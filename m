@@ -1,82 +1,39 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH] memcg: make cache index determination more robust
-Date: Thu, 13 Jun 2013 18:38:49 +0200
-Message-ID: <20130613163849.GL23070@dhcp22.suse.cz>
-References: <1371069808-1172-1-git-send-email-glommer@openvz.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3 0/7] cpuset: implement sane hierarchy behaviors
+Date: Thu, 13 Jun 2013 10:49:36 -0700
+Message-ID: <20130613174936.GA10799@mtj.dyndns.org>
+References: <51B4475A.8030509@huawei.com>
+ <20130609160353.GE2835@htj.dyndns.org>
+ <51B96F04.30803@huawei.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=FV/rruqTRI6yrcn9PYO8rw4PG8Y5pAZkpqAIZdxRr0I=;
+        b=Vsy4DI+Dx3p1gJJB9wDDjkIlJOAM6CJRFYzx8L/Kye7gXXR17t56+8PEKm2c0du9WF
+         /h2gSZj9CJ05/wAZUEAtao/LzUUYDjgpX5kH37cPy8rvncKx98nQbm2wwTE80WjhHdvf
+         JniTD1Mk3tKXn3AY2WAo1hnCSiGtf+DRQnY4BcMlXJ5cbM2K2zhj1Vq8KmcMBB2HEMdq
+         yi7eaXb4zmvHAEZQYA2fO7OVq26vn6emPxqIx99Y0mMVbIqNyuWNExzKL5CNS4gzPiX5
+         D/mKfND0ERNd873Ks5B9Q/x7Zf1X6qwT17ZGyU8V2cyqggF6mG3zmdycrgiqTvFenJSA
+         bO4g==
 Content-Disposition: inline
-In-Reply-To: <1371069808-1172-1-git-send-email-glommer@openvz.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <51B96F04.30803-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@gmail.com>
-Cc: akpm@linux-foundation.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Glauber Costa <glommer@openvz.org>, Johannes Weiner <hannes@cmpxchg.org>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 
-On Wed 12-06-13 16:43:28, Glauber Costa wrote:
-> I caught myself doing something like the following outside memcg core:
-> 
-> 	memcg_id = -1;
-> 	if (memcg && memcg_kmem_is_active(memcg))
-> 		memcg_id = memcg_cache_id(memcg);
-> 
-> to be able to handle all possible memcgs in a sane manner. In particular, the
-> root cache will have kmemcg_id = -1 (just because we don't call memcg_kmem_init
-> to the root cache since it is not limitable). We have always coped with that by
-> making sure we sanitize which cache is passed to memcg_cache_id. Although this
-> example is given for root, what we really need to know is whether or not a
-> cache is kmem active.
-> 
-> But outside the memcg core testing for root, for instance, is not trivial since
-> we don't export mem_cgroup_is_root. I ended up realizing that this tests really
-> belong inside memcg_cache_id. This patch moves the tests inside memcg_cache_id
-> and make sure it always return a meaningful value.
+On Thu, Jun 13, 2013 at 03:04:36PM +0800, Li Zefan wrote:
+> I would prefer those patches are applied first, as the new changes can
+> be based on this patchset, and the changes should be quite straightforward,
+> and also I don't have to rebase those patches again.
 
-This is quite a mess, to be honest. Some callers test/require
-memcg_can_account_kmem others !p->is_root_cache. Can we have that
-unified, please?
-
-Also the return value of this function is used mostly as an index to
-memcg_params->memcg_caches array so returning -1 sounds like a bad idea.
-Few other cases use it as a real id. Maybe we need to split this up.
-
-Pulling the check inside the function is OK but can we settle with a
-common pattern here, pretty please?
-
-> Signed-off-by: Glauber Costa <glommer@openvz.org>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Michal Hocko <mhocko@suse.cz>
-> Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> ---
->  mm/memcontrol.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 2e851f4..749f7a4 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -3081,7 +3081,9 @@ void memcg_cache_list_add(struct mem_cgroup *memcg, struct kmem_cache *cachep)
->   */
->  int memcg_cache_id(struct mem_cgroup *memcg)
->  {
-> -	return memcg ? memcg->kmemcg_id : -1;
-> +	if (!memcg || !memcg_kmem_is_active(memcg))
-> +		return -1;
-> +	return memcg->kmemcg_id;
->  }
->  
->  /*
-> -- 
-> 1.8.1.4
-> 
+Aye aye, applied the rest of the series to cgroup/for-3.11-cpuset.
+Thanks!
 
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
