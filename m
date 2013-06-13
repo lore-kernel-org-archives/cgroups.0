@@ -1,39 +1,60 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3 0/7] cpuset: implement sane hierarchy behaviors
-Date: Thu, 13 Jun 2013 10:49:36 -0700
-Message-ID: <20130613174936.GA10799@mtj.dyndns.org>
-References: <51B4475A.8030509@huawei.com>
- <20130609160353.GE2835@htj.dyndns.org>
- <51B96F04.30803@huawei.com>
+Subject: Re: [PATCH v4 7/7] cpuset: fix to migrate mm correctly in a corner
+	case
+Date: Thu, 13 Jun 2013 10:52:39 -0700
+Message-ID: <20130613175239.GB10799@mtj.dyndns.org>
+References: <51B970B0.2040907@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=FV/rruqTRI6yrcn9PYO8rw4PG8Y5pAZkpqAIZdxRr0I=;
-        b=Vsy4DI+Dx3p1gJJB9wDDjkIlJOAM6CJRFYzx8L/Kye7gXXR17t56+8PEKm2c0du9WF
-         /h2gSZj9CJ05/wAZUEAtao/LzUUYDjgpX5kH37cPy8rvncKx98nQbm2wwTE80WjhHdvf
-         JniTD1Mk3tKXn3AY2WAo1hnCSiGtf+DRQnY4BcMlXJ5cbM2K2zhj1Vq8KmcMBB2HEMdq
-         yi7eaXb4zmvHAEZQYA2fO7OVq26vn6emPxqIx99Y0mMVbIqNyuWNExzKL5CNS4gzPiX5
-         D/mKfND0ERNd873Ks5B9Q/x7Zf1X6qwT17ZGyU8V2cyqggF6mG3zmdycrgiqTvFenJSA
-         bO4g==
-Content-Disposition: inline
-In-Reply-To: <51B96F04.30803-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=h9AqEp3ln7FCYkCnM7LeyWMMV2it2wb9fYuWgiW4Klo=;
+	b=S2JgM+kByKzW+7fZ7plIugCVtvLJBkmzN0DoNAZPwX/aZI55hN3uc2X78b1kJf63jG
+	jvqDn7LCLi26Ki6x4PfC56QL1/U+r8sXjKGSKCoNxI/vJE2nPZyADJkbQDUgyzFoqr8x
+	ajgq25plWefGoSqJqjhuZMA/FxIN/JkCv7EwgwS3ai5/HuiMpqGBz1yZq/XTKQ+AP4cU
+	MDo7/o/mIZXZy5psNRPSNmx69o7Qv4VOzTiGUeLmBrEcAajvYHRJ7t7HPzMz7vu6S8Xk
+	xBY0v7TScolUSJPsza0637bWp2FqUgc6s3mueqsmiiNFhuO4EhrzehjQOAjiNQf6DPqE
+	t/lA==
+Content-Disposition: inline
+In-Reply-To: <51B970B0.2040907-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Thu, Jun 13, 2013 at 03:04:36PM +0800, Li Zefan wrote:
-> I would prefer those patches are applied first, as the new changes can
-> be based on this patchset, and the changes should be quite straightforward,
-> and also I don't have to rebase those patches again.
+On Thu, Jun 13, 2013 at 03:11:44PM +0800, Li Zefan wrote:
+> Before moving tasks out of empty cpusets, update_tasks_nodemask()
+> is called, which calls do_migrate_pages(xx, from, to). Then those
+> tasks are moved to an ancestor, and do_migrate_pages() is called
+> again.
+> 
+> The first time: from = node_to_be_offlined, to = empty.
+> The second time: from = empty, to = ancestor's nodemask.
+> 
+> so looks like no pages will be migrated.
+> 
+> Fix this by:
+> 
+> - Don't call update_tasks_nodemask() on empty cpusets.
+> - Pass cs->old_mems_allowed to do_migrate_pages().
+> 
+> v4: added comment in cpuset_hotplug_update_tasks() and rephased comment
+>     in cpuset_attach().
+> 
+> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Aye aye, applied the rest of the series to cgroup/for-3.11-cpuset.
-Thanks!
+Replaced v3 with this one in cgroup/for-3.11-cpuset.  Thanks!
 
 -- 
 tejun
