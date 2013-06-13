@@ -1,88 +1,72 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch] mm, memcg: add oom killer delay
-Date: Wed, 12 Jun 2013 14:27:05 -0700 (PDT)
-Message-ID: <alpine.DEB.2.02.1306121408490.24902@chino.kir.corp.google.com>
-References: <20130601102058.GA19474@dhcp22.suse.cz> <alpine.DEB.2.02.1306031102480.7956@chino.kir.corp.google.com> <20130603193147.GC23659@dhcp22.suse.cz> <alpine.DEB.2.02.1306031411380.22083@chino.kir.corp.google.com> <20130604095514.GC31242@dhcp22.suse.cz>
- <alpine.DEB.2.02.1306042329320.20610@chino.kir.corp.google.com> <20130605093937.GK15997@dhcp22.suse.cz> <alpine.DEB.2.02.1306051657001.29626@chino.kir.corp.google.com> <20130610142321.GE5138@dhcp22.suse.cz> <alpine.DEB.2.02.1306111321360.32688@chino.kir.corp.google.com>
- <20130612202348.GA17282@dhcp22.suse.cz>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 03/11] cgroup: bring some sanity to naming around
+	cg_cgroup_link
+Date: Thu, 13 Jun 2013 10:34:56 +0800
+Message-ID: <51B92FD0.8020907@huawei.com>
+References: <1371070996-20613-1-git-send-email-tj@kernel.org>
+	<1371070996-20613-4-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version:content-type;
-        bh=QWdQqBEQbACxa+Vh1D5Xy/LTt0t71KBv1BBRXyVLiz8=;
-        b=OAOeK78k08mxP1eKaUXT061a5UU5584mRdbiytrFIUG90OQkEFyyL6iFwm2Fw90C/Z
-         jzRJiFG8cqrNSgcJfpMYVO82v68KXC0D27QwOjmpbKTTmJFfrVt+GDxtQfQNh/ciKyRD
-         5bsOhEU7mCC3ija593GDfXWMdtIoA+MqLv3U/7N8463tjyOPVIb5roVQxoLP/jYtbPZR
-         CKoWjwK/NtdQ1v7QkZwLkiLy7GMhj/DnqNsw33UStlyqSIhX8IwCe24i4SW6jJN/S3aY
-         Z/i8xyddCxdiKnz4g1ndQItjxVGDuiOovjjCvAa3Zx7JikHaxQ3WiRa4xfMKuGOE5rte
-         ZhjA==
-In-Reply-To: <20130612202348.GA17282@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <1371070996-20613-4-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, 12 Jun 2013, Michal Hocko wrote:
+On 2013/6/13 5:03, Tejun Heo wrote:
+> cgroups and css_sets are mapped M:N and this M:N mapping is
+> represented by struct cg_cgroup_link which points to forms linked
+> lists on both sides.  The naming around this already confusing struct
+> is pretty bad.
+> 
+>>From cgroup side, it starts off ->css_sets and runs through
+> ->cgrp_link_list.  From css_set side, it starts off ->cg_links and
+> runs through ->cg_link_list.  This is rather reversed as
+> cgrp_link_list is used to iterate css_sets and cg_link_list cgroups.
+> Also, this is the only place which is still using the confusing "cg"
+> for css_sets.  This patch cleans it up a bit.
+> 
+> * s/cgroup->css_sets/cgroup->cset_links/
+>   s/css_set->cg_links/css_set->cgrp_links/
+>   s/cgroup_iter->cg_link/cgroup_iter->cset_link/
+> 
+> * s/cg_cgroup_link/cgrp_cset_link/
+> 
+> * s/cgrp_cset_link->cg/cgrp_cset_link->cset/
+>   s/cgrp_cset_link->cgrp_link_list/cgrp_cset_link->cset_link/
+>   s/cgrp_cset_link->cg_link_list/cgrp_cset_link->cgrp_link/
+> 
+> * s/init_css_set_link/init_cgrp_cset_link/
+>   s/free_cg_links/free_cgrp_cset_links/
+>   s/allocate_cg_links/allocate_cgrp_cset_links/
+> 
+> * s/cgl[12]/link[12]/ in compare_css_sets()
+> 
+> * s/saved_link/tmp_link/ s/tmp/tmp_links/ and a couple similar
+>   adustments.
+> 
+> * Comment and whiteline adjustments.
+> 
+> After the changes, we have
+> 
+> 	list_for_each_entry(link, &cont->cset_links, cset_link) {
+> 		struct css_set *cset = link->cset;
+> 
+> instead of
+> 
+> 	list_for_each_entry(link, &cont->css_sets, cgrp_link_list) {
+> 		struct css_set *cset = link->cg;
+> 
 
-> But the objective is to handle oom deadlocks gracefully and you cannot
-> possibly miss those as they are, well, _deadlocks_.
-
-That's not at all the objective, the changelog quite explicitly states 
-this is a deadlock as the result of userspace having disabled the oom 
-killer so that its userspace oom handler can resolve the condition and it 
-being unresponsive or unable to perform its job.
-
-When you allow users to create their own memcgs, which we do and is 
-possible by chowning the user's root to be owned by it, and implement 
-their own userspace oom notifier, you must then rely on their 
-implementation to work 100% of the time, otherwise all those gigabytes of 
-memory go unfreed forever.  What you're insisting on is that this 
-userspace is perfect and there is never any memory allocated (otherwise it 
-may oom its own user root memcg where the notifier is hosted) and it is 
-always responsive and able to handle the situation.  This is not reality.
-
-This is why the kernel has its own oom killer and doesn't wait for a user 
-to go to kill something.  There's no option to disable the kernel oom 
-killer.  It's because we don't want to leave the system in a state where 
-no progress can be made.  The same intention is for memcgs to not be left 
-in a state where no progress can be made even if userspace has the best 
-intentions.
-
-Your solution of a global entity to prevent these situations doesn't work 
-for the same reason we can't implement the kernel oom killer in userspace.  
-It's the exact same reason.  We also want to push patches that allow 
-global oom conditions to trigger an eventfd notification on the root memcg 
-with the exact same semantics of a memcg oom: allow it time to respond but 
-step in and kill something if it fails to respond.  Memcg happens to be 
-the perfect place to implement such a userspace policy and we want to have 
-a priority-based killing mechanism that is hierarchical and different from 
-oom_score_adj.
-
-For that to work properly, it cannot possibly allocate memory even on page 
-fault so it must be mlocked in memory and have enough buffers to store the 
-priorities of top-level memcgs.  Asking a global watchdog to sit there 
-mlocked in memory to store thousands of memcgs, their priorities, their 
-last oom, their timeouts, etc, is a non-starter.
-
-I don't buy your argument that we're pushing any interface to an extreme.  
-Users having the ability to manipulate their own memcgs and subcontainers 
-isn't extreme, it's explicitly allowed by cgroups!  What we're asking for 
-is that level of control for memcg is sane and that if userspace is 
-unresponsive that we don't lose gigabytes of memory forever.  And since 
-we've supported this type of functionality even before memcg was created 
-for cpusets and have used and supported it for six years, I have no 
-problem supporting such a thing upstream.
-
-I do understand that we're the largest user of memcg and use it unlike you 
-or others on this thread do, but that doesn't mean our usecase is any less 
-important or that we should aim for the most robust behavior possible.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Those renames really make the code more readable! I have to think for a while
+everytime I see those namings.
