@@ -1,64 +1,128 @@
 From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch 2/2] memcg: do not sleep on OOM waitqueue with full charge
- context
-Date: Thu, 13 Jun 2013 13:34:46 -0700 (PDT)
-Message-ID: <alpine.DEB.2.02.1306131330170.8686@chino.kir.corp.google.com>
-References: <20130606173355.GB27226@cmpxchg.org> <alpine.DEB.2.02.1306061308320.9493@chino.kir.corp.google.com> <20130606215425.GM15721@cmpxchg.org> <alpine.DEB.2.02.1306061507330.15503@chino.kir.corp.google.com> <20130607000222.GT15576@cmpxchg.org>
- <alpine.DEB.2.02.1306111454030.4803@chino.kir.corp.google.com> <20130612082817.GA6706@dhcp22.suse.cz> <alpine.DEB.2.02.1306121309500.23348@chino.kir.corp.google.com> <20130612203705.GB17282@dhcp22.suse.cz> <alpine.DEB.2.02.1306121343500.24902@chino.kir.corp.google.com>
- <20130613134826.GE23070@dhcp22.suse.cz>
+Subject: Re: [patch] mm, memcg: add oom killer delay
+Date: Thu, 13 Jun 2013 15:25:56 -0700 (PDT)
+Message-ID: <alpine.DEB.2.02.1306131508300.8686@chino.kir.corp.google.com>
+References: <20130603193147.GC23659@dhcp22.suse.cz> <alpine.DEB.2.02.1306031411380.22083@chino.kir.corp.google.com> <20130604095514.GC31242@dhcp22.suse.cz> <alpine.DEB.2.02.1306042329320.20610@chino.kir.corp.google.com> <20130605093937.GK15997@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1306051657001.29626@chino.kir.corp.google.com> <20130610142321.GE5138@dhcp22.suse.cz> <alpine.DEB.2.02.1306111321360.32688@chino.kir.corp.google.com> <20130612202348.GA17282@dhcp22.suse.cz> <alpine.DEB.2.02.1306121408490.24902@chino.kir.corp.google.com>
+ <20130613151602.GG23070@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
          :references:user-agent:mime-version:content-type;
-        bh=XcJXnXPLcse5ucWhuyB1Z3zRGCE1TUf79zFRG3xcI/c=;
-        b=DBkN3DSKHff43KfggW5jppb3YGFxRomiBVeTplrn3neH1yvyGjRDlCcKLWNhzpiteb
-         KmEnYQOsc5ZcsBgBHfL2a5q2wxb7mu1Aj1TtvM3Wa+duAu9Q/quygxe+4XGjVGhzGPzN
-         LEquQTkGNw837aG2ClptZeODm3W6zFfpdZRk5z+a88lmCPzaiKQ6o2oyGrAS8NyJXL2D
-         x0DhsTtTpHHc6BV+wIfd4kX7P2n7HKOAAGT2v3zwQXSeEOro3RaBeh/bLe6nkzSk0TnK
-         ZyQIQjaI2OUAZ1GHZ6IP6YEXXKcnealFHwDbUP6cKx4nowIL28du6Lmyk9wk77IXLmp7
-         ynLg==
-In-Reply-To: <20130613134826.GE23070@dhcp22.suse.cz>
+        bh=wFmn+puBRqZ54ET06WoChIe3Gpxp3A4oSYsaaZvvovU=;
+        b=G38NUiHZkHyZiS+NtnJZEawXwiB1tRun8elzBhNGQocvTMUWk0zLimczzeVNq51HJ+
+         pYF5t9Gkjt8ZqzUs29tCr5LbMuygTA9Kb9bEm0gTTrcaHh83G95kE8dv7GN/mzqBQvfm
+         o24jdpt09md5l4lV9R403XdiAcO8ldM8SYR0+ddBvMH8hCr7aGwy0sQZNR/W6awIW2xO
+         xoaPQsvzQzxXZ2/W4H5QzDAZPzm2pCewP1MhKzznrj8OlSpa83VHHRqzVFpB3GxAnn1T
+         YjmmVKU8e5BbattjOqRHbF6X878nQwFGjzooN8hwsErrF2sIJZL+cqacRJMn6FjxTISE
+         gt8w==
+In-Reply-To: <20130613151602.GG23070@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Michal Hocko <mhocko@suse.cz>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
 On Thu, 13 Jun 2013, Michal Hocko wrote:
 
-> > Right now it appears that that number of users is 0 and we're talking 
-> > about a problem that was reported in 3.2 that was released a year and a 
-> > half ago.  The rules of inclusion in stable also prohibit such a change 
-> > from being backported, specifically "It must fix a real bug that bothers 
-> > people (not a, "This could be a problem..." type thing)".
+> > That's not at all the objective, the changelog quite explicitly states 
+> > this is a deadlock as the result of userspace having disabled the oom 
+> > killer so that its userspace oom handler can resolve the condition and it 
+> > being unresponsive or unable to perform its job.
 > 
-> As you can see there is an user seeing this in 3.2. The bug is _real_ and
-> I do not see what you are objecting against. Do you really think that
-> sitting on a time bomb is preferred more?
-> 
+> Ohh, so another round. Sigh. You insist on having user space handlers
+> running in the context of the limited group. OK, I can understand your
+> use case, although I think it is pushing the limits of the interface and
+> it is dangerous.
 
-Nobody has reported the problem in seven months.  You're patching a kernel 
-that's 18 months old.  Your "user" hasn't even bothered to respond to your 
-backport.  This isn't a timebomb.
+Ok, this is where our misunderstanding is, and I can see why you have 
+reacted the way you have.  It's my fault for not describing where we're 
+going with this.
 
-> > We have deployed memcg on a very large number of machines and I can run a 
-> > query over all software watchdog timeouts that have occurred by 
-> > deadlocking on i_mutex during memcg oom.  It returns 0 results.
-> 
-> Do you capture /prc/<pid>/stack for each of them to find that your
-> deadlock (and you have reported that they happen) was in fact caused by
-> a locking issue? These kind of deadlocks might got unnoticed especially
-> when the oom is handled by userspace by increasing the limit (my mmecg
-> is stuck and increasing the limit a bit always helped).
-> 
+Userspace oom handling right now is very inadequate, not only for the 
+reasons that you and Johannes have described.  This requirement that 
+userspace oom handlers must run with more memory than the memcgs it is 
+monitoring is where the pain is.
 
-We dump stack traces for every thread on the system to the kernel log for 
-a software watchdog timeout and capture it over the network for searching 
-later.  We have not experienced any deadlock that even remotely resembles 
-the stack traces in the chnagelog.  We do not reproduce this issue.
+We have to accept the fact that users can be given control of their own 
+memcg trees by chowning that "user root" directory to the user.  The only 
+real change you must enforce is that the limit cannot be increased unless 
+you have a special capability.  Otherwise, users can be given complete 
+control over their own tree and enforce their own memory limits (or just 
+accounting).
+
+I haven't seen any objection to that usecase from anybody, so I'm assuming 
+that it's something that is understood and acknowledged.  Nothing in the 
+cgroups code prevents it and I believe it gives a much more powerful 
+interface to the user to control their own destiny much like setting up 
+root level memcgs for the admin.
+
+The problem is that we want to control global oom conditions as well.  
+oom_score_adj simply doesn't allow for user-specific implementations 
+either within user subcontainers or at the root.  Users may very well want 
+to kill the allocating task in their memcg to avoid expensive scans (SGI 
+required oom_kill_allocating_task at a global level), kill the largest 
+memory consumer, do a priority-based memcg scoring, kill the newest 
+process, etc.  That's the power of user oom notifications beyond just 
+statistics collection or creating a tombstone to examine later.
+
+We want to do that at the root level as well for global oom conditions.  
+We have a priority-based scoring method amongst top-level memcgs.  They 
+are jobs that are scheduled on machines and given a certain priority to 
+run at.  We also overcommit the machine so the sum of all top-level
+memory.limit_in_bytes exceeds the amount of physical RAM since jobs seldom 
+use their entire reservation.  When RAM is exhausted, we want to kill the 
+lowest priority process from the lowest priority memcg.
+
+That's not possible to do currently because we lack global oom 
+notification and userspace oom handling.  We want to change that by 
+notifying on the root memcg's memory.oom_control for global oom and wakeup 
+a process that will handle global oom conditions.  Memcg is the perfect 
+vehicle for this since it already does userspace oom notification and 
+because the oom condition in a "user root" can be handled the same as a 
+"global oom".
+
+Waking up userspace and asking it to do anything useful in a global oom 
+condition is problematic if it is unresponsive for whatever reason.  
+Especially with true kmem accounting of all slab, we cannot be guaranteed 
+that this global oom handler can actually do things like query the memory 
+usage of a process or read a memcg's tasks file.  For this reason, we want 
+a kernel failsafe to ensure that if it isn't able to respond in a 
+reasonable amount of time, the kernel frees memory itself.
+
+There's simply no other alternative to doing something like 
+memory.oom_delay_millisecs then at the root level.  For notification to 
+actually work, we need to preempt the kernel at least for a certain amount 
+of time from killing: the solution right now is to disable the oom killer 
+entirely with memory.oom_control == 1.  If the global oom handler fails 
+the respond, the machine is essentially dead unless something starts 
+freeing memory back for some strange reason.
+
+For our own priority-based memcg oom scoring implementation, this global 
+oom handler would then signal the memcg oom handler in the lowest priority 
+memcg, if it exists, to handle the situation or it would kill something 
+from that memcg itself.
+
+The key is that without some sort of kernel-imposed delay, there's no way 
+to sanely implement a global oom handler that doesn't risk killing the 
+entire machine because the kernel oom killer is deferred.  This patch 
+makes that delay configurable.
+
+I could certainly push the patch that does the global oom notification on 
+the root level memcg's memory.oom_control first if you'd like, but I 
+didn't think there would be so much opposition to running a memcg oom 
+handler in the memcg itself, which is what this essentially is.
+
+If that's done, then we can't simply rely on the global oom killer, which 
+your suggestion does when things go wrong or to act as a watchdog, to step 
+in in such a situation and kill something.  We always want to kill from 
+the lowest-priority memcg in global oom conditions and we don't expect to 
+implement a multitude of different oom selection algorithms in the kernel.  
+We want to punt to userspace and give it the functionality in the kernel 
+that it needs when things go wrong.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
