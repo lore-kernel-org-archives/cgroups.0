@@ -1,192 +1,91 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v3 5/9] memcg: use css_get/put when charging/uncharging kmem
-Date: Thu, 13 Jun 2013 17:12:55 +0800
-Message-ID: <51B98D17.2050902@huawei.com>
+From: richard -rw- weinberger <richard.weinberger@gmail.com>
+Subject: mem_cgroup_page_lruvec: BUG: unable to handle kernel NULL pointer
+ dereference at 00000000000001a8
+Date: Thu, 13 Jun 2013 13:48:27 +0200
+Message-ID: <CAFLxGvzKes7mGknTJgqFamr_-ODPBArf6BajF+m5x-S4AEtdmQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:date:message-id:subject:from:to:content-type;
+        bh=iYVsiE04zDWoPeP3vE0rDuDmSIdgx9xKwqid8X4p2FM=;
+        b=wGV80KUiW+c0TzsTSNn+GmRkfVuJ5Wv1ed8jnbnenufqeoiPOa1IVRi5QopwcD8oxz
+         6tXyf9PekYFTg8tn2Z6dLoUHB2KCpIhfB8VEHwfjbYarlWUfKv/22SQYTB6yEyrBFldA
+         lbPuv1Yuv0lXFNp2C0zquAijgqZUGf6316+0a9WCzjjifgybpftn0V/akBfkZK0yCfn5
+         f8YJdT5yTGBpn9JbD0G30PaW/PgEQHpVeAplsYM34E9tdyIuZ1nqdHYVMBya6a1JA/JR
+         cE0G4kXygrr+6s09z+VZfHtJK2O6CgxQkOFl0R3W55sO63YTqPGvCf9O/rqsqU/az35f
+         Zw4Q==
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: LKML <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, cgroups mailinglist <cgroups@vger.kernel.org>, "kamezawa.hiroyu@jp.fujitsu.com" <kamezawa.hiroyu@jp.fujitsu.com>, bsingharora@gmail.com, Michal Hocko <mhocko@suse.cz>, hannes@cmpxchg.org
 
-Sorry for updating the patchset so late.
+Hi!
 
-I've made some changes for the memory barrier thing, and I agree with
-Michal that there can be improvement but can be a separate patch.
+While playing with user namespaces my kernel crashed under heavy load.
+Kernel is 3.9.0 plus some trivial patches.
 
-If this version is ok for everyone, I'll send the whole patchset out
-to Andrew.
+[35355.882105] BUG: unable to handle kernel NULL pointer dereference
+at 00000000000001a8
+[35355.883056] IP: [<ffffffff811297d9>] mem_cgroup_page_lruvec+0x79/0x90
+[35355.883056] PGD 0
+[35355.883056] Oops: 0000 [#1] SMP
+[35355.883056] CPU 3
+[35355.883056] Pid: 477, comm: kswapd0 Not tainted 3.9.0+ #12 Bochs Bochs
+[35355.883056] RIP: 0010:[<ffffffff811297d9>]  [<ffffffff811297d9>]
+mem_cgroup_page_lruvec+0x79/0x90
+[35355.883056] RSP: 0000:ffff88003d523aa8  EFLAGS: 00010002
+[35355.883056] RAX: 0000000000000138 RBX: ffff88003fffa600 RCX: ffff88003e04a800
+[35355.883056] RDX: 0000000000000020 RSI: 0000000000000000 RDI: 0000000000028500
+[35355.883056] RBP: ffff88003d523ab8 R08: 0000000000000000 R09: 0000000000000000
+[35355.883056] R10: 0000000000000000 R11: dead000000100100 R12: ffffea0000a14000
+[35355.883056] R13: ffff88003e04b138 R14: ffff88003d523bb8 R15: ffffea0000a14020
+[35355.883056] FS:  0000000000000000(0000) GS:ffff88003fd80000(0000)
+knlGS:0000000000000000
+[35355.883056] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[35355.883056] CR2: 00000000000001a8 CR3: 0000000001a0b000 CR4: 00000000000006e0
+[35355.883056] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[35355.883056] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[35355.883056] Process kswapd0 (pid: 477, threadinfo ffff88003d522000,
+task ffff88003db6dc40)
+[35355.883056] Stack:
+[35355.883056]  0000000000000014 ffffea0000a14000 ffff88003d523b28
+ffffffff810ea4c5
+[35355.883056]  ffff88003d523b90 ffff88003fffa9c0 ffff88003d523b98
+0000000000000020
+[35355.883056]  ffff88003fffa600 0000000200000003 ffff88003fffa600
+ffff88003d523b98
+[35355.883056] Call Trace:
+[35355.883056]  [<ffffffff810ea4c5>] move_active_pages_to_lru+0x65/0x190
+[35355.883056]  [<ffffffff810ec4e7>] shrink_active_list+0x297/0x380
+[35355.883056]  [<ffffffff810ebff6>] ? shrink_inactive_list+0x1a6/0x400
+[35355.883056]  [<ffffffff810ec815>] shrink_lruvec+0x245/0x4b0
+[35355.883056]  [<ffffffff810ecae6>] shrink_zone+0x66/0x180
+[35355.883056]  [<ffffffff810edcb4>] balance_pgdat+0x474/0x5b0
+[35355.883056]  [<ffffffff810edf58>] kswapd+0x168/0x440
+[35355.883056]  [<ffffffff8105d310>] ? abort_exclusive_wait+0xb0/0xb0
+[35355.883056]  [<ffffffff810eddf0>] ? balance_pgdat+0x5b0/0x5b0
+[35355.883056]  [<ffffffff8105c5fb>] kthread+0xbb/0xc0
+[35355.883056]  [<ffffffff8105c540>] ? __kthread_unpark+0x50/0x50
+[35355.883056]  [<ffffffff81748eac>] ret_from_fork+0x7c/0xb0
+[35355.883056]  [<ffffffff8105c540>] ? __kthread_unpark+0x50/0x50
+[35355.883056] Code: 89 50 08 48 89 d1 0f 1f 40 00 49 8b 04 24 48 89
+c2 48 c1 e8 38 83 e0 03 48 c1 ea 3a 48 69 c0 38 01 00 00 48 03 84 d1
+e0 02 00 00 <48> 3b 58 70 75 0a 48 8b 5d f0 4c 8b 65 f8 c9 c3 48 89 58
+70 eb
+[35355.883056] RIP  [<ffffffff811297d9>] mem_cgroup_page_lruvec+0x79/0x90
+[35355.883056]  RSP <ffff88003d523aa8>
+[35355.883056] CR2: 00000000000001a8
+[35355.883056] ---[ end trace 2c9b8eec517f960d ]---
 
-=========================
 
-Use css_get/put instead of mem_cgroup_get/put.
+--
+Thanks,
+//richard
 
-We can't do a simple replacement, because here mem_cgroup_put()
-is called during mem_cgroup_css_free(), while mem_cgroup_css_free()
-won't be called until css refcnt goes down to 0.
-
-Instead we increment css refcnt in mem_cgroup_css_offline(), and
-then check if there's still kmem charges. If not, css refcnt will
-be decremented immediately, otherwise the refcnt won't be decremented
-when kmem charges goes down to 0.
-
-v3:
-- changed wmb() to smp_smb(), and moved it to memcg_kmem_mark_dead(),
-  and added comment.
-
-v2:
-- added wmb() in kmem_cgroup_css_offline(), pointed out by Michal
-- revised comments as suggested by Michal
-- fixed to check if kmem is activated in kmem_cgroup_css_offline()
-
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
----
- mm/memcontrol.c | 70 ++++++++++++++++++++++++++++++++++++---------------------
- 1 file changed, 45 insertions(+), 25 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 466c595..76dcd0e 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -416,6 +416,11 @@ static void memcg_kmem_clear_activated(struct mem_cgroup *memcg)
- 
- static void memcg_kmem_mark_dead(struct mem_cgroup *memcg)
- {
-+	/*
-+	 * We need to call css_get() first, because memcg_uncharge_kmem()
-+	 * will call css_put() if it sees the memcg is dead.
-+	 */
-+	smb_wmb();
- 	if (test_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_account_flags))
- 		set_bit(KMEM_ACCOUNTED_DEAD, &memcg->kmem_account_flags);
- }
-@@ -3060,8 +3065,16 @@ static void memcg_uncharge_kmem(struct mem_cgroup *memcg, u64 size)
- 	if (res_counter_uncharge(&memcg->kmem, size))
- 		return;
- 
-+	/*
-+	 * Releases a reference taken in kmem_cgroup_css_offline in case
-+	 * this last uncharge is racing with the offlining code or it is
-+	 * outliving the memcg existence.
-+	 *
-+	 * The memory barrier imposed by test&clear is paired with the
-+	 * explicit one in memcg_kmem_mark_dead().
-+	 */
- 	if (memcg_kmem_test_and_clear_dead(memcg))
--		mem_cgroup_put(memcg);
-+		css_put(&memcg->css);
- }
- 
- void memcg_cache_list_add(struct mem_cgroup *memcg, struct kmem_cache *cachep)
-@@ -5165,14 +5178,6 @@ static int memcg_update_kmem_limit(struct cgroup *cont, u64 val)
- 		 * starts accounting before all call sites are patched
- 		 */
- 		memcg_kmem_set_active(memcg);
--
--		/*
--		 * kmem charges can outlive the cgroup. In the case of slab
--		 * pages, for instance, a page contain objects from various
--		 * processes, so it is unfeasible to migrate them away. We
--		 * need to reference count the memcg because of that.
--		 */
--		mem_cgroup_get(memcg);
- 	} else
- 		ret = res_counter_set_limit(&memcg->kmem, val);
- out:
-@@ -5205,12 +5210,10 @@ static int memcg_propagate_kmem(struct mem_cgroup *memcg)
- 		goto out;
- 
- 	/*
--	 * destroy(), called if we fail, will issue static_key_slow_inc() and
--	 * mem_cgroup_put() if kmem is enabled. We have to either call them
--	 * unconditionally, or clear the KMEM_ACTIVE flag. I personally find
--	 * this more consistent, since it always leads to the same destroy path
-+	 * __mem_cgroup_free() will issue static_key_slow_dec() because this
-+	 * memcg is active already. If the later initialization fails then the
-+	 * cgroup core triggers the cleanup so we do not have to do it here.
- 	 */
--	mem_cgroup_get(memcg);
- 	static_key_slow_inc(&memcg_kmem_enabled_key);
- 
- 	mutex_lock(&set_limit_mutex);
-@@ -5893,23 +5896,38 @@ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- 	return mem_cgroup_sockets_init(memcg, ss);
- }
- 
--static void kmem_cgroup_destroy(struct mem_cgroup *memcg)
-+static void kmem_cgroup_css_offline(struct mem_cgroup *memcg)
- {
--	mem_cgroup_sockets_destroy(memcg);
-+	if (!memcg_kmem_is_active(memcg))
-+		return;
-+
-+	/*
-+	 * kmem charges can outlive the cgroup. In the case of slab
-+	 * pages, for instance, a page contain objects from various
-+	 * processes. As we prevent from taking a reference for every
-+	 * such allocation we have to be careful when doing uncharge
-+	 * (see memcg_uncharge_kmem) and here during offlining.
-+	 *
-+	 * The idea is that that only the _last_ uncharge which sees
-+	 * the dead memcg will drop the last reference. An additional
-+	 * reference is taken here before the group is marked dead
-+	 * which is then paired with css_put during uncharge resp. here.
-+	 *
-+	 * Although this might sound strange as this path is called from
-+	 * css_offline() when the referencemight have dropped down to 0
-+	 * and shouldn't be incremented anymore (css_tryget would fail)
-+	 * we do not have other options because of the kmem allocations
-+	 * lifetime.
-+	 */
-+	css_get(&memcg->css);
- 
- 	memcg_kmem_mark_dead(memcg);
- 
- 	if (res_counter_read_u64(&memcg->kmem, RES_USAGE) != 0)
- 		return;
- 
--	/*
--	 * Charges already down to 0, undo mem_cgroup_get() done in the charge
--	 * path here, being careful not to race with memcg_uncharge_kmem: it is
--	 * possible that the charges went down to 0 between mark_dead and the
--	 * res_counter read, so in that case, we don't need the put
--	 */
- 	if (memcg_kmem_test_and_clear_dead(memcg))
--		mem_cgroup_put(memcg);
-+		css_put(&memcg->css);
- }
- #else
- static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
-@@ -5917,7 +5935,7 @@ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- 	return 0;
- }
- 
--static void kmem_cgroup_destroy(struct mem_cgroup *memcg)
-+static void kmem_cgroup_css_offline(struct mem_cgroup *memcg)
- {
- }
- #endif
-@@ -6350,6 +6368,8 @@ static void mem_cgroup_css_offline(struct cgroup *cont)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
- 
-+	kmem_cgroup_css_offline(memcg);
-+
- 	mem_cgroup_invalidate_reclaim_iterators(memcg);
- 	mem_cgroup_reparent_charges(memcg);
- 	mem_cgroup_destroy_all_caches(memcg);
-@@ -6359,7 +6379,7 @@ static void mem_cgroup_css_free(struct cgroup *cont)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
- 
--	kmem_cgroup_destroy(memcg);
-+	mem_cgroup_sockets_destroy(memcg);
- 
- 	mem_cgroup_put(memcg);
- }
--- 
-1.8.0.2
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
