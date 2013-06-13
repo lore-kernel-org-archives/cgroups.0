@@ -1,49 +1,46 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH 04/11] cgroup: use kzalloc() and list_del_init()
-Date: Wed, 12 Jun 2013 19:39:16 -0700
-Message-ID: <CAOS58YOFHpgFXh2jCZHg-pdu0x_2NNUohahcJJi5YmeR6H+zHA@mail.gmail.com>
+Date: Wed, 12 Jun 2013 19:41:15 -0700
+Message-ID: <CAOS58YPv_uKeTqZSNF=sXTEnLn=LTbsdpBPM5K_ykXoVT-+CpA@mail.gmail.com>
 References: <1371070996-20613-1-git-send-email-tj@kernel.org>
 	<1371070996-20613-5-git-send-email-tj@kernel.org>
 	<51B93038.9010202@huawei.com>
+	<20130613023831.GB10979@localhost>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:sender:in-reply-to:references:date
+         :x-google-sender-auth:message-id:subject:from:to:cc:content-type;
+        bh=LadXFs1QzO/rbLZEn8Ew45jKW2r/8PZEsm7rf9pzkMQ=;
+        b=JckRXRD3FJiezOBcTaq4LCGPuWEdrruPWXCZ9H6Jw+0GYLIxc+0w2mOWw2LJq9JUCo
+         r90JMjgkni9qlI71td6dHUwewWZbN1Aq+dR3Cp5F3fTq1FZdlsDhqyOHguXh12iLEmGz
+         NbopXJVWQ/FzbKpGF75yIrTdbYR+CMNy0fa46tCdWCy7BfpjPpHhcgZYn395LYLEWCbJ
+         E+m3C8jE+8SD8pUlPXwwik+iRqbT0YwZcWtQM6KKRgsfctIdmvvmpVC+o/QMYeNCq+Xp
+         e6LcLwqF/aIdp+tfHJMCWO+MuYoVEfT7oeftdQu3I9mrCu58Y4uARhQt70XVJZ9Q/iUx
+         rV0A==
+In-Reply-To: <20130613023831.GB10979@localhost>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=mime-version:sender:in-reply-to:references:date
-	:x-google-sender-auth:message-id:subject:from:to:cc:content-type;
-	bh=llR8OfZMUz95VUphA8x1DwBf8yj9FPCgym38pyYOy88=;
-	b=ui49pUi6nQAFpezrHwOzgPMRJowKmgikJBNmqvIbnWH2S3/4hA3AnGM6qx7NwLxKDR
-	IwvKosTgHNz9e4yx0/beN4FqLxkoAWYWhZBswNjTayg5P9SWCaEzgWKf5qzgbY8iIAws
-	eC9NfUUlIv6hciv4yh1MPJLrWKUC/VRcSFk89rSKARzCnrdcUbNTonvqUtcDoVtNRBjr
-	KFt1yYU976atiBle0zlo5edUDuCzZn065sxKBiC25zs7rZw0xTAJMBnIepZSL6F+r/fq
-	MKsPyy8Ihfij9ds6l2gabDhTEbr6LQVRrWTkg6KHfFrH0IVEDk/NSrB7MP2kUSTTkX9A
-	xnWA==
-In-Reply-To: <51B93038.9010202-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Christoph Lameter <cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kent Overstreet <koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Kent Overstreet <koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Christoph Lameter <cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
 Hello,
 
-On Wed, Jun 12, 2013 at 7:36 PM, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
-> Do you mean we prefer list_del_init() than list_del() in general? Then
+On Wed, Jun 12, 2013 at 7:38 PM, Kent Overstreet <koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> IMO, list_del() is preferred when the object shouldn't be reused (i.e.
+> it gets taken off a list and then it's freed). list_del_init() could
+> hide bugs.
 
-Yes.
+Nah... use-after-frees are detected much more reliably by poisoning
+anyway. Using list_del() instead of list_del_init() to hunt down
+use-after-free isn't a good idea because you're likely to corrupt the
+memory of unrelated area. I really don't see much point in using
+list_del().
 
-> in which cases do we prefer list_del()?
-
-Nowadays, I don't think we ever prefer list_del(). Maybe if it can be
-shown that the extra init part is noticeably expensive?
+Thanks.
 
 --
 tejun
