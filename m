@@ -1,93 +1,192 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v4 7/7] cpuset: fix to migrate mm correctly in a corner case
-Date: Thu, 13 Jun 2013 15:11:44 +0800
-Message-ID: <51B970B0.2040907@huawei.com>
+Subject: [PATCH v3 5/9] memcg: use css_get/put when charging/uncharging kmem
+Date: Thu, 13 Jun 2013 17:12:55 +0800
+Message-ID: <51B98D17.2050902@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-Before moving tasks out of empty cpusets, update_tasks_nodemask()
-is called, which calls do_migrate_pages(xx, from, to). Then those
-tasks are moved to an ancestor, and do_migrate_pages() is called
-again.
+Sorry for updating the patchset so late.
 
-The first time: from = node_to_be_offlined, to = empty.
-The second time: from = empty, to = ancestor's nodemask.
+I've made some changes for the memory barrier thing, and I agree with
+Michal that there can be improvement but can be a separate patch.
 
-so looks like no pages will be migrated.
+If this version is ok for everyone, I'll send the whole patchset out
+to Andrew.
 
-Fix this by:
+=========================
 
-- Don't call update_tasks_nodemask() on empty cpusets.
-- Pass cs->old_mems_allowed to do_migrate_pages().
+Use css_get/put instead of mem_cgroup_get/put.
 
-v4: added comment in cpuset_hotplug_update_tasks() and rephased comment
-    in cpuset_attach().
+We can't do a simple replacement, because here mem_cgroup_put()
+is called during mem_cgroup_css_free(), while mem_cgroup_css_free()
+won't be called until css refcnt goes down to 0.
+
+Instead we increment css refcnt in mem_cgroup_css_offline(), and
+then check if there's still kmem charges. If not, css refcnt will
+be decremented immediately, otherwise the refcnt won't be decremented
+when kmem charges goes down to 0.
+
+v3:
+- changed wmb() to smp_smb(), and moved it to memcg_kmem_mark_dead(),
+  and added comment.
+
+v2:
+- added wmb() in kmem_cgroup_css_offline(), pointed out by Michal
+- revised comments as suggested by Michal
+- fixed to check if kmem is activated in kmem_cgroup_css_offline()
 
 Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 ---
- kernel/cpuset.c | 25 +++++++++++++++++++------
- 1 file changed, 19 insertions(+), 6 deletions(-)
+ mm/memcontrol.c | 70 ++++++++++++++++++++++++++++++++++++---------------------
+ 1 file changed, 45 insertions(+), 25 deletions(-)
 
-diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index d1d6782..3be9597 100644
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -1563,9 +1563,18 @@ static void cpuset_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
- 		struct cpuset *mems_oldcs = effective_nodemask_cpuset(oldcs);
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 466c595..76dcd0e 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -416,6 +416,11 @@ static void memcg_kmem_clear_activated(struct mem_cgroup *memcg)
  
- 		mpol_rebind_mm(mm, &cpuset_attach_nodemask_to);
--		if (is_memory_migrate(cs))
--			cpuset_migrate_mm(mm, &mems_oldcs->mems_allowed,
+ static void memcg_kmem_mark_dead(struct mem_cgroup *memcg)
+ {
++	/*
++	 * We need to call css_get() first, because memcg_uncharge_kmem()
++	 * will call css_put() if it sees the memcg is dead.
++	 */
++	smb_wmb();
+ 	if (test_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_account_flags))
+ 		set_bit(KMEM_ACCOUNTED_DEAD, &memcg->kmem_account_flags);
+ }
+@@ -3060,8 +3065,16 @@ static void memcg_uncharge_kmem(struct mem_cgroup *memcg, u64 size)
+ 	if (res_counter_uncharge(&memcg->kmem, size))
+ 		return;
+ 
++	/*
++	 * Releases a reference taken in kmem_cgroup_css_offline in case
++	 * this last uncharge is racing with the offlining code or it is
++	 * outliving the memcg existence.
++	 *
++	 * The memory barrier imposed by test&clear is paired with the
++	 * explicit one in memcg_kmem_mark_dead().
++	 */
+ 	if (memcg_kmem_test_and_clear_dead(memcg))
+-		mem_cgroup_put(memcg);
++		css_put(&memcg->css);
+ }
+ 
+ void memcg_cache_list_add(struct mem_cgroup *memcg, struct kmem_cache *cachep)
+@@ -5165,14 +5178,6 @@ static int memcg_update_kmem_limit(struct cgroup *cont, u64 val)
+ 		 * starts accounting before all call sites are patched
+ 		 */
+ 		memcg_kmem_set_active(memcg);
+-
+-		/*
+-		 * kmem charges can outlive the cgroup. In the case of slab
+-		 * pages, for instance, a page contain objects from various
+-		 * processes, so it is unfeasible to migrate them away. We
+-		 * need to reference count the memcg because of that.
+-		 */
+-		mem_cgroup_get(memcg);
+ 	} else
+ 		ret = res_counter_set_limit(&memcg->kmem, val);
+ out:
+@@ -5205,12 +5210,10 @@ static int memcg_propagate_kmem(struct mem_cgroup *memcg)
+ 		goto out;
+ 
+ 	/*
+-	 * destroy(), called if we fail, will issue static_key_slow_inc() and
+-	 * mem_cgroup_put() if kmem is enabled. We have to either call them
+-	 * unconditionally, or clear the KMEM_ACTIVE flag. I personally find
+-	 * this more consistent, since it always leads to the same destroy path
++	 * __mem_cgroup_free() will issue static_key_slow_dec() because this
++	 * memcg is active already. If the later initialization fails then the
++	 * cgroup core triggers the cleanup so we do not have to do it here.
+ 	 */
+-	mem_cgroup_get(memcg);
+ 	static_key_slow_inc(&memcg_kmem_enabled_key);
+ 
+ 	mutex_lock(&set_limit_mutex);
+@@ -5893,23 +5896,38 @@ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
+ 	return mem_cgroup_sockets_init(memcg, ss);
+ }
+ 
+-static void kmem_cgroup_destroy(struct mem_cgroup *memcg)
++static void kmem_cgroup_css_offline(struct mem_cgroup *memcg)
+ {
+-	mem_cgroup_sockets_destroy(memcg);
++	if (!memcg_kmem_is_active(memcg))
++		return;
 +
-+		/*
-+		 * old_mems_allowed is the same with mems_allowed here, except
-+		 * if this task is being moved automatically due to hotplug.
-+		 * In that case @mems_allowed has been updated and is empty,
-+		 * so @old_mems_allowed is the right nodesets that we migrate
-+		 * mm from.
-+		 */
-+		if (is_memory_migrate(cs)) {
-+			cpuset_migrate_mm(mm, &mems_oldcs->old_mems_allowed,
- 					  &cpuset_attach_nodemask_to);
-+		}
- 		mmput(mm);
- 	}
++	/*
++	 * kmem charges can outlive the cgroup. In the case of slab
++	 * pages, for instance, a page contain objects from various
++	 * processes. As we prevent from taking a reference for every
++	 * such allocation we have to be careful when doing uncharge
++	 * (see memcg_uncharge_kmem) and here during offlining.
++	 *
++	 * The idea is that that only the _last_ uncharge which sees
++	 * the dead memcg will drop the last reference. An additional
++	 * reference is taken here before the group is marked dead
++	 * which is then paired with css_put during uncharge resp. here.
++	 *
++	 * Although this might sound strange as this path is called from
++	 * css_offline() when the referencemight have dropped down to 0
++	 * and shouldn't be incremented anymore (css_tryget would fail)
++	 * we do not have other options because of the kmem allocations
++	 * lifetime.
++	 */
++	css_get(&memcg->css);
  
-@@ -2152,10 +2161,12 @@ retry:
+ 	memcg_kmem_mark_dead(memcg);
  
- 	/*
- 	 * If sane_behavior flag is set, we need to update tasks' cpumask
--	 * for empty cpuset to take on ancestor's cpumask.
-+	 * for empty cpuset to take on ancestor's cpumask. Otherwise, don't
-+	 * call update_tasks_cpumask() if the cpuset becomes empty, as
-+	 * the tasks in it will be migrated to an ancestor.
- 	 */
- 	if ((sane && cpumask_empty(cs->cpus_allowed)) ||
--	    !cpumask_empty(&off_cpus))
-+	    (!cpumask_empty(&off_cpus) && !cpumask_empty(cs->cpus_allowed)))
- 		update_tasks_cpumask(cs, NULL);
+ 	if (res_counter_read_u64(&memcg->kmem, RES_USAGE) != 0)
+ 		return;
  
- 	mutex_lock(&callback_mutex);
-@@ -2164,10 +2175,12 @@ retry:
+-	/*
+-	 * Charges already down to 0, undo mem_cgroup_get() done in the charge
+-	 * path here, being careful not to race with memcg_uncharge_kmem: it is
+-	 * possible that the charges went down to 0 between mark_dead and the
+-	 * res_counter read, so in that case, we don't need the put
+-	 */
+ 	if (memcg_kmem_test_and_clear_dead(memcg))
+-		mem_cgroup_put(memcg);
++		css_put(&memcg->css);
+ }
+ #else
+ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
+@@ -5917,7 +5935,7 @@ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
+ 	return 0;
+ }
  
- 	/*
- 	 * If sane_behavior flag is set, we need to update tasks' nodemask
--	 * for empty cpuset to take on ancestor's nodemask.
-+	 * for empty cpuset to take on ancestor's nodemask. Otherwise, don't
-+	 * call update_tasks_nodemask() if the cpuset becomes empty, as
-+	 * the tasks in it will be migratd to an ancestor.
- 	 */
- 	if ((sane && nodes_empty(cs->mems_allowed)) ||
--	    !nodes_empty(off_mems))
-+	    (!nodes_empty(off_mems) && !nodes_empty(cs->mems_allowed)))
- 		update_tasks_nodemask(cs, NULL);
+-static void kmem_cgroup_destroy(struct mem_cgroup *memcg)
++static void kmem_cgroup_css_offline(struct mem_cgroup *memcg)
+ {
+ }
+ #endif
+@@ -6350,6 +6368,8 @@ static void mem_cgroup_css_offline(struct cgroup *cont)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
  
- 	is_empty = cpumask_empty(cs->cpus_allowed) ||
++	kmem_cgroup_css_offline(memcg);
++
+ 	mem_cgroup_invalidate_reclaim_iterators(memcg);
+ 	mem_cgroup_reparent_charges(memcg);
+ 	mem_cgroup_destroy_all_caches(memcg);
+@@ -6359,7 +6379,7 @@ static void mem_cgroup_css_free(struct cgroup *cont)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+ 
+-	kmem_cgroup_destroy(memcg);
++	mem_cgroup_sockets_destroy(memcg);
+ 
+ 	mem_cgroup_put(memcg);
+ }
 -- 
 1.8.0.2
