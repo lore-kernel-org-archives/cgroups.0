@@ -1,83 +1,134 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch 2/2] memcg: do not sleep on OOM waitqueue with full
- charge context
-Date: Fri, 14 Jun 2013 11:29:12 +0200
-Message-ID: <20130614092912.GA10084@dhcp22.suse.cz>
-References: <20130606215425.GM15721@cmpxchg.org>
- <alpine.DEB.2.02.1306061507330.15503@chino.kir.corp.google.com>
- <20130607000222.GT15576@cmpxchg.org>
- <alpine.DEB.2.02.1306111454030.4803@chino.kir.corp.google.com>
- <20130612082817.GA6706@dhcp22.suse.cz>
- <alpine.DEB.2.02.1306121309500.23348@chino.kir.corp.google.com>
- <20130612203705.GB17282@dhcp22.suse.cz>
- <alpine.DEB.2.02.1306121343500.24902@chino.kir.corp.google.com>
- <20130613134826.GE23070@dhcp22.suse.cz>
- <alpine.DEB.2.02.1306131330170.8686@chino.kir.corp.google.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [patch] mm, memcg: add oom killer delay
+Date: Fri, 14 Jun 2013 03:12:52 -0700 (PDT)
+Message-ID: <alpine.DEB.2.02.1306140254590.8780@chino.kir.corp.google.com>
+References: <20130603193147.GC23659@dhcp22.suse.cz> <alpine.DEB.2.02.1306031411380.22083@chino.kir.corp.google.com> <20130604095514.GC31242@dhcp22.suse.cz> <alpine.DEB.2.02.1306042329320.20610@chino.kir.corp.google.com> <20130605093937.GK15997@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1306051657001.29626@chino.kir.corp.google.com> <20130610142321.GE5138@dhcp22.suse.cz> <alpine.DEB.2.02.1306111321360.32688@chino.kir.corp.google.com> <20130612202348.GA17282@dhcp22.suse.cz> <alpine.DEB.2.02.1306121408490.24902@chino.kir.corp.google.com>
+ <20130613151602.GG23070@dhcp22.suse.cz> <alpine.DEB.2.02.1306131508300.8686@chino.kir.corp.google.com> <51BA6A2A.3060107@jp.fujitsu.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1306131330170.8686@chino.kir.corp.google.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=Hx1FUVDWwHgE9FYzezoBTxMdDmhlsppKsO4JSm+QfJw=;
+        b=LaPnGF35X3oovDYbYdHfExuMZG7LzG6YW2Y2RRq99rJRshy/w2qWX9+asiqL1EHV0e
+         7U2YI/tT4rHtCeyZeMlTKHlfSUNOWHMQEzenwQDp3TYaU7rlNiJsUeOgG71Vx7QmmUL4
+         BSnYMaPcHJdSANIm13CMiGXwT6BnmDMqI22H+/Yl0U8H0CwqpY7/UYjoVC1NLBAZCVod
+         y3wpyrtGnDMJKQnDNdMCW0Jg1aI3qlom5ErnvKvNr6L99L6gdmeoZwE6rIvpAhaa6jjC
+         Y1Jk+sS0NYvqrBKYRjc9RsH8k97IHsj9vpUQYSxoExMOkCQQbwWRN0sMAwXbEZVP86CC
+         tf9Q==
+In-Reply-To: <51BA6A2A.3060107@jp.fujitsu.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Michal Hocko <mhocko@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On Thu 13-06-13 13:34:46, David Rientjes wrote:
-> On Thu, 13 Jun 2013, Michal Hocko wrote:
+On Fri, 14 Jun 2013, Kamezawa Hiroyuki wrote:
+
+> Reading your discussion, I think I understand your requirements.
+> The problem is that I can't think you took into all options into
+> accounts and found the best way is this new oom_delay. IOW, I can't
+> convice oom-delay is the best way to handle your issue.
 > 
-> > > Right now it appears that that number of users is 0 and we're talking 
-> > > about a problem that was reported in 3.2 that was released a year and a 
-> > > half ago.  The rules of inclusion in stable also prohibit such a change 
-> > > from being backported, specifically "It must fix a real bug that bothers 
-> > > people (not a, "This could be a problem..." type thing)".
-> > 
-> > As you can see there is an user seeing this in 3.2. The bug is _real_ and
-> > I do not see what you are objecting against. Do you really think that
-> > sitting on a time bomb is preferred more?
-> > 
+
+Ok, let's talk about it.
+
+> Your requeirement is
+>  - Allowing userland oom-handler within local memcg.
 > 
-> Nobody has reported the problem in seven months.  You're patching a kernel 
-> that's 18 months old.  Your "user" hasn't even bothered to respond to your 
-> backport. 
->
-> This isn't a timebomb.
 
-Doh. This is getting ridiculous! So you are claiming that oom blocking
-while the task might be sitting on an unpredictable amount of locks
-which could block oom victims to die is OK? I would consider it a _bug_
-and I am definitely backporting it to our kernel which is 3.0 based
-whether it end up in the stable or not.
+Another requirement:
 
-Whether this is a general stable material I will leave for others (I
-would be voting for it because it definitely makes sense). The real
-regardless how many users suffer from it. The stable-or-not discussion
-shouldn't delay the fix for the current tree though. Or do you disagree
-with the patch itself?
+ - Allow userland oom handler for global oom conditions.
 
-> > > We have deployed memcg on a very large number of machines and I can run a 
-> > > query over all software watchdog timeouts that have occurred by 
-> > > deadlocking on i_mutex during memcg oom.  It returns 0 results.
-> > 
-> > Do you capture /prc/<pid>/stack for each of them to find that your
-> > deadlock (and you have reported that they happen) was in fact caused by
-> > a locking issue? These kind of deadlocks might got unnoticed especially
-> > when the oom is handled by userspace by increasing the limit (my mmecg
-> > is stuck and increasing the limit a bit always helped).
-> > 
+Hopefully that's hooked into memcg because the functionality is already 
+there, we can simply duplicate all of the oom functionality that we'll be 
+adding for the root memcg.
+
+> Considering straightforward, the answer should be
+>  - Allowing oom-handler daemon out of memcg's control by its limit.
+>    (For example, a flag/capability for a task can archive this.)
+>    Or attaching some *fixed* resource to the task rather than cgroup.
 > 
-> We dump stack traces for every thread on the system to the kernel log for 
-> a software watchdog timeout and capture it over the network for searching 
-> later.  We have not experienced any deadlock that even remotely resembles 
-> the stack traces in the chnagelog.  We do not reproduce this issue.
+>    Allow to set task->secret_saving=20M.
+> 
 
-OK. This could really rule it out for you. The analysis is not really
-trivial because locks might be hidden nicely but having the data is
-definitely useful.
--- 
-Michal Hocko
-SUSE Labs
+Exactly!
+
+First of all, thanks very much for taking an interest in our usecase and 
+discussing it with us.
+
+I didn't propose what I referred to earlier in the thread as "memcg 
+reserves" because I thought it was going to be a more difficult battle.  
+The fact that you brought it up first actually makes me think it's less 
+insane :)
+
+We do indeed want memcg reserves and I have patches to add it if you'd 
+like to see that first.  It ensures that this userspace oom handler can 
+actually do some work in determining which process to kill.  The reserve 
+is a fraction of true memory reserves (the space below the per-zone min 
+watermarks) which is dependent on min_free_kbytes.  This does indeed 
+become more difficult with true and complete kmem charging.  That "work" 
+could be opening the tasks file (which allocates the pidlist within the 
+kernel), checking /proc/pid/status for rss, checking for how long a 
+process has been running, checking for tid, sending a signal to drop 
+caches, etc.
+
+We'd also like to do this for global oom conditions, which makes it even 
+more interesting.  I was thinking of using a fraction of memory reserves 
+as the oom killer currently does (that memory below the min watermark) for 
+these purposes.
+
+Memory charging is simply bypassed for these oom handlers (we only grant 
+access to those waiting on the memory.oom_control eventfd) up to 
+memory.limit_in_bytes + (min_free_kbytes / 4), for example.  I don't think 
+this is entirely insane because these oom handlers should lead to future 
+memory freeing, just like TIF_MEMDIE processes.
+
+> Going back to your patch, what's confusing is your approach.
+> Why the problem caused by the amount of memory should be solved by
+> some dealy, i.e. the amount of time ?
+> 
+> This exchanging sounds confusing to me.
+> 
+
+Even with all of the above (which is not actually that invasive of a 
+patch), I still think we need memory.oom_delay_millisecs.  I probably made 
+a mistake in describing what that is addressing if it seems like it's 
+trying to address any of the above.
+
+If a userspace oom handler fails to respond even with access to those 
+"memcg reserves", the kernel needs to kill within that memcg.  Do we do 
+that above a set time period (this patch) or when the reserves are 
+completely exhausted?  That's debatable, but if we are to allow it for 
+global oom conditions as well then my opinion was to make it as safe as 
+possible; today, we can't disable the global oom killer from userspace and 
+I don't think we should ever allow it to be disabled.  I think we should 
+allow userspace a reasonable amount of time to respond and then kill if it 
+is exceeded.
+
+For the global oom case, we want to have a priority-based memcg selection.  
+Select the lowest priority top-level memcg and kill within it.  If it has 
+an oom notifier, send it a signal to kill something.  If it fails to 
+react, kill something after memory.oom_delay_millisecs has elapsed.  If 
+there isn't a userspace oom notifier, kill something within that lowest 
+priority memcg.
+
+The bottomline with my approach is that I don't believe there is ever a 
+reason for an oom memcg to remain oom indefinitely.  That's why I hate 
+memory.oom_control == 1 and I think for the global notification it would 
+be deemed a nonstarter since you couldn't even login to the machine.
+
+> I'm not against what you finally want to do, but I don't like the fix.
+> 
+
+I'm thrilled to hear that, and I hope we can work to make userspace oom 
+handling more effective.
+
+What do you think about that above?
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
