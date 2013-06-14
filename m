@@ -1,57 +1,70 @@
 From: Glauber Costa <glommer@gmail.com>
-Subject: Re: [PATCH v3 5/9] memcg: use css_get/put when charging/uncharging
- kmem
-Date: Fri, 14 Jun 2013 14:56:13 +0400
-Message-ID: <20130614105611.GA4292@localhost.localdomain>
-References: <51B98D17.2050902@huawei.com>
- <20130613155319.GJ23070@dhcp22.suse.cz>
- <51BA6F34.30001@huawei.com>
+Subject: Re: [PATCH] memcg: make cache index determination more robust
+Date: Fri, 14 Jun 2013 15:01:45 +0400
+Message-ID: <20130614110145.GB4292@localhost.localdomain>
+References: <1371069808-1172-1-git-send-email-glommer@openvz.org>
+ <20130613163849.GL23070@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=F9aut/mM1zHoWHlJPTd8ToyZr8tY2DfY3cWf/frFU14=;
-        b=O4Jw1h2Nul1SEQqqKVvp+pCl/okQbRr6lHSWa1nEd5th/d4tD44XQ2k5lD0vzR2e/+
-         AMjVA96VyXkTAlNHioccOzXSNfuJxpS1NXTuhWVmwqGuG2YN6tkgpAekhGNxoHdWLDAX
-         98t0ea/0Vcf56Zodk6yaRwYBOWDNljCMlNnfHb++qRHFpiH2+kV9BBqFkyYBZ0fbN7iP
-         /Nlxgt0oYdSpfg9Pvm9Uf9rjAWAJog1dJFmfBjPwViO+QuzPF4xJvRgmtEnTXaEmolxv
-         LtsqDceTP3eFaHDuAnZSx5mchRY2DGZRUR32oaDl1jx1g8TnYUOS5bxvxNP5jE/KKmmf
-         FIxw==
+        bh=lzgd71useI0ciLhyA1voZoP4jTTbg9+NYCIW2scM0ys=;
+        b=LbbjCU0dGTQ3qtqxUtlUesUDR1U/pXJiG7Z91wNNnWYwXwovaIUlyFLdeKWiqxZFS0
+         oJguqDIKN5/g6vU5hEAVr4lrFMNj3ny8n85umpjphn9eygd7vI7HJa9Z9x6/WVrurOGt
+         BU/rSagZPlgNCuIGflvU8WEViYH8za4bg68JXGLu5N7Ok4y2knWV1OnCrnxcQpX/2jXr
+         WYb+jMRwoYLKmAOAhPVmj84Pee8EHmMA0knctfIbhpGkUd2VUNkcTx1DhNKct8OV3Aas
+         XKltUDR+2P/tJQ0m8FzsmHL5zciWv0NKnYr8uMH+BPjEeFTlxRd8r2pAmZ6acHa6vRpK
+         F2Nw==
 Content-Disposition: inline
-In-Reply-To: <51BA6F34.30001@huawei.com>
+In-Reply-To: <20130613163849.GL23070@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>
-Cc: Michal Hocko <mhocko@suse.cz>, Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@openvz.org>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: akpm@linux-foundation.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Glauber Costa <glommer@openvz.org>, Johannes Weiner <hannes@cmpxchg.org>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-On Fri, Jun 14, 2013 at 09:17:40AM +0800, Li Zefan wrote:
-> >>  static void memcg_kmem_mark_dead(struct mem_cgroup *memcg)
-> >>  {
-> >> +	/*
-> >> +	 * We need to call css_get() first, because memcg_uncharge_kmem()
-> >> +	 * will call css_put() if it sees the memcg is dead.
-> >> +	 */
-> >> +	smb_wmb();
-> >>  	if (test_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_account_flags))
-> >>  		set_bit(KMEM_ACCOUNTED_DEAD, &memcg->kmem_account_flags);
+On Thu, Jun 13, 2013 at 06:38:49PM +0200, Michal Hocko wrote:
+> On Wed 12-06-13 16:43:28, Glauber Costa wrote:
+> > I caught myself doing something like the following outside memcg core:
 > > 
-> > I do not feel strongly about that but maybe open coding this in
-> > mem_cgroup_css_offline would be even better. There is only single caller
-> > and there is smaller chance somebody will use the function incorrectly
-> > later on.
+> > 	memcg_id = -1;
+> > 	if (memcg && memcg_kmem_is_active(memcg))
+> > 		memcg_id = memcg_cache_id(memcg);
 > > 
-> > So I leave the decision on you because this doesn't matter much.
+> > to be able to handle all possible memcgs in a sane manner. In particular, the
+> > root cache will have kmemcg_id = -1 (just because we don't call memcg_kmem_init
+> > to the root cache since it is not limitable). We have always coped with that by
+> > making sure we sanitize which cache is passed to memcg_cache_id. Although this
+> > example is given for root, what we really need to know is whether or not a
+> > cache is kmem active.
 > > 
+> > But outside the memcg core testing for root, for instance, is not trivial since
+> > we don't export mem_cgroup_is_root. I ended up realizing that this tests really
+> > belong inside memcg_cache_id. This patch moves the tests inside memcg_cache_id
+> > and make sure it always return a meaningful value.
 > 
-> Yeah, it should go away soon. I'll post a patch after this patchset gets
-> merged into -mm tree and then we can discuss there.
- 
-I don't care if it is open coded or not. If there is any strong preference
-from anyone on this matter, feel free to change it.
+> This is quite a mess, to be honest. Some callers test/require
+> memcg_can_account_kmem others !p->is_root_cache. Can we have that
+> unified, please?
+> 
+> Also the return value of this function is used mostly as an index to
+> memcg_params->memcg_caches array so returning -1 sounds like a bad idea.
+> Few other cases use it as a real id. Maybe we need to split this up.
+> 
+> Pulling the check inside the function is OK but can we settle with a
+> common pattern here, pretty please?
+> 
+
+We have been through the array index discussion before. It is used as an array index
+only in contexts where we are absolutely sure we are dealing with a memcg that is kmem
+limited. Those are usually contexts in which in case it is not, we would have to BUG
+anyway.
+
+If you prefer, though, that we always BUG on id == -1 in those scenarios, for consistency,
+this is understandable and I will prepare a patch for this.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
