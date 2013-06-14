@@ -1,88 +1,69 @@
-From: Kent Overstreet <koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 11/11] cgroup: use percpu refcnt for cgroup_subsys_states
-Date: Thu, 13 Jun 2013 16:16:34 -0700
-Message-ID: <20130613231634.GD28664@moria.home.lan>
-References: <1371096298-24402-1-git-send-email-tj@kernel.org>
-	<1371096298-24402-12-git-send-email-tj@kernel.org>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [patch] mm, memcg: add oom killer delay
+Date: Fri, 14 Jun 2013 09:56:10 +0900
+Message-ID: <51BA6A2A.3060107@jp.fujitsu.com>
+References: <20130603193147.GC23659@dhcp22.suse.cz> <alpine.DEB.2.02.1306031411380.22083@chino.kir.corp.google.com> <20130604095514.GC31242@dhcp22.suse.cz> <alpine.DEB.2.02.1306042329320.20610@chino.kir.corp.google.com> <20130605093937.GK15997@dhcp22.suse.cz> <alpine.DEB.2.02.1306051657001.29626@chino.kir.corp.google.com> <20130610142321.GE5138@dhcp22.suse.cz> <alpine.DEB.2.02.1306111321360.32688@chino.kir.corp.google.com> <20130612202348.GA17282@dhcp22.suse.cz> <alpine.DEB.2.02.1306121408490.24902@chino.kir.corp.google.com> <20130613151602.GG23070@dhcp22.suse.cz> <alpine.DEB.2.02.1306131508300.8686@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20120113;
-	h=date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=Nqgf7iLVHTFvTUsIxtmrHsp0Fwds3QrcfKfvetIfWZA=;
-	b=ig7SgdNDCthn6zLOBi/3I7Ar2JqSme8UbfSd5zjdznHyUMhxWfla6wbx/80/cNriax
-	hMUeh3K1fHjKbicxxzCRWZ3aPf+8Mg4/ePJ8YkTa5k+BnKLQ6IBMovMnchsC6KNmP8Pc
-	2W72G4hrE7nj8VBcEmPXk/OJa6BaBmTFAF+3xwmVeDoirT8JyW2jdsl2Lvu4p+xZPFHc
-	GEcr2Hx/La90sUwGpN0EWoNJvEOAb5Y8NkTx2ZRRXva4IL64yPDLXsF9/mUN+9thN7WW
-	X5/6FQ+nnHbdfop4LzEXpnAlo56LYLnOdNfZfnqfYZBSZ+JIVKyCCDwK5EXZY0Gb5M0f
-	kL5w==
-Content-Disposition: inline
-In-Reply-To: <1371096298-24402-12-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Mikulas Patocka <mpatocka-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Alasdair G. Kergon" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <alpine.DEB.2.02.1306131508300.8686@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: David Rientjes <rientjes@google.com>
+Cc: Michal Hocko <mhocko@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On Wed, Jun 12, 2013 at 09:04:58PM -0700, Tejun Heo wrote:
-> A css (cgroup_subsys_state) is how each cgroup is represented to a
-> controller.  As such, it can be used in hot paths across the various
-> subsystems different controllers are associated with.
-> 
-> One of the common operations is reference counting, which up until now
-> has been implemented using a global atomic counter and can have
-> significant adverse impact on scalability.  For example, css refcnt
-> can be gotten and put multiple times by blkcg for each IO request.
-> For highops configurations which try to do as much per-cpu as
-> possible, the global frequent refcnting can be very expensive.
-> 
-> In general, given the various and hugely diverse paths css's end up
-> being used from, we need to make it cheap and highly scalable.  In its
-> usage, css refcnting isn't very different from module refcnting.
-> 
-> This patch converts css refcnting to use the recently added
-> percpu_ref.  css_get/tryget/put() directly maps to the matching
-> percpu_ref operations and the deactivation logic is no longer
-> necessary as percpu_ref already has refcnt killing.
-> 
-> The only complication is that as the refcnt is per-cpu,
-> percpu_ref_kill() in itself doesn't ensure that further tryget
-> operations will fail, which we need to guarantee before invoking
-> ->css_offline()'s.  This is resolved collecting kill confirmation
-> using percpu_ref_kill_and_confirm() and initiating the offline phase
-> of destruction after all css refcnt's are confirmed to be seen as
-> killed on all CPUs.  The previous patches already splitted destruction
-> into two phases, so percpu_ref_kill_and_confirm() can be hooked up
-> easily.
-> 
-> This patch removes css_refcnt() which is used for rcu dereference
-> sanity check in css_id().  While we can add a percpu refcnt API to ask
-> the same question, css_id() itself is scheduled to be removed fairly
-> soon, so let's not bother with it.  Just drop the sanity check and use
-> rcu_dereference_raw() instead.
-> 
-> v2: - init_cgroup_css() was calling percpu_ref_init() without checking
->       the return value.  This causes two problems - the obvious lack
->       of error handling and percpu_ref_init() being called from
->       cgroup_init_subsys() before the allocators are up, which
->       triggers warnings but doesn't cause actual problems as the
->       refcnt isn't used for roots anyway.  Fix both by moving
->       percpu_ref_init() to cgroup_create().
-> 
->     - The base references were put too early by
->       percpu_ref_kill_and_confirm() and cgroup_offline_fn() put the
->       refs one extra time.  This wasn't noticeable because css's go
->       through another RCU grace period before being freed.  Update
->       cgroup_destroy_locked() to grab an extra reference before
->       killing the refcnts.  This problem was noticed by Kent.
+(2013/06/14 7:25), David Rientjes wrote:
+> On Thu, 13 Jun 2013, Michal Hocko wrote:
+>
+>>> That's not at all the objective, the changelog quite explicitly states
+>>> this is a deadlock as the result of userspace having disabled the oom
+>>> killer so that its userspace oom handler can resolve the condition and it
+>>> being unresponsive or unable to perform its job.
+>>
+>> Ohh, so another round. Sigh. You insist on having user space handlers
+>> running in the context of the limited group. OK, I can understand your
+>> use case, although I think it is pushing the limits of the interface and
+>> it is dangerous.
+>
+> Ok, this is where our misunderstanding is, and I can see why you have
+> reacted the way you have.  It's my fault for not describing where we're
+> going with this.
+>
 
-Reviewed-by: Kent Overstreet <koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Reading your discussion, I think I understand your requirements.
+The problem is that I can't think you took into all options into
+accounts and found the best way is this new oom_delay. IOW, I can't
+convice oom-delay is the best way to handle your issue.
+
+Your requeirement is
+  - Allowing userland oom-handler within local memcg.
+
+Considering straightforward, the answer should be
+  - Allowing oom-handler daemon out of memcg's control by its limit.
+    (For example, a flag/capability for a task can archive this.)
+    Or attaching some *fixed* resource to the task rather than cgroup.
+
+    Allow to set task->secret_saving=20M.
+
+
+Going back to your patch, what's confusing is your approach.
+Why the problem caused by the amount of memory should be solved by
+some dealy, i.e. the amount of time ?
+
+This exchanging sounds confusing to me.
+
+I'm not against what you finally want to do, but I don't like the fix.
+
+Thanks,
+-Kame
+
+
+
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
