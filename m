@@ -1,100 +1,81 @@
-From: Glauber Costa <glommer@gmail.com>
-Subject: [PATCH v2 2/2] memcg: consolidate callers of memcg_cache_id
-Date: Fri, 14 Jun 2013 14:04:36 -0400
-Message-ID: <1371233076-936-3-git-send-email-glommer@openvz.org>
-References: <1371233076-936-1-git-send-email-glommer@openvz.org>
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=from:to:cc:subject:date:message-id:x-mailer:in-reply-to:references;
-        bh=krl50NA6X36CzH7RbkFQNFRE+eGHYcNOq9qEYa7v0i8=;
-        b=JbFi+uj99M4jhuZPqq3uxquH4Ha/gxXClbiOXMzQBi5595Jao7v5x3DC5FgM9pCU+v
-         P+Y2h51Oa/GcmBx9ZlHTtxh2l5+6vucoywt56A4cztq4SgkHPEN82vgIIxDBFlb7X5e8
-         b3jXX5XY0SlRsBrTX5jrPch+q14FKkXBUuhrn561R07Pl8UEEKsT3BTUqID2WNh4vhxe
-         mDJYsN5C01pja+n2NLNmLbXqdDo/mwSyy/cH3J3HnKFSocfrZ9NBmY0sL+nlRwYvmxuz
-         BGPe1QDL3HgcpFSgHXJIhtCYQea435FjGLUZ8GRaYMm7XQx3nOXk0I3rCAbTgT6x/Wnk
-         E+ZA==
-In-Reply-To: <1371233076-936-1-git-send-email-glommer@openvz.org>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v2 cgroup/for-3.11] cgroup: disallow rename(2) if sane_behavior
+Date: Fri, 14 Jun 2013 11:18:22 -0700
+Message-ID: <20130614181822.GC6593@mtj.dyndns.org>
+References: <20130614034717.GA31533@htj.dyndns.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: linux-mm <linux-mm@kvack.org>, cgroups <cgroups@vger.kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Glauber Costa <glommer@openvz.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=OKWMYtPhY4KquWEfy305BtzAb+4/EpDi8uuj3y0IRQI=;
+	b=k+XQlzC+rAxFp91dq1za9nVTrvQhg4I63aUKQ9NGw/b1AqTjfTC2QzDveAJ9X6ouRa
+	Z1nu8rajnEysytupY+nPijHAKf9KbWQnuUkRw0iQmpImVmKsmm+6lC5EFMxsRn3Be9rV
+	PrAlhTOCOJKmqQjX1PNGJH3gePvLGAAP8UCDeTNmJtWyEjIIkm35zDvgn3bYmkkhNYQG
+	guTD4qm+7U2MwguSUsbUqNfCNqH5D0KsijZ8axW5i0FELb8jAGRK3Q8Gj5qjp7kUfTBT
+	MWivM5U//8g/KEVC+p8ccq4suQjTuhDRJsxlKM0YrCI7M7ImXv1LjHcHziNU/Mcij1/G
+	ObAg==
+Content-Disposition: inline
+In-Reply-To: <20130614034717.GA31533-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>
 
-Each caller of memcg_cache_id ends up sanitizing its parameters in its own way.
-Now that the memcg_cache_id itself is more robust, we can consolidate this.
+cgroup's rename(2) isn't a proper migration implementation - it can't
+move the cgroup to a different parent in the hierarchy.  All it can do
+is swapping the name string for that cgroup.  This isn't useful and
+can mislead users to think that cgroup supports proper cgroup-level
+migration.  Disallow rename(2) if sane_behavior.
 
-There are callers that really cannot handle anything other than a valid memcg
-being passed to the function, otherwise something is seriously wrong.  In those
-cases, we at least VM_BUG_ON explicitly before using the value any further
+v2: Fail with -EPERM instead of -EINVAL so that it matches the vfs
+    return value when ->rename is not implemented as suggested by Li.
 
-Signed-off-by: Glauber Costa <glommer@openvz.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
-Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- mm/memcontrol.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+ include/linux/cgroup.h |    2 ++
+ kernel/cgroup.c        |    7 +++++++
+ 2 files changed, 9 insertions(+)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 359a53b..adbc09b 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2975,10 +2975,14 @@ static inline bool memcg_can_account_kmem(struct mem_cgroup *memcg)
- static struct kmem_cache *memcg_params_to_cache(struct memcg_cache_params *p)
- {
- 	struct kmem_cache *cachep;
-+	int idx;
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 1760476..f975227 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -270,6 +270,8 @@ enum {
+ 	 * - "release_agent" and "notify_on_release" are removed.
+ 	 *   Replacement notification mechanism will be implemented.
+ 	 *
++	 * - rename(2) is disallowed.
++	 *
+ 	 * - memcg: use_hierarchy is on by default and the cgroup file for
+ 	 *   the flag is not created.
+ 	 */
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 2e9da7b..c2c64005 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -2508,6 +2508,13 @@ static int cgroup_rename(struct inode *old_dir, struct dentry *old_dentry,
  
- 	VM_BUG_ON(p->is_root_cache);
- 	cachep = p->root_cache;
--	return cachep->memcg_params->memcg_caches[memcg_cache_id(p->memcg)];
+ 	cgrp = __d_cgrp(old_dentry);
+ 
++	/*
++	 * This isn't a proper migration and its usefulness is very
++	 * limited.  Disallow if sane_behavior.
++	 */
++	if (cgroup_sane_behavior(cgrp))
++		return -EPERM;
 +
-+	idx = memcg_cache_id(p->memcg);
-+	VM_BUG_ON(idx < 0);
-+	return cachep->memcg_params->memcg_caches[idx];
- }
- 
- #ifdef CONFIG_SLABINFO
-@@ -3246,6 +3250,7 @@ void memcg_release_cache(struct kmem_cache *s)
- 
- 	memcg = s->memcg_params->memcg;
- 	id  = memcg_cache_id(memcg);
-+	VM_BUG_ON(id < 0);
- 
- 	root = s->memcg_params->root_cache;
- 	root->memcg_params->memcg_caches[id] = NULL;
-@@ -3408,9 +3413,8 @@ static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
- 	struct kmem_cache *new_cachep;
- 	int idx;
- 
--	BUG_ON(!memcg_can_account_kmem(memcg));
--
- 	idx = memcg_cache_id(memcg);
-+	BUG_ON(!idx < 0);
- 
- 	mutex_lock(&memcg_cache_mutex);
- 	new_cachep = cachep->memcg_params->memcg_caches[idx];
-@@ -3583,10 +3587,9 @@ struct kmem_cache *__memcg_kmem_get_cache(struct kmem_cache *cachep,
- 	rcu_read_lock();
- 	memcg = mem_cgroup_from_task(rcu_dereference(current->mm->owner));
- 
--	if (!memcg_can_account_kmem(memcg))
--		goto out;
--
- 	idx = memcg_cache_id(memcg);
-+	if (idx < 0)
-+		return cachep;
- 
- 	/*
- 	 * barrier to mare sure we're always seeing the up to date value.  The
--- 
-1.8.1.4
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+ 	name = cgroup_alloc_name(new_dentry);
+ 	if (!name)
+ 		return -ENOMEM;
