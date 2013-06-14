@@ -1,60 +1,72 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 11/11] cgroup: use percpu refcnt for cgroup_subsys_states
-Date: Fri, 14 Jun 2013 15:20:26 +0200
-Message-ID: <20130614132026.GD10084@dhcp22.suse.cz>
-References: <1371096298-24402-1-git-send-email-tj@kernel.org>
- <1371096298-24402-12-git-send-email-tj@kernel.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH] memcg: make cache index determination more robust
+Date: Fri, 14 Jun 2013 15:53:16 +0200
+Message-ID: <20130614135316.GE10084@dhcp22.suse.cz>
+References: <1371069808-1172-1-git-send-email-glommer@openvz.org>
+ <20130613163849.GL23070@dhcp22.suse.cz>
+ <20130614110145.GB4292@localhost.localdomain>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1371096298-24402-12-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20130614110145.GB4292@localhost.localdomain>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Alasdair G. Kergon" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Mikulas Patocka <mpatocka-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Glauber Costa <glommer@gmail.com>
+Cc: akpm@linux-foundation.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Glauber Costa <glommer@openvz.org>, Johannes Weiner <hannes@cmpxchg.org>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-On Wed 12-06-13 21:04:58, Tejun Heo wrote:
-> A css (cgroup_subsys_state) is how each cgroup is represented to a
-> controller.  As such, it can be used in hot paths across the various
-> subsystems different controllers are associated with.
+On Fri 14-06-13 15:01:45, Glauber Costa wrote:
+> On Thu, Jun 13, 2013 at 06:38:49PM +0200, Michal Hocko wrote:
+> > On Wed 12-06-13 16:43:28, Glauber Costa wrote:
+> > > I caught myself doing something like the following outside memcg core:
+> > > 
+> > > 	memcg_id = -1;
+> > > 	if (memcg && memcg_kmem_is_active(memcg))
+> > > 		memcg_id = memcg_cache_id(memcg);
+> > > 
+> > > to be able to handle all possible memcgs in a sane manner. In particular, the
+> > > root cache will have kmemcg_id = -1 (just because we don't call memcg_kmem_init
+> > > to the root cache since it is not limitable). We have always coped with that by
+> > > making sure we sanitize which cache is passed to memcg_cache_id. Although this
+> > > example is given for root, what we really need to know is whether or not a
+> > > cache is kmem active.
+> > > 
+> > > But outside the memcg core testing for root, for instance, is not trivial since
+> > > we don't export mem_cgroup_is_root. I ended up realizing that this tests really
+> > > belong inside memcg_cache_id. This patch moves the tests inside memcg_cache_id
+> > > and make sure it always return a meaningful value.
+> > 
+> > This is quite a mess, to be honest. Some callers test/require
+> > memcg_can_account_kmem others !p->is_root_cache. Can we have that
+> > unified, please?
+> > 
+> > Also the return value of this function is used mostly as an index to
+> > memcg_params->memcg_caches array so returning -1 sounds like a bad idea.
+> > Few other cases use it as a real id. Maybe we need to split this up.
+> > 
+> > Pulling the check inside the function is OK but can we settle with a
+> > common pattern here, pretty please?
+> > 
 > 
-> One of the common operations is reference counting, which up until now
-> has been implemented using a global atomic counter and can have
-> significant adverse impact on scalability.  For example, css refcnt
-> can be gotten and put multiple times by blkcg for each IO request.
-> For highops configurations which try to do as much per-cpu as
-> possible, the global frequent refcnting can be very expensive.
-> 
-> In general, given the various and hugely diverse paths css's end up
-> being used from, we need to make it cheap and highly scalable.  In its
-> usage, css refcnting isn't very different from module refcnting.
-> 
-> This patch converts css refcnting to use the recently added
-> percpu_ref. 
+> We have been through the array index discussion before. It is used as
+> an array index only in contexts where we are absolutely sure we are
+> dealing with a memcg that is kmem limited. Those are usually contexts
+> in which in case it is not, we would have to BUG anyway.
+>
+> If you prefer, though, that we always BUG on id == -1 in those
+> scenarios, for consistency, this is understandable and I will prepare
+> a patch for this.
 
-I have no objections to change css reference counting scheme if the
-guarantees we used to have are still valid. I am just missing some
-comparisons. Do you have any numbers that would show benefits clearly?
-
-You are mentioning that especially controllers that are strongly per-cpu
-oriented will see the biggest improvements. What about others?
-A single atomic_add resp. atomic_dec_return is much less heavy than the
-new ref counting. Is it possible that those could regress? Or the
-differences would be only within the noise?
-
-I do realize that it is not possible to test all controllers but I
-would be interested to see at least that those for which it really
-matters get a nice boost. Memcg uses css with caution although there are
-places which are in really hot paths (e.g. charging) so any improvement
-would be really welcome.
-
-Sorry, if this information has been posted along with the series. I was
-CCed only on this one and didn't get to look at the rest yet (apart from
-"percpu: implement generic percpu refcounting" in your
-review-css-percpu-ref branch).
-[...]
+I think it would even make sense to have two things memcg_cache_id - the
+same we have now + your condition enhancement - and memcg_cache_idx
+which uses memcg_cache_id internally and BUG_ON(memcg_cache_id()==-1).
 -- 
 Michal Hocko
 SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
