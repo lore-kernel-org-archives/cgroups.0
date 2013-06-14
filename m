@@ -1,37 +1,53 @@
-From: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [cgroup_init_early] WARNING: at mm/percpu.c:292 pcpu_mem_zalloc()
-Date: Fri, 14 Jun 2013 09:36:07 +0800
-Message-ID: <20130614013607.GA13366@localhost>
-References: <20130613230004.GA8096@localhost>
- <51BA6DFD.6060903@huawei.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: [PATCH v4 1/9] Revert "memcg: avoid dangling reference count in creation
+ failure."
+Date: Fri, 14 Jun 2013 09:53:42 +0800
+Message-ID: <51BA77A6.70404@huawei.com>
+References: <51BA7794.2000305@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <51BA6DFD.6060903-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <51BA7794.2000305@huawei.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@openvz.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org, Michal Hocko <mhocko@suse.cz>
 
-On Fri, Jun 14, 2013 at 09:12:29AM +0800, Li Zefan wrote:
-> On 2013/6/14 7:00, Fengguang Wu wrote:
-> > Greetings,
-> > 
-> > I got the below dmesg and the first bad commit is
-> > 
-> > commit f284b77333b1320491f138b76f11006bbc962569
-> > Author: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> > Date:   Wed Jun 12 13:50:58 2013 -0700
-> > 
-> >     cgroup: use percpu refcnt for cgroup_subsys_states
-> >     
-> 
-> You were testing the old patch, and Tejun has had it updated yesterday,
-> and the new one won't trigger this warning.
+From: Michal Hocko <mhocko@suse.cz>
 
-Got it, thanks for the quick fix!
+This reverts commit e4715f01be697a3730c78f8ffffb595591d6a88c
 
-Thanks,
-Fengguang
+mem_cgroup_put is hierarchy aware so mem_cgroup_put(memcg) already drops
+an additional reference from all parents so the additional
+mem_cgrroup_put(parent) potentially causes use-after-free.
+
+Cc: <stable@vger.kernel.org> # 3.9+
+Signed-off-by: Michal Hocko <mhocko@suse.cz>
+Signed-off-by: Li Zefan <lizefan@huawei.com>
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+---
+ mm/memcontrol.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 2e851f4..0bacc0d 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6332,8 +6332,6 @@ mem_cgroup_css_online(struct cgroup *cont)
+ 		 * call __mem_cgroup_free, so return directly
+ 		 */
+ 		mem_cgroup_put(memcg);
+-		if (parent->use_hierarchy)
+-			mem_cgroup_put(parent);
+ 	}
+ 	return error;
+ }
+-- 
+1.8.0.2
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
