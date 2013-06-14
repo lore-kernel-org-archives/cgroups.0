@@ -1,7 +1,7 @@
 From: Glauber Costa <glommer@gmail.com>
 Subject: Re: [PATCH] memcg: make cache index determination more robust
-Date: Fri, 14 Jun 2013 15:01:45 +0400
-Message-ID: <20130614110145.GB4292@localhost.localdomain>
+Date: Fri, 14 Jun 2013 15:24:00 +0400
+Message-ID: <20130614112359.GC4292@localhost.localdomain>
 References: <1371069808-1172-1-git-send-email-glommer@openvz.org>
  <20130613163849.GL23070@dhcp22.suse.cz>
 Mime-Version: 1.0
@@ -10,13 +10,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=lzgd71useI0ciLhyA1voZoP4jTTbg9+NYCIW2scM0ys=;
-        b=LbbjCU0dGTQ3qtqxUtlUesUDR1U/pXJiG7Z91wNNnWYwXwovaIUlyFLdeKWiqxZFS0
-         oJguqDIKN5/g6vU5hEAVr4lrFMNj3ny8n85umpjphn9eygd7vI7HJa9Z9x6/WVrurOGt
-         BU/rSagZPlgNCuIGflvU8WEViYH8za4bg68JXGLu5N7Ok4y2knWV1OnCrnxcQpX/2jXr
-         WYb+jMRwoYLKmAOAhPVmj84Pee8EHmMA0knctfIbhpGkUd2VUNkcTx1DhNKct8OV3Aas
-         XKltUDR+2P/tJQ0m8FzsmHL5zciWv0NKnYr8uMH+BPjEeFTlxRd8r2pAmZ6acHa6vRpK
-         F2Nw==
+        bh=f9hmL7UUBzdK2ZOaxtOCvySpi434yuLCdDtW59nFU3s=;
+        b=cz0/K7Orj8d8325a9msUl7dwCpshy0NfjEcS0aJ3CFAMDCpYJa/XF9QhAho2LR9a+f
+         23hlhI1dC86xDKQYPxyzNbLcVHmNiii3QSRnHSrl7oczs3xbA7egzgUKwknGMc5AXzjK
+         flDteH/qbihP1QReQlEoL8HdlsXyYHDr8SP5gFt4oZ1x1U5DSwrdkIK4gvOTQtrr5M79
+         ajNCA4PuivHWekL0H57zAZQ4aobIKSktVqub0bbMvpRatqvBYmPl8nPgyiDY4C1VVttl
+         DwY5GUWgtPVQC5h5vr7eDJIw//WAc1TV/CSnmFkqBlpuiiS+CcS/hneqVZmaLUemKcaB
+         Sp8A==
 Content-Disposition: inline
 In-Reply-To: <20130613163849.GL23070@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
@@ -57,14 +57,49 @@ On Thu, Jun 13, 2013 at 06:38:49PM +0200, Michal Hocko wrote:
 > Pulling the check inside the function is OK but can we settle with a
 > common pattern here, pretty please?
 > 
+BTW: Since the test for memcg_can_account_kmem is a bit stronger than
+memcg_kmem_is_active (the difference is that it tests the extra bit that we need
+to coordinate the static branches), I will test for that, instead. Like this:
 
-We have been through the array index discussion before. It is used as an array index
-only in contexts where we are absolutely sure we are dealing with a memcg that is kmem
-limited. Those are usually contexts in which in case it is not, we would have to BUG
-anyway.
+int memcg_cache_id(struct mem_cgroup *memcg)
+{
+        if (!memcg_can_account_kmem(memcg))                       
+                return -1;
+        return memcg->kmemcg_id;                                          
+}
 
-If you prefer, though, that we always BUG on id == -1 in those scenarios, for consistency,
-this is understandable and I will prepare a patch for this.
+This will allow us to consolidate the tests around it a bit in my follow up patch.
+
+> > Signed-off-by: Glauber Costa <glommer@openvz.org>
+> > Cc: Johannes Weiner <hannes@cmpxchg.org>
+> > Cc: Michal Hocko <mhocko@suse.cz>
+> > Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> > ---
+> >  mm/memcontrol.c | 4 +++-
+> >  1 file changed, 3 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index 2e851f4..749f7a4 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -3081,7 +3081,9 @@ void memcg_cache_list_add(struct mem_cgroup *memcg, struct kmem_cache *cachep)
+> >   */
+> >  int memcg_cache_id(struct mem_cgroup *memcg)
+> >  {
+> > -	return memcg ? memcg->kmemcg_id : -1;
+> > +	if (!memcg || !memcg_kmem_is_active(memcg))
+> > +		return -1;
+> > +	return memcg->kmemcg_id;
+> >  }
+> >  
+> >  /*
+> > -- 
+> > 1.8.1.4
+> > 
+> 
+> -- 
+> Michal Hocko
+> SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
