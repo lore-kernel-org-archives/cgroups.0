@@ -1,14 +1,14 @@
 From: Michal Hocko <mhocko@suse.cz>
 Subject: Re: [PATCH] memcg: make cache index determination more robust
-Date: Fri, 14 Jun 2013 15:53:16 +0200
-Message-ID: <20130614135316.GE10084@dhcp22.suse.cz>
+Date: Fri, 14 Jun 2013 15:56:13 +0200
+Message-ID: <20130614135613.GF10084@dhcp22.suse.cz>
 References: <1371069808-1172-1-git-send-email-glommer@openvz.org>
  <20130613163849.GL23070@dhcp22.suse.cz>
- <20130614110145.GB4292@localhost.localdomain>
+ <20130614112359.GC4292@localhost.localdomain>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20130614110145.GB4292@localhost.localdomain>
+In-Reply-To: <20130614112359.GC4292@localhost.localdomain>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -16,7 +16,7 @@ Content-Transfer-Encoding: 7bit
 To: Glauber Costa <glommer@gmail.com>
 Cc: akpm@linux-foundation.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Glauber Costa <glommer@openvz.org>, Johannes Weiner <hannes@cmpxchg.org>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-On Fri 14-06-13 15:01:45, Glauber Costa wrote:
+On Fri 14-06-13 15:24:00, Glauber Costa wrote:
 > On Thu, Jun 13, 2013 at 06:38:49PM +0200, Michal Hocko wrote:
 > > On Wed 12-06-13 16:43:28, Glauber Costa wrote:
 > > > I caught myself doing something like the following outside memcg core:
@@ -48,19 +48,19 @@ On Fri 14-06-13 15:01:45, Glauber Costa wrote:
 > > Pulling the check inside the function is OK but can we settle with a
 > > common pattern here, pretty please?
 > > 
+> BTW: Since the test for memcg_can_account_kmem is a bit stronger than
+> memcg_kmem_is_active (the difference is that it tests the extra bit that we need
+> to coordinate the static branches), I will test for that, instead. Like this:
 > 
-> We have been through the array index discussion before. It is used as
-> an array index only in contexts where we are absolutely sure we are
-> dealing with a memcg that is kmem limited. Those are usually contexts
-> in which in case it is not, we would have to BUG anyway.
->
-> If you prefer, though, that we always BUG on id == -1 in those
-> scenarios, for consistency, this is understandable and I will prepare
-> a patch for this.
+> int memcg_cache_id(struct mem_cgroup *memcg)
+> {
+>         if (!memcg_can_account_kmem(memcg))                       
+>                 return -1;
+>         return memcg->kmemcg_id;                                          
+> }
 
-I think it would even make sense to have two things memcg_cache_id - the
-same we have now + your condition enhancement - and memcg_cache_idx
-which uses memcg_cache_id internally and BUG_ON(memcg_cache_id()==-1).
+Makes sense. You also need to test memcg == NULL, right?
+
 -- 
 Michal Hocko
 SUSE Labs
