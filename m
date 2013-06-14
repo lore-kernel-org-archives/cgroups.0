@@ -1,115 +1,63 @@
-From: Li Zefan <lizefan@huawei.com>
-Subject: [PATCH v4 9/9] memcg: don't need to free memcg via RCU or workqueue
-Date: Fri, 14 Jun 2013 09:56:01 +0800
-Message-ID: <51BA7831.4040003@huawei.com>
-References: <51BA7794.2000305@huawei.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHSET v2 cgroup/for-3.11] cgroup: convert
+	cgroup_subsys_state refcnt to percpu_ref
+Date: Thu, 13 Jun 2013 19:41:57 -0700
+Message-ID: <20130614024157.GB7846@htj.dyndns.org>
+References: <1371096298-24402-1-git-send-email-tj@kernel.org>
+	<51B960FF.7070604@huawei.com>
+	<20130613175627.GC10799@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <51BA7794.2000305@huawei.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@openvz.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org, Michal Hocko <mhocko@suse.cz>, Hugh Dickins <hughd@google.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=iNC3ijwh1QAJR9+mutChg0FIKpvLQorxROAbcvpSr3I=;
+	b=kUu/fPHafAdWlgXwcwaByHPvo3Rk8KobLr75vNvx2a2NwXxpuWDSOWJIs7/MEyfxPJ
+	gEgvjTWp3DlEH9pH1LczTWMr+2tfeMy1Xjizk7pxBM6Z+YF3TR19lPxsWu+TMRn9x4cd
+	f4oFjlYM5EjsXAsTfowMer+uUVm1j2N59ml/T5Z/1399xIgZSlM1WUi181O+qIUGjuu8
+	rm9Aif5jeaqVAS3BjmIyiWYyOMideoNbdAL2Nq5D74igHjSEINdoBSX5d0xN6q53rp7f
+	Vp3fzV8fzieqlWPPu7vIloEC8ZptkspuN/Kc4yjNTx3QkjWsTT5qV4CaMwGaE+NUPt3C
+	ZHVw==
+Content-Disposition: inline
+In-Reply-To: <20130613175627.GC10799-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Now memcg has the same life cycle with its corresponding cgroup, and
-a cgroup is freed via RCU and then mem_cgroup_css_free() will be
-called in a work function, so we can simply call __mem_cgroup_free()
-in mem_cgroup_css_free().
+On Thu, Jun 13, 2013 at 10:56:27AM -0700, Tejun Heo wrote:
+> On Thu, Jun 13, 2013 at 02:04:47PM +0800, Li Zefan wrote:
+> > >  0001-cgroup-remove-now-unused-css_depth.patch
+> > >  0002-cgroup-consistently-use-cset-for-struct-css_set-vari.patch
+> > >  0003-cgroup-bring-some-sanity-to-naming-around-cg_cgroup_.patch
+> > >  0004-cgroup-use-kzalloc-instead-of-kmalloc.patch
+> > >  0005-cgroup-clean-up-css_-try-get-and-css_put.patch
+> > >  0006-cgroup-rename-CGRP_REMOVED-to-CGRP_DEAD.patch
+> > >  0007-cgroup-drop-unnecessary-RCU-dancing-from-__put_css_s.patch
+> > >  0008-cgroup-remove-cgroup-count-and-use.patch
+> > >  0009-cgroup-reorder-the-operations-in-cgroup_destroy_lock.patch
+> > >  0010-cgroup-split-cgroup-destruction-into-two-steps.patch
+> > >  0011-cgroup-use-percpu-refcnt-for-cgroup_subsys_states.patch
+> > 
+> > Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> 
+> Applied 0001-0008 to cgroup/for-3.11.  Will apply the reset once the
+> percpu-refcount side is settled.
 
-This actually reverts 59927fb984de1703c67bc640c3e522d8b5276c73
-("memcg: free mem_cgroup by RCU to fix oops").
+Applied 0009-0010 to cgroup/for-3.11; then pulled in percpu/for-3.11
+for percpu_ref and applied 0011.
 
-Cc: Hugh Dickins <hughd@google.com>
-Signed-off-by: Li Zefan <lizefan@huawei.com>
-Acked-by: Michal Hocko <mhocko@suse.cz>
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
----
- mm/memcontrol.c | 51 +++++----------------------------------------------
- 1 file changed, 5 insertions(+), 46 deletions(-)
+Thanks!
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 7b622c3..234f311 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -267,28 +267,10 @@ struct mem_cgroup {
- 	/* vmpressure notifications */
- 	struct vmpressure vmpressure;
- 
--	union {
--		/*
--		 * the counter to account for mem+swap usage.
--		 */
--		struct res_counter memsw;
--
--		/*
--		 * rcu_freeing is used only when freeing struct mem_cgroup,
--		 * so put it into a union to avoid wasting more memory.
--		 * It must be disjoint from the css field.  It could be
--		 * in a union with the res field, but res plays a much
--		 * larger part in mem_cgroup life than memsw, and might
--		 * be of interest, even at time of free, when debugging.
--		 * So share rcu_head with the less interesting memsw.
--		 */
--		struct rcu_head rcu_freeing;
--		/*
--		 * We also need some space for a worker in deferred freeing.
--		 * By the time we call it, rcu_freeing is no longer in use.
--		 */
--		struct work_struct work_freeing;
--	};
-+	/*
-+	 * the counter to account for mem+swap usage.
-+	 */
-+	struct res_counter memsw;
- 
- 	/*
- 	 * the counter to account for kernel memory usage.
-@@ -6182,29 +6164,6 @@ static void __mem_cgroup_free(struct mem_cgroup *memcg)
- 		vfree(memcg);
- }
- 
--
--/*
-- * Helpers for freeing a kmalloc()ed/vzalloc()ed mem_cgroup by RCU,
-- * but in process context.  The work_freeing structure is overlaid
-- * on the rcu_freeing structure, which itself is overlaid on memsw.
-- */
--static void free_work(struct work_struct *work)
--{
--	struct mem_cgroup *memcg;
--
--	memcg = container_of(work, struct mem_cgroup, work_freeing);
--	__mem_cgroup_free(memcg);
--}
--
--static void free_rcu(struct rcu_head *rcu_head)
--{
--	struct mem_cgroup *memcg;
--
--	memcg = container_of(rcu_head, struct mem_cgroup, rcu_freeing);
--	INIT_WORK(&memcg->work_freeing, free_work);
--	schedule_work(&memcg->work_freeing);
--}
--
- /*
-  * Returns the parent mem_cgroup in memcgroup hierarchy with hierarchy enabled.
-  */
-@@ -6355,7 +6314,7 @@ static void mem_cgroup_css_free(struct cgroup *cont)
- 
- 	mem_cgroup_sockets_destroy(memcg);
- 
--	call_rcu(&memcg->rcu_freeing, free_rcu);
-+	__mem_cgroup_free(memcg);
- }
- 
- #ifdef CONFIG_MMU
 -- 
-1.8.0.2
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
