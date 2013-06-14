@@ -1,71 +1,86 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.11] cgroup: disallow rename(2) if
-	sane_behavior
-Date: Fri, 14 Jun 2013 15:44:42 +0800
-Message-ID: <51BAC9EA.7020100@huawei.com>
-References: <20130614034717.GA31533@htj.dyndns.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch 2/2] memcg: do not sleep on OOM waitqueue with full
+ charge context
+Date: Fri, 14 Jun 2013 11:29:12 +0200
+Message-ID: <20130614092912.GA10084@dhcp22.suse.cz>
+References: <20130606215425.GM15721@cmpxchg.org>
+ <alpine.DEB.2.02.1306061507330.15503@chino.kir.corp.google.com>
+ <20130607000222.GT15576@cmpxchg.org>
+ <alpine.DEB.2.02.1306111454030.4803@chino.kir.corp.google.com>
+ <20130612082817.GA6706@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1306121309500.23348@chino.kir.corp.google.com>
+ <20130612203705.GB17282@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1306121343500.24902@chino.kir.corp.google.com>
+ <20130613134826.GE23070@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1306131330170.8686@chino.kir.corp.google.com>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.02.1306131330170.8686@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20130614034717.GA31533-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>
+To: David Rientjes <rientjes@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 2013/6/14 11:47, Tejun Heo wrote:
-> cgroup's rename(2) isn't a proper migration implementation - it can't
-> move the cgroup to a different parent in the hierarchy.  All it can do
-> is swapping the name string for that cgroup.  This isn't useful and
-> can mislead users to think that cgroup supports proper cgroup-level
-> migration.  Disallow rename(2) if sane_behavior.
+On Thu 13-06-13 13:34:46, David Rientjes wrote:
+> On Thu, 13 Jun 2013, Michal Hocko wrote:
 > 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> ---
->  include/linux/cgroup.h |    2 ++
->  kernel/cgroup.c        |    7 +++++++
->  2 files changed, 9 insertions(+)
+> > > Right now it appears that that number of users is 0 and we're talking 
+> > > about a problem that was reported in 3.2 that was released a year and a 
+> > > half ago.  The rules of inclusion in stable also prohibit such a change 
+> > > from being backported, specifically "It must fix a real bug that bothers 
+> > > people (not a, "This could be a problem..." type thing)".
+> > 
+> > As you can see there is an user seeing this in 3.2. The bug is _real_ and
+> > I do not see what you are objecting against. Do you really think that
+> > sitting on a time bomb is preferred more?
+> > 
 > 
-> diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-> index 1760476..f975227 100644
-> --- a/include/linux/cgroup.h
-> +++ b/include/linux/cgroup.h
-> @@ -270,6 +270,8 @@ enum {
->  	 * - "release_agent" and "notify_on_release" are removed.
->  	 *   Replacement notification mechanism will be implemented.
->  	 *
-> +	 * - rename(2) is disallowed.
-> +	 *
->  	 * - memcg: use_hierarchy is on by default and the cgroup file for
->  	 *   the flag is not created.
->  	 */
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index 2e9da7b..7d78902 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -2508,6 +2508,13 @@ static int cgroup_rename(struct inode *old_dir, struct dentry *old_dentry,
->  
->  	cgrp = __d_cgrp(old_dentry);
->  
-> +	/*
-> +	 * This isn't a proper migration and its usefulness is very
-> +	 * limited.  Disallow if sane_behavior.
-> +	 */
-> +	if (cgroup_sane_behavior(cgrp))
-> +		return -EINVAL;
-> +
+> Nobody has reported the problem in seven months.  You're patching a kernel 
+> that's 18 months old.  Your "user" hasn't even bothered to respond to your 
+> backport. 
+>
+> This isn't a timebomb.
 
-Isn't -EPERM a better errno? VFS will return -EPERM if inode->rename is NULL.
+Doh. This is getting ridiculous! So you are claiming that oom blocking
+while the task might be sitting on an unpredictable amount of locks
+which could block oom victims to die is OK? I would consider it a _bug_
+and I am definitely backporting it to our kernel which is 3.0 based
+whether it end up in the stable or not.
 
->  	name = cgroup_alloc_name(new_dentry);
->  	if (!name)
->  		return -ENOMEM;
+Whether this is a general stable material I will leave for others (I
+would be voting for it because it definitely makes sense). The real
+regardless how many users suffer from it. The stable-or-not discussion
+shouldn't delay the fix for the current tree though. Or do you disagree
+with the patch itself?
+
+> > > We have deployed memcg on a very large number of machines and I can run a 
+> > > query over all software watchdog timeouts that have occurred by 
+> > > deadlocking on i_mutex during memcg oom.  It returns 0 results.
+> > 
+> > Do you capture /prc/<pid>/stack for each of them to find that your
+> > deadlock (and you have reported that they happen) was in fact caused by
+> > a locking issue? These kind of deadlocks might got unnoticed especially
+> > when the oom is handled by userspace by increasing the limit (my mmecg
+> > is stuck and increasing the limit a bit always helped).
+> > 
+> 
+> We dump stack traces for every thread on the system to the kernel log for 
+> a software watchdog timeout and capture it over the network for searching 
+> later.  We have not experienced any deadlock that even remotely resembles 
+> the stack traces in the chnagelog.  We do not reproduce this issue.
+
+OK. This could really rule it out for you. The analysis is not really
+trivial because locks might be hidden nicely but having the data is
+definitely useful.
+-- 
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
