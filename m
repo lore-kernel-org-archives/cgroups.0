@@ -1,108 +1,62 @@
-From: Glauber Costa <glommer@gmail.com>
-Subject: Re: [PATCH] memcg: make cache index determination more robust
-Date: Fri, 14 Jun 2013 15:24:00 +0400
-Message-ID: <20130614112359.GC4292@localhost.localdomain>
-References: <1371069808-1172-1-git-send-email-glommer@openvz.org>
- <20130613163849.GL23070@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 11/11] cgroup: use percpu refcnt for cgroup_subsys_states
+Date: Fri, 14 Jun 2013 14:55:39 +0200
+Message-ID: <20130614125539.GC10084@dhcp22.suse.cz>
+References: <1371096298-24402-1-git-send-email-tj@kernel.org>
+	<1371096298-24402-12-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=f9hmL7UUBzdK2ZOaxtOCvySpi434yuLCdDtW59nFU3s=;
-        b=cz0/K7Orj8d8325a9msUl7dwCpshy0NfjEcS0aJ3CFAMDCpYJa/XF9QhAho2LR9a+f
-         23hlhI1dC86xDKQYPxyzNbLcVHmNiii3QSRnHSrl7oczs3xbA7egzgUKwknGMc5AXzjK
-         flDteH/qbihP1QReQlEoL8HdlsXyYHDr8SP5gFt4oZ1x1U5DSwrdkIK4gvOTQtrr5M79
-         ajNCA4PuivHWekL0H57zAZQ4aobIKSktVqub0bbMvpRatqvBYmPl8nPgyiDY4C1VVttl
-         DwY5GUWgtPVQC5h5vr7eDJIw//WAc1TV/CSnmFkqBlpuiiS+CcS/hneqVZmaLUemKcaB
-         Sp8A==
-Content-Disposition: inline
-In-Reply-To: <20130613163849.GL23070@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: akpm@linux-foundation.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Glauber Costa <glommer@openvz.org>, Johannes Weiner <hannes@cmpxchg.org>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1371096298-24402-12-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mikulas Patocka <mpatocka-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Alasdair G. Kergon" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Thu, Jun 13, 2013 at 06:38:49PM +0200, Michal Hocko wrote:
-> On Wed 12-06-13 16:43:28, Glauber Costa wrote:
-> > I caught myself doing something like the following outside memcg core:
-> > 
-> > 	memcg_id = -1;
-> > 	if (memcg && memcg_kmem_is_active(memcg))
-> > 		memcg_id = memcg_cache_id(memcg);
-> > 
-> > to be able to handle all possible memcgs in a sane manner. In particular, the
-> > root cache will have kmemcg_id = -1 (just because we don't call memcg_kmem_init
-> > to the root cache since it is not limitable). We have always coped with that by
-> > making sure we sanitize which cache is passed to memcg_cache_id. Although this
-> > example is given for root, what we really need to know is whether or not a
-> > cache is kmem active.
-> > 
-> > But outside the memcg core testing for root, for instance, is not trivial since
-> > we don't export mem_cgroup_is_root. I ended up realizing that this tests really
-> > belong inside memcg_cache_id. This patch moves the tests inside memcg_cache_id
-> > and make sure it always return a meaningful value.
-> 
-> This is quite a mess, to be honest. Some callers test/require
-> memcg_can_account_kmem others !p->is_root_cache. Can we have that
-> unified, please?
-> 
-> Also the return value of this function is used mostly as an index to
-> memcg_params->memcg_caches array so returning -1 sounds like a bad idea.
-> Few other cases use it as a real id. Maybe we need to split this up.
-> 
-> Pulling the check inside the function is OK but can we settle with a
-> common pattern here, pretty please?
-> 
-BTW: Since the test for memcg_can_account_kmem is a bit stronger than
-memcg_kmem_is_active (the difference is that it tests the extra bit that we need
-to coordinate the static branches), I will test for that, instead. Like this:
+On Wed 12-06-13 21:04:58, Tejun Heo wrote:
+[...]
+> +/**
+> + * cgroup_destroy_locked - the first stage of cgroup destruction
+> + * @cgrp: cgroup to be destroyed
+> + *
+> + * css's make use of percpu refcnts whose killing latency shouldn't be
+> + * exposed to userland and are RCU protected.  Also, cgroup core needs to
+> + * guarantee that css_tryget() won't succeed by the time ->css_offline() is
+> + * invoked.  To satisfy all the requirements, destruction is implemented in
+> + * the following two steps.
+> + *
+> + * s1. Verify @cgrp can be destroyed and mark it dying.  Remove all
+> + *     userland visible parts and start killing the percpu refcnts of
+> + *     css's.  Set up so that the next stage will be kicked off once all
+> + *     the percpu refcnts are confirmed to be killed.
+> + *
+> + * s2. Invoke ->css_offline(), mark the cgroup dead and proceed with the
+> + *     rest of destruction.  Once all cgroup references are gone, the
+> + *     cgroup is RCU-freed.
+> + *
+> + * This function implements s1.  After this step, @cgrp is gone as far as
+> + * the userland is concerned and a new cgroup with the same name may be
+> + * created.  As cgroup doesn't care about the names internally, this
+> + * doesn't cause any problem.
 
-int memcg_cache_id(struct mem_cgroup *memcg)
-{
-        if (!memcg_can_account_kmem(memcg))                       
-                return -1;
-        return memcg->kmemcg_id;                                          
-}
+Glauber is this asumption correct for kmem caches naming scheme?
+I guess it should, but I would rather be sure this won't blow up later
+specially when caches might live longer than css_offline.
 
-This will allow us to consolidate the tests around it a bit in my follow up patch.
-
-> > Signed-off-by: Glauber Costa <glommer@openvz.org>
-> > Cc: Johannes Weiner <hannes@cmpxchg.org>
-> > Cc: Michal Hocko <mhocko@suse.cz>
-> > Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> > ---
-> >  mm/memcontrol.c | 4 +++-
-> >  1 file changed, 3 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index 2e851f4..749f7a4 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -3081,7 +3081,9 @@ void memcg_cache_list_add(struct mem_cgroup *memcg, struct kmem_cache *cachep)
-> >   */
-> >  int memcg_cache_id(struct mem_cgroup *memcg)
-> >  {
-> > -	return memcg ? memcg->kmemcg_id : -1;
-> > +	if (!memcg || !memcg_kmem_is_active(memcg))
-> > +		return -1;
-> > +	return memcg->kmemcg_id;
-> >  }
-> >  
-> >  /*
-> > -- 
-> > 1.8.1.4
-> > 
-> 
-> -- 
-> Michal Hocko
-> SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> + */
+>  static int cgroup_destroy_locked(struct cgroup *cgrp)
+>  	__releases(&cgroup_mutex) __acquires(&cgroup_mutex)
+>  {
+-- 
+Michal Hocko
+SUSE Labs
