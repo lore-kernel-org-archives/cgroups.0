@@ -1,242 +1,74 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH 11/11] cgroup: use percpu refcnt for cgroup_subsys_states
-Date: Fri, 14 Jun 2013 15:31:25 -0700
-Message-ID: <20130614223125.GD6593@mtj.dyndns.org>
+Date: Fri, 14 Jun 2013 22:35:22 -0700
+Message-ID: <20130615053522.GA7017@htj.dyndns.org>
 References: <1371096298-24402-1-git-send-email-tj@kernel.org>
  <1371096298-24402-12-git-send-email-tj@kernel.org>
  <20130614132026.GD10084@dhcp22.suse.cz>
+ <20130614223125.GD6593@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="LQksG6bCIzRHxTLp"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=7Yi8aE766/O/3UEGwRaUkC5/QlcKBoZr7b817njXuXY=;
-        b=vVKLpTAuSC203rKSKdyq5xjIBA7z/E4YaFlEoDAAQs4bqXKrST+CVtT9gWnBogB7Fs
-         8Ajls06sH4WOHYt92Uid9tJm+2RVLX/LCeYV6ZXGUgJNrlJSFcF2NmFZY5Kc1ZwfEGK3
-         QlISg31l4uipCKp2X7ReyXiJrEXqL115mt0M2bBKl3LSZU68VeOnfswvnyslZvcNgVzY
-         sLKbQq8OhioehJGqA8bdSebSmeLqka1RTSHLqyraGqlhzBMEfuVAc0p4KvAmTdDmEP5A
-         WwlOi4KHyHO1Qt/VuUQ7/J0+W8/Fw7qQSL/G6dlZLnse4MTS5Nm30RufhPX4kwDnqpxS
-         V1EA==
+        bh=3jWlDHrguJdMtwMCSoPO9IITrSseBK5yvkpUmPJ5NUE=;
+        b=0iD8HdOSJIiAQK5p9vkTF1AEjdVfCVA19VShicS96kmnAUi0/6a3oW2n7JOFoa45fZ
+         u4B6AFXawQqzaNlwEpytN77yMJlbr77cHJ0BtEOG58f1d4Rd26cVSbpEqIwWGrsAt3OP
+         fcikcQIFu6az4prmPzpfB0vpd/MVQylztyHerPuCZIJTbqCXlEGGR9XaNBzqneQnmrXH
+         yiQoG6arDe/lwa5Xk+k0hp4QeHcFsQMh/H6hzXmi5u/Q1y6+lQ62F+Xxmsz7jxha7uk3
+         9cfJTdWP8PJWnyT6QYh++BebIuhIJ2/ohNapTb6Wo0cC46EvsTGko7hWatMa2kYo0fwa
+         vu7A==
 Content-Disposition: inline
-In-Reply-To: <20130614132026.GD10084-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <20130614223125.GD6593-9pTldWuhBndy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Alasdair G. Kergon" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Mikulas Patocka <mpatocka-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
+On Fri, Jun 14, 2013 at 03:31:25PM -0700, Tejun Heo wrote:
+> I'll play with it a bit more on an actual machine and post more
+> results.  Test program attached.
 
---LQksG6bCIzRHxTLp
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+So, here are the results from the same test on a dual-socket 2-way
+NUMA opteron 8 core machine.
 
-Hello, Michal.
+Running on one CPU.
 
-On Fri, Jun 14, 2013 at 03:20:26PM +0200, Michal Hocko wrote:
-> I have no objections to change css reference counting scheme if the
-> guarantees we used to have are still valid. I am just missing some
-> comparisons. Do you have any numbers that would show benefits clearly?
+  copy size	atomic		percpu		diff in pct
+  0		535964443	616756827	+15.07%
+  32		399988186	378678713	 -5.33%
+  64		389067476	355073979	 -8.74%
+  128		342192631	315615300	 -7.77%
+  256		281208005	260598931	 -7.33%
+  512		188070912	193225269	 +2.74%
 
-Mikulas' high scalability dm test case on top of ramdisk was affected
-severely when css refcnting was added to track the original issuer's
-cgroup context.  That probably is one of the more severe cases.
+Running on all eight cores.
 
-> You are mentioning that especially controllers that are strongly per-cpu
-> oriented will see the biggest improvements. What about others?
-> A single atomic_add resp. atomic_dec_return is much less heavy than the
+  copy size	atomic		percpu		diff in pct
+  0		121324328	4889425511	+3,930.05%
+  32		 96170193	2999613380	+3,019.07%
+  64		 98139061	2813894184	+2,767.25%
+  128		112610025	2503229487	+2,122.92%
+  256		 96828114	2069865752	+2,037.67%
+  512		 95858297	1537726109	+1,504.17%
 
-Even with preemption enabled, the percpu ref get/put will be under ten
-instructions which touch two memory areas - the preemption counter
-which is usually very hot anyway and the percpu refcnt itself.  It
-shouldn't be much slower than the atomic ops.  If the kernel has
-preemption disabled, percpu_ref is actually likely to be cheaper even
-on single CPU.
+Ration of all cores / single core.
 
-So, here are some numbers from the attached test program.  The test is
-very simple - inc ref, copy N bytes into per-cpu buf, dec ref - and
-see how many times it can do that in given amount of time - 15s.  Both
-single CPU and all CPUs scenarios are tested.  The test is run inside
-qemu on my laptop - mobile i7 2 core / 4 threads.  Yeah, I know.  I'll
-run it on a proper test machine later today.
+  copy size	atomic		percpu
+  0		0.23		7.93
+  32		0.24		7.92
+  64		0.25		7.92
+  128		0.33		7.93
+  256		0.34		7.94
+  512		0.51		7.96
 
-Single CPU case.  Preemption enabled.  This is the best scenario for
-atomic_t.  No cacheline bouncing at all.
-
-    copy size  atomic_t		  percpu_ref	   diff
-
-	0      1198217077	  1747505555	  +45.84%
-	32	505504457	   465714742	   -7.87%
-	64	511521639	   470741887	   -7.97%
-	128	485319952	   434920137	  -10.38%
-	256	421809359	   384871731	   -8.76%
-	512	330527059	   307587622	   -6.94%
-
-For some reason, percpu_ref wins if copy_size is zero.  I don't know
-why that is.  The body isn't optimized out so it's still doing all the
-refcnting.  Maybe the CPU doesn't have enough work to mask pipeline
-bubbles from atomic ops?  In other cases, it's slower by around or
-under 10% which isn't exactly noise but this is the worst possible
-scenario.  Unless this is the only thing a pinned CPU is doing, it's
-unlikely to be noticeable.
-
-Now doing the same thing on multiple CPUs.  Note that while this is
-the best scenario for percpu_ref, the hardware the test is run on is
-very favorable to atomic_t - it's just two cores on the same package
-sharing the L3 cache, so cacheline ping-poinging is relatively cheap.
-
-    copy size  atomic_t		  percpu_ref	   diff
-
-	0      342659959	  3794775739	  +1007.45%
-	32     401933493	  1337286466	   +232.71%
-	64     385459752	  1353978982	   +251.26%
-	128    401379622	  1234780968	   +207.63%
-	256    401170676	  1052511682	   +162.36%
-	512    387796881	   794101245	   +104.77%
-
-Even on this machine, the difference is huge.  If the refcnt is used
-from different CPUs in any frequency, percpu_ref will destroy
-atomic_t.  Also note that percpu_ref will scale perfectly as the
-number of CPUs increases while atomic_t will get worse.
-
-I'll play with it a bit more on an actual machine and post more
-results.  Test program attached.
+Note exactly 8 - the cores do share quite a bit of resources after all
+- but pretty close.
 
 Thanks.
 
 -- 
 tejun
-
---LQksG6bCIzRHxTLp
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="test-pcpuref.c"
-
-#include <linux/module.h>
-#include <linux/moduleparam.h>
-#include <asm/atomic.h>
-#include <linux/percpu-refcount.h>
-#include <linux/workqueue.h>
-#include <linux/completion.h>
-
-static struct workqueue_struct *my_wq;
-
-static int test_all_cpus = 0;
-module_param_named(all_cpus, test_all_cpus, int, 0444);
-
-static int test_duration = 15;
-module_param_named(duration, test_duration, int, 0444);
-
-static int test_copy_bytes = 32;
-module_param_named(copy_bytes, test_copy_bytes, int, 0444);
-
-static char test_src_buf[1024];
-static DEFINE_PER_CPU(char [1024], test_dst_buf);
-static DEFINE_PER_CPU(struct work_struct, test_work);
-
-static atomic_t test_atomic_ref = ATOMIC_INIT(1);
-
-static void test_atomic_workfn(struct work_struct *work)
-{
-	unsigned long end = jiffies + test_duration * HZ;
-	unsigned long cnt = 0;
-
-	do {
-		int bytes = test_copy_bytes;
-
-		atomic_inc(&test_atomic_ref);
-		while (bytes) {
-			int todo = min_t(int, bytes, 1024);
-
-			memcpy(*this_cpu_ptr(&test_dst_buf), test_src_buf, todo);
-			bytes -= todo;
-		}
-		cnt++;
-		atomic_dec(&test_atomic_ref);
-	} while (time_before(jiffies, end));
-
-	printk("XXX atomic on CPU %d completed %lu loops\n",
-	       smp_processor_id(), cnt);
-}
-
-static struct percpu_ref test_pcpu_ref;
-static DECLARE_COMPLETION(test_cpu_ref_done);
-
-static void test_pcpu_release(struct percpu_ref *ref)
-{
-	complete(&test_cpu_ref_done);
-}
-
-static void test_pcpu_workfn(struct work_struct *work)
-{
-	unsigned long end = jiffies + test_duration * HZ;
-	unsigned long cnt = 0;
-
-	do {
-		int bytes = test_copy_bytes;
-
-		percpu_ref_get(&test_pcpu_ref);
-		while (bytes) {
-			int todo = min_t(int, bytes, 1024);
-
-			memcpy(*this_cpu_ptr(&test_dst_buf), test_src_buf, todo);
-			bytes -= todo;
-		}
-		cnt++;
-		percpu_ref_put(&test_pcpu_ref);
-	} while (time_before(jiffies, end));
-
-	printk("XXX percpu on CPU %d completed %lu loops\n",
-	       smp_processor_id(), cnt);
-}
-
-static int test_pcpuref_init(void)
-{
-	int cpu;
-
-	if (percpu_ref_init(&test_pcpu_ref, test_pcpu_release))
-		return -ENOMEM;
-
-	my_wq = alloc_workqueue("test-pcpuref", WQ_CPU_INTENSIVE, 0);
-	if (!my_wq) {
-		percpu_ref_cancel_init(&test_pcpu_ref);
-		return -ENOMEM;
-	}
-
-	printk("XXX testing atomic_t for %d secs\n", test_duration);
-
-	for_each_online_cpu(cpu) {
-		INIT_WORK(per_cpu_ptr(&test_work, cpu), test_atomic_workfn);
-		queue_work_on(cpu, my_wq, per_cpu_ptr(&test_work, cpu));
-		if (!test_all_cpus)
-			break;
-	}
-
-	flush_workqueue(my_wq);
-
-	printk("XXX testing percpu_ref for %d secs\n", test_duration);
-
-	for_each_online_cpu(cpu) {
-		INIT_WORK(per_cpu_ptr(&test_work, cpu), test_pcpu_workfn);
-		queue_work_on(cpu, my_wq, per_cpu_ptr(&test_work, cpu));
-		if (!test_all_cpus)
-			break;
-	}
-
-	flush_workqueue(my_wq);
-
-	percpu_ref_kill(&test_pcpu_ref);
-	wait_for_completion(&test_cpu_ref_done);
-
-	return 0;
-}
-module_init(test_pcpuref_init);
-
-static void test_pcpuref_exit(void)
-{
-	destroy_workqueue(my_wq);
-}
-module_exit(test_pcpuref_exit);
-
-MODULE_LICENSE("GPL v2");
-
---LQksG6bCIzRHxTLp--
