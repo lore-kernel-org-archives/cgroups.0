@@ -1,46 +1,38 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch v4] Soft limit rework
-Date: Mon, 17 Jun 2013 16:01:08 +0200
-Message-ID: <20130617140108.GE5018@dhcp22.suse.cz>
-References: <1370254735-13012-1-git-send-email-mhocko@suse.cz>
- <20130611154353.GF31277@dhcp22.suse.cz>
+From: Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-3.11] cgroup: disallow rename(2) if
+  sane_behavior
+Date: Mon, 17 Jun 2013 18:33:53 +0200
+Message-ID: <20130617163353.GD22846@tango.0pointer.de>
+References: <20130614034717.GA31533@htj.dyndns.org>
+ <20130616071648.GA1978@tango.0pointer.de>
+ <20130616221556.GC28587@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20130611154353.GF31277@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20130616221556.GC28587-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Glauber Costa <glommer@gmail.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Tue 11-06-13 17:43:53, Michal Hocko wrote:
-> JFYI, I have rebased the series on top of the current mmotm tree to
-> catch up with Mel's changes in reclaim and other small things here and
-> there. To be sure that the things are still good I have started my tests
-> again which will take some time.
+On Sun, 16.06.13 15:15, Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org) wrote:
 
-And it took way more time than I would like but the current mmotm is
-broken and crashes/hangs and misbehaves in strange ways. At first I
-thought it is my -mm git tree that is broken but then when I started
-testing with linux-next I could see issues as well. I was able to reduce
-the space to slab shrinkers rework but bisection led to nothing
-reasonable. I will report those issues in a separate email when I
-collect all necessary information.
+> We want composability regardless of migration, but as for migration
+> itself, an alternative could be having an atomic "move everything in
+> cgroup A to cgroup B" interface, so that the admin (whether human or
+> base system software) can set up a new cgroup and then move the member
+> tasks atomically.
 
-In the meantime I will retest on top of my -mm tree without slab
-shrinkers patches applied. This should be OK for the soft reclaim work
-because memcg shrinkers are still not merged into mm tree and they
-shouldn't be affected by the soft reclaim as the reclaim is per
-shrink_zone now.
+I am not sure this would cut it for containers. For containers we'll
+usually have a fully populated cgroup subtree, and if we want to migrate
+that somewhere else, then we'd something that works recursively and
+allows us to not tell the container at all about the move (i.e. the
+namespace of cgroupfs the container sees should ideall stay entirely
+unaltered by the move).
+
+Lennart
 
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Lennart Poettering - Red Hat, Inc.
