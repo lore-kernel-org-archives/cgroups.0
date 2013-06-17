@@ -1,70 +1,58 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 11/11] cgroup: use percpu refcnt for cgroup_subsys_states
-Date: Mon, 17 Jun 2013 15:27:44 +0200
-Message-ID: <20130617132744.GB5018@dhcp22.suse.cz>
-References: <1371096298-24402-1-git-send-email-tj@kernel.org>
- <1371096298-24402-12-git-send-email-tj@kernel.org>
- <20130614132026.GD10084@dhcp22.suse.cz>
- <20130614223125.GD6593@mtj.dyndns.org>
- <20130615053522.GA7017@htj.dyndns.org>
+Subject: Re: [PATCH v2 0/2] slightly rework memcg cache id determination
+Date: Mon, 17 Jun 2013 15:30:49 +0200
+Message-ID: <20130617133049.GC5018@dhcp22.suse.cz>
+References: <1371233076-936-1-git-send-email-glommer@openvz.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20130615053522.GA7017-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+In-Reply-To: <1371233076-936-1-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Alasdair G. Kergon" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Mikulas Patocka <mpatocka-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 
-On Fri 14-06-13 22:35:22, Tejun Heo wrote:
-> On Fri, Jun 14, 2013 at 03:31:25PM -0700, Tejun Heo wrote:
-> > I'll play with it a bit more on an actual machine and post more
-> > results.  Test program attached.
+On Fri 14-06-13 14:04:34, Glauber Costa wrote:
+> Michal,
 > 
-> So, here are the results from the same test on a dual-socket 2-way
-> NUMA opteron 8 core machine.
+> Let me know if this is more acceptable to you. I didn't take your suggestion of
+> having an id and idx functions, because I think this could potentially be even
+> more confusing: in the sense that people would need to wonder a bit what is the
+> difference between them.
+
+Any clean up is better than nothing. I still think that split up and
+making the 2 functions explicit would be better but I do not think this
+is really that important. 
+
+> Note please that we never use the id as an array index outside of memcg core.
+
+Now but that doesn't prevent future abuse.
+
+> So for memcg core, I have changed, in Patch 2, each direct use of idx as an
+> index to include a VM_BUG_ON in case we would get an invalid index.
+
+OK. If you had an _idx variant then you wouldn't need to add that
+VM_BUG_ON at every single place where you use it as an index and do not
+risk that future calls would forget about VM_BUG_ON.
+
+> For the other cases, I have consolidated a bit the usage pattern around
+> memcg_cache_id.  Now the tests are all pretty standardized.
+
+OK, Great!
+ 
+> Glauber Costa (2):
+>   memcg: make cache index determination more robust
+>   memcg: consolidate callers of memcg_cache_id
 > 
-> Running on one CPU.
+>  mm/memcontrol.c | 19 ++++++++++++-------
+>  1 file changed, 12 insertions(+), 7 deletions(-)
 > 
->   copy size	atomic		percpu		diff in pct
->   0		535964443	616756827	+15.07%
->   32		399988186	378678713	 -5.33%
->   64		389067476	355073979	 -8.74%
->   128		342192631	315615300	 -7.77%
->   256		281208005	260598931	 -7.33%
->   512		188070912	193225269	 +2.74%
-> 
-> Running on all eight cores.
-> 
->   copy size	atomic		percpu		diff in pct
->   0		121324328	4889425511	+3,930.05%
->   32		 96170193	2999613380	+3,019.07%
->   64		 98139061	2813894184	+2,767.25%
->   128		112610025	2503229487	+2,122.92%
->   256		 96828114	2069865752	+2,037.67%
->   512		 95858297	1537726109	+1,504.17%
-> 
-> Ration of all cores / single core.
-> 
->   copy size	atomic		percpu
->   0		0.23		7.93
->   32		0.24		7.92
->   64		0.25		7.92
->   128		0.33		7.93
->   256		0.34		7.94
->   512		0.51		7.96
-> 
-> Note exactly 8 - the cores do share quite a bit of resources after all
-> - but pretty close.
+> -- 
+> 1.8.1.4
 > 
 
-Thanks for your results! Yes the boost can be really high. I will try to
-measure some memcg workloads as soon as I have some spare cycles. I do
-not expect a big win but I also do not think this would regress.
-
-Thanks.
 -- 
 Michal Hocko
 SUSE Labs
