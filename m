@@ -1,56 +1,70 @@
-From: "azurIt" <azurit@pobox.sk>
-Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=5D_memcg=3A_do_not_trap_chargers_with_full_callstack_on_OOM?=
-Date: Mon, 17 Jun 2013 12:21:34 +0200
-Message-ID: <20130617122134.2E072BA8@pobox.sk>
-References: <20130208152402.GD7557@dhcp22.suse.cz>, <20130208165805.8908B143@pobox.sk>, <20130208171012.GH7557@dhcp22.suse.cz>, <20130208220243.EDEE0825@pobox.sk>, <20130210150310.GA9504@dhcp22.suse.cz>, <20130210174619.24F20488@pobox.sk>, <20130211112240.GC19922@dhcp22.suse.cz>, <20130222092332.4001E4B6@pobox.sk>, <20130606160446.GE24115@dhcp22.suse.cz>, <20130606181633.BCC3E02E@pobox.sk> <20130607131157.GF8117@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 11/11] cgroup: use percpu refcnt for cgroup_subsys_states
+Date: Mon, 17 Jun 2013 15:27:44 +0200
+Message-ID: <20130617132744.GB5018@dhcp22.suse.cz>
+References: <1371096298-24402-1-git-send-email-tj@kernel.org>
+ <1371096298-24402-12-git-send-email-tj@kernel.org>
+ <20130614132026.GD10084@dhcp22.suse.cz>
+ <20130614223125.GD6593@mtj.dyndns.org>
+ <20130615053522.GA7017@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130607131157.GF8117@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20130615053522.GA7017-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Alasdair G. Kergon" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Mikulas Patocka <mpatocka-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
->Here we go. I hope I didn't screw anything (Johannes might double check)
->because there were quite some changes in the area since 3.2. Nothing
->earth shattering though. Please note that I have only compile tested
->this. Also make sure you remove the previous patches you have from me.
+On Fri 14-06-13 22:35:22, Tejun Heo wrote:
+> On Fri, Jun 14, 2013 at 03:31:25PM -0700, Tejun Heo wrote:
+> > I'll play with it a bit more on an actual machine and post more
+> > results.  Test program attached.
+> 
+> So, here are the results from the same test on a dual-socket 2-way
+> NUMA opteron 8 core machine.
+> 
+> Running on one CPU.
+> 
+>   copy size	atomic		percpu		diff in pct
+>   0		535964443	616756827	+15.07%
+>   32		399988186	378678713	 -5.33%
+>   64		389067476	355073979	 -8.74%
+>   128		342192631	315615300	 -7.77%
+>   256		281208005	260598931	 -7.33%
+>   512		188070912	193225269	 +2.74%
+> 
+> Running on all eight cores.
+> 
+>   copy size	atomic		percpu		diff in pct
+>   0		121324328	4889425511	+3,930.05%
+>   32		 96170193	2999613380	+3,019.07%
+>   64		 98139061	2813894184	+2,767.25%
+>   128		112610025	2503229487	+2,122.92%
+>   256		 96828114	2069865752	+2,037.67%
+>   512		 95858297	1537726109	+1,504.17%
+> 
+> Ration of all cores / single core.
+> 
+>   copy size	atomic		percpu
+>   0		0.23		7.93
+>   32		0.24		7.92
+>   64		0.25		7.92
+>   128		0.33		7.93
+>   256		0.34		7.94
+>   512		0.51		7.96
+> 
+> Note exactly 8 - the cores do share quite a bit of resources after all
+> - but pretty close.
+> 
 
+Thanks for your results! Yes the boost can be really high. I will try to
+measure some memcg workloads as soon as I have some spare cycles. I do
+not expect a big win but I also do not think this would regress.
 
-Hi Michal,
-
-it, unfortunately, didn't work. Everything was working fine but original =
-problem is still occuring. I'm unable to send you stacks or more info bec=
-ause problem is taking down the whole server for some time now (don't kno=
-w what exactly caused it to start happening, maybe newer versions of 3.2.=
-x). But i'm sure of one thing - when problem occurs, nothing is able to a=
-ccess hard drives (every process which tries it is freezed until problem =
-is resolved or server is rebooted). Problem is fixed after killing proces=
-ses from cgroup which caused it and everything immediatelly starts to wor=
-k normally. I find this out by keeping terminal opened from another serve=
-r to one where my problem is occuring quite often and running several app=
-s there (htop, iotop, etc.). When problem occurs, all apps which wasn't w=
-orking with HDD was ok. The htop proved to be very usefull here because i=
-t's only reading proc filesystem and is also able to send KILL signals - =
-i was able to resolve the problem with it
-  without rebooting the server.
-
-I created a special daemon (about month ago) which is able to detect and =
-fix the problem so i'm not having server outages now. The point was to NO=
-T access anything which is stored on HDDs, the daemon is only reading inf=
-o from cgroup filesystem and sending KILL signals to processes. Maybe i s=
-hould be able to also read stack files before killing, i will try it.
-
-Btw, which vanilla kernel includes this patch?
-
-Thank you and everyone involved very much for time and help.
-
-azur
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks.
+-- 
+Michal Hocko
+SUSE Labs
