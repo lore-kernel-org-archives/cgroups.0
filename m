@@ -1,48 +1,63 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 11/11] cgroup: use percpu refcnt for cgroup_subsys_states
-Date: Mon, 17 Jun 2013 10:16:51 -0700
-Message-ID: <20130617171651.GE32663@mtj.dyndns.org>
-References: <1371096298-24402-1-git-send-email-tj@kernel.org>
- <1371096298-24402-12-git-send-email-tj@kernel.org>
- <20130614132026.GD10084@dhcp22.suse.cz>
- <20130614223125.GD6593@mtj.dyndns.org>
- <20130615053522.GA7017@htj.dyndns.org>
- <20130617132744.GB5018@dhcp22.suse.cz>
+From: Glauber Costa <glommer@gmail.com>
+Subject: Re: [PATCH v2 0/2] slightly rework memcg cache id determination
+Date: Tue, 18 Jun 2013 03:13:40 +0400
+Message-ID: <20130617231339.GA3306@localhost.localdomain>
+References: <1371233076-936-1-git-send-email-glommer@openvz.org>
+ <20130617133049.GC5018@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+        h=date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=o442r442E35YtG4Q6nMFp8acbjQTv+lKpVAgxmZiviM=;
-        b=zQtiOYHbXUJDG8osg72cJL+JGrID24k+D41Ww7CMUZxgWcNF2Tm32iC9LrxIdjDaOJ
-         Sf7n7ezI0hCNhXuQqiPeSfUaSTcZhdin+OzpLA9CMbbOqOGbVyz5rPRc47Msn3MZBT8c
-         ArD7a/zMjEgcn2FFAcJ3ig9V1bk4Dy8csSw8/ahY4jKMVlggKIyouVqEBF9V/MZXNxh7
-         GLATbKhuQiHEub4tHekk+KREiNcCih7j//oCYRwlrdLrYtTWOZl7ua3pQueibsY5i9j6
-         cr/DBf2YPtafJY4vda6HA87bfopMDt2R/leB1Q+IabNMfb9HUDaEi2nQioh34fDS2io5
-         4n/w==
+        bh=/XV94cJLncc7IydB9Qr2itWiHmMSDhPPFw9ICqasFzc=;
+        b=VXesb8+vsU9GCJG8jprHCi/Xkuij/9enJqmgMcO10ZklT6aJv/Vi/HrvPopR5sSxc5
+         9Jdhfc+QNSdeEXo9EujBkkCGSHktdjLVr4fr+XTyozCIlK7SaIuSJ4T6an+K91q34Cw8
+         IALN8iU1hR4oIt6qguV2orY/qfUeSDQBPUoTbnpX4kyEN/5emMl18OA/KFcR1PYYGpo0
+         IC2UizJMmcRe8DPHA5OadOnJFLqECwuYjcr+b0lIu7NxCzfbiL8Ev87f2c5vsFsliQKN
+         +/1Se4Wi4uKo9jfQCcEKQYiULH+Uo/O/V790lLau1tfI2Ugl+AOxZpqzPPxBjwUMMtsm
+         3aGA==
 Content-Disposition: inline
-In-Reply-To: <20130617132744.GB5018-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20130617133049.GC5018@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Alasdair G. Kergon" <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Mikulas Patocka <mpatocka-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-mm <linux-mm@kvack.org>, cgroups <cgroups@vger.kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Glauber Costa <glommer@openvz.org>
 
-Hello, Michal.
+On Mon, Jun 17, 2013 at 03:30:49PM +0200, Michal Hocko wrote:
+> On Fri 14-06-13 14:04:34, Glauber Costa wrote:
+> > Michal,
+> > 
+> > Let me know if this is more acceptable to you. I didn't take your suggestion of
+> > having an id and idx functions, because I think this could potentially be even
+> > more confusing: in the sense that people would need to wonder a bit what is the
+> > difference between them.
+> 
+> Any clean up is better than nothing. I still think that split up and
+> making the 2 functions explicit would be better but I do not think this
+> is really that important. 
+> 
+Being all the same to you, I prefer like this. At least while the users are self
+contained and live inside memcg core. This is because I believe having two functions
+can be a bit confusing, and while not *totally* confusing, the array-like users
+are relatively few.
 
-On Mon, Jun 17, 2013 at 03:27:44PM +0200, Michal Hocko wrote:
-> Thanks for your results! Yes the boost can be really high. I will try to
-> measure some memcg workloads as soon as I have some spare cycles. I do
-> not expect a big win but I also do not think this would regress.
+ 
+> OK. If you had an _idx variant then you wouldn't need to add that
+> VM_BUG_ON at every single place where you use it as an index and do not
+> risk that future calls would forget about VM_BUG_ON.
+> 
+> > For the other cases, I have consolidated a bit the usage pattern around
+> > memcg_cache_id.  Now the tests are all pretty standardized.
+> 
+> OK, Great!
+>  
+Thanks Michal! Please take a look at the individual patches if you can.
 
-With the just committed RCU-sched conversion, the slowdown even on
-single CPU configuration w/ CONFIG_PREEMPT should be in the range of a
-few percent points in the worst cases and will mostly be in the noise
-in any realistic scenarios.  So, yeah, looks pretty good to me. :)
-
-Thanks.
-
--- 
-tejun
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
