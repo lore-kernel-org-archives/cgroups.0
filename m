@@ -1,85 +1,46 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.11] cgroup: disallow rename(2) if
- sane_behavior
-Date: Mon, 17 Jun 2013 15:51:22 +0200
-Message-ID: <20130617135122.GD5018@dhcp22.suse.cz>
-References: <20130614034717.GA31533@htj.dyndns.org>
- <20130616071648.GA1978@tango.0pointer.de>
- <20130616221556.GC28587@htj.dyndns.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch v4] Soft limit rework
+Date: Mon, 17 Jun 2013 16:01:08 +0200
+Message-ID: <20130617140108.GE5018@dhcp22.suse.cz>
+References: <1370254735-13012-1-git-send-email-mhocko@suse.cz>
+ <20130611154353.GF31277@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20130616221556.GC28587-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20130611154353.GF31277@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Glauber Costa <glommer@gmail.com>
 
-On Sun 16-06-13 15:15:56, Tejun Heo wrote:
-> Hey, Lennart.
-> 
-> On Sun, Jun 16, 2013 at 09:16:48AM +0200, Lennart Poettering wrote:
-> > Note that in the long run I'd really like to see functionality added to
-> > move a full cgroup subtree to a different point in the tree, so that we
-> > can migrate containers and such atomically from one partition to
-> 
-> As some configurations are still affected by who one's parent is, we
-> can't do migration using rename(2) right now. 
+On Tue 11-06-13 17:43:53, Michal Hocko wrote:
+> JFYI, I have rebased the series on top of the current mmotm tree to
+> catch up with Mel's changes in reclaim and other small things here and
+> there. To be sure that the things are still good I have started my tests
+> again which will take some time.
 
-> Some configurations which are legitimate under the current parent
-> might be invalid when put under a different parent. 
+And it took way more time than I would like but the current mmotm is
+broken and crashes/hangs and misbehaves in strange ways. At first I
+thought it is my -mm git tree that is broken but then when I started
+testing with linux-next I could see issues as well. I was able to reduce
+the space to slab shrinkers rework but bisection led to nothing
+reasonable. I will report those issues in a separate email when I
+collect all necessary information.
 
-yes, for example all configurations where old parent is more restrictive
-than the new one. For example. hardlimit in memcg or even more
-oom_control, swappiness or use_hierarchy which are expected to be
-consistent down the hierarchy.
-
-> For migration to
-> work, all configurations should be composable, which currently isn't
-> true.  Off the top of my head, I think the offending ones are cpuset
-> and device_cgroup, and I *think* the scheme Michal proposed at LSF
-> breaks composability.
-
-The biggest problem I can see is how the core cgroup code know when it is
-OK to migrate. There might be some ongoing operations that depend on the
-current tree structure. For example the hierarchical reclaim or oom
-etc..
-
-I do not think that soft reclaim which I was talking about at LSF would
-change anything here as it would be pretty much the same as the hard
-limit. But that is not so important.
-
-> In general, configuration composability is something we want.  We
-> don't want descendant configs being updated or becoming invalid as
-> configurations of an ancestor change - any configuration should be
-> valid.  The effects of some configurations could be no-op depending on
-> how the ancestors are configured, but that's just the configuration
-> being interpreted within the limits of its ancestors.
-> 
-> Li is working to make cpuset composable.  As for device_cgroup, I'm
-> not sure what to do.  Aristeu, I know you already put in too much work
-> into devcg and I'm sorry that I'm raising this now but would you be
-> interested in tackling this too?
-> 
-> We want composability regardless of migration, but as for migration
-> itself, an alternative could be having an atomic "move everything in
-> cgroup A to cgroup B" interface, so that the admin (whether human or
-> base system software) can set up a new cgroup and then move the member
-> tasks atomically.
-> 
-> > another, without the container having to be aware of this (which of
-> > course implies that we have a somewhat more useful cgroup namespacing
-> > solution in place).
-> 
-> But such approach would definitely be visible to containers.  :(
-> 
-> Thanks.
-> 
-> -- 
-> tejun
+In the meantime I will retest on top of my -mm tree without slab
+shrinkers patches applied. This should be OK for the soft reclaim work
+because memcg shrinkers are still not merged into mm tree and they
+shouldn't be affected by the soft reclaim as the reclaim is per
+shrink_zone now.
 
 -- 
 Michal Hocko
 SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
