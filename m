@@ -1,7 +1,7 @@
 From: Michal Hocko <mhocko@suse.cz>
-Subject: [PATCH v5 2/8] memcg: Get rid of soft-limit tree infrastructure
-Date: Tue, 18 Jun 2013 14:09:41 +0200
-Message-ID: <1371557387-22434-3-git-send-email-mhocko@suse.cz>
+Subject: [PATCH v5 4/8] memcg: enhance memcg iterator to support predicates
+Date: Tue, 18 Jun 2013 14:09:43 +0200
+Message-ID: <1371557387-22434-5-git-send-email-mhocko@suse.cz>
 References: <1371557387-22434-1-git-send-email-mhocko@suse.cz>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1371557387-22434-1-git-send-email-mhocko@suse.cz>
@@ -13,416 +13,326 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Glauber Costa <glommer@gmail.com>
 
-Now that the soft limit is integrated to the reclaim directly the whole
-soft-limit tree infrastructure is not needed anymore. Rip it out.
+The caller of the iterator might know that some nodes or even subtrees
+should be skipped but there is no way to tell iterators about that so
+the only choice left is to let iterators to visit each node and do the
+selection outside of the iterating code. This, however, doesn't scale
+well with hierarchies with many groups where only few groups are
+interesting.
 
-Changes v1->v2
-- mem_cgroup_reclaimable is no longer used
-- test_mem_cgroup_node_reclaimable is not used outside NUMA code
+This patch adds mem_cgroup_iter_cond variant of the iterator with a
+callback which gets called for every visited node. There are three
+possible ways how the callback can influence the walk. Either the node
+is visited, it is skipped but the tree walk continues down the tree or
+the whole subtree of the current group is skipped.
 
 Signed-off-by: Michal Hocko <mhocko@suse.cz>
-Reviewed-by: Glauber Costa <glommer@openvz.org>
-Reviewed-by: Tejun Heo <tj@kernel.org>
 ---
- mm/memcontrol.c | 265 +-------------------------------------------------------
- 1 file changed, 2 insertions(+), 263 deletions(-)
+ include/linux/memcontrol.h | 48 +++++++++++++++++++++++++----
+ mm/memcontrol.c            | 77 ++++++++++++++++++++++++++++++++++++----------
+ mm/vmscan.c                | 16 +++-------
+ 3 files changed, 108 insertions(+), 33 deletions(-)
 
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 065ecef..1276be3 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -41,6 +41,23 @@ struct mem_cgroup_reclaim_cookie {
+ 	unsigned int generation;
+ };
+ 
++enum mem_cgroup_filter_t {
++	VISIT,		/* visit current node */
++	SKIP,		/* skip the current node and continue traversal */
++	SKIP_TREE,	/* skip the whole subtree and continue traversal */
++};
++
++/*
++ * mem_cgroup_filter_t predicate might instruct mem_cgroup_iter_cond how to
++ * iterate through the hierarchy tree. Each tree element is checked by the
++ * predicate before it is returned by the iterator. If a filter returns
++ * SKIP or SKIP_TREE then the iterator code continues traversal (with the
++ * next node down the hierarchy or the next node that doesn't belong under the
++ * memcg's subtree).
++ */
++typedef enum mem_cgroup_filter_t
++(*mem_cgroup_iter_filter)(struct mem_cgroup *memcg, struct mem_cgroup *root);
++
+ #ifdef CONFIG_MEMCG
+ /*
+  * All "charge" functions with gfp_mask should use GFP_KERNEL or
+@@ -108,9 +125,18 @@ mem_cgroup_prepare_migration(struct page *page, struct page *newpage,
+ extern void mem_cgroup_end_migration(struct mem_cgroup *memcg,
+ 	struct page *oldpage, struct page *newpage, bool migration_ok);
+ 
+-struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *,
+-				   struct mem_cgroup *,
+-				   struct mem_cgroup_reclaim_cookie *);
++struct mem_cgroup *mem_cgroup_iter_cond(struct mem_cgroup *root,
++				   struct mem_cgroup *prev,
++				   struct mem_cgroup_reclaim_cookie *reclaim,
++				   mem_cgroup_iter_filter cond);
++
++static inline struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
++				   struct mem_cgroup *prev,
++				   struct mem_cgroup_reclaim_cookie *reclaim)
++{
++	return mem_cgroup_iter_cond(root, prev, reclaim, NULL);
++}
++
+ void mem_cgroup_iter_break(struct mem_cgroup *, struct mem_cgroup *);
+ 
+ /*
+@@ -180,7 +206,8 @@ static inline void mem_cgroup_dec_page_stat(struct page *page,
+ 	mem_cgroup_update_page_stat(page, idx, -1);
+ }
+ 
+-bool mem_cgroup_soft_reclaim_eligible(struct mem_cgroup *memcg,
++enum mem_cgroup_filter_t
++mem_cgroup_soft_reclaim_eligible(struct mem_cgroup *memcg,
+ 		struct mem_cgroup *root);
+ 
+ void __mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx);
+@@ -295,6 +322,14 @@ static inline void mem_cgroup_end_migration(struct mem_cgroup *memcg,
+ 		struct page *oldpage, struct page *newpage, bool migration_ok)
+ {
+ }
++static inline struct mem_cgroup *
++mem_cgroup_iter_cond(struct mem_cgroup *root,
++		struct mem_cgroup *prev,
++		struct mem_cgroup_reclaim_cookie *reclaim,
++		mem_cgroup_iter_filter cond)
++{
++	return NULL;
++}
+ 
+ static inline struct mem_cgroup *
+ mem_cgroup_iter(struct mem_cgroup *root,
+@@ -358,10 +393,11 @@ static inline void mem_cgroup_dec_page_stat(struct page *page,
+ }
+ 
+ static inline
+-bool mem_cgroup_soft_reclaim_eligible(struct mem_cgroup *memcg,
++enum mem_cgroup_filter_t
++mem_cgroup_soft_reclaim_eligible(struct mem_cgroup *memcg,
+ 		struct mem_cgroup *root)
+ {
+-	return false;
++	return VISIT;
+ }
+ 
+ static inline void mem_cgroup_split_huge_fixup(struct page *head)
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index ea10f73..cdc8aed 100644
+index 90217f3..1364ca5 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -39,7 +39,6 @@
- #include <linux/limits.h>
- #include <linux/export.h>
- #include <linux/mutex.h>
--#include <linux/rbtree.h>
- #include <linux/slab.h>
- #include <linux/swap.h>
- #include <linux/swapops.h>
-@@ -137,7 +136,6 @@ static const char * const mem_cgroup_lru_names[] = {
-  */
- enum mem_cgroup_events_target {
- 	MEM_CGROUP_TARGET_THRESH,
--	MEM_CGROUP_TARGET_SOFTLIMIT,
- 	MEM_CGROUP_TARGET_NUMAINFO,
- 	MEM_CGROUP_NTARGETS,
- };
-@@ -173,10 +171,6 @@ struct mem_cgroup_per_zone {
- 
- 	struct mem_cgroup_reclaim_iter reclaim_iter[DEF_PRIORITY + 1];
- 
--	struct rb_node		tree_node;	/* RB tree node */
--	unsigned long long	usage_in_excess;/* Set to the value by which */
--						/* the soft limit is exceeded*/
--	bool			on_tree;
- 	struct mem_cgroup	*memcg;		/* Back pointer, we cannot */
- 						/* use container_of	   */
- };
-@@ -185,26 +179,6 @@ struct mem_cgroup_per_node {
- 	struct mem_cgroup_per_zone zoneinfo[MAX_NR_ZONES];
- };
- 
--/*
-- * Cgroups above their limits are maintained in a RB-Tree, independent of
-- * their hierarchy representation
-- */
--
--struct mem_cgroup_tree_per_zone {
--	struct rb_root rb_root;
--	spinlock_t lock;
--};
--
--struct mem_cgroup_tree_per_node {
--	struct mem_cgroup_tree_per_zone rb_tree_per_zone[MAX_NR_ZONES];
--};
--
--struct mem_cgroup_tree {
--	struct mem_cgroup_tree_per_node *rb_tree_per_node[MAX_NUMNODES];
--};
--
--static struct mem_cgroup_tree soft_limit_tree __read_mostly;
--
- struct mem_cgroup_threshold {
- 	struct eventfd_ctx *eventfd;
- 	u64 threshold;
-@@ -523,7 +497,6 @@ static bool move_file(void)
-  * limit reclaim to prevent infinite loops, if they ever occur.
-  */
- #define	MEM_CGROUP_MAX_RECLAIM_LOOPS		100
--#define	MEM_CGROUP_MAX_SOFT_LIMIT_RECLAIM_LOOPS	2
- 
- enum charge_type {
- 	MEM_CGROUP_CHARGE_TYPE_CACHE = 0,
-@@ -754,164 +727,6 @@ page_cgroup_zoneinfo(struct mem_cgroup *memcg, struct page *page)
- 	return mem_cgroup_zoneinfo(memcg, nid, zid);
+@@ -959,6 +959,15 @@ struct mem_cgroup *try_get_mem_cgroup_from_mm(struct mm_struct *mm)
+ 	return memcg;
  }
  
--static struct mem_cgroup_tree_per_zone *
--soft_limit_tree_node_zone(int nid, int zid)
--{
--	return &soft_limit_tree.rb_tree_per_node[nid]->rb_tree_per_zone[zid];
--}
--
--static struct mem_cgroup_tree_per_zone *
--soft_limit_tree_from_page(struct page *page)
--{
--	int nid = page_to_nid(page);
--	int zid = page_zonenum(page);
--
--	return &soft_limit_tree.rb_tree_per_node[nid]->rb_tree_per_zone[zid];
--}
--
--static void
--__mem_cgroup_insert_exceeded(struct mem_cgroup *memcg,
--				struct mem_cgroup_per_zone *mz,
--				struct mem_cgroup_tree_per_zone *mctz,
--				unsigned long long new_usage_in_excess)
--{
--	struct rb_node **p = &mctz->rb_root.rb_node;
--	struct rb_node *parent = NULL;
--	struct mem_cgroup_per_zone *mz_node;
--
--	if (mz->on_tree)
--		return;
--
--	mz->usage_in_excess = new_usage_in_excess;
--	if (!mz->usage_in_excess)
--		return;
--	while (*p) {
--		parent = *p;
--		mz_node = rb_entry(parent, struct mem_cgroup_per_zone,
--					tree_node);
--		if (mz->usage_in_excess < mz_node->usage_in_excess)
--			p = &(*p)->rb_left;
--		/*
--		 * We can't avoid mem cgroups that are over their soft
--		 * limit by the same amount
--		 */
--		else if (mz->usage_in_excess >= mz_node->usage_in_excess)
--			p = &(*p)->rb_right;
--	}
--	rb_link_node(&mz->tree_node, parent, p);
--	rb_insert_color(&mz->tree_node, &mctz->rb_root);
--	mz->on_tree = true;
--}
--
--static void
--__mem_cgroup_remove_exceeded(struct mem_cgroup *memcg,
--				struct mem_cgroup_per_zone *mz,
--				struct mem_cgroup_tree_per_zone *mctz)
--{
--	if (!mz->on_tree)
--		return;
--	rb_erase(&mz->tree_node, &mctz->rb_root);
--	mz->on_tree = false;
--}
--
--static void
--mem_cgroup_remove_exceeded(struct mem_cgroup *memcg,
--				struct mem_cgroup_per_zone *mz,
--				struct mem_cgroup_tree_per_zone *mctz)
--{
--	spin_lock(&mctz->lock);
--	__mem_cgroup_remove_exceeded(memcg, mz, mctz);
--	spin_unlock(&mctz->lock);
--}
--
--
--static void mem_cgroup_update_tree(struct mem_cgroup *memcg, struct page *page)
--{
--	unsigned long long excess;
--	struct mem_cgroup_per_zone *mz;
--	struct mem_cgroup_tree_per_zone *mctz;
--	int nid = page_to_nid(page);
--	int zid = page_zonenum(page);
--	mctz = soft_limit_tree_from_page(page);
--
--	/*
--	 * Necessary to update all ancestors when hierarchy is used.
--	 * because their event counter is not touched.
--	 */
--	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
--		mz = mem_cgroup_zoneinfo(memcg, nid, zid);
--		excess = res_counter_soft_limit_excess(&memcg->res);
--		/*
--		 * We have to update the tree if mz is on RB-tree or
--		 * mem is over its softlimit.
--		 */
--		if (excess || mz->on_tree) {
--			spin_lock(&mctz->lock);
--			/* if on-tree, remove it */
--			if (mz->on_tree)
--				__mem_cgroup_remove_exceeded(memcg, mz, mctz);
--			/*
--			 * Insert again. mz->usage_in_excess will be updated.
--			 * If excess is 0, no tree ops.
--			 */
--			__mem_cgroup_insert_exceeded(memcg, mz, mctz, excess);
--			spin_unlock(&mctz->lock);
--		}
--	}
--}
--
--static void mem_cgroup_remove_from_trees(struct mem_cgroup *memcg)
--{
--	int node, zone;
--	struct mem_cgroup_per_zone *mz;
--	struct mem_cgroup_tree_per_zone *mctz;
--
--	for_each_node(node) {
--		for (zone = 0; zone < MAX_NR_ZONES; zone++) {
--			mz = mem_cgroup_zoneinfo(memcg, node, zone);
--			mctz = soft_limit_tree_node_zone(node, zone);
--			mem_cgroup_remove_exceeded(memcg, mz, mctz);
--		}
--	}
--}
--
--static struct mem_cgroup_per_zone *
--__mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_zone *mctz)
--{
--	struct rb_node *rightmost = NULL;
--	struct mem_cgroup_per_zone *mz;
--
--retry:
--	mz = NULL;
--	rightmost = rb_last(&mctz->rb_root);
--	if (!rightmost)
--		goto done;		/* Nothing to reclaim from */
--
--	mz = rb_entry(rightmost, struct mem_cgroup_per_zone, tree_node);
--	/*
--	 * Remove the node now but someone else can add it back,
--	 * we will to add it back at the end of reclaim to its correct
--	 * position in the tree.
--	 */
--	__mem_cgroup_remove_exceeded(mz->memcg, mz, mctz);
--	if (!res_counter_soft_limit_excess(&mz->memcg->res) ||
--		!css_tryget(&mz->memcg->css))
--		goto retry;
--done:
--	return mz;
--}
--
--static struct mem_cgroup_per_zone *
--mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_zone *mctz)
--{
--	struct mem_cgroup_per_zone *mz;
--
--	spin_lock(&mctz->lock);
--	mz = __mem_cgroup_largest_soft_limit_node(mctz);
--	spin_unlock(&mctz->lock);
--	return mz;
--}
--
++static enum mem_cgroup_filter_t
++mem_cgroup_filter(struct mem_cgroup *memcg, struct mem_cgroup *root,
++		mem_cgroup_iter_filter cond)
++{
++	if (!cond)
++		return VISIT;
++	return cond(memcg, root);
++}
++
  /*
-  * Implementation Note: reading percpu statistics for memcg.
-  *
-@@ -1065,9 +880,6 @@ static bool mem_cgroup_event_ratelimit(struct mem_cgroup *memcg,
- 		case MEM_CGROUP_TARGET_THRESH:
- 			next = val + THRESHOLDS_EVENTS_TARGET;
- 			break;
--		case MEM_CGROUP_TARGET_SOFTLIMIT:
--			next = val + SOFTLIMIT_EVENTS_TARGET;
--			break;
- 		case MEM_CGROUP_TARGET_NUMAINFO:
- 			next = val + NUMAINFO_EVENTS_TARGET;
- 			break;
-@@ -1090,11 +902,8 @@ static void memcg_check_events(struct mem_cgroup *memcg, struct page *page)
- 	/* threshold event is triggered in finer grain than soft limit */
- 	if (unlikely(mem_cgroup_event_ratelimit(memcg,
- 						MEM_CGROUP_TARGET_THRESH))) {
--		bool do_softlimit;
- 		bool do_numainfo __maybe_unused;
- 
--		do_softlimit = mem_cgroup_event_ratelimit(memcg,
--						MEM_CGROUP_TARGET_SOFTLIMIT);
- #if MAX_NUMNODES > 1
- 		do_numainfo = mem_cgroup_event_ratelimit(memcg,
- 						MEM_CGROUP_TARGET_NUMAINFO);
-@@ -1102,8 +911,6 @@ static void memcg_check_events(struct mem_cgroup *memcg, struct page *page)
- 		preempt_enable();
- 
- 		mem_cgroup_threshold(memcg);
--		if (unlikely(do_softlimit))
--			mem_cgroup_update_tree(memcg, page);
- #if MAX_NUMNODES > 1
- 		if (unlikely(do_numainfo))
- 			atomic_inc(&memcg->numainfo_events);
-@@ -1964,6 +1771,7 @@ static unsigned long mem_cgroup_reclaim(struct mem_cgroup *memcg,
- 	return total;
- }
- 
-+#if MAX_NUMNODES > 1
- /**
-  * test_mem_cgroup_node_reclaimable
-  * @memcg: the target memcg
-@@ -1986,7 +1794,6 @@ static bool test_mem_cgroup_node_reclaimable(struct mem_cgroup *memcg,
- 	return false;
- 
- }
--#if MAX_NUMNODES > 1
- 
- /*
-  * Always updating the nodemask is not very good - even if we have an empty
-@@ -2054,51 +1861,12 @@ int mem_cgroup_select_victim_node(struct mem_cgroup *memcg)
- 	return node;
- }
- 
--/*
-- * Check all nodes whether it contains reclaimable pages or not.
-- * For quick scan, we make use of scan_nodes. This will allow us to skip
-- * unused nodes. But scan_nodes is lazily updated and may not cotain
-- * enough new information. We need to do double check.
-- */
--static bool mem_cgroup_reclaimable(struct mem_cgroup *memcg, bool noswap)
--{
--	int nid;
--
--	/*
--	 * quick check...making use of scan_node.
--	 * We can skip unused nodes.
--	 */
--	if (!nodes_empty(memcg->scan_nodes)) {
--		for (nid = first_node(memcg->scan_nodes);
--		     nid < MAX_NUMNODES;
--		     nid = next_node(nid, memcg->scan_nodes)) {
--
--			if (test_mem_cgroup_node_reclaimable(memcg, nid, noswap))
--				return true;
--		}
--	}
--	/*
--	 * Check rest of nodes.
--	 */
--	for_each_node_state(nid, N_MEMORY) {
--		if (node_isset(nid, memcg->scan_nodes))
--			continue;
--		if (test_mem_cgroup_node_reclaimable(memcg, nid, noswap))
--			return true;
--	}
--	return false;
--}
--
- #else
- int mem_cgroup_select_victim_node(struct mem_cgroup *memcg)
+  * Returns a next (in a pre-order walk) alive memcg (with elevated css
+  * ref. count) or NULL if the whole root's subtree has been visited.
+@@ -966,7 +975,7 @@ struct mem_cgroup *try_get_mem_cgroup_from_mm(struct mm_struct *mm)
+  * helper function to be used by mem_cgroup_iter
+  */
+ static struct mem_cgroup *__mem_cgroup_iter_next(struct mem_cgroup *root,
+-		struct mem_cgroup *last_visited)
++		struct mem_cgroup *last_visited, mem_cgroup_iter_filter cond)
  {
- 	return 0;
- }
+ 	struct cgroup *prev_cgroup, *next_cgroup;
  
--static bool mem_cgroup_reclaimable(struct mem_cgroup *memcg, bool noswap)
--{
--	return test_mem_cgroup_node_reclaimable(memcg, 0, noswap);
--}
- #endif
+@@ -974,10 +983,18 @@ static struct mem_cgroup *__mem_cgroup_iter_next(struct mem_cgroup *root,
+ 	 * Root is not visited by cgroup iterators so it needs an
+ 	 * explicit visit.
+ 	 */
+-	if (!last_visited)
+-		return root;
++	if (!last_visited) {
++		switch(mem_cgroup_filter(root, root, cond)) {
++		case VISIT:
++			return root;
++		case SKIP:
++			break;
++		case SKIP_TREE:
++			return NULL;
++		}
++	}
  
- /*
-@@ -2973,9 +2741,7 @@ static void __mem_cgroup_commit_charge(struct mem_cgroup *memcg,
- 	unlock_page_cgroup(pc);
+-	prev_cgroup = (last_visited == root) ? NULL
++	prev_cgroup = (last_visited == root || !last_visited) ? NULL
+ 		: last_visited->css.cgroup;
+ skip_node:
+ 	next_cgroup = cgroup_next_descendant_pre(
+@@ -993,11 +1010,30 @@ skip_node:
+ 	if (next_cgroup) {
+ 		struct mem_cgroup *mem = mem_cgroup_from_cont(
+ 				next_cgroup);
+-		if (css_tryget(&mem->css))
+-			return mem;
+-		else {
++
++		switch (mem_cgroup_filter(mem, root, cond)) {
++		case SKIP:
+ 			prev_cgroup = next_cgroup;
+ 			goto skip_node;
++		case SKIP_TREE:
++			/*
++			 * cgroup_rightmost_descendant is not an optimal way to
++			 * skip through a subtree (especially for imbalanced
++			 * trees leaning to right) but that's what we have right
++			 * now. More effective solution would be traversing
++			 * right-up for first non-NULL without calling
++			 * cgroup_next_descendant_pre afterwards.
++			 */
++			prev_cgroup = cgroup_rightmost_descendant(next_cgroup);
++			goto skip_node;
++		case VISIT:
++			if (css_tryget(&mem->css))
++				return mem;
++			else {
++				prev_cgroup = next_cgroup;
++				goto skip_node;
++			}
++			break;
+ 		}
+ 	}
+ 
+@@ -1061,6 +1097,7 @@ static void mem_cgroup_iter_update(struct mem_cgroup_reclaim_iter *iter,
+  * @root: hierarchy root
+  * @prev: previously returned memcg, NULL on first invocation
+  * @reclaim: cookie for shared reclaim walks, NULL for full walks
++ * @cond: filter for visited nodes, NULL for no filter
+  *
+  * Returns references to children of the hierarchy below @root, or
+  * @root itself, or %NULL after a full round-trip.
+@@ -1073,9 +1110,10 @@ static void mem_cgroup_iter_update(struct mem_cgroup_reclaim_iter *iter,
+  * divide up the memcgs in the hierarchy among all concurrent
+  * reclaimers operating on the same zone and priority.
+  */
+-struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
++struct mem_cgroup *mem_cgroup_iter_cond(struct mem_cgroup *root,
+ 				   struct mem_cgroup *prev,
+-				   struct mem_cgroup_reclaim_cookie *reclaim)
++				   struct mem_cgroup_reclaim_cookie *reclaim,
++				   mem_cgroup_iter_filter cond)
+ {
+ 	struct mem_cgroup *memcg = NULL;
+ 	struct mem_cgroup *last_visited = NULL;
+@@ -1092,7 +1130,9 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
+ 	if (!root->use_hierarchy && root != root_mem_cgroup) {
+ 		if (prev)
+ 			goto out_css_put;
+-		return root;
++		if (mem_cgroup_filter(root, root, cond) == VISIT)
++			return root;
++		return NULL;
+ 	}
+ 
+ 	rcu_read_lock();
+@@ -1116,7 +1156,7 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
+ 			last_visited = mem_cgroup_iter_load(iter, root, &seq);
+ 		}
+ 
+-		memcg = __mem_cgroup_iter_next(root, last_visited);
++		memcg = __mem_cgroup_iter_next(root, last_visited, cond);
+ 
+ 		if (reclaim) {
+ 			mem_cgroup_iter_update(iter, last_visited, memcg, seq);
+@@ -1127,7 +1167,11 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
+ 				reclaim->generation = iter->generation;
+ 		}
+ 
+-		if (prev && !memcg)
++		/*
++		 * We have finished the whole tree walk or no group has been
++		 * visited because filter told us to skip the root node.
++		 */
++		if (!memcg && (prev || (cond && !last_visited)))
+ 			goto out_unlock;
+ 	}
+ out_unlock:
+@@ -1875,13 +1919,14 @@ int mem_cgroup_select_victim_node(struct mem_cgroup *memcg)
+  * 	a) it is over its soft limit
+  * 	b) any parent up the hierarchy is over its soft limit
+  */
+-bool mem_cgroup_soft_reclaim_eligible(struct mem_cgroup *memcg,
++enum mem_cgroup_filter_t
++mem_cgroup_soft_reclaim_eligible(struct mem_cgroup *memcg,
+ 		struct mem_cgroup *root)
+ {
+ 	struct mem_cgroup *parent = memcg;
+ 
+ 	if (res_counter_soft_limit_excess(&memcg->res))
+-		return true;
++		return VISIT;
  
  	/*
--	 * "charge_statistics" updated event counter. Then, check it.
--	 * Insert ancestor (and ancestor's ancestors), to softlimit RB-tree.
--	 * if they exceeds softlimit.
-+	 * "charge_statistics" updated event counter.
+ 	 * If any parent up to the root in the hierarchy is over its soft limit
+@@ -1889,12 +1934,12 @@ bool mem_cgroup_soft_reclaim_eligible(struct mem_cgroup *memcg,
  	 */
- 	memcg_check_events(memcg, page);
- }
-@@ -6112,8 +5878,6 @@ static int alloc_mem_cgroup_per_zone_info(struct mem_cgroup *memcg, int node)
- 	for (zone = 0; zone < MAX_NR_ZONES; zone++) {
- 		mz = &pn->zoneinfo[zone];
- 		lruvec_init(&mz->lruvec);
--		mz->usage_in_excess = 0;
--		mz->on_tree = false;
- 		mz->memcg = memcg;
+ 	while((parent = parent_mem_cgroup(parent))) {
+ 		if (res_counter_soft_limit_excess(&parent->res))
+-			return true;
++			return VISIT;
+ 		if (parent == root)
+ 			break;
  	}
- 	memcg->nodeinfo[node] = pn;
-@@ -6169,7 +5933,6 @@ static void __mem_cgroup_free(struct mem_cgroup *memcg)
- 	int node;
- 	size_t size = memcg_size();
  
--	mem_cgroup_remove_from_trees(memcg);
- 	free_css_id(&mem_cgroup_subsys, &memcg->css);
- 
- 	for_each_node(node)
-@@ -6251,29 +6014,6 @@ struct mem_cgroup *parent_mem_cgroup(struct mem_cgroup *memcg)
+-	return false;
++	return SKIP;
  }
- EXPORT_SYMBOL(parent_mem_cgroup);
  
--static void __init mem_cgroup_soft_limit_tree_init(void)
--{
--	struct mem_cgroup_tree_per_node *rtpn;
--	struct mem_cgroup_tree_per_zone *rtpz;
--	int tmp, node, zone;
+ /*
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 13d746d..79d59ec 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -2145,21 +2145,16 @@ __shrink_zone(struct zone *zone, struct scan_control *sc, bool soft_reclaim)
+ 			.zone = zone,
+ 			.priority = sc->priority,
+ 		};
+-		struct mem_cgroup *memcg;
++		struct mem_cgroup *memcg = NULL;
++		mem_cgroup_iter_filter filter = (soft_reclaim) ?
++			mem_cgroup_soft_reclaim_eligible : NULL;
+ 
+ 		nr_reclaimed = sc->nr_reclaimed;
+ 		nr_scanned = sc->nr_scanned;
+ 
+-		memcg = mem_cgroup_iter(root, NULL, &reclaim);
+-		do {
++		while ((memcg = mem_cgroup_iter_cond(root, memcg, &reclaim, filter))) {
+ 			struct lruvec *lruvec;
+ 
+-			if (soft_reclaim &&
+-			    !mem_cgroup_soft_reclaim_eligible(memcg, root)) {
+-				memcg = mem_cgroup_iter(root, memcg, &reclaim);
+-				continue;
+-			}
 -
--	for_each_node(node) {
--		tmp = node;
--		if (!node_state(node, N_NORMAL_MEMORY))
--			tmp = -1;
--		rtpn = kzalloc_node(sizeof(*rtpn), GFP_KERNEL, tmp);
--		BUG_ON(!rtpn);
--
--		soft_limit_tree.rb_tree_per_node[node] = rtpn;
--
--		for (zone = 0; zone < MAX_NR_ZONES; zone++) {
--			rtpz = &rtpn->rb_tree_per_zone[zone];
--			rtpz->rb_root = RB_ROOT;
--			spin_lock_init(&rtpz->lock);
--		}
--	}
--}
--
- static struct cgroup_subsys_state * __ref
- mem_cgroup_css_alloc(struct cgroup *cont)
- {
-@@ -7066,7 +6806,6 @@ static int __init mem_cgroup_init(void)
- {
- 	hotcpu_notifier(memcg_cpu_hotplug_callback, 0);
- 	enable_swap_cgroup();
--	mem_cgroup_soft_limit_tree_init();
- 	memcg_stock_init();
- 	return 0;
- }
+ 			lruvec = mem_cgroup_zone_lruvec(zone, memcg);
+ 
+ 			shrink_lruvec(lruvec, sc);
+@@ -2179,8 +2174,7 @@ __shrink_zone(struct zone *zone, struct scan_control *sc, bool soft_reclaim)
+ 				mem_cgroup_iter_break(root, memcg);
+ 				break;
+ 			}
+-			memcg = mem_cgroup_iter(root, memcg, &reclaim);
+-		} while (memcg);
++		}
+ 
+ 		vmpressure(sc->gfp_mask, sc->target_mem_cgroup,
+ 			   sc->nr_scanned - nr_scanned,
 -- 
 1.8.3.1
 
