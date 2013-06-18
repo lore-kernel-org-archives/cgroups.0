@@ -1,111 +1,131 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 3/3] cgroup: clean up cgroup_serial_nr_cursor
-Date: Tue, 18 Jun 2013 11:18:35 -0700
-Message-ID: <20130618181835.GC1596@htj.dyndns.org>
-References: <51C03AF2.7050702@huawei.com>
- <51C03B05.4080504@huawei.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH v5] Soft limit rework
+Date: Tue, 18 Jun 2013 15:01:21 -0400
+Message-ID: <20130618190121.GR15721@cmpxchg.org>
+References: <1371557387-22434-1-git-send-email-mhocko@suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=XJljqDnYlOkpRXkG9qwHTyM6I9gKKoDVYVgW7JJD/i8=;
-        b=HhxT1Y9P6M+8tmN+nfliRgrxFMk307ZkcaqddogqUYdUwSY4oONGvDkfC/klKT43HL
-         CwdErclHbCtaWaVF0GW8CBuZ9arYJ0seTSmxs9yCdMu43vY4iKjuDE75oouEXI5DfrRy
-         UPhAg4FhKTCBPCoZM9dVfXO0eZ60LX/zfgr78P34AewmINv8942rOgMs8wFAYnexZKw9
-         UhDIlOw5TqRr8eOuy+yKVvW+u7iOZVPxg8aL0kyt/hwahnCNsocNicBCEVJoPB8z1Boi
-         CrJEEXvySNSzMov/INBz18G9hoI67BZqD2X/UDKW50m5DPNnlCmBUSik3EHzsjI9AIzF
-         LL7g==
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <51C03B05.4080504-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1371557387-22434-1-git-send-email-mhocko@suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Glauber Costa <glommer@gmail.com>
 
-From 00356bd5f0f5e04183fb15805eb29e97c2fc20ac Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date: Tue, 18 Jun 2013 11:14:22 -0700
+On Tue, Jun 18, 2013 at 02:09:39PM +0200, Michal Hocko wrote:
+> My primary test case was a parallel kernel build with 2 groups (make
+> is running with -j4 with a distribution .config in a separate cgroup
+> without any hard limit) on a 8 CPU machine booted with 1GB memory.  I
+> was mostly interested in 2 setups. Default - no soft limit set and - and
+> 0 soft limit set to both groups.
+> The first one should tell us whether the rework regresses the default
+> behavior while the second one should show us improvements in an extreme
+> case where both workloads are always over the soft limit.
 
-cgroup_serial_nr_cursor was created atomic64_t because I thought it
-was never gonna used for anything other than assigning unique numbers
-to cgroups and didn't want to worry about synchronization; however,
-now we're using it as an event-stamp to distinguish cgroups created
-before and after certain point which assumes that it's protected by
-cgroup_mutex.
+The most interesting test case would be how it behaves if some groups
+are over the soft limits while others are not.  I would expect this to
+be the most common situation for when soft limits are used.
 
-Let's make it clear by making it a u64.  Also, rename it to
-cgroup_serial_nr_next and make it point to the next nr to allocate so
-that where it's pointing to is clear and more conventional.
+On the other hand, setting all soft limits to 0 makes every reclaim
+invocation do almost only soft reclaim.  What's the point of that?
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
-Applied to cgroup/for-3.11 as a follow-up.
+> /usr/bin/time -v has been used to collect the statistics and each
+> configuration had 3 runs after fresh boot without any other load on the
+> system.
+> 
+> base is mmotm-2013-05-09-15-57
+> baserebase is mmotm-2013-06-05-17-24-63 + patches from the current mmots
+> without slab shrinkers patchset.
+> reworkrebase all patches 8 applied on top of baserebase
+> 
+> * No-limit
+> User
+> base: min: 1164.94 max: 1169.75 avg: 1168.31 std: 1.57 runs: 6
+> baserebase: min: 1169.46 [100.4%] max: 1176.07 [100.5%] avg: 1172.49 [100.4%] std: 2.38 runs: 6
+> reworkrebase: min: 1172.58 [100.7%] max: 1177.43 [100.7%] avg: 1175.53 [100.6%] std: 1.91 runs: 6
+> System
+> base: min: 242.55 max: 245.36 avg: 243.92 std: 1.17 runs: 6
+> baserebase: min: 235.36 [97.0%] max: 238.52 [97.2%] avg: 236.70 [97.0%] std: 1.04 runs: 6
+> reworkrebase: min: 236.21 [97.4%] max: 239.46 [97.6%] avg: 237.55 [97.4%] std: 1.05 runs: 6
+> Elapsed
+> base: min: 596.81 max: 620.04 avg: 605.52 std: 7.56 runs: 6
+> baserebase: min: 666.45 [111.7%] max: 710.89 [114.7%] avg: 690.62 [114.1%] std: 13.85 runs: 6
+> reworkrebase: min: 664.05 [111.3%] max: 701.06 [113.1%] avg: 689.29 [113.8%] std: 12.36 runs: 6
+> 
+> Elapsed time regressed by 13% wrt. base but it seems that this came from
+> baserebase which regressed by the same amount.
 
-Thanks.
+Which mmots does this refer to?  We should probably look into a
+regression this size...
 
- kernel/cgroup.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+> * 0-limit
+> User
+> base: min: 1188.28 max: 1198.54 avg: 1194.10 std: 3.31 runs: 6
+> baserebase: min: 1186.17 [99.8%] max: 1196.46 [99.8%] avg: 1189.75 [99.6%] std: 3.41 runs: 6
+> reworkrebase: min: 1169.88 [98.5%] max: 1177.84 [98.3%] avg: 1173.50 [98.3%] std: 2.79 runs: 6
+> System
+> base: min: 248.40 max: 252.00 avg: 250.19 std: 1.38 runs: 6
+> baserebase: min: 240.77 [96.9%] max: 246.74 [97.9%] avg: 243.63 [97.4%] std: 2.23 runs: 6
+> reworkrebase: min: 235.19 [94.7%] max: 237.43 [94.2%] avg: 236.35 [94.5%] std: 0.86 runs: 6
+> Elapsed
+> base: min: 759.28 max: 805.30 avg: 784.87 std: 15.45 runs: 6
+> baserebase: min: 881.69 [116.1%] max: 938.14 [116.5%] avg: 911.68 [116.2%] std: 19.58 runs: 6
+> reworkrebase: min: 667.54 [87.9%] max: 718.54 [89.2%] avg: 695.61 [88.6%] std: 17.16 runs: 6
+> 
+> System time is slightly better but I wouldn't consider it relevant.
+> 
+> Elapsed time is more interesting though. baserebase regresses by 16%
+> again which is in par with no-limit configuration.
+> 
+> With the patchset applied we are 11% better in average wrt. to the
+> old base but it is important to realize that this is still 76.3% wrt.
+> baserebase so the effect of the series is comparable to the previous
+> version. Albeit the whole result is worse.
+> 
+> Page fault statistics tell us at least part of the story:
+> Minor
+> base: min: 35941845.00 max: 36029788.00 avg: 35986860.17 std: 28288.66 runs: 6
+> baserebase: min: 35852414.00 [99.8%] max: 35899605.00 [99.6%] avg: 35874906.83 [99.7%] std: 18722.59 runs: 6
+> reworkrebase: min: 35538346.00 [98.9%] max: 35584907.00 [98.8%] avg: 35562362.17 [98.8%] std: 18921.74 runs: 6
+> Major
+> base: min: 25390.00 max: 33132.00 avg: 29961.83 std: 2476.58 runs: 6
+> baserebase: min: 34224.00 [134.8%] max: 45674.00 [137.9%] avg: 41556.83 [138.7%] std: 3595.39 runs: 6
+> reworkrebase: min: 277.00 [1.1%] max: 480.00 [1.4%] avg: 384.67 [1.3%] std: 74.67 runs: 6
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 0ed7d8d..65f333e 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -203,9 +203,10 @@ static struct cgroup_name root_cgroup_name = { .name = "/" };
-  * guarantees cgroups with bigger numbers are newer than those with smaller
-  * numbers.  Also, as cgroups are always appended to the parent's
-  * ->children list, it guarantees that sibling cgroups are always sorted in
-- * the ascending serial number order on the list.
-+ * the ascending serial number order on the list.  Protected by
-+ * cgroup_mutex.
-  */
--static atomic64_t cgroup_serial_nr_cursor = ATOMIC64_INIT(0);
-+static u64 cgroup_serial_nr_next = 1;
- 
- /* This flag indicates whether tasks in the fork and exit paths should
-  * check for fork/exit handlers to call. This avoids us having to do
-@@ -2803,7 +2804,7 @@ static void cgroup_cfts_commit(struct cgroup_subsys *ss,
- 	struct super_block *sb = ss->root->sb;
- 	struct dentry *prev = NULL;
- 	struct inode *inode;
--	u64 update_upto;
-+	u64 update_before;
- 
- 	/* %NULL @cfts indicates abort and don't bother if @ss isn't attached */
- 	if (!cfts || ss->root == &rootnode ||
-@@ -2815,9 +2816,9 @@ static void cgroup_cfts_commit(struct cgroup_subsys *ss,
- 	/*
- 	 * All cgroups which are created after we drop cgroup_mutex will
- 	 * have the updated set of files, so we only need to update the
--	 * cgroups created before the current @cgroup_serial_nr_cursor.
-+	 * cgroups created before the current @cgroup_serial_nr_next.
- 	 */
--	update_upto = atomic64_read(&cgroup_serial_nr_cursor);
-+	update_before = cgroup_serial_nr_next;
- 
- 	mutex_unlock(&cgroup_mutex);
- 
-@@ -2844,7 +2845,7 @@ static void cgroup_cfts_commit(struct cgroup_subsys *ss,
- 
- 		mutex_lock(&inode->i_mutex);
- 		mutex_lock(&cgroup_mutex);
--		if (cgrp->serial_nr <= update_upto && !cgroup_is_dead(cgrp))
-+		if (cgrp->serial_nr < update_before && !cgroup_is_dead(cgrp))
- 			cgroup_addrm_files(cgrp, ss, cfts, is_add);
- 		mutex_unlock(&cgroup_mutex);
- 		mutex_unlock(&inode->i_mutex);
-@@ -4327,7 +4328,7 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 		goto err_free_all;
- 	lockdep_assert_held(&dentry->d_inode->i_mutex);
- 
--	cgrp->serial_nr = atomic64_inc_return(&cgroup_serial_nr_cursor);
-+	cgrp->serial_nr = cgroup_serial_nr_next++;
- 
- 	/* allocation complete, commit to creation */
- 	list_add_tail_rcu(&cgrp->sibling, &cgrp->parent->children);
--- 
-1.8.2.1
+The changes are big but the test makes no sense to me.
+
+> While the minor faults are within the noise the major faults are reduced
+> considerably. This looks like an aggressive pageout during the reclaim
+> and that pageout affects the working set presumably. Please note that
+> baserebase has even hight number of major page faults than the older
+> mmotm trree.
+> 
+> While this looks as a nice win it is fair to say that there are some
+> workloads that actually benefit from reclaim at 0 priority (from
+> background reclaim). E.g. an aggressive streaming IO would like to get
+> rid of as many pages as possible and do not block on the pages under
+> writeback. This can lead to a higher System time but I generally got
+> Elapsed which was comparable.
+> 
+> The following results are from 2 groups configuration on a 8GB machine
+> (A running stream IO with 4*TotalMem with 0 soft limit, B runnning a
+> mem_eater which consumes TotalMem-1G without any limit).
+> System
+> base: min: 124.88 max: 136.97 avg: 130.77 std: 4.94 runs: 3
+> baserebase: min: 102.51 [82.1%] max: 108.84 [79.5%] avg: 104.81 [80.1%] std: 2.86 runs: 3
+> reworkrebase: min: 108.29 [86.7%] max: 121.70 [88.9%] avg: 114.60 [87.6%] std: 5.50 runs: 3
+> Elapsed
+> base: min: 398.86 max: 412.81 avg: 407.62 std: 6.23 runs: 3
+> baserebase: min: 480.92 [120.6%] max: 497.56 [120.5%] avg: 491.46 [120.6%] std: 7.48 runs: 3
+> reworkrebase: min: 397.19 [99.6%] max: 462.57 [112.1%] avg: 436.13 [107.0%] std: 28.12 runs: 3
+
+Do you have individual runtimes for both the streamer and "mem_eater"?
+Is mem_eater's memory reclaimable?
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
