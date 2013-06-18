@@ -1,76 +1,55 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: [PATCH v5 7/8] memcg: Track all children over limit in the root
-Date: Tue, 18 Jun 2013 14:09:46 +0200
-Message-ID: <1371557387-22434-8-git-send-email-mhocko@suse.cz>
-References: <1371557387-22434-1-git-send-email-mhocko@suse.cz>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1371557387-22434-1-git-send-email-mhocko@suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2 cgroup/for-3.11] cgroup: disallow rename(2) if
+	sane_behavior
+Date: Tue, 18 Jun 2013 08:16:54 -0700
+Message-ID: <20130618151654.GF2767@htj.dyndns.org>
+References: <20130614034717.GA31533@htj.dyndns.org>
+	<20130614181822.GC6593@mtj.dyndns.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Glauber Costa <glommer@gmail.com>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=zLP8U0HH2/h5b0uwpbd5ZrCft6c6aw2eW4J+K+THMeA=;
+	b=GhHS1mhK8rG013A66gl3RATmti3j+klYt/YSU0fgGRLszMpnUnPA5WVjohpjMHtbNx
+	s6BV78hkHfOphzSK1bsGPKkhDuayHt5m2gZtslF8yCamfxZPWzjgki48jd2yNakbulAC
+	NUDuJH//r+QY7n/8TjjqALgJ2DpxYr8eNqN0rR3sTwFTz+A65HIkbEOXmevUIltn00zj
+	rpSbAHe86yicOz/B40p6WtVZiWlPS8glzevdf4KkBdlACh3XBEkIzlboSgYOJjRBQPU2
+	X3pjb94IyRgP311httm5YQf2zXSVaBqJMs1XlWSOA4XvKEZCr252s7dkX/53OPMLAsuE
+	WBGg==
+Content-Disposition: inline
+In-Reply-To: <20130614181822.GC6593-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>
 
-Children in soft limit excess are currently tracked up the hierarchy
-in memcg->children_in_excess. Nevertheless there still might exist
-tons of groups that are not in hierarchy relation to the root cgroup
-(e.g. all first level groups if root_mem_cgroup->use_hierarchy ==
-false).
+On Fri, Jun 14, 2013 at 11:18:22AM -0700, Tejun Heo wrote:
+> cgroup's rename(2) isn't a proper migration implementation - it can't
+> move the cgroup to a different parent in the hierarchy.  All it can do
+> is swapping the name string for that cgroup.  This isn't useful and
+> can mislead users to think that cgroup supports proper cgroup-level
+> migration.  Disallow rename(2) if sane_behavior.
+> 
+> v2: Fail with -EPERM instead of -EINVAL so that it matches the vfs
+>     return value when ->rename is not implemented as suggested by Li.
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-As the whole tree walk has to be done when the iteration starts at
-root_mem_cgroup the iterator should be able to skip the walk if there
-is no child above the limit without iterating them. This can be done
-easily if the root tracks all children rather than only hierarchical
-children. This is done by this patch which updates root_mem_cgroup
-children_in_excess if root_mem_cgroup->use_hierarchy == false so the
-root knows about all children in excess.
+Applied to cgroup/for-3.11.
 
-Please note that this is not an issue for inner memcgs which have
-use_hierarchy == false because then only the single group is visited so
-no special optimization is necessary.
+Thanks.
 
-Signed-off-by: Michal Hocko <mhocko@suse.cz>
----
- mm/memcontrol.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b2e44d3..d55e2c8 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -942,9 +942,15 @@ static void mem_cgroup_update_soft_limit(struct mem_cgroup *memcg)
- 	/*
- 	 * Necessary to update all ancestors when hierarchy is used
- 	 * because their event counter is not touched.
-+	 * We track children even outside the hierarchy for the root
-+	 * cgroup because tree walk starting at root should visit
-+	 * all cgroups and we want to prevent from pointless tree
-+	 * walk if no children is below the limit.
- 	 */
- 	while (delta && (parent = parent_mem_cgroup(parent)))
- 		atomic_add(delta, &parent->children_in_excess);
-+	if (memcg != root_mem_cgroup && !root_mem_cgroup->use_hierarchy)
-+		atomic_add(delta, &root_mem_cgroup->children_in_excess);
- 	spin_unlock(&memcg->soft_lock);
- }
- 
-@@ -6256,6 +6262,9 @@ static void mem_cgroup_css_offline(struct cgroup *cont)
- 	if (memcg->soft_contributed) {
- 		while ((memcg = parent_mem_cgroup(memcg)))
- 			atomic_dec(&memcg->children_in_excess);
-+
-+		if (memcg != root_mem_cgroup && !root_mem_cgroup->use_hierarchy)
-+			atomic_dec(&root_mem_cgroup->children_in_excess);
- 	}
- 	mem_cgroup_destroy_all_caches(memcg);
- }
 -- 
-1.8.3.1
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
