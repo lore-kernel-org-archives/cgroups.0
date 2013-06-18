@@ -1,7 +1,7 @@
 From: Michal Hocko <mhocko@suse.cz>
-Subject: [PATCH v5 6/8] memcg, vmscan: Do not attempt soft limit reclaim if it would not scan anything
-Date: Tue, 18 Jun 2013 14:09:45 +0200
-Message-ID: <1371557387-22434-7-git-send-email-mhocko@suse.cz>
+Subject: [PATCH v5 8/8] memcg, vmscan: do not fall into reclaim-all pass too quickly
+Date: Tue, 18 Jun 2013 14:09:47 +0200
+Message-ID: <1371557387-22434-9-git-send-email-mhocko@suse.cz>
 References: <1371557387-22434-1-git-send-email-mhocko@suse.cz>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1371557387-22434-1-git-send-email-mhocko@suse.cz>
@@ -13,59 +13,87 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Glauber Costa <glommer@gmail.com>
 
-mem_cgroup_should_soft_reclaim controls whether soft reclaim pass is
-done and it always says yes currently. Memcg iterators are clever to
-skip nodes that are not soft reclaimable quite efficiently but
-mem_cgroup_should_soft_reclaim can be more clever and do not start the
-soft reclaim pass at all if it knows that nothing would be scanned
-anyway.
+shrink_zone starts with soft reclaim pass first and then falls back to
+regular reclaim if nothing has been scanned. This behavior is natural
+but there is a catch. Memcg iterators, when used with the reclaim
+cookie, are designed to help to prevent from over reclaim by
+interleaving reclaimers (per node-zone-priority) so the tree walk might
+miss many (even all) nodes in the hierarchy e.g. when there are direct
+reclaimers racing with each other or with kswapd in the global case or
+multiple allocators reaching the limit for the target reclaim case.
+To make it even more complicated, targeted reclaim doesn't do the whole
+tree walk because it stops reclaiming once it reclaims sufficient pages.
+As a result groups over the limit might be missed, thus nothing is
+scanned, and reclaim would fall back to the reclaim all mode.
 
-In order to do that, simply reuse mem_cgroup_soft_reclaim_eligible for
-the target group of the reclaim and allow the pass only if the whole
-subtree wouldn't be skipped.
-
-Changes since v1
-- do not export mem_cgroup_root and teach mem_cgroup_soft_reclaim_eligible
-  to handle NULL memcg as mem_cgroup_root
+This patch checks for the incomplete tree walk in shrink_zone. If no
+group has been visited and the hierarchy is soft reclaimable then we
+must have missed some groups, in which case the __shrink_zone is called
+again. This doesn't guarantee there will be some progress of course
+because the current reclaimer might be still racing with others but it
+would at least give a chance to start the walk without a big risk of
+reclaim latencies.
 
 Signed-off-by: Michal Hocko <mhocko@suse.cz>
 ---
- mm/memcontrol.c | 6 +++++-
- mm/vmscan.c     | 4 +++-
- 2 files changed, 8 insertions(+), 2 deletions(-)
+ mm/vmscan.c | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 2a06d5a..b2e44d3 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1987,7 +1987,11 @@ enum mem_cgroup_filter_t
- mem_cgroup_soft_reclaim_eligible(struct mem_cgroup *memcg,
- 		struct mem_cgroup *root)
- {
--	struct mem_cgroup *parent = memcg;
-+	struct mem_cgroup *parent;
-+
-+	if (!memcg)
-+		memcg = root_mem_cgroup;
-+	parent = memcg;
- 
- 	if (res_counter_soft_limit_excess(&memcg->res))
- 		return VISIT;
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 79d59ec..56302da 100644
+index 56302da..8cbc8e5 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
-@@ -142,7 +142,9 @@ static bool global_reclaim(struct scan_control *sc)
- 
- static bool mem_cgroup_should_soft_reclaim(struct scan_control *sc)
- {
--	return !mem_cgroup_disabled();
-+	struct mem_cgroup *root = sc->target_mem_cgroup;
-+	return !mem_cgroup_disabled() &&
-+		mem_cgroup_soft_reclaim_eligible(root, root) != SKIP_TREE;
+@@ -2136,10 +2136,11 @@ static inline bool should_continue_reclaim(struct zone *zone,
+ 	}
  }
- #else
- static bool global_reclaim(struct scan_control *sc)
+ 
+-static void
++static int
+ __shrink_zone(struct zone *zone, struct scan_control *sc, bool soft_reclaim)
+ {
+ 	unsigned long nr_reclaimed, nr_scanned;
++	int groups_scanned = 0;
+ 
+ 	do {
+ 		struct mem_cgroup *root = sc->target_mem_cgroup;
+@@ -2157,6 +2158,7 @@ __shrink_zone(struct zone *zone, struct scan_control *sc, bool soft_reclaim)
+ 		while ((memcg = mem_cgroup_iter_cond(root, memcg, &reclaim, filter))) {
+ 			struct lruvec *lruvec;
+ 
++			groups_scanned++;
+ 			lruvec = mem_cgroup_zone_lruvec(zone, memcg);
+ 
+ 			shrink_lruvec(lruvec, sc);
+@@ -2184,6 +2186,8 @@ __shrink_zone(struct zone *zone, struct scan_control *sc, bool soft_reclaim)
+ 
+ 	} while (should_continue_reclaim(zone, sc->nr_reclaimed - nr_reclaimed,
+ 					 sc->nr_scanned - nr_scanned, sc));
++
++	return groups_scanned;
+ }
+ 
+ 
+@@ -2191,8 +2195,19 @@ static void shrink_zone(struct zone *zone, struct scan_control *sc)
+ {
+ 	bool do_soft_reclaim = mem_cgroup_should_soft_reclaim(sc);
+ 	unsigned long nr_scanned = sc->nr_scanned;
++	int scanned_groups;
+ 
+-	__shrink_zone(zone, sc, do_soft_reclaim);
++	scanned_groups = __shrink_zone(zone, sc, do_soft_reclaim);
++	/*
++         * memcg iterator might race with other reclaimer or start from
++         * a incomplete tree walk so the tree walk in __shrink_zone
++         * might have missed groups that are above the soft limit. Try
++         * another loop to catch up with others. Do it just once to
++         * prevent from reclaim latencies when other reclaimers always
++         * preempt this one.
++	 */
++	if (do_soft_reclaim && !scanned_groups)
++		__shrink_zone(zone, sc, do_soft_reclaim);
+ 
+ 	/*
+ 	 * No group is over the soft limit or those that are do not have
 -- 
 1.8.3.1
 
