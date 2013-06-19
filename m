@@ -1,36 +1,92 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH ] cgroup: rename cont to cgrp
-Date: Wed, 19 Jun 2013 09:31:10 +0800
-Message-ID: <51C109DE.8010607@huawei.com>
-References: <51BA8B3F.3060606@huawei.com>
+From: Glauber Costa <glommer@gmail.com>
+Subject: Re: [PATCH v11 25/25] list_lru: dynamically adjust node arrays
+Date: Wed, 19 Jun 2013 11:31:56 +0400
+Message-ID: <20130619073154.GA1990@localhost.localdomain>
+References: <1370550898-26711-1-git-send-email-glommer@openvz.org>
+ <1370550898-26711-26-git-send-email-glommer@openvz.org>
+ <1371548521.2984.6.camel@ThinkPad-T5421>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <51BA8B3F.3060606-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=bUbU0EL8tJfFg8z/rLC1Lvk8IximvnHyQRf0v0CInQw=;
+        b=xvhBkr/h9LBBUjKv6AJFxtoUqU1bwzIxs9qwIMw1v6AiFkyV482rUah+d+6j9BzrOk
+         +RphEh0D089v7E4j2c+WrKR9nMHeTxgNThlWmIFB9UTR68fwENO3Hu1j4iqKy1WcvP7h
+         CJcrZVpgxmXvdm7Svpt7NZsRaVv+auubkrg5KKFDPCIhSZQm5ngaNjHghVb+uret+zGX
+         jqVDHG4ISO/kmwO6iiCYFZd/AdA67cCYtzp5exqGOrAdAzxJl1AznEo0yHcUcqntRchj
+         4An5qdHLUm9TK5SrXnPHj8Obl3Q6r6agVB26eRe0UErMbSFZstiPi+kNp2qQnjBG7cAA
+         TPWA==
+Content-Disposition: inline
+In-Reply-To: <1371548521.2984.6.camel@ThinkPad-T5421>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Li Zhong <lizhongfs@gmail.com>
+Cc: Glauber Costa <glommer@openvz.org>, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, mgorman@suse.de, david@fromorbit.com, linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, mhocko@suze.cz, hannes@cmpxchg.org, hughd@google.com, gthelen@google.com, Dave Chinner <dchinner@redhat.com>
 
-Hi Tejun,
+On Tue, Jun 18, 2013 at 05:42:01PM +0800, Li Zhong wrote:
+> On Fri, 2013-06-07 at 00:34 +0400, Glauber Costa wrote:
+ > 
+> > diff --git a/fs/super.c b/fs/super.c
+> > index 85a6104..1b6ef7b 100644
+> > --- a/fs/super.c
+> > +++ b/fs/super.c
+> > @@ -199,8 +199,12 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags)
+> >  		INIT_HLIST_NODE(&s->s_instances);
+> >  		INIT_HLIST_BL_HEAD(&s->s_anon);
+> >  		INIT_LIST_HEAD(&s->s_inodes);
+> > -		list_lru_init(&s->s_dentry_lru);
+> > -		list_lru_init(&s->s_inode_lru);
+> > +
+> > +		if (list_lru_init(&s->s_dentry_lru))
+> > +			goto err_out;
+> > +		if (list_lru_init(&s->s_inode_lru))
+> > +			goto err_out_dentry_lru;
+> > +
+> >  		INIT_LIST_HEAD(&s->s_mounts);
+> >  		init_rwsem(&s->s_umount);
+> >  		lockdep_set_class(&s->s_umount, &type->s_umount_key);
+> > @@ -240,6 +244,9 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags)
+> >  	}
+> >  out:
+> >  	return s;
+> > +
+> > +err_out_dentry_lru:
+> > +	list_lru_destroy(&s->s_dentry_lru);
+> >  err_out:
+> >  	security_sb_free(s);
+> >  #ifdef CONFIG_SMP
+> 
+> It seems we also need to call list_lru_destroy() in destroy_super()? 
+> like below:
+>  
+> -----------
+> diff --git a/fs/super.c b/fs/super.c
+> index b79e732..06ee3af 100644
+> --- a/fs/super.c
+> +++ b/fs/super.c
+> @@ -269,6 +269,8 @@ err_out:
+>   */
+>  static inline void destroy_super(struct super_block *s)
+>  {
+> +	list_lru_destroy(&s->s_inode_lru);
+> +	list_lru_destroy(&s->s_dentry_lru);
+>  #ifdef CONFIG_SMP
+>  	free_percpu(s->s_files);
+>  #endif
 
-Could you apply this patch?
+Hi
 
-On 2013/6/14 11:17, Li Zefan wrote:
-> Cont is short for container. control group was named process container
-> at first, but then people found container already has a meaning in
-> linux kernel.
-> 
-> Clean up the leftover variable name @cont.
-> 
-> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> ---
-> 
-> I'll clean up this for memcg later.
-> 
-> ---
->  include/linux/cgroup.h |  4 ++--
->  kernel/cgroup.c        | 22 +++++++++++-----------
->  2 files changed, 13 insertions(+), 13 deletions(-)
-> 
+Thanks for taking a look at this.
+
+list_lru_destroy is called by deactivate_lock_super, so we should be fine already.
+ 
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
