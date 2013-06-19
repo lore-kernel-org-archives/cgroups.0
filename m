@@ -1,92 +1,57 @@
-From: Glauber Costa <glommer@gmail.com>
-Subject: Re: [PATCH v11 25/25] list_lru: dynamically adjust node arrays
-Date: Wed, 19 Jun 2013 11:31:56 +0400
-Message-ID: <20130619073154.GA1990@localhost.localdomain>
-References: <1370550898-26711-1-git-send-email-glommer@openvz.org>
- <1370550898-26711-26-git-send-email-glommer@openvz.org>
- <1371548521.2984.6.camel@ThinkPad-T5421>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH ] cgroup: rename cont to cgrp
+Date: Wed, 19 Jun 2013 01:23:47 -0700
+Message-ID: <20130619082347.GE30681@mtj.dyndns.org>
+References: <51BA8B3F.3060606@huawei.com>
+ <51C109DE.8010607@huawei.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=bUbU0EL8tJfFg8z/rLC1Lvk8IximvnHyQRf0v0CInQw=;
-        b=xvhBkr/h9LBBUjKv6AJFxtoUqU1bwzIxs9qwIMw1v6AiFkyV482rUah+d+6j9BzrOk
-         +RphEh0D089v7E4j2c+WrKR9nMHeTxgNThlWmIFB9UTR68fwENO3Hu1j4iqKy1WcvP7h
-         CJcrZVpgxmXvdm7Svpt7NZsRaVv+auubkrg5KKFDPCIhSZQm5ngaNjHghVb+uret+zGX
-         jqVDHG4ISO/kmwO6iiCYFZd/AdA67cCYtzp5exqGOrAdAzxJl1AznEo0yHcUcqntRchj
-         4An5qdHLUm9TK5SrXnPHj8Obl3Q6r6agVB26eRe0UErMbSFZstiPi+kNp2qQnjBG7cAA
-         TPWA==
-Content-Disposition: inline
-In-Reply-To: <1371548521.2984.6.camel@ThinkPad-T5421>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zhong <lizhongfs@gmail.com>
-Cc: Glauber Costa <glommer@openvz.org>, akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, mgorman@suse.de, david@fromorbit.com, linux-mm@kvack.org, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, mhocko@suze.cz, hannes@cmpxchg.org, hughd@google.com, gthelen@google.com, Dave Chinner <dchinner@redhat.com>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=JMKq6PJi1eNX0RAG7kgG07YXMx84zvYuq+nCEPxkARk=;
+	b=VGFi5PouVbB6WkNo6AOp8kU2xu0iF7hpHsmiVoJ6sWk1J5K3H2WovtcvdIegbeZXaC
+	qhLpk6aUuIhdF9Ek+nugGQR9NOPdn4G/ygS913/dA5Vo72Nqthfp172ZpuNxx54jWqt3
+	UcmD5LOVyC3JnuR6NyJRX9o5w0+qKwt6DDs5zZ31c4jbflMkOnL2EUv4rLvw0ElJM2j5
+	tYKgRMwizcmjA/0erIRz10dIVKIYeb2F6iCYnPs8Z0riMd2DIzTaaVE4vx8HcU1n375s
+	6kcFX0Xn3AqqGBccgBjtb3u0T49e15xdT70EV2BHsnsVZ9sCheJnOtX4UBAJM8aZ0MUw
+	CtZQ==
+Content-Disposition: inline
+In-Reply-To: <51C109DE.8010607-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Tue, Jun 18, 2013 at 05:42:01PM +0800, Li Zhong wrote:
-> On Fri, 2013-06-07 at 00:34 +0400, Glauber Costa wrote:
- > 
-> > diff --git a/fs/super.c b/fs/super.c
-> > index 85a6104..1b6ef7b 100644
-> > --- a/fs/super.c
-> > +++ b/fs/super.c
-> > @@ -199,8 +199,12 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags)
-> >  		INIT_HLIST_NODE(&s->s_instances);
-> >  		INIT_HLIST_BL_HEAD(&s->s_anon);
-> >  		INIT_LIST_HEAD(&s->s_inodes);
-> > -		list_lru_init(&s->s_dentry_lru);
-> > -		list_lru_init(&s->s_inode_lru);
-> > +
-> > +		if (list_lru_init(&s->s_dentry_lru))
-> > +			goto err_out;
-> > +		if (list_lru_init(&s->s_inode_lru))
-> > +			goto err_out_dentry_lru;
-> > +
-> >  		INIT_LIST_HEAD(&s->s_mounts);
-> >  		init_rwsem(&s->s_umount);
-> >  		lockdep_set_class(&s->s_umount, &type->s_umount_key);
-> > @@ -240,6 +244,9 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags)
-> >  	}
-> >  out:
-> >  	return s;
-> > +
-> > +err_out_dentry_lru:
-> > +	list_lru_destroy(&s->s_dentry_lru);
-> >  err_out:
-> >  	security_sb_free(s);
-> >  #ifdef CONFIG_SMP
+On Wed, Jun 19, 2013 at 09:31:10AM +0800, Li Zefan wrote:
+> Hi Tejun,
 > 
-> It seems we also need to call list_lru_destroy() in destroy_super()? 
-> like below:
->  
-> -----------
-> diff --git a/fs/super.c b/fs/super.c
-> index b79e732..06ee3af 100644
-> --- a/fs/super.c
-> +++ b/fs/super.c
-> @@ -269,6 +269,8 @@ err_out:
->   */
->  static inline void destroy_super(struct super_block *s)
->  {
-> +	list_lru_destroy(&s->s_inode_lru);
-> +	list_lru_destroy(&s->s_dentry_lru);
->  #ifdef CONFIG_SMP
->  	free_percpu(s->s_files);
->  #endif
+> Could you apply this patch?
 
-Hi
+Oops, I thought I applied this one.  Apparently not.
 
-Thanks for taking a look at this.
+> On 2013/6/14 11:17, Li Zefan wrote:
+> > Cont is short for container. control group was named process container
+> > at first, but then people found container already has a meaning in
+> > linux kernel.
+> > 
+> > Clean up the leftover variable name @cont.
+> > 
+> > Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-list_lru_destroy is called by deactivate_lock_super, so we should be fine already.
- 
+Applied to cgroup/for-3.11.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks.
+
+-- 
+tejun
