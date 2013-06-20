@@ -1,68 +1,128 @@
-From: Li Zefan <lizefan@huawei.com>
-Subject: Re: [PATCH v2] Make transparent hugepages cpuset aware
-Date: Thu, 20 Jun 2013 11:34:45 +0800
-Message-ID: <51C27855.8010905@huawei.com>
-References: <1370967244-5610-1-git-send-email-athorlton@sgi.com> <alpine.DEB.2.02.1306111517200.6141@chino.kir.corp.google.com> <20130618164537.GJ16067@sgi.com> <alpine.DEB.2.02.1306181654350.4503@chino.kir.corp.google.com> <20130619093212.GX3658@sgi.com> <alpine.DEB.2.02.1306191419081.13015@chino.kir.corp.google.com>
+From: Mel Gorman <mgorman@suse.de>
+Subject: Re: [PATCH v5] Soft limit rework
+Date: Thu, 20 Jun 2013 12:12:06 +0100
+Message-ID: <20130620111206.GA14809@suse.de>
+References: <1371557387-22434-1-git-send-email-mhocko@suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1306191419081.13015@chino.kir.corp.google.com>
-Sender: linux-doc-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1371557387-22434-1-git-send-email-mhocko@suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: David Rientjes <rientjes@google.com>
-Cc: Robin Holt <holt@sgi.com>, Alex Thorlton <athorlton@sgi.com>, linux-kernel@vger.kernel.org, Rob Landley <rob@landley.net>, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Johannes Weiner <hannes@cmpxchg.org>, Xiao Guangrong <xiaoguangrong@linux.vnet.ibm.com>, linux-doc@vger.kernel.org, linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, cgroups <cgroups@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Glauber Costa <glommer@gmail.com>
 
-Cc: Tejun, and cgroup ML
+On Tue, Jun 18, 2013 at 02:09:39PM +0200, Michal Hocko wrote:
+> base is mmotm-2013-05-09-15-57
+> baserebase is mmotm-2013-06-05-17-24-63 + patches from the current mmots
+> without slab shrinkers patchset.
+> reworkrebase all patches 8 applied on top of baserebase
+> 
+> * No-limit
+> User
+> base: min: 1164.94 max: 1169.75 avg: 1168.31 std: 1.57 runs: 6
+> baserebase: min: 1169.46 [100.4%] max: 1176.07 [100.5%] avg: 1172.49 [100.4%] std: 2.38 runs: 6
+> reworkrebase: min: 1172.58 [100.7%] max: 1177.43 [100.7%] avg: 1175.53 [100.6%] std: 1.91 runs: 6
+> System
+> base: min: 242.55 max: 245.36 avg: 243.92 std: 1.17 runs: 6
+> baserebase: min: 235.36 [97.0%] max: 238.52 [97.2%] avg: 236.70 [97.0%] std: 1.04 runs: 6
+> reworkrebase: min: 236.21 [97.4%] max: 239.46 [97.6%] avg: 237.55 [97.4%] std: 1.05 runs: 6
+> Elapsed
+> base: min: 596.81 max: 620.04 avg: 605.52 std: 7.56 runs: 6
+> baserebase: min: 666.45 [111.7%] max: 710.89 [114.7%] avg: 690.62 [114.1%] std: 13.85 runs: 6
+> reworkrebase: min: 664.05 [111.3%] max: 701.06 [113.1%] avg: 689.29 [113.8%] std: 12.36 runs: 6
+> 
+> Elapsed time regressed by 13% wrt. base but it seems that this came from
+> baserebase which regressed by the same amount.
+> 
 
->> Here are the entries in the cpuset:
->> cgroup.event_control  mem_exclusive    memory_pressure_enabled  notify_on_release         tasks
->> cgroup.procs          mem_hardwall     memory_spread_page       release_agent
->> cpu_exclusive         memory_migrate   memory_spread_slab       sched_load_balance
->> cpus                  memory_pressure  mems                     sched_relax_domain_level
->>
->> There are scheduler, slab allocator, page_cache layout, etc controls.
-> 
-> I think this is mostly for historical reasons since cpusets were 
-> introduced before cgroups.
-> 
->> Why _NOT_ add a thp control to that nicely contained central location?
->> It is a concise set of controls for the job.
->>
-> 
-> All of the above seem to be for cpusets primary purpose, i.e. NUMA 
-> optimizations.  It has nothing to do with transparent hugepages.  (I'm not 
-> saying thp has anything to do with memcg either, but a "memory controller" 
-> seems more appropriate for controlling thp behavior.)
-> 
->> Maybe I am misunderstanding.  Are you saying you want to put memcg
->> information into the cpuset or something like that?
->>
-> 
-> I'm saying there's absolutely no reason to have thp controlled by a 
-> cpuset, or ANY cgroup for that matter, since you chose not to respond to 
-> the question I asked: why do you want to control thp behavior for certain 
-> static binaries and not others?  Where is the performance regression or 
-> the downside?  Is it because of max_ptes_none for certain jobs blowing up 
-> the rss?  We need information, and even if were justifiable then it 
-> wouldn't have anything to do with ANY cgroup but rather a per-process 
-> control.  It has nothing to do with cpusets whatsoever.
-> 
-> (And I'm very curious why you didn't even cc the cpusets maintainer on 
-> this patch in the first place who would probably say the same thing.)
-> .
+boo-urns
 
-Don't know whom you were refering to here. It's Paul Jackson who invented
-cpusets, and then Paul Menage took over the maintainership but he wasn't
-doing much maintainer's work. Now it's me and Tejun maintaining cpusets.
-(long ago Ingo once requested cpuset patches should be cced to him and
-Peter.)
+> Page fault statistics tell us at least part of the story:
+> Minor
+> base: min: 35941845.00 max: 36029788.00 avg: 35986860.17 std: 28288.66 runs: 6
+> baserebase: min: 35852414.00 [99.8%] max: 35899605.00 [99.6%] avg: 35874906.83 [99.7%] std: 18722.59 runs: 6
+> reworkrebase: min: 35538346.00 [98.9%] max: 35584907.00 [98.8%] avg: 35562362.17 [98.8%] std: 18921.74 runs: 6
+> Major
+> base: min: 25390.00 max: 33132.00 avg: 29961.83 std: 2476.58 runs: 6
+> baserebase: min: 34224.00 [134.8%] max: 45674.00 [137.9%] avg: 41556.83 [138.7%] std: 3595.39 runs: 6
+> reworkrebase: min: 277.00 [1.1%] max: 480.00 [1.4%] avg: 384.67 [1.3%] std: 74.67 runs: 6
 
-Back to this patch, I'm definitely on your side. This feature doesn't
-interact with existing cpuset features, and it doens't need anything
-that cpuset provides. In a word, it has nothing to do with cpusets hence
-it shouldn't belong to cpusets.
+Can you try this monolithic patch please?
 
-We're clearing all the messes in cgroups, and this patch acts in the
-converse direction.
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index fe73724..f677780 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -1477,25 +1477,11 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
+ 	 * as there is no guarantee the dirtying process is throttled in the
+ 	 * same way balance_dirty_pages() manages.
+ 	 *
+-	 * This scales the number of dirty pages that must be under writeback
+-	 * before a zone gets flagged ZONE_WRITEBACK. It is a simple backoff
+-	 * function that has the most effect in the range DEF_PRIORITY to
+-	 * DEF_PRIORITY-2 which is the priority reclaim is considered to be
+-	 * in trouble and reclaim is considered to be in trouble.
+-	 *
+-	 * DEF_PRIORITY   100% isolated pages must be PageWriteback to throttle
+-	 * DEF_PRIORITY-1  50% must be PageWriteback
+-	 * DEF_PRIORITY-2  25% must be PageWriteback, kswapd in trouble
+-	 * ...
+-	 * DEF_PRIORITY-6 For SWAP_CLUSTER_MAX isolated pages, throttle if any
+-	 *                     isolated page is PageWriteback
+-	 *
+ 	 * Once a zone is flagged ZONE_WRITEBACK, kswapd will count the number
+ 	 * of pages under pages flagged for immediate reclaim and stall if any
+ 	 * are encountered in the nr_immediate check below.
+ 	 */
+-	if (nr_writeback && nr_writeback >=
+-			(nr_taken >> (DEF_PRIORITY - sc->priority)))
++	if (nr_writeback && nr_writeback == nr_taken)
+ 		zone_set_flag(zone, ZONE_WRITEBACK);
+ 
+ 	/*
+@@ -2382,12 +2368,14 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
+ 	struct zone *zone;
+ 	unsigned long writeback_threshold;
+ 	bool aborted_reclaim;
++	int min_scan_priority = 1;
+ 
+ 	delayacct_freepages_start();
+ 
+ 	if (global_reclaim(sc))
+ 		count_vm_event(ALLOCSTALL);
+ 
++rescan:
+ 	do {
+ 		vmpressure_prio(sc->gfp_mask, sc->target_mem_cgroup,
+ 				sc->priority);
+@@ -2442,7 +2430,7 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
+ 						WB_REASON_TRY_TO_FREE_PAGES);
+ 			sc->may_writepage = 1;
+ 		}
+-	} while (--sc->priority >= 0);
++	} while (--sc->priority >= min_scan_priority);
+ 
+ out:
+ 	delayacct_freepages_end();
+@@ -2466,6 +2454,12 @@ out:
+ 	if (global_reclaim(sc) && !all_unreclaimable(zonelist, sc))
+ 		return 1;
+ 
++	/* If the page allocator is going to consider OOM, rescan at priority 0 */
++	if (min_scan_priority) {
++		min_scan_priority = 0;
++		goto rescan;
++	}
++
+ 	return 0;
+ }
+ 
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
