@@ -1,45 +1,52 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH v5] Soft limit rework
-Date: Fri, 21 Jun 2013 17:09:06 +0200
-Message-ID: <20130621150906.GM12424@dhcp22.suse.cz>
+Date: Fri, 21 Jun 2013 09:34:32 -0700
+Message-ID: <20130621163432.GB31218@htj.dyndns.org>
 References: <1371557387-22434-1-git-send-email-mhocko@suse.cz>
  <20130620111206.GA14809@suse.de>
  <20130621140627.GI12424@dhcp22.suse.cz>
  <20130621140938.GJ12424@dhcp22.suse.cz>
  <20130621150430.GL12424@dhcp22.suse.cz>
+ <20130621150906.GM12424@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=ymmT/kx0t1CT7F9o7dapGxZcbn/xENVDZKG27M0j/F0=;
+        b=xrTlZgCbCCSs9K7YU6GVMUc7F4GiXpjRCw2TUt/E886GSSVhjNXcedx1XQdNJ/tVPa
+         4hIvjvJDbHW9XMrV9E728/upc2DVy7M0NvrZUlw8YnkT5+Nx3XHwg4++FkmH6oNWGiJU
+         dbCh4aJ66F2df7BiB3fkBJ56ukPNtJnHbTqKl0BvSznEY4V1hDqg4Xal3MDrw77gW8ve
+         kqvyKsjAoKVgGhHvvCbJyNf8kuQ7XxR96Fa8T1k94Zu5s0499WGYuoT6Z3DXVDyzl0cU
+         iIRY3YeIa/6NDZtkDlz+DCLklv4yFwTM/lfVVEl2De5H/XmyfXHQkw4giKirnnntctFj
+         Sbpw==
 Content-Disposition: inline
-In-Reply-To: <20130621150430.GL12424-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20130621150906.GM12424@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Mel Gorman <mgorman@suse.de>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, Glauber Costa <glommer@gmail.com>
 
-On Fri 21-06-13 17:04:30, Michal Hocko wrote:
-> On Fri 21-06-13 16:09:38, Michal Hocko wrote:
-> > On Fri 21-06-13 16:06:27, Michal Hocko wrote:
-> > [...]
-> > > > Can you try this monolithic patch please?
-> > > 
-> > > Wow, this looks much better!
-> > 
-> > Damn it! Scratch that. I have made a mistake in configuration so this
-> > all has been 0-no-limit in fact. Sorry about that. It's only now that
-> > I've noticed that so I am retesting. Hopefully it will be done before I
-> > leave today. I will post it on Monday otherwise.
+On Fri, Jun 21, 2013 at 05:09:06PM +0200, Michal Hocko wrote:
+> And I am total idiot. The machine was not booted with mem=1G so the
+> figures are completely useless.
 > 
-> And for real now and it is still Wow!
+> It is soooo Friday. I will start everything again on Monday with a clean
+> head.
+> 
+> Sorry about all the noise.
 
-And I am total idiot. The machine was not booted with mem=1G so the
-figures are completely useless.
+Oh, don't be.  It was the most fun thread of the whole week.  Enjoy
+the weekend. :)
 
-It is soooo Friday. I will start everything again on Monday with a clean
-head.
-
-Sorry about all the noise.
 -- 
-Michal Hocko
-SUSE Labs
+tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
