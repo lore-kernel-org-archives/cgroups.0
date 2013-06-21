@@ -1,52 +1,119 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v5] Soft limit rework
-Date: Fri, 21 Jun 2013 09:34:32 -0700
-Message-ID: <20130621163432.GB31218@htj.dyndns.org>
-References: <1371557387-22434-1-git-send-email-mhocko@suse.cz>
- <20130620111206.GA14809@suse.de>
- <20130621140627.GI12424@dhcp22.suse.cz>
- <20130621140938.GJ12424@dhcp22.suse.cz>
- <20130621150430.GL12424@dhcp22.suse.cz>
- <20130621150906.GM12424@dhcp22.suse.cz>
+From: Tejun Heo <theo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH cgroup/for-3.11 1/3] cgroup: fix RCU accesses to task->cgroups
+Date: Fri, 21 Jun 2013 15:51:17 -0700
+Message-ID: <20130621225116.GC3949@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=ymmT/kx0t1CT7F9o7dapGxZcbn/xENVDZKG27M0j/F0=;
-        b=xrTlZgCbCCSs9K7YU6GVMUc7F4GiXpjRCw2TUt/E886GSSVhjNXcedx1XQdNJ/tVPa
-         4hIvjvJDbHW9XMrV9E728/upc2DVy7M0NvrZUlw8YnkT5+Nx3XHwg4++FkmH6oNWGiJU
-         dbCh4aJ66F2df7BiB3fkBJ56ukPNtJnHbTqKl0BvSznEY4V1hDqg4Xal3MDrw77gW8ve
-         kqvyKsjAoKVgGhHvvCbJyNf8kuQ7XxR96Fa8T1k94Zu5s0499WGYuoT6Z3DXVDyzl0cU
-         iIRY3YeIa/6NDZtkDlz+DCLklv4yFwTM/lfVVEl2De5H/XmyfXHQkw4giKirnnntctFj
-         Sbpw==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20130621150906.GM12424@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Mel Gorman <mgorman@suse.de>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Balbir Singh <bsingharora@gmail.com>, Glauber Costa <glommer@gmail.com>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Fri, Jun 21, 2013 at 05:09:06PM +0200, Michal Hocko wrote:
-> And I am total idiot. The machine was not booted with mem=1G so the
-> figures are completely useless.
-> 
-> It is soooo Friday. I will start everything again on Monday with a clean
-> head.
-> 
-> Sorry about all the noise.
+task->cgroups is a RCU pointer pointing to struct css_set.  A task
+switches to a different css_set on cgroup migration but a css_set
+doesn't change once created and its pointers to cgroup_subsys_states
+aren't RCU protected.
 
-Oh, don't be.  It was the most fun thread of the whole week.  Enjoy
-the weekend. :)
+task_subsys_state[_check]() is the macro to acquire css given a task
+and subsys_id pair.  It RCU-dereferences task->cgroups->subsys[] not
+task->cgroups, so the RCU pointer task->cgroups ends up being
+dereferenced without read_barrier_depends() after it.  It's broken.
 
--- 
-tejun
+Fix it by introducing task_css_set[_check]() which does
+RCU-dereference on task->cgroups.  task_subsys_state[_check]() is
+reimplemented to directly dereference ->subsys[] of the css_set
+returned from task_css_set[_check]().
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+This removes some of sparse RCU warnings in cgroup.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Reported-by: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+---
+Hello,
+
+Three RCU fixe patches.  The first one fixes an actual bug.  The other
+two add missing annoations so that sparse doesn't generate spurious
+RCU address space warnings.
+
+Thanks!
+
+ include/linux/cgroup.h |   58 ++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 48 insertions(+), 10 deletions(-)
+
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -638,22 +638,60 @@ static inline struct cgroup_subsys_state
+ 	return cgrp->subsys[subsys_id];
+ }
+ 
+-/*
+- * function to get the cgroup_subsys_state which allows for extra
+- * rcu_dereference_check() conditions, such as locks used during the
+- * cgroup_subsys::attach() methods.
++/**
++ * task_css_set_check - obtain a task's css_set with extra access conditions
++ * @task: the task to obtain css_set for
++ * @__c: extra condition expression to be passed to rcu_dereference_check()
++ *
++ * A task's css_set is RCU protected, initialized and exited while holding
++ * task_lock(), and can only be modified while holding both cgroup_mutex
++ * and task_lock() while the task is alive.  This macro verifies that the
++ * caller is inside proper critical section and returns @task's css_set.
++ *
++ * The caller can also specify additional allowed conditions via @__c, such
++ * as locks used during the cgroup_subsys::attach() methods.
+  */
+ #ifdef CONFIG_PROVE_RCU
+ extern struct mutex cgroup_mutex;
+-#define task_subsys_state_check(task, subsys_id, __c)			\
+-	rcu_dereference_check((task)->cgroups->subsys[(subsys_id)],	\
+-			      lockdep_is_held(&(task)->alloc_lock) ||	\
+-			      lockdep_is_held(&cgroup_mutex) || (__c))
++#define task_css_set_check(task, __c)					\
++	rcu_dereference_check((task)->cgroups,				\
++		lockdep_is_held(&(task)->alloc_lock) ||			\
++		lockdep_is_held(&cgroup_mutex) || (__c))
+ #else
+-#define task_subsys_state_check(task, subsys_id, __c)			\
+-	rcu_dereference((task)->cgroups->subsys[(subsys_id)])
++#define task_css_set_check(task, __c)					\
++	rcu_dereference_raw((task)->cgroups
+ #endif
+ 
++/**
++ * task_subsys_state_check - obtain css for (task, subsys) w/ extra access conds
++ * @task: the target task
++ * @subsys_id: the target subsystem ID
++ * @__c: extra condition expression to be passed to rcu_dereference_check()
++ *
++ * Return the cgroup_subsys_state for the (@task, @subsys_id) pair.  The
++ * synchronization rules are the same as task_css_set_check().
++ */
++#define task_subsys_state_check(task, subsys_id, __c)			\
++	task_css_set_check((task), (__c))->subsys[(subsys_id)]
++
++/**
++ * task_css_set - obtain a task's css_set
++ * @task: the task to obtain css_set for
++ *
++ * See task_css_set_check().
++ */
++static inline struct css_set *task_css_set(struct task_struct *task)
++{
++	return task_css_set_check(task, false);
++}
++
++/**
++ * task_subsys_state - obtain css for (task, subsys)
++ * @task: the target task
++ * @subsys_id: the target subsystem ID
++ *
++ * See task_subsys_state_check().
++ */
+ static inline struct cgroup_subsys_state *
+ task_subsys_state(struct task_struct *task, int subsys_id)
+ {
