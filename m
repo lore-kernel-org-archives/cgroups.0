@@ -1,128 +1,121 @@
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [PATCH v5] Soft limit rework
-Date: Thu, 20 Jun 2013 12:12:06 +0100
-Message-ID: <20130620111206.GA14809@suse.de>
-References: <1371557387-22434-1-git-send-email-mhocko@suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-3.11] cgroup: disallow rename(2) if
+ sane_behavior
+Date: Fri, 21 Jun 2013 10:35:20 +0200
+Message-ID: <20130621083520.GA12424@dhcp22.suse.cz>
+References: <20130614034717.GA31533@htj.dyndns.org>
+ <20130616071648.GA1978@tango.0pointer.de>
+ <20130616221556.GC28587@htj.dyndns.org>
+ <20130617135122.GD5018@dhcp22.suse.cz>
+ <20130617165129.GA32663@mtj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1371557387-22434-1-git-send-email-mhocko@suse.cz>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20130617165129.GA32663-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Glauber Costa <glommer@gmail.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Tue, Jun 18, 2013 at 02:09:39PM +0200, Michal Hocko wrote:
-> base is mmotm-2013-05-09-15-57
-> baserebase is mmotm-2013-06-05-17-24-63 + patches from the current mmots
-> without slab shrinkers patchset.
-> reworkrebase all patches 8 applied on top of baserebase
+On Mon 17-06-13 09:51:29, Tejun Heo wrote:
+> Hello, Michal.
 > 
-> * No-limit
-> User
-> base: min: 1164.94 max: 1169.75 avg: 1168.31 std: 1.57 runs: 6
-> baserebase: min: 1169.46 [100.4%] max: 1176.07 [100.5%] avg: 1172.49 [100.4%] std: 2.38 runs: 6
-> reworkrebase: min: 1172.58 [100.7%] max: 1177.43 [100.7%] avg: 1175.53 [100.6%] std: 1.91 runs: 6
-> System
-> base: min: 242.55 max: 245.36 avg: 243.92 std: 1.17 runs: 6
-> baserebase: min: 235.36 [97.0%] max: 238.52 [97.2%] avg: 236.70 [97.0%] std: 1.04 runs: 6
-> reworkrebase: min: 236.21 [97.4%] max: 239.46 [97.6%] avg: 237.55 [97.4%] std: 1.05 runs: 6
-> Elapsed
-> base: min: 596.81 max: 620.04 avg: 605.52 std: 7.56 runs: 6
-> baserebase: min: 666.45 [111.7%] max: 710.89 [114.7%] avg: 690.62 [114.1%] std: 13.85 runs: 6
-> reworkrebase: min: 664.05 [111.3%] max: 701.06 [113.1%] avg: 689.29 [113.8%] std: 12.36 runs: 6
+> On Mon, Jun 17, 2013 at 03:51:22PM +0200, Michal Hocko wrote:
+> > > Some configurations which are legitimate under the current parent
+> > > might be invalid when put under a different parent. 
+> > 
+> > yes, for example all configurations where old parent is more restrictive
+> > than the new one. For example. hardlimit in memcg or even more
 > 
-> Elapsed time regressed by 13% wrt. base but it seems that this came from
-> baserebase which regressed by the same amount.
+> I'm not following the hardlimit part.  Shouldn't a given hardlimit
+> value have the same meaning regardless of where the node is located?
+> Its application will surely be different but its meaning would be the
+> same, no?
+
+Yes the hardlimit example was misleading. I was thinking about all the
+consequences. Sorry about the confusion.
+
+> > oom_control, swappiness or use_hierarchy which are expected to be
+> > consistent down the hierarchy.
 > 
+> use_hierarchy is going away.  Can you please explain how oom_control
+> and swappiness behave?
 
-boo-urns
+Both have to be consistent throughout the hierarchy currently. 
 
-> Page fault statistics tell us at least part of the story:
-> Minor
-> base: min: 35941845.00 max: 36029788.00 avg: 35986860.17 std: 28288.66 runs: 6
-> baserebase: min: 35852414.00 [99.8%] max: 35899605.00 [99.6%] avg: 35874906.83 [99.7%] std: 18722.59 runs: 6
-> reworkrebase: min: 35538346.00 [98.9%] max: 35584907.00 [98.8%] avg: 35562362.17 [98.8%] std: 18921.74 runs: 6
-> Major
-> base: min: 25390.00 max: 33132.00 avg: 29961.83 std: 2476.58 runs: 6
-> baserebase: min: 34224.00 [134.8%] max: 45674.00 [137.9%] avg: 41556.83 [138.7%] std: 3595.39 runs: 6
-> reworkrebase: min: 277.00 [1.1%] max: 480.00 [1.4%] avg: 384.67 [1.3%] std: 74.67 runs: 6
+The same swappiness is used for hierarchical reclaim at any
+level. I plan to remove this restriction because this is really too
+restrictive. We should be able to say that some groups in a hierarchy
+shouldn't swap etc.
 
-Can you try this monolithic patch please?
+I am not sure about oom_control yet, though. OOM is handled at the first
+hierarchy level which cannot be pushed down to its hard limit and the
+whole subtree is oom frozen.
+It would be little awkward if a group down the hierarchy hit its own
+limit as well and fired OOM while the OOM is frozen up the hierarchy
+and user space tries to find out the best candidate to kill in that
+hierarchy:
+A (under_oom=true) - waiting for userspace
+ \
+  .
+  .
+  .
+   \
+    B - hit the limit and call mem_cgroup_out_of_memory
 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index fe73724..f677780 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -1477,25 +1477,11 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
- 	 * as there is no guarantee the dirtying process is throttled in the
- 	 * same way balance_dirty_pages() manages.
- 	 *
--	 * This scales the number of dirty pages that must be under writeback
--	 * before a zone gets flagged ZONE_WRITEBACK. It is a simple backoff
--	 * function that has the most effect in the range DEF_PRIORITY to
--	 * DEF_PRIORITY-2 which is the priority reclaim is considered to be
--	 * in trouble and reclaim is considered to be in trouble.
--	 *
--	 * DEF_PRIORITY   100% isolated pages must be PageWriteback to throttle
--	 * DEF_PRIORITY-1  50% must be PageWriteback
--	 * DEF_PRIORITY-2  25% must be PageWriteback, kswapd in trouble
--	 * ...
--	 * DEF_PRIORITY-6 For SWAP_CLUSTER_MAX isolated pages, throttle if any
--	 *                     isolated page is PageWriteback
--	 *
- 	 * Once a zone is flagged ZONE_WRITEBACK, kswapd will count the number
- 	 * of pages under pages flagged for immediate reclaim and stall if any
- 	 * are encountered in the nr_immediate check below.
- 	 */
--	if (nr_writeback && nr_writeback >=
--			(nr_taken >> (DEF_PRIORITY - sc->priority)))
-+	if (nr_writeback && nr_writeback == nr_taken)
- 		zone_set_flag(zone, ZONE_WRITEBACK);
- 
- 	/*
-@@ -2382,12 +2368,14 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
- 	struct zone *zone;
- 	unsigned long writeback_threshold;
- 	bool aborted_reclaim;
-+	int min_scan_priority = 1;
- 
- 	delayacct_freepages_start();
- 
- 	if (global_reclaim(sc))
- 		count_vm_event(ALLOCSTALL);
- 
-+rescan:
- 	do {
- 		vmpressure_prio(sc->gfp_mask, sc->target_mem_cgroup,
- 				sc->priority);
-@@ -2442,7 +2430,7 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
- 						WB_REASON_TRY_TO_FREE_PAGES);
- 			sc->may_writepage = 1;
- 		}
--	} while (--sc->priority >= 0);
-+	} while (--sc->priority >= min_scan_priority);
- 
- out:
- 	delayacct_freepages_end();
-@@ -2466,6 +2454,12 @@ out:
- 	if (global_reclaim(sc) && !all_unreclaimable(zonelist, sc))
- 		return 1;
- 
-+	/* If the page allocator is going to consider OOM, rescan at priority 0 */
-+	if (min_scan_priority) {
-+		min_scan_priority = 0;
-+		goto rescan;
-+	}
-+
- 	return 0;
- }
- 
+On the other hand the handler should be prepared to handle exiting
+tasks (which might change the oom situation) so the under_oom has to be
+checked after a victim is selected and before it is killed to prevent
+from an excessive killing.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+It would be even more interesting if the situation was opposite. Child
+has the oom disabled and waits for userspace to handle the situation.
+     A (oom_control=0)
+    / \___________
+   /              \
+  B (charge)       C (oom_control=1)
+
+Parent gets under oom as well because a sibling pushes it to the
+hard limit. Parent wouldn't be able to oom freeze the hierarchy
+(mem_cgroup_oom_lock) because there is an ongoing oom down the hierarchy
+so it would be basically waiting for userspace as well. This would be
+quite unexpected. While the oom freezing could be tweaked to handle this
+it sounds quite messy to me.
+
+> > The biggest problem I can see is how the core cgroup code know when it is
+> > OK to migrate. There might be some ongoing operations that depend on the
+> > current tree structure. For example the hierarchical reclaim or oom
+> > etc..
+> 
+> Internally, I think it should be implemented as task migrating to
+> another cgroup - IOW, to controllers, it'll appear the same as the
+> userland echoing the pid to cgroup.procs file on the new cgroup.
+
+OK, that should work. The controller still should have an option to say
+that the current configuration is not compatible with its new parent.
+E.g. for memcg if parent->oom_control != moving_memcg->oom_control so
+the move would fail.
+
+> That's the only sane way to implement it as controllers need to do
+> everything which it does for the normal task migration case anyway.
+> Matching the impedance would be the responsibility of cgroup core.
+> 
+> > I do not think that soft reclaim which I was talking about at LSF would
+> > change anything here as it would be pretty much the same as the hard
+> > limit. But that is not so important.
+> 
+> I think it's very important to have trivially stackable
+> configurations.  Maybe we can make more complex semantics work too but
+> it's gonna be confusing like hell when combined with the level of
+> automation we're hoping to achieve.
+> 
+> Thanks.
+> 
+> -- 
+> tejun
+
+-- 
+Michal Hocko
+SUSE Labs
