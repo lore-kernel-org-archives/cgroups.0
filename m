@@ -1,20 +1,20 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 3/6] cgroup: remove cgroup->actual_subsys_mask
-Date: Fri, 21 Jun 2013 18:34:11 -0700
-Message-ID: <1371864854-28364-4-git-send-email-tj@kernel.org>
+Subject: [PATCH 5/6] cgroup: s/for_each_subsys()/for_each_root_subsys()/
+Date: Fri, 21 Jun 2013 18:34:13 -0700
+Message-ID: <1371864854-28364-6-git-send-email-tj@kernel.org>
 References: <1371864854-28364-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
          :references;
-        bh=/5XU7JcMBXpAjZFYI5DKlY31IaGe6tajAJlfNCFJse4=;
-        b=MEzqdOwhPyPOHVXdYFCFYMh6G8oxYp0gg8zOlRzLmNa/dhHu/ck9xxcGpwStE88Ymp
-         y7ZpJhLpz/U50hdpijcLDVqxDBcinyDgaSRUQmh7XSitmeKOIYMArdKMQpRclpoE6AmZ
-         vmQcj02f7hKHRUU1XgIMoA4uBEXKzrqHPxfpe7jUXMW1buqoSIjQ7XQZLGUwf0Xu1kjb
-         x7G4RIbY/XxNvxQ0uRq7CZZzXXkQQEKsWI/sbgtZbPFgLcfcPwxZMP6dm2chF/9e4Yiq
-         zsOQ8AkIH2Lun/21bIajCByci42gafle/0Lb+pcFjVKXao95KYYkEb4G/rvsADH4XBKO
-         7BxA==
+        bh=YTRI08Ep1Pb2NwEo0CIXuonZfxxtQZL05ubqC4b6L/g=;
+        b=u2cZCtRoY5VkAwxhtJU7iMnLZlVZ0VTJInwXEfJKLD3NlaZi0zRVo1iiGA9soX9xVi
+         Wgx8oPjMO/wEJwko04F1b+UvA0C9wRVBl9IIwSceOGLbH7eR7AeXnNdOsLF+nMr5xfQH
+         V8pzoI8Loelpoojcu43rNp2OBx8eNbQ+N+5Tj6LgaIfSbrpYGDGlRoLd8OBGZX1urj8n
+         KovE+fKGEE1tAP0kqJOE+UjN7pG7AujOjJV+rAlZtDgg2kFxhglC7xbNEwAt9eC2AVCo
+         TIGMSqhIabq3ZI4dBoJR/MKlujzhbvew0BcG0epxs5w4fblNy/Rl86BLGzikLQhf/gMr
+         D4qg==
 In-Reply-To: <1371864854-28364-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -24,140 +24,192 @@ Content-Transfer-Encoding: 7bit
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-cgroup curiously has two subsystem masks, ->subsys_mask and
-->actual_subsys_mask.  The latter only exists because the new target
-subsys_mask is passed into rebind_subsystems() via @cgrp->subsys_mask.
-rebind_subsystems() needs to know what the current mask is to decide
-how to reach the target mask so ->actual_subsys_mask is used as the
-temp location to remember the current state.
+for_each_subsys() walks over subsystems attached to a hierarchy and
+we're gonna add iterators which walk over all available subsystems.
+Rename for_each_subsys() to for_each_root_subsys() so that it's more
+appropriately named and for_each_subsys() can be used to iterate all
+subsystems.
 
-Adding a temporary field to a permanent data structure is rather silly
-and can be misleading.  Update rebind_subsystems() to take @added_mask
-and @removed_mask instead and remove @cgrp->actual_subsys_mask.
+While at it, remove unnecessary underbar prefix from macro arguments,
+put them inside parentheses, and adjust indentation for the two
+for_each_*() macros.
 
-This patch shouldn't introduce any behavior changes.
+This patch is purely cosmetic.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- include/linux/cgroup.h |  3 ---
- kernel/cgroup.c        | 22 ++++++++++++----------
- 2 files changed, 12 insertions(+), 13 deletions(-)
+ kernel/cgroup.c | 47 ++++++++++++++++++++++-------------------------
+ 1 file changed, 22 insertions(+), 25 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 46a59d0..7d8c4ec 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -295,9 +295,6 @@ struct cgroupfs_root {
- 	/* Unique id for this hierarchy. */
- 	int hierarchy_id;
- 
--	/* The bitmask of subsystems currently attached to this hierarchy */
--	unsigned long actual_subsys_mask;
--
- 	/* A list running through the attached subsystems */
- 	struct list_head subsys_list;
- 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index dbb4418..c3222a7 100644
+index 5f85f3a..c4bbafb 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -986,17 +986,14 @@ static void cgroup_d_remove_dir(struct dentry *dentry)
-  * returns an error, no reference counts are touched.
-  */
- static int rebind_subsystems(struct cgroupfs_root *root,
--			      unsigned long final_subsys_mask)
-+			     unsigned long added_mask, unsigned removed_mask)
- {
--	unsigned long added_mask, removed_mask;
- 	struct cgroup *cgrp = &root->top_cgroup;
- 	int i;
- 
- 	BUG_ON(!mutex_is_locked(&cgroup_mutex));
- 	BUG_ON(!mutex_is_locked(&cgroup_root_mutex));
- 
--	removed_mask = root->actual_subsys_mask & ~final_subsys_mask;
--	added_mask = final_subsys_mask & ~root->actual_subsys_mask;
- 	/* Check that any added subsystems are currently free */
- 	for (i = 0; i < CGROUP_SUBSYS_COUNT; i++) {
- 		unsigned long bit = 1UL << i;
-@@ -1032,27 +1029,33 @@ static int rebind_subsystems(struct cgroupfs_root *root,
- 			BUG_ON(cgrp->subsys[i]);
- 			BUG_ON(!cgroup_dummy_top->subsys[i]);
- 			BUG_ON(cgroup_dummy_top->subsys[i]->cgroup != cgroup_dummy_top);
-+
- 			cgrp->subsys[i] = cgroup_dummy_top->subsys[i];
- 			cgrp->subsys[i]->cgroup = cgrp;
- 			list_move(&ss->sibling, &root->subsys_list);
- 			ss->root = root;
- 			if (ss->bind)
- 				ss->bind(cgrp);
-+
- 			/* refcount was already taken, and we're keeping it */
-+			root->subsys_mask |= bit;
- 		} else if (bit & removed_mask) {
- 			/* We're removing this subsystem */
- 			BUG_ON(ss == NULL);
- 			BUG_ON(cgrp->subsys[i] != cgroup_dummy_top->subsys[i]);
- 			BUG_ON(cgrp->subsys[i]->cgroup != cgrp);
-+
- 			if (ss->bind)
- 				ss->bind(cgroup_dummy_top);
- 			cgroup_dummy_top->subsys[i]->cgroup = cgroup_dummy_top;
- 			cgrp->subsys[i] = NULL;
- 			cgroup_subsys[i]->root = &cgroup_dummy_root;
- 			list_move(&ss->sibling, &cgroup_dummy_root.subsys_list);
-+
- 			/* subsystem is now free - drop reference on module */
- 			module_put(ss->module);
--		} else if (bit & final_subsys_mask) {
-+			root->subsys_mask &= ~bit;
-+		} else if (bit & root->subsys_mask) {
- 			/* Subsystem state should already exist */
- 			BUG_ON(ss == NULL);
- 			BUG_ON(!cgrp->subsys[i]);
-@@ -1069,7 +1072,6 @@ static int rebind_subsystems(struct cgroupfs_root *root,
- 			BUG_ON(cgrp->subsys[i]);
- 		}
- 	}
--	root->subsys_mask = root->actual_subsys_mask = final_subsys_mask;
- 
- 	return 0;
+@@ -259,16 +259,13 @@ static int notify_on_release(const struct cgroup *cgrp)
+ 	return test_bit(CGRP_NOTIFY_ON_RELEASE, &cgrp->flags);
  }
-@@ -1343,7 +1345,7 @@ static int cgroup_remount(struct super_block *sb, int *flags, char *data)
- 	if (ret)
- 		goto out_unlock;
  
--	if (opts.subsys_mask != root->actual_subsys_mask || opts.release_agent)
-+	if (opts.subsys_mask != root->subsys_mask || opts.release_agent)
- 		pr_warning("cgroup: option changes via remount are deprecated (pid=%d comm=%s)\n",
- 			   task_tgid_nr(current), current->comm);
+-/*
+- * for_each_subsys() allows you to iterate on each subsystem attached to
+- * an active hierarchy
+- */
+-#define for_each_subsys(_root, _ss) \
+-list_for_each_entry(_ss, &_root->subsys_list, sibling)
++/* iterate each subsystem attached to a hierarchy */
++#define for_each_root_subsys(root, ss)					\
++	list_for_each_entry((ss), &(root)->subsys_list, sibling)
  
-@@ -1365,7 +1367,7 @@ static int cgroup_remount(struct super_block *sb, int *flags, char *data)
+-/* for_each_active_root() allows you to iterate across the active hierarchies */
+-#define for_each_active_root(_root) \
+-list_for_each_entry(_root, &cgroup_roots, root_list)
++/* iterate across the active hierarchies */
++#define for_each_active_root(root)					\
++	list_for_each_entry((root), &cgroup_roots, root_list)
+ 
+ static inline struct cgroup *__d_cgrp(struct dentry *dentry)
+ {
+@@ -828,7 +825,7 @@ static void cgroup_free_fn(struct work_struct *work)
+ 	/*
+ 	 * Release the subsystem state objects.
  	 */
- 	cgroup_clear_directory(cgrp->dentry, false, removed_mask);
+-	for_each_subsys(cgrp->root, ss)
++	for_each_root_subsys(cgrp->root, ss)
+ 		ss->css_free(cgrp);
  
--	ret = rebind_subsystems(root, opts.subsys_mask);
-+	ret = rebind_subsystems(root, added_mask, removed_mask);
- 	if (ret) {
- 		/* rebind_subsystems failed, re-populate the removed files */
- 		cgroup_populate_dir(cgrp, false, removed_mask);
-@@ -1634,7 +1636,7 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 		if (ret)
- 			goto unlock_drop;
+ 	cgrp->root->number_of_cgroups--;
+@@ -944,7 +941,7 @@ static void cgroup_clear_directory(struct dentry *dir, bool base_files,
+ 	struct cgroup *cgrp = __d_cgrp(dir);
+ 	struct cgroup_subsys *ss;
  
--		ret = rebind_subsystems(root, root->subsys_mask);
-+		ret = rebind_subsystems(root, root->subsys_mask, 0);
- 		if (ret == -EBUSY) {
- 			free_cgrp_cset_links(&tmp_links);
- 			goto unlock_drop;
-@@ -1727,7 +1729,7 @@ static void cgroup_kill_sb(struct super_block *sb) {
+-	for_each_subsys(cgrp->root, ss) {
++	for_each_root_subsys(cgrp->root, ss) {
+ 		struct cftype_set *set;
+ 		if (!test_bit(ss->subsys_id, &subsys_mask))
+ 			continue;
+@@ -1078,7 +1075,7 @@ static int cgroup_show_options(struct seq_file *seq, struct dentry *dentry)
+ 	struct cgroup_subsys *ss;
+ 
  	mutex_lock(&cgroup_root_mutex);
+-	for_each_subsys(root, ss)
++	for_each_root_subsys(root, ss)
+ 		seq_printf(seq, ",%s", ss->name);
+ 	if (root->flags & CGRP_ROOT_SANE_BEHAVIOR)
+ 		seq_puts(seq, ",sane_behavior");
+@@ -2054,7 +2051,7 @@ static int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk,
+ 	/*
+ 	 * step 1: check that we can legitimately attach to the cgroup.
+ 	 */
+-	for_each_subsys(root, ss) {
++	for_each_root_subsys(root, ss) {
+ 		if (ss->can_attach) {
+ 			retval = ss->can_attach(cgrp, &tset);
+ 			if (retval) {
+@@ -2094,7 +2091,7 @@ static int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk,
+ 	/*
+ 	 * step 4: do subsystem attach callbacks.
+ 	 */
+-	for_each_subsys(root, ss) {
++	for_each_root_subsys(root, ss) {
+ 		if (ss->attach)
+ 			ss->attach(cgrp, &tset);
+ 	}
+@@ -2114,7 +2111,7 @@ out_put_css_set_refs:
+ 	}
+ out_cancel_attach:
+ 	if (retval) {
+-		for_each_subsys(root, ss) {
++		for_each_root_subsys(root, ss) {
+ 			if (ss == failed_ss)
+ 				break;
+ 			if (ss->cancel_attach)
+@@ -4140,7 +4137,7 @@ static int cgroup_populate_dir(struct cgroup *cgrp, bool base_files,
+ 	}
  
- 	/* Rebind all subsystems back to the default hierarchy */
--	ret = rebind_subsystems(root, 0);
-+	ret = rebind_subsystems(root, 0, root->subsys_mask);
- 	/* Shouldn't be able to fail ... */
- 	BUG_ON(ret);
+ 	/* process cftsets of each subsystem */
+-	for_each_subsys(cgrp->root, ss) {
++	for_each_root_subsys(cgrp->root, ss) {
+ 		struct cftype_set *set;
+ 		if (!test_bit(ss->subsys_id, &subsys_mask))
+ 			continue;
+@@ -4150,7 +4147,7 @@ static int cgroup_populate_dir(struct cgroup *cgrp, bool base_files,
+ 	}
  
+ 	/* This cgroup is ready now */
+-	for_each_subsys(cgrp->root, ss) {
++	for_each_root_subsys(cgrp->root, ss) {
+ 		struct cgroup_subsys_state *css = cgrp->subsys[ss->subsys_id];
+ 		struct css_id *id = rcu_dereference_protected(css->id, true);
+ 
+@@ -4299,7 +4296,7 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+ 	if (test_bit(CGRP_CPUSET_CLONE_CHILDREN, &parent->flags))
+ 		set_bit(CGRP_CPUSET_CLONE_CHILDREN, &cgrp->flags);
+ 
+-	for_each_subsys(root, ss) {
++	for_each_root_subsys(root, ss) {
+ 		struct cgroup_subsys_state *css;
+ 
+ 		css = ss->css_alloc(cgrp);
+@@ -4338,14 +4335,14 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+ 	root->number_of_cgroups++;
+ 
+ 	/* each css holds a ref to the cgroup's dentry */
+-	for_each_subsys(root, ss)
++	for_each_root_subsys(root, ss)
+ 		dget(dentry);
+ 
+ 	/* hold a ref to the parent's dentry */
+ 	dget(parent->dentry);
+ 
+ 	/* creation succeeded, notify subsystems */
+-	for_each_subsys(root, ss) {
++	for_each_root_subsys(root, ss) {
+ 		err = online_css(ss, cgrp);
+ 		if (err)
+ 			goto err_destroy;
+@@ -4370,7 +4367,7 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+ 	return 0;
+ 
+ err_free_all:
+-	for_each_subsys(root, ss) {
++	for_each_root_subsys(root, ss) {
+ 		struct cgroup_subsys_state *css = cgrp->subsys[ss->subsys_id];
+ 
+ 		if (css) {
+@@ -4483,7 +4480,7 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 	 * be killed.
+ 	 */
+ 	atomic_set(&cgrp->css_kill_cnt, 1);
+-	for_each_subsys(cgrp->root, ss) {
++	for_each_root_subsys(cgrp->root, ss) {
+ 		struct cgroup_subsys_state *css = cgrp->subsys[ss->subsys_id];
+ 
+ 		/*
+@@ -4557,7 +4554,7 @@ static void cgroup_offline_fn(struct work_struct *work)
+ 	 * css_tryget() is guaranteed to fail now.  Tell subsystems to
+ 	 * initate destruction.
+ 	 */
+-	for_each_subsys(cgrp->root, ss)
++	for_each_root_subsys(cgrp->root, ss)
+ 		offline_css(ss, cgrp);
+ 
+ 	/*
+@@ -4567,7 +4564,7 @@ static void cgroup_offline_fn(struct work_struct *work)
+ 	 * whenever that may be, the extra dentry ref is put so that dentry
+ 	 * destruction happens only after all css's are released.
+ 	 */
+-	for_each_subsys(cgrp->root, ss)
++	for_each_root_subsys(cgrp->root, ss)
+ 		css_put(cgrp->subsys[ss->subsys_id]);
+ 
+ 	/* delete this cgroup from parent->children */
+@@ -4972,7 +4969,7 @@ int proc_cgroup_show(struct seq_file *m, void *v)
+ 		int count = 0;
+ 
+ 		seq_printf(m, "%d:", root->hierarchy_id);
+-		for_each_subsys(root, ss)
++		for_each_root_subsys(root, ss)
+ 			seq_printf(m, "%s%s", count++ ? "," : "", ss->name);
+ 		if (strlen(root->name))
+ 			seq_printf(m, "%sname=%s", count ? "," : "",
 -- 
 1.8.2.1
