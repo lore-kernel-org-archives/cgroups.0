@@ -1,87 +1,61 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH cgroup/for-3.11] cgroup: reserve ID 0 for dummy_root and 1
-	for unified hierarchy
-Date: Sat, 22 Jun 2013 09:30:41 -0700
-Message-ID: <20130622163041.GA15261@htj.dyndns.org>
+From: "azurIt" <azurit@pobox.sk>
+Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=5D_memcg=3A_do_not_trap_chargers_with_full_callstack_on_OOM?=
+Date: Sat, 22 Jun 2013 22:09:58 +0200
+Message-ID: <20130622220958.D10567A4@pobox.sk>
+References: <20130208171012.GH7557@dhcp22.suse.cz>, <20130208220243.EDEE0825@pobox.sk>, <20130210150310.GA9504@dhcp22.suse.cz>, <20130210174619.24F20488@pobox.sk>, <20130211112240.GC19922@dhcp22.suse.cz>, <20130222092332.4001E4B6@pobox.sk>, <20130606160446.GE24115@dhcp22.suse.cz>, <20130606181633.BCC3E02E@pobox.sk>, <20130607131157.GF8117@dhcp22.suse.cz>, <20130617122134.2E072BA8@pobox.sk> <20130619132614.GC16457@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20130619132614.GC16457@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-	:content-disposition:user-agent;
-	bh=HaLPzOTIp2Xg9nPG5DlY0WMjLbj1hyxUfU4pw44dAq8=;
-	b=jq7vIblIVYpzlrJDJ+CAOwyo1KUFhP4TfjaG0zltVC1up3douoerh2aZQOqiSkXDsU
-	ooFqtg9UUhlewZJqd5+ifDV8A7vnYBuhZowKwnoGmby+nXzjStfNaNrmhYoSoWe8lp/H
-	b9cohOZbgnVJxM6vQ0PQFNcnXB7pHYr5oFhMsLJFOAVLCFPNqITy5kd/ffcCK9m7HT6b
-	ZeHBqHlfHjibVBeeaBcrj7+avGucuuKya4tM4OpWvD+B2e6Ac7U7OKm9PPvjThosqoQm
-	b0gx6Z4o5mnTXs3srWp/hiXYVTL/OmGzKnQoX2XKwhruLnRpYMfgzLdoNPjyXehtj4GL
-	mLOg==
-Content-Disposition: inline
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
 
-Before 1a57423166 ("cgroup: make hierarchy_id use cyclic idr"),
-hierarchy IDs were allocated from 0.  As the dummy hierarchy was
-always the one first initialized, it got assigned 0 and all other
-hierarchies from 1.  The patch accidentally changed the minimum
-useable ID to 2.
+Michal,
 
-Let's restore ID 0 for dummy_root and while at it reserve 1 for
-unified hierarchy.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
----
- kernel/cgroup.c |   10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
 
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1421,14 +1421,15 @@ static void init_cgroup_root(struct cgro
- 	init_cgroup_housekeeping(cgrp);
- }
- 
--static int cgroup_init_root_id(struct cgroupfs_root *root)
-+static int cgroup_init_root_id(struct cgroupfs_root *root, int start, int end)
- {
- 	int id;
- 
- 	lockdep_assert_held(&cgroup_mutex);
- 	lockdep_assert_held(&cgroup_root_mutex);
- 
--	id = idr_alloc_cyclic(&cgroup_hierarchy_idr, root, 2, 0, GFP_KERNEL);
-+	id = idr_alloc_cyclic(&cgroup_hierarchy_idr, root, start, end,
-+			      GFP_KERNEL);
- 	if (id < 0)
- 		return id;
- 
-@@ -1631,7 +1632,8 @@ static struct dentry *cgroup_mount(struc
- 		if (ret)
- 			goto unlock_drop;
- 
--		ret = cgroup_init_root_id(root);
-+		/* ID 0 is reserved for dummy root, 1 for unified hierarchy */
-+		ret = cgroup_init_root_id(root, 2, 0);
- 		if (ret)
- 			goto unlock_drop;
- 
-@@ -4899,7 +4901,7 @@ int __init cgroup_init(void)
- 	mutex_lock(&cgroup_mutex);
- 	mutex_lock(&cgroup_root_mutex);
- 
--	BUG_ON(cgroup_init_root_id(&cgroup_dummy_root));
-+	BUG_ON(cgroup_init_root_id(&cgroup_dummy_root, 0, 1));
- 
- 	mutex_unlock(&cgroup_root_mutex);
- 	mutex_unlock(&cgroup_mutex);
+>> I'm unable to send you stacks or more info because problem is taking
+>> down the whole server for some time now (don't know what exactly
+>> caused it to start happening, maybe newer versions of 3.2.x).
+>
+>So you are not testing with the same kernel with just the old patch
+>replaced by the new one?
+
+
+No, i'm not testing with the same kernel but all are 3.2.x. I even cannot=
+ install older 3.2.x because grsecurity is always available for newest ke=
+rnel and there is no archive of older versions (at least i don't know abo=
+ut any).
+
+
+>> But i'm sure of one thing - when problem occurs, nothing is able to
+>> access hard drives (every process which tries it is freezed until
+>> problem is resolved or server is rebooted).
+>
+>I would be really interesting to see what those tasks are blocked on.
+
+
+I'm trying to get it, stay tuned :)
+
+
+Today i noticed one bug, not 100% sure it is related to 'your' patch but =
+i didn't seen this before. I noticed that i have lots of cgroups which ca=
+nnot be removed - if i do 'rmdir <cgroup_directory>', it just hangs and n=
+ever complete. Even more, it's not possible to access the whole cgroup fi=
+lesystem until i kill that rmdir (anything, which tries it, just hangs). =
+All unremoveable cgroups has this in 'memory.oom_control':
+oom_kill_disable 0
+under_oom 1
+
+And, yes, 'tasks' file is empty.
+
+azur
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
