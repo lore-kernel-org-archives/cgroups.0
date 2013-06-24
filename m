@@ -1,41 +1,45 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 5/6] cgroup: s/for_each_subsys()/for_each_root_subsys()/
-Date: Mon, 24 Jun 2013 18:52:15 +0800
-Message-ID: <51C824DF.5080903@huawei.com>
-References: <1371864854-28364-1-git-send-email-tj@kernel.org>
-	<1371864854-28364-6-git-send-email-tj@kernel.org>
+From: "azurIt" <azurit@pobox.sk>
+Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=5D_memcg=3A_do_not_trap_chargers_with_full_callstack_on_OOM?=
+Date: Mon, 24 Jun 2013 18:48:40 +0200
+Message-ID: <20130624184840.781777E6@pobox.sk>
+References: <20130208171012.GH7557@dhcp22.suse.cz>, <20130208220243.EDEE0825@pobox.sk>, <20130210150310.GA9504@dhcp22.suse.cz>, <20130210174619.24F20488@pobox.sk>, <20130211112240.GC19922@dhcp22.suse.cz>, <20130222092332.4001E4B6@pobox.sk>, <20130606160446.GE24115@dhcp22.suse.cz>, <20130606181633.BCC3E02E@pobox.sk>, <20130607131157.GF8117@dhcp22.suse.cz>, <20130617122134.2E072BA8@pobox.sk> <20130619132614.GC16457@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1371864854-28364-6-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Content-Type: text/plain; charset="iso-8859-1"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20130619132614.GC16457@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
 
-09ogMjAxMy82LzIyIDk6MzQsIFRlanVuIEhlbyDQtLXAOgo+IGZvcl9lYWNoX3N1YnN5cygpIHdh
-bGtzIG92ZXIgc3Vic3lzdGVtcyBhdHRhY2hlZCB0byBhIGhpZXJhcmNoeSBhbmQKPiB3ZSdyZSBn
-b25uYSBhZGQgaXRlcmF0b3JzIHdoaWNoIHdhbGsgb3ZlciBhbGwgYXZhaWxhYmxlIHN1YnN5c3Rl
-bXMuCj4gUmVuYW1lIGZvcl9lYWNoX3N1YnN5cygpIHRvIGZvcl9lYWNoX3Jvb3Rfc3Vic3lzKCkg
-c28gdGhhdCBpdCdzIG1vcmUKPiBhcHByb3ByaWF0ZWx5IG5hbWVkIGFuZCBmb3JfZWFjaF9zdWJz
-eXMoKSBjYW4gYmUgdXNlZCB0byBpdGVyYXRlIGFsbAo+IHN1YnN5c3RlbXMuCj4gCj4gV2hpbGUg
-YXQgaXQsIHJlbW92ZSB1bm5lY2Vzc2FyeSB1bmRlcmJhciBwcmVmaXggZnJvbSBtYWNybyBhcmd1
-bWVudHMsCj4gcHV0IHRoZW0gaW5zaWRlIHBhcmVudGhlc2VzLCBhbmQgYWRqdXN0IGluZGVudGF0
-aW9uIGZvciB0aGUgdHdvCj4gZm9yX2VhY2hfKigpIG1hY3Jvcy4KPiAKPiBUaGlzIHBhdGNoIGlz
-IHB1cmVseSBjb3NtZXRpYy4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBUZWp1biBIZW8gPHRqQGtlcm5l
-bC5vcmc+Cj4gLS0tCj4gIGtlcm5lbC9jZ3JvdXAuYyB8IDQ3ICsrKysrKysrKysrKysrKysrKysr
-KystLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCj4gIDEgZmlsZSBjaGFuZ2VkLCAyMiBpbnNlcnRp
-b25zKCspLCAyNSBkZWxldGlvbnMoLSkKCkFja2VkLWJ5OiBMaSBaZWZhbiA8bGl6ZWZhbkBodWF3
-ZWkuY29tPgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
-Q29udGFpbmVycyBtYWlsaW5nIGxpc3QKQ29udGFpbmVyc0BsaXN0cy5saW51eC1mb3VuZGF0aW9u
-Lm9yZwpodHRwczovL2xpc3RzLmxpbnV4Zm91bmRhdGlvbi5vcmcvbWFpbG1hbi9saXN0aW5mby9j
-b250YWluZXJz
+>I would be really interesting to see what those tasks are blocked on.
+
+
+Ok, i got it! Problem occurs two times and it behaves differently each ti=
+me, I was running kernel with that latest patch.
+
+1.) It doesn't have impact on the whole server, only on one cgroup. Here =
+are stacks:
+http://watchdog.sk/lkml/memcg-bug-7.tar.gz
+
+
+2.) It almost takes down the server because of huge I/O on HDDs. Unfortun=
+ately, i had a bug in my script which was suppose to gather stacks (i was=
+n't able to do it by hand like in (1), server was almost unoperable). But=
+ I was lucky and somehow killed processes from problematic cgroup (via ht=
+op) and server was ok again EXCEPT one important thing - processes from t=
+hat cgroup were still running in D state and i wasn't able to kill them f=
+or good. They were taking web server network ports so i had to reboot the=
+ server :( BUT, before that, i gathered stacks:
+http://watchdog.sk/lkml/memcg-bug-8.tar.gz
+
+What do you think?
+
+azur
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
