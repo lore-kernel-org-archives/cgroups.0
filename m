@@ -1,62 +1,80 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 6/6] cgroup: implement for_each_[builtin_]subsys()
-Date: Mon, 24 Jun 2013 13:04:33 -0700
-Message-ID: <20130624200433.GI1918@mtj.dyndns.org>
-References: <1371864854-28364-1-git-send-email-tj@kernel.org>
-	<1371864854-28364-7-git-send-email-tj@kernel.org>
-	<51C82482.9020902@huawei.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH for 3.2] memcg: do not trap chargers with full callstack
+ on OOM
+Date: Mon, 24 Jun 2013 16:13:45 -0400
+Message-ID: <20130624201345.GA21822@cmpxchg.org>
+References: <20130210150310.GA9504@dhcp22.suse.cz>
+ <20130210174619.24F20488@pobox.sk>
+ <20130211112240.GC19922@dhcp22.suse.cz>
+ <20130222092332.4001E4B6@pobox.sk>
+ <20130606160446.GE24115@dhcp22.suse.cz>
+ <20130606181633.BCC3E02E@pobox.sk>
+ <20130607131157.GF8117@dhcp22.suse.cz>
+ <20130617122134.2E072BA8@pobox.sk>
+ <20130619132614.GC16457@dhcp22.suse.cz>
+ <20130622220958.D10567A4@pobox.sk>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20130622220958.D10567A4-Rm0zKEqwvD4@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=eG2emxt6+fmzB18/w7EmLkkxvvEXlY05Clyk8N6vGDI=;
-	b=i0vl0GDsPndEo0a2mxi1+/1puxkc0ik2sS0H7nleVn7aKJ4/ydMl7jeOZOwYBf3Kga
-	jfmrshPU8mgJy4hpeoSWmgubg6rPkyfZW8Yd6RR3shjvolLWFIINALNlWTf8W5Q0FtLr
-	/FxR3weilmBckqG7A0a0y1zB6ytxYAysfzw596nVT1tbVI6vdhTdZLKcuTDv7eap1ZVN
-	2+sHRYFEnTLgLK5WainJR5eXzK86MzReL+oRHZ4oXkY03haq4s7Tb6xcNOOs3vIDiDCO
-	lcmRgxIp4UFveMLJDgM2/RR5BmJNHaFX9m9nNkYzfvrnxQ4dqDp4jrB458I9j0qZ+lZK
-	wddQ==
-Content-Disposition: inline
-In-Reply-To: <51C82482.9020902-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-On Mon, Jun 24, 2013 at 06:50:42PM +0800, Li Zefan wrote:
-> > +/**
-> > + * for_each_subsys - iterate all loaded cgroup subsystems
-> > + * @ss: the iteration cursor
-> > + * @i: the index of @ss, CGROUP_SUBSYS_COUNT after reaching the end
-> > + */
-> > +#define for_each_subsys(ss, i)						\
+Hi guys,
+
+On Sat, Jun 22, 2013 at 10:09:58PM +0200, azurIt wrote:
+> >> But i'm sure of one thing - when problem occurs, nothing is able to
+> >> access hard drives (every process which tries it is freezed until
+> >> problem is resolved or server is rebooted).
+> >
+> >I would be really interesting to see what those tasks are blocked on.
 > 
-> This should be called with cgroup_mutex held, so how about add a comment or
-> a lock assert for it?
-
-Will do.
-
-> > +#define for_each_builtin_subsys(ss, i)					\
-> > +	for ((i) = 0; (i) < CGROUP_BUILTIN_SUBSYS_COUNT &&		\
-> > +	     (((ss) = cgroup_subsys[i]) || true); (i)++)
+> I'm trying to get it, stay tuned :)
 > 
-> Why "true" is needed here? given ss can't be NULL.
+> Today i noticed one bug, not 100% sure it is related to 'your' patch
+> but i didn't seen this before. I noticed that i have lots of cgroups
+> which cannot be removed - if i do 'rmdir <cgroup_directory>', it
+> just hangs and never complete. Even more, it's not possible to
+> access the whole cgroup filesystem until i kill that rmdir
+> (anything, which tries it, just hangs). All unremoveable cgroups has
+> this in 'memory.oom_control': oom_kill_disable 0 under_oom 1
 
-Because the compiler doesn't know that and we want the compiler to
-optimize out the conditional branch.
+Somebody acquires the OOM wait reference to the memcg and marks it
+under oom but then does not call into mem_cgroup_oom_synchronize() to
+clean up.  That's why under_oom is set and the rmdir waits for
+outstanding references.
 
-Thanks.
+> And, yes, 'tasks' file is empty.
 
--- 
-tejun
+It's not a kernel thread that does it because all kernel-context
+handle_mm_fault() are annotated properly, which means the task must be
+userspace and, since tasks is empty, have exited before synchronizing.
+
+Can you try with the following patch on top?
+
+diff --git a/arch/x86/mm/fault.c b/arch/x86/mm/fault.c
+index 5db0490..9a0b152 100644
+--- a/arch/x86/mm/fault.c
++++ b/arch/x86/mm/fault.c
+@@ -846,17 +846,6 @@ static noinline int
+ mm_fault_error(struct pt_regs *regs, unsigned long error_code,
+ 	       unsigned long address, unsigned int fault)
+ {
+-	/*
+-	 * Pagefault was interrupted by SIGKILL. We have no reason to
+-	 * continue pagefault.
+-	 */
+-	if (fatal_signal_pending(current)) {
+-		if (!(fault & VM_FAULT_RETRY))
+-			up_read(&current->mm->mmap_sem);
+-		if (!(error_code & PF_USER))
+-			no_context(regs, error_code, address);
+-		return 1;
+-	}
+ 	if (!(fault & VM_FAULT_ERROR))
+ 		return 0;
+ 
