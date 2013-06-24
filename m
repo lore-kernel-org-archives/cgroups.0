@@ -1,80 +1,182 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH for 3.2] memcg: do not trap chargers with full callstack
- on OOM
-Date: Mon, 24 Jun 2013 16:13:45 -0400
-Message-ID: <20130624201345.GA21822@cmpxchg.org>
-References: <20130210150310.GA9504@dhcp22.suse.cz>
- <20130210174619.24F20488@pobox.sk>
- <20130211112240.GC19922@dhcp22.suse.cz>
- <20130222092332.4001E4B6@pobox.sk>
- <20130606160446.GE24115@dhcp22.suse.cz>
- <20130606181633.BCC3E02E@pobox.sk>
- <20130607131157.GF8117@dhcp22.suse.cz>
- <20130617122134.2E072BA8@pobox.sk>
- <20130619132614.GC16457@dhcp22.suse.cz>
- <20130622220958.D10567A4@pobox.sk>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v2 3/6] cgroup: remove cgroup->actual_subsys_mask
+Date: Mon, 24 Jun 2013 15:30:26 -0700
+Message-ID: <20130624223026.GK1918@mtj.dyndns.org>
+References: <1371864854-28364-1-git-send-email-tj@kernel.org>
+ <1371864854-28364-4-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=u5OA04OQhUuAqrg2z3FRj9AGmZYjMUGkq8l2TQxGUgA=;
+        b=0H3Zsr+8ugYJxrmpA0SdFpnLQTb8fYuuNgykH+fnrgSTUru+1scFAn0W6r6eO6Nqfw
+         XpR+CyteF0KYI5wKMXKo6ItUPdJt0OlLJbEuT7wkBD9OSAyLa/1mkKe5OnnFzkty80rl
+         fbJfYTRQ3SqLvhUnY6zdtIHWYnMRQwmCenkXgdxydU3HhqxlIgDh2UEF98BfJWuNwNYL
+         tkDISTVKKsvWald+0XlkT2rO9Njei/IS/fKnHln9Oxk9FV1rcFsRgPAisSRPUzmL8Dus
+         k//dL24U1TtjCxrFv6u/1At6vtP3PPDXUapgCQpzoYq7xZfCkr8NQP5iskkpBiaA1fRZ
+         /n1g==
 Content-Disposition: inline
-In-Reply-To: <20130622220958.D10567A4-Rm0zKEqwvD4@public.gmane.org>
+In-Reply-To: <1371864854-28364-4-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi guys,
+From a8a648c4acee2095262f7fa65b0d8a68a03c32e4 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Mon, 24 Jun 2013 15:21:47 -0700
 
-On Sat, Jun 22, 2013 at 10:09:58PM +0200, azurIt wrote:
-> >> But i'm sure of one thing - when problem occurs, nothing is able to
-> >> access hard drives (every process which tries it is freezed until
-> >> problem is resolved or server is rebooted).
-> >
-> >I would be really interesting to see what those tasks are blocked on.
-> 
-> I'm trying to get it, stay tuned :)
-> 
-> Today i noticed one bug, not 100% sure it is related to 'your' patch
-> but i didn't seen this before. I noticed that i have lots of cgroups
-> which cannot be removed - if i do 'rmdir <cgroup_directory>', it
-> just hangs and never complete. Even more, it's not possible to
-> access the whole cgroup filesystem until i kill that rmdir
-> (anything, which tries it, just hangs). All unremoveable cgroups has
-> this in 'memory.oom_control': oom_kill_disable 0 under_oom 1
+cgroup curiously has two subsystem masks, ->subsys_mask and
+->actual_subsys_mask.  The latter only exists because the new target
+subsys_mask is passed into rebind_subsystems() via @root>subsys_mask.
+rebind_subsystems() needs to know what the current mask is to decide
+how to reach the target mask so ->actual_subsys_mask is used as the
+temp location to remember the current state.
 
-Somebody acquires the OOM wait reference to the memcg and marks it
-under oom but then does not call into mem_cgroup_oom_synchronize() to
-clean up.  That's why under_oom is set and the rmdir waits for
-outstanding references.
+Adding a temporary field to a permanent data structure is rather silly
+and can be misleading.  Update rebind_subsystems() to take @added_mask
+and @removed_mask instead and remove @root->actual_subsys_mask.
 
-> And, yes, 'tasks' file is empty.
+This patch shouldn't introduce any behavior changes.
 
-It's not a kernel thread that does it because all kernel-context
-handle_mm_fault() are annotated properly, which means the task must be
-userspace and, since tasks is empty, have exited before synchronizing.
+v2: Comment and description updated as suggested by Li.
 
-Can you try with the following patch on top?
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ include/linux/cgroup.h |  8 +-------
+ kernel/cgroup.c        | 22 ++++++++++++----------
+ 2 files changed, 13 insertions(+), 17 deletions(-)
 
-diff --git a/arch/x86/mm/fault.c b/arch/x86/mm/fault.c
-index 5db0490..9a0b152 100644
---- a/arch/x86/mm/fault.c
-+++ b/arch/x86/mm/fault.c
-@@ -846,17 +846,6 @@ static noinline int
- mm_fault_error(struct pt_regs *regs, unsigned long error_code,
- 	       unsigned long address, unsigned int fault)
- {
--	/*
--	 * Pagefault was interrupted by SIGKILL. We have no reason to
--	 * continue pagefault.
--	 */
--	if (fatal_signal_pending(current)) {
--		if (!(fault & VM_FAULT_RETRY))
--			up_read(&current->mm->mmap_sem);
--		if (!(error_code & PF_USER))
--			no_context(regs, error_code, address);
--		return 1;
--	}
- 	if (!(fault & VM_FAULT_ERROR))
- 		return 0;
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index ab27001..4c1eceb 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -286,18 +286,12 @@ enum {
+ struct cgroupfs_root {
+ 	struct super_block *sb;
  
+-	/*
+-	 * The bitmask of subsystems intended to be attached to this
+-	 * hierarchy
+-	 */
++	/* The bitmask of subsystems attached to this hierarchy */
+ 	unsigned long subsys_mask;
+ 
+ 	/* Unique id for this hierarchy. */
+ 	int hierarchy_id;
+ 
+-	/* The bitmask of subsystems currently attached to this hierarchy */
+-	unsigned long actual_subsys_mask;
+-
+ 	/* A list running through the attached subsystems */
+ 	struct list_head subsys_list;
+ 
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 8f296b8..67fc953 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -986,17 +986,14 @@ static void cgroup_d_remove_dir(struct dentry *dentry)
+  * returns an error, no reference counts are touched.
+  */
+ static int rebind_subsystems(struct cgroupfs_root *root,
+-			      unsigned long final_subsys_mask)
++			     unsigned long added_mask, unsigned removed_mask)
+ {
+-	unsigned long added_mask, removed_mask;
+ 	struct cgroup *cgrp = &root->top_cgroup;
+ 	int i;
+ 
+ 	BUG_ON(!mutex_is_locked(&cgroup_mutex));
+ 	BUG_ON(!mutex_is_locked(&cgroup_root_mutex));
+ 
+-	removed_mask = root->actual_subsys_mask & ~final_subsys_mask;
+-	added_mask = final_subsys_mask & ~root->actual_subsys_mask;
+ 	/* Check that any added subsystems are currently free */
+ 	for (i = 0; i < CGROUP_SUBSYS_COUNT; i++) {
+ 		unsigned long bit = 1UL << i;
+@@ -1032,27 +1029,33 @@ static int rebind_subsystems(struct cgroupfs_root *root,
+ 			BUG_ON(cgrp->subsys[i]);
+ 			BUG_ON(!cgroup_dummy_top->subsys[i]);
+ 			BUG_ON(cgroup_dummy_top->subsys[i]->cgroup != cgroup_dummy_top);
++
+ 			cgrp->subsys[i] = cgroup_dummy_top->subsys[i];
+ 			cgrp->subsys[i]->cgroup = cgrp;
+ 			list_move(&ss->sibling, &root->subsys_list);
+ 			ss->root = root;
+ 			if (ss->bind)
+ 				ss->bind(cgrp);
++
+ 			/* refcount was already taken, and we're keeping it */
++			root->subsys_mask |= bit;
+ 		} else if (bit & removed_mask) {
+ 			/* We're removing this subsystem */
+ 			BUG_ON(ss == NULL);
+ 			BUG_ON(cgrp->subsys[i] != cgroup_dummy_top->subsys[i]);
+ 			BUG_ON(cgrp->subsys[i]->cgroup != cgrp);
++
+ 			if (ss->bind)
+ 				ss->bind(cgroup_dummy_top);
+ 			cgroup_dummy_top->subsys[i]->cgroup = cgroup_dummy_top;
+ 			cgrp->subsys[i] = NULL;
+ 			cgroup_subsys[i]->root = &cgroup_dummy_root;
+ 			list_move(&ss->sibling, &cgroup_dummy_root.subsys_list);
++
+ 			/* subsystem is now free - drop reference on module */
+ 			module_put(ss->module);
+-		} else if (bit & final_subsys_mask) {
++			root->subsys_mask &= ~bit;
++		} else if (bit & root->subsys_mask) {
+ 			/* Subsystem state should already exist */
+ 			BUG_ON(ss == NULL);
+ 			BUG_ON(!cgrp->subsys[i]);
+@@ -1069,7 +1072,6 @@ static int rebind_subsystems(struct cgroupfs_root *root,
+ 			BUG_ON(cgrp->subsys[i]);
+ 		}
+ 	}
+-	root->subsys_mask = root->actual_subsys_mask = final_subsys_mask;
+ 
+ 	return 0;
+ }
+@@ -1343,7 +1345,7 @@ static int cgroup_remount(struct super_block *sb, int *flags, char *data)
+ 	if (ret)
+ 		goto out_unlock;
+ 
+-	if (opts.subsys_mask != root->actual_subsys_mask || opts.release_agent)
++	if (opts.subsys_mask != root->subsys_mask || opts.release_agent)
+ 		pr_warning("cgroup: option changes via remount are deprecated (pid=%d comm=%s)\n",
+ 			   task_tgid_nr(current), current->comm);
+ 
+@@ -1365,7 +1367,7 @@ static int cgroup_remount(struct super_block *sb, int *flags, char *data)
+ 	 */
+ 	cgroup_clear_directory(cgrp->dentry, false, removed_mask);
+ 
+-	ret = rebind_subsystems(root, opts.subsys_mask);
++	ret = rebind_subsystems(root, added_mask, removed_mask);
+ 	if (ret) {
+ 		/* rebind_subsystems failed, re-populate the removed files */
+ 		cgroup_populate_dir(cgrp, false, removed_mask);
+@@ -1634,7 +1636,7 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 		if (ret)
+ 			goto unlock_drop;
+ 
+-		ret = rebind_subsystems(root, root->subsys_mask);
++		ret = rebind_subsystems(root, root->subsys_mask, 0);
+ 		if (ret == -EBUSY) {
+ 			free_cgrp_cset_links(&tmp_links);
+ 			goto unlock_drop;
+@@ -1727,7 +1729,7 @@ static void cgroup_kill_sb(struct super_block *sb) {
+ 	mutex_lock(&cgroup_root_mutex);
+ 
+ 	/* Rebind all subsystems back to the default hierarchy */
+-	ret = rebind_subsystems(root, 0);
++	ret = rebind_subsystems(root, 0, root->subsys_mask);
+ 	/* Shouldn't be able to fail ... */
+ 	BUG_ON(ret);
+ 
+-- 
+1.8.2.1
