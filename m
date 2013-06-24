@@ -1,45 +1,58 @@
-From: "azurIt" <azurit@pobox.sk>
-Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=5D_memcg=3A_do_not_trap_chargers_with_full_callstack_on_OOM?=
-Date: Mon, 24 Jun 2013 18:48:40 +0200
-Message-ID: <20130624184840.781777E6@pobox.sk>
-References: <20130208171012.GH7557@dhcp22.suse.cz>, <20130208220243.EDEE0825@pobox.sk>, <20130210150310.GA9504@dhcp22.suse.cz>, <20130210174619.24F20488@pobox.sk>, <20130211112240.GC19922@dhcp22.suse.cz>, <20130222092332.4001E4B6@pobox.sk>, <20130606160446.GE24115@dhcp22.suse.cz>, <20130606181633.BCC3E02E@pobox.sk>, <20130607131157.GF8117@dhcp22.suse.cz>, <20130617122134.2E072BA8@pobox.sk> <20130619132614.GC16457@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 4/6] cgroup: clean up find_css_set() and friends
+Date: Mon, 24 Jun 2013 13:03:30 -0700
+Message-ID: <20130624200330.GH1918@mtj.dyndns.org>
+References: <1371864854-28364-1-git-send-email-tj@kernel.org>
+ <1371864854-28364-5-git-send-email-tj@kernel.org>
+ <51C8206F.90404@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130619132614.GC16457@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=N7s22XN7Xv2diVtGg+RYPaJlDtdIz6dZmtLi4LBVfHc=;
+        b=FU9l365AdO9hnwAAHlpEUsdcCGQhxSL42WAqEhLgUH8RQWlzl+BanX/mNB3nsvzzOm
+         XOqCH5maS5blLnFZOspzkVF0twf3KlUYUkyVP0QmULfDd0Xr7UKKkGaBFsZ/1WYgI748
+         6m9kxwAEODAoO+ywUQlbXm0zpEFWBpxIdqrtZFaNlpufuIH10HWhfgbwCyt1jPvK6by/
+         A+fJF/QFwu4zuaOrBMhTTQLxUqdz8jTRAedC41kmwC49WB8D4D01LuEYH7Yay3bA+oPm
+         k3V2sYSXHTVmiM9XW83hDZU1n6DsMsCuJ7nD9b3NgA2PJI7DyciAU5Tx3CD6iyNnmztv
+         TeMQ==
+Content-Disposition: inline
+In-Reply-To: <51C8206F.90404-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
->I would be really interesting to see what those tasks are blocked on.
+On Mon, Jun 24, 2013 at 06:33:19PM +0800, Li Zefan wrote:
+> On 2013/6/22 9:34, Tejun Heo wrote:
+> > find_css_set() passes uninitialized on-stack template[] array to
+> > find_existing_css_set() which sets the entries for all subsystems.
+> > Passing around an uninitialized array is a bit icky and we want to
+> > introduce an iterator which only iterates loaded subsystems.  Let's
+> > initialize it on definition.
+> > 
+> > While at it, also make the following cosmetic cleanups.
+> > 
+> > * Convert to proper /** comments.
+> > 
+> 
+> I thought we only use this for external functions, but then I read
+> Documentation/kernel-doc-nano-HOWTO.txt:
+> 
+> We also recommend providing kernel-doc formatted documentation
+> for private (file "static") routines, for consistency of kernel
+> source code layout.  But this is lower priority and at the
+> discretion of the MAINTAINER of that kernel source file.
 
+Yeah, for functions which are tricky, important and/or used in many
+different places, I prefer proper function comments.  There really is
+no reason not to do it.
 
-Ok, i got it! Problem occurs two times and it behaves differently each ti=
-me, I was running kernel with that latest patch.
+Thanks.
 
-1.) It doesn't have impact on the whole server, only on one cgroup. Here =
-are stacks:
-http://watchdog.sk/lkml/memcg-bug-7.tar.gz
-
-
-2.) It almost takes down the server because of huge I/O on HDDs. Unfortun=
-ately, i had a bug in my script which was suppose to gather stacks (i was=
-n't able to do it by hand like in (1), server was almost unoperable). But=
- I was lucky and somehow killed processes from problematic cgroup (via ht=
-op) and server was ok again EXCEPT one important thing - processes from t=
-hat cgroup were still running in D state and i wasn't able to kill them f=
-or good. They were taking web server network ports so i had to reboot the=
- server :( BUT, before that, i gathered stacks:
-http://watchdog.sk/lkml/memcg-bug-8.tar.gz
-
-What do you think?
-
-azur
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
