@@ -1,47 +1,107 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.11] cgroup: miscellaneous cleanups
-Date: Mon, 24 Jun 2013 15:32:01 -0700
-Message-ID: <20130624223201.GL1918@mtj.dyndns.org>
-References: <1371864854-28364-1-git-send-email-tj@kernel.org>
+Subject: Re: cgroup: status-quo and userland efforts
+Date: Mon, 24 Jun 2013 17:01:18 -0700
+Message-ID: <20130625000118.GT1918@mtj.dyndns.org>
+References: <20130406012159.GA17159@mtj.dyndns.org>
+	<CAAAKZwvh_R2Xz--bmSLiN33fsqKanOJMq_6+6hoFWFRx38O4gA@mail.gmail.com>
+	<20130422214159.GG12543@htj.dyndns.org>
+	<CAAAKZwuXJwwyj7KSqb7rZ+nrTwBWEaUCWfa7kWecTBnHL8koGw@mail.gmail.com>
+	<CAAAKZwvP_7wBBYMmtFuiE2hZt=ByaLrnTyiR83CZr3OMip63Gg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=L51Ku0LqHBgh6AlJTnNyFFE/lzg7kQp4sll3+vz9whc=;
-        b=u1TYXgjDaeFD3trMG631xmwew5p1gz0DlJnTe8v+HGEX06e7DkapcuXCLyfv7Rvja5
-         HZ4XXEtzmVTcpHAT8XJkgf5RjkPVtpKPKUCj2Rp7SRXLAqVbgXg0bndTfjv969s2UYJy
-         MH1fjE9KtaPqDOnl+8mrk5dcbFQMGcp6gQsnVP1WJ3Ju4i4522xN/JJr6E+CnfNFX1v+
-         QrDlu/QRAYpzP9V/Pfnv6fNwjnsQS1bLGYbEwaX3HRMyd+27OUl6p3eBRWZ6TfxR2lHL
-         m52nAZXgEVY/MffI5AvqZiKpbfpgPLEYJTP4pLy9AAy67Cc/8zEO12H1yCCzsk1EFsSh
-         eRQQ==
-Content-Disposition: inline
-In-Reply-To: <1371864854-28364-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=w/Os+b4+mgcTMoAYdVB7wUgOdxsVeSfjNMuVJmLrJAg=;
+	b=JNGEFTNO9pD0FAg3+Y91QkTgW9v8djzG/vgFliBWpd699IkZrIQ9fHdFMEGs/jzLje
+	YiJ4DTZOXLkJJbJQqP0zlNf5lz8QQ6SFFqGcTALtn2OEWzoTi0sxS5qwNdx3JGIFT7a1
+	s6IkZJuy4r6OO75qoZUzl3Ghe/tRoIotDIml4774YDeCuks5IBHyMyOEXN3WyndDvFfG
+	gx8F8AR9jevYFSmk8LaOAfHxfJYl18k8nPXKfaCB53oSTDIluk/stgeWOucAwpVHSSi8
+	cKlDI/kSec/Gq19IhDhQ3WdhEUjlZF64Eij/YBOTVcDZZ2Q7J8uw+zawdgYI3sP2WtdN
+	Rnfw==
+Content-Disposition: inline
+In-Reply-To: <CAAAKZwvP_7wBBYMmtFuiE2hZt=ByaLrnTyiR83CZr3OMip63Gg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>
+Cc: jpoimboe <jpoimboe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, lpoetter <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, workman-devel <workman-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "dhaval.giani" <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Fri, Jun 21, 2013 at 06:34:08PM -0700, Tejun Heo wrote:
-> Hello,
-> 
-> These are misc clean up patches mostly focused on subsys handling that
-> I ended up with while working on unified hierarchy support.  Nothing
-> too interesting.  Just cleanups.
-> 
->  0001-cgroup-convert-CFTYPE_-flags-to-enums.patch
->  0002-cgroup-prefix-global-variables-with-cgroup_.patch
->  0003-cgroup-remove-cgroup-actual_subsys_mask.patch
->  0004-cgroup-clean-up-find_css_set-and-friends.patch
->  0005-cgroup-s-for_each_subsys-for_each_root_subsys.patch
->  0006-cgroup-implement-for_each_-builtin_-subsys.patch
+Hello, Tim.
 
-Applied 0001-0005.  The patches are re-sequenced so that they can be
-applied before the RCU fixes.  Nothing noteworthy, just a couple
-trivial context conflicts.  Will soon post updated version of 0006.
+On Sat, Jun 22, 2013 at 04:13:41PM -0700, Tim Hockin wrote:
+> I'm very sorry I let this fall off my plate.  I was pointed at a
+> systemd-devel message indicating that this is done.  Is it so?  It
+
+It's progressing pretty fast.
+
+> seems so completely ass-backwards to me. Below is one of our use-cases
+> that I just don't see how we can reproduce in a single-heierarchy.
+
+Configurations which depend on orthogonal multiple hierarchies of
+course won't be replicated under unified hierarchy.  It's unfortunate
+but those just have to go.  More on this later.
+
+> We're also long into the model that users can control their own
+> sub-cgroups (moderated by permissions decided by admin SW up front).
+
+If you're in control of the base system, nothing prevents you from
+doing so.  It's utterly broken security and policy-enforcement point
+of view but if you can trust each software running on your system to
+do the right thing, it's gonna be fine.
+
+> This gives us 4 combinations:
+>   1) { production, DTF }
+>   2) { production, non-DTF }
+>   3) { batch, DTF }
+>   4) { batch non-DTF }
+> 
+> Of these, (3) is sort of nonsense, but the others are actually used
+> and needed.  This is only
+> possible because of split hierarchies.  In fact, we undertook a very painful
+> process to move from a unified cgroup hierarchy to split hierarchies in large
+> part _because of_ these examples.
+
+You can create three sibling cgroups and configure cpuset and blkio
+accordingly.  For cpuset, the setup wouldn't make any different.  For
+blkio, the two non-DTFs would now belong to different cgroups and
+compete with each other as two groups, which won't matter at all as
+non-DTFs are given what's left over after serving DTFs anyway, IIRC.
+
+> Making cgroups composable allows us to build a higher level abstraction that
+> is very powerful and flexible.  Moving back to unified hierarchies goes
+> against everything that we're doing here, and will cause us REAL pain.
+
+Categorizing processes into hierarchical groups of tasks is a
+fundamental idea and a fundamental idea is something to base things on
+top of as it's something people can agree upon relatively easily and
+establish a structure by.  I'd go as far as saying that it's the
+failure on the part of workload design if they in general can't be
+categorized hierarchically.
+
+Even at the practical level, the orthogonal hierarchy encouraged, at
+the very least, the blkcg writeback support which can't be upstreamed
+in any reasonable manner because it is impossible to say that a
+resource can't be said to belong to a cgroup irrespective of who's
+looking at it.
+
+It's something fundamentally broken and I have very difficult time
+believing google's workload is so different that it can't be
+categorized in a single hierarchy for the purpose of resource
+distribution.  I'm sure there are cases where some compromises are
+necessary but the laternative is much worse here.  As I wrote multiple
+times now, multiple orthogonal hierarchy support is gonna be around
+for some time, so I don't think there's any rason for panic; that
+said, please at least plan to move on.
 
 Thanks.
 
