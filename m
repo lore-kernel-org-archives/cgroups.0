@@ -1,94 +1,65 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v5] Soft limit rework
-Date: Tue, 25 Jun 2013 17:49:03 +0200
-Message-ID: <20130625154903.GA10617@dhcp22.suse.cz>
-References: <1371557387-22434-1-git-send-email-mhocko@suse.cz>
- <20130620111206.GA14809@suse.de>
+From: Sasha Levin <sasha.levin@oracle.com>
+Subject: cgroup: kernel BUG at kernel/cgroup.c:1038!
+Date: Tue, 25 Jun 2013 13:20:59 -0400
+Message-ID: <51C9D17B.5090208@oracle.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20130620111206.GA14809-l3A5Bk7waGM@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Return-path: <trinity-owner@vger.kernel.org>
+Sender: trinity-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: lizefan@huawei.com, tj@kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, trinity@vger.kernel.org
 
-On Thu 20-06-13 12:12:06, Mel Gorman wrote:
-> On Tue, Jun 18, 2013 at 02:09:39PM +0200, Michal Hocko wrote:
-> > base is mmotm-2013-05-09-15-57
-> > baserebase is mmotm-2013-06-05-17-24-63 + patches from the current mmots
-> > without slab shrinkers patchset.
-> > reworkrebase all patches 8 applied on top of baserebase
-> > 
-> > * No-limit
-> > User
-> > base: min: 1164.94 max: 1169.75 avg: 1168.31 std: 1.57 runs: 6
-> > baserebase: min: 1169.46 [100.4%] max: 1176.07 [100.5%] avg: 1172.49 [100.4%] std: 2.38 runs: 6
-> > reworkrebase: min: 1172.58 [100.7%] max: 1177.43 [100.7%] avg: 1175.53 [100.6%] std: 1.91 runs: 6
-> > System
-> > base: min: 242.55 max: 245.36 avg: 243.92 std: 1.17 runs: 6
-> > baserebase: min: 235.36 [97.0%] max: 238.52 [97.2%] avg: 236.70 [97.0%] std: 1.04 runs: 6
-> > reworkrebase: min: 236.21 [97.4%] max: 239.46 [97.6%] avg: 237.55 [97.4%] std: 1.05 runs: 6
-> > Elapsed
-> > base: min: 596.81 max: 620.04 avg: 605.52 std: 7.56 runs: 6
-> > baserebase: min: 666.45 [111.7%] max: 710.89 [114.7%] avg: 690.62 [114.1%] std: 13.85 runs: 6
-> > reworkrebase: min: 664.05 [111.3%] max: 701.06 [113.1%] avg: 689.29 [113.8%] std: 12.36 runs: 6
-> > 
-> > Elapsed time regressed by 13% wrt. base but it seems that this came from
-> > baserebase which regressed by the same amount.
-> > 
-> 
-> boo-urns
-> 
-> > Page fault statistics tell us at least part of the story:
-> > Minor
-> > base: min: 35941845.00 max: 36029788.00 avg: 35986860.17 std: 28288.66 runs: 6
-> > baserebase: min: 35852414.00 [99.8%] max: 35899605.00 [99.6%] avg: 35874906.83 [99.7%] std: 18722.59 runs: 6
-> > reworkrebase: min: 35538346.00 [98.9%] max: 35584907.00 [98.8%] avg: 35562362.17 [98.8%] std: 18921.74 runs: 6
-> > Major
-> > base: min: 25390.00 max: 33132.00 avg: 29961.83 std: 2476.58 runs: 6
-> > baserebase: min: 34224.00 [134.8%] max: 45674.00 [137.9%] avg: 41556.83 [138.7%] std: 3595.39 runs: 6
-> > reworkrebase: min: 277.00 [1.1%] max: 480.00 [1.4%] avg: 384.67 [1.3%] std: 74.67 runs: 6
-> 
-> Can you try this monolithic patch please?
+Hi all,
 
-Now that I've tested the patch properly, finally, I have to say that the
-situation has improved.
-0-limit case has a bigger variation with 15% regression in the worst
-case and down to 4% regression in the best case (which gets us to 7% on
-average).
-no-limit configuration behaves better. The worst case is not so bad and
-we are down to 3% regression in average.
+While fuzzing with trinity on a KVM tools guest running latest -next kernel, I've
+stumbled on the following spew:
 
-* 0-limit
-User
-base: min: 1188.28 max: 1198.54 avg: 1194.10 std: 3.31 runs: 6
-baserebase: min: 1186.17 [99.8%] max: 1196.46 [99.8%] avg: 1189.75 [99.6%] std: 3.41 runs: 6
-mel: min: 1183.62 [99.6%] max: 1208.19 [100.8%] avg: 1194.00 [100.0%] std: 8.71 runs: 6
-System
-base: min: 248.40 max: 252.00 avg: 250.19 std: 1.38 runs: 6
-baserebase: min: 240.77 [96.9%] max: 246.74 [97.9%] avg: 243.63 [97.4%] std: 2.23 runs: 6
-mel: min: 249.41 [100.4%] max: 253.34 [100.5%] avg: 251.28 [100.4%] std: 1.20 runs: 6
-Elapsed
-base: min: 759.28 max: 805.30 avg: 784.87 std: 15.45 runs: 6
-baserebase: min: 881.69 [116.1%] max: 938.14 [116.5%] avg: 911.68 [116.2%] std: 19.58 runs: 6
-mel: min: 789.62 [104.0%] max: 928.68 [115.3%] avg: 845.62 [107.7%] std: 59.31 runs: 6
+[   88.247018] kernel BUG at kernel/cgroup.c:1038!
+[   88.250738] invalid opcode: 0000 [#1] PREEMPT SMP DEBUG_PAGEALLOC
+[   88.251169] Dumping ftrace buffer:
+[   88.251169]    (ftrace buffer empty)
+[   88.251169] CPU: 1 PID: 7973 Comm: mount Tainted: G        W    3.10.0-rc7-next-2013
+0625-sasha-00011-g1c1dc0e #1105
+[   88.251169] task: ffff880fc0ae8000 ti: ffff880fc0b9a000 task.ti: ffff880fc0b9a000
+[   88.251437] RIP: 0010:[<ffffffff81249b29>]  [<ffffffff81249b29>] rebind_subsystems+0
+x409/0x5f0
+[   88.252442] RSP: 0018:ffff880fc0b9bba8  EFLAGS: 00010202
+[   88.252994] RAX: 0000000000000001 RBX: ffff880fc0b8a148 RCX: 0000000000000001
+[   88.253839] RDX: 0000000000000003 RSI: 0000000000000001 RDI: ffffffff8860eec0
+[   88.254695] RBP: ffff880fc0b9bc28 R08: ffff880fc0b8a170 R09: ffffffff889e64f8
+[   88.255325] R10: ffffffff889e64d0 R11: ffffffff8a28b600 R12: 0000000000000001
+[   88.255325] R13: 0000000000000000 R14: ffff880fc0b8a170 R15: ffffffff87a6f060
+[   88.255325] FS:  00007f1289eba7e0(0000) GS:ffff880fe5800000(0000) knlGS:000000000000
+0000
+[   88.255325] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[   88.255325] CR2: 00007f12894382f0 CR3: 0000000fc01e0000 CR4: 00000000000006e0
+[   88.255325] Stack:
+[   88.255325]  ffffffff87a6e4d8 ffffffff87a6e468 2222222222222222 2222222222222222
+[   88.255325]  2222222222222222 2222222200000001 0000000000000000 0000000187a6e460
+[   88.255325]  ffff880fc0b8a160 0000000000000000 ffff880fcc2f8b88 ffff880fc0b8a148
+[   88.255325] Call Trace:
+[   88.255325]  [<ffffffff8124bd4f>] cgroup_kill_sb+0xff/0x210
+[   88.255325]  [<ffffffff813d21af>] deactivate_locked_super+0x4f/0x90
+[   88.255325]  [<ffffffff8124f3b3>] cgroup_mount+0x673/0x6e0
+[   88.255325]  [<ffffffff81401a6d>] ? get_fs_type+0x7d/0xd0
+[   88.255325]  [<ffffffff854e95ec>] ? _raw_read_unlock+0x5c/0x80
+[   88.255325]  [<ffffffff81257169>] cpuset_mount+0xd9/0x110
+[   88.255325]  [<ffffffff81337908>] ? pcpu_alloc+0x4e8/0x5f0
+[   88.255325]  [<ffffffff813d2580>] mount_fs+0xb0/0x2d0
+[   88.255325]  [<ffffffff81404afd>] vfs_kern_mount+0xbd/0x180
+[   88.255325]  [<ffffffff814070b5>] do_new_mount+0x145/0x2c0
+[   88.255325]  [<ffffffff81de79b8>] ? security_capable+0x18/0x20
+[   88.255325]  [<ffffffff814085d6>] do_mount+0x356/0x3c0
+[   88.255325]  [<ffffffff8140873d>] SyS_mount+0xfd/0x140
+[   88.255325]  [<ffffffff854eb600>] tracesys+0xdd/0xe2
+[   88.255325] Code: 89 c6 89 45 a8 e8 28 b7 07 00 8b 45 a8 48 63 d0 48 83 c2 02 48 8b 0c d5 48 63 
+9e 88 48 ff c1 85 c0 48 89 0c d5 48 63 9e 88 74 04 <0f> 0b eb fe 4a 8b 84 2b 88 00 00 00 48 c7 c7 98 
+ee 60 88 4c 39
+[   88.255325] RIP  [<ffffffff81249b29>] rebind_subsystems+0x409/0x5f0
+[   88.255325]  RSP <ffff880fc0b9bba8>
 
-* no-limit
-User
-base: min: 1164.94 max: 1169.75 avg: 1168.31 std: 1.57 runs: 6
-baserebase: min: 1169.46 [100.4%] max: 1176.07 [100.5%] avg: 1172.49 [100.4%] std: 2.38 runs: 6
-mel: min: 1174.58 [100.8%] max: 1176.46 [100.6%] avg: 1175.53 [100.6%] std: 0.59 runs: 6
-System
-base: min: 242.55 max: 245.36 avg: 243.92 std: 1.17 runs: 6
-baserebase: min: 235.36 [97.0%] max: 238.52 [97.2%] avg: 236.70 [97.0%] std: 1.04 runs: 6
-mel: min: 244.79 [100.9%] max: 246.86 [100.6%] avg: 246.30 [101.0%] std: 0.76 runs: 6
-Elapsed
-base: min: 596.81 max: 620.04 avg: 605.52 std: 7.56 runs: 6
-baserebase: min: 666.45 [111.7%] max: 710.89 [114.7%] avg: 690.62 [114.1%] std: 13.85 runs: 6
-mel: min: 618.77 [103.7%] max: 637.84 [102.9%] avg: 627.92 [103.7%] std: 6.64 runs: 6
--- 
-Michal Hocko
-SUSE Labs
+
+Thanks,
+Sasha
