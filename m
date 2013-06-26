@@ -1,61 +1,41 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.11 1/3] cgroup: fix RCU accesses to
-	task->cgroups
-Date: Wed, 26 Jun 2013 10:49:36 -0700
-Message-ID: <20130626174936.GE4405@mtj.dyndns.org>
-References: <20130621225116.GC3949@htj.dyndns.org>
+Subject: Re: [PATCH cgroup/for-3.11] cgroup: grab cgroup_mutex in
+ drop_parsed_module_refcounts()
+Date: Wed, 26 Jun 2013 10:50:08 -0700
+Message-ID: <20130626175008.GF4405@mtj.dyndns.org>
+References: <51C9D17B.5090208@oracle.com>
+ <20130626010454.GD30407@mtj.dyndns.org>
+ <20130626010521.GE30407@mtj.dyndns.org>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=D3R9qt858knNkrcbLlsDzUgKIGn6JenjN7+EjGO3YkU=;
+        b=BqK/DX8PMNJysMwFjXp+WqEzZOOdAHEvIllVJEnH0RdIMIgnHGPmSIpgII0xbeYdec
+         xVRJjiVXjXK9r/Ept3NlOfpzz7fRSZxsGNQM9dbth/yaAzA08V+GD8IVPSwykRQs4/9+
+         etzo7YVZYJzqN6W5MTC9d70q4LTrEIvn2WYUutH+0/K6eKRRjEZFjUee6qrkDpOQ1KBJ
+         FhfnUYk37uutPR+SKY3bSuJZyFqs+t4WoPCORSk7wonMvJYhExDccdKwj0ivWaglh9xT
+         CM0jFEt7YGTknrSM4Y7QIEUHGSh8p+o0h81KVWc5+ufCJ9lXBONtS42OP1g7QnJcnL1+
+         bgdw==
+Content-Disposition: inline
+In-Reply-To: <20130626010521.GE30407-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=+XeCv5eTX8XWGzFnla3oxDtyXTNfUmMRHvJxvabRhy8=;
-	b=p3yHlcHjumED5X6HekMzCnHmVIKStzPlO43RX5nPImdc4inNRtz9jL5ottzgi/9jkd
-	kitiCSg8bHUy40qaUq7LK0/JRw3WM78qLHodeTHmxgUcc+sHt7NknUZHuG2oLOLARvKQ
-	FhBUcF/3p7IiZOya875SmMR64mhHyFKb+tiy8fvym4tu2XB/WgYkzcmIR6oPvdtu5pTw
-	f1Oe1xOmI2WddQtUXqSy8ZonFxOR/sA8+xnC9L+HrzPeFsWcWoy3v9NhQpajZVDfZA+W
-	l0UfwR1EzFHrRTix2+hYYHSEYDXWgpNXojFoWtugHAmoTI56h0ZSbhAA3AEnxXqirrLs
-	NmpA==
-Content-Disposition: inline
-In-Reply-To: <20130621225116.GC3949-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <theo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+To: Sasha Levin <sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, trinity-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Jun 21, 2013 at 03:51:17PM -0700, Tejun Heo wrote:
-> task->cgroups is a RCU pointer pointing to struct css_set.  A task
-> switches to a different css_set on cgroup migration but a css_set
-> doesn't change once created and its pointers to cgroup_subsys_states
-> aren't RCU protected.
-> 
-> task_subsys_state[_check]() is the macro to acquire css given a task
-> and subsys_id pair.  It RCU-dereferences task->cgroups->subsys[] not
-> task->cgroups, so the RCU pointer task->cgroups ends up being
-> dereferenced without read_barrier_depends() after it.  It's broken.
-> 
-> Fix it by introducing task_css_set[_check]() which does
-> RCU-dereference on task->cgroups.  task_subsys_state[_check]() is
-> reimplemented to directly dereference ->subsys[] of the css_set
-> returned from task_css_set[_check]().
-> 
-> This removes some of sparse RCU warnings in cgroup.
+On Tue, Jun 25, 2013 at 06:05:21PM -0700, Tejun Heo wrote:
+> This isn't strictly necessary as all subsystems specified in
+> @subsys_mask are guaranteed to be pinned; however, it does spuriously
+> trigger lockdep warning.  Let's grab cgroup_mutex around it.
 > 
 > Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Reported-by: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Applied 1-3 to cgroup/for-3.11.
+Applied both patches to cgroup/for-3.11.
 
 Thanks.
 
