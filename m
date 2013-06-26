@@ -1,158 +1,122 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: cgroup: status-quo and userland efforts
-Date: Wed, 26 Jun 2013 14:20:47 -0700
-Message-ID: <20130626212047.GB4536@htj.dyndns.org>
-References: <20130406012159.GA17159@mtj.dyndns.org>
-	<CAAAKZwvh_R2Xz--bmSLiN33fsqKanOJMq_6+6hoFWFRx38O4gA@mail.gmail.com>
-	<20130422214159.GG12543@htj.dyndns.org>
-	<CAAAKZwuXJwwyj7KSqb7rZ+nrTwBWEaUCWfa7kWecTBnHL8koGw@mail.gmail.com>
-	<CAAAKZwvP_7wBBYMmtFuiE2hZt=ByaLrnTyiR83CZr3OMip63Gg@mail.gmail.com>
-	<20130625000118.GT1918@mtj.dyndns.org>
-	<CAAAKZwt09k-qUwLCnMpAQeYJ-S0XtkjXe4=bJ-G_fcrkAqEzoA@mail.gmail.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [patch] mm, memcg: add oom killer delay
+Date: Wed, 26 Jun 2013 16:18:11 -0700 (PDT)
+Message-ID: <alpine.DEB.2.02.1306261606050.27897@chino.kir.corp.google.com>
+References: <20130603193147.GC23659@dhcp22.suse.cz> <alpine.DEB.2.02.1306031411380.22083@chino.kir.corp.google.com> <20130604095514.GC31242@dhcp22.suse.cz> <alpine.DEB.2.02.1306042329320.20610@chino.kir.corp.google.com> <20130605093937.GK15997@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1306051657001.29626@chino.kir.corp.google.com> <20130610142321.GE5138@dhcp22.suse.cz> <alpine.DEB.2.02.1306111321360.32688@chino.kir.corp.google.com> <20130612202348.GA17282@dhcp22.suse.cz> <alpine.DEB.2.02.1306121408490.24902@chino.kir.corp.google.com>
+ <20130613151602.GG23070@dhcp22.suse.cz> <alpine.DEB.2.02.1306131508300.8686@chino.kir.corp.google.com> <51BA6A2A.3060107@jp.fujitsu.com> <alpine.DEB.2.02.1306140254590.8780@chino.kir.corp.google.com> <51C8F4B9.9060604@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:x-x-sender:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version:content-type;
+        bh=oigPzPHMGEUE02/vOyEm0I0x2f19aSnWmRhowoYml8I=;
+        b=DeJDHwMc+lrG89hAIlAkyVBqsAxEzLIg39p3RmzN0pFbaBXToMl3cd8NiD+dt9/Uox
+         IARSKQ+mlDhRuBxk8Ujn3iepa7nR8J+bRsh3O3AWX2NOqxszwU3Jq2TNTp+wFVaFI/JC
+         5KND7ZddGIPA+A3KrwvpTnpdTX+EhoFKimkjbEmGoP0iMsmvEo2X/JWAqaClgy4PAXrE
+         owJCH+8Oxn0iRkZm0wF7hcTCabSrouJKyZFRWdwsjx0Hn4nsbwUJ01lLKNQE4S5zo/ye
+         ZwhdRk8jiHLMqs2PgeRfzre7mmjG9Iyy2pdI41Zu7Q2ERWGyXEtK1Dfbn+dz6iY/sfFE
+         ADgg==
+In-Reply-To: <51C8F4B9.9060604@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=YNsGJroI36MqpcoddlL9xpHBLb1YRYdO7K+yxhojd2s=;
-	b=hE/YTLaI8+v1ThWoB2ECXwKOfwk0CSzBIaJstj7uVYB6WxR+6+6hhFmKg+gkLf4YiP
-	bBt1U7HZcnk0tdVXLjTIB96BDFbi0T/Y8yFvjquGYZQCzEXFFLw+jevo1XD0p8xbJtzk
-	hk3yRJYxPyok5EX4a9Yw94XPk+KiZ/LpILp1LbCrRHUx7G/rArqhcNnCc/Io+480GCmr
-	tW7YXVreu9CXj44PStfr6nfGtpSIMzQtvGtAGMeUPO4k5Qgo9F3X7x1qZujc1Nh0gVsd
-	/nBTppaTg7c5dobTxhmReuE6DvSbsfDDlxNQ63Ovrj/b7e4n62C9s5XOQp5e41daOO+z
-	neLg==
-Content-Disposition: inline
-In-Reply-To: <CAAAKZwt09k-qUwLCnMpAQeYJ-S0XtkjXe4=bJ-G_fcrkAqEzoA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>
-Cc: jpoimboe <jpoimboe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, lpoetter <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, workman-devel <workman-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "dhaval.giani" <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Michal Hocko <mhocko@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-Hello, Tim.
+On Tue, 25 Jun 2013, Kamezawa Hiroyuki wrote:
 
-On Mon, Jun 24, 2013 at 09:07:47PM -0700, Tim Hockin wrote:
-> I really want to understand why this is SO IMPORTANT that you have to
-> break userspace compatibility?  I mean, isn't Linux supposed to be the
-> OS with the stable kernel interface?  I've seen Linus rant time and
-> time again about this - why is it OK now?
+> Considering only memcg, bypassing all charge-limit-check will work.
+> But as you say, that will not work against global-oom.
 
-What the hell are you talking about?  Nobody is breaking userland
-interface.  A new version of interface is being phased in and the old
-one will stay there for the foreseeable future.  It will be phased out
-eventually but that's gonna take a long time and it will have to be
-something hardly noticeable.  Of course new features will only be
-available with the new interface and there will be efforts to nudge
-people away from the old one but the existing interface will keep
-working it does.
+I think it will since we have per-zone memory reserves that can be 
+bypassed in the page allocator, not to the level of PF_MEMALLOC or 
+TIF_MEMDIE but perhaps to the min watermark / 4, for example.  A userspace 
+global oom handler will obviously be mlocked in memory and this reserve is 
+used only for true kmem accounting so that reading things like the memcg 
+tasks file or reading /proc/pid/stat works, or dynamically allocate a 
+buffer to store data to iterate over.  This is why 
+memory.oom_delay_millisecs is crucial: we want the same functionality that 
+the "user root" has for global oom conditions at the memcg root level and 
+in case reserves are exhausted that the kernel will kill something (which 
+should be rare, but possible) and use the rest of memory reserves to allow 
+to exit.
 
-> Examples?  we obviously don't grant full access, but our kernel gang
-> and security gang seem to trust the bits we're enabling well enough...
-
-Then the security gang doesn't have any clue what's going on, or at
-least operating on very different assumptions (ie. the workloads are
-trusted by default).  You can OOM the whole kernel by creating many
-cgroups, completely mess up controllers by creating deep hierarchies,
-affect your siblings by adjusting your weight and so on.  It's really
-easy to DoS the whole system if you have write access to a cgroup
-directory.
-
-> The non-DTF jobs have a combined share that is small but non-trivial.
-> If we cut that share in half, giving one slice to prod and one slice
-> to batch, we get bad sharing under contention.  We tried this.  We
-
-Why is that tho?  It *should* work fine and I can't think of a reason
-why that would behave particularly badly off the top of my head.
-Maybe I forgot too much of the iosched modification used in google.
-Anyways, if there's a problem, that should be fixable, right?  And
-controller-specific issues like that should really dictate the
-architectural design too much.
-
-> could add control loops in userspace code which try to balance the
-> shares in proportion to the load.  We did that with CPU, and it's sort
-
-Yeah, that is horrible.
-
-> of horrible.  We're moving AWAY from all this craziness in favor of
-> well-defined hierarchical behaviors.
-
-But I don't follow the conclusion here.  For short term workaround,
-sure, but having that dictate the whole architecture decision seems
-completely backwards to me.
-
-> It's a bit naive to think that this is some absolute truth, don't you
-> think?  It just isn't so.  You should know better than most what
-> craziness our users do, and what (legit) rationales they can produce.
-> I have $large_number of machines running $huge_number of jobs from
-> thousands of developers running for years upon years backing up my
-> worldview.
-
-If so, you aren't communicating it very well.  I've talked with quite
-a few people about multiple orthogonal hierarchies including people
-inside google.  Sure, some are using it as it is there but I couldn't
-find strong enough rationale to continue that way given the amount of
-crazys it implies / encourages.  On the other hand, most people agreed
-that having a unified hierarchy with differing level of granularities
-would serve their cases well enough while not being crazy.
-
-Really, I have $huge_number of machines configured certain way isn't
-much of an argument when unified hierarchy isn't gonna break them and
-many people involved in cgroup both on kernel and userland sides share
-the view that the whole thing is a hellish mess which can only be used
-by crafting very specialized configurations for each setup.
-
-> I'm not sure I really grok that statement.  I'm OK with defining new
-
-That's about google's blkcg modifications to support blkcg on
-writeback IOs.  It works but can't be upstreamed as it requires
-tagging each page both with memcg and blkcg tags.
-
-> rules that bring some order to the chaos.  Give us new rules to live
-> by.  All-or-nothing would be fine.  What if mounting cgroupfs gives me
-> N sub-dirs, one for each compiled-in controller?  You could make THAT
-> the mount option - you can have either a unified hierarchy of all
-> controllers or fully disjoint hierarchies.  Or some other rule.
-
-Now I'm lost what you're talking about.  But the summary is, in the
-future, use a single unified hierarchy with differing granularities.
-It's still being worked on, so, for now, try not to depend on creating
-completely orthogonal hierarchies for different controllers.
-
-> The time frame you talk about IS reason for panic.  If I know that
-
-What time frame are you referring to?
-
-> you're going to completely screw me in a a year and a half, I have to
-
-How the hell am I gonna screw you in a year and half?  What are you
-talking about?  Where is this coming from?
-
-> start moving NOW to find new ways to hack around the mess you're
-> making, make my userspace mesh with it, test those things with
-> critical customers, find a way to deploy it safely to a bajillion
-> machines, handle inevitable rollback issues, and so on and so on.
-> Moving from single hierarchy to split hierarchy LITERALLY took 2
-> years.
+> > Even with all of the above (which is not actually that invasive of a
+> > patch), I still think we need memory.oom_delay_millisecs.  I probably made
+> > a mistake in describing what that is addressing if it seems like it's
+> > trying to address any of the above.
+> > 
+> > If a userspace oom handler fails to respond even with access to those
+> > "memcg reserves",
 > 
-> So yeah, I'm in a bit of a panic.  You're making a huge amount of work
-> for us.  You're breaking binary compatibility of the (probably)
-> largest single installation of Linux in the world.  And you're being
-> kind of flip about the reality of it, which is so weird to me,
-> considering you have first-hand experience with it all.
+> How this happens ?
+> 
 
-I frankly have no idea what you're talking about.  Calm down and try
-to understand what's actually going on.
+If the memcg reserves are exhausted, then the kernel needs to kill 
+something even in global oom conditions (consider a "user root" memcg tree 
+to be the same as a global oom condition for processes attached to that 
+tree) since otherwise the machine hangs.  There's no guarantee that some 
+root process sitting in the root memcg would be able to enforce this delay 
+as Michal suggests since reserves could be depleted.  It's important we 
+don't do something as extreme as PF_MEMALLOC so all per-zone reserves are 
+depleted so that the kernel can still intervene and kill something when 
+userspace is unresponsive.
 
-Thanks.
+> Someone may be against that kind of control and say "Hey, I have better idea".
+> That was another reason that oom-scirpiting was discussed. No one can
+> implement
+> general-purpose-victim-selection-logic.
+> 
 
--- 
-tejun
+Completely agreed, and our experience shows that users who manipulate 
+their own "user root" memcgs have their own logic, this is why we're 
+trying to make userspace oom handling as powerful as possible without 
+risking making the machine unresponsive.
+
+> IMHO, it will be difficult but allowing to write script/filter for oom-killing
+> will be worth to try. like..
+> 
+> ==
+> for_each_process :
+>   if comm == mem_manage_daemon :
+>      continue
+>   if user == root              :
+>      continue
+>   score = default_calc_score()
+>   if score > high_score :
+>      selected = current
+> ==
+> 
+
+This is effectively what already happens with the oom delay as proposed 
+here, the userspace oom handler is given access to "memcg reserves" and a 
+period of time to respond; if that fails, then the kernel will kill 
+something the next time we try to charge to the memcg.
+
+> BTW, if you love the logic in the userland oom daemon, why you can't implement
+> it in the kernel ? Does that do some pretty things other than sending SIGKILL
+> ?
+> 
+
+Some do "pretty" things like collect stats and dump it before killing 
+something, but we also want oom handlers that don't do SIGKILL at all.  An 
+example: we statically allocate hugepages at boot because we need a large 
+percentage of memory to be backed by hugepages for a certain class of 
+applications and it's only available at boot.  We also have a userspace 
+that runs on these machines that is shared between hugepage machines and 
+non-hugepage machines.  At times, this userspace becomes oom because the 
+remainder of available memory is allocated as hugetlb pages when in 
+reality they are unmapped and sitting in a free pool.  In that case, our 
+userspace oom handler wants to free those hugetlb pages back to the kernel 
+down to a certain watermark and then opportunistically reallocate them to 
+the pool when memory usage on the system is lower due to spikes in the 
+userspace.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
