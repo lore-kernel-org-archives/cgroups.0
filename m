@@ -1,57 +1,43 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH cgroup/for-3.11] cgroup: grab cgroup_mutex in
- drop_parsed_module_refcounts()
-Date: Tue, 25 Jun 2013 18:05:21 -0700
-Message-ID: <20130626010521.GE30407@mtj.dyndns.org>
-References: <51C9D17B.5090208@oracle.com>
- <20130626010454.GD30407@mtj.dyndns.org>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-3.11 2/3] cgroup: fix RCU accesses around
+	task->cgroups
+Date: Wed, 26 Jun 2013 11:29:46 +0800
+Message-ID: <51CA602A.8020906@huawei.com>
+References: <20130621225116.GC3949@htj.dyndns.org>
+	<20130621225204.GD3949@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <trinity-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=+NAH1LbI6EiPkADj20UUt8Fz0aeReXKe8nccJPYa0DE=;
-        b=qSyYN84aLnDbjOINIcyAvf3i7l7966K88kHGS763JXj4DpI9DFXIxJIoz4xxRStU2p
-         01d/l8qW25iAolnko2XRwsavRd/ah1QX9mqCLh4ehCJYiUdympa9BSREoKYYmUgquN4r
-         T367Y7hkXRTa3uNnyTtemQuBt1WPrkCY+6iZbwAfG9xspTjViNLMHMCKnOvVMRSa0jL8
-         +HiJ+NLHObd6oe5h059ImGOe8vtNw/x1HP3eBTRkartj7WuXwTZfksXS9MmJdPQg4nUK
-         GSjKMilkTlgvLpOQkwN1Yj78x567nfIFXV4JD3tFECiPCvU2CAVUH7UncTRq7bu02KLw
-         0ZJg==
-Content-Disposition: inline
-In-Reply-To: <20130626010454.GD30407@mtj.dyndns.org>
-Sender: trinity-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sasha Levin <sasha.levin@oracle.com>
-Cc: lizefan@huawei.com, LKML <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, trinity@vger.kernel.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20130621225204.GD3949-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <theo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-This isn't strictly necessary as all subsystems specified in
-@subsys_mask are guaranteed to be pinned; however, it does spuriously
-trigger lockdep warning.  Let's grab cgroup_mutex around it.
+On 2013/6/22 6:52, Tejun Heo wrote:
+> There are several places in kernel/cgroup.c where task->cgroups is
+> accessed and modified without going through proper RCU accessors.
+> None is broken as they're all lock protected accesses; however, this
+> still triggers sparse RCU address space warnings.
+> 
+> * Consistently use task_css_set() for task->cgroups dereferencing.
+> 
+> * Use RCU_INIT_POINTER() to clear task->cgroups to &init_css_set on
+>   exit.
+> 
+> * Remove unnecessary rcu_dereference_raw() from cset->subsys[]
+>   dereference in cgroup_exit().
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Reported-by: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- kernel/cgroup.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1325,11 +1325,11 @@ static void drop_parsed_module_refcounts
- 	struct cgroup_subsys *ss;
- 	int i;
- 
--	for_each_subsys(ss, i) {
--		if (!(subsys_mask & (1UL << i)))
--			continue;
--		module_put(cgroup_subsys[i]->module);
--	}
-+	mutex_lock(&cgroup_mutex);
-+	for_each_subsys(ss, i)
-+		if (subsys_mask & (1UL << i))
-+			module_put(cgroup_subsys[i]->module);
-+	mutex_unlock(&cgroup_mutex);
- }
- 
- static int cgroup_remount(struct super_block *sb, int *flags, char *data)
+Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
