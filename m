@@ -1,54 +1,63 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.11] cgroup: fix cgroupfs_root early destruction
- path
-Date: Wed, 26 Jun 2013 17:14:03 +0800
-Message-ID: <51CAB0DB.5000706@huawei.com>
-References: <51C9D17B.5090208@oracle.com> <20130626010454.GD30407@mtj.dyndns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-3.11 1/3] cgroup: fix RCU accesses to
+	task->cgroups
+Date: Wed, 26 Jun 2013 10:49:36 -0700
+Message-ID: <20130626174936.GE4405@mtj.dyndns.org>
+References: <20130621225116.GC3949@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130626010454.GD30407-9pTldWuhBndy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Sasha Levin <sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, trinity-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=+XeCv5eTX8XWGzFnla3oxDtyXTNfUmMRHvJxvabRhy8=;
+	b=p3yHlcHjumED5X6HekMzCnHmVIKStzPlO43RX5nPImdc4inNRtz9jL5ottzgi/9jkd
+	kitiCSg8bHUy40qaUq7LK0/JRw3WM78qLHodeTHmxgUcc+sHt7NknUZHuG2oLOLARvKQ
+	FhBUcF/3p7IiZOya875SmMR64mhHyFKb+tiy8fvym4tu2XB/WgYkzcmIR6oPvdtu5pTw
+	f1Oe1xOmI2WddQtUXqSy8ZonFxOR/sA8+xnC9L+HrzPeFsWcWoy3v9NhQpajZVDfZA+W
+	l0UfwR1EzFHrRTix2+hYYHSEYDXWgpNXojFoWtugHAmoTI56h0ZSbhAA3AEnxXqirrLs
+	NmpA==
+Content-Disposition: inline
+In-Reply-To: <20130621225116.GC3949-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <theo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On 2013/6/26 9:04, Tejun Heo wrote:
-> cgroupfs_root used to have ->actual_subsys_mask in addition to
-> ->subsys_mask.  a8a648c4ac ("cgroup: remove
-> cgroup->actual_subsys_mask") removed it noting that the subsys_mask is
-> essentially temporary and doesn't belong in cgroupfs_root; however,
-> the patch made it impossible to tell whether a cgroupfs_root actually
-> has the subsystems bound or just have the bits set leading to the
-> following BUG when trying to mount with subsystems which are already
-> mounted elsewhere.
+On Fri, Jun 21, 2013 at 03:51:17PM -0700, Tejun Heo wrote:
+> task->cgroups is a RCU pointer pointing to struct css_set.  A task
+> switches to a different css_set on cgroup migration but a css_set
+> doesn't change once created and its pointers to cgroup_subsys_states
+> aren't RCU protected.
 > 
->  kernel BUG at kernel/cgroup.c:1038!
->  invalid opcode: 0000 [#1] PREEMPT SMP DEBUG_PAGEALLOC
->  ...
->  CPU: 1 PID: 7973 Comm: mount Tainted: G        W    3.10.0-rc7-next-20130625-sasha-00011-g1c1dc0e #1105
->  task: ffff880fc0ae8000 ti: ffff880fc0b9a000 task.ti: ffff880fc0b9a000
->  RIP: 0010:[<ffffffff81249b29>]  [<ffffffff81249b29>] rebind_subsystems+0x409/0x5f0
->  ...
->  Call Trace:
->   [<ffffffff8124bd4f>] cgroup_kill_sb+0xff/0x210
->   [<ffffffff813d21af>] deactivate_locked_super+0x4f/0x90
->   [<ffffffff8124f3b3>] cgroup_mount+0x673/0x6e0
->   [<ffffffff81257169>] cpuset_mount+0xd9/0x110
->   [<ffffffff813d2580>] mount_fs+0xb0/0x2d0
->   [<ffffffff81404afd>] vfs_kern_mount+0xbd/0x180
->   [<ffffffff814070b5>] do_new_mount+0x145/0x2c0
->   [<ffffffff814085d6>] do_mount+0x356/0x3c0
->   [<ffffffff8140873d>] SyS_mount+0xfd/0x140
->   [<ffffffff854eb600>] tracesys+0xdd/0xe2
+> task_subsys_state[_check]() is the macro to acquire css given a task
+> and subsys_id pair.  It RCU-dereferences task->cgroups->subsys[] not
+> task->cgroups, so the RCU pointer task->cgroups ends up being
+> dereferenced without read_barrier_depends() after it.  It's broken.
 > 
-> We still want rebind_subsystems() to take added/removed masks, so
-> let's fix it by marking whether a cgroupfs_root has finished binding
-> or not.  Also, document what's going on around ->subsys_mask
-> initialization so that similar mistakes aren't repeated.
+> Fix it by introducing task_css_set[_check]() which does
+> RCU-dereference on task->cgroups.  task_subsys_state[_check]() is
+> reimplemented to directly dereference ->subsys[] of the css_set
+> returned from task_css_set[_check]().
+> 
+> This removes some of sparse RCU warnings in cgroup.
 > 
 > Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Reported-by: Sasha Levin <sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+> Reported-by: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Applied 1-3 to cgroup/for-3.11.
+
+Thanks.
+
+-- 
+tejun
