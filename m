@@ -1,113 +1,145 @@
-From: Anatol Pomozov <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] cgroups: Do not show inactive devices in cgroups statistics
-Date: Thu, 27 Jun 2013 10:21:45 -0700
-Message-ID: <CAOMFOmUNkb2q_FL_ceJC_GerTiUYrwN0r8WO1fQ7ZhmwKra2dQ@mail.gmail.com>
-References: <20130627012304.GG4536@htj.dyndns.org>
-	<1372351046-11976-1-git-send-email-anatol.pomozov@gmail.com>
-	<20130627165943.GA5599@mtj.dyndns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: cgroup: status-quo and userland efforts
+Date: Thu, 27 Jun 2013 10:38:09 -0700
+Message-ID: <20130627173809.GB5599@mtj.dyndns.org>
+References: <CAAAKZwvh_R2Xz--bmSLiN33fsqKanOJMq_6+6hoFWFRx38O4gA@mail.gmail.com>
+	<20130422214159.GG12543@htj.dyndns.org>
+	<CAAAKZwuXJwwyj7KSqb7rZ+nrTwBWEaUCWfa7kWecTBnHL8koGw@mail.gmail.com>
+	<CAAAKZwvP_7wBBYMmtFuiE2hZt=ByaLrnTyiR83CZr3OMip63Gg@mail.gmail.com>
+	<20130625000118.GT1918@mtj.dyndns.org>
+	<CAAAKZwt09k-qUwLCnMpAQeYJ-S0XtkjXe4=bJ-G_fcrkAqEzoA@mail.gmail.com>
+	<20130626212047.GB4536@htj.dyndns.org>
+	<CAAAKZws1qkSik4G4pRr7z+067Jp9-jHfpx9-euqbvmdHjoN_Zg@mail.gmail.com>
+	<20130627010427.GF4536@htj.dyndns.org>
+	<CAAAKZwsMT7FRccyVxSn77GR8+9JsSeqmDO6oOy7ycNCY7Desnw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=SNLDeK/BTJ7CvcXlgq8+tLJVxe/a3UL6SBXGgtMYFdk=;
-        b=AlaftGRZxYs51Sf4P/GmOWSM0KfDl2ypTZBBw8pCsSjwvxAUqvBbhkoONAciHUsyJE
-         6xVvmq+7sYeSFEgXuM5NGEM8NQRe5CFo1ymHGQLVuq7NkCk9y/INr5iLGS+muLhctx3z
-         TqpB+X17OK8lVBjxLDHei9Dy+GQ44D1jMIalKkLiVTiBmQeJrXHagpBIq7CNbFV99Mah
-         rpyPh/6NqSa3k4IWwM/8EMVc59R/eGVY7JooAYve96O3dDg+MC/q1xOttqCDjCAJ5IDb
-         6J1S8M+njPIMWry1fNVbZdnGPlGB/bOYOLteKFsNQiGwhXCy4x1Fh3EkT+tgDzZmyiHU
-         ljGg==
-In-Reply-To: <20130627165943.GA5599-9pTldWuhBndy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=CMvQYej+H0NTmmx0pAcPCabxCtEfhuwKor7VQHoSQl8=;
+	b=e5MqK0RhHF2+iXzXhtGDlKfaDIKRDihmuUfdVvcPjDFcd7fVGaoDHGJS73Loiz5iba
+	xys2bc2L1BQYph0hFDkUB6nPmYmnWku1HR74g71dEVc2LsUqrUyoHZ4Ebx5Io2i+kybi
+	8VMcoAOzESVHCz99Ambft89xsTK99dRGdJxOevLXg0bK6gKgsdDFZsq8ZK/ZOWjTh5gb
+	UkUFsvbDZ5vBKl6fKFjOL9dsjzwwtn3rqf9VHNjDzBuXcbridYz0mowrhsSrDV9CJfVV
+	6tnvTIFJu8iElAKi63OfP5G2y9DPqFFIYF9k7QBoCjRj1711GOHunuQA/X2qwgLC/tzl
+	OLAg==
+Content-Disposition: inline
+In-Reply-To: <CAAAKZwsMT7FRccyVxSn77GR8+9JsSeqmDO6oOy7ycNCY7Desnw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>
+Cc: jpoimboe <jpoimboe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, lpoetter <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, workman-devel <workman-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "dhaval.giani" <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hi
+Hello, Tim.
 
-On Thu, Jun 27, 2013 at 9:59 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> (cc'ing Jens)
->
-> Hello,
->
-> This one probably needs -stable cc'd.  Jens, do you wanna take this?
-> If not, I'll be happy to take it through cgroup tree.
+On Wed, Jun 26, 2013 at 08:42:21PM -0700, Tim Hockin wrote:
+> OK, then what I don't know is what is the new interface?  A new cgroupfs?
 
-Personally I think it should not go to -stable. The stats was changed
-in 3.5 kernel and nobody complained about it, so I guess nobody
-(except us) cares about the file format.
+It's gonna be a new mount option for cgroupfs.
 
-> On Thu, Jun 27, 2013 at 09:37:26AM -0700, Anatol Pomozov wrote:
->> Before 3.5 CFQ cgroups stats was lazy initialized - the stat object was created
->> only if the device had any I/O in that cgroup.
->>
->> Around 3.5 time CFQ stat structure became part of device structure. And
->> zero stat is created when device is initialized. Initialization can happen
->> e.g. when we configure it via 'weight_device' file. It calls
->> cfqg_set_weight_device() and it creates cfq_group structure.
->>
->> But even if device is initialized the stats is still zero.
->> If we configure all devices in all in all cgroups it generates a lot of
->> useless stat info that takes more resources to process and store. Imagine
->> servers with handreds cgroups and handreds iSCSI block devices.
->>
->> Do not print stats for inactive devices - it restores functionality
->> that was before 3.5
->>
->> Signed-off-by: Anatol Pomozov <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->
-> Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->
->> ---
->>  block/blk-cgroup.c | 13 +++++++++----
->>  1 file changed, 9 insertions(+), 4 deletions(-)
->>
->> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
->> index e8918ff..4e07e73 100644
->> --- a/block/blk-cgroup.c
->> +++ b/block/blk-cgroup.c
->> @@ -560,6 +560,7 @@ EXPORT_SYMBOL_GPL(__blkg_prfill_u64);
->>   * @rwstat: rwstat to print
->>   *
->>   * Print @rwstat to @sf for the device assocaited with @pd.
->> + * Devices with zero activity will not be printed.
->>   */
->>  u64 __blkg_prfill_rwstat(struct seq_file *sf, struct blkg_policy_data *pd,
->>                        const struct blkg_rwstat *rwstat)
->> @@ -571,19 +572,23 @@ u64 __blkg_prfill_rwstat(struct seq_file *sf, struct blkg_policy_data *pd,
->>               [BLKG_RWSTAT_ASYNC]     = "Async",
->>       };
->>       const char *dname = blkg_dev_name(pd->blkg);
->> -     u64 v;
->> +     u64 total;
->>       int i;
->>
->>       if (!dname)
->>               return 0;
->>
->> +     total = rwstat->cnt[BLKG_RWSTAT_READ] + rwstat->cnt[BLKG_RWSTAT_WRITE];
->> +     /* skip devices with no activity */
->> +     if (!total)
->> +             return 0;
->> +
->>       for (i = 0; i < BLKG_RWSTAT_NR; i++)
->>               seq_printf(sf, "%s %s %llu\n", dname, rwstr[i],
->>                          (unsigned long long)rwstat->cnt[i]);
->>
->> -     v = rwstat->cnt[BLKG_RWSTAT_READ] + rwstat->cnt[BLKG_RWSTAT_WRITE];
->> -     seq_printf(sf, "%s Total %llu\n", dname, (unsigned long long)v);
->> -     return v;
->> +     seq_printf(sf, "%s Total %llu\n", dname, (unsigned long long)total);
->> +     return total;
->>  }
->>  EXPORT_SYMBOL_GPL(__blkg_prfill_rwstat);
->>
->> --
->> 1.8.3
->>
->
-> --
-> tejun
+> DTF and CPU and cpuset all have "default" groups for some tasks (and
+> not others) in our world today.  DTF actually has default, prio, and
+> "normal".  I was simplifying before.  I really wish it were as simple
+> as you think it is.  But if it were, do you think I'd still be
+> arguing?
+
+How am I supposed to know when you don't communicate it but just wave
+your hands saying it's all very complicated?  The cpuset / blkcg
+example is pretty bad because you can enforce any cpuset rules at the
+leaves.
+
+> This really doesn't scale when I have thousands of jobs running.
+> Being able to disable at some levels on some controllers probably
+> helps some, but I can't say for sure without knowing the new interface
+
+How does the number of jobs affect it?  Does each job create a new
+cgroup?
+
+> We tried it in unified hierarchy.  We had our Top People on the
+> problem.  The best we could get was bad enough that we embarked on a
+> LITERAL 2 year transition to make it better.
+
+What didn't work?  What part was so bad?  I find it pretty difficult
+to believe that multiple orthogonal hierarchies is the only possible
+solution, so please elaborate the issues that you guys have
+experienced.
+
+The hierarchy is for organization and enforcement of dynamic
+hierarchical resource distribution and that's it.  If its expressive
+power is lacking, take compromise or tune the configuration according
+to the workloads.  The latter is necessary in workloads which have
+clear distinction of foreground and background anyway - anything which
+interacts with human beings including androids.
+
+> In other words, define a container as a set of cgroups, one under each
+> each active controller type.  A TID enters the container atomically,
+> joining all of the cgroups or none of the cgroups.
+> 
+> container C1 = { /cgroup/cpu/foo, /cgroup/memory/bar,
+> /cgroup/io/default/foo/bar, /cgroup/cpuset/
+> 
+> This is an abstraction that we maintain in userspace (more or less)
+> and we do actually have headaches from split hierarchies here
+> (handling partial failures, non-atomic joins, etc)
+
+That'd separate out task organization from controllre config
+hierarchies.  Kay had a similar idea some time ago.  I think it makes
+things even more complex than it is right now.  I'll continue on this
+below.
+
+> I'm still a bit fuzzy - is all of this written somewhere?
+
+If you dig through cgroup ML, most are there.  There'll be
+"cgroup.controllers" file with which you can enable / disable
+controllers.  Enabling a controller in a cgroup implies that the
+controller is enabled in all ancestors.
+
+> It sounds like you're missing a layer of abstraction.  Why not add the
+> abstraction you want to expose on top of powerful primitives, instead
+> of dumbing down the primitives?
+
+It sure would be possible build more and try to address the issues
+we're seeing now; however, after looking at cgroups for some time now,
+the underlying theme is failure to take reasonable trade-offs and
+going for maximum flexibility in making each choice - the choice of
+interface, multiple hierarchies, no restriction on hierarchical
+behavior, splitting threads of the same process into separate cgroups,
+semi-encouraging delegation through file permission without actually
+pondering the consequences and so on.  And each choice probably made
+sense trying to serve each immediate requirement at the time but added
+up it's a giant pile of mess which developed without direction.
+
+So, at this point, I'm very skeptical about adding more flexibility.
+Once the basics are settled, we sure can look into the missing pieces
+but I don't think that's what we should be doing right now.  Another
+thing is that the unified hierarchy can be implemented by using most
+of the constructs cgroup core already has in more controller way.
+Given that we're gonna have to maintain both interfaces for quite some
+time, the deviation should be kept as minimal as possible.
+
+> But it seems vastly better to define a next-gen API that retains the
+> important flexibility but adds structure where it was lacking
+> previously.
+
+I suppose that's where we disagree.  I think a lot of cgroup's
+problems stem from too much flexibility.  The problem with such level
+of flexibility is that, in addition to breaking fundamental constructs
+and adding significantly to maintenance overhead, it blocks reasonable
+trade-offs to be made at the right places, in turn requiring more
+"flexibility" to address the introduced deficiencies.
+
+Thanks.
+
+-- 
+tejun
