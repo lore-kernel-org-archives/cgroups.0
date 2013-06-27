@@ -1,65 +1,78 @@
-From: David Lang <david@lang.hm>
-Subject: Re: cgroup: status-quo and userland efforts
-Date: Wed, 26 Jun 2013 16:14:07 -0700 (PDT)
-Message-ID: <alpine.DEB.2.02.1306261609050.22572@nftneq.ynat.uz>
-References: <20130406012159.GA17159@mtj.dyndns.org> <CAAAKZwvh_R2Xz--bmSLiN33fsqKanOJMq_6+6hoFWFRx38O4gA@mail.gmail.com> <20130422214159.GG12543@htj.dyndns.org> <CAAAKZwuXJwwyj7KSqb7rZ+nrTwBWEaUCWfa7kWecTBnHL8koGw@mail.gmail.com>
- <CAAAKZwvP_7wBBYMmtFuiE2hZt=ByaLrnTyiR83CZr3OMip63Gg@mail.gmail.com> <20130625000118.GT1918@mtj.dyndns.org> <CAAAKZwt09k-qUwLCnMpAQeYJ-S0XtkjXe4=bJ-G_fcrkAqEzoA@mail.gmail.com> <20130626212047.GB4536@htj.dyndns.org>
- <CAAAKZws1qkSik4G4pRr7z+067Jp9-jHfpx9-euqbvmdHjoN_Zg@mail.gmail.com>
+From: Anatol Pomozov <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] cgroups: Do not show inactive devices in cgroups statistics
+Date: Wed, 26 Jun 2013 17:37:38 -0700
+Message-ID: <CAOMFOmVqevNSKgWR5keT8u7vsCRpHhYROejM6OucyNeeA6j6zQ@mail.gmail.com>
+References: <1372274770-30679-1-git-send-email-anatol.pomozov@gmail.com>
+	<20130626204540.GA4536@htj.dyndns.org>
+	<20130626210820.GA17564@redhat.com>
+	<CAOS58YP_Umud2DTY+3tc4m02FywGNOEALSN1An4OLXczcmsQ4Q@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAAAKZws1qkSik4G4pRr7z+067Jp9-jHfpx9-euqbvmdHjoN_Zg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=Ert6+36Aj0KaYkfTw7xeSKOlSy03vNm4YUq3AZJBPBk=;
+        b=X7GRqxn+NNlfxr+rAH+mUHuMS9SXa6lMyEAEr+hlKVSIDSE2ST9VctQKdAHC+5tc6t
+         Q8YhGxBQ0gQI9EOQTJCac7NCWXglEJlhUeV46/Xg5qxBRjttTNX9xJHlnMehLMWFGQjF
+         cTj8Fo3Wu6oHjpSOJ/gGz+Uuwx6ETf6ONEZ7hyy57yphgcWC8jzzmEc8wZRbJC+veAUi
+         5h7hVDoEae8r62i62xYtjTthCyx7gZGS+KQVL16pYkzgYdzwuPOOYi8PH8ng/SwenYa5
+         paKE2J2ueFUC1/F+fQq3V+a6qURGpd7VJ2TL1UY80iFloUINTS5MpFLdL5MDCk7npLzW
+         HdpQ==
+In-Reply-To: <CAOS58YP_Umud2DTY+3tc4m02FywGNOEALSN1An4OLXczcmsQ4Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"; format="flowed"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tim Hockin <thockin@hockin.org>
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Containers <containers@lists.linux-foundation.org>, Cgroups <cgroups@vger.kernel.org>, bsingharora <bsingharora@gmail.com>, "dhaval.giani" <dhaval.giani@gmail.com>, Kay Sievers <kay.sievers@vrfy.org>, jpoimboe <jpoimboe@redhat.com>, "Daniel P. Berrange" <berrange@redhat.com>, lpoetter <lpoetter@redhat.com>, workman-devel <workman-devel@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
 
-On Wed, 26 Jun 2013, Tim Hockin wrote:
+Hi
 
-> On Wed, Jun 26, 2013 at 2:20 PM, Tejun Heo <tj@kernel.org> wrote:
->> Hello, Tim.
+On Wed, Jun 26, 2013 at 2:11 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> On Wed, Jun 26, 2013 at 2:08 PM, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+>> I don't have an objection to not listing stats of devices which are
+>> zero, but wondering why all the devices of system are showing in
+>> cgroup stat.
 >>
->> On Mon, Jun 24, 2013 at 09:07:47PM -0700, Tim Hockin wrote:
->>> I really want to understand why this is SO IMPORTANT that you have to
->>> break userspace compatibility?  I mean, isn't Linux supposed to be the
->>> OS with the stable kernel interface?  I've seen Linus rant time and
->>> time again about this - why is it OK now?
+>> Don't we add a blkg to a blkcg only if that cgroup did some IO to
+>> that particular device. If yes, then only those devices should
+>> show to which cgroup did some IO and that should be non-zero.
 >>
->> What the hell are you talking about?  Nobody is breaking userland
->> interface.  A new version of interface is being phased in and the old
+>> Is it because of hierarchical support where if a child does IO
+>> to device, we will add an blkg instance to parent's cgroup? In
+>> that case hierarchical stats will still be non-zero but group
+>> local stat can be zero.
 >
-> The first assertion, as I understood, was that (eventually) cgroupfs
-> will not allow split hierarchies - that unified hierarchy would be the
-> only mode.  Is that not the case?
->
-> The second assertion, as I understood, was that (eventually) cgroupfs
-> would not support granting access to some cgroup control files to
-> users (through chown/chmod).  Is that not the case?
+> I wondered that too.  Maybe they're configuring all combinations?  Anatol?
 
-As a bystander, what I understand to be happening is:
+We use an io scheduler similar to cfq.
 
-1. the Kernel developers are saying that multiple hierarchies is causing lots of 
-problems, and so they are starting the migration to a unified hierarchy. In the 
-near term this will be optional, at a later (unspecified) point, it will no 
-longer be optional.
+So I added a log to find place where the blkg is created. I found that
+the structure is created on data write to CGROUP/weight_device CFQ
+file. Now let's look at cfqg_set_weight_device() function (I am
+looking at 3.5 sources but seems HEAD has the same issue). When we set
+weight for a device in that group then an instance of cfq_group is
+created for it. Here is the codepath from write() syscall to
+cfq_pd_init() function:
 
-It is recognized that this is an API break, but the problem is bad enough (too 
-much undefined behavior) that it looks like they are going to do this anyway.
-
-
-2. indpendantly from this, the systemd people have declared that systemd is 
-going to take control of this unified hierarchy and all applications had better 
-use DBUS calls to systemd to make any cgroup changes or else. (i.e. systemd may 
-break whatever you are doing)
-
-
-I don't think the kernel developers are talking about changing ways to control 
-cgroups, just eliminating having multiple hierarchies.
+[  119.584630]  [<ffffffff805001ba>] cfq_pd_init+0x10a/0x110
+[  119.584634]  [<ffffffff804fce00>] blkg_alloc+0x110/0x130
+[  119.584639]  [<ffffffff804fd098>] __blkg_lookup_create+0x278/0x3c0
+[  119.584643]  [<ffffffff804fd1fb>] blkg_lookup_create+0x1b/0x40
+[  119.584647]  [<ffffffff804fd433>] blkg_conf_prep+0x213/0x270
+[  119.584669]  [<ffffffff805008ca>] cfqg_set_weight_device+0x4a/0xd0
+[  119.584678]  [<ffffffff802c1118>] cgroup_write_string.isra.17+0xc8/0x130
+[  119.584687]  [<ffffffff802c12d9>] cgroup_file_write+0x159/0x1e0
+[  119.584707]  [<ffffffff8038aa4f>] vfs_write+0xaf/0x160
+[  119.584711]  [<ffffffff8038add6>] sys_write+0x76/0x100
+[  119.584716]  [<ffffffff807da672>] system_call_fastpath+0x16/0x1b
 
 
+Bottom line: when we set weight for a device then it creates cfq_group
+and initializes device stats with zero. Later that zero stat is shown
+even if no activity happened on the device. Both CFQ and our custom IO
+scheduler have this problem. And because we write set weight for all
+devices in all cgroups we endup with a lot of zero useless stats.
 
-Now, I could be completely misunderstanding this (and I expect to hear about it 
-if I am :-)
-
-David Lang
+What is the right fix in this situation?
