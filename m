@@ -1,50 +1,119 @@
-From: Anatol Pomozov <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] cgroups: Do not show inactive devices in cgroups statistics
-Date: Thu, 27 Jun 2013 09:39:12 -0700
-Message-ID: <CAOMFOmVc5YerD56b_j9DMVYyyztN=54xZ9Xqq3gsB3pe27SXNw@mail.gmail.com>
-References: <1372274770-30679-1-git-send-email-anatol.pomozov@gmail.com>
-	<20130626204540.GA4536@htj.dyndns.org>
-	<20130626210820.GA17564@redhat.com>
-	<CAOS58YP_Umud2DTY+3tc4m02FywGNOEALSN1An4OLXczcmsQ4Q@mail.gmail.com>
-	<CAOMFOmVqevNSKgWR5keT8u7vsCRpHhYROejM6OucyNeeA6j6zQ@mail.gmail.com>
-	<20130627012304.GG4536@htj.dyndns.org>
+From: Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>
+Subject: cgroup access daemon
+Date: Thu, 27 Jun 2013 09:53:52 -0700
+Message-ID: <CAAAKZwuKxxYoVRn6Ye72Vs7vSd_T4cbvEwiU6Q3j4D-Z+VAPrw@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=Y4sOKwoBxPIm3F5dBt1u2rkdIpn8j9pEh0zK7B1pD6c=;
-        b=rWr9TtgLcHtgO6RiFCjKRcloajFdYZnMbpi4CLCGdl9pDfX6R8HI+PiPZjH+a9m4Ge
-         V1tfYuMp8jcYjYufNXeTd8yN/vDH3LK+fCtotXDV2AiPTJ4PonNX3YMX8bvn1N39o6xu
-         owG9rR5d1XcIpHH/vOeaNwIvUZmY/v8ptxoWEB22c9O5v/d852CXg+WCu81zcS0ZPp52
-         6gn40qw4hSeYiKFyl4tpjJltMMhBU1EwdstAUNISoTXwqPGMdq8Fzq1eOuUntRoNk3G8
-         XKubbdnwLNB3XZFSs8u0gTVhq20G8T9f6mldAii5hJenMypR9olOr9U5T9RyG+G0jelk
-         HlSQ==
-In-Reply-To: <20130627012304.GG4536-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+        h=mime-version:sender:from:date:x-google-sender-auth:message-id
+         :subject:to:cc:content-type;
+        bh=1t81F98Wb6XaGxnCZVY3Rm+fDvFdCwPZfUJg2s5af4w=;
+        b=GuOCS8uedzJwVanFxQwoOTVk2WWSjf01nTD3vGlbYivJSDajRr8wYOfEZOXWnLAP81
+         mvnqI3ti9E45XuTAjgB4zN6Su/MxTUx9hhLTArl5pfbGtQNNv2EUiXU5/xIav7IxaaXU
+         twd6Gs1eH9GGsUnXi5GjhV2sDBNcl25nTqj+WrBANo6sVPEiSxuNeWvwBpYNbe0W5ZZ/
+         fkCHvsAYcVvyC6QZDxlRaLIRnToRcDIP1IUj3VFaEdYB97/u8jO5D862LC26iL1mo6Aw
+         suq6xa44w6Wzf5fBUveWzynkszRzCYHNqIr6Myjwx7u7LNmEs72rx2bmxg37+z1Yu1nz
+         qrIA==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+To: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Cc: Mike Galbraith <bitbucket-BGeptl67XyCzQB+pC5nmwQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, lpoetter <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, workman-devel <workman-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, jpoimboe <jpoimboe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "dhaval.giani" <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hi
+Changing the subject, so as not to mix two discussions
 
-On Wed, Jun 26, 2013 at 6:23 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> Hello,
+On Thu, Jun 27, 2013 at 9:18 AM, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org> wrote:
 >
-> On Wed, Jun 26, 2013 at 05:37:38PM -0700, Anatol Pomozov wrote:
->> Bottom line: when we set weight for a device then it creates cfq_group
->> and initializes device stats with zero. Later that zero stat is shown
->> even if no activity happened on the device. Both CFQ and our custom IO
->> scheduler have this problem. And because we write set weight for all
->> devices in all cgroups we endup with a lot of zero useless stats.
+>> > FWIW, the code is too embarassing yet to see daylight, but I'm playing
+>> > with a very lowlevel cgroup manager which supports nesting itself.
+>> > Access in this POC is low-level ("set freezer.state to THAWED for cgroup
+>> > /c1/c2", "Create /c3"), but the key feature is that it can run in two
+>> > modes - native mode in which it uses cgroupfs, and child mode where it
+>> > talks to a parent manager to make the changes.
 >>
->> What is the right fix in this situation?
+>> In this world, are users able to read cgroup files, or do they have to
+>> go through a central agent, too?
 >
-> Yeah, I think yours is fine.  You're just configuring each blkg during
-> init.  Please just update the u64 case and repost.
+> The agent won't itself do anything to stop access through cgroupfs, but
+> the idea would be that cgroupfs would only be mounted in the agent's
+> mntns.  My hope would be that the libcgroup commands (like cgexec,
+> cgcreate, etc) would know to talk to the agent when possible, and users
+> would use those.
 
-Yep. But it looks like before 3.5 stats initialization was not tied to
-device initialization.
+For our use case this is a huge problem.  We have people who access
+cgroup files in a fairly tight loops, polling for information.  We
+have literally hundeds of jobs running on sub-second frequencies -
+plumbing all of that through a daemon is going to be a disaster.
+Either your daemon becomes a bottleneck, or we have to build something
+far more scalable than you really want to.  Not to mention the
+inefficiency of inserting a layer.
+
+We also need the ability to set up eventfds for users or to let them
+poll() on the socket from this daemon.
+
+>> > So then the idea would be that userspace (like libvirt and lxc) would
+>> > talk over /dev/cgroup to its manager.  Userspace inside a container
+>> > (which can't actually mount cgroups itself) would talk to its own
+>> > manager which is talking over a passed-in socket to the host manager,
+>> > which in turn runs natively (uses cgroupfs, and nests "create /c1" under
+>> > the requestor's cgroup).
+>>
+>> How do you handle updates of this agent?  Suppose I have hundreds of
+>> running containers, and I want to release a new version of the cgroupd
+>> ?
+>
+> This may change (which is part of what I want to investigate with some
+> POC), but right now I'm building any controller-aware smarts into it.  I
+> think that's what you're asking about?  The agent doesn't do "slices"
+> etc.  This may turn out to be insufficient, we'll see.
+
+No, what I am asking is a release-engineering problem.  Suppose we
+need to roll out a new version of this daemon (some new feature or a
+bug or something).  We have hundreds of these "child" agents running
+in the job containers.
+
+How do I bring down all these children, and then bring them back up on
+a new version in a way that does not disrupt user jobs (much)?
+
+Similarly, what happens when one of these child agents crashes?  Does
+someone restart it?  Do user jobs just stop working?
+
+>
+> So the only state which the agent stores is a list of cgroup mounts (if
+> in native mode) or an open socket to the parent (if in child mode), and a
+> list of connected children sockets.
+>
+> HUPping the agent will cause it to reload the cgroupfs mounts (in case
+> you've mounted a new controller, living in "the old world" :).  If you
+> just kill it and start a new one, it shouldn't matter.
+>
+>> (note: inquiries about the implementation do not denote acceptance of
+>> the model :)
+>
+> To put it another way, the problem I'm solving (for now) is not the "I
+> want a daemon to ensure that requested guarantees are correctly
+> implemented." In that sense I'm maintaining the status quo, i.e. the
+> admin needs to architect the layout correctly.
+>
+> The problem I'm solving is really that I want containers to be able to
+> handle cgroups even if they can't mount cgroupfs, and I want all
+> userspace to be able to behave the same whether they are in a container
+> or not.
+>
+> This isn't meant as a poke in the eye of anyone who wants to address the
+> other problem.  If it turns out that we (meaning "the community of
+> cgroup users") really want such an agent, then we can add that.  I'm not
+> convinced.
+>
+> What would probably be a better design, then, would be that the agent
+> I'm working on can plug into a resource allocation agent.  Or, I
+> suppose, the other way around.
+>
+>> > At some point (probably soon) we might want to talk about a standard API
+>> > for these things.  However I think it will have to come in the form of
+>> > a standard library, which knows to either send requests over dbus to
+>> > systemd, or over /dev/cgroup sock to the manager.
+>> >
+>> > -serge
