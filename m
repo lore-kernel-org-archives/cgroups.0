@@ -1,100 +1,69 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH v4 5/9] memcg: use css_get/put when charging/uncharging
- kmem
-Date: Fri, 28 Jun 2013 15:59:19 -0700
-Message-ID: <20130628155919.840f44b4d76e4e9ade6a9b6e@linux-foundation.org>
-References: <51BA7794.2000305@huawei.com>
-	<51BA77F1.4080106@huawei.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <51BA77F1.4080106@huawei.com>
-Sender: owner-linux-mm@kvack.org
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET] cgroup: fix and clean up cgroup file creations and removals
+Date: Fri, 28 Jun 2013 16:45:36 -0700
+Message-ID: <1372463145-4245-1-git-send-email-tj@kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id:x-mailer;
+        bh=Eo1EMewHfp/16QmDEL30Y4bxxH8NJmcAPsU9ElOzDS4=;
+        b=W2jQyuQxkXdtuppuXHq17hZPOqWBWxGtdr/WGv4dJC2dfkvhlBDOX7ofTeWv9gh6bj
+         xRYWp3YXdZHDI8vca+UNqRRSulh1rMNSlN/myIYAPJVRKkvg0iYkv3QsOHM6PlwFUFME
+         VFZu7jnxfFi+ADYDPMxZx1FhuSY9wHTBtcAzLpF4KMZZATPeJKZAONQ2hRmTgEsiQhSt
+         SKh/3QqSsA/h0LQO4tq8nzzDvEf1ntTkCnTm+2AqLKQAI37kmPE7EmSusa2IfEAKlTWo
+         T3pSmTCRtpht7dSZNV+BgZT5iWpzekliuomnxPiL9p59dB8HyxDcn7bw8NTDyCM6LV7r
+         FCig==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Li Zefan <lizefan@huawei.com>
-Cc: Tejun Heo <tj@kernel.org>, Glauber Costa <glommer@openvz.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org, Michal Hocko <mhocko@suse.cz>
+Content-Transfer-Encoding: 7bit
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, 14 Jun 2013 09:54:57 +0800 Li Zefan <lizefan@huawei.com> wrote:
+Hello,
 
-> Use css_get/put instead of mem_cgroup_get/put.
-> 
-> We can't do a simple replacement, because here mem_cgroup_put()
-> is called during mem_cgroup_css_free(), while mem_cgroup_css_free()
-> won't be called until css refcnt goes down to 0.
-> 
-> Instead we increment css refcnt in mem_cgroup_css_offline(), and
-> then check if there's still kmem charges. If not, css refcnt will
-> be decremented immediately, otherwise the refcnt will be released
-> after the last kmem allocation is uncahred.
-> 
-> ...
->
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -416,6 +416,11 @@ static void memcg_kmem_clear_activated(struct mem_cgroup *memcg)
->  
->  static void memcg_kmem_mark_dead(struct mem_cgroup *memcg)
->  {
-> +	/*
-> +	 * We need to call css_get() first, because memcg_uncharge_kmem()
-> +	 * will call css_put() if it sees the memcg is dead.
-> +	 */
-> +	smp_wmb();
->  	if (test_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_account_flags))
->  		set_bit(KMEM_ACCOUNTED_DEAD, &memcg->kmem_account_flags);
->  }
+cgroup has been pretty lax about errors while creating cgroupfs files.
+In most cases, it just ignores the errors and continues - cgroups
+created or subsystems bound under heavy memory pressure could be
+missing some files.  As such low memory conditions aren't too
+frequent, this hasn't caused a lot of problems but this is lousy and
+we'll be creating and removing cgroupfs files a lot more dynamically
+with unified hierarchy.  Let's get it in proper shape.
 
-That comment is rather confusing and unhelpful.  "We need to call
-css_get", but we clearly *don't* call css_get().  I guess we want
+This patchset contains the following nine patches.
 
---- a/mm/memcontrol.c~memcg-use-css_get-put-when-charging-uncharging-kmem-fix
-+++ a/mm/memcontrol.c
-@@ -407,7 +407,7 @@ static void memcg_kmem_clear_activated(s
- static void memcg_kmem_mark_dead(struct mem_cgroup *memcg)
- {
- 	/*
--	 * We need to call css_get() first, because memcg_uncharge_kmem()
-+	 * Our caller must use css_get() first, because memcg_uncharge_kmem()
- 	 * will call css_put() if it sees the memcg is dead.
- 	 */
- 	smp_wmb();
-_
+ 0001-cgroup-minor-updates-around-cgroup_clear_directory.patch
+ 0002-cgroup-fix-error-path-of-cgroup_addrm_files.patch
+ 0003-cgroup-fix-cgroup_add_cftypes-error-handling.patch
+ 0004-cgroup-separate-out-cgroup_base_files-handling-out-o.patch
+ 0005-cgroup-update-error-handling-in-cgroup_populate_dir.patch
+ 0006-cgroup-make-rebind_subsystems-handle-file-additions-.patch
+ 0007-cgroup-cosmetic-follow-up-cleanups.patch
+ 0008-cgroup-move-number_of_cgroups-test-out-of-rebind_sub.patch
+ 0009-blkcg-make-blkcg_policy_register-correctly-handle-cg.patch
 
+0001-0007 clean up and get proper error handling implemented so that
+if a file creation fails, the whole operation fails.
 
-But it's still not good.
+0008 is trivial reorganization to prepare for unified hierarchy.
 
-- What is the smp_wmb() for?  These barriers should always be
-  documented so readers can see what we're barriering against but this
-  one is floating around unexplained.
+0009 updates blkcg to treat cgroup_add_cftypes(), which now behaves
+correctly after a failure, error properly.
 
-- What does memcg_uncharge_kmem() have to do with all this? 
-  memcg_kmem_mark_dead() just does a set_bit() - what has that to do
-  with memcg_kmem_mark_dead().
+This patch is on top of cgroup/for-3.11 0ce6cba357 ("cgroup:
+CGRP_ROOT_SUBSYS_BOUND should be ignored when comparing mount
+options") and available in the following git branc.h
 
-So I dunno, it's all clear as mud and I hope we can do better.
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-file-error-handling
 
+diffstat follows.
 
-> @@ -3060,8 +3065,16 @@ static void memcg_uncharge_kmem(struct mem_cgroup *memcg, u64 size)
->  	if (res_counter_uncharge(&memcg->kmem, size))
->  		return;
->  
-> +	/*
-> +	 * Releases a reference taken in kmem_cgroup_css_offline in case
-> +	 * this last uncharge is racing with the offlining code or it is
-> +	 * outliving the memcg existence.
-> +	 *
-> +	 * The memory barrier imposed by test&clear is paired with the
-> +	 * explicit one in memcg_kmem_mark_dead().
-> +	 */
+ block/blk-cgroup.c |    9 +-
+ kernel/cgroup.c    |  212 ++++++++++++++++++++++++++++++-----------------------
+ 2 files changed, 126 insertions(+), 95 deletions(-)
 
-OK, that clears things up a bit.  A small bit.
-
-
-This code is far too tricky :(
+Thanks.
 
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
