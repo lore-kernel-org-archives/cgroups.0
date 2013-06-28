@@ -1,28 +1,33 @@
-From: =?UTF-8?B?VnJpamVuZHJhICjgpLXgpYPgpJzgpYfgpKjgpY3gpKbgpY3gpLApIEdva2hhbGU=?=
-	<vrigo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: cgroup access daemon
-Date: Fri, 28 Jun 2013 11:51:08 -0700
-Message-ID: <CAEZzrd1uN_ys8bMOb1k4Mzg7u4K=S=0xe4r6gU6AnAWY3=_DsQ@mail.gmail.com>
-References: <CAAAKZwuKxxYoVRn6Ye72Vs7vSd_T4cbvEwiU6Q3j4D-Z+VAPrw@mail.gmail.com>
-	<20130627181108.GA26334@sergelap>
-	<CAAAKZwvXYBznJ5uiWaEV7fNCHbciwLa6U+E5RUJkz1ioMu=cRg@mail.gmail.com>
-	<20130628163154.GA4989@sergelap>
-	<CAAAKZwv1CQbCOweUOcvFXtwDsMHB6Pay-fUqz-CNrcOAda8ghA@mail.gmail.com>
+From: Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>
+Subject: Re: cgroup: status-quo and userland efforts
+Date: Fri, 28 Jun 2013 11:53:13 -0700
+Message-ID: <CAAAKZwtqYe-c0bfkgHFbzsOKVHifjTwkqcpci=uS1JwqS9TJHQ@mail.gmail.com>
+References: <CAAAKZwvP_7wBBYMmtFuiE2hZt=ByaLrnTyiR83CZr3OMip63Gg@mail.gmail.com>
+	<20130625000118.GT1918@mtj.dyndns.org>
+	<CAAAKZwt09k-qUwLCnMpAQeYJ-S0XtkjXe4=bJ-G_fcrkAqEzoA@mail.gmail.com>
+	<20130626212047.GB4536@htj.dyndns.org>
+	<1372311907.5871.78.camel@marge.simpson.net>
+	<20130627180143.GD5599@mtj.dyndns.org>
+	<1372391198.5989.110.camel@marge.simpson.net>
+	<20130628040930.GC2500@htj.dyndns.org>
+	<1372394950.5989.128.camel@marge.simpson.net>
+	<20130628050138.GD2500@htj.dyndns.org>
+	<20130628150513.GD5125@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20120113;
-	h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-	:cc:content-type;
-	bh=pWh9j4CUvMK3+G0X+lGza2ui89F2QCFLgOkYzip8Epc=;
-	b=ShHqpvEOdb1zXLnuzpBlTxkuOIB4hiIhSNlhbrFTeFLQAEyzN8WNOBWr+v1OSj7Vlf
-	n6swMdpKIhfOrrJN0X9vBFQCXnbUVdJ6SvndNqYXpdWLvIFGrHNExoCwxJxxkucwnb66
-	9ayXinZY/PNb/NoCfVdFLZ8iufNCCXV3j0onVr2eSGTbFlOA4ZnLjKkff2mMxGwLsVvg
-	zmRLUxJ9qtk1yAnU0V+QZKxpfbtbSAhaPdx+VDz/t2sNWjLhvItN3lZhwu1EDvnksph8
-	hq6sHd6ZmeAHO3zC8NSzTNBKM0/sjabDMvHocvWNw2bt1CYzngiRm1gv8hQfPyWJi+mc
-	+2BA==
-In-Reply-To: <CAAAKZwv1CQbCOweUOcvFXtwDsMHB6Pay-fUqz-CNrcOAda8ghA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=mime-version:sender:in-reply-to:references:from:date
+	:x-google-sender-auth:message-id:subject:to:cc:content-type;
+	bh=Rj5QDDYTJffGuar5S5gJG1eCuFs3UKhtKDsiWlciC18=;
+	b=S83hANoWOL87LKR3amu5RFBO2pwr2jAU1KkpvOrKvxpYou9UgzR/0JWK90sxxDbi8w
+	fXHKbF9fVIzUNmtNQlVf5lK49Wiq6y1Egs3/P+xcwg7fjR5RTjWSwx8p2n3PLDgSliQp
+	eDJnphCNqjAMktal/nV1BlVdhr9RelBq2tYUm4SfRnMzNOkNGPkCsBuBRwtPZLtGKHdc
+	6S28d7IHPj3oRSYYiXuZvLo4njL0H8fMTbh6Xq6DU/GtsoSVSuGNxus9RJZP6q9cggB6
+	cVNwvpxCiLEpkMYcBCk5GkEtMhO7CQqrLBgbhgJT7Tcvhh8zeRfRvrSjsfj7bNFpXgi2
+	cWkA==
+In-Reply-To: <20130628150513.GD5125-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -33,224 +38,43 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>
-Cc: Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Mike Galbraith <bitbucket-BGeptl67XyCzQB+pC5nmwQ@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, lpoetter <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, jpoimboe <jpoimboe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dhaval.giani" <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, workman-devel <workman-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: jpoimboe <jpoimboe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Galbraith <bitbucket-BGeptl67XyCzQB+pC5nmwQ@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, lpoetter <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, workman-devel <workman-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "dhaval.giani" <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Fri, Jun 28, 2013 at 11:37 AM, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org> wrote:
+On Fri, Jun 28, 2013 at 8:05 AM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
+> On Thu 27-06-13 22:01:38, Tejun Heo wrote:
 
-> On Fri, Jun 28, 2013 at 9:31 AM, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-> wrote:
-> > Quoting Tim Hockin (thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org):
-> >> On Thu, Jun 27, 2013 at 11:11 AM, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-> wrote:
-> >> > Quoting Tim Hockin (thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org):
-> >> >
-> >> >> For our use case this is a huge problem.  We have people who access
-> >> >> cgroup files in a fairly tight loops, polling for information.  We
-> >> >> have literally hundeds of jobs running on sub-second frequencies -
-> >> >> plumbing all of that through a daemon is going to be a disaster.
-> >> >> Either your daemon becomes a bottleneck, or we have to build
-> something
-> >> >> far more scalable than you really want to.  Not to mention the
-> >> >> inefficiency of inserting a layer.
-> >> >
-> >> > Currently you can trivially create a container which has the
-> >> > container's cgroups bind-mounted to the expected places
-> >> > (/sys/fs/cgroup/$controller) by uncommenting two lines in the
-> >> > configuration file, and handle cgroups through cgroupfs there.
-> >> > (This is what the management agent wants to be an alternative
-> >> > for)  The main deficiency there is that /proc/self/cgroups is
-> >> > not filtered, so it will show /lxc/c1 for init's cgroup, while
-> >> > the host's /sys/fs/cgroup/devices/lxc/c1/c1.real will be what
-> >> > is seen under the container's /sys/fs/cgroup/devices (for
-> >> > instance).  Not ideal.
-> >>
-> >> I'm really saying that if your daemon is to provide a replacement for
-> >> cgroupfs direct access, it needs to be designed to be scalable.  If
-> >> we're going to get away from bind mounting cgroupfs into user
-> >> namespaces, then let's try to solve ALL the problems.
-> >>
-> >> >> We also need the ability to set up eventfds for users or to let them
-> >> >> poll() on the socket from this daemon.
-> >> >
-> >> > So you'd want to be able to request updates when any cgroup value
-> >> > is changed, right?
-> >>
-> >> Not necessarily ANY, but that's the terminus of this API facet.
-> >>
-> >> > That's currently not in my very limited set of commands, but I can
-> >> > certainly add it, and yes it would be a simple unix sock so you can
-> >> > set up eventfd, select/poll, etc.
-> >>
-> >> Assuming the protocol is basically a pass-through to basic filesystem
-> >> ops, it should be pretty easy.  You just need to add it to your
-> >> protocol.
-> >>
-> >> But it brings up another point - access control.  How do you decide
-> >> which files a child agent should have access to?  Does that ever
-> >> change based on the child's configuration? In our world, the answer is
-> >> almost certainly yes.
-> >
-> > Could you give examples?
-> >
-> > If you have a white/academic paper I should go read, that'd be great.
+>> Oh, that in itself is not bad.  I mean, if you're root, it's pretty
+>> easy to play with and that part is fine.  But combined with the
+>> hierarchical nature of cgroup and file permissions, it encourages
+>> people to "deligate" subdirectories to less previledged domains,
 >
-> We don't have anything on this, but examples may help.
->
-> Someone running as root should be able to connect to the "native"
-> daemon and read or write any cgroup file they want, right?  You could
-> argue that root should be able to do this to a child-daemon, too, but
-> let's ignore that.
->
-> But inside a container, I don't want the users to be able to write to
-> anything in their own container.  I do want them to be able to make
-> sub-cgroups, but only 5 levels deep.  For sub-cgroups, they should be
-> able to write to memory.limit_in_bytes, to read but not write
-> memory.soft_limit_in_bytes, and not be able to read memory.stat.
->
-> To get even fancier, a user should be able to create a sub-cgroup and
-> then designate that sub-cgroup as "final" - no further sub-sub-cgroups
-> allowed under it.  They should also be able to designate that a
-> sub-cgroup is "one-way" - once a process enters it, it can not leave.
->
-> These are real(ish) examples based on what people want to do today.
-> In particular, the last couple are things that we want to do, but
-> don't do today.
->
+> OK, this really depends on what you expose to non-root users. I have
+> seen use cases where admin prepares top-level which is root-only but
+> it allows creating sub-groups which are under _full_ control of the
+> subdomain. This worked nicely for memcg for example because hard limit,
+> oom handling and other knobs are hierarchical so the subdomain cannot
+> overwrite what admin has said.
 
-To elaborate on what Tim mentioned earlier:
+bingo
 
-A lot of google workloads run third party code (think AppEngine).
+> And the systemd, with its history of eating projects and not caring much
+> about their previous users who are not willing to jump in to the systemd
+> car, doesn't sound like a good place where to place the new interface to
+> me.
 
-The need to create sub-cgroups and move such third party code into those
-cgroups to limit their memory/cpu usage is very real.
++1
 
-Monitoring stats for such workloads via polling the cgroup or via eventfds
-is imperative.
+If systemd is the only upstream implementation of this single-agent
+idea, we will have to invent our own, and continue to diverge rather
+than converge.  I think that, if we are going to pursue this model of
+a single-agent, we should make a kick-ass implementation that is
+flexible and scalable, and full-featured enough to not require
+divergence at the lowest layer of the stack.  Then build systemd on
+top of that. Let systemd offer more features and policies and
+"semantic" APIs.
 
+We will build our own semantic APIs that are, necessarily, different
+from systemd.  But we can all use the same low-level mechanism.
 
-> The particular policy can differ per-container.  Production jobs might
-> be allowed to create sub-cgroups, but batch jobs are not.  Some user
-> jobs are designated "trusted" in one facet or another and get more
-> (but still not full) access.
->
-> > At the moment I'm going on the naive belief that proper hierarchy
-> > controls will be enforced (eventually) by the kernel - i.e. if
-> > a task in cgroup /lxc/c1 is not allowed to mknod /dev/sda1, then it
-> > won't be possible for /lxc/c1/lxc/c2 to take that access.
-> >
-> > The native cgroup manager (the one using cgroupfs) will be checking
-> > the credentials of the requesting child manager for access(2) to
-> > the cgroup files.
->
-> This might be sufficient, or the basis for a sufficient access control
-> system for users.  The problem comes that we have multiple jobs on a
-> single machine running as the same user.  We need to ensure that the
-> jobs can not modify each other.
->
-> >> >> >> > So then the idea would be that userspace (like libvirt and lxc)
-> would
-> >> >> >> > talk over /dev/cgroup to its manager.  Userspace inside a
-> container
-> >> >> >> > (which can't actually mount cgroups itself) would talk to its
-> own
-> >> >> >> > manager which is talking over a passed-in socket to the host
-> manager,
-> >> >> >> > which in turn runs natively (uses cgroupfs, and nests "create
-> /c1" under
-> >> >> >> > the requestor's cgroup).
-> >> >> >>
-> >> >> >> How do you handle updates of this agent?  Suppose I have hundreds
-> of
-> >> >> >> running containers, and I want to release a new version of the
-> cgroupd
-> >> >> >> ?
-> >> >> >
-> >> >> > This may change (which is part of what I want to investigate with
-> some
-> >> >> > POC), but right now I'm building any controller-aware smarts into
-> it.  I
-> >> >> > think that's what you're asking about?  The agent doesn't do
-> "slices"
-> >> >> > etc.  This may turn out to be insufficient, we'll see.
-> >> >>
-> >> >> No, what I am asking is a release-engineering problem.  Suppose we
-> >> >> need to roll out a new version of this daemon (some new feature or a
-> >> >> bug or something).  We have hundreds of these "child" agents running
-> >> >> in the job containers.
-> >> >
-> >> > When I say "container" I mean an lxc container, with it's own isolated
-> >> > rootfs and mntns.  I'm not sure what your "containers" are, but I if
-> >> > they're not that, then they shouldn't need to run a child agent.  They
-> >> > can just talk over the host cgroup agent's socket.
-> >>
-> >> If they talk over the host agent's socket, where is the access control
-> >> and restriction done?  Who decides how deep I can nest groups?  Who
-> >> says which files I may access?  Who stops me from modifying someone
-> >> else's container?
-> >>
-> >> Our containers are somewhat thinner and more managed than LXC, but not
-> >> that much.  If we're running a system agent in a user container, we
-> >> need to manage that software.  We can't just start up a version and
-> >> leave it running until the user decides to upgrade - we force
-> >> upgrades.
-> >>
-> >> >> How do I bring down all these children, and then bring them back up
-> on
-> >> >> a new version in a way that does not disrupt user jobs (much)?
-> >> >>
-> >> >> Similarly, what happens when one of these child agents crashes?  Does
-> >> >> someone restart it?  Do user jobs just stop working?
-> >> >
-> >> > An upstart^W$init_system job will restart it...
-> >>
-> >> What happens when the main agent crashes?  All those children on UNIX
-> >> sockets need to reconnect, I guess.  This means your UNIX socket needs
-> >> to be a named socket, not just a socketpair(),  making your auth model
-> >> more complicated.
-> >
-> > It is a named socket.
->
-> So anyone can connect?  even with SO_PEERCRED, how do you know which
-> branches of the cgroup tree I am allowed to modify if the same user
-> owns more than one?
->
-> >> What happens when the main agent hangs?  Is someone health-checking
-> >> it?  How about all the child daemons?
-> >>
-> >> I guess my main point is that this SOUNDS like a simple project, but
-> >
-> > I guess it's not "simple".  It just focuses on one specific problem.
-> >
-> >> if you just do the simple obvious things, it will be woefully
-> >> inadequate for anything but simple use-cases.  If we get forced into
-> >> such a model (and there are some good reasons to do it, even
-> >> disregarding all the other chatter), we'd rather use the same thing
-> >> that the upstream world uses, and not re-invent the whole thing
-> >> ourselves.
-> >>
-> >> Do you have a design spec, or a requirements list, or even a prototype
-> >> that we can look at?
-> >
-> > The readme at https://github.com/hallyn/cgroup-mgr/blob/master/README
-> > shows what I have in mind.  It (and the sloppy code next to it)
-> > represent a few hours' work over the last few days while waiting
-> > for compiles and in between emails...
->
-> Awesome.  Do you mind if we look?
->
-> > But again, it is completely predicated on my goal to have libvirt
-> > and lxc (and other cgroup users) be able to use the same library
-> > or API to make their requests whether they are on host or in a
-> > container, and regardless of the distro they're running under.
->
-> I think that is a good goal.  We'd like to not be different, if
-> possible.  Obviously, we can't impose our needs on you if you don't
-> want to handle them.  It sounds like what you are building is the
-> bottom layer in a stack - we (Google) should use that same bottom
-> layer.  But that can only happen iff you're open to hearing our
-> requirements.  Otherwise we have to strike out on our own or build
-> more layers in-between.
->
-> Tim
->
+Tim
