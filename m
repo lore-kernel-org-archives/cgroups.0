@@ -1,30 +1,75 @@
-From: "azurIt" <azurit-Rm0zKEqwvD4@public.gmane.org>
-Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=5D_memcg=3A_do_not_trap_chargers_with_full_callstack_on_OOM?=
-Date: Fri, 28 Jun 2013 12:06:13 +0200
-Message-ID: <20130628120613.6D6CAD21@pobox.sk>
-References: <20130210150310.GA9504@dhcp22.suse.cz>, <20130210174619.24F20488@pobox.sk>, <20130211112240.GC19922@dhcp22.suse.cz>, <20130222092332.4001E4B6@pobox.sk>, <20130606160446.GE24115@dhcp22.suse.cz>, <20130606181633.BCC3E02E@pobox.sk>, <20130607131157.GF8117@dhcp22.suse.cz>, <20130617122134.2E072BA8@pobox.sk>, <20130619132614.GC16457@dhcp22.suse.cz>, <20130622220958.D10567A4@pobox.sk> <20130624201345.GA21822@cmpxchg.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: cgroup: status-quo and userland efforts
+Date: Fri, 28 Jun 2013 17:05:13 +0200
+Message-ID: <20130628150513.GD5125@dhcp22.suse.cz>
+References: <CAAAKZwvP_7wBBYMmtFuiE2hZt=ByaLrnTyiR83CZr3OMip63Gg@mail.gmail.com>
+ <20130625000118.GT1918@mtj.dyndns.org>
+ <CAAAKZwt09k-qUwLCnMpAQeYJ-S0XtkjXe4=bJ-G_fcrkAqEzoA@mail.gmail.com>
+ <20130626212047.GB4536@htj.dyndns.org>
+ <1372311907.5871.78.camel@marge.simpson.net>
+ <20130627180143.GD5599@mtj.dyndns.org>
+ <1372391198.5989.110.camel@marge.simpson.net>
+ <20130628040930.GC2500@htj.dyndns.org>
+ <1372394950.5989.128.camel@marge.simpson.net>
+ <20130628050138.GD2500@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130624201345.GA21822-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20130628050138.GD2500-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: =?utf-8?q?Johannes_Weiner?= <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: =?utf-8?q?Michal_Hocko?= <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, =?utf-8?q?cgroups_mailinglist?= <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Mike Galbraith <bitbucket-BGeptl67XyCzQB+pC5nmwQ@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bsingharora <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "dhaval.giani" <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, jpoimboe <jpoimboe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, lpoetter <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, workman-devel <workman-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
->It's not a kernel thread that does it because all kernel-context
->handle_mm_fault() are annotated properly, which means the task must be
->userspace and, since tasks is empty, have exited before synchronizing.
+On Thu 27-06-13 22:01:38, Tejun Heo wrote:
+> Hello, Mike.
+> 
+> On Fri, Jun 28, 2013 at 06:49:10AM +0200, Mike Galbraith wrote:
+> > I always thought that was a very cool feature, mkdir+echo, poof done.
+> > Now maybe that interface is suboptimal for serious usage, but it makes
+> > the things usable via dirt simple scripts, very flexible, nice.
+> 
+> Oh, that in itself is not bad.  I mean, if you're root, it's pretty
+> easy to play with and that part is fine.  But combined with the
+> hierarchical nature of cgroup and file permissions, it encourages
+> people to "deligate" subdirectories to less previledged domains,
+
+OK, this really depends on what you expose to non-root users. I have
+seen use cases where admin prepares top-level which is root-only but
+it allows creating sub-groups which are under _full_ control of the
+subdomain. This worked nicely for memcg for example because hard limit,
+oom handling and other knobs are hierarchical so the subdomain cannot
+overwrite what admin has said.
+
+> which
+> in turn leads to normal binaries to manipulate them directly, which is
+> where the horror begins.  We end up exposing control knobs which are
+> tightly coupled to kernel implementation details right into lay
+> binaries and scripts directly used by end users.
 >
->Can you try with the following patch on top?
+> I think this is the first time this happened, which is probably why
+> nobody really noticed the mess earlier.
+> 
+> Anyways, if you're root, you can keep doing whatever you want.
 
+OK, so libcgroup's rules daemon will still work and place my tasks in
+appropriate cgroups?
 
-Michal and Johannes,
+This is not quite in par with "libcgroup is dead and others have to
+migrate to systemd as well" statements from the link posted earlier.
+I really do not think that _any_ central agent will understand my
+requirements and needs so I need a way to talk to cgroupfs somehow - I
+have used libcgroups so far but touching cgroupfs is quite convinient
+as well.
 
-i have some observations which i made:
-Original patch from Johannes was really fixing something but definitely not everything and was introducing new problems. I'm running unpatched kernel from time i send my last message and problems with freezing cgroups are occuring very often (several times per day) - they were, on the other hand, quite rare with patch from Johannes.
+And the systemd, with its history of eating projects and not caring much
+about their previous users who are not willing to jump in to the systemd
+car, doesn't sound like a good place where to place the new interface to
+me.
 
-Johannes, i didn't try your last patch yet. I would like to wait until you or Michal look at my last message which contained detailed information about freezing of cgroups on kernel running your original patch (which was suppose to fix it for good). Even more, i would like to hear your opinion about that stucked processes which was holding web server port and which forced me to reboot production server at the middle of the day :( more information was in my last message. Thank you very much for your time.
-
-azur
+[...]
+-- 
+Michal Hocko
+SUSE Labs
