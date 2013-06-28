@@ -1,20 +1,20 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 6/9] cgroup: make rebind_subsystems() handle file additions and removals with proper error handling
-Date: Fri, 28 Jun 2013 16:45:42 -0700
-Message-ID: <1372463145-4245-7-git-send-email-tj@kernel.org>
+Subject: [PATCH 4/9] cgroup: separate out cgroup_base_files[] handling out of cgroup_populate/clear_dir()
+Date: Fri, 28 Jun 2013 16:45:40 -0700
+Message-ID: <1372463145-4245-5-git-send-email-tj@kernel.org>
 References: <1372463145-4245-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
          :references;
-        bh=M1D5vwUXn6L9tFumQ62a+uReNUNRSIjm41vIyjexhWs=;
-        b=OxiModjjLsK8Sk4H6zKPQlbpgTOnR38cFpO92Wg7X1aDed2Zuy3dEnQHK1icAzhWb1
-         VeDwedB6M0284ykXopqw+JDjV8FIX1RxyIvs/V6vqCEX/yBPhR+xPtP4ZZEiwlfTtHov
-         ZQ9W97nZTOWeS2qGGtV9EZuqgOJuPWxsXqzD9hlLyQK1+6mlqPqt6Dp/owYwbjeRknwZ
-         hlDzDzuygNSv+IU34eKRVYTAslInp1tPYrIzPualNqBqDdz0f45OzsgWEWWeh5aSJJIC
-         MKlQfZMRzqxsA7Z5AuqjIWIkEZFPeZK431aTN9VLQMMmP+i5CbQLIXqdhhvYZWwDVmPb
-         jPNQ==
+        bh=erkJBzOQDZ2th8My2A0SsCP+BxvqTUw2qMkjAxHl0Vg=;
+        b=qPk755F0GcHecVMc7T0k195txUjWPuQTrpasVWtLo6/aZfa30WvwzQAr9RAAdGqyi9
+         1FGRWyDcxJpyTRCol83UuonjHfcnLhW/RvFHFNjH5zmNawA499UMNUuCgPUW6I0pawdy
+         6CYxqqoaWk7jmTfYmUjE2/dfSKDIrvJmznYiQ2CkuYKQyCgUlXJUM5z8C6VNC/Dhth6d
+         8HGwyqN0wgb0Ivq83f/D6yH2Uzf3p3t3z5Z7CukP0ZBbJyJV3SAvcDfPe5Bkd6bJYYCi
+         Bnn1LwH7i1sVtpkVEomUyv5yo87tRhQIOwut5X0ifoVmG0AIWvO1cXCdKK0M9KOzOO97
+         BCrw==
 In-Reply-To: <1372463145-4245-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -24,191 +24,157 @@ Content-Transfer-Encoding: 7bit
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Currently, creating and removing cgroup files in the root directory
-are handled separately from the actual subsystem binding and unbinding
-which happens in rebind_subsystems().  Also, rebind_subsystems() users
-aren't handling file creation errors properly.  Let's integrate
-top_cgroup file handling into rebind_subsystems() so that it's simpler
-to use and everyone handles file creation errors correctly.
+cgroup_populate/clear_dir() currently take @base_files and adds and
+removes, respectively, cgroup_base_files[] to the directory.  File
+additions and removals are being reorganized for proper error handling
+and more dynamic handling for the unified hierarchy, and mixing base
+and subsys file handling into the same functions gets a bit confusing.
 
-* On a successful return, rebind_subsystems() is guaranteed to have
-  created all files of the new subsystems and deleted the ones
-  belonging to the removed subsystems.  After a failure, no file is
-  created or removed.
+This patch moves base file handling out of cgroup_populate/clear_dir()
+into their users - cgroup_mount(), cgroup_create() and
+cgroup_destroy_locked().
 
-* cgroup_remount() no longer needs to make explicit populate/clear
-  calls as it's all handled by rebind_subsystems(), and it gets proper
-  error handling automatically.
-
-* cgroup_mount() has been updated such that the root dentry and cgroup
-  are linked before rebind_subsystems().  Also, the init_cred dancing
-  and base file handling are moved right above rebind_subsystems()
-  call and proper error handling for the base files is added.
-
-* cgroup_kill_sb() calls rebind_subsystems() to unbind all subsystems
-  which now implies removing all subsystem files which requires the
-  directory's i_mutex.  Grab it.  This means that files on the root
-  cgroup are removed earlier - they used to be deleted from generic
-  super_block cleanup from vfs.  This doesn't lead to any functional
-  difference and it's cleaner to do the clean up explicitly for all
-  files.
-
-Combined with the previous changes, this makes all cgroup file
-creation errors handled correctly.
+Note that this changes the behavior of base file removal.  If
+@base_files is %true, cgroup_clear_dir() used to delete files
+regardless of cftype until there's no files left.  Now, only files
+with matching cfts are removed.  As files can only be created by the
+base or registered cftypes, this shouldn't result in any behavior
+difference.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- kernel/cgroup.c | 61 ++++++++++++++++++++++++++++++---------------------------
- 1 file changed, 32 insertions(+), 29 deletions(-)
+ kernel/cgroup.c | 46 +++++++++++++++++++---------------------------
+ 1 file changed, 19 insertions(+), 27 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 3475267..f0f8bb9 100644
+index 4682d81..254d54e 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -1003,7 +1003,7 @@ static int rebind_subsystems(struct cgroupfs_root *root,
+@@ -215,6 +215,8 @@ static u64 cgroup_serial_nr_next = 1;
+  */
+ static int need_forkexit_callback __read_mostly;
+ 
++static struct cftype cgroup_base_files[];
++
+ static void cgroup_offline_fn(struct work_struct *work);
+ static int cgroup_destroy_locked(struct cgroup *cgrp);
+ static int cgroup_addrm_files(struct cgroup *cgrp, struct cgroup_subsys *subsys,
+@@ -804,8 +806,7 @@ static struct cgroup *task_cgroup_from_root(struct task_struct *task,
+ static int cgroup_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode);
+ static struct dentry *cgroup_lookup(struct inode *, struct dentry *, unsigned int);
+ static int cgroup_rmdir(struct inode *unused_dir, struct dentry *dentry);
+-static int cgroup_populate_dir(struct cgroup *cgrp, bool base_files,
+-			       unsigned long subsys_mask);
++static int cgroup_populate_dir(struct cgroup *cgrp, unsigned long subsys_mask);
+ static const struct inode_operations cgroup_dir_inode_operations;
+ static const struct file_operations proc_cgroupstats_operations;
+ 
+@@ -957,13 +958,11 @@ static void cgroup_rm_file(struct cgroup *cgrp, const struct cftype *cft)
+ }
+ 
+ /**
+- * cgroup_clear_dir - selective removal of base and subsystem files
++ * cgroup_clear_dir - remove subsys files in a cgroup directory
+  * @cgrp: target cgroup
+- * @base_files: true if the base files should be removed
+  * @subsys_mask: mask of the subsystem ids whose files should be removed
+  */
+-static void cgroup_clear_dir(struct cgroup *cgrp, bool base_files,
+-			     unsigned long subsys_mask)
++static void cgroup_clear_dir(struct cgroup *cgrp, unsigned long subsys_mask)
  {
- 	struct cgroup *cgrp = &root->top_cgroup;
  	struct cgroup_subsys *ss;
--	int i;
-+	int i, ret;
  
- 	BUG_ON(!mutex_is_locked(&cgroup_mutex));
- 	BUG_ON(!mutex_is_locked(&cgroup_root_mutex));
-@@ -1028,7 +1028,16 @@ static int rebind_subsystems(struct cgroupfs_root *root,
- 	if (root->number_of_cgroups > 1)
- 		return -EBUSY;
+@@ -974,10 +973,6 @@ static void cgroup_clear_dir(struct cgroup *cgrp, bool base_files,
+ 		list_for_each_entry(set, &ss->cftsets, node)
+ 			cgroup_addrm_files(cgrp, NULL, set->cfts, false);
+ 	}
+-	if (base_files) {
+-		while (!list_empty(&cgrp->files))
+-			cgroup_rm_file(cgrp, NULL);
+-	}
+ }
  
--	/* Process each subsystem */
-+	ret = cgroup_populate_dir(cgrp, added_mask);
-+	if (ret)
-+		return ret;
-+
-+	/*
-+	 * Nothing can fail from this point on.  Remove files for the
-+	 * removed subsystems and rebind each subsystem.
-+	 */
+ /*
+@@ -1372,17 +1367,17 @@ static int cgroup_remount(struct super_block *sb, int *flags, char *data)
+ 	 * this before rebind_subsystems, since rebind_subsystems may
+ 	 * change this hierarchy's subsys_list.
+ 	 */
+-	cgroup_clear_dir(cgrp, false, removed_mask);
 +	cgroup_clear_dir(cgrp, removed_mask);
-+
- 	for_each_subsys(ss, i) {
- 		unsigned long bit = 1UL << i;
  
-@@ -1364,22 +1373,9 @@ static int cgroup_remount(struct super_block *sb, int *flags, char *data)
+ 	ret = rebind_subsystems(root, added_mask, removed_mask);
+ 	if (ret) {
+ 		/* rebind_subsystems failed, re-populate the removed files */
+-		cgroup_populate_dir(cgrp, false, removed_mask);
++		cgroup_populate_dir(cgrp, removed_mask);
  		goto out_unlock;
  	}
  
--	/*
--	 * Clear out the files of subsystems that should be removed, do
--	 * this before rebind_subsystems, since rebind_subsystems may
--	 * change this hierarchy's subsys_list.
--	 */
--	cgroup_clear_dir(cgrp, removed_mask);
--
- 	ret = rebind_subsystems(root, added_mask, removed_mask);
--	if (ret) {
--		/* rebind_subsystems failed, re-populate the removed files */
--		cgroup_populate_dir(cgrp, removed_mask);
-+	if (ret)
- 		goto out_unlock;
--	}
--
--	/* re-populate subsystem files */
--	cgroup_populate_dir(cgrp, added_mask);
+ 	/* re-populate subsystem files */
+-	cgroup_populate_dir(cgrp, false, added_mask);
++	cgroup_populate_dir(cgrp, added_mask);
  
  	if (opts.release_agent)
  		strcpy(root->release_agent_path, opts.release_agent);
-@@ -1579,6 +1575,7 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 	struct super_block *sb;
- 	struct cgroupfs_root *new_root;
- 	struct inode *inode;
-+	const struct cred *cred;
- 
- 	/* First find the desired set of subsystems */
- 	mutex_lock(&cgroup_mutex);
-@@ -1613,7 +1610,6 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 		struct list_head tmp_links;
- 		struct cgroup *root_cgrp = &root->top_cgroup;
- 		struct cgroupfs_root *existing_root;
--		const struct cred *cred;
- 		int i;
- 		struct css_set *cset;
- 
-@@ -1651,26 +1647,32 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 		if (ret)
- 			goto unlock_drop;
- 
-+		sb->s_root->d_fsdata = root_cgrp;
-+		root_cgrp->dentry = sb->s_root;
-+
-+		cred = override_creds(&init_cred);
-+
-+		ret = cgroup_addrm_files(root_cgrp, NULL, cgroup_base_files, true);
-+		if (ret)
-+			goto rm_base_files;
-+
- 		ret = rebind_subsystems(root, root->subsys_mask, 0);
--		if (ret == -EBUSY) {
-+		if (ret) {
- 			free_cgrp_cset_links(&tmp_links);
--			goto unlock_drop;
-+			goto rm_base_files;
- 		}
-+
-+		revert_creds(cred);
-+
- 		/*
- 		 * There must be no failure case after here, since rebinding
- 		 * takes care of subsystems' refcounts, which are explicitly
- 		 * dropped in the failure exit path.
- 		 */
- 
--		/* EBUSY should be the only error here */
--		BUG_ON(ret);
--
- 		list_add(&root->root_list, &cgroup_roots);
- 		cgroup_root_count++;
- 
--		sb->s_root->d_fsdata = root_cgrp;
--		root->top_cgroup.dentry = sb->s_root;
--
- 		/* Link the top cgroup in this hierarchy into all
- 		 * the css_set objects */
- 		write_lock(&css_set_lock);
-@@ -1683,10 +1685,6 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 		BUG_ON(!list_empty(&root_cgrp->children));
+@@ -1687,7 +1682,8 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
  		BUG_ON(root->number_of_cgroups != 1);
  
--		cred = override_creds(&init_cred);
--		cgroup_addrm_files(root_cgrp, NULL, cgroup_base_files, true);
--		cgroup_populate_dir(root_cgrp, root->subsys_mask);
--		revert_creds(cred);
+ 		cred = override_creds(&init_cred);
+-		cgroup_populate_dir(root_cgrp, true, root->subsys_mask);
++		cgroup_addrm_files(root_cgrp, NULL, cgroup_base_files, true);
++		cgroup_populate_dir(root_cgrp, root->subsys_mask);
+ 		revert_creds(cred);
  		mutex_unlock(&cgroup_root_mutex);
  		mutex_unlock(&cgroup_mutex);
- 		mutex_unlock(&inode->i_mutex);
-@@ -1715,6 +1713,9 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 	kfree(opts.name);
- 	return dget(sb->s_root);
+@@ -4172,23 +4168,14 @@ static struct cftype cgroup_base_files[] = {
+ };
  
-+ rm_base_files:
-+	cgroup_addrm_files(&root->top_cgroup, NULL, cgroup_base_files, false);
-+	revert_creds(cred);
-  unlock_drop:
- 	cgroup_exit_root_id(root);
- 	mutex_unlock(&cgroup_root_mutex);
-@@ -1741,6 +1742,7 @@ static void cgroup_kill_sb(struct super_block *sb) {
- 	BUG_ON(root->number_of_cgroups != 1);
- 	BUG_ON(!list_empty(&cgrp->children));
+ /**
+- * cgroup_populate_dir - selectively creation of files in a directory
++ * cgroup_populate_dir - create subsys files in a cgroup directory
+  * @cgrp: target cgroup
+- * @base_files: true if the base files should be added
+  * @subsys_mask: mask of the subsystem ids whose files should be added
+  */
+-static int cgroup_populate_dir(struct cgroup *cgrp, bool base_files,
+-			       unsigned long subsys_mask)
++static int cgroup_populate_dir(struct cgroup *cgrp, unsigned long subsys_mask)
+ {
+-	int err;
+ 	struct cgroup_subsys *ss;
  
-+	mutex_lock(&cgrp->dentry->d_inode->i_mutex);
- 	mutex_lock(&cgroup_mutex);
- 	mutex_lock(&cgroup_root_mutex);
+-	if (base_files) {
+-		err = cgroup_addrm_files(cgrp, NULL, cgroup_base_files, true);
+-		if (err < 0)
+-			return err;
+-	}
+-
+ 	/* process cftsets of each subsystem */
+ 	for_each_root_subsys(cgrp->root, ss) {
+ 		struct cftype_set *set;
+@@ -4410,7 +4397,11 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+ 		}
+ 	}
  
-@@ -1773,6 +1775,7 @@ static void cgroup_kill_sb(struct super_block *sb) {
+-	err = cgroup_populate_dir(cgrp, true, root->subsys_mask);
++	err = cgroup_addrm_files(cgrp, NULL, cgroup_base_files, true);
++	if (err)
++		goto err_destroy;
++
++	err = cgroup_populate_dir(cgrp, root->subsys_mask);
+ 	if (err)
+ 		goto err_destroy;
  
- 	mutex_unlock(&cgroup_root_mutex);
- 	mutex_unlock(&cgroup_mutex);
-+	mutex_unlock(&cgrp->dentry->d_inode->i_mutex);
- 
- 	simple_xattrs_free(&cgrp->xattrs);
+@@ -4566,7 +4557,8 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 	 * Clear and remove @cgrp directory.  The removal puts the base ref
+ 	 * but we aren't quite done with @cgrp yet, so hold onto it.
+ 	 */
+-	cgroup_clear_dir(cgrp, true, cgrp->root->subsys_mask);
++	cgroup_clear_dir(cgrp, cgrp->root->subsys_mask);
++	cgroup_addrm_files(cgrp, NULL, cgroup_base_files, false);
+ 	dget(d);
+ 	cgroup_d_remove_dir(d);
  
 -- 
 1.8.3.1
