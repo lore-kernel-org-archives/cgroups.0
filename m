@@ -1,104 +1,43 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Mike Galbraith <bitbucket-BGeptl67XyCzQB+pC5nmwQ@public.gmane.org>
 Subject: Re: cgroup: status-quo and userland efforts
-Date: Thu, 27 Jun 2013 21:09:30 -0700
-Message-ID: <20130628040930.GC2500@htj.dyndns.org>
+Date: Fri, 28 Jun 2013 06:49:10 +0200
+Message-ID: <1372394950.5989.128.camel@marge.simpson.net>
 References: <CAAAKZwvh_R2Xz--bmSLiN33fsqKanOJMq_6+6hoFWFRx38O4gA@mail.gmail.com>
- <20130422214159.GG12543@htj.dyndns.org>
- <CAAAKZwuXJwwyj7KSqb7rZ+nrTwBWEaUCWfa7kWecTBnHL8koGw@mail.gmail.com>
- <CAAAKZwvP_7wBBYMmtFuiE2hZt=ByaLrnTyiR83CZr3OMip63Gg@mail.gmail.com>
- <20130625000118.GT1918@mtj.dyndns.org>
- <CAAAKZwt09k-qUwLCnMpAQeYJ-S0XtkjXe4=bJ-G_fcrkAqEzoA@mail.gmail.com>
- <20130626212047.GB4536@htj.dyndns.org>
- <1372311907.5871.78.camel@marge.simpson.net>
- <20130627180143.GD5599@mtj.dyndns.org>
- <1372391198.5989.110.camel@marge.simpson.net>
+	 <20130422214159.GG12543@htj.dyndns.org>
+	 <CAAAKZwuXJwwyj7KSqb7rZ+nrTwBWEaUCWfa7kWecTBnHL8koGw@mail.gmail.com>
+	 <CAAAKZwvP_7wBBYMmtFuiE2hZt=ByaLrnTyiR83CZr3OMip63Gg@mail.gmail.com>
+	 <20130625000118.GT1918@mtj.dyndns.org>
+	 <CAAAKZwt09k-qUwLCnMpAQeYJ-S0XtkjXe4=bJ-G_fcrkAqEzoA@mail.gmail.com>
+	 <20130626212047.GB4536@htj.dyndns.org>
+	 <1372311907.5871.78.camel@marge.simpson.net>
+	 <20130627180143.GD5599@mtj.dyndns.org>
+	 <1372391198.5989.110.camel@marge.simpson.net>
+	 <20130628040930.GC2500@htj.dyndns.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=LkuDizNh3XMx26Ht3oyiI/r/mWH2z6YEQ9GfDke1H2Y=;
-        b=jrKUwLoNFOb2MmumCX9hIg+N8ZmhXM3S0ZhLKvldCCt6YfZuWxK8UliiwsrDsXVjxi
-         7hFjA9k4gu5BSerhRC58ZYDTk7dwRz/uC4ogUrVrph8j324hIm/vrn6v2h2stmL/ZSbZ
-         COUMUVIuNOAXymzvysAe3WEeG4GAD0X4iCJgSADC9Ns7QM6zCIFsJEVfXUY6tGRFdWun
-         fdztDDILKdiXF8PFJURtexDXJmetQKJzkGDi7kQfDFBS1cbWymQo8TgkKHO5NUUcRYKU
-         rDynebxF00ZRLgYW3WIAdWzPJw1kv/tL9SOonXp8uM/8MhZb7cjmM/2Ydd9ftX8JW0kz
-         LiHA==
-Content-Disposition: inline
-In-Reply-To: <1372391198.5989.110.camel-YqMYhexLQo31wTEvPJ5Q0F6hYfS7NtTn@public.gmane.org>
+In-Reply-To: <20130628040930.GC2500-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Mike Galbraith <bitbucket-BGeptl67XyCzQB+pC5nmwQ@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bsingharora <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "dhaval.giani" <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, jpoimboe <jpoimboe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, lpoetter <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, workman-devel <workman-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello, Mike.
+On Thu, 2013-06-27 at 21:09 -0700, Tejun Heo wrote:
 
-On Fri, Jun 28, 2013 at 05:46:38AM +0200, Mike Galbraith wrote:
-> Sure, because in private property and I mandatory agent, I see "gimme
-> yer wallet bitch", an incredibly arrogant and brutal mugging.  That's
-> not the way it's meant, I know that, but that's how it comes across.
-> You asked, so you get the straight up answer.
+> No, it's completely messed up.  We're now starting to see users trying
+> to embed low level cgroup details into their binaries and cgroup is
+> exposing sysctl-level konbs which are directly tied to internal
+> implementation of core subsystems.  cgroup successfully bypassed the
+> usual kernel API policing with the help of hierarchical filesystem
+> interface which allows delegation on the surface.  We completely
+> fucked up.  This is a full scale disaster unrolling.
 
-I don't know.  It reads more like tungue-in-cheek thing to me rather
-than being actually arrogant, and some part of the brutality is
-necessary at this point.
+I always thought that was a very cool feature, mkdir+echo, poof done.
+Now maybe that interface is suboptimal for serious usage, but it makes
+the things usable via dirt simple scripts, very flexible, nice.
 
-> Offering to manage cgroups is one thing, very generous, forcefully
-> placing itself between user and kernel quite another.  Perhaps I
-> misread, but my interpretation was that the intent is to make systemd a
-> mandatory agent, even saw reference to it taking up residence in the
-> kernel tree (that bit made me chuckle, pull request would have to be
-> very cleverly worded methinks).  I'm sure it will be quite capable, its
-> authors are.  However, when I want to talk to my kernel, I expect to be
-> able to tell anyone else using the phone to hang up.. now.
+But whatever, not my call, you know your business better than I.  If
+mandatory agent happens, fine, but imho that will be sad day.
 
-I don't know how to respond to this.  It feels more emotional than
-technical.
-
-> It's useful now, usable to the point that enterprise users exist who
-> have integrated cgroups into their business model.  But then you know
-> that.  Sure, there are problems, things could and no doubt will get a
-> lot better.
-
-No, it's completely messed up.  We're now starting to see users trying
-to embed low level cgroup details into their binaries and cgroup is
-exposing sysctl-level konbs which are directly tied to internal
-implementation of core subsystems.  cgroup successfully bypassed the
-usual kernel API policing with the help of hierarchical filesystem
-interface which allows delegation on the surface.  We completely
-fucked up.  This is a full scale disaster unrolling.
-
-> However, wrt userspace agent, no agent is going to be the right answer
-> for all, so that agent needs to have a step aside button so another
-> agent can be tasked with the managerial duties, whether that be little
-> ole /me or Aunt Tilly piddling with this and that because we damn well
-> feel like it, or BigFoot company X going massively wild and crazy doing
-> their business thing.
-
-*ANY* agent is better than now.  We need to back the hell out of
-direct usages as soon as possible.  cgroup is leaking kernel
-implementation details into individual binaries.  The current
-situation is dangerous and putting an agent inbetween is a good way of
-gradually backing out of it.
-
-> No, it's not at all crazy, _offering_ the user a managerial service is
-> great, generous, way to go guys, pass out the white hats.  Use force,
-> and those pretty white hats turn black as night, hero to villain.
-
-No, it's completely crazy.  Full psycho crazy.  You just don't realize
-it yet.
-
-> systemd and no systemd is also a valid issue.  I'm sure it'll all get
-> worked out, but that link, and others like it make me see bright red.
-
-That red is nothing compared to the kernel implementation detail leak
-going on right now.  The alarm for that has been blinking
-psychedelically for some time now.
-
-Thanks.
-
--- 
-tejun
+-Mike
