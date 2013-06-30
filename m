@@ -1,67 +1,70 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH cgroup/for-3.11 3/2] cgroup: CGRP_ROOT_SUBSYS_BOUND should
- also be ignored when mounting an existing hierarchy
-Date: Sat, 29 Jun 2013 14:17:40 -0700
-Message-ID: <20130629211740.GA23902@mtj.dyndns.org>
-References: <20130628023930.GA2500@htj.dyndns.org>
- <20130628024003.GB2500@htj.dyndns.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [Workman-devel] cgroup: status-quo and userland efforts
+Date: Sun, 30 Jun 2013 20:38:38 +0200
+Message-ID: <20130630183838.GB23731@dhcp22.suse.cz>
+References: <CAAAKZwt09k-qUwLCnMpAQeYJ-S0XtkjXe4=bJ-G_fcrkAqEzoA@mail.gmail.com>
+ <20130626212047.GB4536@htj.dyndns.org>
+ <1372311907.5871.78.camel@marge.simpson.net>
+ <20130627180143.GD5599@mtj.dyndns.org>
+ <1372391198.5989.110.camel@marge.simpson.net>
+ <20130628040930.GC2500@htj.dyndns.org>
+ <1372394950.5989.128.camel@marge.simpson.net>
+ <20130628050138.GD2500@htj.dyndns.org>
+ <20130628150513.GD5125@dhcp22.suse.cz>
+ <20130628180155.GD16483@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=d6d9HLs4oViq1nmeYq9uEV+LI0olkMQaMF8aG+UEsCU=;
-        b=wo7vBF8AYSwc3/PduytuB1z+7CfsZoaE3Dig1FTsLAV8O7eRUG/WI+ANdYsxW8tda3
-         ACiq8Idd3em9J0oFJdqEsBg6EXS67jR4d/kWPbEXDJ15orBzclZC4N7ruuax1jAbh7Tr
-         pwbgfUzoTIsFmrUVWYj0DOuikP5s8pxNqg4nqiYcdOg5nsA6EfvY5H8cq+5cW6oAzhsH
-         biNZY6atvdQjXZSE+gdMJoU+7p0VSXin0+/sCKaMwP/mjQu2ggcVZOCdXTLWUvibZrQJ
-         yNE50H6JUnFQtGqYtcc0ppJPw8SzVLOQwA618Vw+Tn1EQf+13Y+Xf7ClFV08ZmhYjDwr
-         32JQ==
+        bh=N8Sf5aasIuDM4sukO2+3rUX8AxjDXajZp+edVSr07q4=;
+        b=U53Jo4i1yleTczyGI719rUNc95tNnHcfhK4WjhcoYiWw049nmHTfSj/u/eyfFoliAh
+         jndEQv2jrYubjyFCGpRyjbNt1Aqi6iVIkqa3ISZ30Dutc+5S1ijB1BlYCSmfNJM4uiLO
+         GLkS3b/H0jK0v4/ucr0KFgU+o67XURr5xrGeRnYH/uDJdQx1AM+1U0wPg6fv0pGAwzPY
+         w4JptzygjadrYJkPgpo9o5saYF3zxtiUtdTZ2+d0NPJiP5zFHXsKmyQLGlZirTHd80XO
+         6CQo8yyyrUJRG0X/+sYYU8P12Begm936syGCjIGMKgVzDml4fEw2nb2YMRdkyRrhLB6N
+         hYTw==
 Content-Disposition: inline
-In-Reply-To: <20130628024003.GB2500-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+In-Reply-To: <20130628180155.GD16483-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Mike Galbraith <bitbucket-BGeptl67XyCzQB+pC5nmwQ@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, lpoetter <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, workman-devel <workman-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "dhaval.giani" <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bsingharora <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-From c7ba8287cd11f2fc9e2feee9e1fac34b7293658f Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date: Sat, 29 Jun 2013 14:06:10 -0700
+On Fri 28-06-13 14:01:55, Vivek Goyal wrote:
+> On Fri, Jun 28, 2013 at 05:05:13PM +0200, Michal Hocko wrote:
+[...]
+> > OK, so libcgroup's rules daemon will still work and place my tasks in
+> > appropriate cgroups?
+> 
+> Do you use that daemon in practice?
 
-0ce6cba357 ("cgroup: CGRP_ROOT_SUBSYS_BOUND should be ignored when
-comparing mount options") only updated the remount path but
-CGRP_ROOT_SUBSYS_BOUND should also be ignored when comparing options
-while mounting an existing hierarchy.  As option mismatch triggers a
-warning but doesn't fail the mount without sane_behavior, this only
-triggers a spurious warning message.
+I am not but my users do. And that is why I care.
 
-Fix it by only comparing CGRP_ROOT_OPTION_MASK bits when comparing new
-and existing root options.
+> For user session logins, I think systemd has plans to put user
+> sessions in a cgroup (kind of making pam_cgroup redundant).
+> 
+> Other functionality rulesengined was providing moving tasks automatically
+> in a cgroup based on executable name. I think that was racy and not
+> many people had liked it.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
-Oops, missed one.  This one isn't critical but let's get it fixed too.
-
-Thanks.
-
- kernel/cgroup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 5a2fcf5..e5583d1 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1703,7 +1703,7 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 		 */
- 		cgroup_free_root(opts.new_root);
+It doesn't make sense for short lived processes, all right, but it can
+be useful for those that live for a long time.
  
--		if (root->flags != opts.flags) {
-+		if ((root->flags ^ opts.flags) & CGRP_ROOT_OPTION_MASK) {
- 			if ((root->flags | opts.flags) & CGRP_ROOT_SANE_BEHAVIOR) {
- 				pr_err("cgroup: sane_behavior: new mount options should match the existing superblock\n");
- 				ret = -EINVAL;
+> IIUC, systemd can't disable access to cgroupfs from other utilities.
+
+The previous messages read otherwise. And that is why this rised the red
+flag at many fronts.
+
+> So most likely rulesengined should contine to work. But having both
+> systemd and libcgroup might not make much sense though.
+> 
+> Thanks
+> Vivek
+
 -- 
-1.8.3.1
+Michal Hocko
+SUSE Labs
