@@ -1,135 +1,102 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup changes for v3.11-rc1
-Date: Tue, 2 Jul 2013 08:38:17 -0700
-Message-ID: <20130702153817.GA17986@mtj.dyndns.org>
+From: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Subject: Re: cgroup: status-quo and userland efforts
+Date: Wed, 3 Jul 2013 01:57:05 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1307030021480.4013@ionos.tec.linutronix.de>
+References: <CAAAKZwvP_7wBBYMmtFuiE2hZt=ByaLrnTyiR83CZr3OMip63Gg@mail.gmail.com> <20130625000118.GT1918@mtj.dyndns.org> <CAAAKZwt09k-qUwLCnMpAQeYJ-S0XtkjXe4=bJ-G_fcrkAqEzoA@mail.gmail.com> <20130626212047.GB4536@htj.dyndns.org> <1372311907.5871.78.camel@marge.simpson.net>
+ <20130627180143.GD5599@mtj.dyndns.org> <1372391198.5989.110.camel@marge.simpson.net> <20130628040930.GC2500@htj.dyndns.org> <1372394950.5989.128.camel@marge.simpson.net> <20130628050138.GD2500@htj.dyndns.org> <20130628150513.GD5125@dhcp22.suse.cz>
+ <CAAAKZwtqYe-c0bfkgHFbzsOKVHifjTwkqcpci=uS1JwqS9TJHQ@mail.gmail.com> <51CE3CE0.9010506@redhat.com> <CAAAKZwuzhSzPj99HZW=KD4emGXZbcsjsUu=+TCpafhs9MKD2JA@mail.gmail.com> <51D08976.6040005@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <51D08976.6040005-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-	:content-disposition:user-agent;
-	bh=6VboaBIXug6Hjus9slZVNUtYzliVpAEpG+U7dGmcN34=;
-	b=iu+fPLsTWyOBzf4rPPAaSQpE3YH7/T3JJkmxfcaO1Rqi7YKERPW/XUhaS6NoWYkpKW
-	pXGlIFYjiHQjct7i/Tucnk+LfFpEMYE8URBNtY8W465Y6DxpEiydSk6EZyp6N2VjVImX
-	rKoaeLv4IVzQdwi9SN+N2S2NPSoWS0BnTm8uOapVyPL1SVzOr0ZbirSl6AwcmYIMC4GN
-	rj9Bqb9MnlFfwmv2I+dNGRMAI2OviylxjyppNDOtj1YXQYCTMzA8gbcZtrs0/ni+vtOw
-	3T6/Ej33yGbhGE98hM/RI7EawfF98YKaf4EPsolw5YmqygVXaoAKrfbQM/SsaIvBphlM
-	5uEg==
-Content-Disposition: inline
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Lennart Poettering <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mike Galbraith <bitbucket-BGeptl67XyCzQB+pC5nmwQ@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bsingharora <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "dhaval.giani" <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, jpoimboe <jpoimboe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, workman-devel <workman-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello, Linus.
+Lennart,
 
-Please note that cgroup/for-3.11 branch pulled in percpu/for-3.11 to
-convert cgroup_subsys_state reference counting to percpu-ref and this
-pull request assumes that percpu/for-3.11 is pulled in first.
+On Sun, 30 Jun 2013, Lennart Poettering wrote:
+> On 29.06.2013 05:05, Tim Hockin wrote:
+> > But that's not my point.  It seems pretty easy to make this cgroup
+> > management (in "native mode") a library that can have either a thin
+> > veneer of a main() function, while also being usable by systemd.  The
+> > point is to solve all of the problems ONCE.  I'm trying to make the
+> > case that systemd itself should be focusing on features and policies
+> > and awesome APIs.
+> 
+> You know, getting this all right isn't easy. If you want to do things
+> properly, then you need to propagate attribute changes between the units you
+> manage. You also need something like a scheduler, since a number of
+> controllers can only be configured under certain external conditions (for
+> example: the blkio or devices controller use major/minor parameters for
+> configuring per-device limits. Since major/minor assignments are pretty much
+> unpredictable these days -- and users probably want to configure things with
+> friendly and stable /dev/disk/by-id/* symlinks anyway -- this requires us to
+> wait for devices to show up before we can configure the parameters.) Soo...
+> you need a graph of units, where you can propagate things, and schedule things
+> based on some execution/event queue. And the propagation and scheduling are
+> closely intermingled.
 
-This pull request contains the following changes.
+you are confusing policy and mechanisms.
 
-* cgroup_subsys_state (css) reference counting has been converted to
-  percpu-ref.  css is what each resource controller embeds into its
-  own control structure and perform reference count against.  It may
-  be used in hot paths of various subsystems and is similar to module
-  refcnt in that aspect.  For example, block-cgroup's css refcnting
-  was showing up a lot in Mikulaus's device-mapper scalability work
-  and this should alleviate it.
+    The access to cgroupfs is mechanism.
 
-* cgroup subtree iterator has been updated so that RCU read lock can
-  be released after grabbing reference.  This allows simplifying its
-  users which requires blocking which used to build iteration list
-  under RCU read lock and then traverse it outside.  This pull request
-  contains simplification of cgroup core and device-cgroup.  A
-  separate pull request will update cpuset.
+    The propagation of changes, the scheduling of cgroupfs access and
+    the correlation to external conditions are policy.
 
-* Fixes for various bugs including corner race conditions and RCU
-  usage bugs.
+What Tim is asking for is to have a common interface, i.e. a library
+which implements the low level access to the cgroupfs mechanism
+without imposing systemd defined policies to it (It might implement a
+set of common useful policies, but that's a different discussion).
 
-* A lot of cleanups and some prepartory work for the planned unified
-  hierarchy support.
+That's definitely not an unreasonable request, because he wants to
+implement his own set of policies which are not necessarily the same
+as those which are implemented by systemd.
 
-The changes are available in the following git branch
+You are simply ignoring the fact, that Linux is used in other ways
+than those which you are focussed on. That's true for Google's way to
+manage its gazillion machines and that's equally true for the other
+end of the spectrum which is deep embedded or any other specialized
+use case. Just face it: running Linux on your laptop and on some RHT
+lab machines is covering about 1% of the use cases.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.11
+Nevertheless you repeatedly claim, that systemd is the only way to
+deal with system startup and system management, is covering _ALL_ use
+cases and the interfaces you expose are sufficient.
 
-for you to fetch changes up to c7ba8287cd11f2fc9e2feee9e1fac34b7293658f:
+Did you ever work on specialized embedded or big data use cases? I
+really doubt that, but I might be wrong as usual.
 
-  cgroup: CGRP_ROOT_SUBSYS_BOUND should also be ignored when mounting an existing hierarchy (2013-06-29 14:06:10 -0700)
+So I invite you to prove that you can beat an existing setup for an
+automotive use case with your magic systemd foo. I refund you fully,
+if you can beat the mark of a functional system less than 800ms after
+reset release on a 200MHz ARM machine. Functional is defined by the
+use case requirements and means:
 
-Thanks.
+    - Basic cgroups management working
+    - GUI up and running
+    - Main communication interface (CAN bus) up and running
 
-----------------------------------------------------------------
-Greg KH (1):
-      cgroup.h: remove some functions that are now gone
+The rest of the system is starting up after that including a more
+complex cgroup management.
 
-Li Zefan (6):
-      cgroup: fix umount vs cgroup_cfts_commit() race
-      cgroup: fix umount vs cgroup_event_remove() race
-      cgroup: fix memory leak in cgroup_rm_cftypes()
-      cgroup: make serial_nr_cursor available throughout cgroup.c
-      cgroup: convert cgroup_cft_commit() to use cgroup_for_each_descendant_pre()
-      cgroup: rename cont to cgrp
+According to your claim that systemd is covering everything and some
+more, this should take you a few hours. I grant you a full week to
+work on that.
 
-Tejun Heo (43):
-      cgroup: refactor hierarchy_id handling
-      cgroup: drop hierarchy_id_lock
-      cgroup: make hierarchy_id use cyclic idr
-      cgroup: implement task_cgroup_path_from_hierarchy()
-      Merge branch 'for-3.10-fixes' into for-3.11
-      cgroup: make cgroup_is_removed() static
-      cgroup: add cgroup->serial_nr and implement cgroup_next_sibling()
-      cgroup: update iterators to use cgroup_next_sibling()
-      device_cgroup: simplify cgroup tree walk in propagate_exception()
-      cgroup: mark "tasks" cgroup file as insane
-      cgroup: mark "notify_on_release" and "release_agent" cgroup files insane
-      cgroup: clean up the cftype array for the base cgroup files
-      cgroup: remove now unused css_depth()
-      cgroup: consistently use @cset for struct css_set variables
-      cgroup: bring some sanity to naming around cg_cgroup_link
-      cgroup: use kzalloc() instead of kmalloc()
-      cgroup: clean up css_[try]get() and css_put()
-      cgroup: rename CGRP_REMOVED to CGRP_DEAD
-      cgroup: drop unnecessary RCU dancing from __put_css_set()
-      cgroup: remove cgroup->count and use
-      cgroup: reorder the operations in cgroup_destroy_locked()
-      cgroup: split cgroup destruction into two steps
-      Merge branch 'for-3.11' of git://git.kernel.org/.../tj/percpu into for-3.11
-      cgroup: use percpu refcnt for cgroup_subsys_states
-      cgroup: update sane_behavior documentation
-      cgroup: disallow rename(2) if sane_behavior
-      cgroup: clean up cgroup_serial_nr_cursor
-      cgroup: convert CFTYPE_* flags to enums
-      cgroup: prefix global variables with "cgroup_"
-      cgroup: remove cgroup->actual_subsys_mask
-      cgroup: clean up find_css_set() and friends
-      cgroup: s/for_each_subsys()/for_each_root_subsys()/
-      cgroup: move init_css_set initialization inside cgroup_mutex
-      cgroup: implement for_each_[builtin_]subsys()
-      cgroup: reserve ID 0 for dummy_root and 1 for unified hierarchy
-      cgroup: fix cgroupfs_root early destruction path
-      cgroup: grab cgroup_mutex in drop_parsed_module_refcounts()
-      cgroup: fix RCU accesses to task->cgroups
-      cgroup: fix RCU accesses around task->cgroups
-      cgroup: always use RCU accessors for protected accesses
-      cgroup: fix deadlock on cgroup_mutex via drop_parsed_module_refcounts()
-      cgroup: CGRP_ROOT_SUBSYS_BOUND should be ignored when comparing mount options
-      cgroup: CGRP_ROOT_SUBSYS_BOUND should also be ignored when mounting an existing hierarchy
+The use case Tim is talking about is different, but has similar
+constraints which are completely driven by his particular use case
+scenario. I'm sure, that Tim can persuade his management to setup a
+similar contest to prove your expertise on the other extreme of the
+Linux world.
 
- include/linux/cgroup.h   |  222 ++++---
- kernel/cgroup.c          | 1536 ++++++++++++++++++++++++++--------------------
- security/device_cgroup.c |   56 +-
- 3 files changed, 1029 insertions(+), 785 deletions(-)
+Before answering please think about the relevance of your statements
+"getting this all right isn't easy", "something like a scheduler",
+"users probably want ..."  and "stable /dev/disk/by-id/* symlinks" in
+those contexts.
 
--- 
-tejun
+Thanks,
+
+	tglx
