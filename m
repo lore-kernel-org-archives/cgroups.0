@@ -1,19 +1,19 @@
 From: Sha Zhengju <handai.szj@gmail.com>
-Subject: [PATCH V4 5/6] memcg: patch mem_cgroup_{begin,end}_update_page_stat() out if only root memcg exists
-Date: Sat,  6 Jul 2013 01:33:43 +0800
-Message-ID: <1373045623-27712-1-git-send-email-handai.szj@taobao.com>
+Subject: [PATCH V4 6/6] memcg: Document cgroup dirty/writeback memory statistics
+Date: Sat,  6 Jul 2013 01:34:17 +0800
+Message-ID: <1373045657-27750-1-git-send-email-handai.szj@taobao.com>
 References: <1373044710-27371-1-git-send-email-handai.szj@taobao.com>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id:x-mailer:in-reply-to:references;
-        bh=QR3aPArLXNvMm3hkqx3Usxgn9uzc6nH5B7Kp+W6mGTg=;
-        b=Y9NKUz4ZQXzwdH6TNmUnM1CXAwjptzOs9gqmNvFiX03LhORwLnnoysELtTta0kil5N
-         mQuqUKK9hQ14qBEQIylBlaU6atWqaR6acZ50VTtekVp1yq+eSGdWY5oIBSzfWCqjFd/U
-         n58ln/lNMvrqFe1FWTAMQAiDMwFTewgL+MVBifx3X2pNZY4tv/4Mskb3yC3G+e3pxa/q
-         VPO6OvURTIgWVTmkXaJRksDJAvzEw3YTGnSWhnGhJ6Xn34p+dSlJUpxoazyNU4RVwchd
-         7g6+GyrkXksvFtM2NyMqguhETvINnr2PMaUdfjnR0cN87Ai2r6A5Vj1t2FDHDAzOuybw
-         TI6Q==
+        bh=b5AgGEaEvzTHKZhq4oYlntY32NNUOFGruRZ8smSq0zk=;
+        b=LzpSTvZOGRxNUMa+f1aBF1bVyTknorxoIQ71+VEO+f0ui/+B3UM0gC00kKPA6BDqu+
+         ok05YgSOuxv9AkHx29Jcg/VBA8T2s20xUEVnoun6znVOYP8+wDbFpW51dEI7N9+jhNEK
+         6j6oa5ykR7Zj6HjP9wDpqU9yozZSUI/aGMOCm1mk89/Z1CzujtYAGWa+VuqxQAyOKLW2
+         OITlkQF4/AvbJnE+QTEaZmBhBgaN/GlXASPlVxIbntSz5A7gBXoudM+OClW/XuTH7In2
+         c5Slxsz7FSOpWm27H3djhY6TPmmAl3xQBsXxOSFQNqmTuWW4e0uaAfTNFtF45XwIYlux
+         r3tg==
 In-Reply-To: <1373044710-27371-1-git-send-email-handai.szj@taobao.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -25,131 +25,30 @@ Cc: mhocko@suse.cz, gthelen@google.com, kamezawa.hiroyu@jp.fujitsu.com, akpm@lin
 
 From: Sha Zhengju <handai.szj@taobao.com>
 
-If memcg is enabled and no non-root memcg exists, all allocated pages
-belongs to root_mem_cgroup and wil go through root memcg statistics routines.
-So in order to reduce overheads after adding memcg dirty/writeback accounting
-in hot paths, we use jump label to patch mem_cgroup_{begin,end}_update_page_stat()
-in or out when not used. If no non-root memcg comes to life, we do not need to
-accquire moving locks, so patch them out.
-
 Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
-cc: Michal Hocko <mhocko@suse.cz>
+Acked-by: Michal Hocko <mhocko@suse.cz>
 cc: Greg Thelen <gthelen@google.com>
 cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 cc: Andrew Morton <akpm@linux-foundation.org>
 cc: Fengguang Wu <fengguang.wu@intel.com>
 cc: Mel Gorman <mgorman@suse.de>
 ---
- include/linux/memcontrol.h |   15 +++++++++++++++
- mm/memcontrol.c            |   23 ++++++++++++++++++++++-
- 2 files changed, 37 insertions(+), 1 deletion(-)
+ Documentation/cgroups/memory.txt |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index ccd35d8..0483e1a 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -55,6 +55,13 @@ struct mem_cgroup_reclaim_cookie {
- };
- 
- #ifdef CONFIG_MEMCG
-+
-+extern struct static_key memcg_inuse_key;
-+static inline bool mem_cgroup_in_use(void)
-+{
-+	return static_key_false(&memcg_inuse_key);
-+}
-+
- /*
-  * All "charge" functions with gfp_mask should use GFP_KERNEL or
-  * (gfp_mask & GFP_RECLAIM_MASK). In current implementatin, memcg doesn't
-@@ -159,6 +166,8 @@ static inline void mem_cgroup_begin_update_page_stat(struct page *page,
- {
- 	if (mem_cgroup_disabled())
- 		return;
-+	if (!mem_cgroup_in_use())
-+		return;
- 	rcu_read_lock();
- 	*locked = false;
- 	if (atomic_read(&memcg_moving))
-@@ -172,6 +181,8 @@ static inline void mem_cgroup_end_update_page_stat(struct page *page,
- {
- 	if (mem_cgroup_disabled())
- 		return;
-+	if (!mem_cgroup_in_use())
-+		return;
- 	if (*locked)
- 		__mem_cgroup_end_update_page_stat(page, flags);
- 	rcu_read_unlock();
-@@ -215,6 +226,10 @@ void mem_cgroup_print_bad_page(struct page *page);
- #endif
- #else /* CONFIG_MEMCG */
- struct mem_cgroup;
-+static inline bool mem_cgroup_in_use(void)
-+{
-+	return false;
-+}
- 
- static inline int mem_cgroup_newpage_charge(struct page *page,
- 					struct mm_struct *mm, gfp_t gfp_mask)
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 9126abc..a85f7c5 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -463,6 +463,13 @@ enum res_type {
- #define MEM_CGROUP_RECLAIM_SHRINK_BIT	0x1
- #define MEM_CGROUP_RECLAIM_SHRINK	(1 << MEM_CGROUP_RECLAIM_SHRINK_BIT)
- 
-+/* static_key used for marking memcg in use or not. We use this jump label to
-+ * patch some memcg page stat accounting code in or out.
-+ * The key will be increased when non-root memcg is created, and be decreased
-+ * when memcg is destroyed.
-+ */
-+struct static_key memcg_inuse_key;
-+
- /*
-  * The memcg_create_mutex will be held whenever a new cgroup is created.
-  * As a consequence, any change that needs to protect against new child cgroups
-@@ -630,10 +637,22 @@ static void disarm_kmem_keys(struct mem_cgroup *memcg)
- }
- #endif /* CONFIG_MEMCG_KMEM */
- 
-+static void disarm_inuse_keys(struct mem_cgroup *memcg)
-+{
-+	if (!mem_cgroup_is_root(memcg))
-+		static_key_slow_dec(&memcg_inuse_key);
-+}
-+
-+static void arm_inuse_keys(void)
-+{
-+	static_key_slow_inc(&memcg_inuse_key);
-+}
-+
- static void disarm_static_keys(struct mem_cgroup *memcg)
- {
- 	disarm_sock_keys(memcg);
- 	disarm_kmem_keys(memcg);
-+	disarm_inuse_keys(memcg);
- }
- 
- static void drain_all_stock_async(struct mem_cgroup *memcg);
-@@ -2298,7 +2317,6 @@ void mem_cgroup_update_page_stat(struct page *page,
- {
- 	struct mem_cgroup *memcg;
- 	struct page_cgroup *pc = lookup_page_cgroup(page);
--	unsigned long uninitialized_var(flags);
- 
- 	if (mem_cgroup_disabled())
- 		return;
-@@ -6293,6 +6311,9 @@ mem_cgroup_css_online(struct cgroup *cont)
- 	}
- 
- 	error = memcg_init_kmem(memcg, &mem_cgroup_subsys);
-+	if (!error)
-+		arm_inuse_keys();
-+
- 	mutex_unlock(&memcg_create_mutex);
- 	return error;
- }
+diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
+index 327acec..7ed4fa9 100644
+--- a/Documentation/cgroups/memory.txt
++++ b/Documentation/cgroups/memory.txt
+@@ -490,6 +490,8 @@ pgpgin		- # of charging events to the memory cgroup. The charging
+ pgpgout		- # of uncharging events to the memory cgroup. The uncharging
+ 		event happens each time a page is unaccounted from the cgroup.
+ swap		- # of bytes of swap usage
++dirty          - # of bytes of file cache that are not in sync with the disk copy.
++writeback      - # of bytes of file/anon cache that are queued for syncing to disk.
+ inactive_anon	- # of bytes of anonymous memory and swap cache memory on
+ 		LRU list.
+ active_anon	- # of bytes of anonymous and swap cache memory on active
 -- 
 1.7.9.5
 
