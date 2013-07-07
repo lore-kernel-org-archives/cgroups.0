@@ -1,126 +1,92 @@
-From: Glauber Costa <glommer@gmail.com>
-Subject: [PATCH v10 13/16] memcg: allow kmem limit to be resized down
-Date: Sun,  7 Jul 2013 11:56:53 -0400
-Message-ID: <1373212616-11713-14-git-send-email-glommer@openvz.org>
+From: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH v10 11/16] vmscan: take at least one pass with shrinkers
+Date: Sun,  7 Jul 2013 11:56:51 -0400
+Message-ID: <1373212616-11713-12-git-send-email-glommer@openvz.org>
 References: <1373212616-11713-1-git-send-email-glommer@openvz.org>
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id:x-mailer:in-reply-to:references;
-        bh=gOKIEVy+DX3+ZOfKowFlr8HEG4/XhX97ZF4Kqkb0sk8=;
-        b=AbtUpyrDxpT7uufmLnI2WEXiwUuU8DUp+ARTzyh0Ei6aC2OYCB13tO9H5GwDpEZmYY
-         Lxw9chJY42zwtuTAJUO5fdPSvIvSmQilA008g/KjMhN/FfW8FmIm2Y8pl9evFhqgm62+
-         roFygWg4+/cuYN9mmn4A2LC2Bf5sNF8tbyDIXMYpN0Gs2rGAP1MWGxnPmSWkVwzRFBLe
-         KwnIDPwmDVihFBMCt0LwUdgvut9e1BD3FdIxI3bOIzIqBtuszc5hEUBTuYcoE/j6fj54
-         wPv0uAFN2GTamfwTJI4zM8q9DTIkEfRFWYVMK1keDPuLo8N/++CR2XOUU+hqxUIkN5/3
-         3G3g==
-In-Reply-To: <1373212616-11713-1-git-send-email-glommer@openvz.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
+        bh=n060NApHm1EmBvMeDNvtYZoNBNy++UiOkqivBri40SU=;
+        b=QLzDDEhWVQJFVLVi4KpRKdA7oZSY235dz/4yPwSwx96RGcBfBZMg5vIrfPY7amhDUs
+         gOIBhk4e1hLRvGLMr12LcEuVVZodnPI4Ovq5eez1C/MoiSf4PTHcxZ0ZHUt8DGhj1VSA
+         KZdRwdSWxsoYTJYrR0kVYZIx0oDUjGmcdPOXLaSQsBCnrwJIsP2V9jHNhJiC65sipiIa
+         Zp/EBZfM49zI0u8oUhAvqNMY12hv0va2EQE143GJCWQiSE7ynoj3K1kFrqkqnR1Z+aWg
+         Zx2Ub0E1JVEPJSnR7MIxsF1+0G+DrDayISR6xtJZdhuP+xan9VbqDwt+8U2GiBT/XYxQ
+         T1LQ==
+In-Reply-To: <1373212616-11713-1-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: linux-fsdevel@vger.kernel.org, mgorman@suse.de, david@fromorbit.com, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, mhocko@suze.cz, hannes@cmpxchg.org, hughd@google.com, gthelen@google.com, akpm@linux-foundation.org, Glauber Costa <glommer@openvz.org>, Michal Hocko <mhocko@suse.cz>
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, mhocko-Y4LbUc7mvzI@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Carlos Maiolino <cmaiolino-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
 
-The userspace memory limit can be freely resized down. Upon attempt,
-reclaim will be called to flush the pages away until we either reach the
-limit we want or give up.
+In very low free kernel memory situations, it may be the case that we
+have less objects to free than our initial batch size. If this is the
+case, it is better to shrink those, and open space for the new workload
+then to keep them and fail the new allocations.
 
-It wasn't possible so far with the kmem limit, since we had no way to
-shrink the kmem buffers other than using the big hammer of shrink_slab,
-that effectively frees data around the whole system.
+In particular, we are concerned with the direct reclaim case for memcg.
+Although this same technique can be applied to other situations just as well,
+we will start conservative and apply it for that case, which is the one
+that matters the most.
 
-The situation flips now that we have a per-memcg shrinker
-infrastructure. We will proceed analogously to our user memory
-counterpart and try to shrink our buffers until we either reach the
-limit we want or give up.
+[ v6: only do it per memcg ]
+[ v5: differentiate no-scan case, don't do this for kswapd ]
 
-Signed-off-by: Glauber Costa <glommer@openvz.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
-Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+CC: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
+CC: Carlos Maiolino <cmaiolino-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+CC: "Theodore Ts'o" <tytso-3s7WtUTddSA@public.gmane.org>
+CC: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
 ---
- mm/memcontrol.c | 43 ++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 38 insertions(+), 5 deletions(-)
+ mm/vmscan.c | 23 ++++++++++++++++++-----
+ 1 file changed, 18 insertions(+), 5 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index cce8a22..8623172 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5446,10 +5446,39 @@ static ssize_t mem_cgroup_read(struct cgroup *cont, struct cftype *cft,
- 	return simple_read_from_buffer(buf, nbytes, ppos, str, len);
- }
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index f1ff892..7b8ea36 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -291,20 +291,33 @@ shrink_slab_node(struct shrink_control *shrinkctl, struct shrinker *shrinker,
+ 				nr_pages_scanned, lru_pages,
+ 				max_pass, delta, total_scan);
  
-+#ifdef CONFIG_MEMCG_KMEM
-+/*
-+ * This is slightly different than res or memsw reclaim.  We already have
-+ * vmscan behind us to drive the reclaim, so we can basically keep trying until
-+ * all buffers that can be flushed are flushed. We have a very clear signal
-+ * about it in the form of the return value of try_to_free_mem_cgroup_kmem.
-+ */
-+static int mem_cgroup_resize_kmem_limit(struct mem_cgroup *memcg,
-+					unsigned long long val)
-+{
-+	int ret = -EBUSY;
+-	while (total_scan >= batch_size) {
++	do {
+ 		unsigned long ret;
++		unsigned long nr_to_scan = min(batch_size, total_scan);
++		struct mem_cgroup *memcg = shrinkctl->target_mem_cgroup;
 +
-+	for (;;) {
-+		if (signal_pending(current)) {
-+			ret = -EINTR;
-+			break;
-+		}
-+
-+		ret = res_counter_set_limit(&memcg->kmem, val);
-+		if (!ret)
++		/*
++		 * Differentiate between "few objects" and "no objects"
++		 * as returned by the count step.
++		 */
++		if (!total_scan)
 +			break;
 +
-+		/* Can't free anything, pointless to continue */
-+		if (!try_to_free_mem_cgroup_kmem(memcg, GFP_KERNEL))
++		if ((total_scan < batch_size) &&
++		   !(memcg && memcg_kmem_is_active(memcg)))
 +			break;
-+	}
-+
-+	return ret;
-+}
-+
- static int memcg_update_kmem_limit(struct cgroup *cont, u64 val)
- {
- 	int ret = -EINVAL;
--#ifdef CONFIG_MEMCG_KMEM
- 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+ 
+-		shrinkctl->nr_to_scan = batch_size;
++		shrinkctl->nr_to_scan = nr_to_scan;
+ 		ret = shrinker->scan_objects(shrinker, shrinkctl);
+ 		if (ret == SHRINK_STOP)
+ 			break;
+ 		freed += ret;
+ 
+-		count_vm_events(SLABS_SCANNED, batch_size);
+-		total_scan -= batch_size;
++		count_vm_events(SLABS_SCANNED, nr_to_scan);
++		total_scan -= nr_to_scan;
+ 
+ 		cond_resched();
+-	}
++	} while (total_scan >= batch_size);
+ 
  	/*
- 	 * For simplicity, we won't allow this to be disabled.  It also can't
-@@ -5484,16 +5513,15 @@ static int memcg_update_kmem_limit(struct cgroup *cont, u64 val)
- 		 * starts accounting before all call sites are patched
- 		 */
- 		memcg_kmem_set_active(memcg);
--	} else
--		ret = res_counter_set_limit(&memcg->kmem, val);
-+	} else {
-+		ret = mem_cgroup_resize_kmem_limit(memcg, val);
-+	}
- out:
- 	mutex_unlock(&set_limit_mutex);
- 	mutex_unlock(&memcg_create_mutex);
--#endif
- 	return ret;
- }
- 
--#ifdef CONFIG_MEMCG_KMEM
- static int memcg_propagate_kmem(struct mem_cgroup *memcg)
- {
- 	int ret = 0;
-@@ -5530,6 +5558,11 @@ static int memcg_propagate_kmem(struct mem_cgroup *memcg)
- out:
- 	return ret;
- }
-+#else
-+static int memcg_update_kmem_limit(struct cgroup *cont, u64 val)
-+{
-+	return -EINVAL;
-+}
- #endif /* CONFIG_MEMCG_KMEM */
- 
- /*
+ 	 * move the unused scan count back into the shrinker in a
 -- 
 1.8.2.1
-
