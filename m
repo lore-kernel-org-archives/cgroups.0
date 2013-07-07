@@ -1,185 +1,77 @@
-From: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v10 15/16] memcg: reap dead memcgs upon global memory pressure
-Date: Sun,  7 Jul 2013 11:56:55 -0400
-Message-ID: <1373212616-11713-16-git-send-email-glommer@openvz.org>
-References: <1373212616-11713-1-git-send-email-glommer@openvz.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=from:to:cc:subject:date:message-id:x-mailer:in-reply-to:references;
-        bh=KmEDVRrYugE12k+DJq2lVYWPv5Rceuqz80jnJfBr5zw=;
-        b=cbB2VT5+c/6y2W7li4f6p7Mu4ZU/HODn8WIbuEnWb9Mjqz9/7cFzfAQDTN8vjykAtx
-         8UBR0wSTEqZg7Ko+Wg6j7Rkb6t5vG4PSiVRdM7rzKRk+Nm9Bp/BDUdrfnk5n11Cg+KPp
-         BirjKEZYlsNKgiRcllz/b17CJEvRotGeot7tQks7mNseJb24lLcqGLstnXq4UQkgcPtp
-         HuEx7pgdcC5VqBJ7VgVNdduYJf5VkXxZFlkojpfyPQXWoxZUV6O1nzEBFHEEOL4bQlct
-         wxKY2f4W31Mzvnp/o2wIUZuokftPlKub7ddPR8FhyuAsIdTsbR3cu/YhfsQQNwhL4kIc
-         rG+A==
-In-Reply-To: <1373212616-11713-1-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: "azurIt" <azurit@pobox.sk>
+Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=5D_memcg=3A_do_not_trap_chargers_with_full_callstack_on_OOM?=
+Date: Mon, 08 Jul 2013 01:42:24 +0200
+Message-ID: <20130708014224.50F06960@pobox.sk>
+References: <20130606160446.GE24115@dhcp22.suse.cz>, <20130606181633.BCC3E02E@pobox.sk>, <20130607131157.GF8117@dhcp22.suse.cz>, <20130617122134.2E072BA8@pobox.sk>, <20130619132614.GC16457@dhcp22.suse.cz>, <20130622220958.D10567A4@pobox.sk>, <20130624201345.GA21822@cmpxchg.org>, <20130628120613.6D6CAD21@pobox.sk>, <20130705181728.GQ17812@cmpxchg.org>, <20130705210246.11D2135A@pobox.sk> <20130705191854.GR17812@cmpxchg.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20130705191854.GR17812@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, mhocko-Y4LbUc7mvzI@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Anton Vorontsov <anton-9xeibp6oKSgdnm+yROfE0A@public.gmane.org>, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+To: =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
+Cc: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>
 
-When we delete kmem-enabled memcgs, they can still be zombieing
-around for a while. The reason is that the objects may still be alive,
-and we won't be able to delete them at destruction time.
+> CC: "Michal Hocko" <mhocko@suse.cz>, linux-kernel@vger.kernel.org, linu=
+x-mm@kvack.org, "cgroups mailinglist" <cgroups@vger.kernel.org>, "KAMEZAW=
+A Hiroyuki" <kamezawa.hiroyu@jp.fujitsu.com>
+>On Fri, Jul 05, 2013 at 09:02:46PM +0200, azurIt wrote:
+>> >I looked at your debug messages but could not find anything that woul=
+d
+>> >hint at a deadlock.  All tasks are stuck in the refrigerator, so I
+>> >assume you use the freezer cgroup and enabled it somehow?
+>>=20
+>>=20
+>> Yes, i'm really using freezer cgroup BUT i was checking if it's not
+>> doing problems - unfortunately, several days passed from that day
+>> and now i don't fully remember if i was checking it for both cases
+>> (unremoveabled cgroups and these freezed processes holding web
+>> server port). I'm 100% sure i was checking it for unremoveable
+>> cgroups but not so sure for the other problem (i had to act quickly
+>> in that case). Are you sure (from stacks) that freezer cgroup was
+>> enabled there?
+>
+>Yeah, all the traces without exception look like this:
+>
+>1372089762/23433/stack:[<ffffffff81080925>] refrigerator+0x95/0x160
+>1372089762/23433/stack:[<ffffffff8106ab7b>] get_signal_to_deliver+0x1cb/=
+0x540
+>1372089762/23433/stack:[<ffffffff8100188b>] do_signal+0x6b/0x750
+>1372089762/23433/stack:[<ffffffff81001fc5>] do_notify_resume+0x55/0x80
+>1372089762/23433/stack:[<ffffffff815cac77>] int_signal+0x12/0x17
+>1372089762/23433/stack:[<ffffffffffffffff>] 0xffffffffffffffff
+>
+>so the freezer was already enabled when you took the backtraces.
+>
+>> Btw, what about that other stacks? I mean this file:
+>> http://watchdog.sk/lkml/memcg-bug-7.tar.gz
+>>=20
+>> It was taken while running the kernel with your patch and from
+>> cgroup which was under unresolveable OOM (just like my very original
+>> problem).
+>
+>I looked at these traces too, but none of the tasks are stuck in rmdir
+>or the OOM path.  Some /are/ in the page fault path, but they are
+>happily doing reclaim and don't appear to be stuck.  So I'm having a
+>hard time matching this data to what you otherwise observed.
+>
+>However, based on what you reported the most likely explanation for
+>the continued hangs is the unfinished OOM handling for which I sent
+>the followup patch for arch/x86/mm/fault.c.
+>
 
-The only entry point for that, though, are the shrinkers. The
-shrinker interface, however, is not exactly tailored to our needs. It
-could be a little bit better by using the API Dave Chinner proposed, but
-it is still not ideal since we aren't really a count-and-scan event, but
-more a one-off flush-all-you-can event that would have to abuse that
-somehow.
 
-Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: Anton Vorontsov <anton-9xeibp6oKSgdnm+yROfE0A@public.gmane.org>
-Cc: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
----
- mm/memcontrol.c | 81 ++++++++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 78 insertions(+), 3 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 8623172..e2dc89c 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -297,8 +297,16 @@ struct mem_cgroup {
- 	/* thresholds for mem+swap usage. RCU-protected */
- 	struct mem_cgroup_thresholds memsw_thresholds;
- 
--	/* For oom notifier event fd */
--	struct list_head oom_notify;
-+	union {
-+		/* For oom notifier event fd */
-+		struct list_head oom_notify;
-+		/*
-+		 * we can only trigger an oom event if the memcg is alive.
-+		 * so we will reuse this field to hook the memcg in the list
-+		 * of dead memcgs.
-+		 */
-+		struct list_head dead;
-+	};
- 
- 	/*
- 	 * Should we move charges of a task when a task is moved into this
-@@ -348,6 +356,29 @@ struct mem_cgroup {
- 	/* WARNING: nodeinfo must be the last member here */
- };
- 
-+#if defined(CONFIG_MEMCG_KMEM) || defined(CONFIG_MEMCG_SWAP)
-+static LIST_HEAD(dangling_memcgs);
-+static DEFINE_MUTEX(dangling_memcgs_mutex);
-+
-+static inline void memcg_dangling_del(struct mem_cgroup *memcg)
-+{
-+	mutex_lock(&dangling_memcgs_mutex);
-+	list_del(&memcg->dead);
-+	mutex_unlock(&dangling_memcgs_mutex);
-+}
-+
-+static inline void memcg_dangling_add(struct mem_cgroup *memcg)
-+{
-+	INIT_LIST_HEAD(&memcg->dead);
-+	mutex_lock(&dangling_memcgs_mutex);
-+	list_add(&memcg->dead, &dangling_memcgs);
-+	mutex_unlock(&dangling_memcgs_mutex);
-+}
-+#else
-+static inline void memcg_dangling_free(struct mem_cgroup *memcg) {}
-+static inline void memcg_dangling_add(struct mem_cgroup *memcg) {}
-+#endif
-+
- static size_t memcg_size(void)
- {
- 	return sizeof(struct mem_cgroup) +
-@@ -6227,6 +6258,41 @@ static int mem_cgroup_oom_control_write(struct cgroup *cgrp,
- }
- 
- #ifdef CONFIG_MEMCG_KMEM
-+static void memcg_vmpressure_shrink_dead(void)
-+{
-+	struct memcg_cache_params *params, *tmp;
-+	struct kmem_cache *cachep;
-+	struct mem_cgroup *memcg;
-+
-+	mutex_lock(&dangling_memcgs_mutex);
-+	list_for_each_entry(memcg, &dangling_memcgs, dead) {
-+		mutex_lock(&memcg->slab_caches_mutex);
-+		/* The element may go away as an indirect result of shrink */
-+		list_for_each_entry_safe(params, tmp,
-+					 &memcg->memcg_slab_caches, list) {
-+			cachep = memcg_params_to_cache(params);
-+			/*
-+			 * the cpu_hotplug lock is taken in kmem_cache_create
-+			 * outside the slab_caches_mutex manipulation. It will
-+			 * be taken by kmem_cache_shrink to flush the cache.
-+			 * So we need to drop the lock. It is all right because
-+			 * the lock only protects elements moving in and out the
-+			 * list.
-+			 */
-+			mutex_unlock(&memcg->slab_caches_mutex);
-+			kmem_cache_shrink(cachep);
-+			mutex_lock(&memcg->slab_caches_mutex);
-+		}
-+		mutex_unlock(&memcg->slab_caches_mutex);
-+	}
-+	mutex_unlock(&dangling_memcgs_mutex);
-+}
-+
-+static void memcg_register_kmem_events(struct cgroup *cont)
-+{
-+	vmpressure_register_kernel_event(cont, memcg_vmpressure_shrink_dead);
-+}
-+
- static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
- 	int ret;
-@@ -6276,6 +6342,10 @@ static void kmem_cgroup_css_offline(struct mem_cgroup *memcg)
- 		css_put(&memcg->css);
- }
- #else
-+static inline void memcg_register_kmem_events(struct cgroup *cont)
-+{
-+}
-+
- static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
- 	return 0;
-@@ -6607,8 +6677,10 @@ mem_cgroup_css_online(struct cgroup *cont)
- 	struct mem_cgroup *memcg, *parent;
- 	int error = 0;
- 
--	if (!cont->parent)
-+	if (!cont->parent) {
-+		memcg_register_kmem_events(cont);
- 		return 0;
-+	}
- 
- 	mutex_lock(&memcg_create_mutex);
- 	memcg = mem_cgroup_from_cont(cont);
-@@ -6672,6 +6744,7 @@ static void mem_cgroup_css_offline(struct cgroup *cont)
- 	mem_cgroup_invalidate_reclaim_iterators(memcg);
- 	mem_cgroup_reparent_charges(memcg);
- 	mem_cgroup_destroy_all_caches(memcg);
-+	memcg_dangling_add(memcg);
- }
- 
- static void mem_cgroup_css_free(struct cgroup *cont)
-@@ -6680,7 +6753,9 @@ static void mem_cgroup_css_free(struct cgroup *cont)
- 
- 	mem_cgroup_sockets_destroy(memcg);
- 
-+	memcg_dangling_del(memcg);
- 	__mem_cgroup_free(memcg);
-+
- }
- 
- #ifdef CONFIG_MMU
--- 
-1.8.2.1
+Johannes,
+
+today I tested both of your patches but problem with unremovable cgroups,=
+ unfortunately, persists.
+
+azur
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
