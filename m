@@ -1,92 +1,82 @@
-From: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v10 11/16] vmscan: take at least one pass with shrinkers
-Date: Sun,  7 Jul 2013 11:56:51 -0400
-Message-ID: <1373212616-11713-12-git-send-email-glommer@openvz.org>
+From: Glauber Costa <glommer@gmail.com>
+Subject: [PATCH v10 16/16] memcg: flush memcg items upon memcg destruction
+Date: Sun,  7 Jul 2013 11:56:56 -0400
+Message-ID: <1373212616-11713-17-git-send-email-glommer@openvz.org>
 References: <1373212616-11713-1-git-send-email-glommer@openvz.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id:x-mailer:in-reply-to:references;
-        bh=n060NApHm1EmBvMeDNvtYZoNBNy++UiOkqivBri40SU=;
-        b=QLzDDEhWVQJFVLVi4KpRKdA7oZSY235dz/4yPwSwx96RGcBfBZMg5vIrfPY7amhDUs
-         gOIBhk4e1hLRvGLMr12LcEuVVZodnPI4Ovq5eez1C/MoiSf4PTHcxZ0ZHUt8DGhj1VSA
-         KZdRwdSWxsoYTJYrR0kVYZIx0oDUjGmcdPOXLaSQsBCnrwJIsP2V9jHNhJiC65sipiIa
-         Zp/EBZfM49zI0u8oUhAvqNMY12hv0va2EQE143GJCWQiSE7ynoj3K1kFrqkqnR1Z+aWg
-         Zx2Ub0E1JVEPJSnR7MIxsF1+0G+DrDayISR6xtJZdhuP+xan9VbqDwt+8U2GiBT/XYxQ
-         T1LQ==
-In-Reply-To: <1373212616-11713-1-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=2WgixP9rhHvOejyaN/GNDUe0w6lkzihlFNBpBB4Ke7A=;
+        b=RpftiDzk+9s7tMdWI7qTidempMcAT0cxsLj93cDNQGVH0R+eeboJ7dJROMOorjhg9m
+         KcdftWojNLn5cA99K6PlGuy6U2krleBJJSDEz2yi5gZcdDD6TodWpanJtaYgiNMeizhz
+         7ho+aQEtF05qYYDZ4j0YcYFP7VVQQP1z05CWY4tgY5NYpLuiRniNH6uybhsxNqNRfqbS
+         QmBBBiMRBGmJB9IkewC4bdXdezQ6uXm912pw4Q/GsUAZEYPIRTADO9WAXlurb6o9dgqi
+         OFbNcH6qyWOYWQeF3qLaijMSdFWCRGB/6tvqWsqWhSZ0XYaxvqsLrodYiWg4Ze1rFagQ
+         3pzw==
+In-Reply-To: <1373212616-11713-1-git-send-email-glommer@openvz.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, mhocko-Y4LbUc7mvzI@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Carlos Maiolino <cmaiolino-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+To: linux-mm@kvack.org
+Cc: linux-fsdevel@vger.kernel.org, mgorman@suse.de, david@fromorbit.com, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, mhocko@suze.cz, hannes@cmpxchg.org, hughd@google.com, gthelen@google.com, akpm@linux-foundation.org, Glauber Costa <glommer@openvz.org>, Michal Hocko <mhocko@suse.cz>
 
-In very low free kernel memory situations, it may be the case that we
-have less objects to free than our initial batch size. If this is the
-case, it is better to shrink those, and open space for the new workload
-then to keep them and fail the new allocations.
+When a memcg is destroyed, it won't be imediately released until all
+objects are gone. This means that if a memcg is restarted with the very
+same workload - a very common case, the objects already cached won't be
+billed to the new memcg. This is mostly undesirable since a container
+can exploit this by restarting itself every time it reaches its limit,
+and then coming up again with a fresh new limit.
 
-In particular, we are concerned with the direct reclaim case for memcg.
-Although this same technique can be applied to other situations just as well,
-we will start conservative and apply it for that case, which is the one
-that matters the most.
+Since now we have targeted reclaim, I sustain that we should assume that
+a memcg that is destroyed should be flushed away. It makes perfect sense
+if we assume that a memcg that goes away most likely indicates an
+isolated workload that is terminated.
 
-[ v6: only do it per memcg ]
-[ v5: differentiate no-scan case, don't do this for kswapd ]
-
-Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-CC: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
-CC: Carlos Maiolino <cmaiolino-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-CC: "Theodore Ts'o" <tytso-3s7WtUTddSA@public.gmane.org>
-CC: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+Signed-off-by: Glauber Costa <glommer@openvz.org>
+Cc: Mel Gorman <mgorman@suse.de>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 ---
- mm/vmscan.c | 23 ++++++++++++++++++-----
- 1 file changed, 18 insertions(+), 5 deletions(-)
+ mm/memcontrol.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index f1ff892..7b8ea36 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -291,20 +291,33 @@ shrink_slab_node(struct shrink_control *shrinkctl, struct shrinker *shrinker,
- 				nr_pages_scanned, lru_pages,
- 				max_pass, delta, total_scan);
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index e2dc89c..90173bc 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6310,10 +6310,27 @@ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
  
--	while (total_scan >= batch_size) {
-+	do {
- 		unsigned long ret;
-+		unsigned long nr_to_scan = min(batch_size, total_scan);
-+		struct mem_cgroup *memcg = shrinkctl->target_mem_cgroup;
-+
-+		/*
-+		 * Differentiate between "few objects" and "no objects"
-+		 * as returned by the count step.
-+		 */
-+		if (!total_scan)
-+			break;
-+
-+		if ((total_scan < batch_size) &&
-+		   !(memcg && memcg_kmem_is_active(memcg)))
-+			break;
- 
--		shrinkctl->nr_to_scan = batch_size;
-+		shrinkctl->nr_to_scan = nr_to_scan;
- 		ret = shrinker->scan_objects(shrinker, shrinkctl);
- 		if (ret == SHRINK_STOP)
- 			break;
- 		freed += ret;
- 
--		count_vm_events(SLABS_SCANNED, batch_size);
--		total_scan -= batch_size;
-+		count_vm_events(SLABS_SCANNED, nr_to_scan);
-+		total_scan -= nr_to_scan;
- 
- 		cond_resched();
--	}
-+	} while (total_scan >= batch_size);
+ static void kmem_cgroup_css_offline(struct mem_cgroup *memcg)
+ {
++	int ret;
+ 	if (!memcg_kmem_is_active(memcg))
+ 		return;
  
  	/*
- 	 * move the unused scan count back into the shrinker in a
++	 * When a memcg is destroyed, it won't be imediately released until all
++	 * objects are gone. This means that if a memcg is restarted with the
++	 * very same workload - a very common case, the objects already cached
++	 * won't be billed to the new memcg. This is mostly undesirable since a
++	 * container can exploit this by restarting itself every time it
++	 * reaches its limit, and then coming up again with a fresh new limit.
++	 *
++	 * Therefore a memcg that is destroyed should be flushed away. It makes
++	 * perfect sense if we assume that a memcg that goes away indicates an
++	 * isolated workload that is terminated.
++	 */
++	do {
++		ret = try_to_free_mem_cgroup_kmem(memcg, GFP_KERNEL);
++	} while (ret);
++
++	/*
+ 	 * kmem charges can outlive the cgroup. In the case of slab
+ 	 * pages, for instance, a page contain objects from various
+ 	 * processes. As we prevent from taking a reference for every
 -- 
 1.8.2.1
+
