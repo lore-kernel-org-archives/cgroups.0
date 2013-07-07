@@ -1,231 +1,185 @@
-From: Glauber Costa <glommer@gmail.com>
-Subject: [PATCH v10 12/16] super: targeted memcg reclaim
-Date: Sun,  7 Jul 2013 11:56:52 -0400
-Message-ID: <1373212616-11713-13-git-send-email-glommer@openvz.org>
+From: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH v10 15/16] memcg: reap dead memcgs upon global memory pressure
+Date: Sun,  7 Jul 2013 11:56:55 -0400
+Message-ID: <1373212616-11713-16-git-send-email-glommer@openvz.org>
 References: <1373212616-11713-1-git-send-email-glommer@openvz.org>
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id:x-mailer:in-reply-to:references;
-        bh=P6YtVDj6r4vM+Zs6j/5FqAdg4zYZW2Vz+p2UFkz0BZI=;
-        b=qtCExevqutbBG9xJRHPNvk6fhKztK/HYp6aKm2RbtGCJ8uZWB1ZXqOXUJh6ZlGxpT/
-         oIecOBgfYPsOnAJ+maqJckVGU5uav17Y2p7At3jDwzLjJ+d6b/o6kAm//IyYNRNxifQ4
-         y2nJl1jMuJgvt8MfwGUZ1jOuftLlg+LB4wKr1xaWQP8m7MXU5a37zhPeDMR7zQycZY61
-         qxW/31AdmB8BvKX2NaS2kG7Ai0I+I7os/Q1YtIC4LmeThWYORwvLdirLHpBL8/e+5aG+
-         UH6D7C+jT/V15ndEZvfYFAvjaUY2Ltnn134dPNn+Uy2K7ZQ2qmgFNgFYD3K/wvebKepZ
-         1ePw==
-In-Reply-To: <1373212616-11713-1-git-send-email-glommer@openvz.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
+        bh=KmEDVRrYugE12k+DJq2lVYWPv5Rceuqz80jnJfBr5zw=;
+        b=cbB2VT5+c/6y2W7li4f6p7Mu4ZU/HODn8WIbuEnWb9Mjqz9/7cFzfAQDTN8vjykAtx
+         8UBR0wSTEqZg7Ko+Wg6j7Rkb6t5vG4PSiVRdM7rzKRk+Nm9Bp/BDUdrfnk5n11Cg+KPp
+         BirjKEZYlsNKgiRcllz/b17CJEvRotGeot7tQks7mNseJb24lLcqGLstnXq4UQkgcPtp
+         HuEx7pgdcC5VqBJ7VgVNdduYJf5VkXxZFlkojpfyPQXWoxZUV6O1nzEBFHEEOL4bQlct
+         wxKY2f4W31Mzvnp/o2wIUZuokftPlKub7ddPR8FhyuAsIdTsbR3cu/YhfsQQNwhL4kIc
+         rG+A==
+In-Reply-To: <1373212616-11713-1-git-send-email-glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: linux-fsdevel@vger.kernel.org, mgorman@suse.de, david@fromorbit.com, cgroups@vger.kernel.org, kamezawa.hiroyu@jp.fujitsu.com, mhocko@suze.cz, hannes@cmpxchg.org, hughd@google.com, gthelen@google.com, akpm@linux-foundation.org, Glauber Costa <glommer@openvz.org>, Dave Chinner <dchinner@redhat.com>, Rik van Riel <riel@redhat.com>, Michal Hocko <mhocko@suse.cz>
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, mhocko-Y4LbUc7mvzI@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Anton Vorontsov <anton-9xeibp6oKSgdnm+yROfE0A@public.gmane.org>, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-We now have all our dentries and inodes placed in memcg-specific LRU
-lists. All we have to do is restrict the reclaim to the said lists in
-case of memcg pressure.
+When we delete kmem-enabled memcgs, they can still be zombieing
+around for a while. The reason is that the objects may still be alive,
+and we won't be able to delete them at destruction time.
 
-That can't be done so easily for the fs_objects part of the equation,
-since this is heavily fs-specific. What we do is pass on the context,
-and let the filesystems decide if they ever chose or want to. At this
-time, we just don't shrink them in memcg pressure (none is supported),
-leaving that for global pressure only.
+The only entry point for that, though, are the shrinkers. The
+shrinker interface, however, is not exactly tailored to our needs. It
+could be a little bit better by using the API Dave Chinner proposed, but
+it is still not ideal since we aren't really a count-and-scan event, but
+more a one-off flush-all-you-can event that would have to abuse that
+somehow.
 
-Marking the superblock shrinker and its LRUs as memcg-aware will
-guarantee that the shrinkers will get invoked during targetted reclaim.
-
-Signed-off-by: Glauber Costa <glommer@openvz.org>
-Cc: Dave Chinner <dchinner@redhat.com>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Rik van Riel <riel@redhat.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
-Cc: Hugh Dickins <hughd@google.com>
-Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: Anton Vorontsov <anton-9xeibp6oKSgdnm+yROfE0A@public.gmane.org>
+Cc: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 ---
- fs/dcache.c   |  7 ++++---
- fs/inode.c    |  7 ++++---
- fs/internal.h |  5 +++--
- fs/super.c    | 35 ++++++++++++++++++++++-------------
- 4 files changed, 33 insertions(+), 21 deletions(-)
+ mm/memcontrol.c | 81 ++++++++++++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 78 insertions(+), 3 deletions(-)
 
-diff --git a/fs/dcache.c b/fs/dcache.c
-index 7489b6f..023302e 100644
---- a/fs/dcache.c
-+++ b/fs/dcache.c
-@@ -901,13 +901,14 @@ dentry_lru_isolate(struct list_head *item, spinlock_t *lru_lock, void *arg)
-  * use.
-  */
- long prune_dcache_sb(struct super_block *sb, unsigned long nr_to_scan,
--		     int nid)
-+		     int nid, struct mem_cgroup *memcg)
- {
- 	LIST_HEAD(dispose);
- 	long freed;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 8623172..e2dc89c 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -297,8 +297,16 @@ struct mem_cgroup {
+ 	/* thresholds for mem+swap usage. RCU-protected */
+ 	struct mem_cgroup_thresholds memsw_thresholds;
  
--	freed = list_lru_walk_node(&sb->s_dentry_lru, nid, dentry_lru_isolate,
--				       &dispose, &nr_to_scan);
-+	freed = list_lru_walk_node_memcg(&sb->s_dentry_lru, nid,
-+					dentry_lru_isolate, &dispose,
-+					&nr_to_scan, memcg);
- 	shrink_dentry_list(&dispose);
- 	return freed;
- }
-diff --git a/fs/inode.c b/fs/inode.c
-index e315c0a..44d4026 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -749,13 +749,14 @@ inode_lru_isolate(struct list_head *item, spinlock_t *lru_lock, void *arg)
-  * then are freed outside inode_lock by dispose_list().
-  */
- long prune_icache_sb(struct super_block *sb, unsigned long nr_to_scan,
--		     int nid)
-+		     int nid, struct mem_cgroup *memcg)
- {
- 	LIST_HEAD(freeable);
- 	long freed;
+-	/* For oom notifier event fd */
+-	struct list_head oom_notify;
++	union {
++		/* For oom notifier event fd */
++		struct list_head oom_notify;
++		/*
++		 * we can only trigger an oom event if the memcg is alive.
++		 * so we will reuse this field to hook the memcg in the list
++		 * of dead memcgs.
++		 */
++		struct list_head dead;
++	};
  
--	freed = list_lru_walk_node(&sb->s_inode_lru, nid, inode_lru_isolate,
--				       &freeable, &nr_to_scan);
-+	freed = list_lru_walk_node_memcg(&sb->s_inode_lru, nid,
-+					inode_lru_isolate, &freeable,
-+					&nr_to_scan, memcg);
- 	dispose_list(&freeable);
- 	return freed;
- }
-diff --git a/fs/internal.h b/fs/internal.h
-index 0b0db70..1f3fd0e 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -16,6 +16,7 @@ struct file_system_type;
- struct linux_binprm;
- struct path;
- struct mount;
-+struct mem_cgroup;
+ 	/*
+ 	 * Should we move charges of a task when a task is moved into this
+@@ -348,6 +356,29 @@ struct mem_cgroup {
+ 	/* WARNING: nodeinfo must be the last member here */
+ };
  
- /*
-  * block_dev.c
-@@ -112,7 +113,7 @@ extern int open_check_o_direct(struct file *f);
-  */
- extern spinlock_t inode_sb_list_lock;
- extern long prune_icache_sb(struct super_block *sb, unsigned long nr_to_scan,
--			    int nid);
-+			    int nid, struct mem_cgroup *memcg);
- extern void inode_add_lru(struct inode *inode);
- 
- /*
-@@ -129,7 +130,7 @@ extern int invalidate_inodes(struct super_block *, bool);
-  */
- extern struct dentry *__d_alloc(struct super_block *, const struct qstr *);
- extern long prune_dcache_sb(struct super_block *sb, unsigned long nr_to_scan,
--			    int nid);
-+			    int nid, struct mem_cgroup *memcg);
- 
- /*
-  * read_write.c
-diff --git a/fs/super.c b/fs/super.c
-index 09da975..3460a3b 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -34,6 +34,7 @@
- #include <linux/cleancache.h>
- #include <linux/fsnotify.h>
- #include <linux/lockdep.h>
-+#include <linux/memcontrol.h>
- #include "internal.h"
- 
- 
-@@ -57,6 +58,7 @@ static unsigned long super_cache_scan(struct shrinker *shrink,
- 				      struct shrink_control *sc)
- {
- 	struct super_block *sb;
-+	struct mem_cgroup *memcg = sc->target_mem_cgroup;
- 	long	fs_objects = 0;
- 	long	total_objects;
- 	long	freed = 0;
-@@ -75,11 +77,12 @@ static unsigned long super_cache_scan(struct shrinker *shrink,
- 	if (!grab_super_passive(sb))
- 		return SHRINK_STOP;
- 
--	if (sb->s_op && sb->s_op->nr_cached_objects)
-+	if (sb->s_op && sb->s_op->nr_cached_objects && !memcg)
- 		fs_objects = sb->s_op->nr_cached_objects(sb, sc->nid);
- 
--	inodes = list_lru_count_node(&sb->s_inode_lru, sc->nid);
--	dentries = list_lru_count_node(&sb->s_dentry_lru, sc->nid);
-+	inodes = list_lru_count_node_memcg(&sb->s_inode_lru, sc->nid, memcg);
-+	dentries = list_lru_count_node_memcg(&sb->s_dentry_lru, sc->nid, memcg);
++#if defined(CONFIG_MEMCG_KMEM) || defined(CONFIG_MEMCG_SWAP)
++static LIST_HEAD(dangling_memcgs);
++static DEFINE_MUTEX(dangling_memcgs_mutex);
 +
- 	total_objects = dentries + inodes + fs_objects + 1;
- 
- 	/* proportion the scan between the caches */
-@@ -90,8 +93,8 @@ static unsigned long super_cache_scan(struct shrinker *shrink,
- 	 * prune the dcache first as the icache is pinned by it, then
- 	 * prune the icache, followed by the filesystem specific caches
- 	 */
--	freed = prune_dcache_sb(sb, dentries, sc->nid);
--	freed += prune_icache_sb(sb, inodes, sc->nid);
-+	freed = prune_dcache_sb(sb, dentries, sc->nid, memcg);
-+	freed += prune_icache_sb(sb, inodes, sc->nid, memcg);
- 
- 	if (fs_objects) {
- 		fs_objects = mult_frac(sc->nr_to_scan, fs_objects,
-@@ -109,20 +112,26 @@ static unsigned long super_cache_count(struct shrinker *shrink,
++static inline void memcg_dangling_del(struct mem_cgroup *memcg)
++{
++	mutex_lock(&dangling_memcgs_mutex);
++	list_del(&memcg->dead);
++	mutex_unlock(&dangling_memcgs_mutex);
++}
++
++static inline void memcg_dangling_add(struct mem_cgroup *memcg)
++{
++	INIT_LIST_HEAD(&memcg->dead);
++	mutex_lock(&dangling_memcgs_mutex);
++	list_add(&memcg->dead, &dangling_memcgs);
++	mutex_unlock(&dangling_memcgs_mutex);
++}
++#else
++static inline void memcg_dangling_free(struct mem_cgroup *memcg) {}
++static inline void memcg_dangling_add(struct mem_cgroup *memcg) {}
++#endif
++
+ static size_t memcg_size(void)
  {
- 	struct super_block *sb;
- 	long	total_objects = 0;
-+	struct mem_cgroup *memcg = sc->target_mem_cgroup;
+ 	return sizeof(struct mem_cgroup) +
+@@ -6227,6 +6258,41 @@ static int mem_cgroup_oom_control_write(struct cgroup *cgrp,
+ }
  
- 	sb = container_of(shrink, struct super_block, s_shrink);
+ #ifdef CONFIG_MEMCG_KMEM
++static void memcg_vmpressure_shrink_dead(void)
++{
++	struct memcg_cache_params *params, *tmp;
++	struct kmem_cache *cachep;
++	struct mem_cgroup *memcg;
++
++	mutex_lock(&dangling_memcgs_mutex);
++	list_for_each_entry(memcg, &dangling_memcgs, dead) {
++		mutex_lock(&memcg->slab_caches_mutex);
++		/* The element may go away as an indirect result of shrink */
++		list_for_each_entry_safe(params, tmp,
++					 &memcg->memcg_slab_caches, list) {
++			cachep = memcg_params_to_cache(params);
++			/*
++			 * the cpu_hotplug lock is taken in kmem_cache_create
++			 * outside the slab_caches_mutex manipulation. It will
++			 * be taken by kmem_cache_shrink to flush the cache.
++			 * So we need to drop the lock. It is all right because
++			 * the lock only protects elements moving in and out the
++			 * list.
++			 */
++			mutex_unlock(&memcg->slab_caches_mutex);
++			kmem_cache_shrink(cachep);
++			mutex_lock(&memcg->slab_caches_mutex);
++		}
++		mutex_unlock(&memcg->slab_caches_mutex);
++	}
++	mutex_unlock(&dangling_memcgs_mutex);
++}
++
++static void memcg_register_kmem_events(struct cgroup *cont)
++{
++	vmpressure_register_kernel_event(cont, memcg_vmpressure_shrink_dead);
++}
++
+ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
+ {
+ 	int ret;
+@@ -6276,6 +6342,10 @@ static void kmem_cgroup_css_offline(struct mem_cgroup *memcg)
+ 		css_put(&memcg->css);
+ }
+ #else
++static inline void memcg_register_kmem_events(struct cgroup *cont)
++{
++}
++
+ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
+ {
+ 	return 0;
+@@ -6607,8 +6677,10 @@ mem_cgroup_css_online(struct cgroup *cont)
+ 	struct mem_cgroup *memcg, *parent;
+ 	int error = 0;
  
- 	if (!grab_super_passive(sb))
+-	if (!cont->parent)
++	if (!cont->parent) {
++		memcg_register_kmem_events(cont);
  		return 0;
++	}
  
--	if (sb->s_op && sb->s_op->nr_cached_objects)
-+	/*
-+	 * Ideally we would pass memcg to nr_cached_objects, and
-+	 * let the underlying filesystem decide. Most likely the
-+	 * path will be if (!memcg) return;, but even then.
-+	 */
-+	if (sb->s_op && sb->s_op->nr_cached_objects && !memcg)
- 		total_objects = sb->s_op->nr_cached_objects(sb,
- 						 sc->nid);
+ 	mutex_lock(&memcg_create_mutex);
+ 	memcg = mem_cgroup_from_cont(cont);
+@@ -6672,6 +6744,7 @@ static void mem_cgroup_css_offline(struct cgroup *cont)
+ 	mem_cgroup_invalidate_reclaim_iterators(memcg);
+ 	mem_cgroup_reparent_charges(memcg);
+ 	mem_cgroup_destroy_all_caches(memcg);
++	memcg_dangling_add(memcg);
+ }
  
--	total_objects += list_lru_count_node(&sb->s_dentry_lru,
--						 sc->nid);
--	total_objects += list_lru_count_node(&sb->s_inode_lru,
--						 sc->nid);
-+	total_objects += list_lru_count_node_memcg(&sb->s_dentry_lru,
-+						 sc->nid, memcg);
-+	total_objects += list_lru_count_node_memcg(&sb->s_inode_lru,
-+						 sc->nid, memcg);
+ static void mem_cgroup_css_free(struct cgroup *cont)
+@@ -6680,7 +6753,9 @@ static void mem_cgroup_css_free(struct cgroup *cont)
  
- 	total_objects = vfs_pressure_ratio(total_objects);
- 	drop_super(sb);
-@@ -202,9 +211,9 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags)
- 		INIT_HLIST_BL_HEAD(&s->s_anon);
- 		INIT_LIST_HEAD(&s->s_inodes);
+ 	mem_cgroup_sockets_destroy(memcg);
  
--		if (list_lru_init(&s->s_dentry_lru))
-+		if (list_lru_init_memcg(&s->s_dentry_lru))
- 			goto err_out;
--		if (list_lru_init(&s->s_inode_lru))
-+		if (list_lru_init_memcg(&s->s_inode_lru))
- 			goto err_out_dentry_lru;
++	memcg_dangling_del(memcg);
+ 	__mem_cgroup_free(memcg);
++
+ }
  
- 		INIT_LIST_HEAD(&s->s_mounts);
-@@ -242,7 +251,7 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags)
- 		s->s_shrink.scan_objects = super_cache_scan;
- 		s->s_shrink.count_objects = super_cache_count;
- 		s->s_shrink.batch = 1024;
--		s->s_shrink.flags = SHRINKER_NUMA_AWARE;
-+		s->s_shrink.flags = SHRINKER_NUMA_AWARE | SHRINKER_MEMCG_AWARE;
- 	}
- out:
- 	return s;
+ #ifdef CONFIG_MMU
 -- 
 1.8.2.1
-
