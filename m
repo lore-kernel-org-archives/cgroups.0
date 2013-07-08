@@ -1,54 +1,100 @@
-From: Tejun Heo <tj@kernel.org>
+From: Vivek Goyal <vgoyal@redhat.com>
 Subject: Re: [PATCH RFC] fsio: filesystem io accounting cgroup
-Date: Mon, 8 Jul 2013 10:56:07 -0700
-Message-ID: <20130708175607.GB18600@mtj.dyndns.org>
+Date: Mon, 8 Jul 2013 14:11:44 -0400
+Message-ID: <20130708181144.GC9094@redhat.com>
 References: <20130708100046.14417.12932.stgit@zurg>
- <20130708170047.GA18600@mtj.dyndns.org>
- <20130708175201.GB9094@redhat.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=PsUaHDXYXBvdC5ctzYwiKMGwZckPqVyCUHSRzV/383g=;
-        b=pq7Rw6Z8ZZxConX71CQ93v7QxcKc5bUJnWj7IAFXaL8DYd3XP82ky+zHHHcp8TaqTE
-         n4V7Vlo3lmljAnQew80B2OtOTZuB+vu1Xik/TszP6w2ym8rsjFXm1R8gntBluX+upXnU
-         uAR4Ee5tFFdhLs6QfnkxdKXw/DFbiNWRBlIcxPeehmUplXFMNl2ieQ5mO9a/MYFHDq0y
-         8HzYs2rzL/GFXMyPUtxMMSHKXRV3S7hbo3GpPwZETXJ0x70XVTeTzIsRJeIo3/vzMWah
-         OKpsWVMHF+x9iLkyGP5ZqiC/zLRILfyjninPdNuIsl7PVt8Zdj1M1+tvmPOjGttQJVFV
-         YJNQ==
 Content-Disposition: inline
-In-Reply-To: <20130708175201.GB9094@redhat.com>
+In-Reply-To: <20130708100046.14417.12932.stgit@zurg>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vivek Goyal <vgoyal@redhat.com>
-Cc: Konstantin Khlebnikov <khlebnikov@openvz.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Michal Hocko <mhocko@suse.cz>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Sha Zhengju <handai.szj@gmail.com>, devel@openvz.org, Jens Axboe <axboe@kernel.dk>
+To: Konstantin Khlebnikov <khlebnikov@openvz.org>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, Michal Hocko <mhocko@suse.cz>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Sha Zhengju <handai.szj@gmail.com>, devel@openvz.org, Greg Thelen <gthelen@google.com>
 
-Hello, Vivek.
-
-On Mon, Jul 08, 2013 at 01:52:01PM -0400, Vivek Goyal wrote:
-> > Again, a problem to be fixed in the stack rather than patching up from
-> > up above.  The right thing to do is to propagate pressure through bdi
-> > properly and let whatever is backing the bdi generate appropriate
-> > amount of pressure, be that disk or network.
+On Mon, Jul 08, 2013 at 02:01:39PM +0400, Konstantin Khlebnikov wrote:
+> RESEND: fix CC
 > 
-> Ok, so use network controller for controlling IO rate on NFS? I had
-> tried it once and it did not work. I think it had problems related
-> to losing the context info as IO propagated through the stack. So
-> we will have to fix that too.
+> This is proof of concept, just basic functionality for IO controller.
+> This cgroup will control filesystem usage on vfs layer, it's main goal is
+> bandwidth control. It's supposed to be much more lightweight than memcg/blkio.
+> 
+> This patch shows easy way for accounting pages in dirty/writeback state in
+> per-inode manner. This is easier that doing this in memcg in per-page manner.
 
-But that's a similar problem we have with blkcg anyway - losing the
-dirtier information by the time writeback comes down through bdi.  It
-might not be exactly the same and might need some impedance matching
-on the network side but I don't see any fundamental differences.
+In the past other developers (CC Greg Thelen <gthelen@google.com>) have posted
+patches where inode was associated with a memcg for writeback accounting.
 
-Thanks.
+So accounting was per inode and not per page. We lose granularity in the
+process if two processes in different cgroups are doing IO to a file but it
+was considered good enough approximation in general. 
 
--- 
-tejun
+> Main idea is in keeping on each inode pointer (->i_fsio) to cgroup which owns
+> dirty data in that inode. It's settled by fsio_account_page_dirtied() when
+> first dirty tag appears in the inode. Relying to mapping tags gives us locking
+> for free, this patch doesn't add any new locks to hot paths.
+> 
+> Unlike to blkio this method works for all of filesystems, not just disk-backed.
+> Also it's able to handle writeback, because each inode has context which can be
+> used in writeback thread to account io operations.
+> 
+> This is early prototype, I have some plans about extra functionality because
+> this accounting itself is mostly useless, but it can be used as basis for more
+> usefull features.
+> 
+> Planned impovements:
+> * Split bdi into several tiers and account them separately. For example:
+>   hdd/ssd/usb/nfs. In complicated containerized environments that might be
+>   different kinds of storages with different limits and billing. This is more
+>   usefull that independent per-disk accounting and much easier to implement
+>   because all per-tier structures are allocated before disk appearance.
+
+What does this mean? With-in a cgroup there are different IO rate rules 
+depending on who is backing the bdi? If yes, then can't this info be
+exported to user space (if it is not already) and then user space can
+set the rules accordingly on disk.
+
+W.r.t the issue of being able to apply rules only when disk appears, I 
+think we will need a solution for this in user space which applies the
+rules when disk shows up.  I think systemd is planning to take care of of this
+up to some extent where one can specify IO bandwidth limits and these
+limits get applied when disk shows up. I am not sure if it allows
+different limits for different disks or not.
+
+
+> * Add some hooks for accounting actualy issued IO requests (iops).
+> * Implement bandwidth throttlers for each tier individually (bps and iops).
+>   This will be the most tasty feature. I already have very effective prototype.
+
+Can you please give some details here and also explain why blkcg can not
+achieve do the same.
+
+> * Add hook into balance_dirty_pages to limit amount of dirty page for each
+>   cgroup in each tier individually. This is required for accurate throttling,
+>   because if we want to limit speed of writeback we also must limit amount
+>   of dirty pages otherwise we have to inject enourmous delay after each sync().
+
+So there is a separate knob for limiting on buffered write rate and it 
+is not accounted towards direct writes etc?
+
+Anyway, limiting dirty pages per memory cgroup will be required even if
+we use blkcg.
+
+> * Implement filtered writeback requests for writing only data which belongs to
+>   particular fsio cgroup (or cgroups tree) to keep dirty balance in background.
+
+I think Greg had done similar modifications and put inodes into cgroup
+specific writeback lists and modify writeback logic.
+
+So quite a few pieces w.r.t balance_dirty_pages() and inode tagging are
+common even if we support writeback limits using blkcg. Only question we
+will have to figure out why implement all this functinality using a new
+cgroup controller instead of enhancing blkcg.
+
+Thanks
+Vivek
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
