@@ -1,62 +1,60 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH RFC] fsio: filesystem io accounting cgroup
-Date: Tue, 9 Jul 2013 06:45:58 -0700
-Message-ID: <20130709134558.GD2478@htj.dyndns.org>
-References: <20130708100046.14417.12932.stgit@zurg>
- <20130708170047.GA18600@mtj.dyndns.org>
- <20130708175201.GB9094@redhat.com>
- <20130708175607.GB18600@mtj.dyndns.org>
- <51DBC99F.4030301@openvz.org>
- <20130709125734.GA2478@htj.dyndns.org>
- <51DC0CE2.2050906@openvz.org>
- <20130709131605.GB2478@htj.dyndns.org>
- <20130709131646.GC2478@htj.dyndns.org>
- <51DC136E.6020901@openvz.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH for 3.2] memcg: do not trap chargers with full callstack
+ on OOM
+Date: Tue, 9 Jul 2013 15:54:50 +0200
+Message-ID: <20130709135450.GI20281@dhcp22.suse.cz>
+References: <20130619132614.GC16457@dhcp22.suse.cz>
+ <20130622220958.D10567A4@pobox.sk>
+ <20130624201345.GA21822@cmpxchg.org>
+ <20130628120613.6D6CAD21@pobox.sk>
+ <20130705181728.GQ17812@cmpxchg.org>
+ <20130705210246.11D2135A@pobox.sk>
+ <20130705191854.GR17812@cmpxchg.org>
+ <20130708014224.50F06960@pobox.sk>
+ <20130709131029.GH20281@dhcp22.suse.cz>
+ <20130709151921.5160C199@pobox.sk>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=FjpvOdfjOyDW4OjEuhcbmtryQ7wo1V2Dl5iK+QiWyrg=;
-        b=hRR2ecy0zX1DY3YKF/RCl4y+fEvVWzI5tTRtMJApyKkSKJ+xXfHveSflQBZtKksAAp
-         RYV955f6vw0MduDPuPl6Q444vTunF3/rZFSCy5QY03EVUMTnAmDHz8bzSLQmE8wZEG9+
-         bhVVorCrvvmGVYc1rgCoasU3tCCVjumHyMzayeT06j0NnaguGTB6jpvIxGBevFrDX3tL
-         RQxK++i0RyBRZa626YBS6tq22Wi1cZDYdu3B9oytew+oI1DWx8mpuZMP2/pMZvrnHTih
-         QVIYvYL3Zn+/yWyoqyx/X6Dm7p5Sygey5t+LSbFOnJ0ZCC2mAMiLAATekTSzDMO4TVRo
-         cVgw==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <51DC136E.6020901@openvz.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20130709151921.5160C199-Rm0zKEqwvD4@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: Vivek Goyal <vgoyal@redhat.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Michal Hocko <mhocko@suse.cz>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Sha Zhengju <handai.szj@gmail.com>, devel@openvz.org, Jens Axboe <axboe@kernel.dk>
+To: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-On Tue, Jul 09, 2013 at 05:43:10PM +0400, Konstantin Khlebnikov wrote:
-> My concept it cgroup which would control io operation on vfs layer
-> for all filesystems.  It will account and manage IO operations. I've
-> found really lightweight technique for accounting and throttling
-> which don't introduce new locks or priority inversions (which is
-> major problem in all existing throttlers, including cpu cgroup rate
-> limiter) So, I've tried to keep code smaller, cleaner and saner as
-> possible while you guys are trying to push me into the block layer
-> =)
+On Tue 09-07-13 15:19:21, azurIt wrote:
+[...]
+> Now i realized that i forgot to remove UID from that cgroup before
+> trying to remove it, so cgroup cannot be removed anyway (we are using
+> third party cgroup called cgroup-uid from Andrea Righi, which is able
+> to associate all user's processes with target cgroup). Look here for
+> cgroup-uid patch:
+> https://www.develer.com/~arighi/linux/patches/cgroup-uid/cgroup-uid-v8.patch
+> 
+> ANYWAY, i'm 101% sure that 'tasks' file was empty and 'under_oom' was
+> permanently '1'.
 
-You're trying to implement QoS in the place where you don't have
-control of the queue itself.  You aren't even managing the right type
-of resource for disks which is time slice rather than iops or
-bandwidth and by the time you implemented proper hierarchy support and
-proportional control, yours isn't gonna be that simple either.  The
-root problem is bdi failing to propagate pressure from the actual
-queue upwards.  Fix that.
+This is really strange. Could you post the whole diff against stable
+tree you are using (except for grsecurity stuff and the above cgroup-uid
+patch)?
 
+Btw. the bellow patch might help us to point to the exit path which
+leaves wait_on_memcg without mem_cgroup_oom_synchronize:
+---
+diff --git a/kernel/exit.c b/kernel/exit.c
+index e6e01b9..ad472e0 100644
+--- a/kernel/exit.c
++++ b/kernel/exit.c
+@@ -895,6 +895,7 @@ NORET_TYPE void do_exit(long code)
+ 
+ 	profile_task_exit(tsk);
+ 
++	WARN_ON(current->memcg_oom.wait_on_memcg);
+ 	WARN_ON(blk_needs_flush_plug(tsk));
+ 
+ 	if (unlikely(in_interrupt()))
 -- 
-tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Michal Hocko
+SUSE Labs
