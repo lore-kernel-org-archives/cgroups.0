@@ -1,108 +1,157 @@
-From: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: cgroup: status-quo and userland efforts
-Date: Wed, 10 Jul 2013 01:12:40 +0200 (CEST)
-Message-ID: <alpine.LRH.2.00.1307100111410.4045@twin.jikos.cz>
-References: <CAAAKZwvP_7wBBYMmtFuiE2hZt=ByaLrnTyiR83CZr3OMip63Gg@mail.gmail.com> <20130625000118.GT1918@mtj.dyndns.org> <CAAAKZwt09k-qUwLCnMpAQeYJ-S0XtkjXe4=bJ-G_fcrkAqEzoA@mail.gmail.com> <20130626212047.GB4536@htj.dyndns.org> <1372311907.5871.78.camel@marge.simpson.net>
- <20130627180143.GD5599@mtj.dyndns.org> <1372391198.5989.110.camel@marge.simpson.net> <20130628040930.GC2500@htj.dyndns.org> <1372394950.5989.128.camel@marge.simpson.net> <20130628050138.GD2500@htj.dyndns.org> <20130628150513.GD5125@dhcp22.suse.cz>
- <CAAAKZwtqYe-c0bfkgHFbzsOKVHifjTwkqcpci=uS1JwqS9TJHQ@mail.gmail.com> <51CE3CE0.9010506@redhat.com> <CAAAKZwuzhSzPj99HZW=KD4emGXZbcsjsUu=+TCpafhs9MKD2JA@mail.gmail.com> <51D08976.6040005@redhat.com> <alpine.DEB.2.02.1307030021480.4013@ionos.tec.linutronix.de>
- <CAPXgP12AyogbFX_hPPmQD5GFG0-+_crsnHF3epDZSRds3-WNtQ@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH cgroup/for-3.11-fixes] cgroup: remove bcache_subsys_id which
+ got added stealthily
+Date: Tue, 9 Jul 2013 16:33:38 -0700
+Message-ID: <20130709233338.GB10374@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAPXgP12AyogbFX_hPPmQD5GFG0-+_crsnHF3epDZSRds3-WNtQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-bcache-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=+1Y+JKTA+iDNcLK7QONBTa1iLUqHCMqLBgjvSFrvwb4=;
+        b=WfuiS+ju9/H6QtdyI5f7mbO1CAwvb9YkZKrEhzhWyHXusOq21IAzT1xo+kI+JPsBSu
+         UeARx0L+Vy0pine7DNlMIobzuUfPYdBHrronudr1UzsfL/Hry9bokRX0mz+FclTCZG72
+         LIiZZqfoMRTzZIvOlkTlSOoff6OA597GM/RtOAZhEiw5O7X1pm0uCV3F0dmiVvkh3HOu
+         Lo2nQqYL43/BzqwQrT64D/A/LIqazM6w1ao8fnkblUNV3cV/lySYCzImMzKDaIvf7lGf
+         DROLjDAmUP7PCfUgUEMH3gYGB4v1OdXoV/ruELewVTx9u86LU/hqnEjCXL5YrNfHT3KM
+         DrRA==
+Content-Disposition: inline
+Sender: linux-bcache-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kay Sievers <kay-tD+1rO4QERM@public.gmane.org>
-Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Lennart Poettering <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mike Galbraith <bitbucket-BGeptl67XyCzQB+pC5nmwQ@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bsingharora <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "dhaval.giani" <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, jpoimboe <jpoimboe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, workman-devel <workman-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Kent Overstreet <kent.overstreet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, 3 Jul 2013, Kay Sievers wrote:
+From add0c59d802e6118e51e21244c3871be35164e4b Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Tue, 9 Jul 2013 16:17:39 -0700
 
-> >> > But that's not my point.  It seems pretty easy to make this cgroup
-> >> > management (in "native mode") a library that can have either a thin
-> >> > veneer of a main() function, while also being usable by systemd.  The
-> >> > point is to solve all of the problems ONCE.  I'm trying to make the
-> >> > case that systemd itself should be focusing on features and policies
-> >> > and awesome APIs.
-> >>
-> >> You know, getting this all right isn't easy. If you want to do things
-> >> properly, then you need to propagate attribute changes between the units you
-> >> manage. You also need something like a scheduler, since a number of
-> >> controllers can only be configured under certain external conditions (for
-> >> example: the blkio or devices controller use major/minor parameters for
-> >> configuring per-device limits. Since major/minor assignments are pretty much
-> >> unpredictable these days -- and users probably want to configure things with
-> >> friendly and stable /dev/disk/by-id/* symlinks anyway -- this requires us to
-> >> wait for devices to show up before we can configure the parameters.) Soo...
-> >> you need a graph of units, where you can propagate things, and schedule things
-> >> based on some execution/event queue. And the propagation and scheduling are
-> >> closely intermingled.
-> >
-> > you are confusing policy and mechanisms.
-> >
-> >     The access to cgroupfs is mechanism.
-> >
-> >     The propagation of changes, the scheduling of cgroupfs access and
-> >     the correlation to external conditions are policy.
-> >
-> > What Tim is asking for is to have a common interface, i.e. a library
-> > which implements the low level access to the cgroupfs mechanism
-> > without imposing systemd defined policies to it (It might implement a
-> > set of common useful policies, but that's a different discussion).
-> >
-> > That's definitely not an unreasonable request, because he wants to
-> > implement his own set of policies which are not necessarily the same
-> > as those which are implemented by systemd.
-> >
-> > You are simply ignoring the fact, that Linux is used in other ways
-> > than those which you are focussed on. That's true for Google's way to
-> > manage its gazillion machines and that's equally true for the other
-> > end of the spectrum which is deep embedded or any other specialized
-> > use case. Just face it: running Linux on your laptop and on some RHT
-> > lab machines is covering about 1% of the use cases.
-> >
-> > Nevertheless you repeatedly claim, that systemd is the only way to
-> > deal with system startup and system management, is covering _ALL_ use
-> > cases and the interfaces you expose are sufficient.
-> >
-> > Did you ever work on specialized embedded or big data use cases? I
-> > really doubt that, but I might be wrong as usual.
-> >
-> > So I invite you to prove that you can beat an existing setup for an
-> > automotive use case with your magic systemd foo. I refund you fully,
-> > if you can beat the mark of a functional system less than 800ms after
-> > reset release on a 200MHz ARM machine. Functional is defined by the
-> > use case requirements and means:
-> >
-> >     - Basic cgroups management working
-> >     - GUI up and running
-> >     - Main communication interface (CAN bus) up and running
-> >
-> > The rest of the system is starting up after that including a more
-> > complex cgroup management.
-> >
-> > According to your claim that systemd is covering everything and some
-> > more, this should take you a few hours. I grant you a full week to
-> > work on that.
-> >
-> > The use case Tim is talking about is different, but has similar
-> > constraints which are completely driven by his particular use case
-> > scenario. I'm sure, that Tim can persuade his management to setup a
-> > similar contest to prove your expertise on the other extreme of the
-> > Linux world.
-> >
-> > Before answering please think about the relevance of your statements
-> > "getting this all right isn't easy", "something like a scheduler",
-> > "users probably want ..."  and "stable /dev/disk/by-id/* symlinks" in
-> > those contexts.
-> 
-> I don't think anybody needs your money.
-> 
-> But it's sure an improvement over last time when you wanted to use a
-> "Kantholz" to make your statement.
+cafe563591 ("bcache: A block layer cache") added a new cgroup
+subsystem bcache_subsys without proper review and ack.  bcache_subsys
+seems to use cgroup for group stats and per-group cache_mode
+configuration.  This is very much the type of usage that we don't want
+to allow.
 
-Now how about the policy vs. mechanisms part of Thomas' e-mail?
+Fortunately, CONFIG_CGROUP_BCACHE which enables bcache_subsys is
+currently commented out, so this shouldn't have any upstream users.
+Let's nip in the bud.  While at it, clarify in cgroup_subsys.h that no
+new subsystem should be added without explicit acks from cgroup
+maintainers.
 
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Kent Overstreet <kent.overstreet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+---
+Applied to cgroup/for-3.11-fixes.  Please don't do things like this
+ever again.
+
+Thanks.
+
+ include/linux/cgroup_subsys.h | 45 +++++++------------------------------------
+ 1 file changed, 7 insertions(+), 38 deletions(-)
+
+diff --git a/include/linux/cgroup_subsys.h b/include/linux/cgroup_subsys.h
+index 6e7ec64..b613ffd 100644
+--- a/include/linux/cgroup_subsys.h
++++ b/include/linux/cgroup_subsys.h
+@@ -1,86 +1,55 @@
+-/* Add subsystem definitions of the form SUBSYS(<name>) in this
+- * file. Surround each one by a line of comment markers so that
+- * patches don't collide
++/*
++ * List of cgroup subsystems.
++ *
++ * DO NOT ADD ANY SUBSYSTEM WITHOUT EXPLICIT ACKS FROM CGROUP MAINTAINERS.
+  */
+-
+-/* */
+-
+-/* */
+-
+ #if IS_SUBSYS_ENABLED(CONFIG_CPUSETS)
+ SUBSYS(cpuset)
+ #endif
+ 
+-/* */
+-
+ #if IS_SUBSYS_ENABLED(CONFIG_CGROUP_DEBUG)
+ SUBSYS(debug)
+ #endif
+ 
+-/* */
+-
+ #if IS_SUBSYS_ENABLED(CONFIG_CGROUP_SCHED)
+ SUBSYS(cpu_cgroup)
+ #endif
+ 
+-/* */
+-
+ #if IS_SUBSYS_ENABLED(CONFIG_CGROUP_CPUACCT)
+ SUBSYS(cpuacct)
+ #endif
+ 
+-/* */
+-
+ #if IS_SUBSYS_ENABLED(CONFIG_MEMCG)
+ SUBSYS(mem_cgroup)
+ #endif
+ 
+-/* */
+-
+ #if IS_SUBSYS_ENABLED(CONFIG_CGROUP_DEVICE)
+ SUBSYS(devices)
+ #endif
+ 
+-/* */
+-
+ #if IS_SUBSYS_ENABLED(CONFIG_CGROUP_FREEZER)
+ SUBSYS(freezer)
+ #endif
+ 
+-/* */
+-
+ #if IS_SUBSYS_ENABLED(CONFIG_NET_CLS_CGROUP)
+ SUBSYS(net_cls)
+ #endif
+ 
+-/* */
+-
+ #if IS_SUBSYS_ENABLED(CONFIG_BLK_CGROUP)
+ SUBSYS(blkio)
+ #endif
+ 
+-/* */
+-
+ #if IS_SUBSYS_ENABLED(CONFIG_CGROUP_PERF)
+ SUBSYS(perf)
+ #endif
+ 
+-/* */
+-
+ #if IS_SUBSYS_ENABLED(CONFIG_NETPRIO_CGROUP)
+ SUBSYS(net_prio)
+ #endif
+ 
+-/* */
+-
+ #if IS_SUBSYS_ENABLED(CONFIG_CGROUP_HUGETLB)
+ SUBSYS(hugetlb)
+ #endif
+-
+-/* */
+-
+-#ifdef CONFIG_CGROUP_BCACHE
+-SUBSYS(bcache)
+-#endif
+-
+-/* */
++/*
++ * DO NOT ADD ANY SUBSYSTEM WITHOUT EXPLICIT ACKS FROM CGROUP MAINTAINERS.
++ */
 -- 
-Jiri Kosina
-SUSE Labs
+1.8.3.1
