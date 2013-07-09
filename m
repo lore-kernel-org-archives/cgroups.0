@@ -1,150 +1,108 @@
-From: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Subject: Re: [PATCH RFC] fsio: filesystem io accounting cgroup
-Date: Wed, 10 Jul 2013 00:54:28 +0400
-Message-ID: <51DC7884.2070104@openvz.org>
-References: <51DBC99F.4030301@openvz.org> <20130709125734.GA2478@htj.dyndns.org> <51DC0CE2.2050906@openvz.org> <20130709131605.GB2478@htj.dyndns.org> <20130709131646.GC2478@htj.dyndns.org> <51DC136E.6020901@openvz.org> <20130709134558.GD2478@htj.dyndns.org> <51DC1FCA.3060904@openvz.org> <20130709150605.GC2237@redhat.com> <51DC4BA1.3000403@openvz.org> <20130709183534.GE2237@redhat.com>
+From: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: cgroup: status-quo and userland efforts
+Date: Wed, 10 Jul 2013 01:12:40 +0200 (CEST)
+Message-ID: <alpine.LRH.2.00.1307100111410.4045@twin.jikos.cz>
+References: <CAAAKZwvP_7wBBYMmtFuiE2hZt=ByaLrnTyiR83CZr3OMip63Gg@mail.gmail.com> <20130625000118.GT1918@mtj.dyndns.org> <CAAAKZwt09k-qUwLCnMpAQeYJ-S0XtkjXe4=bJ-G_fcrkAqEzoA@mail.gmail.com> <20130626212047.GB4536@htj.dyndns.org> <1372311907.5871.78.camel@marge.simpson.net>
+ <20130627180143.GD5599@mtj.dyndns.org> <1372391198.5989.110.camel@marge.simpson.net> <20130628040930.GC2500@htj.dyndns.org> <1372394950.5989.128.camel@marge.simpson.net> <20130628050138.GD2500@htj.dyndns.org> <20130628150513.GD5125@dhcp22.suse.cz>
+ <CAAAKZwtqYe-c0bfkgHFbzsOKVHifjTwkqcpci=uS1JwqS9TJHQ@mail.gmail.com> <51CE3CE0.9010506@redhat.com> <CAAAKZwuzhSzPj99HZW=KD4emGXZbcsjsUu=+TCpafhs9MKD2JA@mail.gmail.com> <51D08976.6040005@redhat.com> <alpine.DEB.2.02.1307030021480.4013@ionos.tec.linutronix.de>
+ <CAPXgP12AyogbFX_hPPmQD5GFG0-+_crsnHF3epDZSRds3-WNtQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:message-id:date:from:user-agent:mime-version:to:cc:subject
-         :references:in-reply-to:content-type:content-transfer-encoding;
-        bh=G801GgfBmODTHNiXP5IaiuGNcc5kIXduZwvQgvP53NM=;
-        b=XgZAEpc2PvzUjp1Dzed3H/7Gei/kAtNS9EwIXRWvi5hdZ00ZlU4cZ75I4dSOxW+nDB
-         DdBiY1aeiolNVer9OWNymjBV3ry1J0wEApXlQz4FNBSWgBJ0yujT1/5KBTUJUYf8Tnl2
-         OSFls/TC2/ouD+R5Uv8TNHMwLiMIJFhx+FYIS9egNh2iXliw6m7luQ1eksGxKB8Ct4ZZ
-         PdpqMPMBXLO7vJUK+/jak0XsiKEmb6GDJZhQ8iXTHY0uepYG8vYRzZdmtXHgiHW9MMN1
-         WE9dDSLrINl/Opz+bIY5T38TvjGoJCDMgm2YK+535SW1gSUZQuGXjXMr1erFc8O6H/3h
-         Q5Ag==
-In-Reply-To: <20130709183534.GE2237@redhat.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAPXgP12AyogbFX_hPPmQD5GFG0-+_crsnHF3epDZSRds3-WNtQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Vivek Goyal <vgoyal@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Michal Hocko <mhocko@suse.cz>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Sha Zhengju <handai.szj@gmail.com>, devel@openvz.org, Jens Axboe <axboe@kernel.dk>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Kay Sievers <kay-tD+1rO4QERM@public.gmane.org>
+Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Lennart Poettering <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mike Galbraith <bitbucket-BGeptl67XyCzQB+pC5nmwQ@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bsingharora <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "dhaval.giani" <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, jpoimboe <jpoimboe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, workman-devel <workman-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Vivek Goyal wrote:
-> On Tue, Jul 09, 2013 at 09:42:57PM +0400, Konstantin Khlebnikov wrote:
->
-> [..]
->>> So what kind of priority inversion you are facing with blkcg and how would
->>> you avoid it with your implementation?
->>>
->>> I know that serialization can happen at filesystem level while trying
->>> to commit journal. But I think same thing will happen with your
->>> implementation too.
->>
->> Yes, metadata changes are serialized and and they depends on data commits,
->> thus block layer cannot delay write requests without introducing nasty priority
->> inversions.
->
-> Tejun had some thoughts about this on how to solve this problem. I don't
-> remember the details though. Tejun?
->
->> Cached read requests cannot be delayed at all.
->
-> Who wants to delay the reads which are coming out of cache. That sounds
-> like a mis-feature.
+On Wed, 3 Jul 2013, Kay Sievers wrote:
 
-Nope, I'm telling about reading into page cache. If page already here but
-still not uptodate because its read request was delayed then following
-cached read will wait for this delayed request too.
+> >> > But that's not my point.  It seems pretty easy to make this cgroup
+> >> > management (in "native mode") a library that can have either a thin
+> >> > veneer of a main() function, while also being usable by systemd.  The
+> >> > point is to solve all of the problems ONCE.  I'm trying to make the
+> >> > case that systemd itself should be focusing on features and policies
+> >> > and awesome APIs.
+> >>
+> >> You know, getting this all right isn't easy. If you want to do things
+> >> properly, then you need to propagate attribute changes between the units you
+> >> manage. You also need something like a scheduler, since a number of
+> >> controllers can only be configured under certain external conditions (for
+> >> example: the blkio or devices controller use major/minor parameters for
+> >> configuring per-device limits. Since major/minor assignments are pretty much
+> >> unpredictable these days -- and users probably want to configure things with
+> >> friendly and stable /dev/disk/by-id/* symlinks anyway -- this requires us to
+> >> wait for devices to show up before we can configure the parameters.) Soo...
+> >> you need a graph of units, where you can propagate things, and schedule things
+> >> based on some execution/event queue. And the propagation and scheduling are
+> >> closely intermingled.
+> >
+> > you are confusing policy and mechanisms.
+> >
+> >     The access to cgroupfs is mechanism.
+> >
+> >     The propagation of changes, the scheduling of cgroupfs access and
+> >     the correlation to external conditions are policy.
+> >
+> > What Tim is asking for is to have a common interface, i.e. a library
+> > which implements the low level access to the cgroupfs mechanism
+> > without imposing systemd defined policies to it (It might implement a
+> > set of common useful policies, but that's a different discussion).
+> >
+> > That's definitely not an unreasonable request, because he wants to
+> > implement his own set of policies which are not necessarily the same
+> > as those which are implemented by systemd.
+> >
+> > You are simply ignoring the fact, that Linux is used in other ways
+> > than those which you are focussed on. That's true for Google's way to
+> > manage its gazillion machines and that's equally true for the other
+> > end of the spectrum which is deep embedded or any other specialized
+> > use case. Just face it: running Linux on your laptop and on some RHT
+> > lab machines is covering about 1% of the use cases.
+> >
+> > Nevertheless you repeatedly claim, that systemd is the only way to
+> > deal with system startup and system management, is covering _ALL_ use
+> > cases and the interfaces you expose are sufficient.
+> >
+> > Did you ever work on specialized embedded or big data use cases? I
+> > really doubt that, but I might be wrong as usual.
+> >
+> > So I invite you to prove that you can beat an existing setup for an
+> > automotive use case with your magic systemd foo. I refund you fully,
+> > if you can beat the mark of a functional system less than 800ms after
+> > reset release on a 200MHz ARM machine. Functional is defined by the
+> > use case requirements and means:
+> >
+> >     - Basic cgroups management working
+> >     - GUI up and running
+> >     - Main communication interface (CAN bus) up and running
+> >
+> > The rest of the system is starting up after that including a more
+> > complex cgroup management.
+> >
+> > According to your claim that systemd is covering everything and some
+> > more, this should take you a few hours. I grant you a full week to
+> > work on that.
+> >
+> > The use case Tim is talking about is different, but has similar
+> > constraints which are completely driven by his particular use case
+> > scenario. I'm sure, that Tim can persuade his management to setup a
+> > similar contest to prove your expertise on the other extreme of the
+> > Linux world.
+> >
+> > Before answering please think about the relevance of your statements
+> > "getting this all right isn't easy", "something like a scheduler",
+> > "users probably want ..."  and "stable /dev/disk/by-id/* symlinks" in
+> > those contexts.
+> 
+> I don't think anybody needs your money.
+> 
+> But it's sure an improvement over last time when you wanted to use a
+> "Kantholz" to make your statement.
 
->
->> All solutions either
->> breaks throttling or adds PI. So block layer is just wrong place for this.
->
-> Well implmenting throttling at block layer can allow you to cache writes
-> so that application does not see the dealye for small writes at the same
-> time it protects against that burst being visible on device and it
-> impacting other IO going device.
->
-> Not sure how much does it matter but atleast this was one discussion
-> point in the past. Implementing it at device level provides better
-> control when it comes to avoiding interference from bursty buffered
-> writes.
->
->>
->>>
->>> One simple way of avoiding that will be to throttle IO even earlier
->>> but that means we do not take advantage of writeback cache and buffered
->>> writes will slow down.
->>
->> If we want to control writeback speed we also must control size of dirty set.
->> There are several possibilities: we either can start writeback earlier,
->> or when dirty set exceeds some threshold we will start charging that dirty
->> memory into throttler and slow down all tasks who generates this dirty memory.
->> Because dirty memory is charged and accounted we can write it without delays.
->
-> Ok, so this is equivalent to allowing bursty IO. Admit bunch of IO burst
-> (dirty set) and then apply throttling rules. Dirty set can be flushed
-> without throttling if sync requires that but future admission of IO will
-> be delayed. That can avoid PI problems due arising due to file system
-> journaling.
->
-> We have discussed implementing throttling at higher layer in the past
-> too.  Various proof of concept implementations had been posted to do
-> throttling in higher layer.
->
-> blk-throttle: Throttle buffered WRITEs in balance_dirty_pages()
-> https://lkml.org/lkml/2011/6/28/243
->
-> buffered write IO controller in balance_dirty_pages()
-> https://lkml.org/lkml/2012/3/28/275
->
-> Andrea Righi had posted some proof of concept implementations too.
->
-> None of these implementations ever made any progress. Tejun always
-> liked the idea of doing throttling at lower layers and then generating
-> back pressure on bdi which in turn controls the size of dirty set.
+Now how about the policy vs. mechanisms part of Thomas' e-mail?
 
-Ok, thanks. I'll see them. I have made similar 'blance_dirty_pages'-like engine
-for our commercial product and works perfectly for several years. At the same
-time prioritization in CFQ never worked for me, and I've give up trying to fix it.
-
-My idea is in doing accounting at lower layer and injecting delays into tasks who
-generates that pressure. We can avoid PI because delays can be injected in
-safe places where tasks don't hold any locks. I've found that recently
-added 'task_work' interface perfectly fits for injecting delays into tasks,
-probably it's overkill but I really like how it works.
-
->
-> To me sovling the issue of Priority inversion in file systems is
-> important one. If we can't solve that reasonably with existing mechanism
-> it does make a case that why throttling at higher level might be
-> interesting.
->
->>
->>>
->>> So I am curious how would you take care of these serialization issue.
->>>
->>> Also the throttlers you are planning to implement, what kind of throttling
->>> do they provide. Is it throttling rate per cgroup or per file per cgroup
->>> or rules will be per bdi per cgroup or something else.
->>
->> Currently I'm thinking about per-cgroup X per-tier. Each bdi will be assigned
->> to some tier. It's flexible enough and solves chicken-and-egg problem:
->> when disk appears it will be assigned to default tier and can be reassigned.
->
-> Ok, this is completely orthogonal issue. It has nothing to do with whether
-> to apply throttling at block layer or at higher leayer.
->
-> To solve the chicken and egg problem we need to take help of user space
-> here and not rely on kernel storing the rules and apply these when devices
-> show up.
->
-> Also how would you create rules for assigning a bdi to a tier. How would
-> you identify a bdi uniquely in a persistent manner.
-
-That's the point that I don't want do this. I'll let userspace configure this.
-It can precreate bunch of tiers, configure them and assign bdi to tier before
-mounting filesystem or switch them in runtime. Or tell kernel somehow that
-all 'nfs' bdi must be placed there while all 'usb' bdi must be here.
-Looks pretentious.. ok let's leave this question for a while.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+Jiri Kosina
+SUSE Labs
