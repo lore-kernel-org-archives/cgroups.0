@@ -1,57 +1,87 @@
-From: Konstantin Khlebnikov <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+From: Konstantin Khlebnikov <khlebnikov@openvz.org>
 Subject: Re: [PATCH RFC] fsio: filesystem io accounting cgroup
-Date: Tue, 09 Jul 2013 21:12:55 +0400
-Message-ID: <51DC4497.6060107@openvz.org>
-References: <20130708100046.14417.12932.stgit@zurg> <20130709153907.GA17972@thunk.org>
+Date: Tue, 09 Jul 2013 21:42:57 +0400
+Message-ID: <51DC4BA1.3000403@openvz.org>
+References: <20130708175201.GB9094@redhat.com> <20130708175607.GB18600@mtj.dyndns.org> <51DBC99F.4030301@openvz.org> <20130709125734.GA2478@htj.dyndns.org> <51DC0CE2.2050906@openvz.org> <20130709131605.GB2478@htj.dyndns.org> <20130709131646.GC2478@htj.dyndns.org> <51DC136E.6020901@openvz.org> <20130709134558.GD2478@htj.dyndns.org> <51DC1FCA.3060904@openvz.org> <20130709150605.GC2237@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:message-id:date:from:user-agent:mime-version:to:subject
+        h=sender:message-id:date:from:user-agent:mime-version:to:cc:subject
          :references:in-reply-to:content-type:content-transfer-encoding;
-        bh=oFbW8S/X0mTg0ujUM8Y8TY6mN4YMzwAQDG273tv+Tuk=;
-        b=bpc9eEJuwGglEXFdtdltSvUjITjB8w66LL0tOJOhRTosBEwnTO7DLZP+9NFlY6qm6F
-         G/fRXrD6LzW6UoJHzAtClo/Onwo25Nnki/3auaLAX08tHb5w5ayTLXQyq5pcY2Angxt6
-         H4ByvN7cB1mhhouxKzCApaCvBQ0W/o+Q5E3RRWXr7coafJGVDL+4AueX4BVrVe8k2pa/
-         XYP38qJntKmY9hNYgluOsEqrRk4UfvL7LuJPxRi2jPExHDuvjY+Eg2ScQtdgEEXG73NI
-         EOx9yEqjd/Y86dFDrVp/IWsxd9XWGmrQd4/14XB5fLyeW5/KeLtIuYoOC0NWpLsRZp5Y
-         YLQA==
-In-Reply-To: <20130709153907.GA17972-AKGzg7BKzIDYtjvyW6yDsg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=fFKUF/PlwYtm3m/gr/zqEwtAngCIvGU3DOLAm+lSPU8=;
+        b=AzfB2VO0PF26j4nzOHUxGsML8xtc0vT9xd52PPXNDBg7coGpFtPlpKzENsLtFmztVl
+         +XAT5v5W3twZnp0TvA248I3UsQvyUjMrWnrTyJ8DP6plBjKEVqV0ak0ekdGlVLkImh/q
+         rqvHjV/kt4bursMp+edoxcM2gl53WuQXp7SU5Z8ucccLKMDQwuOvgg+jWljHmMYBrvhq
+         ugEhscf/fx0MLvk5QHtcTAq2CwI6BsMetMBmcPqHGIMOlhoII7a5evGaruYiaCY5O0Yz
+         xNLwyS1LEb0RuFF3CC3mGngz+UowrLwQN7YT7lCXqpu2fxS7c4ZIv2pm04xrq5GdCLMp
+         zqrg==
+In-Reply-To: <20130709150605.GC2237@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+To: Vivek Goyal <vgoyal@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Michal Hocko <mhocko@suse.cz>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Sha Zhengju <handai.szj@gmail.com>, devel@openvz.org, Jens Axboe <axboe@kernel.dk>
 
-Theodore Ts'o wrote:
-> Another major problem with this concept is that it lumps all I/O's
-> into a single cgroup.  So I/O's from pseudo filesystems (such as
-> reading from /sys/kernel/debug/tracing/trace_pipe), networked file
-> systems such as NFS, and I/O to various different block devices all
-> get counted in a single per-cgroup limit.
+Vivek Goyal wrote:
+> On Tue, Jul 09, 2013 at 06:35:54PM +0400, Konstantin Khlebnikov wrote:
 >
-> This doesn't seem terribly useful to me.  Network resources and block
-> resources are quite different, and counting pseudo file systems and
-> ram disks makes no sense at all.
+> [..]
+>> I'm not interested in QoS or proportional control. Let schedulers do it.
+>> I want just bandwidth control. I don't want to write a new scheduler
+>> or extend some of existing one. I want implement simple and lightweight
+>> accounting and add couple of throttlers on top of that.
+>> It can be easily done without violation of that hierarchical design.
+>>
+>> The same problem already has happened with cpu scheduler. It has really
+>> complicated rate limiter which is actually useless in the real world because
+>> it triggers all possible priority inversions since it puts bunch of tasks into
+>> deep sleep while some of them may hold kernel locks. Perfect.
+>>
+>> QoS and scheduling policy are good thing, but rate-limiting must be separated
+>> and done only in places where it doesn't leads to these problems.
+>
+> So what kind of priority inversion you are facing with blkcg and how would
+> you avoid it with your implementation?
+>
+> I know that serialization can happen at filesystem level while trying
+> to commit journal. But I think same thing will happen with your
+> implementation too.
 
-Yep, I know it. I've already mentioned about this as first planned improvement:
-
-|* Split bdi into several tiers and account them separately. For example:
-|  hdd/ssd/usb/nfs. In complicated containerized environments that might be
-|  different kinds of storages with different limits and billing. This is more
-|  usefull that independent per-disk accounting and much easier to implement
-|  because all per-tier structures are allocated before disk appearance.
-
-Accounting each BDI separately doesn't very useful too, so I've chosen
-something in the middle.
+Yes, metadata changes are serialized and and they depends on data commits,
+thus block layer cannot delay write requests without introducing nasty priority
+inversions. Cached read requests cannot be delayed at all. All solutions either
+breaks throttling or adds PI. So block layer is just wrong place for this.
 
 >
-> Regards,
+> One simple way of avoiding that will be to throttle IO even earlier
+> but that means we do not take advantage of writeback cache and buffered
+> writes will slow down.
+
+If we want to control writeback speed we also must control size of dirty set.
+There are several possibilities: we either can start writeback earlier,
+or when dirty set exceeds some threshold we will start charging that dirty
+memory into throttler and slow down all tasks who generates this dirty memory.
+Because dirty memory is charged and accounted we can write it without delays.
+
 >
-> 					- Ted
+> So I am curious how would you take care of these serialization issue.
+>
+> Also the throttlers you are planning to implement, what kind of throttling
+> do they provide. Is it throttling rate per cgroup or per file per cgroup
+> or rules will be per bdi per cgroup or something else.
+
+Currently I'm thinking about per-cgroup X per-tier. Each bdi will be assigned
+to some tier. It's flexible enough and solves chicken-and-egg problem:
+when disk appears it will be assigned to default tier and can be reassigned.
+
+>
+> Thanks
+> Vivek
 >
 > --
 > To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
+> the body to majordomo@kvack.org.  For more info on Linux MM,
 > see: http://www.linux-mm.org/ .
-> Don't email:<a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org">  email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org</a>
+> Don't email:<a href=mailto:"dont@kvack.org">  email@kvack.org</a>
