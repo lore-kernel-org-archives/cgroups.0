@@ -1,87 +1,66 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH for 3.2] memcg: do not trap chargers with full callstack
- on OOM
-Date: Tue, 9 Jul 2013 15:10:29 +0200
-Message-ID: <20130709131029.GH20281@dhcp22.suse.cz>
-References: <20130607131157.GF8117@dhcp22.suse.cz>
- <20130617122134.2E072BA8@pobox.sk>
- <20130619132614.GC16457@dhcp22.suse.cz>
- <20130622220958.D10567A4@pobox.sk>
- <20130624201345.GA21822@cmpxchg.org>
- <20130628120613.6D6CAD21@pobox.sk>
- <20130705181728.GQ17812@cmpxchg.org>
- <20130705210246.11D2135A@pobox.sk>
- <20130705191854.GR17812@cmpxchg.org>
- <20130708014224.50F06960@pobox.sk>
+From: Konstantin Khlebnikov <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH RFC] fsio: filesystem io accounting cgroup
+Date: Tue, 09 Jul 2013 17:15:14 +0400
+Message-ID: <51DC0CE2.2050906@openvz.org>
+References: <20130708100046.14417.12932.stgit@zurg> <20130708170047.GA18600@mtj.dyndns.org> <20130708175201.GB9094@redhat.com> <20130708175607.GB18600@mtj.dyndns.org> <51DBC99F.4030301@openvz.org> <20130709125734.GA2478@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20130708014224.50F06960@pobox.sk>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: azurIt <azurit@pobox.sk>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups mailinglist <cgroups@vger.kernel.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:message-id:date:from:user-agent:mime-version:to:cc:subject
+         :references:in-reply-to:content-type:content-transfer-encoding;
+        bh=BiYsMIoDns9k/DMiN0YETmhEU7rIp35HDI85K3oc7BQ=;
+        b=awBQKEemVeNlc95vpQhekSUPmsxOSNjx8J1QqaCm8yYZM4b2npWxtXZYJaymbZVTWF
+         Cbn5fMJDa9l2hPCrpeFt47RTRmdBfx0BQGR1azh8luuvPDvIegRW6IJuPDHMrI725saF
+         wTLBOtvgKPC8mp83CipI2m2YxzEY85x0LdVR2pE+IxrjUGKOMiwprNeji4t9bK/3k0Ck
+         cpo6TyIV3W6iWnTfKa//z1On9s+LSu/DJfumNgHiNZu4F5uQKSqSe4tjGrMXiZn8N467
+         n+lQm1dqyKyEoBpyRHnLSmmegnycIiBRHEctdlaBTjQ4ljjBnr95OdNqmcgzuZK2T1vZ
+         4BBg==
+In-Reply-To: <20130709125734.GA2478-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
 
-On Mon 08-07-13 01:42:24, azurIt wrote:
-> > CC: "Michal Hocko" <mhocko@suse.cz>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, "cgroups mailinglist" <cgroups@vger.kernel.org>, "KAMEZAWA Hiroyuki" <kamezawa.hiroyu@jp.fujitsu.com>
-> >On Fri, Jul 05, 2013 at 09:02:46PM +0200, azurIt wrote:
-> >> >I looked at your debug messages but could not find anything that would
-> >> >hint at a deadlock.  All tasks are stuck in the refrigerator, so I
-> >> >assume you use the freezer cgroup and enabled it somehow?
-> >> 
-> >> 
-> >> Yes, i'm really using freezer cgroup BUT i was checking if it's not
-> >> doing problems - unfortunately, several days passed from that day
-> >> and now i don't fully remember if i was checking it for both cases
-> >> (unremoveabled cgroups and these freezed processes holding web
-> >> server port). I'm 100% sure i was checking it for unremoveable
-> >> cgroups but not so sure for the other problem (i had to act quickly
-> >> in that case). Are you sure (from stacks) that freezer cgroup was
-> >> enabled there?
-> >
-> >Yeah, all the traces without exception look like this:
-> >
-> >1372089762/23433/stack:[<ffffffff81080925>] refrigerator+0x95/0x160
-> >1372089762/23433/stack:[<ffffffff8106ab7b>] get_signal_to_deliver+0x1cb/0x540
-> >1372089762/23433/stack:[<ffffffff8100188b>] do_signal+0x6b/0x750
-> >1372089762/23433/stack:[<ffffffff81001fc5>] do_notify_resume+0x55/0x80
-> >1372089762/23433/stack:[<ffffffff815cac77>] int_signal+0x12/0x17
-> >1372089762/23433/stack:[<ffffffffffffffff>] 0xffffffffffffffff
-> >
-> >so the freezer was already enabled when you took the backtraces.
-> >
-> >> Btw, what about that other stacks? I mean this file:
-> >> http://watchdog.sk/lkml/memcg-bug-7.tar.gz
-> >> 
-> >> It was taken while running the kernel with your patch and from
-> >> cgroup which was under unresolveable OOM (just like my very original
-> >> problem).
-> >
-> >I looked at these traces too, but none of the tasks are stuck in rmdir
-> >or the OOM path.  Some /are/ in the page fault path, but they are
-> >happily doing reclaim and don't appear to be stuck.  So I'm having a
-> >hard time matching this data to what you otherwise observed.
+Tejun Heo wrote:
+> Hello,
+>
+> On Tue, Jul 09, 2013 at 12:28:15PM +0400, Konstantin Khlebnikov wrote:
+>> Yep, blkio has plenty problems and flaws and I don't get how it's related
+>> to vfs layer, dirty set control and non-disk or network backed filesystems.
+>> Any problem can be fixed by introducing new abstract layer, except too many
+>> abstraction levels. Cgroup is pluggable subsystem, blkio has it's own plugins
+>> and it's build on top of io scheduler plugin. All this stuff always have worked
+>
+> What does that have to do with anything?
+>
+>> with block devices. Now you suggest to handle all filesystems in this stack.
+>> I think binding them to unrealated cgroup is rough leveling violation.
+>
+> How is blkio unrelated to filesystems mounted on block devices?
+> You're suggesting a duplicate solution which can't be complete.
 
-Agreed.
+blkio controls block devices. not filesystems or superblocks or bdi or pagecache.
+It's all about block layer and nothing more. Am I right?
 
-> >However, based on what you reported the most likely explanation for
-> >the continued hangs is the unfinished OOM handling for which I sent
-> >the followup patch for arch/x86/mm/fault.c.
-> 
-> Johannes,
-> 
-> today I tested both of your patches but problem with unremovable
-> cgroups, unfortunately, persists.
+So, you want to link some completely unrelated subsystems like NFS into the block layer?
 
-Is the group empty again with marked under_oom?
--- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+>
+>> NFS cannot be controlled only by network throttlers because we
+>> cannot slow down writeback process when it happens, we must slow
+>> down tasks who generates dirty memory.
+>
+> That's exactly the same problem why blkio doesn't work for async IOs
+> right now, so if you're interested in the area, please contribute to
+> fixing that problem.
+>
+>> Plus it's close to impossible to separate several workloads if they
+>> share one NFS sb.
+>
+> Again, the same problem with blkio.  We need separate pressure
+> channels on bdi for each cgroup.
+>
+> Thanks.
+>
