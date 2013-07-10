@@ -1,67 +1,37 @@
-From: "azurIt" <azurit@pobox.sk>
-Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=5D_memcg=3A_do_not_trap_chargers_with_full_callstack_on_OOM?=
-Date: Wed, 10 Jul 2013 18:25:06 +0200
-Message-ID: <20130710182506.F25DF461@pobox.sk>
-References: <20130619132614.GC16457@dhcp22.suse.cz>, <20130622220958.D10567A4@pobox.sk>, <20130624201345.GA21822@cmpxchg.org>, <20130628120613.6D6CAD21@pobox.sk>, <20130705181728.GQ17812@cmpxchg.org>, <20130705210246.11D2135A@pobox.sk>, <20130705191854.GR17812@cmpxchg.org>, <20130708014224.50F06960@pobox.sk>, <20130709131029.GH20281@dhcp22.suse.cz>, <20130709151921.5160C199@pobox.sk> <20130709135450.GI20281@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: workqueue usage in vmpressure
+Date: Wed, 10 Jul 2013 11:42:54 -0700
+Message-ID: <20130710184254.GA16979@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130709135450.GI20281@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=SkcAChrubZEMJD8y3THfB1CbO6SITBPtYm0Nar+1LUw=;
+        b=mrQUYidCjyosKua/Zyhz/kp2ap2Rr2CclByfwB3z4SGMkBYaX2A+pB/zjrZF9V2L6/
+         b9HSJMDZF6F96U/cV7PPBGXxvroQy+/j3jC2sIbwLrMe8f4jzE7VmYxLgOLkvzsXxBSw
+         xMlGM+BMJJ7fhmu71d0QfJ0QAuILFr97cX6VLjiLOhHxXSNoCBbwaQ9AhZJZm+kR3lCV
+         bonwgJjQb3adercc5zpGkNAlJVFwsCc0/FzfjMD/rkcPDGgCSG1x0TGUFp726bXT/l1d
+         +wFgk7osKh9jl2a0kzG3P9pN578iiWee0WJXNTXdE6spUh2OoQ/8ALz8G9mIkQoUMJIr
+         L7oQ==
+Content-Disposition: inline
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
-Cc: =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, righi.andrea@gmail.com
+Content-Transfer-Encoding: 7bit
+To: Anton Vorontsov <anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
->> Now i realized that i forgot to remove UID from that cgroup before
->> trying to remove it, so cgroup cannot be removed anyway (we are using
->> third party cgroup called cgroup-uid from Andrea Righi, which is able
->> to associate all user's processes with target cgroup). Look here for
->> cgroup-uid patch:
->> https://www.develer.com/~arighi/linux/patches/cgroup-uid/cgroup-uid-v8=
-.patch
->>=20
->> ANYWAY, i'm 101% sure that 'tasks' file was empty and 'under_oom' was
->> permanently '1'.
->
->This is really strange. Could you post the whole diff against stable
->tree you are using (except for grsecurity stuff and the above cgroup-uid
->patch)?
+Hello, guys.
 
+While auditing cgroup_subsys_state() usages, I noticed something weird
+in vmpressure.  vmpressure() schedules vmpr->work where vmpr is
+embedded in mem_cgroup but I can't find where it's flushed / canceled?
+What prevents the memcg going away while the work item is pending or
+in flight?
 
-Here are all patches which i applied to kernel 3.2.48 in my last test:
-http://watchdog.sk/lkml/patches3/
+Thanks.
 
-Patches marked as 7-* are from Johannes. I'm appling them in order except=
- the grsecurity - it goes as first.
-
-azur
-
-
-
-
->Btw. the bellow patch might help us to point to the exit path which
->leaves wait_on_memcg without mem_cgroup_oom_synchronize:
->---
->diff --git a/kernel/exit.c b/kernel/exit.c
->index e6e01b9..ad472e0 100644
->--- a/kernel/exit.c
->+++ b/kernel/exit.c
->@@ -895,6 +895,7 @@ NORET_TYPE void do_exit(long code)
->=20
-> 	profile_task_exit(tsk);
->=20
->+	WARN_ON(current->memcg_oom.wait_on_memcg);
-> 	WARN_ON(blk_needs_flush_plug(tsk));
->=20
-> 	if (unlikely(in_interrupt()))
->--=20
->Michal Hocko
->SUSE Labs
->
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
