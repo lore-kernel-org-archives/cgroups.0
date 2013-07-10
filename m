@@ -1,87 +1,80 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Konstantin Khlebnikov <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH RFC] fsio: filesystem io accounting cgroup
-Date: Tue, 9 Jul 2013 20:50:24 -0700
-Message-ID: <20130710035024.GA28461@htj.dyndns.org>
-References: <51DC0CE2.2050906@openvz.org>
- <20130709131605.GB2478@htj.dyndns.org>
- <20130709131646.GC2478@htj.dyndns.org>
- <51DC136E.6020901@openvz.org>
- <20130709134558.GD2478@htj.dyndns.org>
- <20130709141833.GA2237@redhat.com>
- <20130709142908.GE2478@htj.dyndns.org>
- <20130709145430.GB2237@redhat.com>
- <20130709150815.GG2478@htj.dyndns.org>
- <20130710030955.GA3569@redhat.com>
+Date: Wed, 10 Jul 2013 10:03:27 +0400
+Message-ID: <51DCF92F.6090409@openvz.org>
+References: <20130708095928.14058.26736.stgit@zurg> <CAFj3OHVtVGDnWHqNBRZH+LNtzDrbk8PO0fKLwFscZAWCJRW9oA@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=rUKcU2Er55NxF2H5ClIUB575Gv70abBBhqP0egPS6Ys=;
-        b=mQxmtSIOzLdvlPcBxmDwBF1iWjIxc1dd9ZB2T4nGoCvegolKgDAioHzjx9baUlrN8K
-         NXR/MJ90YRNqYxSxOi8E22fzQM3/EWpCUfcxfv7XF7DnqmcPQ9o5GeKVNjt6utq/MyRM
-         oQu7B4Q8scmEVgBwKgSM6Y6WT48tRjhYtKVJns5NZIBINK26RQOvbBM2ukOHSTP7tRoT
-         BzGSlRYWXQIGCOscOYs2KhgEDjqhCUSvGVFIf9Xqj74iWqwZOsJMwVWy2lZzdsE37Mji
-         n/3PG7hlW9JY43e/LkyDHjIesczBJpKrsvCuOSOi+1wvHLBToZ7M4PQ9SY3ptSWGVrDf
-         5Wig==
-Content-Disposition: inline
-In-Reply-To: <20130710030955.GA3569-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        h=sender:message-id:date:from:user-agent:mime-version:to:cc:subject
+         :references:in-reply-to:content-type:content-transfer-encoding;
+        bh=SnJ+viIN0dMb50Ro946OAsiqTLRQc8fNBK5NK6fzN/M=;
+        b=ssZIZu734bOu21yZ7pHKyyvzpc713Ycuj1O8nQitjZi8NAoanMcf3fNqaEt/ywG1Dl
+         UYNCQvqIEOETFMoXyJW50PkL4lpE4v+K2k5j7SVQ7Xr110HSHp0hcXERBF6Sn4D/yUm9
+         WhuWrgkpTZUHjaMqeph1W0vwX+nbV8GDE8L1RAYXoxc1THZsH0rmUolQmlbbRynqllmb
+         wItXVyrv8JVc0lRw//9oezyI60YffEoJlX4tz+ibbg3KD4PrSQjrD5ZjB3L6Qaa5VPoo
+         lW3cZVBbZcuc6730xpDBaxqfNNxY2oz8Td0EZBvQ2E9eM77XYNI1zOUY/nA++bctlL+S
+         a6oQ==
+In-Reply-To: <CAFj3OHVtVGDnWHqNBRZH+LNtzDrbk8PO0fKLwFscZAWCJRW9oA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Konstantin Khlebnikov <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org" <devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-Hello,
+Sha Zhengju wrote:
+> Hi,
+>
+> On Mon, Jul 8, 2013 at 5:59 PM, Konstantin Khlebnikov
+> <khlebnikov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>  wrote:
+>> >  This is proof of concept, just basic functionality for IO controller.
+>> >  This cgroup will control filesystem usage on vfs layer, it's main goal is
+>> >  bandwidth control. It's supposed to be much more lightweight than memcg/blkio.
+>> >
+>> >  This patch shows easy way for accounting pages in dirty/writeback state in
+>> >  per-inode manner. This is easier that doing this in memcg in per-page manner.
+>> >  Main idea is in keeping on each inode pointer (->i_fsio) to cgroup which owns
+>> >  dirty data in that inode. It's settled by fsio_account_page_dirtied() when
+>> >  first dirty tag appears in the inode. Relying to mapping tags gives us locking
+>> >  for free, this patch doesn't add any new locks to hot paths.
+> While referring to dirty/writeback numbers, what I care about is 'how
+> many dirties in how many memory' and later may use the proportion to
+> decide throttling or something else. So if you are talking about nr of
+> dirty pages without memcg's amount of memory, I don't see the meaning
+> of a single number.
 
-On Tue, Jul 09, 2013 at 11:09:55PM -0400, Vivek Goyal wrote:
-> Stacking drivers are pretty important ones and we expect throttling
-> to work with them. By throttling bio, a single hook worked both for
-> request based drivers and bio based drivers.
+I'm planning to add some thresholds or limits to fsio cgroup -- how many dirty pages
+this cgroup may have. memcg is completely different thing: memcg controls data storage
+while fsio controls data flows. Memcg already handles too much, I just don't want add
+yet another unrelated stuff into it. Otherwise we will end with one single controller
+which would handle all possible resources, because they all related in some cases.
 
-Oh yeah, sure, we have them working now, so there's no way to break
-them but that doesn't mean it's a good overall design.  I don't have a
-good answer for this one.  The root cause is having the distinction
-between bio and rq based drivers.  With the right constructs, I
-suspect we probably could have done away with bio based drivers, but,
-well, that's all history now.
+>
+> What's more, counting dirty/writeback stats in per-node manner can
+> bring inaccuracy in some situations: considering two tasks from
+> different fsio cgroups are dirtying one file concurrently but may only
+> be counting in one fsio stats, or a task is moved to another fsio
+> cgroup after dirtrying one file. As talking about task moving, it is
+> the root cause of adding memcg locks in page stat routines, since
+> there's a race window between 'modify cgroup owner' and 'update stats
+> using cgroup pointer'. But if you are going to handle task move or
+> take care of ->i_fsio for better accuracy in future, I'm afraid you
+> will also need some synchronization mechanism in hot paths. Maybe also
+> a new lock or mapping->tree_lock(which is already hot enough) IMHO.
 
-> So looks like for bio based drivers you want bio throttling and for
-> request based drviers, request throttling and define a separate hook
-> in blk_queue_bio(). A generic hook probably can check the type of request
-> queue and not throttle bio if it is request based queue and ultimately
-> request queue based hook will throttle it.
-> 
-> So in a cgroup we blkio.throttle.io_serviced will have stats for
-> bio/request depending on type of device.
-> 
-> And we will need to modify throttling logic so that it can handle
-> both bio and request throttling. Not sure how much of code can be
-> shared for bio/request throttling.
+Yes, per-inode accounting is less accurate. But this approach works really
+well in the real life. I don't want add new locks and loose performance just
+to fix accuracy for some artificial cases.
 
-I'm not sure how much (de)multiplexing and sharing we'd be doing but
-I'm afraid there's gonna need to be some.  We really can't use the
-same logic for SSDs and rotating rusts after all and it probably would
-be best to avoid contaminating SSD paths with lots of guesstimating
-logics necessary for rotating rusts.
-
-> I am not sure about request based multipath driver and it might
-> require some special handling.
-
-If it's not supported now, I'll be happy with just leaving it alone
-and telling mp users to configure the underlying queues.
-
-> Is it roughly inline with what you have been thinking.
-
-I'm hoping to keep it somewhat manageable at least.  I wouldn't mind
-leaving stacking driver and cfq-iosched support as they are while only
-supporting SSD devices with new code.  It's all pie in the sky at this
-point and none of this matters before we fix the bdi and writeback
-issue anyway.
-
-Thanks.
-
--- 
-tejun
+to Tejun:
+BTW I don't like that volatility of task's cgroup ponters. I'd like to forbid
+moving tasks between cgroups except for 'current', existing behavior can be
+kept with help of task_work: instead external change of task->cgroups we can
+schedule task_work into it in and change that pointer in the 'current' context.
+That will save us a lot of rcu_lock/unlock and atomic operations in grabbing
+temporary pointers to current cgroup because current->cgroups will be stable.
+I don't think that external cross-cgroup task migration is really performance
+critical. Currently I don't know what to do with kernel threads and workqueues,
+but any way this problem doesn't look unsolvable.
