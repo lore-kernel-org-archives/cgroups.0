@@ -1,7 +1,7 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Subject: Re: workqueue usage in vmpressure
-Date: Thu, 11 Jul 2013 16:43:08 +0800
-Message-ID: <51DE701C.6010800@huawei.com>
+Date: Thu, 11 Jul 2013 16:45:46 +0800
+Message-ID: <51DE70BA.3020401@huawei.com>
 References: <20130710184254.GA16979@mtj.dyndns.org> <20130711083110.GC21667@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -13,43 +13,30 @@ Content-Type: text/plain; charset="us-ascii"
 To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Anton Vorontsov <anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-> @@ -178,7 +179,7 @@ static void vmpressure_work_fn(struct work_struct *work)
->  	 * vmpr->reclaimed is in sync.
->  	 */
->  	if (!vmpr->scanned)
-> -		return;
-> +		goto out;
->  
->  	mutex_lock(&vmpr->sr_lock);
->  	scanned = vmpr->scanned;
-> @@ -195,6 +196,13 @@ static void vmpressure_work_fn(struct work_struct *work)
->  		 * hierarchy.
->  		 */
->  	} while ((vmpr = vmpressure_parent(vmpr)));
-> +out:
-> +	/*
-> +	 * Reference has been taken in vmpressure.
-> +	 * memcg which embeds this vmpr might go away after this call so
-> +	 * no further manipulation with vmprs or work item is safe
-> +	 */
-> +	vmpressure_unpin_memcg(vmpr);
->  }
->  
->  /**
-> @@ -248,6 +256,9 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
->  
->  	if (scanned < vmpressure_win || work_pending(&vmpr->work))
->  		return;
+> +void vmpressure_pin_memcg(struct vmpressure *vmpr)
+> +{
+> +	struct mem_cgroup *memcg = vmpressure_to_mem_cgroup(vmpr);
+> +	if (memcg != root_mem_cgroup)
+
+this check is redundant. see the definition of css_get():
+
+static inline void css_get(struct cgroup_subsys_state *css)
+{
+        /* We don't need to reference count the root state */
+        if (!(css->flags & CSS_ROOT))
+                __css_get(css, 1);
+}
+
+> +		css_get(&memcg->css);
+> +}
 > +
-> +	/* Reference will be released in vmpressure_work_fn */
-> +	vmpressure_pin_memcg(vmpr);
->  	schedule_work(&vmpr->work);
+> +void vmpressure_unpin_memcg(struct vmpressure *vmpr)
+> +{
+> +	struct mem_cgroup *memcg = vmpressure_to_mem_cgroup(vmpr);
+> +	if (memcg != root_mem_cgroup)
 
-Looks like a work can be queued right after the above work_pending()
-returns 0, then we should do this:
+ditto
 
-    if (schedule_work(&vmpr->work))
-	vmpressure_pin_memcg(vmpr);
+> +		css_put(&memcg->css);
+> +}
 
->  }
->  
