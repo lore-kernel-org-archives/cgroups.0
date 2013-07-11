@@ -1,75 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] vmpressure: make sure memcg stays alive until all
- users are signaled
-Date: Thu, 11 Jul 2013 08:44:08 -0700
-Message-ID: <20130711154408.GA9229@mtj.dyndns.org>
-References: <20130710184254.GA16979@mtj.dyndns.org>
- <20130711083110.GC21667@dhcp22.suse.cz>
- <51DE701C.6010800@huawei.com>
- <20130711092542.GD21667@dhcp22.suse.cz>
- <51DE7AAF.6070004@huawei.com>
- <20130711093300.GE21667@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [OFFLIST] status of devcg
+Date: Thu, 11 Jul 2013 08:51:06 -0700
+Message-ID: <20130711155106.GB9229@mtj.dyndns.org>
+References: <20130710184655.GB16979@mtj.dyndns.org>
+	<20130710195001.GW14011@redhat.com>
+	<20130711093405.GC2377@redhat.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=1MSNIh/iz+R4IGe0HntCsAGQyB+XOp2lHgjbtaMem40=;
-        b=E1xpSBan5Rg0ZpDq6E69tA3sNQMmo+cWkveoJgjw2PspCr3RMMIRXY/9bB185cxb5E
-         3nQgap/u8ROltK4b3pdiePWNa/PYIZmsm1n1tNNG/LGb+j3s979vQe6s8+NuoD+cIhB/
-         paUsXbGlN1MGjJxXDON3XrIXeLrFGelYNqXmlF1i44hzGRUhrO/0KCvf5QIwQxLZgd20
-         w6P4/k9qiQVfL5+tObgjfiaFBnFkMBrNXjJRB4m2rKHCNeiKsWwjf35gKgY6a9TEed+7
-         D96O1842W3nP1c4vVxooVaZmGFj/YIjickOf3LvFt1on2qRqrfg6dE4OTjciHWQLleAH
-         bC7A==
-Content-Disposition: inline
-In-Reply-To: <20130711093300.GE21667@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Li Zefan <lizefan@huawei.com>, Anton Vorontsov <anton.vorontsov@linaro.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=7A5JHL1mKZXVDCFwFZher/3eFNCLEeTVihyCFvIk3eY=;
+	b=h1jU74FYiNY0C1naXmbRjrorScJdn3FZFV5kcC5s7SXOhG/Spy5r4cA8xf8ViDzC/E
+	v9Wzg/CBu8wkmAv2ImnXs1WkqfNNJZQkN0pJxvhUOwCZYnbpnkV+Izmxi2U2MClj8qbB
+	cypP9V5JVsVOe7TTXflc92g+NmGXrwsLp3W1SnKwsbKEakjJlFzHGJUK4eBghQcVSXuN
+	CdZDMB+YvG41KMYmwK0ynhC+VZHznrm/Rhs6Ewfz+8BwbPwxE9zs2cSRwp/0fE4xzXx2
+	rgTCd06OWgcmLzTHHiqVkE61oG+0wWi8NSE/XR67nd/RYADkFvEXf6cRA2R+oB73Odn+
+	uPmw==
+Content-Disposition: inline
+In-Reply-To: <20130711093405.GC2377-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Kay Sievers <kay-tD+1rO4QERM@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Michal.
+On Thu, Jul 11, 2013 at 10:34:05AM +0100, Daniel P. Berrange wrote:
+> FWIW, libvirt's usage of devcg is to deny all by default, allow major 136
+> (for all /dev/pts/*), followed by allow (major,minor) pair for each specific
+> whitelisted devices. As such we don't have anything that relies on ordering
+> of rules in devcg.
 
-On Thu, Jul 11, 2013 at 11:33:00AM +0200, Michal Hocko wrote:
-> +static inline
-> +struct mem_cgroup *vmpressure_to_mem_cgroup(struct vmpressure *vmpr)
-> +{
-> +	return container_of(vmpr, struct mem_cgroup, vmpressure);
-> +}
-> +
-> +void vmpressure_pin_memcg(struct vmpressure *vmpr)
-> +{
-> +	struct mem_cgroup *memcg = vmpressure_to_mem_cgroup(vmpr);
-> +
-> +	css_get(&memcg->css);
-> +}
-> +
-> +void vmpressure_unpin_memcg(struct vmpressure *vmpr)
-> +{
-> +	struct mem_cgroup *memcg = vmpressure_to_mem_cgroup(vmpr);
-> +
-> +	css_put(&memcg->css);
-> +}
-
-So, while this *should* work, can't we just cancel/flush the work item
-from offline?  There doesn't seem to be any possible deadlocks from my
-shallow glance and those mutexes don't seem to be held for long (do
-they actually need to be mutexes?  what blocks inside them?).
-
-Also, while at it, can you please remove the work_pending() check?
-They're almost always spurious or racy and should be avoided in
-general.
+I'd personally much prefer something very simple - allow all by
+default, allow only the specified if explicitly specified.  I really
+don't want full iptables like facility inside devcg.
 
 Thanks.
 
 -- 
 tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
