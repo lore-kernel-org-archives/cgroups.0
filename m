@@ -1,123 +1,62 @@
-From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH V4 4/6] memcg: add per cgroup writeback pages accounting
-Date: Fri, 12 Jul 2013 00:56:31 +0800
-Message-ID: <CAFj3OHXSFWW2oXRu2t+oiKWo2Nw8eLyxsPi0MprrEzJSMcefaQ@mail.gmail.com>
-References: <1373044710-27371-1-git-send-email-handai.szj@taobao.com>
-	<1373045577-27671-1-git-send-email-handai.szj@taobao.com>
-	<20130711144003.GJ21667@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 5/9] cgroup: update error handling in cgroup_populate_dir()
+Date: Thu, 11 Jul 2013 10:01:23 -0700
+Message-ID: <20130711170123.GA10195@mtj.dyndns.org>
+References: <1372463145-4245-1-git-send-email-tj@kernel.org>
+	<1372463145-4245-6-git-send-email-tj@kernel.org>
+	<51DE59D7.2000203@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=kyogiSk3VYmIyMyVkHY1MuC1i6lPVuwFdXcRSYRHr78=;
-        b=hf49+t/LtGT51vEO0jXbQgCJ6VtUMzWqmrEPgt8JDO2MW7FWLqiprbPTRymC7aVauu
-         TXcuRtpZ54Tqnw8fCJm50F2mCqZm3e/hxVdLink8cYdhSLeUi1QTH7j5U1RxJ6uEX5jb
-         rZjYfbbl9Ke5mWlyClDHnvUHODgzu4gZDzYULb6mYJ+Xi9NbLUK9tMLfZOPtypcU8Cwn
-         fdYcS3pHipakNqbFiqCyVdlWhS72NViRPP2esepAMGTSlWmTlAXBWjoLUuEe8lWDc1Ic
-         nroU8fdZ5gbSBFEggFSizyoVhN8gaFUdXdsKNrwLLjHfRt49DndZmsCEgGWxnYfDNIkt
-         o0Bg==
-In-Reply-To: <20130711144003.GJ21667-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Wu Fengguang <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=BSUvrHHeAjeZipptRi1ppPQZjEhMCJcHwH2CUanzGGE=;
+	b=O46/R4hlNDKv5+bdmGAk8TRecd62ojpnIalzKwXUx38UJNNDtNan6P1lNA6/PVhF81
+	htT+JsFfrlxOliHa58mpNjd01fB0/L5XgWHGO5DuGOsSvtoVz/uqKFa54wwpwjEdxjtx
+	v9sF9HqloYLstOjJfGXAc3lpUR6iWXuc8grVKp+FOf8hy/+NyLfqY7INvESolqpbhxd6
+	ZhS5iM3KIwp6RIwSDaexmk7y3Gon2So1kVsTEq4CxczXqmdj0vt/VCt5KqRAgi/UQAGM
+	IKLzrRh4TQ1TdU8XJN/OGc+LutMr1+m02U9MtbwnVBITfeLTm4YPMe/b8ez66kUeCBOq
+	XGAA==
+Content-Disposition: inline
+In-Reply-To: <51DE59D7.2000203-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On Thu, Jul 11, 2013 at 10:40 PM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
-> On Sat 06-07-13 01:32:57, Sha Zhengju wrote:
->> From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
->>
->> Similar to dirty page, we add per cgroup writeback pages accounting. The lock
->> rule still is:
->>         mem_cgroup_begin_update_page_stat()
->>         modify page WRITEBACK stat
->>         mem_cgroup_update_page_stat()
->>         mem_cgroup_end_update_page_stat()
->>
->> There're two writeback interfaces to modify: test_{clear/set}_page_writeback().
->>
->> Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
->> Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
->> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
->> cc: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
->> cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
->> cc: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
->> cc: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
->> ---
->>  include/linux/memcontrol.h |    1 +
->>  mm/memcontrol.c            |    5 +++++
->>  mm/page-writeback.c        |   15 +++++++++++++++
->>  3 files changed, 21 insertions(+)
->>
->> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
->> index f952be6..ccd35d8 100644
->> --- a/include/linux/memcontrol.h
->> +++ b/include/linux/memcontrol.h
->> @@ -43,6 +43,7 @@ enum mem_cgroup_stat_index {
->>       MEM_CGROUP_STAT_RSS_HUGE,       /* # of pages charged as anon huge */
->>       MEM_CGROUP_STAT_FILE_MAPPED,    /* # of pages charged as file rss */
->>       MEM_CGROUP_STAT_FILE_DIRTY,     /* # of dirty pages in page cache */
->> +     MEM_CGROUP_STAT_WRITEBACK,      /* # of pages under writeback */
->>       MEM_CGROUP_STAT_SWAP,           /* # of pages, swapped out */
->>       MEM_CGROUP_STAT_NSTATS,
->>  };
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 1d31851..9126abc 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -92,6 +92,7 @@ static const char * const mem_cgroup_stat_names[] = {
->>       "mapped_file",
->>       "swap",
->>       "dirty",
->> +     "writeback",
->
-> Ordering issue again (see mem_cgroup_stat_index)
+Hello, Li.
 
-Yes, you're right.
+On Thu, Jul 11, 2013 at 03:08:07PM +0800, Li Zefan wrote:
+> > -	for_each_root_subsys(cgrp->root, ss) {
+> > +	for_each_subsys(ss, i) {
+> 
+> Why this change?
 
->
->>  };
->>
->>  enum mem_cgroup_events_index {
-> [...]
->> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
->> index 3900e62..85de9a0 100644
->> --- a/mm/page-writeback.c
->> +++ b/mm/page-writeback.c
->> @@ -2008,11 +2008,17 @@ EXPORT_SYMBOL(account_page_dirtied);
->>
->>  /*
->>   * Helper function for set_page_writeback family.
->> + *
->> + * The caller must hold mem_cgroup_begin/end_update_page_stat() lock
->> + * while modifying struct page state and accounting writeback pages.
->
-> I guess "while calling this function" would be sufficient
+Because subsystem binding / unbinding is being made dynamic and
+subsystem linking would happen only after file popluation has been
+confirmed to succeed, so it should be possible to perform file
+creations / deletions whether the subsystem is currently bound or not.
+Besides, I find it weird for file handling functions to care about
+subsystem binding status directly.
 
-Thanks for the advice.
+I somehow forgot to write about the above in the patch description.
+Will update.
 
->
->> + * See test_set_page_writeback for example.
->> + *
->>   * NOTE: Unlike account_page_dirtied this does not rely on being atomic
->>   * wrt interrupts.
->>   */
->>  void account_page_writeback(struct page *page)
->>  {
->> +     mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_WRITEBACK);
->>       inc_zone_page_state(page, NR_WRITEBACK);
->>  }
->>  EXPORT_SYMBOL(account_page_writeback);
-> [...]
-> --
-> Michal Hocko
-> SUSE Labs
+> It even increases object size a bit:
 
+Meh... cold path.  Wrong thing to optimize for.
 
+Thanks.
 
---
-Thanks,
-Sha
+-- 
+tejun
