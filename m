@@ -1,72 +1,193 @@
-From: "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [OFFLIST] status of devcg
-Date: Thu, 11 Jul 2013 10:34:05 +0100
-Message-ID: <20130711093405.GC2377@redhat.com>
-References: <20130710184655.GB16979@mtj.dyndns.org>
- <20130710195001.GW14011@redhat.com>
-Reply-To: "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH V4 1/6] memcg: remove MEMCG_NR_FILE_MAPPED
+Date: Thu, 11 Jul 2013 15:39:58 +0200
+Message-ID: <20130711133958.GH21667@dhcp22.suse.cz>
+References: <1373044710-27371-1-git-send-email-handai.szj@taobao.com>
+ <1373044902-27445-1-git-send-email-handai.szj@taobao.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20130710195001.GW14011-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1373044902-27445-1-git-send-email-handai.szj@taobao.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Kay Sievers <kay-tD+1rO4QERM@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sha Zhengju <handai.szj@gmail.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, gthelen@google.com, kamezawa.hiroyu@jp.fujitsu.com, akpm@linux-foundation.org, fengguang.wu@intel.com, mgorman@suse.de, Sha Zhengju <handai.szj@taobao.com>
 
-On Wed, Jul 10, 2013 at 03:50:02PM -0400, Aristeu Rozanski wrote:
-> On Wed, Jul 10, 2013 at 11:46:55AM -0700, Tejun Heo wrote:
-> > Just wondering whether you're working on implementing new hierarchical
-> > behavior on devcg.  If so, can you please share some details on how
-> > you're planning to do it?  Please feel free to add the relevant
-> > mailing lists when replying.
-> 
-> I did start, but still dealing with lots of company internal tasks so I
-> couldn't do much.
-> 
-> One of the ideas is to start changing (again) how the rules are processed
-> internally, moving away from the default policy + exceptions model to
-> an ordered set of rules like iptables:
-> 
-> 	default: allow/deny
-> 	allow block major 100-101, all minors
-> 	deny char major 200, all minors
-> 	...
-> 
-> That will solve most complex use cases the current model won't [1] but
-> the problem with this approach is that since it relies on order, merging
-> would be a problem, and it'd have test each parent all the way to / to
-> make sure the access is possible.
-> 
-> [1] One example of usage the current model won't solve:
-> 
-> 	- by default deny everything
-> 	- allow c,200,*
-> 	- but deny c,200,100
-> 
-> The second idea, which is simpler, will reuse the current internal model
-> of default policy + exceptions and the idea in the initial patches of having
-> two lists in each cgroup: active policy+exceptions and locally set
-> policy+exceptions. This way for every change that happens in a parent (or
-> even change of parents when moving the cgroup around), the active
-> policy+exceptions will be regenerated.
-> 
-> In both cases, we do need a new userspace interface (although we can
-> still provide backwards compatibility with the old one).
-> 
-> Comments?
+I think this one can go in now also without the rest of the series.
+It is a good clean up
 
-FWIW, libvirt's usage of devcg is to deny all by default, allow major 136
-(for all /dev/pts/*), followed by allow (major,minor) pair for each specific
-whitelisted devices. As such we don't have anything that relies on ordering
-of rules in devcg.
+On Sat 06-07-13 01:21:42, Sha Zhengju wrote:
+> From: Sha Zhengju <handai.szj@taobao.com>
+> 
+> While accounting memcg page stat, it's not worth to use MEMCG_NR_FILE_MAPPED
+> as an extra layer of indirection because of the complexity and presumed
+> performance overhead. We can use MEM_CGROUP_STAT_FILE_MAPPED directly.
+> 
+> Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
+> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> Acked-by: Michal Hocko <mhocko@suse.cz>
+> Acked-by: Fengguang Wu <fengguang.wu@intel.com>
+> Reviewed-by: Greg Thelen <gthelen@google.com>
+> cc: Andrew Morton <akpm@linux-foundation.org>
+> cc: Mel Gorman <mgorman@suse.de>
+> ---
+>  include/linux/memcontrol.h |   27 +++++++++++++++++++--------
+>  mm/memcontrol.c            |   25 +------------------------
+>  mm/rmap.c                  |    4 ++--
+>  3 files changed, 22 insertions(+), 34 deletions(-)
+> 
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index 7b4d9d7..d166aeb 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -30,9 +30,20 @@ struct page;
+>  struct mm_struct;
+>  struct kmem_cache;
+>  
+> -/* Stats that can be updated by kernel. */
+> -enum mem_cgroup_page_stat_item {
+> -	MEMCG_NR_FILE_MAPPED, /* # of pages charged as file rss */
+> +/*
+> + * The corresponding mem_cgroup_stat_names is defined in mm/memcontrol.c,
+> + * These two lists should keep in accord with each other.
+> + */
+> +enum mem_cgroup_stat_index {
+> +	/*
+> +	 * For MEM_CONTAINER_TYPE_ALL, usage = pagecache + rss.
+> +	 */
+> +	MEM_CGROUP_STAT_CACHE,		/* # of pages charged as cache */
+> +	MEM_CGROUP_STAT_RSS,		/* # of pages charged as anon rss */
+> +	MEM_CGROUP_STAT_RSS_HUGE,	/* # of pages charged as anon huge */
+> +	MEM_CGROUP_STAT_FILE_MAPPED,	/* # of pages charged as file rss */
+> +	MEM_CGROUP_STAT_SWAP,		/* # of pages, swapped out */
+> +	MEM_CGROUP_STAT_NSTATS,
+>  };
+>  
+>  struct mem_cgroup_reclaim_cookie {
+> @@ -165,17 +176,17 @@ static inline void mem_cgroup_end_update_page_stat(struct page *page,
+>  }
+>  
+>  void mem_cgroup_update_page_stat(struct page *page,
+> -				 enum mem_cgroup_page_stat_item idx,
+> +				 enum mem_cgroup_stat_index idx,
+>  				 int val);
+>  
+>  static inline void mem_cgroup_inc_page_stat(struct page *page,
+> -					    enum mem_cgroup_page_stat_item idx)
+> +					    enum mem_cgroup_stat_index idx)
+>  {
+>  	mem_cgroup_update_page_stat(page, idx, 1);
+>  }
+>  
+>  static inline void mem_cgroup_dec_page_stat(struct page *page,
+> -					    enum mem_cgroup_page_stat_item idx)
+> +					    enum mem_cgroup_stat_index idx)
+>  {
+>  	mem_cgroup_update_page_stat(page, idx, -1);
+>  }
+> @@ -349,12 +360,12 @@ static inline void mem_cgroup_end_update_page_stat(struct page *page,
+>  }
+>  
+>  static inline void mem_cgroup_inc_page_stat(struct page *page,
+> -					    enum mem_cgroup_page_stat_item idx)
+> +					    enum mem_cgroup_stat_index idx)
+>  {
+>  }
+>  
+>  static inline void mem_cgroup_dec_page_stat(struct page *page,
+> -					    enum mem_cgroup_page_stat_item idx)
+> +					    enum mem_cgroup_stat_index idx)
+>  {
+>  }
+>  
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 6e120e4..f9acf49 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -85,21 +85,6 @@ static int really_do_swap_account __initdata = 0;
+>  #endif
+>  
+>  
+> -/*
+> - * Statistics for memory cgroup.
+> - */
+> -enum mem_cgroup_stat_index {
+> -	/*
+> -	 * For MEM_CONTAINER_TYPE_ALL, usage = pagecache + rss.
+> -	 */
+> -	MEM_CGROUP_STAT_CACHE,		/* # of pages charged as cache */
+> -	MEM_CGROUP_STAT_RSS,		/* # of pages charged as anon rss */
+> -	MEM_CGROUP_STAT_RSS_HUGE,	/* # of pages charged as anon huge */
+> -	MEM_CGROUP_STAT_FILE_MAPPED,	/* # of pages charged as file rss */
+> -	MEM_CGROUP_STAT_SWAP,		/* # of pages, swapped out */
+> -	MEM_CGROUP_STAT_NSTATS,
+> -};
+> -
+>  static const char * const mem_cgroup_stat_names[] = {
+>  	"cache",
+>  	"rss",
+> @@ -2307,7 +2292,7 @@ void __mem_cgroup_end_update_page_stat(struct page *page, unsigned long *flags)
+>  }
+>  
+>  void mem_cgroup_update_page_stat(struct page *page,
+> -				 enum mem_cgroup_page_stat_item idx, int val)
+> +				 enum mem_cgroup_stat_index idx, int val)
+>  {
+>  	struct mem_cgroup *memcg;
+>  	struct page_cgroup *pc = lookup_page_cgroup(page);
+> @@ -2320,14 +2305,6 @@ void mem_cgroup_update_page_stat(struct page *page,
+>  	if (unlikely(!memcg || !PageCgroupUsed(pc)))
+>  		return;
+>  
+> -	switch (idx) {
+> -	case MEMCG_NR_FILE_MAPPED:
+> -		idx = MEM_CGROUP_STAT_FILE_MAPPED;
+> -		break;
+> -	default:
+> -		BUG();
+> -	}
+> -
+>  	this_cpu_add(memcg->stat->count[idx], val);
+>  }
+>  
+> diff --git a/mm/rmap.c b/mm/rmap.c
+> index cd356df..3a3e03e 100644
+> --- a/mm/rmap.c
+> +++ b/mm/rmap.c
+> @@ -1114,7 +1114,7 @@ void page_add_file_rmap(struct page *page)
+>  	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
+>  	if (atomic_inc_and_test(&page->_mapcount)) {
+>  		__inc_zone_page_state(page, NR_FILE_MAPPED);
+> -		mem_cgroup_inc_page_stat(page, MEMCG_NR_FILE_MAPPED);
+> +		mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_FILE_MAPPED);
+>  	}
+>  	mem_cgroup_end_update_page_stat(page, &locked, &flags);
+>  }
+> @@ -1158,7 +1158,7 @@ void page_remove_rmap(struct page *page)
+>  					      NR_ANON_TRANSPARENT_HUGEPAGES);
+>  	} else {
+>  		__dec_zone_page_state(page, NR_FILE_MAPPED);
+> -		mem_cgroup_dec_page_stat(page, MEMCG_NR_FILE_MAPPED);
+> +		mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_FILE_MAPPED);
+>  		mem_cgroup_end_update_page_stat(page, &locked, &flags);
+>  	}
+>  	if (unlikely(PageMlocked(page)))
+> -- 
+> 1.7.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Regards,
-Daniel
 -- 
-|: http://berrange.com      -o-    http://www.flickr.com/photos/dberrange/ :|
-|: http://libvirt.org              -o-             http://virt-manager.org :|
-|: http://autobuild.org       -o-         http://search.cpan.org/~danberr/ :|
-|: http://entangle-photo.org       -o-       http://live.gnome.org/gtk-vnc :|
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
