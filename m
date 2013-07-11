@@ -1,179 +1,72 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH V4 5/6] memcg: patch
- mem_cgroup_{begin,end}_update_page_stat() out if only root memcg exists
-Date: Thu, 11 Jul 2013 16:56:25 +0200
-Message-ID: <20130711145625.GK21667@dhcp22.suse.cz>
-References: <1373044710-27371-1-git-send-email-handai.szj@taobao.com>
- <1373045623-27712-1-git-send-email-handai.szj@taobao.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2] vmpressure: make sure memcg stays alive until all
+ users are signaled
+Date: Thu, 11 Jul 2013 08:44:08 -0700
+Message-ID: <20130711154408.GA9229@mtj.dyndns.org>
+References: <20130710184254.GA16979@mtj.dyndns.org>
+ <20130711083110.GC21667@dhcp22.suse.cz>
+ <51DE701C.6010800@huawei.com>
+ <20130711092542.GD21667@dhcp22.suse.cz>
+ <51DE7AAF.6070004@huawei.com>
+ <20130711093300.GE21667@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=1MSNIh/iz+R4IGe0HntCsAGQyB+XOp2lHgjbtaMem40=;
+        b=E1xpSBan5Rg0ZpDq6E69tA3sNQMmo+cWkveoJgjw2PspCr3RMMIRXY/9bB185cxb5E
+         3nQgap/u8ROltK4b3pdiePWNa/PYIZmsm1n1tNNG/LGb+j3s979vQe6s8+NuoD+cIhB/
+         paUsXbGlN1MGjJxXDON3XrIXeLrFGelYNqXmlF1i44hzGRUhrO/0KCvf5QIwQxLZgd20
+         w6P4/k9qiQVfL5+tObgjfiaFBnFkMBrNXjJRB4m2rKHCNeiKsWwjf35gKgY6a9TEed+7
+         D96O1842W3nP1c4vVxooVaZmGFj/YIjickOf3LvFt1on2qRqrfg6dE4OTjciHWQLleAH
+         bC7A==
 Content-Disposition: inline
-In-Reply-To: <1373045623-27712-1-git-send-email-handai.szj@taobao.com>
+In-Reply-To: <20130711093300.GE21667@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sha Zhengju <handai.szj@gmail.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, gthelen@google.com, kamezawa.hiroyu@jp.fujitsu.com, akpm@linux-foundation.org, fengguang.wu@intel.com, mgorman@suse.de, Sha Zhengju <handai.szj@taobao.com>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Li Zefan <lizefan@huawei.com>, Anton Vorontsov <anton.vorontsov@linaro.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
 
-On Sat 06-07-13 01:33:43, Sha Zhengju wrote:
-> From: Sha Zhengju <handai.szj@taobao.com>
-> 
-> If memcg is enabled and no non-root memcg exists, all allocated
-> pages belongs to root_mem_cgroup and wil go through root memcg
-> statistics routines.  So in order to reduce overheads after adding
-> memcg dirty/writeback accounting in hot paths, we use jump label to
-> patch mem_cgroup_{begin,end}_update_page_stat() in or out when not
-> used.
+Hello, Michal.
 
-I do not think this is enough. How much do you save? One atomic read.
-This doesn't seem like a killer.
-
-I hoped we could simply not account at all and move counters to the root
-cgroup once the label gets enabled.
-
-Besides that, the current patch is racy. Consider what happens when:
-
-mem_cgroup_begin_update_page_stat
-					arm_inuse_keys
-							mem_cgroup_move_account
-mem_cgroup_move_account_page_stat
-mem_cgroup_end_update_page_stat
-
-The race window is small of course but it is there. I guess we need
-rcu_read_lock at least.
-
-> If no non-root memcg comes to life, we do not need to accquire moving
-> locks, so patch them out.
->
-> cc: Michal Hocko <mhocko@suse.cz>
-> cc: Greg Thelen <gthelen@google.com>
-> cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-> cc: Andrew Morton <akpm@linux-foundation.org>
-> cc: Fengguang Wu <fengguang.wu@intel.com>
-> cc: Mel Gorman <mgorman@suse.de>
-> ---
->  include/linux/memcontrol.h |   15 +++++++++++++++
->  mm/memcontrol.c            |   23 ++++++++++++++++++++++-
->  2 files changed, 37 insertions(+), 1 deletion(-)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index ccd35d8..0483e1a 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -55,6 +55,13 @@ struct mem_cgroup_reclaim_cookie {
->  };
->  
->  #ifdef CONFIG_MEMCG
-> +
-> +extern struct static_key memcg_inuse_key;
-> +static inline bool mem_cgroup_in_use(void)
+On Thu, Jul 11, 2013 at 11:33:00AM +0200, Michal Hocko wrote:
+> +static inline
+> +struct mem_cgroup *vmpressure_to_mem_cgroup(struct vmpressure *vmpr)
 > +{
-> +	return static_key_false(&memcg_inuse_key);
+> +	return container_of(vmpr, struct mem_cgroup, vmpressure);
 > +}
 > +
->  /*
->   * All "charge" functions with gfp_mask should use GFP_KERNEL or
->   * (gfp_mask & GFP_RECLAIM_MASK). In current implementatin, memcg doesn't
-> @@ -159,6 +166,8 @@ static inline void mem_cgroup_begin_update_page_stat(struct page *page,
->  {
->  	if (mem_cgroup_disabled())
->  		return;
-> +	if (!mem_cgroup_in_use())
-> +		return;
->  	rcu_read_lock();
->  	*locked = false;
->  	if (atomic_read(&memcg_moving))
-> @@ -172,6 +181,8 @@ static inline void mem_cgroup_end_update_page_stat(struct page *page,
->  {
->  	if (mem_cgroup_disabled())
->  		return;
-> +	if (!mem_cgroup_in_use())
-> +		return;
->  	if (*locked)
->  		__mem_cgroup_end_update_page_stat(page, flags);
->  	rcu_read_unlock();
-> @@ -215,6 +226,10 @@ void mem_cgroup_print_bad_page(struct page *page);
->  #endif
->  #else /* CONFIG_MEMCG */
->  struct mem_cgroup;
-> +static inline bool mem_cgroup_in_use(void)
+> +void vmpressure_pin_memcg(struct vmpressure *vmpr)
 > +{
-> +	return false;
-> +}
->  
->  static inline int mem_cgroup_newpage_charge(struct page *page,
->  					struct mm_struct *mm, gfp_t gfp_mask)
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 9126abc..a85f7c5 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -463,6 +463,13 @@ enum res_type {
->  #define MEM_CGROUP_RECLAIM_SHRINK_BIT	0x1
->  #define MEM_CGROUP_RECLAIM_SHRINK	(1 << MEM_CGROUP_RECLAIM_SHRINK_BIT)
->  
-> +/* static_key used for marking memcg in use or not. We use this jump label to
-> + * patch some memcg page stat accounting code in or out.
-> + * The key will be increased when non-root memcg is created, and be decreased
-> + * when memcg is destroyed.
-> + */
-> +struct static_key memcg_inuse_key;
+> +	struct mem_cgroup *memcg = vmpressure_to_mem_cgroup(vmpr);
 > +
->  /*
->   * The memcg_create_mutex will be held whenever a new cgroup is created.
->   * As a consequence, any change that needs to protect against new child cgroups
-> @@ -630,10 +637,22 @@ static void disarm_kmem_keys(struct mem_cgroup *memcg)
->  }
->  #endif /* CONFIG_MEMCG_KMEM */
->  
-> +static void disarm_inuse_keys(struct mem_cgroup *memcg)
-> +{
-> +	if (!mem_cgroup_is_root(memcg))
-> +		static_key_slow_dec(&memcg_inuse_key);
+> +	css_get(&memcg->css);
 > +}
 > +
-> +static void arm_inuse_keys(void)
+> +void vmpressure_unpin_memcg(struct vmpressure *vmpr)
 > +{
-> +	static_key_slow_inc(&memcg_inuse_key);
+> +	struct mem_cgroup *memcg = vmpressure_to_mem_cgroup(vmpr);
+> +
+> +	css_put(&memcg->css);
 > +}
-> +
->  static void disarm_static_keys(struct mem_cgroup *memcg)
->  {
->  	disarm_sock_keys(memcg);
->  	disarm_kmem_keys(memcg);
-> +	disarm_inuse_keys(memcg);
->  }
->  
->  static void drain_all_stock_async(struct mem_cgroup *memcg);
-> @@ -2298,7 +2317,6 @@ void mem_cgroup_update_page_stat(struct page *page,
->  {
->  	struct mem_cgroup *memcg;
->  	struct page_cgroup *pc = lookup_page_cgroup(page);
-> -	unsigned long uninitialized_var(flags);
->  
->  	if (mem_cgroup_disabled())
->  		return;
-> @@ -6293,6 +6311,9 @@ mem_cgroup_css_online(struct cgroup *cont)
->  	}
->  
->  	error = memcg_init_kmem(memcg, &mem_cgroup_subsys);
-> +	if (!error)
-> +		arm_inuse_keys();
-> +
->  	mutex_unlock(&memcg_create_mutex);
->  	return error;
->  }
-> -- 
-> 1.7.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+So, while this *should* work, can't we just cancel/flush the work item
+from offline?  There doesn't seem to be any possible deadlocks from my
+shallow glance and those mutexes don't seem to be held for long (do
+they actually need to be mutexes?  what blocks inside them?).
+
+Also, while at it, can you please remove the work_pending() check?
+They're almost always spurious or racy and should be avoided in
+general.
+
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
+tejun
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
