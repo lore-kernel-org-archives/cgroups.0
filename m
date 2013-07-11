@@ -1,81 +1,219 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] vmpressure: make sure memcg stays alive until all
- users are signaled
-Date: Thu, 11 Jul 2013 09:32:38 -0700
-Message-ID: <20130711163238.GC9229@mtj.dyndns.org>
-References: <20130710184254.GA16979@mtj.dyndns.org>
- <20130711083110.GC21667@dhcp22.suse.cz>
- <51DE701C.6010800@huawei.com>
- <20130711092542.GD21667@dhcp22.suse.cz>
- <51DE7AAF.6070004@huawei.com>
- <20130711093300.GE21667@dhcp22.suse.cz>
- <20130711154408.GA9229@mtj.dyndns.org>
- <20130711162215.GM21667@dhcp22.suse.cz>
+From: Sha Zhengju <handai.szj@gmail.com>
+Subject: Re: [PATCH V4 3/6] memcg: add per cgroup dirty pages accounting
+Date: Fri, 12 Jul 2013 00:49:50 +0800
+Message-ID: <CAFj3OHWq87TK1_T3gPEORfPdoDkosA55La+W=W5C920Xi9Cs0A@mail.gmail.com>
+References: <1373044710-27371-1-git-send-email-handai.szj@taobao.com>
+	<1373045409-27617-1-git-send-email-handai.szj@taobao.com>
+	<20130711143120.GI21667@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=WMJ/TWg2tjrWv7MXLhJXUr+c+k3o/0BCbTDJR6NxCSg=;
-        b=ocxrOgtHknz259pjkudGHwG67eZ45LHb7J355AEc1KjYqH40oKqkQEkGw+ItDJ/ctU
-         yKD2xJzyAtaONLtxNItUDAiX+zdX9lWF4XA3vqVWSQxbg1rnh2/Oud/B8oelqsZ4ZkiE
-         xwgCQ9roQWxj3gd8nZEv0qML4HYRMz95PnyPMDLiuDWRmx7g/oVwvfzJjGeyQt1vzjYt
-         Uds7t768I6DW6u6LC0A+G+SE1CGUqZaFjUYyM8BResYxC2FHk6WNcw4ZIMQ74y7f9qf/
-         FASc0M3EQT4UJgY6/sAyHUspP25tuEUtVrFrOMF4YEL0nQ4tzl4uLgRh+1Z1ERvH0UfF
-         7IeA==
-Content-Disposition: inline
-In-Reply-To: <20130711162215.GM21667@dhcp22.suse.cz>
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=Oo+3ukqkF8y9E5uIUqaH5RUbnDGufM03i0U6YDzPv4I=;
+        b=ywuuLcniD2Cy1hkoi9oWbuczWVf3QmLZG38wTTS3jiRQCDWfxkPJi2Bps1F2vDxVM8
+         OFG70KNnx2IltAzXaY9EquKZRLgiijO/u5TAf7rAGGNNzKRxAhkDhOgOChjYicStl8yB
+         rEx3Xd5RJiqL+QahG6F95347yxxb+vwXhZM0X0HyskCXmxszxEVhyuDO4lwr84JAzVCN
+         i0hHk+z2ouTT+wCLy46cegwzS9vmIJhv7wgI/hJdHxqj56ioDZqbTw7fSkKaxkhsNDcj
+         EmfDLIvXk9Nz7/LxQK927hMEP2QsjrjtOVaVsyZb09NL25MpaH00qBlxoh7VPli20tOd
+         xAqw==
+In-Reply-To: <20130711143120.GI21667@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Michal Hocko <mhocko@suse.cz>
-Cc: Li Zefan <lizefan@huawei.com>, Anton Vorontsov <anton.vorontsov@linaro.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
+Cc: linux-fsdevel@vger.kernel.org, "linux-mm@kvack.org" <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, Greg Thelen <gthelen@google.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, Wu Fengguang <fengguang.wu@intel.com>, Mel Gorman <mgorman@suse.de>, Sha Zhengju <handai.szj@taobao.com>
 
-Hello,
+On Thu, Jul 11, 2013 at 10:31 PM, Michal Hocko <mhocko@suse.cz> wrote:
+> Please also CC vfs people
+>
+> On Sat 06-07-13 01:30:09, Sha Zhengju wrote:
+>> From: Sha Zhengju <handai.szj@taobao.com>
+>>
+>> This patch adds memcg routines to count dirty pages, which allows memory controller
+>> to maintain an accurate view of the amount of its dirty memory.
+>>
+>> After Kame's commit 89c06bd5(memcg: use new logic for page stat accounting), we can
+>> use 'struct page' flag to test page state instead of per page_cgroup flag. But memcg
+>> has a feature to move a page from a cgroup to another one and may have race between
+>> "move" and "page stat accounting". So in order to avoid the race we have designed a
+>> bigger lock:
+>
+> Well, bigger lock is little bit an overstatement ;). It is full no-op for
+> !CONFIG_MEMCG, almost no-op if memcg is disabled (but compiled in), rcu
+> read lock in the most cases (no task is moving) and spin_lock_irqsave on
+> top in the slow path.
+>
+> It would be good to mention this in the changelog for those who are not
+> familiar.
 
-On Thu, Jul 11, 2013 at 06:22:15PM +0200, Michal Hocko wrote:
-> I would rather not put vmpressure clean up code into memcg offlining.
-> We have reference counting for exactly this purposes so it feels strange
-> to overcome it like that.
+Okay, good advise.
 
-It's not something white and black but for things which can be made
-trivially synchrnous, it usually is better to do it that way,
-especially while shutting down objects as they enter a lingering stage
-where they're de-registered but not destroyed and you should be
-careful which parts of the object are still accessible.  I haven't
-read it carefully but here I'm not sure whether it's safe to do event
-related operations after removal.  From cgroup core side, event list
-is shut down synchronously from cgroup_destroy_locked().  It doesn't
-seem like that part is explicitly built to remain accessible
-afterwards.
+>
+>>
+>>          mem_cgroup_begin_update_page_stat()
+>>          modify page information        -->(a)
+>>          mem_cgroup_update_page_stat()  -->(b)
+>
+> Hmm, mem_cgroup_update_page_stat doesn't do any checking that we use a
+> proper locking. Which would be hard but we could at least test for
+> rcu_read_lock_held() because RCU is held if !mem_cgroup_disabled().
+> This would be a nice preparatory patch. What do you think?
 
-> Besides that wouldn't be that racy? The work item could be already
-> executing and preempted and we do not want vmpr to disappear from under
-> our feet. I know this is _highly_ unlikely but why to play games?
+In patch 5/6 I've used static branch to patch out most of
+mem_cgroup_begin/end_update_page_stat() including
+rcu_read_lock/unlock, so the test may be false in that case. Well,
+since I still need to think it over according to your opinion, it's
+not bad to add the check patch next round.
 
-Hmmm?  flush_work() and cancel_work_sync() guarantee that the work
-item isn't executing on return unless it's being requeued.  There's no
-race condition.
+>
+>>          mem_cgroup_end_update_page_stat()
+>> It requires both (a) and (b)(dirty pages accounting) to be pretected in
+>> mem_cgroup_{begin/end}_update_page_stat().
+>>
+>> Server places should be added accounting:
+>
+> Server?
 
-> Dunno, to be honest. From a quick look they both can be turned to spin
-> locks but events_lock might cause long preempt disabled periods when
-> zillions of events are registered.
+Oops.. I mean 'several'.....
 
-I see.
+>
+>>         incrementing (3):
+>>                 __set_page_dirty_buffers
+>>                 __set_page_dirty_nobuffers
+>>               mark_buffer_dirty
+>>         decrementing (5):
+>>                 clear_page_dirty_for_io
+>>                 cancel_dirty_page
+>>               delete_from_page_cache
+>>               __delete_from_page_cache
+>>               replace_page_cache_page
+>>
+>> The lock order between memcg lock and mapping lock is:
+>>       --> memcg->move_lock
+>>         --> mapping->private_lock
+>>             --> mapping->tree_lock
+>>
+>> Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
+>> cc: Michal Hocko <mhocko@suse.cz>
+>> cc: Greg Thelen <gthelen@google.com>
+>> cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+>> cc: Andrew Morton <akpm@linux-foundation.org>
+>> cc: Fengguang Wu <fengguang.wu@intel.com>
+>> cc: Mel Gorman <mgorman@suse.de>
+>> ---
+>>  fs/buffer.c                |    9 +++++++++
+>>  include/linux/memcontrol.h |    1 +
+>>  mm/filemap.c               |   14 ++++++++++++++
+>>  mm/memcontrol.c            |   30 +++++++++++++++++++++++-------
+>>  mm/page-writeback.c        |   24 ++++++++++++++++++++++--
+>>  mm/truncate.c              |    6 ++++++
+>>  6 files changed, 75 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/fs/buffer.c b/fs/buffer.c
+>> index 695eb14..7c537f4 100644
+>> --- a/fs/buffer.c
+>> +++ b/fs/buffer.c
+>> @@ -694,10 +694,13 @@ int __set_page_dirty_buffers(struct page *page)
+>>  {
+>>       int newly_dirty;
+>>       struct address_space *mapping = page_mapping(page);
+>> +     bool locked;
+>> +     unsigned long flags;
+>>
+>>       if (unlikely(!mapping))
+>>               return !TestSetPageDirty(page);
+>
+> I guess it would be worth mentioning why we do not care about pages
+> without mapping.
 
-> > Also, while at it, can you please remove the work_pending() check?
-> > They're almost always spurious or racy and should be avoided in
-> > general.
-> 
-> sure, this really looks bogus. I will cook patches for both issues and
-> send them tomorrow.
+Actually what I concern is where both doing 'TestSetPageDirty' and
+'account_pages_dirtied'. Since it doesn't do global counting here, I
+also needn't do so.
 
-Thanks.
+>
+>> +     mem_cgroup_begin_update_page_stat(page, &locked, &flags);
+>>       spin_lock(&mapping->private_lock);
+>>       if (page_has_buffers(page)) {
+>>               struct buffer_head *head = page_buffers(page);
+> [...]
+>> diff --git a/mm/filemap.c b/mm/filemap.c
+>> index 4b51ac1..5642de6 100644
+>> --- a/mm/filemap.c
+>> +++ b/mm/filemap.c
+> [...]
+>> @@ -144,6 +149,7 @@ void __delete_from_page_cache(struct page *page)
+>
+> This needs a comment that it has to be called from within
+> mem_cgroup_{begin,end}_update_page_stat context. Btw. it seems that you
+> are missing invalidate_complete_page2 and __remove_mapping
 
--- 
-tejun
+Sorry, yes, I'll add them next.
+
+>
+>>        * having removed the page entirely.
+>>        */
+>>       if (PageDirty(page) && mapping_cap_account_dirty(mapping)) {
+>> +             mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_FILE_DIRTY);
+>>               dec_zone_page_state(page, NR_FILE_DIRTY);
+>>               dec_bdi_stat(mapping->backing_dev_info, BDI_RECLAIMABLE);
+>>       }
+>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> index f9acf49..1d31851 100644
+>> --- a/mm/memcontrol.c
+>> +++ b/mm/memcontrol.c
+>> @@ -91,6 +91,7 @@ static const char * const mem_cgroup_stat_names[] = {
+>>       "rss_huge",
+>>       "mapped_file",
+>>       "swap",
+>> +     "dirty",
+>
+> This doesn't match mem_cgroup_stat_index ordering.
+
+Yes... I should be more careful. :(
+
+>
+>>  };
+>>
+>>  enum mem_cgroup_events_index {
+> [...]
+>> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+>> index 4514ad7..3900e62 100644
+>> --- a/mm/page-writeback.c
+>> +++ b/mm/page-writeback.c
+>> @@ -1982,6 +1982,11 @@ int __set_page_dirty_no_writeback(struct page *page)
+>>
+>>  /*
+>>   * Helper function for set_page_dirty family.
+>> + *
+>> + * The caller must hold mem_cgroup_begin/end_update_page_stat() lock
+>> + * while modifying struct page state and accounting dirty pages.
+>
+> I think "while calling this function" would be sufficient.
+
+Okay.
+Thanks for reviewing!
+
+>
+>> + * See __set_page_dirty_{nobuffers,buffers} for example.
+>> + *
+>>   * NOTE: This relies on being atomic wrt interrupts.
+>>   */
+>>  void account_page_dirtied(struct page *page, struct address_space *mapping)
+> [...]
+>
+> Thanks
+> --
+> Michal Hocko
+> SUSE Labs
+
+
+
+--
+Thanks,
+Sha
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
