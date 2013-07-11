@@ -1,52 +1,93 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [OFFLIST] status of devcg
-Date: Thu, 11 Jul 2013 10:11:40 -0700
-Message-ID: <20130711171140.GC10195@mtj.dyndns.org>
-References: <20130710184655.GB16979@mtj.dyndns.org>
- <20130710195001.GW14011@redhat.com>
- <20130711093405.GC2377@redhat.com>
- <20130711155106.GB9229@mtj.dyndns.org>
- <20130711160532.GA14909@ac100>
- <20130711171037.GB10195@mtj.dyndns.org>
+Subject: [PATCH v2 5/9] cgroup: update error handling in cgroup_populate_dir()
+Date: Thu, 11 Jul 2013 10:18:25 -0700
+Message-ID: <20130711171825.GD10195@mtj.dyndns.org>
+References: <1372463145-4245-1-git-send-email-tj@kernel.org>
+ <1372463145-4245-6-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=iQ8JJaIBwuZNYaiUUcsINziXtYTZqSVOWC/tNfPiw4I=;
-        b=Mvi0PTZv2n8oYotgdwQI5NAnB34qEX1kTLBN5IsTMbYP/cUVSmSOaNkWi1RLOOrSD6
-         cAtLovdNoO9sF2p6ODXebuZd29HIlrjlfvfEmaai+Jv8irPIhY4gu2Sh+jRikEJo2WRw
-         GWmmTvpJkSxCSj0RglkdyRVgmu4fGSpwWGo8LavDeQc7onb2Ckl++ooNUYPjf8VeOvjA
-         +vnN4E94Hutb/MwshxYXTDdk0xWL3F/eMm6MyJg5hmiCN6VB1Xl1zRZ4POdt/0ygAEer
-         AK9KI7mn4ED7Uu8wR0zznAIb4pRGUYkD7xz6Rkd4eiZ8JYhp0VvhnpaNmiNabjeR4Pwf
-         SG/w==
+        bh=e2pFudRqiKf+KlUQ6TN8Y9a0TQlYqsa4s9wLIixI5Ps=;
+        b=qsbNOQGGS/s7vXDlrRqZIYCq8oQngCbGkc4d0RIJQYznKg1xQMDPJ0LaHD7EpnGe+f
+         klQoQLaHVRwNl21Yw08GuVYiSsUm2J3qWqcU9kMGixIBeuYQ9/C1SzQMN6SZyMWeSrU+
+         9C4M39Px2+LNFNaMoQkDfK52pVCl1o0OFhA6/rICrmUnua/OxZPFshuq9DwaJby9P2L+
+         tQAOs5/GJfGax/IqFu5+ysxlAUiNkpzbPxHm7eSkgoM8sTwKcDzL+kkEy1M6PJj5oHue
+         zAY7YMPw0KZdB0BNZNGJTp3GUe8MsG3wOf8QImt9o7AX2Ku7oV5mljBCOx4TX7oRSi2O
+         R1lg==
 Content-Disposition: inline
-In-Reply-To: <20130711171037.GB10195-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+In-Reply-To: <1372463145-4245-6-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Cc: "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Kay Sievers <kay-tD+1rO4QERM@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Jul 11, 2013 at 10:10:37AM -0700, Tejun Heo wrote:
-> Hello,
-> 
-> On Thu, Jul 11, 2013 at 11:05:32AM -0500, Serge Hallyn wrote:
-> > Is there something in particular you want to accomplish for which the
-> > current rules do not suffice?
-> 
-> Yeah, a cgroup changing its rules affecting the descendants
-> irreversibly, which is nasty and makes it tricky to implement
-> automation on top or implement proper cgroup migration, so I asked
-> Aristeu whether he could implement cleaner behavior for unified
-> hierarchy.
+From 4b5e65e0911690422a9b253b8ef68b14288e99c5 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Fri, 28 Jun 2013 16:24:11 -0700
 
-Ooh, BTW, the other controller which has similar behavior is cpuset
-and that one is gonna be updated too.
+cgroup_populate_dir() didn't use to check whether the actual file
+creations were successful and could return success with only subset of
+the requested files created, which is nasty.
+
+This patch udpates cgroup_populate_dir() so that it either succeeds
+with all files or fails with no file.
+
+v2: The original patch also converted for_each_root_subsys() usages to
+    for_each_subsys() without explaining why.  That part has been
+    moved to a separate patch.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+Li, I separated out the for_each_subsys() conversion to a separate
+patch instead.
 
 Thanks.
 
--- 
-tejun
+ kernel/cgroup.c |   13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
+
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -4171,10 +4171,13 @@ static struct cftype cgroup_base_files[]
+  * cgroup_populate_dir - create subsys files in a cgroup directory
+  * @cgrp: target cgroup
+  * @subsys_mask: mask of the subsystem ids whose files should be added
++ *
++ * On failure, no file is added.
+  */
+ static int cgroup_populate_dir(struct cgroup *cgrp, unsigned long subsys_mask)
+ {
+ 	struct cgroup_subsys *ss;
++	int ret = 0;
+ 
+ 	/* process cftsets of each subsystem */
+ 	for_each_root_subsys(cgrp->root, ss) {
+@@ -4182,8 +4185,11 @@ static int cgroup_populate_dir(struct cg
+ 		if (!test_bit(ss->subsys_id, &subsys_mask))
+ 			continue;
+ 
+-		list_for_each_entry(set, &ss->cftsets, node)
+-			cgroup_addrm_files(cgrp, ss, set->cfts, true);
++		list_for_each_entry(set, &ss->cftsets, node) {
++			ret = cgroup_addrm_files(cgrp, ss, set->cfts, true);
++			if (ret < 0)
++				goto err;
++		}
+ 	}
+ 
+ 	/* This cgroup is ready now */
+@@ -4201,6 +4207,9 @@ static int cgroup_populate_dir(struct cg
+ 	}
+ 
+ 	return 0;
++err:
++	cgroup_clear_dir(cgrp, subsys_mask);
++	return ret;
+ }
+ 
+ static void css_dput_fn(struct work_struct *work)
