@@ -1,40 +1,57 @@
-From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [OFFLIST] status of devcg
-Date: Thu, 11 Jul 2013 14:12:06 -0500
-Message-ID: <20130711191206.GA2149@ac100>
+Date: Thu, 11 Jul 2013 13:38:33 -0700
+Message-ID: <20130711203833.GA3974@htj.dyndns.org>
 References: <20130710184655.GB16979@mtj.dyndns.org>
- <20130710195001.GW14011@redhat.com>
- <20130711093405.GC2377@redhat.com>
- <20130711155106.GB9229@mtj.dyndns.org>
- <20130711160532.GA14909@ac100>
- <20130711171037.GB10195@mtj.dyndns.org>
+	<20130710195001.GW14011@redhat.com>
+	<20130711093405.GC2377@redhat.com>
+	<20130711155106.GB9229@mtj.dyndns.org>
+	<20130711160532.GA14909@ac100>
+	<20130711171037.GB10195@mtj.dyndns.org>
+	<20130711191206.GA2149@ac100>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20130711171037.GB10195-9pTldWuhBndy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Kay Sievers <kay-tD+1rO4QERM@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=fwwB1TfRXdUJp7su3VKMblJrfke4bdlPK5p2Gfbo5AI=;
+	b=D0Q69ehkpfZ8EaRpZltAHZxig0gthFW2/xkRmv1vBJ0I/mqr5UFDbjw1tvrQIlWG10
+	O9QYDfYWNUAc6421ADMjOj68vDwQ9ZML9yE4Podzw5I0txtHpzj1RmeOt4YZ5QIULhVw
+	5l8IYkUaAbOTaX66lmcavqmaizBKrbYzhooLAzQU0t+X6RbBslY6A2OvIrS5/uc37W5n
+	f8/38CbBdZG/teFIgav8txUC8m8VlG+INMQRjoSY4axIGZ7Jl8/MNwASFZBggie2fJ3R
+	N/uSVf+lDj8WP+ddPUHooZ07emlP/yjVWz40eE65W6/MMg9CIN2CASF6ZEJJChM+krAh
+	GAmg==
+Content-Disposition: inline
+In-Reply-To: <20130711191206.GA2149@ac100>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Cc: Kay Sievers <kay-tD+1rO4QERM@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Quoting Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org):
-> Hello,
-> 
-> On Thu, Jul 11, 2013 at 11:05:32AM -0500, Serge Hallyn wrote:
-> > Is there something in particular you want to accomplish for which the
-> > current rules do not suffice?
-> 
-> Yeah, a cgroup changing its rules affecting the descendants
-> irreversibly, which is nasty and makes it tricky to implement
-> automation on top or implement proper cgroup migration, so I asked
-> Aristeu whether he could implement cleaner behavior for unified
-> hierarchy.
+On Thu, Jul 11, 2013 at 02:12:06PM -0500, Serge Hallyn wrote:
+> Before I respond to that, could you please tell me precisely what
+> you mean by 'unified hierarchy'?  I thought it just meant all
+> controllers composed into one mount.  Maybe it means something
+> else.
 
-Before I respond to that, could you please tell me precisely what
-you mean by 'unified hierarchy'?  I thought it just meant all
-controllers composed into one mount.  Maybe it means something
-else.
+Oh, it's gonna be a hierarchy which can dynamically enable / disable
+controllers in sub-hierarchies, so it isn't just co-mounting
+everything, which really wouldn't work for many use cases.  As some
+controllers are outright hostile against being co-mounted and this is
+basically gonna be v2 (or v1.1 whatever) of the itnerface, I'm trying
+to weed out weird behaviors.
 
--serge
+Thanks.
+
+-- 
+tejun
