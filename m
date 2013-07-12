@@ -1,381 +1,54 @@
-From: Sha Zhengju <handai.szj@gmail.com>
-Subject: Re: [PATCH V4 5/6] memcg: patch mem_cgroup_{begin,end}_update_page_stat()
- out if only root memcg exists
-Date: Fri, 12 Jul 2013 20:59:24 +0800
-Message-ID: <CAFj3OHV=6YDcbKmSeuF3+oMv1HfZF1RxXHoiLgTk0wH5cJVsiQ@mail.gmail.com>
-References: <1373044710-27371-1-git-send-email-handai.szj@taobao.com>
-	<1373045623-27712-1-git-send-email-handai.szj@taobao.com>
-	<20130711145625.GK21667@dhcp22.suse.cz>
+From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [OFFLIST] status of devcg
+Date: Fri, 12 Jul 2013 13:04:37 +0000
+Message-ID: <20130712130437.GA26910@mail.hallyn.com>
+References: <20130710184655.GB16979@mtj.dyndns.org>
+	<20130710195001.GW14011@redhat.com>
+	<20130711093405.GC2377@redhat.com>
+	<20130711155106.GB9229@mtj.dyndns.org>
+	<20130711160532.GA14909@ac100>
+	<20130711171037.GB10195@mtj.dyndns.org>
+	<20130711191206.GA2149@ac100>
+	<20130711203833.GA3974@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: multipart/alternative; boundary=001a11c36a6a8614bd04e15014d4
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=iHtSSxigkGuO/FyvzV8thqM745/tfU3EYMNInDo23LU=;
-        b=iJnVa7fZZBGvKZkodCxJMP33EKn5v21zXK0dRdbQ+56m9ChgC/US45K2Qr+Pl3wezi
-         +aMm3NQJKuaYr87p6IS+ha+7RD7MCeLh3AKc+oHu4v1TgU9Y92oCeGREqrq8ZslCs1iM
-         uIunzTbHY9cuHxUttN0eVWCRXRpBXaqBroygHqP9unI6fWleZ0nvEs6r/7YczgiRH4wr
-         cooKGPK65S2gEIL9hXckE3Hf68RFJWhRF91yr8pDSQ6XBrnaTd8Ayo39PV0dyMRtQQXI
-         JXO+Yo68Y/aoGyngN6quqOla2niu6E8nFW9Hhept5T45AcAYhNwh6rcHWcJbrtazPMlq
-         44xQ==
-In-Reply-To: <20130711145625.GK21667@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-To: Michal Hocko <mhocko@suse.cz>
-Cc: "linux-mm@kvack.org" <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, Greg Thelen <gthelen@google.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, Wu Fengguang <fengguang.wu@intel.com>, Mel Gorman <mgorman@suse.de>, Glauber Costa <glommer@parallels.com>, Sha Zhengju <handai.szj@taobao.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20130711203833.GA3974-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Kay Sievers <kay-tD+1rO4QERM@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>
 
---001a11c36a6a8614bd04e15014d4
-Content-Type: text/plain; charset=ISO-8859-1
+Quoting Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org):
+> On Thu, Jul 11, 2013 at 02:12:06PM -0500, Serge Hallyn wrote:
+> > Before I respond to that, could you please tell me precisely what
+> > you mean by 'unified hierarchy'?  I thought it just meant all
+> > controllers composed into one mount.  Maybe it means something
+> > else.
+> 
+> Oh, it's gonna be a hierarchy which can dynamically enable / disable
+> controllers in sub-hierarchies, so it isn't just co-mounting
+> everything, which really wouldn't work for many use cases.  As some
 
-Add cc to Glauber
+I see.  (I'll let that sink in for a bit then look back at Aristeu's
+email :)
 
-On Thu, Jul 11, 2013 at 10:56 PM, Michal Hocko <mhocko@suse.cz> wrote:
-> On Sat 06-07-13 01:33:43, Sha Zhengju wrote:
->> From: Sha Zhengju <handai.szj@taobao.com>
->>
->> If memcg is enabled and no non-root memcg exists, all allocated
->> pages belongs to root_mem_cgroup and wil go through root memcg
->> statistics routines.  So in order to reduce overheads after adding
->> memcg dirty/writeback accounting in hot paths, we use jump label to
->> patch mem_cgroup_{begin,end}_update_page_stat() in or out when not
->> used.
->
-> I do not think this is enough. How much do you save? One atomic read.
-> This doesn't seem like a killer.
->
-> I hoped we could simply not account at all and move counters to the root
-> cgroup once the label gets enabled.
+> controllers are outright hostile against being co-mounted and this is
+> basically gonna be v2 (or v1.1 whatever) of the itnerface, I'm trying
+> to weed out weird behaviors.
+> 
+> Thanks.
 
-I have thought of this approach before, but it would probably run into
-another issue, e.g, each zone has a percpu stock named ->pageset to
-optimize the increment and decrement operations, and I haven't figure out a
-simpler and cheaper approach to handle that stock numbers if moving global
-counters to root cgroup, maybe we can just leave them and can afford the
-approximation?
+Thanks
 
-Glauber have already done lots of works here, in his previous patchset he
-also tried to move some global stats to root (
-http://comments.gmane.org/gmane.linux.kernel.cgroups/6291). May I steal
-some of your ideas here, Glauber? :P
-
-
->
-> Besides that, the current patch is racy. Consider what happens when:
->
-> mem_cgroup_begin_update_page_stat
->                                         arm_inuse_keys
->
-mem_cgroup_move_account
-> mem_cgroup_move_account_page_stat
-> mem_cgroup_end_update_page_stat
->
-> The race window is small of course but it is there. I guess we need
-> rcu_read_lock at least.
-
-Yes, you're right. I'm afraid we need to take care of the racy in the next
-updates as well. But mem_cgroup_begin/end_update_page_stat() already have
-rcu lock, so here we maybe only need a synchronize_rcu() after changing
-memcg_inuse_key?
-
-
->
->> If no non-root memcg comes to life, we do not need to accquire moving
->> locks, so patch them out.
->>
->> cc: Michal Hocko <mhocko@suse.cz>
->> cc: Greg Thelen <gthelen@google.com>
->> cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
->> cc: Andrew Morton <akpm@linux-foundation.org>
->> cc: Fengguang Wu <fengguang.wu@intel.com>
->> cc: Mel Gorman <mgorman@suse.de>
->> ---
->>  include/linux/memcontrol.h |   15 +++++++++++++++
->>  mm/memcontrol.c            |   23 ++++++++++++++++++++++-
->>  2 files changed, 37 insertions(+), 1 deletion(-)
->>
->> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
->> index ccd35d8..0483e1a 100644
->> --- a/include/linux/memcontrol.h
->> +++ b/include/linux/memcontrol.h
->> @@ -55,6 +55,13 @@ struct mem_cgroup_reclaim_cookie {
->>  };
->>
->>  #ifdef CONFIG_MEMCG
->> +
->> +extern struct static_key memcg_inuse_key;
->> +static inline bool mem_cgroup_in_use(void)
->> +{
->> +     return static_key_false(&memcg_inuse_key);
->> +}
->> +
->>  /*
->>   * All "charge" functions with gfp_mask should use GFP_KERNEL or
->>   * (gfp_mask & GFP_RECLAIM_MASK). In current implementatin, memcg
-doesn't
->> @@ -159,6 +166,8 @@ static inline void
-mem_cgroup_begin_update_page_stat(struct page *page,
->>  {
->>       if (mem_cgroup_disabled())
->>               return;
->> +     if (!mem_cgroup_in_use())
->> +             return;
->>       rcu_read_lock();
->>       *locked = false;
->>       if (atomic_read(&memcg_moving))
->> @@ -172,6 +181,8 @@ static inline void
-mem_cgroup_end_update_page_stat(struct page *page,
->>  {
->>       if (mem_cgroup_disabled())
->>               return;
->> +     if (!mem_cgroup_in_use())
->> +             return;
->>       if (*locked)
->>               __mem_cgroup_end_update_page_stat(page, flags);
->>       rcu_read_unlock();
->> @@ -215,6 +226,10 @@ void mem_cgroup_print_bad_page(struct page *page);
->>  #endif
->>  #else /* CONFIG_MEMCG */
->>  struct mem_cgroup;
->> +static inline bool mem_cgroup_in_use(void)
->> +{
->> +     return false;
->> +}
->>
->>  static inline int mem_cgroup_newpage_charge(struct page *page,
->>                                       struct mm_struct *mm, gfp_t
-gfp_mask)
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 9126abc..a85f7c5 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -463,6 +463,13 @@ enum res_type {
->>  #define MEM_CGROUP_RECLAIM_SHRINK_BIT        0x1
->>  #define MEM_CGROUP_RECLAIM_SHRINK    (1 <<
-MEM_CGROUP_RECLAIM_SHRINK_BIT)
->>
->> +/* static_key used for marking memcg in use or not. We use this jump
-label to
->> + * patch some memcg page stat accounting code in or out.
->> + * The key will be increased when non-root memcg is created, and be
-decreased
->> + * when memcg is destroyed.
->> + */
->> +struct static_key memcg_inuse_key;
->> +
->>  /*
->>   * The memcg_create_mutex will be held whenever a new cgroup is created.
->>   * As a consequence, any change that needs to protect against new child
-cgroups
->> @@ -630,10 +637,22 @@ static void disarm_kmem_keys(struct mem_cgroup
-*memcg)
->>  }
->>  #endif /* CONFIG_MEMCG_KMEM */
->>
->> +static void disarm_inuse_keys(struct mem_cgroup *memcg)
->> +{
->> +     if (!mem_cgroup_is_root(memcg))
->> +             static_key_slow_dec(&memcg_inuse_key);
->> +}
->> +
->> +static void arm_inuse_keys(void)
->> +{
->> +     static_key_slow_inc(&memcg_inuse_key);
->> +}
->> +
->>  static void disarm_static_keys(struct mem_cgroup *memcg)
->>  {
->>       disarm_sock_keys(memcg);
->>       disarm_kmem_keys(memcg);
->> +     disarm_inuse_keys(memcg);
->>  }
->>
->>  static void drain_all_stock_async(struct mem_cgroup *memcg);
->> @@ -2298,7 +2317,6 @@ void mem_cgroup_update_page_stat(struct page *page,
->>  {
->>       struct mem_cgroup *memcg;
->>       struct page_cgroup *pc = lookup_page_cgroup(page);
->> -     unsigned long uninitialized_var(flags);
->>
->>       if (mem_cgroup_disabled())
->>               return;
->> @@ -6293,6 +6311,9 @@ mem_cgroup_css_online(struct cgroup *cont)
->>       }
->>
->>       error = memcg_init_kmem(memcg, &mem_cgroup_subsys);
->> +     if (!error)
->> +             arm_inuse_keys();
->> +
->>       mutex_unlock(&memcg_create_mutex);
->>       return error;
->>  }
->> --
->> 1.7.9.5
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe cgroups" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> --
-> Michal Hocko
-> SUSE Labs
-
-
-
---
-Thanks,
-Sha
-
---001a11c36a6a8614bd04e15014d4
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><div>Add cc to Glauber<br><br>On Thu, Jul 11, 2013 at 10:5=
-6 PM, Michal Hocko &lt;<a href=3D"mailto:mhocko@suse.cz">mhocko@suse.cz</a>=
-&gt; wrote:<br>&gt; On Sat 06-07-13 01:33:43, Sha Zhengju wrote:<br>&gt;&gt=
-; From: Sha Zhengju &lt;<a href=3D"mailto:handai.szj@taobao.com">handai.szj=
-@taobao.com</a>&gt;<br>
-&gt;&gt;<br>&gt;&gt; If memcg is enabled and no non-root memcg exists, all =
-allocated<br>&gt;&gt; pages belongs to root_mem_cgroup and wil go through r=
-oot memcg<br>&gt;&gt; statistics routines. =A0So in order to reduce overhea=
-ds after adding<br>
-&gt;&gt; memcg dirty/writeback accounting in hot paths, we use jump label t=
-o<br>&gt;&gt; patch mem_cgroup_{begin,end}_update_page_stat() in or out whe=
-n not<br>&gt;&gt; used.<br>&gt;<br>&gt; I do not think this is enough. How =
-much do you save? One atomic read.<br>
-&gt; This doesn&#39;t seem like a killer.<br>&gt;<br>&gt; I hoped we could =
-simply not account at all and move counters to the root<br>&gt; cgroup once=
- the label gets enabled.<br><br>I have thought of this approach before, but=
- it would probably run into another issue, e.g, each zone has a percpu stoc=
-k named -&gt;pageset to optimize the increment and decrement operations, an=
-d I haven&#39;t figure out a simpler and cheaper approach to handle that st=
-ock numbers if moving global counters to root cgroup, maybe we can just lea=
-ve them and can afford the approximation?<br>
-<br>Glauber have already done lots of works here, in his previous patchset =
-he also tried to move some global stats to root (<a href=3D"http://comments=
-.gmane.org/gmane.linux.kernel.cgroups/6291">http://comments.gmane.org/gmane=
-.linux.kernel.cgroups/6291</a>). May I steal some of your <span class=3D"">=
-</span><span class=3D""></span> ideas here, Glauber? :P<br>
-<br><br>&gt;<br>&gt; Besides that, the current patch is racy. Consider what=
- happens when:<br>&gt;<br>&gt; mem_cgroup_begin_update_page_stat<br>&gt; =
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 arm_inuse_keys<br>&gt; =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 mem_cgroup=
-_move_account<br>
-&gt; mem_cgroup_move_account_page_stat<br>&gt; mem_cgroup_end_update_page_s=
-tat<br>&gt;<br>&gt; The race window is small of course but it is there. I g=
-uess we need<br>&gt; rcu_read_lock at least.<br><br></div>Yes, you&#39;re r=
-ight. I&#39;m afraid we need to take care of the racy in the next updates a=
-s well. But mem_cgroup_begin/end_update_page_stat() already have rcu lock, =
-so here we maybe only need a synchronize_rcu() after changing memcg_inuse_k=
-ey? <br>
-<div><br><div><br>&gt;<br>&gt;&gt; If no non-root memcg comes to life, we d=
-o not need to accquire moving<br>&gt;&gt; locks, so patch them out.<br>&gt;=
-&gt;<br>&gt;&gt; cc: Michal Hocko &lt;<a href=3D"mailto:mhocko@suse.cz">mho=
-cko@suse.cz</a>&gt;<br>
-&gt;&gt; cc: Greg Thelen &lt;<a href=3D"mailto:gthelen@google.com">gthelen@=
-google.com</a>&gt;<br>&gt;&gt; cc: KAMEZAWA Hiroyuki &lt;<a href=3D"mailto:=
-kamezawa.hiroyu@jp.fujitsu.com">kamezawa.hiroyu@jp.fujitsu.com</a>&gt;<br>&=
-gt;&gt; cc: Andrew Morton &lt;<a href=3D"mailto:akpm@linux-foundation.org">=
-akpm@linux-foundation.org</a>&gt;<br>
-&gt;&gt; cc: Fengguang Wu &lt;<a href=3D"mailto:fengguang.wu@intel.com">fen=
-gguang.wu@intel.com</a>&gt;<br>&gt;&gt; cc: Mel Gorman &lt;<a href=3D"mailt=
-o:mgorman@suse.de">mgorman@suse.de</a>&gt;<br>&gt;&gt; ---<br>&gt;&gt; =A0i=
-nclude/linux/memcontrol.h | =A0 15 +++++++++++++++<br>
-&gt;&gt; =A0mm/memcontrol.c =A0 =A0 =A0 =A0 =A0 =A0| =A0 23 +++++++++++++++=
-+++++++-<br>&gt;&gt; =A02 files changed, 37 insertions(+), 1 deletion(-)<br=
->&gt;&gt;<br>&gt;&gt; diff --git a/include/linux/memcontrol.h b/include/lin=
-ux/memcontrol.h<br>
-&gt;&gt; index ccd35d8..0483e1a 100644<br>&gt;&gt; --- a/include/linux/memc=
-ontrol.h<br>&gt;&gt; +++ b/include/linux/memcontrol.h<br>&gt;&gt; @@ -55,6 =
-+55,13 @@ struct mem_cgroup_reclaim_cookie {<br>&gt;&gt; =A0};<br>&gt;&gt;<=
-br>
-&gt;&gt; =A0#ifdef CONFIG_MEMCG<br>&gt;&gt; +<br>&gt;&gt; +extern struct st=
-atic_key memcg_inuse_key;<br>&gt;&gt; +static inline bool mem_cgroup_in_use=
-(void)<br>&gt;&gt; +{<br>&gt;&gt; + =A0 =A0 return static_key_false(&amp;me=
-mcg_inuse_key);<br>
-&gt;&gt; +}<br>&gt;&gt; +<br>&gt;&gt; =A0/*<br>&gt;&gt; =A0 * All &quot;cha=
-rge&quot; functions with gfp_mask should use GFP_KERNEL or<br>&gt;&gt; =A0 =
-* (gfp_mask &amp; GFP_RECLAIM_MASK). In current implementatin, memcg doesn&=
-#39;t<br>
-&gt;&gt; @@ -159,6 +166,8 @@ static inline void mem_cgroup_begin_update_pag=
-e_stat(struct page *page,<br>&gt;&gt; =A0{<br>&gt;&gt; =A0 =A0 =A0 if (mem_=
-cgroup_disabled())<br>&gt;&gt; =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;<br>&gt;&=
-gt; + =A0 =A0 if (!mem_cgroup_in_use())<br>
-&gt;&gt; + =A0 =A0 =A0 =A0 =A0 =A0 return;<br>&gt;&gt; =A0 =A0 =A0 rcu_read=
-_lock();<br>&gt;&gt; =A0 =A0 =A0 *locked =3D false;<br>&gt;&gt; =A0 =A0 =A0=
- if (atomic_read(&amp;memcg_moving))<br>&gt;&gt; @@ -172,6 +181,8 @@ static=
- inline void mem_cgroup_end_update_page_stat(struct page *page,<br>
-&gt;&gt; =A0{<br>&gt;&gt; =A0 =A0 =A0 if (mem_cgroup_disabled())<br>&gt;&gt=
-; =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;<br>&gt;&gt; + =A0 =A0 if (!mem_cgroup=
-_in_use())<br>&gt;&gt; + =A0 =A0 =A0 =A0 =A0 =A0 return;<br>&gt;&gt; =A0 =
-=A0 =A0 if (*locked)<br>&gt;&gt; =A0 =A0 =A0 =A0 =A0 =A0 =A0 __mem_cgroup_e=
-nd_update_page_stat(page, flags);<br>
-&gt;&gt; =A0 =A0 =A0 rcu_read_unlock();<br>&gt;&gt; @@ -215,6 +226,10 @@ vo=
-id mem_cgroup_print_bad_page(struct page *page);<br>&gt;&gt; =A0#endif<br>&=
-gt;&gt; =A0#else /* CONFIG_MEMCG */<br>&gt;&gt; =A0struct mem_cgroup;<br>&g=
-t;&gt; +static inline bool mem_cgroup_in_use(void)<br>
-&gt;&gt; +{<br>&gt;&gt; + =A0 =A0 return false;<br>&gt;&gt; +}<br>&gt;&gt;<=
-br>&gt;&gt; =A0static inline int mem_cgroup_newpage_charge(struct page *pag=
-e,<br>&gt;&gt; =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0 =A0 =A0 struct mm_struct *mm, gfp_t gfp_mask)<br>
-&gt;&gt; diff --git a/mm/memcontrol.c b/mm/memcontrol.c<br>&gt;&gt; index 9=
-126abc..a85f7c5 100644<br>&gt;&gt; --- a/mm/memcontrol.c<br>&gt;&gt; +++ b/=
-mm/memcontrol.c<br>&gt;&gt; @@ -463,6 +463,13 @@ enum res_type {<br>&gt;&gt=
-; =A0#define MEM_CGROUP_RECLAIM_SHRINK_BIT =A0 =A0 =A0 =A00x1<br>
-&gt;&gt; =A0#define MEM_CGROUP_RECLAIM_SHRINK =A0 =A0(1 &lt;&lt; MEM_CGROUP=
-_RECLAIM_SHRINK_BIT)<br>&gt;&gt;<br>&gt;&gt; +/* static_key used for markin=
-g memcg in use or not. We use this jump label to<br>&gt;&gt; + * patch some=
- memcg page stat accounting code in or out.<br>
-&gt;&gt; + * The key will be increased when non-root memcg is created, and =
-be decreased<br>&gt;&gt; + * when memcg is destroyed.<br>&gt;&gt; + */<br>&=
-gt;&gt; +struct static_key memcg_inuse_key;<br>&gt;&gt; +<br>&gt;&gt; =A0/*=
-<br>
-&gt;&gt; =A0 * The memcg_create_mutex will be held whenever a new cgroup is=
- created.<br>&gt;&gt; =A0 * As a consequence, any change that needs to prot=
-ect against new child cgroups<br>&gt;&gt; @@ -630,10 +637,22 @@ static void=
- disarm_kmem_keys(struct mem_cgroup *memcg)<br>
-&gt;&gt; =A0}<br>&gt;&gt; =A0#endif /* CONFIG_MEMCG_KMEM */<br>&gt;&gt;<br>=
-&gt;&gt; +static void disarm_inuse_keys(struct mem_cgroup *memcg)<br>&gt;&g=
-t; +{<br>&gt;&gt; + =A0 =A0 if (!mem_cgroup_is_root(memcg))<br>&gt;&gt; + =
-=A0 =A0 =A0 =A0 =A0 =A0 static_key_slow_dec(&amp;memcg_inuse_key);<br>
-&gt;&gt; +}<br>&gt;&gt; +<br>&gt;&gt; +static void arm_inuse_keys(void)<br>=
-&gt;&gt; +{<br>&gt;&gt; + =A0 =A0 static_key_slow_inc(&amp;memcg_inuse_key)=
-;<br>&gt;&gt; +}<br>&gt;&gt; +<br>&gt;&gt; =A0static void disarm_static_key=
-s(struct mem_cgroup *memcg)<br>
-&gt;&gt; =A0{<br>&gt;&gt; =A0 =A0 =A0 disarm_sock_keys(memcg);<br>&gt;&gt; =
-=A0 =A0 =A0 disarm_kmem_keys(memcg);<br>&gt;&gt; + =A0 =A0 disarm_inuse_key=
-s(memcg);<br>&gt;&gt; =A0}<br>&gt;&gt;<br>&gt;&gt; =A0static void drain_all=
-_stock_async(struct mem_cgroup *memcg);<br>
-&gt;&gt; @@ -2298,7 +2317,6 @@ void mem_cgroup_update_page_stat(struct page=
- *page,<br>&gt;&gt; =A0{<br>&gt;&gt; =A0 =A0 =A0 struct mem_cgroup *memcg;<=
-br>&gt;&gt; =A0 =A0 =A0 struct page_cgroup *pc =3D lookup_page_cgroup(page)=
-;<br>&gt;&gt; - =A0 =A0 unsigned long uninitialized_var(flags);<br>
-&gt;&gt;<br>&gt;&gt; =A0 =A0 =A0 if (mem_cgroup_disabled())<br>&gt;&gt; =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 return;<br>&gt;&gt; @@ -6293,6 +6311,9 @@ mem_cgro=
-up_css_online(struct cgroup *cont)<br>&gt;&gt; =A0 =A0 =A0 }<br>&gt;&gt;<br=
->&gt;&gt; =A0 =A0 =A0 error =3D memcg_init_kmem(memcg, &amp;mem_cgroup_subs=
-ys);<br>
-&gt;&gt; + =A0 =A0 if (!error)<br>&gt;&gt; + =A0 =A0 =A0 =A0 =A0 =A0 arm_in=
-use_keys();<br>&gt;&gt; +<br>&gt;&gt; =A0 =A0 =A0 mutex_unlock(&amp;memcg_c=
-reate_mutex);<br>&gt;&gt; =A0 =A0 =A0 return error;<br>&gt;&gt; =A0}<br>&gt=
-;&gt; --<br>&gt;&gt; 1.7.9.5<br>
-&gt;&gt;<br>&gt;&gt; --<br>&gt;&gt; To unsubscribe from this list: send the=
- line &quot;unsubscribe cgroups&quot; in<br>&gt;&gt; the body of a message =
-to <a href=3D"mailto:majordomo@vger.kernel.org">majordomo@vger.kernel.org</=
-a><br>
-&gt;&gt; More majordomo info at =A0<a href=3D"http://vger.kernel.org/majord=
-omo-info.html">http://vger.kernel.org/majordomo-info.html</a><br>&gt;<br>&g=
-t; --<br>&gt; Michal Hocko<br>&gt; SUSE Labs<br><br><br><br>--<br>Thanks,<b=
-r>
-Sha</div></div></div>
-
---001a11c36a6a8614bd04e15014d4--
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-serge
