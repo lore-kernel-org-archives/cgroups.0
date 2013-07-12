@@ -1,122 +1,71 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH cgroup 1/2] cgroup: move module ref handling into
-	rebind_subsystems()
-Date: Fri, 12 Jul 2013 17:08:23 +0800
-Message-ID: <51DFC787.7080703@huawei.com>
-References: <20130629041231.GA31353@htj.dyndns.org>
-	<51DFC650.9010801@huawei.com>
-Mime-Version: 1.0
+From: Michal Hocko <mhocko@suse.cz>
+Subject: [PATCH 1/3] vmpressure: document why css_get/put is not necessary for work queue based signaling
+Date: Fri, 12 Jul 2013 11:24:56 +0200
+Message-ID: <1373621098-15261-1-git-send-email-mhocko@suse.cz>
+References: <20130712084039.GA13224@dhcp22.suse.cz>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20130712084039.GA13224@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <51DFC650.9010801-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: cgroups@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Anton Vorontsov <anton.vorontsov@linaro.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, linux-mm@kvack.org
 
->> Subject: [PATCH 1/2] cgroup: move module ref handling into rebind_subsystems()
->>
->> Module ref handling in cgroup is rather weird.
->> parse_cgroupfs_options() grabs all the modules for the specified
->> subsystems.  A module ref is kept if the specified subsystem is newly
->> bound to the hierarchy.  If not, or the operation fails, the refs are
->> dropped.  This scatters module ref handling across multiple functions
->> making it difficult to track.  It also make the function nasty to use
->> for dynamic subsystem binding which is necessary for the planned
->> unified hierarchy.
->>
->> There's nothing which requires the subsystem modules to be pinned
->> between parse_cgroupfs_options() and rebind_subsystems() in both mount
->> and remount paths.  parse_cgroupfs_options() can just parse and
->> rebind_subsystems() can handle pinning the subsystems that it wants to
->> bind, which is a natural part of its task - binding - anyway.
->>
->> Move module ref handling into rebind_subsystems() which makes the code
->> a lot simpler - modules are gotten iff it's gonna be bound and put iff
->> unbound or binding fails.
->>
->> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->> ---
->>  kernel/cgroup.c | 87 +++++++++++++++------------------------------------------
->>  1 file changed, 22 insertions(+), 65 deletions(-)
->>
->> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
->> index 3bc7a1a..a65aff1 100644
->> --- a/kernel/cgroup.c
->> +++ b/kernel/cgroup.c
->> @@ -1003,6 +1003,7 @@ static int rebind_subsystems(struct cgroupfs_root *root,
->>  {
->>  	struct cgroup *cgrp = &root->top_cgroup;
->>  	struct cgroup_subsys *ss;
->> +	unsigned long pinned = 0;
->>  	int i, ret;
->>  
->>  	BUG_ON(!mutex_is_locked(&cgroup_mutex));
->> @@ -1010,20 +1011,26 @@ static int rebind_subsystems(struct cgroupfs_root *root,
->>  
->>  	/* Check that any added subsystems are currently free */
->>  	for_each_subsys(ss, i) {
->> -		unsigned long bit = 1UL << i;
->> -
->> -		if (!(bit & added_mask))
->> +		if (!(added_mask & (1 << i)))
->>  			continue;
->>  
->> +		/* is the subsystem mounted elsewhere? */
->>  		if (ss->root != &cgroup_dummy_root) {
->> -			/* Subsystem isn't free */
->> -			return -EBUSY;
->> +			ret = -EBUSY;
->> +			goto out_put;
->>  		}
->> +
->> +		/* pin the module */
->> +		if (!try_module_get(ss->module)) {
->> +			ret = -ENOENT;
->> +			goto out_put;
->> +		}
->> +		pinned |= 1 << i;
->>  	}
-> 
-> This looks wrong to me.
-> 
-> cgroup_mount()
-> {
-> 	mutex_lock(cgroup_mutex);
-> 	parse_cgroupfs_options();
-> 	mutex_unlock(cgroup_mutex);
-> 	...
-> 
-> 	mutex_lock(cgroup_mutex);
-> 	...
-> 	rebind_subsystems();
-> 	...
-> 	mutex_unlock(cgroup_mutex);
-> }
-> 
-> so a modular cgroup subsystem can be unloaded inbetween, say it's net_cls, and
-> then it's possible that:
-> 
-> 	# mount -t cgroup -o net_cls xxx /cgroup
-> 
-> The above operation succeeds but it's not binded to cgroupfs as it just got
-> unloaded.
-> 
+Tejun raised a concern that vmpressure() doesn't take any reference to
+memcg which embeds vmpressure structure when it schedules work item so
+there is no guarantee that memcg (thus vmpr) is still valid when the
+work item is processed.
 
-for (i = 0; i < CGROUP_SUBSYS_COUNT; i++) {
-	...
-	if (!subsys[i] && (added_mask & (1 << i))
-		return -EINVAL;
-	...
-}
+Normally we should take a css reference on memcg before scheduling the
+work and release it in vmpressure_work_fn but this doesn't seem to be
+necessary because of the way how eventfd is implemented at cgroup level.
 
-This should work.
+Cgroup events are unregistered from the workqueue context by
+cgroup_event_remove scheduled by cgroup_destroy_locked (when a cgroup is
+removed by rmdir).
+
+cgroup_event_remove removes the eventfd wait queue from the work
+queue, then it unregisters all the registered events and finally
+puts a reference to the cgroup dentry. css_free which triggers memcg
+deallocation is called after the last reference is dropped.
+
+The scheduled vmpressure work item either happens before
+cgroup_event_remove or it is not triggered at all so it always happen
+_before_ the last dput thus css_free.
+
+This patch just documents this trickiness.
+
+Brought-up-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Michal Hocko <mhocko@suse.cz>
+---
+ mm/vmpressure.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/mm/vmpressure.c b/mm/vmpressure.c
+index 736a601..eb2bcf9 100644
+--- a/mm/vmpressure.c
++++ b/mm/vmpressure.c
+@@ -165,6 +165,13 @@ static bool vmpressure_event(struct vmpressure *vmpr,
+ 
+ static void vmpressure_work_fn(struct work_struct *work)
+ {
++	/*
++	 * vmpr which is embedded inside memcg is safe to use from
++	 * this context because cgroup_event_remove which unregisters
++	 * vmpressure events and removes work item from the queue is
++	 * called before dput on the cgroup so css_free is called
++	 * later. So css_get/put on memcg is not necessary.
++	 */
+ 	struct vmpressure *vmpr = work_to_vmpressure(work);
+ 	unsigned long scanned;
+ 	unsigned long reclaimed;
+-- 
+1.8.3.2
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
