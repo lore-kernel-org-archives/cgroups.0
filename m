@@ -1,90 +1,40 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: [PATCH 2/3] vmpressure: change vmpressure::sr_lock to spinlock
-Date: Fri, 12 Jul 2013 11:24:57 +0200
-Message-ID: <1373621098-15261-2-git-send-email-mhocko@suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: [PATCH 3/3] vmpressure: do not check for pending work to prevent from new work
+Date: Fri, 12 Jul 2013 11:24:58 +0200
+Message-ID: <1373621098-15261-3-git-send-email-mhocko@suse.cz>
 References: <20130712084039.GA13224@dhcp22.suse.cz>
  <1373621098-15261-1-git-send-email-mhocko@suse.cz>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1373621098-15261-1-git-send-email-mhocko@suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1373621098-15261-1-git-send-email-mhocko-AlSwsSmVLrQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Anton Vorontsov <anton.vorontsov@linaro.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, linux-mm@kvack.org
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Anton Vorontsov <anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-There is nothing that can sleep inside critical sections protected by
-this lock and those sections are really small so there doesn't make much
-sense to use mutex for them. Change the log to a spinlock
+because it is racy and it doesn't give us much anyway as schedule_work
+handles this case already.
 
-Brought-up-by: Tejun Heo <tj@kernel.org>
-Signed-off-by: Michal Hocko <mhocko@suse.cz>
+Brought-up-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 ---
- include/linux/vmpressure.h |  2 +-
- mm/vmpressure.c            | 10 +++++-----
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ mm/vmpressure.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/linux/vmpressure.h b/include/linux/vmpressure.h
-index 76be077..2081680 100644
---- a/include/linux/vmpressure.h
-+++ b/include/linux/vmpressure.h
-@@ -12,7 +12,7 @@ struct vmpressure {
- 	unsigned long scanned;
- 	unsigned long reclaimed;
- 	/* The lock is used to keep the scanned/reclaimed above in sync. */
--	struct mutex sr_lock;
-+	struct spinlock sr_lock;
- 
- 	/* The list of vmpressure_event structs. */
- 	struct list_head events;
 diff --git a/mm/vmpressure.c b/mm/vmpressure.c
-index eb2bcf9..b8e16fe 100644
+index b8e16fe..581a7d7 100644
 --- a/mm/vmpressure.c
 +++ b/mm/vmpressure.c
-@@ -187,12 +187,12 @@ static void vmpressure_work_fn(struct work_struct *work)
- 	if (!vmpr->scanned)
- 		return;
- 
--	mutex_lock(&vmpr->sr_lock);
-+	spin_lock(&vmpr->sr_lock);
+@@ -253,7 +253,7 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
  	scanned = vmpr->scanned;
- 	reclaimed = vmpr->reclaimed;
- 	vmpr->scanned = 0;
- 	vmpr->reclaimed = 0;
--	mutex_unlock(&vmpr->sr_lock);
-+	spin_unlock(&vmpr->sr_lock);
+ 	spin_unlock(&vmpr->sr_lock);
  
- 	do {
- 		if (vmpressure_event(vmpr, scanned, reclaimed))
-@@ -247,11 +247,11 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
- 	if (!scanned)
+-	if (scanned < vmpressure_win || work_pending(&vmpr->work))
++	if (scanned < vmpressure_win)
  		return;
- 
--	mutex_lock(&vmpr->sr_lock);
-+	spin_lock(&vmpr->sr_lock);
- 	vmpr->scanned += scanned;
- 	vmpr->reclaimed += reclaimed;
- 	scanned = vmpr->scanned;
--	mutex_unlock(&vmpr->sr_lock);
-+	spin_unlock(&vmpr->sr_lock);
- 
- 	if (scanned < vmpressure_win || work_pending(&vmpr->work))
- 		return;
-@@ -374,7 +374,7 @@ void vmpressure_unregister_event(struct cgroup *cg, struct cftype *cft,
-  */
- void vmpressure_init(struct vmpressure *vmpr)
- {
--	mutex_init(&vmpr->sr_lock);
-+	spin_lock_init(&vmpr->sr_lock);
- 	mutex_init(&vmpr->events_lock);
- 	INIT_LIST_HEAD(&vmpr->events);
- 	INIT_WORK(&vmpr->work, vmpressure_work_fn);
+ 	schedule_work(&vmpr->work);
+ }
 -- 
 1.8.3.2
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
