@@ -1,83 +1,121 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH V4 5/6] memcg: patch
- mem_cgroup_{begin,end}_update_page_stat() out if only root memcg exists
-Date: Fri, 12 Jul 2013 15:25:50 +0200
-Message-ID: <20130712132550.GD15307@dhcp22.suse.cz>
-References: <1373044710-27371-1-git-send-email-handai.szj@taobao.com>
- <1373045623-27712-1-git-send-email-handai.szj@taobao.com>
- <20130711145625.GK21667@dhcp22.suse.cz>
- <CAFj3OHV=6YDcbKmSeuF3+oMv1HfZF1RxXHoiLgTk0wH5cJVsiQ@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2] vmpressure: make sure memcg stays alive until all
+ users are signaled
+Date: Fri, 12 Jul 2013 11:34:04 -0700
+Message-ID: <20130712183404.GA23680@mtj.dyndns.org>
+References: <20130710184254.GA16979@mtj.dyndns.org>
+ <20130711083110.GC21667@dhcp22.suse.cz>
+ <51DE701C.6010800@huawei.com>
+ <20130711092542.GD21667@dhcp22.suse.cz>
+ <51DE7AAF.6070004@huawei.com>
+ <20130711093300.GE21667@dhcp22.suse.cz>
+ <20130711154408.GA9229@mtj.dyndns.org>
+ <20130711162215.GM21667@dhcp22.suse.cz>
+ <20130711163238.GC9229@mtj.dyndns.org>
+ <20130712084039.GA13224@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=9pqSw4rKFcK7CDqYDIXQkIYs2XWBAaOoEirTEAO/HJ8=;
+        b=Uy31FcHsHJNfal4GlCydE5/kcT1vA8qCab0NKEoCqB0FUgljhSy85R9NA4CUJVQPbc
+         fV9XMPe3F6tSTRj8ifxLwdI1LM08rxYqmVd9nDa7tpnjVg6JQUTSqwaxeXnDt8CfLxuv
+         XiEjNf++6D2nUGgi8ULSIyqPth/bzYzqgIJNC5UE4D9aWC/HnWdDtgtKiM4KpnrvrJvY
+         x2eCRMWfTJikNTodbK6f5GgM1624PdTdLGmMO6RN5tZun+DHgx5v9oqVYC5O5N2fkrzd
+         lop4UTZ7Z+VhMsoTjNIVYcXkrI0OLfdjQaSOCGXY7Nz6pdK6VxYhdZyaQW7/jnF3iaTC
+         U/JQ==
 Content-Disposition: inline
-In-Reply-To: <CAFj3OHV=6YDcbKmSeuF3+oMv1HfZF1RxXHoiLgTk0wH5cJVsiQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20130712084039.GA13224@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Wu Fengguang <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Li Zefan <lizefan@huawei.com>, Anton Vorontsov <anton.vorontsov@linaro.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
 
-On Fri 12-07-13 20:59:24, Sha Zhengju wrote:
-> Add cc to Glauber
-> 
-> On Thu, Jul 11, 2013 at 10:56 PM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
-> > On Sat 06-07-13 01:33:43, Sha Zhengju wrote:
-> >> From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
-> >>
-> >> If memcg is enabled and no non-root memcg exists, all allocated
-> >> pages belongs to root_mem_cgroup and wil go through root memcg
-> >> statistics routines.  So in order to reduce overheads after adding
-> >> memcg dirty/writeback accounting in hot paths, we use jump label to
-> >> patch mem_cgroup_{begin,end}_update_page_stat() in or out when not
-> >> used.
-> >
-> > I do not think this is enough. How much do you save? One atomic read.
-> > This doesn't seem like a killer.
-> >
-> > I hoped we could simply not account at all and move counters to the root
-> > cgroup once the label gets enabled.
-> 
-> I have thought of this approach before, but it would probably run into
-> another issue, e.g, each zone has a percpu stock named ->pageset to
-> optimize the increment and decrement operations, and I haven't figure out a
-> simpler and cheaper approach to handle that stock numbers if moving global
-> counters to root cgroup, maybe we can just leave them and can afford the
-> approximation?
+Hello, Michal.
 
-You can read per-cpu diffs during transition and tolerate small
-races. Or maybe simply summing NR_FILE_DIRTY for all zones would be
-sufficient.
-
-> Glauber have already done lots of works here, in his previous patchset he
-> also tried to move some global stats to root (
-> http://comments.gmane.org/gmane.linux.kernel.cgroups/6291). May I steal
-> some of your ideas here, Glauber? :P
+On Fri, Jul 12, 2013 at 10:40:39AM +0200, Michal Hocko wrote:
+> > It's not something white and black but for things which can be made
+> > trivially synchrnous, it usually is better to do it that way,
 > 
-> 
-> >
-> > Besides that, the current patch is racy. Consider what happens when:
-> >
-> > mem_cgroup_begin_update_page_stat
-> >                                         arm_inuse_keys
-> >								mem_cgroup_move_account
-> > mem_cgroup_move_account_page_stat
-> > mem_cgroup_end_update_page_stat
-> >
-> > The race window is small of course but it is there. I guess we need
-> > rcu_read_lock at least.
-> 
-> Yes, you're right. I'm afraid we need to take care of the racy in the next
-> updates as well. But mem_cgroup_begin/end_update_page_stat() already have
-> rcu lock, so here we maybe only need a synchronize_rcu() after changing
-> memcg_inuse_key?
+> True in general but it is also true (in general) that once we have a
+> reference counting for controlling life cycle for an object we should
+> not bypass it.
 
-Your patch doesn't take rcu_read_lock. synchronize_rcu might work but I
-am still not sure this would help to prevent from the overhead which
-IMHO comes from the accounting not a single atomic_read + rcu_read_lock
-which is the hot path of mem_cgroup_{begin,end}_update_page_stat.
+When you have a reference count with staged destruction like cgroup,
+the object goes two stagages before being released.  It first gets
+deactivated or removed from further access and the base ref is
+dropped.  This state presists until the left-over references drain.
+When all the references are dropped, the object is actually released.
 
-[...]
+Now, between the initiation of destruction and actual release, the
+object often isn't in the same state as before the destruction
+started.  It depends on the specifics of the subsystem but usually
+only subset of the original functionalities are accessible.  At times,
+it becomes tricky discerning what's safe and what's not and we do end
+up with latent subtle bugs which are only triggered when tricky
+conditions are met - things like certain operations stretching across
+destruction point.
+
+It is important to distinguish the boundary between things which
+remain accessible after destruction point and it often is easier and
+less dangerous to avoid expanding that set unless necessary, so it is
+not "bypassing" an existing mechanism at all.  It is an inherent part
+of that model and various kernel subsystems have been doing that
+forever.
+
+> So I guess we are safe with the code as is but this all is really
+> _tricky_ and deserves a fat comment. So rather than adding flushing work
+> item code we should document it properly.
+> 
+> Or am I missing something?
+
+Two things.
+
+* I have no idea what would prevent the work item execution kicking in
+  way after the inode is released.  The execution is not flushed and
+  the work item isn't pinning the underlying data structure.  There's
+  nothing preventing the work item execution to happen after or
+  stretch across inode release.
+
+* You're turning something which has a clearly established pattern of
+  usage - work item shutdown which is usually done by disabling
+  issuance and then flushing / canceling - into something really
+  tricky and deserving a fat comment.  In general, kernel engineering
+  is never about finding the most optimal / minimal / ingenious
+  solution for each encountered instances of problems.  In most cases,
+  it's usually about identifying established patterns and applying
+  them so that the code is not only safe and correct but also remains
+  accessible to the fellow kernel developers.
+
+  Here, people who are familiary with workqueue usage would
+  automatically look for shutdown sequence as the work item is
+  contained in a dynamic object.  There are cases where
+  synchronization happens externally and you don't necessarily need
+  flush / cancel, but even then, if you consider readability and
+  maintainability, following the established pattern is often then
+  right thing to do.  It makes the code easier to follow and verify
+  for others and avoids unintentional breakages afterwards as you
+  separate out work item draining from the external synchronization
+  which may change later on without noticing how it's interlocked with
+  work item draining.
+
+> OK, I haven't realized the action waits for finishing. /me is not
+> regular work_queue user...
+
+So, please, follow the established patterns.  This really isn't the
+place for ingenuity.
+
+Thanks.
+
 -- 
-Michal Hocko
-SUSE Labs
+tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
