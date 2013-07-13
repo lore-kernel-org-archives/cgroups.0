@@ -1,261 +1,233 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v2 cgroup 1/2] cgroup: move module ref handling into
-	rebind_subsystems()
-Date: Fri, 12 Jul 2013 13:38:17 -0700
-Message-ID: <20130712203817.GI23680@mtj.dyndns.org>
-References: <20130629041231.GA31353@htj.dyndns.org>
+From: Sha Zhengju <handai.szj@gmail.com>
+Subject: Re: [PATCH V4 5/6] memcg: patch mem_cgroup_{begin,end}_update_page_stat()
+ out if only root memcg exists
+Date: Sat, 13 Jul 2013 12:15:39 +0800
+Message-ID: <CAFj3OHU3UQ=25J=PMa5qRzkVejN10e92x=nEbQh2s08A8Od7Uw@mail.gmail.com>
+References: <1373044710-27371-1-git-send-email-handai.szj@taobao.com>
+	<1373045623-27712-1-git-send-email-handai.szj@taobao.com>
+	<20130711145625.GK21667@dhcp22.suse.cz>
+	<CAFj3OHV=6YDcbKmSeuF3+oMv1HfZF1RxXHoiLgTk0wH5cJVsiQ@mail.gmail.com>
+	<20130712132550.GD15307@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=qLdKffwNlUzWgWGRe8UGv6yRurR31oVbN0U5i6/9JBA=;
-	b=tFExrULqOyhD0Y6c7+AtLBbSJbmZEfvOFdLWr9lPZwIhrZkpAzpFiA3PsF5hCQuDBj
-	Z9/Uqn6J5quhrZpYcUpoxCKHrCFNNH4wYSwjJVGArobhJBBtfLUTp/cZGPVt5iAtesuc
-	YjJk3zlEmp7qGvm201ITnFbhZId8uO59NdTVtAFUR6vWzflCvPYOG8kyLC1i+HpWEIO8
-	x3XndcF51q24Jd5vqwZxm+pZFrAyFtqKDu0p1Niviby+BQbwSMI18kFzUn5s7FFe22tW
-	5DIk+V7HpMwEcu3ZrPp5d37rb47kr+5uwbJecwBhppKmUbxnPi7LOH/gIEV+u4HJ7ZGW
-	q29g==
-Content-Disposition: inline
-In-Reply-To: <20130629041231.GA31353-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Content-Type: multipart/alternative; boundary=20cf301cc4b04730ba04e15ce1c5
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=DcWwFyOMOw7DwMUierWrZ9tWutCvbICftLmaYticOug=;
+        b=SzHwHhP98oqZ44pKWeJUNsu71EseCWh7iGKkWDtYAdngsWjjEyvaIHuchfSMKWeIhJ
+         7xz4GoAFFn8QOkyur8nT2QZXFkvYXbm0IG/3tqoNXG9cDgvNgEr5dON3YkbDuZmNZhwJ
+         WC5uPLrl6Rg73DWn7VKUffMDLebfII3z146k+0qMWpH/1epAL+ZgDv4/dDrn5zwrlWwh
+         jAbSLbrgynrlLFkes9XiA83pw4xntgVMGvlwOIzTUZGzaili+qKlh6asQmbMon5N+iUb
+         jGshkvNNreAZyyjcB1z1gy3FwAzcftaDSCLT5wyvJGPdf6bvK55VWHW/h+BD5qAjz20d
+         apEw==
+In-Reply-To: <20130712132550.GD15307@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: "linux-mm@kvack.org" <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, Wu Fengguang <fengguang.wu@intel.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Sha Zhengju <handai.szj@taobao.com>, Mel Gorman <mgorman@suse.de>, Greg Thelen <gthelen@google.com>, Glauber Costa <glommer@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
 
-Module ref handling in cgroup is rather weird.
-parse_cgroupfs_options() grabs all the modules for the specified
-subsystems.  A module ref is kept if the specified subsystem is newly
-bound to the hierarchy.  If not, or the operation fails, the refs are
-dropped.  This scatters module ref handling across multiple functions
-making it difficult to track.  It also make the function nasty to use
-for dynamic subsystem binding which is necessary for the planned
-unified hierarchy.
+--20cf301cc4b04730ba04e15ce1c5
+Content-Type: text/plain; charset=GB2312
+Content-Transfer-Encoding: quoted-printable
 
-There's nothing which requires the subsystem modules to be pinned
-between parse_cgroupfs_options() and rebind_subsystems() in both mount
-and remount paths.  parse_cgroupfs_options() can just parse and
-rebind_subsystems() can handle pinning the subsystems that it wants to
-bind, which is a natural part of its task - binding - anyway.
+=D4=DA 2013-7-12 =CD=ED=C9=CF9:25=A3=AC"Michal Hocko" <mhocko@suse.cz>=D0=
+=B4=B5=C0=A3=BA
+>
+> On Fri 12-07-13 20:59:24, Sha Zhengju wrote:
+> > Add cc to Glauber
+> >
+> > On Thu, Jul 11, 2013 at 10:56 PM, Michal Hocko <mhocko@suse.cz> wrote:
+> > > On Sat 06-07-13 01:33:43, Sha Zhengju wrote:
+> > >> From: Sha Zhengju <handai.szj@taobao.com>
+> > >>
+> > >> If memcg is enabled and no non-root memcg exists, all allocated
+> > >> pages belongs to root_mem_cgroup and wil go through root memcg
+> > >> statistics routines.  So in order to reduce overheads after adding
+> > >> memcg dirty/writeback accounting in hot paths, we use jump label to
+> > >> patch mem_cgroup_{begin,end}_update_page_stat() in or out when not
+> > >> used.
+> > >
+> > > I do not think this is enough. How much do you save? One atomic read.
+> > > This doesn't seem like a killer.
+> > >
+> > > I hoped we could simply not account at all and move counters to the
+root
+> > > cgroup once the label gets enabled.
+> >
+> > I have thought of this approach before, but it would probably run into
+> > another issue, e.g, each zone has a percpu stock named ->pageset to
+> > optimize the increment and decrement operations, and I haven't figure
+out a
+> > simpler and cheaper approach to handle that stock numbers if moving
+global
+> > counters to root cgroup, maybe we can just leave them and can afford th=
+e
+> > approximation?
+>
+> You can read per-cpu diffs during transition and tolerate small
+> races. Or maybe simply summing NR_FILE_DIRTY for all zones would be
+> sufficient.
 
-Move module ref handling into rebind_subsystems() which makes the code
-a lot simpler - modules are gotten iff it's gonna be bound and put iff
-unbound or binding fails.
+Thanks, I'll have a try.
 
-v2: Li pointed out that if a controller module is unloaded between
-    parsing and binding, rebind_subsystems() won't notice the missing
-    controller as it only iterates through existing controllers.  Fix
-    it by updating rebind_subsystems() to compare @added_mask to
-    @pinned and fail with -ENOENT if they don't match.
+>
+> > Glauber have already done lots of works here, in his previous patchset
+he
+> > also tried to move some global stats to root (
+> > http://comments.gmane.org/gmane.linux.kernel.cgroups/6291). May I steal
+> > some of your ideas here, Glauber? :P
+> >
+> >
+> > >
+> > > Besides that, the current patch is racy. Consider what happens when:
+> > >
+> > > mem_cgroup_begin_update_page_stat
+> > >                                         arm_inuse_keys
+> > >
+mem_cgroup_move_account
+> > > mem_cgroup_move_account_page_stat
+> > > mem_cgroup_end_update_page_stat
+> > >
+> > > The race window is small of course but it is there. I guess we need
+> > > rcu_read_lock at least.
+> >
+> > Yes, you're right. I'm afraid we need to take care of the racy in the
+next
+> > updates as well. But mem_cgroup_begin/end_update_page_stat() already
+have
+> > rcu lock, so here we maybe only need a synchronize_rcu() after changing
+> > memcg_inuse_key?
+>
+> Your patch doesn't take rcu_read_lock. synchronize_rcu might work but I
+> am still not sure this would help to prevent from the overhead which
+> IMHO comes from the accounting not a single atomic_read + rcu_read_lock
+> which is the hot path of mem_cgroup_{begin,end}_update_page_stat.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
-Turns out rebind_subsystems() already has @pinned so detecting cases
-where the module went missing is trivial.
+I means I'll try to zero out accounting overhead in next version, but the
+race will probably also occur in that case.
 
-Thanks.
+Thanks!
 
- kernel/cgroup.c |   93 ++++++++++++++++----------------------------------------
- 1 file changed, 28 insertions(+), 65 deletions(-)
+>
+> [...]
+> --
+> Michal Hocko
+> SUSE Labs
 
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1003,6 +1003,7 @@ static int rebind_subsystems(struct cgro
- {
- 	struct cgroup *cgrp = &root->top_cgroup;
- 	struct cgroup_subsys *ss;
-+	unsigned long pinned = 0;
- 	int i, ret;
- 
- 	BUG_ON(!mutex_is_locked(&cgroup_mutex));
-@@ -1010,20 +1011,32 @@ static int rebind_subsystems(struct cgro
- 
- 	/* Check that any added subsystems are currently free */
- 	for_each_subsys(ss, i) {
--		unsigned long bit = 1UL << i;
--
--		if (!(bit & added_mask))
-+		if (!(added_mask & (1 << i)))
- 			continue;
- 
-+		/* is the subsystem mounted elsewhere? */
- 		if (ss->root != &cgroup_dummy_root) {
--			/* Subsystem isn't free */
--			return -EBUSY;
-+			ret = -EBUSY;
-+			goto out_put;
-+		}
-+
-+		/* pin the module */
-+		if (!try_module_get(ss->module)) {
-+			ret = -ENOENT;
-+			goto out_put;
- 		}
-+		pinned |= 1 << i;
-+	}
-+
-+	/* subsys could be missing if unloaded between parsing and here */
-+	if (added_mask != pinned) {
-+		ret = -ENOENT;
-+		goto out_put;
- 	}
- 
- 	ret = cgroup_populate_dir(cgrp, added_mask);
- 	if (ret)
--		return ret;
-+		goto out_put;
- 
- 	/*
- 	 * Nothing can fail from this point on.  Remove files for the
-@@ -1067,11 +1080,6 @@ static int rebind_subsystems(struct cgro
- 		} else if (bit & root->subsys_mask) {
- 			/* Subsystem state should already exist */
- 			BUG_ON(!cgrp->subsys[i]);
--			/*
--			 * a refcount was taken, but we already had one, so
--			 * drop the extra reference.
--			 */
--			module_put(ss->module);
- #ifdef CONFIG_MODULE_UNLOAD
- 			BUG_ON(ss->module && !module_refcount(ss->module));
- #endif
-@@ -1088,6 +1096,12 @@ static int rebind_subsystems(struct cgro
- 	root->flags |= CGRP_ROOT_SUBSYS_BOUND;
- 
- 	return 0;
-+
-+out_put:
-+	for_each_subsys(ss, i)
-+		if (pinned & (1 << i))
-+			module_put(ss->module);
-+	return ret;
- }
- 
- static int cgroup_show_options(struct seq_file *seq, struct dentry *dentry)
-@@ -1138,7 +1152,6 @@ static int parse_cgroupfs_options(char *
- 	char *token, *o = data;
- 	bool all_ss = false, one_ss = false;
- 	unsigned long mask = (unsigned long)-1;
--	bool module_pin_failed = false;
- 	struct cgroup_subsys *ss;
- 	int i;
- 
-@@ -1281,52 +1294,9 @@ static int parse_cgroupfs_options(char *
- 	if (!opts->subsys_mask && !opts->name)
- 		return -EINVAL;
- 
--	/*
--	 * Grab references on all the modules we'll need, so the subsystems
--	 * don't dance around before rebind_subsystems attaches them. This may
--	 * take duplicate reference counts on a subsystem that's already used,
--	 * but rebind_subsystems handles this case.
--	 */
--	for_each_subsys(ss, i) {
--		if (!(opts->subsys_mask & (1UL << i)))
--			continue;
--		if (!try_module_get(cgroup_subsys[i]->module)) {
--			module_pin_failed = true;
--			break;
--		}
--	}
--	if (module_pin_failed) {
--		/*
--		 * oops, one of the modules was going away. this means that we
--		 * raced with a module_delete call, and to the user this is
--		 * essentially a "subsystem doesn't exist" case.
--		 */
--		for (i--; i >= 0; i--) {
--			/* drop refcounts only on the ones we took */
--			unsigned long bit = 1UL << i;
--
--			if (!(bit & opts->subsys_mask))
--				continue;
--			module_put(cgroup_subsys[i]->module);
--		}
--		return -ENOENT;
--	}
--
- 	return 0;
- }
- 
--static void drop_parsed_module_refcounts(unsigned long subsys_mask)
--{
--	struct cgroup_subsys *ss;
--	int i;
--
--	mutex_lock(&cgroup_mutex);
--	for_each_subsys(ss, i)
--		if (subsys_mask & (1UL << i))
--			module_put(cgroup_subsys[i]->module);
--	mutex_unlock(&cgroup_mutex);
--}
--
- static int cgroup_remount(struct super_block *sb, int *flags, char *data)
- {
- 	int ret = 0;
-@@ -1384,8 +1354,6 @@ static int cgroup_remount(struct super_b
- 	mutex_unlock(&cgroup_root_mutex);
- 	mutex_unlock(&cgroup_mutex);
- 	mutex_unlock(&cgrp->dentry->d_inode->i_mutex);
--	if (ret)
--		drop_parsed_module_refcounts(opts.subsys_mask);
- 	return ret;
- }
- 
-@@ -1591,7 +1559,7 @@ static struct dentry *cgroup_mount(struc
- 	new_root = cgroup_root_from_opts(&opts);
- 	if (IS_ERR(new_root)) {
- 		ret = PTR_ERR(new_root);
--		goto drop_modules;
-+		goto out_err;
- 	}
- 	opts.new_root = new_root;
- 
-@@ -1600,7 +1568,7 @@ static struct dentry *cgroup_mount(struc
- 	if (IS_ERR(sb)) {
- 		ret = PTR_ERR(sb);
- 		cgroup_free_root(opts.new_root);
--		goto drop_modules;
-+		goto out_err;
- 	}
- 
- 	root = sb->s_fs_info;
-@@ -1708,9 +1676,6 @@ static struct dentry *cgroup_mount(struc
- 				pr_warning("cgroup: new mount options do not match the existing superblock, will be ignored\n");
- 			}
- 		}
--
--		/* no subsys rebinding, so refcounts don't change */
--		drop_parsed_module_refcounts(opts.subsys_mask);
- 	}
- 
- 	kfree(opts.release_agent);
-@@ -1728,8 +1693,6 @@ static struct dentry *cgroup_mount(struc
- 	mutex_unlock(&inode->i_mutex);
-  drop_new_super:
- 	deactivate_locked_super(sb);
-- drop_modules:
--	drop_parsed_module_refcounts(opts.subsys_mask);
-  out_err:
- 	kfree(opts.release_agent);
- 	kfree(opts.name);
-@@ -4837,7 +4800,7 @@ void cgroup_unload_subsys(struct cgroup_
- 
- 	/*
- 	 * we shouldn't be called if the subsystem is in use, and the use of
--	 * try_module_get in parse_cgroupfs_options should ensure that it
-+	 * try_module_get() in rebind_subsystems() should ensure that it
- 	 * doesn't start being used while we're killing it off.
- 	 */
- 	BUG_ON(ss->root != &cgroup_dummy_root);
+--20cf301cc4b04730ba04e15ce1c5
+Content-Type: text/html; charset=GB2312
+Content-Transfer-Encoding: quoted-printable
+
+<p><br>
+=D4=DA 2013-7-12 =CD=ED=C9=CF9:25=A3=AC&quot;Michal Hocko&quot; &lt;<a href=
+=3D"mailto:mhocko@suse.cz">mhocko@suse.cz</a>&gt;=D0=B4=B5=C0=A3=BA<br>
+&gt;<br>
+&gt; On Fri 12-07-13 20:59:24, Sha Zhengju wrote:<br>
+&gt; &gt; Add cc to Glauber<br>
+&gt; &gt;<br>
+&gt; &gt; On Thu, Jul 11, 2013 at 10:56 PM, Michal Hocko &lt;<a href=3D"mai=
+lto:mhocko@suse.cz">mhocko@suse.cz</a>&gt; wrote:<br>
+&gt; &gt; &gt; On Sat 06-07-13 01:33:43, Sha Zhengju wrote:<br>
+&gt; &gt; &gt;&gt; From: Sha Zhengju &lt;<a href=3D"mailto:handai.szj@taoba=
+o.com">handai.szj@taobao.com</a>&gt;<br>
+&gt; &gt; &gt;&gt;<br>
+&gt; &gt; &gt;&gt; If memcg is enabled and no non-root memcg exists, all al=
+located<br>
+&gt; &gt; &gt;&gt; pages belongs to root_mem_cgroup and wil go through root=
+ memcg<br>
+&gt; &gt; &gt;&gt; statistics routines. &nbsp;So in order to reduce overhea=
+ds after adding<br>
+&gt; &gt; &gt;&gt; memcg dirty/writeback accounting in hot paths, we use ju=
+mp label to<br>
+&gt; &gt; &gt;&gt; patch mem_cgroup_{begin,end}_update_page_stat() in or ou=
+t when not<br>
+&gt; &gt; &gt;&gt; used.<br>
+&gt; &gt; &gt;<br>
+&gt; &gt; &gt; I do not think this is enough. How much do you save? One ato=
+mic read.<br>
+&gt; &gt; &gt; This doesn&#39;t seem like a killer.<br>
+&gt; &gt; &gt;<br>
+&gt; &gt; &gt; I hoped we could simply not account at all and move counters=
+ to the root<br>
+&gt; &gt; &gt; cgroup once the label gets enabled.<br>
+&gt; &gt;<br>
+&gt; &gt; I have thought of this approach before, but it would probably run=
+ into<br>
+&gt; &gt; another issue, e.g, each zone has a percpu stock named -&gt;pages=
+et to<br>
+&gt; &gt; optimize the increment and decrement operations, and I haven&#39;=
+t figure out a<br>
+&gt; &gt; simpler and cheaper approach to handle that stock numbers if movi=
+ng global<br>
+&gt; &gt; counters to root cgroup, maybe we can just leave them and can aff=
+ord the<br>
+&gt; &gt; approximation?<br>
+&gt;<br>
+&gt; You can read per-cpu diffs during transition and tolerate small<br>
+&gt; races. Or maybe simply summing NR_FILE_DIRTY for all zones would be<br=
+>
+&gt; sufficient.</p>
+<p>Thanks, I&#39;ll have a try.</p>
+<p>&gt;<br>
+&gt; &gt; Glauber have already done lots of works here, in his previous pat=
+chset he<br>
+&gt; &gt; also tried to move some global stats to root (<br>
+&gt; &gt; <a href=3D"http://comments.gmane.org/gmane.linux.kernel.cgroups/6=
+291">http://comments.gmane.org/gmane.linux.kernel.cgroups/6291</a>). May I =
+steal<br>
+&gt; &gt; some of your ideas here, Glauber? :P<br>
+&gt; &gt;<br>
+&gt; &gt;<br>
+&gt; &gt; &gt;<br>
+&gt; &gt; &gt; Besides that, the current patch is racy. Consider what happe=
+ns when:<br>
+&gt; &gt; &gt;<br>
+&gt; &gt; &gt; mem_cgroup_begin_update_page_stat<br>
+&gt; &gt; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbs=
+p; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &n=
+bsp; arm_inuse_keys<br>
+&gt; &gt; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbs=
+p; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &n=
+bsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; =
+mem_cgroup_move_account<br>
+&gt; &gt; &gt; mem_cgroup_move_account_page_stat<br>
+&gt; &gt; &gt; mem_cgroup_end_update_page_stat<br>
+&gt; &gt; &gt;<br>
+&gt; &gt; &gt; The race window is small of course but it is there. I guess =
+we need<br>
+&gt; &gt; &gt; rcu_read_lock at least.<br>
+&gt; &gt;<br>
+&gt; &gt; Yes, you&#39;re right. I&#39;m afraid we need to take care of the=
+ racy in the next<br>
+&gt; &gt; updates as well. But mem_cgroup_begin/end_update_page_stat() alre=
+ady have<br>
+&gt; &gt; rcu lock, so here we maybe only need a synchronize_rcu() after ch=
+anging<br>
+&gt; &gt; memcg_inuse_key?<br>
+&gt;<br>
+&gt; Your patch doesn&#39;t take rcu_read_lock. synchronize_rcu might work =
+but I<br>
+&gt; am still not sure this would help to prevent from the overhead which<b=
+r>
+&gt; IMHO comes from the accounting not a single atomic_read + rcu_read_loc=
+k<br>
+&gt; which is the hot path of mem_cgroup_{begin,end}_update_page_stat.</p>
+<p>I means I&#39;ll try to zero out accounting overhead in next version, bu=
+t the race will probably also occur in that case.</p>
+<p>Thanks!</p>
+<p>&gt;<br>
+&gt; [...]<br>
+&gt; --<br>
+&gt; Michal Hocko<br>
+&gt; SUSE Labs<br>
+</p>
+
+--20cf301cc4b04730ba04e15ce1c5--
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
