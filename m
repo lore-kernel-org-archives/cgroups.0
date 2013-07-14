@@ -1,74 +1,76 @@
 From: "azurIt" <azurit@pobox.sk>
 Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=5D_memcg=3A_do_not_trap_chargers_with_full_callstack_on_OOM?=
-Date: Sun, 14 Jul 2013 01:51:12 +0200
-Message-ID: <20130714015112.FFCB7AF7@pobox.sk>
-References: <20130624201345.GA21822@cmpxchg.org>, <20130628120613.6D6CAD21@pobox.sk>, <20130705181728.GQ17812@cmpxchg.org>, <20130705210246.11D2135A@pobox.sk>, <20130705191854.GR17812@cmpxchg.org>, <20130708014224.50F06960@pobox.sk>, <20130709131029.GH20281@dhcp22.suse.cz>, <20130709151921.5160C199@pobox.sk>, <20130709135450.GI20281@dhcp22.suse.cz>, <20130710182506.F25DF461@pobox.sk>, <20130711072507.GA21667@dhcp22.suse.cz> <20130714012641.C2DA4E05@pobox.sk>
+Date: Sun, 14 Jul 2013 19:07:23 +0200
+Message-ID: <20130714190723.BF406E48@pobox.sk>
+References: <20130606160446.GE24115@dhcp22.suse.cz>, <20130606181633.BCC3E02E@pobox.sk>, <20130607131157.GF8117@dhcp22.suse.cz>, <20130617122134.2E072BA8@pobox.sk>, <20130619132614.GC16457@dhcp22.suse.cz>, <20130622220958.D10567A4@pobox.sk>, <20130624201345.GA21822@cmpxchg.org>, <20130628120613.6D6CAD21@pobox.sk>, <20130705181728.GQ17812@cmpxchg.org>, <20130705210246.11D2135A@pobox.sk> <20130705191854.GR17812@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130714012641.C2DA4E05@pobox.sk>
+In-Reply-To: <20130705191854.GR17812@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
-Cc: =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, righi.andrea@gmail.com
+To: =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
+Cc: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>
 
-> CC: "Johannes Weiner" <hannes@cmpxchg.org>, linux-kernel@vger.kernel.or=
-g, linux-mm@kvack.org, "cgroups mailinglist" <cgroups@vger.kernel.org>, "=
-KAMEZAWA Hiroyuki" <kamezawa.hiroyu@jp.fujitsu.com>, righi.andrea@gmail.c=
-om
->> CC: "Johannes Weiner" <hannes@cmpxchg.org>, linux-kernel@vger.kernel.o=
-rg, linux-mm@kvack.org, "cgroups mailinglist" <cgroups@vger.kernel.org>, =
-"KAMEZAWA Hiroyuki" <kamezawa.hiroyu@jp.fujitsu.com>, righi.andrea@gmail.=
-com
->>On Wed 10-07-13 18:25:06, azurIt wrote:
->>> >> Now i realized that i forgot to remove UID from that cgroup before
->>> >> trying to remove it, so cgroup cannot be removed anyway (we are us=
-ing
->>> >> third party cgroup called cgroup-uid from Andrea Righi, which is a=
-ble
->>> >> to associate all user's processes with target cgroup). Look here f=
-or
->>> >> cgroup-uid patch:
->>> >> https://www.develer.com/~arighi/linux/patches/cgroup-uid/cgroup-ui=
-d-v8.patch
->>> >>=20
->>> >> ANYWAY, i'm 101% sure that 'tasks' file was empty and 'under_oom' =
-was
->>> >> permanently '1'.
->>> >
->>> >This is really strange. Could you post the whole diff against stable
->>> >tree you are using (except for grsecurity stuff and the above cgroup=
--uid
->>> >patch)?
->>>=20
->>>=20
->>> Here are all patches which i applied to kernel 3.2.48 in my last test=
-:
->>> http://watchdog.sk/lkml/patches3/
->>
->>The two patches from Johannes seem correct.
->>
->>From a quick look even grsecurity patchset shouldn't interfere as it
->>doesn't seem to put any code between handle_mm_fault and mm_fault_error
->>and there also doesn't seem to be any new handle_mm_fault call sites.
->>
->>But I cannot tell there aren't other code paths which would lead to a
->>memcg charge, thus oom, without proper FAULT_FLAG_KERNEL handling.
+> CC: "Michal Hocko" <mhocko@suse.cz>, linux-kernel@vger.kernel.org, linu=
+x-mm@kvack.org, "cgroups mailinglist" <cgroups@vger.kernel.org>, "KAMEZAW=
+A Hiroyuki" <kamezawa.hiroyu@jp.fujitsu.com>
+>On Fri, Jul 05, 2013 at 09:02:46PM +0200, azurIt wrote:
+>> >I looked at your debug messages but could not find anything that woul=
+d
+>> >hint at a deadlock.  All tasks are stuck in the refrigerator, so I
+>> >assume you use the freezer cgroup and enabled it somehow?
+>>=20
+>>=20
+>> Yes, i'm really using freezer cgroup BUT i was checking if it's not
+>> doing problems - unfortunately, several days passed from that day
+>> and now i don't fully remember if i was checking it for both cases
+>> (unremoveabled cgroups and these freezed processes holding web
+>> server port). I'm 100% sure i was checking it for unremoveable
+>> cgroups but not so sure for the other problem (i had to act quickly
+>> in that case). Are you sure (from stacks) that freezer cgroup was
+>> enabled there?
 >
+>Yeah, all the traces without exception look like this:
 >
->Michal,
+>1372089762/23433/stack:[<ffffffff81080925>] refrigerator+0x95/0x160
+>1372089762/23433/stack:[<ffffffff8106ab7b>] get_signal_to_deliver+0x1cb/=
+0x540
+>1372089762/23433/stack:[<ffffffff8100188b>] do_signal+0x6b/0x750
+>1372089762/23433/stack:[<ffffffff81001fc5>] do_notify_resume+0x55/0x80
+>1372089762/23433/stack:[<ffffffff815cac77>] int_signal+0x12/0x17
+>1372089762/23433/stack:[<ffffffffffffffff>] 0xffffffffffffffff
 >
->now i can definitely confirm that problem with unremovable cgroups persi=
-sts. What info do you need from me? I applied also your little 'WARN_ON' =
-patch.
+>so the freezer was already enabled when you took the backtraces.
 >
->azur
+>> Btw, what about that other stacks? I mean this file:
+>> http://watchdog.sk/lkml/memcg-bug-7.tar.gz
+>>=20
+>> It was taken while running the kernel with your patch and from
+>> cgroup which was under unresolveable OOM (just like my very original
+>> problem).
+>
+>I looked at these traces too, but none of the tasks are stuck in rmdir
+>or the OOM path.  Some /are/ in the page fault path, but they are
+>happily doing reclaim and don't appear to be stuck.  So I'm having a
+>hard time matching this data to what you otherwise observed.
+>
+>However, based on what you reported the most likely explanation for
+>the continued hangs is the unfinished OOM handling for which I sent
+>the followup patch for arch/x86/mm/fault.c.
 
 
+Johannes,
 
-Ok, i think you want this:
-http://watchdog.sk/lkml/kern4.log
+this problem happened again but was even worse, now i'm sure it wasn't my=
+ fault. This time I even wasn't able to access /proc/<pid> of hanged apac=
+he process (which was, again, helding web server port and forced me to re=
+boot the server). Everything which tried to access /proc/<pid> just hange=
+d. Server even wasn't able to reboot correctly, it hanged and then done a=
+ hard reboot after few minutes.
+
+azur
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
