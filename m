@@ -1,95 +1,71 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: [PATCH v3 3/3] vmpressure: Make sure there are no events queued after memcg is offlined
-Date: Mon, 15 Jul 2013 12:30:33 +0200
-Message-ID: <1373884233-32441-3-git-send-email-mhocko@suse.cz>
-References: <20130711154408.GA9229@mtj.dyndns.org>
- <1373884233-32441-1-git-send-email-mhocko@suse.cz>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1373884233-32441-1-git-send-email-mhocko@suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: Single process controlling all cgroups sounds like looking in
+	right direction but wrong solution.
+Date: Mon, 15 Jul 2013 07:32:16 -0500
+Message-ID: <20130715123216.GA5663@sergelap>
+References: <CANA3KFV6LmfKYUo305Fo2Yv_0kJGSSa7OjnGi8BMb+0Ys9e8NA@mail.gmail.com>
+	<20130715032551.GA3046@ac100>
+	<CANA3KFWdKbrpZDHHsqKeh-vugK7NjJ1xrFcXyYSRaKn0mUYewg@mail.gmail.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Anton Vorontsov <anton.vorontsov@linaro.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, linux-mm@kvack.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CANA3KFWdKbrpZDHHsqKeh-vugK7NjJ1xrFcXyYSRaKn0mUYewg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Peter Dolding <oiaohm-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-vmpressure is called synchronously from the reclaim where the
-target_memcg is guaranteed to be alive but the eventfd is signaled from
-the work queue context. This means that memcg (along with vmpressure
-structure which is embedded into it) might go away while the work item
-is pending which would result in use-after-release bug.
+Quoting Peter Dolding (oiaohm-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org):
+> I followed the Maintainers File.  https://www.kernel.org/doc/linux/MAINTAINERS
+> CONTROL GROUPS (CGROUPS)
+> M:	Paul Menage <menage-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> M:	Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+> L:	containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-We have two possible ways how to fix this. Either vmpressure pins memcg
-before it schedules vmpr->work and unpin it in vmpressure_work_fn or
-explicitely flush the work item from the css_offline context (as
-suggested by Tejun).
+Odd, my version has
 
-This patch implements the later one and it introduces vmpressure_cleanup
-which flushes the vmpressure work queue item item. It hooks into
-mem_cgroup_css_offline after the memcg itself is cleaned up.
+L:      containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+L:      cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Reported-by: Tejun Heo <tj@kernel.org>
-Signed-off-by: Michal Hocko <mhocko@suse.cz>
----
- include/linux/vmpressure.h |  1 +
- mm/memcontrol.c            |  1 +
- mm/vmpressure.c            | 16 ++++++++++++++++
- 3 files changed, 18 insertions(+)
+The cgroups entry was added in November 2011 according to git-blame.
+I don't know why the kernel.org version is so old.
 
-diff --git a/include/linux/vmpressure.h b/include/linux/vmpressure.h
-index 2081680..0c9bc9a 100644
---- a/include/linux/vmpressure.h
-+++ b/include/linux/vmpressure.h
-@@ -30,6 +30,7 @@ extern void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
- extern void vmpressure_prio(gfp_t gfp, struct mem_cgroup *memcg, int prio);
- 
- extern void vmpressure_init(struct vmpressure *vmpr);
-+extern void vmpressure_cleanup(struct vmpressure * vmpr);
- extern struct vmpressure *memcg_to_vmpressure(struct mem_cgroup *memcg);
- extern struct cgroup_subsys_state *vmpressure_to_css(struct vmpressure *vmpr);
- extern struct vmpressure *css_to_vmpressure(struct cgroup_subsys_state *css);
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 6e120e4..198759c 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -6326,6 +6326,7 @@ static void mem_cgroup_css_offline(struct cgroup *cont)
- 	mem_cgroup_invalidate_reclaim_iterators(memcg);
- 	mem_cgroup_reparent_charges(memcg);
- 	mem_cgroup_destroy_all_caches(memcg);
-+	vmpressure_cleanup(&memcg->vmpressure);
- }
- 
- static void mem_cgroup_css_free(struct cgroup *cont)
-diff --git a/mm/vmpressure.c b/mm/vmpressure.c
-index 192f973..0c1e37d 100644
---- a/mm/vmpressure.c
-+++ b/mm/vmpressure.c
-@@ -372,3 +372,19 @@ void vmpressure_init(struct vmpressure *vmpr)
- 	INIT_LIST_HEAD(&vmpr->events);
- 	INIT_WORK(&vmpr->work, vmpressure_work_fn);
- }
-+
-+/**
-+ * vmpressure_cleanup() - shuts down vmpressure control structure
-+ * @vmpr:	Structure to be cleaned up
-+ *
-+ * This function should be called before the structure in which it is
-+ * embedded is cleaned up.
-+ */
-+void vmpressure_cleanup(struct vmpressure *vmpr)
-+{
-+	/*
-+	 * Make sure there is no pending work before eventfd infrastructure
-+	 * goes away.
-+	 */
-+	flush_work(&vmpr->work);
-+}
--- 
-1.8.3.2
+Still I think that should be patched to remove containers@.  I
+originally objected to the cgroup@ list creation, but since I
+do not believe the relevant cgroup folks read the containers@
+list any more, I don't think containers@ should be listed -
+certainly not first.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> S:	Maintained
+> F:	include/linux/cgroup*
+> F:	kernel/cgroup*
+> F:	mm/*cgroup*
+> 
+> 
+> Apparently by your response this might be a bit out of date.  I just read
+> lwm and *Tejun Heo is not even as a main maintainer.  Listed as a sub part
+> maintainer.   By the maintainers file discussions should be in *
+> containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org where I sent this.
+> 
+> Tejun Heo please inform if this is still correct.  Its either update this
+> or tell lwn.net to get your title correct in future.
+> 
+> Serge I am trying to follow policy that is why I posted here in the first
+> place.
+
+That sounds unnecessarily defensive - I wasn't complaining, just trying
+to help your email get to where it would be best discussed  :)  Sorry
+that it involves an extra step (resending), but I didn't want to simply
+reply cc:ing cgroups@, as the email thread tends to get funky that way.
+
+-serge
