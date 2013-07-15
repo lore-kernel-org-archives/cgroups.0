@@ -1,40 +1,46 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/2] cgroup: remove gratuituous BUG_ON()s from
-	rebind_subsystems()
-Date: Mon, 15 Jul 2013 10:54:49 +0800
-Message-ID: <51E36479.5050405@huawei.com>
-References: <20130629041231.GA31353@htj.dyndns.org>
-	<20130629041305.GB31353@htj.dyndns.org>
+Subject: Re: [PATCH v2] vmpressure: make sure memcg stays alive until all
+ users are signaled
+Date: Mon, 15 Jul 2013 11:07:52 +0800
+Message-ID: <51E36788.6080308@huawei.com>
+References: <20130711092542.GD21667@dhcp22.suse.cz> <51DE7AAF.6070004@huawei.com> <20130711093300.GE21667@dhcp22.suse.cz> <20130711154408.GA9229@mtj.dyndns.org> <20130711162215.GM21667@dhcp22.suse.cz> <20130711163238.GC9229@mtj.dyndns.org> <20130712084039.GA13224@dhcp22.suse.cz> <51DFCA49.4080407@huawei.com> <20130712092927.GA15307@dhcp22.suse.cz> <51DFD253.3030501@huawei.com> <20130712103731.GB15307@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20130629041305.GB31353-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20130712103731.GB15307-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Anton Vorontsov <anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-On 2013/6/29 12:13, Tejun Heo wrote:
->>From 9d47f1dd70a19b78a9da53e71fc1bf41e0300026 Mon Sep 17 00:00:00 2001
-> From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Date: Fri, 28 Jun 2013 21:08:27 -0700
+On 2013/7/12 18:37, Michal Hocko wrote:
+> On Fri 12-07-13 17:54:27, Li Zefan wrote:
+>> On 2013/7/12 17:29, Michal Hocko wrote:
+>>> On Fri 12-07-13 17:20:09, Li Zefan wrote:
+>>> [...]
+>>>> But if I read the code correctly, even no one registers a vmpressure event,
+>>>> vmpressure() is always running and queue the work item.
+>>>
+>>> True but checking there is somebody is rather impractical. First we
+>>> would have to take a events_lock to check this and then drop it after
+>>> scheduling the work. Which doesn't guarantee that the registered event
+>>> wouldn't go away.
+>>> And even trickier, we would have to do the same for all parents up the
+>>> hierarchy.
+>>>
+>>
+>> The thing is, we can forget about eventfd. eventfd is checked in
+>> vmpressure_work_fn(), while vmpressure() is always called no matter what.
 > 
-> rebind_subsystems() performs santiy checks even on subsystems which
-> aren't specified to be added or removed and the checks aren't all that
-> useful given that these are in a very cold path while the violations
-> they check would trip up in much hotter paths.
+> But vmpressure is called only for an existing memcg. This means that
+> it cannot be called past css_offline so it must happen _before_ cgroup
+> eventfd cleanup code.
 > 
-> Let's remove these from rebind_subsystems().
+> Or am I missing something?
 > 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Yeah.
+
+The vmpressure work item is queued if we sense some memory pressure, no matter
+if there is any eventfd ever registered. This is the point.
