@@ -1,79 +1,55 @@
-From: "azurIt" <azurit@pobox.sk>
-Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=5D_memcg=3A_do_not_trap_chargers_with_full_callstack_on_OOM?=
-Date: Sun, 14 Jul 2013 19:07:23 +0200
-Message-ID: <20130714190723.BF406E48@pobox.sk>
-References: <20130606160446.GE24115@dhcp22.suse.cz>, <20130606181633.BCC3E02E@pobox.sk>, <20130607131157.GF8117@dhcp22.suse.cz>, <20130617122134.2E072BA8@pobox.sk>, <20130619132614.GC16457@dhcp22.suse.cz>, <20130622220958.D10567A4@pobox.sk>, <20130624201345.GA21822@cmpxchg.org>, <20130628120613.6D6CAD21@pobox.sk>, <20130705181728.GQ17812@cmpxchg.org>, <20130705210246.11D2135A@pobox.sk> <20130705191854.GR17812@cmpxchg.org>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 cgroup 1/2] cgroup: move module ref handling into
+	rebind_subsystems()
+Date: Mon, 15 Jul 2013 10:54:18 +0800
+Message-ID: <51E3645A.6080404@huawei.com>
+References: <20130629041231.GA31353@htj.dyndns.org>
+	<20130712203817.GI23680@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130705191854.GR17812@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
-Cc: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?utf-8?q?cgroups_mailinglist?= <cgroups@vger.kernel.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20130712203817.GI23680-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-> CC: "Michal Hocko" <mhocko@suse.cz>, linux-kernel@vger.kernel.org, linu=
-x-mm@kvack.org, "cgroups mailinglist" <cgroups@vger.kernel.org>, "KAMEZAW=
-A Hiroyuki" <kamezawa.hiroyu@jp.fujitsu.com>
->On Fri, Jul 05, 2013 at 09:02:46PM +0200, azurIt wrote:
->> >I looked at your debug messages but could not find anything that woul=
-d
->> >hint at a deadlock.  All tasks are stuck in the refrigerator, so I
->> >assume you use the freezer cgroup and enabled it somehow?
->>=20
->>=20
->> Yes, i'm really using freezer cgroup BUT i was checking if it's not
->> doing problems - unfortunately, several days passed from that day
->> and now i don't fully remember if i was checking it for both cases
->> (unremoveabled cgroups and these freezed processes holding web
->> server port). I'm 100% sure i was checking it for unremoveable
->> cgroups but not so sure for the other problem (i had to act quickly
->> in that case). Are you sure (from stacks) that freezer cgroup was
->> enabled there?
->
->Yeah, all the traces without exception look like this:
->
->1372089762/23433/stack:[<ffffffff81080925>] refrigerator+0x95/0x160
->1372089762/23433/stack:[<ffffffff8106ab7b>] get_signal_to_deliver+0x1cb/=
-0x540
->1372089762/23433/stack:[<ffffffff8100188b>] do_signal+0x6b/0x750
->1372089762/23433/stack:[<ffffffff81001fc5>] do_notify_resume+0x55/0x80
->1372089762/23433/stack:[<ffffffff815cac77>] int_signal+0x12/0x17
->1372089762/23433/stack:[<ffffffffffffffff>] 0xffffffffffffffff
->
->so the freezer was already enabled when you took the backtraces.
->
->> Btw, what about that other stacks? I mean this file:
->> http://watchdog.sk/lkml/memcg-bug-7.tar.gz
->>=20
->> It was taken while running the kernel with your patch and from
->> cgroup which was under unresolveable OOM (just like my very original
->> problem).
->
->I looked at these traces too, but none of the tasks are stuck in rmdir
->or the OOM path.  Some /are/ in the page fault path, but they are
->happily doing reclaim and don't appear to be stuck.  So I'm having a
->hard time matching this data to what you otherwise observed.
->
->However, based on what you reported the most likely explanation for
->the continued hangs is the unfinished OOM handling for which I sent
->the followup patch for arch/x86/mm/fault.c.
+On 2013/7/13 4:38, Tejun Heo wrote:
+> Module ref handling in cgroup is rather weird.
+> parse_cgroupfs_options() grabs all the modules for the specified
+> subsystems.  A module ref is kept if the specified subsystem is newly
+> bound to the hierarchy.  If not, or the operation fails, the refs are
+> dropped.  This scatters module ref handling across multiple functions
+> making it difficult to track.  It also make the function nasty to use
+> for dynamic subsystem binding which is necessary for the planned
+> unified hierarchy.
+> 
+> There's nothing which requires the subsystem modules to be pinned
+> between parse_cgroupfs_options() and rebind_subsystems() in both mount
+> and remount paths.  parse_cgroupfs_options() can just parse and
+> rebind_subsystems() can handle pinning the subsystems that it wants to
+> bind, which is a natural part of its task - binding - anyway.
+> 
+> Move module ref handling into rebind_subsystems() which makes the code
+> a lot simpler - modules are gotten iff it's gonna be bound and put iff
+> unbound or binding fails.
+> 
+> v2: Li pointed out that if a controller module is unloaded between
+>     parsing and binding, rebind_subsystems() won't notice the missing
+>     controller as it only iterates through existing controllers.  Fix
+>     it by updating rebind_subsystems() to compare @added_mask to
+>     @pinned and fail with -ENOENT if they don't match.
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-
-Johannes,
-
-this problem happened again but was even worse, now i'm sure it wasn't my=
- fault. This time I even wasn't able to access /proc/<pid> of hanged apac=
-he process (which was, again, helding web server port and forced me to re=
-boot the server). Everything which tried to access /proc/<pid> just hange=
-d. Server even wasn't able to reboot correctly, it hanged and then done a=
- hard reboot after few minutes.
-
-azur
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
