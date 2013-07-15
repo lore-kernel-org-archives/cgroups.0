@@ -1,73 +1,73 @@
-From: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH V4 5/6] memcg: patch
- mem_cgroup_{begin,end}_update_page_stat() out if only root memcg exists
-Date: Mon, 15 Jul 2013 10:32:26 +0400
-Message-ID: <20130715063224.GA3745@localhost.localdomain>
-References: <1373044710-27371-1-git-send-email-handai.szj@taobao.com>
- <1373045623-27712-1-git-send-email-handai.szj@taobao.com>
- <20130711145625.GK21667@dhcp22.suse.cz>
- <CAFj3OHV=6YDcbKmSeuF3+oMv1HfZF1RxXHoiLgTk0wH5cJVsiQ@mail.gmail.com>
- <CAFj3OHXF+ZjnaDS2L6ZmuHPx20+7XC9r-s7Gh=_TYOr4Opr4Bw@mail.gmail.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH v2] vmpressure: make sure memcg stays alive until all
+ users are signaled
+Date: Mon, 15 Jul 2013 11:20:33 +0200
+Message-ID: <20130715092033.GB26199@dhcp22.suse.cz>
+References: <20130711093300.GE21667@dhcp22.suse.cz>
+ <20130711154408.GA9229@mtj.dyndns.org>
+ <20130711162215.GM21667@dhcp22.suse.cz>
+ <20130711163238.GC9229@mtj.dyndns.org>
+ <20130712084039.GA13224@dhcp22.suse.cz>
+ <51DFCA49.4080407@huawei.com>
+ <20130712092927.GA15307@dhcp22.suse.cz>
+ <51DFD253.3030501@huawei.com>
+ <20130712103731.GB15307@dhcp22.suse.cz>
+ <51E36788.6080308@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=oPzJ64pUGBnu7drQQ6988tzCpXSTnspocrpFC7h6f9I=;
-        b=B0Z4fUGpF1pSkpIXQ/QfZx0yjAOQH5S6czpnC5Ink4VLcC9WkOns1WFkMQcIbZJ+1X
-         x9x6MmE0Wswih2WtgRDqQGvNijFdWrgR8sdFuRYFz6T3ypd6ZcGHKyCy1ulUdM7nbbL5
-         464faV7B7cgxjmps6//OiOfg8FA+S8OagSTs+LeTwHVq0TZ08qfZwytQ2uzBoZz1eo78
-         OUMwQSw9bZToenbzYRnhKrPcUiJKNIMU2ZdXTKKCNwAF58gKqNWKUy/2rjUcxvgstkDz
-         rEV6ot0g4N6Q2EqZImc9satykWLseCw3Ko+OjIxRBB0JZGT5VCKd2loFxLqSTuwKPabI
-         8QQw==
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <CAFj3OHXF+ZjnaDS2L6ZmuHPx20+7XC9r-s7Gh=_TYOr4Opr4Bw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <51E36788.6080308@huawei.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Wu Fengguang <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+To: Li Zefan <lizefan@huawei.com>
+Cc: Tejun Heo <tj@kernel.org>, Anton Vorontsov <anton.vorontsov@linaro.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
 
-On Fri, Jul 12, 2013 at 09:13:56PM +0800, Sha Zhengju wrote:
-> Ooops.... it seems unreachable, change Glauber's email...
+On Mon 15-07-13 11:07:52, Li Zefan wrote:
+> On 2013/7/12 18:37, Michal Hocko wrote:
+> > On Fri 12-07-13 17:54:27, Li Zefan wrote:
+> >> On 2013/7/12 17:29, Michal Hocko wrote:
+> >>> On Fri 12-07-13 17:20:09, Li Zefan wrote:
+> >>> [...]
+> >>>> But if I read the code correctly, even no one registers a vmpressure event,
+> >>>> vmpressure() is always running and queue the work item.
+> >>>
+> >>> True but checking there is somebody is rather impractical. First we
+> >>> would have to take a events_lock to check this and then drop it after
+> >>> scheduling the work. Which doesn't guarantee that the registered event
+> >>> wouldn't go away.
+> >>> And even trickier, we would have to do the same for all parents up the
+> >>> hierarchy.
+> >>>
+> >>
+> >> The thing is, we can forget about eventfd. eventfd is checked in
+> >> vmpressure_work_fn(), while vmpressure() is always called no matter what.
+> > 
+> > But vmpressure is called only for an existing memcg. This means that
+> > it cannot be called past css_offline so it must happen _before_ cgroup
+> > eventfd cleanup code.
+> > 
+> > Or am I missing something?
+> > 
 > 
+> Yeah.
 > 
-> On Fri, Jul 12, 2013 at 8:59 PM, Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> 
-> > Add cc to Glauber
-> >
-Thanks
+> The vmpressure work item is queued if we sense some memory pressure, no matter
+> if there is any eventfd ever registered. This is the point.
 
-> >
-> > On Thu, Jul 11, 2013 at 10:56 PM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
-> > > On Sat 06-07-13 01:33:43, Sha Zhengju wrote:
-> > >> From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
-> > >>
-> > >> If memcg is enabled and no non-root memcg exists, all allocated
-> > >> pages belongs to root_mem_cgroup and wil go through root memcg
-> > >> statistics routines.  So in order to reduce overheads after adding
-> > >> memcg dirty/writeback accounting in hot paths, we use jump label to
-> > >> patch mem_cgroup_{begin,end}_update_page_stat() in or out when not
-> > >> used.
-> > >
-> > > I do not think this is enough. How much do you save? One atomic read.
-> > > This doesn't seem like a killer.
-> > >
-> > > I hoped we could simply not account at all and move counters to the root
-> > > cgroup once the label gets enabled.
-> >
-> > I have thought of this approach before, but it would probably run into
-> > another issue, e.g, each zone has a percpu stock named ->pageset to
-> > optimize the increment and decrement operations, and I haven't figure out a
-> > simpler and cheaper approach to handle that stock numbers if moving global
-> > counters to root cgroup, maybe we can just leave them and can afford the
-> > approximation?
-> >
-> > Glauber have already done lots of works here, in his previous patchset he
-> > also tried to move some global stats to root (
-> > http://comments.gmane.org/gmane.linux.kernel.cgroups/6291). May I steal
-> > some of your ideas here, Glauber? :P
-> >
-Of course. Please go ahead and keep me posted in my new address.
+But it is queued on vmpr which is embedded in the memcg which is the
+_target_ of the reclaim. There is _no reclaim_ for a memcg after css has
+been deactivated which happens _before_ css_offline.
+
+/me confused.
+
+-- 
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
