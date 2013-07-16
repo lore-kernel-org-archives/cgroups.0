@@ -1,171 +1,98 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH for 3.2] memcg: do not trap chargers with full callstack
- on OOM
-Date: Tue, 16 Jul 2013 12:48:30 -0400
-Message-ID: <20130716164830.GZ17812@cmpxchg.org>
-References: <20130709151921.5160C199@pobox.sk>
- <20130709135450.GI20281@dhcp22.suse.cz>
- <20130710182506.F25DF461@pobox.sk>
- <20130711072507.GA21667@dhcp22.suse.cz>
- <20130714012641.C2DA4E05@pobox.sk>
- <20130714015112.FFCB7AF7@pobox.sk>
- <20130715154119.GA32435@dhcp22.suse.cz>
- <20130715160006.GB32435@dhcp22.suse.cz>
- <20130716153544.GX17812@cmpxchg.org>
- <20130716160905.GA20018@dhcp22.suse.cz>
+From: Peter Dolding <oiaohm-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: Single process controlling all cgroups sounds like looking in
+ right direction but wrong solution.
+Date: Wed, 17 Jul 2013 08:06:50 +1000
+Message-ID: <CANA3KFVeYkvidYu=1rV_We3JLH5QEsogCnYQEdA6VGBKD2sbYw@mail.gmail.com>
+References: <CANA3KFV6LmfKYUo305Fo2Yv_0kJGSSa7OjnGi8BMb+0Ys9e8NA@mail.gmail.com>
+	<20130715032551.GA3046@ac100>
+	<CANA3KFWdKbrpZDHHsqKeh-vugK7NjJ1xrFcXyYSRaKn0mUYewg@mail.gmail.com>
+	<20130715123216.GA5663@sergelap>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20130716160905.GA20018-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=Cp3a1nvkhtFw0z9cFLwBuI1Zfqdz28kyMrqusQkmYrg=;
+        b=hPFd5BDuyZ9UbeooQHbVKJV7Iv9/uH8tIoAm/rG6x5zHJ5z0kipzEaOhUFW8cNegrG
+         n5JYC4EjIQs2DuzNJ94UUBGBAo9Vg4kv4xhL49aa/3W2XXLst603F/YNDrEMvdBGkG4r
+         94MnfxxpFU3MVESnWLZXk6uIQwNnG0HbqLryLq0mmEqHm4XgAqUljV1gd27XUvIcIKx3
+         uIlqXbKcCoz57ZCeJYlaNW4a7/T8tT27+J+7pSdIcuQZCOI4qTmzy4vkPtrxvwwH8dmY
+         0dgV2GDmZCqPb6JekhSfbZUUfyU4sgxWHdtt9f3FKhA7QMFPatmAsutNTeN4pm0bhd7G
+         yYSw==
+In-Reply-To: <20130715123216.GA5663@sergelap>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, righi.andrea-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+To: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, webmaster-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-On Tue, Jul 16, 2013 at 06:09:05PM +0200, Michal Hocko wrote:
-> On Tue 16-07-13 11:35:44, Johannes Weiner wrote:
-> > On Mon, Jul 15, 2013 at 06:00:06PM +0200, Michal Hocko wrote:
-> > > On Mon 15-07-13 17:41:19, Michal Hocko wrote:
-> > > > On Sun 14-07-13 01:51:12, azurIt wrote:
-> > > > > > CC: "Johannes Weiner" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, "cgroups mailinglist" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "KAMEZAWA Hiroyuki" <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, righi.andrea-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-> > > > > >> CC: "Johannes Weiner" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, "cgroups mailinglist" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "KAMEZAWA Hiroyuki" <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, righi.andrea-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-> > > > > >>On Wed 10-07-13 18:25:06, azurIt wrote:
-> > > > > >>> >> Now i realized that i forgot to remove UID from that cgroup before
-> > > > > >>> >> trying to remove it, so cgroup cannot be removed anyway (we are using
-> > > > > >>> >> third party cgroup called cgroup-uid from Andrea Righi, which is able
-> > > > > >>> >> to associate all user's processes with target cgroup). Look here for
-> > > > > >>> >> cgroup-uid patch:
-> > > > > >>> >> https://www.develer.com/~arighi/linux/patches/cgroup-uid/cgroup-uid-v8.patch
-> > > > > >>> >> 
-> > > > > >>> >> ANYWAY, i'm 101% sure that 'tasks' file was empty and 'under_oom' was
-> > > > > >>> >> permanently '1'.
-> > > > > >>> >
-> > > > > >>> >This is really strange. Could you post the whole diff against stable
-> > > > > >>> >tree you are using (except for grsecurity stuff and the above cgroup-uid
-> > > > > >>> >patch)?
-> > > > > >>> 
-> > > > > >>> 
-> > > > > >>> Here are all patches which i applied to kernel 3.2.48 in my last test:
-> > > > > >>> http://watchdog.sk/lkml/patches3/
-> > > > > >>
-> > > > > >>The two patches from Johannes seem correct.
-> > > > > >>
-> > > > > >>From a quick look even grsecurity patchset shouldn't interfere as it
-> > > > > >>doesn't seem to put any code between handle_mm_fault and mm_fault_error
-> > > > > >>and there also doesn't seem to be any new handle_mm_fault call sites.
-> > > > > >>
-> > > > > >>But I cannot tell there aren't other code paths which would lead to a
-> > > > > >>memcg charge, thus oom, without proper FAULT_FLAG_KERNEL handling.
-> > > > > >
-> > > > > >
-> > > > > >Michal,
-> > > > > >
-> > > > > >now i can definitely confirm that problem with unremovable cgroups
-> > > > > >persists. What info do you need from me? I applied also your little
-> > > > > >'WARN_ON' patch.
-> > > > > 
-> > > > > Ok, i think you want this:
-> > > > > http://watchdog.sk/lkml/kern4.log
-> > > > 
-> > > > Jul 14 01:11:39 server01 kernel: [  593.589087] [ pid ]   uid  tgid total_vm      rss cpu oom_adj oom_score_adj name
-> > > > Jul 14 01:11:39 server01 kernel: [  593.589451] [12021]  1333 12021   172027    64723   4       0             0 apache2
-> > > > Jul 14 01:11:39 server01 kernel: [  593.589647] [12030]  1333 12030   172030    64748   2       0             0 apache2
-> > > > Jul 14 01:11:39 server01 kernel: [  593.589836] [12031]  1333 12031   172030    64749   3       0             0 apache2
-> > > > Jul 14 01:11:39 server01 kernel: [  593.590025] [12032]  1333 12032   170619    63428   3       0             0 apache2
-> > > > Jul 14 01:11:39 server01 kernel: [  593.590213] [12033]  1333 12033   167934    60524   2       0             0 apache2
-> > > > Jul 14 01:11:39 server01 kernel: [  593.590401] [12034]  1333 12034   170747    63496   4       0             0 apache2
-> > > > Jul 14 01:11:39 server01 kernel: [  593.590588] [12035]  1333 12035   169659    62451   1       0             0 apache2
-> > > > Jul 14 01:11:39 server01 kernel: [  593.590776] [12036]  1333 12036   167614    60384   3       0             0 apache2
-> > > > Jul 14 01:11:39 server01 kernel: [  593.590984] [12037]  1333 12037   166342    58964   3       0             0 apache2
-> > > > Jul 14 01:11:39 server01 kernel: [  593.591178] Memory cgroup out of memory: Kill process 12021 (apache2) score 847 or sacrifice child
-> > > > Jul 14 01:11:39 server01 kernel: [  593.591370] Killed process 12021 (apache2) total-vm:688108kB, anon-rss:255472kB, file-rss:3420kB
-> > > > Jul 14 01:11:41 server01 kernel: [  595.392920] ------------[ cut here ]------------
-> > > > Jul 14 01:11:41 server01 kernel: [  595.393096] WARNING: at kernel/exit.c:888 do_exit+0x7d0/0x870()
-> > > > Jul 14 01:11:41 server01 kernel: [  595.393256] Hardware name: S5000VSA
-> > > > Jul 14 01:11:41 server01 kernel: [  595.393415] Pid: 12037, comm: apache2 Not tainted 3.2.48-grsec #1
-> > > > Jul 14 01:11:41 server01 kernel: [  595.393577] Call Trace:
-> > > > Jul 14 01:11:41 server01 kernel: [  595.393737]  [<ffffffff8105520a>] warn_slowpath_common+0x7a/0xb0
-> > > > Jul 14 01:11:41 server01 kernel: [  595.393903]  [<ffffffff8105525a>] warn_slowpath_null+0x1a/0x20
-> > > > Jul 14 01:11:41 server01 kernel: [  595.394068]  [<ffffffff81059c50>] do_exit+0x7d0/0x870
-> > > > Jul 14 01:11:41 server01 kernel: [  595.394231]  [<ffffffff81050254>] ? thread_group_times+0x44/0xb0
-> > > > Jul 14 01:11:41 server01 kernel: [  595.394392]  [<ffffffff81059d41>] do_group_exit+0x51/0xc0
-> > > > Jul 14 01:11:41 server01 kernel: [  595.394551]  [<ffffffff81059dc7>] sys_exit_group+0x17/0x20
-> > > > Jul 14 01:11:41 server01 kernel: [  595.394714]  [<ffffffff815caea6>] system_call_fastpath+0x18/0x1d
-> > > > Jul 14 01:11:41 server01 kernel: [  595.394921] ---[ end trace 738570e688acf099 ]---
-> > > > 
-> > > > OK, so you had an OOM which has been handled by in-kernel oom handler
-> > > > (it killed 12021) and 12037 was in the same group. The warning tells us
-> > > > that it went through mem_cgroup_oom as well (otherwise it wouldn't have
-> > > > memcg_oom.wait_on_memcg set and the warning wouldn't trigger) and then
-> > > > it exited on the userspace request (by exit syscall).
-> > > > 
-> > > > I do not see any way how, this could happen though. If mem_cgroup_oom
-> > > > is called then we always return CHARGE_NOMEM which turns into ENOMEM
-> > > > returned by __mem_cgroup_try_charge (invoke_oom must have been set to
-> > > > true).  So if nobody screwed the return value on the way up to page
-> > > > fault handler then there is no way to escape.
-> > > > 
-> > > > I will check the code.
-> > > 
-> > > OK, I guess I found it:
-> > > __do_fault
-> > >   fault = filemap_fault
-> > >   do_async_mmap_readahead
-> > >     page_cache_async_readahead
-> > >       ondemand_readahead
-> > >         __do_page_cache_readahead
-> > >           read_pages
-> > >             readpages = ext3_readpages
-> > >               mpage_readpages			# Doesn't propagate ENOMEM
-> > >                add_to_page_cache_lru
-> > >                  add_to_page_cache
-> > >                    add_to_page_cache_locked
-> > >                      mem_cgroup_cache_charge
-> > > 
-> > > So the read ahead most probably. Again! Duhhh. I will try to think
-> > > about a fix for this. One obvious place is mpage_readpages but
-> > > __do_page_cache_readahead ignores read_pages return value as well and
-> > > page_cache_async_readahead, even worse, is just void and exported as
-> > > such.
-> > > 
-> > > So this smells like a hard to fix bugger. One possible, and really ugly
-> > > way would be calling mem_cgroup_oom_synchronize even if handle_mm_fault
-> > > doesn't return VM_FAULT_ERROR, but that is a crude hack.
-> > 
-> > Ouch, good spot.
-> > 
-> > I don't think we need to handle an OOM from the readahead code.  If
-> > readahead does not produce the desired page, we retry synchroneously
-> > in page_cache_read() and handle the OOM properly.  We should not
-> > signal an OOM for optional pages anyway.
-> > 
-> > So either we pass a flag from the readahead code down to
-> > add_to_page_cache and mem_cgroup_cache_charge that tells the charge
-> > code to ignore OOM conditions and do not set up an OOM context.
-> 
-> That was my previous attempt and it was sooo painful.
-> 
-> > Or we DO call mem_cgroup_oom_synchronize() from the read_cache_pages,
-> > with an argument that makes it only clean up the context and not wait.
-> 
-> Yes, I was playing with this idea as well. I just do not like how
-> fragile this is. We need some way to catch all possible places which
-> might leak it.
+Serge You took it the wrong way I was not trying to be defensive.
+That was my version of what the heck is wrong response.  Followed
+policy and it wrong you kinda want to find out what is wrong.  Its if
+something is out like this other people are going to go south.
 
-I don't think this is necessary, but we could add a sanity check
-in/near mem_cgroup_clear_userfault() that makes sure the OOM context
-is only set up when an error is returned.
+So this is interesting there is a miss match between git and what the
+website displays.   Fact that its old it the webmaster needs to be
+informed so it can be fixed.      I have changed the who this is going
+to.
 
-> > It would not be completely outlandish to place it there, since it's
-> > right next to where an error from add_to_page_cache() is not further
-> > propagated back through the fault stack.
-> > 
-> > I'm travelling right now, I'll send a patch when I get back
-> > (Thursday).  Unless you beat me to it :)
-> 
-> I can cook something up but there is quite a big pile on my desk
-> currently (as always :/).
+Webmaster https://www.kernel.org/doc/linux/MAINTAINERS   and the
+Maintainers file in git don't match.    Would suspect other sections
+in doc directory are also out.
 
-No worries, I'll send an update.
+https://www.kernel.org/doc/linux/   Apparently this is one of the
+things that broke when kernel.org was breached and has not been fixed
+yet.   Nothing in that section of kernel.org appears to be updated
+since the 19 Aug 2011.   Kernel.org breach was the 31 of Aug 2011.
+So I would say the script or whatever was done to sync there has not
+been operating because it was removed cleaning up from the breach.
+If its never going to be operating sections there should be just
+deleted so it does not lead people up garden path..
+
+On Mon, Jul 15, 2013 at 10:32 PM, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org> wrote:
+> Quoting Peter Dolding (oiaohm-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org):
+>> I followed the Maintainers File.  https://www.kernel.org/doc/linux/MAINTAINERS
+>> CONTROL GROUPS (CGROUPS)
+>> M:    Paul Menage <menage-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>> M:    Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+>> L:    containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+>
+> Odd, my version has
+>
+> L:      containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+> L:      cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+>
+> The cgroups entry was added in November 2011 according to git-blame.
+> I don't know why the kernel.org version is so old.
+>
+> Still I think that should be patched to remove containers@.  I
+> originally objected to the cgroup@ list creation, but since I
+> do not believe the relevant cgroup folks read the containers@
+> list any more, I don't think containers@ should be listed -
+> certainly not first.
+>
+>> S:    Maintained
+>> F:    include/linux/cgroup*
+>> F:    kernel/cgroup*
+>> F:    mm/*cgroup*
+>>
+>>
+>> Apparently by your response this might be a bit out of date.  I just read
+>> lwm and *Tejun Heo is not even as a main maintainer.  Listed as a sub part
+>> maintainer.   By the maintainers file discussions should be in *
+>> containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org where I sent this.
+>>
+>> Tejun Heo please inform if this is still correct.  Its either update this
+>> or tell lwn.net to get your title correct in future.
+>>
+>> Serge I am trying to follow policy that is why I posted here in the first
+>> place.
+>
+> That sounds unnecessarily defensive - I wasn't complaining, just trying
+> to help your email get to where it would be best discussed  :)  Sorry
+> that it involves an extra step (resending), but I didn't want to simply
+> reply cc:ing cgroups@, as the email thread tends to get funky that way.
+>
+> -serge
