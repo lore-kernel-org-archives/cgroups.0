@@ -1,7 +1,7 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH stable-3.10] cgroup: fix umount vs cgroup_cfts_commit() race
-Date: Thu, 18 Jul 2013 11:08:25 +0800
-Message-ID: <51E75C29.6050302@huawei.com>
+Subject: [PATCH stable-3.9] cgroup: fix umount vs cgroup_cfts_commit() race
+Date: Thu, 18 Jul 2013 11:08:31 +0800
+Message-ID: <51E75C2F.1010408@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -33,7 +33,7 @@ be triggered:
 
 Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-[ backported to 3.10:
+[ backported to 3.9:
   - fixed build error: added '&' to atomic_inc_not_zero parameter;
     this was fixed upstream by commit e8c82d20a9f729cf4b9f73043f7fd4e0872bebfd ]
 ---
@@ -41,10 +41,10 @@ Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
  1 file changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index a7c9e6d..28d150e 100644
+index a32f943..1c98235 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -2769,13 +2769,17 @@ static void cgroup_cfts_commit(struct cgroup_subsys *ss,
+@@ -2810,13 +2810,17 @@ static void cgroup_cfts_commit(struct cgroup_subsys *ss,
  {
  	LIST_HEAD(pending);
  	struct cgroup *cgrp, *n;
@@ -63,7 +63,7 @@ index a7c9e6d..28d150e 100644
  	}
  
  	mutex_unlock(&cgroup_mutex);
-@@ -2798,6 +2802,9 @@ static void cgroup_cfts_commit(struct cgroup_subsys *ss,
+@@ -2839,6 +2843,9 @@ static void cgroup_cfts_commit(struct cgroup_subsys *ss,
  		dput(cgrp->dentry);
  	}
  
