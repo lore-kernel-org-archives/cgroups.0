@@ -1,39 +1,94 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: [PATCH resend 2/3] vmpressure: do not check for pending work to prevent from new work
-Date: Fri, 19 Jul 2013 18:51:10 +0200
-Message-ID: <1374252671-11939-2-git-send-email-mhocko@suse.cz>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: [PATCH resend 3/3] vmpressure: Make sure there are no events queued after memcg is offlined
+Date: Fri, 19 Jul 2013 18:51:11 +0200
+Message-ID: <1374252671-11939-3-git-send-email-mhocko@suse.cz>
 References: <1374252671-11939-1-git-send-email-mhocko@suse.cz>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1374252671-11939-1-git-send-email-mhocko-AlSwsSmVLrQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1374252671-11939-1-git-send-email-mhocko@suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Anton Vorontsov <anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Anton Vorontsov <anton.vorontsov@linaro.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-because it is racy and it doesn't give us much anyway as schedule_work
-handles this case already.
+vmpressure is called synchronously from the reclaim where the
+target_memcg is guaranteed to be alive but the eventfd is signaled from
+the work queue context. This means that memcg (along with vmpressure
+structure which is embedded into it) might go away while the work item
+is pending which would result in use-after-release bug.
 
-Brought-up-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+We have two possible ways how to fix this. Either vmpressure pins memcg
+before it schedules vmpr->work and unpin it in vmpressure_work_fn or
+explicitely flush the work item from the css_offline context (as
+suggested by Tejun).
+
+This patch implements the later one and it introduces vmpressure_cleanup
+which flushes the vmpressure work queue item item. It hooks into
+mem_cgroup_css_offline after the memcg itself is cleaned up.
+
+Reported-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Michal Hocko <mhocko@suse.cz>
 ---
- mm/vmpressure.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/vmpressure.h |  1 +
+ mm/memcontrol.c            |  1 +
+ mm/vmpressure.c            | 16 ++++++++++++++++
+ 3 files changed, 18 insertions(+)
 
+diff --git a/include/linux/vmpressure.h b/include/linux/vmpressure.h
+index 2081680..0c9bc9a 100644
+--- a/include/linux/vmpressure.h
++++ b/include/linux/vmpressure.h
+@@ -30,6 +30,7 @@ extern void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
+ extern void vmpressure_prio(gfp_t gfp, struct mem_cgroup *memcg, int prio);
+ 
+ extern void vmpressure_init(struct vmpressure *vmpr);
++extern void vmpressure_cleanup(struct vmpressure * vmpr);
+ extern struct vmpressure *memcg_to_vmpressure(struct mem_cgroup *memcg);
+ extern struct cgroup_subsys_state *vmpressure_to_css(struct vmpressure *vmpr);
+ extern struct vmpressure *css_to_vmpressure(struct cgroup_subsys_state *css);
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 6e120e4..198759c 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6326,6 +6326,7 @@ static void mem_cgroup_css_offline(struct cgroup *cont)
+ 	mem_cgroup_invalidate_reclaim_iterators(memcg);
+ 	mem_cgroup_reparent_charges(memcg);
+ 	mem_cgroup_destroy_all_caches(memcg);
++	vmpressure_cleanup(&memcg->vmpressure);
+ }
+ 
+ static void mem_cgroup_css_free(struct cgroup *cont)
 diff --git a/mm/vmpressure.c b/mm/vmpressure.c
-index f4ee6a1..192f973 100644
+index 192f973..0c1e37d 100644
 --- a/mm/vmpressure.c
 +++ b/mm/vmpressure.c
-@@ -246,7 +246,7 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
- 	scanned = vmpr->scanned;
- 	spin_unlock(&vmpr->sr_lock);
- 
--	if (scanned < vmpressure_win || work_pending(&vmpr->work))
-+	if (scanned < vmpressure_win)
- 		return;
- 	schedule_work(&vmpr->work);
+@@ -372,3 +372,19 @@ void vmpressure_init(struct vmpressure *vmpr)
+ 	INIT_LIST_HEAD(&vmpr->events);
+ 	INIT_WORK(&vmpr->work, vmpressure_work_fn);
  }
++
++/**
++ * vmpressure_cleanup() - shuts down vmpressure control structure
++ * @vmpr:	Structure to be cleaned up
++ *
++ * This function should be called before the structure in which it is
++ * embedded is cleaned up.
++ */
++void vmpressure_cleanup(struct vmpressure *vmpr)
++{
++	/*
++	 * Make sure there is no pending work before eventfd infrastructure
++	 * goes away.
++	 */
++	flush_work(&vmpr->work);
++}
 -- 
 1.8.3.2
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
