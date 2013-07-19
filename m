@@ -1,147 +1,150 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: [patch 5/5] mm: memcontrol: sanity check memcg OOM context unwind
-Date: Fri, 19 Jul 2013 00:26:23 -0400
-Message-ID: <20130719042623.GH17812@cmpxchg.org>
-References: <20130710182506.F25DF461@pobox.sk>
- <20130711072507.GA21667@dhcp22.suse.cz>
- <20130714012641.C2DA4E05@pobox.sk>
- <20130714015112.FFCB7AF7@pobox.sk>
- <20130715154119.GA32435@dhcp22.suse.cz>
- <20130715160006.GB32435@dhcp22.suse.cz>
- <20130716153544.GX17812@cmpxchg.org>
- <20130716160905.GA20018@dhcp22.suse.cz>
- <20130716164830.GZ17812@cmpxchg.org>
- <20130719042124.GC17812@cmpxchg.org>
+From: "azurIt" <azurit-Rm0zKEqwvD4@public.gmane.org>
+Subject: =?utf-8?q?Re=3A_=5BPATCH_for_3=2E2=5D_memcg=3A_do_not_trap_chargers_with_full_callstack_on_OOM?=
+Date: Fri, 19 Jul 2013 10:23:39 +0200
+Message-ID: <20130719102339.34DF73E5@pobox.sk>
+References: <20130709135450.GI20281@dhcp22.suse.cz>, <20130710182506.F25DF461@pobox.sk>, <20130711072507.GA21667@dhcp22.suse.cz>, <20130714012641.C2DA4E05@pobox.sk>, <20130714015112.FFCB7AF7@pobox.sk>, <20130715154119.GA32435@dhcp22.suse.cz>, <20130715160006.GB32435@dhcp22.suse.cz>, <20130716153544.GX17812@cmpxchg.org>, <20130716160905.GA20018@dhcp22.suse.cz>, <20130716164830.GZ17812@cmpxchg.org> <20130719042124.GC17812@cmpxchg.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
 In-Reply-To: <20130719042124.GC17812-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, righi.andrea-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+To: =?utf-8?q?Johannes_Weiner?= <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, =?utf-8?q?Michal_Hocko?= <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, =?utf-8?q?cgroups_mailinglist?= <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, righi.andrea-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-Catch the cases where a memcg OOM context is set up in the failed
-charge path but the fault handler is not actually returning
-VM_FAULT_ERROR, which would be required to properly finalize the OOM.
+> CC: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, "cgroups mailinglist" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "KAMEZAWA Hiroyuki" <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, righi.andrea-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+>On Tue, Jul 16, 2013 at 12:48:30PM -0400, Johannes Weiner wrote:
+>> On Tue, Jul 16, 2013 at 06:09:05PM +0200, Michal Hocko wrote:
+>> > On Tue 16-07-13 11:35:44, Johannes Weiner wrote:
+>> > > On Mon, Jul 15, 2013 at 06:00:06PM +0200, Michal Hocko wrote:
+>> > > > On Mon 15-07-13 17:41:19, Michal Hocko wrote:
+>> > > > > On Sun 14-07-13 01:51:12, azurIt wrote:
+>> > > > > > > CC: "Johannes Weiner" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, "cgroups mailinglist" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "KAMEZAWA Hiroyuki" <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, righi.andrea-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+>> > > > > > >> CC: "Johannes Weiner" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, "cgroups mailinglist" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "KAMEZAWA Hiroyuki" <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, righi.andrea-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+>> > > > > > >>On Wed 10-07-13 18:25:06, azurIt wrote:
+>> > > > > > >>> >> Now i realized that i forgot to remove UID from that cgroup before
+>> > > > > > >>> >> trying to remove it, so cgroup cannot be removed anyway (we are using
+>> > > > > > >>> >> third party cgroup called cgroup-uid from Andrea Righi, which is able
+>> > > > > > >>> >> to associate all user's processes with target cgroup). Look here for
+>> > > > > > >>> >> cgroup-uid patch:
+>> > > > > > >>> >> https://www.develer.com/~arighi/linux/patches/cgroup-uid/cgroup-uid-v8.patch
+>> > > > > > >>> >> 
+>> > > > > > >>> >> ANYWAY, i'm 101% sure that 'tasks' file was empty and 'under_oom' was
+>> > > > > > >>> >> permanently '1'.
+>> > > > > > >>> >
+>> > > > > > >>> >This is really strange. Could you post the whole diff against stable
+>> > > > > > >>> >tree you are using (except for grsecurity stuff and the above cgroup-uid
+>> > > > > > >>> >patch)?
+>> > > > > > >>> 
+>> > > > > > >>> 
+>> > > > > > >>> Here are all patches which i applied to kernel 3.2.48 in my last test:
+>> > > > > > >>> http://watchdog.sk/lkml/patches3/
+>> > > > > > >>
+>> > > > > > >>The two patches from Johannes seem correct.
+>> > > > > > >>
+>> > > > > > >>From a quick look even grsecurity patchset shouldn't interfere as it
+>> > > > > > >>doesn't seem to put any code between handle_mm_fault and mm_fault_error
+>> > > > > > >>and there also doesn't seem to be any new handle_mm_fault call sites.
+>> > > > > > >>
+>> > > > > > >>But I cannot tell there aren't other code paths which would lead to a
+>> > > > > > >>memcg charge, thus oom, without proper FAULT_FLAG_KERNEL handling.
+>> > > > > > >
+>> > > > > > >
+>> > > > > > >Michal,
+>> > > > > > >
+>> > > > > > >now i can definitely confirm that problem with unremovable cgroups
+>> > > > > > >persists. What info do you need from me? I applied also your little
+>> > > > > > >'WARN_ON' patch.
+>> > > > > > 
+>> > > > > > Ok, i think you want this:
+>> > > > > > http://watchdog.sk/lkml/kern4.log
+>> > > > > 
+>> > > > > Jul 14 01:11:39 server01 kernel: [  593.589087] [ pid ]   uid  tgid total_vm      rss cpu oom_adj oom_score_adj name
+>> > > > > Jul 14 01:11:39 server01 kernel: [  593.589451] [12021]  1333 12021   172027    64723   4       0             0 apache2
+>> > > > > Jul 14 01:11:39 server01 kernel: [  593.589647] [12030]  1333 12030   172030    64748   2       0             0 apache2
+>> > > > > Jul 14 01:11:39 server01 kernel: [  593.589836] [12031]  1333 12031   172030    64749   3       0             0 apache2
+>> > > > > Jul 14 01:11:39 server01 kernel: [  593.590025] [12032]  1333 12032   170619    63428   3       0             0 apache2
+>> > > > > Jul 14 01:11:39 server01 kernel: [  593.590213] [12033]  1333 12033   167934    60524   2       0             0 apache2
+>> > > > > Jul 14 01:11:39 server01 kernel: [  593.590401] [12034]  1333 12034   170747    63496   4       0             0 apache2
+>> > > > > Jul 14 01:11:39 server01 kernel: [  593.590588] [12035]  1333 12035   169659    62451   1       0             0 apache2
+>> > > > > Jul 14 01:11:39 server01 kernel: [  593.590776] [12036]  1333 12036   167614    60384   3       0             0 apache2
+>> > > > > Jul 14 01:11:39 server01 kernel: [  593.590984] [12037]  1333 12037   166342    58964   3       0             0 apache2
+>> > > > > Jul 14 01:11:39 server01 kernel: [  593.591178] Memory cgroup out of memory: Kill process 12021 (apache2) score 847 or sacrifice child
+>> > > > > Jul 14 01:11:39 server01 kernel: [  593.591370] Killed process 12021 (apache2) total-vm:688108kB, anon-rss:255472kB, file-rss:3420kB
+>> > > > > Jul 14 01:11:41 server01 kernel: [  595.392920] ------------[ cut here ]------------
+>> > > > > Jul 14 01:11:41 server01 kernel: [  595.393096] WARNING: at kernel/exit.c:888 do_exit+0x7d0/0x870()
+>> > > > > Jul 14 01:11:41 server01 kernel: [  595.393256] Hardware name: S5000VSA
+>> > > > > Jul 14 01:11:41 server01 kernel: [  595.393415] Pid: 12037, comm: apache2 Not tainted 3.2.48-grsec #1
+>> > > > > Jul 14 01:11:41 server01 kernel: [  595.393577] Call Trace:
+>> > > > > Jul 14 01:11:41 server01 kernel: [  595.393737]  [<ffffffff8105520a>] warn_slowpath_common+0x7a/0xb0
+>> > > > > Jul 14 01:11:41 server01 kernel: [  595.393903]  [<ffffffff8105525a>] warn_slowpath_null+0x1a/0x20
+>> > > > > Jul 14 01:11:41 server01 kernel: [  595.394068]  [<ffffffff81059c50>] do_exit+0x7d0/0x870
+>> > > > > Jul 14 01:11:41 server01 kernel: [  595.394231]  [<ffffffff81050254>] ? thread_group_times+0x44/0xb0
+>> > > > > Jul 14 01:11:41 server01 kernel: [  595.394392]  [<ffffffff81059d41>] do_group_exit+0x51/0xc0
+>> > > > > Jul 14 01:11:41 server01 kernel: [  595.394551]  [<ffffffff81059dc7>] sys_exit_group+0x17/0x20
+>> > > > > Jul 14 01:11:41 server01 kernel: [  595.394714]  [<ffffffff815caea6>] system_call_fastpath+0x18/0x1d
+>> > > > > Jul 14 01:11:41 server01 kernel: [  595.394921] ---[ end trace 738570e688acf099 ]---
+>> > > > > 
+>> > > > > OK, so you had an OOM which has been handled by in-kernel oom handler
+>> > > > > (it killed 12021) and 12037 was in the same group. The warning tells us
+>> > > > > that it went through mem_cgroup_oom as well (otherwise it wouldn't have
+>> > > > > memcg_oom.wait_on_memcg set and the warning wouldn't trigger) and then
+>> > > > > it exited on the userspace request (by exit syscall).
+>> > > > > 
+>> > > > > I do not see any way how, this could happen though. If mem_cgroup_oom
+>> > > > > is called then we always return CHARGE_NOMEM which turns into ENOMEM
+>> > > > > returned by __mem_cgroup_try_charge (invoke_oom must have been set to
+>> > > > > true).  So if nobody screwed the return value on the way up to page
+>> > > > > fault handler then there is no way to escape.
+>> > > > > 
+>> > > > > I will check the code.
+>> > > > 
+>> > > > OK, I guess I found it:
+>> > > > __do_fault
+>> > > >   fault = filemap_fault
+>> > > >   do_async_mmap_readahead
+>> > > >     page_cache_async_readahead
+>> > > >       ondemand_readahead
+>> > > >         __do_page_cache_readahead
+>> > > >           read_pages
+>> > > >             readpages = ext3_readpages
+>> > > >               mpage_readpages			# Doesn't propagate ENOMEM
+>> > > >                add_to_page_cache_lru
+>> > > >                  add_to_page_cache
+>> > > >                    add_to_page_cache_locked
+>> > > >                      mem_cgroup_cache_charge
+>> > > > 
+>> > > > So the read ahead most probably. Again! Duhhh. I will try to think
+>> > > > about a fix for this. One obvious place is mpage_readpages but
+>> > > > __do_page_cache_readahead ignores read_pages return value as well and
+>> > > > page_cache_async_readahead, even worse, is just void and exported as
+>> > > > such.
+>> > > > 
+>> > > > So this smells like a hard to fix bugger. One possible, and really ugly
+>> > > > way would be calling mem_cgroup_oom_synchronize even if handle_mm_fault
+>> > > > doesn't return VM_FAULT_ERROR, but that is a crude hack.
+>
+>I fixed it by disabling the OOM killer altogether for readahead code.
+>We don't do it globally, we should not do it in the memcg, these are
+>optional allocations/charges.
+>
+>I also disabled it for kernel faults triggered from within a syscall
+>(copy_*user, get_user_pages), which should just return -ENOMEM as
+>usual (unless it's nested inside a userspace fault).  The only
+>downside is that we can't get around annotating userspace faults
+>anymore, so every architecture fault handler now passes
+>FAULT_FLAG_USER to handle_mm_fault().  Makes the series a little less
+>self-contained, but it's not unreasonable.
+>
+>It's easy to detect leaks now by checking if the memcg OOM context is
+>setup and we are not returning VM_FAULT_OOM.
+>
+>Here is a combined diff based on 3.2.  azurIt, any chance you could
+>give this a shot?  I tested it on my local machines, but you have a
+>known reproducer of fairly unlikely scenarios...
 
-Example output: the first trace shows the stack at the end of
-handle_mm_fault() where an unexpected memcg OOM context is detected.
-The subsequent trace is of whoever set up that OOM context.  In this
-case it was the charging of readahead pages in a file fault, which
-does not propagate VM_FAULT_OOM on failure and should disable OOM:
 
-[   27.805359] WARNING: at /home/hannes/src/linux/linux/mm/memory.c:3523 handle_mm_fault+0x1fb/0x3f0()
-[   27.805360] Hardware name: PowerEdge 1950
-[   27.805361] Fixing unhandled memcg OOM context, set up from:
-[   27.805362] Pid: 1599, comm: file Tainted: G        W    3.2.0-00005-g6d10010 #97
-[   27.805363] Call Trace:
-[   27.805365]  [<ffffffff8103dcea>] warn_slowpath_common+0x6a/0xa0
-[   27.805367]  [<ffffffff8103dd91>] warn_slowpath_fmt+0x41/0x50
-[   27.805369]  [<ffffffff810c8ffb>] handle_mm_fault+0x1fb/0x3f0
-[   27.805371]  [<ffffffff81024fa0>] do_page_fault+0x140/0x4a0
-[   27.805373]  [<ffffffff810cdbfb>] ? do_mmap_pgoff+0x34b/0x360
-[   27.805376]  [<ffffffff813cbc6f>] page_fault+0x1f/0x30
-[   27.805377] ---[ end trace 305ec584fba81649 ]---
-[   27.805378]  [<ffffffff810f2418>] __mem_cgroup_try_charge+0x5c8/0x7e0
-[   27.805380]  [<ffffffff810f38fc>] mem_cgroup_cache_charge+0xac/0x110
-[   27.805381]  [<ffffffff810a528e>] add_to_page_cache_locked+0x3e/0x120
-[   27.805383]  [<ffffffff810a5385>] add_to_page_cache_lru+0x15/0x40
-[   27.805385]  [<ffffffff8112dfa3>] mpage_readpages+0xc3/0x150
-[   27.805387]  [<ffffffff8115c6d8>] ext4_readpages+0x18/0x20
-[   27.805388]  [<ffffffff810afbe1>] __do_page_cache_readahead+0x1c1/0x270
-[   27.805390]  [<ffffffff810b023c>] ra_submit+0x1c/0x20
-[   27.805392]  [<ffffffff810a5eb4>] filemap_fault+0x3f4/0x450
-[   27.805394]  [<ffffffff810c4a2d>] __do_fault+0x6d/0x510
-[   27.805395]  [<ffffffff810c741a>] handle_pte_fault+0x8a/0x920
-[   27.805397]  [<ffffffff810c8f9c>] handle_mm_fault+0x19c/0x3f0
-[   27.805398]  [<ffffffff81024fa0>] do_page_fault+0x140/0x4a0
-[   27.805400]  [<ffffffff813cbc6f>] page_fault+0x1f/0x30
-[   27.805401]  [<ffffffffffffffff>] 0xffffffffffffffff
+I will be out of office between 25.7. and 1.8. and I don't want to run anything which can potentially do an outage of our services. I will test this patch after 2.8. Should I use also previous patches of this one is enough? Thank you very much Johannes.
 
-Debug patch only.
-
-Not-signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
----
- include/linux/sched.h | 3 +++
- mm/memcontrol.c       | 7 +++++++
- mm/memory.c           | 9 +++++++++
- 3 files changed, 19 insertions(+)
-
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 7e6c9e9..a77d198 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -91,6 +91,7 @@ struct sched_param {
- #include <linux/latencytop.h>
- #include <linux/cred.h>
- #include <linux/llist.h>
-+#include <linux/stacktrace.h>
- 
- #include <asm/processor.h>
- 
-@@ -1571,6 +1572,8 @@ struct task_struct {
- 	struct memcg_oom_info {
- 		unsigned int may_oom:1;
- 		unsigned int in_memcg_oom:1;
-+		struct stack_trace trace;
-+		unsigned long trace_entries[16];
- 		int wakeups;
- 		struct mem_cgroup *wait_on_memcg;
- 	} memcg_oom;
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 99b0101..c47c77e 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -49,6 +49,7 @@
- #include <linux/page_cgroup.h>
- #include <linux/cpu.h>
- #include <linux/oom.h>
-+#include <linux/stacktrace.h>
- #include "internal.h"
- 
- #include <asm/uaccess.h>
-@@ -1870,6 +1871,12 @@ static void mem_cgroup_oom(struct mem_cgroup *memcg, gfp_t mask)
- 
- 	current->memcg_oom.in_memcg_oom = 1;
- 
-+	current->memcg_oom.trace.nr_entries = 0;
-+	current->memcg_oom.trace.max_entries = 16;
-+	current->memcg_oom.trace.entries = current->memcg_oom.trace_entries;
-+	current->memcg_oom.trace.skip = 1;
-+	save_stack_trace(&current->memcg_oom.trace);
-+
- 	/* At first, try to OOM lock hierarchy under memcg.*/
- 	spin_lock(&memcg_oom_lock);
- 	locked = mem_cgroup_oom_lock(memcg);
-diff --git a/mm/memory.c b/mm/memory.c
-index 2be02b7..fc6d741 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -57,6 +57,7 @@
- #include <linux/swapops.h>
- #include <linux/elf.h>
- #include <linux/gfp.h>
-+#include <linux/stacktrace.h>
- 
- #include <asm/io.h>
- #include <asm/pgalloc.h>
-@@ -3517,6 +3518,14 @@ int handle_mm_fault(struct mm_struct *mm, struct vm_area_struct *vma,
- 	if (userfault)
- 		WARN_ON(mem_cgroup_xchg_may_oom(current, 0) == 0);
- 
-+#ifdef CONFIG_CGROUP_MEM_RES_CTLR
-+	if (WARN(!(ret & VM_FAULT_OOM) && current->memcg_oom.in_memcg_oom,
-+		 "Fixing unhandled memcg OOM context, set up from:\n")) {
-+		print_stack_trace(&current->memcg_oom.trace, 0);
-+		mem_cgroup_oom_synchronize();
-+	}
-+#endif
-+
- 	return ret;
- }
- 
--- 
-1.8.3.2
+azur
