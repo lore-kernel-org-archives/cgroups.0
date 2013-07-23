@@ -1,75 +1,69 @@
-From: Konstantin Ryabitsev <mricon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: Single process controlling all cgroups sounds like looking in
- right direction but wrong solution.
-Date: Fri, 19 Jul 2013 16:01:21 -0400
-Message-ID: <51E99B11.5020904@kernel.org>
-References: <CANA3KFV6LmfKYUo305Fo2Yv_0kJGSSa7OjnGi8BMb+0Ys9e8NA@mail.gmail.com> <20130715032551.GA3046@ac100> <CANA3KFWdKbrpZDHHsqKeh-vugK7NjJ1xrFcXyYSRaKn0mUYewg@mail.gmail.com> <20130715123216.GA5663@sergelap> <CANA3KFVeYkvidYu=1rV_We3JLH5QEsogCnYQEdA6VGBKD2sbYw@mail.gmail.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [Workman-devel] cgroup: status-quo and userland efforts
+Date: Tue, 23 Jul 2013 16:48:16 +0200
+Message-ID: <20130723144816.GK8677@dhcp22.suse.cz>
+References: <1372311907.5871.78.camel@marge.simpson.net>
+ <20130627180143.GD5599@mtj.dyndns.org>
+ <1372391198.5989.110.camel@marge.simpson.net>
+ <20130628040930.GC2500@htj.dyndns.org>
+ <1372394950.5989.128.camel@marge.simpson.net>
+ <20130628050138.GD2500@htj.dyndns.org>
+ <20130628150513.GD5125@dhcp22.suse.cz>
+ <20130628180155.GD16483@redhat.com>
+ <20130630183838.GB23731@dhcp22.suse.cz>
+ <20130715184940.GG27338@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="AqEScAQoBLWP6avm9MpJOHQTPHEpfgjBS"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linuxfoundation.org; s=google;
-        h=sender:message-id:date:from:organization:user-agent:mime-version:to
-         :cc:subject:references:in-reply-to:x-enigmail-version:content-type;
-        bh=8lZxTs9appAjXNi8Ejz+aq1JxIhRqhGKXsKIioCjlVI=;
-        b=J4pQ5eloB95lSAEVkwsRMwCTExHGO/ghbWPhLopH80EhQ24iu245cc/7OGK48DB9rh
-         yy8K0rDmjGF/YlEZA49Jf8PfmLfHG90n62cZzHDlUekcZZdXpgdvovQgwtwT78kQp5Qy
-         mP8tvxoPqUdIxeTBI/L1DaBKtbigmJ1LVhPxI=
-In-Reply-To: <CANA3KFVeYkvidYu=1rV_We3JLH5QEsogCnYQEdA6VGBKD2sbYw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20130715184940.GG27338-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: Peter Dolding <oiaohm-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, webmaster-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Mike Galbraith <bitbucket-BGeptl67XyCzQB+pC5nmwQ@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, lpoetter <lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, workman-devel <workman-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "dhaval.giani" <dhaval.giani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bsingharora <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---AqEScAQoBLWP6avm9MpJOHQTPHEpfgjBS
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Mon 15-07-13 14:49:40, Vivek Goyal wrote:
+> On Sun, Jun 30, 2013 at 08:38:38PM +0200, Michal Hocko wrote:
+> > On Fri 28-06-13 14:01:55, Vivek Goyal wrote:
+> > > On Fri, Jun 28, 2013 at 05:05:13PM +0200, Michal Hocko wrote:
+> > [...]
+> > > > OK, so libcgroup's rules daemon will still work and place my tasks in
+> > > > appropriate cgroups?
+> > > 
+> > > Do you use that daemon in practice?
+> > 
+> > I am not but my users do. And that is why I care.
+> 
+> Michael, 
+> 
+> would you have more details of how those users are exactly using
+> rules engine daemon.
 
-On 16/07/13 06:06 PM, Peter Dolding wrote:
-> Webmaster https://www.kernel.org/doc/linux/MAINTAINERS   and the
-> Maintainers file in git don't match.    Would suspect other sections
-> in doc directory are also out.
+The most common usage is uid and exec names.
 
-Correct, that seems to have been completely overlooked. I just put
-together a script that will auto-build and update the documentation
-tree. The following is now auto-updated each time Linus tags his tree:
+> To me rulesengined processed 3 kinds of rules.
+> 
+> - uid based
+> - gid based
+> - exec file path based
+> 
+> uid/gid based rule exection can be taken care by pam_cgroup module too.
+> So I think one should not need cgrulesengined for that.
 
-https://www.kernel.org/doc/Documentation/
-https://www.kernel.org/doc/htmldocs/
-https://www.kernel.org/doc/readme/
-https://www.kernel.org/doc/linux/
-https://www.kernel.org/doc/makehelp.txt
+I am not familiar with pam_cgroup much but it is a part of libcgroup
+package, right?
 
-Best,
---=20
-Konstantin Ryabitsev
-Senior Systems Administrator
-Linux Foundation Collab Projects
-Montr=C3=A9al, Qu=C3=A9bec
+> I am curious what kind of exec rules are useful. Any placement of
+> services one can do using systemd. So only executables we are left
+> to manage are which are not services. 
 
+Yes, those are usually backup processes which should not disrupt the
+regular server workload.
 
---AqEScAQoBLWP6avm9MpJOHQTPHEpfgjBS
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQGcBAEBAgAGBQJR6ZsRAAoJEI6WedmufEle8S4L/RtAbQDfVPUye0rgBRf91lNf
-4qd5/bdoypAwul+omkQ7HNvKpDs4cNZM2PE4YLGLgbeHburA6mjjPHZ1iSyZPeCt
-03iswjN+E0cBWMQbRlboLpjRp0DjmAa2S78X3A9xsc9WKsKbiYo5nkb+svl2nPN8
-vp/1ZP1W4IsP08mhBBNgN4onDSj2bbwkGWkADVUv5FoB/4uSxnjRoUM3rKJ+1EwL
-QRl6V6f80TRyej3ZoXUpO0frbDCJqVlnk9c+l/P38yMFbnIPDB1FgC79HqbjWMEc
-SyPDo4vEg5WQA1xaXSGDN8a5XyAwq4yx+dlepwePHCOwNzuRdH6DH3dVRlRtf+In
-QgYniN8XM+/1ARvel8nLdX9C3AKXGfD7klIOAmhqxsMf7NVen3/sss0T67LQL9CU
-dlQUKynmJd3C/miOodWGpy0zI6/sKNGKcYep8MQ5oKT8bQci6zoVUbapP2DgUFpo
-q2p/iJu/xKLK/WS3DCiH71qY9KzEEND8qqU8UdGJMg==
-=qqpV
------END PGP SIGNATURE-----
-
---AqEScAQoBLWP6avm9MpJOHQTPHEpfgjBS--
+uid ones are used to keep a leash on local users of the machine but i do
+not have many details as I usually do not have access to those machines.
+All I see are complains when something explodes ;)
+-- 
+Michal Hocko
+SUSE Labs
