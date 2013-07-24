@@ -1,99 +1,93 @@
-From: Li Zefan <lizefan@huawei.com>
-Subject: [PATCH v2 5/8] memcg: convert to use cgroup id
-Date: Wed, 24 Jul 2013 18:01:53 +0800
-Message-ID: <51EFA611.8000706@huawei.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH v2 1/8] cgroup: convert cgroup_ida to cgroup_idr
+Date: Wed, 24 Jul 2013 16:07:02 +0200
+Message-ID: <20130724140702.GD2540@dhcp22.suse.cz>
 References: <51EFA554.6080801@huawei.com>
+ <51EFA570.5020907@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <51EFA554.6080801@huawei.com>
+Content-Disposition: inline
+In-Reply-To: <51EFA570.5020907@huawei.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Glauber Costa <glommer@parallels.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan@huawei.com>
+Cc: Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Glauber Costa <glommer@parallels.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org
 
-Use cgroup id instead of css id. This is a preparation to kill css id.
+On Wed 24-07-13 17:59:12, Li Zefan wrote:
+> This enables us to lookup a cgroup by its id.
+> 
+> Signed-off-by: Li Zefan <lizefan@huawei.com>
 
-Note, as memcg treats 0 as an invalid id, while cgroup id starts with 0,
-we define memcg_id == cgroup_id + 1.
+Reviewed-by: Michal Hocko <mhocko@suse.cz>
 
-Signed-off-by: Li Zefan <lizefan@huawei.com>
----
- mm/memcontrol.c | 25 +++++++++++++++++--------
- 1 file changed, 17 insertions(+), 8 deletions(-)
+One nit/question bellow
+[...]
+> @@ -4268,15 +4271,19 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+>  	if (!cgrp)
+>  		return -ENOMEM;
+>  
+> +	/*
+> +	 * Temporarily set the pointer to NULL, so idr_find() won't return
+> +	 * a half-baked cgroup.
+> +	 */
+> +	cgrp->id = idr_alloc(&root->cgroup_idr, NULL, 1, 0, GFP_KERNEL);
+> +	if (cgrp->id < 0)
+> +		goto err_free_cgrp;
+> +
+>  	name = cgroup_alloc_name(dentry);
+>  	if (!name)
+> -		goto err_free_cgrp;
+> +		goto err_free_id;
+>  	rcu_assign_pointer(cgrp->name, name);
+>  
+> -	cgrp->id = ida_simple_get(&root->cgroup_ida, 1, 0, GFP_KERNEL);
+> -	if (cgrp->id < 0)
+> -		goto err_free_name;
+> -
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 626c426..35d8286 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -512,6 +512,15 @@ static inline bool mem_cgroup_is_root(struct mem_cgroup *memcg)
- 	return (memcg == root_mem_cgroup);
- }
- 
-+static inline unsigned short mem_cgroup_id(struct mem_cgroup *memcg)
-+{
-+	/*
-+	 * The ID of the root cgroup is 0, but memcg treat 0 as an
-+	 * valid ID, so we return (cgroup_id + 1).
-+	 */
-+	return memcg->css.cgroup->id + 1;
-+}
-+
- /* Writing them here to avoid exposing memcg's inner layout */
- #if defined(CONFIG_INET) && defined(CONFIG_MEMCG_KMEM)
- 
-@@ -2821,15 +2830,15 @@ static void __mem_cgroup_cancel_local_charge(struct mem_cgroup *memcg,
-  */
- static struct mem_cgroup *mem_cgroup_lookup(unsigned short id)
- {
--	struct cgroup_subsys_state *css;
-+	struct cgroup *cgrp;
- 
- 	/* ID 0 is unused ID */
- 	if (!id)
- 		return NULL;
--	css = css_lookup(&mem_cgroup_subsys, id);
--	if (!css)
-+	cgrp = cgroup_from_id(&mem_cgroup_subsys, id - 1);
-+	if (!cgrp)
- 		return NULL;
--	return mem_cgroup_from_css(css);
-+	return mem_cgroup_from_cont(cgrp);
- }
- 
- struct mem_cgroup *try_get_mem_cgroup_from_page(struct page *page)
-@@ -4328,7 +4337,7 @@ mem_cgroup_uncharge_swapcache(struct page *page, swp_entry_t ent, bool swapout)
- 	 * css_get() was called in uncharge().
- 	 */
- 	if (do_swap_account && swapout && memcg)
--		swap_cgroup_record(ent, css_id(&memcg->css));
-+		swap_cgroup_record(ent, mem_cgroup_id(memcg));
- }
- #endif
- 
-@@ -4380,8 +4389,8 @@ static int mem_cgroup_move_swap_account(swp_entry_t entry,
- {
- 	unsigned short old_id, new_id;
- 
--	old_id = css_id(&from->css);
--	new_id = css_id(&to->css);
-+	old_id = mem_cgroup_id(from);
-+	new_id = mem_cgroup_id(to);
- 
- 	if (swap_cgroup_cmpxchg(entry, old_id, new_id) == old_id) {
- 		mem_cgroup_swap_statistics(from, false);
-@@ -6542,7 +6551,7 @@ static enum mc_target_type get_mctgt_type(struct vm_area_struct *vma,
- 	}
- 	/* There is a swap entry and a page doesn't exist or isn't charged */
- 	if (ent.val && !ret &&
--			css_id(&mc.from->css) == lookup_swap_cgroup_id(ent)) {
-+	    mem_cgroup_id(mc.from) == lookup_swap_cgroup_id(ent)) {
- 		ret = MC_TARGET_SWAP;
- 		if (target)
- 			target->ent = ent;
+Is the move necessary? You would safe few lines in the patch if you kept
+the ordering.
+
+>  	/*
+>  	 * Only live parents can have children.  Note that the liveliness
+>  	 * check isn't strictly necessary because cgroup_mkdir() and
+> @@ -4286,7 +4293,7 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+>  	 */
+>  	if (!cgroup_lock_live_group(parent)) {
+>  		err = -ENODEV;
+> -		goto err_free_id;
+> +		goto err_free_name;
+>  	}
+>  
+>  	/* Grab a reference on the superblock so the hierarchy doesn't
+> @@ -4371,6 +4378,8 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+>  		}
+>  	}
+>  
+> +	idr_replace(&root->cgroup_idr, cgrp, cgrp->id);
+> +
+>  	err = cgroup_addrm_files(cgrp, NULL, cgroup_base_files, true);
+>  	if (err)
+>  		goto err_destroy;
+> @@ -4396,10 +4405,10 @@ err_free_all:
+>  	mutex_unlock(&cgroup_mutex);
+>  	/* Release the reference count that we took on the superblock */
+>  	deactivate_super(sb);
+> -err_free_id:
+> -	ida_simple_remove(&root->cgroup_ida, cgrp->id);
+>  err_free_name:
+>  	kfree(rcu_dereference_raw(cgrp->name));
+> +err_free_id:
+> +	idr_remove(&root->cgroup_idr, cgrp->id);
+>  err_free_cgrp:
+>  	kfree(cgrp);
+>  	return err;
+[...]
 -- 
-1.8.0.2
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
