@@ -1,219 +1,411 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [patch 6/6] mm: memcg: do not trap chargers with full callstack
- on OOM
-Date: Fri, 26 Jul 2013 16:43:10 +0200
-Message-ID: <20130726144310.GH17761@dhcp22.suse.cz>
-References: <1374791138-15665-1-git-send-email-hannes@cmpxchg.org>
- <1374791138-15665-7-git-send-email-hannes@cmpxchg.org>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1374791138-15665-7-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Michal Hocko <mhocko@suse.cz>
+Subject: [PATCH v5.1 1/8] memcg, vmscan: integrate soft reclaim tighter with zone shrinking code
+Date: Fri, 26 Jul 2013 18:04:11 +0200
+Message-ID: <1374854658-26990-2-git-send-email-mhocko@suse.cz>
+References: <1374854658-26990-1-git-send-email-mhocko@suse.cz>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1374854658-26990-1-git-send-email-mhocko@suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Glauber Costa <glommer@gmail.com>
 
-On Thu 25-07-13 18:25:38, Johannes Weiner wrote:
-> The memcg OOM handling is incredibly fragile and can deadlock.  When a
-> task fails to charge memory, it invokes the OOM killer and loops right
-> there in the charge code until it succeeds.  Comparably, any other
-> task that enters the charge path at this point will go to a waitqueue
-> right then and there and sleep until the OOM situation is resolved.
-> The problem is that these tasks may hold filesystem locks and the
-> mmap_sem; locks that the selected OOM victim may need to exit.
-> 
-> For example, in one reported case, the task invoking the OOM killer
-> was about to charge a page cache page during a write(), which holds
-> the i_mutex.  The OOM killer selected a task that was just entering
-> truncate() and trying to acquire the i_mutex:
-> 
-> OOM invoking task:
-> [<ffffffff8110a9c1>] mem_cgroup_handle_oom+0x241/0x3b0
-> [<ffffffff8110b5ab>] T.1146+0x5ab/0x5c0
-> [<ffffffff8110c22e>] mem_cgroup_cache_charge+0xbe/0xe0
-> [<ffffffff810ca28c>] add_to_page_cache_locked+0x4c/0x140
-> [<ffffffff810ca3a2>] add_to_page_cache_lru+0x22/0x50
-> [<ffffffff810ca45b>] grab_cache_page_write_begin+0x8b/0xe0
-> [<ffffffff81193a18>] ext3_write_begin+0x88/0x270
-> [<ffffffff810c8fc6>] generic_file_buffered_write+0x116/0x290
-> [<ffffffff810cb3cc>] __generic_file_aio_write+0x27c/0x480
-> [<ffffffff810cb646>] generic_file_aio_write+0x76/0xf0           # takes ->i_mutex
-> [<ffffffff8111156a>] do_sync_write+0xea/0x130
-> [<ffffffff81112183>] vfs_write+0xf3/0x1f0
-> [<ffffffff81112381>] sys_write+0x51/0x90
-> [<ffffffff815b5926>] system_call_fastpath+0x18/0x1d
-> [<ffffffffffffffff>] 0xffffffffffffffff
-> 
-> OOM kill victim:
-> [<ffffffff811109b8>] do_truncate+0x58/0xa0              # takes i_mutex
-> [<ffffffff81121c90>] do_last+0x250/0xa30
-> [<ffffffff81122547>] path_openat+0xd7/0x440
-> [<ffffffff811229c9>] do_filp_open+0x49/0xa0
-> [<ffffffff8110f7d6>] do_sys_open+0x106/0x240
-> [<ffffffff8110f950>] sys_open+0x20/0x30
-> [<ffffffff815b5926>] system_call_fastpath+0x18/0x1d
-> [<ffffffffffffffff>] 0xffffffffffffffff
-> 
-> The OOM handling task will retry the charge indefinitely while the OOM
-> killed task is not releasing any resources.
-> 
-> A similar scenario can happen when the kernel OOM killer for a memcg
-> is disabled and a userspace task is in charge of resolving OOM
-> situations.  In this case, ALL tasks that enter the OOM path will be
-> made to sleep on the OOM waitqueue and wait for userspace to free
-> resources or increase the group's limit.  But a userspace OOM handler
-> is prone to deadlock itself on the locks held by the waiting tasks.
-> For example one of the sleeping tasks may be stuck in a brk() call
-> with the mmap_sem held for writing but the userspace handler, in order
-> to pick an optimal victim, may need to read files from /proc/<pid>,
-> which tries to acquire the same mmap_sem for reading and deadlocks.
-> 
-> This patch changes the way tasks behave after detecting a memcg OOM
-> and makes sure nobody loops or sleeps with locks held:
-> 
-> 1. When OOMing in a user fault, invoke the OOM killer and restart the
->    fault instead of looping on the charge attempt.  This way, the OOM
->    victim can not get stuck on locks the looping task may hold.
-> 
-> 2. When OOMing in a user fault but somebody else is handling it
->    (either the kernel OOM killer or a userspace handler), don't go to
->    sleep in the charge context.  Instead, remember the OOMing memcg in
->    the task struct and then fully unwind the page fault stack with
->    -ENOMEM.  pagefault_out_of_memory() will then call back into the
->    memcg code to check if the -ENOMEM came from the memcg, and then
->    either put the task to sleep on the memcg's OOM waitqueue or just
->    restart the fault.  The OOM victim can no longer get stuck on any
->    lock a sleeping task may hold.
-> 
-> This relies on the memcg OOM killer only being enabled when an
-> allocation failure will result in a call to pagefault_out_of_memory().
-> 
-> While reworking the OOM routine, also remove a needless OOM waitqueue
-> wakeup when invoking the killer.  In addition to the wakeup implied in
-> the kill signal delivery, only uncharges and limit increases, things
-> that actually change the memory situation, should poke the waitqueue.
-> 
-> Reported-by: Reported-by: azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>
-> Debugged-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Memcg soft reclaim has been traditionally triggered from the global
+reclaim paths before calling shrink_zone. mem_cgroup_soft_limit_reclaim
+then picked up a group which exceeds the soft limit the most and
+reclaimed it with 0 priority to reclaim at least SWAP_CLUSTER_MAX pages.
 
-Looks good just one remark bellow.
+The infrastructure requires per-node-zone trees which hold over-limit
+groups and keep them up-to-date (via memcg_check_events) which is not
+cost free. Although this overhead hasn't turned out to be a bottle neck
+the implementation is suboptimal because mem_cgroup_update_tree has no
+idea which zones consumed memory over the limit so we could easily end
+up having a group on a node-zone tree having only few pages from that
+node-zone.
 
-[...]
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 30ae46a..029a3a8 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-[...]
-> @@ -2189,31 +2191,20 @@ static void memcg_oom_recover(struct mem_cgroup *memcg)
->  }
->  
->  /*
-> - * try to call OOM killer. returns false if we should exit memory-reclaim loop.
-> + * try to call OOM killer
->   */
-> -static bool mem_cgroup_handle_oom(struct mem_cgroup *memcg, gfp_t mask,
-> -				  int order)
-> +static void mem_cgroup_oom(struct mem_cgroup *memcg, gfp_t mask, int order)
->  {
-> -	struct oom_wait_info owait;
-> -	bool locked, need_to_kill;
-> +	bool locked, need_to_kill = true;
->  
-> -	owait.memcg = memcg;
-> -	owait.wait.flags = 0;
-> -	owait.wait.func = memcg_oom_wake_function;
-> -	owait.wait.private = current;
-> -	INIT_LIST_HEAD(&owait.wait.task_list);
-> -	need_to_kill = true;
-> -	mem_cgroup_mark_under_oom(memcg);
+This patch doesn't try to fix node-zone trees management because it
+seems that integrating soft reclaim into zone shrinking sounds much
+easier and more appropriate for several reasons.
+First of all 0 priority reclaim was a crude hack which might lead to
+big stalls if the group's LRUs are big and hard to reclaim (e.g. a lot
+of dirty/writeback pages).
+Soft reclaim should be applicable also to the targeted reclaim which is
+awkward right now without additional hacks.
+Last but not least the whole infrastructure eats quite some code.
 
-You are marking memcg under_oom only for the sleepers. So if we have
-no sleepers then the memcg will never report it is under oom which
-is a behavior change. On the other hand who-ever relies on under_oom
-under such conditions (it would basically mean a busy loop reading
-memory.oom_control) would be racy anyway so it is questionable it
-matters at all. At least now when we do not have any active notification
-that under_oom has changed.
+After this patch shrink_zone is done in 2 passes. First it tries to do the
+soft reclaim if appropriate (only for global reclaim for now to keep
+compatible with the original state) and fall back to ignoring soft limit
+if no group is eligible to soft reclaim or nothing has been scanned
+during the first pass. Only groups which are over their soft limit or
+any of their parents up the hierarchy is over the limit are considered
+eligible during the first pass.
 
-Anyway, this shouldn't be a part of this patch so if you want it because
-it saves a pointless hierarchy traversal then make it a separate patch
-with explanation why the new behavior is still OK.
+Soft limit tree which is not necessary anymore will be removed in the
+follow up patch to make this patch smaller and easier to review.
 
-> +	if (!current->memcg_oom.may_oom)
-> +		return;
-> +
-> +	current->memcg_oom.in_memcg_oom = 1;
->  
->  	/* At first, try to OOM lock hierarchy under memcg.*/
->  	spin_lock(&memcg_oom_lock);
->  	locked = mem_cgroup_oom_lock(memcg);
-> -	/*
-> -	 * Even if signal_pending(), we can't quit charge() loop without
-> -	 * accounting. So, UNINTERRUPTIBLE is appropriate. But SIGKILL
-> -	 * under OOM is always welcomed, use TASK_KILLABLE here.
-> -	 */
-> -	prepare_to_wait(&memcg_oom_waitq, &owait.wait, TASK_KILLABLE);
->  	if (!locked || memcg->oom_kill_disable)
->  		need_to_kill = false;
->  	if (locked)
-> @@ -2221,24 +2212,100 @@ static bool mem_cgroup_handle_oom(struct mem_cgroup *memcg, gfp_t mask,
->  	spin_unlock(&memcg_oom_lock);
->  
->  	if (need_to_kill) {
-> -		finish_wait(&memcg_oom_waitq, &owait.wait);
->  		mem_cgroup_out_of_memory(memcg, mask, order);
->  	} else {
-> -		schedule();
-> -		finish_wait(&memcg_oom_waitq, &owait.wait);
-> +		/*
-> +		 * A system call can just return -ENOMEM, but if this
-> +		 * is a page fault and somebody else is handling the
-> +		 * OOM already, we need to sleep on the OOM waitqueue
-> +		 * for this memcg until the situation is resolved.
-> +		 * Which can take some time because it might be
-> +		 * handled by a userspace task.
-> +		 *
-> +		 * However, this is the charge context, which means
-> +		 * that we may sit on a large call stack and hold
-> +		 * various filesystem locks, the mmap_sem etc. and we
-> +		 * don't want the OOM handler to deadlock on them
-> +		 * while we sit here and wait.  Store the current OOM
-> +		 * context in the task_struct, then return -ENOMEM.
-> +		 * At the end of the page fault handler, with the
-> +		 * stack unwound, pagefault_out_of_memory() will check
-> +		 * back with us by calling
-> +		 * mem_cgroup_oom_synchronize(), possibly putting the
-> +		 * task to sleep.
-> +		 */
-> +		mem_cgroup_mark_under_oom(memcg);
-> +		current->memcg_oom.wakeups = atomic_read(&memcg->oom_wakeups);
-> +		css_get(&memcg->css);
-> +		current->memcg_oom.wait_on_memcg = memcg;
->  	}
-> -	spin_lock(&memcg_oom_lock);
-> -	if (locked)
-> +
-> +	if (locked) {
-> +		spin_lock(&memcg_oom_lock);
->  		mem_cgroup_oom_unlock(memcg);
-> -	memcg_wakeup_oom(memcg);
-> -	spin_unlock(&memcg_oom_lock);
-> +		/*
-> +		 * Sleeping tasks might have been killed, make sure
-> +		 * they get scheduled so they can exit.
-> +		 */
-> +		if (need_to_kill)
-> +			memcg_oom_recover(memcg);
-> +		spin_unlock(&memcg_oom_lock);
-> +	}
-> +}
->  
-> -	mem_cgroup_unmark_under_oom(memcg);
-[...]
+Changes since v2
+- Do not try soft reclaim pass if mem_cgroup_disabled
+Changes since v1
+- __shrink_zone doesn't return the number of shrunk groups as nr_scanned
+  test covers both no groups scanned and no pages from the required zone
+  as pointed by Johannes
+
+Signed-off-by: Michal Hocko <mhocko@suse.cz>
+Reviewed-by: Glauber Costa <glommer@openvz.org>
+Reviewed-by: Tejun Heo <tj@kernel.org>
+---
+ include/linux/memcontrol.h |  10 +--
+ mm/memcontrol.c            | 163 ++++++---------------------------------------
+ mm/vmscan.c                |  62 +++++++++--------
+ 3 files changed, 60 insertions(+), 175 deletions(-)
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 7b4d9d7..d495b9e 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -180,9 +180,7 @@ static inline void mem_cgroup_dec_page_stat(struct page *page,
+ 	mem_cgroup_update_page_stat(page, idx, -1);
+ }
+ 
+-unsigned long mem_cgroup_soft_limit_reclaim(struct zone *zone, int order,
+-						gfp_t gfp_mask,
+-						unsigned long *total_scanned);
++bool mem_cgroup_soft_reclaim_eligible(struct mem_cgroup *memcg);
+ 
+ void __mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx);
+ static inline void mem_cgroup_count_vm_event(struct mm_struct *mm,
+@@ -359,11 +357,9 @@ static inline void mem_cgroup_dec_page_stat(struct page *page,
+ }
+ 
+ static inline
+-unsigned long mem_cgroup_soft_limit_reclaim(struct zone *zone, int order,
+-					    gfp_t gfp_mask,
+-					    unsigned long *total_scanned)
++bool mem_cgroup_soft_reclaim_eligible(struct mem_cgroup *memcg)
+ {
+-	return 0;
++	return false;
+ }
+ 
+ static inline void mem_cgroup_split_huge_fixup(struct page *head)
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index d12ca6f..b010de1 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2023,57 +2023,28 @@ static bool mem_cgroup_reclaimable(struct mem_cgroup *memcg, bool noswap)
+ }
+ #endif
+ 
+-static int mem_cgroup_soft_reclaim(struct mem_cgroup *root_memcg,
+-				   struct zone *zone,
+-				   gfp_t gfp_mask,
+-				   unsigned long *total_scanned)
+-{
+-	struct mem_cgroup *victim = NULL;
+-	int total = 0;
+-	int loop = 0;
+-	unsigned long excess;
+-	unsigned long nr_scanned;
+-	struct mem_cgroup_reclaim_cookie reclaim = {
+-		.zone = zone,
+-		.priority = 0,
+-	};
+-
+-	excess = res_counter_soft_limit_excess(&root_memcg->res) >> PAGE_SHIFT;
+-
+-	while (1) {
+-		victim = mem_cgroup_iter(root_memcg, victim, &reclaim);
+-		if (!victim) {
+-			loop++;
+-			if (loop >= 2) {
+-				/*
+-				 * If we have not been able to reclaim
+-				 * anything, it might because there are
+-				 * no reclaimable pages under this hierarchy
+-				 */
+-				if (!total)
+-					break;
+-				/*
+-				 * We want to do more targeted reclaim.
+-				 * excess >> 2 is not to excessive so as to
+-				 * reclaim too much, nor too less that we keep
+-				 * coming back to reclaim from this cgroup
+-				 */
+-				if (total >= (excess >> 2) ||
+-					(loop > MEM_CGROUP_MAX_RECLAIM_LOOPS))
+-					break;
+-			}
+-			continue;
+-		}
+-		if (!mem_cgroup_reclaimable(victim, false))
+-			continue;
+-		total += mem_cgroup_shrink_node_zone(victim, gfp_mask, false,
+-						     zone, &nr_scanned);
+-		*total_scanned += nr_scanned;
+-		if (!res_counter_soft_limit_excess(&root_memcg->res))
+-			break;
++/*
++ * A group is eligible for the soft limit reclaim if it is
++ * 	a) is over its soft limit
++ * 	b) any parent up the hierarchy is over its soft limit
++ */
++bool mem_cgroup_soft_reclaim_eligible(struct mem_cgroup *memcg)
++{
++	struct mem_cgroup *parent = memcg;
++
++	if (res_counter_soft_limit_excess(&memcg->res))
++		return true;
++
++	/*
++	 * If any parent up the hierarchy is over its soft limit then we
++	 * have to obey and reclaim from this group as well.
++	 */
++	while((parent = parent_mem_cgroup(parent))) {
++		if (res_counter_soft_limit_excess(&parent->res))
++			return true;
+ 	}
+-	mem_cgroup_iter_break(root_memcg, victim);
+-	return total;
++
++	return false;
+ }
+ 
+ /*
+@@ -4743,98 +4714,6 @@ static int mem_cgroup_resize_memsw_limit(struct mem_cgroup *memcg,
+ 	return ret;
+ }
+ 
+-unsigned long mem_cgroup_soft_limit_reclaim(struct zone *zone, int order,
+-					    gfp_t gfp_mask,
+-					    unsigned long *total_scanned)
+-{
+-	unsigned long nr_reclaimed = 0;
+-	struct mem_cgroup_per_zone *mz, *next_mz = NULL;
+-	unsigned long reclaimed;
+-	int loop = 0;
+-	struct mem_cgroup_tree_per_zone *mctz;
+-	unsigned long long excess;
+-	unsigned long nr_scanned;
+-
+-	if (order > 0)
+-		return 0;
+-
+-	mctz = soft_limit_tree_node_zone(zone_to_nid(zone), zone_idx(zone));
+-	/*
+-	 * This loop can run a while, specially if mem_cgroup's continuously
+-	 * keep exceeding their soft limit and putting the system under
+-	 * pressure
+-	 */
+-	do {
+-		if (next_mz)
+-			mz = next_mz;
+-		else
+-			mz = mem_cgroup_largest_soft_limit_node(mctz);
+-		if (!mz)
+-			break;
+-
+-		nr_scanned = 0;
+-		reclaimed = mem_cgroup_soft_reclaim(mz->memcg, zone,
+-						    gfp_mask, &nr_scanned);
+-		nr_reclaimed += reclaimed;
+-		*total_scanned += nr_scanned;
+-		spin_lock(&mctz->lock);
+-
+-		/*
+-		 * If we failed to reclaim anything from this memory cgroup
+-		 * it is time to move on to the next cgroup
+-		 */
+-		next_mz = NULL;
+-		if (!reclaimed) {
+-			do {
+-				/*
+-				 * Loop until we find yet another one.
+-				 *
+-				 * By the time we get the soft_limit lock
+-				 * again, someone might have aded the
+-				 * group back on the RB tree. Iterate to
+-				 * make sure we get a different mem.
+-				 * mem_cgroup_largest_soft_limit_node returns
+-				 * NULL if no other cgroup is present on
+-				 * the tree
+-				 */
+-				next_mz =
+-				__mem_cgroup_largest_soft_limit_node(mctz);
+-				if (next_mz == mz)
+-					css_put(&next_mz->memcg->css);
+-				else /* next_mz == NULL or other memcg */
+-					break;
+-			} while (1);
+-		}
+-		__mem_cgroup_remove_exceeded(mz->memcg, mz, mctz);
+-		excess = res_counter_soft_limit_excess(&mz->memcg->res);
+-		/*
+-		 * One school of thought says that we should not add
+-		 * back the node to the tree if reclaim returns 0.
+-		 * But our reclaim could return 0, simply because due
+-		 * to priority we are exposing a smaller subset of
+-		 * memory to reclaim from. Consider this as a longer
+-		 * term TODO.
+-		 */
+-		/* If excess == 0, no tree ops */
+-		__mem_cgroup_insert_exceeded(mz->memcg, mz, mctz, excess);
+-		spin_unlock(&mctz->lock);
+-		css_put(&mz->memcg->css);
+-		loop++;
+-		/*
+-		 * Could not reclaim anything and there are no more
+-		 * mem cgroups to try or we seem to be looping without
+-		 * reclaiming anything.
+-		 */
+-		if (!nr_reclaimed &&
+-			(next_mz == NULL ||
+-			loop > MEM_CGROUP_MAX_SOFT_LIMIT_RECLAIM_LOOPS))
+-			break;
+-	} while (!nr_reclaimed);
+-	if (next_mz)
+-		css_put(&next_mz->memcg->css);
+-	return nr_reclaimed;
+-}
+-
+ /**
+  * mem_cgroup_force_empty_list - clears LRU of a group
+  * @memcg: group to clear
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index e364542..14ecbdb 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -139,11 +139,21 @@ static bool global_reclaim(struct scan_control *sc)
+ {
+ 	return !sc->target_mem_cgroup;
+ }
++
++static bool mem_cgroup_should_soft_reclaim(struct scan_control *sc)
++{
++	return !mem_cgroup_disabled() && global_reclaim(sc);
++}
+ #else
+ static bool global_reclaim(struct scan_control *sc)
+ {
+ 	return true;
+ }
++
++static bool mem_cgroup_should_soft_reclaim(struct scan_control *sc)
++{
++	return false;
++}
+ #endif
+ 
+ static unsigned long get_lru_size(struct lruvec *lruvec, enum lru_list lru)
+@@ -2145,7 +2155,8 @@ static inline bool should_continue_reclaim(struct zone *zone,
+ 	}
+ }
+ 
+-static void shrink_zone(struct zone *zone, struct scan_control *sc)
++static void
++__shrink_zone(struct zone *zone, struct scan_control *sc, bool soft_reclaim)
+ {
+ 	unsigned long nr_reclaimed, nr_scanned;
+ 
+@@ -2164,6 +2175,12 @@ static void shrink_zone(struct zone *zone, struct scan_control *sc)
+ 		do {
+ 			struct lruvec *lruvec;
+ 
++			if (soft_reclaim &&
++			    !mem_cgroup_soft_reclaim_eligible(memcg)) {
++				memcg = mem_cgroup_iter(root, memcg, &reclaim);
++				continue;
++			}
++
+ 			lruvec = mem_cgroup_zone_lruvec(zone, memcg);
+ 
+ 			shrink_lruvec(lruvec, sc);
+@@ -2194,6 +2211,24 @@ static void shrink_zone(struct zone *zone, struct scan_control *sc)
+ 					 sc->nr_scanned - nr_scanned, sc));
+ }
+ 
++
++static void shrink_zone(struct zone *zone, struct scan_control *sc)
++{
++	bool do_soft_reclaim = mem_cgroup_should_soft_reclaim(sc);
++	unsigned long nr_scanned = sc->nr_scanned;
++
++	__shrink_zone(zone, sc, do_soft_reclaim);
++
++	/*
++	 * No group is over the soft limit or those that are do not have
++	 * pages in the zone we are reclaiming so we have to reclaim everybody
++	 */
++	if (do_soft_reclaim && (sc->nr_scanned == nr_scanned)) {
++		__shrink_zone(zone, sc, false);
++		return;
++	}
++}
++
+ /* Returns true if compaction should go ahead for a high-order request */
+ static inline bool compaction_ready(struct zone *zone, struct scan_control *sc)
+ {
+@@ -2255,8 +2290,6 @@ static bool shrink_zones(struct zonelist *zonelist, struct scan_control *sc)
+ {
+ 	struct zoneref *z;
+ 	struct zone *zone;
+-	unsigned long nr_soft_reclaimed;
+-	unsigned long nr_soft_scanned;
+ 	bool aborted_reclaim = false;
+ 
+ 	/*
+@@ -2296,18 +2329,6 @@ static bool shrink_zones(struct zonelist *zonelist, struct scan_control *sc)
+ 					continue;
+ 				}
+ 			}
+-			/*
+-			 * This steals pages from memory cgroups over softlimit
+-			 * and returns the number of reclaimed pages and
+-			 * scanned pages. This works for global memory pressure
+-			 * and balancing, not for a memcg's limit.
+-			 */
+-			nr_soft_scanned = 0;
+-			nr_soft_reclaimed = mem_cgroup_soft_limit_reclaim(zone,
+-						sc->order, sc->gfp_mask,
+-						&nr_soft_scanned);
+-			sc->nr_reclaimed += nr_soft_reclaimed;
+-			sc->nr_scanned += nr_soft_scanned;
+ 			/* need some check for avoid more shrink_zone() */
+ 		}
+ 
+@@ -2910,8 +2931,6 @@ static unsigned long balance_pgdat(pg_data_t *pgdat, int order,
+ {
+ 	int i;
+ 	int end_zone = 0;	/* Inclusive.  0 = ZONE_DMA */
+-	unsigned long nr_soft_reclaimed;
+-	unsigned long nr_soft_scanned;
+ 	struct scan_control sc = {
+ 		.gfp_mask = GFP_KERNEL,
+ 		.priority = DEF_PRIORITY,
+@@ -3026,15 +3045,6 @@ static unsigned long balance_pgdat(pg_data_t *pgdat, int order,
+ 
+ 			sc.nr_scanned = 0;
+ 
+-			nr_soft_scanned = 0;
+-			/*
+-			 * Call soft limit reclaim before calling shrink_zone.
+-			 */
+-			nr_soft_reclaimed = mem_cgroup_soft_limit_reclaim(zone,
+-							order, sc.gfp_mask,
+-							&nr_soft_scanned);
+-			sc.nr_reclaimed += nr_soft_reclaimed;
+-
+ 			/*
+ 			 * There should be no need to raise the scanning
+ 			 * priority if enough pages are already being scanned
 -- 
-Michal Hocko
-SUSE Labs
+1.8.3.2
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
