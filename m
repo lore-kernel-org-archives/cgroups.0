@@ -1,7 +1,8 @@
 From: Zhao Hongjiang <zhaohongjiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 2/2] cpuset: correct the disoder comment of two functions
-Date: Sat, 27 Jul 2013 11:56:53 +0800
-Message-ID: <51F34505.9010505@huawei.com>
+Subject: [PATCH 1/2] cpuset: get rid of the useless forward declaration of
+ cpuset
+Date: Sat, 27 Jul 2013 11:56:49 +0800
+Message-ID: <51F34501.1090608@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -11,43 +12,25 @@ Content-Type: text/plain; charset="us-ascii"
 To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-correct the disoder comment between cpuset_css_offline() and
-cpuset_css_free() functions.
+get rid of the useless forward declaration of the struct cpuset cause the 
+below define it.
 
 Signed-off-by: Zhao Hongjiang <zhaohongjiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- kernel/cpuset.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ kernel/cpuset.c | 1 -
+ 1 file changed, 1 deletion(-)
 
 diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index 2ddd9b9..703bfd5 100644
+index e565778..2ddd9b9 100644
 --- a/kernel/cpuset.c
 +++ b/kernel/cpuset.c
-@@ -2020,6 +2020,12 @@ out_unlock:
- 	return 0;
- }
+@@ -70,7 +70,6 @@ int number_of_cpusets __read_mostly;
  
-+/*
-+ * If the cpuset being removed has its flag 'sched_load_balance'
-+ * enabled, then simulate turning sched_load_balance off, which
-+ * will call rebuild_sched_domains_locked().
-+ */
-+
- static void cpuset_css_offline(struct cgroup *cgrp)
- {
- 	struct cpuset *cs = cgroup_cs(cgrp);
-@@ -2035,12 +2041,6 @@ static void cpuset_css_offline(struct cgroup *cgrp)
- 	mutex_unlock(&cpuset_mutex);
- }
+ /* Forward declare cgroup structures */
+ struct cgroup_subsys cpuset_subsys;
+-struct cpuset;
  
--/*
-- * If the cpuset being removed has its flag 'sched_load_balance'
-- * enabled, then simulate turning sched_load_balance off, which
-- * will call rebuild_sched_domains_locked().
-- */
--
- static void cpuset_css_free(struct cgroup *cgrp)
- {
- 	struct cpuset *cs = cgroup_cs(cgrp);
+ /* See "Frequency meter" comments, below. */
+ 
 -- 
 1.8.2.2
