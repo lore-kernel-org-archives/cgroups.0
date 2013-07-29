@@ -1,39 +1,52 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/2] cpuset: correct the disoder comment of two functions
-Date: Mon, 29 Jul 2013 14:13:36 -0400
-Message-ID: <20130729181336.GB26076@mtj.dyndns.org>
-References: <51F34505.9010505@huawei.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: memcg creates an unkillable task in 3.2-rc2
+Date: Mon, 29 Jul 2013 14:13:54 -0400
+Message-ID: <20130729181354.GX715@cmpxchg.org>
+References: <20130723174711.GE21100@mtj.dyndns.org>
+	<8761vui4cr.fsf@xmission.com>
+	<20130729075939.GA4678@dhcp22.suse.cz>
+	<87ehahg312.fsf@xmission.com>
+	<20130729095109.GB4678@dhcp22.suse.cz>
+	<20130729161026.GD22605@mtj.dyndns.org>
+	<87r4eh70yg.fsf@xmission.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=5r2nG57Fz7q6MmeHQKj16mEN8XUGVA0LeSZGQuSY3d4=;
-        b=alyJFBKp9Mz/LlTn7PeGTwlhGomQuy4gL6e8hHe6ewmR52tD2urTKZ8tPqu4E75cvf
-         PaZtsMG9hlvWXA7mjrS76E7sen5yRYiaBRWvs1exI6wIhBOHRtv31xLxPKXjnm7zypf0
-         Fca5oC4boW4YJWOCBTknT+3WacgV47Qc/+3qLAc/fgPTxxOjE4jfiVkJfS3lBms8npan
-         CluqP9Ep2UuuqEwstipVsqTOFj3Yh/wHqt+UZZmGgjeXEyxpO9srWEFbCVyWH9syf2bT
-         EIocAbI/an+zBPnu9xhk/xPXJaz59oc7Y5FR5SVnXWs8eNUmHxOnAYHo0jCzJ9Pf7Wmb
-         WElg==
-Content-Disposition: inline
-In-Reply-To: <51F34505.9010505-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Zhao Hongjiang <zhaohongjiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <87r4eh70yg.fsf-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+Cc: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kent.overstreet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On Sat, Jul 27, 2013 at 11:56:53AM +0800, Zhao Hongjiang wrote:
-> correct the disoder comment between cpuset_css_offline() and
-> cpuset_css_free() functions.
+On Mon, Jul 29, 2013 at 10:03:35AM -0700, Eric W. Biederman wrote:
+> Yes.  From the looks of the looks of it the cgroup implementation is
+> rather badly borked right now, and definitely not up to the standards of
+> the other core pieces of the kernel.  One of the reasons I was rather
+> apalled when systemd started using them.  Until the code actually works
+> reliably and the races are removed most people's systems would be much
+> better off with cgroups compiled out.
 > 
-> Signed-off-by: Zhao Hongjiang <zhaohongjiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> A single unified hierarchy is a really nasty idea for the same set of
+> reasons. You have to recompile to disable a controller to see if it that
+> controller's bugs are what are causing problems on your production
+> system.  Compiles or even just a reboot is a very heavy hammer to ask
+> people to use when they are triaging a problem.
 
-Applied to cgroup/for-3.12.
+That's not how it works.  You can always select which controllers you
+want to mount during runtime.  Unified hierarchy only means that there
+is one cgroup tree for all mounted controllers, rather than every
+controller having its own separate cgroup tree.
 
-Thanks.
-
--- 
-tejun
+If you are like most users and currently mount all controllers in the
+same directory so that their cgroup trees overlap and appear to be a
+single tree, nothing changes for you.
