@@ -1,47 +1,52 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3 1/8] cgroup: convert cgroup_ida to cgroup_idr
-Date: Mon, 29 Jul 2013 14:28:35 -0400
-Message-ID: <20130729182835.GD26076@mtj.dyndns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3 3/8] cgroup: implement cgroup_from_id()
+Date: Mon, 29 Jul 2013 14:31:39 -0400
+Message-ID: <20130729183139.GE26076@mtj.dyndns.org>
 References: <51F614B2.6010503@huawei.com>
- <51F614C4.7060602@huawei.com>
+ <51F614DF.9010508@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=niQtGH7TJKA2CqS4FI09pvROmyz/d/z3f4wVpWp/gQE=;
-        b=AvWNg3bSY9nt3gVTukAcbfp3YNrzsrBq11Hjav5TDeAL5xQ1j9/u7O+1fg3UPIFjTg
-         dhoVBsfuaAmc7uL9Pcoale0YluFs8j2KQRIwfiJLLDYk2Up2DuL/NUTikoZRDaquGp5H
-         1u7pztOX3lrOUQqNu7LLX79VAu/7FTW8DD9apnSosJLtsNgzgK2h7G0CTgHs+cZJaEGu
-         DjnC+NYUHAoSWSCTtvOfjIxz5Md6ZkZ7v8gX3tCz+i+8lVy70a+RIMSLs0XBbfN+EoIc
-         2Vqno/MiaLK1AZXIB2c214aOT+0QR/zE/OKMmUKxDfGOGEIChQ9myMcPTrnTwkUZhRzG
-         JUww==
+        bh=JNZU38BCsT50WoxvDbfs+il+7RniBs7ALv0dg4BPKns=;
+        b=TmXfiT4SaAXLrcAYw7IC/bZjYB4qz1d20qKcGHMrQmQmBjFCI76K4XyGp+5T1lhWAW
+         xYOjMSapBc6WzZdGMXJe7RCVrDdn8PSpPpMbIHZYJ3HiLLSotIciE58DRhwtJrO05LoC
+         glFtytNsGhih7mh9HwsBwaasPo42o1c33GxSzJ8VcWNFOlVqILkDFqEsISZQ/AgjUn6h
+         QxkcXq/IfdjtX30OtT5gJ3E+5Qb1sbxIRIYkKs960lO+PHIn8vCAEx51ZUPs5hI4Gpu5
+         FKOTGZcRNOyeTj+RrNu79UiK+mS/YTshCQprnJMj2z7UVgK02ciHMTMn/FknpYUB7t7E
+         9WPQ==
 Content-Disposition: inline
-In-Reply-To: <51F614C4.7060602-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <51F614DF.9010508@huawei.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Li Zefan <lizefan@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Glauber Costa <glommer@parallels.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org
 
-Hello,
+On Mon, Jul 29, 2013 at 03:08:15PM +0800, Li Zefan wrote:
+> +struct cgroup *cgroup_from_id(struct cgroup_subsys *ss, int id)
+> +{
+> +	rcu_lockdep_assert(rcu_read_lock_held(),
+> +			   "cgroup_from_id() needs rcu_read_lock()"
+> +			   " protection");
 
-On Mon, Jul 29, 2013 at 03:07:48PM +0800, Li Zefan wrote:
-> @@ -4590,6 +4599,9 @@ static void cgroup_offline_fn(struct work_struct *work)
->  	/* delete this cgroup from parent->children */
->  	list_del_rcu(&cgrp->sibling);
->  
-> +	if (cgrp->id)
-> +		idr_remove(&cgrp->root->cgroup_idr, cgrp->id);
-> +
+Maybe we want to add notation for &cgroup_mutex for completeness?
 
-Yeap, if we're gonna allow lookups, removal should happen here but can
-we please add short comment explaining why that is?  Also, do we want
-to clear cgrp->id?
+> +	return idr_find(&ss->root->cgroup_idr, id);
+> +}
+
+And maybe inline it?
 
 Thanks.
 
 -- 
 tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
