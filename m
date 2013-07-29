@@ -1,71 +1,30 @@
-From: Holger Brunck <holger.brunck-SkAbAL50j+5BDgjK7y7TUQ@public.gmane.org>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 Subject: Re: cgroups and SCHED_IDLE
-Date: Mon, 29 Jul 2013 17:14:47 +0200
-Message-ID: <51F686E7.6020200@keymile.com>
-References: <51CC7392.8080701@keymile.com> <51D139B4.8070407@keymile.com> <20130723155634.GD18458@mtj.dyndns.org> <51F65F3D.1080503@keymile.com> <20130729140723.GB22156@laptop.programming.kicks-ass.net>
+Date: Mon, 29 Jul 2013 17:25:29 +0200
+Message-ID: <20130729152529.GD22156@laptop.programming.kicks-ass.net>
+References: <51CC7392.8080701@keymile.com>
+ <51D139B4.8070407@keymile.com>
+ <20130723155634.GD18458@mtj.dyndns.org>
+ <51F65F3D.1080503@keymile.com>
+ <20130729140723.GB22156@laptop.programming.kicks-ass.net>
+ <51F686E7.6020200@keymile.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130729140723.GB22156-RM5+C6weyIYnLiPH7yDmwOa11wxjtiyuLtmvbW2Dspo@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <51F686E7.6020200-SkAbAL50j+5BDgjK7y7TUQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Holger Brunck <holger.brunck-SkAbAL50j+5BDgjK7y7TUQ@public.gmane.org>
 Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "Germs, Frits (extern)" <Frits.Germs-SkAbAL50j+5BDgjK7y7TUQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 07/29/2013 04:07 PM, Peter Zijlstra wrote:
-> On Mon, Jul 29, 2013 at 02:25:33PM +0200, Holger Brunck wrote:
->> On 07/23/2013 05:56 PM, Tejun Heo wrote:
->>>> On 06/27/2013 07:17 PM, Holger Brunck wrote:
->>>>
->>>> On a single ARM CPU (kirkwood) I see the same confusing results similar to the
->>>> results of the above powerpc example:
->>>>
->>>>   PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
->>>>   232 root      20   0  1924  492  420 R 99.9  0.4   0:29.15 dd
->>>>   234 root      20   0  1924  492  420 R  0.3  0.4   0:00.13 dd
->>>>
->>>> I doublechecked this on my local host x86_64 multicore and here it works fine
->>>> even if I force both dd processes to run on the same CPU:
->>>>
->>>>   PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
->>>> 32046 root      20   0  102m  516  432 R 49.4  0.0   0:32.49 dd
->>>> 32049 root      20   0  102m  516  432 R 49.4  0.0   0:13.39 dd
->>>>
->>>> So either it's a problem for single CPUs or it's not allowed at all and works
->>>> only by chance.
->>>
->>> Can you please boot with maxcpus=1 and see whether that makes the
->>> issue reproducible on x86?
->>>
->>
->> I retested this with maxcpus=0 to disable SMP completely and it works, both
->> processes share 50% of the CPU. But I have to admit that I currently have only a
->> 3.4 setup for my x86_64 PC.
->>
->> My setup for an arm kirkwood board and a board with a powerpc 8247 runs latest
->> 3.10 kernel where I see the problem that one process is starving.  But the
->> problem was already present in a 3.0.x kernel. So it seems to be a architecture
->> dependent problem.
-> 
-> Does the below fix it?
-> 
+On Mon, Jul 29, 2013 at 05:14:47PM +0200, Holger Brunck wrote:
+> no, unfortunately I got the same results as before.
 
-no, unfortunately I got the same results as before.
+OK, so I'm a little confused; this works on SMP but not on UP? There's
+lots of mention of various platforms, but since I simply don't know any
+of them its not clear if they're UP or not.
 
-Two sched_idle task in the root group:
-
- PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
-  622 root      20   0  1924  492  420 R 49.8  0.4   0:20.26 dd
-  623 root      20   0  1924  492  420 R 49.8  0.4   0:19.96 dd
-
-After moving one of them into a subgroup:
-
-[root@km_kirkwood /sys/fs/cgroup/cpu]# echo 623 > browser/tasks
-
-  PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
-  623 root      20   0  1924  492  420 R 99.4  0.4   0:38.07 dd
-  622 root      20   0  1924  492  420 R  0.3  0.4   0:30.15 dd
-
-Regards
-Holger
+Typically the cgroup nightmare is easier on UP; it would be curious if
+that's the 'broken' case now :-)
