@@ -1,52 +1,61 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 3/8] cgroup: implement cgroup_from_id()
-Date: Mon, 29 Jul 2013 14:31:39 -0400
-Message-ID: <20130729183139.GE26076@mtj.dyndns.org>
-References: <51F614B2.6010503@huawei.com>
- <51F614DF.9010508@huawei.com>
+From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
+Subject: Re: memcg creates an unkillable task in 3.2-rc2
+Date: Mon, 29 Jul 2013 11:52:11 -0700
+Message-ID: <87a9l5w65g.fsf@xmission.com>
+References: <20130723174711.GE21100@mtj.dyndns.org>
+	<8761vui4cr.fsf@xmission.com> <20130729075939.GA4678@dhcp22.suse.cz>
+	<87ehahg312.fsf@xmission.com> <20130729095109.GB4678@dhcp22.suse.cz>
+	<20130729161026.GD22605@mtj.dyndns.org> <87r4eh70yg.fsf@xmission.com>
+	<20130729181354.GX715@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=JNZU38BCsT50WoxvDbfs+il+7RniBs7ALv0dg4BPKns=;
-        b=TmXfiT4SaAXLrcAYw7IC/bZjYB4qz1d20qKcGHMrQmQmBjFCI76K4XyGp+5T1lhWAW
-         xYOjMSapBc6WzZdGMXJe7RCVrDdn8PSpPpMbIHZYJ3HiLLSotIciE58DRhwtJrO05LoC
-         glFtytNsGhih7mh9HwsBwaasPo42o1c33GxSzJ8VcWNFOlVqILkDFqEsISZQ/AgjUn6h
-         QxkcXq/IfdjtX30OtT5gJ3E+5Qb1sbxIRIYkKs960lO+PHIn8vCAEx51ZUPs5hI4Gpu5
-         FKOTGZcRNOyeTj+RrNu79UiK+mS/YTshCQprnJMj2z7UVgK02ciHMTMn/FknpYUB7t7E
-         9WPQ==
-Content-Disposition: inline
-In-Reply-To: <51F614DF.9010508@huawei.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20130729181354.GX715-druUgvl0LCNAfugRpC6u6w@public.gmane.org> (Johannes Weiner's message of
+	"Mon, 29 Jul 2013 14:13:54 -0400")
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Glauber Costa <glommer@parallels.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kent.overstreet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Mon, Jul 29, 2013 at 03:08:15PM +0800, Li Zefan wrote:
-> +struct cgroup *cgroup_from_id(struct cgroup_subsys *ss, int id)
-> +{
-> +	rcu_lockdep_assert(rcu_read_lock_held(),
-> +			   "cgroup_from_id() needs rcu_read_lock()"
-> +			   " protection");
+Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> writes:
 
-Maybe we want to add notation for &cgroup_mutex for completeness?
+> On Mon, Jul 29, 2013 at 10:03:35AM -0700, Eric W. Biederman wrote:
+>> Yes.  From the looks of the looks of it the cgroup implementation is
+>> rather badly borked right now, and definitely not up to the standards of
+>> the other core pieces of the kernel.  One of the reasons I was rather
+>> apalled when systemd started using them.  Until the code actually works
+>> reliably and the races are removed most people's systems would be much
+>> better off with cgroups compiled out.
+>> 
+>> A single unified hierarchy is a really nasty idea for the same set of
+>> reasons. You have to recompile to disable a controller to see if it that
+>> controller's bugs are what are causing problems on your production
+>> system.  Compiles or even just a reboot is a very heavy hammer to ask
+>> people to use when they are triaging a problem.
+>
+> That's not how it works.  You can always select which controllers you
+> want to mount during runtime.  Unified hierarchy only means that there
+> is one cgroup tree for all mounted controllers, rather than every
+> controller having its own separate cgroup tree.
+>
+> If you are like most users and currently mount all controllers in the
+> same directory so that their cgroup trees overlap and appear to be a
+> single tree, nothing changes for you.
 
-> +	return idr_find(&ss->root->cgroup_idr, id);
-> +}
+My practical need is that I need the ability modify which controllers I
+am using on a per group basis.  So that I can make corrall new processes
+in a different set of controllers than currently existing processes.
 
-And maybe inline it?
+I might just be missing something but I don't see how to do that with
+all of the controllers mounted to the same filesystem.
 
-Thanks.
+So while I currently have a single mount of cgroupfs, and don't yet see
+a need for orthogonal classification of processes.  To keep bugs and
+craziness under control I expect I will be implementing a mount of
+cgroupfs per controller within a month.
 
--- 
-tejun
+But except for the need to limit the scope of bugs this is all getting
+rather badly off topic.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Eric
