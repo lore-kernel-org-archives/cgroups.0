@@ -1,30 +1,45 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v3 2/8] cgroup: document how cgroup IDs are assigned
-Date: Tue, 30 Jul 2013 09:08:14 +0800
-Message-ID: <51F711FE.3040006@huawei.com>
-References: <51F614B2.6010503@huawei.com> <51F614D4.6000703@huawei.com> <20130729182632.GC26076@mtj.dyndns.org>
+From: Li Zefan <lizefan@huawei.com>
+Subject: Re: [PATCH v3 1/8] cgroup: convert cgroup_ida to cgroup_idr
+Date: Tue, 30 Jul 2013 09:10:19 +0800
+Message-ID: <51F7127B.1070107@huawei.com>
+References: <51F614B2.6010503@huawei.com> <51F614C4.7060602@huawei.com> <20130729182835.GD26076@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130729182632.GC26076-9pTldWuhBndy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20130729182835.GD26076@mtj.dyndns.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Glauber Costa <glommer@parallels.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, linux-mm@kvack.org
 
-On 2013/7/30 2:26, Tejun Heo wrote:
-> On Mon, Jul 29, 2013 at 03:08:04PM +0800, Li Zefan wrote:
->> As cgroup id has been used in netprio cgroup and will be used in memcg,
->> it's important to make it clear how a cgroup id is allocated.
->>
->> For example, in netprio cgroup, the id is used as index of anarray.
->>
->> Signed-off-by: Li Zefan <lizefan-Z5rXVj2qdvIAvxtiuMwx3w@public.gmane.org>
->> Reviewed-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+On 2013/7/30 2:28, Tejun Heo wrote:
+> Hello,
 > 
-> We can merge this into the first patch?
+> On Mon, Jul 29, 2013 at 03:07:48PM +0800, Li Zefan wrote:
+>> @@ -4590,6 +4599,9 @@ static void cgroup_offline_fn(struct work_struct *work)
+>>  	/* delete this cgroup from parent->children */
+>>  	list_del_rcu(&cgrp->sibling);
+>>  
+>> +	if (cgrp->id)
+>> +		idr_remove(&cgrp->root->cgroup_idr, cgrp->id);
+>> +
+> 
+> Yeap, if we're gonna allow lookups, removal should happen here but can
+> we please add short comment explaining why that is?
+
+sure
+
+> Also, do we want to clear cgrp->id?
 > 
 
-The first patch just changes ida to idr, it doesn't change how IDs are
-allocated, so I prefer make this a standalone patch.
+Set cgrp->id to 0? No, 0 is a valid id. The if is here because at first
+I called idr_alloc() very late in cgroup_create(), so cgroup_offline_fn()
+can be called while cgrp->id hasn't been initialized. Now I can remove
+this check.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
