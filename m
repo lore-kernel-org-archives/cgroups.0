@@ -1,141 +1,30 @@
-From: KOSAKI Motohiro <kosaki.motohiro@gmail.com>
-Subject: Re: [patch 5/6] mm: memcg: enable memcg OOM killer only for user
- faults
-Date: Mon, 29 Jul 2013 15:47:49 -0400
-Message-ID: <51F6C6E5.9020200@gmail.com>
-References: <1374791138-15665-1-git-send-email-hannes@cmpxchg.org> <1374791138-15665-6-git-send-email-hannes@cmpxchg.org> <51F6C00C.5050702@gmail.com> <20130729194452.GA4793@cmpxchg.org>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v3 2/8] cgroup: document how cgroup IDs are assigned
+Date: Tue, 30 Jul 2013 09:08:14 +0800
+Message-ID: <51F711FE.3040006@huawei.com>
+References: <51F614B2.6010503@huawei.com> <51F614D4.6000703@huawei.com> <20130729182632.GC26076@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arch-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=message-id:date:from:user-agent:mime-version:to:cc:subject
-         :references:in-reply-to:content-type:content-transfer-encoding;
-        bh=Jz9dqPk9fXYf8qa619AFnE9OsQmS7lLtqUz9eQk3SYU=;
-        b=B0DmcV9fn0kj2LTgPZ1xR3OpbvBS0iFMj8BlldaiPaezJKKm9zK+tXb3UEiAJPV1vk
-         07/QJ8irYGeRLtmyZOMRrKKRL7okn8z7E8S6eh4g6JuJfNw44mvktkG6rJPvTtE2hrzz
-         futgLr5qFoC0U2l9KiH6B6aRFdK0dMOttn0WoRSxuc/sDm6cItGJdxghFQFbuHZugi+7
-         M1s4rnYcWnTE9LItJ7AWDPV8km3oi/9zGVYKzg11quQgZep7OPh/pTToUpkxOi1bWfab
-         tyQJRI67Y8ZvBZQRDORw1XZoL1vTcKPXNcuP5jKIwVANDsys91jwjE2ZQtFg70b6+z5h
-         P1xQ==
-In-Reply-To: <20130729194452.GA4793@cmpxchg.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20130729182632.GC26076-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: KOSAKI Motohiro <kosaki.motohiro@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, David Rientjes <rientjes@google.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, azurIt <azurit@pobox.sk>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-(7/29/13 3:44 PM), Johannes Weiner wrote:
-> On Mon, Jul 29, 2013 at 03:18:36PM -0400, KOSAKI Motohiro wrote:
->> (7/25/13 6:25 PM), Johannes Weiner wrote:
->>> System calls and kernel faults (uaccess, gup) can handle an out of
->>> memory situation gracefully and just return -ENOMEM.
->>>
->>> Enable the memcg OOM killer only for user faults, where it's really
->>> the only option available.
->>>
->>> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
->>> ---
->>>    include/linux/memcontrol.h | 23 +++++++++++++++++++++++
->>>    include/linux/sched.h      |  3 +++
->>>    mm/filemap.c               | 11 ++++++++++-
->>>    mm/memcontrol.c            |  2 +-
->>>    mm/memory.c                | 40 ++++++++++++++++++++++++++++++----------
->>>    5 files changed, 67 insertions(+), 12 deletions(-)
->>>
->>> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
->>> index 7b4d9d7..9bb5eeb 100644
->>> --- a/include/linux/memcontrol.h
->>> +++ b/include/linux/memcontrol.h
->>> @@ -125,6 +125,24 @@ extern void mem_cgroup_print_oom_info(struct mem_cgroup *memcg,
->>>    extern void mem_cgroup_replace_page_cache(struct page *oldpage,
->>>    					struct page *newpage);
->>>
->>> +/**
->>> + * mem_cgroup_xchg_may_oom - toggle the memcg OOM killer for a task
->>> + * @p: task
->>> + * @new: true to enable, false to disable
->>> + *
->>> + * Toggle whether a failed memcg charge should invoke the OOM killer
->>> + * or just return -ENOMEM.  Returns the previous toggle state.
->>> + */
->>> +static inline bool mem_cgroup_xchg_may_oom(struct task_struct *p, bool new)
->>> +{
->>> +	bool old;
->>> +
->>> +	old = p->memcg_oom.may_oom;
->>> +	p->memcg_oom.may_oom = new;
->>> +
->>> +	return old;
->>> +}
+On 2013/7/30 2:26, Tejun Heo wrote:
+> On Mon, Jul 29, 2013 at 03:08:04PM +0800, Li Zefan wrote:
+>> As cgroup id has been used in netprio cgroup and will be used in memcg,
+>> it's important to make it clear how a cgroup id is allocated.
 >>
->> The name of xchg strongly suggest the function use compare-swap op. So, it seems
->> misleading name. I suggest just use "set_*" or something else. In linux kernel,
->> many setter functions already return old value. Don't mind.
->
-> I renamed it to bool mem_cgroup_toggle_oom(bool onoff) when I
-> incorporated Michal's feedback, would you be okay with that?
-
-Yes, thank you.
-
->
->>> diff --git a/include/linux/sched.h b/include/linux/sched.h
->>> index fc09d21..4b3effc 100644
->>> --- a/include/linux/sched.h
->>> +++ b/include/linux/sched.h
->>> @@ -1398,6 +1398,9 @@ struct task_struct {
->>>    		unsigned long memsw_nr_pages; /* uncharged mem+swap usage */
->>>    	} memcg_batch;
->>>    	unsigned int memcg_kmem_skip_account;
->>> +	struct memcg_oom_info {
->>> +		unsigned int may_oom:1;
->>> +	} memcg_oom;
+>> For example, in netprio cgroup, the id is used as index of anarray.
 >>
->> This ":1" makes slower but doesn't diet any memory space, right? I suggest
->> to use bool. If anybody need to diet in future, he may change it to bit field.
->> That's ok, let's stop too early and questionable micro optimization.
->
-> It should sit in the same word as the memcg_kmem_skip_account, plus
-> I'm adding another bit in the next patch (in_memcg_oom), so we save
-> space.  It's also the OOM path, so anything but performance critical.
+>> Signed-off-by: Li Zefan <lizefan-Z5rXVj2qdvIAvxtiuMwx3w@public.gmane.org>
+>> Reviewed-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> 
+> We can merge this into the first patch?
+> 
 
-Oh, if you added another bit too, it's ok, of course.
-
->>> diff --git a/mm/filemap.c b/mm/filemap.c
->>> index a6981fe..2932810 100644
->>> --- a/mm/filemap.c
->>> +++ b/mm/filemap.c
->>> @@ -1617,6 +1617,7 @@ int filemap_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
->>>    	struct file_ra_state *ra = &file->f_ra;
->>>    	struct inode *inode = mapping->host;
->>>    	pgoff_t offset = vmf->pgoff;
->>> +	unsigned int may_oom;
->>
->> Why don't you use bool? your mem_cgroup_xchg_may_oom() uses bool and it seems cleaner more.
->
-> Yup, forgot to convert it with the interface, I changed it to bool.
-
-thx.
-
-
->>> +	/*
->>> +	 * Enable the memcg OOM handling for faults triggered in user
->>> +	 * space.  Kernel faults are handled more gracefully.
->>> +	 */
->>> +	if (flags & FAULT_FLAG_USER)
->>> +		WARN_ON(mem_cgroup_xchg_may_oom(current, true) == true);
->>
->> Please don't assume WARN_ON never erase any code. I'm not surprised if embedded
->> guys replace WARN_ON with nop in future.
->
-> That would be really messed up.
->
-> But at the same time, the WARN_ON() obfuscates what's going on a
-> little bit, so putting it separately should make the code more
-> readable.  I'll change it.
->
-> Thanks for your input!
-
-No problem. :)
-
-
+The first patch just changes ida to idr, it doesn't change how IDs are
+allocated, so I prefer make this a standalone patch.
