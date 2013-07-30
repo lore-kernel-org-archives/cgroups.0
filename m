@@ -1,100 +1,185 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: memcg creates an unkillable task in 3.11-rc2
-Date: Tue, 30 Jul 2013 14:31:20 +0200
-Message-ID: <20130730123120.GA15847@dhcp22.suse.cz>
-References: <20130723174711.GE21100@mtj.dyndns.org>
-	<8761vui4cr.fsf@xmission.com>
-	<20130729075939.GA4678@dhcp22.suse.cz>
-	<87ehahg312.fsf@xmission.com>
-	<20130729095109.GB4678@dhcp22.suse.cz>
-	<20130729161026.GD22605@mtj.dyndns.org>
-	<87r4eh70yg.fsf@xmission.com> <51F71DE2.4020102@huawei.com>
-	<87ppu0a298.fsf_-_@tw-ebiederman.twitter.com>
+Subject: Re: [patch 6/6] mm: memcg: do not trap chargers with full callstack
+ on OOM
+Date: Tue, 30 Jul 2013 16:09:13 +0200
+Message-ID: <20130730140913.GC15847@dhcp22.suse.cz>
+References: <1374791138-15665-1-git-send-email-hannes@cmpxchg.org>
+ <1374791138-15665-7-git-send-email-hannes@cmpxchg.org>
+ <20130726144310.GH17761@dhcp22.suse.cz>
+ <20130726212808.GD17975@cmpxchg.org>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20130726212808.GD17975-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <87ppu0a298.fsf_-_-HxuHnoDHeQZYhcs0q7wBk77fW72O3V7zAL8bYrjMMd8@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Cc: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kent.overstreet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue 30-07-13 01:19:31, Eric W. Biederman wrote:
+On Fri 26-07-13 17:28:09, Johannes Weiner wrote:
 [...]
-> Hmm. Looking farther I see what is going on. And it has nothing to do
-> with the freezer. (I have commented out that code and reproduced it
-> without the freezer to be doubly certain).
+> From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Subject: [patch] mm: memcg: rework and document OOM serialization
 > 
+> 1. Remove the return value of mem_cgroup_oom_unlock().
 > 
-> On the exit path exit_robust_list is triggering a page fault to fault a
-> page back in.  Which since we have no memory causes the exit path
-> to get stuck in mem_cgroup_handle_oom.
-
-Hmm, interesting. I assume the exit is caused by the SIGKILL, right?
-If yes, then why it hasn't coughed early in __mem_cgroup_try_charge
-
-> Which means the following change should fix the hang.  I will test it in just
-> a second.
+> 2. Rename mem_cgroup_oom_lock() to mem_cgroup_oom_trylock().
 > 
-> The problem is that we only handled pending fatal signals and exiting
-> processes when the OOM logic was enabled. Sigh.
+> 3. Pull the prepare_to_wait() out of the memcg_oom_lock scope.  This
+>    makes it more obvious that the task has to be on the waitqueue
+>    before attempting to OOM-trylock the hierarchy, to not miss any
+>    wakeups before going to sleep.  It just didn't matter until now
+>    because it was all lumped together into the global memcg_oom_lock
+>    spinlock section.
+> 
+> 4. Pull the mem_cgroup_oom_notify() out of the memcg_oom_lock scope.
+>    It is proctected by the hierarchical OOM-lock.
+> 
+> 5. The memcg_oom_lock spinlock is only required to propagate the OOM
+>    lock in any given hierarchy atomically.  Restrict its scope to
+>    mem_cgroup_oom_(trylock|unlock).
+> 
+> 6. Do not wake up the waitqueue unconditionally at the end of the
+>    function.  Only the lockholder has to wake up the next in line
+>    after releasing the lock.
+> 
+>    Note that the lockholder kicks off the OOM-killer, which in turn
+>    leads to wakeups from the uncharges of the exiting task.  But any
+>    contender is not guaranteed to see them if it enters the OOM path
+>    after the OOM kills but before the lockholder releases the lock.
+>    Thus the wakeup has to be explicitely after releasing the lock.
+> 
+> 7. Put the OOM task on the waitqueue before marking the hierarchy as
+>    under OOM as that is the point where we start to receive wakeups.
+>    No point in listening before being on the waitqueue.
+> 
+> 8. Likewise, unmark the hierarchy before finishing the sleep, for
+>    symmetry.
+> 
 
-If this is about PF_EXITING then we should handle that earlier in the
-code chain (__mem_cgroup_try_charge sounds like a proper place). Let me
-think about that.
+OK, this looks better than what we have today, but still could be done
+better IMO ;)
 
-Thanks for debugging this!
-
-> Eric
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> ---
+>  mm/memcontrol.c | 85 +++++++++++++++++++++++++++++++--------------------------
+>  1 file changed, 47 insertions(+), 38 deletions(-)
 > 
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 00a7a66..5998a57 100644
+> index 30ae46a..0d923df 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -1792,16 +1792,6 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
->         unsigned int points = 0;
->         struct task_struct *chosen = NULL;
+> @@ -2076,15 +2076,18 @@ static int mem_cgroup_soft_reclaim(struct mem_cgroup *root_memcg,
+>  	return total;
+>  }
 >  
-> -       /*
-> -        * If current has a pending SIGKILL or is exiting, then automatically
-> -        * select it.  The goal is to allow it to allocate so that it may
-> -        * quickly exit and free its memory.
-> -        */
-> -       if (fatal_signal_pending(current) || current->flags & PF_EXITING) {
-> -               set_thread_flag(TIF_MEMDIE);
-> -               return;
-> -       }
-> -
->         check_panic_on_oom(CONSTRAINT_MEMCG, gfp_mask, order, NULL);
->         totalpages = mem_cgroup_get_limit(memcg) >> PAGE_SHIFT ? : 1;
->         for_each_mem_cgroup_tree(iter, memcg) {
-> @@ -2220,7 +2210,15 @@ static bool mem_cgroup_handle_oom(struct mem_cgroup *memcg, gfp_t mask,
->                 mem_cgroup_oom_notify(memcg);
->         spin_unlock(&memcg_oom_lock);
+
+/* Protects oom_lock hierarchy consistent state and oom_notify chain */
+
+> +static DEFINE_SPINLOCK(memcg_oom_lock);
+> +
+>  /*
+>   * Check OOM-Killer is already running under our hierarchy.
+>   * If someone is running, return false.
+> - * Has to be called with memcg_oom_lock
+>   */
+[...]
+> @@ -2195,45 +2197,52 @@ static bool mem_cgroup_handle_oom(struct mem_cgroup *memcg, gfp_t mask,
+>  				  int order)
+>  {
+>  	struct oom_wait_info owait;
+> -	bool locked, need_to_kill;
+> +	bool locked;
 >  
-> -       if (need_to_kill) {
-> +       /*
-> +        * If current has a pending SIGKILL or is exiting, then automatically
-> +        * select it.  The goal is to allow it to allocate so that it may
-> +        * quickly exit and free its memory.
-> +        */
-> +       if (fatal_signal_pending(current) || current->flags & PF_EXITING) {
-> +               set_thread_flag(TIF_MEMDIE);
-> +               finish_wait(&memcg_oom_waitq, &owait.wait);
-> +       } else if (need_to_kill) {
->                 finish_wait(&memcg_oom_waitq, &owait.wait);
->                 mem_cgroup_out_of_memory(memcg, mask, order);
->         } else {
+>  	owait.memcg = memcg;
+>  	owait.wait.flags = 0;
+>  	owait.wait.func = memcg_oom_wake_function;
+>  	owait.wait.private = current;
+>  	INIT_LIST_HEAD(&owait.wait.task_list);
+> -	need_to_kill = true;
+> -	mem_cgroup_mark_under_oom(memcg);
+>  
+> -	/* At first, try to OOM lock hierarchy under memcg.*/
+> -	spin_lock(&memcg_oom_lock);
+> -	locked = mem_cgroup_oom_lock(memcg);
+>  	/*
+> +	 * As with any blocking lock, a contender needs to start
+> +	 * listening for wakeups before attempting the trylock,
+> +	 * otherwise it can miss the wakeup from the unlock and sleep
+> +	 * indefinitely.  This is just open-coded because our locking
+> +	 * is so particular to memcg hierarchies.
+> +	 *
+>  	 * Even if signal_pending(), we can't quit charge() loop without
+>  	 * accounting. So, UNINTERRUPTIBLE is appropriate. But SIGKILL
+>  	 * under OOM is always welcomed, use TASK_KILLABLE here.
+
+Could you take care of this paragraph as well, while you are at it,
+please? I've always found it it confusing. I would remove it completely
+I would remove it completely.
+
+>  	 */
+>  	prepare_to_wait(&memcg_oom_waitq, &owait.wait, TASK_KILLABLE);
+> -	if (!locked || memcg->oom_kill_disable)
+> -		need_to_kill = false;
+> +	mem_cgroup_mark_under_oom(memcg);
+> +
+> +	locked = mem_cgroup_oom_trylock(memcg);
+> +
+>  	if (locked)
+>  		mem_cgroup_oom_notify(memcg);
+> -	spin_unlock(&memcg_oom_lock);
+>  
+> -	if (need_to_kill) {
+> +	if (locked && !memcg->oom_kill_disable) {
+> +		mem_cgroup_unmark_under_oom(memcg);
+>  		finish_wait(&memcg_oom_waitq, &owait.wait);
+>  		mem_cgroup_out_of_memory(memcg, mask, order);
+
+Killing under hierarchy which is not under_oom sounds strange to me.
+Cannot we just move finish_wait & unmark down after unlock? It would
+also take care about incorrect memcg_oom_recover you have in oom_unlock
+path. The ordering would also be more natural
+	prepare_wait
+	mark_under_oom
+	trylock
+	unlock
+	unmark_under_oom
+	finish_wait
+
+>  	} else {
+>  		schedule();
+> +		mem_cgroup_unmark_under_oom(memcg);
+>  		finish_wait(&memcg_oom_waitq, &owait.wait);
+>  	}
+> -	spin_lock(&memcg_oom_lock);
+> -	if (locked)
+> -		mem_cgroup_oom_unlock(memcg);
+> -	memcg_wakeup_oom(memcg);
+> -	spin_unlock(&memcg_oom_lock);
+>  
+> -	mem_cgroup_unmark_under_oom(memcg);
+> +	if (locked) {
+> +		mem_cgroup_oom_unlock(memcg);
+> +		/*
+> +		 * There is no guarantee that a OOM-lock contender
+> +		 * sees the wakeups triggered by the OOM kill
+> +		 * uncharges.  Wake any sleepers explicitely.
+> +		 */
+> +		memcg_oom_recover(memcg);
+
+This will be a noop because memcg is no longer under_oom (you wanted
+memcg_wakeup_oom here I guess). Moreover, even the killed wouldn't wake
+up anybody for the same reason.
+
+> +	}
+>  
+>  	if (test_thread_flag(TIF_MEMDIE) || fatal_signal_pending(current))
+>  		return false;
+> -- 
+> 1.8.3.2
+> 
 
 -- 
 Michal Hocko
