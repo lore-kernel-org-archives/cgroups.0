@@ -1,130 +1,142 @@
-From: Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 2/4] memcg: rename RESOURCE_MAX to RES_COUNTER_MAX
-Date: Wed, 31 Jul 2013 15:31:23 +0800
-Message-ID: <1375255885-10648-3-git-send-email-h.huangqiang@huawei.com>
-References: <1375255885-10648-1-git-send-email-h.huangqiang@huawei.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: memcg creates an unkillable task in 3.11-rc2
+Date: Wed, 31 Jul 2013 09:37:26 +0200
+Message-ID: <20130731073726.GC30514@dhcp22.suse.cz>
+References: <8761vui4cr.fsf@xmission.com>
+	<20130729075939.GA4678@dhcp22.suse.cz>
+	<87ehahg312.fsf@xmission.com>
+	<20130729095109.GB4678@dhcp22.suse.cz>
+	<20130729161026.GD22605@mtj.dyndns.org>
+	<87r4eh70yg.fsf@xmission.com> <51F71DE2.4020102@huawei.com>
+	<87ppu0a298.fsf_-_@tw-ebiederman.twitter.com>
+	<20130730123120.GA15847@dhcp22.suse.cz>
+	<874nbc3sx1.fsf@tw-ebiederman.twitter.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1375255885-10648-1-git-send-email-h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <874nbc3sx1.fsf-HxuHnoDHeQZYhcs0q7wBk77fW72O3V7zAL8bYrjMMd8@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+Cc: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kent.overstreet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-RESOURCE_MAX is far too general name, change it to RES_COUNTER_MAX.
+[I am CCing David here as well]
 
-Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+On Tue 30-07-13 09:37:46, Eric W. Biederman wrote:
+> Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> writes:
+> 
+> > On Tue 30-07-13 01:19:31, Eric W. Biederman wrote:
+> > [...]
+> >> Hmm. Looking farther I see what is going on. And it has nothing to do
+> >> with the freezer. (I have commented out that code and reproduced it
+> >> without the freezer to be doubly certain).
+> >> 
+> >> 
+> >> On the exit path exit_robust_list is triggering a page fault to fault a
+> >> page back in.  Which since we have no memory causes the exit path
+> >> to get stuck in mem_cgroup_handle_oom.
+> >
+> > Hmm, interesting. I assume the exit is caused by the SIGKILL, right?
+> > If yes, then why it hasn't coughed early in __mem_cgroup_try_charge
+> 
+> Interesting question.  This isn't the primary thread but we do send
+> SIGKILL to the secondary threads as well.
+> 
+> We definitely need those checks on both paths making my change valid.
+> 
+> Oh. Duh!  This is after we act on SIGKILL so SIGKILL is no longer
+> pending.
+
+Very well spotted Eric! What do you think about the following patch?
+I would have to check since when the exit path could trigger the fault
+but I guess this is worth stable backport.
 ---
- include/linux/res_counter.h |  2 +-
- kernel/res_counter.c        |  8 ++++----
- mm/memcontrol.c             |  4 ++--
- net/ipv4/tcp_memcontrol.c   | 10 +++++-----
- 4 files changed, 12 insertions(+), 12 deletions(-)
+From 411408558f2858328ea25e69567e9a53a8314032 Mon Sep 17 00:00:00 2001
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Date: Wed, 31 Jul 2013 08:48:54 +0200
+Subject: [PATCH] memcg: Do not hang on OOM when killed by userspace OOM
 
-diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
-index 586bc7c..201a697 100644
---- a/include/linux/res_counter.h
-+++ b/include/linux/res_counter.h
-@@ -54,7 +54,7 @@ struct res_counter {
- 	struct res_counter *parent;
- };
- 
--#define RESOURCE_MAX ULLONG_MAX
-+#define RES_COUNTER_MAX ULLONG_MAX
- 
- /**
-  * Helpers to interact with userspace
-diff --git a/kernel/res_counter.c b/kernel/res_counter.c
-index ff55247..3f0417f 100644
---- a/kernel/res_counter.c
-+++ b/kernel/res_counter.c
-@@ -17,8 +17,8 @@
- void res_counter_init(struct res_counter *counter, struct res_counter *parent)
- {
- 	spin_lock_init(&counter->lock);
--	counter->limit = RESOURCE_MAX;
--	counter->soft_limit = RESOURCE_MAX;
-+	counter->limit = RES_COUNTER_MAX;
-+	counter->soft_limit = RES_COUNTER_MAX;
- 	counter->parent = parent;
- }
- 
-@@ -182,12 +182,12 @@ int res_counter_memparse_write_strategy(const char *buf,
- {
- 	char *end;
- 
--	/* return RESOURCE_MAX(unlimited) if "-1" is specified */
-+	/* return RES_COUNTER_MAX(unlimited) if "-1" is specified */
- 	if (*buf == '-') {
- 		*res = simple_strtoull(buf + 1, &end, 10);
- 		if (*res != 1 || *end != '\0')
- 			return -EINVAL;
--		*res = RESOURCE_MAX;
-+		*res = RES_COUNTER_MAX;
- 		return 0;
- 	}
- 
+Eric has reported that he can see task(s) stuck in memcg OOM handler
+regularly. The only way out is to
+	echo 0 > $GROUP/memory.oom_controll
+
+His usecase is:
+- Setup a hierarchy with memory and the freezer
+  (disable kernel oom and have a process watch for oom).
+- In that memory cgroup add a process with one thread per cpu.
+- In one thread slowly allocate once per second I think it is 16M of ram
+  and mlock and dirty it (just to force the pages into ram and stay there).
+- When oom is achieved loop:
+  * attempt to freeze all of the tasks.
+  * if frozen send every task SIGKILL, unfreeze, remove the directory in
+    cgroupfs.
+
+Eric has then pinpointed the issue to be memcg specific.
+
+All tasks are sitting on the memcg_oom_waitq when memcg oom is disabled.
+Those that have received fatal signal will bypass the charge and should
+continue on their way out. The tricky part is that that exit path might
+trigger a page fault (e.g. exit_robust_list) thus the memcg charge
+while its memcg is still under OOM because nobody has released any
+charges. Unlike with the in-kernel OOM handler the exiting task doesn't
+get TIF_MEMDIE set so it doesn't shortcut charges and falls to the
+memcg OOM again without any way out of it as there are no fatal signals
+pending anymore.
+
+This patch sets the TIF_MEMDIE flag pro actively in mem_cgroup_handle_oom
+if the memcg is disabled after the task is woken up with fatal signal
+pending. This means that any further charges will be bypassed early in
+__mem_cgroup_try_charge and the task will have chance to exit finally.
+
+Strictly speaking we might mark also a task which hasn't been killed by
+userspace OOM handler but this is not harmful as the task is going away
+anyway and under-oom group would like to see it go as soon as possible.
+
+Reported-by: Eric W. Biederman <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+Debugged-by: Eric W. Biederman <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+---
+ mm/memcontrol.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 1947218..f621cf5 100644
+index d12ca6f..d4103b0 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -5117,7 +5117,7 @@ static int memcg_update_kmem_limit(struct cgroup *cont, u64 val)
- 	 */
- 	mutex_lock(&memcg_create_mutex);
- 	mutex_lock(&set_limit_mutex);
--	if (!memcg->kmem_account_flags && val != RESOURCE_MAX) {
-+	if (!memcg->kmem_account_flags && val != RES_COUNTER_MAX) {
- 		if (cgroup_task_count(cont) || memcg_has_children(memcg)) {
- 			ret = -EBUSY;
- 			goto out;
-@@ -5127,7 +5127,7 @@ static int memcg_update_kmem_limit(struct cgroup *cont, u64 val)
+@@ -2235,8 +2235,19 @@ static bool mem_cgroup_handle_oom(struct mem_cgroup *memcg, gfp_t mask,
  
- 		ret = memcg_update_cache_sizes(memcg);
- 		if (ret) {
--			res_counter_set_limit(&memcg->kmem, RESOURCE_MAX);
-+			res_counter_set_limit(&memcg->kmem, RES_COUNTER_MAX);
- 			goto out;
- 		}
- 		static_key_slow_inc(&memcg_kmem_enabled_key);
-diff --git a/net/ipv4/tcp_memcontrol.c b/net/ipv4/tcp_memcontrol.c
-index da14436..90550f4 100644
---- a/net/ipv4/tcp_memcontrol.c
-+++ b/net/ipv4/tcp_memcontrol.c
-@@ -87,8 +87,8 @@ static int tcp_update_limit(struct mem_cgroup *memcg, u64 val)
- 	if (!cg_proto)
- 		return -EINVAL;
+ 	mem_cgroup_unmark_under_oom(memcg);
  
--	if (val > RESOURCE_MAX)
--		val = RESOURCE_MAX;
-+	if (val > RES_COUNTER_MAX)
-+		val = RES_COUNTER_MAX;
- 
- 	tcp = tcp_from_cgproto(cg_proto);
- 
-@@ -101,9 +101,9 @@ static int tcp_update_limit(struct mem_cgroup *memcg, u64 val)
- 		tcp->tcp_prot_mem[i] = min_t(long, val >> PAGE_SHIFT,
- 					     net->ipv4.sysctl_tcp_mem[i]);
- 
--	if (val == RESOURCE_MAX)
-+	if (val == RES_COUNTER_MAX)
- 		clear_bit(MEMCG_SOCK_ACTIVE, &cg_proto->flags);
--	else if (val != RESOURCE_MAX) {
-+	else if (val != RES_COUNTER_MAX) {
- 		/*
- 		 * The active bit needs to be written after the static_key
- 		 * update. This is what guarantees that the socket activation
-@@ -187,7 +187,7 @@ static u64 tcp_cgroup_read(struct cgroup *cont, struct cftype *cft)
- 
- 	switch (cft->private) {
- 	case RES_LIMIT:
--		val = tcp_read_stat(memcg, RES_LIMIT, RESOURCE_MAX);
-+		val = tcp_read_stat(memcg, RES_LIMIT, RES_COUNTER_MAX);
- 		break;
- 	case RES_USAGE:
- 		val = tcp_read_usage(memcg);
+-	if (test_thread_flag(TIF_MEMDIE) || fatal_signal_pending(current))
++	if (test_thread_flag(TIF_MEMDIE))
+ 		return false;
++
++	/*
++	 * Userspace OOM killer might have killed this task but
++	 * there is no way it could have set TIF_MEMDIE as well
++	 * so we have to set it manually.
++	 */
++	if (fatal_signal_pending(current)) {
++		if (memcg->oom_kill_disable)
++			set_thread_flag(TIF_MEMDIE);
++		return false;
++	}
+ 	/* Give chance to dying process */
+ 	schedule_timeout_uninterruptible(1);
+ 	return true;
 -- 
-1.8.3
+1.8.3.2
 
+-- 
+Michal Hocko
+SUSE Labs
