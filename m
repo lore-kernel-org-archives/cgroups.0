@@ -1,78 +1,59 @@
-From: Li Zefan <lizefan@huawei.com>
+From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH 0/4] memcg: fix memcg resource limit overflow issues
-Date: Wed, 31 Jul 2013 17:51:26 +0800
-Message-ID: <51F8DE1E.2020305@huawei.com>
-References: <1375255885-10648-1-git-send-email-h.huangqiang@huawei.com> <CAFj3OHX4WLaecyE_zFbnFKs9wrCWTq2eDAUDMxqPg8=TYt18gg@mail.gmail.com> <51F8D016.4090009@huawei.com> <51F8D0E1.4010007@huawei.com> <51F8DA1E.3040900@oracle.com>
+Date: Wed, 31 Jul 2013 18:04:30 +0800
+Message-ID: <CAFj3OHWOKn3NdbBzhKq5iCoB8BaiZVuf=VauLuB=NthyuDgZdQ@mail.gmail.com>
+References: <1375255885-10648-1-git-send-email-h.huangqiang@huawei.com>
+	<CAFj3OHX4WLaecyE_zFbnFKs9wrCWTq2eDAUDMxqPg8=TYt18gg@mail.gmail.com>
+	<51F8D016.4090009@huawei.com>
+	<51F8D0E1.4010007@huawei.com>
+	<CAFj3OHUEVM+BtoYS8wbXRU42Q8_=1X5qaQm7QY8oBc=ONAdfOA@mail.gmail.com>
+	<20130731095010.GA5012@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <51F8DA1E.3040900@oracle.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=A2jS5EB8kb2Jyo6hQtEfxlS5Z7+5FIC2lKEMFxmd3Nk=;
+        b=tdgpn7jKFtF5y4Ff5WJEZg0V9rcTCMpif7IprQQCyIQ0MERUGhyFP7s9htZnIADsQ+
+         ZWrDtyGtsWLtodzuhQ7DQVs0LDG0eL1JuTfvtpmK/qwX/hSGp929FacTdkCU99lPuCKM
+         Pyqzpv1GHsN9o/Try/ZQ1/x4yHUL8OQ/U17WcPtDxRZXrFATuIJ6Mz7+qr1lu74gmYy9
+         nixN5q5q9xruWiTjcTgskVMbR//o6hcnZf42eeK9+oVkE+XPH0JT/b8dxN357IKruWKc
+         iv8ZXKKKeqAs6CbLcHlnBVHju/O9fCwodNWIbnQPT0JvKYQ6c9Q0ugUj0g2kGN/DU66K
+         i4zQ==
+In-Reply-To: <20130731095010.GA5012-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: Qiang Huang <h.huangqiang@huawei.com>, Sha Zhengju <handai.szj@gmail.com>, Cgroups <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Sha Zhengju <handai.szj@taobao.com>, Daisuke Nishimura <nishimura@mxp.nes.nec.co.jp>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>, Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Jeff Liu <jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
-On 2013/7/31 17:34, Jeff Liu wrote:
-> On 07/31/2013 04:54 PM, Li Zefan wrote:
-> 
->> On 2013/7/31 16:51, Qiang Huang wrote:
->>> On 2013/7/31 16:23, Sha Zhengju wrote:
->>>> Hi list,
->>>>
->>>> On Wed, Jul 31, 2013 at 3:31 PM, Qiang Huang <h.huangqiang@huawei.com> wrote:
->>>>> This issue is first discussed in:
->>>>> http://marc.info/?l=linux-mm&m=136574878704295&w=2
->>>>>
->>>>> Then a second version sent to:
->>>>> http://marc.info/?l=linux-mm&m=136776855928310&w=2
->>>>>
->>>>> We contacted Sha a month ago, she seems have no time to deal with it
->>>>> recently, but we quite need this patch. So I modified and resent it.
->>>>
->>>>
->>>> No, I didn't receive any of YOUR message, only a engineer named Libo
->>>> Chen from Huawei connected me recently. I don't approve you to resent
->>>> them on behalf of me, and just before you send this you even don't
->>>> send me a mail. Besides, after a rough look, I do not see any
->>>> innovative ideas from yourself but just rework patches from my last
->>>> version.
->>>> So I'm strong against this patchset.
->>>
->>> Sorry if this troubles you.
->>> Libo Chen is my colleague, we work together, he sent an email to you on
->>> 25 June, to ask about this issue, you said you'll resent it soon, but it
->>> didn't happen until now :(, and he asked again the other day and you didn't
->>> reply. As we really need to fix this problem(and need it in upstream), so
->>> I modified it and sent out.
->>>
->>> I think split patches, rewrite changelogs and tests, they all kind of work
->>> right? Of course, if you mind, I can change it, I just need this fix merged
->>> to upstream ASAP.
->>>
->>> So you want me rewrite this patchset and SOB only you or you want resent this
->>> by yourself? I'm ok with both :)
->>>
->>
->> No, you can't send out patches without your SOB...but you can add a line
->> in the beginning of the email:
->>
->> From: Sha Zhengju <handai.szj@taobao.com>
-> 
-> This is the usual way to credit the original author.  But in this case, Qiang
-> should get a confirmation from Sha at first.
-> 
-> IMO, that would make a mess of a project if anybody can take over an on-going
-> task without an approval from the author just because he is looking forward to
-> see something will happen on mainline shortly.
-> 
+On Wed, Jul 31, 2013 at 5:50 PM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
+> On Wed 31-07-13 17:39:43, Sha Zhengju wrote:
+>> I don't want to block the community, since they're urgent to the
+>> patches and Michal has already reviewed them just now, I won't be
+>> so caustic on it. I'm OK of letting the codes in under the rules of
+>> community.
+>
+> Your s-o-b has been preserved which was sufficient for me, but
+> preserving the original From would be polity and sorry I have missed
+> that, I would have screamed as well. It should be added in the next
+> repost.
 
-This happens from time to time, but mostly it's because of mistakes or lack of
-communication or unfamiliarity about the rules rather than deliberatly stealing
-someone else's credits.
+Thanks for the support.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> Qiang Huang s-o-b is appropriate as well as he has rebased and reposted
+> the series, though.
+>
+> Anyway, I do not see any reason to postpone this series as it is a good
+> improvement.
+>
+
+Yeah, I thought the problem it tries to solve is rarely encountered
+when I sent it last time. But now I also glad to see it merged soon.
+
+
+
+Thanks,
+Sha
