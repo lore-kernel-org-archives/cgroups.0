@@ -1,7 +1,7 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v4 4/8] memcg: convert to use cgroup_is_descendant()
-Date: Wed, 31 Jul 2013 09:51:45 +0800
-Message-ID: <51F86DB1.9030309@huawei.com>
+Subject: [PATCH v4 3/8] cgroup: implement cgroup_from_id()
+Date: Wed, 31 Jul 2013 09:51:31 +0800
+Message-ID: <51F86DA3.6050406@huawei.com>
 References: <51F86D69.2030907@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -11,28 +11,51 @@ Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-This is a preparation to kill css_id.
+This will be used as a replacement for css_lookup().
+
+There's a difference with cgroup id and css id. cgroup id starts with 0,
+while css id starts with 1.
+
+v4:
+- also check if cggroup_mutex is held.
+- make it an inline function.
 
 Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Reviewed-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 ---
- mm/memcontrol.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/cgroup.h | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index d12ca6f..626c426 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1434,7 +1434,7 @@ bool __mem_cgroup_same_or_subtree(const struct mem_cgroup *root_memcg,
- 		return true;
- 	if (!root_memcg->use_hierarchy || !memcg)
- 		return false;
--	return css_is_ancestor(&memcg->css, &root_memcg->css);
-+	return cgroup_is_descendant(memcg->css.cgroup, root_memcg->css.cgroup);
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 8c107e9..4ef8452 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -720,6 +720,24 @@ static inline struct cgroup* task_cgroup(struct task_struct *task,
+ 	return task_subsys_state(task, subsys_id)->cgroup;
  }
  
- static bool mem_cgroup_same_or_subtree(const struct mem_cgroup *root_memcg,
++/**
++ * cgroup_from_id - lookup cgroup by id
++ * @ss: cgroup subsys to be looked into
++ * @id: the cgroup id
++ *
++ * Returns the cgroup if there's valid one with @id, otherwise returns NULL.
++ * Should be called under rcu_read_lock().
++ */
++static inline struct cgroup *cgroup_from_id(struct cgroup_subsys *ss, int id)
++{
++#ifdef CONFIG_PROVE_RCU
++	rcu_lockdep_assert(rcu_read_lock_held() ||
++			   lockdep_is_held(&cgroup_mutex),
++			   "cgroup_from_id() needs proper protection");
++#endif
++	return idr_find(&ss->root->cgroup_idr, id);
++}
++
+ struct cgroup *cgroup_next_sibling(struct cgroup *pos);
+ 
+ /**
 -- 
 1.8.0.2
