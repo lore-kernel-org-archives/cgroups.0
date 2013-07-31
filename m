@@ -1,59 +1,39 @@
-From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 0/4] memcg: fix memcg resource limit overflow issues
-Date: Wed, 31 Jul 2013 18:04:30 +0800
-Message-ID: <CAFj3OHWOKn3NdbBzhKq5iCoB8BaiZVuf=VauLuB=NthyuDgZdQ@mail.gmail.com>
-References: <1375255885-10648-1-git-send-email-h.huangqiang@huawei.com>
-	<CAFj3OHX4WLaecyE_zFbnFKs9wrCWTq2eDAUDMxqPg8=TYt18gg@mail.gmail.com>
-	<51F8D016.4090009@huawei.com>
-	<51F8D0E1.4010007@huawei.com>
-	<CAFj3OHUEVM+BtoYS8wbXRU42Q8_=1X5qaQm7QY8oBc=ONAdfOA@mail.gmail.com>
-	<20130731095010.GA5012@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 1/7] cgroup: fix a leak when percpu_ref_init() fails
+Date: Wed, 31 Jul 2013 06:14:18 -0400
+Message-ID: <20130731101418.GB2810@htj.dyndns.org>
+References: <51F8C7C5.9040608@huawei.com>
+ <51F8C7DC.8060306@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=A2jS5EB8kb2Jyo6hQtEfxlS5Z7+5FIC2lKEMFxmd3Nk=;
-        b=tdgpn7jKFtF5y4Ff5WJEZg0V9rcTCMpif7IprQQCyIQ0MERUGhyFP7s9htZnIADsQ+
-         ZWrDtyGtsWLtodzuhQ7DQVs0LDG0eL1JuTfvtpmK/qwX/hSGp929FacTdkCU99lPuCKM
-         Pyqzpv1GHsN9o/Try/ZQ1/x4yHUL8OQ/U17WcPtDxRZXrFATuIJ6Mz7+qr1lu74gmYy9
-         nixN5q5q9xruWiTjcTgskVMbR//o6hcnZf42eeK9+oVkE+XPH0JT/b8dxN357IKruWKc
-         iv8ZXKKKeqAs6CbLcHlnBVHju/O9fCwodNWIbnQPT0JvKYQ6c9Q0ugUj0g2kGN/DU66K
-         i4zQ==
-In-Reply-To: <20130731095010.GA5012-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=xzt2lJQPvnger1pZC/l8iPHYfOEKG9ydnaBj08D+crc=;
+        b=ztvzUcJ0Eu19WX7A5TxdoAQ2Wk76Slh1L4DCsCr4pynfXhLX+xbPSNwLFAkrQqT9pr
+         GL0Bfaa07dnSMSfR73/aNodTPbwSsGrAflXGh6O20PyMmKgv5hb7ScqFM4naBY8EC4Ge
+         aAeWNCGhWPaqc1XXaU9+wF/RMOTskTB7lxugZ/FEEWfS+WiAByKGJcP3eco/MYCAW+u7
+         0DVpUgF2eAjrPMdTCW45LVssMY6DzM08KPkzdh5J+8I7mVwNupglrRojd5XoMaXoW2qV
+         nG6U8fWMYoZ7sAsI5tb4Sj8mTp++UMzUNjt1BOxfQKeZ1RwG+j+OK1ZDiCTWGK4cG8Z6
+         Cc0Q==
+Content-Disposition: inline
+In-Reply-To: <51F8C7DC.8060306-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>, Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Jeff Liu <jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Wed, Jul 31, 2013 at 5:50 PM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
-> On Wed 31-07-13 17:39:43, Sha Zhengju wrote:
->> I don't want to block the community, since they're urgent to the
->> patches and Michal has already reviewed them just now, I won't be
->> so caustic on it. I'm OK of letting the codes in under the rules of
->> community.
->
-> Your s-o-b has been preserved which was sufficient for me, but
-> preserving the original From would be polity and sorry I have missed
-> that, I would have screamed as well. It should be added in the next
-> repost.
+On Wed, Jul 31, 2013 at 04:16:28PM +0800, Li Zefan wrote:
+> ss->css_free() is not called when perfcpu_ref_init() fails.
+> 
+> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Thanks for the support.
+Applied to cgroup/for-3.11-fixes.
 
-> Qiang Huang s-o-b is appropriate as well as he has rebased and reposted
-> the series, though.
->
-> Anyway, I do not see any reason to postpone this series as it is a good
-> improvement.
->
+Thanks.
 
-Yeah, I thought the problem it tries to solve is rarely encountered
-when I sent it last time. But now I also glad to see it merged soon.
-
-
-
-Thanks,
-Sha
+-- 
+tejun
