@@ -1,25 +1,26 @@
-From: Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+From: Li Zefan <lizefan@huawei.com>
 Subject: Re: [PATCH 0/4] memcg: fix memcg resource limit overflow issues
-Date: Wed, 31 Jul 2013 17:51:01 +0800
-Message-ID: <51F8DE05.5020606@huawei.com>
-References: <1375255885-10648-1-git-send-email-h.huangqiang@huawei.com> <CAFj3OHX4WLaecyE_zFbnFKs9wrCWTq2eDAUDMxqPg8=TYt18gg@mail.gmail.com> <51F8D016.4090009@huawei.com> <51F8D0E1.4010007@huawei.com> <CAFj3OHUEVM+BtoYS8wbXRU42Q8_=1X5qaQm7QY8oBc=ONAdfOA@mail.gmail.com>
+Date: Wed, 31 Jul 2013 17:51:26 +0800
+Message-ID: <51F8DE1E.2020305@huawei.com>
+References: <1375255885-10648-1-git-send-email-h.huangqiang@huawei.com> <CAFj3OHX4WLaecyE_zFbnFKs9wrCWTq2eDAUDMxqPg8=TYt18gg@mail.gmail.com> <51F8D016.4090009@huawei.com> <51F8D0E1.4010007@huawei.com> <51F8DA1E.3040900@oracle.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAFj3OHUEVM+BtoYS8wbXRU42Q8_=1X5qaQm7QY8oBc=ONAdfOA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <51F8DA1E.3040900@oracle.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>, Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Jeff Liu <jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: Qiang Huang <h.huangqiang@huawei.com>, Sha Zhengju <handai.szj@gmail.com>, Cgroups <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Sha Zhengju <handai.szj@taobao.com>, Daisuke Nishimura <nishimura@mxp.nes.nec.co.jp>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>
 
-On 2013/7/31 17:39, Sha Zhengju wrote:
-> On Wed, Jul 31, 2013 at 4:54 PM, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
+On 2013/7/31 17:34, Jeff Liu wrote:
+> On 07/31/2013 04:54 PM, Li Zefan wrote:
+> 
 >> On 2013/7/31 16:51, Qiang Huang wrote:
 >>> On 2013/7/31 16:23, Sha Zhengju wrote:
 >>>> Hi list,
 >>>>
->>>> On Wed, Jul 31, 2013 at 3:31 PM, Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
+>>>> On Wed, Jul 31, 2013 at 3:31 PM, Qiang Huang <h.huangqiang@huawei.com> wrote:
 >>>>> This issue is first discussed in:
 >>>>> http://marc.info/?l=linux-mm&m=136574878704295&w=2
 >>>>>
@@ -56,19 +57,22 @@ On 2013/7/31 17:39, Sha Zhengju wrote:
 >> No, you can't send out patches without your SOB...but you can add a line
 >> in the beginning of the email:
 >>
->> From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
->>
+>> From: Sha Zhengju <handai.szj@taobao.com>
 > 
-> Cooperation is welcomed and I just hated this kind of behavior. I
-> don't want to block the community, since they're urgent to the patches
-> and Michal has already reviewed them just now,  I won't be so caustic
-> on it. I'm OK of letting the codes in under the rules of community.
+> This is the usual way to credit the original author.  But in this case, Qiang
+> should get a confirmation from Sha at first.
+> 
+> IMO, that would make a mess of a project if anybody can take over an on-going
+> task without an approval from the author just because he is looking forward to
+> see something will happen on mainline shortly.
 > 
 
-OK, thank you Sha, I just confirmed again, Libo did get your reply, we
-made a mistake, sorry for that.
+This happens from time to time, but mostly it's because of mistakes or lack of
+communication or unfamiliarity about the rules rather than deliberatly stealing
+someone else's credits.
 
-It is my fault didn't get your permission before the rework, I didn't notice
-this is that big deal, I'll be more careful next time :). Thanks again.
-
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
