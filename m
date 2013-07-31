@@ -1,9 +1,11 @@
 From: Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 0/4] memcg: fix memcg resource limit overflow issues
-Date: Wed, 31 Jul 2013 15:31:21 +0800
-Message-ID: <1375255885-10648-1-git-send-email-h.huangqiang@huawei.com>
+Subject: [PATCH 4/4] memcg: reduce function dereference
+Date: Wed, 31 Jul 2013 15:31:25 +0800
+Message-ID: <1375255885-10648-5-git-send-email-h.huangqiang@huawei.com>
+References: <1375255885-10648-1-git-send-email-h.huangqiang@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1375255885-10648-1-git-send-email-h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -11,27 +13,57 @@ Content-Transfer-Encoding: 7bit
 To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 Cc: handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
 
-This issue is first discussed in:
-http://marc.info/?l=linux-mm&m=136574878704295&w=2
+This function dereferences res far too often, so optimize it.
 
-Then a second version sent to:
-http://marc.info/?l=linux-mm&m=136776855928310&w=2
+Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ kernel/res_counter.c | 19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
 
-We contacted Sha a month ago, she seems have no time to deal with it 
-recently, but we quite need this patch. So I modified and resent it.
-
-Qiang Huang (4):
-  memcg: correct RESOURCE_MAX to ULLONG_MAX
-  memcg: rename RESOURCE_MAX to RES_COUNTER_MAX
-  memcg: avoid overflow caused by PAGE_ALIGN
-  memcg: reduce function dereference
-
- include/linux/res_counter.h |  2 +-
- kernel/res_counter.c        | 25 ++++++++++++++++---------
- mm/memcontrol.c             |  4 ++--
- net/ipv4/tcp_memcontrol.c   | 10 +++++-----
- 4 files changed, 24 insertions(+), 17 deletions(-)
-
+diff --git a/kernel/res_counter.c b/kernel/res_counter.c
+index 085d3ae..4aa8a30 100644
+--- a/kernel/res_counter.c
++++ b/kernel/res_counter.c
+@@ -178,27 +178,30 @@ u64 res_counter_read_u64(struct res_counter *counter, int member)
+ #endif
+ 
+ int res_counter_memparse_write_strategy(const char *buf,
+-					unsigned long long *res)
++					unsigned long long *resp)
+ {
+ 	char *end;
++	unsigned long long res;
+ 
+ 	/* return RES_COUNTER_MAX(unlimited) if "-1" is specified */
+ 	if (*buf == '-') {
+-		*res = simple_strtoull(buf + 1, &end, 10);
+-		if (*res != 1 || *end != '\0')
++		res = simple_strtoull(buf + 1, &end, 10);
++		if (res != 1 || *end != '\0')
+ 			return -EINVAL;
+-		*res = RES_COUNTER_MAX;
++		*resp = RES_COUNTER_MAX;
+ 		return 0;
+ 	}
+ 
+-	*res = memparse(buf, &end);
++	res = memparse(buf, &end);
+ 	if (*end != '\0')
+ 		return -EINVAL;
+ 
+-	if (PAGE_ALIGN(*res) >= *res)
+-		*res = PAGE_ALIGN(*res);
++	if (PAGE_ALIGN(res) >= res)
++		res = PAGE_ALIGN(res);
+ 	else
+-		*res = RES_COUNTER_MAX;
++		res = RES_COUNTER_MAX;
++
++	*resp = res;
+ 
+ 	return 0;
+ }
 -- 
 1.8.3
 
