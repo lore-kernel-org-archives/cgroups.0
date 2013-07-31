@@ -1,74 +1,40 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH 3/4] memcg: avoid overflow caused by PAGE_ALIGN
-Date: Wed, 31 Jul 2013 10:14:41 +0200
-Message-ID: <20130731081441.GG30514@dhcp22.suse.cz>
-References: <1375255885-10648-1-git-send-email-h.huangqiang@huawei.com>
- <1375255885-10648-4-git-send-email-h.huangqiang@huawei.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: [PATCH 1/7] cgroup: fix a leak when percpu_ref_init() fails
+Date: Wed, 31 Jul 2013 16:16:28 +0800
+Message-ID: <51F8C7DC.8060306@huawei.com>
+References: <51F8C7C5.9040608@huawei.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <1375255885-10648-4-git-send-email-h.huangqiang@huawei.com>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <51F8C7C5.9040608@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Qiang Huang <h.huangqiang@huawei.com>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, handai.szj@taobao.com, lizefan@huawei.com, nishimura@mxp.nes.nec.co.jp, akpm@linux-foundation.org, jeff.liu@oracle.com
+To: Tejun Heo <tj@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-On Wed 31-07-13 15:31:24, Qiang Huang wrote:
-> Since PAGE_ALIGN is aligning up(the next page boundary), so after PAGE_ALIGN,
-> the value might be overflow, such as write the MAX value to *.limit_in_bytes.
-> 
-> $ cat /cgroup/memory/memory.limit_in_bytes
-> 18446744073709551615
-> 
-> # echo 18446744073709551615 > /cgroup/memory/memory.limit_in_bytes
-> bash: echo: write error: Invalid argument
-> 
-> Some user programs might depend on such behaviours(like libcg, we read the
-> value in snapshot, then use the value to reset cgroup later), and that
-> will cause confusion. So we need to fix it.
-> 
-> Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
-> Signed-off-by: Qiang Huang <h.huangqiang@huawei.com>
+ss->css_free() is not called when perfcpu_ref_init() fails.
 
-Reviewed-by: Michal Hocko <mhocko@suse.cz>
+Signed-off-by: Li Zefan <lizefan@huawei.com>
+---
+ kernel/cgroup.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-> ---
->  kernel/res_counter.c | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/kernel/res_counter.c b/kernel/res_counter.c
-> index 3f0417f..085d3ae 100644
-> --- a/kernel/res_counter.c
-> +++ b/kernel/res_counter.c
-> @@ -195,6 +195,10 @@ int res_counter_memparse_write_strategy(const char *buf,
->  	if (*end != '\0')
->  		return -EINVAL;
->  
-> -	*res = PAGE_ALIGN(*res);
-> +	if (PAGE_ALIGN(*res) >= *res)
-> +		*res = PAGE_ALIGN(*res);
-> +	else
-> +		*res = RES_COUNTER_MAX;
-> +
->  	return 0;
->  }
-> -- 
-> 1.8.3
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index a64b7b8..e60eba2 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -4274,8 +4274,10 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+ 		}
+ 
+ 		err = percpu_ref_init(&css->refcnt, css_release);
+-		if (err)
++		if (err) {
++			ss->css_free(cgrp);
+ 			goto err_free_all;
++		}
+ 
+ 		init_cgroup_css(css, ss, cgrp);
+ 	}
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+1.8.0.2
