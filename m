@@ -1,110 +1,43 @@
-From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
-Subject: Re: memcg creates an unkillable task in 3.11-rc2
-Date: Tue, 30 Jul 2013 09:37:46 -0700
-Message-ID: <874nbc3sx1.fsf@tw-ebiederman.twitter.com>
-References: <20130723174711.GE21100@mtj.dyndns.org>
-	<8761vui4cr.fsf@xmission.com> <20130729075939.GA4678@dhcp22.suse.cz>
-	<87ehahg312.fsf@xmission.com> <20130729095109.GB4678@dhcp22.suse.cz>
-	<20130729161026.GD22605@mtj.dyndns.org> <87r4eh70yg.fsf@xmission.com>
-	<51F71DE2.4020102@huawei.com>
-	<87ppu0a298.fsf_-_@tw-ebiederman.twitter.com>
-	<20130730123120.GA15847@dhcp22.suse.cz>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v4 0/8] memcg, cgroup: kill css_id
+Date: Wed, 31 Jul 2013 09:50:33 +0800
+Message-ID: <51F86D69.2030907@huawei.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130730123120.GA15847-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org> (Michal Hocko's message
-	of "Tue, 30 Jul 2013 14:31:20 +0200")
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kent.overstreet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> writes:
+This patchset converts memcg to use cgroup->id, and then we can remove
+cgroup css_id.
 
-> On Tue 30-07-13 01:19:31, Eric W. Biederman wrote:
-> [...]
->> Hmm. Looking farther I see what is going on. And it has nothing to do
->> with the freezer. (I have commented out that code and reproduced it
->> without the freezer to be doubly certain).
->> 
->> 
->> On the exit path exit_robust_list is triggering a page fault to fault a
->> page back in.  Which since we have no memory causes the exit path
->> to get stuck in mem_cgroup_handle_oom.
->
-> Hmm, interesting. I assume the exit is caused by the SIGKILL, right?
-> If yes, then why it hasn't coughed early in __mem_cgroup_try_charge
+As we've removed memcg's own refcnt, converting memcg to use cgroup->id
+is very straight-forward.
 
-Interesting question.  This isn't the primary thread but we do send
-SIGKILL to the secondary threads as well.
+The patchset is based on Tejun's cgroup tree.
 
-We definitely need those checks on both paths making my change valid.
+v4:
+- make cgroup_from_id() inline and check if cgroup_mutex is held.
+- add a comment for idr_remove() in cgroup_offline)fn().
 
-Oh. Duh!  This is after we act on SIGKILL so SIGKILL is no longer
-pending.
+v2->v3:
+- some minor cleanups suggested by Michal.
+- fixed the call to idr_alloc() in cgroup_init() in the first patch.
 
-That is how it makes it through __mem_cgroup_try_charge.
-
-
->> Which means the following change should fix the hang.  I will test it in just
->> a second.
->> 
->> The problem is that we only handled pending fatal signals and exiting
->> processes when the OOM logic was enabled. Sigh.
->
-> If this is about PF_EXITING then we should handle that earlier in the
-> code chain (__mem_cgroup_try_charge sounds like a proper place). Let me
-> think about that.
-
-We also need to test for fatal signals before we sleep in both boths of
-mem_cgroup_out_of_memory.  But yes testing for this condition earlier
-so we don't have to do a lot of work before we get out would not be a
-bad thing.
-
-Eric
-
-
->
-> Thanks for debugging this!
->
->> Eric
->> 
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 00a7a66..5998a57 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -1792,16 +1792,6 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
->>         unsigned int points = 0;
->>         struct task_struct *chosen = NULL;
->>  
->> -       /*
->> -        * If current has a pending SIGKILL or is exiting, then automatically
->> -        * select it.  The goal is to allow it to allocate so that it may
->> -        * quickly exit and free its memory.
->> -        */
->> -       if (fatal_signal_pending(current) || current->flags & PF_EXITING) {
->> -               set_thread_flag(TIF_MEMDIE);
->> -               return;
->> -       }
->> -
->>         check_panic_on_oom(CONSTRAINT_MEMCG, gfp_mask, order, NULL);
->>         totalpages = mem_cgroup_get_limit(memcg) >> PAGE_SHIFT ? : 1;
->>         for_each_mem_cgroup_tree(iter, memcg) {
->> @@ -2220,7 +2210,15 @@ static bool mem_cgroup_handle_oom(struct mem_cgroup *memcg, gfp_t mask,
->>                 mem_cgroup_oom_notify(memcg);
->>         spin_unlock(&memcg_oom_lock);
->>  
->> -       if (need_to_kill) {
->> +       /*
->> +        * If current has a pending SIGKILL or is exiting, then automatically
->> +        * select it.  The goal is to allow it to allocate so that it may
->> +        * quickly exit and free its memory.
->> +        */
->> +       if (fatal_signal_pending(current) || current->flags & PF_EXITING) {
->> +               set_thread_flag(TIF_MEMDIE);
->> +               finish_wait(&memcg_oom_waitq, &owait.wait);
->> +       } else if (need_to_kill) {
->>                 finish_wait(&memcg_oom_waitq, &owait.wait);
->>                 mem_cgroup_out_of_memory(memcg, mask, order);
->>         } else {
+Li Zefan (8):
+      cgroup: convert cgroup_ida to cgroup_idr
+      cgroup: document how cgroup IDs are assigned
+      cgroup: implement cgroup_from_id()
+      memcg: convert to use cgroup_is_descendant()
+      memcg: convert to use cgroup id
+      memcg: fail to create cgroup if the cgroup id is too big
+      memcg: stop using css id
+      cgroup: kill css_id
+--
+ include/linux/cgroup.h |  65 ++++++--------
+ kernel/cgroup.c        | 285 ++++++-----------------------------------------------------
+ mm/memcontrol.c        |  68 ++++++++------
+ 3 files changed, 96 insertions(+), 322 deletions(-)
