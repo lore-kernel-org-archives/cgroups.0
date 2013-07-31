@@ -1,86 +1,46 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH 4/4] memcg: reduce function dereference
-Date: Wed, 31 Jul 2013 10:20:29 +0200
-Message-ID: <20130731082029.GH30514@dhcp22.suse.cz>
+From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 0/4] memcg: fix memcg resource limit overflow issues
+Date: Wed, 31 Jul 2013 16:23:50 +0800
+Message-ID: <CAFj3OHX4WLaecyE_zFbnFKs9wrCWTq2eDAUDMxqPg8=TYt18gg@mail.gmail.com>
 References: <1375255885-10648-1-git-send-email-h.huangqiang@huawei.com>
- <1375255885-10648-5-git-send-email-h.huangqiang@huawei.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <1375255885-10648-5-git-send-email-h.huangqiang@huawei.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=VPKhN6JJ0BKYdaZAK9sDTDLLOf0o1WIOCr4w//4qHfM=;
+        b=pIHlp9WS61/s0Sc/GR6mKsVLIl7XmHSYTHpdFY6AtC5Y9/iYRmbiRg2MbpIPw8+BEO
+         kJqv9YbJJ3JENrdldeQNm24oyXUAszcPZUF/4SS7ZAZkjIQNLtY2Oas5aRscv5GnJczO
+         iditrrEodTFxo2tF+lUzUDYZf+k+QpXx2PykXF0I2fIsh5dahuxV1y6F5n+Yg9/+YcDN
+         wZSD2Uc2JH6h3vPln0ilD/t/adPvQSX7HYzpypGZauS91sZjKN0vu9iJQhG8OF17NRBC
+         yvhczKiPTbnfVzkv4JJ5gii4tJ6vPnDT3zBfN5LUp9IcuczOMJ0w1EWECMZzvknMPhW4
+         FbEg==
+In-Reply-To: <1375255885-10648-1-git-send-email-h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Qiang Huang <h.huangqiang@huawei.com>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, handai.szj@taobao.com, lizefan@huawei.com, nishimura@mxp.nes.nec.co.jp, akpm@linux-foundation.org, jeff.liu@oracle.com
+To: Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Daisuke Nishimura <nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Jeff Liu <jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
-On Wed 31-07-13 15:31:25, Qiang Huang wrote:
-> This function dereferences res far too often, so optimize it.
-> 
-> Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
-> Signed-off-by: Qiang Huang <h.huangqiang@huawei.com>
+Hi list,
 
-Reviewed-by: Michal Hocko <mhocko@suse.cz>
+On Wed, Jul 31, 2013 at 3:31 PM, Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
+> This issue is first discussed in:
+> http://marc.info/?l=linux-mm&m=136574878704295&w=2
+>
+> Then a second version sent to:
+> http://marc.info/?l=linux-mm&m=136776855928310&w=2
+>
+> We contacted Sha a month ago, she seems have no time to deal with it
+> recently, but we quite need this patch. So I modified and resent it.
 
-> ---
->  kernel/res_counter.c | 19 +++++++++++--------
->  1 file changed, 11 insertions(+), 8 deletions(-)
-> 
-> diff --git a/kernel/res_counter.c b/kernel/res_counter.c
-> index 085d3ae..4aa8a30 100644
-> --- a/kernel/res_counter.c
-> +++ b/kernel/res_counter.c
-> @@ -178,27 +178,30 @@ u64 res_counter_read_u64(struct res_counter *counter, int member)
->  #endif
->  
->  int res_counter_memparse_write_strategy(const char *buf,
-> -					unsigned long long *res)
-> +					unsigned long long *resp)
->  {
->  	char *end;
-> +	unsigned long long res;
->  
->  	/* return RES_COUNTER_MAX(unlimited) if "-1" is specified */
->  	if (*buf == '-') {
-> -		*res = simple_strtoull(buf + 1, &end, 10);
-> -		if (*res != 1 || *end != '\0')
-> +		res = simple_strtoull(buf + 1, &end, 10);
-> +		if (res != 1 || *end != '\0')
->  			return -EINVAL;
-> -		*res = RES_COUNTER_MAX;
-> +		*resp = RES_COUNTER_MAX;
->  		return 0;
->  	}
->  
-> -	*res = memparse(buf, &end);
-> +	res = memparse(buf, &end);
->  	if (*end != '\0')
->  		return -EINVAL;
->  
-> -	if (PAGE_ALIGN(*res) >= *res)
-> -		*res = PAGE_ALIGN(*res);
-> +	if (PAGE_ALIGN(res) >= res)
-> +		res = PAGE_ALIGN(res);
->  	else
-> -		*res = RES_COUNTER_MAX;
-> +		res = RES_COUNTER_MAX;
-> +
-> +	*resp = res;
->  
->  	return 0;
->  }
-> -- 
-> 1.8.3
-> 
-> 
 
--- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+No, I didn't receive any of YOUR message, only a engineer named Libo
+Chen from Huawei connected me recently. I don't approve you to resent
+them on behalf of me, and just before you send this you even don't
+send me a mail. Besides, after a rough look, I do not see any
+innovative ideas from yourself but just rework patches from my last
+version.
+So I'm strong against this patchset.
