@@ -1,11 +1,9 @@
 From: Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 1/4] memcg: correct RESOURCE_MAX to ULLONG_MAX
-Date: Wed, 31 Jul 2013 15:31:22 +0800
-Message-ID: <1375255885-10648-2-git-send-email-h.huangqiang@huawei.com>
-References: <1375255885-10648-1-git-send-email-h.huangqiang@huawei.com>
+Subject: [PATCH 0/4] memcg: fix memcg resource limit overflow issues
+Date: Wed, 31 Jul 2013 15:31:21 +0800
+Message-ID: <1375255885-10648-1-git-send-email-h.huangqiang@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1375255885-10648-1-git-send-email-h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -13,42 +11,27 @@ Content-Transfer-Encoding: 7bit
 To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 Cc: handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, nishimura-YQH0OdQVrdy45+QrQBaojngSJqDPrsil@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, jeff.liu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
 
-Current RESOURCE_MAX is ULONG_MAX, but the value we used to set resource
-limit is unsigned long long, so we can set bigger value than that which
-is strange. The XXX_MAX should be reasonable max value, bigger than that
-should be overflow.
+This issue is first discussed in:
+http://marc.info/?l=linux-mm&m=136574878704295&w=2
 
-Notice that this change will affect user output of default *.limit_in_bytes:
-before change:
-$ cat /cgroup/memory/memory.limit_in_bytes
-9223372036854775807
+Then a second version sent to:
+http://marc.info/?l=linux-mm&m=136776855928310&w=2
 
-after change:
-$ cat /cgroup/memory/memory.limit_in_bytes
-18446744073709551615
+We contacted Sha a month ago, she seems have no time to deal with it 
+recently, but we quite need this patch. So I modified and resent it.
 
-But it doesn't alter the API in term of input - we can still use
-"echo -1 > *.limit_in_bytes" to reset the numbers to "unlimited".
+Qiang Huang (4):
+  memcg: correct RESOURCE_MAX to ULLONG_MAX
+  memcg: rename RESOURCE_MAX to RES_COUNTER_MAX
+  memcg: avoid overflow caused by PAGE_ALIGN
+  memcg: reduce function dereference
 
-Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- include/linux/res_counter.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/res_counter.h |  2 +-
+ kernel/res_counter.c        | 25 ++++++++++++++++---------
+ mm/memcontrol.c             |  4 ++--
+ net/ipv4/tcp_memcontrol.c   | 10 +++++-----
+ 4 files changed, 24 insertions(+), 17 deletions(-)
 
-diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
-index 96a509b..586bc7c 100644
---- a/include/linux/res_counter.h
-+++ b/include/linux/res_counter.h
-@@ -54,7 +54,7 @@ struct res_counter {
- 	struct res_counter *parent;
- };
- 
--#define RESOURCE_MAX (unsigned long long)LLONG_MAX
-+#define RESOURCE_MAX ULLONG_MAX
- 
- /**
-  * Helpers to interact with userspace
 -- 
 1.8.3
 
