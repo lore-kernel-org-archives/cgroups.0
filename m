@@ -1,47 +1,48 @@
-From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH V5 8/8] memcg: Document cgroup dirty/writeback memory statistics
-Date: Thu,  1 Aug 2013 20:00:43 +0800
-Message-ID: <1375358443-10817-1-git-send-email-handai.szj@taobao.com>
-References: <1375357402-9811-1-git-send-email-handai.szj@taobao.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2 5/5] cgroup: remove struct cgroup_seqfile_state
+Date: Thu, 1 Aug 2013 08:08:55 -0400
+Message-ID: <20130801120855.GA24966@htj.dyndns.org>
+References: <51F8DA99.3010303@huawei.com>
+ <20130731113619.GL2810@htj.dyndns.org>
+ <51F9B5BD.2070502@huawei.com>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=from:to:cc:subject:date:message-id:x-mailer:in-reply-to:references;
-        bh=4ycYd4HqWSL4W7TVJ+l3FivV3qlNk/p9uTN+wnzd0VU=;
-        b=qH/CSa2u8j3Rc6atCM67CmJnvGy5zpYdX5qJwV9jP6Nb61kOPiDqIUi90b2sYLtMih
-         1DDE+G0URD6t7axPxHt3bLln9OvaIxIaqtz8RTwpb5IN5KiVv1ooq7MxNy2Nr5ZNkXe+
-         R0Ew1jm5E3K8RhRTGpqCdJ5A94zH7bsoT3oEBFjZLU7CG99FuUljqKeN7VGVoo6VTwdx
-         0krrkVXAtZn5c9C1Ar9Ahh8ST/5mosGi6yPayVlJuXhi3YnJf2Gz0QqK7Jnf317wAcsZ
-         ba+HApuRBgEIqXyqPu4K9FOWx7yQHO8LzHN/4SfbqSnVt/WGRTLgOAW15HiWahj0derU
-         XNfA==
-In-Reply-To: <1375357402-9811-1-git-send-email-handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=TQTL/V2myZqT2NYh/0Qc7/MNVq++7I7WeuMYy6v5SmE=;
+        b=EtC4avAULy6jD7Avdpwx1Q1N7Rrzz4FjDUPwmN/sbwHv84rgkWRpxYWrPkUrML+azz
+         DmbqlKAGMlSyxtJ9LgwlLreFK5nD9rv9M7U9WNxHvk4tuc89mDKNSpvWqn3DNrkIj22I
+         18Nawpni62s6f2sBBfIopAQ2Yd0F6qDTFRs00NHgusltWTSRoF0NOePOvgKC3rqkDfQk
+         yv2hGV8rWke94r3rJ9QGXYMWts9WYp76mRRTY2yucm/fKvf8CoU43+VPR0MnS5yLhLFR
+         PBp47NfchGQhlbW/XYNllPMt1RpHkWamDHfQIgYPvyDn9/acruGraFhFJmPHPHP7jSoY
+         kOHQ==
+Content-Disposition: inline
+In-Reply-To: <51F9B5BD.2070502-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: mhocko-AlSwsSmVLrQ@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+On Thu, Aug 01, 2013 at 09:11:25AM +0800, Li Zefan wrote:
+> On 2013/7/31 19:36, Tejun Heo wrote:
+> > On Wed, Jul 31, 2013 at 05:36:25PM +0800, Li Zefan wrote:
+> >> We can use struct cfent instead.
+> >>
+> >> v2:
+> >> - remove cgroup_seqfile_release().
+> >>
+> >> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> > 
+> > Applied to libata/for-3.12.
+> > 
+> 
+> libata? I hope you didn't. :)
 
-Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
----
- Documentation/cgroups/memory.txt |    2 ++
- 1 file changed, 2 insertions(+)
+Haha, brainfart.  I did apply it to cgroup/for-3.12. :)
 
-diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
-index 327acec..7ed4fa9 100644
---- a/Documentation/cgroups/memory.txt
-+++ b/Documentation/cgroups/memory.txt
-@@ -490,6 +490,8 @@ pgpgin		- # of charging events to the memory cgroup. The charging
- pgpgout		- # of uncharging events to the memory cgroup. The uncharging
- 		event happens each time a page is unaccounted from the cgroup.
- swap		- # of bytes of swap usage
-+dirty          - # of bytes of file cache that are not in sync with the disk copy.
-+writeback      - # of bytes of file/anon cache that are queued for syncing to disk.
- inactive_anon	- # of bytes of anonymous memory and swap cache memory on
- 		LRU list.
- active_anon	- # of bytes of anonymous and swap cache memory on active
 -- 
-1.7.9.5
+tejun
