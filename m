@@ -1,48 +1,49 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 5/5] cgroup: remove struct cgroup_seqfile_state
-Date: Thu, 1 Aug 2013 08:08:55 -0400
-Message-ID: <20130801120855.GA24966@htj.dyndns.org>
-References: <51F8DA99.3010303@huawei.com>
- <20130731113619.GL2810@htj.dyndns.org>
- <51F9B5BD.2070502@huawei.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 3/7] cgroup: restructure the failure path in
+ cgroup_write_event_control()
+Date: Thu, 1 Aug 2013 09:30:22 -0400
+Message-ID: <20130801133022.GD24966@htj.dyndns.org>
+References: <51F8C7C5.9040608@huawei.com>
+ <51F8C802.7070404@huawei.com>
+ <20130731104448.GH2810@htj.dyndns.org>
+ <51F9BF33.4060306@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=TQTL/V2myZqT2NYh/0Qc7/MNVq++7I7WeuMYy6v5SmE=;
-        b=EtC4avAULy6jD7Avdpwx1Q1N7Rrzz4FjDUPwmN/sbwHv84rgkWRpxYWrPkUrML+azz
-         DmbqlKAGMlSyxtJ9LgwlLreFK5nD9rv9M7U9WNxHvk4tuc89mDKNSpvWqn3DNrkIj22I
-         18Nawpni62s6f2sBBfIopAQ2Yd0F6qDTFRs00NHgusltWTSRoF0NOePOvgKC3rqkDfQk
-         yv2hGV8rWke94r3rJ9QGXYMWts9WYp76mRRTY2yucm/fKvf8CoU43+VPR0MnS5yLhLFR
-         PBp47NfchGQhlbW/XYNllPMt1RpHkWamDHfQIgYPvyDn9/acruGraFhFJmPHPHP7jSoY
-         kOHQ==
+        bh=DFWCHcRpC7YiDTVQ8ZRgyjXOhTCL8bmLMdR5urG+zN4=;
+        b=adLD8G0mx8LYf5UcaGKY9d07cnYOe9PFZ41r4+eAKnQfu/mjmLr5giRfKSfcO0rOsh
+         0DsAZY2wkzHqgk7EbaIUGaDbkivZgB4qBZemMxh1LrTEZFEQKxqcKAAfbYC10rao9KbE
+         r88QJQqC+qoum/At8+iVPda3ZHcrozJvoSvTnKjkZe6gDL4fNerxOAw6urfqq2EI8oAf
+         9FFv0SlRH4/rEGO+Mqz0uYRcZdCaR3DScI6JZ/bk0UJmK8Q4G+1VIsiYmcsqJzqjvJDH
+         ZUXjaVQ3AsJ2H5MCtBhYnuDvN/U6+cQNTfkojUr/gTD739UCseQosDsx9QmcCYvxmOkx
+         QSNA==
 Content-Disposition: inline
-In-Reply-To: <51F9B5BD.2070502-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <51F9BF33.4060306@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Li Zefan <lizefan@huawei.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-On Thu, Aug 01, 2013 at 09:11:25AM +0800, Li Zefan wrote:
-> On 2013/7/31 19:36, Tejun Heo wrote:
-> > On Wed, Jul 31, 2013 at 05:36:25PM +0800, Li Zefan wrote:
-> >> We can use struct cfent instead.
-> >>
-> >> v2:
-> >> - remove cgroup_seqfile_release().
-> >>
-> >> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> > 
-> > Applied to libata/for-3.12.
-> > 
+On Thu, Aug 01, 2013 at 09:51:47AM +0800, Li Zefan wrote:
+> It uses a single label and checks the validity of each pointer. This
+> is err-prone, and actually we had a bug because one of the check was
+> insufficient.
 > 
-> libata? I hope you didn't. :)
+> Use multi lables as we do in other places.
+> 
+> v2:
+> - drop initializations of local variables.
+> 
+> Signed-off-by: Li Zefan <lizefan@huawei.com>
 
-Haha, brainfart.  I did apply it to cgroup/for-3.12. :)
+Applied to cgroup/for-3.12.
+
+Thanks.
 
 -- 
 tejun
