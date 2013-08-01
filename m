@@ -1,138 +1,144 @@
-From: Sage Weil <sage@inktank.com>
-Subject: Re: [PATCH V5 2/8] fs/ceph: vfs __set_page_dirty_nobuffers interface
- instead of doing it inside filesystem
-Date: Thu, 1 Aug 2013 11:27:49 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1308011121080.22584@cobra.newdream.net>
-References: <1375357402-9811-1-git-send-email-handai.szj@taobao.com> <1375357892-10188-1-git-send-email-handai.szj@taobao.com> <CAAM7YAmxmmA6g2WPVtGN1-42rtDBYzLhF-gvNXxcBN6dUveBYQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="557981400-154103058-1375381669=:22584"
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <CAAM7YAmxmmA6g2WPVtGN1-42rtDBYzLhF-gvNXxcBN6dUveBYQ@mail.gmail.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET cgroup/for-3.12] cgroup: use cgroup_subsys_state as the primary subsystem interface handle
+Date: Thu,  1 Aug 2013 17:49:38 -0400
+Message-ID: <1375393801-4817-1-git-send-email-tj@kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id:x-mailer;
+        bh=lCUWxKL9Nrce7gYjwPIKLGv5p/7Lgq151+uk3Je3TXQ=;
+        b=kArS1MA8kPtH8JcocAuct9wGjE6U0ewwLP2m95goV3kQlMDL0PQswh+23w3fD1da37
+         BENGq/9Vn1iAVTi9op25rUOYkfL7R2fPR1YKGRV7+Hw+mPR7mMF1N4cohccOJyPkczUs
+         kF9sBdZwXZRMygxtwPi8Ptq6kFkVfcRxMeeGBfB+oWRWOJBOary25RTdsSA9AamqFpeL
+         534HOqZND0CRTGnikVIRk5YRNLckcIvCRUmm3wOmW1sAKs/f01nIH4d3z31miq/ykq0j
+         lxVLSd8PpygLyp6ZW7fgQ5qPNGMRH2ibdmtizUNZ2+rEXJiUzOdAeD+4Uoe7JdaEZe+h
+         ITgA==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: "Yan, Zheng" <ukernel@gmail.com>
-Cc: Sha Zhengju <handai.szj@gmail.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, ceph-devel <ceph-devel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, cgroups@vger.kernel.org, mhocko@suse.cz, kamezawa.hiroyu@jp.fujitsu.com, glommer@gmail.com, Greg Thelen <gthelen@google.com>, Wu Fengguang <fengguang.wu@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Sha Zhengju <handai.szj@taobao.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Hello,
 
---557981400-154103058-1375381669=:22584
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Currently, struct cgroup * is used as the main interface handle
+between cgroup core and its subsystems, which works but is a bit
+clunky because subsystems usually care much more about css's
+(cgroup_subsys_state) a lot more than cgroups, which is natural as a
+css is the intersection between a cgroup and a subsystem.
 
-On Thu, 1 Aug 2013, Yan, Zheng wrote:
-> On Thu, Aug 1, 2013 at 7:51 PM, Sha Zhengju <handai.szj@gmail.com> wrot=
-e:
-> > From: Sha Zhengju <handai.szj@taobao.com>
-> >
-> > Following we will begin to add memcg dirty page accounting around
-> __set_page_dirty_
-> > {buffers,nobuffers} in vfs layer, so we'd better use vfs interface to
-> avoid exporting
-> > those details to filesystems.
-> >
-> > Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
-> > ---
-> > =A0fs/ceph/addr.c | =A0 13 +------------
-> > =A01 file changed, 1 insertion(+), 12 deletions(-)
-> >
-> > diff --git a/fs/ceph/addr.c b/fs/ceph/addr.c
-> > index 3e68ac1..1445bf1 100644
-> > --- a/fs/ceph/addr.c
-> > +++ b/fs/ceph/addr.c
-> > @@ -76,7 +76,7 @@ static int ceph_set_page_dirty(struct page *page)
-> > =A0 =A0 =A0 =A0 if (unlikely(!mapping))
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return !TestSetPageDirty(page);
-> >
-> > - =A0 =A0 =A0 if (TestSetPageDirty(page)) {
-> > + =A0 =A0 =A0 if (!__set_page_dirty_nobuffers(page)) {
-> it's too early to set the radix tree tag here. We should set page's sna=
-pshot
-> context and increase the i_wrbuffer_ref first. This is because once the=
- tag
-> is set, writeback thread can find and start flushing the page.
+In addition to being a bit clunky, dealing with cgroups directly pose
+a bit of trouble for the planned unified hierarchy support on two
+fronts.  First, most iterations become subsystem dependent as task
+membership is affected by which subtree has the specific subsystem
+enabled and thus require specifying which subsystem the iteration is
+for, which is automatically achieved if the interfaces deal with css's
+instead of cgroups.
 
-Unfortunately I only remember being frustrated by this code.  :)  Looking=
-=20
-at it now, though, it seems like the minimum fix is to set the=20
-page->private before marking the page dirty.  I don't know the locking=20
-rules around that, though.  If that is potentially racy, maybe the safest=
-=20
-thing would be if __set_page_dirty_nobuffers() took a void* to set=20
-page->private to atomically while holding the tree_lock.
+Second, as css's may be created, attached, detached and destroyed
+dynamically multiple times across the lifetime of a given cgroup as
+they're enabled and disabled, which makes cgroup -> css mapping much
+more difficult to synchronize.  Giving out cgroup to subsystems and
+then requiring them to take the extra steps to deal with their css's
+coming and going dynamically is a lot more fragile than cgroup core
+proper handling it internally and giving out the resulting css's to
+subsystems.
 
-sage
+So, this patchset converts all cgroup subsystem APIs to deal with
+css's instead of cgroups.  The patchset is fairly large but most of
+the conversions, while being tedious, aren't complex.  At the end of
+series, subsystems no longer make cgroup -> css mapping themselves and
+cgroup_css() - formerly cgroup_subsys_state() - is made internal to
+cgroup core proper.
 
->=20
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 dout("%p set_page_dirty %p idx %lu --=
- already dirty\n",
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0mapping->host, page, page-=
->index);
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 0;
-> > @@ -107,14 +107,7 @@ static int ceph_set_page_dirty(struct page *page=
-)
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0snapc, snapc->seq, snapc->num_snaps);
-> > =A0 =A0 =A0 =A0 spin_unlock(&ci->i_ceph_lock);
-> >
-> > - =A0 =A0 =A0 /* now adjust page */
-> > - =A0 =A0 =A0 spin_lock_irq(&mapping->tree_lock);
-> > =A0 =A0 =A0 =A0 if (page->mapping) { =A0 =A0/* Race with truncate? */
-> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 WARN_ON_ONCE(!PageUptodate(page));
-> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 account_page_dirtied(page, page->mappin=
-g);
-> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 radix_tree_tag_set(&mapping->page_tree,
-> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 page_in=
-dex(page), PAGECACHE_TAG_DIRTY);
-> > -
->=20
-> this code was coped from __set_page_dirty_nobuffers(). I think the reas=
-on
-> Sage did this is to handle the race described in
-> __set_page_dirty_nobuffers()'s comment. But I'm wonder if "page->mappin=
-g =3D=3D
-> NULL" can still happen here. Because truncate_inode_page() unmap page f=
-rom
-> processes's address spaces first, then delete page from page cache.
->=20
-> Regards
-> Yan, Zheng
->=20
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 /*
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* Reference snap context in page->=
-private. =A0Also set
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* PagePrivate so that we get inval=
-idatepage callback.
-> > @@ -126,14 +119,10 @@ static int ceph_set_page_dirty(struct page *pag=
-e)
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 undo =3D 1;
-> > =A0 =A0 =A0 =A0 }
-> >
-> > - =A0 =A0 =A0 spin_unlock_irq(&mapping->tree_lock);
->=20
->=20
->=20
->=20
-> > -
-> > =A0 =A0 =A0 =A0 if (undo)
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* whoops, we failed to dirty the pag=
-e */
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ceph_put_wrbuffer_cap_refs(ci, 1, sna=
-pc);
-> >
-> > - =A0 =A0 =A0 __mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
-> > -
-> > =A0 =A0 =A0 =A0 BUG_ON(!PageDirty(page));
-> > =A0 =A0 =A0 =A0 return 1;
-> > =A0}
-> > --
-> > 1.7.9.5
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe ceph-devel"=
- in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->=20
->=20
->=20
---557981400-154103058-1375381669=:22584--
+This is a rather large update to the interface and likely to play as a
+barrier when porting commits, which is inconvenient but also provides
+an opportunity to clean up the API where we can as doing so won't
+significantly raise the level of inconvenience.  As such, this
+patchset contains some API cleanups and I'll probably follow up with
+further API updates that I've been meaning to do and, if you have some
+good idea to clean up cgroup internal API, this probably is a good
+time to submit it.
+
+This patchset contains the following 23 patches.
+
+ 0001-cgroup-s-cgroup_subsys_state-cgroup_css-s-task_subsy.patch
+ 0002-cpuset-drop-const-qualifiers-from-struct-cpuset-inst.patch
+ 0003-netprio_cgroup-pass-around-css-instead-of-cgroup-and.patch
+ 0004-hugetlb_cgroup-pass-around-hugetlb_cgroup-instead-of.patch
+ 0005-cgroup-add-subsystem-pointer-to-cgroup_subsys_state.patch
+ 0006-cgroup-add-update-accessors-which-obtain-subsys-spec.patch
+ 0007-cgroup-add-css_parent.patch
+ 0008-cgroup-pass-around-cgroup_subsys_state-instead-of-cg.patch
+ 0009-cgroup-add-subsys-backlink-pointer-to-cftype.patch
+ 0010-cgroup-pin-cgroup_subsys_state-when-opening-a-cgroup.patch
+ 0011-cgroup-add-cgroup-dummy_css.patch
+ 0012-cgroup-pass-around-cgroup_subsys_state-instead-of-cg.patch
+ 0013-cgroup-convert-cgroup_next_sibling-to-cgroup_next_ch.patch
+ 0014-cgroup-always-use-cgroup_next_child-to-walk-the-chil.patch
+ 0015-cgroup-make-hierarchy-iterators-deal-with-cgroup_sub.patch
+ 0016-cgroup-relocate-cgroup_advance_iter.patch
+ 0017-cgroup-rename-cgroup_iter-to-cgroup_task_iter.patch
+ 0018-cgroup-make-cgroup_task_iter-remember-the-cgroup-bei.patch
+ 0019-cgroup-remove-struct-cgroup_scanner.patch
+ 0020-cgroup-make-task-iterators-deal-with-cgroup_subsys_s.patch
+ 0021-cgroup-make-cftype-un-register_event-deal-with-cgrou.patch
+ 0022-cgroup-make-cgroup_taskset-deal-with-cgroup_subsys_s.patch
+ 0023-cgroup-unexport-cgroup_css.patch
+
+0001-0007 prepare for css-based interface.  Individual subsystems are
+updated so that they're easier to convert and css_parent() is added so
+that upward travelsal can be done without going through cgroup.
+
+0008 updates all subsystem methods.
+
+0009-0012 update file operations.
+
+0013-0015 update hierarchy iterators.
+
+0016-0020 update task iterators.
+
+0021 updates events.
+
+0022 updates task_set handling.
+
+0023 unexports cgroup_css().
+
+This patchset is available in the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cssfy
+
+diffstat follows.
+
+ block/blk-cgroup.c           |   41 +-
+ block/blk-cgroup.h           |   34 -
+ block/blk-throttle.c         |   40 +-
+ block/cfq-iosched.c          |   90 ++--
+ fs/bio.c                     |    2
+ include/linux/cgroup.h       |  268 +++++++-------
+ include/linux/memcontrol.h   |    2
+ include/linux/vmpressure.h   |    6
+ include/net/cls_cgroup.h     |    4
+ include/net/netprio_cgroup.h |    8
+ kernel/cgroup.c              |  798 ++++++++++++++++++++++++-------------------
+ kernel/cgroup_freezer.c      |  128 +++---
+ kernel/cpuset.c              |  265 ++++++--------
+ kernel/events/core.c         |   22 -
+ kernel/sched/core.c          |  113 +++---
+ kernel/sched/cpuacct.c       |   51 +-
+ kernel/sched/sched.h         |    6
+ mm/hugetlb_cgroup.c          |   69 +--
+ mm/memcontrol.c              |  216 +++++------
+ mm/vmpressure.c              |   25 -
+ net/core/netprio_cgroup.c    |   72 +--
+ net/ipv4/tcp_memcontrol.c    |   12
+ net/sched/cls_cgroup.c       |   39 +-
+ security/device_cgroup.c     |   63 +--
+ 24 files changed, 1210 insertions(+), 1164 deletions(-)
+
+Thanks.
+
+--
+tejun
