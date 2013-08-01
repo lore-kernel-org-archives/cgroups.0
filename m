@@ -1,20 +1,20 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 09/23] cgroup: add subsys backlink pointer to cftype
-Date: Thu,  1 Aug 2013 17:49:47 -0400
-Message-ID: <1375393801-4817-10-git-send-email-tj@kernel.org>
+Subject: [PATCH 21/23] cgroup: make cftype->[un]register_event() deal with cgroup_subsys_state instead of cgroup
+Date: Thu,  1 Aug 2013 17:49:59 -0400
+Message-ID: <1375393801-4817-22-git-send-email-tj@kernel.org>
 References: <1375393801-4817-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
          :references;
-        bh=z2B0Tg7WRaLKz8RewAk1xDiozCAfdOVbE1L2+Xz4uAw=;
-        b=XcN5KbqpX++inl5iym1mBevj6iliL8zLuQzHzQdigNVgQQOXvNE4gubCCg41g7RTjx
-         bfSq1lYGiHElNBbWASOdDOIZH1uG+6NDw2jwzQu5HTpcslRdDhPkcdKbTfFwr3GjCN/9
-         5FMc2ZlkkyLmc7juCZbIB+SW82YCqrBBOF4ls9qIZlomG3bP91K9d53aPV5IluHcndx6
-         iphC2wHew/ppTmYYQJlSQMp4ghs7mPbq7jUmaHPZD0MWgjv9JyfFd9ZdvycMIC+r7EVc
-         YR0Tbu+mbvXjt/i/2jyI0O39oih6TlOMIf3GvoW+H3RdDNckUkJ0gwRDYBrX1beZRa2l
-         GmNw==
+        bh=f2oU0LTjNHISAjY2ENpbwcAKwJr9H9Ci2RuJ+IWwuW8=;
+        b=dv8xfrT3ICq6OEamTan/KkDWlbm9JP7xjLF4ipAQt1nzCPCCabaG8MRfHe7oHRpuKw
+         0ToFoKYncgJAqN248PjwDiKxDY10U8H5V9Sp9DqvTDo8pAxe3XSsu+4GpXu3y/Antf7w
+         a5g1CuG1qHZW9xAr6udhQlFzlaERKSbWeUtzxiH6S7gqnuH6NNozlc6NPsRlKY+HjMQ7
+         onITc8vY7ZDi3s35sqX6ID3Lw27dvE+RUZ627IKXtyxhaUIqosxJF5bfatRC0zQoTEcv
+         pOH+3PwfLiq48Jw9S3d8ewBisa1VSJxvJdvVxOKiqakGXZH3BvK6XzKwpSZu+JK1SzTz
+         +uLg==
 In-Reply-To: <1375393801-4817-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -22,304 +22,264 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com
-Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, Jens Axboe <axboe@kernel.dk>
+Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>
 
-cgroup is transitioning to using css (cgroup_subsys_state) instead of
-cgroup as the primary subsystem handle.  The cgroupfs file interface
-will be converted to use css's which requires finding out the
-subsystem from cftype so that the matching css can be determined from
-the cgroup.
+cgroup is in the process of converting to css (cgroup_subsys_state)
+from cgroup as the principal subsystem interface handle.  This is
+mostly to prepare for the unified hierarchy support where css's will
+be created and destroyed dynamically but also helps cleaning up
+subsystem implementations as css is usually what they are interested
+in anyway.
 
-This patch adds cftype->ss which points to the subsystem the file
-belongs to.  The field is initialized while a cftype is being
-registered.  This makes it unnecessary to explicitly specify the
-subsystem for other cftype handling functions.  @ss argument dropped
-from various cftype handling functions.
-
-This patch shouldn't introduce any behavior differences.
+cftype->[un]register_event() is among the remaining couple interfaces
+which still use struct cgroup.  Convert it to cgroup_subsys_state.
+The conversion is mostly mechanical and removes the last users of
+mem_cgroup_from_cont() and cg_to_vmpressure(), which are removed.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Vivek Goyal <vgoyal@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>
+Cc: Balbir Singh <bsingharora@gmail.com>
 ---
- block/blk-cgroup.c     |  2 +-
- include/linux/cgroup.h |  8 +++++-
- kernel/cgroup.c        | 78 ++++++++++++++++++++++++++++----------------------
- 3 files changed, 51 insertions(+), 37 deletions(-)
+ include/linux/cgroup.h     |  8 +++++---
+ include/linux/vmpressure.h |  6 ++++--
+ kernel/cgroup.c            | 15 ++++++++-------
+ mm/memcontrol.c            | 21 ++++++++-------------
+ mm/vmpressure.c            | 21 +++++++++------------
+ 5 files changed, 34 insertions(+), 37 deletions(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 79fd9f4..3406373 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -1128,7 +1128,7 @@ void blkcg_policy_unregister(struct blkcg_policy *pol)
- 
- 	/* kill the intf files first */
- 	if (pol->cftypes)
--		cgroup_rm_cftypes(&blkio_subsys, pol->cftypes);
-+		cgroup_rm_cftypes(pol->cftypes);
- 
- 	/* unregister and update blkgs */
- 	blkcg_policy[pol->plid] = NULL;
 diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 69b33f9..2e0e9e2 100644
+index 6f6d87b..8f44411 100644
 --- a/include/linux/cgroup.h
 +++ b/include/linux/cgroup.h
-@@ -429,6 +429,12 @@ struct cftype {
- 	/* CFTYPE_* flags */
- 	unsigned int flags;
+@@ -506,15 +506,17 @@ struct cftype {
+ 	 * you want to provide this functionality. Use eventfd_signal()
+ 	 * on eventfd to send notification to userspace.
+ 	 */
+-	int (*register_event)(struct cgroup *cgrp, struct cftype *cft,
+-			struct eventfd_ctx *eventfd, const char *args);
++	int (*register_event)(struct cgroup_subsys_state *css,
++			      struct cftype *cft, struct eventfd_ctx *eventfd,
++			      const char *args);
+ 	/*
+ 	 * unregister_event() callback will be called when userspace
+ 	 * closes the eventfd or on cgroup removing.
+ 	 * This callback must be implemented, if you want provide
+ 	 * notification functionality.
+ 	 */
+-	void (*unregister_event)(struct cgroup *cgrp, struct cftype *cft,
++	void (*unregister_event)(struct cgroup_subsys_state *css,
++				 struct cftype *cft,
+ 			struct eventfd_ctx *eventfd);
+ };
  
-+	/*
-+	 * The subsys this file belongs to.  Initialized automatically
-+	 * during registration.  NULL for cgroup core files.
-+	 */
-+	struct cgroup_subsys *ss;
-+
- 	int (*open)(struct inode *inode, struct file *file);
- 	ssize_t (*read)(struct cgroup *cgrp, struct cftype *cft,
- 			struct file *file,
-@@ -542,7 +548,7 @@ static inline const char *cgroup_name(const struct cgroup *cgrp)
- }
- 
- int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
--int cgroup_rm_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
-+int cgroup_rm_cftypes(struct cftype *cfts);
- 
- bool cgroup_is_descendant(struct cgroup *cgrp, struct cgroup *ancestor);
- 
+diff --git a/include/linux/vmpressure.h b/include/linux/vmpressure.h
+index 76be077..b239482 100644
+--- a/include/linux/vmpressure.h
++++ b/include/linux/vmpressure.h
+@@ -33,10 +33,12 @@ extern void vmpressure_init(struct vmpressure *vmpr);
+ extern struct vmpressure *memcg_to_vmpressure(struct mem_cgroup *memcg);
+ extern struct cgroup_subsys_state *vmpressure_to_css(struct vmpressure *vmpr);
+ extern struct vmpressure *css_to_vmpressure(struct cgroup_subsys_state *css);
+-extern int vmpressure_register_event(struct cgroup *cg, struct cftype *cft,
++extern int vmpressure_register_event(struct cgroup_subsys_state *css,
++				     struct cftype *cft,
+ 				     struct eventfd_ctx *eventfd,
+ 				     const char *args);
+-extern void vmpressure_unregister_event(struct cgroup *cg, struct cftype *cft,
++extern void vmpressure_unregister_event(struct cgroup_subsys_state *css,
++					struct cftype *cft,
+ 					struct eventfd_ctx *eventfd);
+ #else
+ static inline void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index fae11e3..f1fc4d8 100644
+index c61b24f..e0ef58e 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -219,8 +219,8 @@ static struct cftype cgroup_base_files[];
- 
- static void cgroup_offline_fn(struct work_struct *work);
- static int cgroup_destroy_locked(struct cgroup *cgrp);
--static int cgroup_addrm_files(struct cgroup *cgrp, struct cgroup_subsys *subsys,
--			      struct cftype cfts[], bool is_add);
-+static int cgroup_addrm_files(struct cgroup *cgrp, struct cftype cfts[],
-+			      bool is_add);
- 
- /* convenient tests for these bits */
- static inline bool cgroup_is_dead(const struct cgroup *cgrp)
-@@ -974,7 +974,7 @@ static void cgroup_clear_dir(struct cgroup *cgrp, unsigned long subsys_mask)
- 		if (!test_bit(i, &subsys_mask))
- 			continue;
- 		list_for_each_entry(set, &ss->cftsets, node)
--			cgroup_addrm_files(cgrp, NULL, set->cfts, false);
-+			cgroup_addrm_files(cgrp, set->cfts, false);
- 	}
- }
- 
-@@ -1623,7 +1623,7 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 		 */
- 		cred = override_creds(&init_cred);
- 
--		ret = cgroup_addrm_files(root_cgrp, NULL, cgroup_base_files, true);
-+		ret = cgroup_addrm_files(root_cgrp, cgroup_base_files, true);
- 		if (ret)
- 			goto rm_base_files;
- 
-@@ -1681,7 +1681,7 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 
-  rm_base_files:
- 	free_cgrp_cset_links(&tmp_links);
--	cgroup_addrm_files(&root->top_cgroup, NULL, cgroup_base_files, false);
-+	cgroup_addrm_files(&root->top_cgroup, cgroup_base_files, false);
- 	revert_creds(cred);
-  unlock_drop:
- 	cgroup_exit_root_id(root);
-@@ -2687,8 +2687,7 @@ static umode_t cgroup_file_mode(const struct cftype *cft)
- 	return mode;
- }
- 
--static int cgroup_add_file(struct cgroup *cgrp, struct cgroup_subsys *subsys,
--			   struct cftype *cft)
-+static int cgroup_add_file(struct cgroup *cgrp, struct cftype *cft)
- {
- 	struct dentry *dir = cgrp->dentry;
- 	struct cgroup *parent = __d_cgrp(dir);
-@@ -2698,8 +2697,8 @@ static int cgroup_add_file(struct cgroup *cgrp, struct cgroup_subsys *subsys,
- 	umode_t mode;
- 	char name[MAX_CGROUP_TYPE_NAMELEN + MAX_CFTYPE_NAME + 2] = { 0 };
- 
--	if (subsys && !(cgrp->root->flags & CGRP_ROOT_NOPREFIX)) {
--		strcpy(name, subsys->name);
-+	if (cft->ss && !(cgrp->root->flags & CGRP_ROOT_NOPREFIX)) {
-+		strcpy(name, cft->ss->name);
- 		strcat(name, ".");
- 	}
- 	strcat(name, cft->name);
-@@ -2736,17 +2735,16 @@ out:
- /**
-  * cgroup_addrm_files - add or remove files to a cgroup directory
-  * @cgrp: the target cgroup
-- * @subsys: the subsystem of files to be added
-  * @cfts: array of cftypes to be added
-  * @is_add: whether to add or remove
-  *
-  * Depending on @is_add, add or remove files defined by @cfts on @cgrp.
-- * All @cfts should belong to @subsys.  For removals, this function never
-- * fails.  If addition fails, this function doesn't remove files already
-- * added.  The caller is responsible for cleaning up.
-+ * For removals, this function never fails.  If addition fails, this
-+ * function doesn't remove files already added.  The caller is responsible
-+ * for cleaning up.
+@@ -159,9 +159,9 @@ struct css_id {
   */
--static int cgroup_addrm_files(struct cgroup *cgrp, struct cgroup_subsys *subsys,
--			      struct cftype cfts[], bool is_add)
-+static int cgroup_addrm_files(struct cgroup *cgrp, struct cftype cfts[],
-+			      bool is_add)
+ struct cgroup_event {
+ 	/*
+-	 * Cgroup which the event belongs to.
++	 * css which the event belongs to.
+ 	 */
+-	struct cgroup *cgrp;
++	struct cgroup_subsys_state *css;
+ 	/*
+ 	 * Control file which the event associated.
+ 	 */
+@@ -3948,11 +3948,12 @@ static void cgroup_event_remove(struct work_struct *work)
  {
- 	struct cftype *cft;
- 	int ret;
-@@ -2764,7 +2762,7 @@ static int cgroup_addrm_files(struct cgroup *cgrp, struct cgroup_subsys *subsys,
- 			continue;
+ 	struct cgroup_event *event = container_of(work, struct cgroup_event,
+ 			remove);
+-	struct cgroup *cgrp = event->cgrp;
++	struct cgroup_subsys_state *css = event->css;
++	struct cgroup *cgrp = css->cgroup;
  
- 		if (is_add) {
--			ret = cgroup_add_file(cgrp, subsys, cft);
-+			ret = cgroup_add_file(cgrp, cft);
- 			if (ret) {
- 				pr_warn("cgroup_addrm_files: failed to add %s, err=%d\n",
- 					cft->name, ret);
-@@ -2789,11 +2787,11 @@ static void cgroup_cfts_prepare(void)
- 	mutex_lock(&cgroup_mutex);
+ 	remove_wait_queue(event->wqh, &event->wait);
+ 
+-	event->cft->unregister_event(cgrp, event->cft, event->eventfd);
++	event->cft->unregister_event(css, event->cft, event->eventfd);
+ 
+ 	/* Notify userspace the event is going away. */
+ 	eventfd_signal(event->eventfd, 1);
+@@ -3972,7 +3973,7 @@ static int cgroup_event_wake(wait_queue_t *wait, unsigned mode,
+ {
+ 	struct cgroup_event *event = container_of(wait,
+ 			struct cgroup_event, wait);
+-	struct cgroup *cgrp = event->cgrp;
++	struct cgroup *cgrp = event->css->cgroup;
+ 	unsigned long flags = (unsigned long)key;
+ 
+ 	if (flags & POLLHUP) {
+@@ -4041,7 +4042,7 @@ static int cgroup_write_event_control(struct cgroup_subsys_state *css,
+ 	event = kzalloc(sizeof(*event), GFP_KERNEL);
+ 	if (!event)
+ 		return -ENOMEM;
+-	event->cgrp = cgrp;
++	event->css = css;
+ 	INIT_LIST_HEAD(&event->list);
+ 	init_poll_funcptr(&event->pt, cgroup_event_ptable_queue_proc);
+ 	init_waitqueue_func_entry(&event->wait, cgroup_event_wake);
+@@ -4092,7 +4093,7 @@ static int cgroup_write_event_control(struct cgroup_subsys_state *css,
+ 		goto out_put_cfile;
+ 	}
+ 
+-	ret = event->cft->register_event(cgrp, event->cft,
++	ret = event->cft->register_event(css, event->cft,
+ 			event->eventfd, buffer);
+ 	if (ret)
+ 		goto out_put_cfile;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 95106a9..2885e3e 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1034,11 +1034,6 @@ static void memcg_check_events(struct mem_cgroup *memcg, struct page *page)
+ 		preempt_enable();
  }
  
--static int cgroup_cfts_commit(struct cgroup_subsys *ss,
--			      struct cftype *cfts, bool is_add)
-+static int cgroup_cfts_commit(struct cftype *cfts, bool is_add)
- 	__releases(&cgroup_mutex)
+-static inline struct mem_cgroup *mem_cgroup_from_cont(struct cgroup *cont)
+-{
+-	return mem_cgroup_from_css(cgroup_css(cont, mem_cgroup_subsys_id));
+-}
+-
+ struct mem_cgroup *mem_cgroup_from_task(struct task_struct *p)
  {
- 	LIST_HEAD(pending);
-+	struct cgroup_subsys *ss = cfts[0].ss;
- 	struct cgroup *cgrp, *root = &ss->root->top_cgroup;
- 	struct super_block *sb = ss->root->sb;
- 	struct dentry *prev = NULL;
-@@ -2821,7 +2819,7 @@ static int cgroup_cfts_commit(struct cgroup_subsys *ss,
- 	inode = root->dentry->d_inode;
- 	mutex_lock(&inode->i_mutex);
- 	mutex_lock(&cgroup_mutex);
--	ret = cgroup_addrm_files(root, ss, cfts, is_add);
-+	ret = cgroup_addrm_files(root, cfts, is_add);
- 	mutex_unlock(&cgroup_mutex);
- 	mutex_unlock(&inode->i_mutex);
+ 	/*
+@@ -5620,10 +5615,10 @@ static void mem_cgroup_oom_notify(struct mem_cgroup *memcg)
+ 		mem_cgroup_oom_notify_cb(iter);
+ }
  
-@@ -2844,7 +2842,7 @@ static int cgroup_cfts_commit(struct cgroup_subsys *ss,
- 		mutex_lock(&inode->i_mutex);
- 		mutex_lock(&cgroup_mutex);
- 		if (cgrp->serial_nr < update_before && !cgroup_is_dead(cgrp))
--			ret = cgroup_addrm_files(cgrp, ss, cfts, is_add);
-+			ret = cgroup_addrm_files(cgrp, cfts, is_add);
- 		mutex_unlock(&cgroup_mutex);
- 		mutex_unlock(&inode->i_mutex);
- 
-@@ -2876,51 +2874,56 @@ out_deact:
- int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
+-static int mem_cgroup_usage_register_event(struct cgroup *cgrp,
++static int mem_cgroup_usage_register_event(struct cgroup_subsys_state *css,
+ 	struct cftype *cft, struct eventfd_ctx *eventfd, const char *args)
  {
- 	struct cftype_set *set;
-+	struct cftype *cft;
- 	int ret;
- 
- 	set = kzalloc(sizeof(*set), GFP_KERNEL);
- 	if (!set)
- 		return -ENOMEM;
- 
-+	for (cft = cfts; cft->name[0] != '\0'; cft++)
-+		cft->ss = ss;
-+
- 	cgroup_cfts_prepare();
- 	set->cfts = cfts;
- 	list_add_tail(&set->node, &ss->cftsets);
--	ret = cgroup_cfts_commit(ss, cfts, true);
-+	ret = cgroup_cfts_commit(cfts, true);
- 	if (ret)
--		cgroup_rm_cftypes(ss, cfts);
-+		cgroup_rm_cftypes(cfts);
+-	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
++	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+ 	struct mem_cgroup_thresholds *thresholds;
+ 	struct mem_cgroup_threshold_ary *new;
+ 	enum res_type type = MEMFILE_TYPE(cft->private);
+@@ -5703,10 +5698,10 @@ unlock:
  	return ret;
  }
- EXPORT_SYMBOL_GPL(cgroup_add_cftypes);
  
- /**
-  * cgroup_rm_cftypes - remove an array of cftypes from a subsystem
-- * @ss: target cgroup subsystem
-  * @cfts: zero-length name terminated array of cftypes
-  *
-- * Unregister @cfts from @ss.  Files described by @cfts are removed from
-- * all existing cgroups to which @ss is attached and all future cgroups
-- * won't have them either.  This function can be called anytime whether @ss
-- * is attached or not.
-+ * Unregister @cfts.  Files described by @cfts are removed from all
-+ * existing cgroups and all future cgroups won't have them either.  This
-+ * function can be called anytime whether @cfts' subsys is attached or not.
-  *
-  * Returns 0 on successful unregistration, -ENOENT if @cfts is not
-- * registered with @ss.
-+ * registered.
-  */
--int cgroup_rm_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
-+int cgroup_rm_cftypes(struct cftype *cfts)
+-static void mem_cgroup_usage_unregister_event(struct cgroup *cgrp,
++static void mem_cgroup_usage_unregister_event(struct cgroup_subsys_state *css,
+ 	struct cftype *cft, struct eventfd_ctx *eventfd)
  {
- 	struct cftype_set *set;
- 
-+	if (!cfts || !cfts[0].ss)
-+		return -ENOENT;
-+
- 	cgroup_cfts_prepare();
- 
--	list_for_each_entry(set, &ss->cftsets, node) {
-+	list_for_each_entry(set, &cfts[0].ss->cftsets, node) {
- 		if (set->cfts == cfts) {
- 			list_del(&set->node);
- 			kfree(set);
--			cgroup_cfts_commit(ss, cfts, false);
-+			cgroup_cfts_commit(cfts, false);
- 			return 0;
- 		}
- 	}
- 
--	cgroup_cfts_commit(ss, NULL, false);
-+	cgroup_cfts_commit(NULL, false);
- 	return -ENOENT;
+-	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
++	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+ 	struct mem_cgroup_thresholds *thresholds;
+ 	struct mem_cgroup_threshold_ary *new;
+ 	enum res_type type = MEMFILE_TYPE(cft->private);
+@@ -5782,10 +5777,10 @@ unlock:
+ 	mutex_unlock(&memcg->thresholds_lock);
  }
  
-@@ -4141,7 +4144,7 @@ static int cgroup_populate_dir(struct cgroup *cgrp, unsigned long subsys_mask)
- 			continue;
+-static int mem_cgroup_oom_register_event(struct cgroup *cgrp,
++static int mem_cgroup_oom_register_event(struct cgroup_subsys_state *css,
+ 	struct cftype *cft, struct eventfd_ctx *eventfd, const char *args)
+ {
+-	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
++	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+ 	struct mem_cgroup_eventfd_list *event;
+ 	enum res_type type = MEMFILE_TYPE(cft->private);
  
- 		list_for_each_entry(set, &ss->cftsets, node) {
--			ret = cgroup_addrm_files(cgrp, ss, set->cfts, true);
-+			ret = cgroup_addrm_files(cgrp, set->cfts, true);
- 			if (ret < 0)
- 				goto err;
- 		}
-@@ -4368,7 +4371,7 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+@@ -5807,10 +5802,10 @@ static int mem_cgroup_oom_register_event(struct cgroup *cgrp,
+ 	return 0;
+ }
  
- 	idr_replace(&root->cgroup_idr, cgrp, cgrp->id);
+-static void mem_cgroup_oom_unregister_event(struct cgroup *cgrp,
++static void mem_cgroup_oom_unregister_event(struct cgroup_subsys_state *css,
+ 	struct cftype *cft, struct eventfd_ctx *eventfd)
+ {
+-	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
++	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+ 	struct mem_cgroup_eventfd_list *ev, *tmp;
+ 	enum res_type type = MEMFILE_TYPE(cft->private);
  
--	err = cgroup_addrm_files(cgrp, NULL, cgroup_base_files, true);
-+	err = cgroup_addrm_files(cgrp, cgroup_base_files, true);
- 	if (err)
- 		goto err_destroy;
+diff --git a/mm/vmpressure.c b/mm/vmpressure.c
+index 2a8a736..13489b1 100644
+--- a/mm/vmpressure.c
++++ b/mm/vmpressure.c
+@@ -74,11 +74,6 @@ static struct vmpressure *work_to_vmpressure(struct work_struct *work)
+ 	return container_of(work, struct vmpressure, work);
+ }
  
-@@ -4529,7 +4532,7 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
- 	 * but we aren't quite done with @cgrp yet, so hold onto it.
- 	 */
- 	cgroup_clear_dir(cgrp, cgrp->root->subsys_mask);
--	cgroup_addrm_files(cgrp, NULL, cgroup_base_files, false);
-+	cgroup_addrm_files(cgrp, cgroup_base_files, false);
- 	dget(d);
- 	cgroup_d_remove_dir(d);
+-static struct vmpressure *cg_to_vmpressure(struct cgroup *cg)
+-{
+-	return css_to_vmpressure(cgroup_css(cg, mem_cgroup_subsys_id));
+-}
+-
+ static struct vmpressure *vmpressure_parent(struct vmpressure *vmpr)
+ {
+ 	struct cgroup_subsys_state *css = vmpressure_to_css(vmpr);
+@@ -283,7 +278,7 @@ void vmpressure_prio(gfp_t gfp, struct mem_cgroup *memcg, int prio)
  
-@@ -4623,6 +4626,11 @@ static void __init_or_module cgroup_init_cftsets(struct cgroup_subsys *ss)
- 	 * deregistration.
- 	 */
- 	if (ss->base_cftypes) {
-+		struct cftype *cft;
-+
-+		for (cft = ss->base_cftypes; cft->name[0] != '\0'; cft++)
-+			cft->ss = ss;
-+
- 		ss->base_cftset.cfts = ss->base_cftypes;
- 		list_add_tail(&ss->base_cftset.node, &ss->cftsets);
- 	}
+ /**
+  * vmpressure_register_event() - Bind vmpressure notifications to an eventfd
+- * @cg:		cgroup that is interested in vmpressure notifications
++ * @css:	css that is interested in vmpressure notifications
+  * @cft:	cgroup control files handle
+  * @eventfd:	eventfd context to link notifications with
+  * @args:	event arguments (used to set up a pressure level threshold)
+@@ -298,10 +293,11 @@ void vmpressure_prio(gfp_t gfp, struct mem_cgroup *memcg, int prio)
+  * cftype).register_event, and then cgroup core will handle everything by
+  * itself.
+  */
+-int vmpressure_register_event(struct cgroup *cg, struct cftype *cft,
+-			      struct eventfd_ctx *eventfd, const char *args)
++int vmpressure_register_event(struct cgroup_subsys_state *css,
++			      struct cftype *cft, struct eventfd_ctx *eventfd,
++			      const char *args)
+ {
+-	struct vmpressure *vmpr = cg_to_vmpressure(cg);
++	struct vmpressure *vmpr = css_to_vmpressure(css);
+ 	struct vmpressure_event *ev;
+ 	int level;
+ 
+@@ -329,7 +325,7 @@ int vmpressure_register_event(struct cgroup *cg, struct cftype *cft,
+ 
+ /**
+  * vmpressure_unregister_event() - Unbind eventfd from vmpressure
+- * @cg:		cgroup handle
++ * @css:	css handle
+  * @cft:	cgroup control files handle
+  * @eventfd:	eventfd context that was used to link vmpressure with the @cg
+  *
+@@ -341,10 +337,11 @@ int vmpressure_register_event(struct cgroup *cg, struct cftype *cft,
+  * cftype).unregister_event, and then cgroup core will handle everything
+  * by itself.
+  */
+-void vmpressure_unregister_event(struct cgroup *cg, struct cftype *cft,
++void vmpressure_unregister_event(struct cgroup_subsys_state *css,
++				 struct cftype *cft,
+ 				 struct eventfd_ctx *eventfd)
+ {
+-	struct vmpressure *vmpr = cg_to_vmpressure(cg);
++	struct vmpressure *vmpr = css_to_vmpressure(css);
+ 	struct vmpressure_event *ev;
+ 
+ 	mutex_lock(&vmpr->events_lock);
 -- 
 1.8.3.1
