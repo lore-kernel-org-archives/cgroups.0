@@ -1,117 +1,193 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2 4/7] cgroup: rename cgroup_pidlist->mutex
-Date: Thu, 1 Aug 2013 09:52:15 +0800
-Message-ID: <51F9BF4F.5030704@huawei.com>
-References: <51F8C7C5.9040608@huawei.com> <51F8C818.4080308@huawei.com> <20130731113518.GJ2810@htj.dyndns.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: memcg creates an unkillable task in 3.11-rc2
+Date: Thu, 1 Aug 2013 11:06:20 +0200
+Message-ID: <20130801090620.GA5198@dhcp22.suse.cz>
+References: <87ehahg312.fsf@xmission.com>
+	<20130729095109.GB4678@dhcp22.suse.cz>
+	<20130729161026.GD22605@mtj.dyndns.org>
+	<87r4eh70yg.fsf@xmission.com> <51F71DE2.4020102@huawei.com>
+	<87ppu0a298.fsf_-_@tw-ebiederman.twitter.com>
+	<20130730123120.GA15847@dhcp22.suse.cz>
+	<874nbc3sx1.fsf@tw-ebiederman.twitter.com>
+	<20130731073726.GC30514@dhcp22.suse.cz>
+	<87zjt2tm9f.fsf@xmission.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130731113518.GJ2810-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <87zjt2tm9f.fsf-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+Cc: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kent.overstreet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-It's a rw_semaphore not a mutex.
+On Wed 31-07-13 15:09:16, Eric W. Biederman wrote:
+> Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> writes:
+> 
+> > [I am CCing David here as well]
+> >
+> > On Tue 30-07-13 09:37:46, Eric W. Biederman wrote:
+> >> Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> writes:
+> >> 
+> >> > On Tue 30-07-13 01:19:31, Eric W. Biederman wrote:
+> >> > [...]
+> >> >> Hmm. Looking farther I see what is going on. And it has nothing to do
+> >> >> with the freezer. (I have commented out that code and reproduced it
+> >> >> without the freezer to be doubly certain).
+> >> >> 
+> >> >> 
+> >> >> On the exit path exit_robust_list is triggering a page fault to fault a
+> >> >> page back in.  Which since we have no memory causes the exit path
+> >> >> to get stuck in mem_cgroup_handle_oom.
+> >> >
+> >> > Hmm, interesting. I assume the exit is caused by the SIGKILL, right?
+> >> > If yes, then why it hasn't coughed early in __mem_cgroup_try_charge
+> >> 
+> >> Interesting question.  This isn't the primary thread but we do send
+> >> SIGKILL to the secondary threads as well.
+> >> 
+> >> We definitely need those checks on both paths making my change valid.
+> >> 
+> >> Oh. Duh!  This is after we act on SIGKILL so SIGKILL is no longer
+> >> pending.
+> >
+> > Very well spotted Eric! What do you think about the following patch?
+> > I would have to check since when the exit path could trigger the fault
+> > but I guess this is worth stable backport.
+> 
+> It doesn't have a prayer of working.
 
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- kernel/cgroup.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+So it hasn't passed your test?
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index ae905a5..6662811 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -3436,7 +3436,7 @@ struct cgroup_pidlist {
- 	/* pointer to the cgroup we belong to, for list removal purposes */
- 	struct cgroup *owner;
- 	/* protects the other fields */
--	struct rw_semaphore mutex;
-+	struct rw_semaphore rwsem;
- };
- 
- /*
-@@ -3509,7 +3509,7 @@ static struct cgroup_pidlist *cgroup_pidlist_find(struct cgroup *cgrp,
- 	struct pid_namespace *ns = task_active_pid_ns(current);
- 
- 	/*
--	 * We can't drop the pidlist_mutex before taking the l->mutex in case
-+	 * We can't drop the pidlist_mutex before taking the l->rwsem in case
- 	 * the last ref-holder is trying to remove l from the list at the same
- 	 * time. Holding the pidlist_mutex precludes somebody taking whichever
- 	 * list we find out from under us - compare release_pid_array().
-@@ -3518,7 +3518,7 @@ static struct cgroup_pidlist *cgroup_pidlist_find(struct cgroup *cgrp,
- 	list_for_each_entry(l, &cgrp->pidlists, links) {
- 		if (l->key.type == type && l->key.ns == ns) {
- 			/* make sure l doesn't vanish out from under us */
--			down_write(&l->mutex);
-+			down_write(&l->rwsem);
- 			mutex_unlock(&cgrp->pidlist_mutex);
- 			return l;
- 		}
-@@ -3529,8 +3529,8 @@ static struct cgroup_pidlist *cgroup_pidlist_find(struct cgroup *cgrp,
- 		mutex_unlock(&cgrp->pidlist_mutex);
- 		return l;
- 	}
--	init_rwsem(&l->mutex);
--	down_write(&l->mutex);
-+	init_rwsem(&l->rwsem);
-+	down_write(&l->rwsem);
- 	l->key.type = type;
- 	l->key.ns = get_pid_ns(ns);
- 	l->owner = cgrp;
-@@ -3591,7 +3591,7 @@ static int pidlist_array_load(struct cgroup *cgrp, enum cgroup_filetype type,
- 	l->list = array;
- 	l->length = length;
- 	l->use_count++;
--	up_write(&l->mutex);
-+	up_write(&l->rwsem);
- 	*lp = l;
- 	return 0;
- }
-@@ -3669,7 +3669,7 @@ static void *cgroup_pidlist_start(struct seq_file *s, loff_t *pos)
- 	int index = 0, pid = *pos;
- 	int *iter;
- 
--	down_read(&l->mutex);
-+	down_read(&l->rwsem);
- 	if (pid) {
- 		int end = l->length;
- 
-@@ -3696,7 +3696,7 @@ static void *cgroup_pidlist_start(struct seq_file *s, loff_t *pos)
- static void cgroup_pidlist_stop(struct seq_file *s, void *v)
- {
- 	struct cgroup_pidlist *l = s->private;
--	up_read(&l->mutex);
-+	up_read(&l->rwsem);
- }
- 
- static void *cgroup_pidlist_next(struct seq_file *s, void *v, loff_t *pos)
-@@ -3742,7 +3742,7 @@ static void cgroup_release_pid_array(struct cgroup_pidlist *l)
- 	 * pidlist_mutex, we have to take pidlist_mutex first.
- 	 */
- 	mutex_lock(&l->owner->pidlist_mutex);
--	down_write(&l->mutex);
-+	down_write(&l->rwsem);
- 	BUG_ON(!l->use_count);
- 	if (!--l->use_count) {
- 		/* we're the last user if refcount is 0; remove and free */
-@@ -3750,12 +3750,12 @@ static void cgroup_release_pid_array(struct cgroup_pidlist *l)
- 		mutex_unlock(&l->owner->pidlist_mutex);
- 		pidlist_free(l->list);
- 		put_pid_ns(l->key.ns);
--		up_write(&l->mutex);
-+		up_write(&l->rwsem);
- 		kfree(l);
- 		return;
- 	}
- 	mutex_unlock(&l->owner->pidlist_mutex);
--	up_write(&l->mutex);
-+	up_write(&l->rwsem);
- }
- 
- static int cgroup_pidlist_release(struct inode *inode, struct file *file)
+> You leave open the race of a fatal signal being received before we go to
+> sleep.
+
+If a fatal signal is received before we're going to sleep then
+schedule() should keep it on the runqueue, no?
+
+static void __sched __schedule(void)
+{
+[...]
+        if (prev->state && !(preempt_count() & PREEMPT_ACTIVE)) {
+                if (unlikely(signal_pending_state(prev->state, prev))) {
+                        prev->state = TASK_RUNNING;
+                } else {
+
+so it should get a timeslice eventually, mem_cgroup_handle_oom sees
+fatal_signal_pending and sets TIF_MEMDIE, bypass the charge, get to
+signal handling, start exiting, fault in, get to charge and bail out in
+__mem_cgroup_try_charge because it sees TIF_MEMDIE.
+
+Or what am I missing?
+
+> You don't handle a task that has processed the fatal signal and is in
+> PF_EXITING.  Which is what I experienced.
+> 
+> From earlier comments about my code not being early enough I thought I
+> was going to see a patch in __mem_cgroup_try_change so that the bypass
+> case will kick in also for tasks in PF_EXITING.
+
+This shouldn't be necessary because TIF_MEMDIE was set for the killed
+task.  I was playing with PF_EXITING there as well but TIF_MEMDIE sounds
+like a more appropriate solution.
+
+> You change actually addresses things later in the code path than mine
+> does.
+> 
+> I do like your summary of the problem.
+> 
+> Eric
+> 
+> > ---
+> > From 411408558f2858328ea25e69567e9a53a8314032 Mon Sep 17 00:00:00 2001
+> > From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> > Date: Wed, 31 Jul 2013 08:48:54 +0200
+> > Subject: [PATCH] memcg: Do not hang on OOM when killed by userspace OOM
+> >
+> > Eric has reported that he can see task(s) stuck in memcg OOM handler
+> > regularly. The only way out is to
+> > 	echo 0 > $GROUP/memory.oom_controll
+> >
+> > His usecase is:
+> > - Setup a hierarchy with memory and the freezer
+> >   (disable kernel oom and have a process watch for oom).
+> > - In that memory cgroup add a process with one thread per cpu.
+> > - In one thread slowly allocate once per second I think it is 16M of ram
+> >   and mlock and dirty it (just to force the pages into ram and stay there).
+> > - When oom is achieved loop:
+> >   * attempt to freeze all of the tasks.
+> >   * if frozen send every task SIGKILL, unfreeze, remove the directory in
+> >     cgroupfs.
+> >
+> > Eric has then pinpointed the issue to be memcg specific.
+> >
+> > All tasks are sitting on the memcg_oom_waitq when memcg oom is disabled.
+> > Those that have received fatal signal will bypass the charge and should
+> > continue on their way out. The tricky part is that that exit path might
+> > trigger a page fault (e.g. exit_robust_list) thus the memcg charge
+> > while its memcg is still under OOM because nobody has released any
+> > charges. Unlike with the in-kernel OOM handler the exiting task doesn't
+> > get TIF_MEMDIE set so it doesn't shortcut charges and falls to the
+> > memcg OOM again without any way out of it as there are no fatal signals
+> > pending anymore.
+> >
+> > This patch sets the TIF_MEMDIE flag pro actively in mem_cgroup_handle_oom
+> > if the memcg is disabled after the task is woken up with fatal signal
+> > pending. This means that any further charges will be bypassed early in
+> > __mem_cgroup_try_charge and the task will have chance to exit finally.
+> >
+> > Strictly speaking we might mark also a task which hasn't been killed by
+> > userspace OOM handler but this is not harmful as the task is going away
+> > anyway and under-oom group would like to see it go as soon as possible.
+> >
+> > Reported-by: Eric W. Biederman <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+> > Debugged-by: Eric W. Biederman <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+> > Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> > ---
+> >  mm/memcontrol.c | 13 ++++++++++++-
+> >  1 file changed, 12 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index d12ca6f..d4103b0 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -2235,8 +2235,19 @@ static bool mem_cgroup_handle_oom(struct mem_cgroup *memcg, gfp_t mask,
+> >  
+> >  	mem_cgroup_unmark_under_oom(memcg);
+> >  
+> > -	if (test_thread_flag(TIF_MEMDIE) || fatal_signal_pending(current))
+> > +	if (test_thread_flag(TIF_MEMDIE))
+> >  		return false;
+> > +
+> > +	/*
+> > +	 * Userspace OOM killer might have killed this task but
+> > +	 * there is no way it could have set TIF_MEMDIE as well
+> > +	 * so we have to set it manually.
+> > +	 */
+> > +	if (fatal_signal_pending(current)) {
+> > +		if (memcg->oom_kill_disable)
+> > +			set_thread_flag(TIF_MEMDIE);
+> > +		return false;
+> > +	}
+> >  	/* Give chance to dying process */
+> >  	schedule_timeout_uninterruptible(1);
+> >  	return true;
+> > -- 
+> > 1.8.3.2
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -- 
-1.8.0.2
+Michal Hocko
+SUSE Labs
