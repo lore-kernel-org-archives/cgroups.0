@@ -1,45 +1,42 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch 2/6] arch: mm: do not invoke OOM killer on kernel fault
- OOM
-Date: Thu, 1 Aug 2013 17:59:24 -0400
-Message-ID: <20130801215924.GO715@cmpxchg.org>
-References: <1374791138-15665-1-git-send-email-hannes@cmpxchg.org>
- <1374791138-15665-3-git-send-email-hannes@cmpxchg.org>
- <51F6BB3D.6000700@gmail.com>
+From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Subject: Re: [PATCH 03/23] netprio_cgroup: pass around @css instead of
+	@cgroup and kill struct cgroup_netprio_state
+Date: Thu, 01 Aug 2013 15:07:47 -0700 (PDT)
+Message-ID: <20130801.150747.1331605394989816099.davem@davemloft.net>
+References: <1375393801-4817-1-git-send-email-tj@kernel.org>
+	<1375393801-4817-4-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <51F6BB3D.6000700@gmail.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: KOSAKI Motohiro <kosaki.motohiro@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, David Rientjes <rientjes@google.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, azurIt <azurit@pobox.sk>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <1375393801-4817-4-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org
 
-On Mon, Jul 29, 2013 at 02:58:05PM -0400, KOSAKI Motohiro wrote:
-> (7/25/13 6:25 PM), Johannes Weiner wrote:
-> > Kernel faults are expected to handle OOM conditions gracefully (gup,
-> > uaccess etc.), so they should never invoke the OOM killer.  Reserve
-> > this for faults triggered in user context when it is the only option.
-> > 
-> > Most architectures already do this, fix up the remaining few.
-> > 
-> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Thu,  1 Aug 2013 17:49:41 -0400
+
+> cgroup controller API will be converted to primarily use struct
+> cgroup_subsys_state instead of struct cgroup.  In preparation, make
+> the internal functions of netprio_cgroup pass around @css instead of
+> @cgrp.
 > 
-> OK. but now almost all arch have the same page fault handler. So, I think
-> we can implement arch generic page fault handler in future. Ah, ok, never
-> mind if you are not interest.
+> While at it, kill struct cgroup_netprio_state which only contained
+> struct cgroup_subsys_state without serving any purpose.  All functions
+> are converted to deal with @css directly.
+> 
+> This patch shouldn't cause any behavior differences.
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Well, I'm already working towards it ;-) Still a long way to go,
-though to fully replace them with generic code...
-
-> Acked-by: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
-
-Thanks!
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Acked-by: David S. Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
