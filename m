@@ -1,285 +1,398 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 21/23] cgroup: make cftype->[un]register_event() deal with cgroup_subsys_state instead of cgroup
-Date: Thu,  1 Aug 2013 17:49:59 -0400
-Message-ID: <1375393801-4817-22-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 07/23] cgroup: add css_parent()
+Date: Thu,  1 Aug 2013 17:49:45 -0400
+Message-ID: <1375393801-4817-8-git-send-email-tj@kernel.org>
 References: <1375393801-4817-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-         :references;
-        bh=f2oU0LTjNHISAjY2ENpbwcAKwJr9H9Ci2RuJ+IWwuW8=;
-        b=dv8xfrT3ICq6OEamTan/KkDWlbm9JP7xjLF4ipAQt1nzCPCCabaG8MRfHe7oHRpuKw
-         0ToFoKYncgJAqN248PjwDiKxDY10U8H5V9Sp9DqvTDo8pAxe3XSsu+4GpXu3y/Antf7w
-         a5g1CuG1qHZW9xAr6udhQlFzlaERKSbWeUtzxiH6S7gqnuH6NNozlc6NPsRlKY+HjMQ7
-         onITc8vY7ZDi3s35sqX6ID3Lw27dvE+RUZ627IKXtyxhaUIqosxJF5bfatRC0zQoTEcv
-         pOH+3PwfLiq48Jw9S3d8ewBisa1VSJxvJdvVxOKiqakGXZH3BvK6XzKwpSZu+JK1SzTz
-         +uLg==
-In-Reply-To: <1375393801-4817-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com
-Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
+	:references; bh=XBOk9+f2Zj9bS6fJefd3LJcRnQty/trAB88YRJ9G1IM=;
+	b=s3YhjSAJYi/eEBCyuGG6kCFJx/swdEHF03QkOFoEq33KNZAiPnN/y/J2c0mwM1Ig6D
+	VfE0KXjpmlcYwkD7l+LM34yyEzK/Qf8Z3dFuPPreD/u2sGHbwiIepMPhSo4j4roKqQHp
+	pP+XlH6T9TS3Wp8oyWk0Zs/6cb2vWCvDiVPmsuNOAN3eTLKjuk2qXz+uWfGgXBvEF4kw
+	3ikAG/cEE+LrwhH7VcA8hU/2OFhTjhu/5ecPk7plOfzFIdHNL+obcheyInSjhb3JAh3b
+	cZUj5+oZcPxPdmA5/IhAkrsaYzp95aiYaaIodV7GKf7OexD8vV775UDoTJ0FgEuPXdKp
+	fCXg==
+In-Reply-To: <1375393801-4817-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-cgroup is in the process of converting to css (cgroup_subsys_state)
-from cgroup as the principal subsystem interface handle.  This is
-mostly to prepare for the unified hierarchy support where css's will
-be created and destroyed dynamically but also helps cleaning up
-subsystem implementations as css is usually what they are interested
-in anyway.
+Currently, controllers have to explicitly follow the cgroup hierarchy
+to find the parent of a given css.  cgroup is moving towards using
+cgroup_subsys_state as the main controller interface construct, so
+let's provide a way to climb the hierarchy using just csses.
 
-cftype->[un]register_event() is among the remaining couple interfaces
-which still use struct cgroup.  Convert it to cgroup_subsys_state.
-The conversion is mostly mechanical and removes the last users of
-mem_cgroup_from_cont() and cg_to_vmpressure(), which are removed.
+This patch implements css_parent() which, given a css, returns its
+parent.  The function is guarnateed to valid non-NULL parent css as
+long as the target css is not at the top of the hierarchy.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
-Cc: Balbir Singh <bsingharora@gmail.com>
+freezer, cpuset, cpu, cpuacct, hugetlb, memory, net_cls and devices
+are converted to use css_parent() instead of accessing cgroup->parent
+directly.
+
+* __parent_ca() is dropped from cpuacct and its usage is replaced with
+  parent_ca().  The only difference between the two was NULL test on
+  cgroup->parent which is now embedded in css_parent() making the
+  distinction moot.  Note that eventually a css->parent field will be
+  added to css and the NULL check in css_parent() will go away.
+
+This patch shouldn't cause any behavior differences.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- include/linux/cgroup.h     |  8 +++++---
- include/linux/vmpressure.h |  6 ++++--
- kernel/cgroup.c            | 15 ++++++++-------
- mm/memcontrol.c            | 21 ++++++++-------------
- mm/vmpressure.c            | 21 +++++++++------------
- 5 files changed, 34 insertions(+), 37 deletions(-)
+ block/blk-cgroup.h       |  4 +---
+ include/linux/cgroup.h   | 15 +++++++++++++++
+ kernel/cgroup_freezer.c  |  8 ++------
+ kernel/cpuset.c          |  6 +-----
+ kernel/sched/core.c      |  9 +++------
+ kernel/sched/cpuacct.c   | 11 ++---------
+ mm/hugetlb_cgroup.c      |  6 +-----
+ mm/memcontrol.c          | 39 +++++++++++----------------------------
+ net/sched/cls_cgroup.c   |  8 +++++---
+ security/device_cgroup.c | 18 +++++-------------
+ 10 files changed, 46 insertions(+), 78 deletions(-)
 
+diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+index 8e5863e..b6802c4 100644
+--- a/block/blk-cgroup.h
++++ b/block/blk-cgroup.h
+@@ -209,9 +209,7 @@ static inline struct blkcg *bio_blkcg(struct bio *bio)
+  */
+ static inline struct blkcg *blkcg_parent(struct blkcg *blkcg)
+ {
+-	struct cgroup *pcg = blkcg->css.cgroup->parent;
+-
+-	return pcg ? cgroup_to_blkcg(pcg) : NULL;
++	return css_to_blkcg(css_parent(&blkcg->css));
+ }
+ 
+ /**
 diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 6f6d87b..8f44411 100644
+index 9c2f9d7..b65f6b5 100644
 --- a/include/linux/cgroup.h
 +++ b/include/linux/cgroup.h
-@@ -506,15 +506,17 @@ struct cftype {
- 	 * you want to provide this functionality. Use eventfd_signal()
- 	 * on eventfd to send notification to userspace.
- 	 */
--	int (*register_event)(struct cgroup *cgrp, struct cftype *cft,
--			struct eventfd_ctx *eventfd, const char *args);
-+	int (*register_event)(struct cgroup_subsys_state *css,
-+			      struct cftype *cft, struct eventfd_ctx *eventfd,
-+			      const char *args);
- 	/*
- 	 * unregister_event() callback will be called when userspace
- 	 * closes the eventfd or on cgroup removing.
- 	 * This callback must be implemented, if you want provide
- 	 * notification functionality.
- 	 */
--	void (*unregister_event)(struct cgroup *cgrp, struct cftype *cft,
-+	void (*unregister_event)(struct cgroup_subsys_state *css,
-+				 struct cftype *cft,
- 			struct eventfd_ctx *eventfd);
- };
+@@ -648,6 +648,21 @@ struct cgroup_subsys {
+ #undef SUBSYS
  
-diff --git a/include/linux/vmpressure.h b/include/linux/vmpressure.h
-index 76be077..b239482 100644
---- a/include/linux/vmpressure.h
-+++ b/include/linux/vmpressure.h
-@@ -33,10 +33,12 @@ extern void vmpressure_init(struct vmpressure *vmpr);
- extern struct vmpressure *memcg_to_vmpressure(struct mem_cgroup *memcg);
- extern struct cgroup_subsys_state *vmpressure_to_css(struct vmpressure *vmpr);
- extern struct vmpressure *css_to_vmpressure(struct cgroup_subsys_state *css);
--extern int vmpressure_register_event(struct cgroup *cg, struct cftype *cft,
-+extern int vmpressure_register_event(struct cgroup_subsys_state *css,
-+				     struct cftype *cft,
- 				     struct eventfd_ctx *eventfd,
- 				     const char *args);
--extern void vmpressure_unregister_event(struct cgroup *cg, struct cftype *cft,
-+extern void vmpressure_unregister_event(struct cgroup_subsys_state *css,
-+					struct cftype *cft,
- 					struct eventfd_ctx *eventfd);
- #else
- static inline void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index c61b24f..e0ef58e 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -159,9 +159,9 @@ struct css_id {
-  */
- struct cgroup_event {
- 	/*
--	 * Cgroup which the event belongs to.
-+	 * css which the event belongs to.
- 	 */
--	struct cgroup *cgrp;
-+	struct cgroup_subsys_state *css;
- 	/*
- 	 * Control file which the event associated.
- 	 */
-@@ -3948,11 +3948,12 @@ static void cgroup_event_remove(struct work_struct *work)
+ /**
++ * css_parent - find the parent css
++ * @css: the target cgroup_subsys_state
++ *
++ * Return the parent css of @css.  This function is guaranteed to return
++ * non-NULL parent as long as @css isn't the root.
++ */
++static inline
++struct cgroup_subsys_state *css_parent(struct cgroup_subsys_state *css)
++{
++	struct cgroup *parent_cgrp = css->cgroup->parent;
++
++	return parent_cgrp ? parent_cgrp->subsys[css->ss->subsys_id] : NULL;
++}
++
++/**
+  * cgroup_css - obtain a cgroup's css for the specified subsystem
+  * @cgrp: the cgroup of interest
+  * @subsys_id: the subsystem of interest
+diff --git a/kernel/cgroup_freezer.c b/kernel/cgroup_freezer.c
+index 1db686e..657a73c 100644
+--- a/kernel/cgroup_freezer.c
++++ b/kernel/cgroup_freezer.c
+@@ -62,11 +62,7 @@ static inline struct freezer *task_freezer(struct task_struct *task)
+ 
+ static struct freezer *parent_freezer(struct freezer *freezer)
  {
- 	struct cgroup_event *event = container_of(work, struct cgroup_event,
- 			remove);
--	struct cgroup *cgrp = event->cgrp;
-+	struct cgroup_subsys_state *css = event->css;
-+	struct cgroup *cgrp = css->cgroup;
- 
- 	remove_wait_queue(event->wqh, &event->wait);
- 
--	event->cft->unregister_event(cgrp, event->cft, event->eventfd);
-+	event->cft->unregister_event(css, event->cft, event->eventfd);
- 
- 	/* Notify userspace the event is going away. */
- 	eventfd_signal(event->eventfd, 1);
-@@ -3972,7 +3973,7 @@ static int cgroup_event_wake(wait_queue_t *wait, unsigned mode,
- {
- 	struct cgroup_event *event = container_of(wait,
- 			struct cgroup_event, wait);
--	struct cgroup *cgrp = event->cgrp;
-+	struct cgroup *cgrp = event->css->cgroup;
- 	unsigned long flags = (unsigned long)key;
- 
- 	if (flags & POLLHUP) {
-@@ -4041,7 +4042,7 @@ static int cgroup_write_event_control(struct cgroup_subsys_state *css,
- 	event = kzalloc(sizeof(*event), GFP_KERNEL);
- 	if (!event)
- 		return -ENOMEM;
--	event->cgrp = cgrp;
-+	event->css = css;
- 	INIT_LIST_HEAD(&event->list);
- 	init_poll_funcptr(&event->pt, cgroup_event_ptable_queue_proc);
- 	init_waitqueue_func_entry(&event->wait, cgroup_event_wake);
-@@ -4092,7 +4093,7 @@ static int cgroup_write_event_control(struct cgroup_subsys_state *css,
- 		goto out_put_cfile;
- 	}
- 
--	ret = event->cft->register_event(cgrp, event->cft,
-+	ret = event->cft->register_event(css, event->cft,
- 			event->eventfd, buffer);
- 	if (ret)
- 		goto out_put_cfile;
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 95106a9..2885e3e 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1034,11 +1034,6 @@ static void memcg_check_events(struct mem_cgroup *memcg, struct page *page)
- 		preempt_enable();
- }
- 
--static inline struct mem_cgroup *mem_cgroup_from_cont(struct cgroup *cont)
--{
--	return mem_cgroup_from_css(cgroup_css(cont, mem_cgroup_subsys_id));
--}
+-	struct cgroup *pcg = freezer->css.cgroup->parent;
 -
- struct mem_cgroup *mem_cgroup_from_task(struct task_struct *p)
- {
- 	/*
-@@ -5620,10 +5615,10 @@ static void mem_cgroup_oom_notify(struct mem_cgroup *memcg)
- 		mem_cgroup_oom_notify_cb(iter);
+-	if (pcg)
+-		return cgroup_freezer(pcg);
+-	return NULL;
++	return css_freezer(css_parent(&freezer->css));
  }
  
--static int mem_cgroup_usage_register_event(struct cgroup *cgrp,
-+static int mem_cgroup_usage_register_event(struct cgroup_subsys_state *css,
- 	struct cftype *cft, struct eventfd_ctx *eventfd, const char *args)
+ bool cgroup_freezing(struct task_struct *task)
+@@ -234,7 +230,7 @@ static void freezer_fork(struct task_struct *task)
+ 	 * The root cgroup is non-freezable, so we can skip the
+ 	 * following check.
+ 	 */
+-	if (!freezer->css.cgroup->parent)
++	if (!parent_freezer(freezer))
+ 		goto out;
+ 
+ 	spin_lock_irq(&freezer->lock);
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index 6e9cbdd..259a4af 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -133,11 +133,7 @@ static inline struct cpuset *task_cs(struct task_struct *task)
+ 
+ static inline struct cpuset *parent_cs(struct cpuset *cs)
  {
--	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
- 	struct mem_cgroup_thresholds *thresholds;
- 	struct mem_cgroup_threshold_ary *new;
- 	enum res_type type = MEMFILE_TYPE(cft->private);
-@@ -5703,10 +5698,10 @@ unlock:
- 	return ret;
+-	struct cgroup *pcgrp = cs->css.cgroup->parent;
+-
+-	if (pcgrp)
+-		return cgroup_cs(pcgrp);
+-	return NULL;
++	return css_cs(css_parent(&cs->css));
  }
  
--static void mem_cgroup_usage_unregister_event(struct cgroup *cgrp,
-+static void mem_cgroup_usage_unregister_event(struct cgroup_subsys_state *css,
- 	struct cftype *cft, struct eventfd_ctx *eventfd)
+ #ifdef CONFIG_NUMA
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 5bccb02..7a10742 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -7114,13 +7114,10 @@ static struct cgroup_subsys_state *cpu_cgroup_css_alloc(struct cgroup *cgrp)
+ static int cpu_cgroup_css_online(struct cgroup *cgrp)
  {
--	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
- 	struct mem_cgroup_thresholds *thresholds;
- 	struct mem_cgroup_threshold_ary *new;
- 	enum res_type type = MEMFILE_TYPE(cft->private);
-@@ -5782,10 +5777,10 @@ unlock:
- 	mutex_unlock(&memcg->thresholds_lock);
- }
+ 	struct task_group *tg = cgroup_tg(cgrp);
+-	struct task_group *parent;
++	struct task_group *parent = css_tg(css_parent(&tg->css));
  
--static int mem_cgroup_oom_register_event(struct cgroup *cgrp,
-+static int mem_cgroup_oom_register_event(struct cgroup_subsys_state *css,
- 	struct cftype *cft, struct eventfd_ctx *eventfd, const char *args)
- {
--	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
- 	struct mem_cgroup_eventfd_list *event;
- 	enum res_type type = MEMFILE_TYPE(cft->private);
- 
-@@ -5807,10 +5802,10 @@ static int mem_cgroup_oom_register_event(struct cgroup *cgrp,
+-	if (!cgrp->parent)
+-		return 0;
+-
+-	parent = cgroup_tg(cgrp->parent);
+-	sched_online_group(tg, parent);
++	if (parent)
++		sched_online_group(tg, parent);
  	return 0;
  }
  
--static void mem_cgroup_oom_unregister_event(struct cgroup *cgrp,
-+static void mem_cgroup_oom_unregister_event(struct cgroup_subsys_state *css,
- 	struct cftype *cft, struct eventfd_ctx *eventfd)
- {
--	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
- 	struct mem_cgroup_eventfd_list *ev, *tmp;
- 	enum res_type type = MEMFILE_TYPE(cft->private);
- 
-diff --git a/mm/vmpressure.c b/mm/vmpressure.c
-index 2a8a736..13489b1 100644
---- a/mm/vmpressure.c
-+++ b/mm/vmpressure.c
-@@ -74,11 +74,6 @@ static struct vmpressure *work_to_vmpressure(struct work_struct *work)
- 	return container_of(work, struct vmpressure, work);
+diff --git a/kernel/sched/cpuacct.c b/kernel/sched/cpuacct.c
+index 8ccfa10..f6926a1 100644
+--- a/kernel/sched/cpuacct.c
++++ b/kernel/sched/cpuacct.c
+@@ -50,16 +50,9 @@ static inline struct cpuacct *task_ca(struct task_struct *tsk)
+ 	return css_ca(task_css(tsk, cpuacct_subsys_id));
  }
  
--static struct vmpressure *cg_to_vmpressure(struct cgroup *cg)
+-static inline struct cpuacct *__parent_ca(struct cpuacct *ca)
 -{
--	return css_to_vmpressure(cgroup_css(cg, mem_cgroup_subsys_id));
+-	return cgroup_ca(ca->css.cgroup->parent);
 -}
 -
- static struct vmpressure *vmpressure_parent(struct vmpressure *vmpr)
+ static inline struct cpuacct *parent_ca(struct cpuacct *ca)
  {
- 	struct cgroup_subsys_state *css = vmpressure_to_css(vmpr);
-@@ -283,7 +278,7 @@ void vmpressure_prio(gfp_t gfp, struct mem_cgroup *memcg, int prio)
+-	if (!ca->css.cgroup->parent)
+-		return NULL;
+-	return cgroup_ca(ca->css.cgroup->parent);
++	return css_ca(css_parent(&ca->css));
+ }
  
- /**
-  * vmpressure_register_event() - Bind vmpressure notifications to an eventfd
-- * @cg:		cgroup that is interested in vmpressure notifications
-+ * @css:	css that is interested in vmpressure notifications
-  * @cft:	cgroup control files handle
-  * @eventfd:	eventfd context to link notifications with
-  * @args:	event arguments (used to set up a pressure level threshold)
-@@ -298,10 +293,11 @@ void vmpressure_prio(gfp_t gfp, struct mem_cgroup *memcg, int prio)
-  * cftype).register_event, and then cgroup core will handle everything by
-  * itself.
+ static DEFINE_PER_CPU(u64, root_cpuacct_cpuusage);
+@@ -284,7 +277,7 @@ void cpuacct_account_field(struct task_struct *p, int index, u64 val)
+ 	while (ca != &root_cpuacct) {
+ 		kcpustat = this_cpu_ptr(ca->cpustat);
+ 		kcpustat->cpustat[index] += val;
+-		ca = __parent_ca(ca);
++		ca = parent_ca(ca);
+ 	}
+ 	rcu_read_unlock();
+ }
+diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
+index 95585a0..57ecb5d 100644
+--- a/mm/hugetlb_cgroup.c
++++ b/mm/hugetlb_cgroup.c
+@@ -59,11 +59,7 @@ static inline bool hugetlb_cgroup_is_root(struct hugetlb_cgroup *h_cg)
+ static inline struct hugetlb_cgroup *
+ parent_hugetlb_cgroup(struct hugetlb_cgroup *h_cg)
+ {
+-	struct cgroup *parent = h_cg->css.cgroup->parent;
+-
+-	if (!parent)
+-		return NULL;
+-	return hugetlb_cgroup_from_cgroup(parent);
++	return hugetlb_cgroup_from_css(css_parent(&h_cg->css));
+ }
+ 
+ static inline bool hugetlb_cgroup_have_usage(struct hugetlb_cgroup *h_cg)
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 11d659e..69b3e52 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1524,10 +1524,8 @@ static unsigned long mem_cgroup_margin(struct mem_cgroup *memcg)
+ 
+ int mem_cgroup_swappiness(struct mem_cgroup *memcg)
+ {
+-	struct cgroup *cgrp = memcg->css.cgroup;
+-
+ 	/* root ? */
+-	if (cgrp->parent == NULL)
++	if (!css_parent(&memcg->css))
+ 		return vm_swappiness;
+ 
+ 	return memcg->swappiness;
+@@ -5026,11 +5024,7 @@ static int mem_cgroup_hierarchy_write(struct cgroup *cont, struct cftype *cft,
+ {
+ 	int retval = 0;
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+-	struct cgroup *parent = cont->parent;
+-	struct mem_cgroup *parent_memcg = NULL;
+-
+-	if (parent)
+-		parent_memcg = mem_cgroup_from_cont(parent);
++	struct mem_cgroup *parent_memcg = mem_cgroup_from_css(css_parent(&memcg->css));
+ 
+ 	mutex_lock(&memcg_create_mutex);
+ 
+@@ -5282,18 +5276,15 @@ static int mem_cgroup_write(struct cgroup *cont, struct cftype *cft,
+ static void memcg_get_hierarchical_limit(struct mem_cgroup *memcg,
+ 		unsigned long long *mem_limit, unsigned long long *memsw_limit)
+ {
+-	struct cgroup *cgroup;
+ 	unsigned long long min_limit, min_memsw_limit, tmp;
+ 
+ 	min_limit = res_counter_read_u64(&memcg->res, RES_LIMIT);
+ 	min_memsw_limit = res_counter_read_u64(&memcg->memsw, RES_LIMIT);
+-	cgroup = memcg->css.cgroup;
+ 	if (!memcg->use_hierarchy)
+ 		goto out;
+ 
+-	while (cgroup->parent) {
+-		cgroup = cgroup->parent;
+-		memcg = mem_cgroup_from_cont(cgroup);
++	while (css_parent(&memcg->css)) {
++		memcg = mem_cgroup_from_css(css_parent(&memcg->css));
+ 		if (!memcg->use_hierarchy)
+ 			break;
+ 		tmp = res_counter_read_u64(&memcg->res, RES_LIMIT);
+@@ -5523,16 +5514,11 @@ static int mem_cgroup_swappiness_write(struct cgroup *cgrp, struct cftype *cft,
+ 				       u64 val)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
+-	struct mem_cgroup *parent;
+-
+-	if (val > 100)
+-		return -EINVAL;
++	struct mem_cgroup *parent = mem_cgroup_from_css(css_parent(&memcg->css));
+ 
+-	if (cgrp->parent == NULL)
++	if (val > 100 || !parent)
+ 		return -EINVAL;
+ 
+-	parent = mem_cgroup_from_cont(cgrp->parent);
+-
+ 	mutex_lock(&memcg_create_mutex);
+ 
+ 	/* If under hierarchy, only empty-root can set this value */
+@@ -5861,14 +5847,12 @@ static int mem_cgroup_oom_control_write(struct cgroup *cgrp,
+ 	struct cftype *cft, u64 val)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cgrp);
+-	struct mem_cgroup *parent;
++	struct mem_cgroup *parent = mem_cgroup_from_css(css_parent(&memcg->css));
+ 
+ 	/* cannot set to root cgroup and only 0 and 1 are allowed */
+-	if (!cgrp->parent || !((val == 0) || (val == 1)))
++	if (!parent || !((val == 0) || (val == 1)))
+ 		return -EINVAL;
+ 
+-	parent = mem_cgroup_from_cont(cgrp->parent);
+-
+ 	mutex_lock(&memcg_create_mutex);
+ 	/* oom-kill-disable is a flag for subhierarchy. */
+ 	if ((parent->use_hierarchy) || memcg_has_children(memcg)) {
+@@ -6266,15 +6250,14 @@ free_out:
+ static int
+ mem_cgroup_css_online(struct cgroup *cont)
+ {
+-	struct mem_cgroup *memcg, *parent;
++	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
++	struct mem_cgroup *parent = mem_cgroup_from_css(css_parent(&memcg->css));
+ 	int error = 0;
+ 
+-	if (!cont->parent)
++	if (!parent)
+ 		return 0;
+ 
+ 	mutex_lock(&memcg_create_mutex);
+-	memcg = mem_cgroup_from_cont(cont);
+-	parent = mem_cgroup_from_cont(cont->parent);
+ 
+ 	memcg->use_hierarchy = parent->use_hierarchy;
+ 	memcg->oom_kill_disable = parent->oom_kill_disable;
+diff --git a/net/sched/cls_cgroup.c b/net/sched/cls_cgroup.c
+index af412ab..9e6b75e 100644
+--- a/net/sched/cls_cgroup.c
++++ b/net/sched/cls_cgroup.c
+@@ -50,9 +50,11 @@ static struct cgroup_subsys_state *cgrp_css_alloc(struct cgroup *cgrp)
+ 
+ static int cgrp_css_online(struct cgroup *cgrp)
+ {
+-	if (cgrp->parent)
+-		cgrp_cls_state(cgrp)->classid =
+-			cgrp_cls_state(cgrp->parent)->classid;
++	struct cgroup_cls_state *cs = cgrp_cls_state(cgrp);
++	struct cgroup_cls_state *parent = css_cls_state(css_parent(&cs->css));
++
++	if (parent)
++		cs->classid = parent->classid;
+ 	return 0;
+ }
+ 
+diff --git a/security/device_cgroup.c b/security/device_cgroup.c
+index 9095364..635a49d 100644
+--- a/security/device_cgroup.c
++++ b/security/device_cgroup.c
+@@ -198,13 +198,11 @@ static inline bool is_devcg_online(const struct dev_cgroup *devcg)
   */
--int vmpressure_register_event(struct cgroup *cg, struct cftype *cft,
--			      struct eventfd_ctx *eventfd, const char *args)
-+int vmpressure_register_event(struct cgroup_subsys_state *css,
-+			      struct cftype *cft, struct eventfd_ctx *eventfd,
-+			      const char *args)
+ static int devcgroup_online(struct cgroup *cgroup)
  {
--	struct vmpressure *vmpr = cg_to_vmpressure(cg);
-+	struct vmpressure *vmpr = css_to_vmpressure(css);
- 	struct vmpressure_event *ev;
- 	int level;
+-	struct dev_cgroup *dev_cgroup, *parent_dev_cgroup = NULL;
++	struct dev_cgroup *dev_cgroup = cgroup_to_devcgroup(cgroup);
++	struct dev_cgroup *parent_dev_cgroup = css_to_devcgroup(css_parent(&dev_cgroup->css));
+ 	int ret = 0;
  
-@@ -329,7 +325,7 @@ int vmpressure_register_event(struct cgroup *cg, struct cftype *cft,
+ 	mutex_lock(&devcgroup_mutex);
+-	dev_cgroup = cgroup_to_devcgroup(cgroup);
+-	if (cgroup->parent)
+-		parent_dev_cgroup = cgroup_to_devcgroup(cgroup->parent);
  
- /**
-  * vmpressure_unregister_event() - Unbind eventfd from vmpressure
-- * @cg:		cgroup handle
-+ * @css:	css handle
-  * @cft:	cgroup control files handle
-  * @eventfd:	eventfd context that was used to link vmpressure with the @cg
-  *
-@@ -341,10 +337,11 @@ int vmpressure_register_event(struct cgroup *cg, struct cftype *cft,
-  * cftype).unregister_event, and then cgroup core will handle everything
-  * by itself.
-  */
--void vmpressure_unregister_event(struct cgroup *cg, struct cftype *cft,
-+void vmpressure_unregister_event(struct cgroup_subsys_state *css,
-+				 struct cftype *cft,
- 				 struct eventfd_ctx *eventfd)
+ 	if (parent_dev_cgroup == NULL)
+ 		dev_cgroup->behavior = DEVCG_DEFAULT_ALLOW;
+@@ -394,12 +392,10 @@ static bool may_access(struct dev_cgroup *dev_cgroup,
+ static int parent_has_perm(struct dev_cgroup *childcg,
+ 				  struct dev_exception_item *ex)
  {
--	struct vmpressure *vmpr = cg_to_vmpressure(cg);
-+	struct vmpressure *vmpr = css_to_vmpressure(css);
- 	struct vmpressure_event *ev;
+-	struct cgroup *pcg = childcg->css.cgroup->parent;
+-	struct dev_cgroup *parent;
++	struct dev_cgroup *parent = css_to_devcgroup(css_parent(&childcg->css));
  
- 	mutex_lock(&vmpr->events_lock);
+-	if (!pcg)
++	if (!parent)
+ 		return 1;
+-	parent = cgroup_to_devcgroup(pcg);
+ 	return may_access(parent, ex, childcg->behavior);
+ }
+ 
+@@ -524,15 +520,11 @@ static int devcgroup_update_access(struct dev_cgroup *devcgroup,
+ 	char temp[12];		/* 11 + 1 characters needed for a u32 */
+ 	int count, rc = 0;
+ 	struct dev_exception_item ex;
+-	struct cgroup *p = devcgroup->css.cgroup;
+-	struct dev_cgroup *parent = NULL;
++	struct dev_cgroup *parent = css_to_devcgroup(css_parent(&devcgroup->css));
+ 
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EPERM;
+ 
+-	if (p->parent)
+-		parent = cgroup_to_devcgroup(p->parent);
+-
+ 	memset(&ex, 0, sizeof(ex));
+ 	b = buffer;
+ 
 -- 
 1.8.3.1
