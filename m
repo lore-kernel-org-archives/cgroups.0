@@ -1,117 +1,186 @@
-From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH V5 0/8] Add memcg dirty/writeback page accounting
-Date: Thu,  1 Aug 2013 19:43:22 +0800
-Message-ID: <1375357402-9811-1-git-send-email-handai.szj@taobao.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Sha Zhengju <handai.szj@gmail.com>
+Subject: [PATCH 1/8] memcg: remove MEMCG_NR_FILE_MAPPED
+Date: Thu,  1 Aug 2013 19:44:58 +0800
+Message-ID: <1375357498-9879-1-git-send-email-handai.szj@taobao.com>
+References: <1375357402-9811-1-git-send-email-handai.szj@taobao.com>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=from:to:cc:subject:date:message-id:x-mailer;
-        bh=CS1SjjMnQdWQy8MjEEwqLlKqpXeWFu+daPRIMAj9eHk=;
-        b=hm4E5RgGmT2IVLpRzP2EDAuFAQrUuFuPklyk5VYij07yBQRwG70tRx7Ygtf2YXn4hO
-         S6v9KVI+JcJ4JsnL5NfYfPDYVdKZ737wFhfBmH0NWEgZ7ilXYJFvvPg7L1IWrF5I/bmP
-         30wKhJHf0bAMi5a1lW2DqC1mgJzmfQtPml9U+g8EOCToSR2nN4XaxW+0aO2peVitedpk
-         nmmeITwbfi4NiFcz8Y77MyOui5cn8PU7w3d29OAV/CEHoCw3i2SGCJHKlXy/B9YUN960
-         32Gf7D+wM0t/zwpzdyxo0nwmaKtTjx0cak+Mp3ZGM9Lf35XwF9b4KXJOCvXSlkNbVSsT
-         mojg==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=from:to:cc:subject:date:message-id:x-mailer:in-reply-to:references;
+        bh=CEzRsR07jJn9cK55PirmM2wGXA6kZ20um9YChlzejLw=;
+        b=QJvGOOX+18mqw/VfTdKP0jSQMtvmhRfdgNW6mAMjm3Zr001S8yhH+6qGDQctu+2mDN
+         7mADaQPG1H8JGmYq3c70fJqN8+YqqmqH5+rbnCE08SnfT91wL3l+yg5S3xDKszrrJ+55
+         6LWy4xiYtR7dKPJnY2612U4Rlu4M+zeMHOkc4B2qI5ucbMcH6OZqweJxMtUJFzz48qAT
+         8MKXogpu28fEf7kZz4B2yZkFMQO4QWt7HGsxBVUuQvf1GkYXxqhGzKbbjOXgdd/xMSvk
+         NTYyP+kZN3Htq2BD6G+YIF2JQ37CrhLn3W1tNfmi83DesojqTJk5CnxYJYgyxC+eBbmM
+         U9aQ==
+In-Reply-To: <1375357402-9811-1-git-send-email-handai.szj@taobao.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: mhocko-AlSwsSmVLrQ@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+To: linux-mm@kvack.org, cgroups@vger.kernel.org
+Cc: mhocko@suse.cz, kamezawa.hiroyu@jp.fujitsu.com, glommer@gmail.com, gthelen@google.com, fengguang.wu@intel.com, akpm@linux-foundation.org, Sha Zhengju <handai.szj@taobao.com>
 
-Hi,
+From: Sha Zhengju <handai.szj@taobao.com>
 
-This is V5 patch series that provide the ability for each memory cgroup to
-have independent dirty/writeback page statistics.
-Previous version is here:
-  V4 - http://www.spinics.net/lists/cgroups/msg08200.html;
-  V3 - http://lwn.net/Articles/530776/;
-  V2 - http://lwn.net/Articles/508452/;
-  V1 - http://lwn.net/Articles/504017/;
+While accounting memcg page stat, it's not worth to use MEMCG_NR_FILE_MAPPED
+as an extra layer of indirection because of the complexity and presumed
+performance overhead. We can use MEM_CGROUP_STAT_FILE_MAPPED directly.
 
-The first three patches are doing some cleanup and prepare works. The first two
-is nothing changed since V3 and patch 3/8 is a new one to check proper locks held.
-Patch 4/8 and 5/8 are doing memcg dirty and writeback page accounting, which adds
-statistic codes in several hot paths.
+Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Acked-by: Michal Hocko <mhocko@suse.cz>
+Acked-by: Fengguang Wu <fengguang.wu@intel.com>
+Reviewed-by: Greg Thelen <gthelen@google.com>
+---
+ include/linux/memcontrol.h |   27 +++++++++++++++++++--------
+ mm/memcontrol.c            |   25 +------------------------
+ mm/rmap.c                  |    4 ++--
+ 3 files changed, 22 insertions(+), 34 deletions(-)
 
-Patch 6/8 and 7/8 are trying to wipe off the overheads introduced in by previous
-two patches, and this is the main changes towards V3. Patch 6 is a prepare one
-to make nocpu_base available for all usages not only hotplug cases. I stealed it
-from Glauber Costa - http://www.spinics.net/lists/cgroups/msg06233.html. Patch 7
-is doing some optimization by jump label: if only root memcg exists, we don't
-need to do page stat accounting and transfer global page stats to root only when
-the first non-root memcg is created.  
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 7b4d9d7..d166aeb 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -30,9 +30,20 @@ struct page;
+ struct mm_struct;
+ struct kmem_cache;
+ 
+-/* Stats that can be updated by kernel. */
+-enum mem_cgroup_page_stat_item {
+-	MEMCG_NR_FILE_MAPPED, /* # of pages charged as file rss */
++/*
++ * The corresponding mem_cgroup_stat_names is defined in mm/memcontrol.c,
++ * These two lists should keep in accord with each other.
++ */
++enum mem_cgroup_stat_index {
++	/*
++	 * For MEM_CONTAINER_TYPE_ALL, usage = pagecache + rss.
++	 */
++	MEM_CGROUP_STAT_CACHE,		/* # of pages charged as cache */
++	MEM_CGROUP_STAT_RSS,		/* # of pages charged as anon rss */
++	MEM_CGROUP_STAT_RSS_HUGE,	/* # of pages charged as anon huge */
++	MEM_CGROUP_STAT_FILE_MAPPED,	/* # of pages charged as file rss */
++	MEM_CGROUP_STAT_SWAP,		/* # of pages, swapped out */
++	MEM_CGROUP_STAT_NSTATS,
+ };
+ 
+ struct mem_cgroup_reclaim_cookie {
+@@ -165,17 +176,17 @@ static inline void mem_cgroup_end_update_page_stat(struct page *page,
+ }
+ 
+ void mem_cgroup_update_page_stat(struct page *page,
+-				 enum mem_cgroup_page_stat_item idx,
++				 enum mem_cgroup_stat_index idx,
+ 				 int val);
+ 
+ static inline void mem_cgroup_inc_page_stat(struct page *page,
+-					    enum mem_cgroup_page_stat_item idx)
++					    enum mem_cgroup_stat_index idx)
+ {
+ 	mem_cgroup_update_page_stat(page, idx, 1);
+ }
+ 
+ static inline void mem_cgroup_dec_page_stat(struct page *page,
+-					    enum mem_cgroup_page_stat_item idx)
++					    enum mem_cgroup_stat_index idx)
+ {
+ 	mem_cgroup_update_page_stat(page, idx, -1);
+ }
+@@ -349,12 +360,12 @@ static inline void mem_cgroup_end_update_page_stat(struct page *page,
+ }
+ 
+ static inline void mem_cgroup_inc_page_stat(struct page *page,
+-					    enum mem_cgroup_page_stat_item idx)
++					    enum mem_cgroup_stat_index idx)
+ {
+ }
+ 
+ static inline void mem_cgroup_dec_page_stat(struct page *page,
+-					    enum mem_cgroup_page_stat_item idx)
++					    enum mem_cgroup_stat_index idx)
+ {
+ }
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index d12ca6f..7691cef 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -85,21 +85,6 @@ static int really_do_swap_account __initdata = 0;
+ #endif
+ 
+ 
+-/*
+- * Statistics for memory cgroup.
+- */
+-enum mem_cgroup_stat_index {
+-	/*
+-	 * For MEM_CONTAINER_TYPE_ALL, usage = pagecache + rss.
+-	 */
+-	MEM_CGROUP_STAT_CACHE,		/* # of pages charged as cache */
+-	MEM_CGROUP_STAT_RSS,		/* # of pages charged as anon rss */
+-	MEM_CGROUP_STAT_RSS_HUGE,	/* # of pages charged as anon huge */
+-	MEM_CGROUP_STAT_FILE_MAPPED,	/* # of pages charged as file rss */
+-	MEM_CGROUP_STAT_SWAP,		/* # of pages, swapped out */
+-	MEM_CGROUP_STAT_NSTATS,
+-};
+-
+ static const char * const mem_cgroup_stat_names[] = {
+ 	"cache",
+ 	"rss",
+@@ -2307,7 +2292,7 @@ void __mem_cgroup_end_update_page_stat(struct page *page, unsigned long *flags)
+ }
+ 
+ void mem_cgroup_update_page_stat(struct page *page,
+-				 enum mem_cgroup_page_stat_item idx, int val)
++				 enum mem_cgroup_stat_index idx, int val)
+ {
+ 	struct mem_cgroup *memcg;
+ 	struct page_cgroup *pc = lookup_page_cgroup(page);
+@@ -2320,14 +2305,6 @@ void mem_cgroup_update_page_stat(struct page *page,
+ 	if (unlikely(!memcg || !PageCgroupUsed(pc)))
+ 		return;
+ 
+-	switch (idx) {
+-	case MEMCG_NR_FILE_MAPPED:
+-		idx = MEM_CGROUP_STAT_FILE_MAPPED;
+-		break;
+-	default:
+-		BUG();
+-	}
+-
+ 	this_cpu_add(memcg->stat->count[idx], val);
+ }
+ 
+diff --git a/mm/rmap.c b/mm/rmap.c
+index 7066470..66c2260 100644
+--- a/mm/rmap.c
++++ b/mm/rmap.c
+@@ -1114,7 +1114,7 @@ void page_add_file_rmap(struct page *page)
+ 	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
+ 	if (atomic_inc_and_test(&page->_mapcount)) {
+ 		__inc_zone_page_state(page, NR_FILE_MAPPED);
+-		mem_cgroup_inc_page_stat(page, MEMCG_NR_FILE_MAPPED);
++		mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_FILE_MAPPED);
+ 	}
+ 	mem_cgroup_end_update_page_stat(page, &locked, &flags);
+ }
+@@ -1158,7 +1158,7 @@ void page_remove_rmap(struct page *page)
+ 				hpage_nr_pages(page));
+ 	} else {
+ 		__dec_zone_page_state(page, NR_FILE_MAPPED);
+-		mem_cgroup_dec_page_stat(page, MEMCG_NR_FILE_MAPPED);
++		mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_FILE_MAPPED);
+ 		mem_cgroup_end_update_page_stat(page, &locked, &flags);
+ 	}
+ 	if (unlikely(PageMlocked(page)))
+-- 
+1.7.9.5
 
-Some perforcemance numbers got by Mel's pft test (On a 4g memory and 4-core
-i5 CPU machine):
-
-vanilla  : memcg enabled, patch not applied
-patched  : all patches are patched
-
-* Duration numbers:
-             vanilla     patched
-User          385.38      379.47
-System         65.12       66.46
-Elapsed       457.46      452.21
-
-* Summary numbers:
-vanilla:
-Clients User        System      Elapsed     Faults/cpu  Faults/sec  
-1       0.03        0.18        0.21        931682.645  910993.850  
-2       0.03        0.22        0.13        760431.152  1472985.863 
-3       0.03        0.29        0.12        600495.043  1620311.084 
-4       0.04        0.37        0.12        475380.531  1688013.267
-
-patched:
-Clients User        System      Elapsed     Faults/cpu  Faults/sec  
-1       0.02        0.19        0.22        915362.875  898763.732  
-2       0.03        0.23        0.13        757518.387  1464893.996 
-3       0.03        0.30        0.12        592113.126  1611873.469 
-4       0.04        0.38        0.12        472203.393  1680013.271
-
-We can see the performance gap is minor.
-
-Change log:
-v5 <-- v4:
-	1. add patch 3 to check proper lock held suggested by Michal Hock
-        2. add another two interfaces which should call mem_cgroup_begin/end_
-	   update_page_stat() in dirty page accounting
-        3. make nobase_cpu not only used in hotplug cases
-        4. don't account root memcg page stats if only root exist
-v4 <-- v3:
-	1. give up reworking vfs codes
-	2. change lock order of memcg->move_lock and mapping->tree_lock
-	3. patch out mem_cgroup_{begin,end}_update_page_stat when not used
-	4. rebased to since-3.10 branch
-v3 <-- v2:
-	1. change lock order of mapping->tree_lock and memcg->move_lock
-	2. performance optimization in 6/8 and 7/8
-v2 <-- v1:
-        1. add test numbers
-        2. some small fix and comments
-
-Glauber Costa (1):
-      memcg: make nocpu_base available for non-hotplug
-
-Sha Zhengju (7):
-      memcg: remove MEMCG_NR_FILE_MAPPED
-      fs/ceph: vfs __set_page_dirty_nobuffers interface instead of doing it inside filesystem
-      memcg: check for proper lock held in mem_cgroup_update_page_stat
-      memcg: add per cgroup dirty pages accounting
-      memcg: add per cgroup writeback pages accounting
-      memcg: patch mem_cgroup_{begin,end}_update_page_stat() out if only root memcg exists
-      memcg: Document cgroup dirty/writeback memory statistics
-
- Documentation/cgroups/memory.txt |    2 +
- fs/buffer.c                      |   13 +++
- fs/ceph/addr.c                   |   13 +--
- include/linux/memcontrol.h       |   47 ++++++++--
- mm/filemap.c                     |   17 +++-
- mm/memcontrol.c                  |  189 +++++++++++++++++++++++++++++---------
- mm/page-writeback.c              |   39 +++++++-
- mm/rmap.c                        |    4 +-
- mm/truncate.c                    |   12 +++
- mm/vmscan.c                      |    7 ++
- 10 files changed, 273 insertions(+), 70 deletions(-)
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
