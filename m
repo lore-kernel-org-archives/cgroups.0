@@ -1,193 +1,117 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: memcg creates an unkillable task in 3.11-rc2
-Date: Thu, 1 Aug 2013 11:06:20 +0200
-Message-ID: <20130801090620.GA5198@dhcp22.suse.cz>
-References: <87ehahg312.fsf@xmission.com>
-	<20130729095109.GB4678@dhcp22.suse.cz>
-	<20130729161026.GD22605@mtj.dyndns.org>
-	<87r4eh70yg.fsf@xmission.com> <51F71DE2.4020102@huawei.com>
-	<87ppu0a298.fsf_-_@tw-ebiederman.twitter.com>
-	<20130730123120.GA15847@dhcp22.suse.cz>
-	<874nbc3sx1.fsf@tw-ebiederman.twitter.com>
-	<20130731073726.GC30514@dhcp22.suse.cz>
-	<87zjt2tm9f.fsf@xmission.com>
-Mime-Version: 1.0
+From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH V5 0/8] Add memcg dirty/writeback page accounting
+Date: Thu,  1 Aug 2013 19:43:22 +0800
+Message-ID: <1375357402-9811-1-git-send-email-handai.szj@taobao.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=from:to:cc:subject:date:message-id:x-mailer;
+        bh=CS1SjjMnQdWQy8MjEEwqLlKqpXeWFu+daPRIMAj9eHk=;
+        b=hm4E5RgGmT2IVLpRzP2EDAuFAQrUuFuPklyk5VYij07yBQRwG70tRx7Ygtf2YXn4hO
+         S6v9KVI+JcJ4JsnL5NfYfPDYVdKZ737wFhfBmH0NWEgZ7ilXYJFvvPg7L1IWrF5I/bmP
+         30wKhJHf0bAMi5a1lW2DqC1mgJzmfQtPml9U+g8EOCToSR2nN4XaxW+0aO2peVitedpk
+         nmmeITwbfi4NiFcz8Y77MyOui5cn8PU7w3d29OAV/CEHoCw3i2SGCJHKlXy/B9YUN960
+         32Gf7D+wM0t/zwpzdyxo0nwmaKtTjx0cak+Mp3ZGM9Lf35XwF9b4KXJOCvXSlkNbVSsT
+         mojg==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <87zjt2tm9f.fsf-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Cc: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kent.overstreet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: mhocko-AlSwsSmVLrQ@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-On Wed 31-07-13 15:09:16, Eric W. Biederman wrote:
-> Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> writes:
-> 
-> > [I am CCing David here as well]
-> >
-> > On Tue 30-07-13 09:37:46, Eric W. Biederman wrote:
-> >> Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> writes:
-> >> 
-> >> > On Tue 30-07-13 01:19:31, Eric W. Biederman wrote:
-> >> > [...]
-> >> >> Hmm. Looking farther I see what is going on. And it has nothing to do
-> >> >> with the freezer. (I have commented out that code and reproduced it
-> >> >> without the freezer to be doubly certain).
-> >> >> 
-> >> >> 
-> >> >> On the exit path exit_robust_list is triggering a page fault to fault a
-> >> >> page back in.  Which since we have no memory causes the exit path
-> >> >> to get stuck in mem_cgroup_handle_oom.
-> >> >
-> >> > Hmm, interesting. I assume the exit is caused by the SIGKILL, right?
-> >> > If yes, then why it hasn't coughed early in __mem_cgroup_try_charge
-> >> 
-> >> Interesting question.  This isn't the primary thread but we do send
-> >> SIGKILL to the secondary threads as well.
-> >> 
-> >> We definitely need those checks on both paths making my change valid.
-> >> 
-> >> Oh. Duh!  This is after we act on SIGKILL so SIGKILL is no longer
-> >> pending.
-> >
-> > Very well spotted Eric! What do you think about the following patch?
-> > I would have to check since when the exit path could trigger the fault
-> > but I guess this is worth stable backport.
-> 
-> It doesn't have a prayer of working.
+Hi,
 
-So it hasn't passed your test?
+This is V5 patch series that provide the ability for each memory cgroup to
+have independent dirty/writeback page statistics.
+Previous version is here:
+  V4 - http://www.spinics.net/lists/cgroups/msg08200.html;
+  V3 - http://lwn.net/Articles/530776/;
+  V2 - http://lwn.net/Articles/508452/;
+  V1 - http://lwn.net/Articles/504017/;
 
-> You leave open the race of a fatal signal being received before we go to
-> sleep.
+The first three patches are doing some cleanup and prepare works. The first two
+is nothing changed since V3 and patch 3/8 is a new one to check proper locks held.
+Patch 4/8 and 5/8 are doing memcg dirty and writeback page accounting, which adds
+statistic codes in several hot paths.
 
-If a fatal signal is received before we're going to sleep then
-schedule() should keep it on the runqueue, no?
+Patch 6/8 and 7/8 are trying to wipe off the overheads introduced in by previous
+two patches, and this is the main changes towards V3. Patch 6 is a prepare one
+to make nocpu_base available for all usages not only hotplug cases. I stealed it
+from Glauber Costa - http://www.spinics.net/lists/cgroups/msg06233.html. Patch 7
+is doing some optimization by jump label: if only root memcg exists, we don't
+need to do page stat accounting and transfer global page stats to root only when
+the first non-root memcg is created.  
 
-static void __sched __schedule(void)
-{
-[...]
-        if (prev->state && !(preempt_count() & PREEMPT_ACTIVE)) {
-                if (unlikely(signal_pending_state(prev->state, prev))) {
-                        prev->state = TASK_RUNNING;
-                } else {
+Some perforcemance numbers got by Mel's pft test (On a 4g memory and 4-core
+i5 CPU machine):
 
-so it should get a timeslice eventually, mem_cgroup_handle_oom sees
-fatal_signal_pending and sets TIF_MEMDIE, bypass the charge, get to
-signal handling, start exiting, fault in, get to charge and bail out in
-__mem_cgroup_try_charge because it sees TIF_MEMDIE.
+vanilla  : memcg enabled, patch not applied
+patched  : all patches are patched
 
-Or what am I missing?
+* Duration numbers:
+             vanilla     patched
+User          385.38      379.47
+System         65.12       66.46
+Elapsed       457.46      452.21
 
-> You don't handle a task that has processed the fatal signal and is in
-> PF_EXITING.  Which is what I experienced.
-> 
-> From earlier comments about my code not being early enough I thought I
-> was going to see a patch in __mem_cgroup_try_change so that the bypass
-> case will kick in also for tasks in PF_EXITING.
+* Summary numbers:
+vanilla:
+Clients User        System      Elapsed     Faults/cpu  Faults/sec  
+1       0.03        0.18        0.21        931682.645  910993.850  
+2       0.03        0.22        0.13        760431.152  1472985.863 
+3       0.03        0.29        0.12        600495.043  1620311.084 
+4       0.04        0.37        0.12        475380.531  1688013.267
 
-This shouldn't be necessary because TIF_MEMDIE was set for the killed
-task.  I was playing with PF_EXITING there as well but TIF_MEMDIE sounds
-like a more appropriate solution.
+patched:
+Clients User        System      Elapsed     Faults/cpu  Faults/sec  
+1       0.02        0.19        0.22        915362.875  898763.732  
+2       0.03        0.23        0.13        757518.387  1464893.996 
+3       0.03        0.30        0.12        592113.126  1611873.469 
+4       0.04        0.38        0.12        472203.393  1680013.271
 
-> You change actually addresses things later in the code path than mine
-> does.
-> 
-> I do like your summary of the problem.
-> 
-> Eric
-> 
-> > ---
-> > From 411408558f2858328ea25e69567e9a53a8314032 Mon Sep 17 00:00:00 2001
-> > From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> > Date: Wed, 31 Jul 2013 08:48:54 +0200
-> > Subject: [PATCH] memcg: Do not hang on OOM when killed by userspace OOM
-> >
-> > Eric has reported that he can see task(s) stuck in memcg OOM handler
-> > regularly. The only way out is to
-> > 	echo 0 > $GROUP/memory.oom_controll
-> >
-> > His usecase is:
-> > - Setup a hierarchy with memory and the freezer
-> >   (disable kernel oom and have a process watch for oom).
-> > - In that memory cgroup add a process with one thread per cpu.
-> > - In one thread slowly allocate once per second I think it is 16M of ram
-> >   and mlock and dirty it (just to force the pages into ram and stay there).
-> > - When oom is achieved loop:
-> >   * attempt to freeze all of the tasks.
-> >   * if frozen send every task SIGKILL, unfreeze, remove the directory in
-> >     cgroupfs.
-> >
-> > Eric has then pinpointed the issue to be memcg specific.
-> >
-> > All tasks are sitting on the memcg_oom_waitq when memcg oom is disabled.
-> > Those that have received fatal signal will bypass the charge and should
-> > continue on their way out. The tricky part is that that exit path might
-> > trigger a page fault (e.g. exit_robust_list) thus the memcg charge
-> > while its memcg is still under OOM because nobody has released any
-> > charges. Unlike with the in-kernel OOM handler the exiting task doesn't
-> > get TIF_MEMDIE set so it doesn't shortcut charges and falls to the
-> > memcg OOM again without any way out of it as there are no fatal signals
-> > pending anymore.
-> >
-> > This patch sets the TIF_MEMDIE flag pro actively in mem_cgroup_handle_oom
-> > if the memcg is disabled after the task is woken up with fatal signal
-> > pending. This means that any further charges will be bypassed early in
-> > __mem_cgroup_try_charge and the task will have chance to exit finally.
-> >
-> > Strictly speaking we might mark also a task which hasn't been killed by
-> > userspace OOM handler but this is not harmful as the task is going away
-> > anyway and under-oom group would like to see it go as soon as possible.
-> >
-> > Reported-by: Eric W. Biederman <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-> > Debugged-by: Eric W. Biederman <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-> > Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> > ---
-> >  mm/memcontrol.c | 13 ++++++++++++-
-> >  1 file changed, 12 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index d12ca6f..d4103b0 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -2235,8 +2235,19 @@ static bool mem_cgroup_handle_oom(struct mem_cgroup *memcg, gfp_t mask,
-> >  
-> >  	mem_cgroup_unmark_under_oom(memcg);
-> >  
-> > -	if (test_thread_flag(TIF_MEMDIE) || fatal_signal_pending(current))
-> > +	if (test_thread_flag(TIF_MEMDIE))
-> >  		return false;
-> > +
-> > +	/*
-> > +	 * Userspace OOM killer might have killed this task but
-> > +	 * there is no way it could have set TIF_MEMDIE as well
-> > +	 * so we have to set it manually.
-> > +	 */
-> > +	if (fatal_signal_pending(current)) {
-> > +		if (memcg->oom_kill_disable)
-> > +			set_thread_flag(TIF_MEMDIE);
-> > +		return false;
-> > +	}
-> >  	/* Give chance to dying process */
-> >  	schedule_timeout_uninterruptible(1);
-> >  	return true;
-> > -- 
-> > 1.8.3.2
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+We can see the performance gap is minor.
 
--- 
-Michal Hocko
-SUSE Labs
+Change log:
+v5 <-- v4:
+	1. add patch 3 to check proper lock held suggested by Michal Hock
+        2. add another two interfaces which should call mem_cgroup_begin/end_
+	   update_page_stat() in dirty page accounting
+        3. make nobase_cpu not only used in hotplug cases
+        4. don't account root memcg page stats if only root exist
+v4 <-- v3:
+	1. give up reworking vfs codes
+	2. change lock order of memcg->move_lock and mapping->tree_lock
+	3. patch out mem_cgroup_{begin,end}_update_page_stat when not used
+	4. rebased to since-3.10 branch
+v3 <-- v2:
+	1. change lock order of mapping->tree_lock and memcg->move_lock
+	2. performance optimization in 6/8 and 7/8
+v2 <-- v1:
+        1. add test numbers
+        2. some small fix and comments
+
+Glauber Costa (1):
+      memcg: make nocpu_base available for non-hotplug
+
+Sha Zhengju (7):
+      memcg: remove MEMCG_NR_FILE_MAPPED
+      fs/ceph: vfs __set_page_dirty_nobuffers interface instead of doing it inside filesystem
+      memcg: check for proper lock held in mem_cgroup_update_page_stat
+      memcg: add per cgroup dirty pages accounting
+      memcg: add per cgroup writeback pages accounting
+      memcg: patch mem_cgroup_{begin,end}_update_page_stat() out if only root memcg exists
+      memcg: Document cgroup dirty/writeback memory statistics
+
+ Documentation/cgroups/memory.txt |    2 +
+ fs/buffer.c                      |   13 +++
+ fs/ceph/addr.c                   |   13 +--
+ include/linux/memcontrol.h       |   47 ++++++++--
+ mm/filemap.c                     |   17 +++-
+ mm/memcontrol.c                  |  189 +++++++++++++++++++++++++++++---------
+ mm/page-writeback.c              |   39 +++++++-
+ mm/rmap.c                        |    4 +-
+ mm/truncate.c                    |   12 +++
+ mm/vmscan.c                      |    7 ++
+ 10 files changed, 273 insertions(+), 70 deletions(-)
