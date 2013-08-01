@@ -1,91 +1,110 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 23/23] cgroup: unexport cgroup_css()
-Date: Thu,  1 Aug 2013 17:50:01 -0400
-Message-ID: <1375393801-4817-24-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 16/23] cgroup: relocate cgroup_advance_iter()
+Date: Thu,  1 Aug 2013 17:49:54 -0400
+Message-ID: <1375393801-4817-17-git-send-email-tj@kernel.org>
 References: <1375393801-4817-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-         :references;
-        bh=sgQEUtJKXlekEZJg7ERPxzZmyblWbdPmttdGy5fgTpk=;
-        b=gazKhqz+FB2DdQKFYI+WEDuL4cAP69ZhZN7zPLNhUwiivUWuzbuLIavFGXkVgKERwF
-         fN58gqZHQqaeP7o0s6kPHWrudli8PnvjjKV8Id9ohafmGxYDVMzyXfNPiDutJEdSG87K
-         NNmA7il163GPd8/9gdxb3NeTTKVor2IQ4qPAmwcInavG684CGOLQvYVmUWszAmGmyHnn
-         CJfLblS8d5nRK3q4Lm+EYhlLfuoWVPwF73WGnXjfERWW7qeXd1UZFBlzZnNVszx+gP6V
-         rF/7RQzTzLStLAZMMqx4yu2oQCwx38Y1E5+ylQRT8fY75GKahyCqYuMgbqssgPvjqgkj
-         mwcA==
-In-Reply-To: <1375393801-4817-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com
-Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
+	:references; bh=kgOFJJrPVuJp10tRjSPNprX4S8tRsR9Ej/fDw2ZQhZo=;
+	b=V97LQe15DRdWoRFX/CLF+fYc3UwPSrJExx5W74nBCLAr+0HocNuVqJIOp6fIQKhHw2
+	j3DtYD0apy5Aq5lV+LCqDbFOa8t5AOL9AMMcmoxn4NDqcLZ7ZDciKCzcvu9J7G5Ym5sU
+	e0P5J2+1cKFxKd2scoP0KsVPhhclj3QTRrQgQa11RJGoyYolbg76cBFk7zEJ5mdmzvPU
+	9Wdvfre5GIUgfwti2OVnnzk113cvmd84m9oJqY/g1hpIy5wvKsl6pdW8LjSgVS2Ug56C
+	tjuodgsjdKswBYMcxnWvYrjnatHxuzrcTnaTd5QOvFb7YurfpkM2zS7VDIyb8ZLgbBlj
+	7RpA==
+In-Reply-To: <1375393801-4817-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-cgroup_css() no longer has any user left outside cgroup.c proper and
-we don't want subsystems to grow new usages of the function.  cgroup
-core should always provide the css to use to the subsystems, which
-will make dynamic creation and destruction of css's across the
-lifetime of a cgroup much more manageable than exposing the cgroup
-directly to subsystems and let them dereference css's from it.
+For some reason, cgroup_advance_iter() is standing lonely all away
+from its iter comrades.  Relocate it.
 
-Make cgroup_css() a static function in cgroup.c.
+This is cosmetic.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- include/linux/cgroup.h | 13 -------------
- kernel/cgroup.c        | 13 +++++++++++++
- 2 files changed, 13 insertions(+), 13 deletions(-)
+ kernel/cgroup.c | 48 ++++++++++++++++++++++++------------------------
+ 1 file changed, 24 insertions(+), 24 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 28e21f9..1d81d25 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -679,19 +679,6 @@ struct cgroup_subsys_state *css_parent(struct cgroup_subsys_state *css)
- }
- 
- /**
-- * cgroup_css - obtain a cgroup's css for the specified subsystem
-- * @cgrp: the cgroup of interest
-- * @subsys_id: the subsystem of interest
-- *
-- * Return @cgrp's css (cgroup_subsys_state) associated with @subsys_id.
-- */
--static inline struct cgroup_subsys_state *cgroup_css(struct cgroup *cgrp,
--						     int subsys_id)
--{
--	return cgrp->subsys[subsys_id];
--}
--
--/**
-  * task_css_set_check - obtain a task's css_set with extra access conditions
-  * @task: the task to obtain css_set for
-  * @__c: extra condition expression to be passed to rcu_dereference_check()
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index ead0088..f8739c7 100644
+index 850ad87..1085439 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -222,6 +222,19 @@ static int cgroup_destroy_locked(struct cgroup *cgrp);
- static int cgroup_addrm_files(struct cgroup *cgrp, struct cftype cfts[],
- 			      bool is_add);
+@@ -2975,30 +2975,6 @@ int cgroup_task_count(const struct cgroup *cgrp)
+ }
  
-+/**
-+ * cgroup_css - obtain a cgroup's css for the specified subsystem
-+ * @cgrp: the cgroup of interest
-+ * @subsys_id: the subsystem of interest
-+ *
-+ * Return @cgrp's css (cgroup_subsys_state) associated with @subsys_id.
+ /*
+- * Advance a list_head iterator.  The iterator should be positioned at
+- * the start of a css_set
+- */
+-static void cgroup_advance_iter(struct cgroup *cgrp, struct cgroup_iter *it)
+-{
+-	struct list_head *l = it->cset_link;
+-	struct cgrp_cset_link *link;
+-	struct css_set *cset;
+-
+-	/* Advance to the next non-empty css_set */
+-	do {
+-		l = l->next;
+-		if (l == &cgrp->cset_links) {
+-			it->cset_link = NULL;
+-			return;
+-		}
+-		link = list_entry(l, struct cgrp_cset_link, cset_link);
+-		cset = link->cset;
+-	} while (list_empty(&cset->tasks));
+-	it->cset_link = l;
+-	it->task = cset->tasks.next;
+-}
+-
+-/*
+  * To reduce the fork() overhead for systems that are not actually
+  * using their cgroups capability, we don't maintain the lists running
+  * through each css_set to its tasks until we see the list actually
+@@ -3216,6 +3192,30 @@ css_next_descendant_post(struct cgroup_subsys_state *pos,
+ }
+ EXPORT_SYMBOL_GPL(css_next_descendant_post);
+ 
++/*
++ * Advance a list_head iterator.  The iterator should be positioned at
++ * the start of a css_set
 + */
-+static struct cgroup_subsys_state *cgroup_css(struct cgroup *cgrp,
-+					      int subsys_id)
++static void cgroup_advance_iter(struct cgroup *cgrp, struct cgroup_iter *it)
 +{
-+	return cgrp->subsys[subsys_id];
++	struct list_head *l = it->cset_link;
++	struct cgrp_cset_link *link;
++	struct css_set *cset;
++
++	/* Advance to the next non-empty css_set */
++	do {
++		l = l->next;
++		if (l == &cgrp->cset_links) {
++			it->cset_link = NULL;
++			return;
++		}
++		link = list_entry(l, struct cgrp_cset_link, cset_link);
++		cset = link->cset;
++	} while (list_empty(&cset->tasks));
++	it->cset_link = l;
++	it->task = cset->tasks.next;
 +}
 +
- /* convenient tests for these bits */
- static inline bool cgroup_is_dead(const struct cgroup *cgrp)
+ void cgroup_iter_start(struct cgroup *cgrp, struct cgroup_iter *it)
+ 	__acquires(css_set_lock)
  {
 -- 
 1.8.3.1
