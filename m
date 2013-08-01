@@ -1,459 +1,391 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 17/23] cgroup: rename cgroup_iter to cgroup_task_iter
-Date: Thu,  1 Aug 2013 17:49:55 -0400
-Message-ID: <1375393801-4817-18-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 19/23] cgroup: remove struct cgroup_scanner
+Date: Thu,  1 Aug 2013 17:49:57 -0400
+Message-ID: <1375393801-4817-20-git-send-email-tj@kernel.org>
 References: <1375393801-4817-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
+         :references;
+        bh=vJ4v0yu3uZGVzy4MTspM45UQSEVsn4+QnsUYtquTe7s=;
+        b=G3a6HUaxv70p5Xft5fgJXUkBvY3aDvG1R+Wo8lf//ggmxc+fMn8IiD9jknSflflTkM
+         Kk1+DDGukrEW/+XTh8VSuhH20WzCpCv+PVRQIq6CWy5NclsHME3ECWvIDh/EkynjzYkm
+         zQ2t6eL6ESvJeV6sF1aNKQhfi3oUR52IRLWXInnMSOgP77H7laqqbHkhnCE/M7QWoiWr
+         HVsOU0hGPKKdue8hMBI1wZLjHkeXt9fnz0XRH2fV5OAnkmE2KAvtpRjkOphQ9ZauAwTn
+         1xygjUOWDTEvqLRo7ZsnVUayOzXKu4cBT886R0f36p1zH3s6k3uo7HZTkwygqCI5L238
+         nnjg==
+In-Reply-To: <1375393801-4817-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-	:references; bh=z7UFEED97nKbGL52nyyWB9vvNh88beKKzmtCH7qOfFQ=;
-	b=WDSI8wweJAejUVqrpJbSdelkRWCtOUYPSjRkHBjIIwUfP+CChgk3K4tWcijh7QtlBn
-	jtPGd6GgCeZdPVaUZd8p3vyBCzYpzsf9o0Cco5oDH8UQb+iRzF1O7soqglcOnAwBTOQi
-	OE4MFypcYVEK2fQZnzwt0jqG0QvF7wKhrTGpTzV143e0tH3hgnH0/qGnjPgNcBP52njg
-	ylRTNj9slTZ1qsdhD9bPGofRO6UgnoI1boDlZNzAfZm12fmEklRV+wm2tLq9JfMymScJ
-	2ZhVsry7upYjAHJhfdkfwr/K1DWftQ5cUEtyP9IywW6Q/7s7lETcvlrSbWjJu2W64gpg
-	7Yrg==
-In-Reply-To: <1375393801-4817-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: lizefan@huawei.com
+Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-cgroup now has multiple iterators and it's quite confusing to have
-something which walks over tasks of a single cgroup cgroup_iter.
-Let's rename it to cgroup_task_iter.
+cgroup_scan_tasks() takes a pointer to struct cgroup_scanner as its
+sole argument and the only function of that struct is packing the
+arguments of the function call which are consisted of five fields.
+It's not too unusual to pack parameters into a struct when the number
+of arguments gets excessive or the whole set needs to be passed around
+a lot, but neither holds here making it just weird.
 
-While at it, reformat / update comments and replace the overview
-comment above the interface function decls with proper function
-comments.  Such overview can be useful but function comments should be
-more than enough here.
+Drop struct cgroup_scanner and pass the params directly to
+cgroup_scan_tasks().  Note that struct cpuset_change_nodemask_arg was
+added to cpuset.c to pass both ->cs and ->newmems pointer to
+cpuset_change_nodemask() using single data pointer.
 
-This is pure rename and doesn't introduce any functional changes.
+This doesn't make any functional differences.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Matt Helsley <matthltc-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- include/linux/cgroup.h  |  31 ++++---------
- kernel/cgroup.c         | 114 ++++++++++++++++++++++++++++++++----------------
- kernel/cgroup_freezer.c |  24 +++++-----
- mm/memcontrol.c         |  10 ++---
- 4 files changed, 102 insertions(+), 77 deletions(-)
+ include/linux/cgroup.h | 16 ++++-----
+ kernel/cgroup.c        | 93 +++++++++++++++++++++++---------------------------
+ kernel/cpuset.c        | 63 ++++++++++++++--------------------
+ 3 files changed, 75 insertions(+), 97 deletions(-)
 
 diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 7fba0d0..4478336 100644
+index 2b10152..2e9a799 100644
 --- a/include/linux/cgroup.h
 +++ b/include/linux/cgroup.h
-@@ -890,31 +890,16 @@ css_next_descendant_post(struct cgroup_subsys_state *pos,
- 	for ((pos) = css_next_descendant_post(NULL, (css)); (pos);	\
- 	     (pos) = css_next_descendant_post((pos), (css)))
- 
--/* A cgroup_iter should be treated as an opaque object */
--struct cgroup_iter {
--	struct list_head *cset_link;
--	struct list_head *task;
-+/* A cgroup_task_iter should be treated as an opaque object */
-+struct cgroup_task_iter {
-+	struct list_head		*cset_link;
-+	struct list_head		*task;
+@@ -528,15 +528,6 @@ struct cftype_set {
+ 	struct cftype			*cfts;
  };
  
--/*
-- * To iterate across the tasks in a cgroup:
-- *
-- * 1) call cgroup_iter_start to initialize an iterator
-- *
-- * 2) call cgroup_iter_next() to retrieve member tasks until it
-- *    returns NULL or until you want to end the iteration
-- *
-- * 3) call cgroup_iter_end() to destroy the iterator.
-- *
-- * Or, call cgroup_scan_tasks() to iterate through every task in a
-- * cgroup - cgroup_scan_tasks() holds the css_set_lock when calling
-- * the test_task() callback, but not while calling the process_task()
-- * callback.
-- */
--void cgroup_iter_start(struct cgroup *cgrp, struct cgroup_iter *it);
--struct task_struct *cgroup_iter_next(struct cgroup *cgrp,
--					struct cgroup_iter *it);
--void cgroup_iter_end(struct cgroup *cgrp, struct cgroup_iter *it);
-+void cgroup_task_iter_start(struct cgroup *cgrp, struct cgroup_task_iter *it);
-+struct task_struct *cgroup_task_iter_next(struct cgroup *cgrp,
-+					  struct cgroup_task_iter *it);
-+void cgroup_task_iter_end(struct cgroup *cgrp, struct cgroup_task_iter *it);
- int cgroup_scan_tasks(struct cgroup_scanner *scan);
+-struct cgroup_scanner {
+-	struct cgroup *cgrp;
+-	int (*test_task)(struct task_struct *p, struct cgroup_scanner *scan);
+-	void (*process_task)(struct task_struct *p,
+-			struct cgroup_scanner *scan);
+-	struct ptr_heap *heap;
+-	void *data;
+-};
+-
+ /*
+  * See the comment above CGRP_ROOT_SANE_BEHAVIOR for details.  This
+  * function can be called as long as @cgrp is accessible.
+@@ -900,7 +891,12 @@ struct cgroup_task_iter {
+ void cgroup_task_iter_start(struct cgroup *cgrp, struct cgroup_task_iter *it);
+ struct task_struct *cgroup_task_iter_next(struct cgroup_task_iter *it);
+ void cgroup_task_iter_end(struct cgroup_task_iter *it);
+-int cgroup_scan_tasks(struct cgroup_scanner *scan);
++
++int cgroup_scan_tasks(struct cgroup *cgrp,
++		      bool (*test)(struct task_struct *, void *),
++		      void (*process)(struct task_struct *, void *),
++		      void *data, struct ptr_heap *heap);
++
  int cgroup_attach_task_all(struct task_struct *from, struct task_struct *);
  int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from);
+ 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 1085439..7a4f89b 100644
+index 7adaaa6..4e354b59 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -367,9 +367,11 @@ static struct cgrp_cset_link init_cgrp_cset_link;
- static int cgroup_init_idr(struct cgroup_subsys *ss,
- 			   struct cgroup_subsys_state *css);
+@@ -3336,32 +3336,37 @@ static inline int started_after(void *p1, void *p2)
  
--/* css_set_lock protects the list of css_set objects, and the
-- * chain of tasks off each css_set.  Nests outside task->alloc_lock
-- * due to cgroup_iter_start() */
-+/*
-+ * css_set_lock protects the list of css_set objects, and the chain of
-+ * tasks off each css_set.  Nests outside task->alloc_lock due to
-+ * cgroup_task_iter_start().
-+ */
- static DEFINE_RWLOCK(css_set_lock);
- static int css_set_count;
- 
-@@ -394,10 +396,12 @@ static unsigned long css_set_hash(struct cgroup_subsys_state *css[])
- 	return key;
- }
- 
--/* We don't maintain the lists running through each css_set to its
-- * task until after the first call to cgroup_iter_start(). This
-- * reduces the fork()/exit() overhead for people who have cgroups
-- * compiled into their kernel but not actually in use */
-+/*
-+ * We don't maintain the lists running through each css_set to its task
-+ * until after the first call to cgroup_task_iter_start().  This reduces
-+ * the fork()/exit() overhead for people who have cgroups compiled into
-+ * their kernel but not actually in use.
-+ */
- static int use_task_css_set_links __read_mostly;
- 
- static void __put_css_set(struct css_set *cset, int taskexit)
-@@ -2975,10 +2979,10 @@ int cgroup_task_count(const struct cgroup *cgrp)
- }
- 
- /*
-- * To reduce the fork() overhead for systems that are not actually
-- * using their cgroups capability, we don't maintain the lists running
-- * through each css_set to its tasks until we see the list actually
-- * used - in other words after the first call to cgroup_iter_start().
-+ * To reduce the fork() overhead for systems that are not actually using
-+ * their cgroups capability, we don't maintain the lists running through
-+ * each css_set to its tasks until we see the list actually used - in other
-+ * words after the first call to cgroup_task_iter_start().
+ /**
+  * cgroup_scan_tasks - iterate though all the tasks in a cgroup
+- * @scan: struct cgroup_scanner containing arguments for the scan
++ * @cgrp: the cgroup to iterate tasks of
++ * @test: optional test callback
++ * @process: process callback
++ * @data: data passed to @test and @process
++ * @heap: optional pre-allocated heap used for task iteration
+  *
+- * Arguments include pointers to callback functions test_task() and
+- * process_task().
+- * Iterate through all the tasks in a cgroup, calling test_task() for each,
+- * and if it returns true, call process_task() for it also.
+- * The test_task pointer may be NULL, meaning always true (select all tasks).
+- * Effectively duplicates cgroup_task_iter_{start,next,end}()
+- * but does not lock css_set_lock for the call to process_task().
+- * The struct cgroup_scanner may be embedded in any structure of the caller's
+- * creation.
+- * It is guaranteed that process_task() will act on every task that
+- * is a member of the cgroup for the duration of this call. This
+- * function may or may not call process_task() for tasks that exit
+- * or move to a different cgroup during the call, or are forked or
+- * move into the cgroup during the call.
++ * Iterate through all the tasks in a cgroup, calling @test for each, and
++ * if it returns %true, call @process for it also.
+  *
+- * Note that test_task() may be called with locks held, and may in some
+- * situations be called multiple times for the same task, so it should
+- * be cheap.
+- * If the heap pointer in the struct cgroup_scanner is non-NULL, a heap has been
+- * pre-allocated and will be used for heap operations (and its "gt" member will
+- * be overwritten), else a temporary heap will be used (allocation of which
+- * may cause this function to fail).
++ * @test may be NULL, meaning always true (select all tasks), which
++ * effectively duplicates cgroup_task_iter_{start,next,end}() but does not
++ * lock css_set_lock for the call to @process.
++ *
++ * It is guaranteed that @process will act on every task that is a member
++ * of @cgrp for the duration of this call.  This function may or may not
++ * call @process for tasks that exit or move to a different cgroup during
++ * the call, or are forked or move into the cgroup during the call.
++ *
++ * Note that @test may be called with locks held, and may in some
++ * situations be called multiple times for the same task, so it should be
++ * cheap.
++ *
++ * If @heap is non-NULL, a heap has been pre-allocated and will be used for
++ * heap operations (and its "gt" member will be overwritten), else a
++ * temporary heap will be used (allocation of which may cause this function
++ * to fail).
   */
- static void cgroup_enable_task_cg_lists(void)
- {
-@@ -3192,11 +3196,15 @@ css_next_descendant_post(struct cgroup_subsys_state *pos,
- }
- EXPORT_SYMBOL_GPL(css_next_descendant_post);
- 
--/*
-- * Advance a list_head iterator.  The iterator should be positioned at
-- * the start of a css_set
-+/**
-+ * cgroup_advance_task_iter - advance a task itererator to the next css_set
-+ * @cgrp: the cgroup to walk tasks of
-+ * @it: the iterator to advance
-+ *
-+ * Advance @it to the next css_set to walk.
-  */
--static void cgroup_advance_iter(struct cgroup *cgrp, struct cgroup_iter *it)
-+static void cgroup_advance_task_iter(struct cgroup *cgrp,
-+				     struct cgroup_task_iter *it)
- {
- 	struct list_head *l = it->cset_link;
- 	struct cgrp_cset_link *link;
-@@ -3216,7 +3224,21 @@ static void cgroup_advance_iter(struct cgroup *cgrp, struct cgroup_iter *it)
- 	it->task = cset->tasks.next;
- }
- 
--void cgroup_iter_start(struct cgroup *cgrp, struct cgroup_iter *it)
-+/**
-+ * cgroup_task_iter_start - initiate task iteration
-+ * @cgrp: the cgroup to walk tasks of
-+ * @it: the task iterator to use
-+ *
-+ * Initiate iteration through the tasks of @cgrp.  The caller can call
-+ * cgroup_task_iter_next() to walk through the tasks until the function
-+ * returns NULL.  On completion of iteration, cgroup_task_iter_end() must
-+ * be called.
-+ *
-+ * Note that this function acquires a lock which is released when the
-+ * iteration finishes.  The caller can't sleep while iteration is in
-+ * progress.
-+ */
-+void cgroup_task_iter_start(struct cgroup *cgrp, struct cgroup_task_iter *it)
- 	__acquires(css_set_lock)
- {
- 	/*
-@@ -3229,11 +3251,20 @@ void cgroup_iter_start(struct cgroup *cgrp, struct cgroup_iter *it)
- 
- 	read_lock(&css_set_lock);
- 	it->cset_link = &cgrp->cset_links;
--	cgroup_advance_iter(cgrp, it);
-+	cgroup_advance_task_iter(cgrp, it);
- }
- 
--struct task_struct *cgroup_iter_next(struct cgroup *cgrp,
--					struct cgroup_iter *it)
-+/**
-+ * cgroup_task_iter_next - return the next task for the iterator
-+ * @cgrp: the cgroup to walk tasks of
-+ * @it: the task iterator being iterated
-+ *
-+ * The "next" function for task iteration.  @it should have been
-+ * initialized via cgroup_task_iter_start().  Returns NULL when the
-+ * iteration reaches the end.
-+ */
-+struct task_struct *cgroup_task_iter_next(struct cgroup *cgrp,
-+					  struct cgroup_task_iter *it)
- {
- 	struct task_struct *res;
- 	struct list_head *l = it->task;
-@@ -3247,16 +3278,25 @@ struct task_struct *cgroup_iter_next(struct cgroup *cgrp,
- 	l = l->next;
- 	link = list_entry(it->cset_link, struct cgrp_cset_link, cset_link);
- 	if (l == &link->cset->tasks) {
--		/* We reached the end of this task list - move on to
--		 * the next cg_cgroup_link */
--		cgroup_advance_iter(cgrp, it);
-+		/*
-+		 * We reached the end of this task list - move on to the
-+		 * next cgrp_cset_link.
-+		 */
-+		cgroup_advance_task_iter(cgrp, it);
- 	} else {
- 		it->task = l;
- 	}
- 	return res;
- }
- 
--void cgroup_iter_end(struct cgroup *cgrp, struct cgroup_iter *it)
-+/**
-+ * cgroup_task_iter_end - finish task iteration
-+ * @cgrp: the cgroup to walk tasks of
-+ * @it: the task iterator to finish
-+ *
-+ * Finish task iteration started by cgroup_task_iter_start().
-+ */
-+void cgroup_task_iter_end(struct cgroup *cgrp, struct cgroup_task_iter *it)
- 	__releases(css_set_lock)
- {
- 	read_unlock(&css_set_lock);
-@@ -3305,7 +3345,7 @@ static inline int started_after(void *p1, void *p2)
-  * Iterate through all the tasks in a cgroup, calling test_task() for each,
-  * and if it returns true, call process_task() for it also.
-  * The test_task pointer may be NULL, meaning always true (select all tasks).
-- * Effectively duplicates cgroup_iter_{start,next,end}()
-+ * Effectively duplicates cgroup_task_iter_{start,next,end}()
-  * but does not lock css_set_lock for the call to process_task().
-  * The struct cgroup_scanner may be embedded in any structure of the caller's
-  * creation.
-@@ -3326,7 +3366,7 @@ static inline int started_after(void *p1, void *p2)
- int cgroup_scan_tasks(struct cgroup_scanner *scan)
+-int cgroup_scan_tasks(struct cgroup_scanner *scan)
++int cgroup_scan_tasks(struct cgroup *cgrp,
++		      bool (*test)(struct task_struct *, void *),
++		      void (*process)(struct task_struct *, void *),
++		      void *data, struct ptr_heap *heap)
  {
  	int retval, i;
--	struct cgroup_iter it;
-+	struct cgroup_task_iter it;
- 	struct task_struct *p, *dropped;
+ 	struct cgroup_task_iter it;
+@@ -3369,12 +3374,10 @@ int cgroup_scan_tasks(struct cgroup_scanner *scan)
  	/* Never dereference latest_task, since it's not refcounted */
  	struct task_struct *latest_task = NULL;
-@@ -3361,8 +3401,8 @@ int cgroup_scan_tasks(struct cgroup_scanner *scan)
+ 	struct ptr_heap tmp_heap;
+-	struct ptr_heap *heap;
+ 	struct timespec latest_time = { 0, 0 };
+ 
+-	if (scan->heap) {
++	if (heap) {
+ 		/* The caller supplied our heap and pre-allocated its memory */
+-		heap = scan->heap;
+ 		heap->gt = &started_after;
+ 	} else {
+ 		/* We need to allocate our own heap memory */
+@@ -3387,25 +3390,24 @@ int cgroup_scan_tasks(struct cgroup_scanner *scan)
+ 
+  again:
+ 	/*
+-	 * Scan tasks in the cgroup, using the scanner's "test_task" callback
+-	 * to determine which are of interest, and using the scanner's
+-	 * "process_task" callback to process any of them that need an update.
+-	 * Since we don't want to hold any locks during the task updates,
+-	 * gather tasks to be processed in a heap structure.
+-	 * The heap is sorted by descending task start time.
+-	 * If the statically-sized heap fills up, we overflow tasks that
+-	 * started later, and in future iterations only consider tasks that
+-	 * started after the latest task in the previous pass. This
++	 * Scan tasks in the cgroup, using the @test callback to determine
++	 * which are of interest, and invoking @process callback on the
++	 * ones which need an update.  Since we don't want to hold any
++	 * locks during the task updates, gather tasks to be processed in a
++	 * heap structure.  The heap is sorted by descending task start
++	 * time.  If the statically-sized heap fills up, we overflow tasks
++	 * that started later, and in future iterations only consider tasks
++	 * that started after the latest task in the previous pass. This
  	 * guarantees forward progress and that we don't miss any tasks.
  	 */
  	heap->size = 0;
--	cgroup_iter_start(scan->cgrp, &it);
--	while ((p = cgroup_iter_next(scan->cgrp, &it))) {
-+	cgroup_task_iter_start(scan->cgrp, &it);
-+	while ((p = cgroup_task_iter_next(scan->cgrp, &it))) {
+-	cgroup_task_iter_start(scan->cgrp, &it);
++	cgroup_task_iter_start(cgrp, &it);
+ 	while ((p = cgroup_task_iter_next(&it))) {
  		/*
  		 * Only affect tasks that qualify per the caller's callback,
  		 * if he provided one
-@@ -3395,7 +3435,7 @@ int cgroup_scan_tasks(struct cgroup_scanner *scan)
- 		 * the heap and wasn't inserted
  		 */
- 	}
--	cgroup_iter_end(scan->cgrp, &it);
-+	cgroup_task_iter_end(scan->cgrp, &it);
+-		if (scan->test_task && !scan->test_task(p, scan))
++		if (test && !test(p, data))
+ 			continue;
+ 		/*
+ 		 * Only process tasks that started after the last task
+@@ -3443,7 +3445,7 @@ int cgroup_scan_tasks(struct cgroup_scanner *scan)
+ 				latest_task = q;
+ 			}
+ 			/* Process the task per the caller's callback */
+-			scan->process_task(q, scan);
++			process(q, data);
+ 			put_task_struct(q);
+ 		}
+ 		/*
+@@ -3460,10 +3462,9 @@ int cgroup_scan_tasks(struct cgroup_scanner *scan)
+ 	return 0;
+ }
  
- 	if (heap->size) {
- 		for (i = 0; i < heap->size; i++) {
-@@ -3601,7 +3641,7 @@ static int pidlist_array_load(struct cgroup *cgrp, enum cgroup_filetype type,
- 	pid_t *array;
- 	int length;
- 	int pid, n = 0; /* used for populating the array */
--	struct cgroup_iter it;
-+	struct cgroup_task_iter it;
- 	struct task_struct *tsk;
- 	struct cgroup_pidlist *l;
- 
-@@ -3616,8 +3656,8 @@ static int pidlist_array_load(struct cgroup *cgrp, enum cgroup_filetype type,
- 	if (!array)
- 		return -ENOMEM;
- 	/* now, populate the array */
--	cgroup_iter_start(cgrp, &it);
--	while ((tsk = cgroup_iter_next(cgrp, &it))) {
-+	cgroup_task_iter_start(cgrp, &it);
-+	while ((tsk = cgroup_task_iter_next(cgrp, &it))) {
- 		if (unlikely(n == length))
- 			break;
- 		/* get tgid or pid for procs or tasks file respectively */
-@@ -3628,7 +3668,7 @@ static int pidlist_array_load(struct cgroup *cgrp, enum cgroup_filetype type,
- 		if (pid > 0) /* make sure to only use valid results */
- 			array[n++] = pid;
- 	}
--	cgroup_iter_end(cgrp, &it);
-+	cgroup_task_iter_end(cgrp, &it);
- 	length = n;
- 	/* now sort & (if procs) strip out duplicates */
- 	sort(array, length, sizeof(pid_t), cmppid, NULL);
-@@ -3662,7 +3702,7 @@ int cgroupstats_build(struct cgroupstats *stats, struct dentry *dentry)
+-static void cgroup_transfer_one_task(struct task_struct *task,
+-				     struct cgroup_scanner *scan)
++static void cgroup_transfer_one_task(struct task_struct *task, void *data)
  {
- 	int ret = -EINVAL;
- 	struct cgroup *cgrp;
--	struct cgroup_iter it;
-+	struct cgroup_task_iter it;
- 	struct task_struct *tsk;
+-	struct cgroup *new_cgroup = scan->data;
++	struct cgroup *new_cgroup = data;
+ 
+ 	mutex_lock(&cgroup_mutex);
+ 	cgroup_attach_task(new_cgroup, task, false);
+@@ -3477,15 +3478,7 @@ static void cgroup_transfer_one_task(struct task_struct *task,
+  */
+ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from)
+ {
+-	struct cgroup_scanner scan;
+-
+-	scan.cgrp = from;
+-	scan.test_task = NULL; /* select all tasks in cgroup */
+-	scan.process_task = cgroup_transfer_one_task;
+-	scan.heap = NULL;
+-	scan.data = to;
+-
+-	return cgroup_scan_tasks(&scan);
++	return cgroup_scan_tasks(from, NULL, cgroup_transfer_one_task, to, NULL);
+ }
+ 
+ /*
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index be4f503..6fe23f2 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -830,7 +830,7 @@ static struct cpuset *effective_nodemask_cpuset(struct cpuset *cs)
+ /**
+  * cpuset_change_cpumask - make a task's cpus_allowed the same as its cpuset's
+  * @tsk: task to test
+- * @scan: struct cgroup_scanner containing the cgroup of the task
++ * @data: cpuset to @tsk belongs to
+  *
+  * Called by cgroup_scan_tasks() for each task in a cgroup whose
+  * cpus_allowed mask needs to be changed.
+@@ -838,12 +838,11 @@ static struct cpuset *effective_nodemask_cpuset(struct cpuset *cs)
+  * We don't need to re-check for the cgroup/cpuset membership, since we're
+  * holding cpuset_mutex at this point.
+  */
+-static void cpuset_change_cpumask(struct task_struct *tsk,
+-				  struct cgroup_scanner *scan)
++static void cpuset_change_cpumask(struct task_struct *tsk, void *data)
+ {
+-	struct cpuset *cpus_cs;
++	struct cpuset *cs = data;
++	struct cpuset *cpus_cs = effective_cpumask_cpuset(cs);
+ 
+-	cpus_cs = effective_cpumask_cpuset(cgroup_cs(scan->cgrp));
+ 	set_cpus_allowed_ptr(tsk, cpus_cs->cpus_allowed);
+ }
+ 
+@@ -862,13 +861,8 @@ static void cpuset_change_cpumask(struct task_struct *tsk,
+  */
+ static void update_tasks_cpumask(struct cpuset *cs, struct ptr_heap *heap)
+ {
+-	struct cgroup_scanner scan;
+-
+-	scan.cgrp = cs->css.cgroup;
+-	scan.test_task = NULL;
+-	scan.process_task = cpuset_change_cpumask;
+-	scan.heap = heap;
+-	cgroup_scan_tasks(&scan);
++	cgroup_scan_tasks(cs->css.cgroup, NULL, cpuset_change_cpumask, cs,
++			  heap);
+ }
+ 
+ /*
+@@ -1052,20 +1046,24 @@ static void cpuset_change_task_nodemask(struct task_struct *tsk,
+ 	task_unlock(tsk);
+ }
+ 
++struct cpuset_change_nodemask_arg {
++	struct cpuset		*cs;
++	nodemask_t		*newmems;
++};
++
+ /*
+  * Update task's mems_allowed and rebind its mempolicy and vmas' mempolicy
+  * of it to cpuset's new mems_allowed, and migrate pages to new nodes if
+  * memory_migrate flag is set. Called with cpuset_mutex held.
+  */
+-static void cpuset_change_nodemask(struct task_struct *p,
+-				   struct cgroup_scanner *scan)
++static void cpuset_change_nodemask(struct task_struct *p, void *data)
+ {
+-	struct cpuset *cs = cgroup_cs(scan->cgrp);
++	struct cpuset_change_nodemask_arg *arg = data;
++	struct cpuset *cs = arg->cs;
+ 	struct mm_struct *mm;
+ 	int migrate;
+-	nodemask_t *newmems = scan->data;
+ 
+-	cpuset_change_task_nodemask(p, newmems);
++	cpuset_change_task_nodemask(p, arg->newmems);
+ 
+ 	mm = get_task_mm(p);
+ 	if (!mm)
+@@ -1075,7 +1073,7 @@ static void cpuset_change_nodemask(struct task_struct *p,
+ 
+ 	mpol_rebind_mm(mm, &cs->mems_allowed);
+ 	if (migrate)
+-		cpuset_migrate_mm(mm, &cs->old_mems_allowed, newmems);
++		cpuset_migrate_mm(mm, &cs->old_mems_allowed, arg->newmems);
+ 	mmput(mm);
+ }
+ 
+@@ -1093,19 +1091,14 @@ static void *cpuset_being_rebound;
+ static void update_tasks_nodemask(struct cpuset *cs, struct ptr_heap *heap)
+ {
+ 	static nodemask_t newmems;	/* protected by cpuset_mutex */
+-	struct cgroup_scanner scan;
+ 	struct cpuset *mems_cs = effective_nodemask_cpuset(cs);
++	struct cpuset_change_nodemask_arg arg = { .cs = cs,
++						  .newmems = &newmems };
+ 
+ 	cpuset_being_rebound = cs;		/* causes mpol_dup() rebind */
+ 
+ 	guarantee_online_mems(mems_cs, &newmems);
+ 
+-	scan.cgrp = cs->css.cgroup;
+-	scan.test_task = NULL;
+-	scan.process_task = cpuset_change_nodemask;
+-	scan.heap = heap;
+-	scan.data = &newmems;
+-
+ 	/*
+ 	 * The mpol_rebind_mm() call takes mmap_sem, which we couldn't
+ 	 * take while holding tasklist_lock.  Forks can happen - the
+@@ -1116,7 +1109,8 @@ static void update_tasks_nodemask(struct cpuset *cs, struct ptr_heap *heap)
+ 	 * It's ok if we rebind the same mm twice; mpol_rebind_mm()
+ 	 * is idempotent.  Also migrate pages in each mm to new nodes.
+ 	 */
+-	cgroup_scan_tasks(&scan);
++	cgroup_scan_tasks(cs->css.cgroup, NULL, cpuset_change_nodemask, &arg,
++			  heap);
  
  	/*
-@@ -3676,8 +3716,8 @@ int cgroupstats_build(struct cgroupstats *stats, struct dentry *dentry)
- 	ret = 0;
- 	cgrp = dentry->d_fsdata;
- 
--	cgroup_iter_start(cgrp, &it);
--	while ((tsk = cgroup_iter_next(cgrp, &it))) {
-+	cgroup_task_iter_start(cgrp, &it);
-+	while ((tsk = cgroup_task_iter_next(cgrp, &it))) {
- 		switch (tsk->state) {
- 		case TASK_RUNNING:
- 			stats->nr_running++;
-@@ -3697,7 +3737,7 @@ int cgroupstats_build(struct cgroupstats *stats, struct dentry *dentry)
- 			break;
- 		}
- 	}
--	cgroup_iter_end(cgrp, &it);
-+	cgroup_task_iter_end(cgrp, &it);
- 
- err:
- 	return ret;
-@@ -5128,7 +5168,7 @@ void cgroup_fork(struct task_struct *child)
-  * Adds the task to the list running through its css_set if necessary and
-  * call the subsystem fork() callbacks.  Has to be after the task is
-  * visible on the task list in case we race with the first call to
-- * cgroup_iter_start() - to guarantee that the new task ends up on its
-+ * cgroup_task_iter_start() - to guarantee that the new task ends up on its
-  * list.
+ 	 * All the tasks' nodemasks have been updated, update
+@@ -1263,17 +1257,18 @@ static int update_relax_domain_level(struct cpuset *cs, s64 val)
+ /*
+  * cpuset_change_flag - make a task's spread flags the same as its cpuset's
+  * @tsk: task to be updated
+- * @scan: struct cgroup_scanner containing the cgroup of the task
++ * @data: cpuset to @tsk belongs to
+  *
+  * Called by cgroup_scan_tasks() for each task in a cgroup.
+  *
+  * We don't need to re-check for the cgroup/cpuset membership, since we're
+  * holding cpuset_mutex at this point.
   */
- void cgroup_post_fork(struct task_struct *child)
-diff --git a/kernel/cgroup_freezer.c b/kernel/cgroup_freezer.c
-index 98ca48d..c9177f8 100644
---- a/kernel/cgroup_freezer.c
-+++ b/kernel/cgroup_freezer.c
-@@ -258,7 +258,7 @@ static void update_if_frozen(struct cgroup_subsys_state *css)
+-static void cpuset_change_flag(struct task_struct *tsk,
+-				struct cgroup_scanner *scan)
++static void cpuset_change_flag(struct task_struct *tsk, void *data)
  {
- 	struct freezer *freezer = css_freezer(css);
- 	struct cgroup_subsys_state *pos;
--	struct cgroup_iter it;
-+	struct cgroup_task_iter it;
- 	struct task_struct *task;
- 
- 	WARN_ON_ONCE(!rcu_read_lock_held());
-@@ -279,9 +279,9 @@ static void update_if_frozen(struct cgroup_subsys_state *css)
- 	}
- 
- 	/* are all tasks frozen? */
--	cgroup_iter_start(css->cgroup, &it);
-+	cgroup_task_iter_start(css->cgroup, &it);
- 
--	while ((task = cgroup_iter_next(css->cgroup, &it))) {
-+	while ((task = cgroup_task_iter_next(css->cgroup, &it))) {
- 		if (freezing(task)) {
- 			/*
- 			 * freezer_should_skip() indicates that the task
-@@ -296,7 +296,7 @@ static void update_if_frozen(struct cgroup_subsys_state *css)
- 
- 	freezer->state |= CGROUP_FROZEN;
- out_iter_end:
--	cgroup_iter_end(css->cgroup, &it);
-+	cgroup_task_iter_end(css->cgroup, &it);
- out_unlock:
- 	spin_unlock_irq(&freezer->lock);
- }
-@@ -323,25 +323,25 @@ static int freezer_read(struct cgroup_subsys_state *css, struct cftype *cft,
- static void freeze_cgroup(struct freezer *freezer)
- {
- 	struct cgroup *cgroup = freezer->css.cgroup;
--	struct cgroup_iter it;
-+	struct cgroup_task_iter it;
- 	struct task_struct *task;
- 
--	cgroup_iter_start(cgroup, &it);
--	while ((task = cgroup_iter_next(cgroup, &it)))
-+	cgroup_task_iter_start(cgroup, &it);
-+	while ((task = cgroup_task_iter_next(cgroup, &it)))
- 		freeze_task(task);
--	cgroup_iter_end(cgroup, &it);
-+	cgroup_task_iter_end(cgroup, &it);
+-	cpuset_update_task_spread_flag(cgroup_cs(scan->cgrp), tsk);
++	struct cpuset *cs = data;
++
++	cpuset_update_task_spread_flag(cs, tsk);
  }
  
- static void unfreeze_cgroup(struct freezer *freezer)
+ /*
+@@ -1291,13 +1286,7 @@ static void cpuset_change_flag(struct task_struct *tsk,
+  */
+ static void update_tasks_flags(struct cpuset *cs, struct ptr_heap *heap)
  {
- 	struct cgroup *cgroup = freezer->css.cgroup;
--	struct cgroup_iter it;
-+	struct cgroup_task_iter it;
- 	struct task_struct *task;
- 
--	cgroup_iter_start(cgroup, &it);
--	while ((task = cgroup_iter_next(cgroup, &it)))
-+	cgroup_task_iter_start(cgroup, &it);
-+	while ((task = cgroup_task_iter_next(cgroup, &it)))
- 		__thaw_task(task);
--	cgroup_iter_end(cgroup, &it);
-+	cgroup_task_iter_end(cgroup, &it);
+-	struct cgroup_scanner scan;
+-
+-	scan.cgrp = cs->css.cgroup;
+-	scan.test_task = NULL;
+-	scan.process_task = cpuset_change_flag;
+-	scan.heap = heap;
+-	cgroup_scan_tasks(&scan);
++	cgroup_scan_tasks(cs->css.cgroup, NULL, cpuset_change_flag, cs, heap);
  }
  
- /**
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 2285319..00b055d 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1800,11 +1800,11 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	totalpages = mem_cgroup_get_limit(memcg) >> PAGE_SHIFT ? : 1;
- 	for_each_mem_cgroup_tree(iter, memcg) {
- 		struct cgroup *cgroup = iter->css.cgroup;
--		struct cgroup_iter it;
-+		struct cgroup_task_iter it;
- 		struct task_struct *task;
- 
--		cgroup_iter_start(cgroup, &it);
--		while ((task = cgroup_iter_next(cgroup, &it))) {
-+		cgroup_task_iter_start(cgroup, &it);
-+		while ((task = cgroup_task_iter_next(cgroup, &it))) {
- 			switch (oom_scan_process_thread(task, totalpages, NULL,
- 							false)) {
- 			case OOM_SCAN_SELECT:
-@@ -1817,7 +1817,7 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 			case OOM_SCAN_CONTINUE:
- 				continue;
- 			case OOM_SCAN_ABORT:
--				cgroup_iter_end(cgroup, &it);
-+				cgroup_task_iter_end(cgroup, &it);
- 				mem_cgroup_iter_break(memcg, iter);
- 				if (chosen)
- 					put_task_struct(chosen);
-@@ -1834,7 +1834,7 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 				get_task_struct(chosen);
- 			}
- 		}
--		cgroup_iter_end(cgroup, &it);
-+		cgroup_task_iter_end(cgroup, &it);
- 	}
- 
- 	if (!chosen)
+ /*
 -- 
 1.8.3.1
