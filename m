@@ -1,34 +1,28 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 5/7] cgroup: remove struct cgroup_seqfile_state
-Date: Thu, 1 Aug 2013 09:11:02 +0800
-Message-ID: <51F9B5A6.4050905@huawei.com>
-References: <51F8C7C5.9040608@huawei.com> <51F8C829.3040708@huawei.com> <51F8D88B.2040400@huawei.com> <20130731113557.GK2810@htj.dyndns.org>
+From: Li Zefan <lizefan@huawei.com>
+Subject: Re: [PATCH v2 5/5] cgroup: remove struct cgroup_seqfile_state
+Date: Thu, 1 Aug 2013 09:11:25 +0800
+Message-ID: <51F9B5BD.2070502@huawei.com>
+References: <51F8DA99.3010303@huawei.com> <20130731113619.GL2810@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130731113557.GK2810-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130731113619.GL2810@htj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-On 2013/7/31 19:35, Tejun Heo wrote:
-> On Wed, Jul 31, 2013 at 05:27:39PM +0800, Li Zefan wrote:
->>>  static int cgroup_seqfile_release(struct inode *inode, struct file *file)
->>>  {
->>> -	struct seq_file *seq = file->private_data;
->>> -	kfree(seq->private);
->>>  	return single_release(inode, file);
->>>  }
+On 2013/7/31 19:36, Tejun Heo wrote:
+> On Wed, Jul 31, 2013 at 05:36:25PM +0800, Li Zefan wrote:
+>> We can use struct cfent instead.
 >>
->> Oh, I just realized now we can remove cgroup_seqfile_release().
+>> v2:
+>> - remove cgroup_seqfile_release().
 >>
->> Will send out an updated patch...
+>> Signed-off-by: Li Zefan <lizefan@huawei.com>
 > 
-> Applied the updated patch.  Can you please post updated patches as
-> replies to the original path from next time?  That makes things easier
-> to track on my side.
+> Applied to libata/for-3.12.
 > 
 
-Sure.
+libata? I hope you didn't. :)
