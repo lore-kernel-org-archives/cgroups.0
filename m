@@ -1,30 +1,50 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 08/23] cgroup: pass around cgroup_subsys_state instead of
- cgroup in subsystem methods
-Date: Fri, 2 Aug 2013 15:43:05 +0200
-Message-ID: <20130802134305.GI25432@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 16/23] cgroup: relocate cgroup_advance_iter()
+Date: Fri, 2 Aug 2013 15:35:56 -0400
+Message-ID: <20130802193556.GB29736@mtj.dyndns.org>
 References: <1375393801-4817-1-git-send-email-tj@kernel.org>
- <1375393801-4817-9-git-send-email-tj@kernel.org>
- <20130802131901.GB25432@dhcp22.suse.cz>
+ <1375393801-4817-17-git-send-email-tj@kernel.org>
+ <51FB26C6.2020100@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=KNSUr8aQcLwWehqftuTAcb3jkfY6pnNwXd1dHPS/Ehs=;
+        b=rcK3h3xKekh/4aSb0xBxz3R7QnQTLChjOraby61j2MxtizZTZGcE4lZD11oVVL3y3Y
+         HafLhldHASIelNWjsjgDPDa+HY4oS0Vi4HkyLqmJHQQIR27cLP2J138Jpfdg4at2kYtX
+         hXN4ZhOUitOrIB5PSdz+zbrooLEzpByW8vJ16Ar78gbCOKjpjNUWoksdA9X2NEMCmkga
+         Wtd9twRXGJlFyY2XngI9ksMEjDmi1rkCekAyAWQwxpEG6FD2bNXMeaRTzyCbj5fe2W3Q
+         tkzn4sx6hcDErdbir8ak3quh1UssB8GUZzPBd9rOkJRVTAiIwM/kCmE4Qd44F1hC9Vpr
+         130Q==
 Content-Disposition: inline
-In-Reply-To: <20130802131901.GB25432-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <51FB26C6.2020100-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Matt Helsley <matthltc-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri 02-08-13 15:19:01, Michal Hocko wrote:
-[...]
-> mem_cgroup_from_cont can go away now as well. Do you plan to remove it
-> in the series or later on?
+Hello, Li.
 
-Ohh, it goes in 21/23. Good
+On Fri, Aug 02, 2013 at 11:25:58AM +0800, Li Zefan wrote:
+> On 2013/8/2 5:49, Tejun Heo wrote:
+> > For some reason, cgroup_advance_iter() is standing lonely all away
+> > from its iter comrades.  Relocate it.
+> > 
+> 
+> There're some other functions that are in the same situation. Do you
+> think it's better to relocate them, or just leave it as it is?
 
-Thanks!
+Hmm... I really don't wanna do one huge reorganize-everything patch as
+they tend to be difficult to verify and the disturbance to benefit
+ration usually isn't that high, but if the respective part of code is
+going through changes and thus will be disturbed anyway, I think it
+makes sense to reorganize a bit.
+
+Thanks.
+
 -- 
-Michal Hocko
-SUSE Labs
+tejun
