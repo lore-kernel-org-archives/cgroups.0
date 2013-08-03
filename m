@@ -1,164 +1,194 @@
-From: Sha Zhengju <handai.szj@gmail.com>
-Subject: Re: [PATCH V5 2/8] fs/ceph: vfs __set_page_dirty_nobuffers interface
- instead of doing it inside filesystem
-Date: Sat, 3 Aug 2013 16:58:57 +0800
-Message-ID: <CAFj3OHVhX-bFKm1DE0G9T5NG2r6zbMzJBNCXX1AH5B1BQiTSoQ@mail.gmail.com>
+From: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH V5 5/8] memcg: add per cgroup writeback pages accounting
+Date: Sat, 3 Aug 2013 17:25:01 +0800
+Message-ID: <CAFj3OHV-VCKJfe6bv4UMvv+uj4LELDXsieRZFJD06Yrdyy=XxA@mail.gmail.com>
 References: <1375357402-9811-1-git-send-email-handai.szj@taobao.com>
-	<1375357892-10188-1-git-send-email-handai.szj@taobao.com>
-	<CAAM7YAmxmmA6g2WPVtGN1-42rtDBYzLhF-gvNXxcBN6dUveBYQ@mail.gmail.com>
-	<alpine.DEB.2.00.1308011121080.22584@cobra.newdream.net>
-	<CAFj3OHVXvtr5BDMrGatHZi7M9y+dh1ZKRMQZGjZmNBcg3pNQtw@mail.gmail.com>
-	<alpine.DEB.2.00.1308021326080.1128@cobra.newdream.net>
+	<1375358051-10306-1-git-send-email-handai.szj@taobao.com>
+	<20130801145302.GJ5198@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=mime-version:in-reply-to:references:date:message-id:subject:from:to
          :cc:content-type;
-        bh=fI2gVKf3Z44LodrE6Il4ULVUQ91TEH6K0Vqju1NX2bM=;
-        b=eTGe+Fn24s41UWNoIv304yEqjVjTRs/AtRbI+kmS8VVtMul5f1fL0IakgQ8Z3jG8gY
-         cAS/1W9RqCi9tLZmlKd48/z9Nd+PWmwuAKp9aIfeGgsedSUSmrCqB970RqfJecTXcHd+
-         cUhSgVHsP4S7T20uTwkeudYnsioq4XNmaHUGQKthuY8FuIONyfCT1PjvljcVbZSY2E+z
-         7Kjn3NcqIpf+6VHN3/pCu4boGfuosTPsDL/7gVcLddePTCaD8TDaj5lAcIXhbNjmXt+z
-         AfrK1ouZGTWaIaz4W/M2Nt0sLazs7rISUusbSnnVHlHu0nU+FLSHZTUmvMqpug8shkw+
-         knwg==
-In-Reply-To: <alpine.DEB.2.00.1308021326080.1128@cobra.newdream.net>
-Sender: owner-linux-mm@kvack.org
+        bh=/XAdOM7FbtB0Z5JUumFUXbGVA62X9VK6VAbmhWX01To=;
+        b=hApmkgBz959e4fomIykX5s5hbZXwSJcxWXqDO/f7NwXWrXDKveIGEOrDSSv8F5rzY0
+         BW2C3zBz2MB8HvGH9aX20w8DFBqVR6hx2Dut2GJmxXCpMHBd8wAcDDnX54DVHemqMogq
+         NvnPvlLMiKq2mpOt7IDCPCMCEhRsXme2z+fRhieHIlnYRbKxwfwXMf0O8sbHIsF9GKwI
+         TFEEr0PXN5xjzy97SZxH7T87QjO2Is69bYf1V1D/73cPhG45B1A3OeO/QPIOhESAKk68
+         d5IcDF9CqU4E0cHCS3RegKisxJys0b2sawd/NUb1h+42zLdry06RXqUXNSw4v1RdAOoj
+         d8Dw==
+In-Reply-To: <20130801145302.GJ5198-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sage Weil <sage@inktank.com>
-Cc: "Yan, Zheng" <ukernel@gmail.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, ceph-devel <ceph-devel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Glauber Costa <glommer@gmail.com>, Greg Thelen <gthelen@google.com>, Wu Fengguang <fengguang.wu@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Sha Zhengju <handai.szj@taobao.com>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: "linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Wu Fengguang <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-On Sat, Aug 3, 2013 at 4:30 AM, Sage Weil <sage@inktank.com> wrote:
-> On Fri, 2 Aug 2013, Sha Zhengju wrote:
->> On Fri, Aug 2, 2013 at 2:27 AM, Sage Weil <sage@inktank.com> wrote:
->> > On Thu, 1 Aug 2013, Yan, Zheng wrote:
->> >> On Thu, Aug 1, 2013 at 7:51 PM, Sha Zhengju <handai.szj@gmail.com> wrote:
->> >> > From: Sha Zhengju <handai.szj@taobao.com>
->> >> >
->> >> > Following we will begin to add memcg dirty page accounting around
->> >> __set_page_dirty_
->> >> > {buffers,nobuffers} in vfs layer, so we'd better use vfs interface to
->> >> avoid exporting
->> >> > those details to filesystems.
->> >> >
->> >> > Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
->> >> > ---
->> >> >  fs/ceph/addr.c |   13 +------------
->> >> >  1 file changed, 1 insertion(+), 12 deletions(-)
->> >> >
->> >> > diff --git a/fs/ceph/addr.c b/fs/ceph/addr.c
->> >> > index 3e68ac1..1445bf1 100644
->> >> > --- a/fs/ceph/addr.c
->> >> > +++ b/fs/ceph/addr.c
->> >> > @@ -76,7 +76,7 @@ static int ceph_set_page_dirty(struct page *page)
->> >> >         if (unlikely(!mapping))
->> >> >                 return !TestSetPageDirty(page);
->> >> >
->> >> > -       if (TestSetPageDirty(page)) {
->> >> > +       if (!__set_page_dirty_nobuffers(page)) {
->> >> it's too early to set the radix tree tag here. We should set page's snapshot
->> >> context and increase the i_wrbuffer_ref first. This is because once the tag
->> >> is set, writeback thread can find and start flushing the page.
->> >
->> > Unfortunately I only remember being frustrated by this code.  :)  Looking
->> > at it now, though, it seems like the minimum fix is to set the
->> > page->private before marking the page dirty.  I don't know the locking
->> > rules around that, though.  If that is potentially racy, maybe the safest
->> > thing would be if __set_page_dirty_nobuffers() took a void* to set
->> > page->private to atomically while holding the tree_lock.
->> >
+On Thu, Aug 1, 2013 at 10:53 PM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
+> On Thu 01-08-13 19:54:11, Sha Zhengju wrote:
+>> From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 >>
->> Sorry, I don't catch the point of your last sentence... Could you
->> please explain it again?
+>> Similar to dirty page, we add per cgroup writeback pages accounting. The lock
+>> rule still is:
+>>         mem_cgroup_begin_update_page_stat()
+>>         modify page WRITEBACK stat
+>>         mem_cgroup_update_page_stat()
+>>         mem_cgroup_end_update_page_stat()
+>>
+>> There're two writeback interfaces to modify: test_{clear/set}_page_writeback().
+>> Lock order:
+>>       --> memcg->move_lock
+>>         --> mapping->tree_lock
+>>
+>> Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 >
-> It didn't make much sense.  :)  I was worried about multiple callers to
-> set_page_dirty, but as understand it, this all happens under page->lock,
-> right?  (There is a mention of other special cases in mm/page-writeback.c,
-> but I'm hoping we don't need to worry about that.)
+> Looks good to me. Maybe I would suggest moving this patch up the stack
+> so that it might get merged earlier as it is simpler than dirty pages
+> accounting. Unless you insist on having the full series merged at once.
 
-I agree, page lock can handle the concurrent access.
+I think the following three patches can be merged earlier:
+      1/8 memcg: remove MEMCG_NR_FILE_MAPPED
+      3/8 memcg: check for proper lock held in mem_cgroup_update_page_stat
+      5/8 memcg: add per cgroup writeback pages accounting
+
+Do I need to resent them again for you or they're enough?
+
+One more word, since dirty accounting is essential to future memcg
+dirty page throttling and it is not an optional feature now, I suspect
+whether we can merge the following two as well and leave the overhead
+optimization a separate series.  :p
+      4/5 memcg: add per cgroup dirty pages accounting
+      8/8 memcg: Document cgroup dirty/writeback memory statistics
+
+The 2/8 ceph one still need more improvement, I'll separate it next version.
 
 >
-> In any case, I suspect what we actually want is something like the below
-> (untested) patch.  The snapc accounting can be ignored here because
-> invalidatepage will clean it up...
->
-> sage
->
->
->
-> diff --git a/fs/ceph/addr.c b/fs/ceph/addr.c
-> index afb2fc2..7602e46 100644
-> --- a/fs/ceph/addr.c
-> +++ b/fs/ceph/addr.c
-> @@ -76,9 +76,10 @@ static int ceph_set_page_dirty(struct page *page)
->         if (unlikely(!mapping))
->                 return !TestSetPageDirty(page);
->
-> -       if (TestSetPageDirty(page)) {
-> +       if (PageDirty(page)) {
->                 dout("%p set_page_dirty %p idx %lu -- already dirty\n",
->                      mapping->host, page, page->index);
-> +               BUG_ON(!PagePrivate(page));
->                 return 0;
->         }
->
-> @@ -107,35 +108,16 @@ static int ceph_set_page_dirty(struct page *page)
->              snapc, snapc->seq, snapc->num_snaps);
->         spin_unlock(&ci->i_ceph_lock);
->
-> -       /* now adjust page */
-> -       spin_lock_irq(&mapping->tree_lock);
-> -       if (page->mapping) {    /* Race with truncate? */
-> -               WARN_ON_ONCE(!PageUptodate(page));
-> -               account_page_dirtied(page, page->mapping);
-> -               radix_tree_tag_set(&mapping->page_tree,
-> -                               page_index(page), PAGECACHE_TAG_DIRTY);
-> -
-> -               /*
-> -                * Reference snap context in page->private.  Also set
-> -                * PagePrivate so that we get invalidatepage callback.
-> -                */
-> -               page->private = (unsigned long)snapc;
-> -               SetPagePrivate(page);
-> -       } else {
-> -               dout("ANON set_page_dirty %p (raced truncate?)\n", page);
-> -               undo = 1;
-> -       }
-> -
-> -       spin_unlock_irq(&mapping->tree_lock);
-> -
-> -       if (undo)
-> -               /* whoops, we failed to dirty the page */
-> -               ceph_put_wrbuffer_cap_refs(ci, 1, snapc);
-> -
-> -       __mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
-> +       /*
-> +        * Reference snap context in page->private.  Also set
-> +        * PagePrivate so that we get invalidatepage callback.
-> +        */
-> +       BUG_ON(PagePrivate(page));
-> +       page->private = (unsigned long)snapc;
-> +       SetPagePrivate(page);
->
-> -       BUG_ON(!PageDirty(page));
-> -       return 1;
-> +       return __set_page_dirty_nobuffers(page);
->  }
->
->  /*
+> Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-Looks good. Since page lock can avoid multiple access, the undo logic
-is also not necessary anymore. Thank you very much!
+Thank you.
+
+>
+>> ---
+>>  include/linux/memcontrol.h |    1 +
+>>  mm/memcontrol.c            |    5 +++++
+>>  mm/page-writeback.c        |   15 +++++++++++++++
+>>  3 files changed, 21 insertions(+)
+>>
+>> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+>> index f952be6..ccd35d8 100644
+>> --- a/include/linux/memcontrol.h
+>> +++ b/include/linux/memcontrol.h
+>> @@ -43,6 +43,7 @@ enum mem_cgroup_stat_index {
+>>       MEM_CGROUP_STAT_RSS_HUGE,       /* # of pages charged as anon huge */
+>>       MEM_CGROUP_STAT_FILE_MAPPED,    /* # of pages charged as file rss */
+>>       MEM_CGROUP_STAT_FILE_DIRTY,     /* # of dirty pages in page cache */
+>> +     MEM_CGROUP_STAT_WRITEBACK,      /* # of pages under writeback */
+>>       MEM_CGROUP_STAT_SWAP,           /* # of pages, swapped out */
+>>       MEM_CGROUP_STAT_NSTATS,
+>>  };
+>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> index 8f3e514..6c18a6d 100644
+>> --- a/mm/memcontrol.c
+>> +++ b/mm/memcontrol.c
+>> @@ -91,6 +91,7 @@ static const char * const mem_cgroup_stat_names[] = {
+>>       "rss_huge",
+>>       "mapped_file",
+>>       "dirty",
+>> +     "writeback",
+>>       "swap",
+>>  };
+>>
+>> @@ -3812,6 +3813,10 @@ static int mem_cgroup_move_account(struct page *page,
+>>               mem_cgroup_move_account_page_stat(from, to, nr_pages,
+>>                       MEM_CGROUP_STAT_FILE_DIRTY);
+>>
+>> +     if (PageWriteback(page))
+>> +             mem_cgroup_move_account_page_stat(from, to, nr_pages,
+>> +                     MEM_CGROUP_STAT_WRITEBACK);
+>> +
+>>       mem_cgroup_charge_statistics(from, page, anon, -nr_pages);
+>>
+>>       /* caller should have done css_get */
+>> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+>> index a09f518..2fa6a52 100644
+>> --- a/mm/page-writeback.c
+>> +++ b/mm/page-writeback.c
+>> @@ -2008,11 +2008,17 @@ EXPORT_SYMBOL(account_page_dirtied);
+>>
+>>  /*
+>>   * Helper function for set_page_writeback family.
+>> + *
+>> + * The caller must hold mem_cgroup_begin/end_update_page_stat() lock
+>> + * while calling this function.
+>> + * See test_set_page_writeback for example.
+>> + *
+>>   * NOTE: Unlike account_page_dirtied this does not rely on being atomic
+>>   * wrt interrupts.
+>>   */
+>>  void account_page_writeback(struct page *page)
+>>  {
+>> +     mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_WRITEBACK);
+>>       inc_zone_page_state(page, NR_WRITEBACK);
+>>  }
+>>  EXPORT_SYMBOL(account_page_writeback);
+>> @@ -2243,7 +2249,10 @@ int test_clear_page_writeback(struct page *page)
+>>  {
+>>       struct address_space *mapping = page_mapping(page);
+>>       int ret;
+>> +     bool locked;
+>> +     unsigned long memcg_flags;
+>>
+>> +     mem_cgroup_begin_update_page_stat(page, &locked, &memcg_flags);
+>>       if (mapping) {
+>>               struct backing_dev_info *bdi = mapping->backing_dev_info;
+>>               unsigned long flags;
+>> @@ -2264,9 +2273,11 @@ int test_clear_page_writeback(struct page *page)
+>>               ret = TestClearPageWriteback(page);
+>>       }
+>>       if (ret) {
+>> +             mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_WRITEBACK);
+>>               dec_zone_page_state(page, NR_WRITEBACK);
+>>               inc_zone_page_state(page, NR_WRITTEN);
+>>       }
+>> +     mem_cgroup_end_update_page_stat(page, &locked, &memcg_flags);
+>>       return ret;
+>>  }
+>>
+>> @@ -2274,7 +2285,10 @@ int test_set_page_writeback(struct page *page)
+>>  {
+>>       struct address_space *mapping = page_mapping(page);
+>>       int ret;
+>> +     bool locked;
+>> +     unsigned long flags;
+>>
+>> +     mem_cgroup_begin_update_page_stat(page, &locked, &flags);
+>>       if (mapping) {
+>>               struct backing_dev_info *bdi = mapping->backing_dev_info;
+>>               unsigned long flags;
+>> @@ -2301,6 +2315,7 @@ int test_set_page_writeback(struct page *page)
+>>       }
+>>       if (!ret)
+>>               account_page_writeback(page);
+>> +     mem_cgroup_end_update_page_stat(page, &locked, &flags);
+>>       return ret;
+>>
+>>  }
+>> --
+>> 1.7.9.5
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+>> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> --
+> Michal Hocko
+> SUSE Labs
+
+
 
 -- 
 Thanks,
 Sha
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
