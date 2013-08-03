@@ -1,9 +1,11 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch 0/7] improve memcg oom killer robustness v2
-Date: Sat,  3 Aug 2013 12:59:53 -0400
-Message-ID: <1375549200-19110-1-git-send-email-hannes@cmpxchg.org>
-Return-path: <linux-arch-owner@vger.kernel.org>
-Sender: linux-arch-owner@vger.kernel.org
+Subject: [patch 2/7] arch: mm: do not invoke OOM killer on kernel fault OOM
+Date: Sat,  3 Aug 2013 12:59:55 -0400
+Message-ID: <1375549200-19110-3-git-send-email-hannes@cmpxchg.org>
+References: <1375549200-19110-1-git-send-email-hannes@cmpxchg.org>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1375549200-19110-1-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -11,71 +13,166 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Michal Hocko <mhocko@suse.cz>, David Rientjes <rientjes@google.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, azurIt <azurit@pobox.sk>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Changes in version 2:
-o use user_mode() instead of open coding it on s390 (Heiko Carstens)
-o clean up memcg OOM enable/disable toggling (Michal Hocko & KOSAKI
-  Motohiro)
-o add a separate patch to rework and document OOM locking
-o fix a problem with lost wakeups when sleeping on the OOM lock
-o fix OOM unlocking & wakeups with userspace OOM handling
+Kernel faults are expected to handle OOM conditions gracefully (gup,
+uaccess etc.), so they should never invoke the OOM killer.  Reserve
+this for faults triggered in user context when it is the only option.
 
-The memcg code can trap tasks in the context of the failing allocation
-until an OOM situation is resolved.  They can hold all kinds of locks
-(fs, mm) at this point, which makes it prone to deadlocking.
+Most architectures already do this, fix up the remaining few.
 
-This series converts memcg OOM handling into a two step process that
-is started in the charge context, but any waiting is done after the
-fault stack is fully unwound.
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Reviewed-by: Michal Hocko <mhocko@suse.cz>
+Acked-by: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
+---
+ arch/arm/mm/fault.c       | 14 +++++++-------
+ arch/arm64/mm/fault.c     | 14 +++++++-------
+ arch/avr32/mm/fault.c     |  2 +-
+ arch/mips/mm/fault.c      |  2 ++
+ arch/um/kernel/trap.c     |  2 ++
+ arch/unicore32/mm/fault.c | 14 +++++++-------
+ 6 files changed, 26 insertions(+), 22 deletions(-)
 
-Patches 1-4 prepare architecture handlers to support the new memcg
-requirements, but in doing so they also remove old cruft and unify
-out-of-memory behavior across architectures.
+diff --git a/arch/arm/mm/fault.c b/arch/arm/mm/fault.c
+index c97f794..217bcbf 100644
+--- a/arch/arm/mm/fault.c
++++ b/arch/arm/mm/fault.c
+@@ -349,6 +349,13 @@ retry:
+ 	if (likely(!(fault & (VM_FAULT_ERROR | VM_FAULT_BADMAP | VM_FAULT_BADACCESS))))
+ 		return 0;
+ 
++	/*
++	 * If we are in kernel mode at this point, we
++	 * have no context to handle this fault with.
++	 */
++	if (!user_mode(regs))
++		goto no_context;
++
+ 	if (fault & VM_FAULT_OOM) {
+ 		/*
+ 		 * We ran out of memory, call the OOM killer, and return to
+@@ -359,13 +366,6 @@ retry:
+ 		return 0;
+ 	}
+ 
+-	/*
+-	 * If we are in kernel mode at this point, we
+-	 * have no context to handle this fault with.
+-	 */
+-	if (!user_mode(regs))
+-		goto no_context;
+-
+ 	if (fault & VM_FAULT_SIGBUS) {
+ 		/*
+ 		 * We had some memory, but were unable to
+diff --git a/arch/arm64/mm/fault.c b/arch/arm64/mm/fault.c
+index 0ecac89..dab1cfd 100644
+--- a/arch/arm64/mm/fault.c
++++ b/arch/arm64/mm/fault.c
+@@ -294,6 +294,13 @@ retry:
+ 			      VM_FAULT_BADACCESS))))
+ 		return 0;
+ 
++	/*
++	 * If we are in kernel mode at this point, we have no context to
++	 * handle this fault with.
++	 */
++	if (!user_mode(regs))
++		goto no_context;
++
+ 	if (fault & VM_FAULT_OOM) {
+ 		/*
+ 		 * We ran out of memory, call the OOM killer, and return to
+@@ -304,13 +311,6 @@ retry:
+ 		return 0;
+ 	}
+ 
+-	/*
+-	 * If we are in kernel mode at this point, we have no context to
+-	 * handle this fault with.
+-	 */
+-	if (!user_mode(regs))
+-		goto no_context;
+-
+ 	if (fault & VM_FAULT_SIGBUS) {
+ 		/*
+ 		 * We had some memory, but were unable to successfully fix up
+diff --git a/arch/avr32/mm/fault.c b/arch/avr32/mm/fault.c
+index b2f2d2d..2ca27b0 100644
+--- a/arch/avr32/mm/fault.c
++++ b/arch/avr32/mm/fault.c
+@@ -228,9 +228,9 @@ no_context:
+ 	 */
+ out_of_memory:
+ 	up_read(&mm->mmap_sem);
+-	pagefault_out_of_memory();
+ 	if (!user_mode(regs))
+ 		goto no_context;
++	pagefault_out_of_memory();
+ 	return;
+ 
+ do_sigbus:
+diff --git a/arch/mips/mm/fault.c b/arch/mips/mm/fault.c
+index 85df1cd..94d3a31 100644
+--- a/arch/mips/mm/fault.c
++++ b/arch/mips/mm/fault.c
+@@ -241,6 +241,8 @@ out_of_memory:
+ 	 * (which will retry the fault, or kill us if we got oom-killed).
+ 	 */
+ 	up_read(&mm->mmap_sem);
++	if (!user_mode(regs))
++		goto no_context;
+ 	pagefault_out_of_memory();
+ 	return;
+ 
+diff --git a/arch/um/kernel/trap.c b/arch/um/kernel/trap.c
+index 089f398..b2f5adf 100644
+--- a/arch/um/kernel/trap.c
++++ b/arch/um/kernel/trap.c
+@@ -124,6 +124,8 @@ out_of_memory:
+ 	 * (which will retry the fault, or kill us if we got oom-killed).
+ 	 */
+ 	up_read(&mm->mmap_sem);
++	if (!is_user)
++		goto out_nosemaphore;
+ 	pagefault_out_of_memory();
+ 	return 0;
+ }
+diff --git a/arch/unicore32/mm/fault.c b/arch/unicore32/mm/fault.c
+index f9b5c10..8ed3c45 100644
+--- a/arch/unicore32/mm/fault.c
++++ b/arch/unicore32/mm/fault.c
+@@ -278,6 +278,13 @@ retry:
+ 	       (VM_FAULT_ERROR | VM_FAULT_BADMAP | VM_FAULT_BADACCESS))))
+ 		return 0;
+ 
++	/*
++	 * If we are in kernel mode at this point, we
++	 * have no context to handle this fault with.
++	 */
++	if (!user_mode(regs))
++		goto no_context;
++
+ 	if (fault & VM_FAULT_OOM) {
+ 		/*
+ 		 * We ran out of memory, call the OOM killer, and return to
+@@ -288,13 +295,6 @@ retry:
+ 		return 0;
+ 	}
+ 
+-	/*
+-	 * If we are in kernel mode at this point, we
+-	 * have no context to handle this fault with.
+-	 */
+-	if (!user_mode(regs))
+-		goto no_context;
+-
+ 	if (fault & VM_FAULT_SIGBUS) {
+ 		/*
+ 		 * We had some memory, but were unable to
+-- 
+1.8.3.2
 
-Patch 5 disables the memcg OOM handling for syscalls, readahead,
-kernel faults, because they can gracefully unwind the stack with
--ENOMEM.  OOM handling is restricted to user triggered faults that
-have no other option.
-
-Patch 6 reworks memcg's hierarchical OOM locking to make it a little
-more obvious wth is going on in there: reduce locked regions, rename
-locking functions, reorder and document.
-
-Patch 7 implements the two-part OOM handling such that tasks are never
-trapped with the full charge stack in an OOM situation.
-
- arch/alpha/mm/fault.c      |   7 +-
- arch/arc/mm/fault.c        |  11 +--
- arch/arm/mm/fault.c        |  23 +++--
- arch/arm64/mm/fault.c      |  23 +++--
- arch/avr32/mm/fault.c      |   4 +-
- arch/cris/mm/fault.c       |   6 +-
- arch/frv/mm/fault.c        |  10 +-
- arch/hexagon/mm/vm_fault.c |   6 +-
- arch/ia64/mm/fault.c       |   6 +-
- arch/m32r/mm/fault.c       |  10 +-
- arch/m68k/mm/fault.c       |   2 +
- arch/metag/mm/fault.c      |   6 +-
- arch/microblaze/mm/fault.c |   7 +-
- arch/mips/mm/fault.c       |   8 +-
- arch/mn10300/mm/fault.c    |   2 +
- arch/openrisc/mm/fault.c   |   1 +
- arch/parisc/mm/fault.c     |   7 +-
- arch/powerpc/mm/fault.c    |   7 +-
- arch/s390/mm/fault.c       |   2 +
- arch/score/mm/fault.c      |  13 ++-
- arch/sh/mm/fault.c         |   9 +-
- arch/sparc/mm/fault_32.c   |  12 ++-
- arch/sparc/mm/fault_64.c   |   8 +-
- arch/tile/mm/fault.c       |  13 +--
- arch/um/kernel/trap.c      |  22 +++--
- arch/unicore32/mm/fault.c  |  22 +++--
- arch/x86/mm/fault.c        |  43 ++++-----
- arch/xtensa/mm/fault.c     |   2 +
- include/linux/memcontrol.h |  65 +++++++++++++
- include/linux/mm.h         |   1 +
- include/linux/sched.h      |   7 ++
- mm/filemap.c               |  11 ++-
- mm/memcontrol.c            | 229 +++++++++++++++++++++++++++++----------------
- mm/memory.c                |  43 +++++++--
- mm/oom_kill.c              |   7 +-
- 35 files changed, 444 insertions(+), 211 deletions(-)
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
