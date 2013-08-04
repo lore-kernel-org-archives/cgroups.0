@@ -1,215 +1,57 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 5/5] memcg: rename cgroup_event to mem_cgroup_event
-Date: Sun,  4 Aug 2013 12:07:26 -0400
-Message-ID: <1375632446-2581-6-git-send-email-tj@kernel.org>
-References: <1375632446-2581-1-git-send-email-tj@kernel.org>
-Return-path: <owner-linux-mm@kvack.org>
+From: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH V5 3/8] memcg: check for proper lock held in mem_cgroup_update_page_stat
+Date: Sun, 04 Aug 2013 11:48:18 -0700
+Message-ID: <xr93a9kxwavh.fsf@gthelen.mtv.corp.google.com>
+References: <1375357402-9811-1-git-send-email-handai.szj@taobao.com>
+	<1375357946-10228-1-git-send-email-handai.szj@taobao.com>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
-         :references;
-        bh=5KUbaPfz3GzbRx7OHJCvGfOPmbJVA+I10EsnqpHCUkI=;
-        b=Hb26+i0ZBnEbkAQURY3cXEpBBJqlBIQiTL7gB9drel4az7yFYgtBNsTGTpG3XbLU/2
-         AnMC6HObBmkXBvDkaWtORGDaU/3n6R15ywd0AXiQ4tmkkCymAGZTgod+c3eyHJsXlyvR
-         4HF6+xPI4lKmDdrDj84QEC4PWwmlL0hzRKdBp8Ia6tSWaAK1R6z3md6n6FXljFa0sXa0
-         S02TdeUxq2DrsBPIlfH8o19a+xjo7j91GiMAsZndTkyJFtk9Lfrwk+XfQdAx1K58UmQQ
-         2SZM4M5Gds+Ph4B73npnkxVg8ETjrvuEKAeCt8faLAChpi9WmoMZuCH9Lzqpyi6+sUAg
-         BOTQ==
-In-Reply-To: <1375632446-2581-1-git-send-email-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+        d=google.com; s=20120113;
+        h=from:to:cc:subject:references:date:message-id:user-agent
+         :mime-version:content-type;
+        bh=ALycO9BgO3mIUzX6i5vvAdJDBccBA0pjkglwMgP1ThA=;
+        b=E6+oA6Kmig9vSAB/hN2gjIgIUnYqtCcsPdOPgahQYJqG28106mhEzoLDQqoU/6Yiu2
+         +rq1A+rHeiQ/JnCJ4jzr42EyABKShLwydja6GZG6d+NCNUDQrTiCGyG1+Q3wWqeP/aPs
+         gr/BnEXEiOW9VWObMh7StEqGm4m6yzyRvzJYPMRzOxZq73udxN+/OzejJm9AZHMii0+5
+         HvYgzRX2tp378RNEut+rx/vWMKFUdcqxInPSy+SbDrsQi4eseVOoFIYu49hkggdcgqYd
+         00rqWUmhIQRZKwtGxOCvcRdJtNGUj//7gqKuf4NqwOxPQ7NBbdIuJo30cxErvoQeJBEA
+         yvWA==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com, hannes@cmpxchg.org, mhocko@suse.cz, bsingharora@gmail.com, kamezawa.hiroyu@jp.fujitsu.com
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
+To: Sha Zhengju <handai.szj-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-cgroup_event is only available in memcg now.  Let's brand it that way.
-While at it, add a comment encouraging deprecation of the feature and
-remove the respective section from cgroup documentation.
+On Thu, Aug 01 2013, Sha Zhengju wrote:
 
-This patch is cosmetic.
+> From: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
+>
+> We should call mem_cgroup_begin_update_page_stat() before
+> mem_cgroup_update_page_stat() to get proper locks, however the
+> latter doesn't do any checking that we use proper locking, which
+> would be hard. Suggested by Michal Hock we could at least test for
+                                     ^^ Hocko
+> rcu_read_lock_held() because RCU is held if !mem_cgroup_disabled().
+>
+> Signed-off-by: Sha Zhengju <handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org>
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- Documentation/cgroups/cgroups.txt | 19 -------------
- mm/memcontrol.c                   | 57 +++++++++++++++++++++++++--------------
- 2 files changed, 37 insertions(+), 39 deletions(-)
+Reviewed-by: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-diff --git a/Documentation/cgroups/cgroups.txt b/Documentation/cgroups/cgroups.txt
-index 638bf17..ca5aee9 100644
---- a/Documentation/cgroups/cgroups.txt
-+++ b/Documentation/cgroups/cgroups.txt
-@@ -472,25 +472,6 @@ you give a subsystem a name.
- The name of the subsystem appears as part of the hierarchy description
- in /proc/mounts and /proc/<pid>/cgroups.
- 
--2.4 Notification API
----------------------
--
--There is mechanism which allows to get notifications about changing
--status of a cgroup.
--
--To register a new notification handler you need to:
-- - create a file descriptor for event notification using eventfd(2);
-- - open a control file to be monitored (e.g. memory.usage_in_bytes);
-- - write "<event_fd> <control_fd> <args>" to cgroup.event_control.
--   Interpretation of args is defined by control file implementation;
--
--eventfd will be woken up by control file implementation or when the
--cgroup is removed.
--
--To unregister a notification handler just close eventfd.
--
--NOTE: Support of notifications should be implemented for the control
--file. See documentation for the subsystem.
- 
- 3. Kernel API
- =============
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e988bf1..240ae72 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -242,7 +242,7 @@ struct mem_cgroup_eventfd_list {
- /*
-  * cgroup_event represents events which userspace want to receive.
-  */
--struct cgroup_event {
-+struct mem_cgroup_event {
- 	/*
- 	 * css which the event belongs to.
- 	 */
-@@ -5977,14 +5977,27 @@ static void kmem_cgroup_css_offline(struct mem_cgroup *memcg)
- #endif
- 
- /*
-+ * DO NOT USE IN NEW FILES.
-+ *
-+ * "cgroup.event_control" implementation.
-+ *
-+ * This is way over-engineered.  It tries to support fully configureable
-+ * events for each user.  Such level of flexibility is completely
-+ * unnecessary especially in the light of the planned unified hierarchy.
-+ *
-+ * Please deprecate this and replace with something simpler if at all
-+ * possible.
-+ */
-+
-+/*
-  * Unregister event and free resources.
-  *
-  * Gets called from workqueue.
-  */
--static void cgroup_event_remove(struct work_struct *work)
-+static void memcg_event_remove(struct work_struct *work)
- {
--	struct cgroup_event *event = container_of(work, struct cgroup_event,
--			remove);
-+	struct mem_cgroup_event *event = container_of(work,
-+					struct mem_cgroup_event, remove);
- 	struct cgroup_subsys_state *css = event->css;
- 	struct cgroup *cgrp = css->cgroup;
- 
-@@ -6005,11 +6018,11 @@ static void cgroup_event_remove(struct work_struct *work)
-  *
-  * Called with wqh->lock held and interrupts disabled.
-  */
--static int cgroup_event_wake(wait_queue_t *wait, unsigned mode,
--		int sync, void *key)
-+static int memcg_event_wake(wait_queue_t *wait, unsigned mode,
-+			    int sync, void *key)
- {
--	struct cgroup_event *event = container_of(wait,
--			struct cgroup_event, wait);
-+	struct mem_cgroup_event *event =
-+		container_of(wait, struct mem_cgroup_event, wait);
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(event->css);
- 	unsigned long flags = (unsigned long)key;
- 
-@@ -6038,28 +6051,30 @@ static int cgroup_event_wake(wait_queue_t *wait, unsigned mode,
- 	return 0;
- }
- 
--static void cgroup_event_ptable_queue_proc(struct file *file,
-+static void memcg_event_ptable_queue_proc(struct file *file,
- 		wait_queue_head_t *wqh, poll_table *pt)
- {
--	struct cgroup_event *event = container_of(pt,
--			struct cgroup_event, pt);
-+	struct mem_cgroup_event *event =
-+		container_of(pt, struct mem_cgroup_event, pt);
- 
- 	event->wqh = wqh;
- 	add_wait_queue(wqh, &event->wait);
- }
- 
- /*
-+ * DO NOT USE IN NEW FILES.
-+ *
-  * Parse input and register new memcg event handler.
-  *
-  * Input must be in format '<event_fd> <control_fd> <args>'.
-  * Interpretation of args is defined by control file implementation.
-  */
--static int cgroup_write_event_control(struct cgroup_subsys_state *css,
--				      struct cftype *cft, const char *buffer)
-+static int memcg_write_event_control(struct cgroup_subsys_state *css,
-+				     struct cftype *cft, const char *buffer)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
- 	struct cgroup *cgrp = css->cgroup;
--	struct cgroup_event *event;
-+	struct mem_cgroup_event *event;
- 	struct cgroup *cgrp_cfile;
- 	unsigned int efd, cfd;
- 	struct file *efile;
-@@ -6082,9 +6097,9 @@ static int cgroup_write_event_control(struct cgroup_subsys_state *css,
- 		return -ENOMEM;
- 	event->css = css;
- 	INIT_LIST_HEAD(&event->list);
--	init_poll_funcptr(&event->pt, cgroup_event_ptable_queue_proc);
--	init_waitqueue_func_entry(&event->wait, cgroup_event_wake);
--	INIT_WORK(&event->remove, cgroup_event_remove);
-+	init_poll_funcptr(&event->pt, memcg_event_ptable_queue_proc);
-+	init_waitqueue_func_entry(&event->wait, memcg_event_wake);
-+	INIT_WORK(&event->remove, memcg_event_remove);
- 
- 	efile = eventfd_fget(efd);
- 	if (IS_ERR(efile)) {
-@@ -6130,6 +6145,8 @@ static int cgroup_write_event_control(struct cgroup_subsys_state *css,
- 	 * to be done via struct cftype but cgroup core no longer knows
- 	 * about these events.  The following is crude but the whole thing
- 	 * is for compatibility anyway.
-+	 *
-+	 * DO NOT ADD NEW FILES.
- 	 */
- 	if (!strcmp(event->cft->name, "usage_in_bytes")) {
- 		event->register_event = mem_cgroup_usage_register_event;
-@@ -6227,8 +6244,8 @@ static struct cftype mem_cgroup_files[] = {
- 		.read_u64 = mem_cgroup_hierarchy_read,
- 	},
- 	{
--		.name = "cgroup.event_control",
--		.write_string = cgroup_write_event_control,
-+		.name = "cgroup.event_control",		/* XXX: for compat */
-+		.write_string = memcg_write_event_control,
- 		.flags = CFTYPE_NO_PREFIX,
- 		.mode = S_IWUGO,
- 	},
-@@ -6561,7 +6578,7 @@ static void mem_cgroup_invalidate_reclaim_iterators(struct mem_cgroup *memcg)
- static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
--	struct cgroup_event *event, *tmp;
-+	struct mem_cgroup_event *event, *tmp;
- 
- 	/*
- 	 * Unregister events and notify userspace.
--- 
-1.8.3.1
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> ---
+>  mm/memcontrol.c |    1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 7691cef..4a55d46 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2301,6 +2301,7 @@ void mem_cgroup_update_page_stat(struct page *page,
+>  	if (mem_cgroup_disabled())
+>  		return;
+>  
+> +	VM_BUG_ON(!rcu_read_lock_held());
+>  	memcg = pc->mem_cgroup;
+>  	if (unlikely(!memcg || !PageCgroupUsed(pc)))
+>  		return;
