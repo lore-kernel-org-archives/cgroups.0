@@ -1,76 +1,154 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCHSET cgroup/for-3.12] cgroup: make cgroup_event specific to memcg
-Date: Sun,  4 Aug 2013 12:07:21 -0400
-Message-ID: <1375632446-2581-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 2/5] cgroup: export __cgroup_from_dentry() and __cgroup_dput()
+Date: Sun,  4 Aug 2013 12:07:23 -0400
+Message-ID: <1375632446-2581-3-git-send-email-tj@kernel.org>
+References: <1375632446-2581-1-git-send-email-tj@kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:x-mailer;
-        bh=KK9MP8fLYwCGh8LvwzYKcPE5Ub1fnk6fMj0gMncVlc0=;
-        b=YAKARqTu30flNETxiRyGb4q/q724Nt7bU7uOpuUG7tzaOOLZrcRXVwLtlC1Tw8Vv2Q
-         Pk/UL0sboFx6lrrfGh4sq6e6gEsTCaH3aI/q57MNoj2ultni2VA3+NO1R8/cAOTHTISU
-         0aa1Rgomm10zp6IVf+Pn6XgVVWjo3HJ3Sa6Sndwhml1l5Bj/pqxy3HOGw+weEytbKw9e
-         H7OY2nDdz1ku4VIRfmbnHeIgvhFN7yWp6Z6hb9oOwTberTFiw58Wed/I7QMWG4LoSM6O
-         RhBEjIXWROprXswlFv8x8wOwiLi1tKTBw9k1cCFJVHSjfdFZLvCI0kG2JXkaNSCbwQqA
-         r4LQ==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=sender:from:to:cc:subject:date:message-id:x-mailer:in-reply-to
+         :references;
+        bh=ETK1q4tYO57eEIxUVJk4vc1uza78m3TQX/H559u/v2Q=;
+        b=fuTdZvBCaT94l/k+b6wmWkbep979X84L/hc7APMQdA3493/JVDAtW63q5/c0S4vuSZ
+         h0690EBsBkMJdJrnaF8y+LdKw1upL9ISTW6TUNW/3nqeejUP47GdltJ3UVG8n7vsziuH
+         0GQuNm1C3/Qony6t2sZMFVN0rp6C9PtXhDn3wnNdrtDNomQZbI9x83z+kq/FPzZ3rVNg
+         w3LyBcGwLhoCSkAlOpabzTwAZFq3WxipB7G3mnct0Lgx8ijVvJvPQoOrlwlCRpwXUuKv
+         F3RhQ7SmWiJaGQTCVLx9FSRmwOeN/y6bHkWmPZuNyjybEei4HdXvHOc42X6y2VjLb2Nq
+         Y5Xg==
+In-Reply-To: <1375632446-2581-1-git-send-email-tj@kernel.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: lizefan@huawei.com, hannes@cmpxchg.org, mhocko@suse.cz, bsingharora@gmail.com, kamezawa.hiroyu@jp.fujitsu.com
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-Hello,
+cgroup_event will no longer be supported as cgroup generic mechanism
+and be moved to memcg.  To enable the relocation, implement and export
+__cgroup_from_dentry() which combines cgroup file dentry -> croup
+mapping and cft discovery, and prefix cgroup_dput() with __ and export
+it.
 
-Like many other things in cgroup, cgroup_event is way too flexible and
-complex - it strives to provide completely flexible event monitoring
-facility in cgroup proper which allows any number of users to monitor
-custom events.  This is overboard, to say the least, and I strongly
-think that cgroup should not any new usages of this facility and
-preferably deprecate the existing usages if at all possible.
+These functions exist and are exported only to enable moving
+cgroup_event implementation to memcg and shouldn't grow any new users
+and thus the __ prefix.
 
-Fortunately, memcg along with vmpressure is the only user of the
-facility and gets to keep it.  This patchset makes cgroup_event
-specific to memcg, moves all related code into mm/memcontrol.c and
-renames it to mem_cgroup_event so that its usage can't spread to other
-subsystems and later deprecation and cleanup can be localized.
+This patch is pure reorganization and doesn't introduce any functional
+difference.
 
-Note that after this patchset, cgroup.event_control file exists only
-for the hierarchy which has memcg attached to it.  This is a userland
-visible change but unlikely to be noticeable as the file has never
-been meaningful outside memcg.  If this ever becomes problematic, we
-can add a dummy file on hierarchies w/o memcg when !sane_behavior.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ include/linux/cgroup.h |  4 ++++
+ kernel/cgroup.c        | 31 +++++++++++++++++--------------
+ 2 files changed, 21 insertions(+), 14 deletions(-)
 
-This patchset is consited of the following five patches.
-
- 0001-cgroup-implement-CFTYPE_NO_PREFIX.patch
- 0002-cgroup-export-__cgroup_from_dentry-and-__cgroup_dput.patch
- 0003-cgroup-memcg-move-cgroup_event-implementation-to-mem.patch
- 0004-cgroup-memcg-move-cgroup-event_list-_lock-and-event-.patch
- 0005-memcg-rename-cgroup_event-to-mem_cgroup_event.patch
-
-The patchset is on top of
-
-  cgroup/for-3.12 61584e3f4 ("cgroup: Merge branch 'for-3.11-fixes' into for-3.12")
-+ [1] cgroup: use cgroup_subsys_state as the primary subsystem interface handle
-
-and available in the following branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-memcg_event
-
-diffstat follows.
-
- Documentation/cgroups/cgroups.txt |   19 --
- include/linux/cgroup.h            |   29 ---
- include/linux/vmpressure.h        |    1
- kernel/cgroup.c                   |  265 +--------------------------------
- mm/memcontrol.c                   |  302 ++++++++++++++++++++++++++++++++++++--
- 5 files changed, 315 insertions(+), 301 deletions(-)
-
-Thanks.
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 30d6ec4..2ac1021 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -923,6 +923,10 @@ bool css_is_ancestor(struct cgroup_subsys_state *cg,
+ unsigned short css_id(struct cgroup_subsys_state *css);
+ struct cgroup_subsys_state *cgroup_css_from_dir(struct file *f, int id);
+ 
++/* do not add new users of the following two functions */
++struct cgroup *__cgroup_from_dentry(struct dentry *dentry, struct cftype **cftp);
++void __cgroup_dput(struct cgroup *cgrp);
++
+ #else /* !CONFIG_CGROUPS */
+ 
+ static inline int cgroup_init_early(void) { return 0; }
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 1b87e2b..2583b7b 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -2661,15 +2661,18 @@ static struct dentry *cgroup_lookup(struct inode *dir, struct dentry *dentry, un
+ 	return NULL;
+ }
+ 
+-/*
+- * Check if a file is a control file
+- */
+-static inline struct cftype *__file_cft(struct file *file)
++/* do not add new users */
++struct cgroup *__cgroup_from_dentry(struct dentry *dentry, struct cftype **cftp)
+ {
+-	if (file_inode(file)->i_fop != &cgroup_file_operations)
+-		return ERR_PTR(-EINVAL);
+-	return __d_cft(file->f_dentry);
++	if (!dentry->d_inode ||
++	    dentry->d_inode->i_op != &cgroup_file_inode_operations)
++		return NULL;
++
++	if (cftp)
++		*cftp = __d_cft(dentry);
++	return __d_cgrp(dentry->d_parent);
+ }
++EXPORT_SYMBOL_GPL(__cgroup_from_dentry);
+ 
+ static int cgroup_create_file(struct dentry *dentry, umode_t mode,
+ 				struct super_block *sb)
+@@ -3953,7 +3956,7 @@ static int cgroup_write_notify_on_release(struct cgroup_subsys_state *css,
+  *
+  * That's why we hold a reference before dput() and drop it right after.
+  */
+-static void cgroup_dput(struct cgroup *cgrp)
++void __cgroup_dput(struct cgroup *cgrp)
+ {
+ 	struct super_block *sb = cgrp->root->sb;
+ 
+@@ -3961,6 +3964,7 @@ static void cgroup_dput(struct cgroup *cgrp)
+ 	dput(cgrp->dentry);
+ 	deactivate_super(sb);
+ }
++EXPORT_SYMBOL_GPL(__cgroup_dput);
+ 
+ /*
+  * Unregister event and free resources.
+@@ -3983,7 +3987,7 @@ static void cgroup_event_remove(struct work_struct *work)
+ 
+ 	eventfd_ctx_put(event->eventfd);
+ 	kfree(event);
+-	cgroup_dput(cgrp);
++	__cgroup_dput(cgrp);
+ }
+ 
+ /*
+@@ -4095,9 +4099,9 @@ static int cgroup_write_event_control(struct cgroup_subsys_state *css,
+ 	if (ret < 0)
+ 		goto out_put_cfile;
+ 
+-	event->cft = __file_cft(cfile);
+-	if (IS_ERR(event->cft)) {
+-		ret = PTR_ERR(event->cft);
++	cgrp_cfile = __cgroup_from_dentry(cfile->f_dentry, &event->cft);
++	if (!cgrp_cfile) {
++		ret = -EINVAL;
+ 		goto out_put_cfile;
+ 	}
+ 
+@@ -4105,7 +4109,6 @@ static int cgroup_write_event_control(struct cgroup_subsys_state *css,
+ 	 * The file to be monitored must be in the same cgroup as
+ 	 * cgroup.event_control is.
+ 	 */
+-	cgrp_cfile = __d_cgrp(cfile->f_dentry->d_parent);
+ 	if (cgrp_cfile != cgrp) {
+ 		ret = -EINVAL;
+ 		goto out_put_cfile;
+@@ -4272,7 +4275,7 @@ static void css_dput_fn(struct work_struct *work)
+ 	struct cgroup_subsys_state *css =
+ 		container_of(work, struct cgroup_subsys_state, dput_work);
+ 
+-	cgroup_dput(css->cgroup);
++	__cgroup_dput(css->cgroup);
+ }
+ 
+ static void css_release(struct percpu_ref *ref)
+-- 
+1.8.3.1
 
 --
-tejun
-
-[1] https://lkml.org/lkml/2013/8/1/722
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
