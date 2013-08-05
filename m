@@ -1,61 +1,245 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.12] cgroup: make css_for_each_descendant()
-	and friends include the origin css in the iteration
-Date: Mon, 5 Aug 2013 12:09:04 +0800
-Message-ID: <51FF2560.8020206@huawei.com>
-References: <20130804230703.GA12029@htj.dyndns.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch 5/7] mm: memcg: enable memcg OOM killer only for user
+ faults
+Date: Mon, 5 Aug 2013 11:18:02 +0200
+Message-ID: <20130805091802.GI10146@dhcp22.suse.cz>
+References: <1375549200-19110-1-git-send-email-hannes@cmpxchg.org>
+ <1375549200-19110-6-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1375549200-19110-6-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20130804230703.GA12029-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, azurIt <azurit@pobox.sk>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> Previously, all css descendant iterators didn't include the origin
-> (root of subtree) css in the iteration.  The reasons were maintaining
-> consistency with css_for_each_child() and that at the time of
-> introduction more use cases needed skipping the origin anyway;
-> however, given that css_is_descendant() considers self to be a
-> descendant, omitting the origin css has become more confusing and
-> looking at the accumulated use cases rather clearly indicates that
-> including origin would result in simpler code overall.
+On Sat 03-08-13 12:59:58, Johannes Weiner wrote:
+> System calls and kernel faults (uaccess, gup) can handle an out of
+> memory situation gracefully and just return -ENOMEM.
 > 
-> While this is a change which can easily lead to subtle bugs, cgroup
-> API including the iterators has recently gone through major
-> restructuring and no out-of-tree changes will be applicable without
-> adjustments making this a relatively acceptable opportunity for this
-> type of change.
+> Enable the memcg OOM killer only for user faults, where it's really
+> the only option available.
 > 
-> The conversions are mostly straight-forward.  If the iteration block
-> had explicit origin handling before or after, it's moved inside the
-> iteration.  If not, if (pos == origin) continue; is added.  Some
-> conversions add extra reference get/put around origin handling by
-> consolidating origin handling and the rest.  While the extra ref
-> operations aren't strictly necessary, this shouldn't cause any
-> noticeable difference.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-> Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: Matt Helsley <matthltc-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>
-> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> Cc: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Cc: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 
-I was wondering this would be better when I converted cgroup_cfts_commits()
-to use this iterator.
+Looks better
+Acked-by: Michal Hocko <mhocko@suse.cz>
 
-Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Thanks
+> ---
+>  include/linux/memcontrol.h | 44 ++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/sched.h      |  3 +++
+>  mm/filemap.c               | 11 ++++++++++-
+>  mm/memcontrol.c            |  2 +-
+>  mm/memory.c                | 40 ++++++++++++++++++++++++++++++----------
+>  5 files changed, 88 insertions(+), 12 deletions(-)
+> 
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index 7b4d9d7..9c449c1 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -125,6 +125,37 @@ extern void mem_cgroup_print_oom_info(struct mem_cgroup *memcg,
+>  extern void mem_cgroup_replace_page_cache(struct page *oldpage,
+>  					struct page *newpage);
+>  
+> +/**
+> + * mem_cgroup_toggle_oom - toggle the memcg OOM killer for the current task
+> + * @new: true to enable, false to disable
+> + *
+> + * Toggle whether a failed memcg charge should invoke the OOM killer
+> + * or just return -ENOMEM.  Returns the previous toggle state.
+> + */
+> +static inline bool mem_cgroup_toggle_oom(bool new)
+> +{
+> +	bool old;
+> +
+> +	old = current->memcg_oom.may_oom;
+> +	current->memcg_oom.may_oom = new;
+> +
+> +	return old;
+> +}
+> +
+> +static inline void mem_cgroup_enable_oom(void)
+> +{
+> +	bool old = mem_cgroup_toggle_oom(true);
+> +
+> +	WARN_ON(old == true);
+> +}
+> +
+> +static inline void mem_cgroup_disable_oom(void)
+> +{
+> +	bool old = mem_cgroup_toggle_oom(false);
+> +
+> +	WARN_ON(old == false);
+> +}
+> +
+>  #ifdef CONFIG_MEMCG_SWAP
+>  extern int do_swap_account;
+>  #endif
+> @@ -348,6 +379,19 @@ static inline void mem_cgroup_end_update_page_stat(struct page *page,
+>  {
+>  }
+>  
+> +static inline bool mem_cgroup_toggle_oom(bool new)
+> +{
+> +	return false;
+> +}
+> +
+> +static inline void mem_cgroup_enable_oom(void)
+> +{
+> +}
+> +
+> +static inline void mem_cgroup_disable_oom(void)
+> +{
+> +}
+> +
+>  static inline void mem_cgroup_inc_page_stat(struct page *page,
+>  					    enum mem_cgroup_page_stat_item idx)
+>  {
+> diff --git a/include/linux/sched.h b/include/linux/sched.h
+> index fc09d21..4b3effc 100644
+> --- a/include/linux/sched.h
+> +++ b/include/linux/sched.h
+> @@ -1398,6 +1398,9 @@ struct task_struct {
+>  		unsigned long memsw_nr_pages; /* uncharged mem+swap usage */
+>  	} memcg_batch;
+>  	unsigned int memcg_kmem_skip_account;
+> +	struct memcg_oom_info {
+> +		unsigned int may_oom:1;
+> +	} memcg_oom;
+>  #endif
+>  #ifdef CONFIG_UPROBES
+>  	struct uprobe_task *utask;
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index a6981fe..4a73e1a 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -1618,6 +1618,7 @@ int filemap_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+>  	struct inode *inode = mapping->host;
+>  	pgoff_t offset = vmf->pgoff;
+>  	struct page *page;
+> +	bool memcg_oom;
+>  	pgoff_t size;
+>  	int ret = 0;
+>  
+> @@ -1626,7 +1627,11 @@ int filemap_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+>  		return VM_FAULT_SIGBUS;
+>  
+>  	/*
+> -	 * Do we have something in the page cache already?
+> +	 * Do we have something in the page cache already?  Either
+> +	 * way, try readahead, but disable the memcg OOM killer for it
+> +	 * as readahead is optional and no errors are propagated up
+> +	 * the fault stack.  The OOM killer is enabled while trying to
+> +	 * instantiate the faulting page individually below.
+>  	 */
+>  	page = find_get_page(mapping, offset);
+>  	if (likely(page) && !(vmf->flags & FAULT_FLAG_TRIED)) {
+> @@ -1634,10 +1639,14 @@ int filemap_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+>  		 * We found the page, so try async readahead before
+>  		 * waiting for the lock.
+>  		 */
+> +		memcg_oom = mem_cgroup_toggle_oom(false);
+>  		do_async_mmap_readahead(vma, ra, file, page, offset);
+> +		mem_cgroup_toggle_oom(memcg_oom);
+>  	} else if (!page) {
+>  		/* No page in the page cache at all */
+> +		memcg_oom = mem_cgroup_toggle_oom(false);
+>  		do_sync_mmap_readahead(vma, ra, file, offset);
+> +		mem_cgroup_toggle_oom(memcg_oom);
+>  		count_vm_event(PGMAJFAULT);
+>  		mem_cgroup_count_vm_event(vma->vm_mm, PGMAJFAULT);
+>  		ret = VM_FAULT_MAJOR;
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 00a7a66..30ae46a 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2614,7 +2614,7 @@ static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  		return CHARGE_RETRY;
+>  
+>  	/* If we don't need to call oom-killer at el, return immediately */
+> -	if (!oom_check)
+> +	if (!oom_check || !current->memcg_oom.may_oom)
+>  		return CHARGE_NOMEM;
+>  	/* check OOM */
+>  	if (!mem_cgroup_handle_oom(mem_over_limit, gfp_mask, get_order(csize)))
+> diff --git a/mm/memory.c b/mm/memory.c
+> index f2ab2a8..58ef726 100644
+> --- a/mm/memory.c
+> +++ b/mm/memory.c
+> @@ -3752,22 +3752,14 @@ unlock:
+>  /*
+>   * By the time we get here, we already hold the mm semaphore
+>   */
+> -int handle_mm_fault(struct mm_struct *mm, struct vm_area_struct *vma,
+> -		unsigned long address, unsigned int flags)
+> +static int __handle_mm_fault(struct mm_struct *mm, struct vm_area_struct *vma,
+> +			     unsigned long address, unsigned int flags)
+>  {
+>  	pgd_t *pgd;
+>  	pud_t *pud;
+>  	pmd_t *pmd;
+>  	pte_t *pte;
+>  
+> -	__set_current_state(TASK_RUNNING);
+> -
+> -	count_vm_event(PGFAULT);
+> -	mem_cgroup_count_vm_event(mm, PGFAULT);
+> -
+> -	/* do counter updates before entering really critical section. */
+> -	check_sync_rss_stat(current);
+> -
+>  	if (unlikely(is_vm_hugetlb_page(vma)))
+>  		return hugetlb_fault(mm, vma, address, flags);
+>  
+> @@ -3851,6 +3843,34 @@ retry:
+>  	return handle_pte_fault(mm, vma, address, pte, pmd, flags);
+>  }
+>  
+> +int handle_mm_fault(struct mm_struct *mm, struct vm_area_struct *vma,
+> +		    unsigned long address, unsigned int flags)
+> +{
+> +	int ret;
+> +
+> +	__set_current_state(TASK_RUNNING);
+> +
+> +	count_vm_event(PGFAULT);
+> +	mem_cgroup_count_vm_event(mm, PGFAULT);
+> +
+> +	/* do counter updates before entering really critical section. */
+> +	check_sync_rss_stat(current);
+> +
+> +	/*
+> +	 * Enable the memcg OOM handling for faults triggered in user
+> +	 * space.  Kernel faults are handled more gracefully.
+> +	 */
+> +	if (flags & FAULT_FLAG_USER)
+> +		mem_cgroup_enable_oom();
+> +
+> +	ret = __handle_mm_fault(mm, vma, address, flags);
+> +
+> +	if (flags & FAULT_FLAG_USER)
+> +		mem_cgroup_disable_oom();
+> +
+> +	return ret;
+> +}
+> +
+>  #ifndef __PAGETABLE_PUD_FOLDED
+>  /*
+>   * Allocate page upper directory.
+> -- 
+> 1.8.3.2
+> 
+
+-- 
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
