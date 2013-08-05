@@ -1,82 +1,120 @@
-From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.12] cgroup: make css_for_each_descendant()
-	and friends include the origin css in the iteration
-Date: Mon, 5 Aug 2013 14:57:23 -0400
-Message-ID: <20130805185723.GD7878@redhat.com>
-References: <20130804230703.GA12029@htj.dyndns.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCHSET cgroup/for-3.12] cgroup: make cgroup_event specific to
+ memcg
+Date: Mon, 5 Aug 2013 21:16:41 +0200
+Message-ID: <20130805191641.GA24003@dhcp22.suse.cz>
+References: <1375632446-2581-1-git-send-email-tj@kernel.org>
+ <20130805160107.GM10146@dhcp22.suse.cz>
+ <20130805162958.GF19631@mtj.dyndns.org>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=euSHhzGqiBPpYjVB0nfOl2PJdMiPxQN+BAtgUbmDYJ0=;
+        b=AFUc4IJs9ARp87qjRZ0dNdlDyvp3gSBTb74actjGWAKSWk1XkbyC8RnvovM9VHmh/J
+         TXiNLOjAutR3RXeRfIi2dm9XlYzWJlyn+2A/vWJVHVWMSp6Uur79pn8gLxUKNXR1IrL+
+         3QKZA3hE0lR2T9Qvc1i9A0BLtl5UIGCqrFcc3FokGPBChDPuQJhbkScR7WT3kmO19dzA
+         5IebmqxroMuzFdmqto7atgU133O07HbrZxQpCeeATKnQIvPnvpA00HWOe19oqtrk/4+N
+         QzlfPlCQsAEWN74oP3CZ+UqTCH0NdEsN3Oz/T9JXBYRP1KPf4iD4li29EHqIWnUynxne
+         Qc4A==
+Content-Disposition: inline
+In-Reply-To: <20130805162958.GF19631@mtj.dyndns.org>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20130804230703.GA12029-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: lizefan@huawei.com, hannes@cmpxchg.org, bsingharora@gmail.com, kamezawa.hiroyu@jp.fujitsu.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Sun, Aug 04, 2013 at 07:07:03PM -0400, Tejun Heo wrote:
-> I've been wanting to do this for some time and given all the recent
-> API updates now seems like a pretty good opportunity.  Verified
-> freezer and blkcg.  The conversions are mostly straight forward but
-> I'd much appreciate acks from controller maintainers.
+On Mon 05-08-13 12:29:58, Tejun Heo wrote:
+> Hello, Michal.
 > 
-> The patch is on top of
+> On Mon, Aug 05, 2013 at 06:01:07PM +0200, Michal Hocko wrote:
+> > Could you be more specific about what is so "overboard" about this
+> > interface? I am not familiar with internals much, so I cannot judge the
+> > complexity part, but I thought that eventfd was intended for this kind
+> > of kernel->userspace notifications.
 > 
->   cgroup/for-3.12 61584e3f4 ("cgroup: Merge branch 'for-3.11-fixes' into for-3.12")
-> + [1] cgroup: use cgroup_subsys_state as the primary subsystem interface handle
-> + [2] cgroup: make cgroup_event specific to memcg
-> 
-> and available in the following git branch.
-> 
->  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-descendant-update
-> 
-> Thanks.
-> 
-> [1] https://lkml.org/lkml/2013/8/1/722
-> [2] http://thread.gmane.org/gmane.linux.kernel.cgroups/8726
-> 
-> ------- 8< -------
-> 
-> From 0e84b0865ab8a87f1c1443e4777c20c7f14e13b6 Mon Sep 17 00:00:00 2001
-> From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Date: Sun, 4 Aug 2013 19:01:23 -0400
-> 
-> Previously, all css descendant iterators didn't include the origin
-> (root of subtree) css in the iteration.  The reasons were maintaining
-> consistency with css_for_each_child() and that at the time of
-> introduction more use cases needed skipping the origin anyway;
-> however, given that css_is_descendant() considers self to be a
-> descendant, omitting the origin css has become more confusing and
-> looking at the accumulated use cases rather clearly indicates that
-> including origin would result in simpler code overall.
-> 
-> While this is a change which can easily lead to subtle bugs, cgroup
-> API including the iterators has recently gone through major
-> restructuring and no out-of-tree changes will be applicable without
-> adjustments making this a relatively acceptable opportunity for this
-> type of change.
-> 
-> The conversions are mostly straight-forward.  If the iteration block
-> had explicit origin handling before or after, it's moved inside the
-> iteration.  If not, if (pos == origin) continue; is added.  Some
-> conversions add extra reference get/put around origin handling by
-> consolidating origin handling and the rest.  While the extra ref
-> operations aren't strictly necessary, this shouldn't cause any
-> noticeable difference.
+> It's just way over-engineered like many other things in cgroup, most
+> likely misguided by the appearance that cgroup could be delegated and
+> accessed by multiple actors concurrently.
 
-Looks good. Thanks for the heads up, saved some hours of head scratching
-:)
+I keep hearing that over and over. And I also keep hearing that there
+are users who do not like many simplifications because they are breaking
+their usecases. Users are those who matter to me. Hey some of them are
+even sane...
 
-Acked-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> The most clear example would be the vmpressure event.  When it could
+> have just called fsnotify_modify() unconditionally when the state
+> changes, now it involves parsing, dynamic list of events and so on
+> without actually adding any benefits.
 
+I am neither author nor user of this interface but my understanding is
+that there are different requirements from different usecases and it
+would be hard to satisfy them without having a way for userspace
+to tell the kernel what it is interested in. There was a discussion
+about edge vs. all-events triggered signaling recently for example.
+
+Besides that, is fsnotify really an interface to be used under memory
+pressure? I might be wrong but from a quick look fsnotify depends on
+GFP_KERNEL allocation which would be no-go for oom_control at least.
+How does the reclaim context gets to struct file to notify? I am pretty
+sure we would get to more and more questions when digging further.
+
+I am all for simplifications, but removing interfaces just because you
+feel they are "over-done" is not a way to go IMHO. In this particular
+case you are removing an interface from cgroup core which has users,
+and will have to support them for very long time. "It is just memcg
+so move it there" is not a way that different subsystems should work
+together and I am _not_ going to ack such a move. All the flexibility that
+you are so complaining about is hidden from the cgroup core in register
+callbacks and the rest is only the core infrastructure (registration and
+unregistration).
+
+And btw. a common notification interface at least makes things
+consistent and prevents controllers to invent their one purpose
+solutions.
+
+So I am really skeptical about this patch set. It doesn't give anything.
+It just moves a code which you do not like out of your sight hoping that
+something will change.
+
+There were mistakes done in the past. And some interfaces are really too
+flexible but that doesn't mean we should be militant about everything.
+
+> For the usage ones, configurability makes some sense but even then
+> just giving it a single array of event points of limited size would be
+> sufficient.
+
+This would be a question for users. I am not one of those so I cannot
+tell you but I certainly cannot claim that something more coarse would
+be sufficient either.
+
+> It's just way over-done.
+
+> > So you think that vmpressure, oom notification or thresholds are
+> > an abuse of this interface? What would you consider a reasonable
+> > replacement for those notifications?  Or do you think that controller
+> > shouldn't be signaling any conditions to the userspace at all?
+> 
+> I don't think the ability to generate events are an abuse, just that
+> the facility itself is way over-engineered.  Just generate a file
+> changed event unconditionally for vmpressure and oom and maybe
+> implement configureable cadence or single set of threshold array for
+> threshold events.  These are things which can and should be done in a
+> a few tens of lines of code with far simpler interface. 
+
+These are strong words without any justification.
+
+[...]
 -- 
-Aristeu
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
