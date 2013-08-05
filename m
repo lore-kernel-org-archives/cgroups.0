@@ -1,141 +1,60 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET cgroup/for-3.12] cgroup: make cgroup_event specific to
- memcg
-Date: Mon, 5 Aug 2013 15:44:31 -0400
-Message-ID: <20130805194431.GD23751@mtj.dyndns.org>
-References: <1375632446-2581-1-git-send-email-tj@kernel.org>
- <20130805160107.GM10146@dhcp22.suse.cz>
- <20130805162958.GF19631@mtj.dyndns.org>
- <20130805191641.GA24003@dhcp22.suse.cz>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] memcg: don't initialize kmem-cache destroying work for
+ root caches
+Date: Mon, 5 Aug 2013 13:05:30 -0700
+Message-ID: <20130805130530.fd38ec4866ba7f1d9a400218@linux-foundation.org>
+References: <1375718980-22154-1-git-send-email-avagin@openvz.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=/d5I/4O/GbgjHGo1fMMhETf49xXlLpGmBrNUEJHr4vk=;
-        b=PNrbnoumks5NxVxt3zoBQkJpshmf/julOWjJmW/fOLCUE/84oWKeD/c28d4hufBla8
-         aJqH6hn31u9zK65iXE1MsmN5030p1KgB31tM1mwvhs7tWK0fd2avSj0VULUyMKLgb/GL
-         DoqhdC6xkT3Kou47oDZEEtbnyreSuzXV06pc8f4fn/09z81dLiTny95ycHbl1GIgeXWx
-         Rb8h4SMc4OR9jP22eUjvMWJpQ3gm/yaAzfAsRlfXVlnPE/yVTWVqgJdY8bdOILfRHme8
-         higegcIE863iQVKG9np6GHI3YGvKG6KLGMJllSuO6kypVyRmaGR7huSCu4p3/flrLdTj
-         XGrA==
-Content-Disposition: inline
-In-Reply-To: <20130805191641.GA24003@dhcp22.suse.cz>
+In-Reply-To: <1375718980-22154-1-git-send-email-avagin@openvz.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: lizefan@huawei.com, hannes@cmpxchg.org, bsingharora@gmail.com, kamezawa.hiroyu@jp.fujitsu.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Andrey Vagin <avagin@openvz.org>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Glauber Costa <glommer@openvz.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Konstantin Khlebnikov <khlebnikov@openvz.org>, stable@vger.kernel.org
 
-Hey, Michal.
+On Mon,  5 Aug 2013 20:09:40 +0400 Andrey Vagin <avagin@openvz.org> wrote:
 
-On Mon, Aug 05, 2013 at 09:16:41PM +0200, Michal Hocko wrote:
-> I keep hearing that over and over. And I also keep hearing that there
-> are users who do not like many simplifications because they are breaking
-> their usecases. Users are those who matter to me. Hey some of them are
-> even sane...
-
-There needs to be some balance between serving use cases and cutting
-off edge ones which pollutes the code with unjustified complexity.  We
-went way far to one end and are trying to cut back, so complaints are
-expected.
-
-> Besides that, is fsnotify really an interface to be used under memory
-> pressure? I might be wrong but from a quick look fsnotify depends on
-> GFP_KERNEL allocation which would be no-go for oom_control at least.
-
-Yeap, I'm pretty sure you're wrong.  I didn't follow the development
-but this is wrapper to combine inotify and dnotify and kernel's main
-FS event mechanism and none of the two mechanisms required memory
-allocation during delivery.
-
-> How does the reclaim context gets to struct file to notify? I am pretty
-> sure we would get to more and more questions when digging further.
-
-The file is optional and probably just to extract path for dnotify, I
-think.  Not sure about namespace implications but I'll build cgroup
-level interface for it so that controllers won't have to deal with it
-directly.  ie. there'll be css_notify_file(css, cfe) interface.
-
-> I am all for simplifications, but removing interfaces just because you
-> feel they are "over-done" is not a way to go IMHO. In this particular
-
-We can keep it around but it's a pretty good time to gradually move
-towards something saner as we're essentially doing v2 of the
-interface.  Note that there's no reason for the interface to disappear
-immediately.  You can keep it and there won't be any problem for it to
-co-exist with simpler mechanism.
-
-> case you are removing an interface from cgroup core which has users,
-> and will have to support them for very long time. "It is just memcg
-> so move it there" is not a way that different subsystems should work
-> together and I am _not_ going to ack such a move. All the flexibility that
-> you are so complaining about is hidden from the cgroup core in register
-> callbacks and the rest is only the core infrastructure (registration and
-> unregistration).
-
-memcg is the only user and will stay that way.  If you wanna keep it
-around, be my guest.  Also, cftype is planned to be simplified so that
-it just provides seq_file interface and the types become helper
-routines like a normal file callback interface.  There'll be nothing
-tying the event file handling to cgroup core and it surely won't be
-used by anyone else.  memcg is and will be the only user.  It's the
-natural place for the code.
-
-> And btw. a common notification interface at least makes things
-> consistent and prevents controllers to invent their one purpose
-> solutions.
-
-We'll surely have a common notification interface which is simple -
-basically just one function - as it should be.
-
-> So I am really skeptical about this patch set. It doesn't give anything.
-> It just moves a code which you do not like out of your sight hoping that
-> something will change.
+> struct memcg_cache_params has a union. Different parts of this union
+> are used for root and non-root caches. A part with destroying work is
+> used only for non-root caches.
 > 
-> There were mistakes done in the past. And some interfaces are really too
-> flexible but that doesn't mean we should be militant about everything.
+> I fixed the same problem in another place v3.9-rc1-16204-gf101a94, but
+> didn't notice this one.
 > 
-> > For the usage ones, configurability makes some sense but even then
-> > just giving it a single array of event points of limited size would be
-> > sufficient.
-> 
-> This would be a question for users. I am not one of those so I cannot
-> tell you but I certainly cannot claim that something more coarse would
-> be sufficient either.
+> Cc: <stable@vger.kernel.org>    [3.9.x]
 
-I can tell you because there will be a single agent of the hierarchy
-with unified hierarchy and both control and events will be routed
-through it.  As such usage restriction rises from inherent properties
-of the current cgroup design and implementation, it isn't something
-which can be properly worked around.
+hm, why the cc:stable?
 
-> > It's just way over-done.
-> 
-> > > So you think that vmpressure, oom notification or thresholds are
-> > > an abuse of this interface? What would you consider a reasonable
-> > > replacement for those notifications?  Or do you think that controller
-> > > shouldn't be signaling any conditions to the userspace at all?
-> > 
-> > I don't think the ability to generate events are an abuse, just that
-> > the facility itself is way over-engineered.  Just generate a file
-> > changed event unconditionally for vmpressure and oom and maybe
-> > implement configureable cadence or single set of threshold array for
-> > threshold events.  These are things which can and should be done in a
-> > a few tens of lines of code with far simpler interface. 
-> 
-> These are strong words without any justification.
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3195,11 +3195,11 @@ int memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *s,
+>  	if (!s->memcg_params)
+>  		return -ENOMEM;
+>  
+> -	INIT_WORK(&s->memcg_params->destroy,
+> -			kmem_cache_destroy_work_func);
+>  	if (memcg) {
+>  		s->memcg_params->memcg = memcg;
+>  		s->memcg_params->root_cache = root_cache;
+> +		INIT_WORK(&s->memcg_params->destroy,
+> +				kmem_cache_destroy_work_func);
+>  	} else
+>  		s->memcg_params->is_root_cache = true;
 
-If you think this level of flexibility is healthy, we'll have to agree
-to disagree.  Just look at it this way - this is memcg specific piece
-of code and this patchset is just natural reorganization of code.
+So the bug here is that we'll scribble on some entries in
+memcg_caches[].  Those scribbles may or may not be within the part of
+that array which is actually used.  If there's code which expects
+memcg_caches[] entries to be zeroed at initialisation then yes, we have
+a problem.
 
-Thanks.
+But I rather doubt whether this bug was causing runtime problems?
 
--- 
-tejun
+
+Presently memcg_register_cache() allocates too much memory for the
+memcg_caches[] array.  If that was fixed then this INIT_WORK() might
+scribble into unknown memory, which is of course serious.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
