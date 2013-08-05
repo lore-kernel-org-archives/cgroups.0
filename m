@@ -1,43 +1,80 @@
-From: Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: [PATCH 09/23] cgroup: add subsys backlink pointer to cftype
-Date: Mon, 5 Aug 2013 08:49:51 -0400
-Message-ID: <20130805124951.GB2274@redhat.com>
+From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 12/23] cgroup: pass around cgroup_subsys_state instead of
+	cgroup in file methods
+Date: Mon, 5 Aug 2013 10:19:55 -0400
+Message-ID: <20130805141955.GC2274@redhat.com>
 References: <1375393801-4817-1-git-send-email-tj@kernel.org>
- <1375393801-4817-10-git-send-email-tj@kernel.org>
+	<1375393801-4817-13-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1375393801-4817-10-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: lizefan@huawei.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1375393801-4817-13-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Thu, Aug 01, 2013 at 05:49:47PM -0400, Tejun Heo wrote:
-> cgroup is transitioning to using css (cgroup_subsys_state) instead of
-> cgroup as the primary subsystem handle.  The cgroupfs file interface
-> will be converted to use css's which requires finding out the
-> subsystem from cftype so that the matching css can be determined from
-> the cgroup.
+On Thu, Aug 01, 2013 at 05:49:50PM -0400, Tejun Heo wrote:
+> cgroup is currently in the process of transitioning to using struct
+> cgroup_subsys_state * as the primary handle instead of struct cgroup.
+> Please see the previous commit which converts the subsystem methods
+> for rationale.
 > 
-> This patch adds cftype->ss which points to the subsystem the file
-> belongs to.  The field is initialized while a cftype is being
-> registered.  This makes it unnecessary to explicitly specify the
-> subsystem for other cftype handling functions.  @ss argument dropped
-> from various cftype handling functions.
+> This patch converts all cftype file operations to take @css instead of
+> @cgroup.  cftypes for the cgroup core files don't have their subsytem
+> pointer set.  These will automatically use the dummy_css added by the
+> previous patch and can be converted the same way.
 > 
-> This patch shouldn't introduce any behavior differences.
+> Most subsystem conversions are straight forwards but there are some
+> interesting ones.
 > 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Vivek Goyal <vgoyal@redhat.com>
-> Cc: Jens Axboe <axboe@kernel.dk>
+> * freezer: update_if_frozen() is also converted to take @css instead
+>   of @cgroup for consistency.  This will make the code look simpler
+>   too once iterators are converted to use css.
+> 
+> * memory/vmpressure: mem_cgroup_from_css() needs to be exported to
+>   vmpressure while mem_cgroup_from_cont() can be made static.
+>   Updated accordingly.
+> 
+> * cpu: cgroup_tg() doesn't have any user left.  Removed.
+> 
+> * cpuacct: cgroup_ca() doesn't have any user left.  Removed.
+> 
+> * hugetlb: hugetlb_cgroup_form_cgroup() doesn't have any user left.
+>   Removed.
+> 
+> * net_cls: cgrp_cls_state() doesn't have any user left.  Removed.
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+> Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> Cc: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Cc: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: Matt Helsley <matthltc-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>
+> Cc: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+> Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+> Cc: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
 > ---
->  block/blk-cgroup.c     |  2 +-
+>  block/blk-cgroup.c         |   6 +-
+>  block/blk-throttle.c       |  32 ++++-----
+>  block/cfq-iosched.c        |  90 ++++++++++++-------------
 
-blk-cgroup bits are simple here. Ack for these.
+blk-cgroup.c, blk-throttle.c and cfq-iosched.c bits look good to me.
 
-Acked-by: Vivek Goyal <vgoyal@redhat.com>
+Acked-by: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
 Vivek
