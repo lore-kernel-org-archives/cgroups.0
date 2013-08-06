@@ -1,84 +1,95 @@
-From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-Subject: Re: [PATCH v2 08/23] cgroup: pass around cgroup_subsys_state instead
- of cgroup in subsystem methods
-Date: Tue, 6 Aug 2013 09:19:45 +0200
-Message-ID: <5200A391.9030208@bmw-carit.de>
-References: <1375393801-4817-1-git-send-email-tj@kernel.org> <1375393801-4817-9-git-send-email-tj@kernel.org> <20130802202408.GH29736@mtj.dyndns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 3/5] cgroup, memcg: move cgroup_event implementation to
+ memcg
+Date: Tue, 6 Aug 2013 10:09:04 -0400
+Message-ID: <20130806140904.GA9814@mtj.dyndns.org>
+References: <1375632446-2581-1-git-send-email-tj@kernel.org>
+ <1375632446-2581-4-git-send-email-tj@kernel.org>
+ <CAKTCnz=DdG6QD0yPJ1poRZk0NYrYHdkmabvCXY-AR2qC1GSzYA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130802202408.GH29736-9pTldWuhBndy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=gmEfAUGqBNKKfUvkz8PDPU8/dnolHzUIgpWdrlL521c=;
+        b=fise2IFxikdhHPg7D+N6LlcEPtHRYdsV7wDS2HGwFbPrs5TkmXllJ1PRVtBOrDentn
+         zR1Cb+sp3rV5pEGhsoGMUwe73Y5a5FPRcANvZ6fMa2iYbDEazFp2cOQ0g8yGWR4ba/J2
+         6gdxwE72DA+7u4l5TxTGIXzuSTEmMAoUFKU8km6AQe9wNfk4w7JLgjVOAg2JhxdVoVVL
+         38zvzrihQPGDYjAyRbY2sf96Z/MBpbX74p2O+pAjXRpRc5tYd4+VeMkiIXkL/6nJm1oE
+         oflI22MXi1jHYaEudx3tR+GJCniDrZpYwEWCsimGr2VdXmwK5Cw4KLpl9AnHPnxbNBwh
+         4F3Q==
+Content-Disposition: inline
+In-Reply-To: <CAKTCnz=DdG6QD0yPJ1poRZk0NYrYHdkmabvCXY-AR2qC1GSzYA@mail.gmail.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Matt Helsley <matthltc-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Balbir Singh <bsingharora@gmail.com>
+Cc: lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On 08/02/2013 10:24 PM, Tejun Heo wrote:
-> cgroup is currently in the process of transitioning to using struct
-> cgroup_subsys_state * as the primary handle instead of struct cgroup *
-> in subsystem implementations for the following reasons.
->
-> * With unified hierarchy, subsystems will be dynamically bound and
->    unbound from cgroups and thus css's (cgroup_subsys_state) may be
->    created and destroyed dynamically over the lifetime of a cgroup,
->    which is different from the current state where all css's are
->    allocated and destroyed together with the associated cgroup.  This
->    in turn means that cgroup_css() should be synchronized and may
->    return NULL, making it more cumbersome to use.
->
-> * Differing levels of per-subsystem granularity in the unified
->    hierarchy means that the task and descendant iterators should behave
->    differently depending on the specific subsystem the iteration is
->    being performed for.
->
-> * In majority of the cases, subsystems only care about its part in the
->    cgroup hierarchy - ie. the hierarchy of css's.  Subsystem methods
->    often obtain the matching css pointer from the cgroup and don't
->    bother with the cgroup pointer itself.  Passing around css fits
->    much better.
->
-> This patch converts all cgroup_subsys methods to take @css instead of
-> @cgroup.  The conversions are mostly straight-forward.  A few
-> noteworthy changes are
->
-> * ->css_alloc() now takes css of the parent cgroup rather than the
->    pointer to the new cgroup as the css for the new cgroup doesn't
->    exist yet.  Knowing the parent css is enough for all the existing
->    subsystems.
->
-> * In kernel/cgroup.c::offline_css(), unnecessary open coded css
->    dereference is replaced with local variable access.
->
-> This patch shouldn't cause any behavior differences.
->
-> v2: Unnecessary explicit cgrp->subsys[] deref in css_online() replaced
->      with local variable @css as suggested by Li Zefan.
->
->      Rebased on top of new for-3.12 which includes for-3.11-fixes so
->      that ->css_free() invocation added by da0a12caff ("cgroup: fix a
->      leak when percpu_ref_init() fails") is converted too.  Suggested
->      by Li Zefan.
->
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-> Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Cc: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: Matt Helsley <matthltc-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>
-> Cc: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-> Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-> Cc: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
+Hello, Balbir.
 
-netprio and cls part:
+On Tue, Aug 06, 2013 at 08:56:34AM +0530, Balbir Singh wrote:
+> [off-topic] Has the unified hierarchy been agreed upon? I did not
+> follow that thread
 
-Acked-By: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+I consider it agreed upon enough.  There of course are objections but
+I feel fairly comfortable with the amount of existing consensus and
+considering the current state of cgroup in general, especially the API
+leaks, I don't think we have many other choices.  The devil is always
+in the details but unless we meet a major technical barrier, I'm
+pretty sure it's happening.
 
-cheers,
-daniel
+> > events at fixed points, or if that's too restrictive, configureable
+> > cadence or single set of configureable points should be enough.
+> 
+> Nit-pick: typo on the spelling of configurable
 
+Will update.
 
+> Tejun, I think the framework was designed to be flexible. Do you see
+> cgroup subsystems never using this?
+
+I can't be a hundred percent sure that we won't need events which are
+configureable per-listener but it's highly unlikely given that we're
+moving onto single agent model and the nature of event delivery -
+spurious events are unlikely to be noticeable unless the frequency is
+very high.  In general, as anything, aiming for extremes isn't a
+healthy design practice.  Maximum flexibility sounds good in isolation
+but nothing is free and it entails unneeded complexity both in
+implementation and usage.  Note that even for memcg, both oom and
+vmpressure don't benefit in any way from all the added complexity at
+all.  The only other place that I can see event being useful at the
+moment is freezer state change notification and that also would only
+require unconditional file modified notification.
+
+> > +static int cgroup_write_event_control(struct cgroup_subsys_state *css,
+> > +                                     struct cftype *cft, const char *buffer)
+> > +{
+> > +       struct cgroup *cgrp = css->cgroup;
+> > +       struct cgroup_event *event;
+> > +       struct cgroup *cgrp_cfile;
+> > +       unsigned int efd, cfd;
+> > +       struct file *efile;
+> > +       struct file *cfile;
+> > +       char *endp;
+> > +       int ret;
+> > +
+> 
+> Can we assert that buffer is NOT NULL here?
+
+The patch moves the code as-is as things become difficult to review
+otherwise.  After the patchset, it belongs to memcg, please feel free
+to modify as memcg people see fit.
+
+Thanks.
+
+-- 
+tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
