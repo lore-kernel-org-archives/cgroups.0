@@ -1,68 +1,107 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/3] memcg: limit the number of thresholds per-memcg
-Date: Wed, 7 Aug 2013 09:22:10 -0400
-Message-ID: <20130807132210.GD27006@htj.dyndns.org>
-References: <1375874907-22013-1-git-send-email-mhocko@suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCHSET cgroup/for-3.12] cgroup: make cgroup_event specific to
+ memcg
+Date: Wed, 7 Aug 2013 15:26:13 +0200
+Message-ID: <20130807132613.GH8184@dhcp22.suse.cz>
+References: <1375632446-2581-1-git-send-email-tj@kernel.org>
+ <20130805160107.GM10146@dhcp22.suse.cz>
+ <20130805162958.GF19631@mtj.dyndns.org>
+ <20130805191641.GA24003@dhcp22.suse.cz>
+ <20130805194431.GD23751@mtj.dyndns.org>
+ <20130806155804.GC31138@dhcp22.suse.cz>
+ <20130806161509.GB10779@mtj.dyndns.org>
+ <20130807121836.GF8184@dhcp22.suse.cz>
+ <20130807124321.GA27006@htj.dyndns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=jefXM4hjuPCAw3eQnr55F62dQ8eY53RzcYQRHKhx40U=;
-        b=BmtjMLBReI797F+zBJ0X2/W3kG/7y8HmI7UEAgJ9TcuDm3SnPb/NjQCTHlAacnl902
-         x5CF/m1w60tJzG60hu22DLuszrTD+iYyMi9R8gkhDeGieL5ZLOQYhB7w/9dX03RNOL/T
-         ja/IwMZtP2S88/0Ga11NBqO7nbD2R+wjtVI2sHdJy5ZlavpnVjy8QcJvuRSLQUJAy9av
-         Oww9rXYsWW9r+56UQTM7s55M8ToD1N2E6pb1Qu8XjthL30VVqRqGURTFek4CDd4jc/Lj
-         UNNczPlFbyjhxtWcZ1qucqq/PnJUGnVPxQaMpIGLj5DSNWyXqQDcRQA6yWyXnlCXb18j
-         gQ6w==
 Content-Disposition: inline
-In-Reply-To: <1375874907-22013-1-git-send-email-mhocko-AlSwsSmVLrQ@public.gmane.org>
+In-Reply-To: <20130807124321.GA27006-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Anton Vorontsov <anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
-
-On Wed, Aug 07, 2013 at 01:28:25PM +0200, Michal Hocko wrote:
-> There is no limit for the maximum number of threshold events registered
-> per memcg. This might lead to an user triggered memory depletion if a
-> regular user is allowed to register on memory.[memsw.]usage_in_bytes
-> eventfd interface.
+On Wed 07-08-13 08:43:21, Tejun Heo wrote:
+> Hello, Michal.
 > 
-> Let's be more strict and cap the number of events that might be
-> registered. MAX_THRESHOLD_EVENTS value is more or less random. The
-> expectation is that it should be high enough to cover reasonable
-> usecases while not too high to allow excessive resources consumption.
-> 1024 events consume something like 16KB which shouldn't be a big deal
-> and it should be good enough.
+> On Wed, Aug 07, 2013 at 02:18:36PM +0200, Michal Hocko wrote:
+> > How is it specific to memcg? The fact only memcg uses the interface
+> > doesn't imply it is memcg specific.
+> 
+> I don't follow.  It's only for memcg.  That is *by definition* memcg
+> specific.  It's the verbatim meaning of the word.
 
-I don't think the memory consumption per-se is the issue to be handled
-here (as kernel memory consumption is a different generic problem) but
-rather that all listeners, regardless of their priv level, cgroup
-membership and so on, end up contributing to this single shared
-contiguous table, which makes it quite easy to do DoS attack on it if
-the event control is actually delegated to untrusted security domain,
-which BTW kinda makes all these complexities kinda pointless as it
-nullifies the only use case (many un-coordinated listeners watching
-different thresholds) which the event mechanism can actually do
-better.
+My understanding of "memcg specific" is that it uses memcg specific
+code/data structures. But let's not play with words.
 
-A proper fix would be making it build sorted data structure, be it
-list or tree, and letting each listener insert its own probe at the
-appropriate position and updating the event generation maintain cursor
-in the tree and fire events as appropriate, but given that the whole
-usage model is being obsoleted, it probably isn't worth doing that and
-this fixed limit is better than just letting things go and allow
-allocation to fail at some point, I suppose.
+> Now, I do
+> understand that it can be a concern the implementation details as-is
+> could be a bit too invasive into cgroup core to be moved to memcg, but
+> that's something we can work on, right?
 
-Can you please update the patch description to reflect the actual
-problem?
+Does it really make sense to work on this interface if it is planned to
+be replaced by something different. Isn't that just a waste of time?
 
-Thanks.
+> Can you at least agree that the feature is nmemcg specific and it'd be
+> better to be located in memcg if possible?  That really isn't not much
+> to ask and is a logical thing to do.
 
+I would rather see it not changed unless it really is a big win in the
+cgroup core. So far I do not see anything like that (just look at
+__cgroup_from_dentry which needs to be exported to allow for the move).
+You reduce the amount of code in cgroup.c, alright, but the code
+doesn't go away really. It just moves out of your sight and moves the
+same burden on somebody else without providing a new generic interface.
+
+> > There are other ways to achieve the same. E.g. not ack new usage of
+> > register callback users. We have done similar with other things like
+> > use_hierarchy...
+> 
+> Yes, but those are all inferior to actually moving the code where it
+> belongs.  Those makes the code harder to follow and people
+> misunderstand and waste time working on stuff (either in the core or
+> controllers) which eventually end up getting nacked.  Why do that when
+> we can easily do better?  What's the rationale behind that?
+
+If somebody needs a notification interface (and there is no one available
+right now) then you cannot prevent from such a pointless work anyway...
+
+> > The cleanup is removing 2 callbacks with a cost of moving non-memcg
+> > specific code inside memcg. That is what I am objecting to.
+> 
+> I don't really get your "non-memcg" specific code assertion when it is
+> by definition memcg-specific.  What are you talking about?
+
+cgroup_event_* don't sound memcg specific at all. They are playing with
+cgroup dentry reference counting and do a generic functionality which
+memcg doesn't need to know about.
+
+> > I will not repeat myself. We seem to disagree on where the code belongs.
+> > As I've said I will not ack this code, try to find somebody else who
+> > think it is a good idea. I do not see any added value.
+> 
+> Nacking is part of your authority as maintainer but you should still
+> provide plausible rationale for that.
+
+I didn't say I Nack it. I said I won't Ack it. If Johannes or Kamezawa
+think this is OK and another bloat in memcg is not a big deal I will not
+block it. I won't be happy but how is the life.
+
+> Are you saying that even if the
+> code is restructured so that it's not invasive into cgroup core, you
+> are still gonna disagree with it because it's still somehow not
+> memcg-specifc?
+
+I wouldn't object to having non-cgroup internals playing variant. I just
+do not think it makes sense to invest time to something that should go
+away long term.
+
+> Please don't repeat yourself but do explain your rationale.  That's
+> part of your duty as a maintainer too.
+
+I think I am clear what I do not like about this move.
 -- 
-tejun
+Michal Hocko
+SUSE Labs
