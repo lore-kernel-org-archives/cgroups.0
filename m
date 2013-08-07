@@ -1,15 +1,13 @@
 From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH 2/3] memcg: Limit the number of events registered on
- oom_control
-Date: Wed, 7 Aug 2013 15:37:46 +0200
-Message-ID: <20130807133746.GI8184@dhcp22.suse.cz>
+Subject: Re: [PATCH 1/3] memcg: limit the number of thresholds per-memcg
+Date: Wed, 7 Aug 2013 15:46:54 +0200
+Message-ID: <20130807134654.GJ8184@dhcp22.suse.cz>
 References: <1375874907-22013-1-git-send-email-mhocko@suse.cz>
- <1375874907-22013-2-git-send-email-mhocko@suse.cz>
- <20130807130836.GB27006@htj.dyndns.org>
+ <20130807132210.GD27006@htj.dyndns.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20130807130836.GB27006@htj.dyndns.org>
+In-Reply-To: <20130807132210.GD27006@htj.dyndns.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -17,42 +15,43 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>
 Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, "Kirill A. Shutemov" <kirill@shutemov.name>, Anton Vorontsov <anton.vorontsov@linaro.org>
 
-On Wed 07-08-13 09:08:36, Tejun Heo wrote:
-> Hello, Michal.
+On Wed 07-08-13 09:22:10, Tejun Heo wrote:
+> Hello,
 > 
-> On Wed, Aug 07, 2013 at 01:28:26PM +0200, Michal Hocko wrote:
-> > There is no limit for the maximum number of oom_control events
-> > registered per memcg. This might lead to an user triggered memory
-> > depletion if a regular user is allowed to register events.
+> On Wed, Aug 07, 2013 at 01:28:25PM +0200, Michal Hocko wrote:
+> > There is no limit for the maximum number of threshold events registered
+> > per memcg. This might lead to an user triggered memory depletion if a
+> > regular user is allowed to register on memory.[memsw.]usage_in_bytes
+> > eventfd interface.
 > > 
 > > Let's be more strict and cap the number of events that might be
-> > registered. MAX_OOM_NOTIFY_EVENTS value is more or less random. The
+> > registered. MAX_THRESHOLD_EVENTS value is more or less random. The
 > > expectation is that it should be high enough to cover reasonable
 > > usecases while not too high to allow excessive resources consumption.
-> > 1024 events consume something like 24KB which shouldn't be a big deal
-> > and it should be good enough (even 1024 oom notification events sounds
-> > crazy).
+> > 1024 events consume something like 16KB which shouldn't be a big deal
+> > and it should be good enough.
 > 
-> I think putting restriction on usage_event makes sense as that builds
-> a shared contiguous table from all events which can't be attributed
-> correctly and makes it easy to trigger allocation failures due to
-> large order allocation but is this necessary for oom and vmpressure,
-> both of which allocate only for the listening task?
+> I don't think the memory consumption per-se is the issue to be handled
+> here (as kernel memory consumption is a different generic problem) but
+> rather that all listeners, regardless of their priv level, cgroup
+> membership and so on, end up contributing to this single shared
+> contiguous table,
 
-Once I was there I made them consistent in that regards.
+The table is per-memcg but you are right that everybody who has file
+write access to the particular group's usage file can register to it.
 
-> It isn't different from listening from epoll, for example.
+> which makes it quite easy to do DoS attack on it if
+> the event control is actually delegated to untrusted security domain,
 
-epoll limits the number of watchers, no?
+OK, I have obviously misunderstood your concern mentioned in the other
+email. Could you be more specific what is the DoS scenario which was
+your concern, then?
 
-> If there needs to be kernel memory limit, shouldn't that be handled by
-> kmemcg?
+[...]
+> Can you please update the patch description to reflect the actual
+> problem?
 
-kmemcg would surely help but turning it on just because of potential
-abuse of the event registration API sounds like an overkill.
-
-I think having a cap for user trigable kernel resources is a good thing
-in general.
+As soon as I understand what is your concern ;)
 -- 
 Michal Hocko
 SUSE Labs
