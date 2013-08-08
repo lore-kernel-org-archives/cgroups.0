@@ -1,129 +1,79 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 06/14] cgroup: add __rcu modifier to cgroup->subsys[]
-Date: Thu,  8 Aug 2013 16:13:43 -0400
-Message-ID: <1375992831-4650-7-git-send-email-tj@kernel.org>
+Subject: [PATCH 13/14] cgroup: move subsys file removal to kill_css()
+Date: Thu,  8 Aug 2013 16:13:50 -0400
+Message-ID: <1375992831-4650-14-git-send-email-tj@kernel.org>
 References: <1375992831-4650-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=JzuHxS+xTqpPl610A49fo3LfCYDOkmkWNiw2nMuw5BE=;
+        b=FFWhIZp7rgPVyRlQ12ORQy9MxpTswfL4eSvi2GTNWqAzPWRMHbHY8PK97TjrNDXTAc
+         tXsPiDBXTP5SDNqvKOd+XUTI884hl0eEz+3mlXbHV+4YAQmpD0LTX86P+83C9UepIxNv
+         bjQNWd7wAP/NxfqyRbT2HqigLKUYdaUnQ+VOqPzeNgtR60eVKvyggBHH351NI8TZhqHV
+         +EtKQnTcAuDm5u9baTBFr6yKdv5wREZgQ8m/pxUE2b9+z+gSifPkd5DUaYbdYB8iaLws
+         ObvxABhAKRtpQvNa3ugtHFJo8wNkxnBXwpYDBn/kVEHBAUzSYA8chKo2k200Air0/FWa
+         8XMA==
+In-Reply-To: <1375992831-4650-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=e2ZtwVWK1gWLhlZIfBsU3Dn2i9WP7HHXUDNgkeOzbbA=;
-	b=bR1qFzAd71U7/O6GWPX7GE1O4UhBoDVUc9WAY0N2KjIiPJWDZsZwZaYte+F3NAovE+
-	WEH1mL5hA00DSBJA3sFx35hmtMogh/ox3zvNoxXkrxKQ4EAmin5HbGwCOv0OTH3Bmghh
-	OSdftfzYIDk3/6K3RldJjOYfoh0SvzDyYgQhG21PUJsCYTcFJvjM/WZPsCUrVkE8eXOc
-	eDGv8wk6Ut4fgVipsB2eh5/Vg++45n1w+NVR+ngIBuv3zD5xUtoSTVN/+kqRFkCqqW0A
-	0+29mZ/2ZaBt/MSzCEWD+BKNOuTwLkDHR5KkS2X/D/z7ZKr/f2qsEZzv72tOW0dAZgTU
-	HbcA==
-In-Reply-To: <1375992831-4650-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-For the planned unified hierarchy, each css (cgroup_subsys_state) will
-be RCU protected so that it can be created and destroyed individually
-while allowing RCU accesses.  Previous changes ensured that all
-cgroup->subsys[] accesses use the cgroup_css() accessor.  This patch
-adds __rcu modifier to cgroup->subsys[], add matching RCU dereference
-in cgroup_css() and convert all assignments to either
-rcu_assign_pointer() or RCU_INIT_POINTER().
+With the planned unified hierarchy, individual css's will be created
+and destroyed dynamically across the lifetime of a cgroup.  To enable
+such usages, css destruction is being decoupled from cgroup
+destruction.  This patch moves subsys file removal from
+cgroup_destroy_locked() to kill_css().
 
-This change prepares for the actual RCUfication of css's and doesn't
-introduce any visible behavior change.  The conversion is verified
-with sparse and all accesses are properly RCU annotated.
+While this changes the order of destruction operations, the changes
+shouldn't be noticeable to cgroup subsystems or userland.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- include/linux/cgroup.h |  2 +-
- kernel/cgroup.c        | 19 ++++++++++++++-----
- 2 files changed, 15 insertions(+), 6 deletions(-)
+ kernel/cgroup.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 8a5dc91..eb200b5 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -204,7 +204,7 @@ struct cgroup {
- 	struct cgroup_name __rcu *name;
- 
- 	/* Private pointers for each registered subsystem */
--	struct cgroup_subsys_state *subsys[CGROUP_SUBSYS_COUNT];
-+	struct cgroup_subsys_state __rcu *subsys[CGROUP_SUBSYS_COUNT];
- 
- 	struct cgroupfs_root *root;
- 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index d63beff..c271016 100644
+index da5f5c2..d99ec53 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -229,11 +229,16 @@ static int cgroup_addrm_files(struct cgroup *cgrp, struct cftype cfts[],
-  * @subsys_id: the subsystem of interest
+@@ -4595,13 +4595,15 @@ static void css_killed_ref_fn(struct percpu_ref *ref)
+  * kill_css - destroy a css
+  * @css: css to destroy
   *
-  * Return @cgrp's css (cgroup_subsys_state) associated with @subsys_id.
-+ * This function must be called either under cgroup_mutex or
-+ * rcu_read_lock() and the caller is responsible for pinning the returned
-+ * css if it wants to keep accessing it outside the said locks.  This
-+ * function may return %NULL if @cgrp doesn't have @subsys_id enabled.
+- * This function initiates destruction of @css by putting its base
+- * reference.  ->css_offline() will be invoked asynchronously once
+- * css_tryget() is guaranteed to fail and when the reference count reaches
+- * zero, @css will be released.
++ * This function initiates destruction of @css by removing cgroup interface
++ * files and putting its base reference.  ->css_offline() will be invoked
++ * asynchronously once css_tryget() is guaranteed to fail and when the
++ * reference count reaches zero, @css will be released.
   */
- static struct cgroup_subsys_state *cgroup_css(struct cgroup *cgrp,
- 					      int subsys_id)
+ static void kill_css(struct cgroup_subsys_state *css)
  {
--	return cgrp->subsys[subsys_id];
-+	return rcu_dereference_check(cgrp->subsys[subsys_id],
-+				     lockdep_is_held(&cgroup_mutex));
- }
- 
- /* convenient tests for these bits */
-@@ -1072,8 +1077,10 @@ static int rebind_subsystems(struct cgroupfs_root *root,
- 			BUG_ON(!cgroup_css(cgroup_dummy_top, i));
- 			BUG_ON(cgroup_css(cgroup_dummy_top, i)->cgroup != cgroup_dummy_top);
- 
--			cgrp->subsys[i] = cgroup_dummy_top->subsys[i];
-+			rcu_assign_pointer(cgrp->subsys[i],
-+					   cgroup_css(cgroup_dummy_top, i));
- 			cgroup_css(cgrp, i)->cgroup = cgrp;
++	cgroup_clear_dir(css->cgroup, 1 << css->ss->subsys_id);
 +
- 			list_move(&ss->sibling, &root->subsys_list);
- 			ss->root = root;
- 			if (ss->bind)
-@@ -1088,8 +1095,10 @@ static int rebind_subsystems(struct cgroupfs_root *root,
+ 	/*
+ 	 * Killing would put the base ref, but we need to keep it alive
+ 	 * until after ->css_offline().
+@@ -4699,10 +4701,10 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 		cgroup_destroy_css_killed(cgrp);
  
- 			if (ss->bind)
- 				ss->bind(cgroup_css(cgroup_dummy_top, i));
-+
- 			cgroup_css(cgroup_dummy_top, i)->cgroup = cgroup_dummy_top;
--			cgrp->subsys[i] = NULL;
-+			RCU_INIT_POINTER(cgrp->subsys[i], NULL);
-+
- 			cgroup_subsys[i]->root = &cgroup_dummy_root;
- 			list_move(&ss->sibling, &cgroup_dummy_root.subsys_list);
- 
-@@ -4314,7 +4323,7 @@ static void init_cgroup_css(struct cgroup_subsys_state *css,
- 		css->flags |= CSS_ROOT;
- 
- 	BUG_ON(cgroup_css(cgrp, ss->subsys_id));
--	cgrp->subsys[ss->subsys_id] = css;
-+	rcu_assign_pointer(cgrp->subsys[ss->subsys_id], css);
- }
- 
- /* invoke ->css_online() on a new CSS and mark it online if successful */
-@@ -4962,7 +4971,7 @@ void cgroup_unload_subsys(struct cgroup_subsys *ss)
- 	 * also takes care of freeing the css_id.
+ 	/*
+-	 * Clear and remove @cgrp directory.  The removal puts the base ref
+-	 * but we aren't quite done with @cgrp yet, so hold onto it.
++	 * Clear the base files and remove @cgrp directory.  The removal
++	 * puts the base ref but we aren't quite done with @cgrp yet, so
++	 * hold onto it.
  	 */
- 	ss->css_free(cgroup_css(cgroup_dummy_top, ss->subsys_id));
--	cgroup_dummy_top->subsys[ss->subsys_id] = NULL;
-+	RCU_INIT_POINTER(cgroup_dummy_top->subsys[ss->subsys_id], NULL);
- 
- 	mutex_unlock(&cgroup_mutex);
- }
+-	cgroup_clear_dir(cgrp, cgrp->root->subsys_mask);
+ 	cgroup_addrm_files(cgrp, cgroup_base_files, false);
+ 	dget(d);
+ 	cgroup_d_remove_dir(d);
 -- 
 1.8.3.1
