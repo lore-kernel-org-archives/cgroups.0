@@ -1,136 +1,85 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 03/14] cgroup: add cgroup_subsys_state->parent
-Date: Thu,  8 Aug 2013 16:13:40 -0400
-Message-ID: <1375992831-4650-4-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 09/14] cgroup: bounce cgroup_subsys_state ref kill confirmation to a work item
+Date: Thu,  8 Aug 2013 16:13:46 -0400
+Message-ID: <1375992831-4650-10-git-send-email-tj@kernel.org>
 References: <1375992831-4650-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=5kX1P3wg02LmP5QQuBwQqQPc4D1s9TrihYvdBkI9JEs=;
-        b=LiXydF7ZXXpjYi5DtV7RCTLo3kPjU3qOecJrkBAKhSI3lE+bt7IZ2fbNAEcfk8uYk5
-         lL6kfJdOcEY/0BguH+ude8ojIrj9sr507EhWGmfDmDGftqeel541ALaw6fzCXDw75c0R
-         rx98CXOh5Xf3zx0ULXKd3WclkDwMEPNrMbMqbsvUWzcriyYK5634Ie9rGWWoYoLND+LZ
-         l/5/laCOWxCBSUDyvnlIeoHZp+Vhs4hAB6lBbGcMssdbwkeWtgtLBDJl3qd1J7A+C0ru
-         OncyzqDnsRm7BXdCubs3jMAlwES4tCcW5vwbDSQuPXaABL+srLNtRriWJjBgbJEkgkcL
-         +STQ==
-In-Reply-To: <1375992831-4650-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=xftLf4lFWcM81jXhRv3M6M69jOLuDmShzjALoy9HSnw=;
+        b=QJhylDKJk14NaXR9odsZE2yrKf/7xsG1mSdcAt5wbIaGpvjM/FOpVT6PibzKYlHQSN
+         ch2mJGOcHEEQ6m/6o/40+iVxbqJAYRKeQ+9AyDFpIrATlP7WECl9cyRN97KpD+jRQCNp
+         WqTah7i1I5ZQKip6ka3o7J2KUiT/tcjcg3YGewtdIGBZQbgaOSteQQU98NsB6yQrQPiE
+         f8gCF6o9H1DllSDj3wV7fiwVgxTYRTxDgxTwn6+NlUqbJpdpNEfJYIN4oDXi/mz64vkQ
+         Po3NYA8s3oKXYhiU1d4D+gH5fq2pkRaNzw1fplctQP28oUsw3rbLtyJSR+c2AYyMp9Yc
+         JbKA==
+In-Reply-To: <1375992831-4650-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com
-Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-With the planned unified hierarchy, css's (cgroup_subsys_state) will
-be RCU protected and allowed to be attached and detached dynamically
-over the course of a cgroup's lifetime.  This means that css's will
-stay accessible after being detached from its cgroup - the matching
-pointer in cgroup->subsys[] cleared - for ref draining and RCU grace
-period.
+css (cgroup_subsys_state) offlining, which requires process context,
+will be moved to ref kill confirmation.  In preparation, bounce
+css_killed handling through css->destroy_work.
 
-cgroup core still wants to guarantee that the parent css is never
-destroyed before its children and css_parent() always returns the
-parent regardless of the state of the child css as long as it's
-accessible.
+css_ref_killed_fn() is renamed to css_killed_ref_fn() so that it's
+consistent with the new css_killed_work_fn().
 
-This patch makes css's hold onto their parents and adds css->parent so
-that the parent css is never detroyed before its children and can be
-determined without consulting the cgroups.
+This patch adds an additional work item bouncing but doesn't change
+the actual logic.
 
-cgroup->dummy_css is also updated to point to the parent dummy_css;
-however, it doesn't need to worry about object lifetime as the parent
-cgroup is already pinned by the child.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- include/linux/cgroup.h | 13 ++++---------
- kernel/cgroup.c        | 18 +++++++++++++++---
- 2 files changed, 19 insertions(+), 12 deletions(-)
+ kernel/cgroup.c | 21 ++++++++++++++++++---
+ 1 file changed, 18 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 12d66fe..8a5dc91 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -75,6 +75,9 @@ struct cgroup_subsys_state {
- 	/* reference count - access via css_[try]get() and css_put() */
- 	struct percpu_ref refcnt;
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 06ba664..88b1095 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -4551,12 +4551,27 @@ static void cgroup_css_killed(struct cgroup *cgrp)
+ 	schedule_work(&cgrp->destroy_work);
+ }
  
-+	/* the parent css */
-+	struct cgroup_subsys_state *parent;
+-static void css_ref_killed_fn(struct percpu_ref *ref)
++/*
++ * This is called when the refcnt of a css is confirmed to be killed.
++ * css_tryget() is now guaranteed to fail.
++ */
++static void css_killed_work_fn(struct work_struct *work)
++{
++	struct cgroup_subsys_state *css =
++		container_of(work, struct cgroup_subsys_state, destroy_work);
++	struct cgroup *cgrp = css->cgroup;
 +
- 	unsigned long flags;
- 	/* ID for this css, if possible */
- 	struct css_id __rcu *id;
-@@ -666,15 +669,7 @@ struct cgroup_subsys {
- static inline
- struct cgroup_subsys_state *css_parent(struct cgroup_subsys_state *css)
++	cgroup_css_killed(cgrp);
++}
++
++/* css kill confirmation processing requires process context, bounce */
++static void css_killed_ref_fn(struct percpu_ref *ref)
  {
--	struct cgroup *parent_cgrp = css->cgroup->parent;
--
--	if (!parent_cgrp)
--		return NULL;
--
--	if (css->ss)
--		return parent_cgrp->subsys[css->ss->subsys_id];
--	else
--		return &parent_cgrp->dummy_css;
-+	return css->parent;
+ 	struct cgroup_subsys_state *css =
+ 		container_of(ref, struct cgroup_subsys_state, refcnt);
+ 
+-	cgroup_css_killed(css->cgroup);
++	INIT_WORK(&css->destroy_work, css_killed_work_fn);
++	schedule_work(&css->destroy_work);
  }
  
  /**
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 0b28097..5c6dd7e 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -4264,6 +4264,9 @@ static void css_free_work_fn(struct work_struct *work)
- 	struct cgroup_subsys_state *css =
- 		container_of(work, struct cgroup_subsys_state, destroy_work);
+@@ -4630,7 +4645,7 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 		percpu_ref_get(&css->refcnt);
  
-+	if (css->parent)
-+		css_put(css->parent);
-+
- 	cgroup_dput(css->cgroup);
- }
+ 		atomic_inc(&cgrp->css_kill_cnt);
+-		percpu_ref_kill_and_confirm(&css->refcnt, css_ref_killed_fn);
++		percpu_ref_kill_and_confirm(&css->refcnt, css_killed_ref_fn);
+ 	}
+ 	cgroup_css_killed(cgrp);
  
-@@ -4290,8 +4293,12 @@ static void init_cgroup_css(struct cgroup_subsys_state *css,
- 	css->ss = ss;
- 	css->flags = 0;
- 	css->id = NULL;
--	if (cgrp == cgroup_dummy_top)
-+
-+	if (cgrp->parent)
-+		css->parent = cgroup_css(cgrp->parent, ss->subsys_id);
-+	else
- 		css->flags |= CSS_ROOT;
-+
- 	BUG_ON(cgroup_css(cgrp, ss->subsys_id));
- 	cgrp->subsys[ss->subsys_id] = css;
- }
-@@ -4388,6 +4395,7 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 	cgrp->dentry = dentry;
- 
- 	cgrp->parent = parent;
-+	cgrp->dummy_css.parent = &parent->dummy_css;
- 	cgrp->root = parent->root;
- 
- 	if (notify_on_release(parent))
-@@ -4436,9 +4444,13 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 	list_add_tail_rcu(&cgrp->sibling, &cgrp->parent->children);
- 	root->number_of_cgroups++;
- 
--	/* each css holds a ref to the cgroup's dentry */
--	for_each_root_subsys(root, ss)
-+	/* each css holds a ref to the cgroup's dentry and the parent css */
-+	for_each_root_subsys(root, ss) {
-+		struct cgroup_subsys_state *css = cgroup_css(cgrp, ss->subsys_id);
-+
- 		dget(dentry);
-+		percpu_ref_get(&css->parent->refcnt);
-+	}
- 
- 	/* hold a ref to the parent's dentry */
- 	dget(parent->dentry);
 -- 
 1.8.3.1
