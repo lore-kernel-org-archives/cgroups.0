@@ -1,8 +1,7 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 04/14] cgroup: cgroup_css_from_dir() now should be called with
-	RCU read locked
-Date: Thu,  8 Aug 2013 16:13:41 -0400
-Message-ID: <1375992831-4650-5-git-send-email-tj@kernel.org>
+Subject: [PATCH 06/14] cgroup: add __rcu modifier to cgroup->subsys[]
+Date: Thu,  8 Aug 2013 16:13:43 -0400
+Message-ID: <1375992831-4650-7-git-send-email-tj@kernel.org>
 References: <1375992831-4650-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,13 +9,13 @@ Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=I7XObxcIpNka7dxe8yVkgekSVcsnBrHq0NVISm7kcNk=;
-	b=pJAOzHC6eOqzwIl64aq5Ww5hgQGYsHRoKLMnW3eZAWpD0UUGz9f4YqfmqP8McRoaEb
-	3eF9gWb7FUN+t2+csYAmAsarRIfuw3UnuuUMuenpY2bxopFe+Lzf7gZDVhL5YbexlsCQ
-	9hUxZeOBM5+adh6VZkHsKodvDnh6u4c7rN7VCBEn6Zg0f7gnPQIr+Rjd2YOczZYPL1Jq
-	Zf6zMdRD0aKg3CdjhI3299HsVRnxRd6W1Tw68hCfo6OiNWMIydgZnHG1Edm4ONdIFAT4
-	ye5A4wdNBtyClzCqIYxus/uwIUcHzgFloiOtepndxQLSaNShxYJa1e5iE6g04O3DjUMC
-	V9CA==
+	bh=e2ZtwVWK1gWLhlZIfBsU3Dn2i9WP7HHXUDNgkeOzbbA=;
+	b=bR1qFzAd71U7/O6GWPX7GE1O4UhBoDVUc9WAY0N2KjIiPJWDZsZwZaYte+F3NAovE+
+	WEH1mL5hA00DSBJA3sFx35hmtMogh/ox3zvNoxXkrxKQ4EAmin5HbGwCOv0OTH3Bmghh
+	OSdftfzYIDk3/6K3RldJjOYfoh0SvzDyYgQhG21PUJsCYTcFJvjM/WZPsCUrVkE8eXOc
+	eDGv8wk6Ut4fgVipsB2eh5/Vg++45n1w+NVR+ngIBuv3zD5xUtoSTVN/+kqRFkCqqW0A
+	0+29mZ/2ZaBt/MSzCEWD+BKNOuTwLkDHR5KkS2X/D/z7ZKr/f2qsEZzv72tOW0dAZgTU
+	HbcA==
 In-Reply-To: <1375992831-4650-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -29,74 +28,102 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-cgroup->subsys[] will become RCU protected and thus all cgroup_css()
-usages should either be under RCU read lock or cgroup_mutex.  This
-patch updates cgroup_css_from_dir() which returns the matching
-cgroup_subsys_state given a directory file and subsys_id so that it
-requires RCU read lock and updates its sole user
-perf_cgroup_connect().
+For the planned unified hierarchy, each css (cgroup_subsys_state) will
+be RCU protected so that it can be created and destroyed individually
+while allowing RCU accesses.  Previous changes ensured that all
+cgroup->subsys[] accesses use the cgroup_css() accessor.  This patch
+adds __rcu modifier to cgroup->subsys[], add matching RCU dereference
+in cgroup_css() and convert all assignments to either
+rcu_assign_pointer() or RCU_INIT_POINTER().
+
+This change prepares for the actual RCUfication of css's and doesn't
+introduce any visible behavior change.  The conversion is verified
+with sparse and all accesses are properly RCU annotated.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
-Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- kernel/cgroup.c      | 12 ++++++++++--
- kernel/events/core.c |  3 +++
- 2 files changed, 13 insertions(+), 2 deletions(-)
+ include/linux/cgroup.h |  2 +-
+ kernel/cgroup.c        | 19 ++++++++++++++-----
+ 2 files changed, 15 insertions(+), 6 deletions(-)
 
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 8a5dc91..eb200b5 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -204,7 +204,7 @@ struct cgroup {
+ 	struct cgroup_name __rcu *name;
+ 
+ 	/* Private pointers for each registered subsystem */
+-	struct cgroup_subsys_state *subsys[CGROUP_SUBSYS_COUNT];
++	struct cgroup_subsys_state __rcu *subsys[CGROUP_SUBSYS_COUNT];
+ 
+ 	struct cgroupfs_root *root;
+ 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 5c6dd7e..cbb6314 100644
+index d63beff..c271016 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -5616,8 +5616,14 @@ struct cgroup_subsys_state *css_lookup(struct cgroup_subsys *ss, int id)
- }
- EXPORT_SYMBOL_GPL(css_lookup);
- 
--/*
-- * get corresponding css from file open on cgroupfs directory
-+/**
-+ * cgroup_css_from_dir - get corresponding css from file open on cgroup dir
-+ * @f: directory file of interest
-+ * @id: subsystem id of interest
-+ *
-+ * Must be called under RCU read lock.  The caller is responsible for
-+ * pinning the returned css if it needs to be accessed outside the RCU
-+ * critical section.
+@@ -229,11 +229,16 @@ static int cgroup_addrm_files(struct cgroup *cgrp, struct cftype cfts[],
+  * @subsys_id: the subsystem of interest
+  *
+  * Return @cgrp's css (cgroup_subsys_state) associated with @subsys_id.
++ * This function must be called either under cgroup_mutex or
++ * rcu_read_lock() and the caller is responsible for pinning the returned
++ * css if it wants to keep accessing it outside the said locks.  This
++ * function may return %NULL if @cgrp doesn't have @subsys_id enabled.
   */
- struct cgroup_subsys_state *cgroup_css_from_dir(struct file *f, int id)
+ static struct cgroup_subsys_state *cgroup_css(struct cgroup *cgrp,
+ 					      int subsys_id)
  {
-@@ -5625,6 +5631,8 @@ struct cgroup_subsys_state *cgroup_css_from_dir(struct file *f, int id)
- 	struct inode *inode;
- 	struct cgroup_subsys_state *css;
+-	return cgrp->subsys[subsys_id];
++	return rcu_dereference_check(cgrp->subsys[subsys_id],
++				     lockdep_is_held(&cgroup_mutex));
+ }
  
-+	WARN_ON_ONCE(!rcu_read_lock_held());
-+
- 	inode = file_inode(f);
- 	/* check in cgroup filesystem dir */
- 	if (inode->i_op != &cgroup_dir_inode_operations)
-diff --git a/kernel/events/core.c b/kernel/events/core.c
-index c199c4f..23261f9 100644
---- a/kernel/events/core.c
-+++ b/kernel/events/core.c
-@@ -591,6 +591,8 @@ static inline int perf_cgroup_connect(int fd, struct perf_event *event,
- 	if (!f.file)
- 		return -EBADF;
+ /* convenient tests for these bits */
+@@ -1072,8 +1077,10 @@ static int rebind_subsystems(struct cgroupfs_root *root,
+ 			BUG_ON(!cgroup_css(cgroup_dummy_top, i));
+ 			BUG_ON(cgroup_css(cgroup_dummy_top, i)->cgroup != cgroup_dummy_top);
  
-+	rcu_read_lock();
+-			cgrp->subsys[i] = cgroup_dummy_top->subsys[i];
++			rcu_assign_pointer(cgrp->subsys[i],
++					   cgroup_css(cgroup_dummy_top, i));
+ 			cgroup_css(cgrp, i)->cgroup = cgrp;
 +
- 	css = cgroup_css_from_dir(f.file, perf_subsys_id);
- 	if (IS_ERR(css)) {
- 		ret = PTR_ERR(css);
-@@ -617,6 +619,7 @@ static inline int perf_cgroup_connect(int fd, struct perf_event *event,
- 		ret = -EINVAL;
- 	}
- out:
-+	rcu_read_unlock();
- 	fdput(f);
- 	return ret;
+ 			list_move(&ss->sibling, &root->subsys_list);
+ 			ss->root = root;
+ 			if (ss->bind)
+@@ -1088,8 +1095,10 @@ static int rebind_subsystems(struct cgroupfs_root *root,
+ 
+ 			if (ss->bind)
+ 				ss->bind(cgroup_css(cgroup_dummy_top, i));
++
+ 			cgroup_css(cgroup_dummy_top, i)->cgroup = cgroup_dummy_top;
+-			cgrp->subsys[i] = NULL;
++			RCU_INIT_POINTER(cgrp->subsys[i], NULL);
++
+ 			cgroup_subsys[i]->root = &cgroup_dummy_root;
+ 			list_move(&ss->sibling, &cgroup_dummy_root.subsys_list);
+ 
+@@ -4314,7 +4323,7 @@ static void init_cgroup_css(struct cgroup_subsys_state *css,
+ 		css->flags |= CSS_ROOT;
+ 
+ 	BUG_ON(cgroup_css(cgrp, ss->subsys_id));
+-	cgrp->subsys[ss->subsys_id] = css;
++	rcu_assign_pointer(cgrp->subsys[ss->subsys_id], css);
+ }
+ 
+ /* invoke ->css_online() on a new CSS and mark it online if successful */
+@@ -4962,7 +4971,7 @@ void cgroup_unload_subsys(struct cgroup_subsys *ss)
+ 	 * also takes care of freeing the css_id.
+ 	 */
+ 	ss->css_free(cgroup_css(cgroup_dummy_top, ss->subsys_id));
+-	cgroup_dummy_top->subsys[ss->subsys_id] = NULL;
++	RCU_INIT_POINTER(cgroup_dummy_top->subsys[ss->subsys_id], NULL);
+ 
+ 	mutex_unlock(&cgroup_mutex);
  }
 -- 
 1.8.3.1
