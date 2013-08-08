@@ -1,79 +1,117 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 13/14] cgroup: move subsys file removal to kill_css()
-Date: Thu,  8 Aug 2013 16:13:50 -0400
-Message-ID: <1375992831-4650-14-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 12/14] cgroup: factor out kill_css()
+Date: Thu,  8 Aug 2013 16:13:49 -0400
+Message-ID: <1375992831-4650-13-git-send-email-tj@kernel.org>
 References: <1375992831-4650-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=JzuHxS+xTqpPl610A49fo3LfCYDOkmkWNiw2nMuw5BE=;
-        b=FFWhIZp7rgPVyRlQ12ORQy9MxpTswfL4eSvi2GTNWqAzPWRMHbHY8PK97TjrNDXTAc
-         tXsPiDBXTP5SDNqvKOd+XUTI884hl0eEz+3mlXbHV+4YAQmpD0LTX86P+83C9UepIxNv
-         bjQNWd7wAP/NxfqyRbT2HqigLKUYdaUnQ+VOqPzeNgtR60eVKvyggBHH351NI8TZhqHV
-         +EtKQnTcAuDm5u9baTBFr6yKdv5wREZgQ8m/pxUE2b9+z+gSifPkd5DUaYbdYB8iaLws
-         ObvxABhAKRtpQvNa3ugtHFJo8wNkxnBXwpYDBn/kVEHBAUzSYA8chKo2k200Air0/FWa
-         8XMA==
-In-Reply-To: <1375992831-4650-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=9mYXyorwmEiC86h3mEld9udkjfX31swf/CDpGsX3pdw=;
+        b=jT1w669UHrLL1iIMyS/AUd19MSDLV3VTHI8Q0eA2hVByHaC7XVIxpSoWw02E6T5CzZ
+         UIcHKAckMzXDHM49/a56a0NA1DCf5WAQzVkFReUXZk4lzd2StXVRJTjg8ht5CNCZ7RQ/
+         pkALG86Sti+Dx+Uxwtf+437b+73BkLlHW6kdUF7O0zQdpdlCK+S4Lk5NtuhwbQHs74xZ
+         XVtXtlGudDJeiOkUn6D+tYuu5NZiLxE9oBt2TZQIoGmItMr354QiDmCBzuaRS9g2sxPx
+         xzT8/DBAws+1ckuo6O0eKGWh2C9xPteLSSg2t+xB76LvbSIsqT+5gO3kYydDUDvR5iRm
+         g3Xw==
+In-Reply-To: <1375992831-4650-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: lizefan@huawei.com
+Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-With the planned unified hierarchy, individual css's will be created
-and destroyed dynamically across the lifetime of a cgroup.  To enable
-such usages, css destruction is being decoupled from cgroup
-destruction.  This patch moves subsys file removal from
-cgroup_destroy_locked() to kill_css().
+Factor out css ref killing from cgroup_destroy_locked() into
+kill_css().  We're gonna add more to the path and the factored out
+function will eventually be called from other places too.
 
-While this changes the order of destruction operations, the changes
-shouldn't be noticeable to cgroup subsystems or userland.
+While at it, replace open coded percpu_ref_get() with css_get() for
+consistency.  This shouldn't cause any functional difference as the
+function is not used for root cgroups.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/cgroup.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+ kernel/cgroup.c | 58 ++++++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 35 insertions(+), 23 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index da5f5c2..d99ec53 100644
+index da2c8e3..da5f5c2 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -4595,13 +4595,15 @@ static void css_killed_ref_fn(struct percpu_ref *ref)
-  * kill_css - destroy a css
-  * @css: css to destroy
-  *
-- * This function initiates destruction of @css by putting its base
-- * reference.  ->css_offline() will be invoked asynchronously once
-- * css_tryget() is guaranteed to fail and when the reference count reaches
-- * zero, @css will be released.
-+ * This function initiates destruction of @css by removing cgroup interface
-+ * files and putting its base reference.  ->css_offline() will be invoked
-+ * asynchronously once css_tryget() is guaranteed to fail and when the
-+ * reference count reaches zero, @css will be released.
-  */
- static void kill_css(struct cgroup_subsys_state *css)
- {
-+	cgroup_clear_dir(css->cgroup, 1 << css->ss->subsys_id);
+@@ -4592,6 +4592,36 @@ static void css_killed_ref_fn(struct percpu_ref *ref)
+ }
+ 
+ /**
++ * kill_css - destroy a css
++ * @css: css to destroy
++ *
++ * This function initiates destruction of @css by putting its base
++ * reference.  ->css_offline() will be invoked asynchronously once
++ * css_tryget() is guaranteed to fail and when the reference count reaches
++ * zero, @css will be released.
++ */
++static void kill_css(struct cgroup_subsys_state *css)
++{
++	/*
++	 * Killing would put the base ref, but we need to keep it alive
++	 * until after ->css_offline().
++	 */
++	css_get(css);
 +
- 	/*
- 	 * Killing would put the base ref, but we need to keep it alive
- 	 * until after ->css_offline().
-@@ -4699,10 +4701,10 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
- 		cgroup_destroy_css_killed(cgrp);
++	/*
++	 * cgroup core guarantees that, by the time ->css_offline() is
++	 * invoked, no new css reference will be given out via
++	 * css_tryget().  We can't simply call percpu_ref_kill() and
++	 * proceed to offlining css's because percpu_ref_kill() doesn't
++	 * guarantee that the ref is seen as killed on all CPUs on return.
++	 *
++	 * Use percpu_ref_kill_and_confirm() to get notifications as each
++	 * css is confirmed to be seen as killed on all CPUs.
++	 */
++	percpu_ref_kill_and_confirm(&css->refcnt, css_killed_ref_fn);
++}
++
++/**
+  * cgroup_destroy_locked - the first stage of cgroup destruction
+  * @cgrp: cgroup to be destroyed
+  *
+@@ -4637,30 +4667,12 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 		return -EBUSY;
  
  	/*
--	 * Clear and remove @cgrp directory.  The removal puts the base ref
--	 * but we aren't quite done with @cgrp yet, so hold onto it.
-+	 * Clear the base files and remove @cgrp directory.  The removal
-+	 * puts the base ref but we aren't quite done with @cgrp yet, so
-+	 * hold onto it.
+-	 * Block new css_tryget() by killing css refcnts.  cgroup core
+-	 * guarantees that, by the time ->css_offline() is invoked, no new
+-	 * css reference will be given out via css_tryget().  We can't
+-	 * simply call percpu_ref_kill() and proceed to offlining css's
+-	 * because percpu_ref_kill() doesn't guarantee that the ref is seen
+-	 * as killed on all CPUs on return.
+-	 *
+-	 * Use percpu_ref_kill_and_confirm() to get notifications as each
+-	 * css is confirmed to be seen as killed on all CPUs.
+-	 * cgroup_destroy_css_killed() will be invoked to perform the rest
+-	 * of destruction once the percpu refs of all css's are confirmed
+-	 * to be killed.
++	 * Initiate massacre of all css's.  cgroup_destroy_css_killed()
++	 * will be invoked to perform the rest of destruction once the
++	 * percpu refs of all css's are confirmed to be killed.
  	 */
--	cgroup_clear_dir(cgrp, cgrp->root->subsys_mask);
- 	cgroup_addrm_files(cgrp, cgroup_base_files, false);
- 	dget(d);
- 	cgroup_d_remove_dir(d);
+-	for_each_root_subsys(cgrp->root, ss) {
+-		struct cgroup_subsys_state *css = cgroup_css(cgrp, ss->subsys_id);
+-
+-		/*
+-		 * Killing would put the base ref, but we need to keep it
+-		 * alive until after ->css_offline.
+-		 */
+-		percpu_ref_get(&css->refcnt);
+-
+-		percpu_ref_kill_and_confirm(&css->refcnt, css_killed_ref_fn);
+-	}
++	for_each_root_subsys(cgrp->root, ss)
++		kill_css(cgroup_css(cgrp, ss->subsys_id));
+ 
+ 	/*
+ 	 * Mark @cgrp dead.  This prevents further task migration and child
 -- 
 1.8.3.1
