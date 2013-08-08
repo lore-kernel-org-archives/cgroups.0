@@ -1,52 +1,86 @@
-From: Ma Shimiao <shimiao.ma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] tfix
-Date: Thu,  8 Aug 2013 23:29:29 +0800
-Message-ID: <1375975769-1764-1-git-send-email-shimiao.ma@gmail.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=from:to:cc:subject:date:message-id;
-        bh=1e57tLAD/8S2KK+ZvelZOEwm7ViekxOyNfhxnZr53Ko=;
-        b=sFDX73FI10DLFWAvGQfx+VAHPDywOWNyRvadrcl5jz3St39w7IhnhXp35n9TEABBt4
-         K3/2h3R4piPeBuJY4OgPl7SQdb7yMPeOvyZVcgHao4bIzVhY9LVIby0TMAlvYcwJCUoW
-         WZopuzJTU7J2Ezat61Pcr9yVrthgRhi+HAnVxpJ91fa1HZHCZa7yyPmNPQQKabfIZbGh
-         w7CpVg4liN8M0nb5rvBFMv3H25SlaofR6D9ImTqn7Lk+Tb27uBgv6839plSD/+1NYKT7
-         dJnwWbKn01yQf5Jp/u5y3eQPMaljNkWygDhL9F2lq6oEYsU0JZd7XTqBLBg1MvozdBm/
-         YIkA==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET cgroup/for-3.12] cgroup: decouple cgroup_subsys_state
+	lifetime from that of cgroup
+Date: Thu,  8 Aug 2013 16:13:37 -0400
+Message-ID: <1375992831-4650-1-git-send-email-tj@kernel.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Ma Shimiao <shimiao.ma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:from:to:cc:subject:date:message-id;
+	bh=wsO+FQzqHVHhOjvY/GcI24vkx+TSJXD1qKLkrhSaPyY=;
+	b=nM0sPvU4VKE3Ml4HxZXdJKSYnnZQkb/GCV2sv/EZEC44VZfJ58t7op+BE5wZrPvOVU
+	3Hg+BrPmR4DoC7dsrwicQKTbklMICEYV6ZKYvNa+x8lbFJS7hEvvhvwmwSTl5kpS5zR2
+	X4TfzV3O5QzxYsTqjzzsrSOaGKQf4/rtXIYX01J4We4PuHfhQJOl4NvWo9jdmS4vQ4bK
+	xwaaUGziMfnwGaregheDewZkWWLJ7AFwvgC6P8lS56npPNo78lA7qB9NXqFhFr8VZ3nn
+	Rwuwwwhywm2SJyG4w4dgklWOV5ktTaZPaP+rRCHuA0zV6X/VT8hseGNruE03gnGVT7bz
+	nM/w==
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Signed-off-by: Ma Shimiao <shimiao.ma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
----
- tools/cgroup/cgroup_event_listener.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Hello,
 
-diff --git a/tools/cgroup/cgroup_event_listener.c b/tools/cgroup/cgroup_event_listener.c
-index 4eb5507..b46d6eb 100644
---- a/tools/cgroup/cgroup_event_listener.c
-+++ b/tools/cgroup/cgroup_event_listener.c
-@@ -37,7 +37,7 @@ int main(int argc, char **argv)
- 	ret = snprintf(event_control_path, PATH_MAX, "%s/cgroup.event_control",
- 			dirname(argv[1]));
- 	if (ret >= PATH_MAX)
--		errx(1, "Path to cgroup.event_control is too long");
-+		errx(1, "Path to cgroup.event_control string is too long");
+Currently a css's (cgroup_subsys_state) lifetime is tied to that of
+the cgroup it's attached to.  css's are created when the cgroup is
+created and destroyed together.  The access rules depend on it too -
+e.g. css's can be dereferenced while holding RCU read lock because
+cgroup is protected with RCU.
 
- 	event_control = open(event_control_path, O_WRONLY);
- 	if (event_control == -1)
-@@ -68,7 +68,7 @@ int main(int argc, char **argv)
+With the planned unified hierarchy, we'll be dynamically creating and
+destroying css's through the lifetime of a cgroup, so we can no longer
+hitch css lifetime management onto cgroup's.  This patchset separates
+out css lifetime management from that of cgroup.  After the patchset,
+each css is individually RCU protected.
 
- 		ret = access(event_control_path, W_OK);
- 		if ((ret == -1) && (errno == ENOENT)) {
--			puts("The cgroup seems to have removed.");
-+			puts("The cgroup seems to have been removed.");
- 			break;
- 		}
+This patchset contains the following 14 patches.
+
+ 0001-cgroup-always-use-cgroup_css.patch
+ 0002-cgroup-rename-cgroup_subsys_state-dput_work-and-its-.patch
+ 0003-cgroup-add-cgroup_subsys_state-parent.patch
+ 0004-cgroup-cgroup_css_from_dir-now-should-be-called-with.patch
+ 0005-cgroup-make-cgroup_file_open-rcu_read_lock-around-cg.patch
+ 0006-cgroup-add-__rcu-modifier-to-cgroup-subsys.patch
+ 0007-cgroup-reorganize-css-init-exit-paths.patch
+ 0008-cgroup-move-cgroup-subsys-assignment-to-online_css.patch
+ 0009-cgroup-bounce-cgroup_subsys_state-ref-kill-confirmat.patch
+ 0010-cgroup-replace-cgroup-css_kill_cnt-with-nr_css.patch
+ 0011-cgroup-decouple-cgroup_subsys_state-destruction-from.patch
+ 0012-cgroup-factor-out-kill_css.patch
+ 0013-cgroup-move-subsys-file-removal-to-kill_css.patch
+ 0014-cgroup-RCU-protect-each-cgroup_subsys_state-release.patch
+
+The patchset is on top of
+
+  cgroup/for-3.12 61584e3f4 ("cgroup: Merge branch 'for-3.11-fixes' into for-3.12")
++ [1] cgroup: use cgroup_subsys_state as the primary subsystem interface handle
++ [2] cgroup: cgroup: make css_for_each_descendant() and friends include the origin css in the iteration
+
+and available in the following branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-rcufy-css
+
+diffstat follows.
+
+ include/linux/cgroup.h |   24 +-
+ kernel/cgroup.c        |  423 +++++++++++++++++++++++++++++--------------------
+ kernel/events/core.c   |    3
+ 3 files changed, 268 insertions(+), 182 deletions(-)
+
+Thanks.
 
 --
-1.8.3.1
+tejun
+
+[1] https://lkml.org/lkml/2013/8/1/722
+[2] https://lkml.org/lkml/2013/8/4/130
