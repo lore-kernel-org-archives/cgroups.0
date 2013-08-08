@@ -1,87 +1,51 @@
-From: "Kirill A. Shutemov" <kirill@shutemov.name>
-Subject: Re: [PATCH 1/3] memcg: limit the number of thresholds per-memcg
-Date: Thu, 8 Aug 2013 01:05:13 +0300
-Message-ID: <20130807220513.GA8068@shutemov.name>
-References: <1375874907-22013-1-git-send-email-mhocko@suse.cz>
- <20130807132210.GD27006@htj.dyndns.org>
- <20130807134654.GJ8184@dhcp22.suse.cz>
- <20130807135818.GG27006@htj.dyndns.org>
- <20130807143727.GA13279@dhcp22.suse.cz>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v5 0/5] memcg, cgroup: kill css_id
+Date: Thu, 8 Aug 2013 10:32:38 +0800
+Message-ID: <52030346.4050003@huawei.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20130807143727.GA13279@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, Anton Vorontsov <anton.vorontsov@linaro.org>
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Wed, Aug 07, 2013 at 04:37:27PM +0200, Michal Hocko wrote:
-> On Wed 07-08-13 09:58:18, Tejun Heo wrote:
-> > Hello,
-> > 
-> > On Wed, Aug 07, 2013 at 03:46:54PM +0200, Michal Hocko wrote:
-> > > OK, I have obviously misunderstood your concern mentioned in the other
-> > > email. Could you be more specific what is the DoS scenario which was
-> > > your concern, then?
-> > 
-> > So, let's say the file is write-accessible to !priv user which is
-> > under reasonable resource limits.  Normally this shouldn't affect priv
-> > system tools which are monitoring the same event as it shouldn't be
-> > able to deplete resources as long as the resource control mechanisms
-> > are configured and functioning properly; however, the memory usage
-> > event puts all event listeners into a single contiguous table which a
-> > !priv user can easily expand to a size where the table can no longer
-> > be enlarged and if a priv system tool or another user tries to
-> > register event afterwards, it'll fail.  IOW, it creates a shared
-> > resource which isn't properly provisioned and can be trivially filled
-> > up making it an easy DoS target.
-> 
-> OK, got your point. You are right and I haven't considered the size of
-> the table and the size restrictions of kmalloc. Thanks for pointing this
-> out!
-> ---
-> From cde8a3333296eddd288780e78803610127401b6a Mon Sep 17 00:00:00 2001
-> From: Michal Hocko <mhocko@suse.cz>
-> Date: Wed, 7 Aug 2013 11:11:22 +0200
-> Subject: [PATCH] memcg: limit the number of thresholds per-memcg
-> 
-> There is no limit for the maximum number of threshold events registered
-> per memcg. It is even worse that all the events are stored in a
-> per-memcg table which is enlarged when a new event is registered. This
-> can lead to the following issue mentioned by Tejun:
-> "
-> So, let's say the file is write-accessible to !priv user which is
-> under reasonable resource limits.  Normally this shouldn't affect priv
-> system tools which are monitoring the same event as it shouldn't be
-> able to deplete resources as long as the resource control mechanisms
-> are configured and functioning properly; however, the memory usage
-> event puts all event listeners into a single contiguous table which a
-> !priv user can easily expand to a size where the table can no longer
-> be enlarged and if a priv system tool or another user tries to
-> register event afterwards, it'll fail.  IOW, it creates a shared
-> resource which isn't properly provisioned and can be trivially filled
-> up making it an easy DoS target.
-> "
-> 
-> Let's be more strict and cap the number of events that might be
-> registered. MAX_THRESHOLD_EVENTS value is more or less random. The
-> expectation is that it should be high enough to cover reasonable
-> usecases while not too high to allow excessive resources consumption.
-> 1024 events consume something like 16KB which shouldn't be a big deal
-> and it should be good enough.
+Hi Andrew,
 
-Is it correct that you fix one local DoS by introducing a new one?
-With the page the !priv user can block root from registering a threshold.
-Is it really the way we want to fix it?
+All the cgroup preparation patches are in cgroup tree now, and these
+remaining patches can be routed by mm tree.
 
--- 
- Kirill A. Shutemov
+===========
+
+This patchset converts memcg to use cgroup->id, and then we can remove
+cgroup css_id.
+
+As we've removed memcg's own refcnt, converting memcg to use cgroup->id
+is very straight-forward.
+
+The patchset is based on Tejun's cgroup tree.
+
+v5:
+- rebased against mmotm 2013-08-07-16-55
+
+v4:
+- make cgroup_from_id() inline and check if cgroup_mutex is held.
+- add a comment for idr_remove() in cgroup_offline)fn().
+
+v2->v3:
+- some minor cleanups suggested by Michal.
+- fixed the call to idr_alloc() in cgroup_init() in the first patch.
+
+Li Zefan (5):
+      memcg: convert to use cgroup_is_descendant()
+      memcg: convert to use cgroup id
+      memcg: fail to create cgroup if the cgroup id is too big
+      memcg: stop using css id
+      cgroup: kill css_id
 
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+ include/linux/cgroup.h |  37 ----------
+ kernel/cgroup.c        | 252 +---------------------------------------------------------------
+ mm/memcontrol.c        |  69 +++++++++++-------
+ 3 files changed, 43 insertions(+), 315 deletions(-)
