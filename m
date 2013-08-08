@@ -1,171 +1,352 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 11/14] cgroup: decouple cgroup_subsys_state destruction from
-	cgroup destruction
-Date: Thu,  8 Aug 2013 16:13:48 -0400
-Message-ID: <1375992831-4650-12-git-send-email-tj@kernel.org>
-References: <1375992831-4650-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+From: Andrey Vagin <avagin@openvz.org>
+Subject: [PATCH] [RFC] kmemcg: remove union from memcg_params
+Date: Fri,  9 Aug 2013 00:51:26 +0400
+Message-ID: <1375995086-15456-1-git-send-email-avagin@openvz.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=eNDte7h8q/thTy+ZejSkHtoQrEE5YeRDMZfC0gGU3HM=;
-	b=Duqld6DWK68OEethK+2bI19ngfVUgig/UI2IP2fVeIFm3Z/KZhsUTKt/BdMi/XGY7b
-	O9xI+QGXoEhS7P1fsNJ87ZivUUmyhMUb8uCsCvzZUya7lFrlhQTfNRP0J+98fcQWBDQU
-	gNfL/6zIWihMR1TST0hyZob+GiqUoVlpJmK2Bada3CT4OKGeqgFSyQHQ2kxB/5NIX5rx
-	qX37v8PskPolg6RW1BYzAi+EbucuuBIi+p4L3jPICzt4SGtNYksZ8qmsjXyHlxv2moJM
-	d2jJD8w2OwTaUbfZa4K8LeMDfZkjht3uYdr1QKGpHV7FAQLw0FZuyDzkHLruvoTYSP4I
-	swnA==
-In-Reply-To: <1375992831-4650-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-mm@kvack.org, Glauber Costa <glommer@parallels.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Andrey Vagin <avagin@openvz.org>, Christoph Lameter <cl@linux-foundation.org>, Pekka Enberg <penberg@kernel.org>, Matt Mackall <mpm@selenic.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>
 
-Currently, css (cgroup_subsys_state) lifetime is tied to that of the
-associated cgroup.  css's are created when the associated cgroup is
-created and destroyed when it gets destroyed.  Also, individual css's
-aren't RCU protected but the whole cgroup is.  With the planned
-unified hierarchy, css's will need to be dynamically created and
-destroyed within the lifetime of a cgroup.
+struct memcg_cache_params {
+        bool is_root_cache;
+        union {
+                struct kmem_cache *memcg_caches[0];
+                struct {
+                        struct mem_cgroup *memcg;
+                        struct list_head list;
+                        struct kmem_cache *root_cache;
+                        bool dead;
+                        atomic_t nr_pages;
+                        struct work_struct destroy;
+                };
+        };
+};
 
-To enable such usages, this patch decouples css destruction from
-cgroup destruction - offline_css() invocation and the final css_put()
-are moved from cgroup_destroy_css_killed() to css_killed_work_fn().
-Now each css is individually offlined and put as its reference count
-is killed instead of waiting for all css's attached to the cgroup to
-finish refcnt killing and then proceeding to offlining and putting
-them together.
+This union is a bit dangerous. //Andrew Morton
 
-While this changes the order of destruction operations, the changes
-shouldn't be noticeable to cgroup subsystems or userland.
+The first problem was fixed in v3.10-rc5-67-gf101a94.
+The second problem is that the size of memory for root
+caches is calculated incorrectly:
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+	ssize_t size = memcg_caches_array_size(num_groups);
+
+	size *= sizeof(void *);
+	size += sizeof(struct memcg_cache_params);
+
+The last line should be fixed like this:
+	size += offsetof(struct memcg_cache_params, memcg_caches)
+
+Andrew suggested to rework this code without union and
+this patch tries to do that.
+
+This patch removes is_root_cache and union. The size of the
+memcg_cache_params structure is not changed.
+
+memcg_caches is moved from memcg_cache_params to kmem_cache.
+
+Cc: Glauber Costa <glommer@parallels.com>
+Cc: Christoph Lameter <cl@linux-foundation.org>
+Cc: Pekka Enberg <penberg@kernel.org>
+Cc: Matt Mackall <mpm@selenic.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>
+Cc: Balbir Singh <bsingharora@gmail.com>
+Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: Andrey Vagin <avagin@openvz.org>
 ---
- include/linux/cgroup.h |  2 +-
- kernel/cgroup.c        | 52 +++++++++++++++++++++++---------------------------
- 2 files changed, 25 insertions(+), 29 deletions(-)
+ include/linux/slab.h     | 18 ++++--------
+ include/linux/slab_def.h |  1 +
+ include/linux/slub_def.h |  1 +
+ mm/memcontrol.c          | 74 +++++++++++++++++++++---------------------------
+ mm/slab.h                |  4 +--
+ 5 files changed, 43 insertions(+), 55 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 80dca87..71e77e7 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -82,7 +82,7 @@ struct cgroup_subsys_state {
- 	/* ID for this css, if possible */
- 	struct css_id __rcu *id;
- 
--	/* Used to put @cgroup->dentry on the last css_put() */
-+	/* percpu_ref killing and putting dentry on the last css_put() */
- 	struct work_struct destroy_work;
+diff --git a/include/linux/slab.h b/include/linux/slab.h
+index 6c5cc0e..fbed77f 100644
+--- a/include/linux/slab.h
++++ b/include/linux/slab.h
+@@ -352,18 +352,12 @@ static __always_inline int kmalloc_size(int n)
+  *           ready, to destroy this cache.
+  */
+ struct memcg_cache_params {
+-	bool is_root_cache;
+-	union {
+-		struct kmem_cache *memcg_caches[0];
+-		struct {
+-			struct mem_cgroup *memcg;
+-			struct list_head list;
+-			struct kmem_cache *root_cache;
+-			bool dead;
+-			atomic_t nr_pages;
+-			struct work_struct destroy;
+-		};
+-	};
++	struct mem_cgroup *memcg;
++	struct list_head list;
++	struct kmem_cache *root_cache;
++	bool dead;
++	atomic_t nr_pages;
++	struct work_struct destroy;
  };
  
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 484af35..da2c8e3 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -4355,6 +4355,7 @@ static void offline_css(struct cgroup_subsys_state *css)
- 		ss->css_offline(css);
+ int memcg_update_all_caches(int num_memcgs);
+diff --git a/include/linux/slab_def.h b/include/linux/slab_def.h
+index cd40158..15751cd 100644
+--- a/include/linux/slab_def.h
++++ b/include/linux/slab_def.h
+@@ -80,6 +80,7 @@ struct kmem_cache {
+ 	int obj_offset;
+ #endif /* CONFIG_DEBUG_SLAB */
+ #ifdef CONFIG_MEMCG_KMEM
++	struct kmem_cache **memcg_caches;
+ 	struct memcg_cache_params *memcg_params;
+ #endif
  
- 	css->flags &= ~CSS_ONLINE;
-+	css->cgroup->nr_css--;
+diff --git a/include/linux/slub_def.h b/include/linux/slub_def.h
+index 027276f..b9dfc3c 100644
+--- a/include/linux/slub_def.h
++++ b/include/linux/slub_def.h
+@@ -91,6 +91,7 @@ struct kmem_cache {
+ 	struct kobject kobj;	/* For sysfs */
+ #endif
+ #ifdef CONFIG_MEMCG_KMEM
++	struct kmem_cache **memcg_caches;
+ 	struct memcg_cache_params *memcg_params;
+ 	int max_attr_size; /* for propagation, maximum size of a stored attr */
+ #endif
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index c5792a5..d1041de 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -41,6 +41,7 @@
+ #include <linux/mutex.h>
+ #include <linux/rbtree.h>
+ #include <linux/slab.h>
++#include "slab.h"
+ #include <linux/swap.h>
+ #include <linux/swapops.h>
+ #include <linux/spinlock.h>
+@@ -2948,9 +2949,8 @@ static struct kmem_cache *memcg_params_to_cache(struct memcg_cache_params *p)
+ {
+ 	struct kmem_cache *cachep;
+ 
+-	VM_BUG_ON(p->is_root_cache);
+ 	cachep = p->root_cache;
+-	return cachep->memcg_params->memcg_caches[memcg_cache_id(p->memcg)];
++	return cachep->memcg_caches[memcg_cache_id(p->memcg)];
  }
  
- /*
-@@ -4555,14 +4556,29 @@ static void css_killed_work_fn(struct work_struct *work)
- 	mutex_lock(&cgroup_mutex);
+ #ifdef CONFIG_SLABINFO
+@@ -3131,25 +3131,22 @@ static void kmem_cache_destroy_work_func(struct work_struct *w);
+ 
+ int memcg_update_cache_size(struct kmem_cache *s, int num_groups)
+ {
+-	struct memcg_cache_params *cur_params = s->memcg_params;
++	struct kmem_cache **cur_caches = s->memcg_caches;
+ 
+-	VM_BUG_ON(s->memcg_params && !s->memcg_params->is_root_cache);
++	VM_BUG_ON(!is_root_cache(s));
+ 
+ 	if (num_groups > memcg_limited_groups_array_size) {
+ 		int i;
+ 		ssize_t size = memcg_caches_array_size(num_groups);
+ 
+ 		size *= sizeof(void *);
+-		size += sizeof(struct memcg_cache_params);
+ 
+-		s->memcg_params = kzalloc(size, GFP_KERNEL);
+-		if (!s->memcg_params) {
+-			s->memcg_params = cur_params;
++		s->memcg_caches = kzalloc(size, GFP_KERNEL);
++		if (!s->memcg_caches) {
++			s->memcg_caches = cur_caches;
+ 			return -ENOMEM;
+ 		}
+ 
+-		s->memcg_params->is_root_cache = true;
+-
+ 		/*
+ 		 * There is the chance it will be bigger than
+ 		 * memcg_limited_groups_array_size, if we failed an allocation
+@@ -3160,10 +3157,9 @@ int memcg_update_cache_size(struct kmem_cache *s, int num_groups)
+ 		 * memcg_limited_groups_array_size is certainly unused
+ 		 */
+ 		for (i = 0; i < memcg_limited_groups_array_size; i++) {
+-			if (!cur_params->memcg_caches[i])
++			if (!cur_caches[i])
+ 				continue;
+-			s->memcg_params->memcg_caches[i] =
+-						cur_params->memcg_caches[i];
++			s->memcg_caches[i] = cur_caches[i];
+ 		}
+ 
+ 		/*
+@@ -3175,7 +3171,7 @@ int memcg_update_cache_size(struct kmem_cache *s, int num_groups)
+ 		 * bigger than the others. And all updates will reset this
+ 		 * anyway.
+ 		 */
+-		kfree(cur_params);
++		kfree(cur_caches);
+ 	}
+ 	return 0;
+ }
+@@ -3183,25 +3179,28 @@ int memcg_update_cache_size(struct kmem_cache *s, int num_groups)
+ int memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *s,
+ 			 struct kmem_cache *root_cache)
+ {
+-	size_t size = sizeof(struct memcg_cache_params);
++	size_t size;
+ 
+ 	if (!memcg_kmem_enabled())
+ 		return 0;
+ 
+-	if (!memcg)
+-		size += memcg_limited_groups_array_size * sizeof(void *);
+-
+-	s->memcg_params = kzalloc(size, GFP_KERNEL);
+-	if (!s->memcg_params)
+-		return -ENOMEM;
+-
+-	if (memcg) {
++	if (!memcg) {
++		VM_BUG_ON(s->memcg_params);
++		size = memcg_limited_groups_array_size * sizeof(void *);
++		s->memcg_caches = kzalloc(size, GFP_KERNEL);
++		if (!s->memcg_caches)
++			return -ENOMEM;
++	} else {
++		VM_BUG_ON(s->memcg_caches);
++		size = sizeof(struct memcg_cache_params);
++		s->memcg_params = kzalloc(size, GFP_KERNEL);
++		if (!s->memcg_params)
++			return -ENOMEM;
+ 		s->memcg_params->memcg = memcg;
+ 		s->memcg_params->root_cache = root_cache;
+ 		INIT_WORK(&s->memcg_params->destroy,
+ 				kmem_cache_destroy_work_func);
+-	} else
+-		s->memcg_params->is_root_cache = true;
++	}
+ 
+ 	return 0;
+ }
+@@ -3212,6 +3211,8 @@ void memcg_release_cache(struct kmem_cache *s)
+ 	struct mem_cgroup *memcg;
+ 	int id;
+ 
++	kfree(s->memcg_caches);
++
+ 	/*
+ 	 * This happens, for instance, when a root cache goes away before we
+ 	 * add any memcg.
+@@ -3219,21 +3220,17 @@ void memcg_release_cache(struct kmem_cache *s)
+ 	if (!s->memcg_params)
+ 		return;
+ 
+-	if (s->memcg_params->is_root_cache)
+-		goto out;
+-
+ 	memcg = s->memcg_params->memcg;
+ 	id  = memcg_cache_id(memcg);
+ 
+ 	root = s->memcg_params->root_cache;
+-	root->memcg_params->memcg_caches[id] = NULL;
++	root->memcg_caches[id] = NULL;
+ 
+ 	mutex_lock(&memcg->slab_caches_mutex);
+ 	list_del(&s->memcg_params->list);
+ 	mutex_unlock(&memcg->slab_caches_mutex);
+ 
+ 	css_put(&memcg->css);
+-out:
+ 	kfree(s->memcg_params);
+ }
+ 
+@@ -3391,7 +3388,7 @@ static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
+ 	idx = memcg_cache_id(memcg);
+ 
+ 	mutex_lock(&memcg_cache_mutex);
+-	new_cachep = cachep->memcg_params->memcg_caches[idx];
++	new_cachep = cachep->memcg_caches[idx];
+ 	if (new_cachep) {
+ 		css_put(&memcg->css);
+ 		goto out;
+@@ -3406,7 +3403,7 @@ static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
+ 
+ 	atomic_set(&new_cachep->memcg_params->nr_pages , 0);
+ 
+-	cachep->memcg_params->memcg_caches[idx] = new_cachep;
++	cachep->memcg_caches[idx] = new_cachep;
+ 	/*
+ 	 * the readers won't lock, make sure everybody sees the updated value,
+ 	 * so they won't put stuff in the queue again for no reason
+@@ -3422,9 +3419,7 @@ void kmem_cache_destroy_memcg_children(struct kmem_cache *s)
+ 	struct kmem_cache *c;
+ 	int i;
+ 
+-	if (!s->memcg_params)
+-		return;
+-	if (!s->memcg_params->is_root_cache)
++	if (!s->memcg_caches)
+ 		return;
  
  	/*
-+	 * css_tryget() is guaranteed to fail now.  Tell subsystems to
-+	 * initate destruction.
-+	 */
-+	offline_css(css);
-+
-+	/*
- 	 * If @cgrp is marked dead, it's waiting for refs of all css's to
- 	 * be disabled before proceeding to the second phase of cgroup
- 	 * destruction.  If we are the last one, kick it off.
+@@ -3438,7 +3433,7 @@ void kmem_cache_destroy_memcg_children(struct kmem_cache *s)
  	 */
--	if (!--cgrp->nr_css && cgroup_is_dead(cgrp))
-+	if (!cgrp->nr_css && cgroup_is_dead(cgrp))
- 		cgroup_destroy_css_killed(cgrp);
+ 	mutex_lock(&set_limit_mutex);
+ 	for (i = 0; i < memcg_limited_groups_array_size; i++) {
+-		c = s->memcg_params->memcg_caches[i];
++		c = s->memcg_caches[i];
+ 		if (!c)
+ 			continue;
  
- 	mutex_unlock(&cgroup_mutex);
-+
-+	/*
-+	 * Put the css refs from kill_css().  Each css holds an extra
-+	 * reference to the cgroup's dentry and cgroup removal proceeds
-+	 * regardless of css refs.  On the last put of each css, whenever
-+	 * that may be, the extra dentry ref is put so that dentry
-+	 * destruction happens only after all css's are released.
-+	 */
-+	css_put(css);
+@@ -3552,9 +3547,6 @@ struct kmem_cache *__memcg_kmem_get_cache(struct kmem_cache *cachep,
+ 	struct mem_cgroup *memcg;
+ 	int idx;
+ 
+-	VM_BUG_ON(!cachep->memcg_params);
+-	VM_BUG_ON(!cachep->memcg_params->is_root_cache);
+-
+ 	if (!current->mm || current->memcg_kmem_skip_account)
+ 		return cachep;
+ 
+@@ -3571,8 +3563,8 @@ struct kmem_cache *__memcg_kmem_get_cache(struct kmem_cache *cachep,
+ 	 * code updating memcg_caches will issue a write barrier to match this.
+ 	 */
+ 	read_barrier_depends();
+-	if (likely(cachep->memcg_params->memcg_caches[idx])) {
+-		cachep = cachep->memcg_params->memcg_caches[idx];
++	if (likely(cachep->memcg_caches[idx])) {
++		cachep = cachep->memcg_caches[idx];
+ 		goto out;
+ 	}
+ 
+diff --git a/mm/slab.h b/mm/slab.h
+index 620ceed..fe82b4b 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -116,7 +116,7 @@ ssize_t slabinfo_write(struct file *file, const char __user *buffer,
+ #ifdef CONFIG_MEMCG_KMEM
+ static inline bool is_root_cache(struct kmem_cache *s)
+ {
+-	return !s->memcg_params || s->memcg_params->is_root_cache;
++	return !s->memcg_params;
  }
  
- /* css kill confirmation processing requires process context, bounce */
-@@ -4629,11 +4645,10 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
- 	 * as killed on all CPUs on return.
- 	 *
- 	 * Use percpu_ref_kill_and_confirm() to get notifications as each
--	 * css is confirmed to be seen as killed on all CPUs.  The
--	 * notification callback keeps track of the number of css's to be
--	 * killed and invokes cgroup_destroy_css_killed() to perform the
--	 * rest of destruction once the percpu refs of all css's are
--	 * confirmed to be killed.
-+	 * css is confirmed to be seen as killed on all CPUs.
-+	 * cgroup_destroy_css_killed() will be invoked to perform the rest
-+	 * of destruction once the percpu refs of all css's are confirmed
-+	 * to be killed.
- 	 */
- 	for_each_root_subsys(cgrp->root, ss) {
- 		struct cgroup_subsys_state *css = cgroup_css(cgrp, ss->subsys_id);
-@@ -4700,36 +4715,17 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
-  * @work: cgroup->destroy_free_work
-  *
-  * This function is invoked from a work item for a cgroup which is being
-- * destroyed after the percpu refcnts of all css's are guaranteed to be
-- * seen as killed on all CPUs, and performs the rest of destruction.  This
-- * is the second step of destruction described in the comment above
-- * cgroup_destroy_locked().
-+ * destroyed after all css's are offlined and performs the rest of
-+ * destruction.  This is the second step of destruction described in the
-+ * comment above cgroup_destroy_locked().
-  */
- static void cgroup_destroy_css_killed(struct cgroup *cgrp)
+ static inline bool cache_match_memcg(struct kmem_cache *cachep,
+@@ -162,7 +162,7 @@ static inline const char *cache_name(struct kmem_cache *s)
+ 
+ static inline struct kmem_cache *cache_from_memcg(struct kmem_cache *s, int idx)
  {
- 	struct cgroup *parent = cgrp->parent;
- 	struct dentry *d = cgrp->dentry;
--	struct cgroup_subsys *ss;
+-	return s->memcg_params->memcg_caches[idx];
++	return s->memcg_caches[idx];
+ }
  
- 	lockdep_assert_held(&cgroup_mutex);
- 
--	/*
--	 * css_tryget() is guaranteed to fail now.  Tell subsystems to
--	 * initate destruction.
--	 */
--	for_each_root_subsys(cgrp->root, ss)
--		offline_css(cgroup_css(cgrp, ss->subsys_id));
--
--	/*
--	 * Put the css refs from cgroup_destroy_locked().  Each css holds
--	 * an extra reference to the cgroup's dentry and cgroup removal
--	 * proceeds regardless of css refs.  On the last put of each css,
--	 * whenever that may be, the extra dentry ref is put so that dentry
--	 * destruction happens only after all css's are released.
--	 */
--	for_each_root_subsys(cgrp->root, ss)
--		css_put(cgroup_css(cgrp, ss->subsys_id));
--
- 	/* delete this cgroup from parent->children */
- 	list_del_rcu(&cgrp->sibling);
- 
+ static inline struct kmem_cache *memcg_root_cache(struct kmem_cache *s)
 -- 
 1.8.3.1
