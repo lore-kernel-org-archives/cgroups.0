@@ -1,39 +1,76 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [HEADSUP] conflicts between cgroup/for-3.12 and memcg
-Date: Thu, 8 Aug 2013 20:34:02 -0400
-Message-ID: <20130809003402.GC13427@mtj.dyndns.org>
+Subject: Re: [PATCH 2/3] memcg: Limit the number of events registered on
+ oom_control
+Date: Thu, 8 Aug 2013 20:46:21 -0400
+Message-ID: <20130809004621.GD13427@mtj.dyndns.org>
+References: <1375874907-22013-1-git-send-email-mhocko@suse.cz>
+ <1375874907-22013-2-git-send-email-mhocko@suse.cz>
+ <20130807130836.GB27006@htj.dyndns.org>
+ <20130807133746.GI8184@dhcp22.suse.cz>
+ <20130807134741.GF27006@htj.dyndns.org>
+ <20130807135734.GK8184@dhcp22.suse.cz>
+ <20130807144730.GB13279@dhcp22.suse.cz>
+ <20130807173051.GD16343@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-         :content-disposition:user-agent;
-        bh=xb0K65Pna8nEqU6z2JUOraHEoihDWmL7ilMCsT3YLCQ=;
-        b=lSrgcTJjxwWcIU63Rmo0f6Hs/8g2u7rJ2EtaklVKr/wVigCim+9h4zi0OxOW+/KGqY
-         arUiptqhxlBXEt2ocuOMnJB4LhoTOhOVHXWmDEnC6JXxV13OkrLllm3FnYhWOvSER3E+
-         Yl9LQdjKkfIRQgMhLKM6WGHZ9YcIJY4YX8yeP27SdYz0knSnKJ18wkbWwEbJvZejCXzp
-         xu0wfw33gofsqMaQ/tTbR0alMsSEWCHsWNikS/zxvFLAHnJQ0uKMCmu6KmBDw0htwt22
-         W86VwmRdNwsmHV6oRD9+qKqtEio1IYNI6OBxFvFXdnNr3mITerObgPIvMbW4JdOWo2Uo
-         gMCA==
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=Wpvr0bWrD+v3GyFgdQ1vu4Pmenpeqv2mx/VhWRdQBl8=;
+        b=JSrYK4sgWyZEPlMzi+gQ4FJzQ5JUBPtGT9ykdoSIRopLBtI8qVtEhdZTYsC1spKf5l
+         QvCeP0jf3OkM64trwQofAq13+N/ehQLcVxC27Vd2Nc8m/fnepp6Fkp4lxQM/WbLD9YQE
+         KRuaBk1FeQ/Kpe4CEOuoD/hKUU//piiMdEBBz5keGQUfv9TrLOCC6bYoppest/ffMzsS
+         IlKyV+95IBuvLPeZW2BGIpfQl6GvbYcfGX+NG1KCo+Io4IRqjAV/hpFOoWSVkythizkn
+         p2l0l2ocd+26Zx1vwR5nJ3e/OTpycMuRElQg8ebDRRHyAKeDmrbL5hvvWFrF+jReoSNy
+         udoA==
 Content-Disposition: inline
+In-Reply-To: <20130807173051.GD16343@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: sfr@canb.auug.org.au, Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-next@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-mm@kvack.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, "Kirill A. Shutemov" <kirill@shutemov.name>, Anton Vorontsov <anton.vorontsov@linaro.org>
 
-Hello, Stephen, Andrew.
+Hello, Michal.
 
-I just applied rather invasive API update to cgroup/for-3.12, which
-led to conflicts in two files - include/net/netprio_cgroup.h and
-mm/memcontrol.c.  The former is trivial context conflict and the two
-changes conflicting are independent.  The latter contains several
-conflicts and unfortunately isn't trivial, especially the iterator
-update and the memcg patches should probably be rebased.
+On Wed, Aug 07, 2013 at 07:30:51PM +0200, Michal Hocko wrote:
+> On Wed 07-08-13 16:47:30, Michal Hocko wrote:
+> > On Wed 07-08-13 15:57:34, Michal Hocko wrote:
+> > [...]
+> > > Hmm, OK so you think that the fd limit is sufficient already?
+> > 
+> > Hmm, that would need to touch the code as well (the register callback
+> > would need to make sure only one event is registered per cfile). But yes
+> > this way would be better. I will send a new patch once I have an idle
+> > moment.
+> 
+> What do you think about the following? I am not sure about EINVAL maybe
+> there is a better way to tell userspace it is doing something wrong. I
+> would appreciate any suggestions. If this looks good I will post a
+> similar patch for vmpressure.
 
-I can hold back pushing for-3.12 into for-next until the memcg patches
-are rebased.  Would that work?
+I don't think it's a good idea.  Not sure it matters given that this
+isn't a very popular interface but adding this sort of rather
+arbitrary restrictions can be confusing and lead to issues in userland
+which are extremely annoying to track down.
+
+Also, in terms of layering, this is horribly misplaced.  This is low
+level event source implementation, which is not the right place to
+implement logic to protect from userland abuses / mistakes.
+
+That's the whole thing with this interface.  It's essentially
+implementing a new userland-visible notification framework.  It is a
+complex userland visible interface which takes a lot of design and
+effort to get right and cgroup core or memcg definitely is not the
+place to do anything like this.  Collectively, we are not capable
+enough to do pull things like this properly by ourselves and even if
+we were it is not the right place to do it.
+
+Given how generally broken delegating to !priv users is, I don't think
+there's anything we can or should do at this point rather than noting
+that it is broken and was a mistake.
 
 Thanks.
 
