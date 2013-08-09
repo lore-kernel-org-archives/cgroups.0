@@ -1,61 +1,129 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET cgroup/for-3.12] cgroup: make cgroup_event specific to
- memcg
-Date: Thu, 8 Aug 2013 21:00:32 -0400
-Message-ID: <20130809010032.GA14792@mtj.dyndns.org>
-References: <20130805162958.GF19631@mtj.dyndns.org>
- <20130805191641.GA24003@dhcp22.suse.cz>
- <20130805194431.GD23751@mtj.dyndns.org>
- <20130806155804.GC31138@dhcp22.suse.cz>
- <20130806161509.GB10779@mtj.dyndns.org>
- <20130807121836.GF8184@dhcp22.suse.cz>
- <20130807124321.GA27006@htj.dyndns.org>
- <20130807132613.GH8184@dhcp22.suse.cz>
- <20130807133645.GE27006@htj.dyndns.org>
- <5203081C.8050403@huawei.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [HEADSUP] conflicts between cgroup/for-3.12 and memcg
+Date: Fri, 9 Aug 2013 09:22:07 +0200
+Message-ID: <20130809072207.GA16531@dhcp22.suse.cz>
+References: <20130809003402.GC13427@mtj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=lvBessSqaHZXx/Jzk8Cr+dpchtaJO4Hrh2hXRjb6pqQ=;
-        b=ZoMbVvN+onohOLF4btVVBgI6LiKq+7lQfZEUYd5HDEidvisJpV8kN5fDW4p3/S5ZSm
-         /AfI9HprFfPNYl+YPEydKduMcNzaycYeGEgyqIXEVoMuDEfr7FdMkTZv27rE+iQwStjI
-         hylfoeXrMxFDGXIzg92A93mGEqNiT6k9YjWiR3fZaxgouOIzAXdFVv5R6Gud24Oc19MG
-         Z4rrzDoOKLyTPdmUjLAt8clRvmO0EgOT8Wq8noJU8QIPm1nPdLEJvdZKsy/yBTbLRqiY
-         oWXN9pMAKjWVuOk0RZvYrE0YBhfV2U94Zj8bpST5iy2e42YnBuhOjma9u6GBeM03sVXf
-         7hvA==
+Content-Type: multipart/mixed; boundary="PNTmBPCT7hxwcZjr"
+Return-path: <linux-next-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <5203081C.8050403@huawei.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20130809003402.GC13427@mtj.dyndns.org>
+Sender: linux-next-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>
-Cc: Michal Hocko <mhocko@suse.cz>, hannes@cmpxchg.org, bsingharora@gmail.com, kamezawa.hiroyu@jp.fujitsu.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+Cc: sfr@canb.auug.org.au, linux-next@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-Hello, Li.
 
-On Thu, Aug 08, 2013 at 10:53:16AM +0800, Li Zefan wrote:
-> I would like to see this happen. I have a feeling that we're deprecating
-> features a bit aggressively without providing alternatives.
+--PNTmBPCT7hxwcZjr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-I'd rework it prolly next week but this has to go one way or another.
-There's no way we're implementing userland interface this complex in
-cgroup proper.  It is a gross layering violation.  We don't implement
-userland visible interface this complex in low level subsystems.  It's
-wrong both in principle and leads to all sorts of problems in practice
-like ending up worrying about userland abuses in memcg event source
-implementation, which is utterly bonkers if you ask me.
+On Thu 08-08-13 20:34:02, Tejun Heo wrote:
+> Hello, Stephen, Andrew.
+> 
+> I just applied rather invasive API update to cgroup/for-3.12, which
+> led to conflicts in two files - include/net/netprio_cgroup.h and
+> mm/memcontrol.c.  The former is trivial context conflict and the two
+> changes conflicting are independent.  The latter contains several
+> conflicts and unfortunately isn't trivial, especially the iterator
+> update and the memcg patches should probably be rebased.
+> 
+> I can hold back pushing for-3.12 into for-next until the memcg patches
+> are rebased.  Would that work?
 
-Thanks.
+I have just tried to merge cgroups/for-3.12 into my memcg tree and there
+were some conflicts indeed. They are attached for reference. The
+resolving is trivial. I've just picked up HEAD as all the conflicts are
+for added resp. removed code in mmotm.
 
+Andrew, let me know if you need a help with rebasing.
+
+HTH
 -- 
-tejun
+Michal Hocko
+SUSE Labs
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+--PNTmBPCT7hxwcZjr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="memcontrol.conflicts"
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index b73988a..c208154 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -182,6 +182,29 @@ struct mem_cgroup_per_node {
+ 	struct mem_cgroup_per_zone zoneinfo[MAX_NR_ZONES];
+ };
+ 
++<<<<<<< HEAD
++=======
++/*
++ * Cgroups above their limits are maintained in a RB-Tree, independent of
++ * their hierarchy representation
++ */
++
++struct mem_cgroup_tree_per_zone {
++	struct rb_root rb_root;
++	spinlock_t lock;
++};
++
++struct mem_cgroup_tree_per_node {
++	struct mem_cgroup_tree_per_zone rb_tree_per_zone[MAX_NR_ZONES];
++};
++
++struct mem_cgroup_tree {
++	struct mem_cgroup_tree_per_node *rb_tree_per_node[MAX_NUMNODES];
++};
++
++static struct mem_cgroup_tree soft_limit_tree __read_mostly;
++
++>>>>>>> tj-cgroups/for-3.12
+ struct mem_cgroup_threshold {
+ 	struct eventfd_ctx *eventfd;
+ 	u64 threshold;
+@@ -255,7 +278,10 @@ struct mem_cgroup {
+ 
+ 	bool		oom_lock;
+ 	atomic_t	under_oom;
++<<<<<<< HEAD
+ 	atomic_t	oom_wakeups;
++=======
++>>>>>>> tj-cgroups/for-3.12
+ 
+ 	int	swappiness;
+ 	/* OOM-Killer disable */
+@@ -323,6 +349,7 @@ struct mem_cgroup {
+ 	 */
+ 	spinlock_t soft_lock;
+ 
++<<<<<<< HEAD
+ 	/*
+ 	 * If true then this group has increased parents' children_in_excess
+ 	 * when it got over the soft limit.
+@@ -334,6 +361,8 @@ struct mem_cgroup {
+ 	/* Number of children that are in soft limit excess */
+ 	atomic_t children_in_excess;
+ 
++=======
++>>>>>>> tj-cgroups/for-3.12
+ 	struct mem_cgroup_per_node *nodeinfo[0];
+ 	/* WARNING: nodeinfo must be the last member here */
+ };
+@@ -3573,9 +3602,15 @@ __memcg_kmem_newpage_charge(gfp_t gfp, struct mem_cgroup **_memcg, int order)
+ 	 * the page allocator. Therefore, the following sequence when backed by
+ 	 * the SLUB allocator:
+ 	 *
++<<<<<<< HEAD
+ 	 *	memcg_stop_kmem_account();
+ 	 *	kmalloc(<large_number>)
+ 	 *	memcg_resume_kmem_account();
++=======
++	 * 	memcg_stop_kmem_account();
++	 * 	kmalloc(<large_number>)
++	 * 	memcg_resume_kmem_account();
++>>>>>>> tj-cgroups/for-3.12
+ 	 *
+ 	 * would effectively ignore the fact that we should skip accounting,
+ 	 * since it will drive us directly to this function without passing
+
+--PNTmBPCT7hxwcZjr--
