@@ -1,49 +1,47 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.12] cgroup: make css_for_each_descendant()
-	and friends include the origin css in the iteration
-Date: Thu, 8 Aug 2013 20:13:02 -0400
-Message-ID: <20130809001302.GB13427@mtj.dyndns.org>
-References: <20130804230703.GA12029@htj.dyndns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [HEADSUP] conflicts between cgroup/for-3.12 and memcg
+Date: Thu, 8 Aug 2013 20:34:02 -0400
+Message-ID: <20130809003402.GC13427@mtj.dyndns.org>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=xb0K65Pna8nEqU6z2JUOraHEoihDWmL7ilMCsT3YLCQ=;
+        b=lSrgcTJjxwWcIU63Rmo0f6Hs/8g2u7rJ2EtaklVKr/wVigCim+9h4zi0OxOW+/KGqY
+         arUiptqhxlBXEt2ocuOMnJB4LhoTOhOVHXWmDEnC6JXxV13OkrLllm3FnYhWOvSER3E+
+         Yl9LQdjKkfIRQgMhLKM6WGHZ9YcIJY4YX8yeP27SdYz0knSnKJ18wkbWwEbJvZejCXzp
+         xu0wfw33gofsqMaQ/tTbR0alMsSEWCHsWNikS/zxvFLAHnJQ0uKMCmu6KmBDw0htwt22
+         W86VwmRdNwsmHV6oRD9+qKqtEio1IYNI6OBxFvFXdnNr3mITerObgPIvMbW4JdOWo2Uo
+         gMCA==
+Content-Disposition: inline
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=1Zrx0FNTdmifzMQCNNLQU+lZCADexjaJYJvZzkhmCZc=;
-	b=mzVfU+v6DXsJg2vfH5O54jVlcjn6V23tBR+SNB92arr3rI1X4hphMsVHXoCzas0p2w
-	ox9OqYetcrq6HjMgXh6ElV4kajOj4IKfjIVxASDU8nIq5U5XPB+vZILEgevQ2HKQS85o
-	1fmufvJAF84vHWpPlbPdnPOWCI3+iEkqb2jjJOEGTVss3G/STs/hn42m1O0oXa9LXTHU
-	HordzmedIoBP9sU0cPv6sm5Dd+Y268B0cEydXsrdJ6rS/PzCQ7SpUzuhhrVIG8c/JTv5
-	X4w0+5EaeR8qViw0H+FLiuVFlTCCJzquuZctdhBbrFYuEi7vk/1qlq4toK1FjUTikGYp
-	2OGA==
-Content-Disposition: inline
-In-Reply-To: <20130804230703.GA12029-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: sfr@canb.auug.org.au, Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-next@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-On Sun, Aug 04, 2013 at 07:07:03PM -0400, Tejun Heo wrote:
-> Hello,
-> 
-> I've been wanting to do this for some time and given all the recent
-> API updates now seems like a pretty good opportunity.  Verified
-> freezer and blkcg.  The conversions are mostly straight forward but
-> I'd much appreciate acks from controller maintainers.
+Hello, Stephen, Andrew.
 
-Applied to cgroup/for-3.12.
+I just applied rather invasive API update to cgroup/for-3.12, which
+led to conflicts in two files - include/net/netprio_cgroup.h and
+mm/memcontrol.c.  The former is trivial context conflict and the two
+changes conflicting are independent.  The latter contains several
+conflicts and unfortunately isn't trivial, especially the iterator
+update and the memcg patches should probably be rebased.
+
+I can hold back pushing for-3.12 into for-next until the memcg patches
+are rebased.  Would that work?
 
 Thanks.
 
 -- 
 tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
