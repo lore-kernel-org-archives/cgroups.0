@@ -1,68 +1,35 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] [RFC] kmemcg: remove union from memcg_params
-Date: Mon, 12 Aug 2013 15:28:12 -0700
-Message-ID: <20130812152812.915d5e8ebe5467586a457eb0@linux-foundation.org>
-References: <1375995086-15456-1-git-send-email-avagin@openvz.org>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 1/2] cpuset: remove an unncessary forward declaration
+Date: Tue, 13 Aug 2013 09:17:33 +0800
+Message-ID: <5209892D.8070502@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1375995086-15456-1-git-send-email-avagin@openvz.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrey Vagin <avagin@openvz.org>
-Cc: linux-mm@kvack.org, Glauber Costa <glommer@parallels.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Lameter <cl@linux-foundation.org>, Pekka Enberg <penberg@kernel.org>, Matt Mackall <mpm@selenic.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Fri,  9 Aug 2013 00:51:26 +0400 Andrey Vagin <avagin@openvz.org> wrote:
 
-> struct memcg_cache_params {
->         bool is_root_cache;
->         union {
->                 struct kmem_cache *memcg_caches[0];
->                 struct {
->                         struct mem_cgroup *memcg;
->                         struct list_head list;
->                         struct kmem_cache *root_cache;
->                         bool dead;
->                         atomic_t nr_pages;
->                         struct work_struct destroy;
->                 };
->         };
-> };
-> 
-> This union is a bit dangerous. //Andrew Morton
-> 
-> The first problem was fixed in v3.10-rc5-67-gf101a94.
-> The second problem is that the size of memory for root
-> caches is calculated incorrectly:
-> 
-> 	ssize_t size = memcg_caches_array_size(num_groups);
-> 
-> 	size *= sizeof(void *);
-> 	size += sizeof(struct memcg_cache_params);
-> 
-> The last line should be fixed like this:
-> 	size += offsetof(struct memcg_cache_params, memcg_caches)
-> 
-> Andrew suggested to rework this code without union and
-> this patch tries to do that.
+Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cpuset.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-hm, did I?
-
-> This patch removes is_root_cache and union. The size of the
-> memcg_cache_params structure is not changed.
-> 
-
-It's a bit sad to consume more space because we're sucky programmers. 
-It would be better to retain the union and to stop writing buggy code
-to handle it!
-
-Maybe there are things we can do to reduce the likelihood of people
-mishandling the union - don't use anonymous fields, name each member,
-access it via helper functions, etc.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index bf69717..9d8d637 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -68,9 +68,6 @@
+  */
+ int number_of_cpusets __read_mostly;
+ 
+-/* Forward declare cgroup structures */
+-struct cgroup_subsys cpuset_subsys;
+-
+ /* See "Frequency meter" comments, below. */
+ 
+ struct fmeter {
+-- 
+1.8.0.2
