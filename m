@@ -1,48 +1,66 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/2] cpuset: remove redundant checks in file write
- functions
-Date: Wed, 14 Aug 2013 09:30:48 -0400
-Message-ID: <20130814133048.GC28628@htj.dyndns.org>
-References: <5209892D.8070502@huawei.com>
- <52098941.4070600@huawei.com>
- <20130813150549.GF26596@mtj.dyndns.org>
- <520AE4FC.5090702@huawei.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH] mm: memcontrol: fix handling of swapaccount parameter
+Date: Wed, 14 Aug 2013 20:36:04 +0200
+Message-ID: <20130814183604.GE24033@dhcp22.suse.cz>
+References: <1376486495-21457-1-git-send-email-gergely@risko.hu>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=zO15be400q0PlxDDaFNbAXmxeJfXvcXh6bofy3AHnUU=;
-        b=JK358SryKmvOUiRkIamy+nmetfTGEQ1duejUSXd+ec6U8IUnAi8mLVDcCLQifSH0An
-         1UKIMvtWglCOHrizb76GnJCLnawFiBLj+dVaq2KS8syslj1EcHWyicQwhuvqfpq5MxAZ
-         Kh0zwUgRDfXzpnDbIYRZOOK5/MI83SwH0KdeGkhjJRO0NZ8HNZKdJGNcaq/zYOOzaglM
-         +jYECMKAWQEU8ZqVmDr6C6C6oy4SgrJ2iml5g01XwRcFSqrYJ0IZZIR2z/oVGVGBWMcD
-         ji9FITWXZREmDocrhmSOqyDd6KyxohSAT7vDByein622wxk24HUU9Rn6zVFtaJ8zwLWz
-         FoFg==
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <520AE4FC.5090702-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1376486495-21457-1-git-send-email-gergely@risko.hu>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Gergely Risko <gergely@risko.hu>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, torvalds@linux-foundation.org
 
-Hello, Li.
+On Wed 14-08-13 15:21:35, Gergely Risko wrote:
+> Fixed swap accounting option parsing to enable if called without argument.
 
-On Wed, Aug 14, 2013 at 10:01:32AM +0800, Li Zefan wrote:
-> But most controllers don't check this in those read/write functions.
-> It shoudn't do any harm not checking online/offline status.
+We used to have [no]swapaccount but that one has been removed by a2c8990a
+(memsw: remove noswapaccount kernel parameter) so I do not think that
+swapaccount without any given value makes much sense these days.
 
-It depends on the specific controller.  For controllers which make
-clear distinction between online and offline states for, say,
-hierarchical config propagation, it could lead to buggy behavior if
-the function body afterwards assume that the current node is online.
-I don't know whether this is the case for the functions converted here
-but even if so the patch needs to update the description.
-
-Thanks.
+> Signed-off-by: Gergely Risko <gergely@risko.hu>
+> ---
+>  mm/memcontrol.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index c290a1c..8ec2507 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -6970,13 +6970,13 @@ struct cgroup_subsys mem_cgroup_subsys = {
+>  static int __init enable_swap_account(char *s)
+>  {
+>  	/* consider enabled if no parameter or 1 is given */
+> -	if (!strcmp(s, "1"))
+> +	if (*s++ != '=' || !*s || !strcmp(s, "1"))
+>  		really_do_swap_account = 1;
+>  	else if (!strcmp(s, "0"))
+>  		really_do_swap_account = 0;
+>  	return 1;
+>  }
+> -__setup("swapaccount=", enable_swap_account);
+> +__setup("swapaccount", enable_swap_account);
+>  
+>  static void __init memsw_file_init(void)
+>  {
+> -- 
+> 1.8.3.2
+> 
+> --
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo@kvack.org.  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
 
 -- 
-tejun
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
