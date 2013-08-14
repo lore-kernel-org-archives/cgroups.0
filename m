@@ -1,69 +1,70 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH] kmemcg: don't allocate extra memory for root
- memcg_cache_params
-Date: Wed, 14 Aug 2013 13:47:10 -0700
-Message-ID: <20130814134710.ff123b0ea802efa7261d7e26@linux-foundation.org>
-References: <1376476281-26559-1-git-send-email-avagin@openvz.org>
+From: Gergely Risko <gergely@risko.hu>
+Subject: Re: [PATCH] mm: memcontrol: fix handling of swapaccount parameter
+Date: Wed, 14 Aug 2013 23:22:23 +0200
+Message-ID: <87ioz855o0.fsf@gergely.risko.hu>
+References: <1376486495-21457-1-git-send-email-gergely@risko.hu>
+	<20130814183604.GE24033@dhcp22.suse.cz>
+	<20130814184956.GF24033@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1376476281-26559-1-git-send-email-avagin-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20130814184956.GF24033@dhcp22.suse.cz> (Michal Hocko's message
+	of "Wed, 14 Aug 2013 20:49:56 +0200")
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrey Vagin <avagin-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@suse.cz>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, torvalds@linux-foundation.org
 
-On Wed, 14 Aug 2013 14:31:21 +0400 Andrey Vagin <avagin-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org> wrote:
+On Wed, 14 Aug 2013 20:49:56 +0200, Michal Hocko <mhocko@suse.cz> writes:
 
-> The memcg_cache_params structure contains the common part and the union,
-> which represents two different types of data: one for root cashes and
-> another for child caches.
-> 
-> The size of child data is fixed. The size of the memcg_caches array is
-> calculated in runtime.
-> 
-> Currently the size of memcg_cache_params for root caches is calculated
-> incorrectly, because it includes the size of parameters for child caches.
-> 
-> ssize_t size = memcg_caches_array_size(num_groups);
-> size *= sizeof(void *);
-> 
-> size += sizeof(struct memcg_cache_params);
-> 
-> ...
+> On Wed 14-08-13 20:36:04, Michal Hocko wrote:
+>> On Wed 14-08-13 15:21:35, Gergely Risko wrote:
+>> > Fixed swap accounting option parsing to enable if called without argument.
+>> 
+>> We used to have [no]swapaccount but that one has been removed by a2c8990a
+>> (memsw: remove noswapaccount kernel parameter) so I do not think that
+>> swapaccount without any given value makes much sense these days.
 >
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -3140,7 +3140,7 @@ int memcg_update_cache_size(struct kmem_cache *s, int num_groups)
->  		ssize_t size = memcg_caches_array_size(num_groups);
->  
->  		size *= sizeof(void *);
-> -		size += sizeof(struct memcg_cache_params);
-> +		size += sizeof(offsetof(struct memcg_cache_params, memcg_caches));
+> Now that I am reading your changelog again it says this is a fix. Have
+> you experienced any troubles because of the parameter semantic change?
 
-This looks wrong. offsetof() returns size_t, so this is equivalent to
+Yeah, I experienced trouble, I was new to all of this containers +
+cgroups + namespaces thingies and while trying out stuff it was totally
+impossible for me to enable swap accounting and I didn't understand why.
 
-		size += sizeof(size_t);
+In Debian swap accounting is off by default, even when you
+cgroup_enable=memory.  So you have to explicitly enable swapaccounting.
 
->  		s->memcg_params = kzalloc(size, GFP_KERNEL);
->  		if (!s->memcg_params) {
-> @@ -3183,13 +3183,16 @@ int memcg_update_cache_size(struct kmem_cache *s, int num_groups)
->  int memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *s,
->  			 struct kmem_cache *root_cache)
->  {
-> -	size_t size = sizeof(struct memcg_cache_params);
-> +	size_t size;
->  
->  	if (!memcg_kmem_enabled())
->  		return 0;
->  
-> -	if (!memcg)
-> +	if (!memcg) {
-> +		size = offsetof(struct memcg_cache_params, memcg_caches);
->  		size += memcg_limited_groups_array_size * sizeof(void *);
-> +	} else
-> +		size = sizeof(struct memcg_cache_params);
->  
->  	s->memcg_params = kzalloc(size, GFP_KERNEL);
->  	if (!s->memcg_params)
+I've found the following documentation snippets all pointing to enable
+swap accounting by just simply adding "swapaccount" to the kernel
+command line.  They all state that "swapaccount" is enough, no need for
+"swapaccount=1" (actually some of them don't even mention =1 at all):
+  - make menuconfig documentation for swap accounting,
+  - /usr/share/doc/lxc/README.Debian from the lxc package,
+  - Documentation/kernel-parameters.txt:
+	swapaccount[=0|1]
+			[KNL] Enable accounting of swap in memory resource
+			controller if no parameter or 1 is given or disable
+			it if 0 is given (See Documentation/cgroups/memory.txt),
+  - the comment in the source code just above the line ("consider enabled
+    if no parameter or 1 is given").
+
+And of course it's a trivial thing for the user to try swapaccount=1
+when simply swapaccount doesn't work, but it's still a very bad
+experience, because the documentation seems to be clear and every
+command line change requires a reboot.
+
+It's OK for me if we fix the documentation instead of the code.  But
+notice that the code is trivial to fix and the documentation has already
+spread out to various debian packages, internet forums, bug reports,
+etc.  So it seems to be less hassle to actually implement the
+documentation than to document the code.
+
+Gergely
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
