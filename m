@@ -1,38 +1,73 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/2] cpuset: remove redundant checks in file write functions
-Date: Wed, 14 Aug 2013 10:01:32 +0800
-Message-ID: <520AE4FC.5090702@huawei.com>
-References: <5209892D.8070502@huawei.com> <52098941.4070600@huawei.com> <20130813150549.GF26596@mtj.dyndns.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130813150549.GF26596-9pTldWuhBndy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Andrey Vagin <avagin@openvz.org>
+Subject: [PATCH] kmemcg: don't allocate extra memory for root memcg_cache_params
+Date: Wed, 14 Aug 2013 14:31:21 +0400
+Message-ID: <1376476281-26559-1-git-send-email-avagin@openvz.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: linux-mm@kvack.org
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Andrey Vagin <avagin@openvz.org>, Glauber Costa <glommer@openvz.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>
 
-On 2013/8/13 23:05, Tejun Heo wrote:
-> On Tue, Aug 13, 2013 at 09:17:53AM +0800, Li Zefan wrote:
->> Now cgroup core gets a reference to the css when a cgroup file is
->> opened(), and the reference is dropped at file release. so it's
->> guaranteed the cpuset is online during the write function.
-> 
-> Hmmm... it doesn't really guarantee that as css's can be offlined with
-> residual css refcnts, os the css may well be offlined by the time it
-> reaches the rw functions.  What's guaranteed is that their refcnts
-> wouldn't be zero.
+The memcg_cache_params structure contains the common part and the union,
+which represents two different types of data: one for root cashes and
+another for child caches.
 
-Oh, right.
+The size of child data is fixed. The size of the memcg_caches array is
+calculated in runtime.
 
-But most controllers don't check this in those read/write functions.
-It shoudn't do any harm not checking online/offline status.
+Currently the size of memcg_cache_params for root caches is calculated
+incorrectly, because it includes the size of parameters for child caches.
 
-> Eventually we need to implement proper sever
-> semantics (probably by replacing the custom fs implementation with
-> sysfs) but right now controllers still need to deal with offline
-> css's.
-> 
-> Thanks.
-> 
+ssize_t size = memcg_caches_array_size(num_groups);
+size *= sizeof(void *);
+
+size += sizeof(struct memcg_cache_params);
+
+Cc: Glauber Costa <glommer@openvz.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>
+Cc: Balbir Singh <bsingharora@gmail.com>
+Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: Andrey Vagin <avagin@openvz.org>
+---
+ mm/memcontrol.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index c5792a5..d69a10b 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3140,7 +3140,7 @@ int memcg_update_cache_size(struct kmem_cache *s, int num_groups)
+ 		ssize_t size = memcg_caches_array_size(num_groups);
+ 
+ 		size *= sizeof(void *);
+-		size += sizeof(struct memcg_cache_params);
++		size += sizeof(offsetof(struct memcg_cache_params, memcg_caches));
+ 
+ 		s->memcg_params = kzalloc(size, GFP_KERNEL);
+ 		if (!s->memcg_params) {
+@@ -3183,13 +3183,16 @@ int memcg_update_cache_size(struct kmem_cache *s, int num_groups)
+ int memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *s,
+ 			 struct kmem_cache *root_cache)
+ {
+-	size_t size = sizeof(struct memcg_cache_params);
++	size_t size;
+ 
+ 	if (!memcg_kmem_enabled())
+ 		return 0;
+ 
+-	if (!memcg)
++	if (!memcg) {
++		size = offsetof(struct memcg_cache_params, memcg_caches);
+ 		size += memcg_limited_groups_array_size * sizeof(void *);
++	} else
++		size = sizeof(struct memcg_cache_params);
+ 
+ 	s->memcg_params = kzalloc(size, GFP_KERNEL);
+ 	if (!s->memcg_params)
+-- 
+1.8.3.1
