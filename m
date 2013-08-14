@@ -1,75 +1,69 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: fix handling of swapaccount parameter
-Date: Wed, 14 Aug 2013 20:49:56 +0200
-Message-ID: <20130814184956.GF24033@dhcp22.suse.cz>
-References: <1376486495-21457-1-git-send-email-gergely@risko.hu>
- <20130814183604.GE24033@dhcp22.suse.cz>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH] kmemcg: don't allocate extra memory for root
+ memcg_cache_params
+Date: Wed, 14 Aug 2013 13:47:10 -0700
+Message-ID: <20130814134710.ff123b0ea802efa7261d7e26@linux-foundation.org>
+References: <1376476281-26559-1-git-send-email-avagin@openvz.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20130814183604.GE24033-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <1376476281-26559-1-git-send-email-avagin-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Gergely Risko <gergely-keabAoRSNPo@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+To: Andrey Vagin <avagin-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-On Wed 14-08-13 20:36:04, Michal Hocko wrote:
-> On Wed 14-08-13 15:21:35, Gergely Risko wrote:
-> > Fixed swap accounting option parsing to enable if called without argument.
+On Wed, 14 Aug 2013 14:31:21 +0400 Andrey Vagin <avagin-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org> wrote:
+
+> The memcg_cache_params structure contains the common part and the union,
+> which represents two different types of data: one for root cashes and
+> another for child caches.
 > 
-> We used to have [no]swapaccount but that one has been removed by a2c8990a
-> (memsw: remove noswapaccount kernel parameter) so I do not think that
-> swapaccount without any given value makes much sense these days.
-
-Now that I am reading your changelog again it says this is a fix. Have
-you experienced any troubles because of the parameter semantic change?
-
-> > Signed-off-by: Gergely Risko <gergely-keabAoRSNPo@public.gmane.org>
-> > ---
-> >  mm/memcontrol.c | 4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index c290a1c..8ec2507 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -6970,13 +6970,13 @@ struct cgroup_subsys mem_cgroup_subsys = {
-> >  static int __init enable_swap_account(char *s)
-> >  {
-> >  	/* consider enabled if no parameter or 1 is given */
-> > -	if (!strcmp(s, "1"))
-> > +	if (*s++ != '=' || !*s || !strcmp(s, "1"))
-> >  		really_do_swap_account = 1;
-> >  	else if (!strcmp(s, "0"))
-> >  		really_do_swap_account = 0;
-> >  	return 1;
-> >  }
-> > -__setup("swapaccount=", enable_swap_account);
-> > +__setup("swapaccount", enable_swap_account);
-> >  
-> >  static void __init memsw_file_init(void)
-> >  {
-> > -- 
-> > 1.8.3.2
-> > 
-> > --
-> > To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> > the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
-> > see: http://www.linux-mm.org/ .
-> > Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
+> The size of child data is fixed. The size of the memcg_caches array is
+> calculated in runtime.
 > 
-> -- 
-> Michal Hocko
-> SUSE Labs
+> Currently the size of memcg_cache_params for root caches is calculated
+> incorrectly, because it includes the size of parameters for child caches.
 > 
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
+> ssize_t size = memcg_caches_array_size(num_groups);
+> size *= sizeof(void *);
+> 
+> size += sizeof(struct memcg_cache_params);
+> 
+> ...
+>
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3140,7 +3140,7 @@ int memcg_update_cache_size(struct kmem_cache *s, int num_groups)
+>  		ssize_t size = memcg_caches_array_size(num_groups);
+>  
+>  		size *= sizeof(void *);
+> -		size += sizeof(struct memcg_cache_params);
+> +		size += sizeof(offsetof(struct memcg_cache_params, memcg_caches));
 
--- 
-Michal Hocko
-SUSE Labs
+This looks wrong. offsetof() returns size_t, so this is equivalent to
+
+		size += sizeof(size_t);
+
+>  		s->memcg_params = kzalloc(size, GFP_KERNEL);
+>  		if (!s->memcg_params) {
+> @@ -3183,13 +3183,16 @@ int memcg_update_cache_size(struct kmem_cache *s, int num_groups)
+>  int memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *s,
+>  			 struct kmem_cache *root_cache)
+>  {
+> -	size_t size = sizeof(struct memcg_cache_params);
+> +	size_t size;
+>  
+>  	if (!memcg_kmem_enabled())
+>  		return 0;
+>  
+> -	if (!memcg)
+> +	if (!memcg) {
+> +		size = offsetof(struct memcg_cache_params, memcg_caches);
+>  		size += memcg_limited_groups_array_size * sizeof(void *);
+> +	} else
+> +		size = sizeof(struct memcg_cache_params);
+>  
+>  	s->memcg_params = kzalloc(size, GFP_KERNEL);
+>  	if (!s->memcg_params)
