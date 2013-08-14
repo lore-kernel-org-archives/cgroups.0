@@ -1,46 +1,160 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/2] cpuset: remove redundant checks in file write
- functions
-Date: Tue, 13 Aug 2013 11:05:49 -0400
-Message-ID: <20130813150549.GF26596@mtj.dyndns.org>
-References: <5209892D.8070502@huawei.com>
- <52098941.4070600@huawei.com>
+Subject: [PATCH v2 08/14] cgroup: move cgroup->subsys[] assignment to
+ online_css()
+Date: Tue, 13 Aug 2013 20:27:51 -0400
+Message-ID: <20130814002751.GM28996@mtj.dyndns.org>
+References: <1375992831-4650-1-git-send-email-tj@kernel.org>
+ <1375992831-4650-9-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=4B3aQXoXCG6GrRne7dXgYh6A4KkBRIXM+mc9d4qyBfI=;
-        b=Dw6apXpDdPZmHJxv/Zw0M8xsjY46vRGG22F8rwGUV+2vIOhrySc/CxP5+SzPip525J
-         m30f40/+79eBmEqereFQlwDhLcIRQZsRiV3n3xNJDwICOj4YXnQp2qWZ6CHnl9HM5Xu5
-         bSRxz2BKpo61fiCGJWDl9dyqM48SRxmo7i/3208BG3bG10qTjOSFg41srX8U6ScXs627
-         VwGgkugipeoE8rej9iWuRokp5TD1WJJG4nX51ohKsLSzelyQmTLgoHmL1+NvTAQ/Jd4P
-         zpP0S3gh/9BrVb8SIxs7gCnyTZ/FByn8fXQOkDcS1zO5vvZ7oxmPw6SYrKgZgnkkMMeG
-         GInA==
+        bh=5+wBGb1dd0P873GmguTE0FSAIfoL+H+v5tUfMUTBDy8=;
+        b=CU37vpuUSqCsklPBCdJZfVFYuZSPdmGP8vGTwFaJ2SPJtSSLEGUcm2WIhsFp/tZ/4G
+         9m7z2L7u+rgtXGhA+YDc+JfV6nZzduWwizSU8q0u0EKPSEQvqeN2ziG45dkHjPfJe/r6
+         ukR0tWfMrQIyh0OtoDTAm6ZOnQHJiA1X8NDWlZwf2ZqHpj/LVoc7YqBxvZHjqsWJN8Ni
+         0KgjFS8ibSMhpjA9cE5PBu/t6qDzoq0P4hfpZ1nVPkxucNsVYHD7ECsW1TYHRzeuAkli
+         rSDvmI/knWz4fB5nm7N28yGWcRpdFkAgFsnuik4SZbq1c5Hu/Aa/wuuwE2EvMyTZ9M4/
+         vn0w==
 Content-Disposition: inline
-In-Reply-To: <52098941.4070600-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1375992831-4650-9-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Aug 13, 2013 at 09:17:53AM +0800, Li Zefan wrote:
-> Now cgroup core gets a reference to the css when a cgroup file is
-> opened(), and the reference is dropped at file release. so it's
-> guaranteed the cpuset is online during the write function.
+From ae7f164a09408bf21ab3c82a9e80a3ff37aa9e3e Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Tue, 13 Aug 2013 20:22:50 -0400
 
-Hmmm... it doesn't really guarantee that as css's can be offlined with
-residual css refcnts, os the css may well be offlined by the time it
-reaches the rw functions.  What's guaranteed is that their refcnts
-wouldn't be zero.  Eventually we need to implement proper sever
-semantics (probably by replacing the custom fs implementation with
-sysfs) but right now controllers still need to deal with offline
-css's.
+Currently, css (cgroup_subsys_state) lifetime is tied to that of the
+associated cgroup.  With the planned unified hierarchy, css's will be
+dynamically created and destroyed within the lifetime of a cgroup.  To
+enable such usages, css's will be individually RCU protected instead
+of being tied to the cgroup.
+
+In preparation, this patch moves cgroup->subsys[] assignment from
+init_css() to online_css().  As this means that a newly initialized
+css should be remembered separately and that cgroup_css() returns NULL
+between init and online, cgroup_create() is updated so that it stores
+newly created css's in a local array css_ar[] and
+cgroup_init/load_subsys() are updated to use local variable @css
+instead of using cgroup_css().  This change also slightly simplifies
+error path of cgroup_create().
+
+While this patch changes when cgroup->subsys[] is initialized, this
+change isn't visible to subsystems or userland.
+
+v2: This patch wasn't updated accordingly after the previous "cgroup:
+    reorganize css init / exit paths" was updated leading to missing a
+    css_ar[] conversion in cgroup_create() and thus boot failure.  Fix
+    it.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+Oops, this needed to be updated too.  git branches updated accordingly.
 
 Thanks.
 
+ kernel/cgroup.c | 21 +++++++++++----------
+ 1 file changed, 11 insertions(+), 10 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index a1ebc44..b9f736c 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -4321,7 +4321,6 @@ static void init_css(struct cgroup_subsys_state *css, struct cgroup_subsys *ss,
+ 		css->flags |= CSS_ROOT;
+ 
+ 	BUG_ON(cgroup_css(cgrp, ss->subsys_id));
+-	rcu_assign_pointer(cgrp->subsys[ss->subsys_id], css);
+ }
+ 
+ /* invoke ->css_online() on a new CSS and mark it online if successful */
+@@ -4334,8 +4333,10 @@ static int online_css(struct cgroup_subsys_state *css)
+ 
+ 	if (ss->css_online)
+ 		ret = ss->css_online(css);
+-	if (!ret)
++	if (!ret) {
+ 		css->flags |= CSS_ONLINE;
++		rcu_assign_pointer(css->cgroup->subsys[ss->subsys_id], css);
++	}
+ 	return ret;
+ }
+ 
+@@ -4366,6 +4367,7 @@ static void offline_css(struct cgroup_subsys_state *css)
+ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+ 			     umode_t mode)
+ {
++	struct cgroup_subsys_state *css_ar[CGROUP_SUBSYS_COUNT] = { };
+ 	struct cgroup *cgrp;
+ 	struct cgroup_name *name;
+ 	struct cgroupfs_root *root = parent->root;
+@@ -4433,12 +4435,11 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+ 			err = PTR_ERR(css);
+ 			goto err_free_all;
+ 		}
++		css_ar[ss->subsys_id] = css;
+ 
+ 		err = percpu_ref_init(&css->refcnt, css_release);
+-		if (err) {
+-			ss->css_free(css);
++		if (err)
+ 			goto err_free_all;
+-		}
+ 
+ 		init_css(css, ss, cgrp);
+ 
+@@ -4467,7 +4468,7 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+ 
+ 	/* each css holds a ref to the cgroup's dentry and the parent css */
+ 	for_each_root_subsys(root, ss) {
+-		struct cgroup_subsys_state *css = cgroup_css(cgrp, ss->subsys_id);
++		struct cgroup_subsys_state *css = css_ar[ss->subsys_id];
+ 
+ 		dget(dentry);
+ 		percpu_ref_get(&css->parent->refcnt);
+@@ -4478,7 +4479,7 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+ 
+ 	/* creation succeeded, notify subsystems */
+ 	for_each_root_subsys(root, ss) {
+-		struct cgroup_subsys_state *css = cgroup_css(cgrp, ss->subsys_id);
++		struct cgroup_subsys_state *css = css_ar[ss->subsys_id];
+ 
+ 		err = online_css(css);
+ 		if (err)
+@@ -4511,7 +4512,7 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+ 
+ err_free_all:
+ 	for_each_root_subsys(root, ss) {
+-		struct cgroup_subsys_state *css = cgroup_css(cgrp, ss->subsys_id);
++		struct cgroup_subsys_state *css = css_ar[ss->subsys_id];
+ 
+ 		if (css) {
+ 			percpu_ref_cancel_init(&css->refcnt);
+@@ -4793,7 +4794,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
+ 	 * need to invoke fork callbacks here. */
+ 	BUG_ON(!list_empty(&init_task.tasks));
+ 
+-	BUG_ON(online_css(cgroup_css(cgroup_dummy_top, ss->subsys_id)));
++	BUG_ON(online_css(css));
+ 
+ 	mutex_unlock(&cgroup_mutex);
+ 
+@@ -4897,7 +4898,7 @@ int __init_or_module cgroup_load_subsys(struct cgroup_subsys *ss)
+ 	}
+ 	write_unlock(&css_set_lock);
+ 
+-	ret = online_css(cgroup_css(cgroup_dummy_top, ss->subsys_id));
++	ret = online_css(css);
+ 	if (ret)
+ 		goto err_unload;
+ 
 -- 
-tejun
+1.8.3.1
