@@ -1,50 +1,110 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.12 1/2] cgroup: fix
- cgroup_write_event_control()
-Date: Thu, 15 Aug 2013 11:41:46 -0400
-Message-ID: <20130815154146.GF14606@htj.dyndns.org>
-References: <20130815154032.GE14606@htj.dyndns.org>
+Subject: [PATCH cgroup/for-3.12 1/2] cgroup: fix subsystem file accesses on
+	the root cgroup
+Date: Thu, 15 Aug 2013 11:42:36 -0400
+Message-ID: <20130815154236.GG14606@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=yhH2VC+3pkl18uXgtLa3Us/EQsHYA5cO/16DLa5qO+g=;
-        b=FovFvH0B0IS6eE0qujn3t0PB/mkIggen+UUF/uDVRDs2cy7iB8oAbyRO7Kf8Li0RbY
-         YCzItpWPu8AR8vkxB+Z/iVBAdhfqvWueKc0YSlCy+eDP5+FAG+XQ588A1A+99Fbyd/q6
-         WNX9G4NbNLqDKRR0L1QCCBH3qTio/2CxsIRGi7Nk4kUjWzky9vD80MjZl+nM86Is9z8C
-         6Kxu2L39vaJGFg+g9isG07I19GfLAGYRo0SvhnS8hxbl+ActbqoWLGZk4wfpvE+keZ5j
-         x1dziozyiWEVBDT1fFfC8I2j6pA+ubfm3iSOeNjrMT4rz2JUv9JxmQyHTc/ppOipxUu+
-         yGsA==
-Content-Disposition: inline
-In-Reply-To: <20130815154032.GE14606-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:subject:message-id:mime-version:content-type
+	:content-disposition:user-agent;
+	bh=fTEQz42mf5yfm6jc9GHL7MJAkG2h93TD2/vU/SKBrLk=;
+	b=D47lqQzUrTWvfD+yVEiifBgyV9F+O2lCA3fRSaVPBssaPgYV3obIVC79d5OUVwYEIv
+	P0umt9folwlLHmuC00xJeP8yx7V+jgxu/mrdW++FLF88yKgAv67pSH7EcDBI13yg4F3q
+	AHhcwSm8WiC3PTfTLaX0px19buhHRhsq7dkcDHCBVxgEEx6yndLmCVqzaZhCtypH66ke
+	BAvPFsX1dQhUp6tpgH7a3KyJhR1YxI5Wuv5IB/KvFae3HJeKFjniFZfju0PqaTIfmsHY
+	pqx1pI6BffbG45ukCwKKYkdXdVLoQlEapi4Sgfsj7FxNVdGi4F5wPuXXHK0A7O16B1ys
+	Dc+w==
+Content-Disposition: inline
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Aug 15, 2013 at 11:40:32AM -0400, Tejun Heo wrote:
-> From 994a762080e4b136171c82ac78f7d7bbf17a451d Mon Sep 17 00:00:00 2001
-> From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Date: Wed, 14 Aug 2013 23:38:21 -0400
-> 
-> 81eeaf0411 ("cgroup: make cftype->[un]register_event() deal with
-> cgroup_subsys_state inst ead of cgroup") updated the cftype event
-> methods to take @css (cgroup_subsys_state) instead of @cgroup;
-> however, it incorrectly used @css passed to
-> cgroup_write_event_control(), which the dummy_css for the cgroup as
-> the file is a cgroup core file.  This leads to oops on event
-> registration.
-> 
-> Fix it by using the css matching the event target file.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From af8e64db96406f91746711260717c11584f90efd Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Thu, 15 Aug 2013 11:37:54 -0400
 
-Oops, wrong patch.  Please ignore.  Will resend soon.
+105347ba5 ("cgroup: make cgroup_file_open() rcu_read_lock() around
+cgroup_css() and add cfent->css") added cfent->css to cache the
+associted cgroup_subsys_state across file operations.
 
-Sorry about the noise.
+A cfent is associated with single css throughout its lifetime and the
+origimal commit initialized the cache pointer during cgroup_add_file()
+and verified that it matches the actual one in cgroup_file_open().
+While this works fine for !root cgroups, it's broken for root cgroups
+as files in a root cgroup are created before the css's are associated
+with the cgroup and thus cgroup_css() call in cgroup_add_file()
+returns NULL associating all cfents in the root cgroup with NULL css.
+This makes cgroup_file_open() trigger WARN and fail with -ENODEV for
+all !core subsystem files in the root cgroups.
 
+There's no reason to initialize cfent->css separately from
+cgroup_add_file().  As the association never changes,
+cgroup_file_open() can set it unconditionally every time and
+containing the logic in cgroup_file_open() makes more sense anyway as
+the only reason it's necessary is file->private_data being already
+occupied.
+
+Fix it by setting cfent->css unconditionally from cgroup_file_open().
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ kernel/cgroup.c | 24 ++++++++++--------------
+ 1 file changed, 10 insertions(+), 14 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 66d0107..ab2a23f 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -2490,10 +2490,18 @@ static int cgroup_file_open(struct inode *inode, struct file *file)
+ 	}
+ 	rcu_read_unlock();
+ 
+-	/* css should match @cfe->css, see cgroup_add_file() for details */
+-	if (!css || WARN_ON_ONCE(css != cfe->css))
++	if (!css)
+ 		return -ENODEV;
+ 
++	/*
++	 * @cfe->css is used by read/write/close to determine the
++	 * associated css.  @file->private_data would be a better place but
++	 * that's already used by seqfile.  Multiple accessors may use it
++	 * simultaneously which is okay as the association never changes.
++	 */
++	WARN_ON_ONCE(cfe->css && cfe->css != css);
++	cfe->css = css;
++
+ 	if (cft->read_map || cft->read_seq_string) {
+ 		file->f_op = &cgroup_seqfile_operations;
+ 		err = single_open(file, cgroup_seqfile_show, cfe);
+@@ -2772,18 +2780,6 @@ static int cgroup_add_file(struct cgroup *cgrp, struct cftype *cft)
+ 	dentry->d_fsdata = cfe;
+ 	simple_xattrs_init(&cfe->xattrs);
+ 
+-	/*
+-	 * cfe->css is used by read/write/close to determine the associated
+-	 * css.  file->private_data would be a better place but that's
+-	 * already used by seqfile.  Note that open will use the usual
+-	 * cgroup_css() and css_tryget() to acquire the css and this
+-	 * caching doesn't affect css lifetime management.
+-	 */
+-	if (cft->ss)
+-		cfe->css = cgroup_css(cgrp, cft->ss->subsys_id);
+-	else
+-		cfe->css = &cgrp->dummy_css;
+-
+ 	mode = cgroup_file_mode(cft);
+ 	error = cgroup_create_file(dentry, mode | S_IFREG, cgrp->root->sb);
+ 	if (!error) {
 -- 
-tejun
+1.8.3.1
