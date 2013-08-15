@@ -1,109 +1,115 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH cgroup/for-3.12 2/2] cgroup: fix cgroup_write_event_control()
-Date: Thu, 15 Aug 2013 11:43:15 -0400
-Message-ID: <20130815154315.GH14606@htj.dyndns.org>
-References: <20130815154236.GG14606@htj.dyndns.org>
-Mime-Version: 1.0
+Subject: [PATCHSET v2 cgroup/for-3.12] cgroup: make cgroup_event specific to memcg
+Date: Thu, 15 Aug 2013 12:02:18 -0400
+Message-ID: <1376582550-12548-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=gWlH/t5PuwR0bbQ7JC9KDIZK3mnuJ5rt/JRwajXZoRg=;
-        b=ovrM5TEKZKNnUSZAVMSb8CNtA9cug1CojVpp18D4c6d9VzwB2zIBOR22pfrf1g5IDg
-         +cvxkbeMtpX1hod6mmUNET3Mnze/8Q9G9MMOofXc4QWlBRiWi6ZCcjg00HF0bw6IkWbk
-         V8tKYWGTtLOrjWFAesh1weLXrh877igCTwmsLH9cEJTjfosd2/4aAa4PruR6x+gaMayy
-         8htMsgo3Mtk5q0YqBAQ6vWwY5gd8UKbCR4doXDIpD9uYaG1OivX7RViD8T5LEoXpDe9A
-         LAmuIOCXMaUe8qGkr3EbhTHt1/knT+j8vWpkTLpd7zhEIM/5OYVKqGgqh11WFcBhb1qW
-         OkMg==
-Content-Disposition: inline
-In-Reply-To: <20130815154236.GG14606-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=qiHJFWXrNVRwZ+II4XrxPwzxA6K4PNnfeRRomtkCPqM=;
+        b=JsetwG58ODI0CP3+Op4o2lAmk6qzyjs9VFMaPrlPkoOhwowkzHQ6rUv/An2V8t1uCc
+         AOaHPrZxWfU8eXuUXS6Fd3wefrlwLO0Up7CxJfR9T261DiQ2B6agNw95GzklZSxWR3MF
+         JkZ6LYZoNBKjqRFD4j1+acZ4lbLB8+9wCJAmelweTi3+CuN1mty40LAGzJgEhQkIV2k6
+         /H/QAtLHbrWVCiBjgNewgpeH5UVCiLSR4kFdf+XcSpVcxH0Wz5XC+xIaAgJwpOKLwBbn
+         8bSm5YV20q/a9P50e8umYQEDmMJZqcaUX/4WTSzdVJrvUt913QneLyLYhH9NukQjEfGM
+         NFfw==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From ced043264c9c3f03ab3c992af17461db50421dd8 Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date: Thu, 15 Aug 2013 11:37:54 -0400
+Hello,
 
-81eeaf0411 ("cgroup: make cftype->[un]register_event() deal with
-cgroup_subsys_state inst ead of cgroup") updated the cftype event
-methods to take @css (cgroup_subsys_state) instead of @cgroup;
-however, it incorrectly used @css passed to
-cgroup_write_event_control(), which the dummy_css for the cgroup as
-the file is a cgroup core file.  This leads to oops on event
-registration.
+Changes from the last take[L] are
 
-Fix it by using the css matching the event target file.  Note that
-cgroup_write_event_control() now disallows cgroup core files from
-being event sources.  This is for simplicity and doesn't matter as
-cgroup_event will be moved and made specific to memcg.
+* Event handling updated such that it doesn't require meddling with
+  internals not normally exposed outside cgroup core proper.  dentry
+  reference counting is replaced with css one and cftype handling is
+  completely gone.  Hopefully, this addresses Michal's complaints.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- kernel/cgroup.c | 25 +++++++++++++++++++++----
- 1 file changed, 21 insertions(+), 4 deletions(-)
+* Further simplifications.
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index ab2a23f..6499004 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -4040,10 +4040,10 @@ static void cgroup_event_ptable_queue_proc(struct file *file,
-  * Input must be in format '<event_fd> <control_fd> <args>'.
-  * Interpretation of args is defined by control file implementation.
-  */
--static int cgroup_write_event_control(struct cgroup_subsys_state *css,
-+static int cgroup_write_event_control(struct cgroup_subsys_state *dummy_css,
- 				      struct cftype *cft, const char *buffer)
- {
--	struct cgroup *cgrp = css->cgroup;
-+	struct cgroup *cgrp = dummy_css->cgroup;
- 	struct cgroup_event *event;
- 	struct cgroup *cgrp_cfile;
- 	unsigned int efd, cfd;
-@@ -4065,7 +4065,7 @@ static int cgroup_write_event_control(struct cgroup_subsys_state *css,
- 	event = kzalloc(sizeof(*event), GFP_KERNEL);
- 	if (!event)
- 		return -ENOMEM;
--	event->css = css;
-+
- 	INIT_LIST_HEAD(&event->list);
- 	init_poll_funcptr(&event->pt, cgroup_event_ptable_queue_proc);
- 	init_waitqueue_func_entry(&event->wait, cgroup_event_wake);
-@@ -4101,6 +4101,23 @@ static int cgroup_write_event_control(struct cgroup_subsys_state *css,
- 		goto out_put_cfile;
- 	}
- 
-+	if (!event->cft->ss) {
-+		ret = -EBADF;
-+		goto out_put_cfile;
-+	}
-+
-+	/* determine the css of @cfile and associate @event with it */
-+	rcu_read_lock();
-+
-+	ret = -EINVAL;
-+	event->css = cgroup_css(cgrp, event->cft->ss->subsys_id);
-+	if (event->css)
-+		ret = 0;
-+
-+	rcu_read_unlock();
-+	if (ret)
-+		goto out_put_cfile;
-+
- 	/*
- 	 * The file to be monitored must be in the same cgroup as
- 	 * cgroup.event_control is.
-@@ -4116,7 +4133,7 @@ static int cgroup_write_event_control(struct cgroup_subsys_state *css,
- 		goto out_put_cfile;
- 	}
- 
--	ret = event->cft->register_event(css, event->cft,
-+	ret = event->cft->register_event(event->css, event->cft,
- 			event->eventfd, buffer);
- 	if (ret)
- 		goto out_put_cfile;
--- 
-1.8.3.1
+* Rebased on top of the current cgroup/for-3.12 and pending patches.
+
+Like many other things in cgroup, cgroup_event is way too flexible and
+complex - it strives to provide completely flexible event monitoring
+facility in cgroup proper which allows any number of users to monitor
+custom events.  This essentially is a layering violation and leads to
+weird issues like worrying about event API mis/abuse from userland in
+cgroup controller event source implementation.
+
+The only thing cgroup_event can do better than standard "file changed"
+notification is serving many uncoordinated event listeners watching
+many different thresholds which would only make sense if access to the
+cgroup hierarchy is widely distributed.  The existing implementation
+is pretty ill-equipped to handle such scenario, is not in the right
+layer to tackle such issues and the whole cgroup is headed the other
+way.  As such, going forward, cgroup core won't support cgroup_event
+as the common event mechanism.
+
+Fortunately, memcg along with vmpressure is the only user of the
+facility and gets to keep it.  This patchset makes cgroup_event
+specific to memcg, moves all related code into mm/memcontrol.c and
+renames it to mem_cgroup_event so that its usage can't spread to other
+subsystems and later deprecation and cleanup can be localized.
+
+Note that after this patchset, cgroup.event_control file exists only
+for the hierarchy which has memcg attached to it.  This is a userland
+visible change but unlikely to be noticeable as the file has never
+been meaningful outside memcg.  If this ever becomes problematic, we
+can add a dummy file on hierarchies w/o memcg when !sane_behavior.
+
+This patchset is consited of the following 12 patches.
+
+ 0001-cgroup-rename-cgroup_css_from_dir-to-css_from_dir-an.patch
+ 0002-cgroup-make-cgroup_css-take-cgroup_subsys-instead-an.patch
+ 0003-cgroup-implement-CFTYPE_NO_PREFIX.patch
+ 0004-cgroup-make-cgroup_event-hold-onto-cgroup_subsys_sta.patch
+ 0005-cgroup-make-cgroup_write_event_control-use-css_from_.patch
+ 0006-cgroup-memcg-move-cgroup_event-implementation-to-mem.patch
+ 0007-memcg-cgroup_write_event_control-now-knows-css-is-fo.patch
+ 0008-cgroup-memcg-move-cgroup-event_list-_lock-and-event-.patch
+ 0009-memcg-remove-cgroup_event-cft.patch
+ 0010-memcg-make-cgroup_event-deal-with-mem_cgroup-instead.patch
+ 0011-memcg-rename-cgroup_event-to-mem_cgroup_event.patch
+ 0012-cgroup-unexport-cgroup_css-and-remove-__file_cft.patch
+
+0001-0005 prep for the move.  0005 moves it.  0006-0012 simplify it.
+
+While these are quite a few patches, they are mostly trivial in nature
+and some are required changes with the planned unified hierarchy
+(e.g. switching to css refcnting) and we'd have to restructure it to
+handle dynamic css attach/detach if it's kept generic, which will
+likely be a lot more work for no noticeable gain.
+
+The patches are based on top of
+
+  cgroup/for-3.12 ff58ac0d58 ("cpuset: remove an unncessary forward declaration")
++ [PATCH] cgroup: fix subsystem file accesses on the root cgroup
++ [PATCH] cgroup: fix cgroup_write_event_control()
+
+and available in the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-memcg_event
+
+diffstat follows.
+
+ Documentation/cgroups/cgroups.txt |   20 -
+ include/linux/cgroup.h            |   28 --
+ include/linux/vmpressure.h        |    8
+ init/Kconfig                      |    3
+ kernel/cgroup.c                   |  383 +++++---------------------------------
+ kernel/events/core.c              |    2
+ mm/memcontrol.c                   |  351 +++++++++++++++++++++++++++++++---
+ mm/vmpressure.c                   |   26 --
+ 8 files changed, 389 insertions(+), 432 deletions(-)
+
+Thanks.
+
+--
+tejun
+
+[L] http://thread.gmane.org/gmane.linux.kernel.cgroups/8726
