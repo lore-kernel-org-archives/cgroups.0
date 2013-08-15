@@ -1,19 +1,19 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 04/12] cgroup: make cgroup_event hold onto cgroup_subsys_state instead of cgroup
-Date: Thu, 15 Aug 2013 12:02:22 -0400
-Message-ID: <1376582550-12548-5-git-send-email-tj@kernel.org>
+Subject: [PATCH 05/12] cgroup: make cgroup_write_event_control() use css_from_dir() instead of __d_cgrp()
+Date: Thu, 15 Aug 2013 12:02:23 -0400
+Message-ID: <1376582550-12548-6-git-send-email-tj@kernel.org>
 References: <1376582550-12548-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Q4K9D4OZrRC27JMG5CFRzwvj2MbduZ2Ff56Jrwo6PoA=;
-        b=gtrrID5INJD5+I9jDNanM8H5mFvzr0Z9NQeNYYHKmTeAOyUj51tRCdj3pCIzdnitW7
-         g6U2zn2hQHra0yCiTXNmwb8LZE9/MF7YK7F4u37tCDTnjNp/Q7igthrDyGoTSevcpUqB
-         ssg/w57ZZ6PDCgdTLzJESdvVFGE0jbzSO2Ncg4mhpD/5ZGiSoCvu9viv15AsaEpM8OVf
-         j505eGFETpGx5SB2J/5GDnlbfGdefX4ok+v39gZ+hne37fZ0fhgZSvmLBznJXQ84AAWu
-         fncZNiSpG0cENuskxF4P/FiQ7BXylj20gbRLdFe9QChCQve1Hhr65vXgpJjgO2IqbDoG
-         Ll9w==
+        bh=k2bdQCEzXvxM6M9djaNGlvkaabYc8lv7npr/WV4W2Yw=;
+        b=LtFIe2HHTwdYQht6EefVVsZx1/Mc45aB9s7XYln2/B2JcWLID40gAfv/dhH6ZKUzxb
+         bqcSc2LCrHXC7cwPZrJlXrT+kS2XDyL/E7XXqew9lRmrm5XRyndSt7h0V3I25c4+jWaM
+         eoTBH5tn1nbNavKSFVabqZJhTeE7R9GTK7lynI8LQ1/rXl2p97HqqcEFrTS5yyHMrjQD
+         agxK8izNZR51Sw4gh+dmojCIiOJzJ9ZohJqyYO1u1E58FxaEfrGrTJHQH9GSxFTZcY8u
+         2/4YyVRWhLOKxDrY16AzGCL4FW3FczBIPbm5iV4QT3uThV1ThDWbTQ71D7ZenkB3yFlE
+         Y2Ww==
 In-Reply-To: <1376582550-12548-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,101 +23,63 @@ Content-Transfer-Encoding: 7bit
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
 Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Currently, each registered cgroup_event holds an extra reference to
-the cgroup.  This is a bit weird as events are subsystem specific and
-will also be incorrect in the planned unified hierarchy as css
-(cgroup_subsys_state) may come and go dynamically across the lifetime
-of a cgroup.  Holding onto cgroup won't prevent the target css from
-going away.
-
-Update cgroup_event to hold onto the css the traget file belongs to
-instead of cgroup.
+cgroup_event will be moved to its only user - memcg.  Replace
+__d_cgrp() usage with css_from_dir(), which is already exported.  This
+also simplifies the code a bit.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- kernel/cgroup.c | 26 ++++++++++++--------------
- 1 file changed, 12 insertions(+), 14 deletions(-)
+ kernel/cgroup.c | 18 +++++-------------
+ 1 file changed, 5 insertions(+), 13 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 73d1c70..3e34c1e 100644
+index 3e34c1e..6deed8b 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -3969,7 +3969,6 @@ static void cgroup_event_remove(struct work_struct *work)
- 	struct cgroup_event *event = container_of(work, struct cgroup_event,
- 			remove);
- 	struct cgroup_subsys_state *css = event->css;
--	struct cgroup *cgrp = css->cgroup;
- 
- 	remove_wait_queue(event->wqh, &event->wait);
- 
-@@ -3980,7 +3979,7 @@ static void cgroup_event_remove(struct work_struct *work)
- 
- 	eventfd_ctx_put(event->eventfd);
- 	kfree(event);
--	cgroup_dput(cgrp);
-+	css_put(css);
- }
- 
- /*
-@@ -4103,12 +4102,16 @@ static int cgroup_write_event_control(struct cgroup_subsys_state *dummy_css,
- 		goto out_put_cfile;
+@@ -4041,7 +4041,7 @@ static int cgroup_write_event_control(struct cgroup_subsys_state *dummy_css,
+ {
+ 	struct cgroup *cgrp = dummy_css->cgroup;
+ 	struct cgroup_event *event;
+-	struct cgroup *cgrp_cfile;
++	struct cgroup_subsys_state *cfile_css;
+ 	unsigned int efd, cfd;
+ 	struct file *efile;
+ 	struct file *cfile;
+@@ -4103,7 +4103,8 @@ static int cgroup_write_event_control(struct cgroup_subsys_state *dummy_css,
  	}
  
--	/* determine the css of @cfile and associate @event with it */
-+	/*
-+	 * Determine the css of @cfile and associate @event with it.
-+	 * Remaining events are automatically removed on cgroup destruction
-+	 * but the removal is asynchronous, so take an extra ref.
-+	 */
- 	rcu_read_lock();
+ 	/*
+-	 * Determine the css of @cfile and associate @event with it.
++	 * Determine the css of @cfile, verify it belongs to the same
++	 * cgroup as cgroup.event_control, and associate @event with it.
+ 	 * Remaining events are automatically removed on cgroup destruction
+ 	 * but the removal is asynchronous, so take an extra ref.
+ 	 */
+@@ -4111,23 +4112,14 @@ static int cgroup_write_event_control(struct cgroup_subsys_state *dummy_css,
  
  	ret = -EINVAL;
  	event->css = cgroup_css(cgrp, event->cft->ss);
--	if (event->css)
-+	if (event->css && css_tryget(event->css))
+-	if (event->css && css_tryget(event->css))
++	cfile_css = css_from_dir(cfile->f_dentry->d_parent, event->cft->ss);
++	if (event->css && event->css == cfile_css && css_tryget(event->css))
  		ret = 0;
  
  	rcu_read_unlock();
-@@ -4122,28 +4125,21 @@ static int cgroup_write_event_control(struct cgroup_subsys_state *dummy_css,
- 	cgrp_cfile = __d_cgrp(cfile->f_dentry->d_parent);
- 	if (cgrp_cfile != cgrp) {
- 		ret = -EINVAL;
--		goto out_put_cfile;
-+		goto out_put_css;
- 	}
- 
- 	if (!event->cft->register_event || !event->cft->unregister_event) {
- 		ret = -EINVAL;
--		goto out_put_cfile;
-+		goto out_put_css;
- 	}
- 
- 	ret = event->cft->register_event(event->css, event->cft,
- 			event->eventfd, buffer);
  	if (ret)
--		goto out_put_cfile;
-+		goto out_put_css;
- 
- 	efile->f_op->poll(efile, &event->pt);
+ 		goto out_put_cfile;
  
 -	/*
--	 * Events should be removed after rmdir of cgroup directory, but before
--	 * destroying subsystem state objects. Let's take reference to cgroup
--	 * directory dentry to do that.
+-	 * The file to be monitored must be in the same cgroup as
+-	 * cgroup.event_control is.
 -	 */
--	dget(cgrp->dentry);
+-	cgrp_cfile = __d_cgrp(cfile->f_dentry->d_parent);
+-	if (cgrp_cfile != cgrp) {
+-		ret = -EINVAL;
+-		goto out_put_css;
+-	}
 -
- 	spin_lock(&cgrp->event_list_lock);
- 	list_add(&event->list, &cgrp->event_list);
- 	spin_unlock(&cgrp->event_list_lock);
-@@ -4153,6 +4149,8 @@ static int cgroup_write_event_control(struct cgroup_subsys_state *dummy_css,
- 
- 	return 0;
- 
-+out_put_css:
-+	css_put(event->css);
- out_put_cfile:
- 	fput(cfile);
- out_put_eventfd:
+ 	if (!event->cft->register_event || !event->cft->unregister_event) {
+ 		ret = -EINVAL;
+ 		goto out_put_css;
 -- 
 1.8.3.1
