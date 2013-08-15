@@ -1,34 +1,52 @@
-From: Gergely Risko <gergely@risko.hu>
-Subject: Re: [PATCH] mm: memcontrol: fix handling of swapaccount parameter
-Date: Thu, 15 Aug 2013 11:01:01 +0200
-Message-ID: <87eh9v5nw2.fsf@gergely.risko.hu>
-References: <1376486495-21457-1-git-send-email-gergely@risko.hu>
-	<20130814183604.GE24033@dhcp22.suse.cz>
-	<20130814184956.GF24033@dhcp22.suse.cz>
-	<87ioz855o0.fsf@gergely.risko.hu>
-	<20130815074714.GA27864@dhcp22.suse.cz>
-Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130815074714.GA27864@dhcp22.suse.cz> (Michal Hocko's message
-	of "Thu, 15 Aug 2013 09:47:14 +0200")
-Sender: owner-linux-mm@kvack.org
+From: aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Subject: [PATCH 0/4] devcg: Store local settings for each device cgroup
+Date: Thu, 15 Aug 2013 11:34:10 -0400
+Message-ID: <1376580854-30929-1-git-send-email-aris@redhat.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, Andrew Morton <akpm@linux-foundation.org>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On Thu, 15 Aug 2013 09:47:14 +0200, Michal Hocko <mhocko@suse.cz> writes:
+This patchset makes possible for device cgroups to store locally set rules to
+be reapplied whenever possible. This is also desired when moving device cgroups
+around.
 
-> Ohh, I have totally missed those left-overs. I would rather fix the doc
-> than reintroduce the handling without any value.
+Consider:
 
-Okay, fine with me, thanks for fixing these left-overs!
+          A
+        /
+       B
 
-Gergely
+Behavior in both is deny. 'A' has this exception list:
+	b 1:* rw
+	c *:* rw
+One can explicitely set on 'B':
+	b 1:5 r
+If for some reason 'A' removes 'b 1:* rw', 'B' exception 'b 1:5 r' will be
+removed because it's not allowed anymore and would be forever lost.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Now, consider that in the parent more fine grained exceptions were added:
+	b 1:1 r
+	b 1:2 rw
+	b 1:4 rwc
+	b 1:5 r
+
+B would still be out of exceptions (we only propagate restrictions, not added
+access).
+
+With this patchset, the 'b 1:5 r' exception will be kept and whenever possible
+(more specifically when the parent gets access to more devices) it'll be
+re-evaluated and applied if allowed. In this specific case, since it's allowed
+again, the exception 'b 1:5 r' will be reapplied to B.
+
+This patchset is based on for-3.12 branch on Tejun's tree
+(bd8815a6d802fc16a7a106e170593aa05dc17e72) and it's available for review on my
+git tree:
+	git://github.com/aristeu/linux-2.6.git
+	branch: devcg-rename
+
+Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
