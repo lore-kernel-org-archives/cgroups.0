@@ -1,35 +1,96 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/2] cpuset: remove redundant checks in file write functions
-Date: Fri, 16 Aug 2013 14:48:43 +0800
-Message-ID: <520DCB4B.6070808@huawei.com>
-References: <5209892D.8070502@huawei.com> <52098941.4070600@huawei.com> <20130813150549.GF26596@mtj.dyndns.org> <520AE4FC.5090702@huawei.com> <20130814133048.GC28628@htj.dyndns.org>
+Subject: [PATCH] cgroup: change cgroup_from_id() to css_from_id()
+Date: Fri, 16 Aug 2013 15:05:16 +0800
+Message-ID: <520DCF2C.1020903@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130814133048.GC28628-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On 2013/8/14 21:30, Tejun Heo wrote:
-> Hello, Li.
-> 
-> On Wed, Aug 14, 2013 at 10:01:32AM +0800, Li Zefan wrote:
->> But most controllers don't check this in those read/write functions.
->> It shoudn't do any harm not checking online/offline status.
-> 
-> It depends on the specific controller.  For controllers which make
-> clear distinction between online and offline states for, say,
-> hierarchical config propagation, it could lead to buggy behavior if
-> the function body afterwards assume that the current node is online.
+Now we want cgroup core to always provide the css to use to the
+subsystems, so change this API to css_from_id().
 
-In those cases, there must be some comments, otherwise it would be
-confusing if and when one needs to check the online/offline states.
+Uninline css_from_id(), because it's getting bigger and cgroup_css()
+has been unexported.
 
-> I don't know whether this is the case for the functions converted here
-> but even if so the patch needs to update the description.
-> 
+While at it, remove the #ifdef.
 
-I'll check for sure.
+Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ include/linux/cgroup.h | 20 ++------------------
+ kernel/cgroup.c        | 22 ++++++++++++++++++++++
+ 2 files changed, 24 insertions(+), 18 deletions(-)
+
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 11a6419..50186f0 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -742,27 +742,11 @@ static inline struct cgroup *task_cgroup(struct task_struct *task,
+ 	return task_css(task, subsys_id)->cgroup;
+ }
+ 
+-/**
+- * cgroup_from_id - lookup cgroup by id
+- * @ss: cgroup subsys to be looked into
+- * @id: the cgroup id
+- *
+- * Returns the cgroup if there's valid one with @id, otherwise returns NULL.
+- * Should be called under rcu_read_lock().
+- */
+-static inline struct cgroup *cgroup_from_id(struct cgroup_subsys *ss, int id)
+-{
+-#ifdef CONFIG_PROVE_RCU
+-	rcu_lockdep_assert(rcu_read_lock_held() ||
+-			   lockdep_is_held(&cgroup_mutex),
+-			   "cgroup_from_id() needs proper protection");
+-#endif
+-	return idr_find(&ss->root->cgroup_idr, id);
+-}
+-
+ struct cgroup_subsys_state *css_next_child(struct cgroup_subsys_state *pos,
+ 					   struct cgroup_subsys_state *parent);
+ 
++struct cgroup_subsys_state *css_from_id(struct cgroup_subsys *ss, int id);
++
+ /**
+  * css_for_each_child - iterate through children of a css
+  * @pos: the css * to use as the loop cursor
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 99785d6..6ec2377 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -5710,6 +5710,28 @@ struct cgroup_subsys_state *cgroup_css_from_dir(struct file *f, int id)
+ 	return css ? css : ERR_PTR(-ENOENT);
+ }
+ 
++/**
++ * css_from_id - lookup css by id
++ * @ss: cgroup subsys to be looked into
++ * @id: the cgroup id
++ *
++ * Returns the css if there's valid one with @id, otherwise returns NULL.
++ * Should be called under rcu_read_lock().
++ */
++struct cgroup_subsys_state *css_from_id(struct cgroup_subsys *ss, int id)
++{
++	struct cgroup *cgrp;
++
++	rcu_lockdep_assert(rcu_read_lock_held() ||
++			   lockdep_is_held(&cgroup_mutex),
++			   "css_from_id() needs proper protection");
++
++	cgrp = idr_find(&ss->root->cgroup_idr, id);
++	if (cgrp)
++		return cgroup_css(cgrp, ss->subsys_id);
++	return NULL;
++}
++
+ #ifdef CONFIG_CGROUP_DEBUG
+ static struct cgroup_subsys_state *
+ debug_css_alloc(struct cgroup_subsys_state *parent_css)
+-- 
+1.8.0.2
