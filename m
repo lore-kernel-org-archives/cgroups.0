@@ -1,96 +1,72 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cgroup: change cgroup_from_id() to css_from_id()
-Date: Fri, 16 Aug 2013 15:05:16 +0800
-Message-ID: <520DCF2C.1020903@huawei.com>
+From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 0/4] devcg: Store local settings for each device cgroup
+Date: Fri, 16 Aug 2013 11:20:26 -0400
+Message-ID: <20130816152025.GC7878@redhat.com>
+References: <1376580854-30929-1-git-send-email-aris@redhat.com>
+ <20130815195941.GA10977@mtj.dyndns.org>
+ <20130815204804.GO7878@redhat.com>
+ <20130815210937.GB10977@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20130815210937.GB10977-9pTldWuhBndy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Lennart Poettering <mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org>
 
-Now we want cgroup core to always provide the css to use to the
-subsystems, so change this API to css_from_id().
+Hi Tejun,
+On Thu, Aug 15, 2013 at 05:09:37PM -0400, Tejun Heo wrote:
+> I think the configuration rules are too complex.  Without being privy
+> to the implementation itself, the restrictions seem mostly arbitrary.
+> The thing with this sort of greedy restrictions is that it might seem
+> okay for a while after enough tweaking (the current state) but it gets
+> weird as soon as the circumstance changes a bit and all the tweakings
+> quickly become extra baggages to carry around.
 
-Uninline css_from_id(), because it's getting bigger and cgroup_css()
-has been unexported.
+Agreed.
 
-While at it, remove the #ifdef.
+> e.g. if a cgroup will be allowed to be moved to another position in
+> the hierarchy, the cgroup shouldn't change its configuration across
+> such migration, right?  If so, we'd be allowing creating a cgroup
+> outside the hierarchy with any configuration moving it under another
+> while disallowing creating it under there and creating the same
+> configuration, which would be an outright buggy behavior.
 
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- include/linux/cgroup.h | 20 ++------------------
- kernel/cgroup.c        | 22 ++++++++++++++++++++++
- 2 files changed, 24 insertions(+), 18 deletions(-)
+Hm, then I think I got the requirements wrong. On my understanding you
+cannot have a cgroup with more access than its parent. And the reason
+for that is at that time the idea of having a container able to control
+its own hierarchy was valid.
+The way it is right now, when moved, a cgroup would have its active
+rules re-checked for permission and it'd be made an attempt to apply
+local rules if the new parent allows it.
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 11a6419..50186f0 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -742,27 +742,11 @@ static inline struct cgroup *task_cgroup(struct task_struct *task,
- 	return task_css(task, subsys_id)->cgroup;
- }
- 
--/**
-- * cgroup_from_id - lookup cgroup by id
-- * @ss: cgroup subsys to be looked into
-- * @id: the cgroup id
-- *
-- * Returns the cgroup if there's valid one with @id, otherwise returns NULL.
-- * Should be called under rcu_read_lock().
-- */
--static inline struct cgroup *cgroup_from_id(struct cgroup_subsys *ss, int id)
--{
--#ifdef CONFIG_PROVE_RCU
--	rcu_lockdep_assert(rcu_read_lock_held() ||
--			   lockdep_is_held(&cgroup_mutex),
--			   "cgroup_from_id() needs proper protection");
--#endif
--	return idr_find(&ss->root->cgroup_idr, id);
--}
--
- struct cgroup_subsys_state *css_next_child(struct cgroup_subsys_state *pos,
- 					   struct cgroup_subsys_state *parent);
- 
-+struct cgroup_subsys_state *css_from_id(struct cgroup_subsys *ss, int id);
-+
- /**
-  * css_for_each_child - iterate through children of a css
-  * @pos: the css * to use as the loop cursor
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 99785d6..6ec2377 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -5710,6 +5710,28 @@ struct cgroup_subsys_state *cgroup_css_from_dir(struct file *f, int id)
- 	return css ? css : ERR_PTR(-ENOENT);
- }
- 
-+/**
-+ * css_from_id - lookup css by id
-+ * @ss: cgroup subsys to be looked into
-+ * @id: the cgroup id
-+ *
-+ * Returns the css if there's valid one with @id, otherwise returns NULL.
-+ * Should be called under rcu_read_lock().
-+ */
-+struct cgroup_subsys_state *css_from_id(struct cgroup_subsys *ss, int id)
-+{
-+	struct cgroup *cgrp;
-+
-+	rcu_lockdep_assert(rcu_read_lock_held() ||
-+			   lockdep_is_held(&cgroup_mutex),
-+			   "css_from_id() needs proper protection");
-+
-+	cgrp = idr_find(&ss->root->cgroup_idr, id);
-+	if (cgrp)
-+		return cgroup_css(cgrp, ss->subsys_id);
-+	return NULL;
-+}
-+
- #ifdef CONFIG_CGROUP_DEBUG
- static struct cgroup_subsys_state *
- debug_css_alloc(struct cgroup_subsys_state *parent_css)
+> The thing is I really don't like specific config change triggering
+> different actions.  It really should be "this chagned, recalculate all
+> rules in this sub-hierarchy" rather than "this may affect XXX and YYY
+> but not ZZZ so let's trigger this subpart".  The latter is way more
+> tricky to fragile and difficult to follow and verify.  In addition, to
+> support migration, it should be ready for any set of config changes in
+> a go anyway.
+
+IIRC it was to simplify the code. That can change of course.
+
+> That's what cgroup_sane_behavior() is for.  It's essentially the next
+> revision of cgroup interface.
+
+Understood, I think after we get the internals sorted out (like going
+for allow all or allow the listed) first
+
+> The reason why I want to get rid of disallow w/ exceptions is that
+> it's difficult to stack properly and ends up with this hodgepodge of
+> restrictions which can serve a set of contorted requirements at the
+> cost of overall consitent design which can be evolved and maintained
+> in the long term.  If the majority of use cases are whitelisting, I
+> think it'd be a better idea to just stick with whitelisting.
+
+OK, will work on that
+
 -- 
-1.8.0.2
+Aristeu
