@@ -1,47 +1,78 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: change cgroup_from_id() to css_from_id()
-Date: Fri, 16 Aug 2013 13:06:59 -0400
-Message-ID: <20130816170659.GM2505@htj.dyndns.org>
-References: <520DCF2C.1020903@huawei.com>
+Subject: [GIT PULL] cgroup fixes for v3.11-rc5
+Date: Sun, 18 Aug 2013 07:20:05 -0400
+Message-ID: <20130818112005.GD7093@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=gQK7cnEnKqOPbCqBjZiWxclw9jhHZUmx+TeWhattSnE=;
-        b=FORvm1JA2ZqfM5sJNpaq9KImETQJKQlIBa7VND2lL4lXpyFyRFioxR5k7F5CpR1uLn
-         CVgEgtMMpcaQjDqZen9nV/HRmF7Y1ztPwQgT34Fsj8UusUI8AdIV71JCNtcUU/f14jAf
-         yBxChYtMLqqndwQEPnq3C1/4nRQKEV60tXRU8rRqm18l+NoY7xM2j37182hUAc3chtuE
-         I3eOHK118ZmIffNAF5LWeWkgGa091b2lCt8WCsHyLKl6onFyXid4t5oBSzoo89cilKmr
-         wIh59YQ5YbpXVBy3mP3UfmpGJEJ6Y/hUmeRpa2/0UrWaMReke/2tsl1W55HWJStVQzE0
-         NFiw==
-Content-Disposition: inline
-In-Reply-To: <520DCF2C.1020903-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+	:content-disposition:user-agent;
+	bh=Wns50pGMAOXek+XfX3q35TbKzesWB8YzHGtmze5yoeI=;
+	b=YmdtF4S8uVOSiSnpMqOCUXwXc9f034hOm93Ph53Jdtoqu0qmoFuEfd70Qvrj0mKGrB
+	PfJseG3Aeqs7GDn1whgM5Mq0Uf6IKXNQE6uXb+xlnvy+O4rifPdf+FvPKiVBe+LF5Hzh
+	ULkngmT+OAjZeSCH3z5VEw9RiF40iAC3CSq6rIvfL/vASyKWqg43RvTnVnA+MF1kl1mQ
+	0gxZ93sF8+gD+hlTxjDKIm4kddcAN3AqjF+/K2GLypEJiBTvfesgy6rtba5XYMHo7x4C
+	8O+QmSFDWdr4dXNbgDtj6OtKWJfF/1H7kNz9v8RPcLdiYYCvK2hZFpYrl8i72yP8Wt5Y
+	Qt3Q==
+Content-Disposition: inline
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Li.
+Hello, Linus.
 
-On Fri, Aug 16, 2013 at 03:05:16PM +0800, Li Zefan wrote:
-> +/**
-> + * css_from_id - lookup css by id
-> + * @ss: cgroup subsys to be looked into
-> + * @id: the cgroup id
-> + *
-> + * Returns the css if there's valid one with @id, otherwise returns NULL.
-> + * Should be called under rcu_read_lock().
-> + */
-> +struct cgroup_subsys_state *css_from_id(struct cgroup_subsys *ss, int id)
+This pull request contains one patch to fix the return value of
+cpuset's cgroups interface function, which used to always return
+-ENODEV for the writes on the "memory_pressure_enabled" file.
 
-Can we please do css_from_id(int id, struct cgroup_subsys *ss)
-instead?
+The fix is available in the following branch
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.11-fixes
+
+for you to fetch changes up to a903f0865a190f8778c73df1a810ea6e25e5d7cf:
+
+  cpuset: fix the return value of cpuset_write_u64() (2013-08-13 10:54:40 -0400)
 
 Thanks.
 
--- 
+----------------------------------------------------------------
+Li Zefan (1):
+      cpuset: fix the return value of cpuset_write_u64()
+
+ kernel/cpuset.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index e565778..010a008 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -1608,11 +1608,13 @@ static int cpuset_write_u64(struct cgroup *cgrp, struct cftype *cft, u64 val)
+ {
+ 	struct cpuset *cs = cgroup_cs(cgrp);
+ 	cpuset_filetype_t type = cft->private;
+-	int retval = -ENODEV;
++	int retval = 0;
+ 
+ 	mutex_lock(&cpuset_mutex);
+-	if (!is_cpuset_online(cs))
++	if (!is_cpuset_online(cs)) {
++		retval = -ENODEV;
+ 		goto out_unlock;
++	}
+ 
+ 	switch (type) {
+ 	case FILE_CPU_EXCLUSIVE:
+
+--
 tejun
