@@ -1,46 +1,59 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.12 2/2] cgroup: fix
-	cgroup_write_event_control()
-Date: Mon, 19 Aug 2013 10:41:55 +0800
-Message-ID: <521185F3.6060806@huawei.com>
-References: <20130815154236.GG14606@htj.dyndns.org>
-	<20130815154315.GH14606@htj.dyndns.org>
+Subject: Re: [PATCH 0/4] devcg: Store local settings for each device cgroup
+Date: Mon, 19 Aug 2013 10:53:06 +0800
+Message-ID: <52118892.7050909@huawei.com>
+References: <1376580854-30929-1-git-send-email-aris@redhat.com> <20130815195941.GA10977@mtj.dyndns.org> <20130815204804.GO7878@redhat.com> <20130815210937.GB10977@mtj.dyndns.org> <20130816152025.GC7878@redhat.com> <20130816154757.GG2505@htj.dyndns.org> <20130816160204.GE7878@redhat.com> <20130816160950.GH2505@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20130815154315.GH14606-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20130816160950.GH2505-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Cc: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Lennart Poettering <mzxreary-uLTowLwuiw4b1SvskN2V4Q@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
 
-On 2013/8/15 23:43, Tejun Heo wrote:
->>From ced043264c9c3f03ab3c992af17461db50421dd8 Mon Sep 17 00:00:00 2001
-> From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Date: Thu, 15 Aug 2013 11:37:54 -0400
-> 
-> 81eeaf0411 ("cgroup: make cftype->[un]register_event() deal with
-> cgroup_subsys_state inst ead of cgroup") updated the cftype event
-> methods to take @css (cgroup_subsys_state) instead of @cgroup;
-> however, it incorrectly used @css passed to
-> cgroup_write_event_control(), which the dummy_css for the cgroup as
-> the file is a cgroup core file.  This leads to oops on event
-> registration.
-> 
-> Fix it by using the css matching the event target file.  Note that
-> cgroup_write_event_control() now disallows cgroup core files from
-> being event sources.  This is for simplicity and doesn't matter as
-> cgroup_event will be moved and made specific to memcg.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Serge
 
-Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+On 2013/8/17 0:09, Tejun Heo wrote:
+> Hello,
+> 
+> On Fri, Aug 16, 2013 at 12:02:04PM -0400, Aristeu Rozanski wrote:
+>>> Yeah, that's the correct behavior, if I'm not misunderstanding you,
+>>> but to be consistent we also need to allow creating rules which allow
+>>> devices which aren't allowed by ancestors.  It won't be applicable at
+>>> rule creation but may later become effective later on.
+>>
+>> Oh, I see, it's just matter of allowing to set the desired set or rules
+>> locally even if they're not possible at the moment.
+> 
+> Yeah, otherwise, we'd get into situation where setting rules in place
+> isn't allowed but moving it out of hierarchy, setting it and then
+> moving it back would work, which doesn't make much sense.
+> 
+>> So, considering we drop in sane_behavior the allow + exceptions case,
+>> the interface in sane_behavior mode would look like:
+>> - policy: {allow_all,deny}
+>> 	writing either will clear the active aw
+>> - active_whitelist
+>> 	list of in effect rules, read only
+>> - whitelist
+>> 	list of locally set rules, read only
+>> - whitelist_add
+>> 	write only, adds rule to the local list and active lists
+>> - whitelist_remove
+>> 	write only, removes rule from the local and active lists
+>>
+>> What you think?
+> 
+> Yeah, I think that should work although you might also need
+> active_policy and "effective" might be a better choice as prefix.
+
+As I've started to work on cpuset side, I'm also thinking about
+adding cpuset.effective_cpus and cpuset.effective_mems.
+
+> Kay, Lennart, what do you guys think?
+> 
+
+As Serge is the original author of devcg, let's also see how
+Serge feel about the new interfaces?
