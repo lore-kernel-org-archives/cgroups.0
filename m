@@ -1,102 +1,50 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2] cgroup: change cgroup_from_id() to css_from_id()
-Date: Mon, 19 Aug 2013 10:05:24 +0800
-Message-ID: <52117D64.1010709@huawei.com>
-References: <520DCF2C.1020903@huawei.com> <20130816170659.GM2505@htj.dyndns.org>
+Subject: Re: [PATCH cgroup/for-3.12 1/2] cgroup: fix subsystem file accesses
+	on the root cgroup
+Date: Mon, 19 Aug 2013 10:23:41 +0800
+Message-ID: <521181AD.7090700@huawei.com>
+References: <20130815154236.GG14606@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130816170659.GM2505-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20130815154236.GG14606-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-Now we want cgroup core to always provide the css to use to the
-subsystems, so change this API to css_from_id().
+> 105347ba5 ("cgroup: make cgroup_file_open() rcu_read_lock() around
+> cgroup_css() and add cfent->css") added cfent->css to cache the
+> associted cgroup_subsys_state across file operations.
+> 
+> A cfent is associated with single css throughout its lifetime and the
+> origimal commit initialized the cache pointer during cgroup_add_file()
+> and verified that it matches the actual one in cgroup_file_open().
+> While this works fine for !root cgroups, it's broken for root cgroups
+> as files in a root cgroup are created before the css's are associated
+> with the cgroup and thus cgroup_css() call in cgroup_add_file()
+> returns NULL associating all cfents in the root cgroup with NULL css.
+> This makes cgroup_file_open() trigger WARN and fail with -ENODEV for
+> all !core subsystem files in the root cgroups.
+> 
+> There's no reason to initialize cfent->css separately from
+> cgroup_add_file().  As the association never changes,
+> cgroup_file_open() can set it unconditionally every time and
+> containing the logic in cgroup_file_open() makes more sense anyway as
+> the only reason it's necessary is file->private_data being already
+> occupied.
+> 
+> Fix it by setting cfent->css unconditionally from cgroup_file_open().
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Uninline css_from_id(), because it's getting bigger and cgroup_css()
-has been unexported.
-
-While at it, remove the #ifdef, and shuffle the order of the args.
-
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
-
-v2: change the order of the args.
-
----
- include/linux/cgroup.h | 20 ++------------------
- kernel/cgroup.c        | 22 ++++++++++++++++++++++
- 2 files changed, 24 insertions(+), 18 deletions(-)
-
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 11a6419..3aac34d 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -742,27 +742,11 @@ static inline struct cgroup *task_cgroup(struct task_struct *task,
- 	return task_css(task, subsys_id)->cgroup;
- }
- 
--/**
-- * cgroup_from_id - lookup cgroup by id
-- * @ss: cgroup subsys to be looked into
-- * @id: the cgroup id
-- *
-- * Returns the cgroup if there's valid one with @id, otherwise returns NULL.
-- * Should be called under rcu_read_lock().
-- */
--static inline struct cgroup *cgroup_from_id(struct cgroup_subsys *ss, int id)
--{
--#ifdef CONFIG_PROVE_RCU
--	rcu_lockdep_assert(rcu_read_lock_held() ||
--			   lockdep_is_held(&cgroup_mutex),
--			   "cgroup_from_id() needs proper protection");
--#endif
--	return idr_find(&ss->root->cgroup_idr, id);
--}
--
- struct cgroup_subsys_state *css_next_child(struct cgroup_subsys_state *pos,
- 					   struct cgroup_subsys_state *parent);
- 
-+struct cgroup_subsys_state *css_from_id(int id, struct cgroup_subsys *ss);
-+
- /**
-  * css_for_each_child - iterate through children of a css
-  * @pos: the css * to use as the loop cursor
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 99785d6..07740d3 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -5710,6 +5710,28 @@ struct cgroup_subsys_state *cgroup_css_from_dir(struct file *f, int id)
- 	return css ? css : ERR_PTR(-ENOENT);
- }
- 
-+/**
-+ * css_from_id - lookup css by id
-+ * @id: the cgroup id
-+ * @ss: cgroup subsys to be looked into
-+ *
-+ * Returns the css if there's valid one with @id, otherwise returns NULL.
-+ * Should be called under rcu_read_lock().
-+ */
-+struct cgroup_subsys_state *css_from_id(int id, struct cgroup_subsys *ss)
-+{
-+	struct cgroup *cgrp;
-+
-+	rcu_lockdep_assert(rcu_read_lock_held() ||
-+			   lockdep_is_held(&cgroup_mutex),
-+			   "css_from_id() needs proper protection");
-+
-+	cgrp = idr_find(&ss->root->cgroup_idr, id);
-+	if (cgrp)
-+		return cgroup_css(cgrp, ss->subsys_id);
-+	return NULL;
-+}
-+
- #ifdef CONFIG_CGROUP_DEBUG
- static struct cgroup_subsys_state *
- debug_css_alloc(struct cgroup_subsys_state *parent_css)
--- 
-1.8.0.2
+Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
