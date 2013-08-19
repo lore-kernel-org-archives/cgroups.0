@@ -1,63 +1,64 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.12 1/2] cgroup: fix subsystem file accesses
- on the root cgroup
-Date: Mon, 19 Aug 2013 09:57:39 -0400
-Message-ID: <20130819135739.GD6176@htj.dyndns.org>
+Subject: Re: [PATCH cgroup/for-3.12 2/2] cgroup: fix
+	cgroup_write_event_control()
+Date: Mon, 19 Aug 2013 09:57:57 -0400
+Message-ID: <20130819135757.GE6176@htj.dyndns.org>
 References: <20130815154236.GG14606@htj.dyndns.org>
- <521181AD.7090700@huawei.com>
+	<20130815154315.GH14606@htj.dyndns.org>
+	<521185F3.6060806@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=1RYBTuimt0rq+P7kHXw3md4+kTicI+nt8E4cmFCLKzQ=;
-        b=JXMvhSt1xMq22m1qQizMei7t0gdfV8i4x6fL/RRL5JcjPZcA2teBtC8EKP0aTwn03Q
-         NM9LtxebmQmqfA7n97S5usN0Z7udldTXm3X3VSkb+QOSsW0MMikgk0vkcaAEnDHqF5Kx
-         7dHbQ5J105CmfXyBaKzMShjV7GP8Zq1OoF2sxVxqXFefDp9Un5yYbEa/YHeoCbCCr9Us
-         lDl+TAzBj/Qy44tCWaRyed+XC2XCrSjoTK9FPspk3s/S8/MK5SqegQfj7zJe1WjMjNnE
-         3w7QZsjsvF5y4GvLc6uRPVRSSdsLAhtTNUkx+yVpIYeJND/YEZbz9Bc//P3veswwqTbg
-         DZPQ==
-Content-Disposition: inline
-In-Reply-To: <521181AD.7090700-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=drJwP39Wypl9bHwdZU+MBqP8WL4DB+AmyGGfh3ERaIw=;
+	b=iZj0amp8SeCLOovxVaDIqUC/YqviXpiZrz26F10+D2tf1trUb9R8UPJ3VHdNW8e4iW
+	1ljJ7R1YkqIG1B7lKNllfs8qVvmMc81qWAu/52zUFNP81t4VaEHmjFjoIw20ULJhDZzM
+	NWQ/Aildg4cjQ4c4Yr6aL1E7c+QiiUqW9pCEVlS9VHwKBrzpK3lpLZpfgMmOtjfI3S8u
+	I5L+WzEoAKyRnIiM69x3IckUXFjICGT7DZ5zAAUwYx3FIuNfY0HJZW7OGF7svBmKVC0P
+	EKAoh3war/aPNgj6YiClP8L5/j7EnFCyNt2B9Wy0G6g6cBSfYbxHQJsMSZaAp66TqHUu
+	usqg==
+Content-Disposition: inline
+In-Reply-To: <521185F3.6060806-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On Mon, Aug 19, 2013 at 10:23:41AM +0800, Li Zefan wrote:
-> > 105347ba5 ("cgroup: make cgroup_file_open() rcu_read_lock() around
-> > cgroup_css() and add cfent->css") added cfent->css to cache the
-> > associted cgroup_subsys_state across file operations.
+On Mon, Aug 19, 2013 at 10:41:55AM +0800, Li Zefan wrote:
+> On 2013/8/15 23:43, Tejun Heo wrote:
+> >>From ced043264c9c3f03ab3c992af17461db50421dd8 Mon Sep 17 00:00:00 2001
+> > From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> > Date: Thu, 15 Aug 2013 11:37:54 -0400
 > > 
-> > A cfent is associated with single css throughout its lifetime and the
-> > origimal commit initialized the cache pointer during cgroup_add_file()
-> > and verified that it matches the actual one in cgroup_file_open().
-> > While this works fine for !root cgroups, it's broken for root cgroups
-> > as files in a root cgroup are created before the css's are associated
-> > with the cgroup and thus cgroup_css() call in cgroup_add_file()
-> > returns NULL associating all cfents in the root cgroup with NULL css.
-> > This makes cgroup_file_open() trigger WARN and fail with -ENODEV for
-> > all !core subsystem files in the root cgroups.
+> > 81eeaf0411 ("cgroup: make cftype->[un]register_event() deal with
+> > cgroup_subsys_state inst ead of cgroup") updated the cftype event
+> > methods to take @css (cgroup_subsys_state) instead of @cgroup;
+> > however, it incorrectly used @css passed to
+> > cgroup_write_event_control(), which the dummy_css for the cgroup as
+> > the file is a cgroup core file.  This leads to oops on event
+> > registration.
 > > 
-> > There's no reason to initialize cfent->css separately from
-> > cgroup_add_file().  As the association never changes,
-> > cgroup_file_open() can set it unconditionally every time and
-> > containing the logic in cgroup_file_open() makes more sense anyway as
-> > the only reason it's necessary is file->private_data being already
-> > occupied.
-> > 
-> > Fix it by setting cfent->css unconditionally from cgroup_file_open().
+> > Fix it by using the css matching the event target file.  Note that
+> > cgroup_write_event_control() now disallows cgroup core files from
+> > being event sources.  This is for simplicity and doesn't matter as
+> > cgroup_event will be moved and made specific to memcg.
 > > 
 > > Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 > 
 > Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Applied to cgroup/for-3.12.
-
-Thanks.
+Applied to cgroup/for-3.12.  Thanks.
 
 -- 
 tejun
