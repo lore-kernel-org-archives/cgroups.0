@@ -1,127 +1,91 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 11/11] cpuset: export effective masks to userspace
-Date: Wed, 21 Aug 2013 18:01:32 +0800
-Message-ID: <52148FFC.4080701@huawei.com>
-References: <52148F52.0@huawei.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] cpuset: fix a regression in validating config change
+Date: Wed, 21 Aug 2013 08:45:58 -0400
+Message-ID: <20130821124558.GA19286@mtj.dyndns.org>
+References: <52142464.1060603@huawei.com>
 Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=Zt+xKiA7B+yBLRd+tN79uwRfpnQwjASKpO36OIXO6ZM=;
+        b=Qog9Zk9n2CHIcRa1tfmV1V+1k7HvPANR4cWKJSG1q57nJHsoCD5UBFJEuPm2XelRAq
+         ToZtoL3gf4ArlAm9dkMjSjcbIQEta2TsGI5E2yqN8vBN91T48zNr5t66z5PgXWc46UNq
+         y3U09nUfCMSFaegOMvvy9IxfHYo0TY57YXBLI9QUYHwItzMhzyjqzZO9HxcxPJQxOqOd
+         gt1O8xQmtIuDWWVlFzAXqor3g1CP4l9bK7g5VDTMzZsr97kjV1Ah/c4/uO9a3acWNR8O
+         iVNqySewTrXp/h6hVjClTRrrTj6lz/MUDJ9+puk6e7W6XE7x19lzF3SLuAhskqHJVVaQ
+         EVDQ==
+Content-Disposition: inline
+In-Reply-To: <52142464.1060603@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <52148F52.0-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Li Zefan <lizefan@huawei.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-cpuset.cpus and cpuset.mems are the configured masks, and we need
-to export effective masks to userspace, so users know the real
-cpus_allowed and mems_allowed that apply to the tasks in a cpuset.
+Hello, Li.
 
-cpuset.effective_cpus and cpuset.effective_mems will be created for
-sane_behavior only.
+I dropped the make_*_empty variables and just put the conditionals
+directly inside the outer if.  Please scream if I messed it up.
+Applied to cgroup/for-3.11-fixes.
 
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Thanks.
+
+------- 8< --------
+From 1c09b195d37fa459844036f429a0f378e70c3db6 Mon Sep 17 00:00:00 2001
+From: Li Zefan <lizefan@huawei.com>
+Date: Wed, 21 Aug 2013 10:22:28 +0800
+Subject: [PATCH] cpuset: fix a regression in validating config change
+
+It's not allowed to clear masks of a cpuset if there're tasks in it,
+but it's broken:
+
+  # mkdir /cgroup/sub
+  # echo 0 > /cgroup/sub/cpuset.cpus
+  # echo 0 > /cgroup/sub/cpuset.mems
+  # echo $$ > /cgroup/sub/tasks
+  # echo > /cgroup/sub/cpuset.cpus
+  (should fail)
+
+This bug was introduced by commit 88fa523bff295f1d60244a54833480b02f775152
+("cpuset: allow to move tasks to empty cpusets").
+
+tj: Dropped temp bool variables and nestes the conditionals directly.
+
+Signed-off-by: Li Zefan <lizefan@huawei.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/cpuset.c | 36 ++++++++++++++++++++++++++++++------
- 1 file changed, 30 insertions(+), 6 deletions(-)
+ kernel/cpuset.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
 diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index c302979..a4f3483 100644
+index 010a008..ea1966d 100644
 --- a/kernel/cpuset.c
 +++ b/kernel/cpuset.c
-@@ -1583,6 +1583,8 @@ typedef enum {
- 	FILE_MEMORY_MIGRATE,
- 	FILE_CPULIST,
- 	FILE_MEMLIST,
-+	FILE_EFFECTIVE_CPULIST,
-+	FILE_EFFECTIVE_MEMLIST,
- 	FILE_CPU_EXCLUSIVE,
- 	FILE_MEM_EXCLUSIVE,
- 	FILE_MEM_HARDWALL,
-@@ -1731,23 +1733,23 @@ out_unlock:
-  * across a page fault.
-  */
+@@ -475,13 +475,17 @@ static int validate_change(const struct cpuset *cur, const struct cpuset *trial)
  
--static size_t cpuset_sprintf_cpulist(char *page, struct cpuset *cs)
-+static size_t cpuset_sprintf_cpulist(char *page, struct cpumask *pmask)
- {
- 	size_t count;
+ 	/*
+ 	 * Cpusets with tasks - existing or newly being attached - can't
+-	 * have empty cpus_allowed or mems_allowed.
++	 * be changed to have empty cpus_allowed or mems_allowed.
+ 	 */
+ 	ret = -ENOSPC;
+-	if ((cgroup_task_count(cur->css.cgroup) || cur->attach_in_progress) &&
+-	    (cpumask_empty(trial->cpus_allowed) &&
+-	     nodes_empty(trial->mems_allowed)))
+-		goto out;
++	if ((cgroup_task_count(cur->css.cgroup) || cur->attach_in_progress)) {
++		if (!cpumask_empty(cur->cpus_allowed) &&
++		    cpumask_empty(trial->cpus_allowed))
++			goto out;
++		if (!nodes_empty(cur->mems_allowed) &&
++		    nodes_empty(trial->mems_allowed))
++			goto out;
++	}
  
- 	mutex_lock(&callback_mutex);
--	count = cpulist_scnprintf(page, PAGE_SIZE, cs->cpus_allowed);
-+	count = cpulist_scnprintf(page, PAGE_SIZE, pmask);
- 	mutex_unlock(&callback_mutex);
- 
- 	return count;
- }
- 
--static size_t cpuset_sprintf_memlist(char *page, struct cpuset *cs)
-+static size_t cpuset_sprintf_memlist(char *page, nodemask_t mask)
- {
- 	size_t count;
- 
- 	mutex_lock(&callback_mutex);
--	count = nodelist_scnprintf(page, PAGE_SIZE, cs->mems_allowed);
-+	count = nodelist_scnprintf(page, PAGE_SIZE, mask);
- 	mutex_unlock(&callback_mutex);
- 
- 	return count;
-@@ -1771,10 +1773,16 @@ static ssize_t cpuset_common_file_read(struct cgroup_subsys_state *css,
- 
- 	switch (type) {
- 	case FILE_CPULIST:
--		s += cpuset_sprintf_cpulist(s, cs);
-+		s += cpuset_sprintf_cpulist(s, cs->cpus_allowed);
- 		break;
- 	case FILE_MEMLIST:
--		s += cpuset_sprintf_memlist(s, cs);
-+		s += cpuset_sprintf_memlist(s, cs->mems_allowed);
-+		break;
-+	case FILE_EFFECTIVE_CPULIST:
-+		s += cpuset_sprintf_cpulist(s, cs->real_cpus_allowed);
-+		break;
-+	case FILE_EFFECTIVE_MEMLIST:
-+		s += cpuset_sprintf_memlist(s, cs->real_mems_allowed);
- 		break;
- 	default:
- 		retval = -EINVAL;
-@@ -1849,6 +1857,14 @@ static struct cftype files[] = {
- 	},
- 
- 	{
-+		.name = "effective_cpus",
-+		.flags = CFTYPE_SANE,
-+		.read = cpuset_common_file_read,
-+		.max_write_len = (100U + 6 * NR_CPUS),
-+		.private = FILE_EFFECTIVE_CPULIST,
-+	},
-+
-+	{
- 		.name = "mems",
- 		.read = cpuset_common_file_read,
- 		.write_string = cpuset_write_resmask,
-@@ -1857,6 +1873,14 @@ static struct cftype files[] = {
- 	},
- 
- 	{
-+		.name = "effective_mems",
-+		.flags = CFTYPE_SANE,
-+		.read = cpuset_common_file_read,
-+		.max_write_len = (100U + 6 * MAX_NUMNODES),
-+		.private = FILE_EFFECTIVE_MEMLIST,
-+	},
-+
-+	{
- 		.name = "cpu_exclusive",
- 		.read_u64 = cpuset_read_u64,
- 		.write_u64 = cpuset_write_u64,
+ 	ret = 0;
+ out:
 -- 
-1.8.0.2
+1.8.3.1
