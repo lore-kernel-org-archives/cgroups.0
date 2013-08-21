@@ -1,7 +1,7 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cpuset: fix a regression in validating config change
-Date: Wed, 21 Aug 2013 10:22:28 +0800
-Message-ID: <52142464.1060603@huawei.com>
+Subject: [PATCH 00/11] cpuset: separate configured masks and effective masks
+Date: Wed, 21 Aug 2013 17:58:42 +0800
+Message-ID: <52148F52.0@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -9,57 +9,44 @@ Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 
-It's not allowed to clear masks of a cpuset if there're tasks in it,
-but it's broken:
+This patcheset introduces behavior changes, but only if you mount cgroupfs
+with sane_behavior option:
 
-  # mkdir /cgroup/sub
-  # echo 0 > /cgroup/sub/cpuset.cpus
-  # echo 0 > /cgroup/sub/cpuset.mems
-  # echo $$ > /cgroup/sub/tasks
-  # echo > /cgroup/sub/cpuset.cpus
-  (should fail)
+- We introduce new interfaces cpuset.effective_cpus and cpuset.effective_mems,
+  while cpuset.cpus and cpuset.mems will be configured masks.
 
-This bug was introduced by commit 88fa523bff295f1d60244a54833480b02f775152
-("cpuset: allow to move tasks to empty cpusets").
+- The configured masks can be changed by writing cpuset.cpus/mems only. They
+  won't be changed when hotplug happens.
 
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- kernel/cpuset.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+- Users can config cpus and mems without restrictions from the parent cpuset.
+  effective masks will enforce the hierarchical behavior.
 
-diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index 0b5b9a3..70ab3fd 100644
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -425,6 +425,8 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
- 	struct cgroup_subsys_state *css;
- 	struct cpuset *c, *par;
- 	int ret;
-+	bool make_cpus_empty;
-+	bool make_mems_empty;
- 
- 	rcu_read_lock();
- 
-@@ -464,12 +466,15 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
- 
- 	/*
- 	 * Cpusets with tasks - existing or newly being attached - can't
--	 * have empty cpus_allowed or mems_allowed.
-+	 * be changed to have empty cpus_allowed or mems_allowed.
- 	 */
- 	ret = -ENOSPC;
-+	make_cpus_empty = !cpumask_empty(cur->cpus_allowed) &&
-+			  cpumask_empty(trial->cpus_allowed);
-+	make_mems_empty = !nodes_empty(cur->mems_allowed) &&
-+			  nodes_empty(trial->mems_allowed);
- 	if ((cgroup_task_count(cur->css.cgroup) || cur->attach_in_progress) &&
--	    (cpumask_empty(trial->cpus_allowed) &&
--	     nodes_empty(trial->mems_allowed)))
-+	    (make_cpus_empty || make_mems_empty))
- 		goto out;
- 
- 	ret = 0;
+- Users can also config cpus and mems to have already offlined CPU/nodes.
+
+- When a CPU/node is onlined, it will be brought back to the effective masks
+  if it's in the configured masks.
+
+- We build sched domains based on effective cpumask but not configured cpumask.
+
+Li Zefan (11):
+  cgroup: allow subsystems to create files for sane_behavior only
+  cpuset: add cs->real_cpus_allowed and cs->real_mems_allowed
+  cpuset: update cpuset->real_{cpus,mems}_allowed at hotplug
+  cpuset: update cs->real_{cpus,mems}_allowed when config changes
+  cpuset: inherite ancestor's masks if real_{cpus,mems}_allowed become empty
+  cpuset: apply cs->real_{cpus,mems}_allowed
+  cpuset: use effective cpumask to build sched domains
+  cpuset: separate configured masks and efffective masks
+  cpuset: enable onlined cpu/node in effective masks
+  cpuset: allow writing offlined masks to cpuset.cpus/mems
+  cpuset: export effective masks to userspace
+
+ include/linux/cgroup.h |   1 +
+ kernel/cgroup.c        |   2 +
+ kernel/cpuset.c        | 466 ++++++++++++++++++++++++++++---------------------
+ 3 files changed, 271 insertions(+), 198 deletions(-)
+
 -- 
 1.8.0.2
