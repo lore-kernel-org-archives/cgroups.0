@@ -1,59 +1,34 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 00/11] cpuset: separate configured masks and effective
- masks
-Date: Wed, 21 Aug 2013 10:21:55 -0400
-Message-ID: <20130821142155.GL19286@mtj.dyndns.org>
-References: <52148F52.0@huawei.com>
+Subject: Re: [PATCHSET v2 cgroup/for-3.12] cgroup: make cgroup_event specific
+ to memcg
+Date: Wed, 21 Aug 2013 16:12:39 -0400
+Message-ID: <20130821201239.GB2436@htj.dyndns.org>
+References: <1376582550-12548-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=HOX1MUap0px2cqY3lqeaep8bwdla+3Kf4uidXTgIEgA=;
-        b=SfS7NRA1JEu1yzGTlyzOlobL5pPDxffFTDw2E4f27guc5peL+YahRfN6MkxxZb938j
-         OhHsRAXgQ0Fg19P/RIX3QeiBShal9F8hWrIHkYmlq2iYnzfar02reGJlDg70N4LoNPUY
-         bFrjKb6vsQ8RMFwe7g3162//dx/FZfrtmDhNmod5GnrnjDhkD65ah+aRL7kVvwGPamw5
-         xAYgDFKgB7Pjjk7g2E2p8Gnu3IRtYsfFAX5VIyIX/nyTz+RPQ0arhR2Qi0XfwYlMU2nY
-         Jd2jF4J2Vzw909OSY1L4ygRfsg9MzChvcawcLRX7jLrM8VG2A4txWg/4ZWrr5tvmy1LQ
-         GVBQ==
+        bh=xgmszLZCCO7JauyJTpMxQ+WUeY7u53BoLF7FrSB2Niw=;
+        b=X42sB5/7BQ2g8t88JQuc5SfaoEAiYbuATdAu20Duf2ZkpazxaxVa6iSfcvUwXxrtS6
+         YUaR5OyDShZJdeinhevvxwazCsOd+SH18YiTvq0vqxceHrxnj2481EVw8SAdPGIsXLyg
+         eMRxbwnFhex0R8BxLJPPAuo8Y3L4I+eTccUEZpGj4fDy5OD6ye9QwLlaDvVKKWgAn/6b
+         8CZ0qNz2oujeT9TAa587v1IlrwpOKF3DZaTE40hLsmzELQBo9lquHOaj9+t7bM9WkEiU
+         IuGDpUadjeNpinx3zZ/yHyFftDFhBoCi0/z1G4xtyCrmZemQWqHG2SEa2jC1XgoSc27x
+         UmGA==
 Content-Disposition: inline
-In-Reply-To: <52148F52.0-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1376582550-12548-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Li.
+Li, Michal, ping.
 
-On Wed, Aug 21, 2013 at 05:58:42PM +0800, Li Zefan wrote:
-> This patcheset introduces behavior changes, but only if you mount cgroupfs
-> with sane_behavior option:
-> 
-> - We introduce new interfaces cpuset.effective_cpus and cpuset.effective_mems,
->   while cpuset.cpus and cpuset.mems will be configured masks.
-> 
-> - The configured masks can be changed by writing cpuset.cpus/mems only. They
->   won't be changed when hotplug happens.
-> 
-> - Users can config cpus and mems without restrictions from the parent cpuset.
->   effective masks will enforce the hierarchical behavior.
-> 
-> - Users can also config cpus and mems to have already offlined CPU/nodes.
-> 
-> - When a CPU/node is onlined, it will be brought back to the effective masks
->   if it's in the configured masks.
-> 
-> - We build sched domains based on effective cpumask but not configured cpumask.
-
-Overall, it looks great.  Thank you so much for doing this.  Most of
-my reviews are concerned with patch descriptions and documentation.  I
-wish they showed clearer what are changed how and why that doesn't
-affect !sane behaviors.
-
-Thanks!
+Thanks.
 
 -- 
 tejun
