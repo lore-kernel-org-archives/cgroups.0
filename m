@@ -1,130 +1,124 @@
-From: Anatol Pomozov <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: OOPS in cfq/blkcgroups if CFQ_GROUP_IOSCHED is not set
-Date: Wed, 21 Aug 2013 22:05:58 -0700
-Message-ID: <CAOMFOmV-k_0RxNwY2JEXn9sHmsoJYArWwURNj1-Srph=FzbFUQ@mail.gmail.com>
+From: Sha Zhengju <handai.szj@gmail.com>
+Subject: Fwd: [PATCH V5 5/8] memcg: add per cgroup writeback pages accounting
+Date: Thu, 22 Aug 2013 17:46:31 +0800
+Message-ID: <CAFj3OHXy5XkwhxKk=WNywp2pq__FD7BrSQwFkp+NZj15_k6BEQ@mail.gmail.com>
+References: <1375357402-9811-1-git-send-email-handai.szj@taobao.com>
+	<1375358051-10306-1-git-send-email-handai.szj@taobao.com>
+	<20130801145302.GJ5198@dhcp22.suse.cz>
+	<CAFj3OHV-VCKJfe6bv4UMvv+uj4LELDXsieRZFJD06Yrdyy=XxA@mail.gmail.com>
+	<20130804100855.GD24005@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:date:message-id:subject:from:to:content-type;
-        bh=tyT1RPkk3LBUIL6o5wPh7uwcPBHonesfy8V69exlLuc=;
-        b=c0ZyMOy/dIuf4D6KE0uGH2i0anIOpRRAa4+HMl+q87s+4OEZKUFn4/C0eaPOpb7+8p
-         BZ8iiQ34DBmWKHXOYHsKUUJ/jZ1Ag3iJZlW1XxcrfFCnsHZXphxfhxLpB8ZhU2UzrF1s
-         A0279H6mtl7DTB8n5Go+Mo9ogUk/yKBeQ0SOmWlEK1x+MXAntZ7eNI9ZSgy66SLzdHcA
-         d/jhMcXJk4RDVm/IDAc1BmWUozeO93H02UMzeDoxlPQoGUG8glNSM80H5GCy7qtO0UPu
-         MVcwsxEPUdXnDcomABNP/5F1a0h0rJonmqAeXUWL9EIUPpD3oqWMHz6cOxgEy6+gZHY2
-         5M9Q==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=15PJ6n+yWHUc2tjmoyeoXSF2O2j0pQjRhHmg3Pe7zno=;
+        b=tVtHeX2uyJKWOHXelP2GYf3R/CMP/pALn4GbQxAiRDkuOC41PUJaIOMcB3bH4RsN61
+         Ij1mcbESeI/1UB7stnT8dtqkLkLsudpB0z7ES4j5hgNb3Fa0woMW9qROwtYjvWP7ijhF
+         48l7Nzh89I74jo5LspU8srzClVcnqsWQb9Wt1c98oIEDS3SUF/xkdbn0K2QMjAt1XFpW
+         T5Th13lSML019Izmv0EPy7baSjfPtbjqEz2/r90SQARbT9YrFTfgyNYIc1R56fkZblZN
+         MyOWqxUW8AVdcTsDs74CTt16fbcGThu36w5bkdCSrjMAbiVhLXi8IEYDvTKtVsSgJw3h
+         MRJA==
+In-Reply-To: <20130804100855.GD24005@dhcp22.suse.cz>
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Greg Thelen <gthelen@google.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Sha Zhengju <handai.szj@taobao.com>
 
-Hi,
+Hi Andrew,
 
-Running our iscsi stress tests on 3.11-rc kernel I've got an oops (see
-it below).
+After several rounds of review, parts of the memcg page accounting
+patchset is ready (leaving memcg dirty page accounting under more
+review):
 
+  1/8 memcg: remove MEMCG_NR_FILE_MAPPED
+  2/8 ceph: vfs __set_page_dirty_nobuffers interface instead of doing
+it inside filesystem
+  3/8 memcg: check for proper lock held in mem_cgroup_update_page_stat
+  5/8 memcg: add per cgroup writeback pages accounting
+  8/8 memcg: Document cgroup dirty/writeback memory statistics
 
-After debugging it I think I understand what is the problem. It is in
-CFQ if CFQ_GROUP_IOSCHED is not set. If the config option is not set
-then following function is never called from cfq-iosched.c:
+But the 2/8 ceph one has been improved again and will be merged in
+ceph tree, so only the other 4 patches need to be added to -mm tree.
+I've moved the 5/8 writeback one up the stack and updated the 8/8 to
+only document writeback changes. Could you please merge them earlier?
+I'll post these updated patches soon. :)
 
-blkcg_activate_policy(q, &blkcg_policy_cfq);
-
-And this function is important for blockcg because it sets root_blkg:
-
-q->root_blkg = blkg;
-
-If root_blkg is not set then it is NULL and later it confuses function
-__blk_queue_next_rl that has following check:
-
-if (ent == &q->root_blkg->q_node)
-
-it intends to skip unintialized request list structures that
-correspond to root_blkg cgroup. But because q->root_blkg is NULL the
-code fails to filter it out and returns invalid requests_list back to
-the user. The caller tries to use unintialized spinlock and crashes.
+Thank you!
 
 
-In crash codepath ent is indeed points to root cgroup - adding
+---------- Forwarded message ----------
+From: Michal Hocko <mhocko@suse.cz>
+Date: Sun, Aug 4, 2013 at 6:08 PM
+Subject: Re: [PATCH V5 5/8] memcg: add per cgroup writeback pages accounting
+To: Sha Zhengju <handai.szj@gmail.com>
+Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+"linux-mm@kvack.org" <linux-mm@kvack.org>, Cgroups
+<cgroups@vger.kernel.org>, KAMEZAWA Hiroyuki
+<kamezawa.hiroyu@jp.fujitsu.com>, Glauber Costa <glommer@gmail.com>,
+Greg Thelen <gthelen@google.com>, Wu Fengguang
+<fengguang.wu@intel.com>, Andrew Morton <akpm@linux-foundation.org>,
+Sha Zhengju <handai.szj@taobao.com>
 
-        if (ent == &q->blkg_list)
-                return NULL;
 
-        blkg = container_of(ent, struct blkcg_gq, q_node);
-+       BUG_ON(blkg->blkcg == &blkcg_root);
-        return &blkg->rl;
+On Sat 03-08-13 17:25:01, Sha Zhengju wrote:
+> On Thu, Aug 1, 2013 at 10:53 PM, Michal Hocko <mhocko@suse.cz> wrote:
+> > On Thu 01-08-13 19:54:11, Sha Zhengju wrote:
+> >> From: Sha Zhengju <handai.szj@taobao.com>
+> >>
+> >> Similar to dirty page, we add per cgroup writeback pages accounting. The lock
+> >> rule still is:
+> >>         mem_cgroup_begin_update_page_stat()
+> >>         modify page WRITEBACK stat
+> >>         mem_cgroup_update_page_stat()
+> >>         mem_cgroup_end_update_page_stat()
+> >>
+> >> There're two writeback interfaces to modify: test_{clear/set}_page_writeback().
+> >> Lock order:
+> >>       --> memcg->move_lock
+> >>         --> mapping->tree_lock
+> >>
+> >> Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
+> >
+> > Looks good to me. Maybe I would suggest moving this patch up the stack
+> > so that it might get merged earlier as it is simpler than dirty pages
+> > accounting. Unless you insist on having the full series merged at once.
+>
+> I think the following three patches can be merged earlier:
+>       1/8 memcg: remove MEMCG_NR_FILE_MAPPED
+>       3/8 memcg: check for proper lock held in mem_cgroup_update_page_stat
+>       5/8 memcg: add per cgroup writeback pages accounting
+>
+> Do I need to resent them again for you or they're enough?
 
-crashes kernel earlier (IMHO this check is useful and worth adding to the code).
+This is a question for Andrew. I would go with them as they are.
+
+> One more word, since dirty accounting is essential to future memcg
+> dirty page throttling and it is not an optional feature now, I suspect
+> whether we can merge the following two as well and leave the overhead
+> optimization a separate series.  :p
+
+I wouldn't hurry it. We need numbers for serious testing to see the
+overhead. It is still just a small step towards dirty throttling.
+
+>       4/5 memcg: add per cgroup dirty pages accounting
+>       8/8 memcg: Document cgroup dirty/writeback memory statistics
+>
+> The 2/8 ceph one still need more improvement, I'll separate it next version.
+>
+> >
+> > Acked-by: Michal Hocko <mhocko@suse.cz>
+>
+> Thank you.
+[...]
+--
+Michal Hocko
+SUSE Labs
 
 
-
-Turning CFQ_GROUP_IOSCHED makes the crash go away.
-
-[  498.876699] BUG: unable to handle kernel NULL pointer dereference
-at           (null)
-    [  498.884566] IP: [<ffffffff810c58cb>] __wake_up_common+0x2b/0x90
-    [  498.890510] PGD 60f7a9067 PUD 60f4c9067 PMD 0
-    [  498.895028] Oops: 0000 [#1] SMP DEBUG_PAGEALLOC
-    [  498.899943] gsmi: Log Shutdown Reason 0x03
-    [  498.904037] Modules linked in: act_mirred cls_tcindex
-cls_prioshift sch_dsmark xt_multiport iptable_mangle sata_mv elephant
-elephant_dev_num cdc_acm uhci_hcd ehci_hcd i2c_d
-    [  498.924787] CPU: 9 PID: 41382 Comm: iSCSI-write- Not tainted
-3.11.0-dbg-DEV #19
-    [  498.932095] Hardware name: Intel XXX
-    [  498.939400] task: ffff88060d16eec0 ti: ffff88060d170000
-task.ti: ffff88060d170000
-    [  498.946883] RIP: 0010:[<ffffffff810c58cb>]
-[<ffffffff810c58cb>] __wake_up_common+0x2b/0x90
-    [  498.955252] RSP: 0000:ffff88060d171818  EFLAGS: 00010096
-    [  498.960569] RAX: 0000000000000082 RBX: ffff880baa3dee60 RCX:
-0000000000000000
-    [  498.967708] RDX: 0000000000000000 RSI: 0000000000000003 RDI:
-ffff880baa3dee60
-    [  498.974845] RBP: ffff88060d171858 R08: 0000000000000000 R09:
-0000000000000000
-    [  498.981983] R10: 0000000000000000 R11: 0000000000000002 R12:
-ffff880baa3dee98
-    [  498.989121] R13: 0000000000000003 R14: 0000000000000000 R15:
-0000000000000003
-    [  498.996261] FS:  00007f977cba6700(0000)
-GS:ffff880c79c60000(0000) knlGS:0000000000000000
-    [  499.004351] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-    [  499.010102] CR2: 0000000000000000 CR3: 000000060f7a5000 CR4:
-00000000000007e0
-    [  499.017238] Stack:
-    [  499.019258]  0000000000000082 0000000000000000 ffff88060d171858
-ffff880baa3dee60
-    [  499.026752]  0000000000000082 0000000000000003 0000000000000000
-0000000000000000
-    [  499.034254]  ffff88060d171898 ffffffff810c7848 ffff88060d171888
-ffff880bde4bc4b8
-    [  499.041748] Call Trace:
-    [  499.044207]  [<ffffffff810c7848>] __wake_up+0x48/0x70
-    [  499.049263]  [<ffffffff8131da53>] __blk_drain_queue+0x123/0x190
-    [  499.055187]  [<ffffffff8131dbb5>] blk_cleanup_queue+0xf5/0x210
-    [  499.061023]  [<ffffffff8141877a>] __scsi_remove_device+0x5a/0xd0
-    [  499.067034]  [<ffffffff81418824>] scsi_remove_device+0x34/0x50
-    [  499.072873]  [<ffffffff814189cb>] scsi_remove_target+0x16b/0x220
-    [  499.078882]  [<ffffffff814210f1>] __iscsi_unbind_session+0xd1/0x1b0
-    [  499.085153]  [<ffffffff814212b2>] iscsi_remove_session+0xe2/0x1c0
-    [  499.091249]  [<ffffffff814213a6>] iscsi_destroy_session+0x16/0x60
-    [  499.097347]  [<ffffffff81423a59>] iscsi_session_teardown+0xd9/0x100
-    [  499.103618]  [<ffffffff8142b75a>] iscsi_sw_tcp_session_destroy+0x5a/0xb0
-    [  499.110319]  [<ffffffff81420948>] iscsi_if_rx+0x10e8/0x1560
-    [  499.115899]  [<ffffffff81573335>] netlink_unicast+0x145/0x200
-    [  499.121647]  [<ffffffff815736f3>] netlink_sendmsg+0x303/0x410
-    [  499.127396]  [<ffffffff81528196>] sock_sendmsg+0xa6/0xd0
-    [  499.132713]  [<ffffffff815294bc>] ___sys_sendmsg+0x38c/0x3a0
-    [  499.138376]  [<ffffffff811ea840>] ? fget_light+0x40/0x160
-    [  499.143779]  [<ffffffff811ea899>] ? fget_light+0x99/0x160
-    [  499.149182]  [<ffffffff811ea840>] ? fget_light+0x40/0x160
-    [  499.154586]  [<ffffffff8152bc79>] __sys_sendmsg+0x49/0x90
-    [  499.159989]  [<ffffffff8152bcd2>] SyS_sendmsg+0x12/0x20
-    [  499.165218]  [<ffffffff815fb642>] system_call_fastpath+0x16/0x1b
-    [  499.171227] Code: 66 66 66 66 90 55 48 89 e5 41 57 41 89 f7 41
-56 41 89 ce 41 55 41 54 4c 8d 67 38 53 48 83 ec 18 89 55 c4 48 8b 57
-38 4c 89 45 c8 <4c> 8b 2a 48 8d 42 e8 49
-    [  499.171227] IP: 0xffffffff810c584b:
+-- 
+Thanks,
+Sha
