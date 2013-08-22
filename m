@@ -1,19 +1,19 @@
 From: Sha Zhengju <handai.szj@gmail.com>
-Subject: [PATCH 1/4] memcg: remove MEMCG_NR_FILE_MAPPED
-Date: Thu, 22 Aug 2013 17:50:23 +0800
-Message-ID: <1377165023-23974-1-git-send-email-handai.szj@taobao.com>
+Subject: [PATCH 2/4] memcg: check for proper lock held in mem_cgroup_update_page_stat
+Date: Thu, 22 Aug 2013 17:52:11 +0800
+Message-ID: <1377165131-24052-1-git-send-email-handai.szj@taobao.com>
 References: <CAFj3OHXy5XkwhxKk=WNywp2pq__FD7BrSQwFkp+NZj15_k6BEQ@mail.gmail.com>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Mmdjo3kHU8kGeRHMegfCFB84o554t2/0DOyWfc5WgDc=;
-        b=YaRGYBHUPwuiCAP849FpD83zdpUo7pJSywOd0Xg0rp/oRMsNQ/PZDPXeTYx7SNCAtv
-         sShk0QHN71FqiD173NTyj8IkshoU1AvYz+0OXeZoZ4bbMl3A7ZmHi/CJiwBmvvtzQ5hF
-         J1sll6u9f7gIiiELTgdSy7IQwcQn2bP6Fl6zOae3gpWpvBJLZhrVdZUCRs0Hg0F3TvJZ
-         G+EdZL6r3tmmFUYtJ4JGA3XE8q54jsGvHV5PFOFCHJEdl+V1Q8bvUU3He1W4lAEqOAkH
-         4plZNRmrIQBbPI2T5D7ra1jhayPNO4G1vRScxTHtFaukCfQaGei+l719j8zr8jNOcOsS
-         wOyA==
+        bh=cJmV8LHHS6UDRSrqz+7lVarDyvolh1lis2AaAjd9txg=;
+        b=IDADedow3ADWsc8AcjF1cESGJyUFbjoUGGFN+idpdj/odV01+bbXICwJfQD6pd2cJF
+         Lzalov1SF3LvNp0JjnCUuwUbh5X10golGUuUtvborSUHhQ6xDkJwUqV7YGwzGXiiQ2Cz
+         Jj5dpLd944MmxpKX2cXytxpEBNvpmYttzuSL7FgXQuELYEAZSNDZGOqENJzm4l/HllL6
+         yYTAjWSHVowz8g1EhGmysOZYOxG8B3/Mx/V9wRQPiggxTwnEXJfyG/BJKmOuJoc7/MYf
+         no0DvN98rhi7l6/caRpXE7fx9sGplC2PfujDMsn+kSOAcuKLSP0/unB2FocCqEfYDu8p
+         16dA==
 In-Reply-To: <CAFj3OHXy5XkwhxKk=WNywp2pq__FD7BrSQwFkp+NZj15_k6BEQ@mail.gmail.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -25,157 +25,31 @@ Cc: mhocko@suse.cz, kamezawa.hiroyu@jp.fujitsu.com, gthelen@google.com, linux-mm
 
 From: Sha Zhengju <handai.szj@taobao.com>
 
-While accounting memcg page stat, it's not worth to use MEMCG_NR_FILE_MAPPED
-as an extra layer of indirection because of the complexity and presumed
-performance overhead. We can use MEM_CGROUP_STAT_FILE_MAPPED directly.
+We should call mem_cgroup_begin_update_page_stat() before
+mem_cgroup_update_page_stat() to get proper locks, however the
+latter doesn't do any checking that we use proper locking, which
+would be hard. Suggested by Michal Hock we could at least test for
+rcu_read_lock_held() because RCU is held if !mem_cgroup_disabled().
 
 Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 Acked-by: Michal Hocko <mhocko@suse.cz>
-Acked-by: Fengguang Wu <fengguang.wu@intel.com>
 Reviewed-by: Greg Thelen <gthelen@google.com>
 ---
- include/linux/memcontrol.h |   27 +++++++++++++++++++--------
- mm/memcontrol.c            |   25 +------------------------
- mm/rmap.c                  |    4 ++--
- 3 files changed, 22 insertions(+), 34 deletions(-)
+ mm/memcontrol.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 8a9ed4d..630bfa1 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -30,9 +30,20 @@ struct page;
- struct mm_struct;
- struct kmem_cache;
- 
--/* Stats that can be updated by kernel. */
--enum mem_cgroup_page_stat_item {
--	MEMCG_NR_FILE_MAPPED, /* # of pages charged as file rss */
-+/*
-+ * The corresponding mem_cgroup_stat_names is defined in mm/memcontrol.c,
-+ * These two lists should keep in accord with each other.
-+ */
-+enum mem_cgroup_stat_index {
-+	/*
-+	 * For MEM_CONTAINER_TYPE_ALL, usage = pagecache + rss.
-+	 */
-+	MEM_CGROUP_STAT_CACHE,		/* # of pages charged as cache */
-+	MEM_CGROUP_STAT_RSS,		/* # of pages charged as anon rss */
-+	MEM_CGROUP_STAT_RSS_HUGE,	/* # of pages charged as anon huge */
-+	MEM_CGROUP_STAT_FILE_MAPPED,	/* # of pages charged as file rss */
-+	MEM_CGROUP_STAT_SWAP,		/* # of pages, swapped out */
-+	MEM_CGROUP_STAT_NSTATS,
- };
- 
- struct mem_cgroup_reclaim_cookie {
-@@ -233,17 +244,17 @@ static inline void mem_cgroup_end_update_page_stat(struct page *page,
- }
- 
- void mem_cgroup_update_page_stat(struct page *page,
--				 enum mem_cgroup_page_stat_item idx,
-+				 enum mem_cgroup_stat_index idx,
- 				 int val);
- 
- static inline void mem_cgroup_inc_page_stat(struct page *page,
--					    enum mem_cgroup_page_stat_item idx)
-+					    enum mem_cgroup_stat_index idx)
- {
- 	mem_cgroup_update_page_stat(page, idx, 1);
- }
- 
- static inline void mem_cgroup_dec_page_stat(struct page *page,
--					    enum mem_cgroup_page_stat_item idx)
-+					    enum mem_cgroup_stat_index idx)
- {
- 	mem_cgroup_update_page_stat(page, idx, -1);
- }
-@@ -448,12 +459,12 @@ static inline bool mem_cgroup_oom_synchronize(void)
- }
- 
- static inline void mem_cgroup_inc_page_stat(struct page *page,
--					    enum mem_cgroup_page_stat_item idx)
-+					    enum mem_cgroup_stat_index idx)
- {
- }
- 
- static inline void mem_cgroup_dec_page_stat(struct page *page,
--					    enum mem_cgroup_page_stat_item idx)
-+					    enum mem_cgroup_stat_index idx)
- {
- }
- 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b73988a..24d6d02 100644
+index 24d6d02..0a50871 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -84,21 +84,6 @@ static int really_do_swap_account __initdata = 0;
- #endif
- 
- 
--/*
-- * Statistics for memory cgroup.
-- */
--enum mem_cgroup_stat_index {
--	/*
--	 * For MEM_CONTAINER_TYPE_ALL, usage = pagecache + rss.
--	 */
--	MEM_CGROUP_STAT_CACHE,		/* # of pages charged as cache */
--	MEM_CGROUP_STAT_RSS,		/* # of pages charged as anon rss */
--	MEM_CGROUP_STAT_RSS_HUGE,	/* # of pages charged as anon huge */
--	MEM_CGROUP_STAT_FILE_MAPPED,	/* # of pages charged as file rss */
--	MEM_CGROUP_STAT_SWAP,		/* # of pages, swapped out */
--	MEM_CGROUP_STAT_NSTATS,
--};
--
- static const char * const mem_cgroup_stat_names[] = {
- 	"cache",
- 	"rss",
-@@ -2255,7 +2240,7 @@ void __mem_cgroup_end_update_page_stat(struct page *page, unsigned long *flags)
- }
- 
- void mem_cgroup_update_page_stat(struct page *page,
--				 enum mem_cgroup_page_stat_item idx, int val)
-+				 enum mem_cgroup_stat_index idx, int val)
- {
- 	struct mem_cgroup *memcg;
- 	struct page_cgroup *pc = lookup_page_cgroup(page);
-@@ -2268,14 +2253,6 @@ void mem_cgroup_update_page_stat(struct page *page,
- 	if (unlikely(!memcg || !PageCgroupUsed(pc)))
+@@ -2249,6 +2249,7 @@ void mem_cgroup_update_page_stat(struct page *page,
+ 	if (mem_cgroup_disabled())
  		return;
  
--	switch (idx) {
--	case MEMCG_NR_FILE_MAPPED:
--		idx = MEM_CGROUP_STAT_FILE_MAPPED;
--		break;
--	default:
--		BUG();
--	}
--
- 	this_cpu_add(memcg->stat->count[idx], val);
- }
- 
-diff --git a/mm/rmap.c b/mm/rmap.c
-index 07afd48..373da2a 100644
---- a/mm/rmap.c
-+++ b/mm/rmap.c
-@@ -1114,7 +1114,7 @@ void page_add_file_rmap(struct page *page)
- 	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
- 	if (atomic_inc_and_test(&page->_mapcount)) {
- 		__inc_zone_page_state(page, NR_FILE_MAPPED);
--		mem_cgroup_inc_page_stat(page, MEMCG_NR_FILE_MAPPED);
-+		mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_FILE_MAPPED);
- 	}
- 	mem_cgroup_end_update_page_stat(page, &locked, &flags);
- }
-@@ -1158,7 +1158,7 @@ void page_remove_rmap(struct page *page)
- 				hpage_nr_pages(page));
- 	} else {
- 		__dec_zone_page_state(page, NR_FILE_MAPPED);
--		mem_cgroup_dec_page_stat(page, MEMCG_NR_FILE_MAPPED);
-+		mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_FILE_MAPPED);
- 		mem_cgroup_end_update_page_stat(page, &locked, &flags);
- 	}
- 	if (unlikely(PageMlocked(page)))
++	VM_BUG_ON(!rcu_read_lock_held());
+ 	memcg = pc->mem_cgroup;
+ 	if (unlikely(!memcg || !PageCgroupUsed(pc)))
+ 		return;
 -- 
 1.7.9.5
 
