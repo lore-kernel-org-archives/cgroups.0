@@ -1,19 +1,19 @@
 From: Sha Zhengju <handai.szj@gmail.com>
-Subject: [PATCH 2/4] memcg: check for proper lock held in mem_cgroup_update_page_stat
-Date: Thu, 22 Aug 2013 17:52:11 +0800
-Message-ID: <1377165131-24052-1-git-send-email-handai.szj@taobao.com>
+Subject: [PATCH 3/4] memcg: add per cgroup writeback pages accounting
+Date: Thu, 22 Aug 2013 17:53:10 +0800
+Message-ID: <1377165190-24143-1-git-send-email-handai.szj@taobao.com>
 References: <CAFj3OHXy5XkwhxKk=WNywp2pq__FD7BrSQwFkp+NZj15_k6BEQ@mail.gmail.com>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=cJmV8LHHS6UDRSrqz+7lVarDyvolh1lis2AaAjd9txg=;
-        b=IDADedow3ADWsc8AcjF1cESGJyUFbjoUGGFN+idpdj/odV01+bbXICwJfQD6pd2cJF
-         Lzalov1SF3LvNp0JjnCUuwUbh5X10golGUuUtvborSUHhQ6xDkJwUqV7YGwzGXiiQ2Cz
-         Jj5dpLd944MmxpKX2cXytxpEBNvpmYttzuSL7FgXQuELYEAZSNDZGOqENJzm4l/HllL6
-         yYTAjWSHVowz8g1EhGmysOZYOxG8B3/Mx/V9wRQPiggxTwnEXJfyG/BJKmOuJoc7/MYf
-         no0DvN98rhi7l6/caRpXE7fx9sGplC2PfujDMsn+kSOAcuKLSP0/unB2FocCqEfYDu8p
-         16dA==
+        bh=I9EBTBf0dMT+pQdhhF9SrG3MI75v71zqM0dBbJWR1k0=;
+        b=meehi2M8zpjd3rWJjjQhiWZK0IxeOQR5sVQdt6pgl5h9MTJdEI7EICrpfHZnGl7rf2
+         Bz4FGHBsZJ89nF6m4jGWqmI5alZ7fUH8/5ZNiLjOXl/B7XhdMSDGwlP2wdd2cM5LCGEo
+         RCMHIsVHvepBk8Ty1KA5CFtqa8vmaKdWMcsg4LlCSuFIAQVlry922/Lj3kerOfDu3gfm
+         HSQWg6CYc8o1tAsd8GMSbg9lMjxP00KQRS4oEX/t6rjH/0+Bsg2qiUL5eoQTQKFY0Mqf
+         maNjQFVXnZueJBvsoYUGUW5nbj2AULwRLy/mnzRxGQ49DGI2AwbbJQLTeKHIAPXjR3Xw
+         AOKw==
 In-Reply-To: <CAFj3OHXy5XkwhxKk=WNywp2pq__FD7BrSQwFkp+NZj15_k6BEQ@mail.gmail.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -25,31 +25,170 @@ Cc: mhocko@suse.cz, kamezawa.hiroyu@jp.fujitsu.com, gthelen@google.com, linux-mm
 
 From: Sha Zhengju <handai.szj@taobao.com>
 
-We should call mem_cgroup_begin_update_page_stat() before
-mem_cgroup_update_page_stat() to get proper locks, however the
-latter doesn't do any checking that we use proper locking, which
-would be hard. Suggested by Michal Hock we could at least test for
-rcu_read_lock_held() because RCU is held if !mem_cgroup_disabled().
+This patch is to add memcg routines to count writeback pages, later dirty pages will
+also be accounted.
+
+After Kame's commit 89c06bd5(memcg: use new logic for page stat accounting), we can
+use 'struct page' flag to test page state instead of per page_cgroup flag. But memcg
+has a feature to move a page from a cgroup to another one and may have race between
+"move" and "page stat accounting". So in order to avoid the race we have designed a
+new lock:
+
+         mem_cgroup_begin_update_page_stat()
+         modify page information        -->(a)
+         mem_cgroup_update_page_stat()  -->(b)
+         mem_cgroup_end_update_page_stat()
+
+It requires both (a) and (b)(writeback pages accounting) to be pretected in
+mem_cgroup_{begin/end}_update_page_stat(). It's full no-op for !CONFIG_MEMCG, almost
+no-op if memcg is disabled (but compiled in), rcu read lock in the most cases
+(no task is moving), and spin_lock_irqsave on top in the slow path.
+
+There're two writeback interfaces to modify: test_{clear/set}_page_writeback().
+And the lock order is:
+	--> memcg->move_lock
+	  --> mapping->tree_lock
 
 Signed-off-by: Sha Zhengju <handai.szj@taobao.com>
 Acked-by: Michal Hocko <mhocko@suse.cz>
 Reviewed-by: Greg Thelen <gthelen@google.com>
 ---
- mm/memcontrol.c |    1 +
- 1 file changed, 1 insertion(+)
+ include/linux/memcontrol.h |    1 +
+ mm/memcontrol.c            |   30 +++++++++++++++++++++++-------
+ mm/page-writeback.c        |   15 +++++++++++++++
+ 3 files changed, 39 insertions(+), 7 deletions(-)
 
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 630bfa1..1878644 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -42,6 +42,7 @@ enum mem_cgroup_stat_index {
+ 	MEM_CGROUP_STAT_RSS,		/* # of pages charged as anon rss */
+ 	MEM_CGROUP_STAT_RSS_HUGE,	/* # of pages charged as anon huge */
+ 	MEM_CGROUP_STAT_FILE_MAPPED,	/* # of pages charged as file rss */
++	MEM_CGROUP_STAT_WRITEBACK,	/* # of pages under writeback */
+ 	MEM_CGROUP_STAT_SWAP,		/* # of pages, swapped out */
+ 	MEM_CGROUP_STAT_NSTATS,
+ };
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 24d6d02..0a50871 100644
+index 0a50871..869bfaf 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2249,6 +2249,7 @@ void mem_cgroup_update_page_stat(struct page *page,
- 	if (mem_cgroup_disabled())
- 		return;
+@@ -89,6 +89,7 @@ static const char * const mem_cgroup_stat_names[] = {
+ 	"rss",
+ 	"rss_huge",
+ 	"mapped_file",
++	"writeback",
+ 	"swap",
+ };
  
-+	VM_BUG_ON(!rcu_read_lock_held());
- 	memcg = pc->mem_cgroup;
- 	if (unlikely(!memcg || !PageCgroupUsed(pc)))
- 		return;
+@@ -3675,6 +3676,20 @@ void mem_cgroup_split_huge_fixup(struct page *head)
+ }
+ #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
+ 
++static inline
++void mem_cgroup_move_account_page_stat(struct mem_cgroup *from,
++					struct mem_cgroup *to,
++					unsigned int nr_pages,
++					enum mem_cgroup_stat_index idx)
++{
++	/* Update stat data for mem_cgroup */
++	preempt_disable();
++	WARN_ON_ONCE(from->stat->count[idx] < nr_pages);
++	__this_cpu_add(from->stat->count[idx], -nr_pages);
++	__this_cpu_add(to->stat->count[idx], nr_pages);
++	preempt_enable();
++}
++
+ /**
+  * mem_cgroup_move_account - move account of the page
+  * @page: the page
+@@ -3720,13 +3735,14 @@ static int mem_cgroup_move_account(struct page *page,
+ 
+ 	move_lock_mem_cgroup(from, &flags);
+ 
+-	if (!anon && page_mapped(page)) {
+-		/* Update mapped_file data for mem_cgroup */
+-		preempt_disable();
+-		__this_cpu_dec(from->stat->count[MEM_CGROUP_STAT_FILE_MAPPED]);
+-		__this_cpu_inc(to->stat->count[MEM_CGROUP_STAT_FILE_MAPPED]);
+-		preempt_enable();
+-	}
++	if (!anon && page_mapped(page))
++		mem_cgroup_move_account_page_stat(from, to, nr_pages,
++			MEM_CGROUP_STAT_FILE_MAPPED);
++
++	if (PageWriteback(page))
++		mem_cgroup_move_account_page_stat(from, to, nr_pages,
++			MEM_CGROUP_STAT_WRITEBACK);
++
+ 	mem_cgroup_charge_statistics(from, page, anon, -nr_pages);
+ 
+ 	/* caller should have done css_get */
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index ddc56fc..b6ecbc6 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -1999,11 +1999,17 @@ EXPORT_SYMBOL(account_page_dirtied);
+ 
+ /*
+  * Helper function for set_page_writeback family.
++ *
++ * The caller must hold mem_cgroup_begin/end_update_page_stat() lock
++ * while calling this function.
++ * See test_set_page_writeback for example.
++ *
+  * NOTE: Unlike account_page_dirtied this does not rely on being atomic
+  * wrt interrupts.
+  */
+ void account_page_writeback(struct page *page)
+ {
++	mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_WRITEBACK);
+ 	inc_zone_page_state(page, NR_WRITEBACK);
+ }
+ EXPORT_SYMBOL(account_page_writeback);
+@@ -2220,7 +2226,10 @@ int test_clear_page_writeback(struct page *page)
+ {
+ 	struct address_space *mapping = page_mapping(page);
+ 	int ret;
++	bool locked;
++	unsigned long memcg_flags;
+ 
++	mem_cgroup_begin_update_page_stat(page, &locked, &memcg_flags);
+ 	if (mapping) {
+ 		struct backing_dev_info *bdi = mapping->backing_dev_info;
+ 		unsigned long flags;
+@@ -2241,9 +2250,11 @@ int test_clear_page_writeback(struct page *page)
+ 		ret = TestClearPageWriteback(page);
+ 	}
+ 	if (ret) {
++		mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_WRITEBACK);
+ 		dec_zone_page_state(page, NR_WRITEBACK);
+ 		inc_zone_page_state(page, NR_WRITTEN);
+ 	}
++	mem_cgroup_end_update_page_stat(page, &locked, &memcg_flags);
+ 	return ret;
+ }
+ 
+@@ -2251,7 +2262,10 @@ int test_set_page_writeback(struct page *page)
+ {
+ 	struct address_space *mapping = page_mapping(page);
+ 	int ret;
++	bool locked;
++	unsigned long memcg_flags;
+ 
++	mem_cgroup_begin_update_page_stat(page, &locked, &memcg_flags);
+ 	if (mapping) {
+ 		struct backing_dev_info *bdi = mapping->backing_dev_info;
+ 		unsigned long flags;
+@@ -2278,6 +2292,7 @@ int test_set_page_writeback(struct page *page)
+ 	}
+ 	if (!ret)
+ 		account_page_writeback(page);
++	mem_cgroup_end_update_page_stat(page, &locked, &memcg_flags);
+ 	return ret;
+ 
+ }
 -- 
 1.7.9.5
 
