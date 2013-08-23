@@ -1,55 +1,61 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 11/11] cpuset: export effective masks to userspace
-Date: Fri, 23 Aug 2013 08:34:00 -0400
-Message-ID: <20130823123400.GB10322@mtj.dyndns.org>
-References: <52148F52.0@huawei.com> <52148FFC.4080701@huawei.com>
-	<20130821142001.GK19286@mtj.dyndns.org>
-	<52171501.8050401@huawei.com>
+Subject: Re: [PATCH 08/11] cpuset: separate configured masks and efffective
+ masks
+Date: Fri, 23 Aug 2013 11:33:28 -0400
+Message-ID: <20130823153328.GD3277@htj.dyndns.org>
+References: <52148F52.0@huawei.com>
+ <52148FCA.8010704@huawei.com>
+ <20130821140846.GH19286@mtj.dyndns.org>
+ <52171367.90005@huawei.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=gqvK07C+piIxZqoLs28L2rBRuWq1J+uRTD9hXU00cGU=;
+        b=qtI+lPrD6a6kXx+GFnuUm+xX4Ygu1hcSx8ihRpBfUFX6OxyWb3nnhYKbOhONhEpUPB
+         ivL6y3Suj4O9QX7IMaWlYmw4RUUaZJN5QRd6KuQmiFDPHrxiZyCnmXyGZsszO/M6nh7s
+         jzPW9dQUyD/K9j0+HLSuFJucV680DskO/qQ88h/GDPAMlc6NCoF0J1kMhey/57NNWbNx
+         NIRNNLPCLY1s0Qo0fpdzs/P+25BEXv1B4iTkJEvFv0tzQDtzMcI13ueRJUTOB85iCsIO
+         MWiTHYewS68SNaGHlTRThhIYcwoZZlAhov0irumjMEV1xtTQ3B4+9Y30z33NX/dCog51
+         oueg==
+Content-Disposition: inline
+In-Reply-To: <52171367.90005-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=2NjUbSD3c5tcvQljyfQOrHLyiQghdKC3YeXmzYCCqAw=;
-	b=aSVmxlRMlqOvyfTQlfvCetoGwHycwCUOhWuepBY+q1dQEnC40xlUZB1zGDY4kguttc
-	BD++NxIra4Pq2+KqbtVzzkouXM20zS06dqCDpBDhga9p6KFJ/zG5G9ueGKyLoMkQ/rsV
-	t6YrsC4AZVGlC4OiImPKezzsDYK73ds+qf2rvgGMQJGprEG/XYhwIrUP5RePFn6efyku
-	8hJxcyYfRurMnRP18xSfuy+upvXnEQwVPCTnt742SB8Z81pOZf1KBAClQouyDY0Ev4/c
-	ktKEqpTorqRXwq/TT8LfRsECfh/11ZxDaWn/IXfMU7Ms1ccY8NTMy7xjWWIz3lezORGS
-	RGNw==
-Content-Disposition: inline
-In-Reply-To: <52171501.8050401-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 
-Hello,
+Hello, Li.
 
-On Fri, Aug 23, 2013 at 03:53:37PM +0800, Li Zefan wrote:
-> It seems confusing if there're two interaces but they actually mean
-> the same thing.
->
-> Another reason I didn't do this is, they're not always the same. When
-> !sane, If cpus_allowed is empty, effective_cpus is not empty, and you
-> are not able to put tasks into this cpuset. So if we want to  expose
-> it unconditionally, I'll make sure cpus_allowed == effective_cpus
-> always stand when !sane.
+On Fri, Aug 23, 2013 at 03:46:47PM +0800, Li Zefan wrote:
+> On 2013/8/21 22:08, Tejun Heo wrote:
+> > On Wed, Aug 21, 2013 at 06:00:42PM +0800, Li Zefan wrote:
+> >> @@ -2261,7 +2271,8 @@ static void cpuset_hotplug_workfn(struct work_struct *work)
+> >>  	/* synchronize mems_allowed to N_MEMORY */
+> >>  	if (mems_updated) {
+> >>  		mutex_lock(&callback_mutex);
+> >> -		top_cpuset.mems_allowed = new_mems;
+> >> +		if (!sane)
+> >> +			top_cpuset.mems_allowed = new_mems;
+> > 
+> > Can you please further explain how the top cgroup behaves?
+> > 
+> 
+> top_cpuset.cpus_allowed will always be cpu_active_mask if sane_behavior
+> is not set, otherwise it will always be cpu_possible_mask. While
+> top_cpuset.effective_cpus will always be cpu_active_mask in either
+> case.
 
-Do you think that'll be convoluted?  Otherwise, sounds like a nice
-thing to do anyway.
+Just in case it wasn't clear, it'd be great if you can also explain
+what's going on w.r.t. sane_behavior in the comments and patch
+description.  Having dual modes of operation can always be quite
+confusing so I think some documentation could be very beneficial.
 
-Thanks.
+Thanks!
 
 -- 
 tejun
