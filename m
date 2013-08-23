@@ -1,34 +1,31 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup fixes for v3.11-rc6
-Date: Fri, 23 Aug 2013 11:48:13 -0400
-Message-ID: <20130823154813.GE3277@htj.dyndns.org>
+Subject: [GIT PULL RESEND] cgroup fixes for v3.11-rc6
+Date: Fri, 23 Aug 2013 11:51:15 -0400
+Message-ID: <20130823155115.GF3277@htj.dyndns.org>
+References: <20130823154813.GE3277@htj.dyndns.org>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=0eOldhIe6o0jOc5hFpqLm1yGQHHFQYvgGLiWooJ4ytk=;
+        b=Zx4xYaB3F330SrQmz9A9xL7vLJueg7rsBcCG0JK5ywuX1aTqpUuuxPeAJ22n56yD+z
+         dthqRsSOggog0eRV3tA+HM9/QAnlzZL9HES53Ix/9pA7mwV1XoOMY7VpyDHx1WPIgRya
+         THClQLyI9PKWaaXuatd0PhRzc/riONsFfIZEs1wSWwfo6zOtgRJmj8j8B9b8jDnFqxzA
+         U9vOQG5Uqg5bLF+/bhtToagKQLbE4eNqI+L2dz6ZTT1oQmoWyh3il/q9O2CC5aME3IqS
+         /2zuJA05CCToiXUIqk4wG6v6NO6hC5ErLCfd5ZTtJEIiSoe1haHzI2/InmFcLA63KfwC
+         oOww==
+Content-Disposition: inline
+In-Reply-To: <20130823154813.GE3277-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-	:content-disposition:user-agent;
-	bh=7w9FbD7KuuJsybbwl0HcAlBYJ4lgA5LhrrjPjBr5Iz8=;
-	b=O2by6wNwI37anDVhDpEIHVHcg9kkHPhyaHySmLjmKo2ifIx3PDxLRoi5dMmsApc1It
-	Mle2Htdt73jeq4VKYyXfqoFKVCIAdOz5EsLhUkRVj6tWfR4H1sarToZkohPvv3Br8p0O
-	RrTNV62YQhCbW9tOgG3XWfIi4eHZsDLp6giDH6V95/l6SNEVSY+XzZeHV2QQcL42qxaP
-	3/+6+u0E8NP3YoRYyID3B1xd7mH8oCFYbC/RmeQ1J/50z+8c5mmzvII11QciTD4XTilc
-	mBwZOXCvbtvtdY7Pk/piDHOO/jjT3oz884dWR+p1bHzaj/7HZFkmH/4Fj6/bn/BqQ5S8
-	stNg==
-Content-Disposition: inline
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+
+(forgot to cc lkml, resending, no content change)
 
 Hello, Linus.
 
