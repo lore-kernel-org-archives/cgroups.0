@@ -1,84 +1,51 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL RESEND] cgroup fixes for v3.11-rc6
-Date: Fri, 23 Aug 2013 11:51:15 -0400
-Message-ID: <20130823155115.GF3277@htj.dyndns.org>
-References: <20130823154813.GE3277@htj.dyndns.org>
+From: Sha Zhengju <handai.szj@gmail.com>
+Subject: Re: [PATCH 3/4] memcg: add per cgroup writeback pages accounting
+Date: Sat, 24 Aug 2013 00:11:50 +0800
+Message-ID: <CAFj3OHUqv9d_0x6hMkboox=B3rPeSe5QJq_ztV+zisuymsjLdw@mail.gmail.com>
+References: <CAFj3OHXy5XkwhxKk=WNywp2pq__FD7BrSQwFkp+NZj15_k6BEQ@mail.gmail.com>
+	<1377165190-24143-1-git-send-email-handai.szj@taobao.com>
+	<20130822154002.ce4310d865ede3a0d30f0ce8@linux-foundation.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=0eOldhIe6o0jOc5hFpqLm1yGQHHFQYvgGLiWooJ4ytk=;
-        b=Zx4xYaB3F330SrQmz9A9xL7vLJueg7rsBcCG0JK5ywuX1aTqpUuuxPeAJ22n56yD+z
-         dthqRsSOggog0eRV3tA+HM9/QAnlzZL9HES53Ix/9pA7mwV1XoOMY7VpyDHx1WPIgRya
-         THClQLyI9PKWaaXuatd0PhRzc/riONsFfIZEs1wSWwfo6zOtgRJmj8j8B9b8jDnFqxzA
-         U9vOQG5Uqg5bLF+/bhtToagKQLbE4eNqI+L2dz6ZTT1oQmoWyh3il/q9O2CC5aME3IqS
-         /2zuJA05CCToiXUIqk4wG6v6NO6hC5ErLCfd5ZTtJEIiSoe1haHzI2/InmFcLA63KfwC
-         oOww==
-Content-Disposition: inline
-In-Reply-To: <20130823154813.GE3277-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=IfUd+8DhrnL8M+2ibbPSEfel6cN3BwFolmochOQNyBQ=;
+        b=Qk2cDRFWy1qGbqrecE28I2mh5VblT5qGInNCfXos9S+NIqrL3ZZ5wE/Sa5NMqs+oar
+         hRQwXUTnKsSKTlJUWBv92mAItx+E1Jf6lgUDaC6qTDW994rD3PPHnlQviUvafjF3AyPe
+         Tvp1aV52F9HQ9HWcAcgWsawZ0ZszQAxTWqTWcVvvo8PA85fAwUisDkiS9csbwitfvrBJ
+         1aFo7jsA9mCpQqufui7sEUjLWp1bMIlwrJfcV1FO0Jk+52sDSRpIenMuICsJ55yBCxKN
+         ovamsZjoZD64Ppuvc0Z7LOipS1k+xUVb9vmykyQrcEyfjBfXB3UgCT2CX2Ct5s2SPzcb
+         ls6A==
+In-Reply-To: <20130822154002.ce4310d865ede3a0d30f0ce8@linux-foundation.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Greg Thelen <gthelen@google.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Sha Zhengju <handai.szj@taobao.com>
 
-(forgot to cc lkml, resending, no content change)
+On Fri, Aug 23, 2013 at 6:40 AM, Andrew Morton
+<akpm@linux-foundation.org> wrote:
+> On Thu, 22 Aug 2013 17:53:10 +0800 Sha Zhengju <handai.szj@gmail.com> wrote:
+>
+>> This patch is to add memcg routines to count writeback pages
+>
+> Well OK, but why?  What use is the feature?  In what ways are people
+> suffering due to its absence?
 
-Hello, Linus.
+My apologies for not explaining it clearly.
 
-A late fix for cgroup.  This fixes a behavior regression visible to
-userland which was created by a commit merged during -rc1.  While the
-behavior change isn't too likely to be noticeable, the fix is
-relatively low risk and we'll need to backport it through -stable
-anyway if the bug gets released.
+It's subset of memcg dirty page accounting(including dirty, writeback,
+nfs_unstable pages from a broad sense), which can provide a more sound
+knowledge of memcg behavior. That would be straightforward to add new
+features like memcg dirty page throttling and even memcg aware
+flushing.
+However, the dirty one is more complicated and performance senstive,
+so I need more efforts to improve it and let the writeback patch go
+first.  Afterwards I'll only focus on dirty page itself.
 
-The fix is available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.11-fixes
-
-for you to fetch changes up to 1c09b195d37fa459844036f429a0f378e70c3db6:
-
-  cpuset: fix a regression in validating config change (2013-08-21 08:40:27 -0400)
-
-Thanks.
-
-----------------------------------------------------------------
-Li Zefan (1):
-      cpuset: fix a regression in validating config change
-
- kernel/cpuset.c | 14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
-
-diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index 010a008..ea1966d 100644
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -475,13 +475,17 @@ static int validate_change(const struct cpuset *cur, const struct cpuset *trial)
- 
- 	/*
- 	 * Cpusets with tasks - existing or newly being attached - can't
--	 * have empty cpus_allowed or mems_allowed.
-+	 * be changed to have empty cpus_allowed or mems_allowed.
- 	 */
- 	ret = -ENOSPC;
--	if ((cgroup_task_count(cur->css.cgroup) || cur->attach_in_progress) &&
--	    (cpumask_empty(trial->cpus_allowed) &&
--	     nodes_empty(trial->mems_allowed)))
--		goto out;
-+	if ((cgroup_task_count(cur->css.cgroup) || cur->attach_in_progress)) {
-+		if (!cpumask_empty(cur->cpus_allowed) &&
-+		    cpumask_empty(trial->cpus_allowed))
-+			goto out;
-+		if (!nodes_empty(cur->mems_allowed) &&
-+		    nodes_empty(trial->mems_allowed))
-+			goto out;
-+	}
- 
- 	ret = 0;
- out:
-
---
-tejun
+-- 
+Thanks,
+Sha
