@@ -1,27 +1,26 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 0/2] fs: supply inode uid/gid setting interface
-Date: Thu, 22 Aug 2013 21:10:10 -0700
-Message-ID: <20130823041010.GA12296@kroah.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 2/2] fs: use inode_set_user to set uid/gid of inode
+Date: Thu, 22 Aug 2013 22:21:42 -0700 (PDT)
+Message-ID: <20130822.222142.765878355588087442.davem@davemloft.net>
 References: <1377226118-43756-1-git-send-email-rui.xiang@huawei.com>
+	<1377226118-43756-3-git-send-email-rui.xiang@huawei.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <1377226118-43756-1-git-send-email-rui.xiang@huawei.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Rui Xiang <rui.xiang@huawei.com>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <1377226118-43756-3-git-send-email-rui.xiang@huawei.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: Text/Plain; charset="us-ascii"
+To: rui.xiang@huawei.com
 Cc: linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-kernel@vger.kernel.org, linux-ia64@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org, linux-rdma@vger.kernel.org, linux-usb@vger.kernel.org, v9fs-developer@lists.sourceforge.net, linux-mm@kvack.org, cgroups@vger.kernel.org, netdev@vger.kernel.org
 
-On Fri, Aug 23, 2013 at 10:48:36AM +0800, Rui Xiang wrote:
-> This patchset implements an accessor functions to set uid/gid
-> in inode struct. Just finish code clean up.
+From: Rui Xiang <rui.xiang@huawei.com>
+Date: Fri, 23 Aug 2013 10:48:38 +0800
 
-Why?
+> Use the new interface to set i_uid/i_gid in inode struct.
+> 
+> Signed-off-by: Rui Xiang <rui.xiang@huawei.com>
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+For the networking bits:
+
+Acked-by: David S. Miller <davem@davemloft.net>
