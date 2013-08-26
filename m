@@ -1,51 +1,48 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
 Subject: Re: [PATCHSET v2 cgroup/for-3.12] cgroup: make cgroup_event specific
-	to memcg
-Date: Sat, 24 Aug 2013 14:25:57 -0400
-Message-ID: <20130824182557.GA5825@htj.dyndns.org>
+ to memcg
+Date: Mon, 26 Aug 2013 17:15:36 +0300
+Message-ID: <20130826141536.GA14985@shutemov.name>
 References: <1376582550-12548-1-git-send-email-tj@kernel.org>
-	<20130821201239.GB2436@htj.dyndns.org>
-	<20130824182005.GA15897@dhcp22.suse.cz>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1376582550-12548-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=PdoKYwtkTAigKoAWy/1Um6HeL7RDYOm4X7a8uLmBMzs=;
-	b=xGzC9E3MZObDIs5lZhk4aX9BhsaST8REK4oYIPzacf/ld+q694dA52Kp0VXMCqLq7n
-	Z6Z9h88oV3GkJ4ipNa+telWkKncgf7ohLh2DrDdyoeoik2eDc9R0wqxkgYXVxJxWAt+x
-	LVMr3BL7dknrC1Nha51Bs6qD/PU8g6GtSy+G0P/hnqKMLAT5ktoJheiWktQRg8Qw9BfE
-	B/pJVp9URNxh+OTzASBStdkXNRMFARUKev8gLAHhcDzba9lZc7zzNurZwIRQGePPKZWk
-	UrLUaaL8RhunZ2vALeyJNb23SZb5sGyk6Oj2m1bs+/E696vpcKlSvzxiUap3TZh63XG9
-	R2CA==
-Content-Disposition: inline
-In-Reply-To: <20130824182005.GA15897-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On Sat, Aug 24, 2013 at 08:20:05PM +0200, Michal Hocko wrote:
-> On Wed 21-08-13 16:12:39, Tejun Heo wrote:
-> > Li, Michal, ping.
+On Thu, Aug 15, 2013 at 12:02:18PM -0400, Tejun Heo wrote:
+> Hello,
 > 
-> I am sorry, I was mostly offline for the last week with very poor
-> internet connection. I will try to get to this next week.
+> Changes from the last take[L] are
+> 
+> * Event handling updated such that it doesn't require meddling with
+>   internals not normally exposed outside cgroup core proper.  dentry
+>   reference counting is replaced with css one and cftype handling is
+>   completely gone.  Hopefully, this addresses Michal's complaints.
+> 
+> * Further simplifications.
+> 
+> * Rebased on top of the current cgroup/for-3.12 and pending patches.
+> 
+> Like many other things in cgroup, cgroup_event is way too flexible and
+> complex - it strives to provide completely flexible event monitoring
+> facility in cgroup proper which allows any number of users to monitor
+> custom events.  This essentially is a layering violation and leads to
+> weird issues like worrying about event API mis/abuse from userland in
+> cgroup controller event source implementation.
 
-Eh well, it's nothing urgent.  Doing this after the merge window is
-perfectly fine too.  Enjoy the offline-ness.
+Blame me. When I added the interface I hoped events will be much more
+useful. Like for delivering 'last task in the cgroup leaves' signals.
+But you are right it's too easy to abuse the interface.
 
-Thanks.
+Few questions before I'll ack the patchset:
+What's the plan if we will need a similar capability in the future?
+How would you implement memory thresholds today?
 
 -- 
-tejun
+ Kirill A. Shutemov
