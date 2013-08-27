@@ -1,93 +1,88 @@
-From: Andrey Vagin <avagin@openvz.org>
-Subject: [PATCH] memcg: check that kmem_cache has memcg_params before accessing it
-Date: Tue, 27 Aug 2013 15:56:51 +0400
-Message-ID: <1377604611-3442-1-git-send-email-avagin@openvz.org>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 06/12] cgroup, memcg: move cgroup_event implementation to
+	memcg
+Date: Tue, 27 Aug 2013 16:20:02 +0200
+Message-ID: <20130827142002.GC13302@dhcp22.suse.cz>
+References: <1376582550-12548-1-git-send-email-tj@kernel.org>
+	<1376582550-12548-7-git-send-email-tj@kernel.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Andrey Vagin <avagin@openvz.org>, Pekka Enberg <penberg@kernel.org>, Christoph Lameter <cl@linux.com>, Glauber Costa <glommer@openvz.org>, Andrew Morton <akpm@linux-foundation.org>, Joonsoo Kim <js1304@gmail.com>, stable@vger.kernel.org.#.3.8
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1376582550-12548-7-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-If the system had a few memory groups and all of them were destroyed,
-memcg_limited_groups_array_size has non-zero value, but all new caches
-are created without memcg_params, because memcg_kmem_enabled() returns
-false.
+[Sorry for the late reply, I was mostly offline last week]
 
-We try to enumirate child caches in a few places and all of them are
-potentially dangerous.
+On Thu 15-08-13 12:02:24, Tejun Heo wrote:
+> cgroup_event is way over-designed and tries to build a generic
+> flexible event mechanism into cgroup - fully customizable event
+> specification for each user of the interface.  This is utterly
+> unnecessary and overboard especially in the light of the planned
+> unified hierarchy as there's gonna be single agent.  Simply generating
+> events at fixed points, or if that's too restrictive, configureable
+> cadence or single set of configureable points should be enough.
 
-For example my kernel is compiled with CONFIG_SLAB and it crashed when I
-tryed to mount a NFS share after a few experiments with kmemcg.
+I guess you are talking about thresholds here. Having a configurable
+static table of them will probably work out fine.
 
-[   92.563747] BUG: unable to handle kernel NULL pointer dereference at 0000000000000008
-[   92.564553] IP: [<ffffffff8118166a>] do_tune_cpucache+0x8a/0xd0
-[   92.564553] PGD b942a067 PUD b999f067 PMD 0
-[   92.564553] Oops: 0000 [#1] SMP
-[   92.564553] Modules linked in: fscache(+) ip6table_filter ip6_tables iptable_filter ip_tables i2c_piix4 pcspkr virtio_net virtio_balloon i2c_core floppy
-[   92.564553] CPU: 0 PID: 357 Comm: modprobe Not tainted 3.11.0-rc7+ #59
-[   92.564553] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
-[   92.564553] task: ffff8800b9f98240 ti: ffff8800ba32e000 task.ti: ffff8800ba32e000
-[   92.564553] RIP: 0010:[<ffffffff8118166a>]  [<ffffffff8118166a>] do_tune_cpucache+0x8a/0xd0
-[   92.564553] RSP: 0018:ffff8800ba32fb70  EFLAGS: 00010246
-[   92.564553] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000006
-[   92.564553] RDX: 0000000000000000 RSI: ffff8800b9f98910 RDI: 0000000000000246
-[   92.564553] RBP: ffff8800ba32fba0 R08: 0000000000000002 R09: 0000000000000004
-[   92.564553] R10: 0000000000000001 R11: 0000000000000001 R12: 0000000000000010
-[   92.564553] R13: 0000000000000008 R14: 00000000000000d0 R15: ffff8800375d0200
-[   92.564553] FS:  00007f55f1378740(0000) GS:ffff8800bfa00000(0000) knlGS:0000000000000000
-[   92.564553] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[   92.564553] CR2: 00007f24feba57a0 CR3: 0000000037b51000 CR4: 00000000000006f0
-[   92.564553] Stack:
-[   92.564553]  0000002000000000 0000000000000020 ffff8800375d0200 0000000000000010
-[   92.564553]  0000000000000080 0000000000000000 ffff8800ba32fbd0 ffffffff811816f9
-[   92.564553]  000000d0ba32ffd8 ffff8800375d0200 ffff8800375d0200 0000000000000080
-[   92.564553] Call Trace:
-[   92.564553]  [<ffffffff811816f9>] enable_cpucache+0x49/0x100
-[   92.564553]  [<ffffffff8162adc5>] setup_cpu_cache+0x215/0x280
-[   92.564553]  [<ffffffff81181baa>] __kmem_cache_create+0x2fa/0x450
-[   92.564553]  [<ffffffff81152274>] kmem_cache_create_memcg+0x214/0x350
-[   92.564553]  [<ffffffffa005fe50>] ? __fscache_invalidate+0xe0/0xe0 [fscache]
-[   92.564553]  [<ffffffff811523db>] kmem_cache_create+0x2b/0x30
-[   92.564553]  [<ffffffffa007019b>] fscache_init+0x19b/0x230 [fscache]
-[   92.564553]  [<ffffffffa0070000>] ? 0xffffffffa006ffff
-[   92.564553]  [<ffffffff810002ca>] do_one_initcall+0xfa/0x1b0
-[   92.564553]  [<ffffffff81042a03>] ? set_memory_nx+0x43/0x50
-[   92.564553]  [<ffffffff810cadd1>] load_module+0x1c41/0x26d0
-[   92.564553]  [<ffffffff810c7040>] ? store_uevent+0x40/0x40
-[   92.564553]  [<ffffffff810cb9f6>] SyS_finit_module+0x86/0xb0
-[   92.564553]  [<ffffffff81644659>] system_call_fastpath+0x16/0x1b
-[   92.564553] Code: c6 b0 b6 81 81 48 c7 c7 c1 ba 9f 81 e8 af de 4a 00 44 8b 0d c1 54 6d 01 45 85 c9 7e 34 31 db 66 90 49 8b 87 e0 00 00 00 48 63 d3 <48> 8b 7c d0 08 48 85 ff 74 11 8b 75 d4 45 89 f0 44 89 e9 44 89
-[   92.564553] RIP  [<ffffffff8118166a>] do_tune_cpucache+0x8a/0xd0
-[   92.564553]  RSP <ffff8800ba32fb70>
-[   92.564553] CR2: 0000000000000008
-[   92.610992] ---[ end trace adf2b24549e1f11d ]---
+But, how do I tell such an interface that I want to get only MEDIUM
+vmpressure events? Do I have a special file for each pressure level?
 
-Cc: Pekka Enberg <penberg@kernel.org>
-Cc: Christoph Lameter <cl@linux.com>
-Cc: Glauber Costa <glommer@openvz.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Joonsoo Kim <js1304@gmail.com>
-Cc: stable@vger.kernel.org # 3.8
-Signed-off-by: Andrey Vagin <avagin@openvz.org>
----
- mm/slab.h | 2 ++
- 1 file changed, 2 insertions(+)
+Doing notification and read() every time might be a concern for
+embedded-world who are worried about too many wakeups. We have
+already seen suggestions to do a different modes of event triggering
+to reduce wake up costs because of the power consumption (e.g.
+http://comments.gmane.org/gmane.linux.kernel.mm/101628).
 
-diff --git a/mm/slab.h b/mm/slab.h
-index 620ceed..a535033 100644
---- a/mm/slab.h
-+++ b/mm/slab.h
-@@ -162,6 +162,8 @@ static inline const char *cache_name(struct kmem_cache *s)
- 
- static inline struct kmem_cache *cache_from_memcg(struct kmem_cache *s, int idx)
- {
-+	if (!s->memcg_params)
-+		return NULL;
- 	return s->memcg_params->memcg_caches[idx];
- }
- 
+> Thankfully, memcg is the only user and gets to keep it.  Replacing it
+> with something simpler on sane_behavior is strongly recommended.
+
+You just forgot to tell us what is that "something simpler". Does it
+exist yet? What is the semantic?
+
+We have been trying to reduce memcg specific things in the past and
+this will add non trivial chunk of code. I would at least expect some
+justification _why_ moving the maintenance burden is worth it. It
+certainly won't make memcg live easier. I can bite a bullet though if
+this is the roadblock for making important changes in the cgroup core.
+But you didn't tell us anything like that, except that you do not like
+the interface because like other parts it is over-engineered thus bad.
+
+You have mentioned it will help you clean up code further in the past
+but I do not see any mention about it in this patch neither in the
+leader email. Could you be more specific? How much? Is this piece of
+code blocking those cleanups?
+
+That is what I _really_ dislike about this patch and why I am really
+reluctant to ack it.
+
+> This patch moves cgroup_event and "cgroup.event_control"
+> implementation to mm/memcontrol.c.
+
+And we might end up having that code there for ever because your new and
+yet to be shown interface might turn out to be not the best fit for the
+current users.
+
+Tejun, you have done _a lot_ of great work on cleaning up cgroup
+core mess and I really appreciate that! I was supporting you in some
+of those, I wish I had more time to do more. But I think you are
+deprecating some things too easily without carrying much about the
+current users assuming they will cope with that somehow and that a magic
+central authority will do everything for them in a sane way. I am quite
+skeptical, to be honest.
 -- 
-1.8.3.1
+Michal Hocko
+SUSE Labs
