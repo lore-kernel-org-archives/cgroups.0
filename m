@@ -1,156 +1,76 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 8/9] cgroup: implement for_each_css()
-Date: Wed, 28 Aug 2013 17:03:48 -0400
-Message-ID: <1377723829-22814-9-git-send-email-tj@kernel.org>
-References: <1377723829-22814-1-git-send-email-tj@kernel.org>
+From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] cgroup: fix rmdir EBUSY regression in 3.11
+Date: Wed, 28 Aug 2013 16:31:23 -0700 (PDT)
+Message-ID: <alpine.LNX.2.00.1308281624430.1266@eggly.anvils>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:to:cc:subject:message-id:user-agent:mime-version
+         :content-type;
+        bh=qeuXusKo8+NDpXr0Yy64PHLH3I1OFl8/miQoBkiXWlQ=;
+        b=OP9qy1JCOtuRZs5w6JsqgzmTKLt5MnC2hs3EyAZhLlUvmJbnMe/e3aNxRSh/We0iBn
+         94Ve40Mz9wLh6QI6rImMlFmi5F7HItZV8TqVZioml01OpifwUmD7qYLsBL60FT18usLw
+         PMcZKjI5hiTy8FSgIPk88Dra2qFaDtr3XU4Nkb+Oa9UN2aBMZzwisaKFWqDSNhwix2cN
+         P0RdmcSWXaDB/gC3mhkL1+OgF9H50WPMW7m/bsviUfVcaTzwWXLjQ0V2O9leGmSyiO0n
+         jftYesaQC7z3Vyg7q7jyZmh7KKQZcGeeU6p6iEKDCP8K0uYhMt/McuH6VQpRMRRF2Sel
+         DPHw==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=8BTRU+uCdqvuFTJOgVzDJtYnNgsjDXwSwoh6xl6aLYc=;
-	b=UhpV2it1CQfTSaIjP7lN8+Hflo+enl6TEqv4+M7Bo/9VUcb3xhxhgBliL0UwA/CZyU
-	qie4X+9Gm/7UqKhpKXFDA/i8Lm3Yar2gbqbqkB1PcwvTuW8VvAPTWMYuzF+grHUuWMYw
-	zWWTTQWKCtPtmsBe3kajTkvXtfYEw35Dwpw9qjMT1YUri4hVBX9CY85UFpfwd69LUowa
-	aN7s16lS2ECmOJfbtKlMLbMS+Cx2G/12WEbWFcjfJotsNxedTnwUbUZvzanXmALPrzJg
-	Kd2dsBs1zQK3aBpMbP31XYGpt2/RuSBfABkYtN7Fi70NlLKidm2r0lvoI+Z5uHSzVH02
-	K2eg==
-In-Reply-To: <1377723829-22814-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-There are enough places where css's of a cgroup are iterated, which
-currently uses for_each_root_subsys() + explicit cgroup_css().  This
-patch implements for_each_css() and replaces the above combination
-with it.
+On 3.11-rc we are seeing cgroup directories left behind when they should
+have been removed.  Here's a trivial reproducer:
 
-This patch doesn't introduce any behavior changes.
+cd /sys/fs/cgroup/memory
+mkdir parent parent/child; rmdir parent/child parent
+rmdir: failed to remove `parent': Device or resource busy
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+It's because cgroup_destroy_locked() (step 1 of destruction) leaves
+cgroup on parent's children list, letting cgroup_offline_fn() (step 2 of
+destruction) remove it; but step 2 is run by work queue, which may not
+yet have removed the children when parent destruction checks the list.
+
+Fix that by checking through a non-empty list of children: if every one
+of them has already been marked CGRP_DEAD, then it's safe to proceed:
+those children are invisible to userspace, and should not obstruct rmdir.
+
+(I didn't see any reason to keep the cgrp->children checks under the
+unrelated css_set_lock, so moved them out.)
+
+Signed-off-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- kernel/cgroup.c | 53 +++++++++++++++++++++++++++++++----------------------
- 1 file changed, 31 insertions(+), 22 deletions(-)
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index cd53b49..88684ce 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -289,6 +289,21 @@ static int notify_on_release(const struct cgroup *cgrp)
- }
- 
- /**
-+ * for_each_css - iterate all css's of a cgroup
-+ * @css: the iteration cursor
-+ * @ssid: the index of the subsystem, CGROUP_SUBSYS_COUNT after reaching the end
-+ * @cgrp: the target cgroup to iterate css's of
-+ *
-+ * Should be called under cgroup_mutex.
-+ */
-+#define for_each_css(css, ssid, cgrp)					\
-+	for ((ssid) = 0; (ssid) < CGROUP_SUBSYS_COUNT; (ssid)++)	\
-+		if (!((css) = rcu_dereference_check(			\
-+				(cgrp)->subsys[(ssid)],			\
-+				lockdep_is_held(&cgroup_mutex)))) { }	\
-+		else
+ kernel/cgroup.c |   17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
+
+--- 3.11-rc7/kernel/cgroup.c	2013-08-11 23:38:33.096579188 -0700
++++ linux/kernel/cgroup.c	2013-08-28 15:44:06.952564071 -0700
+@@ -4490,8 +4490,23 @@ static int cgroup_destroy_locked(struct
+ 	 * @cgrp from being removed while __put_css_set() is in progress.
+ 	 */
+ 	read_lock(&css_set_lock);
+-	empty = list_empty(&cgrp->cset_links) && list_empty(&cgrp->children);
++	empty = list_empty(&cgrp->cset_links);
+ 	read_unlock(&css_set_lock);
 +
-+/**
-  * for_each_subsys - iterate all loaded cgroup subsystems
-  * @ss: the iteration cursor
-  * @ssid: the index of @ss, CGROUP_SUBSYS_COUNT after reaching the end
-@@ -2007,8 +2022,8 @@ static int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk,
- 			      bool threadgroup)
- {
- 	int retval, i, group_size;
--	struct cgroup_subsys *ss, *failed_ss = NULL;
- 	struct cgroupfs_root *root = cgrp->root;
-+	struct cgroup_subsys_state *css, *failed_css = NULL;
- 	/* threadgroup list cursor and array */
- 	struct task_struct *leader = tsk;
- 	struct task_and_cgroup *tc;
-@@ -2081,13 +2096,11 @@ static int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk,
- 	/*
- 	 * step 1: check that we can legitimately attach to the cgroup.
- 	 */
--	for_each_root_subsys(root, ss) {
--		struct cgroup_subsys_state *css = cgroup_css(cgrp, ss);
--
--		if (ss->can_attach) {
--			retval = ss->can_attach(css, &tset);
-+	for_each_css(css, i, cgrp) {
-+		if (css->ss->can_attach) {
-+			retval = css->ss->can_attach(css, &tset);
- 			if (retval) {
--				failed_ss = ss;
-+				failed_css = css;
- 				goto out_cancel_attach;
- 			}
- 		}
-@@ -2123,12 +2136,9 @@ static int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk,
- 	/*
- 	 * step 4: do subsystem attach callbacks.
- 	 */
--	for_each_root_subsys(root, ss) {
--		struct cgroup_subsys_state *css = cgroup_css(cgrp, ss);
--
--		if (ss->attach)
--			ss->attach(css, &tset);
--	}
-+	for_each_css(css, i, cgrp)
-+		if (css->ss->attach)
-+			css->ss->attach(css, &tset);
++	if (empty && !list_empty(&cgrp->children)) {
++		struct cgroup *child;
++		/*
++		 * We need "rmdir parent/child parent" to succeed,
++		 * but our children may not have reached step 2 yet.
++		 */
++		rcu_read_lock();
++		list_for_each_entry_rcu(child, &cgrp->children, sibling) {
++			empty = cgroup_is_dead(child);
++			if (!empty)
++				break;
++		}
++		rcu_read_unlock();
++	}
+ 	if (!empty)
+ 		return -EBUSY;
  
- 	/*
- 	 * step 5: success! and cleanup
-@@ -2145,13 +2155,11 @@ out_put_css_set_refs:
- 	}
- out_cancel_attach:
- 	if (retval) {
--		for_each_root_subsys(root, ss) {
--			struct cgroup_subsys_state *css = cgroup_css(cgrp, ss);
--
--			if (ss == failed_ss)
-+		for_each_css(css, i, cgrp) {
-+			if (css == failed_css)
- 				break;
--			if (ss->cancel_attach)
--				ss->cancel_attach(css, &tset);
-+			if (css->ss->cancel_attach)
-+				css->ss->cancel_attach(css, &tset);
- 		}
- 	}
- out_free_group_list:
-@@ -4694,8 +4702,9 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
- {
- 	struct dentry *d = cgrp->dentry;
- 	struct cgroup_event *event, *tmp;
--	struct cgroup_subsys *ss;
-+	struct cgroup_subsys_state *css;
- 	bool empty;
-+	int ssid;
- 
- 	lockdep_assert_held(&d->d_inode->i_mutex);
- 	lockdep_assert_held(&cgroup_mutex);
-@@ -4715,8 +4724,8 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
- 	 * will be invoked to perform the rest of destruction once the
- 	 * percpu refs of all css's are confirmed to be killed.
- 	 */
--	for_each_root_subsys(cgrp->root, ss)
--		kill_css(cgroup_css(cgrp, ss));
-+	for_each_css(css, ssid, cgrp)
-+		kill_css(css);
- 
- 	/*
- 	 * Mark @cgrp dead.  This prevents further task migration and child
--- 
-1.8.3.1
