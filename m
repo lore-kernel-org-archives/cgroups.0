@@ -1,7 +1,7 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 6/9] cgroup: combine css handling loops in cgroup_create()
-Date: Wed, 28 Aug 2013 17:03:46 -0400
-Message-ID: <1377723829-22814-7-git-send-email-tj@kernel.org>
+Subject: [PATCH 8/9] cgroup: implement for_each_css()
+Date: Wed, 28 Aug 2013 17:03:48 -0400
+Message-ID: <1377723829-22814-9-git-send-email-tj@kernel.org>
 References: <1377723829-22814-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -9,13 +9,13 @@ Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=NWjDY7/52suwibglVvm/eC2VkFpZcnLJIUIy5WUYsJs=;
-	b=CWSOuGab5MFJcEF7ll9UoOd2s1r/66ejiPV7JAMHwfePH3SFhoQBbEghXmFKY3yDSx
-	g0CY3UaTDCOasAJtVRD3E0b1yNETzNmBDulIlkXuQM3FgKTL5gOHkeWfQ4+Dt5izXlcQ
-	wHtqDhps/s9AO5GQWgsS3mH0ZN6l2sppAVRFtQAX+KH8KEJUVoZuRgm/SnF4evBoCY7Q
-	u72pwxUbKWUVhTBTU9F6ocwrAizmjomhL8xHqoJ8xmwYXJoOIBUjPhl726FZEoXQTjU5
-	elIRpwmK1M/gClQ+FgScWlkUZvuYFMT98yZ+zxASdvL08z3iQPH3fdI7sRtedp1bFDDV
-	1dmQ==
+	bh=8BTRU+uCdqvuFTJOgVzDJtYnNgsjDXwSwoh6xl6aLYc=;
+	b=UhpV2it1CQfTSaIjP7lN8+Hflo+enl6TEqv4+M7Bo/9VUcb3xhxhgBliL0UwA/CZyU
+	qie4X+9Gm/7UqKhpKXFDA/i8Lm3Yar2gbqbqkB1PcwvTuW8VvAPTWMYuzF+grHUuWMYw
+	zWWTTQWKCtPtmsBe3kajTkvXtfYEw35Dwpw9qjMT1YUri4hVBX9CY85UFpfwd69LUowa
+	aN7s16lS2ECmOJfbtKlMLbMS+Cx2G/12WEbWFcjfJotsNxedTnwUbUZvzanXmALPrzJg
+	Kd2dsBs1zQK3aBpMbP31XYGpt2/RuSBfABkYtN7Fi70NlLKidm2r0lvoI+Z5uHSzVH02
+	K2eg==
 In-Reply-To: <1377723829-22814-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -30,92 +30,127 @@ Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Now that css operations in cgroup_create() are back-to-back, there
-isn't much point in allocating css's in one loop and onlining them in
-another.  Merge the two loops so that a css is allocated and onlined
-on each iteration.
+There are enough places where css's of a cgroup are iterated, which
+currently uses for_each_root_subsys() + explicit cgroup_css().  This
+patch implements for_each_css() and replaces the above combination
+with it.
 
-css_ar[] is no longer necessary and replaced with a single pointer.
-This also simplifies the error handling path.
+This patch doesn't introduce any behavior changes.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- kernel/cgroup.c | 25 +++++++------------------
- 1 file changed, 7 insertions(+), 18 deletions(-)
+ kernel/cgroup.c | 53 +++++++++++++++++++++++++++++++----------------------
+ 1 file changed, 31 insertions(+), 22 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index d41ddab..20cd24b 100644
+index cd53b49..88684ce 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -4396,7 +4396,7 @@ static void offline_css(struct cgroup_subsys_state *css)
- static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 			     umode_t mode)
+@@ -289,6 +289,21 @@ static int notify_on_release(const struct cgroup *cgrp)
+ }
+ 
+ /**
++ * for_each_css - iterate all css's of a cgroup
++ * @css: the iteration cursor
++ * @ssid: the index of the subsystem, CGROUP_SUBSYS_COUNT after reaching the end
++ * @cgrp: the target cgroup to iterate css's of
++ *
++ * Should be called under cgroup_mutex.
++ */
++#define for_each_css(css, ssid, cgrp)					\
++	for ((ssid) = 0; (ssid) < CGROUP_SUBSYS_COUNT; (ssid)++)	\
++		if (!((css) = rcu_dereference_check(			\
++				(cgrp)->subsys[(ssid)],			\
++				lockdep_is_held(&cgroup_mutex)))) { }	\
++		else
++
++/**
+  * for_each_subsys - iterate all loaded cgroup subsystems
+  * @ss: the iteration cursor
+  * @ssid: the index of @ss, CGROUP_SUBSYS_COUNT after reaching the end
+@@ -2007,8 +2022,8 @@ static int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk,
+ 			      bool threadgroup)
  {
--	struct cgroup_subsys_state *css_ar[CGROUP_SUBSYS_COUNT] = { };
-+	struct cgroup_subsys_state *css = NULL;
- 	struct cgroup *cgrp;
- 	struct cgroup_name *name;
- 	struct cgroupfs_root *root = parent->root;
-@@ -4485,15 +4485,14 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 	if (err)
- 		goto err_destroy;
- 
-+	/* let's create and online css's */
- 	for_each_root_subsys(root, ss) {
--		struct cgroup_subsys_state *css;
+ 	int retval, i, group_size;
+-	struct cgroup_subsys *ss, *failed_ss = NULL;
+ 	struct cgroupfs_root *root = cgrp->root;
++	struct cgroup_subsys_state *css, *failed_css = NULL;
+ 	/* threadgroup list cursor and array */
+ 	struct task_struct *leader = tsk;
+ 	struct task_and_cgroup *tc;
+@@ -2081,13 +2096,11 @@ static int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk,
+ 	/*
+ 	 * step 1: check that we can legitimately attach to the cgroup.
+ 	 */
+-	for_each_root_subsys(root, ss) {
+-		struct cgroup_subsys_state *css = cgroup_css(cgrp, ss);
 -
- 		css = ss->css_alloc(cgroup_css(parent, ss));
- 		if (IS_ERR(css)) {
- 			err = PTR_ERR(css);
-+			css = NULL;
- 			goto err_destroy;
+-		if (ss->can_attach) {
+-			retval = ss->can_attach(css, &tset);
++	for_each_css(css, i, cgrp) {
++		if (css->ss->can_attach) {
++			retval = css->ss->can_attach(css, &tset);
+ 			if (retval) {
+-				failed_ss = ss;
++				failed_css = css;
+ 				goto out_cancel_attach;
+ 			}
  		}
--		css_ar[ss->subsys_id] = css;
- 
- 		err = percpu_ref_init(&css->refcnt, css_release);
- 		if (err)
-@@ -4506,11 +4505,6 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 			if (err)
- 				goto err_destroy;
- 		}
+@@ -2123,12 +2136,9 @@ static int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk,
+ 	/*
+ 	 * step 4: do subsystem attach callbacks.
+ 	 */
+-	for_each_root_subsys(root, ss) {
+-		struct cgroup_subsys_state *css = cgroup_css(cgrp, ss);
+-
+-		if (ss->attach)
+-			ss->attach(css, &tset);
 -	}
--
--	/* creation succeeded, notify subsystems */
--	for_each_root_subsys(root, ss) {
--		struct cgroup_subsys_state *css = css_ar[ss->subsys_id];
++	for_each_css(css, i, cgrp)
++		if (css->ss->attach)
++			css->ss->attach(css, &tset);
  
- 		err = cgroup_populate_dir(cgrp, 1 << ss->subsys_id);
- 		if (err)
-@@ -4520,12 +4514,11 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 		if (err)
- 			goto err_destroy;
- 
--		/* each css holds a ref to the cgroup's dentry and parent css */
- 		dget(dentry);
- 		css_get(css->parent);
- 
- 		/* mark it consumed for error path */
--		css_ar[ss->subsys_id] = NULL;
-+		css = NULL;
- 
- 		if (ss->broken_hierarchy && !ss->warned_broken_hierarchy &&
- 		    parent->parent) {
-@@ -4555,13 +4548,9 @@ err_free_cgrp:
- 	return err;
- 
- err_destroy:
--	for_each_root_subsys(root, ss) {
--		struct cgroup_subsys_state *css = css_ar[ss->subsys_id];
--
--		if (css) {
--			percpu_ref_cancel_init(&css->refcnt);
--			ss->css_free(css);
--		}
-+	if (css) {
-+		percpu_ref_cancel_init(&css->refcnt);
-+		css->ss->css_free(css);
+ 	/*
+ 	 * step 5: success! and cleanup
+@@ -2145,13 +2155,11 @@ out_put_css_set_refs:
  	}
- 	cgroup_destroy_locked(cgrp);
- 	mutex_unlock(&cgroup_mutex);
+ out_cancel_attach:
+ 	if (retval) {
+-		for_each_root_subsys(root, ss) {
+-			struct cgroup_subsys_state *css = cgroup_css(cgrp, ss);
+-
+-			if (ss == failed_ss)
++		for_each_css(css, i, cgrp) {
++			if (css == failed_css)
+ 				break;
+-			if (ss->cancel_attach)
+-				ss->cancel_attach(css, &tset);
++			if (css->ss->cancel_attach)
++				css->ss->cancel_attach(css, &tset);
+ 		}
+ 	}
+ out_free_group_list:
+@@ -4694,8 +4702,9 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ {
+ 	struct dentry *d = cgrp->dentry;
+ 	struct cgroup_event *event, *tmp;
+-	struct cgroup_subsys *ss;
++	struct cgroup_subsys_state *css;
+ 	bool empty;
++	int ssid;
+ 
+ 	lockdep_assert_held(&d->d_inode->i_mutex);
+ 	lockdep_assert_held(&cgroup_mutex);
+@@ -4715,8 +4724,8 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 	 * will be invoked to perform the rest of destruction once the
+ 	 * percpu refs of all css's are confirmed to be killed.
+ 	 */
+-	for_each_root_subsys(cgrp->root, ss)
+-		kill_css(cgroup_css(cgrp, ss));
++	for_each_css(css, ssid, cgrp)
++		kill_css(css);
+ 
+ 	/*
+ 	 * Mark @cgrp dead.  This prevents further task migration and child
 -- 
 1.8.3.1
