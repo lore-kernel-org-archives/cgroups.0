@@ -1,8 +1,10 @@
 From: Anatol Pomozov <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: [PATCH] cfq: explicitly use 64bit divide operation for 64bit arguments
-Date: Fri, 30 Aug 2013 10:31:56 -0700
-Message-ID: <1377883916-8957-1-git-send-email-anatol.pomozov@gmail.com>
+Date: Fri, 30 Aug 2013 10:52:29 -0700
+Message-ID: <1377885149-28208-1-git-send-email-anatol.pomozov@gmail.com>
+References: <1377883916-8957-1-git-send-email-anatol.pomozov@gmail.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1377883916-8957-1-git-send-email-anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -24,7 +26,7 @@ Signed-off-by: Anatol Pomozov <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gman
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index d5bbdcf..10fb653 100644
+index d5bbdcf..c410752 100644
 --- a/block/cfq-iosched.c
 +++ b/block/cfq-iosched.c
 @@ -1803,7 +1803,7 @@ static u64 cfqg_prfill_avg_queue_size(struct seq_file *sf,
@@ -32,7 +34,7 @@ index d5bbdcf..10fb653 100644
  	if (samples) {
  		v = blkg_stat_read(&cfqg->stats.avg_queue_size_sum);
 -		do_div(v, samples);
-+		div64_u64(v, samples);
++		v = div64_u64(v, samples);
  	}
  	__blkg_prfill_u64(sf, pd, v);
  	return 0;
