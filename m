@@ -1,42 +1,37 @@
-From: Anatol Pomozov <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] cfq: explicitly use 64bit divide operation for 64bit arguments
-Date: Fri, 30 Aug 2013 10:52:29 -0700
-Message-ID: <1377885149-28208-1-git-send-email-anatol.pomozov@gmail.com>
-References: <1377883916-8957-1-git-send-email-anatol.pomozov@gmail.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1377883916-8957-1-git-send-email-anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: "azurIt" <azurit@pobox.sk>
+Subject: =?utf-8?q?Re=3A_=5Bpatch_0=2F7=5D_improve_memcg_oom_killer_robustness_v2?=
+Date: Fri, 30 Aug 2013 21:58:52 +0200
+Message-ID: <20130830215852.3E5D3D66@pobox.sk>
+References: <1375549200-19110-1-git-send-email-hannes@cmpxchg.org> <20130803170831.GB23319@cmpxchg.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20130803170831.GB23319@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Anatol Pomozov <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
+Cc: =?utf-8?q?Andrew_Morton?= <akpm@linux-foundation.org>, =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>, =?utf-8?q?David_Rientjes?= <rientjes@google.com>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?KOSAKI_Motohiro?= <kosaki.motohiro@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
 
-'samples' is 64bit operant, but do_div() second parameter is 32.
-do_div silently truncates high 32 bits and calculated result
-is invalid.
+>Hi azur,
+>
+>here is the x86-only rollup of the series for 3.2.
+>
+>Thanks!
+>Johannes
+>---
 
-In case if low 32bit of 'samples' are zeros then do_div() produces
-kernel crash.
 
-Signed-off-by: Anatol Pomozov <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
----
- block/cfq-iosched.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Johannes,
 
-diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index d5bbdcf..c410752 100644
---- a/block/cfq-iosched.c
-+++ b/block/cfq-iosched.c
-@@ -1803,7 +1803,7 @@ static u64 cfqg_prfill_avg_queue_size(struct seq_file *sf,
- 
- 	if (samples) {
- 		v = blkg_stat_read(&cfqg->stats.avg_queue_size_sum);
--		do_div(v, samples);
-+		v = div64_u64(v, samples);
- 	}
- 	__blkg_prfill_u64(sf, pd, v);
- 	return 0;
--- 
-1.8.4
+unfortunately, one problem arises: I have (again) cgroup which cannot be =
+deleted :( it's a user who had very high memory usage and was reaching hi=
+s limit very often. Do you need any info which i can gather now?
+
+azur
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
