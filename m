@@ -1,47 +1,193 @@
-From: Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cgroup, doc: make cgroup_disable doc accurater
-Date: Sat, 31 Aug 2013 14:34:11 +0800
-Message-ID: <52218E63.4060302@huawei.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v2 2/9] cgroup: css iterations and css_from_dir() are safe
+	under cgroup_mutex
+Date: Sat, 31 Aug 2013 09:56:57 -0400
+Message-ID: <20130831135657.GA26539@htj.dyndns.org>
+References: <1377723829-22814-1-git-send-email-tj@kernel.org>
+	<1377723829-22814-3-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: rob-VoJi6FS/r0vR7s880joybQ@public.gmane.org
-Cc: linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, menage-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=arMoSomgcFOWE681DOhMsKtCKy1r49+15naTG9lCC2Y=;
+	b=SWmHzUk3g4QJCS46pG5R84xeXc/dY8mlNAnhNl9AQZLtiC2bu8QATzuE4Ammsyz5vI
+	ZSZXHwmEd3EaMmCnygcRBCBcd7uBYX63fsdTQX7y0OmZ44ep7FzQIhN6GJPceN6rm4oq
+	ASbMfVezwwIUmDgnHpiQ1c8FGHIeztYrAeUmEGodnt/NL0J4inL5uHXcFS5nr5zMxlbJ
+	MgI8k42t4PRWOVcj8wqayaMDgCBD9a7gbXKvAxjwgKLK8zoY/c4hsZRbZ/dVoVrmua+o
+	8PJ7eRBMAvLbutWrbbKwo7oSoxnmaUdem1OGSlISsOR5pWooRaRK56qi4pb47f+Mcokl
+	HCRg==
+Content-Disposition: inline
+In-Reply-To: <1377723829-22814-3-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-In doc, it said that 'Currently supported controllers - "memory"',
-but actually we can use cgroup_disable=cpu,cpuset and all other
-controllers, so this is confusing for cgroup users without much
-cgroup knowledge. We need to make it clear.
+Currently, all css iterations and css_from_dir() require RCU read lock
+whether the caller is holding cgroup_mutex or not, which is
+unnecessarily restrictive.  They are all safe to use under
+cgroup_mutex without holding RCU read lock.
 
-[some comments copied from Paul Menage's original patch 8bab8dded]
+Factor out cgroup_assert_mutex_or_rcu_locked() from css_from_id() and
+apply it to all css iteration functions and css_from_dir().
 
-Signed-off-by: Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+v2: cgroup_assert_mutex_or_rcu_locked() definition doesn't need to be
+    inside CONFIG_PROVE_RCU ifdef as rcu_lockdep_assert() is always
+    defined and conditionalized.  Move it outside of the ifdef block.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- Documentation/kernel-parameters.txt | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ kernel/cgroup.c |   56 ++++++++++++++++++++++++++++++--------------------------
+ 1 file changed, 30 insertions(+), 26 deletions(-)
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 2fe6e76..14bb96e 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -460,7 +460,14 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
-
- 	cgroup_disable= [KNL] Disable a particular controller
- 			Format: {name of the controller(s) to disable}
--				{Currently supported controllers - "memory"}
-+			The effects of cgroup_disable=foo are:
-+			- foo isn't auto-mounted if you mount all cgroups in
-+			  a single hierarchy
-+			- foo isn't visible as an individually mountable
-+			  subsystem
-+			{Currently only "memory" controller deal with this and
-+			cut the overhead, others just disable the usage. So
-+			only cgroup_disable=memory is actually worthy}
-
- 	checkreqprot	[SELINUX] Set initial checkreqprot flag value.
- 			Format: { "0" | "1" }
--- 
-1.8.3
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -88,6 +88,11 @@ static DEFINE_MUTEX(cgroup_mutex);
+ 
+ static DEFINE_MUTEX(cgroup_root_mutex);
+ 
++#define cgroup_assert_mutex_or_rcu_locked()				\
++	rcu_lockdep_assert(rcu_read_lock_held() ||			\
++			   lockdep_is_held(&cgroup_mutex),		\
++			   "cgroup_mutex or RCU read lock required");
++
+ /*
+  * Generate an array of cgroup subsystem pointers. At boot time, this is
+  * populated with the built in subsystems, and modular subsystems are
+@@ -3036,9 +3041,9 @@ static void cgroup_enable_task_cg_lists(
+  * @parent_css: css whose children to walk
+  *
+  * This function returns the next child of @parent_css and should be called
+- * under RCU read lock.  The only requirement is that @parent_css and
+- * @pos_css are accessible.  The next sibling is guaranteed to be returned
+- * regardless of their states.
++ * under either cgroup_mutex or RCU read lock.  The only requirement is
++ * that @parent_css and @pos_css are accessible.  The next sibling is
++ * guaranteed to be returned regardless of their states.
+  */
+ struct cgroup_subsys_state *
+ css_next_child(struct cgroup_subsys_state *pos_css,
+@@ -3048,7 +3053,7 @@ css_next_child(struct cgroup_subsys_stat
+ 	struct cgroup *cgrp = parent_css->cgroup;
+ 	struct cgroup *next;
+ 
+-	WARN_ON_ONCE(!rcu_read_lock_held());
++	cgroup_assert_mutex_or_rcu_locked();
+ 
+ 	/*
+ 	 * @pos could already have been removed.  Once a cgroup is removed,
+@@ -3095,10 +3100,10 @@ EXPORT_SYMBOL_GPL(css_next_child);
+  * to visit for pre-order traversal of @root's descendants.  @root is
+  * included in the iteration and the first node to be visited.
+  *
+- * While this function requires RCU read locking, it doesn't require the
+- * whole traversal to be contained in a single RCU critical section.  This
+- * function will return the correct next descendant as long as both @pos
+- * and @root are accessible and @pos is a descendant of @root.
++ * While this function requires cgroup_mutex or RCU read locking, it
++ * doesn't require the whole traversal to be contained in a single critical
++ * section.  This function will return the correct next descendant as long
++ * as both @pos and @root are accessible and @pos is a descendant of @root.
+  */
+ struct cgroup_subsys_state *
+ css_next_descendant_pre(struct cgroup_subsys_state *pos,
+@@ -3106,7 +3111,7 @@ css_next_descendant_pre(struct cgroup_su
+ {
+ 	struct cgroup_subsys_state *next;
+ 
+-	WARN_ON_ONCE(!rcu_read_lock_held());
++	cgroup_assert_mutex_or_rcu_locked();
+ 
+ 	/* if first iteration, visit @root */
+ 	if (!pos)
+@@ -3137,17 +3142,17 @@ EXPORT_SYMBOL_GPL(css_next_descendant_pr
+  * is returned.  This can be used during pre-order traversal to skip
+  * subtree of @pos.
+  *
+- * While this function requires RCU read locking, it doesn't require the
+- * whole traversal to be contained in a single RCU critical section.  This
+- * function will return the correct rightmost descendant as long as @pos is
+- * accessible.
++ * While this function requires cgroup_mutex or RCU read locking, it
++ * doesn't require the whole traversal to be contained in a single critical
++ * section.  This function will return the correct rightmost descendant as
++ * long as @pos is accessible.
+  */
+ struct cgroup_subsys_state *
+ css_rightmost_descendant(struct cgroup_subsys_state *pos)
+ {
+ 	struct cgroup_subsys_state *last, *tmp;
+ 
+-	WARN_ON_ONCE(!rcu_read_lock_held());
++	cgroup_assert_mutex_or_rcu_locked();
+ 
+ 	do {
+ 		last = pos;
+@@ -3183,10 +3188,11 @@ css_leftmost_descendant(struct cgroup_su
+  * to visit for post-order traversal of @root's descendants.  @root is
+  * included in the iteration and the last node to be visited.
+  *
+- * While this function requires RCU read locking, it doesn't require the
+- * whole traversal to be contained in a single RCU critical section.  This
+- * function will return the correct next descendant as long as both @pos
+- * and @cgroup are accessible and @pos is a descendant of @cgroup.
++ * While this function requires cgroup_mutex or RCU read locking, it
++ * doesn't require the whole traversal to be contained in a single critical
++ * section.  This function will return the correct next descendant as long
++ * as both @pos and @cgroup are accessible and @pos is a descendant of
++ * @cgroup.
+  */
+ struct cgroup_subsys_state *
+ css_next_descendant_post(struct cgroup_subsys_state *pos,
+@@ -3194,7 +3200,7 @@ css_next_descendant_post(struct cgroup_s
+ {
+ 	struct cgroup_subsys_state *next;
+ 
+-	WARN_ON_ONCE(!rcu_read_lock_held());
++	cgroup_assert_mutex_or_rcu_locked();
+ 
+ 	/* if first iteration, visit the leftmost descendant */
+ 	if (!pos) {
+@@ -5698,16 +5704,16 @@ EXPORT_SYMBOL_GPL(css_lookup);
+  * @dentry: directory dentry of interest
+  * @ss: subsystem of interest
+  *
+- * Must be called under RCU read lock.  The caller is responsible for
+- * pinning the returned css if it needs to be accessed outside the RCU
+- * critical section.
++ * Must be called under cgroup_mutex or RCU read lock.  The caller is
++ * responsible for pinning the returned css if it needs to be accessed
++ * outside the critical section.
+  */
+ struct cgroup_subsys_state *css_from_dir(struct dentry *dentry,
+ 					 struct cgroup_subsys *ss)
+ {
+ 	struct cgroup *cgrp;
+ 
+-	WARN_ON_ONCE(!rcu_read_lock_held());
++	cgroup_assert_mutex_or_rcu_locked();
+ 
+ 	/* is @dentry a cgroup dir? */
+ 	if (!dentry->d_inode ||
+@@ -5730,9 +5736,7 @@ struct cgroup_subsys_state *css_from_id(
+ {
+ 	struct cgroup *cgrp;
+ 
+-	rcu_lockdep_assert(rcu_read_lock_held() ||
+-			   lockdep_is_held(&cgroup_mutex),
+-			   "css_from_id() needs proper protection");
++	cgroup_assert_mutex_or_rcu_locked();
+ 
+ 	cgrp = idr_find(&ss->root->cgroup_idr, id);
+ 	if (cgrp)
