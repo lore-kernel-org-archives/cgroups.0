@@ -1,44 +1,64 @@
-From: "azurIt" <azurit@pobox.sk>
-Subject: =?utf-8?q?Re=3A_=5Bpatch_0=2F7=5D_improve_memcg_oom_killer_robustness_v2?=
-Date: Mon, 02 Sep 2013 12:38:02 +0200
-Message-ID: <20130902123802.5B8E8CB1@pobox.sk>
-References: <1375549200-19110-1-git-send-email-hannes@cmpxchg.org>, <20130803170831.GB23319@cmpxchg.org> <20130830215852.3E5D3D66@pobox.sk>
+From: Kay Sievers <kay-tD+1rO4QERM@public.gmane.org>
+Subject: Re: [PATCH v2 3/3] Send cgroup_path in SCM_CGROUP
+Date: Mon, 2 Sep 2013 19:17:00 +0200
+Message-ID: <CAPXgP120-PZHvEkAOgvUNkYYXnNfPt=SbxjRWY1hDXY9RWTJWQ@mail.gmail.com>
+References: <1377614400-27122-1-git-send-email-jkaluza@redhat.com>
+	<1377785602-10766-1-git-send-email-jkaluza@redhat.com>
+	<1377785602-10766-4-git-send-email-jkaluza@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130830215852.3E5D3D66@pobox.sk>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: azurIt <azurit@pobox.sk>, =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
-Cc: =?utf-8?q?Andrew_Morton?= <akpm@linux-foundation.org>, =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>, =?utf-8?q?David_Rientjes?= <rientjes@google.com>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?KOSAKI_Motohiro?= <kosaki.motohiro@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vrfy.org; s=google;
+	h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+	:cc:content-type;
+	bh=COIX2RvvaKBthmATl5T850Tk8m2nrhpsOxGG2WVQmTI=;
+	b=OKOaUb5NTeM6Ucp2t6syvKcRydWvywcO6JO6D23k1h8gbnrvipBbjkiglD7bBXocVu
+	q3SANe2aTvCisUvI0pg3cNjygEChc9zLqHKpXAzMgGWOKd0R+xl3+M4mESwYZyujbKvG
+	xJ0b6vOLn6cpk1hFZhUO39mlrgrdgyXQ+Ud+A=
+In-Reply-To: <1377785602-10766-4-git-send-email-jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Jan Kaluza <jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org
 
->>Hi azur,
->>
->>here is the x86-only rollup of the series for 3.2.
->>
->>Thanks!
->>Johannes
->>---
+On Thu, Aug 29, 2013 at 4:13 PM, Jan Kaluza <jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+> Add new SCM type called SCM_CGROUP to send "cgroup_path" in SCM.
+> This is useful for journald (systemd logging daemon) to get additional context
+> with each log line received using UNIX socket.
 >
->
->Johannes,
->
->unfortunately, one problem arises: I have (again) cgroup which cannot be=
- deleted :( it's a user who had very high memory usage and was reaching h=
-is limit very often. Do you need any info which i can gather now?
->
->azur
->
+> Signed-off-by: Jan Kaluza <jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
+In many cases it's generally more useful to explain *why* something is
+done, not *where* it is used. It makes it easier for people to match
+the described problem to their own use-cases, where it possibly occurs
+too. The problem this patch solves is very generic and not so much
+specific to logging or the journal. Maybe something like this:
 
-Now i can definitely confirm that problem is NOT fixed :( it happened aga=
-in but i don't have any data because i already disabled all debug output.
+"Server-like processes in many cases need credentials and other
+metadata of the peer, to decide if the calling process is allowed to
+request a specific action, or the server just wants to log away this
+type of information for auditing tasks.
 
-azur
+The current practice to retrieve such process metadata is to look that
+information up in procfs with the $PID received over SCM_CREDENTIALS.
+This is sufficient for long-running tasks, but introduces a race which
+cannot be worked around for short-living processes; the calling
+process and all the information in /proc/$PID/ is gone before the
+receiver of the socket message can look it up.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+This introduces a new SCM type called SCM_CGROUP to allow the direct
+attaching of "cgroup_path" to SCM, which is significantly more
+efficient and will reliably avoid the race with the round-trip over
+procfs."
+
+Thanks,
+Kay
