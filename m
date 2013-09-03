@@ -1,60 +1,126 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch 0/7] improve memcg oom killer robustness v2
-Date: Tue, 3 Sep 2013 16:48:50 -0400
-Message-ID: <20130903204850.GA1412@cmpxchg.org>
-References: <1375549200-19110-1-git-send-email-hannes@cmpxchg.org>
- <20130803170831.GB23319@cmpxchg.org>
- <20130830215852.3E5D3D66@pobox.sk>
- <20130902123802.5B8E8CB1@pobox.sk>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v2 1/9] cgroup: fix css leaks on online_css() failure
+Date: Tue, 3 Sep 2013 16:51:54 -0400
+Message-ID: <20130903205154.GF27092@mtj.dyndns.org>
+References: <1377723829-22814-1-git-send-email-tj@kernel.org>
+	<1377723829-22814-2-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20130902123802.5B8E8CB1@pobox.sk>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: azurIt <azurit@pobox.sk>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, David Rientjes <rientjes@google.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=U4opRl9kgV1aigkMCZ7VKvPnOF//DKFDf0WfjgfMoTA=;
+	b=PQjr6vIpF3FhVCDKq/w+TyKFQV0SsZUh/veiU5iy6+DpKlgMzG+duqikNsokva1OVf
+	x6Uws0CKKjT+d5RqhZvJ/diWPJdViB56+Y5DMUrtV2rTnA3XnyDi1pldQW3RIc7GBV1w
+	PSHyfz6P2NohfXnhZWuhE4zJRQukKmbGYJuP/nav2EwHPXeAUXMAbYiHsSRo0wO412Hq
+	8rAAf27h5RQqEMkwcO3YtsUsyluvvn+y/zohkFwNsyX3L3/Af4zGDS8mhZ6kRLUyG/F1
+	u8qcSWCBjtLuQnUMEwcwnVLnKLQIgTDgPGZH6nYC29j3gIOphjY0f5bH/XaTJwI17ZOV
+	nr5Q==
+Content-Disposition: inline
+In-Reply-To: <1377723829-22814-2-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello azur,
+Okay, re-sequencing the for_each_css patch turns out to be a lot more
+headache than expected.  Let's just fix it up in this patch proper.
+It's a standalone bug fix anyway.  The change only affects the
+for_each_css() patch later.  Will post an updated version of that
+patch too soon.
 
-On Mon, Sep 02, 2013 at 12:38:02PM +0200, azurIt wrote:
-> >>Hi azur,
-> >>
-> >>here is the x86-only rollup of the series for 3.2.
-> >>
-> >>Thanks!
-> >>Johannes
-> >>---
-> >
-> >
-> >Johannes,
-> >
-> >unfortunately, one problem arises: I have (again) cgroup which cannot be deleted :( it's a user who had very high memory usage and was reaching his limit very often. Do you need any info which i can gather now?
+Thanks.
+----- 8< -----
+ae7f164a09 ("cgroup: move cgroup->subsys[] assignment to
+online_css()") moved cgroup->subsys[] assignements later in
+cgroup_create() but didn't update error handling path accordingly
+leaking later css's after an online_css() failure.
 
-Did the OOM killer go off in this group?
+This patch moves reference bumping inside online_css() loop, clears
+css_ar[] as css's are brought online successfully, and updates
+err_destroy path so that either a css is fully online and destroyed by
+cgroup_destroy_locked() or the error path frees it.  This creates a
+duplicate css free logic in the error path but it will be cleaned up
+soon.
 
-Was there a warning in the syslog ("Fixing unhandled memcg OOM
-context")?
+v2: Li pointed out that cgroup_destroy_locked() would do NULL-deref if
+    invoked with a cgroup which doesn't have all css's populated.
+    Update cgroup_destroy_locked() so that it skips NULL css's.
 
-If it happens again, could you check if there are tasks left in the
-cgroup?  And provide /proc/<pid>/stack of the hung task trying to
-delete the cgroup?
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup.c |   31 +++++++++++++++++++++----------
+ 1 file changed, 21 insertions(+), 10 deletions(-)
 
-> Now i can definitely confirm that problem is NOT fixed :( it happened again but i don't have any data because i already disabled all debug output.
-
-Which debug output?
-
-Do you still have access to the syslog?
-
-It's possible that, as your system does not deadlock on the OOMing
-cgroup anymore, you hit a separate bug...
-
-Thanks!
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -4489,14 +4489,6 @@ static long cgroup_create(struct cgroup
+ 	list_add_tail_rcu(&cgrp->sibling, &cgrp->parent->children);
+ 	root->number_of_cgroups++;
+ 
+-	/* each css holds a ref to the cgroup's dentry and the parent css */
+-	for_each_root_subsys(root, ss) {
+-		struct cgroup_subsys_state *css = css_ar[ss->subsys_id];
+-
+-		dget(dentry);
+-		css_get(css->parent);
+-	}
+-
+ 	/* hold a ref to the parent's dentry */
+ 	dget(parent->dentry);
+ 
+@@ -4508,6 +4500,13 @@ static long cgroup_create(struct cgroup
+ 		if (err)
+ 			goto err_destroy;
+ 
++		/* each css holds a ref to the cgroup's dentry and parent css */
++		dget(dentry);
++		css_get(css->parent);
++
++		/* mark it consumed for error path */
++		css_ar[ss->subsys_id] = NULL;
++
+ 		if (ss->broken_hierarchy && !ss->warned_broken_hierarchy &&
+ 		    parent->parent) {
+ 			pr_warning("cgroup: %s (%d) created nested cgroup for controller \"%s\" which has incomplete hierarchy support. Nested cgroups may change behavior in the future.\n",
+@@ -4554,6 +4553,14 @@ err_free_cgrp:
+ 	return err;
+ 
+ err_destroy:
++	for_each_root_subsys(root, ss) {
++		struct cgroup_subsys_state *css = css_ar[ss->subsys_id];
++
++		if (css) {
++			percpu_ref_cancel_init(&css->refcnt);
++			ss->css_free(css);
++		}
++	}
+ 	cgroup_destroy_locked(cgrp);
+ 	mutex_unlock(&cgroup_mutex);
+ 	mutex_unlock(&dentry->d_inode->i_mutex);
+@@ -4698,8 +4705,12 @@ static int cgroup_destroy_locked(struct
+ 	 * will be invoked to perform the rest of destruction once the
+ 	 * percpu refs of all css's are confirmed to be killed.
+ 	 */
+-	for_each_root_subsys(cgrp->root, ss)
+-		kill_css(cgroup_css(cgrp, ss));
++	for_each_root_subsys(cgrp->root, ss) {
++		struct cgroup_subsys_state *css = cgroup_css(cgrp, ss);
++
++		if (css)
++			kill_css(css);
++	}
+ 
+ 	/*
+ 	 * Mark @cgrp dead.  This prevents further task migration and child
