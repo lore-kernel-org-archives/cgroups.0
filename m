@@ -1,62 +1,84 @@
-From: "azurIt" <azurit@pobox.sk>
-Subject: =?utf-8?q?Re=3A_=5Bpatch_0=2F7=5D_improve_memcg_oom_killer_robustness_v2?=
-Date: Wed, 04 Sep 2013 14:39:25 +0200
-Message-ID: <20130904143925.6672E0C4@pobox.sk>
-References: <1375549200-19110-1-git-send-email-hannes@cmpxchg.org>, <20130803170831.GB23319@cmpxchg.org>, <20130830215852.3E5D3D66@pobox.sk>, <20130902123802.5B8E8CB1@pobox.sk>, <20130903204850.GA1412@cmpxchg.org>, <20130904114523.A9F0173C@pobox.sk>, <20130904115741.GA28285@dhcp22.suse.cz>, <20130904141000.0F910EFA@pobox.sk> <20130904122632.GB28285@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3 0/3] Send audit/procinfo/cgroup data in socket-level
+	control message
+Date: Wed, 4 Sep 2013 10:45:07 -0400
+Message-ID: <20130904144507.GA25788@mtj.dyndns.org>
+References: <1377614400-27122-1-git-send-email-jkaluza@redhat.com>
+	<1378275261-4553-1-git-send-email-jkaluza@redhat.com>
+	<878uzdf2xp.fsf@xmission.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130904122632.GB28285@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
-Cc: =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>, =?utf-8?q?Andrew_Morton?= <akpm@linux-foundation.org>, =?utf-8?q?David_Rientjes?= <rientjes@google.com>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?KOSAKI_Motohiro?= <kosaki.motohiro@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=LoAts1Ek8aIVmUo3yNs01QQgha1iJlRTdl5lzK988JQ=;
+	b=n6vcdiZDhdketm/bYVEf8OHpzHZRxXew09cQ7ac+637tkz/ajtHXV2m4HEF2XgMeO8
+	cnj3zw9Sm+vBhE1lMY0/KiEJ9eB8FXgZ0lge0kPglf+LOwObEz1JTi6p/O0R04xNiuyP
+	BW8stkYEvOlJlgFdJK0ynhpTlmjEaRVaLmZJOZxneKnfMZdQ7BqQ+zS94+jYx4QjIgGK
+	NkTmu594YwAMqiLxlVqgOqKRli9NAOPAf//mdG6M6pLG5WeGQNhlXvU4+5AUUdEohcK1
+	6VaEVt3j6MAlpnS7bTzLRrjK8oLCFHqfqH8dd7y8YklGjrl7vpSLOhNaIZ864Fz/YOj+
+	PvVQ==
+Content-Disposition: inline
+In-Reply-To: <878uzdf2xp.fsf-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+Cc: Jan Kaluza <jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org
 
->> >[...]
->> >> My script has just detected (and killed) another freezed cgroup. I
->> >> must say that i'm not 100% sure that cgroup was really freezed but =
-it
->> >> has 99% or more memory usage for at least 30 seconds (well, or it h=
-as
->> >> 99% memory usage in both two cases the script was checking it). Her=
-e
->> >> are stacks of processes inside it before they were killed:
->> >[...]
->> >> pid: 26536
->> >> stack:
->> >> [<ffffffff81080a45>] refrigerator+0x95/0x160
->> >> [<ffffffff8106ac2b>] get_signal_to_deliver+0x1cb/0x540
->> >> [<ffffffff8100188b>] do_signal+0x6b/0x750
->> >> [<ffffffff81001fc5>] do_notify_resume+0x55/0x80
->> >> [<ffffffff815cb662>] retint_signal+0x3d/0x7b
->> >> [<ffffffffffffffff>] 0xffffffffffffffff
->> >
->> >[...]
->> >
->> >This task is sitting in the refigerator which means it has been froze=
-n
->> >by the freezer cgroup most probably. I am not familiar with the
->> >implementation but my recollection is that you have to thaw that grou=
-p
->> >in order the killed process can pass away.
->>=20
->> Yes, my script is freezing the cgroup before killing processes inside
->> it. Stacks are taken after the freeze, it that problem?
->
->I thought you had a problem to remove this particular group...
+Hello, Eric.
 
+On Wed, Sep 04, 2013 at 12:42:26AM -0700, Eric W. Biederman wrote:
+> Can I just say ick, blech, barf, gag.
 
+Gees, an awesome way to start the conversation.  If your gag response
+is hyper-sensitive, go see a frigging doctor.  It's annoying because
+you tend to go over the top while getting things wrong often enough.
+Even if you don't agree, you don't have to start things this way.
 
-No, this one is different from the unremovable one. This was, probably, h=
-anged just like when i was originaly reporting this problem (but, as i sa=
-id, i'm not 100% sure because of reasons i described). Sorry for confusio=
-n.
+> You don't require this information to be passed.  You are asking people
+> to suport a lot of new code for the forseeable future.  The only advantage
+> appears to be for short lived racy processes that don't even bother to
+> make certain their message was acknowleged before exiting.
 
-azur
+While I'm not sure whether this is *the* right appraoch, how is "we
+have some pretty visible race conditions but it's probably okay" an
+answer?  This affects auditing and logging directly and you're saying
+"ah well, the program wasn't running long enough"?
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+> You sent this during the merge window which is the time for code
+> integration and testing not new code.
+
+What are you talking about?  It is *okay* to send new patches during
+merge window even if it's headed for the next merge window.  Sending
+patches to maintainers doesn't mean "this should go in right now".
+Maintainers are of course free to delay response or ask for
+pinging/resending later but it's just stupid to accuse patch
+submitters for sending patches.  What the hell is that?
+
+> By my count you have overflowed cb in struct sk_buff and are stomping on
+> _skb_refdest.
+> 
+> If you are going to go crazy and pass things is there a reason you do
+> not add a patch to pass the bsd SCM_CREDS?  That information seems more
+> relevant in a security context and for making security decisions than
+> about half the information you are passing.
+
+You could have lost all the other paragraphs and just responded with
+the above.  I don't think we can extend an existing struct but maybe
+how information is packed can be adjusted.  That said, the proposed
+split makes sense to me.
+
+Thanks.
+
+-- 
+tejun
