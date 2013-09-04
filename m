@@ -1,60 +1,100 @@
-From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
-Subject: Re: [PATCH v3 0/3] Send audit/procinfo/cgroup data in socket-level control message
-Date: Wed, 04 Sep 2013 00:42:26 -0700
-Message-ID: <878uzdf2xp.fsf@xmission.com>
-References: <1377614400-27122-1-git-send-email-jkaluza@redhat.com>
-	<1378275261-4553-1-git-send-email-jkaluza@redhat.com>
+From: "azurIt" <azurit@pobox.sk>
+Subject: =?utf-8?q?Re=3A_=5Bpatch_0=2F7=5D_improve_memcg_oom_killer_robustness_v2?=
+Date: Wed, 04 Sep 2013 09:53:51 +0200
+Message-ID: <20130904095351.8220AA75@pobox.sk>
+References: <1375549200-19110-1-git-send-email-hannes@cmpxchg.org>, <20130803170831.GB23319@cmpxchg.org>, <20130830215852.3E5D3D66@pobox.sk>, <20130902123802.5B8E8CB1@pobox.sk> <20130903204850.GA1412@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1378275261-4553-1-git-send-email-jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> (Jan
-	Kaluza's message of "Wed, 4 Sep 2013 08:14:18 +0200")
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20130903204850.GA1412@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jan Kaluza <jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org
+To: =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
+Cc: =?utf-8?q?Andrew_Morton?= <akpm@linux-foundation.org>, =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>, =?utf-8?q?David_Rientjes?= <rientjes@google.com>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?KOSAKI_Motohiro?= <kosaki.motohiro@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Jan Kaluza <jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
-
-> Hi,
+>On Mon, Sep 02, 2013 at 12:38:02PM +0200, azurIt wrote:
+>> >>Hi azur,
+>> >>
+>> >>here is the x86-only rollup of the series for 3.2.
+>> >>
+>> >>Thanks!
+>> >>Johannes
+>> >>---
+>> >
+>> >
+>> >Johannes,
+>> >
+>> >unfortunately, one problem arises: I have (again) cgroup which cannot=
+ be deleted :( it's a user who had very high memory usage and was reachin=
+g his limit very often. Do you need any info which i can gather now?
 >
-> this patchset against net-next (applies also to linux-next) adds 3 new types
-> of "Socket"-level control message (SCM_AUDIT, SCM_PROCINFO and SCM_CGROUP).
+>Did the OOM killer go off in this group?
 >
-> Server-like processes in many cases need credentials and other
-> metadata of the peer, to decide if the calling process is allowed to
-> request a specific action, or the server just wants to log away this
-> type of information for auditing tasks.
+
+
+
+# cat /cgroups/cannot_rm_01/memory.oom_control=20
+oom_kill_disable 0
+under_oom 1
+#
+
+
+
+
+>Was there a warning in the syslog ("Fixing unhandled memcg OOM
+>context")?
+
+
+
+Really don't know cos i don't know the exact day when it happens. I just =
+find that out on 30.8. but it could happen anytime before. Uptime on that=
+ server is 27 days so maybe i can grep all syslog logs i have if it helps=
+. I just need to find out the original name of that  cgroup cos i renamed=
+ it to 'cannot_rm_01' so my software will ignore it.
+
+
+
+>If it happens again, could you check if there are tasks left in the
+>cgroup?  And provide /proc/<pid>/stack of the hung task trying to
+>delete the cgroup?
+
+
+
+# cat /cgroups/cannot_rm_01/tasks
+#
+
+
+
+>> Now i can definitely confirm that problem is NOT fixed :( it happened =
+again but i don't have any data because i already disabled all debug outp=
+ut.
 >
-> The current practice to retrieve such process metadata is to look that
-> information up in procfs with the $PID received over SCM_CREDENTIALS.
-> This is sufficient for long-running tasks, but introduces a race which
-> cannot be worked around for short-living processes; the calling
-> process and all the information in /proc/$PID/ is gone before the
-> receiver of the socket message can look it up.
+>Which debug output?
 
-> Changes introduced in this patchset can also increase performance
-> of such server-like processes, because current way of opening and
-> parsing /proc/$PID/* files is much more expensive than receiving these
-> metadata using SCM.
 
-Can I just say ick, blech, barf, gag.
 
-You don't require this information to be passed.  You are asking people
-to suport a lot of new code for the forseeable future.  The only advantage
-appears to be for short lived racy processes that don't even bother to
-make certain their message was acknowleged before exiting.
+Debug output from my own scripts which are suppose to handle this situati=
+on and kill frozen processes. I already reactivated it, it is grabbing co=
+ntent of 'stacks' from all processes before killing them.
 
-You sent this during the merge window which is the time for code
-integration and testing not new code.
 
-By my count you have overflowed cb in struct sk_buff and are stomping on
-_skb_refdest.
 
-If you are going to go crazy and pass things is there a reason you do
-not add a patch to pass the bsd SCM_CREDS?  That information seems more
-relevant in a security context and for making security decisions than
-about half the information you are passing.
+>Do you still have access to the syslog?
 
-Eric
+
+
+From that day (30.8.)? Yes.
+
+
+>It's possible that, as your system does not deadlock on the OOMing
+>cgroup anymore, you hit a separate bug...
+>
+>Thanks!
+>
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
