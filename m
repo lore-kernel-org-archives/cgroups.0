@@ -1,215 +1,217 @@
-From: =?windows-1252?Q?Jan_Kalu=9Ea?= <jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v3 1/3] Send loginuid and sessionid in SCM_AUDIT
-Date: Wed, 04 Sep 2013 11:07:05 +0200
-Message-ID: <5226F839.4010704@redhat.com>
-References: <1377614400-27122-1-git-send-email-jkaluza@redhat.com>
-	<1378275261-4553-1-git-send-email-jkaluza@redhat.com>
-	<1378275261-4553-2-git-send-email-jkaluza@redhat.com>
-	<87bo49gifv.fsf@xmission.com>
+From: "azurIt" <azurit@pobox.sk>
+Subject: =?utf-8?q?Re=3A_=5Bpatch_0=2F7=5D_improve_memcg_oom_killer_robustness_v2?=
+Date: Wed, 04 Sep 2013 11:45:23 +0200
+Message-ID: <20130904114523.A9F0173C@pobox.sk>
+References: <1375549200-19110-1-git-send-email-hannes@cmpxchg.org>, <20130803170831.GB23319@cmpxchg.org>, <20130830215852.3E5D3D66@pobox.sk>, <20130902123802.5B8E8CB1@pobox.sk> <20130903204850.GA1412@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <87bo49gifv.fsf-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Cc: rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20130903204850.GA1412@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
+Cc: =?utf-8?q?Andrew_Morton?= <akpm@linux-foundation.org>, =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>, =?utf-8?q?David_Rientjes?= <rientjes@google.com>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?KOSAKI_Motohiro?= <kosaki.motohiro@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 09/04/2013 09:22 AM, Eric W. Biederman wrote:
-> Jan Kaluza <jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
+>Hello azur,
 >
->> Server-like processes in many cases need credentials and other
->> metadata of the peer, to decide if the calling process is allowed to
->> request a specific action, or the server just wants to log away this
->> type of information for auditing tasks.
->>
->> The current practice to retrieve such process metadata is to look that
->> information up in procfs with the $PID received over SCM_CREDENTIALS.
->> This is sufficient for long-running tasks, but introduces a race which
->> cannot be worked around for short-living processes; the calling
->> process and all the information in /proc/$PID/ is gone before the
->> receiver of the socket message can look it up.
->>
->> This introduces a new SCM type called SCM_AUDIT to allow the direct
->> attaching of "loginuid" and "sessionid" to SCM, which is significantly more
->> efficient and will reliably avoid the race with the round-trip over
->> procfs.
+>On Mon, Sep 02, 2013 at 12:38:02PM +0200, azurIt wrote:
+>> >>Hi azur,
+>> >>
+>> >>here is the x86-only rollup of the series for 3.2.
+>> >>
+>> >>Thanks!
+>> >>Johannes
+>> >>---
+>> >
+>> >
+>> >Johannes,
+>> >
+>> >unfortunately, one problem arises: I have (again) cgroup which cannot=
+ be deleted :( it's a user who had very high memory usage and was reachin=
+g his limit very often. Do you need any info which i can gather now?
 >
-> Unless I am misreading something this patch will break the build if
-> CONFIG_AUDITSYSCALL is not defined.
+>Did the OOM killer go off in this group?
+>
+>Was there a warning in the syslog ("Fixing unhandled memcg OOM
+>context")?
+>
+>If it happens again, could you check if there are tasks left in the
+>cgroup?  And provide /proc/<pid>/stack of the hung task trying to
+>delete the cgroup?
+>
+>> Now i can definitely confirm that problem is NOT fixed :( it happened =
+again but i don't have any data because i already disabled all debug outp=
+ut.
+>
+>Which debug output?
+>
+>Do you still have access to the syslog?
+>
+>It's possible that, as your system does not deadlock on the OOMing
+>cgroup anymore, you hit a separate bug...
+>
+>Thanks!
 
-It does build. In this case, audit_get_loginuid returns INVALID_UID and 
-audit_get_sessionid returns -1.
 
-Jan Kaluza
 
-> Eric
->
->
->> Signed-off-by: Jan Kaluza <jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->> ---
->>   include/linux/socket.h |  6 ++++++
->>   include/net/af_unix.h  |  2 ++
->>   include/net/scm.h      | 28 ++++++++++++++++++++++++++--
->>   net/unix/af_unix.c     |  7 +++++++
->>   4 files changed, 41 insertions(+), 2 deletions(-)
->>
->> diff --git a/include/linux/socket.h b/include/linux/socket.h
->> index 445ef75..505047a 100644
->> --- a/include/linux/socket.h
->> +++ b/include/linux/socket.h
->> @@ -130,6 +130,7 @@ static inline struct cmsghdr * cmsg_nxthdr (struct msghdr *__msg, struct cmsghdr
->>   #define	SCM_RIGHTS	0x01		/* rw: access rights (array of int) */
->>   #define SCM_CREDENTIALS 0x02		/* rw: struct ucred		*/
->>   #define SCM_SECURITY	0x03		/* rw: security label		*/
->> +#define SCM_AUDIT	0x04		/* rw: struct uaudit		*/
->>
->>   struct ucred {
->>   	__u32	pid;
->> @@ -137,6 +138,11 @@ struct ucred {
->>   	__u32	gid;
->>   };
->>
->> +struct uaudit {
->> +	__u32	loginuid;
->> +	__u32	sessionid;
->> +};
->> +
->>   /* Supported address families. */
->>   #define AF_UNSPEC	0
->>   #define AF_UNIX		1	/* Unix domain sockets 		*/
->> diff --git a/include/net/af_unix.h b/include/net/af_unix.h
->> index a175ba4..3b9d22a 100644
->> --- a/include/net/af_unix.h
->> +++ b/include/net/af_unix.h
->> @@ -36,6 +36,8 @@ struct unix_skb_parms {
->>   	u32			secid;		/* Security ID		*/
->>   #endif
->>   	u32			consumed;
->> +	kuid_t			loginuid;
->> +	unsigned int		sessionid;
->>   };
->>
->>   #define UNIXCB(skb) 	(*(struct unix_skb_parms *)&((skb)->cb))
->> diff --git a/include/net/scm.h b/include/net/scm.h
->> index 8de2d37..e349a25 100644
->> --- a/include/net/scm.h
->> +++ b/include/net/scm.h
->> @@ -6,6 +6,7 @@
->>   #include <linux/security.h>
->>   #include <linux/pid.h>
->>   #include <linux/nsproxy.h>
->> +#include <linux/audit.h>
->>
->>   /* Well, we should have at least one descriptor open
->>    * to accept passed FDs 8)
->> @@ -18,6 +19,11 @@ struct scm_creds {
->>   	kgid_t	gid;
->>   };
->>
->> +struct scm_audit {
->> +	kuid_t loginuid;
->> +	unsigned int sessionid;
->> +};
->> +
->>   struct scm_fp_list {
->>   	short			count;
->>   	short			max;
->> @@ -28,6 +34,7 @@ struct scm_cookie {
->>   	struct pid		*pid;		/* Skb credentials */
->>   	struct scm_fp_list	*fp;		/* Passed files		*/
->>   	struct scm_creds	creds;		/* Skb credentials	*/
->> +	struct scm_audit	audit;		/* Skb audit	*/
->>   #ifdef CONFIG_SECURITY_NETWORK
->>   	u32			secid;		/* Passed security ID 	*/
->>   #endif
->> @@ -58,6 +65,13 @@ static __inline__ void scm_set_cred(struct scm_cookie *scm,
->>   	scm->creds.gid = gid;
->>   }
->>
->> +static inline void scm_set_audit(struct scm_cookie *scm,
->> +				    kuid_t loginuid, unsigned int sessionid)
->> +{
->> +	scm->audit.loginuid = loginuid;
->> +	scm->audit.sessionid = sessionid;
->> +}
->> +
->>   static __inline__ void scm_destroy_cred(struct scm_cookie *scm)
->>   {
->>   	put_pid(scm->pid);
->> @@ -77,8 +91,12 @@ static __inline__ int scm_send(struct socket *sock, struct msghdr *msg,
->>   	memset(scm, 0, sizeof(*scm));
->>   	scm->creds.uid = INVALID_UID;
->>   	scm->creds.gid = INVALID_GID;
->> -	if (forcecreds)
->> -		scm_set_cred(scm, task_tgid(current), current_uid(), current_gid());
->> +	if (forcecreds) {
->> +		scm_set_cred(scm, task_tgid(current), current_uid(),
->> +			     current_gid());
->> +		scm_set_audit(scm, audit_get_loginuid(current),
->> +			      audit_get_sessionid(current));
->> +	}
->>   	unix_get_peersec_dgram(sock, scm);
->>   	if (msg->msg_controllen <= 0)
->>   		return 0;
->> @@ -123,7 +141,13 @@ static __inline__ void scm_recv(struct socket *sock, struct msghdr *msg,
->>   			.uid = from_kuid_munged(current_ns, scm->creds.uid),
->>   			.gid = from_kgid_munged(current_ns, scm->creds.gid),
->>   		};
->> +		struct uaudit uaudits = {
->> +			.loginuid = from_kuid_munged(current_ns,
->> +						     scm->audit.loginuid),
->> +			.sessionid = scm->audit.sessionid,
->> +		};
->>   		put_cmsg(msg, SOL_SOCKET, SCM_CREDENTIALS, sizeof(ucreds), &ucreds);
->> +		put_cmsg(msg, SOL_SOCKET, SCM_AUDIT, sizeof(uaudits), &uaudits);
->>   	}
->>
->>   	scm_destroy_cred(scm);
->> diff --git a/net/unix/af_unix.c b/net/unix/af_unix.c
->> index 86de99a..c410f76 100644
->> --- a/net/unix/af_unix.c
->> +++ b/net/unix/af_unix.c
->> @@ -1393,6 +1393,8 @@ static int unix_scm_to_skb(struct scm_cookie *scm, struct sk_buff *skb, bool sen
->>   	UNIXCB(skb).pid  = get_pid(scm->pid);
->>   	UNIXCB(skb).uid = scm->creds.uid;
->>   	UNIXCB(skb).gid = scm->creds.gid;
->> +	UNIXCB(skb).loginuid = scm->audit.loginuid;
->> +	UNIXCB(skb).sessionid = scm->audit.sessionid;
->>   	UNIXCB(skb).fp = NULL;
->>   	if (scm->fp && send_fds)
->>   		err = unix_attach_fds(scm, skb);
->> @@ -1416,6 +1418,8 @@ static void maybe_add_creds(struct sk_buff *skb, const struct socket *sock,
->>   	    test_bit(SOCK_PASSCRED, &other->sk_socket->flags)) {
->>   		UNIXCB(skb).pid  = get_pid(task_tgid(current));
->>   		current_uid_gid(&UNIXCB(skb).uid, &UNIXCB(skb).gid);
->> +		UNIXCB(skb).loginuid = audit_get_loginuid(current);
->> +		UNIXCB(skb).sessionid = audit_get_sessionid(current);
->>   	}
->>   }
->>
->> @@ -1812,6 +1816,7 @@ static int unix_dgram_recvmsg(struct kiocb *iocb, struct socket *sock,
->>   		memset(&tmp_scm, 0, sizeof(tmp_scm));
->>   	}
->>   	scm_set_cred(siocb->scm, UNIXCB(skb).pid, UNIXCB(skb).uid, UNIXCB(skb).gid);
->> +	scm_set_audit(siocb->scm, UNIXCB(skb).loginuid, UNIXCB(skb).sessionid);
->>   	unix_set_secdata(siocb->scm, skb);
->>
->>   	if (!(flags & MSG_PEEK)) {
->> @@ -1993,6 +1998,8 @@ again:
->>   		} else if (test_bit(SOCK_PASSCRED, &sock->flags)) {
->>   			/* Copy credentials */
->>   			scm_set_cred(siocb->scm, UNIXCB(skb).pid, UNIXCB(skb).uid, UNIXCB(skb).gid);
->> +			scm_set_audit(siocb->scm, UNIXCB(skb).loginuid,
->> +				      UNIXCB(skb).sessionid);
->>   			check_creds = 1;
->>   		}
+My script has just detected (and killed) another freezed cgroup. I must s=
+ay that i'm not 100% sure that cgroup was really freezed but it has 99% o=
+r more memory usage for at least 30 seconds (well, or it has 99% memory u=
+sage in both two cases the script was checking it). Here are stacks of pr=
+ocesses inside it before they were killed:
+
+
+
+pid: 26490
+stack:
+[<ffffffff81127842>] do_last+0x302/0xa60
+[<ffffffff81128077>] path_openat+0xd7/0x470
+[<ffffffff81128529>] do_filp_open+0x49/0xa0
+[<ffffffff81114a16>] do_sys_open+0x106/0x240
+[<ffffffff81114b90>] sys_open+0x20/0x30
+[<ffffffff815cbce6>] system_call_fastpath+0x18/0x1d
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+
+pid: 26503
+stack:
+[<ffffffff81127842>] do_last+0x302/0xa60
+[<ffffffff81128077>] path_openat+0xd7/0x470
+[<ffffffff81128529>] do_filp_open+0x49/0xa0
+[<ffffffff81114a16>] do_sys_open+0x106/0x240
+[<ffffffff81114b90>] sys_open+0x20/0x30
+[<ffffffff815cbce6>] system_call_fastpath+0x18/0x1d
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+
+pid: 26517
+stack:
+[<ffffffff81127842>] do_last+0x302/0xa60
+[<ffffffff81128077>] path_openat+0xd7/0x470
+[<ffffffff81128529>] do_filp_open+0x49/0xa0
+[<ffffffff81114a16>] do_sys_open+0x106/0x240
+[<ffffffff81114b90>] sys_open+0x20/0x30
+[<ffffffff815cbce6>] system_call_fastpath+0x18/0x1d
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+
+pid: 26518
+stack:
+[<ffffffff81127842>] do_last+0x302/0xa60
+[<ffffffff81128077>] path_openat+0xd7/0x470
+[<ffffffff81128529>] do_filp_open+0x49/0xa0
+[<ffffffff81114a16>] do_sys_open+0x106/0x240
+[<ffffffff81114b90>] sys_open+0x20/0x30
+[<ffffffff815cbce6>] system_call_fastpath+0x18/0x1d
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+
+pid: 26519
+stack:
+[<ffffffff815cb618>] retint_careful+0xd/0x1a
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+
+pid: 26520
+stack:
+[<ffffffff81127842>] do_last+0x302/0xa60
+[<ffffffff81128077>] path_openat+0xd7/0x470
+[<ffffffff81128529>] do_filp_open+0x49/0xa0
+[<ffffffff81114a16>] do_sys_open+0x106/0x240
+[<ffffffff81114b90>] sys_open+0x20/0x30
+[<ffffffff815cbce6>] system_call_fastpath+0x18/0x1d
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+
+pid: 26521
+stack:
+[<ffffffff815cb618>] retint_careful+0xd/0x1a
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+
+pid: 26522
+stack:
+[<ffffffff81127842>] do_last+0x302/0xa60
+[<ffffffff81128077>] path_openat+0xd7/0x470
+[<ffffffff81128529>] do_filp_open+0x49/0xa0
+[<ffffffff81114a16>] do_sys_open+0x106/0x240
+[<ffffffff81114b90>] sys_open+0x20/0x30
+[<ffffffff815cbce6>] system_call_fastpath+0x18/0x1d
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+
+pid: 26523
+stack:
+[<ffffffff81127842>] do_last+0x302/0xa60
+[<ffffffff81128077>] path_openat+0xd7/0x470
+[<ffffffff81128529>] do_filp_open+0x49/0xa0
+[<ffffffff81114a16>] do_sys_open+0x106/0x240
+[<ffffffff81114b90>] sys_open+0x20/0x30
+[<ffffffff815cbce6>] system_call_fastpath+0x18/0x1d
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+
+pid: 26524
+stack:
+[<ffffffff81052671>] sys_sched_yield+0x41/0x70
+[<ffffffff81148d91>] free_more_memory+0x21/0x60
+[<ffffffff8114941d>] __getblk+0x14d/0x2c0
+[<ffffffff8119888b>] ext3_getblk+0xeb/0x240
+[<ffffffff811989f9>] ext3_bread+0x19/0x90
+[<ffffffff8119cea3>] ext3_dx_find_entry+0x83/0x1e0
+[<ffffffff8119d2e4>] ext3_find_entry+0x2e4/0x480
+[<ffffffff8119dbcd>] ext3_lookup+0x4d/0x120
+[<ffffffff811228f5>] d_alloc_and_lookup+0x45/0x90
+[<ffffffff81125578>] __lookup_hash+0xa8/0xf0
+[<ffffffff81127852>] do_last+0x312/0xa60
+[<ffffffff81128077>] path_openat+0xd7/0x470
+[<ffffffff81128529>] do_filp_open+0x49/0xa0
+[<ffffffff81114a16>] do_sys_open+0x106/0x240
+[<ffffffff81114b90>] sys_open+0x20/0x30
+[<ffffffff815cbce6>] system_call_fastpath+0x18/0x1d
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+
+pid: 26526
+stack:
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+
+pid: 26531
+stack:
+[<ffffffff81127842>] do_last+0x302/0xa60
+[<ffffffff81128077>] path_openat+0xd7/0x470
+[<ffffffff81128529>] do_filp_open+0x49/0xa0
+[<ffffffff81114a16>] do_sys_open+0x106/0x240
+[<ffffffff81114b90>] sys_open+0x20/0x30
+[<ffffffff815cbce6>] system_call_fastpath+0x18/0x1d
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+
+pid: 26533
+stack:
+[<ffffffff815cb618>] retint_careful+0xd/0x1a
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+
+pid: 26536
+stack:
+[<ffffffff81080a45>] refrigerator+0x95/0x160
+[<ffffffff8106ac2b>] get_signal_to_deliver+0x1cb/0x540
+[<ffffffff8100188b>] do_signal+0x6b/0x750
+[<ffffffff81001fc5>] do_notify_resume+0x55/0x80
+[<ffffffff815cb662>] retint_signal+0x3d/0x7b
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+
+pid: 26539
+stack:
+[<ffffffff815cb618>] retint_careful+0xd/0x1a
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
