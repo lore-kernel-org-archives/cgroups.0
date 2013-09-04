@@ -1,124 +1,66 @@
-From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: Race condition between "read CFQ stats" and "block device shutdown"
-Date: Wed, 04 Sep 2013 08:42:41 +0200
-Message-ID: <5226D661.7070301@suse.de>
-References: <CAOMFOmXJ5ZTYdOvdUt-oxsouhPGRmMshCRhn6AFgmFAGZw5WZA@mail.gmail.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 08/12] cgroup, memcg: move cgroup->event_list[_lock] and
+	event callbacks into memcg
+Date: Wed, 4 Sep 2013 09:11:15 +0200
+Message-ID: <20130904071115.GA7375@dhcp22.suse.cz>
+References: <1376582550-12548-1-git-send-email-tj@kernel.org>
+	<1376582550-12548-9-git-send-email-tj@kernel.org>
+	<20130830110846.GB31605@dhcp22.suse.cz>
+	<20130903215646.GA31091@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAOMFOmXJ5ZTYdOvdUt-oxsouhPGRmMshCRhn6AFgmFAGZw5WZA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Anatol Pomozov <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20130903215646.GA31091-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On 09/03/2013 10:14 PM, Anatol Pomozov wrote:
-> Hi,
->=20
-> I am running a program that checkes "read CFQ stat files" for race
-> conditions with other evens (e.g. device shutdown).
->=20
-> And I discovered an interesting bug. Here is the "double_unlock" cras=
-h for it
->=20
->=20
-> print_unlock_imbalance_bug.isra.23+0x4/0x10
-> [ 261.453775] [<ffffffff810f7c65>] lock_release_non_nested.isra.39+0x=
-2f5/0x300
-> [ 261.460900] [<ffffffff810f7cfe>] lock_release+0x8e/0x1f0
-> [ 261.466293] [<ffffffff81339030>] ? cfqg_prfill_service_level+0x60/0=
-x60
-> [ 261.472894] [<ffffffff81005be3>] _raw_spin_unlock_irq+0x23/0x50
-> [ 261.478894] [<ffffffff8133559f>] blkcg_print_blkgs+0x8f/0x140
-> [ 261.484724] [<ffffffff81335515>] ? blkcg_print_blkgs+0x5/0x140
-> [ 261.490631] [<ffffffff81338a7f>] cfqg_print_weighted_queue_time+0x2=
-f/0x40
-> [ 261.497489] [<ffffffff8110b793>] cgroup_seqfile_show+0x53/0x60
-> [ 261.503398] [<ffffffff811f1fe4>] seq_read+0x124/0x3a0
-> [ 261.508529] [<ffffffff811ce39d>] vfs_read+0xad/0x180
-> [ 261.513576] [<ffffffff811ce625>] SyS_read+0x55/0xa0
-> [ 261.518538] [<ffffffff81609f66>] cstar_dispatch+0x7/0x1f
->=20
-> blkcg_print_blkgs fails with double unlock? Hmm, I checked
-> cfqg_prfill_service_level and I did not find any places where unlock
-> can happen.
->=20
-> After some debugging I found that in blkcg_print_blkgs() spinlock
-> passed to spin_lock_irq() function differs from the object passed to
-> spin_unlock_irq just a few lines below. It means
-> request_queue->queue_lock spinlock has changed under the function fee=
-t
-> while it was executing!!!
->=20
-> To make sure I added
->=20
-> --- a/block/blk-cgroup.c
-> +++ b/block/blk-cgroup.c
-> @@ -465,10 +465,16 @@ void blkcg_print_blkgs(struct seq_file *sf,
-> struct blkcg *blkcg,
->=20
->         rcu_read_lock();
->         hlist_for_each_entry_rcu(blkg, n, &blkcg->blkg_list, blkcg_no=
-de) {
-> -               spin_lock_irq(blkg->q->queue_lock);
-> +               spinlock_t *lock =3D blkg->q->queue_lock;
-> +               spinlock_t *new_lock;
-> +               spin_lock_irq(lock);
->                 if (blkcg_policy_enabled(blkg->q, pol))
->                         total +=3D prfill(sf, blkg->pd[pol->plid], da=
-ta);
-> -               spin_unlock_irq(blkg->q->queue_lock);
-> +               new_lock =3D blkg->q->queue_lock;
-> +               if (lock !=3D new_lock) {
-> +                       pr_err("old lock %p %s  new lock %p %s\n",
-> lock, lock->dep_map.name, new_lock, new_lock->dep_map.name);
-> +               }
-> +               spin_unlock_irq(lock);
->         }
->         rcu_read_unlock();
->=20
->=20
->=20
-> And indeed it shows locks are different.
->=20
->=20
-> It comes from this change 777eb1bf1 "block: Free queue resources at
-> blk_release_queue()" that changes lock when devices is shutting down.
->=20
-> What would be the best fix for the issue?
->=20
-The correct fix would be to add checks for 'blkq->q'; the mentioned
-lock reassignment can only happen during queue shutdown.
-So whenever the queue is dead or stopping we whould refuse to print
-anything here.
+On Tue 03-09-13 17:56:46, Tejun Heo wrote:
+> Hello, Michal.
+> 
+> On Fri, Aug 30, 2013 at 01:08:46PM +0200, Michal Hocko wrote:
+> > On Thu 15-08-13 12:02:26, Tejun Heo wrote:
+> > [...]
+> > > @@ -6030,12 +6050,13 @@ static void cgroup_event_ptable_queue_proc(struct file *file,
+> > >  static int cgroup_write_event_control(struct cgroup_subsys_state *css,
+> > >  				      struct cftype *cft, const char *buffer)
+> > >  {
+> > > -	struct cgroup *cgrp = css->cgroup;
+> > > +	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+> > >  	struct cgroup_event *event;
+> > >  	struct cgroup_subsys_state *cfile_css;
+> > >  	unsigned int efd, cfd;
+> > >  	struct file *efile;
+> > >  	struct file *cfile;
+> > > +	const char *name;
+> > >  	char *endp;
+> > >  	int ret;
+> > 
+> > AFAICS nothing prevents from registering a new event after css_offline
+> > is done already which would lead to a mem leak. The we would need to do
+> > css_tryget somewhere in the beginning. Or is there anything that would
+> > prevent from that?
+> 
+> An earlier patch titled "cgroup: make cgroup_event hold onto
+> cgroup_subsys_state instead of cgroup" updates cgroup_event such that
+> each cgroup_event acquires a css reference using css_tryget(), so if a
+> css has already been offlined, no new event will be created.
 
-Try this:
+Right you are. Sorry I have missed/forgot about the patch. The patch is
+ok then and you can add my acked-by.
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 290792a..3e17841 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -504,6 +504,8 @@ void blkcg_print_blkgs(struct seq_file *sf,
-struct blkcg *bl
-kcg,
-
-        rcu_read_lock();
-        hlist_for_each_entry_rcu(blkg, &blkcg->blkg_list, blkcg_node) {
-+               if (unlikely(blk_queue_dying(blkg->q)))
-+                       continue;
-                spin_lock_irq(blkg->q->queue_lock);
-                if (blkcg_policy_enabled(blkg->q, pol))
-                        total +=3D prfill(sf, blkg->pd[pol->plid], data=
-);
-
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare-l3A5Bk7waGM@public.gmane.org			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
+Thanks and sorry about the noise.
+-- 
+Michal Hocko
+SUSE Labs
