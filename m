@@ -1,106 +1,107 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch 0/7] improve memcg oom killer robustness v2
-Date: Thu, 5 Sep 2013 15:24:15 +0200
-Message-ID: <20130905132415.GD13666@dhcp22.suse.cz>
-References: <1375549200-19110-1-git-send-email-hannes@cmpxchg.org>
- <20130803170831.GB23319@cmpxchg.org>
- <20130830215852.3E5D3D66@pobox.sk>
- <20130902123802.5B8E8CB1@pobox.sk>
- <20130903204850.GA1412@cmpxchg.org>
- <20130904101852.58E70042@pobox.sk>
- <20130905115430.GB856@cmpxchg.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [patch] mm, memcg: store memcg name for oom kill log consistency
+Date: Thu, 5 Sep 2013 15:52:19 +0200
+Message-ID: <20130905135219.GE13666@dhcp22.suse.cz>
+References: <alpine.DEB.2.02.1308282302450.14291@chino.kir.corp.google.com>
+ <20130829133032.GB12077@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20130905115430.GB856@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20130829133032.GB12077-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: azurIt <azurit@pobox.sk>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Thu 05-09-13 07:54:30, Johannes Weiner wrote:
-[...]
-> From: Johannes Weiner <hannes@cmpxchg.org>
-> Subject: [patch] mm: memcg: handle non-error OOM situations more gracefully
+On Thu 29-08-13 15:30:32, Michal Hocko wrote:
+> On Wed 28-08-13 23:03:54, David Rientjes wrote:
+> > A shared buffer is currently used for the name of the oom memcg and the
+> > memcg of the killed process.  There is no serialization of memcg oom
+> > kills, so this buffer can easily be overwritten if there is a concurrent
+> > oom kill in another memcg.
 > 
-> Many places that can trigger a memcg OOM situation return gracefully
-> and don't propagate VM_FAULT_OOM up the fault stack.
+> Right.
 > 
-> It's not practical to annotate all of them to disable the memcg OOM
-> killer.  Instead, just clean up any set OOM state without warning in
-> case the fault is not returning VM_FAULT_OOM.
+> > This patch stores the names of the memcgs directly in struct mem_cgroup.
 > 
-> Also fail charges immediately when the current task already is in an
-> OOM context.  Otherwise, the previous context gets overwritten and the
-> memcg reference is leaked.
-
-Could you paste find_or_create_page called from __get_blk as an example
-here, please? So that we do not have to scratch our heads again later...
-
-Also task_in_memcg_oom could be stuffed into mem_cgroup_disable_oom
-branch to reduce an overhead for in-kernel faults. The overhead
-shouldn't be noticeable so I am not sure this is that important.
-
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-
-I do not see any easier way to fix this without returning back to the
-old behavior which is much worse.
-
-Acked-by: Michal Hocko <mhocko@suse.cz>
-
-Thanks!
-
-> diff --git a/mm/memory.c b/mm/memory.c
-> index cdbe41b..cdad471 100644
-> --- a/mm/memory.c
-> +++ b/mm/memory.c
-> @@ -57,7 +57,6 @@
->  #include <linux/swapops.h>
->  #include <linux/elf.h>
->  #include <linux/gfp.h>
-> -#include <linux/stacktrace.h>
->  
->  #include <asm/io.h>
->  #include <asm/pgalloc.h>
-> @@ -3521,11 +3520,8 @@ int handle_mm_fault(struct mm_struct *mm, struct vm_area_struct *vma,
->  	if (flags & FAULT_FLAG_USER)
->  		mem_cgroup_disable_oom();
->  
-> -	if (WARN_ON(task_in_memcg_oom(current) && !(ret & VM_FAULT_OOM))) {
-> -		printk("Fixing unhandled memcg OOM context set up from:\n");
-> -		print_stack_trace(&current->memcg_oom.trace, 0);
-> -		mem_cgroup_oom_synchronize();
-> -	}
-> +	if (task_in_memcg_oom(current) && !(ret & VM_FAULT_OOM))
-> +		mem_cgroup_oom_synchronize(false);
->  
->  	return ret;
->  }
-> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-> index aa60863..3bf664c 100644
-> --- a/mm/oom_kill.c
-> +++ b/mm/oom_kill.c
-> @@ -785,7 +785,7 @@ out:
->   */
->  void pagefault_out_of_memory(void)
->  {
-> -	if (mem_cgroup_oom_synchronize())
-> +	if (mem_cgroup_oom_synchronize(true))
->  		return;
->  	if (try_set_system_oom()) {
->  		out_of_memory(NULL, 0, 0, NULL);
-> -- 
-> 1.8.4
+> I do not like to make every mem_cgroup larger even if it never sees an
+> OOM.
 > 
+> Wouldn't it be much easier to add a new lock (memcg_oom_info_lock) inside
+> mem_cgroup_print_oom_info instead? This would have a nice side effect
+> that parallel memcg oom kill messages wouldn't interleave.
+
+What about the following?
+---
+From 4cee36f56100f5689fe1ae22f468016ce5a0cbae Mon Sep 17 00:00:00 2001
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Date: Thu, 5 Sep 2013 15:39:20 +0200
+Subject: [PATCH] memcg, oom: lock mem_cgroup_print_oom_info
+
+mem_cgroup_print_oom_info uses a static buffer (memcg_name) to store the
+name of the cgroup. This is not safe as pointed out by David Rientjes
+because although memcg oom is locked for its hierarchy nothing prevents
+another parallel hierarchy to trigger oom as well and overwrite the
+already in-use buffer.
+
+This patch introduces oom_info_lock hidden inside mem_cgroup_print_oom_info
+which is held throughout the function. It make access to memcg_name safe
+and as a bonus it also prevents parallel memcg ooms to interleave their
+statistics which would make the printed data hard to analyze otherwise.
+
+Using the spinlock is OK here because this path is not hot and
+meaningful data is much more important.
+
+Reported-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+---
+ mm/memcontrol.c |   12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index b73988a..d436316 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1575,13 +1575,13 @@ static void move_unlock_mem_cgroup(struct mem_cgroup *memcg,
+  */
+ void mem_cgroup_print_oom_info(struct mem_cgroup *memcg, struct task_struct *p)
+ {
+-	struct cgroup *task_cgrp;
+-	struct cgroup *mem_cgrp;
+ 	/*
+-	 * Need a buffer in BSS, can't rely on allocations. The code relies
+-	 * on the assumption that OOM is serialized for memory controller.
+-	 * If this assumption is broken, revisit this code.
++	 * protects memcg_name and makes sure that parallel ooms do not
++	 * interleave
+ 	 */
++	static DEFINE_SPINLOCK(oom_info_lock);
++	struct cgroup *task_cgrp;
++	struct cgroup *mem_cgrp;
+ 	static char memcg_name[PATH_MAX];
+ 	int ret;
+ 	struct mem_cgroup *iter;
+@@ -1590,6 +1590,7 @@ void mem_cgroup_print_oom_info(struct mem_cgroup *memcg, struct task_struct *p)
+ 	if (!p)
+ 		return;
+ 
++	spin_lock(&oom_info_lock);
+ 	rcu_read_lock();
+ 
+ 	mem_cgrp = memcg->css.cgroup;
+@@ -1658,6 +1659,7 @@ done:
+ 
+ 		pr_cont("\n");
+ 	}
++	spin_unlock(&oom_info_lock);
+ }
+ 
+ /*
+-- 
+1.7.10.4
 
 -- 
 Michal Hocko
 SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
