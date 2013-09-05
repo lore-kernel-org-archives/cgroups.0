@@ -1,146 +1,146 @@
-From: Greg Thelen <gthelen@google.com>
-Subject: [PATCH 2/2 v3] memcg: support hierarchical memory.numa_stats
-Date: Wed,  4 Sep 2013 23:28:59 -0700
-Message-ID: <1378362539-18100-2-git-send-email-gthelen@google.com>
-References: <1378362539-18100-1-git-send-email-gthelen@google.com>
+From: "azurIt" <azurit@pobox.sk>
+Subject: =?utf-8?q?Re=3A_=5Bpatch_0=2F7=5D_improve_memcg_oom_killer_robustness_v2?=
+Date: Thu, 05 Sep 2013 11:14:30 +0200
+Message-ID: <20130905111430.CB1392B4@pobox.sk>
+References: <1375549200-19110-1-git-send-email-hannes@cmpxchg.org>, <20130803170831.GB23319@cmpxchg.org>, <20130830215852.3E5D3D66@pobox.sk>, <20130902123802.5B8E8CB1@pobox.sk>, <20130903204850.GA1412@cmpxchg.org>, <20130904114523.A9F0173C@pobox.sk>, <20130904115741.GA28285@dhcp22.suse.cz>, <20130904141000.0F910EFA@pobox.sk> <20130904122632.GB28285@dhcp22.suse.cz>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=7wC08z6gqfNK4P37FAT3LezWovWJE2OsHvdnjolJ2LI=;
-        b=ZD8kGdf5PX9Tx0t+AGiqMMIoIwddIfu9FIi5/t50h5tGPJ8gN5y+vCV8d5fp+aZCq5
-         rhAPnWC9rlFT7blqHX29j29acl/2ykQXbxA+BNy75Wjt0BVRv2HusvpdigU1OhpG73m8
-         WMusKxSmZlz8C7s81PkiF+M2beJsRno3SfVb8ABXBsXr3Mam0nDnNIzcknPnwXiCOFGv
-         jPzfdLzPBNTbj3k2IWAgI4wz7dvzv8JNevZY95XBqWEt4Ns4hEOsLKqu67wUqMAS9S1X
-         OxWQdawa7LYU3caPVHqie3gjyj2LU/JejxazHYzRzs8jUuCGZEOC+z0aLwsop80KweTu
-         YZyg==
-In-Reply-To: <1378362539-18100-1-git-send-email-gthelen@google.com>
+In-Reply-To: <20130904122632.GB28285@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: hughd@google.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Ying Han <yinghan@google.com>, Greg Thelen <gthelen@google.com>
+To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
+Cc: =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>, =?utf-8?q?Andrew_Morton?= <akpm@linux-foundation.org>, =?utf-8?q?David_Rientjes?= <rientjes@google.com>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?KOSAKI_Motohiro?= <kosaki.motohiro@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Ying Han <yinghan@google.com>
+>> >[...]
+>> >> My script has just detected (and killed) another freezed cgroup. I
+>> >> must say that i'm not 100% sure that cgroup was really freezed but =
+it
+>> >> has 99% or more memory usage for at least 30 seconds (well, or it h=
+as
+>> >> 99% memory usage in both two cases the script was checking it). Her=
+e
+>> >> are stacks of processes inside it before they were killed:
+>> >[...]
+>> >> pid: 26536
+>> >> stack:
+>> >> [<ffffffff81080a45>] refrigerator+0x95/0x160
+>> >> [<ffffffff8106ac2b>] get_signal_to_deliver+0x1cb/0x540
+>> >> [<ffffffff8100188b>] do_signal+0x6b/0x750
+>> >> [<ffffffff81001fc5>] do_notify_resume+0x55/0x80
+>> >> [<ffffffff815cb662>] retint_signal+0x3d/0x7b
+>> >> [<ffffffffffffffff>] 0xffffffffffffffff
+>> >
+>> >[...]
+>> >
+>> >This task is sitting in the refigerator which means it has been froze=
+n
+>> >by the freezer cgroup most probably. I am not familiar with the
+>> >implementation but my recollection is that you have to thaw that grou=
+p
+>> >in order the killed process can pass away.
+>>=20
+>> Yes, my script is freezing the cgroup before killing processes inside
+>> it. Stacks are taken after the freeze, it that problem?
+>
+>I thought you had a problem to remove this particular group...
+>--=20
+>Michal Hocko
+>SUSE Labs
 
-The memory.numa_stat file was not hierarchical.  Memory charged to the
-children was not shown in parent's numa_stat.
 
-This change adds the "hierarchical_" stats to the existing stats.  The
-new hierarchical stats include the sum of all children's values in
-addition to the value of the memcg.
 
-Tested: Create cgroup a, a/b and run workload under b.  The values of
-b are included in the "hierarchical_*" under a.
 
-$ cd /sys/fs/cgroup
-$ echo 1 > memory.use_hierarchy
-$ mkdir a a/b
+My script detected another freezed cgroup today, sending stacks. Is there=
+ anything interesting?
 
-Run workload in a/b:
-$ (echo $BASHPID >> a/b/cgroup.procs && cat /some/file && bash) &
 
-The hierarchical_ fields in parent (a) show use of workload in a/b:
-$ cat a/memory.numa_stat
-total=0 N0=0 N1=0 N2=0 N3=0
-file=0 N0=0 N1=0 N2=0 N3=0
-anon=0 N0=0 N1=0 N2=0 N3=0
-unevictable=0 N0=0 N1=0 N2=0 N3=0
-hierarchical_total=61 N0=0 N1=41 N2=20 N3=0
-hierarchical_file=14 N0=0 N1=0 N2=14 N3=0
-hierarchical_anon=47 N0=0 N1=41 N2=6 N3=0
-hierarchical_unevictable=0 N0=0 N1=0 N2=0 N3=0
 
-The workload memory usage:
-$ cat a/b/memory.numa_stat
-total=73 N0=0 N1=41 N2=32 N3=0
-file=14 N0=0 N1=0 N2=14 N3=0
-anon=59 N0=0 N1=41 N2=18 N3=0
-unevictable=0 N0=0 N1=0 N2=0 N3=0
-hierarchical_total=73 N0=0 N1=41 N2=32 N3=0
-hierarchical_file=14 N0=0 N1=0 N2=14 N3=0
-hierarchical_anon=59 N0=0 N1=41 N2=18 N3=0
-hierarchical_unevictable=0 N0=0 N1=0 N2=0 N3=0
+pid: 947
+stack:
+[<ffffffff810ceefe>] sleep_on_page_killable+0xe/0x40
+[<ffffffff810cee57>] __lock_page_killable+0x67/0x70
+[<ffffffff810d1067>] generic_file_aio_read+0x4d7/0x790
+[<ffffffff81116a8a>] do_sync_read+0xea/0x130
+[<ffffffff81117a40>] vfs_read+0xf0/0x220
+[<ffffffff81117c71>] sys_read+0x51/0x90
+[<ffffffff815cbce6>] system_call_fastpath+0x18/0x1d
+[<ffffffffffffffff>] 0xffffffffffffffff
 
-Signed-off-by: Ying Han <yinghan@google.com>
-Signed-off-by: Greg Thelen <gthelen@google.com>
----
-Changelog since v2:
-- reworded Documentation/cgroup/memory.txt
-- updated commit description
 
- Documentation/cgroups/memory.txt | 10 +++++++---
- mm/memcontrol.c                  | 16 ++++++++++++++++
- 2 files changed, 23 insertions(+), 3 deletions(-)
+pid: 949
+stack:
+[<ffffffff810ceefe>] sleep_on_page_killable+0xe/0x40
+[<ffffffff810cee57>] __lock_page_killable+0x67/0x70
+[<ffffffff810d1067>] generic_file_aio_read+0x4d7/0x790
+[<ffffffff81116a8a>] do_sync_read+0xea/0x130
+[<ffffffff81117a40>] vfs_read+0xf0/0x220
+[<ffffffff81117c71>] sys_read+0x51/0x90
+[<ffffffff815cbce6>] system_call_fastpath+0x18/0x1d
+[<ffffffffffffffff>] 0xffffffffffffffff
 
-diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
-index 2a33306..d6d6479 100644
---- a/Documentation/cgroups/memory.txt
-+++ b/Documentation/cgroups/memory.txt
-@@ -571,15 +571,19 @@ an memcg since the pages are allowed to be allocated from any physical
- node.  One of the use cases is evaluating application performance by
- combining this information with the application's CPU allocation.
- 
--We export "total", "file", "anon" and "unevictable" pages per-node for
--each memcg.  The ouput format of memory.numa_stat is:
-+Each memcg's numa_stat file includes "total", "file", "anon" and "unevictable"
-+per-node page counts including "hierarchical_<counter>" which sums of all
-+hierarchical children's values in addition to the memcg's own value.
-+
-+The ouput format of memory.numa_stat is:
- 
- total=<total pages> N0=<node 0 pages> N1=<node 1 pages> ...
- file=<total file pages> N0=<node 0 pages> N1=<node 1 pages> ...
- anon=<total anon pages> N0=<node 0 pages> N1=<node 1 pages> ...
- unevictable=<total anon pages> N0=<node 0 pages> N1=<node 1 pages> ...
-+hierarchical_<counter>=<counter pages> N0=<node 0 pages> N1=<node 1 pages> ...
- 
--And we have total = file + anon + unevictable.
-+The "total" count is sum of file + anon + unevictable.
- 
- 6. Hierarchy support
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 4d2b037..0e5be30 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5394,6 +5394,7 @@ static int memcg_numa_stat_show(struct cgroup *cont, struct cftype *cft,
- 	int nid;
- 	unsigned long nr;
- 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
-+	struct mem_cgroup *iter;
- 
- 	for (stat = stats; stat->name; stat++) {
- 		nr = mem_cgroup_nr_lru_pages(memcg, stat->lru_mask);
-@@ -5406,6 +5407,21 @@ static int memcg_numa_stat_show(struct cgroup *cont, struct cftype *cft,
- 		seq_putc(m, '\n');
- 	}
- 
-+	for (stat = stats; stat->name; stat++) {
-+		nr = 0;
-+		for_each_mem_cgroup_tree(iter, memcg)
-+			nr += mem_cgroup_nr_lru_pages(iter, stat->lru_mask);
-+		seq_printf(m, "hierarchical_%s=%lu", stat->name, nr);
-+		for_each_node_state(nid, N_MEMORY) {
-+			nr = 0;
-+			for_each_mem_cgroup_tree(iter, memcg)
-+				nr += mem_cgroup_node_nr_lru_pages(
-+					iter, nid, stat->lru_mask);
-+			seq_printf(m, " N%d=%lu", nid, nr);
-+		}
-+		seq_putc(m, '\n');
-+	}
-+
- 	return 0;
- }
- #endif /* CONFIG_NUMA */
--- 
-1.8.4
+
+pid: 985
+stack:
+[<ffffffff810ceefe>] sleep_on_page_killable+0xe/0x40
+n[<ffffffff810cee57>] __lock_page_killable+0x67/0x70
+[<ffffffff810d1067>] generic_file_aio_read+0x4d7/0x790
+[<ffffffff81116a8a>] do_sync_read+0xea/0x130
+[<ffffffff81117a40>] vfs_read+0xf0/0x220
+[<ffffffff81117c71>] sys_read+0x51/0x90
+[<ffffffff815cbce6>] system_call_fastpath+0x18/0x1d
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+
+pid: 987
+stack:
+[<ffffffff810ceefe>] sleep_on_page_killable+0xe/0x40
+[<ffffffff810cee57>] __lock_page_killable+0x67/0x70
+[<ffffffff810d1067>] generic_file_aio_read+0x4d7/0x790
+[<ffffffff81116a8a>] do_sync_read+0xea/0x130
+[<ffffffff81117a40>] vfs_read+0xf0/0x220
+[<ffffffff81117c71>] sys_read+0x51/0x90
+[<ffffffff815cbce6>] system_call_fastpath+0x18/0x1d
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+
+pid: 1031
+stack:
+[<ffffffff8110f255>] mem_cgroup_oom_synchronize+0x165/0x190
+[<ffffffff810d269e>] pagefault_out_of_memory+0xe/0x120
+[<ffffffff81026f5e>] mm_fault_error+0x9e/0x150
+[<ffffffff81027414>] do_page_fault+0x404/0x490
+[<ffffffff815cb7bf>] page_fault+0x1f/0x30
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+
+pid: 1032
+stack:
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+
+pid: 1036
+stack:
+[<ffffffff8110f255>] mem_cgroup_oom_synchronize+0x165/0x190
+[<ffffffff810d269e>] pagefault_out_of_memory+0xe/0x120
+[<ffffffff81026f5e>] mm_fault_error+0x9e/0x150
+[<ffffffff81027414>] do_page_fault+0x404/0x490
+[<ffffffff815cb7bf>] page_fault+0x1f/0x30
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+
+pid: 1038
+stack:
+[<ffffffff8110f255>] mem_cgroup_oom_synchronize+0x165/0x190
+[<ffffffff810d269e>] pagefault_out_of_memory+0xe/0x120
+[<ffffffff81026f5e>] mm_fault_error+0x9e/0x150
+[<ffffffff81027414>] do_page_fault+0x404/0x490
+[<ffffffff815cb7bf>] page_fault+0x1f/0x30
+[<ffffffffffffffff>] 0xffffffffffffffff
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
 the body to majordomo@kvack.org.  For more info on Linux MM,
 see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
