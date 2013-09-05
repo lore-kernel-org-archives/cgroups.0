@@ -1,47 +1,121 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.12] cgroup: factor out css creation into
-	create_css()
-Date: Thu, 5 Sep 2013 11:24:57 +0800
-Message-ID: <5227F989.10907@huawei.com>
-References: <1377723829-22814-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+From: Greg Thelen <gthelen@google.com>
+Subject: [PATCH 1/2 v3] memcg: refactor mem_control_numa_stat_show()
+Date: Wed,  4 Sep 2013 23:28:58 -0700
+Message-ID: <1378362539-18100-1-git-send-email-gthelen@google.com>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=from:to:cc:subject:date:message-id;
+        bh=WQz/7yP6VgFtPkV7ZjsorKj95nIn/zeb3kyHrnlX+N0=;
+        b=CDc7KK0ozAMEXPcIVGeAUlTHP67fGoI2j5tj+2TT2fGVIsoYyrd5Q//cZ965Pc2PjY
+         mKuwvjbsCMrmIp1dvLSoOVy9+kOJ3lasJEfjkRPJEyFgF4QsEYqQMh/5ommkPsRZ6Jb2
+         zjo+TYz8ggIiXBve1ijeLK5fbjRWBM1ueeLDwadQlimXQBeqJVW44qPdJFGaLJJHpYse
+         kyAUJb8zdhJ06Wd+7K5edWWQCNBPYgj0bLU6TRumpAcxwKxmEP5BLdt0/kxgRjcjCXGD
+         zn9anQZ4qJQtmOnKHeT1DRCaVlcU3GuQAUDhfCqyb+K681rr2trL+b2WO2txXEZEpRWT
+         tIvw==
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1377723829-22814-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: hughd@google.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Greg Thelen <gthelen@google.com>, Ying Han <yinghan@google.com>
 
-On 2013/8/29 5:03, Tejun Heo wrote:
-> Hello,
-> 
-> For unified hierarchy, a css's (cgroup_subsys_state) lifetime will be
-> different from that of the associated cgroup.  css's may be created
-> and destroyed dynamically over the lifetime of a single cgroup.  The
-> previous changes decoupled css destruction from cgroup's.  This
-> patchset decouples css creation from cgroup's.
-> 
-> This patchset contains the following nine patches.
-> 
->  0001-cgroup-fix-css-leaks-on-online_css-failure.patch
->  0002-cgroup-css-iterations-and-css_from_dir-are-safe-unde.patch
->  0003-cgroup-make-for_each_subsys-useable-under-cgroup_roo.patch
->  0004-cgroup-move-css_id-commit-from-cgroup_populate_dir-t.patch
->  0005-cgroup-reorder-operations-in-cgroup_create.patch
->  0006-cgroup-combine-css-handling-loops-in-cgroup_create.patch
->  0007-cgroup-factor-out-cgroup_subsys_state-creation-into-.patch
->  0008-cgroup-implement-for_each_css.patch
->  0009-cgroup-remove-for_each_root_subsys.patch
-> 
+Refactor mem_control_numa_stat_show() to use a new stats structure for
+smaller and simpler code.  This consolidates nearly identical code.
 
-Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+   text     data      bss        dec      hex   filename
+8,055,980 1,675,648 1,896,448 11,628,076 b16e2c vmlinux.before
+8,055,276 1,675,648 1,896,448 11,627,372 b16b6c vmlinux.after
+
+Signed-off-by: Greg Thelen <gthelen@google.com>
+Signed-off-by: Ying Han <yinghan@google.com>
+---
+Changelog since v2:
+- rebased to v3.11
+- updated commit description
+
+ mm/memcontrol.c | 57 +++++++++++++++++++++++----------------------------------
+ 1 file changed, 23 insertions(+), 34 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 0878ff7..4d2b037 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5378,45 +5378,34 @@ static int mem_cgroup_move_charge_write(struct cgroup *cgrp,
+ static int memcg_numa_stat_show(struct cgroup *cont, struct cftype *cft,
+ 				      struct seq_file *m)
+ {
++	struct numa_stat {
++		const char *name;
++		unsigned int lru_mask;
++	};
++
++	static const struct numa_stat stats[] = {
++		{ "total", LRU_ALL },
++		{ "file", LRU_ALL_FILE },
++		{ "anon", LRU_ALL_ANON },
++		{ "unevictable", BIT(LRU_UNEVICTABLE) },
++		{ NULL, 0 }  /* terminator */
++	};
++	const struct numa_stat *stat;
+ 	int nid;
+-	unsigned long total_nr, file_nr, anon_nr, unevictable_nr;
+-	unsigned long node_nr;
++	unsigned long nr;
+ 	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
+ 
+-	total_nr = mem_cgroup_nr_lru_pages(memcg, LRU_ALL);
+-	seq_printf(m, "total=%lu", total_nr);
+-	for_each_node_state(nid, N_MEMORY) {
+-		node_nr = mem_cgroup_node_nr_lru_pages(memcg, nid, LRU_ALL);
+-		seq_printf(m, " N%d=%lu", nid, node_nr);
+-	}
+-	seq_putc(m, '\n');
+-
+-	file_nr = mem_cgroup_nr_lru_pages(memcg, LRU_ALL_FILE);
+-	seq_printf(m, "file=%lu", file_nr);
+-	for_each_node_state(nid, N_MEMORY) {
+-		node_nr = mem_cgroup_node_nr_lru_pages(memcg, nid,
+-				LRU_ALL_FILE);
+-		seq_printf(m, " N%d=%lu", nid, node_nr);
+-	}
+-	seq_putc(m, '\n');
+-
+-	anon_nr = mem_cgroup_nr_lru_pages(memcg, LRU_ALL_ANON);
+-	seq_printf(m, "anon=%lu", anon_nr);
+-	for_each_node_state(nid, N_MEMORY) {
+-		node_nr = mem_cgroup_node_nr_lru_pages(memcg, nid,
+-				LRU_ALL_ANON);
+-		seq_printf(m, " N%d=%lu", nid, node_nr);
++	for (stat = stats; stat->name; stat++) {
++		nr = mem_cgroup_nr_lru_pages(memcg, stat->lru_mask);
++		seq_printf(m, "%s=%lu", stat->name, nr);
++		for_each_node_state(nid, N_MEMORY) {
++			nr = mem_cgroup_node_nr_lru_pages(memcg, nid,
++							  stat->lru_mask);
++			seq_printf(m, " N%d=%lu", nid, nr);
++		}
++		seq_putc(m, '\n');
+ 	}
+-	seq_putc(m, '\n');
+ 
+-	unevictable_nr = mem_cgroup_nr_lru_pages(memcg, BIT(LRU_UNEVICTABLE));
+-	seq_printf(m, "unevictable=%lu", unevictable_nr);
+-	for_each_node_state(nid, N_MEMORY) {
+-		node_nr = mem_cgroup_node_nr_lru_pages(memcg, nid,
+-				BIT(LRU_UNEVICTABLE));
+-		seq_printf(m, " N%d=%lu", nid, node_nr);
+-	}
+-	seq_putc(m, '\n');
+ 	return 0;
+ }
+ #endif /* CONFIG_NUMA */
+-- 
+1.8.4
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
