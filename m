@@ -1,63 +1,80 @@
-From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: CGROUP =?utf-8?B?6rSA66CoIOusuOydmA==?=
-Date: Sun, 8 Sep 2013 18:00:07 +0200
-Message-ID: <20130908160007.GA31903@redhat.com>
-References: <1286806.131871377667197297.JavaMail.weblogic@epv6ml01>
-	<20130828134000.GA9295@htj.dyndns.org>
+From: Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] mm, memcg: add a helper function to check may oom condition
+Date: Mon, 9 Sep 2013 10:18:13 +0800
+Message-ID: <522D2FE5.3080606@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20130828134000.GA9295-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: =?utf-8?B?6rmA7J2A6riw?= <eunki_kim-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-SGkgVGVqdW4sCgpTb3JyeSBmb3IgZGVsYXksIHZhY2F0aW9uLgoKT24gMDgvMjgsIFRlanVuIEhl
-byB3cm90ZToKPgo+IEhleSwgb2xlZy4KPgo+IEV1bmtpIGlzIHJlcG9ydGluZyBhIHN0YWxsIGlu
-IHRoZSBmb2xsb3dpbmcgbG9vcCBpbgo+IGtlcm5lbC9jZ3JvdXAuYzo6Y2dyb3VwX2F0dGFjaF90
-YXNrKCkKPgo+IE9uIFdlZCwgQXVnIDI4LCAyMDEzIGF0IDA1OjE5OjU3QU0gKzAwMDAsIOq5gOyd
-gOq4sCB3cm90ZToKPiA+Cj4gPiAgICAgIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQo+ID4gICAgICAgICBy
-Y3VfcmVhZF9sb2NrKCk7Cj4gPiAgICAgICAgIGRvIHsKPiA+ICAgICAgICAgICAgICAgICBzdHJ1
-Y3QgdGFza19hbmRfY2dyb3VwIGVudDsKPiA+Cj4gPiAgICAgICAgICAgICAgICAgLyogQHRzayBl
-aXRoZXIgYWxyZWFkeSBleGl0ZWQgb3IgY2FuJ3QgZXhpdCB1bnRpbCB0aGUgZW5kICovCj4gPiAg
-ICAgICAgICAgICAgICAgaWYgKHRzay0+ZmxhZ3MgJiBQRl9FWElUSU5HKQo+ID4gICAgICAgICAg
-ICAgICAgICAgICAgICAgY29udGludWU7Cj4gPgo+ID4gICAgICAgICAgICAgICAgIC8qIGFzIHBl
-ciBhYm92ZSwgbnJfdGhyZWFkcyBtYXkgZGVjcmVhc2UsIGJ1dCBub3QgaW5jcmVhc2UuICovCj4g
-PiAgICAgICAgICAgICAgICAgQlVHX09OKGkgPj0gZ3JvdXBfc2l6ZSk7Cj4gPiAgICAgICAgICAg
-ICAgICAgZW50LnRhc2sgPSB0c2s7Cj4gPiAgICAgICAgICAgICAgICAgZW50LmNncnAgPSB0YXNr
-X2Nncm91cF9mcm9tX3Jvb3QodHNrLCByb290KTsKPiA+ICAgICAgICAgICAgICAgICAvKiBub3Ro
-aW5nIHRvIGRvIGlmIHRoaXMgdGFzayBpcyBhbHJlYWR5IGluIHRoZSBjZ3JvdXAgKi8KPiA+ICAg
-ICAgICAgICAgICAgICBpZiAoZW50LmNncnAgPT0gY2dycCkKPiA+ICAgICAgICAgICAgICAgICAg
-ICAgICAgIGNvbnRpbnVlOwo+ID4gICAgICAgICAgICAgICAgIC8qCj4gPiAgICAgICAgICAgICAg
-ICAgICogc2F5aW5nIEdGUF9BVE9NSUMgaGFzIG5vIGVmZmVjdCBoZXJlIGJlY2F1c2Ugd2UgZGlk
-IHByZWFsbG9jCj4gPiAgICAgICAgICAgICAgICAgICogZWFybGllciwgYnV0IGl0J3MgZ29vZCBm
-b3JtIHRvIGNvbW11bmljYXRlIG91ciBleHBlY3RhdGlvbnMuCj4gPiAgICAgICAgICAgICAgICAg
-ICovCj4gPiAgICAgICAgICAgICAgICAgcmV0dmFsID0gZmxleF9hcnJheV9wdXQoZ3JvdXAsIGks
-ICZlbnQsIEdGUF9BVE9NSUMpOwo+ID4gICAgICAgICAgICAgICAgIEJVR19PTihyZXR2YWwgIT0g
-MCk7Cj4gPiAgICAgICAgICAgICAgICAgaSsrOwo+ID4KPiA+ICAgICAgICAgICAgICAgICBpZiAo
-IXRocmVhZGdyb3VwKQo+ID4gICAgICAgICAgICAgICAgICAgICAgICAgYnJlYWs7Cj4gPiAgICAg
-ICAgIH0gd2hpbGVfZWFjaF90aHJlYWQobGVhZGVyLCB0c2spOwo+ID4gLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tCj4KPiB3aGVyZSB0aGUgaXRlcmF0aW9uIGdvZXMgbGlrZQo+
-Cj4gICBsZWFkZXIgLT4gVGFzazEgLT4gVGFzazIgLT4gVGFzazMgIC0+IFRhc2sxCj4KPiBpZS4g
-bGVhZGVyIHNlZW1zIFJDVSB1bmxpbmtlZC4gIExvb2tpbmcgYXQgdGhlIHVzZXJzIG9mCj4gd2hp
-bGVfZWFjaF90aHJlYWQoKSwgSSdtIGNvbmZ1c2VkIGFib3V0IGl0cyBsb2NraW5nIHJlcXVpcmVt
-ZW50cy4KCkluIHNob3J0OiBpdCBpcyBicm9rZW4uIFRoaXMgd2FzIGFscmVhZHkgZGlzY3Vzc2Vk
-IHNldmVyYWwgdGltZXMgYnV0CmV2ZXJ5IHRpbWUgSSB3YXMgZGlzdHJhY3RlZC4KCkkgYWxyZWFk
-eSBoYXZlIHRoZSBwYXRjaGVzIHNvbWV3aGVyZSAocHJvYmFibHkgbm90IDEwMCUgZmluaXNoZWQp
-LAp3aWxsIHRyeSB0byByZXR1cm4gdG8gdGhpcyBwcm9ibGVtIHNvb24uCgpPbGVnLgoKX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KQ29udGFpbmVycyBtYWls
-aW5nIGxpc3QKQ29udGFpbmVyc0BsaXN0cy5saW51eC1mb3VuZGF0aW9uLm9yZwpodHRwczovL2xp
-c3RzLmxpbnV4Zm91bmRhdGlvbi5vcmcvbWFpbG1hbi9saXN0aW5mby9jb250YWluZXJz
+Use helper function to check if we need to deal with oom condition.
+
+Signed-off-by: Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ include/linux/oom.h | 5 +++++
+ mm/memcontrol.c     | 9 +--------
+ mm/page_alloc.c     | 2 +-
+ 3 files changed, 7 insertions(+), 9 deletions(-)
+
+diff --git a/include/linux/oom.h b/include/linux/oom.h
+index da60007..d061c63 100644
+--- a/include/linux/oom.h
++++ b/include/linux/oom.h
+@@ -82,6 +82,11 @@ static inline void oom_killer_enable(void)
+ 	oom_killer_disabled = false;
+ }
+
++static inline bool may_oom(gfp_t gfp_mask)
++{
++	return (gfp_mask & __GFP_FS) && !(gfp_mask & __GFP_NORETRY);
++}
++
+ extern struct task_struct *find_lock_task_mm(struct task_struct *p);
+
+ /* sysctls */
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index b73988a..e07fcfa 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2910,21 +2910,14 @@ static int memcg_charge_kmem(struct mem_cgroup *memcg, gfp_t gfp, u64 size)
+ 	struct res_counter *fail_res;
+ 	struct mem_cgroup *_memcg;
+ 	int ret = 0;
+-	bool may_oom;
+
+ 	ret = res_counter_charge(&memcg->kmem, size, &fail_res);
+ 	if (ret)
+ 		return ret;
+
+-	/*
+-	 * Conditions under which we can wait for the oom_killer. Those are
+-	 * the same conditions tested by the core page allocator
+-	 */
+-	may_oom = (gfp & __GFP_FS) && !(gfp & __GFP_NORETRY);
+-
+ 	_memcg = memcg;
+ 	ret = __mem_cgroup_try_charge(NULL, gfp, size >> PAGE_SHIFT,
+-				      &_memcg, may_oom);
++				      &_memcg, may_oom(gfp));
+
+ 	if (ret == -EINTR)  {
+ 		/*
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index b7c612d..42af675 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -2589,7 +2589,7 @@ rebalance:
+ 	 * running out of options and have to consider going OOM
+ 	 */
+ 	if (!did_some_progress) {
+-		if ((gfp_mask & __GFP_FS) && !(gfp_mask & __GFP_NORETRY)) {
++		if (may_oom(gfp_mask)) {
+ 			if (oom_killer_disabled)
+ 				goto nopage;
+ 			/* Coredumps can quickly deplete all memory reserves */
+-- 
+1.8.3
