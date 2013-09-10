@@ -1,84 +1,38 @@
-From: Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2] mm, memcg: add a helper function to check may oom condition
-Date: Tue, 10 Sep 2013 09:24:45 +0800
-Message-ID: <522E74DD.5030706@huawei.com>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2] mm, memcg: add a helper function to check may oom
+ condition
+Date: Mon, 9 Sep 2013 23:34:10 -0700 (PDT)
+Message-ID: <alpine.DEB.2.02.1309092333590.20625@chino.kir.corp.google.com>
+References: <522E74DD.5030706@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version:content-type;
+        bh=Szw94TG5Tilj3f6awqhbWsMQDyD58LscF09ZuIIGQC8=;
+        b=UeoumTAxn0XOLFCXySKSakn9f/H4Pjj2g9IFGlZXl/mx7YreABbRPUjKBZXgE/q8Kd
+         5YPR/Qg0QNmbK5ZXczh+lcV3qox84A3C2qfkT9WQSO+U6RDjU0NO0p9yvK+mFxbElA6x
+         jgX7ED/zNgVVsI2uh0bpBkRccD4mTqoao46dHXezBW6jhT994VU3oPH74Z5cih1mPMDr
+         1lUeR/7eTxKquVfH6Fld8zo5lTB3OdVTS4KQswla3r/o7keTugMh02oGhq9S/nbcYKG/
+         GXb4xbUVnCxgVxABXrz3QIiqlrBQ5QzX4AF6JPw7wr7DRUu153kQZb1y2Yzn8IRQwDmZ
+         EKrA==
+In-Reply-To: <522E74DD.5030706-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-Use helper function to check if we need to deal with oom condition.
+On Tue, 10 Sep 2013, Qiang Huang wrote:
 
-v2:
-Change the function name to oom_gfp_allowed() as suggested by
-David Rientjes.
+> Use helper function to check if we need to deal with oom condition.
+> 
+> v2:
+> Change the function name to oom_gfp_allowed() as suggested by
+> David Rientjes.
+> 
+> Signed-off-by: Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Signed-off-by: Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- include/linux/oom.h | 5 +++++
- mm/memcontrol.c     | 9 +--------
- mm/page_alloc.c     | 2 +-
- 3 files changed, 7 insertions(+), 9 deletions(-)
-
-diff --git a/include/linux/oom.h b/include/linux/oom.h
-index da60007..4cd6267 100644
---- a/include/linux/oom.h
-+++ b/include/linux/oom.h
-@@ -82,6 +82,11 @@ static inline void oom_killer_enable(void)
- 	oom_killer_disabled = false;
- }
-
-+static inline bool oom_gfp_allowed(gfp_t gfp_mask)
-+{
-+	return (gfp_mask & __GFP_FS) && !(gfp_mask & __GFP_NORETRY);
-+}
-+
- extern struct task_struct *find_lock_task_mm(struct task_struct *p);
-
- /* sysctls */
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b73988a..392e668 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2910,21 +2910,14 @@ static int memcg_charge_kmem(struct mem_cgroup *memcg, gfp_t gfp, u64 size)
- 	struct res_counter *fail_res;
- 	struct mem_cgroup *_memcg;
- 	int ret = 0;
--	bool may_oom;
-
- 	ret = res_counter_charge(&memcg->kmem, size, &fail_res);
- 	if (ret)
- 		return ret;
-
--	/*
--	 * Conditions under which we can wait for the oom_killer. Those are
--	 * the same conditions tested by the core page allocator
--	 */
--	may_oom = (gfp & __GFP_FS) && !(gfp & __GFP_NORETRY);
--
- 	_memcg = memcg;
- 	ret = __mem_cgroup_try_charge(NULL, gfp, size >> PAGE_SHIFT,
--				      &_memcg, may_oom);
-+				      &_memcg, oom_gfp_allowed(gfp));
-
- 	if (ret == -EINTR)  {
- 		/*
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index b7c612d..079ee3d 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -2589,7 +2589,7 @@ rebalance:
- 	 * running out of options and have to consider going OOM
- 	 */
- 	if (!did_some_progress) {
--		if ((gfp_mask & __GFP_FS) && !(gfp_mask & __GFP_NORETRY)) {
-+		if (oom_gfp_allowed(gfp_mask)) {
- 			if (oom_killer_disabled)
- 				goto nopage;
- 			/* Coredumps can quickly deplete all memory reserves */
--- 
-1.8.3
+Acked-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
