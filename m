@@ -1,92 +1,83 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [patch 0/7] improve memcg oom killer robustness v2
-Date: Wed, 11 Sep 2013 16:04:26 -0400
-Message-ID: <20130911200426.GO856@cmpxchg.org>
-References: <20130910201222.GA25972@cmpxchg.org>
- <20130910230853.FEEC19B5@pobox.sk>
- <20130910211823.GJ856@cmpxchg.org>
- <20130910233247.9EDF4DBA@pobox.sk>
- <20130910220329.GK856@cmpxchg.org>
- <20130911143305.FFEAD399@pobox.sk>
- <20130911180327.GL856@cmpxchg.org>
- <20130911205448.656D9D7C@pobox.sk>
- <20130911191150.GN856@cmpxchg.org>
- <20130911214118.7CDF2E71@pobox.sk>
+Date: Thu, 12 Sep 2013 08:59:38 -0400
+Message-ID: <20130912125938.GP856@cmpxchg.org>
+References: <20130803170831.GB23319@cmpxchg.org>
+ <20130830215852.3E5D3D66@pobox.sk>
+ <20130902123802.5B8E8CB1@pobox.sk>
+ <20130903204850.GA1412@cmpxchg.org>
+ <20130904101852.58E70042@pobox.sk>
+ <20130905115430.GB856@cmpxchg.org>
+ <20130905124352.GB13666@dhcp22.suse.cz>
+ <20130905161817.GD856@cmpxchg.org>
+ <20130909123625.GC22212@dhcp22.suse.cz>
+ <20130909125659.GD22212@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20130911214118.7CDF2E71@pobox.sk>
+In-Reply-To: <20130909125659.GD22212@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: azurIt <azurit@pobox.sk>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, David Rientjes <rientjes@google.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Glauber Costa <glommer@gmail.com>, azurIt <azurit@pobox.sk>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Sep 11, 2013 at 09:41:18PM +0200, azurIt wrote:
-> >On Wed, Sep 11, 2013 at 08:54:48PM +0200, azurIt wrote:
-> >> >On Wed, Sep 11, 2013 at 02:33:05PM +0200, azurIt wrote:
-> >> >> >On Tue, Sep 10, 2013 at 11:32:47PM +0200, azurIt wrote:
-> >> >> >> >On Tue, Sep 10, 2013 at 11:08:53PM +0200, azurIt wrote:
-> >> >> >> >> >On Tue, Sep 10, 2013 at 09:32:53PM +0200, azurIt wrote:
-> >> >> >> >> >> Here is full kernel log between 6:00 and 7:59:
-> >> >> >> >> >> http://watchdog.sk/lkml/kern6.log
-> >> >> >> >> >
-> >> >> >> >> >Wow, your apaches are like the hydra.  Whenever one is OOM killed,
-> >> >> >> >> >more show up!
-> >> >> >> >> 
-> >> >> >> >> 
-> >> >> >> >> 
-> >> >> >> >> Yeah, it's supposed to do this ;)
-> >> >> >
-> >> >> >How are you expecting the machine to recover from an OOM situation,
-> >> >> >though?  I guess I don't really understand what these machines are
-> >> >> >doing.  But if you are overloading them like crazy, isn't that the
-> >> >> >expected outcome?
-> >> >> 
-> >> >> 
-> >> >> 
-> >> >> 
-> >> >> 
-> >> >> There's no global OOM, server has enough of memory. OOM is occuring only in cgroups (customers who simply don't want to pay for more memory).
-> >> >
-> >> >Yes, sure, but when the cgroups are thrashing, they use the disk and
-> >> >CPU to the point where the overall system is affected.
-> >> 
-> >> 
-> >> 
-> >> 
-> >> Didn't know that there is a disk usage because of this, i never noticed anything yet.
-> >
-> >You said there was heavy IO going on...?
+On Mon, Sep 09, 2013 at 02:56:59PM +0200, Michal Hocko wrote:
+> [Adding Glauber - the full patch is here https://lkml.org/lkml/2013/9/5/319]
 > 
+> On Mon 09-09-13 14:36:25, Michal Hocko wrote:
+> > On Thu 05-09-13 12:18:17, Johannes Weiner wrote:
+> > [...]
+> > > From: Johannes Weiner <hannes@cmpxchg.org>
+> > > Subject: [patch] mm: memcg: do not trap chargers with full callstack on OOM
+> > > 
+> > [...]
+> > > 
+> > > To fix this, never do any OOM handling directly in the charge context.
+> > > When an OOM situation is detected, let the task remember the memcg and
+> > > then handle the OOM (kill or wait) only after the page fault stack is
+> > > unwound and about to return to userspace.
+> > 
+> > OK, this is indeed nicer because the oom setup is trivial and the
+> > handling is not split into two parts and everything happens close to
+> > out_of_memory where it is expected.
 > 
+> Hmm, wait a second. I have completely forgot about the kmem charging
+> path during the review.
 > 
-> Yes, there usually was a big IO but it was related to that
-> deadlocking bug in kernel (or i assume it was). I never saw a big IO
-> in normal conditions even when there were lots of OOM in
-> cgroups. I'm even not using swap because of this so i was assuming
-> that lacks of memory is not doing any additional IO (or am i
-> wrong?). And if you mean that last problem with IO from Monday, i
-> don't exactly know what happens but it's really long time when we
-> had so big problem with IO that it disables also root login on
-> console.
+> So while previously memcg_charge_kmem could have oom killed a
+> task if the it couldn't charge to the u-limit after it managed
+> to charge k-limit, now it would simply fail because there is no
+> mem_cgroup_{enable,disable}_oom around __mem_cgroup_try_charge it relies
+> on. The allocation will fail in the end but I am not sure whether the
+> missing oom is an issue or not for existing use cases.
 
-The deadlocking problem should be separate from this.
+Kernel sites should be able to handle -ENOMEM, right?  And if this
+nests inside a userspace fault, it'll still enter OOM.
 
-Even without swap, the binaries and libraries of the running tasks can
-get reclaimed (and immediately faulted back from disk, i.e thrashing).
+> My original objection about oom triggered from kmem paths was that oom
+> is not kmem aware so the oom decisions might be totally bogus. But we
+> still have that:
 
-Usually the OOM killer should kick in before tasks cannibalize each
-other like that.
+Well, k should be a fraction of u+k on any reasonable setup, so there
+are always appropriate candidates to take down.
 
-The patch you were using did in fact have the side effect of widening
-the window between tasks entering heavy reclaim and the OOM killer
-kicking in, so it could explain the IO worsening while fixing the dead
-lock problem.
+>         /*
+>          * Conditions under which we can wait for the oom_killer. Those are
+>          * the same conditions tested by the core page allocator
+>          */
+>         may_oom = (gfp & __GFP_FS) && !(gfp & __GFP_NORETRY);
+> 
+>         _memcg = memcg;
+>         ret = __mem_cgroup_try_charge(NULL, gfp, size >> PAGE_SHIFT,
+>                                       &_memcg, may_oom);
+> 
+> I do not mind having may_oom = false unconditionally in that path but I
+> would like to hear fromm Glauber first.
 
-That followup patch tries to narrow this window by quite a bit and
-tries to stop concurrent reclaim when the group is already OOM.
+The patch I just sent to azur puts this conditional into try_charge(),
+so I'd just change the kmem site to pass `true'.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
