@@ -1,58 +1,126 @@
-From: Anatol Pomozov <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] cfq: explicitly use 64bit divide operation for 64bit arguments
-Date: Fri, 13 Sep 2013 09:20:45 -0700
-Message-ID: <CAOMFOmV-MxF5vQqL1y4yY45LebFXA2DP7fsJx5CZcF+SSe6f7w@mail.gmail.com>
-References: <1377883916-8957-1-git-send-email-anatol.pomozov@gmail.com>
-	<1377885149-28208-1-git-send-email-anatol.pomozov@gmail.com>
+From: "azurIt" <azurit@pobox.sk>
+Subject: =?utf-8?q?Re=3A_=5Bpatch_0=2F7=5D_improve_memcg_oom_killer_robustness_v2?=
+Date: Sat, 14 Sep 2013 12:48:31 +0200
+Message-ID: <20130914124831.4DD20346@pobox.sk>
+References: <20130910201222.GA25972@cmpxchg.org>, <20130910230853.FEEC19B5@pobox.sk>, <20130910211823.GJ856@cmpxchg.org>, <20130910233247.9EDF4DBA@pobox.sk>, <20130910220329.GK856@cmpxchg.org>, <20130911143305.FFEAD399@pobox.sk>, <20130911180327.GL856@cmpxchg.org>, <20130911205448.656D9D7C@pobox.sk>, <20130911191150.GN856@cmpxchg.org>, <20130911214118.7CDF2E71@pobox.sk> <20130911200426.GO856@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=9gXHqt/0J5Jgr+iHoLpYWkXnQQ8W/yCnTuC6sbjUrwE=;
-        b=nlET7toFetXFtwsB6V16EY53Yh5nJU5pyC9VIVBB3YQJlW8SGMw0lxeaLn5fZdiH+Z
-         xu/MdukZZckUck6rI+d9Rnv8OeuY7gPAbwkPirrlzzTKszQ5diLRdaYx3Z53XWYfFZOm
-         pjhlI/dqYffDQAnqnYvwrc9uJuwt+1UxnV6pADSgL8lVh3hl0KJEkCYMKwgCJGlheVcb
-         Kqux0bnKXdLMPWrKd2BZ7WmBzmQlapq2U/TLqDpNG5/G9yzaMr7p+/iRIezMYiP9pOhn
-         pyQzCTuQVPofpT7VU7nCA7BTdtKC/6Xyu3zyIPxRpUgOkncJavBEeS8b7U2kTajwtdAT
-         wzlw==
-In-Reply-To: <1377885149-28208-1-git-send-email-anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20130911200426.GO856@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Anatol Pomozov <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
+Cc: =?utf-8?q?Andrew_Morton?= <akpm@linux-foundation.org>, =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>, =?utf-8?q?David_Rientjes?= <rientjes@google.com>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?KOSAKI_Motohiro?= <kosaki.motohiro@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi, Tejun
+> CC: "Andrew Morton" <akpm@linux-foundation.org>, "Michal Hocko" <mhocko=
+@suse.cz>, "David Rientjes" <rientjes@google.com>, "KAMEZAWA Hiroyuki" <k=
+amezawa.hiroyu@jp.fujitsu.com>, "KOSAKI Motohiro" <kosaki.motohiro@jp.fuj=
+itsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, l=
+inux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+>On Wed, Sep 11, 2013 at 09:41:18PM +0200, azurIt wrote:
+>> >On Wed, Sep 11, 2013 at 08:54:48PM +0200, azurIt wrote:
+>> >> >On Wed, Sep 11, 2013 at 02:33:05PM +0200, azurIt wrote:
+>> >> >> >On Tue, Sep 10, 2013 at 11:32:47PM +0200, azurIt wrote:
+>> >> >> >> >On Tue, Sep 10, 2013 at 11:08:53PM +0200, azurIt wrote:
+>> >> >> >> >> >On Tue, Sep 10, 2013 at 09:32:53PM +0200, azurIt wrote:
+>> >> >> >> >> >> Here is full kernel log between 6:00 and 7:59:
+>> >> >> >> >> >> http://watchdog.sk/lkml/kern6.log
+>> >> >> >> >> >
+>> >> >> >> >> >Wow, your apaches are like the hydra.  Whenever one is OO=
+M killed,
+>> >> >> >> >> >more show up!
+>> >> >> >> >>=20
+>> >> >> >> >>=20
+>> >> >> >> >>=20
+>> >> >> >> >> Yeah, it's supposed to do this ;)
+>> >> >> >
+>> >> >> >How are you expecting the machine to recover from an OOM situat=
+ion,
+>> >> >> >though?  I guess I don't really understand what these machines =
+are
+>> >> >> >doing.  But if you are overloading them like crazy, isn't that =
+the
+>> >> >> >expected outcome?
+>> >> >>=20
+>> >> >>=20
+>> >> >>=20
+>> >> >>=20
+>> >> >>=20
+>> >> >> There's no global OOM, server has enough of memory. OOM is occur=
+ing only in cgroups (customers who simply don't want to pay for more memo=
+ry).
+>> >> >
+>> >> >Yes, sure, but when the cgroups are thrashing, they use the disk a=
+nd
+>> >> >CPU to the point where the overall system is affected.
+>> >>=20
+>> >>=20
+>> >>=20
+>> >>=20
+>> >> Didn't know that there is a disk usage because of this, i never not=
+iced anything yet.
+>> >
+>> >You said there was heavy IO going on...?
+>>=20
+>>=20
+>>=20
+>> Yes, there usually was a big IO but it was related to that
+>> deadlocking bug in kernel (or i assume it was). I never saw a big IO
+>> in normal conditions even when there were lots of OOM in
+>> cgroups. I'm even not using swap because of this so i was assuming
+>> that lacks of memory is not doing any additional IO (or am i
+>> wrong?). And if you mean that last problem with IO from Monday, i
+>> don't exactly know what happens but it's really long time when we
+>> had so big problem with IO that it disables also root login on
+>> console.
+>
+>The deadlocking problem should be separate from this.
+>
+>Even without swap, the binaries and libraries of the running tasks can
+>get reclaimed (and immediately faulted back from disk, i.e thrashing).
+>
+>Usually the OOM killer should kick in before tasks cannibalize each
+>other like that.
+>
+>The patch you were using did in fact have the side effect of widening
+>the window between tasks entering heavy reclaim and the OOM killer
+>kicking in, so it could explain the IO worsening while fixing the dead
+>lock problem.
+>
+>That followup patch tries to narrow this window by quite a bit and
+>tries to stop concurrent reclaim when the group is already OOM.
 
-On Fri, Aug 30, 2013 at 10:52 AM, Anatol Pomozov
-<anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> 'samples' is 64bit operant, but do_div() second parameter is 32.
-> do_div silently truncates high 32 bits and calculated result
-> is invalid.
->
-> In case if low 32bit of 'samples' are zeros then do_div() produces
-> kernel crash.
->
-> Signed-off-by: Anatol Pomozov <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> ---
->  block/cfq-iosched.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-> index d5bbdcf..c410752 100644
-> --- a/block/cfq-iosched.c
-> +++ b/block/cfq-iosched.c
-> @@ -1803,7 +1803,7 @@ static u64 cfqg_prfill_avg_queue_size(struct seq_file *sf,
->
->         if (samples) {
->                 v = blkg_stat_read(&cfqg->stats.avg_queue_size_sum);
-> -               do_div(v, samples);
-> +               v = div64_u64(v, samples);
->         }
->         __blkg_prfill_u64(sf, pd, v);
->         return 0;
 
-what do you think about this patch?
+
+Johannes,
+
+the problem happened again, twice, but i have little more info than befor=
+e.
+
+Here is the first occurence, this night between 5:15 and 5:25:
+ - this time i kept opened terminal from other server to this problematic=
+ one with htop running
+ - when server went down i opened it and saw one process of one user runn=
+ing at the top and taking 97% of CPU (cgroup 1304)
+ - everything was stucked so that htop didn't help me much
+ - luckily, my new 'load check' script, which i was mentioning before, wa=
+s able to kill apache and everything went to normal (success with it's ve=
+ry first version, wow ;) )
+ - i checked some other logs and everything seems to point to cgroup 1304=
+, also kernel log at 5:14-15 is showing hard OOM in that cgroup:
+http://watchdog.sk/lkml/kern7.log
+
+
+Second time it happend between 12:01 and 12:09 but it was in the middle o=
+f the day so i'm not attaching any logs (there will be lots of other junk=
+ so it will be harded to read something from it). It was related to diffe=
+rent cgroup than in first time.
+
+azur
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
