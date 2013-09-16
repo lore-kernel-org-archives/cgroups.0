@@ -1,141 +1,68 @@
-From: Greg Thelen <gthelen@google.com>
-Subject: [PATCH 2/2 v4] memcg: support hierarchical memory.numa_stats
-Date: Mon, 16 Sep 2013 12:00:23 -0700
-Message-ID: <1379358023-3093-2-git-send-email-gthelen@google.com>
-References: <1379358023-3093-1-git-send-email-gthelen@google.com>
+From: "azurIt" <azurit@pobox.sk>
+Subject: =?utf-8?q?Re=3A_=5Bpatch_0=2F7=5D_improve_memcg_oom_killer_robustness_v2?=
+Date: Mon, 16 Sep 2013 22:52:46 +0200
+Message-ID: <20130916225246.A633145B@pobox.sk>
+References: <20130911191150.GN856@cmpxchg.org>, <20130911214118.7CDF2E71@pobox.sk>, <20130911200426.GO856@cmpxchg.org>, <20130914124831.4DD20346@pobox.sk>, <20130916134014.GA3674@dhcp22.suse.cz>, <20130916160119.2E76C2A1@pobox.sk>, <20130916140607.GC3674@dhcp22.suse.cz>, <20130916161316.5113F6E7@pobox.sk>, <20130916145744.GE3674@dhcp22.suse.cz>, <20130916170543.77F1ECB4@pobox.sk> <20130916152548.GF3674@dhcp22.suse.cz>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=j+JKSSncAkntBZxW+Udc9qMg0Z3SwzhXnb/V638HGE4=;
-        b=TvIvTeN1JYuWUYhqmYjAcUtuPKsrGO20Z4AIMDjbbjtUxwBJYoz480w5DndJANJKQj
-         Bm3YKpt7wH+T9n9+03SoOuYk61wMJiMWcId0mrZ02arXUastmj55AValkW11bg6il2lc
-         eZTJ01El/XuDmXZ5rI+f2j/xrULFlSziuFMmn56DXttVCag6cLfTcmLdU2JpVWMbY9FP
-         gad/OXWmFogeTa6DrXR5dyx/oE+58bpNlkS6V3aZJ00dPs//SBLsnjiIuCUq5qrD8Fz6
-         JSyDLNioWfMyIie5YwWMCqO2bOdmbxOIy2T14Hdfdsd6/+V3efI9O3oQyOciglQ2uHCY
-         1G1w==
-In-Reply-To: <1379358023-3093-1-git-send-email-gthelen@google.com>
+In-Reply-To: <20130916152548.GF3674@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: hughd@google.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Greg Thelen <gthelen@google.com>, Ying Han <yinghan@google.com>
+To: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>
+Cc: =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>, =?utf-8?q?Andrew_Morton?= <akpm@linux-foundation.org>, =?utf-8?q?David_Rientjes?= <rientjes@google.com>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?KOSAKI_Motohiro?= <kosaki.motohiro@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Ying Han <yinghan@google.com>
+> CC: "Johannes Weiner" <hannes@cmpxchg.org>, "Andrew Morton" <akpm@linux=
+-foundation.org>, "David Rientjes" <rientjes@google.com>, "KAMEZAWA Hiroy=
+uki" <kamezawa.hiroyu@jp.fujitsu.com>, "KOSAKI Motohiro" <kosaki.motohiro=
+@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel=
+.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+>On Mon 16-09-13 17:05:43, azurIt wrote:
+>> > CC: "Johannes Weiner" <hannes@cmpxchg.org>, "Andrew Morton" <akpm@li=
+nux-foundation.org>, "David Rientjes" <rientjes@google.com>, "KAMEZAWA Hi=
+royuki" <kamezawa.hiroyu@jp.fujitsu.com>, "KOSAKI Motohiro" <kosaki.motoh=
+iro@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@ker=
+nel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+>> >On Mon 16-09-13 16:13:16, azurIt wrote:
+>> >[...]
+>> >> >You can use sysrq+l via serial console to see tasks hogging the CP=
+U or
+>> >> >sysrq+t to see all the existing tasks.
+>> >>=20
+>> >>=20
+>> >> Doesn't work here, it just prints 'l' resp. 't'.
+>> >
+>> >I am using telnet for accessing my serial consoles exported by
+>> >the multiplicator or KVM and it can send sysrq via ctrl+t (Send
+>> >Break). Check your serial console setup.
+>>=20
+>>=20
+>>=20
+>> I'm using Raritan KVM and i created keyboard macro 'sysrq + l' resp.
+>> 'sysrq + t'. I'm also unable to use it on my local PC. Maybe it needs
+>> to be enabled somehow?
+>
+>Probably yes. echo 1 > /proc/sys/kernel/sysrq should enable all sysrq
+>commands. You can select also some of them (have a look at
+>Documentation/sysrq.txt for more information)
 
-From: Ying Han <yinghan@google.com>
 
-The memory.numa_stat file was not hierarchical.  Memory charged to the
-children was not shown in parent's numa_stat.
+Now it happens again and i was just looking on the server's htop. I'm sur=
+e that this time it was only one process (apache) running under user acco=
+unt (not root). It was taking about 100% CPU (about 100% of one core). I =
+was able to kill it by hand inside htop but everything was very slow, ser=
+ver load was immediately on 500. I'm sure it must be related to that Joha=
+nnes kernel patches because i'm also using i/o throttling in cgroups via =
+Block IO controller so users are unable to create such a huge I/O. I will=
+ try to take stacks of processes but i'm not able to identify the problem=
+atic process so i will have to take them from *all* apache processes whil=
+e killing them.
 
-This change adds the "hierarchical_" stats to the existing stats.  The
-new hierarchical stats include the sum of all children's values in
-addition to the value of the memcg.
-
-Tested: Create cgroup a, a/b and run workload under b.  The values of
-b are included in the "hierarchical_*" under a.
-
-$ cd /sys/fs/cgroup
-$ echo 1 > memory.use_hierarchy
-$ mkdir a a/b
-
-Run workload in a/b:
-$ (echo $BASHPID >> a/b/cgroup.procs && cat /some/file && bash) &
-
-The hierarchical_ fields in parent (a) show use of workload in a/b:
-$ cat a/memory.numa_stat
-total=0 N0=0 N1=0 N2=0 N3=0
-file=0 N0=0 N1=0 N2=0 N3=0
-anon=0 N0=0 N1=0 N2=0 N3=0
-unevictable=0 N0=0 N1=0 N2=0 N3=0
-hierarchical_total=908 N0=552 N1=317 N2=39 N3=0
-hierarchical_file=850 N0=549 N1=301 N2=0 N3=0
-hierarchical_anon=58 N0=3 N1=16 N2=39 N3=0
-hierarchical_unevictable=0 N0=0 N1=0 N2=0 N3=0
-
-$ cat a/b/memory.numa_stat
-total=908 N0=552 N1=317 N2=39 N3=0
-file=850 N0=549 N1=301 N2=0 N3=0
-anon=58 N0=3 N1=16 N2=39 N3=0
-unevictable=0 N0=0 N1=0 N2=0 N3=0
-hierarchical_total=908 N0=552 N1=317 N2=39 N3=0
-hierarchical_file=850 N0=549 N1=301 N2=0 N3=0
-hierarchical_anon=58 N0=3 N1=16 N2=39 N3=0
-hierarchical_unevictable=0 N0=0 N1=0 N2=0 N3=0
-
-Signed-off-by: Ying Han <yinghan@google.com>
-Signed-off-by: Greg Thelen <gthelen@google.com>
----
-Changelog since v3:
-- push 'iter' local variable usage closer to its usage
-- documentation fixup
-
- Documentation/cgroups/memory.txt | 10 +++++++---
- mm/memcontrol.c                  | 17 +++++++++++++++++
- 2 files changed, 24 insertions(+), 3 deletions(-)
-
-diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
-index 8af4ad1..e2bc132 100644
---- a/Documentation/cgroups/memory.txt
-+++ b/Documentation/cgroups/memory.txt
-@@ -573,15 +573,19 @@ an memcg since the pages are allowed to be allocated from any physical
- node.  One of the use cases is evaluating application performance by
- combining this information with the application's CPU allocation.
- 
--We export "total", "file", "anon" and "unevictable" pages per-node for
--each memcg.  The ouput format of memory.numa_stat is:
-+Each memcg's numa_stat file includes "total", "file", "anon" and "unevictable"
-+per-node page counts including "hierarchical_<counter>" which sums up all
-+hierarchical children's values in addition to the memcg's own value.
-+
-+The ouput format of memory.numa_stat is:
- 
- total=<total pages> N0=<node 0 pages> N1=<node 1 pages> ...
- file=<total file pages> N0=<node 0 pages> N1=<node 1 pages> ...
- anon=<total anon pages> N0=<node 0 pages> N1=<node 1 pages> ...
- unevictable=<total anon pages> N0=<node 0 pages> N1=<node 1 pages> ...
-+hierarchical_<counter>=<counter pages> N0=<node 0 pages> N1=<node 1 pages> ...
- 
--And we have total = file + anon + unevictable.
-+The "total" count is sum of file + anon + unevictable.
- 
- 6. Hierarchy support
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 5806eea..d02176d 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5206,6 +5206,23 @@ static int memcg_numa_stat_show(struct cgroup_subsys_state *css,
- 		seq_putc(m, '\n');
- 	}
- 
-+	for (stat = stats; stat < stats + ARRAY_SIZE(stats); stat++) {
-+		struct mem_cgroup *iter;
-+
-+		nr = 0;
-+		for_each_mem_cgroup_tree(iter, memcg)
-+			nr += mem_cgroup_nr_lru_pages(iter, stat->lru_mask);
-+		seq_printf(m, "hierarchical_%s=%lu", stat->name, nr);
-+		for_each_node_state(nid, N_MEMORY) {
-+			nr = 0;
-+			for_each_mem_cgroup_tree(iter, memcg)
-+				nr += mem_cgroup_node_nr_lru_pages(
-+					iter, nid, stat->lru_mask);
-+			seq_printf(m, " N%d=%lu", nid, nr);
-+		}
-+		seq_putc(m, '\n');
-+	}
-+
- 	return 0;
- }
- #endif /* CONFIG_NUMA */
--- 
-1.8.4
+azur
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
 the body to majordomo@kvack.org.  For more info on Linux MM,
 see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
