@@ -1,87 +1,63 @@
-From: "azurIt" <azurit@pobox.sk>
-Subject: =?utf-8?q?Re=3A_=5Bpatch_0=2F7=5D_improve_memcg_oom_killer_robustness_v2?=
-Date: Tue, 17 Sep 2013 13:20:17 +0200
-Message-ID: <20130917132017.5B266A87@pobox.sk>
-References: <20130911200426.GO856@cmpxchg.org>, <20130914124831.4DD20346@pobox.sk>, <20130916134014.GA3674@dhcp22.suse.cz>, <20130916160119.2E76C2A1@pobox.sk>, <20130916140607.GC3674@dhcp22.suse.cz>, <20130916161316.5113F6E7@pobox.sk>, <20130916145744.GE3674@dhcp22.suse.cz>, <20130916170543.77F1ECB4@pobox.sk>, <20130916152548.GF3674@dhcp22.suse.cz>, <20130916225246.A633145B@pobox.sk> <20130917000244.GD3278@cmpxchg.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch 0/7] improve memcg oom killer robustness v2
+Date: Tue, 17 Sep 2013 16:10:13 +0200
+Message-ID: <20130917141013.GA30838@dhcp22.suse.cz>
+References: <20130916134014.GA3674@dhcp22.suse.cz>
+ <20130916160119.2E76C2A1@pobox.sk>
+ <20130916140607.GC3674@dhcp22.suse.cz>
+ <20130916161316.5113F6E7@pobox.sk>
+ <20130916145744.GE3674@dhcp22.suse.cz>
+ <20130916170543.77F1ECB4@pobox.sk>
+ <20130916152548.GF3674@dhcp22.suse.cz>
+ <20130916225246.A633145B@pobox.sk>
+ <20130917000244.GD3278@cmpxchg.org>
+ <20130917131535.94E0A843@pobox.sk>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130917000244.GD3278@cmpxchg.org>
+Content-Disposition: inline
+In-Reply-To: <20130917131535.94E0A843@pobox.sk>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: =?utf-8?q?Johannes_Weiner?= <hannes@cmpxchg.org>
-Cc: =?utf-8?q?Michal_Hocko?= <mhocko@suse.cz>, =?utf-8?q?Andrew_Morton?= <akpm@linux-foundation.org>, =?utf-8?q?David_Rientjes?= <rientjes@google.com>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu@jp.fujitsu.com>, =?utf-8?q?KOSAKI_Motohiro?= <kosaki.motohiro@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: azurIt <azurit@pobox.sk>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> CC: "Michal Hocko" <mhocko@suse.cz>, "Andrew Morton" <akpm@linux-founda=
-tion.org>, "David Rientjes" <rientjes@google.com>, "KAMEZAWA Hiroyuki" <k=
-amezawa.hiroyu@jp.fujitsu.com>, "KOSAKI Motohiro" <kosaki.motohiro@jp.fuj=
-itsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, l=
-inux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
->On Mon, Sep 16, 2013 at 10:52:46PM +0200, azurIt wrote:
->> > CC: "Johannes Weiner" <hannes@cmpxchg.org>, "Andrew Morton" <akpm@li=
-nux-foundation.org>, "David Rientjes" <rientjes@google.com>, "KAMEZAWA Hi=
-royuki" <kamezawa.hiroyu@jp.fujitsu.com>, "KOSAKI Motohiro" <kosaki.motoh=
-iro@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@ker=
-nel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
->> >On Mon 16-09-13 17:05:43, azurIt wrote:
->> >> > CC: "Johannes Weiner" <hannes@cmpxchg.org>, "Andrew Morton" <akpm=
-@linux-foundation.org>, "David Rientjes" <rientjes@google.com>, "KAMEZAWA=
- Hiroyuki" <kamezawa.hiroyu@jp.fujitsu.com>, "KOSAKI Motohiro" <kosaki.mo=
-tohiro@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, x86@=
-kernel.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
->> >> >On Mon 16-09-13 16:13:16, azurIt wrote:
->> >> >[...]
->> >> >> >You can use sysrq+l via serial console to see tasks hogging the=
- CPU or
->> >> >> >sysrq+t to see all the existing tasks.
->> >> >>=20
->> >> >>=20
->> >> >> Doesn't work here, it just prints 'l' resp. 't'.
->> >> >
->> >> >I am using telnet for accessing my serial consoles exported by
->> >> >the multiplicator or KVM and it can send sysrq via ctrl+t (Send
->> >> >Break). Check your serial console setup.
->> >>=20
->> >>=20
->> >>=20
->> >> I'm using Raritan KVM and i created keyboard macro 'sysrq + l' resp=
-.
->> >> 'sysrq + t'. I'm also unable to use it on my local PC. Maybe it nee=
-ds
->> >> to be enabled somehow?
->> >
->> >Probably yes. echo 1 > /proc/sys/kernel/sysrq should enable all sysrq
->> >commands. You can select also some of them (have a look at
->> >Documentation/sysrq.txt for more information)
->>=20
->>=20
->> Now it happens again and i was just looking on the server's
->> htop. I'm sure that this time it was only one process (apache)
->> running under user account (not root). It was taking about 100% CPU
->> (about 100% of one core). I was able to kill it by hand inside htop
->> but everything was very slow, server load was immediately on
->> 500. I'm sure it must be related to that Johannes kernel patches
->> because i'm also using i/o throttling in cgroups via Block IO
->> controller so users are unable to create such a huge I/O. I will try
->> to take stacks of processes but i'm not able to identify the
->> problematic process so i will have to take them from *all* apache
->> processes while killing them.
->
->It would be fantastic if you could capture those stacks.  sysrq+t
->captures ALL of them in one go and drops them into your syslog.
->
->/proc/<pid>/stack for individual tasks works too.
+On Tue 17-09-13 13:15:35, azurIt wrote:
+[...]
+> Is something unusual on this stack?
+> 
+> 
+> [<ffffffff810d1a5e>] dump_header+0x7e/0x1e0
+> [<ffffffff810d195f>] ? find_lock_task_mm+0x2f/0x70
+> [<ffffffff810d1f25>] oom_kill_process+0x85/0x2a0
+> [<ffffffff810d24a8>] mem_cgroup_out_of_memory+0xa8/0xf0
+> [<ffffffff8110fb76>] mem_cgroup_oom_synchronize+0x2e6/0x310
+> [<ffffffff8110efc0>] ? mem_cgroup_uncharge_page+0x40/0x40
+> [<ffffffff810d2703>] pagefault_out_of_memory+0x13/0x130
+> [<ffffffff81026f6e>] mm_fault_error+0x9e/0x150
+> [<ffffffff81027424>] do_page_fault+0x404/0x490
+> [<ffffffff810f952c>] ? do_mmap_pgoff+0x3dc/0x430
+> [<ffffffff815cb87f>] page_fault+0x1f/0x30
 
+This is a regular memcg OOM killer. Which dumps messages about what is
+going to do. So no, nothing unusual, except if it was like that for ever
+which would mean that oom_kill_process is in the endless loop. But a
+single stack doesn't tell us much.
 
-
-Btw, this is how it looked like:
-http://watchdog.sk/lkml/htop2.jpg
-
-azur
+Just a note. When you see something hogging a cpu and you are not sure
+whether it might be in an endless loop inside the kernel it makes sense
+to take several snaphosts of the stack trace and see if it changes. If
+not and the process is not sleeping (there is no schedule on the trace)
+then it might be looping somewhere waiting for Godot. If it is sleeping
+then it is slightly harder because you would have to identify what it is
+waiting for which requires to know a deeper context.
+-- 
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
 the body to majordomo@kvack.org.  For more info on Linux MM,
 see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
