@@ -1,46 +1,84 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH v5] Soft limit rework
-Date: Tue, 17 Sep 2013 13:57:51 -0700
-Message-ID: <20130917135751.962fd27b03a576ac2a926ee8@linux-foundation.org>
-References: <20130819163512.GB712@cmpxchg.org>
-	<20130820091414.GC31552@dhcp22.suse.cz>
-	<20130820141339.GA31419@cmpxchg.org>
-	<20130822105856.GA21529@dhcp22.suse.cz>
-	<20130903161550.GA856@cmpxchg.org>
-	<20130904163823.GA30851@dhcp22.suse.cz>
-	<20130906192311.GE856@cmpxchg.org>
-	<20130913144953.GA23857@dhcp22.suse.cz>
-	<20130913161709.GV856@cmpxchg.org>
-	<20130916164405.GG3674@dhcp22.suse.cz>
-	<20130917195615.GC856@cmpxchg.org>
+From: "azurIt" <azurit-Rm0zKEqwvD4@public.gmane.org>
+Subject: =?utf-8?q?Re=3A_=5Bpatch_0=2F7=5D_improve_memcg_oom_killer_robustness_v2?=
+Date: Wed, 18 Sep 2013 16:03:04 +0200
+Message-ID: <20130918160304.6EDF2729@pobox.sk>
+References: <20130916134014.GA3674@dhcp22.suse.cz>, <20130916160119.2E76C2A1@pobox.sk>, <20130916140607.GC3674@dhcp22.suse.cz>, <20130916161316.5113F6E7@pobox.sk>, <20130916145744.GE3674@dhcp22.suse.cz>, <20130916170543.77F1ECB4@pobox.sk>, <20130916152548.GF3674@dhcp22.suse.cz>, <20130916225246.A633145B@pobox.sk>, <20130917000244.GD3278@cmpxchg.org>, <20130917131535.94E0A843@pobox.sk> <20130917141013.GA30838@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20130917195615.GC856@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20130917141013.GA30838-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ying Han <yinghan@google.com>, Hugh Dickins <hughd@google.com>, Michel Lespinasse <walken@google.com>, Greg Thelen <gthelen@google.com>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, Balbir Singh <bsingharora@gmail.com>, Glauber Costa <glommer@gmail.com>
+To: =?utf-8?q?Michal_Hocko?= <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: =?utf-8?q?Johannes_Weiner?= <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, =?utf-8?q?Andrew_Morton?= <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, =?utf-8?q?David_Rientjes?= <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, =?utf-8?q?KOSAKI_Motohiro?= <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, 17 Sep 2013 15:56:15 -0400 Johannes Weiner <hannes@cmpxchg.org> wrote:
+> CC: "Johannes Weiner" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "Andrew Morton" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "David Rientjes" <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "KAMEZAWA Hiroyuki" <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, "KOSAKI Motohiro" <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+>On Tue 17-09-13 13:15:35, azurIt wrote:
+>[...]
+>> Is something unusual on this stack?
+>> 
+>> 
+>> [<ffffffff810d1a5e>] dump_header+0x7e/0x1e0
+>> [<ffffffff810d195f>] ? find_lock_task_mm+0x2f/0x70
+>> [<ffffffff810d1f25>] oom_kill_process+0x85/0x2a0
+>> [<ffffffff810d24a8>] mem_cgroup_out_of_memory+0xa8/0xf0
+>> [<ffffffff8110fb76>] mem_cgroup_oom_synchronize+0x2e6/0x310
+>> [<ffffffff8110efc0>] ? mem_cgroup_uncharge_page+0x40/0x40
+>> [<ffffffff810d2703>] pagefault_out_of_memory+0x13/0x130
+>> [<ffffffff81026f6e>] mm_fault_error+0x9e/0x150
+>> [<ffffffff81027424>] do_page_fault+0x404/0x490
+>> [<ffffffff810f952c>] ? do_mmap_pgoff+0x3dc/0x430
+>> [<ffffffff815cb87f>] page_fault+0x1f/0x30
+>
+>This is a regular memcg OOM killer. Which dumps messages about what is
+>going to do. So no, nothing unusual, except if it was like that for ever
+>which would mean that oom_kill_process is in the endless loop. But a
+>single stack doesn't tell us much.
+>
+>Just a note. When you see something hogging a cpu and you are not sure
+>whether it might be in an endless loop inside the kernel it makes sense
+>to take several snaphosts of the stack trace and see if it changes. If
+>not and the process is not sleeping (there is no schedule on the trace)
+>then it might be looping somewhere waiting for Godot. If it is sleeping
+>then it is slightly harder because you would have to identify what it is
+>waiting for which requires to know a deeper context.
+>-- 
+>Michal Hocko
+>SUSE Labs
 
-> > Anyway. Your wording that nothing should be done about the soft reclaim
-> > seems to be quite clear though. If this position is really firm then go
-> > ahead and NACK the series _explicitly_ so that Andrew or you can send a
-> > revert request to Linus. I would really like to not waste a lot of time
-> > on testing right now when it wouldn't lead to anything.
-> 
-> Nacked-by: Johannes Weiner <hannes@cmpxchg.org>
 
-OK, I queued a bunch of reverts for when Linus gets back to his desk.
 
-It's all my fault for getting distracted for a week (in the middle of
-the dang merge window) and not noticing that we haven't yet settled on
-a direction.  Sorry bout that.
+I was finally able to get stack of problematic process :) I saved it two times from the same process, as Michal suggested (i wasn't able to take more). Here it is:
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+First (doesn't look very helpfull):
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+
+Second:
+[<ffffffff810e17d1>] shrink_zone+0x481/0x650
+[<ffffffff810e2ade>] do_try_to_free_pages+0xde/0x550
+[<ffffffff810e310b>] try_to_free_pages+0x9b/0x120
+[<ffffffff81148ccd>] free_more_memory+0x5d/0x60
+[<ffffffff8114931d>] __getblk+0x14d/0x2c0
+[<ffffffff8114c973>] __bread+0x13/0xc0
+[<ffffffff811968a8>] ext3_get_branch+0x98/0x140
+[<ffffffff81197497>] ext3_get_blocks_handle+0xd7/0xdc0
+[<ffffffff81198244>] ext3_get_block+0xc4/0x120
+[<ffffffff81155b8a>] do_mpage_readpage+0x38a/0x690
+[<ffffffff81155ffb>] mpage_readpages+0xfb/0x160
+[<ffffffff811972bd>] ext3_readpages+0x1d/0x20
+[<ffffffff810d9345>] __do_page_cache_readahead+0x1c5/0x270
+[<ffffffff810d9411>] ra_submit+0x21/0x30
+[<ffffffff810cfb90>] filemap_fault+0x380/0x4f0
+[<ffffffff810ef908>] __do_fault+0x78/0x5a0
+[<ffffffff810f2b24>] handle_pte_fault+0x84/0x940
+[<ffffffff810f354a>] handle_mm_fault+0x16a/0x320
+[<ffffffff8102715b>] do_page_fault+0x13b/0x490
+[<ffffffff815cb87f>] page_fault+0x1f/0x30
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+
+What do you think about it?
+
+azur
