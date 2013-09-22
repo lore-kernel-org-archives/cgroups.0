@@ -1,132 +1,78 @@
-From: "azurIt" <azurit-Rm0zKEqwvD4@public.gmane.org>
-Subject: =?utf-8?q?Re=3A_=5Bpatch_0=2F7=5D_improve_memcg_oom_killer_robustness_v2?=
-Date: Wed, 18 Sep 2013 22:52:19 +0200
-Message-ID: <20130918225219.670AD8C2@pobox.sk>
-References: <20130916145744.GE3674@dhcp22.suse.cz>, <20130916170543.77F1ECB4@pobox.sk>, <20130916152548.GF3674@dhcp22.suse.cz>, <20130916225246.A633145B@pobox.sk>, <20130917000244.GD3278@cmpxchg.org>, <20130917131535.94E0A843@pobox.sk>, <20130917141013.GA30838@dhcp22.suse.cz>, <20130918160304.6EDF2729@pobox.sk>, <20130918180455.GD856@cmpxchg.org>, <20130918181946.GE856@cmpxchg.org> <20130918195504.GF856@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cfq: explicitly use 64bit divide operation for 64bit
+ arguments
+Date: Sun, 22 Sep 2013 12:51:22 -0400
+Message-ID: <20130922165122.GB30946@htj.dyndns.org>
+References: <1377883916-8957-1-git-send-email-anatol.pomozov@gmail.com>
+ <1377885149-28208-1-git-send-email-anatol.pomozov@gmail.com>
+ <CAOMFOmV-MxF5vQqL1y4yY45LebFXA2DP7fsJx5CZcF+SSe6f7w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130918195504.GF856-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=4P7KUoRgTUoCe4+clrMkj+8xwhs5usAsDz0GyIDVHqw=;
+        b=pFnaskaLttapEFlnsYVMgD0VqpZqvRNodJNmUcGERhoOWRfqjk76HqG5nZ0nqqfSDB
+         neVzNk++lfJjkn81nYZU8S29+U0X2X1VXEykMi58mQ6/gQiWqEwcg0obXbJx3ZrmIOJb
+         eX9QhNiVyStfgb4LJekbO8rXV4ar7JK/LinpWwy0itVShm8l7rbp7dVU6k6VGM0ekxC0
+         kR5lLB/4hC5B7Q9KfTEfQhnDUSzrSo/F8eutIgFT9hpcJYRn0yfPZXcTiRyv6Bopk0vK
+         rEABm1QoKSxFwC2R5Z+mSG+xt2D0SjwmGMOgIEtVE8r+gV1K2pr+GauH6EIotu20qLAM
+         k4GQ==
+Content-Disposition: inline
+In-Reply-To: <CAOMFOmV-MxF5vQqL1y4yY45LebFXA2DP7fsJx5CZcF+SSe6f7w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: =?utf-8?q?Johannes_Weiner?= <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: =?utf-8?q?Michal_Hocko?= <mhocko-AlSwsSmVLrQ@public.gmane.org>, =?utf-8?q?Andrew_Morton?= <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, =?utf-8?q?David_Rientjes?= <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, =?utf-8?q?KOSAKI_Motohiro?= <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Anatol Pomozov <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
 
-> CC: "Michal Hocko" <mhocko-AlSwsSmVLrQ@public.gmane.org>, "Andrew Morton" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "David Rientjes" <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "KAMEZAWA Hiroyuki" <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, "KOSAKI Motohiro" <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->On Wed, Sep 18, 2013 at 02:19:46PM -0400, Johannes Weiner wrote:
->> On Wed, Sep 18, 2013 at 02:04:55PM -0400, Johannes Weiner wrote:
->> > On Wed, Sep 18, 2013 at 04:03:04PM +0200, azurIt wrote:
->> > > > CC: "Johannes Weiner" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "Andrew Morton" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "David Rientjes" <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "KAMEZAWA Hiroyuki" <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, "KOSAKI Motohiro" <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->> > > >On Tue 17-09-13 13:15:35, azurIt wrote:
->> > > >[...]
->> > > >> Is something unusual on this stack?
->> > > >> 
->> > > >> 
->> > > >> [<ffffffff810d1a5e>] dump_header+0x7e/0x1e0
->> > > >> [<ffffffff810d195f>] ? find_lock_task_mm+0x2f/0x70
->> > > >> [<ffffffff810d1f25>] oom_kill_process+0x85/0x2a0
->> > > >> [<ffffffff810d24a8>] mem_cgroup_out_of_memory+0xa8/0xf0
->> > > >> [<ffffffff8110fb76>] mem_cgroup_oom_synchronize+0x2e6/0x310
->> > > >> [<ffffffff8110efc0>] ? mem_cgroup_uncharge_page+0x40/0x40
->> > > >> [<ffffffff810d2703>] pagefault_out_of_memory+0x13/0x130
->> > > >> [<ffffffff81026f6e>] mm_fault_error+0x9e/0x150
->> > > >> [<ffffffff81027424>] do_page_fault+0x404/0x490
->> > > >> [<ffffffff810f952c>] ? do_mmap_pgoff+0x3dc/0x430
->> > > >> [<ffffffff815cb87f>] page_fault+0x1f/0x30
->> > > >
->> > > >This is a regular memcg OOM killer. Which dumps messages about what is
->> > > >going to do. So no, nothing unusual, except if it was like that for ever
->> > > >which would mean that oom_kill_process is in the endless loop. But a
->> > > >single stack doesn't tell us much.
->> > > >
->> > > >Just a note. When you see something hogging a cpu and you are not sure
->> > > >whether it might be in an endless loop inside the kernel it makes sense
->> > > >to take several snaphosts of the stack trace and see if it changes. If
->> > > >not and the process is not sleeping (there is no schedule on the trace)
->> > > >then it might be looping somewhere waiting for Godot. If it is sleeping
->> > > >then it is slightly harder because you would have to identify what it is
->> > > >waiting for which requires to know a deeper context.
->> > > >-- 
->> > > >Michal Hocko
->> > > >SUSE Labs
->> > > 
->> > > 
->> > > 
->> > > I was finally able to get stack of problematic process :) I saved it two times from the same process, as Michal suggested (i wasn't able to take more). Here it is:
->> > > 
->> > > First (doesn't look very helpfull):
->> > > [<ffffffffffffffff>] 0xffffffffffffffff
->> > > 
->> > > 
->> > > Second:
->> > > [<ffffffff810e17d1>] shrink_zone+0x481/0x650
->> > > [<ffffffff810e2ade>] do_try_to_free_pages+0xde/0x550
->> > > [<ffffffff810e310b>] try_to_free_pages+0x9b/0x120
->> > > [<ffffffff81148ccd>] free_more_memory+0x5d/0x60
->> > > [<ffffffff8114931d>] __getblk+0x14d/0x2c0
->> > > [<ffffffff8114c973>] __bread+0x13/0xc0
->> > > [<ffffffff811968a8>] ext3_get_branch+0x98/0x140
->> > > [<ffffffff81197497>] ext3_get_blocks_handle+0xd7/0xdc0
->> > > [<ffffffff81198244>] ext3_get_block+0xc4/0x120
->> > > [<ffffffff81155b8a>] do_mpage_readpage+0x38a/0x690
->> > > [<ffffffff81155ffb>] mpage_readpages+0xfb/0x160
->> > > [<ffffffff811972bd>] ext3_readpages+0x1d/0x20
->> > > [<ffffffff810d9345>] __do_page_cache_readahead+0x1c5/0x270
->> > > [<ffffffff810d9411>] ra_submit+0x21/0x30
->> > > [<ffffffff810cfb90>] filemap_fault+0x380/0x4f0
->> > > [<ffffffff810ef908>] __do_fault+0x78/0x5a0
->> > > [<ffffffff810f2b24>] handle_pte_fault+0x84/0x940
->> > > [<ffffffff810f354a>] handle_mm_fault+0x16a/0x320
->> > > [<ffffffff8102715b>] do_page_fault+0x13b/0x490
->> > > [<ffffffff815cb87f>] page_fault+0x1f/0x30
->> > > [<ffffffffffffffff>] 0xffffffffffffffff
->> > 
->> > Ah, crap.  I'm sorry.  You even showed us this exact trace before in
->> > another context, but I did not fully realize what __getblk() is doing.
->> > 
->> > My subsequent patches made a charge attempt return -ENOMEM without
->> > reclaim if the memcg is under OOM.  And so the reason you have these
->> > reclaim livelocks is because __getblk never fails on -ENOMEM.  When
->> > the allocation returns -ENOMEM, it invokes GLOBAL DIRECT RECLAIM and
->> > tries again in an endless loop.  The memcg code would previously just
->> > loop inside the charge, reclaiming and killing, until the allocation
->> > succeeded.  But the new code relies on the fault stack being unwound
->> > to complete the OOM kill.  And since the stack is not unwound with
->> > __getblk() looping around the allocation there is no more memcg
->> > reclaim AND no memcg OOM kill, thus no chance of exiting.
->> > 
->> > That code is weird but really old, so it may take a while to evaluate
->> > all the callers as to whether this can be changed.
->> > 
->> > In the meantime, I would just allow __getblk to bypass the memcg limit
->> > when it still can't charge after reclaim.  Does the below get your
->> > machine back on track?
->> 
->> Scratch that.  The idea is reasonable but the implementation is not
->> fully cooked yet.  I'll send you an update.
->
->Here is an update.  Full replacement on top of 3.2 since we tried a
->dead end and it would be more painful to revert individual changes.
->
->The first bug you had was the same task entering OOM repeatedly and
->leaking the memcg reference, thus creating undeletable memcgs.  My
->fixup added a condition that if the task already set up an OOM context
->in that fault, another charge attempt would immediately return -ENOMEM
->without even trying reclaim anymore.  This dropped __getblk() into an
->endless loop of waking the flushers and performing global reclaim and
->memcg returning -ENOMEM regardless of free memory.
->
->The update now basically only changes this -ENOMEM to bypass, so that
->the memory is not accounted and the limit ignored.  OOM killed tasks
->are granted the same right, so that they can exit quickly and release
->memory.  Likewise, we want a task that hit the OOM condition also to
->finish the fault quickly so that it can invoke the OOM killer.
->
->Does the following work for you, azur?
+(cc'ing Jens)
 
+Hello,
 
+On Fri, Sep 13, 2013 at 09:20:45AM -0700, Anatol Pomozov wrote:
+> Hi, Tejun
+> 
+> On Fri, Aug 30, 2013 at 10:52 AM, Anatol Pomozov
+> <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> > 'samples' is 64bit operant, but do_div() second parameter is 32.
+> > do_div silently truncates high 32 bits and calculated result
+> > is invalid.
+> >
+> > In case if low 32bit of 'samples' are zeros then do_div() produces
+> > kernel crash.
+> >
+> > Signed-off-by: Anatol Pomozov <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > ---
+> >  block/cfq-iosched.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+> > index d5bbdcf..c410752 100644
+> > --- a/block/cfq-iosched.c
+> > +++ b/block/cfq-iosched.c
+> > @@ -1803,7 +1803,7 @@ static u64 cfqg_prfill_avg_queue_size(struct seq_file *sf,
+> >
+> >         if (samples) {
+> >                 v = blkg_stat_read(&cfqg->stats.avg_queue_size_sum);
+> > -               do_div(v, samples);
+> > +               v = div64_u64(v, samples);
+> >         }
+> >         __blkg_prfill_u64(sf, pd, v);
+> >         return 0;
+> 
+> what do you think about this patch?
 
-Compiled fine, I wil install new kernel this night. Thank you!
+Sorry about the delay.  Was traveling.
 
-azur
+  Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+
+blkcg patches are routed through Jens's block tree but I haven't been
+able to get hold of Jens lately.  Jens?
+
+Thanks.
+
+-- 
+tejun
