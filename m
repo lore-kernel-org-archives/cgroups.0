@@ -1,69 +1,62 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: [PATCH] cfq: explicitly use 64bit divide operation for 64bit
- arguments
-Date: Sun, 22 Sep 2013 12:43:54 -0600
-Message-ID: <20130922184354.GA31014@kernel.dk>
-References: <1377883916-8957-1-git-send-email-anatol.pomozov@gmail.com>
- <1377885149-28208-1-git-send-email-anatol.pomozov@gmail.com>
- <CAOMFOmV-MxF5vQqL1y4yY45LebFXA2DP7fsJx5CZcF+SSe6f7w@mail.gmail.com>
- <20130922165122.GB30946@htj.dyndns.org>
+From: Li Zefan <lizefan@huawei.com>
+Subject: [PATCH v6 0/5] memcg, cgroup: kill css id
+Date: Mon, 23 Sep 2013 16:55:20 +0800
+Message-ID: <524001F8.6070205@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20130922165122.GB30946-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Anatol Pomozov <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA
+ Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, cgroups <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
 
-On Sun, Sep 22 2013, Tejun Heo wrote:
-> (cc'ing Jens)
-> 
-> Hello,
-> 
-> On Fri, Sep 13, 2013 at 09:20:45AM -0700, Anatol Pomozov wrote:
-> > Hi, Tejun
-> > 
-> > On Fri, Aug 30, 2013 at 10:52 AM, Anatol Pomozov
-> > <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> > > 'samples' is 64bit operant, but do_div() second parameter is 32.
-> > > do_div silently truncates high 32 bits and calculated result
-> > > is invalid.
-> > >
-> > > In case if low 32bit of 'samples' are zeros then do_div() produces
-> > > kernel crash.
-> > >
-> > > Signed-off-by: Anatol Pomozov <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> > > ---
-> > >  block/cfq-iosched.c | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > >
-> > > diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-> > > index d5bbdcf..c410752 100644
-> > > --- a/block/cfq-iosched.c
-> > > +++ b/block/cfq-iosched.c
-> > > @@ -1803,7 +1803,7 @@ static u64 cfqg_prfill_avg_queue_size(struct seq_file *sf,
-> > >
-> > >         if (samples) {
-> > >                 v = blkg_stat_read(&cfqg->stats.avg_queue_size_sum);
-> > > -               do_div(v, samples);
-> > > +               v = div64_u64(v, samples);
-> > >         }
-> > >         __blkg_prfill_u64(sf, pd, v);
-> > >         return 0;
-> > 
-> > what do you think about this patch?
-> 
-> Sorry about the delay.  Was traveling.
-> 
->   Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> 
-> blkcg patches are routed through Jens's block tree but I haven't been
-> able to get hold of Jens lately.  Jens?
+Hi Andrew,
 
-Sorry, been a bit crazy on my end. Will queue it up for 3.12, thanks.
+The whole patchset has been acked and reviewed by Michal and Tejun.
+Could you merge it into mm tree?
+
+===========
+
+This patchset converts memcg to use cgroup->id, and then we remove cgroup
+css_id.
+
+As we've removed memcg's own refcnt, converting memcg to use cgroup->id
+is very straight-forward.
+
+v6:
+- rebased against mmotm 2013-09-20-15-59
+- moved cgroup id check from mem_cgroup_css_alloc() to mem_cgroup_css_online()
+
+v5:
+- rebased against mmotm 2013-08-07-16-55
+
+v4:
+- make cgroup_from_id() inline and check if cgroup_mutex is held.
+- add a comment for idr_remove() in cgroup_offline)fn().
+
+v2->v3:
+- some minor cleanups suggested by Michal.
+- fixed the call to idr_alloc() in cgroup_init() in the first patch.
+
+Li Zefan (5):
+  memcg: convert to use cgroup_is_descendant()
+  memcg: convert to use cgroup id
+  memcg: fail to create cgroup if the cgroup id is too big
+  memcg: stop using css id
+  cgroup: kill css_id
+
+ include/linux/cgroup.h |  37 --------
+ kernel/cgroup.c        | 248 +------------------------------------------------
+ mm/memcontrol.c        |  66 +++++++------
+ 3 files changed, 41 insertions(+), 310 deletions(-)
 
 -- 
-Jens Axboe
+1.8.0.2
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
