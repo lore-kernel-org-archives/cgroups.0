@@ -1,10 +1,12 @@
 From: Li Zefan <lizefan@huawei.com>
-Subject: [PATCH v6 0/5] memcg, cgroup: kill css id
-Date: Mon, 23 Sep 2013 16:55:20 +0800
-Message-ID: <524001F8.6070205@huawei.com>
+Subject: [PATCH v6 2/5] memcg: convert to use cgroup id
+Date: Mon, 23 Sep 2013 16:56:01 +0800
+Message-ID: <52400221.6040306@huawei.com>
+References: <524001F8.6070205@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <524001F8.6070205@huawei.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -12,46 +14,91 @@ To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA
  Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, cgroups <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
 
-Hi Andrew,
+Use cgroup id instead of css id. This is a preparation to kill css id.
 
-The whole patchset has been acked and reviewed by Michal and Tejun.
-Could you merge it into mm tree?
+Note, as memcg treat 0 as an invalid id, while cgroup id starts with 0,
+we define memcg_id == cgroup_id + 1.
 
-===========
+Signed-off-by: Li Zefan <lizefan@huawei.com>
+Acked-by: Michal Hocko <mhocko@suse.cz>
+---
+ mm/memcontrol.c | 32 ++++++++++++++++++++++----------
+ 1 file changed, 22 insertions(+), 10 deletions(-)
 
-This patchset converts memcg to use cgroup->id, and then we remove cgroup
-css_id.
-
-As we've removed memcg's own refcnt, converting memcg to use cgroup->id
-is very straight-forward.
-
-v6:
-- rebased against mmotm 2013-09-20-15-59
-- moved cgroup id check from mem_cgroup_css_alloc() to mem_cgroup_css_online()
-
-v5:
-- rebased against mmotm 2013-08-07-16-55
-
-v4:
-- make cgroup_from_id() inline and check if cgroup_mutex is held.
-- add a comment for idr_remove() in cgroup_offline)fn().
-
-v2->v3:
-- some minor cleanups suggested by Michal.
-- fixed the call to idr_alloc() in cgroup_init() in the first patch.
-
-Li Zefan (5):
-  memcg: convert to use cgroup_is_descendant()
-  memcg: convert to use cgroup id
-  memcg: fail to create cgroup if the cgroup id is too big
-  memcg: stop using css id
-  cgroup: kill css_id
-
- include/linux/cgroup.h |  37 --------
- kernel/cgroup.c        | 248 +------------------------------------------------
- mm/memcontrol.c        |  66 +++++++------
- 3 files changed, 41 insertions(+), 310 deletions(-)
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 9117249..6719e2c 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -498,6 +498,23 @@ static inline bool mem_cgroup_is_root(struct mem_cgroup *memcg)
+ 	return (memcg == root_mem_cgroup);
+ }
+ 
++static inline unsigned short mem_cgroup_id(struct mem_cgroup *memcg)
++{
++	/*
++	 * The ID of the root cgroup is 0, but memcg treat 0 as an
++	 * invalid ID, so we return (cgroup_id + 1).
++	 */
++	return memcg->css.cgroup->id + 1;
++}
++
++static inline struct mem_cgroup *mem_cgroup_from_id(unsigned short id)
++{
++	struct cgroup_subsys_state *css;
++
++	css = css_from_id(id - 1, &mem_cgroup_subsys);
++	return mem_cgroup_from_css(css);
++}
++
+ /* Writing them here to avoid exposing memcg's inner layout */
+ #if defined(CONFIG_INET) && defined(CONFIG_MEMCG_KMEM)
+ 
+@@ -2850,15 +2867,10 @@ static void __mem_cgroup_cancel_local_charge(struct mem_cgroup *memcg,
+  */
+ static struct mem_cgroup *mem_cgroup_lookup(unsigned short id)
+ {
+-	struct cgroup_subsys_state *css;
+-
+ 	/* ID 0 is unused ID */
+ 	if (!id)
+ 		return NULL;
+-	css = css_lookup(&mem_cgroup_subsys, id);
+-	if (!css)
+-		return NULL;
+-	return mem_cgroup_from_css(css);
++	return mem_cgroup_from_id(id);
+ }
+ 
+ struct mem_cgroup *try_get_mem_cgroup_from_page(struct page *page)
+@@ -4368,7 +4380,7 @@ mem_cgroup_uncharge_swapcache(struct page *page, swp_entry_t ent, bool swapout)
+ 	 * css_get() was called in uncharge().
+ 	 */
+ 	if (do_swap_account && swapout && memcg)
+-		swap_cgroup_record(ent, css_id(&memcg->css));
++		swap_cgroup_record(ent, mem_cgroup_id(memcg));
+ }
+ #endif
+ 
+@@ -4420,8 +4432,8 @@ static int mem_cgroup_move_swap_account(swp_entry_t entry,
+ {
+ 	unsigned short old_id, new_id;
+ 
+-	old_id = css_id(&from->css);
+-	new_id = css_id(&to->css);
++	old_id = mem_cgroup_id(from);
++	new_id = mem_cgroup_id(to);
+ 
+ 	if (swap_cgroup_cmpxchg(entry, old_id, new_id) == old_id) {
+ 		mem_cgroup_swap_statistics(from, false);
+@@ -6571,7 +6583,7 @@ static enum mc_target_type get_mctgt_type(struct vm_area_struct *vma,
+ 	}
+ 	/* There is a swap entry and a page doesn't exist or isn't charged */
+ 	if (ent.val && !ret &&
+-			css_id(&mc.from->css) == lookup_swap_cgroup_id(ent)) {
++	    mem_cgroup_id(mc.from) == lookup_swap_cgroup_id(ent)) {
+ 		ret = MC_TARGET_SWAP;
+ 		if (target)
+ 			target->ent = ent;
 -- 
 1.8.0.2
 
