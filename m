@@ -1,55 +1,42 @@
 From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH v6 0/5] memcg, cgroup: kill css id
-Date: Mon, 23 Sep 2013 21:30:58 -0400
-Message-ID: <20130924013058.GB3482@htj.dyndns.org>
+Date: Mon, 23 Sep 2013 21:46:12 -0400
+Message-ID: <20130924014612.GC3482@htj.dyndns.org>
 References: <524001F8.6070205@huawei.com>
- <20130923130816.GH30946@htj.dyndns.org>
- <20130923131215.GI30946@htj.dyndns.org>
- <5240DD83.1070509@huawei.com>
- <20130923175247.ea5156de.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=hXzfpEwClf8gLwUzQt3m16Lrb9NwjU9pifRxbbsYL1Q=;
-        b=s/MFA8oX7dr1y+TAKKaMm2S8nadY/8on6Ct99+Bt0A5rVZUB4B0jnUac4kfkmmjwai
-         IJNsOBWBO7jGBZFsKYddIqQ4Kb5mkvKKxxQMIIuoTKz4rGdTgOhNnGx+kBPsuuQhcoeS
-         0h9AjsY7riC3eCThgHHO/STyy4Y8dTqSVmK4XuU49eMcMTxwyRsGZekMcCJFQea+b60O
-         c6/ChjdhtMOus7YWgIto2MqC+JVFmCglzr6KHwUe8+wuCNhQIYP8/5EshffZTcMvv03M
-         K99ggUy9schZoE9OD+41CRGQfgqUrmQ9UwXr7e2ZQkXJxAdzTpVX4LQawz5V98YEpfhC
-         EPfA==
+        bh=6THy7vEnAm4QRfHybQIWm3IJND5Mqgm/ce/EhU581qg=;
+        b=EdHJd/0gIexU0ivWV/dmyA9fjffV5GwZNkGhXbKXQ5/m6lWiW+NpJkloGrwqmylXF5
+         gSp/AGN0Jr22tc8wN+YJ73PCM3Do/5X7rEqTKZvpRA9/gNcueZYX32j37KDW5Z5CYz10
+         XQHVQbFjsMuHisn10aENMISf0BQg41MYqEZudpdLAj0yeHpaKNKyVd0akfXTVCg5mHl9
+         FDfcXlgJivPhLw7Fs3qKjgo1IOKJpZ0MOmKv1HLJTyH1sDQUCc2ycECY870BJ9q88pOH
+         GRRNXJN53ka7txiA93v3jaTigDzSWzJl4KejSWk5lzmuQfiJADiqfNq385L/1vT18+aO
+         7IMQ==
 Content-Disposition: inline
-In-Reply-To: <20130923175247.ea5156de.akpm@linux-foundation.org>
+In-Reply-To: <524001F8.6070205@huawei.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, cgroups <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
+To: Li Zefan <lizefan@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, cgroups <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
 
-Hello, Andrew.
-
-On Mon, Sep 23, 2013 at 05:52:47PM -0700, Andrew Morton wrote:
-> > I would love to see this patchset go through cgroup tree. The changes to
-> > memcg is quite small,
+On Mon, Sep 23, 2013 at 04:55:20PM +0800, Li Zefan wrote:
+> Hi Andrew,
 > 
-> It seems logical to put this in the cgroup tree as that's where most of
-> the impact occurs.
-
-Cool, applying the changes to cgroup/for-3.13.
-
-> > and as -mm tree is based on -next it won't cause
-> > future conflicts.
+> The whole patchset has been acked and reviewed by Michal and Tejun.
+> Could you merge it into mm tree?
 > 
-> That's no longer the case - I'm staging -mm patches ahead of linux-next
-> now.  Except in cases where that's impractical, such as the 3.12 memcg
-> changes which were pretty heavily impacted by cgroups tree changes.
+> ===========
+> 
+> This patchset converts memcg to use cgroup->id, and then we remove cgroup
+> css_id.
 
-Please note that cgroup is likely to continue to go through a lot of
-changes for the foreseeable future and memcg is likely to be affected
-heavily.
+Applied to cgroup/for-3.13.
 
 Thanks.
 
