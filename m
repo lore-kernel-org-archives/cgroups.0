@@ -1,61 +1,63 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH v6 0/5] memcg, cgroup: kill css id
-Date: Mon, 23 Sep 2013 17:52:47 -0700
-Message-ID: <20130923175247.ea5156de.akpm@linux-foundation.org>
+Date: Mon, 23 Sep 2013 21:30:58 -0400
+Message-ID: <20130924013058.GB3482@htj.dyndns.org>
 References: <524001F8.6070205@huawei.com>
-	<20130923130816.GH30946@htj.dyndns.org>
-	<20130923131215.GI30946@htj.dyndns.org>
-	<5240DD83.1070509@huawei.com>
+ <20130923130816.GH30946@htj.dyndns.org>
+ <20130923131215.GI30946@htj.dyndns.org>
+ <5240DD83.1070509@huawei.com>
+ <20130923175247.ea5156de.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5240DD83.1070509-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=hXzfpEwClf8gLwUzQt3m16Lrb9NwjU9pifRxbbsYL1Q=;
+        b=s/MFA8oX7dr1y+TAKKaMm2S8nadY/8on6Ct99+Bt0A5rVZUB4B0jnUac4kfkmmjwai
+         IJNsOBWBO7jGBZFsKYddIqQ4Kb5mkvKKxxQMIIuoTKz4rGdTgOhNnGx+kBPsuuQhcoeS
+         0h9AjsY7riC3eCThgHHO/STyy4Y8dTqSVmK4XuU49eMcMTxwyRsGZekMcCJFQea+b60O
+         c6/ChjdhtMOus7YWgIto2MqC+JVFmCglzr6KHwUe8+wuCNhQIYP8/5EshffZTcMvv03M
+         K99ggUy9schZoE9OD+41CRGQfgqUrmQ9UwXr7e2ZQkXJxAdzTpVX4LQawz5V98YEpfhC
+         EPfA==
+Content-Disposition: inline
+In-Reply-To: <20130923175247.ea5156de.akpm@linux-foundation.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, cgroups <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
 
-On Tue, 24 Sep 2013 08:32:03 +0800 Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
+Hello, Andrew.
 
-> On 2013/9/23 21:12, Tejun Heo wrote:
-> > On Mon, Sep 23, 2013 at 09:08:16AM -0400, Tejun Heo wrote:
-> >> Hello,
-> >>
-> >> On Mon, Sep 23, 2013 at 04:55:20PM +0800, Li Zefan wrote:
-> >>> The whole patchset has been acked and reviewed by Michal and Tejun.
-> >>> Could you merge it into mm tree?
-> >>
-> >> Ah... I really hoped that this had been merged during -rc1 window.
-> >> Andrew, would it be okay to carry this series through cgroup tree?  It
-> >> doesn't really have much to do with mm proper and it's a PITA to have
-> >> to keep updating css_id code from cgroup side when it's scheduled to
-> >> go away.  If carried in -mm, it's likely to cause conflicts with
-> >> ongoing cgroup changes too.
+On Mon, Sep 23, 2013 at 05:52:47PM -0700, Andrew Morton wrote:
+> > I would love to see this patchset go through cgroup tree. The changes to
+> > memcg is quite small,
 > 
-> I would love to see this patchset go through cgroup tree. The changes to
-> memcg is quite small,
+> It seems logical to put this in the cgroup tree as that's where most of
+> the impact occurs.
 
-It seems logical to put this in the cgroup tree as that's where most of
-the impact occurs.
+Cool, applying the changes to cgroup/for-3.13.
 
-> and as -mm tree is based on -next it won't cause
-> future conflicts.
-
-That's no longer the case - I'm staging -mm patches ahead of linux-next
-now.  Except in cases where that's impractical, such as the 3.12 memcg
-changes which were pretty heavily impacted by cgroups tree changes.
-
-> > 
-> > Also, wasn't this already in -mm during the last devel cycle?  ISTR
-> > conflicts with it in -mm with other cgroup core changes.  Is there any
-> > specific reason why this wasn't merged during the merge windw?
-> > 
+> > and as -mm tree is based on -next it won't cause
+> > future conflicts.
 > 
-> No, it never went into -mm tree... I guess it's because Andrew was too
-> busy and overlooked this patchset?
+> That's no longer the case - I'm staging -mm patches ahead of linux-next
+> now.  Except in cases where that's impractical, such as the 3.12 memcg
+> changes which were pretty heavily impacted by cgroups tree changes.
 
-I'm not sure what happened to the August 7 patchset, actually.  I don't
-often overlook stuff - I'll skip things if the timing is terrible or if
-the review comments indicate that another version is coming.  But none
-of that seems to be the case here.  hmm...
+Please note that cgroup is likely to continue to go through a lot of
+changes for the foreseeable future and memcg is likely to be affected
+heavily.
+
+Thanks.
+
+-- 
+tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
