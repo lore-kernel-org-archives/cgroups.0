@@ -1,118 +1,112 @@
-From: "azurIt" <azurit-Rm0zKEqwvD4@public.gmane.org>
-Subject: =?utf-8?q?Re=3A_=5Bpatch_0=2F7=5D_improve_memcg_oom_killer_robustness_v2?=
-Date: Fri, 27 Sep 2013 04:04:23 +0200
-Message-ID: <20130927040423.FBF382D2@pobox.sk>
-References: <20130916152548.GF3674@dhcp22.suse.cz>, <20130916225246.A633145B@pobox.sk>, <20130917000244.GD3278@cmpxchg.org>, <20130917131535.94E0A843@pobox.sk>, <20130917141013.GA30838@dhcp22.suse.cz>, <20130918160304.6EDF2729@pobox.sk>, <20130918180455.GD856@cmpxchg.org>, <20130918181946.GE856@cmpxchg.org>, <20130918195504.GF856@cmpxchg.org>, <20130926185459.E5D2987F@pobox.sk> <20130926192743.GP856@cmpxchg.org>
+From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: Race condition between "read CFQ stats" and "block device shutdown"
+Date: Fri, 27 Sep 2013 07:59:04 +0200
+Message-ID: <52451EA8.70606@suse.de>
+References: <CAOMFOmXJ5ZTYdOvdUt-oxsouhPGRmMshCRhn6AFgmFAGZw5WZA@mail.gmail.com> <5226D661.7070301@suse.de> <CAOMFOmUCqXN1uaqBEWH3PStuZXvnvLw=YrARgv7DvqO6Y4bFPQ@mail.gmail.com> <20130904160723.GC26609@mtj.dyndns.org> <CAOMFOmWWfxCZ7ND_Vso4UkSEOqGm=o-xsqrfrj5MKdf9_jr1gA@mail.gmail.com> <20130926135443.GC2480@htj.dyndns.org> <5244423A.2050107@suse.de> <CAOMFOmX2f35qWyTr7=1HNu=RMB_LMAmpMbYxSEsX1xgURhx_mg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20130926192743.GP856-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <CAOMFOmX2f35qWyTr7=1HNu=RMB_LMAmpMbYxSEsX1xgURhx_mg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: =?utf-8?q?Johannes_Weiner?= <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: =?utf-8?q?Michal_Hocko?= <mhocko-AlSwsSmVLrQ@public.gmane.org>, =?utf-8?q?Andrew_Morton?= <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, =?utf-8?q?David_Rientjes?= <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, =?utf-8?q?KOSAKI_Motohiro?= <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Anatol Pomozov <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-> CC: "Michal Hocko" <mhocko-AlSwsSmVLrQ@public.gmane.org>, "Andrew Morton" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "David Rientjes" <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "KAMEZAWA Hiroyuki" <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, "KOSAKI Motohiro" <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->Hi azur,
->
->On Thu, Sep 26, 2013 at 06:54:59PM +0200, azurIt wrote:
->> On Wed, Sep 18, 2013 at 02:19:46PM -0400, Johannes Weiner wrote:
->> >Here is an update.  Full replacement on top of 3.2 since we tried a
->> >dead end and it would be more painful to revert individual changes.
->> >
->> >The first bug you had was the same task entering OOM repeatedly and
->> >leaking the memcg reference, thus creating undeletable memcgs.  My
->> >fixup added a condition that if the task already set up an OOM context
->> >in that fault, another charge attempt would immediately return -ENOMEM
->> >without even trying reclaim anymore.  This dropped __getblk() into an
->> >endless loop of waking the flushers and performing global reclaim and
->> >memcg returning -ENOMEM regardless of free memory.
->> >
->> >The update now basically only changes this -ENOMEM to bypass, so that
->> >the memory is not accounted and the limit ignored.  OOM killed tasks
->> >are granted the same right, so that they can exit quickly and release
->> >memory.  Likewise, we want a task that hit the OOM condition also to
->> >finish the fault quickly so that it can invoke the OOM killer.
->> >
->> >Does the following work for you, azur?
->> 
->> 
->> Johannes,
->> 
->> bad news everyone! :(
->> 
->> Unfortunaely, two different problems appears today:
->> 
->> 1.) This looks like my very original problem - stucked processes inside one cgroup. I took stacks from all of them over time but server was very slow so i had to kill them soon:
->> http://watchdog.sk/lkmlmemcg-bug-9.tar.gz
->> 
->> 2.) This was just like my last problem where few processes were doing huge i/o. As sever was almost unoperable i barely killed them so no more info here, sorry.
->
-From one of the tasks:
->
->1380213238/11210/stack:[<ffffffff810528f1>] sys_sched_yield+0x41/0x70
->1380213238/11210/stack:[<ffffffff81148ef1>] free_more_memory+0x21/0x60
->1380213238/11210/stack:[<ffffffff8114957d>] __getblk+0x14d/0x2c0
->1380213238/11210/stack:[<ffffffff81198a2b>] ext3_getblk+0xeb/0x240
->1380213238/11210/stack:[<ffffffff8119d2df>] ext3_find_entry+0x13f/0x480
->1380213238/11210/stack:[<ffffffff8119dd6d>] ext3_lookup+0x4d/0x120
->1380213238/11210/stack:[<ffffffff81122a55>] d_alloc_and_lookup+0x45/0x90
->1380213238/11210/stack:[<ffffffff81122ff8>] do_lookup+0x278/0x390
->1380213238/11210/stack:[<ffffffff81124c40>] path_lookupat+0x120/0x800
->1380213238/11210/stack:[<ffffffff81125355>] do_path_lookup+0x35/0xd0
->1380213238/11210/stack:[<ffffffff811254d9>] user_path_at_empty+0x59/0xb0
->1380213238/11210/stack:[<ffffffff81125541>] user_path_at+0x11/0x20
->1380213238/11210/stack:[<ffffffff81115b70>] sys_faccessat+0xd0/0x200
->1380213238/11210/stack:[<ffffffff81115cb8>] sys_access+0x18/0x20
->1380213238/11210/stack:[<ffffffff815ccc26>] system_call_fastpath+0x18/0x1d
->
->Should have seen this coming... it's still in that braindead
->__getblk() loop, only from a syscall this time (no OOM path).  The
->group's memory.stat looks like this:
->
->cache 0
->rss 0
->mapped_file 0
->pgpgin 0
->pgpgout 0
->swap 0
->pgfault 0
->pgmajfault 0
->inactive_anon 0
->active_anon 0
->inactive_file 0
->active_file 0
->unevictable 0
->hierarchical_memory_limit 209715200
->hierarchical_memsw_limit 209715200
->total_cache 0
->total_rss 209715200
->total_mapped_file 0
->total_pgpgin 1028153297
->total_pgpgout 1028102097
->total_swap 0
->total_pgfault 1352903120
->total_pgmajfault 45342
->total_inactive_anon 0
->total_active_anon 209715200
->total_inactive_file 0
->total_active_file 0
->total_unevictable 0
->
->with anonymous pages to the limit and you probably don't have any swap
->space enabled to anything in the group.
->
->I guess there is no way around annotating that __getblk() loop.  The
->best solution right now is probably to use __GFP_NOFAIL.  For one, we
->can let the allocation bypass the memcg limit if reclaim can't make
->progress.  But also, the loop is then actually happening inside the
->page allocator, where it should happen, and not around ad-hoc direct
->reclaim in buffer.c.
->
->Can you try this on top of our ever-growing stack of patches?
+On 09/26/2013 06:23 PM, Anatol Pomozov wrote:
+> Hi
+>=20
+> On Thu, Sep 26, 2013 at 7:18 AM, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org> wrote=
+:
+>> On 09/26/2013 03:54 PM, Tejun Heo wrote:
+>>> Hello, (cc'ing linux-scsi)
+>>>
+>>> On Wed, Sep 25, 2013 at 01:37:51PM -0700, Anatol Pomozov wrote:
+>>>> Hi
+>>>>
+>>>> On Wed, Sep 4, 2013 at 9:07 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+>>>>> Hello,
+>>>>>
+>>>>> On Wed, Sep 04, 2013 at 08:45:33AM -0700, Anatol Pomozov wrote:
+>>>>>> I am not an expect in block code, so I have a few questions here=
+:
+>>>>>>
+>>>>>> - are we sure that this operation is atomic? What if blkg->q bec=
+omes
+>>>>>> dead right after we checked it, and blkg->q->queue_lock got inva=
+lid so
+>>>>>> we have the same crash as before?
+>>>>>
+>>>>> request_queue lock switching is something inherently broken in bl=
+ock
+>>>>> layer.  It's unsalvageable.
+>>>>
+>>>> Fully agree. The problem that request_queue->queue_lock is a share=
+d
+>>>> resource that concurrently modified/accessed. In this case (when o=
+ne
+>>>> thread changes, another thread access it) we need synchronization =
+to
+>>>> prevent race conditions. So we need a spin_lock to access queue_lo=
+ck
+>>>> spin_lock, otherwise we have a crash like one above...
+>>>>
+>>>>>  Maybe we can drop lock switching once blk-mq is fully merged.
+>>>>
+>>>> Could you please provide more information about it? What is the ti=
+meline?
+>>>
+>>> I have no idea.  Hopefully, not too far out.  Jens would have bette=
+r
+>>> idea.
+>>>
+>>>> If there is an easy way to fix the race condition I would like to
+>>>> help. Please give me some pointer what direction I should move.
+>>>
+>>> The first step would be identifying who are actually making use of
+>>> lock switching, why and how much difference it would make for them =
+to
+>>> not do that.
+>>>
+>> Typically, the lock is being used by the block drivers to
+>> synchronize access between some internal data structures and the
+>> request queue itself. You don't actually _need_ to do it that way,
+>> but removing the lock switching would involve quite some redesign of
+>> these drivers.
+>> Give that most of the are rather oldish I really wouldn't want to
+>> touch them.
+>=20
+> Thanks for the info.
+>=20
+> We use modified version of "sbull" block device driver from GKH book.
+> We use it for testing block device startup/shutdown path + CFQ
+> manipulation.
+>=20
+> The sbull driver uses function
+> blk_init_queue(..., &dev->qlock);
+>=20
+> it passes lock as a second parameter and function makes the lock
+> swapping. According to your information passing lock to
+> blk_init_queue() considered as an "old non recommended way" so we
+> should modify our driver and avoid doing this. I'll take a look.
+>=20
+Yep. I would recommend to use the queue_lock directly whenever you
+need to pull requests off the request_queue, and use your own lock
+to protect any internal structures associated with handling the
+request internally.
 
+Yes, this _might_ involve some lock dancing between the queue_lock
+and the internal lock, but has the advantage that the internal lock
+typically it used far more often than the queue_lock itself.
+So you might even get some speed advantage here as you reduce
+contention on the queue_lock.
 
-Installed, thank you!
+Cheers,
 
-azur
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare-l3A5Bk7waGM@public.gmane.org			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
+)
