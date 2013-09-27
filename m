@@ -1,105 +1,118 @@
-From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
-Subject: Re: memcg creates an unkillable task in 3.11-rc2
-Date: Thu, 26 Sep 2013 17:35:43 -0700
-Message-ID: <87y56jnlsw.fsf@xmission.com>
-References: <20130723174711.GE21100@mtj.dyndns.org>
-	<8761vui4cr.fsf@xmission.com> <20130729075939.GA4678@dhcp22.suse.cz>
-	<87ehahg312.fsf@xmission.com> <20130729095109.GB4678@dhcp22.suse.cz>
-	<20130729161026.GD22605@mtj.dyndns.org> <87r4eh70yg.fsf@xmission.com>
-	<51F71DE2.4020102@huawei.com>
-	<87ppu0a298.fsf_-_@tw-ebiederman.twitter.com>
-	<87ppu03td7.fsf@tw-ebiederman.twitter.com>
-	<CAHyO6Z33pUJ1_MjPO2OeUY_+ZRmc1niPiFm5DzGVDokm5vb4rw@mail.gmail.com>
+From: "azurIt" <azurit-Rm0zKEqwvD4@public.gmane.org>
+Subject: =?utf-8?q?Re=3A_=5Bpatch_0=2F7=5D_improve_memcg_oom_killer_robustness_v2?=
+Date: Fri, 27 Sep 2013 04:04:23 +0200
+Message-ID: <20130927040423.FBF382D2@pobox.sk>
+References: <20130916152548.GF3674@dhcp22.suse.cz>, <20130916225246.A633145B@pobox.sk>, <20130917000244.GD3278@cmpxchg.org>, <20130917131535.94E0A843@pobox.sk>, <20130917141013.GA30838@dhcp22.suse.cz>, <20130918160304.6EDF2729@pobox.sk>, <20130918180455.GD856@cmpxchg.org>, <20130918181946.GE856@cmpxchg.org>, <20130918195504.GF856@cmpxchg.org>, <20130926185459.E5D2987F@pobox.sk> <20130926192743.GP856@cmpxchg.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20130926192743.GP856-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <CAHyO6Z33pUJ1_MjPO2OeUY_+ZRmc1niPiFm5DzGVDokm5vb4rw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-	(Fabio Kung's message of "Thu, 26 Sep 2013 16:41:19 -0700")
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Fabio Kung <fabio.kung-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kent.overstreet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+To: =?utf-8?q?Johannes_Weiner?= <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: =?utf-8?q?Michal_Hocko?= <mhocko-AlSwsSmVLrQ@public.gmane.org>, =?utf-8?q?Andrew_Morton?= <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, =?utf-8?q?David_Rientjes?= <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, =?utf-8?q?KAMEZAWA_Hiroyuki?= <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, =?utf-8?q?KOSAKI_Motohiro?= <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Fabio Kung <fabio.kung-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> writes:
+> CC: "Michal Hocko" <mhocko-AlSwsSmVLrQ@public.gmane.org>, "Andrew Morton" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "David Rientjes" <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "KAMEZAWA Hiroyuki" <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, "KOSAKI Motohiro" <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+>Hi azur,
+>
+>On Thu, Sep 26, 2013 at 06:54:59PM +0200, azurIt wrote:
+>> On Wed, Sep 18, 2013 at 02:19:46PM -0400, Johannes Weiner wrote:
+>> >Here is an update.  Full replacement on top of 3.2 since we tried a
+>> >dead end and it would be more painful to revert individual changes.
+>> >
+>> >The first bug you had was the same task entering OOM repeatedly and
+>> >leaking the memcg reference, thus creating undeletable memcgs.  My
+>> >fixup added a condition that if the task already set up an OOM context
+>> >in that fault, another charge attempt would immediately return -ENOMEM
+>> >without even trying reclaim anymore.  This dropped __getblk() into an
+>> >endless loop of waking the flushers and performing global reclaim and
+>> >memcg returning -ENOMEM regardless of free memory.
+>> >
+>> >The update now basically only changes this -ENOMEM to bypass, so that
+>> >the memory is not accounted and the limit ignored.  OOM killed tasks
+>> >are granted the same right, so that they can exit quickly and release
+>> >memory.  Likewise, we want a task that hit the OOM condition also to
+>> >finish the fault quickly so that it can invoke the OOM killer.
+>> >
+>> >Does the following work for you, azur?
+>> 
+>> 
+>> Johannes,
+>> 
+>> bad news everyone! :(
+>> 
+>> Unfortunaely, two different problems appears today:
+>> 
+>> 1.) This looks like my very original problem - stucked processes inside one cgroup. I took stacks from all of them over time but server was very slow so i had to kill them soon:
+>> http://watchdog.sk/lkmlmemcg-bug-9.tar.gz
+>> 
+>> 2.) This was just like my last problem where few processes were doing huge i/o. As sever was almost unoperable i barely killed them so no more info here, sorry.
+>
+From one of the tasks:
+>
+>1380213238/11210/stack:[<ffffffff810528f1>] sys_sched_yield+0x41/0x70
+>1380213238/11210/stack:[<ffffffff81148ef1>] free_more_memory+0x21/0x60
+>1380213238/11210/stack:[<ffffffff8114957d>] __getblk+0x14d/0x2c0
+>1380213238/11210/stack:[<ffffffff81198a2b>] ext3_getblk+0xeb/0x240
+>1380213238/11210/stack:[<ffffffff8119d2df>] ext3_find_entry+0x13f/0x480
+>1380213238/11210/stack:[<ffffffff8119dd6d>] ext3_lookup+0x4d/0x120
+>1380213238/11210/stack:[<ffffffff81122a55>] d_alloc_and_lookup+0x45/0x90
+>1380213238/11210/stack:[<ffffffff81122ff8>] do_lookup+0x278/0x390
+>1380213238/11210/stack:[<ffffffff81124c40>] path_lookupat+0x120/0x800
+>1380213238/11210/stack:[<ffffffff81125355>] do_path_lookup+0x35/0xd0
+>1380213238/11210/stack:[<ffffffff811254d9>] user_path_at_empty+0x59/0xb0
+>1380213238/11210/stack:[<ffffffff81125541>] user_path_at+0x11/0x20
+>1380213238/11210/stack:[<ffffffff81115b70>] sys_faccessat+0xd0/0x200
+>1380213238/11210/stack:[<ffffffff81115cb8>] sys_access+0x18/0x20
+>1380213238/11210/stack:[<ffffffff815ccc26>] system_call_fastpath+0x18/0x1d
+>
+>Should have seen this coming... it's still in that braindead
+>__getblk() loop, only from a syscall this time (no OOM path).  The
+>group's memory.stat looks like this:
+>
+>cache 0
+>rss 0
+>mapped_file 0
+>pgpgin 0
+>pgpgout 0
+>swap 0
+>pgfault 0
+>pgmajfault 0
+>inactive_anon 0
+>active_anon 0
+>inactive_file 0
+>active_file 0
+>unevictable 0
+>hierarchical_memory_limit 209715200
+>hierarchical_memsw_limit 209715200
+>total_cache 0
+>total_rss 209715200
+>total_mapped_file 0
+>total_pgpgin 1028153297
+>total_pgpgout 1028102097
+>total_swap 0
+>total_pgfault 1352903120
+>total_pgmajfault 45342
+>total_inactive_anon 0
+>total_active_anon 209715200
+>total_inactive_file 0
+>total_active_file 0
+>total_unevictable 0
+>
+>with anonymous pages to the limit and you probably don't have any swap
+>space enabled to anything in the group.
+>
+>I guess there is no way around annotating that __getblk() loop.  The
+>best solution right now is probably to use __GFP_NOFAIL.  For one, we
+>can let the allocation bypass the memcg limit if reclaim can't make
+>progress.  But also, the loop is then actually happening inside the
+>page allocator, where it should happen, and not around ad-hoc direct
+>reclaim in buffer.c.
+>
+>Can you try this on top of our ever-growing stack of patches?
 
-> On Tue, Jul 30, 2013 at 9:28 AM, Eric W. Biederman
-> <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org> wrote:
->>
->> ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman) writes:
->>
->> Ok.  I have been trying for an hour and I have not been able to
->> reproduce the weird hang with the memcg, and it used to be something I
->> could reproduce trivially.  So it appears the patch below is the fix.
->>
->> After I sleep I will see if I can turn it into a proper patch.
->
->
-> Contributing with another data point: I am seeing similar issues with
-> un-killable tasks inside LXC containers on a vanilla 3.8.11 kernel.
-> The stack from zombie tasks look like this:
->
-> # cat /proc/12499/stack
-> [<ffffffff81186226>] __mem_cgroup_try_charge+0xa96/0xbf0
-> [<ffffffff8118670b>] __mem_cgroup_try_charge_swapin+0xab/0xd0
-> [<ffffffff8118678d>] mem_cgroup_try_charge_swapin+0x5d/0x70
-> [<ffffffff811524f5>] handle_pte_fault+0x315/0xac0
-> [<ffffffff81152f11>] handle_mm_fault+0x271/0x3d0
-> [<ffffffff815bbf3b>] __do_page_fault+0x20b/0x4c0
-> [<ffffffff815bc1fe>] do_page_fault+0xe/0x10
-> [<ffffffff815b8718>] page_fault+0x28/0x30
-> [<ffffffff81056327>] mm_release+0x127/0x140
-> [<ffffffff8105ece1>] do_exit+0x171/0xa70
-> [<ffffffff8105f635>] do_group_exit+0x55/0xd0
-> [<ffffffff8106fa8f>] get_signal_to_deliver+0x23f/0x5d0
-> [<ffffffff81014402>] do_signal+0x42/0x600
-> [<ffffffff81014a48>] do_notify_resume+0x88/0xc0
-> [<ffffffff815c0b92>] int_signal+0x12/0x17
-> [<ffffffffffffffff>] 0xffffffffffffffff
->
-> Same symptoms that Eric described: a race condition in memcg when
-> there is a page fault and the process is exiting.
->
-> I went ahead and reproduced the bug described earlier here on the same
-> 3.8.11 kernel, also using the Mesos framework
-> (http://mesos.apache.org/) memory Ballooning tests. The call trace
-> from zombie tasks in this case look very similar:
->
-> # cat /proc/22827/stack
-> [<ffffffff81186280>] __mem_cgroup_try_charge+0xaf0/0xbf0
-> [<ffffffff8118670b>] __mem_cgroup_try_charge_swapin+0xab/0xd0
-> [<ffffffff8118678d>] mem_cgroup_try_charge_swapin+0x5d/0x70
-> [<ffffffff811524f5>] handle_pte_fault+0x315/0xac0
-> [<ffffffff81152f11>] handle_mm_fault+0x271/0x3d0
-> [<ffffffff815bbf3b>] __do_page_fault+0x20b/0x4c0
-> [<ffffffff815bc1fe>] do_page_fault+0xe/0x10
-> [<ffffffff815b8718>] page_fault+0x28/0x30
-> [<ffffffff81056327>] mm_release+0x127/0x140
-> [<ffffffff8105ece1>] do_exit+0x171/0xa70
-> [<ffffffff8105f635>] do_group_exit+0x55/0xd0
-> [<ffffffff8106fa8f>] get_signal_to_deliver+0x23f/0x5d0
-> [<ffffffff81014402>] do_signal+0x42/0x600
-> [<ffffffff81014a48>] do_notify_resume+0x88/0xc0
-> [<ffffffff815c0b92>] int_signal+0x12/0x17
-> [<ffffffffffffffff>] 0xffffffffffffffff
->
-> Then, I applied Eric's patch below, and I can't reproduce the problem
-> anymore. Before the patch, it was very easy to reproduce it with some
-> extra memory pressure from other processes in the instance (increasing
-> the probability of page faults when processes are exiting).
->
-> We also tried a vanilla 3.11.1 kernel, and we could reproduce the bug
-> on it pretty easily.
 
-There are some significant fixes in 3.12-rcX.  I haven't had a chance to
-look at them in detail yet but they look very promising.
+Installed, thank you!
 
-Eric
+azur
