@@ -1,112 +1,48 @@
-From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: Race condition between "read CFQ stats" and "block device shutdown"
-Date: Fri, 27 Sep 2013 07:59:04 +0200
-Message-ID: <52451EA8.70606@suse.de>
-References: <CAOMFOmXJ5ZTYdOvdUt-oxsouhPGRmMshCRhn6AFgmFAGZw5WZA@mail.gmail.com> <5226D661.7070301@suse.de> <CAOMFOmUCqXN1uaqBEWH3PStuZXvnvLw=YrARgv7DvqO6Y4bFPQ@mail.gmail.com> <20130904160723.GC26609@mtj.dyndns.org> <CAOMFOmWWfxCZ7ND_Vso4UkSEOqGm=o-xsqrfrj5MKdf9_jr1gA@mail.gmail.com> <20130926135443.GC2480@htj.dyndns.org> <5244423A.2050107@suse.de> <CAOMFOmX2f35qWyTr7=1HNu=RMB_LMAmpMbYxSEsX1xgURhx_mg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Thierry Reding <thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: linux-next: manual merge of the cgroup tree
+Date: Mon, 30 Sep 2013 13:26:05 +0200
+Message-ID: <1380540373-25352-3-git-send-email-treding@nvidia.com>
+References: <1380540373-25352-1-git-send-email-treding@nvidia.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAOMFOmX2f35qWyTr7=1HNu=RMB_LMAmpMbYxSEsX1xgURhx_mg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=KjXZfIcLk2eLzTHfg5Dj2K/wgTaEQz70yYKaHFFy/DM=;
+        b=aouLs84FNOq11VPVB8bS8DsZYzXvifpRT3XT7IVOGbTPQWxealyHUvIa1BINhBNpiM
+         QS6tocZc/kON/DlsxLGLOD+8Np/dineq9Y5Cx8ipQP+V4In6dXmwwZpcwJFFhuhg7zcr
+         G0qz/SH4ZPwA9dPJUmUcO+zf/sS5VHSNhGFeHsyMiKjCijLfcPQYfQQ33f10TAgp3/7j
+         7IlSdePGPPvlTtdxQG10HvvSnkiFTnIYbitHmk8EhQyvmSwNNoH5iTU+3KXrBbJdIwbM
+         jiMppDSbVOLrv2107vcGGGlmxUnjCqJPSHBIX9T8A5yMDOS3mUzi3c6/6p+cSMAXvnJy
+         zQ1w==
+In-Reply-To: <1380540373-25352-1-git-send-email-treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Anatol Pomozov <anatol.pomozov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 09/26/2013 06:23 PM, Anatol Pomozov wrote:
-> Hi
->=20
-> On Thu, Sep 26, 2013 at 7:18 AM, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org> wrote=
-:
->> On 09/26/2013 03:54 PM, Tejun Heo wrote:
->>> Hello, (cc'ing linux-scsi)
->>>
->>> On Wed, Sep 25, 2013 at 01:37:51PM -0700, Anatol Pomozov wrote:
->>>> Hi
->>>>
->>>> On Wed, Sep 4, 2013 at 9:07 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->>>>> Hello,
->>>>>
->>>>> On Wed, Sep 04, 2013 at 08:45:33AM -0700, Anatol Pomozov wrote:
->>>>>> I am not an expect in block code, so I have a few questions here=
-:
->>>>>>
->>>>>> - are we sure that this operation is atomic? What if blkg->q bec=
-omes
->>>>>> dead right after we checked it, and blkg->q->queue_lock got inva=
-lid so
->>>>>> we have the same crash as before?
->>>>>
->>>>> request_queue lock switching is something inherently broken in bl=
-ock
->>>>> layer.  It's unsalvageable.
->>>>
->>>> Fully agree. The problem that request_queue->queue_lock is a share=
-d
->>>> resource that concurrently modified/accessed. In this case (when o=
-ne
->>>> thread changes, another thread access it) we need synchronization =
-to
->>>> prevent race conditions. So we need a spin_lock to access queue_lo=
-ck
->>>> spin_lock, otherwise we have a crash like one above...
->>>>
->>>>>  Maybe we can drop lock switching once blk-mq is fully merged.
->>>>
->>>> Could you please provide more information about it? What is the ti=
-meline?
->>>
->>> I have no idea.  Hopefully, not too far out.  Jens would have bette=
-r
->>> idea.
->>>
->>>> If there is an easy way to fix the race condition I would like to
->>>> help. Please give me some pointer what direction I should move.
->>>
->>> The first step would be identifying who are actually making use of
->>> lock switching, why and how much difference it would make for them =
-to
->>> not do that.
->>>
->> Typically, the lock is being used by the block drivers to
->> synchronize access between some internal data structures and the
->> request queue itself. You don't actually _need_ to do it that way,
->> but removing the lock switching would involve quite some redesign of
->> these drivers.
->> Give that most of the are rather oldish I really wouldn't want to
->> touch them.
->=20
-> Thanks for the info.
->=20
-> We use modified version of "sbull" block device driver from GKH book.
-> We use it for testing block device startup/shutdown path + CFQ
-> manipulation.
->=20
-> The sbull driver uses function
-> blk_init_queue(..., &dev->qlock);
->=20
-> it passes lock as a second parameter and function makes the lock
-> swapping. According to your information passing lock to
-> blk_init_queue() considered as an "old non recommended way" so we
-> should modify our driver and avoid doing this. I'll take a look.
->=20
-Yep. I would recommend to use the queue_lock directly whenever you
-need to pull requests off the request_queue, and use your own lock
-to protect any internal structures associated with handling the
-request internally.
+Today's linux-next merge of the cgroup tree got conflicts in
 
-Yes, this _might_ involve some lock dancing between the queue_lock
-and the internal lock, but has the advantage that the internal lock
-typically it used far more often than the queue_lock itself.
-So you might even get some speed advantage here as you reduce
-contention on the queue_lock.
+	mm/memcontrol.c
 
-Cheers,
+I fixed it up (see below). Please check if the resolution looks correct.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare-l3A5Bk7waGM@public.gmane.org			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
+Thanks,
+Thierry
+---
+diff --cc mm/memcontrol.c
+index 1c52ddb,65a46ef..84dcc5c
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@@ -6203,9 -5979,6 +6216,8 @@@ static void __mem_cgroup_free(struct me
+  	int node;
+  	size_t size = memcg_size();
+  
+ +	mem_cgroup_remove_from_trees(memcg);
+- 	free_css_id(&mem_cgroup_subsys, &memcg->css);
+ +
+  	for_each_node(node)
+  		free_mem_cgroup_per_zone_info(memcg, node);
+  
