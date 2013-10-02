@@ -1,52 +1,40 @@
-From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [patch for-3.12] mm, memcg: protect mem_cgroup_read_events for cpu
- hotplug
-Date: Tue, 1 Oct 2013 16:31:23 -0700 (PDT)
-Message-ID: <alpine.DEB.2.02.1310011629350.27758@chino.kir.corp.google.com>
+From: KOSAKI Motohiro <kosaki.motohiro@gmail.com>
+Subject: Re: [patch for-3.12] mm, memcg: protect mem_cgroup_read_events for
+ cpu hotplug
+Date: Tue, 01 Oct 2013 20:47:01 -0400
+Message-ID: <524B6D05.5030609@gmail.com>
+References: <alpine.DEB.2.02.1310011629350.27758@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:user-agent:mime-version
-         :content-type;
-        bh=Licu6C83bW05qeMU0PnEBjvATaprv0Dy4UAXV2Y2ju0=;
-        b=OSjCHGD4ImS9XMPvEjFyB/J1EfUWxuZdcbwcAq/vctQKDoQOOEsCCU2TyS36a4uAYb
-         bsqYlLVsznG7OlqxipZux5t2JHaKRdUljwSWX2kytu6sWuhT3h2t7uMGnhAVDdTtaGqE
-         bPBmC8WkCRWBffWLxj1WjutCbnmQsVh4My6HmM7IxvndGHQwUxCdguryQ50ABkvLICDt
-         PpQYUC7SI1scl0uADlfWLvdIrJ149OqjYUVlJAuc+b5t8dw1ox+t7wtAHKOVjOxaSxn4
-         duhORk1JwIFExBWh9COo0m6eVV+OZLfF9sWURQilAn8vTLL6ly1SaVkoYJFjulVtddOi
-         AgpQ==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=message-id:date:from:user-agent:mime-version:to:cc:subject
+         :references:in-reply-to:content-type:content-transfer-encoding;
+        bh=CbAQTSrAhW5QQkzMQtxomg7CVBRJbuBl1mgNaNlAgIo=;
+        b=t2WaO3gVxs9j6D9SeHv4HdANcyjGMdBWqHvHgb0s88/Fbgn1srkJq/7fwmF8RSSgtS
+         WM5tQ+t63lGa53jnB3JhTfNtXFzlk+zjbNRO9aVswd12OI15EY9/spuEIbe366qJSdK9
+         uK2uLvafgtvfk0o0lqW5mtXc0DN7q7DVpXn739EDVi4e8GyeBTlHqyQW9kU3OfweTwxQ
+         maafb1CvN7S6HzxIcMrMytqJXjoYUbniRhzlnl7KzycGO0gkRMZYeKKRLEnJAmxM0sYY
+         xc5vPgMkSNr/Vk+oaQ/yhl3Ol0vJTsN8jMGXmmOeiVIMeFrvyIy2ydvuD79tKS96NhUd
+         2/Rw==
+In-Reply-To: <alpine.DEB.2.02.1310011629350.27758@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: David Rientjes <rientjes@google.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, kosaki.motohiro@gmail.com
 
-for_each_online_cpu() needs the protection of {get,put}_online_cpus() so
-cpu_online_mask doesn't change during the iteration.
+(10/1/13 7:31 PM), David Rientjes wrote:
+> for_each_online_cpu() needs the protection of {get,put}_online_cpus() so
+> cpu_online_mask doesn't change during the iteration.
+>
+> Signed-off-by: David Rientjes <rientjes@google.com>
 
-Signed-off-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
- mm/memcontrol.c | 2 ++
- 1 file changed, 2 insertions(+)
+Acked-by: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -866,6 +866,7 @@ static unsigned long mem_cgroup_read_events(struct mem_cgroup *memcg,
- 	unsigned long val = 0;
- 	int cpu;
- 
-+	get_online_cpus();
- 	for_each_online_cpu(cpu)
- 		val += per_cpu(memcg->stat->events[idx], cpu);
- #ifdef CONFIG_HOTPLUG_CPU
-@@ -873,6 +874,7 @@ static unsigned long mem_cgroup_read_events(struct mem_cgroup *memcg,
- 	val += memcg->nocpu_base.events[idx];
- 	spin_unlock(&memcg->pcp_counter_lock);
- #endif
-+	put_online_cpus();
- 	return val;
- }
- 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
