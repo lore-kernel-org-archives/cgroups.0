@@ -1,73 +1,90 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH nf-next] netfilter: xtables: lightweight process control
- group matching
-Date: Mon, 7 Oct 2013 12:46:47 -0400
-Message-ID: <20131007164647.GA2481@htj.dyndns.org>
-References: <1380910855-12325-1-git-send-email-dborkman@redhat.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: cgroup attach task - slogging cpu
+Date: Mon, 7 Oct 2013 14:45:07 -0400
+Message-ID: <20131007184507.GD27396@htj.dyndns.org>
+References: <CALPf4Tz+Gf_Q7wKKBufCc1mtV1qVPVrOW0S1qhHxfOv6pJa2Kg@mail.gmail.com>
+ <20131004130207.GA9338@redhat.com>
 Mime-Version: 1.0
-Return-path: <netfilter-devel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=dXjcnaVPWi1WJLFJu5SbPaeCAp60laHqXsVd8SuZTus=;
-        b=YlAW4U76hpk8N1HA+52fvbZb4ehcQTzXfor3oGQwts+AgCVytlEKFZRMR20kI94i3T
-         Yxm/2YnppGehcTDp1VEn7sOXyOPZ+WKHNxJcr46ipehPhxlPMRB+d70HET0xAqiMh6LI
-         +Y3ZDQgMud/mVcRjDJnFJuR83qVAdGfAXUUpNOWz1h3QgI3fCEOwJ5ZkbVL+VFUX1FJ4
-         xAceIGlV35nKaAV8aUsO4XVGp9kiiZScfGR6qYt4qRLWDWTLQqQB5MKi9AoZuKp7QUe9
-         iaCHmqSjSSu1dHhMwDkqcGQuI5eQxf0+o8IyWeJ31MB99rZVD+1/UOKJZAhyUHFDMS6a
-         2uHQ==
+        bh=KsR/lfdOQubU2KcNli5VY6oLaeZPGdH6fZ//B4T5O5Y=;
+        b=CZ55bsOeSS8HniCuDgX5X3sZ7MIWdE8WreYPfqSte+Qsq0iOOKe4vw8NCqLci8oxCQ
+         e+qLWqekPACP5OluB3d0pcXhjFX+ccRhxCOPF7cW+96bjOnWgveanBy2iwr6FwPqCe0P
+         +13b3o0RfymAIelm5AiBOIEPeJvPYecKXgXxoCYrPEQYZkbf+fKBZ7JiR4Mbg0O41Qnn
+         usha/oABVvz407eg4YFqReMMpYSCvddKesEILcd6mbJd+rgKc5GVr1JvYoSccZK4V7MQ
+         fZFo4xam3PvfFCAgYWNx7kjCLtz+B1SDolnqK/lROraY85qeYDNzObi94+cXg7RcQasT
+         nPcQ==
 Content-Disposition: inline
-In-Reply-To: <1380910855-12325-1-git-send-email-dborkman@redhat.com>
-Sender: netfilter-devel-owner@vger.kernel.org
+In-Reply-To: <20131004130207.GA9338-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Daniel Borkmann <dborkman@redhat.com>
-Cc: pablo@netfilter.org, netfilter-devel@vger.kernel.org, netdev@vger.kernel.org, cgroups@vger.kernel.org
+To: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: anjana vk <anjanvk12-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+Hey,
 
-On Fri, Oct 04, 2013 at 08:20:55PM +0200, Daniel Borkmann wrote:
-> It would be useful e.g. in a server or desktop environment to have
-> a facility in the notion of fine-grained "per application" or "per
-> application group" firewall policies. Probably, users in the mobile/
-> embedded area (e.g. Android based) with different security policy
-> requirements for application groups could have great benefit from
-> that as well. For example, with a little bit of configuration effort,
-> an admin could whitelist well-known applications, and thus block
-> otherwise unwanted "hard-to-track" applications like [1] from a
-> user's machine.
+On Fri, Oct 04, 2013 at 03:02:07PM +0200, Oleg Nesterov wrote:
+> Not sure I understand, but just in case: yes the lockless
+> while_each_thread() is buggy and should be fixed (it should actually
+> die eventually). And a lot of current users of while_each_thread()
+> are themselves buggy and need the fixes no matter what we do with
+> while_each_thread.
 > 
-> Implementation of PID-based matching would not be appropriate
-> as they frequently change, and child tracking would make that
-> even more complex and ugly. Cgroups would be a perfect candidate
-> for accomplishing that as they associate a set of tasks with a
-> set of parameters for one or more subsystems, in our case the
-> netfilter subsystem, which, of course, can be combined with other
-> cgroup subsystems into something more complex.
-> 
-> As mentioned, to overcome this constraint, such processes could
-> be placed into one or multiple cgroups where different fine-grained
-> rules can be defined depending on the application scenario, while
-> e.g. everything else that is not part of that could be dropped (or
-> vice versa), thus making life harder for unwanted processes to
-> communicate to the outside world. So, we make use of cgroups here
-> to track jobs and limit their resources in terms of iptables
-> policies; in other words, limiting what they are allowed to
-> communicate.
-> 
-> We have similar cgroup facilities in networking for traffic
-> classifier, and netprio cgroups. This feature adds a lightweight
-> cgroup id matching in terms of network security resp. network
-> traffic isolation as part of netfilter's xtables subsystem.
+> Oh. and just in case... I am (slowly) working on this, but didn't
+> finish it yet, sorry.
 
-I don't think the two net cgroups were a good idea and definitely
-don't want to continue the trend.  I think this is being done
-backwards.  Wouldn't it be more logical to implement netfilter rule to
-match the target cgroup paths?  It really doesn't make much sense to
-me to add separate controllers to just tag processes.  Please classify
-tasks in cgroup and let netfilter match the cgroups.
+Is there anything I can do to make the hang go away in the meantime?
+
+> But I do not really understand cgroup_attach_task(), and I am not
+> sure you observed the same problem. Add Tejun.
+
+Sounds like the same problem to me.
+
+> 	--- x/kernel/cgroup.c
+> 	+++ x/kernel/cgroup.c
+> 	@@ -2034,7 +2034,7 @@ static int cgroup_attach_task(struct cgr
+> 		 * take an rcu_read_lock.
+> 		 */
+> 		rcu_read_lock();
+> 	-	do {
+> 	+	for_each_thread(leader->signal, task) {
+> 			struct task_and_cgroup ent;
+> 	 
+> 			/* @tsk either already exited or can't exit until the end */
+> 	@@ -2058,7 +2058,7 @@ static int cgroup_attach_task(struct cgr
+> 	 
+> 			if (!threadgroup)
+> 				break;
+> 	-	} while_each_thread(leader, tsk);
+> 	+	}
+> 		rcu_read_unlock();
+> 		/* remember the number of threads in the array for later. */
+> 		group_size = i;
+> 
+> after we add for_each_thread/etc. But I am not sure we need another
+> "threadgroup" check.
+
+...
+> > diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+> > index 1f53387..cae8416 100644
+> > --- a/kernel/cgroup.c
+> > +++ b/kernel/cgroup.c
+> > @@ -2002,7 +2002,9 @@ static int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk,
+> >  		ent.task = tsk;
+> >  		ent.cgrp = task_cgroup_from_root(tsk, root);
+> >  		/* nothing to do if this task is already in the cgroup */
+> > -		if (ent.cgrp == cgrp)
+> > +		if (ent.cgrp == cgrp && !threadgroup)
+> > +			break;
+> > +		else if(ent.cgrp == cgrp)
+> >  			continue;
+
+I have no idea know how this would make any difference.  Hmm...
 
 Thanks.
 
