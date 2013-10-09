@@ -1,66 +1,93 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH nf-next] netfilter: xtables: lightweight process control
- group matching
-Date: Wed, 9 Oct 2013 13:04:09 -0400
-Message-ID: <20131009170409.GH22495@htj.dyndns.org>
-References: <1380910855-12325-1-git-send-email-dborkman@redhat.com>
- <20131007164647.GA2481@htj.dyndns.org>
- <5253BCAE.5060409@redhat.com>
+From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: cgroup_attach_task && while_each_thread (Was: cgroup attach task -
+	slogging cpu)
+Date: Wed, 9 Oct 2013 18:54:48 +0200
+Message-ID: <20131009165448.GA22437@redhat.com>
+References: <CALPf4Tz+Gf_Q7wKKBufCc1mtV1qVPVrOW0S1qhHxfOv6pJa2Kg@mail.gmail.com> <20131004130207.GA9338@redhat.com> <20131007184507.GD27396@htj.dyndns.org> <20131008145833.GA15600@redhat.com> <5254EB2A.7090803@huawei.com> <20131009133047.GA12414@redhat.com> <20131009140551.GA15849@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=LYbchJ4GIu5s6XxmVWR/D+E9dHAQt619ULqaRbCTSfw=;
-        b=VergNOycv0HY9StiSDc59RiEPsMxVosDIS2Mhg1BWLclQnQH1AJe/V5aRxd1G21CF2
-         T54afIY/duoYoApKKHtIrq1du81b9RqA0PDkvAADphlGmJk7AoNytc5lAigfNQxlTO9V
-         1iCTR1e9+ZaGSPtPw05UWuRTeSmhEXeqHa0Epju5BCHCAKjLkgQCc55J9cFe3VFGJxom
-         o3i1LFmapfndnDDCKLUkKGeJqKitJ9Y6lAbT84F1iRv9EvN13lqkDHgihFlm2tjFL8ge
-         Kg3fMaKWFQ7h9V0JMsNij5bj9MvRxPHspvzYI/bTtKRkLyy5nRUyEQ802bM2JV9FyrOc
-         CF0w==
 Content-Disposition: inline
-In-Reply-To: <5253BCAE.5060409-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20131009140551.GA15849-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Daniel Borkmann <dborkman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, netfilter-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, anjana vk <anjanvk12-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, eunki_kim-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org
 
-Hello,
+And I am starting to think that this change should also fix the
+while_each_thread() problems in this particular case.
 
-On Tue, Oct 08, 2013 at 10:05:02AM +0200, Daniel Borkmann wrote:
-> Could you elaborate on "Wouldn't it be more logical to implement netfilter
-> rule to match the target cgroup paths?". I don't think (or hope) you mean
-> some string comparison on the dentry path here? :) With our proposal, we
-> have in the network stack's critical path only the following code that is
-> being executed here to match the cgroup ...
+In generak the code like
 
-Comparing path each time obviously doesn't make sense but you can
-determine the cgroup on config and hold onto the pointer while the
-rule exists.
+	rcu_read_lock();
+	task = find_get_task(...);
+	rcu_read_unlock();
 
-> ... where ``info->id == skb->sk->sk_cgrp_fwid'' is the actual work, so very
-> lightweight, which is good for high loads (1Gbit/s, 10Gbit/s and beyond), of
-> course. Also, it would be intuitive for admins familiar with other subsystems
-> to just set up and use these cgroup ids in iptabels. I'm not yet quite sure
-> how your suggestion would look like, so you would need to setup some "dummy"
-> subgroups first just to have a path that you can match on?
+	rcu_read_lock();
+	t = task;
+	do {
+		...
+	} while_each_thread (task, t);
+	rcu_read_unlock();
 
-Currently, it's tricky because we have multiple hierarchies to
-consider and there isn't an efficient way to map from task to cgroup
-on a specific hierarchy.  I'm not sure whether we should add another
-mapping table in css_set or just allow using path matching on the
-unified hierarchy.  The latter should be cleaner and easier but more
-restrictive.
+is wrong even if while_each_thread() was correct (and we have a lot
+of examples of this pattern). A GP can pass before the 2nd rcu-lock,
+and we simply can't trust ->thread_group.next.
 
-Anyways, it isn't manageable in the long term to keep adding
-controllers simply to tag tasks differently.  If we want to do this,
-let's please work on a way to match a task's cgroup affiliation
-efficiently.
+But I didn't notice that cgroup_attach_task(tsk, threadgroup) can only
+be called with threadgroup == T when a) tsk is ->group_leader and b)
+we hold threadgroup_lock() which blocks de_thread(). IOW, in this case
+"tsk" can't be removed from ->thread_group list before other threads.
 
-Thanks.
+If next_thread() sees thread_group.next != leader, we know that the
+that .next thread didn't do __unhash_process() yet, and since we
+know that in this case "leader" didn't do this too we are safe.
 
--- 
-tejun
+In short: __unhash_process(leader) (in this) case can never change
+->thread_group.next of another thread, because leader->thread_group
+should be already list_empty().
+
+On 10/09, Oleg Nesterov wrote:
+>
+> On 10/09, Oleg Nesterov wrote:
+> >
+> > On 10/09, Li Zefan wrote:
+> > >
+> > > Anjana, could you revise the patch and send it out with proper changelog
+> > > and Signed-off-by? And please add "Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> # 3.9+"
+> >
+> > Yes, Anjana, please!
+>
+> Please note also that the PF_EXITING check has the same problem, it also
+> needs "goto next".
+>
+> > > > check in the main loop. So Anjana was right (sorry again!), and we
+> > > > should probably do
+> > > >
+> > > > 		ent.cgrp = task_cgroup_from_root(...);
+> > > > 		if (ent.cgrp != cgrp) {
+> > > > 			retval = flex_array_put(...);
+> > > > 			...
+> > > > 		}
+> > > >
+> > > > 		if (!threadgroup)
+> > > > 			break;
+> > > >
+> > >
+> > > Or
+> > >
+> > > do {
+> > > 	...
+> > > 	if (ent.cgrp == cgrp)
+> > > 		goto next;
+> >
+> > Or this, agreed.
+> >
+> > > > Or I am wrong again?
+> > >
+> > > No, you are not! :)
+> >
+> > Thanks ;)
+> >
+> > Oleg.
