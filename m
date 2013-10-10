@@ -1,47 +1,39 @@
-From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: cgroup attach task - slogging cpu
-Date: Thu, 10 Oct 2013 13:11:10 +0200
-Message-ID: <20131010111110.GB22827@redhat.com>
-References: <CALPf4Tz+Gf_Q7wKKBufCc1mtV1qVPVrOW0S1qhHxfOv6pJa2Kg@mail.gmail.com> <20131004130207.GA9338@redhat.com> <20131007184507.GD27396@htj.dyndns.org> <20131008145833.GA15600@redhat.com> <5254EB2A.7090803@huawei.com> <20131009133047.GA12414@redhat.com> <20131009140551.GA15849@redhat.com> <CAChhN7RerxpSadqyosUeSKFg+qcOpO4d-maEKBZ0rvOQGvN27g@mail.gmail.com>
+From: William Dauchy <wdauchy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: strange oom behaviour on 3.10
+Date: Thu, 10 Oct 2013 14:30:33 +0200
+Message-ID: <CAJ75kXab53kyyoLs5agu83-YxqXfXVzATPj+nydrN9R-azZx4g@mail.gmail.com>
+References: <CAJ75kXYqNfWejMhykEqmby4Yvs1w+Tv+QxKHZF67j77HJnco5A@mail.gmail.com>
+ <20131010002412.GC856@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CAChhN7RerxpSadqyosUeSKFg+qcOpO4d-maEKBZ0rvOQGvN27g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-type;
+        bh=5Tyk24jJRF7OFZCgClOFaf0C8kpF6XGsUr6cb6FcCLs=;
+        b=mIlXan9lzsh/LGF//W5/NFOcPPAgg83W+gyjsfvvhDXHK8sSbFWr1VC2F6SG2BMGch
+         RHJ6WuvXBziV+nzLqCAotaWc2U40CzVKeI1v9rA2OmWH04eCHMrgAiAI2/QhG9vyuDiY
+         6c+jLAkHcmq8HPeKyga50tftCOvHfsbMmS0Qy1qEGae3tqKYHZq9kKMom7Ih/baHJYJv
+         DtpXHcytpdkmeAyeW2cIJODIrR8YAVgSPxsqbgmzYFfodAlBtyntWaMxdB+kHtVMLC6s
+         Vbs4pi7t8ETLXDAd+zU95O1gqu6nta8COCX3S2I3spiNqqf+kdfs67P90NT+HRTjLGuN
+         gKZA==
+In-Reply-To: <20131010002412.GC856-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Anjana V Kumar <anjanavk12-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, anjana vk <anjanvk12-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Hi Anjana,
+Hi Johannes,
 
-> On 10/10, Anjana V Kumar wrote:
-> >
-> >
-> Problem:
-> Issue when attaching a single thread to a cgroup if the thread was alredy in the
-> cgroup. The check if the thread is already in cgroup in the above case,
-> continues to the next thread instead of exciting.
+Thank you for you quick reply. and the details given for my questions.
 
-Yes. Thanks.
+On Thu, Oct 10, 2013 at 2:24 AM, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+> Can you try this patch on top of what you have right now?
 
-> @@ -2047,7 +2047,7 @@ static int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk,
->  		ent.cgrp = task_cgroup_from_root(tsk, root);
->  		/* nothing to do if this task is already in the cgroup */
->  		if (ent.cgrp == cgrp)
-> -			continue;
-> +			goto next_thread;
->  		/*
->  		 * saying GFP_ATOMIC has no effect here because we did prealloc
->  		 * earlier, but it's good form to communicate our expectations.
-> @@ -2055,7 +2055,7 @@ static int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk,
->  		retval = flex_array_put(group, i, &ent, GFP_ATOMIC);
->  		BUG_ON(retval != 0);
->  		i++;
-> -
-> +next_thread:
+Ok; let me some time to test it.
 
-Yes, but you forgot to fix another "continue" after "ent.cgrp == cgrp" ;)
-
-Oleg.
+Regards,
+-- 
+William
