@@ -1,84 +1,100 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: strange oom behaviour on 3.10
-Date: Wed, 9 Oct 2013 20:24:12 -0400
-Message-ID: <20131010002412.GC856@cmpxchg.org>
-References: <CAJ75kXYqNfWejMhykEqmby4Yvs1w+Tv+QxKHZF67j77HJnco5A@mail.gmail.com>
+From: anjana vk <anjanvk12-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: cgroup attach task - slogging cpu
+Date: Thu, 10 Oct 2013 09:52:00 +0530
+Message-ID: <CALPf4Txeh85oq_Bo6qd=emniNGvKsJN1xJQY111Tuz+XOrSxiA@mail.gmail.com>
+References: <CALPf4Tz+Gf_Q7wKKBufCc1mtV1qVPVrOW0S1qhHxfOv6pJa2Kg@mail.gmail.com>
+	<20131004130207.GA9338@redhat.com>
+	<20131007184507.GD27396@htj.dyndns.org>
+	<20131008145833.GA15600@redhat.com>
+	<5254EB2A.7090803@huawei.com>
+	<20131009133047.GA12414@redhat.com>
+	<20131009140551.GA15849@redhat.com>
+	<CAChhN7RerxpSadqyosUeSKFg+qcOpO4d-maEKBZ0rvOQGvN27g@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=GJ+INu1k27skg0wxro+NUDGi2lYzTPFu9ybi0IUFTl4=;
-	b=nRIyYzqdVQAKhmDMU1EZBkl7QRI8Cu76MINY7jkdTQNLFE0v6lhngdGcwzjaBw/ad2EV+gO5RBxxPNXkJz3+uJrXRsNtExNeMDLPXnmD9ZL8wYzU9ug2/ILMnSniPUAVdIZCzWXBzfJnd80Q1was0hEOkQDmTkqYGnTb+XhbWiM=;
-Content-Disposition: inline
-In-Reply-To: <CAJ75kXYqNfWejMhykEqmby4Yvs1w+Tv+QxKHZF67j77HJnco5A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=kAnH2QDBBfx5ujHJ5KyJziXi4lotTTB6yfsBr2BuH1E=;
+        b=EqZbhhHt/2yCmLxPzF6boeGsJQAy+j73larXX3GMrWxoxGXll09v2P/8NKqWWYbZWN
+         AB7YFuyauSXdPvvQGkv4xJ7Z5leaGc0/bQL0gCV0ZdSVAk56PPbmiR9ypIYrUekG5F7+
+         YEbBUv4CE7nmZt099KUnRKv/p4Nly6ybzyDk/H0heUyN5a18M5UwShwox+spM0ZKdbg2
+         4OTdCKmucB8kdEkr2KqGn73+kz3YJNpLWRTlNj+iHqxqpPC6uqqmusZPUIoTj3c4pnG6
+         Ao8qqda0332hRmhFM0UtfWq+P0jKdXKVAEVh5KAM5x/UdBwMz6fHTCkQGxH+xzDgMrsU
+         oBtQ==
+In-Reply-To: <CAChhN7RerxpSadqyosUeSKFg+qcOpO4d-maEKBZ0rvOQGvN27g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: William Dauchy <wdauchy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Anjana V Kumar <anjanavk12-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi William,
++cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Oct 09, 2013 at 05:54:20PM +0200, William Dauchy wrote:
-> Hi,
-> 
-> I have been through a strange issue with cgroups on v3.10.x.
-> The oom is triggered for a cgroups wich has reached the memory limit.
-> I'm getting several:
-> 
-> Task in /lxc/VM_A killed as a result of limit of /lxc/VM_A
-> memory: usage 262144kB, limit 262144kB, failcnt 44742
-> 
-> which is quite normal.
-> The last one is:
-> Task in / killed as a result of limit of /lxc/VM_A
-> memory: usage 128420kB, limit 262144kB, failcnt 44749
-> 
-> Why do I have a oom kill is this case since the memory usage is ok?
-
-I suspect a task's OOM context is set up but not handled, so later on
-when another task triggers an OOM the OOM killer is invoked on
-whatever memcg that OOM context was pointing to.
-
-> Why is it choosing a task in / instead of in /lxc/VM_A?
-
-The memcg in the OOM context could have been freed and corrupted at
-that point.
-
-Can you try this patch on top of what you have right now?
-
----
- mm/memcontrol.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index ba3051a..d60f560 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2706,6 +2706,9 @@ static int __mem_cgroup_try_charge(struct mm_struct *mm,
- 	if (unlikely(task_in_memcg_oom(current)))
- 		goto bypass;
- 
-+	if (gfp_mask & __GFP_NOFAIL)
-+		oom = false;
-+
- 	/*
- 	 * We always charge the cgroup the mm_struct belongs to.
- 	 * The mm_struct's mem_cgroup changes on task migration if the
-@@ -2803,10 +2806,10 @@ done:
- 	*ptr = memcg;
- 	return 0;
- nomem:
--	*ptr = NULL;
--	if (gfp_mask & __GFP_NOFAIL)
--		return 0;
--	return -ENOMEM;
-+	if (!(gfp_mask & __GFP_NOFAIL)) {
-+		*ptr = NULL;
-+		return -ENOMEM;
-+	}
- bypass:
- 	*ptr = root_mem_cgroup;
- 	return -EINTR;
--- 
-1.8.4
+On 10/10/13, Anjana V Kumar <anjanavk12-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> Hi All,
+>
+> Please find the attached patch making the changes for the case where thread
+> is already in the required cgroup.
+>
+> Can you please let me know if this is the right way to fix this issue, if
+> any modifications are required.
+>
+> Thanks and Regards
+> Anjana
+>
+>
+> On Wed, Oct 9, 2013 at 7:35 PM, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+>
+>> On 10/09, Oleg Nesterov wrote:
+>> >
+>> > On 10/09, Li Zefan wrote:
+>> > >
+>> > > Anjana, could you revise the patch and send it out with proper
+>> changelog
+>> > > and Signed-off-by? And please add "Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> #
+>> 3.9+"
+>> >
+>> > Yes, Anjana, please!
+>>
+>> Please note also that the PF_EXITING check has the same problem, it also
+>> needs "goto next".
+>>
+>> > > > check in the main loop. So Anjana was right (sorry again!), and we
+>> > > > should probably do
+>> > > >
+>> > > >           ent.cgrp = task_cgroup_from_root(...);
+>> > > >           if (ent.cgrp != cgrp) {
+>> > > >                   retval = flex_array_put(...);
+>> > > >                   ...
+>> > > >           }
+>> > > >
+>> > > >           if (!threadgroup)
+>> > > >                   break;
+>> > > >
+>> > >
+>> > > Or
+>> > >
+>> > > do {
+>> > >     ...
+>> > >     if (ent.cgrp == cgrp)
+>> > >             goto next;
+>> >
+>> > Or this, agreed.
+>> >
+>> > > > Or I am wrong again?
+>> > >
+>> > > No, you are not! :)
+>> >
+>> > Thanks ;)
+>> >
+>> > Oleg.
+>>
+>>
+>
+>
+> --
+> Anjana
+>
