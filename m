@@ -1,50 +1,58 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: Possible regression with cgroups in 3.11
-Date: Fri, 11 Oct 2013 21:06:22 +0800
-Message-ID: <5257F7CE.90702@huawei.com>
-References: <4431690.ZqnBIdaGMg@akheu22.uni-muenster.de>
+Subject: Re: cgroup_attach_task && while_each_thread (Was: cgroup attach task
+ - slogging cpu)
+Date: Fri, 11 Oct 2013 21:15:15 +0800
+Message-ID: <5257F9E3.5030708@huawei.com>
+References: <CALPf4Tz+Gf_Q7wKKBufCc1mtV1qVPVrOW0S1qhHxfOv6pJa2Kg@mail.gmail.com> <20131004130207.GA9338@redhat.com> <20131007184507.GD27396@htj.dyndns.org> <20131008145833.GA15600@redhat.com> <5254EB2A.7090803@huawei.com> <20131009133047.GA12414@redhat.com> <20131009140551.GA15849@redhat.com> <20131009165448.GA22437@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4431690.ZqnBIdaGMg-fhzw3bAB8VLGE+7tAf435K1T39T6GgSB@public.gmane.org>
+In-Reply-To: <20131009165448.GA22437-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Markus Blank-Burian <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, anjana vk <anjanvk12-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, eunki_kim-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org
 
-On 2013/10/10 16:50, Markus Blank-Burian wrote:
-> Hi,
+On 2013/10/10 0:54, Oleg Nesterov wrote:
+> And I am starting to think that this change should also fix the
+> while_each_thread() problems in this particular case.
+> 
+> In generak the code like
+> 
+> 	rcu_read_lock();
+> 	task = find_get_task(...);
+> 	rcu_read_unlock();
+> 
+> 	rcu_read_lock();
+> 	t = task;
+> 	do {
+> 		...
+> 	} while_each_thread (task, t);
+> 	rcu_read_unlock();
+> 
+> is wrong even if while_each_thread() was correct (and we have a lot
+> of examples of this pattern). A GP can pass before the 2nd rcu-lock,
+> and we simply can't trust ->thread_group.next.
+> 
+> But I didn't notice that cgroup_attach_task(tsk, threadgroup) can only
+> be called with threadgroup == T when a) tsk is ->group_leader and b)
+> we hold threadgroup_lock() which blocks de_thread(). IOW, in this case
+> "tsk" can't be removed from ->thread_group list before other threads.
+> 
+> If next_thread() sees thread_group.next != leader, we know that the
+> that .next thread didn't do __unhash_process() yet, and since we
+> know that in this case "leader" didn't do this too we are safe.
+> 
+> In short: __unhash_process(leader) (in this) case can never change
+> ->thread_group.next of another thread, because leader->thread_group
+> should be already list_empty().
 > 
 
-Thanks for the report.
+If threadgroup == false, and if the tsk is existing or is already in
+the targeted cgroup, we won't break the loop due to the bug but do
+this:
 
-> I have upgraded all nodes on our computing cluster to 3.11.3 last week (from 
-> 3.10.9) and experience deadlocks in kernel threads connected to cgroups. They 
-> appear sometimes, when our queuing system (slurm 2.6.0) tries to clean up its 
-> cgroups (using freezer, cpuset, memory and devices subsets). I have attached 
-> the associated kernel messages as well als the cleanup script.
-> 
+  while_each_thread(task, t)
 
-We've changed the cgroup destroy path dramatically including using per-cpu
-ref, so those changes probably introduced this bug.
-
-> Oct 10 00:39:48 kaa-14 kernel: [169967.617545] INFO: task kworker/7:0:5201 blocked for more than 120 seconds.
-> Oct 10 00:39:48 kaa-14 kernel: [169967.617557] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> Oct 10 00:39:48 kaa-14 kernel: [169967.617563] kworker/7:0     D ffff88077e873328     0  5201      2 0x00000000
-> Oct 10 00:39:48 kaa-14 kernel: [169967.617583] Workqueue: events cgroup_offline_fn
-> Oct 10 00:39:48 kaa-14 kernel: [169967.617590]  ffff8804a4129d70 0000000000000002 ffff8804adc60000 ffff8804a4129fd8
-> Oct 10 00:39:48 kaa-14 kernel: [169967.617599]  ffff8804a4129fd8 0000000000011c40 ffff88077e872ee0 ffffffff81634ae0
-> Oct 10 00:39:48 kaa-14 kernel: [169967.617608]  ffffffff81634ae4 ffff88077e872ee0 ffffffff81634ae8 00000000ffffffff
-> Oct 10 00:39:48 kaa-14 kernel: [169967.617617] Call Trace:
-> Oct 10 00:39:48 kaa-14 kernel: [169967.617634]  [<ffffffff813c57e4>] schedule+0x60/0x62
-> Oct 10 00:39:48 kaa-14 kernel: [169967.617645]  [<ffffffff813c5a6b>] schedule_preempt_disabled+0x13/0x1f
-> Oct 10 00:39:48 kaa-14 kernel: [169967.617654]  [<ffffffff813c4987>] __mutex_lock_slowpath+0x143/0x1d4
-> Oct 10 00:39:48 kaa-14 kernel: [169967.617665]  [<ffffffff8105a3e8>] ? arch_vtime_task_switch+0x6a/0x6f
-> Oct 10 00:39:48 kaa-14 kernel: [169967.617673]  [<ffffffff813c3b58>] mutex_lock+0x12/0x22
-> Oct 10 00:39:48 kaa-14 kernel: [169967.617681]  [<ffffffff81084f4f>] cgroup_offline_fn+0x36/0x137
-
-All the tasks are blocked in cgroup mutex, but it doesn't tell us who's
-holding this lock, which is vital.
-
-Is there any other kernel warnings in the kernel log?
+If @task isn't the leader, we might got stuck in the loop?
