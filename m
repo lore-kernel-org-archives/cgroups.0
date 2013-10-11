@@ -1,71 +1,72 @@
-From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: cgroup_attach_task && while_each_thread (Was: cgroup attach
-	task - slogging cpu)
-Date: Fri, 11 Oct 2013 18:00:04 +0200
-Message-ID: <20131011160004.GA26416@redhat.com>
-References: <CALPf4Tz+Gf_Q7wKKBufCc1mtV1qVPVrOW0S1qhHxfOv6pJa2Kg@mail.gmail.com> <20131004130207.GA9338@redhat.com> <20131007184507.GD27396@htj.dyndns.org> <20131008145833.GA15600@redhat.com> <5254EB2A.7090803@huawei.com> <20131009133047.GA12414@redhat.com> <20131009140551.GA15849@redhat.com> <20131009165448.GA22437@redhat.com> <5257F9E3.5030708@huawei.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [patch 2/2] fs: buffer: move allocation failure loop into the
+ allocator
+Date: Fri, 11 Oct 2013 13:51:57 -0700
+Message-ID: <20131011135157.cad19680e02cc4140ecdff0b@linux-foundation.org>
+References: <1381265890-11333-1-git-send-email-hannes@cmpxchg.org>
+	<1381265890-11333-2-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <5257F9E3.5030708-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1381265890-11333-2-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, anjana vk <anjanvk12-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, eunki_kim-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>, azurIt <azurit@pobox.sk>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 10/11, Li Zefan wrote:
->
-> On 2013/10/10 0:54, Oleg Nesterov wrote:
->
-> > And I am starting to think that this change should also fix the
-> > while_each_thread() problems in this particular case.
+On Tue,  8 Oct 2013 16:58:10 -0400 Johannes Weiner <hannes@cmpxchg.org> wrote:
 
-Please see below,
+> Buffer allocation has a very crude indefinite loop around waking the
+> flusher threads and performing global NOFS direct reclaim because it
+> can not handle allocation failures.
+> 
+> The most immediate problem with this is that the allocation may fail
+> due to a memory cgroup limit, where flushers + direct reclaim might
+> not make any progress towards resolving the situation at all.  Because
+> unlike the global case, a memory cgroup may not have any cache at all,
+> only anonymous pages but no swap.  This situation will lead to a
+> reclaim livelock with insane IO from waking the flushers and thrashing
+> unrelated filesystem cache in a tight loop.
+> 
+> Use __GFP_NOFAIL allocations for buffers for now.  This makes sure
+> that any looping happens in the page allocator, which knows how to
+> orchestrate kswapd, direct reclaim, and the flushers sensibly.  It
+> also allows memory cgroups to detect allocations that can't handle
+> failure and will allow them to ultimately bypass the limit if reclaim
+> can not make progress.
+> 
+> --- a/fs/buffer.c
+> +++ b/fs/buffer.c
+> @@ -1005,9 +1005,19 @@ grow_dev_page(struct block_device *bdev, sector_t block,
+>  	struct buffer_head *bh;
+>  	sector_t end_block;
+>  	int ret = 0;		/* Will call free_more_memory() */
+> +	gfp_t gfp_mask;
+>  
+> -	page = find_or_create_page(inode->i_mapping, index,
+> -		(mapping_gfp_mask(inode->i_mapping) & ~__GFP_FS)|__GFP_MOVABLE);
+> +	gfp_mask = mapping_gfp_mask(inode->i_mapping) & ~__GFP_FS;
+> +	gfp_mask |= __GFP_MOVABLE;
+> +	/*
+> +	 * XXX: __getblk_slow() can not really deal with failure and
+> +	 * will endlessly loop on improvised global reclaim.  Prefer
+> +	 * looping in the allocator rather than here, at least that
+> +	 * code knows what it's doing.
+> +	 */
+> +	gfp_mask |= __GFP_NOFAIL;
 
-> > In generak the code like
-> >
-> > 	rcu_read_lock();
-> > 	task = find_get_task(...);
-> > 	rcu_read_unlock();
-> >
-> > 	rcu_read_lock();
-> > 	t = task;
-> > 	do {
-> > 		...
-> > 	} while_each_thread (task, t);
-> > 	rcu_read_unlock();
-> >
-> > is wrong even if while_each_thread() was correct (and we have a lot
-> > of examples of this pattern). A GP can pass before the 2nd rcu-lock,
-> > and we simply can't trust ->thread_group.next.
-> >
-> > But I didn't notice that cgroup_attach_task(tsk, threadgroup) can only
-> > be called with threadgroup == T when a) tsk is ->group_leader and b)
-> > we hold threadgroup_lock() which blocks de_thread(). IOW, in this case
-> > "tsk" can't be removed from ->thread_group list before other threads.
-> >
-> > If next_thread() sees thread_group.next != leader, we know that the
-> > that .next thread didn't do __unhash_process() yet, and since we
-> > know that in this case "leader" didn't do this too we are safe.
-> >
-> > In short: __unhash_process(leader) (in this) case can never change
-> > ->thread_group.next of another thread, because leader->thread_group
-> > should be already list_empty().
-> >
->
-> If threadgroup == false, and if the tsk is existing or is already in
-> the targeted cgroup, we won't break the loop due to the bug but do
-> this:
->
->   while_each_thread(task, t)
->
-> If @task isn't the leader, we might got stuck in the loop?
+Yup.  When I added GFP_NOFAIL all those years ago there were numerous
+open-coded try-forever loops, and GFP_NOFAIL was more a cleanup than
+anything else - move the loop into the page allocator, leaving behind a
+sentinel which says "this code sucks and should be fixed".  Of course,
+nothing has since been fixed :(
 
-Yes, yes, sure. We need to fix the wrong "continue" logic, hopefully
+So apart from fixing a bug, this patch continues this conversion.  I
+can't think why I didn't do it a decade ago!
 
-I tried to say (see above) that after we do this while_each_thread()
-should be fine in this particular case.
-
-Oleg.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
