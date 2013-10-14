@@ -1,94 +1,478 @@
-From: Markus Blank-Burian <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org>
-Subject: Re: Possible regression with cgroups in 3.11
-Date: Mon, 14 Oct 2013 10:06:13 +0200
-Message-ID: <CA+SBX_MQVMuzWKroASK7Cr5J8cu9ajGo=CWr7SRs+OWh83h4_w@mail.gmail.com>
-References: <4431690.ZqnBIdaGMg@akheu22.uni-muenster.de>
-	<5257F7CE.90702@huawei.com>
-	<CA+SBX_Pa8sJbRq3aOghzqam5tDUbs_SPnVTaewtg-pRmvUqSzA@mail.gmail.com>
-	<5258E584.70500@huawei.com>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Hong Zhiguo <honkiko@gmail.com>
+Subject: [PATCH v2] blk-throttle: simplify logic by token bucket algorithm
+Date: Mon, 14 Oct 2013 17:09:17 +0800
+Message-ID: <1381741757-20888-1-git-send-email-zhiguohong@tencent.com>
+References: <1381574794-7639-1-git-send-email-zhiguohong@tencent.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20120113;
-        h=mime-version:sender:in-reply-to:references:date:message-id:subject
-         :from:to:content-type;
-        bh=HNg7SxJGkcrVVIgn1HjwDY7rJBuSHGj07FazxNEQC7A=;
-        b=RSS9II3Aquk5SND0c5njOwspH1ZM5u9tEkmVG9Yt/L/YGNQb2f6lmLKD6u4482UuRV
-         ZakY3/UqEBKsKOSqgHM1RfMoIIAaKwZfvqMG+SBeutKTO7ZP9JloX0Gs0TvY/2Zm0pUV
-         Lbipyg5ohTS8JF9kInNtm8a54QmqhJblV8WfCdlmGIJkh0AR0NP2N/EBxF/wbD5xs+bq
-         yR0fzBLKEx0BJAgQDp7AynZYUT54kCjdrNrkJ2dPJSqdK1/VcR8UTOuu8Gz5LpQmTxaP
-         imGGoKYmCfPQChuaicnQB6l8wev9dAgTAE9tW2SyVezYvMjG7kmeLMxdJxYINcRNCA2z
-         pvNw==
-In-Reply-To: <5258E584.70500-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=gmail.com; s=20120113;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=xJ+SwM0+f4j/YYLwWKJhpaD/E5i1Z28lOYmfN9YDAG0=;
+        b=B6FKsu1ACdsFeA75wUZHVPzcyYhAHBidspDy07hdjJKGAucCf2elZPcgGqVKzKeo4a
+         91+zLOc/4vVgYRDXJvibzzMLy0pCvgUc0c00jEZ3lRD1byjrX7PtAVKUa7MkTzJ6uSRs
+         5yR96fSeFmqMijBs80WXuG9sp7teBkuZa2bEjzYsUinBIVpQPc3vh0/Hu6lp1Xymomg6
+         jUPrv84f8As5vFmntRQaxm1hlRIt6EQAhzVaJTohFTeWknvSPPtq4MXxM9R3o9Tc8/tm
+         iwDueWZWOFArcTQZoYjqqvqk6zZrkysdEDQO3gNWdG/taaVomUx4+aUODDFFAnVBqOtU
+         S1xQ==
+In-Reply-To: <1381574794-7639-1-git-send-email-zhiguohong@tencent.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: axboe@kernel.dk
+Cc: vgoyal@redhat.com, cgroups@vger.kernel.org, tj@kernel.org, linux-kernel@vger.kernel.org, Hong Zhiguo <zhiguohong@tencent.com>
 
-The crash utility indicated, that the lock was held by a kworker
-thread, which was idle at the moment. So there might be a case, where
-no unlock is done. I am trying to reproduce the problem at the moment
-with CONFIG_PROVE_LOCKING, but without luck so far. It seems, that my
-test-job is quite bad at reproducing the bug. I'll let you know, if I
-can find out more.
+From: Hong Zhiguo <zhiguohong@tencent.com>
 
+Token bucket algorithm(http://en.wikipedia.org/wiki/Token_bucket)
+is very simple and widely used for rate limiting and shaping.
+It's well suitable for blk-throttle. And it natually works for
+hierarchical cgroups. So I took it to replace the original time
+_slicing_|_trimming_|_extending_ logic.
 
-On Sat, Oct 12, 2013 at 8:00 AM, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
-> On 2013/10/12 0:05, Markus Blank-Burian wrote:
->> I rechecked the logs and found no information about who may be holding
->> the lock. I have only identified more different stack traces, waiting
->> for locks. These are for instance:
->>
-> ...
->>
->> But i suppose, the lock is lost elsewhere. Are there any kernel
->> options i could activate for more debug output or some tools to find
->> out, who is holding the lock (or who forgot to unlock).
->>
->
-> You may enable CONFIG_PROVE_LOCKING, and do this when deadlock happens:
->
-> # echo d > /proc/sysrq-trigger
-> # dmesg
-> ...
-> [ 3463.022386] 2 locks held by bash/10414:
-> [ 3463.022388]  #0:  (sysrq_key_table_lock){......}, at: [<ffffffff813691d8>] __handle_sysrq+0x28/0x190
-> [ 3463.022399]  #1:  (tasklist_lock){.+.+..}, at: [<ffffffff810b6d05>] debug_show_all_locks+0x45/0x280
->
-> Or you don't have to enable PROVE_LOCKING, but use crash when the
-> bug is triggered:
->
-> # crash <your vmlinux> /proc/kcore
-> crash> struct mutex cgroup_mutex
-> struct mutex {
-> ...
->   owner = 0xffff880619e04dc0,      <--- this is the thread holding the lock
-> ...
-> }
-> crash> struct task_struct 0xffff880619e04dc0
-> struct task_struct {
-> ...
->   pid = 22201,
-> ...
->   comm = "bash\000proc\000\000\000\000\000\000",
-> ...
-> }
-> crash> bt 22201
-> PID: 22201  TASK: ffff880619e04dc0  CPU: 0   COMMAND: "bash"
->  #0 [ffff880616d5fbe8] __schedule at ffffffff815602db
->  #1 [ffff880616d5fd30] schedule at ffffffff81560839
->  #2 [ffff880616d5fd40] schedule_timeout at ffffffff8155cb42
->  #3 [ffff880616d5fe00] schedule_timeout_uninterruptible at ffffffff8155cc5e
->  #4 [ffff880616d5fe10] msleep at ffffffff81069cc5
->  #5 [ffff880616d5fe20] cgroup_release_agent_write at ffffffff810f0f2d
->  #6 [ffff880616d5fe40] cgroup_write_string at ffffffff810f2e32
->  #7 [ffff880616d5fed0] cgroup_file_write at ffffffff810f2f60
->  #8 [ffff880616d5fef0] vfs_write at ffffffff811dfb6f
->  #9 [ffff880616d5ff20] sys_write at ffffffff811e0515
-> #10 [ffff880616d5ff80] system_call_fastpath at ffffffff8156cfc2
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The advantage is simplicity, reliability and less fluctuation.
+
+About 300 lines of code for time-slicing is replaced with 60 lines of
+code for token bucket in blk-throttle.c.
+
+I've tested this patch by fio with rw=randread, rw=randrw. It
+behaves almost the same with original time-slicing implementation,
+and with more accuracy.
+
+For example, create 2 cgroups and set blkio.throttle.read_bps_device
+to 51200(50K) and 204800(200K), start fio with rw=randread. The
+Average and Standard Deviation of bandwidth report:
+----------------------------------------------
+Time Slicing         | 50K group | 200K group
+----------------------------------------------
+Average:             | 50.1176   | 200.4470
+Standard Deviation:  | 1.2977    | 3.6272
+----------------------------------------------
+
+----------------------------------------------
+Token Bucket         | 50K group | 200K group
+----------------------------------------------
+Average:             | 50.1647   | 200.4705
+Standard Deviation:  | 0.5498    | 1.0080
+----------------------------------------------
+
+Signed-off-by: Hong Zhiguo <zhiguohong@tencent.com>
+Tested-by: Hong Zhiguo <zhiguohong@tencent.com>
+---
+ block/blk-throttle.c | 284 ++++++++-------------------------------------------
+ 1 file changed, 43 insertions(+), 241 deletions(-)
+
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 8331aba..ec26555 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -18,9 +18,6 @@ static int throtl_grp_quantum = 8;
+ /* Total max dispatch from all groups in one round */
+ static int throtl_quantum = 32;
+ 
+-/* Throttling is performed over 100ms slice and after that slice is renewed */
+-static unsigned long throtl_slice = HZ/10;	/* 100 ms */
+-
+ static struct blkcg_policy blkcg_policy_throtl;
+ 
+ /* A workqueue to queue throttle related work */
+@@ -91,6 +88,11 @@ struct tg_stats_cpu {
+ 	struct blkg_rwstat		serviced;
+ };
+ 
++/* Depth of iops token bucket */
++#define THROTL_BURST_IO 8
++/* Depth of bps token bucket */
++#define THROTL_BURST_BYTES (4096 * 8)
++
+ struct throtl_grp {
+ 	/* must be the first member */
+ 	struct blkg_policy_data pd;
+@@ -133,14 +135,13 @@ struct throtl_grp {
+ 	/* IOPS limits */
+ 	unsigned int iops[2];
+ 
+-	/* Number of bytes disptached in current slice */
+-	uint64_t bytes_disp[2];
+-	/* Number of bio's dispatched in current slice */
+-	unsigned int io_disp[2];
++	/* Token for throttling by bps */
++	uint64_t bytes_token[2];
++	/* Token for throttling by iops */
++	unsigned int io_token[2];
+ 
+-	/* When did we start a new slice */
+-	unsigned long slice_start[2];
+-	unsigned long slice_end[2];
++	/* Time check-point */
++	unsigned long t_c[2];
+ 
+ 	/* Per cpu stats pointer */
+ 	struct tg_stats_cpu __percpu *stats_cpu;
+@@ -680,171 +681,26 @@ static bool throtl_schedule_next_dispatch(struct throtl_service_queue *sq,
+ 	return false;
+ }
+ 
+-static inline void throtl_start_new_slice_with_credit(struct throtl_grp *tg,
+-		bool rw, unsigned long start)
+-{
+-	tg->bytes_disp[rw] = 0;
+-	tg->io_disp[rw] = 0;
+-
+-	/*
+-	 * Previous slice has expired. We must have trimmed it after last
+-	 * bio dispatch. That means since start of last slice, we never used
+-	 * that bandwidth. Do try to make use of that bandwidth while giving
+-	 * credit.
+-	 */
+-	if (time_after_eq(start, tg->slice_start[rw]))
+-		tg->slice_start[rw] = start;
+-
+-	tg->slice_end[rw] = jiffies + throtl_slice;
+-	throtl_log(&tg->service_queue,
+-		   "[%c] new slice with credit start=%lu end=%lu jiffies=%lu",
+-		   rw == READ ? 'R' : 'W', tg->slice_start[rw],
+-		   tg->slice_end[rw], jiffies);
+-}
+-
+-static inline void throtl_start_new_slice(struct throtl_grp *tg, bool rw)
+-{
+-	tg->bytes_disp[rw] = 0;
+-	tg->io_disp[rw] = 0;
+-	tg->slice_start[rw] = jiffies;
+-	tg->slice_end[rw] = jiffies + throtl_slice;
+-	throtl_log(&tg->service_queue,
+-		   "[%c] new slice start=%lu end=%lu jiffies=%lu",
+-		   rw == READ ? 'R' : 'W', tg->slice_start[rw],
+-		   tg->slice_end[rw], jiffies);
+-}
+-
+-static inline void throtl_set_slice_end(struct throtl_grp *tg, bool rw,
+-					unsigned long jiffy_end)
+-{
+-	tg->slice_end[rw] = roundup(jiffy_end, throtl_slice);
+-}
+-
+-static inline void throtl_extend_slice(struct throtl_grp *tg, bool rw,
+-				       unsigned long jiffy_end)
+-{
+-	tg->slice_end[rw] = roundup(jiffy_end, throtl_slice);
+-	throtl_log(&tg->service_queue,
+-		   "[%c] extend slice start=%lu end=%lu jiffies=%lu",
+-		   rw == READ ? 'R' : 'W', tg->slice_start[rw],
+-		   tg->slice_end[rw], jiffies);
+-}
+-
+-/* Determine if previously allocated or extended slice is complete or not */
+-static bool throtl_slice_used(struct throtl_grp *tg, bool rw)
+-{
+-	if (time_in_range(jiffies, tg->slice_start[rw], tg->slice_end[rw]))
+-		return 0;
+-
+-	return 1;
+-}
+-
+-/* Trim the used slices and adjust slice start accordingly */
+-static inline void throtl_trim_slice(struct throtl_grp *tg, bool rw)
+-{
+-	unsigned long nr_slices, time_elapsed, io_trim;
+-	u64 bytes_trim, tmp;
+-
+-	BUG_ON(time_before(tg->slice_end[rw], tg->slice_start[rw]));
+-
+-	/*
+-	 * If bps are unlimited (-1), then time slice don't get
+-	 * renewed. Don't try to trim the slice if slice is used. A new
+-	 * slice will start when appropriate.
+-	 */
+-	if (throtl_slice_used(tg, rw))
+-		return;
+-
+-	/*
+-	 * A bio has been dispatched. Also adjust slice_end. It might happen
+-	 * that initially cgroup limit was very low resulting in high
+-	 * slice_end, but later limit was bumped up and bio was dispached
+-	 * sooner, then we need to reduce slice_end. A high bogus slice_end
+-	 * is bad because it does not allow new slice to start.
+-	 */
+-
+-	throtl_set_slice_end(tg, rw, jiffies + throtl_slice);
+-
+-	time_elapsed = jiffies - tg->slice_start[rw];
+-
+-	nr_slices = time_elapsed / throtl_slice;
+-
+-	if (!nr_slices)
+-		return;
+-	tmp = tg->bps[rw] * throtl_slice * nr_slices;
+-	do_div(tmp, HZ);
+-	bytes_trim = tmp;
+-
+-	io_trim = (tg->iops[rw] * throtl_slice * nr_slices)/HZ;
+-
+-	if (!bytes_trim && !io_trim)
+-		return;
+-
+-	if (tg->bytes_disp[rw] >= bytes_trim)
+-		tg->bytes_disp[rw] -= bytes_trim;
+-	else
+-		tg->bytes_disp[rw] = 0;
+-
+-	if (tg->io_disp[rw] >= io_trim)
+-		tg->io_disp[rw] -= io_trim;
+-	else
+-		tg->io_disp[rw] = 0;
+-
+-	tg->slice_start[rw] += nr_slices * throtl_slice;
+-
+-	throtl_log(&tg->service_queue,
+-		   "[%c] trim slice nr=%lu bytes=%llu io=%lu start=%lu end=%lu jiffies=%lu",
+-		   rw == READ ? 'R' : 'W', nr_slices, bytes_trim, io_trim,
+-		   tg->slice_start[rw], tg->slice_end[rw], jiffies);
+-}
+-
+ static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
+ 				  unsigned long *wait)
+ {
+ 	bool rw = bio_data_dir(bio);
+-	unsigned int io_allowed;
+-	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
+-	u64 tmp;
+-
+-	jiffy_elapsed = jiffy_elapsed_rnd = jiffies - tg->slice_start[rw];
+-
+-	/* Slice has just started. Consider one slice interval */
+-	if (!jiffy_elapsed)
+-		jiffy_elapsed_rnd = throtl_slice;
+-
+-	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, throtl_slice);
++	u64 token;
+ 
+-	/*
+-	 * jiffy_elapsed_rnd should not be a big value as minimum iops can be
+-	 * 1 then at max jiffy elapsed should be equivalent of 1 second as we
+-	 * will allow dispatch after 1 second and after that slice should
+-	 * have been trimmed.
+-	 */
+-
+-	tmp = (u64)tg->iops[rw] * jiffy_elapsed_rnd;
+-	do_div(tmp, HZ);
++	token = (u64)tg->iops[rw] * (jiffies - tg->t_c[rw]);
++	do_div(token, HZ);
++	token += tg->io_token[rw];
+ 
+-	if (tmp > UINT_MAX)
+-		io_allowed = UINT_MAX;
+-	else
+-		io_allowed = tmp;
+-
+-	if (tg->io_disp[rw] + 1 <= io_allowed) {
++	if (token) {
++		tg->io_token[rw] = token;
+ 		if (wait)
+ 			*wait = 0;
+ 		return 1;
+ 	}
+ 
+ 	/* Calc approx time to dispatch */
+-	jiffy_wait = ((tg->io_disp[rw] + 1) * HZ)/tg->iops[rw] + 1;
+-
+-	if (jiffy_wait > jiffy_elapsed)
+-		jiffy_wait = jiffy_wait - jiffy_elapsed;
+-	else
+-		jiffy_wait = 1;
+-
+ 	if (wait)
+-		*wait = jiffy_wait;
++		*wait = HZ / tg->iops[rw] ?: 1;
+ 	return 0;
+ }
+ 
+@@ -852,41 +708,26 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 				 unsigned long *wait)
+ {
+ 	bool rw = bio_data_dir(bio);
+-	u64 bytes_allowed, extra_bytes, tmp;
+-	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
+-
+-	jiffy_elapsed = jiffy_elapsed_rnd = jiffies - tg->slice_start[rw];
+-
+-	/* Slice has just started. Consider one slice interval */
+-	if (!jiffy_elapsed)
+-		jiffy_elapsed_rnd = throtl_slice;
+-
+-	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, throtl_slice);
++	u64 extra_bytes, token;
++	unsigned long jiffy_wait;
+ 
+-	tmp = tg->bps[rw] * jiffy_elapsed_rnd;
+-	do_div(tmp, HZ);
+-	bytes_allowed = tmp;
++	token = (u64)tg->bps[rw] * (jiffies - tg->t_c[rw]);
++	do_div(token, HZ);
++	token += tg->bytes_token[rw];
+ 
+-	if (tg->bytes_disp[rw] + bio->bi_size <= bytes_allowed) {
++	if (bio->bi_size <= token) {
++		tg->bytes_token[rw] = token;
+ 		if (wait)
+ 			*wait = 0;
+ 		return 1;
+ 	}
+ 
+ 	/* Calc approx time to dispatch */
+-	extra_bytes = tg->bytes_disp[rw] + bio->bi_size - bytes_allowed;
+-	jiffy_wait = div64_u64(extra_bytes * HZ, tg->bps[rw]);
+-
+-	if (!jiffy_wait)
+-		jiffy_wait = 1;
+-
+-	/*
+-	 * This wait time is without taking into consideration the rounding
+-	 * up we did. Add that time also.
+-	 */
+-	jiffy_wait = jiffy_wait + (jiffy_elapsed_rnd - jiffy_elapsed);
+-	if (wait)
+-		*wait = jiffy_wait;
++	if (wait) {
++		extra_bytes = bio->bi_size - token;
++		jiffy_wait = div64_u64(extra_bytes * HZ, tg->bps[rw]);
++		*wait = jiffy_wait ?: 1;
++	}
+ 	return 0;
+ }
+ 
+@@ -916,18 +757,6 @@ static bool tg_may_dispatch(struct throtl_grp *tg, struct bio *bio,
+ 		return 1;
+ 	}
+ 
+-	/*
+-	 * If previous slice expired, start a new one otherwise renew/extend
+-	 * existing slice to make sure it is at least throtl_slice interval
+-	 * long since now.
+-	 */
+-	if (throtl_slice_used(tg, rw))
+-		throtl_start_new_slice(tg, rw);
+-	else {
+-		if (time_before(tg->slice_end[rw], jiffies + throtl_slice))
+-			throtl_extend_slice(tg, rw, jiffies + throtl_slice);
+-	}
+-
+ 	if (tg_with_in_bps_limit(tg, bio, &bps_wait) &&
+ 	    tg_with_in_iops_limit(tg, bio, &iops_wait)) {
+ 		if (wait)
+@@ -940,9 +769,6 @@ static bool tg_may_dispatch(struct throtl_grp *tg, struct bio *bio,
+ 	if (wait)
+ 		*wait = max_wait;
+ 
+-	if (time_before(tg->slice_end[rw], jiffies + max_wait))
+-		throtl_extend_slice(tg, rw, jiffies + max_wait);
+-
+ 	return 0;
+ }
+ 
+@@ -976,10 +802,16 @@ static void throtl_charge_bio(struct throtl_grp *tg, struct bio *bio)
+ {
+ 	bool rw = bio_data_dir(bio);
+ 
+-	/* Charge the bio to the group */
+-	tg->bytes_disp[rw] += bio->bi_size;
+-	tg->io_disp[rw]++;
++	/* Charge the bio to the group and trim the bucket */
++	tg->bytes_token[rw] -= bio->bi_size;
++	if (tg->bytes_token[rw] > THROTL_BURST_BYTES)
++		tg->bytes_token[rw] = THROTL_BURST_BYTES;
+ 
++	tg->io_token[rw]--;
++	if (tg->io_token[rw] > THROTL_BURST_IO)
++		tg->io_token[rw] = THROTL_BURST_IO;
++
++	tg->t_c[rw] = jiffies;
+ 	/*
+ 	 * REQ_THROTTLED is used to prevent the same bio to be throttled
+ 	 * more than once as a throttled bio will go through blk-throtl the
+@@ -1055,16 +887,6 @@ static void tg_update_disptime(struct throtl_grp *tg)
+ 	tg->flags &= ~THROTL_TG_WAS_EMPTY;
+ }
+ 
+-static void start_parent_slice_with_credit(struct throtl_grp *child_tg,
+-					struct throtl_grp *parent_tg, bool rw)
+-{
+-	if (throtl_slice_used(parent_tg, rw)) {
+-		throtl_start_new_slice_with_credit(parent_tg, rw,
+-				child_tg->slice_start[rw]);
+-	}
+-
+-}
+-
+ static void tg_dispatch_one_bio(struct throtl_grp *tg, bool rw)
+ {
+ 	struct throtl_service_queue *sq = &tg->service_queue;
+@@ -1093,7 +915,6 @@ static void tg_dispatch_one_bio(struct throtl_grp *tg, bool rw)
+ 	 */
+ 	if (parent_tg) {
+ 		throtl_add_bio_tg(bio, &tg->qnode_on_parent[rw], parent_tg);
+-		start_parent_slice_with_credit(tg, parent_tg, rw);
+ 	} else {
+ 		throtl_qnode_add_bio(bio, &tg->qnode_on_parent[rw],
+ 				     &parent_sq->queued[rw]);
+@@ -1101,8 +922,6 @@ static void tg_dispatch_one_bio(struct throtl_grp *tg, bool rw)
+ 		tg->td->nr_queued[rw]--;
+ 	}
+ 
+-	throtl_trim_slice(tg, rw);
+-
+ 	if (tg_to_put)
+ 		blkg_put(tg_to_blkg(tg_to_put));
+ }
+@@ -1386,12 +1205,8 @@ static int tg_set_conf(struct cgroup_subsys_state *css, struct cftype *cft,
+ 	 * We're already holding queue_lock and know @tg is valid.  Let's
+ 	 * apply the new config directly.
+ 	 *
+-	 * Restart the slices for both READ and WRITES. It might happen
+-	 * that a group's limit are dropped suddenly and we don't want to
+-	 * account recently dispatched IO with new low rate.
++	 * Update dispatch time.
+ 	 */
+-	throtl_start_new_slice(tg, 0);
+-	throtl_start_new_slice(tg, 1);
+ 
+ 	if (tg->flags & THROTL_TG_PENDING) {
+ 		tg_update_disptime(tg);
+@@ -1527,19 +1342,6 @@ bool blk_throtl_bio(struct request_queue *q, struct bio *bio)
+ 		throtl_charge_bio(tg, bio);
+ 
+ 		/*
+-		 * We need to trim slice even when bios are not being queued
+-		 * otherwise it might happen that a bio is not queued for
+-		 * a long time and slice keeps on extending and trim is not
+-		 * called for a long time. Now if limits are reduced suddenly
+-		 * we take into account all the IO dispatched so far at new
+-		 * low rate and * newly queued IO gets a really long dispatch
+-		 * time.
+-		 *
+-		 * So keep on trimming slice even if bio is not queued.
+-		 */
+-		throtl_trim_slice(tg, rw);
+-
+-		/*
+ 		 * @bio passed through this layer without being throttled.
+ 		 * Climb up the ladder.  If we''re already at the top, it
+ 		 * can be executed directly.
+@@ -1552,10 +1354,10 @@ bool blk_throtl_bio(struct request_queue *q, struct bio *bio)
+ 	}
+ 
+ 	/* out-of-limit, queue to @tg */
+-	throtl_log(sq, "[%c] bio. bdisp=%llu sz=%u bps=%llu iodisp=%u iops=%u queued=%d/%d",
++	throtl_log(sq, "[%c] bio. btk=%llu sz=%u bps=%llu iotk=%u iops=%u queued=%d/%d",
+ 		   rw == READ ? 'R' : 'W',
+-		   tg->bytes_disp[rw], bio->bi_size, tg->bps[rw],
+-		   tg->io_disp[rw], tg->iops[rw],
++		   tg->bytes_token[rw], bio->bi_size, tg->bps[rw],
++		   tg->io_token[rw], tg->iops[rw],
+ 		   sq->nr_queued[READ], sq->nr_queued[WRITE]);
+ 
+ 	bio_associate_current(bio);
+-- 
+1.8.1.2
