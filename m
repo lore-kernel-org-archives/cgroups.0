@@ -1,69 +1,76 @@
-From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] blk-throttle: use READ/WRITE directly
-Date: Wed, 16 Oct 2013 09:59:22 -0400
-Message-ID: <20131016135922.GD17611@redhat.com>
-References: <1381921012-12114-1-git-send-email-zhiguohong@tencent.com>
+From: Vivek Goyal <vgoyal@redhat.com>
+Subject: Re: [PATCH v2] blk-throttle: simplify logic by token bucket algorithm
+Date: Wed, 16 Oct 2013 10:14:06 -0400
+Message-ID: <20131016141405.GE17611@redhat.com>
+References: <1381574794-7639-1-git-send-email-zhiguohong@tencent.com>
+ <1381741757-20888-1-git-send-email-zhiguohong@tencent.com>
+ <20131015173252.GM31215@redhat.com>
+ <CAA7+ByWjdYTi5uXT6apLYkON1RnrFEGjHU318OD1VMen2YHKOA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1381921012-12114-1-git-send-email-zhiguohong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <CAA7+ByWjdYTi5uXT6apLYkON1RnrFEGjHU318OD1VMen2YHKOA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Hong Zhiguo <honkiko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hong Zhiguo <zhiguohong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+To: Hong zhi guo <honkiko@gmail.com>
+Cc: Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, Hong Zhiguo <zhiguohong@tencent.com>
 
-On Wed, Oct 16, 2013 at 06:56:52PM +0800, Hong Zhiguo wrote:
-> From: Hong Zhiguo <zhiguohong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+On Wed, Oct 16, 2013 at 02:09:40PM +0800, Hong zhi guo wrote:
+> Hi, Vivek,
 > 
-> To save some instructions
+> Thanks for your careful review. I'll rename t_c to last_dispatch, it's
+> much better.
 > 
-I am not sure if this change is worth doing or not. But ofcourse it
-is simple enough.
+> For the big burst issue, I've different opinion. Let's discuss it.
+> 
+> Any time a big IO means a big burst. Even if it's throttled at first
+> time, queued in
+> the service_queue, and then waited for a while, when it's delivered
+> out, it IS still
+> a big burst. So throttling the bio for another while makes no sense.
 
-Acked-by: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+If a malicious application is creating a big BIO and sending it out, then
+effective IO rate as seen by application will be much higher than
+throttling limit.
 
+So yes, a burst is anyway going to happen when big IO is dispatched
+to disk, but the question is when should that burst be allowed. What's
+the effective IO rate application should see.
+ 
+> 
+> If a group has been idle for 5 minutes, then it owns the credit to
+> deliver a big IO
+> (within 300 * bps bytes). And the extra credit will be cut off after
+> the delivery.
+
+I think there are couple of issues here.
+
+- First of all, if you think that a group is entitiled for tokens even
+  when it is not doing IO, then why are you truncating the tokens after
+  dispatch of a BIO.
+
+- Second in general it does not seem right that a group is entitiled to
+  tokens even when no IO is happening or group is not backlogged. That
+  would mean a group will not do IO for 10 hours and then be entitiled
+  to those tokens suddenly after 10 hours with a huge burst.
+
+So I think you also agree that a group should not be entitiled to
+tokens when group is not backlogged and that's why you seem to be
+truncating extra tokens after dispatch of a BIO. If that's the case,
+then even for first BIO, ideally a group should not be given tokens
+for idle time.
+
+Just think that an application has a huge BIO, say size 2MB. And group
+has limit of say 8KB per second. Now if group has been idling long enough,
+this BIO will be dispatched immediately. And effective rate a group
+will be is much higher than 8KB/s. Which is not right, IMO.
+
+If you argue that token entitilement for idle groups is not right and
+doing it for first BIO in a batch is exception for simplicity reasons,
+that still might be fine. But right now that does not seem to be the
+case.
+
+Thanks
 Vivek
-
-> Signed-off-by: Hong Zhiguo <zhiguohong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-> ---
->  block/blk-throttle.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-> index 8331aba..f4fb859 100644
-> --- a/block/blk-throttle.c
-> +++ b/block/blk-throttle.c
-> @@ -1120,7 +1120,7 @@ static int throtl_dispatch_tg(struct throtl_grp *tg)
->  	while ((bio = throtl_peek_queued(&sq->queued[READ])) &&
->  	       tg_may_dispatch(tg, bio, NULL)) {
->  
-> -		tg_dispatch_one_bio(tg, bio_data_dir(bio));
-> +		tg_dispatch_one_bio(tg, READ);
->  		nr_reads++;
->  
->  		if (nr_reads >= max_nr_reads)
-> @@ -1130,7 +1130,7 @@ static int throtl_dispatch_tg(struct throtl_grp *tg)
->  	while ((bio = throtl_peek_queued(&sq->queued[WRITE])) &&
->  	       tg_may_dispatch(tg, bio, NULL)) {
->  
-> -		tg_dispatch_one_bio(tg, bio_data_dir(bio));
-> +		tg_dispatch_one_bio(tg, WRITE);
->  		nr_writes++;
->  
->  		if (nr_writes >= max_nr_writes)
-> @@ -1605,9 +1605,9 @@ static void tg_drain_bios(struct throtl_service_queue *parent_sq)
->  		throtl_dequeue_tg(tg);
->  
->  		while ((bio = throtl_peek_queued(&sq->queued[READ])))
-> -			tg_dispatch_one_bio(tg, bio_data_dir(bio));
-> +			tg_dispatch_one_bio(tg, READ);
->  		while ((bio = throtl_peek_queued(&sq->queued[WRITE])))
-> -			tg_dispatch_one_bio(tg, bio_data_dir(bio));
-> +			tg_dispatch_one_bio(tg, WRITE);
->  	}
->  }
->  
-> -- 
-> 1.8.1.2
