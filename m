@@ -1,131 +1,68 @@
-From: Hong zhi guo <honkiko@gmail.com>
-Subject: Re: [PATCH v2] blk-throttle: simplify logic by token bucket algorithm
-Date: Wed, 16 Oct 2013 14:09:40 +0800
-Message-ID: <CAA7+ByWjdYTi5uXT6apLYkON1RnrFEGjHU318OD1VMen2YHKOA@mail.gmail.com>
-References: <1381574794-7639-1-git-send-email-zhiguohong@tencent.com>
-	<1381741757-20888-1-git-send-email-zhiguohong@tencent.com>
-	<20131015173252.GM31215@redhat.com>
-Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+From: Hong Zhiguo <honkiko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] blk-throttle: use READ/WRITE directly
+Date: Wed, 16 Oct 2013 18:56:52 +0800
+Message-ID: <1381921012-12114-1-git-send-email-zhiguohong@tencent.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=auVH/mDXE0dnKj+67zjPEOuqzR57HiNynrKa7GmHf9k=;
-        b=JvLIKyqO4HjJ4VrKuL4Sze6gbbYvLr6s9NInDItHNpmx1MxoEnIDOdDA2w77c39+xi
-         3au2pe9UcILUcPvRIFsbxYAbsk6wTjf0yqeriXSruE11rXmLH5TWTDo9RZx+CwaH5Dso
-         7awYr9QU2bYkAJb5UxtraO56TuAptR+065Y5iKOp3toNcleQS8ca4oTwUlnBpVaQlFdg
-         S460DKYUhLzLtuzj93CJQlE5kYmDI/bAN1A02EayBAYAaLefhitWouDeea+ulM3YdCy9
-         lK7WTkDvBl9+KJulsVrik4DSzIS4zN9wFCskS0R0T8SO06GNoC4+crFQF5+ghq7Bjxo1
-         +DuA==
-In-Reply-To: <20131015173252.GM31215@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        h=from:to:cc:subject:date:message-id;
+        bh=k46kPUpg224cKkXSOQxuhsiCidR+SI813p77KMTqNQo=;
+        b=mmf6U/2Nm+lehvdym9xU7Kqv1f52dO7T/i2yqg6gjs7Ze+YMoPVZtFcrwRzBuBrdg6
+         g7U88T6jRvISQs6nnLg7X6RhXhA8g2gijW9nqNiKOMhhiZVkUae/Wx+f33xaM381I1ps
+         g6qNGrjU0DRt+kXQbkLoxbZbq//wZ62ytmUD5G7BvHk3BapcojzpspwXq07WX6q/8N8C
+         eA0tQXZNZuWsrTWseGsWq0ouAbWhDdVMlgoZl+siw3jl8mShn9MgvWQRa++rog0KxNtk
+         d2aI+Ooc5n4m5MPowiEJLle43LSZoELPc719OWJTIK7vslEfGjiZV/m59OR8A+fJmUsM
+         mJ6Q==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vivek Goyal <vgoyal@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, Hong Zhiguo <zhiguohong@tencent.com>
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hong Zhiguo <zhiguohong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-Hi, Vivek,
+From: Hong Zhiguo <zhiguohong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-Thanks for your careful review. I'll rename t_c to last_dispatch, it's
-much better.
+To save some instructions
 
-For the big burst issue, I've different opinion. Let's discuss it.
+Signed-off-by: Hong Zhiguo <zhiguohong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+---
+ block/blk-throttle.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Any time a big IO means a big burst. Even if it's throttled at first
-time, queued in
-the service_queue, and then waited for a while, when it's delivered
-out, it IS still
-a big burst. So throttling the bio for another while makes no sense.
-
-If a group has been idle for 5 minutes, then it owns the credit to
-deliver a big IO
-(within 300 * bps bytes). And the extra credit will be cut off after
-the delivery.
-
-Waiting for your comments.
-
-Zhiguo
-
-
-On Wed, Oct 16, 2013 at 1:32 AM, Vivek Goyal <vgoyal@redhat.com> wrote:
-> On Mon, Oct 14, 2013 at 05:09:17PM +0800, Hong Zhiguo wrote:
->
-> [..]
->
-> Hi Hong,
->
-> Thanks for the token based throttling implementation. In general it looks
-> good and it simplies the logic. Couple of comments/concerns below.
->
->> @@ -133,14 +135,13 @@ struct throtl_grp {
->>       /* IOPS limits */
->>       unsigned int iops[2];
->>
->> -     /* Number of bytes disptached in current slice */
->> -     uint64_t bytes_disp[2];
->> -     /* Number of bio's dispatched in current slice */
->> -     unsigned int io_disp[2];
->> +     /* Token for throttling by bps */
->> +     uint64_t bytes_token[2];
->> +     /* Token for throttling by iops */
->> +     unsigned int io_token[2];
->>
->> -     /* When did we start a new slice */
->> -     unsigned long slice_start[2];
->> -     unsigned long slice_end[2];
->> +     /* Time check-point */
->> +     unsigned long t_c[2];
->
-> Can we rename this variable to say last_dispatch[2].
->
-> [..]
->>
->> @@ -852,41 +708,26 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
->>                                unsigned long *wait)
->>  {
->>       bool rw = bio_data_dir(bio);
->> -     u64 bytes_allowed, extra_bytes, tmp;
->> -     unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
->> -
->> -     jiffy_elapsed = jiffy_elapsed_rnd = jiffies - tg->slice_start[rw];
->> -
->> -     /* Slice has just started. Consider one slice interval */
->> -     if (!jiffy_elapsed)
->> -             jiffy_elapsed_rnd = throtl_slice;
->> -
->> -     jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, throtl_slice);
->> +     u64 extra_bytes, token;
->> +     unsigned long jiffy_wait;
->>
->> -     tmp = tg->bps[rw] * jiffy_elapsed_rnd;
->> -     do_div(tmp, HZ);
->> -     bytes_allowed = tmp;
->> +     token = (u64)tg->bps[rw] * (jiffies - tg->t_c[rw]);
->
-> So here we seem to be calculating how many tokens a group is eligible
-> for. This is done based on since last time check. And last time check
-> was updated in last dispatch from the group.
->
-> What happens if no IO happens in a group for some time, say for 5 minutes,
-> and then one big IO comes in. IIUC, we will allow a big burst of IO for
-> the first IO (tokens worth of full 5 minutes will be given to this group).
-> I think we should have a mechanism where we don't allow too big a burst
-> for the first IO. (Possibly limit the burst to THROTL_BURST_IO and
-> THROTL_BURST_BYTES until and unless a bigger IO is already queued and
-> we are waiting for it).
->
-> In previous time slice logic, I took care of it by extend time slice
-> by 100ms and if no IO happens in the group for 100ms, time slice will
-> expire and next IO will get at max of 100ms of worth of credit (equivalent
-> of burst limits).
->
-> Thanks
-> Vivek
-
-
-
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 8331aba..f4fb859 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -1120,7 +1120,7 @@ static int throtl_dispatch_tg(struct throtl_grp *tg)
+ 	while ((bio = throtl_peek_queued(&sq->queued[READ])) &&
+ 	       tg_may_dispatch(tg, bio, NULL)) {
+ 
+-		tg_dispatch_one_bio(tg, bio_data_dir(bio));
++		tg_dispatch_one_bio(tg, READ);
+ 		nr_reads++;
+ 
+ 		if (nr_reads >= max_nr_reads)
+@@ -1130,7 +1130,7 @@ static int throtl_dispatch_tg(struct throtl_grp *tg)
+ 	while ((bio = throtl_peek_queued(&sq->queued[WRITE])) &&
+ 	       tg_may_dispatch(tg, bio, NULL)) {
+ 
+-		tg_dispatch_one_bio(tg, bio_data_dir(bio));
++		tg_dispatch_one_bio(tg, WRITE);
+ 		nr_writes++;
+ 
+ 		if (nr_writes >= max_nr_writes)
+@@ -1605,9 +1605,9 @@ static void tg_drain_bios(struct throtl_service_queue *parent_sq)
+ 		throtl_dequeue_tg(tg);
+ 
+ 		while ((bio = throtl_peek_queued(&sq->queued[READ])))
+-			tg_dispatch_one_bio(tg, bio_data_dir(bio));
++			tg_dispatch_one_bio(tg, READ);
+ 		while ((bio = throtl_peek_queued(&sq->queued[WRITE])))
+-			tg_dispatch_one_bio(tg, bio_data_dir(bio));
++			tg_dispatch_one_bio(tg, WRITE);
+ 	}
+ }
+ 
 -- 
-best regards
-Hong Zhiguo
+1.8.1.2
