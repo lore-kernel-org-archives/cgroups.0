@@ -1,34 +1,53 @@
-From: Daniel Borkmann <dborkman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH nf-next] netfilter: xtables: lightweight process control
- group matching
-Date: Sat, 19 Oct 2013 09:16:48 +0200
-Message-ID: <526231E0.6060903@redhat.com>
-References: <1380910855-12325-1-git-send-email-dborkman@redhat.com> <87li1qp3l8.fsf@xmission.com>
+From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
+Subject: [PATCH 0/6] ipv4: tcp_memcontrol and userns sysctls
+Date: Sat, 19 Oct 2013 16:23:19 -0700
+Message-ID: <87r4bghml4.fsf@xmission.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <87li1qp3l8.fsf-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Cc: pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, netfilter-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 10/19/2013 01:21 AM, Eric W. Biederman wrote:
 
-> I am coming to this late.  But two concrete suggestions.
->
-> 1) process groups and sessions don't change as frequently as pids.
->
-> 2) It is possible to put a set of processes in their own network
->     namespace and pipe just the packets you want those processes to
->     use into that network namespace.  Using an ingress queueing filter
->     makes that process very efficient even if you have to filter by port.
+While looking into allowing the ipv4 sysctls to be used in a network
+namespace I stumbled upon the mess that is tcp_memcontrol.
 
-Actually in our case we're filtering outgoing traffic, based on which
-local socket that originated from; so you wouldn't need all of that
-construct. Also, you wouldn't even need to have an a-prio knowledge of
-the application internals regarding their use of particular use of ports
-or protocols. I don't think that such a setup will have the same
-efficiency, ease of use, and power to distinguish the application the
-traffic came from in such a lightweight, protocol independent and easy way.
+I remove the dead code, broken code, and excessive abstraction in the
+tcp_memcontrols then I clean up up and allow in the user namespace the
+per net ipv4 sysctls.
+
+Eric W. Biederman (6):
+      tcp_memcontrol: Remove tcp_max_memory
+      tcp_memcontrol: Remove setting cgroup settings via sysctl
+      tcp_memcontrol: Remove the per netns control.
+      tcp_memcontrol: Kill struct tcp_memcontrol
+      ipv4: Use math to point per net sysctls into the appropriate struct net.
+      ipv4: Allow unprivileged users to use per net sysctls
+
+ include/net/netns/ipv4.h     |    1 -
+ include/net/sock.h           |   28 ++++++------
+ include/net/tcp.h            |    3 +-
+ include/net/tcp_memcontrol.h |   12 ------
+ mm/memcontrol.c              |    6 +-
+ net/ipv4/af_inet.c           |    2 -
+ net/ipv4/sysctl_net_ipv4.c   |   85 ++++++----------------------------------
+ net/ipv4/tcp.c               |   12 +++--
+ net/ipv4/tcp_ipv4.c          |    1 +
+ net/ipv4/tcp_memcontrol.c    |   90 ++++++++---------------------------------
+ net/ipv6/af_inet6.c          |    2 -
+ net/ipv6/tcp_ipv6.c          |    1 +
+ 12 files changed, 57 insertions(+), 186 deletions(-)
+
+
+Eric
