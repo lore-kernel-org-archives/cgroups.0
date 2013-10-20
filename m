@@ -1,111 +1,57 @@
-From: Hong zhi guo <honkiko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v3] blk-throttle: simplify logic by token bucket algorithm
-Date: Sun, 20 Oct 2013 20:08:12 +0800
-Message-ID: <CAA7+ByVfuUz74NHoH+hu=Nb=TpKL0kVtn5Nsf7gs83b4Den2zw@mail.gmail.com>
-References: <1381574794-7639-1-git-send-email-zhiguohong@tencent.com>
-	<1382012272-26170-1-git-send-email-zhiguohong@tencent.com>
-	<20131018155532.GD2277@redhat.com>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Hong Zhiguo <honkiko@gmail.com>
+Subject: [PATCH v4 0/2] blk-throttle: simplify logic by token bucket algorithm
+Date: Sun, 20 Oct 2013 20:11:10 +0800
+Message-ID: <1382271072-15664-1-git-send-email-zhiguohong@tencent.com>
+References: <20131018155532.GD2277@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=jV3x4+rhaF+jvDZ37kvygrzaVP9xtrkZ+UBrvp6yQWU=;
-        b=YzgWWkWwEf7YyG8hirpDZ6caIx/zj4Zsxa9YEcXCZTmIOp+tanrCG9IyAv9/wiT5Hz
-         99BJL5p6naSSu0DsoQdUmn+qhn/4AuTxkXCjYJeIk01zGSi3V/+9LMxb/vNXFcIKMC51
-         PNOqID4+B2BAjz7axn1xEbplvIDlTWM08/2fZ0IhQYiI5MLr9UQSCfEcJz4k19Zw+SNA
-         5r1F6p7qOc53bowighlLwgmJzrG0qGGixu/zTOtWMRNvglrbboQax6/tXG6PDjn3zTD7
-         BWc4mKE/Bac7n+fkFeI+cWlHloxO0JX2DbzSBkU2r9ybie49jm+2uVoqtbA2kjGsmqe1
-         6NvQ==
-In-Reply-To: <20131018155532.GD2277-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=nkKzdaroQ1dY+KXNrTMMgMq5uL6QKfXHKliO+rmBrI0=;
+        b=BvJ+XaeIKPPjZuXAouGjS6di004ZWNNGqfwc2yoDLE7lFFprIJxUIQUhVXUJX/llT4
+         beBnISUEVgIxRSsoXo+r8AhEI8ueG57ceYEdkeC5rN8M5xTdFMvIxECTRTrhfS+DRzXD
+         V7uAGh9kLo5kkPRbKdLVHEM4DCAKyFFAaLfaP62JDCzbdBdgs5z7ptNQYvwn1dlK092G
+         caOACpQ4bu5mfO3kgTeAi/DE5TFC5IACbkbYd8np9ExHARORve5ZwNHkBP/Dh18AAZNY
+         hck5SQncmslQnqS8knNzOiUT1kmswN78ipGjJtBSxgFunjeukM5ixaZ91U9/xQb2cxY/
+         dszw==
+In-Reply-To: <20131018155532.GD2277@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hong Zhiguo <zhiguohong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+To: tj@kernel.org, vgoyal@redhat.com
+Cc: cgroups@vger.kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org, Hong Zhiguo <zhiguohong@tencent.com>
 
-Hi, Vivek,
+From: Hong Zhiguo <zhiguohong@tencent.com>
 
-Thanks for your comments. I didn't realize the ancestor over-trim issue before.
+Based on the discussion with Vivek, Tejun and Jens.
 
-Trimming of iops token is not necessary. Since a bio always costs
-_one_ iops token. Trimming it won't change the fact that current iops
-token is zero or not.
+Patch 1/2 implements basic token bucket rate limiting for blk-throttle.
+Patch 2/2 adjusts some behavior for the cases pointed out by Vivek:
+	- A huge bio may be allowed immediately after a long time of idle
+	- When token is trimmed for above case, should not trim ancestors
+	  when bio climbs up, instead, trim ancestors when bio is queued
+	  on lowest child group.
 
-For hierarchical triming, as you pointed out, there's 2 issues in my v3 patch.
-1) When bio climbs up, the parent group is not trimmed.
-2) When bio climbs up, we should not trim groups level by level,
-   that would block the bio too much time than expected.
+Trimming of iops token is not necessary. Since a bio always costs _one_ 
+iops token. Trimming it won't change the fact that current iops token is
+zero or not.
 
-You proposed time keeping method helps.
-But how about some bios waiting on multiple child group, and climb up
-in different order than they get queued on clild group? Some token is
-still missed.
-How does this works for multiple levels of ancestors?
+I renamed "last_dispatch" back to "t_c"(Time Checkpoint, naming from network
+code) because now it's not only updated when a bio is dispatched. See patch
+2/2.
 
-I got another idea and implementation for the issues. The basic idea is:
-When the bio is queued on child group, all it's ancestor groups
-becomes non-idle. They should start to reserve tokens for that bio
-from this moment. And tokens they reserved before should be trimmed at
-this moment.
+Thanks Vivek for the ancestor over-trim issue and the proposed solution.
+I took another method inspired by Vivek's comments but different. Please
+help to review it.
 
-I'll also send the implementation later.
+Hong Zhiguo (2):
+  blk-throttle: simplify logic by token bucket algorithm
+  blk-throttle: trim tokens generated for an idle tree
 
-Please help to review the idea and code. Thanks.
-
-On Fri, Oct 18, 2013 at 11:55 PM, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
-> On Thu, Oct 17, 2013 at 08:17:52PM +0800, Hong Zhiguo wrote:
->
-> I think same logic need to be applied to iops too?
->
-> Also, how does it work in case of hierarchy? IIUC, when bio is being
-> propogated upwards, we first add it to the parent, and then later
-> update dispatch time which will in turn call tg_with_in_bps_limit().
->
-> So by the time you come here after bio propogation, bio is already
-> on service queue and it will be entitiled to *unlimited* idle tokens.
->
-> On the flip side, we can't do blind truncation of idle tokens in
-> parent group. Reason being that once bio got queued in child group,
-> effectively it should be subjected to parent's limits too right now
-> and not necessarily when it climbs up the tree.
->
-> To solve this problem I had put following patch.
->
-> commit 32ee5bc4787dfbdb280b4d81a338dcdd55918c1e
-> Author: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Date:   Tue May 14 13:52:38 2013 -0700
->
->     blk-throttle: Account for child group's start time in parent while bio
-> climb
->
->
-> Above solution was not perfect but seemed like reasonable approximation.
-> We might have to do something similar. I think we can keep track of time
-> when an bio starts waiting in a group (gets to head of list) and then
-> when that bio is dispatched, pass that time to parent group. Now
-> parent can give more tokens to bio based on wait time start as passed
-> by children.
->
-> For example say Twaitstart is the time a bio started waiting on the head
-> of queue of a group. Say Tidle is time when parent became idle. Now when
-> child passes this bio to parent, it will also pass Twaitstart to parent.
-> When it comes time for token calculation, parent can do following.
->
-> If (time_after(Twaitstart, Tidle)
->         start_time = Twaitstart;
-> else
->         start_time = Tidle;
->
-> token_eligibility = (jiffies - start_time) * rate;
->
-> This is far from perfect, but it should work reasonably.
->
-> Thanks
-> Vivek
+ block/blk-throttle.c | 321 ++++++++++++++-------------------------------------
+ 1 file changed, 87 insertions(+), 234 deletions(-)
 
 -- 
-best regards
-Hong Zhiguo
+1.8.1.2
