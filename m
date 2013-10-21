@@ -1,147 +1,98 @@
-From: Hong Zhiguo <honkiko@gmail.com>
-Subject: [PATCH v4 2/2] blk-throttle: trim tokens generated for an idle tree
-Date: Sun, 20 Oct 2013 20:11:12 +0800
-Message-ID: <1382271072-15664-3-git-send-email-zhiguohong@tencent.com>
-References: <20131018155532.GD2277@redhat.com>
- <1382271072-15664-1-git-send-email-zhiguohong@tencent.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL] cgroup fixes for v3.12-rc6
+Date: Mon, 21 Oct 2013 11:49:20 +0100
+Message-ID: <20131021104920.GA26917@mtj.dyndns.org>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=7076zQOUD9wf2s3g5ZfWt+jhRMwnY6N05s6SK10kUvQ=;
-        b=NlcVYft5RLjx1iIwJreBWViN5pmatRM72rFPUMUCCXwPoxX0L9r2gen5o/cUzkeso6
-         3Cvsd6aGx6lYqroC8Q1nOQqKjzmXGqRnt2o+OxQwthjIlx9629GOcG5LpYCwAXD9gZXx
-         cSHvbYLIfsc6qq+1tbZpLKee6kcocXF/xgej5HSv6HAnguamemujpjEIxlcCAEL44xyq
-         rVgtIHFdG0tW4mL9jgjfbxktG3qB6H/zSrKscEIGy2EWya2nLMWJ1QFom1o8xXHN9aao
-         wZ9Asgxo5jWjihLus65JggZDgkpfMNNarsE0eknCVKQpAsI7eZZjxYy8ag4UYCns1QIa
-         9k3g==
-In-Reply-To: <1382271072-15664-1-git-send-email-zhiguohong@tencent.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=BfkSYJpdxr36t5h3FsdGvM56kNIB5KLdZlD2zhWwiR0=;
+        b=dh71njJij2ncJBLkybw1CLlxR1t6XIw4zFKxzTi8RQRAH/lPJzV8ODei3HLaFC2QbZ
+         PlZt4LL/gBaFa8nwEkGTeG8qiL4adHMtC4/k+GSwtFFxZYaOwuCNVUNnMjpTMPLBQopm
+         qZIGZWLhhbGShPIhiZoBRRpKyziUFBP5yh3mFcy5cmAdhjNcqCVJHuqDgYsmwCwHKkRw
+         l6xvfIrJGYgYJ8odQh1bNlnci5w6USGuzumSkUE7J0jeIN+rzFOuO3HQ5yu45K1zGKyf
+         8hJwMqsShFIMA5T2u6b/taD+nQbPC7mh6wIrBr8RcS5xq583lKxKhLGZm/8NySr286eF
+         CkfQ==
+Content-Disposition: inline
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj@kernel.org, vgoyal@redhat.com
-Cc: cgroups@vger.kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org, Hong Zhiguo <zhiguohong@tencent.com>
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Hong Zhiguo <zhiguohong@tencent.com>
+Hello, Linus.
 
-Why
-====
-Pointed out by Vivek: Tokens generated during idle period should
-be trimmed. Otherwise a huge bio may be permited immediately.
-Overlimit behaviour may be observed during short I/O throughput
-test.
+Two late fixes for cgroup.  One fixes descendant walk introduced
+during this rc1 cycle.  The other fixes a post 3.9 bug during task
+attach which can lead to hang.  Both fixes are critical and the fixes
+are relatively straight-forward.
 
-Vivek also pointed out: We should not over-trim for hierarchical
-groups. Suppose a subtree of groups are idle when a big bio comes.
-The token of the child group is trimmed and not enough. So the bio is
-queued on the child group. After some jiffies the child group reserved
-enough tokens and the bio climbs up. If we trim the parent group at
-this time again, this bio will wait too much time than expected.
+The two fixes are available in the following branch
 
-Analysis
-========
-When the bio is queued on child group, all it's ancestor groups
-becomes non-idle. They should start to reserve tokens for that
-bio from this moment. And their reserved tokens before should be
-trimmed at this moment.
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.12-fixes
 
-How
-====
-service_queue now has a new member nr_queued_tree[2], to represent
-the the number of bios waiting on the subtree rooted by this sq.
+for you to fetch changes up to ea84753c98a7ac6b74e530b64c444a912b3835ca:
 
-When a bio is queued on the hierarchy first time, nr_queued_tree
-of all ancestors and the child group itself are increased. When a
-bio climbs up, nr_queued_tree of the child group is decreased.
+  cgroup: fix to break the while loop in cgroup_attach_task() correctly (2013-10-13 16:07:10 -0400)
 
-When nr_queued_tree turns from zero to one, the tokens reserved
-before are trimmed. And after this switch, this group will never
-be trimmed to reserve tokens for the bio waiting on it's descendant
-group.
+Thanks.
 
-Signed-off-by: Hong Zhiguo <zhiguohong@tencent.com>
----
- block/blk-throttle.c | 38 ++++++++++++++++++++++++++++++++++++++
- 1 file changed, 38 insertions(+)
+----------------------------------------------------------------
+Anjana V Kumar (1):
+      cgroup: fix to break the while loop in cgroup_attach_task() correctly
 
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 45d4d91..d10a5e1 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -63,6 +63,10 @@ struct throtl_service_queue {
- 	 */
- 	struct list_head	queued[2];	/* throtl_qnode [READ/WRITE] */
- 	unsigned int		nr_queued[2];	/* number of queued bios */
-+	/*
-+	 * number of bios queued on this subtree
-+	 */
-+	unsigned int		nr_queued_tree[2];
+Tejun Heo (1):
+      cgroup: fix cgroup post-order descendant walk of empty subtree
+
+ kernel/cgroup.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index e0aeb32..1bf4f7a1 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -2038,7 +2038,7 @@ static int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk,
  
- 	/*
- 	 * RB tree of active children throtl_grp's, which are sorted by
-@@ -699,6 +703,11 @@ static void tg_update_token(struct throtl_grp *tg, bool rw)
- 	do_div(token, HZ);
- 	tg->bytes_token[rw] += token;
+ 		/* @tsk either already exited or can't exit until the end */
+ 		if (tsk->flags & PF_EXITING)
+-			continue;
++			goto next;
  
-+	/* trim token if the whole subtree is idle */
-+	if (!tg->service_queue.nr_queued_tree[rw] &&
-+	    tg->bytes_token[rw] > THROTL_BURST_BYTES)
-+		token = THROTL_BURST_BYTES;
-+
- 	tg->t_c[rw] = jiffies;
- }
+ 		/* as per above, nr_threads may decrease, but not increase. */
+ 		BUG_ON(i >= group_size);
+@@ -2046,7 +2046,7 @@ static int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk,
+ 		ent.cgrp = task_cgroup_from_root(tsk, root);
+ 		/* nothing to do if this task is already in the cgroup */
+ 		if (ent.cgrp == cgrp)
+-			continue;
++			goto next;
+ 		/*
+ 		 * saying GFP_ATOMIC has no effect here because we did prealloc
+ 		 * earlier, but it's good form to communicate our expectations.
+@@ -2054,7 +2054,7 @@ static int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk,
+ 		retval = flex_array_put(group, i, &ent, GFP_ATOMIC);
+ 		BUG_ON(retval != 0);
+ 		i++;
+-
++	next:
+ 		if (!threadgroup)
+ 			break;
+ 	} while_each_thread(leader, tsk);
+@@ -3187,11 +3187,9 @@ css_next_descendant_post(struct cgroup_subsys_state *pos,
  
-@@ -843,6 +852,28 @@ static void throtl_charge_bio(struct throtl_grp *tg, struct bio *bio)
- }
+ 	WARN_ON_ONCE(!rcu_read_lock_held());
  
- /**
-+ * tg_update_nr_queue_tree - update nr_queued_tree of all ancestors
-+ * @sq: the target service_queue
-+ *
-+ * Traverse from @sq to the top throtl_grp, increase their
-+ * nr_queued_tree. If one sq has zero nr_queued_tree and now turns to
-+ * one, trim the tokens generated before. From now on it will never
-+ * get trimmed until same thing happens next time.
-+ */
-+static void tg_update_nr_queue_tree(struct throtl_service_queue *sq, bool rw)
-+{
-+	struct throtl_grp *tg;
-+
-+	while (sq && (tg = sq_to_tg(sq))) {
-+		if (!sq->nr_queued_tree[rw])
-+			tg_update_token(tg, rw);
-+
-+		sq->nr_queued_tree[rw]++;
-+		sq = sq->parent_sq;
-+	}
-+}
-+
-+/**
-  * throtl_add_bio_tg - add a bio to the specified throtl_grp
-  * @bio: bio to add
-  * @qn: qnode to use
-@@ -916,6 +947,9 @@ static void tg_dispatch_one_bio(struct throtl_grp *tg, bool rw)
- 	bio = throtl_pop_queued(&sq->queued[rw], &tg_to_put);
- 	sq->nr_queued[rw]--;
+-	/* if first iteration, visit the leftmost descendant */
+-	if (!pos) {
+-		next = css_leftmost_descendant(root);
+-		return next != root ? next : NULL;
+-	}
++	/* if first iteration, visit leftmost descendant which may be @root */
++	if (!pos)
++		return css_leftmost_descendant(root);
  
-+	/* Here's the only place nr_queued_tree get decreased */
-+	sq->nr_queued_tree[rw]--;
-+
- 	throtl_charge_bio(tg, bio);
- 
- 	/*
-@@ -1375,6 +1409,10 @@ bool blk_throtl_bio(struct request_queue *q, struct bio *bio)
- 
- 	bio_associate_current(bio);
- 	tg->td->nr_queued[rw]++;
-+
-+	/* Here's the only place nr_queued_tree get increased */
-+	tg_update_nr_queue_tree(sq, rw);
-+
- 	throtl_add_bio_tg(bio, qn, tg);
- 	throttled = true;
- 
--- 
-1.8.1.2
+ 	/* if we visited @root, we're done */
+ 	if (pos == root)
