@@ -1,51 +1,37 @@
-From: Daniel Borkmann <dborkman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH nf-next] netfilter: xtables: lightweight process control
- group matching
-Date: Mon, 21 Oct 2013 17:48:54 +0200
-Message-ID: <52654CE6.7030706@redhat.com>
-References: <1380910855-12325-1-git-send-email-dborkman@redhat.com> <87li1qp3l8.fsf@xmission.com> <526231E0.6060903@redhat.com> <526543A2.2040901@monom.org>
+From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Subject: Re: [PATCH 0/6] ipv4: tcp_memcontrol and userns sysctls
+Date: Mon, 21 Oct 2013 18:44:23 -0400 (EDT)
+Message-ID: <20131021.184423.332048469613815248.davem@davemloft.net>
+References: <87r4bghml4.fsf@xmission.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <526543A2.2040901-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Daniel Wagner <wagi-kQCPcA+X3s7YtjvyW6yDsg@public.gmane.org>
-Cc: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, netfilter-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <87r4bghml4.fsf-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 10/21/2013 05:09 PM, Daniel Wagner wrote:
-> On 10/19/2013 08:16 AM, Daniel Borkmann wrote:
->> On 10/19/2013 01:21 AM, Eric W. Biederman wrote:
->>
->>> I am coming to this late.  But two concrete suggestions.
->>>
->>> 1) process groups and sessions don't change as frequently as pids.
->>>
->>> 2) It is possible to put a set of processes in their own network
->>>     namespace and pipe just the packets you want those processes to
->>>     use into that network namespace.  Using an ingress queueing filter
->>>     makes that process very efficient even if you have to filter by port.
->>
->> Actually in our case we're filtering outgoing traffic, based on which
->> local socket that originated from; so you wouldn't need all of that
->> construct. Also, you wouldn't even need to have an a-prio knowledge of
->> the application internals regarding their use of particular use of ports
->> or protocols. I don't think that such a setup will have the same
->> efficiency, ease of use, and power to distinguish the application the
->> traffic came from in such a lightweight, protocol independent and easy way.
->
-> Sorry for beeing late as well (and also stupid question)
->
-> Couldn't you use something from the LSM? I mean you allow the
-> application to create the socket etc and then block later
-> the traffic originated from that socket. Wouldn't it make
-> more sense to block early?
+From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
+Date: Sat, 19 Oct 2013 16:23:19 -0700
 
-I gave one simple example for blocking in the commit message,
-that's true, but it is not limited to that, meaning we can have
-much different scenarios/policies that netfilter allows us than
-just blocking, e.g. fine grained settings where applications are
-allowed to connect/send traffic to, application traffic marking/
-conntracking, application-specific packet mangling, and so on,
-just think of the whole netfilter universe.
+> While looking into allowing the ipv4 sysctls to be used in a network
+> namespace I stumbled upon the mess that is tcp_memcontrol.
+> 
+> I remove the dead code, broken code, and excessive abstraction in the
+> tcp_memcontrols then I clean up up and allow in the user namespace the
+> per net ipv4 sysctls.
+
+I wish we hadn't installed this stuff in the first place, but better
+to take care of it now than later.
+
+Series applied, thanks Eric.
