@@ -1,39 +1,69 @@
-From: Daniel Wagner <wagi@monom.org>
-Subject: Re: [PATCH nf-next] netfilter: xtables: lightweight process control
- group matching
-Date: Tue, 22 Oct 2013 08:45:32 +0100
-Message-ID: <52662D1C.2020104@monom.org>
-References: <1380910855-12325-1-git-send-email-dborkman@redhat.com> <87li1qp3l8.fsf@xmission.com> <526231E0.6060903@redhat.com> <526543A2.2040901@monom.org> <52654CE6.7030706@redhat.com> <91E2D863603AD4478F101CE81E76E45D01828D59@SHSMSX103.ccr.corp.intel.com>
+From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v4 2/2] blk-throttle: trim tokens generated for an idle
+ tree
+Date: Tue, 22 Oct 2013 17:02:32 -0400
+Message-ID: <20131022210232.GB2884@redhat.com>
+References: <20131018155532.GD2277@redhat.com>
+ <1382271072-15664-1-git-send-email-zhiguohong@tencent.com>
+ <1382271072-15664-3-git-send-email-zhiguohong@tencent.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <91E2D863603AD4478F101CE81E76E45D01828D59@SHSMSX103.ccr.corp.intel.com>
-Sender: netdev-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1382271072-15664-3-git-send-email-zhiguohong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: "Ni, Xun" <xun.ni@intel.com>, Daniel Borkmann <dborkman@redhat.com>
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>, "pablo@netfilter.org" <pablo@netfilter.org>, "netfilter-devel@vger.kernel.org" <netfilter-devel@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, Tejun Heo <tj@kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Hong Zhiguo <honkiko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hong Zhiguo <zhiguohong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-Hi Xun,
+On Sun, Oct 20, 2013 at 08:11:12PM +0800, Hong Zhiguo wrote:
+> From: Hong Zhiguo <zhiguohong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+> 
+> Why
+> ====
+> Pointed out by Vivek: Tokens generated during idle period should
+> be trimmed. Otherwise a huge bio may be permited immediately.
+> Overlimit behaviour may be observed during short I/O throughput
+> test.
+> 
+> Vivek also pointed out: We should not over-trim for hierarchical
+> groups. Suppose a subtree of groups are idle when a big bio comes.
+> The token of the child group is trimmed and not enough. So the bio is
+> queued on the child group. After some jiffies the child group reserved
+> enough tokens and the bio climbs up. If we trim the parent group at
+> this time again, this bio will wait too much time than expected.
+> 
+> Analysis
+> ========
+> When the bio is queued on child group, all it's ancestor groups
+> becomes non-idle. They should start to reserve tokens for that
+> bio from this moment. And their reserved tokens before should be
+> trimmed at this moment.
+> 
+> How
+> ====
+> service_queue now has a new member nr_queued_tree[2], to represent
+> the the number of bios waiting on the subtree rooted by this sq.
+> 
+> When a bio is queued on the hierarchy first time, nr_queued_tree
+> of all ancestors and the child group itself are increased. When a
+> bio climbs up, nr_queued_tree of the child group is decreased.
+> 
+> When nr_queued_tree turns from zero to one, the tokens reserved
+> before are trimmed. And after this switch, this group will never
+> be trimmed to reserve tokens for the bio waiting on it's descendant
+> group.
+> 
 
-On 10/22/2013 08:15 AM, Ni, Xun wrote:
-> Hello, Daniel:
-> can all your examples block early before doing network operations?
+Hi Hong,
 
-I was referring to Linux Security Module which allows
-to define access policies for an application e.g. which ports are
-allowed to be used.
+This approach looks good in general. Only downside I can think of
+updation of nr_requests throughout the hierarchy. So deeper the 
+hierarchy, higher the overhead.
 
-If the goal is just to block those ports you don't have to go through
-half of the networking stack to figure out via an iptable rules that
-this access is not allowed.
+I am not sure if that's a concern or not. I will have a closer look
+a the patches tomorrow and do some testing too.
 
-> What's the whole netfilter universe? Can you give us more clear
-> examples?
-
-I am not sure if I understood your question correctly. In case you
-are asking what netfilter is I would like pointing you to the
-http://www.netfilter.org/ project page.
-
-cheers,
-daniel
+Thanks
+Vivek
