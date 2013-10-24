@@ -1,182 +1,56 @@
-From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: [PATCH v11 13/15] vmpressure: in-kernel notifications
-Date: Thu, 24 Oct 2013 16:05:04 +0400
-Message-ID: <7318b33240095a035fcd2f2e6f4b23f8c7eb3191.1382603434.git.vdavydov@parallels.com>
-References: <cover.1382603434.git.vdavydov@parallels.com>
+From: Pekka Enberg <penberg@iki.fi>
+Subject: Re: [PATCH 1/3] memcg, kmem: Use is_root_cache instead of hard code
+Date: Thu, 24 Oct 2013 20:30:37 +0300
+Message-ID: <5269593D.8000904@iki.fi>
+References: <1382527875-10112-1-git-send-email-h.huangqiang@huawei.com> <1382527875-10112-2-git-send-email-h.huangqiang@huawei.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <cover.1382603434.git.vdavydov@parallels.com>
+DKIM-Signature: v=1; a=rsa-sha1; c=relaxed/relaxed; d=
+	messagingengine.com; h=message-id:date:from:mime-version:to:cc
+	:subject:references:in-reply-to:content-type
+	:content-transfer-encoding; s=smtpout; bh=3uCVm8+g9qjV8FILeJfneu
+	Yqf78=; b=JT582tLwHQ744ZjUAP79SNjOMhrg8YNFVRcyMGAn7FH6AYeGHgkrAR
+	18ZeqaEIR3fp+V5cXTuRolEx/SnVTwVKj1qh/34UPSjG7b8BFhYMUFAmlzHqWlUJ
+	aDM5CQKGiDEjmsttjR2z3OVPN4fnV1wCIs2DWwQAQkWrgnHyFqn28=
+In-Reply-To: <1382527875-10112-2-git-send-email-h.huangqiang@huawei.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org
-Cc: glommer@openvz.org, khorenko@parallels.com, devel@openvz.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, John Stultz <john.stultz@linaro.org>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Michal Hocko <mhocko@suse.cz>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Qiang Huang <h.huangqiang@huawei.com>, akpm@linux-foundation.org
+Cc: hannes@cmpxchg.org, mhocko@suse.cz, cl@linux-foundation.org, penberg@kernel.org, glommer@parallels.com, rientjes@google.com, cgroups@vger.kernel.org, linux-mm@kvack.org, lizefan@huawei.com
 
-From: Glauber Costa <glommer@openvz.org>
+On 10/23/2013 02:31 PM, Qiang Huang wrote:
+> Signed-off-by: Qiang Huang <h.huangqiang@huawei.com>
+> ---
+>   mm/memcontrol.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index b73988a..15ad0e3 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -57,6 +57,7 @@
+>   #include <net/sock.h>
+>   #include <net/ip.h>
+>   #include <net/tcp_memcontrol.h>
+> +#include "slab.h"
+>   
+>   #include <asm/uaccess.h>
+>   
+> @@ -3064,7 +3065,7 @@ int memcg_update_cache_size(struct kmem_cache *s, int num_groups)
+>   {
+>   	struct memcg_cache_params *cur_params = s->memcg_params;
+>   
+> -	VM_BUG_ON(s->memcg_params && !s->memcg_params->is_root_cache);
+> +	VM_BUG_ON(!is_root_cache(s));
+>   
+>   	if (num_groups > memcg_limited_groups_array_size) {
+>   		int i;
 
-During the past weeks, it became clear to us that the shrinker interface
-we have right now works very well for some particular types of users,
-but not that well for others. The later are usually people interested in
-one-shot notifications, that were forced to adapt themselves to the
-count+scan behavior of shrinkers. To do so, they had no choice than to
-greatly abuse the shrinker interface producing little monsters all over.
+Reviewed-by: Pekka Enberg <penberg@kernel.org>
 
-During LSF/MM, one of the proposals that popped out during our session
-was to reuse Anton Voronstsov's vmpressure for this. They are designed
-for userspace consumption, but also provide a well-stablished,
-cgroup-aware entry point for notifications.
-
-This patch extends that to also support in-kernel users. Events that
-should be generated for in-kernel consumption will be marked as such,
-and for those, we will call a registered function instead of triggering
-an eventfd notification.
-
-Please note that due to my lack of understanding of each shrinker user,
-I will stay away from converting the actual users, you are all welcome
-to do so.
-
-Signed-off-by: Glauber Costa <glommer@openvz.org>
-Acked-by: Anton Vorontsov <anton@enomsg.org>
-Acked-by: Pekka Enberg <penberg@kernel.org>
-Reviewed-by: Greg Thelen <gthelen@google.com>
-Cc: Dave Chinner <dchinner@redhat.com>
-Cc: John Stultz <john.stultz@linaro.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Joonsoo Kim <iamjoonsoo.kim@lge.com>
-Cc: Michal Hocko <mhocko@suse.cz>
-Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
----
- include/linux/vmpressure.h |    5 +++++
- mm/vmpressure.c            |   53 +++++++++++++++++++++++++++++++++++++++++---
- 2 files changed, 55 insertions(+), 3 deletions(-)
-
-diff --git a/include/linux/vmpressure.h b/include/linux/vmpressure.h
-index 3f3788d..9102e53 100644
---- a/include/linux/vmpressure.h
-+++ b/include/linux/vmpressure.h
-@@ -19,6 +19,9 @@ struct vmpressure {
- 	/* Have to grab the lock on events traversal or modifications. */
- 	struct mutex events_lock;
- 
-+	/* False if only kernel users want to be notified, true otherwise. */
-+	bool notify_userspace;
-+
- 	struct work_struct work;
- };
- 
-@@ -38,6 +41,8 @@ extern int vmpressure_register_event(struct cgroup_subsys_state *css,
- 				     struct cftype *cft,
- 				     struct eventfd_ctx *eventfd,
- 				     const char *args);
-+extern int vmpressure_register_kernel_event(struct cgroup_subsys_state *css,
-+					    void (*fn)(void));
- extern void vmpressure_unregister_event(struct cgroup_subsys_state *css,
- 					struct cftype *cft,
- 					struct eventfd_ctx *eventfd);
-diff --git a/mm/vmpressure.c b/mm/vmpressure.c
-index e0f6283..730e7c1 100644
---- a/mm/vmpressure.c
-+++ b/mm/vmpressure.c
-@@ -130,8 +130,12 @@ static enum vmpressure_levels vmpressure_calc_level(unsigned long scanned,
- }
- 
- struct vmpressure_event {
--	struct eventfd_ctx *efd;
-+	union {
-+		struct eventfd_ctx *efd;
-+		void (*fn)(void);
-+	};
- 	enum vmpressure_levels level;
-+	bool kernel_event;
- 	struct list_head node;
- };
- 
-@@ -147,12 +151,15 @@ static bool vmpressure_event(struct vmpressure *vmpr,
- 	mutex_lock(&vmpr->events_lock);
- 
- 	list_for_each_entry(ev, &vmpr->events, node) {
--		if (level >= ev->level) {
-+		if (ev->kernel_event) {
-+			ev->fn();
-+		} else if (vmpr->notify_userspace && level >= ev->level) {
- 			eventfd_signal(ev->efd, 1);
- 			signalled = true;
- 		}
- 	}
- 
-+	vmpr->notify_userspace = false;
- 	mutex_unlock(&vmpr->events_lock);
- 
- 	return signalled;
-@@ -222,7 +229,7 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
- 	 * we account it too.
- 	 */
- 	if (!(gfp & (__GFP_HIGHMEM | __GFP_MOVABLE | __GFP_IO | __GFP_FS)))
--		return;
-+		goto schedule;
- 
- 	/*
- 	 * If we got here with no pages scanned, then that is an indicator
-@@ -239,8 +246,15 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
- 	vmpr->scanned += scanned;
- 	vmpr->reclaimed += reclaimed;
- 	scanned = vmpr->scanned;
-+	/*
-+	 * If we didn't reach this point, only kernel events will be triggered.
-+	 * It is the job of the worker thread to clean this up once the
-+	 * notifications are all delivered.
-+	 */
-+	vmpr->notify_userspace = true;
- 	spin_unlock(&vmpr->sr_lock);
- 
-+schedule:
- 	if (scanned < vmpressure_win)
- 		return;
- 	schedule_work(&vmpr->work);
-@@ -324,6 +338,39 @@ int vmpressure_register_event(struct cgroup_subsys_state *css,
- }
- 
- /**
-+ * vmpressure_register_kernel_event() - Register kernel-side notification
-+ * @css:	css that is interested in vmpressure notifications
-+ * @fn:		function to be called when pressure happens
-+ *
-+ * This function register in-kernel users interested in receiving notifications
-+ * about pressure conditions. Pressure notifications will be triggered at the
-+ * same time as userspace notifications (with no particular ordering relative
-+ * to it).
-+ *
-+ * Pressure notifications are a alternative method to shrinkers and will serve
-+ * well users that are interested in a one-shot notification, with a
-+ * well-defined cgroup aware interface.
-+ */
-+int vmpressure_register_kernel_event(struct cgroup_subsys_state *css,
-+				      void (*fn)(void))
-+{
-+	struct vmpressure *vmpr = css_to_vmpressure(css);
-+	struct vmpressure_event *ev;
-+
-+	ev = kzalloc(sizeof(*ev), GFP_KERNEL);
-+	if (!ev)
-+		return -ENOMEM;
-+
-+	ev->kernel_event = true;
-+	ev->fn = fn;
-+
-+	mutex_lock(&vmpr->events_lock);
-+	list_add(&ev->node, &vmpr->events);
-+	mutex_unlock(&vmpr->events_lock);
-+	return 0;
-+}
-+
-+/**
-  * vmpressure_unregister_event() - Unbind eventfd from vmpressure
-  * @css:	css handle
-  * @cft:	cgroup control files handle
--- 
-1.7.10.4
+Andrew, I think your tree is the right place for these patches.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
