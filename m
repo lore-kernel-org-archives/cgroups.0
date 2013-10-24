@@ -1,67 +1,81 @@
 From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: [PATCH v11 04/15] memcg: move initialization to memcg creation
-Date: Thu, 24 Oct 2013 16:04:55 +0400
-Message-ID: <958291b8ed92e5b9f857a633a2f64e58fca6a23a.1382603434.git.vdavydov@parallels.com>
+Subject: [PATCH v11 08/15] vmscan: take at least one pass with shrinkers
+Date: Thu, 24 Oct 2013 16:04:59 +0400
+Message-ID: <a03e10799bc8313e2771e50bd88dc01f25ff8566.1382603434.git.vdavydov@parallels.com>
 References: <cover.1382603434.git.vdavydov@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1382603434.git.vdavydov@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: akpm@linux-foundation.org
-Cc: glommer@openvz.org, khorenko@parallels.com, devel@openvz.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Hugh Dickins <hughd@google.com>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: glommer@openvz.org, khorenko@parallels.com, devel@openvz.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, Carlos Maiolino <cmaiolino@redhat.com>, Theodore Ts'o <tytso@mit.edu>, Al Viro <viro@zeniv.linux.org.uk>
 
 From: Glauber Costa <glommer@openvz.org>
 
-Those structures are only used for memcgs that are effectively using
-kmemcg. However, in a later patch I intend to use scan that list
-inconditionally (list empty meaning no kmem caches present), which
-simplifies the code a lot.
+In very low free kernel memory situations, it may be the case that we
+have less objects to free than our initial batch size. If this is the
+case, it is better to shrink those, and open space for the new workload
+then to keep them and fail the new allocations.
 
-So move the initialization to early kmem creation.
+In particular, we are concerned with the direct reclaim case for memcg.
+Although this same technique can be applied to other situations just as well,
+we will start conservative and apply it for that case, which is the one
+that matters the most.
 
 Signed-off-by: Glauber Costa <glommer@openvz.org>
-Cc: Dave Chinner <dchinner@redhat.com>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Rik van Riel <riel@redhat.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
-Cc: Hugh Dickins <hughd@google.com>
-Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
+CC: Dave Chinner <dchinner@redhat.com>
+CC: Carlos Maiolino <cmaiolino@redhat.com>
+CC: "Theodore Ts'o" <tytso@mit.edu>
+CC: Al Viro <viro@zeniv.linux.org.uk>
 ---
- mm/memcontrol.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ mm/vmscan.c |   23 ++++++++++++++++++-----
+ 1 file changed, 18 insertions(+), 5 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 41c216a..5104d1f 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3120,8 +3120,6 @@ int memcg_update_cache_sizes(struct mem_cgroup *memcg)
- 	}
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 36fc133..bfedcdc 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -311,20 +311,33 @@ shrink_slab_node(struct shrink_control *shrinkctl, struct shrinker *shrinker,
+ 				nr_pages_scanned, lru_pages,
+ 				max_pass, delta, total_scan);
  
- 	memcg->kmemcg_id = num;
--	INIT_LIST_HEAD(&memcg->memcg_slab_caches);
--	mutex_init(&memcg->slab_caches_mutex);
- 	return 0;
- }
+-	while (total_scan >= batch_size) {
++	do {
+ 		unsigned long ret;
++		unsigned long nr_to_scan = min(batch_size, total_scan);
++		struct mem_cgroup *memcg = shrinkctl->target_mem_cgroup;
++
++		/*
++		 * Differentiate between "few objects" and "no objects"
++		 * as returned by the count step.
++		 */
++		if (!total_scan)
++			break;
++
++		if ((total_scan < batch_size) &&
++		   !(memcg && memcg_kmem_is_active(memcg)))
++			break;
  
-@@ -5916,6 +5914,8 @@ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
- 	int ret;
+-		shrinkctl->nr_to_scan = batch_size;
++		shrinkctl->nr_to_scan = nr_to_scan;
+ 		ret = shrinker->scan_objects(shrinker, shrinkctl);
+ 		if (ret == SHRINK_STOP)
+ 			break;
+ 		freed += ret;
  
-+	INIT_LIST_HEAD(&memcg->memcg_slab_caches);
-+	mutex_init(&memcg->slab_caches_mutex);
- 	memcg->kmemcg_id = -1;
- 	ret = memcg_propagate_kmem(memcg);
- 	if (ret)
+-		count_vm_events(SLABS_SCANNED, batch_size);
+-		total_scan -= batch_size;
++		count_vm_events(SLABS_SCANNED, nr_to_scan);
++		total_scan -= nr_to_scan;
+ 
+ 		cond_resched();
+-	}
++	} while (total_scan >= batch_size);
+ 
+ 	/*
+ 	 * move the unused scan count back into the shrinker in a
 -- 
 1.7.10.4
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
