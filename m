@@ -1,96 +1,41 @@
-From: Greg Thelen <gthelen@google.com>
-Subject: [PATCH 3/3] memcg: use __this_cpu_sub to decrement stats
-Date: Sun, 27 Oct 2013 00:44:36 -0700
-Message-ID: <1382859876-28196-4-git-send-email-gthelen@google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 1/3] percpu counter: test module
+Date: Sun, 27 Oct 2013 07:18:44 -0400
+Message-ID: <20131027111844.GA14934@mtj.dyndns.org>
 References: <1382859876-28196-1-git-send-email-gthelen@google.com>
-Return-path: <owner-linux-mm@kvack.org>
+ <1382859876-28196-2-git-send-email-gthelen@google.com>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=LqidpUjZnyQmxCtWGONiP5klClnMRFWMuQXBc3VP+iM=;
-        b=m0l2y4iWDh6iCewVVDSzcjFIcYZYAyYH/QzaBRZYS6K+vtDuyGF4ZLQEFsBnIaa2/i
-         9BDfg9mvoyrFVFogZSs8qkuoWPpqZ2dt4G0wdUSgoojkWLsxHMNZ5uDw+ss8pV0KAkol
-         RRIoX0ulwiDce/YGVagbEv0j0CJwc3o+yOfXyTUdWtFwaWqVIFuoTZSDyFMsJkYTIbV0
-         eBHb6FQoY0/ocEi3HQeIOVzu9D4ZK2ZzNg884PBc5gsljdV6Hil533zTh1YwWrwAQtZG
-         Q9uFeSrvIsNSa4KFt1IwaMj3Q17lbc/JvVbpc1JVCOpIdoyCi2E8Q9BiD/G3NimzYMYo
-         WhvQ==
-In-Reply-To: <1382859876-28196-1-git-send-email-gthelen@google.com>
-Sender: owner-linux-mm@kvack.org
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=65OsvE2vQL6VPHui5DsYquqYIoLreqEHs0lF1KgPci8=;
+        b=Xa8kSSy8LPooSoaqWFXo9bMgfC9jRXeRCaOuDDwhEaEifT3Mmokveqo7JmQ+PAVNBB
+         wM/fHJpJb5gQu0KBwCuhQcUUggVRrdXKM2DGoyEkGfIf6NQjamb8WWSFYc6XLeK6sqYz
+         KAK+r0V+ge9MFt3MgfzYGpgH3ob3eQqKT77NArTk/dRuC/qi7bUr/BA8GLXzyBCmdnPD
+         5sV/SPxPl/kCLmwAaEpsnHQkc7BcaULDQVrgtCVK7q1BszZgQoMFRmA65uUqZZ7GiPG7
+         6n3UkME2fo4JNZhLEy4/m/NknUJ6LiPzD9dHrG3YEesINc2BKEstl1Lmm7r9/ug9PYYJ
+         33lQ==
+Content-Disposition: inline
+In-Reply-To: <1382859876-28196-2-git-send-email-gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>, Christoph Lameter <cl@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, handai.szj@taobao.com, Andrew Morton <akpm@linux-foundation.org>
-Cc: x86@kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Greg Thelen <gthelen@google.com>
+To: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Christoph Lameter <cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-As of v3.11-9444-g3ea67d0 "memcg: add per cgroup writeback pages
-accounting" memcg counter errors are possible when moving charged
-memory to a different memcg.  Charge movement occurs when processing
-writes to memory.force_empty, moving tasks to a memcg with
-memcg.move_charge_at_immigrate=1, or memcg deletion.  An example
-showing error after memory.force_empty:
-  $ cd /sys/fs/cgroup/memory
-  $ mkdir x
-  $ rm /data/tmp/file
-  $ (echo $BASHPID >> x/tasks && exec mmap_writer /data/tmp/file 1M) &
-  [1] 13600
-  $ grep ^mapped x/memory.stat
-  mapped_file 1048576
-  $ echo 13600 > tasks
-  $ echo 1 > x/memory.force_empty
-  $ grep ^mapped x/memory.stat
-  mapped_file 4503599627370496
+On Sun, Oct 27, 2013 at 12:44:34AM -0700, Greg Thelen wrote:
+> Tests various percpu operations.
+> 
+> Enable with CONFIG_PERCPU_TEST=m.
+> 
+> Signed-off-by: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-mapped_file should end with 0.
-  4503599627370496 == 0x10,0000,0000,0000 == 0x100,0000,0000 pages
-  1048576          == 0x10,0000           == 0x100 pages
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-This issue only affects the source memcg on 64 bit machines; the
-destination memcg counters are correct.  So the rmdir case is not too
-important because such counters are soon disappearing with the entire
-memcg.  But the memcg.force_empty and
-memory.move_charge_at_immigrate=1 cases are larger problems as the
-bogus counters are visible for the (possibly long) remaining life of
-the source memcg.
+Thanks.
 
-The problem is due to memcg use of __this_cpu_from(.., -nr_pages),
-which is subtly wrong because it subtracts the unsigned int nr_pages
-(either -1 or -512 for THP) from a signed long percpu counter.  When
-nr_pages=-1, -nr_pages=0xffffffff.  On 64 bit machines
-stat->count[idx] is signed 64 bit.  So memcg's attempt to simply
-decrement a count (e.g. from 1 to 0) boils down to:
-  long count = 1
-  unsigned int nr_pages = 1
-  count += -nr_pages  /* -nr_pages == 0xffff,ffff */
-  count is now 0x1,0000,0000 instead of 0
-
-The fix is to subtract the unsigned page count rather than adding its
-negation.  This only works with the "percpu counter: cast
-this_cpu_sub() adjustment" patch which fixes this_cpu_sub().
-
-Signed-off-by: Greg Thelen <gthelen@google.com>
----
- mm/memcontrol.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index aa8185c..b7ace0f 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3773,7 +3773,7 @@ void mem_cgroup_move_account_page_stat(struct mem_cgroup *from,
- {
- 	/* Update stat data for mem_cgroup */
- 	preempt_disable();
--	__this_cpu_add(from->stat->count[idx], -nr_pages);
-+	__this_cpu_sub(from->stat->count[idx], nr_pages);
- 	__this_cpu_add(to->stat->count[idx], nr_pages);
- 	preempt_enable();
- }
 -- 
-1.8.4.1
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
