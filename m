@@ -1,37 +1,36 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 3/3] cgroups: remove calls to simple_kstrtoll
-Date: Sun, 27 Oct 2013 07:39:25 -0400
-Message-ID: <20131027113925.GF14934@mtj.dyndns.org>
-References: <1382754793-8827-3-git-send-email-dwalker@fifo99.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 2/3] percpu counter: cast this_cpu_sub() adjustment
+Date: Sun, 27 Oct 2013 05:04:29 -0700
+Message-ID: <20131027050429.7fcc2ed5.akpm@linux-foundation.org>
+References: <1382859876-28196-1-git-send-email-gthelen@google.com>
+	<1382859876-28196-3-git-send-email-gthelen@google.com>
+	<20131027112255.GB14934@mtj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=VxL44EIMeX8sVQx4rlUoXt6UrQ4RC63x68Ev/wRJxII=;
-        b=0MU2KA5Lz6v6lOubviCIGLMoSKJmNTJJRsG3OFJtfVUvve28l5cTVoAlvlGjqq87YY
-         shD8jZ70QR7XM7FL/XH/Pn2Sc13q9cugpU3hywDNI4/L7V77oM19kkCwFMv22pPGI9NL
-         sEISSGsWME4MHjmOOGfoo3lgKhlgPzvvqdukeKcWOiWJWUz+TEWt2gYNQu8XoHWMCSWf
-         HoEy1QBsDoWwRKGEYZEw63qDKqQs71yAl/tPxOH3JWy2LEQSmfD8oQ8A2hdH4QVAq13M
-         w4HhqNj+Ff5hDY53MejA7Dhxjm8ARQ+msadGxU7q4yeZ9TM3QtoBizfZ0nj/VZyfqB7U
-         Js4g==
-Content-Disposition: inline
-In-Reply-To: <1382754793-8827-3-git-send-email-dwalker-zu3NM2574RrQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20131027112255.GB14934@mtj.dyndns.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Daniel Walker <dwalker-zu3NM2574RrQT0dZR+AlfA@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Greg Thelen <gthelen@google.com>, Christoph Lameter <cl@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, handai.szj@taobao.com, x86@kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-On Fri, Oct 25, 2013 at 07:33:13PM -0700, Daniel Walker wrote:
-> Signed-off-by: Daniel Walker <dwalker-zu3NM2574RrQT0dZR+AlfA@public.gmane.org>
+On Sun, 27 Oct 2013 07:22:55 -0400 Tejun Heo <tj@kernel.org> wrote:
 
-Can you please briefly explain why this conversion is happening in the
-patch description?
+> We probably want to cc stable for this and the next one.  How should
+> these be routed?  I can take these through percpu tree or mm works
+> too.  Either way, it'd be best to route them together.
 
-Thanks.
+Yes, all three look like -stable material to me.  I'll grab them later
+in the week if you haven't ;)
 
--- 
-tejun
+The names of the first two patches distress me.  They rather clearly
+assert that the code affects percpu_counter.[ch], but that is not the case. 
+Massaging is needed to fix that up.
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
