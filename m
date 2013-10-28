@@ -1,97 +1,112 @@
-From: Greg Thelen <gthelen@google.com>
-Subject: [PATCH v2 3/3] memcg: use __this_cpu_sub() to dec stats to avoid incorrect subtrahend casting
-Date: Sun, 27 Oct 2013 10:30:17 -0700
-Message-ID: <1382895017-19067-4-git-send-email-gthelen@google.com>
-References: <1382895017-19067-1-git-send-email-gthelen@google.com>
-Return-path: <owner-linux-mm@kvack.org>
+From: Hong zhi guo <honkiko@gmail.com>
+Subject: Re: [PATCH v4 2/2] blk-throttle: trim tokens generated for an idle tree
+Date: Mon, 28 Oct 2013 13:08:18 +0800
+Message-ID: <CAA7+ByUH7BeEOcuZF-cs8BMZMBOG+S9MF7ZryTRymy7ZPUxOKA@mail.gmail.com>
+References: <20131018155532.GD2277@redhat.com>
+	<1382271072-15664-1-git-send-email-zhiguohong@tencent.com>
+	<1382271072-15664-3-git-send-email-zhiguohong@tencent.com>
+	<20131022210232.GB2884@redhat.com>
+Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=smJj+4ZEvJneTCXYJIAqvUU84j8aTsHtutQ96ZZX/ho=;
-        b=lUcWLPW8PHEJ6QlWvdOXiOq6xS3GjoEi3o9/p4pxIWZvJCTL6XAeIolfxkpRcN/UBY
-         2bFI9PxI+sqfuAZmAewZEZJTxVirmlyBgSNgt5tgmTXA+80NvNc54fPm3A/h/a851EPC
-         sZd/Qzhs/udUNEwiqz5siKNHgYht+47Wd2CksdkBBDAXqnusnhHanvQg/NagQM0MvHJj
-         H2C8OIizv7wDrCfwJSYSPSV6DQt8Nidj6sNXq325p9MJ6pqoWtLe0Fsfndg/A/4/3FkC
-         a332VfG/B+MdjLwhGT0qaujJzFKkfhEOzYp/rHU5eNByAODTnOTDcv/qNvWpJYNFKFSl
-         xU7A==
-In-Reply-To: <1382895017-19067-1-git-send-email-gthelen@google.com>
-Sender: owner-linux-mm@kvack.org
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=L/FFoLogAGkZSUsE4AHAZ6gt2oPEBwlMacC2DivWr+0=;
+        b=1FOpsYrGbp38Z43uz8rdOfjXuLyfZ0k1R+btrLfSYrCErnS/Pb5llT3zKZ9hxoNi4g
+         Esus/nJA1sAjGS31pK/Yll9ARdwrlJg/l8q3xj4j2Shp01bAJfTF1jIcxF3SKvbNb9Mx
+         Ua9f5wS7h4BLra3BsfeRjioI1QNX1IAEExLknCKOR2zZJUrgPKjwBv6C/rnqlUyUWpru
+         GgS/UyrhIiI2eoG3NmYJhheJp8c+WbiUY3hPsU4dkmOmdptZmfQK/qI+MsfJKtJr8XsF
+         k6KKhrDfFT92l7YkNhXIiQu7IS2pFMx+A39qVEEfUaa3xkjUm/iZirVefkeWNS+MbItt
+         9Wmw==
+In-Reply-To: <20131022210232.GB2884@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>, Christoph Lameter <cl@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, handai.szj@taobao.com, Andrew Morton <akpm@linux-foundation.org>
-Cc: x86@kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Greg Thelen <gthelen@google.com>
+To: Vivek Goyal <vgoyal@redhat.com>, Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, Hong Zhiguo <zhiguohong@tencent.com>
 
-As of v3.11-9444-g3ea67d0 "memcg: add per cgroup writeback pages
-accounting" memcg counter errors are possible when moving charged
-memory to a different memcg.  Charge movement occurs when processing
-writes to memory.force_empty, moving tasks to a memcg with
-memcg.move_charge_at_immigrate=1, or memcg deletion.  An example
-showing error after memory.force_empty:
-  $ cd /sys/fs/cgroup/memory
-  $ mkdir x
-  $ rm /data/tmp/file
-  $ (echo $BASHPID >> x/tasks && exec mmap_writer /data/tmp/file 1M) &
-  [1] 13600
-  $ grep ^mapped x/memory.stat
-  mapped_file 1048576
-  $ echo 13600 > tasks
-  $ echo 1 > x/memory.force_empty
-  $ grep ^mapped x/memory.stat
-  mapped_file 4503599627370496
+Hi, Vivek,
 
-mapped_file should end with 0.
-  4503599627370496 == 0x10,0000,0000,0000 == 0x100,0000,0000 pages
-  1048576          == 0x10,0000           == 0x100 pages
+I tested the PATCH v4 for some basic hierarchical setup as I did
+before. And I get the similar result.
 
-This issue only affects the source memcg on 64 bit machines; the
-destination memcg counters are correct.  So the rmdir case is not too
-important because such counters are soon disappearing with the entire
-memcg.  But the memcg.force_empty and
-memory.move_charge_at_immigrate=1 cases are larger problems as the
-bogus counters are visible for the (possibly long) remaining life of
-the source memcg.
+Preparation
+============
+1) mount subsys blkio with "__DEVEL__sane_behavior"
+2) Create 3 levels of directories under the blkio mount point:
+    mkdir 1
+    mkdir 1/2
+    mkdir 1/2/3
+    mkdir 4
+3) start 4 bash sessions, write their PIDs into:
+    1/cgroup.procs
+    1/2/cgroup.procs
+    1/2/3/cgroup.procs
+    4/cgroup.procs
+4) prepare 4 10MB files on sdb(ext4 fs)
 
-The problem is due to memcg use of __this_cpu_from(.., -nr_pages),
-which is subtly wrong because it subtracts the unsigned int nr_pages
-(either -1 or -512 for THP) from a signed long percpu counter.  When
-nr_pages=-1, -nr_pages=0xffffffff.  On 64 bit machines
-stat->count[idx] is signed 64 bit.  So memcg's attempt to simply
-decrement a count (e.g. from 1 to 0) boils down to:
-  long count = 1
-  unsigned int nr_pages = 1
-  count += -nr_pages  /* -nr_pages == 0xffff,ffff */
-  count is now 0x1,0000,0000 instead of 0
+Note: in below hierarchy graph:
+    "[50k]" means configured value for read_bps_device is 50kB/s
+    "(50k)" means bandwidth reported by dd is 50kB/s
 
-The fix is to subtract the unsigned page count rather than adding its
-negation.  This only works once "percpu: fix this_cpu_sub() subtrahend
-casting for unsigneds" is applied to fix this_cpu_sub().
+Test A: 1 process throttled by ancestor group
+=============================================
+Hierarchy set-up:
+    (echo "8:16 204800" > 1/blkio.throttle.read_bps_device)
+    |-- 1 [200k]
+    |    `-- 2 [-]
+    |         `-- 3 [-]
+    `-- 4 [-]
 
-Signed-off-by: Greg Thelen <gthelen@google.com>
-Acked-by: Tejun Heo <tj@kernel.org>
----
- mm/memcontrol.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+dd within group 3:
+    (drop cache then: dd if=10M-file-3 of=/dev/null)
+Result:
+    206kB/s (I did same test without the token-bucket patch, The
+result is 205kB/s)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index aa8185c..b7ace0f 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3773,7 +3773,7 @@ void mem_cgroup_move_account_page_stat(struct mem_cgroup *from,
- {
- 	/* Update stat data for mem_cgroup */
- 	preempt_disable();
--	__this_cpu_add(from->stat->count[idx], -nr_pages);
-+	__this_cpu_sub(from->stat->count[idx], nr_pages);
- 	__this_cpu_add(to->stat->count[idx], nr_pages);
- 	preempt_enable();
- }
+dd within group 2:
+    (drop cache then: dd if=10M-file-2 of=/dev/null)
+Result:
+    206kB/s
+
+
+Test B: 4 processes in 3 levels of hierarchy
+=============================================
+Hierarchy set-up:
+    echo "8:16 204800" > 1/blkio.throttle.read_bps_device
+    echo "8:16 102400" > 1/2/blkio.throttle.read_bps_device
+    echo "8:16 51200"  > 1/2/3/blkio.throttle.read_bps_device
+    echo "8:16 51200"  > 4/blkio.throttle.read_bps_device
+    |-- 1 [200k]
+    |    `-- 2 [100k]
+    |         `-- 3 [50k]
+    `-- 4 [50k]
+
+start 4 dd processes from 4 bash sessions
+    (dd if=10M-file-x of=/dev/null)
+Result:
+    |-- 1 (104k)
+    |    `-- 2 (52.1k)
+    |         `-- 3 (51.3k)
+    `-- 4 (51.4k)
+
+
+On Wed, Oct 23, 2013 at 5:02 AM, Vivek Goyal <vgoyal@redhat.com> wrote:
+> Hi Hong,
+>
+> This approach looks good in general. Only downside I can think of
+> updation of nr_requests throughout the hierarchy. So deeper the
+> hierarchy, higher the overhead.
+>
+> I am not sure if that's a concern or not. I will have a closer look
+> a the patches tomorrow and do some testing too.
+>
+> Thanks
+> Vivek
+
+
 -- 
-1.8.4.1
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+best regards
+Hong Zhiguo
