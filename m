@@ -1,75 +1,116 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v2 3/3] memcg: use __this_cpu_sub() to dec stats to avoid
- incorrect subtrahend casting
-Date: Tue, 29 Oct 2013 10:28:50 -0400
-Message-ID: <20131029142850.GC1548@cmpxchg.org>
-References: <1382895017-19067-1-git-send-email-gthelen@google.com>
- <1382895017-19067-4-git-send-email-gthelen@google.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: Possible regression with cgroups in 3.11
+Date: Wed, 30 Oct 2013 16:14:31 +0800
+Message-ID: <5270BFE7.4000602@huawei.com>
+References: <4431690.ZqnBIdaGMg@akheu22.uni-muenster.de> <5257F7CE.90702@huawei.com> <CA+SBX_Pa8sJbRq3aOghzqam5tDUbs_SPnVTaewtg-pRmvUqSzA@mail.gmail.com> <5258E584.70500@huawei.com> <CA+SBX_MQVMuzWKroASK7Cr5J8cu9ajGo=CWr7SRs+OWh83h4_w@mail.gmail.com> <525CB337.8050105@huawei.com> <CA+SBX_Ogo8HP81o+vrJ8ozSBN6gPwzc8WNOV3Uya=4AYv+CCyQ@mail.gmail.com> <CA+SBX_OJBbYzrNX5Mi4rmM2SANShXMmAvuPGczAyBdx8F2hBDQ@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=/E6nQxbRgGl3ExiQd8ni+c6I9tXk4nRg0IFDQDfkt4Q=;
-	b=iwji+rbDyDRTtk/rHVbU7CKEtdPzxLfkyNe8YJO2KaciibEc4aUZLJz48iI3AOLBntYgY50cwd4XYppRS4PcLHpYE2eYqbW/3BMiS5tIYDNiiObKRXf1hMDM+hmJEj4B6LNUIBo1HEqpbmTaP5OY1HLYIX84JHwOop8fn2waHTw=;
-Content-Disposition: inline
-In-Reply-To: <1382895017-19067-4-git-send-email-gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <CA+SBX_OJBbYzrNX5Mi4rmM2SANShXMmAvuPGczAyBdx8F2hBDQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Markus Blank-Burian <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Sun, Oct 27, 2013 at 10:30:17AM -0700, Greg Thelen wrote:
-> As of v3.11-9444-g3ea67d0 "memcg: add per cgroup writeback pages
-> accounting" memcg counter errors are possible when moving charged
-> memory to a different memcg.  Charge movement occurs when processing
-> writes to memory.force_empty, moving tasks to a memcg with
-> memcg.move_charge_at_immigrate=1, or memcg deletion.  An example
-> showing error after memory.force_empty:
->   $ cd /sys/fs/cgroup/memory
->   $ mkdir x
->   $ rm /data/tmp/file
->   $ (echo $BASHPID >> x/tasks && exec mmap_writer /data/tmp/file 1M) &
->   [1] 13600
->   $ grep ^mapped x/memory.stat
->   mapped_file 1048576
->   $ echo 13600 > tasks
->   $ echo 1 > x/memory.force_empty
->   $ grep ^mapped x/memory.stat
->   mapped_file 4503599627370496
-> 
-> mapped_file should end with 0.
->   4503599627370496 == 0x10,0000,0000,0000 == 0x100,0000,0000 pages
->   1048576          == 0x10,0000           == 0x100 pages
-> 
-> This issue only affects the source memcg on 64 bit machines; the
-> destination memcg counters are correct.  So the rmdir case is not too
-> important because such counters are soon disappearing with the entire
-> memcg.  But the memcg.force_empty and
-> memory.move_charge_at_immigrate=1 cases are larger problems as the
-> bogus counters are visible for the (possibly long) remaining life of
-> the source memcg.
-> 
-> The problem is due to memcg use of __this_cpu_from(.., -nr_pages),
-> which is subtly wrong because it subtracts the unsigned int nr_pages
-> (either -1 or -512 for THP) from a signed long percpu counter.  When
-> nr_pages=-1, -nr_pages=0xffffffff.  On 64 bit machines
-> stat->count[idx] is signed 64 bit.  So memcg's attempt to simply
-> decrement a count (e.g. from 1 to 0) boils down to:
->   long count = 1
->   unsigned int nr_pages = 1
->   count += -nr_pages  /* -nr_pages == 0xffff,ffff */
->   count is now 0x1,0000,0000 instead of 0
-> 
-> The fix is to subtract the unsigned page count rather than adding its
-> negation.  This only works once "percpu: fix this_cpu_sub() subtrahend
-> casting for unsigneds" is applied to fix this_cpu_sub().
-> 
-> Signed-off-by: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sorry for late reply.
 
-Huh, it looked so innocent...  At first I thought 2/3 would fix this
-case as well but the cast happens only after the negation, so the sign
-extension does not happen.  Alright, then.
+Seems we stuck in the while loop in mem_cgroup_reparent_charges().
+I talked with Michal during Kernel Summit, and seems Google also
+hit this bug. Let's get more people involed.
 
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+On 2013/10/18 17:57, Markus Blank-Burian wrote:
+> My test-runs now reproduced the bug with tracing enabled. The mutex
+> holding thread is definitely the one I posted earlier, and with the
+> "-t" option the crash utility can also display the whole stack
+> backtrace. (Did only show the first 3 lines without this options,
+> which confused me earlier into thinking, that the worker thread was
+> idle). I will keep the test machine running in this state if you need
+> more information.
+> 
+> crash> bt 13115 -t
+> PID: 13115  TASK: ffff88082e34a050  CPU: 4   COMMAND: "kworker/4:0"
+>               START: __schedule at ffffffff813e0f4f
+>   [ffff88082f673ad8] schedule at ffffffff813e111f
+>   [ffff88082f673ae8] schedule_timeout at ffffffff813ddd6c
+>   [ffff88082f673af8] mark_held_locks at ffffffff8107bec4
+>   [ffff88082f673b10] _raw_spin_unlock_irq at ffffffff813e2625
+>   [ffff88082f673b38] trace_hardirqs_on_caller at ffffffff8107c04f
+>   [ffff88082f673b58] trace_hardirqs_on at ffffffff8107c078
+>   [ffff88082f673b80] __wait_for_common at ffffffff813e0980
+>   [ffff88082f673b88] schedule_timeout at ffffffff813ddd38
+>   [ffff88082f673ba0] default_wake_function at ffffffff8105a258
+>   [ffff88082f673bb8] call_rcu at ffffffff810a552b
+>   [ffff88082f673be8] wait_for_completion at ffffffff813e0a1c
+>   [ffff88082f673bf8] wait_rcu_gp at ffffffff8104c736
+>   [ffff88082f673c08] wakeme_after_rcu at ffffffff8104c6d1
+>   [ffff88082f673c60] __mutex_unlock_slowpath at ffffffff813e0217
+>   [ffff88082f673c88] synchronize_rcu at ffffffff810a3f50
+>   [ffff88082f673c98] mem_cgroup_reparent_charges at ffffffff810f6765
+>   [ffff88082f673d28] mem_cgroup_css_offline at ffffffff810f6b9f
+>   [ffff88082f673d58] offline_css at ffffffff8108b4aa
+>   [ffff88082f673d80] cgroup_offline_fn at ffffffff8108e112
+>   [ffff88082f673dc0] process_one_work at ffffffff810493b3
+>   [ffff88082f673dc8] process_one_work at ffffffff81049348
+>   [ffff88082f673e28] worker_thread at ffffffff81049d7b
+>   [ffff88082f673e48] worker_thread at ffffffff81049c37
+>   [ffff88082f673e60] kthread at ffffffff8104ef80
+>   [ffff88082f673f28] kthread at ffffffff8104eed4
+>   [ffff88082f673f50] ret_from_fork at ffffffff813e31ec
+>   [ffff88082f673f80] kthread at ffffffff8104eed4
+> 
+> On Fri, Oct 18, 2013 at 11:34 AM, Markus Blank-Burian
+> <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org> wrote:
+>> I guess I found out, where it is hanging: While waiting for the
+>> test-runs to trigger the bug, I tried "echo w > /proc/sysrq-trigger"
+>> to show the stacks of all blocked tasks, and one of them was always
+>> this one:
+>>
+>> [586147.824671] kworker/3:5     D ffff8800df81e208     0 10909      2 0x00000000
+>> [586147.824671] Workqueue: events cgroup_offline_fn
+>> [586147.824671]  ffff8800fba7bbd0 0000000000000002 ffff88007afc2ee0
+>> ffff8800fba7bfd8
+>> [586147.824671]  ffff8800fba7bfd8 0000000000011c40 ffff8800df81ddc0
+>> 7fffffffffffffff
+>> [586147.824671]  ffff8800fba7bcf8 ffff8800df81ddc0 0000000000000002
+>> ffff8800fba7bcf0
+>> [586147.824671] Call Trace:
+>> [586147.824671]  [<ffffffff813c57e4>] schedule+0x60/0x62
+>> [586147.824671]  [<ffffffff813c374c>] schedule_timeout+0x34/0x11c
+>> [586147.824671]  [<ffffffff81053305>] ? __wake_up_common+0x51/0x7e
+>> [586147.824671]  [<ffffffff813c6a73>] ? _raw_spin_unlock_irqrestore+0x29/0x34
+>> [586147.824671]  [<ffffffff813c5097>] __wait_for_common+0x9c/0x119
+>> [586147.824671]  [<ffffffff813c3718>] ? svcauth_gss_legacy_init+0x176/0x176
+>> [586147.824671]  [<ffffffff8105790d>] ? wake_up_state+0xd/0xd
+>> [586147.824671]  [<ffffffff8109c237>] ? call_rcu_bh+0x18/0x18
+>> [586147.824671]  [<ffffffff813c5133>] wait_for_completion+0x1f/0x21
+>> [586147.824671]  [<ffffffff8104a8ee>] wait_rcu_gp+0x46/0x4c
+>> [586147.824671]  [<ffffffff8104a899>] ? __rcu_read_unlock+0x4c/0x4c
+>> [586147.824671]  [<ffffffff8109ad6b>] synchronize_rcu+0x29/0x2b
+>> [586147.824671]  [<ffffffff810ec34e>] mem_cgroup_reparent_charges+0x63/0x2fb
+>> [586147.824671]  [<ffffffff810ec75a>] mem_cgroup_css_offline+0xa5/0x14a
+>> [586147.824671]  [<ffffffff8108329e>] offline_css.part.15+0x1b/0x2e
+>> [586147.824671]  [<ffffffff81084f8b>] cgroup_offline_fn+0x72/0x137
+>> [586147.824671]  [<ffffffff81047cb7>] process_one_work+0x15f/0x21e
+>> [586147.824671]  [<ffffffff81048159>] worker_thread+0x144/0x1f0
+>> [586147.824671]  [<ffffffff81048015>] ? rescuer_thread+0x275/0x275
+>> [586147.824671]  [<ffffffff8104cbec>] kthread+0x88/0x90
+>> [586147.824671]  [<ffffffff8104cb64>] ? __kthread_parkme+0x60/0x60
+>> [586147.824671]  [<ffffffff813c756c>] ret_from_fork+0x7c/0xb0
+>> [586147.824671]  [<ffffffff8104cb64>] ? __kthread_parkme+0x60/0x60
+>>
+>>
+>> On Tue, Oct 15, 2013 at 5:15 AM, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
+>>> On 2013/10/14 16:06, Markus Blank-Burian wrote:
+>>>> The crash utility indicated, that the lock was held by a kworker
+>>>> thread, which was idle at the moment. So there might be a case, where
+>>>> no unlock is done. I am trying to reproduce the problem at the moment
+>>>> with CONFIG_PROVE_LOCKING, but without luck so far. It seems, that my
+>>>> test-job is quite bad at reproducing the bug. I'll let you know, if I
+>>>> can find out more.
+>>>>
+>>>
+>>> Thanks. I'll review the code to see if I can find some suspect.
+>>>
+>>> PS: I'll be travelling from 10/16 ~ 10/28, so I may not be able
+>>> to spend much time on this.
