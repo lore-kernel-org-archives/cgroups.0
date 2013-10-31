@@ -1,116 +1,141 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: Possible regression with cgroups in 3.11
-Date: Wed, 30 Oct 2013 16:14:31 +0800
-Message-ID: <5270BFE7.4000602@huawei.com>
-References: <4431690.ZqnBIdaGMg@akheu22.uni-muenster.de> <5257F7CE.90702@huawei.com> <CA+SBX_Pa8sJbRq3aOghzqam5tDUbs_SPnVTaewtg-pRmvUqSzA@mail.gmail.com> <5258E584.70500@huawei.com> <CA+SBX_MQVMuzWKroASK7Cr5J8cu9ajGo=CWr7SRs+OWh83h4_w@mail.gmail.com> <525CB337.8050105@huawei.com> <CA+SBX_Ogo8HP81o+vrJ8ozSBN6gPwzc8WNOV3Uya=4AYv+CCyQ@mail.gmail.com> <CA+SBX_OJBbYzrNX5Mi4rmM2SANShXMmAvuPGczAyBdx8F2hBDQ@mail.gmail.com>
+From: David Rientjes <rientjes@google.com>
+Subject: [patch] mm, memcg: add memory.oom_control notification for system
+ oom
+Date: Wed, 30 Oct 2013 18:39:16 -0700 (PDT)
+Message-ID: <alpine.DEB.2.02.1310301838300.13556@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CA+SBX_OJBbYzrNX5Mi4rmM2SANShXMmAvuPGczAyBdx8F2hBDQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:to:cc:subject:message-id:user-agent:mime-version
+         :content-type;
+        bh=vR9XKgJblp7DaqAOk/ZeQqgFO7uSEOM1VrbvWa4a9IA=;
+        b=M2zzURjCSoD2jPRYmS8TZPDSmROJGZWU+uOLhxxghTQWy03UrhZL2MDUrAzKrJkkVB
+         YdImw7TI/2SJGlF2J7yWZNIPlUSC3jKVix5J7shFs5gDPFF7MqYTgBezSnosm+r3P9kS
+         tZ1mURl7Hq4zx9308rSS/cZtt3sjZPUSb/sz6xX6GtePHfDiTqqVgWgMlSLEvc8LD3Ls
+         GLZuEX9dJk8Kq/jE3KDUG92rvwqXcMfL2aYgCrpO2pYMgjuk5y/dDcdYQYsrxVXbavI+
+         UHnNXgr2J4kARyd/PaCWo8em/vwGDQSY70afdDc2ft/cOIfM9e3fKxk3AAchUyB5r0oz
+         owuA==
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Markus Blank-Burian <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-Sorry for late reply.
+A subset of applications that wait on memory.oom_control don't disable
+the oom killer for that memcg and simply log or cleanup after the kernel
+oom killer kills a process to free memory.
 
-Seems we stuck in the while loop in mem_cgroup_reparent_charges().
-I talked with Michal during Kernel Summit, and seems Google also
-hit this bug. Let's get more people involed.
+We need the ability to do this for system oom conditions as well, i.e.
+when the system is depleted of all memory and must kill a process.  For
+convenience, this can use memcg since oom notifiers are already present.
 
-On 2013/10/18 17:57, Markus Blank-Burian wrote:
-> My test-runs now reproduced the bug with tracing enabled. The mutex
-> holding thread is definitely the one I posted earlier, and with the
-> "-t" option the crash utility can also display the whole stack
-> backtrace. (Did only show the first 3 lines without this options,
-> which confused me earlier into thinking, that the worker thread was
-> idle). I will keep the test machine running in this state if you need
-> more information.
-> 
-> crash> bt 13115 -t
-> PID: 13115  TASK: ffff88082e34a050  CPU: 4   COMMAND: "kworker/4:0"
->               START: __schedule at ffffffff813e0f4f
->   [ffff88082f673ad8] schedule at ffffffff813e111f
->   [ffff88082f673ae8] schedule_timeout at ffffffff813ddd6c
->   [ffff88082f673af8] mark_held_locks at ffffffff8107bec4
->   [ffff88082f673b10] _raw_spin_unlock_irq at ffffffff813e2625
->   [ffff88082f673b38] trace_hardirqs_on_caller at ffffffff8107c04f
->   [ffff88082f673b58] trace_hardirqs_on at ffffffff8107c078
->   [ffff88082f673b80] __wait_for_common at ffffffff813e0980
->   [ffff88082f673b88] schedule_timeout at ffffffff813ddd38
->   [ffff88082f673ba0] default_wake_function at ffffffff8105a258
->   [ffff88082f673bb8] call_rcu at ffffffff810a552b
->   [ffff88082f673be8] wait_for_completion at ffffffff813e0a1c
->   [ffff88082f673bf8] wait_rcu_gp at ffffffff8104c736
->   [ffff88082f673c08] wakeme_after_rcu at ffffffff8104c6d1
->   [ffff88082f673c60] __mutex_unlock_slowpath at ffffffff813e0217
->   [ffff88082f673c88] synchronize_rcu at ffffffff810a3f50
->   [ffff88082f673c98] mem_cgroup_reparent_charges at ffffffff810f6765
->   [ffff88082f673d28] mem_cgroup_css_offline at ffffffff810f6b9f
->   [ffff88082f673d58] offline_css at ffffffff8108b4aa
->   [ffff88082f673d80] cgroup_offline_fn at ffffffff8108e112
->   [ffff88082f673dc0] process_one_work at ffffffff810493b3
->   [ffff88082f673dc8] process_one_work at ffffffff81049348
->   [ffff88082f673e28] worker_thread at ffffffff81049d7b
->   [ffff88082f673e48] worker_thread at ffffffff81049c37
->   [ffff88082f673e60] kthread at ffffffff8104ef80
->   [ffff88082f673f28] kthread at ffffffff8104eed4
->   [ffff88082f673f50] ret_from_fork at ffffffff813e31ec
->   [ffff88082f673f80] kthread at ffffffff8104eed4
-> 
-> On Fri, Oct 18, 2013 at 11:34 AM, Markus Blank-Burian
-> <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org> wrote:
->> I guess I found out, where it is hanging: While waiting for the
->> test-runs to trigger the bug, I tried "echo w > /proc/sysrq-trigger"
->> to show the stacks of all blocked tasks, and one of them was always
->> this one:
->>
->> [586147.824671] kworker/3:5     D ffff8800df81e208     0 10909      2 0x00000000
->> [586147.824671] Workqueue: events cgroup_offline_fn
->> [586147.824671]  ffff8800fba7bbd0 0000000000000002 ffff88007afc2ee0
->> ffff8800fba7bfd8
->> [586147.824671]  ffff8800fba7bfd8 0000000000011c40 ffff8800df81ddc0
->> 7fffffffffffffff
->> [586147.824671]  ffff8800fba7bcf8 ffff8800df81ddc0 0000000000000002
->> ffff8800fba7bcf0
->> [586147.824671] Call Trace:
->> [586147.824671]  [<ffffffff813c57e4>] schedule+0x60/0x62
->> [586147.824671]  [<ffffffff813c374c>] schedule_timeout+0x34/0x11c
->> [586147.824671]  [<ffffffff81053305>] ? __wake_up_common+0x51/0x7e
->> [586147.824671]  [<ffffffff813c6a73>] ? _raw_spin_unlock_irqrestore+0x29/0x34
->> [586147.824671]  [<ffffffff813c5097>] __wait_for_common+0x9c/0x119
->> [586147.824671]  [<ffffffff813c3718>] ? svcauth_gss_legacy_init+0x176/0x176
->> [586147.824671]  [<ffffffff8105790d>] ? wake_up_state+0xd/0xd
->> [586147.824671]  [<ffffffff8109c237>] ? call_rcu_bh+0x18/0x18
->> [586147.824671]  [<ffffffff813c5133>] wait_for_completion+0x1f/0x21
->> [586147.824671]  [<ffffffff8104a8ee>] wait_rcu_gp+0x46/0x4c
->> [586147.824671]  [<ffffffff8104a899>] ? __rcu_read_unlock+0x4c/0x4c
->> [586147.824671]  [<ffffffff8109ad6b>] synchronize_rcu+0x29/0x2b
->> [586147.824671]  [<ffffffff810ec34e>] mem_cgroup_reparent_charges+0x63/0x2fb
->> [586147.824671]  [<ffffffff810ec75a>] mem_cgroup_css_offline+0xa5/0x14a
->> [586147.824671]  [<ffffffff8108329e>] offline_css.part.15+0x1b/0x2e
->> [586147.824671]  [<ffffffff81084f8b>] cgroup_offline_fn+0x72/0x137
->> [586147.824671]  [<ffffffff81047cb7>] process_one_work+0x15f/0x21e
->> [586147.824671]  [<ffffffff81048159>] worker_thread+0x144/0x1f0
->> [586147.824671]  [<ffffffff81048015>] ? rescuer_thread+0x275/0x275
->> [586147.824671]  [<ffffffff8104cbec>] kthread+0x88/0x90
->> [586147.824671]  [<ffffffff8104cb64>] ? __kthread_parkme+0x60/0x60
->> [586147.824671]  [<ffffffff813c756c>] ret_from_fork+0x7c/0xb0
->> [586147.824671]  [<ffffffff8104cb64>] ? __kthread_parkme+0x60/0x60
->>
->>
->> On Tue, Oct 15, 2013 at 5:15 AM, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
->>> On 2013/10/14 16:06, Markus Blank-Burian wrote:
->>>> The crash utility indicated, that the lock was held by a kworker
->>>> thread, which was idle at the moment. So there might be a case, where
->>>> no unlock is done. I am trying to reproduce the problem at the moment
->>>> with CONFIG_PROVE_LOCKING, but without luck so far. It seems, that my
->>>> test-job is quite bad at reproducing the bug. I'll let you know, if I
->>>> can find out more.
->>>>
->>>
->>> Thanks. I'll review the code to see if I can find some suspect.
->>>
->>> PS: I'll be travelling from 10/16 ~ 10/28, so I may not be able
->>> to spend much time on this.
+When a userspace process waits on the root memcg's memory.oom_control, it
+will wake up anytime there is a system oom condition so that it can log
+the event, including what process was killed and the stack, or cleanup
+after the kernel oom killer has killed something.
+
+This is a special case of oom notifiers since it doesn't subsequently
+notify all memcgs under the root memcg (all memcgs on the system).  We
+don't want to trigger those oom handlers which are set aside specifically
+for true memcg oom notifications that disable their own oom killers to
+enforce their own oom policy, for example.
+
+Signed-off-by: David Rientjes <rientjes@google.com>
+---
+ Documentation/cgroups/memory.txt | 11 ++++++-----
+ include/linux/memcontrol.h       |  5 +++++
+ mm/memcontrol.c                  |  9 +++++++++
+ mm/oom_kill.c                    |  4 ++++
+ 4 files changed, 24 insertions(+), 5 deletions(-)
+
+diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
+--- a/Documentation/cgroups/memory.txt
++++ b/Documentation/cgroups/memory.txt
+@@ -739,18 +739,19 @@ delivery and gets notification when OOM happens.
+ 
+ To register a notifier, an application must:
+  - create an eventfd using eventfd(2)
+- - open memory.oom_control file
++ - open memory.oom_control file for reading
+  - write string like "<event_fd> <fd of memory.oom_control>" to
+    cgroup.event_control
+ 
+-The application will be notified through eventfd when OOM happens.
+-OOM notification doesn't work for the root cgroup.
++The application will be notified through eventfd when OOM happens, including
++on system oom when used with the root memcg.
+ 
+ You can disable the OOM-killer by writing "1" to memory.oom_control file, as:
+ 
+-	#echo 1 > memory.oom_control
++	# echo 1 > memory.oom_control
+ 
+-This operation is only allowed to the top cgroup of a sub-hierarchy.
++This operation is only allowed to the top cgroup of a sub-hierarchy and does
++not include the root memcg.
+ If OOM-killer is disabled, tasks under cgroup will hang/sleep
+ in memory cgroup's OOM-waitqueue when they request accountable memory.
+ 
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -155,6 +155,7 @@ static inline bool task_in_memcg_oom(struct task_struct *p)
+ }
+ 
+ bool mem_cgroup_oom_synchronize(bool wait);
++void mem_cgroup_root_oom_notify(void);
+ 
+ #ifdef CONFIG_MEMCG_SWAP
+ extern int do_swap_account;
+@@ -397,6 +398,10 @@ static inline bool mem_cgroup_oom_synchronize(bool wait)
+ 	return false;
+ }
+ 
++static inline void mem_cgroup_root_oom_notify(void)
++{
++}
++
+ static inline void mem_cgroup_inc_page_stat(struct page *page,
+ 					    enum mem_cgroup_stat_index idx)
+ {
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5641,6 +5641,15 @@ static void mem_cgroup_oom_notify(struct mem_cgroup *memcg)
+ 		mem_cgroup_oom_notify_cb(iter);
+ }
+ 
++/*
++ * Notify any process waiting on the root memcg's memory.oom_control, but do not
++ * notify any child memcgs to avoid triggering their per-memcg oom handlers.
++ */
++void mem_cgroup_root_oom_notify(void)
++{
++	mem_cgroup_oom_notify_cb(root_mem_cgroup);
++}
++
+ static int mem_cgroup_usage_register_event(struct cgroup_subsys_state *css,
+ 	struct cftype *cft, struct eventfd_ctx *eventfd, const char *args)
+ {
+diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+--- a/mm/oom_kill.c
++++ b/mm/oom_kill.c
+@@ -632,6 +632,10 @@ void out_of_memory(struct zonelist *zonelist, gfp_t gfp_mask,
+ 		return;
+ 	}
+ 
++	/* Avoid waking up processes for oom kills triggered by sysrq */
++	if (!force_kill)
++		mem_cgroup_root_oom_notify();
++
+ 	/*
+ 	 * Check if there were limitations on the allocation (only relevant for
+ 	 * NUMA) that may require different handling.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
