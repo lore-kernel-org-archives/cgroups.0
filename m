@@ -1,54 +1,35 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH v2 1/3] percpu: add test module for various percpu
- operations
-Date: Mon, 4 Nov 2013 16:09:18 -0800
-Message-ID: <20131104160918.0c571b410cf165e9c4b4a502@linux-foundation.org>
-References: <1382895017-19067-1-git-send-email-gthelen@google.com>
-	<1382895017-19067-2-git-send-email-gthelen@google.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: Possible regression with cgroups in 3.11
+Date: Tue, 5 Nov 2013 17:01:37 +0800
+Message-ID: <5278B3F1.9040502@huawei.com>
+References: <4431690.ZqnBIdaGMg@akheu22.uni-muenster.de> <5257F7CE.90702@huawei.com> <CA+SBX_Pa8sJbRq3aOghzqam5tDUbs_SPnVTaewtg-pRmvUqSzA@mail.gmail.com> <5258E584.70500@huawei.com> <CA+SBX_MQVMuzWKroASK7Cr5J8cu9ajGo=CWr7SRs+OWh83h4_w@mail.gmail.com> <525CB337.8050105@huawei.com> <CA+SBX_Ogo8HP81o+vrJ8ozSBN6gPwzc8WNOV3Uya=4AYv+CCyQ@mail.gmail.com> <CA+SBX_OJBbYzrNX5Mi4rmM2SANShXMmAvuPGczAyBdx8F2hBDQ@mail.gmail.com> <5270BFE7.4000602@huawei.com> <alpine.LNX.2.00.1310301606080.2333@eggly.anvils> <20131031130647.0ff6f2c7@gandalf.local.home> <alpine.LNX.2.00.1310311442030.2633@eggly.anvils> <20131031192732.2dbb14b3@gandalf.local.home> <CA+SBX_NjAYrqqOpSuCy8Wpj6q1hE_qdLrRV6auydmJjdcHKQHg@mail.gmail.com> <5277932C.40400@huawei.com> <CA+SBX_ORkOzDynKKweg=JomY2+1kz4=FXYJXYMsN8LKf48idBg@mail.gmail.
+ com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1382895017-19067-2-git-send-email-gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <CA+SBX_ORkOzDynKKweg=JomY2+1kz4=FXYJXYMsN8LKf48idBg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Markus Blank-Burian <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org>
+Cc: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sun, 27 Oct 2013 10:30:15 -0700 Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+On 2013/11/4 21:43, Markus Blank-Burian wrote:
+>> synchronize_rcu() is a block operation and can keep us waiting for
+>> a long period, so instead it's possible that usage never goes down
+>> to 0 and we are in a dead loop.
+> 
+> Ok, I didn't think of that. Tracing shows that the function keeps
+> looping. The last lines repeat indefinitely.
+> 
+...
+>      kworker/3:5-7605  [003] ....   987.475678:
+> mem_cgroup_reparent_charges: usage: 1568768
+>      kworker/3:5-7605  [003] ....   987.478677:
+> mem_cgroup_reparent_charges: usage: 1568768
+>      kworker/3:5-7605  [003] ....   987.481675:
+> mem_cgroup_reparent_charges: usage: 1568768
 
-> Tests various percpu operations.
-
-Could you please take a look at the 32-bit build (this is i386):
-
-lib/percpu_test.c: In function 'percpu_test_init':
-lib/percpu_test.c:61: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:61: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:61: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:61: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:61: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:61: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:70: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:70: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:70: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:70: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:70: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:70: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:89: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:89: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:89: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:89: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:89: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:89: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:97: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:97: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:97: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:97: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:97: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:97: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:112: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:112: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:112: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:112: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:112: warning: integer constant is too large for 'long' type
-lib/percpu_test.c:112: warning: integer constant is too large for 'long' type
+So it's much more likely this is a memcg bug rather than a cgroup bug.
+I hope memcg guys could look into it, or you could do a git-bisect if
+you can reliably reproduce the bug.
