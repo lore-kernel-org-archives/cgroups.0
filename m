@@ -1,278 +1,94 @@
-From: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 1/3] percpu: add test module for various percpu operations
-Date: Thu, 07 Nov 2013 12:29:49 -0800
-Message-ID: <xr93li10vttu.fsf@gthelen.mtv.corp.google.com>
-References: <1382895017-19067-1-git-send-email-gthelen@google.com>
-	<1382895017-19067-2-git-send-email-gthelen@google.com>
-	<20131104160918.0c571b410cf165e9c4b4a502@linux-foundation.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: Possible regression with cgroups in 3.11
+Date: Thu, 7 Nov 2013 18:53:01 -0500
+Message-ID: <20131107235301.GB1092@cmpxchg.org>
+References: <CA+SBX_OJBbYzrNX5Mi4rmM2SANShXMmAvuPGczAyBdx8F2hBDQ@mail.gmail.com>
+ <5270BFE7.4000602@huawei.com>
+ <alpine.LNX.2.00.1310301606080.2333@eggly.anvils>
+ <20131031130647.0ff6f2c7@gandalf.local.home>
+ <alpine.LNX.2.00.1310311442030.2633@eggly.anvils>
+ <20131031192732.2dbb14b3@gandalf.local.home>
+ <CA+SBX_NjAYrqqOpSuCy8Wpj6q1hE_qdLrRV6auydmJjdcHKQHg@mail.gmail.com>
+ <5277932C.40400@huawei.com>
+ <CA+SBX_ORkOzDynKKweg=JomY2+1kz4=FXYJXYMsN8LKf48idBg@mail.gmail.com>
+ <5278B3F1.9040502@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=from:to:cc:subject:references:date:message-id:user-agent
-         :mime-version:content-type;
-        bh=Pm2cyWQJSadbkStTZRw6znA+3z1KKQ7TpLBrz026HkE=;
-        b=h/6iNMXpFuBV37ybHrCQu/XYH1IXmHLSC5kcBtQpVeahJ6EkSV4fEbWfViE88ZwmzH
-         DFM/vI4VocjcGMRh19UatitkkOn+IGzIt5zKCoWTdVKb9wgpv8ldz22KwW7/TbMev4y8
-         KC+Nhn9jOENGhLDMv/iN5xFDBPXXpo0O8qCHxFNx/j+pP4Ptb7Dk3tg5OMSplYPgW3+6
-         G4pr2dbRsOC2D+4iunz2DBzbAM3Vjo+og7m5KTWuMb/MangF90wSLhBRW5IGebuhTYi6
-         VGwEar1gS9yo+dTidGHqVWnqnfPZWV3ho9sO8ScAyrQiRqRqlDHrU7lE3XVXttPH7b61
-         4Ujg==
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=C0vVwDnqu7m5QQbtkj2zQ/t07H1p9qLf6pp6zHjo/OQ=;
+	b=SMGn0m9PJAjS7qEYJVZmu0nojL2r8bdQyhPgwTPuIQDoovVP3KlMaOriJEKgiqHMAO2gUib38pN+HRtlEyhUbLjxPnBnpKlzVdRkujthUcfPjY6wNHSeHfoAdruItiZ812jhy8sVZVi+fLIZsYERkPAuSYY6l8czgU9JeRRe+ds=;
+Content-Disposition: inline
+In-Reply-To: <5278B3F1.9040502-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, handai.szj-3b8fjiQLQpfQT0dZR+AlfA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Markus Blank-Burian <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Nov 04 2013, Andrew Morton wrote:
+On Tue, Nov 05, 2013 at 05:01:37PM +0800, Li Zefan wrote:
+> On 2013/11/4 21:43, Markus Blank-Burian wrote:
+> >> synchronize_rcu() is a block operation and can keep us waiting for
+> >> a long period, so instead it's possible that usage never goes down
+> >> to 0 and we are in a dead loop.
+> > 
+> > Ok, I didn't think of that. Tracing shows that the function keeps
+> > looping. The last lines repeat indefinitely.
+> > 
+> ...
+> >      kworker/3:5-7605  [003] ....   987.475678:
+> > mem_cgroup_reparent_charges: usage: 1568768
+> >      kworker/3:5-7605  [003] ....   987.478677:
+> > mem_cgroup_reparent_charges: usage: 1568768
+> >      kworker/3:5-7605  [003] ....   987.481675:
+> > mem_cgroup_reparent_charges: usage: 1568768
+> 
+> So it's much more likely this is a memcg bug rather than a cgroup bug.
+> I hope memcg guys could look into it, or you could do a git-bisect if
+> you can reliably reproduce the bug.
 
-> On Sun, 27 Oct 2013 10:30:15 -0700 Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->
->> Tests various percpu operations.
->
-> Could you please take a look at the 32-bit build (this is i386):
->
-> lib/percpu_test.c: In function 'percpu_test_init':
-> lib/percpu_test.c:61: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:61: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:61: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:61: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:61: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:61: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:70: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:70: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:70: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:70: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:70: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:70: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:89: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:89: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:89: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:89: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:89: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:89: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:97: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:97: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:97: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:97: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:97: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:97: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:112: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:112: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:112: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:112: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:112: warning: integer constant is too large for 'long' type
-> lib/percpu_test.c:112: warning: integer constant is too large for 'long' type
+I think there is a problem with ref counting and memcg.
 
-I was using gcc 4.6 which apparently adds LL suffix as needed.  Though
-there were some other code problems with 32 bit beyond missing suffixes.
-Fixed version below tested with both gcc 4.4 and gcc 4.6 on 32 and 64
-bit x86.
+The old scheme would wait with the charge reparenting until all
+references were gone for good, whereas the new scheme has only a RCU
+grace period between disabling tryget and offlining the css.
+Unfortunately, memory cgroups don't hold the rcu_read_lock() over both
+the tryget and the res_counter charge that would make it visible to
+offline_css(), which means that there is a possible race condition
+between cgroup teardown and an ongoing charge:
 
----8<---
+#0: destroy                #1: charge
 
-From a95bb1ce42b4492644fa10c7c80fd9bbd7bf23b9 Mon Sep 17 00:00:00 2001
-In-Reply-To: <20131104160918.0c571b410cf165e9c4b4a502-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-References: <20131104160918.0c571b410cf165e9c4b4a502-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-From: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Date: Sun, 27 Oct 2013 10:30:15 -0700
-Subject: [PATCH v2] percpu: add test module for various percpu operations
+                           rcu_read_lock()
+                           css_tryget()
+                           rcu_read_unlock()
+disable tryget()
+call_rcu()
+  offline_css()
+    reparent_charges()
+                           res_counter_charge()
+                           css_put()
+                             css_free()
+                           pc->mem_cgroup = deadcg
+                           add page to lru
 
-Tests various percpu operations.
+If the res_counter is hierarchical, there is now a leaked charge from
+the dead group in the parent counter with no corresponding page on the
+LRU, which will lead to this endless loop when deleting the parent.
 
-Enable with CONFIG_PERCPU_TEST=m.
+The race window can be seconds if the res_counter hits its limit and
+page reclaim is entered between css_tryget() and the res counter
+charge succeeding.
 
-Signed-off-by: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
-Changelog since v1:
-- use %lld/x which allows for less casting
-- fix 32 bit build by casting large constants
+I thought about calling reparent_charges() again from css_free() at
+first to catch any raced charges.  But that won't work if the last
+reference is actually put by the charger because then it'll drop into
+the loop before putting the page on the LRU.
 
- lib/Kconfig.debug |   9 ++++
- lib/Makefile      |   2 +
- lib/percpu_test.c | 138 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 149 insertions(+)
- create mode 100644 lib/percpu_test.c
-
-diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
-index 094f3152ec2b..1891eb271adf 100644
---- a/lib/Kconfig.debug
-+++ b/lib/Kconfig.debug
-@@ -1472,6 +1472,15 @@ config INTERVAL_TREE_TEST
- 	help
- 	  A benchmark measuring the performance of the interval tree library
- 
-+config PERCPU_TEST
-+	tristate "Per cpu operations test"
-+	depends on m && DEBUG_KERNEL
-+	help
-+	  Enable this option to build test module which validates per-cpu
-+	  operations.
-+
-+	  If unsure, say N.
-+
- config ATOMIC64_SELFTEST
- 	bool "Perform an atomic64_t self-test at boot"
- 	help
-diff --git a/lib/Makefile b/lib/Makefile
-index f3bb2cb98adf..bb016e116ba4 100644
---- a/lib/Makefile
-+++ b/lib/Makefile
-@@ -157,6 +157,8 @@ obj-$(CONFIG_INTERVAL_TREE_TEST) += interval_tree_test.o
- 
- interval_tree_test-objs := interval_tree_test_main.o interval_tree.o
- 
-+obj-$(CONFIG_PERCPU_TEST) += percpu_test.o
-+
- obj-$(CONFIG_ASN1) += asn1_decoder.o
- 
- obj-$(CONFIG_FONT_SUPPORT) += fonts/
-diff --git a/lib/percpu_test.c b/lib/percpu_test.c
-new file mode 100644
-index 000000000000..0b5d14dadd1a
---- /dev/null
-+++ b/lib/percpu_test.c
-@@ -0,0 +1,138 @@
-+#include <linux/module.h>
-+
-+/* validate @native and @pcp counter values match @expected */
-+#define CHECK(native, pcp, expected)                                    \
-+	do {                                                            \
-+		WARN((native) != (expected),                            \
-+		     "raw %ld (0x%lx) != expected %lld (0x%llx)",	\
-+		     (native), (native),				\
-+		     (long long)(expected), (long long)(expected));	\
-+		WARN(__this_cpu_read(pcp) != (expected),                \
-+		     "pcp %ld (0x%lx) != expected %lld (0x%llx)",	\
-+		     __this_cpu_read(pcp), __this_cpu_read(pcp),	\
-+		     (long long)(expected), (long long)(expected));	\
-+	} while (0)
-+
-+static DEFINE_PER_CPU(long, long_counter);
-+static DEFINE_PER_CPU(unsigned long, ulong_counter);
-+
-+static int __init percpu_test_init(void)
-+{
-+	/*
-+	 * volatile prevents compiler from optimizing it uses, otherwise the
-+	 * +ul_one/-ul_one below would replace with inc/dec instructions.
-+	 */
-+	volatile unsigned int ui_one = 1;
-+	long l = 0;
-+	unsigned long ul = 0;
-+
-+	pr_info("percpu test start\n");
-+
-+	preempt_disable();
-+
-+	l += -1;
-+	__this_cpu_add(long_counter, -1);
-+	CHECK(l, long_counter, -1);
-+
-+	l += 1;
-+	__this_cpu_add(long_counter, 1);
-+	CHECK(l, long_counter, 0);
-+
-+	ul = 0;
-+	__this_cpu_write(ulong_counter, 0);
-+
-+	ul += 1UL;
-+	__this_cpu_add(ulong_counter, 1UL);
-+	CHECK(ul, ulong_counter, 1);
-+
-+	ul += -1UL;
-+	__this_cpu_add(ulong_counter, -1UL);
-+	CHECK(ul, ulong_counter, 0);
-+
-+	ul += -(unsigned long)1;
-+	__this_cpu_add(ulong_counter, -(unsigned long)1);
-+	CHECK(ul, ulong_counter, -1);
-+
-+	ul = 0;
-+	__this_cpu_write(ulong_counter, 0);
-+
-+	ul -= 1;
-+	__this_cpu_dec(ulong_counter);
-+	CHECK(ul, ulong_counter, -1);
-+	CHECK(ul, ulong_counter, ULONG_MAX);
-+
-+	l += -ui_one;
-+	__this_cpu_add(long_counter, -ui_one);
-+	CHECK(l, long_counter, 0xffffffff);
-+
-+	l += ui_one;
-+	__this_cpu_add(long_counter, ui_one);
-+	CHECK(l, long_counter, (long)0x100000000LL);
-+
-+
-+	l = 0;
-+	__this_cpu_write(long_counter, 0);
-+
-+	l -= ui_one;
-+	__this_cpu_sub(long_counter, ui_one);
-+	CHECK(l, long_counter, -1);
-+
-+	l = 0;
-+	__this_cpu_write(long_counter, 0);
-+
-+	l += ui_one;
-+	__this_cpu_add(long_counter, ui_one);
-+	CHECK(l, long_counter, 1);
-+
-+	l += -ui_one;
-+	__this_cpu_add(long_counter, -ui_one);
-+	CHECK(l, long_counter, (long)0x100000000LL);
-+
-+	l = 0;
-+	__this_cpu_write(long_counter, 0);
-+
-+	l -= ui_one;
-+	this_cpu_sub(long_counter, ui_one);
-+	CHECK(l, long_counter, -1);
-+	CHECK(l, long_counter, ULONG_MAX);
-+
-+	ul = 0;
-+	__this_cpu_write(ulong_counter, 0);
-+
-+	ul += ui_one;
-+	__this_cpu_add(ulong_counter, ui_one);
-+	CHECK(ul, ulong_counter, 1);
-+
-+	ul = 0;
-+	__this_cpu_write(ulong_counter, 0);
-+
-+	ul -= ui_one;
-+	__this_cpu_sub(ulong_counter, ui_one);
-+	CHECK(ul, ulong_counter, -1);
-+	CHECK(ul, ulong_counter, ULONG_MAX);
-+
-+	ul = 3;
-+	__this_cpu_write(ulong_counter, 3);
-+
-+	ul = this_cpu_sub_return(ulong_counter, ui_one);
-+	CHECK(ul, ulong_counter, 2);
-+
-+	ul = __this_cpu_sub_return(ulong_counter, ui_one);
-+	CHECK(ul, ulong_counter, 1);
-+
-+	preempt_enable();
-+
-+	pr_info("percpu test done\n");
-+	return -EAGAIN;  /* Fail will directly unload the module */
-+}
-+
-+static void __exit percpu_test_exit(void)
-+{
-+}
-+
-+module_init(percpu_test_init)
-+module_exit(percpu_test_exit)
-+
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Greg Thelen");
-+MODULE_DESCRIPTION("percpu operations test");
--- 
-1.8.4.1
-
+The lifetime management in memory cgroups is a disaster and it's going
+to require some thought to fix.  Even before the cgroups rewrite,
+swapin accounting was prone to this race condition because a task from
+a completely different cgroup can start charging a swap-in page
+against the cgroup that owned the page on swapout, a cgroup that might
+be exiting and had been found to have no tasks, no child groups, and
+no outstanding references anymore.
