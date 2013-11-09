@@ -1,64 +1,101 @@
-From: Santosh Shilimkar <santosh.shilimkar@ti.com>
-Subject: [PATCH 18/24] mm/page_cgroup: Use memblock apis for early memory allocations
-Date: Fri, 8 Nov 2013 18:41:54 -0500
-Message-ID: <1383954120-24368-19-git-send-email-santosh.shilimkar@ti.com>
-References: <1383954120-24368-1-git-send-email-santosh.shilimkar@ti.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL] cgroup changes for v3.13-rc1
+Date: Sun, 10 Nov 2013 07:38:31 +0900
+Message-ID: <20131109223831.GC24275@mtj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1383954120-24368-1-git-send-email-santosh.shilimkar@ti.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=/LFRifueToiT3C7fiAKHV8A5OCct58gs11MAp1Y1AOM=;
+        b=QoY8nXcc9HbkVoX4Mj55jkccvymhQtvtHfFiWFRtMsZ+3/X3eOk+EueaiTp7SZc6kN
+         XKFPx7SB32x4T6iyYiNomkHe85oRcirDsWNCkVB+TZmBP2zctycC8u1UpL5ULdu3WdQf
+         KgFCSK8g/lSlZTOmD46FvxISFwmvA7Cz8Ap17GEaFVSZWpuzbya3NZ9yGMQmAjzUyQ9Y
+         PRXgBvHiBPO6OogmkAhCReEuQQGMExZ06D7P4YeheQ+i0renPiu8XHSQWHfzAC5rDj8Q
+         XNokFWp6w8P7N+jEtThjtxvgqbmYaDhrWAI3Gmjk3W4w0m8xjCl77W6TlRLOFJe30ih4
+         8zvQ==
+Content-Disposition: inline
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj@kernel.org, linux-kernel@vger.kernel.org
-Cc: linux-mm@kvack.org, linux-arm-kernel@lists.infradead.org, Grygorii Strashko <grygorii.strashko@ti.com>, Yinghai Lu <yinghai@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, Santosh Shilimkar <santosh.shilimkar@ti.com>
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Grygorii Strashko <grygorii.strashko@ti.com>
+Hello, again.
 
-Switch to memblock interfaces for early memory allocator instead of
-bootmem allocator. No functional change in beahvior than what it is
-in current code from bootmem users points of view.
+Not too much activity this time around.  css_id is finally killed and
+a minor update to device_cgroup; however, the pull request does lead
+to a conflict in mm/memcontrol.c between the following two commits.
 
-Archs already converted to NO_BOOTMEM now directly use memblock
-interfaces instead of bootmem wrappers build on top of memblock. And the
-archs which still uses bootmem, these new apis just fallback to exiting
-bootmem APIs.
+  b862783594847 ("memcg: stop using css id")
+  bb4cc1a8b5eaf ("revert "memcg: get rid of soft-limit tree infrastructure"")
 
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: cgroups@vger.kernel.org
+The former removes free_css_id() call from __mem_cgroup_free() and the
+latter restores mem_cgroup_remove_from_trees() right above it leading
+to context conflict.  The conflict looks like
 
-Signed-off-by: Grygorii Strashko <grygorii.strashko@ti.com>
-Signed-off-by: Santosh Shilimkar <santosh.shilimkar@ti.com>
----
- mm/page_cgroup.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+  static void __mem_cgroup_free(struct mem_cgroup *memcg)
+  {
+	  int node;
+	  size_t size = memcg_size();
 
-diff --git a/mm/page_cgroup.c b/mm/page_cgroup.c
-index 6d757e3a..d8bd2c5 100644
---- a/mm/page_cgroup.c
-+++ b/mm/page_cgroup.c
-@@ -54,8 +54,9 @@ static int __init alloc_node_page_cgroup(int nid)
- 
- 	table_size = sizeof(struct page_cgroup) * nr_pages;
- 
--	base = __alloc_bootmem_node_nopanic(NODE_DATA(nid),
--			table_size, PAGE_SIZE, __pa(MAX_DMA_ADDRESS));
-+	base = memblock_virt_alloc_try_nid_nopanic(
-+			table_size, PAGE_SIZE, __pa(MAX_DMA_ADDRESS),
-+			BOOTMEM_ALLOC_ACCESSIBLE, nid);
- 	if (!base)
- 		return -ENOMEM;
- 	NODE_DATA(nid)->node_page_cgroup = base;
+  <<<<<<< HEAD
+	  mem_cgroup_remove_from_trees(memcg);
+	  free_css_id(&mem_cgroup_subsys, &memcg->css);
+
+  =======
+  >>>>>>> 73ba353471e0b692f398f3d63018b7f46ccf1d3e
+	  for_each_node(node)
+		  free_mem_cgroup_per_zone_info(memcg, node);
+
+	  free_percpu(memcg->stat);
+
+and can be resolved like the following.
+
+  static void __mem_cgroup_free(struct mem_cgroup *memcg)
+  {
+	  int node;
+	  size_t size = memcg_size();
+
+	  mem_cgroup_remove_from_trees(memcg);
+
+	  for_each_node(node)
+		  free_mem_cgroup_per_zone_info(memcg, node);
+
+	  free_percpu(memcg->stat);
+
+The changes are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.13
+
+for you to fetch changes up to 73ba353471e0b692f398f3d63018b7f46ccf1d3e:
+
+  device_cgroup: remove can_attach (2013-10-24 06:56:56 -0400)
+
+Just in case, the test merge is available in the following git branch.
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git test-merge-3.13
+
+Thanks.
+
+----------------------------------------------------------------
+Li Zefan (5):
+      memcg: convert to use cgroup_is_descendant()
+      memcg: convert to use cgroup id
+      memcg: fail to create cgroup if the cgroup id is too big
+      memcg: stop using css id
+      cgroup: kill css_id
+
+Serge Hallyn (1):
+      device_cgroup: remove can_attach
+
+ include/linux/cgroup.h   |  37 -------
+ kernel/cgroup.c          | 248 +----------------------------------------------
+ mm/memcontrol.c          |  67 +++++++------
+ security/device_cgroup.c |  11 ---
+ 4 files changed, 41 insertions(+), 322 deletions(-)
+
 -- 
-1.7.9.5
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
