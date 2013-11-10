@@ -1,101 +1,37 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup changes for v3.13-rc1
-Date: Sun, 10 Nov 2013 07:38:31 +0900
-Message-ID: <20131109223831.GC24275@mtj.dyndns.org>
+Subject: Re: [PATCHSET v2 cgroup/for-3.12] cgroup: make cgroup_event specific
+ to memcg
+Date: Sun, 10 Nov 2013 13:48:11 +0900
+Message-ID: <20131110044811.GA25112@mtj.dyndns.org>
+References: <1376582550-12548-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-         :content-disposition:user-agent;
-        bh=/LFRifueToiT3C7fiAKHV8A5OCct58gs11MAp1Y1AOM=;
-        b=QoY8nXcc9HbkVoX4Mj55jkccvymhQtvtHfFiWFRtMsZ+3/X3eOk+EueaiTp7SZc6kN
-         XKFPx7SB32x4T6iyYiNomkHe85oRcirDsWNCkVB+TZmBP2zctycC8u1UpL5ULdu3WdQf
-         KgFCSK8g/lSlZTOmD46FvxISFwmvA7Cz8Ap17GEaFVSZWpuzbya3NZ9yGMQmAjzUyQ9Y
-         PRXgBvHiBPO6OogmkAhCReEuQQGMExZ06D7P4YeheQ+i0renPiu8XHSQWHfzAC5rDj8Q
-         XNokFWp6w8P7N+jEtThjtxvgqbmYaDhrWAI3Gmjk3W4w0m8xjCl77W6TlRLOFJe30ih4
-         8zvQ==
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=aIomojl0SSrO4Dczh4frHYd0D8La1GrgfNT4sdwXI6A=;
+        b=D1oxfckXITc8uqlwEHx2VRCdt4uxqwFZ/DmeEkgIpRCYRbA7gyXPZ//G44aIzYN4Qc
+         NJm2DseTpFgRYZKP0A538QLN75JaTlVTCjztdONWVoCG+7++GWuWNiJ+uS1/MVK2pcYX
+         wZhQ5TDNWQfmVHJepa2y6ggP6MP/HH/XVi23Ckjhux9xe3Esco3o84W+o7OCanRpzIlB
+         f+J9rZxN7RsS9e3ZpNxlMMl8hDigLvgZt77RXFS8mvG/GJwlk5z1HUUNINnXq/UHJopB
+         nQ/12ddfNx3N1jHtQZGP93haKyyWmLJAnojtPe7F+xrVth+h/U18adDHWpIBJZim6n1J
+         vUgg==
 Content-Disposition: inline
+In-Reply-To: <1376582550-12548-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, again.
+Hey, guys.
 
-Not too much activity this time around.  css_id is finally killed and
-a minor update to device_cgroup; however, the pull request does lead
-to a conflict in mm/memcontrol.c between the following two commits.
-
-  b862783594847 ("memcg: stop using css id")
-  bb4cc1a8b5eaf ("revert "memcg: get rid of soft-limit tree infrastructure"")
-
-The former removes free_css_id() call from __mem_cgroup_free() and the
-latter restores mem_cgroup_remove_from_trees() right above it leading
-to context conflict.  The conflict looks like
-
-  static void __mem_cgroup_free(struct mem_cgroup *memcg)
-  {
-	  int node;
-	  size_t size = memcg_size();
-
-  <<<<<<< HEAD
-	  mem_cgroup_remove_from_trees(memcg);
-	  free_css_id(&mem_cgroup_subsys, &memcg->css);
-
-  =======
-  >>>>>>> 73ba353471e0b692f398f3d63018b7f46ccf1d3e
-	  for_each_node(node)
-		  free_mem_cgroup_per_zone_info(memcg, node);
-
-	  free_percpu(memcg->stat);
-
-and can be resolved like the following.
-
-  static void __mem_cgroup_free(struct mem_cgroup *memcg)
-  {
-	  int node;
-	  size_t size = memcg_size();
-
-	  mem_cgroup_remove_from_trees(memcg);
-
-	  for_each_node(node)
-		  free_mem_cgroup_per_zone_info(memcg, node);
-
-	  free_percpu(memcg->stat);
-
-The changes are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.13
-
-for you to fetch changes up to 73ba353471e0b692f398f3d63018b7f46ccf1d3e:
-
-  device_cgroup: remove can_attach (2013-10-24 06:56:56 -0400)
-
-Just in case, the test merge is available in the following git branch.
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git test-merge-3.13
+I'll route this series through the cgroup tree with the acks added
+once v3.13-rc1 drops.
 
 Thanks.
-
-----------------------------------------------------------------
-Li Zefan (5):
-      memcg: convert to use cgroup_is_descendant()
-      memcg: convert to use cgroup id
-      memcg: fail to create cgroup if the cgroup id is too big
-      memcg: stop using css id
-      cgroup: kill css_id
-
-Serge Hallyn (1):
-      device_cgroup: remove can_attach
-
- include/linux/cgroup.h   |  37 -------
- kernel/cgroup.c          | 248 +----------------------------------------------
- mm/memcontrol.c          |  67 +++++++------
- security/device_cgroup.c |  11 ---
- 4 files changed, 41 insertions(+), 322 deletions(-)
 
 -- 
 tejun
