@@ -1,100 +1,71 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: 3.10.16 cgroup_mutex deadlock
-Date: Tue, 12 Nov 2013 17:55:04 +0100
-Message-ID: <20131112165504.GF6049@dhcp22.suse.cz>
-References: <20131111220626.GA7509@sbohrermbp13-local.rgmadvisors.com>
- <52820030.6000806@huawei.com>
- <20131112143147.GB6049@dhcp22.suse.cz>
- <20131112155530.GA2860@sbohrermbp13-local.rgmadvisors.com>
+From: Markus Blank-Burian <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org>
+Subject: Re: Possible regression with cgroups in 3.11
+Date: Tue, 12 Nov 2013 20:33:24 +0100
+Message-ID: <CA+SBX_MWM1iU7kyT5Ct3OJ7S3oMgbz_EWbFH1dGae+r_UnDxOA@mail.gmail.com>
+References: <20131031192732.2dbb14b3@gandalf.local.home>
+	<CA+SBX_NjAYrqqOpSuCy8Wpj6q1hE_qdLrRV6auydmJjdcHKQHg@mail.gmail.com>
+	<5277932C.40400@huawei.com>
+	<CA+SBX_ORkOzDynKKweg=JomY2+1kz4=FXYJXYMsN8LKf48idBg@mail.gmail.com>
+	<5278B3F1.9040502@huawei.com>
+	<20131107235301.GB1092@cmpxchg.org>
+	<20131108001437.GC1092@cmpxchg.org>
+	<CA+SBX_P6wzmb0k0qM1m06C_1024ZTfYZOs0axLBBJm46X+osqA@mail.gmail.com>
+	<20131111153943.GA22384@dhcp22.suse.cz>
+	<CA+SBX_PiRoL7HU-C_wXHjHYduYrbTjO3i6_OoHOJ_Mq+sMZStg@mail.gmail.com>
+	<20131112135844.GA6049@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20131112155530.GA2860-/vebjAlq/uFE7V8Yqttd03bhEEblAqRIDbRjUBewulXQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=googlemail.com; s=20120113;
+        h=mime-version:sender:in-reply-to:references:date:message-id:subject
+         :from:to:cc:content-type;
+        bh=O1NRpDLbHm5s+dl3uzqqb/F+/lpG+NWSRbLaPZ+nK8s=;
+        b=WjZUmC9JNJCfa0ov0TOCTOxXDfScu4l4a4xwkmdrDngOVRw+nEqoRqv0g7Wf3ddZWr
+         5DZbOvBapAV4yQTrrM8fWl5uM9MiWnWJX+LeJqIpPzmOOWVZNoVseHfF1vESgznhHTTV
+         uvXM31YeNnC/5yE1lzK11kaYGgyVmXlN2Jq2Yi+3x4C7t4pc5jUGdQ1IteFb6ELx9o7x
+         pzooHLZ153w8OMUqNlgVnqhGHcRI8nCHDbOGQQJDy5zrIjKdno9zvwUMDKzA8FWZSf/X
+         metyFRZhN/C4jNSnPfwRACoi/OyY2X86wE7YNmLzfIZrGJ2rtqB0v7z4M6nKBCYAwExT
+         t5ew==
+In-Reply-To: <20131112135844.GA6049-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shawn Bohrer <shawn.bohrer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Markus Blank-Burian <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue 12-11-13 09:55:30, Shawn Bohrer wrote:
-> On Tue, Nov 12, 2013 at 03:31:47PM +0100, Michal Hocko wrote:
-> > On Tue 12-11-13 18:17:20, Li Zefan wrote:
-> > > Cc more people
-> > > 
-> > > On 2013/11/12 6:06, Shawn Bohrer wrote:
-> > > > Hello,
-> > > > 
-> > > > This morning I had a machine running 3.10.16 go unresponsive but
-> > > > before we killed it we were able to get the information below.  I'm
-> > > > not an expert here but it looks like most of the tasks below are
-> > > > blocking waiting on the cgroup_mutex.  You can see that the
-> > > > resource_alloca:16502 task is holding the cgroup_mutex and that task
-> > > > appears to be waiting on a lru_add_drain_all() to complete.
-> > 
-> > Do you have sysrq+l output as well by any chance? That would tell
-> > us what the current CPUs are doing. Dumping all kworker stacks
-> > might be helpful as well. We know that lru_add_drain_all waits for
-> > schedule_on_each_cpu to return so it is waiting for workers to finish.
-> > I would be really curious why some of lru_add_drain_cpu cannot finish
-> > properly. The only reason would be that some work item(s) do not get CPU
-> > or somebody is holding lru_lock.
-> 
-> In fact the sys-admin did manage to fire off a sysrq+l, I've put all
-> of the info from the syslog below.  I've looked it over and I'm not
-> sure it reveals anything.  First looking at the timestamps it appears
-> we ran the sysrq+l 19.2 hours after the cgroup_mutex lockup I
-> previously sent.
+> No swap means that no charges are done by a group non-member. So the
+> race Johannes was describing shouldn't be the problem in your case.
+>
+> Out of curiosity, do you set any limit for kmem?
+>
 
-I would expect sysrq+w would still show those kworkers blocked on the
-same cgroup mutex?
+I did a quick search through the code, but I see nothing related to
+kernel memory:
+https://github.com/SchedMD/slurm/blob/master/src/plugins/task/cgroup/task_cgroup_memory.c
 
-> I also have atop logs over that whole time period
-> that show hundreds of zombie processes which to me indicates that over
-> that 19.2 hours systemd remained wedged on the cgroup_mutex.  Looking
-> at the backtraces from the sysrq+l it appears most of the CPUs were
-> idle
 
-Right so either we managed to sleep with the lru_lock held which sounds
-a bit improbable - but who knows - or there is some other problem. I
-would expect the later to be true.
+>> memory.use_hierarchy support is enabled and memory is limited from the
+>> job directory. I have mounted the cgroup to /var/slurm/cgroup/memory
+>> in addition to the normal directory at /sys/fs/cgroup/memory.
+>
+> How exactly have you mounted it there?
 
-lru_add_drain executes per-cpu and preemption disabled this means that
-its work item cannot be preempted so the only logical explanation seems
-to be that the work item has never got scheduled.
+Slurm has an automount option, which takes care of this. I don't
+actually know, why I made this kind of setup. So I will probably
+revert back to /sys/fs/cgroup tomorrow.
 
-> except there are a few where ptpd is trying to step the clock
-> with clock_settime.  The ptpd process also appears to get stuck for a
-> bit but it looks like it recovers because it moves CPUs and the
-> previous CPUs become idle.
+>
+> Btw. how reproducible is this? Do you think you could try to bisect
+> it down? Reducing bisection to mm/ and kernel/ diretories should be
+> sufficient I guess.
 
-It gets soft lockup because it is waiting for it's own IPIs which got
-preempted by NMI trace dumper. But this is unrelated.
-
-> The fact that ptpd is stepping the clock
-> at all at this time means that timekeeping is a mess at this point and
-> the system clock is way out of sync.  There are also a few of these
-> NMI messages in there that I don't understand but at this point the
-> machine was a sinking ship.
-> 
-> Nov 11 07:03:29 sydtest0 kernel: [764305.327043] Uhhuh. NMI received for unknown reason 21 on CPU 26.
-> Nov 11 07:03:29 sydtest0 kernel: [764305.327043] Do you have a strange power saving mode enabled?
-> Nov 11 07:03:29 sydtest0 kernel: [764305.327043] Dazed and confused, but trying to continue
-> Nov 11 07:03:29 sydtest0 kernel: [764305.327143] Uhhuh. NMI received for unknown reason 31 on CPU 27.
-> Nov 11 07:03:29 sydtest0 kernel: [764305.327144] Do you have a strange power saving mode enabled?
-> Nov 11 07:03:29 sydtest0 kernel: [764305.327144] Dazed and confused, but trying to continue
-> Nov 11 07:03:29 sydtest0 kernel: [764305.327242] Uhhuh. NMI received for unknown reason 31 on CPU 28.
-> Nov 11 07:03:29 sydtest0 kernel: [764305.327242] Do you have a strange power saving mode enabled?
-> Nov 11 07:03:29 sydtest0 kernel: [764305.327243] Dazed and confused, but trying to continue
-> 
-> Perhaps there is another task blocking somewhere holding the lru_lock, but at
-> this point the machine has been rebooted so I'm not sure how we'd figure out
-> what task that might be. Anyway here is the full output of sysrq+l plus
-> whatever else ended up in the syslog.
-
-OK. In case the issue happens again. It would be very helpful to get the
-kworker and per-cpu stacks. Maybe Tejun can help with some waitqueue
-debugging tricks.
--- 
-Michal Hocko
-SUSE Labs
+The bug is quite reproducible here .. within a few minutes at most.
+Since we have diskless clients with nfsroot and aufs, bisectioning
+proved to be a bit difficult (means the kernel compiled and booted but
+aufs failed on /etc). But then I have tried bisectioning the whole
+kernel sources. Tomorrow, I will first try to test without
+CONFIG_MEMCG_SWAP_ENABLED and CONFIG_MEMCG_KMEM, and then give
+bisectioning only the two directories another try. Btw. I never saw
+this bug before 3.11, but it may well be, that because of some trivial
+code change, it became much more likely to trigger.
