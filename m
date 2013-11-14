@@ -1,134 +1,150 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch] mm, memcg: add memory.oom_control notification for
- system oom
-Date: Wed, 13 Nov 2013 22:25:08 -0500
-Message-ID: <20131114032508.GL707@cmpxchg.org>
-References: <alpine.DEB.2.02.1310301838300.13556@chino.kir.corp.google.com>
- <20131031054942.GA26301@cmpxchg.org>
- <alpine.DEB.2.02.1311131416460.23211@chino.kir.corp.google.com>
- <20131113233419.GJ707@cmpxchg.org>
- <alpine.DEB.2.02.1311131649110.6735@chino.kir.corp.google.com>
+From: Shawn Bohrer <shawn.bohrer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: 3.10.16 cgroup_mutex deadlock
+Date: Thu, 14 Nov 2013 16:56:49 -0600
+Message-ID: <20131114225649.GA16725@sbohrermbp13-local.rgmadvisors.com>
+References: <20131111220626.GA7509@sbohrermbp13-local.rgmadvisors.com>
+ <52820030.6000806@huawei.com>
+ <20131112143147.GB6049@dhcp22.suse.cz>
+ <20131112155530.GA2860@sbohrermbp13-local.rgmadvisors.com>
+ <20131112165504.GF6049@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=GkQuuzav53t0CPj3SBdpGzIGo8jjppRZc6xjygjABjM=;
-	b=XvNwQjh2y34cDcENw3HG2b398jYW5Bcl5eyIWttxaGjZk51Ga5r9MA1TmL9KA4eUS6vfVqy4aXPcgHOBL+cFWb0CgX2YFzkVF3kZoDzLgY4zHBMbEdGyBNbrxcftett9RTFfdQFzmkp9KnIP/kje8NhNJB5sdg50/W3MdZKcfO0=;
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=imvyMi+ytPokgphWaNIwp2mfEnjDC8QaH/w2Kffsl+w=;
+        b=SgEf/1ppsSqhslSqtZPfcMG3BJoXL9HF0GKqvwcxg/nsDQTcnX37K56vSoX900wNLU
+         /1LS06qHL8Uy+QP3GPhTQIXbbwJcxliQ0TDAWkssHxmjtN1W+H3ZJOQUO8L1lTaCaTQN
+         MT1i7Mzp6QP8Jf/z0Nd43o8+jwya7i/Mz/KngVNqmqDFDSP4ay5S/eDxvchhHKhlvyr1
+         kuCSPNH3xyAWxIgQdrB0zXsOvUsIVYygJ2ofJb81AwzSZ2ss53cDyPtDigEzfJDRwclM
+         ctLmolvEWPqTSgeouqgmM9+ApCUKIqhbGOaBnV5kBb4yQxtcYMuAUoho4KpVyAbsAr0P
+         zXFg==
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1311131649110.6735@chino.kir.corp.google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20131112165504.GF6049-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Markus Blank-Burian <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org>
 
-On Wed, Nov 13, 2013 at 04:56:09PM -0800, David Rientjes wrote:
-> On Wed, 13 Nov 2013, Johannes Weiner wrote:
-> 
-> > > > > diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> > > > > --- a/include/linux/memcontrol.h
-> > > > > +++ b/include/linux/memcontrol.h
-> > > > > @@ -155,6 +155,7 @@ static inline bool task_in_memcg_oom(struct task_struct *p)
-> > > > >  }
-> > > > >  
-> > > > >  bool mem_cgroup_oom_synchronize(bool wait);
-> > > > > +void mem_cgroup_root_oom_notify(void);
-> > > > >  
-> > > > >  #ifdef CONFIG_MEMCG_SWAP
-> > > > >  extern int do_swap_account;
-> > > > > @@ -397,6 +398,10 @@ static inline bool mem_cgroup_oom_synchronize(bool wait)
-> > > > >  	return false;
-> > > > >  }
-> > > > >  
-> > > > > +static inline void mem_cgroup_root_oom_notify(void)
-> > > > > +{
-> > > > > +}
-> > > > > +
-> > > > >  static inline void mem_cgroup_inc_page_stat(struct page *page,
-> > > > >  					    enum mem_cgroup_stat_index idx)
-> > > > >  {
-> > > > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > > > > --- a/mm/memcontrol.c
-> > > > > +++ b/mm/memcontrol.c
-> > > > > @@ -5641,6 +5641,15 @@ static void mem_cgroup_oom_notify(struct mem_cgroup *memcg)
-> > > > >  		mem_cgroup_oom_notify_cb(iter);
-> > > > >  }
-> > > > >  
-> > > > > +/*
-> > > > > + * Notify any process waiting on the root memcg's memory.oom_control, but do not
-> > > > > + * notify any child memcgs to avoid triggering their per-memcg oom handlers.
-> > > > > + */
-> > > > > +void mem_cgroup_root_oom_notify(void)
-> > > > > +{
-> > > > > +	mem_cgroup_oom_notify_cb(root_mem_cgroup);
-> > > > > +}
-> > > > > +
-> > > > >  static int mem_cgroup_usage_register_event(struct cgroup_subsys_state *css,
-> > > > >  	struct cftype *cft, struct eventfd_ctx *eventfd, const char *args)
-> > > > >  {
-> > > > > diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-> > > > > --- a/mm/oom_kill.c
-> > > > > +++ b/mm/oom_kill.c
-> > > > > @@ -632,6 +632,10 @@ void out_of_memory(struct zonelist *zonelist, gfp_t gfp_mask,
-> > > > >  		return;
-> > > > >  	}
-> > > > >  
-> > > > > +	/* Avoid waking up processes for oom kills triggered by sysrq */
-> > > > > +	if (!force_kill)
-> > > > > +		mem_cgroup_root_oom_notify();
+On Tue, Nov 12, 2013 at 05:55:04PM +0100, Michal Hocko wrote:
+> On Tue 12-11-13 09:55:30, Shawn Bohrer wrote:
+> > On Tue, Nov 12, 2013 at 03:31:47PM +0100, Michal Hocko wrote:
+> > > On Tue 12-11-13 18:17:20, Li Zefan wrote:
+> > > > Cc more people
 > > > > 
-> > > > We have an API for global OOM notifications, please just use
-> > > > register_oom_notifier() instead.
-> > > > 
+> > > > On 2013/11/12 6:06, Shawn Bohrer wrote:
+> > > > > Hello,
+> > > > > 
+> > > > > This morning I had a machine running 3.10.16 go unresponsive but
+> > > > > before we killed it we were able to get the information below.  I'm
+> > > > > not an expert here but it looks like most of the tasks below are
+> > > > > blocking waiting on the cgroup_mutex.  You can see that the
+> > > > > resource_alloca:16502 task is holding the cgroup_mutex and that task
+> > > > > appears to be waiting on a lru_add_drain_all() to complete.
 > > > 
-> > > We can't use register_oom_notifier() because we don't want to notify the 
-> > > root memcg for a system oom handler if existing oom notifiers free memory 
-> > > (powerpc or s390).  We also don't want to notify the root memcg when 
-> > > current is exiting or has a pending SIGKILL, we just want to silently give 
-> > > it access to memory reserves and exit.  The mem_cgroup_root_oom_notify() 
-> > > here is placed correctly.
+> > > Do you have sysrq+l output as well by any chance? That would tell
+> > > us what the current CPUs are doing. Dumping all kworker stacks
+> > > might be helpful as well. We know that lru_add_drain_all waits for
+> > > schedule_on_each_cpu to return so it is waiting for workers to finish.
+> > > I would be really curious why some of lru_add_drain_cpu cannot finish
+> > > properly. The only reason would be that some work item(s) do not get CPU
+> > > or somebody is holding lru_lock.
 > > 
-> > This is all handwaving.
+> > In fact the sys-admin did manage to fire off a sysrq+l, I've put all
+> > of the info from the syslog below.  I've looked it over and I'm not
+> > sure it reveals anything.  First looking at the timestamps it appears
+> > we ran the sysrq+l 19.2 hours after the cgroup_mutex lockup I
+> > previously sent.
 > 
-> I'm defining the semantics of the system oom notification for the root 
-> memcg.  Userspace oom handlers are not going to want to wakeup when a 
-> kernel oom notifier is capable of freeing memory to prevent the oom killer 
-> from doing anything at all or if current simply needs access to memory 
-> reserves to make forward progress.  Userspace oom handlers want a wakeup 
-> when a process must be killed to free memory, and thus this is correctly 
-> placed.
+> I would expect sysrq+w would still show those kworkers blocked on the
+> same cgroup mutex?
 
-Userspace may very much be interested in an OOM situation, REGARDLESS
-of what action needs to be taken.  Userspace has always the ability to
-filter out events and look at the stats after the notification, but it
-can not know situations it's not told about.
+Yes, I believe so.
 
-> > Somebody called out_of_memory() after they
-> > failed reclaim, the machine is OOM.
+> > I also have atop logs over that whole time period
+> > that show hundreds of zombie processes which to me indicates that over
+> > that 19.2 hours systemd remained wedged on the cgroup_mutex.  Looking
+> > at the backtraces from the sysrq+l it appears most of the CPUs were
+> > idle
 > 
-> While momentarily oom, the oom notifiers in powerpc and s390 have the 
-> ability to free memory without requiring a kill.
-
-So either
-
-1) they should be part of the regular reclaim process, or
-
-2) their invocation is severe enough to not be part of reclaim, at
-   which point we should probably tell userspace about the OOM
-
-> > The fact that current is exiting
-> > without requiring a kill is coincidental and irrelevant.  You want an
-> > OOM notification, use the OOM notifiers, that's what they're for.
-> > 
+> Right so either we managed to sleep with the lru_lock held which sounds
+> a bit improbable - but who knows - or there is some other problem. I
+> would expect the later to be true.
 > 
-> I think you're misunderstanding the kernel oom notifiers, they exist 
-> solely to free memory so that the oom killer actually doesn't have to kill 
-> anything.  The fact that they use kernel notifiers is irrelevant and 
-> userspace oom notification is separate.  Userspace is only going to want a 
-> notification when the oom killer has to kill something, the EXACT same 
-> semantics as the non-root-memcg memory.oom_control.
+> lru_add_drain executes per-cpu and preemption disabled this means that
+> its work item cannot be preempted so the only logical explanation seems
+> to be that the work item has never got scheduled.
 
-That's actually not true, we invoke the OOM notifier before calling
-mem_cgroup_out_of_memory(), which then may skip the kill in favor of
-letting current exit.  It does this for when the kernel handler is
-enabled, which would be the equivalent for what you are implementing.
+Meaning you think there would be no kworker thread for the
+lru_add_drain at this point?  If so you might be correct.
+
+> OK. In case the issue happens again. It would be very helpful to get the
+> kworker and per-cpu stacks. Maybe Tejun can help with some waitqueue
+> debugging tricks.
+
+I set up one of my test pools with two scripts trying to reproduce the
+problem.  One essentially puts tasks into several cpuset groups that
+have cpuset.memory_migrate set, then takes them back out.  It also
+occasionally switches cpuset.mems in those groups to try to keep the
+memory of those tasks migrating between nodes.  The second script is:
+
+$ cat /home/hbi/cgroup_mutex_cgroup_maker.sh 
+#!/bin/bash
+
+session_group=$(ps -o pid,cmd,cgroup -p $$ | grep -E 'c[0-9]+' -o)
+cd /sys/fs/cgroup/systemd/user/hbi/${session_group}
+pwd
+
+while true; do
+    for x in $(seq 1 1000); do
+        mkdir $x
+        echo $$ > ${x}/tasks
+        echo $$ > tasks
+        rmdir $x
+    done
+    sleep .1
+    date
+done
+
+After running both concurrently on 40 machines for about 12 hours I've
+managed to reproduce the issue at least once, possibly more.  One
+machine looked identical to this reported issue.  It has a bunch of
+stuck cgroup_free_fn() kworker threads and one thread in cpuset_attach
+waiting on lru_add_drain_all().  A sysrq+l shows all CPUs are idle
+except for the one triggering the sysrq+l.  The sysrq+w unfortunately
+wrapped dmesg so we didn't get the stacks of all blocked tasks.  We
+did however also cat /proc/<pid>/stack of all kworker threads on the
+system.  There were 265 kworker threads that all have the following
+stack:
+
+[kworker/2:1]
+[<ffffffff810930ec>] cgroup_free_fn+0x2c/0x120
+[<ffffffff81057c54>] process_one_work+0x174/0x490
+[<ffffffff81058d0c>] worker_thread+0x11c/0x370
+[<ffffffff8105f0b0>] kthread+0xc0/0xd0
+[<ffffffff814c20dc>] ret_from_fork+0x7c/0xb0
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+And there were another 101 that had stacks like the following:
+
+[kworker/0:0]
+[<ffffffff81058daf>] worker_thread+0x1bf/0x370
+[<ffffffff8105f0b0>] kthread+0xc0/0xd0
+[<ffffffff814c20dc>] ret_from_fork+0x7c/0xb0
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+That's it.  Again I'm not sure if that is helpful at all but it seems
+to imply that the lru_add_drain_work was not scheduled.
+
+I also managed to kill another two machines running my test.  One of
+them we didn't get anything out of, and the other looks like I
+deadlocked on the css_set_lock lock.  I'll follow up with the
+css_set_lock deadlock in another email since it doesn't look related
+to this one.  But it does seem that I can probably reproduce this if
+anyone has some debugging ideas.
+
+--
+Shawn
