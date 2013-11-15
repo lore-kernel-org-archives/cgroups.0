@@ -1,144 +1,71 @@
-From: David Rientjes <rientjes@google.com>
-Subject: [patch 2/2] mm, memcg: add memory.oom_control notification for system
- oom
-Date: Thu, 14 Nov 2013 15:26:55 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1311141526300.30112@chino.kir.corp.google.com>
-References: <alpine.DEB.2.02.1310301838300.13556@chino.kir.corp.google.com> <20131031054942.GA26301@cmpxchg.org> <alpine.DEB.2.02.1311131416460.23211@chino.kir.corp.google.com> <20131113233419.GJ707@cmpxchg.org> <alpine.DEB.2.02.1311131649110.6735@chino.kir.corp.google.com>
- <20131114032508.GL707@cmpxchg.org> <alpine.DEB.2.02.1311141447160.21413@chino.kir.corp.google.com> <alpine.DEB.2.02.1311141525440.30112@chino.kir.corp.google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: 3.10.16 cgroup_mutex deadlock
+Date: Fri, 15 Nov 2013 15:24:58 +0900
+Message-ID: <20131115062458.GA9755@mtj.dyndns.org>
+References: <20131111220626.GA7509@sbohrermbp13-local.rgmadvisors.com>
+ <52820030.6000806@huawei.com>
+ <20131112143147.GB6049@dhcp22.suse.cz>
+ <20131112155530.GA2860@sbohrermbp13-local.rgmadvisors.com>
+ <20131112165504.GF6049@dhcp22.suse.cz>
+ <20131114225649.GA16725@sbohrermbp13-local.rgmadvisors.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=aMrIDgg6iYMxwzq9O/0P22BtB+ImF+Qq6t2FSjGDQkk=;
-        b=d3mz2LQ+m7kY/6QB9pTvVMkS/1rWCuCpi3Kalf4vMeM2v55DzpwiYnHNlg0LGJ4udJ
-         j945CAJhwHFBTr6ZPkyhcNxWym44ooI25XFd3I9Zo4S1/iiXrvPu80mKyCh6HK9bTYNA
-         KFCILY0U5OxRCOe6vxUUfWgqFvPUD/UW2VRLYWlTsb0Bb70GfazgEspEizjdO1OXucEb
-         YuWjK1KcOICv9AgLgpt7sC7xdWJGPd7l47BWSIjDOpcHxUTNEYMZby+QnH4O/3MRgRQ2
-         BQhxhgiTRSdZL/JTxmcqG+BHEWjBs/ovy1QC95kIe0Q87cYFEDSU2nlB6D8WPsAfjLCZ
-         sDGg==
-In-Reply-To: <alpine.DEB.2.02.1311141525440.30112@chino.kir.corp.google.com>
-Sender: owner-linux-mm@kvack.org
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=XAYOaw0CFLTPfIGyHKc1xg5th6vpXxxsb7wsSJ1UrMo=;
+        b=wdCk6o/f2uO8QVnh2R7AccnHm8n9wzjxcPSIIzpSvFMw6YV4p/1s+gSkp+PXfjmelw
+         5i2CWCRgLoTj56s7hXfl2SxgeCF0iwkmFPOrFJ+1V4gWTSJ0/XT3rbB4aZk9ybXcJVY/
+         7T5JJq5pOoqgNAUfwrJUkjfrqmL2tc0lqdrRb4rTU/wBTCNzEVf1wV41qOMcloHkxYzW
+         ZLvb7qk5Pfb9RNsiOU+38sSjprlDIGLcAoK7+YDOS7fANoYvG9XY8lj453CNWkNYNEpw
+         KklliPbl4hzWffg5fargLLnkiB9H/QtXrbfdkJ7IXQ0xANOqmRavu78HkLnodxRYn+LC
+         7y+A==
+Content-Disposition: inline
+In-Reply-To: <20131114225649.GA16725-/vebjAlq/uFE7V8Yqttd03bhEEblAqRIDbRjUBewulXQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+To: Shawn Bohrer <shawn.bohrer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Markus Blank-Burian <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org>
 
-A subset of applications that wait on memory.oom_control don't disable
-the oom killer for that memcg and simply log or cleanup after the kernel
-oom killer kills a process to free memory.
+Hello,
 
-We need the ability to do this for system oom conditions as well, i.e.
-when the system is depleted of all memory and must kill a process.  For
-convenience, this can use memcg since oom notifiers are already present.
+On Thu, Nov 14, 2013 at 04:56:49PM -0600, Shawn Bohrer wrote:
+> After running both concurrently on 40 machines for about 12 hours I've
+> managed to reproduce the issue at least once, possibly more.  One
+> machine looked identical to this reported issue.  It has a bunch of
+> stuck cgroup_free_fn() kworker threads and one thread in cpuset_attach
+> waiting on lru_add_drain_all().  A sysrq+l shows all CPUs are idle
+> except for the one triggering the sysrq+l.  The sysrq+w unfortunately
+> wrapped dmesg so we didn't get the stacks of all blocked tasks.  We
+> did however also cat /proc/<pid>/stack of all kworker threads on the
+> system.  There were 265 kworker threads that all have the following
+> stack:
 
-When a userspace process waits on the root memcg's memory.oom_control, it
-will wake up anytime there is a system oom condition so that it can log
-the event, including what process was killed and the stack, or cleanup
-after the kernel oom killer has killed something.
+Umm... so, WQ_DFL_ACTIVE is 256.  It's just an arbitrarily largish
+number which is supposed to serve as protection against runaway
+kworker creation.  The assumption there is that there won't be a
+dependency chain which can be longer than that and if there are it
+should be separated out into a separate workqueue.  It looks like we
+*can* have such long chain of dependency with high enough rate of
+cgroup destruction.  kworkers trying to destroy cgroups get blocked by
+an earlier one which is holding cgroup_mutex.  If the blocked ones
+completely consume max_active and then the earlier one tries to
+perform an operation which makes use of the system_wq, the forward
+progress guarantee gets broken.
 
-This is a special case of oom notifiers since it doesn't subsequently
-notify all memcgs under the root memcg (all memcgs on the system).  We
-don't want to trigger those oom handlers which are set aside specifically
-for true memcg oom notifications that disable their own oom killers to
-enforce their own oom policy, for example.
+So, yeah, it makes sense now.  We're just gonna have to separate out
+cgroup destruction to a separate workqueue.  Hugh's temp fix achieved
+about the same effect by putting the affected part of destruction to a
+different workqueue.  I probably should have realized that we were
+hitting max_active when I was told that moving some part to a
+different workqueue makes the problem go away.
 
-Signed-off-by: David Rientjes <rientjes@google.com>
----
- Documentation/cgroups/memory.txt | 11 ++++++-----
- include/linux/memcontrol.h       |  5 +++++
- mm/memcontrol.c                  |  9 +++++++++
- mm/oom_kill.c                    |  4 ++++
- 4 files changed, 24 insertions(+), 5 deletions(-)
+Will send out a patch soon.
 
-diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
---- a/Documentation/cgroups/memory.txt
-+++ b/Documentation/cgroups/memory.txt
-@@ -743,18 +743,19 @@ delivery and gets notification when OOM happens.
- 
- To register a notifier, an application must:
-  - create an eventfd using eventfd(2)
-- - open memory.oom_control file
-+ - open memory.oom_control file for reading
-  - write string like "<event_fd> <fd of memory.oom_control>" to
-    cgroup.event_control
- 
--The application will be notified through eventfd when OOM happens.
--OOM notification doesn't work for the root cgroup.
-+The application will be notified through eventfd when OOM happens, including
-+on system oom when used with the root memcg.
- 
- You can disable the OOM-killer by writing "1" to memory.oom_control file, as:
- 
--	#echo 1 > memory.oom_control
-+	# echo 1 > memory.oom_control
- 
--This operation is only allowed to the top cgroup of a sub-hierarchy.
-+This operation is only allowed to the top cgroup of a sub-hierarchy and does
-+not include the root memcg.
- If OOM-killer is disabled, tasks under cgroup will hang/sleep
- in memory cgroup's OOM-waitqueue when they request accountable memory.
- 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -155,6 +155,7 @@ static inline bool task_in_memcg_oom(struct task_struct *p)
- }
- 
- bool mem_cgroup_oom_synchronize(bool wait);
-+void mem_cgroup_root_oom_notify(void);
- 
- #ifdef CONFIG_MEMCG_SWAP
- extern int do_swap_account;
-@@ -397,6 +398,10 @@ static inline bool mem_cgroup_oom_synchronize(bool wait)
- 	return false;
- }
- 
-+static inline void mem_cgroup_root_oom_notify(void)
-+{
-+}
-+
- static inline void mem_cgroup_inc_page_stat(struct page *page,
- 					    enum mem_cgroup_stat_index idx)
- {
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5648,6 +5648,15 @@ static void mem_cgroup_oom_notify(struct mem_cgroup *memcg)
- 		mem_cgroup_oom_notify_cb(iter);
- }
- 
-+/*
-+ * Notify any process waiting on the root memcg's memory.oom_control, but do not
-+ * notify any child memcgs to avoid triggering their per-memcg oom handlers.
-+ */
-+void mem_cgroup_root_oom_notify(void)
-+{
-+	mem_cgroup_oom_notify_cb(root_mem_cgroup);
-+}
-+
- static int mem_cgroup_usage_register_event(struct cgroup_subsys_state *css,
- 	struct cftype *cft, struct eventfd_ctx *eventfd, const char *args)
- {
-diff --git a/mm/oom_kill.c b/mm/oom_kill.c
---- a/mm/oom_kill.c
-+++ b/mm/oom_kill.c
-@@ -632,6 +632,10 @@ void out_of_memory(struct zonelist *zonelist, gfp_t gfp_mask,
- 		return;
- 	}
- 
-+	/* Avoid waking up processes for oom kills triggered by sysrq */
-+	if (!force_kill)
-+		mem_cgroup_root_oom_notify();
-+
- 	/*
- 	 * Check if there were limitations on the allocation (only relevant for
- 	 * NUMA) that may require different handling.
+Thanks.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
