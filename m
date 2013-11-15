@@ -1,28 +1,29 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: 3.10.16 cgroup_mutex deadlock
-Date: Fri, 15 Nov 2013 15:24:58 +0900
-Message-ID: <20131115062458.GA9755@mtj.dyndns.org>
+Date: Fri, 15 Nov 2013 16:54:01 +0900
+Message-ID: <20131115075401.GB9755@mtj.dyndns.org>
 References: <20131111220626.GA7509@sbohrermbp13-local.rgmadvisors.com>
  <52820030.6000806@huawei.com>
  <20131112143147.GB6049@dhcp22.suse.cz>
  <20131112155530.GA2860@sbohrermbp13-local.rgmadvisors.com>
  <20131112165504.GF6049@dhcp22.suse.cz>
  <20131114225649.GA16725@sbohrermbp13-local.rgmadvisors.com>
+ <20131115062458.GA9755@mtj.dyndns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=XAYOaw0CFLTPfIGyHKc1xg5th6vpXxxsb7wsSJ1UrMo=;
-        b=wdCk6o/f2uO8QVnh2R7AccnHm8n9wzjxcPSIIzpSvFMw6YV4p/1s+gSkp+PXfjmelw
-         5i2CWCRgLoTj56s7hXfl2SxgeCF0iwkmFPOrFJ+1V4gWTSJ0/XT3rbB4aZk9ybXcJVY/
-         7T5JJq5pOoqgNAUfwrJUkjfrqmL2tc0lqdrRb4rTU/wBTCNzEVf1wV41qOMcloHkxYzW
-         ZLvb7qk5Pfb9RNsiOU+38sSjprlDIGLcAoK7+YDOS7fANoYvG9XY8lj453CNWkNYNEpw
-         KklliPbl4hzWffg5fargLLnkiB9H/QtXrbfdkJ7IXQ0xANOqmRavu78HkLnodxRYn+LC
-         7y+A==
+        bh=LtQuDIa64zRNKqSwmmbXz19oo74TYJZZnJs0yzSvhMQ=;
+        b=NDAa7prhEtX+XfSyVlCG3oi3W0haLfPgGZkZ4U0SixWeOyN4ygl0eh2RGrBN3xwtPH
+         5Q0jhyfeQQMPys5Uik35BavvYpXepzAmUVUW38ebU056C90R0OHLgN2f8HUxxL7dPcm8
+         Jr2FXUt3h3ED/9wgoHD85fHgZomQsI/w2htFc1VHAsF3iqV/gfwddihK0POOZrQu6hfI
+         PSa9cAlPnR9zuxAgZRxhn89z1IGUF62v118sdlo7/f8EhmJe4m5CuwxcAnlF9JsW3LBi
+         rAizRMRL7nrsd/TQuX0tR6ieGtWdTyy9cHEVIAQDm76BzuE2qR2E6CUNZlvuO4gVyiOK
+         yrWg==
 Content-Disposition: inline
-In-Reply-To: <20131114225649.GA16725-/vebjAlq/uFE7V8Yqttd03bhEEblAqRIDbRjUBewulXQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20131115062458.GA9755-9pTldWuhBndy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -32,40 +33,86 @@ Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Li Zefan <lizefan-hv44wF
 
 Hello,
 
-On Thu, Nov 14, 2013 at 04:56:49PM -0600, Shawn Bohrer wrote:
-> After running both concurrently on 40 machines for about 12 hours I've
-> managed to reproduce the issue at least once, possibly more.  One
-> machine looked identical to this reported issue.  It has a bunch of
-> stuck cgroup_free_fn() kworker threads and one thread in cpuset_attach
-> waiting on lru_add_drain_all().  A sysrq+l shows all CPUs are idle
-> except for the one triggering the sysrq+l.  The sysrq+w unfortunately
-> wrapped dmesg so we didn't get the stacks of all blocked tasks.  We
-> did however also cat /proc/<pid>/stack of all kworker threads on the
-> system.  There were 265 kworker threads that all have the following
-> stack:
-
-Umm... so, WQ_DFL_ACTIVE is 256.  It's just an arbitrarily largish
-number which is supposed to serve as protection against runaway
-kworker creation.  The assumption there is that there won't be a
-dependency chain which can be longer than that and if there are it
-should be separated out into a separate workqueue.  It looks like we
-*can* have such long chain of dependency with high enough rate of
-cgroup destruction.  kworkers trying to destroy cgroups get blocked by
-an earlier one which is holding cgroup_mutex.  If the blocked ones
-completely consume max_active and then the earlier one tries to
-perform an operation which makes use of the system_wq, the forward
-progress guarantee gets broken.
-
-So, yeah, it makes sense now.  We're just gonna have to separate out
-cgroup destruction to a separate workqueue.  Hugh's temp fix achieved
-about the same effect by putting the affected part of destruction to a
-different workqueue.  I probably should have realized that we were
-hitting max_active when I was told that moving some part to a
-different workqueue makes the problem go away.
-
-Will send out a patch soon.
+Shawn, Hugh, can you please verify whether the attached patch makes
+the deadlock go away?
 
 Thanks.
 
--- 
-tejun
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index e0839bc..dc9dc06 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -90,6 +90,14 @@ static DEFINE_MUTEX(cgroup_mutex);
+ static DEFINE_MUTEX(cgroup_root_mutex);
+ 
+ /*
++ * cgroup destruction makes heavy use of work items and there can be a lot
++ * of concurrent destructions.  Use a separate workqueue so that cgroup
++ * destruction work items don't end up filling up max_active of system_wq
++ * which may lead to deadlock.
++ */
++static struct workqueue_struct *cgroup_destroy_wq;
++
++/*
+  * Generate an array of cgroup subsystem pointers. At boot time, this is
+  * populated with the built in subsystems, and modular subsystems are
+  * registered after that. The mutable section of this array is protected by
+@@ -871,7 +879,7 @@ static void cgroup_free_rcu(struct rcu_head *head)
+ 	struct cgroup *cgrp = container_of(head, struct cgroup, rcu_head);
+ 
+ 	INIT_WORK(&cgrp->destroy_work, cgroup_free_fn);
+-	schedule_work(&cgrp->destroy_work);
++	queue_work(cgroup_destroy_wq, &cgrp->destroy_work);
+ }
+ 
+ static void cgroup_diput(struct dentry *dentry, struct inode *inode)
+@@ -4254,7 +4262,7 @@ static void css_free_rcu_fn(struct rcu_head *rcu_head)
+ 	 * css_put().  dput() requires process context which we don't have.
+ 	 */
+ 	INIT_WORK(&css->destroy_work, css_free_work_fn);
+-	schedule_work(&css->destroy_work);
++	queue_work(cgroup_destroy_wq, &css->destroy_work);
+ }
+ 
+ static void css_release(struct percpu_ref *ref)
+@@ -4544,7 +4552,7 @@ static void css_killed_ref_fn(struct percpu_ref *ref)
+ 		container_of(ref, struct cgroup_subsys_state, refcnt);
+ 
+ 	INIT_WORK(&css->destroy_work, css_killed_work_fn);
+-	schedule_work(&css->destroy_work);
++	queue_work(cgroup_destroy_wq, &css->destroy_work);
+ }
+ 
+ /**
+@@ -5025,6 +5033,17 @@ int __init cgroup_init(void)
+ 	if (err)
+ 		return err;
+ 
++	/*
++	 * There isn't much point in executing destruction path in
++	 * parallel.  Good chunk is serialized with cgroup_mutex anyway.
++	 * Use 1 for @max_active.
++	 */
++	cgroup_destroy_wq = alloc_workqueue("cgroup_destroy", 0, 1);
++	if (!cgroup_destroy_wq) {
++		err = -ENOMEM;
++		goto out;
++	}
++
+ 	for_each_builtin_subsys(ss, i) {
+ 		if (!ss->early_init)
+ 			cgroup_init_subsys(ss);
+@@ -5062,9 +5081,11 @@ int __init cgroup_init(void)
+ 	proc_create("cgroups", 0, NULL, &proc_cgroupstats_operations);
+ 
+ out:
+-	if (err)
++	if (err) {
++		if (cgroup_destroy_wq)
++			destroy_workqueue(cgroup_destroy_wq);
+ 		bdi_destroy(&cgroup_backing_dev_info);
+-
++	}
+ 	return err;
+ }
+ 
