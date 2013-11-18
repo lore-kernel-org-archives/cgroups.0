@@ -1,75 +1,43 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [patch] mm, memcg: add memory.oom_control notification for
- system oom
-Date: Mon, 18 Nov 2013 10:54:50 -0500
-Message-ID: <20131118155450.GB3556@cmpxchg.org>
-References: <alpine.DEB.2.02.1310301838300.13556@chino.kir.corp.google.com>
- <20131031054942.GA26301@cmpxchg.org>
- <alpine.DEB.2.02.1311131416460.23211@chino.kir.corp.google.com>
- <20131113233419.GJ707@cmpxchg.org>
- <alpine.DEB.2.02.1311131649110.6735@chino.kir.corp.google.com>
- <20131114032508.GL707@cmpxchg.org>
- <alpine.DEB.2.02.1311141447160.21413@chino.kir.corp.google.com>
+Subject: Re: Possible regression with cgroups in 3.11
+Date: Mon, 18 Nov 2013 11:43:08 -0500
+Message-ID: <20131118164308.GD3556@cmpxchg.org>
+References: <20131031130647.0ff6f2c7@gandalf.local.home>
+ <alpine.LNX.2.00.1310311442030.2633@eggly.anvils>
+ <20131031192732.2dbb14b3@gandalf.local.home>
+ <CA+SBX_NjAYrqqOpSuCy8Wpj6q1hE_qdLrRV6auydmJjdcHKQHg@mail.gmail.com>
+ <5277932C.40400@huawei.com>
+ <CA+SBX_ORkOzDynKKweg=JomY2+1kz4=FXYJXYMsN8LKf48idBg@mail.gmail.com>
+ <5278B3F1.9040502@huawei.com>
+ <20131107235301.GB1092@cmpxchg.org>
+ <20131108001437.GC1092@cmpxchg.org>
+ <CAJ75kXamrtQz5-cYS7tYtYeP1ZLf2pzSE7UnEPpyORzpG3BASg@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=vqmV43VkeVrme9JRx3wBMGMEVfgyUlzynm2tVFrg1PQ=;
-	b=f7owF7rMvf2JvWTGjGpK/FsEPC9DzjTyBqx87sr+aYvpfkqPxAtMTc95KFrgxmga741VwEjZ4fzuUQU+Vw+eEDVdaRHsTqIlK+ZMfGmutdbFTx7bRdowVChPJleCGa+IAYDn9g7aQ87rkwTrHHRsNaNrwSO7kiMcRkvjOJVvL20=;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=LXgAJIn6oi2s8Zr8qdNPZvYuReG3mFDgySWqJA03PVs=;
+	b=E8gn7+cbPISEG6IAp3mpWpyBPWPC4ydTbSV4JsQAq/W9km9hRPGDjX5MGzS3/9RXPFyPq0gIkMcfN27/JlI/TXOki79uauSlg7Q3kZd4UsKpHeSkHbwkPHeAuLnOVdS19Jasb/3tSL2bDOS1E8JOxDxwWOtEQICUFxuOBs+7bpQ=;
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1311141447160.21413-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
+In-Reply-To: <CAJ75kXamrtQz5-cYS7tYtYeP1ZLf2pzSE7UnEPpyORzpG3BASg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: William Dauchy <wdauchy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Markus Blank-Burian <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Nov 14, 2013 at 02:57:51PM -0800, David Rientjes wrote:
-> On Wed, 13 Nov 2013, Johannes Weiner wrote:
+On Mon, Nov 18, 2013 at 11:30:56AM +0100, William Dauchy wrote:
+> Hi Johannes,
 > 
-> > > > Somebody called out_of_memory() after they
-> > > > failed reclaim, the machine is OOM.
-> > > 
-> > > While momentarily oom, the oom notifiers in powerpc and s390 have the 
-> > > ability to free memory without requiring a kill.
-> > 
-> > So either
-> > 
-> > 1) they should be part of the regular reclaim process, or
-> > 
-> > 2) their invocation is severe enough to not be part of reclaim, at
-> >    which point we should probably tell userspace about the OOM
-> > 
+> On Fri, Nov 8, 2013 at 1:14 AM, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+> > So how about this?
 > 
-> (1) is already true, we can avoid oom by freeing memory for subsystems 
-> using register_oom_notifier(), so we're not actually oom.  It's a late 
-> callback into the kernel to free memory in a sense of reclaim.  It was 
-> added directly into out_of_memory() purely for simplicity; it could be 
-> moved to the page allocator if we move all of the oom_notify_list helpers 
-> there as well.
+> this patch seems to fix my issue I reported you some weeks ago with a
+> oom looping issue.
+> Tested on a 3.10.x
 
-If they can easily free it without any repercussions, they should
-really be part of regular reclaim.  Maybe convert them to shrinkers.
+I would not have expected this.  Thank you very much for testing and
+confirming.  I'm going to go back to the emails you sent me and will
+try to make sense of this.
 
-And then you can use OOM notifiers to be notified about OOM.
-
-> The same is true of silently setting TIF_MEMDIE for current so that it has 
-> access to memory reserves and may exit when it has a pending SIGKILL or is 
-> already exiting.
-> 
-> In both cases, we're not actually oom because either (a) the kernel can 
-> still free memory and avoid actually killing a process, or (b) current 
-> simply needs access to memory reserves so it may die.
-> 
-> We don't want to invoke the userspace oom handler when we first enter 
-> direct reclaim, for example, for the same reason.
-
-Reclaim is an option the kernel always has, the current task exiting
-is a coincidence.
-
-And accessing the emergency reserves means we are definitely no longer
-A-OK, this is not comparable to the first direct reclaim invocation.
-
-We exhausted our options and we got really lucky.  It should not be
-considered the baseline and a user listening for "OOM conditions"
-should be informed about this.
+Thanks, William!
