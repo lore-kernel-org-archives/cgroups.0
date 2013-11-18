@@ -1,46 +1,58 @@
-From: Markus Blank-Burian <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org>
-Subject: Re: Possible regression with cgroups in 3.11
-Date: Mon, 18 Nov 2013 15:31:26 +0100
-Message-ID: <CA+SBX_PqdsG5LBQ1uLpPsSUsbjF8TJ+ok4E+Hp_3AdHf+_5e-A@mail.gmail.com>
-References: <5277932C.40400@huawei.com>
-	<CA+SBX_ORkOzDynKKweg=JomY2+1kz4=FXYJXYMsN8LKf48idBg@mail.gmail.com>
-	<5278B3F1.9040502@huawei.com>
-	<20131107235301.GB1092@cmpxchg.org>
-	<20131108001437.GC1092@cmpxchg.org>
-	<CA+SBX_P6wzmb0k0qM1m06C_1024ZTfYZOs0axLBBJm46X+osqA@mail.gmail.com>
-	<20131111153943.GA22384@dhcp22.suse.cz>
-	<CA+SBX_PiRoL7HU-C_wXHjHYduYrbTjO3i6_OoHOJ_Mq+sMZStg@mail.gmail.com>
-	<20131112135844.GA6049@dhcp22.suse.cz>
-	<CA+SBX_O4oK1H7Gtb5OFYSn_W3Gz+d-YqF7OmM3mOrRTp6x3pvw@mail.gmail.com>
-	<20131118094554.GA32623@dhcp22.suse.cz>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
+ access to memory reserves
+Date: Mon, 18 Nov 2013 10:41:15 -0500
+Message-ID: <20131118154115.GA3556@cmpxchg.org>
+References: <alpine.DEB.2.02.1310301838300.13556@chino.kir.corp.google.com>
+ <20131031054942.GA26301@cmpxchg.org>
+ <alpine.DEB.2.02.1311131416460.23211@chino.kir.corp.google.com>
+ <20131113233419.GJ707@cmpxchg.org>
+ <alpine.DEB.2.02.1311131649110.6735@chino.kir.corp.google.com>
+ <20131114032508.GL707@cmpxchg.org>
+ <alpine.DEB.2.02.1311141447160.21413@chino.kir.corp.google.com>
+ <alpine.DEB.2.02.1311141525440.30112@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20120113;
-        h=mime-version:sender:in-reply-to:references:date:message-id:subject
-         :from:to:cc:content-type;
-        bh=x0MQuqjmaVHnOttLfU6+59MDjsn3r/zk7473tmTM1oY=;
-        b=nNCvjTzZSfqzUiwVOtwEvB1bN9wfNEy5gPA0mseri8t/Ww1wY6+ODQ+bcRp+pdzJdX
-         uZ7odAAGJHupdJUbGD0k3fEBS504Hcs3eZZ3BWDtYIKv1xbUYdSdigi9V5erNeFe5/5G
-         n53Q+Lthx3o6LHO5h5bBu5Bh2RVA7GKkiwCQAQdbdew8YzX17CUFn14slEgaKfZ6iCRH
-         /LUhfARUdBpWbPxU0W1U/dN/CGOHMVZOKn5bfFa44DorMR+npnW0Ch0NFcxfoGw7F1Zf
-         iDXSbDiqSnqcnKWQ3Xyuy0eiR1Z/5t9s430Kxti4ZXIGDnIJf1C29ELAzroV3XEtpmZ5
-         Xl6g==
-In-Reply-To: <20131118094554.GA32623-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=M4kPUX7V5MeH8PFDZVisygbw+k/8IUu+rOQcfsaZkvw=;
+	b=s7v1McTiF9A1MlwJI2cXc3rr/8We3ru9JamSZRNe11Cy3xMuvVBjWb/U/fB3CocJ2XakJWZotjwzhnC9tJ2vhVKO9dGreBdcem3zMFUf1k1h319FY7Svx78uAIzeNaKB6w82YyNEmypnP/u1GKS6dB3iA2jBGx6VoRU4AFuqn7w=;
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.02.1311141525440.30112-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-> There is one more issue which is discussed in another thread
-> (https://lkml.org/lkml/2013/11/15/31) and Tejun has posted a patch (and
-> Hugh followed up on it https://lkml.org/lkml/2013/11/17/166) to fix
-> the cgroup destruction path which may get stuck.
->
+On Thu, Nov 14, 2013 at 03:26:51PM -0800, David Rientjes wrote:
+> When current has a pending SIGKILL or is already in the exit path, it
+> only needs access to memory reserves to fully exit.  In that sense, the
+> memcg is not actually oom for current, it simply needs to bypass memory
+> charges to exit and free its memory, which is guarantee itself that
+> memory will be freed.
+> 
+> We only want to notify userspace for actionable oom conditions where
+> something needs to be done (and all oom handling can already be deferred
+> to userspace through this method by disabling the memcg oom killer with
+> memory.oom_control), not simply when a memcg has reached its limit, which
+> would actually have to happen before memcg reclaim actually frees memory
+> for charges.
 
-Tried out the patches from Johannes, Tejun+Hugh and Michal all
-together and my problem still persists :-(
-Anything I can try besides bisectioning (which I still could not get
-to work yet)?
+Even though the situation may not require a kill, the user still wants
+to know that the memory hard limit was breached and the isolation
+broken in order to prevent a kill.  We just came really close and the
+fact that current is exiting is coincidental.  Not everybody is having
+OOM situations on a frequent basis and they might want to know when
+they are redlining the system and that the same workload might blow up
+the next time it's run.
+
+The emergency reserves are there to prevent the system from
+deadlocking.  We only dip into them to avert a more imminent disaster
+but we are no longer in good shape at this point.  But by not even
+announcing this situation to userspace anymore you are making this the
+new baseline and declaring that everything is fine when the system is
+already clutching at straws.
+
+I maintain that we should signal OOM when our healthy and
+always-available options are exhausted.
