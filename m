@@ -1,95 +1,92 @@
-From: William Dauchy <wdauchy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: Possible regression with cgroups in 3.11
-Date: Mon, 18 Nov 2013 11:30:56 +0100
-Message-ID: <CAJ75kXamrtQz5-cYS7tYtYeP1ZLf2pzSE7UnEPpyORzpG3BASg@mail.gmail.com>
-References: <5270BFE7.4000602@huawei.com> <alpine.LNX.2.00.1310301606080.2333@eggly.anvils>
- <20131031130647.0ff6f2c7@gandalf.local.home> <alpine.LNX.2.00.1310311442030.2633@eggly.anvils>
- <20131031192732.2dbb14b3@gandalf.local.home> <CA+SBX_NjAYrqqOpSuCy8Wpj6q1hE_qdLrRV6auydmJjdcHKQHg@mail.gmail.com>
- <5277932C.40400@huawei.com> <CA+SBX_ORkOzDynKKweg=JomY2+1kz4=FXYJXYMsN8LKf48idBg@mail.gmail.com>
- <5278B3F1.9040502@huawei.com> <20131107235301.GB1092@cmpxchg.org> <20131108001437.GC1092@cmpxchg.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
+ access to memory reserves
+Date: Mon, 18 Nov 2013 13:52:40 +0100
+Message-ID: <20131118125240.GC32623@dhcp22.suse.cz>
+References: <alpine.DEB.2.02.1310301838300.13556@chino.kir.corp.google.com>
+ <20131031054942.GA26301@cmpxchg.org>
+ <alpine.DEB.2.02.1311131416460.23211@chino.kir.corp.google.com>
+ <20131113233419.GJ707@cmpxchg.org>
+ <alpine.DEB.2.02.1311131649110.6735@chino.kir.corp.google.com>
+ <20131114032508.GL707@cmpxchg.org>
+ <alpine.DEB.2.02.1311141447160.21413@chino.kir.corp.google.com>
+ <alpine.DEB.2.02.1311141525440.30112@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-type;
-        bh=h6CsOdWhfj+hzjSn8zCjjokMYEl/j3LBMfyob392PhE=;
-        b=MZQYxG7gOyFGM3fwpmWmqxZPrP8KvkO7Kv/ClzPCy7waS7j5O2oE+5wuQJOrU7Ux6J
-         qaCLlB4Yygm2Mq18RZVyP6yPYhlUttqCY3Etiy35NqpeVAI50frAaXkcw2IR2UwE9iys
-         HllEq8QomgfMN/ToF5n2N5bnDjj7dg1lzoWzoodDlKAaNSiy/Ue9/5Iu4u34nXcsR6UL
-         7bdau7LF5glmstedLv2LUJ9d3oPaD8TBgSCH0c3jS5WSJkC3fvNCzJ7WnaQF1FFqnoCY
-         m50I6yz97PLMdeIWwEiVUutouvuZI6kSOvf79QYX69elgqutlOeWMquqrbLZuslRvfLJ
-         KqrQ==
-In-Reply-To: <20131108001437.GC1092-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.02.1311141525440.30112-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Markus Blank-Burian <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
 
-Hi Johannes,
+[Adding Eric to CC]
 
-On Fri, Nov 8, 2013 at 1:14 AM, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> So how about this?
+On Thu 14-11-13 15:26:51, David Rientjes wrote:
+> When current has a pending SIGKILL or is already in the exit path, it
+> only needs access to memory reserves to fully exit.  In that sense, the
+> memcg is not actually oom for current, it simply needs to bypass memory
+> charges to exit and free its memory, which is guarantee itself that
+> memory will be freed.
+> 
+> We only want to notify userspace for actionable oom conditions where
+> something needs to be done (and all oom handling can already be deferred
+> to userspace through this method by disabling the memcg oom killer with
+> memory.oom_control), not simply when a memcg has reached its limit, which
+> would actually have to happen before memcg reclaim actually frees memory
+> for charges.
 
-this patch seems to fix my issue I reported you some weeks ago with a
-oom looping issue.
-Tested on a 3.10.x
-
+I believe this also fixes the issue reported by Eric
+(https://lkml.org/lkml/2013/7/28/74). I had a patch for this
+https://lkml.org/lkml/2013/7/31/94 but the code changed since then and
+this should be equivalent.
+ 
+> Reported-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Signed-off-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 > ---
-> From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Subject: [patch] mm: memcg: reparent charges during css_free()
->
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: stable-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org # 3.8+
-> ---
->  mm/memcontrol.c | 29 ++++++++++++++++++++++++++++-
->  1 file changed, 28 insertions(+), 1 deletion(-)
->
+>  mm/memcontrol.c | 20 ++++++++++----------
+>  1 file changed, 10 insertions(+), 10 deletions(-)
+> 
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index cc4f9cbe760e..3dce2b50891c 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -6341,7 +6341,34 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
->  static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
->  {
->         struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+> @@ -1783,16 +1783,6 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	unsigned int points = 0;
+>  	struct task_struct *chosen = NULL;
+>  
+> -	/*
+> -	 * If current has a pending SIGKILL or is exiting, then automatically
+> -	 * select it.  The goal is to allow it to allocate so that it may
+> -	 * quickly exit and free its memory.
+> -	 */
+> -	if (fatal_signal_pending(current) || current->flags & PF_EXITING) {
+> -		set_thread_flag(TIF_MEMDIE);
+> -		return;
+> -	}
 > -
-> +       /*
-> +        * XXX: css_offline() would be where we should reparent all
-> +        * memory to prepare the cgroup for destruction.  However,
-> +        * memcg does not do css_tryget() and res_counter charging
-> +        * under the same RCU lock region, which means that charging
-> +        * could race with offlining, potentially leaking charges and
-> +        * sending out pages with stale cgroup pointers:
-> +        *
-> +        * #0                        #1
-> +        *                           rcu_read_lock()
-> +        *                           css_tryget()
-> +        *                           rcu_read_unlock()
-> +        * disable css_tryget()
-> +        * call_rcu()
-> +        *   offline_css()
-> +        *     reparent_charges()
-> +        *                           res_counter_charge()
-> +        *                           css_put()
-> +        *                             css_free()
-> +        *                           pc->mem_cgroup = dead memcg
-> +        *                           add page to lru
-> +        *
-> +        * We still reparent most charges in offline_css() simply
-> +        * because we don't want all these pages stuck if a long-term
-> +        * reference like a swap entry is holding on to the cgroup
-> +        * past offlining, but make sure we catch any raced charges:
-> +        */
-> +       mem_cgroup_reparent_charges(memcg);
->         memcg_destroy_kmem(memcg);
->         __mem_cgroup_free(memcg);
->  }
-> --
-> 1.8.4.2
-
+>  	check_panic_on_oom(CONSTRAINT_MEMCG, gfp_mask, order, NULL);
+>  	totalpages = mem_cgroup_get_limit(memcg) >> PAGE_SHIFT ? : 1;
+>  	for_each_mem_cgroup_tree(iter, memcg) {
+> @@ -2243,6 +2233,16 @@ bool mem_cgroup_oom_synchronize(bool handle)
+>  	if (!handle)
+>  		goto cleanup;
+>  
+> +	/*
+> +	 * If current has a pending SIGKILL or is exiting, then automatically
+> +	 * select it.  The goal is to allow it to allocate so that it may
+> +	 * quickly exit and free its memory.
+> +	 */
+> +	if (fatal_signal_pending(current) || current->flags & PF_EXITING) {
+> +		set_thread_flag(TIF_MEMDIE);
+> +		goto cleanup;
+> +	}
+> +
+>  	owait.memcg = memcg;
+>  	owait.wait.flags = 0;
+>  	owait.wait.func = memcg_oom_wake_function;
 
 -- 
-William
+Michal Hocko
+SUSE Labs
