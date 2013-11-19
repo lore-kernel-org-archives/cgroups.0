@@ -1,65 +1,60 @@
 From: David Rientjes <rientjes@google.com>
 Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
  access to memory reserves
-Date: Mon, 18 Nov 2013 17:19:00 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1311181717500.4292@chino.kir.corp.google.com>
+Date: Mon, 18 Nov 2013 17:22:16 -0800 (PST)
+Message-ID: <alpine.DEB.2.02.1311181719390.4292@chino.kir.corp.google.com>
 References: <alpine.DEB.2.02.1310301838300.13556@chino.kir.corp.google.com> <20131031054942.GA26301@cmpxchg.org> <alpine.DEB.2.02.1311131416460.23211@chino.kir.corp.google.com> <20131113233419.GJ707@cmpxchg.org> <alpine.DEB.2.02.1311131649110.6735@chino.kir.corp.google.com>
- <20131114032508.GL707@cmpxchg.org> <alpine.DEB.2.02.1311141447160.21413@chino.kir.corp.google.com> <alpine.DEB.2.02.1311141525440.30112@chino.kir.corp.google.com> <20131118125240.GC32623@dhcp22.suse.cz> <20131118125507.GD32623@dhcp22.suse.cz>
+ <20131114032508.GL707@cmpxchg.org> <alpine.DEB.2.02.1311141447160.21413@chino.kir.corp.google.com> <alpine.DEB.2.02.1311141525440.30112@chino.kir.corp.google.com> <20131118154115.GA3556@cmpxchg.org> <20131118165110.GE32623@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=date:from:to:cc:subject:in-reply-to:message-id:references
          :user-agent:mime-version:content-type;
-        bh=UZbLDZeQ/cKvvDiayQYm2Yn1OYp0byPfBdojL4G+HOs=;
-        b=kPBJnmFKpCy91kIwuxECmAacHrLJd3+iZOJ4fLC6rdBzYw3TlLT8+hbEFSqrJ80n2n
-         Ima6pyL5QrZwi5wqkBi5GwW3dloLD3AskwUYuurPxE6t+rTFqVVNxKh/yS3jWrkJwf7t
-         pyyUfmwRgq0xzkErQyfoDuO/hFNjgXYVO1ayboGLpW40tc0Z5fzC3hLW8+Seu8vBe3FV
-         ixFKbouzGZ77s/nBKaHZP4+QvPchrMOdaRkxJBxXwbliV4WjdKp48s/O2hP/nv9KH8br
-         UyRwNbGwxs0mHjlD8r+F8gupENhDcfCdd0mZWpoBqbTRcKVGU6ObUEtr8eTLRKlxkFo3
-         Lv6Q==
-In-Reply-To: <20131118125507.GD32623@dhcp22.suse.cz>
+        bh=40/EVcRG8lll+qXE5Eq1dnPlFDmG1XjiRC02uz7pTcU=;
+        b=gr2B2QPoE9oyn3jcqzATDV89nCZf/OiOIHO0ZtaO1hyghGsKrtQl8fnUifCzegVzbE
+         7/3opThsiC++FUvFcs8OUvYx4WedXJOwGfcEXWeF4XS2wJxjGcz2eVJm3axANkkH6wZ5
+         J9dY9OY4cyFSmDErrm/RezUvC2INogrHeMzwaa0HTmeTp1y53G+Erk7R+8BtoalsKjoh
+         zV9/qWeSsac0Db/jQKUZGOVAAHl4GYxlxqpbPe/W3oWKDj1Q82k0y+O5fYrkbDedSfc+
+         yes3qVtOdshwFdqzoyF6BVcYkWnzSTQOTRHvjP4kaMxtTHadn7Bpq6GwnKjfHY/PoGx6
+         LASA==
+In-Reply-To: <20131118165110.GE32623@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Michal Hocko <mhocko@suse.cz>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
 On Mon, 18 Nov 2013, Michal Hocko wrote:
 
-> > > When current has a pending SIGKILL or is already in the exit path, it
-> > > only needs access to memory reserves to fully exit.  In that sense, the
-> > > memcg is not actually oom for current, it simply needs to bypass memory
-> > > charges to exit and free its memory, which is guarantee itself that
-> > > memory will be freed.
-> > > 
-> > > We only want to notify userspace for actionable oom conditions where
-> > > something needs to be done (and all oom handling can already be deferred
-> > > to userspace through this method by disabling the memcg oom killer with
-> > > memory.oom_control), not simply when a memcg has reached its limit, which
-> > > would actually have to happen before memcg reclaim actually frees memory
-> > > for charges.
-> > 
-> > I believe this also fixes the issue reported by Eric
-> > (https://lkml.org/lkml/2013/7/28/74). I had a patch for this
-> > https://lkml.org/lkml/2013/7/31/94 but the code changed since then and
-> > this should be equivalent.
-> >  
-> > > Reported-by: Johannes Weiner <hannes@cmpxchg.org>
-> > > Signed-off-by: David Rientjes <rientjes@google.com>
+> > Even though the situation may not require a kill, the user still wants
+> > to know that the memory hard limit was breached and the isolation
+> > broken in order to prevent a kill.  We just came really close and the
 > 
-> Anyway, the patch looks good to me but please mention the above bug in
-> the changelog.
+> You can observe that you are getting into troubles from fail counter
+> already. The usability without more reclaim statistics is a bit
+> questionable but you get a rough impression that something is wrong at
+> least.
 > 
 
-The patch is in -mm, so perhaps we can change the changelog if/when Eric 
-confirms it fixes his issue.
+Agreed, but it seems like the appropriate mechanism for this is through 
+the memory.{,memsw.}usage_in_bytes notifiers which already exist.
 
-> Acked-by: Michal Hocko <mhocko@suse.cz>
+> > fact that current is exiting is coincidental.  Not everybody is having
+> > OOM situations on a frequent basis and they might want to know when
+> > they are redlining the system and that the same workload might blow up
+> > the next time it's run.
+> 
+> I am just concerned that signaling temporal OOM conditions which do not
+> require any OOM killer action (user or kernel space) might be confusing.
+> Userspace would have harder times to tell whether any action is required
+> or not.
 > 
 
-Thanks!
+Completely agreed, in fact there is no reliable and non-racy way in 
+userspace to determine "is this a real oom condition that I must act upon 
+or can the kernel handle it?"
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
