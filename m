@@ -1,47 +1,76 @@
-From: William Dauchy <wdauchy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: Possible regression with cgroups in 3.11
-Date: Tue, 19 Nov 2013 12:16:56 +0100
-Message-ID: <CAJ75kXYfN8RJaunrQd6cG8xZFO4Ny+f1uDPU5DaUUhmibp-vUA@mail.gmail.com>
-References: <20131031130647.0ff6f2c7@gandalf.local.home> <alpine.LNX.2.00.1310311442030.2633@eggly.anvils>
- <20131031192732.2dbb14b3@gandalf.local.home> <CA+SBX_NjAYrqqOpSuCy8Wpj6q1hE_qdLrRV6auydmJjdcHKQHg@mail.gmail.com>
- <5277932C.40400@huawei.com> <CA+SBX_ORkOzDynKKweg=JomY2+1kz4=FXYJXYMsN8LKf48idBg@mail.gmail.com>
- <5278B3F1.9040502@huawei.com> <20131107235301.GB1092@cmpxchg.org>
- <20131108001437.GC1092@cmpxchg.org> <CAJ75kXamrtQz5-cYS7tYtYeP1ZLf2pzSE7UnEPpyORzpG3BASg@mail.gmail.com>
- <20131118164308.GD3556@cmpxchg.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [patch 2/2] mm, memcg: add memory.oom_control notification for
+ system oom
+Date: Tue, 19 Nov 2013 13:41:38 +0100
+Message-ID: <20131119124138.GB20655@dhcp22.suse.cz>
+References: <20131031054942.GA26301@cmpxchg.org>
+ <alpine.DEB.2.02.1311131416460.23211@chino.kir.corp.google.com>
+ <20131113233419.GJ707@cmpxchg.org>
+ <alpine.DEB.2.02.1311131649110.6735@chino.kir.corp.google.com>
+ <20131114032508.GL707@cmpxchg.org>
+ <alpine.DEB.2.02.1311141447160.21413@chino.kir.corp.google.com>
+ <alpine.DEB.2.02.1311141525440.30112@chino.kir.corp.google.com>
+ <alpine.DEB.2.02.1311141526300.30112@chino.kir.corp.google.com>
+ <20131118185213.GA12923@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1311181722380.4292@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-type;
-        bh=QwCwQAob7OefVGDWRr8k3vkDgqxU6TSO3NTwvMeA/Ro=;
-        b=y3fIlD7Z6XctJzAbOw64D70NIC9eC5hEVAyTRmeCcWUvI6ybJfllOT2zyrF0MtwKkj
-         iJm3xSSBVWd4oB2zUN9ptfGTkGFL1SFpFI/KFgH22y2lLqD33uTAPdlPUO2mwA4I5S3h
-         RYauqFbYzf2/OOgT3w+BHZ3OzNgmLiieTjiKHHVOsrhN661elerRNe5M8wEkNStYVugW
-         81zXULl2Hzmuxq+7ENOco9+M30IPI61mf1y3559cURhLUwoqoKZNmp1DQxIj98oHgw/L
-         3hHyf70wY79/Bcqn70apet3KVWIPhuMbzBhF2/V/+QO6Q2hkcmvh2LQD9tetGCNA5SUm
-         vCPg==
-In-Reply-To: <20131118164308.GD3556-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.02.1311181722380.4292-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Markus Blank-Burian <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello Johannes,
+On Mon 18-11-13 17:25:13, David Rientjes wrote:
+> On Mon, 18 Nov 2013, Michal Hocko wrote:
+> 
+> > > A subset of applications that wait on memory.oom_control don't disable
+> > > the oom killer for that memcg and simply log or cleanup after the kernel
+> > > oom killer kills a process to free memory.
+> > > 
+> > > We need the ability to do this for system oom conditions as well, i.e.
+> > > when the system is depleted of all memory and must kill a process.  For
+> > > convenience, this can use memcg since oom notifiers are already present.
+> > 
+> > Using the memcg interface for "read-only" interface without any plan for
+> > the "write" is only halfway solution. We want to handle global OOM in a
+> > more user defined ways but we have to agree on the proper interface
+> > first. I do not want to end up with something half baked with memcg and
+> > a different interface to do the real thing just because memcg turns out
+> > to be unsuitable.
+> > 
+> 
+> This patch isn't really a halfway solution, you can still determine if the 
+> open(O_WRONLY) succeeds or not to determine if that feature has been 
+> implemented. 
 
-On Mon, Nov 18, 2013 at 5:43 PM, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> I would not have expected this.  Thank you very much for testing and
-> confirming.  I'm going to go back to the emails you sent me and will
-> try to make sense of this.
+Let's say that we end up using loadable modules for the user policy
+driven OOM killer. And that one would implement its own way of
+notification or even no notification at all. How would an unrelated
+check for open on a memcg file help?
 
-seems like I talked too fast. The issue is just much harder to trigger
-(spent more than seven days testing).
-I'm triggering my oom bug when memory+swap is full. I'll send you some
-more info in a separate thread.
-Sorry for the false report.
+> I'm concerned about disabling the oom killer entirely for 
+> system oom conditions, though, so I didn't implement it to be writable.
 
-Regards,
+I really do not like to use different interfaces to accomplish the two
+parts of the process. OOM action and notification should be implemented
+by the same "subsystem" (be it memcg, modules, foobar...).
+
+> I don't think we should be doing anything special in terms of "write"
+> behavior for the root memcg memory.oom_control, so I'd argue against
+> doing anything other than disabling the oom killer.  That's scary.
+
+But we need to have a way to describe user/admin policy for the global
+OOM. Killing a task is just one of the policy and there are usecases (as
+discussed at LSF2013) where e.g. killing the whole group of processes
+makes much more sense. And there are many other possible policies. What
+is the proper interface is a question and we should discuss that
+properly. Memcg interface is one of the possible ways. We can also go
+with kernel modules or a more generic filter like interface with
+userspace defined rules.
 -- 
-William
+Michal Hocko
+SUSE Labs
