@@ -1,76 +1,47 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [patch 2/2] mm, memcg: add memory.oom_control notification for
- system oom
-Date: Tue, 19 Nov 2013 13:41:38 +0100
-Message-ID: <20131119124138.GB20655@dhcp22.suse.cz>
-References: <20131031054942.GA26301@cmpxchg.org>
- <alpine.DEB.2.02.1311131416460.23211@chino.kir.corp.google.com>
- <20131113233419.GJ707@cmpxchg.org>
- <alpine.DEB.2.02.1311131649110.6735@chino.kir.corp.google.com>
- <20131114032508.GL707@cmpxchg.org>
- <alpine.DEB.2.02.1311141447160.21413@chino.kir.corp.google.com>
- <alpine.DEB.2.02.1311141525440.30112@chino.kir.corp.google.com>
- <alpine.DEB.2.02.1311141526300.30112@chino.kir.corp.google.com>
- <20131118185213.GA12923@dhcp22.suse.cz>
- <alpine.DEB.2.02.1311181722380.4292@chino.kir.corp.google.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] blkcg: have bh disable for 32bit UP system reading 64bit
+ stats
+Date: Wed, 20 Nov 2013 12:24:13 -0500
+Message-ID: <20131120172413.GN28946@htj.dyndns.org>
+References: <1383736484-393-1-git-send-email-zhiguohong@tencent.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=Wyz4Va25NvHstaXMBDINeIjOwV7a54J1U7p+wgBxqdI=;
+        b=EO+GNT+mbTz1yEPjUo88H6KqowhflGyTPNKu++DRW7vzzE+a6nn9kRnMMnn3q/y6ep
+         sGgCNhboq2lbTM8c4Lvj+Yib3g8ZB8C8OUOoRIDDNf4KMUKEfP7mQHTX3Jo6mmF5vZua
+         rx011VqWuhP1p9I4m8VBHtfNHnuUvQihrEI3eqFo2Kki3b9zA3uNMqWcxFx/qCpMDfji
+         so8Umk+TGdY15EtCK0WQVbGI3qSVVIQ9RCBZ7i8WLr8ikrGZTnfMZpD+HL7JiAelHHOk
+         GJWKwm3SJQKQkRlAFI0BTykrAZ58J4ukvvSadVqI9Hw8hYJ4pFEfti7aECmk61dtnpgU
+         IHHA==
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1311181722380.4292-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1383736484-393-1-git-send-email-zhiguohong@tencent.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hong Zhiguo <honkiko@gmail.com>
+Cc: vgoyal@redhat.com, cgroups@vger.kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org, Hong Zhiguo <zhiguohong@tencent.com>
 
-On Mon 18-11-13 17:25:13, David Rientjes wrote:
-> On Mon, 18 Nov 2013, Michal Hocko wrote:
+On Wed, Nov 06, 2013 at 07:14:44PM +0800, Hong Zhiguo wrote:
+> From: Hong Zhiguo <zhiguohong@tencent.com>
 > 
-> > > A subset of applications that wait on memory.oom_control don't disable
-> > > the oom killer for that memcg and simply log or cleanup after the kernel
-> > > oom killer kills a process to free memory.
-> > > 
-> > > We need the ability to do this for system oom conditions as well, i.e.
-> > > when the system is depleted of all memory and must kill a process.  For
-> > > convenience, this can use memcg since oom notifiers are already present.
-> > 
-> > Using the memcg interface for "read-only" interface without any plan for
-> > the "write" is only halfway solution. We want to handle global OOM in a
-> > more user defined ways but we have to agree on the proper interface
-> > first. I do not want to end up with something half baked with memcg and
-> > a different interface to do the real thing just because memcg turns out
-> > to be unsuitable.
-> > 
+> Update of blkg_stat and blkg_rwstat may happen in bh context.
+> While u64_stats_fetch_retry is only preempt_disable on 32bit
+> UP system. This is not enough to avoid preemption by bh and
+> may read strange 64 bit value.
 > 
-> This patch isn't really a halfway solution, you can still determine if the 
-> open(O_WRONLY) succeeds or not to determine if that feature has been 
-> implemented. 
+> Signed-off-by: Hong Zhiguo <zhiguohong@tencent.com>
 
-Let's say that we end up using loadable modules for the user policy
-driven OOM killer. And that one would implement its own way of
-notification or even no notification at all. How would an unrelated
-check for open on a memcg file help?
+Acked-by: Tejun Heo <tj@kernel.org>
 
-> I'm concerned about disabling the oom killer entirely for 
-> system oom conditions, though, so I didn't implement it to be writable.
+Jens, can you please pick this one up?  This probably needs to be
+tagged for stable too.
 
-I really do not like to use different interfaces to accomplish the two
-parts of the process. OOM action and notification should be implemented
-by the same "subsystem" (be it memcg, modules, foobar...).
+Thanks!
 
-> I don't think we should be doing anything special in terms of "write"
-> behavior for the root memcg memory.oom_control, so I'd argue against
-> doing anything other than disabling the oom killer.  That's scary.
-
-But we need to have a way to describe user/admin policy for the global
-OOM. Killing a task is just one of the policy and there are usecases (as
-discussed at LSF2013) where e.g. killing the whole group of processes
-makes much more sense. And there are many other possible policies. What
-is the proper interface is a question and we should discuss that
-properly. Memcg interface is one of the possible ways. We can also go
-with kernel modules or a more generic filter like interface with
-userspace defined rules.
 -- 
-Michal Hocko
-SUSE Labs
+tejun
