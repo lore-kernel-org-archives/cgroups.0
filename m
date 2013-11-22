@@ -1,62 +1,71 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [Suggestion] kernel: cgroup: mount failure in LTP cgroup_regression_test.sh
-Date: Fri, 22 Nov 2013 13:46:09 +0800
-Message-ID: <528EEFA1.7020408@huawei.com>
-References: <527C9D9B.8090802@asianux.com> <20131120173549.GO28946@htj.dyndns.org> <528D6E19.4080100@gmail.com> <528D89AA.6080102@gmail.com> <551116969.38084288.1385021094494.JavaMail.root@redhat.com> <20131121152645.GB3352@htj.dyndns.org> <1639659702.38807133.1385075581222.JavaMail.root@redhat.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: Possible regression with cgroups in 3.11
+Date: Fri, 22 Nov 2013 15:50:33 +0100
+Message-ID: <20131122145033.GE25406@dhcp22.suse.cz>
+References: <20131111153943.GA22384@dhcp22.suse.cz>
+ <CA+SBX_PiRoL7HU-C_wXHjHYduYrbTjO3i6_OoHOJ_Mq+sMZStg@mail.gmail.com>
+ <20131112135844.GA6049@dhcp22.suse.cz>
+ <CA+SBX_O4oK1H7Gtb5OFYSn_W3Gz+d-YqF7OmM3mOrRTp6x3pvw@mail.gmail.com>
+ <20131118094554.GA32623@dhcp22.suse.cz>
+ <CA+SBX_PqdsG5LBQ1uLpPsSUsbjF8TJ+ok4E+Hp_3AdHf+_5e-A@mail.gmail.com>
+ <20131118191655.GB12923@dhcp22.suse.cz>
+ <CA+SBX_OeGCr5oDbF0n7jSLu-TTY9xpqc=LYp_=18qFYHB-nBdg@mail.gmail.com>
+ <20131121164559.GA16703@dhcp22.suse.cz>
+ <CA+SBX_PDuU7roist-rQ136Jhx1pr-Nt-r=ULdghJFNHsMWwLrg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1639659702.38807133.1385075581222.JavaMail.root-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CA+SBX_PDuU7roist-rQ136Jhx1pr-Nt-r=ULdghJFNHsMWwLrg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jan Stancek <jstancek-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Chen Gang <gang.chen.5i5j-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Garrett Cooper <yanegomi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, gaowanlong-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, chris-8NJIiSa5LzA@public.gmane.org, mitani-Czb31pHLG9l3+QwDJ9on6Q@public.gmane.org, lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Markus Blank-Burian <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ying Han <yinghan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-> ----- Original Message -----
->> From: "Tejun Heo" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->> To: "Jan Stancek" <jstancek-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->> Cc: "Chen Gang" <gang.chen.5i5j-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Garrett Cooper" <yanegomi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, gaowanlong-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org,
->> chris-8NJIiSa5LzA@public.gmane.org, mitani-Czb31pHLG9l3+QwDJ9on6Q@public.gmane.org, lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, "Li Zefan" <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>,
->> containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->> Sent: Thursday, 21 November, 2013 4:26:45 PM
->> Subject: Re: [Suggestion] kernel: cgroup: mount failure in LTP cgroup_regression_test.sh
->>
->> Hello, Jan.
->>
->> On Thu, Nov 21, 2013 at 03:04:54AM -0500, Jan Stancek wrote:
->>> it looks like those 2 subsystems are already mounted by systemd,
->>> each in different hierarchy:
->>>
->>>>   cpuacct	4	35	1
->>>>   freezer	5	4	1
->>>
->>> from Documentation/cgroups/cgroups.txt:
->>> "If an active hierarchy with exactly the same set of subsystems already
->>> exists, it will be reused for the new mount. If no existing hierarchy
->>> matches, and any of the requested subsystems are in use in an existing
->>> hierarchy, the mount will fail with -EBUSY. Otherwise, a new hierarchy
->>> is activated, associated with the requested subsystems."
->>
->> Ah, cgroup now requires that those recycled mounts to have matching
->> options.  This is an intended behavior change because previously we
->> could end up with mounts which have actual options which differ from
->> what was specified by mount, which can be misleading at the very
->> least.
+On Fri 22-11-13 10:50:11, Markus Blank-Burian wrote:
+> > Hmm interesting. Either the output is not complete (because there is no
+> > is going offline message for memcg:ffffc9001e5c3000) or this happens
+> > before offlining. And there is only one such a place.
 > 
-> I believe the test always respected this requirement. Problem we see
-> is because of initial state of the system. Test appears to expect
-> that it is able to mount cgroups freely, but they are already in use.
+> There is indeed no offline for memcg:ffffc9001e5c3000, I checked that
+> before sending the relevant part of the trace.
 > 
->> Would it be possible to update LTP accordingly?
+> > mem_cgroup_force_empty which is called when somebody writes into
+> > memory.force_empty file. That however doesn't match your previous
+> > traces. Maybe yet another issue...
+> >
+> > Could you apply the patch bellow on top of what you have already?
 > 
-> I'm not sure the test can do anything (other than not run at all).
-> 
-> Other option is to setup system in a way where cgroups are not in use
-> prior to running this test, though this may not be possible with systemd.
-> 
+> I applied the patch and attached the whole trace log, but there is no
+> new trace output from mem_cgroup_force_empty present.
 
-I believe each test will do cleanup after it finishes (like umount
-cgroupfs). I guess the system already mounted cgroupfs after boot
-and each cgroup subsystem was mounted separately? And that leads to
-this issue.
+Weird! There are no other call sites.
+
+Anyway.
+$ grep mem_cgroup_css_offline: trace | sed 's@.*is@@' | sort | uniq -c
+    581  going offline now
+    580  offline now
+
+So there is entry to offline without finishing. I would assume it would be the one that got stuck but no:
+$ grep mem_cgroup_css_offline: trace | sed 's@.*memcg:\([0-9a-f]*\) .*@\1@' | sort | uniq -c | sort -k1 -n | head -n1
+      1 ffffc9001e085000
+
+which is not our ffffc9001e2cf000 and it is even not a bit-flip different.
+What might be interesting is that
+$ grep -B1 ffffc9001e2cf000 trace | head -n2
+    kworker/8:13-7244  [008] ....   546.743666: mem_cgroup_css_offline: memcg:ffffc9001e085000 is going offline now
+     kworker/2:5-6494  [002] ....   620.277552: mem_cgroup_reparent_charges: memcg:ffffc9001e2cf000 u:4096 k:0 tasks:0
+
+So it is the last offline before and it started quite some time ago
+without finishing or looping on mem_cgroup_reparent_charges on usage>0.
+Maybe it is stuck on some other blocking operation (you've said you have
+the fix for too many workers applied, right?)
+
+It would be interesting to find out whether this is a general pattern
+and if yes then check what are the stack traces of the two workers.
+
+Thanks for your patience!
+-- 
+Michal Hocko
+SUSE Labs
