@@ -1,19 +1,19 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 4/9] cgroup: introduce struct cgroup_pidlist_open_file
-Date: Sun, 24 Nov 2013 17:11:31 -0500
-Message-ID: <1385331096-7918-5-git-send-email-tj@kernel.org>
+Subject: [PATCH 6/9] cgroup: remove cgroup_pidlist->rwsem
+Date: Sun, 24 Nov 2013 17:11:33 -0500
+Message-ID: <1385331096-7918-7-git-send-email-tj@kernel.org>
 References: <1385331096-7918-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Hw6JCNACUQLNLC8Qc0rbvrd8f+io5KZBPeVa1JKuN2k=;
-        b=G1cia4+MC7ZXXprdxk71uTTJmJT8umTNQ/qJF+soMIiTX0FBsAxilfuFaT5KmfZ44+
-         JFpt4fWFDG52N9UsoU5XrVWItIzLwZxuQrATKsFCH2in9fjtgy/VGTLRUZjKXLvc0rKV
-         9CKg5c2JWtnxFQbP3Nd6wh/6l9Gc8zyixzwck6bWaZfbNu6Wxo/r+ffjWcmk7dTDYbDn
-         ZQOl4I09IN63+/oCSYfs8Na997xpKYLW/dZeGUDOPRqtUj6T1yNrspwwzimTHwcc7Xi6
-         w6lq5CE+B8nOKyzbZEq+r9ycrejXoMqO1NHrpfj4hqROyIyn5Z/NmJam4EFWHYuJBo9c
-         PBTA==
+        bh=80KsCEX08711BCtCRehzg87XEytCyFXQf3jQzswisDg=;
+        b=Ayw96Dz7mfuGFx6wW1MEiO5OydHNUzm2Jchh9AWklJq5JTnEtfvKvPPM+Sww+YSeGu
+         u6iNtRdXwWass5SAFQWa8Viw5TxW0U+pFkUKjBHD6oPrcKLbYwa3qCQluZCKeeqT6+O4
+         8uZKIVtZu1iM3SSZUZ8uyKj5Q33VadfyahATb0VhyHNXv7OUeP6OT9hdP+w44yKvmn8K
+         maRIFR3+1LA3jgpUoVgLJPg6Yv79dFmsomF4spjxbovhYgexNkw5l+E/xxK6ffZDe/On
+         cGCtrl84guYiC0EPnzD/7po4LNfqRS5qTEWqhtRYGLg5vByf8gmCwAYtKnxx1H9FoPVe
+         mefg==
 In-Reply-To: <1385331096-7918-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,115 +23,107 @@ Content-Transfer-Encoding: 7bit
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-For pidlist files, seq_file->private pointed to the loaded
-cgroup_pidlist; however, pidlist loading is planned to be moved to
-cgroup_pidlist_start() for kernfs conversion and seq_file->private
-needs to carry more information from open to allow that.
+cgroup_pidlist locking is needlessly complicated.  It has outer
+cgroup->pidlist_mutex to protect the list of pidlists associated with
+a cgroup and then each pidlist has rwsem to synchronize updates and
+reads.  Given that the only read access is from seq_file operations
+which are always invoked back-to-back, the rwsem is a giant overkill.
+All it does is adding unnecessary complexity.
 
-This patch introduces struct cgroup_pidlist_open_file which contains
-type, cgrp and pidlist and updates pidlist seq_file->private to point
-to it using seq_open_private() and seq_release_private().  Note that
-this eventually will be replaced by kernfs_open_file.
-
-While this patch makes more information available to seq_file
-operations, they don't use it yet and this patch doesn't introduce any
-behavior changes except for allocation of the extra private struct.
+This patch removes cgroup_pidlist->rwsem and protects all accesses to
+pidlists belonging to a cgroup with cgroup->pidlist_mutex.
+pidlist->rwsem locking is removed if it's nested inside
+cgroup->pidlist_mutex; otherwise, it's replaced with
+cgroup->pidlist_mutex locking.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- kernel/cgroup.c | 36 ++++++++++++++++++++++++++----------
- 1 file changed, 26 insertions(+), 10 deletions(-)
+ kernel/cgroup.c | 15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 2e21490..0e902f4 100644
+index 33b6c4d..4ceeab0 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -3466,6 +3466,13 @@ struct cgroup_pidlist {
+@@ -3460,8 +3460,6 @@ struct cgroup_pidlist {
+ 	struct list_head links;
+ 	/* pointer to the cgroup we belong to, for list removal purposes */
+ 	struct cgroup *owner;
+-	/* protects the other fields */
+-	struct rw_semaphore rwsem;
+ 	/* for delayed destruction */
  	struct delayed_work destroy_dwork;
  };
+@@ -3520,7 +3518,6 @@ static void cgroup_pidlist_destroy_work_fn(struct work_struct *work)
+ 	struct cgroup_pidlist *tofree = NULL;
  
-+/* seq_file->private points to the following */
-+struct cgroup_pidlist_open_file {
-+	enum cgroup_filetype		type;
-+	struct cgroup			*cgrp;
-+	struct cgroup_pidlist		*pidlist;
-+};
-+
- /*
-  * The following two functions "fix" the issue where there are more pids
-  * than kmalloc will give memory for; in such cases, we use vmalloc/vfree.
-@@ -3737,7 +3744,8 @@ static void *cgroup_pidlist_start(struct seq_file *s, loff_t *pos)
- 	 * after a seek to the start). Use a binary-search to find the
- 	 * next pid to display, if any
- 	 */
--	struct cgroup_pidlist *l = s->private;
-+	struct cgroup_pidlist_open_file *of = s->private;
-+	struct cgroup_pidlist *l = of->pidlist;
+ 	mutex_lock(&l->owner->pidlist_mutex);
+-	down_write(&l->rwsem);
+ 
+ 	/*
+ 	 * Destroy iff we didn't race with a new user or get queued again.
+@@ -3533,7 +3530,6 @@ static void cgroup_pidlist_destroy_work_fn(struct work_struct *work)
+ 		tofree = l;
+ 	}
+ 
+-	up_write(&l->rwsem);
+ 	mutex_unlock(&l->owner->pidlist_mutex);
+ 	kfree(tofree);
+ }
+@@ -3610,7 +3606,6 @@ static struct cgroup_pidlist *cgroup_pidlist_find_create(struct cgroup *cgrp,
+ 	if (!l)
+ 		return l;
+ 
+-	init_rwsem(&l->rwsem);
+ 	INIT_DELAYED_WORK(&l->destroy_dwork, cgroup_pidlist_destroy_work_fn);
+ 	l->key.type = type;
+ 	/* don't need task_nsproxy() if we're looking at ourself */
+@@ -3673,12 +3668,10 @@ static int pidlist_array_load(struct cgroup *cgrp, enum cgroup_filetype type,
+ 	}
+ 
+ 	/* store array, freeing old if necessary */
+-	down_write(&l->rwsem);
+ 	pidlist_free(l->list);
+ 	l->list = array;
+ 	l->length = length;
+ 	l->use_count++;
+-	up_write(&l->rwsem);
+ 
+ 	mutex_unlock(&cgrp->pidlist_mutex);
+ 
+@@ -3760,7 +3753,7 @@ static void *cgroup_pidlist_start(struct seq_file *s, loff_t *pos)
  	int index = 0, pid = *pos;
  	int *iter;
  
-@@ -3767,13 +3775,15 @@ static void *cgroup_pidlist_start(struct seq_file *s, loff_t *pos)
+-	down_read(&l->rwsem);
++	mutex_lock(&of->cgrp->pidlist_mutex);
+ 	if (pid) {
+ 		int end = l->length;
  
- static void cgroup_pidlist_stop(struct seq_file *s, void *v)
+@@ -3788,7 +3781,7 @@ static void cgroup_pidlist_stop(struct seq_file *s, void *v)
  {
--	struct cgroup_pidlist *l = s->private;
--	up_read(&l->rwsem);
-+	struct cgroup_pidlist_open_file *of = s->private;
-+
-+	up_read(&of->pidlist->rwsem);
+ 	struct cgroup_pidlist_open_file *of = s->private;
+ 
+-	up_read(&of->pidlist->rwsem);
++	mutex_unlock(&of->cgrp->pidlist_mutex);
  }
  
  static void *cgroup_pidlist_next(struct seq_file *s, void *v, loff_t *pos)
+@@ -3828,13 +3821,13 @@ static const struct seq_operations cgroup_pidlist_seq_operations = {
+ 
+ static void cgroup_release_pid_array(struct cgroup_pidlist *l)
  {
--	struct cgroup_pidlist *l = s->private;
-+	struct cgroup_pidlist_open_file *of = s->private;
-+	struct cgroup_pidlist *l = of->pidlist;
- 	pid_t *p = v;
- 	pid_t *end = l->list + l->length;
- 	/*
-@@ -3818,11 +3828,11 @@ static void cgroup_release_pid_array(struct cgroup_pidlist *l)
+-	down_write(&l->rwsem);
++	mutex_lock(&l->owner->pidlist_mutex);
+ 	BUG_ON(!l->use_count);
+ 	/* if the last user, arm the destroy work */
+ 	if (!--l->use_count)
+ 		mod_delayed_work(cgroup_pidlist_destroy_wq, &l->destroy_dwork,
+ 				 CGROUP_PIDLIST_DESTROY_DELAY);
+-	up_write(&l->rwsem);
++	mutex_unlock(&l->owner->pidlist_mutex);
+ }
  
  static int cgroup_pidlist_release(struct inode *inode, struct file *file)
- {
--	struct cgroup_pidlist *l;
-+	struct cgroup_pidlist_open_file *of;
- 
--	l = ((struct seq_file *)file->private_data)->private;
--	cgroup_release_pid_array(l);
--	return seq_release(inode, file);
-+	of = ((struct seq_file *)file->private_data)->private;
-+	cgroup_release_pid_array(of->pidlist);
-+	return seq_release_private(inode, file);
- }
- 
- static const struct file_operations cgroup_pidlist_operations = {
-@@ -3841,6 +3851,7 @@ static const struct file_operations cgroup_pidlist_operations = {
- static int cgroup_pidlist_open(struct file *file, enum cgroup_filetype type)
- {
- 	struct cgroup *cgrp = __d_cgrp(file->f_dentry->d_parent);
-+	struct cgroup_pidlist_open_file *of;
- 	struct cgroup_pidlist *l;
- 	int retval;
- 
-@@ -3851,12 +3862,17 @@ static int cgroup_pidlist_open(struct file *file, enum cgroup_filetype type)
- 	/* configure file information */
- 	file->f_op = &cgroup_pidlist_operations;
- 
--	retval = seq_open(file, &cgroup_pidlist_seq_operations);
-+	retval = seq_open_private(file, &cgroup_pidlist_seq_operations,
-+				  sizeof(*of));
- 	if (retval) {
- 		cgroup_release_pid_array(l);
- 		return retval;
- 	}
--	((struct seq_file *)file->private_data)->private = l;
-+
-+	of = ((struct seq_file *)file->private_data)->private;
-+	of->type = type;
-+	of->cgrp = cgrp;
-+	of->pidlist = l;
- 	return 0;
- }
- static int cgroup_tasks_open(struct inode *unused, struct file *file)
 -- 
 1.8.4.2
