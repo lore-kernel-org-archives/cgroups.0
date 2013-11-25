@@ -1,7 +1,7 @@
 From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: [PATCH v11 08/15] vmscan: take at least one pass with shrinkers
-Date: Mon, 25 Nov 2013 16:07:41 +0400
-Message-ID: <2ddb3940d9a96ba6625809a17e23ccb4e65fe29d.1385377616.git.vdavydov@parallels.com>
+Subject: [PATCH v11 10/15] memcg,list_lru: add function walking over all lists of a per-memcg LRU
+Date: Mon, 25 Nov 2013 16:07:43 +0400
+Message-ID: <8ee38a2dc85f9e8f4d06d0c747f4ccc4f9a5977f.1385377616.git.vdavydov@parallels.com>
 References: <cover.1385377616.git.vdavydov@parallels.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
@@ -13,70 +13,169 @@ Content-Transfer-Encoding: 7bit
 To: akpm@linux-foundation.org, mhocko@suse.cz
 Cc: glommer@openvz.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org
 
-From: Glauber Costa <glommer@openvz.org>
+Sometimes it can be necessary to iterate over all memcgs' lists of the
+same memcg-aware LRU. For example shrink_dcache_sb() should prune all
+dentries no matter what memory cgroup they belong to. Current interface
+to struct memcg_list_lru, however, only allows per-memcg LRU walks.
+This patch adds the special method memcg_list_lru_walk_all() which
+provides the required functionality. Note that this function does not
+guarantee that all the elements will be processed in the true
+least-recently-used order, in fact it simply enumerates all kmem-active
+memcgs and for each of them calls list_lru_walk(), but
+shrink_dcache_sb(), which is going to be the only user of this function,
+does not need it.
 
-In very low free kernel memory situations, it may be the case that we
-have less objects to free than our initial batch size. If this is the
-case, it is better to shrink those, and open space for the new workload
-then to keep them and fail the new allocations.
-
-In particular, we are concerned with the direct reclaim case for memcg.
-Although this same technique can be applied to other situations just as well,
-we will start conservative and apply it for that case, which is the one
-that matters the most.
-
-Signed-off-by: Glauber Costa <glommer@openvz.org>
-CC: Dave Chinner <dchinner@redhat.com>
-CC: Carlos Maiolino <cmaiolino@redhat.com>
-CC: "Theodore Ts'o" <tytso@mit.edu>
-CC: Al Viro <viro@zeniv.linux.org.uk>
+Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
+Cc: Glauber Costa <glommer@openvz.org>
+Cc: Dave Chinner <dchinner@redhat.com>
+Cc: Mel Gorman <mgorman@suse.de>
+Cc: Rik van Riel <riel@redhat.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
 ---
- mm/vmscan.c |   23 ++++++++++++++++++-----
- 1 file changed, 18 insertions(+), 5 deletions(-)
+ include/linux/list_lru.h |   21 ++++++++++++++++++
+ mm/memcontrol.c          |   55 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 76 insertions(+)
 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 36fc133..bfedcdc 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -311,20 +311,33 @@ shrink_slab_node(struct shrink_control *shrinkctl, struct shrinker *shrinker,
- 				nr_pages_scanned, lru_pages,
- 				max_pass, delta, total_scan);
+diff --git a/include/linux/list_lru.h b/include/linux/list_lru.h
+index b3b3b86..ce815cc 100644
+--- a/include/linux/list_lru.h
++++ b/include/linux/list_lru.h
+@@ -40,6 +40,16 @@ struct memcg_list_lru {
+ 	struct list_lru **memcg_lrus;	/* rcu-protected array of per-memcg
+ 					   lrus, indexed by memcg_cache_id() */
  
--	while (total_scan >= batch_size) {
-+	do {
- 		unsigned long ret;
-+		unsigned long nr_to_scan = min(batch_size, total_scan);
-+		struct mem_cgroup *memcg = shrinkctl->target_mem_cgroup;
++	/*
++	 * When a memory cgroup is removed, all pointers to its list_lru
++	 * objects stored in memcg_lrus arrays are first marked as dead by
++	 * setting the lowest bit of the address while the actual data free
++	 * happens only after an rcu grace period. If a memcg_lrus reader,
++	 * which should be rcu-protected, faces a dead pointer, it won't
++	 * dereference it. This ensures there will be no use-after-free.
++	 */
++#define MEMCG_LIST_LRU_DEAD		1
 +
-+		/*
-+		 * Differentiate between "few objects" and "no objects"
-+		 * as returned by the count step.
-+		 */
-+		if (!total_scan)
-+			break;
-+
-+		if ((total_scan < batch_size) &&
-+		   !(memcg && memcg_kmem_is_active(memcg)))
-+			break;
- 
--		shrinkctl->nr_to_scan = batch_size;
-+		shrinkctl->nr_to_scan = nr_to_scan;
- 		ret = shrinker->scan_objects(shrinker, shrinkctl);
- 		if (ret == SHRINK_STOP)
- 			break;
- 		freed += ret;
- 
--		count_vm_events(SLABS_SCANNED, batch_size);
--		total_scan -= batch_size;
-+		count_vm_events(SLABS_SCANNED, nr_to_scan);
-+		total_scan -= nr_to_scan;
- 
- 		cond_resched();
--	}
-+	} while (total_scan >= batch_size);
+ 	struct list_head list;		/* list of all memcg-aware lrus */
  
  	/*
- 	 * move the unused scan count back into the shrinker in a
+@@ -160,6 +170,10 @@ struct list_lru *
+ mem_cgroup_list_lru(struct memcg_list_lru *lru, struct mem_cgroup *memcg);
+ struct list_lru *
+ mem_cgroup_kmem_list_lru(struct memcg_list_lru *lru, void *ptr);
++
++unsigned long
++memcg_list_lru_walk_all(struct memcg_list_lru *lru, list_lru_walk_cb isolate,
++			void *cb_arg, unsigned long nr_to_walk);
+ #else
+ static inline int memcg_list_lru_init(struct memcg_list_lru *lru)
+ {
+@@ -182,6 +196,13 @@ mem_cgroup_kmem_list_lru(struct memcg_list_lru *lru, void *ptr)
+ {
+ 	return &lru->global_lru;
+ }
++
++static inline unsigned long
++memcg_list_lru_walk_all(struct memcg_list_lru *lru, list_lru_walk_cb isolate,
++			void *cb_arg, unsigned long nr_to_walk)
++{
++	return list_lru_walk(&lru->global_lru, isolate, cb_arg, nr_to_walk);
++}
+ #endif /* CONFIG_MEMCG_KMEM */
+ 
+ #endif /* _LRU_LIST_H */
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 84f1ca3..7b4f420 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3915,16 +3915,30 @@ static int alloc_memcg_lru(struct memcg_list_lru *lru, int memcg_id)
+ 		return err;
+ 	}
+ 
++	smp_wmb();
+ 	VM_BUG_ON(lru->memcg_lrus[memcg_id]);
+ 	lru->memcg_lrus[memcg_id] = memcg_lru;
+ 	return 0;
+ }
+ 
++static void memcg_lru_mark_dead(struct memcg_list_lru *lru, int memcg_id)
++{
++	struct list_lru *memcg_lru;
++	
++	BUG_ON(!lru->memcg_lrus);
++	memcg_lru = lru->memcg_lrus[memcg_id];
++	if (memcg_lru)
++		lru->memcg_lrus[memcg_id] = (void *)((unsigned long)memcg_lru |
++						     MEMCG_LIST_LRU_DEAD);
++}
++
+ static void free_memcg_lru(struct memcg_list_lru *lru, int memcg_id)
+ {
+ 	struct list_lru *memcg_lru = NULL;
+ 
+ 	swap(lru->memcg_lrus[memcg_id], memcg_lru);
++	memcg_lru = (void *)((unsigned long)memcg_lru &
++			     ~MEMCG_LIST_LRU_DEAD);
+ 	if (memcg_lru) {
+ 		list_lru_destroy(memcg_lru);
+ 		kfree(memcg_lru);
+@@ -3958,6 +3972,17 @@ static void __memcg_destroy_all_lrus(int memcg_id)
+ {
+ 	struct memcg_list_lru *lru;
+ 
++	/*
++	 * Mark all lru lists of this memcg as dead and free them only after a
++	 * grace period. This is to prevent functions iterating over memcg_lrus
++	 * arrays (e.g. memcg_list_lru_walk_all()) from dereferencing pointers
++	 * pointing to already freed data.
++	 */
++	list_for_each_entry(lru, &memcg_lrus_list, list)
++		memcg_lru_mark_dead(lru, memcg_id);
++
++	synchronize_rcu();
++
+ 	list_for_each_entry(lru, &memcg_lrus_list, list)
+ 		free_memcg_lru(lru, memcg_id);
+ }
+@@ -4124,6 +4149,36 @@ mem_cgroup_kmem_list_lru(struct memcg_list_lru *lru, void *ptr)
+ 	}
+ 	return mem_cgroup_list_lru(lru, memcg);
+ }
++
++unsigned long
++memcg_list_lru_walk_all(struct memcg_list_lru *lru, list_lru_walk_cb isolate,
++			void *cb_arg, unsigned long nr_to_walk)
++{
++	int i;
++	unsigned long isolated;
++	struct list_lru *memcg_lru;
++	struct list_lru **memcg_lrus;
++
++	isolated = list_lru_walk(&lru->global_lru, isolate, cb_arg, nr_to_walk);
++
++	rcu_read_lock();
++	memcg_lrus = rcu_dereference(lru->memcg_lrus);
++	for_each_memcg_cache_index(i) {
++		memcg_lru = memcg_lrus[i];
++		if (!memcg_lru)
++			continue;
++
++		if ((unsigned long)memcg_lru & MEMCG_LIST_LRU_DEAD)
++			continue;
++
++		smp_read_barrier_depends();
++		isolated += list_lru_walk(memcg_lru,
++					  isolate, cb_arg, nr_to_walk);
++	}
++	rcu_read_unlock();
++
++	return isolated;
++}
+ #else
+ static inline void mem_cgroup_destroy_all_caches(struct mem_cgroup *memcg)
+ {
 -- 
 1.7.10.4
 
