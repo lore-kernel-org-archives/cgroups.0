@@ -1,112 +1,66 @@
-From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v11 05/15] memcg: move stop and resume accounting functions
-Date: Mon, 25 Nov 2013 16:07:38 +0400
-Message-ID: <dd12f72351d8ada63c576ee809713d5e47c8187a.1385377616.git.vdavydov@parallels.com>
+From: Vladimir Davydov <vdavydov@parallels.com>
+Subject: [PATCH v11 01/15] memcg: make cache index determination more robust
+Date: Mon, 25 Nov 2013 16:07:34 +0400
+Message-ID: <0ccced80c1270d6cb502cd03aac26bda9d2e0a6f.1385377616.git.vdavydov@parallels.com>
 References: <cover.1385377616.git.vdavydov@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <cover.1385377616.git.vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <cover.1385377616.git.vdavydov@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org
-Cc: glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+To: akpm@linux-foundation.org, mhocko@suse.cz
+Cc: glommer@openvz.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org
 
-From: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+From: Glauber Costa <glommer@openvz.org>
 
-I need to move this up a bit, and I am doing it in a separate patch just to
-reduce churn in the patch that needs it.
+I caught myself doing something like the following outside memcg core:
 
-Signed-off-by: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+	memcg_id = -1;
+	if (memcg && memcg_kmem_is_active(memcg))
+		memcg_id = memcg_cache_id(memcg);
+
+to be able to handle all possible memcgs in a sane manner. In particular, the
+root cache will have kmemcg_id = -1 (just because we don't call memcg_kmem_init
+to the root cache since it is not limitable). We have always coped with that by
+making sure we sanitize which cache is passed to memcg_cache_id. Although this
+example is given for root, what we really need to know is whether or not a
+cache is kmem active.
+
+But outside the memcg core testing for root, for instance, is not trivial since
+we don't export mem_cgroup_is_root. I ended up realizing that this tests really
+belong inside memcg_cache_id. This patch moves a similar but stronger test
+inside memcg_cache_id and make sure it always return a meaningful value.
+
+Signed-off-by: Glauber Costa <glommer@openvz.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>
+Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 ---
- mm/memcontrol.c |   62 +++++++++++++++++++++++++++----------------------------
- 1 file changed, 31 insertions(+), 31 deletions(-)
+ mm/memcontrol.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 9ba9975..e9bdcf3 100644
+index f1a0ae6..02b5176 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -3010,6 +3010,37 @@ static struct kmem_cache *memcg_params_to_cache(struct memcg_cache_params *p)
- 	return cache_from_memcg_idx(cachep, memcg_cache_idx(p->memcg));
- }
- 
-+/*
-+ * During the creation a new cache, we need to disable our accounting mechanism
-+ * altogether. This is true even if we are not creating, but rather just
-+ * enqueing new caches to be created.
-+ *
-+ * This is because that process will trigger allocations; some visible, like
-+ * explicit kmallocs to auxiliary data structures, name strings and internal
-+ * cache structures; some well concealed, like INIT_WORK() that can allocate
-+ * objects during debug.
-+ *
-+ * If any allocation happens during memcg_kmem_get_cache, we will recurse back
-+ * to it. This may not be a bounded recursion: since the first cache creation
-+ * failed to complete (waiting on the allocation), we'll just try to create the
-+ * cache again, failing at the same point.
-+ *
-+ * memcg_kmem_get_cache is prepared to abort after seeing a positive count of
-+ * memcg_kmem_skip_account. So we enclose anything that might allocate memory
-+ * inside the following two functions.
-+ */
-+static inline void memcg_stop_kmem_account(void)
-+{
-+	VM_BUG_ON(!current->mm);
-+	current->memcg_kmem_skip_account++;
-+}
-+
-+static inline void memcg_resume_kmem_account(void)
-+{
-+	VM_BUG_ON(!current->mm);
-+	current->memcg_kmem_skip_account--;
-+}
-+
- #ifdef CONFIG_SLABINFO
- static int mem_cgroup_slabinfo_read(struct cgroup_subsys_state *css,
- 				    struct cftype *cft, struct seq_file *m)
-@@ -3278,37 +3309,6 @@ out:
- 	kfree(s->memcg_params);
- }
- 
--/*
-- * During the creation a new cache, we need to disable our accounting mechanism
-- * altogether. This is true even if we are not creating, but rather just
-- * enqueing new caches to be created.
-- *
-- * This is because that process will trigger allocations; some visible, like
-- * explicit kmallocs to auxiliary data structures, name strings and internal
-- * cache structures; some well concealed, like INIT_WORK() that can allocate
-- * objects during debug.
-- *
-- * If any allocation happens during memcg_kmem_get_cache, we will recurse back
-- * to it. This may not be a bounded recursion: since the first cache creation
-- * failed to complete (waiting on the allocation), we'll just try to create the
-- * cache again, failing at the same point.
-- *
-- * memcg_kmem_get_cache is prepared to abort after seeing a positive count of
-- * memcg_kmem_skip_account. So we enclose anything that might allocate memory
-- * inside the following two functions.
-- */
--static inline void memcg_stop_kmem_account(void)
--{
--	VM_BUG_ON(!current->mm);
--	current->memcg_kmem_skip_account++;
--}
--
--static inline void memcg_resume_kmem_account(void)
--{
--	VM_BUG_ON(!current->mm);
--	current->memcg_kmem_skip_account--;
--}
--
- static void kmem_cache_destroy_work_func(struct work_struct *w)
+@@ -3073,7 +3073,9 @@ void memcg_cache_list_add(struct mem_cgroup *memcg, struct kmem_cache *cachep)
+  */
+ int memcg_cache_id(struct mem_cgroup *memcg)
  {
- 	struct kmem_cache *cachep;
+-	return memcg ? memcg->kmemcg_id : -1;
++	if (!memcg || !memcg_can_account_kmem(memcg))
++		return -1;
++	return memcg->kmemcg_id;
+ }
+ 
+ /*
 -- 
 1.7.10.4
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
