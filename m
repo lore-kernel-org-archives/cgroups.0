@@ -1,97 +1,72 @@
 From: Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: cgroup management daemon
-Date: Tue, 26 Nov 2013 12:45:27 -0800
-Message-ID: <CAO_Rewao9smJpi5H1hZBVv3J=CHEathFP7zWSeu6wuXhVfTsoQ@mail.gmail.com>
-References: <20131125224335.GA15481@mail.hallyn.com> <CAO_RewZGWARUafKzDc_t3G5OedGtEPTZgB2VYeHHiKSSrja8fA@mail.gmail.com>
- <20131126161246.GA23834@mail.hallyn.com>
+Subject: Re: [lxc-devel] cgroup management daemon
+Date: Tue, 26 Nov 2013 12:49:36 -0800
+Message-ID: <CAO_Rewax-wfR07OB727924iGHh-qJpAYZf4ZmeCFLxXP40p39Q@mail.gmail.com>
+References: <20131125224335.GA15481@mail.hallyn.com> <1385432284.8590.52.camel@mtking.wittsend.com>
+ <CAO_RewYmS0fH819BFCr9ozis1132dACgCPwbyb59gM1PafpUkw@mail.gmail.com> <20131126163737.GB23834@mail.hallyn.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=mime-version:in-reply-to:references:from:date:message-id:subject:to
          :cc:content-type;
-        bh=qWWVX4yTCLDNUPVGBKqvuVl2lyLqcss62ipWLvZR8J4=;
-        b=LegT9HLUX074NMSgheHM0gHy2sZhNapl0vi9f4S020TdBySeORrnABfRzk5bYRUg7p
-         uH60rxG3fiLs4cfnMq4O0LHce7Y0QO2waFW4bj3nLx0kka+8CHQnhoBvoDBzqZvgxZrR
-         EOBu+yqGwZw9yXgX0ji0vlcKKn//3kh5CRqKbp9eIp0xTWlKHMubqKCAyeY5Hh4k5CFI
-         PjsiDBHWlFv0FlJva72dxedC6I/9BnoA++zzka4eDG5XPKwHI2zT3q0EUF60CVi/nf4E
-         mkDYAjksVNuYih5xj1UwQ+iEZouWH/fFW9jj0UGq7Vp+xCm/TuEVPE8H8r+enjOLE8KJ
-         bJaw==
-In-Reply-To: <20131126161246.GA23834-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
+        bh=kE+j9VlBLj969McozX12NNCXUIHEF1jf2ZIgKFCWOhQ=;
+        b=QB0m/uoTbX5z9kOWNlfxqwi2vWoHW3A0P+rTe8b9CRpKSAlAZSDrS/rTI3SGonU5zd
+         pID7zTWtKqS8TVjYXd+1pF9eGO1MJLDKfp4iQWlPiKXS3X1Sqkj+NteRz0eq//YAtIjp
+         zp5Fp2swPiyDt2I9LsuUjkrET/z21r19b1S9ZMhZuG4B5HBxbOCiE3Oekx/hkb5O0for
+         EnvYMHRc6YQXfD8rRbVhv04Bgeps0R9vysLHq0kU6ttm3PRf0X3m8WXBlop7OPX1NAtk
+         uaWqg2PG03SmDlAqkJSM9rYb21JO8KcWWl7SxpN/UBV5bfVFv/op2DCmeQP2dET2wBpU
+         FBhA==
+In-Reply-To: <20131126163737.GB23834-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lxc-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Victor Marmol <vmarmol-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rohit Jnagal <jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, =?ISO-8859-1?Q?St=E9phane_Graber?= <stgraber-/Ni+VN9Krahg9hUCZPvPmw@public.gmane.org>
+Cc: mhw-UGBql2FAF+1Wk0Htik3J/w@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lxc-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Victor Marmol <vmarmol-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rohit Jnagal <jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, =?ISO-8859-1?Q?St=E9phane_Graber?= <stgraber-/Ni+VN9Krahg9hUCZPvPmw@public.gmane.org>
 
-On Tue, Nov 26, 2013 at 8:12 AM, Serge E. Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org> wrote:
+On Tue, Nov 26, 2013 at 8:37 AM, Serge E. Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org> wrote:
 > Quoting Tim Hockin (thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org):
->> What are the requirements/goals around performance and concurrency?
->> Do you expect this to be a single-threaded thing, or can we handle
->> some number of concurrent operations?  Do you expect to use threads of
->> processes?
+>> At the start of this discussion, some months ago, we offered to
+>> co-devel this with Lennart et al.  They did not seem keen on the idea.
+>>
+>> If they have an established DBUS protocol spec,
 >
-> The cgmanager should be pretty dumb, so I would expect it to be
-> quite fast.  I don't have any specific perf goals though.  If you
-> have requirements I'm very interested to hear them.  I should be
-> able to tell pretty soon how far short I fall.
-
-If we're limiting this to write traffic only, I think our perf goals
-are fairly relaxed.  As longs as you don't develop it to preclude
-threading or multi-processing, we can adapt later.  I would like to
-see at least a mention to this effect.  We also need to beware DoS
-(accidental or otherwise) - perhaps we should force round-robin
-service of pending-requests, or something.
-
-> By default I'd expect to run with a single thread, but I don't
-> imagine one thread can serve a busy 1024-cpu system very well.
-> Unless you have guidance right now, I think I'd like to get
-> started with the basic functionality and see how it measures
-> up to your requirements.  I should add perf counters from the
-> start so we can figure out where bottlenecks (if any) are and
-> how to handle them.
+> see http://www.freedesktop.org/wiki/Software/systemd/ControlGroupInterface/
+> and http://man7.org/linux/man-pages/man5/systemd.cgroup.5.html
 >
-> Otherwise I could start out with a basic numcpus/10 threadpool
-> and have the main thread do socket i/o and parcel access
-> verification and vfs work out to the threadpool, but I'd rather
-> first know where the problems lie.
-
-Agree.  Correct first, then fast :)
-
->> Can you talk about logging - what and where?
+>>  we should consider
+>> adopting it instead of a new one, but we CAN'T just play follow the
+>> leader and do whatever they do, change whenever they feel like
+>> changing.
 >
-> When started under upstart, anything we print out goes to
-> /var/log/upstart/cgmanager.log.  Would be nice to keep it
-> that simple.  We could log requests by r to do something
-> it is not allowed to do, but it seems to me the failed
-> attempts cause no harm, while the potential for overflowing
-> logs can.
-
-I agree that we don't want to overflow logs.
-
-> Did you have anything in mind?  Did you want logging to help
-> detect certain conditions for system optimization, or just
-> for failure notices and security violations?
-
-When something goes amiss, we have to ty to figure out what happened -
-how far did a request get?  Logging every change is probably
-important.  Logging failures could be downsampled and rate-limited,
-something like 1 failure log per second or something.
-
->> How will we handle event_fd?  Pass a file-descriptor back to the caller?
+> Right.  And if we suspect that the APIs will always be at least
+> subtly different, then keeping them obviously visually different
+> seems to have some benefit.  (i.e.
+>         systemctl set-property httpd.service CPUShares=500 MemoryLimit=500M
+> vs
+>         dbus-send cgmanager set-value http.server "cpushares:500 memorylimit:500M swaplimit:1G"
+> ) rather than have admins try to remember "now why did that not work
+> here, oh yeah, MemoryLimit over here should be Memorylimit" or whatever.
 >
-> The only thing currently supporting eventfd is memory threshold,
-> right?  I haven't tested whether this will work or not, but
-> ideally the caller would open the eventfd fd, pass it, the
-> cgroup name, controller file to be watched, and the args to
-> cgmanager;  cgmanager confirms read access, opens the
-> controller fd, makes the request over cgroup.event_control,
-> then passes the controller fd back to the caller and closes
-> its own copy.
+> Then again if lmctfy is the layer which admins will use, then it
+> doesn't matter as much.
 >
-> I'm also not sure whether the cgroup interface is going to be
-> offering a new feature to replace eventfd, since it wants
-> people to stop using cgroupfs...  Tejun?
+>> It would be best if we could get a common DBUS api specc'ed and all
+>> agree to it.  Serge, do you feel up to that?
 >
->> That's all I can come up with for now.
+> Not sure what you mean - I'll certainly send the API to these lists as
+
+What I meant was whether it is worth opening a discussion with the
+systemd folks on a common lowest-level DBUS interface.  But it looks
+like their work is already a bit higher level, so it's probably moot.
+
+> the code is developed, and will accept all feedback that I get.  My only
+> requirements are that the requirements I've listed in the document
+> be feasible, and be feasible back to, say, 3.2 kernels.  So that is
+> why we must send an scm-cred for the pid to move into a cgroup.  (With
+> 3.12 we may have alterntives, accepting a vpid as a simple dbus message
+> and setns()ing into the requestor's pidns to echo the pid into the
+> cgroup.tasks file.)
+>
+> -serge
