@@ -1,63 +1,88 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch] mm: memcg: do not declare OOM from __GFP_NOFAIL
- allocations
-Date: Wed, 27 Nov 2013 17:53:40 -0500
-Message-ID: <20131127225340.GE3556@cmpxchg.org>
-References: <1385140676-5677-1-git-send-email-hannes@cmpxchg.org>
- <alpine.DEB.2.02.1311261658170.21003@chino.kir.corp.google.com>
- <alpine.DEB.2.02.1311261931210.5973@chino.kir.corp.google.com>
- <20131127163916.GB3556@cmpxchg.org>
- <alpine.DEB.2.02.1311271336220.9222@chino.kir.corp.google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH for-3.13-fixes] cgroup: fix cgroup_subsys_state leak for
+	seq_files
+Date: Wed, 27 Nov 2013 18:15:50 -0500
+Message-ID: <20131127231550.GE13098@mtj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=ARzvj7OyyXBEmgza+YM91+eQQrKmjCBaOZYRZssM1YM=;
-	b=BLDq0jnRl/YY3XUhGUqgFMEZnw4oXqhshVAny63zqZx1hYZ0alUzrW8RoiEEwM9r028x0MQRtFK/MEly6DLthsuDAh4UJc+Z/M6qB+hnwTrPKJYt2UNcC2e7Ddn2drTy3DKA9W9W02vq6+vnB1Qcuu/1FjArMWjaS94Mxd+znJA=;
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1311271336220.9222@chino.kir.corp.google.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+	:content-disposition:user-agent;
+	bh=mVr/txoxJI5uO3IiWfbpkDSBnHJ8u/tUFS6xL6Tudd0=;
+	b=qGEWfL/87OAaeLrnnbVPrFjytFjO8Dbfkauok5WYUIHb0AOhRyl4SnzE0XiQTIdOqb
+	Jowuq2BGjaAJGz4vIGex0PBlXIWTu6+U/2Ts5I44MhY8XW/tloJAdXPPXPz3Lf8DcppF
+	m0WcqkZFqI5zIifHeRc64LVCsaSHpND3JxLlLxNGpjZoRQ9jknBMorJgSjuExUT32d1R
+	nQbMJcg+CXe2PgvvoV+n6Cwv6vr/L7kYRl9RYN9n69otUm0tX983ZT+mmex9O8oQyqiZ
+	Ml7t/mRuNlpTCcZ6omj1hRHQBmdaQzVVtAUNHT7A7D9Ei49TZ9Etv3aRi58pbQCphEqW
+	VWKg==
+Content-Disposition: inline
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On Wed, Nov 27, 2013 at 01:38:59PM -0800, David Rientjes wrote:
-> On Wed, 27 Nov 2013, Johannes Weiner wrote:
-> 
-> > > Ah, this is because of 3168ecbe1c04 ("mm: memcg: use proper memcg in limit 
-> > > bypass") which just bypasses all of these allocations and charges the root 
-> > > memcg.  So if allocations want to bypass memcg isolation they just have to 
-> > > be __GFP_NOFAIL?
-> > 
-> > I don't think we have another option.
-> > 
-> 
-> We don't give __GFP_NOFAIL allocations access to memory reserves in the 
-> page allocator and we do call the oom killer for them so that a process is 
-> killed so that memory is freed.  Why do we have a different policy for 
-> memcg?
+If a cgroup file implements either read_map() or read_seq_string(),
+such file is served using seq_file by overriding file->f_op to
+cgroup_seqfile_operations, which also overrides the release method to
+single_release() from cgroup_file_release().
 
-Oh boy, that's the epic story we dealt with all throughout the last
-merge window... ;-)
+Because cgroup_file_open() didn't use to acquire any resources, this
+used to be fine, but since f7d58818ba42 ("cgroup: pin
+cgroup_subsys_state when opening a cgroupfs file"), cgroup_file_open()
+pins the css (cgroup_subsys_state) which is put by
+cgroup_file_release().  The patch forgot to update the release path
+for seq_files and each open/release cycle leaks a css reference.
 
-__GFP_NOFAIL allocations might come in with various filesystem locks
-held that could prevent an OOM victim from exiting, so a loop around
-the OOM killer in an allocation context is prone to loop endlessly.
+Fix it by updating cgroup_file_release() to also handle seq_files and
+using it for seq_file release path too.
 
-Because of this, I changed memcg to never invoke OOM kills from the
-allocation context anymore but save it for the end of the page fault
-handler.  __GFP_NOFAIL allocations can not fail and thus do not reach
-the end of the page fault, so no OOM kill invocation possible.
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # v3.12
+---
+Hello,
 
-Arguably, the page allocator should also just return NULL and leave
-OOM killing to pagefault_out_of_memory(), but it's much less likely to
-get stuck since the overall system has more chances of producing free
-memory even without an OOM kill than a memcg with a single process and
-no swap for example.
+I'm applying this to for-3.13-fixes right away so that I can push it
+out to Linus tomorrow along with other fixes.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks.
+
+ kernel/cgroup.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -166,6 +166,7 @@ static void cgroup_destroy_css_killed(st
+ static int cgroup_destroy_locked(struct cgroup *cgrp);
+ static int cgroup_addrm_files(struct cgroup *cgrp, struct cftype cfts[],
+ 			      bool is_add);
++static int cgroup_file_release(struct inode *inode, struct file *file);
+ 
+ /**
+  * cgroup_css - obtain a cgroup's css for the specified subsystem
+@@ -2394,7 +2395,7 @@ static const struct file_operations cgro
+ 	.read = seq_read,
+ 	.write = cgroup_file_write,
+ 	.llseek = seq_lseek,
+-	.release = single_release,
++	.release = cgroup_file_release,
+ };
+ 
+ static int cgroup_file_open(struct inode *inode, struct file *file)
+@@ -2455,6 +2456,8 @@ static int cgroup_file_release(struct in
+ 		ret = cft->release(inode, file);
+ 	if (css->ss)
+ 		css_put(css);
++	if (file->f_op == &cgroup_seqfile_operations)
++		single_release(inode, file);
+ 	return ret;
+ }
