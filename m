@@ -1,130 +1,42 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
- access to memory reserves
-Date: Wed, 27 Nov 2013 18:19:31 -0500
-Message-ID: <20131127231931.GG3556@cmpxchg.org>
-References: <alpine.DEB.2.02.1311131649110.6735@chino.kir.corp.google.com>
- <20131114032508.GL707@cmpxchg.org>
- <alpine.DEB.2.02.1311141447160.21413@chino.kir.corp.google.com>
- <alpine.DEB.2.02.1311141525440.30112@chino.kir.corp.google.com>
- <20131118154115.GA3556@cmpxchg.org>
- <20131118165110.GE32623@dhcp22.suse.cz>
- <20131122165100.GN3556@cmpxchg.org>
- <alpine.DEB.2.02.1311261648570.21003@chino.kir.corp.google.com>
- <20131127163435.GA3556@cmpxchg.org>
- <alpine.DEB.2.02.1311271343250.9222@chino.kir.corp.google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHSET cgroup-for-3.14] cgroup: restructure pidlist handling
+Date: Wed, 27 Nov 2013 18:23:41 -0500
+Message-ID: <20131127232341.GF13098@mtj.dyndns.org>
+References: <1385331096-7918-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=rcAbIsNvRwlWp738dym4QhROKLolABLdgLh63lxIfyA=;
-	b=C4ZD+/I9xprU4co6BU7U4NoV2kY6SYWJl/diG4JW2taCP3fZRaY3ZQF/sQ5WGTK8lLl4/PRQHgW4fIp9zLWbRhPYsx2+Yv6eX4h/zlSHqvwSS+wC3NNagqdmhFPsnbcUXVBGczrmpDJOrKwy217DMLykgw9ErXOdGNwPIUnFexo=;
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=KIK2V6G0cQa23Atu4F2ss8jrePMN6a5NbPdcqlbFzyc=;
+        b=e5VUjtGIScSerXbg8CsYbPFMlaO/bZIRDqdmNP14i9/YE12CfHtePyqEqj5/+ie5vR
+         7WAbAjE0ki4UlN3/SoL7FkCetSJHsPVcOq3sKmdih9oTeoXRT+Wqf7MHZHg+xH505iAN
+         6aPqye+AjC1NNfuifBg/zDeyhL3RsTPlOI7pgaIzV+NNGKbvy3WeJUCpMSibAfzVHl+u
+         jmLziCQ7j1sd/gu6eC3Ubv04BihwTOzezkVCqZP6SlFP2+fNGJRokUUh1AAVYWN8MxAQ
+         yl4BLQHQTAK6vli3Ao8CD5xWGBVHpcTfPuV4i+vK3Ej/xWXcjEFGSQM/oqO15CIyC16+
+         fnNw==
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1311271343250.9222@chino.kir.corp.google.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1385331096-7918-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Michal Hocko <mhocko@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Nov 27, 2013 at 01:51:20PM -0800, David Rientjes wrote:
-> On Wed, 27 Nov 2013, Johannes Weiner wrote:
+On Sun, Nov 24, 2013 at 05:11:27PM -0500, Tejun Heo wrote:
+> This patchset is on top of cgroup/for-3.14 edab95103d3a ("cgroup:
+> Merge branch 'memcg_event' into for-3.14") and available in the
+> following git branch.
 > 
-> > > > But more importantly, OOM handling is just inherently racy.  A task
-> > > > might receive the kill signal a split second *after* userspace was
-> > > > notified.  Or a task may exit voluntarily a split second after a
-> > > > victim was chosen and killed.
-> > > > 
-> > > 
-> > > That's not true even today without the userspace oom handling proposal 
-> > > currently being discussed if you have a memcg oom handler attached to a 
-> > > parent memcg with access to more memory than an oom child memcg.  The oom 
-> > > handler can disable the child memcg's oom killer with memory.oom_control 
-> > > and implement its own policy to deal with any notification of oom.
-> > 
-> > I was never implying the kernel handler.  All the races exist with
-> > userspace handling as well.
-> > 
-> 
-> A process may indeed exit immediately after a different process was oom 
-> killed.  A process may also free memory immediately after a process was 
-> oom killed.
-> 
-> > > This patch is required to ensure that in such a scenario that the oom 
-> > > handler sitting in the parent memcg only wakes up when it's required to 
-> > > intervene.
-> > 
-> > A task could receive an unrelated kill between the OOM notification
-> > and going to sleep to wait for userspace OOM handling.  Or another
-> > task could exit voluntarily between the notification and waitqueue
-> > entry, which would again be short-cut by the oom_recover of the exit
-> > uncharges.
-> > 
-> > oom:                           other tasks:
-> > check signal/exiting
-> >                                could exit or get killed here
-> > mem_cgroup_oom_trylock()
-> >                                could exit or get killed here
-> > mem_cgroup_oom_notify()
-> >                                could exit or get killed here
-> > if (userspace_handler)
-> >   sleep()                      could exit or get killed here
-> > else
-> >   oom_kill()
-> >                                could exit or get killed here
-> > 
-> > It does not matter where your signal/exiting check is, OOM
-> > notification can never be race free because OOM is just an arbitrary
-> > line we draw.  We have no idea what all the tasks are up to and how
-> > close they are to releasing memory.  Even if we freeze the whole group
-> > to handle tasks, it does not change the fact that the userspace OOM
-> > handler might kill one task and after the unfreeze another task
-> > immediately exits voluntarily or got a kill signal a split second
-> > after it was frozen.
-> > 
-> > You can't fix this.  We just have to draw the line somewhere and
-> > accept that in rare situations the OOM kill was unnecessary.  So
-> > again, I don't see this patch is doing anything but blur the current
-> > line and make notification less predictable.  And, as someone else in
-> > this thread already said, it's a uservisible change in behavior and
-> > would break known tuning usecases.
-> > 
-> 
-> The patch is drawing the line at "the kernel can no longer do anything to 
-> free memory", and that's the line where userspace should be notified or a 
-> process killed by the kernel.
->
-> Giving current access to memory reserves in the oom killer is an
-> optimization so that all reclaim is exhausted prior to declaring
-> that they are necessary, the kernel still has the ability to allow
-> that process to exit and free memory.
+>  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-pidlist
 
-"they" are necessary?
+Patchset rebased on cgroup/for-3.14 c729b11edf74 ("cgroup: Merge
+branch 'for-3.13-fixes' into for-3.14 ").  git branch updated
+accordingly.
 
-> This is the same as the oom notifiers within the kernel that free
-> memory from s390 and powerpc archs: the kernel still has the ability
-> to free memory.
+Thanks.
 
-They're not the same at all.  One is the kernel freeing memory, the
-other is a random coincidence.
-
-It's such an unlikely condition that you are not really helping the
-notification to be less racy wrt concurrent memory freeing, which I
-tried to explain still exists big time.  But it's enough to screw up
-somebody's tuning effort by not reporting OOM, even though 60 reclaim
-cycles have not produced a single page, just because the last
-allocation happened to be in a dying task in that run.
-
-> If you wish to be notified that you've simply reached the memcg
-> limit, for whatever reason, you can monitor memory.failcnt or
-> register a memory threshold.
-
-Given a machine and a workload, I would like the OOM threshold to be
-as predictable and reproducible as possible.  We can count on reclaim,
-we can't count on the final straw coming from a dying task.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
