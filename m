@@ -1,73 +1,68 @@
-From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Subject: Re: cgroup management daemon
-Date: Wed, 27 Nov 2013 01:53:24 +0000
-Message-ID: <20131127015324.GB31364@mail.hallyn.com>
-References: <20131125224335.GA15481@mail.hallyn.com>
-	<CAO_RewZGWARUafKzDc_t3G5OedGtEPTZgB2VYeHHiKSSrja8fA@mail.gmail.com>
-	<20131126054718.GA19134@mail.hallyn.com>
-	<CAO_RewZ8cUn-PdXfQF0yH=V=9UqE7Yo1JX2pt2c71WYDrpYE0Q@mail.gmail.com>
-	<20131126205819.GA27266@mail.hallyn.com>
-	<CAO_RewZh+dNkUdZdu-R3CKTvYzbPL50v-BsBHvek75ti3V6kZQ@mail.gmail.com>
-	<20131126212814.GA27602@mail.hallyn.com>
-	<CAD=mX8uuAeN7s8ZA6Gc-wsBd6-PHevBRyBL6hMAS9VW15T5eYA@mail.gmail.com>
-	<CAO_RewY0eFTgkVqbRJwdW9bgR3nz9h5t6c823wFH5cg1CD0sEA@mail.gmail.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [patch] mm: memcg: do not declare OOM from __GFP_NOFAIL
+ allocations
+Date: Tue, 26 Nov 2013 19:33:12 -0800 (PST)
+Message-ID: <alpine.DEB.2.02.1311261931210.5973@chino.kir.corp.google.com>
+References: <1385140676-5677-1-git-send-email-hannes@cmpxchg.org> <alpine.DEB.2.02.1311261658170.21003@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version:content-type;
+        bh=TRbecZlCtuy7HhLo1RF+qCKUl6L1he32Ymms1ujH1NE=;
+        b=jSICYfDNpe668uHQHf60+NB+B7ixrikAiil3HOgLfB5HJS06nYtofhtWUXjq12PU7k
+         UzpoXl4L28sLVvy82Cp245u21gdFRkrC/pnHssHu82PrsM1T6gHHZ87KpBq9I0ZzRIJ5
+         j6ftAHdSmrEImZeoD0/6ASTmgUhxyql5SFezz45yMgBgXKlBaKr3R4zRVEFzF6wyf1I4
+         4nBmEmqlbu3tdy8H2QBfUJcQ6ix+rZycfFS8QMwRLKpWfosMYTUu3DYkyiD1ev/Bdfqs
+         gfFeQ4dl2lHKU8Wq51q7ONcYCmxIAu4EOuerAOx/VYDynnVGIxfhQQycxf2MZjFMcQ8C
+         TSfA==
+In-Reply-To: <alpine.DEB.2.02.1311261658170.21003@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <lxc-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CAO_RewY0eFTgkVqbRJwdW9bgR3nz9h5t6c823wFH5cg1CD0sEA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/lxc-devel>,
-	<mailto:lxc-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=lxc-devel>
-List-Post: <mailto:lxc-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-List-Help: <mailto:lxc-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/lxc-devel>,
-	<mailto:lxc-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
-Errors-To: lxc-devel-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-To: Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: =?iso-8859-1?Q?St=E9phane?= Graber <stgraber-/Ni+VN9Krahg9hUCZPvPmw@public.gmane.org>, Victor Marmol <vmarmol-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rohit Jnagal <jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lxc-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-I was planning on doing #3, but since you guys need to access .., my
-plan is to have 'a/b' refer to $cwd/a/b while /a/b is the absolute
-path, and allow read and eventfd but no write to any parent dirs.
+On Tue, 26 Nov 2013, David Rientjes wrote:
 
-Quoting Tim Hockin (thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org):
-> I see three models:
+> On Fri, 22 Nov 2013, Johannes Weiner wrote:
 > 
-> 1) Don't "virtualize" the cgroup path.  This is what lmctfy does,
-> though we have discussed changing to:
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index 13b9d0f..cc4f9cb 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -2677,6 +2677,9 @@ static int __mem_cgroup_try_charge(struct mm_struct *mm,
+> >  	if (unlikely(task_in_memcg_oom(current)))
+> >  		goto bypass;
+> >  
+> > +	if (gfp_mask & __GFP_NOFAIL)
+> > +		oom = false;
+> > +
+> >  	/*
+> >  	 * We always charge the cgroup the mm_struct belongs to.
+> >  	 * The mm_struct's mem_cgroup changes on task migration if the
 > 
-> 2) Virtualize to an "administrative root" - I get to tell you where
-> your root is, and you can't see anythign higher than that.
+> Sorry, I don't understand this.  What happens in the following scenario:
 > 
-> 3) Virtualize to CWD root - you can never go up, just down.
+>  - memory.usage_in_bytes == memory.limit_in_bytes,
 > 
+>  - memcg reclaim fails to reclaim memory, and
 > 
-> #1 seems easy, but exposes a lot.  #3 is restrictive and fairly easy -
-> could we live with that?  #2 seems ideal, but it's not clear to me how
-> to actually implement it.
+>  - all processes (perhaps only one) attached to the memcg are doing one of
+>    the over dozen __GFP_NOFAIL allocations in the kernel?
 > 
-> On Tue, Nov 26, 2013 at 1:31 PM, Victor Marmol <vmarmol-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> > I think most of our usecases have only wanted to know about the parent, but
-> > I can see people wanting to go further. Would it be much different to
-> > support both? I feel like it'll be simpler to support all if we go that
-> > route.
-> >
-> >
-> > On Tue, Nov 26, 2013 at 1:28 PM, Serge E. Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org> wrote:
-> >>
-> >> Quoting Tim Hockin (thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org):
-> >> > lmctfy literally supports ".." as a container name :)
-> >>
-> >> So is ../.. ever used, or does noone every do anything beyond ..?
-> >
-> >
+> How do we make forward progress if you cannot oom kill something?
+> 
 
-------------------------------------------------------------------------------
-Rapidly troubleshoot problems before they affect your business. Most IT 
-organizations don't have a clear picture of how application performance 
-affects their revenue. With AppDynamics, you get 100% visibility into your 
-Java,.NET, & PHP application. Start your 15-day FREE TRIAL of AppDynamics Pro!
-http://pubads.g.doubleclick.net/gampad/clk?id=84349351&iu=/4140/ostg.clktrk
+Ah, this is because of 3168ecbe1c04 ("mm: memcg: use proper memcg in limit 
+bypass") which just bypasses all of these allocations and charges the root 
+memcg.  So if allocations want to bypass memcg isolation they just have to 
+be __GFP_NOFAIL?
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
