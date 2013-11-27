@@ -1,60 +1,59 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch] mm: memcg: do not declare OOM from __GFP_NOFAIL
- allocations
-Date: Tue, 26 Nov 2013 17:01:43 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1311261658170.21003@chino.kir.corp.google.com>
-References: <1385140676-5677-1-git-send-email-hannes@cmpxchg.org>
+From: Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: cgroup management daemon
+Date: Tue, 26 Nov 2013 17:49:03 -0800
+Message-ID: <CAO_RewY0eFTgkVqbRJwdW9bgR3nz9h5t6c823wFH5cg1CD0sEA@mail.gmail.com>
+References: <20131125224335.GA15481@mail.hallyn.com> <CAO_RewZGWARUafKzDc_t3G5OedGtEPTZgB2VYeHHiKSSrja8fA@mail.gmail.com>
+ <20131126054718.GA19134@mail.hallyn.com> <CAO_RewZ8cUn-PdXfQF0yH=V=9UqE7Yo1JX2pt2c71WYDrpYE0Q@mail.gmail.com>
+ <20131126205819.GA27266@mail.hallyn.com> <CAO_RewZh+dNkUdZdu-R3CKTvYzbPL50v-BsBHvek75ti3V6kZQ@mail.gmail.com>
+ <20131126212814.GA27602@mail.hallyn.com> <CAD=mX8uuAeN7s8ZA6Gc-wsBd6-PHevBRyBL6hMAS9VW15T5eYA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=KTSZU0q25s4JPEoxYgU/Zwa/G2RSEqgn/+7pxyQvLuo=;
-        b=hrU5taiAdE/jPniSjJnSK4CalwhJpUk9X6aB80mor4CPoNllPX7r9jieeqcksN7vXy
-         1i6V6jLk4+VVaaQSUsKtmfuDTonljfsXTyBhNebDgH1tZ8alco43SxaxJXdb02v65J1U
-         hS9ZHBqO7/VIIv7OFGHuBr8PnpAdvn1hgMYJMtrTEMPDjWkgM0oV7Muw6YJZlbI21EtG
-         6HxD35wa1CyCyw8NyRSEsKmirTdiGCe2dHK0szq13gTkKZXtp3L40Ag7iw2OawiD7InV
-         XksGrDHWtQ39taoxVJneLCPZNu67lG+oeXFpRrN5W3f94PauTj1MVkl0h+MO+NxJUjCl
-         yYHg==
-In-Reply-To: <1385140676-5677-1-git-send-email-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-type;
+        bh=3XyGPVJIIlVQyWuiJJklHnw/CXvCIrwXdhyTlwQB9WE=;
+        b=KBmBpn/elcA+RAlvpMsL1ib2lI0/kjeAexrSbcJVbKbEQ4jUJWgAvuzT2StIk4aDFI
+         Ch0slPnUodDs5gykOQWjnATvfGXT+x9RqPE2jcFomJS1keQk8n3JUlXhF9e4Csv3nrRq
+         q/ohwRDHc3z/OU53r9rpdOEAr8ZE1Ugu5RMyHUl5mvmewPNlMk9Y5nnWDqIqUN9eGF2h
+         N/Pc3Stg6+fE2rhd4KLgGcP3FQWQCzWHx0IS/JtTWjDnwIvkfKU2CBWBmBF6ua0X/FZ9
+         xcxEegbnBCuwvoB3BJGTTBwxO2hR5xn0fC5YyC0zvYonTkuj/P5yjlFxKKN03jhSGlo5
+         LBxQ==
+In-Reply-To: <CAD=mX8uuAeN7s8ZA6Gc-wsBd6-PHevBRyBL6hMAS9VW15T5eYA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Victor Marmol <vmarmol-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lxc-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Rohit Jnagal <jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, =?ISO-8859-1?Q?St=E9phane_Graber?= <stgraber-/Ni+VN9Krahg9hUCZPvPmw@public.gmane.org>
 
-On Fri, 22 Nov 2013, Johannes Weiner wrote:
+I see three models:
 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 13b9d0f..cc4f9cb 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2677,6 +2677,9 @@ static int __mem_cgroup_try_charge(struct mm_struct *mm,
->  	if (unlikely(task_in_memcg_oom(current)))
->  		goto bypass;
->  
-> +	if (gfp_mask & __GFP_NOFAIL)
-> +		oom = false;
-> +
->  	/*
->  	 * We always charge the cgroup the mm_struct belongs to.
->  	 * The mm_struct's mem_cgroup changes on task migration if the
+1) Don't "virtualize" the cgroup path.  This is what lmctfy does,
+though we have discussed changing to:
 
-Sorry, I don't understand this.  What happens in the following scenario:
+2) Virtualize to an "administrative root" - I get to tell you where
+your root is, and you can't see anythign higher than that.
 
- - memory.usage_in_bytes == memory.limit_in_bytes,
+3) Virtualize to CWD root - you can never go up, just down.
 
- - memcg reclaim fails to reclaim memory, and
 
- - all processes (perhaps only one) attached to the memcg are doing one of
-   the over dozen __GFP_NOFAIL allocations in the kernel?
+#1 seems easy, but exposes a lot.  #3 is restrictive and fairly easy -
+could we live with that?  #2 seems ideal, but it's not clear to me how
+to actually implement it.
 
-How do we make forward progress if you cannot oom kill something?
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+On Tue, Nov 26, 2013 at 1:31 PM, Victor Marmol <vmarmol-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> I think most of our usecases have only wanted to know about the parent, but
+> I can see people wanting to go further. Would it be much different to
+> support both? I feel like it'll be simpler to support all if we go that
+> route.
+>
+>
+> On Tue, Nov 26, 2013 at 1:28 PM, Serge E. Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org> wrote:
+>>
+>> Quoting Tim Hockin (thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org):
+>> > lmctfy literally supports ".." as a container name :)
+>>
+>> So is ../.. ever used, or does noone every do anything beyond ..?
+>
+>
