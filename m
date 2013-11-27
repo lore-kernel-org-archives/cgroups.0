@@ -1,68 +1,30 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch] mm: memcg: do not declare OOM from __GFP_NOFAIL
- allocations
-Date: Tue, 26 Nov 2013 19:33:12 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1311261931210.5973@chino.kir.corp.google.com>
-References: <1385140676-5677-1-git-send-email-hannes@cmpxchg.org> <alpine.DEB.2.02.1311261658170.21003@chino.kir.corp.google.com>
+From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v11 00/15] kmemcg shrinkers
+Date: Wed, 27 Nov 2013 10:26:17 +0400
+Message-ID: <52959089.6030607@parallels.com>
+References: <cover.1385377616.git.vdavydov@parallels.com> <20131125174135.GE22729@cmpxchg.org> <529443E4.7080602@parallels.com> <20131126224742.GB10988@dastard>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=TRbecZlCtuy7HhLo1RF+qCKUl6L1he32Ymms1ujH1NE=;
-        b=jSICYfDNpe668uHQHf60+NB+B7ixrikAiil3HOgLfB5HJS06nYtofhtWUXjq12PU7k
-         UzpoXl4L28sLVvy82Cp245u21gdFRkrC/pnHssHu82PrsM1T6gHHZ87KpBq9I0ZzRIJ5
-         j6ftAHdSmrEImZeoD0/6ASTmgUhxyql5SFezz45yMgBgXKlBaKr3R4zRVEFzF6wyf1I4
-         4nBmEmqlbu3tdy8H2QBfUJcQ6ix+rZycfFS8QMwRLKpWfosMYTUu3DYkyiD1ev/Bdfqs
-         gfFeQ4dl2lHKU8Wq51q7ONcYCmxIAu4EOuerAOx/VYDynnVGIxfhQQycxf2MZjFMcQ8C
-         TSfA==
-In-Reply-To: <alpine.DEB.2.02.1311261658170.21003@chino.kir.corp.google.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20131126224742.GB10988@dastard>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-On Tue, 26 Nov 2013, David Rientjes wrote:
+On 11/27/2013 02:47 AM, Dave Chinner wrote:
+> On Tue, Nov 26, 2013 at 10:47:00AM +0400, Vladimir Davydov wrote:
+>> Hi,
+>>
+>> Thank you for the review. I agree with all your comments and I'll
+>> resend the fixed version soon.
+>>
+>> If anyone still has something to say about the patchset, I'd be glad
+>> to hear from them.
+> Please CC me on all the shrinker/list-lru changes being made as I am
+> the original author of the list-lru code and the shrinker
+> integration and have more than a passing interest in ensuring
+> it doesn't get broken or crippled....
 
-> On Fri, 22 Nov 2013, Johannes Weiner wrote:
-> 
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index 13b9d0f..cc4f9cb 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -2677,6 +2677,9 @@ static int __mem_cgroup_try_charge(struct mm_struct *mm,
-> >  	if (unlikely(task_in_memcg_oom(current)))
-> >  		goto bypass;
-> >  
-> > +	if (gfp_mask & __GFP_NOFAIL)
-> > +		oom = false;
-> > +
-> >  	/*
-> >  	 * We always charge the cgroup the mm_struct belongs to.
-> >  	 * The mm_struct's mem_cgroup changes on task migration if the
-> 
-> Sorry, I don't understand this.  What happens in the following scenario:
-> 
->  - memory.usage_in_bytes == memory.limit_in_bytes,
-> 
->  - memcg reclaim fails to reclaim memory, and
-> 
->  - all processes (perhaps only one) attached to the memcg are doing one of
->    the over dozen __GFP_NOFAIL allocations in the kernel?
-> 
-> How do we make forward progress if you cannot oom kill something?
-> 
-
-Ah, this is because of 3168ecbe1c04 ("mm: memcg: use proper memcg in limit 
-bypass") which just bypasses all of these allocations and charges the root 
-memcg.  So if allocations want to bypass memcg isolation they just have to 
-be __GFP_NOFAIL?
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Sure, thanks.
