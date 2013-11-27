@@ -1,19 +1,19 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 07/12] cgroup: unify cgroup_write_X64() and cgroup_write_string()
-Date: Wed, 27 Nov 2013 18:42:34 -0500
-Message-ID: <1385595759-17656-8-git-send-email-tj@kernel.org>
+Subject: [PATCH 08/12] cgroup: unify read path so that seq_file is always used
+Date: Wed, 27 Nov 2013 18:42:35 -0500
+Message-ID: <1385595759-17656-9-git-send-email-tj@kernel.org>
 References: <1385595759-17656-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=8xh1tC1JuveCDjJE5A8mXFuAWqc/PSAmajThRuElKVM=;
-        b=bgdviLrGRoS505IsmZCFsPhNKyRmh73QAa7QaQB0X49arpBHgCTxFIb6aFdGy1qqEM
-         tlJzy50g26ZiUtZb0z66WHMr2MbE5OhTTAwjB6nkJUxV/ldftmHDgAZUXI5SWNWV4jDV
-         tuc+dQ5rkEDT0J2RDcB6+/qVyBLw4tGNXwAv/dbVqT7jqkLoHW32D6evgGtRxVam6Fkq
-         jJUV2nlQ3FBkn832Dza+LX2dunPAtodvcV0kwLQuYUvjRd3KeuSO78HAfWd92TOTv/YA
-         IghNR5FUxYRuwJm8NmSYd8In4JfktPKzkzV3J5UGCmHTE2RSvQCN4QaGU8LIjNzw/dWs
-         WG7Q==
+        bh=h5mVU9gkqaX0w22AVAxkqPZBuVoeIU5OkZVDFTxd3og=;
+        b=xqbLlBnSiv585j0b852egWICzqOAsyPwEVrxfmEcuyEDYHVkOo/JnZn6Ltzrgm4a6k
+         aUxohts2KDvRa1FKDxkykW51zXmdTc7lwY7MzlsEQOFbIhr6CYZALkcR48LERnf645QY
+         tk5WlM2oAQPEv5IsIx41W8p5EC0dzsYJqWjwwdYUPJ17dPwi25ECdye8vh9WvGJfwFCC
+         EcUV8JNi+quT0yJ33QqpP9YI4gMkapKzIGGo3WijglVGWDmOYM15/EyT+fIFs0ppWhRo
+         ni+KRegDSko8g534CxgHzffavxzFGtJjSMEXaV9BSoWffkLypf7ofFpZE+t6WqR2T5g3
+         8ZPw==
 In-Reply-To: <1385595759-17656-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,149 +23,139 @@ Content-Transfer-Encoding: 7bit
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-cgroup_write_X64() and cgroup_write_string() both implement about the
-same buffering logic.  Unify the two into cgroup_file_write() which
-always allocates dynamic buffer for simplicity and uses kstrto*()
-instead of simple_strto*().
+With the recent removal of cftype->read() and ->read_map(), only three
+operations are remaining, ->read_u64(), ->read_s64() and
+->read_seq_string().  Currently, the first two are handled directly
+while the last is handled through seq_file.
 
-This patch doesn't make any visible behavior changes except for
-possibly different error value from kstrsto*().
+It is trivial to serve the first two through the seq_file path too.
+This patch restructures read path so that all operations are served
+through cgroup_seqfile_show().  This makes all cgroup files seq_file -
+single_open/release() are now used by default,
+cgroup_seqfile_operations is dropped, and cgroup_file_operations uses
+seq_read() for read.
+
+This simplifies the code and makes the read path easy to convert to
+use kernfs.
+
+Note that, while cgroup_file_operations uses seq_read() for read, it
+still uses generic_file_llseek() for seeking instead of seq_lseek().
+This is different from cgroup_seqfile_operations but shouldn't break
+anything and brings the seeking behavior aligned with kernfs.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- kernel/cgroup.c | 112 ++++++++++++++++++--------------------------------------
- 1 file changed, 36 insertions(+), 76 deletions(-)
+ kernel/cgroup.c | 68 +++++++++++++--------------------------------------------
+ 1 file changed, 15 insertions(+), 53 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 3592515..23abe8e 100644
+index 23abe8e..7048e7f 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -2249,90 +2249,50 @@ static int cgroup_sane_behavior_show(struct cgroup_subsys_state *css,
- /* A buffer size big enough for numbers or short strings */
- #define CGROUP_LOCAL_BUFFER_SIZE 64
+@@ -2295,42 +2295,6 @@ out_free:
+ 	return ret ?: nbytes;
+ }
  
--static ssize_t cgroup_write_X64(struct cgroup_subsys_state *css,
--				struct cftype *cft, struct file *file,
--				const char __user *userbuf, size_t nbytes,
--				loff_t *unused_ppos)
+-static ssize_t cgroup_read_u64(struct cgroup_subsys_state *css,
+-			       struct cftype *cft, struct file *file,
+-			       char __user *buf, size_t nbytes, loff_t *ppos)
 -{
--	char buffer[CGROUP_LOCAL_BUFFER_SIZE];
--	int retval = 0;
--	char *end;
+-	char tmp[CGROUP_LOCAL_BUFFER_SIZE];
+-	u64 val = cft->read_u64(css, cft);
+-	int len = sprintf(tmp, "%llu\n", (unsigned long long) val);
 -
--	if (!nbytes)
--		return -EINVAL;
--	if (nbytes >= sizeof(buffer))
--		return -E2BIG;
--	if (copy_from_user(buffer, userbuf, nbytes))
--		return -EFAULT;
--
--	buffer[nbytes] = 0;     /* nul-terminate */
--	if (cft->write_u64) {
--		u64 val = simple_strtoull(strstrip(buffer), &end, 0);
--		if (*end)
--			return -EINVAL;
--		retval = cft->write_u64(css, cft, val);
--	} else {
--		s64 val = simple_strtoll(strstrip(buffer), &end, 0);
--		if (*end)
--			return -EINVAL;
--		retval = cft->write_s64(css, cft, val);
--	}
--	if (!retval)
--		retval = nbytes;
--	return retval;
+-	return simple_read_from_buffer(buf, nbytes, ppos, tmp, len);
 -}
 -
--static ssize_t cgroup_write_string(struct cgroup_subsys_state *css,
--				   struct cftype *cft, struct file *file,
--				   const char __user *userbuf, size_t nbytes,
--				   loff_t *unused_ppos)
-+static ssize_t cgroup_file_write(struct file *file, const char __user *userbuf,
-+				 size_t nbytes, loff_t *ppos)
- {
--	char local_buffer[CGROUP_LOCAL_BUFFER_SIZE];
--	int retval = 0;
--	size_t max_bytes = cft->max_write_len;
--	char *buffer = local_buffer;
-+	struct cfent *cfe = __d_cfe(file->f_dentry);
-+	struct cftype *cft = __d_cft(file->f_dentry);
-+	struct cgroup_subsys_state *css = cfe->css;
-+	size_t max_bytes = cft->max_write_len ?: CGROUP_LOCAL_BUFFER_SIZE - 1;
-+	char *buf;
-+	int ret;
- 
--	if (!max_bytes)
--		max_bytes = sizeof(local_buffer) - 1;
- 	if (nbytes >= max_bytes)
- 		return -E2BIG;
--	/* Allocate a dynamic buffer if we need one */
--	if (nbytes >= sizeof(local_buffer)) {
--		buffer = kmalloc(nbytes + 1, GFP_KERNEL);
--		if (buffer == NULL)
--			return -ENOMEM;
--	}
--	if (nbytes && copy_from_user(buffer, userbuf, nbytes)) {
--		retval = -EFAULT;
--		goto out;
--	}
- 
--	buffer[nbytes] = 0;     /* nul-terminate */
--	retval = cft->write_string(css, cft, strstrip(buffer));
--	if (!retval)
--		retval = nbytes;
--out:
--	if (buffer != local_buffer)
--		kfree(buffer);
--	return retval;
+-static ssize_t cgroup_read_s64(struct cgroup_subsys_state *css,
+-			       struct cftype *cft, struct file *file,
+-			       char __user *buf, size_t nbytes, loff_t *ppos)
+-{
+-	char tmp[CGROUP_LOCAL_BUFFER_SIZE];
+-	s64 val = cft->read_s64(css, cft);
+-	int len = sprintf(tmp, "%lld\n", (long long) val);
+-
+-	return simple_read_from_buffer(buf, nbytes, ppos, tmp, len);
 -}
-+	buf = kmalloc(nbytes + 1, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
- 
--static ssize_t cgroup_file_write(struct file *file, const char __user *buf,
--				 size_t nbytes, loff_t *ppos)
+-
+-static ssize_t cgroup_file_read(struct file *file, char __user *buf,
+-				size_t nbytes, loff_t *ppos)
 -{
 -	struct cfent *cfe = __d_cfe(file->f_dentry);
 -	struct cftype *cft = __d_cft(file->f_dentry);
 -	struct cgroup_subsys_state *css = cfe->css;
-+	if (copy_from_user(buf, userbuf, nbytes)) {
-+		ret = -EFAULT;
-+		goto out_free;
-+	}
- 
--	if (cft->write_u64 || cft->write_s64)
--		return cgroup_write_X64(css, cft, file, buf, nbytes, ppos);
--	if (cft->write_string)
--		return cgroup_write_string(css, cft, file, buf, nbytes, ppos);
--	if (cft->trigger) {
--		int ret = cft->trigger(css, (unsigned int)cft->private);
--		return ret ? ret : nbytes;
-+	buf[nbytes] = '\0';
-+
-+	if (cft->write_string) {
-+		ret = cft->write_string(css, cft, strstrip(buf));
-+	} else if (cft->write_u64) {
-+		unsigned long long v;
-+		ret = kstrtoull(buf, 0, &v);
-+		if (!ret)
-+			ret = cft->write_u64(css, cft, v);
-+	} else if (cft->write_s64) {
-+		long long v;
-+		ret = kstrtoll(buf, 0, &v);
-+		if (!ret)
-+			ret = cft->write_s64(css, cft, v);
-+	} else if (cft->trigger) {
-+		ret = cft->trigger(css, (unsigned int)cft->private);
-+	} else {
-+		ret = -EINVAL;
- 	}
+-
+-	if (cft->read_u64)
+-		return cgroup_read_u64(css, cft, file, buf, nbytes, ppos);
+-	if (cft->read_s64)
+-		return cgroup_read_s64(css, cft, file, buf, nbytes, ppos);
 -	return -EINVAL;
-+out_free:
-+	kfree(buf);
-+	return ret ?: nbytes;
+-}
+-
+ /*
+  * seqfile ops/methods for returning structured data. Currently just
+  * supports string->u64 maps, but can be extended in future.
+@@ -2342,15 +2306,17 @@ static int cgroup_seqfile_show(struct seq_file *m, void *arg)
+ 	struct cftype *cft = cfe->type;
+ 	struct cgroup_subsys_state *css = cfe->css;
+ 
+-	return cft->read_seq_string(css, cft, m);
+-}
++	if (cft->read_seq_string)
++		return cft->read_seq_string(css, cft, m);
+ 
+-static const struct file_operations cgroup_seqfile_operations = {
+-	.read = seq_read,
+-	.write = cgroup_file_write,
+-	.llseek = seq_lseek,
+-	.release = cgroup_file_release,
+-};
++	if (cft->read_u64)
++		seq_printf(m, "%llu\n", cft->read_u64(css, cft));
++	else if (cft->read_s64)
++		seq_printf(m, "%lld\n", cft->read_s64(css, cft));
++	else
++		return -EINVAL;
++	return 0;
++}
+ 
+ static int cgroup_file_open(struct inode *inode, struct file *file)
+ {
+@@ -2387,12 +2353,10 @@ static int cgroup_file_open(struct inode *inode, struct file *file)
+ 	WARN_ON_ONCE(cfe->css && cfe->css != css);
+ 	cfe->css = css;
+ 
+-	if (cft->read_seq_string) {
+-		file->f_op = &cgroup_seqfile_operations;
+-		err = single_open(file, cgroup_seqfile_show, cfe);
+-	} else if (cft->open) {
++	if (cft->open)
+ 		err = cft->open(inode, file);
+-	}
++	else
++		err = single_open(file, cgroup_seqfile_show, cfe);
+ 
+ 	if (css->ss && err)
+ 		css_put(css);
+@@ -2406,9 +2370,7 @@ static int cgroup_file_release(struct inode *inode, struct file *file)
+ 
+ 	if (css->ss)
+ 		css_put(css);
+-	if (file->f_op == &cgroup_seqfile_operations)
+-		single_release(inode, file);
+-	return 0;
++	return single_release(inode, file);
  }
  
- static ssize_t cgroup_read_u64(struct cgroup_subsys_state *css,
+ /*
+@@ -2519,7 +2481,7 @@ static ssize_t cgroup_listxattr(struct dentry *dentry, char *buf, size_t size)
+ }
+ 
+ static const struct file_operations cgroup_file_operations = {
+-	.read = cgroup_file_read,
++	.read = seq_read,
+ 	.write = cgroup_file_write,
+ 	.llseek = generic_file_llseek,
+ 	.open = cgroup_file_open,
 -- 
 1.8.4.2
