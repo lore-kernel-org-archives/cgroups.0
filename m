@@ -1,19 +1,19 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 09/12] cgroup: generalize cgroup_pidlist_open_file
-Date: Wed, 27 Nov 2013 18:42:36 -0500
-Message-ID: <1385595759-17656-10-git-send-email-tj@kernel.org>
+Subject: [PATCH 12/12] cgroup: unify pidlist and other file handling
+Date: Wed, 27 Nov 2013 18:42:39 -0500
+Message-ID: <1385595759-17656-13-git-send-email-tj@kernel.org>
 References: <1385595759-17656-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Xo1O2Yf/ZbTKpkL8A0fTQfuZFbOzMqubyPwvBdW/IX0=;
-        b=zUxYzVRTAnf5IoVGmovfKbjPQFS+R4TFB/wEWLlRd/zh4KbI2MLi/PXNYPsLDUvU72
-         ilkbGBiP5j/jFiMWraVknn59HWVG4YOK67FgA3zkMpymTuyzRbDTz3v9O8wQh891BLCw
-         z49VMToJsBb0HLFiIdK5OUbwtuPQHDcfKiKi5TH+8fLlyi9ORbCGoqNuPDyCY51Wifhs
-         jgS1zgVZve+UQEW5EnAnGTXxbKf4BytPXp91AwyISXZimTSxtZSWklrvFCPK4oKnLjAi
-         IwNmDqetXCzzuocHaoAwa7wfYZokrRQRPpKT0hiTVCbl8Op5csRhjJIHMVsUQjOJDxTx
-         PKfA==
+        bh=wssvYNpwWNRbIyttf9mK40ARYhi0xvF1nQGBt7RtVos=;
+        b=TB8eIJiZJxZpekg5FRdfwck1IcSh45L38AdzeNaI5gK0y4Y8sqydxpyX49OHFNDcPY
+         b60k4nyL3F95l6B9tFNwNDOa/4tSRM6L4dxm9ZJx4+H3Sjx75qkjiCCZimJS9CKMnBZB
+         7mpWaZ5kEyfGmyuEYJTTEy5wxCFoSuvKnw1tYqyK8f7znt7fCnepEt8fUxyaj0U6SE9t
+         WII2lEhdkzpepk3uC8BZ/jwICvDGGHdc2J79+PVKloydj37tVqmSuc152T7DCwrV32rp
+         oFUdAu8s4LE33MZykPyAAvhBSXTQm541y3jxcKBlCupjJ80psJnIlqBo8KMM1WpWnscY
+         fS5Q==
 In-Reply-To: <1385595759-17656-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -24,179 +24,220 @@ To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
 In preparation of conversion to kernfs, cgroup file handling is
-updated so that it can be easily mapped to kernfs.  This patch renames
-cgroup_pidlist_open_file to cgroup_open_file and updates it so that it
-only contains a field to identify the specific file, ->cfe, and an
-opaque ->priv pointer.  When cgroup is converted to kernfs, this will
-be replaced by kernfs_open_file which contains about the same
-information.
+updated so that it can be easily mapped to kernfs.  With the previous
+changes, the difference between pidlist and other files are very
+small.  Both are served by seq_file in a pretty standard way with the
+only difference being !pidlist files use single_open().
 
-As whether the file is "cgroup.procs" or "tasks" should now be
-determined from cgroup_open_file->cfe, the cftype->private for the two
-files now carry the file type and cgroup_pidlist_start() reads the
-type through cfe->type->private.  This makes the distinction between
-cgroup_tasks_open() and cgroup_procs_open() unnecessary.
-cgroup_pidlist_open() is now directly used as the open method.
+This patch adds cftype->seq_start(), ->seq_next and ->seq_stop() and
+implements the matching cgroup_seqfile_start/next/stop() which either
+emulates single_open() behavior or invokes cftype->seq_*() operations
+if specified.  This allows using single seq_operations for both
+pidlist and other files and makes cgroup_pidlist_operations and
+cgorup_pidlist_open() no longer necessary.  As cgroup_pidlist_open()
+was the only user of cftype->open(), the method is dropped together.
 
-This patch doesn't make any behavior changes.
+This brings cftype file interface very close to kernfs interface and
+mapping shouldn't be too difficult.  Once converted to kernfs, most of
+the plumbing code including cgroup_seqfile_*() will be removed as
+kernfs provides those facilities.
+
+This patch does not introduce any behavior changes.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- kernel/cgroup.c | 66 ++++++++++++++++++++++++++-------------------------------
- 1 file changed, 30 insertions(+), 36 deletions(-)
+ include/linux/cgroup.h |   6 ++-
+ kernel/cgroup.c        | 109 ++++++++++++++++++++++++++++---------------------
+ 2 files changed, 68 insertions(+), 47 deletions(-)
 
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index b32a0f8..8b9a594 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -434,7 +434,6 @@ struct cftype {
+ 	 */
+ 	struct cgroup_subsys *ss;
+ 
+-	int (*open)(struct inode *inode, struct file *file);
+ 	/*
+ 	 * read_u64() is a shortcut for the common case of returning a
+ 	 * single integer. Use it in place of read()
+@@ -448,6 +447,11 @@ struct cftype {
+ 	/* generic seq_file read interface */
+ 	int (*seq_show)(struct seq_file *sf, void *v);
+ 
++	/* optional ops, implement all or none */
++	void *(*seq_start)(struct seq_file *sf, loff_t *ppos);
++	void *(*seq_next)(struct seq_file *sf, void *v, loff_t *ppos);
++	void (*seq_stop)(struct seq_file *sf, void *v);
++
+ 	/*
+ 	 * write_u64() is a shortcut for the common case of accepting
+ 	 * a single integer (as parsed by simple_strtoull) from
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 7048e7f..bdb8e8d 100644
+index 39fdf75..13a3d3b 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -3369,10 +3369,9 @@ struct cgroup_pidlist {
- };
- 
- /* seq_file->private points to the following */
--struct cgroup_pidlist_open_file {
--	enum cgroup_filetype		type;
--	struct cgroup			*cgrp;
--	struct cgroup_pidlist		*pidlist;
-+struct cgroup_open_file {
-+	struct cfent			*cfe;
-+	void				*priv;
- };
- 
- /*
-@@ -3689,33 +3688,35 @@ static void *cgroup_pidlist_start(struct seq_file *s, loff_t *pos)
- 	 * after a seek to the start). Use a binary-search to find the
- 	 * next pid to display, if any
- 	 */
--	struct cgroup_pidlist_open_file *of = s->private;
--	struct cgroup *cgrp = of->cgrp;
-+	struct cgroup_open_file *of = s->private;
-+	struct cgroup *cgrp = of->cfe->css->cgroup;
- 	struct cgroup_pidlist *l;
-+	enum cgroup_filetype type = of->cfe->type->private;
- 	int index = 0, pid = *pos;
- 	int *iter, ret;
- 
- 	mutex_lock(&cgrp->pidlist_mutex);
- 
- 	/*
--	 * !NULL @of->pidlist indicates that this isn't the first start()
-+	 * !NULL @of->priv indicates that this isn't the first start()
- 	 * after open.  If the matching pidlist is around, we can use that.
--	 * Look for it.  Note that @of->pidlist can't be used directly.  It
-+	 * Look for it.  Note that @of->priv can't be used directly.  It
- 	 * could already have been destroyed.
- 	 */
--	if (of->pidlist)
--		of->pidlist = cgroup_pidlist_find(cgrp, of->type);
-+	if (of->priv)
-+		of->priv = cgroup_pidlist_find(cgrp, type);
- 
- 	/*
- 	 * Either this is the first start() after open or the matching
- 	 * pidlist has been destroyed inbetween.  Create a new one.
- 	 */
--	if (!of->pidlist) {
--		ret = pidlist_array_load(of->cgrp, of->type, &of->pidlist);
-+	if (!of->priv) {
-+		ret = pidlist_array_load(cgrp, type,
-+					 (struct cgroup_pidlist **)&of->priv);
- 		if (ret)
- 			return ERR_PTR(ret);
- 	}
--	l = of->pidlist;
-+	l = of->priv;
- 
- 	if (pid) {
- 		int end = l->length;
-@@ -3742,19 +3743,19 @@ static void *cgroup_pidlist_start(struct seq_file *s, loff_t *pos)
- 
- static void cgroup_pidlist_stop(struct seq_file *s, void *v)
- {
--	struct cgroup_pidlist_open_file *of = s->private;
-+	struct cgroup_open_file *of = s->private;
-+	struct cgroup_pidlist *l = of->priv;
- 
--	if (of->pidlist)
--		mod_delayed_work(cgroup_pidlist_destroy_wq,
--				 &of->pidlist->destroy_dwork,
-+	if (l)
-+		mod_delayed_work(cgroup_pidlist_destroy_wq, &l->destroy_dwork,
- 				 CGROUP_PIDLIST_DESTROY_DELAY);
--	mutex_unlock(&of->cgrp->pidlist_mutex);
-+	mutex_unlock(&of->cfe->css->cgroup->pidlist_mutex);
- }
- 
- static void *cgroup_pidlist_next(struct seq_file *s, void *v, loff_t *pos)
- {
--	struct cgroup_pidlist_open_file *of = s->private;
--	struct cgroup_pidlist *l = of->pidlist;
-+	struct cgroup_open_file *of = s->private;
-+	struct cgroup_pidlist *l = of->priv;
- 	pid_t *p = v;
- 	pid_t *end = l->list + l->length;
- 	/*
-@@ -3765,7 +3766,7 @@ static void *cgroup_pidlist_next(struct seq_file *s, void *v, loff_t *pos)
- 	if (p >= end) {
- 		return NULL;
- 	} else {
--		*pos = cgroup_pid_fry(of->cgrp, *p);
-+		*pos = cgroup_pid_fry(of->cfe->css->cgroup, *p);
- 		return p;
- 	}
- }
-@@ -3799,10 +3800,10 @@ static const struct file_operations cgroup_pidlist_operations = {
-  * in the cgroup.
+@@ -2286,6 +2286,45 @@ out_free:
+  * supports string->u64 maps, but can be extended in future.
   */
- /* helper function for the two below it */
--static int cgroup_pidlist_open(struct file *file, enum cgroup_filetype type)
-+static int cgroup_pidlist_open(struct inode *unused, struct file *file)
+ 
++static void *cgroup_seqfile_start(struct seq_file *seq, loff_t *ppos)
++{
++	struct cftype *cft = seq_cft(seq);
++
++	if (cft->seq_start) {
++		return cft->seq_start(seq, ppos);
++	} else {
++		/*
++		 * The same behavior and code as single_open().  Returns
++		 * !NULL if pos is at the beginning; otherwise, NULL.
++		 */
++		return NULL + !*ppos;
++	}
++}
++
++static void *cgroup_seqfile_next(struct seq_file *seq, void *v, loff_t *ppos)
++{
++	struct cftype *cft = seq_cft(seq);
++
++	if (cft->seq_next) {
++		return cft->seq_next(seq, v, ppos);
++	} else {
++		/*
++		 * The same behavior and code as single_open(), always
++		 * terminate after the initial read.
++		 */
++		++*ppos;
++		return NULL;
++	}
++}
++
++static void cgroup_seqfile_stop(struct seq_file *seq, void *v)
++{
++	struct cftype *cft = seq_cft(seq);
++
++	if (cft->seq_stop)
++		cft->seq_stop(seq, v);
++}
++
+ static int cgroup_seqfile_show(struct seq_file *m, void *arg)
  {
--	struct cgroup *cgrp = __d_cgrp(file->f_dentry->d_parent);
--	struct cgroup_pidlist_open_file *of;
-+	struct cfent *cfe = __d_cfe(file->f_dentry);
-+	struct cgroup_open_file *of;
- 	int retval;
- 
- 	/* configure file information */
-@@ -3814,18 +3815,9 @@ static int cgroup_pidlist_open(struct file *file, enum cgroup_filetype type)
- 		return retval;
- 
- 	of = ((struct seq_file *)file->private_data)->private;
--	of->type = type;
--	of->cgrp = cgrp;
-+	of->cfe = cfe;
+ 	struct cftype *cft = seq_cft(m);
+@@ -2303,6 +2342,13 @@ static int cgroup_seqfile_show(struct seq_file *m, void *arg)
  	return 0;
  }
--static int cgroup_tasks_open(struct inode *unused, struct file *file)
--{
--	return cgroup_pidlist_open(file, CGROUP_FILE_TASKS);
--}
--static int cgroup_procs_open(struct inode *unused, struct file *file)
--{
--	return cgroup_pidlist_open(file, CGROUP_FILE_PROCS);
--}
  
++static struct seq_operations cgroup_seq_operations = {
++	.start		= cgroup_seqfile_start,
++	.next		= cgroup_seqfile_next,
++	.stop		= cgroup_seqfile_stop,
++	.show		= cgroup_seqfile_show,
++};
++
+ static int cgroup_file_open(struct inode *inode, struct file *file)
+ {
+ 	struct cfent *cfe = __d_cfe(file->f_dentry);
+@@ -2338,20 +2384,17 @@ static int cgroup_file_open(struct inode *inode, struct file *file)
+ 	WARN_ON_ONCE(cfe->css && cfe->css != css);
+ 	cfe->css = css;
+ 
+-	if (cft->open) {
+-		err = cft->open(inode, file);
+-	} else {
+-		err = single_open_size(file, cgroup_seqfile_show, cfe,
+-				       sizeof(struct cgroup_open_file));
+-		if (!err) {
+-			struct seq_file *sf = file->private_data;
+-			struct cgroup_open_file *of = sf->private;
++	err = seq_open_private(file, &cgroup_seq_operations,
++			       sizeof(struct cgroup_open_file));
++	if (!err) {
++		struct seq_file *sf = file->private_data;
++		struct cgroup_open_file *of = sf->private;
+ 
+-			of->cfe = cfe;
+-		}
++		of->cfe = cfe;
++		return 0;
+ 	}
+ 
+-	if (css->ss && err)
++	if (css->ss)
+ 		css_put(css);
+ 	return err;
+ }
+@@ -2363,7 +2406,7 @@ static int cgroup_file_release(struct inode *inode, struct file *file)
+ 
+ 	if (css->ss)
+ 		css_put(css);
+-	return single_release(inode, file);
++	return seq_release_private(inode, file);
+ }
+ 
+ /*
+@@ -3774,38 +3817,6 @@ static const struct seq_operations cgroup_pidlist_seq_operations = {
+ 	.show = cgroup_pidlist_show,
+ };
+ 
+-static const struct file_operations cgroup_pidlist_operations = {
+-	.read = seq_read,
+-	.llseek = seq_lseek,
+-	.write = cgroup_file_write,
+-	.release = seq_release_private,
+-};
+-
+-/*
+- * The following functions handle opens on a file that displays a pidlist
+- * (tasks or procs). Prepare an array of the process/thread IDs of whoever's
+- * in the cgroup.
+- */
+-/* helper function for the two below it */
+-static int cgroup_pidlist_open(struct inode *unused, struct file *file)
+-{
+-	struct cfent *cfe = __d_cfe(file->f_dentry);
+-	struct cgroup_open_file *of;
+-	int retval;
+-
+-	/* configure file information */
+-	file->f_op = &cgroup_pidlist_operations;
+-
+-	retval = seq_open_private(file, &cgroup_pidlist_seq_operations,
+-				  sizeof(*of));
+-	if (retval)
+-		return retval;
+-
+-	of = ((struct seq_file *)file->private_data)->private;
+-	of->cfe = cfe;
+-	return 0;
+-}
+-
  static u64 cgroup_read_notify_on_release(struct cgroup_subsys_state *css,
  					 struct cftype *cft)
-@@ -3880,7 +3872,8 @@ static int cgroup_clone_children_write(struct cgroup_subsys_state *css,
+ {
+@@ -3859,7 +3870,10 @@ static int cgroup_clone_children_write(struct cgroup_subsys_state *css,
  static struct cftype cgroup_base_files[] = {
  	{
  		.name = "cgroup.procs",
--		.open = cgroup_procs_open,
-+		.open = cgroup_pidlist_open,
-+		.private = CGROUP_FILE_PROCS,
+-		.open = cgroup_pidlist_open,
++		.seq_start = cgroup_pidlist_start,
++		.seq_next = cgroup_pidlist_next,
++		.seq_stop = cgroup_pidlist_stop,
++		.seq_show = cgroup_pidlist_show,
+ 		.private = CGROUP_FILE_PROCS,
  		.write_u64 = cgroup_procs_write,
  		.mode = S_IRUGO | S_IWUSR,
- 	},
-@@ -3904,7 +3897,8 @@ static struct cftype cgroup_base_files[] = {
+@@ -3884,7 +3898,10 @@ static struct cftype cgroup_base_files[] = {
  	{
  		.name = "tasks",
  		.flags = CFTYPE_INSANE,		/* use "procs" instead */
--		.open = cgroup_tasks_open,
-+		.open = cgroup_pidlist_open,
-+		.private = CGROUP_FILE_TASKS,
+-		.open = cgroup_pidlist_open,
++		.seq_start = cgroup_pidlist_start,
++		.seq_next = cgroup_pidlist_next,
++		.seq_stop = cgroup_pidlist_stop,
++		.seq_show = cgroup_pidlist_show,
+ 		.private = CGROUP_FILE_TASKS,
  		.write_u64 = cgroup_tasks_write,
  		.mode = S_IRUGO | S_IWUSR,
- 	},
 -- 
 1.8.4.2
