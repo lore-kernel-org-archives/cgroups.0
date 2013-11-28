@@ -1,211 +1,81 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 10/12] cgroup: attach cgroup_open_file to all cgroup files
-Date: Wed, 27 Nov 2013 18:42:37 -0500
-Message-ID: <1385595759-17656-11-git-send-email-tj@kernel.org>
-References: <1385595759-17656-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
+ access to memory reserves
+Date: Wed, 27 Nov 2013 16:22:18 -0800 (PST)
+Message-ID: <alpine.DEB.2.02.1311271613340.10617@chino.kir.corp.google.com>
+References: <alpine.DEB.2.02.1311131649110.6735@chino.kir.corp.google.com> <20131114032508.GL707@cmpxchg.org> <alpine.DEB.2.02.1311141447160.21413@chino.kir.corp.google.com> <alpine.DEB.2.02.1311141525440.30112@chino.kir.corp.google.com> <20131118154115.GA3556@cmpxchg.org>
+ <20131118165110.GE32623@dhcp22.suse.cz> <20131122165100.GN3556@cmpxchg.org> <alpine.DEB.2.02.1311261648570.21003@chino.kir.corp.google.com> <20131127163435.GA3556@cmpxchg.org> <alpine.DEB.2.02.1311271343250.9222@chino.kir.corp.google.com>
+ <20131127231931.GG3556@cmpxchg.org>
+Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=QrBzs3Ozqs8/AAd9jgkWevZIrWNhPwHvYjwcJcKrTMw=;
-        b=U1El0d/0prrwfFX5tQ2LiQIyCFN5hk4GJf14Cifck+QC5mOKETkzKmaH0sCgpcAd0l
-         KOZtZxK6rFfNW67ONMcHKdmuYnaWmQlwdygVMaZTJ/p2est+yulUAdz0at0gakuCllYw
-         +x1PzxkY1xY6f86UlGDgAFVDo7XIA72K13AoyxYAaiqVzMP1sqxalSu8pCEFW5kO3tUg
-         +rSb+AKirnzSem1amb2nyB3/9Hx213jDhJc/FfHkBaNSfTGAQQnLKCFs1GHVmlOtLCdF
-         QvAu5SRaC6QFEzS7n20wRZLnOffe+4vGVAoCddUeBWKkiUFKxTWTjAM82Dxv54VInKKZ
-         CGvw==
-In-Reply-To: <1385595759-17656-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=google.com; s=20120113;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version:content-type;
+        bh=1PdCFY2+4+imxP51rwp0CzYEnDTyXi5S/tKTp7FA/HA=;
+        b=Ve6G5Nm1lN0caeznLdg0hjG2DIjVpqwhqyZgS4HYHYO5C/bd9S186vMg0WF3IDJK9b
+         /ugXZzt/QvscV7T8aIbp+qi6eFgkitbyEbBYxMYRQUWiZ/pOWtoXAhcPiSWmGmezZI0W
+         tAE4XJTPs82HBneO1sekiI726y6FOb0v72b0YJjp1Fx/ZFC+cOr8YM0nJiFdfcVCYr+w
+         vSge6HsIdcRKHZ6/P3+eSvGS6jo+A3/hWDTDNl2/Eoy9b0SQdHo9BLJvac4yl06sTjZC
+         ka1wE/yBlHZz9OhxDeBz8egRAQcJKEz+O+XvJowJyqSUlEBvLFT17rnEuNEtGAoz68vt
+         FAgw==
+In-Reply-To: <20131127231931.GG3556@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-In preparation of conversion to kernfs, cgroup file handling is
-updated so that it can be easily mapped to kernfs.  This patch
-attaches cgroup_open_file, which used to be attached to pidlist files,
-to all cgroup files, introduces seq_css/cft() accessors to determine
-the cgroup_subsys_state and cftype associated with a given cgroup
-seq_file, exports them as public interface.
+On Wed, 27 Nov 2013, Johannes Weiner wrote:
 
-This doesn't cause any behavior changes but unifies cgroup file
-handling across different file types and will help converting them to
-kernfs seq_show() interface.
+> > The patch is drawing the line at "the kernel can no longer do anything to 
+> > free memory", and that's the line where userspace should be notified or a 
+> > process killed by the kernel.
+> >
+> > Giving current access to memory reserves in the oom killer is an
+> > optimization so that all reclaim is exhausted prior to declaring
+> > that they are necessary, the kernel still has the ability to allow
+> > that process to exit and free memory.
+> 
+> "they" are necessary?
+> 
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- include/linux/cgroup.h | 33 +++++++++++++++++++++++++++++++++
- kernel/cgroup.c        | 47 +++++++++++++++++------------------------------
- 2 files changed, 50 insertions(+), 30 deletions(-)
+Memory reserves.
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 53e11da..c3d698a 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -21,6 +21,7 @@
- #include <linux/xattr.h>
- #include <linux/fs.h>
- #include <linux/percpu-refcount.h>
-+#include <linux/seq_file.h>
- 
- #ifdef CONFIG_CGROUPS
- 
-@@ -490,6 +491,26 @@ struct cftype_set {
- };
- 
- /*
-+ * cgroupfs file entry, pointed to from leaf dentry->d_fsdata.  Don't
-+ * access directly.
-+ */
-+struct cfent {
-+	struct list_head		node;
-+	struct dentry			*dentry;
-+	struct cftype			*type;
-+	struct cgroup_subsys_state	*css;
-+
-+	/* file xattrs */
-+	struct simple_xattrs		xattrs;
-+};
-+
-+/* seq_file->private points to the following, only ->priv is public */
-+struct cgroup_open_file {
-+	struct cfent			*cfe;
-+	void				*priv;
-+};
-+
-+/*
-  * See the comment above CGRP_ROOT_SANE_BEHAVIOR for details.  This
-  * function can be called as long as @cgrp is accessible.
-  */
-@@ -504,6 +525,18 @@ static inline const char *cgroup_name(const struct cgroup *cgrp)
- 	return rcu_dereference(cgrp->name)->name;
- }
- 
-+static inline struct cgroup_subsys_state *seq_css(struct seq_file *seq)
-+{
-+	struct cgroup_open_file *of = seq->private;
-+	return of->cfe->css;
-+}
-+
-+static inline struct cftype *seq_cft(struct seq_file *seq)
-+{
-+	struct cgroup_open_file *of = seq->private;
-+	return of->cfe->type;
-+}
-+
- int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
- int cgroup_rm_cftypes(struct cftype *cfts);
- 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index bdb8e8d..1189de7 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -41,7 +41,6 @@
- #include <linux/rcupdate.h>
- #include <linux/sched.h>
- #include <linux/backing-dev.h>
--#include <linux/seq_file.h>
- #include <linux/slab.h>
- #include <linux/magic.h>
- #include <linux/spinlock.h>
-@@ -130,19 +129,6 @@ static struct cgroupfs_root cgroup_dummy_root;
- /* dummy_top is a shorthand for the dummy hierarchy's top cgroup */
- static struct cgroup * const cgroup_dummy_top = &cgroup_dummy_root.top_cgroup;
- 
--/*
-- * cgroupfs file entry, pointed to from leaf dentry->d_fsdata.
-- */
--struct cfent {
--	struct list_head		node;
--	struct dentry			*dentry;
--	struct cftype			*type;
--	struct cgroup_subsys_state	*css;
--
--	/* file xattrs */
--	struct simple_xattrs		xattrs;
--};
--
- /* The list of hierarchy roots */
- 
- static LIST_HEAD(cgroup_roots);
-@@ -2302,9 +2288,8 @@ out_free:
- 
- static int cgroup_seqfile_show(struct seq_file *m, void *arg)
- {
--	struct cfent *cfe = m->private;
--	struct cftype *cft = cfe->type;
--	struct cgroup_subsys_state *css = cfe->css;
-+	struct cftype *cft = seq_cft(m);
-+	struct cgroup_subsys_state *css = seq_css(m);
- 
- 	if (cft->read_seq_string)
- 		return cft->read_seq_string(css, cft, m);
-@@ -2353,10 +2338,18 @@ static int cgroup_file_open(struct inode *inode, struct file *file)
- 	WARN_ON_ONCE(cfe->css && cfe->css != css);
- 	cfe->css = css;
- 
--	if (cft->open)
-+	if (cft->open) {
- 		err = cft->open(inode, file);
--	else
--		err = single_open(file, cgroup_seqfile_show, cfe);
-+	} else {
-+		err = single_open_size(file, cgroup_seqfile_show, cfe,
-+				       sizeof(struct cgroup_open_file));
-+		if (!err) {
-+			struct seq_file *sf = file->private_data;
-+			struct cgroup_open_file *of = sf->private;
-+
-+			of->cfe = cfe;
-+		}
-+	}
- 
- 	if (css->ss && err)
- 		css_put(css);
-@@ -3368,12 +3361,6 @@ struct cgroup_pidlist {
- 	struct delayed_work destroy_dwork;
- };
- 
--/* seq_file->private points to the following */
--struct cgroup_open_file {
--	struct cfent			*cfe;
--	void				*priv;
--};
--
- /*
-  * The following two functions "fix" the issue where there are more pids
-  * than kmalloc will give memory for; in such cases, we use vmalloc/vfree.
-@@ -3689,9 +3676,9 @@ static void *cgroup_pidlist_start(struct seq_file *s, loff_t *pos)
- 	 * next pid to display, if any
- 	 */
- 	struct cgroup_open_file *of = s->private;
--	struct cgroup *cgrp = of->cfe->css->cgroup;
-+	struct cgroup *cgrp = seq_css(s)->cgroup;
- 	struct cgroup_pidlist *l;
--	enum cgroup_filetype type = of->cfe->type->private;
-+	enum cgroup_filetype type = seq_cft(s)->private;
- 	int index = 0, pid = *pos;
- 	int *iter, ret;
- 
-@@ -3749,7 +3736,7 @@ static void cgroup_pidlist_stop(struct seq_file *s, void *v)
- 	if (l)
- 		mod_delayed_work(cgroup_pidlist_destroy_wq, &l->destroy_dwork,
- 				 CGROUP_PIDLIST_DESTROY_DELAY);
--	mutex_unlock(&of->cfe->css->cgroup->pidlist_mutex);
-+	mutex_unlock(&seq_css(s)->cgroup->pidlist_mutex);
- }
- 
- static void *cgroup_pidlist_next(struct seq_file *s, void *v, loff_t *pos)
-@@ -3766,7 +3753,7 @@ static void *cgroup_pidlist_next(struct seq_file *s, void *v, loff_t *pos)
- 	if (p >= end) {
- 		return NULL;
- 	} else {
--		*pos = cgroup_pid_fry(of->cfe->css->cgroup, *p);
-+		*pos = cgroup_pid_fry(seq_css(s)->cgroup, *p);
- 		return p;
- 	}
- }
--- 
-1.8.4.2
+> > This is the same as the oom notifiers within the kernel that free
+> > memory from s390 and powerpc archs: the kernel still has the ability
+> > to free memory.
+> 
+> They're not the same at all.  One is the kernel freeing memory, the
+> other is a random coincidence.
+> 
+
+Current is on the way to memory freeing because it has a pending SIGKILL 
+or is already exiting, it simply needs access to memory reserves to do so.  
+This was originally introduced to prevent the oom killer from having to 
+scan the set of eligible processes and silently giving it access to memory 
+reserves; we didn't want to emit all of the messages to the kernel log 
+because scripts (and admins) were looking at the kernel log and seeing 
+that the oom killer killed something when it really came from a different 
+source or was already exiting.
+
+We have a differing opinion on what to consider the point of oom (the 
+"notification line that has to be drawn").  My position is to notify 
+userspace when the kernel has exhausted its capability to free memory 
+without killing something.  In the case of current exiting or having a 
+pending SIGKILL, memory is going to be freed, the oom killer simply needs 
+to preempt the tasklist scan.  The situation is going to be remedied.  I 
+defined the notification with this patch to only happen when the kernel 
+can't free any memory without a kill so that userspace may do so itself.  
+Michal concurred with that position.
+
+So I'll repeat: if you are interested in situations when the limit is 
+reached, use memory thresholds, if you are interested in situations where 
+reclaim is struggling to free memory, use VMPRESSURE_CRITICAL.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
