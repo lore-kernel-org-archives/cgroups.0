@@ -1,49 +1,230 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
- access to memory reserves
-Date: Wed, 27 Nov 2013 22:16:10 -0500
-Message-ID: <20131128031610.GL3556@cmpxchg.org>
-References: <20131118154115.GA3556@cmpxchg.org>
- <20131118165110.GE32623@dhcp22.suse.cz>
- <20131122165100.GN3556@cmpxchg.org>
- <alpine.DEB.2.02.1311261648570.21003@chino.kir.corp.google.com>
- <20131127163435.GA3556@cmpxchg.org>
- <alpine.DEB.2.02.1311271343250.9222@chino.kir.corp.google.com>
- <20131127231931.GG3556@cmpxchg.org>
- <alpine.DEB.2.02.1311271613340.10617@chino.kir.corp.google.com>
- <20131128022804.GJ3556@cmpxchg.org>
- <alpine.DEB.2.02.1311271839290.5120@chino.kir.corp.google.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 03/12] memcg: convert away from cftype->read() and
+	->read_map()
+Date: Thu, 28 Nov 2013 09:26:38 +0100
+Message-ID: <20131128082638.GB2761@dhcp22.suse.cz>
+References: <1385595759-17656-1-git-send-email-tj@kernel.org>
+	<1385595759-17656-4-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=6pZLwGteRtpFjwJLVda/Ykln84VFpHZi7FmeXXw23G0=;
-	b=t5u7DiPfLvLfrFVp9dVJI8lENJAwK/193f1T/r6dGqlo6CkXf7uq2rGYtrMsZ2OOaHPMqudkvWejeedB+1cyIqJu+ZoVFBosCwFG6x/pCmJSJ2fOqGN9yCOWKp74UBgu8iEnD5WWB2hPCw9GfWEXoAhjHGGBZitkGsngyY72zHU=;
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1311271839290.5120-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=eTKi7Cmy6hOq1Fat1sDhCSyIapQH9L83t/R3Tz8vN1g=;
+	b=BLxRP3zolniSrH5S7n4WNv8RG7YTyhEBbt3BM2tYTTOsZhZeKyOU244PrRRvK98qlP
+	3f+yCi8uAlKGFlfBUO3Wx3CbHRtWDxJPAooDqriZj7hfhppdWr1iDfsJ1JWmQJe+HMz7
+	Auq6mSIoyF2qatVwJbKOROHZ2ZSbe4nC3zIni+sdHH8Ffsn66JL7QqKvFO9rcOT/lVtJ
+	LsiIpILggfAEsECxfkB5pJlEMtGyIEFyVNqIVykWoOoOhpacHKUkF1ghNkybPBQBWwkX
+	s4zB8ZXA6UHNAnuKtngUDVNVpiEeV5Q3LUIloufn5yMH27MVy5JgqK94vHuI67D0hoSq
+	aTPQ==
+Content-Disposition: inline
+In-Reply-To: <1385595759-17656-4-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-On Wed, Nov 27, 2013 at 06:52:10PM -0800, David Rientjes wrote:
-> On Wed, 27 Nov 2013, Johannes Weiner wrote:
+On Wed 27-11-13 18:42:30, Tejun Heo wrote:
+> In preparation of conversion to kernfs, cgroup file handling is being
+> consolidated so that it can be easily mapped to the seq_file based
+> interface of kernfs.
 > 
-> > The long-standing, user-visible definition of the current line agrees
-> > with me.  You can't just redefine this, period.
-> > 
-> > I tried to explain to you how insane the motivation for this patch is,
-> > but it does not look like you are reading what I write.  But you don't
-> > get to change user-visible behavior just like that anyway, much less
-> > so without a sane reason, so this was a complete waste of time :-(
-> > 
+> cftype->read_map() doesn't add any value and being replaced with
+> ->read_seq_string(), and all users of cftype->read() can be easily
+> served, usually better, by seq_file and other methods.
 > 
-> If you would like to leave this to Andrew's decision, that's fine.  
-> Michal has already agreed with my patch and has acked it in -mm.
+> Update mem_cgroup_read() to return u64 instead of printing itself and
+> rename it to mem_cgroup_read_u64(), and update
+> mem_cgroup_oom_control_read() to use ->read_seq_string() instead of
+> ->read_map().
 > 
-> If userspace is going to handle oom conditions, which is possible today 
-> and will be extended in the future, then it should only wakeup as a last 
-> resort when there is no possibility of future memory freeing.
+> This patch doesn't make any visible behavior changes.
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> Cc: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-I'll ack a patch that accomplishes that.
+Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+
+Thanks!
+
+> ---
+>  mm/memcontrol.c | 49 +++++++++++++++++++++----------------------------
+>  1 file changed, 21 insertions(+), 28 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 7aa0d40..f149521 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -5150,14 +5150,12 @@ static inline u64 mem_cgroup_usage(struct mem_cgroup *memcg, bool swap)
+>  	return val << PAGE_SHIFT;
+>  }
+>  
+> -static ssize_t mem_cgroup_read(struct cgroup_subsys_state *css,
+> -			       struct cftype *cft, struct file *file,
+> -			       char __user *buf, size_t nbytes, loff_t *ppos)
+> +static u64 mem_cgroup_read_u64(struct cgroup_subsys_state *css,
+> +				   struct cftype *cft)
+>  {
+>  	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+> -	char str[64];
+>  	u64 val;
+> -	int name, len;
+> +	int name;
+>  	enum res_type type;
+>  
+>  	type = MEMFILE_TYPE(cft->private);
+> @@ -5183,8 +5181,7 @@ static ssize_t mem_cgroup_read(struct cgroup_subsys_state *css,
+>  		BUG();
+>  	}
+>  
+> -	len = scnprintf(str, sizeof(str), "%llu\n", (unsigned long long)val);
+> -	return simple_read_from_buffer(buf, nbytes, ppos, str, len);
+> +	return val;
+>  }
+>  
+>  static int memcg_update_kmem_limit(struct cgroup_subsys_state *css, u64 val)
+> @@ -5911,16 +5908,12 @@ static void mem_cgroup_oom_unregister_event(struct mem_cgroup *memcg,
+>  }
+>  
+>  static int mem_cgroup_oom_control_read(struct cgroup_subsys_state *css,
+> -	struct cftype *cft,  struct cgroup_map_cb *cb)
+> +				       struct cftype *cft, struct seq_file *sf)
+>  {
+>  	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+>  
+> -	cb->fill(cb, "oom_kill_disable", memcg->oom_kill_disable);
+> -
+> -	if (atomic_read(&memcg->under_oom))
+> -		cb->fill(cb, "under_oom", 1);
+> -	else
+> -		cb->fill(cb, "under_oom", 0);
+> +	seq_printf(sf, "oom_kill_disable %d\n", memcg->oom_kill_disable);
+> +	seq_printf(sf, "under_oom %d\n", (bool)atomic_read(&memcg->under_oom));
+>  	return 0;
+>  }
+>  
+> @@ -6239,31 +6232,31 @@ static struct cftype mem_cgroup_files[] = {
+>  	{
+>  		.name = "usage_in_bytes",
+>  		.private = MEMFILE_PRIVATE(_MEM, RES_USAGE),
+> -		.read = mem_cgroup_read,
+> +		.read_u64 = mem_cgroup_read_u64,
+>  	},
+>  	{
+>  		.name = "max_usage_in_bytes",
+>  		.private = MEMFILE_PRIVATE(_MEM, RES_MAX_USAGE),
+>  		.trigger = mem_cgroup_reset,
+> -		.read = mem_cgroup_read,
+> +		.read_u64 = mem_cgroup_read_u64,
+>  	},
+>  	{
+>  		.name = "limit_in_bytes",
+>  		.private = MEMFILE_PRIVATE(_MEM, RES_LIMIT),
+>  		.write_string = mem_cgroup_write,
+> -		.read = mem_cgroup_read,
+> +		.read_u64 = mem_cgroup_read_u64,
+>  	},
+>  	{
+>  		.name = "soft_limit_in_bytes",
+>  		.private = MEMFILE_PRIVATE(_MEM, RES_SOFT_LIMIT),
+>  		.write_string = mem_cgroup_write,
+> -		.read = mem_cgroup_read,
+> +		.read_u64 = mem_cgroup_read_u64,
+>  	},
+>  	{
+>  		.name = "failcnt",
+>  		.private = MEMFILE_PRIVATE(_MEM, RES_FAILCNT),
+>  		.trigger = mem_cgroup_reset,
+> -		.read = mem_cgroup_read,
+> +		.read_u64 = mem_cgroup_read_u64,
+>  	},
+>  	{
+>  		.name = "stat",
+> @@ -6297,7 +6290,7 @@ static struct cftype mem_cgroup_files[] = {
+>  	},
+>  	{
+>  		.name = "oom_control",
+> -		.read_map = mem_cgroup_oom_control_read,
+> +		.read_seq_string = mem_cgroup_oom_control_read,
+>  		.write_u64 = mem_cgroup_oom_control_write,
+>  		.private = MEMFILE_PRIVATE(_OOM_TYPE, OOM_CONTROL),
+>  	},
+> @@ -6315,24 +6308,24 @@ static struct cftype mem_cgroup_files[] = {
+>  		.name = "kmem.limit_in_bytes",
+>  		.private = MEMFILE_PRIVATE(_KMEM, RES_LIMIT),
+>  		.write_string = mem_cgroup_write,
+> -		.read = mem_cgroup_read,
+> +		.read_u64 = mem_cgroup_read_u64,
+>  	},
+>  	{
+>  		.name = "kmem.usage_in_bytes",
+>  		.private = MEMFILE_PRIVATE(_KMEM, RES_USAGE),
+> -		.read = mem_cgroup_read,
+> +		.read_u64 = mem_cgroup_read_u64,
+>  	},
+>  	{
+>  		.name = "kmem.failcnt",
+>  		.private = MEMFILE_PRIVATE(_KMEM, RES_FAILCNT),
+>  		.trigger = mem_cgroup_reset,
+> -		.read = mem_cgroup_read,
+> +		.read_u64 = mem_cgroup_read_u64,
+>  	},
+>  	{
+>  		.name = "kmem.max_usage_in_bytes",
+>  		.private = MEMFILE_PRIVATE(_KMEM, RES_MAX_USAGE),
+>  		.trigger = mem_cgroup_reset,
+> -		.read = mem_cgroup_read,
+> +		.read_u64 = mem_cgroup_read_u64,
+>  	},
+>  #ifdef CONFIG_SLABINFO
+>  	{
+> @@ -6349,25 +6342,25 @@ static struct cftype memsw_cgroup_files[] = {
+>  	{
+>  		.name = "memsw.usage_in_bytes",
+>  		.private = MEMFILE_PRIVATE(_MEMSWAP, RES_USAGE),
+> -		.read = mem_cgroup_read,
+> +		.read_u64 = mem_cgroup_read_u64,
+>  	},
+>  	{
+>  		.name = "memsw.max_usage_in_bytes",
+>  		.private = MEMFILE_PRIVATE(_MEMSWAP, RES_MAX_USAGE),
+>  		.trigger = mem_cgroup_reset,
+> -		.read = mem_cgroup_read,
+> +		.read_u64 = mem_cgroup_read_u64,
+>  	},
+>  	{
+>  		.name = "memsw.limit_in_bytes",
+>  		.private = MEMFILE_PRIVATE(_MEMSWAP, RES_LIMIT),
+>  		.write_string = mem_cgroup_write,
+> -		.read = mem_cgroup_read,
+> +		.read_u64 = mem_cgroup_read_u64,
+>  	},
+>  	{
+>  		.name = "memsw.failcnt",
+>  		.private = MEMFILE_PRIVATE(_MEMSWAP, RES_FAILCNT),
+>  		.trigger = mem_cgroup_reset,
+> -		.read = mem_cgroup_read,
+> +		.read_u64 = mem_cgroup_read_u64,
+>  	},
+>  	{ },	/* terminate */
+>  };
+> -- 
+> 1.8.4.2
+> 
+
+-- 
+Michal Hocko
+SUSE Labs
