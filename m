@@ -1,59 +1,82 @@
-From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-Subject: Re: [PATCH 11/12] cgroup: replace cftype->read_seq_string() with
-	cftype->seq_show()
-Date: Thu, 28 Nov 2013 10:07:40 +0100
-Message-ID: <529707DC.3030401@bmw-carit.de>
-References: <1385595759-17656-1-git-send-email-tj@kernel.org>
-	<1385595759-17656-12-git-send-email-tj@kernel.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [patch] mm: memcg: do not declare OOM from __GFP_NOFAIL
+ allocations
+Date: Thu, 28 Nov 2013 11:20:49 +0100
+Message-ID: <20131128102049.GF2761@dhcp22.suse.cz>
+References: <1385140676-5677-1-git-send-email-hannes@cmpxchg.org>
+ <alpine.DEB.2.02.1311261658170.21003@chino.kir.corp.google.com>
+ <alpine.DEB.2.02.1311261931210.5973@chino.kir.corp.google.com>
+ <20131127163916.GB3556@cmpxchg.org>
+ <alpine.DEB.2.02.1311271336220.9222@chino.kir.corp.google.com>
+ <20131127225340.GE3556@cmpxchg.org>
+ <alpine.DEB.2.02.1311271526080.22848@chino.kir.corp.google.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=G/KNwrraLq/1eSCQnptY8Jnu3MU0XOCJjoBAF717G4I=;
+        b=r4dZsTLTintKwxYA/WwlvvGiP9Q1OnOQu5avz/HX1uR21Sr17qWOkChGjf7jlzLij9
+         y/zaotSipLqz6VoJZbCkWjEDHV/GZxgMFWhJmI3gJAwfpipoUHfTVyeA3PMykGY2p400
+         c1qRfXuDgbt7Bvad+xjb1lJNfnKDD3eI3A3YDs4O8pTWKjqKnFErXRJKnnD3X4H4OpWg
+         PVV4kufG02IW0CaX1dH6JjEHNIJwNaBPDa5YDokO0x5cf6hx+nqAUm4aA7sB97ToPnQj
+         NF+h41xPxVYyEfDaekKp+c2zRBjTN7h3I2Deik/3V7RURh8JBmTG/4Ekm/vBV+ulpYMB
+         LJMw==
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.02.1311271526080.22848-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1385595759-17656-12-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi Tejun,
+On Wed 27-11-13 15:34:24, David Rientjes wrote:
+> On Wed, 27 Nov 2013, Johannes Weiner wrote:
+> 
+> > > We don't give __GFP_NOFAIL allocations access to memory reserves in the 
+> > > page allocator and we do call the oom killer for them so that a process is 
+> > > killed so that memory is freed.  Why do we have a different policy for 
+> > > memcg?
+> > 
+> > Oh boy, that's the epic story we dealt with all throughout the last
+> > merge window... ;-)
+> > 
+> > __GFP_NOFAIL allocations might come in with various filesystem locks
+> > held that could prevent an OOM victim from exiting, so a loop around
+> > the OOM killer in an allocation context is prone to loop endlessly.
+> > 
+> 
+> Ok, so let's forget about GFP_KERNEL | __GFP_NOFAIL since anything doing 
+> __GFP_FS should not be holding such locks, we have some of those in the 
+> drivers code and that makes sense that they are doing GFP_KERNEL.
+> 
+> Focusing on the GFP_NOFS | __GFP_NOFAIL allocations in the filesystem 
+> code, the kernel oom killer independent of memcg never gets called because 
+> !__GFP_FS and they'll simply loop around the page allocator forever.
+> 
+> In the past, Andrew has expressed the desire to get rid of __GFP_NOFAIL 
+> entirely since it's flawed when combined with GFP_NOFS (and GFP_KERNEL | 
+> __GFP_NOFAIL could simply be reimplemented in the caller) because of the 
+> reason you point out in addition to making it very difficult in the page 
+> allocator to free memory independent of memcg.
+> 
+> So I'm wondering if we should just disable the oom killer in memcg for 
+> __GFP_NOFAIL as you've done here, but not bypass to the root memcg and 
+> just allow them to spin?  I think we should be focused on the fixing the 
+> callers rather than breaking memcg isolation.
 
-On 11/28/2013 12:42 AM, Tejun Heo wrote:
-> In preparation of conversion to kernfs, cgroup file handling is
-> updated so that it can be easily mapped to kernfs.  This patch
-> replaces cftype->read_seq_string() with cftype->seq_show() which is
-> not limited to single_open() operation and will map directcly to
-> kernfs seq_file interface.
->
-> The conversions are mechanical.  As ->seq_show() doesn't have @css and
-> @cft, the functions which make use of them are converted to use
-> seq_css() and seq_cft() respectively.  In several occassions, e.f. if
-> it has seq_string in its name, the function name is updated to fit the
-> new method better.
->
-> This patch does not introduce any behavior changes.
->
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-> Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> Cc: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
-> Cc: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-> Cc: Aristeu Rozanski <arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+What if the callers simply cannot deal with the allocation failure?
+84235de394d97 (fs: buffer: move allocation failure loop into the
+allocator) describes one such case when __getblk_slow tries desperately
+to grow buffers relying on the reclaim to free something. As there might
+be no reclaim going on we are screwed.
 
-Ack for netprio_cgroup.c.
-
-Thanks,
-daniel
+That being said, while I do agree with you that we should strive for
+isolation as much as possible there are certain cases when this is
+impossible to achieve without seeing much worse consequences. For now,
+we hope that __GFP_NOFAIL is used very scarcely.
+-- 
+Michal Hocko
+SUSE Labs
