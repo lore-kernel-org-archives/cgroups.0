@@ -1,44 +1,68 @@
-From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH] memcg: fix kmem_account_flags check in memcg_can_account_kmem()
-Date: Fri, 29 Nov 2013 14:09:18 +0400
-Message-ID: <529867CE.4040004@parallels.com>
-References: <1385567162-14973-1-git-send-email-vdavydov@parallels.com> <20131129094502.GD25893@dhcp22.suse.cz>
+From: Martin Boutin <martboutin@gmail.com>
+Subject: cgroups-blkio CFQ scheduling does not work well in a RAID5 configuration.
+Date: Fri, 29 Nov 2013 09:06:08 -0500
+Message-ID: <CACtJ3Hak1pvYLRDSC3MELeo_jV8_1Tp8rjte5SODyvNauoFv4g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20131129094502.GD25893-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:date:message-id:subject:from:to:content-type;
+        bh=wRDAnhZnCS+2NwHkdvzkl17KzQARvbDZAPY5qlLFAi4=;
+        b=JJtIUIZ2QMq6k88M7ivuimGfFGoXszgPAoWNrkVqmPpnxOIWJvhfF3yggOYPdhxJ6O
+         jO1Q755nAv+adpT9dFI6aEWvDeGXJVf8wBYlkMgTeMavj3BtcMJfj1nv++qA/JdRA+yG
+         MoGB3tMaGjn3kZIcnA69fL88XjyJJwi4DE/eAVZz5aLBIDVL1cWuUZtXwj+WcuwYP7sM
+         6GNRkPa404TaG+zQN6oRv8UrQ6RKRlMkafeUtGwukQGnDu3876OonKIe4z3cQ7QjUa7N
+         6pjAZ5KZfoLcOAREV+Q1TuiCYHOGYGDZ1O9QN5JkozN8imJtKvogWYs8Wm78jC5sty68
+         okkQ==
+Sender: linux-raid-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Jens Axboe <axboe@kernel.dk>, "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, "Kernel.org-Linux-cgroups" <cgroups@vger.kernel.org>
 
-On 11/29/2013 01:45 PM, Michal Hocko wrote:
-> On Wed 27-11-13 19:46:01, Vladimir Davydov wrote:
->> We should start kmem accounting for a memory cgroup only after both its
->> kmem limit is set (KMEM_ACCOUNTED_ACTIVE) and related call sites are
->> patched (KMEM_ACCOUNTED_ACTIVATED).
-> This should be vice-versa, no? ACTIVE is set after
-> static_key_slow_inc(&memcg_kmem_enabled_key) AFAICS.
->
->> Currently memcg_can_account_kmem() allows kmem accounting even if only
->> one of the conditions is true.
->> Fix it.
-> It would be nice to describe, what is the actual problem here. I assume
-> this is a charge vs. enable race. Let me try
->
-> So we have KMEM_ACCOUNTED_ACTIVATED (set by memcg_update_cache_sizes)
-> but the static key is not enabled yet (so KMEM_ACCOUNTED_ACTIVE is not
-> set yet). memcg_can_account_kmem is called from 2 contexts during charge
-> 	- memcg_kmem_get_cache via __memcg_kmem_get_cache
-> 	- memcg_kmem_newpage_charge via __memcg_kmem_newpage_charge
->
-> both of them start by checking memcg_kmem_enabled which is our
-> static key before memcg_can_account_kmem. This would suggest that
-> static_key+ACTIVE check memcg_can_account_kmem is sufficient. No?
+Hello list,
 
-Yes, I guess you're perfectly right and we don't need the ACTIVATED bit 
-at all. I'll look at this deeper and send a patch removing it if it 
-doesn't break something.
+Today I was trying to figure out how to get block I/O prioritization
+working for a certain process. The process is a streaming server that
+reads a big file stored in a filesystem (xfs) on top of a RAID5
+configuration using 3 disks, using O_DIRECT.
 
-Thanks.
+I'm setting up cgroups this way:
+$ echo 1000 > /sys/fs/cgroup/blkio/prio/blkio.weight
+$ echo 10 > /sys/fs/cgroup/blkio/blkio.leaf_weight
+
+meaning that all the tasks in the prio cgroup will have unconstrained
+access time to the disk, while all the other tasks will have their
+disk access time weighted by a factor.
+
+If I ignore the RAID5 setup, create a XFS filesystem on /dev/sdb2,
+mount it on /data and put my streaming daemon in the prio cgroup and
+run the daemon by streaming around 250MiB/s of data, while I launch
+fio with disk I/O intensive tasks. For a period of 5 minutes, the
+streaming deamon had to stop streaming in about 5 times to rebuffer.
+
+Now, if I consider the same scenario but using the RAID5 device and
+letting the daemon stream 500MiB/s of data (because the RAID has
+around twice the throughput of a single drive), after a period of 5
+minutes the streaming daemon had to stop streaming in about 50 times!
+This is 10 times more than the single drive case.
+
+While streaming, I observed both blkio.sectors and blkio.io_queued for
+both cgroups (the root node and prio). If only the streaming daemon is
+run (therefore fio is stopped), the sector count in prio/blkio.sectors
+increases while (root)/blkio.sectors does not. This confirms the
+streaming daemon is correctly identified as in the prio cgroup.
+Then, while both the streaming daemon and fio run, observing io_queued
+shows that for the root cgroup there is about 50 queued request in
+total (in average), while for the prio cgroup there is only one
+ocasional delayed request from time to time.
+
+$ uname -a
+Linux haswell1 3.10.10 #9 SMP PREEMPT Fri Nov 29 11:38:20 CET 2013
+i686 GNU/Linux
+
+Any ideas?
+
+Thanks,
+-- 
+Martin Boutin
