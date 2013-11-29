@@ -1,79 +1,67 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 07/12] cgroup: unify cgroup_write_X64() and
-	cgroup_write_string()
-Date: Fri, 29 Nov 2013 15:05:25 -0500
-Message-ID: <20131129200525.GC21755@mtj.dyndns.org>
-References: <1385595759-17656-1-git-send-email-tj@kernel.org>
-	<1385595759-17656-8-git-send-email-tj@kernel.org>
-	<20131128111818.GG2761@dhcp22.suse.cz>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [patch] mm: memcg: do not declare OOM from __GFP_NOFAIL
+ allocations
+Date: Fri, 29 Nov 2013 15:46:16 -0800 (PST)
+Message-ID: <alpine.DEB.2.02.1311291543400.22413@chino.kir.corp.google.com>
+References: <1385140676-5677-1-git-send-email-hannes@cmpxchg.org> <alpine.DEB.2.02.1311261658170.21003@chino.kir.corp.google.com> <alpine.DEB.2.02.1311261931210.5973@chino.kir.corp.google.com> <20131127163916.GB3556@cmpxchg.org>
+ <alpine.DEB.2.02.1311271336220.9222@chino.kir.corp.google.com> <20131127225340.GE3556@cmpxchg.org> <alpine.DEB.2.02.1311271526080.22848@chino.kir.corp.google.com> <20131128102049.GF2761@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version:content-type;
+        bh=LnQayGAN11BSdtkFQfv4TlCapJZSStc6y6/pXoR35/U=;
+        b=VQfuoXyqQb64XznhaWW+6ZHpsPpfuj73eaJVvumchMMgOSacTzG/D+ixrT0Aepsapx
+         qsGz1nXaeTK6XYnSK6OfQ7udTR8S2HZvIQxPD+Iik9lOTe2xiuyFN0LpeR8tPAmTJMfU
+         KCZDb7AbLevKQ8HEpoPDFuCwCeBNLHktW7FfqxkRC+VGh1fIJZqd0R8xBcAXoZyFcRml
+         HBb0G/PX9eMzAXoA9LG746LHzXtXgvbGXpbq3FB7uKckBn19BbXCsXkLB9fJxcqIbgED
+         QxcHnUWE1jTRcuEvQ9wMITrLAsEizJrdPv093azorAySgTQycS/z3VeeToOPmTAKCTvg
+         TBfg==
+In-Reply-To: <20131128102049.GF2761-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=G8zRhZPn2x9LQUsF69AUtFNsEaBljsmrwN3P6Ht5e/4=;
-	b=tH3xl5r8zjXU62zX1+e3i8B63AzPSea790oMS6E2V5iu6n8Soav4yPAqxe5NQFnsFt
-	TD77yvIGDE2qD8hIoyfeo9bnTsPRN8ev51k5k2e5cEebmyp62ijutg8jZs58Wc+uuc6p
-	miqpNeKZCAXf/mqSBt51c5M1fsHBHzHgYBcSlaxyga5pyAPeteLPfj493HnQuqwBrMyH
-	Fn/uCbKYIugcbtM0xD19uNCCwVKDQ0qRtJpnlUc9h9nzepVQ/E9lg2HPOwK60ZijtYAC
-	0PXTa/LRvvKyn/v38gsRdNAYSsaii3IQ547hXhg+ShwKOiVGo62+1isSclR2d1m96LQr
-	yfoA==
-Content-Disposition: inline
-In-Reply-To: <20131128111818.GG2761-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Michal.
+On Thu, 28 Nov 2013, Michal Hocko wrote:
 
-On Thu, Nov 28, 2013 at 12:18:18PM +0100, Michal Hocko wrote:
-> > Unify the two into cgroup_file_write() which always allocates dynamic
-> > buffer for simplicity
+> > Ok, so let's forget about GFP_KERNEL | __GFP_NOFAIL since anything doing 
+> > __GFP_FS should not be holding such locks, we have some of those in the 
+> > drivers code and that makes sense that they are doing GFP_KERNEL.
+> > 
+> > Focusing on the GFP_NOFS | __GFP_NOFAIL allocations in the filesystem 
+> > code, the kernel oom killer independent of memcg never gets called because 
+> > !__GFP_FS and they'll simply loop around the page allocator forever.
+> > 
+> > In the past, Andrew has expressed the desire to get rid of __GFP_NOFAIL 
+> > entirely since it's flawed when combined with GFP_NOFS (and GFP_KERNEL | 
+> > __GFP_NOFAIL could simply be reimplemented in the caller) because of the 
+> > reason you point out in addition to making it very difficult in the page 
+> > allocator to free memory independent of memcg.
+> > 
+> > So I'm wondering if we should just disable the oom killer in memcg for 
+> > __GFP_NOFAIL as you've done here, but not bypass to the root memcg and 
+> > just allow them to spin?  I think we should be focused on the fixing the 
+> > callers rather than breaking memcg isolation.
 > 
-> It's true that this is simpler but the allocation might cause some
-> issues with memcg. Although it is not common that userspace oom handler
-> is a part of the target memcg there are users (e.g. Google) who do that.
+> What if the callers simply cannot deal with the allocation failure?
+> 84235de394d97 (fs: buffer: move allocation failure loop into the
+> allocator) describes one such case when __getblk_slow tries desperately
+> to grow buffers relying on the reclaim to free something. As there might
+> be no reclaim going on we are screwed.
 > 
-> Why is that a problem? Consider that a memcg is under OOM, handler gets
-> notified and tries to solve the situation by enlarging the hard limit.
-> This worked before this patch because cgroup_write_X64 used an on stack
-> buffer but now it would use kmalloc which might be accounted and trip
-> over the same OOM situation.
-> 
-> This is not limited to the OOM handling. The group might be close to OOM
-> and the last thing user expects is to trigger OOM when he tries to
-> enlarge the limit.
-> 
-> Is the additional simplicity worth breaking those usecases?
 
-Whoa, so we support oom handler inside the memcg that it handles?
-Does that work reliably?  Changing the above detail in this patch
-isn't difficult (and we'll later need to update kernfs too) but
-supporting such setup properly would be a *lot* of commitment and I'm
-very doubtful we'd be able to achieve that by just carefully avoiding
-memory allocation in the operations that usreland oom handler uses -
-that set is destined to expand over time, extremely fragile and will
-be hellish to maintain.
+My suggestion is to spin, not return NULL.  Bypassing to the root memcg 
+can lead to a system oom condition whereas if memcg weren't involved at 
+all the page allocator would just spin (because of !__GFP_FS).
 
-So, I'm not at all excited about commiting to this guarantee.  This
-one is an easy one but it looks like the first step onto dizzying
-slippery slope.
+> That being said, while I do agree with you that we should strive for
+> isolation as much as possible there are certain cases when this is
+> impossible to achieve without seeing much worse consequences. For now,
+> we hope that __GFP_NOFAIL is used very scarcely.
 
-Am I misunderstanding something here?  Are you and Johannes firm on
-supporting this?
-
-Thanks.
-
--- 
-tejun
+If that's true, why not bypass the per-zone min watermarks in the page 
+allocator as well to allow these allocations to succeed?
