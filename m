@@ -1,41 +1,113 @@
-From: William Dauchy <wdauchy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: 3.10.16 cgroup_mutex deadlock
-Date: Mon, 2 Dec 2013 11:31:53 +0100
-Message-ID: <CAJ75kXYKx67VaGYRs1nwataE2ra216qTB9Yks=MRGFN-c_b3uA@mail.gmail.com>
-References: <20131111220626.GA7509@sbohrermbp13-local.rgmadvisors.com>
- <52820030.6000806@huawei.com> <20131112143147.GB6049@dhcp22.suse.cz>
- <20131112155530.GA2860@sbohrermbp13-local.rgmadvisors.com>
- <20131112165504.GF6049@dhcp22.suse.cz> <20131114225649.GA16725@sbohrermbp13-local.rgmadvisors.com>
- <20131115062458.GA9755@mtj.dyndns.org> <20131115075401.GB9755@mtj.dyndns.org>
- <alpine.LNX.2.00.1311171746160.15789@eggly.anvils> <CAJ75kXZYjKwV_XiEB493jNyGRqS395JZyY-S9xQBQJLyaCSOEQ@mail.gmail.com>
- <20131122221839.GD8981@mtj.dyndns.org> <CAJ75kXabrnxqdtb5SXqm_pYTrSih9yvP38DApF+_P+YZCepTMw@mail.gmail.com>
- <5292A5EA.1030501@huawei.com>
+From: Vladimir Davydov <vdavydov@parallels.com>
+Subject: [PATCH v12 00/18] kmemcg shrinkers
+Date: Mon, 2 Dec 2013 15:19:35 +0400
+Message-ID: <cover.1385974612.git.vdavydov@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-type;
-        bh=mXiHPTbIVjF2mS6PlikJXv0nz+GvMYYsRjFvXiz/T4Y=;
-        b=M9xlkk/fd7ZwfXXaMvq5QsYKnppJuUShTNG0svXy21DtbnKgTDC45U+lkoJI7SCJj+
-         nw7RwcLRuwdQWbM5jK/k8PppC8MqlOY1eTeYnERdgsBAjHrlNOPE0n7eWZCAq1g78TAH
-         QaCrww8BkbX692vwc2QNlVGaO6CNglJGHEutjphjZvgSEAN9Rs/x0eqe2zEQCtpKMr2W
-         wxvLK7SLAuugcE6Q0YKCjuD9L7ak2QWgh39CsmMOHG9taVQQmbt7w638Wbj+/NVcpq66
-         3sDY78ReoRp5L2T0XvBGS1dm0ZM3wRf2yUubtE7QxmS7bwzvTlT09OYRVpWmYDGfdrHg
-         cUCA==
-In-Reply-To: <5292A5EA.1030501-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shawn Bohrer <shawn.bohrer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Markus Blank-Burian <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org>
+To: hannes@cmpxchg.org, mhocko@suse.cz, dchinner@redhat.com, akpm@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, glommer@openvz.org, vdavydov@parallels.com
 
-Hi Li,
+Hi,
 
-On Mon, Nov 25, 2013 at 2:20 AM, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
-> I'll do this after the patch hits mainline, if Tejun doesn't plan to.
+This is the 12th iteration of Glauber Costa's patchset implementing targeted
+shrinking for memory cgroups when kmem limits are present. So far, we've been
+accounting kernel objects but failing allocations when short of memory. This is
+because our only option would be to call the global shrinker, depleting objects
+from all caches and breaking isolation.
 
-Do you have some news about it?
+The main idea is to make LRU lists used by FS slab shrinkers per-memcg. When
+adding or removing an element from from the LRU, we use the page information to
+figure out which memory cgroup it belongs to and relay it to the appropriate
+list. This allows scanning kmem objects accounted to different memory cgroups
+independently.
+
+The patchset is based on top of Linux 3.13-rc2 and organized as follows:
+
+ * patches 1-8 are for cleanup/preparation;
+ * patch 9 introduces infrastructure for memcg-aware shrinkers;
+ * patches 10 and 11 implement the per-memcg LRU list structure;
+ * patch 12 uses per-memcg LRU lists to make dcache and icache shrinkers
+   memcg-aware;
+ * patch 13 implements kmem-only shrinking;
+ * patches 14-18 issue kmem shrinking on limit resize, global pressure.
+
+Known issues:
+
+ * Since FS shrinkers can't be executed on __GFP_FS allocations, such
+   allocations will fail if memcg kmem limit is less than the user limit and
+   the memcg kmem usage is close to its limit. Glauber proposed to schedule a
+   worker which would shrink kmem in the background on such allocations.
+   However, this approach does not eliminate failures completely, it just makes
+   them rarer. I'm thinking on implementing soft limits for memcg kmem so that
+   striking the soft limit will trigger the reclaimer, but won't fail the
+   allocation. I would appreciate any other proposals on how this can be fixed.
+
+ * Only dcache and icache are reclaimed on memcg pressure. Other FS objects are
+   left for global pressure only. However, it should not be a serious problem
+   to make them reclaimable too by passing on memcg to the FS-layer and letting
+   each FS decide if its internal objects are shrinkable on memcg pressure.
+
+Changelog:
+
+Changes in v12:
+ * Do not prune all slabs on kmem-only pressure.
+ * Count all on-LRU pages eligible for reclaim to pass to shrink_slab().
+ * Fix isolation issue due to using shrinker->nr_deferred on memcg pressure.
+ * Add comments to memcg_list_lru functions.
+ * Code cleanup/refactoring.
+
+Changes in v11:
+ * Rework per-memcg list_lru infrastructure.
+
+Glauber Costa (7):
+  memcg: make cache index determination more robust
+  memcg: consolidate callers of memcg_cache_id
+  memcg: move initialization to memcg creation
+  memcg: allow kmem limit to be resized down
+  vmpressure: in-kernel notifications
+  memcg: reap dead memcgs upon global memory pressure
+  memcg: flush memcg items upon memcg destruction
+
+Vladimir Davydov (11):
+  memcg: move several kmemcg functions upper
+  fs: do not use destroy_super() in alloc_super() fail path
+  vmscan: rename shrink_slab() args to make it more generic
+  vmscan: move call to shrink_slab() to shrink_zones()
+  vmscan: do_try_to_free_pages(): remove shrink_control argument
+  vmscan: shrink slab on memcg pressure
+  memcg,list_lru: add per-memcg LRU list infrastructure
+  memcg,list_lru: add function walking over all lists of a per-memcg
+    LRU
+  fs: make icache, dcache shrinkers memcg-aware
+  memcg: per-memcg kmem shrinking
+  vmscan: take at least one pass with shrinkers
+
+ fs/dcache.c                   |   25 +-
+ fs/inode.c                    |   16 +-
+ fs/internal.h                 |    9 +-
+ fs/super.c                    |   48 ++-
+ include/linux/fs.h            |    4 +-
+ include/linux/list_lru.h      |   83 +++++
+ include/linux/memcontrol.h    |   22 ++
+ include/linux/mm.h            |    3 +-
+ include/linux/shrinker.h      |   10 +-
+ include/linux/swap.h          |    2 +
+ include/linux/vmpressure.h    |    5 +
+ include/trace/events/vmscan.h |   20 +-
+ mm/memcontrol.c               |  728 ++++++++++++++++++++++++++++++++++++-----
+ mm/vmpressure.c               |   53 ++-
+ mm/vmscan.c                   |  249 +++++++++-----
+ 15 files changed, 1054 insertions(+), 223 deletions(-)
+
 -- 
-William
+1.7.10.4
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
