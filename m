@@ -1,81 +1,67 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [patch] mm: memcg: do not declare OOM from __GFP_NOFAIL
- allocations
-Date: Mon, 2 Dec 2013 14:22:01 +0100
-Message-ID: <20131202132201.GC18838@dhcp22.suse.cz>
-References: <1385140676-5677-1-git-send-email-hannes@cmpxchg.org>
- <alpine.DEB.2.02.1311261658170.21003@chino.kir.corp.google.com>
- <alpine.DEB.2.02.1311261931210.5973@chino.kir.corp.google.com>
- <20131127163916.GB3556@cmpxchg.org>
- <alpine.DEB.2.02.1311271336220.9222@chino.kir.corp.google.com>
- <20131127225340.GE3556@cmpxchg.org>
- <alpine.DEB.2.02.1311271526080.22848@chino.kir.corp.google.com>
- <20131128102049.GF2761@dhcp22.suse.cz>
- <alpine.DEB.2.02.1311291543400.22413@chino.kir.corp.google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 07/12] cgroup: unify cgroup_write_X64() and
+	cgroup_write_string()
+Date: Mon, 2 Dec 2013 08:30:59 -0500
+Message-ID: <20131202133059.GA3626@htj.dyndns.org>
+References: <1385595759-17656-1-git-send-email-tj@kernel.org>
+	<1385595759-17656-8-git-send-email-tj@kernel.org>
+	<20131128111818.GG2761@dhcp22.suse.cz>
+	<20131129200525.GC21755@mtj.dyndns.org>
+	<20131202095401.GA18838@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1311291543400.22413-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=kEa4k7sHgjggKxx+J9PjZ1a1CbKjhTfxtsB1jx+RfQs=;
+	b=tJayaiDCs9g7KNFYIAKjPu/OdyAXDfsG+6OrZe1zILreVt4h6oPrmO2ptbpvQAKtUY
+	EAzGkn7gaAQnOlo2vluBWbCS8PsqGKMOyX0OzZF08ML319as+qMCdU23UyOpjfUI2vvi
+	1xJwUnXEiuRuO/4n1PrSsJAStgKn6A3N7VEVFenbZaRZ+3PwZXmC/HjFJFaqEO/MdK6u
+	x4mkp4qVIz83+dtwuRMiWcpmnsF7mf3jWsAVcxt9Hndj5XkUjlwehR4/mKMevXtj93/V
+	kc1vMDOwoeT61rr/Y3nMn6+EW54/qXhmrQ7c9kNDLilX+Mei1Xb+cljmM7nS2BrCP7RN
+	NG8g==
+Content-Disposition: inline
+In-Reply-To: <20131202095401.GA18838-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-On Fri 29-11-13 15:46:16, David Rientjes wrote:
-> On Thu, 28 Nov 2013, Michal Hocko wrote:
-> 
-> > > Ok, so let's forget about GFP_KERNEL | __GFP_NOFAIL since anything doing 
-> > > __GFP_FS should not be holding such locks, we have some of those in the 
-> > > drivers code and that makes sense that they are doing GFP_KERNEL.
-> > > 
-> > > Focusing on the GFP_NOFS | __GFP_NOFAIL allocations in the filesystem 
-> > > code, the kernel oom killer independent of memcg never gets called because 
-> > > !__GFP_FS and they'll simply loop around the page allocator forever.
-> > > 
-> > > In the past, Andrew has expressed the desire to get rid of __GFP_NOFAIL 
-> > > entirely since it's flawed when combined with GFP_NOFS (and GFP_KERNEL | 
-> > > __GFP_NOFAIL could simply be reimplemented in the caller) because of the 
-> > > reason you point out in addition to making it very difficult in the page 
-> > > allocator to free memory independent of memcg.
-> > > 
-> > > So I'm wondering if we should just disable the oom killer in memcg for 
-> > > __GFP_NOFAIL as you've done here, but not bypass to the root memcg and 
-> > > just allow them to spin?  I think we should be focused on the fixing the 
-> > > callers rather than breaking memcg isolation.
-> > 
-> > What if the callers simply cannot deal with the allocation failure?
-> > 84235de394d97 (fs: buffer: move allocation failure loop into the
-> > allocator) describes one such case when __getblk_slow tries desperately
-> > to grow buffers relying on the reclaim to free something. As there might
-> > be no reclaim going on we are screwed.
-> > 
-> 
-> My suggestion is to spin, not return NULL. 
+Hello, Michal.
 
-Spin on which level? The whole point of this change was to not spin for
-ever because the caller might sit on top of other locks which might
-prevent somebody else to die although it has been killed.
+On Mon, Dec 02, 2013 at 10:54:01AM +0100, Michal Hocko wrote:
+> Well, I am not happy about the use case as well and I will always
+> discourage people from doing this. I was merely pointing out that the
+> patch will break those even though it seems trivial to not do so. That
+> being said I would rather see no allocation in that path but if that
+> doesn't seem viable to you then I will not loose any sleep over it.
 
-> Bypassing to the root memcg 
-> can lead to a system oom condition whereas if memcg weren't involved at 
-> all the page allocator would just spin (because of !__GFP_FS).
+So, is it something already working reliably?  I really don't like the
+implications of heading this way.  Does it also mean cgroup won't be
+able to use seq_file for read paths either?
 
-I am confused now. The page allocation has already happened at the time
-we are doing the charge. So the global OOM would have happened already.
+We're talking about a *lot* of extra restrictions and shackles if we
+go down this path and many of them would be extremely subtle and
+fragile.  If this is an one-off thing to keep the existing users
+happy, I'm okay with it and will update this patch and kernfs so that
+writes under certain size use on-stack buffer, but I *DO* want an
+assurance that memcg isn't gonna march that way, which is likely to
+bring down the rest of cgroup in the process.
 
-> > That being said, while I do agree with you that we should strive for
-> > isolation as much as possible there are certain cases when this is
-> > impossible to achieve without seeing much worse consequences. For now,
-> > we hope that __GFP_NOFAIL is used very scarcely.
-> 
-> If that's true, why not bypass the per-zone min watermarks in the page 
-> allocator as well to allow these allocations to succeed?
+Well, either that or please convince me it's something sane to
+support, but you don't sound too sure either, so....
 
-Allocations are already done. We simply cannot charge that allocation
-because we have reached the hard limit. And the said allocation might
-prevent OOM action to proceed due to held locks.
+Thanks.
+
 -- 
-Michal Hocko
-SUSE Labs
+tejun
