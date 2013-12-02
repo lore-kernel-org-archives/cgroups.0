@@ -1,153 +1,171 @@
-From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH] memcg: remove KMEM_ACCOUNTED_ACTIVATED
-Date: Mon, 2 Dec 2013 23:12:43 +0400
-Message-ID: <529CDBAB.8060307@parallels.com>
-References: <1385989693-28788-1-git-send-email-vdavydov@parallels.com> <20131202181501.GA5524@dhcp22.suse.cz>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
+ access to memory reserves
+Date: Mon, 2 Dec 2013 16:25:00 -0500
+Message-ID: <20131202212500.GN22729@cmpxchg.org>
+References: <alpine.DEB.2.02.1311131649110.6735@chino.kir.corp.google.com>
+ <20131114032508.GL707@cmpxchg.org>
+ <alpine.DEB.2.02.1311141447160.21413@chino.kir.corp.google.com>
+ <alpine.DEB.2.02.1311141525440.30112@chino.kir.corp.google.com>
+ <20131118154115.GA3556@cmpxchg.org>
+ <20131118165110.GE32623@dhcp22.suse.cz>
+ <20131122165100.GN3556@cmpxchg.org>
+ <alpine.DEB.2.02.1311261648570.21003@chino.kir.corp.google.com>
+ <20131127163435.GA3556@cmpxchg.org>
+ <20131202200221.GC5524@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20131202181501.GA5524-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=K2mXjx6NUxz5k6f9waurHgBwyty6I0VY1k6nhcs+u+4=;
+	b=qjwB+Nk3370HaVARNjsYA8ER4YraWgLioEkctt7NMXXYLabWwuxq8eykyIFKEmT+XVHQfsawvyjPouEaDsifNrvTfnOWfYWh8te/zjmsZm6ElZRQk1MrvVBqpl0Nwwwr5ELx/OUTlYT1l/ESTnxgZHvMqlhHmrOSXtUcIsqDMKs=;
+Content-Disposition: inline
+In-Reply-To: <20131202200221.GC5524-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 12/02/2013 10:15 PM, Michal Hocko wrote:
-> [CCing Glauber - please do so in other posts for kmem related changes]
->
-> On Mon 02-12-13 17:08:13, Vladimir Davydov wrote:
->> The KMEM_ACCOUNTED_ACTIVATED was introduced by commit a8964b9b ("memcg:
->> use static branches when code not in use") in order to guarantee that
->> static_key_slow_inc(&memcg_kmem_enabled_key) will be called only once
->> for each memory cgroup when its kmem limit is set. The point is that at
->> that time the memcg_update_kmem_limit() function's workflow looked like
->> this:
->>
->> 	bool must_inc_static_branch = false;
->>
->> 	cgroup_lock();
->> 	mutex_lock(&set_limit_mutex);
->> 	if (!memcg->kmem_account_flags && val != RESOURCE_MAX) {
->> 		/* The kmem limit is set for the first time */
->> 		ret = res_counter_set_limit(&memcg->kmem, val);
->>
->> 		memcg_kmem_set_activated(memcg);
->> 		must_inc_static_branch = true;
->> 	} else
->> 		ret = res_counter_set_limit(&memcg->kmem, val);
->> 	mutex_unlock(&set_limit_mutex);
->> 	cgroup_unlock();
->>
->> 	if (must_inc_static_branch) {
->> 		/* We can't do this under cgroup_lock */
->> 		static_key_slow_inc(&memcg_kmem_enabled_key);
->> 		memcg_kmem_set_active(memcg);
->> 	}
->>
->> Today, we don't use cgroup_lock in memcg_update_kmem_limit(), and
->> static_key_slow_inc() is called under the set_limit_mutex, but the
->> leftover from the above-mentioned commit is still here. Let's remove it.
-> OK, so I have looked there again and 692e89abd154b (memcg: increment
-> static branch right after limit set) which went in after cgroup_mutex
-> has been removed. It came along with the following comment.
->                  /*
->                   * setting the active bit after the inc will guarantee no one
->                   * starts accounting before all call sites are patched
->                   */
->
-> This suggests that the flag is needed after all because we have
-> to be sure that _all_ the places have to be patched. AFAIU
-> memcg_kmem_newpage_charge might see the static key already patched so
-> it would do a charge but memcg_kmem_commit_charge would still see it
-> unpatched and so the charge won't be committed.
+On Mon, Dec 02, 2013 at 09:02:21PM +0100, Michal Hocko wrote:
+> On Wed 27-11-13 11:34:36, Johannes Weiner wrote:
+> > On Tue, Nov 26, 2013 at 04:53:47PM -0800, David Rientjes wrote:
+> > > On Fri, 22 Nov 2013, Johannes Weiner wrote:
+> > > 
+> > > > But userspace in all likeliness DOES need to take action.
+> > > > 
+> > > > Reclaim is a really long process.  If 5 times doing 12 priority cycles
+> > > > and scanning thousands of pages is not enough to reclaim a single
+> > > > page, what does that say about the health of the memcg?
+> > > > 
+> > > > But more importantly, OOM handling is just inherently racy.  A task
+> > > > might receive the kill signal a split second *after* userspace was
+> > > > notified.  Or a task may exit voluntarily a split second after a
+> > > > victim was chosen and killed.
+> > > > 
+> > > 
+> > > That's not true even today without the userspace oom handling proposal 
+> > > currently being discussed if you have a memcg oom handler attached to a 
+> > > parent memcg with access to more memory than an oom child memcg.  The oom 
+> > > handler can disable the child memcg's oom killer with memory.oom_control 
+> > > and implement its own policy to deal with any notification of oom.
+> > 
+> > I was never implying the kernel handler.  All the races exist with
+> > userspace handling as well.
+> > 
+> > > This patch is required to ensure that in such a scenario that the oom 
+> > > handler sitting in the parent memcg only wakes up when it's required to 
+> > > intervene.
+> > 
+> > A task could receive an unrelated kill between the OOM notification
+> > and going to sleep to wait for userspace OOM handling.  Or another
+> > task could exit voluntarily between the notification and waitqueue
+> > entry, which would again be short-cut by the oom_recover of the exit
+> > uncharges.
+> > 
+> > oom:                           other tasks:
+> > check signal/exiting
+> >                                could exit or get killed here
+> > mem_cgroup_oom_trylock()
+> >                                could exit or get killed here
+> > mem_cgroup_oom_notify()
+> >                                could exit or get killed here
+> > if (userspace_handler)
+> >   sleep()                      could exit or get killed here
+> > else
+> >   oom_kill()
+> >                                could exit or get killed here
+> > 
+> > It does not matter where your signal/exiting check is, OOM
+> > notification can never be race free because OOM is just an arbitrary
+> > line we draw.  We have no idea what all the tasks are up to and how
+> > close they are to releasing memory.  Even if we freeze the whole group
+> > to handle tasks, it does not change the fact that the userspace OOM
+> > handler might kill one task and after the unfreeze another task
+> > immediately exits voluntarily or got a kill signal a split second
+> > after it was frozen.
+> > 
+> > You can't fix this.  We just have to draw the line somewhere and
+> > accept that in rare situations the OOM kill was unnecessary.
+> 
+> But we are not talking just about races here. What if the OOM is a
+> result of an OOM action itself. E.g. a killed task faults a memory in
+> while exiting and it hasn't freed its memory yet. Should we notify in
+> such a case? What would an userspace OOM handler do (the in-kernel
+> implementation has an advantage because it can check the tasks flags)?
 
-Hmm, but we have the KMEM_ACCOUNTED_ACTIVE flag, which is set *after* 
-static_key_slow_inc() in memcg_update_kmem_limit(), and 
-__memcg_kmem_newpage_charge() checks it before charging 
-(memcg_can_account_kmem()). So the situation you described is impossible?
+We don't notify in such a case.  Every charge from a TIF_MEMDIE or
+exiting task is bypassing the limit immediately.  Not even reclaim.
 
->
-> Or am I missing something?
->   
->> Signed-off-by: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
->> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
->> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
->> Cc: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
->> ---
->>   mm/memcontrol.c |   26 +-------------------------
->>   1 file changed, 1 insertion(+), 25 deletions(-)
->>
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index f1a0ae6..f78661f 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -344,14 +344,9 @@ static size_t memcg_size(void)
->>   /* internal only representation about the status of kmem accounting. */
->>   enum {
->>   	KMEM_ACCOUNTED_ACTIVE = 0, /* accounted by this cgroup itself */
->> -	KMEM_ACCOUNTED_ACTIVATED, /* static key enabled. */
->>   	KMEM_ACCOUNTED_DEAD, /* dead memcg with pending kmem charges */
->>   };
->>   
->> -/* We account when limit is on, but only after call sites are patched */
->> -#define KMEM_ACCOUNTED_MASK \
->> -		((1 << KMEM_ACCOUNTED_ACTIVE) | (1 << KMEM_ACCOUNTED_ACTIVATED))
->> -
->>   #ifdef CONFIG_MEMCG_KMEM
->>   static inline void memcg_kmem_set_active(struct mem_cgroup *memcg)
->>   {
->> @@ -363,16 +358,6 @@ static bool memcg_kmem_is_active(struct mem_cgroup *memcg)
->>   	return test_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_account_flags);
->>   }
->>   
->> -static void memcg_kmem_set_activated(struct mem_cgroup *memcg)
->> -{
->> -	set_bit(KMEM_ACCOUNTED_ACTIVATED, &memcg->kmem_account_flags);
->> -}
->> -
->> -static void memcg_kmem_clear_activated(struct mem_cgroup *memcg)
->> -{
->> -	clear_bit(KMEM_ACCOUNTED_ACTIVATED, &memcg->kmem_account_flags);
->> -}
->> -
->>   static void memcg_kmem_mark_dead(struct mem_cgroup *memcg)
->>   {
->>   	/*
->> @@ -2956,7 +2941,7 @@ static DEFINE_MUTEX(set_limit_mutex);
->>   static inline bool memcg_can_account_kmem(struct mem_cgroup *memcg)
->>   {
->>   	return !mem_cgroup_disabled() && !mem_cgroup_is_root(memcg) &&
->> -		(memcg->kmem_account_flags & KMEM_ACCOUNTED_MASK);
->> +		memcg_kmem_is_active(memcg);
->>   }
->>   
->>   /*
->> @@ -3091,19 +3076,10 @@ int memcg_update_cache_sizes(struct mem_cgroup *memcg)
->>   				0, MEMCG_CACHES_MAX_SIZE, GFP_KERNEL);
->>   	if (num < 0)
->>   		return num;
->> -	/*
->> -	 * After this point, kmem_accounted (that we test atomically in
->> -	 * the beginning of this conditional), is no longer 0. This
->> -	 * guarantees only one process will set the following boolean
->> -	 * to true. We don't need test_and_set because we're protected
->> -	 * by the set_limit_mutex anyway.
->> -	 */
->> -	memcg_kmem_set_activated(memcg);
->>   
->>   	ret = memcg_update_all_caches(num+1);
->>   	if (ret) {
->>   		ida_simple_remove(&kmem_limited_groups, num);
->> -		memcg_kmem_clear_activated(memcg);
->>   		return ret;
->>   	}
->>   
->> -- 
->> 1.7.10.4
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe cgroups" in
->> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > So again, I don't see this patch is doing anything but blur the
+> > current line and make notification less predictable. And, as someone
+> > else in this thread already said, it's a uservisible change in
+> > behavior and would break known tuning usecases.
+> 
+> I would like to understand how would such a tuning usecase work and how
+> it would break with this change.
+
+I would do test runs and with every run increase the size of the
+workload until I get OOM notifications to know when the kernel has
+been pushed beyond its limits and available memory + reclaim
+capability can't keep up with the workload anymore.
+
+Not informing me just because due to timing variance a random process
+exits in the last moment would be flat out lying.  The machine is OOM.
+Many reclaim cycles failing is a good predictor.  Last minute exit of
+random task is not, it's happenstance and I don't want to rely on a
+fluke like this to size my workload.
+
+> Consider the above example. You would get 2 notification for the very
+> same OOM condition.
+> On the other hand if the encountered exiting task was just a race then
+> we have two options basically. Either there are more tasks racing (and
+> not all of them are exiting) or there is only one (all are exiting).
+> We will not loose any notification in the first case because the flags
+> are checked before mem_cgroup_oom_trylock and so one of tasks would lock
+> and notify.
+> The second case is more interesting. Userspace won't get notification
+> but we also know that no action is required as the OOM will be resolved
+> by itself. And now we should consider whether notification would do more
+> good than harm. The tuning usecase would loose one event. Would such a
+> rare situation skew the statistics so much? On the other hand a real OOM
+> killer would do something which means something will be killed. I find
+> the later much worse.
+
+We already check in various places (sigh) for whether reclaim and
+killing is still necessary.  What is the end game here?  An endless
+loop right before the kill where we check if the kill is still
+necessary?
+
+You're not fixing this problem, so why make the notifications less
+reliable?
+
+> So all in all. I do agree with you that this path will never be race
+> free and without pointless OOM actions. I also agree that drawing the
+> line is hard. But I am more inclined to prevent from notification when
+> we already know that _no action_ is required because IMHO the vast
+> majority of oom listeners are there to _do_ an action which is mostly
+> deadly.
+
+If you want to push the machine so hard that active measures like
+reclaim can't keep up and you rely on stupid timing like this to save
+your sorry butt, then you'll just have to live with the
+unpredictability of it.  You're going to eat kills that might have
+been avoided last minute either way.  It's no excuse to plaster the MM
+with TIF_MEMDIE checks and last-minute cgroup margin checks in the
+weirdest locations.
+
+Again, how likely is it anyway that the kill was truly skipped and not
+just deferred?  Reclaim failing is a good indicator that you're in
+trouble, a random task exiting in an ongoing workload does not say
+much.  The machine could still be in trouble, so you just deferred the
+inevitable, you didn't really avoid a kill.
+
+At this point we are talking about OOM kill frequency and statistical
+probability during apparently normal operations.  The OOM killer was
+never written for that, it was supposed to be a last minute resort
+that should not occur during normal operations and only if all SANE
+measures to avoid it have failed.  99% of all users have no interest
+in these micro-optimizations and we shouldn't clutter the code and
+have unpredictable behavior without even a trace of data to show that
+this is anything more than a placebo measure for one use case.
