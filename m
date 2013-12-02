@@ -1,98 +1,75 @@
-From: Kevin Wilson <wkevils-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: noprefix mount option
-Date: Sat, 30 Nov 2013 12:51:24 +0200
-Message-ID: <CAGXs5wVT+MGH6C=DO+iTzbQCFzDmisDiFugBNA8ufaHbvKEoEA@mail.gmail.com>
-References: <CAGXs5wVd-fD5xcFJbeN-uSbEKczYuDbBp0BE=vhuM34eBgsqXA@mail.gmail.com>
-	<52993619.2090903@huawei.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 07/12] cgroup: unify cgroup_write_X64() and
+	cgroup_write_string()
+Date: Mon, 2 Dec 2013 10:54:01 +0100
+Message-ID: <20131202095401.GA18838@dhcp22.suse.cz>
+References: <1385595759-17656-1-git-send-email-tj@kernel.org>
+	<1385595759-17656-8-git-send-email-tj@kernel.org>
+	<20131128111818.GG2761@dhcp22.suse.cz>
+	<20131129200525.GC21755@mtj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=iQnRF9EuhpLGK4H05t7pw906Fg+wTcYnosAlzVQ1iX8=;
-        b=Mq3sXfXdGx00gQgg+ecIWh3qK7s4rQQLj1QjvKUJTEKg7l7qSWBRCRWqCkvqHmWITP
-         eyS8h3dAJCrzNnmhwma1NFo/8nwhukViACtuta6PLUw3mkUcb8x8EYuQSBLRUMtFFhQH
-         VtZW+v80J+UG9sL5untl/9iCmWDNvTIYAHG0mOvSe1rA8uYzDCh0J1ajJ8nCiaKJ4tuH
-         rbjsSVxGcM+S2d5WOcUDzpWomOVurrLO7bE2o0aE5pGbj6U2DMS69b9173gGtk6fr1Jr
-         to0dneAIK+2j+po/BgTpbOebHfpE4lbo0tZNi0ledZVrH8QRxEr9sjefPYmtKlYNl+lr
-         ec8w==
-In-Reply-To: <52993619.2090903-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20131129200525.GC21755-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-Hello,
-Yes you are right. When I tested it again now on Ubuntu, after reboot,
-it was as expected.
-Thanks,
-Kevin
+On Fri 29-11-13 15:05:25, Tejun Heo wrote:
+> Hello, Michal.
+> 
+> On Thu, Nov 28, 2013 at 12:18:18PM +0100, Michal Hocko wrote:
+> > > Unify the two into cgroup_file_write() which always allocates dynamic
+> > > buffer for simplicity
+> > 
+> > It's true that this is simpler but the allocation might cause some
+> > issues with memcg. Although it is not common that userspace oom handler
+> > is a part of the target memcg there are users (e.g. Google) who do that.
+> > 
+> > Why is that a problem? Consider that a memcg is under OOM, handler gets
+> > notified and tries to solve the situation by enlarging the hard limit.
+> > This worked before this patch because cgroup_write_X64 used an on stack
+> > buffer but now it would use kmalloc which might be accounted and trip
+> > over the same OOM situation.
+> > 
+> > This is not limited to the OOM handling. The group might be close to OOM
+> > and the last thing user expects is to trigger OOM when he tries to
+> > enlarge the limit.
+> > 
+> > Is the additional simplicity worth breaking those usecases?
+> 
+> Whoa, so we support oom handler inside the memcg that it handles?
+> Does that work reliably?  Changing the above detail in this patch
+> isn't difficult (and we'll later need to update kernfs too) but
+> supporting such setup properly would be a *lot* of commitment and I'm
+> very doubtful we'd be able to achieve that by just carefully avoiding
+> memory allocation in the operations that usreland oom handler uses -
+> that set is destined to expand over time, extremely fragile and will
+> be hellish to maintain.
+> 
+> So, I'm not at all excited about commiting to this guarantee.  This
+> one is an easy one but it looks like the first step onto dizzying
+> slippery slope.
+> 
+> Am I misunderstanding something here?  Are you and Johannes firm on
+> supporting this?
 
-
-On Sat, Nov 30, 2013 at 2:49 AM, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
-> On 2013/11/29 22:36, Kevin Wilson wrote:
->> Hello,
->> I hope this is the right place to ask.
->> As far as I know, the noprefix mount option is valid only for cpuset.
->>
->> I ran the following sequence of Fedora 18, 3.6.10-4.fc18.x86_64:
->>
->> mkdir /mytest
->> mount -t tmpfs testcg /mytest
->> mkdir /mytest/testprefix
->> mount -t cgroup -o noprefix,cpuset  testnonprefix /mytest/testprefix/
->>
->> I expected that entries under /mytest/testprefix/ will be without the
->> "cpuset" prefix. However, this is what I get:
->>
->> ls /mytest/testprefix/
->> cgroup.clone_children       cpuset.memory_pressure_enabled
->> cgroup.event_control        cpuset.memory_spread_page
->> cgroup.procs                   cpuset.memory_spread_slab
->> cpuset.cpu_exclusive        cpuset.mems
->> cpuset.cpus                     cpuset.sched_load_balance
->> cpuset.mem_exclusive      cpuset.sched_relax_domain_level
->> cpuset.mem_hardwall       notify_on_release
->> cpuset.memory_migrate    release_agent
->> cpuset.memory_pressure  tasks
->>
->>
->> any ideas ? Am I missing something ?
->>
->
-> I've tried this, and it works for me.
->
-> My guess is, cpuset had already been mounted:
->
-> # mount -t cgroup -o noprefix,cpuset xxx /cgroup
-> # ls /cgroup
-> cgroup.clone_children  mem_hardwall             mems
-> cgroup.event_control   memory_migrate           notify_on_release
-> cgroup.procs           memory_pressure          release_agent
-> cpu_exclusive          memory_pressure_enabled  sched_load_balance
-> cpus                   memory_spread_page       sched_relax_domain_level
-> mem_exclusive          memory_spread_slab       tasks
->
-> # umount /cgroup
-> # mount -t cgroup -o cpuset xxx /cgroup
-> # ls /cgroup
-> cgroup.clone_children  cpuset.mem_hardwall             cpuset.mems
-> cgroup.event_control   cpuset.memory_migrate           cpuset.sched_load_balance
-> cgroup.procs           cpuset.memory_pressure          cpuset.sched_relax_domain_level
-> cpuset.cpu_exclusive   cpuset.memory_pressure_enabled  notify_on_release
-> cpuset.cpus            cpuset.memory_spread_page       release_agent
-> cpuset.mem_exclusive   cpuset.memory_spread_slab       tasks
->
-> # mount -t cgroup -o noprefix,cpuset xxx /cgroup2/
-> # ls /cgroup2/
-> cgroup.clone_children  cpuset.mem_hardwall             cpuset.mems
-> cgroup.event_control   cpuset.memory_migrate           cpuset.sched_load_balance
-> cgroup.procs           cpuset.memory_pressure          cpuset.sched_relax_domain_level
-> cpuset.cpu_exclusive   cpuset.memory_pressure_enabled  notify_on_release
-> cpuset.cpus            cpuset.memory_spread_page       release_agent
-> cpuset.mem_exclusive   cpuset.memory_spread_slab       tasks
->
->
+Well, I am not happy about the use case as well and I will always
+discourage people from doing this. I was merely pointing out that the
+patch will break those even though it seems trivial to not do so. That
+being said I would rather see no allocation in that path but if that
+doesn't seem viable to you then I will not loose any sleep over it.
+-- 
+Michal Hocko
+SUSE Labs
