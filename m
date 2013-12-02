@@ -1,193 +1,121 @@
-From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: Re: [PATCH v12 00/18] kmemcg shrinkers
-Date: Mon, 2 Dec 2013 15:22:18 +0400
-Message-ID: <529C6D6A.3060307@parallels.com>
-References: <cover.1385974612.git.vdavydov@parallels.com>
+From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH] memcg: remove KMEM_ACCOUNTED_ACTIVATED
+Date: Mon, 2 Dec 2013 17:08:13 +0400
+Message-ID: <1385989693-28788-1-git-send-email-vdavydov@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <cover.1385974612.git.vdavydov@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: hannes@cmpxchg.org
-Cc: Vladimir Davydov <vdavydov@parallels.com>, mhocko@suse.cz, dchinner@redhat.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, glommer@openvz.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: mhocko-AlSwsSmVLrQ@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-Hi, Johannes
+The KMEM_ACCOUNTED_ACTIVATED was introduced by commit a8964b9b ("memcg:
+use static branches when code not in use") in order to guarantee that
+static_key_slow_inc(&memcg_kmem_enabled_key) will be called only once
+for each memory cgroup when its kmem limit is set. The point is that at
+that time the memcg_update_kmem_limit() function's workflow looked like
+this:
 
-I tried to fix the patchset according to your comments, but there were a 
-couple of places that after a bit of thinking I found impossible to 
-amend exactly the way you proposed. Here they go:
+	bool must_inc_static_branch = false;
 
->> +static unsigned long
->> +zone_nr_reclaimable_pages(struct scan_control *sc, struct zone *zone)
->> +{
->> +	if (global_reclaim(sc))
->> +		return zone_reclaimable_pages(zone);
->> +	return memcg_zone_reclaimable_pages(sc->target_mem_cgroup, zone);
->> +}
-> So we have zone_reclaimable_pages() and zone_nr_reclaimable_pages()
-> with completely different signatures and usecases.  Not good.
->
-> The intersection between a zone and a memcg is called an lruvec,
-> please use that.  Look up an lruvec as early as possible, then
-> implement lruvec_reclaimable_pages() etc. for use during reclaim.
+	cgroup_lock();
+	mutex_lock(&set_limit_mutex);
+	if (!memcg->kmem_account_flags && val != RESOURCE_MAX) {
+		/* The kmem limit is set for the first time */
+		ret = res_counter_set_limit(&memcg->kmem, val);
 
-We iterate over lruvecs in shrink_zone() so AFAIU I should have put the 
-lru_pages counting there. However, we're not guaranteed to iterate over 
-all lruvecs eligible for current allocations if the zone is being shrunk 
-concurrently. One way to fix this would be rewriting memcg iteration 
-interface to always iterate over all memcgs returning in a flag in the 
-cookie if the current memcg should be reclaimed, but I found this 
-somewhat obfuscating and preferred simply fix the function name.
+		memcg_kmem_set_activated(memcg);
+		must_inc_static_branch = true;
+	} else
+		ret = res_counter_set_limit(&memcg->kmem, val);
+	mutex_unlock(&set_limit_mutex);
+	cgroup_unlock();
 
-> -		for_each_node_mask(shrinkctl->nid, shrinkctl->nodes_to_scan) {
-> -			if (!node_online(shrinkctl->nid))
-> -				continue;
-> -
-> -			if (!(shrinker->flags & SHRINKER_NUMA_AWARE) &&
-> -			    (shrinkctl->nid != 0))
-> +			if (!memcg || memcg_kmem_is_active(memcg))
-> +				freed += shrink_slab_one(shrinkctl, shrinker,
-> +					 nr_pages_scanned, lru_pages);
-> +			/*
-> +			 * For non-memcg aware shrinkers, we will arrive here
-> +			 * at first pass because we need to scan the root
-> +			 * memcg.  We need to bail out, since exactly because
-> +			 * they are not memcg aware, instead of noticing they
-> +			 * have nothing to shrink, they will just shrink again,
-> +			 * and deplete too many objects.
-> +			 */
-> I actually found the code easier to understand without this comment.
->
->> +			if (!(shrinker->flags & SHRINKER_MEMCG_AWARE))
->>   				break;
->> +			shrinkctl->target_mem_cgroup =
->> +				mem_cgroup_iter(root, memcg, NULL);
-> The target memcg is always the same, don't change this.  Look at the
-> lru scan code for reference.  Iterate zones (nodes in this case)
-> first, then iterate the memcgs in each zone (node), look up the lruvec
-> and then call shrink_slab_lruvec(lruvec, ...).
+	if (must_inc_static_branch) {
+		/* We can't do this under cgroup_lock */
+		static_key_slow_inc(&memcg_kmem_enabled_key);
+		memcg_kmem_set_active(memcg);
+	}
 
-They are somewhat different: shrink_zone() calls shrink_lruvec() for 
-each memcg's lruvec, but for shrink_slab() we don't have lruvecs. We do 
-have memcg_list_lru though, but it's up to the shrinker to use it. In 
-other words, in contrast to page cache reclaim, kmem shrinkers are 
-opaque to vmscan.
+Today, we don't use cgroup_lock in memcg_update_kmem_limit(), and
+static_key_slow_inc() is called under the set_limit_mutex, but the
+leftover from the above-mentioned commit is still here. Let's remove it.
 
-Anyway, I can't help agreeing with you that changing target_mem_cgroup 
-while iterating over memcgs looks ugly. So I rewrote it a bit to 
-resemble the way per-node shrinking is implemented. For per-node 
-shrinking we have shrink_control::nodemask, which is set by the 
-shrink_slab() caller, and shrink_control::nid, which is initialized by 
-shrink_slab() while iterating over online NUMA nodes and actually used 
-by the shrinker. Similarly, for memory cgroups I added two fields to the 
-shrink_control struct, target_mem_cgroup and memcg, the former is set by 
-the shrink_slab() caller and specifies the memory cgroup tree to scan, 
-and the latter is used as the iterator by shrink_slab() and as the 
-target memcg by a particular memcg-aware shrinker.
+Signed-off-by: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+---
+ mm/memcontrol.c |   26 +-------------------------
+ 1 file changed, 1 insertion(+), 25 deletions(-)
 
-I would appreciate if you could look at the new version and share your 
-attitude toward it.
-
-Thank you.
-
-On 12/02/2013 03:19 PM, Vladimir Davydov wrote:
-> Hi,
->
-> This is the 12th iteration of Glauber Costa's patchset implementing targeted
-> shrinking for memory cgroups when kmem limits are present. So far, we've been
-> accounting kernel objects but failing allocations when short of memory. This is
-> because our only option would be to call the global shrinker, depleting objects
-> from all caches and breaking isolation.
->
-> The main idea is to make LRU lists used by FS slab shrinkers per-memcg. When
-> adding or removing an element from from the LRU, we use the page information to
-> figure out which memory cgroup it belongs to and relay it to the appropriate
-> list. This allows scanning kmem objects accounted to different memory cgroups
-> independently.
->
-> The patchset is based on top of Linux 3.13-rc2 and organized as follows:
->
->   * patches 1-8 are for cleanup/preparation;
->   * patch 9 introduces infrastructure for memcg-aware shrinkers;
->   * patches 10 and 11 implement the per-memcg LRU list structure;
->   * patch 12 uses per-memcg LRU lists to make dcache and icache shrinkers
->     memcg-aware;
->   * patch 13 implements kmem-only shrinking;
->   * patches 14-18 issue kmem shrinking on limit resize, global pressure.
->
-> Known issues:
->
->   * Since FS shrinkers can't be executed on __GFP_FS allocations, such
->     allocations will fail if memcg kmem limit is less than the user limit and
->     the memcg kmem usage is close to its limit. Glauber proposed to schedule a
->     worker which would shrink kmem in the background on such allocations.
->     However, this approach does not eliminate failures completely, it just makes
->     them rarer. I'm thinking on implementing soft limits for memcg kmem so that
->     striking the soft limit will trigger the reclaimer, but won't fail the
->     allocation. I would appreciate any other proposals on how this can be fixed.
->
->   * Only dcache and icache are reclaimed on memcg pressure. Other FS objects are
->     left for global pressure only. However, it should not be a serious problem
->     to make them reclaimable too by passing on memcg to the FS-layer and letting
->     each FS decide if its internal objects are shrinkable on memcg pressure.
->
-> Changelog:
->
-> Changes in v12:
->   * Do not prune all slabs on kmem-only pressure.
->   * Count all on-LRU pages eligible for reclaim to pass to shrink_slab().
->   * Fix isolation issue due to using shrinker->nr_deferred on memcg pressure.
->   * Add comments to memcg_list_lru functions.
->   * Code cleanup/refactoring.
->
-> Changes in v11:
->   * Rework per-memcg list_lru infrastructure.
->
-> Glauber Costa (7):
->    memcg: make cache index determination more robust
->    memcg: consolidate callers of memcg_cache_id
->    memcg: move initialization to memcg creation
->    memcg: allow kmem limit to be resized down
->    vmpressure: in-kernel notifications
->    memcg: reap dead memcgs upon global memory pressure
->    memcg: flush memcg items upon memcg destruction
->
-> Vladimir Davydov (11):
->    memcg: move several kmemcg functions upper
->    fs: do not use destroy_super() in alloc_super() fail path
->    vmscan: rename shrink_slab() args to make it more generic
->    vmscan: move call to shrink_slab() to shrink_zones()
->    vmscan: do_try_to_free_pages(): remove shrink_control argument
->    vmscan: shrink slab on memcg pressure
->    memcg,list_lru: add per-memcg LRU list infrastructure
->    memcg,list_lru: add function walking over all lists of a per-memcg
->      LRU
->    fs: make icache, dcache shrinkers memcg-aware
->    memcg: per-memcg kmem shrinking
->    vmscan: take at least one pass with shrinkers
->
->   fs/dcache.c                   |   25 +-
->   fs/inode.c                    |   16 +-
->   fs/internal.h                 |    9 +-
->   fs/super.c                    |   48 ++-
->   include/linux/fs.h            |    4 +-
->   include/linux/list_lru.h      |   83 +++++
->   include/linux/memcontrol.h    |   22 ++
->   include/linux/mm.h            |    3 +-
->   include/linux/shrinker.h      |   10 +-
->   include/linux/swap.h          |    2 +
->   include/linux/vmpressure.h    |    5 +
->   include/trace/events/vmscan.h |   20 +-
->   mm/memcontrol.c               |  728 ++++++++++++++++++++++++++++++++++++-----
->   mm/vmpressure.c               |   53 ++-
->   mm/vmscan.c                   |  249 +++++++++-----
->   15 files changed, 1054 insertions(+), 223 deletions(-)
->
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index f1a0ae6..f78661f 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -344,14 +344,9 @@ static size_t memcg_size(void)
+ /* internal only representation about the status of kmem accounting. */
+ enum {
+ 	KMEM_ACCOUNTED_ACTIVE = 0, /* accounted by this cgroup itself */
+-	KMEM_ACCOUNTED_ACTIVATED, /* static key enabled. */
+ 	KMEM_ACCOUNTED_DEAD, /* dead memcg with pending kmem charges */
+ };
+ 
+-/* We account when limit is on, but only after call sites are patched */
+-#define KMEM_ACCOUNTED_MASK \
+-		((1 << KMEM_ACCOUNTED_ACTIVE) | (1 << KMEM_ACCOUNTED_ACTIVATED))
+-
+ #ifdef CONFIG_MEMCG_KMEM
+ static inline void memcg_kmem_set_active(struct mem_cgroup *memcg)
+ {
+@@ -363,16 +358,6 @@ static bool memcg_kmem_is_active(struct mem_cgroup *memcg)
+ 	return test_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_account_flags);
+ }
+ 
+-static void memcg_kmem_set_activated(struct mem_cgroup *memcg)
+-{
+-	set_bit(KMEM_ACCOUNTED_ACTIVATED, &memcg->kmem_account_flags);
+-}
+-
+-static void memcg_kmem_clear_activated(struct mem_cgroup *memcg)
+-{
+-	clear_bit(KMEM_ACCOUNTED_ACTIVATED, &memcg->kmem_account_flags);
+-}
+-
+ static void memcg_kmem_mark_dead(struct mem_cgroup *memcg)
+ {
+ 	/*
+@@ -2956,7 +2941,7 @@ static DEFINE_MUTEX(set_limit_mutex);
+ static inline bool memcg_can_account_kmem(struct mem_cgroup *memcg)
+ {
+ 	return !mem_cgroup_disabled() && !mem_cgroup_is_root(memcg) &&
+-		(memcg->kmem_account_flags & KMEM_ACCOUNTED_MASK);
++		memcg_kmem_is_active(memcg);
+ }
+ 
+ /*
+@@ -3091,19 +3076,10 @@ int memcg_update_cache_sizes(struct mem_cgroup *memcg)
+ 				0, MEMCG_CACHES_MAX_SIZE, GFP_KERNEL);
+ 	if (num < 0)
+ 		return num;
+-	/*
+-	 * After this point, kmem_accounted (that we test atomically in
+-	 * the beginning of this conditional), is no longer 0. This
+-	 * guarantees only one process will set the following boolean
+-	 * to true. We don't need test_and_set because we're protected
+-	 * by the set_limit_mutex anyway.
+-	 */
+-	memcg_kmem_set_activated(memcg);
+ 
+ 	ret = memcg_update_all_caches(num+1);
+ 	if (ret) {
+ 		ida_simple_remove(&kmem_limited_groups, num);
+-		memcg_kmem_clear_activated(memcg);
+ 		return ret;
+ 	}
+ 
+-- 
+1.7.10.4
