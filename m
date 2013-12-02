@@ -1,7 +1,7 @@
 From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: [PATCH v12 13/18] memcg: per-memcg kmem shrinking
-Date: Mon, 2 Dec 2013 15:19:48 +0400
-Message-ID: <6a255c838dd290844d6ea437612e9671a88e6f31.1385974612.git.vdavydov@parallels.com>
+Subject: [PATCH v12 17/18] memcg: reap dead memcgs upon global memory pressure
+Date: Mon, 2 Dec 2013 15:19:52 +0400
+Message-ID: <dcbf3fd6336bc44948c89d0abc8f9aff27888f81.1385974612.git.vdavydov@parallels.com>
 References: <cover.1385974612.git.vdavydov@parallels.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
@@ -11,188 +11,166 @@ List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: hannes@cmpxchg.org, mhocko@suse.cz, dchinner@redhat.com, akpm@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, glommer@openvz.org, vdavydov@parallels.com, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, glommer@openvz.org, vdavydov@parallels.com, Anton Vorontsov <anton@enomsg.org>, John Stultz <john.stultz@linaro.org>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-If a memory cgroup's kmem limit is less than its user memory limit, we
-can run into a situation where our allocation fail, but freeing user
-pages will buy us nothing. In such scenarios we would like to call a
-specialized reclaimer that only frees kernel memory. This patch adds it.
-All the magic lies behind the previous patches that made slab shrinkers
-memcg-aware, this patch only employs the shrink_slab() facility to scan
-slab objects accounted to a specific memory cgroup, however, there is
-one thing that is worth noticing.
+From: Glauber Costa <glommer@openvz.org>
 
-The point is that since all memcg-aware shrinkers are FS-dependent, we
-have no option rather than failing all GFP_NOFS allocations when we are
-close to the kmem limit. The best thing we can do in such a situation is
-to spawn the reclaimer in a background process hoping next allocations
-will succeed.
+When we delete kmem-enabled memcgs, they can still be zombieing
+around for a while. The reason is that the objects may still be alive,
+and we won't be able to delete them at destruction time.
 
-Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
+The only entry point for that, though, are the shrinkers. The
+shrinker interface, however, is not exactly tailored to our needs. It
+could be a little bit better by using the API Dave Chinner proposed, but
+it is still not ideal since we aren't really a count-and-scan event, but
+more a one-off flush-all-you-can event that would have to abuse that
+somehow.
+
+Signed-off-by: Glauber Costa <glommer@openvz.org>
+Cc: Anton Vorontsov <anton@enomsg.org>
+Cc: John Stultz <john.stultz@linaro.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Rik van Riel <riel@redhat.com>
-Cc: Balbir Singh <bsingharora@gmail.com>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Michal Hocko <mhocko@suse.cz>
+Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
 ---
- include/linux/swap.h |    2 ++
- mm/memcontrol.c      |   51 +++++++++++++++++++++++++++++++++++++++++++++++++-
- mm/vmscan.c          |   38 ++++++++++++++++++++++++++++++++++++-
- 3 files changed, 89 insertions(+), 2 deletions(-)
+ mm/memcontrol.c |   80 ++++++++++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 77 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index 46ba0c6..367a773 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -309,6 +309,8 @@ extern unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
- extern int __isolate_lru_page(struct page *page, isolate_mode_t mode);
- extern unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *mem,
- 						  gfp_t gfp_mask, bool noswap);
-+extern unsigned long try_to_free_mem_cgroup_kmem(struct mem_cgroup *mem,
-+						 gfp_t gfp_mask);
- extern unsigned long mem_cgroup_shrink_node_zone(struct mem_cgroup *mem,
- 						gfp_t gfp_mask, bool noswap,
- 						struct zone *zone,
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index da06f91..3679acb 100644
+index a0b22d7..72db892 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -323,6 +323,8 @@ struct mem_cgroup {
- 	struct mutex slab_caches_mutex;
-         /* Index in the kmem_cache->memcg_params->memcg_caches array */
- 	int kmemcg_id;
-+	/* when kmem shrinkers cannot proceed due to context */
-+	struct work_struct kmem_shrink_work;
- #endif
+@@ -287,8 +287,16 @@ struct mem_cgroup {
+ 	/* thresholds for mem+swap usage. RCU-protected */
+ 	struct mem_cgroup_thresholds memsw_thresholds;
  
- 	int last_scanned_node;
-@@ -3431,13 +3433,57 @@ static int mem_cgroup_slabinfo_read(struct cgroup_subsys_state *css,
- }
- #endif
+-	/* For oom notifier event fd */
+-	struct list_head oom_notify;
++	union {
++		/* For oom notifier event fd */
++		struct list_head oom_notify;
++		/*
++		 * we can only trigger an oom event if the memcg is alive.
++		 * so we will reuse this field to hook the memcg in the list
++		 * of dead memcgs.
++		 */
++		struct list_head dead;
++	};
  
-+static void kmem_shrink_work_func(struct work_struct *w)
+ 	/*
+ 	 * Should we move charges of a task when a task is moved into this
+@@ -338,6 +346,29 @@ struct mem_cgroup {
+ 	/* WARNING: nodeinfo must be the last member here */
+ };
+ 
++#if defined(CONFIG_MEMCG_KMEM) || defined(CONFIG_MEMCG_SWAP)
++static LIST_HEAD(dangling_memcgs);
++static DEFINE_MUTEX(dangling_memcgs_mutex);
++
++static inline void memcg_dangling_del(struct mem_cgroup *memcg)
 +{
++	mutex_lock(&dangling_memcgs_mutex);
++	list_del(&memcg->dead);
++	mutex_unlock(&dangling_memcgs_mutex);
++}
++
++static inline void memcg_dangling_add(struct mem_cgroup *memcg)
++{
++	INIT_LIST_HEAD(&memcg->dead);
++	mutex_lock(&dangling_memcgs_mutex);
++	list_add(&memcg->dead, &dangling_memcgs);
++	mutex_unlock(&dangling_memcgs_mutex);
++}
++#else
++static inline void memcg_dangling_del(struct mem_cgroup *memcg) {}
++static inline void memcg_dangling_add(struct mem_cgroup *memcg) {}
++#endif
++
+ static size_t memcg_size(void)
+ {
+ 	return sizeof(struct mem_cgroup) +
+@@ -6363,6 +6394,41 @@ static int mem_cgroup_oom_control_write(struct cgroup_subsys_state *css,
+ }
+ 
+ #ifdef CONFIG_MEMCG_KMEM
++static void memcg_vmpressure_shrink_dead(void)
++{
++	struct memcg_cache_params *params, *tmp;
++	struct kmem_cache *cachep;
 +	struct mem_cgroup *memcg;
 +
-+	memcg = container_of(w, struct mem_cgroup, kmem_shrink_work);
-+	try_to_free_mem_cgroup_kmem(memcg, GFP_KERNEL);
-+}
-+
-+static int memcg_try_charge_kmem(struct mem_cgroup *memcg, gfp_t gfp, u64 size)
-+{
-+	int nr_retries = MEM_CGROUP_RECLAIM_RETRIES;
-+	struct mem_cgroup *mem_over_limit;
-+	struct res_counter *fail_res;
-+	int ret;
-+
-+	do {
-+		ret = res_counter_charge(&memcg->kmem, size, &fail_res);
-+		if (!ret)
-+			break;
-+
-+		mem_over_limit = mem_cgroup_from_res_counter(fail_res, kmem);
-+
-+		/*
-+		 * Now we are going to shrink kernel memory present in caches.
-+		 * If we cannot wait, we will have no option rather than fail
-+		 * the current allocation and make room in the background
-+		 * hoping the next one will succeed.
-+		 *
-+		 * If we are in FS context, then although we can wait, we
-+		 * cannot call the shrinkers, because most FS shrinkers will
-+		 * not run without __GFP_FS to avoid deadlock.
-+		 */
-+		if (!(gfp & __GFP_WAIT) || !(gfp & __GFP_FS)) {
-+			schedule_work(&mem_over_limit->kmem_shrink_work);
-+			break;
++	mutex_lock(&dangling_memcgs_mutex);
++	list_for_each_entry(memcg, &dangling_memcgs, dead) {
++		mutex_lock(&memcg->slab_caches_mutex);
++		/* The element may go away as an indirect result of shrink */
++		list_for_each_entry_safe(params, tmp,
++					 &memcg->memcg_slab_caches, list) {
++			cachep = memcg_params_to_cache(params);
++			/*
++			 * the cpu_hotplug lock is taken in kmem_cache_create
++			 * outside the slab_caches_mutex manipulation. It will
++			 * be taken by kmem_cache_shrink to flush the cache.
++			 * So we need to drop the lock. It is all right because
++			 * the lock only protects elements moving in and out the
++			 * list.
++			 */
++			mutex_unlock(&memcg->slab_caches_mutex);
++			kmem_cache_shrink(cachep);
++			mutex_lock(&memcg->slab_caches_mutex);
 +		}
-+
-+		if (!try_to_free_mem_cgroup_kmem(mem_over_limit, gfp))
-+			break;
-+	} while (--nr_retries > 0);
-+
-+	return ret;
++		mutex_unlock(&memcg->slab_caches_mutex);
++	}
++	mutex_unlock(&dangling_memcgs_mutex);
 +}
 +
- static int memcg_charge_kmem(struct mem_cgroup *memcg, gfp_t gfp, u64 size)
- {
- 	struct res_counter *fail_res;
- 	struct mem_cgroup *_memcg;
- 	int ret = 0;
- 
--	ret = res_counter_charge(&memcg->kmem, size, &fail_res);
-+	ret = memcg_try_charge_kmem(memcg, gfp, size);
- 	if (ret)
- 		return ret;
- 
-@@ -6289,6 +6335,7 @@ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- 	int ret;
- 
- 	INIT_LIST_HEAD(&memcg->memcg_slab_caches);
-+	INIT_WORK(&memcg->kmem_shrink_work, kmem_shrink_work_func);
- 	mutex_init(&memcg->slab_caches_mutex);
- 	memcg->kmemcg_id = -1;
- 	ret = memcg_propagate_kmem(memcg);
-@@ -6309,6 +6356,8 @@ static void kmem_cgroup_css_offline(struct mem_cgroup *memcg)
- 	if (!memcg_kmem_is_active(memcg))
- 		return;
- 
-+	cancel_work_sync(&memcg->kmem_shrink_work);
-+
- 	/*
- 	 * kmem charges can outlive the cgroup. In the case of slab
- 	 * pages, for instance, a page contain objects from various
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 04df967..10e6b2f 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -2729,7 +2729,43 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
- 
- 	return nr_reclaimed;
- }
--#endif
-+
-+#ifdef CONFIG_MEMCG_KMEM
-+unsigned long try_to_free_mem_cgroup_kmem(struct mem_cgroup *memcg,
-+					  gfp_t gfp_mask)
++static void memcg_register_kmem_events(struct cgroup_subsys_state *css)
 +{
-+	struct reclaim_state reclaim_state;
-+	struct shrink_control shrink = {
-+		.gfp_mask = gfp_mask,
-+		.target_mem_cgroup = memcg,
-+	};
-+	int priority = DEF_PRIORITY;
-+	unsigned long nr_to_reclaim = SWAP_CLUSTER_MAX;
-+	unsigned long freed, total_freed = 0;
-+
-+	nodes_setall(shrink.nodes_to_scan);
-+
-+	lockdep_set_current_reclaim_state(sc.gfp_mask);
-+	reclaim_state.reclaimed_slab = 0;
-+	current->reclaim_state = &reclaim_state;
-+
-+	do {
-+		freed = shrink_slab(&shrink, 1000, 1000 << priority);
-+		if (!freed)
-+			congestion_wait(BLK_RW_ASYNC, HZ/10);
-+		total_freed += freed;
-+		if (current->reclaim_state->reclaimed_slab >= nr_to_reclaim)
-+			break;
-+	} while (--priority >= 0);
-+
-+	current->reclaim_state = NULL;
-+	lockdep_clear_current_reclaim_state();
-+
-+	return total_freed;
++	vmpressure_register_kernel_event(css, memcg_vmpressure_shrink_dead);
 +}
-+#endif /* CONFIG_MEMCG_KMEM */
 +
-+#endif /* CONFIG_MEMCG */
- 
- static void age_active_anon(struct zone *zone, struct scan_control *sc)
+ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
  {
+ 	int ret;
+@@ -6420,6 +6486,10 @@ static void kmem_cgroup_css_offline(struct mem_cgroup *memcg)
+ 		css_put(&memcg->css);
+ }
+ #else
++static inline void memcg_register_kmem_events(struct cgroup *cont)
++{
++}
++
+ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
+ {
+ 	return 0;
+@@ -6758,8 +6828,10 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
+ 	if (css->cgroup->id > MEM_CGROUP_ID_MAX)
+ 		return -ENOSPC;
+ 
+-	if (!parent)
++	if (!parent) {
++		memcg_register_kmem_events(css);
+ 		return 0;
++	}
+ 
+ 	mutex_lock(&memcg_create_mutex);
+ 
+@@ -6821,6 +6893,7 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
+ 	mem_cgroup_invalidate_reclaim_iterators(memcg);
+ 	mem_cgroup_reparent_charges(memcg);
+ 	mem_cgroup_destroy_all_caches(memcg);
++	memcg_dangling_add(memcg);
+ 	vmpressure_cleanup(&memcg->vmpressure);
+ }
+ 
+@@ -6829,6 +6902,7 @@ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+ 
+ 	memcg_destroy_kmem(memcg);
++	memcg_dangling_del(memcg);
+ 	__mem_cgroup_free(memcg);
+ }
+ 
 -- 
 1.7.10.4
 
