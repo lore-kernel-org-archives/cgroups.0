@@ -1,7 +1,7 @@
 From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: [PATCH v12 04/18] memcg: move several kmemcg functions upper
-Date: Mon, 2 Dec 2013 15:19:39 +0400
-Message-ID: <55258317799fe5c825f5fa783a4e582b1b6f0f00.1385974612.git.vdavydov@parallels.com>
+Subject: [PATCH v12 18/18] memcg: flush memcg items upon memcg destruction
+Date: Mon, 2 Dec 2013 15:19:53 +0400
+Message-ID: <cfd5a5fbbf1ad8b31544a253ebe5bf3c18faf7d1.1385974612.git.vdavydov@parallels.com>
 References: <cover.1385974612.git.vdavydov@parallels.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
@@ -13,138 +13,64 @@ Content-Transfer-Encoding: 7bit
 To: hannes@cmpxchg.org, mhocko@suse.cz, dchinner@redhat.com, akpm@linux-foundation.org
 Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, glommer@openvz.org, vdavydov@parallels.com, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-I need to move memcg_{stop,resume}_kmem_account() and
-memcg_caches_array_size() upper since I am going to use them in
-per-memcg lrus implementation introduced by the following patches.
-These functions are very simple and do not depend on other kmemcg
-bits so it is better to keep them on top anyway.
+From: Glauber Costa <glommer@openvz.org>
 
+When a memcg is destroyed, it won't be imediately released until all
+objects are gone. This means that if a memcg is restarted with the very
+same workload - a very common case, the objects already cached won't be
+billed to the new memcg. This is mostly undesirable since a container
+can exploit this by restarting itself every time it reaches its limit,
+and then coming up again with a fresh new limit.
+
+Since now we have targeted reclaim, I sustain that we should assume that
+a memcg that is destroyed should be flushed away. It makes perfect sense
+if we assume that a memcg that goes away most likely indicates an
+isolated workload that is terminated.
+
+Signed-off-by: Glauber Costa <glommer@openvz.org>
 Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
 Cc: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Michal Hocko <mhocko@suse.cz>
 Cc: Balbir Singh <bsingharora@gmail.com>
 Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 ---
- mm/memcontrol.c |   92 +++++++++++++++++++++++++++----------------------------
- 1 file changed, 46 insertions(+), 46 deletions(-)
+ mm/memcontrol.c |   17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 3a4e2f8..3a92ab3 100644
+index 72db892..e780511 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2983,6 +2983,52 @@ static int memcg_cache_idx(struct mem_cgroup *memcg)
- 	return ret;
- }
+@@ -6452,12 +6452,29 @@ static void memcg_destroy_kmem(struct mem_cgroup *memcg)
  
-+static size_t memcg_caches_array_size(int num_groups)
-+{
-+	ssize_t size;
-+	if (num_groups <= 0)
-+		return 0;
-+
-+	size = 2 * num_groups;
-+	if (size < MEMCG_CACHES_MIN_SIZE)
-+		size = MEMCG_CACHES_MIN_SIZE;
-+	else if (size > MEMCG_CACHES_MAX_SIZE)
-+		size = MEMCG_CACHES_MAX_SIZE;
-+
-+	return size;
-+}
-+
-+/*
-+ * During the creation a new cache, we need to disable our accounting mechanism
-+ * altogether. This is true even if we are not creating, but rather just
-+ * enqueing new caches to be created.
-+ *
-+ * This is because that process will trigger allocations; some visible, like
-+ * explicit kmallocs to auxiliary data structures, name strings and internal
-+ * cache structures; some well concealed, like INIT_WORK() that can allocate
-+ * objects during debug.
-+ *
-+ * If any allocation happens during memcg_kmem_get_cache, we will recurse back
-+ * to it. This may not be a bounded recursion: since the first cache creation
-+ * failed to complete (waiting on the allocation), we'll just try to create the
-+ * cache again, failing at the same point.
-+ *
-+ * memcg_kmem_get_cache is prepared to abort after seeing a positive count of
-+ * memcg_kmem_skip_account. So we enclose anything that might allocate memory
-+ * inside the following two functions.
-+ */
-+static inline void memcg_stop_kmem_account(void)
-+{
-+	VM_BUG_ON(!current->mm);
-+	current->memcg_kmem_skip_account++;
-+}
-+
-+static inline void memcg_resume_kmem_account(void)
-+{
-+	VM_BUG_ON(!current->mm);
-+	current->memcg_kmem_skip_account--;
-+}
-+
- /*
-  * This is a bit cumbersome, but it is rarely used and avoids a backpointer
-  * in the memcg_cache_params struct.
-@@ -3125,21 +3171,6 @@ int memcg_update_cache_sizes(struct mem_cgroup *memcg)
- 	return 0;
- }
- 
--static size_t memcg_caches_array_size(int num_groups)
--{
--	ssize_t size;
--	if (num_groups <= 0)
--		return 0;
--
--	size = 2 * num_groups;
--	if (size < MEMCG_CACHES_MIN_SIZE)
--		size = MEMCG_CACHES_MIN_SIZE;
--	else if (size > MEMCG_CACHES_MAX_SIZE)
--		size = MEMCG_CACHES_MAX_SIZE;
--
--	return size;
--}
--
- /*
-  * We should update the current array size iff all caches updates succeed. This
-  * can only be done from the slab side. The slab mutex needs to be held when
-@@ -3264,37 +3295,6 @@ out:
- 	kfree(s->memcg_params);
- }
- 
--/*
-- * During the creation a new cache, we need to disable our accounting mechanism
-- * altogether. This is true even if we are not creating, but rather just
-- * enqueing new caches to be created.
-- *
-- * This is because that process will trigger allocations; some visible, like
-- * explicit kmallocs to auxiliary data structures, name strings and internal
-- * cache structures; some well concealed, like INIT_WORK() that can allocate
-- * objects during debug.
-- *
-- * If any allocation happens during memcg_kmem_get_cache, we will recurse back
-- * to it. This may not be a bounded recursion: since the first cache creation
-- * failed to complete (waiting on the allocation), we'll just try to create the
-- * cache again, failing at the same point.
-- *
-- * memcg_kmem_get_cache is prepared to abort after seeing a positive count of
-- * memcg_kmem_skip_account. So we enclose anything that might allocate memory
-- * inside the following two functions.
-- */
--static inline void memcg_stop_kmem_account(void)
--{
--	VM_BUG_ON(!current->mm);
--	current->memcg_kmem_skip_account++;
--}
--
--static inline void memcg_resume_kmem_account(void)
--{
--	VM_BUG_ON(!current->mm);
--	current->memcg_kmem_skip_account--;
--}
--
- static void kmem_cache_destroy_work_func(struct work_struct *w)
+ static void kmem_cgroup_css_offline(struct mem_cgroup *memcg)
  {
- 	struct kmem_cache *cachep;
++	int ret;
+ 	if (!memcg_kmem_is_active(memcg))
+ 		return;
+ 
+ 	cancel_work_sync(&memcg->kmem_shrink_work);
+ 
+ 	/*
++	 * When a memcg is destroyed, it won't be imediately released until all
++	 * objects are gone. This means that if a memcg is restarted with the
++	 * very same workload - a very common case, the objects already cached
++	 * won't be billed to the new memcg. This is mostly undesirable since a
++	 * container can exploit this by restarting itself every time it
++	 * reaches its limit, and then coming up again with a fresh new limit.
++	 *
++	 * Therefore a memcg that is destroyed should be flushed away. It makes
++	 * perfect sense if we assume that a memcg that goes away indicates an
++	 * isolated workload that is terminated.
++	 */
++	do {
++		ret = try_to_free_mem_cgroup_kmem(memcg, GFP_KERNEL);
++	} while (ret);
++
++	/*
+ 	 * kmem charges can outlive the cgroup. In the case of slab
+ 	 * pages, for instance, a page contain objects from various
+ 	 * processes. As we prevent from taking a reference for every
 -- 
 1.7.10.4
 
