@@ -1,108 +1,188 @@
 From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: [PATCH v12 00/18] kmemcg shrinkers
-Date: Mon, 2 Dec 2013 15:19:35 +0400
-Message-ID: <cover.1385974612.git.vdavydov@parallels.com>
+Subject: [PATCH v12 06/18] vmscan: rename shrink_slab() args to make it more generic
+Date: Mon, 2 Dec 2013 15:19:41 +0400
+Message-ID: <6fbe648a707331e0716cc7a4fc6366ca83a97f6a.1385974612.git.vdavydov@parallels.com>
+References: <cover.1385974612.git.vdavydov@parallels.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <cover.1385974612.git.vdavydov@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: hannes@cmpxchg.org, mhocko@suse.cz, dchinner@redhat.com, akpm@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, glommer@openvz.org, vdavydov@parallels.com
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, glommer@openvz.org, vdavydov@parallels.com, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>
 
-Hi,
+Currently in addition to a shrink_control struct shrink_slab() takes two
+arguments, nr_pages_scanned and lru_pages, which are used for balancing
+slab reclaim versus page reclaim - roughly speaking, shrink_slab() will
+try to scan nr_pages_scanned/lru_pages fraction of all slab objects.
+However, shrink_slab() is not always called after page cache reclaim.
+For example, drop_slab() uses shrink_slab() to drop as many slab objects
+as possible and thus has to pass phony values 1000/1000 to it, which do
+not make sense for nr_pages_scanned/lru_pages. Moreover, as soon as
+kmemcg reclaim is introduced, we will have to make up phony values for
+nr_pages_scanned and lru_pages again when doing kmem-only reclaim for a
+memory cgroup, which is possible if the cgroup has its kmem limit less
+than the total memory limit.
 
-This is the 12th iteration of Glauber Costa's patchset implementing targeted
-shrinking for memory cgroups when kmem limits are present. So far, we've been
-accounting kernel objects but failing allocations when short of memory. This is
-because our only option would be to call the global shrinker, depleting objects
-from all caches and breaking isolation.
+Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Mel Gorman <mgorman@suse.de>
+Cc: Rik van Riel <riel@redhat.com>
+---
+ include/linux/mm.h            |    3 +--
+ include/trace/events/vmscan.h |   20 ++++++++++----------
+ mm/vmscan.c                   |   26 +++++++++++++-------------
+ 3 files changed, 24 insertions(+), 25 deletions(-)
 
-The main idea is to make LRU lists used by FS slab shrinkers per-memcg. When
-adding or removing an element from from the LRU, we use the page information to
-figure out which memory cgroup it belongs to and relay it to the appropriate
-list. This allows scanning kmem objects accounted to different memory cgroups
-independently.
-
-The patchset is based on top of Linux 3.13-rc2 and organized as follows:
-
- * patches 1-8 are for cleanup/preparation;
- * patch 9 introduces infrastructure for memcg-aware shrinkers;
- * patches 10 and 11 implement the per-memcg LRU list structure;
- * patch 12 uses per-memcg LRU lists to make dcache and icache shrinkers
-   memcg-aware;
- * patch 13 implements kmem-only shrinking;
- * patches 14-18 issue kmem shrinking on limit resize, global pressure.
-
-Known issues:
-
- * Since FS shrinkers can't be executed on __GFP_FS allocations, such
-   allocations will fail if memcg kmem limit is less than the user limit and
-   the memcg kmem usage is close to its limit. Glauber proposed to schedule a
-   worker which would shrink kmem in the background on such allocations.
-   However, this approach does not eliminate failures completely, it just makes
-   them rarer. I'm thinking on implementing soft limits for memcg kmem so that
-   striking the soft limit will trigger the reclaimer, but won't fail the
-   allocation. I would appreciate any other proposals on how this can be fixed.
-
- * Only dcache and icache are reclaimed on memcg pressure. Other FS objects are
-   left for global pressure only. However, it should not be a serious problem
-   to make them reclaimable too by passing on memcg to the FS-layer and letting
-   each FS decide if its internal objects are shrinkable on memcg pressure.
-
-Changelog:
-
-Changes in v12:
- * Do not prune all slabs on kmem-only pressure.
- * Count all on-LRU pages eligible for reclaim to pass to shrink_slab().
- * Fix isolation issue due to using shrinker->nr_deferred on memcg pressure.
- * Add comments to memcg_list_lru functions.
- * Code cleanup/refactoring.
-
-Changes in v11:
- * Rework per-memcg list_lru infrastructure.
-
-Glauber Costa (7):
-  memcg: make cache index determination more robust
-  memcg: consolidate callers of memcg_cache_id
-  memcg: move initialization to memcg creation
-  memcg: allow kmem limit to be resized down
-  vmpressure: in-kernel notifications
-  memcg: reap dead memcgs upon global memory pressure
-  memcg: flush memcg items upon memcg destruction
-
-Vladimir Davydov (11):
-  memcg: move several kmemcg functions upper
-  fs: do not use destroy_super() in alloc_super() fail path
-  vmscan: rename shrink_slab() args to make it more generic
-  vmscan: move call to shrink_slab() to shrink_zones()
-  vmscan: do_try_to_free_pages(): remove shrink_control argument
-  vmscan: shrink slab on memcg pressure
-  memcg,list_lru: add per-memcg LRU list infrastructure
-  memcg,list_lru: add function walking over all lists of a per-memcg
-    LRU
-  fs: make icache, dcache shrinkers memcg-aware
-  memcg: per-memcg kmem shrinking
-  vmscan: take at least one pass with shrinkers
-
- fs/dcache.c                   |   25 +-
- fs/inode.c                    |   16 +-
- fs/internal.h                 |    9 +-
- fs/super.c                    |   48 ++-
- include/linux/fs.h            |    4 +-
- include/linux/list_lru.h      |   83 +++++
- include/linux/memcontrol.h    |   22 ++
- include/linux/mm.h            |    3 +-
- include/linux/shrinker.h      |   10 +-
- include/linux/swap.h          |    2 +
- include/linux/vmpressure.h    |    5 +
- include/trace/events/vmscan.h |   20 +-
- mm/memcontrol.c               |  728 ++++++++++++++++++++++++++++++++++++-----
- mm/vmpressure.c               |   53 ++-
- mm/vmscan.c                   |  249 +++++++++-----
- 15 files changed, 1054 insertions(+), 223 deletions(-)
-
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 1cedd00..71c7f50 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -1926,8 +1926,7 @@ int drop_caches_sysctl_handler(struct ctl_table *, int,
+ #endif
+ 
+ unsigned long shrink_slab(struct shrink_control *shrink,
+-			  unsigned long nr_pages_scanned,
+-			  unsigned long lru_pages);
++			  unsigned long fraction, unsigned long denominator);
+ 
+ #ifndef CONFIG_MMU
+ #define randomize_va_space 0
+diff --git a/include/trace/events/vmscan.h b/include/trace/events/vmscan.h
+index 132a985..6bed4ab 100644
+--- a/include/trace/events/vmscan.h
++++ b/include/trace/events/vmscan.h
+@@ -181,11 +181,11 @@ DEFINE_EVENT(mm_vmscan_direct_reclaim_end_template, mm_vmscan_memcg_softlimit_re
+ 
+ TRACE_EVENT(mm_shrink_slab_start,
+ 	TP_PROTO(struct shrinker *shr, struct shrink_control *sc,
+-		long nr_objects_to_shrink, unsigned long pgs_scanned,
+-		unsigned long lru_pgs, unsigned long cache_items,
++		long nr_objects_to_shrink, unsigned long frac,
++		unsigned long denom, unsigned long cache_items,
+ 		unsigned long long delta, unsigned long total_scan),
+ 
+-	TP_ARGS(shr, sc, nr_objects_to_shrink, pgs_scanned, lru_pgs,
++	TP_ARGS(shr, sc, nr_objects_to_shrink, frac, denom,
+ 		cache_items, delta, total_scan),
+ 
+ 	TP_STRUCT__entry(
+@@ -193,8 +193,8 @@ TRACE_EVENT(mm_shrink_slab_start,
+ 		__field(void *, shrink)
+ 		__field(long, nr_objects_to_shrink)
+ 		__field(gfp_t, gfp_flags)
+-		__field(unsigned long, pgs_scanned)
+-		__field(unsigned long, lru_pgs)
++		__field(unsigned long, frac)
++		__field(unsigned long, denom)
+ 		__field(unsigned long, cache_items)
+ 		__field(unsigned long long, delta)
+ 		__field(unsigned long, total_scan)
+@@ -205,20 +205,20 @@ TRACE_EVENT(mm_shrink_slab_start,
+ 		__entry->shrink = shr->scan_objects;
+ 		__entry->nr_objects_to_shrink = nr_objects_to_shrink;
+ 		__entry->gfp_flags = sc->gfp_mask;
+-		__entry->pgs_scanned = pgs_scanned;
+-		__entry->lru_pgs = lru_pgs;
++		__entry->frac = frac;
++		__entry->denom = denom;
+ 		__entry->cache_items = cache_items;
+ 		__entry->delta = delta;
+ 		__entry->total_scan = total_scan;
+ 	),
+ 
+-	TP_printk("%pF %p: objects to shrink %ld gfp_flags %s pgs_scanned %ld lru_pgs %ld cache items %ld delta %lld total_scan %ld",
++	TP_printk("%pF %p: objects to shrink %ld gfp_flags %s frac %ld denom %ld cache items %ld delta %lld total_scan %ld",
+ 		__entry->shrink,
+ 		__entry->shr,
+ 		__entry->nr_objects_to_shrink,
+ 		show_gfp_flags(__entry->gfp_flags),
+-		__entry->pgs_scanned,
+-		__entry->lru_pgs,
++		__entry->frac,
++		__entry->denom,
+ 		__entry->cache_items,
+ 		__entry->delta,
+ 		__entry->total_scan)
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index eea668d..6946997 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -219,7 +219,7 @@ EXPORT_SYMBOL(unregister_shrinker);
+ 
+ static unsigned long
+ shrink_slab_node(struct shrink_control *shrinkctl, struct shrinker *shrinker,
+-		 unsigned long nr_pages_scanned, unsigned long lru_pages)
++		 unsigned long fraction, unsigned long denominator)
+ {
+ 	unsigned long freed = 0;
+ 	unsigned long long delta;
+@@ -243,9 +243,9 @@ shrink_slab_node(struct shrink_control *shrinkctl, struct shrinker *shrinker,
+ 	nr = atomic_long_xchg(&shrinker->nr_deferred[nid], 0);
+ 
+ 	total_scan = nr;
+-	delta = (4 * nr_pages_scanned) / shrinker->seeks;
++	delta = (4 * fraction) / shrinker->seeks;
+ 	delta *= max_pass;
+-	do_div(delta, lru_pages + 1);
++	do_div(delta, denominator + 1);
+ 	total_scan += delta;
+ 	if (total_scan < 0) {
+ 		printk(KERN_ERR
+@@ -278,7 +278,7 @@ shrink_slab_node(struct shrink_control *shrinkctl, struct shrinker *shrinker,
+ 		total_scan = max_pass * 2;
+ 
+ 	trace_mm_shrink_slab_start(shrinker, shrinkctl, nr,
+-				nr_pages_scanned, lru_pages,
++				fraction, denominator,
+ 				max_pass, delta, total_scan);
+ 
+ 	while (total_scan >= batch_size) {
+@@ -322,23 +322,23 @@ shrink_slab_node(struct shrink_control *shrinkctl, struct shrinker *shrinker,
+  * If the vm encountered mapped pages on the LRU it increase the pressure on
+  * slab to avoid swapping.
+  *
+- * We do weird things to avoid (scanned*seeks*entries) overflowing 32 bits.
++ * We do weird things to avoid (fraction*seeks*entries) overflowing 32 bits.
+  *
+- * `lru_pages' represents the number of on-LRU pages in all the zones which
+- * are eligible for the caller's allocation attempt.  It is used for balancing
+- * slab reclaim versus page reclaim.
++ * `fraction' and `denominator' are used for balancing slab reclaim versus page
++ * reclaim. To scan slab objects proportionally to page cache, pass the number
++ * of pages scanned and the total number of on-LRU pages in all the zones which
++ * are eligible for the caller's allocation attempt respectively.
+  *
+  * Returns the number of slab objects which we shrunk.
+  */
+ unsigned long shrink_slab(struct shrink_control *shrinkctl,
+-			  unsigned long nr_pages_scanned,
+-			  unsigned long lru_pages)
++			  unsigned long fraction, unsigned long denominator)
+ {
+ 	struct shrinker *shrinker;
+ 	unsigned long freed = 0;
+ 
+-	if (nr_pages_scanned == 0)
+-		nr_pages_scanned = SWAP_CLUSTER_MAX;
++	if (fraction == 0)
++		fraction = SWAP_CLUSTER_MAX;
+ 
+ 	if (!down_read_trylock(&shrinker_rwsem)) {
+ 		/*
+@@ -361,7 +361,7 @@ unsigned long shrink_slab(struct shrink_control *shrinkctl,
+ 				break;
+ 
+ 			freed += shrink_slab_node(shrinkctl, shrinker,
+-				 nr_pages_scanned, lru_pages);
++						  fraction, denominator);
+ 
+ 		}
+ 	}
 -- 
 1.7.10.4
 
