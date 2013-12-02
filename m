@@ -1,171 +1,106 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
- access to memory reserves
-Date: Mon, 2 Dec 2013 16:25:00 -0500
-Message-ID: <20131202212500.GN22729@cmpxchg.org>
-References: <alpine.DEB.2.02.1311131649110.6735@chino.kir.corp.google.com>
- <20131114032508.GL707@cmpxchg.org>
- <alpine.DEB.2.02.1311141447160.21413@chino.kir.corp.google.com>
- <alpine.DEB.2.02.1311141525440.30112@chino.kir.corp.google.com>
- <20131118154115.GA3556@cmpxchg.org>
- <20131118165110.GE32623@dhcp22.suse.cz>
- <20131122165100.GN3556@cmpxchg.org>
- <alpine.DEB.2.02.1311261648570.21003@chino.kir.corp.google.com>
- <20131127163435.GA3556@cmpxchg.org>
- <20131202200221.GC5524@dhcp22.suse.cz>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [patch] mm: memcg: do not declare OOM from __GFP_NOFAIL
+ allocations
+Date: Mon, 2 Dec 2013 15:02:09 -0800 (PST)
+Message-ID: <alpine.DEB.2.02.1312021452510.13465@chino.kir.corp.google.com>
+References: <1385140676-5677-1-git-send-email-hannes@cmpxchg.org> <alpine.DEB.2.02.1311261658170.21003@chino.kir.corp.google.com> <alpine.DEB.2.02.1311261931210.5973@chino.kir.corp.google.com> <20131127163916.GB3556@cmpxchg.org>
+ <alpine.DEB.2.02.1311271336220.9222@chino.kir.corp.google.com> <20131127225340.GE3556@cmpxchg.org> <alpine.DEB.2.02.1311271526080.22848@chino.kir.corp.google.com> <20131128102049.GF2761@dhcp22.suse.cz> <alpine.DEB.2.02.1311291543400.22413@chino.kir.corp.google.com>
+ <20131202132201.GC18838@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=K2mXjx6NUxz5k6f9waurHgBwyty6I0VY1k6nhcs+u+4=;
-	b=qjwB+Nk3370HaVARNjsYA8ER4YraWgLioEkctt7NMXXYLabWwuxq8eykyIFKEmT+XVHQfsawvyjPouEaDsifNrvTfnOWfYWh8te/zjmsZm6ElZRQk1MrvVBqpl0Nwwwr5ELx/OUTlYT1l/ESTnxgZHvMqlhHmrOSXtUcIsqDMKs=;
-Content-Disposition: inline
-In-Reply-To: <20131202200221.GC5524-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version:content-type;
+        bh=mEYrkvONWe+dyUEAhmsB8ILyVtsPQ/smhGkTzwsUbfw=;
+        b=RZ8nsFtNt8FYgfIhh+tq2rLd+NdU1/05CIjZmuqwZZAEqtTiU3r+VAnWRFFJYsVIxo
+         z72qGAnveFiGVy+5hlKjl9tTZ/8AviDTcs43PsV8+1I2Z1FyP1kbDyO/XCK8UliAXgLJ
+         iSP9Z41O7r86SFvjIE4gy1o1y1/k3rU71nT+T2moQd3pE1guYnLROHoPFa3nUTZWGcWA
+         8yUJ9qVHks0q6CXYOZl4ybEBnm6u/MYmqdEalSunR2zGUfkOFHrO6uavORhdM6Q2/uZy
+         ue0O2H/UY3i2SslDb4lhixSKvkQbL+z1nVIvkHxz/7areTD2Oal3NJAnRGjkrDi9B1Ov
+         KZFA==
+In-Reply-To: <20131202132201.GC18838@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Dec 02, 2013 at 09:02:21PM +0100, Michal Hocko wrote:
-> On Wed 27-11-13 11:34:36, Johannes Weiner wrote:
-> > On Tue, Nov 26, 2013 at 04:53:47PM -0800, David Rientjes wrote:
-> > > On Fri, 22 Nov 2013, Johannes Weiner wrote:
+On Mon, 2 Dec 2013, Michal Hocko wrote:
+
+> > > What if the callers simply cannot deal with the allocation failure?
+> > > 84235de394d97 (fs: buffer: move allocation failure loop into the
+> > > allocator) describes one such case when __getblk_slow tries desperately
+> > > to grow buffers relying on the reclaim to free something. As there might
+> > > be no reclaim going on we are screwed.
 > > > 
-> > > > But userspace in all likeliness DOES need to take action.
-> > > > 
-> > > > Reclaim is a really long process.  If 5 times doing 12 priority cycles
-> > > > and scanning thousands of pages is not enough to reclaim a single
-> > > > page, what does that say about the health of the memcg?
-> > > > 
-> > > > But more importantly, OOM handling is just inherently racy.  A task
-> > > > might receive the kill signal a split second *after* userspace was
-> > > > notified.  Or a task may exit voluntarily a split second after a
-> > > > victim was chosen and killed.
-> > > > 
-> > > 
-> > > That's not true even today without the userspace oom handling proposal 
-> > > currently being discussed if you have a memcg oom handler attached to a 
-> > > parent memcg with access to more memory than an oom child memcg.  The oom 
-> > > handler can disable the child memcg's oom killer with memory.oom_control 
-> > > and implement its own policy to deal with any notification of oom.
 > > 
-> > I was never implying the kernel handler.  All the races exist with
-> > userspace handling as well.
-> > 
-> > > This patch is required to ensure that in such a scenario that the oom 
-> > > handler sitting in the parent memcg only wakes up when it's required to 
-> > > intervene.
-> > 
-> > A task could receive an unrelated kill between the OOM notification
-> > and going to sleep to wait for userspace OOM handling.  Or another
-> > task could exit voluntarily between the notification and waitqueue
-> > entry, which would again be short-cut by the oom_recover of the exit
-> > uncharges.
-> > 
-> > oom:                           other tasks:
-> > check signal/exiting
-> >                                could exit or get killed here
-> > mem_cgroup_oom_trylock()
-> >                                could exit or get killed here
-> > mem_cgroup_oom_notify()
-> >                                could exit or get killed here
-> > if (userspace_handler)
-> >   sleep()                      could exit or get killed here
-> > else
-> >   oom_kill()
-> >                                could exit or get killed here
-> > 
-> > It does not matter where your signal/exiting check is, OOM
-> > notification can never be race free because OOM is just an arbitrary
-> > line we draw.  We have no idea what all the tasks are up to and how
-> > close they are to releasing memory.  Even if we freeze the whole group
-> > to handle tasks, it does not change the fact that the userspace OOM
-> > handler might kill one task and after the unfreeze another task
-> > immediately exits voluntarily or got a kill signal a split second
-> > after it was frozen.
-> > 
-> > You can't fix this.  We just have to draw the line somewhere and
-> > accept that in rare situations the OOM kill was unnecessary.
+> > My suggestion is to spin, not return NULL. 
 > 
-> But we are not talking just about races here. What if the OOM is a
-> result of an OOM action itself. E.g. a killed task faults a memory in
-> while exiting and it hasn't freed its memory yet. Should we notify in
-> such a case? What would an userspace OOM handler do (the in-kernel
-> implementation has an advantage because it can check the tasks flags)?
-
-We don't notify in such a case.  Every charge from a TIF_MEMDIE or
-exiting task is bypassing the limit immediately.  Not even reclaim.
-
-> > So again, I don't see this patch is doing anything but blur the
-> > current line and make notification less predictable. And, as someone
-> > else in this thread already said, it's a uservisible change in
-> > behavior and would break known tuning usecases.
+> Spin on which level? The whole point of this change was to not spin for
+> ever because the caller might sit on top of other locks which might
+> prevent somebody else to die although it has been killed.
 > 
-> I would like to understand how would such a tuning usecase work and how
-> it would break with this change.
 
-I would do test runs and with every run increase the size of the
-workload until I get OOM notifications to know when the kernel has
-been pushed beyond its limits and available memory + reclaim
-capability can't keep up with the workload anymore.
+See my question about the non-memcg page allocator behavior below.
 
-Not informing me just because due to timing variance a random process
-exits in the last moment would be flat out lying.  The machine is OOM.
-Many reclaim cycles failing is a good predictor.  Last minute exit of
-random task is not, it's happenstance and I don't want to rely on a
-fluke like this to size my workload.
+> > Bypassing to the root memcg 
+> > can lead to a system oom condition whereas if memcg weren't involved at 
+> > all the page allocator would just spin (because of !__GFP_FS).
+> 
+> I am confused now. The page allocation has already happened at the time
+> we are doing the charge. So the global OOM would have happened already.
+> 
 
-> Consider the above example. You would get 2 notification for the very
-> same OOM condition.
-> On the other hand if the encountered exiting task was just a race then
-> we have two options basically. Either there are more tasks racing (and
-> not all of them are exiting) or there is only one (all are exiting).
-> We will not loose any notification in the first case because the flags
-> are checked before mem_cgroup_oom_trylock and so one of tasks would lock
-> and notify.
-> The second case is more interesting. Userspace won't get notification
-> but we also know that no action is required as the OOM will be resolved
-> by itself. And now we should consider whether notification would do more
-> good than harm. The tuning usecase would loose one event. Would such a
-> rare situation skew the statistics so much? On the other hand a real OOM
-> killer would do something which means something will be killed. I find
-> the later much worse.
+That's precisely the point, the successful charges can allow additional 
+page allocations to occur and cause system oom conditions if you don't 
+have memcg isolation.  Some customers, including us, use memcg to ensure 
+that a set of processes cannot use more resources than allowed.  Any 
+bypass opens up the possibility of additional memory allocations that 
+cause the system to be oom and then we end up requiring a userspace oom 
+handler because our policy is complex enough that it cannot be effected 
+simply by /proc/pid/oom_score_adj.
 
-We already check in various places (sigh) for whether reclaim and
-killing is still necessary.  What is the end game here?  An endless
-loop right before the kill where we check if the kill is still
-necessary?
+I'm not quite sure how significant of a point this is, though, because it 
+depends on the caller doing the __GFP_NOFAIL allocations that allow the 
+bypass.  If you're doing
 
-You're not fixing this problem, so why make the notifications less
-reliable?
+	for (i = 0; i < 1 << 20; i++)
+		page[i] = alloc_page(GFP_NOFS | __GFP_NOFAIL);
 
-> So all in all. I do agree with you that this path will never be race
-> free and without pointless OOM actions. I also agree that drawing the
-> line is hard. But I am more inclined to prevent from notification when
-> we already know that _no action_ is required because IMHO the vast
-> majority of oom listeners are there to _do_ an action which is mostly
-> deadly.
+it can become significant, but I'm unsure of how much memory all callers 
+end up allocating in this context.
 
-If you want to push the machine so hard that active measures like
-reclaim can't keep up and you rely on stupid timing like this to save
-your sorry butt, then you'll just have to live with the
-unpredictability of it.  You're going to eat kills that might have
-been avoided last minute either way.  It's no excuse to plaster the MM
-with TIF_MEMDIE checks and last-minute cgroup margin checks in the
-weirdest locations.
+> > > That being said, while I do agree with you that we should strive for
+> > > isolation as much as possible there are certain cases when this is
+> > > impossible to achieve without seeing much worse consequences. For now,
+> > > we hope that __GFP_NOFAIL is used very scarcely.
+> > 
+> > If that's true, why not bypass the per-zone min watermarks in the page 
+> > allocator as well to allow these allocations to succeed?
+> 
+> Allocations are already done. We simply cannot charge that allocation
+> because we have reached the hard limit. And the said allocation might
+> prevent OOM action to proceed due to held locks.
 
-Again, how likely is it anyway that the kill was truly skipped and not
-just deferred?  Reclaim failing is a good indicator that you're in
-trouble, a random task exiting in an ongoing workload does not say
-much.  The machine could still be in trouble, so you just deferred the
-inevitable, you didn't really avoid a kill.
+I'm referring to the generic non-memcg page allocator behavior.  Forget 
+memcg for a moment.  What is the behavior in the _page_allocator_ for 
+GFP_NOFS | __GFP_NOFAIL?  Do we spin forever if reclaim fails or do we 
+bypas the per-zone min watermarks to allow it to allocate because "it 
+needs to succeed, it may be holding filesystem locks"?
 
-At this point we are talking about OOM kill frequency and statistical
-probability during apparently normal operations.  The OOM killer was
-never written for that, it was supposed to be a last minute resort
-that should not occur during normal operations and only if all SANE
-measures to avoid it have failed.  99% of all users have no interest
-in these micro-optimizations and we shouldn't clutter the code and
-have unpredictable behavior without even a trace of data to show that
-this is anything more than a placebo measure for one use case.
+It's already been acknowledged in this thread that no bypassing is done 
+in the page allocator and it just spins.  There's some handwaving saying 
+that since the entire system is oom that there is a greater chance that 
+memory will be freed by something else, but that's just handwaving and is 
+certainly no guaranteed.
+
+So, my question again: why not bypass the per-zone min watermarks in the 
+page allocator?
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
