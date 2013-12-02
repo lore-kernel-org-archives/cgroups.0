@@ -1,70 +1,163 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 07/12] cgroup: unify cgroup_write_X64() and
- cgroup_write_string()
-Date: Mon, 2 Dec 2013 11:44:06 -0500
-Message-ID: <20131202164406.GP3556@cmpxchg.org>
-References: <1385595759-17656-1-git-send-email-tj@kernel.org>
- <1385595759-17656-8-git-send-email-tj@kernel.org>
- <20131128111818.GG2761@dhcp22.suse.cz>
- <20131129200525.GC21755@mtj.dyndns.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH] memcg: remove KMEM_ACCOUNTED_ACTIVATED
+Date: Mon, 2 Dec 2013 19:15:01 +0100
+Message-ID: <20131202181501.GA5524@dhcp22.suse.cz>
+References: <1385989693-28788-1-git-send-email-vdavydov@parallels.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=u1MVPhAQwH+WYyxhanFITHUEewyk8RKzS0GqNBJsOYg=;
-	b=B4wA9eRyTAXbQYRzNfl7g0Stt4nr/nUGxWT+aWxK3hIMV1yEKflCfGEdHG5+Gm+6P6OA4Mlq0UpHTwwRcB/dIl+KXcS0hRxBWUZEDY2I4TznHWhTA+GOOKxyJE632YWGdNXHh7dXgLo8sqKta+oQjuC+DMTzXNU0NhQKa1kz0hM=;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=gtl0W8KjQsS+rLkdy1r7N0Da/rMT8NHiNfnmRJnBA0k=;
+        b=svtPKRYW83pD4YGHIHUSsdbWSdgf+1IHx9HIo1fZ8M+trfH5pr0H+2Ydm/DkO6f6hX
+         hEtPiuSIk8CLmQr81ZsjNipHSEMi9pgkUbGnTylVJBv/J+8XVXlJtun85XD05WT/AU6o
+         i52Xp4icQfK/gKnR+82ry3uUi4lAW3dZ6EAJqcgmfsN147iqkLmmm4XLNOTnSwUlBt0l
+         oipgt8QEGthnnYifXYPAsCmgIBJOp+y3/a046YJ/t2ZMYqu158EJv9wjwkqI7DNzKjdW
+         WHR5cYhdNQdOIJPthNheTlS8S02lTuVJ3fDvTkNfiPXxpNb0PI0WhkPdtns8nqNvsx/r
+         AapA==
 Content-Disposition: inline
-In-Reply-To: <20131129200525.GC21755-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+In-Reply-To: <1385989693-28788-1-git-send-email-vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Fri, Nov 29, 2013 at 03:05:25PM -0500, Tejun Heo wrote:
-> Hello, Michal.
-> 
-> On Thu, Nov 28, 2013 at 12:18:18PM +0100, Michal Hocko wrote:
-> > > Unify the two into cgroup_file_write() which always allocates dynamic
-> > > buffer for simplicity
-> > 
-> > It's true that this is simpler but the allocation might cause some
-> > issues with memcg. Although it is not common that userspace oom handler
-> > is a part of the target memcg there are users (e.g. Google) who do that.
-> > 
-> > Why is that a problem? Consider that a memcg is under OOM, handler gets
-> > notified and tries to solve the situation by enlarging the hard limit.
-> > This worked before this patch because cgroup_write_X64 used an on stack
-> > buffer but now it would use kmalloc which might be accounted and trip
-> > over the same OOM situation.
-> >
-> > This is not limited to the OOM handling. The group might be close to OOM
-> > and the last thing user expects is to trigger OOM when he tries to
-> > enlarge the limit.
-> > 
-> > Is the additional simplicity worth breaking those usecases?
-> 
-> Whoa, so we support oom handler inside the memcg that it handles?
-> Does that work reliably?  Changing the above detail in this patch
-> isn't difficult (and we'll later need to update kernfs too) but
-> supporting such setup properly would be a *lot* of commitment and I'm
-> very doubtful we'd be able to achieve that by just carefully avoiding
-> memory allocation in the operations that usreland oom handler uses -
-> that set is destined to expand over time, extremely fragile and will
-> be hellish to maintain.
-> 
-> So, I'm not at all excited about commiting to this guarantee.  This
-> one is an easy one but it looks like the first step onto dizzying
-> slippery slope.
-> 
-> Am I misunderstanding something here?  Are you and Johannes firm on
-> supporting this?
+[CCing Glauber - please do so in other posts for kmem related changes]
 
-Handling a memcg OOM from userspace running inside that OOM memcg is
-completely crazy.  I mean, think about this for just two seconds...
-Really?
+On Mon 02-12-13 17:08:13, Vladimir Davydov wrote:
+> The KMEM_ACCOUNTED_ACTIVATED was introduced by commit a8964b9b ("memcg:
+> use static branches when code not in use") in order to guarantee that
+> static_key_slow_inc(&memcg_kmem_enabled_key) will be called only once
+> for each memory cgroup when its kmem limit is set. The point is that at
+> that time the memcg_update_kmem_limit() function's workflow looked like
+> this:
+> 
+> 	bool must_inc_static_branch = false;
+> 
+> 	cgroup_lock();
+> 	mutex_lock(&set_limit_mutex);
+> 	if (!memcg->kmem_account_flags && val != RESOURCE_MAX) {
+> 		/* The kmem limit is set for the first time */
+> 		ret = res_counter_set_limit(&memcg->kmem, val);
+> 
+> 		memcg_kmem_set_activated(memcg);
+> 		must_inc_static_branch = true;
+> 	} else
+> 		ret = res_counter_set_limit(&memcg->kmem, val);
+> 	mutex_unlock(&set_limit_mutex);
+> 	cgroup_unlock();
+> 
+> 	if (must_inc_static_branch) {
+> 		/* We can't do this under cgroup_lock */
+> 		static_key_slow_inc(&memcg_kmem_enabled_key);
+> 		memcg_kmem_set_active(memcg);
+> 	}
+> 
+> Today, we don't use cgroup_lock in memcg_update_kmem_limit(), and
+> static_key_slow_inc() is called under the set_limit_mutex, but the
+> leftover from the above-mentioned commit is still here. Let's remove it.
 
-I get that people are doing it right now, and if you can get away with
-it for now, good for you.  But you have to be aware how crazy this is
-and if it breaks you get to keep the pieces and we are not going to
-accomodate this in the kernel.  Fix your crazy userspace.
+OK, so I have looked there again and 692e89abd154b (memcg: increment
+static branch right after limit set) which went in after cgroup_mutex
+has been removed. It came along with the following comment.
+                /*
+                 * setting the active bit after the inc will guarantee no one
+                 * starts accounting before all call sites are patched
+                 */
+
+This suggests that the flag is needed after all because we have
+to be sure that _all_ the places have to be patched. AFAIU
+memcg_kmem_newpage_charge might see the static key already patched so
+it would do a charge but memcg_kmem_commit_charge would still see it
+unpatched and so the charge won't be committed.
+
+Or am I missing something?
+ 
+> Signed-off-by: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> Cc: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> ---
+>  mm/memcontrol.c |   26 +-------------------------
+>  1 file changed, 1 insertion(+), 25 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index f1a0ae6..f78661f 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -344,14 +344,9 @@ static size_t memcg_size(void)
+>  /* internal only representation about the status of kmem accounting. */
+>  enum {
+>  	KMEM_ACCOUNTED_ACTIVE = 0, /* accounted by this cgroup itself */
+> -	KMEM_ACCOUNTED_ACTIVATED, /* static key enabled. */
+>  	KMEM_ACCOUNTED_DEAD, /* dead memcg with pending kmem charges */
+>  };
+>  
+> -/* We account when limit is on, but only after call sites are patched */
+> -#define KMEM_ACCOUNTED_MASK \
+> -		((1 << KMEM_ACCOUNTED_ACTIVE) | (1 << KMEM_ACCOUNTED_ACTIVATED))
+> -
+>  #ifdef CONFIG_MEMCG_KMEM
+>  static inline void memcg_kmem_set_active(struct mem_cgroup *memcg)
+>  {
+> @@ -363,16 +358,6 @@ static bool memcg_kmem_is_active(struct mem_cgroup *memcg)
+>  	return test_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_account_flags);
+>  }
+>  
+> -static void memcg_kmem_set_activated(struct mem_cgroup *memcg)
+> -{
+> -	set_bit(KMEM_ACCOUNTED_ACTIVATED, &memcg->kmem_account_flags);
+> -}
+> -
+> -static void memcg_kmem_clear_activated(struct mem_cgroup *memcg)
+> -{
+> -	clear_bit(KMEM_ACCOUNTED_ACTIVATED, &memcg->kmem_account_flags);
+> -}
+> -
+>  static void memcg_kmem_mark_dead(struct mem_cgroup *memcg)
+>  {
+>  	/*
+> @@ -2956,7 +2941,7 @@ static DEFINE_MUTEX(set_limit_mutex);
+>  static inline bool memcg_can_account_kmem(struct mem_cgroup *memcg)
+>  {
+>  	return !mem_cgroup_disabled() && !mem_cgroup_is_root(memcg) &&
+> -		(memcg->kmem_account_flags & KMEM_ACCOUNTED_MASK);
+> +		memcg_kmem_is_active(memcg);
+>  }
+>  
+>  /*
+> @@ -3091,19 +3076,10 @@ int memcg_update_cache_sizes(struct mem_cgroup *memcg)
+>  				0, MEMCG_CACHES_MAX_SIZE, GFP_KERNEL);
+>  	if (num < 0)
+>  		return num;
+> -	/*
+> -	 * After this point, kmem_accounted (that we test atomically in
+> -	 * the beginning of this conditional), is no longer 0. This
+> -	 * guarantees only one process will set the following boolean
+> -	 * to true. We don't need test_and_set because we're protected
+> -	 * by the set_limit_mutex anyway.
+> -	 */
+> -	memcg_kmem_set_activated(memcg);
+>  
+>  	ret = memcg_update_all_caches(num+1);
+>  	if (ret) {
+>  		ida_simple_remove(&kmem_limited_groups, num);
+> -		memcg_kmem_clear_activated(memcg);
+>  		return ret;
+>  	}
+>  
+> -- 
+> 1.7.10.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Michal Hocko
+SUSE Labs
