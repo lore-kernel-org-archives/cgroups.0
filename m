@@ -1,68 +1,54 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: cgroup management daemon
-Date: Tue, 3 Dec 2013 08:54:03 -0500
-Message-ID: <20131203135403.GI8277@htj.dyndns.org>
+Date: Tue, 3 Dec 2013 09:00:53 -0500
+Message-ID: <20131203140053.GJ8277@htj.dyndns.org>
 References: <20131125224335.GA15481@mail.hallyn.com>
  <CAO_RewZGWARUafKzDc_t3G5OedGtEPTZgB2VYeHHiKSSrja8fA@mail.gmail.com>
+ <20131126161246.GA23834@mail.hallyn.com>
+ <CAD=mX8tCOEO4wP-XGs9YdRufTAay6zPaOxo_wZF=-KoqepH0wg@mail.gmail.com>
+ <20131126164125.GC23834@mail.hallyn.com>
+ <CAD=mX8v-jfA8F5DueK60Oo4Zfcjj86idKYKnDVc9LxQVs9W_rQ@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=iYtJonXHv/Lf+x6cfMI4Gq1jpMw4CZ3ldCVWQo3f9/w=;
-        b=rv9NWPQGqAqRJ7D5a07jU1pO1HZ8HLZNM1CxT9xakb4D6SU9lan95aN2dXlq7/3PIj
-         Hh3mdpxnRr7hL5LGqzCdiM2Re/g1jlHXHZopL+4gSymxh+T98YH6Df5jNi76hd2vhyVL
-         3Tdy8kjmBj+GA3ZuAiob7ocGczFydYm401gMFe4o2FFzl2MFYuS8TIz68P8SFtBWcInp
-         1Kp9sULihOPo9idomnpJlDWWpB5YwPF1XSMg2UpUIJtVWJtlWtt77z+31INdhvG1Jzl2
-         MZNoO5xfY5FIwOmcLhVjQYO7nLcjfTS5cFDms6z3dw2CXOlOdz4XB4rnm9hXdTp4QCFT
-         noJQ==
+        bh=NLmo7mJ4zrgaXXbQeoYXKa9WvQSciP/VS6BjuPs/mXY=;
+        b=C44qrsDO54mRUculizdLz7UuaGZ0HZ4CW0YEg8ythqYWILCRgX8NoWQn1SUgEtTO+/
+         r7k/a8q7QhsDWK/iqjCZRpPMoMDouf2an85cEF2ui6LDDO6vpX3G6wrbDJqhFNLM5AXZ
+         e0POApYek4GYC3yZZUfHPWVRbf8lnGiSIo34BxeB2dtKNnooXPEaqKtkQN9C0/5hNOGD
+         yPdHmk0vPPsnK2Qto8cXxfnd1Mwl7Ez67Tik7016JTv90Ql4b+Z4wRlGebwmkHAt56xy
+         wRLc9pHKpgbwQlMVcVV/m27Vmr1/ExcTelXcTommnIPJ0Y+mrvi+k0YeA2PF9pwAqUjk
+         FYJQ==
 Content-Disposition: inline
-In-Reply-To: <CAO_RewZGWARUafKzDc_t3G5OedGtEPTZgB2VYeHHiKSSrja8fA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <CAD=mX8v-jfA8F5DueK60Oo4Zfcjj86idKYKnDVc9LxQVs9W_rQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, lxc-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Victor Marmol <vmarmol-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rohit Jnagal <jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, =?iso-8859-1?Q?St=E9phane?= Graber <stgraber-/Ni+VN9Krahg9hUCZPvPmw@public.gmane.org>
+To: Victor Marmol <vmarmol-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lxc-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Rohit Jnagal <jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, =?iso-8859-1?Q?St=E9phane?= Graber <stgraber-/Ni+VN9Krahg9hUCZPvPmw@public.gmane.org>
 
-Hello, Tim.
+Hello,
 
-On Mon, Nov 25, 2013 at 08:58:09PM -0800, Tim Hockin wrote:
-> Thanks for this!  I think it helps a lot to discuss now, rather than
-> over nearly-done code.
+On Tue, Nov 26, 2013 at 09:19:18AM -0800, Victor Marmol wrote:
+> > > >From my discussions with Tejun, he wanted to move to using inotify so it
+> > > may still be an fd we pass around.
+> >
+> > Hm, would that just be inotify on the memory.max_usage_in_bytes
+> > file, of inotify on a specific fd you've created which is
+> > associated with any threshold you specify?  The former seems
+> > less ideal.
+> >
 > 
-> On Mon, Nov 25, 2013 at 2:43 PM, Serge E. Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org> wrote:
-> > Additionally, Tejun has specified that we do not want users to be
-> > too closely tied to the cgroupfs implementation.  Therefore
-> > commands will be just a hair more general than specifying cgroupfs
-> > filenames and values.  I may go so far as to avoid specifying
-> > specific controllers, as AFAIK there should be no redundancy in
-> > features.  On the other hand, I don't want to get too general.
-> > So I'm basing the API loosely on the lmctfy command line API.
-> 
-> I'm torn here.  While I agree in principle with Tejun, I am concerned
-> that this agent will always lag new kernel features or that the thin
-> abstraction you want to provide here does not easily accommodate some
-> of the more ... oddball features of one cgroup interface or another.
+> Tejun can comment more, but I think it is still TBD.
 
-Yeah, that's the trade-off but cgroupfs is a kernel API.  It shouldn't
-change or grow rapidly once things settle down.  As long as there's
-not too crazy way to step-aside when such rare case arises, I think
-pros outweight cons.
-
-> This agent is the very bottom of the stack, and should probably not do
-> much by way of abstraction.  I think I'd rather let something like
-> lmctfy provide the abstraction more holistically, and relegate this
-> agent to very simple plumbing and policy.  It could be as simple as
-> providing read/write/etc ops to specific control files.  It needs to
-> handle event_fd, too, I guess.  This has the nice side-effect of
-> always being "current" on kernel features :)
-
-The level of abstraction is definitely something debatable.  Please
-note that the existing event_fd based mechanism won't grow any new
-users (BTW, event_control is one of the dos vectors if you give write
-access to it) and all new notifications will be using inotify.
+It's likely the former with configurable cadence or per-knob (not
+per-opener) configurable thresholds.  max_usage_in_bytes is a special
+case here as all other knobs can simply generate an event on each
+transition.  If event (de)muxing is necessary, it probably should be
+done from userland.
 
 Thanks.
 
