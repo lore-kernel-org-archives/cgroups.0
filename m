@@ -1,62 +1,107 @@
-From: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] memcg: remove KMEM_ACCOUNTED_ACTIVATED
-Date: Wed, 4 Dec 2013 02:38:46 +0400
-Message-ID: <CAA6-i6q2viRkbjYOHcoiCHgvdfbfo-4j0k9gj9AA4SH1YToqVg@mail.gmail.com>
-References: <1385989693-28788-1-git-send-email-vdavydov@parallels.com>
-	<20131202181501.GA5524@dhcp22.suse.cz>
-	<CAA6-i6rWsZNQmFY5L-=yc6TaTGyg4hP4qn9gMZVsu8wWJ=1ywg@mail.gmail.com>
-	<529CDDB3.3090301@parallels.com>
-	<CAA6-i6q+WooWMSbJwLS=ByVu=fgAQuep99iP7tAXiuLABu2gVA@mail.gmail.com>
-	<529D9100.4070207@parallels.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [patch] mm: memcg: do not declare OOM from __GFP_NOFAIL
+ allocations
+Date: Tue, 3 Dec 2013 15:40:13 -0800 (PST)
+Message-ID: <alpine.DEB.2.02.1312031531510.5946@chino.kir.corp.google.com>
+References: <alpine.DEB.2.02.1311261658170.21003@chino.kir.corp.google.com> <alpine.DEB.2.02.1311261931210.5973@chino.kir.corp.google.com> <20131127163916.GB3556@cmpxchg.org> <alpine.DEB.2.02.1311271336220.9222@chino.kir.corp.google.com> <20131127225340.GE3556@cmpxchg.org>
+ <alpine.DEB.2.02.1311271526080.22848@chino.kir.corp.google.com> <20131128102049.GF2761@dhcp22.suse.cz> <alpine.DEB.2.02.1311291543400.22413@chino.kir.corp.google.com> <20131202132201.GC18838@dhcp22.suse.cz> <alpine.DEB.2.02.1312021452510.13465@chino.kir.corp.google.com>
+ <20131203222511.GU3556@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=rJGMEYF8VK/HdobY+wqhpUUMn+LH10HS0K6D84ijpF4=;
-        b=KXrX8j3LzUBbayYydLn4Y+8cBumBm8n3d8mX5gQSrVnIfo9JznhY3ZD5coh4dYP0af
-         E/ji0qxhVJMPXjJF3mEB9rLRQjSCoA7NCLwdmNQXleHoiVXNgLlEg++tGmIrQ239F2CY
-         yDz24qCFOyhImRAEsgeG6f1YkTfwiwNzH5lLMcMgyudDq0C3C2E1K44XBFa5vy2f9tTU
-         3/rTjUpbGtX/oV7cW/pemIxbNuhRGoUzjTM+iZrDDUCWx3vipJHVi6sD2Pc3q9oJt6+k
-         TNfSi3n0WyDxrKUuh1FxE8ZjLpZgZdRswTnrqtiO4f1E668kUbJMTPP0eAuQ+Du26Jh3
-         Gmeg==
-In-Reply-To: <529D9100.4070207-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=google.com; s=20120113;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version:content-type;
+        bh=mlH8fK9vm/US8NuGc0RH2yhR75iQLygLVicQh2pYbIs=;
+        b=cBh6ve7tPzRbfzROCec9ynyOYFT4W7uQQJcOJVcVsedmhdqblLAA3EA3x6MonfzcQr
+         ElksaeAlEgYxEdKfJKFGVm+NOpF5xzA9MCyKMAW1+QmWgSYLhnz1W8zfbt4v6BRR2t06
+         LLSMW3eXEDZgFOC4+tk3JJLrGso5KZ9lgj+1AMnq3mbHN+ivCD2wp4f8uJOaTUl2xr9P
+         4PW2YedcGHn64UqpBGlQzgoPPDKdXFIBvDttb+VM4kcQN7UAqQo9dHm+Q0JEzZ+Kl8hZ
+         BK0zJSLuID4EkOzp9UAvj6Bbyvq4/Q9DCK5HilLQQGhtFTQ48LYNAkgPg+4KQXHga5iz
+         pnTg==
+In-Reply-To: <20131203222511.GU3556@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
->>> Hi, Glauber
+On Tue, 3 Dec 2013, Johannes Weiner wrote:
 
-Hi.
+> > > Spin on which level? The whole point of this change was to not spin for
+> > > ever because the caller might sit on top of other locks which might
+> > > prevent somebody else to die although it has been killed.
+> > 
+> > See my question about the non-memcg page allocator behavior below.
+> 
+> No, please answer the question.
+> 
 
->
-> In memcg_update_kmem_limit() we do the whole process of limit
-> initialization under a mutex so the situation we need protection from in
-> tcp_update_limit() is impossible. BTW once set, the 'activated' flag is
-> never cleared and never checked alone, only along with the 'active'
-> flag, that's why I doubt we need it at all.
+The question would be answered below, by having consistency in allocation 
+and charging paths between both the page allocator and memcg.
 
-The updates are protected by a mutex, but the readers are not, and should not.
-So we can still be patching the readers, and the double-flag was
-initially used so
-we can make sure that both flags are only set after the static branches are in.
+> > I'm not quite sure how significant of a point this is, though, because it 
+> > depends on the caller doing the __GFP_NOFAIL allocations that allow the 
+> > bypass.  If you're doing
+> > 
+> > 	for (i = 0; i < 1 << 20; i++)
+> > 		page[i] = alloc_page(GFP_NOFS | __GFP_NOFAIL);
+> 
+> Hyperbole serves no one.
+> 
 
-Note that one of the flags is set inside memcg_update_cache_sizes(). After that,
-we call static_key_slow_inc(). At this point, someone whose code is
-patched in could
-start accounting, but it shouldn't - because not all sites are patched in.
+Since this bypasses all charges to the root memcg in oom conditions as a 
+result of your patch, how do you ensure the "leakage" is contained to a 
+small amount of memory?  Are we currently just trusting the users of 
+__GFP_NOFAIL that they aren't allocating a large amount of memory?
 
-So after the update is done, we set the other flag, and now everybody
-will start going
-through.
+> > I'm referring to the generic non-memcg page allocator behavior.  Forget 
+> > memcg for a moment.  What is the behavior in the _page_allocator_ for 
+> > GFP_NOFS | __GFP_NOFAIL?  Do we spin forever if reclaim fails or do we 
+> > bypas the per-zone min watermarks to allow it to allocate because "it 
+> > needs to succeed, it may be holding filesystem locks"?
+> > 
+> > It's already been acknowledged in this thread that no bypassing is done 
+> > in the page allocator and it just spins.  There's some handwaving saying 
+> > that since the entire system is oom that there is a greater chance that 
+> > memory will be freed by something else, but that's just handwaving and is 
+> > certainly no guaranteed.
+> 
+> Do you have another explanation of why this deadlock is not triggering
+> in the global case?  It's pretty obvious that there is a deadlock that
+> can not be resolved unless some unrelated task intervenes, just read
+> __alloc_pages_slowpath().
+> 
+> But we had a concrete bug report for memcg where there was no other
+> task to intervene.  One was stuck in the OOM killer waiting for the
+> victim to exit, the victim was stuck on locks that the killer held.
+> 
 
-Could you do something clever with just one flag? Probably yes. But I
-doubt it would
-be that much cleaner, this is just the way that patching sites work.
+I believe the page allocator would be susceptible to the same deadlock if 
+nothing else on the system can reclaim memory and that belief comes from 
+code inspection that shows __GFP_NOFAIL is not guaranteed to ever succeed 
+in the page allocator as their charges now are (with your patch) in memcg.  
+I do not have an example of such an incident.
 
--- 
-E Mare, Libertas
+> > So, my question again: why not bypass the per-zone min watermarks in the 
+> > page allocator?
+> 
+> I don't even know what your argument is supposed to be.  The fact that
+> we don't do it in the page allocator means that there can't be a bug
+> in memcg?
+> 
+
+I'm asking if we should allow GFP_NOFS | __GFP_NOFAIL allocations in the 
+page allocator to bypass per-zone min watermarks after reclaim has failed 
+since the oom killer cannot be called in such a context so that the page 
+allocator is not susceptible to the same deadlock without a complete 
+depletion of memory reserves?
+
+It's not an argument, it's a question.  Relax.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
