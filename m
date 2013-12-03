@@ -1,56 +1,233 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: cgroup management daemon
-Date: Tue, 3 Dec 2013 09:00:53 -0500
-Message-ID: <20131203140053.GJ8277@htj.dyndns.org>
-References: <20131125224335.GA15481@mail.hallyn.com>
- <CAO_RewZGWARUafKzDc_t3G5OedGtEPTZgB2VYeHHiKSSrja8fA@mail.gmail.com>
- <20131126161246.GA23834@mail.hallyn.com>
- <CAD=mX8tCOEO4wP-XGs9YdRufTAay6zPaOxo_wZF=-KoqepH0wg@mail.gmail.com>
- <20131126164125.GC23834@mail.hallyn.com>
- <CAD=mX8v-jfA8F5DueK60Oo4Zfcjj86idKYKnDVc9LxQVs9W_rQ@mail.gmail.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
+ access to memory reserves
+Date: Tue, 3 Dec 2013 15:17:13 -0500
+Message-ID: <20131203201713.GR3556@cmpxchg.org>
+References: <alpine.DEB.2.02.1311141447160.21413@chino.kir.corp.google.com>
+ <alpine.DEB.2.02.1311141525440.30112@chino.kir.corp.google.com>
+ <20131118154115.GA3556@cmpxchg.org>
+ <20131118165110.GE32623@dhcp22.suse.cz>
+ <20131122165100.GN3556@cmpxchg.org>
+ <alpine.DEB.2.02.1311261648570.21003@chino.kir.corp.google.com>
+ <20131127163435.GA3556@cmpxchg.org>
+ <20131202200221.GC5524@dhcp22.suse.cz>
+ <20131202212500.GN22729@cmpxchg.org>
+ <20131203120454.GA12758@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=NLmo7mJ4zrgaXXbQeoYXKa9WvQSciP/VS6BjuPs/mXY=;
-        b=C44qrsDO54mRUculizdLz7UuaGZ0HZ4CW0YEg8ythqYWILCRgX8NoWQn1SUgEtTO+/
-         r7k/a8q7QhsDWK/iqjCZRpPMoMDouf2an85cEF2ui6LDDO6vpX3G6wrbDJqhFNLM5AXZ
-         e0POApYek4GYC3yZZUfHPWVRbf8lnGiSIo34BxeB2dtKNnooXPEaqKtkQN9C0/5hNOGD
-         yPdHmk0vPPsnK2Qto8cXxfnd1Mwl7Ez67Tik7016JTv90Ql4b+Z4wRlGebwmkHAt56xy
-         wRLc9pHKpgbwQlMVcVV/m27Vmr1/ExcTelXcTommnIPJ0Y+mrvi+k0YeA2PF9pwAqUjk
-         FYJQ==
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=sRMy/B5J/5p1raGD+LpSBLmPE5sAkAlD25faDgFQZKk=;
+	b=fQ00qSRK3Ci7q+gvvF6FP89SK8Tio2E31PyrtFb2X3h+eGp05/mTpx0xK6jx8Gx6Y05Y9G1jk1y5fE291DIjEc71IH6gOZ6+Zvncbdf7S46N9HapJd0NHc5/7S5q3i9Ea+jPiKaBeNo6k0vWhtZhUwM9ZpF/+bIDNFbRJLZdmqw=;
 Content-Disposition: inline
-In-Reply-To: <CAD=mX8v-jfA8F5DueK60Oo4Zfcjj86idKYKnDVc9LxQVs9W_rQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20131203120454.GA12758-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Victor Marmol <vmarmol-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lxc-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Rohit Jnagal <jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, =?iso-8859-1?Q?St=E9phane?= Graber <stgraber-/Ni+VN9Krahg9hUCZPvPmw@public.gmane.org>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
-
-On Tue, Nov 26, 2013 at 09:19:18AM -0800, Victor Marmol wrote:
-> > > >From my discussions with Tejun, he wanted to move to using inotify so it
-> > > may still be an fd we pass around.
-> >
-> > Hm, would that just be inotify on the memory.max_usage_in_bytes
-> > file, of inotify on a specific fd you've created which is
-> > associated with any threshold you specify?  The former seems
-> > less ideal.
-> >
+On Tue, Dec 03, 2013 at 01:04:54PM +0100, Michal Hocko wrote:
+> On Mon 02-12-13 16:25:00, Johannes Weiner wrote:
+> > On Mon, Dec 02, 2013 at 09:02:21PM +0100, Michal Hocko wrote:
+> [...]
+> > > But we are not talking just about races here. What if the OOM is a
+> > > result of an OOM action itself. E.g. a killed task faults a memory in
+> > > while exiting and it hasn't freed its memory yet. Should we notify in
+> > > such a case? What would an userspace OOM handler do (the in-kernel
+> > > implementation has an advantage because it can check the tasks flags)?
+> > 
+> > We don't notify in such a case.  Every charge from a TIF_MEMDIE or
+> > exiting task is bypassing the limit immediately.  Not even reclaim.
 > 
-> Tejun can comment more, but I think it is still TBD.
+> Not really. Assume a memcg is under OOM. A task is killed by
+> userspace so we get into signal delivery code which clears
+> fatal_signal_pending and the code goes on to exit but then it faults in.
+> __mem_cgroup_try_charge will not see signal pending and TIF_MEMDIE is
+> not set yet. OOM is still not resolved so we are back to square one.
 
-It's likely the former with configurable cadence or per-knob (not
-per-opener) configurable thresholds.  max_usage_in_bytes is a special
-case here as all other knobs can simply generate an event on each
-transition.  If event (de)muxing is necessary, it probably should be
-done from userland.
+Ah, that's a completely separate problem, though.  One issue I have
+with these checks is that I never know which one are shortcuts and
+micro optimizations and which one are functionally necessary.
 
-Thanks.
+> > > > So again, I don't see this patch is doing anything but blur the
+> > > > current line and make notification less predictable. And, as someone
+> > > > else in this thread already said, it's a uservisible change in
+> > > > behavior and would break known tuning usecases.
+> > > 
+> > > I would like to understand how would such a tuning usecase work and how
+> > > it would break with this change.
+> > 
+> > I would do test runs and with every run increase the size of the
+> > workload until I get OOM notifications to know when the kernel has
+> > been pushed beyond its limits and available memory + reclaim
+> > capability can't keep up with the workload anymore.
+> > 
+> > Not informing me just because due to timing variance a random process
+> > exits in the last moment would be flat out lying.  The machine is OOM.
+> > Many reclaim cycles failing is a good predictor.  Last minute exit of
+> > random task is not, it's happenstance and I don't want to rely on a
+> > fluke like this to size my workload.
+> 
+> Such a metric would be inherently racy for the same reason. You simply
+> cannot rely on not seeing OOMs because an exiting task managed to leave
+> in time (after MEM_CGROUP_RECLAIM_RETRIES direct reclaim loops and
+> before mem_cgroup_oom). Difference between in time and little bit too
+> late is just too fragile to be useful IMO.
 
--- 
-tejun
+Are we saying the same thing?  Or did I misunderstand you?
+
+> > > Consider the above example. You would get 2 notification for the very
+> > > same OOM condition.
+> > > On the other hand if the encountered exiting task was just a race then
+> > > we have two options basically. Either there are more tasks racing (and
+> > > not all of them are exiting) or there is only one (all are exiting).
+> > > We will not loose any notification in the first case because the flags
+> > > are checked before mem_cgroup_oom_trylock and so one of tasks would lock
+> > > and notify.
+> > > The second case is more interesting. Userspace won't get notification
+> > > but we also know that no action is required as the OOM will be resolved
+> > > by itself. And now we should consider whether notification would do more
+> > > good than harm. The tuning usecase would loose one event. Would such a
+> > > rare situation skew the statistics so much? On the other hand a real OOM
+> > > killer would do something which means something will be killed. I find
+> > > the later much worse.
+> > 
+> > We already check in various places (sigh) for whether reclaim and
+> > killing is still necessary.  What is the end game here?  An endless
+> > loop right before the kill where we check if the kill is still
+> > necessary?
+> 
+> The patch as is doesn't cover all the cases and ideally we should check
+> that for OOM_SCAN_ABORT and later in oom_kill_process because they can
+> back out as well if we want to have only-on-action notification. Such a
+> solution would be too messy though.
+
+There is never an only-on-action notification and there is no check to
+cover all cases.  This is the fallacy I'm trying to point out.  All we
+can do is pick a fairly predictable line and stick to it.
+
+> But as I've said. The primary reason I liked this change is because it
+> solves the above mentioned OOM during exit issue and it also prevents
+> from a pointless notification. I am perfectly fine with moving the
+> check+set TIF_MEMDIE down so solve only the issue #1 and do not mess
+> with notifications.
+
+The notification is not pointless, we are OOM at the time we make the
+decision.
+
+> > You're not fixing this problem, so why make the notifications less
+> > reliable?
+> 
+> I am still not seeing why it is less reliable. The notification is
+> inherently racy so you cannot rely on any simple metrics based on their
+> count (at least not in general).
+
+It should be based on reclaim failing, which is more predictable and
+reproducible across multiple runs.  Anything else is just random
+coincidence, I can't fathom why you think that it's at all meaningful.
+
+You could do one more reclaim cycle and a charge attempt, or even just
+add an msleep() between the last reclaim cycle and the last charge
+attempt for exactly the same outcome.
+
+> > > So all in all. I do agree with you that this path will never be race
+> > > free and without pointless OOM actions. I also agree that drawing the
+> > > line is hard. But I am more inclined to prevent from notification when
+> > > we already know that _no action_ is required because IMHO the vast
+> > > majority of oom listeners are there to _do_ an action which is mostly
+> > > deadly.
+> > 
+> > If you want to push the machine so hard that active measures like
+> > reclaim can't keep up and you rely on stupid timing like this to save
+> > your sorry butt, then you'll just have to live with the
+> > unpredictability of it.  You're going to eat kills that might have
+> > been avoided last minute either way.  It's no excuse to plaster the MM
+> > with TIF_MEMDIE checks and last-minute cgroup margin checks in the
+> > weirdest locations.
+> 
+> Yes I do not agree with putting TIF_MEMDIE checks all over the place and
+> we should reduce their number to minimum. It is fair to say that the
+> patch didn't add a new check. It just has moved it to cover both
+> in-kernel and user space oom paths. That was a bonus I liked. To be
+> honest I do not see the notification side effect as a big deal as those
+> are racy anyway and I would rather see fewer of them than more
+> (especially when it is clear that nothing is to be done).
+
+I don't know why we have this check there in the first place, it
+should be part of the OOM victim selection process and not a hacky
+shortcut in memcg.  It's a blatant layering violation for no obvious
+reason.
+
+> > Again, how likely is it anyway that the kill was truly skipped and not
+> > just deferred?  Reclaim failing is a good indicator that you're in
+> > trouble, a random task exiting in an ongoing workload does not say
+> > much.  The machine could still be in trouble, so you just deferred the
+> > inevitable, you didn't really avoid a kill.
+> > 
+> > At this point we are talking about OOM kill frequency and statistical
+> > probability during apparently normal operations.  The OOM killer was
+> > never written for that, it was supposed to be a last minute resort
+> > that should not occur during normal operations and only if all SANE
+> > measures to avoid it have failed.  99% of all users have no interest
+> > in these micro-optimizations and we shouldn't clutter the code and
+> > have unpredictable behavior without even a trace of data to show that
+> > this is anything more than a placebo measure for one use case.
+> 
+> OK, as it seems that the notification part is too controversial, how
+> would you like the following? It reverts the notification part and still
+> solves the fault on exit path. I will prepare the full patch with the
+> changelog if this looks reasonable:
+> ---
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 28c9221b74ea..f44fe7e65a98 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -1783,6 +1783,16 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	unsigned int points = 0;
+>  	struct task_struct *chosen = NULL;
+>  
+> +	/*
+> +	 * If current has a pending SIGKILL or is exiting, then automatically
+> +	 * select it.  The goal is to allow it to allocate so that it may
+> +	 * quickly exit and free its memory.
+> +	 */
+> +	if (fatal_signal_pending(current) || current->flags & PF_EXITING) {
+> +		set_thread_flag(TIF_MEMDIE);
+> +		goto cleanup;
+
+		return;
+
+Anyway, I wish this would not be here at all and part of the thread
+scanner.  As David said, this is a very cold path, why the shortcut?
+
+> @@ -2233,16 +2243,6 @@ bool mem_cgroup_oom_synchronize(bool handle)
+>  	if (!handle)
+>  		goto cleanup;
+>  
+> -	/*
+> -	 * If current has a pending SIGKILL or is exiting, then automatically
+> -	 * select it.  The goal is to allow it to allocate so that it may
+> -	 * quickly exit and free its memory.
+> -	 */
+> -	if (fatal_signal_pending(current) || current->flags & PF_EXITING) {
+> -		set_thread_flag(TIF_MEMDIE);
+> -		goto cleanup;
+> -	}
+> -
+>  	owait.memcg = memcg;
+>  	owait.wait.flags = 0;
+>  	owait.wait.func = memcg_oom_wake_function;
+> @@ -2266,6 +2266,13 @@ bool mem_cgroup_oom_synchronize(bool handle)
+>  		schedule();
+>  		mem_cgroup_unmark_under_oom(memcg);
+>  		finish_wait(&memcg_oom_waitq, &owait.wait);
+> +
+> +		/* Userspace OOM handler cannot set TIF_MEMDIE to a target */
+> +		if (memcg->oom_kill_disable) {
+> +			if ((fatal_signal_pending(current) ||
+> +						current->flags & PF_EXITING))
+> +				set_thread_flag(TIF_MEMDIE);
+> +		}
+
+This is an entirely different change that I think makes sense.
