@@ -1,63 +1,38 @@
-From: Santosh Shilimkar <santosh.shilimkar@ti.com>
-Subject: [PATCH v2 17/23] mm/page_cgroup: Use memblock apis for early memory allocations
-Date: Mon, 2 Dec 2013 21:27:32 -0500
-Message-ID: <1386037658-3161-18-git-send-email-santosh.shilimkar@ti.com>
-References: <1386037658-3161-1-git-send-email-santosh.shilimkar@ti.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 07/12] cgroup: unify cgroup_write_X64() and
+	cgroup_write_string()
+Date: Tue, 3 Dec 2013 15:35:48 +0800
+Message-ID: <529D89D4.8040006@huawei.com>
+References: <1385595759-17656-1-git-send-email-tj@kernel.org>
+	<1385595759-17656-8-git-send-email-tj@kernel.org>
+	<20131128111818.GG2761@dhcp22.suse.cz>
+	<20131129200525.GC21755@mtj.dyndns.org>
+	<20131202164406.GP3556@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1386037658-3161-1-git-send-email-santosh.shilimkar@ti.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org, linux-mm@kvack.org, Grygorii Strashko <grygorii.strashko@ti.com>, Yinghai Lu <yinghai@kernel.org>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, Santosh Shilimkar <santosh.shilimkar@ti.com>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20131202164406.GP3556-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-From: Grygorii Strashko <grygorii.strashko@ti.com>
+> Handling a memcg OOM from userspace running inside that OOM memcg is
+> completely crazy.  I mean, think about this for just two seconds...
+> Really?
+> 
+> I get that people are doing it right now, and if you can get away with
+> it for now, good for you.  But you have to be aware how crazy this is
+> and if it breaks you get to keep the pieces and we are not going to
+> accomodate this in the kernel.  Fix your crazy userspace.
 
-Switch to memblock interfaces for early memory allocator instead of
-bootmem allocator. No functional change in beahvior than what it is
-in current code from bootmem users points of view.
-
-Archs already converted to NO_BOOTMEM now directly use memblock
-interfaces instead of bootmem wrappers build on top of memblock. And the
-archs which still uses bootmem, these new apis just fallback to exiting
-bootmem APIs.
-
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: cgroups@vger.kernel.org
-Signed-off-by: Grygorii Strashko <grygorii.strashko@ti.com>
-Signed-off-by: Santosh Shilimkar <santosh.shilimkar@ti.com>
----
- mm/page_cgroup.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/mm/page_cgroup.c b/mm/page_cgroup.c
-index 6d757e3a..d8bd2c5 100644
---- a/mm/page_cgroup.c
-+++ b/mm/page_cgroup.c
-@@ -54,8 +54,9 @@ static int __init alloc_node_page_cgroup(int nid)
- 
- 	table_size = sizeof(struct page_cgroup) * nr_pages;
- 
--	base = __alloc_bootmem_node_nopanic(NODE_DATA(nid),
--			table_size, PAGE_SIZE, __pa(MAX_DMA_ADDRESS));
-+	base = memblock_virt_alloc_try_nid_nopanic(
-+			table_size, PAGE_SIZE, __pa(MAX_DMA_ADDRESS),
-+			BOOTMEM_ALLOC_ACCESSIBLE, nid);
- 	if (!base)
- 		return -ENOMEM;
- 	NODE_DATA(nid)->node_page_cgroup = base;
--- 
-1.7.9.5
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
++1
