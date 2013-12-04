@@ -1,7 +1,7 @@
 From: David Rientjes <rientjes@google.com>
-Subject: [patch 3/8] mm, mempolicy: remove per-process flag
-Date: Tue, 3 Dec 2013 21:20:01 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1312032117490.29733@chino.kir.corp.google.com>
+Subject: [patch 4/8] mm, memcg: add tunable for oom reserves
+Date: Tue, 3 Dec 2013 21:20:06 -0800 (PST)
+Message-ID: <alpine.DEB.2.02.1312032118050.29733@chino.kir.corp.google.com>
 References: <20131119131400.GC20655@dhcp22.suse.cz> <20131119134007.GD20655@dhcp22.suse.cz> <alpine.DEB.2.02.1311192352070.20752@chino.kir.corp.google.com> <20131120152251.GA18809@dhcp22.suse.cz> <alpine.DEB.2.02.1311201917520.7167@chino.kir.corp.google.com>
  <20131128115458.GK2761@dhcp22.suse.cz> <alpine.DEB.2.02.1312021504170.13465@chino.kir.corp.google.com> <alpine.DEB.2.02.1312032116440.29733@chino.kir.corp.google.com>
 Mime-Version: 1.0
@@ -10,13 +10,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=date:from:to:cc:subject:in-reply-to:message-id:references
          :user-agent:mime-version:content-type;
-        bh=YBJuLWraFv7a2a741+Mm5H8UIvCOC/pGShW4QppKEV0=;
-        b=gNmDQjuaGpieR7/EzaWmLsf9kk0d5PcQINmmRl9USEz0jeguasvXKyOxsm2K2S8wQO
-         zxsFOz8HIOLb24q1VF4wBPviyosa2d4yDYS85fDyvAvtCjo364mioz1XTQwkxSmiGgw/
-         /+x1imGY7hcLPjqDVK68zCzfYbFrXhsvODKXBSPw3NFLtvz0GB1gjSXVhClq+IAFbSal
-         brIKvBEPuPJ0ZQLJffQtIcXjCmMx5Ul8Zc/eTLOwzrLBJEcGGmYkXcarTDJgUNKwtrX3
-         CpOUDotoI/7ul3N7hPViz5DsIXKdhHo3Ba4335L/lko601wYAh+lCOqBU39eMcYzw5aC
-         LnSQ==
+        bh=UXSMSKyZ+c85YwvSealOpZ8j/yXhp3T4cSRYXBJUGFs=;
+        b=eryPv1xT3HSa7wkipe0i+pk9XtMoxqy+QJH/ZRmfs6S46Z4q21GhEl/v8ADTz7Ss6M
+         bMRUm8ah9S7fhwQSxjdtxYkTTgc49xhLMQmfXk0YvGw8ocKICUnpCvPl5T/spSCLfxN1
+         ToX0FCLJWc1VU9knuMif3UjjFIGkS1WM97sbX7mORV/59zLAcq1AjZjdN5X1UBTY/nmW
+         xuWoCfl3VNIUJdHhGE8XhQCj88tuxQHP7O/9gv55LYUaQnUStmS5840A0rOWn2SnzIFq
+         wyrmKyzq+rP3lNPhskSFQ9d2kL07kBVFPgVbNPPTgXSEI3w4t2mMt4J/IS6Mw3jZ239Q
+         vjBg==
 In-Reply-To: <alpine.DEB.2.02.1312032116440.29733@chino.kir.corp.google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -25,137 +25,97 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Pekka Enberg <penberg@kernel.org>, Christoph Lameter <cl@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-PF_MEMPOLICY is an unnecessary optimization for CONFIG_SLAB users.
-There's no significant performance degradation to checking
-current->mempolicy rather than current->flags & PF_MEMPOLICY in the
-allocation path, especially since this is considered unlikely().
+Userspace needs a way to define the amount of memory reserves that
+processes handling oom conditions may utilize.  This patch adds a per-
+memcg oom reserve field and file, memory.oom_reserve_in_bytes, to
+manipulate its value.
 
-Per-process flags are a scarce resource so we should free them up
-whenever possible and make them available.  We'll be using it shortly for
-memcg oom reserves.
+If currently utilized memory reserves are attempted to be reduced by
+writing a smaller value to memory.oom_reserve_in_bytes, it will fail with
+-EBUSY until some memory is uncharged.
 
 Signed-off-by: David Rientjes <rientjes@google.com>
 ---
- include/linux/mempolicy.h |  5 -----
- include/linux/sched.h     |  1 -
- kernel/fork.c             |  1 -
- mm/mempolicy.c            | 31 -------------------------------
- mm/slab.c                 |  4 ++--
- 5 files changed, 2 insertions(+), 40 deletions(-)
+ mm/memcontrol.c | 53 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
 
-diff --git a/include/linux/mempolicy.h b/include/linux/mempolicy.h
---- a/include/linux/mempolicy.h
-+++ b/include/linux/mempolicy.h
-@@ -143,7 +143,6 @@ extern void numa_policy_init(void);
- extern void mpol_rebind_task(struct task_struct *tsk, const nodemask_t *new,
- 				enum mpol_rebind_step step);
- extern void mpol_rebind_mm(struct mm_struct *mm, nodemask_t *new);
--extern void mpol_fix_fork_child_flag(struct task_struct *p);
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -274,6 +274,9 @@ struct mem_cgroup {
+ 	/* OOM-Killer disable */
+ 	int		oom_kill_disable;
  
- extern struct zonelist *huge_zonelist(struct vm_area_struct *vma,
- 				unsigned long addr, gfp_t gfp_flags,
-@@ -266,10 +265,6 @@ static inline void mpol_rebind_mm(struct mm_struct *mm, nodemask_t *new)
- {
++	/* reserves for handling oom conditions, protected by res.lock */
++	unsigned long long	oom_reserve;
++
+ 	/* set when res.limit == memsw.limit */
+ 	bool		memsw_is_minimum;
+ 
+@@ -5893,6 +5896,51 @@ static int mem_cgroup_oom_control_write(struct cgroup_subsys_state *css,
+ 	return 0;
  }
  
--static inline void mpol_fix_fork_child_flag(struct task_struct *p)
--{
--}
--
- static inline struct zonelist *huge_zonelist(struct vm_area_struct *vma,
- 				unsigned long addr, gfp_t gfp_flags,
- 				struct mempolicy **mpol, nodemask_t **nodemask)
-diff --git a/include/linux/sched.h b/include/linux/sched.h
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1695,7 +1695,6 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut,
- #define PF_SPREAD_SLAB	0x02000000	/* Spread some slab caches over cpuset */
- #define PF_NO_SETAFFINITY 0x04000000	/* Userland is not allowed to meddle with cpus_allowed */
- #define PF_MCE_EARLY    0x08000000      /* Early kill for mce process policy */
--#define PF_MEMPOLICY	0x10000000	/* Non-default NUMA mempolicy */
- #define PF_MUTEX_TESTER	0x20000000	/* Thread belongs to the rt mutex tester */
- #define PF_FREEZER_SKIP	0x40000000	/* Freezer should not count it as freezable */
- #define PF_SUSPEND_TASK 0x80000000      /* this thread called freeze_processes and should not be frozen */
-diff --git a/kernel/fork.c b/kernel/fork.c
---- a/kernel/fork.c
-+++ b/kernel/fork.c
-@@ -1261,7 +1261,6 @@ static struct task_struct *copy_process(unsigned long clone_flags,
- 		p->mempolicy = NULL;
- 		goto bad_fork_cleanup_cgroup;
- 	}
--	mpol_fix_fork_child_flag(p);
- #endif
- #ifdef CONFIG_CPUSETS
- 	p->cpuset_mem_spread_rotor = NUMA_NO_NODE;
-diff --git a/mm/mempolicy.c b/mm/mempolicy.c
---- a/mm/mempolicy.c
-+++ b/mm/mempolicy.c
-@@ -796,36 +796,6 @@ static int mbind_range(struct mm_struct *mm, unsigned long start,
- 	return err;
- }
- 
--/*
-- * Update task->flags PF_MEMPOLICY bit: set iff non-default
-- * mempolicy.  Allows more rapid checking of this (combined perhaps
-- * with other PF_* flag bits) on memory allocation hot code paths.
-- *
-- * If called from outside this file, the task 'p' should -only- be
-- * a newly forked child not yet visible on the task list, because
-- * manipulating the task flags of a visible task is not safe.
-- *
-- * The above limitation is why this routine has the funny name
-- * mpol_fix_fork_child_flag().
-- *
-- * It is also safe to call this with a task pointer of current,
-- * which the static wrapper mpol_set_task_struct_flag() does,
-- * for use within this file.
-- */
--
--void mpol_fix_fork_child_flag(struct task_struct *p)
--{
--	if (p->mempolicy)
--		p->flags |= PF_MEMPOLICY;
--	else
--		p->flags &= ~PF_MEMPOLICY;
--}
--
--static void mpol_set_task_struct_flag(void)
--{
--	mpol_fix_fork_child_flag(current);
--}
--
- /* Set the process memory policy */
- static long do_set_mempolicy(unsigned short mode, unsigned short flags,
- 			     nodemask_t *nodes)
-@@ -862,7 +832,6 @@ static long do_set_mempolicy(unsigned short mode, unsigned short flags,
- 	}
- 	old = current->mempolicy;
- 	current->mempolicy = new;
--	mpol_set_task_struct_flag();
- 	if (new && new->mode == MPOL_INTERLEAVE &&
- 	    nodes_weight(new->v.nodes))
- 		current->il_next = first_node(new->v.nodes);
-diff --git a/mm/slab.c b/mm/slab.c
---- a/mm/slab.c
-+++ b/mm/slab.c
-@@ -3027,7 +3027,7 @@ out:
- 
- #ifdef CONFIG_NUMA
- /*
-- * Try allocating on another node if PF_SPREAD_SLAB|PF_MEMPOLICY.
-+ * Try allocating on another node if PF_SPREAD_SLAB is a mempolicy is set.
-  *
-  * If we are in_interrupt, then process context, including cpusets and
-  * mempolicy, may not apply and should not be used for allocation policy.
-@@ -3259,7 +3259,7 @@ __do_cache_alloc(struct kmem_cache *cache, gfp_t flags)
++static int mem_cgroup_resize_oom_reserve(struct mem_cgroup *memcg,
++					 unsigned long long new_limit)
++{
++	struct res_counter *res = &memcg->res;
++	u64 limit, usage;
++	int ret = 0;
++
++	spin_lock(&res->lock);
++	limit = res->limit;
++	usage = res->usage;
++
++	if (usage > limit && usage - limit > new_limit) {
++		ret = -EBUSY;
++		goto out;
++	}
++
++	memcg->oom_reserve = new_limit;
++out:
++	spin_unlock(&res->lock);
++	return ret;
++}
++
++static u64 mem_cgroup_oom_reserve_read(struct cgroup_subsys_state *css,
++				       struct cftype *cft)
++{
++	return mem_cgroup_from_css(css)->oom_reserve;
++}
++
++static int mem_cgroup_oom_reserve_write(struct cgroup_subsys_state *css,
++					struct cftype *cft, const char *buffer)
++{
++	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
++	unsigned long long val;
++	int ret;
++
++	if (mem_cgroup_is_root(memcg))
++		return -EINVAL;
++
++	ret = res_counter_memparse_write_strategy(buffer, &val);
++	if (ret)
++		return ret;
++
++	return mem_cgroup_resize_oom_reserve(memcg, val);
++}
++
+ #ifdef CONFIG_MEMCG_KMEM
+ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
  {
- 	void *objp;
- 
--	if (unlikely(current->flags & (PF_SPREAD_SLAB | PF_MEMPOLICY))) {
-+	if (current->mempolicy || unlikely(current->flags & PF_SPREAD_SLAB)) {
- 		objp = alternate_node_alloc(cache, flags);
- 		if (objp)
- 			goto out;
+@@ -6024,6 +6072,11 @@ static struct cftype mem_cgroup_files[] = {
+ 		.private = MEMFILE_PRIVATE(_OOM_TYPE, OOM_CONTROL),
+ 	},
+ 	{
++		.name = "oom_reserve_in_bytes",
++		.read_u64 = mem_cgroup_oom_reserve_read,
++		.write_string = mem_cgroup_oom_reserve_write,
++	},
++	{
+ 		.name = "pressure_level",
+ 		.register_event = vmpressure_register_event,
+ 		.unregister_event = vmpressure_unregister_event,
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
