@@ -1,37 +1,80 @@
-From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [lxc-devel] cgroup management daemon
-Date: Wed, 4 Dec 2013 09:56:57 -0600
-Message-ID: <20131204155657.GB29008@sergelap>
-References: <20131125224335.GA15481@mail.hallyn.com>
- <20131203134506.GG8277@htj.dyndns.org>
- <20131204000344.GB24968@sergelap>
- <20131204012416.GY8277@htj.dyndns.org>
- <20131204023151.GA12376@sergelap>
- <CAO_RewbZiLCJcO9G7pgxN8ZxkkVdEW1B84nkQ5wX3a9DPq4zfg@mail.gmail.com>
- <CAD=mX8seoMfM63hOwbmJ_0GdS-fa8H6fB40k8uyqBNbSVqfXrA@mail.gmail.com>
+From: Joonsoo Kim <js1304@gmail.com>
+Subject: Re: [patch 2/2] fs: buffer: move allocation failure loop into the allocator
+Date: Thu, 5 Dec 2013 01:02:15 +0900
+Message-ID: <CAAmzW4PwLhMd61ksOktdg=rkj0xHsSGt2Wm_za2Adjh4+tss-g@mail.gmail.com>
+References: <1381265890-11333-1-git-send-email-hannes@cmpxchg.org>
+	<1381265890-11333-2-git-send-email-hannes@cmpxchg.org>
+	<20131203165910.54d6b4724a1f3e329af52ac6@linux-foundation.org>
+	<20131204015218.GA19709@lge.com>
+	<20131203180717.94c013d1.akpm@linux-foundation.org>
+	<00000142be2f1de0-764bb035-adbc-4367-b2b4-bf05498510a6-000000@email.amazonses.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CAD=mX8seoMfM63hOwbmJ_0GdS-fa8H6fB40k8uyqBNbSVqfXrA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=OyZOEFrhqjqSBaJZmwelZzLqKbO/3H2guK4wcPF6dFo=;
+        b=wK7/euwOMzsLNUAps9ytcLub0Q4LphDTxsAvz7KQ87oAQWCSTckkqSrfPGRYpKTGbR
+         9b2RKJccH0pcCYsr8Z2VRmOvtxXP9hX8UOaCxGqMG9Acf6lh2rNy7qcA4bpKI0fJrY5u
+         XhFnSiPYcd12mK2UVgDtsV2SK8pwapZzPuh3WqX5Ox8Jnt5KSigCV1MpUmW3Mbw4h/2u
+         oU2w8Dn+/oMSyb/BhKKLQHR0NbYfkLkym7VktxkxDekSHx961oWIBTn3bwJepYv8cjNg
+         mAmYrQh+dsvsvKzcRzAK8E6qUGZf0PAPIqqQylBdme0pzpDfe0fvFsUbL/Ega88eKjwy
+         BZ6w==
+In-Reply-To: <00000142be2f1de0-764bb035-adbc-4367-b2b4-bf05498510a6-000000@email.amazonses.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Victor Marmol <vmarmol-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, =?iso-8859-1?Q?St=E9phane?= Graber <stgraber-/Ni+VN9Krahg9hUCZPvPmw@public.gmane.org>, Rohit Jnagal <jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lxc-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: Christoph Lameter <cl@linux.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, azurIt <azurit@pobox.sk>, Linux Memory Management List <linux-mm@kvack.org>, cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christian Casteyde <casteyde.christian@free.fr>, Pekka Enberg <penberg@kernel.org>
 
-Quoting Victor Marmol (vmarmol-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org):
-> I thought we were going to use chown in the initial version to enforce the
-> ownership/permissions on the hierarchy. Only the cgroup manager has access
-> to the hierarchy, but it tries to access the hierarchy as the user that
-> sent the request. It was only meant to be a "for now" solution while the
-> real one rolls out. It may also have gotten thrown out since last I heard :)
+2013/12/5 Christoph Lameter <cl@linux.com>:
+> On Tue, 3 Dec 2013, Andrew Morton wrote:
+>
+>> >     page = alloc_slab_page(alloc_gfp, node, oo);
+>> >     if (unlikely(!page)) {
+>> >             oo = s->min;
+>>
+>> What is the value of s->min?  Please tell me it's zero.
+>
+> It usually is.
+>
+>> > @@ -1349,7 +1350,7 @@ static struct page *allocate_slab(struct kmem_cache *s, gfp_t flags, int node)
+>> >             && !(s->flags & (SLAB_NOTRACK | DEBUG_DEFAULT_FLAGS))) {
+>> >             int pages = 1 << oo_order(oo);
+>> >
+>> > -           kmemcheck_alloc_shadow(page, oo_order(oo), flags, node);
+>> > +           kmemcheck_alloc_shadow(page, oo_order(oo), alloc_gfp, node);
+>>
+>> That seems reasonable, assuming kmemcheck can handle the allocation
+>> failure.
+>>
+>>
+>> Still I dislike this practice of using unnecessarily large allocations.
+>> What does it gain us?  Slightly improved object packing density.
+>> Anything else?
+>
+> The fastpath for slub works only within the bounds of a single slab page.
+> Therefore a larger frame increases the number of allocation possible from
+> the fastpath without having to use the slowpath and also reduces the
+> management overhead in the partial lists.
 
-Actually that part wasn't meant as a "for now" solution.  It can of
-course be thrown away in favor of having the daemon store all this
-information, but I'm seeing no advantages to that right now.
+Hello Christoph.
 
-There are other things which the daemon can eventually try to keep
-track of, if we don't decide they belong in a higher layer.
+Now we have cpu partial slabs facility, so I think that slowpath isn't really
+slow. And it doesn't much increase the management overhead in the node
+partial lists, because of cpu partial slabs.
 
--serge
+And larger frame may cause more slab_lock contention or cmpxchg contention
+if there are parallel freeings.
+
+But, I don't know which one is better. Is larger frame still better? :)
+
+Thanks.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
