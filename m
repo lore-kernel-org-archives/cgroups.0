@@ -1,75 +1,53 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
- access to memory reserves
-Date: Wed, 4 Dec 2013 12:13:18 +0100
-Message-ID: <20131204111318.GE8410@dhcp22.suse.cz>
-References: <alpine.DEB.2.02.1311141525440.30112@chino.kir.corp.google.com>
- <20131118154115.GA3556@cmpxchg.org>
- <20131118165110.GE32623@dhcp22.suse.cz>
- <20131122165100.GN3556@cmpxchg.org>
- <alpine.DEB.2.02.1311261648570.21003@chino.kir.corp.google.com>
- <20131127163435.GA3556@cmpxchg.org>
- <20131202200221.GC5524@dhcp22.suse.cz>
- <20131202212500.GN22729@cmpxchg.org>
- <20131203120454.GA12758@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312031544530.5946@chino.kir.corp.google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [lxc-devel] cgroup management daemon
+Date: Wed, 4 Dec 2013 06:37:50 -0500
+Message-ID: <20131204113750.GA3158@htj.dyndns.org>
+References: <20131125224335.GA15481@mail.hallyn.com>
+ <20131203134506.GG8277@htj.dyndns.org>
+ <20131204000344.GB24968@sergelap>
+ <20131204012416.GY8277@htj.dyndns.org>
+ <20131204023151.GA12376@sergelap>
+ <CAO_RewbZiLCJcO9G7pgxN8ZxkkVdEW1B84nkQ5wX3a9DPq4zfg@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=cAiCASyfodLKtuDP6Qz0h0rNHV3308TMXkQJhloFfbE=;
+        b=dDDiy3aizWIkpFqoshkTHmzPxmPhjV7aBC8OE5ptSWe6M+m2nXaDtsGVHbIi7IlhDO
+         rdhe27/dcrdsrV+hLr/Y7y4BJGlZf4TkZSCKEkUfKtPEpev4ytf04BmeeaAJ53czrW4g
+         SG0+eRjB6dW6St9vAHc0/RBtaaBm7tWiagwYlyfRe91XawhaU0NU6XkcuRsYT2M9hsZj
+         eHeLED7vqMdkTexdyZ49aJQYzR9iVKOFuYtVX76WoejIuOdeAqMXrmy+5VeJW4ikeIB2
+         yVbA4qs/kc8hv6MHcj5IJlsO0J21fhJSOzlsIna936aHm/45mMTCAw3TcFr6K7Sy/0GF
+         X0DA==
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1312031544530.5946-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
+In-Reply-To: <CAO_RewbZiLCJcO9G7pgxN8ZxkkVdEW1B84nkQ5wX3a9DPq4zfg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, =?iso-8859-1?Q?St=E9phane?= Graber <stgraber-/Ni+VN9Krahg9hUCZPvPmw@public.gmane.org>, Victor Marmol <vmarmol-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rohit Jnagal <jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lxc-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Tue 03-12-13 15:50:41, David Rientjes wrote:
-> On Tue, 3 Dec 2013, Michal Hocko wrote:
-> 
-> > OK, as it seems that the notification part is too controversial, how
-> > would you like the following? It reverts the notification part and still
-> > solves the fault on exit path. I will prepare the full patch with the
-> > changelog if this looks reasonable:
-> 
-> Um, no, that's not satisfactory because it obviously does the check after 
-> mem_cgroup_oom_notify().  There is absolutely no reason why userspace 
-> should be woken up when current simply needs access to memory reserves to 
-> exit. 
+Hello, Tim.
 
-Let me repeat, that the only reason I liked the patch was that it solves
-the fault during exit with oom disabled issue which I am really worried
-about.
-A nice side effect was that it moves the TIF_MEMDIE logic into a common
-place. It seems that you are selling the side effect as a primary
-feature.
-Johannes is obviously against such a change for the reasons I won't
-repeat here again. It is true that such a change wouldn't give us the
-"notify only when an action is taken" semantic because oom path might
-bail out few more times before killing anything.  Until we have that,
-or agree what is the actual semantic that makes the most sense let's
-backout with this and fix the actual bug which is real and drop the
-tweak that just it only half way.
+On Tue, Dec 03, 2013 at 08:53:21PM -0800, Tim Hockin wrote:
+> If this daemon works as advertised, we will explore moving all write
+> traffic to use it.  I still have concerns that this can't handle read
+> traffic at the scale we need.
 
-> You can already get such notification by memory thresholds at the 
-> memcg limit.
-> 
-> I'll repeat: Section 10 of Documentation/cgroups/memory.txt specifies what 
-> userspace should do when waking up; one of those options is not "check if 
-> the memcg is still actually oom in a short period of time once a charging 
-> task with a pending SIGKILL or in the exit path has been able to exit."
-> Users of this interface typically also disable the memcg oom killer 
-> through the same file, it's ludicrous to put the responsibility on 
-> userspace to determine if the wakeup is actionable and requires it to 
-> intervene in one of the methods listed in section 10.
+At least from the kernel side, cgroup doesn't and won't have any
+problem with direct reads.
 
-David, you would need to show us that such a condition happens in real
-loads often enough that such a tweak is worth it. Repeating that a race
-exists doesn't help, because yeah it does and it will after your patch
-as well. So show us that it happens considerably less often with this
-check.
- 
-[...]
+> Tejun,  I am not sure why chown came back into the conversation.  This
+> is a replacement for that.
+
+I guess I'm just confused because of the mentions of chown.  If it
+isn't about giving unmoderated write access to untrusted domains,
+everything should be fine.
+
+Thanks!
+
 -- 
-Michal Hocko
-SUSE Labs
+tejun
