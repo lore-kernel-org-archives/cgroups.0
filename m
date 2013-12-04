@@ -1,109 +1,145 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
- access to memory reserves
-Date: Tue, 3 Dec 2013 15:50:41 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1312031544530.5946@chino.kir.corp.google.com>
-References: <20131114032508.GL707@cmpxchg.org> <alpine.DEB.2.02.1311141447160.21413@chino.kir.corp.google.com> <alpine.DEB.2.02.1311141525440.30112@chino.kir.corp.google.com> <20131118154115.GA3556@cmpxchg.org> <20131118165110.GE32623@dhcp22.suse.cz>
- <20131122165100.GN3556@cmpxchg.org> <alpine.DEB.2.02.1311261648570.21003@chino.kir.corp.google.com> <20131127163435.GA3556@cmpxchg.org> <20131202200221.GC5524@dhcp22.suse.cz> <20131202212500.GN22729@cmpxchg.org> <20131203120454.GA12758@dhcp22.suse.cz>
+From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [lxc-devel] cgroup management daemon
+Date: Tue, 3 Dec 2013 18:03:44 -0600
+Message-ID: <20131204000344.GB24968@sergelap>
+References: <20131125224335.GA15481@mail.hallyn.com>
+ <20131203134506.GG8277@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=Ob8hLwNZ52HDI/78rMS9K8BmKKv7VNSjjuVg9KTcmtA=;
-        b=JIMsOAhpKWwiJcNPxDKIYBc60uPmstLWLr8eGpNUdOqzAb41ttkhnK2qXBTiJRFg1V
-         pojrYgmsAOlzTREnWsdflbVcjgw/L/mx3q4pciuyIuRxTNpKNM9DMmZ/vnsiV2gn2CNJ
-         vkGL5MvPnYUgs1Dg+C+aJkGbA0ouNOixN30+RLcoQFUb5mb6TTZfa/nF0brEUL6g67fe
-         PBP0NnIFwR79HMgFbEM6H0D9bdFqL7fc2uWxwGkFsxGsRohpkSptG2oZuPsNRLKGvm35
-         8ADY9ZP+o8Wx9fMsnJGQFQqzSATeOjbX31ctTKiic/1coVrvGOZWKlOxh10STjQnsVyy
-         2SVQ==
-In-Reply-To: <20131203120454.GA12758@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20131203134506.GG8277-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, =?iso-8859-1?Q?St=E9phane?= Graber <stgraber-/Ni+VN9Krahg9hUCZPvPmw@public.gmane.org>, Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Victor Marmol <vmarmol-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rohit Jnagal <jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lxc-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Tue, 3 Dec 2013, Michal Hocko wrote:
+Quoting Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org):
+> Hello, guys.
+> 
+> Sorry about the delay.
+> 
+> On Mon, Nov 25, 2013 at 10:43:35PM +0000, Serge E. Hallyn wrote:
+> > Additionally, Tejun has specified that we do not want users to be
+> > too closely tied to the cgroupfs implementation.  Therefore
+> > commands will be just a hair more general than specifying cgroupfs
+> > filenames and values.  I may go so far as to avoid specifying
+> > specific controllers, as AFAIK there should be no redundancy in
+> > features.  On the other hand, I don't want to get too general.
+> > So I'm basing the API loosely on the lmctfy command line API.
+> 
+> One of the reasons for not exposing knobs as-is is that the knobs we
+> currently have aren't consistent.  The weight values have different
+> ranges, some combinations of values don't make much sense, and so on.
+> The user can cope with it but it'd probably be better to expose
+> something which doesn't lead to mistakes too easily.
 
-> OK, as it seems that the notification part is too controversial, how
-> would you like the following? It reverts the notification part and still
-> solves the fault on exit path. I will prepare the full patch with the
-> changelog if this looks reasonable:
+For the moment, for prototype (github.com/hallyn/cgmanager), I'm just
+going with filenames/values.
 
-Um, no, that's not satisfactory because it obviously does the check after 
-mem_cgroup_oom_notify().  There is absolutely no reason why userspace 
-should be woken up when current simply needs access to memory reserves to 
-exit.  You can already get such notification by memory thresholds at the 
-memcg limit.
+When the bulk of the work is done, we can either (or both) (a) introduce
+a thin abstraction layer over the key/values, or/and (b) whitelist
+some of the filenames and filter some values.
 
-I'll repeat: Section 10 of Documentation/cgroups/memory.txt specifies what 
-userspace should do when waking up; one of those options is not "check if 
-the memcg is still actually oom in a short period of time once a charging 
-task with a pending SIGKILL or in the exit path has been able to exit."  
-Users of this interface typically also disable the memcg oom killer 
-through the same file, it's ludicrous to put the responsibility on 
-userspace to determine if the wakeup is actionable and requires it to 
-intervene in one of the methods listed in section 10.
+I know the upstart folks don't want to have to wait long for a
+specification...  I'll hopefully make a final decision on this next
+week.
 
-> ---
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 28c9221b74ea..f44fe7e65a98 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1783,6 +1783,16 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
->  	unsigned int points = 0;
->  	struct task_struct *chosen = NULL;
->  
-> +	/*
-> +	 * If current has a pending SIGKILL or is exiting, then automatically
-> +	 * select it.  The goal is to allow it to allocate so that it may
-> +	 * quickly exit and free its memory.
-> +	 */
-> +	if (fatal_signal_pending(current) || current->flags & PF_EXITING) {
-> +		set_thread_flag(TIF_MEMDIE);
-> +		goto cleanup;
-> +	}
-> +
->  	check_panic_on_oom(CONSTRAINT_MEMCG, gfp_mask, order, NULL);
->  	totalpages = mem_cgroup_get_limit(memcg) >> PAGE_SHIFT ? : 1;
->  	for_each_mem_cgroup_tree(iter, memcg) {
-> @@ -2233,16 +2243,6 @@ bool mem_cgroup_oom_synchronize(bool handle)
->  	if (!handle)
->  		goto cleanup;
->  
-> -	/*
-> -	 * If current has a pending SIGKILL or is exiting, then automatically
-> -	 * select it.  The goal is to allow it to allocate so that it may
-> -	 * quickly exit and free its memory.
-> -	 */
-> -	if (fatal_signal_pending(current) || current->flags & PF_EXITING) {
-> -		set_thread_flag(TIF_MEMDIE);
-> -		goto cleanup;
-> -	}
-> -
->  	owait.memcg = memcg;
->  	owait.wait.flags = 0;
->  	owait.wait.func = memcg_oom_wake_function;
-> @@ -2266,6 +2266,13 @@ bool mem_cgroup_oom_synchronize(bool handle)
->  		schedule();
->  		mem_cgroup_unmark_under_oom(memcg);
->  		finish_wait(&memcg_oom_waitq, &owait.wait);
-> +
-> +		/* Userspace OOM handler cannot set TIF_MEMDIE to a target */
-> +		if (memcg->oom_kill_disable) {
-> +			if ((fatal_signal_pending(current) ||
-> +						current->flags & PF_EXITING))
-> +				set_thread_flag(TIF_MEMDIE);
-> +		}
->  	}
->  
->  	if (locked) {
+> > The above addresses
+> >     * creating cgroups
+> >     * chowning cgroups
+> >     * setting cgroup limits
+> >     * moving tasks into cgroups
+> >   . but does not address a 'cgexec <group> -- command' type of behavior.
+> >     * To handle that (specifically for upstart), recommend that r do:
+> >       if (!pid) {
+> >         request_reclassify(cgroup, getpid());
+> >         do_execve();
+> >       }
+> >   . alternatively, the daemon could, if kernel is new enough, setns to
+> >     the requestor's namespaces to execute a command in a new cgroup.
+> >     The new command would be daemonized to that pid namespaces' pid 1.
+> 
+> So, IIUC, cgroup hierarchy management - creation and removal of
+> cgroups and assignments of tasks will go through while configuring
+> control knobs will be delegated to the cgroup owner, right?
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Not sure what you mean, but I think the answer is no.  Everything
+goes through the manager.  The manager doesn't try to enforce that,
+but by default the cgroup filesystems will only be mounted in the
+manager's private mnt_ns, and containers at least will not be
+allowed to mount cgroup fstype.
+
+> Hmmm... the plan is to allow delegating task assignments in the
+> sub-hierarchy but require CAP_X for writes to knobs (not reads).  This
+> stems from the fact that, especially with unified hierarchy, those
+> operations will be cgroup-core proper operations which are gonna be
+> relatively safer and that task organizations in the subhierarchy and
+> monitoring knobs are likely to be higher frequency operation than
+> enabling and configuring controllers.
+
+Should be ok for this.
+
+> As I communicated multiple times before, delegating write access to
+> control knobs to untrusted domain has always been a security risk and
+> is likely to continue to remain so.  Also, organizationally, a
+
+Then that will need to be address with per-key blacklisting and/or
+per-value filtering in the manager.
+
+Which is my way of saying:  can we please have a list of the security
+issues so we can handle them?  :)  (I've asked several times before
+but haven't seen a list or anyone offering to make one)
+
+> cgroup's control knobs belong to the parent not the cgroup itself.
+
+After thinking awhile I think this makes perfect sense.  I haven't
+implemented set_value yet, and when I do I think I'll implement this
+guideline.
+
+> That probably is why you were thinking about putting an extra cgroup
+> inbetween for isolation, but the root problem there is that those
+> knobs belong to the parent, not the directory itself.
+
+Yup.
+
+> Security is in most part logistics - it's about getting all the
+> details right, and we don't either design or implement each knob with
+> security in mind and DoSing them has always been pretty easy, so I
+> don't think delegating write accesses to knobs is a good idea.
+> 
+> If you, for whatever reason, can trust the delegatee, which I believe
+> is the case for google, it's fine.  If you're trying to delegate to a
+> container which you don't have any control over, it isn't a good idea.
+> 
+> Another thing to consider is due to both the fundamental characterics
+> of hierarchy and implementation issues, things will become expensive
+> if nesting gets beyond several layers (if controllers are enabled,
+> that is) and the controllers in general will be implemented and
+> optimized with limited level of nesting in mind.  IOW, building, say,
+> 8 level deep hierarchy in the host and then doing the same thing
+> inside the container with controllers enabled won't make a very happy
+
+Yes, I very much want to avoid that.
+
+> system.  It probably is something to keep in mind when laying out how
+> the whole thing eventually would look like.
+> 
+> > Long-term we will want the cgroup manager to become more intelligent -
+> > to place its own limits on clients, to address cpu and device hotplug,
+> > etc.  Since we will not be doing that in the first prototype, the daemon
+> > will not keep any state about the clients.
+> 
+> Isn't the above conflicting with chowning control knobs?
+
+Not sure what you mean by this.
+
+To be clear what I'm talking about is having the client be able to say
+"grant 50% of cpus", then when more cpus are added, the actual cpuset
+gets recalculated.  This may well forever stay outside of the cgmanager
+scope.  It may be more appropriate to put that logic into the lmctfy
+layer.
+
+thanks,
+-serge
