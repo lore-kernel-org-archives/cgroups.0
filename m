@@ -1,113 +1,83 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch] mm: memcg: do not declare OOM from __GFP_NOFAIL
- allocations
-Date: Wed, 4 Dec 2013 00:25:42 -0500
-Message-ID: <20131204052542.GY3556@cmpxchg.org>
-References: <20131127225340.GE3556@cmpxchg.org>
- <alpine.DEB.2.02.1311271526080.22848@chino.kir.corp.google.com>
- <20131128102049.GF2761@dhcp22.suse.cz>
- <alpine.DEB.2.02.1311291543400.22413@chino.kir.corp.google.com>
- <20131202132201.GC18838@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312021452510.13465@chino.kir.corp.google.com>
- <20131203222511.GU3556@cmpxchg.org>
- <alpine.DEB.2.02.1312031531510.5946@chino.kir.corp.google.com>
- <20131204030101.GV3556@cmpxchg.org>
- <20131204043417.GM10988@dastard>
+Subject: Re: [patch 7/8] mm, memcg: allow processes handling oom
+ notifications to access reserves
+Date: Wed, 4 Dec 2013 00:45:33 -0500
+Message-ID: <20131204054533.GZ3556@cmpxchg.org>
+References: <20131119131400.GC20655@dhcp22.suse.cz>
+ <20131119134007.GD20655@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1311192352070.20752@chino.kir.corp.google.com>
+ <20131120152251.GA18809@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1311201917520.7167@chino.kir.corp.google.com>
+ <20131128115458.GK2761@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1312021504170.13465@chino.kir.corp.google.com>
+ <alpine.DEB.2.02.1312032116440.29733@chino.kir.corp.google.com>
+ <alpine.DEB.2.02.1312032118570.29733@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=RXNRiQrlh3DgDUQf9UyOqIwheEoQBP2lvB5QwHHj9vU=;
-	b=L5vgVZe2cXK78wBalOyESLHsbIHGKUJR0FeYYDCvTc3hXr1tzB0Q6+AURms0vZoFbpZ+fbpaXG83rYCCglWcRI33VW9fi5fVLnCa7m2SJiqFu9RFztgrhnvkghlD1SkoiORqAdB0k5aWlofscKp/PcDfMrROQEiQ6FodgcoJxYc=;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=/OZ+3BiQfwiEKX5eLxThyOTTZwgJTSfPQrXZOgf0S1s=;
+	b=L9pGF7+TNRq6T4eNa+gqZ3mKouZH8x4633R0M9gpx4HcmPCcPduzjNxqESSQLDFpfkL+Yc5OrXMKSRzftmJMera2LFhv2sc6+XVGT5PFXWpxm03yCNnOINhVKG0gOwLXujrc6kZLEt/ksiivfgZ1Ns8pQtc8f0wHpxNWGaS9CJ8=;
 Content-Disposition: inline
-In-Reply-To: <20131204043417.GM10988@dastard>
+In-Reply-To: <alpine.DEB.2.02.1312032118570.29733@chino.kir.corp.google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Dave Chinner <david@fromorbit.com>
-Cc: David Rientjes <rientjes@google.com>, Michal Hocko <mhocko@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: David Rientjes <rientjes@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Pekka Enberg <penberg@kernel.org>, Christoph Lameter <cl@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On Wed, Dec 04, 2013 at 03:34:17PM +1100, Dave Chinner wrote:
-> On Tue, Dec 03, 2013 at 10:01:01PM -0500, Johannes Weiner wrote:
-> > On Tue, Dec 03, 2013 at 03:40:13PM -0800, David Rientjes wrote:
-> > > On Tue, 3 Dec 2013, Johannes Weiner wrote:
-> > > I believe the page allocator would be susceptible to the same deadlock if 
-> > > nothing else on the system can reclaim memory and that belief comes from 
-> > > code inspection that shows __GFP_NOFAIL is not guaranteed to ever succeed 
-> > > in the page allocator as their charges now are (with your patch) in memcg.  
-> > > I do not have an example of such an incident.
-> > 
-> > Me neither.
+On Tue, Dec 03, 2013 at 09:20:17PM -0800, David Rientjes wrote:
+> Now that a per-process flag is available, define it for processes that
+> handle userspace oom notifications.  This is an optimization to avoid
+> mantaining a list of such processes attached to a memcg at any given time
+> and iterating it at charge time.
 > 
-> Is this the sort of thing that you expect to see when GFP_NOFS |
-> GFP_NOFAIL type allocations continualy fail?
+> This flag gets set whenever a process has registered for an oom
+> notification and is cleared whenever it unregisters.
 > 
-> http://oss.sgi.com/archives/xfs/2013-12/msg00095.html
-> 
-> XFS doesn't use GFP_NOFAIL, it does it's own loop with GFP_NOWARN in
-> kmem_alloc() so that if we get stuck for more than 100 attempts to
-> allocate it throws a warning. i.e. only when we really are stuck and
-> reclaim is not making any progress.
-> 
-> This specific case is due to memory fragmentation preventing a 64k
-> memory allocation (due to the filesystem being configured with a 64k
-> directory block size), but GFP_NOFS | GFP_NOFAIL allocations happen
-> *all the time* in filesystems.
+> When memcg reclaim has failed to free any memory, it is necessary for
+> userspace oom handlers to be able to dip into reserves to pagefault text,
+> allocate kernel memory to read the "tasks" file, allocate heap, etc.
 
-Yes, the question is whether this in itself is a practical problem,
-regardless of whether you use __GFP_NOFAIL or a manual loop.
+The task handling the OOM of a memcg can obviously not be part of that
+same memcg.
 
-> > > > > So, my question again: why not bypass the per-zone min watermarks in the 
-> > > > > page allocator?
-> > > > 
-> > > > I don't even know what your argument is supposed to be.  The fact that
-> > > > we don't do it in the page allocator means that there can't be a bug
-> > > > in memcg?
-> > > > 
+I've said this many times in the past, but here is the most recent
+thread from Tejun, me, and Li on this topic:
+
+---
+
+On Tue, 3 Dec 2013 at 15:35:48 +0800, Li Zefan wrote:
+> On Mon, 2 Dec 2013 at 11:44:06 -0500, Johannes Weiner wrote:
+> > On Fri, Nov 29, 2013 at 03:05:25PM -0500, Tejun Heo wrote:
+> > > Whoa, so we support oom handler inside the memcg that it handles?
+> > > Does that work reliably?  Changing the above detail in this patch
+> > > isn't difficult (and we'll later need to update kernfs too) but
+> > > supporting such setup properly would be a *lot* of commitment and I'm
+> > > very doubtful we'd be able to achieve that by just carefully avoiding
+> > > memory allocation in the operations that usreland oom handler uses -
+> > > that set is destined to expand over time, extremely fragile and will
+> > > be hellish to maintain.
 > > > 
-> > > I'm asking if we should allow GFP_NOFS | __GFP_NOFAIL allocations in the 
-> > > page allocator to bypass per-zone min watermarks after reclaim has failed 
-> > > since the oom killer cannot be called in such a context so that the page 
-> > > allocator is not susceptible to the same deadlock without a complete 
-> > > depletion of memory reserves?
-> > 
-> > Yes, I think so.
+> > > So, I'm not at all excited about commiting to this guarantee.  This
+> > > one is an easy one but it looks like the first step onto dizzying
+> > > slippery slope.
+> > > 
+> > > Am I misunderstanding something here?  Are you and Johannes firm on
+> > > supporting this?
+> >
+> > Handling a memcg OOM from userspace running inside that OOM memcg is
+> > completely crazy.  I mean, think about this for just two seconds...
+> > Really?
+> >
+> > I get that people are doing it right now, and if you can get away with
+> > it for now, good for you.  But you have to be aware how crazy this is
+> > and if it breaks you get to keep the pieces and we are not going to
+> > accomodate this in the kernel.  Fix your crazy userspace.
 > 
-> There be dragons. If memcg's deadlock in low memory conditions in
-> the presence of GFP_NOFS | GFP_NOFAIL allocations, then we need to
-> make the memcg reclaim design more robust, not work around it by
-> allowing filesystems to drain critical memory reserves needed for
-> other situations....
+> +1
 
-The problems in the page allocator and memcg are entirely unrelated.
-What we do in the memcg does not affect the page allocator and vice
-versa.  However, they are problems of the same type, so we are trying
-to find out whether both instances can have the same solution:
-
-If GFP_NOFS | __GFP_NOFAIL allocations can not make forward progress
-in direct reclaim, they are screwed: can't reclaim memory, can't OOM
-kill, can't return NULL.  They are essentially stuck until a third
-party intervenes.  This applies to both the page allocator and memcg.
-
-In memcg, I fixed it by allowing the __GFP_NOFAIL task to bypass the
-user-defined memory limit after reclaim fails.
-
-David asks whether we should do the equivalent in the page allocator
-and allow __GFP_NOFAIL allocations to dip into the emergency memory
-reserves for the same reason.
-
-I suggested that the situations are not entirely the same.  A memcg
-might only have one or two tasks and so third party intervention to
-reduce memory usage in the memcg can be unlikely to impossible,
-whereas in the case of the page allocator, the likelihood of any task
-in the system releasing or reclaiming memory is higher.
-
-However, the GFP_NOFS | __GFP_NOFAIL task stuck in the page allocator
-may hold filesystem locks that could prevent a third party from
-freeing memory and/or exiting, so we can not guarantee that only the
-__GFP_NOFAIL task is getting stuck, it might well trap other tasks.
-The same applies to open-coded GFP_NOFS allocation loops of course
-unless they cycle the filesystem locks while looping.
+---
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
