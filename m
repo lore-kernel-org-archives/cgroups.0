@@ -1,266 +1,55 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v3 12/12] cgroup: unify pidlist and other file handling
-Date: Wed, 4 Dec 2013 10:09:43 -0500
-Message-ID: <20131204150943.GM3158@htj.dyndns.org>
-References: <1385595759-17656-1-git-send-email-tj@kernel.org>
- <1385595759-17656-13-git-send-email-tj@kernel.org>
+From: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [patch 2/2] fs: buffer: move allocation failure loop into the
+ allocator
+Date: Wed, 4 Dec 2013 15:17:08 +0000
+Message-ID: <00000142be2f1de0-764bb035-adbc-4367-b2b4-bf05498510a6-000000@email.amazonses.com>
+References: <1381265890-11333-1-git-send-email-hannes@cmpxchg.org> <1381265890-11333-2-git-send-email-hannes@cmpxchg.org> <20131203165910.54d6b4724a1f3e329af52ac6@linux-foundation.org> <20131204015218.GA19709@lge.com>
+ <20131203180717.94c013d1.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=BNQQFIWcwvT/UXC7ekfoQJcTSA8MSt8z7rsPq4Sb9ME=;
-        b=Bk8Sjvi8eloCip8VrTzRyz2/FtWmlF55+wkTH+CSlWMlcbF3zs4P5LXL8UnDrbM5dT
-         X0sxS2r9xoyVgkRzC6UfvO5yiwGQF2oWPGn8Rd89YyTXvHFd9B/pj0yqs2MKROaKO6ns
-         adHIO6CftV3F93WOEuVpOz7lNmeQTSZWf6LQ9X8A3IiRioawY7pv46HQLv4idwBC7BcE
-         k1sStQdfqRq7lozGZC8sBbpQ+sB5RDhgeiwlLvKFIu7bgCoqf74M8k8LRpdDi7G+VMK3
-         /H048ztk7fYs31QuRgMAezC4cC3q37ZJSYPOWHM5QreAYTm4NotAY0KdKPQLXj/rZXgD
-         Uz3Q==
-Content-Disposition: inline
-In-Reply-To: <1385595759-17656-13-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <20131203180717.94c013d1.akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian Casteyde <casteyde.christian-GANU6spQydw@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-From 319da8b44d61ab3452caccc46a0944755e617cbe Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date: Wed, 4 Dec 2013 10:06:18 -0500
+On Tue, 3 Dec 2013, Andrew Morton wrote:
 
-In preparation of conversion to kernfs, cgroup file handling is
-updated so that it can be easily mapped to kernfs.  With the previous
-changes, the difference between pidlist and other files are very
-small.  Both are served by seq_file in a pretty standard way with the
-only difference being !pidlist files use single_open().
+> >  	page = alloc_slab_page(alloc_gfp, node, oo);
+> >  	if (unlikely(!page)) {
+> >  		oo = s->min;
+>
+> What is the value of s->min?  Please tell me it's zero.
 
-This patch adds cftype->seq_start(), ->seq_next and ->seq_stop() and
-implements the matching cgroup_seqfile_start/next/stop() which either
-emulates single_open() behavior or invokes cftype->seq_*() operations
-if specified.  This allows using single seq_operations for both
-pidlist and other files and makes cgroup_pidlist_operations and
-cgorup_pidlist_open() no longer necessary.  As cgroup_pidlist_open()
-was the only user of cftype->open(), the method is dropped together.
+It usually is.
 
-This brings cftype file interface very close to kernfs interface and
-mapping shouldn't be too difficult.  Once converted to kernfs, most of
-the plumbing code including cgroup_seqfile_*() will be removed as
-kernfs provides those facilities.
+> > @@ -1349,7 +1350,7 @@ static struct page *allocate_slab(struct kmem_cache *s, gfp_t flags, int node)
+> >  		&& !(s->flags & (SLAB_NOTRACK | DEBUG_DEFAULT_FLAGS))) {
+> >  		int pages = 1 << oo_order(oo);
+> >
+> > -		kmemcheck_alloc_shadow(page, oo_order(oo), flags, node);
+> > +		kmemcheck_alloc_shadow(page, oo_order(oo), alloc_gfp, node);
+>
+> That seems reasonable, assuming kmemcheck can handle the allocation
+> failure.
+>
+>
+> Still I dislike this practice of using unnecessarily large allocations.
+> What does it gain us?  Slightly improved object packing density.
+> Anything else?
 
-This patch does not introduce any behavior changes.
+The fastpath for slub works only within the bounds of a single slab page.
+Therefore a larger frame increases the number of allocation possible from
+the fastpath without having to use the slowpath and also reduces the
+management overhead in the partial lists.
 
-v2: Refreshed on top of the updated "cgroup: introduce struct
-    cgroup_pidlist_open_file".
+There is a kernel parameter that can be used to control the maximum order
 
-v3: Refreshed on top of the updated "cgroup: attach cgroup_open_file
-    to all cgroup files".
+	slub_max_order
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- include/linux/cgroup.h |   6 ++-
- kernel/cgroup.c        | 112 +++++++++++++++++++++++++++----------------------
- 2 files changed, 68 insertions(+), 50 deletions(-)
+The default is PAGE_ALLOC_COSTLY_ORDER. See also
+Documentation/vm/slub.txt.
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index b32a0f8..8b9a594 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -434,7 +434,6 @@ struct cftype {
- 	 */
- 	struct cgroup_subsys *ss;
- 
--	int (*open)(struct inode *inode, struct file *file);
- 	/*
- 	 * read_u64() is a shortcut for the common case of returning a
- 	 * single integer. Use it in place of read()
-@@ -448,6 +447,11 @@ struct cftype {
- 	/* generic seq_file read interface */
- 	int (*seq_show)(struct seq_file *sf, void *v);
- 
-+	/* optional ops, implement all or none */
-+	void *(*seq_start)(struct seq_file *sf, loff_t *ppos);
-+	void *(*seq_next)(struct seq_file *sf, void *v, loff_t *ppos);
-+	void (*seq_stop)(struct seq_file *sf, void *v);
-+
- 	/*
- 	 * write_u64() is a shortcut for the common case of accepting
- 	 * a single integer (as parsed by simple_strtoull) from
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index c45e633..f9ae38a 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -2286,6 +2286,45 @@ out_free:
-  * supports string->u64 maps, but can be extended in future.
-  */
- 
-+static void *cgroup_seqfile_start(struct seq_file *seq, loff_t *ppos)
-+{
-+	struct cftype *cft = seq_cft(seq);
-+
-+	if (cft->seq_start) {
-+		return cft->seq_start(seq, ppos);
-+	} else {
-+		/*
-+		 * The same behavior and code as single_open().  Returns
-+		 * !NULL if pos is at the beginning; otherwise, NULL.
-+		 */
-+		return NULL + !*ppos;
-+	}
-+}
-+
-+static void *cgroup_seqfile_next(struct seq_file *seq, void *v, loff_t *ppos)
-+{
-+	struct cftype *cft = seq_cft(seq);
-+
-+	if (cft->seq_next) {
-+		return cft->seq_next(seq, v, ppos);
-+	} else {
-+		/*
-+		 * The same behavior and code as single_open(), always
-+		 * terminate after the initial read.
-+		 */
-+		++*ppos;
-+		return NULL;
-+	}
-+}
-+
-+static void cgroup_seqfile_stop(struct seq_file *seq, void *v)
-+{
-+	struct cftype *cft = seq_cft(seq);
-+
-+	if (cft->seq_stop)
-+		cft->seq_stop(seq, v);
-+}
-+
- static int cgroup_seqfile_show(struct seq_file *m, void *arg)
- {
- 	struct cftype *cft = seq_cft(m);
-@@ -2303,12 +2342,20 @@ static int cgroup_seqfile_show(struct seq_file *m, void *arg)
- 	return 0;
- }
- 
-+static struct seq_operations cgroup_seq_operations = {
-+	.start		= cgroup_seqfile_start,
-+	.next		= cgroup_seqfile_next,
-+	.stop		= cgroup_seqfile_stop,
-+	.show		= cgroup_seqfile_show,
-+};
-+
- static int cgroup_file_open(struct inode *inode, struct file *file)
- {
- 	struct cfent *cfe = __d_cfe(file->f_dentry);
- 	struct cftype *cft = __d_cft(file->f_dentry);
- 	struct cgroup *cgrp = __d_cgrp(cfe->dentry->d_parent);
- 	struct cgroup_subsys_state *css;
-+	struct cgroup_open_file *of;
- 	int err;
- 
- 	err = generic_file_open(inode, file);
-@@ -2338,24 +2385,16 @@ static int cgroup_file_open(struct inode *inode, struct file *file)
- 	WARN_ON_ONCE(cfe->css && cfe->css != css);
- 	cfe->css = css;
- 
--	if (cft->open) {
--		err = cft->open(inode, file);
--	} else {
--		struct cgroup_open_file *of;
--
--		err = -ENOMEM;
--		of = kzalloc(sizeof(*of), GFP_KERNEL);
--		if (of) {
--			of->cfe = cfe;
--			err = single_open(file, cgroup_seqfile_show, of);
--			if (err)
--				kfree(of);
--		}
-+	of = __seq_open_private(file, &cgroup_seq_operations,
-+				sizeof(struct cgroup_open_file));
-+	if (of) {
-+		of->cfe = cfe;
-+		return 0;
- 	}
- 
--	if (css->ss && err)
-+	if (css->ss)
- 		css_put(css);
--	return err;
-+	return -ENOMEM;
- }
- 
- static int cgroup_file_release(struct inode *inode, struct file *file)
-@@ -2365,8 +2404,7 @@ static int cgroup_file_release(struct inode *inode, struct file *file)
- 
- 	if (css->ss)
- 		css_put(css);
--	kfree(((struct seq_file *)file->private_data)->private);
--	return single_release(inode, file);
-+	return seq_release_private(inode, file);
- }
- 
- /*
-@@ -3777,36 +3815,6 @@ static const struct seq_operations cgroup_pidlist_seq_operations = {
- 	.show = cgroup_pidlist_show,
- };
- 
--static const struct file_operations cgroup_pidlist_operations = {
--	.read = seq_read,
--	.llseek = seq_lseek,
--	.write = cgroup_file_write,
--	.release = seq_release_private,
--};
--
--/*
-- * The following functions handle opens on a file that displays a pidlist
-- * (tasks or procs). Prepare an array of the process/thread IDs of whoever's
-- * in the cgroup.
-- */
--/* helper function for the two below it */
--static int cgroup_pidlist_open(struct inode *unused, struct file *file)
--{
--	struct cfent *cfe = __d_cfe(file->f_dentry);
--	struct cgroup_open_file *of;
--
--	/* configure file information */
--	file->f_op = &cgroup_pidlist_operations;
--
--	of = __seq_open_private(file, &cgroup_pidlist_seq_operations,
--				sizeof(*of));
--	if (!of)
--		return -ENOMEM;
--
--	of->cfe = cfe;
--	return 0;
--}
--
- static u64 cgroup_read_notify_on_release(struct cgroup_subsys_state *css,
- 					 struct cftype *cft)
- {
-@@ -3860,7 +3868,10 @@ static int cgroup_clone_children_write(struct cgroup_subsys_state *css,
- static struct cftype cgroup_base_files[] = {
- 	{
- 		.name = "cgroup.procs",
--		.open = cgroup_pidlist_open,
-+		.seq_start = cgroup_pidlist_start,
-+		.seq_next = cgroup_pidlist_next,
-+		.seq_stop = cgroup_pidlist_stop,
-+		.seq_show = cgroup_pidlist_show,
- 		.private = CGROUP_FILE_PROCS,
- 		.write_u64 = cgroup_procs_write,
- 		.mode = S_IRUGO | S_IWUSR,
-@@ -3885,7 +3896,10 @@ static struct cftype cgroup_base_files[] = {
- 	{
- 		.name = "tasks",
- 		.flags = CFTYPE_INSANE,		/* use "procs" instead */
--		.open = cgroup_pidlist_open,
-+		.seq_start = cgroup_pidlist_start,
-+		.seq_next = cgroup_pidlist_next,
-+		.seq_stop = cgroup_pidlist_stop,
-+		.seq_show = cgroup_pidlist_show,
- 		.private = CGROUP_FILE_TASKS,
- 		.write_u64 = cgroup_tasks_write,
- 		.mode = S_IRUGO | S_IWUSR,
--- 
-1.8.4.2
+Booting with slub_max_order=1 will force order 0/1 pages.
