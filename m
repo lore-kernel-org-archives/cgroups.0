@@ -1,57 +1,95 @@
-From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [lxc-devel] cgroup management daemon
-Date: Tue, 3 Dec 2013 20:31:51 -0600
-Message-ID: <20131204023151.GA12376@sergelap>
-References: <20131125224335.GA15481@mail.hallyn.com>
- <20131203134506.GG8277@htj.dyndns.org>
- <20131204000344.GB24968@sergelap>
- <20131204012416.GY8277@htj.dyndns.org>
+From: Joonsoo Kim <iamjoonsoo.kim@lge.com>
+Subject: Re: [patch 2/2] fs: buffer: move allocation failure loop into the
+ allocator
+Date: Wed, 4 Dec 2013 11:42:03 +0900
+Message-ID: <20131204024203.GB19709@lge.com>
+References: <1381265890-11333-1-git-send-email-hannes@cmpxchg.org>
+ <1381265890-11333-2-git-send-email-hannes@cmpxchg.org>
+ <20131203165910.54d6b4724a1f3e329af52ac6@linux-foundation.org>
+ <20131204015218.GA19709@lge.com>
+ <20131203180717.94c013d1.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20131204012416.GY8277-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20131203180717.94c013d1.akpm@linux-foundation.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, =?iso-8859-1?Q?St=E9phane?= Graber <stgraber-/Ni+VN9Krahg9hUCZPvPmw@public.gmane.org>, Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Victor Marmol <vmarmol-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rohit Jnagal <jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lxc-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, azurIt <azurit@pobox.sk>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Christian Casteyde <casteyde.christian@free.fr>, Pekka Enberg <penberg@kernel.org>, Christoph Lameter <cl@linux.com>
 
-Quoting Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org):
-> Hello, Serge.
+On Tue, Dec 03, 2013 at 06:07:17PM -0800, Andrew Morton wrote:
+> On Wed, 4 Dec 2013 10:52:18 +0900 Joonsoo Kim <iamjoonsoo.kim@lge.com> wrote:
 > 
-> On Tue, Dec 03, 2013 at 06:03:44PM -0600, Serge Hallyn wrote:
-> > > As I communicated multiple times before, delegating write access to
-> > > control knobs to untrusted domain has always been a security risk and
-> > > is likely to continue to remain so.  Also, organizationally, a
+> > SLUB already try to allocate high order page with clearing __GFP_NOFAIL.
+> > But, when allocating shadow page for kmemcheck, it missed clearing
+> > the flag. This trigger WARN_ON_ONCE() reported by Christian Casteyde.
 > > 
-> > Then that will need to be address with per-key blacklisting and/or
-> > per-value filtering in the manager.
+> > https://bugzilla.kernel.org/show_bug.cgi?id=65991
 > > 
-> > Which is my way of saying:  can we please have a list of the security
-> > issues so we can handle them?  :)  (I've asked several times before
-> > but haven't seen a list or anyone offering to make one)
-> 
-> Unfortunately, for now, please consider everything blacklisted.  Yes,
-> it is true that some knobs should be mostly safe but given the level
-> of changes we're going through and the difficulty of properly auditing
-> anything for delegation to untrusted environment, I don't feel
-> comfortable at all about delegating through chown.  It is an
-> accidental feature which happened just because it uses filesystem as
-> its interface and it is no where near the top of the todo list.  It
-> has never worked properly and won't in any foreseeable future.
-> 
-> > > cgroup's control knobs belong to the parent not the cgroup itself.
+> > This patch fix this situation by using same allocation flag as original
+> > allocation.
 > > 
-> > After thinking awhile I think this makes perfect sense.  I haven't
-> > implemented set_value yet, and when I do I think I'll implement this
-> > guideline.
+> > Reported-by: Christian Casteyde <casteyde.christian@free.fr>
+> > Signed-off-by: Joonsoo Kim <iamjoonsoo.kim@lge.com>
+> > 
+> > diff --git a/mm/slub.c b/mm/slub.c
+> > index 545a170..3dd28b1 100644
+> > --- a/mm/slub.c
+> > +++ b/mm/slub.c
+> > @@ -1335,11 +1335,12 @@ static struct page *allocate_slab(struct kmem_cache *s, gfp_t flags, int node)
+> >  	page = alloc_slab_page(alloc_gfp, node, oo);
+> >  	if (unlikely(!page)) {
+> >  		oo = s->min;
 > 
-> I'm kinda confused here.  You say *everything* is gonna go through the
-> manager and then talks about chowning directories.  Don't the two
-> conflict?
+> What is the value of s->min?  Please tell me it's zero.
 
-No.  I expect the user - except in the google case - to either have
-access to no cgroupfs mounts, or readonly mounts.
+s->min is calculated by get_order(object size).
+So if object size is less or equal than PAGE_SIZE, it would return zero.
 
--serge
+> 
+> > +		alloc_gfp = flags;
+> >  		/*
+> >  		 * Allocation may have failed due to fragmentation.
+> >  		 * Try a lower order alloc if possible
+> >  		 */
+> > -		page = alloc_slab_page(flags, node, oo);
+> > +		page = alloc_slab_page(alloc_gfp, node, oo);
+> >  
+> >  		if (page)
+> >  			stat(s, ORDER_FALLBACK);
+> 
+> This change doesn't actually do anything.
+
+It set alloc_gfp to flags and we use alloc_gfp later.
+It means that we try to allocate same order and flag as original allocation.
+
+> 
+> > @@ -1349,7 +1350,7 @@ static struct page *allocate_slab(struct kmem_cache *s, gfp_t flags, int node)
+> >  		&& !(s->flags & (SLAB_NOTRACK | DEBUG_DEFAULT_FLAGS))) {
+> >  		int pages = 1 << oo_order(oo);
+> >  
+> > -		kmemcheck_alloc_shadow(page, oo_order(oo), flags, node);
+> > +		kmemcheck_alloc_shadow(page, oo_order(oo), alloc_gfp, node);
+> 
+> That seems reasonable, assuming kmemcheck can handle the allocation
+> failure.
+
+Yes, I looked at kmemcheck_alloc_shadow() at a glance, it can handle failure.
+
+> 
+> Still I dislike this practice of using unnecessarily large allocations.
+> What does it gain us?  Slightly improved object packing density. 
+> Anything else?
+
+There is no my likes and dislikes here.
+Perhaps, Christoph would answer it.
+
+Thanks.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
