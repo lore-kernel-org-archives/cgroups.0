@@ -1,35 +1,33 @@
-From: Christoph Lameter <cl@linux.com>
-Subject: Re: [patch 3/8] mm, mempolicy: remove per-process flag
-Date: Wed, 4 Dec 2013 15:24:52 +0000
-Message-ID: <00000142be3633ba-2a459537-58fb-444b-a99f-33ff5e5b2aed-000000@email.amazonses.com>
-References: <20131119131400.GC20655@dhcp22.suse.cz> <20131119134007.GD20655@dhcp22.suse.cz> <alpine.DEB.2.02.1311192352070.20752@chino.kir.corp.google.com> <20131120152251.GA18809@dhcp22.suse.cz> <alpine.DEB.2.02.1311201917520.7167@chino.kir.corp.google.com>
- <20131128115458.GK2761@dhcp22.suse.cz> <alpine.DEB.2.02.1312021504170.13465@chino.kir.corp.google.com> <alpine.DEB.2.02.1312032116440.29733@chino.kir.corp.google.com> <alpine.DEB.2.02.1312032117490.29733@chino.kir.corp.google.com>
+From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [lxc-devel] cgroup management daemon
+Date: Wed, 4 Dec 2013 09:54:37 -0600
+Message-ID: <20131204155437.GA29008@sergelap>
+References: <20131125224335.GA15481@mail.hallyn.com>
+ <20131203134506.GG8277@htj.dyndns.org>
+ <20131204000344.GB24968@sergelap>
+ <20131204012416.GY8277@htj.dyndns.org>
+ <20131204023151.GA12376@sergelap>
+ <CAO_RewbZiLCJcO9G7pgxN8ZxkkVdEW1B84nkQ5wX3a9DPq4zfg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <alpine.DEB.2.02.1312032117490.29733@chino.kir.corp.google.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CAO_RewbZiLCJcO9G7pgxN8ZxkkVdEW1B84nkQ5wX3a9DPq4zfg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Pekka Enberg <penberg@kernel.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+To: Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, =?iso-8859-1?Q?St=E9phane?= Graber <stgraber-/Ni+VN9Krahg9hUCZPvPmw@public.gmane.org>, Victor Marmol <vmarmol-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rohit Jnagal <jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lxc-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Tue, 3 Dec 2013, David Rientjes wrote:
+Quoting Tim Hockin (thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org):
+> If this daemon works as advertised, we will explore moving all write
+> traffic to use it.  I still have concerns that this can't handle read
+> traffic at the scale we need.
+> 
+> Tejun,  I am not sure why chown came back into the conversation.  This
+> is a replacement for that.
 
-> PF_MEMPOLICY is an unnecessary optimization for CONFIG_SLAB users.
-> There's no significant performance degradation to checking
-> current->mempolicy rather than current->flags & PF_MEMPOLICY in the
-> allocation path, especially since this is considered unlikely().
+Because the daemon is chowning directories and files.  That's how
+the daemon decides whether clients have access.
 
-The use of current->mempolicy increase the cache footprint since its in a
-rarely used cacheline. This performance issue would occur when memory
-policies are not used since that cacheline would then have to be touched
-regardless of memory policies be in effect or not. PF_MEMPOLICY was used
-to avoid touching the cacheline.
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-serge
