@@ -1,126 +1,82 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch] mm: memcg: do not declare OOM from __GFP_NOFAIL
- allocations
-Date: Tue, 3 Dec 2013 22:01:01 -0500
-Message-ID: <20131204030101.GV3556@cmpxchg.org>
-References: <20131127163916.GB3556@cmpxchg.org>
- <alpine.DEB.2.02.1311271336220.9222@chino.kir.corp.google.com>
- <20131127225340.GE3556@cmpxchg.org>
- <alpine.DEB.2.02.1311271526080.22848@chino.kir.corp.google.com>
- <20131128102049.GF2761@dhcp22.suse.cz>
- <alpine.DEB.2.02.1311291543400.22413@chino.kir.corp.google.com>
- <20131202132201.GC18838@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312021452510.13465@chino.kir.corp.google.com>
- <20131203222511.GU3556@cmpxchg.org>
- <alpine.DEB.2.02.1312031531510.5946@chino.kir.corp.google.com>
+Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
+ access to memory reserves
+Date: Tue, 3 Dec 2013 22:34:49 -0500
+Message-ID: <20131204033449.GX3556@cmpxchg.org>
+References: <alpine.DEB.2.02.1311141525440.30112@chino.kir.corp.google.com>
+ <20131118154115.GA3556@cmpxchg.org>
+ <20131118165110.GE32623@dhcp22.suse.cz>
+ <20131122165100.GN3556@cmpxchg.org>
+ <alpine.DEB.2.02.1311261648570.21003@chino.kir.corp.google.com>
+ <20131127163435.GA3556@cmpxchg.org>
+ <20131202200221.GC5524@dhcp22.suse.cz>
+ <20131202212500.GN22729@cmpxchg.org>
+ <20131203120454.GA12758@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1312031544530.5946@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=9opmOpP1inKkkwt/K4QFeM1H+oMthfXzvc2iY8MBRBo=;
-	b=Kxf+LRYpZP4GDiSSiDr6TN1wXIopb3hc0/EOoVaThny9S/TNJhD57Ixk1Kk4nBZ65IlRgrx2VgVdrY4Dftz1K3CHVxonJG86MX8BnHlGYVrKzFHvCdJVcS7RlwdBTE58llqKj6HtYqElFlvNr0Q6UQ5kTDDbcROXvmDSIvPancs=;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=3NixDbBheEvgjbgxVPL/4ezUFiFjCr8OqYjDVprdfF8=;
+	b=nwt2VU1oegKnVBNr2vebceeIj5X7LsL0dqP2sJY22j8slJJdDrYxIKPEtNmtfchEe5yldB3aqWtKi69YLqSRR/8VLKtLHqpdRvO29qlzkOMC8bnmmfHeujSXREqMGSO5HJKV99dDjcS9nznRu+LaBwJhGeSUGcU/F3MEL9uS8dw=;
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1312031531510.5946@chino.kir.corp.google.com>
+In-Reply-To: <alpine.DEB.2.02.1312031544530.5946@chino.kir.corp.google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: David Rientjes <rientjes@google.com>
-Cc: Michal Hocko <mhocko@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Michal Hocko <mhocko@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On Tue, Dec 03, 2013 at 03:40:13PM -0800, David Rientjes wrote:
-> On Tue, 3 Dec 2013, Johannes Weiner wrote:
+On Tue, Dec 03, 2013 at 03:50:41PM -0800, David Rientjes wrote:
+> On Tue, 3 Dec 2013, Michal Hocko wrote:
 > 
-> > > > Spin on which level? The whole point of this change was to not spin for
-> > > > ever because the caller might sit on top of other locks which might
-> > > > prevent somebody else to die although it has been killed.
-> > > 
-> > > See my question about the non-memcg page allocator behavior below.
-> > 
-> > No, please answer the question.
-> > 
+> > OK, as it seems that the notification part is too controversial, how
+> > would you like the following? It reverts the notification part and still
+> > solves the fault on exit path. I will prepare the full patch with the
+> > changelog if this looks reasonable:
 > 
-> The question would be answered below, by having consistency in allocation 
-> and charging paths between both the page allocator and memcg.
+> Um, no, that's not satisfactory because it obviously does the check after 
+> mem_cgroup_oom_notify().  There is absolutely no reason why userspace 
+> should be woken up when current simply needs access to memory reserves to 
+> exit.  You can already get such notification by memory thresholds at the 
+> memcg limit.
 > 
-> > > I'm not quite sure how significant of a point this is, though, because it 
-> > > depends on the caller doing the __GFP_NOFAIL allocations that allow the 
-> > > bypass.  If you're doing
-> > > 
-> > > 	for (i = 0; i < 1 << 20; i++)
-> > > 		page[i] = alloc_page(GFP_NOFS | __GFP_NOFAIL);
-> > 
-> > Hyperbole serves no one.
-> > 
-> 
-> Since this bypasses all charges to the root memcg in oom conditions as a 
-> result of your patch, how do you ensure the "leakage" is contained to a 
-> small amount of memory?  Are we currently just trusting the users of 
-> __GFP_NOFAIL that they aren't allocating a large amount of memory?
+> I'll repeat: Section 10 of Documentation/cgroups/memory.txt specifies what 
+> userspace should do when waking up; one of those options is not "check if 
+> the memcg is still actually oom in a short period of time once a charging 
+> task with a pending SIGKILL or in the exit path has been able to exit."  
+> Users of this interface typically also disable the memcg oom killer 
+> through the same file, it's ludicrous to put the responsibility on 
+> userspace to determine if the wakeup is actionable and requires it to 
+> intervene in one of the methods listed in section 10.
 
-Yes, as answered in my first reply to you:
+Kind of a bummer that you haven't read anything I wrote...
 
----
+But here is a patch that defers wakeups until we know for sure that
+userspace action is required:
 
-> Ah, this is because of 3168ecbe1c04 ("mm: memcg: use proper memcg in limit 
-> bypass") which just bypasses all of these allocations and charges the root 
-> memcg.  So if allocations want to bypass memcg isolation they just have to 
-> be __GFP_NOFAIL?
-
-I don't think we have another option.
-
----
-
-Is there a specific reason you keep repeating the same questions?
-
-> > > I'm referring to the generic non-memcg page allocator behavior.  Forget 
-> > > memcg for a moment.  What is the behavior in the _page_allocator_ for 
-> > > GFP_NOFS | __GFP_NOFAIL?  Do we spin forever if reclaim fails or do we 
-> > > bypas the per-zone min watermarks to allow it to allocate because "it 
-> > > needs to succeed, it may be holding filesystem locks"?
-> > > 
-> > > It's already been acknowledged in this thread that no bypassing is done 
-> > > in the page allocator and it just spins.  There's some handwaving saying 
-> > > that since the entire system is oom that there is a greater chance that 
-> > > memory will be freed by something else, but that's just handwaving and is 
-> > > certainly no guaranteed.
-> > 
-> > Do you have another explanation of why this deadlock is not triggering
-> > in the global case?  It's pretty obvious that there is a deadlock that
-> > can not be resolved unless some unrelated task intervenes, just read
-> > __alloc_pages_slowpath().
-> > 
-> > But we had a concrete bug report for memcg where there was no other
-> > task to intervene.  One was stuck in the OOM killer waiting for the
-> > victim to exit, the victim was stuck on locks that the killer held.
-> > 
-> 
-> I believe the page allocator would be susceptible to the same deadlock if 
-> nothing else on the system can reclaim memory and that belief comes from 
-> code inspection that shows __GFP_NOFAIL is not guaranteed to ever succeed 
-> in the page allocator as their charges now are (with your patch) in memcg.  
-> I do not have an example of such an incident.
-
-Me neither.
-
-> > > So, my question again: why not bypass the per-zone min watermarks in the 
-> > > page allocator?
-> > 
-> > I don't even know what your argument is supposed to be.  The fact that
-> > we don't do it in the page allocator means that there can't be a bug
-> > in memcg?
-> > 
-> 
-> I'm asking if we should allow GFP_NOFS | __GFP_NOFAIL allocations in the 
-> page allocator to bypass per-zone min watermarks after reclaim has failed 
-> since the oom killer cannot be called in such a context so that the page 
-> allocator is not susceptible to the same deadlock without a complete 
-> depletion of memory reserves?
-
-Yes, I think so.
-
-> It's not an argument, it's a question.  Relax.
-
-Right.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index f1a0ae6..cc6adac 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2254,8 +2254,17 @@ bool mem_cgroup_oom_synchronize(bool handle)
+ 
+ 	locked = mem_cgroup_oom_trylock(memcg);
+ 
++#if 0
++	/*
++	 * XXX: An unrelated task in the group might exit at any time,
++	 * making the OOM kill unnecessary.  We don't want to wake up
++	 * the userspace handler unless we are certain it needs to
++	 * intervene, so disable notifications until we solve the
++	 * halting problem.
++	 */
+ 	if (locked)
+ 		mem_cgroup_oom_notify(memcg);
++#endif
+ 
+ 	if (locked && !memcg->oom_kill_disable) {
+ 		mem_cgroup_unmark_under_oom(memcg);
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
