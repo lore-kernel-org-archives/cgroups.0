@@ -1,56 +1,53 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch 2/2] mm: memcg: do not allow task about to OOM kill to bypass the limit
-Date: Wed,  4 Dec 2013 17:45:14 -0500
-Message-ID: <1386197114-5317-3-git-send-email-hannes@cmpxchg.org>
-References: <1386197114-5317-1-git-send-email-hannes@cmpxchg.org>
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From; bh=YjrG/6f//dtUYb5RtMFhxBOzw077CyTsyM7ZyhWE2hs=;
-	b=FYeUSX42ZXVF58rrTw5ArXVH/NjCWzOiFX72PzhW88Tyos9S0DpPglgcstqXyoJjoJUE2GMqUcR52QwjQws3pfrF27Ql1OI2oSamg1uofiZSpIfkFJv9J5YgBsOsl/ocMpduvfJq2cQhVDZHegvgYo7DpJg8ITMa20uY6bn5ong=;
-In-Reply-To: <1386197114-5317-1-git-send-email-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [lxc-devel] cgroup management daemon
+Date: Wed, 4 Dec 2013 18:06:32 -0500
+Message-ID: <20131204230632.GA10785@mtj.dyndns.org>
+References: <20131125224335.GA15481@mail.hallyn.com>
+ <20131203134506.GG8277@htj.dyndns.org>
+ <20131204000344.GB24968@sergelap>
+ <20131204012416.GY8277@htj.dyndns.org>
+ <20131204023151.GA12376@sergelap>
+ <CAO_RewbZiLCJcO9G7pgxN8ZxkkVdEW1B84nkQ5wX3a9DPq4zfg@mail.gmail.com>
+ <20131204155437.GA29008@sergelap>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=QvDRWULCnUquijEAWJyt/m1uEPRFoHEjJLmrRabnsYo=;
+        b=Lr5gmZdXbqXdfd8aElTCoETAtIqohW+cqWcfsVhAuYfntR4VNHM5HarHckNi5dP5WU
+         T7vDsm7GSFkK1jBpgBM9Q4HG1GaXHL1SIq9YHuu3z9zcSsIXcAiQFA4saVtfc4wH9TaP
+         seOLUBF/IevAap4zn6D2h+3DE/K+5D1pAb4FN+0MblKjjPI/kLmPS3NmmkEK0Tew4YYo
+         KljqfLgm1Yvb+p4b70kcqUl3pCS9LCHQwtYWPbSyDUB00/R0LR3YfP0EBK8rCnuSyQCf
+         ikZpnF3yR2kannZ+aKG4eUJdQS95nRvWd3KooRQrTZts2JHyGWOcPOJUd8EjlLRsb2Bu
+         Kc8w==
+Content-Disposition: inline
+In-Reply-To: <20131204155437.GA29008@sergelap>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.cz>, David Rientjes <rientjes@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Cc: Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, =?iso-8859-1?Q?St=E9phane?= Graber <stgraber-/Ni+VN9Krahg9hUCZPvPmw@public.gmane.org>, Victor Marmol <vmarmol-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rohit Jnagal <jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lxc-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-4942642080ea ("mm: memcg: handle non-error OOM situations more
-gracefully") allowed tasks that already entered a memcg OOM condition
-to bypass the memcg limit on subsequent allocation attempts hoping
-this would expedite finishing the page fault and executing the kill.
+On Wed, Dec 04, 2013 at 09:54:37AM -0600, Serge Hallyn wrote:
+> Quoting Tim Hockin (thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org):
+> > If this daemon works as advertised, we will explore moving all write
+> > traffic to use it.  I still have concerns that this can't handle read
+> > traffic at the scale we need.
+> > 
+> > Tejun,  I am not sure why chown came back into the conversation.  This
+> > is a replacement for that.
+> 
+> Because the daemon is chowning directories and files.  That's how
+> the daemon decides whether clients have access.
 
-David Rientjes is worried that this breaks memcg isolation guarantees
-and since there is no evidence that the bypass actually speeds up
-fault processing just change it so that these subsequent charge
-attempts fail outright.  The notable exception being __GFP_NOFAIL
-charges which are required to bypass the limit regardless.
+Ah, okay, so the manager is just using filesystem metadata for
+bookkeeping.  That should be fine.  Please note that cgroup filesystem
+also supports xattr and AFAIK systemd is already making use of it.
 
-Reported-by: David Rientjes <rientjes@google.com>
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- mm/memcontrol.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index f6a63f5b3827..bf5e89457149 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2694,7 +2694,7 @@ static int __mem_cgroup_try_charge(struct mm_struct *mm,
- 		goto bypass;
- 
- 	if (unlikely(task_in_memcg_oom(current)))
--		goto bypass;
-+		goto nomem;
- 
- 	if (gfp_mask & __GFP_NOFAIL)
- 		oom = false;
 -- 
-1.8.4.2
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
