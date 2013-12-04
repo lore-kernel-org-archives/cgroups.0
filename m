@@ -1,105 +1,85 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [patch 2/2] fs: buffer: move allocation failure loop into the
- allocator
-Date: Tue, 3 Dec 2013 16:59:10 -0800
-Message-ID: <20131203165910.54d6b4724a1f3e329af52ac6@linux-foundation.org>
-References: <1381265890-11333-1-git-send-email-hannes@cmpxchg.org>
-	<1381265890-11333-2-git-send-email-hannes@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [lxc-devel] cgroup management daemon
+Date: Tue, 3 Dec 2013 20:24:16 -0500
+Message-ID: <20131204012416.GY8277@htj.dyndns.org>
+References: <20131125224335.GA15481@mail.hallyn.com>
+ <20131203134506.GG8277@htj.dyndns.org>
+ <20131204000344.GB24968@sergelap>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1381265890-11333-2-git-send-email-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=gI4h2ixDiyeovKYGxY2WpAZNB9w+Vmnc+LHKfaI6KT8=;
+        b=OBYy8V6o8pT8JzLdgx+Rhp9951ZF6rBAE5Vo06v1NlzRuz7fUno9/qO7TlyHq/RWUt
+         Vamb6xmG8jA+gn5qvjVkzj+Ee34+G850UHfumVe2zV1vsqTTUkTxnvz5G21NtvciqgEG
+         1JXfo3XTrFg63zMb2MvP3cewTPmjyTt/p0z8rU/X7DGVzEVR8hWR0VcQYB0Qdyf1a4MF
+         1chKCuOWUnyM7Vrk/iTwgYu0avCPrjdlCi6Bt4BJ2b2+AUoeXDQMUqCn+7M2IC2k9Zjx
+         KJuP68m5vQVB0QUFFvniR/TcIq3KHNs2OO5EW2zkagtng0O7r+eXXmWbU4tclja+ltwI
+         7tyQ==
+Content-Disposition: inline
+In-Reply-To: <20131204000344.GB24968@sergelap>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>, azurIt <azurit@pobox.sk>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Christian Casteyde <casteyde.christian@free.fr>, Pekka Enberg <penberg@kernel.org>, Christoph Lameter <cl@linux.com>
+Content-Transfer-Encoding: 7bit
+To: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Cc: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, =?iso-8859-1?Q?St=E9phane?= Graber <stgraber-/Ni+VN9Krahg9hUCZPvPmw@public.gmane.org>, Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Victor Marmol <vmarmol-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rohit Jnagal <jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lxc-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Tue,  8 Oct 2013 16:58:10 -0400 Johannes Weiner <hannes@cmpxchg.org> wrote:
+Hello, Serge.
 
-> Buffer allocation has a very crude indefinite loop around waking the
-> flusher threads and performing global NOFS direct reclaim because it
-> can not handle allocation failures.
+On Tue, Dec 03, 2013 at 06:03:44PM -0600, Serge Hallyn wrote:
+> > As I communicated multiple times before, delegating write access to
+> > control knobs to untrusted domain has always been a security risk and
+> > is likely to continue to remain so.  Also, organizationally, a
 > 
-> The most immediate problem with this is that the allocation may fail
-> due to a memory cgroup limit, where flushers + direct reclaim might
-> not make any progress towards resolving the situation at all.  Because
-> unlike the global case, a memory cgroup may not have any cache at all,
-> only anonymous pages but no swap.  This situation will lead to a
-> reclaim livelock with insane IO from waking the flushers and thrashing
-> unrelated filesystem cache in a tight loop.
+> Then that will need to be address with per-key blacklisting and/or
+> per-value filtering in the manager.
 > 
-> Use __GFP_NOFAIL allocations for buffers for now.  This makes sure
-> that any looping happens in the page allocator, which knows how to
-> orchestrate kswapd, direct reclaim, and the flushers sensibly.  It
-> also allows memory cgroups to detect allocations that can't handle
-> failure and will allow them to ultimately bypass the limit if reclaim
-> can not make progress.
+> Which is my way of saying:  can we please have a list of the security
+> issues so we can handle them?  :)  (I've asked several times before
+> but haven't seen a list or anyone offering to make one)
 
-Problem.
+Unfortunately, for now, please consider everything blacklisted.  Yes,
+it is true that some knobs should be mostly safe but given the level
+of changes we're going through and the difficulty of properly auditing
+anything for delegation to untrusted environment, I don't feel
+comfortable at all about delegating through chown.  It is an
+accidental feature which happened just because it uses filesystem as
+its interface and it is no where near the top of the todo list.  It
+has never worked properly and won't in any foreseeable future.
 
-> --- a/fs/buffer.c
-> +++ b/fs/buffer.c
-> @@ -1005,9 +1005,19 @@ grow_dev_page(struct block_device *bdev, sector_t block,
->  	struct buffer_head *bh;
->  	sector_t end_block;
->  	int ret = 0;		/* Will call free_more_memory() */
-> +	gfp_t gfp_mask;
->  
-> -	page = find_or_create_page(inode->i_mapping, index,
-> -		(mapping_gfp_mask(inode->i_mapping) & ~__GFP_FS)|__GFP_MOVABLE);
-> +	gfp_mask = mapping_gfp_mask(inode->i_mapping) & ~__GFP_FS;
-> +	gfp_mask |= __GFP_MOVABLE;
+> > cgroup's control knobs belong to the parent not the cgroup itself.
+> 
+> After thinking awhile I think this makes perfect sense.  I haven't
+> implemented set_value yet, and when I do I think I'll implement this
+> guideline.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=65991
+I'm kinda confused here.  You say *everything* is gonna go through the
+manager and then talks about chowning directories.  Don't the two
+conflict?
 
-WARNING: CPU: 0 PID: 1 at mm/page_alloc.c:1539 get_page_from_freelist+0x8a9/0x8c0()
-Modules linked in:
-CPU: 0 PID: 1 Comm: swapper/0 Not tainted 3.13.0-rc1 #42
-Hardware name: Acer Aspire 7750G/JE70_HR, BIOS V1.07 03/02/2011
- 0000000000000009 ffff8801c6121650 ffffffff81898d39 0000000000000000
- ffff8801c6121688 ffffffff8107dc43 0000000000000002 0000000000000001
- 0000000000284850 0000000000000000 ffff8801cec04680 ffff8801c6121698
-Call Trace:
- [<ffffffff81898d39>] dump_stack+0x4e/0x7a
- [<ffffffff8107dc43>] warn_slowpath_common+0x73/0x90
- [<ffffffff8107dd15>] warn_slowpath_null+0x15/0x20
- [<ffffffff81116f69>] get_page_from_freelist+0x8a9/0x8c0
- [<ffffffff81330cdd>] ? trace_hardirqs_off_thunk+0x3a/0x3c
- [<ffffffff81117070>] __alloc_pages_nodemask+0xf0/0x770
- [<ffffffff81330cdd>] ? trace_hardirqs_off_thunk+0x3a/0x3c
- [<ffffffff81156823>] kmemcheck_alloc_shadow+0x53/0xf0
- [<ffffffff81152495>] new_slab+0x345/0x3e0
- [<ffffffff81897712>] __slab_alloc.isra.57+0x215/0x535
- [<ffffffff81328030>] ? __radix_tree_preload+0x60/0xf0
- [<ffffffff811545c8>] kmem_cache_alloc+0x118/0x150
- [<ffffffff81328030>] ? __radix_tree_preload+0x60/0xf0
- [<ffffffff81328030>] __radix_tree_preload+0x60/0xf0
- [<ffffffff81328125>] radix_tree_maybe_preload+0x25/0x30
- [<ffffffff8110faf7>] add_to_page_cache_locked+0x37/0x100
- [<ffffffff8110fbd5>] add_to_page_cache_lru+0x15/0x40
- [<ffffffff8110ff37>] find_or_create_page+0x57/0x90
- [<ffffffff8118e630>] __getblk+0xf0/0x2f0
+> > > Long-term we will want the cgroup manager to become more intelligent -
+> > > to place its own limits on clients, to address cpu and device hotplug,
+> > > etc.  Since we will not be doing that in the first prototype, the daemon
+> > > will not keep any state about the clients.
+> > 
+> > Isn't the above conflicting with chowning control knobs?
+> 
+> Not sure what you mean by this.
+> 
+> To be clear what I'm talking about is having the client be able to say
+> "grant 50% of cpus", then when more cpus are added, the actual cpuset
+> gets recalculated.  This may well forever stay outside of the cgmanager
+> scope.  It may be more appropriate to put that logic into the lmctfy
+> layer.
 
-That __GFP_NOFAIL is getting down into
-radix_tree_preload->kmem_cache_alloc() and I expect that in its
-boundless stupidity, slab has decided to inappropriately go and use an
-unnecessarily massive page size for radix_tree_node_cachep's underlying
-memory allocations.  So we end up using GFP_NOFAIL for an order=2 (or
-more) allocation, which is unacceptably risky, methinks.
+Yes, something like that would be nice but if you give out raw access
+to the control knobs by chowning them, I just don't see how that would
+be implementable.  What am I missing here?
 
-I really really wish slab wouldn't do this.  The benefit is surely very
-small and these unnecessary higher-order allocations are quite abusive
-of the page allocator.
+Thanks.
 
-Can we please make slab stop doing this?
-
-radix_tree_nodes are 560 bytes and the kernel often allocates them in
-times of extreme memory stress.  We really really want them to be
-backed by order=0 pages.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
