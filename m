@@ -1,86 +1,62 @@
-From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: Re: [PATCH] memcg: remove KMEM_ACCOUNTED_ACTIVATED
-Date: Wed, 4 Dec 2013 15:56:51 +0400
-Message-ID: <529F1883.3030907@parallels.com>
-References: <1385989693-28788-1-git-send-email-vdavydov@parallels.com> <20131202181501.GA5524@dhcp22.suse.cz> <CAA6-i6rWsZNQmFY5L-=yc6TaTGyg4hP4qn9gMZVsu8wWJ=1ywg@mail.gmail.com> <529CDDB3.3090301@parallels.com> <CAA6-i6q+WooWMSbJwLS=ByVu=fgAQuep99iP7tAXiuLABu2gVA@mail.gmail.com> <529D9100.4070207@parallels.com> <CAA6-i6q2viRkbjYOHcoiCHgvdfbfo-4j0k9gj9AA4SH1YToqVg@mail.gmail.com> <529EDB41.8030505@parallels.com> <CAA6-i6o+ZuM_fq+PdQJZ40S0d7K35cBvbTELg49+SgLKP5F0xA@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 10/12] cgroup: attach cgroup_open_file to all cgroup files
+Date: Wed, 4 Dec 2013 08:04:50 -0500
+Message-ID: <20131204130450.GE3158@htj.dyndns.org>
+References: <1385595759-17656-1-git-send-email-tj@kernel.org>
+	<1385595759-17656-11-git-send-email-tj@kernel.org>
+	<529EC5F4.10708@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAA6-i6o+ZuM_fq+PdQJZ40S0d7K35cBvbTELg49+SgLKP5F0xA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer@gmail.com>
-Cc: Michal Hocko <mhocko@suse.cz>, LKML <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=+5GYLSY8NH8CdzYUNNChrF/0Tk/C6iwgX05obKvIqhE=;
+	b=oWVMgaAXZFq5lXk7lPfbBrvYAx8c3S+1l8+AQb1HQG6I2OmsErmRcbTWtj2c06WMl9
+	DrZ8div0jXDd14//l079JJjcRGjXJEm7AGOkTSrzeBlOs7INuwgha47iGp6te3BtzVBt
+	yOF5/Phxgl38OItk762dbmMLe58y5h/ATWmNxc5wNE1ZsV4fzIeBTUwUsYRVAgdk0dRh
+	NsYGAZA6nuJv2MzzJbaSh52l+ZyEiFfQ8IJSQ1s93UCqCTnHXwpN3Xzl38feVJ9vmmmI
+	3K3yuQOugbL9/YXDa5EbiKmaE76yOsklSqPJxwYtzUjwjLPpNCgLTFcAQ3mrfilu/Zfx
+	nNaw==
+Content-Disposition: inline
+In-Reply-To: <529EC5F4.10708-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-On 12/04/2013 02:08 PM, Glauber Costa wrote:
->>> Could you do something clever with just one flag? Probably yes. But I
->>> doubt it would
->>> be that much cleaner, this is just the way that patching sites work.
->> Thank you for spending your time to listen to me.
->>
-> Don't worry! I thank you for carrying this forward.
->
->> Let me try to explain what is bothering me.
->>
->> We have two state bits for each memcg, 'active' and 'activated'. There
->> are two scenarios where the bits can be modified:
->>
->> 1) The kmem limit is set on a memcg for the first time -
->> memcg_update_kmem_limit(). Here we call memcg_update_cache_sizes(),
->> which sets the 'activated' bit on success, then update static branching,
->> then set the 'active' bit. All three actions are done atomically in
->> respect to other tasks setting the limit due to the set_limit_mutex.
->> After both bits are set, they never get cleared for the memcg.
->>
-> So far so good. But again, note how you yourself describe it:
-> the cations are done atomically  *in respect to other tasks setting the limit*
->
-> But there are also tasks that are running its courses naturally and
-> just allocating
-> memory. For those, some call sites will be on, some will be off. We need to make
-> sure that *none* of them uses the patched site until *all* of them are patched.
-> This has nothing to do with updates, this is all about the readers.
->
->> 2) When a subgroup of a kmem-active cgroup is created -
->> memcg_propagate_kmem(). Here we copy kmem_account_flags from the parent,
->> then increase static branching refcounter, then call
->> memcg_update_cache_sizes() for the new memcg, which may clear the
->> 'activated' bit on failure. After successful execution, the state bits
->> never get cleared for the new memcg.
->>
->> In scenario 2 there is no need bothering about the flags setting order,
->> because we don't have any tasks in the cgroup yet - the tasks can be
->> moved in only after css_online finishes when we have both of the bits
->> set and the static branching enabled. Actually, we already do not bother
->> about it, because we have both bits set before the cgroup is fully
->> initialized (memcg_update_cache_sizes() is called).
->>
-> Yes, after the first cgroup is set none of that matters. But it is just easier
-> and less error prone just to follow the same path every time. As I have said,
-> if you can come up with a more clever way to deal with the problem above
-> that doesn't involve the double flag - and you can prove it works - I
-> am definitely
-> fine with it. But this is subtle code, and in the past - Michal can
-> attest this - we've
-> changed this being sure it would work just to see it explode in our faces.
->
-> So although I am willing to review every patch for correctness on that
-> front (I never
-> said I liked the 2-flags scheme...), unless you have a bug or real
-> problem on it,
-> I would advise against changing it if its just to make it more readable.
->
-> But again, don't take me too seriously on this. If you and Michal think you can
-> come up with something better, I'm all for it.
+On Wed, Dec 04, 2013 at 02:04:36PM +0800, Li Zefan wrote:
+> > @@ -2353,10 +2338,18 @@ static int cgroup_file_open(struct inode *inode, struct file *file)
+> >  	WARN_ON_ONCE(cfe->css && cfe->css != css);
+> >  	cfe->css = css;
+> >  
+> > -	if (cft->open)
+> > +	if (cft->open) {
+> >  		err = cft->open(inode, file);
+> > -	else
+> > -		err = single_open(file, cgroup_seqfile_show, cfe);
+> > +	} else {
+> > +		err = single_open_size(file, cgroup_seqfile_show, cfe,
+> > +				       sizeof(struct cgroup_open_file));
+> 
+> This is wrong.
+> 
+> I guess you wanted to use single_open_private(), which doesn't exist.
 
-All right, I finally get you :-)
+Yeah, right, I got completely confused about what single_open_size()
+was doing.  Hah, so, I guess I'll just introduce the single callbacks
+here using seq_open_private().  More on this in the next patch.
 
-Although I still don't think we need the second flag, I now understand
-that it's better not to change the code that works fine especially the
-change does not make it neither more readable nor more effective. Since
-I can be mistaken about the flags usage (it's by far not unlikely), it's
-better to leave it as is rather than being at risk of catching spurious
-hangs that might be caused by this modification.
+Thanks.
 
-Thanks for the detailed explanation!
+-- 
+tejun
