@@ -1,33 +1,35 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.14] cgroup: consolidate file handling
-Date: Thu, 5 Dec 2013 12:26:14 -0500
-Message-ID: <20131205172614.GC24062@mtj.dyndns.org>
-References: <1385595759-17656-1-git-send-email-tj@kernel.org>
+From: Christoph Lameter <cl@linux.com>
+Subject: Re: [patch 2/2] fs: buffer: move allocation failure loop into the
+ allocator
+Date: Thu, 5 Dec 2013 18:50:50 +0000
+Message-ID: <00000142c4192155-e27322df-ba1a-4af8-98c3-f2b15dd70d13-000000@email.amazonses.com>
+References: <1381265890-11333-1-git-send-email-hannes@cmpxchg.org> <1381265890-11333-2-git-send-email-hannes@cmpxchg.org> <20131203165910.54d6b4724a1f3e329af52ac6@linux-foundation.org> <20131204015218.GA19709@lge.com> <20131203180717.94c013d1.akpm@linux-foundation.org>
+ <00000142be2f1de0-764bb035-adbc-4367-b2b4-bf05498510a6-000000@email.amazonses.com> <CAAmzW4PwLhMd61ksOktdg=rkj0xHsSGt2Wm_za2Adjh4+tss-g@mail.gmail.com> <00000142be753b07-aa0e2354-6704-41f8-8e11-3c856a186af5-000000@email.amazonses.com>
+ <20131205084441.GA5561@lge.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=upy8gRhMuWvFCvNLZl2gO7cwY1BZefME79dfNJGKFAA=;
-        b=0qeFb18eebRshkmKj1xafeGP+0kYdc93VQ931/g/alX4uQafVkHUyO3Rsrr5rcUqC5
-         sTbvjw0ng+ZCsX7aDddZXMvhY9p9U9vr0lHqnczsFs4Boz4b3laKGpkeLzqak1xBkaCe
-         YEHTr1mlUDfpg290/u1i83YF1hrhvJ0w5qDV/8rY7UmRN7wprGhS6aGo49NNUihsOkuG
-         aVEzAP+SZAJTIKGqMbObhmamNrIcCvlpXFt9w0ZFUAb4A0tCpSyH6ZCHE1tzdQEXiF88
-         8zLPQlgxT1x29IrYwTFL7DDQl/S+EVB5FVWeKcjVyoNBuwsEp/hXGYWeKFesrIfohnWw
-         o6RQ==
-Content-Disposition: inline
-In-Reply-To: <1385595759-17656-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20131205084441.GA5561@lge.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: Joonsoo Kim <iamjoonsoo.kim@lge.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, azurIt <azurit@pobox.sk>, Linux Memory Management List <linux-mm@kvack.org>, cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christian Casteyde <casteyde.christian@free.fr>, Pekka Enberg <penberg@kernel.org>
 
-Applying to cgroup/for-3.14.
+On Thu, 5 Dec 2013, Joonsoo Kim wrote:
 
-Thanks.
+> I could try. But my trial would not figure this out, since my machine has
+> just 4 cores which normally cannot produce heavy contention.
 
--- 
-tejun
+I think that is fine for starters. Once we know what to look for we can
+find machines to test specific scenarios.
+
+> Anyway, could you tell me where I can find your synthetic benchmarks for slab?
+
+https://lkml.org/lkml/2009/10/13/459
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
