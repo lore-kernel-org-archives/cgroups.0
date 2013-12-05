@@ -1,130 +1,134 @@
-From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH] cgroup: fix bug on cgroup_create() fail path
-Date: Thu, 5 Dec 2013 13:00:06 +0400
-Message-ID: <1386234006-1633-1-git-send-email-vdavydov@parallels.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch 1/2] mm: memcg: fix race condition between memcg teardown
+ and swapin
+Date: Thu, 5 Dec 2013 14:13:55 +0100
+Message-ID: <20131205131355.GB16711@dhcp22.suse.cz>
+References: <1386197114-5317-1-git-send-email-hannes@cmpxchg.org>
+ <1386197114-5317-2-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1386197114-5317-2-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-If cgroup_create() fails to online_css() we will get a bug:
+On Wed 04-12-13 17:45:13, Johannes Weiner wrote:
+> There is a race condition between a memcg being torn down and a swapin
+> triggered from a different memcg of a page that was recorded to belong
+> to the exiting memcg on swapout (with CONFIG_MEMCG_SWAP extension).
+> The result is unreclaimable pages pointing to dead memcgs, which can
+> lead to anything from endless loops in later memcg teardown (the page
+> is charged to all hierarchical parents but is not on any LRU list) or
+> crashes from following the dangling memcg pointer.
+> 
+> Memcgs with tasks in them can not be torn down and usually charges
+> don't show up in memcgs without tasks.  Swapin with the
+> CONFIG_MEMCG_SWAP extension is the notable exception because it
+> charges the cgroup that was recorded as owner during swapout, which
+> may be empty and in the process of being torn down when a task in
+> another memcg triggers the swapin:
+> 
+>   teardown:                 swapin:
+> 
+>                             lookup_swap_cgroup_id()
+>                             rcu_read_lock()
+>                             mem_cgroup_lookup()
+>                             css_tryget()
+>                             rcu_read_unlock()
+>   disable css_tryget()
+>   call_rcu()
+>     offline_css()
+>       reparent_charges()
+>                             res_counter_charge() (hierarchical!)
+>                             css_put()
+>                               css_free()
+>                             pc->mem_cgroup = dead memcg
+>                             add page to dead lru
+> 
+> Add a final reparenting step into css_free() to make sure any such
+> raced charges are moved out of the memcg before it's finally freed.
+> 
+> In the longer term it would be cleaner to have the css_tryget() and
+> the res_counter charge under the same RCU lock section so that the
+> charge reparenting is deferred until the last charge whose tryget
+> succeeded is visible.  But this will require more invasive changes
+> that will be harder to evaluate and backport into stable, so better
+> defer them to a separate change set.
+> 
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: <stable@kernel.org>
 
-BUG: unable to handle kernel NULL pointer dereference at 0000000000000008
-IP: [<ffffffff810eeaa8>] cgroup_destroy_locked+0x118/0x2f0
-PGD a780a067 PUD aadbe067 PMD 0
-Oops: 0000 [#1] SMP
-Modules linked in:
-CPU: 6 PID: 7360 Comm: mkdir Not tainted 3.13.0-rc2+ #69
-Hardware name:
-task: ffff8800b9dbec00 ti: ffff8800a781a000 task.ti: ffff8800a781a000
-RIP: 0010:[<ffffffff810eeaa8>]  [<ffffffff810eeaa8>] cgroup_destroy_locked+0x118/0x2f0
-RSP: 0018:ffff8800a781bd98  EFLAGS: 00010282
-RAX: ffff880586903878 RBX: ffff880586903800 RCX: ffff880586903820
-RDX: ffff880586903860 RSI: ffff8800a781bdb0 RDI: ffff880586903820
-RBP: ffff8800a781bde8 R08: ffff88060e0b8048 R09: ffffffff811d7bc1
-R10: 000000000000008c R11: 0000000000000001 R12: ffff8800a72286c0
-R13: 0000000000000000 R14: ffffffff81cf7a40 R15: 0000000000000001
-FS:  00007f60ecda57a0(0000) GS:ffff8806272c0000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000000000000008 CR3: 00000000a7a03000 CR4: 00000000000007e0
-Stack:
- ffff880586903860 ffff880586903910 ffff8800a72286c0 ffff880586903820
- ffffffff81cf7a40 ffff880586903800 ffff88060e0b8018 ffffffff81cf7a40
- ffff8800b9dbec00 ffff8800b9dbf098 ffff8800a781bec8 ffffffff810ef5bf
-Call Trace:
- [<ffffffff810ef5bf>] cgroup_mkdir+0x55f/0x5f0
- [<ffffffff811c90ae>] vfs_mkdir+0xee/0x140
- [<ffffffff811cb07e>] SyS_mkdirat+0x6e/0xf0
- [<ffffffff811c6a19>] SyS_mkdir+0x19/0x20
- [<ffffffff8169e569>] system_call_fastpath+0x16/0x1b
+I have a patch to fix this properly but I didn't get to test it yet. I
+will post it sometimes soon hopefully.
 
-The point is that cgroup_destroy_locked() that is called on the fail
-path assumes all css's have already been assigned to the cgroup, which
-is not true, and calls kill_css() to destroy them.
+For the meantime
+Acked-by: Michal Hocko <mhocko@suse.cz>
 
-The patch makes css_online() proceed to assigning css to a cgroup even
-if subsys-specific css_online method fails - it only skips setting
-CSS_ONLINE flag then. Respectively, offline_css() should skip only
-subsys-specific css_offline method if CSS_ONLINE is not set. Besides, it
-makes cgroup_create() call online_css() for all css's before going to
-cgroup_destroy_locked(). It is not that optimal, but it's only a fail
-path.
+> ---
+>  mm/memcontrol.c | 36 ++++++++++++++++++++++++++++++++++++
+>  1 file changed, 36 insertions(+)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index e3aff0175d4c..f6a63f5b3827 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -6355,6 +6355,42 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
+>  static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
+>  {
+>  	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+> +	/*
+> +	 * XXX: css_offline() would be where we should reparent all
+> +	 * memory to prepare the cgroup for destruction.  However,
+> +	 * memcg does not do css_tryget() and res_counter charging
+> +	 * under the same RCU lock region, which means that charging
+> +	 * could race with offlining.  Offlining only happens to
+> +	 * cgroups with no tasks in them but charges can show up
+> +	 * without any tasks from the swapin path when the target
+> +	 * memcg is looked up from the swapout record and not from the
+> +	 * current task as it usually is.  A race like this can leak
+> +	 * charges and put pages with stale cgroup pointers into
+> +	 * circulation:
+> +	 *
+> +	 * #0                        #1
+> +	 *                           lookup_swap_cgroup_id()
+> +	 *                           rcu_read_lock()
+> +	 *                           mem_cgroup_lookup()
+> +	 *                           css_tryget()
+> +	 *                           rcu_read_unlock()
+> +	 * disable css_tryget()
+> +	 * call_rcu()
+> +	 *   offline_css()
+> +	 *     reparent_charges()
+> +	 *                           res_counter_charge()
+> +	 *                           css_put()
+> +	 *                             css_free()
+> +	 *                           pc->mem_cgroup = dead memcg
+> +	 *                           add page to lru
+> +	 *
+> +	 * The bulk of the charges are still moved in offline_css() to
+> +	 * avoid pinning a lot of pages in case a long-term reference
+> +	 * like a swapout record is deferring the css_free() to long
+> +	 * after offlining.  But this makes sure we catch any charges
+> +	 * made after offlining:
+> +	 */
+> +	mem_cgroup_reparent_charges(memcg);
+>  
+>  	memcg_destroy_kmem(memcg);
+>  	__mem_cgroup_free(memcg);
+> -- 
+> 1.8.4.2
+> 
 
-Signed-off-by: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- kernel/cgroup.c |   28 +++++++++++++++++-----------
- 1 file changed, 17 insertions(+), 11 deletions(-)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 8b729c2..1846923 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -4296,11 +4296,10 @@ static int online_css(struct cgroup_subsys_state *css)
- 
- 	if (ss->css_online)
- 		ret = ss->css_online(css);
--	if (!ret) {
-+	if (!ret)
- 		css->flags |= CSS_ONLINE;
--		css->cgroup->nr_css++;
--		rcu_assign_pointer(css->cgroup->subsys[ss->subsys_id], css);
--	}
-+	css->cgroup->nr_css++;
-+	rcu_assign_pointer(css->cgroup->subsys[ss->subsys_id], css);
- 	return ret;
- }
- 
-@@ -4311,10 +4310,7 @@ static void offline_css(struct cgroup_subsys_state *css)
- 
- 	lockdep_assert_held(&cgroup_mutex);
- 
--	if (!(css->flags & CSS_ONLINE))
--		return;
--
--	if (ss->css_offline)
-+	if ((css->flags & CSS_ONLINE) && ss->css_offline)
- 		ss->css_offline(css);
- 
- 	css->flags &= ~CSS_ONLINE;
-@@ -4437,13 +4433,20 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 	/* hold a ref to the parent's dentry */
- 	dget(parent->dentry);
- 
-+	err = 0;
-+
- 	/* creation succeeded, notify subsystems */
- 	for_each_root_subsys(root, ss) {
- 		struct cgroup_subsys_state *css = css_ar[ss->subsys_id];
-+		int ret;
- 
--		err = online_css(css);
--		if (err)
--			goto err_destroy;
-+		/* Continue assigning css's to this cgroup on failure so that
-+		 * all css's will be killed by cgroup_destroy_locked(). */
-+		ret = online_css(css);
-+		if (ret) {
-+			err = ret;
-+			continue;
-+		}
- 
- 		if (ss->broken_hierarchy && !ss->warned_broken_hierarchy &&
- 		    parent->parent) {
-@@ -4455,6 +4458,9 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 		}
- 	}
- 
-+	if (err)
-+		goto err_destroy;
-+
- 	idr_replace(&root->cgroup_idr, cgrp, cgrp->id);
- 
- 	err = cgroup_addrm_files(cgrp, cgroup_base_files, true);
 -- 
-1.7.10.4
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
