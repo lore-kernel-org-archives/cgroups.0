@@ -1,74 +1,95 @@
 From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch 2/2] mm: memcg: do not allow task about to OOM kill to
- bypass the limit
-Date: Wed, 4 Dec 2013 15:51:57 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1312041546370.6329@chino.kir.corp.google.com>
-References: <1386197114-5317-1-git-send-email-hannes@cmpxchg.org> <1386197114-5317-3-git-send-email-hannes@cmpxchg.org>
+Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
+ access to memory reserves
+Date: Wed, 4 Dec 2013 16:23:41 -0800 (PST)
+Message-ID: <alpine.DEB.2.02.1312041606260.6329@chino.kir.corp.google.com>
+References: <alpine.DEB.2.02.1311141525440.30112@chino.kir.corp.google.com> <20131118154115.GA3556@cmpxchg.org> <20131118165110.GE32623@dhcp22.suse.cz> <20131122165100.GN3556@cmpxchg.org> <alpine.DEB.2.02.1311261648570.21003@chino.kir.corp.google.com>
+ <20131127163435.GA3556@cmpxchg.org> <20131202200221.GC5524@dhcp22.suse.cz> <20131202212500.GN22729@cmpxchg.org> <20131203120454.GA12758@dhcp22.suse.cz> <alpine.DEB.2.02.1312031544530.5946@chino.kir.corp.google.com> <20131204111318.GE8410@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=date:from:to:cc:subject:in-reply-to:message-id:references
          :user-agent:mime-version:content-type;
-        bh=5OvzI1Mwzo4KL1vRrtozCQPerqrS3CLNKOLn5NvCQts=;
-        b=fVepudujgqgSQgabBJMfKs3Gva1J+UFQ+y3/IqtON6OO4KM65g/kOx6mh6a/CDdfLB
-         3EiclGyQiKHVE3HBz1lA81PwOSefW3bZkZ9/W0Xq45WxcZV4gAT2uFdmNPeEnEczhChX
-         I/dmb8XMAG33fUrvEGVuQikSkiiq22q96MNs+7hI8H2nR3R1kXrYBQ0+khL1gnyE9mwe
-         Xk24G6sH5iDXcVfthIsWl2agkvOHUr7fKL1z+rYztClFCHuerK86eWgUruzcJcYNeipp
-         you46oo46eTmF83aYOsQyS+hO2lBHvL/HSJpyN7rDybzaPb28kjuBqB4yGiVitt11TaM
-         i1kA==
-In-Reply-To: <1386197114-5317-3-git-send-email-hannes@cmpxchg.org>
+        bh=VZyssqb65JX8h9LfUMCfIgjhLWyorEdXqpJXaYvcpZ4=;
+        b=KAZD3smce+qiio6Mg25koIAPcw4XaUWulKfYycdt39dCLRgS9K5roRICUkltDTSPig
+         NLDfZmxOyebOK3ByHuA1cIQNzrvCpfeVZt94qqZSe6nvAEfV10LWP20B8ki08at/70Me
+         +dYwi8kycRVJSEEVezeM25FWPp9r8DGP42TiqhF5CUNi7GZi574Wlyf/5MvlL42QCrov
+         ppgNdpQyDAAJ1WCrnm+xoXGjVodG3IcP+6dXz2ZmRDV+5pqWzmVxY0kZzhypx4wvFsxh
+         Mni0johl+VqGfUGGV8igsOqks0YG8PyWeeLAcWAWwSjb6MfpxvrSPfxIqFpqoUH4QBMV
+         QIRA==
+In-Reply-To: <20131204111318.GE8410@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On Wed, 4 Dec 2013, Johannes Weiner wrote:
+On Wed, 4 Dec 2013, Michal Hocko wrote:
 
-> 4942642080ea ("mm: memcg: handle non-error OOM situations more
-> gracefully") allowed tasks that already entered a memcg OOM condition
-> to bypass the memcg limit on subsequent allocation attempts hoping
-> this would expedite finishing the page fault and executing the kill.
+> > I'll repeat: Section 10 of Documentation/cgroups/memory.txt specifies what 
+> > userspace should do when waking up; one of those options is not "check if 
+> > the memcg is still actually oom in a short period of time once a charging 
+> > task with a pending SIGKILL or in the exit path has been able to exit."
+> > Users of this interface typically also disable the memcg oom killer 
+> > through the same file, it's ludicrous to put the responsibility on 
+> > userspace to determine if the wakeup is actionable and requires it to 
+> > intervene in one of the methods listed in section 10.
 > 
-> David Rientjes is worried that this breaks memcg isolation guarantees
-> and since there is no evidence that the bypass actually speeds up
-> fault processing just change it so that these subsequent charge
-> attempts fail outright.  The notable exception being __GFP_NOFAIL
-> charges which are required to bypass the limit regardless.
-> 
-> Reported-by: David Rientjes <rientjes@google.com>
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> David, you would need to show us that such a condition happens in real
+> loads often enough that such a tweak is worth it. Repeating that a race
+> exists doesn't help, because yeah it does and it will after your patch
+> as well. So show us that it happens considerably less often with this
+> check.
+>  
 
-Acked-by: David Rientjes <rientjes@google.com>
+Google depends on getting memory.oom_control notifications only when they 
+are actionable, which is exactly how Documentation/cgroups/memory.txt 
+describes how userspace should respond to such a notification.
 
-Thanks!
+"Actionable" here means that the kernel has exhausted its capabilities of 
+allowing for future memory freeing, which is the entire premise of any oom 
+killer.
 
-I think we should consider marking this for stable@vger.kernel.org for 
-3.12 since the original patch went into 3.12-rc6.  Depending on the number 
-of allocators in the oom memcg, the amount of memory bypassed can become 
-quite large.
+Giving a dying process or a process that is going to subsequently die 
+access to memory reserves is a capability the kernel users to ensure 
+progress is made in oom conditions.  It is not an exhaustion of 
+capabilities.
 
-For example, in a memcg with a limit of 128MB, if you start 10 concurrent 
-processes that simply allocate a lot of memory you can get quite a bit of 
-memory bypassed.  If I start 10 membench processes, which would cause a 
-128MB memcg to oom even if only one such process were running, we get:
+Yes, we all know that subsequent to the userspace notification that memory 
+may be freed and the kill no longer becomes required.  There is nothing 
+that can be done about that, and it has never been implied that a memcg is 
+guaranteed to still be oom when the process wakes up.
 
-# grep RSS /proc/1092[0-9]/status
-VmRSS:	   15724 kB
-VmRSS:	   15064 kB
-VmRSS:	   13224 kB
-VmRSS:	   14520 kB
-VmRSS:	   14472 kB
-VmRSS:	   13016 kB
-VmRSS:	   13024 kB
-VmRSS:	   14560 kB
-VmRSS:	   14864 kB
-VmRSS:	   14772 kB
+I'm referring to a siutation that can manifest in a number of ways: 
+coincidental process exit, coincidental process being killed, 
+VMPRESSURE_CRITICAL notification that results in a process being killed, 
+or memory threshold notification that results in a process being killed.  
+Regardless, we're talking about a situation where something is already 
+in the exit path or has been killed and is simply attempting to free its 
+memory.
 
-And all of those total ~140MB of memory while bound to a memcg with a 
-128MB limit, about 10% of memory is bypassed.
+Such a process simply needs access to memory reserves to make progress and 
+free its memory as part of the exit path.  The process waiting on 
+memory.oom_control does _not_ need to do any of the actions mentioned in 
+Documentation/cgroups/memory.txt: reduce usage, enlarge the limit, kill a 
+process, or move a process with charge migration.
+
+It would be ridiculous to require anybody implementing such a process to 
+check if the oom condition still exists after a period of time before 
+taking such an action.  It would be required to wait for any possible 
+dying task or process with a pending SIGKILL to exit and there's no way to 
+determine how long is long enough to wait or that it will get woken up 
+again if it relies on a second signal for the same oom condition.  At the 
+same time, the action taken by such a process would still be as racy as it 
+would with the patch: we simply can't guarantee memory is not freed 
+immediately after we issue the SIGKILL.
+
+What we can control is that the kernel has exhausted its capabilities of 
+allowing for future memory freeing at the time of notification.  That's 
+the goal of the patch, at the same time making it consistent with the 
+documentation.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
