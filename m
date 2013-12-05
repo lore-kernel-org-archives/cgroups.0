@@ -1,82 +1,53 @@
-From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [patch 7/8] mm, memcg: allow processes handling oom notifications
- to access reserves
-Date: Thu, 5 Dec 2013 15:49:57 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1312051537550.7717@chino.kir.corp.google.com>
-References: <20131119134007.GD20655@dhcp22.suse.cz> <alpine.DEB.2.02.1311192352070.20752@chino.kir.corp.google.com> <20131120152251.GA18809@dhcp22.suse.cz> <alpine.DEB.2.02.1311201917520.7167@chino.kir.corp.google.com> <20131128115458.GK2761@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312021504170.13465@chino.kir.corp.google.com> <alpine.DEB.2.02.1312032116440.29733@chino.kir.corp.google.com> <alpine.DEB.2.02.1312032118570.29733@chino.kir.corp.google.com> <20131204054533.GZ3556@cmpxchg.org>
- <alpine.DEB.2.02.1312041742560.20115@chino.kir.corp.google.com> <20131205025026.GA26777@htj.dyndns.org>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [patch 3/8] mm, mempolicy: remove per-process flag
+Date: Thu, 5 Dec 2013 15:53:35 -0800 (PST)
+Message-ID: <alpine.DEB.2.02.1312051550390.7717@chino.kir.corp.google.com>
+References: <20131119131400.GC20655@dhcp22.suse.cz> <20131119134007.GD20655@dhcp22.suse.cz> <alpine.DEB.2.02.1311192352070.20752@chino.kir.corp.google.com> <20131120152251.GA18809@dhcp22.suse.cz> <alpine.DEB.2.02.1311201917520.7167@chino.kir.corp.google.com>
+ <20131128115458.GK2761@dhcp22.suse.cz> <alpine.DEB.2.02.1312021504170.13465@chino.kir.corp.google.com> <alpine.DEB.2.02.1312032116440.29733@chino.kir.corp.google.com> <alpine.DEB.2.02.1312032117490.29733@chino.kir.corp.google.com>
+ <00000142be3633ba-2a459537-58fb-444b-a99f-33ff5e5b2aed-000000@email.amazonses.com> <alpine.DEB.2.02.1312041651080.13608@chino.kir.corp.google.com> <00000142c426b81a-45e6815b-bde4-483c-975e-ce1eea42a753-000000@email.amazonses.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=date:from:to:cc:subject:in-reply-to:message-id:references
          :user-agent:mime-version:content-type;
-        bh=eJnHx/mLy4vYLOZDKsU8vhEjHiuRNZMbSQV0Sj/civk=;
-        b=SzYzfqbGC9Aci8VrVQWK5gol+WhI3TseTGYQ7SRWQtuoIvsad963WSL3cjK5/HPCQn
-         FoY1bQMxL5JXDqTxzR+IJT4c5FCsGPH6xTy4v+XK8UZMuG+hpCBasMabhtLRQAfczRpW
-         MogAXsWcggkg3CYxeAknIEvvZrAyq244ExL3KjVk7L5v7BtLzoTVzfwnZ8o1GO/veBGv
-         +ZoC9A80PBzbc0hbJCQquGcJhQnEjtHopmhIB1FW2A20hG/ptyPJlS0S4ZeJ79rH5hVm
-         VRQZW29npx1kXgqomJ5IM/fA5qKjyPA4ow/wzuFDL0kVY+8R4Wy9/hEcCMTeWBIs5V0R
-         uGSg==
-In-Reply-To: <20131205025026.GA26777-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=qBOQETZr9qTJ1jmWdga9EFmveEncD0di/Taa6AlmRpQ=;
+        b=dME0tN4ZHuBhRiUqiJCViE6mS3Q7ESNl+6wB7Z9v8+lHjBUrHgPqJQFfLreXrZ+D9J
+         29RQeIO1I+YRtFkBQA8NGmh9mtKLHiTmc8BbRR0w4N06laQOF4R47JJNJKJtIGLPclHg
+         TB9skdkY4ousVKjgE+lzQC0vxBVVW8VONq4uI515ZiJ3pT+4X6A5vHm/G42QZEtYOcD9
+         jA4D9NolGscuxua2/28SSxILsk438jgkmS4xbCPEpLnvjr8/IyocmQzF2Q4IPkQ0ygbI
+         dhnClNUkjVB3+0Ue5O0RYeHf8RM+iaH+F4cq2VV+8OcKpxadSQhQk9q80j0GYD7uN1W5
+         No4A==
+In-Reply-To: <00000142c426b81a-45e6815b-bde4-483c-975e-ce1eea42a753-000000@email.amazonses.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Christoph Lameter <cl@linux.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Pekka Enberg <penberg@kernel.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On Wed, 4 Dec 2013, Tejun Heo wrote:
+On Thu, 5 Dec 2013, Christoph Lameter wrote:
 
-> Hello,
+> Specjbb? What does Java have to do with this?
+> Can you run the synthetic in kernel slab benchmark.
+> 
+> Like this one https://lkml.org/lkml/2009/10/13/459
 > 
 
-Tejun, how are you?
+We actually carry that in our production kernel and have updated it to 
+build on 3.11, I'll run it and netperf TCP_RR as well, thanks.
 
-> Umm.. without delving into details, aren't you basically creating a
-> memory cgroup inside a memory cgroup?  Doesn't sound like a
-> particularly well thought-out plan to me.
+> However, SLAB is still the allocator in use for RHEL which puts some
+> importance on still supporting SLAB.
 > 
 
-I agree that we wouldn't need such support if we are only addressing memcg 
-oom conditions.  We could do things like A/memory.limit_in_bytes == 128M 
-and A/b/memory.limit_in_bytes == 126MB and then attach the process waiting 
-on A/b/memory.oom_control to A and that would work perfect.
+Google also uses it exclusively so I'm definitely not saying that since 
+it's not default that we can ignore it.  I haven't seen any performance 
+regression in removing it, but I'll post the numbers on the slab benchmark 
+and netperf TCP_RR when I have them.
 
-However, we also need to discuss system oom handling.  We have an interest 
-in being able to allow userspace to handle system oom conditions since the 
-policy will differ depending on machine and we can't encode every possible 
-mechanism into the kernel.  For example, on system oom we want to kill a 
-process from the lowest priority top-level memcg.  We lack that ability 
-entirely in the kernel and since the sum of our top-level memcgs 
-memory.limit_in_bytes exceeds the amount of present RAM, we run into these 
-oom conditions a _lot_.
-
-So the first step, in my opinion, is to add a system oom notification on 
-the root memcg's memory.oom_control which currently allows registering an 
-eventfd() notification but never actually triggers.  I did that in a patch 
-and it is was merged into -mm but was pulled out for later discussion.
-
-Then, we need to ensure that the userspace that is registered to handle 
-such events and that is difficult to do when the system is oom.  The 
-proposal is to allow such processes, now marked as PF_OOM_HANDLER, to be 
-able to access pre-defined per-zone memory reserves in the page allocator.  
-The only special handling for PF_OOM_HANDLER in the page allocator itself 
-would be under such oom conditions (memcg oom conditions have no problem 
-allocating the memory, only charging it).  The amount of reserves would be 
-defined as memory.oom_reserve_in_bytes from within the root memcg as 
-defined by this patch, i.e. allow this amount of memory to be allocated in 
-the page allocator for PF_OOM_HANDLER below the per-zone min watermarks.
-
-This, I believe, is the cleanest interface for users who choose to use a 
-non-default policy by setting memory.oom_reserve_in_bytes and constrains 
-all of the code to memcg which you have to configure for such support.
-
-The system oom condition is not addressed in this patch series, although 
-the PF_OOM_HANDLER bit can be used for that purpose.  I didn't post that 
-patch because the notification on the root memcg's memory.oom_control in 
-such conditions is currently being debated, so we need to solve that issue 
-first.
-
-Your opinions and suggestions are more than helpful, thanks.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
