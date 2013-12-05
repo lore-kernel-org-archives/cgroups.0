@@ -1,95 +1,57 @@
 From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
- access to memory reserves
-Date: Wed, 4 Dec 2013 16:23:41 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1312041606260.6329@chino.kir.corp.google.com>
-References: <alpine.DEB.2.02.1311141525440.30112@chino.kir.corp.google.com> <20131118154115.GA3556@cmpxchg.org> <20131118165110.GE32623@dhcp22.suse.cz> <20131122165100.GN3556@cmpxchg.org> <alpine.DEB.2.02.1311261648570.21003@chino.kir.corp.google.com>
- <20131127163435.GA3556@cmpxchg.org> <20131202200221.GC5524@dhcp22.suse.cz> <20131202212500.GN22729@cmpxchg.org> <20131203120454.GA12758@dhcp22.suse.cz> <alpine.DEB.2.02.1312031544530.5946@chino.kir.corp.google.com> <20131204111318.GE8410@dhcp22.suse.cz>
+Subject: Re: [patch 3/8] mm, mempolicy: remove per-process flag
+Date: Wed, 4 Dec 2013 16:53:54 -0800 (PST)
+Message-ID: <alpine.DEB.2.02.1312041651080.13608@chino.kir.corp.google.com>
+References: <20131119131400.GC20655@dhcp22.suse.cz> <20131119134007.GD20655@dhcp22.suse.cz> <alpine.DEB.2.02.1311192352070.20752@chino.kir.corp.google.com> <20131120152251.GA18809@dhcp22.suse.cz> <alpine.DEB.2.02.1311201917520.7167@chino.kir.corp.google.com>
+ <20131128115458.GK2761@dhcp22.suse.cz> <alpine.DEB.2.02.1312021504170.13465@chino.kir.corp.google.com> <alpine.DEB.2.02.1312032116440.29733@chino.kir.corp.google.com> <alpine.DEB.2.02.1312032117490.29733@chino.kir.corp.google.com>
+ <00000142be3633ba-2a459537-58fb-444b-a99f-33ff5e5b2aed-000000@email.amazonses.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=date:from:to:cc:subject:in-reply-to:message-id:references
          :user-agent:mime-version:content-type;
-        bh=VZyssqb65JX8h9LfUMCfIgjhLWyorEdXqpJXaYvcpZ4=;
-        b=KAZD3smce+qiio6Mg25koIAPcw4XaUWulKfYycdt39dCLRgS9K5roRICUkltDTSPig
-         NLDfZmxOyebOK3ByHuA1cIQNzrvCpfeVZt94qqZSe6nvAEfV10LWP20B8ki08at/70Me
-         +dYwi8kycRVJSEEVezeM25FWPp9r8DGP42TiqhF5CUNi7GZi574Wlyf/5MvlL42QCrov
-         ppgNdpQyDAAJ1WCrnm+xoXGjVodG3IcP+6dXz2ZmRDV+5pqWzmVxY0kZzhypx4wvFsxh
-         Mni0johl+VqGfUGGV8igsOqks0YG8PyWeeLAcWAWwSjb6MfpxvrSPfxIqFpqoUH4QBMV
-         QIRA==
-In-Reply-To: <20131204111318.GE8410@dhcp22.suse.cz>
+        bh=ZgtjFfcFGFZnwGUmWI2QOnwtmJJZH5wogsXzsxNE9QY=;
+        b=GiIOnZPAgEbbg28kxvfQLZhOj2YD/PBD9spVNYTOa+fegY492X+5dArQ5+WN3wpWrC
+         hwlHT8b9vWfMbhDuDHu//t0sLQUiplUHWxU6Uj5zyGun17vbExiGvzq0t/XardcJN6ag
+         FzbGbZHyznLEn3hTvuWCcgx9ntABjV8Yx4Y/qtvnqjOgdU+6M9MZfILRuoWfNtKW5OjA
+         wxvaHOKzycdX/GMCF1VT2qVJUkt6AOBpnkbqgOKl+PAL8C1NLi/XSnjADNoQyvGMjpMm
+         u5/+oajEynqBI9e08sv/zJglqx10SVIKEgSrVGBIm5bSjLipGlmbhfMQAEcSxziFexPM
+         /xWA==
+In-Reply-To: <00000142be3633ba-2a459537-58fb-444b-a99f-33ff5e5b2aed-000000@email.amazonses.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+To: Christoph Lameter <cl@linux.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Pekka Enberg <penberg@kernel.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On Wed, 4 Dec 2013, Michal Hocko wrote:
+On Wed, 4 Dec 2013, Christoph Lameter wrote:
 
-> > I'll repeat: Section 10 of Documentation/cgroups/memory.txt specifies what 
-> > userspace should do when waking up; one of those options is not "check if 
-> > the memcg is still actually oom in a short period of time once a charging 
-> > task with a pending SIGKILL or in the exit path has been able to exit."
-> > Users of this interface typically also disable the memcg oom killer 
-> > through the same file, it's ludicrous to put the responsibility on 
-> > userspace to determine if the wakeup is actionable and requires it to 
-> > intervene in one of the methods listed in section 10.
+> > PF_MEMPOLICY is an unnecessary optimization for CONFIG_SLAB users.
+> > There's no significant performance degradation to checking
+> > current->mempolicy rather than current->flags & PF_MEMPOLICY in the
+> > allocation path, especially since this is considered unlikely().
 > 
-> David, you would need to show us that such a condition happens in real
-> loads often enough that such a tweak is worth it. Repeating that a race
-> exists doesn't help, because yeah it does and it will after your patch
-> as well. So show us that it happens considerably less often with this
-> check.
->  
+> The use of current->mempolicy increase the cache footprint since its in a
+> rarely used cacheline. This performance issue would occur when memory
+> policies are not used since that cacheline would then have to be touched
+> regardless of memory policies be in effect or not. PF_MEMPOLICY was used
+> to avoid touching the cacheline.
+> 
 
-Google depends on getting memory.oom_control notifications only when they 
-are actionable, which is exactly how Documentation/cgroups/memory.txt 
-describes how userspace should respond to such a notification.
+Right, but it turns out not to matter in practice.  As one of the non-
+default CONFIG_SLAB users, and PF_MEMPOLICY only does something for 
+CONFIG_SLAB, this patch tested to not show any degradation for specjbb 
+which stresses the allocator in terms of throughput:
 
-"Actionable" here means that the kernel has exhausted its capabilities of 
-allowing for future memory freeing, which is the entire premise of any oom 
-killer.
+	   with patch: 128761.54 SPECjbb2005 bops
+	without patch: 127576.65 SPECjbb2005 bops
 
-Giving a dying process or a process that is going to subsequently die 
-access to memory reserves is a capability the kernel users to ensure 
-progress is made in oom conditions.  It is not an exhaustion of 
-capabilities.
-
-Yes, we all know that subsequent to the userspace notification that memory 
-may be freed and the kill no longer becomes required.  There is nothing 
-that can be done about that, and it has never been implied that a memcg is 
-guaranteed to still be oom when the process wakes up.
-
-I'm referring to a siutation that can manifest in a number of ways: 
-coincidental process exit, coincidental process being killed, 
-VMPRESSURE_CRITICAL notification that results in a process being killed, 
-or memory threshold notification that results in a process being killed.  
-Regardless, we're talking about a situation where something is already 
-in the exit path or has been killed and is simply attempting to free its 
-memory.
-
-Such a process simply needs access to memory reserves to make progress and 
-free its memory as part of the exit path.  The process waiting on 
-memory.oom_control does _not_ need to do any of the actions mentioned in 
-Documentation/cgroups/memory.txt: reduce usage, enlarge the limit, kill a 
-process, or move a process with charge migration.
-
-It would be ridiculous to require anybody implementing such a process to 
-check if the oom condition still exists after a period of time before 
-taking such an action.  It would be required to wait for any possible 
-dying task or process with a pending SIGKILL to exit and there's no way to 
-determine how long is long enough to wait or that it will get woken up 
-again if it relies on a second signal for the same oom condition.  At the 
-same time, the action taken by such a process would still be as racy as it 
-would with the patch: we simply can't guarantee memory is not freed 
-immediately after we issue the SIGKILL.
-
-What we can control is that the kernel has exhausted its capabilities of 
-allowing for future memory freeing at the time of notification.  That's 
-the goal of the patch, at the same time making it consistent with the 
-documentation.
+These per-process flags are a scarce resource so I don't think 
+PF_MEMPOLICY warrants a bit when it's not shown to be advantageous in 
+configurations without mempolicy usage where it's intended to optimize, 
+especially for a non-default slab allocator.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
