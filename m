@@ -1,60 +1,72 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.14] cgroup: consolidate file handling
-Date: Thu, 5 Dec 2013 09:48:42 +0800
-Message-ID: <529FDB7A.3090303@huawei.com>
-References: <1385595759-17656-1-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [patch 7/8] mm, memcg: allow processes handling oom
+ notifications to access reserves
+Date: Wed, 4 Dec 2013 21:50:26 -0500
+Message-ID: <20131205025026.GA26777@htj.dyndns.org>
+References: <20131119134007.GD20655@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1311192352070.20752@chino.kir.corp.google.com>
+ <20131120152251.GA18809@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1311201917520.7167@chino.kir.corp.google.com>
+ <20131128115458.GK2761@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1312021504170.13465@chino.kir.corp.google.com>
+ <alpine.DEB.2.02.1312032116440.29733@chino.kir.corp.google.com>
+ <alpine.DEB.2.02.1312032118570.29733@chino.kir.corp.google.com>
+ <20131204054533.GZ3556@cmpxchg.org>
+ <alpine.DEB.2.02.1312041742560.20115@chino.kir.corp.google.com>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=yxo7notXnVTJTjAkmY8JcJk+EfhPq762xenQIC+8lFM=;
+        b=Ahz++RWaWMDqeHA4OmLQl1gsjQuIWJBQfiNjkFj/NTOuhuVTqS/DgID/T4yEKP/l7r
+         e3dQlFgNlW1aJv07Nf2eRwpsKvPMhY8k7/wBNJJ3tuZ1R3x/3zVRd1o8yaF1LZcLgc6f
+         BziiKDNZpCIqV/1YGHunF96jRjgb86jqP6s3cnUILuxnF+OXTbeSpEB4/MLAWEMcDWZ4
+         yqGmWyl3SwvcKT8C6GkCl8FmL/qYr8USz6jL6r8LneMd6nnRn4e3uelWLGZHnY/XI9vq
+         xq0Z1ilVmF36pgcycMBYK9xt+2yVArmM/9PB4sS1/8wdFqXeWWgeHH7M8KhGip9eIq3D
+         UzLw==
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.02.1312041742560.20115@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1385595759-17656-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: David Rientjes <rientjes@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Pekka Enberg <penberg@kernel.org>, Christoph Lameter <cl@linux-foundation.org>, Li Zefan <lizefan@huawei.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-> cgroup is scheduled to be converted to use kernfs, which is currently
-> in the process of being separated out of sysfs, so that, among other
-> things, cgroup core locking can be decoupled from vfs layer.  This
-> patchset cleans up and conslidates cgroup file handling to facilitate
-> such conversion.
-> 
-> There currently are a couple different rw paths including the ones
-> which don't impose any structure.  All existing users and expected
-> reasonable use cases can be served with standard seq_file interface
-> and buffered writes, which is what's provided by kernfs.
-> 
-> This patchset updates cgroup file handling so that the interface and
-> usages are more concise and there is single path for read and single
-> path for write, both of which closely map to the interface kernfs
-> provides.
-> 
-> This series ends up adding some amount of code which will be replaced
-> by kernfs but, overall, things get more streamlined and LOC is
-> reduced.
-> 
-> The following 12 patches are included in the series.
-> 
->  0001-cgroup-sched-convert-away-from-cftype-read_map.patch
->  0002-cpuset-convert-away-from-cftype-read.patch
->  0003-memcg-convert-away-from-cftype-read-and-read_map.patch
->  0004-netprio_cgroup-convert-away-from-cftype-read_map.patch
->  0005-hugetlb_cgroup-convert-away-from-cftype-read.patch
->  0006-cgroup-remove-cftype-read-read_map-and-write.patch
->  0007-cgroup-unify-cgroup_write_X64-and-cgroup_write_strin.patch
->  0008-cgroup-unify-read-path-so-that-seq_file-is-always-us.patch
->  0009-cgroup-generalize-cgroup_pidlist_open_file.patch
->  0010-cgroup-attach-cgroup_open_file-to-all-cgroup-files.patch
->  0011-cgroup-replace-cftype-read_seq_string-with-cftype-se.patch
->  0012-cgroup-unify-pidlist-and-other-file-handling.patch
-> 
+Hello,
 
-Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+On Wed, Dec 04, 2013 at 05:49:04PM -0800, David Rientjes wrote:
+> That's not what this series is addressing, though, and in fact it's quite 
+> the opposite.  It acknowledges that userspace oom handlers need to 
+> allocate and that anything else would be too difficult to maintain 
+> (thereby agreeing with the above), so we must set aside memory that they 
+> are exclusively allowed to access.  For the vast majority of users who 
+> will not use userspace oom handlers, they can just use the default value 
+> of memory.oom_reserve_in_bytes == 0 and they incur absolutely no side-
+> effects as a result of this series.
+
+Umm.. without delving into details, aren't you basically creating a
+memory cgroup inside a memory cgroup?  Doesn't sound like a
+particularly well thought-out plan to me.
+
+> For those who do use userspace oom handlers, like Google, this allows us 
+> to set aside memory to allow the userspace oom handlers to kill a process, 
+> dump the heap, send a signal, drop caches, etc. when waking up.
+
+Seems kinda obvious.  Put it in a separate cgroup?  You're basically
+saying it doesn't want to be under the same memory limit as the
+processes that it's looking over.  That's like the definition of being
+in a different cgroup.
+
+Thanks.
+
+-- 
+tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
