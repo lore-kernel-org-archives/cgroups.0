@@ -1,53 +1,160 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch 3/8] mm, mempolicy: remove per-process flag
-Date: Thu, 5 Dec 2013 15:53:35 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1312051550390.7717@chino.kir.corp.google.com>
-References: <20131119131400.GC20655@dhcp22.suse.cz> <20131119134007.GD20655@dhcp22.suse.cz> <alpine.DEB.2.02.1311192352070.20752@chino.kir.corp.google.com> <20131120152251.GA18809@dhcp22.suse.cz> <alpine.DEB.2.02.1311201917520.7167@chino.kir.corp.google.com>
- <20131128115458.GK2761@dhcp22.suse.cz> <alpine.DEB.2.02.1312021504170.13465@chino.kir.corp.google.com> <alpine.DEB.2.02.1312032116440.29733@chino.kir.corp.google.com> <alpine.DEB.2.02.1312032117490.29733@chino.kir.corp.google.com>
- <00000142be3633ba-2a459537-58fb-444b-a99f-33ff5e5b2aed-000000@email.amazonses.com> <alpine.DEB.2.02.1312041651080.13608@chino.kir.corp.google.com> <00000142c426b81a-45e6815b-bde4-483c-975e-ce1eea42a753-000000@email.amazonses.com>
+From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-3.13-fixes] cgroup: fix oops in cgroup init
+ failure path
+Date: Fri, 6 Dec 2013 11:02:07 +0400
+Message-ID: <52A1766F.5090808@parallels.com>
+References: <1386234006-1633-1-git-send-email-vdavydov@parallels.com> <20131205211814.GA29598@mtj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=qBOQETZr9qTJ1jmWdga9EFmveEncD0di/Taa6AlmRpQ=;
-        b=dME0tN4ZHuBhRiUqiJCViE6mS3Q7ESNl+6wB7Z9v8+lHjBUrHgPqJQFfLreXrZ+D9J
-         29RQeIO1I+YRtFkBQA8NGmh9mtKLHiTmc8BbRR0w4N06laQOF4R47JJNJKJtIGLPclHg
-         TB9skdkY4ousVKjgE+lzQC0vxBVVW8VONq4uI515ZiJ3pT+4X6A5vHm/G42QZEtYOcD9
-         jA4D9NolGscuxua2/28SSxILsk438jgkmS4xbCPEpLnvjr8/IyocmQzF2Q4IPkQ0ygbI
-         dhnClNUkjVB3+0Ue5O0RYeHf8RM+iaH+F4cq2VV+8OcKpxadSQhQk9q80j0GYD7uN1W5
-         No4A==
-In-Reply-To: <00000142c426b81a-45e6815b-bde4-483c-975e-ce1eea42a753-000000@email.amazonses.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christoph Lameter <cl@linux.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Pekka Enberg <penberg@kernel.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20131205211814.GA29598-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-On Thu, 5 Dec 2013, Christoph Lameter wrote:
+On 12/06/2013 01:18 AM, Tejun Heo wrote:
+> Hello, Vladimir.
+>
+> Thanks a lot for the report and fix; however, I really wanna make sure
+> that only online css's become visible, so I wrote up a different fix.
+> Can you please test this one?
 
-> Specjbb? What does Java have to do with this?
-> Can you run the synthetic in kernel slab benchmark.
-> 
-> Like this one https://lkml.org/lkml/2009/10/13/459
-> 
+Hi, Tejun
 
-We actually carry that in our production kernel and have updated it to 
-build on 3.11, I'll run it and netperf TCP_RR as well, thanks.
+This patch fixes this bug, but I have a couple of questions regarding it.
 
-> However, SLAB is still the allocator in use for RHEL which puts some
-> importance on still supporting SLAB.
-> 
+First, cgroup_load_subsys() also calls css_online(), and if it fails, it
+calls cgroup_unload_subsys() to rollback. The latter function executes
+the following command:
 
-Google also uses it exclusively so I'm definitely not saying that since 
-it's not default that we can ignore it.  I haven't seen any performance 
-regression in removing it, but I'll post the numbers on the slab benchmark 
-and netperf TCP_RR when I have them.
+    offline_css(cgroup_css(cgroup_dummy_top, ss));
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+But since we failed to online_css(), cgroup_css() will return NULL
+resulting in another oops.
+
+Second, it's not clear to me why we need the CSS_ONLINE flag at all if
+we never assign css's that we fail to online to a cgroup. AFAIU we will
+never see such css's, because in all places we call offline_css(),
+namely cgroup_destroy_locked() (via kill_css()) and
+cgroup_unload_subsys(), we use cgroup_css() which will return NULL for them.
+
+Third, please see commends inline.
+
+Thanks.
+
+> --- a/kernel/cgroup.c
+> +++ b/kernel/cgroup.c
+> @@ -4399,13 +4399,13 @@ static long cgroup_create(struct cgroup
+>  		css = ss->css_alloc(cgroup_css(parent, ss));
+>  		if (IS_ERR(css)) {
+>  			err = PTR_ERR(css);
+> -			goto err_free_all;
+> +			goto err_deactivate;
+>  		}
+>  		css_ar[ss->subsys_id] = css;
+>  
+>  		err = percpu_ref_init(&css->refcnt, css_release);
+>  		if (err)
+> -			goto err_free_all;
+> +			goto err_deactivate;
+>  
+>  		init_css(css, ss, cgrp);
+>  	}
+> @@ -4417,7 +4417,7 @@ static long cgroup_create(struct cgroup
+>  	 */
+>  	err = cgroup_create_file(dentry, S_IFDIR | mode, sb);
+>  	if (err < 0)
+> -		goto err_free_all;
+> +		goto err_deactivate;
+>  	lockdep_assert_held(&dentry->d_inode->i_mutex);
+>  
+>  	cgrp->serial_nr = cgroup_serial_nr_next++;
+> @@ -4445,6 +4445,9 @@ static long cgroup_create(struct cgroup
+>  		if (err)
+>  			goto err_destroy;
+
+Before we get here, we call
+
+    /* each css holds a ref to the cgroup's dentry and the parent css */
+    for_each_root_subsys(root, ss) {
+        struct cgroup_subsys_state *css = css_ar[ss->subsys_id];
+
+        dget(dentry);
+        css_get(css->parent);
+    }
+
+If we fail to online a css, we will only call
+
+    ss->css_free(css);
+
+on it skipping css_put() on parent.
+
+css_put() is called on parent in css_release() on normal destroy path.
+
+>  
+> +		/* @css successfully attached, now owned by @cgrp */
+> +		css_ar[ss->subsys_id] = NULL;
+> +
+>  		if (ss->broken_hierarchy && !ss->warned_broken_hierarchy &&
+>  		    parent->parent) {
+>  			pr_warning("cgroup: %s (%d) created nested cgroup for controller \"%s\" which has incomplete hierarchy support. Nested cgroups may change behavior in the future.\n",
+> @@ -4470,15 +4473,7 @@ static long cgroup_create(struct cgroup
+>  
+>  	return 0;
+>  
+> -err_free_all:
+> -	for_each_root_subsys(root, ss) {
+> -		struct cgroup_subsys_state *css = css_ar[ss->subsys_id];
+> -
+> -		if (css) {
+> -			percpu_ref_cancel_init(&css->refcnt);
+> -			ss->css_free(css);
+> -		}
+> -	}
+> +err_deactivate:
+>  	mutex_unlock(&cgroup_mutex);
+>  	/* Release the reference count that we took on the superblock */
+>  	deactivate_super(sb);
+> @@ -4488,12 +4483,21 @@ err_free_name:
+>  	kfree(rcu_dereference_raw(cgrp->name));
+>  err_free_cgrp:
+>  	kfree(cgrp);
+> -	return err;
+> +	goto out_free_css_ar;
+>  
+>  err_destroy:
+>  	cgroup_destroy_locked(cgrp);
+>  	mutex_unlock(&cgroup_mutex);
+>  	mutex_unlock(&dentry->d_inode->i_mutex);
+> +out_free_css_ar:
+> +	for_each_root_subsys(root, ss) {
+> +		struct cgroup_subsys_state *css = css_ar[ss->subsys_id];
+> +
+> +		if (css) {
+> +			percpu_ref_cancel_init(&css->refcnt);
+> +			ss->css_free(css);
+> +		}
+> +	}
+>  	return err;
+>  }
+>  
+> @@ -4650,10 +4654,14 @@ static int cgroup_destroy_locked(struct
+>  	/*
+>  	 * Initiate massacre of all css's.  cgroup_destroy_css_killed()
+>  	 * will be invoked to perform the rest of destruction once the
+> -	 * percpu refs of all css's are confirmed to be killed.
+> +	 * percpu refs of all css's are confirmed to be killed.  Not all
+> +	 * css's may be present if @cgrp failed init half-way.
+>  	 */
+> -	for_each_root_subsys(cgrp->root, ss)
+> -		kill_css(cgroup_css(cgrp, ss));
+> +	for_each_root_subsys(cgrp->root, ss) {
+> +		struct cgroup_subsys_state *css = cgroup_css(cgrp, ss);
+> +		if (css)
+> +			kill_css(cgroup_css(cgrp, ss));
+> +	}
+>  
+>  	/*
+>  	 * Mark @cgrp dead.  This prevents further task migration and child
