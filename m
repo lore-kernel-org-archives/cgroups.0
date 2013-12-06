@@ -1,122 +1,170 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [patch 7/8] mm, memcg: allow processes handling oom
- notifications to access reserves
-Date: Fri, 6 Dec 2013 14:01:05 -0500
-Message-ID: <20131206190105.GE13373@htj.dyndns.org>
-References: <20131120152251.GA18809@dhcp22.suse.cz>
- <alpine.DEB.2.02.1311201917520.7167@chino.kir.corp.google.com>
- <20131128115458.GK2761@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312021504170.13465@chino.kir.corp.google.com>
- <alpine.DEB.2.02.1312032116440.29733@chino.kir.corp.google.com>
- <alpine.DEB.2.02.1312032118570.29733@chino.kir.corp.google.com>
- <20131204054533.GZ3556@cmpxchg.org>
- <alpine.DEB.2.02.1312041742560.20115@chino.kir.corp.google.com>
- <20131205025026.GA26777@htj.dyndns.org>
- <alpine.DEB.2.02.1312051537550.7717@chino.kir.corp.google.com>
+Subject: [PATCH cgroup/for-3.13-fixes] cgroup: fix cgroup_create() error
+	handling path
+Date: Fri, 6 Dec 2013 15:15:23 -0500
+Message-ID: <20131206201523.GG13373@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=Syog2UL7S8P3ktnJzoXBUkEBzvfemn/Ci54JvZhci5U=;
-        b=USXs0cxFYixkrR4joI0hPKeMBzZY7eTAvDF4S5QELkfPIvAihSS28dxfh0eWOAJx6o
-         GACZ0cbISsCmrM9J79aJRThMZjyF9d2fxQrUj3zkOJK9CwlWg8/K3oF9CCJKU6TlOy3u
-         yTGKqgiSrTpFjx9YpOwIEsdX4c1C8LX1Dtf93CGdCLoqqpfzdix6siXuvml4Ik1ZY/l8
-         xXNpdFfBclmoYst+FrwQPywtaMzZjD7Dw8WYo8JKaameDNPAKHiRwdH1nxsNU7Ylp51o
-         4hKRGgEW8Ej9mW52qKPbwxoobvMSazgO3r78XJJPdMJr+VY6qYXK8Th+vMc2mj6ScwJZ
-         pHzg==
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1312051537550.7717-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+	:content-disposition:user-agent;
+	bh=S70GeTDntRlO0J/E5VWcXObk7+mRNZCma6FCPJweLZc=;
+	b=JRW2B446kNNU6IULXNuoFbd9412O82nA2ZAB0J79/gKelBmD+gMzveoj/eVGyEWygB
+	65LQv8WCX0zPp+t8hc2lF87anvAxD93yGhsbq7LmuGniRToZgas7HNQHyc2H0qmjcrCh
+	avPW/0bTss7zAIntm80KTXqplwdxqdBLIhR9FneQUGuWVNYNt4ZMEqhG7bi3vFyqE0NO
+	/I3DugbrBuBLc4Q5fp+QbK6JPSGc//wXE+UDuhxT1bVAC2kpkv7qHF7f4qyPykgXfRFA
+	hpruyozVqV/Wco/n+clYl/OR4uWpkRaVn7QppgzW+G+LhwxWGBS1sQGDRL57YPpmZq1B
+	9+Vg==
+Content-Disposition: inline
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Yo, David.
+Hello,
 
-On Thu, Dec 05, 2013 at 03:49:57PM -0800, David Rientjes wrote:
-> Tejun, how are you?
+This patch was posted back in Aug, got reviewed and acked.
+Unfortunately, I somehow forgot to apply it and Vladimir reported the
+same problem.  Refreshed the patch, updated commit message and
+committed to libata/for-3.13-fixes.  The original posting is
 
-Doing pretty good.  How's yourself? :)
+ http://permalink.gmane.org/gmane.linux.kernel.containers/26804
 
-> > Umm.. without delving into details, aren't you basically creating a
-> > memory cgroup inside a memory cgroup?  Doesn't sound like a
-> > particularly well thought-out plan to me.
-> 
-> I agree that we wouldn't need such support if we are only addressing memcg 
-> oom conditions.  We could do things like A/memory.limit_in_bytes == 128M 
-> and A/b/memory.limit_in_bytes == 126MB and then attach the process waiting 
-> on A/b/memory.oom_control to A and that would work perfect.
+Thanks.
 
-Or even just create a separate parallel cgroup A/memory.limit_in_bytes
-== 126M A-oom/memory.limit_in_bytes = 2M and avoid the extra layer of
-nesting.
+------ 8< ------
+From 266ccd505e8acb98717819cef9d91d66c7b237cc Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Fri, 6 Dec 2013 15:07:32 -0500
 
-> However, we also need to discuss system oom handling.  We have an interest 
-> in being able to allow userspace to handle system oom conditions since the 
-> policy will differ depending on machine and we can't encode every possible 
-> mechanism into the kernel.  For example, on system oom we want to kill a 
-> process from the lowest priority top-level memcg.  We lack that ability 
-> entirely in the kernel and since the sum of our top-level memcgs 
-> memory.limit_in_bytes exceeds the amount of present RAM, we run into these 
-> oom conditions a _lot_.
-> 
-> So the first step, in my opinion, is to add a system oom notification on 
-> the root memcg's memory.oom_control which currently allows registering an 
-> eventfd() notification but never actually triggers.  I did that in a patch 
-> and it is was merged into -mm but was pulled out for later discussion.
+ae7f164a09 ("cgroup: move cgroup->subsys[] assignment to
+online_css()") moved cgroup->subsys[] assignements later in
+cgroup_create() but didn't update error handling path accordingly
+leading to the following oops and leaking later css's after an
+online_css() failure.  The oops is from cgroup destruction path being
+invoked on the partially constructed cgroup which is not ready to
+handle empty slots in cgrp->subsys[] array.
 
-Hmmm... this seems to be a different topic.  You're saying that it'd
-be beneficial to add userland oom handling at the sytem level and if
-that happens having per-memcg oom reserve would be consistent with the
-system-wide one, right?  While I can see some merit in that argument,
-the whole thing is predicated on system level userland oom handling
-being justified && even then I'm not quite sure whether "consistent
-interface" is enough to have oom reserve in all memory cgroups.  It
-feels a bit backwards because, here, the root memcg is the exception,
-not the other way around.  Root is the only one which can't put oom
-handler in a separate cgroup, so it could make more sense to special
-case that rather than spreading the interface for global userland oom
-to everyone else.
+  BUG: unable to handle kernel NULL pointer dereference at 0000000000000008
+  IP: [<ffffffff810eeaa8>] cgroup_destroy_locked+0x118/0x2f0
+  PGD a780a067 PUD aadbe067 PMD 0
+  Oops: 0000 [#1] SMP
+  Modules linked in:
+  CPU: 6 PID: 7360 Comm: mkdir Not tainted 3.13.0-rc2+ #69
+  Hardware name:
+  task: ffff8800b9dbec00 ti: ffff8800a781a000 task.ti: ffff8800a781a000
+  RIP: 0010:[<ffffffff810eeaa8>]  [<ffffffff810eeaa8>] cgroup_destroy_locked+0x118/0x2f0
+  RSP: 0018:ffff8800a781bd98  EFLAGS: 00010282
+  RAX: ffff880586903878 RBX: ffff880586903800 RCX: ffff880586903820
+  RDX: ffff880586903860 RSI: ffff8800a781bdb0 RDI: ffff880586903820
+  RBP: ffff8800a781bde8 R08: ffff88060e0b8048 R09: ffffffff811d7bc1
+  R10: 000000000000008c R11: 0000000000000001 R12: ffff8800a72286c0
+  R13: 0000000000000000 R14: ffffffff81cf7a40 R15: 0000000000000001
+  FS:  00007f60ecda57a0(0000) GS:ffff8806272c0000(0000) knlGS:0000000000000000
+  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+  CR2: 0000000000000008 CR3: 00000000a7a03000 CR4: 00000000000007e0
+  Stack:
+   ffff880586903860 ffff880586903910 ffff8800a72286c0 ffff880586903820
+   ffffffff81cf7a40 ffff880586903800 ffff88060e0b8018 ffffffff81cf7a40
+   ffff8800b9dbec00 ffff8800b9dbf098 ffff8800a781bec8 ffffffff810ef5bf
+  Call Trace:
+   [<ffffffff810ef5bf>] cgroup_mkdir+0x55f/0x5f0
+   [<ffffffff811c90ae>] vfs_mkdir+0xee/0x140
+   [<ffffffff811cb07e>] SyS_mkdirat+0x6e/0xf0
+   [<ffffffff811c6a19>] SyS_mkdir+0x19/0x20
+   [<ffffffff8169e569>] system_call_fastpath+0x16/0x1b
 
-But, before that, system level userland OOM handling sounds scary to
-me.  I thought about userland OOM handling for memcgs and it does make
-some sense.  ie. there is a different action that userland oom handler
-can take which kernel oom handler can't - it can expand the limit of
-the offending cgroup, effectively using OOM handler as a sizing
-estimator.  I'm not sure whether that in itself is a good idea but
-then again it might not be possible to clearly separate out sizing
-from oom conditions.
+This patch moves reference bumping inside online_css() loop, clears
+css_ar[] as css's are brought online successfully, and updates
+err_destroy path so that either a css is fully online and destroyed by
+cgroup_destroy_locked() or the error path frees it.  This creates a
+duplicate css free logic in the error path but it will be cleaned up
+soon.
 
-Anyways, but for system level OOM handling, there's no other action
-userland handler can take.  It's not like the OOM handler paging the
-admin to install more memory is a reasonable mode of operation to
-support.  The *only* action userland OOM handler can take is killing
-something.  Now, if that's the case and we have kernel OOM handler
-anyway, I think the best course of action is improving kernel OOM
-handler and teach it to make the decisions that the userland handler
-would consider good.  That should be doable, right?
+v2: Li pointed out that cgroup_destroy_locked() would do NULL-deref if
+    invoked with a cgroup which doesn't have all css's populated.
+    Update cgroup_destroy_locked() so that it skips NULL css's.
 
-The thing is OOM handling in userland is an inherently fragile thing
-and it can *never* replace kernel OOM handling.  You may reserve any
-amount of memory you want but there would still be cases that it may
-fail.  It's not like we have owner-based allocation all through the
-kernel or are willing to pay overhead for such thing.  Even if that
-part can be guaranteed somehow (no idea how), the kernel still can
-NEVER trust the userland OOM handler.  No matter what we do, we need a
-kernel OOM handler with no resource dependency.
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Reported-by: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # v3.12+
+---
+ kernel/cgroup.c | 31 +++++++++++++++++++++----------
+ 1 file changed, 21 insertions(+), 10 deletions(-)
 
-So, there isn't anything userland OOM handler can inherently do better
-and we can't do away with kernel handler no matter what.  On both
-accounts, it seems like the best course of action is making
-system-wide kernel OOM handler to make better decisions if possible at
-all.  If that's impossible, let's first think about why that's the
-case before hastly opening this new can of worms.
-
-Thanks!
-
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 8b729c2..bcb1755 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -4426,14 +4426,6 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+ 	list_add_tail_rcu(&cgrp->sibling, &cgrp->parent->children);
+ 	root->number_of_cgroups++;
+ 
+-	/* each css holds a ref to the cgroup's dentry and the parent css */
+-	for_each_root_subsys(root, ss) {
+-		struct cgroup_subsys_state *css = css_ar[ss->subsys_id];
+-
+-		dget(dentry);
+-		css_get(css->parent);
+-	}
+-
+ 	/* hold a ref to the parent's dentry */
+ 	dget(parent->dentry);
+ 
+@@ -4445,6 +4437,13 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+ 		if (err)
+ 			goto err_destroy;
+ 
++		/* each css holds a ref to the cgroup's dentry and parent css */
++		dget(dentry);
++		css_get(css->parent);
++
++		/* mark it consumed for error path */
++		css_ar[ss->subsys_id] = NULL;
++
+ 		if (ss->broken_hierarchy && !ss->warned_broken_hierarchy &&
+ 		    parent->parent) {
+ 			pr_warning("cgroup: %s (%d) created nested cgroup for controller \"%s\" which has incomplete hierarchy support. Nested cgroups may change behavior in the future.\n",
+@@ -4491,6 +4490,14 @@ err_free_cgrp:
+ 	return err;
+ 
+ err_destroy:
++	for_each_root_subsys(root, ss) {
++		struct cgroup_subsys_state *css = css_ar[ss->subsys_id];
++
++		if (css) {
++			percpu_ref_cancel_init(&css->refcnt);
++			ss->css_free(css);
++		}
++	}
+ 	cgroup_destroy_locked(cgrp);
+ 	mutex_unlock(&cgroup_mutex);
+ 	mutex_unlock(&dentry->d_inode->i_mutex);
+@@ -4652,8 +4659,12 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 	 * will be invoked to perform the rest of destruction once the
+ 	 * percpu refs of all css's are confirmed to be killed.
+ 	 */
+-	for_each_root_subsys(cgrp->root, ss)
+-		kill_css(cgroup_css(cgrp, ss));
++	for_each_root_subsys(cgrp->root, ss) {
++		struct cgroup_subsys_state *css = cgroup_css(cgrp, ss);
++
++		if (css)
++			kill_css(css);
++	}
+ 
+ 	/*
+ 	 * Mark @cgrp dead.  This prevents further task migration and child
 -- 
-tejun
+1.8.4.2
