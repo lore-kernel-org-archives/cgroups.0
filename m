@@ -1,44 +1,28 @@
-From: Joonsoo Kim <iamjoonsoo.kim@lge.com>
-Subject: Re: [patch 2/2] fs: buffer: move allocation failure loop into the
- allocator
-Date: Fri, 6 Dec 2013 17:57:30 +0900
-Message-ID: <20131206085730.GB24706@lge.com>
-References: <1381265890-11333-1-git-send-email-hannes@cmpxchg.org>
- <1381265890-11333-2-git-send-email-hannes@cmpxchg.org>
- <20131203165910.54d6b4724a1f3e329af52ac6@linux-foundation.org>
- <20131204015218.GA19709@lge.com>
- <20131203180717.94c013d1.akpm@linux-foundation.org>
- <00000142be2f1de0-764bb035-adbc-4367-b2b4-bf05498510a6-000000@email.amazonses.com>
- <CAAmzW4PwLhMd61ksOktdg=rkj0xHsSGt2Wm_za2Adjh4+tss-g@mail.gmail.com>
- <00000142be753b07-aa0e2354-6704-41f8-8e11-3c856a186af5-000000@email.amazonses.com>
- <20131205084441.GA5561@lge.com>
- <00000142c4192155-e27322df-ba1a-4af8-98c3-f2b15dd70d13-000000@email.amazonses.com>
+From: Christoph Lameter <cl@linux.com>
+Subject: Re: [patch 3/8] mm, mempolicy: remove per-process flag
+Date: Fri, 6 Dec 2013 14:46:47 +0000
+Message-ID: <00000142c8600e2a-1c73cb76-2ba9-4644-a714-1c8d43c48c23-000000@email.amazonses.com>
+References: <20131119131400.GC20655@dhcp22.suse.cz> <20131119134007.GD20655@dhcp22.suse.cz> <alpine.DEB.2.02.1311192352070.20752@chino.kir.corp.google.com> <20131120152251.GA18809@dhcp22.suse.cz> <alpine.DEB.2.02.1311201917520.7167@chino.kir.corp.google.com>
+ <20131128115458.GK2761@dhcp22.suse.cz> <alpine.DEB.2.02.1312021504170.13465@chino.kir.corp.google.com> <alpine.DEB.2.02.1312032116440.29733@chino.kir.corp.google.com> <alpine.DEB.2.02.1312032117490.29733@chino.kir.corp.google.com>
+ <00000142be3633ba-2a459537-58fb-444b-a99f-33ff5e5b2aed-000000@email.amazonses.com> <alpine.DEB.2.02.1312041651080.13608@chino.kir.corp.google.com> <00000142c426b81a-45e6815b-bde4-483c-975e-ce1eea42a753-000000@email.amazonses.com>
+ <alpine.DEB.2.02.1312051550390.7717@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <00000142c4192155-e27322df-ba1a-4af8-98c3-f2b15dd70d13-000000@email.amazonses.com>
+In-Reply-To: <alpine.DEB.2.02.1312051550390.7717@chino.kir.corp.google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christoph Lameter <cl@linux.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, azurIt <azurit@pobox.sk>, Linux Memory Management List <linux-mm@kvack.org>, cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christian Casteyde <casteyde.christian@free.fr>, Pekka Enberg <penberg@kernel.org>
+To: David Rientjes <rientjes@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Pekka Enberg <penberg@kernel.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On Thu, Dec 05, 2013 at 06:50:50PM +0000, Christoph Lameter wrote:
-> On Thu, 5 Dec 2013, Joonsoo Kim wrote:
-> 
-> > I could try. But my trial would not figure this out, since my machine has
-> > just 4 cores which normally cannot produce heavy contention.
-> 
-> I think that is fine for starters. Once we know what to look for we can
-> find machines to test specific scenarios.
-> 
-> > Anyway, could you tell me where I can find your synthetic benchmarks for slab?
-> 
-> https://lkml.org/lkml/2009/10/13/459
+On Thu, 5 Dec 2013, David Rientjes wrote:
 
-Okay.
-Thanks.
+> We actually carry that in our production kernel and have updated it to
+> build on 3.11, I'll run it and netperf TCP_RR as well, thanks.
+
+If you get around it then please post the updated version. Maybe we can
+get that merged at some point. Keeps floating around after all.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
