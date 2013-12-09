@@ -1,105 +1,120 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
- access to memory reserves
-Date: Mon, 9 Dec 2013 13:48:40 +0100
-Message-ID: <20131209124840.GC3597@dhcp22.suse.cz>
-References: <20131118165110.GE32623@dhcp22.suse.cz>
- <20131122165100.GN3556@cmpxchg.org>
- <alpine.DEB.2.02.1311261648570.21003@chino.kir.corp.google.com>
- <20131127163435.GA3556@cmpxchg.org>
- <20131202200221.GC5524@dhcp22.suse.cz>
- <20131202212500.GN22729@cmpxchg.org>
- <20131203120454.GA12758@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312031544530.5946@chino.kir.corp.google.com>
- <20131204111318.GE8410@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312041606260.6329@chino.kir.corp.google.com>
+Subject: Re: [PATCH] memcg: remove KMEM_ACCOUNTED_ACTIVATED
+Date: Mon, 9 Dec 2013 16:22:56 +0100
+Message-ID: <20131209152256.GD3597@dhcp22.suse.cz>
+References: <1385989693-28788-1-git-send-email-vdavydov@parallels.com>
+ <20131202181501.GA5524@dhcp22.suse.cz>
+ <CAA6-i6rWsZNQmFY5L-=yc6TaTGyg4hP4qn9gMZVsu8wWJ=1ywg@mail.gmail.com>
+ <529CDDB3.3090301@parallels.com>
+ <CAA6-i6q+WooWMSbJwLS=ByVu=fgAQuep99iP7tAXiuLABu2gVA@mail.gmail.com>
+ <529D9100.4070207@parallels.com>
+ <CAA6-i6q2viRkbjYOHcoiCHgvdfbfo-4j0k9gj9AA4SH1YToqVg@mail.gmail.com>
+ <529EDB41.8030505@parallels.com>
+ <CAA6-i6o+ZuM_fq+PdQJZ40S0d7K35cBvbTELg49+SgLKP5F0xA@mail.gmail.com>
+ <529F1883.3030907@parallels.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1312041606260.6329-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
+In-Reply-To: <529F1883.3030907-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-On Wed 04-12-13 16:23:41, David Rientjes wrote:
-> On Wed, 4 Dec 2013, Michal Hocko wrote:
+On Wed 04-12-13 15:56:51, Vladimir Davydov wrote:
+> On 12/04/2013 02:08 PM, Glauber Costa wrote:
+> >>> Could you do something clever with just one flag? Probably yes. But I
+> >>> doubt it would
+> >>> be that much cleaner, this is just the way that patching sites work.
+> >> Thank you for spending your time to listen to me.
+> >>
+> > Don't worry! I thank you for carrying this forward.
+> >
+> >> Let me try to explain what is bothering me.
+> >>
+> >> We have two state bits for each memcg, 'active' and 'activated'. There
+> >> are two scenarios where the bits can be modified:
+> >>
+> >> 1) The kmem limit is set on a memcg for the first time -
+> >> memcg_update_kmem_limit(). Here we call memcg_update_cache_sizes(),
+> >> which sets the 'activated' bit on success, then update static branching,
+> >> then set the 'active' bit. All three actions are done atomically in
+> >> respect to other tasks setting the limit due to the set_limit_mutex.
+> >> After both bits are set, they never get cleared for the memcg.
+> >>
+> > So far so good. But again, note how you yourself describe it:
+> > the cations are done atomically  *in respect to other tasks setting the limit*
+> >
+> > But there are also tasks that are running its courses naturally and
+> > just allocating
+> > memory. For those, some call sites will be on, some will be off. We need to make
+> > sure that *none* of them uses the patched site until *all* of them are patched.
+> > This has nothing to do with updates, this is all about the readers.
+> >
+> >> 2) When a subgroup of a kmem-active cgroup is created -
+> >> memcg_propagate_kmem(). Here we copy kmem_account_flags from the parent,
+> >> then increase static branching refcounter, then call
+> >> memcg_update_cache_sizes() for the new memcg, which may clear the
+> >> 'activated' bit on failure. After successful execution, the state bits
+> >> never get cleared for the new memcg.
+> >>
+> >> In scenario 2 there is no need bothering about the flags setting order,
+> >> because we don't have any tasks in the cgroup yet - the tasks can be
+> >> moved in only after css_online finishes when we have both of the bits
+> >> set and the static branching enabled. Actually, we already do not bother
+> >> about it, because we have both bits set before the cgroup is fully
+> >> initialized (memcg_update_cache_sizes() is called).
+> >>
+> > Yes, after the first cgroup is set none of that matters. But it is just easier
+> > and less error prone just to follow the same path every time. As I have said,
+> > if you can come up with a more clever way to deal with the problem above
+> > that doesn't involve the double flag - and you can prove it works - I
+> > am definitely
+> > fine with it. But this is subtle code, and in the past - Michal can
+> > attest this - we've
+> > changed this being sure it would work just to see it explode in our faces.
+> >
+> > So although I am willing to review every patch for correctness on that
+> > front (I never
+> > said I liked the 2-flags scheme...), unless you have a bug or real
+> > problem on it,
+> > I would advise against changing it if its just to make it more readable.
+> >
+> > But again, don't take me too seriously on this. If you and Michal think you can
+> > come up with something better, I'm all for it.
 > 
-> > > I'll repeat: Section 10 of Documentation/cgroups/memory.txt specifies what 
-> > > userspace should do when waking up; one of those options is not "check if 
-> > > the memcg is still actually oom in a short period of time once a charging 
-> > > task with a pending SIGKILL or in the exit path has been able to exit."
-> > > Users of this interface typically also disable the memcg oom killer 
-> > > through the same file, it's ludicrous to put the responsibility on 
-> > > userspace to determine if the wakeup is actionable and requires it to 
-> > > intervene in one of the methods listed in section 10.
-> > 
-> > David, you would need to show us that such a condition happens in real
-> > loads often enough that such a tweak is worth it. Repeating that a race
-> > exists doesn't help, because yeah it does and it will after your patch
-> > as well. So show us that it happens considerably less often with this
-> > check.
-> >  
+> All right, I finally get you :-)
 > 
-> Google depends on getting memory.oom_control notifications only when they 
-> are actionable, which is exactly how Documentation/cgroups/memory.txt 
-> describes how userspace should respond to such a notification.
+> Although I still don't think we need the second flag, I now understand
+> that it's better not to change the code that works fine especially the
+> change does not make it neither more readable nor more effective. Since
+> I can be mistaken about the flags usage (it's by far not unlikely), it's
+> better to leave it as is rather than being at risk of catching spurious
+> hangs that might be caused by this modification.
 > 
-> "Actionable" here means that the kernel has exhausted its capabilities of 
-> allowing for future memory freeing, which is the entire premise of any oom 
-> killer.
-> 
-> Giving a dying process or a process that is going to subsequently die 
-> access to memory reserves is a capability the kernel users to ensure 
-> progress is made in oom conditions.  It is not an exhaustion of 
-> capabilities.
-> 
-> Yes, we all know that subsequent to the userspace notification that memory 
-> may be freed and the kill no longer becomes required.  There is nothing 
-> that can be done about that, and it has never been implied that a memcg is 
-> guaranteed to still be oom when the process wakes up.
-> 
-> I'm referring to a siutation that can manifest in a number of ways: 
-> coincidental process exit, coincidental process being killed, 
-> VMPRESSURE_CRITICAL notification that results in a process being killed, 
-> or memory threshold notification that results in a process being killed.  
-> Regardless, we're talking about a situation where something is already 
-> in the exit path or has been killed and is simply attempting to free its 
-> memory.
+> Thanks for the detailed explanation!
 
-You have already mentioned that. Several times in fact. And I do
-understand what you are saying. You are just not backing your claims
-with anything that would convince us that what you are trying to solve
-is an issue in the real life. So show us it is real, please.
+It would be really great if we could push some of that into the
+comments, please?
 
-> Such a process simply needs access to memory reserves to make progress and 
-> free its memory as part of the exit path.  The process waiting on 
-> memory.oom_control does _not_ need to do any of the actions mentioned in 
-> Documentation/cgroups/memory.txt: reduce usage, enlarge the limit, kill a 
-> process, or move a process with charge migration.
-> 
-> It would be ridiculous to require anybody implementing such a process to 
-> check if the oom condition still exists after a period of time before 
-> taking such an action.
+Anyway, reading this thread again, I guess I finally got what you meant
+Vladimir.
+You are basically saying that the two stage enabling can be done
+by static_key_slow_inc in the first step and memcg_kmem_set_active
+in the second step without an additional flag.
+Assuming that the writers cannot race (they cannot currently because
+they are linearized by set_limit_mutex and memcg_create_mutex) and
+readers (charging paths) are _always_ checking the static key before
+checking active flags?
 
-Why would you consider that ridiculous? If your memcg is oom already
-then waiting few seconds to let racing tasks finish doesn't sound that
-bad to me.
+I guess this should work. But it would require a deep audit that the
+above is correct in all places. For example we do not bother to check
+static key during offline/free paths. I guess it should be harmless as
+is but who knows...
 
-> It would be required to wait for any possible 
-> dying task or process with a pending SIGKILL to exit and there's no way to 
-> determine how long is long enough to wait or that it will get woken up 
-> again if it relies on a second signal for the same oom condition.  At the 
-> same time, the action taken by such a process would still be as racy as it 
-> would with the patch: we simply can't guarantee memory is not freed 
-> immediately after we issue the SIGKILL.
-> 
-> What we can control is that the kernel has exhausted its capabilities of 
-> allowing for future memory freeing at the time of notification.  That's 
-> the goal of the patch, at the same time making it consistent with the 
-> documentation.
+I would rather see more detailed description of the current state first.
 
 -- 
 Michal Hocko
