@@ -1,8 +1,8 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
  access to memory reserves
-Date: Mon, 9 Dec 2013 17:51:42 -0500
-Message-ID: <20131209225142.GK21724@cmpxchg.org>
+Date: Mon, 9 Dec 2013 18:05:27 -0500
+Message-ID: <20131209230527.GL21724@cmpxchg.org>
 References: <alpine.DEB.2.02.1311261648570.21003@chino.kir.corp.google.com>
  <20131127163435.GA3556@cmpxchg.org>
  <20131202200221.GC5524@dhcp22.suse.cz>
@@ -14,18 +14,18 @@ References: <alpine.DEB.2.02.1311261648570.21003@chino.kir.corp.google.com>
  <20131209124840.GC3597@dhcp22.suse.cz>
  <alpine.DEB.2.02.1312091328550.11026@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=n43j/Z6bA6y04Sz74SiCL/8bx9/OAUPieIkvD1SRNxo=;
-	b=EH8WXUaq3JSWu7nARnrLGpo47/bd8cH1NI8kOYBr3M3BewqdfqCGIOyDmmQU+9jtSVZEi+96rNSwGzuY/QDrBUxhH9unEGcPNIm0Ay0KHzCNA1zUBeVHsiUo/eHlksspVe/Zg4zbdSLIZRVMJynGnyNggSVBUTO2tM4aRu4Vfxk=;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=r1O+pUEHUf/bInL0k0jBqinyo3ksGHAcjY4BqUqVs7k=;
+	b=maWDzsqVZiy68Zu9NrK5jsBAkNge52zE9imTLmxTkfKHkv2vS7d7xoT0In3qBFsTx+AI4NPtBXplMKjawckg9Px3L2zBRsjTlTidQfs5htSSTyd89dwnOuSnx5r63/bzEe7uShODV2NMoxDDM8isOWaUIPvp/5ZcjSIwjfXvVfE=;
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1312091328550.11026-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <alpine.DEB.2.02.1312091328550.11026@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Rientjes <rientjes@google.com>
+Cc: Michal Hocko <mhocko@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
 On Mon, Dec 09, 2013 at 01:46:16PM -0800, David Rientjes wrote:
 > On Mon, 9 Dec 2013, Michal Hocko wrote:
@@ -76,45 +76,35 @@ reclaim.  Should we be checking for PF_EXITING too?
 > threads that were killed as part of the oom killer SIGKILL but weren't the 
 > thread lucky enough to get TIF_MEMDIE set and they were in the allocation 
 > path.
-
-
-
-> 
+>
 > Are you asking me to patch our kernel, get it rolled out, and plot a graph 
 > to show how often it gets triggered over time in our datacenters and that 
 > it causes us to get unnecessary oom kill notifications?
-> 
-> I'm trying to support you in any way I can by giving you the information 
-> you need, but in all honesty this seems pretty trivial and obvious to 
-> understand.  I'm really quite stunned at this thread.  What exactly are 
-> you arguing in the other direction for?  What does giving an oom 
-> notification before allowing exiting processes to free its memory so the 
-> memcg or system is no longer oom do?  Why can't you use memory thresholds 
-> or vmpressure for such a situation?
-> 
-> > > Such a process simply needs access to memory reserves to make progress and 
-> > > free its memory as part of the exit path.  The process waiting on 
-> > > memory.oom_control does _not_ need to do any of the actions mentioned in 
-> > > Documentation/cgroups/memory.txt: reduce usage, enlarge the limit, kill a 
-> > > process, or move a process with charge migration.
-> > > 
-> > > It would be ridiculous to require anybody implementing such a process to 
-> > > check if the oom condition still exists after a period of time before 
-> > > taking such an action.
-> > 
-> > Why would you consider that ridiculous? If your memcg is oom already
-> > then waiting few seconds to let racing tasks finish doesn't sound that
-> > bad to me.
-> > 
-> 
-> A few seconds?  Is that just handwaving or are you making a guarantee that 
-> all processes that need access to memory reserves will wake up, try its 
-> allocation, get the memcg's oom lock, get access to memory reserves, 
-> allocate, return to handle its pending SIGKILL, proceed down the exit() 
-> path, and free its memory by then?
-> 
-> Meanwhile, the userspace oom handler is doing its little sleep(3) that you 
-> suggest, it checks the status of the memcg, finds it's still oom, but 
-> doesn't realize because it didn't do a second blocking read() that its a 
-> second oom condition for a different process attached to the memcg and 
-> that process simply needs memory reserves to exit.
+
+I asked this because you were talking about all this nonsense of
+last-second checks and the probability of unnecessary kills.
+
+You kept insisting that this check has to be the last action before
+the OOM kill, which was an entirely different motivation for this
+change and I questioned the validity of this claim repeatedly during
+this thread, to which you never answered.
+
+You even re-inforced this motivation by suggesting the separate memcg
+margin check right before the OOM kill, so don't blame us for
+misunderstanding the exact placement of this check as your main
+argument when you repeated it over and over.
+
+All I object to is that the OOM killer is riddled with last-second
+checks of whether the OOM situation is still existant.  We establish
+that the context is OOM and once we are certain we are executing,
+period.
+
+Not catching PF_EXITING in the long window between the first reclaim
+and going OOM is a separate issue and I can see that this should be
+fixed but it should be checked before we start invoking OOM.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
