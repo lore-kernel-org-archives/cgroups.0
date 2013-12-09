@@ -1,127 +1,207 @@
-From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: Re: [PATCH] memcg: remove KMEM_ACCOUNTED_ACTIVATED
-Date: Mon, 9 Dec 2013 22:44:51 +0400
-Message-ID: <52A60FA3.20106@parallels.com>
-References: <1385989693-28788-1-git-send-email-vdavydov@parallels.com> <20131202181501.GA5524@dhcp22.suse.cz> <CAA6-i6rWsZNQmFY5L-=yc6TaTGyg4hP4qn9gMZVsu8wWJ=1ywg@mail.gmail.com> <529CDDB3.3090301@parallels.com> <CAA6-i6q+WooWMSbJwLS=ByVu=fgAQuep99iP7tAXiuLABu2gVA@mail.gmail.com> <529D9100.4070207@parallels.com> <CAA6-i6q2viRkbjYOHcoiCHgvdfbfo-4j0k9gj9AA4SH1YToqVg@mail.gmail.com> <529EDB41.8030505@parallels.com> <CAA6-i6o+ZuM_fq+PdQJZ40S0d7K35cBvbTELg49+SgLKP5F0xA@mail.gmail.com> <529F1883.3030907@parallels.com> <20131209152256.GD3597@dhcp22.suse.cz>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [patch 7/8] mm, memcg: allow processes handling oom notifications
+ to access reserves
+Date: Mon, 9 Dec 2013 12:10:44 -0800 (PST)
+Message-ID: <alpine.DEB.2.02.1312061441390.8949@chino.kir.corp.google.com>
+References: <20131120152251.GA18809@dhcp22.suse.cz> <alpine.DEB.2.02.1311201917520.7167@chino.kir.corp.google.com> <20131128115458.GK2761@dhcp22.suse.cz> <alpine.DEB.2.02.1312021504170.13465@chino.kir.corp.google.com> <alpine.DEB.2.02.1312032116440.29733@chino.kir.corp.google.com>
+ <alpine.DEB.2.02.1312032118570.29733@chino.kir.corp.google.com> <20131204054533.GZ3556@cmpxchg.org> <alpine.DEB.2.02.1312041742560.20115@chino.kir.corp.google.com> <20131205025026.GA26777@htj.dyndns.org> <alpine.DEB.2.02.1312051537550.7717@chino.kir.corp.google.com>
+ <20131206190105.GE13373@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20131209152256.GD3597@dhcp22.suse.cz>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version:content-type;
+        bh=NRBK0kMEWC/qVEupuaa294HQAJhorplHd568vs3LPfk=;
+        b=AVANyP1QHEFSDxpDMLeA6b70QPGBA7iClR0De14Q3TvGEb2vykh2/l+6lu0SSnuq9F
+         kHrdH8KPs7iU4JaYAezWeOm4wGRJ1cyRWKExm8Lq+oAF5zRrLXDS6hxAg+8S0Au34BzL
+         wr2IdvK1kx5cjpeybrHd/1w0Xg6sMeWxGg8Un7XgEqHvn2fSf7xUF3EMrw2kx/mYjkQ3
+         CIAOAufJ0MnrqsgcrgdNtLG4nf22jaudA5pORGetlFbcL49Y5Ak7cLpxmTlF+VHuHejJ
+         77fN0PuEyp6L4GTZJhOVn/V+eOu4etkQBfdc5FyRz8k5BCPGIqqwuor0P2HPM5q6R2bS
+         qEMQ==
+In-Reply-To: <20131206190105.GE13373@htj.dyndns.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Glauber Costa <glommer@gmail.com>, LKML <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Pekka Enberg <penberg@kernel.org>, Christoph Lameter <cl@linux-foundation.org>, Li Zefan <lizefan@huawei.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On 12/09/2013 07:22 PM, Michal Hocko wrote:
-> On Wed 04-12-13 15:56:51, Vladimir Davydov wrote:
->> On 12/04/2013 02:08 PM, Glauber Costa wrote:
->>>>> Could you do something clever with just one flag? Probably yes. But I
->>>>> doubt it would
->>>>> be that much cleaner, this is just the way that patching sites work.
->>>> Thank you for spending your time to listen to me.
->>>>
->>> Don't worry! I thank you for carrying this forward.
->>>
->>>> Let me try to explain what is bothering me.
->>>>
->>>> We have two state bits for each memcg, 'active' and 'activated'. There
->>>> are two scenarios where the bits can be modified:
->>>>
->>>> 1) The kmem limit is set on a memcg for the first time -
->>>> memcg_update_kmem_limit(). Here we call memcg_update_cache_sizes(),
->>>> which sets the 'activated' bit on success, then update static branching,
->>>> then set the 'active' bit. All three actions are done atomically in
->>>> respect to other tasks setting the limit due to the set_limit_mutex.
->>>> After both bits are set, they never get cleared for the memcg.
->>>>
->>> So far so good. But again, note how you yourself describe it:
->>> the cations are done atomically  *in respect to other tasks setting the limit*
->>>
->>> But there are also tasks that are running its courses naturally and
->>> just allocating
->>> memory. For those, some call sites will be on, some will be off. We need to make
->>> sure that *none* of them uses the patched site until *all* of them are patched.
->>> This has nothing to do with updates, this is all about the readers.
->>>
->>>> 2) When a subgroup of a kmem-active cgroup is created -
->>>> memcg_propagate_kmem(). Here we copy kmem_account_flags from the parent,
->>>> then increase static branching refcounter, then call
->>>> memcg_update_cache_sizes() for the new memcg, which may clear the
->>>> 'activated' bit on failure. After successful execution, the state bits
->>>> never get cleared for the new memcg.
->>>>
->>>> In scenario 2 there is no need bothering about the flags setting order,
->>>> because we don't have any tasks in the cgroup yet - the tasks can be
->>>> moved in only after css_online finishes when we have both of the bits
->>>> set and the static branching enabled. Actually, we already do not bother
->>>> about it, because we have both bits set before the cgroup is fully
->>>> initialized (memcg_update_cache_sizes() is called).
->>>>
->>> Yes, after the first cgroup is set none of that matters. But it is just easier
->>> and less error prone just to follow the same path every time. As I have said,
->>> if you can come up with a more clever way to deal with the problem above
->>> that doesn't involve the double flag - and you can prove it works - I
->>> am definitely
->>> fine with it. But this is subtle code, and in the past - Michal can
->>> attest this - we've
->>> changed this being sure it would work just to see it explode in our faces.
->>>
->>> So although I am willing to review every patch for correctness on that
->>> front (I never
->>> said I liked the 2-flags scheme...), unless you have a bug or real
->>> problem on it,
->>> I would advise against changing it if its just to make it more readable.
->>>
->>> But again, don't take me too seriously on this. If you and Michal think you can
->>> come up with something better, I'm all for it.
->> All right, I finally get you :-)
->>
->> Although I still don't think we need the second flag, I now understand
->> that it's better not to change the code that works fine especially the
->> change does not make it neither more readable nor more effective. Since
->> I can be mistaken about the flags usage (it's by far not unlikely), it's
->> better to leave it as is rather than being at risk of catching spurious
->> hangs that might be caused by this modification.
->>
->> Thanks for the detailed explanation!
-> It would be really great if we could push some of that into the
-> comments, please?
->
-> Anyway, reading this thread again, I guess I finally got what you meant
-> Vladimir.
-> You are basically saying that the two stage enabling can be done
-> by static_key_slow_inc in the first step and memcg_kmem_set_active
-> in the second step without an additional flag.
-> Assuming that the writers cannot race (they cannot currently because
-> they are linearized by set_limit_mutex and memcg_create_mutex) and
-> readers (charging paths) are _always_ checking the static key before
-> checking active flags?
+On Fri, 6 Dec 2013, Tejun Heo wrote:
 
-Right. There is no point in checking the static key after checking
-active flags, because the benefit of using static branching would
-disappear then. So IMHO the only thing we should bother is that the
-static key refcounter is incremented *before* the active bit is set.
-That assures all static branches have been patched if a charge path
-succeeds, because a charge path cannot succeed if the active bit is not
-set. That said we won't skip a commit or uncharge after a charge due to
-an unpatched static branch. That's why I think the 'active' bit is enough.
+> > Tejun, how are you?
+> 
+> Doing pretty good.  How's yourself? :)
+> 
 
-Currently we have two flags 'activated' and 'active', and their usage
-looks strange to me. Throughout the code we only have the following checks:
-    test_bit('active', state_mask)
-    test_bit('active', state_mask)&&test_bit('activated', state_mask)
-Since 'active' bit is always set after 'activated' and none of them gets
-cleared, the latter check is equivalent to the former.
-Since we never issue a check like this:
-    test_bit('activated', state_mask)
-we never actually check the 'activated' bit and do not need it - ???
+Not bad, busy with holidays and all that.
 
-Thanks.
+> > I agree that we wouldn't need such support if we are only addressing memcg 
+> > oom conditions.  We could do things like A/memory.limit_in_bytes == 128M 
+> > and A/b/memory.limit_in_bytes == 126MB and then attach the process waiting 
+> > on A/b/memory.oom_control to A and that would work perfect.
+> 
+> Or even just create a separate parallel cgroup A/memory.limit_in_bytes
+> == 126M A-oom/memory.limit_in_bytes = 2M and avoid the extra layer of
+> nesting.
+> 
 
-> I guess this should work. But it would require a deep audit that the
-> above is correct in all places. For example we do not bother to check
-> static key during offline/free paths. I guess it should be harmless as
-> is but who knows...
->
-> I would rather see more detailed description of the current state first.
+Indeed.  The setup I'm specifically trying to attack is where the sum of 
+the limits of all non-oom handling memcgs (A/b in my model, A in yours) 
+exceed the amount of RAM.  If the system has 256MB,
+
+				/=256MB
+	A=126MB		A-oom=2MB	B=188MB		B-oom=4MB
+
+or
+
+			/=256MB
+	C=128MB				D=192MB
+	C/a=126M			D/a=188MB
+
+then it's possible for A + B or C/a + D/a to cause a system oom condition 
+and meanwhile A-oom/tasks, B-oom/tasks, C/tasks, and D/tasks cannot 
+allocate memory to handle it.
+
+> > However, we also need to discuss system oom handling.  We have an interest 
+> > in being able to allow userspace to handle system oom conditions since the 
+> > policy will differ depending on machine and we can't encode every possible 
+> > mechanism into the kernel.  For example, on system oom we want to kill a 
+> > process from the lowest priority top-level memcg.  We lack that ability 
+> > entirely in the kernel and since the sum of our top-level memcgs 
+> > memory.limit_in_bytes exceeds the amount of present RAM, we run into these 
+> > oom conditions a _lot_.
+> > 
+> > So the first step, in my opinion, is to add a system oom notification on 
+> > the root memcg's memory.oom_control which currently allows registering an 
+> > eventfd() notification but never actually triggers.  I did that in a patch 
+> > and it is was merged into -mm but was pulled out for later discussion.
+> 
+> Hmmm... this seems to be a different topic.  You're saying that it'd
+> be beneficial to add userland oom handling at the sytem level and if
+> that happens having per-memcg oom reserve would be consistent with the
+> system-wide one, right?
+
+Right, and apologies for not discussing the system oom handling here since 
+its notification on the root memcg is currently being debated as well.  
+The idea is that admins and users aren't going to be concerned about 
+memory allocation through the page allocator vs memory charging through 
+the memory controller; they simply want memory for their userspace oom 
+handling.  And since the notification would be tied to the root memcg, it 
+makes sense to make the amount of memory allowed to allocate exclusively 
+for these handlers a memcg interface.  So the cleanest solution, in my 
+opinion, was to add the interface as part of memcg.
+
+> While I can see some merit in that argument,
+> the whole thing is predicated on system level userland oom handling
+> being justified && even then I'm not quite sure whether "consistent
+> interface" is enough to have oom reserve in all memory cgroups.  It
+> feels a bit backwards because, here, the root memcg is the exception,
+> not the other way around.  Root is the only one which can't put oom
+> handler in a separate cgroup, so it could make more sense to special
+> case that rather than spreading the interface for global userland oom
+> to everyone else.
+> 
+
+It's really the same thing, though, from the user perspective.  They don't 
+care about page allocation failure vs memcg charge failure, they simply 
+want to ensure that the memory set aside for memory.oom_reserve_in_bytes 
+is available in oom conditions.  With the suggested alternatives:
+
+				/=256MB
+	A=126MB		A-oom=2MB	B=188MB		B-oom=4MB
+
+or
+
+			/=256MB
+	C=128MB				D=192MB
+	C/a=126M			D/a=188MB
+
+we can't distinguish between what is able to allocate below per-zone min 
+watermarks in the page allocator as the oom reserve.  The key point is 
+that the root memcg is not the only memcg concerned with page allocator 
+memory reserves, it's any oom reserve.  If A's usage is 124MB and B's 
+usage is 132MB, we can't specify that processes attached to B-oom should 
+be able to bypass per-zone min watermarks without an interface such as 
+that being proposed.
+
+> But, before that, system level userland OOM handling sounds scary to
+> me.  I thought about userland OOM handling for memcgs and it does make
+> some sense.  ie. there is a different action that userland oom handler
+> can take which kernel oom handler can't - it can expand the limit of
+> the offending cgroup, effectively using OOM handler as a sizing
+> estimator.  I'm not sure whether that in itself is a good idea but
+> then again it might not be possible to clearly separate out sizing
+> from oom conditions.
+> 
+> Anyways, but for system level OOM handling, there's no other action
+> userland handler can take.  It's not like the OOM handler paging the
+> admin to install more memory is a reasonable mode of operation to
+> support.  The *only* action userland OOM handler can take is killing
+> something.  Now, if that's the case and we have kernel OOM handler
+> anyway, I think the best course of action is improving kernel OOM
+> handler and teach it to make the decisions that the userland handler
+> would consider good.  That should be doable, right?
+> 
+
+It's much more powerful than that; you're referring to the mechanism to 
+guarantee future memory freeing so the system or memcg is no longer oom, 
+and that's only one case of possible handling.  I have a customer who 
+wants to save heap profiles at the time of oom as well, for example, and 
+their sole desire is to be able to capture memory statistics before the 
+oom kill takes place.  The sine qua non is that memory reserves allow 
+something to be done in such conditions: if you try to do a "ps" or "ls" 
+or cat a file in an oom memcg, you hang.  We need better functionality to 
+ensure that we can do some action prior to the oom kill itself, whether 
+that comes from userspace or the kernel.  We simply cannot rely on things 
+like memory thresholds or vmpressure to grab these heap profiles, there is 
+no guarantee that memory will not be exhausted and the oom kill would 
+already have taken place before the process handling the notification 
+wakes up.  (And any argument that it is possible by simply making the 
+threshold happen early enough is a non-starter: it does not guarantee the 
+heaps are collected for oom conditions and the oom kill can still occur 
+prematurely in machines that overcommit their memcg limits, as we do.)
+
+> The thing is OOM handling in userland is an inherently fragile thing
+> and it can *never* replace kernel OOM handling.  You may reserve any
+> amount of memory you want but there would still be cases that it may
+> fail.  It's not like we have owner-based allocation all through the
+> kernel or are willing to pay overhead for such thing.  Even if that
+> part can be guaranteed somehow (no idea how), the kernel still can
+> NEVER trust the userland OOM handler.  No matter what we do, we need a
+> kernel OOM handler with no resource dependency.
+> 
+
+I was never an advocate for the current memory.oom_control behavior that 
+allows you to disable the oom killer indefinitely for a memcg and I agree 
+that it is dangerous if userspace will not cause future memory freeing or 
+toggle the value such that the kernel will kill something.  So I agree 
+with you with today's functionality, not with the functionality that this 
+patchset, and the notification on the root memcg for system oom 
+conditions, provides.  I also proposed a memory.oom_delay_millisecs that 
+we have used for several years dating back to even cpusets that simply 
+delays the oom kill such that userspace can do "something" like send a 
+kill itself, collect heap profiles, send a signal to our malloc() 
+implementation to free arena memory, etc. prior to the kernel oom kill.
+
+> So, there isn't anything userland OOM handler can inherently do better
+> and we can't do away with kernel handler no matter what.  On both
+> accounts, it seems like the best course of action is making
+> system-wide kernel OOM handler to make better decisions if possible at
+> all.  If that's impossible, let's first think about why that's the
+> case before hastly opening this new can of worms.
+> 
+
+We certainly can get away with the kernel oom killer in 99% of cases with 
+this functionality for users who choose to have their own oom handling 
+implementations.  We also can't possibly code every single handling policy 
+into the kernel: we can't guarantee that our version of malloc() is 
+guaranteed to be able to free memory back to the kernel when waking up on 
+a memory.oom_control notification prior to the memcg oom killer killing 
+something, for example, without this functionality.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
