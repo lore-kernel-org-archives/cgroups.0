@@ -1,140 +1,116 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: cgroups-blkio CFQ scheduling does not work well in a RAID5 configuration.
-Date: Mon, 09 Dec 2013 14:50:28 -0600
-Message-ID: <52A62D14.8020203@hardwarefreak.com>
-References: <CACtJ3Hak1pvYLRDSC3MELeo_jV8_1Tp8rjte5SODyvNauoFv4g@mail.gmail.com>	<CACtJ3HZ7WdJX1i72jpfB9+QDZwa77MBFSxW1W=XZU81b=MNtJw@mail.gmail.com>	<CAGqmV7pPb-Gh=B_Cjv0Az+PBxTHtPX=ECqkvFdd2Ej-hTfLqOQ@mail.gmail.com> <CACtJ3HaU-N2O+JJQekKOvP3aLiMHvPJyubfO4-Qyny6_Mk62=w@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
+ access to memory reserves
+Date: Mon, 9 Dec 2013 13:46:16 -0800 (PST)
+Message-ID: <alpine.DEB.2.02.1312091328550.11026@chino.kir.corp.google.com>
+References: <20131118165110.GE32623@dhcp22.suse.cz> <20131122165100.GN3556@cmpxchg.org> <alpine.DEB.2.02.1311261648570.21003@chino.kir.corp.google.com> <20131127163435.GA3556@cmpxchg.org> <20131202200221.GC5524@dhcp22.suse.cz> <20131202212500.GN22729@cmpxchg.org>
+ <20131203120454.GA12758@dhcp22.suse.cz> <alpine.DEB.2.02.1312031544530.5946@chino.kir.corp.google.com> <20131204111318.GE8410@dhcp22.suse.cz> <alpine.DEB.2.02.1312041606260.6329@chino.kir.corp.google.com> <20131209124840.GC3597@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACtJ3HaU-N2O+JJQekKOvP3aLiMHvPJyubfO4-Qyny6_Mk62=w@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version:content-type;
+        bh=iZXwVMSJeSMV3Wm0WMjaWxlc52pAnP3/h8eFP9TU6bo=;
+        b=TM8t7Th2TB45/v06xisjHI0yHTA6IAEEnb/dXk3vl4ugCU3r3YdZn/bItMxvsz9NWQ
+         mN8mYE+ACJgxCD2xshlv53mfZB3ZsKdF3uF3lyh1LU8qyXqSPS23gxDWGEdUBdkOo2bD
+         cLtg3k7M/QslYufuAc6Afvu8b6Mk9qMqxicO+zehUqlfA7ztYhifbgxW/1JEz6NDXEVF
+         TER5bkNrP/EE9ulIr7tndYIOOlZsrie+hh+Se2hWvI6WWSD+vbEgATM7xBGdpjtU85dE
+         rLMh4Ob0Tnrjd7UIrvBLjTz27MDClM6AEquHhj9w1SQvUE5G4zufJYnehaMPjvRcYITB
+         vrTQ==
+In-Reply-To: <20131209124840.GC3597@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Martin Boutin <martboutin@gmail.com>, CoolCold <coolthecold@gmail.com>
-Cc: Jens Axboe <axboe@kernel.dk>, "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, "Kernel.org-Linux-cgroups" <cgroups@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On 12/9/2013 3:05 AM, Martin Boutin wrote:
-> Any thoughts here?
+On Mon, 9 Dec 2013, Michal Hocko wrote:
 
-Your testing methodology is neither scientific nor thorough, and your
-information is incomplete.  This may be why you're receiving no replies...
-
-You suggest the problem is related to md because taking it out of the
-loop shows "less breakage" of your streaming application.  However,
-you're using XFS.  Thus this is applicable:
-
-"As of kernel 3.2.12, the default i/o scheduler, CFQ, will defeat much
-of the parallelization in XFS. "
-
-http://xfs.org/index.php/XFS_FAQ#Q:_I_want_to_tune_my_XFS_filesystems_for_.3Csomething.3E
-
-It may simply be that the CFQ/XFS problem is manifesting itself more
-prominently with md than single disk in your case.
-
-Also, are you aligning XFS to the md geometry?  mkfs.xfs should have
-aligned to md automatically but sometimes this may break.
-
-I suggest testing with the deadline elevator.  I'd also suggest
-benchmarking your disks individually and benchmarking the md0 RAID5
-array and providing the results.  It's possible your RAID5 array is
-actually performing slower than a single disk, but you don't know it
-because you've not tested it.  What's your stripe_cache_size value?  The
-default may be too low for your disks/array.  What is the configuration
-of your RAID5 array?  Chunk size?
-
-You said a single drive was streaming 250 MB/s.  That's impossible
-unless you're using SSD.  If what you really meant is that you told your
-streaming program to do 250MB/s then of course you'll get buffering as
-the disks can't keep up with that rate, only about half that for a
-single SATA drive.  You did not mention SSDs.  You didn't mention rust.
- You did not mention drive make/model/size.
-
-
-
-
-> - Martin
+> > Google depends on getting memory.oom_control notifications only when they 
+> > are actionable, which is exactly how Documentation/cgroups/memory.txt 
+> > describes how userspace should respond to such a notification.
+> > 
+> > "Actionable" here means that the kernel has exhausted its capabilities of 
+> > allowing for future memory freeing, which is the entire premise of any oom 
+> > killer.
+> > 
+> > Giving a dying process or a process that is going to subsequently die 
+> > access to memory reserves is a capability the kernel users to ensure 
+> > progress is made in oom conditions.  It is not an exhaustion of 
+> > capabilities.
+> > 
+> > Yes, we all know that subsequent to the userspace notification that memory 
+> > may be freed and the kill no longer becomes required.  There is nothing 
+> > that can be done about that, and it has never been implied that a memcg is 
+> > guaranteed to still be oom when the process wakes up.
+> > 
+> > I'm referring to a siutation that can manifest in a number of ways: 
+> > coincidental process exit, coincidental process being killed, 
+> > VMPRESSURE_CRITICAL notification that results in a process being killed, 
+> > or memory threshold notification that results in a process being killed.  
+> > Regardless, we're talking about a situation where something is already 
+> > in the exit path or has been killed and is simply attempting to free its 
+> > memory.
 > 
-> On Sun, Dec 1, 2013 at 11:44 AM, CoolCold <coolthecold@gmail.com> wrote:
->> I hope Neil will shed some light here, interesting question.
->>
->>
->> On Fri, Nov 29, 2013 at 6:15 PM, Martin Boutin <martboutin@gmail.com> wrote:
->>>
->>> I forgot to suggest that this might have to do with md0_raid5 process.
->>> The process has to take care of RAID parity for both processes
->>> (streaming daemon and fio). By default it stays in the root cgroup
->>> which means that RAID-related I/O will be unprioritized even for
->>> processes in the prio cgroup, this might be introducing delays in the
->>> I/O.
->>> Otherwise I cannot put the md0_raid5 process in the prio cgroup either
->>> because that would have RAID-related I/O from all other processes
->>> stealing disk time from priority processes.
->>>
->>> On Fri, Nov 29, 2013 at 9:06 AM, Martin Boutin <martboutin@gmail.com>
->>> wrote:
->>>> Hello list,
->>>>
->>>> Today I was trying to figure out how to get block I/O prioritization
->>>> working for a certain process. The process is a streaming server that
->>>> reads a big file stored in a filesystem (xfs) on top of a RAID5
->>>> configuration using 3 disks, using O_DIRECT.
->>>>
->>>> I'm setting up cgroups this way:
->>>> $ echo 1000 > /sys/fs/cgroup/blkio/prio/blkio.weight
->>>> $ echo 10 > /sys/fs/cgroup/blkio/blkio.leaf_weight
->>>>
->>>> meaning that all the tasks in the prio cgroup will have unconstrained
->>>> access time to the disk, while all the other tasks will have their
->>>> disk access time weighted by a factor.
->>>>
->>>> If I ignore the RAID5 setup, create a XFS filesystem on /dev/sdb2,
->>>> mount it on /data and put my streaming daemon in the prio cgroup and
->>>> run the daemon by streaming around 250MiB/s of data, while I launch
->>>> fio with disk I/O intensive tasks. For a period of 5 minutes, the
->>>> streaming deamon had to stop streaming in about 5 times to rebuffer.
->>>>
->>>> Now, if I consider the same scenario but using the RAID5 device and
->>>> letting the daemon stream 500MiB/s of data (because the RAID has
->>>> around twice the throughput of a single drive), after a period of 5
->>>> minutes the streaming daemon had to stop streaming in about 50 times!
->>>> This is 10 times more than the single drive case.
->>>>
->>>> While streaming, I observed both blkio.sectors and blkio.io_queued for
->>>> both cgroups (the root node and prio). If only the streaming daemon is
->>>> run (therefore fio is stopped), the sector count in prio/blkio.sectors
->>>> increases while (root)/blkio.sectors does not. This confirms the
->>>> streaming daemon is correctly identified as in the prio cgroup.
->>>> Then, while both the streaming daemon and fio run, observing io_queued
->>>> shows that for the root cgroup there is about 50 queued request in
->>>> total (in average), while for the prio cgroup there is only one
->>>> ocasional delayed request from time to time.
->>>>
->>>> $ uname -a
->>>> Linux haswell1 3.10.10 #9 SMP PREEMPT Fri Nov 29 11:38:20 CET 2013
->>>> i686 GNU/Linux
->>>>
->>>> Any ideas?
->>>>
->>>> Thanks,
->>>> --
->>>> Martin Boutin
->>>
->>>
->>>
->>> --
->>> Martin Boutin
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->>
->>
->> --
->> Best regards,
->> [COOLCOLD-RIPN]
+> You have already mentioned that. Several times in fact. And I do
+> understand what you are saying. You are just not backing your claims
+> with anything that would convince us that what you are trying to solve
+> is an issue in the real life. So show us it is real, please.
 > 
+
+What exactly would you like to see?  It's obvious that the kernel has not 
+exhausted its capabilities of allowing for future memory freeing if the 
+notification happens before the check for current->flags & PF_EXITING or 
+fatal_signal_pending(current).  Does that conditional get triggered?  ALL 
+THE TIME.  We know it happens because I had to introduce it into both the 
+system oom killer and the memcg oom killer to fix mm->mmap_sem issues for 
+threads that were killed as part of the oom killer SIGKILL but weren't the 
+thread lucky enough to get TIF_MEMDIE set and they were in the allocation 
+path.
+
+Are you asking me to patch our kernel, get it rolled out, and plot a graph 
+to show how often it gets triggered over time in our datacenters and that 
+it causes us to get unnecessary oom kill notifications?
+
+I'm trying to support you in any way I can by giving you the information 
+you need, but in all honesty this seems pretty trivial and obvious to 
+understand.  I'm really quite stunned at this thread.  What exactly are 
+you arguing in the other direction for?  What does giving an oom 
+notification before allowing exiting processes to free its memory so the 
+memcg or system is no longer oom do?  Why can't you use memory thresholds 
+or vmpressure for such a situation?
+
+> > Such a process simply needs access to memory reserves to make progress and 
+> > free its memory as part of the exit path.  The process waiting on 
+> > memory.oom_control does _not_ need to do any of the actions mentioned in 
+> > Documentation/cgroups/memory.txt: reduce usage, enlarge the limit, kill a 
+> > process, or move a process with charge migration.
+> > 
+> > It would be ridiculous to require anybody implementing such a process to 
+> > check if the oom condition still exists after a period of time before 
+> > taking such an action.
 > 
+> Why would you consider that ridiculous? If your memcg is oom already
+> then waiting few seconds to let racing tasks finish doesn't sound that
+> bad to me.
 > 
+
+A few seconds?  Is that just handwaving or are you making a guarantee that 
+all processes that need access to memory reserves will wake up, try its 
+allocation, get the memcg's oom lock, get access to memory reserves, 
+allocate, return to handle its pending SIGKILL, proceed down the exit() 
+path, and free its memory by then?
+
+Meanwhile, the userspace oom handler is doing its little sleep(3) that you 
+suggest, it checks the status of the memcg, finds it's still oom, but 
+doesn't realize because it didn't do a second blocking read() that its a 
+second oom condition for a different process attached to the memcg and 
+that process simply needs memory reserves to exit.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
