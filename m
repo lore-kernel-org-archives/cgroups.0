@@ -1,66 +1,84 @@
 From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: [PATCH v13 07/16] vmscan: call NUMA-unaware shrinkers irrespective of nodemask
-Date: Mon, 9 Dec 2013 12:05:48 +0400
-Message-ID: <c9d74baf1e2c793bcda2bf20b3ceb295e6cbfb8a.1386571280.git.vdavydov@parallels.com>
+Subject: [PATCH v13 04/16] memcg: move memcg_caches_array_size() function
+Date: Mon, 9 Dec 2013 12:05:45 +0400
+Message-ID: <efacba489a23b3a87321a02828ed1a5094e5c490.1386571280.git.vdavydov@parallels.com>
 References: <cover.1386571280.git.vdavydov@parallels.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <cover.1386571280.git.vdavydov@parallels.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: dchinner@redhat.com, hannes@cmpxchg.org, mhocko@suse.cz, akpm@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, glommer@openvz.org, glommer@gmail.com, vdavydov@parallels.com, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, glommer@openvz.org, glommer@gmail.com, vdavydov@parallels.com, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-If a shrinker is not NUMA-aware, shrink_slab() should call it exactly
-once with nid=0, but currently it is not true: if node 0 is not set in
-the nodemask or if it is not online, we will not call such shrinkers at
-all. As a result some slabs will be left untouched under some
-circumstances. Let us fix it.
+I need to move this up a bit, and I am doing in a separate patch just to
+reduce churn in the patch that needs it.
 
 Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
-Reported-by: Dave Chinner <dchinner@redhat.com>
 Cc: Glauber Costa <glommer@openvz.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Michal Hocko <mhocko@suse.cz>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Rik van Riel <riel@redhat.com>
+Cc: Balbir Singh <bsingharora@gmail.com>
+Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 ---
- mm/vmscan.c |   19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+ mm/memcontrol.c |   30 +++++++++++++++---------------
+ 1 file changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 33b356e..d98f272 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -352,16 +352,17 @@ unsigned long shrink_slab(struct shrink_control *shrinkctl,
- 	}
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 3a4e2f8..220b463 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2983,6 +2983,21 @@ static int memcg_cache_idx(struct mem_cgroup *memcg)
+ 	return ret;
+ }
  
- 	list_for_each_entry(shrinker, &shrinker_list, list) {
--		for_each_node_mask(shrinkctl->nid, shrinkctl->nodes_to_scan) {
--			if (!node_online(shrinkctl->nid))
--				continue;
--
--			if (!(shrinker->flags & SHRINKER_NUMA_AWARE) &&
--			    (shrinkctl->nid != 0))
--				break;
--
-+		if (!(shrinker->flags & SHRINKER_NUMA_AWARE)) {
-+			shrinkctl->nid = 0;
- 			freed += shrink_slab_node(shrinkctl, shrinker,
--				 nr_pages_scanned, lru_pages);
-+					nr_pages_scanned, lru_pages);
-+			continue;
-+		}
++static size_t memcg_caches_array_size(int num_groups)
++{
++	ssize_t size;
++	if (num_groups <= 0)
++		return 0;
 +
-+		for_each_node_mask(shrinkctl->nid, shrinkctl->nodes_to_scan) {
-+			if (node_online(shrinkctl->nid))
-+				freed += shrink_slab_node(shrinkctl, shrinker,
-+						nr_pages_scanned, lru_pages);
++	size = 2 * num_groups;
++	if (size < MEMCG_CACHES_MIN_SIZE)
++		size = MEMCG_CACHES_MIN_SIZE;
++	else if (size > MEMCG_CACHES_MAX_SIZE)
++		size = MEMCG_CACHES_MAX_SIZE;
++
++	return size;
++}
++
+ /*
+  * This is a bit cumbersome, but it is rarely used and avoids a backpointer
+  * in the memcg_cache_params struct.
+@@ -3125,21 +3140,6 @@ int memcg_update_cache_sizes(struct mem_cgroup *memcg)
+ 	return 0;
+ }
  
- 		}
- 	}
+-static size_t memcg_caches_array_size(int num_groups)
+-{
+-	ssize_t size;
+-	if (num_groups <= 0)
+-		return 0;
+-
+-	size = 2 * num_groups;
+-	if (size < MEMCG_CACHES_MIN_SIZE)
+-		size = MEMCG_CACHES_MIN_SIZE;
+-	else if (size > MEMCG_CACHES_MAX_SIZE)
+-		size = MEMCG_CACHES_MAX_SIZE;
+-
+-	return size;
+-}
+-
+ /*
+  * We should update the current array size iff all caches updates succeed. This
+  * can only be done from the slab side. The slab mutex needs to be held when
 -- 
 1.7.10.4
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
