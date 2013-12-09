@@ -1,101 +1,141 @@
-From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: [PATCH v13 00/16] kmemcg shrinkers
-Date: Mon, 9 Dec 2013 12:05:41 +0400
-Message-ID: <cover.1386571280.git.vdavydov@parallels.com>
+From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH v13 05/16] vmscan: move call to shrink_slab() to shrink_zones()
+Date: Mon, 9 Dec 2013 12:05:46 +0400
+Message-ID: <71c7c5bbcad2e29f81eaf9eaad36c120815125c8.1386571280.git.vdavydov@parallels.com>
+References: <cover.1386571280.git.vdavydov@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <cover.1386571280.git.vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: dchinner@redhat.com, hannes@cmpxchg.org, mhocko@suse.cz, akpm@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, glommer@openvz.org, glommer@gmail.com, vdavydov@parallels.com
+To: dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Hi,
+This reduces the indentation level of do_try_to_free_pages() and removes
+extra loop over all eligible zones counting the number of on-LRU pages.
 
-This is the 13th iteration of Glauber Costa's patch-set implementing slab
-shrinking on memcg pressure. The main idea is to make the list_lru structure
-used by most FS shrinkers per-memcg. When adding or removing an element from a
-list_lru, we use the page information to figure out which memcg it belongs to
-and relay it to the appropriate list. This allows scanning kmem objects
-accounted to different memcgs independently.
+Signed-off-by: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
+Cc: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ mm/vmscan.c |   57 ++++++++++++++++++++++++++-------------------------------
+ 1 file changed, 26 insertions(+), 31 deletions(-)
 
-Please note that in contrast to previous versions this patch-set implements
-slab shrinking only when we hit the user memory limit so that kmem allocations
-will still fail if we are below the user memory limit, but close to the kmem
-limit. This is, because the implementation of kmem-only reclaim was rather
-incomplete - we had to fail GFP_NOFS allocations since everything we could
-reclaim was only FS data. I will try to improve this and send in a separate
-patch-set, but currently it is only worthwhile setting the kmem limit to be
-greater than the user mem limit just to enable per-memcg slab accounting and
-reclaim.
-
-The patch-set is based on top of Linux-3.13-rc3 and organized as follows:
- - patches 1-9 prepare vmscan, memcontrol, list_lru to kmemcg reclaim;
- - patch 10 implements the kmemcg reclaim core;
- - patch 11 makes the list_lru struct per-memcg and patch 12 marks all
-   list_lru-based shrinkers as memcg-aware;
- - patches 13-16 slightly improve memcontrol behavior regarding mem reclaim.
-
-Changes in v13:
- - fix NUMA-unaware shrinkers not being called when node 0 is not set in the
-   nodemask;
- - rework list_lru API to require a shrink_control
- - make list_lru automatically handle memcgs w/o introducing a separate struct;
- - simplify walk over all memcg LRUs of a list_lru;
- - cleanup shrink_slab()
- - remove kmem-only reclaim as explained above;
-
-Previous iterations of this patch-set can be found here:
- - https://lkml.org/lkml/2013/12/2/141
- - https://lkml.org/lkml/2013/11/25/214
-
-Thanks.
-
-Glauber Costa (7):
-  memcg: make cache index determination more robust
-  memcg: consolidate callers of memcg_cache_id
-  memcg: move initialization to memcg creation
-  vmscan: take at least one pass with shrinkers
-  vmpressure: in-kernel notifications
-  memcg: reap dead memcgs upon global memory pressure
-  memcg: flush memcg items upon memcg destruction
-
-Vladimir Davydov (9):
-  memcg: move memcg_caches_array_size() function
-  vmscan: move call to shrink_slab() to shrink_zones()
-  vmscan: remove shrink_control arg from do_try_to_free_pages()
-  vmscan: call NUMA-unaware shrinkers irrespective of nodemask
-  mm: list_lru: require shrink_control in count, walk functions
-  fs: consolidate {nr,free}_cached_objects args in shrink_control
-  vmscan: shrink slab on memcg pressure
-  mm: list_lru: add per-memcg lists
-  fs: mark list_lru based shrinkers memcg aware
-
- fs/dcache.c                |   17 +-
- fs/gfs2/quota.c            |   10 +-
- fs/inode.c                 |    8 +-
- fs/internal.h              |    9 +-
- fs/super.c                 |   24 ++-
- fs/xfs/xfs_buf.c           |   16 +-
- fs/xfs/xfs_qm.c            |    8 +-
- fs/xfs/xfs_super.c         |    6 +-
- include/linux/fs.h         |    6 +-
- include/linux/list_lru.h   |   83 ++++++----
- include/linux/memcontrol.h |   35 ++++
- include/linux/shrinker.h   |   10 +-
- include/linux/vmpressure.h |    5 +
- mm/list_lru.c              |  263 +++++++++++++++++++++++++++---
- mm/memcontrol.c            |  384 +++++++++++++++++++++++++++++++++++++++-----
- mm/vmpressure.c            |   53 +++++-
- mm/vmscan.c                |  172 +++++++++++++-------
- 17 files changed, 888 insertions(+), 221 deletions(-)
-
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index eea668d..035ab3a 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -2273,13 +2273,17 @@ static inline bool compaction_ready(struct zone *zone, struct scan_control *sc)
+  * the caller that it should consider retrying the allocation instead of
+  * further reclaim.
+  */
+-static bool shrink_zones(struct zonelist *zonelist, struct scan_control *sc)
++static bool shrink_zones(struct zonelist *zonelist,
++			 struct scan_control *sc,
++			 struct shrink_control *shrink)
+ {
+ 	struct zoneref *z;
+ 	struct zone *zone;
+ 	unsigned long nr_soft_reclaimed;
+ 	unsigned long nr_soft_scanned;
++	unsigned long lru_pages = 0;
+ 	bool aborted_reclaim = false;
++	struct reclaim_state *reclaim_state = current->reclaim_state;
+ 
+ 	/*
+ 	 * If the number of buffer_heads in the machine exceeds the maximum
+@@ -2289,6 +2293,8 @@ static bool shrink_zones(struct zonelist *zonelist, struct scan_control *sc)
+ 	if (buffer_heads_over_limit)
+ 		sc->gfp_mask |= __GFP_HIGHMEM;
+ 
++	nodes_clear(shrink->nodes_to_scan);
++
+ 	for_each_zone_zonelist_nodemask(zone, z, zonelist,
+ 					gfp_zone(sc->gfp_mask), sc->nodemask) {
+ 		if (!populated_zone(zone))
+@@ -2300,6 +2306,10 @@ static bool shrink_zones(struct zonelist *zonelist, struct scan_control *sc)
+ 		if (global_reclaim(sc)) {
+ 			if (!cpuset_zone_allowed_hardwall(zone, GFP_KERNEL))
+ 				continue;
++
++			lru_pages += zone_reclaimable_pages(zone);
++			node_set(zone_to_nid(zone), shrink->nodes_to_scan);
++
+ 			if (sc->priority != DEF_PRIORITY &&
+ 			    !zone_reclaimable(zone))
+ 				continue;	/* Let kswapd poll it */
+@@ -2336,6 +2346,20 @@ static bool shrink_zones(struct zonelist *zonelist, struct scan_control *sc)
+ 		shrink_zone(zone, sc);
+ 	}
+ 
++	/*
++	 * Don't shrink slabs when reclaiming memory from over limit
++	 * cgroups but do shrink slab at least once when aborting
++	 * reclaim for compaction to avoid unevenly scanning file/anon
++	 * LRU pages over slab pages.
++	 */
++	if (global_reclaim(sc)) {
++		shrink_slab(shrink, sc->nr_scanned, lru_pages);
++		if (reclaim_state) {
++			sc->nr_reclaimed += reclaim_state->reclaimed_slab;
++			reclaim_state->reclaimed_slab = 0;
++		}
++	}
++
+ 	return aborted_reclaim;
+ }
+ 
+@@ -2380,9 +2404,6 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
+ 					struct shrink_control *shrink)
+ {
+ 	unsigned long total_scanned = 0;
+-	struct reclaim_state *reclaim_state = current->reclaim_state;
+-	struct zoneref *z;
+-	struct zone *zone;
+ 	unsigned long writeback_threshold;
+ 	bool aborted_reclaim;
+ 
+@@ -2395,34 +2416,8 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
+ 		vmpressure_prio(sc->gfp_mask, sc->target_mem_cgroup,
+ 				sc->priority);
+ 		sc->nr_scanned = 0;
+-		aborted_reclaim = shrink_zones(zonelist, sc);
+-
+-		/*
+-		 * Don't shrink slabs when reclaiming memory from over limit
+-		 * cgroups but do shrink slab at least once when aborting
+-		 * reclaim for compaction to avoid unevenly scanning file/anon
+-		 * LRU pages over slab pages.
+-		 */
+-		if (global_reclaim(sc)) {
+-			unsigned long lru_pages = 0;
++		aborted_reclaim = shrink_zones(zonelist, sc, shrink);
+ 
+-			nodes_clear(shrink->nodes_to_scan);
+-			for_each_zone_zonelist(zone, z, zonelist,
+-					gfp_zone(sc->gfp_mask)) {
+-				if (!cpuset_zone_allowed_hardwall(zone, GFP_KERNEL))
+-					continue;
+-
+-				lru_pages += zone_reclaimable_pages(zone);
+-				node_set(zone_to_nid(zone),
+-					 shrink->nodes_to_scan);
+-			}
+-
+-			shrink_slab(shrink, sc->nr_scanned, lru_pages);
+-			if (reclaim_state) {
+-				sc->nr_reclaimed += reclaim_state->reclaimed_slab;
+-				reclaim_state->reclaimed_slab = 0;
+-			}
+-		}
+ 		total_scanned += sc->nr_scanned;
+ 		if (sc->nr_reclaimed >= sc->nr_to_reclaim)
+ 			goto out;
 -- 
 1.7.10.4
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
