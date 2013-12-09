@@ -1,207 +1,140 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch 7/8] mm, memcg: allow processes handling oom notifications
- to access reserves
-Date: Mon, 9 Dec 2013 12:10:44 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1312061441390.8949@chino.kir.corp.google.com>
-References: <20131120152251.GA18809@dhcp22.suse.cz> <alpine.DEB.2.02.1311201917520.7167@chino.kir.corp.google.com> <20131128115458.GK2761@dhcp22.suse.cz> <alpine.DEB.2.02.1312021504170.13465@chino.kir.corp.google.com> <alpine.DEB.2.02.1312032116440.29733@chino.kir.corp.google.com>
- <alpine.DEB.2.02.1312032118570.29733@chino.kir.corp.google.com> <20131204054533.GZ3556@cmpxchg.org> <alpine.DEB.2.02.1312041742560.20115@chino.kir.corp.google.com> <20131205025026.GA26777@htj.dyndns.org> <alpine.DEB.2.02.1312051537550.7717@chino.kir.corp.google.com>
- <20131206190105.GE13373@htj.dyndns.org>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: cgroups-blkio CFQ scheduling does not work well in a RAID5 configuration.
+Date: Mon, 09 Dec 2013 14:50:28 -0600
+Message-ID: <52A62D14.8020203@hardwarefreak.com>
+References: <CACtJ3Hak1pvYLRDSC3MELeo_jV8_1Tp8rjte5SODyvNauoFv4g@mail.gmail.com>	<CACtJ3HZ7WdJX1i72jpfB9+QDZwa77MBFSxW1W=XZU81b=MNtJw@mail.gmail.com>	<CAGqmV7pPb-Gh=B_Cjv0Az+PBxTHtPX=ECqkvFdd2Ej-hTfLqOQ@mail.gmail.com> <CACtJ3HaU-N2O+JJQekKOvP3aLiMHvPJyubfO4-Qyny6_Mk62=w@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=NRBK0kMEWC/qVEupuaa294HQAJhorplHd568vs3LPfk=;
-        b=AVANyP1QHEFSDxpDMLeA6b70QPGBA7iClR0De14Q3TvGEb2vykh2/l+6lu0SSnuq9F
-         kHrdH8KPs7iU4JaYAezWeOm4wGRJ1cyRWKExm8Lq+oAF5zRrLXDS6hxAg+8S0Au34BzL
-         wr2IdvK1kx5cjpeybrHd/1w0Xg6sMeWxGg8Un7XgEqHvn2fSf7xUF3EMrw2kx/mYjkQ3
-         CIAOAufJ0MnrqsgcrgdNtLG4nf22jaudA5pORGetlFbcL49Y5Ak7cLpxmTlF+VHuHejJ
-         77fN0PuEyp6L4GTZJhOVn/V+eOu4etkQBfdc5FyRz8k5BCPGIqqwuor0P2HPM5q6R2bS
-         qEMQ==
-In-Reply-To: <20131206190105.GE13373@htj.dyndns.org>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Pekka Enberg <penberg@kernel.org>, Christoph Lameter <cl@linux-foundation.org>, Li Zefan <lizefan@huawei.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CACtJ3HaU-N2O+JJQekKOvP3aLiMHvPJyubfO4-Qyny6_Mk62=w@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Martin Boutin <martboutin@gmail.com>, CoolCold <coolthecold@gmail.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, "Kernel.org-Linux-cgroups" <cgroups@vger.kernel.org>
 
-On Fri, 6 Dec 2013, Tejun Heo wrote:
+On 12/9/2013 3:05 AM, Martin Boutin wrote:
+> Any thoughts here?
 
-> > Tejun, how are you?
+Your testing methodology is neither scientific nor thorough, and your
+information is incomplete.  This may be why you're receiving no replies...
+
+You suggest the problem is related to md because taking it out of the
+loop shows "less breakage" of your streaming application.  However,
+you're using XFS.  Thus this is applicable:
+
+"As of kernel 3.2.12, the default i/o scheduler, CFQ, will defeat much
+of the parallelization in XFS. "
+
+http://xfs.org/index.php/XFS_FAQ#Q:_I_want_to_tune_my_XFS_filesystems_for_.3Csomething.3E
+
+It may simply be that the CFQ/XFS problem is manifesting itself more
+prominently with md than single disk in your case.
+
+Also, are you aligning XFS to the md geometry?  mkfs.xfs should have
+aligned to md automatically but sometimes this may break.
+
+I suggest testing with the deadline elevator.  I'd also suggest
+benchmarking your disks individually and benchmarking the md0 RAID5
+array and providing the results.  It's possible your RAID5 array is
+actually performing slower than a single disk, but you don't know it
+because you've not tested it.  What's your stripe_cache_size value?  The
+default may be too low for your disks/array.  What is the configuration
+of your RAID5 array?  Chunk size?
+
+You said a single drive was streaming 250 MB/s.  That's impossible
+unless you're using SSD.  If what you really meant is that you told your
+streaming program to do 250MB/s then of course you'll get buffering as
+the disks can't keep up with that rate, only about half that for a
+single SATA drive.  You did not mention SSDs.  You didn't mention rust.
+ You did not mention drive make/model/size.
+
+
+
+
+> - Martin
 > 
-> Doing pretty good.  How's yourself? :)
+> On Sun, Dec 1, 2013 at 11:44 AM, CoolCold <coolthecold@gmail.com> wrote:
+>> I hope Neil will shed some light here, interesting question.
+>>
+>>
+>> On Fri, Nov 29, 2013 at 6:15 PM, Martin Boutin <martboutin@gmail.com> wrote:
+>>>
+>>> I forgot to suggest that this might have to do with md0_raid5 process.
+>>> The process has to take care of RAID parity for both processes
+>>> (streaming daemon and fio). By default it stays in the root cgroup
+>>> which means that RAID-related I/O will be unprioritized even for
+>>> processes in the prio cgroup, this might be introducing delays in the
+>>> I/O.
+>>> Otherwise I cannot put the md0_raid5 process in the prio cgroup either
+>>> because that would have RAID-related I/O from all other processes
+>>> stealing disk time from priority processes.
+>>>
+>>> On Fri, Nov 29, 2013 at 9:06 AM, Martin Boutin <martboutin@gmail.com>
+>>> wrote:
+>>>> Hello list,
+>>>>
+>>>> Today I was trying to figure out how to get block I/O prioritization
+>>>> working for a certain process. The process is a streaming server that
+>>>> reads a big file stored in a filesystem (xfs) on top of a RAID5
+>>>> configuration using 3 disks, using O_DIRECT.
+>>>>
+>>>> I'm setting up cgroups this way:
+>>>> $ echo 1000 > /sys/fs/cgroup/blkio/prio/blkio.weight
+>>>> $ echo 10 > /sys/fs/cgroup/blkio/blkio.leaf_weight
+>>>>
+>>>> meaning that all the tasks in the prio cgroup will have unconstrained
+>>>> access time to the disk, while all the other tasks will have their
+>>>> disk access time weighted by a factor.
+>>>>
+>>>> If I ignore the RAID5 setup, create a XFS filesystem on /dev/sdb2,
+>>>> mount it on /data and put my streaming daemon in the prio cgroup and
+>>>> run the daemon by streaming around 250MiB/s of data, while I launch
+>>>> fio with disk I/O intensive tasks. For a period of 5 minutes, the
+>>>> streaming deamon had to stop streaming in about 5 times to rebuffer.
+>>>>
+>>>> Now, if I consider the same scenario but using the RAID5 device and
+>>>> letting the daemon stream 500MiB/s of data (because the RAID has
+>>>> around twice the throughput of a single drive), after a period of 5
+>>>> minutes the streaming daemon had to stop streaming in about 50 times!
+>>>> This is 10 times more than the single drive case.
+>>>>
+>>>> While streaming, I observed both blkio.sectors and blkio.io_queued for
+>>>> both cgroups (the root node and prio). If only the streaming daemon is
+>>>> run (therefore fio is stopped), the sector count in prio/blkio.sectors
+>>>> increases while (root)/blkio.sectors does not. This confirms the
+>>>> streaming daemon is correctly identified as in the prio cgroup.
+>>>> Then, while both the streaming daemon and fio run, observing io_queued
+>>>> shows that for the root cgroup there is about 50 queued request in
+>>>> total (in average), while for the prio cgroup there is only one
+>>>> ocasional delayed request from time to time.
+>>>>
+>>>> $ uname -a
+>>>> Linux haswell1 3.10.10 #9 SMP PREEMPT Fri Nov 29 11:38:20 CET 2013
+>>>> i686 GNU/Linux
+>>>>
+>>>> Any ideas?
+>>>>
+>>>> Thanks,
+>>>> --
+>>>> Martin Boutin
+>>>
+>>>
+>>>
+>>> --
+>>> Martin Boutin
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>
+>>
+>>
+>> --
+>> Best regards,
+>> [COOLCOLD-RIPN]
 > 
-
-Not bad, busy with holidays and all that.
-
-> > I agree that we wouldn't need such support if we are only addressing memcg 
-> > oom conditions.  We could do things like A/memory.limit_in_bytes == 128M 
-> > and A/b/memory.limit_in_bytes == 126MB and then attach the process waiting 
-> > on A/b/memory.oom_control to A and that would work perfect.
 > 
-> Or even just create a separate parallel cgroup A/memory.limit_in_bytes
-> == 126M A-oom/memory.limit_in_bytes = 2M and avoid the extra layer of
-> nesting.
 > 
-
-Indeed.  The setup I'm specifically trying to attack is where the sum of 
-the limits of all non-oom handling memcgs (A/b in my model, A in yours) 
-exceed the amount of RAM.  If the system has 256MB,
-
-				/=256MB
-	A=126MB		A-oom=2MB	B=188MB		B-oom=4MB
-
-or
-
-			/=256MB
-	C=128MB				D=192MB
-	C/a=126M			D/a=188MB
-
-then it's possible for A + B or C/a + D/a to cause a system oom condition 
-and meanwhile A-oom/tasks, B-oom/tasks, C/tasks, and D/tasks cannot 
-allocate memory to handle it.
-
-> > However, we also need to discuss system oom handling.  We have an interest 
-> > in being able to allow userspace to handle system oom conditions since the 
-> > policy will differ depending on machine and we can't encode every possible 
-> > mechanism into the kernel.  For example, on system oom we want to kill a 
-> > process from the lowest priority top-level memcg.  We lack that ability 
-> > entirely in the kernel and since the sum of our top-level memcgs 
-> > memory.limit_in_bytes exceeds the amount of present RAM, we run into these 
-> > oom conditions a _lot_.
-> > 
-> > So the first step, in my opinion, is to add a system oom notification on 
-> > the root memcg's memory.oom_control which currently allows registering an 
-> > eventfd() notification but never actually triggers.  I did that in a patch 
-> > and it is was merged into -mm but was pulled out for later discussion.
-> 
-> Hmmm... this seems to be a different topic.  You're saying that it'd
-> be beneficial to add userland oom handling at the sytem level and if
-> that happens having per-memcg oom reserve would be consistent with the
-> system-wide one, right?
-
-Right, and apologies for not discussing the system oom handling here since 
-its notification on the root memcg is currently being debated as well.  
-The idea is that admins and users aren't going to be concerned about 
-memory allocation through the page allocator vs memory charging through 
-the memory controller; they simply want memory for their userspace oom 
-handling.  And since the notification would be tied to the root memcg, it 
-makes sense to make the amount of memory allowed to allocate exclusively 
-for these handlers a memcg interface.  So the cleanest solution, in my 
-opinion, was to add the interface as part of memcg.
-
-> While I can see some merit in that argument,
-> the whole thing is predicated on system level userland oom handling
-> being justified && even then I'm not quite sure whether "consistent
-> interface" is enough to have oom reserve in all memory cgroups.  It
-> feels a bit backwards because, here, the root memcg is the exception,
-> not the other way around.  Root is the only one which can't put oom
-> handler in a separate cgroup, so it could make more sense to special
-> case that rather than spreading the interface for global userland oom
-> to everyone else.
-> 
-
-It's really the same thing, though, from the user perspective.  They don't 
-care about page allocation failure vs memcg charge failure, they simply 
-want to ensure that the memory set aside for memory.oom_reserve_in_bytes 
-is available in oom conditions.  With the suggested alternatives:
-
-				/=256MB
-	A=126MB		A-oom=2MB	B=188MB		B-oom=4MB
-
-or
-
-			/=256MB
-	C=128MB				D=192MB
-	C/a=126M			D/a=188MB
-
-we can't distinguish between what is able to allocate below per-zone min 
-watermarks in the page allocator as the oom reserve.  The key point is 
-that the root memcg is not the only memcg concerned with page allocator 
-memory reserves, it's any oom reserve.  If A's usage is 124MB and B's 
-usage is 132MB, we can't specify that processes attached to B-oom should 
-be able to bypass per-zone min watermarks without an interface such as 
-that being proposed.
-
-> But, before that, system level userland OOM handling sounds scary to
-> me.  I thought about userland OOM handling for memcgs and it does make
-> some sense.  ie. there is a different action that userland oom handler
-> can take which kernel oom handler can't - it can expand the limit of
-> the offending cgroup, effectively using OOM handler as a sizing
-> estimator.  I'm not sure whether that in itself is a good idea but
-> then again it might not be possible to clearly separate out sizing
-> from oom conditions.
-> 
-> Anyways, but for system level OOM handling, there's no other action
-> userland handler can take.  It's not like the OOM handler paging the
-> admin to install more memory is a reasonable mode of operation to
-> support.  The *only* action userland OOM handler can take is killing
-> something.  Now, if that's the case and we have kernel OOM handler
-> anyway, I think the best course of action is improving kernel OOM
-> handler and teach it to make the decisions that the userland handler
-> would consider good.  That should be doable, right?
-> 
-
-It's much more powerful than that; you're referring to the mechanism to 
-guarantee future memory freeing so the system or memcg is no longer oom, 
-and that's only one case of possible handling.  I have a customer who 
-wants to save heap profiles at the time of oom as well, for example, and 
-their sole desire is to be able to capture memory statistics before the 
-oom kill takes place.  The sine qua non is that memory reserves allow 
-something to be done in such conditions: if you try to do a "ps" or "ls" 
-or cat a file in an oom memcg, you hang.  We need better functionality to 
-ensure that we can do some action prior to the oom kill itself, whether 
-that comes from userspace or the kernel.  We simply cannot rely on things 
-like memory thresholds or vmpressure to grab these heap profiles, there is 
-no guarantee that memory will not be exhausted and the oom kill would 
-already have taken place before the process handling the notification 
-wakes up.  (And any argument that it is possible by simply making the 
-threshold happen early enough is a non-starter: it does not guarantee the 
-heaps are collected for oom conditions and the oom kill can still occur 
-prematurely in machines that overcommit their memcg limits, as we do.)
-
-> The thing is OOM handling in userland is an inherently fragile thing
-> and it can *never* replace kernel OOM handling.  You may reserve any
-> amount of memory you want but there would still be cases that it may
-> fail.  It's not like we have owner-based allocation all through the
-> kernel or are willing to pay overhead for such thing.  Even if that
-> part can be guaranteed somehow (no idea how), the kernel still can
-> NEVER trust the userland OOM handler.  No matter what we do, we need a
-> kernel OOM handler with no resource dependency.
-> 
-
-I was never an advocate for the current memory.oom_control behavior that 
-allows you to disable the oom killer indefinitely for a memcg and I agree 
-that it is dangerous if userspace will not cause future memory freeing or 
-toggle the value such that the kernel will kill something.  So I agree 
-with you with today's functionality, not with the functionality that this 
-patchset, and the notification on the root memcg for system oom 
-conditions, provides.  I also proposed a memory.oom_delay_millisecs that 
-we have used for several years dating back to even cpusets that simply 
-delays the oom kill such that userspace can do "something" like send a 
-kill itself, collect heap profiles, send a signal to our malloc() 
-implementation to free arena memory, etc. prior to the kernel oom kill.
-
-> So, there isn't anything userland OOM handler can inherently do better
-> and we can't do away with kernel handler no matter what.  On both
-> accounts, it seems like the best course of action is making
-> system-wide kernel OOM handler to make better decisions if possible at
-> all.  If that's impossible, let's first think about why that's the
-> case before hastly opening this new can of worms.
-> 
-
-We certainly can get away with the kernel oom killer in 99% of cases with 
-this functionality for users who choose to have their own oom handling 
-implementations.  We also can't possibly code every single handling policy 
-into the kernel: we can't guarantee that our version of malloc() is 
-guaranteed to be able to free memory back to the kernel when waking up on 
-a memory.oom_control notification prior to the memcg oom killer killing 
-something, for example, without this functionality.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
