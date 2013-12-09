@@ -1,264 +1,120 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [patch 7/8] mm, memcg: allow processes handling oom
- notifications to access reserves
-Date: Mon, 9 Dec 2013 17:37:34 -0500
-Message-ID: <20131209223734.GJ21724@cmpxchg.org>
-References: <20131128115458.GK2761@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312021504170.13465@chino.kir.corp.google.com>
- <alpine.DEB.2.02.1312032116440.29733@chino.kir.corp.google.com>
- <alpine.DEB.2.02.1312032118570.29733@chino.kir.corp.google.com>
- <20131204054533.GZ3556@cmpxchg.org>
- <alpine.DEB.2.02.1312041742560.20115@chino.kir.corp.google.com>
- <20131205025026.GA26777@htj.dyndns.org>
- <alpine.DEB.2.02.1312051537550.7717@chino.kir.corp.google.com>
- <20131206190105.GE13373@htj.dyndns.org>
- <alpine.DEB.2.02.1312061441390.8949@chino.kir.corp.google.com>
+Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
+ access to memory reserves
+Date: Mon, 9 Dec 2013 17:51:42 -0500
+Message-ID: <20131209225142.GK21724@cmpxchg.org>
+References: <alpine.DEB.2.02.1311261648570.21003@chino.kir.corp.google.com>
+ <20131127163435.GA3556@cmpxchg.org>
+ <20131202200221.GC5524@dhcp22.suse.cz>
+ <20131202212500.GN22729@cmpxchg.org>
+ <20131203120454.GA12758@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1312031544530.5946@chino.kir.corp.google.com>
+ <20131204111318.GE8410@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1312041606260.6329@chino.kir.corp.google.com>
+ <20131209124840.GC3597@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1312091328550.11026@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=g6WOIuDElRMUkrP5ma04sCGa4itXb9mQjhV8HfwEChA=;
-	b=ow3oPKex8rAFhK9kTRUBas9f+PrdMbT7rqPlpOCA9pZLRYGliE8Yei1MG0hZ60ExUX51wRhIN02Ynb9KU04NnuFf280JqekFUAFnHjm/xF4iSSRoBy5tNps7/SSMGYN6AXNfXUExjXyL8ctACCNxBjbaGf1I1weVlie+Gj5z5/Y=;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=n43j/Z6bA6y04Sz74SiCL/8bx9/OAUPieIkvD1SRNxo=;
+	b=EH8WXUaq3JSWu7nARnrLGpo47/bd8cH1NI8kOYBr3M3BewqdfqCGIOyDmmQU+9jtSVZEi+96rNSwGzuY/QDrBUxhH9unEGcPNIm0Ay0KHzCNA1zUBeVHsiUo/eHlksspVe/Zg4zbdSLIZRVMJynGnyNggSVBUTO2tM4aRu4Vfxk=;
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1312061441390.8949-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
+In-Reply-To: <alpine.DEB.2.02.1312091328550.11026-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Dec 09, 2013 at 12:10:44PM -0800, David Rientjes wrote:
-> On Fri, 6 Dec 2013, Tejun Heo wrote:
+On Mon, Dec 09, 2013 at 01:46:16PM -0800, David Rientjes wrote:
+> On Mon, 9 Dec 2013, Michal Hocko wrote:
 > 
-> > > Tejun, how are you?
-> > 
-> > Doing pretty good.  How's yourself? :)
-> > 
-> 
-> Not bad, busy with holidays and all that.
-> 
-> > > I agree that we wouldn't need such support if we are only addressing memcg 
-> > > oom conditions.  We could do things like A/memory.limit_in_bytes == 128M 
-> > > and A/b/memory.limit_in_bytes == 126MB and then attach the process waiting 
-> > > on A/b/memory.oom_control to A and that would work perfect.
-> > 
-> > Or even just create a separate parallel cgroup A/memory.limit_in_bytes
-> > == 126M A-oom/memory.limit_in_bytes = 2M and avoid the extra layer of
-> > nesting.
-> > 
-> 
-> Indeed.  The setup I'm specifically trying to attack is where the sum of 
-> the limits of all non-oom handling memcgs (A/b in my model, A in yours) 
-> exceed the amount of RAM.  If the system has 256MB,
-> 
-> 				/=256MB
-> 	A=126MB		A-oom=2MB	B=188MB		B-oom=4MB
-> 
-> or
-> 
-> 			/=256MB
-> 	C=128MB				D=192MB
-> 	C/a=126M			D/a=188MB
-> 
-> then it's possible for A + B or C/a + D/a to cause a system oom condition 
-> and meanwhile A-oom/tasks, B-oom/tasks, C/tasks, and D/tasks cannot 
-> allocate memory to handle it.
-
-So your per-memcg handlers want access to PHYSICAL MEMORY reserves
-during system-wide OOM, but this patch implements MEMORY CHARGE
-reserves only, which are obviously meaningless during system-wide OOM.
-
-In other words, this is an entirely different usecase than what this
-patchset is really about.
-
-You have to sell us on the problem first, then we can discuss a
-solution.  Instead, you insist on the solution and keep changing the
-problem whenever we find it no longer justifies your proposal.
-
-> > > However, we also need to discuss system oom handling.  We have an interest 
-> > > in being able to allow userspace to handle system oom conditions since the 
-> > > policy will differ depending on machine and we can't encode every possible 
-> > > mechanism into the kernel.  For example, on system oom we want to kill a 
-> > > process from the lowest priority top-level memcg.  We lack that ability 
-> > > entirely in the kernel and since the sum of our top-level memcgs 
-> > > memory.limit_in_bytes exceeds the amount of present RAM, we run into these 
-> > > oom conditions a _lot_.
+> > > Google depends on getting memory.oom_control notifications only when they 
+> > > are actionable, which is exactly how Documentation/cgroups/memory.txt 
+> > > describes how userspace should respond to such a notification.
 > > > 
-> > > So the first step, in my opinion, is to add a system oom notification on 
-> > > the root memcg's memory.oom_control which currently allows registering an 
-> > > eventfd() notification but never actually triggers.  I did that in a patch 
-> > > and it is was merged into -mm but was pulled out for later discussion.
+> > > "Actionable" here means that the kernel has exhausted its capabilities of 
+> > > allowing for future memory freeing, which is the entire premise of any oom 
+> > > killer.
+> > > 
+> > > Giving a dying process or a process that is going to subsequently die 
+> > > access to memory reserves is a capability the kernel users to ensure 
+> > > progress is made in oom conditions.  It is not an exhaustion of 
+> > > capabilities.
+> > > 
+> > > Yes, we all know that subsequent to the userspace notification that memory 
+> > > may be freed and the kill no longer becomes required.  There is nothing 
+> > > that can be done about that, and it has never been implied that a memcg is 
+> > > guaranteed to still be oom when the process wakes up.
+> > > 
+> > > I'm referring to a siutation that can manifest in a number of ways: 
+> > > coincidental process exit, coincidental process being killed, 
+> > > VMPRESSURE_CRITICAL notification that results in a process being killed, 
+> > > or memory threshold notification that results in a process being killed.  
+> > > Regardless, we're talking about a situation where something is already 
+> > > in the exit path or has been killed and is simply attempting to free its 
+> > > memory.
 > > 
-> > Hmmm... this seems to be a different topic.  You're saying that it'd
-> > be beneficial to add userland oom handling at the sytem level and if
-> > that happens having per-memcg oom reserve would be consistent with the
-> > system-wide one, right?
-> 
-> Right, and apologies for not discussing the system oom handling here since 
-> its notification on the root memcg is currently being debated as well.  
-> The idea is that admins and users aren't going to be concerned about 
-> memory allocation through the page allocator vs memory charging through 
-> the memory controller; they simply want memory for their userspace oom 
-> handling.  And since the notification would be tied to the root memcg, it 
-> makes sense to make the amount of memory allowed to allocate exclusively 
-> for these handlers a memcg interface.  So the cleanest solution, in my 
-> opinion, was to add the interface as part of memcg.
-> 
-> > While I can see some merit in that argument,
-> > the whole thing is predicated on system level userland oom handling
-> > being justified && even then I'm not quite sure whether "consistent
-> > interface" is enough to have oom reserve in all memory cgroups.  It
-> > feels a bit backwards because, here, the root memcg is the exception,
-> > not the other way around.  Root is the only one which can't put oom
-> > handler in a separate cgroup, so it could make more sense to special
-> > case that rather than spreading the interface for global userland oom
-> > to everyone else.
+> > You have already mentioned that. Several times in fact. And I do
+> > understand what you are saying. You are just not backing your claims
+> > with anything that would convince us that what you are trying to solve
+> > is an issue in the real life. So show us it is real, please.
 > > 
 > 
-> It's really the same thing, though, from the user perspective.  They don't 
-> care about page allocation failure vs memcg charge failure, they simply 
-> want to ensure that the memory set aside for memory.oom_reserve_in_bytes 
-> is available in oom conditions.  With the suggested alternatives:
+> What exactly would you like to see?  It's obvious that the kernel has not 
+> exhausted its capabilities of allowing for future memory freeing if the 
+> notification happens before the check for current->flags & PF_EXITING or 
+> fatal_signal_pending(current).  Does that conditional get triggered?  ALL 
+> THE TIME.
+
+We check for fatal signals during the repeated charge attempts and
+reclaim.  Should we be checking for PF_EXITING too?
+
+> We know it happens because I had to introduce it into both the 
+> system oom killer and the memcg oom killer to fix mm->mmap_sem issues for 
+> threads that were killed as part of the oom killer SIGKILL but weren't the 
+> thread lucky enough to get TIF_MEMDIE set and they were in the allocation 
+> path.
+
+
+
 > 
-> 				/=256MB
-> 	A=126MB		A-oom=2MB	B=188MB		B-oom=4MB
+> Are you asking me to patch our kernel, get it rolled out, and plot a graph 
+> to show how often it gets triggered over time in our datacenters and that 
+> it causes us to get unnecessary oom kill notifications?
 > 
-> or
+> I'm trying to support you in any way I can by giving you the information 
+> you need, but in all honesty this seems pretty trivial and obvious to 
+> understand.  I'm really quite stunned at this thread.  What exactly are 
+> you arguing in the other direction for?  What does giving an oom 
+> notification before allowing exiting processes to free its memory so the 
+> memcg or system is no longer oom do?  Why can't you use memory thresholds 
+> or vmpressure for such a situation?
 > 
-> 			/=256MB
-> 	C=128MB				D=192MB
-> 	C/a=126M			D/a=188MB
-> 
-> we can't distinguish between what is able to allocate below per-zone min 
-> watermarks in the page allocator as the oom reserve.  The key point is 
-> that the root memcg is not the only memcg concerned with page allocator 
-> memory reserves, it's any oom reserve.  If A's usage is 124MB and B's 
-> usage is 132MB, we can't specify that processes attached to B-oom should 
-> be able to bypass per-zone min watermarks without an interface such as 
-> that being proposed.
-
-The per-zone min watermarks are there to allow rudimentary OOM
-handling inside the kernel to prevent a complete deadlock.
-
-You want to hand them out to an indefinite number of (untrusted?)
-userspace tasks in the hope that they handle the situation?
-
-Also, the following concerns from Tejun still apply:
-
-> > The thing is OOM handling in userland is an inherently fragile thing
-> > and it can *never* replace kernel OOM handling.  You may reserve any
-> > amount of memory you want but there would still be cases that it may
-> > fail.  It's not like we have owner-based allocation all through the
-> > kernel or are willing to pay overhead for such thing.  Even if that
-> > part can be guaranteed somehow (no idea how), the kernel still can
-> > NEVER trust the userland OOM handler.  No matter what we do, we need a
-> > kernel OOM handler with no resource dependency.
-
-Your userspace handler may very much fail, but it may have squandered
-all the resources for the kernel fallback handling to actually perform
-its job.
-
-I don't know if you are actually allowing every PF_OOM_HANDLER to
-simply bypass the watermarks in your kernels, but this seems way too
-fragile for upstream.
-
-> > But, before that, system level userland OOM handling sounds scary to
-> > me.  I thought about userland OOM handling for memcgs and it does make
-> > some sense.  ie. there is a different action that userland oom handler
-> > can take which kernel oom handler can't - it can expand the limit of
-> > the offending cgroup, effectively using OOM handler as a sizing
-> > estimator.  I'm not sure whether that in itself is a good idea but
-> > then again it might not be possible to clearly separate out sizing
-> > from oom conditions.
+> > > Such a process simply needs access to memory reserves to make progress and 
+> > > free its memory as part of the exit path.  The process waiting on 
+> > > memory.oom_control does _not_ need to do any of the actions mentioned in 
+> > > Documentation/cgroups/memory.txt: reduce usage, enlarge the limit, kill a 
+> > > process, or move a process with charge migration.
+> > > 
+> > > It would be ridiculous to require anybody implementing such a process to 
+> > > check if the oom condition still exists after a period of time before 
+> > > taking such an action.
 > > 
-> > Anyways, but for system level OOM handling, there's no other action
-> > userland handler can take.  It's not like the OOM handler paging the
-> > admin to install more memory is a reasonable mode of operation to
-> > support.  The *only* action userland OOM handler can take is killing
-> > something.  Now, if that's the case and we have kernel OOM handler
-> > anyway, I think the best course of action is improving kernel OOM
-> > handler and teach it to make the decisions that the userland handler
-> > would consider good.  That should be doable, right?
+> > Why would you consider that ridiculous? If your memcg is oom already
+> > then waiting few seconds to let racing tasks finish doesn't sound that
+> > bad to me.
 > > 
 > 
-> It's much more powerful than that; you're referring to the mechanism to 
-> guarantee future memory freeing so the system or memcg is no longer oom, 
-> and that's only one case of possible handling.  I have a customer who 
-> wants to save heap profiles at the time of oom as well, for example, and 
-> their sole desire is to be able to capture memory statistics before the 
-> oom kill takes place.  The sine qua non is that memory reserves allow 
-> something to be done in such conditions: if you try to do a "ps" or "ls" 
-> or cat a file in an oom memcg, you hang.
-
-This is conflating per-memcg OOM handling and global OOM handling.
-You can always ps or ls from outside to analyze a memcg OOM and we
-have established that there is no good reason to try doing it from
-inside the OOM group.
-
-> We need better functionality to ensure that we can do some action
-> prior to the oom kill itself, whether that comes from userspace or
-> the kernel.  We simply cannot rely on things like memory thresholds
-> or vmpressure to grab these heap profiles, there is no guarantee
-> that memory will not be exhausted and the oom kill would already
-> have taken place before the process handling the notification wakes
-> up.  (And any argument that it is possible by simply making the
-> threshold happen early enough is a non-starter: it does not
-> guarantee the heaps are collected for oom conditions and the oom
-> kill can still occur prematurely in machines that overcommit their
-> memcg limits, as we do.)
+> A few seconds?  Is that just handwaving or are you making a guarantee that 
+> all processes that need access to memory reserves will wake up, try its 
+> allocation, get the memcg's oom lock, get access to memory reserves, 
+> allocate, return to handle its pending SIGKILL, proceed down the exit() 
+> path, and free its memory by then?
 > 
-> > The thing is OOM handling in userland is an inherently fragile thing
-> > and it can *never* replace kernel OOM handling.  You may reserve any
-> > amount of memory you want but there would still be cases that it may
-> > fail.  It's not like we have owner-based allocation all through the
-> > kernel or are willing to pay overhead for such thing.  Even if that
-> > part can be guaranteed somehow (no idea how), the kernel still can
-> > NEVER trust the userland OOM handler.  No matter what we do, we need a
-> > kernel OOM handler with no resource dependency.
-> > 
-> 
-> I was never an advocate for the current memory.oom_control behavior that 
-> allows you to disable the oom killer indefinitely for a memcg and I agree 
-> that it is dangerous if userspace will not cause future memory freeing or 
-> toggle the value such that the kernel will kill something.
-
-This is again confusing system-wide OOM with per-memcg OOM.  Disabling
-the per-memcg OOM handler is perfectly fine because any memory demand
-from higher up the hierarchy will still kill in such a group.  The
-problems Tejun describe are only existant in userspace handling of
-system-wide OOM situations.  Which is the thing you are advocating,
-not what we currently have.
-
-> So I agree with you with today's functionality, not with the
-> functionality that this patchset, and the notification on the root
-> memcg for system oom conditions, provides.  I also proposed a
-> memory.oom_delay_millisecs that we have used for several years
-> dating back to even cpusets that simply delays the oom kill such
-> that userspace can do "something" like send a kill itself, collect
-> heap profiles, send a signal to our malloc() implementation to free
-> arena memory, etc. prior to the kernel oom kill.
-> 
-> > So, there isn't anything userland OOM handler can inherently do better
-> > and we can't do away with kernel handler no matter what.  On both
-> > accounts, it seems like the best course of action is making
-> > system-wide kernel OOM handler to make better decisions if possible at
-> > all.  If that's impossible, let's first think about why that's the
-> > case before hastly opening this new can of worms.
-> > 
-> 
-> We certainly can get away with the kernel oom killer in 99% of cases with 
-> this functionality for users who choose to have their own oom handling 
-> implementations.  We also can't possibly code every single handling policy 
-> into the kernel: we can't guarantee that our version of malloc() is 
-> guaranteed to be able to free memory back to the kernel when waking up on 
-> a memory.oom_control notification prior to the memcg oom killer killing 
-> something, for example, without this functionality.
-
-If you have discardable anonymous memory laying around the volatile
-memory patches are a much more reliable way of getting rid of it than
-to wake up a userspace task and wait & pray a few seconds.
-
-Page reclaim has been *the* tool to facilitate overcommit for decades
-while OOM killing has always been a last-resort measure.  Why is this
-not good enough anymore and why is the only solution to give up and do
-it all in userspace?
+> Meanwhile, the userspace oom handler is doing its little sleep(3) that you 
+> suggest, it checks the status of the memcg, finds it's still oom, but 
+> doesn't realize because it didn't do a second blocking read() that its a 
+> second oom condition for a different process attached to the memcg and 
+> that process simply needs memory reserves to exit.
