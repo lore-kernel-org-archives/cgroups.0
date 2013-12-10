@@ -1,64 +1,116 @@
-From: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v13 13/16] vmscan: take at least one pass with shrinkers
-Date: Tue, 10 Dec 2013 16:38:46 +0400
-Message-ID: <CAA6-i6pWF-iiqLEUwcODKUCr+ng-H0Wc=L7+WFxUxo=Yr7MM8A@mail.gmail.com>
-References: <cover.1386571280.git.vdavydov@parallels.com>
-	<5287164773f8aade33ce17f3c91546c6e1afaf85.1386571280.git.vdavydov@parallels.com>
-	<20131210041826.GB31386@dastard>
-	<52A6FFF0.6080207@parallels.com>
+From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Race in memcg kmem?
+Date: Tue, 10 Dec 2013 17:59:31 +0400
+Message-ID: <52A71E43.9040200@parallels.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=lkrXguvgbWBXFR9tsRNVYqDxVzKto2NiUuy2WLTQmbA=;
-        b=qNpQg9Dn4rnke81TiMBg7hFBGF7nDclCNRZNk+c3TtMWjGcKeFDalUa2YuR+OT20pD
-         WySdrAuktnOQOcKvOoG3uxE5+pU68Pa74uMFPDbCLSfQf/vRaPr0yOYLmU4P48OZovKQ
-         IN+T52oi2uok3b1PP6ncASqo5wHAeVlpw0Gx3/BMbweXLoIBs4o6vUlW+Y+C1Snem2kV
-         ee9uSPON5nZQo+hoTvfFJNU3tHRv9wbfUXnuOq3GDVuIXyTrIYqJUw1sysgEI/Zetfc0
-         yuAIEBARZAFVi6/+6BYy/EatDS1nhxYgH7tiGnBf6DH2ZRUgOvjh5ruUcsGToc38xsUj
-         WLXw==
-In-Reply-To: <52A6FFF0.6080207-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Glauber Costa <gloomer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-On Tue, Dec 10, 2013 at 3:50 PM, Vladimir Davydov
-<vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
-> On 12/10/2013 08:18 AM, Dave Chinner wrote:
->> On Mon, Dec 09, 2013 at 12:05:54PM +0400, Vladimir Davydov wrote:
->>> From: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
->>>
->>> In very low free kernel memory situations, it may be the case that we
->>> have less objects to free than our initial batch size. If this is the
->>> case, it is better to shrink those, and open space for the new workload
->>> then to keep them and fail the new allocations.
->>>
->>> In particular, we are concerned with the direct reclaim case for memcg.
->>> Although this same technique can be applied to other situations just as
->>> well, we will start conservative and apply it for that case, which is
->>> the one that matters the most.
->> This should be at the start of the series.
->
-> Since Glauber wanted to introduce this only for memcg-reclaim first,
-> this can't be at the start of the series, but I'll move it to go
-> immediately after per-memcg shrinking core in the next iteration.
->
-> Thanks.
+Hi,
 
-So, the reason for that being memcg only, is that the reclaim for
-small objects triggered
-a bunch of XFS regressions (I am sure the regressions are general, but
-I've tested them using
-ZFS).
+Looking through the per-memcg kmem_cache initialization code, I have a
+bad feeling that it is prone to a race. Before getting to fixing it, I'd
+like to ensure this race is not only in my imagination. Here it goes.
 
-In theory they shouldn't, so we can try to make it global again, so
-long as it comes together
-with benchmarks demonstrating that it is a safe change.
+We keep per-memcg kmem caches in the memcg_params field of each root
+cache. The memcg_params array is grown dynamically by
+memcg_update_cache_size(). I guess that if this function is executed
+concurrently with memcg_create_kmem_cache() we can get a race resulting
+in a memory leak.
 
-I am not sure the filesystem people would benefit from that directly,
-though. So it may not be worth the hassle...
+-- memcg_create_kmem_cache(memcg, cachep) --
+creates a new kmem_cache corresponding to a memcg and assigns it to the
+root cache; called in the background - it is OK to have several such
+functions trying to create a cache for the same memcg concurrently, but
+only one of them should succeed.
+@cachep is the root cache
+@memcg is the memcg we want to create a cache for.
+
+The function:
+
+A1) assures there is no cache corresponding to the memcg (if it is we
+have nothing to do):
+    idx = memcg_cache_id(memcg);
+    if (cachep->memcg_params[idx])
+        goto out;
+
+A2) creates and assigns a new cache:
+    new_cachep = kmem_cache_dup(memcg, cachep);
+    // init new_cachep
+    cachep->memcg_params->memcg_caches[idx] = new_cachep;
+
+
+-- memcg_update_cache_size(s, num_groups) --
+grows s->memcg_params to accomodate data for num_groups memcg's
+@s is the root cache whose memcg_params we want to grow
+@num_groups is the new number of kmem-active cgroups (defines the new
+size of memcg_params array).
+
+The function:
+
+B1) allocates and assigns a new cache:
+    cur_params = s->memcg_params;
+    s->memcg_params = kzalloc(size, GFP_KERNEL);
+
+B2) copies per-memcg cache ptrs from the old memcg_params array to the
+new one:
+    for (i = 0; i < memcg_limited_groups_array_size; i++) {
+        if (!cur_params->memcg_caches[i])
+            continue;
+        s->memcg_params->memcg_caches[i] =
+                    cur_params->memcg_caches[i];
+    }
+
+B3) frees the old array:
+    kfree(cur_params);
+
+
+Since these two functions do not share any mutexes, we can get the
+following race:
+
+Assume, by the time Cpu0 gets to memcg_create_kmem_cache(), the memcg
+cache has already been created by another thread, so this function
+should do nothing.
+
+Cpu0    Cpu1
+----    ----
+        B1
+A1              we haven't initialized memcg_params yet so Cpu0 will
+                proceed to A2 to alloc and assign a new cache
+A2
+        B2      Cpu1 rewrites the memcg cache ptr set by Cpu0 at A2
+                - a memory leak?
+        B3
+
+I'd like to add that even if I'm right about the race, this is rather
+not critical, because memcg_update_cache_sizes() is called very rarely.
+
+
+BTW, it seems to me that the way we update memcg_params in
+memcg_update_cache_size() make cache_from_memcg_idx() prone to
+use-after-free:
+
+> static inline struct kmem_cache *
+> cache_from_memcg_idx(struct kmem_cache *s, int idx)
+> {
+>     if (!s->memcg_params)
+>         return NULL;
+>     return s->memcg_params->memcg_caches[idx];
+> }
+
+This is equivalent to
+
+1) struct memcg_cache_params *params = s->memcg_params;
+2) return params->memcg_caches[idx];
+
+If memcg_update_cache_size() is executed between steps 1 and 2 on
+another CPU, at step 2 we will dereference memcg_params that has already
+been freed. This is very unlikely, but still possible. Perhaps, we
+should free old memcg params only after a sync_rcu()?
+
+Thanks.
