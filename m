@@ -1,179 +1,153 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [patch 7/8] mm, memcg: allow processes handling oom
- notifications to access reserves
-Date: Tue, 10 Dec 2013 16:50:37 -0500
-Message-ID: <20131210215037.GB9143@htj.dyndns.org>
-References: <20131128115458.GK2761@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312021504170.13465@chino.kir.corp.google.com>
- <alpine.DEB.2.02.1312032116440.29733@chino.kir.corp.google.com>
- <alpine.DEB.2.02.1312032118570.29733@chino.kir.corp.google.com>
- <20131204054533.GZ3556@cmpxchg.org>
- <alpine.DEB.2.02.1312041742560.20115@chino.kir.corp.google.com>
- <20131205025026.GA26777@htj.dyndns.org>
- <alpine.DEB.2.02.1312051537550.7717@chino.kir.corp.google.com>
- <20131206190105.GE13373@htj.dyndns.org>
- <alpine.DEB.2.02.1312061441390.8949@chino.kir.corp.google.com>
+From: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: Race in memcg kmem?
+Date: Wed, 11 Dec 2013 03:13:48 +0400
+Message-ID: <CAA6-i6oyraHQ7_1GBKxgupS12_QFx708Niu93nyNFLrbQBXE5A@mail.gmail.com>
+References: <52A71E43.9040200@parallels.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=U3tMuXFVjeAiIlSnndOQwiAfNyZtWdl0sxrNhTrQs2k=;
-        b=KBRIGyX5ZUoGVJ3823hNDuyIEQEtNyLVJJvbVtsrwhSLN8SEy3/mHoBiRMZv/2kjjO
-         tilGokZt/fp9DufaEYLvyQ7rkj/XMpWuL8m0AHDzIK7FMf9jszty49eBIYF3WnAdrXzo
-         F28g43Refb7yz1PcLIcufvl4Wl7f+T9mkzHbePQ3AbXSH6KRZhvpUcvmRph/BkSxcRZZ
-         k8zlIitNFbQiGvhx0iZOSycI/piGoJiyDRScrQskfggCIFWMtGHC2hidU8uoMlT6K6Hp
-         tkzij3KIhV9RAXgOeBQgfC8EqT5ZYYMW1TpXoNcsLcwHDG1wnGiVEgxJcPSYanDa3obD
-         7YJQ==
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1312061441390.8949-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=iGfCRxZNlFqAxXgup4YVvdlYm7xKYN8CuCR53igxzrQ=;
+        b=fwyMDKbpRaPfQZRoykSu/MoAFAjkXAEnHgE45SfyrgsxpcmccxR8ivhKcYCyRsFYFU
+         Yo6atin8/9Da0jSM6gq/E5g4Z/tU4Pfiyi7lxKd4pkvWxfm9afTMgRFPZsKWd/ZuBmXG
+         reW1rHuiiN2gprYeHdeSxbVmzHXCpmlBIEW8RS5einTkb/AmRf0JAwg+TQhWD1yeL54w
+         10PdoO5+MhHZ848wpho5Szj/kgMek8QUnAISuLsm7/7DSrb588Ao8u8Lq6NTIgSF0Z9H
+         SznM2X0Ls13M7M5+ZTkdQzuAHGRKHkfe7nYN4UDS85d6M/blJVP8yQQ0SoUov82Fg3m2
+         AkvQ==
+In-Reply-To: <52A71E43.9040200-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-Hey, David.
+On Tue, Dec 10, 2013 at 5:59 PM, Vladimir Davydov
+<vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
+> Hi,
+>
+> Looking through the per-memcg kmem_cache initialization code, I have a
+> bad feeling that it is prone to a race. Before getting to fixing it, I'd
+> like to ensure this race is not only in my imagination. Here it goes.
+>
+> We keep per-memcg kmem caches in the memcg_params field of each root
+> cache. The memcg_params array is grown dynamically by
+> memcg_update_cache_size(). I guess that if this function is executed
+> concurrently with memcg_create_kmem_cache() we can get a race resulting
+> in a memory leak.
+>
+Ok, let's see.
 
-On Mon, Dec 09, 2013 at 12:10:44PM -0800, David Rientjes wrote:
-> Indeed.  The setup I'm specifically trying to attack is where the sum of 
-> the limits of all non-oom handling memcgs (A/b in my model, A in yours) 
-> exceed the amount of RAM.  If the system has 256MB,
-> 
-> 				/=256MB
-> 	A=126MB		A-oom=2MB	B=188MB		B-oom=4MB
-> 
-> or
-> 
-> 			/=256MB
-> 	C=128MB				D=192MB
-> 	C/a=126M			D/a=188MB
-> 
-> then it's possible for A + B or C/a + D/a to cause a system oom condition 
-> and meanwhile A-oom/tasks, B-oom/tasks, C/tasks, and D/tasks cannot 
-> allocate memory to handle it.
+> -- memcg_create_kmem_cache(memcg, cachep) --
+> creates a new kmem_cache corresponding to a memcg and assigns it to the
+> root cache; called in the background - it is OK to have several such
+> functions trying to create a cache for the same memcg concurrently, but
+> only one of them should succeed.
 
-"tasks"?  You mean that tasks can't be read reliably once system-OOM
-is hit regardless of memcg configuration?
+Yes.
 
-> Right, and apologies for not discussing the system oom handling here since 
-> its notification on the root memcg is currently being debated as well.  
-> The idea is that admins and users aren't going to be concerned about 
-> memory allocation through the page allocator vs memory charging through 
-> the memory controller; they simply want memory for their userspace oom 
-> handling.  And since the notification would be tied to the root memcg, it 
-> makes sense to make the amount of memory allowed to allocate exclusively 
-> for these handlers a memcg interface.  So the cleanest solution, in my 
-> opinion, was to add the interface as part of memcg.
+> @cachep is the root cache
+> @memcg is the memcg we want to create a cache for.
+>
+> The function:
+>
+> A1) assures there is no cache corresponding to the memcg (if it is we
+> have nothing to do):
+>     idx = memcg_cache_id(memcg);
+>     if (cachep->memcg_params[idx])
+>         goto out;
+>
+> A2) creates and assigns a new cache:
+>     new_cachep = kmem_cache_dup(memcg, cachep);
+Please note this cannot proceed in parallel with memcg_update_cache_size(),
+because they both take the slab mutex.
 
-I'm still not quite following the reasoning.  Can you please elaborate
-on what the distinction between "page allocator" and "charges through
-memory controller" has to do with this interface?
+>     // init new_cachep
+>     cachep->memcg_params->memcg_caches[idx] = new_cachep;
+>
+>
+> -- memcg_update_cache_size(s, num_groups) --
+> grows s->memcg_params to accomodate data for num_groups memcg's
+> @s is the root cache whose memcg_params we want to grow
+> @num_groups is the new number of kmem-active cgroups (defines the new
+> size of memcg_params array).
+>
+> The function:
+>
+> B1) allocates and assigns a new cache:
+>     cur_params = s->memcg_params;
+>     s->memcg_params = kzalloc(size, GFP_KERNEL);
+>
+> B2) copies per-memcg cache ptrs from the old memcg_params array to the
+> new one:
+>     for (i = 0; i < memcg_limited_groups_array_size; i++) {
+>         if (!cur_params->memcg_caches[i])
+>             continue;
+>         s->memcg_params->memcg_caches[i] =
+>                     cur_params->memcg_caches[i];
+>     }
+>
+> B3) frees the old array:
+>     kfree(cur_params);
+>
+>
+> Since these two functions do not share any mutexes, we can get the
 
-> It's really the same thing, though, from the user perspective.  They don't 
-> care about page allocation failure vs memcg charge failure, they simply 
-> want to ensure that the memory set aside for memory.oom_reserve_in_bytes 
-> is available in oom conditions.  With the suggested alternatives:
-> 
-> 				/=256MB
-> 	A=126MB		A-oom=2MB	B=188MB		B-oom=4MB
-> 
-> or
-> 
-> 			/=256MB
-> 	C=128MB				D=192MB
-> 	C/a=126M			D/a=188MB
-> 
-> we can't distinguish between what is able to allocate below per-zone min 
-> watermarks in the page allocator as the oom reserve.  The key point is 
-> that the root memcg is not the only memcg concerned with page allocator 
-> memory reserves, it's any oom reserve.  If A's usage is 124MB and B's 
-> usage is 132MB, we can't specify that processes attached to B-oom should 
-> be able to bypass per-zone min watermarks without an interface such as 
-> that being proposed.
+They do share a mutex, the slab mutex.
 
-Okay, are you saying that userland OOM handlers will be able to dip
-into kernel reserve memory?  Maybe I'm mistaken but you realize that
-that reserve is there to make things like task exits work under OOM
-conditions, right?  The only way userland OOM handlers as you describe
-would work would be creating a separate reserve for them.
+> following race:
+>
+> Assume, by the time Cpu0 gets to memcg_create_kmem_cache(), the memcg
+> cache has already been created by another thread, so this function
+> should do nothing.
+>
+> Cpu0    Cpu1
+> ----    ----
+>         B1
+> A1              we haven't initialized memcg_params yet so Cpu0 will
+>                 proceed to A2 to alloc and assign a new cache
+> A2
+>         B2      Cpu1 rewrites the memcg cache ptr set by Cpu0 at A2
+>                 - a memory leak?
+>         B3
+>
+> I'd like to add that even if I'm right about the race, this is rather
+> not critical, because memcg_update_cache_sizes() is called very rarely.
+>
+Every race is critical.
 
-Aren't you basically suggesting two memcg domains - one which is
-overcommitted and the other which isn't?  But if you want to do that,
-wouldn't that be something which is a natural fit for memch hierarchy?
-Not only that, such hierarchical setup would make sense for other
-controllers too - you're really creating two fundamentally different
-resource groups.
+So, I am a bit lost by your description. Get back to me if I got anything wrong,
+but I am think that the point that you're missing is that all heavy
+slab operations
+take the slab_mutex underneath, and that includes cache creation and update.
 
-> It's much more powerful than that; you're referring to the mechanism to 
-> guarantee future memory freeing so the system or memcg is no longer oom, 
-> and that's only one case of possible handling.  I have a customer who 
-> wants to save heap profiles at the time of oom as well, for example, and 
-> their sole desire is to be able to capture memory statistics before the 
-> oom kill takes place.  The sine qua non is that memory reserves allow 
-> something to be done in such conditions: if you try to do a "ps" or "ls" 
-> or cat a file in an oom memcg, you hang.  We need better functionality to 
-> ensure that we can do some action prior to the oom kill itself, whether 
-> that comes from userspace or the kernel.  We simply cannot rely on things 
 
-Well, the gotcha there is that you won't be able to do that with
-system level OOM handler either unless you create a separately
-reserved memory, which, again, can be achieved using hierarchical
-memcg setup already.  Am I missing something here?
+>
+> BTW, it seems to me that the way we update memcg_params in
+> memcg_update_cache_size() make cache_from_memcg_idx() prone to
+> use-after-free:
+>
+>> static inline struct kmem_cache *
+>> cache_from_memcg_idx(struct kmem_cache *s, int idx)
+>> {
+>>     if (!s->memcg_params)
+>>         return NULL;
+>>     return s->memcg_params->memcg_caches[idx];
+>> }
+>
+> This is equivalent to
+>
+> 1) struct memcg_cache_params *params = s->memcg_params;
+> 2) return params->memcg_caches[idx];
+>
+> If memcg_update_cache_size() is executed between steps 1 and 2 on
+> another CPU, at step 2 we will dereference memcg_params that has already
+> been freed. This is very unlikely, but still possible. Perhaps, we
+> should free old memcg params only after a sync_rcu()?
+>
 
-> like memory thresholds or vmpressure to grab these heap profiles, there is 
-> no guarantee that memory will not be exhausted and the oom kill would 
-> already have taken place before the process handling the notification 
-> wakes up.  (And any argument that it is possible by simply making the 
-> threshold happen early enough is a non-starter: it does not guarantee the 
-> heaps are collected for oom conditions and the oom kill can still occur 
-> prematurely in machines that overcommit their memcg limits, as we do.)
-
-I don't really follow your "guarantee" argument regarding OOM.  It's
-not like we have mathmatically concrete definition of OOM conditions.
-That'd be nice to have but we simply don't have them.  As it currently
-is defined, it's just "oh well, we tried hard enough but nothing seems
-to give in.  whatever".  As currently defined, it's an inherently
-fuzzy and racy thing.  Sure, it *could* be meaningful to try to
-decrease the raciness if the difference is significant but using
-absolute terms like guarantee is just misleading, IMHO.  You can't
-guarantee much with something which is racy to begin with.
-
-...
-> conditions, provides.  I also proposed a memory.oom_delay_millisecs that 
-> we have used for several years dating back to even cpusets that simply 
-> delays the oom kill such that userspace can do "something" like send a 
-> kill itself, collect heap profiles, send a signal to our malloc() 
-> implementation to free arena memory, etc. prior to the kernel oom kill.
-
-All the above would require a separately reserved memory, right?
-Also, a curiosity, how would "sending a signal to our malloc()" work?
-If you mean sending a signal to malloc() in a different process,
-that's not gonna work.  How is that process gonna have memory to
-process the signal and free memory from malloc() under OOM condition?
-
-> We certainly can get away with the kernel oom killer in 99% of cases with 
-> this functionality for users who choose to have their own oom handling 
-> implementations.  We also can't possibly code every single handling policy 
-> into the kernel: we can't guarantee that our version of malloc() is 
-> guaranteed to be able to free memory back to the kernel when waking up on 
-> a memory.oom_control notification prior to the memcg oom killer killing 
-> something, for example, without this functionality.
-
-So, malloc() is mapped into the same process as the OOM handler which
-is gonna be able to tap into physically reserved memory?  Also, while
-freeing, it won't need to coordinate with other processes?
-
-If I'm not mistaken, we're talking about a lot of additional
-complexities throughout the whole mm layer for something which seems,
-to me, achieveable through proper memcg configuration without any
-modification to the kernel and doesn't seem all that necessary for 99%
-of use cases, as you said.  Unless I'm missing something major (quite
-possible, of course), I think you'd need stronger rationale.
-
-Thanks.
-
--- 
-tejun
+You seem to be right in this one. Indeed, if my mind does not betray
+me, That is how I freed
+the LRUs. (with synchronize_rcus).
