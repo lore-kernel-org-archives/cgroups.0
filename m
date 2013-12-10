@@ -1,168 +1,137 @@
-From: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
-Subject: Re: [PATCH v13 10/16] vmscan: shrink slab on memcg pressure
-Date: Tue, 10 Dec 2013 13:11:52 +1100
-Message-ID: <20131210021152.GZ31386@dastard>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v13 12/16] fs: mark list_lru based shrinkers memcg aware
+Date: Tue, 10 Dec 2013 15:17:47 +1100
+Message-ID: <20131210041747.GA31386@dastard>
 References: <cover.1386571280.git.vdavydov@parallels.com>
- <24314b9f3b299bac988ea3570f71f9e6919bbc4e.1386571280.git.vdavydov@parallels.com>
+ <9e1005848996c3df5ceca9e8262edcf8211a893d.1386571280.git.vdavydov@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <24314b9f3b299bac988ea3570f71f9e6919bbc4e.1386571280.git.vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <9e1005848996c3df5ceca9e8262edcf8211a893d.1386571280.git.vdavydov@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+To: Vladimir Davydov <vdavydov@parallels.com>, Steven Whitehouse <swhiteho@redhat.com>
+Cc: dchinner@redhat.com, hannes@cmpxchg.org, mhocko@suse.cz, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, glommer@openvz.org, glommer@gmail.com, Al Viro <viro@zeniv.linux.org.uk>
 
-On Mon, Dec 09, 2013 at 12:05:51PM +0400, Vladimir Davydov wrote:
-> This patch makes direct reclaim path shrink slab not only on global
-> memory pressure, but also when we reach the user memory limit of a
-> memcg. To achieve that, it makes shrink_slab() walk over the memcg
-> hierarchy and run shrinkers marked as memcg-aware on the target memcg
-> and all its descendants. The memcg to scan is passed in a shrink_control
-> structure; memcg-unaware shrinkers are still called only on global
-> memory pressure with memcg=NULL. It is up to the shrinker how to
-> organize the objects it is responsible for to achieve per-memcg reclaim.
+On Mon, Dec 09, 2013 at 12:05:53PM +0400, Vladimir Davydov wrote:
+> Since now list_lru automatically distributes objects among per-memcg
+> lists and list_lru_{count,walk} employ information passed in the
+> shrink_control argument to scan appropriate list, all shrinkers that
+> keep objects in the list_lru structure can already work as memcg-aware.
+> Let us mark them so.
 > 
-> The idea lying behind the patch as well as the initial implementation
-> belong to Glauber Costa.
-...
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -311,6 +311,58 @@ shrink_slab_node(struct shrink_control *shrinkctl, struct shrinker *shrinker,
->  	return freed;
->  }
->  
-> +static unsigned long
-> +run_shrinker(struct shrink_control *shrinkctl, struct shrinker *shrinker,
-> +	     unsigned long nr_pages_scanned, unsigned long lru_pages)
-> +{
-> +	unsigned long freed = 0;
-> +
-> +	/*
-> +	 * If we don't have a target mem cgroup, we scan them all. Otherwise
-> +	 * we will limit our scan to shrinkers marked as memcg aware.
-> +	 */
-> +	if (!(shrinker->flags & SHRINKER_MEMCG_AWARE) &&
-> +	    shrinkctl->target_mem_cgroup != NULL)
-> +		return 0;
-> +	/*
-> +	 * In a hierarchical chain, it might be that not all memcgs are kmem
-> +	 * active. kmemcg design mandates that when one memcg is active, its
-> +	 * children will be active as well. But it is perfectly possible that
-> +	 * its parent is not.
-> +	 *
-> +	 * We also need to make sure we scan at least once, for the global
-> +	 * case. So if we don't have a target memcg, we proceed normally and
-> +	 * expect to break in the next round.
-> +	 */
-> +	shrinkctl->memcg = shrinkctl->target_mem_cgroup;
-> +	do {
-> +		if (shrinkctl->memcg && !memcg_kmem_is_active(shrinkctl->memcg))
-> +			goto next;
-> +
-> +		if (!(shrinker->flags & SHRINKER_NUMA_AWARE)) {
-> +			shrinkctl->nid = 0;
-> +			freed += shrink_slab_node(shrinkctl, shrinker,
-> +					nr_pages_scanned, lru_pages);
-> +			goto next;
-> +		}
-> +
-> +		for_each_node_mask(shrinkctl->nid, shrinkctl->nodes_to_scan) {
-> +			if (node_online(shrinkctl->nid))
-> +				freed += shrink_slab_node(shrinkctl, shrinker,
-> +						nr_pages_scanned, lru_pages);
-> +
-> +		}
-> +next:
-> +		if (!(shrinker->flags & SHRINKER_MEMCG_AWARE))
-> +			break;
-> +		shrinkctl->memcg = mem_cgroup_iter(shrinkctl->target_mem_cgroup,
-> +						   shrinkctl->memcg, NULL);
-> +	} while (shrinkctl->memcg);
-> +
-> +	return freed;
-> +}
+> Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
+> Cc: Glauber Costa <glommer@openvz.org>
+> Cc: Dave Chinner <dchinner@redhat.com>
+> Cc: Al Viro <viro@zeniv.linux.org.uk>
+> ---
+>  fs/gfs2/quota.c  |    2 +-
+>  fs/super.c       |    2 +-
+>  fs/xfs/xfs_buf.c |    2 +-
+>  fs/xfs/xfs_qm.c  |    2 +-
+>  4 files changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
+> index f0435da..6cf6114 100644
+> --- a/fs/gfs2/quota.c
+> +++ b/fs/gfs2/quota.c
+> @@ -150,7 +150,7 @@ struct shrinker gfs2_qd_shrinker = {
+>  	.count_objects = gfs2_qd_shrink_count,
+>  	.scan_objects = gfs2_qd_shrink_scan,
+>  	.seeks = DEFAULT_SEEKS,
+> -	.flags = SHRINKER_NUMA_AWARE,
+> +	.flags = SHRINKER_NUMA_AWARE | SHRINKER_MEMCG_AWARE,
+>  };
 
-Ok, I think we need to improve the abstraction here, because I find
-this quite messy and hard to follow the code flow differences
-between memcg and non-memg shrinker invocations..
+I'll leave it for Steve to have the final say, but this cache tracks
+objects that have contexts that span multiple memcgs (i.e. global
+scope) and so is not a candidate for memcg based shrinking.
 
-> +
->  /*
->   * Call the shrink functions to age shrinkable caches
->   *
-> @@ -352,20 +404,10 @@ unsigned long shrink_slab(struct shrink_control *shrinkctl,
->  	}
->  
->  	list_for_each_entry(shrinker, &shrinker_list, list) {
-> -		if (!(shrinker->flags & SHRINKER_NUMA_AWARE)) {
-> -			shrinkctl->nid = 0;
-> -			freed += shrink_slab_node(shrinkctl, shrinker,
-> -					nr_pages_scanned, lru_pages);
-> -			continue;
-> -		}
-> -
-> -		for_each_node_mask(shrinkctl->nid, shrinkctl->nodes_to_scan) {
-> -			if (node_online(shrinkctl->nid))
-> -				freed += shrink_slab_node(shrinkctl, shrinker,
-> -						nr_pages_scanned, lru_pages);
-> -
-> -		}
+e.g. a single user can have processes running in multiple concurrent
+memcgs, and so the user quota dquot needs to be accessed from all
+those memcg contexts. Same for group quota objects - they can span
+multiple memcgs that different users have instantiated, simply
+because they all belong to the same group and hence are subject to
+the group quota accounting.
 
-This code is the "run_shrinker()" helper function, not the entire
-memcg loop.
+And for XFS, there's also project quotas, which means you can have
+files that are unique to both users and groups, but shared the same
+project quota and hence span memcgs that way....
 
-> +		freed += run_shrinker(shrinkctl, shrinker,
-> +				      nr_pages_scanned, lru_pages);
->  	}
+> diff --git a/fs/super.c b/fs/super.c
+> index 8f9a81b..05bead8 100644
+> --- a/fs/super.c
+> +++ b/fs/super.c
+> @@ -219,7 +219,7 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags)
+>  	s->s_shrink.scan_objects = super_cache_scan;
+>  	s->s_shrink.count_objects = super_cache_count;
+>  	s->s_shrink.batch = 1024;
+> -	s->s_shrink.flags = SHRINKER_NUMA_AWARE;
+> +	s->s_shrink.flags = SHRINKER_NUMA_AWARE | SHRINKER_MEMCG_AWARE;
+>  	return s;
 
-i.e. the shrinker execution control loop becomes much clearer if
-we separate the memcg and non-memcg shrinker execution from the
-node awareness of the shrinker like so:
+OK.
 
-	list_for_each_entry(shrinker, &shrinker_list, list) {
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 5b2a49c..d8326b6 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1679,7 +1679,7 @@ xfs_alloc_buftarg(
+>  	btp->bt_shrinker.count_objects = xfs_buftarg_shrink_count;
+>  	btp->bt_shrinker.scan_objects = xfs_buftarg_shrink_scan;
+>  	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
+> -	btp->bt_shrinker.flags = SHRINKER_NUMA_AWARE;
+> +	btp->bt_shrinker.flags = SHRINKER_NUMA_AWARE | SHRINKER_MEMCG_AWARE;
+>  	register_shrinker(&btp->bt_shrinker);
+>  	return btp;
 
-		/*
-		 * If we aren't doing targeted memcg shrinking, then run
-		 * the shrinker with a global context and move on.
-		 */
-		if (!shrinkctl->target_mem_cgroup) {
-			freed += run_shrinker(shrinkctl, shrinker,
-					      nr_pages_scanned, lru_pages);
-			continue;
-		}
+This is a cache for XFS metadata buffers, and so is way below the
+scope of memcg control. e.g. an inode buffer can hold 32 inodes,
+each that belongs to a different memcg at the VFS inode cache level.
+Even if a memcg removes an inode from the VFS cache level, that
+buffer is still relevant to 31 other memcg contexts. A similar case
+occurs for dquot buffers, and then there's filesystem internal
+metadata like AG headers that no memcg has any right to claim
+ownership of - they are owned and used solely by the filesystem, and
+can be required by *any* memcg in the system to make progress.
 
-		if (!(shrinker->flags & SHRINKER_MEMCG_AWARE))
-			continue;
+i.e. these are low level filesystem metadata caches are owned by the
+filesystem and are global resources - they will never come under
+control of memcg, and none of the memory associated with this cache
+should be accounted to a memcg context because of that....
 
-		/*
-		 * memcg shrinking: Iterate the target memcg heirarchy
-		 * and run the shrinker on each memcg context that
-		 * is found in the heirarchy.
-		 */
-		shrinkctl->memcg = shrinkctl->target_mem_cgroup;
-		do {
-			if (memcg_kmem_is_active(shrinkctl->memcg))
-				continue;
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index aaacf8f..1f9bbb5 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -903,7 +903,7 @@ xfs_qm_init_quotainfo(
+>  	qinf->qi_shrinker.count_objects = xfs_qm_shrink_count;
+>  	qinf->qi_shrinker.scan_objects = xfs_qm_shrink_scan;
+>  	qinf->qi_shrinker.seeks = DEFAULT_SEEKS;
+> -	qinf->qi_shrinker.flags = SHRINKER_NUMA_AWARE;
+> +	qinf->qi_shrinker.flags = SHRINKER_NUMA_AWARE | SHRINKER_MEMCG_AWARE;
+>  	register_shrinker(&qinf->qi_shrinker);
+>  	return 0;
 
-			freed += run_shrinker(shrinkctl, shrinker,
-					      nr_pages_scanned, lru_pages);
-		while ((shrinkctl->memcg =
-				mem_cgroup_iter(shrinkctl->target_mem_cgroup,
-						shrinkctl->memcg, NULL)));
-	}
+That's the XFS dquot cache, analogous to the GFS2 dquot
+cache I commented on above. Hence, not a candidate for memcg
+shrinking.
 
-That makes the code much easier to read and clearly demonstrates the
-differences betwen non-memcg and memcg shrinking contexts, and
-separates them cleanly from the shrinker implementation.  IMO,
-that's much nicer than trying to handle all contexts in the one
-do-while loop.
+Remember - caches use list_lru for scalability reasons right now,
+but that doesn't automatically mean memcg based shrinking makes
+sense for them.
 
 Cheers,
 
 Dave.
 -- 
 Dave Chinner
-david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org
+david@fromorbit.com
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
