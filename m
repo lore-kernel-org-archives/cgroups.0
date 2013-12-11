@@ -1,150 +1,69 @@
-From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: Race in memcg kmem?
-Date: Wed, 11 Dec 2013 10:22:06 +0400
-Message-ID: <52A8048E.4020806@parallels.com>
-References: <52A71E43.9040200@parallels.com> <CAA6-i6oyraHQ7_1GBKxgupS12_QFx708Niu93nyNFLrbQBXE5A@mail.gmail.com>
+From: Mel Gorman <mgorman@suse.de>
+Subject: Re: [patch 7/8] mm, memcg: allow processes handling oom
+ notifications to access reserves
+Date: Wed, 11 Dec 2013 09:49:12 +0000
+Message-ID: <20131211094912.GX11295@suse.de>
+References: <alpine.DEB.2.02.1312032116440.29733@chino.kir.corp.google.com>
+ <alpine.DEB.2.02.1312032118570.29733@chino.kir.corp.google.com>
+ <20131204054533.GZ3556@cmpxchg.org>
+ <alpine.DEB.2.02.1312041742560.20115@chino.kir.corp.google.com>
+ <20131205025026.GA26777@htj.dyndns.org>
+ <alpine.DEB.2.02.1312051537550.7717@chino.kir.corp.google.com>
+ <20131206190105.GE13373@htj.dyndns.org>
+ <alpine.DEB.2.02.1312061441390.8949@chino.kir.corp.google.com>
+ <20131210215037.GB9143@htj.dyndns.org>
+ <alpine.DEB.2.02.1312101522400.22701@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAA6-i6oyraHQ7_1GBKxgupS12_QFx708Niu93nyNFLrbQBXE5A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.02.1312101522400.22701@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: David Rientjes <rientjes@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Rik van Riel <riel@redhat.com>, Pekka Enberg <penberg@kernel.org>, Christoph Lameter <cl@linux-foundation.org>, Li Zefan <lizefan@huawei.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On 12/11/2013 03:13 AM, Glauber Costa wrote:
-> On Tue, Dec 10, 2013 at 5:59 PM, Vladimir Davydov
-> <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
->> Hi,
->>
->> Looking through the per-memcg kmem_cache initialization code, I have a
->> bad feeling that it is prone to a race. Before getting to fixing it, I'd
->> like to ensure this race is not only in my imagination. Here it goes.
->>
->> We keep per-memcg kmem caches in the memcg_params field of each root
->> cache. The memcg_params array is grown dynamically by
->> memcg_update_cache_size(). I guess that if this function is executed
->> concurrently with memcg_create_kmem_cache() we can get a race resulting
->> in a memory leak.
->>
-> Ok, let's see.
->
->> -- memcg_create_kmem_cache(memcg, cachep) --
->> creates a new kmem_cache corresponding to a memcg and assigns it to the
->> root cache; called in the background - it is OK to have several such
->> functions trying to create a cache for the same memcg concurrently, but
->> only one of them should succeed.
-> Yes.
->
->> @cachep is the root cache
->> @memcg is the memcg we want to create a cache for.
->>
->> The function:
->>
->> A1) assures there is no cache corresponding to the memcg (if it is we
->> have nothing to do):
->>     idx = memcg_cache_id(memcg);
->>     if (cachep->memcg_params[idx])
->>         goto out;
->>
->> A2) creates and assigns a new cache:
->>     new_cachep = kmem_cache_dup(memcg, cachep);
-> Please note this cannot proceed in parallel with memcg_update_cache_size(),
-> because they both take the slab mutex.
+On Tue, Dec 10, 2013 at 03:55:48PM -0800, David Rientjes wrote:
+> > Okay, are you saying that userland OOM handlers will be able to dip
+> > into kernel reserve memory?  Maybe I'm mistaken but you realize that
+> > that reserve is there to make things like task exits work under OOM
+> > conditions, right?  The only way userland OOM handlers as you describe
+> > would work would be creating a separate reserve for them.
+> > 
+> 
+> Yes, PF_OOM_HANDLER processes would be able to allocate this amount as 
+> specified by memory.oom_reserve_in_bytes below the per-zone watermarks and 
+> the amount of reserves can already be controlled via min_free_kbytes, 
+> which we already increase internally for thp.
 
-Oh, I see. memcg_create_kmem_cache() takes and releases the slab mutex
-in kmem_cache_create_memcg(), which is called by kmem_cache_dup(). This
-effectively works as a barrier that does not allow A2 to proceed until
-memcg_update_cache_sizes() finishes, which makes the race implausible.
-Did not notice that at first. Thanks for clarification!
+THP increased min_free_kbytes for external fragmentation control as
+it reduces the amount of mixing of the different migrate types within
+pageblocks. It was not about reserves, increasing reserves was just the
+most straight forward way of handling the problem.
 
->
->>     // init new_cachep
->>     cachep->memcg_params->memcg_caches[idx] = new_cachep;
->>
->>
->> -- memcg_update_cache_size(s, num_groups) --
->> grows s->memcg_params to accomodate data for num_groups memcg's
->> @s is the root cache whose memcg_params we want to grow
->> @num_groups is the new number of kmem-active cgroups (defines the new
->> size of memcg_params array).
->>
->> The function:
->>
->> B1) allocates and assigns a new cache:
->>     cur_params = s->memcg_params;
->>     s->memcg_params = kzalloc(size, GFP_KERNEL);
->>
->> B2) copies per-memcg cache ptrs from the old memcg_params array to the
->> new one:
->>     for (i = 0; i < memcg_limited_groups_array_size; i++) {
->>         if (!cur_params->memcg_caches[i])
->>             continue;
->>         s->memcg_params->memcg_caches[i] =
->>                     cur_params->memcg_caches[i];
->>     }
->>
->> B3) frees the old array:
->>     kfree(cur_params);
->>
->>
->> Since these two functions do not share any mutexes, we can get the
-> They do share a mutex, the slab mutex.
->
->> following race:
->>
->> Assume, by the time Cpu0 gets to memcg_create_kmem_cache(), the memcg
->> cache has already been created by another thread, so this function
->> should do nothing.
->>
->> Cpu0    Cpu1
->> ----    ----
->>         B1
->> A1              we haven't initialized memcg_params yet so Cpu0 will
->>                 proceed to A2 to alloc and assign a new cache
->> A2
->>         B2      Cpu1 rewrites the memcg cache ptr set by Cpu0 at A2
->>                 - a memory leak?
->>         B3
->>
->> I'd like to add that even if I'm right about the race, this is rather
->> not critical, because memcg_update_cache_sizes() is called very rarely.
->>
-> Every race is critical.
->
-> So, I am a bit lost by your description. Get back to me if I got anything wrong,
-> but I am think that the point that you're missing is that all heavy
-> slab operations
-> take the slab_mutex underneath, and that includes cache creation and update.
->
->
->> BTW, it seems to me that the way we update memcg_params in
->> memcg_update_cache_size() make cache_from_memcg_idx() prone to
->> use-after-free:
->>
->>> static inline struct kmem_cache *
->>> cache_from_memcg_idx(struct kmem_cache *s, int idx)
->>> {
->>>     if (!s->memcg_params)
->>>         return NULL;
->>>     return s->memcg_params->memcg_caches[idx];
->>> }
->> This is equivalent to
->>
->> 1) struct memcg_cache_params *params = s->memcg_params;
->> 2) return params->memcg_caches[idx];
->>
->> If memcg_update_cache_size() is executed between steps 1 and 2 on
->> another CPU, at step 2 we will dereference memcg_params that has already
->> been freed. This is very unlikely, but still possible. Perhaps, we
->> should free old memcg params only after a sync_rcu()?
->>
-> You seem to be right in this one. Indeed, if my mind does not betray
-> me, That is how I freed
-> the LRUs. (with synchronize_rcus).
+This dicussion is closer to swap-over-network than to anything
+THP did. Swap-over-network takes care to only allocate memory for
+reserves if it the allocation was required for swapping and reject
+all other allocation requests to the extent they can get throttled in
+throttle_direct_reclaim. Once allocated from reserves for swapping,
+care is taken that the allocations are not leaked to other users (e.g.
+is_obj_pfmemalloc checks in slab).
 
-Yes, you freed LRUs only after a sync_rcu, that's why the way
-memcg_params is updated looks suspicious to me. I'll try to fix it then.
+It does not look like PF_OOM_HANDLER takes the same sort of care. Even
+if it did, it's not quite the same. swap-over-network allocates from the
+zone reserves *only* the memory required to writeback the pages. It can
+be slow but it'll make forward progress. A userspace process with special
+privileges could allocate any amount of memory for any reason so it would
+need a pre-configured and limited reserve on top of the zone reserves or
+run the risk of livelock.
 
-Thanks.
+-- 
+Mel Gorman
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
