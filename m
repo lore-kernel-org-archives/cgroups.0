@@ -1,60 +1,78 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
- access to memory reserves
-Date: Wed, 11 Dec 2013 10:55:49 +0100
-Message-ID: <20131211095549.GA18741@dhcp22.suse.cz>
-References: <20131202200221.GC5524@dhcp22.suse.cz>
- <20131202212500.GN22729@cmpxchg.org>
- <20131203120454.GA12758@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312031544530.5946@chino.kir.corp.google.com>
- <20131204111318.GE8410@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312041606260.6329@chino.kir.corp.google.com>
- <20131209124840.GC3597@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312091328550.11026@chino.kir.corp.google.com>
- <20131210103827.GB20242@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312101655430.22701@chino.kir.corp.google.com>
+From: Steven Whitehouse <swhiteho@redhat.com>
+Subject: Re: [PATCH v13 12/16] fs: mark list_lru based shrinkers memcg aware
+Date: Wed, 11 Dec 2013 11:08:05 +0000
+Message-ID: <1386760085.2706.20.camel@menhir>
+References: <cover.1386571280.git.vdavydov@parallels.com>
+	 <9e1005848996c3df5ceca9e8262edcf8211a893d.1386571280.git.vdavydov@parallels.com>
+	 <20131210041747.GA31386@dastard>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1312101655430.22701@chino.kir.corp.google.com>
+In-Reply-To: <20131210041747.GA31386@dastard>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Vladimir Davydov <vdavydov@parallels.com>, dchinner@redhat.com, hannes@cmpxchg.org, mhocko@suse.cz, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, glommer@openvz.org, glommer@gmail.com, Al Viro <viro@zeniv.linux.org.uk>
 
-On Tue 10-12-13 17:03:45, David Rientjes wrote:
-> On Tue, 10 Dec 2013, Michal Hocko wrote:
-> 
-> > > What exactly would you like to see?
+Hi,
+
+On Tue, 2013-12-10 at 15:17 +1100, Dave Chinner wrote:
+> On Mon, Dec 09, 2013 at 12:05:53PM +0400, Vladimir Davydov wrote:
+> > Since now list_lru automatically distributes objects among per-memcg
+> > lists and list_lru_{count,walk} employ information passed in the
+> > shrink_control argument to scan appropriate list, all shrinkers that
+> > keep objects in the list_lru structure can already work as memcg-aware.
+> > Let us mark them so.
 > > 
-> > How often do you see PF_EXITING tasks which haven't been killed causing
-> > a pointless notification? Because fatal_signal_pending and TIF_MEMDIE
-> > cases are already handled because we bypass charges in those cases (except
-> > for user OOM killer killed tasks which don't get TIF_MEMDIE and that
-> > should be fixed).
+> > Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
+> > Cc: Glauber Costa <glommer@openvz.org>
+> > Cc: Dave Chinner <dchinner@redhat.com>
+> > Cc: Al Viro <viro@zeniv.linux.org.uk>
+> > ---
+> >  fs/gfs2/quota.c  |    2 +-
+> >  fs/super.c       |    2 +-
+> >  fs/xfs/xfs_buf.c |    2 +-
+> >  fs/xfs/xfs_qm.c  |    2 +-
+> >  4 files changed, 4 insertions(+), 4 deletions(-)
 > > 
+> > diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
+> > index f0435da..6cf6114 100644
+> > --- a/fs/gfs2/quota.c
+> > +++ b/fs/gfs2/quota.c
+> > @@ -150,7 +150,7 @@ struct shrinker gfs2_qd_shrinker = {
+> >  	.count_objects = gfs2_qd_shrink_count,
+> >  	.scan_objects = gfs2_qd_shrink_scan,
+> >  	.seeks = DEFAULT_SEEKS,
+> > -	.flags = SHRINKER_NUMA_AWARE,
+> > +	.flags = SHRINKER_NUMA_AWARE | SHRINKER_MEMCG_AWARE,
+> >  };
 > 
-> Triggering a pointless notification with PF_EXITING is rare, yet one 
-> pointless notification can be avoided with the patch. 
+> I'll leave it for Steve to have the final say, but this cache tracks
+> objects that have contexts that span multiple memcgs (i.e. global
+> scope) and so is not a candidate for memcg based shrinking.
+> 
+> e.g. a single user can have processes running in multiple concurrent
+> memcgs, and so the user quota dquot needs to be accessed from all
+> those memcg contexts. Same for group quota objects - they can span
+> multiple memcgs that different users have instantiated, simply
+> because they all belong to the same group and hence are subject to
+> the group quota accounting.
+> 
+> And for XFS, there's also project quotas, which means you can have
+> files that are unique to both users and groups, but shared the same
+> project quota and hence span memcgs that way....
+> 
 
-Sigh. Yes it will avoid one particular and rare race. There will still
-be notifications without oom kills.
+Well that seems to make sense to me. I'm not that familiar with memcg
+and my main interest was to use the provided lru code, unless there was
+a good reason why we should roll our own, and also to take advantage of
+the NUMA friendliness of the new code. Although my main target in GFS2
+was the glock lru, I've not got that far yet as it is a rather more
+complicated thing to do, compared with the quota code,
 
-Anyway.
-Does the reclaim make any sense for PF_EXITING tasks? Shouldn't we
-simply bypass charges of these tasks automatically. Those tasks will
-free some memory anyway so why to trigger reclaim and potentially OOM
-in the first place? Do we need to go via TIF_MEMDIE loop in the first
-place?
+Steve.
 
-> Additionally, it also avoids a pointless notification for a racing
-> SIGKILL.
-
--- 
-Michal Hocko
-SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
