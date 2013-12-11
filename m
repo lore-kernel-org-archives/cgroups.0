@@ -1,78 +1,106 @@
-From: Steven Whitehouse <swhiteho@redhat.com>
-Subject: Re: [PATCH v13 12/16] fs: mark list_lru based shrinkers memcg aware
-Date: Wed, 11 Dec 2013 11:08:05 +0000
-Message-ID: <1386760085.2706.20.camel@menhir>
-References: <cover.1386571280.git.vdavydov@parallels.com>
-	 <9e1005848996c3df5ceca9e8262edcf8211a893d.1386571280.git.vdavydov@parallels.com>
-	 <20131210041747.GA31386@dastard>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [patch 7/8] mm, memcg: allow processes handling oom
+ notifications to access reserves
+Date: Wed, 11 Dec 2013 07:42:40 -0500
+Message-ID: <20131211124240.GA24557@htj.dyndns.org>
+References: <alpine.DEB.2.02.1312032116440.29733@chino.kir.corp.google.com>
+ <alpine.DEB.2.02.1312032118570.29733@chino.kir.corp.google.com>
+ <20131204054533.GZ3556@cmpxchg.org>
+ <alpine.DEB.2.02.1312041742560.20115@chino.kir.corp.google.com>
+ <20131205025026.GA26777@htj.dyndns.org>
+ <alpine.DEB.2.02.1312051537550.7717@chino.kir.corp.google.com>
+ <20131206190105.GE13373@htj.dyndns.org>
+ <alpine.DEB.2.02.1312061441390.8949@chino.kir.corp.google.com>
+ <20131210215037.GB9143@htj.dyndns.org>
+ <alpine.DEB.2.02.1312101522400.22701@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20131210041747.GA31386@dastard>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=hcWtwoa1Uw6PnftUXUxc7tT1TOAgpcN/tDuFfNWxQNE=;
+        b=mjf5tImUPilvUgC6n7IXxZTha0GyrGYMhMAf09EpMXClItDvsgQjXqNXaJoNhp4Mjg
+         pzYWIkzon5a2mNAegtzDk8EUwoUqhJnVmKSvQwPiMMBuU9r4l9ja5M1OQ5W3Nrhj2ovL
+         2u9AwywH1OMETJhav6k1Mi5ppdqzOU6uLhJc4IRapJKig53OmwB7gK2EIa31GNsNqYZD
+         nqlbAHRmItPNiNAy9nMSH4AoarVpv5cu5LRy8wkLYhBPspMStC9teAQab5xuODVvdp9U
+         ckziwO8zAdY/odGieQQmQ3Zdo2hbLJPjFtU1YVOI30GkE47W7XfYStIaeSHpe86gOwH6
+         wYbg==
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.02.1312101522400.22701@chino.kir.corp.google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Dave Chinner <david@fromorbit.com>
-Cc: Vladimir Davydov <vdavydov@parallels.com>, dchinner@redhat.com, hannes@cmpxchg.org, mhocko@suse.cz, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, glommer@openvz.org, glommer@gmail.com, Al Viro <viro@zeniv.linux.org.uk>
+Content-Transfer-Encoding: 7bit
+To: David Rientjes <rientjes@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Pekka Enberg <penberg@kernel.org>, Christoph Lameter <cl@linux-foundation.org>, Li Zefan <lizefan@huawei.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-Hi,
+Yo,
 
-On Tue, 2013-12-10 at 15:17 +1100, Dave Chinner wrote:
-> On Mon, Dec 09, 2013 at 12:05:53PM +0400, Vladimir Davydov wrote:
-> > Since now list_lru automatically distributes objects among per-memcg
-> > lists and list_lru_{count,walk} employ information passed in the
-> > shrink_control argument to scan appropriate list, all shrinkers that
-> > keep objects in the list_lru structure can already work as memcg-aware.
-> > Let us mark them so.
-> > 
-> > Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
-> > Cc: Glauber Costa <glommer@openvz.org>
-> > Cc: Dave Chinner <dchinner@redhat.com>
-> > Cc: Al Viro <viro@zeniv.linux.org.uk>
-> > ---
-> >  fs/gfs2/quota.c  |    2 +-
-> >  fs/super.c       |    2 +-
-> >  fs/xfs/xfs_buf.c |    2 +-
-> >  fs/xfs/xfs_qm.c  |    2 +-
-> >  4 files changed, 4 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
-> > index f0435da..6cf6114 100644
-> > --- a/fs/gfs2/quota.c
-> > +++ b/fs/gfs2/quota.c
-> > @@ -150,7 +150,7 @@ struct shrinker gfs2_qd_shrinker = {
-> >  	.count_objects = gfs2_qd_shrink_count,
-> >  	.scan_objects = gfs2_qd_shrink_scan,
-> >  	.seeks = DEFAULT_SEEKS,
-> > -	.flags = SHRINKER_NUMA_AWARE,
-> > +	.flags = SHRINKER_NUMA_AWARE | SHRINKER_MEMCG_AWARE,
-> >  };
+On Tue, Dec 10, 2013 at 03:55:48PM -0800, David Rientjes wrote:
+> > Well, the gotcha there is that you won't be able to do that with
+> > system level OOM handler either unless you create a separately
+> > reserved memory, which, again, can be achieved using hierarchical
+> > memcg setup already.  Am I missing something here?
 > 
-> I'll leave it for Steve to have the final say, but this cache tracks
-> objects that have contexts that span multiple memcgs (i.e. global
-> scope) and so is not a candidate for memcg based shrinking.
-> 
-> e.g. a single user can have processes running in multiple concurrent
-> memcgs, and so the user quota dquot needs to be accessed from all
-> those memcg contexts. Same for group quota objects - they can span
-> multiple memcgs that different users have instantiated, simply
-> because they all belong to the same group and hence are subject to
-> the group quota accounting.
-> 
-> And for XFS, there's also project quotas, which means you can have
-> files that are unique to both users and groups, but shared the same
-> project quota and hence span memcgs that way....
-> 
+> System oom conditions would only arise when the usage of memcgs A + B 
+> above cause the page allocator to not be able to allocate memory without 
+> oom killing something even though the limits of both A and B may not have 
+> been reached yet.  No userspace oom handler can allocate memory with 
+> access to memory reserves in the page allocator in such a context; it's 
+> vital that if we are to handle system oom conditions in userspace that we 
+> given them access to memory that other processes can't allocate.  You 
+> could attach a userspace system oom handler to any memcg in this scenario 
+> with memory.oom_reserve_in_bytes and since it has PF_OOM_HANDLER it would 
+> be able to allocate in reserves in the page allocator and overcharge in 
+> its memcg to handle it.  This isn't possible only with a hierarchical 
+> memcg setup unless you ensure the sum of the limits of the top level 
+> memcgs do not equal or exceed the sum of the min watermarks of all memory 
+> zones, and we exceed that.
 
-Well that seems to make sense to me. I'm not that familiar with memcg
-and my main interest was to use the provided lru code, unless there was
-a good reason why we should roll our own, and also to take advantage of
-the NUMA friendliness of the new code. Although my main target in GFS2
-was the glock lru, I've not got that far yet as it is a rather more
-complicated thing to do, compared with the quota code,
+Yes, exactly.  If system memory is 128M, create top level memcgs w/
+120M and 8M each (well, with some slack of course) and then overcommit
+the descendants of 120M while putting OOM handlers and friends under
+8M without overcommitting.
 
-Steve.
+...
+> The stronger rationale is that you can't handle system oom in userspace 
+> without this functionality and we need to do so.
 
+You're giving yourself an unreasonable precondition - overcommitting
+at root level and handling system OOM from userland - and then trying
+to contort everything to fit that.  How can possibly "overcommitting
+at root level" be a goal of and in itself?  Please take a step back
+and look at and explain the *problem* you're trying to solve.  You
+haven't explained why that *need*s to be the case at all.
+
+I wrote this at the start of the thread but you're still doing the
+same thing.  You're trying to create a hidden memcg level inside a
+memcg.  At the beginning of this thread, you were trying to do that
+for !root memcgs and now you're arguing that you *need* that for root
+memcg.  Because there's no other limit we can make use of, you're
+suggesting the use of kernel reserve memory for that purpose.  It
+seems like an absurd thing to do to me.  It could be that you might
+not be able to achieve exactly the same thing that way, but the right
+thing to do would be improving memcg in general so that it can instead
+of adding yet more layer of half-baked complexity, right?
+
+Even if there are some inherent advantages of system userland OOM
+handling with a separate physical memory reserve, which AFAICS you
+haven't succeeded at showing yet, this is a very invasive change and,
+as you said before, something with an *extremely* narrow use case.
+Wouldn't it be a better idea to improve the existing mechanisms - be
+that memcg in general or kernel OOM handling - to fit the niche use
+case better?  I mean, just think about all the corner cases.  How are
+you gonna handle priority inversion through locked pages or
+allocations given out to other tasks through slab?  You're suggesting
+opening a giant can of worms for extremely narrow benefit which
+doesn't even seem like actually needing opening the said can.
+
+Thanks.
+
+-- 
+tejun
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
