@@ -1,122 +1,70 @@
-From: Tim Hockin <thockin@hockin.org>
-Subject: Re: [patch 7/8] mm, memcg: allow processes handling oom notifications
- to access reserves
-Date: Wed, 11 Dec 2013 21:37:46 -0800
-Message-ID: <CAAAKZwsmM-C=kLGV=RW=Y4Mq=BWpQzuPruW6zvEr9p0Xs4GD5g@mail.gmail.com>
-References: <alpine.DEB.2.02.1312032116440.29733@chino.kir.corp.google.com>
- <alpine.DEB.2.02.1312032118570.29733@chino.kir.corp.google.com>
- <20131204054533.GZ3556@cmpxchg.org> <alpine.DEB.2.02.1312041742560.20115@chino.kir.corp.google.com>
- <20131205025026.GA26777@htj.dyndns.org> <alpine.DEB.2.02.1312051537550.7717@chino.kir.corp.google.com>
- <20131206190105.GE13373@htj.dyndns.org> <alpine.DEB.2.02.1312061441390.8949@chino.kir.corp.google.com>
- <20131210215037.GB9143@htj.dyndns.org> <alpine.DEB.2.02.1312101522400.22701@chino.kir.corp.google.com>
- <20131211124240.GA24557@htj.dyndns.org>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] cgroup: fix fail path in cgroup_load_subsys()
+Date: Thu, 12 Dec 2013 14:01:12 +0800
+Message-ID: <52A95128.9020309@huawei.com>
+References: <1386403085-24866-1-git-send-email-vdavydov@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:sender:in-reply-to:references:from:date:message-id
-         :subject:to:cc:content-type;
-        bh=bO7P3XtaPaEE2z/r07RPUd38FfUjU20hhQvKLLJmSnI=;
-        b=veMWqszoYLae30LHTDfXbcUHIuhta/SF1EnWLq42wXh4Rp/o0GRIyEYmgvZrU3IfIF
-         qPslNQXSmhW3/QXbHb5H07d2B2x9eXpGBqDUcGlcOaeLXGpZht4EnlK0DxngBXkknr4u
-         4r0t6WJ1gdzLcFyUV2UEwKOGnA4Pl5icdBsFeXkQUvrLps6GB/xoCU2wnpCKbe67/CQN
-         vV5vRAlxVaaLHASwnXdDM35bm3fPsm/jPkK2HIsDhJbsFfZcX/bV3hFTmnAH/WYdDDbv
-         1Ief1ulgTPKCuumAoXXImKp/kqgPYNM7cvJFC8wBG9MwA8wj2SqxiB99mrRUeWLikw2N
-         5ZwA==
-In-Reply-To: <20131211124240.GA24557@htj.dyndns.org>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1386403085-24866-1-git-send-email-vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: David Rientjes <rientjes@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Pekka Enberg <penberg@kernel.org>, Christoph Lameter <cl@linux-foundation.org>, Li Zefan <lizefan@huawei.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, Cgroups <cgroups@vger.kernel.org>
+To: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-The immediate problem I see with setting aside reserves "off the top"
-is that we don't really know a priori how much memory the kernel
-itself is going to use, which could still land us in an overcommitted
-state.
+> @@ -4861,10 +4861,8 @@ int __init_or_module cgroup_load_subsys(struct cgroup_subsys *ss)
+>  	 */
+>  	css = ss->css_alloc(cgroup_css(cgroup_dummy_top, ss));
+>  	if (IS_ERR(css)) {
+> -		/* failure case - need to deassign the cgroup_subsys[] slot. */
+> -		cgroup_subsys[ss->subsys_id] = NULL;
+> -		mutex_unlock(&cgroup_mutex);
+> -		return PTR_ERR(css);
+> +		ret = PTR_ERR(css);
+> +		goto out_err;
+>  	}
+>  
+>  	list_add(&ss->sibling, &cgroup_dummy_root.subsys_list);
+> @@ -4873,6 +4871,10 @@ int __init_or_module cgroup_load_subsys(struct cgroup_subsys *ss)
+>  	/* our new subsystem will be attached to the dummy hierarchy. */
+>  	init_css(css, ss, cgroup_dummy_top);
+>  
+> +	ret = online_css(css);
+> +	if (ret)
+> +		goto free_css;
+> +
+>  	/*
+>  	 * Now we need to entangle the css into the existing css_sets. unlike
+>  	 * in cgroup_init_subsys, there are now multiple css_sets, so each one
+> @@ -4896,18 +4898,17 @@ int __init_or_module cgroup_load_subsys(struct cgroup_subsys *ss)
+>  	}
+>  	write_unlock(&css_set_lock);
+>  
+> -	ret = online_css(css);
+> -	if (ret)
+> -		goto err_unload;
+> -
 
-In other words, if I have your 128 MB machine, and I set aside 8 MB
-for OOM handling, and give 120 MB for jobs, I have not accounted for
-the kernel.  So I set aside 8 MB for OOM and 100 MB for jobs, leaving
-20 MB for jobs.  That should be enough right?  Hell if I know, and
-nothing ensures that.
+Moving online_css() upwards should be fine.
 
-On Wed, Dec 11, 2013 at 4:42 AM, Tejun Heo <tj@kernel.org> wrote:
-> Yo,
->
-> On Tue, Dec 10, 2013 at 03:55:48PM -0800, David Rientjes wrote:
->> > Well, the gotcha there is that you won't be able to do that with
->> > system level OOM handler either unless you create a separately
->> > reserved memory, which, again, can be achieved using hierarchical
->> > memcg setup already.  Am I missing something here?
->>
->> System oom conditions would only arise when the usage of memcgs A + B
->> above cause the page allocator to not be able to allocate memory without
->> oom killing something even though the limits of both A and B may not have
->> been reached yet.  No userspace oom handler can allocate memory with
->> access to memory reserves in the page allocator in such a context; it's
->> vital that if we are to handle system oom conditions in userspace that we
->> given them access to memory that other processes can't allocate.  You
->> could attach a userspace system oom handler to any memcg in this scenario
->> with memory.oom_reserve_in_bytes and since it has PF_OOM_HANDLER it would
->> be able to allocate in reserves in the page allocator and overcharge in
->> its memcg to handle it.  This isn't possible only with a hierarchical
->> memcg setup unless you ensure the sum of the limits of the top level
->> memcgs do not equal or exceed the sum of the min watermarks of all memory
->> zones, and we exceed that.
->
-> Yes, exactly.  If system memory is 128M, create top level memcgs w/
-> 120M and 8M each (well, with some slack of course) and then overcommit
-> the descendants of 120M while putting OOM handlers and friends under
-> 8M without overcommitting.
->
-> ...
->> The stronger rationale is that you can't handle system oom in userspace
->> without this functionality and we need to do so.
->
-> You're giving yourself an unreasonable precondition - overcommitting
-> at root level and handling system OOM from userland - and then trying
-> to contort everything to fit that.  How can possibly "overcommitting
-> at root level" be a goal of and in itself?  Please take a step back
-> and look at and explain the *problem* you're trying to solve.  You
-> haven't explained why that *need*s to be the case at all.
->
-> I wrote this at the start of the thread but you're still doing the
-> same thing.  You're trying to create a hidden memcg level inside a
-> memcg.  At the beginning of this thread, you were trying to do that
-> for !root memcgs and now you're arguing that you *need* that for root
-> memcg.  Because there's no other limit we can make use of, you're
-> suggesting the use of kernel reserve memory for that purpose.  It
-> seems like an absurd thing to do to me.  It could be that you might
-> not be able to achieve exactly the same thing that way, but the right
-> thing to do would be improving memcg in general so that it can instead
-> of adding yet more layer of half-baked complexity, right?
->
-> Even if there are some inherent advantages of system userland OOM
-> handling with a separate physical memory reserve, which AFAICS you
-> haven't succeeded at showing yet, this is a very invasive change and,
-> as you said before, something with an *extremely* narrow use case.
-> Wouldn't it be a better idea to improve the existing mechanisms - be
-> that memcg in general or kernel OOM handling - to fit the niche use
-> case better?  I mean, just think about all the corner cases.  How are
-> you gonna handle priority inversion through locked pages or
-> allocations given out to other tasks through slab?  You're suggesting
-> opening a giant can of worms for extremely narrow benefit which
-> doesn't even seem like actually needing opening the said can.
->
-> Thanks.
->
-> --
-> tejun
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+>  	/* success! */
+>  	mutex_unlock(&cgroup_mutex);
+>  	return 0;
+>  
+> -err_unload:
+> +free_css:
+> +	list_del(&ss->sibling);
+> +	ss->css_free(css);
+> +out_err:
+> +	/* failure case - need to deassign the cgroup_subsys[] slot. */
+> +	cgroup_subsys[ss->subsys_id] = NULL;
+>  	mutex_unlock(&cgroup_mutex);
+> -	/* @ss can't be mounted here as try_module_get() would fail */
+> -	cgroup_unload_subsys(ss);
+>  	return ret;
+>  }
+>  EXPORT_SYMBOL_GPL(cgroup_load_subsys);
+> 
