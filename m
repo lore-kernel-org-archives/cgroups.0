@@ -1,8 +1,8 @@
 From: Michal Hocko <mhocko@suse.cz>
 Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
  access to memory reserves
-Date: Thu, 12 Dec 2013 11:50:03 +0100
-Message-ID: <20131212105003.GC2630@dhcp22.suse.cz>
+Date: Thu, 12 Dec 2013 13:11:40 +0100
+Message-ID: <20131212121140.GD2630@dhcp22.suse.cz>
 References: <alpine.DEB.2.02.1312031544530.5946@chino.kir.corp.google.com>
  <20131204111318.GE8410@dhcp22.suse.cz>
  <alpine.DEB.2.02.1312041606260.6329@chino.kir.corp.google.com>
@@ -26,109 +26,112 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.o
 
 On Thu 12-12-13 11:31:59, Michal Hocko wrote:
 [...]
-> > > Anyway.
-> > > Does the reclaim make any sense for PF_EXITING tasks? Shouldn't we
-> > > simply bypass charges of these tasks automatically. Those tasks will
-> > > free some memory anyway so why to trigger reclaim and potentially OOM
-> > > in the first place? Do we need to go via TIF_MEMDIE loop in the first
-> > > place?
-> > > 
-> > 
-> > I don't see any reason to make an optimization there since they will get 
-> > TIF_MEMDIE set if reclaim has failed on one of their charges or if it 
-> > results in a system oom through the page allocator's oom killer.
+> The semantic would be as simple as "notification is sent only when
+> an action is due". It will be still racy as nothing prevents a task
+> which is not under OOM to exit and release some memory but there is no
+> sensible way to address that. On the other hand such a semantic would be
+> sensible for oom_control listeners because they will know that an action
+> has to be or will be taken (the line was drawn).
 > 
-> This all will happen after MEM_CGROUP_RECLAIM_RETRIES full reclaim
-> rounds. Is it really worth the addional overhead just to later say "OK
-> go ahead and skipp charges"?
-> And for the !oom memcg it might reclaim some pages which could have
-> stayed on LRUs just to free some memory little bit later and release the
-> memory pressure.
-> So I would rather go with
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index c72b03bf9679..fee25c5934d2 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2692,7 +2693,8 @@ static int __mem_cgroup_try_charge(struct mm_struct *mm,
->  	 * MEMDIE process.
->  	 */
->  	if (unlikely(test_thread_flag(TIF_MEMDIE)
-> -		     || fatal_signal_pending(current)))
-> +		     || fatal_signal_pending(current))
-> +		     || current->flags & PF_EXITING)
->  		goto bypass;
->  
->  	if (unlikely(task_in_memcg_oom(current)))
-> 
-> rather than the later checks down the oom_synchronize paths. The comment
-> already mentions dying process...
+> Can we agree on this, Johannes? Or you see the line drawn when
+> mem_cgroup_oom_synchronize has been reached already no matter whether
+> the action is to be done or not?
 
-With the full changelog. I will repost it in a separate thread if you
-are OK with this.
----
-From 6e24846f531bb1cc2e68383abf9a6c63b4ee1f78 Mon Sep 17 00:00:00 2001
+Something like the following:
+
+From 5d9c01e2814a7ade49db7945ad3890f4f138855e Mon Sep 17 00:00:00 2001
 From: Michal Hocko <mhocko@suse.cz>
-Date: Thu, 12 Dec 2013 11:37:27 +0100
-Subject: [PATCH] memcg: Do not hang on OOM when killed by userspace OOM
+Date: Thu, 12 Dec 2013 11:50:17 +0100
+Subject: [PATCH] memcg: notify userspace about OOM when and action is due
 
-Eric has reported that he can see task(s) stuck in memcg OOM handler
-regularly. The only way out is to
-	echo 0 > $GROUP/memory.oom_controll
-His usecase is:
-- Setup a hierarchy with memory and the freezer
-  (disable kernel oom and have a process watch for oom).
-- In that memory cgroup add a process with one thread per cpu.
-- In one thread slowly allocate once per second I think it is 16M of ram
-  and mlock and dirty it (just to force the pages into ram and stay there).
-- When oom is achieved loop:
-  * attempt to freeze all of the tasks.
-  * if frozen send every task SIGKILL, unfreeze, remove the directory in
-    cgroupfs.
+Userspace is currently notified about OOM condition after fails
+to reclaim any memory after MEM_CGROUP_RECLAIM_RETRIES rounds.
+This usually means that the memcg is really in troubles and an
+OOM action (either done by userspace or kernel) has to be taken.
+The kernel OOM killer however bails out and doesn't kill anything
+if it sees an already dying/exiting task in a good hope a memory
+will be released and OOM situation will be resolved.
 
-Eric has then pinpointed the issue to be memcg specific.
+Therefore it makes sense to notify userspace only after really all
+measures have been taken and an userspace action is required or
+the kernel kills a task.
 
-All tasks are sitting on the memcg_oom_waitq when memcg oom is disabled.
-Those that have received fatal signal will bypass the charge and should
-continue on their way out. The tricky part is that the exit path might
-trigger a page fault (e.g. exit_robust_list) thus the memcg charge
-while its memcg is still under OOM because nobody has released any
-charges. Unlike with the in-kernel OOM handler the exiting task doesn't
-get TIF_MEMDIE set so it doesn't shortcut charges and falls to the
-memcg OOM again without any way out of it as there are no fatal signals
-pending anymore.
-
-This patch fixes the issue by checking PF_EXITING early in
-__mem_cgroup_try_charge and bypass the charge same as if it had fatal
-signal pending or TIF_MEMDIE set.
-
-Normally (not killed) exiting tasks will bypass the charge now but
-this should be OK as the task is leaving and will release memory and
-increasing the memory pressure just to release it in a moment seems
-dubious wasting of cycles. Besides that charges after exit_signals
-should be rare.
+This patch also removes fatal_signal_pending and PF_EXITING check from
+mem_cgroup_oom_synchronize because __mem_cgroup_try_charge already
+checks for both and bypasses charge so we cannot end up in the oom path.
 
 Signed-off-by: Michal Hocko <mhocko@suse.cz>
 ---
- mm/memcontrol.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ mm/memcontrol.c | 17 ++++-------------
+ mm/oom_kill.c   |  5 +++++
+ 2 files changed, 9 insertions(+), 13 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c72b03bf9679..98900c070045 100644
+index 98900c070045..af7148c77bac 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2692,7 +2692,8 @@ static int __mem_cgroup_try_charge(struct mm_struct *mm,
- 	 * MEMDIE process.
- 	 */
- 	if (unlikely(test_thread_flag(TIF_MEMDIE)
--		     || fatal_signal_pending(current)))
-+		     || fatal_signal_pending(current))
-+		     || current->flags & PF_EXITING)
- 		goto bypass;
+@@ -2235,16 +2235,6 @@ bool mem_cgroup_oom_synchronize(bool handle)
+ 	if (!handle)
+ 		goto cleanup;
  
- 	if (unlikely(task_in_memcg_oom(current)))
+-	/*
+-	 * If current has a pending SIGKILL or is exiting, then automatically
+-	 * select it.  The goal is to allow it to allocate so that it may
+-	 * quickly exit and free its memory.
+-	 */
+-	if (fatal_signal_pending(current) || current->flags & PF_EXITING) {
+-		set_thread_flag(TIF_MEMDIE);
+-		goto cleanup;
+-	}
+-
+ 	owait.memcg = memcg;
+ 	owait.wait.flags = 0;
+ 	owait.wait.func = memcg_oom_wake_function;
+@@ -2256,15 +2246,16 @@ bool mem_cgroup_oom_synchronize(bool handle)
+ 
+ 	locked = mem_cgroup_oom_trylock(memcg);
+ 
+-	if (locked)
+-		mem_cgroup_oom_notify(memcg);
+-
+ 	if (locked && !memcg->oom_kill_disable) {
+ 		mem_cgroup_unmark_under_oom(memcg);
+ 		finish_wait(&memcg_oom_waitq, &owait.wait);
++		/* calls mem_cgroup_oom_notify if there is a task to kill */
+ 		mem_cgroup_out_of_memory(memcg, current->memcg_oom.gfp_mask,
+ 					 current->memcg_oom.order);
+ 	} else {
++		if (locked && memcg->oom_kill_disable)
++			mem_cgroup_oom_notify(memcg);
++
+ 		schedule();
+ 		mem_cgroup_unmark_under_oom(memcg);
+ 		finish_wait(&memcg_oom_waitq, &owait.wait);
+diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+index 1e4a600a6163..47c9de8da36d 100644
+--- a/mm/oom_kill.c
++++ b/mm/oom_kill.c
+@@ -394,6 +394,8 @@ static void dump_header(struct task_struct *p, gfp_t gfp_mask, int order,
+ 		dump_tasks(memcg, nodemask);
+ }
+ 
++extern void mem_cgroup_oom_notify(struct mem_cgroup *memcg);
++
+ #define K(x) ((x) << (PAGE_SHIFT-10))
+ /*
+  * Must be called while holding a reference to p, which will be released upon
+@@ -470,6 +472,9 @@ void oom_kill_process(struct task_struct *p, gfp_t gfp_mask, int order,
+ 		victim = p;
+ 	}
+ 
++	if (memcg)
++		mem_cgroup_oom_notify(memcg);
++
+ 	/* mm cannot safely be dereferenced after task_unlock(victim) */
+ 	mm = victim->mm;
+ 	pr_err("Killed process %d (%s) total-vm:%lukB, anon-rss:%lukB, file-rss:%lukB\n",
 -- 
 1.8.4.4
-
 
 -- 
 Michal Hocko
