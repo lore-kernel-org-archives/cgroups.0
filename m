@@ -1,58 +1,163 @@
-From: Libo Chen <clbchenlibo.chen-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: cgroup filter on physics interface can't control container
-Date: Thu, 12 Dec 2013 20:18:07 +0800
-Message-ID: <52A9A97F.20902@huawei.com>
-References: <52A52BBF.6030105@huawei.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
+ access to memory reserves
+Date: Thu, 12 Dec 2013 13:37:36 +0100
+Message-ID: <20131212123736.GE2630@dhcp22.suse.cz>
+References: <20131204111318.GE8410@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1312041606260.6329@chino.kir.corp.google.com>
+ <20131209124840.GC3597@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1312091328550.11026@chino.kir.corp.google.com>
+ <20131210103827.GB20242@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1312101655430.22701@chino.kir.corp.google.com>
+ <20131211095549.GA18741@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1312111434200.7354@chino.kir.corp.google.com>
+ <20131212103159.GB2630@dhcp22.suse.cz>
+ <20131212121140.GD2630@dhcp22.suse.cz>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20131212121140.GD2630@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <52A52BBF.6030105-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org, xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Cc: jeff-o2qLIJkoznsdnm+yROfE0A@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, honkiko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fbl-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, "zhangwei(Jovi)" <jovi.zhangwei-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+To: David Rientjes <rientjes@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-ping...
+On Thu 12-12-13 13:11:40, Michal Hocko wrote:
+> On Thu 12-12-13 11:31:59, Michal Hocko wrote:
+> [...]
+> > The semantic would be as simple as "notification is sent only when
+> > an action is due". It will be still racy as nothing prevents a task
+> > which is not under OOM to exit and release some memory but there is no
+> > sensible way to address that. On the other hand such a semantic would be
+> > sensible for oom_control listeners because they will know that an action
+> > has to be or will be taken (the line was drawn).
+> > 
+> > Can we agree on this, Johannes? Or you see the line drawn when
+> > mem_cgroup_oom_synchronize has been reached already no matter whether
+> > the action is to be done or not?
+> 
+> Something like the following:
 
-On 2013/12/9 10:32, Libo Chen wrote:
-> hello network hackers,
+I forgot to mention that this patch assumes "memcg: Do not hang on OOM
+when killed by userspace OOM"
+
+> From 5d9c01e2814a7ade49db7945ad3890f4f138855e Mon Sep 17 00:00:00 2001
+> From: Michal Hocko <mhocko@suse.cz>
+> Date: Thu, 12 Dec 2013 11:50:17 +0100
+> Subject: [PATCH] memcg: notify userspace about OOM when and action is due
 > 
-> 	A linux container was builded with veth pair(veth0 inside container, veth1 outside container),
+> Userspace is currently notified about OOM condition after fails
+> to reclaim any memory after MEM_CGROUP_RECLAIM_RETRIES rounds.
+> This usually means that the memcg is really in troubles and an
+> OOM action (either done by userspace or kernel) has to be taken.
+> The kernel OOM killer however bails out and doesn't kill anything
+> if it sees an already dying/exiting task in a good hope a memory
+> will be released and OOM situation will be resolved.
 > 
-> the config as below:
+> Therefore it makes sense to notify userspace only after really all
+> measures have been taken and an userspace action is required or
+> the kernel kills a task.
 > 
->   lxc.network.type = veth
->   lxc.network.flags = up
->   lxc.network.link = br0  // base on eth0
->   lxc.network.name = eth0
->   lxc.network.ipv4 = 128.5.130.26/24
+> This patch also removes fatal_signal_pending and PF_EXITING check from
+> mem_cgroup_oom_synchronize because __mem_cgroup_try_charge already
+> checks for both and bypasses charge so we cannot end up in the oom path.
+
+Hmm, I have just noticed that oom_scan_process_thread aborts scanning
+only if it sees PF_EXITING or TIF_MEMDIE. Why the same is not done for 
+fatal_signal_pending tasks as well? Following the same logic as for the
+current we should do that no?
+
+The different sets of checks is so confusing :/
+
+> Signed-off-by: Michal Hocko <mhocko@suse.cz>
+> ---
+>  mm/memcontrol.c | 17 ++++-------------
+>  mm/oom_kill.c   |  5 +++++
+>  2 files changed, 9 insertions(+), 13 deletions(-)
 > 
-> then I use tc command with cgroup filter on veth0, it works well. But when setting on eth0, it doesn`t work.
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 98900c070045..af7148c77bac 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2235,16 +2235,6 @@ bool mem_cgroup_oom_synchronize(bool handle)
+>  	if (!handle)
+>  		goto cleanup;
+>  
+> -	/*
+> -	 * If current has a pending SIGKILL or is exiting, then automatically
+> -	 * select it.  The goal is to allow it to allocate so that it may
+> -	 * quickly exit and free its memory.
+> -	 */
+> -	if (fatal_signal_pending(current) || current->flags & PF_EXITING) {
+> -		set_thread_flag(TIF_MEMDIE);
+> -		goto cleanup;
+> -	}
+> -
+>  	owait.memcg = memcg;
+>  	owait.wait.flags = 0;
+>  	owait.wait.func = memcg_oom_wake_function;
+> @@ -2256,15 +2246,16 @@ bool mem_cgroup_oom_synchronize(bool handle)
+>  
+>  	locked = mem_cgroup_oom_trylock(memcg);
+>  
+> -	if (locked)
+> -		mem_cgroup_oom_notify(memcg);
+> -
+>  	if (locked && !memcg->oom_kill_disable) {
+>  		mem_cgroup_unmark_under_oom(memcg);
+>  		finish_wait(&memcg_oom_waitq, &owait.wait);
+> +		/* calls mem_cgroup_oom_notify if there is a task to kill */
+>  		mem_cgroup_out_of_memory(memcg, current->memcg_oom.gfp_mask,
+>  					 current->memcg_oom.order);
+>  	} else {
+> +		if (locked && memcg->oom_kill_disable)
+> +			mem_cgroup_oom_notify(memcg);
+> +
+>  		schedule();
+>  		mem_cgroup_unmark_under_oom(memcg);
+>  		finish_wait(&memcg_oom_waitq, &owait.wait);
+> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+> index 1e4a600a6163..47c9de8da36d 100644
+> --- a/mm/oom_kill.c
+> +++ b/mm/oom_kill.c
+> @@ -394,6 +394,8 @@ static void dump_header(struct task_struct *p, gfp_t gfp_mask, int order,
+>  		dump_tasks(memcg, nodemask);
+>  }
+>  
+> +extern void mem_cgroup_oom_notify(struct mem_cgroup *memcg);
+> +
+>  #define K(x) ((x) << (PAGE_SHIFT-10))
+>  /*
+>   * Must be called while holding a reference to p, which will be released upon
+> @@ -470,6 +472,9 @@ void oom_kill_process(struct task_struct *p, gfp_t gfp_mask, int order,
+>  		victim = p;
+>  	}
+>  
+> +	if (memcg)
+> +		mem_cgroup_oom_notify(memcg);
+> +
+>  	/* mm cannot safely be dereferenced after task_unlock(victim) */
+>  	mm = victim->mm;
+>  	pr_err("Killed process %d (%s) total-vm:%lukB, anon-rss:%lukB, file-rss:%lukB\n",
+> -- 
+> 1.8.4.4
 > 
-> The reason is dev_forward_skb() in veth_xmit will call skb_scrub_packet and clean all information including skb->sk
-> in the skb, so if cls_cgroup_classify is working in serving softirq state, it will return failer, see below:
-> 
-> 	if (in_serving_softirq()) {
-> 		/* If there is an sk_classid we'll use that. */
-> 		if (!skb->sk)
-> 			return -1;
-> 		classid = skb->sk->sk_classid;
-> 	}
-> 
-> 
-> Qdisc with cgroup filter on physics interface can not control a container network, it is disappointed.
-> 
-> we can save sk_classid before skb_scrub_packet and restore it after that. Is it reasonable?  or any way to achieve this?
-> 
-> thanks,
-> Libo
-> 
+> -- 
+> Michal Hocko
+> SUSE Labs
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
