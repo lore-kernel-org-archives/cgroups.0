@@ -1,163 +1,126 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
- access to memory reserves
-Date: Thu, 12 Dec 2013 13:37:36 +0100
-Message-ID: <20131212123736.GE2630@dhcp22.suse.cz>
-References: <20131204111318.GE8410@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312041606260.6329@chino.kir.corp.google.com>
- <20131209124840.GC3597@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312091328550.11026@chino.kir.corp.google.com>
- <20131210103827.GB20242@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312101655430.22701@chino.kir.corp.google.com>
- <20131211095549.GA18741@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312111434200.7354@chino.kir.corp.google.com>
- <20131212103159.GB2630@dhcp22.suse.cz>
- <20131212121140.GD2630@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: Race in memcg kmem?
+Date: Thu, 12 Dec 2013 14:21:13 +0100
+Message-ID: <20131212132113.GG2630@dhcp22.suse.cz>
+References: <52A71E43.9040200@parallels.com>
+ <CAA6-i6oyraHQ7_1GBKxgupS12_QFx708Niu93nyNFLrbQBXE5A@mail.gmail.com>
+ <52A8048E.4020806@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20131212121140.GD2630@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <52A8048E.4020806-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+To: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-On Thu 12-12-13 13:11:40, Michal Hocko wrote:
-> On Thu 12-12-13 11:31:59, Michal Hocko wrote:
-> [...]
-> > The semantic would be as simple as "notification is sent only when
-> > an action is due". It will be still racy as nothing prevents a task
-> > which is not under OOM to exit and release some memory but there is no
-> > sensible way to address that. On the other hand such a semantic would be
-> > sensible for oom_control listeners because they will know that an action
-> > has to be or will be taken (the line was drawn).
-> > 
-> > Can we agree on this, Johannes? Or you see the line drawn when
-> > mem_cgroup_oom_synchronize has been reached already no matter whether
-> > the action is to be done or not?
+On Wed 11-12-13 10:22:06, Vladimir Davydov wrote:
+> On 12/11/2013 03:13 AM, Glauber Costa wrote:
+> > On Tue, Dec 10, 2013 at 5:59 PM, Vladimir Davydov
+[...]
+> >> -- memcg_update_cache_size(s, num_groups) --
+> >> grows s->memcg_params to accomodate data for num_groups memcg's
+> >> @s is the root cache whose memcg_params we want to grow
+> >> @num_groups is the new number of kmem-active cgroups (defines the new
+> >> size of memcg_params array).
+> >>
+> >> The function:
+> >>
+> >> B1) allocates and assigns a new cache:
+> >>     cur_params = s->memcg_params;
+> >>     s->memcg_params = kzalloc(size, GFP_KERNEL);
+> >>
+> >> B2) copies per-memcg cache ptrs from the old memcg_params array to the
+> >> new one:
+> >>     for (i = 0; i < memcg_limited_groups_array_size; i++) {
+> >>         if (!cur_params->memcg_caches[i])
+> >>             continue;
+> >>         s->memcg_params->memcg_caches[i] =
+> >>                     cur_params->memcg_caches[i];
+> >>     }
+> >>
+> >> B3) frees the old array:
+> >>     kfree(cur_params);
+> >>
+> >>
+> >> Since these two functions do not share any mutexes, we can get the
+> > They do share a mutex, the slab mutex.
+
+Worth sticking in a lock_dep_assert?
+
+> >
+> >> following race:
+> >>
+> >> Assume, by the time Cpu0 gets to memcg_create_kmem_cache(), the memcg
+> >> cache has already been created by another thread, so this function
+> >> should do nothing.
+> >>
+> >> Cpu0    Cpu1
+> >> ----    ----
+> >>         B1
+> >> A1              we haven't initialized memcg_params yet so Cpu0 will
+> >>                 proceed to A2 to alloc and assign a new cache
+> >> A2
+> >>         B2      Cpu1 rewrites the memcg cache ptr set by Cpu0 at A2
+> >>                 - a memory leak?
+> >>         B3
+> >>
+> >> I'd like to add that even if I'm right about the race, this is rather
+> >> not critical, because memcg_update_cache_sizes() is called very rarely.
+> >>
+> > Every race is critical.
+> >
+> > So, I am a bit lost by your description. Get back to me if I got anything wrong,
+> > but I am think that the point that you're missing is that all heavy
+> > slab operations
+> > take the slab_mutex underneath, and that includes cache creation and update.
+> >
+> >
+> >> BTW, it seems to me that the way we update memcg_params in
+> >> memcg_update_cache_size() make cache_from_memcg_idx() prone to
+> >> use-after-free:
+> >>
+> >>> static inline struct kmem_cache *
+> >>> cache_from_memcg_idx(struct kmem_cache *s, int idx)
+> >>> {
+> >>>     if (!s->memcg_params)
+> >>>         return NULL;
+> >>>     return s->memcg_params->memcg_caches[idx];
+> >>> }
+> >> This is equivalent to
+> >>
+> >> 1) struct memcg_cache_params *params = s->memcg_params;
+> >> 2) return params->memcg_caches[idx];
+> >>
+> >> If memcg_update_cache_size() is executed between steps 1 and 2 on
+> >> another CPU, at step 2 we will dereference memcg_params that has already
+> >> been freed. This is very unlikely, but still possible. Perhaps, we
+> >> should free old memcg params only after a sync_rcu()?
+> >>
+> > You seem to be right in this one. Indeed, if my mind does not betray
+> > me, That is how I freed
+> > the LRUs. (with synchronize_rcus).
 > 
-> Something like the following:
+> Yes, you freed LRUs only after a sync_rcu, that's why the way
+> memcg_params is updated looks suspicious to me. I'll try to fix it then.
 
-I forgot to mention that this patch assumes "memcg: Do not hang on OOM
-when killed by userspace OOM"
+I have quickly glanced through cache_from_memcg_idx users and the
+locking is quite inconsistent.
+* mem_cgroup_slabinfo_read - memcg->slab_caches_mutex
+* memcg_create_kmem_cache - memcg_cache_mutex
+* kmem_cache_destroy_memcg_children - set_limit_mutex
+* __memcg_kmem_get_cache - RCU read lock
 
-> From 5d9c01e2814a7ade49db7945ad3890f4f138855e Mon Sep 17 00:00:00 2001
-> From: Michal Hocko <mhocko@suse.cz>
-> Date: Thu, 12 Dec 2013 11:50:17 +0100
-> Subject: [PATCH] memcg: notify userspace about OOM when and action is due
-> 
-> Userspace is currently notified about OOM condition after fails
-> to reclaim any memory after MEM_CGROUP_RECLAIM_RETRIES rounds.
-> This usually means that the memcg is really in troubles and an
-> OOM action (either done by userspace or kernel) has to be taken.
-> The kernel OOM killer however bails out and doesn't kill anything
-> if it sees an already dying/exiting task in a good hope a memory
-> will be released and OOM situation will be resolved.
-> 
-> Therefore it makes sense to notify userspace only after really all
-> measures have been taken and an userspace action is required or
-> the kernel kills a task.
-> 
-> This patch also removes fatal_signal_pending and PF_EXITING check from
-> mem_cgroup_oom_synchronize because __mem_cgroup_try_charge already
-> checks for both and bypasses charge so we cannot end up in the oom path.
+I was afraid to go further...
 
-Hmm, I have just noticed that oom_scan_process_thread aborts scanning
-only if it sees PF_EXITING or TIF_MEMDIE. Why the same is not done for 
-fatal_signal_pending tasks as well? Following the same logic as for the
-current we should do that no?
+memcg_update_cache_size and kmem_cache_create_memcg seem to be the only
+who touch memcg_params and they rely on slab_mutex. The later one is
+touching a cache which is not visible yet so it should be safe.
 
-The different sets of checks is so confusing :/
-
-> Signed-off-by: Michal Hocko <mhocko@suse.cz>
-> ---
->  mm/memcontrol.c | 17 ++++-------------
->  mm/oom_kill.c   |  5 +++++
->  2 files changed, 9 insertions(+), 13 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 98900c070045..af7148c77bac 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2235,16 +2235,6 @@ bool mem_cgroup_oom_synchronize(bool handle)
->  	if (!handle)
->  		goto cleanup;
->  
-> -	/*
-> -	 * If current has a pending SIGKILL or is exiting, then automatically
-> -	 * select it.  The goal is to allow it to allocate so that it may
-> -	 * quickly exit and free its memory.
-> -	 */
-> -	if (fatal_signal_pending(current) || current->flags & PF_EXITING) {
-> -		set_thread_flag(TIF_MEMDIE);
-> -		goto cleanup;
-> -	}
-> -
->  	owait.memcg = memcg;
->  	owait.wait.flags = 0;
->  	owait.wait.func = memcg_oom_wake_function;
-> @@ -2256,15 +2246,16 @@ bool mem_cgroup_oom_synchronize(bool handle)
->  
->  	locked = mem_cgroup_oom_trylock(memcg);
->  
-> -	if (locked)
-> -		mem_cgroup_oom_notify(memcg);
-> -
->  	if (locked && !memcg->oom_kill_disable) {
->  		mem_cgroup_unmark_under_oom(memcg);
->  		finish_wait(&memcg_oom_waitq, &owait.wait);
-> +		/* calls mem_cgroup_oom_notify if there is a task to kill */
->  		mem_cgroup_out_of_memory(memcg, current->memcg_oom.gfp_mask,
->  					 current->memcg_oom.order);
->  	} else {
-> +		if (locked && memcg->oom_kill_disable)
-> +			mem_cgroup_oom_notify(memcg);
-> +
->  		schedule();
->  		mem_cgroup_unmark_under_oom(memcg);
->  		finish_wait(&memcg_oom_waitq, &owait.wait);
-> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-> index 1e4a600a6163..47c9de8da36d 100644
-> --- a/mm/oom_kill.c
-> +++ b/mm/oom_kill.c
-> @@ -394,6 +394,8 @@ static void dump_header(struct task_struct *p, gfp_t gfp_mask, int order,
->  		dump_tasks(memcg, nodemask);
->  }
->  
-> +extern void mem_cgroup_oom_notify(struct mem_cgroup *memcg);
-> +
->  #define K(x) ((x) << (PAGE_SHIFT-10))
->  /*
->   * Must be called while holding a reference to p, which will be released upon
-> @@ -470,6 +472,9 @@ void oom_kill_process(struct task_struct *p, gfp_t gfp_mask, int order,
->  		victim = p;
->  	}
->  
-> +	if (memcg)
-> +		mem_cgroup_oom_notify(memcg);
-> +
->  	/* mm cannot safely be dereferenced after task_unlock(victim) */
->  	mm = victim->mm;
->  	pr_err("Killed process %d (%s) total-vm:%lukB, anon-rss:%lukB, file-rss:%lukB\n",
-> -- 
-> 1.8.4.4
-> 
-> -- 
-> Michal Hocko
-> SUSE Labs
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+I didn't look closer at all the callers of cache_from_memcg_idx but I
+guess we want to use RCU here.
 -- 
 Michal Hocko
 SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
