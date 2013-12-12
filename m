@@ -1,40 +1,51 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH -next] cgroup: fix missing unlock on error in
- cgroup_load_subsys()
-Date: Thu, 12 Dec 2013 10:46:26 -0500
-Message-ID: <20131212154626.GE32683@htj.dyndns.org>
-References: <CAPgLHd8s94-e2=tynt-jKKNmoSXzNFHs+vYeUS1uW3+Ohk_OVA@mail.gmail.com>
+Subject: Re: [PATCH] cgroup: fix fail path in cgroup_load_subsys()
+Date: Thu, 12 Dec 2013 10:55:23 -0500
+Message-ID: <20131212155523.GF32683@htj.dyndns.org>
+References: <1386403085-24866-1-git-send-email-vdavydov@parallels.com>
+ <20131212153536.GD32683@htj.dyndns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=kJnOuMEXlOXIzy2kPhdHERmFoE3iaNt1SdbpNBG/MlA=;
-        b=MahzA4djPZkXWMZvMHv6pbwKFxXW/LJCJPlLIRs2OXiqFOxBkurYQvixtrYBJEHOlO
-         NJtEaokxh9QauBzefOeQ0qQCMne0YRiaNAS7PGKTiL0Q1kH7UA87PRoREP+XJydgn5fS
-         zXnbInYGxiIk+j2SgdVo0njnrhSzh9f5rFNFeKwwsvUiNpBreBvvpbSsV9gxZXr7MA1b
-         uvFMqORTNjV3abqTEwuh9HqJ++F9sJZ44qWUp9l7qiiVp5IAwQXaZdDngMiTmbW4eo9C
-         eHex6i91hlNJj42UxPKsYWC6I+1Vpmf2xGXkBpN43yNoFL1kx023vuwGpKZI46sspWJS
-         PHsw==
+        bh=T9Sle7fhEA85wemI/0zu14ZsBdoSjjQNG9Tka2yvp2M=;
+        b=A0mcn9Hlj/VPZvG21kLUBKeQ2TSfgr/qeLTGYHWFDqWBAE8XP5S62CyYZ5aHp5t0gT
+         A+2QUXQnyB/0ExFmwHFtS0zETtZYAdCUbA9QGl8AJZgwRbFXaIfgyuPY24Fjb616zKPu
+         flsFiyikgHcnSf4UVBp1zLfRjhUc+2k7noqdo5C7xrG9lSOJBys8iMZNDFE1FPg3Ogxd
+         5SbCo+7cHSsNbat5ALJfh7XfmoJo5xwdndRY1TtOh3VEleU2KgFushshfbFRMjgJnq8a
+         iPRlNi9Cnh2L/c7y4/qAKxnf2QyAl05+UeWo6CTXThQIqp2G9O0/nAeEra9zTcUK5ytT
+         +9Og==
 Content-Disposition: inline
-In-Reply-To: <CAPgLHd8s94-e2=tynt-jKKNmoSXzNFHs+vYeUS1uW3+Ohk_OVA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20131212153536.GD32683-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Wei Yongjun <weiyj.lk-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yongjun_wei-zrsr2BFq86L20UzCJQGyNP8+0UxHXcjY@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On Mon, Dec 09, 2013 at 08:38:29PM +0800, Wei Yongjun wrote:
-> From: Wei Yongjun <yongjun_wei-zrsr2BFq86L20UzCJQGyNP8+0UxHXcjY@public.gmane.org>
+On Thu, Dec 12, 2013 at 10:35:36AM -0500, Tejun Heo wrote:
+> On Sat, Dec 07, 2013 at 11:58:05AM +0400, Vladimir Davydov wrote:
+> > We should not call cgroup_unload_subsys() if online_css() fails, because
+> > online_css() does not assign css to cgroup on failure, while
+> > offline_css() called from cgroup_unload_subsys() expects it is assigned.
+> > So let's call everything we need to rollback inline without involving
+> > cgroup_unload_subsys().
+> > 
+> > Signed-off-by: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> > Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> > Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 > 
-> Add the missing unlock before return from function cgroup_load_subsys()
-> in the error handling case.
-> 
-> Signed-off-by: Wei Yongjun <yongjun_wei-zrsr2BFq86L20UzCJQGyNP8+0UxHXcjY@public.gmane.org>
+> Applied to cgroup/for-3.13-fixes.
 
-Applied to cgroup/for-3.14.
+Scrap that.  I don't think we can fail css_online for the root css in
+3.13-fixes and this would cause conflict with 3.14, so let's not
+commit it to 3.13-fixes.  Vladimir, can you please respin the patch on
+top of cgroup/for-3.14 but make cgroup_unload_subsys() check whether
+css is actually there before calling offline so that it matches the
+usual offline path better?
 
 Thanks.
 
