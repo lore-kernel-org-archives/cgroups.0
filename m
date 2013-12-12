@@ -1,57 +1,101 @@
-From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: Re: Race in memcg kmem?
-Date: Thu, 12 Dec 2013 17:39:29 +0400
-Message-ID: <52A9BC91.5020105@parallels.com>
-References: <52A71E43.9040200@parallels.com> <CAA6-i6oyraHQ7_1GBKxgupS12_QFx708Niu93nyNFLrbQBXE5A@mail.gmail.com> <52A8048E.4020806@parallels.com> <20131212132113.GG2630@dhcp22.suse.cz>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [patch 7/8] mm, memcg: allow processes handling oom
+ notifications to access reserves
+Date: Thu, 12 Dec 2013 09:21:56 -0500
+Message-ID: <20131212142156.GB32683@htj.dyndns.org>
+References: <20131204054533.GZ3556@cmpxchg.org>
+ <alpine.DEB.2.02.1312041742560.20115@chino.kir.corp.google.com>
+ <20131205025026.GA26777@htj.dyndns.org>
+ <alpine.DEB.2.02.1312051537550.7717@chino.kir.corp.google.com>
+ <20131206190105.GE13373@htj.dyndns.org>
+ <alpine.DEB.2.02.1312061441390.8949@chino.kir.corp.google.com>
+ <20131210215037.GB9143@htj.dyndns.org>
+ <alpine.DEB.2.02.1312101522400.22701@chino.kir.corp.google.com>
+ <20131211124240.GA24557@htj.dyndns.org>
+ <CAAAKZwsmM-C=kLGV=RW=Y4Mq=BWpQzuPruW6zvEr9p0Xs4GD5g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20131212132113.GG2630@dhcp22.suse.cz>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=WRa02mcDF0nj+ga8f50NFEIjeFl8ugSjpV59D9ego+w=;
+        b=ZCT2VTPpjPV71NRvXkiCmBN88+HPZna9namptpBDBP7YIaSiL/NW5mfUQZ2DRIPk9/
+         WoAM3/Fa93K98Ysb498hLlVKFY6MXWU8z8xqB+511lFDUztTqIJJop/t61w5MVtFfDse
+         hljS2mLhV59M+NkvvT4IHX5Xe094sBsRh9jElIgm5y+aKNgz1oJEcTlKsnBmjhPpfrey
+         i77G2jRmO+/eNitLeTfXjA8SlVTB6CVUwDX8/Blt7L7LZGW3VBG6d7eKmquJ8OHoe2dW
+         sOv/bL86kA8H3nKinbixESguodjui3eNJlk0JE6kwa7VFgc1VcMY28UZUyNCJlUceF7R
+         0jAg==
+Content-Disposition: inline
+In-Reply-To: <CAAAKZwsmM-C=kLGV=RW=Y4Mq=BWpQzuPruW6zvEr9p0Xs4GD5g@mail.gmail.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Glauber Costa <glommer@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, devel@openvz.org, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Content-Transfer-Encoding: 7bit
+To: Tim Hockin <thockin@hockin.org>
+Cc: David Rientjes <rientjes@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Pekka Enberg <penberg@kernel.org>, Christoph Lameter <cl@linux-foundation.org>, Li Zefan <lizefan@huawei.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, Cgroups <cgroups@vger.kernel.org>
 
-On 12/12/2013 05:21 PM, Michal Hocko wrote:
-> On Wed 11-12-13 10:22:06, Vladimir Davydov wrote:
->> On 12/11/2013 03:13 AM, Glauber Costa wrote:
->>> On Tue, Dec 10, 2013 at 5:59 PM, Vladimir Davydov
-> [...]
->>>> -- memcg_update_cache_size(s, num_groups) --
->>>> grows s->memcg_params to accomodate data for num_groups memcg's
->>>> @s is the root cache whose memcg_params we want to grow
->>>> @num_groups is the new number of kmem-active cgroups (defines the new
->>>> size of memcg_params array).
->>>>
->>>> The function:
->>>>
->>>> B1) allocates and assigns a new cache:
->>>>     cur_params = s->memcg_params;
->>>>     s->memcg_params = kzalloc(size, GFP_KERNEL);
->>>>
->>>> B2) copies per-memcg cache ptrs from the old memcg_params array to the
->>>> new one:
->>>>     for (i = 0; i < memcg_limited_groups_array_size; i++) {
->>>>         if (!cur_params->memcg_caches[i])
->>>>             continue;
->>>>         s->memcg_params->memcg_caches[i] =
->>>>                     cur_params->memcg_caches[i];
->>>>     }
->>>>
->>>> B3) frees the old array:
->>>>     kfree(cur_params);
->>>>
->>>>
->>>> Since these two functions do not share any mutexes, we can get the
->>> They do share a mutex, the slab mutex.
-> Worth sticking in a lock_dep_assert?
+Hey, Tim.
 
-AFAIU, lockdep_assert_held() is not applicable here:
-memcg_create_kmem_cache() is called w/o the slab_mutex held, but it
-calls kmem_cache_create_kmemcg(), which takes and releases this mutex,
-working as a barrier. Placing lockdep_assert_held() into the latter
-won't make things any clearer. IMO, we need a big good comment in
-memcg_create_kmem_cache() proving its correctness.
+Sidenote: Please don't top-post with the whole body quoted below
+unless you're adding new cc's.  Please selectively quote the original
+message's body to remind the readers of the context and reply below
+it.  It's a basic lkml etiquette and one with good reasons.  If you
+have to top-post for whatever reason - say you're typing from a
+machine which doesn't allow easy editing of the original message,
+explain so at the top of the message, or better yet, wait till you can
+unless it's urgent.
+
+On Wed, Dec 11, 2013 at 09:37:46PM -0800, Tim Hockin wrote:
+> The immediate problem I see with setting aside reserves "off the top"
+> is that we don't really know a priori how much memory the kernel
+> itself is going to use, which could still land us in an overcommitted
+> state.
+> 
+> In other words, if I have your 128 MB machine, and I set aside 8 MB
+> for OOM handling, and give 120 MB for jobs, I have not accounted for
+> the kernel.  So I set aside 8 MB for OOM and 100 MB for jobs, leaving
+> 20 MB for jobs.  That should be enough right?  Hell if I know, and
+> nothing ensures that.
+
+Yes, sure thing, that's the reason why I mentioned "with some slack"
+in the original message and also that it might not be completely the
+same.  It doesn't allow you to aggressively use system level OOM
+handling as the sizing estimator for the root cgroup; however, it's
+more of an implementation details than something which should guide
+the overall architecture - it's a problem which lessens in severity as
+[k]memcg improves and its coverage becomes more complete, which is the
+direction we should be headed no matter what.
+
+It'd depend on the workload but with memcg fully configured it
+shouldn't fluctuate wildly.  If it does, we need to hunt down whatever
+is causing such fluctuatation and include it in kmemcg, right?  That
+way, memcg as a whole improves for all use cases not just your niche
+one and I strongly believe that aligning as many use cases as possible
+along the same axis, rather than creating a large hole to stow away
+the exceptions, is vastly more beneficial to *everyone* in the long
+term.
+
+There'd still be all the bells and whistles to configure and monitor
+system-level OOM and if there's justified need for improvements, we
+surely can and should do that; however, with the heavy lifting / hot
+path offloaded to the per-memcg userland OOM handlers, I believe it's
+reasonable to expect the burden on system OOM handler being noticeably
+less, which is the way it should be.  That's the last guard against
+the whole system completely locking up and we can't extend its
+capabilities beyond that easily and we most likely don't even want to.
+
+If I take back a step and look at the two options and their pros and
+cons, which path we should take is rather obvious to me.  I hope you
+see it too.
 
 Thanks.
+
+-- 
+tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
