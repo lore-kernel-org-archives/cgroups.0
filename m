@@ -1,110 +1,27 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [patch 7/8] mm, memcg: allow processes handling oom
- notifications to access reserves
-Date: Fri, 13 Dec 2013 06:47:34 -0500
-Message-ID: <20131213114734.GA22074@htj.dyndns.org>
-References: <20131206190105.GE13373@htj.dyndns.org>
- <alpine.DEB.2.02.1312061441390.8949@chino.kir.corp.google.com>
- <20131210215037.GB9143@htj.dyndns.org>
- <alpine.DEB.2.02.1312101522400.22701@chino.kir.corp.google.com>
- <20131211124240.GA24557@htj.dyndns.org>
- <CAAAKZwsmM-C=kLGV=RW=Y4Mq=BWpQzuPruW6zvEr9p0Xs4GD5g@mail.gmail.com>
- <20131212142156.GB32683@htj.dyndns.org>
- <CAAAKZwtuydFdiiSsKMuOUv3nr9trjuKvKoDO2aM0QsJKu1TMZA@mail.gmail.com>
- <20131212192319.GL32683@htj.dyndns.org>
- <CAAAKZwtQc212_-oqf56ToxjSG7f9bsNcBwwurSezpGKiPDT+nQ@mail.gmail.com>
+From: Christoph Lameter <cl@linux.com>
+Subject: Re: [patch 2/2] fs: buffer: move allocation failure loop into the
+ allocator
+Date: Fri, 13 Dec 2013 16:40:58 +0000
+Message-ID: <00000142ecd51cc6-b987e565-7b4f-4945-89ba-731f1d1376fb-000000@email.amazonses.com>
+References: <1381265890-11333-1-git-send-email-hannes@cmpxchg.org> <1381265890-11333-2-git-send-email-hannes@cmpxchg.org> <20131203165910.54d6b4724a1f3e329af52ac6@linux-foundation.org> <20131204015218.GA19709@lge.com> <20131213065805.GC8845@lge.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=ST6e8xIExI66YVy1G9X9Vm+MXXR/acT0sUxnv4LGjRw=;
-        b=XUgrJx0znAIqpndkqYIuYka+xdTmV/PY+yiSKvcAd+lf9r8hRNYYVEmXT4Bs3trLZX
-         i5vhMaHEoHxojod3TPlw5giM58BpEcYz2IzQlQHZEcm+r6eZ7ap7/XBfTOqws8uMafED
-         azNvw0Dl3LRoNpvIepf9m4yqO+Zat4B7knGxa7qkfD4WGmCWDRLVxTMAzug7mDKEm8i2
-         ZM7ka8EKKnswuQLIGjs/F0TJ6j8KaVUWcJytvfk/TviK/ZNOiejNBSlWFUQJoD8h3ku6
-         1YtYhgH6VFNQibjbjM/PYlZx2N7KEBOeovmufWPmuuNjFFTfCzBvWGPvOrKQojRBNq2v
-         HOIg==
-Content-Disposition: inline
-In-Reply-To: <CAAAKZwtQc212_-oqf56ToxjSG7f9bsNcBwwurSezpGKiPDT+nQ@mail.gmail.com>
+In-Reply-To: <20131213065805.GC8845@lge.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tim Hockin <thockin@hockin.org>
-Cc: David Rientjes <rientjes@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Pekka Enberg <penberg@kernel.org>, Christoph Lameter <cl@linux-foundation.org>, Li Zefan <lizefan@huawei.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, Cgroups <cgroups@vger.kernel.org>, Victor Marmol <vmarmol@google.com>
+To: Joonsoo Kim <iamjoonsoo.kim@lge.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, azurIt <azurit@pobox.sk>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Christian Casteyde <casteyde.christian@free.fr>, Pekka Enberg <penberg@kernel.org>
 
-Hello, Tim.
+On Fri, 13 Dec 2013, Joonsoo Kim wrote:
 
-On Thu, Dec 12, 2013 at 04:23:18PM -0800, Tim Hockin wrote:
-> Just to be clear - I say this because it doesn't feel right to impose
-> my craziness on others, and it sucks when we try and are met with
-> "you're crazy, go away".  And you have to admit that happens to
-> Google. :)  Punching an escape valve that allows us to be crazy
-> without hurting anyone else sounds ideal, IF and ONLY IF that escape
-> valve is itself maintainable.
+> Could you review this patch?
+> I think that we should merge it to fix the problem reported by Christian.
 
-I don't think google being considered crazy is a good thing in
-general, highly likely not something to be proud of.  It sure is
-partly indicative of the specialization that you guys need but I
-suspect is a much stronger signal for room for better engineering.
-
-I'm fairly certain the blame is abundant for everybody to share.  The
-point I'm trying to make is "let's please stop diverging".  It hurts
-everybody.
-
-> If the escape valve is userspace it's REALLY easy to iterate on our
-> craziness.  If it is kernel space, it's somewhat less easy, but not
-> impossible.
-
-As I'm sure you've gathered from this thread, even punching the
-initial hole is a sizable burden and contortion to the general memory
-management and I'm sure as you guys develop further down the path
-you'll encounter cases where you need further support or holes from
-the kernel.  I can't anticipate the details but the fact that those
-will follow is as evident as the day to me, especially given the
-mindset leading to the current situation in the first place.
-
-Please note that this part of discussion is more abstract than
-necessary for this particular patchset or hole.  I'm quite doubtful
-that system-level OOM handling with separate physical reserve is
-likely to survive even just on technical details.  The reason why I'm
-keeping at this abstract point is because this seems to be a
-continuing trend rather than a single occurrence and I really hope it
-changes.
-
-> Well that's an awesome start.  We have or had patches to do a lot of
-> this.  I don't know how well scrubbed they are for pushing or whether
-> they apply at all to current head, though.
-
-Awesome, this looks like something everyone agrees on. :)
-
-> As an aside: mucking about with extra nesting levels to achieve a
-> stable OOM semantic sounds doable, but it certainly sucks in a unified
-> hierarchy.  We'll end up with 1, 2, or 3 (or more in esoteric cases?
-> not sure) extra nesting levels for every other resource dimension.
-> And lawd help us if we ever need to do something similar in a
-> different resource dimension - the cross product is mind-bending.
-> What we do with split-hierarchies is this but on a smaller scale.
-
-Yes, agreed but I believe there are substantial benefits to having
-certain level of structural constraints.  It encourages people to
-ponder the underlying issues and make active trade-offs.  Not that
-going off that extreme would be good either but we've gone too far
-towards the other end.
-
-This being a special issue with memcg, if this turns out to be a big
-enough problem, I don't think having a provision to be able to handle
-it without further nesting would be too crazy - e.g. the ability to
-mark a single cgroup at the root level as for OOM handler or whatever
-- as long as we stay within the boundaries of memcg and cgroup proper,
-but we seem to have ways to go before worrying about that one.
-
-Thanks.
-
--- 
-tejun
+I'd be fine with clearing __GFP_NOFAIL but not with using the same flags
+as for a higher order alloc. __GFP_NORETRY and __GFP_NOWARN should be left
+untouched for the minimal alloc.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
