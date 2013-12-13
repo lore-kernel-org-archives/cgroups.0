@@ -1,71 +1,167 @@
-From: Glauber Costa <glommer@gmail.com>
-Subject: Re: [PATCH v13 11/16] mm: list_lru: add per-memcg lists
-Date: Fri, 13 Dec 2013 00:48:03 +0400
-Message-ID: <CAA6-i6rukbiu+_pnS1nkD45ViA0fnn9fQjhk74LWXOA+S=+7Tg@mail.gmail.com>
-References: <cover.1386571280.git.vdavydov@parallels.com>
-	<0ca62dbfbf545edb22b86bd11c50e9017a3dc4db.1386571280.git.vdavydov@parallels.com>
-	<20131210050005.GC31386@dastard>
+From: Tim Hockin <thockin@hockin.org>
+Subject: Re: [patch 7/8] mm, memcg: allow processes handling oom notifications
+ to access reserves
+Date: Thu, 12 Dec 2013 16:23:18 -0800
+Message-ID: <CAAAKZwtQc212_-oqf56ToxjSG7f9bsNcBwwurSezpGKiPDT+nQ@mail.gmail.com>
+References: <20131205025026.GA26777@htj.dyndns.org> <alpine.DEB.2.02.1312051537550.7717@chino.kir.corp.google.com>
+ <20131206190105.GE13373@htj.dyndns.org> <alpine.DEB.2.02.1312061441390.8949@chino.kir.corp.google.com>
+ <20131210215037.GB9143@htj.dyndns.org> <alpine.DEB.2.02.1312101522400.22701@chino.kir.corp.google.com>
+ <20131211124240.GA24557@htj.dyndns.org> <CAAAKZwsmM-C=kLGV=RW=Y4Mq=BWpQzuPruW6zvEr9p0Xs4GD5g@mail.gmail.com>
+ <20131212142156.GB32683@htj.dyndns.org> <CAAAKZwtuydFdiiSsKMuOUv3nr9trjuKvKoDO2aM0QsJKu1TMZA@mail.gmail.com>
+ <20131212192319.GL32683@htj.dyndns.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=XFm0pVcy22Y2kyLajDHa1Z5iuLO3AH+kOxMMsjyylYI=;
-        b=BFlc/dlV+Wyvyzbi4k5jYznNyzVKuPmmEfys1MZVS4hdwnAE5nQJCwy2/8YbLrA9KT
-         l5kZqR5uuAwQTX2EAGUzeU+SvDaRKXZhNVP5HYFzX6LV3ZMykJJGhmi4cWxNI0jDWkvu
-         OkoLgthIPXWVUBFGmw8SX/DQkfZ/D7AyTG9wguwMTMKYP2hpTXtHn2eNnImquuHCEo/D
-         Idc7BvXTETCNmDtt3l9KBMmSGszQCMvbUpP6yu35nJDcLCQfG+UnF7770rNeHNojIv5p
-         zpots2oUCVeIqcMpm0K4zZzyiUB7cuUQij7RcRXftDSsGQFB1T95AWkLeupD5xl8NRTz
-         sw8g==
-In-Reply-To: <20131210050005.GC31386@dastard>
+        h=mime-version:sender:in-reply-to:references:from:date:message-id
+         :subject:to:cc:content-type;
+        bh=yh0QePnXEARZCMiLybv4OipB9Klc1sjFe5Dze69M0Cc=;
+        b=L+FUBYVof686y9B4L5FJxOHuXkEH/F3FvbLlCppbwQe5Z9ip0pTx455w+E+a2sCnxC
+         HLSTwlt/g6dOz0N5yc5y29GrdwAFKirJ54tf5T5J7oM/nKwHMewDrCHEATzP8/KxeaLB
+         6C2JPUave7agO2wCLODFbFezv+gnDl+QoZN1JWdZmeolpDacfBhc4COyqA7Kp1aaR/fP
+         r5ZdX95A+JXQGUzJFOc+b2+0vvFzvgjPqUCY1N32nto2a8WTHv5aMwIVP/UCjyjGl1hy
+         Ew16SXRXnoQq4o/7S391KlPL+2ZN1Pe33tFUnxdcR9LmsPBYuXjerTUiPDSu0g+VRmYN
+         V29g==
+In-Reply-To: <20131212192319.GL32683@htj.dyndns.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Dave Chinner <david@fromorbit.com>
-Cc: Vladimir Davydov <vdavydov@parallels.com>, dchinner@redhat.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Glauber Costa <glommer@openvz.org>, Al Viro <viro@zeniv.linux.org.uk>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: David Rientjes <rientjes@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Pekka Enberg <penberg@kernel.org>, Christoph Lameter <cl@linux-foundation.org>, Li Zefan <lizefan@huawei.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, Cgroups <cgroups@vger.kernel.org>, Victor Marmol <vmarmol@google.com>
 
-> OK, as far as I can tell, this is introducing a per-node, per-memcg
-> LRU lists. Is that correct?
+On Thu, Dec 12, 2013 at 11:23 AM, Tejun Heo <tj@kernel.org> wrote:
+> Hello, Tim.
 >
-> If so, then that is not what Glauber and I originally intended for
-> memcg LRUs. per-node LRUs are expensive in terms of memory and cross
-> multiplying them by the number of memcgs in a system was not a good
-> use of memory.
+> On Thu, Dec 12, 2013 at 10:42:20AM -0800, Tim Hockin wrote:
+>> Yeah sorry.  Replying from my phone is awkward at best.  I know better :)
 >
-> According to Glauber, most memcgs are small and typically confined
-> to a single node or two by external means and therefore don't need the
-> scalability numa aware LRUs provide. Hence the idea was that the
-> memcg LRUs would just be a single LRU list, just like a non-numa
-> aware list_lru instantiation. IOWs, this is the structure that we
-> had decided on as the best compromise between memory usage,
-> complexity and memcg awareness:
+> Heh, sorry about being bitchy. :)
 >
-Sorry for jumping late into this particular e-mail.
+>> In my mind, the ONLY point of pulling system-OOM handling into
+>> userspace is to make it easier for crazy people (Google) to implement
+>> bizarre system-OOM policies.  Example:
+>
+> I think that's one of the places where we largely disagree.  If at all
 
-I just wanted to point out that the reason I adopted such matrix in my
-design was that
-it actually uses less memory this way. My reasoning for this was
-explained in the original
-patch that I posted that contained that implementation.
+Just to be clear - I say this because it doesn't feel right to impose
+my craziness on others, and it sucks when we try and are met with
+"you're crazy, go away".  And you have to admit that happens to
+Google. :)  Punching an escape valve that allows us to be crazy
+without hurting anyone else sounds ideal, IF and ONLY IF that escape
+valve is itself maintainable.
 
-This is because whenever an object would go on a memcg list, it *would
-not* go on
-the global list. Therefore, to keep information about nodes for global
-reclaim, you
-have to put them in node-lists.
+If the escape valve is userspace it's REALLY easy to iterate on our
+craziness.  If it is kernel space, it's somewhat less easy, but not
+impossible.
 
-memcg reclaim, however, would reclaim regardless of node information.
+> possible, I'd much prefer google's workload to be supported inside the
+> general boundaries of the upstream kernel without having to punch a
+> large hole in it.  To me, the general development history of memcg in
+> general and this thread in particular seem to epitomize why it is a
+> bad idea to have isolated, large and deep "crazy" use cases.  Punching
+> the initial hole is the easy part; however, we all are quite limited
+> in anticpating future needs and sooner or later that crazy use case is
+> bound to evolve further towards the isolated extreme it departed
+> towards and require more and larger holes and further contortions to
+> accomodate such progress.
+>
+> The concern I have with the suggested solution is not necessarily that
+> it's technically complex than it looks like on the surface - I'm sure
+> it can be made to work one way or the other - but that it's a fairly
+> large step toward an isolated extreme which memcg as a project
+> probably should not head toward.
+>
+> There sure are cases where such exceptions can't be avoided and are
+> good trade-offs but, here, we're talking about a major architectural
+> decision which not only affects memcg but mm in general.  I'm afraid
+> this doesn't sound like an no-brainer flexibility we can afford.
+>
+>> When we have a system OOM we want to do a walk of the administrative
+>> memcg tree (which is only a couple levels deep, users can make
+>> non-admin sub-memcgs), selecting the lowest priority entity at each
+>> step (where both tasks and memcgs have a priority and the priority
+>> range is much wider than the current OOM scores, and where memcg
+>> priority is sometimes a function of memcg usage), until we reach a
+>> leaf.
+>>
+>> Once we reach a leaf, I want to log some info about the memcg doing
+>> the allocation, the memcg being terminated, and maybe some other bits
+>> about the system (depending on the priority of the selected victim,
+>> this may or may not be an "acceptable" situation).  Then I want to
+>> kill *everything* under that memcg.  Then I want to "publish" some
+>> information through a sane API (e.g. not dmesg scraping).
+>>
+>> This is basically our policy as we understand it today.  This is
+>> notably different than it was a year ago, and it will probably evolve
+>> further in the next year.
+>
+> I think per-memcg score and killing is something which makes
+> fundamental sense.  In fact, killing a single process has never made
+> much sense to me as that is a unit which ultimately is only meaningful
+> to the kernel itself and not necessraily to userland, so no matter
+> what I think we're gonna gain per-memcg behavior and it seems most,
+> albeit not all, of what you described above should be implementable
+> through that.
 
-In global reclaim, the memcg lists would be scanned obeying the node structure
-in the lists.
+Well that's an awesome start.  We have or had patches to do a lot of
+this.  I don't know how well scrubbed they are for pushing or whether
+they apply at all to current head, though.
 
-Because that has a fixed cost, it ends up using less memory that having a second
-list pointer in the objects, which is something that scale with the
-number of objects.
-Not to mention, that cost would be incurred even with memcg not being in use,
-which is something that we would like to avoid.
+> Ultimately, if the use case calls for very fine level of control, I
+> think the right thing to do is making nesting work properly which is
+> likely to take some time.  In the meantime, even if such use case
+> requires modifying the kernel to tailor the OOM behavior, I think
+> sticking to kernel OOM provides a lot easier way to eventual
+> convergence.  Userland system OOM basically means giving up and would
+> lessen the motivation towards improving the shared infrastructures
+> while adding significant pressure towards schizophreic diversion.
+>
+>> We have a long tail of kernel memory usage.  If we provision machines
+>> so that the "do work here" first-level memcg excludes the average
+>> kernel usage, we have a huge number of machines that will fail to
+>> apply OOM policy because of actual overcommitment.  If we provision
+>> for 95th or 99th percentile kernel usage, we're wasting large amounts
+>> of memory that could be used to schedule jobs.  This is the
+>> fundamental problem we face with static apportionment (and we face it
+>> in a dozen other situations, too).  Expressing this set-aside memory
+>> as "off-the-top" rather than absolute limits makes the whole system
+>> more flexible.
+>
+> I agree that's pretty sad.  Maybe I shouldn't be surprised given the
+> far-from-perfect coverage of kmemcg at this point, but, again,
+> *everyone* wants [k]memcg coverage to be more complete and we have and
+> are still building the infrastructures to make that possible, so I'm
+> still of the opinion that making [k]memcg work better is the better
+> direction to pursue and given the short development history of kmemcg
+> I'm fairly sure there are quite a few low hanging fruits.
+
+yes we should fix accounting across the board.  We are hugely in favor
+of that.  But I don't buy that we'll erase that tail.  Fundamentally,
+we don't know what the limit is, but we know that we need to save a
+little "off the top".  I'm very much hoping we can find a way to
+express that.
+
+As an aside: mucking about with extra nesting levels to achieve a
+stable OOM semantic sounds doable, but it certainly sucks in a unified
+hierarchy.  We'll end up with 1, 2, or 3 (or more in esoteric cases?
+not sure) extra nesting levels for every other resource dimension.
+And lawd help us if we ever need to do something similar in a
+different resource dimension - the cross product is mind-bending.
+What we do with split-hierarchies is this but on a smaller scale.
+
+> Another thing which *might* be relevant is the rigidity of the upper
+> limit and the vagueness of soft limit of the current implementation.
+> I have a rather strong suspicion that the way memcg config knobs
+> behave now - one finicky, the other whatever - is likely hindering the
+> use cases to fan out more naturally.  I could be completely wrong on
+> this but your mention of inflexibility of absolute limits reminds me
+> of the issue.
+>
+> Thanks.
+>
+> --
+> tejun
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
