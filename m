@@ -1,166 +1,113 @@
-From: Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>
-Subject: Re: [patch 2/2] fs: buffer: move allocation failure loop into the
- allocator
-Date: Fri, 13 Dec 2013 15:58:06 +0900
-Message-ID: <20131213065805.GC8845@lge.com>
-References: <1381265890-11333-1-git-send-email-hannes@cmpxchg.org>
- <1381265890-11333-2-git-send-email-hannes@cmpxchg.org>
- <20131203165910.54d6b4724a1f3e329af52ac6@linux-foundation.org>
- <20131204015218.GA19709@lge.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [patch 7/8] mm, memcg: allow processes handling oom
+ notifications to access reserves
+Date: Fri, 13 Dec 2013 06:47:34 -0500
+Message-ID: <20131213114734.GA22074@htj.dyndns.org>
+References: <20131206190105.GE13373@htj.dyndns.org>
+ <alpine.DEB.2.02.1312061441390.8949@chino.kir.corp.google.com>
+ <20131210215037.GB9143@htj.dyndns.org>
+ <alpine.DEB.2.02.1312101522400.22701@chino.kir.corp.google.com>
+ <20131211124240.GA24557@htj.dyndns.org>
+ <CAAAKZwsmM-C=kLGV=RW=Y4Mq=BWpQzuPruW6zvEr9p0Xs4GD5g@mail.gmail.com>
+ <20131212142156.GB32683@htj.dyndns.org>
+ <CAAAKZwtuydFdiiSsKMuOUv3nr9trjuKvKoDO2aM0QsJKu1TMZA@mail.gmail.com>
+ <20131212192319.GL32683@htj.dyndns.org>
+ <CAAAKZwtQc212_-oqf56ToxjSG7f9bsNcBwwurSezpGKiPDT+nQ@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=ST6e8xIExI66YVy1G9X9Vm+MXXR/acT0sUxnv4LGjRw=;
+        b=XUgrJx0znAIqpndkqYIuYka+xdTmV/PY+yiSKvcAd+lf9r8hRNYYVEmXT4Bs3trLZX
+         i5vhMaHEoHxojod3TPlw5giM58BpEcYz2IzQlQHZEcm+r6eZ7ap7/XBfTOqws8uMafED
+         azNvw0Dl3LRoNpvIepf9m4yqO+Zat4B7knGxa7qkfD4WGmCWDRLVxTMAzug7mDKEm8i2
+         ZM7ka8EKKnswuQLIGjs/F0TJ6j8KaVUWcJytvfk/TviK/ZNOiejNBSlWFUQJoD8h3ku6
+         1YtYhgH6VFNQibjbjM/PYlZx2N7KEBOeovmufWPmuuNjFFTfCzBvWGPvOrKQojRBNq2v
+         HOIg==
 Content-Disposition: inline
-In-Reply-To: <20131204015218.GA19709-Hm3cg6mZ9cc@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <CAAAKZwtQc212_-oqf56ToxjSG7f9bsNcBwwurSezpGKiPDT+nQ@mail.gmail.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian Casteyde <casteyde.christian-GANU6spQydw@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+To: Tim Hockin <thockin@hockin.org>
+Cc: David Rientjes <rientjes@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, Pekka Enberg <penberg@kernel.org>, Christoph Lameter <cl@linux-foundation.org>, Li Zefan <lizefan@huawei.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, Cgroups <cgroups@vger.kernel.org>, Victor Marmol <vmarmol@google.com>
 
-On Wed, Dec 04, 2013 at 10:52:18AM +0900, Joonsoo Kim wrote:
-> On Tue, Dec 03, 2013 at 04:59:10PM -0800, Andrew Morton wrote:
-> > On Tue,  8 Oct 2013 16:58:10 -0400 Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> > 
-> > > Buffer allocation has a very crude indefinite loop around waking the
-> > > flusher threads and performing global NOFS direct reclaim because it
-> > > can not handle allocation failures.
-> > > 
-> > > The most immediate problem with this is that the allocation may fail
-> > > due to a memory cgroup limit, where flushers + direct reclaim might
-> > > not make any progress towards resolving the situation at all.  Because
-> > > unlike the global case, a memory cgroup may not have any cache at all,
-> > > only anonymous pages but no swap.  This situation will lead to a
-> > > reclaim livelock with insane IO from waking the flushers and thrashing
-> > > unrelated filesystem cache in a tight loop.
-> > > 
-> > > Use __GFP_NOFAIL allocations for buffers for now.  This makes sure
-> > > that any looping happens in the page allocator, which knows how to
-> > > orchestrate kswapd, direct reclaim, and the flushers sensibly.  It
-> > > also allows memory cgroups to detect allocations that can't handle
-> > > failure and will allow them to ultimately bypass the limit if reclaim
-> > > can not make progress.
-> > 
-> > Problem.
-> > 
-> > > --- a/fs/buffer.c
-> > > +++ b/fs/buffer.c
-> > > @@ -1005,9 +1005,19 @@ grow_dev_page(struct block_device *bdev, sector_t block,
-> > >  	struct buffer_head *bh;
-> > >  	sector_t end_block;
-> > >  	int ret = 0;		/* Will call free_more_memory() */
-> > > +	gfp_t gfp_mask;
-> > >  
-> > > -	page = find_or_create_page(inode->i_mapping, index,
-> > > -		(mapping_gfp_mask(inode->i_mapping) & ~__GFP_FS)|__GFP_MOVABLE);
-> > > +	gfp_mask = mapping_gfp_mask(inode->i_mapping) & ~__GFP_FS;
-> > > +	gfp_mask |= __GFP_MOVABLE;
-> > 
-> > https://bugzilla.kernel.org/show_bug.cgi?id=65991
-> > 
-> > WARNING: CPU: 0 PID: 1 at mm/page_alloc.c:1539 get_page_from_freelist+0x8a9/0x8c0()
-> > Modules linked in:
-> > CPU: 0 PID: 1 Comm: swapper/0 Not tainted 3.13.0-rc1 #42
-> > Hardware name: Acer Aspire 7750G/JE70_HR, BIOS V1.07 03/02/2011
-> >  0000000000000009 ffff8801c6121650 ffffffff81898d39 0000000000000000
-> >  ffff8801c6121688 ffffffff8107dc43 0000000000000002 0000000000000001
-> >  0000000000284850 0000000000000000 ffff8801cec04680 ffff8801c6121698
-> > Call Trace:
-> >  [<ffffffff81898d39>] dump_stack+0x4e/0x7a
-> >  [<ffffffff8107dc43>] warn_slowpath_common+0x73/0x90
-> >  [<ffffffff8107dd15>] warn_slowpath_null+0x15/0x20
-> >  [<ffffffff81116f69>] get_page_from_freelist+0x8a9/0x8c0
-> >  [<ffffffff81330cdd>] ? trace_hardirqs_off_thunk+0x3a/0x3c
-> >  [<ffffffff81117070>] __alloc_pages_nodemask+0xf0/0x770
-> >  [<ffffffff81330cdd>] ? trace_hardirqs_off_thunk+0x3a/0x3c
-> >  [<ffffffff81156823>] kmemcheck_alloc_shadow+0x53/0xf0
-> >  [<ffffffff81152495>] new_slab+0x345/0x3e0
-> >  [<ffffffff81897712>] __slab_alloc.isra.57+0x215/0x535
-> >  [<ffffffff81328030>] ? __radix_tree_preload+0x60/0xf0
-> >  [<ffffffff811545c8>] kmem_cache_alloc+0x118/0x150
-> >  [<ffffffff81328030>] ? __radix_tree_preload+0x60/0xf0
-> >  [<ffffffff81328030>] __radix_tree_preload+0x60/0xf0
-> >  [<ffffffff81328125>] radix_tree_maybe_preload+0x25/0x30
-> >  [<ffffffff8110faf7>] add_to_page_cache_locked+0x37/0x100
-> >  [<ffffffff8110fbd5>] add_to_page_cache_lru+0x15/0x40
-> >  [<ffffffff8110ff37>] find_or_create_page+0x57/0x90
-> >  [<ffffffff8118e630>] __getblk+0xf0/0x2f0
-> > 
-> > That __GFP_NOFAIL is getting down into
-> > radix_tree_preload->kmem_cache_alloc() and I expect that in its
-> > boundless stupidity, slab has decided to inappropriately go and use an
-> > unnecessarily massive page size for radix_tree_node_cachep's underlying
-> > memory allocations.  So we end up using GFP_NOFAIL for an order=2 (or
-> > more) allocation, which is unacceptably risky, methinks.
-> > 
-> > I really really wish slab wouldn't do this.  The benefit is surely very
-> > small and these unnecessary higher-order allocations are quite abusive
-> > of the page allocator.
-> > 
-> > Can we please make slab stop doing this?
-> > 
-> > radix_tree_nodes are 560 bytes and the kernel often allocates them in
-> > times of extreme memory stress.  We really really want them to be
-> > backed by order=0 pages.
-> 
-> Hello, Andrew.
-> 
-> Following patch would fix this problem.
-> 
-> Thanks.
-> 
-> -------------------8<------------------------
-> >From 7f21232d1eeffccdbd0f6d79c04d297cf95a713e Mon Sep 17 00:00:00 2001
-> From: Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>
-> Date: Wed, 4 Dec 2013 10:36:11 +0900
-> Subject: [PATCH] slub: fix high order page allocation problem with
->  __GFP_NOFAIL
-> 
-> SLUB already try to allocate high order page with clearing __GFP_NOFAIL.
-> But, when allocating shadow page for kmemcheck, it missed clearing
-> the flag. This trigger WARN_ON_ONCE() reported by Christian Casteyde.
-> 
-> https://bugzilla.kernel.org/show_bug.cgi?id=65991
-> 
-> This patch fix this situation by using same allocation flag as original
-> allocation.
-> 
-> Reported-by: Christian Casteyde <casteyde.christian-GANU6spQydw@public.gmane.org>
-> Signed-off-by: Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>
-> 
-> diff --git a/mm/slub.c b/mm/slub.c
-> index 545a170..3dd28b1 100644
-> --- a/mm/slub.c
-> +++ b/mm/slub.c
-> @@ -1335,11 +1335,12 @@ static struct page *allocate_slab(struct kmem_cache *s, gfp_t flags, int node)
->  	page = alloc_slab_page(alloc_gfp, node, oo);
->  	if (unlikely(!page)) {
->  		oo = s->min;
-> +		alloc_gfp = flags;
->  		/*
->  		 * Allocation may have failed due to fragmentation.
->  		 * Try a lower order alloc if possible
->  		 */
-> -		page = alloc_slab_page(flags, node, oo);
-> +		page = alloc_slab_page(alloc_gfp, node, oo);
->  
->  		if (page)
->  			stat(s, ORDER_FALLBACK);
-> @@ -1349,7 +1350,7 @@ static struct page *allocate_slab(struct kmem_cache *s, gfp_t flags, int node)
->  		&& !(s->flags & (SLAB_NOTRACK | DEBUG_DEFAULT_FLAGS))) {
->  		int pages = 1 << oo_order(oo);
->  
-> -		kmemcheck_alloc_shadow(page, oo_order(oo), flags, node);
-> +		kmemcheck_alloc_shadow(page, oo_order(oo), alloc_gfp, node);
->  
->  		/*
->  		 * Objects from caches that have a constructor don't get
-> -- 
-> 1.7.9.5
+Hello, Tim.
 
-Hello, Pekka and Christoph.
+On Thu, Dec 12, 2013 at 04:23:18PM -0800, Tim Hockin wrote:
+> Just to be clear - I say this because it doesn't feel right to impose
+> my craziness on others, and it sucks when we try and are met with
+> "you're crazy, go away".  And you have to admit that happens to
+> Google. :)  Punching an escape valve that allows us to be crazy
+> without hurting anyone else sounds ideal, IF and ONLY IF that escape
+> valve is itself maintainable.
 
-Could you review this patch?
-I think that we should merge it to fix the problem reported by Christian.
+I don't think google being considered crazy is a good thing in
+general, highly likely not something to be proud of.  It sure is
+partly indicative of the specialization that you guys need but I
+suspect is a much stronger signal for room for better engineering.
+
+I'm fairly certain the blame is abundant for everybody to share.  The
+point I'm trying to make is "let's please stop diverging".  It hurts
+everybody.
+
+> If the escape valve is userspace it's REALLY easy to iterate on our
+> craziness.  If it is kernel space, it's somewhat less easy, but not
+> impossible.
+
+As I'm sure you've gathered from this thread, even punching the
+initial hole is a sizable burden and contortion to the general memory
+management and I'm sure as you guys develop further down the path
+you'll encounter cases where you need further support or holes from
+the kernel.  I can't anticipate the details but the fact that those
+will follow is as evident as the day to me, especially given the
+mindset leading to the current situation in the first place.
+
+Please note that this part of discussion is more abstract than
+necessary for this particular patchset or hole.  I'm quite doubtful
+that system-level OOM handling with separate physical reserve is
+likely to survive even just on technical details.  The reason why I'm
+keeping at this abstract point is because this seems to be a
+continuing trend rather than a single occurrence and I really hope it
+changes.
+
+> Well that's an awesome start.  We have or had patches to do a lot of
+> this.  I don't know how well scrubbed they are for pushing or whether
+> they apply at all to current head, though.
+
+Awesome, this looks like something everyone agrees on. :)
+
+> As an aside: mucking about with extra nesting levels to achieve a
+> stable OOM semantic sounds doable, but it certainly sucks in a unified
+> hierarchy.  We'll end up with 1, 2, or 3 (or more in esoteric cases?
+> not sure) extra nesting levels for every other resource dimension.
+> And lawd help us if we ever need to do something similar in a
+> different resource dimension - the cross product is mind-bending.
+> What we do with split-hierarchies is this but on a smaller scale.
+
+Yes, agreed but I believe there are substantial benefits to having
+certain level of structural constraints.  It encourages people to
+ponder the underlying issues and make active trade-offs.  Not that
+going off that extreme would be good either but we've gone too far
+towards the other end.
+
+This being a special issue with memcg, if this turns out to be a big
+enough problem, I don't think having a provision to be able to handle
+it without further nesting would be too crazy - e.g. the ability to
+mark a single cgroup at the root level as for OOM handler or whatever
+- as long as we stay within the boundaries of memcg and cgroup proper,
+but we seem to have ways to go before worrying about that one.
 
 Thanks.
+
+-- 
+tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
