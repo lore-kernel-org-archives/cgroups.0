@@ -1,28 +1,166 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.14] cgroup: fix fail path in cgroup_load_subsys()
-Date: Fri, 13 Dec 2013 11:20:50 +0800
-Message-ID: <52AA7D12.2070705@huawei.com>
-References: <1386875828-5075-1-git-send-email-vdavydov@parallels.com>
+From: Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>
+Subject: Re: [patch 2/2] fs: buffer: move allocation failure loop into the
+ allocator
+Date: Fri, 13 Dec 2013 15:58:06 +0900
+Message-ID: <20131213065805.GC8845@lge.com>
+References: <1381265890-11333-1-git-send-email-hannes@cmpxchg.org>
+ <1381265890-11333-2-git-send-email-hannes@cmpxchg.org>
+ <20131203165910.54d6b4724a1f3e329af52ac6@linux-foundation.org>
+ <20131204015218.GA19709@lge.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1386875828-5075-1-git-send-email-vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20131204015218.GA19709-Hm3cg6mZ9cc@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, azurIt <azurit-Rm0zKEqwvD4@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian Casteyde <casteyde.christian-GANU6spQydw@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
 
-On 2013/12/13 3:17, Vladimir Davydov wrote:
-> Calling cgroup_unload_subsys() from cgroup_load_subsys() after
-> online_css() failure will result in a NULL ptr dereference on attempt to
-> offline_css(), because online_css() only assigns css to cgroup on
-> success. Let's fix that by skipping calls to offline_css() and
-> css_free() in cgroup_unload_subsys() if there is no css, and freeing css
-> in cgroup_load_subsys() on online_css() failure.
+On Wed, Dec 04, 2013 at 10:52:18AM +0900, Joonsoo Kim wrote:
+> On Tue, Dec 03, 2013 at 04:59:10PM -0800, Andrew Morton wrote:
+> > On Tue,  8 Oct 2013 16:58:10 -0400 Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+> > 
+> > > Buffer allocation has a very crude indefinite loop around waking the
+> > > flusher threads and performing global NOFS direct reclaim because it
+> > > can not handle allocation failures.
+> > > 
+> > > The most immediate problem with this is that the allocation may fail
+> > > due to a memory cgroup limit, where flushers + direct reclaim might
+> > > not make any progress towards resolving the situation at all.  Because
+> > > unlike the global case, a memory cgroup may not have any cache at all,
+> > > only anonymous pages but no swap.  This situation will lead to a
+> > > reclaim livelock with insane IO from waking the flushers and thrashing
+> > > unrelated filesystem cache in a tight loop.
+> > > 
+> > > Use __GFP_NOFAIL allocations for buffers for now.  This makes sure
+> > > that any looping happens in the page allocator, which knows how to
+> > > orchestrate kswapd, direct reclaim, and the flushers sensibly.  It
+> > > also allows memory cgroups to detect allocations that can't handle
+> > > failure and will allow them to ultimately bypass the limit if reclaim
+> > > can not make progress.
+> > 
+> > Problem.
+> > 
+> > > --- a/fs/buffer.c
+> > > +++ b/fs/buffer.c
+> > > @@ -1005,9 +1005,19 @@ grow_dev_page(struct block_device *bdev, sector_t block,
+> > >  	struct buffer_head *bh;
+> > >  	sector_t end_block;
+> > >  	int ret = 0;		/* Will call free_more_memory() */
+> > > +	gfp_t gfp_mask;
+> > >  
+> > > -	page = find_or_create_page(inode->i_mapping, index,
+> > > -		(mapping_gfp_mask(inode->i_mapping) & ~__GFP_FS)|__GFP_MOVABLE);
+> > > +	gfp_mask = mapping_gfp_mask(inode->i_mapping) & ~__GFP_FS;
+> > > +	gfp_mask |= __GFP_MOVABLE;
+> > 
+> > https://bugzilla.kernel.org/show_bug.cgi?id=65991
+> > 
+> > WARNING: CPU: 0 PID: 1 at mm/page_alloc.c:1539 get_page_from_freelist+0x8a9/0x8c0()
+> > Modules linked in:
+> > CPU: 0 PID: 1 Comm: swapper/0 Not tainted 3.13.0-rc1 #42
+> > Hardware name: Acer Aspire 7750G/JE70_HR, BIOS V1.07 03/02/2011
+> >  0000000000000009 ffff8801c6121650 ffffffff81898d39 0000000000000000
+> >  ffff8801c6121688 ffffffff8107dc43 0000000000000002 0000000000000001
+> >  0000000000284850 0000000000000000 ffff8801cec04680 ffff8801c6121698
+> > Call Trace:
+> >  [<ffffffff81898d39>] dump_stack+0x4e/0x7a
+> >  [<ffffffff8107dc43>] warn_slowpath_common+0x73/0x90
+> >  [<ffffffff8107dd15>] warn_slowpath_null+0x15/0x20
+> >  [<ffffffff81116f69>] get_page_from_freelist+0x8a9/0x8c0
+> >  [<ffffffff81330cdd>] ? trace_hardirqs_off_thunk+0x3a/0x3c
+> >  [<ffffffff81117070>] __alloc_pages_nodemask+0xf0/0x770
+> >  [<ffffffff81330cdd>] ? trace_hardirqs_off_thunk+0x3a/0x3c
+> >  [<ffffffff81156823>] kmemcheck_alloc_shadow+0x53/0xf0
+> >  [<ffffffff81152495>] new_slab+0x345/0x3e0
+> >  [<ffffffff81897712>] __slab_alloc.isra.57+0x215/0x535
+> >  [<ffffffff81328030>] ? __radix_tree_preload+0x60/0xf0
+> >  [<ffffffff811545c8>] kmem_cache_alloc+0x118/0x150
+> >  [<ffffffff81328030>] ? __radix_tree_preload+0x60/0xf0
+> >  [<ffffffff81328030>] __radix_tree_preload+0x60/0xf0
+> >  [<ffffffff81328125>] radix_tree_maybe_preload+0x25/0x30
+> >  [<ffffffff8110faf7>] add_to_page_cache_locked+0x37/0x100
+> >  [<ffffffff8110fbd5>] add_to_page_cache_lru+0x15/0x40
+> >  [<ffffffff8110ff37>] find_or_create_page+0x57/0x90
+> >  [<ffffffff8118e630>] __getblk+0xf0/0x2f0
+> > 
+> > That __GFP_NOFAIL is getting down into
+> > radix_tree_preload->kmem_cache_alloc() and I expect that in its
+> > boundless stupidity, slab has decided to inappropriately go and use an
+> > unnecessarily massive page size for radix_tree_node_cachep's underlying
+> > memory allocations.  So we end up using GFP_NOFAIL for an order=2 (or
+> > more) allocation, which is unacceptably risky, methinks.
+> > 
+> > I really really wish slab wouldn't do this.  The benefit is surely very
+> > small and these unnecessary higher-order allocations are quite abusive
+> > of the page allocator.
+> > 
+> > Can we please make slab stop doing this?
+> > 
+> > radix_tree_nodes are 560 bytes and the kernel often allocates them in
+> > times of extreme memory stress.  We really really want them to be
+> > backed by order=0 pages.
 > 
-> Signed-off-by: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> Hello, Andrew.
+> 
+> Following patch would fix this problem.
+> 
+> Thanks.
+> 
+> -------------------8<------------------------
+> >From 7f21232d1eeffccdbd0f6d79c04d297cf95a713e Mon Sep 17 00:00:00 2001
+> From: Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>
+> Date: Wed, 4 Dec 2013 10:36:11 +0900
+> Subject: [PATCH] slub: fix high order page allocation problem with
+>  __GFP_NOFAIL
+> 
+> SLUB already try to allocate high order page with clearing __GFP_NOFAIL.
+> But, when allocating shadow page for kmemcheck, it missed clearing
+> the flag. This trigger WARN_ON_ONCE() reported by Christian Casteyde.
+> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=65991
+> 
+> This patch fix this situation by using same allocation flag as original
+> allocation.
+> 
+> Reported-by: Christian Casteyde <casteyde.christian-GANU6spQydw@public.gmane.org>
+> Signed-off-by: Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>
+> 
+> diff --git a/mm/slub.c b/mm/slub.c
+> index 545a170..3dd28b1 100644
+> --- a/mm/slub.c
+> +++ b/mm/slub.c
+> @@ -1335,11 +1335,12 @@ static struct page *allocate_slab(struct kmem_cache *s, gfp_t flags, int node)
+>  	page = alloc_slab_page(alloc_gfp, node, oo);
+>  	if (unlikely(!page)) {
+>  		oo = s->min;
+> +		alloc_gfp = flags;
+>  		/*
+>  		 * Allocation may have failed due to fragmentation.
+>  		 * Try a lower order alloc if possible
+>  		 */
+> -		page = alloc_slab_page(flags, node, oo);
+> +		page = alloc_slab_page(alloc_gfp, node, oo);
+>  
+>  		if (page)
+>  			stat(s, ORDER_FALLBACK);
+> @@ -1349,7 +1350,7 @@ static struct page *allocate_slab(struct kmem_cache *s, gfp_t flags, int node)
+>  		&& !(s->flags & (SLAB_NOTRACK | DEBUG_DEFAULT_FLAGS))) {
+>  		int pages = 1 << oo_order(oo);
+>  
+> -		kmemcheck_alloc_shadow(page, oo_order(oo), flags, node);
+> +		kmemcheck_alloc_shadow(page, oo_order(oo), alloc_gfp, node);
+>  
+>  		/*
+>  		 * Objects from caches that have a constructor don't get
+> -- 
+> 1.7.9.5
 
-I don't have strong preference on which way to go.
+Hello, Pekka and Christoph.
 
-Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Could you review this patch?
+I think that we should merge it to fix the problem reported by Christian.
+
+Thanks.
