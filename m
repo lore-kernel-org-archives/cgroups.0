@@ -1,93 +1,92 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: 3.13-rc breaks MEMCG_SWAP
-Date: Mon, 16 Dec 2013 11:40:42 +0100
-Message-ID: <20131216104042.GC23582@dhcp22.suse.cz>
-References: <alpine.LNX.2.00.1312160025200.2785@eggly.anvils>
- <52AEC989.4080509@huawei.com>
- <20131216095345.GB23582@dhcp22.suse.cz>
+From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH v14 00/18] kmemcg shrinkers
+Date: Mon, 16 Dec 2013 16:16:49 +0400
+Message-ID: <cover.1387193771.git.vdavydov@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20131216095345.GB23582@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>
-Cc: Hugh Dickins <hughd@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On Mon 16-12-13 10:53:45, Michal Hocko wrote:
-> On Mon 16-12-13 17:36:09, Li Zefan wrote:
-> > On 2013/12/16 16:36, Hugh Dickins wrote:
-> > > CONFIG_MEMCG_SWAP is broken in 3.13-rc.  Try something like this:
-> > > 
-> > > mkdir -p /tmp/tmpfs /tmp/memcg
-> > > mount -t tmpfs -o size=1G tmpfs /tmp/tmpfs
-> > > mount -t cgroup -o memory memcg /tmp/memcg
-> > > mkdir /tmp/memcg/old
-> > > echo 512M >/tmp/memcg/old/memory.limit_in_bytes
-> > > echo $$ >/tmp/memcg/old/tasks
-> > > cp /dev/zero /tmp/tmpfs/zero 2>/dev/null
-> > > echo $$ >/tmp/memcg/tasks
-> > > rmdir /tmp/memcg/old
-> > > sleep 1	# let rmdir work complete
-> > > mkdir /tmp/memcg/new
-> > > umount /tmp/tmpfs
-> > > dmesg | grep WARNING
-> > > rmdir /tmp/memcg/new
-> > > umount /tmp/memcg
-> > > 
-> > > Shows lots of WARNING: CPU: 1 PID: 1006 at kernel/res_counter.c:91
-> > >                            res_counter_uncharge_locked+0x1f/0x2f()
-> > > 
-> > > Breakage comes from 34c00c319ce7 ("memcg: convert to use cgroup id").
-> > > 
-> > > The lifetime of a cgroup id is different from the lifetime of the
-> > > css id it replaced: memsw's css_get()s do nothing to hold on to the
-> > > old cgroup id, it soon gets recycled to a new cgroup, which then
-> > > mysteriously inherits the old's swap, without any charge for it.
-> > > (I thought memsw's particular need had been discussed and was
-> > > well understood when 34c00c319ce7 went in, but apparently not.)
-> > > 
-> > > The right thing to do at this stage would be to revert that and its
-> > > associated commits; but I imagine to do so would be unwelcome to
-> > > the cgroup guys, going against their general direction; and I've
-> > > no idea how embedded that css_id removal has become by now.
-> > > 
-> > > Perhaps some creative refcounting can rescue memsw while still
-> > > using cgroup id?
-> > > 
-> > 
-> > Sorry for the broken.
-> > 
-> > I think we can keep the cgroup->id until the last css reference is
-> > dropped and the css is scheduled to be destroyed.
-> 
-> How would this work? The task which pushed the memory to the swap is
-> still alive (living in a different group) and the swap will be there
-> after the last reference to css as well.
+Hi,
 
-Or did you mean to get css reference in swap_cgroup_record and release
-it in __mem_cgroup_try_charge_swapin?
+This is the 14th iteration of Glauber Costa's patch-set implementing slab
+shrinking on memcg pressure. The main idea is to make the list_lru structure
+used by most FS shrinkers per-memcg. When adding or removing an element from a
+list_lru, we use the page information to figure out which memcg it belongs to
+and relay it to the appropriate list. This allows scanning kmem objects
+accounted to different memcgs independently.
 
-That would prevent the warning (assuming idr_remove would move to
-css_free[1]) but I am not sure this is the right thing to do. memsw charges
-will be accounted to the parent already (assuming there is one) without
-anybody to uncharge them because all uncharges would fallback to the
-root memcg after css_offline.
+Please note that this patch-set implements slab shrinking only when we hit the
+user memory limit so that kmem allocations will still fail if we are below the
+user memory limit, but close to the kmem limit. I am going to fix this in a
+separate patch-set, but currently it is only worthwhile setting the kmem limit
+to be greater than the user mem limit just to enable per-memcg slab accounting
+and reclaim.
 
-Hugh's approach seems much better.
+The patch-set is based on top of Linux-3.13-rc4 and organized as follows:
+ - patches 1-11 prepare vmscan, memcontrol, list_lru to kmemcg reclaim;
+ - patches 12, 13 implement the kmemcg reclaim core;
+ - patch 14 makes the list_lru struct per-memcg and patch 15 marks the
+   super_block shrinker as memcg-aware;
+ - patches 16-18 slightly improve memcontrol behavior regarding mem reclaim.
 
----
-[1] Is this even possible? I cannot say I would understand the comment
-above idr_remove in cgroup_destroy_css_killed 100% but it suggests we
-cannot postpone it to later.
+Changes in v14:
+ - do not change list_lru interface, introduce new shrink functions instead;
+ - remove NUMA awareness from per-memcg LRUs;
+ - improve synchronization between list_lru creation and kmemcg activation;
+ - various small fixes/improvements and code cleanup.
+
+Previous iterations of this patch-set can be found here:
+ - https://lkml.org/lkml/2013/12/9/103 (v13)
+ - https://lkml.org/lkml/2013/12/2/141 (v12)
+ - https://lkml.org/lkml/2013/11/25/214 (v11)
+
+Thanks.
+
+Glauber Costa (7):
+  memcg: make cache index determination more robust
+  memcg: consolidate callers of memcg_cache_id
+  memcg: move initialization to memcg creation
+  vmscan: take at least one pass with shrinkers
+  vmpressure: in-kernel notifications
+  memcg: reap dead memcgs upon global memory pressure
+  memcg: flush memcg items upon memcg destruction
+
+Vladimir Davydov (11):
+  memcg: make for_each_mem_cgroup macros public
+  memcg: remove KMEM_ACCOUNTED_ACTIVATED flag
+  memcg: rework memcg_update_kmem_limit synchronization
+  list_lru, shrinkers: introduce list_lru_shrink_{count,walk}
+  fs: consolidate {nr,free}_cached_objects args in shrink_control
+  vmscan: move call to shrink_slab() to shrink_zones()
+  vmscan: remove shrink_control arg from do_try_to_free_pages()
+  vmscan: call NUMA-unaware shrinkers irrespective of nodemask
+  vmscan: shrink slab on memcg pressure
+  list_lru: add per-memcg lists
+  fs: make shrinker memcg aware
+
+ fs/dcache.c                |   14 +-
+ fs/gfs2/quota.c            |    6 +-
+ fs/inode.c                 |    7 +-
+ fs/internal.h              |    7 +-
+ fs/super.c                 |   34 ++-
+ fs/xfs/xfs_buf.c           |    7 +-
+ fs/xfs/xfs_qm.c            |    7 +-
+ fs/xfs/xfs_super.c         |    7 +-
+ include/linux/fs.h         |    6 +-
+ include/linux/list_lru.h   |  112 +++++++--
+ include/linux/memcontrol.h |   50 ++++
+ include/linux/shrinker.h   |   10 +-
+ include/linux/vmpressure.h |    5 +
+ mm/list_lru.c              |  257 +++++++++++++++++--
+ mm/memcontrol.c            |  584 ++++++++++++++++++++++++++++++++------------
+ mm/vmpressure.c            |   53 +++-
+ mm/vmscan.c                |  170 ++++++++-----
+ 17 files changed, 1017 insertions(+), 319 deletions(-)
+
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+1.7.10.4
