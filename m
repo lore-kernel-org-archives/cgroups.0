@@ -1,7 +1,7 @@
 From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: [PATCH v14 13/18] vmscan: take at least one pass with shrinkers
-Date: Mon, 16 Dec 2013 16:17:02 +0400
-Message-ID: <9645eb409c9cf01a249b100d2ff0d7dff12deedb.1387193771.git.vdavydov@parallels.com>
+Subject: [PATCH v14 01/18] memcg: make cache index determination more robust
+Date: Mon, 16 Dec 2013 16:16:50 +0400
+Message-ID: <e17a4d621bdf2a01dac6179fc7694d0f1c854711.1387193771.git.vdavydov@parallels.com>
 References: <cover.1387193771.git.vdavydov@parallels.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
@@ -11,63 +11,53 @@ List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: dchinner@redhat.com, mhocko@suse.cz, hannes@cmpxchg.org, akpm@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, glommer@openvz.org, glommer@gmail.com, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, glommer@openvz.org, glommer@gmail.com, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
 From: Glauber Costa <glommer@openvz.org>
 
-In very low free kernel memory situations, it may be the case that we
-have less objects to free than our initial batch size. If this is the
-case, it is better to shrink those, and open space for the new workload
-then to keep them and fail the new allocations.
+I caught myself doing something like the following outside memcg core:
 
-In particular, we are concerned with the direct reclaim case for memcg.
-Although this same technique can be applied to other situations just as
-well, we will start conservative and apply it for that case, which is
-the one that matters the most.
+	memcg_id = -1;
+	if (memcg && memcg_kmem_is_active(memcg))
+		memcg_id = memcg_cache_id(memcg);
+
+to be able to handle all possible memcgs in a sane manner. In particular, the
+root cache will have kmemcg_id = -1 (just because we don't call memcg_kmem_init
+to the root cache since it is not limitable). We have always coped with that by
+making sure we sanitize which cache is passed to memcg_cache_id. Although this
+example is given for root, what we really need to know is whether or not a
+cache is kmem active.
+
+But outside the memcg core testing for root, for instance, is not trivial since
+we don't export mem_cgroup_is_root. I ended up realizing that this tests really
+belong inside memcg_cache_id. This patch moves a similar but stronger test
+inside memcg_cache_id and make sure it always return a meaningful value.
 
 Signed-off-by: Glauber Costa <glommer@openvz.org>
 Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
-Cc: Dave Chinner <dchinner@redhat.com>
 Cc: Michal Hocko <mhocko@suse.cz>
 Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Rik van Riel <riel@redhat.com>
+Cc: Balbir Singh <bsingharora@gmail.com>
+Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 ---
- mm/vmscan.c |   13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+ mm/memcontrol.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 67c1950..95fd2c3 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -281,17 +281,22 @@ shrink_slab_node(struct shrink_control *shrinkctl, struct shrinker *shrinker,
- 				nr_pages_scanned, lru_pages,
- 				max_pass, delta, total_scan);
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index bf5e894..3408852 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3076,7 +3076,9 @@ void memcg_cache_list_add(struct mem_cgroup *memcg, struct kmem_cache *cachep)
+  */
+ int memcg_cache_id(struct mem_cgroup *memcg)
+ {
+-	return memcg ? memcg->kmemcg_id : -1;
++	if (!memcg || !memcg_can_account_kmem(memcg))
++		return -1;
++	return memcg->kmemcg_id;
+ }
  
--	while (total_scan >= batch_size) {
-+	while (total_scan > 0) {
- 		unsigned long ret;
-+		unsigned long nr_to_scan = min(batch_size, total_scan);
- 
--		shrinkctl->nr_to_scan = batch_size;
-+		if (!shrinkctl->target_mem_cgroup &&
-+		    total_scan < batch_size)
-+			break;
-+
-+		shrinkctl->nr_to_scan = nr_to_scan;
- 		ret = shrinker->scan_objects(shrinker, shrinkctl);
- 		if (ret == SHRINK_STOP)
- 			break;
- 		freed += ret;
- 
--		count_vm_events(SLABS_SCANNED, batch_size);
--		total_scan -= batch_size;
-+		count_vm_events(SLABS_SCANNED, nr_to_scan);
-+		total_scan -= nr_to_scan;
- 
- 		cond_resched();
- 	}
+ /*
 -- 
 1.7.10.4
 
