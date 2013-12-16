@@ -1,140 +1,92 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH 2/2] memcg: do not use vmalloc for mem_cgroup allocations
-Date: Mon, 16 Dec 2013 17:53:56 +0100
-Message-ID: <20131216165356.GE26797@dhcp22.suse.cz>
-References: <965cbb70fb55fe50a77382537b9a1b7455deac86.1387007793.git.vdavydov@parallels.com>
- <ce02d52baac3730d659c046a181c2784c6cee2c4.1387007793.git.vdavydov@parallels.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: 3.13-rc breaks MEMCG_SWAP
+Date: Mon, 16 Dec 2013 18:15:27 +0100
+Message-ID: <20131216171527.GF26797@dhcp22.suse.cz>
+References: <alpine.LNX.2.00.1312160025200.2785@eggly.anvils>
+ <52AEC989.4080509@huawei.com>
+ <20131216095345.GB23582@dhcp22.suse.cz>
+ <20131216104042.GC23582@dhcp22.suse.cz>
+ <20131216164154.GX21724@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <ce02d52baac3730d659c046a181c2784c6cee2c4.1387007793.git.vdavydov@parallels.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20131216164154.GX21724-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov@parallels.com>
-Cc: glommer@gmail.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, devel@openvz.org, Glauber Costa <glommer@openvz.org>, Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sat 14-12-13 12:15:34, Vladimir Davydov wrote:
-> The vmalloc was introduced by patch 333279 ("memcgroup: use vmalloc for
-> mem_cgroup allocation"), because at that time MAX_NUMNODES was used for
-> defining the per-node array in the mem_cgroup structure so that the
-> structure could be huge even if the system had the only NUMA node.
+On Mon 16-12-13 11:41:54, Johannes Weiner wrote:
+> On Mon, Dec 16, 2013 at 11:40:42AM +0100, Michal Hocko wrote:
+> > On Mon 16-12-13 10:53:45, Michal Hocko wrote:
+> > > On Mon 16-12-13 17:36:09, Li Zefan wrote:
+> > > > On 2013/12/16 16:36, Hugh Dickins wrote:
+> > > > > CONFIG_MEMCG_SWAP is broken in 3.13-rc.  Try something like this:
+> > > > > 
+> > > > > mkdir -p /tmp/tmpfs /tmp/memcg
+> > > > > mount -t tmpfs -o size=1G tmpfs /tmp/tmpfs
+> > > > > mount -t cgroup -o memory memcg /tmp/memcg
+> > > > > mkdir /tmp/memcg/old
+> > > > > echo 512M >/tmp/memcg/old/memory.limit_in_bytes
+> > > > > echo $$ >/tmp/memcg/old/tasks
+> > > > > cp /dev/zero /tmp/tmpfs/zero 2>/dev/null
+> > > > > echo $$ >/tmp/memcg/tasks
+> > > > > rmdir /tmp/memcg/old
+> > > > > sleep 1	# let rmdir work complete
+> > > > > mkdir /tmp/memcg/new
+> > > > > umount /tmp/tmpfs
+> > > > > dmesg | grep WARNING
+> > > > > rmdir /tmp/memcg/new
+> > > > > umount /tmp/memcg
+> > > > > 
+> > > > > Shows lots of WARNING: CPU: 1 PID: 1006 at kernel/res_counter.c:91
+> > > > >                            res_counter_uncharge_locked+0x1f/0x2f()
+> > > > > 
+> > > > > Breakage comes from 34c00c319ce7 ("memcg: convert to use cgroup id").
+> > > > > 
+> > > > > The lifetime of a cgroup id is different from the lifetime of the
+> > > > > css id it replaced: memsw's css_get()s do nothing to hold on to the
+> > > > > old cgroup id, it soon gets recycled to a new cgroup, which then
+> > > > > mysteriously inherits the old's swap, without any charge for it.
+> > > > > (I thought memsw's particular need had been discussed and was
+> > > > > well understood when 34c00c319ce7 went in, but apparently not.)
+> > > > > 
+> > > > > The right thing to do at this stage would be to revert that and its
+> > > > > associated commits; but I imagine to do so would be unwelcome to
+> > > > > the cgroup guys, going against their general direction; and I've
+> > > > > no idea how embedded that css_id removal has become by now.
+> > > > > 
+> > > > > Perhaps some creative refcounting can rescue memsw while still
+> > > > > using cgroup id?
+> > > > > 
+> > > > 
+> > > > Sorry for the broken.
+> > > > 
+> > > > I think we can keep the cgroup->id until the last css reference is
+> > > > dropped and the css is scheduled to be destroyed.
+> > > 
+> > > How would this work? The task which pushed the memory to the swap is
+> > > still alive (living in a different group) and the swap will be there
+> > > after the last reference to css as well.
+> > 
+> > Or did you mean to get css reference in swap_cgroup_record and release
+> > it in __mem_cgroup_try_charge_swapin?
 > 
-> The situation was significantly improved by patch 45cf7e ("memcg: reduce
-> the size of struct memcg 244-fold"), which made the size of the
-> mem_cgroup structure calculated dynamically depending on the real number
-> of NUMA nodes installed on the system (nr_node_ids), so now there is no
-> point in using vmalloc here: the structure is allocated rarely and on
-> most systems its size is about 1K.
-> 
-> Personally I'd like to remove this vmalloc, because I'm considering
-> using wait_on_bit() on mem_cgroup::kmem_account_flags in the kmemcg
-> shrinkers implementation, which is impossible on vmalloc'd areas.
-> 
-> Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
-> Cc: Michal Hocko <mhocko@suse.cz>
-> Cc: Glauber Costa <glommer@openvz.org>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Balbir Singh <bsingharora@gmail.com>
-> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> We already do that, swap records hold a css reference.  We do the put
+> in mem_cgroup_uncharge_swap().
 
-yes this makes sense to me even without wait_on_bit part.
-Maybe I would just merge it with 1/2.
+Dohh! You are right I have totally missed that the css_get is burried in
+__mem_cgroup_uncharge_common and the counterpart is in mem_cgroup_uncharge_swap
+(which is less unexpected).
 
-Acked-by: Michal Hocko <mhocko@suse.cz>
+> It really strikes me as odd that we recycle the cgroup ID while there
+> are still references to the cgroup in circulation.
 
-Thanks!
-> ---
->  mm/memcontrol.c |   28 ++++++----------------------
->  1 file changed, 6 insertions(+), 22 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 7f1a356..205eb7b 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -48,7 +48,6 @@
->  #include <linux/sort.h>
->  #include <linux/fs.h>
->  #include <linux/seq_file.h>
-> -#include <linux/vmalloc.h>
->  #include <linux/vmpressure.h>
->  #include <linux/mm_inline.h>
->  #include <linux/page_cgroup.h>
-> @@ -335,12 +334,6 @@ struct mem_cgroup {
->  	/* WARNING: nodeinfo must be the last member here */
->  };
->  
-> -static size_t memcg_size(void)
-> -{
-> -	return sizeof(struct mem_cgroup) +
-> -		nr_node_ids * sizeof(struct mem_cgroup_per_node *);
-> -}
-> -
->  /* internal only representation about the status of kmem accounting. */
->  enum {
->  	KMEM_ACCOUNTED_ACTIVE = 0, /* accounted by this cgroup itself */
-> @@ -6139,14 +6132,12 @@ static void free_mem_cgroup_per_zone_info(struct mem_cgroup *memcg, int node)
->  static struct mem_cgroup *mem_cgroup_alloc(void)
->  {
->  	struct mem_cgroup *memcg;
-> -	size_t size = memcg_size();
-> +	size_t size;
->  
-> -	/* Can be very big if nr_node_ids is very big */
-> -	if (size < PAGE_SIZE)
-> -		memcg = kzalloc(size, GFP_KERNEL);
-> -	else
-> -		memcg = vzalloc(size);
-> +	size = sizeof(struct mem_cgroup);
-> +	size += nr_node_ids * sizeof(struct mem_cgroup_per_node *);
->  
-> +	memcg = kzalloc(size, GFP_KERNEL);
->  	if (!memcg)
->  		return NULL;
->  
-> @@ -6157,10 +6148,7 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
->  	return memcg;
->  
->  out_free:
-> -	if (size < PAGE_SIZE)
-> -		kfree(memcg);
-> -	else
-> -		vfree(memcg);
-> +	kfree(memcg);
->  	return NULL;
->  }
->  
-> @@ -6178,7 +6166,6 @@ out_free:
->  static void __mem_cgroup_free(struct mem_cgroup *memcg)
->  {
->  	int node;
-> -	size_t size = memcg_size();
->  
->  	mem_cgroup_remove_from_trees(memcg);
->  
-> @@ -6199,10 +6186,7 @@ static void __mem_cgroup_free(struct mem_cgroup *memcg)
->  	 * the cgroup_lock.
->  	 */
->  	disarm_static_keys(memcg);
-> -	if (size < PAGE_SIZE)
-> -		kfree(memcg);
-> -	else
-> -		vfree(memcg);
-> +	kfree(memcg);
->  }
->  
->  /*
-> -- 
-> 1.7.10.4
-> 
+That is true but even with this fixed I still think that the Hugh's
+approach makes a lot of sense.
 
 -- 
 Michal Hocko
 SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
