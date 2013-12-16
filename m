@@ -1,24 +1,16 @@
-From: Tejun Heo <tj@kernel.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: 3.13-rc breaks MEMCG_SWAP
-Date: Mon, 16 Dec 2013 11:35:30 -0500
-Message-ID: <20131216163530.GH32509@htj.dyndns.org>
+Date: Mon, 16 Dec 2013 11:41:54 -0500
+Message-ID: <20131216164154.GX21724@cmpxchg.org>
 References: <alpine.LNX.2.00.1312160025200.2785@eggly.anvils>
  <52AEC989.4080509@huawei.com>
  <20131216095345.GB23582@dhcp22.suse.cz>
  <20131216104042.GC23582@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=pVfxkQgKr6DTLr37U0VLoXEIU8z+OWIpJRgsR8FQuKw=;
-        b=MtadVIjgqpaRsTs8oTURdsgmnKUT8dLvFf7fFvICSFBHuBRbW+K7592InA6VDOm2qU
-         bZQFG5LqPLRXjw8pkESMld+H4wTUMzAkH6r4Y5mU+GfaggkocANZJ9n6XKfjNowtvh6U
-         GlB8mpgT68aKJat2hPpVlnkLAugJWTWZJljPdHLMe2vkwmh8MlYSI6GHy1ZKG3c+bjNa
-         4sugL5vy9sla/VXpnE37wi0CIaDT+dHIT8kqCFylqxnTQO6k5cmJ/yDgHToqsMmhvJLy
-         TLkVZhyx4vAB3RjPMY1u8ING4kL1/y2CM3qiW7FOOLsUA7UhKQ2Af00EIaRRRh0r240R
-         UXIQ==
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=W7voIUtkannTeaYQqZ9QKW6MYdkqHc18oXztHZQ9LJo=;
+	b=ZTuv+K5oH7q6Z6gcqlJ0bGJutxZivPVN55sFxUoEXwaPcrN5WmSK3GeQZso98hrgo2U0K6vnOE44uwwJQJS1Qi+E9u6rgx706uhnshhQxsfdqYptbMt9ioKU/NsFekHCjjjMnnRmyj/PxZ39LrcyZvMCdjFpZuLwFRY9WTZeKpU=;
 Content-Disposition: inline
 In-Reply-To: <20131216104042.GC23582@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
@@ -26,35 +18,68 @@ List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Michal Hocko <mhocko@suse.cz>
-Cc: Li Zefan <lizefan@huawei.com>, Hugh Dickins <hughd@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Li Zefan <lizefan@huawei.com>, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
 On Mon, Dec 16, 2013 at 11:40:42AM +0100, Michal Hocko wrote:
+> On Mon 16-12-13 10:53:45, Michal Hocko wrote:
+> > On Mon 16-12-13 17:36:09, Li Zefan wrote:
+> > > On 2013/12/16 16:36, Hugh Dickins wrote:
+> > > > CONFIG_MEMCG_SWAP is broken in 3.13-rc.  Try something like this:
+> > > > 
+> > > > mkdir -p /tmp/tmpfs /tmp/memcg
+> > > > mount -t tmpfs -o size=1G tmpfs /tmp/tmpfs
+> > > > mount -t cgroup -o memory memcg /tmp/memcg
+> > > > mkdir /tmp/memcg/old
+> > > > echo 512M >/tmp/memcg/old/memory.limit_in_bytes
+> > > > echo $$ >/tmp/memcg/old/tasks
+> > > > cp /dev/zero /tmp/tmpfs/zero 2>/dev/null
+> > > > echo $$ >/tmp/memcg/tasks
+> > > > rmdir /tmp/memcg/old
+> > > > sleep 1	# let rmdir work complete
+> > > > mkdir /tmp/memcg/new
+> > > > umount /tmp/tmpfs
+> > > > dmesg | grep WARNING
+> > > > rmdir /tmp/memcg/new
+> > > > umount /tmp/memcg
+> > > > 
+> > > > Shows lots of WARNING: CPU: 1 PID: 1006 at kernel/res_counter.c:91
+> > > >                            res_counter_uncharge_locked+0x1f/0x2f()
+> > > > 
+> > > > Breakage comes from 34c00c319ce7 ("memcg: convert to use cgroup id").
+> > > > 
+> > > > The lifetime of a cgroup id is different from the lifetime of the
+> > > > css id it replaced: memsw's css_get()s do nothing to hold on to the
+> > > > old cgroup id, it soon gets recycled to a new cgroup, which then
+> > > > mysteriously inherits the old's swap, without any charge for it.
+> > > > (I thought memsw's particular need had been discussed and was
+> > > > well understood when 34c00c319ce7 went in, but apparently not.)
+> > > > 
+> > > > The right thing to do at this stage would be to revert that and its
+> > > > associated commits; but I imagine to do so would be unwelcome to
+> > > > the cgroup guys, going against their general direction; and I've
+> > > > no idea how embedded that css_id removal has become by now.
+> > > > 
+> > > > Perhaps some creative refcounting can rescue memsw while still
+> > > > using cgroup id?
+> > > > 
+> > > 
+> > > Sorry for the broken.
+> > > 
+> > > I think we can keep the cgroup->id until the last css reference is
+> > > dropped and the css is scheduled to be destroyed.
+> > 
 > > How would this work? The task which pushed the memory to the swap is
 > > still alive (living in a different group) and the swap will be there
 > > after the last reference to css as well.
 > 
 > Or did you mean to get css reference in swap_cgroup_record and release
 > it in __mem_cgroup_try_charge_swapin?
-> 
-> That would prevent the warning (assuming idr_remove would move to
-> css_free[1]) but I am not sure this is the right thing to do. memsw charges
-> will be accounted to the parent already (assuming there is one) without
-> anybody to uncharge them because all uncharges would fallback to the
-> root memcg after css_offline.
-> 
-> Hugh's approach seems much better.
 
-Hmmm... I think it's reasonable for css's to expect cgrp->id to not be
-recycled before all css refs are gone.  If Hugh's patches are
-something desriable independent of cgrp->id issues, great, but, if
-not, let's first try to get it right from cgroup core.  Is it enough
-for css_from_id() to return NULL after offline until all refs are
-gone?  That should be an easy fix.
+We already do that, swap records hold a css reference.  We do the put
+in mem_cgroup_uncharge_swap().
 
-Thanks.
-
--- 
-tejun
+It really strikes me as odd that we recycle the cgroup ID while there
+are still references to the cgroup in circulation.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
