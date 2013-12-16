@@ -1,84 +1,123 @@
-From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: [PATCH v14 04/18] memcg: make for_each_mem_cgroup macros public
-Date: Mon, 16 Dec 2013 16:16:53 +0400
-Message-ID: <935807f1cf90abb10423e049346c49ef7b6bcc2f.1387193771.git.vdavydov@parallels.com>
+From: Vladimir Davydov <vdavydov@parallels.com>
+Subject: [PATCH v14 08/18] fs: consolidate {nr,free}_cached_objects args in shrink_control
+Date: Mon, 16 Dec 2013 16:16:57 +0400
+Message-ID: <6fc0f59034407af4e3d5e5a86850e0245bdd0756.1387193771.git.vdavydov@parallels.com>
 References: <cover.1387193771.git.vdavydov@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <cover.1387193771.git.vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <cover.1387193771.git.vdavydov@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+To: dchinner@redhat.com, mhocko@suse.cz, hannes@cmpxchg.org, akpm@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, glommer@openvz.org, glommer@gmail.com, Al Viro <viro@zeniv.linux.org.uk>
 
-I am going to use these macros in next patches, so let's move them to
-the header. These macros are very handy and they depend only on
-mem_cgroup_iter(), which is already public, so I guess it's worth it.
+We are going to make the FS shrinker memcg-aware. To achieve that, we
+will have to pass the memcg to scan to the nr_cached_objects and
+free_cached_objects VFS methods, which currently take only the NUMA node
+to scan. Since the shrink_control structure already holds the node, and
+the memcg to scan will be added to it as we introduce memcg-aware
+vmscan, let us consolidate the methods' arguments in this structure to
+keep things clean.
 
-Signed-off-by: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Glauber Costa <glommer-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Thanks to David Chinner for the tip.
+
+Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
+Cc: Glauber Costa <glommer@openvz.org>
+Cc: Dave Chinner <dchinner@redhat.com>
+Cc: Al Viro <viro@zeniv.linux.org.uk>
 ---
- include/linux/memcontrol.h |   15 +++++++++++++++
- mm/memcontrol.c            |   15 ---------------
- 2 files changed, 15 insertions(+), 15 deletions(-)
+ fs/super.c         |   12 ++++++------
+ fs/xfs/xfs_super.c |    7 +++----
+ include/linux/fs.h |    6 ++++--
+ 3 files changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index b3e7a66..e3efab2 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -53,6 +53,21 @@ struct mem_cgroup_reclaim_cookie {
- 	unsigned int generation;
- };
+diff --git a/fs/super.c b/fs/super.c
+index 13c4c92..9084c3d 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -76,7 +76,7 @@ static unsigned long super_cache_scan(struct shrinker *shrink,
+ 		return SHRINK_STOP;
  
-+/*
-+ * Iteration constructs for visiting all cgroups (under a tree).  If
-+ * loops are exited prematurely (break), mem_cgroup_iter_break() must
-+ * be used for reference counting.
-+ */
-+#define for_each_mem_cgroup_tree(iter, root)		\
-+	for (iter = mem_cgroup_iter(root, NULL, NULL);	\
-+	     iter != NULL;				\
-+	     iter = mem_cgroup_iter(root, iter, NULL))
-+
-+#define for_each_mem_cgroup(iter)			\
-+	for (iter = mem_cgroup_iter(NULL, NULL, NULL);	\
-+	     iter != NULL;				\
-+	     iter = mem_cgroup_iter(NULL, iter, NULL))
-+
- #ifdef CONFIG_MEMCG
- /*
-  * All "charge" functions with gfp_mask should use GFP_KERNEL or
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 8fdb239..b6ec029 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1261,21 +1261,6 @@ void mem_cgroup_iter_break(struct mem_cgroup *root,
- 		css_put(&prev->css);
+ 	if (sb->s_op->nr_cached_objects)
+-		fs_objects = sb->s_op->nr_cached_objects(sb, sc->nid);
++		fs_objects = sb->s_op->nr_cached_objects(sb, sc);
+ 
+ 	inodes = list_lru_shrink_count(&sb->s_inode_lru, sc);
+ 	dentries = list_lru_shrink_count(&sb->s_dentry_lru, sc);
+@@ -96,9 +96,10 @@ static unsigned long super_cache_scan(struct shrinker *shrink,
+ 	sc->nr_to_scan = inodes;
+ 	freed += prune_icache_sb(sb, sc);
+ 
+-	if (fs_objects)
+-		freed += sb->s_op->free_cached_objects(sb, fs_objects,
+-						       sc->nid);
++	if (fs_objects) {
++		sc->nr_to_scan = fs_objects;
++		freed += sb->s_op->free_cached_objects(sb, sc);
++	}
+ 
+ 	drop_super(sb);
+ 	return freed;
+@@ -116,8 +117,7 @@ static unsigned long super_cache_count(struct shrinker *shrink,
+ 		return 0;
+ 
+ 	if (sb->s_op && sb->s_op->nr_cached_objects)
+-		total_objects = sb->s_op->nr_cached_objects(sb,
+-						 sc->nid);
++		total_objects = sb->s_op->nr_cached_objects(sb, sc);
+ 
+ 	total_objects += list_lru_shrink_count(&sb->s_dentry_lru, sc);
+ 	total_objects += list_lru_shrink_count(&sb->s_inode_lru, sc);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index f317488..28d0697 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1524,7 +1524,7 @@ xfs_fs_mount(
+ static long
+ xfs_fs_nr_cached_objects(
+ 	struct super_block	*sb,
+-	int			nid)
++	struct shrink_control	*sc)
+ {
+ 	return xfs_reclaim_inodes_count(XFS_M(sb));
+ }
+@@ -1532,10 +1532,9 @@ xfs_fs_nr_cached_objects(
+ static long
+ xfs_fs_free_cached_objects(
+ 	struct super_block	*sb,
+-	long			nr_to_scan,
+-	int			nid)
++	struct shrink_control	*sc)
+ {
+-	return xfs_reclaim_inodes_nr(XFS_M(sb), nr_to_scan);
++	return xfs_reclaim_inodes_nr(XFS_M(sb), sc->nr_to_scan);
  }
  
--/*
-- * Iteration constructs for visiting all cgroups (under a tree).  If
-- * loops are exited prematurely (break), mem_cgroup_iter_break() must
-- * be used for reference counting.
-- */
--#define for_each_mem_cgroup_tree(iter, root)		\
--	for (iter = mem_cgroup_iter(root, NULL, NULL);	\
--	     iter != NULL;				\
--	     iter = mem_cgroup_iter(root, iter, NULL))
--
--#define for_each_mem_cgroup(iter)			\
--	for (iter = mem_cgroup_iter(NULL, NULL, NULL);	\
--	     iter != NULL;				\
--	     iter = mem_cgroup_iter(NULL, iter, NULL))
--
- void __mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx)
- {
- 	struct mem_cgroup *memcg;
+ static const struct super_operations xfs_super_operations = {
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 121f11f..aef5e6b 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1619,8 +1619,10 @@ struct super_operations {
+ 	ssize_t (*quota_write)(struct super_block *, int, const char *, size_t, loff_t);
+ #endif
+ 	int (*bdev_try_to_free_page)(struct super_block*, struct page*, gfp_t);
+-	long (*nr_cached_objects)(struct super_block *, int);
+-	long (*free_cached_objects)(struct super_block *, long, int);
++	long (*nr_cached_objects)(struct super_block *,
++				  struct shrink_control *);
++	long (*free_cached_objects)(struct super_block *,
++				    struct shrink_control *);
+ };
+ 
+ /*
 -- 
 1.7.10.4
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
