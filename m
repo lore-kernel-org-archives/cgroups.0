@@ -1,50 +1,102 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH 1/2] memcg: fix memcg_size() calculation
-Date: Tue, 17 Dec 2013 09:12:02 +0100
-Message-ID: <20131217081202.GA26640@dhcp22.suse.cz>
-References: <965cbb70fb55fe50a77382537b9a1b7455deac86.1387007793.git.vdavydov@parallels.com>
- <20131216164730.GD26797@dhcp22.suse.cz>
- <CAA6-i6rX7-F9UO2DO3gwC2SHNuSv2Fn48eLb1BZmc3HjCkbuvQ@mail.gmail.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: 3.13-rc breaks MEMCG_SWAP
+Date: Tue, 17 Dec 2013 11:25:17 +0100
+Message-ID: <20131217102517.GA28991@dhcp22.suse.cz>
+References: <alpine.LNX.2.00.1312160025200.2785@eggly.anvils>
+ <20131216162042.GC26797@dhcp22.suse.cz>
+ <alpine.LNX.2.00.1312161742540.2037@eggly.anvils>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <CAA6-i6rX7-F9UO2DO3gwC2SHNuSv2Fn48eLb1BZmc3HjCkbuvQ@mail.gmail.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <alpine.LNX.2.00.1312161742540.2037-fupSdm12i1nKWymIFiNcPA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Glauber Costa <glommer@gmail.com>
-Cc: Vladimir Davydov <vdavydov@parallels.com>, LKML <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, devel@openvz.org, Glauber Costa <glommer@openvz.org>, Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue 17-12-13 11:48:20, Glauber Costa wrote:
-> On Mon, Dec 16, 2013 at 8:47 PM, Michal Hocko <mhocko@suse.cz> wrote:
-> > On Sat 14-12-13 12:15:33, Vladimir Davydov wrote:
-> >> The mem_cgroup structure contains nr_node_ids pointers to
-> >> mem_cgroup_per_node objects, not the objects themselves.
-> >
-> > Ouch! This is 2k per node which is wasted. What a shame I haven't
-> > noticed this back then when reviewing 45cf7ebd5a033 (memcg: reduce the
-> > size of struct memcg 244-fold)
-> >
-> IIRC, they weren't pointers back then. I think they were embedded in
-> the structure, and I let
-> them embedded.
-> My mind may be tricking me, but I think I recall that Johannes changed
-> them to pointers
-> in a later time. No ?
+On Mon 16-12-13 18:26:18, Hugh Dickins wrote:
+> On Mon, 16 Dec 2013, Michal Hocko wrote:
+> > On Mon 16-12-13 00:36:05, Hugh Dickins wrote:
+[...]
+> > > +/**
+> > > + * swap_cgroup_reassign - assign all old entries to new (before old is freed).
+> > > + * @old: id of emptied memcg whose entries are now to be reassigned
+> > > + * @new: id of parent memcg to which those entries are to be assigned
+> > > + *
+> > > + * Returns number of entries reassigned, for debugging or for statistics.
+> > > + */
+> > > +long swap_cgroup_reassign(unsigned short old, unsigned short new)
+> > > +{
+> > > +	long reassigned = 0;
+> > > +	int type;
+> > > +
+> > > +	for (type = 0; type < MAX_SWAPFILES; type++) {
+> > > +		struct swap_cgroup_ctrl *ctrl = &swap_cgroup_ctrl[type];
+> > > +		unsigned long idx;
+> > > +
+> > > +		for (idx = 0; idx < ACCESS_ONCE(ctrl->length); idx++) {
+> > > +			struct swap_cgroup *sc, *scend;
+> > > +
+> > > +			spin_lock(&swap_cgroup_lock);
+> > > +			if (idx >= ACCESS_ONCE(ctrl->length))
+> > > +				goto unlock;
+> > > +			sc = page_address(ctrl->map[idx]);
+> > > +			for (scend = sc + SC_PER_PAGE; sc < scend; sc++) {
+> > > +				if (sc->id != old)
+> > > +					continue;
+> > 
+> > Is this safe? What prevents from race when id is set to old?
+> 
+> I am assuming that when this is called, we shall not be making any
+> new charges to old (if you see what I mean :) - this is called after
+> mem_cgroup_reparent_charges() (the main call - I've not yet wrapped
+> my head around Hannes's later safety-net call; perhaps these patches
+> would even make that one redundant - dunno).
 
-It was wrapped by mem_cgroup_lru_info back then but the memcg_size
-hasn't changed after 54f72fe022d9 (memcg: clean up memcg->nodeinfo) so
-the missing * was there since 45cf7ebd5a033
+I have to think about this some more. I was playing with an alternative
+fix for this race and few trace points shown me that the races are quite
+common.
 
-> In any case, this is correct.
+Anyway, wouldn't be it easier to take the lock for a batch of sc's and
+then release it followed by cond_resched? Doing 1024 of iterations
+doesn't sound too bad to me (we would take the lock 2 times for 4k pages).
 
+> Quite a lot is made simpler by the fact that we do not need to call
+> this from mem_cgroup_force_empty(), with all the races that would
+> entail: there was never any attempt to move these swap charges before,
+> so it's a pleasure not to have to deal with that possibility now.
+>
+> > > +				spin_lock(&ctrl->lock);
+> > > +				if (sc->id == old) {
+> > 
+> > Also it seems that compiler is free to optimize this test away, no?
+> > You need ACCESS_ONCE here as well, I guess.
+> 
+> Oh dear, you're asking me to read again through memory-barriers.txt
+> (Xmas 2013 edition), and come to a conclusion.  I think this pattern
+> of test outside spinlock, spinlock, test again inside spinlock is
+> used in very many places, without any ACCESS_ONCE.  I'll have to
+> go and search through the precedents.
+> 
+> I've probably brought this upon myself with the ACCESS_ONCE(ctrl->length)
+> a few lines above, which I added at a late stage to match the one above
+> it; but now I'm arguing that's unnecessary.
+
+Yeah, that triggered the red flag ;)
+
+> One of the problems with ACCESS_ONCE is that one easily falls into
+> a mistaken state in which it seems to be necessary everywhere;
+> but that illusion must be resisted.
+> 
+> The spinlock should make it unnecessary, but I'll have to muse on
+> semi-permeable membranes, osmosis, stuff like that.
+
+OK, I have checked that and you are right. ACCESS_ONCE is not needed.
+Compiler is not allowed to optimize across barrier() which is a part of
+spin_lock. So this should be ok.
+[...]
 -- 
 Michal Hocko
 SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
