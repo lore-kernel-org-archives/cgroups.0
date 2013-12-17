@@ -1,7 +1,7 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+From: Michal Hocko <mhocko@suse.cz>
 Subject: Re: 3.13-rc breaks MEMCG_SWAP
-Date: Tue, 17 Dec 2013 14:12:41 +0100
-Message-ID: <20131217131241.GE28991@dhcp22.suse.cz>
+Date: Tue, 17 Dec 2013 14:14:11 +0100
+Message-ID: <20131217131411.GF28991@dhcp22.suse.cz>
 References: <alpine.LNX.2.00.1312160025200.2785@eggly.anvils>
  <52AEC989.4080509@huawei.com>
  <20131216095345.GB23582@dhcp22.suse.cz>
@@ -10,49 +10,49 @@ References: <alpine.LNX.2.00.1312160025200.2785@eggly.anvils>
  <20131216171937.GG26797@dhcp22.suse.cz>
  <20131216172143.GJ32509@htj.dyndns.org>
  <alpine.LNX.2.00.1312161718001.2037@eggly.anvils>
- <52AFC163.5010507@huawei.com>
- <20131217122926.GC29989@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20131217122926.GC29989-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <alpine.LNX.2.00.1312161718001.2037@eggly.anvils>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hugh Dickins <hughd@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue 17-12-13 07:29:26, Tejun Heo wrote:
-> Hello, Li.
+On Mon 16-12-13 17:41:38, Hugh Dickins wrote:
+> On Mon, 16 Dec 2013, Tejun Heo wrote:
+> > On Mon, Dec 16, 2013 at 06:19:37PM +0100, Michal Hocko wrote:
+> > > I have to think about it some more (the brain is not working anymore
+> > > today). But what we really need is that nobody gets the same id while
+> > > the css is alive. So css_from_id returning NULL doesn't seem to be
+> > > enough.
+> > 
+> > Oh, I meant whether it's necessary to keep css_from_id() working
+> > (ie. doing successful lookups) between offline and release, because
+> > that's where lifetimes are coupled.  IOW, if it's enough for cgroup to
+> > not recycle the ID until all css's are released && fail css_from_id()
+> > lookup after the css is offlined, I can make a five liner quick fix.
 > 
-> On Tue, Dec 17, 2013 at 11:13:39AM +0800, Li Zefan wrote:
-> > diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> > index c36d906..769b5bb 100644
-> > --- a/kernel/cgroup.c
-> > +++ b/kernel/cgroup.c
-> > @@ -868,6 +868,15 @@ static void cgroup_diput(struct dentry *dentry, struct inode *inode)
-> >  		struct cgroup *cgrp = dentry->d_fsdata;
-> >  
-> >  		BUG_ON(!(cgroup_is_dead(cgrp)));
-> > +
-> > +		/*
-> > +		 * We should remove the cgroup object from idr before its
-> > +		 * grace period starts, so we won't be looking up a cgroup
-> > +		 * while the cgroup is being freed.
-> > +		 */
+> Don't take my word on it, I'm too fuzzy on this: but although it would
+> be good to refrain from recycling the ID until all css's are released,
+> I believe that it would not be good enough to fail css_from_id() once
+> the css is offlined - mem_cgroup_uncharge_swap() needs to uncharge the
+> hierarchy of the dead memcg (for example, when tmpfs file is removed).
 > 
-> Let's remove this comment and instead comment that this is to be made
-> per-css.  I mixed up the lifetime rules of the cgroup and css and
-> thought css_from_id() should fail once css is confirmed to be offline,
-> so the above comment.  It looks like we'll eventually have to move
-> cgrp->id to css->id (just simple per-ss idr) as the two objects'
-> lifetime rules will be completely separate.  Other than that, looks
-> good to me.
+> Uncharging the dead memcg itself is presumably irrelevant, but it does
+> need to locate the right parent to uncharge, and NULL css_from_id()
+> would make that impossible. 
 
-Yeah, please remove it. It made me think that idr_remove cannot be
-pulled to later and that's why I ruled out css based solution from the
-beginning.
+Exactly!
+
 -- 
 Michal Hocko
 SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
