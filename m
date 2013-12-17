@@ -1,259 +1,157 @@
-From: Hugh Dickins <hughd@google.com>
+From: Li Zefan <lizefan@huawei.com>
 Subject: Re: 3.13-rc breaks MEMCG_SWAP
-Date: Mon, 16 Dec 2013 18:26:18 -0800 (PST)
-Message-ID: <alpine.LNX.2.00.1312161742540.2037@eggly.anvils>
-References: <alpine.LNX.2.00.1312160025200.2785@eggly.anvils> <20131216162042.GC26797@dhcp22.suse.cz>
+Date: Tue, 17 Dec 2013 11:13:39 +0800
+Message-ID: <52AFC163.5010507@huawei.com>
+References: <alpine.LNX.2.00.1312160025200.2785@eggly.anvils> <52AEC989.4080509@huawei.com> <20131216095345.GB23582@dhcp22.suse.cz> <20131216104042.GC23582@dhcp22.suse.cz> <20131216163530.GH32509@htj.dyndns.org> <20131216171937.GG26797@dhcp22.suse.cz> <20131216172143.GJ32509@htj.dyndns.org> <alpine.LNX.2.00.1312161718001.2037@eggly.anvils>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=eA+g/x5wU5m4AUlqCG/clv1niZ8k3uiMoRuqjAEbzi4=;
-        b=g1svMzqv35i9BoiTeWEhYTzpYkFaosl6HtfLhUArzAF/PvprhjmwH+6pW6sG+tMDQG
-         rQ2WCso2ayipnhQuV9JQI+QnxsplTvBVvZesm513kyuue1selyeu1ujJ6BEZmrvdUDYR
-         vD6uq/q+AOwS7okaffDab3GfbScfO6Pyo9YiIYNzK6Bh45PBxzmeyDOv5GnzIfmNnB7X
-         lfaKeDKg6cCp3hR2YDKuCv/q4lSvyXkc0c+aOHIvDt573v6A5NbaY2cFbGlJeNEuhK/I
-         2jTb0Tw3qwTD85UqPVME4SAm1QI+kCSyuriDT0zAvp8aNr2QxsQX5BJUqeATyFMqyfNs
-         ax/g==
-In-Reply-To: <20131216162042.GC26797@dhcp22.suse.cz>
+In-Reply-To: <alpine.LNX.2.00.1312161718001.2037@eggly.anvils>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Hugh Dickins <hughd@google.com>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: Hugh Dickins <hughd@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA
+ Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 16 Dec 2013, Michal Hocko wrote:
-> On Mon 16-12-13 00:36:05, Hugh Dickins wrote:
-> [...]
+On 2013/12/17 9:41, Hugh Dickins wrote:
+> On Mon, 16 Dec 2013, Tejun Heo wrote:
+>> On Mon, Dec 16, 2013 at 06:19:37PM +0100, Michal Hocko wrote:
+>>> I have to think about it some more (the brain is not working anymore
+>>> today). But what we really need is that nobody gets the same id while
+>>> the css is alive.
+
+That's what I meant to do in my last reply.
+
+But I'm confused by
+
+"How would this work? .. the swap will be there
+after the last reference to css as well."
+
+>>> So css_from_id returning NULL doesn't seem to be
+>>> enough.
+>>
+>> Oh, I meant whether it's necessary to keep css_from_id() working
+>> (ie. doing successful lookups) between offline and release, because
+>> that's where lifetimes are coupled.  IOW, if it's enough for cgroup to
+>> not recycle the ID until all css's are released && fail css_from_id()
+>> lookup after the css is offlined, I can make a five liner quick fix.
 > 
-> OK, I went through the patch and it looks good except for suspicious
-> ctrl->lock handling in swap_cgroup_reassign (see below). I am just
-> suggesting to split it into 4 parts
-
-Thanks a lot for studying it, and responding so quickly.
-As I remark in reply to Tejun, I'm not nearly so keen on this
-approach as you are, and would prefer something short and sweet
-from the cgroup end, at least for now; but let's go through your
-comments, to keep both options open until we're surer.
-
+> Don't take my word on it, I'm too fuzzy on this: but although it would
+> be good to refrain from recycling the ID until all css's are released,
+> I believe that it would not be good enough to fail css_from_id() once
+> the css is offlined - mem_cgroup_uncharge_swap() needs to uncharge the
+> hierarchy of the dead memcg (for example, when tmpfs file is removed).
 > 
-> * swap_cgroup_mutex -> swap_cgroup_lock
-> * swapon cleanup
-> * drop irqsave when taking ctrl->lock
-> * mem_cgroup_reparent_swap
+> Uncharging the dead memcg itself is presumably irrelevant, but it does
+> need to locate the right parent to uncharge, and NULL css_from_id()
+> would make that impossible.  It would be easy if we said those charges
+> migrate to root rather than to parent, but that's inconsistent with
+> what we have happily converged upon doing elsewhere (in the preferred
+> use_hierarchy case), and it would be a change in behaviour.
 > 
-> but I will leave the split up to you. Just make sure that the fix is a
-> separate patch, please.
+> I'm not nearly as enthusiastic for my patch as Michal is: I really
+> would prefer a five-liner from you or from Zefan. 
 
-Yes indeed, some split like that, maybe even more pieces.  The difficult
-part is the ordering: for going into 3.13, we'd prefer a small fix first
-and cleanup to follow after in 3.14, but it will be hard to force myself
-not to do the cleanup ones first, and until getting down to it I won't
-recall how much of the cleanup was essential e.g. to avoid lock ordering
-problems or long lock hold times, perhaps.
+I've come up with a fix. Though it's more than five-line, it mostly moves
+a few lines from one place to another. I've tested it with your script.
 
-> 
-> [...]
-> > --- 3.13-rc4/mm/page_cgroup.c	2013-02-18 15:58:34.000000000 -0800
-> > +++ linux/mm/page_cgroup.c	2013-12-15 14:34:36.312485960 -0800
-> > @@ -322,7 +322,8 @@ void __meminit pgdat_page_cgroup_init(st
-> >  
-> >  #ifdef CONFIG_MEMCG_SWAP
-> >  
-> > -static DEFINE_MUTEX(swap_cgroup_mutex);
-> > +static DEFINE_SPINLOCK(swap_cgroup_lock);
-> > +
-> 
-> This one is worth a separate patch IMO.
+============================
 
-Agreed.
+From: Li Zefan <lizefan@huawei.com>
+Date: Tue, 17 Dec 2013 10:45:09 +0800
+Subject: [PATCH] cgroup: don't recycle cgroup id until all csses' have been destroyed
 
-> 
-> >  struct swap_cgroup_ctrl {
-> >  	struct page **map;
-> >  	unsigned long length;
-> > @@ -353,14 +354,11 @@ struct swap_cgroup {
-> >  /*
-> >   * allocate buffer for swap_cgroup.
-> >   */
-> > -static int swap_cgroup_prepare(int type)
-> > +static int swap_cgroup_prepare(struct swap_cgroup_ctrl *ctrl)
-> >  {
-> >  	struct page *page;
-> > -	struct swap_cgroup_ctrl *ctrl;
-> >  	unsigned long idx, max;
-> >  
-> > -	ctrl = &swap_cgroup_ctrl[type];
-> > -
-> >  	for (idx = 0; idx < ctrl->length; idx++) {
-> >  		page = alloc_page(GFP_KERNEL | __GFP_ZERO);
-> >  		if (!page)
-> 
-> This with swap_cgroup_swapon should be in a separate patch as a cleanup.
+Hugh reported this bug:
 
-Agreed.
+> CONFIG_MEMCG_SWAP is broken in 3.13-rc.  Try something like this:
+>
+> mkdir -p /tmp/tmpfs /tmp/memcg
+> mount -t tmpfs -o size=1G tmpfs /tmp/tmpfs
+> mount -t cgroup -o memory memcg /tmp/memcg
+> mkdir /tmp/memcg/old
+> echo 512M >/tmp/memcg/old/memory.limit_in_bytes
+> echo $$ >/tmp/memcg/old/tasks
+> cp /dev/zero /tmp/tmpfs/zero 2>/dev/null
+> echo $$ >/tmp/memcg/tasks
+> rmdir /tmp/memcg/old
+> sleep 1	# let rmdir work complete
+> mkdir /tmp/memcg/new
+> umount /tmp/tmpfs
+> dmesg | grep WARNING
+> rmdir /tmp/memcg/new
+> umount /tmp/memcg
+>
+> Shows lots of WARNING: CPU: 1 PID: 1006 at kernel/res_counter.c:91
+>                            res_counter_uncharge_locked+0x1f/0x2f()
+>
+> Breakage comes from 34c00c319ce7 ("memcg: convert to use cgroup id").
+>
+> The lifetime of a cgroup id is different from the lifetime of the
+> css id it replaced: memsw's css_get()s do nothing to hold on to the
+> old cgroup id, it soon gets recycled to a new cgroup, which then
+> mysteriously inherits the old's swap, without any charge for it.
 
-> 
-> > @@ -407,18 +405,17 @@ unsigned short swap_cgroup_cmpxchg(swp_e
-> >  {
-> >  	struct swap_cgroup_ctrl *ctrl;
-> >  	struct swap_cgroup *sc;
-> > -	unsigned long flags;
-> >  	unsigned short retval;
-> >  
-> >  	sc = lookup_swap_cgroup(ent, &ctrl);
-> >  
-> > -	spin_lock_irqsave(&ctrl->lock, flags);
-> > +	spin_lock(&ctrl->lock);
-> >  	retval = sc->id;
-> >  	if (retval == old)
-> >  		sc->id = new;
-> >  	else
-> >  		retval = 0;
-> > -	spin_unlock_irqrestore(&ctrl->lock, flags);
-> > +	spin_unlock(&ctrl->lock);
-> >  	return retval;
-> >  }
-> >  
-> > @@ -435,14 +432,13 @@ unsigned short swap_cgroup_record(swp_en
-> >  	struct swap_cgroup_ctrl *ctrl;
-> >  	struct swap_cgroup *sc;
-> >  	unsigned short old;
-> > -	unsigned long flags;
-> >  
-> >  	sc = lookup_swap_cgroup(ent, &ctrl);
-> >  
-> > -	spin_lock_irqsave(&ctrl->lock, flags);
-> > +	spin_lock(&ctrl->lock);
-> >  	old = sc->id;
-> >  	sc->id = id;
-> > -	spin_unlock_irqrestore(&ctrl->lock, flags);
-> > +	spin_unlock(&ctrl->lock);
-> >  
-> >  	return old;
-> >  }
-> 
-> I would prefer these two in a separate patch as well. I have no idea why
-> these were IRQ aware as this was never needed AFAICS.
-> e9e58a4ec3b10 is not very specific...
+Instead of removing cgroup id right after all the csses have been
+offlined, we should do that after csses have been destroyed.
 
-Agreed.  Yes, I couldn't work out any justification for the _irqsave
-variants, and preferred to avoid that clutter rather than add to it.
+To make sure an invalid css pointer won't be returned after the css
+is destroyed, make sure css_from_id() returns NULL in this case.
 
-> 
-> > @@ -451,19 +447,60 @@ unsigned short swap_cgroup_record(swp_en
-> >   * lookup_swap_cgroup_id - lookup mem_cgroup id tied to swap entry
-> >   * @ent: swap entry to be looked up.
-> >   *
-> > - * Returns CSS ID of mem_cgroup at success. 0 at failure. (0 is invalid ID)
-> > + * Returns ID of mem_cgroup at success. 0 at failure. (0 is invalid ID)
-> >   */
-> >  unsigned short lookup_swap_cgroup_id(swp_entry_t ent)
-> >  {
-> >  	return lookup_swap_cgroup(ent, NULL)->id;
-> >  }
-> >  
-> > +/**
-> > + * swap_cgroup_reassign - assign all old entries to new (before old is freed).
-> > + * @old: id of emptied memcg whose entries are now to be reassigned
-> > + * @new: id of parent memcg to which those entries are to be assigned
-> > + *
-> > + * Returns number of entries reassigned, for debugging or for statistics.
-> > + */
-> > +long swap_cgroup_reassign(unsigned short old, unsigned short new)
-> > +{
-> > +	long reassigned = 0;
-> > +	int type;
-> > +
-> > +	for (type = 0; type < MAX_SWAPFILES; type++) {
-> > +		struct swap_cgroup_ctrl *ctrl = &swap_cgroup_ctrl[type];
-> > +		unsigned long idx;
-> > +
-> > +		for (idx = 0; idx < ACCESS_ONCE(ctrl->length); idx++) {
-> > +			struct swap_cgroup *sc, *scend;
-> > +
-> > +			spin_lock(&swap_cgroup_lock);
-> > +			if (idx >= ACCESS_ONCE(ctrl->length))
-> > +				goto unlock;
-> > +			sc = page_address(ctrl->map[idx]);
-> > +			for (scend = sc + SC_PER_PAGE; sc < scend; sc++) {
-> > +				if (sc->id != old)
-> > +					continue;
-> 
-> Is this safe? What prevents from race when id is set to old?
+Reported-by: Hugh Dickins <hughd@google.com>
+Signed-off-by: Li Zefan <lizefan@huawei.com>
+---
+ kernel/cgroup.c | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
-I am assuming that when this is called, we shall not be making any
-new charges to old (if you see what I mean :) - this is called after
-mem_cgroup_reparent_charges() (the main call - I've not yet wrapped
-my head around Hannes's later safety-net call; perhaps these patches
-would even make that one redundant - dunno).
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index c36d906..769b5bb 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -868,6 +868,15 @@ static void cgroup_diput(struct dentry *dentry, struct inode *inode)
+ 		struct cgroup *cgrp = dentry->d_fsdata;
+ 
+ 		BUG_ON(!(cgroup_is_dead(cgrp)));
++
++		/*
++		 * We should remove the cgroup object from idr before its
++		 * grace period starts, so we won't be looking up a cgroup
++		 * while the cgroup is being freed.
++		 */
++		idr_remove(&cgrp->root->cgroup_idr, cgrp->id);
++		cgrp->id = -1;
++
+ 		call_rcu(&cgrp->rcu_head, cgroup_free_rcu);
+ 	} else {
+ 		struct cfent *cfe = __d_cfe(dentry);
+@@ -4104,6 +4113,7 @@ static void css_release(struct percpu_ref *ref)
+ 	struct cgroup_subsys_state *css =
+ 		container_of(ref, struct cgroup_subsys_state, refcnt);
+ 
++	rcu_assign_pointer(css->cgroup->subsys[css->ss->subsys_id], NULL);
+ 	call_rcu(&css->rcu_head, css_free_rcu_fn);
+ }
+ 
+@@ -4545,14 +4555,6 @@ static void cgroup_destroy_css_killed(struct cgroup *cgrp)
+ 	/* delete this cgroup from parent->children */
+ 	list_del_rcu(&cgrp->sibling);
+ 
+-	/*
+-	 * We should remove the cgroup object from idr before its grace
+-	 * period starts, so we won't be looking up a cgroup while the
+-	 * cgroup is being freed.
+-	 */
+-	idr_remove(&cgrp->root->cgroup_idr, cgrp->id);
+-	cgrp->id = -1;
+-
+ 	dput(d);
+ 
+ 	set_bit(CGRP_RELEASABLE, &parent->flags);
+-- 
+1.8.0.2
 
-Quite a lot is made simpler by the fact that we do not need to call
-this from mem_cgroup_force_empty(), with all the races that would
-entail: there was never any attempt to move these swap charges before,
-so it's a pleasure not to have to deal with that possibility now.
 
-> 
-> > +				spin_lock(&ctrl->lock);
-> > +				if (sc->id == old) {
-> 
-> Also it seems that compiler is free to optimize this test away, no?
-> You need ACCESS_ONCE here as well, I guess.
 
-Oh dear, you're asking me to read again through memory-barriers.txt
-(Xmas 2013 edition), and come to a conclusion.  I think this pattern
-of test outside spinlock, spinlock, test again inside spinlock is
-used in very many places, without any ACCESS_ONCE.  I'll have to
-go and search through the precedents.
-
-I've probably brought this upon myself with the ACCESS_ONCE(ctrl->length)
-a few lines above, which I added at a late stage to match the one above
-it; but now I'm arguing that's unnecessary.
-
-One of the problems with ACCESS_ONCE is that one easily falls into
-a mistaken state in which it seems to be necessary everywhere;
-but that illusion must be resisted.
-
-The spinlock should make it unnecessary, but I'll have to muse on
-semi-permeable membranes, osmosis, stuff like that.
-
-> 
-> > +					sc->id = new;
-> > +					reassigned++;
-> > +				}
-> > +				spin_unlock(&ctrl->lock);
-> > +			}
-> > +unlock:
-> > +			spin_unlock(&swap_cgroup_lock);
-> > +			cond_resched();
-> > +		}
-> > +	}
-> > +	return reassigned;
-> > +}
-> > +
-> >  int swap_cgroup_swapon(int type, unsigned long max_pages)
-> >  {
-> >  	void *array;
-> >  	unsigned long array_size;
-> >  	unsigned long length;
-> > -	struct swap_cgroup_ctrl *ctrl;
-> > +	struct swap_cgroup_ctrl ctrl;
-> >  
-> >  	if (!do_swap_account)
-> >  		return 0;
-> [...]
-> -- 
-> Michal Hocko
-> SUSE Labs
-
-Thanks: let's see if Tejun and Zefan can come up with something
-simpler than this at their end.  If we do all decide that this
-swap_cgroup_reassign() kind of change is desirable, it would still
-be better to make it later on as a cleanup than rush it in now.
-
-Hugh
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
