@@ -1,91 +1,91 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
- access to memory reserves
-Date: Tue, 17 Dec 2013 12:50:09 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1312171240541.21640@chino.kir.corp.google.com>
-References: <20131204111318.GE8410@dhcp22.suse.cz> <alpine.DEB.2.02.1312041606260.6329@chino.kir.corp.google.com> <20131209124840.GC3597@dhcp22.suse.cz> <alpine.DEB.2.02.1312091328550.11026@chino.kir.corp.google.com> <20131210103827.GB20242@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312101655430.22701@chino.kir.corp.google.com> <20131211095549.GA18741@dhcp22.suse.cz> <alpine.DEB.2.02.1312111434200.7354@chino.kir.corp.google.com> <20131212103159.GB2630@dhcp22.suse.cz> <alpine.DEB.2.02.1312131551220.28704@chino.kir.corp.google.com>
- <20131217162342.GG28991@dhcp22.suse.cz>
+From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [Devel] Race in memcg kmem?
+Date: Wed, 18 Dec 2013 11:51:30 +0400
+Message-ID: <52B15402.4060907@parallels.com>
+References: <52A71E43.9040200@parallels.com> <CAA6-i6oyraHQ7_1GBKxgupS12_QFx708Niu93nyNFLrbQBXE5A@mail.gmail.com> <52A8048E.4020806@parallels.com> <20131212132113.GG2630@dhcp22.suse.cz> <52A9BC91.5020105@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=Cj6u7yGZXmzQNlt3Th7zIBqrH3PDs7GZL4kAp3oy3lY=;
-        b=LPIYURDqwDjS2gwKgh0izcv5BgCMVHSohNI8kaQt8Li3o55LLKgnkYi3ftWNYThQzE
-         AK3eucsf8akqImQD77DyDk+yHA+1VLjQMrhfe8hP6/+QAw8EgJCtw5xo2B8Ys0F8B/8U
-         BfrAt+1pv0xvaOSZbQWc6itoUQRZK0KVoG2Aa4VrVWRviH8NS+su7YSYqge3fiyQ6PFY
-         44lb1sQgfQAWIXYf17s1FiV3tQZSkt/lv2XBoddYFYJ+azVh46BDVe/JrxLfWuh96Dv7
-         DdYHhmBVXs56TE8Aj+1wGPcXv3d3ReTanajsaZFjchkKbmbGPozo6WGl2AAO3CWzvvZR
-         fs4Q==
-In-Reply-To: <20131217162342.GG28991@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <52A9BC91.5020105-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-On Tue, 17 Dec 2013, Michal Hocko wrote:
+On 12/12/2013 05:39 PM, Vladimir Davydov wrote:
+> On 12/12/2013 05:21 PM, Michal Hocko wrote:
+>> On Wed 11-12-13 10:22:06, Vladimir Davydov wrote:
+>>> On 12/11/2013 03:13 AM, Glauber Costa wrote:
+>>>> On Tue, Dec 10, 2013 at 5:59 PM, Vladimir Davydov
+>> [...]
+>>>>> -- memcg_update_cache_size(s, num_groups) --
+>>>>> grows s->memcg_params to accomodate data for num_groups memcg's
+>>>>> @s is the root cache whose memcg_params we want to grow
+>>>>> @num_groups is the new number of kmem-active cgroups (defines the new
+>>>>> size of memcg_params array).
+>>>>>
+>>>>> The function:
+>>>>>
+>>>>> B1) allocates and assigns a new cache:
+>>>>>     cur_params = s->memcg_params;
+>>>>>     s->memcg_params = kzalloc(size, GFP_KERNEL);
+>>>>>
+>>>>> B2) copies per-memcg cache ptrs from the old memcg_params array to the
+>>>>> new one:
+>>>>>     for (i = 0; i < memcg_limited_groups_array_size; i++) {
+>>>>>         if (!cur_params->memcg_caches[i])
+>>>>>             continue;
+>>>>>         s->memcg_params->memcg_caches[i] =
+>>>>>                     cur_params->memcg_caches[i];
+>>>>>     }
+>>>>>
+>>>>> B3) frees the old array:
+>>>>>     kfree(cur_params);
+>>>>>
+>>>>>
+>>>>> Since these two functions do not share any mutexes, we can get the
+>>>> They do share a mutex, the slab mutex.
+>> Worth sticking in a lock_dep_assert?
+> AFAIU, lockdep_assert_held() is not applicable here:
+> memcg_create_kmem_cache() is called w/o the slab_mutex held, but it
+> calls kmem_cache_create_kmemcg(), which takes and releases this mutex,
+> working as a barrier. Placing lockdep_assert_held() into the latter
+> won't make things any clearer. IMO, we need a big good comment in
+> memcg_create_kmem_cache() proving its correctness.
 
-> > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > > index c72b03bf9679..fee25c5934d2 100644
-> > > --- a/mm/memcontrol.c
-> > > +++ b/mm/memcontrol.c
-> > > @@ -2692,7 +2693,8 @@ static int __mem_cgroup_try_charge(struct mm_struct *mm,
-> > >  	 * MEMDIE process.
-> > >  	 */
-> > >  	if (unlikely(test_thread_flag(TIF_MEMDIE)
-> > > -		     || fatal_signal_pending(current)))
-> > > +		     || fatal_signal_pending(current))
-> > > +		     || current->flags & PF_EXITING)
-> > >  		goto bypass;
-> > >  
-> > >  	if (unlikely(task_in_memcg_oom(current)))
-> > > 
-> > > rather than the later checks down the oom_synchronize paths. The comment
-> > > already mentions dying process...
-> > > 
-> > 
-> > This is scary because it doesn't even try to reclaim memcg memory before 
-> > allowing the allocation to succeed.
-> 
-> Why should it reclaim in the first place when it simply is on the way to
-> release memory. In other words why should it increase the memory
-> pressure when it is in fact releasing it?
-> 
+After a bit of thinking on the comment explaining why the race is
+impossible I seem to have found another one in these two functions.
 
-(Answering about removing the fatal_signal_pending() check as well here.)
+Assume two threads schedule kmem_cache creation works for the same
+kmem_cache of the same memcg from __memcg_kmem_get_cache(). One of the
+works successfully creates it. Another work should fail then, but if it
+interleaves with memcg_update_cache_size() as follows, it does not:
 
-For memory isolation, we'd only want to bypass memcg charges when 
-absolutely necessary and it seems like TIF_MEMDIE is the only case where 
-that's required.  We don't give processes with pending SIGKILLs or those 
-in the exit() path access to memory reserves in the page allocator without 
-first determining that reclaim can't make any progress for the same reason 
-and then we only do so by setting TIF_MEMDIE when calling the oom killer.  
+memcg_create_kmem_cache()                       memcg_update_cache_size()
+(called w/o mutexes held)                       (called with slab_mutex
+held)
+-------------------------                       -------------------------
+mutex_lock(&memcg_cache_mutex)
+                                                s->memcg_params=kzalloc(...)
+new_cachep=cache_from_memcg_idx(cachep,idx)
+// new_cachep==NULL => proceed to creation
+                                                // initialize
+s->memcg_params;
+                                                // sets s->memcg_params
+                                                //       
+->memcg_caches[idx]
+new_cachep = kmem_cache_dup(memcg, cachep)
+// nothing prevents kmem_cache_dup from
+// succeeding so ...
+cachep->memcg_params->memcg_caches[idx]=new_cachep
+// we've overwritten an existing cache ptr!
 
-> I am really puzzled here. On one hand you are strongly arguing for not
-> notifying when we know we can prevent from OOM action and on the other
-> hand you are ok to get vmpressure/thresholds notification when an
-> exiting task triggers reclaim.
-> 
-> So I am really lost in what you are trying to achieve here. It sounds a
-> bit arbirtrary.
-> 
+slab_mutex won't help here...
 
-It's not arbitrary to define when memcg bypass is allowed and, in my 
-opinion, it should only be done in situations where it is unavoidable and 
-therefore breaking memory isolation is required.
+Anyway, I'm going to move check and initialization of memcg_caches[idx]
+from memcg_create_kmem_cache() to kmem_cache_create_memcg() under the
+slab_mutex eliminating every possibility of race there. Will send the
+patch soon.
 
-(We wouldn't expect a 128MB memcg to be oom [and perhaps with a userspace 
-oom handler attached] when it has 100 children each 1MB in size just 
-because they all happen to be oom at the same time.  We set up the excess 
-memory in the parent specifically for the memcg with the oom handler 
-attached.)
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks.
