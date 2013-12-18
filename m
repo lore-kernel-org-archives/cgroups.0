@@ -1,79 +1,130 @@
-From: Libo Chen <clbchenlibo.chen-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: cgroup filter on physics interface can't control container
-Date: Wed, 18 Dec 2013 17:12:13 +0800
-Message-ID: <52B166ED.7020508@huawei.com>
-References: <52A52BBF.6030105@huawei.com> <52A9A97F.20902@huawei.com>
+From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH 1/6] slab: cleanup kmem_cache_create_memcg()
+Date: Wed, 18 Dec 2013 17:16:52 +0400
+Message-ID: <6f02b2d079ffd0990ae335339c803337b13ecd8c.1387372122.git.vdavydov@parallels.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <52A9A97F.20902-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org, xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org
-Cc: jeff-o2qLIJkoznsdnm+yROfE0A@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, honkiko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fbl-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, "zhangwei(Jovi)" <jovi.zhangwei-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-hello guys,
+Signed-off-by: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+Cc: Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+---
+ mm/slab_common.c |   66 +++++++++++++++++++++++++++---------------------------
+ 1 file changed, 33 insertions(+), 33 deletions(-)
 
-I said before "we can save sk_classid before skb_scrub_packet and
-restore it after that"  since skb->sk had been freed in
-skb_scrub_packet(), so it is not reasonable. yes?
-
-I have another idea.
-commit:f84517253(cls_cgroup: Store classid in struct sock) introduces
-sk_classid and put it in skb->sk pointer.  can we put sk_classid form
-struct sock to struct sk_buff? then sk_classid will not be affected
-by dev_forward_skb()->skb_scrub_packet() ?
-
-any comment are welcome!
-
-
-thanks,
-Libo
-
-
-On 2013/12/12 20:18, Libo Chen wrote:
-> ping...
-> 
-> On 2013/12/9 10:32, Libo Chen wrote:
->> hello network hackers,
->>
->> 	A linux container was builded with veth pair(veth0 inside container, veth1 outside container),
->>
->> the config as below:
->>
->>   lxc.network.type = veth
->>   lxc.network.flags = up
->>   lxc.network.link = br0  // base on eth0
->>   lxc.network.name = eth0
->>   lxc.network.ipv4 = 128.5.130.26/24
->>
->> then I use tc command with cgroup filter on veth0, it works well. But when setting on eth0, it doesn`t work.
->>
->> The reason is dev_forward_skb() in veth_xmit will call skb_scrub_packet and clean all information including skb->sk
->> in the skb, so if cls_cgroup_classify is working in serving softirq state, it will return failer, see below:
->>
->> 	if (in_serving_softirq()) {
->> 		/* If there is an sk_classid we'll use that. */
->> 		if (!skb->sk)
->> 			return -1;
->> 		classid = skb->sk->sk_classid;
->> 	}
->>
->>
->> Qdisc with cgroup filter on physics interface can not control a container network, it is disappointed.
->>
->> we can save sk_classid before skb_scrub_packet and restore it after that. Is it reasonable?  or any way to achieve this?
->>
->> thanks,
->> Libo
->>
-> 
+diff --git a/mm/slab_common.c b/mm/slab_common.c
+index 0b7bb39..5d6f743 100644
+--- a/mm/slab_common.c
++++ b/mm/slab_common.c
+@@ -176,8 +176,9 @@ kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
+ 	get_online_cpus();
+ 	mutex_lock(&slab_mutex);
+ 
+-	if (!kmem_cache_sanity_check(memcg, name, size) == 0)
+-		goto out_locked;
++	err = kmem_cache_sanity_check(memcg, name, size);
++	if (err)
++		goto out_unlock;
+ 
+ 	/*
+ 	 * Some allocators will constraint the set of valid flags to a subset
+@@ -189,45 +190,41 @@ kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
+ 
+ 	s = __kmem_cache_alias(memcg, name, size, align, flags, ctor);
+ 	if (s)
+-		goto out_locked;
++		goto out_unlock;
+ 
+ 	s = kmem_cache_zalloc(kmem_cache, GFP_KERNEL);
+-	if (s) {
+-		s->object_size = s->size = size;
+-		s->align = calculate_alignment(flags, align, size);
+-		s->ctor = ctor;
+-
+-		if (memcg_register_cache(memcg, s, parent_cache)) {
+-			kmem_cache_free(kmem_cache, s);
+-			err = -ENOMEM;
+-			goto out_locked;
+-		}
++	if (!s) {
++		err = -ENOMEM;
++		goto out_unlock;
++	}
+ 
+-		s->name = kstrdup(name, GFP_KERNEL);
+-		if (!s->name) {
+-			kmem_cache_free(kmem_cache, s);
+-			err = -ENOMEM;
+-			goto out_locked;
+-		}
++	s->object_size = s->size = size;
++	s->align = calculate_alignment(flags, align, size);
++	s->ctor = ctor;
+ 
+-		err = __kmem_cache_create(s, flags);
+-		if (!err) {
+-			s->refcount = 1;
+-			list_add(&s->list, &slab_caches);
+-			memcg_cache_list_add(memcg, s);
+-		} else {
+-			kfree(s->name);
+-			kmem_cache_free(kmem_cache, s);
+-		}
+-	} else
++	s->name = kstrdup(name, GFP_KERNEL);
++	if (!s->name) {
+ 		err = -ENOMEM;
++		goto out_free_cache;
++	}
++
++	err = memcg_register_cache(memcg, s, parent_cache);
++	if (err)
++		goto out_free_cache;
+ 
+-out_locked:
++	err = __kmem_cache_create(s, flags);
++	if (err)
++		goto out_free_cache;
++
++	s->refcount = 1;
++	list_add(&s->list, &slab_caches);
++	memcg_cache_list_add(memcg, s);
++
++out_unlock:
+ 	mutex_unlock(&slab_mutex);
+ 	put_online_cpus();
+ 
+ 	if (err) {
+-
+ 		if (flags & SLAB_PANIC)
+ 			panic("kmem_cache_create: Failed to create slab '%s'. Error %d\n",
+ 				name, err);
+@@ -236,11 +233,14 @@ out_locked:
+ 				name, err);
+ 			dump_stack();
+ 		}
+-
+ 		return NULL;
+ 	}
+-
+ 	return s;
++
++out_free_cache:
++	kfree(s->name);
++	kmem_cache_free(kmem_cache, s);
++	goto out_unlock;
+ }
+ 
+ struct kmem_cache *
+-- 
+1.7.10.4
