@@ -1,91 +1,79 @@
-From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [Devel] Race in memcg kmem?
-Date: Wed, 18 Dec 2013 11:51:30 +0400
-Message-ID: <52B15402.4060907@parallels.com>
-References: <52A71E43.9040200@parallels.com> <CAA6-i6oyraHQ7_1GBKxgupS12_QFx708Niu93nyNFLrbQBXE5A@mail.gmail.com> <52A8048E.4020806@parallels.com> <20131212132113.GG2630@dhcp22.suse.cz> <52A9BC91.5020105@parallels.com>
+From: Libo Chen <clbchenlibo.chen-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: cgroup filter on physics interface can't control container
+Date: Wed, 18 Dec 2013 17:12:13 +0800
+Message-ID: <52B166ED.7020508@huawei.com>
+References: <52A52BBF.6030105@huawei.com> <52A9A97F.20902@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <52A9BC91.5020105-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <52A9A97F.20902-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org, xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org
+Cc: jeff-o2qLIJkoznsdnm+yROfE0A@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, honkiko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fbl-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, "zhangwei(Jovi)" <jovi.zhangwei-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On 12/12/2013 05:39 PM, Vladimir Davydov wrote:
-> On 12/12/2013 05:21 PM, Michal Hocko wrote:
->> On Wed 11-12-13 10:22:06, Vladimir Davydov wrote:
->>> On 12/11/2013 03:13 AM, Glauber Costa wrote:
->>>> On Tue, Dec 10, 2013 at 5:59 PM, Vladimir Davydov
->> [...]
->>>>> -- memcg_update_cache_size(s, num_groups) --
->>>>> grows s->memcg_params to accomodate data for num_groups memcg's
->>>>> @s is the root cache whose memcg_params we want to grow
->>>>> @num_groups is the new number of kmem-active cgroups (defines the new
->>>>> size of memcg_params array).
->>>>>
->>>>> The function:
->>>>>
->>>>> B1) allocates and assigns a new cache:
->>>>>     cur_params = s->memcg_params;
->>>>>     s->memcg_params = kzalloc(size, GFP_KERNEL);
->>>>>
->>>>> B2) copies per-memcg cache ptrs from the old memcg_params array to the
->>>>> new one:
->>>>>     for (i = 0; i < memcg_limited_groups_array_size; i++) {
->>>>>         if (!cur_params->memcg_caches[i])
->>>>>             continue;
->>>>>         s->memcg_params->memcg_caches[i] =
->>>>>                     cur_params->memcg_caches[i];
->>>>>     }
->>>>>
->>>>> B3) frees the old array:
->>>>>     kfree(cur_params);
->>>>>
->>>>>
->>>>> Since these two functions do not share any mutexes, we can get the
->>>> They do share a mutex, the slab mutex.
->> Worth sticking in a lock_dep_assert?
-> AFAIU, lockdep_assert_held() is not applicable here:
-> memcg_create_kmem_cache() is called w/o the slab_mutex held, but it
-> calls kmem_cache_create_kmemcg(), which takes and releases this mutex,
-> working as a barrier. Placing lockdep_assert_held() into the latter
-> won't make things any clearer. IMO, we need a big good comment in
-> memcg_create_kmem_cache() proving its correctness.
+hello guys,
 
-After a bit of thinking on the comment explaining why the race is
-impossible I seem to have found another one in these two functions.
+I said before "we can save sk_classid before skb_scrub_packet and
+restore it after that"  since skb->sk had been freed in
+skb_scrub_packet(), so it is not reasonable. yes?
 
-Assume two threads schedule kmem_cache creation works for the same
-kmem_cache of the same memcg from __memcg_kmem_get_cache(). One of the
-works successfully creates it. Another work should fail then, but if it
-interleaves with memcg_update_cache_size() as follows, it does not:
+I have another idea.
+commit:f84517253(cls_cgroup: Store classid in struct sock) introduces
+sk_classid and put it in skb->sk pointer.  can we put sk_classid form
+struct sock to struct sk_buff? then sk_classid will not be affected
+by dev_forward_skb()->skb_scrub_packet() ?
 
-memcg_create_kmem_cache()                       memcg_update_cache_size()
-(called w/o mutexes held)                       (called with slab_mutex
-held)
--------------------------                       -------------------------
-mutex_lock(&memcg_cache_mutex)
-                                                s->memcg_params=kzalloc(...)
-new_cachep=cache_from_memcg_idx(cachep,idx)
-// new_cachep==NULL => proceed to creation
-                                                // initialize
-s->memcg_params;
-                                                // sets s->memcg_params
-                                                //       
-->memcg_caches[idx]
-new_cachep = kmem_cache_dup(memcg, cachep)
-// nothing prevents kmem_cache_dup from
-// succeeding so ...
-cachep->memcg_params->memcg_caches[idx]=new_cachep
-// we've overwritten an existing cache ptr!
+any comment are welcome!
 
-slab_mutex won't help here...
 
-Anyway, I'm going to move check and initialization of memcg_caches[idx]
-from memcg_create_kmem_cache() to kmem_cache_create_memcg() under the
-slab_mutex eliminating every possibility of race there. Will send the
-patch soon.
+thanks,
+Libo
 
-Thanks.
+
+On 2013/12/12 20:18, Libo Chen wrote:
+> ping...
+> 
+> On 2013/12/9 10:32, Libo Chen wrote:
+>> hello network hackers,
+>>
+>> 	A linux container was builded with veth pair(veth0 inside container, veth1 outside container),
+>>
+>> the config as below:
+>>
+>>   lxc.network.type = veth
+>>   lxc.network.flags = up
+>>   lxc.network.link = br0  // base on eth0
+>>   lxc.network.name = eth0
+>>   lxc.network.ipv4 = 128.5.130.26/24
+>>
+>> then I use tc command with cgroup filter on veth0, it works well. But when setting on eth0, it doesn`t work.
+>>
+>> The reason is dev_forward_skb() in veth_xmit will call skb_scrub_packet and clean all information including skb->sk
+>> in the skb, so if cls_cgroup_classify is working in serving softirq state, it will return failer, see below:
+>>
+>> 	if (in_serving_softirq()) {
+>> 		/* If there is an sk_classid we'll use that. */
+>> 		if (!skb->sk)
+>> 			return -1;
+>> 		classid = skb->sk->sk_classid;
+>> 	}
+>>
+>>
+>> Qdisc with cgroup filter on physics interface can not control a container network, it is disappointed.
+>>
+>> we can save sk_classid before skb_scrub_packet and restore it after that. Is it reasonable?  or any way to achieve this?
+>>
+>> thanks,
+>> Libo
+>>
+> 
