@@ -1,87 +1,194 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
- access to memory reserves
-Date: Wed, 18 Dec 2013 22:09:12 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1312182157510.1247@chino.kir.corp.google.com>
-References: <20131209124840.GC3597@dhcp22.suse.cz> <alpine.DEB.2.02.1312091328550.11026@chino.kir.corp.google.com> <20131210103827.GB20242@dhcp22.suse.cz> <alpine.DEB.2.02.1312101655430.22701@chino.kir.corp.google.com> <20131211095549.GA18741@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312111434200.7354@chino.kir.corp.google.com> <20131212103159.GB2630@dhcp22.suse.cz> <alpine.DEB.2.02.1312131551220.28704@chino.kir.corp.google.com> <20131217162342.GG28991@dhcp22.suse.cz> <alpine.DEB.2.02.1312171240541.21640@chino.kir.corp.google.com>
- <20131218200434.GA4161@dhcp22.suse.cz>
+From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH 1/6] slab: cleanup kmem_cache_create_memcg()
+Date: Thu, 19 Dec 2013 10:31:43 +0400
+Message-ID: <52B292CF.5030002@parallels.com>
+References: <6f02b2d079ffd0990ae335339c803337b13ecd8c.1387372122.git.vdavydov@parallels.com> <20131218165603.GB31080@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=0dIjo2jY3PTdkxRRlFS0qmkDoRJSMJ9p2thvLZwWhlA=;
-        b=U9CRkYOwaSK50bWfSCS3e3PhisCIvcbsVUbkt8u660WmlW5ASXMu7jiQdes0ZPftmT
-         ZuUxTV14Qs5cZhP8uqXQRR764YNgaUj89as/9/yKrDQ4WYeOb/Z2V6M4A/LVqD4iVwxu
-         VYfr3eHkWo4LLFhEMTs5ZIu3osLzdI5BGqm28gL2PwdnSVxLtFLHS15bvgo4Z5+wgPW0
-         IvT2sCrAWAy6Yilzxp4Wp13A4tYHSyF8oGUiQDbw08Rqypbs0z3PPecpLSGa6B//QJ5N
-         any9DouE+oQrmUOdyy11SKuoPUstM9Ru+k6Z20EJ0yZgkgMvgvAQSfIckNp7wtkDtAl2
-         vb8Q==
-In-Reply-To: <20131218200434.GA4161@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20131218165603.GB31080-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Wed, 18 Dec 2013, Michal Hocko wrote:
+On 12/18/2013 08:56 PM, Michal Hocko wrote:
+> On Wed 18-12-13 17:16:52, Vladimir Davydov wrote:
+>> Signed-off-by: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+>> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+>> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+>> Cc: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>> Cc: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+>> Cc: Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+>> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+> Dunno, is this really better to be worth the code churn?
+>
+> It even makes the generated code tiny bit bigger:
+> text    data     bss     dec     hex filename
+> 4355     171     236    4762    129a mm/slab_common.o.after
+> 4342     171     236    4749    128d mm/slab_common.o.before
+>
+> Or does it make the further changes much more easier? Be explicit in the
+> patch description if so.
 
-> > For memory isolation, we'd only want to bypass memcg charges when 
-> > absolutely necessary and it seems like TIF_MEMDIE is the only case where 
-> > that's required.  We don't give processes with pending SIGKILLs or those 
-> > in the exit() path access to memory reserves in the page allocator without 
-> > first determining that reclaim can't make any progress for the same reason 
-> > and then we only do so by setting TIF_MEMDIE when calling the oom killer.  
-> 
-> While I do understand arguments about isolation I would also like to be
-> practical here. How many charges are we talking about? Dozen pages? Much
-> more?
+Hi, Michal
 
-The PF_EXITING bypass is indeed much less concerning than the 
-fatal_signal_pending() bypass.
+IMO, undoing under labels looks better than inside conditionals, because
+we don't have to repeat the same deinitialization code then, like this
+(note three calls to kmem_cache_free()):
 
-> Besides that all of those should be very short lived because the task
-> is going to die very soon and so the memory will be freed.
-> 
+    s = kmem_cache_zalloc(kmem_cache, GFP_KERNEL);
+    if (s) {
+        s->object_size = s->size = size;
+        s->align = calculate_alignment(flags, align, size);
+        s->ctor = ctor;
 
-We don't know how much memory is being allocated while 
-fatal_signal_pending() is true before the process can handle the SIGKILL, 
-so this could potentially bypass a significant amount of memory.  If we 
-are to have a configuration such as what Tejun recommended for oom 
-handling:
+        if (memcg_register_cache(memcg, s, parent_cache)) {
+            kmem_cache_free(kmem_cache, s);
+            err = -ENOMEM;
+            goto out_locked;
+        }
 
-			 _____root______
-			/		\
-		    user		 oom
-		   /    \		/   \
-		  A	 B	       a     b
+        s->name = kstrdup(name, GFP_KERNEL);
+        if (!s->name) {
+            kmem_cache_free(kmem_cache, s);
+            err = -ENOMEM;
+            goto out_locked;
+        }
 
-where the limit of A + B can be greater than the limit of user for 
-overcommit, and the limit of user is the amount of RAM minus whatever is 
-reserved for the oom hierarchy, then significant bypass to the root memcg 
-will cause memcgs in the oom hierarchy to actually not be able to allocate 
-memory from the page allocator.
+        err = __kmem_cache_create(s, flags);
+        if (!err) {
+            s->refcount = 1;
+            list_add(&s->list, &slab_caches);
+            memcg_cache_list_add(memcg, s);
+        } else {
+            kfree(s->name);
+            kmem_cache_free(kmem_cache, s);
+        }
+    } else
+        err = -ENOMEM;
 
-The PF_EXITING bypass is much less concerning because we shouldn't be 
-doing significant memory allocation in the exit() path, but it's also true 
-that neither the PF_EXITING nor the fatal_signal_pending() bypass is 
-required.  In Tejun's suggested configuration above, we absolutely do want 
-to reclaim from the user hierarchy before declaring oom and setting 
-TIF_MEMDIE, otherwise the oom hierarchy cannot allocate.
+The next patch, which fixes the memcg_params leakage on error, would
+make it even worse introducing two calls to memcg_free_cache_params()
+after kstrdup and __kmem_cache_create.
 
-> So from my POV I would like to see these heuristics as simple as
-> possible and placed at very few places. Doing a bypass before charge
-> - or even after a failed charge before doing reclaim sounds like an easy
-> enough heuristic without a big risk.
+If you think it isn't worthwhile applying this patch, just let me know,
+I don't mind dropping it.
 
-It's a very significant risk of depleting memory that is available for oom 
-handling in the suggested configuration.
+Anyway, I'll improve the comment and resend.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks.
+
+>
+>> ---
+>>  mm/slab_common.c |   66 +++++++++++++++++++++++++++---------------------------
+>>  1 file changed, 33 insertions(+), 33 deletions(-)
+>>
+>> diff --git a/mm/slab_common.c b/mm/slab_common.c
+>> index 0b7bb39..5d6f743 100644
+>> --- a/mm/slab_common.c
+>> +++ b/mm/slab_common.c
+>> @@ -176,8 +176,9 @@ kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
+>>  	get_online_cpus();
+>>  	mutex_lock(&slab_mutex);
+>>  
+>> -	if (!kmem_cache_sanity_check(memcg, name, size) == 0)
+>> -		goto out_locked;
+>> +	err = kmem_cache_sanity_check(memcg, name, size);
+>> +	if (err)
+>> +		goto out_unlock;
+>>  
+>>  	/*
+>>  	 * Some allocators will constraint the set of valid flags to a subset
+>> @@ -189,45 +190,41 @@ kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
+>>  
+>>  	s = __kmem_cache_alias(memcg, name, size, align, flags, ctor);
+>>  	if (s)
+>> -		goto out_locked;
+>> +		goto out_unlock;
+>>  
+>>  	s = kmem_cache_zalloc(kmem_cache, GFP_KERNEL);
+>> -	if (s) {
+>> -		s->object_size = s->size = size;
+>> -		s->align = calculate_alignment(flags, align, size);
+>> -		s->ctor = ctor;
+>> -
+>> -		if (memcg_register_cache(memcg, s, parent_cache)) {
+>> -			kmem_cache_free(kmem_cache, s);
+>> -			err = -ENOMEM;
+>> -			goto out_locked;
+>> -		}
+>> +	if (!s) {
+>> +		err = -ENOMEM;
+>> +		goto out_unlock;
+>> +	}
+>>  
+>> -		s->name = kstrdup(name, GFP_KERNEL);
+>> -		if (!s->name) {
+>> -			kmem_cache_free(kmem_cache, s);
+>> -			err = -ENOMEM;
+>> -			goto out_locked;
+>> -		}
+>> +	s->object_size = s->size = size;
+>> +	s->align = calculate_alignment(flags, align, size);
+>> +	s->ctor = ctor;
+>>  
+>> -		err = __kmem_cache_create(s, flags);
+>> -		if (!err) {
+>> -			s->refcount = 1;
+>> -			list_add(&s->list, &slab_caches);
+>> -			memcg_cache_list_add(memcg, s);
+>> -		} else {
+>> -			kfree(s->name);
+>> -			kmem_cache_free(kmem_cache, s);
+>> -		}
+>> -	} else
+>> +	s->name = kstrdup(name, GFP_KERNEL);
+>> +	if (!s->name) {
+>>  		err = -ENOMEM;
+>> +		goto out_free_cache;
+>> +	}
+>> +
+>> +	err = memcg_register_cache(memcg, s, parent_cache);
+>> +	if (err)
+>> +		goto out_free_cache;
+>>  
+>> -out_locked:
+>> +	err = __kmem_cache_create(s, flags);
+>> +	if (err)
+>> +		goto out_free_cache;
+>> +
+>> +	s->refcount = 1;
+>> +	list_add(&s->list, &slab_caches);
+>> +	memcg_cache_list_add(memcg, s);
+>> +
+>> +out_unlock:
+>>  	mutex_unlock(&slab_mutex);
+>>  	put_online_cpus();
+>>  
+>>  	if (err) {
+>> -
+>>  		if (flags & SLAB_PANIC)
+>>  			panic("kmem_cache_create: Failed to create slab '%s'. Error %d\n",
+>>  				name, err);
+>> @@ -236,11 +233,14 @@ out_locked:
+>>  				name, err);
+>>  			dump_stack();
+>>  		}
+>> -
+>>  		return NULL;
+>>  	}
+>> -
+>>  	return s;
+>> +
+>> +out_free_cache:
+>> +	kfree(s->name);
+>> +	kmem_cache_free(kmem_cache, s);
+>> +	goto out_unlock;
+>>  }
+>>  
+>>  struct kmem_cache *
+>> -- 
+>> 1.7.10.4
+>>
