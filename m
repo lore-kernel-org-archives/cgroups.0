@@ -1,18 +1,18 @@
 From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH 2/6] memcg, slab: kmem_cache_create_memcg(): free memcg
- params on error
-Date: Thu, 19 Dec 2013 10:19:03 +0100
-Message-ID: <20131219091903.GF9331@dhcp22.suse.cz>
+Subject: Re: [PATCH 3/6] memcg, slab: cleanup barrier usage when accessing
+ memcg_caches
+Date: Thu, 19 Dec 2013 10:21:37 +0100
+Message-ID: <20131219092137.GG9331@dhcp22.suse.cz>
 References: <6f02b2d079ffd0990ae335339c803337b13ecd8c.1387372122.git.vdavydov@parallels.com>
- <9420ad797a2cfa14c23ad1ba6db615a2a51ffee0.1387372122.git.vdavydov@parallels.com>
- <20131218170649.GC31080@dhcp22.suse.cz>
- <52B292FD.8040603@parallels.com>
- <20131219084845.GB9331@dhcp22.suse.cz>
- <52B2B5E8.6020307@parallels.com>
+ <bd0a7ffc57e4a0b0c3d456c0cf8801e829e14717.1387372122.git.vdavydov@parallels.com>
+ <20131218171411.GD31080@dhcp22.suse.cz>
+ <52B29427.9010909@parallels.com>
+ <20131219091007.GC9331@dhcp22.suse.cz>
+ <52B2B951.5080809@parallels.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <52B2B5E8.6020307@parallels.com>
+In-Reply-To: <52B2B951.5080809@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -20,66 +20,59 @@ Content-Transfer-Encoding: 7bit
 To: Vladimir Davydov <vdavydov@parallels.com>
 Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Glauber Costa <glommer@gmail.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-On Thu 19-12-13 13:01:28, Vladimir Davydov wrote:
-> On 12/19/2013 12:48 PM, Michal Hocko wrote:
-> > On Thu 19-12-13 10:32:29, Vladimir Davydov wrote:
-> >> On 12/18/2013 09:06 PM, Michal Hocko wrote:
-> >>> On Wed 18-12-13 17:16:53, Vladimir Davydov wrote:
-> >>>> Plus, rename memcg_register_cache() to memcg_init_cache_params(),
-> >>>> because it actually does not register the cache anywhere, but simply
-> >>>> initialize kmem_cache::memcg_params.
-> >>> I've almost missed this is a memory leak fix.
-> >> Yeah, the comment is poor, sorry about that. Will fix it.
+On Thu 19-12-13 13:16:01, Vladimir Davydov wrote:
+> On 12/19/2013 01:10 PM, Michal Hocko wrote:
+> > On Thu 19-12-13 10:37:27, Vladimir Davydov wrote:
+> >> On 12/18/2013 09:14 PM, Michal Hocko wrote:
+> >>> On Wed 18-12-13 17:16:54, Vladimir Davydov wrote:
+> >>>> First, in memcg_create_kmem_cache() we should issue the write barrier
+> >>>> after the kmem_cache is initialized, but before storing the pointer to
+> >>>> it in its parent's memcg_params.
+> >>>>
+> >>>> Second, we should always issue the read barrier after
+> >>>> cache_from_memcg_idx() to conform with the write barrier.
+> >>>>
+> >>>> Third, its better to use smp_* versions of barriers, because we don't
+> >>>> need them on UP systems.
+> >>> Please be (much) more verbose on Why. Barriers are tricky and should be
+> >>> documented accordingly. So if you say that we should issue a barrier
+> >>> always be specific why we should do it.
+> >> In short, we have kmem_cache::memcg_params::memcg_caches is an array of
+> >> pointers to per-memcg caches. We access it lock-free so we should use
+> >> memory barriers during initialization. Obviously we should place a write
+> >> barrier just before we set the pointer in order to make sure nobody will
+> >> see a partially initialized structure. Besides there must be a read
+> >> barrier between reading the pointer and accessing the structure, to
+> >> conform with the write barrier. It's all that similar to rcu_assign and
+> >> rcu_deref. Currently the barrier usage looks rather strange:
 > >>
-> >>> I do not mind renaming and the name but wouldn't
-> >>> memcg_alloc_cache_params suit better?
-> >> As you wish. I don't have a strong preference for memcg_init_cache_params.
-> > I really hate naming... but it seems that alloc is a better fit. _init_
-> > would expect an already allocated object.
-> >
-> > Btw. memcg_free_cache_params is called only once which sounds
-> > suspicious. The regular destroy path should use it as well?
-> > [...]
+> >> memcg_create_kmem_cache:
+> >>     initialize kmem
+> >>     set the pointer in memcg_caches
+> >>     wmb() // ???
+> >>
+> >> __memcg_kmem_get_cache:
+> >>     <...>
+> >>     read_barrier_depends() // ???
+> >>     cachep = root_cache->memcg_params->memcg_caches[memcg_id]
+> >>     <...>
+> > Why do we need explicit memory barriers when we can use RCU?
+> > __memcg_kmem_get_cache already dereferences within rcu_read_lock.
 > 
-> The usual destroy path uses memcg_release_cache(), which does the trick.
-> Plus, it actually "unregisters" the cache. BTW, I forgot to substitute
-> kfree(s->memcg_params) with the new memcg_free_cache_params() there.
-> Although it currently does not break anything, better to fix it in case
-> new memcg_free_cache_params() will have to do something else.
-> 
-> And you're right about the naming is not good.
-> 
-> Currently we have:
-> 
->   on create:
->     memcg_register_cache()
->     memcg_cache_list_add()
->   on destroy:
->     memcg_release_cache()
-> 
-> After this patch we would have:
-> 
->   on create:
->     memcg_alloc_cache_params()
->     memcg_register_cache()
->   on destroy:
->     memcg_release_cache()
-> 
-> Still not perfect: "alloc" does not have corresponding "free", while
-> "register" does not have corresponding "unregister", everything is done
-> by "release".
-> 
-> What do you think about splitting memcg_release_cache() into two functions:
-> 
->     memcg_unregister_cache()
->     memcg_free_cache_params()
+> Because it's not RCU, IMO. RCU implies freeing the old version after a
+> grace period, while kmem_caches are freed immediately. We simply want to
+> be sure the kmem_cache is fully initialized. And we do not require
+> calling this in an RCU critical section.
 
-yes I am all for cleaning up this mess. I am still trying to wrap my
-head around what is each of this function responsible for.
-Absolute lack of documentation is not helping at all...
-
+And you can use rcu_dereference and rcu_assign for that as well. It
+hides all the juicy details about memory barriers. Besides that nothing
+prevents us from freeing from rcu callback. Or?
+ 
+> > Btw. cache_from_memcg_idx is desperately asking for a comment about
+> > required locking.
 > 
-> ?
+> Actually, I placed a reference to the comment there ;-) but no problem,
+> I move it to cache_from_memcg_idx().
 > 
 > Thanks.
 
