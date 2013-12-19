@@ -1,64 +1,124 @@
-From: Pekka Enberg <penberg@iki.fi>
-Subject: Re: [Devel] [PATCH 1/6] slab: cleanup kmem_cache_create_memcg()
-Date: Thu, 19 Dec 2013 12:23:41 +0200
-Message-ID: <52B2C92D.2020301@iki.fi>
-References: <6f02b2d079ffd0990ae335339c803337b13ecd8c.1387372122.git.vdavydov@parallels.com> <52B2AB7C.1010803@parallels.com> <52B2B0A4.8050009@parallels.com> <52B2BBB4.3090209@parallels.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
+ access to memory reserves
+Date: Thu, 19 Dec 2013 15:41:34 +0100
+Message-ID: <20131219144134.GH10855@dhcp22.suse.cz>
+References: <20131210103827.GB20242@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1312101655430.22701@chino.kir.corp.google.com>
+ <20131211095549.GA18741@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1312111434200.7354@chino.kir.corp.google.com>
+ <20131212103159.GB2630@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1312131551220.28704@chino.kir.corp.google.com>
+ <20131217162342.GG28991@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1312171240541.21640@chino.kir.corp.google.com>
+ <20131218200434.GA4161@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1312182157510.1247@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha1; c=relaxed/relaxed; d=
-	messagingengine.com; h=message-id:date:from:mime-version:to:cc
-	:subject:references:in-reply-to:content-type
-	:content-transfer-encoding; s=smtpout; bh=rYbzilR4Lsvp6kmgZsHrAJ
-	o5ugk=; b=DpCoQPSOqOd9G1WbZbYWq2AFize2NF9FmDktPyiO3Wt4ph95dvM+jO
-	Sg6GEdAZe3jwx3rOmzXU+FimCaPSPx1oEgE9nKP7Mth8eRwE0Z0D+k4qWvztKKo/
-	pKwBDBWHQfQBjVgdpMH7a4P2f5P2pZcOQQrTSvOutCNlNGuV4VnqA=
-In-Reply-To: <52B2BBB4.3090209@parallels.com>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.02.1312182157510.1247@chino.kir.corp.google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Vasily Averin <vvs@parallels.com>, Vladimir Davydov <vdavydov@parallels.com>
-Cc: Michal Hocko <mhocko@suse.cz>, Glauber Costa <glommer@gmail.com>, linux-kernel@vger.kernel.org, Pekka Enberg <penberg@kernel.org>, linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Christoph Lameter <cl@linux.com>, Andrew Morton <akpm@linux-foundation.org>, devel@openvz.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: David Rientjes <rientjes@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On 12/19/2013 11:26 AM, Vasily Averin wrote:
-> On 12/19/2013 12:39 PM, Vladimir Davydov wrote:
->> On 12/19/2013 12:17 PM, Vasily Averin wrote:
->>> On 12/18/2013 05:16 PM, Vladimir Davydov wrote:
->>>> --- a/mm/slab_common.c
->>>> +++ b/mm/slab_common.c
->>>> @@ -176,8 +176,9 @@ kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
->>>>   	get_online_cpus();
->>>>   	mutex_lock(&slab_mutex);
->>>>   
->>>> -	if (!kmem_cache_sanity_check(memcg, name, size) == 0)
->>>> -		goto out_locked;
->>>> +	err = kmem_cache_sanity_check(memcg, name, size);
->>>> +	if (err)
->>>> +		goto out_unlock;
->>>>   
->>>>   	/*
->>>>   	 * Some allocators will constraint the set of valid flags to a subset
->>> Theoretically in future kmem_cache_sanity_check() can return positive value.
->>> Probably it's better to check (err < 0) in caller ?
->> Hmm, why? What information could positive retval carry here? We have
->> plenty of places throughout the code where we check for (err), not
->> (err<0), simply because it looks clearer, e.g. look at
->> __kmem_cache_create() calls. If it returns a positive value one day, we
->> will have to parse every place where it's called. Anyway, if someone
->> wants to change a function behavior, he must check every place where
->> this function is called and fix them accordingly.
-> I believe expected semantic of function -- return negative in case of error.
-> So correct error cheek should be (err < 0).
-> (err) check is semantically incorrect, and it can lead to troubles in future.
+On Wed 18-12-13 22:09:12, David Rientjes wrote:
+> On Wed, 18 Dec 2013, Michal Hocko wrote:
+> 
+> > > For memory isolation, we'd only want to bypass memcg charges when 
+> > > absolutely necessary and it seems like TIF_MEMDIE is the only case where 
+> > > that's required.  We don't give processes with pending SIGKILLs or those 
+> > > in the exit() path access to memory reserves in the page allocator without 
+> > > first determining that reclaim can't make any progress for the same reason 
+> > > and then we only do so by setting TIF_MEMDIE when calling the oom killer.  
+> > 
+> > While I do understand arguments about isolation I would also like to be
+> > practical here. How many charges are we talking about? Dozen pages? Much
+> > more?
+> 
+> The PF_EXITING bypass is indeed much less concerning than the 
+> fatal_signal_pending() bypass.
 
-I don't know what semantics you are referring to but a typical 
-convention in mm/*.c is to return zero on success and negative on error 
-but never positive numbers.
+OK, so can we at least agree on the patch posted here:
+https://lkml.org/lkml/2013/12/12/129. This is a real bug and definitely
+worth fixing.
 
-Looking at mm/slab_common.c, "if (err)" is the established convention so 
-using "if (err < 0)" just because is pointless here.
+> > Besides that all of those should be very short lived because the task
+> > is going to die very soon and so the memory will be freed.
+> > 
+> 
+> We don't know how much memory is being allocated while 
+> fatal_signal_pending() is true before the process can handle the SIGKILL, 
+> so this could potentially bypass a significant amount of memory. 
 
-                             Pekka
+The question is. Does it in _practice_?
+
+We have this behavior since 867578cbccb08 which is 2.6.34 and we haven't
+seen a single report where a shotdown task would break over the limit too
+much. This would suggest that such a case doesn't happen very often.  If
+it happens or it is easily triggerable then I am all for reverting that
+check but that would require a proper justification rather than
+speculations.
+
+> If we are to have a configuration such as what Tejun recommended for
+> oom handling:
+> 
+> 			 _____root______
+> 			/		\
+> 		    user		 oom
+> 		   /    \		/   \
+> 		  A	 B	       a     b
+> 
+> where the limit of A + B can be greater than the limit of user for 
+> overcommit, and the limit of user is the amount of RAM minus whatever is 
+> reserved for the oom hierarchy, then significant bypass to the root memcg 
+> will cause memcgs in the oom hierarchy to actually not be able to allocate 
+> memory from the page allocator.
+
+I can imagine that the killed task might be in the middle of an
+allocation loop and rather far away from returning to userspace (e.g.
+readahead comes to mind - although that one shouldn't cause the global
+OOM).
+I would argue that we shouldn't reclaim in such a case and rather fail
+the charge. Reclaiming will not help us much. In an extreme case we
+would end up in OOM and the killed task would get TIF_MEMDIE and so it
+would be allowed to bypass charges and break the isolation anyway.
+Can we fail charges for killed tasks in general? I am very skeptical
+because this might be a regular allocation to make a progress on the way
+out.
+
+So this doesn't solve the isolation problem, it just postpones it to
+later and makes the life of other tasks in the same memcg worse because
+their memory gets reclaimed which can lead to different performance
+issues. And all of that for temporal charges which will go away shortly.
+
+> The PF_EXITING bypass is much less concerning because we shouldn't be 
+> doing significant memory allocation in the exit() path, but it's also true 
+> that neither the PF_EXITING nor the fatal_signal_pending() bypass is 
+> required. 
+
+Yes, it is not, strictly speaking, required. It is very practical to do,
+though. We do not know much about the context which called us so we
+cannot base our decisions properly and just doing reclaim to see what
+happens sounds like a bad decision to me.
+
+> In Tejun's suggested configuration above, we absolutely do want 
+> to reclaim from the user hierarchy before declaring oom and setting 
+> TIF_MEMDIE, otherwise the oom hierarchy cannot allocate.
+> 
+> > So from my POV I would like to see these heuristics as simple as
+> > possible and placed at very few places. Doing a bypass before charge
+> > - or even after a failed charge before doing reclaim sounds like an easy
+> > enough heuristic without a big risk.
+> 
+> It's a very significant risk of depleting memory that is available for oom 
+> handling in the suggested configuration.
+
+-- 
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
