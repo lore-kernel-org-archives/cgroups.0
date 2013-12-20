@@ -1,124 +1,264 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
- access to memory reserves
-Date: Thu, 19 Dec 2013 15:41:34 +0100
-Message-ID: <20131219144134.GH10855@dhcp22.suse.cz>
-References: <20131210103827.GB20242@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312101655430.22701@chino.kir.corp.google.com>
- <20131211095549.GA18741@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312111434200.7354@chino.kir.corp.google.com>
- <20131212103159.GB2630@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312131551220.28704@chino.kir.corp.google.com>
- <20131217162342.GG28991@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312171240541.21640@chino.kir.corp.google.com>
- <20131218200434.GA4161@dhcp22.suse.cz>
- <alpine.DEB.2.02.1312182157510.1247@chino.kir.corp.google.com>
+From: Luiz Capitulino <lcapitulino@redhat.com>
+Subject: Re: [PATCH v14 16/18] vmpressure: in-kernel notifications
+Date: Fri, 20 Dec 2013 09:26:59 -0500
+Message-ID: <20131220092659.0ed23cf5@redhat.com>
+References: <cover.1387193771.git.vdavydov@parallels.com>
+	<abff42910c131a9c94a7518de59b283ee0a2dcd1.1387193771.git.vdavydov@parallels.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1312182157510.1247@chino.kir.corp.google.com>
+In-Reply-To: <abff42910c131a9c94a7518de59b283ee0a2dcd1.1387193771.git.vdavydov@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+To: Vladimir Davydov <vdavydov@parallels.com>
+Cc: dchinner@redhat.com, mhocko@suse.cz, hannes@cmpxchg.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, glommer@openvz.org, glommer@gmail.com, John Stultz <john.stultz@linaro.org>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-On Wed 18-12-13 22:09:12, David Rientjes wrote:
-> On Wed, 18 Dec 2013, Michal Hocko wrote:
+On Mon, 16 Dec 2013 16:17:05 +0400
+Vladimir Davydov <vdavydov@parallels.com> wrote:
+
+> From: Glauber Costa <glommer@openvz.org>
 > 
-> > > For memory isolation, we'd only want to bypass memcg charges when 
-> > > absolutely necessary and it seems like TIF_MEMDIE is the only case where 
-> > > that's required.  We don't give processes with pending SIGKILLs or those 
-> > > in the exit() path access to memory reserves in the page allocator without 
-> > > first determining that reclaim can't make any progress for the same reason 
-> > > and then we only do so by setting TIF_MEMDIE when calling the oom killer.  
-> > 
-> > While I do understand arguments about isolation I would also like to be
-> > practical here. How many charges are we talking about? Dozen pages? Much
-> > more?
+> During the past weeks, it became clear to us that the shrinker interface
+> we have right now works very well for some particular types of users,
+> but not that well for others. The latter are usually people interested
+> in one-shot notifications, that were forced to adapt themselves to the
+> count+scan behavior of shrinkers. To do so, they had no choice than to
+> greatly abuse the shrinker interface producing little monsters all over.
 > 
-> The PF_EXITING bypass is indeed much less concerning than the 
-> fatal_signal_pending() bypass.
+> During LSF/MM, one of the proposals that popped out during our session
+> was to reuse Anton Voronstsov's vmpressure for this. They are designed
+> for userspace consumption, but also provide a well-stablished,
+> cgroup-aware entry point for notifications.
 
-OK, so can we at least agree on the patch posted here:
-https://lkml.org/lkml/2013/12/12/129. This is a real bug and definitely
-worth fixing.
+I have the exact problem described above for a project I'm working on
+and this solution seems to solve it well.
 
-> > Besides that all of those should be very short lived because the task
-> > is going to die very soon and so the memory will be freed.
-> > 
+However, I had a few issues while trying to use this interface. I'll
+comment on them below, but please take this more as advice seeking
+than patch review.
+
+> This patch extends that to also support in-kernel users. Events that
+> should be generated for in-kernel consumption will be marked as such,
+> and for those, we will call a registered function instead of triggering
+> an eventfd notification.
 > 
-> We don't know how much memory is being allocated while 
-> fatal_signal_pending() is true before the process can handle the SIGKILL, 
-> so this could potentially bypass a significant amount of memory. 
-
-The question is. Does it in _practice_?
-
-We have this behavior since 867578cbccb08 which is 2.6.34 and we haven't
-seen a single report where a shotdown task would break over the limit too
-much. This would suggest that such a case doesn't happen very often.  If
-it happens or it is easily triggerable then I am all for reverting that
-check but that would require a proper justification rather than
-speculations.
-
-> If we are to have a configuration such as what Tejun recommended for
-> oom handling:
+> Please note that due to my lack of understanding of each shrinker user,
+> I will stay away from converting the actual users, you are all welcome
+> to do so.
 > 
-> 			 _____root______
-> 			/		\
-> 		    user		 oom
-> 		   /    \		/   \
-> 		  A	 B	       a     b
+> Signed-off-by: Glauber Costa <glommer@openvz.org>
+> Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
+> Acked-by: Anton Vorontsov <anton@enomsg.org>
+> Acked-by: Pekka Enberg <penberg@kernel.org>
+> Reviewed-by: Greg Thelen <gthelen@google.com>
+> Cc: Dave Chinner <dchinner@redhat.com>
+> Cc: John Stultz <john.stultz@linaro.org>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Joonsoo Kim <iamjoonsoo.kim@lge.com>
+> Cc: Michal Hocko <mhocko@suse.cz>
+> Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> ---
+>  include/linux/vmpressure.h |    5 +++++
+>  mm/vmpressure.c            |   53 +++++++++++++++++++++++++++++++++++++++++---
+>  2 files changed, 55 insertions(+), 3 deletions(-)
 > 
-> where the limit of A + B can be greater than the limit of user for 
-> overcommit, and the limit of user is the amount of RAM minus whatever is 
-> reserved for the oom hierarchy, then significant bypass to the root memcg 
-> will cause memcgs in the oom hierarchy to actually not be able to allocate 
-> memory from the page allocator.
+> diff --git a/include/linux/vmpressure.h b/include/linux/vmpressure.h
+> index 3f3788d..9102e53 100644
+> --- a/include/linux/vmpressure.h
+> +++ b/include/linux/vmpressure.h
+> @@ -19,6 +19,9 @@ struct vmpressure {
+>  	/* Have to grab the lock on events traversal or modifications. */
+>  	struct mutex events_lock;
+>  
+> +	/* False if only kernel users want to be notified, true otherwise. */
+> +	bool notify_userspace;
+> +
+>  	struct work_struct work;
+>  };
+>  
+> @@ -38,6 +41,8 @@ extern int vmpressure_register_event(struct cgroup_subsys_state *css,
+>  				     struct cftype *cft,
+>  				     struct eventfd_ctx *eventfd,
+>  				     const char *args);
+> +extern int vmpressure_register_kernel_event(struct cgroup_subsys_state *css,
+> +					    void (*fn)(void));
+>  extern void vmpressure_unregister_event(struct cgroup_subsys_state *css,
+>  					struct cftype *cft,
+>  					struct eventfd_ctx *eventfd);
+> diff --git a/mm/vmpressure.c b/mm/vmpressure.c
+> index e0f6283..730e7c1 100644
+> --- a/mm/vmpressure.c
+> +++ b/mm/vmpressure.c
+> @@ -130,8 +130,12 @@ static enum vmpressure_levels vmpressure_calc_level(unsigned long scanned,
+>  }
+>  
+>  struct vmpressure_event {
+> -	struct eventfd_ctx *efd;
+> +	union {
+> +		struct eventfd_ctx *efd;
+> +		void (*fn)(void);
 
-I can imagine that the killed task might be in the middle of an
-allocation loop and rather far away from returning to userspace (e.g.
-readahead comes to mind - although that one shouldn't cause the global
-OOM).
-I would argue that we shouldn't reclaim in such a case and rather fail
-the charge. Reclaiming will not help us much. In an extreme case we
-would end up in OOM and the killed task would get TIF_MEMDIE and so it
-would be allowed to bypass charges and break the isolation anyway.
-Can we fail charges for killed tasks in general? I am very skeptical
-because this might be a regular allocation to make a progress on the way
-out.
+How does the callback access its private data?
 
-So this doesn't solve the isolation problem, it just postpones it to
-later and makes the life of other tasks in the same memcg worse because
-their memory gets reclaimed which can lead to different performance
-issues. And all of that for temporal charges which will go away shortly.
+> +	};
+>  	enum vmpressure_levels level;
+> +	bool kernel_event;
+>  	struct list_head node;
+>  };
+>  
+> @@ -147,12 +151,15 @@ static bool vmpressure_event(struct vmpressure *vmpr,
+>  	mutex_lock(&vmpr->events_lock);
+>  
+>  	list_for_each_entry(ev, &vmpr->events, node) {
+> -		if (level >= ev->level) {
+> +		if (ev->kernel_event) {
+> +			ev->fn();
 
-> The PF_EXITING bypass is much less concerning because we shouldn't be 
-> doing significant memory allocation in the exit() path, but it's also true 
-> that neither the PF_EXITING nor the fatal_signal_pending() bypass is 
-> required. 
+I think it would be interesting to pass 'level' to the callback (I'll
+probably use it myself), but we could wait for a in-tree user before
+adding it.
 
-Yes, it is not, strictly speaking, required. It is very practical to do,
-though. We do not know much about the context which called us so we
-cannot base our decisions properly and just doing reclaim to see what
-happens sounds like a bad decision to me.
+> +		} else if (vmpr->notify_userspace && level >= ev->level) {
+>  			eventfd_signal(ev->efd, 1);
+>  			signalled = true;
+>  		}
+>  	}
+>  
+> +	vmpr->notify_userspace = false;
+>  	mutex_unlock(&vmpr->events_lock);
+>  
+>  	return signalled;
+> @@ -222,7 +229,7 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
+>  	 * we account it too.
+>  	 */
+>  	if (!(gfp & (__GFP_HIGHMEM | __GFP_MOVABLE | __GFP_IO | __GFP_FS)))
+> -		return;
+> +		goto schedule;
+>  
+>  	/*
+>  	 * If we got here with no pages scanned, then that is an indicator
+> @@ -239,8 +246,15 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
+>  	vmpr->scanned += scanned;
+>  	vmpr->reclaimed += reclaimed;
+>  	scanned = vmpr->scanned;
+> +	/*
+> +	 * If we didn't reach this point, only kernel events will be triggered.
+> +	 * It is the job of the worker thread to clean this up once the
+> +	 * notifications are all delivered.
+> +	 */
+> +	vmpr->notify_userspace = true;
+>  	spin_unlock(&vmpr->sr_lock);
+>  
+> +schedule:
+>  	if (scanned < vmpressure_win)
+>  		return;
+>  	schedule_work(&vmpr->work);
+> @@ -324,6 +338,39 @@ int vmpressure_register_event(struct cgroup_subsys_state *css,
+>  }
+>  
+>  /**
+> + * vmpressure_register_kernel_event() - Register kernel-side notification
+> + * @css:	css that is interested in vmpressure notifications
+> + * @fn:		function to be called when pressure happens
+> + *
+> + * This function register in-kernel users interested in receiving notifications
+> + * about pressure conditions. Pressure notifications will be triggered at the
+> + * same time as userspace notifications (with no particular ordering relative
+> + * to it).
+> + *
+> + * Pressure notifications are a alternative method to shrinkers and will serve
+> + * well users that are interested in a one-shot notification, with a
+> + * well-defined cgroup aware interface.
+> + */
+> +int vmpressure_register_kernel_event(struct cgroup_subsys_state *css,
+> +				      void (*fn)(void))
+> +{
+> +	struct vmpressure *vmpr = css_to_vmpressure(css);
 
-> In Tejun's suggested configuration above, we absolutely do want 
-> to reclaim from the user hierarchy before declaring oom and setting 
-> TIF_MEMDIE, otherwise the oom hierarchy cannot allocate.
-> 
-> > So from my POV I would like to see these heuristics as simple as
-> > possible and placed at very few places. Doing a bypass before charge
-> > - or even after a failed charge before doing reclaim sounds like an easy
-> > enough heuristic without a big risk.
-> 
-> It's a very significant risk of depleting memory that is available for oom 
-> handling in the suggested configuration.
+This doesn't allow for css=NULL. What's the recommended way for a today's
+shrinker (which is not related to cgroups) to register with this API?
 
+Also, you don't seem to provide a way to de-register from the event.
+
+I hacked a patch to be able to use this, seems to work but it's a ugly
+hack:
+
+---
+ include/linux/vmpressure.h |  3 ++-
+ mm/vmpressure.c            | 13 +++++++++----
+ 2 files changed, 11 insertions(+), 5 deletions(-)
+
+diff --git a/include/linux/vmpressure.h b/include/linux/vmpressure.h
+index 9102e53..de416b6 100644
+--- a/include/linux/vmpressure.h
++++ b/include/linux/vmpressure.h
+@@ -42,7 +42,8 @@ extern int vmpressure_register_event(struct cgroup_subsys_state *css,
+ 				     struct eventfd_ctx *eventfd,
+ 				     const char *args);
+ extern int vmpressure_register_kernel_event(struct cgroup_subsys_state *css,
+-					    void (*fn)(void));
++				     	    void (*fn)(void *data, int level),
++					    void *data);
+ extern void vmpressure_unregister_event(struct cgroup_subsys_state *css,
+ 					struct cftype *cft,
+ 					struct eventfd_ctx *eventfd);
+diff --git a/mm/vmpressure.c b/mm/vmpressure.c
+index 730e7c1..4ed0e85 100644
+--- a/mm/vmpressure.c
++++ b/mm/vmpressure.c
+@@ -132,9 +132,10 @@ static enum vmpressure_levels vmpressure_calc_level(unsigned long scanned,
+ struct vmpressure_event {
+ 	union {
+ 		struct eventfd_ctx *efd;
+-		void (*fn)(void);
++		void (*fn)(void *data, int level);
+ 	};
+ 	enum vmpressure_levels level;
++	void *data;
+ 	bool kernel_event;
+ 	struct list_head node;
+ };
+@@ -152,7 +153,7 @@ static bool vmpressure_event(struct vmpressure *vmpr,
+ 
+ 	list_for_each_entry(ev, &vmpr->events, node) {
+ 		if (ev->kernel_event) {
+-			ev->fn();
++			ev->fn(ev->data, level);
+ 		} else if (vmpr->notify_userspace && level >= ev->level) {
+ 			eventfd_signal(ev->efd, 1);
+ 			signalled = true;
+@@ -352,21 +353,25 @@ int vmpressure_register_event(struct cgroup_subsys_state *css,
+  * well-defined cgroup aware interface.
+  */
+ int vmpressure_register_kernel_event(struct cgroup_subsys_state *css,
+-				      void (*fn)(void))
++				     void (*fn)(void *data, int level), void *data)
+ {
+-	struct vmpressure *vmpr = css_to_vmpressure(css);
++	struct vmpressure *vmpr;
+ 	struct vmpressure_event *ev;
+ 
++	vmpr = css ? css_to_vmpressure(css) : memcg_to_vmpressure(NULL);
++
+ 	ev = kzalloc(sizeof(*ev), GFP_KERNEL);
+ 	if (!ev)
+ 		return -ENOMEM;
+ 
+ 	ev->kernel_event = true;
++	ev->data = data;
+ 	ev->fn = fn;
+ 
+ 	mutex_lock(&vmpr->events_lock);
+ 	list_add(&ev->node, &vmpr->events);
+ 	mutex_unlock(&vmpr->events_lock);
++
+ 	return 0;
+ }
+ 
 -- 
-Michal Hocko
-SUSE Labs
+1.8.3.1
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
