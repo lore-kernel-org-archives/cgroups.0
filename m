@@ -1,71 +1,43 @@
-From: Luiz Capitulino <lcapitulino@redhat.com>
-Subject: Re: [PATCH v14 16/18] vmpressure: in-kernel notifications
-Date: Fri, 20 Dec 2013 12:00:59 -0500
-Message-ID: <20131220120059.7cc0744e@redhat.com>
-References: <cover.1387193771.git.vdavydov@parallels.com>
-	<abff42910c131a9c94a7518de59b283ee0a2dcd1.1387193771.git.vdavydov@parallels.com>
-	<20131220092659.0ed23cf5@redhat.com>
-	<CAA6-i6pDqDemeQ+s4EorOx39qmNAtAfVYfg0Z2wtTEu-S7mY=A@mail.gmail.com>
-	<20131220100332.0c5c1ad5@redhat.com>
-	<20131220114439.23af09fc@redhat.com>
-	<CAA6-i6oJrUquFa3Y=+vGCDjh7z8ZOxT20QuyWweyrrKGOeBGAA@mail.gmail.com>
-	<20131220115359.225f7503@redhat.com>
-	<CAA6-i6pDQqhv+h0mP2mDacFUExDEy0oCJ7Lcqat0FSuv0NQUog@mail.gmail.com>
+From: Vladimir Davydov <vdavydov@parallels.com>
+Subject: [PATCH 00/11] kmemcg fixes
+Date: Sat, 21 Dec 2013 19:53:51 +0400
+Message-ID: <cover.1387640541.git.vdavydov@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <CAA6-i6pDQqhv+h0mP2mDacFUExDEy0oCJ7Lcqat0FSuv0NQUog@mail.gmail.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Glauber Costa <glommer@gmail.com>
-Cc: Vladimir Davydov <vdavydov@parallels.com>, dchinner@redhat.com, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Glauber Costa <glommer@openvz.org>, John Stultz <john.stultz@linaro.org>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Content-Transfer-Encoding: 7bit
+To: mhocko@suse.cz
+Cc: glommer@gmail.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org
 
-On Fri, 20 Dec 2013 20:58:52 +0400
-Glauber Costa <glommer@gmail.com> wrote:
+This patch-set fixes several bugs here and there in the implementation
+of kmem accounting for memory cgroups and makes the code look a bit
+clearer.
 
-> On Fri, Dec 20, 2013 at 8:53 PM, Luiz Capitulino <lcapitulino@redhat.com> wrote:
-> > On Fri, 20 Dec 2013 20:46:05 +0400
-> > Glauber Costa <glommer@gmail.com> wrote:
-> >
-> >> On Fri, Dec 20, 2013 at 8:44 PM, Luiz Capitulino <lcapitulino@redhat.com> wrote:
-> >> > On Fri, 20 Dec 2013 10:03:32 -0500
-> >> > Luiz Capitulino <lcapitulino@redhat.com> wrote:
-> >> >
-> >> >> > The answer for all of your questions above can be summarized by noting
-> >> >> > that for the lack of other users (at the time), this patch does the bare minimum
-> >> >> > for memcg needs. I agree, for instance, that it would be good to pass the level
-> >> >> > but since memcg won't do anything with thta, I didn't pass it.
-> >> >> >
-> >> >> > That should be extended if you need to.
-> >> >>
-> >> >> That works for me. That is, including this minimal version first and
-> >> >> extending it when we get in-tree users.
-> >> >
-> >> > Btw, there's something I was thinking just right now. If/when we
-> >> > convert shrink functions to use this API, they will come to depend
-> >> > on CONFIG_MEMCG=y. IOW, they won't work if CONFIG_MEMCG=n.
-> >> >
-> >> > Is this acceptable (this is an honest question)? Because today, they
-> >> > do work when CONFIG_MEMCG=n. Should those shrink functions use the
-> >> > shrinker API as a fallback?
-> >>
-> >> If you have a non-memcg user, that should obviously be available for
-> >> CONFIG_MEMCG=n
-> >
-> > OK, which means we'll have to change it, right? Because, if I'm not
-> > missing something, today vmpressure does depend on CONFIG_MEMCG=y.
-> 
-> You mean the main vmpressure mechanism?
-> Sorry, this was out of my mental cachelines. Yes, vmpressure depends
-> on MEMCG, because
-> the pressure interface is memcg-specific (global == root memcg)
-> 
-> You might want to change that so you can reuse the mechanism and let
-> only the user interface
-> depend on memcg.
+Vladimir Davydov (11):
+  slab: cleanup kmem_cache_create_memcg() error handling
+  memcg, slab: kmem_cache_create_memcg(): fix memleak on fail path
+  memcg, slab: cleanup memcg cache initialization/destruction
+  memcg, slab: fix barrier usage when accessing memcg_caches
+  memcg: fix possible NULL deref while traversing memcg_slab_caches
+    list
+  memcg, slab: fix races in per-memcg cache creation/destruction
+  memcg: get rid of kmem_cache_dup
+  slab: do not panic if we fail to create memcg cache
+  memcg, slab: RCU protect memcg_params for root caches
+  memcg: remove KMEM_ACCOUNTED_ACTIVATED flag
+  memcg: rework memcg_update_kmem_limit synchronization
 
-OK, that makes sense. Thanks Glauber.
+ include/linux/memcontrol.h |   23 +--
+ include/linux/slab.h       |    9 +-
+ mm/memcontrol.c            |  405 +++++++++++++++++++++-----------------------
+ mm/slab.h                  |   26 ++-
+ mm/slab_common.c           |   90 ++++++----
+ 5 files changed, 292 insertions(+), 261 deletions(-)
+
+-- 
+1.7.10.4
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
