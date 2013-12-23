@@ -1,138 +1,76 @@
-From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: [PATCH 02/11] memcg, slab: kmem_cache_create_memcg(): fix memleak on fail path
-Date: Sat, 21 Dec 2013 19:53:53 +0400
-Message-ID: <36af4620739c61830f5556fe8164c67d40a6a182.1387640541.git.vdavydov@parallels.com>
-References: <cover.1387640541.git.vdavydov@parallels.com>
+From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH RFC 0/9] cgroups: add res_counter_write_u64() API
+Date: Mon, 23 Dec 2013 13:54:12 +0100
+Message-ID: <20131223125410.GA585@localhost.localdomain>
+References: <1386884118-14972-1-git-send-email-dwight.engen@oracle.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <cover.1387640541.git.vdavydov@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=BoYk+yTB7mDiIR34xwHrnk4V83Evd9yPdSz7S2LmYNE=;
+        b=TyRdfitI8XWe0g0IioGDOcyZfjykgsoXO4WIQ133kbqr4denrvHdhLIX55JCsvBLpL
+         0l5155yBNH7zRYBS8/yxyYU5Fmq0V8sX2EjiobyvN9gIUUQ63VXb+NLjO84D75fgNsHD
+         HLHZ7wbw14mw+N0iGsYC+hWtttw2ASgWvTaxDcGNXeasvB040LRkH3ZUHpTmk7hAWm5s
+         av6+pJ7VqnRroHzyxGAifQy9PAGMpEp6lIOPjVgiUDxaiOOJw5ArAECAw11HxUbiJrWw
+         bXt0VVHqRlVjGbflzopAY0ibKaAuwVRwQDgywJ0cQjGYP1ya9kRUDy+b8vmlbzJBk7v1
+         /RGQ==
+Content-Disposition: inline
+In-Reply-To: <1386884118-14972-1-git-send-email-dwight.engen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: mhocko@suse.cz
-Cc: glommer@gmail.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Pekka Enberg <penberg@kernel.org>, Christoph Lameter <cl@linux.com>
+To: Dwight Engen <dwight.engen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-We do not free the cache's memcg_params if __kmem_cache_create fails.
-Fix this.
+On Thu, Dec 12, 2013 at 04:35:09PM -0500, Dwight Engen wrote:
+> Hello,
+> 
+> I've seen that some sort of fork/task limiter has been proposed and
+> discussed several times before. Despite the existance of kmem in memcg, a
+> fork limiter is still often asked for by container users. Perhaps this is
+> due to current granularity in kmem (ie. stack/struct task not split out from
+> other slab allocations) but I believe it is just more natural for users to
+> express a limit in terms of tasks.
+> 
+> So what I've done is updated Frederic Weisbecker's task counter patchset and
+> tried to address the concerns that I saw people had raised. This involved
+> the following changes:
+> 
+> - merged into cpuacct controller, as it seems there is a desire not to add
+>   new controllers, this controller is already heirarchical, and I feel
+>   limiting number of tasks/forks fits best here
+> - included a fork_limit similar to the one Max Kellermann posted
+>   (https://lkml.org/lkml/2011/2/17/116) which is a use case not addressable
+>   with memcg
+> - ala memcg kmem, for performance reasons don't account unless limit is set
+> - ala memcg, allow usage to roll up to root (prevents warnings on
+>   uncharge), but still don't allow setting limits in root
+> - changed the interface at fork()/exit(), adding
+>   can_fork()/cancel_can_fork() modeled on can_attach(). cgroup_fork()
+>   can now return failure to fork().
+> - ran Frederics selftests, and added a couple more
+> 
+> I also wrote a small fork micro benchmark to see how this change affected
+> performance. I did 20 runs of 100000 fork/exit/waitpid, and took the
+> average. Times are in seconds, base is without the change, cpuacct1 is with
+> the change but no accounting be done (ie. no limit set), and cpuacct2 is
+> with the test being in a cgroup 1 level deep.
+> 
+> base  cpuacct1  cpuaac2
+> 5.59  5.59      5.64
+> 
+> So I believe this change has minimal performance impact, especially when no
+> limit is set.
 
-Plus, rename memcg_register_cache() to memcg_alloc_cache_params(),
-because it actually does not register the cache anywhere, but simply
-initialize kmem_cache::memcg_params.
+Sorry for the late answer on this. I'm adding cgroup mailing list and a few
+cgroups/kmem people in Cc.
 
-Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
-Cc: Michal Hocko <mhocko@suse.cz>
-Cc: Glauber Costa <glommer@gmail.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Balbir Singh <bsingharora@gmail.com>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Pekka Enberg <penberg@kernel.org>
-Cc: Christoph Lameter <cl@linux.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
----
- include/linux/memcontrol.h |   14 +++++++++-----
- mm/memcontrol.c            |   11 ++++++++---
- mm/slab_common.c           |    3 ++-
- 3 files changed, 19 insertions(+), 9 deletions(-)
+This patchset was eventually abandoned because kmem became the prefered way to
+limit the number of tasks that can be forked.
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index b3e7a66..5e6541f 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -497,8 +497,9 @@ void __memcg_kmem_commit_charge(struct page *page,
- void __memcg_kmem_uncharge_pages(struct page *page, int order);
- 
- int memcg_cache_id(struct mem_cgroup *memcg);
--int memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *s,
--			 struct kmem_cache *root_cache);
-+int memcg_alloc_cache_params(struct mem_cgroup *memcg, struct kmem_cache *s,
-+			     struct kmem_cache *root_cache);
-+void memcg_free_cache_params(struct kmem_cache *s);
- void memcg_release_cache(struct kmem_cache *cachep);
- void memcg_cache_list_add(struct mem_cgroup *memcg, struct kmem_cache *cachep);
- 
-@@ -640,13 +641,16 @@ static inline int memcg_cache_id(struct mem_cgroup *memcg)
- 	return -1;
- }
- 
--static inline int
--memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *s,
--		     struct kmem_cache *root_cache)
-+static inline int memcg_alloc_cache_params(struct mem_cgroup *memcg,
-+		struct kmem_cache *s, struct kmem_cache *root_cache)
- {
- 	return 0;
- }
- 
-+static inline void memcg_free_cache_params(struct kmem_cache *s);
-+{
-+}
-+
- static inline void memcg_release_cache(struct kmem_cache *cachep)
- {
- }
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index bf5e894..8c47910 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3195,8 +3195,8 @@ int memcg_update_cache_size(struct kmem_cache *s, int num_groups)
- 	return 0;
- }
- 
--int memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *s,
--			 struct kmem_cache *root_cache)
-+int memcg_alloc_cache_params(struct mem_cgroup *memcg, struct kmem_cache *s,
-+			     struct kmem_cache *root_cache)
- {
- 	size_t size;
- 
-@@ -3224,6 +3224,11 @@ int memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *s,
- 	return 0;
- }
- 
-+void memcg_free_cache_params(struct kmem_cache *s)
-+{
-+	kfree(s->memcg_params);
-+}
-+
- void memcg_release_cache(struct kmem_cache *s)
- {
- 	struct kmem_cache *root;
-@@ -3252,7 +3257,7 @@ void memcg_release_cache(struct kmem_cache *s)
- 
- 	css_put(&memcg->css);
- out:
--	kfree(s->memcg_params);
-+	memcg_free_cache_params(s);
- }
- 
- /*
-diff --git a/mm/slab_common.c b/mm/slab_common.c
-index f70df3e..70f9e24 100644
---- a/mm/slab_common.c
-+++ b/mm/slab_common.c
-@@ -205,7 +205,7 @@ kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
- 	if (!s->name)
- 		goto out_free_cache;
- 
--	err = memcg_register_cache(memcg, s, parent_cache);
-+	err = memcg_alloc_cache_params(memcg, s, parent_cache);
- 	if (err)
- 		goto out_free_cache;
- 
-@@ -235,6 +235,7 @@ out_unlock:
- 	return s;
- 
- out_free_cache:
-+	memcg_free_cache_params(s);
- 	kfree(s->name);
- 	kmem_cache_free(kmem_cache, s);
- 	goto out_unlock;
--- 
-1.7.10.4
+Have you tried it?
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks.
