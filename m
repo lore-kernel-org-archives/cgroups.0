@@ -1,7 +1,7 @@
 From: Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
-Subject: [RFC PATCH 2/3] x86: Add Cache QoS Monitoring support to x86 perf uncore
-Date: Thu, 26 Dec 2013 13:34:38 -0800
-Message-ID: <1388093679-26952-3-git-send-email-peter.p.waskiewicz.jr@intel.com>
+Subject: [RFC PATCH 1/3] x86: Add support for Cache QoS Monitoring (CQM) detection
+Date: Thu, 26 Dec 2013 13:34:37 -0800
+Message-ID: <1388093679-26952-2-git-send-email-peter.p.waskiewicz.jr@intel.com>
 References: <1388093679-26952-1-git-send-email-peter.p.waskiewicz.jr@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1388093679-26952-1-git-send-email-peter.p.waskiewicz.jr@intel.com>
@@ -13,40 +13,148 @@ Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org, x86@kernel.org, tj@kernel.org
 Cc: linux-kernel@vger.kernel.org, peter.p.waskiewicz.jr@intel.com
 
-This patch adds the MSRs and masks for CQM to the x86 uncore.
+This patch adds support for the new Cache QoS Monitoring (CQM)
+feature found in future Intel Xeon processors.  It includes the
+new values to track CQM resources to the cpuinfo_x86 structure,
+plus the CPUID detection routines for CQM.
 
-The actual scheduling functions using the MSRs will be included
-in the next patch when the new cgroup subsystem is added, as there
-are dependencies on structs from the cgroup.
+CQM allows a process, or set of processes, to be tracked by the CPU
+to determine the cache usage of that task group.  Using this data
+from the CPU, software can be written to extract this data and
+report cache usage and occupancy for a particular process, or
+group of processes.
+
+More information about Cache QoS Monitoring can be found in the
+Intel (R) x86 Architecture Software Developer Manual, section 17.14.
 
 Signed-off-by: Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
 ---
- arch/x86/kernel/cpu/perf_event_intel_uncore.h | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ arch/x86/configs/x86_64_defconfig |  1 +
+ arch/x86/include/asm/cpufeature.h |  9 ++++++++-
+ arch/x86/include/asm/processor.h  |  3 +++
+ arch/x86/kernel/cpu/common.c      | 39 +++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 51 insertions(+), 1 deletion(-)
 
-diff --git a/arch/x86/kernel/cpu/perf_event_intel_uncore.h b/arch/x86/kernel/cpu/perf_event_intel_uncore.h
-index a80ab71..f788145 100644
---- a/arch/x86/kernel/cpu/perf_event_intel_uncore.h
-+++ b/arch/x86/kernel/cpu/perf_event_intel_uncore.h
-@@ -412,6 +412,19 @@
+diff --git a/arch/x86/configs/x86_64_defconfig b/arch/x86/configs/x86_64_defconfig
+index c1119d4..8e98ed4 100644
+--- a/arch/x86/configs/x86_64_defconfig
++++ b/arch/x86/configs/x86_64_defconfig
+@@ -14,6 +14,7 @@ CONFIG_LOG_BUF_SHIFT=18
+ CONFIG_CGROUPS=y
+ CONFIG_CGROUP_FREEZER=y
+ CONFIG_CPUSETS=y
++CONFIG_CGROUP_CACHEQOS=y
+ CONFIG_CGROUP_CPUACCT=y
+ CONFIG_RESOURCE_COUNTERS=y
+ CONFIG_CGROUP_SCHED=y
+diff --git a/arch/x86/include/asm/cpufeature.h b/arch/x86/include/asm/cpufeature.h
+index 89270b4..5dd59a2 100644
+--- a/arch/x86/include/asm/cpufeature.h
++++ b/arch/x86/include/asm/cpufeature.h
+@@ -8,7 +8,7 @@
+ #include <asm/required-features.h>
+ #endif
  
- #define NHMEX_W_PMON_GLOBAL_FIXED_EN		(1ULL << 31)
+-#define NCAPINTS	10	/* N 32-bit words worth of info */
++#define NCAPINTS	12	/* N 32-bit words worth of info */
+ #define NBUGINTS	1	/* N 32-bit bug flags */
  
-+#ifdef CONFIG_CGROUP_CACHEQOS
-+/* Intel Cache QoS Monitoring uncore support */
-+#define IA32_QM_EVTSEL				0xc8d
-+#define IA32_QM_CTR				0xc8e
-+#define IA32_PQR_ASSOC				0xc8f
+ /*
+@@ -216,10 +216,17 @@
+ #define X86_FEATURE_ERMS	(9*32+ 9) /* Enhanced REP MOVSB/STOSB */
+ #define X86_FEATURE_INVPCID	(9*32+10) /* Invalidate Processor Context ID */
+ #define X86_FEATURE_RTM		(9*32+11) /* Restricted Transactional Memory */
++#define X86_FEATURE_CQM		(9*32+12) /* Cache QoS Monitoring */
+ #define X86_FEATURE_RDSEED	(9*32+18) /* The RDSEED instruction */
+ #define X86_FEATURE_ADX		(9*32+19) /* The ADCX and ADOX instructions */
+ #define X86_FEATURE_SMAP	(9*32+20) /* Supervisor Mode Access Prevention */
+ 
++/* Intel-defined CPU QoS Sub-leaf, CPUID level 0x0000000F:0 (edx), word 10 */
++#define X86_FEATURE_CQM_LLC	(10*32+ 1) /* LLC QoS if 1 */
 +
-+#define IA32_QM_EVTSEL_EVTID_READ_OCC		0x01
-+#define IA32_QM_CTR_ERR				(0x03llu << 62)
-+#define IA32_RMID_PQR_MASK			0x3ff
-+#define IA32_QM_EVTSEL_RMID_POSITION		32
++/* Intel-defined CPU QoS Sub-leaf, CPUID level 0x0000000F:1 (edx), word 11 */
++#define X86_FEATURE_CQM_OCCUP_LLC (11*32+ 0) /* LLC occupancy monitoring if 1 */
 +
-+#endif /* CONFIG_CGROUP_CACHEQOS */
+ /*
+  * BUG word(s)
+  */
+diff --git a/arch/x86/include/asm/processor.h b/arch/x86/include/asm/processor.h
+index 7b034a4..3892281 100644
+--- a/arch/x86/include/asm/processor.h
++++ b/arch/x86/include/asm/processor.h
+@@ -110,6 +110,9 @@ struct cpuinfo_x86 {
+ 	/* in KB - valid for CPUS which support this call: */
+ 	int			x86_cache_size;
+ 	int			x86_cache_alignment;	/* In bytes */
++	/* Cache QoS architectural values: */
++	int			x86_cache_max_rmid;	/* max index */
++	int			x86_cache_occ_scale;	/* scale to bytes */
+ 	int			x86_power;
+ 	unsigned long		loops_per_jiffy;
+ 	/* cpuid returned max cores value: */
+diff --git a/arch/x86/kernel/cpu/common.c b/arch/x86/kernel/cpu/common.c
+index 6abc172..f18bc43 100644
+--- a/arch/x86/kernel/cpu/common.c
++++ b/arch/x86/kernel/cpu/common.c
+@@ -626,6 +626,30 @@ void get_cpu_cap(struct cpuinfo_x86 *c)
+ 		c->x86_capability[9] = ebx;
+ 	}
+ 
++	/* Additional Intel-defined flags: level 0x0000000F */
++	if (c->cpuid_level >= 0x0000000F) {
++		u32 eax, ebx, ecx, edx;
 +
- struct intel_uncore_ops;
- struct intel_uncore_pmu;
- struct intel_uncore_box;
++		/* QoS sub-leaf, EAX=0Fh, ECX=0 */
++		cpuid_count(0x0000000F, 0, &eax, &ebx, &ecx, &edx);
++		c->x86_capability[10] = edx;
++		if (cpu_has(c, X86_FEATURE_CQM_LLC)) {
++			/* will be overridden if occupancy monitoring exists */
++			c->x86_cache_max_rmid = ebx;
++
++			/* QoS sub-leaf, EAX=0Fh, ECX=1 */
++			cpuid_count(0x0000000F, 1, &eax, &ebx, &ecx, &edx);
++			c->x86_capability[11] = edx;
++			if (cpu_has(c, X86_FEATURE_CQM_OCCUP_LLC)) {
++				c->x86_cache_max_rmid = ecx;
++				c->x86_cache_occ_scale = ebx;
++			}
++		} else {
++			c->x86_cache_max_rmid = -1;
++			c->x86_cache_occ_scale = -1;
++		}
++	}
++
+ 	/* AMD-defined flags: level 0x80000001 */
+ 	xlvl = cpuid_eax(0x80000000);
+ 	c->extended_cpuid_level = xlvl;
+@@ -814,6 +838,20 @@ static void generic_identify(struct cpuinfo_x86 *c)
+ 	detect_nopl(c);
+ }
+ 
++static void x86_init_cache_qos(struct cpuinfo_x86 *c)
++{
++	/*
++	 * The heavy lifting of max_rmid and cache_occ_scale are handled
++	 * in get_cpu_cap().  Here we just set the max_rmid for the boot_cpu
++	 * in case CQM bits really aren't there in this CPU.
++	 */
++	if (c != &boot_cpu_data) {
++		boot_cpu_data.x86_cache_max_rmid =
++			min(boot_cpu_data.x86_cache_max_rmid,
++			    c->x86_cache_max_rmid);
++	}
++}
++
+ /*
+  * This does the hard work of actually picking apart the CPU stuff...
+  */
+@@ -903,6 +941,7 @@ static void identify_cpu(struct cpuinfo_x86 *c)
+ 
+ 	init_hypervisor(c);
+ 	x86_init_rdrand(c);
++	x86_init_cache_qos(c);
+ 
+ 	/*
+ 	 * Clear/Set all flags overriden by options, need do it
 -- 
 1.8.3.1
