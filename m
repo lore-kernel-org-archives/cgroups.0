@@ -1,64 +1,47 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup fixes for v3.13-rc5
-Date: Tue, 24 Dec 2013 09:29:23 -0500
-Message-ID: <20131224142923.GC3512@htj.dyndns.org>
-Mime-Version: 1.0
+From: Peter P Waskiewicz Jr <peter.p.waskiewicz.jr-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [RFC PATCH 0/3] x86: Add Cache QoS Monitoring (CQM) support
+Date: Thu, 26 Dec 2013 13:34:36 -0800
+Message-ID: <1388093679-26952-1-git-send-email-peter.p.waskiewicz.jr@intel.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-	:content-disposition:user-agent;
-	bh=GoB99YdQNL21OhZLFVC3ikaSA6ypEeBIkYI0vkoKn3E=;
-	b=RDQHYl/AYGgjQP48UKkDHYdknhYFkySLRjAha3J2D9DVwdl44Drg8BbfFeNWN+pEmI
-	dfFCTp5/YChKAyITbn4BkOPBuHIKbqI/4ikgzjmuLjip+Drf0WTWdUag+sLf9HytUqqP
-	JP5j9GTMQI49l6vADTmNrYikzfeQvdnAWhMTcFySlPEv5rtqUgY2BSmOsIkaxY/a1rnJ
-	zkpshUovsD0sZLB3iehEDjV2p14BmhHtJaB0f/P+NtkuEkIvQHM9jQkkTTc6WX2VEB40
-	fdWdG/IVxCDtUyCTRDNv6X8gEX/gt3DcCcV8Qk8McSte3qomdQN6+0IyKY767uqM+Us/
-	SOXg==
-Content-Disposition: inline
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, peter.p.waskiewicz.jr-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
 
-Hey, Linus.
+RFC: This is a work-in-progress patchset.  Looking for general
+feedback on the approach and design of this changeset, especially
+since this is adding a new cgroup subsystem to present the data
+from this CPU feature.
 
-Two fixes.  One fixes a bug in the error path of cgroup_create().  The
-other changes cgrp->id lifetime rule so that the id doesn't get
-recycled before all controller states are destroyed.  This premature
-id recycling made memcg malfunction.
+This patchset adds support for the new Cache QoS Monitoring (CQM)
+feature found in future Intel Xeon processors.
 
-The following changes since commit e605b36575e896edd8161534550c9ea021b03bc0:
+CQM allows a process, or set of processes, to be tracked by the CPU
+to determine the cache usage of that task group.  Using this data
+from the CPU, software can be written to extract this data and
+report cache usage and occupancy for a particular process, or
+group of processes.
 
-  cgroup: fix cgroup_subsys_state leak for seq_files (2013-11-27 18:16:21 -0500)
+More information about Cache QoS Monitoring can be found in the
+Intel (R) x86 Architecture Software Developer Manual, section 17.14.
 
-are available in the git repository at:
+This series is also laying the framework for additional Platform
+QoS features in future Intel Xeon processors.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.13-fixes
+The CPU features themselves are relatively straight-forward, but
+the presentation of the data is less straight-forward.  Since this
+tracks cache usage and occupancy per process (by swapping Resource
+Monitor IDs, or RMIDs, when processes are rescheduled), perf would
+not be a good fit for this data, which does not report on a
+per-process level.  Therefore, a new cgroup subsystem, cacheqos, has
+been added.  This operates very similarly to the cpu and cpuacct
+cgroup subsystems, where tasks can be grouped into sub-leaves of the
+root-level cgroup.
 
-for you to fetch changes up to c1a71504e9715812a2d15e7c03b5aa147ae70ded:
-
-  cgroup: don't recycle cgroup id until all csses' have been destroyed (2013-12-17 08:11:52 -0500)
-
-Thanks.
-----------------------------------------------------------------
-Li Zefan (1):
-      cgroup: don't recycle cgroup id until all csses' have been destroyed
-
-Tejun Heo (1):
-      cgroup: fix cgroup_create() error handling path
-
- kernel/cgroup.c | 50 ++++++++++++++++++++++++++++++++------------------
- 1 file changed, 32 insertions(+), 18 deletions(-)
-
--- 
-tejun
+Peter P Waskiewicz Jr (3):
+      x86: Add support for Cache QoS Monitoring (CQM) detection
+      x86: Add Cache QoS Monitoring support to x86 perf uncore
+      cgroup: Add new cacheqos cgroup subsys to support Cache QoS Monitoring
