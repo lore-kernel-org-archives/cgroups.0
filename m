@@ -1,130 +1,66 @@
-From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: [PATCH RESEND 04/11] memcg, slab: fix barrier usage when accessing memcg_caches
-Date: Mon, 6 Jan 2014 12:44:55 +0400
-Message-ID: <bee9853bac6bf196ffe1a1bb1634e8947b1d9d09.1388996525.git.vdavydov@parallels.com>
-References: <cover.1388996525.git.vdavydov@parallels.com>
+From: Libo Chen <clbchenlibo.chen@huawei.com>
+Subject: Re: [RFC PATCH net-next 0/4] net_cls for sys container
+Date: Mon, 6 Jan 2014 18:06:30 +0800
+Message-ID: <52CA8026.4010106@huawei.com>
+References: <52C62A44.4070304@huawei.com> <CAM_iQpW0+Ftvk=QBE+0yMNW00VkBee1+yAEmbPkT+zjij9RX-Q@mail.gmail.com> <52CA614D.6040702@huawei.com> <52CA6C80.9060002@cn.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <cover.1388996525.git.vdavydov@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <52CA6C80.9060002@cn.fujitsu.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: mhocko@suse.cz, akpm@linux-foundation.org
-Cc: glommer@gmail.com, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Pekka Enberg <penberg@kernel.org>, Christoph Lameter <cl@linux.com>
+To: Gao feng <gaofeng@cn.fujitsu.com>, Cong Wang <xiyou.wangcong@gmail.com>
+Cc: David Miller <davem@davemloft.net>, Jamal Hadi Salim <jhs@mojatatu.com>, Li Zefan <lizefan@huawei.com>, Eric Dumazet <edumazet@google.com>, pshelar@nicira.com, jasowang@redhat.com, Simon Horman <horms@verge.net.au>, Serge Hallyn <serge.hallyn@ubuntu.com>, Linux Kernel Network Developers <netdev@vger.kernel.org>, cgroups@vger.kernel.org, containers@lists.linux-foundation.org, Patrick McHardy <kaber@trash.net>, xemul@openvz.org, LKML <linux-kernel@vger.kernel.org>
 
-Each root kmem_cache has pointers to per-memcg caches stored in its
-memcg_params::memcg_caches array. Whenever we want to allocate a slab
-for a memcg, we access this array to get per-memcg cache to allocate
-from (see memcg_kmem_get_cache()). The access must be lock-free for
-performance reasons, so we should use barriers to assert the kmem_cache
-is up-to-date.
 
-First, we should place a write barrier immediately before setting the
-pointer to it in the memcg_caches array in order to make sure nobody
-will see a partially initialized object. Second, we should issue a read
-barrier before dereferencing the pointer to conform to the write
-barrier.
 
-However, currently the barrier usage looks rather strange. We have a
-write barrier *after* setting the pointer and a read barrier *before*
-reading the pointer, which is incorrect. This patch fixes this.
 
-Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
-Cc: Michal Hocko <mhocko@suse.cz>
-Cc: Glauber Costa <glommer@gmail.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Balbir Singh <bsingharora@gmail.com>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Pekka Enberg <penberg@kernel.org>
-Cc: Christoph Lameter <cl@linux.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
----
- mm/memcontrol.c |   24 ++++++++++--------------
- mm/slab.h       |   12 +++++++++++-
- 2 files changed, 21 insertions(+), 15 deletions(-)
+yes
+On 2014/1/6 16:42, Gao feng wrote:
+> On 01/06/2014 03:54 PM, Libo Chen wrote:
+>> On 2014/1/3 13:20, Cong Wang wrote:
+>>> On Thu, Jan 2, 2014 at 7:11 PM, Libo Chen <clbchenlibo.chen@huawei.com> wrote:
+>>>> Hi guys,
+>>>>
+>>>> Now, lxc created with veth can not be under control by
+>>>> cls_cgroup.
+>>>>
+>>>> the former discussion:
+>>>> http://lkml.indiana.edu/hypermail/linux/kernel/1312.1/00214.html
+>>>>
+>>>> In short, because cls_cgroup relys classid attached to sock
+>>>> filter skb, but sock will be cleared inside dev_forward_skb()
+>>>> in veth_xmit().
+>>>
+>>>
+>>> So what are you trying to achieve here?
+>>
+>> sys container using veth can be controlled by cls_cgroup basing on physic network interface
+>>
+> 
+> It's a problem about virtual nic, not container/net namespace.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index f8eb994..999e7d4 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3238,12 +3238,14 @@ void memcg_register_cache(struct kmem_cache *s)
- 	list_add(&s->memcg_params->list, &memcg->memcg_slab_caches);
- 	mutex_unlock(&memcg->slab_caches_mutex);
- 
--	root->memcg_params->memcg_caches[id] = s;
- 	/*
--	 * the readers won't lock, make sure everybody sees the updated value,
--	 * so they won't put stuff in the queue again for no reason
-+	 * Since readers won't lock (see cache_from_memcg_idx()), we need a
-+	 * barrier here to ensure nobody will see the kmem_cache partially
-+	 * initialized.
- 	 */
--	wmb();
-+	smp_wmb();
-+
-+	root->memcg_params->memcg_caches[id] = s;
- }
- 
- void memcg_unregister_cache(struct kmem_cache *s)
-@@ -3569,7 +3571,7 @@ struct kmem_cache *__memcg_kmem_get_cache(struct kmem_cache *cachep,
- 					  gfp_t gfp)
- {
- 	struct mem_cgroup *memcg;
--	int idx;
-+	struct kmem_cache *memcg_cachep;
- 
- 	VM_BUG_ON(!cachep->memcg_params);
- 	VM_BUG_ON(!cachep->memcg_params->is_root_cache);
-@@ -3583,15 +3585,9 @@ struct kmem_cache *__memcg_kmem_get_cache(struct kmem_cache *cachep,
- 	if (!memcg_can_account_kmem(memcg))
- 		goto out;
- 
--	idx = memcg_cache_id(memcg);
--
--	/*
--	 * barrier to mare sure we're always seeing the up to date value.  The
--	 * code updating memcg_caches will issue a write barrier to match this.
--	 */
--	read_barrier_depends();
--	if (likely(cache_from_memcg_idx(cachep, idx))) {
--		cachep = cache_from_memcg_idx(cachep, idx);
-+	memcg_cachep = cache_from_memcg_idx(cachep, memcg_cache_id(memcg));
-+	if (likely(memcg_cachep)) {
-+		cachep = memcg_cachep;
- 		goto out;
- 	}
- 
-diff --git a/mm/slab.h b/mm/slab.h
-index 0859c42..72d1f9d 100644
---- a/mm/slab.h
-+++ b/mm/slab.h
-@@ -163,9 +163,19 @@ static inline const char *cache_name(struct kmem_cache *s)
- static inline struct kmem_cache *
- cache_from_memcg_idx(struct kmem_cache *s, int idx)
- {
-+	struct kmem_cache *cachep;
-+
- 	if (!s->memcg_params)
- 		return NULL;
--	return s->memcg_params->memcg_caches[idx];
-+	cachep = s->memcg_params->memcg_caches[idx];
-+
-+	/*
-+	 * Make sure we will access the up-to-date value. The code updating
-+	 * memcg_caches issues a write barrier to match this (see
-+	 * memcg_register_cache()).
-+	 */
-+	smp_read_barrier_depends();
-+	return cachep;
- }
- 
- static inline struct kmem_cache *memcg_root_cache(struct kmem_cache *s)
--- 
-1.7.10.4
+yes
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> 
+> If veth device is running in host. the skb is transmitted firstly by veth device and then delivered
+> by physical device. if you set both qdisc rule on veth and physical device. which qdisc rule will take
+> effect?
+
+both, the end result depends on a smaller.
+
+> 
+> In your patch, both qdisc rule are effective. it looks strange.
+> 
+
+qdisc is based nic, does not distinguish virtual or physics. if you are all set,
+it means that what you want.  so the logic is not the problemI and this appears to be normal.
+
+
+thanks,
+Libo
+
+> .
+> 
+
