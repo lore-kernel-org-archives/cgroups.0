@@ -1,94 +1,46 @@
-From: "Waskiewicz Jr, Peter P" <peter.p.waskiewicz.jr-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 Subject: Re: [PATCH 0/4] x86: Add Cache QoS Monitoring (CQM) support
-Date: Mon, 6 Jan 2014 16:47:57 +0000
-Message-ID: <1389026867.32504.16.camel@ppwaskie-mobl.amr.corp.intel.com>
+Date: Mon, 6 Jan 2014 18:53:38 +0100
+Message-ID: <20140106175338.GF30183@twins.programming.kicks-ass.net>
 References: <1388781285-18067-1-git-send-email-peter.p.waskiewicz.jr@intel.com>
-	 <20140104161050.GA24306@htj.dyndns.org>
-	 <1388875369.9761.25.camel@ppwaskie-mobl.amr.corp.intel.com>
-	 <20140104225058.GC24306@htj.dyndns.org>
-	 <1388899376.9761.45.camel@ppwaskie-mobl.amr.corp.intel.com>
-	 <20140106111624.GB5623@twins.programming.kicks-ass.net>
-	 <1389026035.32504.3.camel@ppwaskie-mobl.amr.corp.intel.com>
-	 <20140106164150.GQ31570@twins.programming.kicks-ass.net>
+	<20140104161050.GA24306@htj.dyndns.org>
+	<1388875369.9761.25.camel@ppwaskie-mobl.amr.corp.intel.com>
+	<20140104225058.GC24306@htj.dyndns.org>
+	<1388899376.9761.45.camel@ppwaskie-mobl.amr.corp.intel.com>
+	<20140106111624.GB5623@twins.programming.kicks-ass.net>
+	<1389026035.32504.3.camel@ppwaskie-mobl.amr.corp.intel.com>
+	<20140106164150.GQ31570@twins.programming.kicks-ass.net>
+	<1389026867.32504.16.camel@ppwaskie-mobl.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20140106164150.GQ31570-ndre7Fmf5hadTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
-Content-Language: en-US
-Content-ID: <4E3A1884C0FEAD4E9927FF129C94CA01-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1389026867.32504.16.camel-29DAm2eTeB2q+SSgkFU3IPooFf0ArEBIu+b9c/7xato@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: "Waskiewicz Jr, Peter P" <peter.p.waskiewicz.jr-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: "containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 
-T24gTW9uLCAyMDE0LTAxLTA2IGF0IDE3OjQxICswMTAwLCBQZXRlciBaaWpsc3RyYSB3cm90ZToN
-Cj4gT24gTW9uLCBKYW4gMDYsIDIwMTQgYXQgMDQ6MzQ6MDRQTSArMDAwMCwgV2Fza2lld2ljeiBK
-ciwgUGV0ZXIgUCB3cm90ZToNCj4gPiBPbiBNb24sIDIwMTQtMDEtMDYgYXQgMTI6MTYgKzAxMDAs
-IFBldGVyIFppamxzdHJhIHdyb3RlOg0KPiA+ID4gT24gU3VuLCBKYW4gMDUsIDIwMTQgYXQgMDU6
-MjM6MDdBTSArMDAwMCwgV2Fza2lld2ljeiBKciwgUGV0ZXIgUCB3cm90ZToNCj4gPiA+ID4gVGhl
-IENQVSBzaWRlIGlzIGVhc3kgYW5kIGNsZWFuLiAgV2hlbiBzb21ldGhpbmcgaW4gdGhlIHNvZnR3
-YXJlIHdhbnRzIHRvDQo+ID4gPiA+IG1vbml0b3Igd2hlbiBhIHBhcnRpY3VsYXIgdGFzayBpcyBz
-Y2hlZHVsZWQgYW5kIHN0YXJ0ZWQsIHdyaXRlIHdoYXRldmVyDQo+ID4gPiA+IFJNSUQgdGhhdCB0
-YXNrIGlzIGFzc2lnbmVkIHRvICh0aHJvdWdoIHNvbWUgbWVjaGFuaXNtKSB0byB0aGUgcHJvcGVy
-IE1TUg0KPiA+ID4gPiBpbiB0aGUgQ1BVLiAgV2hlbiB0aGF0IHRhc2sgaXMgc3dhcHBlZCBvdXQs
-IGNsZWFyIHRoZSBNU1IgdG8gc3RvcA0KPiA+ID4gPiBtb25pdG9yaW5nIG9mIHRoYXQgUk1JRC4g
-IFdoZW4gdGhhdCBSTUlEJ3Mgc3RhdGlzdGljcyBhcmUgcmVxdWVzdGVkIGJ5DQo+ID4gPiA+IHRo
-ZSBzb2Z0d2FyZSAodGhyb3VnaCBzb21lIG1lY2hhbmlzbSksIHRoZW4gdGhlIENQVSdzIE1TUnMg
-YXJlIHdyaXR0ZW4NCj4gPiA+ID4gd2l0aCB0aGUgUk1JRCBpbiBxdWVzdGlvbiwgYW5kIHRoZSB2
-YWx1ZSBpcyByZWFkIG9mIHdoYXQgaGFzIGJlZW4NCj4gPiA+ID4gY29sbGVjdGVkIHNvIGZhci4g
-IEluIG15IGNhc2UsIEkgZGVjaWRlZCB0byB1c2UgYSBjZ3JvdXAgZm9yIHRoaXMNCj4gPiA+ID4g
-Im1lY2hhbmlzbSIgc2luY2Ugc28gbXVjaCBvZiB0aGUgZ3JvdXBpbmcgYW5kIHRhc2svZ3JvdXAg
-YXNzb2NpYXRpb24NCj4gPiA+ID4gYWxyZWFkeSBleGlzdHMgYW5kIGRvZXNuJ3QgbmVlZCB0byBi
-ZSByZWJ1aWx0IG9yIHJlLWludmVudGVkLg0KPiA+ID4gDQo+ID4gPiBUaGlzIHN0aWxsIGRvZXNu
-J3QgZXhwbGFpbiB3aHkgeW91IGNhbid0IHVzZSBwZXJmLWNncm91cCBmb3IgdGhpcy4NCj4gPiAN
-Cj4gPiBJJ20gbm90IGNvbXBsZXRlbHkgZmFtaWxpYXIgd2l0aCBwZXJmLWNncm91cCwgc28gSSBs
-b29rZWQgZm9yIHNvbWUNCj4gPiBkb2N1bWVudGF0aW9uIGZvciBpdCB0byBiZXR0ZXIgdW5kZXJz
-dGFuZCBpdC4gIEFyZSB5b3UgcmVmZXJyaW5nIHRvIHBlcmYNCj4gPiAtRyB0byBtb25pdG9yIGFu
-IGV4aXN0aW5nIGNncm91cC9hbGwgY2dyb3Vwcz8gIE9yIHNvbWV0aGluZyBlbHNlPyAgSWYNCj4g
-PiBpdCdzIHRoZSBmb3JtZXIsIEknbSBub3QgZm9sbG93aW5nIHlvdSBob3cgdGhpcyB3b3VsZCBm
-aXQuDQo+IA0KPiBBbGwgdGhlIGJpdHMgdW5kZXIgQ09ORklHX0NHUk9VUF9QRVJGLCBJJ3ZlIG5v
-IGlkZWEgaG93IHVzZXJzcGFjZSBsb29rcy4NCg0KQWggb2suICBZZXMsIHRoZSB1c2Vyc3BhY2Ug
-c2lkZSBvZiBwZXJmIHJlYWxseSBkb2Vzbid0IGZpdCBjb250cm9sbGluZw0KdGhlIENRTSBiaXRz
-IGF0IGFsbCBmcm9tIHdoYXQgSSBzZWUuDQoNCj4gPiA+ID4gPiBJbiBnZW5lcmFsLCBJJ20gcXVp
-dGUgc3Ryb25nbHkgb3Bwb3NlZCBhZ2FpbnN0IHVzaW5nIGNncm91cCBhcw0KPiA+ID4gPiA+IGFy
-Yml0cmFyeSBncm91cGluZyBtZWNoYW5pc20gZm9yIGFueXRoaW5nIG90aGVyIHRoYW4gcmVzb3Vy
-Y2UgY29udHJvbCwNCj4gPiA+ID4gPiBlc3BlY2lhbGx5IGdpdmVuIHRoYXQgd2UncmUgbW92aW5n
-IGF3YXkgZnJvbSBtdWx0aXBsZSBoaWVyYXJjaGllcy4NCj4gPiA+ID4gDQo+ID4gPiA+IEp1c3Qg
-dG8gY2xhcmlmeSB0aGVuLCB3b3VsZCB0aGUgbWVjaGFuaXNtIGluIHRoZSBjcHVhY2N0IGNncm91
-cCB0bw0KPiA+ID4gPiBjcmVhdGUgYSBncm91cCBvZmYgdGhlIHJvb3Qgc3Vic3lzdGVtIGJlIGNv
-bnNpZGVyZWQgbXVsdGktaGllcmFyY2hpY2FsPw0KPiA+ID4gPiBJZiBub3QsIHRoZW4gdGhlIGlu
-dGVudCBmb3IgdGhpcyBuZXcgY2FjaGVxb3Mgc3Vic3lzdGVtIGlzIHRvIGJlDQo+ID4gPiA+IGlk
-ZW50aWNhbCBpbiB0aGF0IHJlZ2FyZCB0byBjcHVhY2N0IGluIHRoZSBiZWhhdmlvci4NCj4gPiA+
-ID4gDQo+ID4gPiA+IFRoaXMgaXMgYSByZXNvdXJjZSBjb250cm9sbGVyLCBpdCBqdXN0IGhhcHBl
-bnMgdG8gYmUgdGllZCB0byBhIGhhcmR3YXJlDQo+ID4gPiA+IHJlc291cmNlIGluc3RlYWQgb2Yg
-YW4gT1MgcmVzb3VyY2UuDQo+ID4gPiANCj4gPiA+IE5vLCBjcHVhY2N0IGFuZCBwZXJmLWNncm91
-cCBhcmVuJ3QgYWN0dWFsbHkgY29udHJvbGxlcnMgYXQgYWxsLiBUaGV5J3JlDQo+ID4gPiByZXNv
-dXJjZSBtb25pdG9ycyBhdCBiZXN0LiBTYW1lIHdpdGggeW91ciBDYWNoZSBRb1MgTW9uaXRvciwg
-aXQgZG9lc24ndA0KPiA+ID4gY29udHJvbCBhbnl0aGluZy4NCj4gPiANCj4gPiBJIG1heSBiZSB1
-c2luZyBjb250cm9sbGVyIGluIGEgZGlmZmVyZW50IHdheSB0aGFuIHlvdSBhcmUuICBZZXMsIHRo
-ZQ0KPiA+IENhY2hlIFFvUyBNb25pdG9yIGlzIG1vbml0b3JpbmcgY2FjaGUgZGF0YS4gIEJ1dCBp
-dCBpcyBhbHNvIGNvbnRyb2xsaW5nDQo+ID4gdGhlIGFsbG9jYXRpb24gYW5kIGRlYWxsb2NhdGlv
-biBvZiBSTUlEcyB0byB0YXNrcy90YXNrIGdyb3VwcyBhcw0KPiA+IG1vbml0b3JpbmcgaXMgZW5h
-YmxlZCBhbmQgZGlzYWJsZWQgZm9yIHRob3NlIGdyb3Vwcy4gIFRoYXQncyB3aHkgSQ0KPiA+IGNh
-bGxlZCBpdCBhIGNvbnRyb2xsZXIuICBJZiB0aGF0J3Mgbm90IGFjY3VyYXRlLCBJIGFwb2xvZ2l6
-ZS4NCj4gDQo+IFllYWggdGhhdCdzIG5vdCBhY2N1cmF0ZSwgbm9yIGRlc2lyZWQgSSB0aGluaywg
-YmVjYXVzZSB5b3UgZ2V0IGludG8NCj4gaG9ycmlibGUgcHJvYmxlbXMgd2l0aCBoaWVyYXJjaGll
-cywgZG8gY2hpbGQgZ3JvdXBzIGJlbG9uZyB0byB5b3VyIFJNSUQNCj4gb3Igbm90Pw0KDQpJJ2Qg
-cmF0aGVyIG5vdCBzdXBwb3J0IGEgY2hpbGQgZ3JvdXAgb2YgYSBjaGlsZCBncm91cC4gIE9ubHkg
-Z3JvdXBzIG9mZg0KdGhlIHJvb3QsIGFuZCBlYWNoIGdyb3VwIHdvdWxkIGJlIGFzc2lnbmVkIGFu
-IFJNSUQgd2hlbiBpdCdzIGFjdGl2YXRlZA0KZm9yIG1vbml0b3JpbmcuDQoNCj4gQXMgaXMgSSBk
-b24ndCByZWFsbHkgc2VlIGEgZ29vZCB1c2UgZm9yIFJNSURzIGFuZCBJIHdvdWxkIHNpbXBseSBu
-b3QgdXNlDQo+IHRoZW0uDQoNCklmIHlvdSB3YW50IHRvIHVzZSBDUU0gaW4gdGhlIGhhcmR3YXJl
-LCB0aGVuIHRoZSBSTUlEIGlzIGhvdyB5b3UgZ2V0IHRoZQ0KY2FjaGUgdXNhZ2UgZGF0YSBmcm9t
-IHRoZSBDUFUuICBJZiB5b3UgZG9uJ3Qgd2FudCB0byB1c2UgQ1FNLCB0aGVuIHlvdQ0KY2FuIGln
-bm9yZSBSTUlEcy4NCg0KT25lIG9mIHRoZSBiZXN0IHVzZSBjYXNlcyBmb3IgdXNpbmcgUk1JRHMg
-aXMgaW4gdmlydHVhbGl6YXRpb24uICBBIFZNDQptYXkgYmUgYSBoZWF2eSBjYWNoZSB1c2VyLCBv
-ciBhIGxpZ2h0IGNhY2hlIHVzZXIuICBUcmFjaW5nIGRpZmZlcmVudCBWTXMNCm9uIGRpZmZlcmVu
-dCBSTUlEcyBjYW4gYWxsb3cgYW4gYWRtaW4gdG8gaWRlbnRpZnkgd2hpY2ggVk0gbWF5IGJlDQpj
-YXVzaW5nIGhpZ2ggbGV2ZWxzIG9mIGV2aWN0aW9uLCBhbmQgZWl0aGVyIG1pZ3JhdGUgaXQgdG8g
-YW5vdGhlciBob3N0LA0Kb3IgbW92ZSBvdGhlciB0YXNrcy9WTXMgdG8gb3RoZXIgaG9zdHMuICBX
-aXRob3V0IENRTSwgaXQncyBtdWNoIGhhcmRlcg0KdG8gZmluZCB3aGljaCBwcm9jZXNzIGlzIGVh
-dGluZyB0aGUgY2FjaGUgdXAuDQoNCkNoZWVycywNCi1QSg0KDQotLSANClBKIFdhc2tpZXdpY3oJ
-CQkJT3BlbiBTb3VyY2UgVGVjaG5vbG9neSBDZW50ZXINCnBldGVyLnAud2Fza2lld2ljei5qckBp
-bnRlbC5jb20JCUludGVsIENvcnAuDQo=
+On Mon, Jan 06, 2014 at 04:47:57PM +0000, Waskiewicz Jr, Peter P wrote:
+> > Yeah that's not accurate, nor desired I think, because you get into
+> > horrible problems with hierarchies, do child groups belong to your RMID
+> > or not?
+> 
+> I'd rather not support a child group of a child group.  Only groups off
+> the root, and each group would be assigned an RMID when it's activated
+> for monitoring.
+
+Yeah, that's a complete non started for cgroups. Cgroups need to be
+completely hierarchical.
+
+So even the root group should represent all tasks; which if you fragment
+RMIDs on child cgroups doesn't work anymore.
