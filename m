@@ -1,7 +1,7 @@
 From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: [PATCH RESEND 10/11] memcg: remove KMEM_ACCOUNTED_ACTIVATED flag
-Date: Mon, 6 Jan 2014 12:45:01 +0400
-Message-ID: <04b54e94c0ab3932e7a94d728387f43d5ab54ecc.1388996525.git.vdavydov@parallels.com>
+Subject: [PATCH RESEND 06/11] memcg, slab: fix races in per-memcg cache creation/destruction
+Date: Mon, 6 Jan 2014 12:44:57 +0400
+Message-ID: <75f6caa087d0e3e9a57eb30f7675c90ebdc08dab.1388996525.git.vdavydov@parallels.com>
 References: <cover.1388996525.git.vdavydov@parallels.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
@@ -11,70 +11,61 @@ List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: mhocko@suse.cz, akpm@linux-foundation.org
-Cc: glommer@gmail.com, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: glommer@gmail.com, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Pekka Enberg <penberg@kernel.org>, Christoph Lameter <cl@linux.com>
 
-Currently we have two state bits in mem_cgroup::kmem_account_flags
-regarding kmem accounting activation, ACTIVATED and ACTIVE. We start
-kmem accounting only if both flags are set (memcg_can_account_kmem()),
-plus throughout the code there are several places where we check only
-the ACTIVE flag, but we never check the ACTIVATED flag alone. These
-flags are both set from memcg_update_kmem_limit() under the
-set_limit_mutex, the ACTIVE flag always being set after ACTIVATED, and
-they never get cleared. That said checking if both flags are set is
-equivalent to checking only for the ACTIVE flag, and since there is no
-ACTIVATED flag checks, we can safely remove the ACTIVATED flag, and
-nothing will change.
+We obtain a per-memcg cache from a root kmem_cache by dereferencing an
+entry of the root cache's memcg_params::memcg_caches array. If we find
+no cache for a memcg there on allocation, we initiate the memcg cache
+creation (see memcg_kmem_get_cache()). The cache creation proceeds
+asynchronously in memcg_create_kmem_cache() in order to avoid lock
+clashes, so there can be several threads trying to create the same
+kmem_cache concurrently, but only one of them may succeed. However, due
+to a race in the code, it is not always true. The point is that the
+memcg_caches array can be relocated when we activate kmem accounting for
+a memcg (see memcg_update_all_caches(), memcg_update_cache_size()). If
+memcg_update_cache_size() and memcg_create_kmem_cache() proceed
+concurrently as described below, we can leak a kmem_cache.
 
-Let's try to understand what was the reason for introducing these flags.
-The purpose of the ACTIVE flag is clear - it states that kmem should be
-accounting to the cgroup. The only requirement for it is that it should
-be set after we have fully initialized kmem accounting bits for the
-cgroup and patched all static branches relating to kmem accounting.
-Since we always check if static branch is enabled before actually
-considering if we should account (otherwise we wouldn't benefit from
-static branching), this guarantees us that we won't skip a commit or
-uncharge after a charge due to an unpatched static branch.
+Asume two threads schedule creation of the same kmem_cache. One of them
+successfully creates it. Another one should fail then, but if
+memcg_create_kmem_cache() interleaves with memcg_update_cache_size() as
+follows, it won't:
 
-Now let's move on to the ACTIVATED bit. As I proved in the beginning of
-this message, it is absolutely useless, and removing it will change
-nothing. So what was the reason introducing it?
+  memcg_create_kmem_cache()             memcg_update_cache_size()
+  (called w/o mutexes held)             (called with slab_mutex,
+                                         set_limit_mutex held)
+  -------------------------             -------------------------
 
-The ACTIVATED flag was introduced by commit a8964b9b ("memcg: use static
-branches when code not in use") in order to guarantee that
-static_key_slow_inc(&memcg_kmem_enabled_key) would be called only once
-for each memory cgroup when its kmem accounting was activated. The point
-was that at that time the memcg_update_kmem_limit() function's work-flow
-looked like this:
+  mutex_lock(&memcg_cache_mutex)
 
-        bool must_inc_static_branch = false;
+                                        s->memcg_params=kzalloc(...)
 
-        cgroup_lock();
-        mutex_lock(&set_limit_mutex);
-        if (!memcg->kmem_account_flags && val != RESOURCE_MAX) {
-                /* The kmem limit is set for the first time */
-                ret = res_counter_set_limit(&memcg->kmem, val);
+  new_cachep=cache_from_memcg_idx(cachep,idx)
+  // new_cachep==NULL => proceed to creation
 
-                memcg_kmem_set_activated(memcg);
-                must_inc_static_branch = true;
-        } else
-                ret = res_counter_set_limit(&memcg->kmem, val);
-        mutex_unlock(&set_limit_mutex);
-        cgroup_unlock();
+                                        s->memcg_params->memcg_caches[i]
+                                            =cur_params->memcg_caches[i]
 
-        if (must_inc_static_branch) {
-                /* We can't do this under cgroup_lock */
-                static_key_slow_inc(&memcg_kmem_enabled_key);
-                memcg_kmem_set_active(memcg);
-        }
+  // kmem_cache_create_memcg takes slab_mutex
+  // so we will hang around until
+  // memcg_update_cache_size finishes, but
+  // nothing will prevent it from succeeding so
+  // memcg_caches[idx] will be overwritten in
+  // memcg_register_cache!
 
-So that without the ACTIVATED flag we could race with other threads
-trying to set the limit and increment the static branching ref-counter
-more than once. Today we call the whole memcg_update_kmem_limit()
-function under the set_limit_mutex and this race is impossible.
+  new_cachep = kmem_cache_create_memcg(...)
+  mutex_unlock(&memcg_cache_mutex)
 
-As now we understand why the ACTIVATED bit was introduced and why we
-don't need it now, and know that removing it will change nothing anyway,
-let's get rid of it.
+Let's fix this by moving the check for existence of the memcg cache to
+kmem_cache_create_memcg() to be called under the slab_mutex and make it
+return NULL if so.
+
+A similar race is possible when destroying a memcg cache (see
+kmem_cache_destroy()). Since memcg_unregister_cache(), which clears the
+pointer in the memcg_caches array, is called w/o protection, we can race
+with memcg_update_cache_size() and omit clearing the pointer. Therefore
+memcg_unregister_cache() should be moved before we release the
+slab_mutex.
 
 Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
 Cc: Michal Hocko <mhocko@suse.cz>
@@ -82,78 +73,119 @@ Cc: Glauber Costa <glommer@gmail.com>
 Cc: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Balbir Singh <bsingharora@gmail.com>
 Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Pekka Enberg <penberg@kernel.org>
+Cc: Christoph Lameter <cl@linux.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>
 ---
- mm/memcontrol.c |   28 ++--------------------------
- 1 file changed, 2 insertions(+), 26 deletions(-)
+ mm/memcontrol.c  |   23 ++++++++++++++---------
+ mm/slab_common.c |   14 +++++++++++++-
+ 2 files changed, 27 insertions(+), 10 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index a7521c3..a5a1ae1 100644
+index d918626..56fc410 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -343,15 +343,10 @@ static size_t memcg_size(void)
+@@ -3228,6 +3228,12 @@ void memcg_register_cache(struct kmem_cache *s)
+ 	if (is_root_cache(s))
+ 		return;
  
- /* internal only representation about the status of kmem accounting. */
- enum {
--	KMEM_ACCOUNTED_ACTIVE = 0, /* accounted by this cgroup itself */
--	KMEM_ACCOUNTED_ACTIVATED, /* static key enabled. */
-+	KMEM_ACCOUNTED_ACTIVE, /* accounted by this cgroup itself */
- 	KMEM_ACCOUNTED_DEAD, /* dead memcg with pending kmem charges */
- };
++	/*
++	 * Holding the slab_mutex assures nobody will touch the memcg_caches
++	 * array while we are modifying it.
++	 */
++	lockdep_assert_held(&slab_mutex);
++
+ 	root = s->memcg_params->root_cache;
+ 	memcg = s->memcg_params->memcg;
+ 	id = memcg_cache_id(memcg);
+@@ -3247,6 +3253,7 @@ void memcg_register_cache(struct kmem_cache *s)
+ 	 * before adding it to the memcg_slab_caches list, otherwise we can
+ 	 * fail to convert memcg_params_to_cache() while traversing the list.
+ 	 */
++	VM_BUG_ON(root->memcg_params->memcg_caches[id]);
+ 	root->memcg_params->memcg_caches[id] = s;
  
--/* We account when limit is on, but only after call sites are patched */
--#define KMEM_ACCOUNTED_MASK \
--		((1 << KMEM_ACCOUNTED_ACTIVE) | (1 << KMEM_ACCOUNTED_ACTIVATED))
--
- #ifdef CONFIG_MEMCG_KMEM
- static inline void memcg_kmem_set_active(struct mem_cgroup *memcg)
+ 	mutex_lock(&memcg->slab_caches_mutex);
+@@ -3263,6 +3270,12 @@ void memcg_unregister_cache(struct kmem_cache *s)
+ 	if (is_root_cache(s))
+ 		return;
+ 
++	/*
++	 * Holding the slab_mutex assures nobody will touch the memcg_caches
++	 * array while we are modifying it.
++	 */
++	lockdep_assert_held(&slab_mutex);
++
+ 	root = s->memcg_params->root_cache;
+ 	memcg = s->memcg_params->memcg;
+ 	id = memcg_cache_id(memcg);
+@@ -3276,6 +3289,7 @@ void memcg_unregister_cache(struct kmem_cache *s)
+ 	 * after removing it from the memcg_slab_caches list, otherwise we can
+ 	 * fail to convert memcg_params_to_cache() while traversing the list.
+ 	 */
++	VM_BUG_ON(!root->memcg_params->memcg_caches[id]);
+ 	root->memcg_params->memcg_caches[id] = NULL;
+ 
+ 	css_put(&memcg->css);
+@@ -3428,22 +3442,13 @@ static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
+ 						  struct kmem_cache *cachep)
  {
-@@ -363,16 +358,6 @@ static bool memcg_kmem_is_active(struct mem_cgroup *memcg)
- 	return test_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_account_flags);
+ 	struct kmem_cache *new_cachep;
+-	int idx;
+ 
+ 	BUG_ON(!memcg_can_account_kmem(memcg));
+ 
+-	idx = memcg_cache_id(memcg);
+-
+ 	mutex_lock(&memcg_cache_mutex);
+-	new_cachep = cache_from_memcg_idx(cachep, idx);
+-	if (new_cachep)
+-		goto out;
+-
+ 	new_cachep = kmem_cache_dup(memcg, cachep);
+ 	if (new_cachep == NULL)
+ 		new_cachep = cachep;
+-
+-out:
+ 	mutex_unlock(&memcg_cache_mutex);
+ 	return new_cachep;
  }
+diff --git a/mm/slab_common.c b/mm/slab_common.c
+index db24ec4..f34707e 100644
+--- a/mm/slab_common.c
++++ b/mm/slab_common.c
+@@ -180,6 +180,18 @@ kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
+ 	if (err)
+ 		goto out_unlock;
  
--static void memcg_kmem_set_activated(struct mem_cgroup *memcg)
--{
--	set_bit(KMEM_ACCOUNTED_ACTIVATED, &memcg->kmem_account_flags);
--}
--
--static void memcg_kmem_clear_activated(struct mem_cgroup *memcg)
--{
--	clear_bit(KMEM_ACCOUNTED_ACTIVATED, &memcg->kmem_account_flags);
--}
--
- static void memcg_kmem_mark_dead(struct mem_cgroup *memcg)
- {
++	if (memcg) {
++		/*
++		 * Since per-memcg caches are created asynchronously on first
++		 * allocation (see memcg_kmem_get_cache()), several threads can
++		 * try to create the same cache, but only one of them may
++		 * succeed. Therefore if we get here and see the cache has
++		 * already been created, we silently return NULL.
++		 */
++		if (cache_from_memcg_idx(parent_cache, memcg_cache_id(memcg)))
++			goto out_unlock;
++	}
++
  	/*
-@@ -2959,7 +2944,7 @@ static DEFINE_MUTEX(set_limit_mutex);
- static inline bool memcg_can_account_kmem(struct mem_cgroup *memcg)
- {
- 	return !mem_cgroup_disabled() && !mem_cgroup_is_root(memcg) &&
--		(memcg->kmem_account_flags & KMEM_ACCOUNTED_MASK);
-+		memcg_kmem_is_active(memcg);
- }
+ 	 * Some allocators will constraint the set of valid flags to a subset
+ 	 * of all flags. We expect them to define CACHE_CREATE_MASK in this
+@@ -261,11 +273,11 @@ void kmem_cache_destroy(struct kmem_cache *s)
+ 		list_del(&s->list);
  
- /*
-@@ -3084,19 +3069,10 @@ int memcg_update_cache_sizes(struct mem_cgroup *memcg)
- 				0, MEMCG_CACHES_MAX_SIZE, GFP_KERNEL);
- 	if (num < 0)
- 		return num;
--	/*
--	 * After this point, kmem_accounted (that we test atomically in
--	 * the beginning of this conditional), is no longer 0. This
--	 * guarantees only one process will set the following boolean
--	 * to true. We don't need test_and_set because we're protected
--	 * by the set_limit_mutex anyway.
--	 */
--	memcg_kmem_set_activated(memcg);
+ 		if (!__kmem_cache_shutdown(s)) {
++			memcg_unregister_cache(s);
+ 			mutex_unlock(&slab_mutex);
+ 			if (s->flags & SLAB_DESTROY_BY_RCU)
+ 				rcu_barrier();
  
- 	ret = memcg_update_all_caches(num+1);
- 	if (ret) {
- 		ida_simple_remove(&kmem_limited_groups, num);
--		memcg_kmem_clear_activated(memcg);
- 		return ret;
- 	}
- 
+-			memcg_unregister_cache(s);
+ 			memcg_free_cache_params(s);
+ 			kfree(s->name);
+ 			kmem_cache_free(kmem_cache, s);
 -- 
 1.7.10.4
 
