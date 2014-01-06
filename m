@@ -1,53 +1,57 @@
-From: Gao feng <gaofeng-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [RFC PATCH net-next 0/4] net_cls for sys container
-Date: Mon, 06 Jan 2014 16:42:40 +0800
-Message-ID: <52CA6C80.9060002@cn.fujitsu.com>
-References: <52C62A44.4070304@huawei.com>
-	<CAM_iQpW0+Ftvk=QBE+0yMNW00VkBee1+yAEmbPkT+zjij9RX-Q@mail.gmail.com>
-	<52CA614D.6040702@huawei.com>
+From: Vladimir Davydov <vdavydov@parallels.com>
+Subject: [PATCH RESEND 00/11] kmemcg-fixes
+Date: Mon, 6 Jan 2014 12:44:51 +0400
+Message-ID: <cover.1388996525.git.vdavydov@parallels.com>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <52CA614D.6040702-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Libo Chen <clbchenlibo.chen-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Cong Wang <xiyou.wangcong-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Simon Horman <horms-/R6kz+dDXgpPR4JQBCEnsQ@public.gmane.org>, Patrick McHardy <kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org>, Linux Kernel Network Developers <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, jasowang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, pshelar-l0M0P4e3n4LQT0dZR+AlfA@public.gmane.org, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+To: mhocko@suse.cz, akpm@linux-foundation.org
+Cc: glommer@gmail.com, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org
 
-On 01/06/2014 03:54 PM, Libo Chen wrote:
-> On 2014/1/3 13:20, Cong Wang wrote:
->> On Thu, Jan 2, 2014 at 7:11 PM, Libo Chen <clbchenlibo.chen-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
->>> Hi guys,
->>>
->>> Now, lxc created with veth can not be under control by
->>> cls_cgroup.
->>>
->>> the former discussion:
->>> http://lkml.indiana.edu/hypermail/linux/kernel/1312.1/00214.html
->>>
->>> In short, because cls_cgroup relys classid attached to sock
->>> filter skb, but sock will be cleared inside dev_forward_skb()
->>> in veth_xmit().
->>
->>
->> So what are you trying to achieve here?
-> 
-> sys container using veth can be controlled by cls_cgroup basing on physic network interface
-> 
+Hi,
 
-It's a problem about virtual nic, not container/net namespace.
+This patch-set fixes several bugs here and there in the implementation
+of kmem accounting for memory cgroups and hopefully makes the code look
+a bit clearer.
 
-If veth device is running in host. the skb is transmitted firstly by veth device and then delivered
-by physical device. if you set both qdisc rule on veth and physical device. which qdisc rule will take
-effect?
+Links to discussion threads that led to this patch-set:
+http://www.spinics.net/lists/cgroups/msg09512.html
+http://www.spinics.net/lists/cgroups/msg09695.html
+http://www.spinics.net/lists/cgroups/msg09796.html
 
-In your patch, both qdisc rule are effective. it looks strange.
+Any comments are highly appreciated.
+
+Thanks.
+
+Vladimir Davydov (11):
+  slab: cleanup kmem_cache_create_memcg() error handling
+  memcg, slab: kmem_cache_create_memcg(): fix memleak on fail path
+  memcg, slab: cleanup memcg cache initialization/destruction
+  memcg, slab: fix barrier usage when accessing memcg_caches
+  memcg: fix possible NULL deref while traversing memcg_slab_caches
+    list
+  memcg, slab: fix races in per-memcg cache creation/destruction
+  memcg: get rid of kmem_cache_dup
+  slab: do not panic if we fail to create memcg cache
+  memcg, slab: RCU protect memcg_params for root caches
+  memcg: remove KMEM_ACCOUNTED_ACTIVATED flag
+  memcg: rework memcg_update_kmem_limit synchronization
+
+ include/linux/memcontrol.h |   23 +--
+ include/linux/slab.h       |    9 +-
+ mm/memcontrol.c            |  405 +++++++++++++++++++++-----------------------
+ mm/slab.h                  |   26 ++-
+ mm/slab_common.c           |   90 ++++++----
+ 5 files changed, 292 insertions(+), 261 deletions(-)
+
+-- 
+1.7.10.4
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
