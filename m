@@ -1,107 +1,147 @@
-From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: [PATCH RESEND 07/11] memcg: get rid of kmem_cache_dup
-Date: Mon, 6 Jan 2014 12:44:58 +0400
-Message-ID: <3effdaf677c9daab1d9341a4176fcee9e58557c2.1388996525.git.vdavydov@parallels.com>
+From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH RESEND 09/11] memcg, slab: RCU protect memcg_params for root caches
+Date: Mon, 6 Jan 2014 12:45:00 +0400
+Message-ID: <f85f01e8ea27bb81694bd99cf35230b92d0a6fa9.1388996525.git.vdavydov@parallels.com>
 References: <cover.1388996525.git.vdavydov@parallels.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <cover.1388996525.git.vdavydov@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <cover.1388996525.git.vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: mhocko@suse.cz, akpm@linux-foundation.org
-Cc: glommer@gmail.com, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, devel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+To: mhocko-AlSwsSmVLrQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
 
-kmem_cache_dup() is only called from memcg_create_kmem_cache(). The
-latter, in fact, does nothing besides this, so let's fold
-kmem_cache_dup() into memcg_create_kmem_cache().
+We relocate root cache's memcg_params whenever we need to grow the
+memcg_caches array to accommodate all kmem-active memory cgroups.
+Currently on relocation we free the old version immediately, which can
+lead to use-after-free, because the memcg_caches array is accessed
+lock-free (see cache_from_memcg_idx()). This patch fixes this by making
+memcg_params RCU-protected for root caches.
 
-This patch also makes the memcg_cache_mutex private to
-memcg_create_kmem_cache(), because it is not used anywhere else.
-
-Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
-Cc: Michal Hocko <mhocko@suse.cz>
-Cc: Glauber Costa <glommer@gmail.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Balbir Singh <bsingharora@gmail.com>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 ---
- mm/memcontrol.c |   39 ++++++++-------------------------------
- 1 file changed, 8 insertions(+), 31 deletions(-)
+ include/linux/slab.h |    9 +++++++--
+ mm/memcontrol.c      |   15 ++++++++-------
+ mm/slab.h            |   16 +++++++++++++++-
+ 3 files changed, 30 insertions(+), 10 deletions(-)
 
+diff --git a/include/linux/slab.h b/include/linux/slab.h
+index 1e2f4fe..a060142 100644
+--- a/include/linux/slab.h
++++ b/include/linux/slab.h
+@@ -513,7 +513,9 @@ static __always_inline void *kmalloc_node(size_t size, gfp_t flags, int node)
+  *
+  * Both the root cache and the child caches will have it. For the root cache,
+  * this will hold a dynamically allocated array large enough to hold
+- * information about the currently limited memcgs in the system.
++ * information about the currently limited memcgs in the system. To allow the
++ * array to be accessed without taking any locks, on relocation we free the old
++ * version only after a grace period.
+  *
+  * Child caches will hold extra metadata needed for its operation. Fields are:
+  *
+@@ -528,7 +530,10 @@ static __always_inline void *kmalloc_node(size_t size, gfp_t flags, int node)
+ struct memcg_cache_params {
+ 	bool is_root_cache;
+ 	union {
+-		struct kmem_cache *memcg_caches[0];
++		struct {
++			struct rcu_head rcu_head;
++			struct kmem_cache *memcg_caches[0];
++		};
+ 		struct {
+ 			struct mem_cgroup *memcg;
+ 			struct list_head list;
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 56fc410..ce25f77 100644
+index ce25f77..a7521c3 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -3391,27 +3391,16 @@ void mem_cgroup_destroy_cache(struct kmem_cache *cachep)
- 	schedule_work(&cachep->memcg_params->destroy);
+@@ -3142,18 +3142,17 @@ int memcg_update_cache_size(struct kmem_cache *s, int num_groups)
+ 
+ 	if (num_groups > memcg_limited_groups_array_size) {
+ 		int i;
++		struct memcg_cache_params *new_params;
+ 		ssize_t size = memcg_caches_array_size(num_groups);
+ 
+ 		size *= sizeof(void *);
+ 		size += offsetof(struct memcg_cache_params, memcg_caches);
+ 
+-		s->memcg_params = kzalloc(size, GFP_KERNEL);
+-		if (!s->memcg_params) {
+-			s->memcg_params = cur_params;
++		new_params = kzalloc(size, GFP_KERNEL);
++		if (!new_params)
+ 			return -ENOMEM;
+-		}
+ 
+-		s->memcg_params->is_root_cache = true;
++		new_params->is_root_cache = true;
+ 
+ 		/*
+ 		 * There is the chance it will be bigger than
+@@ -3167,7 +3166,7 @@ int memcg_update_cache_size(struct kmem_cache *s, int num_groups)
+ 		for (i = 0; i < memcg_limited_groups_array_size; i++) {
+ 			if (!cur_params->memcg_caches[i])
+ 				continue;
+-			s->memcg_params->memcg_caches[i] =
++			new_params->memcg_caches[i] =
+ 						cur_params->memcg_caches[i];
+ 		}
+ 
+@@ -3180,7 +3179,9 @@ int memcg_update_cache_size(struct kmem_cache *s, int num_groups)
+ 		 * bigger than the others. And all updates will reset this
+ 		 * anyway.
+ 		 */
+-		kfree(cur_params);
++		rcu_assign_pointer(s->memcg_params, new_params);
++		if (cur_params)
++			kfree_rcu(cur_params, rcu_head);
+ 	}
+ 	return 0;
+ }
+diff --git a/mm/slab.h b/mm/slab.h
+index 72d1f9d..8184a7c 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -160,14 +160,28 @@ static inline const char *cache_name(struct kmem_cache *s)
+ 	return s->name;
  }
  
--/*
-- * This lock protects updaters, not readers. We want readers to be as fast as
-- * they can, and they will either see NULL or a valid cache value. Our model
-- * allow them to see NULL, in which case the root memcg will be selected.
-- *
-- * We need this lock because multiple allocations to the same cache from a non
-- * will span more than one worker. Only one of them can create the cache.
-- */
--static DEFINE_MUTEX(memcg_cache_mutex);
--
--/*
-- * Called with memcg_cache_mutex held
-- */
--static struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
--					 struct kmem_cache *s)
-+static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
-+						  struct kmem_cache *s)
++/*
++ * Note, we protect with RCU only the memcg_caches array, not per-memcg caches.
++ * That said the caller must assure the memcg's cache won't go away. Since once
++ * created a memcg's cache is destroyed only along with the root cache, it is
++ * true if we are going to allocate from the cache or hold a reference to the
++ * root cache by other means. Otherwise, we should hold either the slab_mutex
++ * or the memcg's slab_caches_mutex while calling this function and accessing
++ * the returned value.
++ */
+ static inline struct kmem_cache *
+ cache_from_memcg_idx(struct kmem_cache *s, int idx)
  {
- 	struct kmem_cache *new;
- 	static char *tmp_name = NULL;
-+	static DEFINE_MUTEX(mutex);	/* protects tmp_name */
+ 	struct kmem_cache *cachep;
++	struct memcg_cache_params *params;
  
--	lockdep_assert_held(&memcg_cache_mutex);
-+	BUG_ON(!memcg_can_account_kmem(memcg));
+ 	if (!s->memcg_params)
+ 		return NULL;
+-	cachep = s->memcg_params->memcg_caches[idx];
++
++	rcu_read_lock();
++	params = rcu_dereference(s->memcg_params);
++	cachep = params->memcg_caches[idx];
++	rcu_read_unlock();
  
-+	mutex_lock(&mutex);
  	/*
- 	 * kmem_cache_create_memcg duplicates the given name and
- 	 * cgroup_name for this name requires RCU context.
-@@ -3434,25 +3423,13 @@ static struct kmem_cache *kmem_cache_dup(struct mem_cgroup *memcg,
- 
- 	if (new)
- 		new->allocflags |= __GFP_KMEMCG;
-+	else
-+		new = s;
- 
-+	mutex_unlock(&mutex);
- 	return new;
- }
- 
--static struct kmem_cache *memcg_create_kmem_cache(struct mem_cgroup *memcg,
--						  struct kmem_cache *cachep)
--{
--	struct kmem_cache *new_cachep;
--
--	BUG_ON(!memcg_can_account_kmem(memcg));
--
--	mutex_lock(&memcg_cache_mutex);
--	new_cachep = kmem_cache_dup(memcg, cachep);
--	if (new_cachep == NULL)
--		new_cachep = cachep;
--	mutex_unlock(&memcg_cache_mutex);
--	return new_cachep;
--}
--
- void kmem_cache_destroy_memcg_children(struct kmem_cache *s)
- {
- 	struct kmem_cache *c;
+ 	 * Make sure we will access the up-to-date value. The code updating
 -- 
 1.7.10.4
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
