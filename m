@@ -1,81 +1,58 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+From: "Waskiewicz Jr, Peter P" <peter.p.waskiewicz.jr-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH 0/4] x86: Add Cache QoS Monitoring (CQM) support
-Date: Mon, 6 Jan 2014 17:41:50 +0100
-Message-ID: <20140106164150.GQ31570@twins.programming.kicks-ass.net>
+Date: Mon, 6 Jan 2014 16:42:29 +0000
+Message-ID: <1389026538.32504.11.camel@ppwaskie-mobl.amr.corp.intel.com>
 References: <1388781285-18067-1-git-send-email-peter.p.waskiewicz.jr@intel.com>
-	<20140104161050.GA24306@htj.dyndns.org>
-	<1388875369.9761.25.camel@ppwaskie-mobl.amr.corp.intel.com>
-	<20140104225058.GC24306@htj.dyndns.org>
-	<1388899376.9761.45.camel@ppwaskie-mobl.amr.corp.intel.com>
-	<20140106111624.GB5623@twins.programming.kicks-ass.net>
-	<1389026035.32504.3.camel@ppwaskie-mobl.amr.corp.intel.com>
+	 <20140106110803.GA5623@twins.programming.kicks-ass.net>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20140106110803.GA5623-ndre7Fmf5hadTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
+Content-Language: en-US
+Content-ID: <8D57DD7440A0D04186515BF31508FF8E-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1389026035.32504.3.camel-29DAm2eTeB2q+SSgkFU3IPooFf0ArEBIu+b9c/7xato@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: "Waskiewicz Jr, Peter P" <peter.p.waskiewicz.jr-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: "containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Mon, Jan 06, 2014 at 04:34:04PM +0000, Waskiewicz Jr, Peter P wrote:
-> On Mon, 2014-01-06 at 12:16 +0100, Peter Zijlstra wrote:
-> > On Sun, Jan 05, 2014 at 05:23:07AM +0000, Waskiewicz Jr, Peter P wrote:
-> > > The CPU side is easy and clean.  When something in the software wants to
-> > > monitor when a particular task is scheduled and started, write whatever
-> > > RMID that task is assigned to (through some mechanism) to the proper MSR
-> > > in the CPU.  When that task is swapped out, clear the MSR to stop
-> > > monitoring of that RMID.  When that RMID's statistics are requested by
-> > > the software (through some mechanism), then the CPU's MSRs are written
-> > > with the RMID in question, and the value is read of what has been
-> > > collected so far.  In my case, I decided to use a cgroup for this
-> > > "mechanism" since so much of the grouping and task/group association
-> > > already exists and doesn't need to be rebuilt or re-invented.
-> > 
-> > This still doesn't explain why you can't use perf-cgroup for this.
-> 
-> I'm not completely familiar with perf-cgroup, so I looked for some
-> documentation for it to better understand it.  Are you referring to perf
-> -G to monitor an existing cgroup/all cgroups?  Or something else?  If
-> it's the former, I'm not following you how this would fit.
-
-All the bits under CONFIG_CGROUP_PERF, I've no idea how userspace looks.
-
-> > > > In general, I'm quite strongly opposed against using cgroup as
-> > > > arbitrary grouping mechanism for anything other than resource control,
-> > > > especially given that we're moving away from multiple hierarchies.
-> > > 
-> > > Just to clarify then, would the mechanism in the cpuacct cgroup to
-> > > create a group off the root subsystem be considered multi-hierarchical?
-> > > If not, then the intent for this new cacheqos subsystem is to be
-> > > identical in that regard to cpuacct in the behavior.
-> > > 
-> > > This is a resource controller, it just happens to be tied to a hardware
-> > > resource instead of an OS resource.
-> > 
-> > No, cpuacct and perf-cgroup aren't actually controllers at all. They're
-> > resource monitors at best. Same with your Cache QoS Monitor, it doesn't
-> > control anything.
-> 
-> I may be using controller in a different way than you are.  Yes, the
-> Cache QoS Monitor is monitoring cache data.  But it is also controlling
-> the allocation and deallocation of RMIDs to tasks/task groups as
-> monitoring is enabled and disabled for those groups.  That's why I
-> called it a controller.  If that's not accurate, I apologize.
-
-Yeah that's not accurate, nor desired I think, because you get into
-horrible problems with hierarchies, do child groups belong to your RMID
-or not?
-
-As is I don't really see a good use for RMIDs and I would simply not use
-them. 
+T24gTW9uLCAyMDE0LTAxLTA2IGF0IDEyOjA4ICswMTAwLCBQZXRlciBaaWpsc3RyYSB3cm90ZToN
+Cj4gT24gRnJpLCBKYW4gMDMsIDIwMTQgYXQgMTI6MzQ6NDFQTSAtMDgwMCwgUGV0ZXIgUCBXYXNr
+aWV3aWN6IEpyIHdyb3RlOg0KPiA+IFRoZSBDUFUgZmVhdHVyZXMgdGhlbXNlbHZlcyBhcmUgcmVs
+YXRpdmVseSBzdHJhaWdodC1mb3J3YXJkLCBidXQNCj4gPiB0aGUgcHJlc2VudGF0aW9uIG9mIHRo
+ZSBkYXRhIGlzIGxlc3Mgc3RyYWlnaHQtZm9yd2FyZC4gIFNpbmNlIHRoaXMNCj4gPiB0cmFja3Mg
+Y2FjaGUgdXNhZ2UgYW5kIG9jY3VwYW5jeSBwZXIgcHJvY2VzcyAoYnkgc3dhcHBpbmcgUmVzb3Vy
+Y2UNCj4gPiBNb25pdG9yIElEcywgb3IgUk1JRHMsIHdoZW4gcHJvY2Vzc2VzIGFyZSByZXNjaGVk
+dWxlZCksIHBlcmYgd291bGQNCj4gPiBub3QgYmUgYSBnb29kIGZpdCBmb3IgdGhpcyBkYXRhLCB3
+aGljaCBkb2VzIG5vdCByZXBvcnQgb24gYQ0KPiA+IHBlci1wcm9jZXNzIGxldmVsLiAgVGhlcmVm
+b3JlLCBhIG5ldyBjZ3JvdXAgc3Vic3lzdGVtLCBjYWNoZXFvcywgaGFzDQo+ID4gYmVlbiBhZGRl
+ZC4gIFRoaXMgb3BlcmF0ZXMgdmVyeSBzaW1pbGFybHkgdG8gdGhlIGNwdSBhbmQgY3B1YWNjdA0K
+PiA+IGNncm91cCBzdWJzeXN0ZW1zLCB3aGVyZSB0YXNrcyBjYW4gYmUgZ3JvdXBlZCBpbnRvIHN1
+Yi1sZWF2ZXMgb2YgdGhlDQo+ID4gcm9vdC1sZXZlbCBjZ3JvdXAuDQo+IA0KPiBUaGlzIGRvZXNu
+J3QgbWFrZSBhbnkgc2Vuc2UuLiBGcm9tIGEgcXVpY2sgU0RNIHJlYWQgeW91IGNhbiBkbyBwcmV0
+dHkNCj4gbXVjaCB3aGF0ZXZlciB3aXRoIHRob3NlIFJNSURzLiBJZiB5b3UgYWxsb2NhdGUgYSBS
+TUlEIHBlciB0YXNrICh0aHJlYWQNCj4gaW4gdXNlcnNwYWNlKSB5b3UgY2FuIGFjdHVhbGx5IG1l
+YXN1cmUgdGhpbmdzIG9uIGEgdGFzayBiYXNpcy4NCg0KRXhhY3RseS4gIEFuIFJNSUQgY2FuIGJl
+IGFzc2lnbmVkIHRvIGEgc2luZ2xlIHRhc2sgb3IgYSBncm91cCBvZiB0YXNrcy4NCkJlY2F1c2Ug
+dGhlIFJNSUQgaXMgYSBoYXJkd2FyZSByZXNvdXJjZSBhbmQgaXMgbGltaXRlZCwgdGhlDQppbXBs
+ZW1lbnRhdGlvbiBvZiB1c2luZyBpdCBpcyB3aGF0IHdlJ3JlIHJlYWxseSBkaXNjdXNzaW5nIGhl
+cmUuICBPdXINCmFwcHJvYWNoIGlzIHRvIGVpdGhlciBtb25pdG9yIHBlci10YXNrLCBvciBwZXIg
+Z3JvdXAgb2YgdGFza3MuDQoNCj4gRnJvbSB0aGVuIG9uIHlvdSBjYW4gdXNlIHBlcmYtY2dyb3Vw
+IHRvIGdyb3VwIHdoYXRldmVyIHRhc2tzIHlvdSB3YW50Lg0KPiANCj4gU28gcGxlYXNlIGJlIG1v
+cmUgZXhwbGljaXQgaW4gd2h5IHlvdSB0aGluayB0aGlzIGRvZXNuJ3QgZml0IGludG8gcGVyZi4N
+Cg0KSSBzYWlkIHRoaXMgaW4gbXkgb3RoZXIgcmVwbHkgdG8gdGhlIG90aGVyIHRocmVhZCwgYnV0
+IEknbGwgYXNrIGFnYWluDQpiZWNhdXNlIEknbSBub3QgZm9sbG93aW5nLiAgSSdtIGxvb2tpbmcg
+Zm9yIGluZm9ybWF0aW9uIG9uIHBlcmYtY2dyb3VwLA0KYW5kIEkgYWxsIHNlZSBpcyBhIHdheSB0
+byBtb25pdG9yIENQVSBldmVudHMgZm9yIHRhc2tzIGluIGEgY2dyb3VwIChwZXJmDQotRyBvcHRp
+b24pLg0KDQpUaGUgb3RoZXIgcGFydCBJJ20gbm90IHNlZWluZyBpcyBob3cgdG8gY29udHJvbCB0
+aGUgUk1JRHMgYmVpbmcNCmFsbG9jYXRlZCBhY3Jvc3MgdG8gZGlmZmVyZW50IGdyb3Vwcy4gIFRo
+ZXJlIG1heSBiZSAxMDAgdGFzayBncm91cHMgdG8NCm1vbml0b3IsIGJ1dCBvbmx5IDMyIFJNSURz
+LiAgU28gdGhlIFJNSURzIG5lZWQgdG8gYmUgaGFuZGVkIG91dCB0bw0KYWN0aXZlIHRhc2tzIGFu
+ZCB0aGVuIGVuYWJsZWQsIGRhdGEgZXh0cmFjdGVkLCB0aGVuIGRpc2FibGVkLiAgVGhhdCB3YXMN
+CnRoZSBpbnRlbnQgb2YgdGhlIGNhY2hlcW9zLm1vbml0b3JfY2FjaGUga25vYi4NCg0KVGhlIGJv
+dHRvbSBsaW5lIGlzIEknbSBhc2tpbmcgZm9yIGEgYml0IG1vcmUgaW5mb3JtYXRpb24gZnJvbSB5
+b3UgYWJvdXQNCnBlcmYtY2dyb3VwLCBzaW5jZSBpdCBzb3VuZHMgbGlrZSB5b3Ugc2VlIGEgZml0
+IGZvciBDUU0gaGVyZSwgYW5kIEknbQ0Kbm90IHNlZWluZyB3aGF0IHlvdSdyZSBsb29raW5nIGF0
+IHlldC4gIEFueSBpbmZvcm1hdGlvbiBpcyBtdWNoDQphcHByZWNpYXRlZC4NCg0KQ2hlZXJzLA0K
+LVBKDQoNCi0tIA0KUEogV2Fza2lld2ljegkJCQlPcGVuIFNvdXJjZSBUZWNobm9sb2d5IENlbnRl
+cg0KcGV0ZXIucC53YXNraWV3aWN6LmpyQGludGVsLmNvbQkJSW50ZWwgQ29ycC4NCg==
