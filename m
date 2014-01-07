@@ -1,7 +1,7 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Subject: Re: RFC: cgroups aware proc
-Date: Tue, 7 Jan 2014 19:16:50 +0800
-Message-ID: <52CBE222.9030404@huawei.com>
+Date: Tue, 7 Jan 2014 19:17:03 +0800
+Message-ID: <52CBE22F.1010106@huawei.com>
 References: <52C78E09.60904@yuhu.biz> <52C8A36B.6030201@yuhu.biz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -34,6 +34,6 @@ On 2014/1/5 8:12, Marian Marinov wrote:
 People tried to do this before, but got rejected by upstream maintainers,
 and then the opinion was to do this in userspace throught FUSE.
 
-Seems libvirt already supports containerized /proc/meminfo in this way.
+Seems libvirt-lxc already supports containerized /proc/meminfo in this way.
 See:
 	http://libvirt.org/drvlxc.html
