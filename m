@@ -1,111 +1,63 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH 0/4] x86: Add Cache QoS Monitoring (CQM) support
-Date: Tue, 7 Jan 2014 22:12:29 +0100
-Message-ID: <20140107211229.GF2480@laptop.programming.kicks-ass.net>
-References: <20140106164150.GQ31570@twins.programming.kicks-ass.net>
-	<1389026867.32504.16.camel@ppwaskie-mobl.amr.corp.intel.com>
-	<20140106180636.GG30183@twins.programming.kicks-ass.net>
-	<1389039035.32504.35.camel@ppwaskie-mobl.amr.corp.intel.com>
-	<20140106212623.GH30183@twins.programming.kicks-ass.net>
-	<1389044899.32504.43.camel@ppwaskie-mobl.amr.corp.intel.com>
-	<20140106221251.GJ30183@twins.programming.kicks-ass.net>
-	<1389048315.32504.57.camel@ppwaskie-mobl.amr.corp.intel.com>
-	<20140107083440.GL30183@twins.programming.kicks-ass.net>
-	<1389107743.32504.69.camel@ppwaskie-mobl.amr.corp.intel.com>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current
+ needs access to memory reserves
+Date: Tue, 7 Jan 2014 16:25:03 -0800
+Message-ID: <20140107162503.f751e880410f61a109cdcc2b@linux-foundation.org>
+References: <20131210103827.GB20242@dhcp22.suse.cz>
+	<alpine.DEB.2.02.1312101655430.22701@chino.kir.corp.google.com>
+	<20131211095549.GA18741@dhcp22.suse.cz>
+	<alpine.DEB.2.02.1312111434200.7354@chino.kir.corp.google.com>
+	<20131212103159.GB2630@dhcp22.suse.cz>
+	<alpine.DEB.2.02.1312131551220.28704@chino.kir.corp.google.com>
+	<20131217162342.GG28991@dhcp22.suse.cz>
+	<alpine.DEB.2.02.1312171240541.21640@chino.kir.corp.google.com>
+	<20131218200434.GA4161@dhcp22.suse.cz>
+	<alpine.DEB.2.02.1312182157510.1247@chino.kir.corp.google.com>
+	<20131219144134.GH10855@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1389107743.32504.69.camel-29DAm2eTeB2q+SSgkFU3IPooFf0ArEBIu+b9c/7xato@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: "Waskiewicz Jr, Peter P" <peter.p.waskiewicz.jr-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: "containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20131219144134.GH10855-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
 
-On Tue, Jan 07, 2014 at 03:15:52PM +0000, Waskiewicz Jr, Peter P wrote:
-> > Still confused here. So what you're saying is that cachelines get tagged
-> > with {CR3,RMID} and when they observe the same CR3 with a different RMID
-> > the hardware will iterate the entire cache and update all tuples?
+On Thu, 19 Dec 2013 15:41:34 +0100 Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
+
+> On Wed 18-12-13 22:09:12, David Rientjes wrote:
+> > On Wed, 18 Dec 2013, Michal Hocko wrote:
 > > 
-> > That seems both very expensive and undesirable. It would mean you could
-> > never use the RMID to creates slices of a process since you're stuck to
-> > the CR3.
+> > > > For memory isolation, we'd only want to bypass memcg charges when 
+> > > > absolutely necessary and it seems like TIF_MEMDIE is the only case where 
+> > > > that's required.  We don't give processes with pending SIGKILLs or those 
+> > > > in the exit() path access to memory reserves in the page allocator without 
+> > > > first determining that reclaim can't make any progress for the same reason 
+> > > > and then we only do so by setting TIF_MEMDIE when calling the oom killer.  
+> > > 
+> > > While I do understand arguments about isolation I would also like to be
+> > > practical here. How many charges are we talking about? Dozen pages? Much
+> > > more?
 > > 
-> > It also makes me wonder why we have the RMID at all; because if you're
-> > already tagging every line with the CR3, why not build the cache monitor
-> > on that. Just query the occupancy for all CR3s in your group and add.
-> 
-> The reason is the RMID needs to be retained on the cache entry when it
-> is promoted to another layer of cache, and (possibly) returns to the LLC
-> later.  And the mechanism to return the occupancy is how you hope it is,
-> query the occupancy for all CR3s and add.  If you didn't have the RMID
-> tagged on the cache entry, then you couldn't do that.
+> > The PF_EXITING bypass is indeed much less concerning than the 
+> > fatal_signal_pending() bypass.
 
-Maybe its me (its late) but I can't follow.
+I just spent a happy half hour reliving this thread and ended up
+deciding I agreed with everyone!  I appears that many more emails are
+needed so I think I'll drop
+http://ozlabs.org/~akpm/mmots/broken-out/mm-memcg-avoid-oom-notification-when-current-needs-access-to-memory-reserves.patch
+for now.
 
-So if every cacheline is tagged with both CR3 and RMID (on all levels --
-I get that it needs to propagate etc..) then you can, upon observing a
-new CR3,RMID pair, iterate the entire cache for the matching CR3 and
-update its RMID.
+The claim that
+mm-memcg-avoid-oom-notification-when-current-needs-access-to-memory-reserves.patch
+will impact existing userspace seems a bit dubious to me.
 
-This, while expensive, would fairly quickly propagate changes.
+> OK, so can we at least agree on the patch posted here:
+> https://lkml.org/lkml/2013/12/12/129. This is a real bug and definitely
+> worth fixing.
 
-Now I'm not at all sure cachelines are CR3 tagged.
-
-The above has downsides in that you cannot use RMIDs to slice into
-processes, where a pure RMID (without CR3 relation, even if cachelines
-are CR3 tagged) can slice processes -- note that process is an
-address-space/CR3 collection of threads.
-
-A pure RMID tagging solution would not allow the immediate update and
-would require on demand updates on new cacheline usage.
-
-This makes switching RMIDs effects slower to propagate.
-
-> > The other possible interpretation is that it updates on-demand whenever
-> > it touches a cacheline. But in that case, how do you deal with the
-> > non-exclusive states? Does the last RMID to touch a non-exclusive
-> > cacheline simply claim the entire line?
-> 
-> I don't believe it claims the whole line; I had that exact discussion
-> awhile ago with the CPU architect, and this didn't appear broken before.
-> I will ask him again though since that discussion was over a year ago.
-> 
-> > But that doesn't avoid the problem; because as soon as you change the
-> > PQR_ASSOC RMID you still need to go run for a while to touch 'all' your
-> > lines.
-> > 
-> > This duration is indeterminate; which again brings us back to needing to
-> > first wipe the entire cache.
-> 
-> I asked hpa if there is a clean way to do that outside of a WBINVD, and
-> the answer is no.
-> 
-> I've sent the two outstanding questions off to the CPU architect, I'll
-> let you know what he says once I hear.
-
-Much appreciated; so I'd like a complete description of how this thing
-works, with in particular when exactly lines are tagged.
-
-So my current mental model would tag a line with the current (ASSOC)
-RMID on:
- - load from DRAM -> L*, even for non-exclusive
- - any to exclusive transition
-
-The result of such rules is that when the effective RMID of a task
-changes it takes an indeterminate amount of time before the residency
-stats reflect reality again.
-
-Furthermore; the IA32_QM_CTR is a misnomer as its a VALUE not a COUNTER.
-Not to mention the entire SDM 17.14.2 section is a mess; it purports to
-describe how to detect the thing using CPUID but then also maybe
-describes how to program it.
+Yes, can we please get Eric's bug fixed?  I don't believe that Eric has
+tested either https://lkml.org/lkml/2013/12/12/129 or
+http://ozlabs.org/~akpm/mmots/broken-out/mm-memcg-avoid-oom-notification-when-current-needs-access-to-memory-reserves.patch.
+Is he the only person who can reproduce this?
