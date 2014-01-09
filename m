@@ -1,103 +1,121 @@
-From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: RFC: cgroups aware proc
-Date: Wed, 8 Jan 2014 09:27:47 -0600
-Message-ID: <20140108152747.GC4765@sergelap>
-References: <52C78E09.60904@yuhu.biz>
- <52C8A36B.6030201@yuhu.biz>
- <52CBE22F.1010106@huawei.com>
- <52CC3C80.8030603@yuhu.biz>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: [PATCH] memcg: Do not hang on OOM when killed by userspace OOM
+ access to memory reserves
+Date: Thu, 9 Jan 2014 15:30:48 +0100
+Message-ID: <20140109143048.GE27538@dhcp22.suse.cz>
+References: <alpine.DEB.2.02.1312111434200.7354@chino.kir.corp.google.com>
+ <20131212103159.GB2630@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1312131551220.28704@chino.kir.corp.google.com>
+ <20131217162342.GG28991@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1312171240541.21640@chino.kir.corp.google.com>
+ <20131218200434.GA4161@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1312182157510.1247@chino.kir.corp.google.com>
+ <20131219144134.GH10855@dhcp22.suse.cz>
+ <20140107162503.f751e880410f61a109cdcc2b@linux-foundation.org>
+ <20140108103319.GF27937@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <52CC3C80.8030603-NV7Lj0SOnH0@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20140108103319.GF27937@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Marian Marinov <mm-NV7Lj0SOnH0@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: David Rientjes <rientjes@google.com>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, "Eric W. Biederman" <ebiederm@xmission.com>
 
-Quoting Marian Marinov (mm-NV7Lj0SOnH0@public.gmane.org):
-> On 01/07/2014 01:17 PM, Li Zefan wrote:
-> >On 2014/1/5 8:12, Marian Marinov wrote:
-> >>Happy new year guys.
-> >>
-> >>I need to have /proc cgroups aware, as I want to have LXC containers that see only the resources that are given to them.
-> >>
-> >>In order to do that I had to patch the kernel. I decided to start with cpuinfo, stat and interrupts and then continue
-> >>with meminfo and loadavg.
-> >>
-> >>I managed to patch the Kernel (linux 3.12.0) and make /proc/cpuinfo, /proc/stat and /proc/interrupts be cgroups aware.
-> >>
-> >>Attached are the patches that make the necessary changes.
-> >>
-> >>The change for /proc/cpuinfo and /proc/interrupts is currently done only for x86 arch, but I will patch the rest of the
-> >>architectures if the style of the patches is acceptable.
-> >>
-> >>Tomorrow I will check if the patches apply and build with the latest kernel.
-> >>
-> >
-> >People tried to do this before, but got rejected by upstream maintainers,
-> >and then the opinion was to do this in userspace throught FUSE.
-> >
-> >Seems libvirt-lxc already supports containerized /proc/meminfo in this way.
-> >See:
-> >	http://libvirt.org/drvlxc.html
+On Wed 08-01-14 11:33:19, Michal Hocko wrote:
+> On Tue 07-01-14 16:25:03, Andrew Morton wrote:
+> [...]
+> > > OK, so can we at least agree on the patch posted here:
+> > > https://lkml.org/lkml/2013/12/12/129. This is a real bug and definitely
+> > > worth fixing.
+> > 
+> > Yes, can we please get Eric's bug fixed?  I don't believe that Eric has
+> > tested either https://lkml.org/lkml/2013/12/12/129 or
+> > http://ozlabs.org/~akpm/mmots/broken-out/mm-memcg-avoid-oom-notification-when-current-needs-access-to-memory-reserves.patch.
+> > Is he the only person who can reproduce this?
 > 
-> I'm well aware of the FUSE approach and the fact that the kernel
-> maintainers do not accept the this kind of changing the kernel but
-> the simple truth is that FUSE is too have for this thing.
-> 
-> I'm setting up a repo on GitHub which will hold all the patches for
+> I have gathered 3 patches from all the discussion and plan to post them
+> today or tomorrow as the time permits. https://lkml.org/lkml/2013/12/12/129
+> will be a part of it.
 
-Thanks, that'll be easier to look at than the in-line patches.
+OK, I've decided to post the oom notification parts later because they
+will likely generate some discussion which might distract from the
+actual fix so here it goes (can be applied on both mmotm and the current
+Linus' tree):
+---
+From 6185aaf3cd429b1ecf2d11d424e29b597feb7811 Mon Sep 17 00:00:00 2001
+From: Michal Hocko <mhocko@suse.cz>
+Date: Thu, 12 Dec 2013 11:37:27 +0100
+Subject: [PATCH] memcg: Do not hang on OOM when killed by userspace OOM
 
-From my very quick look, I would recommend
+Eric has reported that he can see task(s) stuck in memcg OOM handler
+regularly. The only way out is to
+	echo 0 > $GROUP/memory.oom_controll
+His usecase is:
+- Setup a hierarchy with memory and the freezer
+  (disable kernel oom and have a process watch for oom).
+- In that memory cgroup add a process with one thread per cpu.
+- In one thread slowly allocate once per second I think it is 16M of ram
+  and mlock and dirty it (just to force the pages into ram and stay there).
+- When oom is achieved loop:
+  * attempt to freeze all of the tasks.
+  * if frozen send every task SIGKILL, unfreeze, remove the directory in
+    cgroupfs.
 
-1. coming up with some helpers to reduce the degree to which you are
-negatively affecting the flow of the existing code.  Currently it
-looks like you're obfuscating it a lot, and I think you can make it
-so only a few clean lines are added per function.
+Eric has then pinpointed the issue to be memcg specific.
 
-For instance, in arch_show_interrupts(), instead of plopping
+All tasks are sitting on the memcg_oom_waitq when memcg oom is disabled.
+Those that have received fatal signal will bypass the charge and should
+continue on their way out. The tricky part is that the exit path might
+trigger a page fault (e.g. exit_robust_list), thus the memcg charge,
+while its memcg is still under OOM because nobody has released any
+charges yet.
+Unlike with the in-kernel OOM handler the exiting task doesn't get
+TIF_MEMDIE set so it doesn't shortcut futher charges of the killed task
+and falls to the memcg OOM again without any way out of it as there are
+no fatal signals pending anymore.
 
-+#ifdef CONFIG_CPUSETS
-+               if (tsk != NULL && cpumask_test_cpu(j, &tsk->cpus_allowed))
-+#endif
+This patch fixes the issue by checking PF_EXITING early in
+__mem_cgroup_try_charge and bypass the charge same as if it had fatal
+signal pending or TIF_MEMDIE set.
 
-in several places,
+Normally exiting tasks (aka not killed) will bypass the charge now but
+this should be OK as the task is leaving and will release memory and
+increasing the memory pressure just to release it in a moment seems
+dubious wasting of cycles. Besides that charges after exit_signals
+should be rare.
 
-write
-static inline bool task_has_cpu(tsk, cpu) {
-#ifdef CONFIG_CPUSETS
-        return (tsk != NULL && cpumask_test_cpu(cpu, &tsk->cpus_allowed));
-#else
-	return true;
-#endif
-}
+Reported-by: Eric W. Biederman <ebiederm@xmission.com>
+Signed-off-by: Michal Hocko <mhocko@suse.cz>
+---
+ mm/memcontrol.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-and then just use 'if task_has_cpu(tsk, j)' several times.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index b8dfed1b9d87..b86fbb04b7c6 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2685,7 +2685,8 @@ static int __mem_cgroup_try_charge(struct mm_struct *mm,
+ 	 * MEMDIE process.
+ 	 */
+ 	if (unlikely(test_thread_flag(TIF_MEMDIE)
+-		     || fatal_signal_pending(current)))
++		     || fatal_signal_pending(current))
++		     || current->flags & PF_EXITING)
+ 		goto bypass;
+ 
+ 	if (unlikely(task_in_memcg_oom(current)))
+-- 
+1.8.5.2
 
+-- 
+Michal Hocko
+SUSE Labs
 
-2. showing performance degredation in the not-using-it case (that is,
-with cgroups enabled but in the root cpuset for instance), which
-hopefully will be near-nil.
-
-If you can avoid confounding the readability of the code and not impact
-the performance, that'll help your chances a lot.
-
-> this and will keep updating it even if it is not accepted by the
-> upstream maintainers. I'll give you the link within a few days.
-> 
-> I have already finished with CPU and Memory... the only thing that
-> is left is the /proc/loadavg, which will take more time, but will be
-> done.
-> 
-> I hope some of the scheduler maintainers at least to give me some comments on the patches that I have done.
-> 
-> Marian
-> 
-> >
-> >
-> >
-> 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
