@@ -1,117 +1,129 @@
-From: Marian Marinov <mm-NV7Lj0SOnH0@public.gmane.org>
-Subject: Re: RFC: cgroups aware proc
-Date: Fri, 10 Jan 2014 18:29:56 +0200
-Message-ID: <52D02004.2060501@yuhu.biz>
-References: <52C78E09.60904@yuhu.biz> <52C8A36B.6030201@yuhu.biz> <52CBE22F.1010106@huawei.com> <52CC3C80.8030603@yuhu.biz> <20140108152747.GC4765@sergelap>
+From: "Waskiewicz Jr, Peter P" <peter.p.waskiewicz.jr-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 0/4] x86: Add Cache QoS Monitoring (CQM) support
+Date: Fri, 10 Jan 2014 18:55:11 +0000
+Message-ID: <1389380100.32504.172.camel@ppwaskie-mobl.amr.corp.intel.com>
+References: <20140106164150.GQ31570@twins.programming.kicks-ass.net>
+	<1389026867.32504.16.camel@ppwaskie-mobl.amr.corp.intel.com>
+	<20140106180636.GG30183@twins.programming.kicks-ass.net>
+	<1389039035.32504.35.camel@ppwaskie-mobl.amr.corp.intel.com>
+	<20140106212623.GH30183@twins.programming.kicks-ass.net>
+	<1389044899.32504.43.camel@ppwaskie-mobl.amr.corp.intel.com>
+	<20140106221251.GJ30183@twins.programming.kicks-ass.net>
+	<1389048315.32504.57.camel@ppwaskie-mobl.amr.corp.intel.com>
+	<20140107083440.GL30183@twins.programming.kicks-ass.net>
+	<1389107743.32504.69.camel@ppwaskie-mobl.amr.corp.intel.com>
+	<20140107211229.GF2480@laptop.programming.kicks-ass.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yuhu.biz; s=default;
-	t=1389371391; bh=PitY/uJb2415qQMYZL7ss3AZas5+n7dK7zQjJTdXRPc=;
-	h=Date:From:To:CC:Subject:References:In-Reply-To;
-	b=DLPZFQ1JqcoPdtNE+HLvtF3lq5AgWxe7hVLthm2cQZ8y2FC10em9P0flps9Tt7JNi
-	 PdgWX/igqH2804Lvu/4wOkFXveBzb+oThXV5D+NwLZl/Wl/O3xUKmcaOOa8h6EUU6J
-	 Mq+bHfoeyd481RWKt5dXjrgqoJckgMgCMhkMInUk=
-In-Reply-To: <20140108152747.GC4765@sergelap>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20140107211229.GF2480-RM5+C6weyIYnLiPH7yDmwOa11wxjtiyuLtmvbW2Dspo@public.gmane.org>
+Content-Language: en-US
+Content-ID: <6599ADE8EA605A4E803C0E87B01CC9B9-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: "containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 
-On 01/08/2014 05:27 PM, Serge Hallyn wrote:
-> Quoting Marian Marinov (mm-NV7Lj0SOnH0@public.gmane.org):
->> On 01/07/2014 01:17 PM, Li Zefan wrote:
->>> On 2014/1/5 8:12, Marian Marinov wrote:
->>>> Happy new year guys.
->>>>
->>>> I need to have /proc cgroups aware, as I want to have LXC containers that see only the resources that are given to them.
->>>>
->>>> In order to do that I had to patch the kernel. I decided to start with cpuinfo, stat and interrupts and then continue
->>>> with meminfo and loadavg.
->>>>
->>>> I managed to patch the Kernel (linux 3.12.0) and make /proc/cpuinfo, /proc/stat and /proc/interrupts be cgroups aware.
->>>>
->>>> Attached are the patches that make the necessary changes.
->>>>
->>>> The change for /proc/cpuinfo and /proc/interrupts is currently done only for x86 arch, but I will patch the rest of the
->>>> architectures if the style of the patches is acceptable.
->>>>
->>>> Tomorrow I will check if the patches apply and build with the latest kernel.
->>>>
->>>
->>> People tried to do this before, but got rejected by upstream maintainers,
->>> and then the opinion was to do this in userspace throught FUSE.
->>>
->>> Seems libvirt-lxc already supports containerized /proc/meminfo in this way.
->>> See:
->>> 	http://libvirt.org/drvlxc.html
->>
->> I'm well aware of the FUSE approach and the fact that the kernel
->> maintainers do not accept the this kind of changing the kernel but
->> the simple truth is that FUSE is too have for this thing.
->>
->> I'm setting up a repo on GitHub which will hold all the patches for
->
-> Thanks, that'll be easier to look at than the in-line patches.
->
->>From my very quick look, I would recommend
->
-> 1. coming up with some helpers to reduce the degree to which you are
-> negatively affecting the flow of the existing code.  Currently it
-> looks like you're obfuscating it a lot, and I think you can make it
-> so only a few clean lines are added per function.
->
-> For instance, in arch_show_interrupts(), instead of plopping
->
-> +#ifdef CONFIG_CPUSETS
-> +               if (tsk != NULL && cpumask_test_cpu(j, &tsk->cpus_allowed))
-> +#endif
->
-> in several places,
->
-> write
-> static inline bool task_has_cpu(tsk, cpu) {
-> #ifdef CONFIG_CPUSETS
->          return (tsk != NULL && cpumask_test_cpu(cpu, &tsk->cpus_allowed));
-> #else
-> 	return true;
-> #endif
-> }
->
-> and then just use 'if task_has_cpu(tsk, j)' several times.
->
->
-> 2. showing performance degredation in the not-using-it case (that is,
-> with cgroups enabled but in the root cpuset for instance), which
-> hopefully will be near-nil.
->
-> If you can avoid confounding the readability of the code and not impact
-> the performance, that'll help your chances a lot.
+On Tue, 2014-01-07 at 22:12 +0100, Peter Zijlstra wrote:
+> Maybe its me (its late) but I can't follow.
+> 
+> So if every cacheline is tagged with both CR3 and RMID (on all levels --
+> I get that it needs to propagate etc..) then you can, upon observing a
+> new CR3,RMID pair, iterate the entire cache for the matching CR3 and
+> update its RMID.
+> 
+> This, while expensive, would fairly quickly propagate changes.
+> 
+> Now I'm not at all sure cachelines are CR3 tagged.
+> 
+> The above has downsides in that you cannot use RMIDs to slice into
+> processes, where a pure RMID (without CR3 relation, even if cachelines
+> are CR3 tagged) can slice processes -- note that process is an
+> address-space/CR3 collection of threads.
+> 
+> A pure RMID tagging solution would not allow the immediate update and
+> would require on demand updates on new cacheline usage.
+> 
+> This makes switching RMIDs effects slower to propagate.
 
-Thanks for the suggestions. I have merged all of my changes into this branch:
-   https://github.com/1HLtd/linux/tree/cgroup-aware-proc
+> > > The other possible interpretation is that it updates on-demand whenever
+> > > it touches a cacheline. But in that case, how do you deal with the
+> > > non-exclusive states? Does the last RMID to touch a non-exclusive
+> > > cacheline simply claim the entire line?
+> > 
+> > I don't believe it claims the whole line; I had that exact discussion
+> > awhile ago with the CPU architect, and this didn't appear broken before.
+> > I will ask him again though since that discussion was over a year ago.
+> > 
+> > > But that doesn't avoid the problem; because as soon as you change the
+> > > PQR_ASSOC RMID you still need to go run for a while to touch 'all' your
+> > > lines.
+> > > 
+> > > This duration is indeterminate; which again brings us back to needing to
+> > > first wipe the entire cache.
+> > 
+> > I asked hpa if there is a clean way to do that outside of a WBINVD, and
+> > the answer is no.
+> > 
+> > I've sent the two outstanding questions off to the CPU architect, I'll
+> > let you know what he says once I hear.
+> 
+> Much appreciated; so I'd like a complete description of how this thing
+> works, with in particular when exactly lines are tagged.
 
-I'm still working on the loadavg issue I hope to have it finished next week.
-If anyone has any suggestions for it I would be more then happy.
+I've spoken with the CPU architect, and he's set me straight.  I was
+getting some simulation data and reality mixed up, so apologies.
 
-Marian
+The cacheline is tagged with the RMID being tracked when it's brought
+into the cache.  That is the only time it's tagged, it does not get
+updated (I was looking at data showing impacts if it was updated).
 
->
->> this and will keep updating it even if it is not accepted by the
->> upstream maintainers. I'll give you the link within a few days.
->>
->> I have already finished with CPU and Memory... the only thing that
->> is left is the /proc/loadavg, which will take more time, but will be
->> done.
->>
->> I hope some of the scheduler maintainers at least to give me some comments on the patches that I have done.
->>
->> Marian
->>
->>>
->>>
->>>
->>
->
->
+If there are frequent RMID updates for a particular process, then there
+is the possibility that any remaining old data for that process can be
+accounted for on a different RMID.  This really is workload dependent,
+and my architect provided their data showing that this occurrence is
+pretty much in the noise.
+
+Also, I did ask about the granularity of the RMID, and it is
+per-cacheline.  So if there is a non-exclusive cacheline, then the
+occupancy data in the other part of the cacheline will count against the
+RMID.
+
+> So my current mental model would tag a line with the current (ASSOC)
+> RMID on:
+>  - load from DRAM -> L*, even for non-exclusive
+>  - any to exclusive transition
+> 
+> The result of such rules is that when the effective RMID of a task
+> changes it takes an indeterminate amount of time before the residency
+> stats reflect reality again.
+> 
+> Furthermore; the IA32_QM_CTR is a misnomer as its a VALUE not a COUNTER.
+> Not to mention the entire SDM 17.14.2 section is a mess; it purports to
+> describe how to detect the thing using CPUID but then also maybe
+> describes how to program it.
+
+I've given this feedback to the section owner in the SDM.  There is an
+update due this month, and there will be some updates to this section
+(along with some additions).
+
+I should have my alternate implementation sent out shortly, just working
+a few kinks out of it.  This is the proc-based and sysfs-based interface
+that will rely on a userspace program to handle the logic of grouping
+and assigning stuff together.
+
+Cheers,
+-PJ
+
+-- 
+PJ Waskiewicz				Open Source Technology Center
+peter.p.waskiewicz.jr-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org		Intel Corp.
