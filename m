@@ -1,77 +1,102 @@
-From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH mmotm/next] cgroup: remove stray references to css_id
-Date: Sun, 12 Jan 2014 20:23:27 -0800 (PST)
-Message-ID: <alpine.LSU.2.11.1401122018400.1701@eggly.anvils>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH 0/4] x86: Add Cache QoS Monitoring (CQM) support
+Date: Mon, 13 Jan 2014 08:55:28 +0100
+Message-ID: <20140113075528.GR7572@laptop.programming.kicks-ass.net>
+References: <20140106180636.GG30183@twins.programming.kicks-ass.net>
+	<1389039035.32504.35.camel@ppwaskie-mobl.amr.corp.intel.com>
+	<20140106212623.GH30183@twins.programming.kicks-ass.net>
+	<1389044899.32504.43.camel@ppwaskie-mobl.amr.corp.intel.com>
+	<20140106221251.GJ30183@twins.programming.kicks-ass.net>
+	<1389048315.32504.57.camel@ppwaskie-mobl.amr.corp.intel.com>
+	<20140107083440.GL30183@twins.programming.kicks-ass.net>
+	<1389107743.32504.69.camel@ppwaskie-mobl.amr.corp.intel.com>
+	<20140107211229.GF2480@laptop.programming.kicks-ass.net>
+	<1389380100.32504.172.camel@ppwaskie-mobl.amr.corp.intel.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:user-agent:mime-version
-         :content-type;
-        bh=Tvm4jyqbaEyPzQYy0LHeglsv+JydixW/fFdU+M84Xd8=;
-        b=E+pVjrgpLznB3goWii5u3mAFdvqQAzmMbLcDNrwl+i6gmf+4BV9DASU2RfFPhLK1aQ
-         hKLDQJq5MIXWbjKFjlbGeBQsr7JTps6RhlsVK3PKXqrrai27yiqNMwSF47b5MINiInmL
-         qu7b4l1cSTGTaOR6LwEcMsNLPJi83akfoKvGZEeXqv4Fx4UY6CV3xN/NVhiSOGR/jl86
-         qlD9yXPabzCsKa4MZ6g2awUwnUozVedSI4nswbGXCYeTLT1lms9AXLpIc+QgaD4mwaPq
-         Kyku60BOV7ORH2fA9swIr/5zMERQFTVAzK82ko3gZirFsY0woz8VuMA6HaETZWBy9bqB
-         LaFg==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1389380100.32504.172.camel-29DAm2eTeB2q+SSgkFU3IPooFf0ArEBIu+b9c/7xato@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: "Waskiewicz Jr, Peter P" <peter.p.waskiewicz.jr-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: "containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 
-Trivial: remove the few stray references to css_id, which itself
-was removed in v3.13's 2ff2a7d03bbe "cgroup: kill css_id".
+On Fri, Jan 10, 2014 at 06:55:11PM +0000, Waskiewicz Jr, Peter P wrote:
+> I've spoken with the CPU architect, and he's set me straight.  I was
+> getting some simulation data and reality mixed up, so apologies.
+> 
+> The cacheline is tagged with the RMID being tracked when it's brought
+> into the cache.  That is the only time it's tagged, it does not get
+> updated (I was looking at data showing impacts if it was updated).
+> 
+> If there are frequent RMID updates for a particular process, then there
+> is the possibility that any remaining old data for that process can be
+> accounted for on a different RMID.  This really is workload dependent,
+> and my architect provided their data showing that this occurrence is
+> pretty much in the noise.
 
-Signed-off-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
-But I don't know your plans with respect to the XXX in
-kernel/cgroup.c, so perhaps you'd prefer to amend this.
+What change frequency and what sided workloads did they test?
 
- drivers/md/bcache/request.c |    1 -
- include/linux/cgroup.h      |    3 ---
- mm/page_cgroup.c            |    2 +-
- 3 files changed, 1 insertion(+), 5 deletions(-)
+I can make it significant; take a multi-threaded workload that mostly
+fits in cache, then assign all theads but one RMDI 0, then fairly
+quickly rotate RMID 1 between the threads.
 
---- mmotm/drivers/md/bcache/request.c	2014-01-10 18:24:58.212448858 -0800
-+++ linux/drivers/md/bcache/request.c	2014-01-12 20:00:07.641685957 -0800
-@@ -163,7 +163,6 @@ static struct cgroup_subsys_state *bcach
- static void bcachecg_destroy(struct cgroup *cgroup)
- {
- 	struct bch_cgroup *cg = cgroup_to_bcache(cgroup);
--	free_css_id(&bcache_subsys, &cg->css);
- 	kfree(cg);
- }
- 
---- mmotm/include/linux/cgroup.h	2014-01-10 18:25:01.820448944 -0800
-+++ linux/include/linux/cgroup.h	2014-01-12 20:00:07.645685957 -0800
-@@ -29,7 +29,6 @@ struct cgroupfs_root;
- struct cgroup_subsys;
- struct inode;
- struct cgroup;
--struct css_id;
- 
- extern int cgroup_init_early(void);
- extern int cgroup_init(void);
-@@ -79,8 +78,6 @@ struct cgroup_subsys_state {
- 	struct cgroup_subsys_state *parent;
- 
- 	unsigned long flags;
--	/* ID for this css, if possible */
--	struct css_id __rcu *id;
- 
- 	/* percpu_ref killing and RCU release */
- 	struct rcu_head rcu_head;
---- mmotm/mm/page_cgroup.c	2014-01-10 18:25:02.256448954 -0800
-+++ linux/mm/page_cgroup.c	2014-01-12 20:00:07.645685957 -0800
-@@ -452,7 +452,7 @@ unsigned short swap_cgroup_record(swp_en
-  * lookup_swap_cgroup_id - lookup mem_cgroup id tied to swap entry
-  * @ent: swap entry to be looked up.
-  *
-- * Returns CSS ID of mem_cgroup at success. 0 at failure. (0 is invalid ID)
-+ * Returns ID of mem_cgroup at success. 0 at failure. (0 is invalid ID)
-  */
- unsigned short lookup_swap_cgroup_id(swp_entry_t ent)
- {
+The problem is, since there's a limited number of RMIDs we have to
+rotate at some point, but since changing RMIDs is nondeterministic we
+can't.
+
+> Also, I did ask about the granularity of the RMID, and it is
+> per-cacheline.  So if there is a non-exclusive cacheline, then the
+> occupancy data in the other part of the cacheline will count against the
+> RMID.
+
+One more question:
+
+  u64 i;
+  u64 rmid_val[];
+
+  for (i = 0; i < rmid_max; i++) {
+    wrmsr(IA32_QM_EVTSEL, 1 | (i << 32));
+    rdmsr(IA32_QM_CTR, rmid_val[i]);
+  }
+
+Is this the right way of reading these values? I couldn't find anything
+that says the event must 'run' to accumulate a value at all, so all it
+seems it a direct value read with a multiplexer to the RMID.
+
+> > So my current mental model would tag a line with the current (ASSOC)
+> > RMID on:
+> >  - load from DRAM -> L*, even for non-exclusive
+> >  - any to exclusive transition
+> > 
+> > The result of such rules is that when the effective RMID of a task
+> > changes it takes an indeterminate amount of time before the residency
+> > stats reflect reality again.
+> > 
+> > Furthermore; the IA32_QM_CTR is a misnomer as its a VALUE not a COUNTER.
+> > Not to mention the entire SDM 17.14.2 section is a mess; it purports to
+> > describe how to detect the thing using CPUID but then also maybe
+> > describes how to program it.
+> 
+> I've given this feedback to the section owner in the SDM.  There is an
+> update due this month, and there will be some updates to this section
+> (along with some additions).
+> 
+> I should have my alternate implementation sent out shortly, just working
+> a few kinks out of it.  This is the proc-based and sysfs-based interface
+> that will rely on a userspace program to handle the logic of grouping
+> and assigning stuff together.
+
+I've not figured out how to deal with this stuff yet; exposing RMIDs to
+userspace is a guaranteed fail though. Any interface that disallows the
+kernel to manage the RMIDs is broken.
