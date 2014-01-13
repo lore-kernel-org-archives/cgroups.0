@@ -1,68 +1,32 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
- access to memory reserves
-Date: Sun, 12 Jan 2014 14:14:07 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1401121411000.20999@chino.kir.corp.google.com>
-References: <alpine.DEB.2.02.1312171240541.21640@chino.kir.corp.google.com> <20131218200434.GA4161@dhcp22.suse.cz> <alpine.DEB.2.02.1312182157510.1247@chino.kir.corp.google.com> <20131219144134.GH10855@dhcp22.suse.cz> <20140107162503.f751e880410f61a109cdcc2b@linux-foundation.org>
- <alpine.DEB.2.02.1401091324120.31538@chino.kir.corp.google.com> <20140109144757.e95616b4280c049b22743a15@linux-foundation.org> <alpine.DEB.2.02.1401091551390.20263@chino.kir.corp.google.com> <20140110083025.GE9437@dhcp22.suse.cz>
- <alpine.DEB.2.02.1401101335200.21486@chino.kir.corp.google.com> <20140110223420.GE6963@cmpxchg.org>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: RFC: cgroups aware proc
+Date: Mon, 13 Jan 2014 11:26:08 +0800
+Message-ID: <52D35CD0.9070602@huawei.com>
+References: <52C78E09.60904@yuhu.biz> <52C8A36B.6030201@yuhu.biz> <52CBE22F.1010106@huawei.com> <52CC3C80.8030603@yuhu.biz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=PU8iIC3nWXmFrZEvXgn4JFa6UwIVmUzX56PvAMi5z1Q=;
-        b=PCgHVZBmbN4nfw09LHAVRg99NucNBAkU645g8TL/QhZoA8Q7frpyg9FU+6SnpmuNCt
-         oiE0X3lMlfkUKZbk+ZhqylWnaeyIRRgFlgCnbWv9qUpw0aRK8F1oODJyLt70j0ZW4psJ
-         OoZv4/tqTUCss0TFuD9gN4bjmjNJO0wq2BlNqLuGZ0eVVjnyixmFKfmR9s5Q75DJffH6
-         X/cPFqoBK5h7q3iGAvHXdRnHnNxz7yO6pALCHYzYYPxaKThGGS1VZmu/38rKdJhN9Thf
-         Rf4feUhJSPVYCAQWtsXv7A5DCVMv3/q3/3MRX8tIqhZi3XuCcxI28tW0akIQ2sqid/Te
-         rEIQ==
-In-Reply-To: <20140110223420.GE6963@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, "Eric W. Biederman" <ebiederm@xmission.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <52CC3C80.8030603-NV7Lj0SOnH0@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Marian Marinov <mm-NV7Lj0SOnH0@public.gmane.org>
+Cc: lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 
-On Fri, 10 Jan 2014, Johannes Weiner wrote:
-
-> > Your patch, which is partially based on my suggestion to move the 
-> > mem_cgroup_oom_notify() and call it from two places to support both 
-> > memory.oom_control == 1 and != 1, is something that I liked as you know.  
-> > It's based on my patch which is now removed from -mm.  So if you want to 
-> > rebase that patch and propose it, that's great, but this is yet another 
-> > occurrence of where important patches have been yanked out just before the 
-> > merge window when the problem they are fixing is real and we depend on 
-> > them.
+>> People tried to do this before, but got rejected by upstream maintainers,
+>> and then the opinion was to do this in userspace throught FUSE.
+>>
+>> Seems libvirt-lxc already supports containerized /proc/meminfo in this way.
+>> See:
+>>     http://libvirt.org/drvlxc.html
 > 
-> We tried to discuss and understand the problem, yet all we got was
-> "it's OBVIOUS" and "Google has been using this patch ever since we
-> switched to memcg" and flat out repetitions of the same points about
-> reliable OOM notification that were already put into question.
+> I'm well aware of the FUSE approach and the fact that the kernel maintainers do not accept the this kind of changing the kernel but the simple truth is that FUSE is too have for this thing.
 > 
-> You still have not convinced me that the problem exists as you
-> described it, apart from the aspects that Michal is now fixing
-> separately because you did not show any signs of cooperating.
+> I'm setting up a repo on GitHub which will hold all the patches for this and will keep updating it even if it is not accepted by the upstream maintainers. I'll give you the link within a few days.
 > 
-
-I cooperated by suggesting his patch which moves the 
-mem_cgroup_oom_notify(), Johannes.  The problem is that it depends on my 
-patch which was removed from -mm.  He can rebase that patch, but I'm 
-hoping it is done before the merge window for inclusion in 3.14.
-
-> None of this will change until you start working with us and actually
-> address feedback and inquiries instead of just repeating your talking
-> points over and over.
+> I have already finished with CPU and Memory... the only thing that is left is the /proc/loadavg, which will take more time, but will be done.
+> 
+> I hope some of the scheduler maintainers at least to give me some comments on the patches that I have done.
 > 
 
-I worked with Michal, who acked my patch, and then wrote another patch on 
-top of it based partially on my suggestion, Johannes.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Then you should add Peter, Ingo and LKML to your Cc list. :)
