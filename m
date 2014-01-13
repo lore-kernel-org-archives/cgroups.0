@@ -1,66 +1,53 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v4 0/3] Send audit/procinfo/cgroup data in socket-level
-	control message
-Date: Mon, 13 Jan 2014 11:55:05 -0500
-Message-ID: <20140113165505.GD29053@htj.dyndns.org>
-References: <1377614400-27122-1-git-send-email-jkaluza@redhat.com>
-	<1389600109-30739-1-git-send-email-jkaluza@redhat.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: Fwd: Re: RFC: cgroups aware proc
+Date: Mon, 13 Jan 2014 18:12:38 +0100
+Message-ID: <20140113171238.GS31570@twins.programming.kicks-ass.net>
+References: <52D35CD0.9070602@huawei.com>
+ <52D41316.5080508@yuhu.biz>
 Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <52D41316.5080508@yuhu.biz>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=DocGhD0sf59TEz3jP3Aq7gX5ZGlSc1VJmUCAw16BKv4=;
-	b=gLkJhVht8NOqCTF2kCBtlQnTO7oUxN8iCuMrHoTY32vB0CJgOnkTmxTUYfhOx9Pv7Q
-	dlKD3y82zxsSjhTUXS4Q+blxyFmm6w/1SxlR6ARrAd+N4mEdMycdBpVVKWo8t4iJ/bwl
-	cjAQWzSBw4bExG4WfYYKDllTClqw3TaFX4IWxPrRi+REt97vdePe3qvvzRtsKCLd84tv
-	8KFgvkJIRvloxdxt4z54rt7LJ4wVsoYXiE+Re6qolIVWtXR1I7u5T8lGYFIBbfu9ue7Y
-	G436I08u8RBhsJgBg2aLp8fCmhHomNWp6HGextu9eMVdt64HjMjXXa/iWRQTxhvCaG7F
-	QQLw==
-Content-Disposition: inline
-In-Reply-To: <1389600109-30739-1-git-send-email-jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Jan Kaluza <jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org
+To: Marian Marinov <mm@yuhu.biz>
+Cc: lxc-devel@lists.linuxcontainers.org, cgroups@vger.kernel.org, "Daniel P. Berrange" <berrange@redhat.com>, Serge Hallyn <serge.hallyn@ubuntu.com>, Li Zefan <lizefan@huawei.com>, Ingo Molnar <mingo@kernel.org>, linux-kernel@vger.kernel.org
 
-Hello,
-
-On Mon, Jan 13, 2014 at 09:01:46AM +0100, Jan Kaluza wrote:
-> this patchset against net-next (applies also to linux-next) adds 3 new types
-> of "Socket"-level control message (SCM_AUDIT, SCM_PROCINFO and SCM_CGROUP).
+On Mon, Jan 13, 2014 at 06:23:50PM +0200, Marian Marinov wrote:
+> Hello Peter,
 > 
-> Server-like processes in many cases need credentials and other
-> metadata of the peer, to decide if the calling process is allowed to
-> request a specific action, or the server just wants to log away this
-> type of information for auditing tasks.
+> I need help with the scheduler.
 > 
-> The current practice to retrieve such process metadata is to look that
-> information up in procfs with the $PID received over SCM_CREDENTIALS.
-> This is sufficient for long-running tasks, but introduces a race which
-> cannot be worked around for short-living processes; the calling
-> process and all the information in /proc/$PID/ is gone before the
-> receiver of the socket message can look it up.
+> I'm currently trying to patch the /proc/loadavg to show the load that is
+> only related to the processes from the current cgroup.
 > 
-> Changes introduced in this patchset can also increase performance
-> of such server-like processes, because current way of opening and
-> parsing /proc/$PID/* files is much more expensive than receiving these
-> metadata using SCM.
+> I looked trough the code and I was hoping that tsk->sched_task_group->cfs_rq
+> struct will give me the needed information, but unfortunately for me, it did
+> not.
+> 
+> Can you advise me, how to approach this problem?
 
-Closing the race sounds like a good idea to me.  What do net people
-think?
+Yeah, don't :-) Really, loadavg is a stupid metric.
 
-Thanks.
+> I'm totally new to the scheduler code.
 
--- 
-tejun
+Luckily you won't actually have to touch much of it. Most of the actual
+loadavg code lives in the first ~400 lines of kernel/sched/proc.c, read
+and weep. Its one of the best documented bits around.
+
+Your proposition however is extremely expensive, you turn something
+that's already expensive O(nr_cpus) into something O(nr_cpus *
+nr_cgroups).
+
+I'm fairly sure people will not like that, esp. for something of such
+questionable use as the loadavg -- its really only a pretty number that
+doesn't mean all that much.
+
+> -------- Original Message --------
+> From: Li Zefan <lizefan@huawei.com>
+>
+> Then you should add Peter, Ingo and LKML to your Cc list. :)
+
+You failed that, let me fix that.
