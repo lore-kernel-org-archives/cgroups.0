@@ -1,65 +1,29 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: RFC: cgroups aware proc
-Date: Tue, 14 Jan 2014 11:05:41 +0100
-Message-ID: <20140114100541.GS7572@laptop.programming.kicks-ass.net>
-References: <52D35CD0.9070602@huawei.com>
- <52D41316.5080508@yuhu.biz>
- <20140113171238.GS31570@twins.programming.kicks-ass.net>
- <52D48BA6.2080701@yuhu.biz>
+From: "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 0/4] x86: Add Cache QoS Monitoring (CQM) support
+Date: Tue, 14 Jan 2014 09:58:26 -0800
+Message-ID: <52D57AC2.3090109@zytor.com>
+References: <20140106180636.GG30183@twins.programming.kicks-ass.net> <1389039035.32504.35.camel@ppwaskie-mobl.amr.corp.intel.com> <20140106212623.GH30183@twins.programming.kicks-ass.net> <1389044899.32504.43.camel@ppwaskie-mobl.amr.corp.intel.com> <20140106221251.GJ30183@twins.programming.kicks-ass.net> <1389048315.32504.57.camel@ppwaskie-mobl.amr.corp.intel.com> <20140107083440.GL30183@twins.programming.kicks-ass.net> <1389107743.32504.69.camel@ppwaskie-mobl.amr.corp.intel.com> <20140107211229.GF2480@laptop.programming.kicks-ass.net> <1389380100.32504.172.camel@ppwaskie-mobl.amr.corp.intel.com> <20140113075528.GR7572@laptop.programming.kicks-ass.net>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <52D48BA6.2080701-NV7Lj0SOnH0@public.gmane.org>
+In-Reply-To: <20140113075528.GR7572-RM5+C6weyIYnLiPH7yDmwOa11wxjtiyuLtmvbW2Dspo@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Marian Marinov <mm-NV7Lj0SOnH0@public.gmane.org>
-Cc: lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Daniel P. Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "Waskiewicz Jr, Peter P" <peter.p.waskiewicz.jr-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Tue, Jan 14, 2014 at 02:58:14AM +0200, Marian Marinov wrote:
-> On 01/13/2014 07:12 PM, Peter Zijlstra wrote:
-> >On Mon, Jan 13, 2014 at 06:23:50PM +0200, Marian Marinov wrote:
-> >>Hello Peter,
-> >>
-> >>I need help with the scheduler.
-> >>
-> >>I'm currently trying to patch the /proc/loadavg to show the load that is
-> >>only related to the processes from the current cgroup.
-> >>
-> >>I looked trough the code and I was hoping that tsk->sched_task_group->cfs_rq
-> >>struct will give me the needed information, but unfortunately for me, it did
-> >>not.
-> >>
-> >>Can you advise me, how to approach this problem?
-> >
-> >Yeah, don't :-) Really, loadavg is a stupid metric.
+On 01/12/2014 11:55 PM, Peter Zijlstra wrote:
 > 
-> Yes... stupid, but unfortunately everyone is looking at it :(
+> The problem is, since there's a limited number of RMIDs we have to
+> rotate at some point, but since changing RMIDs is nondeterministic we
+> can't.
 > 
-> >
-> >>I'm totally new to the scheduler code.
-> >
-> >Luckily you won't actually have to touch much of it. Most of the actual
-> >loadavg code lives in the first ~400 lines of kernel/sched/proc.c, read
-> >and weep. Its one of the best documented bits around.
-> 
-> I looked trough it but I don't understand how to introduce the per cgroup calculation.
-> 
-> I looked trough the headers and found the following, which is already implemented.
-> 
->   task->sched_task_group->load_avg
->   task->sched_task_group->cfs_rq->load_avg
->   task->sched_task_group->cfs_rq->load.weight
->   task->sched_task_group->cfs_rq->runnable_load_avg
-> 
-> Unfortunately there is almost no documentation for these elements of the cfs_rq and task_group structs.
-> 
-> It seams to me that part of the per task group loadavg code is already present.
 
-No, those are actual load metrics and completely unrelated to loadavg.
+This is fundamentally the crux here.  RMIDs are quite expensive for the
+hardware to implement, so they are limited - but recycling them is
+*very* expensive because you literally have to touch every line in the
+cache.
 
-Loadavg requires per-cgroup-per-cpu variants of nr_running and
-nr_uninterruptible.
+	-hpa
 
-Those are the only metrics used in kernel/sched/proc.c for loadavg.
