@@ -1,29 +1,88 @@
-From: "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>
+From: "Waskiewicz Jr, Peter P" <peter.p.waskiewicz.jr-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH 0/4] x86: Add Cache QoS Monitoring (CQM) support
-Date: Tue, 14 Jan 2014 09:58:26 -0800
-Message-ID: <52D57AC2.3090109@zytor.com>
-References: <20140106180636.GG30183@twins.programming.kicks-ass.net> <1389039035.32504.35.camel@ppwaskie-mobl.amr.corp.intel.com> <20140106212623.GH30183@twins.programming.kicks-ass.net> <1389044899.32504.43.camel@ppwaskie-mobl.amr.corp.intel.com> <20140106221251.GJ30183@twins.programming.kicks-ass.net> <1389048315.32504.57.camel@ppwaskie-mobl.amr.corp.intel.com> <20140107083440.GL30183@twins.programming.kicks-ass.net> <1389107743.32504.69.camel@ppwaskie-mobl.amr.corp.intel.com> <20140107211229.GF2480@laptop.programming.kicks-ass.net> <1389380100.32504.172.camel@ppwaskie-mobl.amr.corp.intel.com> <20140113075528.GR7572@laptop.programming.kicks-ass.net>
+Date: Tue, 14 Jan 2014 20:46:53 +0000
+Message-ID: <1389732405.32504.193.camel@ppwaskie-mobl.amr.corp.intel.com>
+References: <20140106180636.GG30183@twins.programming.kicks-ass.net>
+	 <1389039035.32504.35.camel@ppwaskie-mobl.amr.corp.intel.com>
+	 <20140106212623.GH30183@twins.programming.kicks-ass.net>
+	 <1389044899.32504.43.camel@ppwaskie-mobl.amr.corp.intel.com>
+	 <20140106221251.GJ30183@twins.programming.kicks-ass.net>
+	 <1389048315.32504.57.camel@ppwaskie-mobl.amr.corp.intel.com>
+	 <20140107083440.GL30183@twins.programming.kicks-ass.net>
+	 <1389107743.32504.69.camel@ppwaskie-mobl.amr.corp.intel.com>
+	 <20140107211229.GF2480@laptop.programming.kicks-ass.net>
+	 <1389380100.32504.172.camel@ppwaskie-mobl.amr.corp.intel.com>
+	 <20140113075528.GR7572@laptop.programming.kicks-ass.net>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <20140113075528.GR7572-RM5+C6weyIYnLiPH7yDmwOa11wxjtiyuLtmvbW2Dspo@public.gmane.org>
+Content-Language: en-US
+Content-ID: <313BB4370657944FA44FFA5E5277A95F-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "Waskiewicz Jr, Peter P" <peter.p.waskiewicz.jr-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On 01/12/2014 11:55 PM, Peter Zijlstra wrote:
-> 
-> The problem is, since there's a limited number of RMIDs we have to
-> rotate at some point, but since changing RMIDs is nondeterministic we
-> can't.
-> 
-
-This is fundamentally the crux here.  RMIDs are quite expensive for the
-hardware to implement, so they are limited - but recycling them is
-*very* expensive because you literally have to touch every line in the
-cache.
-
-	-hpa
-
+T24gTW9uLCAyMDE0LTAxLTEzIGF0IDA4OjU1ICswMTAwLCBQZXRlciBaaWpsc3RyYSB3cm90ZToN
+Cj4gT24gRnJpLCBKYW4gMTAsIDIwMTQgYXQgMDY6NTU6MTFQTSArMDAwMCwgV2Fza2lld2ljeiBK
+ciwgUGV0ZXIgUCB3cm90ZToNCj4gPiBJJ3ZlIHNwb2tlbiB3aXRoIHRoZSBDUFUgYXJjaGl0ZWN0
+LCBhbmQgaGUncyBzZXQgbWUgc3RyYWlnaHQuICBJIHdhcw0KPiA+IGdldHRpbmcgc29tZSBzaW11
+bGF0aW9uIGRhdGEgYW5kIHJlYWxpdHkgbWl4ZWQgdXAsIHNvIGFwb2xvZ2llcy4NCj4gPiANCj4g
+PiBUaGUgY2FjaGVsaW5lIGlzIHRhZ2dlZCB3aXRoIHRoZSBSTUlEIGJlaW5nIHRyYWNrZWQgd2hl
+biBpdCdzIGJyb3VnaHQNCj4gPiBpbnRvIHRoZSBjYWNoZS4gIFRoYXQgaXMgdGhlIG9ubHkgdGlt
+ZSBpdCdzIHRhZ2dlZCwgaXQgZG9lcyBub3QgZ2V0DQo+ID4gdXBkYXRlZCAoSSB3YXMgbG9va2lu
+ZyBhdCBkYXRhIHNob3dpbmcgaW1wYWN0cyBpZiBpdCB3YXMgdXBkYXRlZCkuDQo+ID4gDQo+ID4g
+SWYgdGhlcmUgYXJlIGZyZXF1ZW50IFJNSUQgdXBkYXRlcyBmb3IgYSBwYXJ0aWN1bGFyIHByb2Nl
+c3MsIHRoZW4gdGhlcmUNCj4gPiBpcyB0aGUgcG9zc2liaWxpdHkgdGhhdCBhbnkgcmVtYWluaW5n
+IG9sZCBkYXRhIGZvciB0aGF0IHByb2Nlc3MgY2FuIGJlDQo+ID4gYWNjb3VudGVkIGZvciBvbiBh
+IGRpZmZlcmVudCBSTUlELiAgVGhpcyByZWFsbHkgaXMgd29ya2xvYWQgZGVwZW5kZW50LA0KPiA+
+IGFuZCBteSBhcmNoaXRlY3QgcHJvdmlkZWQgdGhlaXIgZGF0YSBzaG93aW5nIHRoYXQgdGhpcyBv
+Y2N1cnJlbmNlIGlzDQo+ID4gcHJldHR5IG11Y2ggaW4gdGhlIG5vaXNlLg0KPiANCj4gV2hhdCBj
+aGFuZ2UgZnJlcXVlbmN5IGFuZCB3aGF0IHNpZGVkIHdvcmtsb2FkcyBkaWQgdGhleSB0ZXN0Pw0K
+DQpJIHdpbGwgc2VlIHdoYXQgZGF0YSBJIGNhbiBzaGFyZSwgYXMgbXVjaCBvZiB0aGlzIGlzIGlu
+dGVybmFsIHRlc3RpbmcNCndpdGggb3BlbiBhY2Nlc3MgdG8gaGFyZHdhcmUgaW1wbGVtZW50YXRp
+b24gZGV0YWlscy4NCg0KPiBJIGNhbiBtYWtlIGl0IHNpZ25pZmljYW50OyB0YWtlIGEgbXVsdGkt
+dGhyZWFkZWQgd29ya2xvYWQgdGhhdCBtb3N0bHkNCj4gZml0cyBpbiBjYWNoZSwgdGhlbiBhc3Np
+Z24gYWxsIHRoZWFkcyBidXQgb25lIFJNREkgMCwgdGhlbiBmYWlybHkNCj4gcXVpY2tseSByb3Rh
+dGUgUk1JRCAxIGJldHdlZW4gdGhlIHRocmVhZHMuDQo+IA0KPiBUaGUgcHJvYmxlbSBpcywgc2lu
+Y2UgdGhlcmUncyBhIGxpbWl0ZWQgbnVtYmVyIG9mIFJNSURzIHdlIGhhdmUgdG8NCj4gcm90YXRl
+IGF0IHNvbWUgcG9pbnQsIGJ1dCBzaW5jZSBjaGFuZ2luZyBSTUlEcyBpcyBub25kZXRlcm1pbmlz
+dGljIHdlDQo+IGNhbid0Lg0KPiANCj4gPiBBbHNvLCBJIGRpZCBhc2sgYWJvdXQgdGhlIGdyYW51
+bGFyaXR5IG9mIHRoZSBSTUlELCBhbmQgaXQgaXMNCj4gPiBwZXItY2FjaGVsaW5lLiAgU28gaWYg
+dGhlcmUgaXMgYSBub24tZXhjbHVzaXZlIGNhY2hlbGluZSwgdGhlbiB0aGUNCj4gPiBvY2N1cGFu
+Y3kgZGF0YSBpbiB0aGUgb3RoZXIgcGFydCBvZiB0aGUgY2FjaGVsaW5lIHdpbGwgY291bnQgYWdh
+aW5zdCB0aGUNCj4gPiBSTUlELg0KPiANCj4gT25lIG1vcmUgcXVlc3Rpb246DQo+IA0KPiAgIHU2
+NCBpOw0KPiAgIHU2NCBybWlkX3ZhbFtdOw0KPiANCj4gICBmb3IgKGkgPSAwOyBpIDwgcm1pZF9t
+YXg7IGkrKykgew0KPiAgICAgd3Jtc3IoSUEzMl9RTV9FVlRTRUwsIDEgfCAoaSA8PCAzMikpOw0K
+PiAgICAgcmRtc3IoSUEzMl9RTV9DVFIsIHJtaWRfdmFsW2ldKTsNCj4gICB9DQo+IA0KPiBJcyB0
+aGlzIHRoZSByaWdodCB3YXkgb2YgcmVhZGluZyB0aGVzZSB2YWx1ZXM/IEkgY291bGRuJ3QgZmlu
+ZCBhbnl0aGluZw0KPiB0aGF0IHNheXMgdGhlIGV2ZW50IG11c3QgJ3J1bicgdG8gYWNjdW11bGF0
+ZSBhIHZhbHVlIGF0IGFsbCwgc28gYWxsIGl0DQo+IHNlZW1zIGl0IGEgZGlyZWN0IHZhbHVlIHJl
+YWQgd2l0aCBhIG11bHRpcGxleGVyIHRvIHRoZSBSTUlELg0KDQpZZXMsIHRoaXMgaXMgY29ycmVj
+dC4gIEluIHRoZSBTRE0sIHRoZSBsYXlvdXQgb2YgdGhlIElBMzJfUU1fQ1RSIE1TUiBoYXMNCmJp
+dHMgNjE6MCBjb250YWluIHRoZSBkYXRhLCB0aGVuIGJpdHMgNjIgYW5kIDYzIGFyZSBlcnJvciBi
+aXRzLiAgSW4NCm9yZGVyIHRvIHNlbGVjdCB0aGUgUk1JRCB0byByZWFkLCB0aGUgSUEzMl9RTV9F
+VlRTRUwgbXVzdCBiZSBwcm9ncmFtbWVkDQp0byBnZXQgdGhlIGRhdGEgb3V0OyB0aGF0J3MgdGhl
+IG9ubHkgd2F5IHRvIHRlbGwgdGhlIENQVSB3aGF0IFJNSUQgbmVlZHMNCnRvIGJlIGluc3BlY3Rl
+ZC4NCg0KWy4uLl0NCg0KPiBJJ3ZlIG5vdCBmaWd1cmVkIG91dCBob3cgdG8gZGVhbCB3aXRoIHRo
+aXMgc3R1ZmYgeWV0OyBleHBvc2luZyBSTUlEcyB0bw0KPiB1c2Vyc3BhY2UgaXMgYSBndWFyYW50
+ZWVkIGZhaWwgdGhvdWdoLiBBbnkgaW50ZXJmYWNlIHRoYXQgZGlzYWxsb3dzIHRoZQ0KPiBrZXJu
+ZWwgdG8gbWFuYWdlIHRoZSBSTUlEcyBpcyBicm9rZW4uDQoNCkhlbmNlIHRoZSBmaXJzdCBpbXBs
+ZW1lbnRhdGlvbiBpbiB0aGlzIHBhdGNoIHNlcmllcyB1c2luZyBjZ3JvdXBzLiAgVGhlDQpiYWNr
+ZW5kIHdvdWxkIGFzc2lnbiBhbiBSTUlEIHRvIHRoZSB0YXNrIGdyb3VwIHdoZW4gbW9uaXRvcmlu
+ZyB3YXMNCmVuYWJsZWQuICBUaGUgUk1JRCBpdHNlbGYgaGFkIG5vIGV4cG9zdXJlIHRvIHVzZXJz
+cGFjZS4gIEl0J3MgcXVpdGUgYQ0KbmljZSBhc3NvY2lhdGlvbiB0aGF0IHdvcmtzIHdlbGwuICBJ
+IHN0aWxsIHRoaW5rIGl0J3MgYSB2aWFibGUgd2F5IHRvIGRvDQppdCwgYW5kIGFtIHRyeWluZyB0
+byBjb252aW5jZSBteXNlbGYgb3RoZXJ3aXNlIChidXQga2VlcCBjb21pbmcgYmFjayB0bw0KaXQp
+Lg0KDQpUaGUgaW1wbGVtZW50YXRpb24gSSdtIHRhbGtpbmcgYWJvdXQgaXMgdG8gYXNzaWduIGFu
+IGFyYml0cmFyeSBncm91cA0KbnVtYmVyIHRvIHRoZSB0YXNrcywgdGhlbiBoYXZlIHRoZSBrZXJu
+ZWwgYXNzaWduIGFuIFJNSUQgdG8gdGhhdCBncm91cA0KbnVtYmVyIHdoZW4gdGhlIGdyb3VwJ3Mg
+bW9uaXRvcmluZyBpcyBlbmFibGVkLiAgU28gYmFzaWNhbGx5IHRoZSBzYW1lDQpmdW5jdGlvbmFs
+aXR5IHRoYXQgdGhlIGN1cnJlbnQgcGF0Y2hzZXQgdXNlcywgYnV0IG1pbnVzIHRoZSBjZ3JvdXAu
+ICBJDQpkb24ndCBsaWtlIHRoZSBhcHByb2FjaCBiZWNhdXNlIGl0IHdpbGwgcmVpbnZlbnQgc29t
+ZSBvZiB0aGUgY2dyb3VwJ3MNCmZ1bmN0aW9uYWxpdHksIGJ1dCBpdCBkb2VzIHNlcGFyYXRlIGl0
+IGZyb20gY2dyb3Vwcy4NCg0KQ2hlZXJzLA0KLVBKDQoNCi0tIA0KUEogV2Fza2lld2ljegkJCQlP
+cGVuIFNvdXJjZSBUZWNobm9sb2d5IENlbnRlcg0KcGV0ZXIucC53YXNraWV3aWN6LmpyQGludGVs
+LmNvbQkJSW50ZWwgQ29ycC4NCg==
