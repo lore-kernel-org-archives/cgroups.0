@@ -1,35 +1,39 @@
-From: Dominique Michel <dominique.michel-1veRC/wliwjtRgLqZ5aouw@public.gmane.org>
-Subject: future of a real time cpu group
-Date: Wed, 15 Jan 2014 18:43:02 +0100
-Message-ID: <20140115184302.13e4ff20@tux.fritz.box>
+From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Subject: Re: [PATCH v4 0/3] Send audit/procinfo/cgroup data in socket-level
+	control message
+Date: Wed, 15 Jan 2014 12:17:30 -0800 (PST)
+Message-ID: <20140115.121730.1984913330507219167.davem@davemloft.net>
+References: <1377614400-27122-1-git-send-email-jkaluza@redhat.com>
+	<1389600109-30739-1-git-send-email-jkaluza@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <1389600109-30739-1-git-send-email-jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi,
+From: Jan Kaluza <jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Date: Mon, 13 Jan 2014 09:01:46 +0100
 
-That's my first email on that list. I use the cgroups from about 2 years
-ago in order to get real time operations with jack audio, that without
-the need of running a -rt kernel. It use CONFIG_RT_GROUP_SCHED
-and cpu.rt_runtime_us with libcgroup in order to define a rt cgroup for
-the audio applications. That as described here:
-http://trac.jackaudio.org/wiki/Cgroups
+> Changes introduced in this patchset can also increase performance
+> of such server-like processes, because current way of opening and
+> parsing /proc/$PID/* files is much more expensive than receiving these
+> metadata using SCM.
 
-If I want to shift to systemd, do you know if systemd can support
-such a setup or a similar setup, now or in the future?
+The problem with this line of reasoning is that these changes will
+hurt everyone else, because these new control messages are sent
+unconditionally, whether the application is interested in them or not.
 
-You are working hard to transform the cgroup into one unique hierarchy.
-Will CONFIG_RT_GROUP_SCHED survive that move, or will it be something
-similar that will enable real time operation similar to those of the -rt
-kernel patch?
-
-Is it right that libcgroup will not work any more with the new cgroup
-implementation you are working on? And if yes, are you aware of other
-control implementations than systemd?
-
-Best Regards,
-Dominique
+I really don't like this cost tradeoff, it's terrible, and therefore
+I'm really not inclined to apply these patches, sorry.
