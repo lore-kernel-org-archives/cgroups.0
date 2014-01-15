@@ -1,89 +1,135 @@
-From: Victor Porton <porton@narod.ru>
-Subject: Re: Notifying on empty cgroup
-Date: Wed, 15 Jan 2014 16:11:40 +0200
-Message-ID: <409331389795100@web18j.yandex.ru>
-References: <135711389759165@web22h.yandex.ru> <20140115135930.GK8782@dhcp22.suse.cz>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH] memcg: Do not hang on OOM when killed by userspace OOM
+ access to memory reserves
+Date: Wed, 15 Jan 2014 15:26:03 +0100
+Message-ID: <20140115142603.GM8782@dhcp22.suse.cz>
+References: <alpine.DEB.2.02.1312171240541.21640@chino.kir.corp.google.com>
+ <20131218200434.GA4161@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1312182157510.1247@chino.kir.corp.google.com>
+ <20131219144134.GH10855@dhcp22.suse.cz>
+ <20140107162503.f751e880410f61a109cdcc2b@linux-foundation.org>
+ <20140108103319.GF27937@dhcp22.suse.cz>
+ <20140109143048.GE27538@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1401091335450.31538@chino.kir.corp.google.com>
+ <20140110082302.GD9437@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1401101327430.21486@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=narod.ru; s=mail;
-	t=1389795101; bh=OdC/ryNcxW8g1qpuw+DR+boYams7TIwo8WMdTYzl6PI=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=X/TsTfLJ6sGpotXHAyeFx4N2Zq+ld2UNvXkjacoiDoyO+he1nMafMC/0VhRzLKKsP
-	 O6Yn5XuIANVdFdwb56fqeCDQOdkqgzQtzdRMN+WGtWRvpuv1XUNtq8ZSrknqMJlKm6
-	 VyoEfWJtWjtAJRWef0NmltMmU4W+6Fx2QzRAbBDQ=
-In-Reply-To: <20140115135930.GK8782@dhcp22.suse.cz>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.02.1401101327430.21486@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Michal Hocko <mhocko@suse.cz>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, cgroups mailinglist <cgroups@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: David Rientjes <rientjes@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, "Eric W. Biederman" <ebiederm@xmission.com>
 
-15.01.2014, 15:59, "Michal Hocko" <mhocko@suse.cz>:
-> [CCing cgroups mailing list]
-> On Wed 15-01-14 06:12:45, Victor Porton wrote:
->
->> =9AI want to write software which needs to receive a signal when the=
- cgroup
->> =9Acreated by it becomes empty. (After this the empty cgroup should =
-be deleted
->> =9Ajust not to clutter the memory.)
->>
->> =9AIf the kernel does not support such notifications, it should be i=
-mproved.
->> =9AThis functionality is crucial for some kinds of software.
->>
->> =9AThere is /sys/fs/cgroup/systemd/release_agent but I don't underst=
-and how to
->> =9Ause it. I don't understand why we would need it at all.
->
-> "1.4 What does notify_on_release do ?" in
-> Documentation/cgroups/cgroups.txt the kernel source doesn't help?
+On Fri 10-01-14 13:33:01, David Rientjes wrote:
+> On Fri, 10 Jan 2014, Michal Hocko wrote:
+> 
+> > > > ---
+> > > >  mm/memcontrol.c | 3 ++-
+> > > >  1 file changed, 2 insertions(+), 1 deletion(-)
+> > > > 
+> > > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > > > index b8dfed1b9d87..b86fbb04b7c6 100644
+> > > > --- a/mm/memcontrol.c
+> > > > +++ b/mm/memcontrol.c
+> > > > @@ -2685,7 +2685,8 @@ static int __mem_cgroup_try_charge(struct mm_struct *mm,
+> > > >  	 * MEMDIE process.
+> > > >  	 */
+> > > >  	if (unlikely(test_thread_flag(TIF_MEMDIE)
+> > > > -		     || fatal_signal_pending(current)))
+> > > > +		     || fatal_signal_pending(current))
+> > > > +		     || current->flags & PF_EXITING)
+> > > >  		goto bypass;
+> > > >  
+> > > >  	if (unlikely(task_in_memcg_oom(current)))
+> > > 
+> > > This would become problematic if significant amount of memory is charged 
+> > > in the exit() path. 
+> > 
+> > But this would hurt also for fatal_signal_pending tasks, wouldn't it?
+> 
+> Yes, and as I've said twice now, that should be removed. 
 
-I've read it. I understand what it does. I don't understand how to use =
-it in practice nor why it is done this way.
+And you failed to provide any relevant data to back your suggestions. I
+have told you that we have these heuristics for ages and we need a
+strong justification to drop them. So if you really think that they are
+not appropriate then back your statements with real data.
 
->> =9AStarting a binary on emptying a cgroup with the purpose to notify=
- an other
->> =9Abinary looks like a big overkill.
->
-> the binary can do rmdir which is what you want, no?
+E.g. measure how much memory are we talking about.
 
-I suppose a base package should do that, not my specific software. Do I=
- understand right?
+> These bypasses should be given to one thread and one thread only,
+> which would be the oom killed thread if it needs access to memory
+> reserves to either allocate memory or charge memory.
 
->> =9AAlso my program should work in userspace without the need to use
->> =9Arelease_agent which can be accessed only by root.
->
-> The release_agent is global for all groups so the program doesn't hav=
-e
-> to care.
+There is no way to determine whether a task has been killed due to user
+space OOM killer or by a regular kill.
 
-Again: What MY program should do?
+> If you are suggesting we use the "user" and "oom" top-level memcg 
+> hierarchy for allowing memory to be available for userspace system oom 
+> handlers, then this has become important when in the past it may have been 
+> a minor point.
 
->> =9ANote that my work is related with sandboxing software (running a =
-program in
->> =9Aclosed environment, so that it would be unable for example to rem=
-ove user's
->> =9Afiles).
->>
->> =9ASee also
->> =9Ahttp://portonsoft.wordpress.com/2014/01/11/toward-robust-linux-sa=
-ndbox/
->>
->> =9A--
->> =9AVictor Porton - http://portonvictor.org
->> =9A--
->> =9ATo unsubscribe from this list: send the line "unsubscribe linux-k=
-ernel" in
->> =9Athe body of a message to majordomo@vger.kernel.org
->> =9AMore majordomo info at =9Ahttp://vger.kernel.org/majordomo-info.h=
-tml
->> =9APlease read the FAQ at =9Ahttp://www.tux.org/lkml/
->
-> --
-> Michal Hocko
-> SUSE Labs
+I am not sure it would be _that_ important and if that really becomes to
+be the case then we should deal with it. So far I haven't see any
+evidence there is a lot of memory charged on the exit path.
 
---=20
-Victor Porton - http://portonvictor.org
+> > Besides that I do not see any source of allocation after exit_signals.
+> > 
+> 
+> That's fine for today but may not be in the future.  If memory allocation 
+> is done after PF_EXITING in the future, are people going to check memcg 
+> bypasses?  No.  And now we have additional memory bypass to root that will 
+> cause our userspace system oom hanlders to be oom themselves with the 
+> suggested configuration.
+> 
+> Using the "user" and "oom" top-level memcg hierarchy is a double edged 
+> sword, we must attempt to prevent all of these bypasses as much as 
+> possible.  The only relevant bypass here is for TIF_MEMDIE which would be 
+> set if necessary for the one thread that needs it.
+
+TIF_MEMDIE doesn't work for userspace OOM killers. So we cannot rely on
+this flag currently.
+
+> > > I don't know of an egregious amount of memory being 
+> > > allocated and charged after PF_EXITING is set, but if it happens in the 
+> > > future then this could potentially cause system oom conditions even in 
+> > > memcg configurations 
+> > 
+> > Even if that happens then the global OOM killer would give the exiting
+> > task access to memory reserves and wouldn't kill anything else.
+> > 
+> > So I am not sure what problem do you see exactly.
+> > 
+> 
+> Userspace system oom handlers being able to handle memcg oom conditions in 
+> the top-level "user" memcg as proposed by Tejun.  If the global oom killer 
+> becomes a part of that discussion at all, then the userspace system oom 
+> handler never got a chance to handle the "user" oom.
+> 
+> > Besides that allocating egregious amount of memory after exit_signals
+> > sounds fundamentally broken to me.
+> > 
+> 
+> Egregious could be defined as allocating a few bytes multiplied by 
+> thousands of threads in PF_EXITING.
+
+Does this happen in the real life.
+
+Look, I have no objections to make the OOM handling better but it would
+help a lot to build new heuristics based on some data in hands. I tried
+to repeat that again and again but it seems to not help. I do not want
+to end up with new sets of heuristics that break other stuff jut because
+they made sense in the context of the specific usecase.
+
+-- 
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
