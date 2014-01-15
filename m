@@ -1,62 +1,94 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
- access to memory reserves
-Date: Wed, 15 Jan 2014 15:34:49 +0100
-Message-ID: <20140115143449.GN8782@dhcp22.suse.cz>
-References: <alpine.DEB.2.02.1312182157510.1247@chino.kir.corp.google.com>
- <20131219144134.GH10855@dhcp22.suse.cz>
- <20140107162503.f751e880410f61a109cdcc2b@linux-foundation.org>
- <alpine.DEB.2.02.1401091324120.31538@chino.kir.corp.google.com>
- <20140109144757.e95616b4280c049b22743a15@linux-foundation.org>
- <alpine.DEB.2.02.1401091551390.20263@chino.kir.corp.google.com>
- <20140109161246.57ea590f00ea5b61fdbf5f11@linux-foundation.org>
- <alpine.DEB.2.02.1401091613560.22649@chino.kir.corp.google.com>
- <20140110221432.GD6963@cmpxchg.org>
- <alpine.DEB.2.02.1401121404530.20999@chino.kir.corp.google.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: Notifying on empty cgroup
+Date: Wed, 15 Jan 2014 16:12:18 +0100
+Message-ID: <20140115151218.GO8782@dhcp22.suse.cz>
+References: <135711389759165@web22h.yandex.ru>
+ <20140115135930.GK8782@dhcp22.suse.cz>
+ <409331389795100@web18j.yandex.ru>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1401121404530.20999@chino.kir.corp.google.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <409331389795100-sAm+gIlHn/hxpj1cXAZ9Bg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, "Eric W. Biederman" <ebiederm@xmission.com>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Victor Porton <porton-Q+l+L2ir60w@public.gmane.org>
+Cc: "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Sun 12-01-14 14:10:49, David Rientjes wrote:
-> On Fri, 10 Jan 2014, Johannes Weiner wrote:
-> 
-> > > > > It was acked-by Michal.
-> > 
-> > Michal acked it before we had most of the discussions and now he is
-> > proposing an alternate version of yours, a patch that you are even
-> > discussing with him concurrently in another thread.  To claim he is
-> > still backing your patch because of that initial ack is disingenuous.
-> > 
-> 
-> His patch depends on mine, Johannes.
+On Wed 15-01-14 16:11:40, Victor Porton wrote:
+> 15.01.2014, 15:59, "Michal Hocko" <mhocko-AlSwsSmVLrQ@public.gmane.org>:
+> > [CCing cgroups mailing list]
+> > On Wed 15-01-14 06:12:45, Victor Porton wrote:
+> >
+> >> =A0I want to write software which needs to receive a signal when t=
+he cgroup
+> >> =A0created by it becomes empty. (After this the empty cgroup shoul=
+d be deleted
+> >> =A0just not to clutter the memory.)
+> >>
+> >> =A0If the kernel does not support such notifications, it should be=
+ improved.
+> >> =A0This functionality is crucial for some kinds of software.
+> >>
+> >> =A0There is /sys/fs/cgroup/systemd/release_agent but I don't under=
+stand how to
+> >> =A0use it. I don't understand why we would need it at all.
+> >
+> > "1.4 What does notify_on_release do ?" in
+> > Documentation/cgroups/cgroups.txt the kernel source doesn't help?
+>=20
+> I've read it. I understand what it does. I don't understand how to us=
+e
+> it in practice nor
 
-Does it? Are we talking about the same patch here?
-https://lkml.org/lkml/2013/12/12/174
+You want to clean up your memcg without any tasks so the script might d=
+o
+something like:
+---
+#!/bin/sh
 
-Which depends on yours only to revert your part. I plan to repost it but
-that still doesn't mean it will get merged because Johannes still has
-some argumnets against. I would like to start the discussion again
-because now we are so deep in circles that it is hard to come up with a
-reasonable outcome. It is still hard to e.g. agree on an actual fix
-for a real problem https://lkml.org/lkml/2013/12/12/129.
+CGROUP=3D"$1"
+CGROUP_MNT=3D`mount | grep cgroup | awk '{print $3}'`
 
-While notification might be an issue as well it is more of a corner case
-than a regular one. So let's try to move on, agree on the "oom vs.
-PF_EXITING) first and lay out discussion for the notification in a new
-threa. Shall we?
--- 
+rmdir "$CGROUP_MNT/$CGROUP"
+---
+
+> why it is done this way.
+
+I find the interface rather awkward as well but that is a question for
+those who have implement it.
+
+The interface will change in the future (sorry I do not have any link t=
+o
+discussion about the change handy).
+
+> >> =A0Starting a binary on emptying a cgroup with the purpose to noti=
+fy an other
+> >> =A0binary looks like a big overkill.
+> >
+> > the binary can do rmdir which is what you want, no?
+>=20
+> I suppose a base package should do that, not my specific software. Do
+> I understand right?
+
+Yes. The notifier works on the root of the cgroup hierarchy so it is a
+matter of the admin to set it.
+=20
+> >> =A0Also my program should work in userspace without the need to us=
+e
+> >> =A0release_agent which can be accessed only by root.
+> >
+> > The release_agent is global for all groups so the program doesn't h=
+ave
+> > to care.
+>=20
+> Again: What MY program should do?
+
+Nothing. (assuming the only thing you are interested in is removing the
+empty group).
+
+[...]
+--=20
 Michal Hocko
 SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
