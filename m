@@ -1,103 +1,54 @@
-From: David Rientjes <rientjes@google.com>
-Subject: [patch v2 -mm] mm, oom: prefer thread group leaders for display
- purposes
-Date: Wed, 15 Jan 2014 23:46:44 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1401152345330.14407@chino.kir.corp.google.com>
-References: <alpine.DEB.2.02.1401151837560.1835@chino.kir.corp.google.com> <20140116070549.GL6963@cmpxchg.org> <alpine.DEB.2.02.1401152344560.14407@chino.kir.corp.google.com>
+From: =?windows-1252?Q?Jan_Kalu=9Ea?= <jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v4 0/3] Send audit/procinfo/cgroup data in socket-level
+	control message
+Date: Thu, 16 Jan 2014 10:29:51 +0100
+Message-ID: <52D7A68F.5030700@redhat.com>
+References: <1377614400-27122-1-git-send-email-jkaluza@redhat.com>
+	<1389600109-30739-1-git-send-email-jkaluza@redhat.com>
+	<20140115.121730.1984913330507219167.davem@davemloft.net>
+	<1389828103.681.34.camel@flatline.rdu.redhat.com>
+	<20140115232345.GA22237@mtj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=i51FTZlHevx8bMfUczpX15/YCujwBiMvKmViB43AFzI=;
-        b=OH2vvqoP/erBVOamN/vHmKVoH068NaKp8C5BppIOVUiWIqJN/Ea290fe7gKcalvLoT
-         jRT5Z1SuNNHK/EPvS+naeCV+jaLoy94Gpib9EFeq0b2HSeIdzdvUSsqlYkPAALaStxnF
-         Gp69ENEIIUSTOOexUXzjae/CvVM7Var18pTZxOMAbPvZTF/Bgr+K/AfOlAoJ7izxcD1T
-         ImN8XjEChSuz1ixUk1q6O/NVO3ihfNmvLScH72FkKtuCycVdQNm1AQEPrn40RUfKevQG
-         6W4yX5kbpb/UY9lUIwg107ax5HdmkkQG4UgzWaSM4HtX07gsLulbzsrwZRd6VrrROZ3o
-         cXuA==
-In-Reply-To: <alpine.DEB.2.02.1401152344560.14407@chino.kir.corp.google.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20140115232345.GA22237-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Eric Paris <eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
 
-When two threads have the same badness score, it's preferable to kill the 
-thread group leader so that the actual process name is printed to the 
-kernel log rather than the thread group name which may be shared amongst 
-several processes.
+On 01/16/2014 12:23 AM, Tejun Heo wrote:
+> On Wed, Jan 15, 2014 at 06:21:43PM -0500, Eric Paris wrote:
+>> Reliably being able to audit what process requested an action is
+>> extremely useful.  And I like the audit patch, as it is a couple of ints
+>> we are storing.
+>>
+>> procinfo and cgroup can both be up to 4k of data.
+>>
+>> Is there an alternative he should consider?  Some way to grab a
+>> reference on task_struct and just attach that to the message?
+>
+> Or maybe it can be made separately optional instead of tagging along
+> on an existing option so that it doesn't tax use cases which don't
+> care about the new stuff?
 
-This was the behavior when select_bad_process() used to do 
-for_each_process(), but it now iterates threads instead and leads to 
-ambiguity.
+Right, I could add new option next to SOCK_PASSCRED which could be used 
+to send newly added stuff. Would this be acceptable?
 
-Signed-off-by: David Rientjes <rientjes@google.com>
----
- v2: fixes missing get_task_struct() found by Johannes.
+I would still vote for SCM_AUDIT to be part of SOCK_PASSCRED and move 
+SCM_CGROUP and SCM_PROCINFO into new option.
 
- mm/memcontrol.c | 19 ++++++++++++-------
- mm/oom_kill.c   | 12 ++++++++----
- 2 files changed, 20 insertions(+), 11 deletions(-)
+> Thanks.
+>
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index a815686..d69c4b3 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1841,13 +1841,18 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 				break;
- 			};
- 			points = oom_badness(task, memcg, NULL, totalpages);
--			if (points > chosen_points) {
--				if (chosen)
--					put_task_struct(chosen);
--				chosen = task;
--				chosen_points = points;
--				get_task_struct(chosen);
--			}
-+			if (points < chosen_points)
-+				continue;
-+			/* Prefer thread group leaders for display purposes */
-+			if (points == chosen_points &&
-+			    thread_group_leader(chosen))
-+				continue;
-+
-+			if (chosen)
-+				put_task_struct(chosen);
-+			chosen = task;
-+			chosen_points = points;
-+			get_task_struct(chosen);
- 		}
- 		css_task_iter_end(&it);
- 	}
-diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-index 054ff47..1dca3d8 100644
---- a/mm/oom_kill.c
-+++ b/mm/oom_kill.c
-@@ -327,10 +327,14 @@ static struct task_struct *select_bad_process(unsigned int *ppoints,
- 			break;
- 		};
- 		points = oom_badness(p, NULL, nodemask, totalpages);
--		if (points > chosen_points) {
--			chosen = p;
--			chosen_points = points;
--		}
-+		if (points < chosen_points)
-+			continue;
-+		/* Prefer thread group leaders for display purposes */
-+		if (points == chosen_points && thread_group_leader(chosen))
-+			continue;
-+
-+		chosen = p;
-+		chosen_points = points;
- 	}
- 	if (chosen)
- 		get_task_struct(chosen);
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Regards,
+Jan Kaluza
