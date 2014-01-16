@@ -1,54 +1,48 @@
-From: =?windows-1252?Q?Jan_Kalu=9Ea?= <jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v4 0/3] Send audit/procinfo/cgroup data in socket-level
-	control message
-Date: Thu, 16 Jan 2014 10:29:51 +0100
-Message-ID: <52D7A68F.5030700@redhat.com>
-References: <1377614400-27122-1-git-send-email-jkaluza@redhat.com>
-	<1389600109-30739-1-git-send-email-jkaluza@redhat.com>
-	<20140115.121730.1984913330507219167.davem@davemloft.net>
-	<1389828103.681.34.camel@flatline.rdu.redhat.com>
-	<20140115232345.GA22237@mtj.dyndns.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
+ access to memory reserves
+Date: Thu, 16 Jan 2014 10:32:20 +0100
+Message-ID: <20140116093220.GC28157@dhcp22.suse.cz>
+References: <20140107162503.f751e880410f61a109cdcc2b@linux-foundation.org>
+ <alpine.DEB.2.02.1401091324120.31538@chino.kir.corp.google.com>
+ <20140109144757.e95616b4280c049b22743a15@linux-foundation.org>
+ <alpine.DEB.2.02.1401091551390.20263@chino.kir.corp.google.com>
+ <20140109161246.57ea590f00ea5b61fdbf5f11@linux-foundation.org>
+ <alpine.DEB.2.02.1401091613560.22649@chino.kir.corp.google.com>
+ <20140110221432.GD6963@cmpxchg.org>
+ <alpine.DEB.2.02.1401121404530.20999@chino.kir.corp.google.com>
+ <20140115143449.GN8782@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1401151319580.10727@chino.kir.corp.google.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.02.1401151319580.10727-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20140115232345.GA22237-9pTldWuhBndy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Eric Paris <eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
 
-On 01/16/2014 12:23 AM, Tejun Heo wrote:
-> On Wed, Jan 15, 2014 at 06:21:43PM -0500, Eric Paris wrote:
->> Reliably being able to audit what process requested an action is
->> extremely useful.  And I like the audit patch, as it is a couple of ints
->> we are storing.
->>
->> procinfo and cgroup can both be up to 4k of data.
->>
->> Is there an alternative he should consider?  Some way to grab a
->> reference on task_struct and just attach that to the message?
->
-> Or maybe it can be made separately optional instead of tagging along
-> on an existing option so that it doesn't tax use cases which don't
-> care about the new stuff?
+On Wed 15-01-14 13:23:10, David Rientjes wrote:
+> On Wed, 15 Jan 2014, Michal Hocko wrote:
+[...]
+> > Which depends on yours only to revert your part. I plan to repost it but
+> > that still doesn't mean it will get merged because Johannes still has
+> > some argumnets against. I would like to start the discussion again
+> > because now we are so deep in circles that it is hard to come up with a
+> > reasonable outcome. It is still hard to e.g. agree on an actual fix
+> > for a real problem https://lkml.org/lkml/2013/12/12/129.
+> > 
+> 
+> This is concerning because it's merged in -mm without being tested by Eric 
+> and is marked for stable while violating the stable kernel rules criteria.
 
-Right, I could add new option next to SOCK_PASSCRED which could be used 
-to send newly added stuff. Would this be acceptable?
+Are you questioning the patch fixes the described issue?
 
-I would still vote for SCM_AUDIT to be part of SOCK_PASSCRED and move 
-SCM_CGROUP and SCM_PROCINFO into new option.
-
-> Thanks.
->
-
-Regards,
-Jan Kaluza
+Please note that the exit_robust_list and PF_EXITING as a culprit has
+been identified by Eric. Of course I would prefer if it was tested by
+anybody who can reproduce it.
+-- 
+Michal Hocko
+SUSE Labs
