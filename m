@@ -1,22 +1,16 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 5/6] cgroup: update locking in cgroup_show_options()
-Date: Fri, 17 Jan 2014 13:11:56 -0500
-Message-ID: <1389982317-22225-6-git-send-email-tj@kernel.org>
+From: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+Subject: Re: [PATCH 1/6] cgroup: make CONFIG_NET_CLS_CGROUP and
+	CONFIG_NETPRIO_CGROUP bool instead of tristate
+Date: Fri, 17 Jan 2014 15:37:38 -0500
+Message-ID: <20140117203738.GE19452@hmsreliant.think-freely.org>
 References: <1389982317-22225-1-git-send-email-tj@kernel.org>
+	<1389982317-22225-2-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=TL2gzNnzaXB2YrfmjTMzaUF1C3ITl2YnjRi2IedT3oA=;
-	b=AX6J0TkEYMmJJliiCNt4pIpfeZUUK9/phMg2Mns6/ptwBrf+1TegAXDuanIOKiazSk
-	rP3jVkKYXxZA5c3V9mfpuFRz8uG7puZofuj1gO8KHNt2rDIW21qxYtbnyhB4JYwLxTiW
-	UZzoLf7GltPDs7JLgm6GfWeMfkINcqsWmCzWU2Cn9cXLSUyHGtsdWse+d1PesceSil3q
-	E3zWD4stBoFUkbW2EGaGjrY8Ya+iMiVKYIyEqVh9ca5YCfsOVcXlC+PsUSl8vv2VugMN
-	uRYZpR2iKjqzjacloDcqTvAbXrHdVDrPqReZF+0okcdaT5hyggeVwtuSt+CCJyGAB3lX
-	PG1A==
-In-Reply-To: <1389982317-22225-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1389982317-22225-2-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -27,90 +21,34 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
 
-cgroup_show_options() grabs cgroup_root_mutex to protect the options
-changing while printing; however, holding root_mutex or not doesn't
-really make much difference for the function.  subsys_mask can be
-atomically tested and most of the options aren't allowed to change
-anyway once mounted.
-
-The only field which needs synchronization is ->release_agent_path.
-This patch introduces a dedicated spinlock to synchronize accesses to
-the field and drops cgroup_root_mutex locking from
-cgroup_show_options().  The next patch will remove cgroup_root_mutex.
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- kernel/cgroup.c | 19 ++++++++++++++++---
- 1 file changed, 16 insertions(+), 3 deletions(-)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 3b2fda0..2736689 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -92,6 +92,12 @@ static DEFINE_MUTEX(cgroup_mutex);
- 
- static DEFINE_MUTEX(cgroup_root_mutex);
- 
-+/*
-+ * Protects cgroup_subsys->release_agent_path.  Modifying it also requires
-+ * cgroup_mutex.  Reading requires either cgroup_mutex or this spinlock.
-+ */
-+static DEFINE_SPINLOCK(release_agent_path_lock);
-+
- #define cgroup_assert_mutex_or_rcu_locked()				\
- 	rcu_lockdep_assert(rcu_read_lock_held() ||			\
- 			   lockdep_is_held(&cgroup_mutex),		\
-@@ -1024,7 +1030,6 @@ static int cgroup_show_options(struct seq_file *seq, struct dentry *dentry)
- 	struct cgroup_subsys *ss;
- 	int ssid;
- 
--	mutex_lock(&cgroup_root_mutex);
- 	for_each_subsys(ss, ssid)
- 		if (root->subsys_mask & (1 << ssid))
- 			seq_printf(seq, ",%s", ss->name);
-@@ -1034,13 +1039,16 @@ static int cgroup_show_options(struct seq_file *seq, struct dentry *dentry)
- 		seq_puts(seq, ",noprefix");
- 	if (root->flags & CGRP_ROOT_XATTR)
- 		seq_puts(seq, ",xattr");
-+
-+	spin_lock(&release_agent_path_lock);
- 	if (strlen(root->release_agent_path))
- 		seq_printf(seq, ",release_agent=%s", root->release_agent_path);
-+	spin_unlock(&release_agent_path_lock);
-+
- 	if (test_bit(CGRP_CPUSET_CLONE_CHILDREN, &root->top_cgroup.flags))
- 		seq_puts(seq, ",clone_children");
- 	if (strlen(root->name))
- 		seq_printf(seq, ",name=%s", root->name);
--	mutex_unlock(&cgroup_root_mutex);
- 	return 0;
- }
- 
-@@ -1262,8 +1270,11 @@ static int cgroup_remount(struct super_block *sb, int *flags, char *data)
- 	if (ret)
- 		goto out_unlock;
- 
--	if (opts.release_agent)
-+	if (opts.release_agent) {
-+		spin_lock(&release_agent_path_lock);
- 		strcpy(root->release_agent_path, opts.release_agent);
-+		spin_unlock(&release_agent_path_lock);
-+	}
-  out_unlock:
- 	kfree(opts.release_agent);
- 	kfree(opts.name);
-@@ -2172,7 +2183,9 @@ static int cgroup_release_agent_write(struct cgroup_subsys_state *css,
- 	if (!cgroup_lock_live_group(css->cgroup))
- 		return -ENODEV;
- 	mutex_lock(&cgroup_root_mutex);
-+	spin_lock(&release_agent_path_lock);
- 	strcpy(css->cgroup->root->release_agent_path, buffer);
-+	spin_unlock(&release_agent_path_lock);
- 	mutex_unlock(&cgroup_root_mutex);
- 	mutex_unlock(&cgroup_mutex);
- 	return 0;
--- 
-1.8.4.2
+On Fri, Jan 17, 2014 at 01:11:52PM -0500, Tejun Heo wrote:
+> net_cls and net_prio are the only cgroups which are allowed to be
+> built as modules.  The savings from allowing the two controllers to be
+> built as modules are tiny especially given that cgroup module support
+> itself adds quite a bit of complexity.
+> 
+> The following are the sizes of vmlinux with both built as module and
+> both built as part of the kernel image with cgroup module support
+> removed.
+> 
+> 	text		data		bss		dec
+> 	20292207	2411496		10784768	33488471
+> 	20293421	2412568		10784768	33490757
+> 
+> The total difference is 2286 bytes.  Given that none of other
+> controllers has much chance of being made a module and that we're
+> unlikely to add new modular controllers, the added complexity is
+> simply not justifiable.
+> 
+> As a first step to drop cgroup module support, this patch changes the
+> two config options to bool from tristate and drops module related code
+> from the two controllers.
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+> Cc: Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>
+> Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Acked-by: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
