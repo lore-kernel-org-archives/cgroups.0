@@ -1,72 +1,84 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH] cgroup: trivial style updates
-Date: Sat, 18 Jan 2014 08:57:25 -0500
-Message-ID: <20140118135725.GA3640@htj.dyndns.org>
-References: <1390031808-31818-1-git-send-email-sj38.park@gmail.com>
+Subject: Re: [PATCH 1/6] cgroup: make CONFIG_NET_CLS_CGROUP and
+	CONFIG_NETPRIO_CGROUP bool instead of tristate
+Date: Sat, 18 Jan 2014 10:10:06 -0500
+Message-ID: <20140118151006.GF3640@htj.dyndns.org>
+References: <1389982317-22225-1-git-send-email-tj@kernel.org>
+	<1389982317-22225-2-git-send-email-tj@kernel.org>
+	<52D9D421.6040608@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=Lf43Z12OpgFaZk7PQFgBri1xJmBvO6FPZzVinHy2vIA=;
-        b=ujUgVkBKWm6jKgEkNPCSaojY1bCd9I89wqJCEyTMXwujRJQNWniVZmpJWGux2lqwyj
-         oNBs3bMHlBvS0kIchVmBuULLYxqYQdEADsNgRiHGfiZprXIROYVA26wFtiSlRyJE5unC
-         rvkw7CuGeVSj6WRgE9vEH/km/E+kyDt7UxJ5DZcnmNwlRR7JpBTfM3NruMbnrhoAzbsR
-         8B7zmLGlcS5wb6CHfXgjpOXZF41I1jwjjI/cxo+Ip6qiPfYdaZW2lQ0YMWi1n6MLZfDs
-         0s9Cw1T1fW901Q4dVwd1cy/IoqLTwN+cM6M3/T8wSvy2qsc8VgMG7xQwOtR6MAn42neR
-         cJDQ==
-Content-Disposition: inline
-In-Reply-To: <1390031808-31818-1-git-send-email-sj38.park-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: SeongJae Park <sj38.park-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=7X2WONKjhRWLaRuc+GKqwvoQx0zkkm6piwBxIv+UpS8=;
+	b=L2JTlKXVyoVK17luMISWubI1+h0XAXXZpSnngUp14Y+aFZ0eFnTBzfNURcLXyD0V6u
+	fiT35gBwCj/gJZhoDOnudWMk3BZu8+FiORJruGd7S66JBS9w8UChq9TX2Zqncy98Iw0E
+	bENUCJPUWUxCdSHF5h+9t1Egfnlq4yvRsWsuKrscRTW3UgqsGw/YIEExxbUA6wpzOmHu
+	sTKOALBscBddmuD1t/r3wosYMXIblRJBKrYchVd99i+PC1E9gb9+Ufz6TN/gSg/5US5n
+	KizZ+o17nFac15WYJypXsg+8eZUj4Sdj5tq0wQW/Zn+FtZy4trVPoU/oF8zPuhjjWupB
+	bVvA==
+Content-Disposition: inline
+In-Reply-To: <52D9D421.6040608-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Borkmann <dborkman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
 
-Merged the two into one patch and applied to cgroup/for-3.14.
+Hey,
+
+On Sat, Jan 18, 2014 at 09:08:49AM +0800, Li Zefan wrote:
+> Cc: Daniel Borkmann <dborkman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> 
+> On 2014/1/18 2:11, Tejun Heo wrote:
+> > net_cls and net_prio are the only cgroups which are allowed to be
+> > built as modules.  The savings from allowing the two controllers to be
+> > built as modules are tiny especially given that cgroup module support
+> > itself adds quite a bit of complexity.
+> > 
+> > The following are the sizes of vmlinux with both built as module and
+> > both built as part of the kernel image with cgroup module support
+> > removed.
+> > 
+> > 	text		data		bss		dec
+> > 	20292207	2411496		10784768	33488471
+> > 	20293421	2412568		10784768	33490757
+> > 
+> > The total difference is 2286 bytes.  Given that none of other
+> > controllers has much chance of being made a module and that we're
+> > unlikely to add new modular controllers, the added complexity is
+> > simply not justifiable.
+> > 
+> > As a first step to drop cgroup module support, this patch changes the
+> > two config options to bool from tristate and drops module related code
+> > from the two controllers.
+> > 
+> 
+> I sugguested Daniel to do this for net_cls, and the change has been in
+> net-next.
+> 
+> https://git.kernel.org/cgit/linux/kernel/git/davem/net-next.git/commit/?id=fe1217c4f3f7d7cbf8efdd8dd5fdc7204a1d65a8
+> 
+> I was planning to remove module support after that change goes into
+> upstream. :)
+
+Ooh, cool. :)
+
+Unless there's gonna be another rc, I think it's already a bit too
+late for 3.14 anyway.  I'll drop the net_cls part and rebase the
+changes on top of rc1 later on.
 
 Thanks.
------- 8< ------
-From dd4b0a4676907481256d16d5de0851b315a6f22c Mon Sep 17 00:00:00 2001
-From: SeongJae Park <sj38.park-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date: Sat, 18 Jan 2014 16:56:47 +0900
 
-* Place newline before function opening brace in cgroup_kill_sb().
-
-* Insert space before assignment in attach_task_by_pid()
-
-tj: merged two patches into one.
-
-Signed-off-by: SeongJae Park <sj38.park-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- kernel/cgroup.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 7030f04..680e2be 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1669,7 +1669,8 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 	return ERR_PTR(ret);
- }
- 
--static void cgroup_kill_sb(struct super_block *sb) {
-+static void cgroup_kill_sb(struct super_block *sb)
-+{
- 	struct cgroupfs_root *root = sb->s_fs_info;
- 	struct cgroup *cgrp = &root->top_cgroup;
- 	struct cgrp_cset_link *link, *tmp_link;
-@@ -2117,7 +2118,7 @@ retry_find_task:
- 		tsk = find_task_by_vpid(pid);
- 		if (!tsk) {
- 			rcu_read_unlock();
--			ret= -ESRCH;
-+			ret = -ESRCH;
- 			goto out_unlock_cgroup;
- 		}
- 		/*
 -- 
-1.8.4.2
+tejun
