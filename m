@@ -1,46 +1,78 @@
-From: SeongJae Park <sj38.park-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH 2/2] cgroup: place newline before function opening brace
-Date: Sat, 18 Jan 2014 16:56:48 +0900
-Message-ID: <1390031808-31818-2-git-send-email-sj38.park@gmail.com>
-References: <1390031808-31818-1-git-send-email-sj38.park@gmail.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=vCrpF3PAs1pKP9TWeXRz6JAEUz2+UdmN8vl+lCxGCbE=;
-        b=vtNWq1CptGh4HnH+REbVA3KTX0zWZzdEyozLz+kHtnfjdFUt3fjEiv4r42iGIxC08s
-         h9oyrY9Hy2ppFsh0h/BJLpqsKGpSuzsnkVs6kFnXtgvbf+SFfP1FFKUXNKjJn0LKiBHl
-         tyjTu386/vS54cXvTUWUb44aK+DE1oGmwvNNTyW15C6b7zO9zQp/WodWYlyEoaj3HZ7/
-         lsYtYAEexyVt7gihsryAg/uC1EiynGkRLffFa1jwP7C9Lyacfp9QriuMcaEWcanMwML5
-         IOABmu4Kaf8TMCWjkjtMHH0oKi2UGBZ9fxe3Kap6bH4h4mqjdara8a05TEpqhqo8Xifj
-         LIIA==
-In-Reply-To: <1390031808-31818-1-git-send-email-sj38.park-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+From: Daniel Borkmann <dborkman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/6] cgroup: make CONFIG_NET_CLS_CGROUP and
+	CONFIG_NETPRIO_CGROUP bool instead of tristate
+Date: Sat, 18 Jan 2014 12:25:43 +0100
+Message-ID: <52DA64B7.3030909@redhat.com>
+References: <1389982317-22225-1-git-send-email-tj@kernel.org>
+	<1389982317-22225-2-git-send-email-tj@kernel.org>
+	<52D9D421.6040608@huawei.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, SeongJae Park <sj38.park-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <52D9D421.6040608-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
 
-Signed-off-by: SeongJae Park <sj38.park-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
----
- kernel/cgroup.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+On 01/18/2014 02:08 AM, Li Zefan wrote:
+> Cc: Daniel Borkmann <dborkman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> 
+> On 2014/1/18 2:11, Tejun Heo wrote:
+>> net_cls and net_prio are the only cgroups which are allowed to be
+>> built as modules.  The savings from allowing the two controllers to be
+>> built as modules are tiny especially given that cgroup module support
+>> itself adds quite a bit of complexity.
+>>
+>> The following are the sizes of vmlinux with both built as module and
+>> both built as part of the kernel image with cgroup module support
+>> removed.
+>>
+>> 	text		data		bss		dec
+>> 	20292207	2411496		10784768	33488471
+>> 	20293421	2412568		10784768	33490757
+>>
+>> The total difference is 2286 bytes.  Given that none of other
+>> controllers has much chance of being made a module and that we're
+>> unlikely to add new modular controllers, the added complexity is
+>> simply not justifiable.
+>>
+>> As a first step to drop cgroup module support, this patch changes the
+>> two config options to bool from tristate and drops module related code
+>> from the two controllers.
+>>
+> 
+> I sugguested Daniel to do this for net_cls, and the change has been in
+> net-next.
+> 
+> https://git.kernel.org/cgit/linux/kernel/git/davem/net-next.git/commit/?id=fe1217c4f3f7d7cbf8efdd8dd5fdc7204a1d65a8
+> 
+> I was planning to remove module support after that change goes into
+> upstream. :)
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 4e47e28..e2f46ba 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1679,7 +1679,8 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 	return ERR_PTR(ret);
- }
- 
--static void cgroup_kill_sb(struct super_block *sb) {
-+static void cgroup_kill_sb(struct super_block *sb)
-+{
- 	struct cgroupfs_root *root = sb->s_fs_info;
- 	struct cgroup *cgrp = &root->top_cgroup;
- 	struct cgrp_cset_link *link, *tmp_link;
--- 
-1.8.3.2
+I am fine with that, thanks Li.
+
+>> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+>> Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+>> Cc: Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>
+>> Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+>> ---
+>>   net/Kconfig               |  2 +-
+>>   net/core/netprio_cgroup.c | 32 ++------------------------------
+>>   net/sched/Kconfig         |  2 +-
+>>   net/sched/cls_cgroup.c    | 23 ++---------------------
+>>   4 files changed, 6 insertions(+), 53 deletions(-)
+>>
+> 
+> The modular version of task_netprioidx() in include/net/netprio_cgroup.h
+> can be removed.
+> 
