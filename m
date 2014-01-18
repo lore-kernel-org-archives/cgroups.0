@@ -1,31 +1,43 @@
-From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-Subject: Re: [PATCH 3/6] cgroup: clean up cgroup_subsys names and
-	initialization
-Date: Fri, 17 Jan 2014 19:10:31 -0800 (PST)
-Message-ID: <20140117.191031.1497734752584828355.davem@davemloft.net>
-References: <1389982317-22225-1-git-send-email-tj@kernel.org>
-	<1389982317-22225-4-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+From: SeongJae Park <sj38.park-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH 1/2] cgroup: insert space before assignment for codingstyle
+Date: Sat, 18 Jan 2014 16:56:47 +0900
+Message-ID: <1390031808-31818-1-git-send-email-sj38.park@gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=from:to:cc:subject:date:message-id;
+        bh=1wKjYGUt7SESgvcTLSGNUfdf6wSDUym+KkAcRs564xE=;
+        b=RUtbvIkvgksTsDQxjeOCoiwG7phuXlw7OJv3YiC1sSloBqss8c41eK7QpJtgMtbu7R
+         JFC0XNu1PngAM1szAXzYfiThb05R/7DNsKskvdHYMuDl12rjFOq2u+06Cv2N1GjoXopu
+         fJ4PYcjgRPs0NQKmnTdOrAiK6IgmnIBPyKUL3FYUwB52VI0hRGtKJQYCZpVwFHN+0FBC
+         RQDH5soLa/b9Vy3Vr/KkXsDzZjCpzDuKfoI6gNiqKTruHWu8XD8uEuymSeWJPSfdUPXf
+         03urY7v8Ldh9Cb6+7adwNiFsrQBg6uHGD4I5BmYUSAeNW66aNotOblsLDD5Xi91emUHU
+         uCJw==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1389982317-22225-4-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, tgraf-G/eBtMaohhA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, SeongJae Park <sj38.park-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date: Fri, 17 Jan 2014 13:11:54 -0500
+Signed-off-by: SeongJae Park <sj38.park-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ kernel/cgroup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-
-Acked-by: David S. Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 9ed68a3..4e47e28 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -2127,7 +2127,7 @@ retry_find_task:
+ 		tsk = find_task_by_vpid(pid);
+ 		if (!tsk) {
+ 			rcu_read_unlock();
+-			ret= -ESRCH;
++			ret = -ESRCH;
+ 			goto out_unlock_cgroup;
+ 		}
+ 		/*
+-- 
+1.8.3.2
