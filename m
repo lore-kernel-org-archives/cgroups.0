@@ -1,87 +1,53 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 3/6] cgroup: clean up cgroup_subsys names and
- initialization
-Date: Mon, 20 Jan 2014 14:13:37 +0100
-Message-ID: <20140120131337.GD2626@dhcp22.suse.cz>
-References: <1389982317-22225-1-git-send-email-tj@kernel.org>
- <1389982317-22225-4-git-send-email-tj@kernel.org>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [patch 1/2] mm, memcg: avoid oom notification when current needs
+ access to memory reserves
+Date: Mon, 20 Jan 2014 21:58:28 -0800 (PST)
+Message-ID: <alpine.DEB.2.02.1401202155410.21729@chino.kir.corp.google.com>
+References: <20140107162503.f751e880410f61a109cdcc2b@linux-foundation.org> <alpine.DEB.2.02.1401091324120.31538@chino.kir.corp.google.com> <20140109144757.e95616b4280c049b22743a15@linux-foundation.org> <alpine.DEB.2.02.1401091551390.20263@chino.kir.corp.google.com>
+ <20140109161246.57ea590f00ea5b61fdbf5f11@linux-foundation.org> <alpine.DEB.2.02.1401091613560.22649@chino.kir.corp.google.com> <20140110221432.GD6963@cmpxchg.org> <alpine.DEB.2.02.1401121404530.20999@chino.kir.corp.google.com> <20140115143449.GN8782@dhcp22.suse.cz>
+ <alpine.DEB.2.02.1401151319580.10727@chino.kir.corp.google.com> <20140116093220.GC28157@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1389982317-22225-4-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version:content-type;
+        bh=MtzGmgU4WiBkoFA0cZBIEVNR9YUuC7tCJWBbGrlMCKg=;
+        b=CyAEPM5JjMPRUlkFVx1rN9e6Bou1ND99aZXad5EawPjBlh8el8cXeBWTF0UUeQhYnE
+         bLib7lUIqQAjmXh24H3h3d2c4U/tqy1WkSEF/I8HECVaYKW7nX+vxalDDxbhy5lGFaK6
+         ejl7NWPPwA0IpWnCcP6Qt0mXCK8xAw3thCwE1iisXnCdsxTU09gZvWrLDRvRocrwVJfK
+         BArFmwHqXFQdms7V1OOMQL+2r/w0OQf17tQMrc3OvyF9x2pj/1YzZZ48WLHFz73Di5Bi
+         wEJN90ZWE0kmGN9tO70LsVxGxzh9pmpcK5/2zM6j4HS5VinS8a+vUrJvC94KVYy8g/p5
+         7OKw==
+In-Reply-To: <20140116093220.GC28157@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Serge E. Hallyn" <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, "Rafael J. Wysocki" <rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, "Eric W. Biederman" <ebiederm@xmission.com>, Greg Kroah-Hartmann <gregkh@linuxfoundation.org>
 
-On Fri 17-01-14 13:11:54, Tejun Heo wrote:
-> cgroup_subsys is a bit messier than it needs to be.
-> 
-> * The name of a subsys can be different from its internal identifier
->   defined in cgroup_subsys.h.  Most subsystems use the matching name
->   but three - cpu, memory and perf_event - use different ones.
-> 
-> * cgroup_subsys_id enums are postfixed with _subsys_id and each
->   cgroup_subsys is postfixed with _subsys.  cgroup.h is widely
->   included throughout various subsystems, it doesn't and shouldn't
->   have claim on such generic names which don't have any qualifier
->   indicating that they belong to cgroup.
-> 
-> * cgroup_subsys->subsys_id should always equal the matching
->   cgroup_subsys_id enum; however, we require each controller to
->   initialize it and then BUG if they don't match, which is a bit
->   silly.
-> 
-> This patch cleans up cgroup_subsys names and initialization by doing
-> the followings.
-> 
-> * cgroup_subsys_id enums are now postfixed with _cgrp_id, and each
->   cgroup_subsys with _cgrp_subsys.
-> 
-> * With the above, renaming subsys identifiers to match the userland
->   visible names doesn't cause any naming conflicts.  All non-matching
->   identifiers are renamed to match the official names.
-> 
->   cpu_cgroup -> cpu
->   mem_cgroup -> memory
->   perf -> perf_event
-> 
-> * controllers no longer need to initialize ->subsys_id and ->name.
->   They're generated in cgroup core and set automatically during boot.
-> 
-> * Redundant cgroup_subsys declarations removed.
-> 
-> * While updating BUG_ON()s in cgroup_init_early(), convert them to
->   WARN()s.  BUGging that early during boot is stupid - the kernel
->   can't print anything, even through serial console and the trap
->   handler doesn't even link stack frame properly for back-tracing.
-> 
-> This patch doesn't introduce any behavior changes.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> Cc: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> Cc: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: Serge E. Hallyn <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>
-> Cc: "Rafael J. Wysocki" <rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org>
-> Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
-> Cc: Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>
-> Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+On Thu, 16 Jan 2014, Michal Hocko wrote:
 
-For memcg and hugetlb
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> > This is concerning because it's merged in -mm without being tested by Eric 
+> > and is marked for stable while violating the stable kernel rules criteria.
+> 
+> Are you questioning the patch fixes the described issue?
+> 
+> Please note that the exit_robust_list and PF_EXITING as a culprit has
+> been identified by Eric. Of course I would prefer if it was tested by
+> anybody who can reproduce it.
 
-[...]
+You're saying the patch hasn't been tested by anybody and that clearly 
+violates the first rule in Documentation/stable_kernel_rules.txt:
 
-Thanks!
--- 
-Michal Hocko
-SUSE Labs
+ - It must be obviously correct and tested.
+
+Adding Greg to the cc if this should be clarified further.  The patches 
+getting proposed through -mm for stable boggles my mind sometimes.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
