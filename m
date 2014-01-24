@@ -1,53 +1,63 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: David Rientjes <rientjes@google.com>
 Subject: Re: [PATCH] cpusets: Allocate heap only when required
-Date: Fri, 24 Jan 2014 05:59:52 -0500
-Message-ID: <20140124105952.GD4101@htj.dyndns.org>
-References: <8622e93b9c49c66ffdc9ef0aa8371c322718edd5.1390475530.git.viresh.kumar@linaro.org>
- <alpine.DEB.2.02.1401231330530.7313@chino.kir.corp.google.com>
- <52E1C8BD.2010500@huawei.com>
- <alpine.DEB.2.02.1401240230190.9846@chino.kir.corp.google.com>
- <20140124103631.GB4101@htj.dyndns.org>
- <alpine.DEB.2.02.1401240243260.24372@chino.kir.corp.google.com>
+Date: Fri, 24 Jan 2014 03:15:11 -0800 (PST)
+Message-ID: <alpine.DEB.2.02.1401240300570.24372@chino.kir.corp.google.com>
+References: <8622e93b9c49c66ffdc9ef0aa8371c322718edd5.1390475530.git.viresh.kumar@linaro.org> <alpine.DEB.2.02.1401231330530.7313@chino.kir.corp.google.com> <52E1C8BD.2010500@huawei.com> <alpine.DEB.2.02.1401240230190.9846@chino.kir.corp.google.com>
+ <20140124103631.GB4101@htj.dyndns.org> <alpine.DEB.2.02.1401240243260.24372@chino.kir.corp.google.com> <20140124105952.GD4101@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=NDZJEgbWglpPFcWinv+9YWl09LoV5LQNuSRbNmFfleA=;
-        b=BISfxgNCocLF28eDaNke8gA6kNjAD0wfYVFo6rPxNKtPaes7MvMRWo1yf5PtWgnwNF
-         520S14HadYKGkRPLSKqwV+I0kmwZqSyfe+qBUSTl+kuOR8vAJeXB5wAkRv932sSuscGU
-         ilFz6pad1tjb9/dckyJ0cmWG9Ps2j1tg0uFE6+74sTc0qoMim0OtHgQK/8WletDvD4xA
-         RJKgIpA3JwSqmMmcet2hoNgpOp/+hE2VnTzTuYp76qt9AZHtcj9npnfS5AeC7aYECJHQ
-         Ey5rl13qrsiCoOFzkN1BZ99zLbEPID6uhtZ2cFNiGeNQLPnbUVrkBFkfx7NRYRcxtb8G
-         6UIA==
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1401240243260.24372-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=google.com; s=20120113;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version:content-type;
+        bh=GQVYXzk+N8FhxpPCeU/HJpfZc3Z/nGb+5h9Zeo1zjI4=;
+        b=YLu0qwmctRoYgrcnVPgW1+qfEK0x5Ji33nHml9mJSSp8XP6xgtQoHNCvgUpMu8RDkU
+         RB7iJZpl15A+npL9Q+lSHutIAPdhkoxCsdL37hZFWMLZZGX5xAntmMwA5yH6xWPOSgO5
+         Q58QmfLhCXtwXghybvYdOOT8A5rRSwOMiQ3mQTB3SWIunK9CPJ2blhKqFdoLkehBv0OD
+         fwGb2GvWCNPJFZv18yzDHr91439Ga4Ce23PIXwVYHO6LO2ztcezjwkW3KFIHv5AcNJNX
+         fvDhWmfG7MZAj2PRdDRNI9a8EupaFOxytAn83yfCEUMvXfPO3LLlCyi/L2MHMMdlg2Y2
+         ZkmA==
+In-Reply-To: <20140124105952.GD4101@htj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linaro-kernel-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, patches-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>, Viresh Kumar <viresh.kumar@linaro.org>, mingo@kernel.org, peterz@infradead.org, linaro-kernel@lists.linaro.org, patches@linaro.org, linux-kernel@vger.kernel.org, Cgroups <cgroups@vger.kernel.org>
 
-Hey,
+On Fri, 24 Jan 2014, Tejun Heo wrote:
 
-On Fri, Jan 24, 2014 at 02:51:12AM -0800, David Rientjes wrote:
-> Nobody is depending on shit, the patch is removing a completely pointless 
-> memory allocation in braindead cpuset code.  What you think is "harmful" 
-> or "more harmful" is irrelevant, but nobody said anything about depending 
-> on that behavior to do anything.
+> > Nobody is depending on shit, the patch is removing a completely pointless 
+> > memory allocation in braindead cpuset code.  What you think is "harmful" 
+> > or "more harmful" is irrelevant, but nobody said anything about depending 
+> > on that behavior to do anything.
+> 
+> Weren't you talking something of that effect in memcg?  Or was it
+> Michal?
 
-Weren't you talking something of that effect in memcg?  Or was it
-Michal?  At any rate, I think you're missing the point why Li replied
-that it's harmless.  He, I think, meant that it doesn't make any
-semantical difference to userland, so your reply saying that it's not
-harmless listing the failure mode under memory pressure seemed
-misleading, so I thought clarification was necessary.  Probably my
-(false?) memory of you talking about that contributed.  Anyways, we
-agree.  Don't depend on it.
+In a completely different thread, I was talking about how we'd like to 
+provide a small amount of memory in oom conditions so that you could do 
+things like read the cgroup tasks file, but you'd also need the same thing 
+to do just about anything, ls, ps, read /proc/pid/status, etc with true 
+slab accounting.  Forget about this unnecessary heap allocation, you 
+couldn't even do the open() in an oom condition.
 
-Thanks.
+That functionality would be provided by the memory reserves set aside for 
+userspace oom handlers as part of that feature, cgroups wouldn't be 
+different than anything else in that regard, it's a memcg and page 
+allocator issue only.
 
--- 
-tejun
+> At any rate, I think you're missing the point why Li replied
+> that it's harmless.  He, I think, meant that it doesn't make any
+> semantical difference to userland, so your reply saying that it's not
+> harmless listing the failure mode under memory pressure seemed
+> misleading, so I thought clarification was necessary.
+
+I would consider any memory allocation that is completely unnecessary to 
+cause anything to fail unnecessarily to be harmful, nothing specific here 
+about update_flag(), cpusets, or cgroups.  Saying something is "harmless" 
+makes it sound like there's no downside to doing it, and that's obviously 
+not the case.
+
+We agree and I think the only outcome of this discussion is that we both 
+wasted time :)
