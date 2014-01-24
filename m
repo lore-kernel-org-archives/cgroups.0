@@ -1,71 +1,36 @@
-From: Kay Sievers <kay-tD+1rO4QERM@public.gmane.org>
-Subject: Re: [PATCH v4 0/3] Send audit/procinfo/cgroup data in socket-level
- control message
-Date: Thu, 23 Jan 2014 20:31:24 +0100
-Message-ID: <CAPXgP11hxVLd7=OJ0-uapLUnQ4P+gsY8dcmfSi2FrenCEg7AFw@mail.gmail.com>
-References: <1377614400-27122-1-git-send-email-jkaluza@redhat.com>
- <1389600109-30739-1-git-send-email-jkaluza@redhat.com> <20140115.121730.1984913330507219167.davem@davemloft.net>
- <1389828103.681.34.camel@flatline.rdu.redhat.com> <20140115232345.GA22237@mtj.dyndns.org>
- <52D7A68F.5030700@redhat.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] cpusets: Allocate heap only when required
+Date: Fri, 24 Jan 2014 09:58:21 +0800
+Message-ID: <52E1C8BD.2010500@huawei.com>
+References: <8622e93b9c49c66ffdc9ef0aa8371c322718edd5.1390475530.git.viresh.kumar@linaro.org> <alpine.DEB.2.02.1401231330530.7313@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=vrfy.org; s=google;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-type:content-transfer-encoding;
-        bh=rEgR9mK5Wh9ln0R6JHfSJuHVJl5xxG6MdGVE1WhpkHA=;
-        b=DANgGODBmR8ip8XZOLhEDGC7lyC4Us5Wy0VbXtFcbr8RUAZu5pVDPALmAd7T9725/Z
-         uePZGJD4hlEcuK24QwWjD/by/9tTV3OVtGWeZIebtfVdNfxkpD2xe5hwhWYS52IfgzSY
-         OOerDoV0GHnO/yPqtrW88fT3AKfqkcz0fQZZ8=
-In-Reply-To: <52D7A68F.5030700-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <alpine.DEB.2.02.1401231330530.7313-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: =?UTF-8?Q?Jan_Kalu=C5=BEa?= <jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Eric Paris <eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rgb-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linaro-kernel-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, patches-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On Thu, Jan 16, 2014 at 10:29 AM, Jan Kalu=C5=BEa <jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> =
-wrote:
-> On 01/16/2014 12:23 AM, Tejun Heo wrote:
->> On Wed, Jan 15, 2014 at 06:21:43PM -0500, Eric Paris wrote:
->>>
->>> Reliably being able to audit what process requested an action is
->>> extremely useful.  And I like the audit patch, as it is a couple of=
- ints
->>> we are storing.
->>>
->>> procinfo and cgroup can both be up to 4k of data.
->>>
->>> Is there an alternative he should consider?  Some way to grab a
->>> reference on task_struct and just attach that to the message?
+Cc: Tejun
+
+On 2014/1/24 5:31, David Rientjes wrote:
+> On Thu, 23 Jan 2014, Viresh Kumar wrote:
+> 
+>> update_flag() routine uses heap only when spread_flag_changed is true. Otherwise
+>> heap isn't used, but is allocated and freed unnecessarily.
 >>
->> Or maybe it can be made separately optional instead of tagging along
->> on an existing option so that it doesn't tax use cases which don't
->> care about the new stuff?
->
-> Right, I could add new option next to SOCK_PASSCRED which could be us=
-ed to
-> send newly added stuff. Would this be acceptable?
->
-> I would still vote for SCM_AUDIT to be part of SOCK_PASSCRED and move
-> SCM_CGROUP and SCM_PROCINFO into new option.
 
-Maybe we could just add a new SOCK_PASS_TASKINFO bit to set in
-socket->flags. Set that bit with a new SO_PASS_TASKINFO sockoption.
+but harmless
 
-The SOCK_PASS_TASKINFO can carry all sorts of "struct task" related
-stuff, also include the audit data. It is all fully conditional, so
-users which do not explicitly subscribe to TASKINFO will never see the
-data or needlessly pay for the overhead.
+>> Fix this by allocating heap only when required.
+>>
+>> Signed-off-by: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+> 
+> Acked-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-A TASKINFO sounds generic enough to be possibly extended with new data
-in the future, without wasting extra bits in the socket flags.
+Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Users which subscribe with SO_PASS_TASKINFO expect some overhead
-anyway. In the end it's still a lot cheaper than parsing /proc for the
-data; which is also racy and does therefore not work for any
-short-living program.
-
-Thanks,
-Kay
+I would like this patch be picked up by Tejun. I'll send out a patchset
+for cpuset which may have confliction with this one.
