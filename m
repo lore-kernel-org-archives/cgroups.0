@@ -1,63 +1,84 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [PATCH] cpusets: Allocate heap only when required
-Date: Fri, 24 Jan 2014 03:15:11 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1401240300570.24372@chino.kir.corp.google.com>
-References: <8622e93b9c49c66ffdc9ef0aa8371c322718edd5.1390475530.git.viresh.kumar@linaro.org> <alpine.DEB.2.02.1401231330530.7313@chino.kir.corp.google.com> <52E1C8BD.2010500@huawei.com> <alpine.DEB.2.02.1401240230190.9846@chino.kir.corp.google.com>
- <20140124103631.GB4101@htj.dyndns.org> <alpine.DEB.2.02.1401240243260.24372@chino.kir.corp.google.com> <20140124105952.GD4101@htj.dyndns.org>
+From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH RFC 0/9] cgroups: add res_counter_write_u64() API
+Date: Sun, 26 Jan 2014 16:56:14 +0100
+Message-ID: <20140126155614.GA6663@mail.hallyn.com>
+References: <1386884118-14972-1-git-send-email-dwight.engen@oracle.com>
+	<20131223125410.GA585@localhost.localdomain>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=GQVYXzk+N8FhxpPCeU/HJpfZc3Z/nGb+5h9Zeo1zjI4=;
-        b=YLu0qwmctRoYgrcnVPgW1+qfEK0x5Ji33nHml9mJSSp8XP6xgtQoHNCvgUpMu8RDkU
-         RB7iJZpl15A+npL9Q+lSHutIAPdhkoxCsdL37hZFWMLZZGX5xAntmMwA5yH6xWPOSgO5
-         Q58QmfLhCXtwXghybvYdOOT8A5rRSwOMiQ3mQTB3SWIunK9CPJ2blhKqFdoLkehBv0OD
-         fwGb2GvWCNPJFZv18yzDHr91439Ga4Ce23PIXwVYHO6LO2ztcezjwkW3KFIHv5AcNJNX
-         fvDhWmfG7MZAj2PRdDRNI9a8EupaFOxytAn83yfCEUMvXfPO3LLlCyi/L2MHMMdlg2Y2
-         ZkmA==
-In-Reply-To: <20140124105952.GD4101@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, Viresh Kumar <viresh.kumar@linaro.org>, mingo@kernel.org, peterz@infradead.org, linaro-kernel@lists.linaro.org, patches@linaro.org, linux-kernel@vger.kernel.org, Cgroups <cgroups@vger.kernel.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20131223125410.GA585-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, 24 Jan 2014, Tejun Heo wrote:
-
-> > Nobody is depending on shit, the patch is removing a completely pointless 
-> > memory allocation in braindead cpuset code.  What you think is "harmful" 
-> > or "more harmful" is irrelevant, but nobody said anything about depending 
-> > on that behavior to do anything.
+Quoting Frederic Weisbecker (fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org):
+> On Thu, Dec 12, 2013 at 04:35:09PM -0500, Dwight Engen wrote:
+> > Hello,
+> > 
+> > I've seen that some sort of fork/task limiter has been proposed and
+> > discussed several times before. Despite the existance of kmem in memcg, a
+> > fork limiter is still often asked for by container users. Perhaps this is
+> > due to current granularity in kmem (ie. stack/struct task not split out from
+> > other slab allocations) but I believe it is just more natural for users to
+> > express a limit in terms of tasks.
+> > 
+> > So what I've done is updated Frederic Weisbecker's task counter patchset and
+> > tried to address the concerns that I saw people had raised. This involved
+> > the following changes:
+> > 
+> > - merged into cpuacct controller, as it seems there is a desire not to add
+> >   new controllers, this controller is already heirarchical, and I feel
+> >   limiting number of tasks/forks fits best here
+> > - included a fork_limit similar to the one Max Kellermann posted
+> >   (https://lkml.org/lkml/2011/2/17/116) which is a use case not addressable
+> >   with memcg
+> > - ala memcg kmem, for performance reasons don't account unless limit is set
+> > - ala memcg, allow usage to roll up to root (prevents warnings on
+> >   uncharge), but still don't allow setting limits in root
+> > - changed the interface at fork()/exit(), adding
+> >   can_fork()/cancel_can_fork() modeled on can_attach(). cgroup_fork()
+> >   can now return failure to fork().
+> > - ran Frederics selftests, and added a couple more
+> > 
+> > I also wrote a small fork micro benchmark to see how this change affected
+> > performance. I did 20 runs of 100000 fork/exit/waitpid, and took the
+> > average. Times are in seconds, base is without the change, cpuacct1 is with
+> > the change but no accounting be done (ie. no limit set), and cpuacct2 is
+> > with the test being in a cgroup 1 level deep.
+> > 
+> > base  cpuacct1  cpuaac2
+> > 5.59  5.59      5.64
+> > 
+> > So I believe this change has minimal performance impact, especially when no
+> > limit is set.
 > 
-> Weren't you talking something of that effect in memcg?  Or was it
-> Michal?
+> Sorry for the late answer on this. I'm adding cgroup mailing list and a few
+> cgroups/kmem people in Cc.
+> 
+> This patchset was eventually abandoned because kmem became the prefered way to
+> limit the number of tasks that can be forked.
+> 
+> Have you tried it?
 
-In a completely different thread, I was talking about how we'd like to 
-provide a small amount of memory in oom conditions so that you could do 
-things like read the cgroup tasks file, but you'd also need the same thing 
-to do just about anything, ls, ps, read /proc/pid/status, etc with true 
-slab accounting.  Forget about this unnecessary heap allocation, you 
-couldn't even do the open() in an oom condition.
+It seems like this could cause false positives if the cgroup was in
+some other way using quite a bit of kernel memory (reading a big
+ecryptfs file?).  Certainly it would be a gross rather than fine-tuned
+knob.
 
-That functionality would be provided by the memory reserves set aside for 
-userspace oom handlers as part of that feature, cgroups wouldn't be 
-different than anything else in that regard, it's a memcg and page 
-allocator issue only.
+Have people actually used the kmem controller this way and found it
+useful and effective?  Is there any guidance on reasonable limits to
+use?
 
-> At any rate, I think you're missing the point why Li replied
-> that it's harmless.  He, I think, meant that it doesn't make any
-> semantical difference to userland, so your reply saying that it's not
-> harmless listing the failure mode under memory pressure seemed
-> misleading, so I thought clarification was necessary.
-
-I would consider any memory allocation that is completely unnecessary to 
-cause anything to fail unnecessarily to be harmful, nothing specific here 
-about update_flag(), cpusets, or cgroups.  Saying something is "harmless" 
-makes it sound like there's no downside to doing it, and that's obviously 
-not the case.
-
-We agree and I think the only outcome of this discussion is that we both 
-wasted time :)
+-serge
