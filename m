@@ -1,84 +1,75 @@
-From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH RFC 0/9] cgroups: add res_counter_write_u64() API
-Date: Sun, 26 Jan 2014 16:56:14 +0100
-Message-ID: <20140126155614.GA6663@mail.hallyn.com>
-References: <1386884118-14972-1-git-send-email-dwight.engen@oracle.com>
-	<20131223125410.GA585@localhost.localdomain>
+From: Dermot McGahon <dmcgahon-mOLzCpKykOlBDgjK7y7TUQ@public.gmane.org>
+Subject: Fwd: CGroups and pthreads
+Date: Mon, 27 Jan 2014 16:38:11 +0000
+Message-ID: <CALaYU_DoyN+aAbS-ubkYRCwnOBd2knxvnhNTYWF-nJoUXMqXnw@mail.gmail.com>
+References: <CALaYU_BZ8iuHnAgkss1wO7BK3qULgotYSpmX4nqX=uC+aTnddA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20131223125410.GA585-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: multipart/mixed; boundary=001a11c309ea929d2104f0f656c3
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=waratek.com; s=waratek;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :content-type;
+        bh=hZrwIPD4EK6LCdPupWhRwIQvVxfvINKGmgU/mhmBIJg=;
+        b=DxDGBMiJBU+S5cKjkMOpDJM5Ald5mf7IgEtkkK9fcfx6k0eAePQdsDJ5RYgzcFBVcH
+         pvFKANNHfGtyYudGYFRncM3ZRqG6hXqCNGMpm4tkxsp2BqWZJcsaKw/T6Lmz/e5ygzUR
+         f3Iz1op+CtI2afUcuQIpzHvobPyi03rTb729M=
+In-Reply-To: <CALaYU_BZ8iuHnAgkss1wO7BK3qULgotYSpmX4nqX=uC+aTnddA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Quoting Frederic Weisbecker (fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org):
-> On Thu, Dec 12, 2013 at 04:35:09PM -0500, Dwight Engen wrote:
-> > Hello,
-> > 
-> > I've seen that some sort of fork/task limiter has been proposed and
-> > discussed several times before. Despite the existance of kmem in memcg, a
-> > fork limiter is still often asked for by container users. Perhaps this is
-> > due to current granularity in kmem (ie. stack/struct task not split out from
-> > other slab allocations) but I believe it is just more natural for users to
-> > express a limit in terms of tasks.
-> > 
-> > So what I've done is updated Frederic Weisbecker's task counter patchset and
-> > tried to address the concerns that I saw people had raised. This involved
-> > the following changes:
-> > 
-> > - merged into cpuacct controller, as it seems there is a desire not to add
-> >   new controllers, this controller is already heirarchical, and I feel
-> >   limiting number of tasks/forks fits best here
-> > - included a fork_limit similar to the one Max Kellermann posted
-> >   (https://lkml.org/lkml/2011/2/17/116) which is a use case not addressable
-> >   with memcg
-> > - ala memcg kmem, for performance reasons don't account unless limit is set
-> > - ala memcg, allow usage to roll up to root (prevents warnings on
-> >   uncharge), but still don't allow setting limits in root
-> > - changed the interface at fork()/exit(), adding
-> >   can_fork()/cancel_can_fork() modeled on can_attach(). cgroup_fork()
-> >   can now return failure to fork().
-> > - ran Frederics selftests, and added a couple more
-> > 
-> > I also wrote a small fork micro benchmark to see how this change affected
-> > performance. I did 20 runs of 100000 fork/exit/waitpid, and took the
-> > average. Times are in seconds, base is without the change, cpuacct1 is with
-> > the change but no accounting be done (ie. no limit set), and cpuacct2 is
-> > with the test being in a cgroup 1 level deep.
-> > 
-> > base  cpuacct1  cpuaac2
-> > 5.59  5.59      5.64
-> > 
-> > So I believe this change has minimal performance impact, especially when no
-> > limit is set.
-> 
-> Sorry for the late answer on this. I'm adding cgroup mailing list and a few
-> cgroups/kmem people in Cc.
-> 
-> This patchset was eventually abandoned because kmem became the prefered way to
-> limit the number of tasks that can be forked.
-> 
-> Have you tried it?
+--001a11c309ea929d2104f0f656c3
+Content-Type: text/plain; charset=ISO-8859-1
 
-It seems like this could cause false positives if the cgroup was in
-some other way using quite a bit of kernel memory (reading a big
-ecryptfs file?).  Certainly it would be a gross rather than fine-tuned
-knob.
+Is it possible to apply cgroup memory subsystem controls to threads created with
+pthread_create() / clone or only tasks that have been created using
+fork and exec?
 
-Have people actually used the kmem controller this way and found it
-useful and effective?  Is there any guidance on reasonable limits to
-use?
+In testing, we seem to be seeing that all allocations are accounted
+for against the
+PPID / TGID and never the pthread_create()'d TID, even though the TID is an LWP
+and can be seen using top (though RSS is aggregate and global of course).
 
--serge
+Attached is a simple test program used to print PID / TID and allocate memory
+from a cloned TID. After setting breakpoints in child and parent and
+setting up a
+cgroups hierarchy of 'parent' and 'child', apply memory.limit_in_bytes and
+memory.memsw.limit_in_bytes to the child cgroup only and adding the PID to
+the parent group and the TID to the child group we see that behaviour.
+
+Is that expected? I realise that the subsystems are all different but
+what is confusing
+us slightly is that we have previously used the CPU subsystem to set cpu_shares
+and adding LWP / TID's to individual cgroups worked just fine for that
+
+Am I misconfiguring somehow or is this a known difference between CPU and
+MEMORY subsystems?
+
+--001a11c309ea929d2104f0f656c3
+Content-Type: text/x-csrc; charset=US-ASCII; name="pthread_test.c"
+Content-Disposition: attachment; filename="pthread_test.c"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hqxy6q1x0
+
+I2luY2x1ZGUgPHN0ZGlvLmg+CiNpbmNsdWRlIDxzdHJpbmcuaD4KI2luY2x1ZGUgPHN0ZGxpYi5o
+PgojaW5jbHVkZSA8c3lzL3N5c2NhbGwuaD4KCnZvaWQgdGhyZWFkX2Z1bmMoKQp7CiAgICBwcmlu
+dGYoICJ0aHJlYWQgcGlkPSVkLCB0aHJlYWQgdGlkPSVkXG4iLCBnZXRwaWQoKSwgc3lzY2FsbCgg
+U1lTX2dldHRpZCApICk7CgogICAgc2l6ZV90IG9uZV9odW5kcmVkX21iID0gMTAwICogMTAyNCAq
+IDEwMjQ7CiAgICB2b2lkICogYWxsb2NhdGVkQ2h1bmsgPSBtYWxsb2MgKCBvbmVfaHVuZHJlZF9t
+YiApOwogICAgbWVtc2V0KCBhbGxvY2F0ZWRDaHVuaywgMCwgb25lX2h1bmRyZWRfbWIgKTsKCiAg
+ICBpZiAoIGFsbG9jYXRlZENodW5rID09IE5VTEwgKQogICAgewogICAgICAgIHByaW50ZigiY291
+bGRuJ3QgYWxsb2NhdGVcbiIpOwogICAgfQogICAgZWxzZQogICAgewogICAgICAgIGludCB0aWQg
+PSBzeXNjYWxsKCBTWVNfZ2V0dGlkICk7CiAgICAgICAgcHJpbnRmKCAiUElEOiAlZCwgVElEOiAl
+ZCAtIGhhcyBhbGxvY2F0ZWQgMTAwbWJcbiIsIGdldHBpZCgpLCBzeXNjYWxsKCBTWVNfZ2V0dGlk
+ICkgKTsKICAgIH0KCiAgICBzbGVlcCgxMDAwKTsKfQoKdm9pZCBtYWluKCkKewogICAgcHJpbnRm
+KCAibWFpbiBwaWQ9JWQsIG1haW4gdGlkPSVkXG4iLCBnZXRwaWQoKSwgc3lzY2FsbCggU1lTX2dl
+dHRpZCApICk7CgogICAgcHRocmVhZF90IHRocmVhZDE7CiAgICBwdGhyZWFkX2NyZWF0ZSggJnRo
+cmVhZDEsIE5VTEwsICh2b2lkICopJnRocmVhZF9mdW5jLCBOVUxMKTsKCi8qICAgIHBpZF90IGNo
+aWxkcGlkOwogICAgY2hpbGRwaWQgPSBmb3JrKCk7CgogICAgaWYgKCBjaGlsZHBpZCA+PSAwICkK
+ICAgIHsKICAgICAgIGlmICggY2hpbGRwaWQgPT0gMCApCiAgICAgICB7CiAgICAgICAgICB0aHJl
+YWRfZnVuYygpOyAvLyBjaGlsZAogICAgICAgfQogICAgICAgZWxzZQogICAgICAgewogICAgICAg
+ICAgc2xlZXAoMTAwMCk7IC8vIHBhcmVudAogICAgICAgfQogICAgfQogICAgZWxzZQogICAgewog
+ICAgICAgcGVycm9yKCJmb3JrIik7CiAgICAgICBleGl0KDApOwogICAgfSAqLwoKICAgIHNsZWVw
+KDEwMDApOwp9Cgo=
+--001a11c309ea929d2104f0f656c3--
