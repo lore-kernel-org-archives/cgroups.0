@@ -1,118 +1,123 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 07/13] cgroup: make cgroup_subsys->base_cftypes use cgroup_add_cftypes()
-Date: Tue, 28 Jan 2014 18:54:39 -0500
-Message-ID: <1390953285-16360-8-git-send-email-tj@kernel.org>
+Subject: [PATCH 03/13] cgroup: release cgroup_mutex over file removals
+Date: Tue, 28 Jan 2014 18:54:35 -0500
+Message-ID: <1390953285-16360-4-git-send-email-tj@kernel.org>
 References: <1390953285-16360-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=RA5RqZq7CCvecjWYIBeeIJyRbPpo7G9m68MaShQxh/c=;
-        b=ZdQSyZEbBbKLHt5FHCaKq5NsM+WQ/ZGd8las1GDoLBk9e2yP+baKRvcTjoI1fXllZy
-         /4yMPErCa7wu6agDYM2u+Ywqh2c32D/oN3urr4wN7VtpZSUTYRHSYEFi7GNIlasse3z9
-         7kst8RMrrGt8pP9NamVSJCfOcqklj49qnl1YMh8A4MabStF60LPcb9tMpsa27SN3sGXP
-         5KOYNfUDTxaAxCQHCNwQ6j/ZgQwSz35Hi2zK+Zja8EgQ9e1u3dlmXDMB2VSdG6CYxeIR
-         E3KxYF0qk0VUcBCVqzKBkOvrNjBwktw+1WQZsCExHir4rcJzWkd4OHOVQ7ncVZ7tOpUz
-         OoiA==
-In-Reply-To: <1390953285-16360-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+	bh=qXus70GG5Jg9SHr889PbuvpaetGFeDsvo7HZajFIjRI=;
+	b=cLGsT4wCUUlkjnbk4IRCmw7ub6bqGPl1n+d9+Y4R+N7XnlGg5Lg5M5ExoGWxOlREPT
+	CrADHdD+VUr4Y7czeeOSObQgxwJGAqCk+dHbBiVu68JwDrCGk2MeCMor6kJz9wmnia8K
+	iLGdrDlmOPjKZnjKlC4J8WkGGDC47nmvd9ZMONq+FnQxWTr1+HDoKuaFdCUc5eOKCJG+
+	hfBwjST6v2+q7gc/Lzji8A5wRuHjMGFxDBAL98kVcZ0GkBzmshtAyKy+NhqcIXhumflP
+	J2sdNs+EyBR2w2QRiUSbfhwxCRKciEQVCX8+gbKqQDNYg/SI9tKcPXchRYOoCsIlNHIJ
+	8Pig==
+In-Reply-To: <1390953285-16360-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Currently, cgroup_subsys->base_cftypes registration is different from
-dynamic cftypes registartion.  Instead of going through
-cgroup_add_cftypes(), cgroup_init_subsys() invokes
-cgroup_init_cftsets() which makes use of cgroup_subsys->base_cftset
-which doesn't involve dynamic allocation.
+Now that cftypes and all tree modification operations are protected by
+cgroup_tree_mutex, we can drop cgroup_mutex while deleting files and
+directories.  Drop cgroup_mutex over removals.
 
-While avoiding dynamic allocation is somewhat nice, having two
-separate paths for cftypes registration is nasty, especially as we're
-planning to add more operations during cftypes registration.
-
-This patch drops cgroup_init_cftsets() and cgroup_subsys->base_cftset
-and registers base_cftypes using cgroup_add_cftypes().  This is done
-as a separate step in cgroup_init() instead of a part of
-cgroup_init_subsys().  This is because cgroup_init_subsys() can be
-called very early during boot when kmalloc() isn't available yet.
+This doesn't make any noticeable difference now but is to help kernfs
+conversion.  In kernfs, removals are sync points which drain in-flight
+operations as those operations would grab cgroup_mutex, trying to
+delete under cgroup_mutex would deadlock.  This can be resolved by
+just holding the outer cgroup_tree_mutex which nests outside both
+kernfs active reference and cgroup_mutex.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- include/linux/cgroup.h |  3 +--
- kernel/cgroup.c        | 29 ++++++++---------------------
- 2 files changed, 9 insertions(+), 23 deletions(-)
+ kernel/cgroup.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 2255639..884d367 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -602,9 +602,8 @@ struct cgroup_subsys {
- 	/* list of cftype_sets */
- 	struct list_head cftsets;
- 
--	/* base cftypes, automatically [de]registered with subsys itself */
-+	/* base cftypes, automatically registered with subsys itself */
- 	struct cftype *base_cftypes;
--	struct cftype_set base_cftset;
- };
- 
- #define SUBSYS(_x) extern struct cgroup_subsys _x ## _cgrp_subsys;
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index e832f90..ab5344d 100644
+index 8018777..bff7d64 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -4494,25 +4494,6 @@ static int cgroup_rmdir(struct inode *unused_dir, struct dentry *dentry)
- 	return ret;
- }
+@@ -974,7 +974,9 @@ static int rebind_subsystems(struct cgroupfs_root *root,
+ 	 * Nothing can fail from this point on.  Remove files for the
+ 	 * removed subsystems and rebind each subsystem.
+ 	 */
++	mutex_unlock(&cgroup_mutex);
+ 	cgroup_clear_dir(cgrp, removed_mask);
++	mutex_lock(&cgroup_mutex);
  
--static void __init cgroup_init_cftsets(struct cgroup_subsys *ss)
--{
--	INIT_LIST_HEAD(&ss->cftsets);
--
--	/*
--	 * base_cftset is embedded in subsys itself, no need to worry about
--	 * deregistration.
--	 */
--	if (ss->base_cftypes) {
--		struct cftype *cft;
--
--		for (cft = ss->base_cftypes; cft->name[0] != '\0'; cft++)
--			cft->ss = ss;
--
--		ss->base_cftset.cfts = ss->base_cftypes;
--		list_add_tail(&ss->base_cftset.node, &ss->cftsets);
--	}
--}
--
- static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
- {
- 	struct cgroup_subsys_state *css;
-@@ -4522,8 +4503,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
- 	mutex_lock(&cgroup_tree_mutex);
- 	mutex_lock(&cgroup_mutex);
- 
--	/* init base cftset */
--	cgroup_init_cftsets(ss);
-+	INIT_LIST_HEAD(&ss->cftsets);
- 
- 	/* Create the top cgroup state for this subsystem */
- 	ss->root = &cgroup_dummy_root;
-@@ -4612,6 +4592,13 @@ int __init cgroup_init(void)
  	for_each_subsys(ss, i) {
- 		if (!ss->early_init)
- 			cgroup_init_subsys(ss);
-+
-+		/*
-+		 * cftype registration needs kmalloc and can't be done
-+		 * during early_init.  Register base cftypes separately.
-+		 */
-+		if (ss->base_cftypes)
-+			WARN_ON(cgroup_add_cftypes(ss, ss->base_cftypes));
- 	}
+ 		unsigned long bit = 1UL << i;
+@@ -2687,10 +2689,11 @@ static int cgroup_cfts_commit(struct cftype *cfts, bool is_add)
+ 	u64 update_before;
+ 	int ret = 0;
  
- 	/* allocate id for the dummy hierarchy */
++	mutex_unlock(&cgroup_mutex);
++
+ 	/* %NULL @cfts indicates abort and don't bother if @ss isn't attached */
+ 	if (!cfts || ss->root == &cgroup_dummy_root ||
+ 	    !atomic_inc_not_zero(&sb->s_active)) {
+-		mutex_unlock(&cgroup_mutex);
+ 		mutex_unlock(&cgroup_tree_mutex);
+ 		return 0;
+ 	}
+@@ -2714,18 +2717,15 @@ static int cgroup_cfts_commit(struct cftype *cfts, bool is_add)
+ 		dput(prev);
+ 		prev = cgrp->dentry;
+ 
+-		mutex_unlock(&cgroup_mutex);
+ 		mutex_unlock(&cgroup_tree_mutex);
+ 		mutex_lock(&inode->i_mutex);
+ 		mutex_lock(&cgroup_tree_mutex);
+-		mutex_lock(&cgroup_mutex);
+ 		if (cgrp->serial_nr < update_before && !cgroup_is_dead(cgrp))
+ 			ret = cgroup_addrm_files(cgrp, cfts, is_add);
+ 		mutex_unlock(&inode->i_mutex);
+ 		if (ret)
+ 			break;
+ 	}
+-	mutex_unlock(&cgroup_mutex);
+ 	mutex_unlock(&cgroup_tree_mutex);
+ 	dput(prev);
+ 	deactivate_super(sb);
+@@ -4378,10 +4378,13 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 	/*
+ 	 * Initiate massacre of all css's.  cgroup_destroy_css_killed()
+ 	 * will be invoked to perform the rest of destruction once the
+-	 * percpu refs of all css's are confirmed to be killed.
++	 * percpu refs of all css's are confirmed to be killed.  This
++	 * involves removing the subsystem's files, drop cgroup_mutex.
+ 	 */
++	mutex_unlock(&cgroup_mutex);
+ 	for_each_css(css, ssid, cgrp)
+ 		kill_css(css);
++	mutex_lock(&cgroup_mutex);
+ 
+ 	/*
+ 	 * Mark @cgrp dead.  This prevents further task migration and child
+@@ -4412,9 +4415,11 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 	 * puts the base ref but we aren't quite done with @cgrp yet, so
+ 	 * hold onto it.
+ 	 */
++	mutex_unlock(&cgroup_mutex);
+ 	cgroup_addrm_files(cgrp, cgroup_base_files, false);
+ 	dget(d);
+ 	cgroup_d_remove_dir(d);
++	mutex_lock(&cgroup_mutex);
+ 
+ 	return 0;
+ };
 -- 
 1.8.5.3
