@@ -1,38 +1,36 @@
-From: Tejun Heo <tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH] cpuset: update MAINTAINERS entry
-Date: Tue, 28 Jan 2014 04:35:46 -0500
-Message-ID: <20140128093546.GA19156@htj.dyndns.org>
+Date: Tue, 28 Jan 2014 10:18:23 -0500
+Message-ID: <20140128151823.GB19156@htj.dyndns.org>
 References: <52E72405.7070402@huawei.com>
- <alpine.DEB.2.02.1401272232150.17436@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=RwrAkWwga8Jeok83rRpRLNxchApVDg/R2WZ6j/kDh6g=;
-        b=pOHKGSIp/8kKzHMcO+LCzDqBuNv43sI0Ipk9lai44zdzAvsR54V8pDaUg7fsp+2H0K
-         +b4F5Rl8jU04hd0PnKDZbMNpEpaUNg6xuqVorZnxGIHoLroU2fiFJRyBdIBw9Evo0pCq
-         THRjOC6RZ0OwyWIiZm+fIPP1FtTSkhR1R+GqDJ269n5zS7/ea+UX/WY+/Pi6zwtYhGEw
-         r72L348Fa+YQqxPJJaYdxNVW2YTzYanHuBO8rZqWMrF+2jBMClmaQ7/2ElX+8pOD7qDl
-         qqDhi6OR5//kaLbqAXKg0frJs83EnsKCAxDi3Xy0G63hmoGY2oISPEf+Eczf30rKFY3t
-         LKSQ==
+        bh=t9EX87sk6kGpLDwG6CvvrmFYfLIxsS3s8dJe9P5/GpE=;
+        b=jGsX21Fzh//zao6fUHiEr1BuUWo5Jx6Bdmd8Pu4R8V9rqt5txHvCqTuoWunqh0KNja
+         jYitxuIsb+oNk9dTaByEqwAMqQ5pvOs0RlqpeFIGCcX8V+CLsPB9PMevsyQ3PbeGusb1
+         W+JFgm9rUvIx1CCDi4dVVgckIxfJvU+fUPRUMSjQsDeR7rlV9+Z3xKZEKaoxtnBg6499
+         Del+4RjC+dJWSMTMmwc6mRYGO55W8oE4JzY2blxnNpacSBssBmkH3PoC+lVO22oEK+oI
+         bDCNsbA8LL1tzoEwvJMqaHYUo2EsHRZZU3yowrFLOuDv63kCkevngph0BhSBTL7AVKd4
+         yRfw==
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1401272232150.17436@chino.kir.corp.google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <52E72405.7070402-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Li Zefan <lizefan@huawei.com>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Mon, Jan 27, 2014 at 10:33:40PM -0800, David Rientjes wrote:
-> It seems like Tejun would obviously be a maintainer as well?
+On Tue, Jan 28, 2014 at 11:29:09AM +0800, Li Zefan wrote:
+> Add mailing list and tree tag to the entry.
+> 
+> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-No, I'm not.  Li has final say on what goes in for cpuset and they may
-even go through other trees.
-
-Thanks.
+Applied to cgroup/for-3.14-fixes.  Thanks.
 
 -- 
 tejun
