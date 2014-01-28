@@ -1,119 +1,229 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 09/13] cgroup: introduce cgroup_init/exit_cftypes()
-Date: Tue, 28 Jan 2014 18:54:41 -0500
-Message-ID: <1390953285-16360-10-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 04/13] cgroup: restructure locking and error handling in
+	cgroup_mount()
+Date: Tue, 28 Jan 2014 18:54:36 -0500
+Message-ID: <1390953285-16360-5-git-send-email-tj@kernel.org>
 References: <1390953285-16360-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=v80919D4tpV0a/SVlt9Qfyq7/myQyAUvBv4bo8Pc2Ec=;
-        b=RLt2k0Zrw0jnJxsb/zn/ck2uDyYug1xNvm8/PR4nisoRwdCHEcPx3RNfYLWCM4m9hJ
-         23dKAadJeIl0YDVT5f/64FizZDgoqKImKxeKn9ppO6ZhddTwb/Uk3Yn0e6CVwfyooI1c
-         toM6CZzE+YFVFuk1UvN9K6jNIlP4BpTptjbk4/Z9b8PhDbKudOh2TO9BTQpw7bxUA8mV
-         dJxPEweLC2bFkHmlguBHHPJArTDpO+piq9Pf0ox1GKT0+QIKzvpekcoRzbJgX7VyKa6Z
-         Ca/6fna0yJL2F1biq8wMhyyo5IL6ZZ5eZCZWMpXwTqMFfThpXrOX1rLEUao1vofHQkcv
-         xeGQ==
-In-Reply-To: <1390953285-16360-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com
-Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+	bh=T2JsTpioQrSBhzYNkvMJFxo2J/N2YVOWTmxb6sEyin0=;
+	b=ynPER8/2pDcWisj+b2kI+QeJqZ9NQzxOuToHsmupWnfeJzZtiVL3e0Sf2CWpoMpUom
+	Wh9PVkEcUesGiQ7f0HJu69rN5g/GN/G2pXyaziTQmecX/zsw7DN0JVVH42NRRqz8bZ21
+	RllByWiWRlLTbPyZILlJlkgP1pnVYs0h+dvxjohCUgcoptw+0/MF6Tjl9PEbQRusT7vT
+	PzgLAkh027L3XTPX0y7BLpiAYWcc6ewCkWK7Ryu9gqnxRbFh6716r8Ocr2c70VZQxtsf
+	3jMx8IeSWbANkXHfiuHcbKhFmkcPXxe/6nl5e16eoXiAZ85GbbRyDVMmfyF9dLsYnLB3
+	dYQQ==
+In-Reply-To: <1390953285-16360-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Factor out cft->ss initialization into cgroup_init_cftypes() from
-cgroup_add_cftypes() and add cft->ss clearing to cgroup_rm_cftypes()
-through cgroup_exit_cftypes().
+cgroup is scheduled to be converted to kernfs.  After conversion,
+cgroup_mount() won't use the sget() machinery for finding out existing
+super_blocks but instead would do that directly.  It'll search the
+existing cgroupfs_roots for a matching one and create a new one iff a
+match doesn't exist.  To ease such conversion, this patch restructures
+locking and error handling of the function.
 
-This doesn't make any meaningful difference now but the two new
-functions will be expanded during kernfs transition.
+cgroup_tree_mutex and cgroup_mutex are grabbed from the get-go and
+held until return.  For now, due to the way vfs locks nest outside
+cgroup mutexes, the two cgroup mutexes are temporarily dropped across
+sget() and inode mutex locking, which looks quite ridiculous; however,
+these will be removed through kernfs conversion and structuring the
+code this way makes the conversion less painful.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
+The error goto labels are consolidated to two.  This looks unwieldy
+now but the next patch will factor out creation of new root into a
+separate function with accompanying error handling and it'll look a
+lot better.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- kernel/cgroup.c | 32 +++++++++++++++++++++++++-------
- 1 file changed, 25 insertions(+), 7 deletions(-)
+ kernel/cgroup.c | 73 +++++++++++++++++++++++++++++++--------------------------
+ 1 file changed, 40 insertions(+), 33 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index a800e56..5c35f00 100644
+index bff7d64..2349698 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -2761,6 +2761,22 @@ static int cgroup_cfts_commit(struct cftype *cfts, bool is_add)
- 	return ret;
- }
- 
-+static void cgroup_exit_cftypes(struct cftype *cfts)
-+{
-+	struct cftype *cft;
-+
-+	for (cft = cfts; cft->name[0] != '\0'; cft++)
-+		cft->ss = NULL;
-+}
-+
-+static void cgroup_init_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
-+{
-+	struct cftype *cft;
-+
-+	for (cft = cfts; cft->name[0] != '\0'; cft++)
-+		cft->ss = ss;
-+}
-+
- /**
-  * cgroup_add_cftypes - add an array of cftypes to a subsystem
-  * @ss: target cgroup subsystem
-@@ -2778,15 +2794,13 @@ static int cgroup_cfts_commit(struct cftype *cfts, bool is_add)
- int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
+@@ -1450,21 +1450,22 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 			 int flags, const char *unused_dev_name,
+ 			 void *data)
  {
- 	struct cftype_set *set;
--	struct cftype *cft;
- 	int ret;
++	LIST_HEAD(tmp_links);
++	struct super_block *sb = NULL;
++	struct inode *inode = NULL;
++	struct cgroupfs_root *root = NULL;
+ 	struct cgroup_sb_opts opts;
+-	struct cgroupfs_root *root;
+-	int ret = 0;
+-	struct super_block *sb;
+ 	struct cgroupfs_root *new_root;
+-	struct list_head tmp_links;
+-	struct inode *inode;
+ 	const struct cred *cred;
++	int ret;
  
- 	set = kzalloc(sizeof(*set), GFP_KERNEL);
- 	if (!set)
- 		return -ENOMEM;
+-	/* First find the desired set of subsystems */
++	mutex_lock(&cgroup_tree_mutex);
+ 	mutex_lock(&cgroup_mutex);
++
++	/* First find the desired set of subsystems */
+ 	ret = parse_cgroupfs_options(data, &opts);
+-	mutex_unlock(&cgroup_mutex);
+ 	if (ret)
+-		goto out_err;
++		goto out_unlock;
  
--	for (cft = cfts; cft->name[0] != '\0'; cft++)
--		cft->ss = ss;
-+	cgroup_init_cftypes(ss, cfts);
+ 	/*
+ 	 * Allocate a new cgroup root. We may not need it if we're
+@@ -1473,16 +1474,20 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 	new_root = cgroup_root_from_opts(&opts);
+ 	if (!new_root) {
+ 		ret = -ENOMEM;
+-		goto out_err;
++		goto out_unlock;
+ 	}
+ 	opts.new_root = new_root;
  
- 	cgroup_cfts_prepare();
- 	set->cfts = cfts;
-@@ -2811,6 +2825,7 @@ EXPORT_SYMBOL_GPL(cgroup_add_cftypes);
-  */
- int cgroup_rm_cftypes(struct cftype *cfts)
- {
-+	struct cftype *found = NULL;
- 	struct cftype_set *set;
+ 	/* Locate an existing or new sb for this hierarchy */
++	mutex_unlock(&cgroup_mutex);
++	mutex_unlock(&cgroup_tree_mutex);
+ 	sb = sget(fs_type, cgroup_test_super, cgroup_set_super, 0, &opts);
++	mutex_lock(&cgroup_tree_mutex);
++	mutex_lock(&cgroup_mutex);
+ 	if (IS_ERR(sb)) {
+ 		ret = PTR_ERR(sb);
+ 		cgroup_free_root(opts.new_root);
+-		goto out_err;
++		goto out_unlock;
+ 	}
  
- 	if (!cfts || !cfts[0].ss)
-@@ -2822,13 +2837,14 @@ int cgroup_rm_cftypes(struct cftype *cfts)
- 		if (set->cfts == cfts) {
- 			list_del(&set->node);
- 			kfree(set);
--			cgroup_cfts_commit(cfts, false);
--			return 0;
-+			found = cfts;
-+			break;
+ 	root = sb->s_fs_info;
+@@ -1496,9 +1501,12 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 
+ 		BUG_ON(sb->s_root != NULL);
+ 
++		mutex_unlock(&cgroup_mutex);
++		mutex_unlock(&cgroup_tree_mutex);
++
+ 		ret = cgroup_get_rootdir(sb);
+ 		if (ret)
+-			goto drop_new_super;
++			goto out_unlock;
+ 		inode = sb->s_root->d_inode;
+ 
+ 		mutex_lock(&inode->i_mutex);
+@@ -1507,7 +1515,7 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 
+ 		ret = idr_alloc(&root->cgroup_idr, root_cgrp, 0, 1, GFP_KERNEL);
+ 		if (ret < 0)
+-			goto unlock_drop;
++			goto out_unlock;
+ 		root_cgrp->id = ret;
+ 
+ 		/* Check for name clashes with existing mounts */
+@@ -1515,7 +1523,7 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 		if (strlen(root->name))
+ 			for_each_active_root(existing_root)
+ 				if (!strcmp(existing_root->name, root->name))
+-					goto unlock_drop;
++					goto out_unlock;
+ 
+ 		/*
+ 		 * We're accessing css_set_count without locking
+@@ -1526,12 +1534,12 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 		 */
+ 		ret = allocate_cgrp_cset_links(css_set_count, &tmp_links);
+ 		if (ret)
+-			goto unlock_drop;
++			goto out_unlock;
+ 
+ 		/* ID 0 is reserved for dummy root, 1 for unified hierarchy */
+ 		ret = cgroup_init_root_id(root, 2, 0);
+ 		if (ret)
+-			goto unlock_drop;
++			goto out_unlock;
+ 
+ 		sb->s_root->d_fsdata = root_cgrp;
+ 		root_cgrp->dentry = sb->s_root;
+@@ -1571,14 +1579,8 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 			link_css_set(&tmp_links, cset, root_cgrp);
+ 		write_unlock(&css_set_lock);
+ 
+-		free_cgrp_cset_links(&tmp_links);
+-
+ 		BUG_ON(!list_empty(&root_cgrp->children));
+ 		BUG_ON(root->number_of_cgroups != 1);
+-
+-		mutex_unlock(&cgroup_mutex);
+-		mutex_unlock(&cgroup_tree_mutex);
+-		mutex_unlock(&inode->i_mutex);
+ 	} else {
+ 		/*
+ 		 * We re-used an existing hierarchy - the new root (if
+@@ -1590,32 +1592,37 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 			if ((root->flags | opts.flags) & CGRP_ROOT_SANE_BEHAVIOR) {
+ 				pr_err("cgroup: sane_behavior: new mount options should match the existing superblock\n");
+ 				ret = -EINVAL;
+-				goto drop_new_super;
++				goto out_unlock;
+ 			} else {
+ 				pr_warning("cgroup: new mount options do not match the existing superblock, will be ignored\n");
+ 			}
  		}
  	}
  
--	cgroup_cfts_commit(NULL, false);
--	return -ENOENT;
-+	cgroup_cfts_commit(found, false);
-+	cgroup_exit_cftypes(cfts);
-+	return found ? 0 : -ENOENT;
+-	kfree(opts.release_agent);
+-	kfree(opts.name);
+-	return dget(sb->s_root);
++	ret = 0;
++	goto out_unlock;
+ 
+- rm_base_files:
+-	free_cgrp_cset_links(&tmp_links);
++rm_base_files:
+ 	cgroup_addrm_files(&root->top_cgroup, cgroup_base_files, false);
+ 	revert_creds(cred);
+- unlock_drop:
+ 	cgroup_exit_root_id(root);
++out_unlock:
+ 	mutex_unlock(&cgroup_mutex);
+ 	mutex_unlock(&cgroup_tree_mutex);
+-	mutex_unlock(&inode->i_mutex);
+- drop_new_super:
+-	deactivate_locked_super(sb);
+- out_err:
++	if (inode)
++		mutex_unlock(&inode->i_mutex);
++
++	if (ret && !IS_ERR_OR_NULL(sb))
++		deactivate_locked_super(sb);
++
++	free_cgrp_cset_links(&tmp_links);
+ 	kfree(opts.release_agent);
+ 	kfree(opts.name);
+-	return ERR_PTR(ret);
++
++	if (!ret)
++		return dget(sb->s_root);
++	else
++		return ERR_PTR(ret);
  }
  
- /**
-@@ -4587,6 +4603,8 @@ int __init cgroup_init(void)
- 	if (err)
- 		return err;
- 
-+	cgroup_init_cftypes(NULL, cgroup_base_files);
-+
- 	for_each_subsys(ss, i) {
- 		if (!ss->early_init)
- 			cgroup_init_subsys(ss);
+ static void cgroup_kill_sb(struct super_block *sb)
 -- 
 1.8.5.3
