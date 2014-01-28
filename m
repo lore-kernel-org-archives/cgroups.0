@@ -1,109 +1,57 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 4/4] cgroup: move the one-off opts sanity check in
-	cgroup_root_from_opts() to parse_cgroupfs_options()
-Date: Tue, 28 Jan 2014 10:32:05 -0500
-Message-ID: <1390923125-4369-5-git-send-email-tj@kernel.org>
-References: <1390923125-4369-1-git-send-email-tj@kernel.org>
+From: Dermot McGahon <dmcgahon-mOLzCpKykOlBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: CGroups and pthreads
+Date: Tue, 28 Jan 2014 17:00:19 +0000
+Message-ID: <CALaYU_AGFVdo1jaaNmN=KDH2Nr3=_Ud8WXzTXdgxpmJuwL_FAQ@mail.gmail.com>
+References: <CALaYU_BZ8iuHnAgkss1wO7BK3qULgotYSpmX4nqX=uC+aTnddA@mail.gmail.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=waratek.com; s=waratek;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :content-type;
+        bh=GwLETr74gh4+69Gxu/+FfjYa4mZV/Q43e6kgrWaDe4Y=;
+        b=SGGZ2opUJ1qJZindSkVJ7Q7VNBADeLwY4X2tAj70MuydIdWIYKGfK6J19T1wVkHWtN
+         r2n3493ha+4X2FRBVGfOuMhCwQDqLoH4YlZFDGO1YavCu9wCduyWsD3Fp+nY0IAR6UtP
+         IwLpdTTDLkza6RWHdRADgcYhKPtYBXIm74uo0=
+In-Reply-To: <CALaYU_BZ8iuHnAgkss1wO7BK3qULgotYSpmX4nqX=uC+aTnddA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=xYTaLnvtqiU065GcNrgedV4QNpy7D3D/qwHeJLhyEeA=;
-	b=GlUYtwjrlSxtiT351SNJ2cP4Xu6b2e5iR94Cc1bU8XBdnB1/6HKq+QX5RqsGTNWSAx
-	/9wJR3ZXfwzbBCYiIZ9SOlkWcluS58M9aRfrndlEFye9BK6+NLx+Yu5FmNB1UgrdEsnd
-	r/0QuDqjCktbRzJZKRA8ZNP5knJN7lXEsUqBOB2chTje+yVA+6GyYqS9HmrkbUu5Fniz
-	ERjGb4idyOB/mmgWqsLJC57DKW+no0jML/2TGR5ioPGr4zUv39ihnZaNtNOKvFGNj3e/
-	Fw7EQbdAESjxzK3vcyP3xIeEP78VKw9Mv+zrjxVFjo+qffWRRLk2XyZhi1i7C5sEp5Vv
-	bgGQ==
-In-Reply-To: <1390923125-4369-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-cgroup_root_from_opts() checks whether (!opts->subsys_mask &&
-!opts->none) and returns NULL if so.  After that, if allocation fails,
-returns ERR_PTR(-ENOMEM).  The caller, cgroup_mount(), doesn't treat
-NULL as an error but set opts.new_root to NULL; however, later on,
-cgroup_set_super() fails with -EINVAL if new_root is NULL.
+Kernel version is 2.6.32 stock kernel for Red Hat Enterprise Linux 6.
 
-This is one bizarre error handling sequence especially when all other
-opts sanity checks including the very close (!opts->subsys_mask &&
-!opts->name) check are done in parse_cgroupfs_options().
+Is there anyone on this list with good knowledge of how the memory subsystem
+behaves?
 
-Let's move the one-off check in cgroup_root_from_opts() to
-parse_cgroupfs_options() where it can be combined with the
-(!opts->subsys_mask && !opts->name) check.  cgroup_root_from_opts() is
-updated to return NULL on memory allocation failure.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- kernel/cgroup.c | 19 ++++++-------------
- 1 file changed, 6 insertions(+), 13 deletions(-)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index b0e030f..5c8fe40 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1265,10 +1265,10 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
- 		return -EINVAL;
- 
- 	/*
--	 * We either have to specify by name or by subsystems. (So all
--	 * empty hierarchies must have a name).
-+	 * We either have to specify by name or by subsystems.  All empty
-+	 * hierarchies must have a name and also "none" option specified.
- 	 */
--	if (!opts->subsys_mask && !opts->name)
-+	if (!opts->subsys_mask && (!opts->name || !opts->none))
- 		return -EINVAL;
- 
- 	return 0;
-@@ -1417,12 +1417,9 @@ static struct cgroupfs_root *cgroup_root_from_opts(struct cgroup_sb_opts *opts)
- {
- 	struct cgroupfs_root *root;
- 
--	if (!opts->subsys_mask && !opts->none)
--		return NULL;
--
- 	root = kzalloc(sizeof(*root), GFP_KERNEL);
- 	if (!root)
--		return ERR_PTR(-ENOMEM);
-+		return NULL;
- 
- 	init_cgroup_root(root);
- 
-@@ -1461,10 +1458,6 @@ static int cgroup_set_super(struct super_block *sb, void *data)
- 	int ret;
- 	struct cgroup_sb_opts *opts = data;
- 
--	/* If we don't have a new root, we can't set up a new sb */
--	if (!opts->new_root)
--		return -EINVAL;
--
- 	BUG_ON(!opts->subsys_mask && !opts->none);
- 
- 	ret = set_anon_super(sb, NULL);
-@@ -1532,8 +1525,8 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 	 * reusing an existing hierarchy.
- 	 */
- 	new_root = cgroup_root_from_opts(&opts);
--	if (IS_ERR(new_root)) {
--		ret = PTR_ERR(new_root);
-+	if (!new_root) {
-+		ret = -ENOMEM;
- 		goto out_err;
- 	}
- 	opts.new_root = new_root;
--- 
-1.8.5.3
+On 27 January 2014 16:36, Dermot McGahon <dmcgahon-mOLzCpKykOlBDgjK7y7TUQ@public.gmane.org> wrote:
+> Is it possible to apply cgroup memory subsystem controls to threads created
+> with
+> pthread_create() / clone or only tasks that have been created using fork and
+> exec?
+>
+> In testing, we seem to be seeing that all allocations are accounted for
+> against the
+> PPID / TGID and never the pthread_create()'d TID, even though the TID is an
+> LWP
+> and can be seen using top (though RSS is aggregate and global of course).
+>
+> Attached is a simple test program used to print PID / TID and allocate
+> memory
+> from a cloned TID. After setting breakpoints in child and parent and setting
+> up a
+> cgroups hierarchy of 'parent' and 'child', apply memory.limit_in_bytes and
+> memory.memsw.limit_in_bytes to the child cgroup only and adding the PID to
+> the parent group and the TID to the child group we see that behaviour.
+>
+> Is that expected? I realise that the subsystems are all different but what
+> is confusing
+> us slightly is that we have previously used the CPU subsystem to set
+> cpu_shares
+> and adding LWP / TID's to individual cgroups worked just fine for that
+>
+> Am I misconfiguring somehow or is this a known difference between CPU and
+> MEMORY subsystems?
+>
