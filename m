@@ -1,199 +1,235 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 4/8] cgroup: simplify dynamic cftype addition and removal
-Date: Tue, 28 Jan 2014 18:59:41 -0500
-Message-ID: <1390953585-16554-5-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 8/8] cgroup: remove cgroupfs_root->refcnt
+Date: Tue, 28 Jan 2014 18:59:45 -0500
+Message-ID: <1390953585-16554-9-git-send-email-tj@kernel.org>
 References: <1390953585-16554-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=5Ylrfiq2SsjMTraISEhyvFHIoz79h7gknB1Kui8twD4=;
+        b=EZdZjSuu+H9vJbKnTcVuLWTek24exwneZKyA09fjazKeeUuDP4vQeniMw4+Y0oQRD2
+         u0R+Bu3wMmONn4iiHLeP8PZmgUAUgXY6yc78UfKZc4TuGXjPSGzXFuqU0DF46+I8RXtY
+         gy15Gq+39dAA7FvmKeaM4VmPMfS81kTlz02EuzCjALV5ghuqj0PChc734dUcz/eZ1p2+
+         layvP8RhlWMalScK1CTCURmKGGM7pbz+SXSBG7qbWBWw/jz+2fT7mVIrZ6NZ4HZP5pBf
+         VEourrzNLdBHF62hX4CpRPJ3Ap7fd1U4d2GH6qUVo7386RaS/4oFE13sYKajRcth0jHr
+         gB8Q==
+In-Reply-To: <1390953585-16554-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=j2TZX4b1mdoW1M6bZrlX0jw0DjMQkOAd2qBPYbLKzHw=;
-	b=Oh0Yw5M8CPsJxvf2Sy+RcNZM/joVha7T2hljdxX4Fz8uLSXeFzhTS9hD0Fn/nP7Err
-	tlEPPyVWKR2Kuo9ZlaTHCt8yHjzKnbYo3L6Jw3h2VcVw3k7dbAmxg2MJf4YWK9cAiHCd
-	EuQmB19Ln+p7uRqZkLScdarya5bjIaQcjgGkJK/s9i+uc9vnIsWm3IVtUTTrF7Mxg6xZ
-	U2PQHjB0X1G7l8Y1inUoK7Y0APaX2ABFM9J/OhgSIeHNQSyO3Ra45WqT+NSHT4JIYYvi
-	CgEroBS+zq//rKJ4Iak/ob4R6kEjJuujoKe65Z2HVykzk8f/v3coPHYtjbpvclC+cIZj
-	rQHA==
-In-Reply-To: <1390953585-16554-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: lizefan@huawei.com
+Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-Dynamic cftype addition and removal using cgroup_add/rm_cftypes()
-respectively has been quite hairy due to vfs i_mutex.  As i_mutex
-nests outside cgroup_mutex, cgroup_mutex has to be released and
-regrabbed on each iteration through the hierarchy complicating the
-process.  Now that i_mutex is no longer in play, it can be simplified.
+Currently, cgroupfs_root and its ->top_cgroup are separated reference
+counted and the latter's is ignored.  There's no reason to do this
+separately.  This patch removes cgroupfs_root->refcnt and destroys
+cgroupfs_root when the top_cgroup is released.
 
-* Just holding cgroup_tree_mutex is enough.  No need to meddle with
-  cgroup_mutex.
+* cgroup_put() updated to ignore cgroup_is_dead() test for top
+  cgroups.  cgroup_free_fn() updated to handle root destruction when
+  releasing a top cgroup.
 
-* No reason to play the unlock - relock - check serial_nr dancing.
-  Everything can be atomically while holding cgroup_tree_mutex.
+* As root destruction is now bounced through cgroup destruction, it is
+  asynchronous.  Update cgroup_mount() so that it waits for pending
+  release which is currently implemented using msleep().  Converting
+  this to proper wait_queue isn't hard but likely unnecessary.
 
-* cgroup_cfts_prepare() is replaced with direct locking of
-  cgroup_tree_mutex.
-
-* cgroup_cfts_commit() no longer fiddles with locking.  It just
-  applies the cftypes change to the existing cgroups in the hierarchy.
-  Renamed to cgroup_cfts_apply().
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/cgroup.c | 87 +++++++++++++++++++++------------------------------------
- 1 file changed, 32 insertions(+), 55 deletions(-)
+ include/linux/cgroup.h |  4 +--
+ kernel/cgroup.c        | 86 ++++++++++++++++++++++----------------------------
+ 2 files changed, 39 insertions(+), 51 deletions(-)
 
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index b14abaf..6756c23 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -280,12 +280,10 @@ struct cgroupfs_root {
+ 	/* The bitmask of subsystems attached to this hierarchy */
+ 	unsigned long subsys_mask;
+ 
+-	atomic_t refcnt;
+-
+ 	/* Unique id for this hierarchy. */
+ 	int hierarchy_id;
+ 
+-	/* The root cgroup for this hierarchy */
++	/* The root cgroup.  Root is destroyed on its release. */
+ 	struct cgroup top_cgroup;
+ 
+ 	/* Number of cgroups in the hierarchy, used only for /proc/cgroups */
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 64eccb2..5d015c1 100644
+index 41b6601..2ea0c4f 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -2287,46 +2287,19 @@ static int cgroup_addrm_files(struct cgroup *cgrp, struct cftype cfts[],
- 	return 0;
+@@ -53,6 +53,7 @@
+ #include <linux/vmalloc.h> /* TODO: replace with more sophisticated array */
+ #include <linux/flex_array.h> /* used in cgroup_attach_task */
+ #include <linux/kthread.h>
++#include <linux/delay.h>
+ 
+ #include <linux/atomic.h>
+ 
+@@ -728,37 +729,16 @@ static void cgroup_free_root(struct cgroupfs_root *root)
+ 	}
  }
  
--static void cgroup_cfts_prepare(void)
--	__acquires(&cgroup_mutex)
+-static void cgroup_get_root(struct cgroupfs_root *root)
 -{
 -	/*
--	 * Thanks to the entanglement with vfs inode locking, we can't walk
--	 * the existing cgroups under cgroup_mutex and create files.
--	 * Instead, we use css_for_each_descendant_pre() and drop RCU read
--	 * lock before calling cgroup_addrm_files().
+-	 * The caller must ensure that @root is alive, which can be
+-	 * achieved by holding a ref on one of the member cgroups or
+-	 * following a registered reference to @root while holding
+-	 * cgroup_tree_mutex.
 -	 */
--	mutex_lock(&cgroup_tree_mutex);
--	mutex_lock(&cgroup_mutex);
+-	WARN_ON_ONCE(atomic_read(&root->refcnt) <= 0);
+-	atomic_inc(&root->refcnt);
 -}
 -
--static int cgroup_cfts_commit(struct cftype *cfts, bool is_add)
--	__releases(&cgroup_mutex)
-+static int cgroup_apply_cftypes(struct cftype *cfts, bool is_add)
+-static void cgroup_put_root(struct cgroupfs_root *root)
++static void cgroup_destroy_root(struct cgroupfs_root *root)
  {
- 	LIST_HEAD(pending);
- 	struct cgroup_subsys *ss = cfts[0].ss;
- 	struct cgroup *root = &ss->root->top_cgroup;
--	struct cgroup *prev = NULL;
- 	struct cgroup_subsys_state *css;
--	u64 update_before;
- 	int ret = 0;
+ 	struct cgroup *cgrp = &root->top_cgroup;
+ 	struct cgrp_cset_link *link, *tmp_link;
+ 	int ret;
  
--	mutex_unlock(&cgroup_mutex);
-+	lockdep_assert_held(&cgroup_tree_mutex);
- 
--	/* %NULL @cfts indicates abort and don't bother if @ss isn't attached */
--	if (!cfts || ss->root == &cgroup_dummy_root) {
+-	/*
+-	 * @root's refcnt reaching zero and its deregistration should be
+-	 * atomic w.r.t. cgroup_tree_mutex.  This ensures that
+-	 * cgroup_get_root() is safe to invoke if @root is registered.
+-	 */
+ 	mutex_lock(&cgroup_tree_mutex);
+-	if (!atomic_dec_and_test(&root->refcnt)) {
 -		mutex_unlock(&cgroup_tree_mutex);
-+	/* don't bother if @ss isn't attached */
-+	if (ss->root == &cgroup_dummy_root)
- 		return 0;
+-		return;
 -	}
--
--	cgroup_get_root(ss->root);
+ 	mutex_lock(&cgroup_mutex);
+ 
+-	BUG_ON(atomic_read(&root->nr_cgrps) != 1);
++	BUG_ON(atomic_read(&root->nr_cgrps));
+ 	BUG_ON(!list_empty(&cgrp->children));
+ 
+ 	/* Rebind all subsystems back to the default hierarchy */
+@@ -929,21 +909,24 @@ static void cgroup_free_fn(struct work_struct *work)
+ 	struct cgroup *cgrp = container_of(work, struct cgroup, destroy_work);
+ 
+ 	atomic_dec(&cgrp->root->nr_cgrps);
 -
 -	/*
--	 * All cgroups which are created after we drop cgroup_mutex will
--	 * have the updated set of files, so we only need to update the
--	 * cgroups created before the current @cgroup_serial_nr_next.
+-	 * We get a ref to the parent, and put the ref when this cgroup is
+-	 * being freed, so it's guaranteed that the parent won't be
+-	 * destroyed before its children.
 -	 */
--	update_before = cgroup_serial_nr_next;
- 
- 	/* add/rm files for all cgroups created before */
- 	css_for_each_descendant_pre(css, cgroup_css(root, ss)) {
-@@ -2335,22 +2308,13 @@ static int cgroup_cfts_commit(struct cftype *cfts, bool is_add)
- 		if (cgroup_is_dead(cgrp))
- 			continue;
- 
--		cgroup_get(cgrp);
--		if (prev)
--			cgroup_put(prev);
--		prev = cgrp;
+-	cgroup_put(cgrp->parent);
 -
--		if (cgrp->serial_nr < update_before && !cgroup_is_dead(cgrp)) {
--			ret = cgroup_addrm_files(cgrp, cfts, is_add);
--			if (is_add)
--				kernfs_activate(cgrp->kn);
--		}
-+		ret = cgroup_addrm_files(cgrp, cfts, is_add);
- 		if (ret)
- 			break;
- 	}
--	mutex_unlock(&cgroup_tree_mutex);
--	cgroup_put(prev);
--	cgroup_put_root(ss->root);
-+
-+	if (is_add && !ret)
-+		kernfs_activate(root->kn);
- 	return ret;
+-	/* put the root reference that we took when we created the cgroup */
+-	cgroup_put_root(cgrp->root);
+-
+ 	cgroup_pidlist_destroy_all(cgrp);
+ 
+-	kernfs_put(cgrp->kn);
+-	kfree(cgrp);
++	if (cgrp->parent) {
++		/*
++		 * We get a ref to the parent, and put the ref when this
++		 * cgroup is being freed, so it's guaranteed that the
++		 * parent won't be destroyed before its children.
++		 */
++		cgroup_put(cgrp->parent);
++		kernfs_put(cgrp->kn);
++		kfree(cgrp);
++	} else {
++		/*
++		 * This is top cgroup's refcnt reaching zero, which
++		 * indicates that the root should be released.
++		 */
++		cgroup_destroy_root(cgrp->root);
++	}
  }
  
-@@ -2401,6 +2365,19 @@ static int cgroup_init_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
- 	return 0;
- }
- 
-+static int cgroup_rm_cftypes_locked(struct cftype *cfts)
-+{
-+	lockdep_assert_held(&cgroup_tree_mutex);
-+
-+	if (!cfts || !cfts[0].ss)
-+		return -ENOENT;
-+
-+	list_del(&cfts->node);
-+	cgroup_apply_cftypes(cfts, false);
-+	cgroup_exit_cftypes(cfts);
-+	return 0;
-+}
-+
- /**
-  * cgroup_rm_cftypes - remove an array of cftypes from a subsystem
-  * @cfts: zero-length name terminated array of cftypes
-@@ -2414,15 +2391,12 @@ static int cgroup_init_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
-  */
- int cgroup_rm_cftypes(struct cftype *cfts)
+ static void cgroup_free_rcu(struct rcu_head *head)
+@@ -965,7 +948,7 @@ static void cgroup_put(struct cgroup *cgrp)
  {
--	if (!cfts || !cfts[0].ss)
--		return -ENOENT;
+ 	if (!atomic_dec_and_test(&cgrp->refcnt))
+ 		return;
+-	if (WARN_ON_ONCE(!cgroup_is_dead(cgrp)))
++	if (WARN_ON_ONCE(cgrp->parent && !cgroup_is_dead(cgrp)))
+ 		return;
+ 
+ 	/*
+@@ -1354,7 +1337,6 @@ static void init_cgroup_root(struct cgroupfs_root *root)
+ {
+ 	struct cgroup *cgrp = &root->top_cgroup;
+ 
+-	atomic_set(&root->refcnt, 1);
+ 	INIT_LIST_HEAD(&root->root_list);
+ 	atomic_set(&root->nr_cgrps, 1);
+ 	cgrp->root = root;
+@@ -1480,7 +1462,7 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 	struct cgroup_sb_opts opts;
+ 	struct dentry *dentry;
+ 	int ret;
 -
--	cgroup_cfts_prepare();
--	list_del(&cfts->node);
--	cgroup_cfts_commit(cfts, false);
-+	int ret;
++retry:
+ 	mutex_lock(&cgroup_tree_mutex);
+ 	mutex_lock(&cgroup_mutex);
  
--	cgroup_exit_cftypes(cfts);
--	return 0;
-+	mutex_lock(&cgroup_tree_mutex);
-+	ret = cgroup_rm_cftypes_locked(cfts);
-+	mutex_unlock(&cgroup_tree_mutex);
-+	return ret;
+@@ -1513,7 +1495,21 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 			}
+ 		}
+ 
+-		cgroup_get_root(root);
++		/*
++		 * A root's lifetime is governed by its top cgroup.  Zero
++		 * ref indicate that the root is being destroyed.  Wait for
++		 * destruction to complete so that the subsystems are free.
++		 * We can use wait_queue for the wait but this path is
++		 * super cold.  Let's just sleep for a bit and retry.
++		 */
++		if (!atomic_inc_not_zero(&root->top_cgroup.refcnt)) {
++			mutex_unlock(&cgroup_mutex);
++			mutex_unlock(&cgroup_tree_mutex);
++			msleep(10);
++			goto retry;
++		}
++
++		ret = 0;
+ 		goto out_unlock;
+ 	}
+ 
+@@ -1540,7 +1536,7 @@ out_unlock:
+ 
+ 	dentry = kernfs_mount(fs_type, flags, root->kf_root);
+ 	if (IS_ERR(dentry))
+-		cgroup_put_root(root);
++		cgroup_put(&root->top_cgroup);
+ 	return dentry;
  }
  
- /**
-@@ -2447,11 +2421,14 @@ int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
- 	if (ret)
- 		return ret;
+@@ -1549,7 +1545,7 @@ static void cgroup_kill_sb(struct super_block *sb)
+ 	struct kernfs_root *kf_root = kernfs_root_from_sb(sb);
+ 	struct cgroupfs_root *root = cgroup_root_from_kf(kf_root);
  
--	cgroup_cfts_prepare();
-+	mutex_lock(&cgroup_tree_mutex);
-+
- 	list_add_tail(&cfts->node, &ss->cfts);
--	ret = cgroup_cfts_commit(cfts, true);
-+	ret = cgroup_apply_cftypes(cfts, true);
- 	if (ret)
--		cgroup_rm_cftypes(cfts);
-+		cgroup_rm_cftypes_locked(cfts);
-+
-+	mutex_unlock(&cgroup_tree_mutex);
- 	return ret;
+-	cgroup_put_root(root);
++	cgroup_put(&root->top_cgroup);
+ 	kernfs_kill_sb(sb);
  }
- EXPORT_SYMBOL_GPL(cgroup_add_cftypes);
+ 
+@@ -3690,12 +3686,6 @@ static long cgroup_create(struct cgroup *parent, const char *name,
+ 	/* allocation complete, commit to creation */
+ 	list_add_tail_rcu(&cgrp->sibling, &cgrp->parent->children);
+ 	atomic_inc(&root->nr_cgrps);
+-
+-	/*
+-	 * Grab a reference on the root and parent so that they don't get
+-	 * deleted while there are child cgroups.
+-	 */
+-	cgroup_get_root(root);
+ 	cgroup_get(parent);
+ 
+ 	/*
 -- 
 1.8.5.3
