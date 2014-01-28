@@ -1,7 +1,7 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 08/13] cgroup: update the meaning of cftype->max_write_len
-Date: Tue, 28 Jan 2014 18:54:40 -0500
-Message-ID: <1390953285-16360-9-git-send-email-tj@kernel.org>
+Subject: [PATCH 10/13] cgroup: introduce cgroup_ino()
+Date: Tue, 28 Jan 2014 18:54:42 -0500
+Message-ID: <1390953285-16360-11-git-send-email-tj@kernel.org>
 References: <1390953285-16360-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -9,13 +9,13 @@ Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=2P3201yMtQe3A9XNc7m8Feaw03uuJneNn5o2fTuTmFc=;
-	b=EGu1ysYHUI8ZQObMpvQ1vz4mSFC8sIRKKpx/AlghFAOEk1hqAtjShplU66vug4WPKq
-	+sXiyJrT++a1NO4Rz5LxBRU/ZSZTL8By8/igNZf10qJDlCCfJfQ7jqoz89sL/KXpTlFI
-	UST6GQCLauze6gniU7RHq0O3Q6zO/nTc5g7W8KAHFu/KW1rw9Vi8SEXtmxIw1Pg/eSiJ
-	z2DacWOpmKy3hyD+aSfB1rbfrVk23v1SHmSrJx1Si1bXOswn2cEL7ieHX2ZTcpqdpg1x
-	tMOWoH0zE/RjPg2JbwqRv8CJQXzpclgTs0wOUuRlV6UR9Ox/VDSiRrWko/rvN0ig0EkX
-	Jdaw==
+	bh=tn+TaFkAEhaKLlmt12R0n3ZZaQElAPKWn5WQXvPT1KE=;
+	b=ja41ArCCcFRrHGPprtb+QnLWkyPs89N0N+lpGgpf6xIgxHWnsrB67P4uiFJlAO/IX/
+	c7ATDUq/PyQYgik1aLG0I4d0LDPCpSTkstlyN9XY1PfMFMaCYEhobCMrZzy92ZPVz1kS
+	oRJX/4LAp/61HC9P+Rt9sLM+L8Z5dZJC9Pw+dSC21XNcI52OrDR8kFQ5/hJdBGc2JD+0
+	f+VzB609aJZXmvE4Ljl0f9xbXCBDIAqtwTuGklx31oJwpYiQaoXyx/qmdFX0OwuOpQEx
+	SJCOLK/oE+EhkYdsVR5HH/mSgdd0yzfO9x6LJnQTHAeWs3r/hJLI9gS2mAdMwcmgCvFZ
+	AGaw==
 In-Reply-To: <1390953285-16360-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -28,168 +28,83 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andi Kleen <andi-Vw/NltI1exuRpAAqCnN02g@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wu Fengguang <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-cftype->max_write_len is used to extend the maximum size of writes.
-It's interpreted in such a way that the actual maximum size is one
-less than the specified value.  The default size is defined by
-CGROUP_LOCAL_BUFFER_SIZE.  Its interpretation is quite confusing - its
-value is decremented by 1 and then compared for equality with max
-size, which means that the actual default size is
-CGROUP_LOCAL_BUFFER_SIZE - 2, which is 62 chars.
+mm/memory-failure.c::hwpoison_filter_task() has been reaching into
+cgroup to extract the associated ino to be used as a filtering
+criterion.  This is an implementation detail which shouldn't be
+depended upon from outside cgroup proper and is about to change with
+the scheduled kernfs conversion.
 
-There's no point in having a limit that low.  Update its definition so
-that it means the actual string length sans termination and anything
-below PAGE_SIZE-1 is treated as PAGE_SIZE-1.
-
-.max_write_len for "release_agent" is updated to PATH_MAX-1 and
-cgroup_release_agent_write() is updated so that the redundant strlen()
-check is removed and it uses strlcpy() instead of strcpy().
-.max_write_len initializations in blk-throttle.c and cfq-iosched.c are
-no longer necessary and removed.  The one in cpuset is kept unchanged
-as it's an approximated value to begin with.
-
-This will also make transition to kernfs smoother.
+This patch introduces a proper interface to determine the associated
+ino, cgroup_ino(), and updates hwpoison_filter_task() to use it
+instead of reaching directly into cgroup.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Andi Kleen <andi-Vw/NltI1exuRpAAqCnN02g@public.gmane.org>
+Cc: Wu Fengguang <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 ---
- block/blk-throttle.c   |  4 ----
- block/cfq-iosched.c    |  3 ---
- include/linux/cgroup.h |  5 +++--
- kernel/cgroup.c        | 18 ++++++++----------
- 4 files changed, 11 insertions(+), 19 deletions(-)
+ include/linux/cgroup.h | 9 +++++++++
+ kernel/cgroup.c        | 5 ++++-
+ mm/memory-failure.c    | 8 ++------
+ 3 files changed, 15 insertions(+), 7 deletions(-)
 
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index a760857..ed1c1c3 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -1425,28 +1425,24 @@ static struct cftype throtl_files[] = {
- 		.private = offsetof(struct throtl_grp, bps[READ]),
- 		.seq_show = tg_print_conf_u64,
- 		.write_string = tg_set_conf_u64,
--		.max_write_len = 256,
- 	},
- 	{
- 		.name = "throttle.write_bps_device",
- 		.private = offsetof(struct throtl_grp, bps[WRITE]),
- 		.seq_show = tg_print_conf_u64,
- 		.write_string = tg_set_conf_u64,
--		.max_write_len = 256,
- 	},
- 	{
- 		.name = "throttle.read_iops_device",
- 		.private = offsetof(struct throtl_grp, iops[READ]),
- 		.seq_show = tg_print_conf_uint,
- 		.write_string = tg_set_conf_uint,
--		.max_write_len = 256,
- 	},
- 	{
- 		.name = "throttle.write_iops_device",
- 		.private = offsetof(struct throtl_grp, iops[WRITE]),
- 		.seq_show = tg_print_conf_uint,
- 		.write_string = tg_set_conf_uint,
--		.max_write_len = 256,
- 	},
- 	{
- 		.name = "throttle.io_service_bytes",
-diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index 744833b..4611879 100644
---- a/block/cfq-iosched.c
-+++ b/block/cfq-iosched.c
-@@ -1838,7 +1838,6 @@ static struct cftype cfq_blkcg_files[] = {
- 		.flags = CFTYPE_ONLY_ON_ROOT,
- 		.seq_show = cfqg_print_leaf_weight_device,
- 		.write_string = cfqg_set_leaf_weight_device,
--		.max_write_len = 256,
- 	},
- 	{
- 		.name = "weight",
-@@ -1853,7 +1852,6 @@ static struct cftype cfq_blkcg_files[] = {
- 		.flags = CFTYPE_NOT_ON_ROOT,
- 		.seq_show = cfqg_print_weight_device,
- 		.write_string = cfqg_set_weight_device,
--		.max_write_len = 256,
- 	},
- 	{
- 		.name = "weight",
-@@ -1866,7 +1864,6 @@ static struct cftype cfq_blkcg_files[] = {
- 		.name = "leaf_weight_device",
- 		.seq_show = cfqg_print_leaf_weight_device,
- 		.write_string = cfqg_set_leaf_weight_device,
--		.max_write_len = 256,
- 	},
- 	{
- 		.name = "leaf_weight",
 diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 884d367..1e4f9e2 100644
+index 1e4f9e2..15b7839 100644
 --- a/include/linux/cgroup.h
 +++ b/include/linux/cgroup.h
-@@ -398,8 +398,9 @@ struct cftype {
- 	umode_t mode;
- 
- 	/*
--	 * If non-zero, defines the maximum length of string that can
--	 * be passed to write_string; defaults to 64
-+	 * The maximum length of string, excluding trailing nul, that can
-+	 * be passed to write_string.  If < PAGE_SIZE-1, PAGE_SIZE-1 is
-+	 * assumed.
- 	 */
- 	size_t max_write_len;
- 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index ab5344d..a800e56 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -2204,13 +2204,14 @@ static int cgroup_procs_write(struct cgroup_subsys_state *css,
- static int cgroup_release_agent_write(struct cgroup_subsys_state *css,
- 				      struct cftype *cft, const char *buffer)
- {
--	BUILD_BUG_ON(sizeof(css->cgroup->root->release_agent_path) < PATH_MAX);
--	if (strlen(buffer) >= PATH_MAX)
--		return -EINVAL;
-+	struct cgroupfs_root *root = css->cgroup->root;
-+
-+	BUILD_BUG_ON(sizeof(root->release_agent_path) < PATH_MAX);
- 	if (!cgroup_lock_live_group(css->cgroup))
- 		return -ENODEV;
- 	spin_lock(&release_agent_path_lock);
--	strcpy(css->cgroup->root->release_agent_path, buffer);
-+	strlcpy(root->release_agent_path, buffer,
-+		sizeof(root->release_agent_path));
- 	spin_unlock(&release_agent_path_lock);
- 	mutex_unlock(&cgroup_mutex);
- 	return 0;
-@@ -2236,20 +2237,17 @@ static int cgroup_sane_behavior_show(struct seq_file *seq, void *v)
- 	return 0;
+@@ -505,6 +505,15 @@ static inline const char *cgroup_name(const struct cgroup *cgrp)
+ 	return rcu_dereference(cgrp->name)->name;
  }
  
--/* A buffer size big enough for numbers or short strings */
--#define CGROUP_LOCAL_BUFFER_SIZE 64
--
- static ssize_t cgroup_file_write(struct file *file, const char __user *userbuf,
- 				 size_t nbytes, loff_t *ppos)
++/* returns ino associated with a cgroup, 0 indicates unmounted root */
++static inline ino_t cgroup_ino(struct cgroup *cgrp)
++{
++	if (cgrp->dentry)
++		return cgrp->dentry->d_inode->i_ino;
++	else
++		return 0;
++}
++
+ static inline struct cgroup_subsys_state *seq_css(struct seq_file *seq)
  {
- 	struct cfent *cfe = __d_cfe(file->f_dentry);
- 	struct cftype *cft = __d_cft(file->f_dentry);
- 	struct cgroup_subsys_state *css = cfe->css;
--	size_t max_bytes = cft->max_write_len ?: CGROUP_LOCAL_BUFFER_SIZE - 1;
-+	size_t max_bytes = max(cft->max_write_len, PAGE_SIZE);
- 	char *buf;
- 	int ret;
+ 	struct cgroup_open_file *of = seq->private;
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 5c35f00..a8a1adc 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -792,7 +792,10 @@ static struct inode *cgroup_new_inode(umode_t mode, struct super_block *sb)
+ 	struct inode *inode = new_inode(sb);
  
--	if (nbytes >= max_bytes)
-+	if (nbytes > max_bytes)
- 		return -E2BIG;
+ 	if (inode) {
+-		inode->i_ino = get_next_ino();
++		do {
++			/* ino 0 is reserved for dummy_root */
++			inode->i_ino = get_next_ino();
++		} while (!inode->i_ino);
+ 		inode->i_mode = mode;
+ 		inode->i_uid = current_fsuid();
+ 		inode->i_gid = current_fsgid();
+diff --git a/mm/memory-failure.c b/mm/memory-failure.c
+index 4f08a2d..9b5933c 100644
+--- a/mm/memory-failure.c
++++ b/mm/memory-failure.c
+@@ -145,14 +145,10 @@ static int hwpoison_filter_task(struct page *p)
+ 		return -EINVAL;
  
- 	buf = kmalloc(nbytes + 1, GFP_KERNEL);
-@@ -3910,7 +3908,7 @@ static struct cftype cgroup_base_files[] = {
- 		.flags = CFTYPE_INSANE | CFTYPE_ONLY_ON_ROOT,
- 		.seq_show = cgroup_release_agent_show,
- 		.write_string = cgroup_release_agent_write,
--		.max_write_len = PATH_MAX,
-+		.max_write_len = PATH_MAX - 1,
- 	},
- 	{ }	/* terminate */
- };
+ 	css = mem_cgroup_css(mem);
+-	/* root_mem_cgroup has NULL dentries */
+-	if (!css->cgroup->dentry)
+-		return -EINVAL;
+-
+-	ino = css->cgroup->dentry->d_inode->i_ino;
++	ino = cgroup_ino(css->cgroup);
+ 	css_put(css);
+ 
+-	if (ino != hwpoison_filter_memcg)
++	if (!ino || ino != hwpoison_filter_memcg)
+ 		return -EINVAL;
+ 
+ 	return 0;
 -- 
 1.8.5.3
