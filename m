@@ -1,116 +1,206 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 5/6] cgroup: update locking in cgroup_show_options()
-Date: Tue, 28 Jan 2014 18:44:00 -0500
-Message-ID: <1390952641-15950-6-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 6/6] cgroup: remove cgroup_root_mutex
+Date: Tue, 28 Jan 2014 18:44:01 -0500
+Message-ID: <1390952641-15950-7-git-send-email-tj@kernel.org>
 References: <1390952641-15950-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=46q3jNZgg/8zzvcQX5aBI4zibSLx1icVG9FvPCA1N3Y=;
+        b=dBnMGHum3W3TRmb+sh4gJV6ohgRXsPPLGsrAd9zJ14rDGa73djy853pBnukhQPoMTR
+         QjTdqNxSgoM51cHmmvqbEFTiIu5CLDywyuWbjECx58Xhip89WzzDCMi4HL6/L6Pvy5bU
+         mXMPuh+E6+bw+0MXMnWzqiC6Au0CmOn4/76lzFj7bsaQYUmiA1OMpod38myW9wt3L/Z+
+         Szeox4m8FUW9RslQMKV0iTuV61tEQ9iM6Tv0hBA5PHKqmb8/zS1DnSaMEx/yZBl4ty8S
+         L4RCtoIdAQQLra1EO08QqmNd4hErEqjc0oYbR/TLL9sXMzxBFFKlTdMI8AXjrePQ1dly
+         UFyA==
+In-Reply-To: <1390952641-15950-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=48I3eZn64bbAcLkSWfQPLMmFl2e0FyR3DuvJv0++PQ8=;
-	b=V2RM/Zi7ZjBEV5oKjK/jLAr9EXxbp4ylqa+g9qNB15Yxtu9U3zZvu2Yf6TMmbvXtPl
-	aUL3Qf/937ESuu46IIyJhXFxp8lWO1HtoBBJzXrU6fxjFwmheXO8UwgX+yr/yyEq7fJq
-	zs3MTTafoXUaSLuDpmeYeEa4Jxoqtj7J4E8GUXqh5ojOrczcqrt8s53wgxhsLmJCwrw3
-	m2EZk7CyP9zoaKuFabQp5XbU0FvwCDUkH7bMz0o4jrdLH0oIdSN8Jiem7c8t3pXpD+ng
-	JMrRJrkyGRXfPLUf+iMrhbm2QLJDIMXWa3mj7TlEPDpmUF45HicnWLdO/lHTuC6IQAWy
-	jLaw==
-In-Reply-To: <1390952641-15950-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: lizefan@huawei.com
+Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-cgroup_show_options() grabs cgroup_root_mutex to protect the options
-changing while printing; however, holding root_mutex or not doesn't
-really make much difference for the function.  subsys_mask can be
-atomically tested and most of the options aren't allowed to change
-anyway once mounted.
+cgroup_root_mutex was added to avoid deadlock involving namespace_sem
+via cgroup_show_options().  It added a lot of overhead for the small
+purpose of it and, because it's nested under cgroup_mutex, it has very
+limited usefulness.  The previous patch made cgroup_show_options() not
+use cgroup_root_mutex, so nobody needs it anymore.  Remove it.
 
-The only field which needs synchronization is ->release_agent_path.
-This patch introduces a dedicated spinlock to synchronize accesses to
-the field and drops cgroup_root_mutex locking from
-cgroup_show_options().  The next patch will remove cgroup_root_mutex.
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/cgroup.c | 19 ++++++++++++++++---
- 1 file changed, 16 insertions(+), 3 deletions(-)
+ kernel/cgroup.c | 42 +-----------------------------------------
+ 1 file changed, 1 insertion(+), 41 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index c753300..97708d0 100644
+index 97708d0..3d92fd0 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -92,6 +92,12 @@ static DEFINE_MUTEX(cgroup_mutex);
+@@ -70,18 +70,6 @@
+ /*
+  * cgroup_mutex is the master lock.  Any modification to cgroup or its
+  * hierarchy must be performed while holding it.
+- *
+- * cgroup_root_mutex nests inside cgroup_mutex and should be held to modify
+- * cgroupfs_root of any cgroup hierarchy - subsys list, flags,
+- * release_agent_path and so on.  Modifying requires both cgroup_mutex and
+- * cgroup_root_mutex.  Readers can acquire either of the two.  This is to
+- * break the following locking order cycle.
+- *
+- *  A. cgroup_mutex -> cred_guard_mutex -> s_type->i_mutex_key -> namespace_sem
+- *  B. namespace_sem -> cgroup_mutex
+- *
+- * B happens only through cgroup_show_options() and using cgroup_root_mutex
+- * breaks it.
+  */
+ #ifdef CONFIG_PROVE_RCU
+ DEFINE_MUTEX(cgroup_mutex);
+@@ -90,8 +78,6 @@ EXPORT_SYMBOL_GPL(cgroup_mutex);	/* only for lockdep */
+ static DEFINE_MUTEX(cgroup_mutex);
+ #endif
  
- static DEFINE_MUTEX(cgroup_root_mutex);
- 
-+/*
-+ * Protects cgroup_subsys->release_agent_path.  Modifying it also requires
-+ * cgroup_mutex.  Reading requires either cgroup_mutex or this spinlock.
-+ */
-+static DEFINE_SPINLOCK(release_agent_path_lock);
-+
- #define cgroup_assert_mutex_or_rcu_locked()				\
- 	rcu_lockdep_assert(rcu_read_lock_held() ||			\
+-static DEFINE_MUTEX(cgroup_root_mutex);
+-
+ /*
+  * Protects cgroup_subsys->release_agent_path.  Modifying it also requires
+  * cgroup_mutex.  Reading requires either cgroup_mutex or this spinlock.
+@@ -103,14 +89,6 @@ static DEFINE_SPINLOCK(release_agent_path_lock);
  			   lockdep_is_held(&cgroup_mutex),		\
-@@ -1034,7 +1040,6 @@ static int cgroup_show_options(struct seq_file *seq, struct dentry *dentry)
- 	struct cgroup_subsys *ss;
- 	int ssid;
+ 			   "cgroup_mutex or RCU read lock required");
  
+-#ifdef CONFIG_LOCKDEP
+-#define cgroup_assert_mutex_or_root_locked()				\
+-	WARN_ON_ONCE(debug_locks && (!lockdep_is_held(&cgroup_mutex) &&	\
+-				     !lockdep_is_held(&cgroup_root_mutex)))
+-#else
+-#define cgroup_assert_mutex_or_root_locked()	do { } while (0)
+-#endif
+-
+ /*
+  * cgroup destruction makes heavy use of work items and there can be a lot
+  * of concurrent destructions.  Use a separate workqueue so that cgroup
+@@ -154,11 +132,7 @@ static struct cgroup * const cgroup_dummy_top = &cgroup_dummy_root.top_cgroup;
+ static LIST_HEAD(cgroup_roots);
+ static int cgroup_root_count;
+ 
+-/*
+- * Hierarchy ID allocation and mapping.  It follows the same exclusion
+- * rules as other root ops - both cgroup_mutex and cgroup_root_mutex for
+- * writes, either for reads.
+- */
++/* hierarchy ID allocation and mapping, protected by cgroup_mutex */
+ static DEFINE_IDR(cgroup_hierarchy_idr);
+ 
+ static struct cgroup_name root_cgroup_name = { .name = "/" };
+@@ -973,7 +947,6 @@ static int rebind_subsystems(struct cgroupfs_root *root,
+ 	int i, ret;
+ 
+ 	BUG_ON(!mutex_is_locked(&cgroup_mutex));
+-	BUG_ON(!mutex_is_locked(&cgroup_root_mutex));
+ 
+ 	/* Check that any added subsystems are currently free */
+ 	for_each_subsys(ss, i)
+@@ -1246,7 +1219,6 @@ static int cgroup_remount(struct super_block *sb, int *flags, char *data)
+ 
+ 	mutex_lock(&cgrp->dentry->d_inode->i_mutex);
+ 	mutex_lock(&cgroup_mutex);
 -	mutex_lock(&cgroup_root_mutex);
- 	for_each_subsys(ss, ssid)
- 		if (root->subsys_mask & (1 << ssid))
- 			seq_printf(seq, ",%s", ss->name);
-@@ -1044,13 +1049,16 @@ static int cgroup_show_options(struct seq_file *seq, struct dentry *dentry)
- 		seq_puts(seq, ",noprefix");
- 	if (root->flags & CGRP_ROOT_XATTR)
- 		seq_puts(seq, ",xattr");
-+
-+	spin_lock(&release_agent_path_lock);
- 	if (strlen(root->release_agent_path))
- 		seq_printf(seq, ",release_agent=%s", root->release_agent_path);
-+	spin_unlock(&release_agent_path_lock);
-+
- 	if (test_bit(CGRP_CPUSET_CLONE_CHILDREN, &root->top_cgroup.flags))
- 		seq_puts(seq, ",clone_children");
- 	if (strlen(root->name))
- 		seq_printf(seq, ",name=%s", root->name);
--	mutex_unlock(&cgroup_root_mutex);
- 	return 0;
- }
  
-@@ -1272,8 +1280,11 @@ static int cgroup_remount(struct super_block *sb, int *flags, char *data)
- 	if (ret)
- 		goto out_unlock;
- 
--	if (opts.release_agent)
-+	if (opts.release_agent) {
-+		spin_lock(&release_agent_path_lock);
- 		strcpy(root->release_agent_path, opts.release_agent);
-+		spin_unlock(&release_agent_path_lock);
-+	}
+ 	/* See what subsystems are wanted */
+ 	ret = parse_cgroupfs_options(data, &opts);
+@@ -1288,7 +1260,6 @@ static int cgroup_remount(struct super_block *sb, int *flags, char *data)
   out_unlock:
  	kfree(opts.release_agent);
  	kfree(opts.name);
-@@ -2176,7 +2187,9 @@ static int cgroup_release_agent_write(struct cgroup_subsys_state *css,
+-	mutex_unlock(&cgroup_root_mutex);
+ 	mutex_unlock(&cgroup_mutex);
+ 	mutex_unlock(&cgrp->dentry->d_inode->i_mutex);
+ 	return ret;
+@@ -1331,7 +1302,6 @@ static int cgroup_init_root_id(struct cgroupfs_root *root, int start, int end)
+ 	int id;
+ 
+ 	lockdep_assert_held(&cgroup_mutex);
+-	lockdep_assert_held(&cgroup_root_mutex);
+ 
+ 	id = idr_alloc_cyclic(&cgroup_hierarchy_idr, root, start, end,
+ 			      GFP_KERNEL);
+@@ -1345,7 +1315,6 @@ static int cgroup_init_root_id(struct cgroupfs_root *root, int start, int end)
+ static void cgroup_exit_root_id(struct cgroupfs_root *root)
+ {
+ 	lockdep_assert_held(&cgroup_mutex);
+-	lockdep_assert_held(&cgroup_root_mutex);
+ 
+ 	if (root->hierarchy_id) {
+ 		idr_remove(&cgroup_hierarchy_idr, root->hierarchy_id);
+@@ -1517,7 +1486,6 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 
+ 		mutex_lock(&inode->i_mutex);
+ 		mutex_lock(&cgroup_mutex);
+-		mutex_lock(&cgroup_root_mutex);
+ 
+ 		ret = idr_alloc(&root->cgroup_idr, root_cgrp, 0, 1, GFP_KERNEL);
+ 		if (ret < 0)
+@@ -1590,7 +1558,6 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 		BUG_ON(!list_empty(&root_cgrp->children));
+ 		BUG_ON(root->number_of_cgroups != 1);
+ 
+-		mutex_unlock(&cgroup_root_mutex);
+ 		mutex_unlock(&cgroup_mutex);
+ 		mutex_unlock(&inode->i_mutex);
+ 	} else {
+@@ -1621,7 +1588,6 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 	revert_creds(cred);
+  unlock_drop:
+ 	cgroup_exit_root_id(root);
+-	mutex_unlock(&cgroup_root_mutex);
+ 	mutex_unlock(&cgroup_mutex);
+ 	mutex_unlock(&inode->i_mutex);
+  drop_new_super:
+@@ -1646,7 +1612,6 @@ static void cgroup_kill_sb(struct super_block *sb)
+ 
+ 	mutex_lock(&cgrp->dentry->d_inode->i_mutex);
+ 	mutex_lock(&cgroup_mutex);
+-	mutex_lock(&cgroup_root_mutex);
+ 
+ 	/* Rebind all subsystems back to the default hierarchy */
+ 	if (root->flags & CGRP_ROOT_SUBSYS_BOUND) {
+@@ -1675,7 +1640,6 @@ static void cgroup_kill_sb(struct super_block *sb)
+ 
+ 	cgroup_exit_root_id(root);
+ 
+-	mutex_unlock(&cgroup_root_mutex);
+ 	mutex_unlock(&cgroup_mutex);
+ 	mutex_unlock(&cgrp->dentry->d_inode->i_mutex);
+ 
+@@ -2186,11 +2150,9 @@ static int cgroup_release_agent_write(struct cgroup_subsys_state *css,
+ 		return -EINVAL;
  	if (!cgroup_lock_live_group(css->cgroup))
  		return -ENODEV;
- 	mutex_lock(&cgroup_root_mutex);
-+	spin_lock(&release_agent_path_lock);
+-	mutex_lock(&cgroup_root_mutex);
+ 	spin_lock(&release_agent_path_lock);
  	strcpy(css->cgroup->root->release_agent_path, buffer);
-+	spin_unlock(&release_agent_path_lock);
- 	mutex_unlock(&cgroup_root_mutex);
+ 	spin_unlock(&release_agent_path_lock);
+-	mutex_unlock(&cgroup_root_mutex);
  	mutex_unlock(&cgroup_mutex);
  	return 0;
+ }
+@@ -4578,7 +4540,6 @@ int __init cgroup_init(void)
+ 
+ 	/* allocate id for the dummy hierarchy */
+ 	mutex_lock(&cgroup_mutex);
+-	mutex_lock(&cgroup_root_mutex);
+ 
+ 	/* Add init_css_set to the hash table */
+ 	key = css_set_hash(init_css_set.subsys);
+@@ -4590,7 +4551,6 @@ int __init cgroup_init(void)
+ 			0, 1, GFP_KERNEL);
+ 	BUG_ON(err < 0);
+ 
+-	mutex_unlock(&cgroup_root_mutex);
+ 	mutex_unlock(&cgroup_mutex);
+ 
+ 	cgroup_kobj = kobject_create_and_add("cgroup", fs_kobj);
 -- 
 1.8.5.3
