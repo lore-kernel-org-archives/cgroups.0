@@ -1,45 +1,45 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.15] cgroup: convert to kernfs
-Date: Wed, 29 Jan 2014 11:10:56 -0500
-Message-ID: <20140129161056.GI30842@htj.dyndns.org>
-References: <1390953285-16360-1-git-send-email-tj@kernel.org>
-	<52E8CED4.5010406@huawei.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: CGroups and pthreads
+Date: Wed, 29 Jan 2014 17:16:49 +0100
+Message-ID: <20140129161649.GB22183@dhcp22.suse.cz>
+References: <CALaYU_BZ8iuHnAgkss1wO7BK3qULgotYSpmX4nqX=uC+aTnddA@mail.gmail.com>
+ <CALaYU_AGFVdo1jaaNmN=KDH2Nr3=_Ud8WXzTXdgxpmJuwL_FAQ@mail.gmail.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CALaYU_AGFVdo1jaaNmN=KDH2Nr3=_Ud8WXzTXdgxpmJuwL_FAQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=VPAbnP6sDKbUq0TEl93ERV9VvZRQZ1LReaiRX3xuEg4=;
-	b=pTiLL3BZDMA7UAVMwvhxYCRs4D8oonQ/H3Ge5UN3i9iJgfXKzOQI1z5TXkVbqqabUO
-	IFKshO3NfLjONfuMcV9/POcEtVo27H07HUo+tAnCOHRNWeZR4z3hU6r8dTODR9hyzTcF
-	fYyDef4JTIpFDXS1n1rf4pvgk1Qp50Gv/Q5d6lLP4S+dFQIq4bjSFFVCkiPt/6kjduId
-	dQ7nig3U9pFOd+Jby4s+j7iiXcyhcfPD7xOf3RsjkPJwH2xqJ/l9kZ2s/cgMXm1dgQsh
-	Z7Rc41Vcvy6Jz6Y851D1dxjfQRMatY6ZPteYRHGLQ7U3adYXYNVblPdJfBI7iFJRfNDS
-	IgYA==
-Content-Disposition: inline
-In-Reply-To: <52E8CED4.5010406-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Dermot McGahon <dmcgahon-mOLzCpKykOlBDgjK7y7TUQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Jan 29, 2014 at 05:50:12PM +0800, Li Zefan wrote:
-> We'll have our most important vacation in China, so I won't be responsive
-> until next next Monday. I'll review those patches when I come back to work.
+On Tue 28-01-14 17:00:19, Dermot McGahon wrote:
+> Kernel version is 2.6.32 stock kernel for Red Hat Enterprise Linux 6.
+> 
+> Is there anyone on this list with good knowledge of how the memory subsystem
+> behaves?
 
-Ooh, no worries.  We're still in -rc1 merge window after all.  I just
-wanted to have some head start as there will be a lot of activities in
-the coming devel cycle.  Happy lunar new year!
+posting to linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org would give you higher chances to get a
+reply.
+ 
+> On 27 January 2014 16:36, Dermot McGahon <dmcgahon-mOLzCpKykOlBDgjK7y7TUQ@public.gmane.org> wrote:
+> > Is it possible to apply cgroup memory subsystem controls to threads
+> > created with pthread_create() / clone or only tasks that have been
+> > created using fork and exec?
 
+Memory cgroup controller charges memory per address space which is
+shared between threads.
+
+[...]
+> > Is that expected? I realise that the subsystems are all different
+> > but what is confusing us slightly is that we have previously used
+> > the CPU subsystem to set cpu_shares and adding LWP / TID's to
+> > individual cgroups worked just fine for that
+
+Please note that this will most probably change in the future because
+all the containers will be per-task rather than per-thread.
 -- 
-tejun
+Michal Hocko
+SUSE Labs
