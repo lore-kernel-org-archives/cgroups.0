@@ -1,10 +1,10 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 6/8] cgroup: remove cgroup->name
-Date: Wed, 29 Jan 2014 10:25:13 -0500
-Message-ID: <20140129152513.GB30842@htj.dyndns.org>
-References: <1390953585-16554-1-git-send-email-tj@kernel.org>
-	<1390953585-16554-7-git-send-email-tj@kernel.org>
-	<20140129120907.GA22183@dhcp22.suse.cz>
+Subject: Re: [PATCH 2/6] cgroup: drop module support
+Date: Wed, 29 Jan 2014 10:30:49 -0500
+Message-ID: <20140129153049.GC30842@htj.dyndns.org>
+References: <1390952641-15950-1-git-send-email-tj@kernel.org>
+	<1390952641-15950-3-git-send-email-tj@kernel.org>
+	<52E880A6.4040902@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -12,15 +12,15 @@ Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@pub
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:date:from:to:cc:subject:message-id:references:mime-version
 	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=HLsSrL6oOtnlBNPMEpmoj8gOkq++xkq3zBlOGo75CdI=;
-	b=YowjCoy8gUsB3Jnh3dXqiwOXU3z4YIiyPKRuSn8/8eYhTnD4wiLA41H0L6y/T9cJj2
-	vg7UO3FWfwhRLKRS5aJVycAmO7/NVfXimjRz6Q9ycJFitxD8MPi0jX8F88XUt73HPULz
-	aCncSVwRgOInoc/eUQOw4a2b4H2vT5MtwW3aiDkgFbEn1hoxI/PBPh6Ck6Iyd2DmaZ9C
-	UPmzHp2DYCV8KHUjlPmCo29Vb9oVnmUQJiC9BSdQ/b63Eskihf7TsDMgewKoPXJ4i24L
-	RSOtIDfOSLRVlia8vvLXs8qifJKLJ00zmHDf3/3Y/pVr1cSxKh0TRaLSwYEeXTPqV3mD
-	FiJg==
+	bh=aCMPsLQZA/C331e37vWONWaE4nIydCyWd7ou9E67pcc=;
+	b=RUT+WCLHqTPlsPd8uhgLAbVeCvBZrWGwto+MLHl3xmrj4Y95allBOIqZqnIZudfje2
+	n2KyGX1XpUtgdf/K4BXDy2NHDsCxT8K21r/3idE8bLWE34Fyi3yj/w6p+k018LSRa13D
+	8eTLC7G+112IMVu3dMAZQ0Wv/gWmhO/VTBRdOza+thtG2UuTqyquDX3AEJycnkHrkAPp
+	M3wlBZTafR6nX0JNPgoVBNjFzvVoHfMw+L2Qq1TAUWN31eA6aLeEVmcc87XX7cFTcKdK
+	pIwnHp8qBRZTZC+jBXyZunCtbv3mI7CvnbB6V76Yg5lOShfnAWjKvPZoSesKLT2ODKxt
+	awAg==
 Content-Disposition: inline
-In-Reply-To: <20140129120907.GA22183-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <52E880A6.4040902-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -31,16 +31,48 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Jan 29, 2014 at 01:09:07PM +0100, Michal Hocko wrote:
-> Btw. after this change we should drop part of the comment above
-> oom_info_lock:
+Hello, Li.
 
-Updated the comment to
+On Wed, Jan 29, 2014 at 12:16:38PM +0800, Li Zefan wrote:
+> > -#define for_each_builtin_subsys(ss, i)					\
+> > -	for ((i) = 0; (i) < CGROUP_BUILTIN_SUBSYS_COUNT &&		\
+> > -	     (((ss) = cgroup_subsys[i]) || true); (i)++)
+> > +	for ((ssid) = 0; (ssid) < CGROUP_SUBSYS_COUNT &&		\
+> > +	     (((ss) = cgroup_subsys[ssid]) || true); (ssid)++)
+> 
+> Now cgroup_subsys[i] won't be NULL, so we can drop "|| true".
 
- /* oom_info_lock ensures that parallel ooms do not interleave */
+Hmmm... because the macro is kinda complex, I'd like to avoid changing
+its implementation in this patch.  Also, the "|| true" tells the
+compiler that it doesn't have to generate conditional branch on the
+preceding condition.
+
+Now that the array is always consecutive, I'm planning to further
+simplify the iterators to not require ssid, so that it just becomes
+for_each_subsys(ss).  Let's leave it alone for now.
+
+> > +	if (need_forkexit_callback)
+> > +		for_each_subsys(ss, i)
+> >  			if (ss->fork)
+> >  				ss->fork(child);
+> > -	}
+> 
+> This looks a bit ugly. How about leaving the parentheses for the
+> outmost if statement?
+> 
+> if (need_forkexit_callback) {
+> 	for_each_subsys(ss, i)
+> 		if (ss->fork)
+> 			ss->fork(child);
+> }
+
+Maybe, I don't know.  I tend to aim for the minimum necessary as that
+usually is the easiest way to achieve consistency.  That said certain
+things are a lot easier on the eye with a bit of extra notations -
+e.g. "(a & b) && c".  Alright, will add the parentheses.
 
 Thanks!
 
