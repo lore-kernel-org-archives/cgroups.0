@@ -1,49 +1,96 @@
-From: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 3/6] cgroup: clean up cgroup_subsys names and
- initialization
-Date: Thu, 30 Jan 2014 10:16:44 +0100
-Message-ID: <20140130091644.GB2749@gmail.com>
-References: <1390952641-15950-1-git-send-email-tj@kernel.org>
- <1390952641-15950-4-git-send-email-tj@kernel.org>
- <20140129104648.GC9636@twins.programming.kicks-ass.net>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Fwd: CGroups and pthreads
+Date: Fri, 31 Jan 2014 12:24:06 -0800
+Message-ID: <1391199846.2172.49.camel@dabdike.int.hansenpartnership.com>
+References: <CALaYU_BZ8iuHnAgkss1wO7BK3qULgotYSpmX4nqX=uC+aTnddA@mail.gmail.com>
+	 <CALaYU_AA8fMLmp_Ng9Mhm0ztcXA0EHCxkU3p68tKs87G48NrOw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=Iut9v2xXNSS+wrGg4XaJHw+XXQCR7jHt2EoKptRqiDU=;
-        b=uV01ry0xRbaPRNPUSBOHFE5tn6rd4gGvfBo7iPwl8A5+pEt0yJntgQh4/g8m+PRQsf
-         eXs/8kElqe4aoiCLczHT+zOBWT6LucQJJKjHT5khShTWeh7hwZzsCLF4kcMT2Z4luJ86
-         ZeOVHHQvSwFOi+qkKEC/2VgDbidkDL6a7Lxu2Pgpa8HzhcSafbsLrp+YE7ZSDZUbI4cH
-         Zd9QazJ6SxgBcvvZCYC0UbNgTMnLoExRmxUjOAj1BzEQgaz28q4OZCfeKYhh9v++P8Vl
-         uxeT8StFvvSCIN2j9OoPer/ibO+NWV570ytCJZjyIKMjH+YwMzUXXTM3qhKrwI6WraaY
-         Fkxg==
-Content-Disposition: inline
-In-Reply-To: <20140129104648.GC9636-ndre7Fmf5hadTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <CALaYU_AA8fMLmp_Ng9Mhm0ztcXA0EHCxkU3p68tKs87G48NrOw@mail.gmail.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Serge E. Hallyn" <serue-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, "Rafael J. Wysocki" <rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>
+To: Dermot McGahon <dmcgahon@waratek.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org
+
+[cc to cgroups@ added]
+On Wed, 2014-01-29 at 17:15 +0000, Dermot McGahon wrote:
+> Forwarding a question that was first asked on cgroups mailing list.
+> Someone recommended asking here instead.
+
+Right, but you still need to keep cgroups in the cc otherwise the thread
+gets fractured
+
+>  We believe that we received
+> the correct answer, which is that cgroup memory subsystem charges
+> always to the leader of the Process Group rather than to the TID.
+> Could someone confirm that is definitely the case (testing does bear
+> that out).
+
+Michal Hocko already told you that the memory controller charges per
+address space.  Threads within a process all share the same address
+space so there's no physical way they can get charged separately.
+
+>  It does make sense to us, since who is to say which thread
+> should the process shared memory be accounted to. Unfortunately, in
+> our specific scenario, which is a JVM that generally allocated out of
+> the heap but occasionally loads native libraries that can allocate
+> using malloc() in known threads, we would have that information. But
+> we can see that in the general case it may not be that useful to
+> account per-thread.
+
+What is it you're trying to do?  Give a per thread memory allocation
+limit?  That's not possible with cgroups because the threads share an
+address space ... I don't even think it's possible with current glibc
+and limits because heap space is shared between the threads as well.
+This is a consequence of the fact that the brk system call is per
+process not per thread.
+
+> Would appreciate any comments you may have.
+> 
+> -----------
+> 
+> Question originally posted to cgroups mailing list:
+> 
+> Is it possible to apply cgroup memory subsystem controls to threads
+> created with pthread_create() / clone or only tasks that have been
+> created using fork and exec?
+
+It is only possible to assert separate controls for things which have
+different address spaces.  Usually fork/exec gives the new process a new
+address space (although it doesn't have to).
+
+> In testing, we seem to be seeing that all allocations are accounted
+> for against the PPID / TGID and never the pthread_create()'d TID, even
+> though the TID is an LWP and can be seen using top (though RSS is
+> aggregate and global of course).
+> 
+> Attached is a simple test program used to print PID / TID and allocate
+> memory from a cloned TID. After setting breakpoints in child and
+> parent and setting up a cgroups hierarchy of 'parent' and 'child',
+> apply memory.limit_in_bytes and memory.memsw.limit_in_bytes to the
+> child cgroup only and adding the PID to the parent group and the TID
+> to the child group we see that behaviour.
+> 
+> Is that expected? I realise that the subsystems are all different but
+> what is confusing us slightly is that we have previously used the CPU
+> subsystem to set cpu_shares and adding LWP / TID's to individual
+> cgroups worked just fine for that
+> 
+> Am I misconfiguring somehow or is this a known difference between CPU
+> and MEMORY subsystems?
+
+Yes, CPU operates within the scheduler and all schedulable entities
+(that's threads or processes) can be accounted separately.  memcg
+operates on address spaces, so only things with separate address spaces
+can be accounted separately.
+
+James
 
 
-* Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
-
-> On Tue, Jan 28, 2014 at 06:43:58PM -0500, Tejun Heo wrote:
-> > * With the above, renaming subsys identifiers to match the userland
-> >   visible names doesn't cause any naming conflicts.  All non-matching
-> >   identifiers are renamed to match the official names.
-> > 
-> >   cpu_cgroup -> cpu
-> >   perf -> perf_event
-> > 
-> > Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Acked-by: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-
-Acked-by: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-
-Thanks,
-
-	Ingo
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
