@@ -1,91 +1,68 @@
-From: Rashika Kheria <rashika.kheria@gmail.com>
-Subject: [PATCH 7/9] mm: Mark functions as static in page_cgroup.c
-Date: Fri, 7 Feb 2014 17:41:34 +0530
-Message-ID: <6054d570fc83c3d4f3de240d6da488f876e21450.1391167128.git.rashika.kheria@gmail.com>
-References: <a7658fc8f2ab015bffe83de1448cc3db79d2a9fc.1391167128.git.rashika.kheria@gmail.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH] cgroup: use an ordered workqueue for cgroup destruction
+Date: Fri, 7 Feb 2014 14:45:33 +0100
+Message-ID: <20140207134533.GC5121@dhcp22.suse.cz>
+References: <alpine.LSU.2.11.1402061541560.31342@eggly.anvils>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:content-transfer-encoding
-         :in-reply-to:user-agent;
-        bh=xzp6FNWdLh7Y7qgTZ/lshXsjCw1DPn0P6VF+xt0gsYw=;
-        b=QF7tLGS5H3AyKcFxQu5WnteZAA5Oh33RduatHgpJadaExvMU/qDuEg3GNWNUZcK/AH
-         oPUnsBTDi19155d1uFLN6CYX3MbcxRS08waoDG+FzhoBZ4Z3EqHxHCW2/EK5v44FV/2j
-         tgy8vmvKuKc/DSrvG5e++WS0IH6Wb46vyaji0ORZOP9P0neYWJ3DSyUBcBwHiLaYVaUH
-         JkRn+LBJ1CCD7AsaA/fxTHdPcDzkkcLSOy3jDo2JF09TcTFl6GgIXa+1cIN+eESuaskS
-         L7zE2TC7WIiPaHOwZJFy/+USnJRFKm7u4a2gyDLyIoDh/kIZso7zQF32k2VUcfAReOhw
-         N3Tg==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <a7658fc8f2ab015bffe83de1448cc3db79d2a9fc.1391167128.git.rashika.kheria@gmail.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <alpine.LSU.2.11.1402061541560.31342-fupSdm12i1nKWymIFiNcPA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: linux-kernel@vger.kernel.org
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, containers@lists.linux-foundation.org, josh@joshtriplett.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Filipe Brandenburger <filbranden-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Markus Blank-Burian <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org>, Shawn Bohrer <shawn.bohrer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Mark functions as static in page_cgroup.c because they are not used
-outside this file.
+On Thu 06-02-14 15:56:01, Hugh Dickins wrote:
+> Sometimes the cleanup after memcg hierarchy testing gets stuck in
+> mem_cgroup_reparent_charges(), unable to bring non-kmem usage down to 0.
+> 
+> There may turn out to be several causes, but a major cause is this: the
+> workitem to offline parent can get run before workitem to offline child;
+> parent's mem_cgroup_reparent_charges() circles around waiting for the
+> child's pages to be reparented to its lrus, but it's holding cgroup_mutex
+> which prevents the child from reaching its mem_cgroup_reparent_charges().
+> 
+> Just use an ordered workqueue for cgroup_destroy_wq.
 
-This eliminates the following warning in mm/page_cgroup.c:
-mm/page_cgroup.c:177:6: warning: no previous prototype for =E2=80=98__fre=
-e_page_cgroup=E2=80=99 [-Wmissing-prototypes]
-mm/page_cgroup.c:190:15: warning: no previous prototype for =E2=80=98onli=
-ne_page_cgroup=E2=80=99 [-Wmissing-prototypes]
-mm/page_cgroup.c:225:15: warning: no previous prototype for =E2=80=98offl=
-ine_page_cgroup=E2=80=99 [-Wmissing-prototypes]
+Hmm, interesting. Markus has seen hangs even with mem_cgroup_css_offline
+and the referenced cgroup fixes, maybe this is the the right one
+finally.
 
-Signed-off-by: Rashika Kheria <rashika.kheria@gmail.com>
-Reviewed-by: Josh Triplett <josh@joshtriplett.org>
----
- mm/page_cgroup.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+> Fixes: e5fca243abae ("cgroup: use a dedicated workqueue for cgroup destruction")
+> Suggested-by: Filipe Brandenburger <filbranden-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # 3.10+
 
-diff --git a/mm/page_cgroup.c b/mm/page_cgroup.c
-index 6d757e3a..6ec349c 100644
---- a/mm/page_cgroup.c
-+++ b/mm/page_cgroup.c
-@@ -174,7 +174,7 @@ static void free_page_cgroup(void *addr)
- 	}
- }
-=20
--void __free_page_cgroup(unsigned long pfn)
-+static void __free_page_cgroup(unsigned long pfn)
- {
- 	struct mem_section *ms;
- 	struct page_cgroup *base;
-@@ -187,9 +187,9 @@ void __free_page_cgroup(unsigned long pfn)
- 	ms->page_cgroup =3D NULL;
- }
-=20
--int __meminit online_page_cgroup(unsigned long start_pfn,
--			unsigned long nr_pages,
--			int nid)
-+static int __meminit online_page_cgroup(unsigned long start_pfn,
-+				unsigned long nr_pages,
-+				int nid)
- {
- 	unsigned long start, end, pfn;
- 	int fail =3D 0;
-@@ -222,8 +222,8 @@ int __meminit online_page_cgroup(unsigned long start_=
-pfn,
- 	return -ENOMEM;
- }
-=20
--int __meminit offline_page_cgroup(unsigned long start_pfn,
--		unsigned long nr_pages, int nid)
-+static int __meminit offline_page_cgroup(unsigned long start_pfn,
-+				unsigned long nr_pages, int nid)
- {
- 	unsigned long start, end, pfn;
-=20
---=20
-1.7.9.5
+Reviewed-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+e5fca243abae was marked for 3.9 stable but I do not see it in the Greg's
+3.9 stable branch so 3.10+ seems to be sufficient.
+
+> ---
+> 
+>  kernel/cgroup.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> --- 3.14-rc1/kernel/cgroup.c	2014-02-02 18:49:07.737302111 -0800
+> +++ linux/kernel/cgroup.c	2014-02-06 15:20:35.548904965 -0800
+> @@ -4845,12 +4845,12 @@ static int __init cgroup_wq_init(void)
+>  	/*
+>  	 * There isn't much point in executing destruction path in
+>  	 * parallel.  Good chunk is serialized with cgroup_mutex anyway.
+> -	 * Use 1 for @max_active.
+> +	 * Must be ordered to make sure parent is offlined after children.
+>  	 *
+>  	 * We would prefer to do this in cgroup_init() above, but that
+>  	 * is called before init_workqueues(): so leave this until after.
+>  	 */
+> -	cgroup_destroy_wq = alloc_workqueue("cgroup_destroy", 0, 1);
+> +	cgroup_destroy_wq = alloc_ordered_workqueue("cgroup_destroy", 0);
+>  	BUG_ON(!cgroup_destroy_wq);
+>  
+>  	/*
+
+-- 
+Michal Hocko
+SUSE Labs
