@@ -1,66 +1,324 @@
-From: Michal Hocko <mhocko@suse.cz>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Subject: Re: [PATCH] cgroup: use an ordered workqueue for cgroup destruction
-Date: Fri, 7 Feb 2014 16:28:49 +0100
-Message-ID: <20140207152849.GF5121@dhcp22.suse.cz>
+Date: Fri, 7 Feb 2014 11:43:21 -0500
+Message-ID: <20140207164321.GE6963@cmpxchg.org>
 References: <alpine.LSU.2.11.1402061541560.31342@eggly.anvils>
- <20140207140402.GA3304@htj.dyndns.org>
- <20140207143740.GD5121@dhcp22.suse.cz>
- <20140207151341.GB3304@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=ROxumcpS0nOkMDvI66Km9f6g/deaJmXc953gtn2poGA=;
+	b=YjZp3nOoKLI1vABZbiEv+XvEYu1aQFrR6Jg1UlDxK7pjZu1NjJExSRuvcOukLKIHO7Gt+EyU1oTLnAUUyW/LJyvgu6bwSCttQ7KSExj20jJ9Y80tAit0EsokrEE5qKUUMgGGyG+uGgKGZzFLUQVuo2e4RYvQoqg7LHLPQObngZY=;
 Content-Disposition: inline
-In-Reply-To: <20140207151341.GB3304@htj.dyndns.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <alpine.LSU.2.11.1402061541560.31342-fupSdm12i1nKWymIFiNcPA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Hugh Dickins <hughd@google.com>, Filipe Brandenburger <filbranden@google.com>, Li Zefan <lizefan@huawei.com>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Greg Thelen <gthelen@google.com>, Michel Lespinasse <walken@google.com>, Markus Blank-Burian <burian@muenster.de>, Shawn Bohrer <shawn.bohrer@gmail.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Filipe Brandenburger <filbranden-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Markus Blank-Burian <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org>, Shawn Bohrer <shawn.bohrer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Fri 07-02-14 10:13:41, Tejun Heo wrote:
-> Hello, Michal.
+On Thu, Feb 06, 2014 at 03:56:01PM -0800, Hugh Dickins wrote:
+> Sometimes the cleanup after memcg hierarchy testing gets stuck in
+> mem_cgroup_reparent_charges(), unable to bring non-kmem usage down to 0.
 > 
-> On Fri, Feb 07, 2014 at 03:37:40PM +0100, Michal Hocko wrote:
-> > Hmm, this is a bit tricky. We cannot use memcg iterators to reach
-> > children because css_tryget would fail on them. We can use cgroup
-> > iterators instead, alright, and reparent pages from leafs but this all
-> > sounds like a lot of complications.
+> There may turn out to be several causes, but a major cause is this: the
+> workitem to offline parent can get run before workitem to offline child;
+> parent's mem_cgroup_reparent_charges() circles around waiting for the
+> child's pages to be reparented to its lrus, but it's holding cgroup_mutex
+> which prevents the child from reaching its mem_cgroup_reparent_charges().
 > 
-> Hmmm... I think we're talking past each other here.  Why would the
-> parent need to reach down to the children?  Just bail out if it can't
-> make things down to zero and let the child when it finishes its own
-> cleaning walk up the tree propagating changes.  ->parent is always
-> accessible.  Would that be complicated too?
-
-This would be basically the option #2 bellow.
-
-> > Another option would be weakening css_offline reparenting and do not
-> > insist on having 0 charges. We want to get rid of as many charges as
-> > possible but do not need to have all of them gone
-> > (http://marc.info/?l=linux-kernel&m=139161412932193&w=2). The last part
-> > would be reparenting to the upmost parent which is still online.
-> > 
-> > I guess this is implementable but I would prefer Hugh's fix for now and
-> > for stable.
+> Just use an ordered workqueue for cgroup_destroy_wq.
 > 
-> Yeah, for -stable, I think Hugh's patch is good but I really don't
-> want to keep it long term.
+> Fixes: e5fca243abae ("cgroup: use a dedicated workqueue for cgroup destruction")
+> Suggested-by: Filipe Brandenburger <filbranden-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # 3.10+
 
-Based on our recent discussion regarding css_offline semantic we want to
-do some changes in that area. I thought we would simply update comments
-but considering this report css_offline needs some changes as well. I
-will look at it. The idea is to split mem_cgroup_reparent_charges into
-two parts. The core one which drains LRUs and would be called from
-mem_cgroup_css_offline and one which loops until all charges are gone
-for mem_cgroup_css_free. mem_cgroup_move_parent will need an update as
-well. It would have to go up the hierarchy to the first alive parent.
+I think this is a good idea for now and -stable:
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
+Long-term, I think we may want to get rid of the reparenting in
+css_offline() entirely and only do it in the naturally ordered
+css_free() callback.  We only reparent in css_offline() because
+swapout records pin the css and we don't want to hang on to
+potentially gigabytes of unreclaimable (css_tryget() disabled) cache
+indefinitely until the last swapout records disappear.
+
+So I'm currently mucking around with the following patch, which drops
+the css pin from swapout records and reparents them in css_free().
+It's lightly tested and there might well be dragons but I don't see
+any fundamental problems with it.
+
+What do you think?
+
+---
+ include/linux/page_cgroup.h |   8 ++++
+ mm/memcontrol.c             | 101 +++++++++++++-------------------------------
+ mm/page_cgroup.c            |  41 ++++++++++++++++++
+ 3 files changed, 78 insertions(+), 72 deletions(-)
+
+diff --git a/include/linux/page_cgroup.h b/include/linux/page_cgroup.h
+index 777a524716db..3ededda8934f 100644
+--- a/include/linux/page_cgroup.h
++++ b/include/linux/page_cgroup.h
+@@ -111,6 +111,8 @@ extern unsigned short swap_cgroup_cmpxchg(swp_entry_t ent,
+ 					unsigned short old, unsigned short new);
+ extern unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id);
+ extern unsigned short lookup_swap_cgroup_id(swp_entry_t ent);
++extern unsigned long swap_cgroup_migrate(unsigned short old,
++					 unsigned short new);
+ extern int swap_cgroup_swapon(int type, unsigned long max_pages);
+ extern void swap_cgroup_swapoff(int type);
+ #else
+@@ -127,6 +129,12 @@ unsigned short lookup_swap_cgroup_id(swp_entry_t ent)
+ 	return 0;
+ }
+ 
++static inline unsigned long swap_cgroup_migrate(unsigned short old,
++						unsigned short new)
++{
++	return 0;
++}
++
+ static inline int
+ swap_cgroup_swapon(int type, unsigned long max_pages)
+ {
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 53385cd4e6f0..e2a0d3986c74 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -892,11 +892,9 @@ static long mem_cgroup_read_stat(struct mem_cgroup *memcg,
+ 	return val;
+ }
+ 
+-static void mem_cgroup_swap_statistics(struct mem_cgroup *memcg,
+-					 bool charge)
++static void mem_cgroup_swap_statistics(struct mem_cgroup *memcg, long nr_pages)
+ {
+-	int val = (charge) ? 1 : -1;
+-	this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_SWAP], val);
++	this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_SWAP], nr_pages);
+ }
+ 
+ static unsigned long mem_cgroup_read_events(struct mem_cgroup *memcg,
+@@ -4234,15 +4232,12 @@ __mem_cgroup_uncharge_common(struct page *page, enum charge_type ctype,
+ 	 */
+ 
+ 	unlock_page_cgroup(pc);
+-	/*
+-	 * even after unlock, we have memcg->res.usage here and this memcg
+-	 * will never be freed, so it's safe to call css_get().
+-	 */
++
+ 	memcg_check_events(memcg, page);
+-	if (do_swap_account && ctype == MEM_CGROUP_CHARGE_TYPE_SWAPOUT) {
+-		mem_cgroup_swap_statistics(memcg, true);
+-		css_get(&memcg->css);
+-	}
++
++	if (do_swap_account && ctype == MEM_CGROUP_CHARGE_TYPE_SWAPOUT)
++		mem_cgroup_swap_statistics(memcg, 1);
++
+ 	/*
+ 	 * Migration does not charge the res_counter for the
+ 	 * replacement page, so leave it alone when phasing out the
+@@ -4351,10 +4346,6 @@ mem_cgroup_uncharge_swapcache(struct page *page, swp_entry_t ent, bool swapout)
+ 
+ 	memcg = __mem_cgroup_uncharge_common(page, ctype, false);
+ 
+-	/*
+-	 * record memcg information,  if swapout && memcg != NULL,
+-	 * css_get() was called in uncharge().
+-	 */
+ 	if (do_swap_account && swapout && memcg)
+ 		swap_cgroup_record(ent, mem_cgroup_id(memcg));
+ }
+@@ -4383,8 +4374,7 @@ void mem_cgroup_uncharge_swap(swp_entry_t ent)
+ 		 */
+ 		if (!mem_cgroup_is_root(memcg))
+ 			res_counter_uncharge(&memcg->memsw, PAGE_SIZE);
+-		mem_cgroup_swap_statistics(memcg, false);
+-		css_put(&memcg->css);
++		mem_cgroup_swap_statistics(memcg, -1);
+ 	}
+ 	rcu_read_unlock();
+ }
+@@ -4412,20 +4402,8 @@ static int mem_cgroup_move_swap_account(swp_entry_t entry,
+ 	new_id = mem_cgroup_id(to);
+ 
+ 	if (swap_cgroup_cmpxchg(entry, old_id, new_id) == old_id) {
+-		mem_cgroup_swap_statistics(from, false);
+-		mem_cgroup_swap_statistics(to, true);
+-		/*
+-		 * This function is only called from task migration context now.
+-		 * It postpones res_counter and refcount handling till the end
+-		 * of task migration(mem_cgroup_clear_mc()) for performance
+-		 * improvement. But we cannot postpone css_get(to)  because if
+-		 * the process that has been moved to @to does swap-in, the
+-		 * refcount of @to might be decreased to 0.
+-		 *
+-		 * We are in attach() phase, so the cgroup is guaranteed to be
+-		 * alive, so we can just call css_get().
+-		 */
+-		css_get(&to->css);
++		mem_cgroup_swap_statistics(from, -1);
++		mem_cgroup_swap_statistics(to, 1);
+ 		return 0;
+ 	}
+ 	return -EINVAL;
+@@ -6611,7 +6589,6 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
+ 	kmem_cgroup_css_offline(memcg);
+ 
+ 	mem_cgroup_invalidate_reclaim_iterators(memcg);
+-	mem_cgroup_reparent_charges(memcg);
+ 	mem_cgroup_destroy_all_caches(memcg);
+ 	vmpressure_cleanup(&memcg->vmpressure);
+ }
+@@ -6619,41 +6596,26 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
+ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
++	unsigned long swaps_moved;
++	struct mem_cgroup *parent;
++
+ 	/*
+-	 * XXX: css_offline() would be where we should reparent all
+-	 * memory to prepare the cgroup for destruction.  However,
+-	 * memcg does not do css_tryget() and res_counter charging
+-	 * under the same RCU lock region, which means that charging
+-	 * could race with offlining.  Offlining only happens to
+-	 * cgroups with no tasks in them but charges can show up
+-	 * without any tasks from the swapin path when the target
+-	 * memcg is looked up from the swapout record and not from the
+-	 * current task as it usually is.  A race like this can leak
+-	 * charges and put pages with stale cgroup pointers into
+-	 * circulation:
+-	 *
+-	 * #0                        #1
+-	 *                           lookup_swap_cgroup_id()
+-	 *                           rcu_read_lock()
+-	 *                           mem_cgroup_lookup()
+-	 *                           css_tryget()
+-	 *                           rcu_read_unlock()
+-	 * disable css_tryget()
+-	 * call_rcu()
+-	 *   offline_css()
+-	 *     reparent_charges()
+-	 *                           res_counter_charge()
+-	 *                           css_put()
+-	 *                             css_free()
+-	 *                           pc->mem_cgroup = dead memcg
+-	 *                           add page to lru
+-	 *
+-	 * The bulk of the charges are still moved in offline_css() to
+-	 * avoid pinning a lot of pages in case a long-term reference
+-	 * like a swapout record is deferring the css_free() to long
+-	 * after offlining.  But this makes sure we catch any charges
+-	 * made after offlining:
++	 * Migrate all swap entries to the parent.  There are no more
++	 * references to the css, so no new swap out records can show
++	 * up.  Any concurrently faulting pages will either get this
++	 * offline cgroup and charge the faulting task, or get the
++	 * migrated parent id and charge the parent for the in-memory
++	 * page.  uncharge_swap() will balance the res_counter in the
++	 * parent either way, whether it still fixes this group's
++	 * res_counter is irrelevant at this point.
+ 	 */
++	parent = parent_mem_cgroup(memcg);
++	if (!parent)
++		parent = root_mem_cgroup;
++	swaps_moved = swap_cgroup_migrate(mem_cgroup_id(memcg),
++					  mem_cgroup_id(parent));
++	mem_cgroup_swap_statistics(parent, swaps_moved);
++
+ 	mem_cgroup_reparent_charges(memcg);
+ 
+ 	memcg_destroy_kmem(memcg);
+@@ -6966,7 +6928,6 @@ static void __mem_cgroup_clear_mc(void)
+ {
+ 	struct mem_cgroup *from = mc.from;
+ 	struct mem_cgroup *to = mc.to;
+-	int i;
+ 
+ 	/* we must uncharge all the leftover precharges from mc.to */
+ 	if (mc.precharge) {
+@@ -6981,16 +6942,13 @@ static void __mem_cgroup_clear_mc(void)
+ 		__mem_cgroup_cancel_charge(mc.from, mc.moved_charge);
+ 		mc.moved_charge = 0;
+ 	}
+-	/* we must fixup refcnts and charges */
++	/* we must fixup charges */
+ 	if (mc.moved_swap) {
+ 		/* uncharge swap account from the old cgroup */
+ 		if (!mem_cgroup_is_root(mc.from))
+ 			res_counter_uncharge(&mc.from->memsw,
+ 						PAGE_SIZE * mc.moved_swap);
+ 
+-		for (i = 0; i < mc.moved_swap; i++)
+-			css_put(&mc.from->css);
+-
+ 		if (!mem_cgroup_is_root(mc.to)) {
+ 			/*
+ 			 * we charged both to->res and to->memsw, so we should
+@@ -6999,7 +6957,6 @@ static void __mem_cgroup_clear_mc(void)
+ 			res_counter_uncharge(&mc.to->res,
+ 						PAGE_SIZE * mc.moved_swap);
+ 		}
+-		/* we've already done css_get(mc.to) */
+ 		mc.moved_swap = 0;
+ 	}
+ 	memcg_oom_recover(from);
+diff --git a/mm/page_cgroup.c b/mm/page_cgroup.c
+index cfd162882c00..ca04feaae7fe 100644
+--- a/mm/page_cgroup.c
++++ b/mm/page_cgroup.c
+@@ -459,6 +459,47 @@ unsigned short lookup_swap_cgroup_id(swp_entry_t ent)
+ 	return lookup_swap_cgroup(ent, NULL)->id;
+ }
+ 
++/**
++ * swap_cgroup_migrate - migrate all entries of one id to another
++ * @old: old id
++ * @new: new id
++ *
++ * Caller has to be able to deal with swapon/swapoff racing.
++ *
++ * Returns number of migrated entries.
++ */
++unsigned long swap_cgroup_migrate(unsigned short old, unsigned short new)
++{
++	unsigned long migrated = 0;
++	unsigned int type;
++
++	for (type = 0; type < MAX_SWAPFILES; type++) {
++		struct swap_cgroup_ctrl *ctrl;
++		unsigned long flags;
++		unsigned int page;
++
++		ctrl = &swap_cgroup_ctrl[type];
++		spin_lock_irqsave(&ctrl->lock, flags);
++		for (page = 0; page < ctrl->length; page++) {
++			struct swap_cgroup *base;
++			pgoff_t offset;
++
++			base = page_address(ctrl->map[page]);
++			for (offset = 0; offset < SC_PER_PAGE; offset++) {
++				struct swap_cgroup *sc;
++
++				sc = base + offset;
++				if (sc->id == old) {
++					sc->id = new;
++					migrated++;
++				}
++			}
++		}
++		spin_unlock_irqrestore(&ctrl->lock, flags);
++	}
++	return migrated;
++}
++
+ int swap_cgroup_swapon(int type, unsigned long max_pages)
+ {
+ 	void *array;
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+1.8.5.3
