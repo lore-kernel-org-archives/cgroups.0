@@ -1,324 +1,110 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH] cgroup: use an ordered workqueue for cgroup destruction
-Date: Fri, 7 Feb 2014 11:43:21 -0500
-Message-ID: <20140207164321.GE6963@cmpxchg.org>
-References: <alpine.LSU.2.11.1402061541560.31342@eggly.anvils>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [cgroup] BUG: unable to handle kernel NULL pointer dereference
+ at 0000000000000080
+Date: Fri, 7 Feb 2014 12:49:07 -0500
+Message-ID: <20140207174907.GA12815@htj.dyndns.org>
+References: <20140207022850.GB11051@localhost>
+ <20140207023333.GB11369@localhost>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=ROxumcpS0nOkMDvI66Km9f6g/deaJmXc953gtn2poGA=;
-	b=YjZp3nOoKLI1vABZbiEv+XvEYu1aQFrR6Jg1UlDxK7pjZu1NjJExSRuvcOukLKIHO7Gt+EyU1oTLnAUUyW/LJyvgu6bwSCttQ7KSExj20jJ9Y80tAit0EsokrEE5qKUUMgGGyG+uGgKGZzFLUQVuo2e4RYvQoqg7LHLPQObngZY=;
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=eZ9ohqcvoij1FyqTXbL2dk/Oazubn2R+45lWFKCBDsc=;
+        b=NYn4d/4iWsGzRycIeEdosoe5O9GQ6GWYTErFIS8ZSg7Ht3JFBCrLPv/DbM/TTJArYD
+         UWgdUecCUPA1M2f2ls1FXTA+3bunP8pIj1dp7qZ5PnJBF/qOMZzmHEEweByzSrFWC1sj
+         OZIfjrZl+oA55sAUEfdgfJNlgBAPjcnxcbDpCiX7AQ8JyCwocEfu6deO8Vt3SA1tT0qE
+         C4adNVIs6FmWxEUFo8BSVNhSH8GmjKYUCPzT5fTKzn9F2icstpsDkvNR8s6qKOELmjyB
+         nFBQ/pj3ahdEZaOzheFNWyCL/tqGoBLRrKxeGZiyB4oEuX2RPTwkvf3GKQtXCr4jMM42
+         SUHw==
 Content-Disposition: inline
-In-Reply-To: <alpine.LSU.2.11.1402061541560.31342-fupSdm12i1nKWymIFiNcPA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20140207023333.GB11369@localhost>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Filipe Brandenburger <filbranden-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Markus Blank-Burian <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org>, Shawn Bohrer <shawn.bohrer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Fengguang Wu <fengguang.wu@intel.com>
+Cc: cgroups@vger.kernel.org, Linux Memory Management List <linux-mm@kvack.org>, linux-kernel@vger.kernel.org
 
-On Thu, Feb 06, 2014 at 03:56:01PM -0800, Hugh Dickins wrote:
-> Sometimes the cleanup after memcg hierarchy testing gets stuck in
-> mem_cgroup_reparent_charges(), unable to bring non-kmem usage down to 0.
+Hello, Fengguang.
+
+On Fri, Feb 07, 2014 at 10:33:33AM +0800, Fengguang Wu wrote:
+> Tejun,
 > 
-> There may turn out to be several causes, but a major cause is this: the
-> workitem to offline parent can get run before workitem to offline child;
-> parent's mem_cgroup_reparent_charges() circles around waiting for the
-> child's pages to be reparented to its lrus, but it's holding cgroup_mutex
-> which prevents the child from reaching its mem_cgroup_reparent_charges().
+> Here is another bisect.
 > 
-> Just use an ordered workqueue for cgroup_destroy_wq.
+> The first bad commit could be any of:
+> 5a87728c4502d0a99f53346545605360fce1e91e cgroup: factor out cgroup_setup_root() from cgroup_mount()
+> 6a9fc7f859a24754999ff9096015583b70dfa162 cgroup: update cgroup name handling
+> bb7a2fa01329b0afc2307011d634c4bde5ef10f1 cgroup: restructure locking and error handling in cgroup_mount()
+> 0571b870aa584093000cc9a2925db1463813212f cgroup: make cgroup_subsys->base_cftypes use cgroup_add_cftypes()
+> 4e6a3a2aae35039751d88a567a0346660f01a1a1 cgroup: release cgroup_mutex over file removals
+> 43b48e8041f0bfaf295e796d9157b40dfac798f0 cgroup: update the meaning of cftype->max_write_len
+> 9c92986924852946840aa265c66325790e926a36 cgroup: introduce cgroup_tree_mutex
+> 0be500347039f5ef658fd3045ca42afa72583e2d cgroup: improve css_from_dir() into css_tryget_from_dir()
+> ed6d28fc60daadf1f445ab439e4da86fd363f2bb cgroup: introduce cgroup_init/exit_cftypes()
+> 80f9567b80a645d67f332bc6707ac4d859f05e19 Merge branch 'review-kernfs-cgroup-prep' into review-kernfs-conversion
+> c48b4c28016fdf927148616940279291d028cbc2 cgroup: introduce cgroup_ino()
+> 455447a2486bc982c7aae2bb0cf93c810da5faae cgroup: misc preps for kernfs conversion
+> 7bac9560a270d2fca5b65893851aa29676db2f4e kernfs: add CONFIG_KERNFS
+> 8d4bee55479f18cbbcbdd3a1c9a3331b90932f05 cgroup: relocate functions in preparation of kernfs conversion
+> ad1521d8543336ac7acf14f918f467ec27e765b9 kernfs: implement kernfs_get_parent(), kernfs_name/path() and friends
+> 7c87a9de3197667e64401fdba77cb641b93d9d90 cgroup: convert to kernfs
+> We cannot bisect more!
 > 
-> Fixes: e5fca243abae ("cgroup: use a dedicated workqueue for cgroup destruction")
-> Suggested-by: Filipe Brandenburger <filbranden-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # 3.10+
+> +------------------------------------------------------------+----+
+> |                                                            |    |
+> +------------------------------------------------------------+----+
+> | boot_successes                                             | 0  |
+> | boot_failures                                              | 19 |
+> | BUG:unable_to_handle_kernel_NULL_pointer_dereference_at    | 19 |
+> | Oops:SMP_DEBUG_PAGEALLOC                                   | 19 |
+> | RIP:kobject_add_internal                                   | 19 |
+> | WARNING:CPU:PID:at_kernel/smp.c:smp_call_function_single() | 19 |
+> | Kernel_panic-not_syncing:Attempted_to_kill_init_exitcode=  | 19 |
+> | backtrace:__class_register                                 | 10 |
+> | backtrace:netdev_kobject_init                              | 10 |
+> | backtrace:net_dev_init                                     | 10 |
+> | backtrace:kernel_init_freeable                             | 10 |
+> +------------------------------------------------------------+----+
+> 
+> [    0.413902] PCI: pci_cache_line_size set to 64 bytes
+> [    0.417267] BUG: unable to handle kernel NULL pointer dereference at 0000000000000080
+> [    0.418531] IP: [<ffffffff81437700>] kobject_add_internal+0x720/0x940
+...
+> [    0.420000]  [<ffffffff81437958>] kset_register+0x38/0x80
+> [    0.420000]  [<ffffffff8190473f>] __class_register+0x1cf/0x390
+> [    0.420000]  [<ffffffff82edebcc>] netdev_kobject_init+0x31/0x3a
+> [    0.420000]  [<ffffffff82ede3d8>] net_dev_init+0x77/0x292
+> [    0.420000]  [<ffffffff82e787c5>] do_one_initcall+0x14f/0x27b
+> [    0.420000]  [<ffffffff82e78c02>] kernel_init_freeable+0x311/0x404
+> [    0.420000]  [<ffffffff81fa6b16>] kernel_init+0x16/0x1e0
+> [    0.420000]  [<ffffffff81fd817c>] ret_from_fork+0x7c/0xb0
+> [    0.420000]  [<ffffffff81fa6b00>] ? rest_init+0x140/0x140
+> [    0.420000] Code: ff e9 33 fe ff ff b8 fe ff ff ff e9 29 fe ff ff 48 83 05 b3 1c 42 02 01 48 c7 c7 f8 90 df 82 4c 8b 63 30 48 83 05 60 16 42 02 01 <41> 0f b7 84 24 80 00 00 00 83 e0 0f 66 83 e8 01 41 0f 95 c5 31 
+> [    0.420000] RIP  [<ffffffff81437700>] kobject_add_internal+0x720/0x940
+> [    0.420000]  RSP <ffff88000035fdb8>
+> [    0.420000] CR2: 0000000000000080
+> [    0.420000] ---[ end trace ec833e17e878915c ]---
+> [    0.420000] swapper/0 (1) used greatest stack depth: 4760 bytes left
 
-I think this is a good idea for now and -stable:
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> CONFIG_KERNFS=y
+> # CONFIG_SYSFS is not set
 
-Long-term, I think we may want to get rid of the reparenting in
-css_offline() entirely and only do it in the naturally ordered
-css_free() callback.  We only reparent in css_offline() because
-swapout records pin the css and we don't want to hang on to
-potentially gigabytes of unreclaimable (css_tryget() disabled) cache
-indefinitely until the last swapout records disappear.
+Heh heh, it's 7bac9560a270 ("add CONFIG_KERNFS") allowing !SYSFS &&
+KERNFS. kobject is getting nullops from sysfs but it also invokes
+kernfs functions directly which expects its inputs to be valid leading
+to the oops.  The only thing necessary is adding matching wrappers in
+sysfs so that they can be noop too if !SYSFS.
 
-So I'm currently mucking around with the following patch, which drops
-the css pin from swapout records and reparents them in css_free().
-It's lightly tested and there might well be dragons but I don't see
-any fundamental problems with it.
+Will fix it.  Thank you very much!
 
-What do you think?
-
----
- include/linux/page_cgroup.h |   8 ++++
- mm/memcontrol.c             | 101 +++++++++++++-------------------------------
- mm/page_cgroup.c            |  41 ++++++++++++++++++
- 3 files changed, 78 insertions(+), 72 deletions(-)
-
-diff --git a/include/linux/page_cgroup.h b/include/linux/page_cgroup.h
-index 777a524716db..3ededda8934f 100644
---- a/include/linux/page_cgroup.h
-+++ b/include/linux/page_cgroup.h
-@@ -111,6 +111,8 @@ extern unsigned short swap_cgroup_cmpxchg(swp_entry_t ent,
- 					unsigned short old, unsigned short new);
- extern unsigned short swap_cgroup_record(swp_entry_t ent, unsigned short id);
- extern unsigned short lookup_swap_cgroup_id(swp_entry_t ent);
-+extern unsigned long swap_cgroup_migrate(unsigned short old,
-+					 unsigned short new);
- extern int swap_cgroup_swapon(int type, unsigned long max_pages);
- extern void swap_cgroup_swapoff(int type);
- #else
-@@ -127,6 +129,12 @@ unsigned short lookup_swap_cgroup_id(swp_entry_t ent)
- 	return 0;
- }
- 
-+static inline unsigned long swap_cgroup_migrate(unsigned short old,
-+						unsigned short new)
-+{
-+	return 0;
-+}
-+
- static inline int
- swap_cgroup_swapon(int type, unsigned long max_pages)
- {
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 53385cd4e6f0..e2a0d3986c74 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -892,11 +892,9 @@ static long mem_cgroup_read_stat(struct mem_cgroup *memcg,
- 	return val;
- }
- 
--static void mem_cgroup_swap_statistics(struct mem_cgroup *memcg,
--					 bool charge)
-+static void mem_cgroup_swap_statistics(struct mem_cgroup *memcg, long nr_pages)
- {
--	int val = (charge) ? 1 : -1;
--	this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_SWAP], val);
-+	this_cpu_add(memcg->stat->count[MEM_CGROUP_STAT_SWAP], nr_pages);
- }
- 
- static unsigned long mem_cgroup_read_events(struct mem_cgroup *memcg,
-@@ -4234,15 +4232,12 @@ __mem_cgroup_uncharge_common(struct page *page, enum charge_type ctype,
- 	 */
- 
- 	unlock_page_cgroup(pc);
--	/*
--	 * even after unlock, we have memcg->res.usage here and this memcg
--	 * will never be freed, so it's safe to call css_get().
--	 */
-+
- 	memcg_check_events(memcg, page);
--	if (do_swap_account && ctype == MEM_CGROUP_CHARGE_TYPE_SWAPOUT) {
--		mem_cgroup_swap_statistics(memcg, true);
--		css_get(&memcg->css);
--	}
-+
-+	if (do_swap_account && ctype == MEM_CGROUP_CHARGE_TYPE_SWAPOUT)
-+		mem_cgroup_swap_statistics(memcg, 1);
-+
- 	/*
- 	 * Migration does not charge the res_counter for the
- 	 * replacement page, so leave it alone when phasing out the
-@@ -4351,10 +4346,6 @@ mem_cgroup_uncharge_swapcache(struct page *page, swp_entry_t ent, bool swapout)
- 
- 	memcg = __mem_cgroup_uncharge_common(page, ctype, false);
- 
--	/*
--	 * record memcg information,  if swapout && memcg != NULL,
--	 * css_get() was called in uncharge().
--	 */
- 	if (do_swap_account && swapout && memcg)
- 		swap_cgroup_record(ent, mem_cgroup_id(memcg));
- }
-@@ -4383,8 +4374,7 @@ void mem_cgroup_uncharge_swap(swp_entry_t ent)
- 		 */
- 		if (!mem_cgroup_is_root(memcg))
- 			res_counter_uncharge(&memcg->memsw, PAGE_SIZE);
--		mem_cgroup_swap_statistics(memcg, false);
--		css_put(&memcg->css);
-+		mem_cgroup_swap_statistics(memcg, -1);
- 	}
- 	rcu_read_unlock();
- }
-@@ -4412,20 +4402,8 @@ static int mem_cgroup_move_swap_account(swp_entry_t entry,
- 	new_id = mem_cgroup_id(to);
- 
- 	if (swap_cgroup_cmpxchg(entry, old_id, new_id) == old_id) {
--		mem_cgroup_swap_statistics(from, false);
--		mem_cgroup_swap_statistics(to, true);
--		/*
--		 * This function is only called from task migration context now.
--		 * It postpones res_counter and refcount handling till the end
--		 * of task migration(mem_cgroup_clear_mc()) for performance
--		 * improvement. But we cannot postpone css_get(to)  because if
--		 * the process that has been moved to @to does swap-in, the
--		 * refcount of @to might be decreased to 0.
--		 *
--		 * We are in attach() phase, so the cgroup is guaranteed to be
--		 * alive, so we can just call css_get().
--		 */
--		css_get(&to->css);
-+		mem_cgroup_swap_statistics(from, -1);
-+		mem_cgroup_swap_statistics(to, 1);
- 		return 0;
- 	}
- 	return -EINVAL;
-@@ -6611,7 +6589,6 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
- 	kmem_cgroup_css_offline(memcg);
- 
- 	mem_cgroup_invalidate_reclaim_iterators(memcg);
--	mem_cgroup_reparent_charges(memcg);
- 	mem_cgroup_destroy_all_caches(memcg);
- 	vmpressure_cleanup(&memcg->vmpressure);
- }
-@@ -6619,41 +6596,26 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
- static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-+	unsigned long swaps_moved;
-+	struct mem_cgroup *parent;
-+
- 	/*
--	 * XXX: css_offline() would be where we should reparent all
--	 * memory to prepare the cgroup for destruction.  However,
--	 * memcg does not do css_tryget() and res_counter charging
--	 * under the same RCU lock region, which means that charging
--	 * could race with offlining.  Offlining only happens to
--	 * cgroups with no tasks in them but charges can show up
--	 * without any tasks from the swapin path when the target
--	 * memcg is looked up from the swapout record and not from the
--	 * current task as it usually is.  A race like this can leak
--	 * charges and put pages with stale cgroup pointers into
--	 * circulation:
--	 *
--	 * #0                        #1
--	 *                           lookup_swap_cgroup_id()
--	 *                           rcu_read_lock()
--	 *                           mem_cgroup_lookup()
--	 *                           css_tryget()
--	 *                           rcu_read_unlock()
--	 * disable css_tryget()
--	 * call_rcu()
--	 *   offline_css()
--	 *     reparent_charges()
--	 *                           res_counter_charge()
--	 *                           css_put()
--	 *                             css_free()
--	 *                           pc->mem_cgroup = dead memcg
--	 *                           add page to lru
--	 *
--	 * The bulk of the charges are still moved in offline_css() to
--	 * avoid pinning a lot of pages in case a long-term reference
--	 * like a swapout record is deferring the css_free() to long
--	 * after offlining.  But this makes sure we catch any charges
--	 * made after offlining:
-+	 * Migrate all swap entries to the parent.  There are no more
-+	 * references to the css, so no new swap out records can show
-+	 * up.  Any concurrently faulting pages will either get this
-+	 * offline cgroup and charge the faulting task, or get the
-+	 * migrated parent id and charge the parent for the in-memory
-+	 * page.  uncharge_swap() will balance the res_counter in the
-+	 * parent either way, whether it still fixes this group's
-+	 * res_counter is irrelevant at this point.
- 	 */
-+	parent = parent_mem_cgroup(memcg);
-+	if (!parent)
-+		parent = root_mem_cgroup;
-+	swaps_moved = swap_cgroup_migrate(mem_cgroup_id(memcg),
-+					  mem_cgroup_id(parent));
-+	mem_cgroup_swap_statistics(parent, swaps_moved);
-+
- 	mem_cgroup_reparent_charges(memcg);
- 
- 	memcg_destroy_kmem(memcg);
-@@ -6966,7 +6928,6 @@ static void __mem_cgroup_clear_mc(void)
- {
- 	struct mem_cgroup *from = mc.from;
- 	struct mem_cgroup *to = mc.to;
--	int i;
- 
- 	/* we must uncharge all the leftover precharges from mc.to */
- 	if (mc.precharge) {
-@@ -6981,16 +6942,13 @@ static void __mem_cgroup_clear_mc(void)
- 		__mem_cgroup_cancel_charge(mc.from, mc.moved_charge);
- 		mc.moved_charge = 0;
- 	}
--	/* we must fixup refcnts and charges */
-+	/* we must fixup charges */
- 	if (mc.moved_swap) {
- 		/* uncharge swap account from the old cgroup */
- 		if (!mem_cgroup_is_root(mc.from))
- 			res_counter_uncharge(&mc.from->memsw,
- 						PAGE_SIZE * mc.moved_swap);
- 
--		for (i = 0; i < mc.moved_swap; i++)
--			css_put(&mc.from->css);
--
- 		if (!mem_cgroup_is_root(mc.to)) {
- 			/*
- 			 * we charged both to->res and to->memsw, so we should
-@@ -6999,7 +6957,6 @@ static void __mem_cgroup_clear_mc(void)
- 			res_counter_uncharge(&mc.to->res,
- 						PAGE_SIZE * mc.moved_swap);
- 		}
--		/* we've already done css_get(mc.to) */
- 		mc.moved_swap = 0;
- 	}
- 	memcg_oom_recover(from);
-diff --git a/mm/page_cgroup.c b/mm/page_cgroup.c
-index cfd162882c00..ca04feaae7fe 100644
---- a/mm/page_cgroup.c
-+++ b/mm/page_cgroup.c
-@@ -459,6 +459,47 @@ unsigned short lookup_swap_cgroup_id(swp_entry_t ent)
- 	return lookup_swap_cgroup(ent, NULL)->id;
- }
- 
-+/**
-+ * swap_cgroup_migrate - migrate all entries of one id to another
-+ * @old: old id
-+ * @new: new id
-+ *
-+ * Caller has to be able to deal with swapon/swapoff racing.
-+ *
-+ * Returns number of migrated entries.
-+ */
-+unsigned long swap_cgroup_migrate(unsigned short old, unsigned short new)
-+{
-+	unsigned long migrated = 0;
-+	unsigned int type;
-+
-+	for (type = 0; type < MAX_SWAPFILES; type++) {
-+		struct swap_cgroup_ctrl *ctrl;
-+		unsigned long flags;
-+		unsigned int page;
-+
-+		ctrl = &swap_cgroup_ctrl[type];
-+		spin_lock_irqsave(&ctrl->lock, flags);
-+		for (page = 0; page < ctrl->length; page++) {
-+			struct swap_cgroup *base;
-+			pgoff_t offset;
-+
-+			base = page_address(ctrl->map[page]);
-+			for (offset = 0; offset < SC_PER_PAGE; offset++) {
-+				struct swap_cgroup *sc;
-+
-+				sc = base + offset;
-+				if (sc->id == old) {
-+					sc->id = new;
-+					migrated++;
-+				}
-+			}
-+		}
-+		spin_unlock_irqrestore(&ctrl->lock, flags);
-+	}
-+	return migrated;
-+}
-+
- int swap_cgroup_swapon(int type, unsigned long max_pages)
- {
- 	void *array;
 -- 
-1.8.5.3
+tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
