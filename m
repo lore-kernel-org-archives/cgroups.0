@@ -1,47 +1,49 @@
-From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 7/9] mm: Mark functions as static in page_cgroup.c
-Date: Fri, 7 Feb 2014 12:56:11 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1402071255590.4212@chino.kir.corp.google.com>
-References: <a7658fc8f2ab015bffe83de1448cc3db79d2a9fc.1391167128.git.rashika.kheria@gmail.com> <6054d570fc83c3d4f3de240d6da488f876e21450.1391167128.git.rashika.kheria@gmail.com>
+From: Hugh Dickins <hughd@google.com>
+Subject: Re: [PATCH] cgroup: use an ordered workqueue for cgroup
+ destruction
+Date: Fri, 7 Feb 2014 13:06:00 -0800 (PST)
+Message-ID: <alpine.LSU.2.11.1402071300300.926@eggly.anvils>
+References: <alpine.LSU.2.11.1402061541560.31342@eggly.anvils> <20140207140402.GA3304@htj.dyndns.org> <alpine.LSU.2.11.1402071130250.333@eggly.anvils> <20140207203508.GC8833@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="531381512-2145918811-1391806572=:4212"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=date:from:to:cc:subject:in-reply-to:message-id:references
          :user-agent:mime-version:content-type;
-        bh=U5eaBmU8xJX4h/hwtTvQA1daUFICs7zSpokjEGx3aYU=;
-        b=nFBE0/4vNT/ehBO6EXXL0zVFmjFXN/CIVrX7x9dpP16dnCBJzQEsHR7Cery03BJDt0
-         aQ82OaUUfHPcQ6IXQvRv+IpEh9tfLpd6lOPpFbX3hyjeoF1GlTBqs8N+8Q6b5hFDL3GE
-         IiBXNNdYt81JdYzw76jbopf7fAPkXXiFzEhtOAs5d6Z7n+Izin5xXEs7ZuKrzITV6BC9
-         ajBzQkzE/UXvMu3eq5THs/nrFOJa3iPEr6jq4ij/3dQqrUsmJt4zgWpf1q9YE9hDQUGj
-         rwjdjdcbdMr/alQNVPl5m5hG+vae275jGaszfuBnkWeg05tB24EREfWR5D5BLqJLvKv+
-         jXVQ==
-In-Reply-To: <6054d570fc83c3d4f3de240d6da488f876e21450.1391167128.git.rashika.kheria-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=YQpIxzpp1uVNs8bsMXnF9qCMvYtnPmO2XMBOQhs8K24=;
+        b=RwFSX4hyoTkc8rZICtA9H6Yk91XsSS421tky4iSz8DP8jjJP4pW6dvSSAEbbKrZqxJ
+         o6zCyNp3KeVrpmRFBHCKggkEXTzleDweseaffWmLVO3vHPPtnFk9sJndqlTKh2NUWZu5
+         lgTQeDDeKlRXAO4OlcZmTcsVyiyS0PQNVK7eHNYc5mRssJUfen6fpogxdX8blZBg9aXp
+         GJcccyHIXrWYT6NmTt5YZDZzoyMrcf/d7s9qgk85enIE7NRYDc3m0t1jX+tXZQdJkQq/
+         //Qp6enV43vFMqY/Olt9kznIpsgvekwf7VT9IMIBegEdu68lN8XQ7lq/5qgTfHeeExn3
+         6vBQ==
+In-Reply-To: <20140207203508.GC8833@htj.dyndns.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-To: Rashika Kheria <rashika.kheria-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, josh-iaAMLnmF4UmaiuxdJuQwMA@public.gmane.org
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Hugh Dickins <hughd@google.com>, Filipe Brandenburger <filbranden@google.com>, Li Zefan <lizefan@huawei.com>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Greg Thelen <gthelen@google.com>, Michel Lespinasse <walken@google.com>, Markus Blank-Burian <burian@muenster.de>, Shawn Bohrer <shawn.bohrer@gmail.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
---531381512-2145918811-1391806572=:4212
-Content-Type: TEXT/PLAIN; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-
-On Fri, 7 Feb 2014, Rashika Kheria wrote:
-
-> Mark functions as static in page_cgroup.c because they are not used
-> outside this file.
+On Fri, 7 Feb 2014, Tejun Heo wrote:
+> On Fri, Feb 07, 2014 at 12:20:44PM -0800, Hugh Dickins wrote:
 > 
-> This eliminates the following warning in mm/page_cgroup.c:
-> mm/page_cgroup.c:177:6: warning: no previous prototype for ‘__free_page_cgroup’ [-Wmissing-prototypes]
-> mm/page_cgroup.c:190:15: warning: no previous prototype for ‘online_page_cgroup’ [-Wmissing-prototypes]
-> mm/page_cgroup.c:225:15: warning: no previous prototype for ‘offline_page_cgroup’ [-Wmissing-prototypes]
+> > You don't return to this concern in the following mails of the thread:
+> > did you later decide that it actually won't be a problem?  I'll assume
+> > so for the moment, since you took the patch, but please reassure me.
 > 
-> Signed-off-by: Rashika Kheria <rashika.kheria-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Reviewed-by: Josh Triplett <josh-iaAMLnmF4UmaiuxdJuQwMA@public.gmane.org>
+> I was just worrying about a different solution where we take
+> css_offline invocation outside of cgroup_mutex and bumping up
+> max_active.  There's nothing to worry about your patch.  Sorry about
+> not being clear.  :)
 
-Acked-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
---531381512-2145918811-1391806572=:4212--
+Thanks a lot for your detailed and admirably responsive explanations.
+You were looking ahead, I see that now, and I'm gratefully reassured :)
+
+Hugh
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
