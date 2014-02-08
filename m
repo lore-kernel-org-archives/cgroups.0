@@ -1,118 +1,297 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 07/13] cgroup: make cgroup_subsys->base_cftypes use cgroup_add_cftypes()
-Date: Sat,  8 Feb 2014 11:15:21 -0500
-Message-ID: <1391876127-7134-8-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 05/13] cgroup: factor out cgroup_setup_root() from
+	cgroup_mount()
+Date: Sat,  8 Feb 2014 11:15:19 -0500
+Message-ID: <1391876127-7134-6-git-send-email-tj@kernel.org>
 References: <1391876127-7134-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=lMZ2TpsKaN5+OFPPohpMyrNKWp1/c7VoROg1E+8p0xQ=;
-        b=wire1Ri92I5jsMAJoJJphNHV/wpSgVLSU39sW7cEPvkX+o1zZul5wt3KNorEv+H/6n
-         9LZrnolS3bdJ8EJ4IA62c/j95wPL/n7X2z447yPZSK6RPWVmV7/D6X1jungB6K+5lJOY
-         l+9wQJyBQUhk5jqfr8zGShReMBuVD6yzHBHEeql16grbmXa/CAzkOxp00kSSfs5QcqL+
-         oP3IJNdPTR0tFPCI2ntRQcLE79CcKhCqNtHFKjg25Qf/TD0I+qCI9dIiAOqm0CrZuh6b
-         /tpzMMYSPb3gkwtjb72VywfejyeWZXpUm6cBh71Zh5t2WMbg3pAj31GnQRaN9aZlVxyd
-         rUQg==
-In-Reply-To: <1391876127-7134-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com
-Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+	bh=8TtMOO+ftd1Rp2IlSnohThbaA/GWhu4BS3hOxaUUSyc=;
+	b=dXMdv+CN+8uldRAGyqdKUaTYrugQYcENI3yGpsYeQccElylskYt43MReDH4JW5mgCu
+	4fWHHiZ8qfuHXokMT84fFNWH2IsuES1e/jGYq7jxHQDmhPq6uuywvshgSdk3VbglsmuR
+	SHl3JkIY/Brq4L8+BM3pDAr+w2HL7ZQ6UlFTUulwnziKM837P6D2vPz1/QyJ8rYTO539
+	2cLaG08xXb1O9OB4rC2JKObNrIyD2+344KDErP/rumatg8ETddTsBVV17u1648McGSEy
+	Hle/Fuoq1Vi1f/nrocitgX/UloQHxgzyNcRLXSI7PTDFTnbQdFYxFM8u6cMLAi3BPUuo
+	c1ag==
+In-Reply-To: <1391876127-7134-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Currently, cgroup_subsys->base_cftypes registration is different from
-dynamic cftypes registartion.  Instead of going through
-cgroup_add_cftypes(), cgroup_init_subsys() invokes
-cgroup_init_cftsets() which makes use of cgroup_subsys->base_cftset
-which doesn't involve dynamic allocation.
+Factor out new root initialization into cgroup_setup_root() from
+cgroup_mount().  This makes it easier to follow and will ease kernfs
+conversion.
 
-While avoiding dynamic allocation is somewhat nice, having two
-separate paths for cftypes registration is nasty, especially as we're
-planning to add more operations during cftypes registration.
-
-This patch drops cgroup_init_cftsets() and cgroup_subsys->base_cftset
-and registers base_cftypes using cgroup_add_cftypes().  This is done
-as a separate step in cgroup_init() instead of a part of
-cgroup_init_subsys().  This is because cgroup_init_subsys() can be
-called very early during boot when kmalloc() isn't available yet.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- include/linux/cgroup.h |  3 +--
- kernel/cgroup.c        | 29 ++++++++---------------------
- 2 files changed, 9 insertions(+), 23 deletions(-)
+ kernel/cgroup.c | 211 ++++++++++++++++++++++++++++++--------------------------
+ 1 file changed, 113 insertions(+), 98 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 2255639..884d367 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -602,9 +602,8 @@ struct cgroup_subsys {
- 	/* list of cftype_sets */
- 	struct list_head cftsets;
- 
--	/* base cftypes, automatically [de]registered with subsys itself */
-+	/* base cftypes, automatically registered with subsys itself */
- 	struct cftype *base_cftypes;
--	struct cftype_set base_cftset;
- };
- 
- #define SUBSYS(_x) extern struct cgroup_subsys _x ## _cgrp_subsys;
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 3cef4a3..5935c2f 100644
+index d88393c..8a9548c 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -4501,25 +4501,6 @@ static int cgroup_rmdir(struct inode *unused_dir, struct dentry *dentry)
- 	return ret;
+@@ -1453,17 +1453,126 @@ static int cgroup_get_rootdir(struct super_block *sb)
+ 	return 0;
  }
  
--static void __init cgroup_init_cftsets(struct cgroup_subsys *ss)
--{
--	INIT_LIST_HEAD(&ss->cftsets);
--
--	/*
--	 * base_cftset is embedded in subsys itself, no need to worry about
--	 * deregistration.
--	 */
--	if (ss->base_cftypes) {
--		struct cftype *cft;
--
--		for (cft = ss->base_cftypes; cft->name[0] != '\0'; cft++)
--			cft->ss = ss;
--
--		ss->base_cftset.cfts = ss->base_cftypes;
--		list_add_tail(&ss->base_cftset.node, &ss->cftsets);
--	}
--}
--
- static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
- {
- 	struct cgroup_subsys_state *css;
-@@ -4529,8 +4510,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
- 	mutex_lock(&cgroup_tree_mutex);
- 	mutex_lock(&cgroup_mutex);
- 
--	/* init base cftset */
--	cgroup_init_cftsets(ss);
-+	INIT_LIST_HEAD(&ss->cftsets);
- 
- 	/* Create the top cgroup state for this subsystem */
- 	ss->root = &cgroup_dummy_root;
-@@ -4619,6 +4599,13 @@ int __init cgroup_init(void)
- 	for_each_subsys(ss, i) {
- 		if (!ss->early_init)
- 			cgroup_init_subsys(ss);
++static int cgroup_setup_root(struct cgroupfs_root *root)
++{
++	LIST_HEAD(tmp_links);
++	struct super_block *sb = root->sb;
++	struct cgroup *root_cgrp = &root->top_cgroup;
++	struct cgroupfs_root *existing_root;
++	struct css_set *cset;
++	struct inode *inode;
++	const struct cred *cred;
++	int i, ret;
 +
-+		/*
-+		 * cftype registration needs kmalloc and can't be done
-+		 * during early_init.  Register base cftypes separately.
-+		 */
-+		if (ss->base_cftypes)
-+			WARN_ON(cgroup_add_cftypes(ss, ss->base_cftypes));
++	lockdep_assert_held(&cgroup_tree_mutex);
++	lockdep_assert_held(&cgroup_mutex);
++	BUG_ON(sb->s_root != NULL);
++
++	mutex_unlock(&cgroup_mutex);
++	mutex_unlock(&cgroup_tree_mutex);
++
++	ret = cgroup_get_rootdir(sb);
++	if (ret) {
++		mutex_lock(&cgroup_tree_mutex);
++		mutex_lock(&cgroup_mutex);
++		return ret;
++	}
++	inode = sb->s_root->d_inode;
++
++	mutex_lock(&inode->i_mutex);
++	mutex_lock(&cgroup_tree_mutex);
++	mutex_lock(&cgroup_mutex);
++
++	ret = idr_alloc(&root->cgroup_idr, root_cgrp, 0, 1, GFP_KERNEL);
++	if (ret < 0)
++		goto out_unlock;
++	root_cgrp->id = ret;
++
++	/* check for name clashes with existing mounts */
++	ret = -EBUSY;
++	if (strlen(root->name))
++		for_each_active_root(existing_root)
++			if (!strcmp(existing_root->name, root->name))
++				goto out_unlock;
++
++	/*
++	 * We're accessing css_set_count without locking css_set_lock here,
++	 * but that's OK - it can only be increased by someone holding
++	 * cgroup_lock, and that's us. The worst that can happen is that we
++	 * have some link structures left over
++	 */
++	ret = allocate_cgrp_cset_links(css_set_count, &tmp_links);
++	if (ret)
++		goto out_unlock;
++
++	/* ID 0 is reserved for dummy root, 1 for unified hierarchy */
++	ret = cgroup_init_root_id(root, 2, 0);
++	if (ret)
++		goto out_unlock;
++
++	sb->s_root->d_fsdata = root_cgrp;
++	root_cgrp->dentry = sb->s_root;
++
++	/*
++	 * We're inside get_sb() and will call lookup_one_len() to create
++	 * the root files, which doesn't work if SELinux is in use.  The
++	 * following cred dancing somehow works around it.  See 2ce9738ba
++	 * ("cgroupfs: use init_cred when populating new cgroupfs mount")
++	 * for more details.
++	 */
++	cred = override_creds(&init_cred);
++
++	ret = cgroup_addrm_files(root_cgrp, cgroup_base_files, true);
++	if (ret)
++		goto rm_base_files;
++
++	ret = rebind_subsystems(root, root->subsys_mask, 0);
++	if (ret)
++		goto rm_base_files;
++
++	revert_creds(cred);
++
++	/*
++	 * There must be no failure case after here, since rebinding takes
++	 * care of subsystems' refcounts, which are explicitly dropped in
++	 * the failure exit path.
++	 */
++	list_add(&root->root_list, &cgroup_roots);
++	cgroup_root_count++;
++
++	/*
++	 * Link the top cgroup in this hierarchy into all the css_set
++	 * objects.
++	 */
++	write_lock(&css_set_lock);
++	hash_for_each(css_set_table, i, cset, hlist)
++		link_css_set(&tmp_links, cset, root_cgrp);
++	write_unlock(&css_set_lock);
++
++	BUG_ON(!list_empty(&root_cgrp->children));
++	BUG_ON(root->number_of_cgroups != 1);
++
++	ret = 0;
++	goto out_unlock;
++
++rm_base_files:
++	cgroup_addrm_files(&root->top_cgroup, cgroup_base_files, false);
++	revert_creds(cred);
++	cgroup_exit_root_id(root);
++out_unlock:
++	mutex_unlock(&inode->i_mutex);
++	free_cgrp_cset_links(&tmp_links);
++	return ret;
++}
++
+ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 			 int flags, const char *unused_dev_name,
+ 			 void *data)
+ {
+-	LIST_HEAD(tmp_links);
+ 	struct super_block *sb = NULL;
+-	struct inode *inode = NULL;
+ 	struct cgroupfs_root *root = NULL;
+ 	struct cgroup_sb_opts opts;
+ 	struct cgroupfs_root *new_root;
+-	const struct cred *cred;
+ 	int ret;
+ 
+ 	mutex_lock(&cgroup_tree_mutex);
+@@ -1500,94 +1609,9 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 	root = sb->s_fs_info;
+ 	BUG_ON(!root);
+ 	if (root == opts.new_root) {
+-		/* We used the new root structure, so this is a new hierarchy */
+-		struct cgroup *root_cgrp = &root->top_cgroup;
+-		struct cgroupfs_root *existing_root;
+-		int i;
+-		struct css_set *cset;
+-
+-		BUG_ON(sb->s_root != NULL);
+-
+-		mutex_unlock(&cgroup_mutex);
+-		mutex_unlock(&cgroup_tree_mutex);
+-
+-		ret = cgroup_get_rootdir(sb);
++		ret = cgroup_setup_root(root);
+ 		if (ret)
+ 			goto out_unlock;
+-		inode = sb->s_root->d_inode;
+-
+-		mutex_lock(&inode->i_mutex);
+-		mutex_lock(&cgroup_tree_mutex);
+-		mutex_lock(&cgroup_mutex);
+-
+-		ret = idr_alloc(&root->cgroup_idr, root_cgrp, 0, 1, GFP_KERNEL);
+-		if (ret < 0)
+-			goto out_unlock;
+-		root_cgrp->id = ret;
+-
+-		/* Check for name clashes with existing mounts */
+-		ret = -EBUSY;
+-		if (strlen(root->name))
+-			for_each_active_root(existing_root)
+-				if (!strcmp(existing_root->name, root->name))
+-					goto out_unlock;
+-
+-		/*
+-		 * We're accessing css_set_count without locking
+-		 * css_set_lock here, but that's OK - it can only be
+-		 * increased by someone holding cgroup_lock, and
+-		 * that's us. The worst that can happen is that we
+-		 * have some link structures left over
+-		 */
+-		ret = allocate_cgrp_cset_links(css_set_count, &tmp_links);
+-		if (ret)
+-			goto out_unlock;
+-
+-		/* ID 0 is reserved for dummy root, 1 for unified hierarchy */
+-		ret = cgroup_init_root_id(root, 2, 0);
+-		if (ret)
+-			goto out_unlock;
+-
+-		sb->s_root->d_fsdata = root_cgrp;
+-		root_cgrp->dentry = sb->s_root;
+-
+-		/*
+-		 * We're inside get_sb() and will call lookup_one_len() to
+-		 * create the root files, which doesn't work if SELinux is
+-		 * in use.  The following cred dancing somehow works around
+-		 * it.  See 2ce9738ba ("cgroupfs: use init_cred when
+-		 * populating new cgroupfs mount") for more details.
+-		 */
+-		cred = override_creds(&init_cred);
+-
+-		ret = cgroup_addrm_files(root_cgrp, cgroup_base_files, true);
+-		if (ret)
+-			goto rm_base_files;
+-
+-		ret = rebind_subsystems(root, root->subsys_mask, 0);
+-		if (ret)
+-			goto rm_base_files;
+-
+-		revert_creds(cred);
+-
+-		/*
+-		 * There must be no failure case after here, since rebinding
+-		 * takes care of subsystems' refcounts, which are explicitly
+-		 * dropped in the failure exit path.
+-		 */
+-
+-		list_add(&root->root_list, &cgroup_roots);
+-		cgroup_root_count++;
+-
+-		/* Link the top cgroup in this hierarchy into all
+-		 * the css_set objects */
+-		write_lock(&css_set_lock);
+-		hash_for_each(css_set_table, i, cset, hlist)
+-			link_css_set(&tmp_links, cset, root_cgrp);
+-		write_unlock(&css_set_lock);
+-
+-		BUG_ON(!list_empty(&root_cgrp->children));
+-		BUG_ON(root->number_of_cgroups != 1);
+ 	} else {
+ 		/*
+ 		 * We re-used an existing hierarchy - the new root (if
+@@ -1607,22 +1631,13 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
  	}
  
- 	/* allocate id for the dummy hierarchy */
+ 	ret = 0;
+-	goto out_unlock;
+-
+-rm_base_files:
+-	cgroup_addrm_files(&root->top_cgroup, cgroup_base_files, false);
+-	revert_creds(cred);
+-	cgroup_exit_root_id(root);
+ out_unlock:
+ 	mutex_unlock(&cgroup_mutex);
+ 	mutex_unlock(&cgroup_tree_mutex);
+-	if (inode)
+-		mutex_unlock(&inode->i_mutex);
+ 
+ 	if (ret && !IS_ERR_OR_NULL(sb))
+ 		deactivate_locked_super(sb);
+ 
+-	free_cgrp_cset_links(&tmp_links);
+ 	kfree(opts.release_agent);
+ 	kfree(opts.name);
+ 
 -- 
 1.8.5.3
