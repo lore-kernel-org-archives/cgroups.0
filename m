@@ -1,229 +1,188 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 04/13] cgroup: restructure locking and error handling in
-	cgroup_mount()
-Date: Sat,  8 Feb 2014 11:15:18 -0500
-Message-ID: <1391876127-7134-5-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 08/13] cgroup: update the meaning of cftype->max_write_len
+Date: Sat,  8 Feb 2014 11:15:22 -0500
+Message-ID: <1391876127-7134-9-git-send-email-tj@kernel.org>
 References: <1391876127-7134-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=Dg5oxkC9YOu4N7p+dpp0hEJCv3fudEC16RVU/om0vqA=;
+        b=l1SlX/Bdjg8yfmOR9q6DkOIDggIbP9++mRLa2sHCy8oQ+oILfNENNeFBvE1/TyZKh+
+         ebmjGPjqcAGNox7E3FM/HWe6s9qouWvh0Hcr9YurNzYRxPPlt7H4TLXP/aiG0QUpLBBL
+         kX7V6pbbTqouCLR0CA8wcSaCaxFv4QhLITfnJNEOVpDU8RNs4dEJPUbGWBIsY7H5NVZR
+         5yHW/DDp4VQ84LHl352r3f2ZwYy7ZW2sO0K8uvJgtD1+btiJ0MSu9T3LO3amQeKwJSix
+         ruOffEMtslZekk0V1EB/weYwjTLUIKCiwIccE4UH2BnY8aIbifaICSr9zr+zHr4pK3gD
+         S73g==
+In-Reply-To: <1391876127-7134-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=e5uajyFIHnO77GXFv1Xd4A4PjyoDXIUqalyEbZMzeI0=;
-	b=Dg1DaSmAt7S3aO6j6ykqoNXGW5yU+KJX7g+H35AK5LyLhx8PWr981GGSdWzg1FT4QZ
-	gS1PcPBRXjeeE1IXcS/J0NYtJmGr9IkzfMDlSR3wZkNp14X97toCgyvocuL0sB6FyDnk
-	NZYrAGYOf+buRKggzA608CF0kX9qgLXqxBVsLV6mz+YlIKvqIWZQiNYuYBpRvLDYpKj7
-	hWfwa2treAnGNbyfBldcHXUG6VA5Oh64KAZzTAqxHNV2CokiKU+1JedQSo8xHXu26vdP
-	5BC1WgMCZQptCKxcYGCrwTKSBbFtbDQYVfLgtJ+r9HtPwS1sIh7GU3WQvMq2qIy9enk4
-	Fkzw==
-In-Reply-To: <1391876127-7134-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: lizefan@huawei.com
+Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-cgroup is scheduled to be converted to kernfs.  After conversion,
-cgroup_mount() won't use the sget() machinery for finding out existing
-super_blocks but instead would do that directly.  It'll search the
-existing cgroupfs_roots for a matching one and create a new one iff a
-match doesn't exist.  To ease such conversion, this patch restructures
-locking and error handling of the function.
+cftype->max_write_len is used to extend the maximum size of writes.
+It's interpreted in such a way that the actual maximum size is one
+less than the specified value.  The default size is defined by
+CGROUP_LOCAL_BUFFER_SIZE.  Its interpretation is quite confusing - its
+value is decremented by 1 and then compared for equality with max
+size, which means that the actual default size is
+CGROUP_LOCAL_BUFFER_SIZE - 2, which is 62 chars.
 
-cgroup_tree_mutex and cgroup_mutex are grabbed from the get-go and
-held until return.  For now, due to the way vfs locks nest outside
-cgroup mutexes, the two cgroup mutexes are temporarily dropped across
-sget() and inode mutex locking, which looks quite ridiculous; however,
-these will be removed through kernfs conversion and structuring the
-code this way makes the conversion less painful.
+There's no point in having a limit that low.  Update its definition so
+that it means the actual string length sans termination and anything
+below PAGE_SIZE-1 is treated as PAGE_SIZE-1.
 
-The error goto labels are consolidated to two.  This looks unwieldy
-now but the next patch will factor out creation of new root into a
-separate function with accompanying error handling and it'll look a
-lot better.
+.max_write_len for "release_agent" is updated to PATH_MAX-1 and
+cgroup_release_agent_write() is updated so that the redundant strlen()
+check is removed and it uses strlcpy() instead of strcpy().
+.max_write_len initializations in blk-throttle.c and cfq-iosched.c are
+no longer necessary and removed.  The one in cpuset is kept unchanged
+as it's an approximated value to begin with.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+This will also make transition to kernfs smoother.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/cgroup.c | 73 +++++++++++++++++++++++++++++++--------------------------
- 1 file changed, 40 insertions(+), 33 deletions(-)
+ block/blk-throttle.c   |  4 ----
+ block/cfq-iosched.c    |  3 ---
+ include/linux/cgroup.h |  5 +++--
+ kernel/cgroup.c        | 18 ++++++++----------
+ 4 files changed, 11 insertions(+), 19 deletions(-)
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 908ad96..d88393c 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1457,21 +1457,22 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 			 int flags, const char *unused_dev_name,
- 			 void *data)
- {
-+	LIST_HEAD(tmp_links);
-+	struct super_block *sb = NULL;
-+	struct inode *inode = NULL;
-+	struct cgroupfs_root *root = NULL;
- 	struct cgroup_sb_opts opts;
--	struct cgroupfs_root *root;
--	int ret = 0;
--	struct super_block *sb;
- 	struct cgroupfs_root *new_root;
--	struct list_head tmp_links;
--	struct inode *inode;
- 	const struct cred *cred;
-+	int ret;
- 
--	/* First find the desired set of subsystems */
-+	mutex_lock(&cgroup_tree_mutex);
- 	mutex_lock(&cgroup_mutex);
-+
-+	/* First find the desired set of subsystems */
- 	ret = parse_cgroupfs_options(data, &opts);
--	mutex_unlock(&cgroup_mutex);
- 	if (ret)
--		goto out_err;
-+		goto out_unlock;
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 1474c3a..861c363 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -1425,28 +1425,24 @@ static struct cftype throtl_files[] = {
+ 		.private = offsetof(struct throtl_grp, bps[READ]),
+ 		.seq_show = tg_print_conf_u64,
+ 		.write_string = tg_set_conf_u64,
+-		.max_write_len = 256,
+ 	},
+ 	{
+ 		.name = "throttle.write_bps_device",
+ 		.private = offsetof(struct throtl_grp, bps[WRITE]),
+ 		.seq_show = tg_print_conf_u64,
+ 		.write_string = tg_set_conf_u64,
+-		.max_write_len = 256,
+ 	},
+ 	{
+ 		.name = "throttle.read_iops_device",
+ 		.private = offsetof(struct throtl_grp, iops[READ]),
+ 		.seq_show = tg_print_conf_uint,
+ 		.write_string = tg_set_conf_uint,
+-		.max_write_len = 256,
+ 	},
+ 	{
+ 		.name = "throttle.write_iops_device",
+ 		.private = offsetof(struct throtl_grp, iops[WRITE]),
+ 		.seq_show = tg_print_conf_uint,
+ 		.write_string = tg_set_conf_uint,
+-		.max_write_len = 256,
+ 	},
+ 	{
+ 		.name = "throttle.io_service_bytes",
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index 744833b..4611879 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -1838,7 +1838,6 @@ static struct cftype cfq_blkcg_files[] = {
+ 		.flags = CFTYPE_ONLY_ON_ROOT,
+ 		.seq_show = cfqg_print_leaf_weight_device,
+ 		.write_string = cfqg_set_leaf_weight_device,
+-		.max_write_len = 256,
+ 	},
+ 	{
+ 		.name = "weight",
+@@ -1853,7 +1852,6 @@ static struct cftype cfq_blkcg_files[] = {
+ 		.flags = CFTYPE_NOT_ON_ROOT,
+ 		.seq_show = cfqg_print_weight_device,
+ 		.write_string = cfqg_set_weight_device,
+-		.max_write_len = 256,
+ 	},
+ 	{
+ 		.name = "weight",
+@@ -1866,7 +1864,6 @@ static struct cftype cfq_blkcg_files[] = {
+ 		.name = "leaf_weight_device",
+ 		.seq_show = cfqg_print_leaf_weight_device,
+ 		.write_string = cfqg_set_leaf_weight_device,
+-		.max_write_len = 256,
+ 	},
+ 	{
+ 		.name = "leaf_weight",
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 884d367..1e4f9e2 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -398,8 +398,9 @@ struct cftype {
+ 	umode_t mode;
  
  	/*
- 	 * Allocate a new cgroup root. We may not need it if we're
-@@ -1480,16 +1481,20 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 	new_root = cgroup_root_from_opts(&opts);
- 	if (IS_ERR(new_root)) {
- 		ret = PTR_ERR(new_root);
--		goto out_err;
-+		goto out_unlock;
- 	}
- 	opts.new_root = new_root;
+-	 * If non-zero, defines the maximum length of string that can
+-	 * be passed to write_string; defaults to 64
++	 * The maximum length of string, excluding trailing nul, that can
++	 * be passed to write_string.  If < PAGE_SIZE-1, PAGE_SIZE-1 is
++	 * assumed.
+ 	 */
+ 	size_t max_write_len;
  
- 	/* Locate an existing or new sb for this hierarchy */
-+	mutex_unlock(&cgroup_mutex);
-+	mutex_unlock(&cgroup_tree_mutex);
- 	sb = sget(fs_type, cgroup_test_super, cgroup_set_super, 0, &opts);
-+	mutex_lock(&cgroup_tree_mutex);
-+	mutex_lock(&cgroup_mutex);
- 	if (IS_ERR(sb)) {
- 		ret = PTR_ERR(sb);
- 		cgroup_free_root(opts.new_root);
--		goto out_err;
-+		goto out_unlock;
- 	}
- 
- 	root = sb->s_fs_info;
-@@ -1503,9 +1508,12 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 
- 		BUG_ON(sb->s_root != NULL);
- 
-+		mutex_unlock(&cgroup_mutex);
-+		mutex_unlock(&cgroup_tree_mutex);
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 5935c2f..1534542 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -2211,13 +2211,14 @@ static int cgroup_procs_write(struct cgroup_subsys_state *css,
+ static int cgroup_release_agent_write(struct cgroup_subsys_state *css,
+ 				      struct cftype *cft, const char *buffer)
+ {
+-	BUILD_BUG_ON(sizeof(css->cgroup->root->release_agent_path) < PATH_MAX);
+-	if (strlen(buffer) >= PATH_MAX)
+-		return -EINVAL;
++	struct cgroupfs_root *root = css->cgroup->root;
 +
- 		ret = cgroup_get_rootdir(sb);
- 		if (ret)
--			goto drop_new_super;
-+			goto out_unlock;
- 		inode = sb->s_root->d_inode;
- 
- 		mutex_lock(&inode->i_mutex);
-@@ -1514,7 +1522,7 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 
- 		ret = idr_alloc(&root->cgroup_idr, root_cgrp, 0, 1, GFP_KERNEL);
- 		if (ret < 0)
--			goto unlock_drop;
-+			goto out_unlock;
- 		root_cgrp->id = ret;
- 
- 		/* Check for name clashes with existing mounts */
-@@ -1522,7 +1530,7 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 		if (strlen(root->name))
- 			for_each_active_root(existing_root)
- 				if (!strcmp(existing_root->name, root->name))
--					goto unlock_drop;
-+					goto out_unlock;
- 
- 		/*
- 		 * We're accessing css_set_count without locking
-@@ -1533,12 +1541,12 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 		 */
- 		ret = allocate_cgrp_cset_links(css_set_count, &tmp_links);
- 		if (ret)
--			goto unlock_drop;
-+			goto out_unlock;
- 
- 		/* ID 0 is reserved for dummy root, 1 for unified hierarchy */
- 		ret = cgroup_init_root_id(root, 2, 0);
- 		if (ret)
--			goto unlock_drop;
-+			goto out_unlock;
- 
- 		sb->s_root->d_fsdata = root_cgrp;
- 		root_cgrp->dentry = sb->s_root;
-@@ -1578,14 +1586,8 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 			link_css_set(&tmp_links, cset, root_cgrp);
- 		write_unlock(&css_set_lock);
- 
--		free_cgrp_cset_links(&tmp_links);
--
- 		BUG_ON(!list_empty(&root_cgrp->children));
- 		BUG_ON(root->number_of_cgroups != 1);
--
--		mutex_unlock(&cgroup_mutex);
--		mutex_unlock(&cgroup_tree_mutex);
--		mutex_unlock(&inode->i_mutex);
- 	} else {
- 		/*
- 		 * We re-used an existing hierarchy - the new root (if
-@@ -1597,32 +1599,37 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 			if ((root->flags | opts.flags) & CGRP_ROOT_SANE_BEHAVIOR) {
- 				pr_err("cgroup: sane_behavior: new mount options should match the existing superblock\n");
- 				ret = -EINVAL;
--				goto drop_new_super;
-+				goto out_unlock;
- 			} else {
- 				pr_warning("cgroup: new mount options do not match the existing superblock, will be ignored\n");
- 			}
- 		}
- 	}
- 
--	kfree(opts.release_agent);
--	kfree(opts.name);
--	return dget(sb->s_root);
-+	ret = 0;
-+	goto out_unlock;
- 
-- rm_base_files:
--	free_cgrp_cset_links(&tmp_links);
-+rm_base_files:
- 	cgroup_addrm_files(&root->top_cgroup, cgroup_base_files, false);
- 	revert_creds(cred);
-- unlock_drop:
- 	cgroup_exit_root_id(root);
-+out_unlock:
++	BUILD_BUG_ON(sizeof(root->release_agent_path) < PATH_MAX);
+ 	if (!cgroup_lock_live_group(css->cgroup))
+ 		return -ENODEV;
+ 	spin_lock(&release_agent_path_lock);
+-	strcpy(css->cgroup->root->release_agent_path, buffer);
++	strlcpy(root->release_agent_path, buffer,
++		sizeof(root->release_agent_path));
+ 	spin_unlock(&release_agent_path_lock);
  	mutex_unlock(&cgroup_mutex);
- 	mutex_unlock(&cgroup_tree_mutex);
--	mutex_unlock(&inode->i_mutex);
-- drop_new_super:
--	deactivate_locked_super(sb);
-- out_err:
-+	if (inode)
-+		mutex_unlock(&inode->i_mutex);
-+
-+	if (ret && !IS_ERR_OR_NULL(sb))
-+		deactivate_locked_super(sb);
-+
-+	free_cgrp_cset_links(&tmp_links);
- 	kfree(opts.release_agent);
- 	kfree(opts.name);
--	return ERR_PTR(ret);
-+
-+	if (!ret)
-+		return dget(sb->s_root);
-+	else
-+		return ERR_PTR(ret);
+ 	return 0;
+@@ -2243,20 +2244,17 @@ static int cgroup_sane_behavior_show(struct seq_file *seq, void *v)
+ 	return 0;
  }
  
- static void cgroup_kill_sb(struct super_block *sb)
+-/* A buffer size big enough for numbers or short strings */
+-#define CGROUP_LOCAL_BUFFER_SIZE 64
+-
+ static ssize_t cgroup_file_write(struct file *file, const char __user *userbuf,
+ 				 size_t nbytes, loff_t *ppos)
+ {
+ 	struct cfent *cfe = __d_cfe(file->f_dentry);
+ 	struct cftype *cft = __d_cft(file->f_dentry);
+ 	struct cgroup_subsys_state *css = cfe->css;
+-	size_t max_bytes = cft->max_write_len ?: CGROUP_LOCAL_BUFFER_SIZE - 1;
++	size_t max_bytes = max(cft->max_write_len, PAGE_SIZE);
+ 	char *buf;
+ 	int ret;
+ 
+-	if (nbytes >= max_bytes)
++	if (nbytes > max_bytes)
+ 		return -E2BIG;
+ 
+ 	buf = kmalloc(nbytes + 1, GFP_KERNEL);
+@@ -3917,7 +3915,7 @@ static struct cftype cgroup_base_files[] = {
+ 		.flags = CFTYPE_INSANE | CFTYPE_ONLY_ON_ROOT,
+ 		.seq_show = cgroup_release_agent_show,
+ 		.write_string = cgroup_release_agent_write,
+-		.max_write_len = PATH_MAX,
++		.max_write_len = PATH_MAX - 1,
+ 	},
+ 	{ }	/* terminate */
+ };
 -- 
 1.8.5.3
