@@ -1,7 +1,7 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 06/13] cgroup: update cgroup name handling
-Date: Sat,  8 Feb 2014 11:15:20 -0500
-Message-ID: <1391876127-7134-7-git-send-email-tj@kernel.org>
+Subject: [PATCH 09/13] cgroup: introduce cgroup_init/exit_cftypes()
+Date: Sat,  8 Feb 2014 11:15:23 -0500
+Message-ID: <1391876127-7134-10-git-send-email-tj@kernel.org>
 References: <1391876127-7134-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -9,13 +9,13 @@ Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=sqPetkcLQIggpr5yzFSDx1DRrRV/E75yT7wKkr2gSmU=;
-	b=FOpf0IejWPwgQrkIlHtN2KVQ56o1V2XavrgXA+Vhhxh3V71ASTUoVQAFvq3xo6baWA
-	iPe/fKjWxsUcZPIy6MCMBlu/RWbxGRhnchTHKkoA1vLO0af+tzCXp7+AjNjx24Di+rX9
-	v/xMmGPE5AuduZAJ0HYh2mt1srtyhcuV6uI7u8Jw35vX3cvlyUwbiQ6n1HaFGBQ0edzz
-	yu0Za1aeCnKLoeierrA9tfVxUs56R5E6XCCK7tglPbe9Sngh9NxzbwyhgSAB9PwP2X3Y
-	2yCAvNOohxAiAvlz+yHFcHvudimRAlJ7dgUZ6qqhBs/MbwWIShi91eIH2hRrD4Nb7rqE
-	KLSQ==
+	bh=DKI917eII0KNrdYztz7AY7MbkqOORyuKvBxhUcsd7y8=;
+	b=idTRMyoXx+yxz8QtN4zyvIyUjNEr+8EihGVSbjEHLziqFLVmee/XeZMxA5W/EZyU9X
+	55uXtpD35jrOWbrf0JRbfGbhVWyD1cSRlhGIuQn4/89KskwHAiq8frnKufXl/JY1ikQM
+	Hp5N7t3fQJrgVoSt1EDob5BHjiQ2HV1W/JNlZzacT2JYRaR3R6yM7J9/8ruhqjeHqgkM
+	zzRpWM4SQYfE+gtuREZL1qHnPyOdM4F7pLbnkXmzvldBsvLaVwdEx6FqXAdsYWEtGX3W
+	aIMgSksusoZoTqSPc5F9Hdne9l0Nbu+rKFkUJz7Xgc07+uvPZ8HyvTzVlXvgolLZ06WW
+	pq1g==
 In-Reply-To: <1391876127-7134-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -30,108 +30,97 @@ Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Straightforward updates to cgroup name handling in preparation of
-kernfs conversion.
+Factor out cft->ss initialization into cgroup_init_cftypes() from
+cgroup_add_cftypes() and add cft->ss clearing to cgroup_rm_cftypes()
+through cgroup_exit_cftypes().
 
-* cgroup_alloc_name() is updated to take const char * isntead of
-  dentry * for name source.
-
-* cgroup name formatting is separated out into cgroup_file_name().
-  While at it, buffer length protection is added.
+This doesn't make any meaningful difference now but the two new
+functions will be expanded during kernfs transition.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- kernel/cgroup.c | 35 ++++++++++++++++++++++-------------
- 1 file changed, 22 insertions(+), 13 deletions(-)
+ kernel/cgroup.c | 32 +++++++++++++++++++++++++-------
+ 1 file changed, 25 insertions(+), 7 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 8a9548c..3cef4a3 100644
+index 1534542..bfbb207 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -67,6 +67,9 @@
-  */
- #define CGROUP_PIDLIST_DESTROY_DELAY	HZ
- 
-+#define CGROUP_FILE_NAME_MAX		(MAX_CGROUP_TYPE_NAMELEN +	\
-+					 MAX_CFTYPE_NAME + 2)
-+
- /*
-  * cgroup_tree_mutex nests above cgroup_mutex and protects cftypes, file
-  * creation/removal and hierarchy changing operations including cgroup
-@@ -799,17 +802,29 @@ static struct inode *cgroup_new_inode(umode_t mode, struct super_block *sb)
- 	return inode;
+@@ -2768,6 +2768,22 @@ static int cgroup_cfts_commit(struct cftype *cfts, bool is_add)
+ 	return ret;
  }
  
--static struct cgroup_name *cgroup_alloc_name(struct dentry *dentry)
-+static struct cgroup_name *cgroup_alloc_name(const char *name_str)
- {
- 	struct cgroup_name *name;
- 
--	name = kmalloc(sizeof(*name) + dentry->d_name.len + 1, GFP_KERNEL);
-+	name = kmalloc(sizeof(*name) + strlen(name_str) + 1, GFP_KERNEL);
- 	if (!name)
- 		return NULL;
--	strcpy(name->name, dentry->d_name.name);
-+	strcpy(name->name, name_str);
- 	return name;
- }
- 
-+static char *cgroup_file_name(struct cgroup *cgrp, const struct cftype *cft,
-+			      char *buf)
++static void cgroup_exit_cftypes(struct cftype *cfts)
 +{
-+	if (cft->ss && !(cft->flags & CFTYPE_NO_PREFIX) &&
-+	    !(cgrp->root->flags & CGRP_ROOT_NOPREFIX))
-+		snprintf(buf, CGROUP_FILE_NAME_MAX, "%s.%s",
-+			 cft->ss->name, cft->name);
-+	else
-+		strncpy(buf, cft->name, CGROUP_FILE_NAME_MAX);
-+	return buf;
++	struct cftype *cft;
++
++	for (cft = cfts; cft->name[0] != '\0'; cft++)
++		cft->ss = NULL;
 +}
 +
- static void cgroup_free_fn(struct work_struct *work)
++static void cgroup_init_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
++{
++	struct cftype *cft;
++
++	for (cft = cfts; cft->name[0] != '\0'; cft++)
++		cft->ss = ss;
++}
++
+ /**
+  * cgroup_add_cftypes - add an array of cftypes to a subsystem
+  * @ss: target cgroup subsystem
+@@ -2785,15 +2801,13 @@ static int cgroup_cfts_commit(struct cftype *cfts, bool is_add)
+ int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
  {
- 	struct cgroup *cgrp = container_of(work, struct cgroup, destroy_work);
-@@ -2435,7 +2450,7 @@ static int cgroup_rename(struct inode *old_dir, struct dentry *old_dentry,
- 	if (cgroup_sane_behavior(cgrp))
- 		return -EPERM;
+ 	struct cftype_set *set;
+-	struct cftype *cft;
+ 	int ret;
  
--	name = cgroup_alloc_name(new_dentry);
-+	name = cgroup_alloc_name(new_dentry->d_name.name);
- 	if (!name)
+ 	set = kzalloc(sizeof(*set), GFP_KERNEL);
+ 	if (!set)
  		return -ENOMEM;
  
-@@ -2611,14 +2626,7 @@ static int cgroup_add_file(struct cgroup *cgrp, struct cftype *cft)
- 	struct cfent *cfe;
- 	int error;
- 	umode_t mode;
--	char name[MAX_CGROUP_TYPE_NAMELEN + MAX_CFTYPE_NAME + 2] = { 0 };
--
--	if (cft->ss && !(cft->flags & CFTYPE_NO_PREFIX) &&
--	    !(cgrp->root->flags & CGRP_ROOT_NOPREFIX)) {
--		strcpy(name, cft->ss->name);
--		strcat(name, ".");
--	}
--	strcat(name, cft->name);
-+	char name[CGROUP_FILE_NAME_MAX];
+-	for (cft = cfts; cft->name[0] != '\0'; cft++)
+-		cft->ss = ss;
++	cgroup_init_cftypes(ss, cfts);
  
- 	BUG_ON(!mutex_is_locked(&dir->d_inode->i_mutex));
+ 	cgroup_cfts_prepare();
+ 	set->cfts = cfts;
+@@ -2818,6 +2832,7 @@ EXPORT_SYMBOL_GPL(cgroup_add_cftypes);
+  */
+ int cgroup_rm_cftypes(struct cftype *cfts)
+ {
++	struct cftype *found = NULL;
+ 	struct cftype_set *set;
  
-@@ -2626,6 +2634,7 @@ static int cgroup_add_file(struct cgroup *cgrp, struct cftype *cft)
- 	if (!cfe)
- 		return -ENOMEM;
+ 	if (!cfts || !cfts[0].ss)
+@@ -2829,13 +2844,14 @@ int cgroup_rm_cftypes(struct cftype *cfts)
+ 		if (set->cfts == cfts) {
+ 			list_del(&set->node);
+ 			kfree(set);
+-			cgroup_cfts_commit(cfts, false);
+-			return 0;
++			found = cfts;
++			break;
+ 		}
+ 	}
  
-+	cgroup_file_name(cgrp, cft, name);
- 	dentry = lookup_one_len(name, dir, strlen(name));
- 	if (IS_ERR(dentry)) {
- 		error = PTR_ERR(dentry);
-@@ -4133,7 +4142,7 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 	if (!cgrp)
- 		return -ENOMEM;
+-	cgroup_cfts_commit(NULL, false);
+-	return -ENOENT;
++	cgroup_cfts_commit(found, false);
++	cgroup_exit_cftypes(cfts);
++	return found ? 0 : -ENOENT;
+ }
  
--	name = cgroup_alloc_name(dentry);
-+	name = cgroup_alloc_name(dentry->d_name.name);
- 	if (!name) {
- 		err = -ENOMEM;
- 		goto err_free_cgrp;
+ /**
+@@ -4594,6 +4610,8 @@ int __init cgroup_init(void)
+ 	if (err)
+ 		return err;
+ 
++	cgroup_init_cftypes(NULL, cgroup_base_files);
++
+ 	for_each_subsys(ss, i) {
+ 		if (!ss->early_init)
+ 			cgroup_init_subsys(ss);
 -- 
 1.8.5.3
