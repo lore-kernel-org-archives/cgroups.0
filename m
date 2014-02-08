@@ -1,125 +1,49 @@
-From: Glyn Normington <gnormington-6n0RBC2Q8y8S+FvcfC7Uqw@public.gmane.org>
-Subject: Re: Attaching a cgroup subsystem to multiple hierarchies
-Date: Sat, 8 Feb 2014 08:55:33 +0000
-Message-ID: <CAGRPoNZ53_dQYK6OcO1jboqSJdRr8w9OHs2p_eRzBb4caNBnnA@mail.gmail.com>
-References: <050BD595-BE55-401D-9B61-E877FB9F06A8@gopivotal.com>
-	<20140206185923.GA2781@dhcp22.suse.cz>
-	<1C806CEE-B69E-4F47-A33F-BC8CE4865223@gopivotal.com>
-	<52F595F1.8020301@huawei.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHSET cgroup/for-3.14-fixes] cgroup: four misc fixes
+Date: Sat, 8 Feb 2014 10:25:51 -0500
+Message-ID: <20140208152551.GC3263@htj.dyndns.org>
+References: <1390923125-4369-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <52F595F1.8020301-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=l2bANOcE4eaaLUxicA6HLtGsuxJPLL7tTjpmj4eaxWQ=;
+	b=HJSM/PKkfXbaAPQnKxq0NLbHX1xrAlUacQ5txQrGdPsXwy8TTADRMpl+H23x/Ju4mU
+	sYdKrG09QNivl5FTzTyMp8F2zsh22cyUmXj0ELfd4tUkKcgEvvpB0ZwkLGmjOuYpycgK
+	JokvsExuntOupTDrnRw7zMMyqm+PnoR3Q8k15wjYvW2szX9i5uuBZqOgSAVmDZLwj+Eq
+	zRcwFF8S5WLGb/pq+lBSQz8tJBWMB4b4gj31e7ZsaYhMdsZBFA7vOD8EAlZzglg11HM3
+	z5DcJsxWa+Bf4Q0G2NDOxAhC1EZjQhtRYX/bHhasVhIWGhBHZf2W13rjjjHhj0PVs9Sy
+	uqoQ==
+Content-Disposition: inline
+In-Reply-To: <1390923125-4369-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 8 February 2014 02:26, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
-> (Add Michal back to the Cc list, and Cc cgroup mailing list)
->
-> On 2014/2/7 17:21, Glyn Normington wrote:
->> Hi Michal
->>
->> On 6 Feb 2014, at 18:59, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
->>
->>> On Wed 05-02-14 14:39:52, Glyn Normington wrote:
->>>> Reading cgroups.txt and casting around the net leads me to believe
->>>> that it is possible to attach a cgroup subsystem (e.g. memory) to
->>>> multiple hierarchies, but this seems to result in "mirrored"
->>>> hierarchies which are automatically kept in step with each other -
->>>> essentially it looks like the same hierarchy at multiple file system
->>>> paths.
->>>>
->>>> Take the following interaction for example:
->>>>
->>>> \begin{verbatim}
->>>> $ pwd
->>>> /home/vagrant
->>>> $ mkdir mem1
->>>> $ mkdir mem2
->>>> $ sudo su
->>>> # mount -t cgroup -o memory none /home/vagrant/mem1
->>>> # mount -t cgroup -o memory none /home/vagrant/mem2
->>>> # cd mem1
->>>> # mkdir inst1
->>>> # ls inst1
->>>> cgroup.clone_children  memory.failcnt ...
->>>> # ls ../mem2
->>>> cgroup.clone_children  inst1 memory.limit_in_bytes ...
->>>> # cd inst1
->>>> # echo 1000000 > memory.limit_in_bytes
->>>> # cat memory.limit_in_bytes
->>>> 1003520
->>>> # cat ../../mem2/inst1/memory.limit_in_bytes
->>>> 1003520
->>>> # echo $$ > tasks
->>>> # cat tasks
->>>> 1365
->>>> 1409
->>>> # cat ../../mem2/inst1/tasks
->>>> 1365
->>>> 1411
->>>>
->>>> Is this working as intended?
->>>
->>> Yes, it doesn't make any sense to have two different views on the same
->>> controllers.
->>
->> Then wouldn't it be better for the second mount to fail?
->>
->
-> We don't disallow mounting procfs/sysfs to more than one mount point.
-> Why we want to do this to cgroupfs?
->
+On Tue, Jan 28, 2014 at 10:32:01AM -0500, Tejun Heo wrote:
+> Hello,
+> 
+> This patchset contains the following four fixes found during
+> conversion to kernfs.  0001-0003 are marked with -stable.
+> 
+>  0001-cgroup-fix-error-return-value-in-cgroup_mount.patch
+>  0002-cgroup-fix-error-return-from-cgroup_create.patch
+>  0003-cgroup-fix-locking-in-cgroup_cfts_commit.patch
+>  0004-cgroup-move-the-one-off-opts-sanity-check-in-cgroup_.patch
 
-If we accept that this scenario does make sense (even if it's not
-particularly useful), then yes, we should continue to allow it. But it
-would be worth documenting the behaviour in cgroups.txt.
-
->>>
->>>> Is there some other way to attach a subsystem to *distinct*
->>>> hierarchies?
->>>
->>> No.
->>>
->>>> Distinct hierarchies would allow distinct cgroups, distinct settings
->>>> (e.g. memory.limit_in_bytes) and distinct partitions of the tasks in
->>>> the system.
->>>
->>> Which one should be applied then?
->>
->> Good question. All of them, I would say: the constraints due to distinct settings would be ANDed together.
->>
->> The implementation would be more complex and less efficient as a subsystem's resources consumed by a process would need charging against each hierarchy to which the subsystem was attached.
->>
->> I very much doubt this would be worth implementing and I'm not at all suggesting it.
->>
->
-> Don't even think about it. :)
->
->>>
->>>>
->>>> Note: I don't have a good use for this function - I'm simply
->>>> trying to reverse engineer the semantics of cgroups to get a precise
->>>> understanding.
->>>
->>> I think there is no need to reverse engineer ;)
->>> Documentation/cgroups/cgroups.txt in the kernel tree does give a decent
->>> description IMO.
->>
->> I disagree. For example, cgroups.txt does not clearly state whether or not a single subsystem may be attached to distinct hierarchies.
->>
->> This seems to have caused confusion elsewhere. For example, Red Hat write "... a single subsystem can be attached to two hierarchies if both of those hierarchies have only that subsystem attached." ([1]).
->>
->
-> No documentation is perfect, but you can make it better by sending us
-> a patch.
->
-
-I certainly intend to, after some more investigation.
+Applied 0001-0003 to cgroup/for-3.14-fixes.  Thanks!
 
 -- 
-Regards,
-Glyn
+tejun
