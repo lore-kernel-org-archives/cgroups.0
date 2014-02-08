@@ -1,7 +1,7 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 2/8] cgroup: relocate cgroup_rm_cftypes()
-Date: Sat,  8 Feb 2014 11:38:23 -0500
-Message-ID: <1391877509-10855-3-git-send-email-tj@kernel.org>
+Subject: [PATCH 4/8] cgroup: simplify dynamic cftype addition and removal
+Date: Sat,  8 Feb 2014 11:38:25 -0500
+Message-ID: <1391877509-10855-5-git-send-email-tj@kernel.org>
 References: <1391877509-10855-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -9,13 +9,13 @@ Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=PpNHg4qCNRLM7Xqf7CBEf3jTstrDZr/R+43K4ApLU58=;
-	b=SLq2Bjr10iAT6gPXkARLbrXxI56uhRMImYLWQ9Hda9ZwMDP6r1zzg3V/01vYKXmGqA
-	8c3+3Zqy+nnUPKdB9fNWnlHTLE314w/ncsPaSVm+gdhW6JFZfRAwFm6kamf6kTbF58YS
-	u/2HZFteAjTDENn56nandX8COy/ezEaKah5qcDDOyyANmlUdhmPCnOgSAvK/On0FxQ9S
-	GezmPcUwLjsxzd9qJriPu8OVo2xSUPl7FjDQnxF5QVNx8szpTIKHZpTpjhLycpKxDKjg
-	sXDmupMiU3abkmRZnUXZCHis3po5HXGR1t/lM5zuue8hVyFr2+cZlKAEwbNit599bFHJ
-	DqEA==
+	bh=rApFy/hhIAjh8PFHl2UNl82ZAjpxibwbwRUUIIjz+Z8=;
+	b=K2VKZK7318LQYfC4CVCw0zpwdC2Z9DHYhgid5D3jpBnHRdGH0zMuJWwCtSV04qFRbS
+	CvFIYrOP6bSERmKazxQlfgxnkPQufGwiEJWKgV1RXS6b8q0Sd7MXzhi+EcX0SFqSsvIU
+	ZpP0LW+MIyvaovw39DncZyyLwJ9W2pU0lqYV2d0S+bplK0y9afMhRNDJnStB55+OSwzi
+	BfZme3eHiRguLDYqjiGR1TQJ1yjNWBfuf+5ac+u2k24QrYviZOXB4h3JXhanyFuFHQG2
+	EqD2fhOS69YdZi+WDu3HQ82cZO5LPxe+24Jgb7UF28Xe4XnNpr0SPnaVTBN3Ch8Ap5JX
+	8bLA==
 In-Reply-To: <1391877509-10855-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -30,101 +30,170 @@ Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-cftype handling is about to be revamped.  Relocate cgroup_rm_cftypes()
-above cgroup_add_cftypes() in preparation.  This is pure relocation.
+Dynamic cftype addition and removal using cgroup_add/rm_cftypes()
+respectively has been quite hairy due to vfs i_mutex.  As i_mutex
+nests outside cgroup_mutex, cgroup_mutex has to be released and
+regrabbed on each iteration through the hierarchy complicating the
+process.  Now that i_mutex is no longer in play, it can be simplified.
+
+* Just holding cgroup_tree_mutex is enough.  No need to meddle with
+  cgroup_mutex.
+
+* No reason to play the unlock - relock - check serial_nr dancing.
+  Everything can be atomically while holding cgroup_tree_mutex.
+
+* cgroup_cfts_prepare() is replaced with direct locking of
+  cgroup_tree_mutex.
+
+* cgroup_cfts_commit() no longer fiddles with locking.  It just
+  applies the cftypes change to the existing cgroups in the hierarchy.
+  Renamed to cgroup_cfts_apply().
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- kernel/cgroup.c | 70 ++++++++++++++++++++++++++++-----------------------------
- 1 file changed, 35 insertions(+), 35 deletions(-)
+ kernel/cgroup.c | 87 +++++++++++++++++++++------------------------------------
+ 1 file changed, 32 insertions(+), 55 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 6b96516..f718cbb 100644
+index a3ade20..6da820d 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -2416,6 +2416,41 @@ static int cgroup_init_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
+@@ -2303,46 +2303,19 @@ static int cgroup_addrm_files(struct cgroup *cgrp, struct cftype cfts[],
+ 	return 0;
  }
  
- /**
-+ * cgroup_rm_cftypes - remove an array of cftypes from a subsystem
-+ * @cfts: zero-length name terminated array of cftypes
-+ *
-+ * Unregister @cfts.  Files described by @cfts are removed from all
-+ * existing cgroups and all future cgroups won't have them either.  This
-+ * function can be called anytime whether @cfts' subsys is attached or not.
-+ *
-+ * Returns 0 on successful unregistration, -ENOENT if @cfts is not
-+ * registered.
-+ */
-+int cgroup_rm_cftypes(struct cftype *cfts)
+-static void cgroup_cfts_prepare(void)
+-	__acquires(&cgroup_mutex)
+-{
+-	/*
+-	 * Thanks to the entanglement with vfs inode locking, we can't walk
+-	 * the existing cgroups under cgroup_mutex and create files.
+-	 * Instead, we use css_for_each_descendant_pre() and drop RCU read
+-	 * lock before calling cgroup_addrm_files().
+-	 */
+-	mutex_lock(&cgroup_tree_mutex);
+-	mutex_lock(&cgroup_mutex);
+-}
+-
+-static int cgroup_cfts_commit(struct cftype *cfts, bool is_add)
+-	__releases(&cgroup_mutex)
++static int cgroup_apply_cftypes(struct cftype *cfts, bool is_add)
+ {
+ 	LIST_HEAD(pending);
+ 	struct cgroup_subsys *ss = cfts[0].ss;
+ 	struct cgroup *root = &ss->root->top_cgroup;
+-	struct cgroup *prev = NULL;
+ 	struct cgroup_subsys_state *css;
+-	u64 update_before;
+ 	int ret = 0;
+ 
+-	mutex_unlock(&cgroup_mutex);
++	lockdep_assert_held(&cgroup_tree_mutex);
+ 
+-	/* %NULL @cfts indicates abort and don't bother if @ss isn't attached */
+-	if (!cfts || ss->root == &cgroup_dummy_root) {
+-		mutex_unlock(&cgroup_tree_mutex);
++	/* don't bother if @ss isn't attached */
++	if (ss->root == &cgroup_dummy_root)
+ 		return 0;
+-	}
+-
+-	cgroup_get_root(ss->root);
+-
+-	/*
+-	 * All cgroups which are created after we drop cgroup_mutex will
+-	 * have the updated set of files, so we only need to update the
+-	 * cgroups created before the current @cgroup_serial_nr_next.
+-	 */
+-	update_before = cgroup_serial_nr_next;
+ 
+ 	/* add/rm files for all cgroups created before */
+ 	css_for_each_descendant_pre(css, cgroup_css(root, ss)) {
+@@ -2351,22 +2324,13 @@ static int cgroup_cfts_commit(struct cftype *cfts, bool is_add)
+ 		if (cgroup_is_dead(cgrp))
+ 			continue;
+ 
+-		cgroup_get(cgrp);
+-		if (prev)
+-			cgroup_put(prev);
+-		prev = cgrp;
+-
+-		if (cgrp->serial_nr < update_before && !cgroup_is_dead(cgrp)) {
+-			ret = cgroup_addrm_files(cgrp, cfts, is_add);
+-			if (is_add)
+-				kernfs_activate(cgrp->kn);
+-		}
++		ret = cgroup_addrm_files(cgrp, cfts, is_add);
+ 		if (ret)
+ 			break;
+ 	}
+-	mutex_unlock(&cgroup_tree_mutex);
+-	cgroup_put(prev);
+-	cgroup_put_root(ss->root);
++
++	if (is_add && !ret)
++		kernfs_activate(root->kn);
+ 	return ret;
+ }
+ 
+@@ -2417,6 +2381,19 @@ static int cgroup_init_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
+ 	return 0;
+ }
+ 
++static int cgroup_rm_cftypes_locked(struct cftype *cfts)
 +{
-+	struct cftype *found = NULL;
-+	struct cftype_set *set;
++	lockdep_assert_held(&cgroup_tree_mutex);
 +
 +	if (!cfts || !cfts[0].ss)
 +		return -ENOENT;
 +
-+	cgroup_cfts_prepare();
-+
-+	list_for_each_entry(set, &cfts[0].ss->cftsets, node) {
-+		if (set->cfts == cfts) {
-+			list_del(&set->node);
-+			kfree(set);
-+			found = cfts;
-+			break;
-+		}
-+	}
-+
-+	cgroup_cfts_commit(found, false);
++	list_del(&cfts->node);
++	cgroup_apply_cftypes(cfts, false);
 +	cgroup_exit_cftypes(cfts);
-+	return found ? 0 : -ENOENT;
++	return 0;
 +}
 +
-+/**
-  * cgroup_add_cftypes - add an array of cftypes to a subsystem
-  * @ss: target cgroup subsystem
-  * @cfts: zero-length name terminated array of cftypes
-@@ -2453,41 +2488,6 @@ int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
- EXPORT_SYMBOL_GPL(cgroup_add_cftypes);
- 
  /**
-- * cgroup_rm_cftypes - remove an array of cftypes from a subsystem
-- * @cfts: zero-length name terminated array of cftypes
-- *
-- * Unregister @cfts.  Files described by @cfts are removed from all
-- * existing cgroups and all future cgroups won't have them either.  This
-- * function can be called anytime whether @cfts' subsys is attached or not.
-- *
-- * Returns 0 on successful unregistration, -ENOENT if @cfts is not
-- * registered.
-- */
--int cgroup_rm_cftypes(struct cftype *cfts)
--{
--	struct cftype *found = NULL;
--	struct cftype_set *set;
--
+  * cgroup_rm_cftypes - remove an array of cftypes from a subsystem
+  * @cfts: zero-length name terminated array of cftypes
+@@ -2430,15 +2407,12 @@ static int cgroup_init_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
+  */
+ int cgroup_rm_cftypes(struct cftype *cfts)
+ {
 -	if (!cfts || !cfts[0].ss)
 -		return -ENOENT;
 -
 -	cgroup_cfts_prepare();
--
--	list_for_each_entry(set, &cfts[0].ss->cftsets, node) {
--		if (set->cfts == cfts) {
--			list_del(&set->node);
--			kfree(set);
--			found = cfts;
--			break;
--		}
--	}
--
--	cgroup_cfts_commit(found, false);
+-	list_del(&cfts->node);
+-	cgroup_cfts_commit(cfts, false);
++	int ret;
+ 
 -	cgroup_exit_cftypes(cfts);
--	return found ? 0 : -ENOENT;
--}
--
--/**
-  * cgroup_task_count - count the number of tasks in a cgroup.
-  * @cgrp: the cgroup in question
-  *
+-	return 0;
++	mutex_lock(&cgroup_tree_mutex);
++	ret = cgroup_rm_cftypes_locked(cfts);
++	mutex_unlock(&cgroup_tree_mutex);
++	return ret;
+ }
+ 
+ /**
+@@ -2463,11 +2437,14 @@ int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
+ 	if (ret)
+ 		return ret;
+ 
+-	cgroup_cfts_prepare();
++	mutex_lock(&cgroup_tree_mutex);
++
+ 	list_add_tail(&cfts->node, &ss->cfts);
+-	ret = cgroup_cfts_commit(cfts, true);
++	ret = cgroup_apply_cftypes(cfts, true);
+ 	if (ret)
+-		cgroup_rm_cftypes(cfts);
++		cgroup_rm_cftypes_locked(cfts);
++
++	mutex_unlock(&cgroup_tree_mutex);
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(cgroup_add_cftypes);
 -- 
 1.8.5.3
