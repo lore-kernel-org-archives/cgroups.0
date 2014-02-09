@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 05/16] cgroup: implement cgroup_has_tasks() and unexport cgroup_task_count()
-Date: Sun,  9 Feb 2014 08:52:33 -0500
-Message-ID: <1391953964-22088-6-git-send-email-tj@kernel.org>
+Subject: [PATCH 11/16] cgroup: move css_set_rwsem locking outside of cgroup_task_migrate()
+Date: Sun,  9 Feb 2014 08:52:39 -0500
+Message-ID: <1391953964-22088-12-git-send-email-tj@kernel.org>
 References: <1391953964-22088-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=S7O6EXiVJatIJxoc0Cige0wkt0LMoNj6rAIQpsoVu0o=;
-        b=0IFHtqvYoo2w3ivVjI+hq3qB8GGhCa/qifunxTS0UtJcy5qDisq7kwPSavMjF00S/Q
-         iyPdpruTxOOn+Uze14bWjmnu9s7Jtxgv7sh/vC9CC7WxbxPw4yacZp0hPTGpUg/8krSO
-         wxG+6rfYPmJV8xUxYvcIXDkXq0W8LKAzeezu1alCsQL/hDO+L2Pmna4jlR3b9iTHcStQ
-         F9r5oeJck1Y6Hc40GK4TKVpWLzzVuo9vtiZMTtikYpb4tOFok/Xsa3uZCC16KSFVOqQK
-         kYGZ8iECkbI0Wx9GZNXuBuADfU+09Q/aahaEHAUsTKhFLKirwzzeWJsEjQFA7gG2NN6x
-         JDQg==
+        bh=l5koZfIQH3OtsuT1xP5CQtFFaQs6byRkC5ArLJQ/HmM=;
+        b=HKSUYSoF8rSHTNgvY49PCbty0z4DEMYAPDTUNUABX+yXChLmPtFB0/QTWZzo76C2Ro
+         wg2vnYKirh1y+OmRapTzBZ77AOKUDWEwkPs2CfDn4dKP4zh0bpVImeosNI9SWHpbzdYe
+         xCGwdie7XKMgi7592tZEiBbrwevZbRQ70Nt+z0ORW6Lq/UDO7wa0ohOlKnka/fW0CRkV
+         npBRtvMLpSLfxta2nT/jOvEk7BFfv12ExTlXsyiT2iRm1ETeBbh3z7z/Gisnfg0Ujwq6
+         GxABg1azjpLC3Kbegf4zlNSZWSnvKR232alYU82qz3Bx7/Ohv5pbTywYEMjPjdcFErwT
+         1lig==
 In-Reply-To: <1391953964-22088-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -21,105 +21,79 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com
-Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Balbir Singh <bsingharora@gmail.com>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-cgroup_task_count() read-locks css_set_lock and walks all tasks to
-count them and then returns the result.  The only thing all the users
-want is determining whether the cgroup is empty or not.  This patch
-implements cgroup_has_tasks() which tests whether cgroup->cset_links
-is empty, replaces all cgroup_task_count() usages and unexports it.
-
-Note that the test isn't synchronized.  This is the same as before.
-The test has always been racy.
-
-This will help planned css_set locking update.
+Instead of repeatedly locking and unlocking css_set_rwsem inside
+cgroup_task_migrate(), update cgroup_attach_task() to grab it outside
+of the loop and update cgroup_task_migrate() to use
+put_css_set_locked().
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
-Cc: Balbir Singh <bsingharora@gmail.com>
-Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 ---
- include/linux/cgroup.h | 8 ++++++--
- kernel/cgroup.c        | 2 +-
- kernel/cpuset.c        | 2 +-
- mm/memcontrol.c        | 4 ++--
- 4 files changed, 10 insertions(+), 6 deletions(-)
+ kernel/cgroup.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 8ca31c1..f173cfb 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -455,6 +455,12 @@ static inline bool cgroup_sane_behavior(const struct cgroup *cgrp)
- 	return cgrp->root->flags & CGRP_ROOT_SANE_BEHAVIOR;
- }
- 
-+/* no synchronization, the result can only be used as a hint */
-+static inline bool cgroup_has_tasks(struct cgroup *cgrp)
-+{
-+	return !list_empty(&cgrp->cset_links);
-+}
-+
- /* returns ino associated with a cgroup, 0 indicates unmounted root */
- static inline ino_t cgroup_ino(struct cgroup *cgrp)
- {
-@@ -514,8 +520,6 @@ int cgroup_rm_cftypes(struct cftype *cfts);
- 
- bool cgroup_is_descendant(struct cgroup *cgrp, struct cgroup *ancestor);
- 
--int cgroup_task_count(const struct cgroup *cgrp);
--
- /*
-  * Control Group taskset, used to pass around set of tasks to cgroup_subsys
-  * methods.
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 1ebc6e30..96a3a85 100644
+index 63d1a4e..ac78311 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -2390,7 +2390,7 @@ EXPORT_SYMBOL_GPL(cgroup_add_cftypes);
+@@ -1713,10 +1713,13 @@ int cgroup_taskset_size(struct cgroup_taskset *tset)
+ EXPORT_SYMBOL_GPL(cgroup_taskset_size);
+ 
+ 
+-/*
++/**
+  * cgroup_task_migrate - move a task from one cgroup to another.
++ * @old_cgrp; the cgroup @tsk is being migrated from
++ * @tsk: the task being migrated
++ * @new_cset: the new css_set @tsk is being attached to
   *
-  * Return the number of tasks in the cgroup.
+- * Must be called with cgroup_mutex and threadgroup locked.
++ * Must be called with cgroup_mutex, threadgroup and css_set_rwsem locked.
   */
--int cgroup_task_count(const struct cgroup *cgrp)
-+static int cgroup_task_count(const struct cgroup *cgrp)
+ static void cgroup_task_migrate(struct cgroup *old_cgrp,
+ 				struct task_struct *tsk,
+@@ -1724,6 +1727,9 @@ static void cgroup_task_migrate(struct cgroup *old_cgrp,
  {
- 	int count = 0;
- 	struct cgrp_cset_link *link;
-diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index e97a6e8..ae190b0 100644
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -467,7 +467,7 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
- 	 * be changed to have empty cpus_allowed or mems_allowed.
- 	 */
- 	ret = -ENOSPC;
--	if ((cgroup_task_count(cur->css.cgroup) || cur->attach_in_progress)) {
-+	if ((cgroup_has_tasks(cur->css.cgroup) || cur->attach_in_progress)) {
- 		if (!cpumask_empty(cur->cpus_allowed) &&
- 		    cpumask_empty(trial->cpus_allowed))
- 			goto out;
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c1c2549..d9c6ac1 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4958,7 +4958,7 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg)
- 	struct cgroup *cgrp = memcg->css.cgroup;
+ 	struct css_set *old_cset;
  
- 	/* returns EBUSY if there is a task or if we come here twice. */
--	if (cgroup_task_count(cgrp) || !list_empty(&cgrp->children))
-+	if (cgroup_has_tasks(cgrp) || !list_empty(&cgrp->children))
- 		return -EBUSY;
++	lockdep_assert_held(&cgroup_mutex);
++	lockdep_assert_held(&css_set_rwsem);
++
+ 	/*
+ 	 * We are synchronized through threadgroup_lock() against PF_EXITING
+ 	 * setting such that we can't race against cgroup_exit() changing the
+@@ -1737,9 +1743,7 @@ static void cgroup_task_migrate(struct cgroup *old_cgrp,
+ 	task_unlock(tsk);
  
- 	/* we call try-to-free pages for make this cgroup empty */
-@@ -5140,7 +5140,7 @@ static int __memcg_activate_kmem(struct mem_cgroup *memcg,
- 	 * of course permitted.
+ 	/* Update the css_set linked lists if we're using them */
+-	down_write(&css_set_rwsem);
+ 	list_move(&tsk->cg_list, &new_cset->tasks);
+-	up_write(&css_set_rwsem);
+ 
+ 	/*
+ 	 * We just gained a reference on old_cset by taking it from the
+@@ -1747,7 +1751,7 @@ static void cgroup_task_migrate(struct cgroup *old_cgrp,
+ 	 * we're safe to drop it here; it will be freed under RCU.
  	 */
- 	mutex_lock(&memcg_create_mutex);
--	if (cgroup_task_count(memcg->css.cgroup) || memcg_has_children(memcg))
-+	if (cgroup_has_tasks(memcg->css.cgroup) || memcg_has_children(memcg))
- 		err = -EBUSY;
- 	mutex_unlock(&memcg_create_mutex);
- 	if (err)
+ 	set_bit(CGRP_RELEASABLE, &old_cgrp->flags);
+-	put_css_set(old_cset, false);
++	put_css_set_locked(old_cset, false);
+ }
+ 
+ /**
+@@ -1870,10 +1874,12 @@ static int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk,
+ 	 * proceed to move all tasks to the new cgroup.  There are no
+ 	 * failure cases after here, so this is the commit point.
+ 	 */
++	down_write(&css_set_rwsem);
+ 	for (i = 0; i < group_size; i++) {
+ 		tc = flex_array_get(group, i);
+ 		cgroup_task_migrate(tc->cgrp, tc->task, tc->cset);
+ 	}
++	up_write(&css_set_rwsem);
+ 	/* nothing is sensitive to fork() after this point. */
+ 
+ 	/*
 -- 
 1.8.5.3
