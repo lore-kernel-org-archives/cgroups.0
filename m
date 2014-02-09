@@ -1,239 +1,110 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 09/16] cgroup: remove css_scan_tasks()
-Date: Sun,  9 Feb 2014 08:52:37 -0500
-Message-ID: <1391953964-22088-10-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 14/16] cgroup: remove cgroup_taskset_cur_css() and cgroup_taskset_size()
+Date: Sun,  9 Feb 2014 08:52:42 -0500
+Message-ID: <1391953964-22088-15-git-send-email-tj@kernel.org>
 References: <1391953964-22088-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=zmZPpy5HYWYs5JiumBJbFizGjnArN4ateO6241BOm5s=;
+        b=c+z29B7NorBfTEaIMh52Nyw66/9tp8gELbsT1Lf8iyuTkA00WVaFUT5HD9GJAte/mH
+         JPKyR+cbmMh4LNhdcl7DXIqe/3EhaiC4CoQzTKS8EXnx6DumRWWmvFbn/yRyMbD2kumi
+         CKX0U6ph2iFUbvLhL2xzsjmZFHaaDbiQjgf5II2BiBlXuGvOJtG5Kyg7hZo+w5qB9q+Z
+         luyH7P+OGM7f2RdX3to6NFEQGep7oYcaU1yGrwRz07PSeO6ckDe0GJT/nMe5mn7e7FjD
+         yIC9Ot/Rcq/v6FPlsbn7q9AQ7zcHGSEmBRF5P0/rVk93mhY56PjuxjZeogUZPuN8pbxn
+         miPw==
+In-Reply-To: <1391953964-22088-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=h3xFye2Oqhl0/4NZhFUNVJlJraqI+Hf6ONa1NXR5HyU=;
-	b=Mqe6w4Nfm82TnCDcyD2g/ULIGlnjuBKWVejX6/heXlDIaSG6hHOPNbbNb2KxNKtCWE
-	Wb5aQb6VaZLdgXc8Gp3lgbXPbqIvQ/DlvGqyWUyTGymqlUH5dg/Q7ySvGXDiiwIVLm4u
-	qX1pfqyR/YDayz/pYIR+ShHOgN0ne5/hlYPJh0VQqHHRUBmNl8uaeuOs1t2iC2HdSZ2S
-	Bj9G2feH2Vtg50vOggnZzLWSXmlWV5wNmd0+UbjPXTdK3V7B5Zm/6xTGvsM6loEjpKoR
-	Ban3G+6OgomZXuwbInqR2GDZex92/YWL30LPfN7kZj03Z3MzHvh2/rRyCKRx4gR+FxL+
-	LJEg==
-In-Reply-To: <1391953964-22088-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: lizefan@huawei.com
+Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-css_scan_tasks() doesn't have any user left.  Remove it.
+The two functions don't have any users left.  Remove them along with
+cgroup_taskset->cur_cgrp.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- include/linux/cgroup.h |   6 --
- kernel/cgroup.c        | 162 -------------------------------------------------
- 2 files changed, 168 deletions(-)
+ include/linux/cgroup.h |  3 ---
+ kernel/cgroup.c        | 30 ------------------------------
+ 2 files changed, 33 deletions(-)
 
 diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index f173cfb..db5ccf4 100644
+index 3c67883..21887b6 100644
 --- a/include/linux/cgroup.h
 +++ b/include/linux/cgroup.h
-@@ -14,7 +14,6 @@
- #include <linux/rcupdate.h>
- #include <linux/rculist.h>
- #include <linux/cgroupstats.h>
--#include <linux/prio_heap.h>
- #include <linux/rwsem.h>
- #include <linux/idr.h>
- #include <linux/workqueue.h>
-@@ -811,11 +810,6 @@ void css_task_iter_start(struct cgroup_subsys_state *css,
- struct task_struct *css_task_iter_next(struct css_task_iter *it);
- void css_task_iter_end(struct css_task_iter *it);
+@@ -526,9 +526,6 @@ bool cgroup_is_descendant(struct cgroup *cgrp, struct cgroup *ancestor);
+ struct cgroup_taskset;
+ struct task_struct *cgroup_taskset_first(struct cgroup_taskset *tset);
+ struct task_struct *cgroup_taskset_next(struct cgroup_taskset *tset);
+-struct cgroup_subsys_state *cgroup_taskset_cur_css(struct cgroup_taskset *tset,
+-						   int subsys_id);
+-int cgroup_taskset_size(struct cgroup_taskset *tset);
  
--int css_scan_tasks(struct cgroup_subsys_state *css,
--		   bool (*test)(struct task_struct *, void *),
--		   void (*process)(struct task_struct *, void *),
--		   void *data, struct ptr_heap *heap);
--
- int cgroup_attach_task_all(struct task_struct *from, struct task_struct *);
- int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from);
- 
+ /**
+  * cgroup_taskset_for_each - iterate cgroup_taskset
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 5ad1b25..8c1f840 100644
+index ac78311..0108753 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -2696,168 +2696,6 @@ void css_task_iter_end(struct css_task_iter *it)
- 	up_read(&css_set_rwsem);
- }
+@@ -1645,7 +1645,6 @@ struct cgroup_taskset {
+ 	struct flex_array	*tc_array;
+ 	int			tc_array_len;
+ 	int			idx;
+-	struct cgroup		*cur_cgrp;
+ };
  
--static inline int started_after_time(struct task_struct *t1,
--				     struct timespec *time,
--				     struct task_struct *t2)
--{
--	int start_diff = timespec_compare(&t1->start_time, time);
--	if (start_diff > 0) {
--		return 1;
--	} else if (start_diff < 0) {
--		return 0;
--	} else {
--		/*
--		 * Arbitrarily, if two processes started at the same
--		 * time, we'll say that the lower pointer value
--		 * started first. Note that t2 may have exited by now
--		 * so this may not be a valid pointer any longer, but
--		 * that's fine - it still serves to distinguish
--		 * between two tasks started (effectively) simultaneously.
--		 */
--		return t1 > t2;
--	}
--}
--
--/*
-- * This function is a callback from heap_insert() and is used to order
-- * the heap.
-- * In this case we order the heap in descending task start time.
+ /**
+@@ -1660,7 +1659,6 @@ struct task_struct *cgroup_taskset_first(struct cgroup_taskset *tset)
+ 		tset->idx = 0;
+ 		return cgroup_taskset_next(tset);
+ 	} else {
+-		tset->cur_cgrp = tset->single.cgrp;
+ 		return tset->single.task;
+ 	}
+ }
+@@ -1681,39 +1679,11 @@ struct task_struct *cgroup_taskset_next(struct cgroup_taskset *tset)
+ 		return NULL;
+ 
+ 	tc = flex_array_get(tset->tc_array, tset->idx++);
+-	tset->cur_cgrp = tc->cgrp;
+ 	return tc->task;
+ }
+ EXPORT_SYMBOL_GPL(cgroup_taskset_next);
+ 
+ /**
+- * cgroup_taskset_cur_css - return the matching css for the current task
+- * @tset: taskset of interest
+- * @subsys_id: the ID of the target subsystem
+- *
+- * Return the css for the current (last returned) task of @tset for
+- * subsystem specified by @subsys_id.  This function must be preceded by
+- * either cgroup_taskset_first() or cgroup_taskset_next().
 - */
--static inline int started_after(void *p1, void *p2)
+-struct cgroup_subsys_state *cgroup_taskset_cur_css(struct cgroup_taskset *tset,
+-						   int subsys_id)
 -{
--	struct task_struct *t1 = p1;
--	struct task_struct *t2 = p2;
--	return started_after_time(t1, &t2->start_time, t2);
+-	return cgroup_css(tset->cur_cgrp, cgroup_subsys[subsys_id]);
 -}
+-EXPORT_SYMBOL_GPL(cgroup_taskset_cur_css);
 -
 -/**
-- * css_scan_tasks - iterate though all the tasks in a css
-- * @css: the css to iterate tasks of
-- * @test: optional test callback
-- * @process: process callback
-- * @data: data passed to @test and @process
-- * @heap: optional pre-allocated heap used for task iteration
-- *
-- * Iterate through all the tasks in @css, calling @test for each, and if it
-- * returns %true, call @process for it also.
-- *
-- * @test may be NULL, meaning always true (select all tasks), which
-- * effectively duplicates css_task_iter_{start,next,end}() but does not
-- * lock css_set_rwsem for the call to @process.
-- *
-- * It is guaranteed that @process will act on every task that is a member
-- * of @css for the duration of this call.  This function may or may not
-- * call @process for tasks that exit or move to a different css during the
-- * call, or are forked or move into the css during the call.
-- *
-- * Note that @test may be called with locks held, and may in some
-- * situations be called multiple times for the same task, so it should be
-- * cheap.
-- *
-- * If @heap is non-NULL, a heap has been pre-allocated and will be used for
-- * heap operations (and its "gt" member will be overwritten), else a
-- * temporary heap will be used (allocation of which may cause this function
-- * to fail).
+- * cgroup_taskset_size - return the number of tasks in taskset
+- * @tset: taskset of interest
 - */
--int css_scan_tasks(struct cgroup_subsys_state *css,
--		   bool (*test)(struct task_struct *, void *),
--		   void (*process)(struct task_struct *, void *),
--		   void *data, struct ptr_heap *heap)
+-int cgroup_taskset_size(struct cgroup_taskset *tset)
 -{
--	int retval, i;
--	struct css_task_iter it;
--	struct task_struct *p, *dropped;
--	/* Never dereference latest_task, since it's not refcounted */
--	struct task_struct *latest_task = NULL;
--	struct ptr_heap tmp_heap;
--	struct timespec latest_time = { 0, 0 };
--
--	if (heap) {
--		/* The caller supplied our heap and pre-allocated its memory */
--		heap->gt = &started_after;
--	} else {
--		/* We need to allocate our own heap memory */
--		heap = &tmp_heap;
--		retval = heap_init(heap, PAGE_SIZE, GFP_KERNEL, &started_after);
--		if (retval)
--			/* cannot allocate the heap */
--			return retval;
--	}
--
-- again:
--	/*
--	 * Scan tasks in the css, using the @test callback to determine
--	 * which are of interest, and invoking @process callback on the
--	 * ones which need an update.  Since we don't want to hold any
--	 * locks during the task updates, gather tasks to be processed in a
--	 * heap structure.  The heap is sorted by descending task start
--	 * time.  If the statically-sized heap fills up, we overflow tasks
--	 * that started later, and in future iterations only consider tasks
--	 * that started after the latest task in the previous pass. This
--	 * guarantees forward progress and that we don't miss any tasks.
--	 */
--	heap->size = 0;
--	css_task_iter_start(css, &it);
--	while ((p = css_task_iter_next(&it))) {
--		/*
--		 * Only affect tasks that qualify per the caller's callback,
--		 * if he provided one
--		 */
--		if (test && !test(p, data))
--			continue;
--		/*
--		 * Only process tasks that started after the last task
--		 * we processed
--		 */
--		if (!started_after_time(p, &latest_time, latest_task))
--			continue;
--		dropped = heap_insert(heap, p);
--		if (dropped == NULL) {
--			/*
--			 * The new task was inserted; the heap wasn't
--			 * previously full
--			 */
--			get_task_struct(p);
--		} else if (dropped != p) {
--			/*
--			 * The new task was inserted, and pushed out a
--			 * different task
--			 */
--			get_task_struct(p);
--			put_task_struct(dropped);
--		}
--		/*
--		 * Else the new task was newer than anything already in
--		 * the heap and wasn't inserted
--		 */
--	}
--	css_task_iter_end(&it);
--
--	if (heap->size) {
--		for (i = 0; i < heap->size; i++) {
--			struct task_struct *q = heap->ptrs[i];
--			if (i == 0) {
--				latest_time = q->start_time;
--				latest_task = q;
--			}
--			/* Process the task per the caller's callback */
--			process(q, data);
--			put_task_struct(q);
--		}
--		/*
--		 * If we had to process any tasks at all, scan again
--		 * in case some of them were in the middle of forking
--		 * children that didn't get processed.
--		 * Not the most efficient way to do it, but it avoids
--		 * having to take callback_mutex in the fork path
--		 */
--		goto again;
--	}
--	if (heap == &tmp_heap)
--		heap_free(&tmp_heap);
--	return 0;
+-	return tset->tc_array ? tset->tc_array_len : 1;
 -}
+-EXPORT_SYMBOL_GPL(cgroup_taskset_size);
 -
- /**
-  * cgroup_trasnsfer_tasks - move tasks from one cgroup to another
-  * @to: cgroup to which the tasks will be moved
+-
+-/**
+  * cgroup_task_migrate - move a task from one cgroup to another.
+  * @old_cgrp; the cgroup @tsk is being migrated from
+  * @tsk: the task being migrated
 -- 
 1.8.5.3
