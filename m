@@ -1,110 +1,163 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 14/16] cgroup: remove cgroup_taskset_cur_css() and cgroup_taskset_size()
-Date: Sun,  9 Feb 2014 08:52:42 -0500
-Message-ID: <1391953964-22088-15-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 10/16] cgroup: separate out put_css_set_locked() and remove
+	put_css_set_taskexit()
+Date: Sun,  9 Feb 2014 08:52:38 -0500
+Message-ID: <1391953964-22088-11-git-send-email-tj@kernel.org>
 References: <1391953964-22088-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=zmZPpy5HYWYs5JiumBJbFizGjnArN4ateO6241BOm5s=;
-        b=c+z29B7NorBfTEaIMh52Nyw66/9tp8gELbsT1Lf8iyuTkA00WVaFUT5HD9GJAte/mH
-         JPKyR+cbmMh4LNhdcl7DXIqe/3EhaiC4CoQzTKS8EXnx6DumRWWmvFbn/yRyMbD2kumi
-         CKX0U6ph2iFUbvLhL2xzsjmZFHaaDbiQjgf5II2BiBlXuGvOJtG5Kyg7hZo+w5qB9q+Z
-         luyH7P+OGM7f2RdX3to6NFEQGep7oYcaU1yGrwRz07PSeO6ckDe0GJT/nMe5mn7e7FjD
-         yIC9Ot/Rcq/v6FPlsbn7q9AQ7zcHGSEmBRF5P0/rVk93mhY56PjuxjZeogUZPuN8pbxn
-         miPw==
-In-Reply-To: <1391953964-22088-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com
-Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+	bh=e73zbqkOUE+OMpNC8MJIxmjFOiRWYod4T2/MqiYhJ+Y=;
+	b=DkVAWeu9s804VeKBrpO+1W7M0QkSK/rRSkWRPMSwh9e5hHG1bT8grlnyT9246b6uim
+	GxKzmqKiklzCvSiUgwCq4yGPGOhK2cFX0uBlUTg7ZlpOye6qMJw82OVRwstMWEzy6UOm
+	S0QvykCmxUcQ9cby6LIjp2oQoWzLJ9zKcXFpEGgTXHgXq+JnL4scHR/TtzBr8372V4bx
+	tuvY5FF8UwcwvhM21jTf+5lSM6391b8KW8Sw6lR5Tk9i+tvoEOm1rtKBVw7EjpQBSKcA
+	frwriBLqArQj0oaYIsOFTnpWWdN8x4jNlTsmrFB5fVQFGSxuYmHse8nBBVVfa1WbEwiJ
+	8PCg==
+In-Reply-To: <1391953964-22088-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-The two functions don't have any users left.  Remove them along with
-cgroup_taskset->cur_cgrp.
+put_css_set() is performed in two steps - it first tries to put
+without grabbing css_set_rwsem if such put wouldn't make the count
+zero.  If that fails, it puts after write-locking css_set_rwsem.  This
+patch separates out the second phase into put_css_set_locked() which
+should be called with css_set_rwsem locked.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
+Also, put_css_set_taskexit() is droped and put_css_set() is made to
+take @taskexit.  There are only a handful users of these functions.
+No point in providing different variants.
+
+put_css_locked() will be used by later changes.  This patch doesn't
+introduce any functional changes.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- include/linux/cgroup.h |  3 ---
- kernel/cgroup.c        | 30 ------------------------------
- 2 files changed, 33 deletions(-)
+ kernel/cgroup.c | 50 +++++++++++++++++++++++---------------------------
+ 1 file changed, 23 insertions(+), 27 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 3c67883..21887b6 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -526,9 +526,6 @@ bool cgroup_is_descendant(struct cgroup *cgrp, struct cgroup *ancestor);
- struct cgroup_taskset;
- struct task_struct *cgroup_taskset_first(struct cgroup_taskset *tset);
- struct task_struct *cgroup_taskset_next(struct cgroup_taskset *tset);
--struct cgroup_subsys_state *cgroup_taskset_cur_css(struct cgroup_taskset *tset,
--						   int subsys_id);
--int cgroup_taskset_size(struct cgroup_taskset *tset);
- 
- /**
-  * cgroup_taskset_for_each - iterate cgroup_taskset
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index ac78311..0108753 100644
+index 8c1f840..63d1a4e 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -1645,7 +1645,6 @@ struct cgroup_taskset {
- 	struct flex_array	*tc_array;
- 	int			tc_array_len;
- 	int			idx;
--	struct cgroup		*cur_cgrp;
- };
+@@ -369,22 +369,14 @@ static unsigned long css_set_hash(struct cgroup_subsys_state *css[])
+ 	return key;
+ }
  
- /**
-@@ -1660,7 +1659,6 @@ struct task_struct *cgroup_taskset_first(struct cgroup_taskset *tset)
- 		tset->idx = 0;
- 		return cgroup_taskset_next(tset);
- 	} else {
--		tset->cur_cgrp = tset->single.cgrp;
- 		return tset->single.task;
+-static void __put_css_set(struct css_set *cset, int taskexit)
++static void put_css_set_locked(struct css_set *cset, bool taskexit)
+ {
+ 	struct cgrp_cset_link *link, *tmp_link;
+ 
+-	/*
+-	 * Ensure that the refcount doesn't hit zero while any readers
+-	 * can see it. Similar to atomic_dec_and_lock(), but for an
+-	 * rwlock
+-	 */
+-	if (atomic_add_unless(&cset->refcount, -1, 1))
+-		return;
+-	down_write(&css_set_rwsem);
+-	if (!atomic_dec_and_test(&cset->refcount)) {
+-		up_write(&css_set_rwsem);
++	lockdep_assert_held(&css_set_rwsem);
++
++	if (!atomic_dec_and_test(&cset->refcount))
+ 		return;
+-	}
+ 
+ 	/* This css_set is dead. unlink it and release cgroup refcounts */
+ 	hash_del(&cset->hlist);
+@@ -406,10 +398,24 @@ static void __put_css_set(struct css_set *cset, int taskexit)
+ 		kfree(link);
  	}
- }
-@@ -1681,39 +1679,11 @@ struct task_struct *cgroup_taskset_next(struct cgroup_taskset *tset)
- 		return NULL;
  
- 	tc = flex_array_get(tset->tc_array, tset->idx++);
--	tset->cur_cgrp = tc->cgrp;
- 	return tc->task;
+-	up_write(&css_set_rwsem);
+ 	kfree_rcu(cset, rcu_head);
  }
- EXPORT_SYMBOL_GPL(cgroup_taskset_next);
+ 
++static void put_css_set(struct css_set *cset, bool taskexit)
++{
++	/*
++	 * Ensure that the refcount doesn't hit zero while any readers
++	 * can see it. Similar to atomic_dec_and_lock(), but for an
++	 * rwlock
++	 */
++	if (atomic_add_unless(&cset->refcount, -1, 1))
++		return;
++
++	down_write(&css_set_rwsem);
++	put_css_set_locked(cset, taskexit);
++	up_write(&css_set_rwsem);
++}
++
+ /*
+  * refcounted get/put for css_set objects
+  */
+@@ -418,16 +424,6 @@ static inline void get_css_set(struct css_set *cset)
+ 	atomic_inc(&cset->refcount);
+ }
+ 
+-static inline void put_css_set(struct css_set *cset)
+-{
+-	__put_css_set(cset, 0);
+-}
+-
+-static inline void put_css_set_taskexit(struct css_set *cset)
+-{
+-	__put_css_set(cset, 1);
+-}
+-
+ /**
+  * compare_css_sets - helper function for find_existing_css_set().
+  * @cset: candidate css_set being tested
+@@ -1751,7 +1747,7 @@ static void cgroup_task_migrate(struct cgroup *old_cgrp,
+ 	 * we're safe to drop it here; it will be freed under RCU.
+ 	 */
+ 	set_bit(CGRP_RELEASABLE, &old_cgrp->flags);
+-	put_css_set(old_cset);
++	put_css_set(old_cset, false);
+ }
  
  /**
-- * cgroup_taskset_cur_css - return the matching css for the current task
-- * @tset: taskset of interest
-- * @subsys_id: the ID of the target subsystem
-- *
-- * Return the css for the current (last returned) task of @tset for
-- * subsystem specified by @subsys_id.  This function must be preceded by
-- * either cgroup_taskset_first() or cgroup_taskset_next().
-- */
--struct cgroup_subsys_state *cgroup_taskset_cur_css(struct cgroup_taskset *tset,
--						   int subsys_id)
--{
--	return cgroup_css(tset->cur_cgrp, cgroup_subsys[subsys_id]);
--}
--EXPORT_SYMBOL_GPL(cgroup_taskset_cur_css);
--
--/**
-- * cgroup_taskset_size - return the number of tasks in taskset
-- * @tset: taskset of interest
-- */
--int cgroup_taskset_size(struct cgroup_taskset *tset)
--{
--	return tset->tc_array ? tset->tc_array_len : 1;
--}
--EXPORT_SYMBOL_GPL(cgroup_taskset_size);
--
--
--/**
-  * cgroup_task_migrate - move a task from one cgroup to another.
-  * @old_cgrp; the cgroup @tsk is being migrated from
-  * @tsk: the task being migrated
+@@ -1897,7 +1893,7 @@ out_put_css_set_refs:
+ 			tc = flex_array_get(group, i);
+ 			if (!tc->cset)
+ 				break;
+-			put_css_set(tc->cset);
++			put_css_set(tc->cset, false);
+ 		}
+ 	}
+ out_cancel_attach:
+@@ -3714,7 +3710,7 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 
+ 	/*
+ 	 * css_set_rwsem synchronizes access to ->cset_links and prevents
+-	 * @cgrp from being removed while __put_css_set() is in progress.
++	 * @cgrp from being removed while put_css_set() is in progress.
+ 	 */
+ 	down_read(&css_set_rwsem);
+ 	empty = list_empty(&cgrp->cset_links);
+@@ -4266,7 +4262,7 @@ void cgroup_exit(struct task_struct *tsk, int run_callbacks)
+ 	}
+ 	task_unlock(tsk);
+ 
+-	put_css_set_taskexit(cset);
++	put_css_set(cset, true);
+ }
+ 
+ static void check_for_release(struct cgroup *cgrp)
 -- 
 1.8.5.3
