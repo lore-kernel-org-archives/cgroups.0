@@ -1,8 +1,7 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 10/16] cgroup: separate out put_css_set_locked() and remove
-	put_css_set_taskexit()
-Date: Sun,  9 Feb 2014 08:52:38 -0500
-Message-ID: <1391953964-22088-11-git-send-email-tj@kernel.org>
+Subject: [PATCH 12/16] cgroup: drop @skip_css from cgroup_taskset_for_each()
+Date: Sun,  9 Feb 2014 08:52:40 -0500
+Message-ID: <1391953964-22088-13-git-send-email-tj@kernel.org>
 References: <1391953964-22088-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,13 +9,13 @@ Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=e73zbqkOUE+OMpNC8MJIxmjFOiRWYod4T2/MqiYhJ+Y=;
-	b=DkVAWeu9s804VeKBrpO+1W7M0QkSK/rRSkWRPMSwh9e5hHG1bT8grlnyT9246b6uim
-	GxKzmqKiklzCvSiUgwCq4yGPGOhK2cFX0uBlUTg7ZlpOye6qMJw82OVRwstMWEzy6UOm
-	S0QvykCmxUcQ9cby6LIjp2oQoWzLJ9zKcXFpEGgTXHgXq+JnL4scHR/TtzBr8372V4bx
-	tuvY5FF8UwcwvhM21jTf+5lSM6391b8KW8Sw6lR5Tk9i+tvoEOm1rtKBVw7EjpQBSKcA
-	frwriBLqArQj0oaYIsOFTnpWWdN8x4jNlTsmrFB5fVQFGSxuYmHse8nBBVVfa1WbEwiJ
-	8PCg==
+	bh=TssyBHW1hYVy89xjW5NzhyDqO28ijRdVhS6hkmlSPac=;
+	b=oVtBumR42WRTsCY/xUB94M/ovL6bDjxC6YtGx8/kwsm1Jto1wpxq0OKiLZjXnU0/Ym
+	jd6HbPmJiYZuswyypQEwt32l03JmxQQNvfR8nrwNw5LZjzVjC+AmFMtYIX94DJ2vE9Si
+	vTkBiuADnP+22Ht/1YoXtjmMV5Xs2N39Q2fU/OebwLczTLS56PXu1I3YH2BN6KExZefm
+	TLtonNVdGKNc6wXaJfGGu9AoSauwCgu/w9zY76yUXrMCyjhPTNJkVsh0PtCgXzpznX2G
+	GGW5/qtpV/T1pawmrjAgWbU5oLbQAZuBf+RIXTkY/XaTL2IPqzV0Vr/U08K8uYPKVs9o
+	PeVQ==
 In-Reply-To: <1391953964-22088-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -29,135 +28,163 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Borkmann <dborkman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-put_css_set() is performed in two steps - it first tries to put
-without grabbing css_set_rwsem if such put wouldn't make the count
-zero.  If that fails, it puts after write-locking css_set_rwsem.  This
-patch separates out the second phase into put_css_set_locked() which
-should be called with css_set_rwsem locked.
-
-Also, put_css_set_taskexit() is droped and put_css_set() is made to
-take @taskexit.  There are only a handful users of these functions.
-No point in providing different variants.
-
-put_css_locked() will be used by later changes.  This patch doesn't
-introduce any functional changes.
+If !NULL, @skip_css makes cgroup_taskset_for_each() skip the matching
+css.  The intention of the interface is to make it easy to skip css's
+(cgroup_subsys_states) which already match the migration target;
+however, this is entirely unnecessary as migration taskset doesn't
+include tasks which are already in the target cgroup.  Drop @skip_css
+from cgroup_taskset_for_each().
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
+Cc: Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>
+Cc: Daniel Borkmann <dborkman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- kernel/cgroup.c | 50 +++++++++++++++++++++++---------------------------
- 1 file changed, 23 insertions(+), 27 deletions(-)
+ block/blk-cgroup.c           | 2 +-
+ include/linux/cgroup.h       | 8 ++------
+ kernel/cgroup_freezer.c      | 2 +-
+ kernel/cpuset.c              | 4 ++--
+ kernel/events/core.c         | 2 +-
+ kernel/sched/core.c          | 4 ++--
+ net/core/netclassid_cgroup.c | 2 +-
+ net/core/netprio_cgroup.c    | 2 +-
+ 8 files changed, 11 insertions(+), 15 deletions(-)
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 8c1f840..63d1a4e 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -369,22 +369,14 @@ static unsigned long css_set_hash(struct cgroup_subsys_state *css[])
- 	return key;
- }
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 1cef07c..4aefd46 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -894,7 +894,7 @@ static int blkcg_can_attach(struct cgroup_subsys_state *css,
+ 	int ret = 0;
  
--static void __put_css_set(struct css_set *cset, int taskexit)
-+static void put_css_set_locked(struct css_set *cset, bool taskexit)
- {
- 	struct cgrp_cset_link *link, *tmp_link;
- 
--	/*
--	 * Ensure that the refcount doesn't hit zero while any readers
--	 * can see it. Similar to atomic_dec_and_lock(), but for an
--	 * rwlock
--	 */
--	if (atomic_add_unless(&cset->refcount, -1, 1))
--		return;
--	down_write(&css_set_rwsem);
--	if (!atomic_dec_and_test(&cset->refcount)) {
--		up_write(&css_set_rwsem);
-+	lockdep_assert_held(&css_set_rwsem);
-+
-+	if (!atomic_dec_and_test(&cset->refcount))
- 		return;
--	}
- 
- 	/* This css_set is dead. unlink it and release cgroup refcounts */
- 	hash_del(&cset->hlist);
-@@ -406,10 +398,24 @@ static void __put_css_set(struct css_set *cset, int taskexit)
- 		kfree(link);
- 	}
- 
--	up_write(&css_set_rwsem);
- 	kfree_rcu(cset, rcu_head);
- }
- 
-+static void put_css_set(struct css_set *cset, bool taskexit)
-+{
-+	/*
-+	 * Ensure that the refcount doesn't hit zero while any readers
-+	 * can see it. Similar to atomic_dec_and_lock(), but for an
-+	 * rwlock
-+	 */
-+	if (atomic_add_unless(&cset->refcount, -1, 1))
-+		return;
-+
-+	down_write(&css_set_rwsem);
-+	put_css_set_locked(cset, taskexit);
-+	up_write(&css_set_rwsem);
-+}
-+
- /*
-  * refcounted get/put for css_set objects
+ 	/* task_lock() is needed to avoid races with exit_io_context() */
+-	cgroup_taskset_for_each(task, css, tset) {
++	cgroup_taskset_for_each(task, tset) {
+ 		task_lock(task);
+ 		ioc = task->io_context;
+ 		if (ioc && atomic_read(&ioc->nr_tasks) > 1)
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index db5ccf4..3c67883 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -533,15 +533,11 @@ int cgroup_taskset_size(struct cgroup_taskset *tset);
+ /**
+  * cgroup_taskset_for_each - iterate cgroup_taskset
+  * @task: the loop cursor
+- * @skip_css: skip if task's css matches this, %NULL to iterate through all
+  * @tset: taskset to iterate
   */
-@@ -418,16 +424,6 @@ static inline void get_css_set(struct css_set *cset)
- 	atomic_inc(&cset->refcount);
- }
+-#define cgroup_taskset_for_each(task, skip_css, tset)			\
++#define cgroup_taskset_for_each(task, tset)				\
+ 	for ((task) = cgroup_taskset_first((tset)); (task);		\
+-	     (task) = cgroup_taskset_next((tset)))			\
+-		if (!(skip_css) ||					\
+-		    cgroup_taskset_cur_css((tset),			\
+-			(skip_css)->ss->id) != (skip_css))
++	     (task) = cgroup_taskset_next((tset)))
  
--static inline void put_css_set(struct css_set *cset)
--{
--	__put_css_set(cset, 0);
--}
--
--static inline void put_css_set_taskexit(struct css_set *cset)
--{
--	__put_css_set(cset, 1);
--}
--
- /**
-  * compare_css_sets - helper function for find_existing_css_set().
-  * @cset: candidate css_set being tested
-@@ -1751,7 +1747,7 @@ static void cgroup_task_migrate(struct cgroup *old_cgrp,
- 	 * we're safe to drop it here; it will be freed under RCU.
+ /*
+  * Control Group subsystem type.
+diff --git a/kernel/cgroup_freezer.c b/kernel/cgroup_freezer.c
+index 98ea26a9..7201a63 100644
+--- a/kernel/cgroup_freezer.c
++++ b/kernel/cgroup_freezer.c
+@@ -187,7 +187,7 @@ static void freezer_attach(struct cgroup_subsys_state *new_css,
+ 	 * current state before executing the following - !frozen tasks may
+ 	 * be visible in a FROZEN cgroup and frozen tasks in a THAWED one.
  	 */
- 	set_bit(CGRP_RELEASABLE, &old_cgrp->flags);
--	put_css_set(old_cset);
-+	put_css_set(old_cset, false);
+-	cgroup_taskset_for_each(task, new_css, tset) {
++	cgroup_taskset_for_each(task, tset) {
+ 		if (!(freezer->state & CGROUP_FREEZING)) {
+ 			__thaw_task(task);
+ 		} else {
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index 65ae0bd..bf20e4a 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -1398,7 +1398,7 @@ static int cpuset_can_attach(struct cgroup_subsys_state *css,
+ 	    (cpumask_empty(cs->cpus_allowed) || nodes_empty(cs->mems_allowed)))
+ 		goto out_unlock;
+ 
+-	cgroup_taskset_for_each(task, css, tset) {
++	cgroup_taskset_for_each(task, tset) {
+ 		/*
+ 		 * Kthreads which disallow setaffinity shouldn't be moved
+ 		 * to a new cpuset; we don't want to change their cpu
+@@ -1467,7 +1467,7 @@ static void cpuset_attach(struct cgroup_subsys_state *css,
+ 
+ 	guarantee_online_mems(mems_cs, &cpuset_attach_nodemask_to);
+ 
+-	cgroup_taskset_for_each(task, css, tset) {
++	cgroup_taskset_for_each(task, tset) {
+ 		/*
+ 		 * can_attach beforehand should guarantee that this doesn't
+ 		 * fail.  TODO: have a better way to handle failure here
+diff --git a/kernel/events/core.c b/kernel/events/core.c
+index a3c3ab5..6dd7149 100644
+--- a/kernel/events/core.c
++++ b/kernel/events/core.c
+@@ -8021,7 +8021,7 @@ static void perf_cgroup_attach(struct cgroup_subsys_state *css,
+ {
+ 	struct task_struct *task;
+ 
+-	cgroup_taskset_for_each(task, css, tset)
++	cgroup_taskset_for_each(task, tset)
+ 		task_function_call(task, __perf_cgroup_move, task);
  }
  
- /**
-@@ -1897,7 +1893,7 @@ out_put_css_set_refs:
- 			tc = flex_array_get(group, i);
- 			if (!tc->cset)
- 				break;
--			put_css_set(tc->cset);
-+			put_css_set(tc->cset, false);
- 		}
- 	}
- out_cancel_attach:
-@@ -3714,7 +3710,7 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index d4cfc55..ba386a0 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -7600,7 +7600,7 @@ static int cpu_cgroup_can_attach(struct cgroup_subsys_state *css,
+ {
+ 	struct task_struct *task;
  
- 	/*
- 	 * css_set_rwsem synchronizes access to ->cset_links and prevents
--	 * @cgrp from being removed while __put_css_set() is in progress.
-+	 * @cgrp from being removed while put_css_set() is in progress.
- 	 */
- 	down_read(&css_set_rwsem);
- 	empty = list_empty(&cgrp->cset_links);
-@@ -4266,7 +4262,7 @@ void cgroup_exit(struct task_struct *tsk, int run_callbacks)
- 	}
- 	task_unlock(tsk);
+-	cgroup_taskset_for_each(task, css, tset) {
++	cgroup_taskset_for_each(task, tset) {
+ #ifdef CONFIG_RT_GROUP_SCHED
+ 		if (!sched_rt_can_attach(css_tg(css), task))
+ 			return -EINVAL;
+@@ -7618,7 +7618,7 @@ static void cpu_cgroup_attach(struct cgroup_subsys_state *css,
+ {
+ 	struct task_struct *task;
  
--	put_css_set_taskexit(cset);
-+	put_css_set(cset, true);
+-	cgroup_taskset_for_each(task, css, tset)
++	cgroup_taskset_for_each(task, tset)
+ 		sched_move_task(task);
  }
  
- static void check_for_release(struct cgroup *cgrp)
+diff --git a/net/core/netclassid_cgroup.c b/net/core/netclassid_cgroup.c
+index b865662..22931e1 100644
+--- a/net/core/netclassid_cgroup.c
++++ b/net/core/netclassid_cgroup.c
+@@ -73,7 +73,7 @@ static void cgrp_attach(struct cgroup_subsys_state *css,
+ 	void *v = (void *)(unsigned long)cs->classid;
+ 	struct task_struct *p;
+ 
+-	cgroup_taskset_for_each(p, css, tset) {
++	cgroup_taskset_for_each(p, tset) {
+ 		task_lock(p);
+ 		iterate_fd(p->files, 0, update_classid, v);
+ 		task_unlock(p);
+diff --git a/net/core/netprio_cgroup.c b/net/core/netprio_cgroup.c
+index d7d23e2..f9f3a40 100644
+--- a/net/core/netprio_cgroup.c
++++ b/net/core/netprio_cgroup.c
+@@ -224,7 +224,7 @@ static void net_prio_attach(struct cgroup_subsys_state *css,
+ 	struct task_struct *p;
+ 	void *v = (void *)(unsigned long)css->cgroup->id;
+ 
+-	cgroup_taskset_for_each(p, css, tset) {
++	cgroup_taskset_for_each(p, tset) {
+ 		task_lock(p);
+ 		iterate_fd(p->files, 0, update_netprio, v);
+ 		task_unlock(p);
 -- 
 1.8.5.3
