@@ -1,139 +1,172 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 05/16] cgroup: implement cgroup_has_tasks() and unexport
- cgroup_task_count()
-Date: Mon, 10 Feb 2014 13:36:36 +0100
-Message-ID: <20140210123636.GC7117@dhcp22.suse.cz>
-References: <1391953964-22088-1-git-send-email-tj@kernel.org>
- <1391953964-22088-6-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+From: "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: mm: memcg: A infinite loop in __handle_mm_fault()
+Date: Mon, 10 Feb 2014 14:56:55 +0200 (EET)
+Message-ID: <20140210125655.4AB48E0090@blue.fi.intel.com>
+References: <52F81C5D.6010601@jp.fujitsu.com>
+ <20140210111928.GA7117@dhcp22.suse.cz>
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=4o0rdpfGX5PNoB4fL8YZiH+/U1Jn6954KkaagDC/lSY=;
-        b=dNTOucBtKKOTHIvBgbEYZ1NB6ItYU6/XiEw/bYR6oTlV9/BljZqLVrKuebxgF6NQ3b
-         2sJ0v5d4v96tdSKJBuZlB2mslDxMUxu3zpAnjQjljepFPPp9U3OUbadPVlmUmfpT/y5c
-         j6hsP4/hn1G96xRc79CxtEG4E6on8nR04evYqIFoGrrnxG7pyVLlYDNiC5+Zc0caXBY1
-         ToO/N4eP10od7oWh1HNe42OE1IwiiNNuFbQfOC/BnZHwgF5Gk1lPjcNFKtPG/h5WBDPV
-         iptfRzUk96J/Fw99UvqfV/ObaSjHsZdAeOVWiQa8zEZkx6dn5FlwLStRcBhkhVTNyHrx
-         vCPA==
-Content-Disposition: inline
-In-Reply-To: <1391953964-22088-6-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <20140210111928.GA7117-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: "Mizuma, Masayoshi" <m.mizuma-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 
-On Sun 09-02-14 08:52:33, Tejun Heo wrote:
-> cgroup_task_count() read-locks css_set_lock and walks all tasks to
-> count them and then returns the result.  The only thing all the users
-> want is determining whether the cgroup is empty or not.  This patch
-> implements cgroup_has_tasks() which tests whether cgroup->cset_links
-> is empty, replaces all cgroup_task_count() usages and unexports it.
+Michal Hocko wrote:
+> [CCing Kirill]
 > 
-> Note that the test isn't synchronized.  This is the same as before.
-> The test has always been racy.
+> On Mon 10-02-14 09:25:01, Mizuma, Masayoshi wrote:
+> > Hi,
 > 
-> This will help planned css_set locking update.
+> Hi,
 > 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> Cc: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Cc: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+> > This is a bug report for memory cgroup hang up.
+> > I reproduced this using 3.14-rc1 but I couldn't in 3.7.
+> > 
+> > When I ran a program (see below) under a limit of memcg, the process hanged up.
+> > Using kprobe trace, I detected the hangup in __handle_mm_fault().
+> > do_huge_pmd_wp_page(), which is called by __handle_mm_fault(), always returns
+> > VM_FAULT_OOM, so it repeats goto retry and the task can't be killed.
+> 
+> Thanks a lot for this very good report. I would bet the issue is related
+> to the THP zero page.
+> 
+> __handle_mm_fault retry loop for VM_FAULT_OOM from do_huge_pmd_wp_page
+> expects that the pmd is marked for splitting so that it can break out
+> and retry the fault. This is not the case for THP zero page though.
+> do_huge_pmd_wp_page checks is_huge_zero_pmd and goes to allocate a new
+> huge page which will succeed in your case because you are hitting memcg
+> limit not the global memory pressure. But then a new page is charged by
+> mem_cgroup_newpage_charge which fails. An existing page is then split
+> and we are returning VM_FAULT_OOM. But we do not have page initialized
+> in that path because page = pmd_page(orig_pmd) is called after
+> is_huge_zero_pmd check.
+> 
+> I am not familiar with THP zero page code much but I guess splitting
+> such a zero page is not a way to go. Instead we should simply drop the
+> zero page and retry the fault. I would assume that one of
+> do_huge_pmd_wp_zero_page_fallback or do_huge_pmd_wp_page_fallback should
+> do the trick but both of them try to charge new page(s) before the
+> current zero page is uncharged. That makes it prone to the same issue
+> AFAICS.
+> 
+> But may be Kirill has a better idea.
 
-Looks good.
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Your analysis looks accurate. Although I was not able to reproduce
+hang up.
 
-> ---
->  include/linux/cgroup.h | 8 ++++++--
->  kernel/cgroup.c        | 2 +-
->  kernel/cpuset.c        | 2 +-
->  mm/memcontrol.c        | 4 ++--
->  4 files changed, 10 insertions(+), 6 deletions(-)
-> 
-> diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-> index 8ca31c1..f173cfb 100644
-> --- a/include/linux/cgroup.h
-> +++ b/include/linux/cgroup.h
-> @@ -455,6 +455,12 @@ static inline bool cgroup_sane_behavior(const struct cgroup *cgrp)
->  	return cgrp->root->flags & CGRP_ROOT_SANE_BEHAVIOR;
->  }
->  
-> +/* no synchronization, the result can only be used as a hint */
-> +static inline bool cgroup_has_tasks(struct cgroup *cgrp)
-> +{
-> +	return !list_empty(&cgrp->cset_links);
-> +}
-> +
->  /* returns ino associated with a cgroup, 0 indicates unmounted root */
->  static inline ino_t cgroup_ino(struct cgroup *cgrp)
->  {
-> @@ -514,8 +520,6 @@ int cgroup_rm_cftypes(struct cftype *cfts);
->  
->  bool cgroup_is_descendant(struct cgroup *cgrp, struct cgroup *ancestor);
->  
-> -int cgroup_task_count(const struct cgroup *cgrp);
-> -
->  /*
->   * Control Group taskset, used to pass around set of tasks to cgroup_subsys
->   * methods.
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index 1ebc6e30..96a3a85 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -2390,7 +2390,7 @@ EXPORT_SYMBOL_GPL(cgroup_add_cftypes);
->   *
->   * Return the number of tasks in the cgroup.
->   */
-> -int cgroup_task_count(const struct cgroup *cgrp)
-> +static int cgroup_task_count(const struct cgroup *cgrp)
->  {
->  	int count = 0;
->  	struct cgrp_cset_link *link;
-> diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-> index e97a6e8..ae190b0 100644
-> --- a/kernel/cpuset.c
-> +++ b/kernel/cpuset.c
-> @@ -467,7 +467,7 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
->  	 * be changed to have empty cpus_allowed or mems_allowed.
->  	 */
->  	ret = -ENOSPC;
-> -	if ((cgroup_task_count(cur->css.cgroup) || cur->attach_in_progress)) {
-> +	if ((cgroup_has_tasks(cur->css.cgroup) || cur->attach_in_progress)) {
->  		if (!cpumask_empty(cur->cpus_allowed) &&
->  		    cpumask_empty(trial->cpus_allowed))
->  			goto out;
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index c1c2549..d9c6ac1 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -4958,7 +4958,7 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg)
->  	struct cgroup *cgrp = memcg->css.cgroup;
->  
->  	/* returns EBUSY if there is a task or if we come here twice. */
-> -	if (cgroup_task_count(cgrp) || !list_empty(&cgrp->children))
-> +	if (cgroup_has_tasks(cgrp) || !list_empty(&cgrp->children))
->  		return -EBUSY;
->  
->  	/* we call try-to-free pages for make this cgroup empty */
-> @@ -5140,7 +5140,7 @@ static int __memcg_activate_kmem(struct mem_cgroup *memcg,
->  	 * of course permitted.
->  	 */
->  	mutex_lock(&memcg_create_mutex);
-> -	if (cgroup_task_count(memcg->css.cgroup) || memcg_has_children(memcg))
-> +	if (cgroup_has_tasks(memcg->css.cgroup) || memcg_has_children(memcg))
->  		err = -EBUSY;
->  	mutex_unlock(&memcg_create_mutex);
->  	if (err)
-> -- 
-> 1.8.5.3
-> 
+The problem with do_huge_pmd_wp_zero_page_fallback() that it can return
+VM_FAULT_OOM if it failed to allocate new *small* page, so it's real OOM.
 
+Untested patch below tries to fix. Masayoshi, could you test.
+
+BTW, Michal, I've triggered sleep-in-atomic bug in
+mem_cgroup_print_oom_info():
+
+[    2.386563] Task in /test killed as a result of limit of /test
+[    2.387326] memory: usage 10240kB, limit 10240kB, failcnt 51
+[    2.388098] memory+swap: usage 10240kB, limit 10240kB, failcnt 0
+[    2.388861] kmem: usage 0kB, limit 18014398509481983kB, failcnt 0
+[    2.389640] Memory cgroup stats for /test:
+[    2.390178] BUG: sleeping function called from invalid context at /home/space/kas/git/public/linux/kernel/cpu.c:68
+[    2.391516] in_atomic(): 1, irqs_disabled(): 0, pid: 66, name: memcg_test
+[    2.392416] 2 locks held by memcg_test/66:
+[    2.392945]  #0:  (memcg_oom_lock#2){+.+...}, at: [<ffffffff81131014>] pagefault_out_of_memory+0x14/0x90
+[    2.394233]  #1:  (oom_info_lock){+.+...}, at: [<ffffffff81197b2a>] mem_cgroup_print_oom_info+0x2a/0x390
+[    2.395496] CPU: 2 PID: 66 Comm: memcg_test Not tainted 3.14.0-rc1-dirty #745
+[    2.396536] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS Bochs 01/01/2011
+[    2.397540]  ffffffff81a3cc90 ffff88081d26dba0 ffffffff81776ea3 0000000000000000
+[    2.398541]  ffff88081d26dbc8 ffffffff8108418a 0000000000000000 ffff88081d15c000
+[    2.399533]  0000000000000000 ffff88081d26dbd8 ffffffff8104f6bc ffff88081d26dc10
+[    2.400588] Call Trace:
+[    2.400908]  [<ffffffff81776ea3>] dump_stack+0x4d/0x66
+[    2.401578]  [<ffffffff8108418a>] __might_sleep+0x16a/0x210
+[    2.402295]  [<ffffffff8104f6bc>] get_online_cpus+0x1c/0x60
+[    2.403005]  [<ffffffff8118fb67>] mem_cgroup_read_stat+0x27/0xb0
+[    2.403769]  [<ffffffff81197d60>] mem_cgroup_print_oom_info+0x260/0x390
+[    2.404653]  [<ffffffff8177314e>] dump_header+0x88/0x251
+[    2.405342]  [<ffffffff810a3bfd>] ? trace_hardirqs_on+0xd/0x10
+[    2.406098]  [<ffffffff81130618>] oom_kill_process+0x258/0x3d0
+[    2.406833]  [<ffffffff81198746>] mem_cgroup_oom_synchronize+0x656/0x6c0
+[    2.407674]  [<ffffffff811973a0>] ? mem_cgroup_charge_common+0xd0/0xd0
+[    2.408553]  [<ffffffff81131014>] pagefault_out_of_memory+0x14/0x90
+[    2.409354]  [<ffffffff817712f7>] mm_fault_error+0x91/0x189
+[    2.410069]  [<ffffffff81783eae>] __do_page_fault+0x48e/0x580
+[    2.410791]  [<ffffffff8108f656>] ? local_clock+0x16/0x30
+[    2.411467]  [<ffffffff810a3bfd>] ? trace_hardirqs_on+0xd/0x10
+[    2.412248]  [<ffffffff8177f6fc>] ? _raw_spin_unlock_irq+0x2c/0x40
+[    2.413039]  [<ffffffff8108312b>] ? finish_task_switch+0x7b/0x100
+[    2.413821]  [<ffffffff813b954a>] ? trace_hardirqs_off_thunk+0x3a/0x3c
+[    2.414652]  [<ffffffff81783fae>] do_page_fault+0xe/0x10
+[    2.415330]  [<ffffffff81780552>] page_fault+0x22/0x30
+
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 82166bf974e1..974eb9eea2c0 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -1166,8 +1166,10 @@ alloc:
+ 		} else {
+ 			ret = do_huge_pmd_wp_page_fallback(mm, vma, address,
+ 					pmd, orig_pmd, page, haddr);
+-			if (ret & VM_FAULT_OOM)
++			if (ret & VM_FAULT_OOM) {
+ 				split_huge_page(page);
++				ret |= VM_FAULT_FALLBACK;
++			}
+ 			put_page(page);
+ 		}
+ 		count_vm_event(THP_FAULT_FALLBACK);
+@@ -1179,9 +1181,12 @@ alloc:
+ 		if (page) {
+ 			split_huge_page(page);
+ 			put_page(page);
++			ret |= VM_FAULT_FALLBACK;
++		} else {
++			ret = do_huge_pmd_wp_zero_page_fallback(mm, vma,
++					address, pmd, orig_pmd, haddr);
+ 		}
+ 		count_vm_event(THP_FAULT_FALLBACK);
+-		ret |= VM_FAULT_OOM;
+ 		goto out;
+ 	}
+ 
+diff --git a/mm/memory.c b/mm/memory.c
+index be6a0c0d4ae0..3b57b7864667 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -3703,7 +3703,6 @@ static int __handle_mm_fault(struct mm_struct *mm, struct vm_area_struct *vma,
+ 	if (unlikely(is_vm_hugetlb_page(vma)))
+ 		return hugetlb_fault(mm, vma, address, flags);
+ 
+-retry:
+ 	pgd = pgd_offset(mm, address);
+ 	pud = pud_alloc(mm, pgd, address);
+ 	if (!pud)
+@@ -3741,20 +3740,13 @@ retry:
+ 			if (dirty && !pmd_write(orig_pmd)) {
+ 				ret = do_huge_pmd_wp_page(mm, vma, address, pmd,
+ 							  orig_pmd);
+-				/*
+-				 * If COW results in an oom, the huge pmd will
+-				 * have been split, so retry the fault on the
+-				 * pte for a smaller charge.
+-				 */
+-				if (unlikely(ret & VM_FAULT_OOM))
+-					goto retry;
+-				return ret;
++				if (!(ret & VM_FAULT_FALLBACK))
++					return ret;
+ 			} else {
+ 				huge_pmd_set_accessed(mm, vma, address, pmd,
+ 						      orig_pmd, dirty);
++				return 0;
+ 			}
+-
+-			return 0;
+ 		}
+ 	}
+ 
 -- 
-Michal Hocko
-SUSE Labs
+ Kirill A. Shutemov
