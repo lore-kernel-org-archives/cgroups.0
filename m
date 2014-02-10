@@ -1,190 +1,247 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 12/16] cgroup: drop @skip_css from cgroup_taskset_for_each()
-Date: Sun,  9 Feb 2014 08:52:40 -0500
-Message-ID: <1391953964-22088-13-git-send-email-tj@kernel.org>
-References: <1391953964-22088-1-git-send-email-tj@kernel.org>
+From: "Mizuma, Masayoshi" <m.mizuma-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: mm: memcg: A infinite loop in __handle_mm_fault()
+Date: Mon, 10 Feb 2014 09:25:01 +0900
+Message-ID: <52F81C5D.6010601@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=TssyBHW1hYVy89xjW5NzhyDqO28ijRdVhS6hkmlSPac=;
-	b=oVtBumR42WRTsCY/xUB94M/ovL6bDjxC6YtGx8/kwsm1Jto1wpxq0OKiLZjXnU0/Ym
-	jd6HbPmJiYZuswyypQEwt32l03JmxQQNvfR8nrwNw5LZjzVjC+AmFMtYIX94DJ2vE9Si
-	vTkBiuADnP+22Ht/1YoXtjmMV5Xs2N39Q2fU/OebwLczTLS56PXu1I3YH2BN6KExZefm
-	TLtonNVdGKNc6wXaJfGGu9AoSauwCgu/w9zY76yUXrMCyjhPTNJkVsh0PtCgXzpznX2G
-	GGW5/qtpV/T1pawmrjAgWbU5oLbQAZuBf+RIXTkY/XaTL2IPqzV0Vr/U08K8uYPKVs9o
-	PeVQ==
-In-Reply-To: <1391953964-22088-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Borkmann <dborkman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-If !NULL, @skip_css makes cgroup_taskset_for_each() skip the matching
-css.  The intention of the interface is to make it easy to skip css's
-(cgroup_subsys_states) which already match the migration target;
-however, this is entirely unnecessary as migration taskset doesn't
-include tasks which are already in the target cgroup.  Drop @skip_css
-from cgroup_taskset_for_each().
+Hi,
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
-Cc: Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Arnaldo Carvalho de Melo <acme-f8uhVLnGfZaxAyOMLChx1axOck334EZe@public.gmane.org>
-Cc: Daniel Borkmann <dborkman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- block/blk-cgroup.c           | 2 +-
- include/linux/cgroup.h       | 8 ++------
- kernel/cgroup_freezer.c      | 2 +-
- kernel/cpuset.c              | 4 ++--
- kernel/events/core.c         | 2 +-
- kernel/sched/core.c          | 4 ++--
- net/core/netclassid_cgroup.c | 2 +-
- net/core/netprio_cgroup.c    | 2 +-
- 8 files changed, 11 insertions(+), 15 deletions(-)
+This is a bug report for memory cgroup hang up.
+I reproduced this using 3.14-rc1 but I couldn't in 3.7.
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 1cef07c..4aefd46 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -894,7 +894,7 @@ static int blkcg_can_attach(struct cgroup_subsys_state *css,
- 	int ret = 0;
- 
- 	/* task_lock() is needed to avoid races with exit_io_context() */
--	cgroup_taskset_for_each(task, css, tset) {
-+	cgroup_taskset_for_each(task, tset) {
- 		task_lock(task);
- 		ioc = task->io_context;
- 		if (ioc && atomic_read(&ioc->nr_tasks) > 1)
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index db5ccf4..3c67883 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -533,15 +533,11 @@ int cgroup_taskset_size(struct cgroup_taskset *tset);
- /**
-  * cgroup_taskset_for_each - iterate cgroup_taskset
-  * @task: the loop cursor
-- * @skip_css: skip if task's css matches this, %NULL to iterate through all
-  * @tset: taskset to iterate
-  */
--#define cgroup_taskset_for_each(task, skip_css, tset)			\
-+#define cgroup_taskset_for_each(task, tset)				\
- 	for ((task) = cgroup_taskset_first((tset)); (task);		\
--	     (task) = cgroup_taskset_next((tset)))			\
--		if (!(skip_css) ||					\
--		    cgroup_taskset_cur_css((tset),			\
--			(skip_css)->ss->id) != (skip_css))
-+	     (task) = cgroup_taskset_next((tset)))
- 
- /*
-  * Control Group subsystem type.
-diff --git a/kernel/cgroup_freezer.c b/kernel/cgroup_freezer.c
-index 98ea26a9..7201a63 100644
---- a/kernel/cgroup_freezer.c
-+++ b/kernel/cgroup_freezer.c
-@@ -187,7 +187,7 @@ static void freezer_attach(struct cgroup_subsys_state *new_css,
- 	 * current state before executing the following - !frozen tasks may
- 	 * be visible in a FROZEN cgroup and frozen tasks in a THAWED one.
- 	 */
--	cgroup_taskset_for_each(task, new_css, tset) {
-+	cgroup_taskset_for_each(task, tset) {
- 		if (!(freezer->state & CGROUP_FREEZING)) {
- 			__thaw_task(task);
- 		} else {
-diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index 65ae0bd..bf20e4a 100644
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -1398,7 +1398,7 @@ static int cpuset_can_attach(struct cgroup_subsys_state *css,
- 	    (cpumask_empty(cs->cpus_allowed) || nodes_empty(cs->mems_allowed)))
- 		goto out_unlock;
- 
--	cgroup_taskset_for_each(task, css, tset) {
-+	cgroup_taskset_for_each(task, tset) {
- 		/*
- 		 * Kthreads which disallow setaffinity shouldn't be moved
- 		 * to a new cpuset; we don't want to change their cpu
-@@ -1467,7 +1467,7 @@ static void cpuset_attach(struct cgroup_subsys_state *css,
- 
- 	guarantee_online_mems(mems_cs, &cpuset_attach_nodemask_to);
- 
--	cgroup_taskset_for_each(task, css, tset) {
-+	cgroup_taskset_for_each(task, tset) {
- 		/*
- 		 * can_attach beforehand should guarantee that this doesn't
- 		 * fail.  TODO: have a better way to handle failure here
-diff --git a/kernel/events/core.c b/kernel/events/core.c
-index a3c3ab5..6dd7149 100644
---- a/kernel/events/core.c
-+++ b/kernel/events/core.c
-@@ -8021,7 +8021,7 @@ static void perf_cgroup_attach(struct cgroup_subsys_state *css,
- {
- 	struct task_struct *task;
- 
--	cgroup_taskset_for_each(task, css, tset)
-+	cgroup_taskset_for_each(task, tset)
- 		task_function_call(task, __perf_cgroup_move, task);
- }
- 
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index d4cfc55..ba386a0 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -7600,7 +7600,7 @@ static int cpu_cgroup_can_attach(struct cgroup_subsys_state *css,
- {
- 	struct task_struct *task;
- 
--	cgroup_taskset_for_each(task, css, tset) {
-+	cgroup_taskset_for_each(task, tset) {
- #ifdef CONFIG_RT_GROUP_SCHED
- 		if (!sched_rt_can_attach(css_tg(css), task))
- 			return -EINVAL;
-@@ -7618,7 +7618,7 @@ static void cpu_cgroup_attach(struct cgroup_subsys_state *css,
- {
- 	struct task_struct *task;
- 
--	cgroup_taskset_for_each(task, css, tset)
-+	cgroup_taskset_for_each(task, tset)
- 		sched_move_task(task);
- }
- 
-diff --git a/net/core/netclassid_cgroup.c b/net/core/netclassid_cgroup.c
-index b865662..22931e1 100644
---- a/net/core/netclassid_cgroup.c
-+++ b/net/core/netclassid_cgroup.c
-@@ -73,7 +73,7 @@ static void cgrp_attach(struct cgroup_subsys_state *css,
- 	void *v = (void *)(unsigned long)cs->classid;
- 	struct task_struct *p;
- 
--	cgroup_taskset_for_each(p, css, tset) {
-+	cgroup_taskset_for_each(p, tset) {
- 		task_lock(p);
- 		iterate_fd(p->files, 0, update_classid, v);
- 		task_unlock(p);
-diff --git a/net/core/netprio_cgroup.c b/net/core/netprio_cgroup.c
-index d7d23e2..f9f3a40 100644
---- a/net/core/netprio_cgroup.c
-+++ b/net/core/netprio_cgroup.c
-@@ -224,7 +224,7 @@ static void net_prio_attach(struct cgroup_subsys_state *css,
- 	struct task_struct *p;
- 	void *v = (void *)(unsigned long)css->cgroup->id;
- 
--	cgroup_taskset_for_each(p, css, tset) {
-+	cgroup_taskset_for_each(p, tset) {
- 		task_lock(p);
- 		iterate_fd(p->files, 0, update_netprio, v);
- 		task_unlock(p);
--- 
-1.8.5.3
+When I ran a program (see below) under a limit of memcg, the process hanged up.
+Using kprobe trace, I detected the hangup in __handle_mm_fault().
+do_huge_pmd_wp_page(), which is called by __handle_mm_fault(), always returns
+VM_FAULT_OOM, so it repeats goto retry and the task can't be killed.
+--------------------------------------------------
+static int __handle_mm_fault(struct mm_struct *mm, struct vm_area_struct *vma,
+                             unsigned long address, unsigned int flags)
+{Hi all,
+
+This is a bug report for memory cgroup hang up.
+I reproduced this using 3.14-rc1 but I couldn't in 3.7.
+
+When I ran a program (see below) under a limit of memcg, the process hangs up.
+Using kprobe trace, I detected the hangup in __handle_mm_fault().
+do_huge_pmd_wp_page(), which is called by __handle_mm_fault(), always returns
+VM_FAULT_OOM but the task can't be killed.
+It seems to be in infinite loop and the process is never killed.
+
+--------------------------------------------------
+static int __handle_mm_fault(struct mm_struct *mm, struct vm_area_struct *vma,
+                             unsigned long address, unsigned int flags)
+{
+...
+retry:
+        pgd = pgd_offset(mm, address);
+...
+                        if (dirty && !pmd_write(orig_pmd)) {
+                                ret = do_huge_pmd_wp_page(mm, vma, address, pmd,
+                                                          orig_pmd);
+                                /*
+                                 * If COW results in an oom, the huge pmd will
+                                 * have been split, so retry the fault on the
+                                 * pte for a smaller charge.
+                                 */
+                                if (unlikely(ret & VM_FAULT_OOM))
+                                        goto retry;
+--------------------------------------------------
+
+[Step to reproduce]
+
+1. Set memory cgroup as follows:
+
+--------------------------------------------------
+# mkdir /sys/fs/cgroup/memory/test
+# echo "6M" > /sys/fs/cgroup/memory/test/memory.limit_in_bytes
+# echo "6M" > /sys/fs/cgroup/memory/test/memory.memsw.limit_in_bytes 
+--------------------------------------------------
+
+2. Ran the following process (test.c).
+
+test.c:
+--------------------------------------------------
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#define SIZE 4*1024*1024
+#define HUGE 2*1024*1024
+#define PAGESIZE 4096
+#define NUM SIZE/PAGESIZE
+
+int main(void)
+{
+	char *a;
+	char *c;
+	int i;
+
+	/* wait until set cgroup limits */
+	sleep(1);
+
+	posix_memalign((void **)&a, HUGE, SIZE);
+	posix_memalign((void **)&c, HUGE, SIZE);
+
+	for (i = 0; i<NUM; i++) {
+		*(a + i * PAGESIZE) = *(c + i * PAGESIZE);
+	}
+
+	for (i = 0; i<NUM; i++) {
+		*(c + i * PAGESIZE) = *(a + i * PAGESIZE);
+	}
+
+	free(a);
+	free(c);
+	return 0;
+}
+--------------------------------------------------
+
+3. Add it to memory cgroup.
+--------------------------------------------------
+# ./test &
+# echo $! > /sys/fs/cgroup/memory/test/tasks
+--------------------------------------------------
+
+Then, the process will hangup.
+I checked the infinit loop by using kprobetrace.
+
+Setting of kprobetrace:
+--------------------------------------------------
+# echo 'p:do_huge_pmd_wp_page do_huge_pmd_wp_page address=%dx' > /sys/kernel/debug/tracing/kprobe_events
+# echo 'r:do_huge_pmd_wp_page_r do_huge_pmd_wp_page ret=$retval' >> /sys/kernel/debug/tracing/kprobe_events
+# echo 'r:mem_cgroup_newpage_charge mem_cgroup_newpage_charge ret=$retval' >> /sys/kernel/debug/tracing/kprobe_events
+# echo 'r:mem_cgroup_charge_common mem_cgroup_charge_common ret=$retval' >> /sys/kernel/debug/tracing/kprobe_events
+# echo 'r:__mem_cgroup_try_charge __mem_cgroup_try_charge ret=$retval' >> /sys/kernel/debug/tracing/kprobe_events
+# echo 1 > /sys/kernel/debug/tracing/events/kprobes/do_huge_pmd_wp_page/enable
+# echo 1 > /sys/kernel/debug/tracing/events/kprobes/do_huge_pmd_wp_page_r/enable
+# echo 1 > /sys/kernel/debug/tracing/events/kprobes/mem_cgroup_newpage_charge/enable
+# echo 1 > /sys/kernel/debug/tracing/events/kprobes/mem_cgroup_charge_common/enable
+# echo 1 > /sys/kernel/debug/tracing/events/kprobes/__mem_cgroup_try_charge/enable
+--------------------------------------------------
+
+The result:
+--------------------------------------------------
+test-2721  [001] dN..  2530.635679: do_huge_pmd_wp_page: (do_huge_pmd_wp_page+0x0/0xa90) address=0x7f55a4400000
+test-2721  [001] dN..  2530.635723: __mem_cgroup_try_charge: (mem_cgroup_charge_common+0x4a/0xa0 <- __mem_cgroup_try_charge) ret=0xfffffff4
+test-2721  [001] dN..  2530.635724: mem_cgroup_charge_common: (mem_cgroup_newpage_charge+0x26/0x30 <- mem_cgroup_charge_common) ret=0xfffffff4
+test-2721  [001] dN..  2530.635725: mem_cgroup_newpage_charge: (do_huge_pmd_wp_page+0x125/0xa90 <- mem_cgroup_newpage_charge) ret=0xfffffff4
+test-2721  [001] dN..  2530.635733: do_huge_pmd_wp_page_r: (handle_mm_fault+0x19e/0x4b0 <- do_huge_pmd_wp_page) ret=0x1
+test-2721  [001] dN..  2530.635735: do_huge_pmd_wp_page: (do_huge_pmd_wp_page+0x0/0xa90) address=0x7f55a4400000
+test-2721  [001] dN..  2530.635761: __mem_cgroup_try_charge: (mem_cgroup_charge_common+0x4a/0xa0 <- __mem_cgroup_try_charge) ret=0xfffffff4
+test-2721  [001] dN..  2530.635761: mem_cgroup_charge_common: (mem_cgroup_newpage_charge+0x26/0x30 <- mem_cgroup_charge_common) ret=0xfffffff4
+test-2721  [001] dN..  2530.635762: mem_cgroup_newpage_charge: (do_huge_pmd_wp_page+0x125/0xa90 <- mem_cgroup_newpage_charge) ret=0xfffffff4
+test-2721  [001] dN..  2530.635768: do_huge_pmd_wp_page_r: (handle_mm_fault+0x19e/0x4b0 <- do_huge_pmd_wp_page) ret=0x1
+(...repeat...)
+--------------------------------------------------
+
+Regards,
+Masayoshi Mizuma <m.mizuma-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+...
+retry:
+        pgd = pgd_offset(mm, address);
+...
+                        if (dirty && !pmd_write(orig_pmd)) {
+                                ret = do_huge_pmd_wp_page(mm, vma, address, pmd,
+                                                          orig_pmd);
+                                /*
+                                 * If COW results in an oom, the huge pmd will
+                                 * have been split, so retry the fault on the
+                                 * pte for a smaller charge.
+                                 */
+                                if (unlikely(ret & VM_FAULT_OOM))
+                                        goto retry;
+--------------------------------------------------
+
+[Step to reproduce]
+
+1. Set memory cgroup as follows:
+
+--------------------------------------------------
+# mkdir /sys/fs/cgroup/memory/test
+# echo "6M" > /sys/fs/cgroup/memory/test/memory.limit_in_bytes
+# echo "6M" > /sys/fs/cgroup/memory/test/memory.memsw.limit_in_bytes 
+--------------------------------------------------
+
+2. Ran the following process (test.c).
+
+test.c:
+--------------------------------------------------
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#define SIZE 4*1024*1024
+#define HUGE 2*1024*1024
+#define PAGESIZE 4096
+#define NUM SIZE/PAGESIZE
+
+int main(void)
+{
+	char *a;
+	char *c;
+	int i;
+
+	/* wait until set cgroup limits */
+	sleep(1);
+
+	posix_memalign((void **)&a, HUGE, SIZE);
+	posix_memalign((void **)&c, HUGE, SIZE);
+
+	for (i = 0; i<NUM; i++) {
+		*(a + i * PAGESIZE) = *(c + i * PAGESIZE);
+	}
+
+	for (i = 0; i<NUM; i++) {
+		*(c + i * PAGESIZE) = *(a + i * PAGESIZE);
+	}
+
+	free(a);
+	free(c);
+	return 0;
+}
+--------------------------------------------------
+
+3. Add it to memory cgroup.
+--------------------------------------------------
+# ./test &
+# echo $! > /sys/fs/cgroup/memory/test/tasks
+--------------------------------------------------
+
+Then, the process will hangup.
+I checked the infinit loop by using kprobetrace.
+
+Setting of kprobetrace:
+--------------------------------------------------
+# echo 'p:do_huge_pmd_wp_page do_huge_pmd_wp_page address=%dx' > /sys/kernel/debug/tracing/kprobe_events
+# echo 'r:do_huge_pmd_wp_page_r do_huge_pmd_wp_page ret=$retval' >> /sys/kernel/debug/tracing/kprobe_events
+# echo 'r:mem_cgroup_newpage_charge mem_cgroup_newpage_charge ret=$retval' >> /sys/kernel/debug/tracing/kprobe_events
+# echo 'r:mem_cgroup_charge_common mem_cgroup_charge_common ret=$retval' >> /sys/kernel/debug/tracing/kprobe_events
+# echo 'r:__mem_cgroup_try_charge __mem_cgroup_try_charge ret=$retval' >> /sys/kernel/debug/tracing/kprobe_events
+# echo 1 > /sys/kernel/debug/tracing/events/kprobes/do_huge_pmd_wp_page/enable
+# echo 1 > /sys/kernel/debug/tracing/events/kprobes/do_huge_pmd_wp_page_r/enable
+# echo 1 > /sys/kernel/debug/tracing/events/kprobes/mem_cgroup_newpage_charge/enable
+# echo 1 > /sys/kernel/debug/tracing/events/kprobes/mem_cgroup_charge_common/enable
+# echo 1 > /sys/kernel/debug/tracing/events/kprobes/__mem_cgroup_try_charge/enable
+--------------------------------------------------
+
+The result:
+--------------------------------------------------
+test-2721  [001] dN..  2530.635679: do_huge_pmd_wp_page: (do_huge_pmd_wp_page+0x0/0xa90) address=0x7f55a4400000
+test-2721  [001] dN..  2530.635723: __mem_cgroup_try_charge: (mem_cgroup_charge_common+0x4a/0xa0 <- __mem_cgroup_try_charge) ret=0xfffffff4
+test-2721  [001] dN..  2530.635724: mem_cgroup_charge_common: (mem_cgroup_newpage_charge+0x26/0x30 <- mem_cgroup_charge_common) ret=0xfffffff4
+test-2721  [001] dN..  2530.635725: mem_cgroup_newpage_charge: (do_huge_pmd_wp_page+0x125/0xa90 <- mem_cgroup_newpage_charge) ret=0xfffffff4
+test-2721  [001] dN..  2530.635733: do_huge_pmd_wp_page_r: (handle_mm_fault+0x19e/0x4b0 <- do_huge_pmd_wp_page) ret=0x1
+test-2721  [001] dN..  2530.635735: do_huge_pmd_wp_page: (do_huge_pmd_wp_page+0x0/0xa90) address=0x7f55a4400000
+test-2721  [001] dN..  2530.635761: __mem_cgroup_try_charge: (mem_cgroup_charge_common+0x4a/0xa0 <- __mem_cgroup_try_charge) ret=0xfffffff4
+test-2721  [001] dN..  2530.635761: mem_cgroup_charge_common: (mem_cgroup_newpage_charge+0x26/0x30 <- mem_cgroup_charge_common) ret=0xfffffff4
+test-2721  [001] dN..  2530.635762: mem_cgroup_newpage_charge: (do_huge_pmd_wp_page+0x125/0xa90 <- mem_cgroup_newpage_charge) ret=0xfffffff4
+test-2721  [001] dN..  2530.635768: do_huge_pmd_wp_page_r: (handle_mm_fault+0x19e/0x4b0 <- do_huge_pmd_wp_page) ret=0x1
+(...repeat...)
+--------------------------------------------------
+
+Regards,
+Masayoshi Mizuma <m.mizuma-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
