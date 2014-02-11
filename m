@@ -1,180 +1,43 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH cgroup/for-3.14-fixes] cgroup: protect modifications to
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH cgroup/for-3.14-fixes] cgroup: protect modifications to
  cgroup_idr with cgroup_mutex
-Date: Tue, 11 Feb 2014 10:41:05 -0500
-Message-ID: <20140211154105.GC24490@htj.dyndns.org>
+Date: Tue, 11 Feb 2014 17:26:25 +0100
+Message-ID: <20140211162625.GP11946@dhcp22.suse.cz>
 References: <52F9D9DA.7040108@huawei.com>
+ <20140211154105.GC24490@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=U631qDVsmoPeHkirOPrza1b7kZVop3Xv3uLpD95gyIc=;
-        b=CO0jp1ta5eeu48jOU1aUXRLLFGoc9RBCTNl2moEUTDFAKVi5FlySpC9bZ4xJ3Ns8+T
-         D168gvX+eHLf0UUqRHvFG/2rs+sOKwQIJ1lbJsytMp08D/FWfHum3ErT7bWUbTphR5KZ
-         YGtNW//EfU/ZkJ5kjETMIZp/SVv6zNOG/Q2PgKAS7QysvGKOaQ+HPCl0jNCItX2NB6+M
-         L740+DG/aq5MdHqGfRJ2TmKQOkNrY5IxVz3/5fnB+Md7AzVjG7qT3RRnYKPoJaXOfh3t
-         YGbfQmO5Ir3UvP2JEkT/VcdbrhN3KnS4lhecu7HFNvbcfCWGmrpVTT8fIyHaA6UYa8Mn
-         Vl5g==
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <52F9D9DA.7040108-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20140211154105.GC24490@htj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-Hello,
+On Tue 11-02-14 10:41:05, Tejun Heo wrote:
+[...]
+> @@ -4254,12 +4256,12 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+>  
+>  	return 0;
+>  
+> -err_unlock:
+> -	mutex_unlock(&cgroup_mutex);
+> -	/* Release the reference count that we took on the superblock */
+> -	deactivate_super(sb);
+>  err_free_id:
+>  	idr_remove(&root->cgroup_idr, cgrp->id);
+> +	/* Release the reference count that we took on the superblock */
+> +	deactivate_super(sb);
+> +err_unlock:
+> +	mutex_unlock(&cgroup_mutex);
+>  err_free_name:
+>  	kfree(rcu_dereference_raw(cgrp->name));
+>  err_free_cgrp:
 
-This is the slightly modified patch that I applied to
-cgroup/for-3.14-fixes.
-
-Thanks a lot!
-
--------- 8< --------
-From 0ab02ca8f887908152d1a96db5130fc661d36a1e Mon Sep 17 00:00:00 2001
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Date: Tue, 11 Feb 2014 16:05:46 +0800
-
-Setup cgroupfs like this:
-  # mount -t cgroup -o cpuacct xxx /cgroup
-  # mkdir /cgroup/sub1
-  # mkdir /cgroup/sub2
-
-Then run these two commands:
-  # for ((; ;)) { mkdir /cgroup/sub1/tmp && rmdir /mnt/sub1/tmp; } &
-  # for ((; ;)) { mkdir /cgroup/sub2/tmp && rmdir /mnt/sub2/tmp; } &
-
-After seconds you may see this warning:
-
-------------[ cut here ]------------
-WARNING: CPU: 1 PID: 25243 at lib/idr.c:527 sub_remove+0x87/0x1b0()
-idr_remove called for id=6 which is not allocated.
-...
-Call Trace:
- [<ffffffff8156063c>] dump_stack+0x7a/0x96
- [<ffffffff810591ac>] warn_slowpath_common+0x8c/0xc0
- [<ffffffff81059296>] warn_slowpath_fmt+0x46/0x50
- [<ffffffff81300aa7>] sub_remove+0x87/0x1b0
- [<ffffffff810f3f02>] ? css_killed_work_fn+0x32/0x1b0
- [<ffffffff81300bf5>] idr_remove+0x25/0xd0
- [<ffffffff810f2bab>] cgroup_destroy_css_killed+0x5b/0xc0
- [<ffffffff810f4000>] css_killed_work_fn+0x130/0x1b0
- [<ffffffff8107cdbc>] process_one_work+0x26c/0x550
- [<ffffffff8107eefe>] worker_thread+0x12e/0x3b0
- [<ffffffff81085f96>] kthread+0xe6/0xf0
- [<ffffffff81570bac>] ret_from_fork+0x7c/0xb0
----[ end trace 2d1577ec10cf80d0 ]---
-
-It's because allocating/removing cgroup ID is not properly synchronized.
-
-The bug was introduced when we converted cgroup_ida to cgroup_idr.
-While synchronization is already done inside ida_simple_{get,remove}(),
-users are responsible for concurrent calls to idr_{alloc,remove}().
-
-tj: Refreshed on top of b58c89986a77 ("cgroup: fix error return from
-cgroup_create()").
-
-Fixes: 4e96ee8e981b ("cgroup: convert cgroup_ida to cgroup_idr")
-Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> #3.12+
-Reported-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- include/linux/cgroup.h |  2 ++
- kernel/cgroup.c        | 34 ++++++++++++++++++----------------
- 2 files changed, 20 insertions(+), 16 deletions(-)
-
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 5c09759..9450f02 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -166,6 +166,8 @@ struct cgroup {
- 	 *
- 	 * The ID of the root cgroup is always 0, and a new cgroup
- 	 * will be assigned with a smallest available ID.
-+	 *
-+	 * Allocating/Removing ID must be protected by cgroup_mutex.
- 	 */
- 	int id;
- 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 3edf716..52719ce 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -886,7 +886,9 @@ static void cgroup_diput(struct dentry *dentry, struct inode *inode)
- 		 * per-subsystem and moved to css->id so that lookups are
- 		 * successful until the target css is released.
- 		 */
-+		mutex_lock(&cgroup_mutex);
- 		idr_remove(&cgrp->root->cgroup_idr, cgrp->id);
-+		mutex_unlock(&cgroup_mutex);
- 		cgrp->id = -1;
- 
- 		call_rcu(&cgrp->rcu_head, cgroup_free_rcu);
-@@ -4168,16 +4170,6 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 	rcu_assign_pointer(cgrp->name, name);
- 
- 	/*
--	 * Temporarily set the pointer to NULL, so idr_find() won't return
--	 * a half-baked cgroup.
--	 */
--	cgrp->id = idr_alloc(&root->cgroup_idr, NULL, 1, 0, GFP_KERNEL);
--	if (cgrp->id < 0) {
--		err = -ENOMEM;
--		goto err_free_name;
--	}
--
--	/*
- 	 * Only live parents can have children.  Note that the liveliness
- 	 * check isn't strictly necessary because cgroup_mkdir() and
- 	 * cgroup_rmdir() are fully synchronized by i_mutex; however, do it
-@@ -4186,7 +4178,17 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 	 */
- 	if (!cgroup_lock_live_group(parent)) {
- 		err = -ENODEV;
--		goto err_free_id;
-+		goto err_free_name;
-+	}
-+
-+	/*
-+	 * Temporarily set the pointer to NULL, so idr_find() won't return
-+	 * a half-baked cgroup.
-+	 */
-+	cgrp->id = idr_alloc(&root->cgroup_idr, NULL, 1, 0, GFP_KERNEL);
-+	if (cgrp->id < 0) {
-+		err = -ENOMEM;
-+		goto err_unlock;
- 	}
- 
- 	/* Grab a reference on the superblock so the hierarchy doesn't
-@@ -4218,7 +4220,7 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 	 */
- 	err = cgroup_create_file(dentry, S_IFDIR | mode, sb);
- 	if (err < 0)
--		goto err_unlock;
-+		goto err_free_id;
- 	lockdep_assert_held(&dentry->d_inode->i_mutex);
- 
- 	cgrp->serial_nr = cgroup_serial_nr_next++;
-@@ -4254,12 +4256,12 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
- 
- 	return 0;
- 
--err_unlock:
--	mutex_unlock(&cgroup_mutex);
--	/* Release the reference count that we took on the superblock */
--	deactivate_super(sb);
- err_free_id:
- 	idr_remove(&root->cgroup_idr, cgrp->id);
-+	/* Release the reference count that we took on the superblock */
-+	deactivate_super(sb);
-+err_unlock:
-+	mutex_unlock(&cgroup_mutex);
- err_free_name:
- 	kfree(rcu_dereference_raw(cgrp->name));
- err_free_cgrp:
+Do I have to change deactivate_super vs. mutex_unlock ordering in my
+backport for 3.12 as well?
 -- 
-1.8.5.3
+Michal Hocko
+SUSE Labs
