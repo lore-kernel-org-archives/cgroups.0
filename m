@@ -1,202 +1,147 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v2 15/16] cgroup: cosmetic updates to cgroup_attach_task()
-Date: Mon, 10 Feb 2014 18:06:59 -0500
-Message-ID: <20140210230659.GJ25350@mtj.dyndns.org>
-References: <1391953964-22088-1-git-send-email-tj@kernel.org>
- <1391953964-22088-16-git-send-email-tj@kernel.org>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] cgroup: protect modifications to cgroup_idr with cgroup_mutex
+Date: Tue, 11 Feb 2014 16:05:46 +0800
+Message-ID: <52F9D9DA.7040108@huawei.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=dGGSHQEV9ZgW/H/HhkM4yXE3w+PKGPLy95qkmyXmBbI=;
-        b=EokvQh1U2NJKE7x5MnmJaPca75RI0RXOnxhmGPxYSaglzucSaxrcgYYdMK0IVclEcM
-         gWOCA50YTRUSW7SM6h5OSNnsTC+Pkd2e19ZCwP1JxOeopvLXkZJewG8x8ZU8ckszsCCX
-         6JWz+17P4zGZb0YpylreLI30Je624YYseVHzYYCQSZD5w/QUxWWu3nBw50t61LXUnWCW
-         hasl4VaqnnW8l3otrIgBd9P6lC4RVpV4I5h5skuqEm8arCnVwCpRgfDma5inEA2QxUa1
-         K+Ew5wXwHnNjx8rHu/zLPr1Qr6z5Nqml4jbwntZj1GcxlKticczBVMOmlJHmC8DeXqE6
-         oCxA==
-Content-Disposition: inline
-In-Reply-To: <1391953964-22088-16-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-cgroup_attach_task() is planned to go through restructuring.  Let's
-tidy it up a bit in preparation.
+Setup cgroupfs like this:
+  # mount -t cgroup -o cpuacct xxx /cgroup
+  # mkdir /cgroup/sub1
+  # mkdir /cgroup/sub2
 
-* Update cgroup_attach_task() to receive the target task argument in
-  @leader instead of @tsk.
+Then run these two commands:
+  # for ((; ;)) { mkdir /cgroup/sub1/tmp && rmdir /mnt/sub1/tmp; } &
+  # for ((; ;)) { mkdir /cgroup/sub2/tmp && rmdir /mnt/sub2/tmp; } &
 
-* Rename @tsk to @task.
+After seconds you may see this warning:
 
-* Rename @retval to @ret.
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 25243 at lib/idr.c:527 sub_remove+0x87/0x1b0()
+idr_remove called for id=6 which is not allocated.
+...
+Call Trace:
+ [<ffffffff8156063c>] dump_stack+0x7a/0x96
+ [<ffffffff810591ac>] warn_slowpath_common+0x8c/0xc0
+ [<ffffffff81059296>] warn_slowpath_fmt+0x46/0x50
+ [<ffffffff81300aa7>] sub_remove+0x87/0x1b0
+ [<ffffffff810f3f02>] ? css_killed_work_fn+0x32/0x1b0
+ [<ffffffff81300bf5>] idr_remove+0x25/0xd0
+ [<ffffffff810f2bab>] cgroup_destroy_css_killed+0x5b/0xc0
+ [<ffffffff810f4000>] css_killed_work_fn+0x130/0x1b0
+ [<ffffffff8107cdbc>] process_one_work+0x26c/0x550
+ [<ffffffff8107eefe>] worker_thread+0x12e/0x3b0
+ [<ffffffff81085f96>] kthread+0xe6/0xf0
+ [<ffffffff81570bac>] ret_from_fork+0x7c/0xb0
+---[ end trace 2d1577ec10cf80d0 ]---
 
-This is purely cosmetic.
+It's because allocating/removing cgroup ID is not properly synchronized.
 
-v2: get_nr_threads() was using uninitialized @task instead of @leader.
-    Fixed.  Reported by Dan Carpenter.
+The bug was introduced when we converted cgroup_ida to cgroup_idr.
+While synchronization is already done inside ida_simple_{get,remove}(),
+users are responsible for concurrent calls to idr_{alloc,remove}().
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Fixes: 4e96ee8e981b ("cgroup: convert cgroup_ida to cgroup_idr")
+Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> #3.12+
+Reported-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
-Hello,
+ include/linux/cgroup.h |  2 ++
+ kernel/cgroup.c        | 30 ++++++++++++++++--------------
+ 2 files changed, 18 insertions(+), 14 deletions(-)
 
-The fixed part doesn't affect the end result.  It gets removed by the
-next patchset.  I'll leave the git branch as-is for now.
-
-Thanks.
-
- kernel/cgroup.c |   45 +++++++++++++++++++++++----------------------
- 1 file changed, 23 insertions(+), 22 deletions(-)
-
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 5c09759..9450f02 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -166,6 +166,8 @@ struct cgroup {
+ 	 *
+ 	 * The ID of the root cgroup is always 0, and a new cgroup
+ 	 * will be assigned with a smallest available ID.
++	 *
++	 * Allocating/Removing ID must be protected by cgroup_mutex.
+ 	 */
+ 	int id;
+ 
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index e2f46ba..4bbaadd 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -1726,20 +1726,20 @@ static void cgroup_task_migrate(struct c
- /**
-  * cgroup_attach_task - attach a task or a whole threadgroup to a cgroup
-  * @cgrp: the cgroup to attach to
-- * @tsk: the task or the leader of the threadgroup to be attached
-+ * @leader: the task or the leader of the threadgroup to be attached
-  * @threadgroup: attach the whole threadgroup?
-  *
-  * Call holding cgroup_mutex and the group_rwsem of the leader. Will take
-  * task_lock of @tsk or each thread in the threadgroup individually in turn.
-  */
--static int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk,
-+static int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *leader,
- 			      bool threadgroup)
- {
--	int retval, i, group_size;
-+	int ret, i, group_size;
- 	struct cgroupfs_root *root = cgrp->root;
- 	struct cgroup_subsys_state *css, *failed_css = NULL;
- 	/* threadgroup list cursor and array */
--	struct task_struct *leader = tsk;
-+	struct task_struct *task;
- 	struct task_and_cgroup *tc;
- 	struct flex_array *group;
- 	struct cgroup_taskset tset = { };
-@@ -1752,7 +1752,7 @@ static int cgroup_attach_task(struct cgr
- 	 * threads exit, this will just be an over-estimate.
- 	 */
- 	if (threadgroup)
--		group_size = get_nr_threads(tsk);
-+		group_size = get_nr_threads(leader);
- 	else
- 		group_size = 1;
- 	/* flex_array supports very large thread-groups better than kmalloc. */
-@@ -1760,8 +1760,8 @@ static int cgroup_attach_task(struct cgr
- 	if (!group)
- 		return -ENOMEM;
- 	/* pre-allocate to guarantee space while iterating in rcu read-side. */
--	retval = flex_array_prealloc(group, 0, group_size, GFP_KERNEL);
--	if (retval)
-+	ret = flex_array_prealloc(group, 0, group_size, GFP_KERNEL);
-+	if (ret)
- 		goto out_free_group_list;
- 
- 	i = 0;
-@@ -1772,17 +1772,18 @@ static int cgroup_attach_task(struct cgr
- 	 */
- 	down_read(&css_set_rwsem);
- 	rcu_read_lock();
-+	task = leader;
- 	do {
- 		struct task_and_cgroup ent;
- 
--		/* @tsk either already exited or can't exit until the end */
--		if (tsk->flags & PF_EXITING)
-+		/* @task either already exited or can't exit until the end */
-+		if (task->flags & PF_EXITING)
- 			goto next;
- 
- 		/* as per above, nr_threads may decrease, but not increase. */
- 		BUG_ON(i >= group_size);
--		ent.task = tsk;
--		ent.cgrp = task_cgroup_from_root(tsk, root);
-+		ent.task = task;
-+		ent.cgrp = task_cgroup_from_root(task, root);
- 		/* nothing to do if this task is already in the cgroup */
- 		if (ent.cgrp == cgrp)
- 			goto next;
-@@ -1790,13 +1791,13 @@ static int cgroup_attach_task(struct cgr
- 		 * saying GFP_ATOMIC has no effect here because we did prealloc
- 		 * earlier, but it's good form to communicate our expectations.
+@@ -886,7 +886,9 @@ static void cgroup_diput(struct dentry *dentry, struct inode *inode)
+ 		 * per-subsystem and moved to css->id so that lookups are
+ 		 * successful until the target css is released.
  		 */
--		retval = flex_array_put(group, i, &ent, GFP_ATOMIC);
--		BUG_ON(retval != 0);
-+		ret = flex_array_put(group, i, &ent, GFP_ATOMIC);
-+		BUG_ON(ret != 0);
- 		i++;
- 	next:
- 		if (!threadgroup)
- 			break;
--	} while_each_thread(leader, tsk);
-+	} while_each_thread(leader, task);
- 	rcu_read_unlock();
- 	up_read(&css_set_rwsem);
- 	/* remember the number of threads in the array for later. */
-@@ -1805,7 +1806,7 @@ static int cgroup_attach_task(struct cgr
- 	tset.tc_array_len = group_size;
++		mutex_lock(&cgroup_mutex);
+ 		idr_remove(&cgrp->root->cgroup_idr, cgrp->id);
++		mutex_unlock(&cgroup_mutex);
+ 		cgrp->id = -1;
  
- 	/* methods shouldn't be called if no task is actually migrating */
--	retval = 0;
-+	ret = 0;
- 	if (!group_size)
- 		goto out_free_group_list;
+ 		call_rcu(&cgrp->rcu_head, cgroup_free_rcu);
+@@ -4173,14 +4175,6 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+ 	rcu_assign_pointer(cgrp->name, name);
  
-@@ -1814,8 +1815,8 @@ static int cgroup_attach_task(struct cgr
- 	 */
- 	for_each_css(css, i, cgrp) {
- 		if (css->ss->can_attach) {
--			retval = css->ss->can_attach(css, &tset);
--			if (retval) {
-+			ret = css->ss->can_attach(css, &tset);
-+			if (ret) {
- 				failed_css = css;
- 				goto out_cancel_attach;
- 			}
-@@ -1833,7 +1834,7 @@ static int cgroup_attach_task(struct cgr
- 		old_cset = task_css_set(tc->task);
- 		tc->cset = find_css_set(old_cset, cgrp);
- 		if (!tc->cset) {
--			retval = -ENOMEM;
-+			ret = -ENOMEM;
- 			goto out_put_css_set_refs;
- 		}
- 	}
-@@ -1861,9 +1862,9 @@ static int cgroup_attach_task(struct cgr
  	/*
- 	 * step 5: success! and cleanup
+-	 * Temporarily set the pointer to NULL, so idr_find() won't return
+-	 * a half-baked cgroup.
+-	 */
+-	cgrp->id = idr_alloc(&root->cgroup_idr, NULL, 1, 0, GFP_KERNEL);
+-	if (cgrp->id < 0)
+-		goto err_free_name;
+-
+-	/*
+ 	 * Only live parents can have children.  Note that the liveliness
+ 	 * check isn't strictly necessary because cgroup_mkdir() and
+ 	 * cgroup_rmdir() are fully synchronized by i_mutex; however, do it
+@@ -4189,9 +4183,17 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
  	 */
--	retval = 0;
-+	ret = 0;
- out_put_css_set_refs:
--	if (retval) {
-+	if (ret) {
- 		for (i = 0; i < group_size; i++) {
- 			tc = flex_array_get(group, i);
- 			if (!tc->cset)
-@@ -1872,7 +1873,7 @@ out_put_css_set_refs:
- 		}
+ 	if (!cgroup_lock_live_group(parent)) {
+ 		err = -ENODEV;
+-		goto err_free_id;
++		goto err_free_name;
  	}
- out_cancel_attach:
--	if (retval) {
-+	if (ret) {
- 		for_each_css(css, i, cgrp) {
- 			if (css == failed_css)
- 				break;
-@@ -1882,7 +1883,7 @@ out_cancel_attach:
- 	}
- out_free_group_list:
- 	flex_array_free(group);
--	return retval;
-+	return ret;
- }
  
- /*
++	/*
++	 * Temporarily set the pointer to NULL, so idr_find() won't return
++	 * a half-baked cgroup.
++	 */
++	cgrp->id = idr_alloc(&root->cgroup_idr, NULL, 1, 0, GFP_KERNEL);
++	if (cgrp->id < 0)
++		goto err_unlock;
++
+ 	/* Grab a reference on the superblock so the hierarchy doesn't
+ 	 * get deleted on unmount if there are child cgroups.  This
+ 	 * can be done outside cgroup_mutex, since the sb can't
+@@ -4221,7 +4223,7 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+ 	 */
+ 	err = cgroup_create_file(dentry, S_IFDIR | mode, sb);
+ 	if (err < 0)
+-		goto err_unlock;
++		goto err_free_id;
+ 	lockdep_assert_held(&dentry->d_inode->i_mutex);
+ 
+ 	cgrp->serial_nr = cgroup_serial_nr_next++;
+@@ -4257,12 +4259,12 @@ static long cgroup_create(struct cgroup *parent, struct dentry *dentry,
+ 
+ 	return 0;
+ 
+-err_unlock:
+-	mutex_unlock(&cgroup_mutex);
+-	/* Release the reference count that we took on the superblock */
+-	deactivate_super(sb);
+ err_free_id:
+ 	idr_remove(&root->cgroup_idr, cgrp->id);
++	/* Release the reference count that we took on the superblock */
++	deactivate_super(sb);
++err_unlock:
++	mutex_unlock(&cgroup_mutex);
+ err_free_name:
+ 	kfree(rcu_dereference_raw(cgrp->name));
+ err_free_cgrp:
+-- 
+1.8.0.2
