@@ -1,77 +1,92 @@
-From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup: use an ordered workqueue for cgroup
- destruction
-Date: Wed, 12 Feb 2014 14:59:44 -0800 (PST)
-Message-ID: <alpine.LSU.2.11.1402121417230.5029@eggly.anvils>
-References: <alpine.LSU.2.11.1402061541560.31342@eggly.anvils> <20140207164321.GE6963@cmpxchg.org>
+From: Hugh Dickins <hughd@google.com>
+Subject: [PATCH 1/2] memcg: reparent charges of children before processing
+ parent
+Date: Wed, 12 Feb 2014 15:03:31 -0800 (PST)
+Message-ID: <alpine.LSU.2.11.1402121500070.5029@eggly.anvils>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=GLuhiC9i0gWv03bkeZ81cUiuSqhADSi/oa0C+OfbBZQ=;
-        b=ULx3S6r+ynih7IZDFnoKS0WPI1c5vOpGNhnVPcpzsefzjZ3t7kr1vYr5iIFctGmqLR
-         E8hsDrJ4PAVXdGqPciYTbrNZasAG2SJsTrfz7vf9mRSyGnsgwy+r96awEaWiobX44lBa
-         5EwvqzHEbJyje/+fQeAXIEKuoiYfCLpd1tZ/577uY1fpuY1yD6cPpJn3VgXPwSLRVkj5
-         miXeaGVEGBHwuTaEf+e0V5aTLh6nqSVQ8zPXGnLzjBhrDMIvXrTkfEb7jPF+/lj+Czc3
-         ikJ+eBsLpfMqPw7wtwipxORDUFBLxLzrflqbUZNITRVvCYajeWwzMXVbH7Sv7qYDqCfH
-         lsog==
-In-Reply-To: <20140207164321.GE6963-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=date:from:to:cc:subject:message-id:user-agent:mime-version
+         :content-type;
+        bh=D6l0F3VQi8llLZ5uAMu3QwZCv6EQfPDPqbOb8RYI9ok=;
+        b=K5MfwBavIQ3xgvYtjnw++Kt3wBi/N4RHBj7E59ZQzOSTp+b2Z9eqexAYsC3wZtDQ9s
+         BlRUw7Ms3xEOq2xUBGurGN59WI0bjyAmHUu+icnblSZJj35zVW2h4JkXo6i7iF6ury/b
+         6h0KiVaWQSzmGx4nCmdqwnlNVsfuQ+fAQsFK59eI6HXgAKxGGMjffLEDqZcISaqMNTb5
+         yFq+ssyaZ2+H8PGkVZ/J5HoEu3QG1Nzram916tFBoImlSjFYidrFfgzzv6tc3JQ8d5a9
+         BxER3lZ3GLpwWpZtaG2biSUuCLzPBca/cSDsl2AaxqySWEI0BhtDKVNfFbES0/9vC/SF
+         c27w==
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Filipe Brandenburger <filbranden-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Markus Blank-Burian <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org>, Shawn Bohrer <shawn.bohrer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Filipe Brandenburger <filbranden@google.com>, Li Zefan <lizefan@huawei.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Michel Lespinasse <walken@google.com>, Markus Blank-Burian <burian@muenster.de>, Shawn Bohrer <shawn.bohrer@gmail.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Fri, 7 Feb 2014, Johannes Weiner wrote:
-> On Thu, Feb 06, 2014 at 03:56:01PM -0800, Hugh Dickins wrote:
-> > Sometimes the cleanup after memcg hierarchy testing gets stuck in
-> > mem_cgroup_reparent_charges(), unable to bring non-kmem usage down to 0.
-> > 
-> > There may turn out to be several causes, but a major cause is this: the
-> > workitem to offline parent can get run before workitem to offline child;
-> > parent's mem_cgroup_reparent_charges() circles around waiting for the
-> > child's pages to be reparented to its lrus, but it's holding cgroup_mutex
-> > which prevents the child from reaching its mem_cgroup_reparent_charges().
-> > 
-> > Just use an ordered workqueue for cgroup_destroy_wq.
-> > 
-> > Fixes: e5fca243abae ("cgroup: use a dedicated workqueue for cgroup destruction")
-> > Suggested-by: Filipe Brandenburger <filbranden-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > Signed-off-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # 3.10+
-> 
-> I think this is a good idea for now and -stable:
-> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+From: Filipe Brandenburger <filbranden@google.com>
 
-You might be wondering why this patch didn't reach Linus yet.
+Sometimes the cleanup after memcg hierarchy testing gets stuck in
+mem_cgroup_reparent_charges(), unable to bring non-kmem usage down to 0.
 
-It's because more thorough testing, by others here, found that it
-wasn't always solving the problem: so I asked Tejun privately to
-hold off from sending it in, until we'd worked out why not.
+There may turn out to be several causes, but a major cause is this: the
+workitem to offline parent can get run before workitem to offline child;
+parent's mem_cgroup_reparent_charges() circles around waiting for the
+child's pages to be reparented to its lrus, but it's holding cgroup_mutex
+which prevents the child from reaching its mem_cgroup_reparent_charges().
 
-Most of our testing being on a v3,11-based kernel, it was perfectly
-possible that the problem was merely our own e.g. missing Tejun's
-8a2b75384444 ("workqueue: fix ordered workqueues in NUMA setups").
+Further testing showed that an ordered workqueue for cgroup_destroy_wq
+is not always good enough: percpu_ref_kill_and_confirm's call_rcu_sched
+stage on the way can mess up the order before reaching the workqueue.
 
-But that turned out not to be enough to fix it either. Then Filipe
-pointed out how percpu_ref_kill_and_confirm() uses call_rcu_sched()
-before we ever get to put the offline on to the workqueue: by the
-time we get to the workqueue, the ordering has already been lost.
+Instead, when offlining a memcg, call mem_cgroup_reparent_charges() on
+all its children (and grandchildren, in the correct order) to have their
+charges reparented first.
 
-So, thanks for the Acks, but I'm afraid that this ordered workqueue
-solution is just not good enough: we should simply forget that patch
-and provide a different answer.
+Fixes: e5fca243abae ("cgroup: use a dedicated workqueue for cgroup destruction")
+Signed-off-by: Filipe Brandenburger <filbranden@google.com>
+Signed-off-by: Hugh Dickins <hughd@google.com>
+Cc: stable@vger.kernel.org # v3.10+ (but will need extra care)
+---
+Or, you may prefer my alternative cgroup.c approach in 2/2:
+there's no need for both.  Please note that neither of these patches
+attempts to handle the unlikely case of racy charges made to child
+after its offline, but parent's offline coming before child's free:
+mem_cgroup_css_free()'s backstop call to mem_cgroup_reparent_charges()
+cannot help in that case, with or without these patches.  Fixing that
+would have to be a separate effort - Michal's?
 
-So I'm now posting a couple of alternative solutions: 1/2 from Filipe
-at the memcg end, and 2/2 from me at the cgroup end.  Each of these
-has stood up to better testing, so you can choose between them,
-or work out a better answer.
+ mm/memcontrol.c |   10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-(By the way, I have another little pair of memcg/cgroup fixes to post
-shortly, nothing to do with these two: it would be less confusing if
-I had some third fix to add in there, but sadly not.)
+--- 3.14-rc2/mm/memcontrol.c	2014-02-02 18:49:07.897302115 -0800
++++ linux/mm/memcontrol.c	2014-02-11 17:48:07.604582963 -0800
+@@ -6595,6 +6595,7 @@ static void mem_cgroup_css_offline(struc
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+ 	struct mem_cgroup_event *event, *tmp;
++	struct cgroup_subsys_state *iter;
+ 
+ 	/*
+ 	 * Unregister events and notify userspace.
+@@ -6611,7 +6612,14 @@ static void mem_cgroup_css_offline(struc
+ 	kmem_cgroup_css_offline(memcg);
+ 
+ 	mem_cgroup_invalidate_reclaim_iterators(memcg);
+-	mem_cgroup_reparent_charges(memcg);
++
++	/*
++	 * This requires that offlining is serialized.  Right now that is
++	 * guaranteed because css_killed_work_fn() holds the cgroup_mutex.
++	 */
++	css_for_each_descendant_post(iter, css)
++		mem_cgroup_reparent_charges(mem_cgroup_from_css(iter));
++
+ 	mem_cgroup_destroy_all_caches(memcg);
+ 	vmpressure_cleanup(&memcg->vmpressure);
+ }
 
-Hugh
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
