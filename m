@@ -1,43 +1,53 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET v2 cgroup/for-3.15] cgroup: cleanups after kernfs
- conversion
-Date: Wed, 12 Feb 2014 09:30:24 -0500
-Message-ID: <20140212143024.GK24490@htj.dyndns.org>
-References: <1391877509-10855-1-git-send-email-tj@kernel.org>
+Subject: Re: [PATCH 5/5] cgroup: update cgroup_transfer_tasks() to either
+	succeed or fail
+Date: Wed, 12 Feb 2014 10:30:33 -0500
+Message-ID: <20140212153033.GA26809@htj.dyndns.org>
+References: <1392063694-26465-1-git-send-email-tj@kernel.org>
+	<1392063694-26465-6-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=qOkeFXYp6lBe+tittrWuF8D5uvg0QnbSeqnv1nXaRIE=;
-        b=THfaj8lH/Sn7+uH3lUGoktSV9H7jnwcryYHK/SIYV3AXbL0bXkYyIi1zKwvQ2TjHO6
-         qaWYr13heWmRTQx/K9oOzrMsiqqbE+nRIhbYLVzFskuASng/1M08n2knaXdh/hgQpuJq
-         81E7VpUp4GWfAVb17KvYP3jswdPp/nSzxuv5SMGLjKsDyizp6PH5UWwMsQP2BGCQ0s84
-         oXuIpR0uM0ENmz44WjWWWX0AQIqf55SoWmcSQwGPoBuLX8wVttKldIEumiMw3OpwaQeC
-         tAQKYUn6V6E6uWtUR1M0QnzVaNz42E7xg4Cn4WuTRGpM852dptWvzQ3/v5aMzMatvYrp
-         T7mg==
-Content-Disposition: inline
-In-Reply-To: <1391877509-10855-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=CcKKzEOgK3m020hsjEcdcCNul+dXAmbw/FenllKXrzQ=;
+	b=wLCISgL7cTqgGBPTkUA+oKCcVa7cZVrLlQnJU9Pv/XootfYMhrDrZ5kGVNgY3WnvXi
+	6CAvil6dKr2Bq86G4p4VX+BCQ/07Cp7EDVXOR5dZpS6HFLsxCFzPrXvhqgwjb8/HcvsE
+	qQGpdzJu29HNTS1spHMXL4f44QCm/QavzvsbkAEnZcWag3a2vq5gu9YyMCjQUjnxupLF
+	n3SIsf3iT2vYk/BABaIvlAnYn+pP0Qu7xKtXgqHQbrKg8R6BFXRf+xkoANuHhVj2cgKg
+	27sdKEiPSqntgwWGjlRS+dGU8p3Vx4fsu1Jsx1xjnPFuiKwhyJ8GHD3O6AGWmhEHPvWf
+	3sjQ==
+Content-Disposition: inline
+In-Reply-To: <1392063694-26465-6-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sat, Feb 08, 2014 at 11:38:21AM -0500, Tejun Heo wrote:
-> Hello,
+On Mon, Feb 10, 2014 at 03:21:34PM -0500, Tejun Heo wrote:
+> cgroup_transfer_tasks() can currently fail in the middle due to memory
+> allocation failure.  When that happens, the function just aborts and
+> returns error code and there's no way to tell how many actually got
+> migrated at the point of failure and or to revert the partial
+> migration.
 > 
-> This is v2 of cleanups-after-kernfs-conversion patchset.  Nothing
-> really changed since the last take[L]. It just got rebased on top of
-> the updated patches.
-> 
-> This patchset does a number of cleanups which are possible now that
-> cgroup is converted to kernfs.  This patchset contains the following
-> eight patches.
+> Update it to use cgroup_migrate{_add_src|prepare_dst|migrate|finish}()
+> so that the function either succeeds or fails as a whole as long as
+> ->can_attach() doesn't fail.
 
-Applied to cgroup/for-3.15.
+While this solves one aspect of the problem, it may still race with
+fork and may leave newly forked tasks behind.  I'll think more about
+it.
 
 Thanks.
 
