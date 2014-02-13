@@ -1,106 +1,67 @@
-From: Michal Hocko <mhocko@suse.cz>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH 1/2] memcg: reparent charges of children before
  processing parent
-Date: Thu, 13 Feb 2014 16:27:45 +0100
-Message-ID: <20140213152745.GE11986@dhcp22.suse.cz>
+Date: Thu, 13 Feb 2014 10:35:01 -0500
+Message-ID: <20140213153501.GA17608@htj.dyndns.org>
 References: <alpine.LSU.2.11.1402121500070.5029@eggly.anvils>
+ <20140213152745.GE11986@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=27gcFiHsKf9YFxu5KxxjNgbXusucoQxC22nxCu/jk0Q=;
+        b=ftPKWuIFGEXKTiPUvAs0Yv19I9v1G8nZ+sQF/Fwji9fmUO8012PWAWA9EMGBbR47Kp
+         9/ZT80VqEWkoJ8hXY7BPiSw/CIO2Ls4CMN77as6RL0LEyw8Y6DMBVDTvjxhvdIo/xZne
+         apeqBnO20+0AURPStFP0VEIOTBP2ms4Bso7vUS/n7+3W2sG9Po+E5rNqdceKHT6ogSn/
+         bfDyXFjHhutCK51ZokgDfCg0+igyPjBgOZ1D+214KvHTnclfztcIwUnlpUo06SZvUDTa
+         yVqW/nW2QtC8jJF+ACRqvoJXcNxziJ4vvf+9AHYkgCfX2dg5srdxXicZQ8ifOZteSFGf
+         jxRg==
 Content-Disposition: inline
-In-Reply-To: <alpine.LSU.2.11.1402121500070.5029@eggly.anvils>
+In-Reply-To: <20140213152745.GE11986@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Hugh Dickins <hughd@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Filipe Brandenburger <filbranden@google.com>, Li Zefan <lizefan@huawei.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Michel Lespinasse <walken@google.com>, Markus Blank-Burian <burian@muenster.de>, Shawn Bohrer <shawn.bohrer@gmail.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Hugh Dickins <hughd@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Filipe Brandenburger <filbranden@google.com>, Li Zefan <lizefan@huawei.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Michel Lespinasse <walken@google.com>, Markus Blank-Burian <burian@muenster.de>, Shawn Bohrer <shawn.bohrer@gmail.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Wed 12-02-14 15:03:31, Hugh Dickins wrote:
-> From: Filipe Brandenburger <filbranden@google.com>
+Hello,
+
+On Thu, Feb 13, 2014 at 04:27:45PM +0100, Michal Hocko wrote:
+> > Further testing showed that an ordered workqueue for cgroup_destroy_wq
+> > is not always good enough: percpu_ref_kill_and_confirm's call_rcu_sched
+> > stage on the way can mess up the order before reaching the workqueue.
 > 
-> Sometimes the cleanup after memcg hierarchy testing gets stuck in
-> mem_cgroup_reparent_charges(), unable to bring non-kmem usage down to 0.
+> This whole code path is so complicated by different types of delayed
+> work that I am not wondering that we have missed that :/
+
+Yeah, I know.  Good part of the complexity comes from RCU -> wq
+bouncing.  I wonder whether we just should bite the bullet and add
+something along the line of call_rcu_work().  The other part is percpu
+ref shutdown.  For me that part is easier to swallow, as the benefits
+are quite clear.
+
+> > Instead, when offlining a memcg, call mem_cgroup_reparent_charges() on
+> > all its children (and grandchildren, in the correct order) to have their
+> > charges reparented first.
 > 
-> There may turn out to be several causes, but a major cause is this: the
-> workitem to offline parent can get run before workitem to offline child;
-> parent's mem_cgroup_reparent_charges() circles around waiting for the
-> child's pages to be reparented to its lrus, but it's holding cgroup_mutex
-> which prevents the child from reaching its mem_cgroup_reparent_charges().
-> 
-> Further testing showed that an ordered workqueue for cgroup_destroy_wq
-> is not always good enough: percpu_ref_kill_and_confirm's call_rcu_sched
-> stage on the way can mess up the order before reaching the workqueue.
+> That is basically what I was suggesting
+> http://marc.info/?l=linux-mm&m=139178386407184&w=2 as #1 option. I
+> cannot say I would like it and I think that reparenting LRUs in
+> css_offline and then reparent the remaining charges from css_free is a
+> better solution but let's keep this for later.
 
-This whole code path is so complicated by different types of delayed
-work that I am not wondering that we have missed that :/
+I'm kinda wishing the reparenting things works out.  Even if that
+involves a bit of overhead at offline, I think it'd be worthwhile to
+be able to follow the same object lifetime rules as other controllers,
+as long as the overhead is reasonable.
 
-> Instead, when offlining a memcg, call mem_cgroup_reparent_charges() on
-> all its children (and grandchildren, in the correct order) to have their
-> charges reparented first.
-
-That is basically what I was suggesting
-http://marc.info/?l=linux-mm&m=139178386407184&w=2 as #1 option. I
-cannot say I would like it and I think that reparenting LRUs in
-css_offline and then reparent the remaining charges from css_free is a
-better solution but let's keep this for later.
-
-> Fixes: e5fca243abae ("cgroup: use a dedicated workqueue for cgroup destruction")
-> Signed-off-by: Filipe Brandenburger <filbranden@google.com>
-> Signed-off-by: Hugh Dickins <hughd@google.com>
-> Cc: stable@vger.kernel.org # v3.10+ (but will need extra care)
-
-OK, I guess we should go with this one because it describes both the
-problem in memcg offlining and requirements from the cgroup core so the
-later approach can build on top of it.
-
-Acked-by: Michal Hocko <mhocko@suse.cz>
-
-> ---
-> Or, you may prefer my alternative cgroup.c approach in 2/2:
-> there's no need for both.  Please note that neither of these patches
-> attempts to handle the unlikely case of racy charges made to child
-> after its offline, but parent's offline coming before child's free:
-> mem_cgroup_css_free()'s backstop call to mem_cgroup_reparent_charges()
-> cannot help in that case, with or without these patches.  Fixing that
-> would have to be a separate effort - Michal's?
-
-I plan to implement the LRU care for css_offline and charge drain for
-css_free later on but I have quite some work on my plate currently so I
-cannot promis it will be done right now. I hope to have it soon though.
-
->  mm/memcontrol.c |   10 +++++++++-
->  1 file changed, 9 insertions(+), 1 deletion(-)
-> 
-> --- 3.14-rc2/mm/memcontrol.c	2014-02-02 18:49:07.897302115 -0800
-> +++ linux/mm/memcontrol.c	2014-02-11 17:48:07.604582963 -0800
-> @@ -6595,6 +6595,7 @@ static void mem_cgroup_css_offline(struc
->  {
->  	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
->  	struct mem_cgroup_event *event, *tmp;
-> +	struct cgroup_subsys_state *iter;
->  
->  	/*
->  	 * Unregister events and notify userspace.
-> @@ -6611,7 +6612,14 @@ static void mem_cgroup_css_offline(struc
->  	kmem_cgroup_css_offline(memcg);
->  
->  	mem_cgroup_invalidate_reclaim_iterators(memcg);
-> -	mem_cgroup_reparent_charges(memcg);
-> +
-> +	/*
-> +	 * This requires that offlining is serialized.  Right now that is
-> +	 * guaranteed because css_killed_work_fn() holds the cgroup_mutex.
-> +	 */
-> +	css_for_each_descendant_post(iter, css)
-> +		mem_cgroup_reparent_charges(mem_cgroup_from_css(iter));
-> +
->  	mem_cgroup_destroy_all_caches(memcg);
->  	vmpressure_cleanup(&memcg->vmpressure);
->  }
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
+tejun
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
