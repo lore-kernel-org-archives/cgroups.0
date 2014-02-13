@@ -1,46 +1,61 @@
-From: Hugh Dickins <hughd@google.com>
-Subject: Re: [PATCH 2/2] cgroup: bring back kill_cnt to order css
- destruction
-Date: Wed, 12 Feb 2014 16:38:25 -0800 (PST)
-Message-ID: <alpine.LSU.2.11.1402121636290.5728@eggly.anvils>
-References: <alpine.LSU.2.11.1402061541560.31342@eggly.anvils> <20140207164321.GE6963@cmpxchg.org> <alpine.LSU.2.11.1402121417230.5029@eggly.anvils> <alpine.LSU.2.11.1402121504150.5029@eggly.anvils> <20140213002853.GC2916@htj.dyndns.org>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCHSET cgroup/for-3.15] cgroup: more cleanups
+Date: Thu, 13 Feb 2014 10:01:59 +0800
+Message-ID: <52FC2797.90502@huawei.com>
+References: <1391953964-22088-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=RQBE9byUU74N/uyWGwa8yXi3aenunHpYkvD0w+Tktcs=;
-        b=e2ifjUQzDPrvU0eeYpZBQj0a3cy6XOcn2ecgwnAdQ7QQiuGmypbw85ghq2uMTJA9BE
-         IGsja6n5Y/+o9lMLO/bSJvo3k8lUZe4q3wcD6xhyUka5X+fQT7T/eKO856/MjVPEndw9
-         9hYA8pjwRAwPs1ZqC8X12BqNx8o7K80TsgF+lFDY9o1S1h6e4i+0HxO0g0HxWhIsLwZs
-         CxsMdBFq2YZ3QAseyGWusDZ7VG3+dLZ2AKsSzHDj11cQBxE4Kyg/s12NC/Rw1mmWS9+d
-         qQsWfp4hBu/F5rsmjbSnWFJ8EMh4mxn1x7m45vGtuR8UkLyHdtnWopTpl9ulqI6w9vsi
-         A+YQ==
-In-Reply-To: <20140213002853.GC2916@htj.dyndns.org>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Hugh Dickins <hughd@google.com>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Filipe Brandenburger <filbranden@google.com>, Li Zefan <lizefan@huawei.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Michel Lespinasse <walken@google.com>, Markus Blank-Burian <burian@muenster.de>, Shawn Bohrer <shawn.bohrer@gmail.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <1391953964-22088-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, 12 Feb 2014, Tejun Heo wrote:
+On 2014/2/9 21:52, Tejun Heo wrote:
+> Hello,
 > 
-> Not that your implementation is bad or anything but the patch itself
-> somehow makes me cringe a bit.  It's probably just because it has to
-> add to the already overly complicated offline path.  Guaranteeing
-> strict offline ordering might be a good idea but at least for the
-> immediate bug fix, I agree that the memcg specific fix seems better
-> suited.  Let's apply that one and reconsider this one if it turns out
-> we do need strict offline reordering.
+> This series contains assorted cleanups which also prepare for the
+> planned migration taskset handling update.
+> 
+> This patchset contains the following sixteen patches.
+> 
+>  0001-cgroup-disallow-xattr-release_agent-and-name-if-sane.patch
+>  0002-cgroup-drop-CGRP_ROOT_SUBSYS_BOUND.patch
+>  0003-cgroup-enable-task_cg_lists-on-the-first-cgroup-moun.patch
+>  0004-cgroup-relocate-cgroup_enable_task_cg_lists.patch
+>  0005-cgroup-implement-cgroup_has_tasks-and-unexport-cgrou.patch
+>  0006-cgroup-reimplement-cgroup_transfer_tasks-without-usi.patch
+>  0007-cgroup-make-css_set_lock-a-rwsem-and-rename-it-to-cs.patch
+>  0008-cpuset-use-css_task_iter_start-next-end-instead-of-c.patch
+>  0009-cgroup-remove-css_scan_tasks.patch
+>  0010-cgroup-separate-out-put_css_set_locked-and-remove-pu.patch
+>  0011-cgroup-move-css_set_rwsem-locking-outside-of-cgroup_.patch
+>  0012-cgroup-drop-skip_css-from-cgroup_taskset_for_each.patch
+>  0013-cpuset-don-t-use-cgroup_taskset_cur_css.patch
+>  0014-cgroup-remove-cgroup_taskset_cur_css-and-cgroup_task.patch
+>  0015-cgroup-cosmetic-updates-to-cgroup_attach_task.patch
+>  0016-cgroup-unexport-functions.patch
+> 
+> The notables ones are
+> 
+>  0003-0004 move task_cg_list enabling to the first mount instead of
+>  the first css task iteration.
+> 
+>  0005-0009 make css_set_lock a rwsem so that css_task_iter allows
+>  blocking during iteration and removes css_scan_tasks().
+> 
+>  0010-0015 clean up migration path to prepare for the planned
+>  migration taskset handling update.
+> 
 
-Yes, I agree completely - thanks.
-
-Hugh
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
