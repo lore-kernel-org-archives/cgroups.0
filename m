@@ -1,135 +1,95 @@
-From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 2/2] cgroup: bring back kill_cnt to order css destruction
-Date: Wed, 12 Feb 2014 15:06:26 -0800 (PST)
-Message-ID: <alpine.LSU.2.11.1402121504150.5029@eggly.anvils>
-References: <alpine.LSU.2.11.1402061541560.31342@eggly.anvils> <20140207164321.GE6963@cmpxchg.org> <alpine.LSU.2.11.1402121417230.5029@eggly.anvils>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH] Revert "cgroup: use an ordered workqueue for cgroup
+ destruction"
+Date: Wed, 12 Feb 2014 19:09:39 -0500
+Message-ID: <20140213000939.GA2916@htj.dyndns.org>
+References: <alpine.LSU.2.11.1402061541560.31342@eggly.anvils>
+ <20140207164321.GE6963@cmpxchg.org>
+ <alpine.LSU.2.11.1402121417230.5029@eggly.anvils>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=nzoxidBKPGiCEa7cBjRrVzvdTZslfmYdkYyJpID/aBA=;
-        b=OKy1+RCD8i/b9flcwHOFhHeg/2+BAAwAGMmKt7ZKR8nBkpwbJePaAmAHmTXS8+QWrO
-         2g4+djA/Bxr/UKg2bkOtabPMXlmIdekOUd3idpPm/oBmS9Fso68YOVupbYOJ3Y62kjut
-         Iqp7Unu1IEfBY695GVH/qJYyVC4mTOuYF+AfJTeFvA3/sYqxEXZR5WANH95jekNd/Rzq
-         SzHgShLHehWLMU3NDFPUZ29pi7jTsVZEGjVXrVigAlRsifGvOqvCrtDBi+HYtbsvpkYT
-         hvUqScTghuThAauziuER/yWmi6GD7+dHQTj28bjazRlShF9jCXjNq8nu72wu3pP5MCpM
-         h0rA==
-In-Reply-To: <alpine.LSU.2.11.1402121417230.5029-fupSdm12i1nKWymIFiNcPA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=VgmOiAwsYijAwvP1BjhNHNcn25nHo8MnY++fXQw5Hvc=;
+        b=GpTF2vQNVK2pfSZMa6J8U4RgHR+/hpSNogYDKuwyzS+DSFrykmMxxbv5I9s5DUigLJ
+         IpwavvTzQezeWWvdYzaacld8FSvsP0wAZR3NenvmkpCFfwgsk8qj6a3crZeRidQOM4Au
+         JWytF2y1VKCdsDK1Jz6kDd7HpeX/vtf2V/vzpWUOItiOsW7U8cnOwRZAYGIZrIo4AAl3
+         hkt24VRW9fkkxSt2bkpTgp2p+t2GSTkILIDWy3ZpqFMQM2tTggYs4iSXshw3qH1h1Nwd
+         1ew+QU3WQpXdxDMemAyvJjT5o8XLnBGErTxUb7DZkg4QQMho6u4mSJkVx5HZFIfE0YW8
+         kcLg==
+Content-Disposition: inline
+In-Reply-To: <alpine.LSU.2.11.1402121417230.5029@eggly.anvils>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Filipe Brandenburger <filbranden-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Markus Blank-Burian <burian-iYtK5bfT9M8b1SvskN2V4Q@public.gmane.org>, Shawn Bohrer <shawn.bohrer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Hugh Dickins <hughd@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Filipe Brandenburger <filbranden@google.com>, Li Zefan <lizefan@huawei.com>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Michel Lespinasse <walken@google.com>, Markus Blank-Burian <burian@muenster.de>, Shawn Bohrer <shawn.bohrer@gmail.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-Sometimes the cleanup after memcg hierarchy testing gets stuck in
-mem_cgroup_reparent_charges(), unable to bring non-kmem usage down to 0.
+From 1a11533fbd71792e8c5d36f6763fbce8df0d231d Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj@kernel.org>
+Date: Wed, 12 Feb 2014 19:06:19 -0500
 
-There may turn out to be several causes, but a major cause is this: the
-workitem to offline parent can get run before workitem to offline child;
-parent's mem_cgroup_reparent_charges() circles around waiting for the
-child's pages to be reparented to its lrus, but it's holding cgroup_mutex
-which prevents the child from reaching its mem_cgroup_reparent_charges().
+This reverts commit ab3f5faa6255a0eb4f832675507d9e295ca7e9ba.
+Explanation from Hugh:
 
-Further testing showed that an ordered workqueue for cgroup_destroy_wq
-is not always good enough: percpu_ref_kill_and_confirm's call_rcu_sched
-stage on the way can mess up the order before reaching the workqueue.
+  It's because more thorough testing, by others here, found that it
+  wasn't always solving the problem: so I asked Tejun privately to
+  hold off from sending it in, until we'd worked out why not.
 
-Instead bring back v3.11's css kill_cnt, repurposing it to make sure
-that offline_css() is not called for parent before it has been called
-for all children.
+  Most of our testing being on a v3,11-based kernel, it was perfectly
+  possible that the problem was merely our own e.g. missing Tejun's
+  8a2b75384444 ("workqueue: fix ordered workqueues in NUMA setups").
 
-Fixes: e5fca243abae ("cgroup: use a dedicated workqueue for cgroup destruction")
-Signed-off-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Reviewed-by: Filipe Brandenburger <filbranden-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # v3.10+ (but will need extra care)
+  But that turned out not to be enough to fix it either. Then Filipe
+  pointed out how percpu_ref_kill_and_confirm() uses call_rcu_sched()
+  before we ever get to put the offline on to the workqueue: by the
+  time we get to the workqueue, the ordering has already been lost.
+
+  So, thanks for the Acks, but I'm afraid that this ordered workqueue
+  solution is just not good enough: we should simply forget that patch
+  and provide a different answer."
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Hugh Dickins <hughd@google.com>
 ---
-This is an alternative to Filipe's 1/2: there's no need for both,
-but each has its merits.  I prefer Filipe's, which is much easier to
-understand: this one made more sense in v3.11, when it was just a matter
-of extending the use of css_kill_cnt; but might be preferred if offlining
-children before parent is thought to be a good idea generally.
+Queued to cgroup/for-3.14-fixes.
 
- include/linux/cgroup.h |    3 +++
- kernel/cgroup.c        |   21 +++++++++++++++++++++
- 2 files changed, 24 insertions(+)
+Thanks.
 
---- 3.14-rc2/include/linux/cgroup.h	2014-02-02 18:49:07.033302094 -0800
-+++ linux/include/linux/cgroup.h	2014-02-11 15:59:22.720393186 -0800
-@@ -79,6 +79,9 @@ struct cgroup_subsys_state {
- 
- 	unsigned long flags;
- 
-+	/* ensure children are offlined before parent */
-+	atomic_t kill_cnt;
-+
- 	/* percpu_ref killing and RCU release */
- 	struct rcu_head rcu_head;
- 	struct work_struct destroy_work;
---- 3.14-rc2/kernel/cgroup.c	2014-02-02 18:49:07.737302111 -0800
-+++ linux/kernel/cgroup.c	2014-02-11 15:57:56.000391125 -0800
-@@ -175,6 +175,7 @@ static int need_forkexit_callback __read
- 
- static struct cftype cgroup_base_files[];
- 
-+static void css_killed_ref_fn(struct percpu_ref *ref);
- static void cgroup_destroy_css_killed(struct cgroup *cgrp);
- static int cgroup_destroy_locked(struct cgroup *cgrp);
- static int cgroup_addrm_files(struct cgroup *cgrp, struct cftype cfts[],
-@@ -4043,6 +4044,7 @@ static void init_css(struct cgroup_subsy
- 	css->cgroup = cgrp;
- 	css->ss = ss;
- 	css->flags = 0;
-+	atomic_set(&css->kill_cnt, 1);
- 
- 	if (cgrp->parent)
- 		css->parent = cgroup_css(cgrp->parent, ss);
-@@ -4292,6 +4294,7 @@ static void css_killed_work_fn(struct wo
- {
- 	struct cgroup_subsys_state *css =
- 		container_of(work, struct cgroup_subsys_state, destroy_work);
-+	struct cgroup_subsys_state *parent = css->parent;
- 	struct cgroup *cgrp = css->cgroup;
- 
- 	mutex_lock(&cgroup_mutex);
-@@ -4320,6 +4323,12 @@ static void css_killed_work_fn(struct wo
- 	 * destruction happens only after all css's are released.
+ kernel/cgroup.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 52719ce..68d8710 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -4844,16 +4844,12 @@ static int __init cgroup_wq_init(void)
+ 	/*
+ 	 * There isn't much point in executing destruction path in
+ 	 * parallel.  Good chunk is serialized with cgroup_mutex anyway.
+-	 *
+-	 * XXX: Must be ordered to make sure parent is offlined after
+-	 * children.  The ordering requirement is for memcg where a
+-	 * parent's offline may wait for a child's leading to deadlock.  In
+-	 * the long term, this should be fixed from memcg side.
++	 * Use 1 for @max_active.
+ 	 *
+ 	 * We would prefer to do this in cgroup_init() above, but that
+ 	 * is called before init_workqueues(): so leave this until after.
  	 */
- 	css_put(css);
-+
-+	/*
-+	 * Put the parent's kill_cnt reference from kill_css(), and
-+	 * schedule its ->css_offline() if all children are now offline.
-+	 */
-+	css_killed_ref_fn(&parent->refcnt);
- }
+-	cgroup_destroy_wq = alloc_ordered_workqueue("cgroup_destroy", 0);
++	cgroup_destroy_wq = alloc_workqueue("cgroup_destroy", 0, 1);
+ 	BUG_ON(!cgroup_destroy_wq);
  
- /* css kill confirmation processing requires process context, bounce */
-@@ -4328,6 +4337,9 @@ static void css_killed_ref_fn(struct per
- 	struct cgroup_subsys_state *css =
- 		container_of(ref, struct cgroup_subsys_state, refcnt);
- 
-+	if (!atomic_dec_and_test(&css->kill_cnt))
-+		return;
-+
- 	INIT_WORK(&css->destroy_work, css_killed_work_fn);
- 	queue_work(cgroup_destroy_wq, &css->destroy_work);
- }
-@@ -4362,6 +4374,15 @@ static void kill_css(struct cgroup_subsy
- 	 * css is confirmed to be seen as killed on all CPUs.
- 	 */
- 	percpu_ref_kill_and_confirm(&css->refcnt, css_killed_ref_fn);
-+
-+	/*
-+	 * Make sure that ->css_offline() will not be called for parent
-+	 * before it has been called for all children: this ordering
-+	 * requirement is important for memcg, where parent's offline
-+	 * might wait for a child's, leading to deadlock.
-+	 */
-+	atomic_inc(&css->parent->kill_cnt);
-+	css_killed_ref_fn(&css->refcnt);
- }
- 
- /**
+ 	/*
+-- 
+1.8.5.3
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
