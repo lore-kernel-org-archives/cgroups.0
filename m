@@ -1,7 +1,7 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] kernfs: fix kernfs_node_from_dentry()
-Date: Fri, 14 Feb 2014 16:57:27 +0800
-Message-ID: <52FDDA77.6070606@huawei.com>
+Subject: [PATCH] cgroup: fix top cgroup refcnt leak
+Date: Fri, 14 Feb 2014 17:36:19 +0800
+Message-ID: <52FDE393.6050607@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -9,66 +9,82 @@ Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Currently kernfs_node_from_dentry() returns NULL for root dentry,
-because root_dentry->d_op == NULL.
+If we mount the same cgroupfs in serveral mount points, and then
+umount all of them, kill_sb() will be called only once.
 
-Due to this bug cgroupstats_build() returns -EINVAL for root cgroup.
+Therefore it's wrong to increment top_cgroup's refcnt when we find
+an existing cgroup_root.
 
-  # mount -t cgroup -o cpuacct /cgroup
-  # Documentation/accounting/getdelays -C /cgroup
-  fatal reply error,  errno -22
+Try:
+	# mount -t cgroup -o cpuacct xxx /cgroup
+	# mount -t cgroup -o cpuacct xxx /cgroup2
+	# cat /proc/cgroups | grep cpuacct
+	cpuacct 2       1       1
+	# umount /cgroup
+	# umount /cgroup2
+	# cat /proc/cgroups | grep cpuacct
+	cpuacct 2       1       1
 
-With this fix:
+You'll see cgroupfs will never be freed.
 
-  # Documentation/accounting/getdelays -C /cgroup
-  sleeping 305, blocked 0, running 1, stopped 0, uninterruptible 1
+Also move this chunk of code upwards.
 
 Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- fs/kernfs/dir.c             | 2 +-
- fs/kernfs/kernfs-internal.h | 1 +
- fs/kernfs/mount.c           | 2 +-
- 3 files changed, 3 insertions(+), 2 deletions(-)
+ kernel/cgroup.c | 32 ++++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
 
-diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
-index 939684e..300f57b 100644
---- a/fs/kernfs/dir.c
-+++ b/fs/kernfs/dir.c
-@@ -501,7 +501,7 @@ const struct dentry_operations kernfs_dops = {
-  */
- struct kernfs_node *kernfs_node_from_dentry(struct dentry *dentry)
- {
--	if (dentry->d_op == &kernfs_dops)
-+	if (dentry->d_sb->s_op == &kernfs_sops)
- 		return dentry->d_fsdata;
- 	return NULL;
- }
-diff --git a/fs/kernfs/kernfs-internal.h b/fs/kernfs/kernfs-internal.h
-index a91d7a1..8be13b2 100644
---- a/fs/kernfs/kernfs-internal.h
-+++ b/fs/kernfs/kernfs-internal.h
-@@ -65,6 +65,7 @@ struct kernfs_super_info {
- };
- #define kernfs_info(SB) ((struct kernfs_super_info *)(SB->s_fs_info))
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 37d94a2..5bfe738 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1498,6 +1498,22 @@ retry:
+ 		bool name_match = false;
  
-+extern const struct super_operations kernfs_sops;
- extern struct kmem_cache *kernfs_node_cache;
+ 		/*
++		 * A root's lifetime is governed by its top cgroup.  Zero
++		 * ref indicate that the root is being destroyed.  Wait for
++		 * destruction to complete so that the subsystems are free.
++		 * We can use wait_queue for the wait but this path is
++		 * super cold.  Let's just sleep for a bit and retry.
++		 */
++		if (!atomic_read(&root->top_cgroup.refcnt)) {
++			mutex_unlock(&cgroup_mutex);
++			mutex_unlock(&cgroup_tree_mutex);
++			kfree(opts.release_agent);
++			kfree(opts.name);
++			msleep(10);
++			goto retry;
++		}
++
++		/*
+ 		 * If we asked for a name then it must match.  Also, if
+ 		 * name matches but sybsys_mask doesn't, we should fail.
+ 		 * Remember whether name matched.
+@@ -1530,22 +1546,6 @@ retry:
+ 			}
+ 		}
  
- /*
-diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
-index e5b28b0..405279b 100644
---- a/fs/kernfs/mount.c
-+++ b/fs/kernfs/mount.c
-@@ -39,7 +39,7 @@ static int kernfs_sop_show_options(struct seq_file *sf, struct dentry *dentry)
- 	return 0;
- }
- 
--static const struct super_operations kernfs_sops = {
-+const struct super_operations kernfs_sops = {
- 	.statfs		= simple_statfs,
- 	.drop_inode	= generic_delete_inode,
- 	.evict_inode	= kernfs_evict_inode,
+-		/*
+-		 * A root's lifetime is governed by its top cgroup.  Zero
+-		 * ref indicate that the root is being destroyed.  Wait for
+-		 * destruction to complete so that the subsystems are free.
+-		 * We can use wait_queue for the wait but this path is
+-		 * super cold.  Let's just sleep for a bit and retry.
+-		 */
+-		if (!atomic_inc_not_zero(&root->top_cgroup.refcnt)) {
+-			mutex_unlock(&cgroup_mutex);
+-			mutex_unlock(&cgroup_tree_mutex);
+-			kfree(opts.release_agent);
+-			kfree(opts.name);
+-			msleep(10);
+-			goto retry;
+-		}
+-
+ 		ret = 0;
+ 		goto out_unlock;
+ 	}
 -- 
 1.8.0.2
