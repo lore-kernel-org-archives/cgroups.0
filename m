@@ -1,102 +1,96 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 7/7] cgroup: update cgroup_transfer_tasks() to either succeed
-	or fail
-Date: Thu, 13 Feb 2014 15:28:53 -0500
-Message-ID: <1392323333-18907-8-git-send-email-tj@kernel.org>
-References: <1392323333-18907-1-git-send-email-tj@kernel.org>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-3.14-fixes] cgroup: update cgroup_enable_task_cg_lists()
+ to grab siglock
+Date: Fri, 14 Feb 2014 11:49:42 +0800
+Message-ID: <52FD9256.1080801@huawei.com>
+References: <20140213182931.GB17608@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=6AgpWSP3w9RNdl4WcAXYuhMyYywUVYUzxiHGZJMGeQs=;
-	b=dFLiuPg0y5/vPPvKMipXyHUqoI8q8VksPePnyW5UNPEKdRM7Rt8+i0UR1z7iEHUrMp
-	4dU6GvHqordiIUFAa2W/g+MFmj/AR9qadyWXNgc/JMCFV2vnDYTTlswxTrAIkKCJnytq
-	sS6b1RyhfOyBHCw6xF1WgQBnct+TZk/Oa8ekL6+u4J7yrxKWiuM1bhSFT8s9aI0G1X7T
-	0rWHQXcZq0vu1wylU5uN12rgRV4dOtqEKysE/BR918v1ZkJh0bYEtASzrw2tbAQKTvn/
-	hz34dP8koXARZXoSeGP9bdrNfKEtG7e9OKOS46dIHFGGfcIAFhfalFo/b/eLkey5Wr3g
-	xEOQ==
-In-Reply-To: <1392323333-18907-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20140213182931.GB17608-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-cgroup_transfer_tasks() can currently fail in the middle due to memory
-allocation failure.  When that happens, the function just aborts and
-returns error code and there's no way to tell how many actually got
-migrated at the point of failure and or to revert the partial
-migration.
+On 2014/2/14 2:29, Tejun Heo wrote:
+> Currently, there's nothing preventing cgroup_enable_task_cg_lists()
+> from missing set PF_EXITING and race against cgroup_exit().  Depending
+> on the timing, cgroup_exit() may finish with the task still linked on
+> css_set leading to list corruption.  Fix it by grabbing siglock in
+> cgroup_enable_task_cg_lists() so that PF_EXITING is guaranteed to be
+> visible.
+> 
+> This whole on-demand cg_list optimization is extremely fragile and has
+> ample possibility to lead to bugs which can cause things like
+> once-a-year oops during boot.
 
-Update it to use cgroup_migrate{_add_src|prepare_dst|migrate|finish}()
-so that the function either succeeds or fails as a whole as long as
-->can_attach() doesn't fail.
+I added the PF_EXITING check years ago:
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- kernel/cgroup.c | 28 +++++++++++++++++++++++-----
- 1 file changed, 23 insertions(+), 5 deletions(-)
+commit 0e04388f0189fa1f6812a8e1cb6172136eada87e
+Author: Li Zefan <lizf-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Date:   Thu Apr 17 11:37:15 2008 +0800
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index e373520..1d52885 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -2807,10 +2807,28 @@ void css_task_iter_end(struct css_task_iter *it)
-  */
- int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from)
- {
-+	LIST_HEAD(preloaded_csets);
-+	struct cgrp_cset_link *link;
- 	struct css_task_iter it;
- 	struct task_struct *task;
--	int ret = 0;
-+	int ret;
-+
-+	mutex_lock(&cgroup_mutex);
-+
-+	/* all tasks in @from are being moved, all csets are source */
-+	down_read(&css_set_rwsem);
-+	list_for_each_entry(link, &from->cset_links, cset_link)
-+		cgroup_migrate_add_src(link->cset, to, &preloaded_csets);
-+	up_read(&css_set_rwsem);
- 
-+	ret = cgroup_migrate_prepare_dst(to, &preloaded_csets);
-+	if (ret)
-+		goto out_err;
-+
-+	/*
-+	 * Migrate tasks one-by-one until @form is empty.  This fails iff
-+	 * ->can_attach() fails.
-+	 */
- 	do {
- 		css_task_iter_start(&from->dummy_css, &it);
- 		task = css_task_iter_next(&it);
-@@ -2819,13 +2837,13 @@ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from)
- 		css_task_iter_end(&it);
- 
- 		if (task) {
--			mutex_lock(&cgroup_mutex);
--			ret = cgroup_attach_task(to, task, false);
--			mutex_unlock(&cgroup_mutex);
-+			ret = cgroup_migrate(to, task, false);
- 			put_task_struct(task);
- 		}
- 	} while (task && !ret);
--
-+out_err:
-+	cgroup_migrate_finish(&preloaded_csets);
-+	mutex_unlock(&cgroup_mutex);
- 	return ret;
- }
- 
--- 
-1.8.5.3
+    cgroup: fix a race condition in manipulating tsk->cg_list
+
+Now the only race I see is caused by checking tsk->cg_list without locking
+in cgroup_exit():
+
+cgroup_enable_task_cg_lists()
+  ...
+  if (!p->flags & PF_EXITING) && list_empty(p->cg_list))
+								exit_signal(tsk)  <-- set PF_EXTING;
+								...
+								if (!list_empty(&tsk->cg_list)) {
+								        down_write(&css_set_rwsem);
+								        if (!list_empty(&tsk->cg_list))
+								                list_del_init(&tsk->cg_list);
+								        up_write(&css_set_rwsem);
+								}
+  	list_add(p->cg_list, ...);
+
+Your patch can fix this race, but after diving into the code I don't think
+the race exists, because exit_mm() locks&unlocks task_lock, and exit_mm()
+is called after exit_signal() and before cgroup_exit(), and task_lock is
+also taken by cgroup_enable_task_cg_lists().
+
+I totally agree the code is fragile and we should take your patch. I just
+want to make it clear if the bug exists in real life or not, and then we
+can write better changelog and decide to queue the patch for 3.14 or 3.15
+and decide to mark it for stable or not.
+
+> I'm wondering whether the better
+> approach would be just adding "cgroup_disable=all" handling which
+> disables the whole cgroup rather than tempting fate with this
+> on-demand craziness.
+> 
+
+:)
+
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> ---
+>  kernel/cgroup.c |    5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+> index 68d8710..105f273 100644
+> --- a/kernel/cgroup.c
+> +++ b/kernel/cgroup.c
+> @@ -2905,9 +2905,14 @@ static void cgroup_enable_task_cg_lists(void)
+>  		 * We should check if the process is exiting, otherwise
+>  		 * it will race with cgroup_exit() in that the list
+>  		 * entry won't be deleted though the process has exited.
+> +		 * Do it while holding siglock so that we don't end up
+> +		 * racing against cgroup_exit().
+>  		 */
+> +		spin_lock_irq(&p->sighand->siglock);
+>  		if (!(p->flags & PF_EXITING) && list_empty(&p->cg_list))
+>  			list_add(&p->cg_list, &task_css_set(p)->tasks);
+> +		spin_unlock_irq(&p->sighand->siglock);
+> +
+>  		task_unlock(p);
+>  	} while_each_thread(g, p);
+>  	read_unlock(&tasklist_lock);
+> 
