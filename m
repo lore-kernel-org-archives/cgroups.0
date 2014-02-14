@@ -1,59 +1,38 @@
 From: Li Zefan <lizefan@huawei.com>
-Subject: [PATCH 1/3] cgroup: fix locking in cgroupstats_build()
-Date: Fri, 14 Feb 2014 16:54:28 +0800
-Message-ID: <52FDD9C4.1070001@huawei.com>
+Subject: [PATCH 2/3] cgroup: fix memory leak in cgroup_mount()
+Date: Fri, 14 Feb 2014 16:55:04 +0800
+Message-ID: <52FDD9E8.4060408@huawei.com>
+References: <52FDD9C4.1070001@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <52FDD9C4.1070001@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj@kernel.org>
 Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-css_set_lock has been converted to css_set_rwsem, and rwsem can't
-nested inside rcu_read_lock.
+We should free the memory allocated in parse_cgroupfs_options() before
+calling this function again.
 
 Signed-off-by: Li Zefan <lizefan@huawei.com>
 ---
- kernel/cgroup.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ kernel/cgroup.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index af4ecc3..0e794ca 100644
+index 0e794ca..37d94a2 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -2997,6 +2997,8 @@ int cgroupstats_build(struct cgroupstats *stats, struct dentry *dentry)
- 	    kernfs_type(kn) != KERNFS_DIR)
- 		return -EINVAL;
- 
-+	mutex_lock(&cgroup_mutex);
-+
- 	/*
- 	 * We aren't being called from kernfs and there's no guarantee on
- 	 * @kn->priv's validity.  For this and css_tryget_from_dir(),
-@@ -3004,10 +3006,12 @@ int cgroupstats_build(struct cgroupstats *stats, struct dentry *dentry)
- 	 */
- 	rcu_read_lock();
- 	cgrp = rcu_dereference(kn->priv);
--	if (!cgrp) {
-+	if (!cgrp || cgroup_is_dead(cgrp)) {
- 		rcu_read_unlock();
-+		mutex_unlock(&cgroup_mutex);
- 		return -ENOENT;
- 	}
-+	rcu_read_unlock();
- 
- 	css_task_iter_start(&cgrp->dummy_css, &it);
- 	while ((tsk = css_task_iter_next(&it))) {
-@@ -3032,7 +3036,7 @@ int cgroupstats_build(struct cgroupstats *stats, struct dentry *dentry)
- 	}
- 	css_task_iter_end(&it);
- 
--	rcu_read_unlock();
-+	mutex_unlock(&cgroup_mutex);
- 	return 0;
- }
- 
+@@ -1540,6 +1540,8 @@ retry:
+ 		if (!atomic_inc_not_zero(&root->top_cgroup.refcnt)) {
+ 			mutex_unlock(&cgroup_mutex);
+ 			mutex_unlock(&cgroup_tree_mutex);
++			kfree(opts.release_agent);
++			kfree(opts.name);
+ 			msleep(10);
+ 			goto retry;
+ 		}
 -- 
 1.8.0.2
