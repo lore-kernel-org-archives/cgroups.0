@@ -1,47 +1,48 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cgroup: fix top cgroup refcnt leak
-Date: Fri, 14 Feb 2014 11:02:25 -0500
-Message-ID: <20140214160225.GD31544@htj.dyndns.org>
-References: <52FDE393.6050607@huawei.com>
- <52FDFAC6.1080802@gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] kernfs: fix kernfs_node_from_dentry()
+Date: Fri, 14 Feb 2014 11:03:01 -0500
+Message-ID: <20140214160301.GE31544@htj.dyndns.org>
+References: <52FDDA77.6070606@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=+etRBozYHVhZ25Nj0eDVVu8D3xpDVN0efwFXg9B8diw=;
-        b=eRdkB1IDj9qhoT4usBHBjLH4yw8dW19KN7csXL1qBtcHnOIAANSxzIFiTJBT5S/zBR
-         9qOib/lqVcjKM7w4fxQUGLhyctxJ2UQky0MUdGP9Fn+NdpPgX6nSa3k2p/uD64CN8D1H
-         Ynoz537i6mMh+9D51RMyEqvTr4SO5fSH0Kz/DNGBW3fB7sys6MSSwHwEhXBjm9wuGoxz
-         sqw23HcnXRYd0/313wTC9cSt/6F5XM7+le78LQ4peO868ohaeb5zHoT2JfeLeTQ6nfZ6
-         3JtXK0uAO1VG8SVzInUl9taH21eoBu4g9jMS7UdaAP89UvS1HNReqi3WM2Z5g3gOiQ7s
-         mjtQ==
+        bh=Y2q5n43n/QhHw2ZvmUmpmLafkf1NRuG6RvQJULnnduY=;
+        b=pBAfYtABN4cqwPK/JEeDR8VScL/nOiRW2Eyo6+Nsp3M5gfniITmWvj3PG4HtMxUPpK
+         Z3vuI+Fbnl1QtKLWDe9KrVtg6FXgHBqAsDJVGPKNxv8KOdtZTfZRpF84+B/JALgoIabs
+         L1H33XiMs8nKFRPztKY7Rm8SgSEmJAoh9puJs2Dw8B8WdqL82z7UPysnoOzg0uarlWxW
+         CupKK1BUjXyRpD/fV/X58ixIJ7rh1szn3/pt6ttKTXTJYBczP8K/v+uiYp57oeuileUB
+         8jbdVfLqw1VRfYCSzFv8uJS1hB+Qa13sMNxRfmFvN+6n8iDoAaWtvYyB+KdJpnqhsp2w
+         ff2w==
 Content-Disposition: inline
-In-Reply-To: <52FDFAC6.1080802@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <52FDDA77.6070606-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizf.kern@gmail.com>
-Cc: Li Zefan <lizefan@huawei.com>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Fri, Feb 14, 2014 at 07:15:18PM +0800, Li Zefan wrote:
-> >  		/*
-> > +		 * A root's lifetime is governed by its top cgroup.  Zero
-> > +		 * ref indicate that the root is being destroyed.  Wait for
-> > +		 * destruction to complete so that the subsystems are free.
-> > +		 * We can use wait_queue for the wait but this path is
-> > +		 * super cold.  Let's just sleep for a bit and retry.
-> > +		 */
-> > +		if (!atomic_read(&root->top_cgroup.refcnt)) {
+On Fri, Feb 14, 2014 at 04:57:27PM +0800, Li Zefan wrote:
+> Currently kernfs_node_from_dentry() returns NULL for root dentry,
+> because root_dentry->d_op == NULL.
 > 
-> oops, this fix is wrong. We call kernfs_mount() without cgroup locks and it
-> drops cgroup refcnt if failed.
+> Due to this bug cgroupstats_build() returns -EINVAL for root cgroup.
 > 
-> I guess we need to bump the refcnt and then drop it after kernfs_mount().
+>   # mount -t cgroup -o cpuacct /cgroup
+>   # Documentation/accounting/getdelays -C /cgroup
+>   fatal reply error,  errno -22
+> 
+> With this fix:
+> 
+>   # Documentation/accounting/getdelays -C /cgroup
+>   sleeping 305, blocked 0, running 1, stopped 0, uninterruptible 1
+> 
+> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Alright, will wait for the updated fix.
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
 Thanks!
 
