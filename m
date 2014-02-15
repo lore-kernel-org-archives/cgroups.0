@@ -1,58 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] kernfs: fix kernfs_node_from_dentry()
-Date: Fri, 14 Feb 2014 17:04:24 -0500
-Message-ID: <20140214220424.GA4634@mtj.dyndns.org>
-References: <52FDDA77.6070606@huawei.com>
- <20140214160301.GE31544@htj.dyndns.org>
- <20140214220440.GA3998@kroah.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 cgroup/for-3.15] cgroup: make cgroup_enable_task_cg_lists()
+ to grab siglock
+Date: Sat, 15 Feb 2014 10:11:47 +0800
+Message-ID: <52FECCE3.1010707@huawei.com>
+References: <20140213182931.GB17608@htj.dyndns.org> <20140214204709.GB2851@mtj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=F0xZB6eK7pxGfOM+LgN8OcwOK06aoZrbMxPOObJvRdQ=;
-        b=0fqIsLMrwSZKbUohuibOFaXbS1fTbLX0UHT0klddKJL17eEdmsTLyoncNuiHPkgvfc
-         N9qAxzeniNIKMlxBRTEzQEpgYLj/XMRe3X4T9N3Fp7lYb27kFV0auWMxBjOFFBN+en2G
-         S2VyF9m5o7JpeATvvoGGVSUOo43ms2fOA/TTBS0B9wePUnz9QGy5BoNobsuzr8gSzfeW
-         VFTxPh08fLXqujwTCYiabGwUQclf9HDiEPamGrWu2pAcaxC6bBihiBMZektagYHBXx1F
-         CRZz3SeDsoJTlpmIDsXTK+CiKkyUaRO9CI1zSIgkZB0CzixAwc3G3Pp8pPlR4TiCfllw
-         zxTA==
-Content-Disposition: inline
-In-Reply-To: <20140214220440.GA3998@kroah.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20140214204709.GB2851-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Li Zefan <lizefan@huawei.com>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Feb 14, 2014 at 02:04:40PM -0800, Greg Kroah-Hartman wrote:
-> On Fri, Feb 14, 2014 at 11:03:01AM -0500, Tejun Heo wrote:
-> > On Fri, Feb 14, 2014 at 04:57:27PM +0800, Li Zefan wrote:
-> > > Currently kernfs_node_from_dentry() returns NULL for root dentry,
-> > > because root_dentry->d_op == NULL.
-> > > 
-> > > Due to this bug cgroupstats_build() returns -EINVAL for root cgroup.
-> > > 
-> > >   # mount -t cgroup -o cpuacct /cgroup
-> > >   # Documentation/accounting/getdelays -C /cgroup
-> > >   fatal reply error,  errno -22
-> > > 
-> > > With this fix:
-> > > 
-> > >   # Documentation/accounting/getdelays -C /cgroup
-> > >   sleeping 305, blocked 0, running 1, stopped 0, uninterruptible 1
-> > > 
-> > > Signed-off-by: Li Zefan <lizefan@huawei.com>
-> > 
-> > Acked-by: Tejun Heo <tj@kernel.org>
+On 2014/2/15 4:47, Tejun Heo wrote:
+> Currently, there's nothing explicitly preventing
+> cgroup_enable_task_cg_lists() from missing set PF_EXITING and race
+> against cgroup_exit(), and, depending on the timing, cgroup_exit()
+> seemingly may finish with the task still linked on css_set leading to
+> list corruption because cgroup_enable_task_cg_lists() can end up
+> linking it after list_empty(&tsk->cg_list) test in cgroup_exit().
 > 
-> Is this needed for 3.14-final or 3.15-rc1?
+> This can't really happen because exit_mm() grabs and release
+> task_lock() between setting of PF_EXITING and cgroup_exit(), and
+> cgroup_enable_task_cg_lists() synchronizes against task_lock too;
+> however, this is fragile and more of a happy accident.  Let's make the
+> synchronization explicit by making cgroup_enable_task_cg_lists() grab
+> siglock around PF_EXITING testing.
+> 
+> This whole on-demand cg_list optimization is extremely fragile and has
+> ample possibility to lead to bugs which can cause things like
+> once-a-year oops during boot.  I'm wondering whether the better
+> approach would be just adding "cgroup_disable=all" handling which
+> disables the whole cgroup rather than tempting fate with this dynamic
+> optimization craziness.
+> 
+> v2: Li pointed out that the race condition can't actually happen due
+>     to task_lock locking in exit_mm().  Updated the patch description
+>     accordingly and dropped -stable cc.
+> 
 
-3.15-rc1, so, driver-core-next.
-
-Thanks.
-
--- 
-tejun
+I realise exit_mm() is a no-op for threads... There're quite a few places
+task_lock is used between exit_signal() and cgroup_exit(), but they're
+all conditional, so I think your original changelog stands!
