@@ -1,35 +1,80 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.14-fixes] cgroup: update cgroup_enable_task_cg_lists()
- to grab siglock
-Date: Sat, 15 Feb 2014 11:37:48 +0800
-Message-ID: <52FEE10C.7010101@huawei.com>
-References: <20140213182931.GB17608@htj.dyndns.org>
+Subject: [PATCH v2] cgroup: fix top cgroup refcnt leak
+Date: Sat, 15 Feb 2014 12:03:04 +0800
+Message-ID: <52FEE6F8.8030404@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20140213182931.GB17608-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On 2014/2/14 2:29, Tejun Heo wrote:
-> Currently, there's nothing preventing cgroup_enable_task_cg_lists()
-> from missing set PF_EXITING and race against cgroup_exit().  Depending
-> on the timing, cgroup_exit() may finish with the task still linked on
-> css_set leading to list corruption.  Fix it by grabbing siglock in
-> cgroup_enable_task_cg_lists() so that PF_EXITING is guaranteed to be
-> visible.
-> 
-> This whole on-demand cg_list optimization is extremely fragile and has
-> ample possibility to lead to bugs which can cause things like
-> once-a-year oops during boot.  I'm wondering whether the better
-> approach would be just adding "cgroup_disable=all" handling which
-> disables the whole cgroup rather than tempting fate with this
-> on-demand craziness.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+If we mount the same cgroupfs in serveral mount points, and then
+umount all of them, kill_sb() will be called only once.
 
-Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Therefore it's wrong to increment top_cgroup's refcnt when we find
+an existing cgroup_root.
+
+Try:
+        # mount -t cgroup -o cpuacct xxx /cgroup
+        # mount -t cgroup -o cpuacct xxx /cgroup2
+        # cat /proc/cgroups | grep cpuacct
+        cpuacct 2       1       1
+        # umount /cgroup
+        # umount /cgroup2
+        # cat /proc/cgroups | grep cpuacct
+        cpuacct 2       1       1
+
+You'll see cgroupfs will never be freed.
+
+v2: change to take the refcnt and drop it after kernfs_mount().
+
+Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 37d94a2..eaffc08 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1477,6 +1477,7 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 	struct cgroup_sb_opts opts;
+ 	struct dentry *dentry;
+ 	int ret;
++	bool new_root = false;
+ 
+ 	/*
+ 	 * The first time anyone tries to mount a cgroup, enable the list
+@@ -1536,6 +1537,10 @@ retry:
+ 		 * destruction to complete so that the subsystems are free.
+ 		 * We can use wait_queue for the wait but this path is
+ 		 * super cold.  Let's just sleep for a bit and retry.
++		 *
++		 * Take a reference so root won't be freed after we drop
++		 * cgroup mutexes, and drop it after we've done the real
++		 * mount through kernfs.
+ 		 */
+ 		if (!atomic_inc_not_zero(&root->top_cgroup.refcnt)) {
+ 			mutex_unlock(&cgroup_mutex);
+@@ -1551,6 +1556,7 @@ retry:
+ 	}
+ 
+ 	/* no such thing, create a new one */
++	new_root = true;
+ 	root = cgroup_root_from_opts(&opts);
+ 	if (IS_ERR(root)) {
+ 		ret = PTR_ERR(root);
+@@ -1572,7 +1578,7 @@ out_unlock:
+ 		return ERR_PTR(ret);
+ 
+ 	dentry = kernfs_mount(fs_type, flags, root->kf_root);
+-	if (IS_ERR(dentry))
++	if (IS_ERR(dentry) || !new_root)
+ 		cgroup_put(&root->top_cgroup);
+ 	return dentry;
+ }
+-- 
+1.8.0.2
