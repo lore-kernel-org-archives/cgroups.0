@@ -1,75 +1,60 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] sysfs: fix namespace refcnt leak
-Date: Tue, 18 Feb 2014 18:12:42 -0500
-Message-ID: <20140218231242.GJ31892@mtj.dyndns.org>
-References: <53018813.7030409@huawei.com>
+Subject: Re: [PATCH] cgroup: add a validation check to cgroup_add_cftyps()
+Date: Tue, 18 Feb 2014 18:20:56 -0500
+Message-ID: <20140218232056.GL31892@mtj.dyndns.org>
+References: <530176EE.6030605@huawei.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=w4fCARzAwXu0yXnESiCEgYE8QF9jsHUTC3jl7r7HqeU=;
-        b=0I6BPihTE01G31N49vmuvS+ANRzc0q8Xh7lASlkrLf7RS4yOo28YAt3LGLUAJUFFlC
-         DE6VhRu6pFhnpU2lSND4GWlRXDWyNg+OzGhV+g/c5YZoyuKhqNg/lLwpf0y0lSjzR5Lu
-         T8gVuSUnnvjLLkPIYx07Vn5o8L1cxDmY1kxL6qJf8q9bNzAAxnlWLDTl/kC8MCCu8pKR
-         BvoymG2rQEI+aJxuOTL2++yFAR8VRLpJxd47FC7U/6etk3vbK2K6T/yeO3fjZlOqUPOz
-         N/gycW88n7sS3GrLo0XfM9fFc20HdbyHlkG4lH1fYDoosKES6yXM8pv/NP2ZdyobGCAT
-         epxA==
+        bh=DznWveeJcJj5y7khhkeiy8Y7fJV+W+/G7QqdXwc7nc8=;
+        b=AH9Iwp9qXqjw5U6Ke86B39G3RqcUOnJTBUisQfww7cnKOMhG/JykjNz5gkwYiWIkKm
+         WiIRUwQOdlv/7bV2jWd5+g0Cyxc8M+GStMIkiP2vsbSzu/EgGdSE/Bsz2Zc+JFLIA9c+
+         xhGUP0A5y7nXdOelbqyCGedTJGx+eBXF8VTMDRTC9vWM8eO7Talwqh3t2X1nIiGdeDe9
+         q4lzBn+JgA5qhuX8vzIY3ljXL00sGolo8x/wTOMYpvquyVimy1ecvub7q0FlzNuw0yq+
+         nZ32+in2akmkm7ZFDGo38ZjGVCXjiAyNy3YFrfLD2ZY0sjo3YwzDGU5kve0j7//T4ZxS
+         B0DQ==
 Content-Disposition: inline
-In-Reply-To: <53018813.7030409@huawei.com>
+In-Reply-To: <530176EE.6030605@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Li Zefan <lizefan@huawei.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
+Cc: Fengguang Wu <fengguang.wu@intel.com>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-Hey,
-
-On Mon, Feb 17, 2014 at 11:54:59AM +0800, Li Zefan wrote:
-> I think we have to fix kernfs in order to fix refcnt leak in sysfs
-> and cgroupfs. This fix is for 3.14, but it creates conflicts for
-> cgroup-next.
+On Mon, Feb 17, 2014 at 10:41:50AM +0800, Li Zefan wrote:
+> Fengguang reported this bug:
 > 
-> ====================
+> BUG: unable to handle kernel NULL pointer dereference at 0000003c
+> IP: [<cc90b4ad>] cgroup_cfts_commit+0x27/0x1c1
+> ...
+> Call Trace:
+>   [<cc9d1129>] ? kmem_cache_alloc_trace+0x33f/0x3b7
+>   [<cc90c6fc>] cgroup_add_cftypes+0x8f/0xca
+>   [<cd78b646>] cgroup_init+0x6a/0x26a
+>   [<cd764d7d>] start_kernel+0x4d7/0x57a
+>   [<cd7642ef>] i386_start_kernel+0x92/0x96
 > 
-> As mount() and kill_sb() is not a one-to-one match, we shoudn't get
-> ns refcnt unconditionally in sysfs_mount(), and instead we should
-> get the refcnt only when kernfs_mount() allocated a new superblock.
+> This happens in a corner case. If CGROUP_SCHED=y but CFS_BANDWIDTH=n &&
+> FAIR_GROUP_SCHED=n && RT_GROUP_SCHED=n, we have:
+> 
+> cpu_files[] = {
+> 	{ }	/* terminate */
+> }
+> 
+> When we pass cpu_files to cgroup_apply_cftypes(), as cpu_files[0].ss
+> is NULL, we'll access NULL pointer.
+> 
+> The bug was introduced by commit de00ffa56ea3132c6013fc8f07133b8a1014cf53
+> ("cgroup: make cgroup_subsys->base_cftypes use cgroup_add_cftypes()").
+> 
+> Reported-by: Fengguang Wu <fengguang.wu@intel.com>
+> Signed-off-by: Li Zefan <lizefan@huawei.com>
 
-Ugh... nasty :(
-
-> @@ -132,6 +132,7 @@ const void *kernfs_super_ns(struct super_block *sb)
->   * @flags: mount flags specified for the mount
->   * @root: kernfs_root of the hierarchy being mounted
->   * @ns: optional namespace tag of the mount
-> + * @new: tell the caller if we allocated a new superblock
-
-Maybe something like @new_sb_created is better?
-
->  	struct super_block *sb;
->  	struct kernfs_super_info *info;
->  	int error;
->  
-> +	*new_sb = false;
-
-Can we make it optional so that users who don't care about it can
-ignore it?
-
-> @@ -430,9 +431,9 @@ static inline int kernfs_rename(struct kernfs_node *kn,
->  
->  static inline struct dentry *
->  kernfs_mount(struct file_system_type *fs_type, int flags,
-> -	     struct kernfs_root *root)
-> +	     struct kernfs_root *root, bool *new_sb)
->  {
-> -	return kernfs_mount_ns(fs_type, flags, root, NULL);
-> +	return kernfs_mount_ns(fs_type, flags, root, NULL, new_sb);
-
-And let kernfs_mount() just use NULL for the parameter?
-
-Thanks.
+Applied to cgroup/for-3.15.  Thanks.
 
 -- 
 tejun
