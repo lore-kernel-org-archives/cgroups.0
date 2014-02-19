@@ -1,52 +1,80 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.14-fixes] cgroup: update
- cgroup_enable_task_cg_lists() to grab siglock
-Date: Tue, 18 Feb 2014 18:25:56 -0500
-Message-ID: <20140218232556.GM31892@mtj.dyndns.org>
-References: <20140213182931.GB17608@htj.dyndns.org>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] sysfs: fix namespace refcnt leak
+Date: Wed, 19 Feb 2014 09:39:28 +0800
+Message-ID: <53040B50.4060600@huawei.com>
+References: <53018813.7030409@huawei.com> <20140218231242.GJ31892@mtj.dyndns.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=txBRKSoDs6AEQ/LvnUJnuTUlw0mDMhRv3Ew59wZ2Pwc=;
-        b=W2ELH8VcGNjTzFjD1WQwbIljK94ZEhXH34zvCtWy4Hx7r+cGvjKRlY1fwzo/AzpkYS
-         77D8bdm7ArxfMhLbBXVzRObI8uAPj9meechJvcZqQnlnlWOvqoNuci/YoBENzqI4TqeY
-         PqTMVyWvNGEWuYcEgBKZxO/ckdiJSsfLP7zBk5G5whOd/kYYpojHQ0grPMCgrnfp23KF
-         q/QvbgN9slFkVtc0P8L9uxFWliMPkT4QVX25MGWZxF1TjJ+wJmBvvhiH1gavZVvPkd0d
-         1NfvhrKbFxKaZtb7pAv/i2cpAvXy/3gfIxLr3M9dW/27K+ANMEfKkzmJNMDB9+ujBkdq
-         cJfA==
-Content-Disposition: inline
-In-Reply-To: <20140213182931.GB17608-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+In-Reply-To: <20140218231242.GJ31892-9pTldWuhBndy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Thu, Feb 13, 2014 at 01:29:31PM -0500, Tejun Heo wrote:
-> Currently, there's nothing preventing cgroup_enable_task_cg_lists()
-> from missing set PF_EXITING and race against cgroup_exit().  Depending
-> on the timing, cgroup_exit() may finish with the task still linked on
-> css_set leading to list corruption.  Fix it by grabbing siglock in
-> cgroup_enable_task_cg_lists() so that PF_EXITING is guaranteed to be
-> visible.
+On 2014/2/19 7:12, Tejun Heo wrote:
+> Hey,
 > 
-> This whole on-demand cg_list optimization is extremely fragile and has
-> ample possibility to lead to bugs which can cause things like
-> once-a-year oops during boot.  I'm wondering whether the better
-> approach would be just adding "cgroup_disable=all" handling which
-> disables the whole cgroup rather than tempting fate with this
-> on-demand craziness.
+> On Mon, Feb 17, 2014 at 11:54:59AM +0800, Li Zefan wrote:
+>> I think we have to fix kernfs in order to fix refcnt leak in sysfs
+>> and cgroupfs. This fix is for 3.14, but it creates conflicts for
+>> cgroup-next.
+>>
+>> ====================
+>>
+>> As mount() and kill_sb() is not a one-to-one match, we shoudn't get
+>> ns refcnt unconditionally in sysfs_mount(), and instead we should
+>> get the refcnt only when kernfs_mount() allocated a new superblock.
 > 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Ugh... nasty :(
+> 
+>> @@ -132,6 +132,7 @@ const void *kernfs_super_ns(struct super_block *sb)
+>>   * @flags: mount flags specified for the mount
+>>   * @root: kernfs_root of the hierarchy being mounted
+>>   * @ns: optional namespace tag of the mount
+>> + * @new: tell the caller if we allocated a new superblock
+> 
+> Maybe something like @new_sb_created is better?
+> 
+>>  	struct super_block *sb;
+>>  	struct kernfs_super_info *info;
+>>  	int error;
+>>  
+>> +	*new_sb = false;
+> 
+> Can we make it optional so that users who don't care about it can
+> ignore it?
+> 
 
-Applied to cgroup/for-3.14-fixes.
+cgroupfs also needs this to fix refcnt leak.
 
-Thanks.
+Because success in finding an existing cgroup_root doesn't mean no new
+superblock is needed. For example:
 
--- 
-tejun
+  # mount -t cgroup -o cpuacct xxx /cgroup
+  # mkdir /cgroup/tmp
+  # umount /cgroup    <--- sb will be freed but cgroup_root won't
+
+  // this will allocate new sb, but we find the cgroup_root is there.
+  # mount -t cgroup -o cpuacct xxx /cgroup
+
+But debugfs won't need this if it's converted to kernfs.
+
+How about I keep kernfs_mount() API intact, and when this fix gets
+merged into mainline, you merge the fix into cgroup-next, and then
+I make a fix for cgroup by changing kernfs_mount()?
+
+>> @@ -430,9 +431,9 @@ static inline int kernfs_rename(struct kernfs_node *kn,
+>>  
+>>  static inline struct dentry *
+>>  kernfs_mount(struct file_system_type *fs_type, int flags,
+>> -	     struct kernfs_root *root)
+>> +	     struct kernfs_root *root, bool *new_sb)
+>>  {
+>> -	return kernfs_mount_ns(fs_type, flags, root, NULL);
+>> +	return kernfs_mount_ns(fs_type, flags, root, NULL, new_sb);
+> 
+> And let kernfs_mount() just use NULL for the parameter?
+> 
+
