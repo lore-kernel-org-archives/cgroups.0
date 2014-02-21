@@ -1,125 +1,67 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2] sysfs: fix namespace refcnt leak
-Date: Fri, 21 Feb 2014 10:55:55 +0800
-Message-ID: <5306C03B.4060808@huawei.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2] sysfs: fix namespace refcnt leak
+Date: Fri, 21 Feb 2014 05:12:48 -0500
+Message-ID: <20140221101248.GB14653@mtj.dyndns.org>
+References: <5306C03B.4060808@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=/48qfj87pHzqAnqdpY/RVJvBcs1ZShtjzLp0BBQrRxk=;
+        b=guiWngSQgi++iA6fuvjDv0K3H9TD5Y51skA3+7FiJn2JlRqlwIxUM3ThiEby6FQpFt
+         yz/t+nJUnzohBnY35bx750qwkzpQuDhD3PyA8OkiaNgBX6pmtkaJxaFLsDJ2AKZzAwC5
+         kLI05Nhnl4Y29/FP+t6eBGY6Cj7+gGsrj5bxO9LXt0eCdwq5Xcu17UJpo/PtKPcMBgoq
+         q4CkJTZBqMMZeDdQ73KGtea+faVtUeKRL3p9CLT9MPcHv4nt+OTU2rVYzkYgk0jfrXTY
+         hsaKsLd6VrDoGzp3FhQKw4hIK8IpCTkvdWO7V9C9RdmCbREcBbQG1FDm3ZEVmH7glKFs
+         zvEg==
+Content-Disposition: inline
+In-Reply-To: <5306C03B.4060808@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan@huawei.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-As mount() and kill_sb() is not a one-to-one match, we shoudn't get
-ns refcnt unconditionally in sysfs_mount(), and instead we should
-get the refcnt only when kernfs_mount() allocated a new superblock.
+On Fri, Feb 21, 2014 at 10:55:55AM +0800, Li Zefan wrote:
+> As mount() and kill_sb() is not a one-to-one match, we shoudn't get
+> ns refcnt unconditionally in sysfs_mount(), and instead we should
+> get the refcnt only when kernfs_mount() allocated a new superblock.
+> 
+> v2:
+> - Changed the name of the new argument, suggested by Tejun.
+> - Made the argument optional, suggested by Tejun.
+> 
+> Signed-off-by: Li Zefan <lizefan@huawei.com>
+...
+> @@ -132,6 +132,7 @@ const void *kernfs_super_ns(struct super_block *sb)
+>   * @flags: mount flags specified for the mount
+>   * @root: kernfs_root of the hierarchy being mounted
+>   * @ns: optional namespace tag of the mount
+> + * @new_sb_created: tell the caller if we allocated a new superblock
+>   *
+>   * This is to be called from each kernfs user's file_system_type->mount()
+>   * implementation, which should pass through the specified @fs_type and
+> @@ -141,7 +142,8 @@ const void *kernfs_super_ns(struct super_block *sb)
+>   * The return value can be passed to the vfs layer verbatim.
+>   */
+>  struct dentry *kernfs_mount_ns(struct file_system_type *fs_type, int flags,
+> -			       struct kernfs_root *root, const void *ns)
+> +			       struct kernfs_root *root, const void *ns,
+> +			       bool *new_sb_created)
 
-v2:
-- Changed the name of the new argument, suggested by Tejun.
-- Made the argument optional, suggested by Tejun.
+Oops, just one more thing.  Let's please put @new_sb_created before
+@ns; otherwise, kernfs_mount_ns() and kernfs_mount() become really
+confusing as we end up omitting the second-to-last param for the
+latter instead of the last.
 
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
+Other than that,
 
-This fix is for 3.14.
+ Reviewed-by: Tejun Heo <tj@kernel.org>
 
----
- fs/kernfs/mount.c      | 8 +++++++-
- fs/sysfs/mount.c       | 5 +++--
- include/linux/kernfs.h | 9 +++++----
- 3 files changed, 15 insertions(+), 7 deletions(-)
+Thanks.
 
-diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
-index 405279b..47f4efd 100644
---- a/fs/kernfs/mount.c
-+++ b/fs/kernfs/mount.c
-@@ -132,6 +132,7 @@ const void *kernfs_super_ns(struct super_block *sb)
-  * @flags: mount flags specified for the mount
-  * @root: kernfs_root of the hierarchy being mounted
-  * @ns: optional namespace tag of the mount
-+ * @new_sb_created: tell the caller if we allocated a new superblock
-  *
-  * This is to be called from each kernfs user's file_system_type->mount()
-  * implementation, which should pass through the specified @fs_type and
-@@ -141,7 +142,8 @@ const void *kernfs_super_ns(struct super_block *sb)
-  * The return value can be passed to the vfs layer verbatim.
-  */
- struct dentry *kernfs_mount_ns(struct file_system_type *fs_type, int flags,
--			       struct kernfs_root *root, const void *ns)
-+			       struct kernfs_root *root, const void *ns,
-+			       bool *new_sb_created)
- {
- 	struct super_block *sb;
- 	struct kernfs_super_info *info;
-@@ -159,6 +161,10 @@ struct dentry *kernfs_mount_ns(struct file_system_type *fs_type, int flags,
- 		kfree(info);
- 	if (IS_ERR(sb))
- 		return ERR_CAST(sb);
-+
-+	if (new_sb_created)
-+		*new_sb_created = !sb->s_root;
-+
- 	if (!sb->s_root) {
- 		error = kernfs_fill_super(sb);
- 		if (error) {
-diff --git a/fs/sysfs/mount.c b/fs/sysfs/mount.c
-index 5c7fdd9..f5bea79 100644
---- a/fs/sysfs/mount.c
-+++ b/fs/sysfs/mount.c
-@@ -27,6 +27,7 @@ static struct dentry *sysfs_mount(struct file_system_type *fs_type,
- {
- 	struct dentry *root;
- 	void *ns;
-+	bool new_sb;
- 
- 	if (!(flags & MS_KERNMOUNT)) {
- 		if (!capable(CAP_SYS_ADMIN) && !fs_fully_visible(fs_type))
-@@ -37,8 +38,8 @@ static struct dentry *sysfs_mount(struct file_system_type *fs_type,
- 	}
- 
- 	ns = kobj_ns_grab_current(KOBJ_NS_TYPE_NET);
--	root = kernfs_mount_ns(fs_type, flags, sysfs_root, ns);
--	if (IS_ERR(root))
-+	root = kernfs_mount_ns(fs_type, flags, sysfs_root, ns, &new_sb);
-+	if (IS_ERR(root) || !new_sb)
- 		kobj_ns_drop(KOBJ_NS_TYPE_NET, ns);
- 	return root;
- }
-diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
-index 649497a..ea3f5d2 100644
---- a/include/linux/kernfs.h
-+++ b/include/linux/kernfs.h
-@@ -279,7 +279,8 @@ void kernfs_notify(struct kernfs_node *kn);
- 
- const void *kernfs_super_ns(struct super_block *sb);
- struct dentry *kernfs_mount_ns(struct file_system_type *fs_type, int flags,
--			       struct kernfs_root *root, const void *ns);
-+			       struct kernfs_root *root, const void *ns,
-+			       bool *new_sb_created);
- void kernfs_kill_sb(struct super_block *sb);
- 
- void kernfs_init(void);
-@@ -372,7 +373,7 @@ static inline const void *kernfs_super_ns(struct super_block *sb)
- 
- static inline struct dentry *
- kernfs_mount_ns(struct file_system_type *fs_type, int flags,
--		struct kernfs_root *root, const void *ns)
-+		struct kernfs_root *root, const void *ns, bool *new_sb_created)
- { return ERR_PTR(-ENOSYS); }
- 
- static inline void kernfs_kill_sb(struct super_block *sb) { }
-@@ -430,9 +431,9 @@ static inline int kernfs_rename(struct kernfs_node *kn,
- 
- static inline struct dentry *
- kernfs_mount(struct file_system_type *fs_type, int flags,
--	     struct kernfs_root *root)
-+	     struct kernfs_root *root, bool *new_sb_created)
- {
--	return kernfs_mount_ns(fs_type, flags, root, NULL);
-+	return kernfs_mount_ns(fs_type, flags, root, NULL, new_sb_created);
- }
- 
- #endif	/* __LINUX_KERNFS_H */
 -- 
-1.8.0.2
+tejun
