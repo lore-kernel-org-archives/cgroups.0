@@ -1,86 +1,125 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCHSET v2 cgroup/for-3.15] cgroup: update task migration path
-Date: Tue, 25 Feb 2014 16:56:40 +0800
-Message-ID: <530C5AC8.5070806@huawei.com>
-References: <1392323333-18907-1-git-send-email-tj@kernel.org>
+From: Li Zefan <lizefan@huawei.com>
+Subject: [PATCH v3] sysfs: fix namespace refcnt leak
+Date: Tue, 25 Feb 2014 19:28:44 +0800
+Message-ID: <530C7E6C.2020500@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1392323333-18907-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-On 2014/2/14 4:28, Tejun Heo wrote:
-> Hello,
-> 
-> This is v2 of update-task-migration-path patchset.  Changes from v1[L]
-> are
-> 
-> * Rebased on top of "[PATCH cgroup/for-3.14-fixes] cgroup: update
->   cgroup_enable_task_cg_lists() to grab siglock"
-> 
-> * 0005-cgroup-update-how-a-newly-forked-task-gets-associate.patch and
->   0006-cgroup-drop-task_lock-protection-around-task-cgroups.patch
->   added to address the race between migration and fork paths.
-> 
-> Currently, when migrating a task or process from one cgroup to
-> another, a flex_array is used to keep track of the target tasks and
-> associated css_sets.  The current implementation has several issues.
-> 
-> * flex_array size is limited.  Given the current data structure, the
->   limit is ~87k on 64bit, which is pretty high but not impossible to
->   hit.
-> 
-> * If multiple targets are being migrated, as migrating each target
->   involves memory allocation, it can fail at any point.  cgroup core
->   doesn't keep track of enough state to roll back partial migration
->   either, so it ends up aborting with some targets migrated with no
->   way of finding out which.  While this isn't a big issue now, we're
->   gonna be making more use of multi-target migration.
-> 
-> * Fork path could race against migration path and it was impossible to
->   implement a mechanism to migrate all tasks of a cgroup to another
->   because migration path can't tell whether there are just forked
->   tasks pointing to the css_set but not linked yet.
-> 
-> This patchset updates task migration path such that
-> 
-> * task->cg_list and css_sets are also used to keep track of targets
->   during migration so that no extra memory allocation is necessary to
->   keep track of migration targets.
-> 
-> * Migration is split into several stages so that all preparations
->   which may fail can be performed for all targets before actually
->   starting migrating tasks.  Ignoring ->can_attach() failure, this can
->   guarantee all-or-nothing semantics of multi-target migration.
-> 
-> * Newly forked tasks are now atomically associated with and linked to
->   the parent's css_set in cgroup_post_fork().  This guarantees that
->   the new task either is visible in the source cgroup once the
->   parent's migration is complete or ends up in the target cgroup in
->   the first place.  This means that just keeping moving tasks out of a
->   cgroup until it's empty is guaranteed to migrate all tasks.
-> 
-> This patchset contains the following seven patches.
-> 
->  0001-cgroup-add-css_set-mg_tasks.patch
->  0002-cgroup-use-css_set-mg_tasks-to-track-target-tasks-du.patch
->  0003-cgroup-separate-out-cset_group_from_root-from-task_c.patch
->  0004-cgroup-split-process-task-migration-into-four-steps.patch
->  0005-cgroup-update-how-a-newly-forked-task-gets-associate.patch
->  0006-cgroup-drop-task_lock-protection-around-task-cgroups.patch
->  0007-cgroup-update-cgroup_transfer_tasks-to-either-succee.patch
-> 
+As mount() and kill_sb() is not a one-to-one match, we shoudn't get
+ns refcnt unconditionally in sysfs_mount(), and instead we should
+get the refcnt only when kernfs_mount() allocated a new superblock.
 
-Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+v2:
+- Changed the name of the new argument, suggested by Tejun.
+- Made the argument optional, suggested by Tejun.
+
+v3:
+- Make the new argument as second-to-last arg, suggested by Tejun.
+
+Reviewed-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Li Zefan <lizefan@huawei.com>
+---
+ fs/kernfs/mount.c      | 8 +++++++-
+ fs/sysfs/mount.c       | 5 +++--
+ include/linux/kernfs.h | 9 +++++----
+ 3 files changed, 15 insertions(+), 7 deletions(-)
+
+diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
+index 405279b..6a5f04a 100644
+--- a/fs/kernfs/mount.c
++++ b/fs/kernfs/mount.c
+@@ -131,6 +131,7 @@ const void *kernfs_super_ns(struct super_block *sb)
+  * @fs_type: file_system_type of the fs being mounted
+  * @flags: mount flags specified for the mount
+  * @root: kernfs_root of the hierarchy being mounted
++ * @new_sb_created: tell the caller if we allocated a new superblock
+  * @ns: optional namespace tag of the mount
+  *
+  * This is to be called from each kernfs user's file_system_type->mount()
+@@ -141,7 +142,8 @@ const void *kernfs_super_ns(struct super_block *sb)
+  * The return value can be passed to the vfs layer verbatim.
+  */
+ struct dentry *kernfs_mount_ns(struct file_system_type *fs_type, int flags,
+-			       struct kernfs_root *root, const void *ns)
++			       struct kernfs_root *root, bool *new_sb_created,
++			       const void *ns)
+ {
+ 	struct super_block *sb;
+ 	struct kernfs_super_info *info;
+@@ -159,6 +161,10 @@ struct dentry *kernfs_mount_ns(struct file_system_type *fs_type, int flags,
+ 		kfree(info);
+ 	if (IS_ERR(sb))
+ 		return ERR_CAST(sb);
++
++	if (new_sb_created)
++		*new_sb_created = !sb->s_root;
++
+ 	if (!sb->s_root) {
+ 		error = kernfs_fill_super(sb);
+ 		if (error) {
+diff --git a/fs/sysfs/mount.c b/fs/sysfs/mount.c
+index 5c7fdd9..a66ad61 100644
+--- a/fs/sysfs/mount.c
++++ b/fs/sysfs/mount.c
+@@ -27,6 +27,7 @@ static struct dentry *sysfs_mount(struct file_system_type *fs_type,
+ {
+ 	struct dentry *root;
+ 	void *ns;
++	bool new_sb;
+ 
+ 	if (!(flags & MS_KERNMOUNT)) {
+ 		if (!capable(CAP_SYS_ADMIN) && !fs_fully_visible(fs_type))
+@@ -37,8 +38,8 @@ static struct dentry *sysfs_mount(struct file_system_type *fs_type,
+ 	}
+ 
+ 	ns = kobj_ns_grab_current(KOBJ_NS_TYPE_NET);
+-	root = kernfs_mount_ns(fs_type, flags, sysfs_root, ns);
+-	if (IS_ERR(root))
++	root = kernfs_mount_ns(fs_type, flags, sysfs_root, &new_sb, ns);
++	if (IS_ERR(root) || !new_sb)
+ 		kobj_ns_drop(KOBJ_NS_TYPE_NET, ns);
+ 	return root;
+ }
+diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
+index 649497a..09669d0 100644
+--- a/include/linux/kernfs.h
++++ b/include/linux/kernfs.h
+@@ -279,7 +279,8 @@ void kernfs_notify(struct kernfs_node *kn);
+ 
+ const void *kernfs_super_ns(struct super_block *sb);
+ struct dentry *kernfs_mount_ns(struct file_system_type *fs_type, int flags,
+-			       struct kernfs_root *root, const void *ns);
++			       struct kernfs_root *root, bool *new_sb_created,
++			       const void *ns);
+ void kernfs_kill_sb(struct super_block *sb);
+ 
+ void kernfs_init(void);
+@@ -372,7 +373,7 @@ static inline const void *kernfs_super_ns(struct super_block *sb)
+ 
+ static inline struct dentry *
+ kernfs_mount_ns(struct file_system_type *fs_type, int flags,
+-		struct kernfs_root *root, const void *ns)
++		struct kernfs_root *root, bool *new_sb_created, const void *ns)
+ { return ERR_PTR(-ENOSYS); }
+ 
+ static inline void kernfs_kill_sb(struct super_block *sb) { }
+@@ -430,9 +431,9 @@ static inline int kernfs_rename(struct kernfs_node *kn,
+ 
+ static inline struct dentry *
+ kernfs_mount(struct file_system_type *fs_type, int flags,
+-	     struct kernfs_root *root)
++	     struct kernfs_root *root, bool *new_sb_created)
+ {
+-	return kernfs_mount_ns(fs_type, flags, root, NULL);
++	return kernfs_mount_ns(fs_type, flags, root, new_sb_created, NULL);
+ }
+ 
+ #endif	/* __LINUX_KERNFS_H */
+-- 
+1.8.0.2
