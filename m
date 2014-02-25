@@ -1,54 +1,48 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [cgroup/task_lock] INFO: suspicious RCU usage.
-Date: Tue, 25 Feb 2014 20:01:25 +0800
-Message-ID: <530C8615.4020004@huawei.com>
-References: <20140221021622.GB13515@localhost> <20140221154025.GB460@htj.dyndns.org> <530C5977.4090402@huawei.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3] sysfs: fix namespace refcnt leak
+Date: Tue, 25 Feb 2014 09:42:56 -0500
+Message-ID: <20140225144256.GB26788@htj.dyndns.org>
+References: <530C7E6C.2020500@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <530C5977.4090402-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=j7eA3O5Gc1isv1woxyvIUBaPFrof2TQH2uvzvJyPFng=;
+        b=oCGoPITYwFl/tlcj37of3zX9/vCJtT05FghJ5BpbFuvuwJjIRyNTPwkETHsP6nRu5w
+         ID5zXV12BDLJfVXkhllMte76jF42EZ+V2P6XY0prLpJECbOclPZFP+N8cTgCIb8umglH
+         lc9h+UA2JyDgQylxVk6DnImp5bvjEKA2kIhFs8oI0RtpyriVHYaMhwdZ5BSPr1bmN/Gn
+         Mzdkvdde5cyl/DJOZ8RACxpsTTTQiEf4lOTgO4Z+qnNup5bBNjwm8SbqbbUA+Tfjv7Kd
+         PaI8hvS3F/GApiExji0plZmEHzUPBpyvP77XfBvjQlCD1ar56cis/64g07FtCPtSTISH
+         rICQ==
+Content-Disposition: inline
+In-Reply-To: <530C7E6C.2020500-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
->>> [main] Setsockopt(1 2b 80d1000 4) on fd 223 [17:2:768]
->>> [   27.030764] 
->>> [   27.031119] ===============================
->>> [   27.031833] [ INFO: suspicious RCU usage. ]
->>> [   27.032536] 3.14.0-rc3-02458-g837caba #2 Not tainted
->>> [   27.033378] -------------------------------
->>> [   27.044237] include/linux/cgroup.h:697 suspicious rcu_dereference_check() usage!
->>> [   27.045795] 
->>> [   27.045795] other info that might help us debug this:
->>> [   27.045795] 
->>> [   27.047114] 
->>> [   27.047114] rcu_scheduler_active = 1, debug_locks = 0
->>> [main] Setsockopt(1 c 80d1000 4) on fd 225 [39:5:0]
->>> [   27.048751] 2 locks held by trinity-c0/4479:
->>> [   27.049478]  #0:  (callback_mutex){+.+...}, at: [<81118395>] cpuset_cpus_allowed+0x1e/0x123
->>> [   27.051132]  #1:  (&(&p->alloc_lock)->rlock){+.+...}, at: [<8111839c>] cpuset_cpus_allowed+0x25/0x123
->>> [   27.052788] 
->>> [   27.052788] stack backtrace:
->>> [   27.053528] CPU: 0 PID: 4479 Comm: trinity-c0 Not tainted 3.14.0-rc3-02458-g837caba #2
->>> [   27.064971]  00000000 00000000
->>>  919eff28 81877cc3[main] Setsockopt(1 7 80d1000 4) on fd 226 [1:5:1]
->>
->> So, this is from removing task_lock from task_css_set_check() and
->> adding rcu_read_lock() in cpuset_cpus_allowed() should fix it.
+On Tue, Feb 25, 2014 at 07:28:44PM +0800, Li Zefan wrote:
+> As mount() and kill_sb() is not a one-to-one match, we shoudn't get
+> ns refcnt unconditionally in sysfs_mount(), and instead we should
+> get the refcnt only when kernfs_mount() allocated a new superblock.
 > 
-> Yeah, rcu_read_lock() should be sufficient.
+> v2:
+> - Changed the name of the new argument, suggested by Tejun.
+> - Made the argument optional, suggested by Tejun.
 > 
->> I'm
->> not sure how much of task_lock() locking we currently have in cpuset
->> is actually necessary tho.  Shouldn't we be able to do most with just
->> callback_mutex, if not cpuset_mutex?  Li, any ideas?
->>
+> v3:
+> - Make the new argument as second-to-last arg, suggested by Tejun.
 > 
-> task_lock() is also used to protect task->mems_allowed. I'll see if we
-> can get rid of most (if not all) task_lock() lockings in cpuset.
-> 
+> Reviewed-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-After a quick lock, I think except the one in cpuset_change_task_nodemask(), all
-other task_lock() lockings can be replace by rcu_readlock().
+ Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+
+Thanks!
+
+-- 
+tejun
