@@ -1,59 +1,40 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [cgroup/task_lock] INFO: suspicious RCU usage.
-Date: Tue, 25 Feb 2014 10:06:36 -0500
-Message-ID: <20140225150636.GF26788@htj.dyndns.org>
-References: <20140221021622.GB13515@localhost>
- <20140221154025.GB460@htj.dyndns.org>
- <530C5977.4090402@huawei.com>
- <530C8615.4020004@huawei.com>
+From: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Subject: Re: [PATCH v3] sysfs: fix namespace refcnt leak
+Date: Tue, 25 Feb 2014 07:19:55 -0800
+Message-ID: <20140225151955.GA8322@kroah.com>
+References: <530C7E6C.2020500@huawei.com>
+ <20140225144256.GB26788@htj.dyndns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=BLurnx+3mpwq58Qv2JOKCC/32+QN+dB4E1LJ0ycCAU0=;
-        b=f03ZplCYRoO+wqtEsBV5d9K3Tr55WzJU6onzzhhcpsVg6DNnNtSEGIGB5rPUnl/v+K
-         VUXc/hUhJ914xlyTotPj6bis+Mx7C/7qN6y8MpAVmwUuPkwC2QsqfYTJYuPLF5qEtc0V
-         +8bKOKF4NH3VxFeVbNEV+wBJMCKB+ctVuEZXLFlNl0GRPMKct68egurBsGB/bC1U2t2T
-         3UzTqpPQec+JV9SPr1fkiDq47MWQzlFmXaKlQ/2imkZ4jEn9iAYyxrG6WMyWfqJtvKhi
-         RixPAIftCkHe76lxmjSP10a77h1XFw0XNtdKzIp/9fcLSEHiNqwBg+S0QnGN9+fofnf4
-         gsMQ==
 Content-Disposition: inline
-In-Reply-To: <530C8615.4020004-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20140225144256.GB26788-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello, Li.
-
-On Tue, Feb 25, 2014 at 08:01:25PM +0800, Li Zefan wrote:
-...
-> >> So, this is from removing task_lock from task_css_set_check() and
-> >> adding rcu_read_lock() in cpuset_cpus_allowed() should fix it.
+On Tue, Feb 25, 2014 at 09:42:56AM -0500, Tejun Heo wrote:
+> On Tue, Feb 25, 2014 at 07:28:44PM +0800, Li Zefan wrote:
+> > As mount() and kill_sb() is not a one-to-one match, we shoudn't get
+> > ns refcnt unconditionally in sysfs_mount(), and instead we should
+> > get the refcnt only when kernfs_mount() allocated a new superblock.
 > > 
-> > Yeah, rcu_read_lock() should be sufficient.
+> > v2:
+> > - Changed the name of the new argument, suggested by Tejun.
+> > - Made the argument optional, suggested by Tejun.
 > > 
-> >> I'm
-> >> not sure how much of task_lock() locking we currently have in cpuset
-> >> is actually necessary tho.  Shouldn't we be able to do most with just
-> >> callback_mutex, if not cpuset_mutex?  Li, any ideas?
-> >>
+> > v3:
+> > - Make the new argument as second-to-last arg, suggested by Tejun.
 > > 
-> > task_lock() is also used to protect task->mems_allowed. I'll see if we
-> > can get rid of most (if not all) task_lock() lockings in cpuset.
-> > 
+> > Reviewed-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> > Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 > 
-> After a quick lock, I think except the one in cpuset_change_task_nodemask(), all
-> other task_lock() lockings can be replace by rcu_readlock().
+>  Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-I committed the original series as-is.  Can you please post follow-up
-patches to update cpuset locking?
+Is this needed for 3.14-final or 3.15?
 
-Thanks.
+thanks,
 
--- 
-tejun
+greg k-h
