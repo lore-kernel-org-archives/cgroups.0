@@ -1,20 +1,20 @@
-From: Li Zefan <lizefan@huawei.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Subject: [PATCH] cpuset: use rcu_read_lock() to protect task_cs()
-Date: Mon, 3 Mar 2014 16:49:04 +0800
-Message-ID: <53144200.70001@huawei.com>
+Date: Mon, 3 Mar 2014 16:49:39 +0800
+Message-ID: <53144223.6000302@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Sasha Levin <sasha.levin@oracle.com>, Fengguang Wu <fengguang.wu@intel.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Sasha Levin <sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
 We no longer use task_lock() to protect tsk->cgroups.
 
-Reported-by: Fengguang Wu <fengguang.wu@intel.com>
-Signed-off-by: Li Zefan <lizefan@huawei.com>
+Reported-by: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
  kernel/cpuset.c | 24 +++++++++++++-----------
  1 file changed, 13 insertions(+), 11 deletions(-)
