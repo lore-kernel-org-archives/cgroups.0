@@ -1,7 +1,8 @@
 From: David Rientjes <rientjes@google.com>
-Subject: [patch 04/11] mm, memcg: add tunable for oom reserves
-Date: Tue, 4 Mar 2014 19:59:19 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1403041955050.8067@chino.kir.corp.google.com>
+Subject: [patch 05/11] res_counter: remove interface for locked charging and
+ uncharging
+Date: Tue, 4 Mar 2014 19:59:22 -0800 (PST)
+Message-ID: <alpine.DEB.2.02.1403041955250.8067@chino.kir.corp.google.com>
 References: <alpine.DEB.2.02.1403041952170.8067@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
@@ -9,13 +10,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=date:from:to:cc:subject:in-reply-to:message-id:references
          :user-agent:mime-version:content-type;
-        bh=hSV0WpI+TdtPmUstvBGNLbK4ZqVxn7oop3Eh/873h0c=;
-        b=maSUAL0EvGGLzI/3GpbSyTKt3i4XAy+6lXsK4GUMyJDcBfCsokuWe9xKXLzqAmCnFC
-         ajRQLgtj2pX+MOMnMTALtCW1uBk0h/16qwk8keLOgDumMICQBr0/TDedOy0DRTMHwf6s
-         DeqR2zzfY322q6c5YsSl6fwN7PUJfgrs9cHGRauwaFaAuirMTC/sivDvDicdUjqb4k/a
-         sfk15bVPmSXPvK5rXKwMTbKl4MP2JsCdFRFVdPLosxQYHPXogq4pSq+9igktPCoklATX
-         kr4yS+BZia3UOqjr45sr1CPSGrvZubT+6I4sM87bUaZLYYiJzI5fDll+ScrkjhOVREEF
-         ripQ==
+        bh=TYqSPRfKOx6itMhNMS1H6IQ8SOgiOsSqeBntVdbAG+A=;
+        b=HR+jeyptq12mKNso2NWLx9CHoZioxWMgyVGMsShuHX25AJlHkzTAlq4/aPyc8j/1FK
+         SOou6iTO4F19LnMX/Z8BYp2IYkx4c9NLySEDapjH3M4BOCvBH6idzhb9qEiiZb+cAkXg
+         WsG1c9dGXi9C0mUOBWunuEKprsCeVb+jiEwSoDF6j9ZJuNRzJ5RGOjd73xkySPxuQc+0
+         bY0NOU7LfExpEJNMrcbCfa1VEiFbgwlKA/ru0y8f68OHCUhWqJBXvsRjwKo8sPSP6XEL
+         /NzFKpingmlS0pc4TxxAmjrdElYAT6R3hA4i8ErnGgUPvaJpWZDgiQ+U2dLEZmvvUVUi
+         GzCw==
 In-Reply-To: <alpine.DEB.2.02.1403041952170.8067@chino.kir.corp.google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -24,97 +25,119 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Christoph Lameter <cl@linux-foundation.org>, Pekka Enberg <penberg@kernel.org>, Tejun Heo <tj@kernel.org>, Mel Gorman <mgorman@suse.de>, Oleg Nesterov <oleg@redhat.com>, Rik van Riel <riel@redhat.com>, Jianguo Wu <wujianguo@huawei.com>, Tim Hockin <thockin@google.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
 
-Userspace needs a way to define the amount of memory reserves that
-processes handling oom conditions may utilize.  This patch adds a per-
-memcg oom reserve field and file, memory.oom_reserve_in_bytes, to
-manipulate its value.
-
-If currently utilized memory reserves are attempted to be reduced by
-writing a smaller value to memory.oom_reserve_in_bytes, it will fail with
--EBUSY until some memory is uncharged.
+The res_counter_{charge,uncharge}_locked() variants are not used in the
+kernel outside of the resource counter code itself, so remove the
+interface.
 
 Signed-off-by: David Rientjes <rientjes@google.com>
 ---
- mm/memcontrol.c | 53 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 53 insertions(+)
+ Documentation/cgroups/resource_counter.txt | 12 ++----------
+ include/linux/res_counter.h                |  6 +-----
+ kernel/res_counter.c                       | 23 ++++++++++++-----------
+ 3 files changed, 15 insertions(+), 26 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -315,6 +315,9 @@ struct mem_cgroup {
- 	/* OOM-Killer disable */
- 	int		oom_kill_disable;
+diff --git a/Documentation/cgroups/resource_counter.txt b/Documentation/cgroups/resource_counter.txt
+--- a/Documentation/cgroups/resource_counter.txt
++++ b/Documentation/cgroups/resource_counter.txt
+@@ -76,15 +76,7 @@ to work with it.
+ 	limit_fail_at parameter is set to the particular res_counter element
+ 	where the charging failed.
  
-+	/* reserves for handling oom conditions, protected by res.lock */
-+	unsigned long long	oom_reserve;
-+
- 	/* set when res.limit == memsw.limit */
- 	bool		memsw_is_minimum;
+- d. int res_counter_charge_locked
+-			(struct res_counter *rc, unsigned long val, bool force)
+-
+-	The same as res_counter_charge(), but it must not acquire/release the
+-	res_counter->lock internally (it must be called with res_counter->lock
+-	held). The force parameter indicates whether we can bypass the limit.
+-
+- e. u64 res_counter_uncharge[_locked]
+-			(struct res_counter *rc, unsigned long val)
++ d. u64 res_counter_uncharge(struct res_counter *rc, unsigned long val)
  
-@@ -5936,6 +5939,51 @@ static int mem_cgroup_oom_control_write(struct cgroup_subsys_state *css,
- 	return 0;
+ 	When a resource is released (freed) it should be de-accounted
+ 	from the resource counter it was accounted to.  This is called
+@@ -93,7 +85,7 @@ to work with it.
+ 
+ 	The _locked routines imply that the res_counter->lock is taken.
+ 
+- f. u64 res_counter_uncharge_until
++ e. u64 res_counter_uncharge_until
+ 		(struct res_counter *rc, struct res_counter *top,
+ 		 unsigned long val)
+ 
+diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
+--- a/include/linux/res_counter.h
++++ b/include/linux/res_counter.h
+@@ -104,15 +104,13 @@ void res_counter_init(struct res_counter *counter, struct res_counter *parent);
+  *       units, e.g. numbers, bytes, Kbytes, etc
+  *
+  * returns 0 on success and <0 if the counter->usage will exceed the
+- * counter->limit _locked call expects the counter->lock to be taken
++ * counter->limit
+  *
+  * charge_nofail works the same, except that it charges the resource
+  * counter unconditionally, and returns < 0 if the after the current
+  * charge we are over limit.
+  */
+ 
+-int __must_check res_counter_charge_locked(struct res_counter *counter,
+-					   unsigned long val, bool force);
+ int __must_check res_counter_charge(struct res_counter *counter,
+ 		unsigned long val, struct res_counter **limit_fail_at);
+ int res_counter_charge_nofail(struct res_counter *counter,
+@@ -125,12 +123,10 @@ int res_counter_charge_nofail(struct res_counter *counter,
+  * @val: the amount of the resource
+  *
+  * these calls check for usage underflow and show a warning on the console
+- * _locked call expects the counter->lock to be taken
+  *
+  * returns the total charges still present in @counter.
+  */
+ 
+-u64 res_counter_uncharge_locked(struct res_counter *counter, unsigned long val);
+ u64 res_counter_uncharge(struct res_counter *counter, unsigned long val);
+ 
+ u64 res_counter_uncharge_until(struct res_counter *counter,
+diff --git a/kernel/res_counter.c b/kernel/res_counter.c
+--- a/kernel/res_counter.c
++++ b/kernel/res_counter.c
+@@ -22,8 +22,18 @@ void res_counter_init(struct res_counter *counter, struct res_counter *parent)
+ 	counter->parent = parent;
  }
  
-+static int mem_cgroup_resize_oom_reserve(struct mem_cgroup *memcg,
-+					 unsigned long long new_limit)
+-int res_counter_charge_locked(struct res_counter *counter, unsigned long val,
+-			      bool force)
++static u64 res_counter_uncharge_locked(struct res_counter *counter,
++				       unsigned long val)
 +{
-+	struct res_counter *res = &memcg->res;
-+	u64 limit, usage;
-+	int ret = 0;
++	if (WARN_ON(counter->usage < val))
++		val = counter->usage;
 +
-+	spin_lock(&res->lock);
-+	limit = res->limit;
-+	usage = res->usage;
-+
-+	if (usage > limit && usage - limit > new_limit) {
-+		ret = -EBUSY;
-+		goto out;
-+	}
-+
-+	memcg->oom_reserve = new_limit;
-+out:
-+	spin_unlock(&res->lock);
-+	return ret;
++	counter->usage -= val;
++	return counter->usage;
 +}
 +
-+static u64 mem_cgroup_oom_reserve_read(struct cgroup_subsys_state *css,
-+				       struct cftype *cft)
-+{
-+	return mem_cgroup_from_css(css)->oom_reserve;
-+}
-+
-+static int mem_cgroup_oom_reserve_write(struct cgroup_subsys_state *css,
-+					struct cftype *cft, const char *buffer)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-+	unsigned long long val;
-+	int ret;
-+
-+	if (mem_cgroup_is_root(memcg))
-+		return -EINVAL;
-+
-+	ret = res_counter_memparse_write_strategy(buffer, &val);
-+	if (ret)
-+		return ret;
-+
-+	return mem_cgroup_resize_oom_reserve(memcg, val);
-+}
-+
- #ifdef CONFIG_MEMCG_KMEM
- static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
++static int res_counter_charge_locked(struct res_counter *counter,
++				     unsigned long val, bool force)
  {
-@@ -6291,6 +6339,11 @@ static struct cftype mem_cgroup_files[] = {
- 		.private = MEMFILE_PRIVATE(_OOM_TYPE, OOM_CONTROL),
- 	},
- 	{
-+		.name = "oom_reserve_in_bytes",
-+		.read_u64 = mem_cgroup_oom_reserve_read,
-+		.write_string = mem_cgroup_oom_reserve_write,
-+	},
-+	{
- 		.name = "pressure_level",
- 	},
- #ifdef CONFIG_NUMA
+ 	int ret = 0;
+ 
+@@ -86,15 +96,6 @@ int res_counter_charge_nofail(struct res_counter *counter, unsigned long val,
+ 	return __res_counter_charge(counter, val, limit_fail_at, true);
+ }
+ 
+-u64 res_counter_uncharge_locked(struct res_counter *counter, unsigned long val)
+-{
+-	if (WARN_ON(counter->usage < val))
+-		val = counter->usage;
+-
+-	counter->usage -= val;
+-	return counter->usage;
+-}
+-
+ u64 res_counter_uncharge_until(struct res_counter *counter,
+ 			       struct res_counter *top,
+ 			       unsigned long val)
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
