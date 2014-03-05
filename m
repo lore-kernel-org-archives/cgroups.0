@@ -1,124 +1,85 @@
-From: David Rientjes <rientjes@google.com>
-Subject: [patch 11/11] mm, memcg: allow system oom killer to be disabled
-Date: Tue, 4 Mar 2014 19:59:46 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1403041957340.8067@chino.kir.corp.google.com>
-References: <alpine.DEB.2.02.1403041952170.8067@chino.kir.corp.google.com>
+From: Markus Blank-Burian <burian@muenster.de>
+Subject: Re: [PATCH 1/2] memcg: reparent charges of children before processing parent
+Date: Wed, 05 Mar 2014 10:27:08 +0100
+Message-ID: <1645786.OfqIDFbIrl@akheu22.uni-muenster.de>
+References: <alpine.LSU.2.11.1402121500070.5029@eggly.anvils>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=DM1afpsefwwveOSK++VkPIC2mMfhXEQKhMVryOQvgVs=;
-        b=GudTMt/ljPaC1vR67pydL5Vh5Er2+n2T6CeHhmytmEeaCVL59NVTyE/widKWASYCux
-         qHTdEYi+/jSbO2+uTVgnNfOEClxleIpEAJNmvOC+Gi5Ji/4oHkDUhg15Y4ZwUVd8W6o2
-         xC+Stod1N9xImw71u9b64+Cotm2KI8S4v4L0fRSsJ9SQYm5xFyup3maWyMLEOuY5nXrD
-         /B3a+88yzWgdxl3xmsbxMN40Vf8j2ncmQ0F2PHgnLedGIEO+sTEUltLh+VI71NEwN8Pw
-         lX1DezY7FKUuEpdu8exDCh72UndSStVxVgloJ/9/1ED2BqO+50oylLnaLy30t8DXpKPC
-         QmnA==
-In-Reply-To: <alpine.DEB.2.02.1403041952170.8067@chino.kir.corp.google.com>
+In-Reply-To: <alpine.LSU.2.11.1402121500070.5029@eggly.anvils>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Christoph Lameter <cl@linux-foundation.org>, Pekka Enberg <penberg@kernel.org>, Tejun Heo <tj@kernel.org>, Mel Gorman <mgorman@suse.de>, Oleg Nesterov <oleg@redhat.com>, Rik van Riel <riel@redhat.com>, Jianguo Wu <wujianguo@huawei.com>, Tim Hockin <thockin@google.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
+To: Hugh Dickins <hughd@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Filipe Brandenburger <filbranden@google.com>, Li Zefan <lizefan@huawei.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Michel Lespinasse <walken@google.com>, Shawn Bohrer <shawn.bohrer@gmail.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-Now that system oom conditions can properly be handled from userspace,
-allow the oom killer to be disabled.  Otherwise, the kernel will
-immediately kill a process and memory will be freed.  The userspace oom
-handler may have a different policy.
+I wanted to give you small feedback, that this patch successfully fixes the 
+problem with reparent_charges on our cluster. Thank you very much for finding 
+and fixing this one!
 
-Signed-off-by: David Rientjes <rientjes@google.com>
----
- Documentation/cgroups/memory.txt |  4 ++--
- include/linux/memcontrol.h       |  6 ++++++
- mm/memcontrol.c                  | 11 ++++++++---
- mm/oom_kill.c                    |  3 +++
- 4 files changed, 19 insertions(+), 5 deletions(-)
 
-diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
---- a/Documentation/cgroups/memory.txt
-+++ b/Documentation/cgroups/memory.txt
-@@ -755,8 +755,8 @@ You can disable the OOM-killer by writing "1" to memory.oom_control file, as:
- 
- 	# echo 1 > memory.oom_control
- 
--This operation is only allowed to the top cgroup of a sub-hierarchy and does
--not include the root memcg.
-+This operation is only allowed to the top cgroup of a sub-hierarchy.  If
-+disabled for the root memcg, the system oom killer is disabled.
- If OOM-killer is disabled, tasks under cgroup will hang/sleep
- in memory cgroup's OOM-waitqueue when they request accountable memory.
- 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -159,6 +159,7 @@ bool mem_cgroup_oom_synchronize(bool wait);
- extern bool mem_cgroup_alloc_use_oom_reserve(void);
- extern u64 mem_cgroup_root_oom_reserve(void);
- extern void mem_cgroup_root_oom_notify(void);
-+extern bool mem_cgroup_root_oom_disable(void);
- 
- #ifdef CONFIG_MEMCG_SWAP
- extern int do_swap_account;
-@@ -415,6 +416,11 @@ static inline void mem_cgroup_root_oom_notify(void)
- {
- }
- 
-+static inline bool mem_cgroup_root_oom_disable(void)
-+{
-+	return false;
-+}
-+
- static inline void mem_cgroup_inc_page_stat(struct page *page,
- 					    enum mem_cgroup_stat_index idx)
- {
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5976,13 +5976,13 @@ static int mem_cgroup_oom_control_write(struct cgroup_subsys_state *css,
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
- 	struct mem_cgroup *parent = mem_cgroup_from_css(css_parent(&memcg->css));
- 
--	/* cannot set to root cgroup and only 0 and 1 are allowed */
--	if (!parent || !((val == 0) || (val == 1)))
-+	/* only 0 and 1 are allowed */
-+	if (val != !!val)
- 		return -EINVAL;
- 
- 	mutex_lock(&memcg_create_mutex);
- 	/* oom-kill-disable is a flag for subhierarchy. */
--	if ((parent->use_hierarchy) || memcg_has_children(memcg)) {
-+	if (parent && (parent->use_hierarchy || memcg_has_children(memcg))) {
- 		mutex_unlock(&memcg_create_mutex);
- 		return -EINVAL;
- 	}
-@@ -6062,6 +6062,11 @@ u64 mem_cgroup_root_oom_reserve(void)
- 	return root_mem_cgroup->oom_reserve >> PAGE_SHIFT;
- }
- 
-+bool mem_cgroup_root_oom_disable(void)
-+{
-+	return root_mem_cgroup->oom_kill_disable;
-+}
-+
- #ifdef CONFIG_MEMCG_KMEM
- static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
- {
-diff --git a/mm/oom_kill.c b/mm/oom_kill.c
---- a/mm/oom_kill.c
-+++ b/mm/oom_kill.c
-@@ -656,6 +656,9 @@ void out_of_memory(struct zonelist *zonelist, gfp_t gfp_mask,
- 	mpol_mask = (constraint == CONSTRAINT_MEMORY_POLICY) ? nodemask : NULL;
- 	check_panic_on_oom(constraint, gfp_mask, order, mpol_mask);
- 
-+	if (mem_cgroup_root_oom_disable())
-+		return;
-+
- 	if (sysctl_oom_kill_allocating_task && current->mm &&
- 	    !oom_unkillable_task(current, NULL, nodemask) &&
- 	    current->signal->oom_score_adj != OOM_SCORE_ADJ_MIN) {
+On Wednesday 12 February 2014 15:03:31 Hugh Dickins wrote:
+> From: Filipe Brandenburger <filbranden@google.com>
+> 
+> Sometimes the cleanup after memcg hierarchy testing gets stuck in
+> mem_cgroup_reparent_charges(), unable to bring non-kmem usage down to 0.
+> 
+> There may turn out to be several causes, but a major cause is this: the
+> workitem to offline parent can get run before workitem to offline child;
+> parent's mem_cgroup_reparent_charges() circles around waiting for the
+> child's pages to be reparented to its lrus, but it's holding cgroup_mutex
+> which prevents the child from reaching its mem_cgroup_reparent_charges().
+> 
+> Further testing showed that an ordered workqueue for cgroup_destroy_wq
+> is not always good enough: percpu_ref_kill_and_confirm's call_rcu_sched
+> stage on the way can mess up the order before reaching the workqueue.
+> 
+> Instead, when offlining a memcg, call mem_cgroup_reparent_charges() on
+> all its children (and grandchildren, in the correct order) to have their
+> charges reparented first.
+> 
+> Fixes: e5fca243abae ("cgroup: use a dedicated workqueue for cgroup
+> destruction") Signed-off-by: Filipe Brandenburger <filbranden@google.com>
+> Signed-off-by: Hugh Dickins <hughd@google.com>
+> Cc: stable@vger.kernel.org # v3.10+ (but will need extra care)
+> ---
+> Or, you may prefer my alternative cgroup.c approach in 2/2:
+> there's no need for both.  Please note that neither of these patches
+> attempts to handle the unlikely case of racy charges made to child
+> after its offline, but parent's offline coming before child's free:
+> mem_cgroup_css_free()'s backstop call to mem_cgroup_reparent_charges()
+> cannot help in that case, with or without these patches.  Fixing that
+> would have to be a separate effort - Michal's?
+> 
+>  mm/memcontrol.c |   10 +++++++++-
+>  1 file changed, 9 insertions(+), 1 deletion(-)
+> 
+> --- 3.14-rc2/mm/memcontrol.c	2014-02-02 18:49:07.897302115 -0800
+> +++ linux/mm/memcontrol.c	2014-02-11 17:48:07.604582963 -0800
+> @@ -6595,6 +6595,7 @@ static void mem_cgroup_css_offline(struc
+>  {
+>  	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+>  	struct mem_cgroup_event *event, *tmp;
+> +	struct cgroup_subsys_state *iter;
+> 
+>  	/*
+>  	 * Unregister events and notify userspace.
+> @@ -6611,7 +6612,14 @@ static void mem_cgroup_css_offline(struc
+>  	kmem_cgroup_css_offline(memcg);
+> 
+>  	mem_cgroup_invalidate_reclaim_iterators(memcg);
+> -	mem_cgroup_reparent_charges(memcg);
+> +
+> +	/*
+> +	 * This requires that offlining is serialized.  Right now that is
+> +	 * guaranteed because css_killed_work_fn() holds the cgroup_mutex.
+> +	 */
+> +	css_for_each_descendant_post(iter, css)
+> +		mem_cgroup_reparent_charges(mem_cgroup_from_css(iter));
+> +
+>  	mem_cgroup_destroy_all_caches(memcg);
+>  	vmpressure_cleanup(&memcg->vmpressure);
+>  }
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
