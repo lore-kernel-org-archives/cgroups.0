@@ -1,8 +1,7 @@
 From: David Rientjes <rientjes@google.com>
-Subject: [patch 07/11] mm, memcg: allow processes handling oom notifications
- to access reserves
-Date: Tue, 4 Mar 2014 19:59:29 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1403041956040.8067@chino.kir.corp.google.com>
+Subject: [patch 08/11] mm, memcg: add memcg oom reserve documentation
+Date: Tue, 4 Mar 2014 19:59:32 -0800 (PST)
+Message-ID: <alpine.DEB.2.02.1403041956250.8067@chino.kir.corp.google.com>
 References: <alpine.DEB.2.02.1403041952170.8067@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
@@ -10,13 +9,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=date:from:to:cc:subject:in-reply-to:message-id:references
          :user-agent:mime-version:content-type;
-        bh=3NqhKvOMZros0gPrhiV43+c57M4+5r6rQe4vIH+lQaM=;
-        b=kcovhZjN1X3239rjV0bAKcGeDs6Sz43AS03GX257CS53EHZr2H4egQLytXDh26Eg05
-         FaPBKgpBYw47frDn5JmuyfFFDEHhSruCXZolX+4lC6/OKZ2AvsKQxFyxhMoHx0Ncff6w
-         QbSyLKARGPOAmRlL1hP/kBhVPUYDCCtSX7LIOl0TclN4J1l+TDomgUODxxg+6kvqPL0P
-         F4/PnjS3/RlnSEEqgCYGy1waxApFtVhHrtkVSzcdxu4iyNUjgb+VDsTbviypm4k36Vc8
-         hBbAv2gjTIAkxAPaQJmLggh2R7D6EqLoxaLKvjXSv9dm5gAdRnPdrbFikFu4znXqIqWn
-         ozAA==
+        bh=Q1IK/5397Xwi+viHAZc1trtnF4nPxrqIuPZ9M3FzDyY=;
+        b=XzqxnAl9MBj3SBTmIa5tg+l6D8M6vf/hKRL0xIF6ebQTBPg+SU7tzFKtcJhwG+bFM8
+         anhIaJrwxzjl2yoSZEALnv4p1TeMTq1Js4aOhOz2vzvTa7G+aHd/XoXqvjg4PSFMlJLS
+         iMm6EPYawWyABYJInmSQAtg6ANUmVGpeMuZLQlPWWmzkTSf/KORFik3QLl2IrL0nbmhv
+         G0QY/c/v4FJqllUu0Blq9dumOy8Ger985lJu1i9ryEZuTkOI15jGK2xPBtJtHdbW5KQ6
+         F+NIrb5aTv7MpaP7x5AuR82rpIY0Y/oQVF+CPdD7AcQfUfy8eSDjE+F8r1Xs7gotvynP
+         NxRw==
 In-Reply-To: <alpine.DEB.2.02.1403041952170.8067@chino.kir.corp.google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -25,125 +24,58 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Christoph Lameter <cl@linux-foundation.org>, Pekka Enberg <penberg@kernel.org>, Tejun Heo <tj@kernel.org>, Mel Gorman <mgorman@suse.de>, Oleg Nesterov <oleg@redhat.com>, Rik van Riel <riel@redhat.com>, Jianguo Wu <wujianguo@huawei.com>, Tim Hockin <thockin@google.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
 
-Now that a per-process flag is available, define it for processes that
-handle userspace oom notifications.  This is an optimization to avoid
-mantaining a list of such processes attached to a memcg at any given time
-and iterating it at charge time.
-
-This flag gets set whenever a process has registered for an oom
-notification and is cleared whenever it unregisters.
-
-When memcg reclaim has failed to free any memory, it is necessary for
-userspace oom handlers to be able to dip into reserves to pagefault text,
-allocate kernel memory to read the "tasks" file, allocate heap, etc.
-
-System oom conditions are not addressed at this time, but the same per-
-process flag can be used in the page allocator to determine if access
-should be given to userspace oom handlers to per-zone memory reserves at
-a later time once there is consensus.
+Add documentation on memcg oom reserves to
+Documentation/cgroups/memory.txt and give an example of its usage and
+recommended best practices.
 
 Signed-off-by: David Rientjes <rientjes@google.com>
 ---
- include/linux/sched.h |  1 +
- mm/memcontrol.c       | 47 ++++++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 47 insertions(+), 1 deletion(-)
+ Documentation/cgroups/memory.txt | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
-diff --git a/include/linux/sched.h b/include/linux/sched.h
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1821,6 +1821,7 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut,
- #define PF_SPREAD_SLAB	0x02000000	/* Spread some slab caches over cpuset */
- #define PF_NO_SETAFFINITY 0x04000000	/* Userland is not allowed to meddle with cpus_allowed */
- #define PF_MCE_EARLY    0x08000000      /* Early kill for mce process policy */
-+#define PF_OOM_HANDLER	0x10000000	/* Userspace process handling oom conditions */
- #define PF_MUTEX_TESTER	0x20000000	/* Thread belongs to the rt mutex tester */
- #define PF_FREEZER_SKIP	0x40000000	/* Freezer should not count it as freezable */
- #define PF_SUSPEND_TASK 0x80000000      /* this thread called freeze_processes and should not be frozen */
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2633,6 +2633,33 @@ enum {
- 	CHARGE_WOULDBLOCK,	/* GFP_WAIT wasn't set and no enough res. */
- };
+diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
+--- a/Documentation/cgroups/memory.txt
++++ b/Documentation/cgroups/memory.txt
+@@ -71,6 +71,7 @@ Brief summary of control files.
+ 				 (See sysctl's vm.swappiness)
+  memory.move_charge_at_immigrate # set/show controls of moving charges
+  memory.oom_control		 # set/show oom controls.
++ memory.oom_reserve_in_bytes	 # set/show limit of oom memory reserves
+  memory.numa_stat		 # show the number of memory usage per numa node
  
-+/*
-+ * Processes handling oom conditions are allowed to utilize memory reserves so
-+ * that they may handle the condition.
-+ */
-+static int mem_cgroup_oom_handler_charge(struct mem_cgroup *memcg,
-+					 unsigned long csize,
-+					 struct mem_cgroup **mem_over_limit)
-+{
-+	struct res_counter *fail_res;
-+	int ret;
+  memory.kmem.limit_in_bytes      # set/show hard limit for kernel memory
+@@ -772,6 +773,31 @@ At reading, current status of OOM is shown.
+ 	under_oom	 0 or 1 (if 1, the memory cgroup is under OOM, tasks may
+ 				 be stopped.)
+ 
++Processes that handle oom conditions in their own memcgs or their child
++memcgs may need to allocate memory themselves to do anything useful,
++including pagefaulting its text or allocating kernel memory to read the
++memcg "tasks" file.  For this reason, memory.oom_reserve_in_bytes is
++provided that specifies how much memory that processes waiting on
++memory.oom_control can allocate above the memcg limit.
 +
-+	ret = res_counter_charge_nofail_max(&memcg->res, csize, &fail_res,
-+					    memcg->oom_reserve);
-+	if (!ret && do_swap_account) {
-+		ret = res_counter_charge_nofail_max(&memcg->memsw, csize,
-+						    &fail_res,
-+						    memcg->oom_reserve);
-+		if (ret) {
-+			res_counter_uncharge(&memcg->res, csize);
-+			*mem_over_limit = mem_cgroup_from_res_counter(fail_res,
-+								      memsw);
++The memcg that the oom handler is attached to is charged for the memory
++that it allocates against its own memory.oom_reserve_in_bytes.  This
++memory is therefore only available to processes that are waiting for
++a notification.
 +
-+		}
-+	}
-+	return !ret ? CHARGE_OK : CHARGE_NOMEM;
-+}
++For example, if you do
 +
- static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 				unsigned int nr_pages, unsigned int min_pages,
- 				bool invoke_oom)
-@@ -2692,6 +2719,13 @@ static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	if (mem_cgroup_wait_acct_move(mem_over_limit))
- 		return CHARGE_RETRY;
- 
-+	if (current->flags & PF_OOM_HANDLER) {
-+		ret = mem_cgroup_oom_handler_charge(memcg, csize,
-+						    &mem_over_limit);
-+		if (ret == CHARGE_OK)
-+			return CHARGE_OK;
-+	}
++	# echo 2m > memory.oom_reserve_in_bytes
 +
- 	if (invoke_oom)
- 		mem_cgroup_oom(mem_over_limit, gfp_mask, get_order(csize));
++then any process attached to this memcg that is waiting on memcg oom
++notifications anywhere on the system can allocate an additional 2MB
++above memory.limit_in_bytes.
++
++You may still consider doing mlockall(MCL_FUTURE) for processes that
++are waiting on oom notifications to keep this vaue as minimal as
++possible, or allow it to be large enough so that its text can still
++be pagefaulted in under oom conditions when the value is known.
++
+ 11. Memory Pressure
  
-@@ -2739,7 +2773,8 @@ static int __mem_cgroup_try_charge(struct mm_struct *mm,
- 		     || fatal_signal_pending(current)))
- 		goto bypass;
- 
--	if (unlikely(task_in_memcg_oom(current)))
-+	if (unlikely(task_in_memcg_oom(current)) &&
-+	    !(current->flags & PF_OOM_HANDLER))
- 		goto nomem;
- 
- 	if (gfp_mask & __GFP_NOFAIL)
-@@ -5877,6 +5912,11 @@ static int mem_cgroup_oom_register_event(struct mem_cgroup *memcg,
- 	if (!event)
- 		return -ENOMEM;
- 
-+	/*
-+	 * Setting PF_OOM_HANDLER before taking memcg_oom_lock ensures it is
-+	 * set before getting added to memcg->oom_notify.
-+	 */
-+	current->flags |= PF_OOM_HANDLER;
- 	spin_lock(&memcg_oom_lock);
- 
- 	event->eventfd = eventfd;
-@@ -5904,6 +5944,11 @@ static void mem_cgroup_oom_unregister_event(struct mem_cgroup *memcg,
- 		}
- 	}
- 
-+	/*
-+	 * Clearing PF_OOM_HANDLER before dropping memcg_oom_lock ensures it is
-+	 * cleared before receiving another notification.
-+	 */
-+	current->flags &= ~PF_OOM_HANDLER;
- 	spin_unlock(&memcg_oom_lock);
- }
- 
+ The pressure level notifications can be used to monitor the memory
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
