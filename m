@@ -1,7 +1,7 @@
 From: David Rientjes <rientjes@google.com>
-Subject: [patch 01/11] fork: collapse copy_flags into copy_process
-Date: Tue, 4 Mar 2014 19:58:41 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1403041953570.8067@chino.kir.corp.google.com>
+Subject: [patch 02/11] mm, mempolicy: rename slab_node for clarity
+Date: Tue, 4 Mar 2014 19:58:44 -0800 (PST)
+Message-ID: <alpine.DEB.2.02.1403041954220.8067@chino.kir.corp.google.com>
 References: <alpine.DEB.2.02.1403041952170.8067@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
@@ -9,13 +9,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=date:from:to:cc:subject:in-reply-to:message-id:references
          :user-agent:mime-version:content-type;
-        bh=YDoXJ3AVf1ZssOUUqCx7Ji3XqlgyMHZZoCxIWFgNBPA=;
-        b=JB5vPbJZUeTteNl18876JMafj+IYbfjIRfSZuwXU/jyH1S507fQShd0I64VrQPSBrN
-         eDQMSvIDec5W3tYC5fyosZsiKtibcU79WXVfYlNrUv5125oPiV6VmFyOTQqyykVNO+Pu
-         rX7I3peGADJfN+o1I1gm4ufv8oVNP/E8Bdy2OLlIpOoYDTZbwZcePnqe/DZYjUU8vnGA
-         my5FkT1OoGPmuMrh6au1fmoD3msEhtD7/M+nEOzJGGySfD7O0WEUQSw7zhQC1SFNur8q
-         tG1XMJj8h8MHnRyNjzlUxtR7tH42EpA5NXwfWIC57xyDijlc1DpXqcsDMuL+Zqsz52Q0
-         4cKg==
+        bh=fEqjddp1nb7K0uk5nMT3xs6jxzEThaYH6ofxCmTfnXA=;
+        b=ciJxhhN36Qdf7H4Z6EOc/KKF1/2HZlOU67HDvEcT9LnQoymnGT3xoZzqUswl2Gqs7i
+         hDIWgEvOiUBdB9KHy/CvlmOuioo7ljfBudMZBevjHwkjcHSG+ZAIN7BoS275sKTtyP+x
+         omuTUEUoNho0V+sK6OzAJzg7XIOtT/D0F8JEfY+zgnkV4iOHSVLywHQ7NYGtNa+hk9Em
+         g5XkIeKH7KhG+syNllkER5w3sIGAQ7uK5VGC5Klz4MjrzObRhQSZHjSzTpYVuElsudom
+         zEyHXAdhF2q54U3iXXZGLSIi8eKqkGyALmuqwZ3DKEvoY5F/Uk2vgkP9G7MGQr3amP+Q
+         Lurg==
 In-Reply-To: <alpine.DEB.2.02.1403041952170.8067@chino.kir.corp.google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -24,43 +24,112 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Christoph Lameter <cl@linux-foundation.org>, Pekka Enberg <penberg@kernel.org>, Tejun Heo <tj@kernel.org>, Mel Gorman <mgorman@suse.de>, Oleg Nesterov <oleg@redhat.com>, Rik van Riel <riel@redhat.com>, Jianguo Wu <wujianguo@huawei.com>, Tim Hockin <thockin@google.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
 
-copy_flags() does not use the clone_flags formal and can be collapsed
-into copy_process() for cleaner code.
+slab_node() is actually a mempolicy function, so rename it to
+mempolicy_slab_node() to make it clearer that it used for processes with
+mempolicies.
 
+At the same time, cleanup its code by saving numa_mem_id() in a local
+variable (since we require a node with memory, not just any node) and
+remove an obsolete comment that assumes the mempolicy is actually passed
+into the function.
+
+Acked-by: Christoph Lameter <cl@linux.com>
 Signed-off-by: David Rientjes <rientjes@google.com>
 ---
- kernel/fork.c | 12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
+ include/linux/mempolicy.h |  2 +-
+ mm/mempolicy.c            | 15 ++++++---------
+ mm/slab.c                 |  4 ++--
+ mm/slub.c                 |  2 +-
+ 4 files changed, 10 insertions(+), 13 deletions(-)
 
-diff --git a/kernel/fork.c b/kernel/fork.c
---- a/kernel/fork.c
-+++ b/kernel/fork.c
-@@ -1069,15 +1069,6 @@ static int copy_signal(unsigned long clone_flags, struct task_struct *tsk)
- 	return 0;
- }
+diff --git a/include/linux/mempolicy.h b/include/linux/mempolicy.h
+--- a/include/linux/mempolicy.h
++++ b/include/linux/mempolicy.h
+@@ -151,7 +151,7 @@ extern struct zonelist *huge_zonelist(struct vm_area_struct *vma,
+ extern bool init_nodemask_of_mempolicy(nodemask_t *mask);
+ extern bool mempolicy_nodemask_intersects(struct task_struct *tsk,
+ 				const nodemask_t *mask);
+-extern unsigned slab_node(void);
++extern unsigned int mempolicy_slab_node(void);
  
--static void copy_flags(unsigned long clone_flags, struct task_struct *p)
--{
--	unsigned long new_flags = p->flags;
--
--	new_flags &= ~(PF_SUPERPRIV | PF_WQ_WORKER);
--	new_flags |= PF_FORKNOEXEC;
--	p->flags = new_flags;
--}
--
- SYSCALL_DEFINE1(set_tid_address, int __user *, tidptr)
+ extern enum zone_type policy_zone;
+ 
+diff --git a/mm/mempolicy.c b/mm/mempolicy.c
+--- a/mm/mempolicy.c
++++ b/mm/mempolicy.c
+@@ -1782,21 +1782,18 @@ static unsigned interleave_nodes(struct mempolicy *policy)
+ /*
+  * Depending on the memory policy provide a node from which to allocate the
+  * next slab entry.
+- * @policy must be protected by freeing by the caller.  If @policy is
+- * the current task's mempolicy, this protection is implicit, as only the
+- * task can change it's policy.  The system default policy requires no
+- * such protection.
+  */
+-unsigned slab_node(void)
++unsigned int mempolicy_slab_node(void)
  {
- 	current->clear_child_tid = tidptr;
-@@ -1227,7 +1218,8 @@ static struct task_struct *copy_process(unsigned long clone_flags,
- 		goto bad_fork_cleanup_count;
+ 	struct mempolicy *policy;
++	int node = numa_mem_id();
  
- 	delayacct_tsk_init(p);	/* Must remain after dup_task_struct() */
--	copy_flags(clone_flags, p);
-+	p->flags &= ~(PF_SUPERPRIV | PF_WQ_WORKER);
-+	p->flags |= PF_FORKNOEXEC;
- 	INIT_LIST_HEAD(&p->children);
- 	INIT_LIST_HEAD(&p->sibling);
- 	rcu_copy_process(p);
+ 	if (in_interrupt())
+-		return numa_node_id();
++		return node;
+ 
+ 	policy = current->mempolicy;
+ 	if (!policy || policy->flags & MPOL_F_LOCAL)
+-		return numa_node_id();
++		return node;
+ 
+ 	switch (policy->mode) {
+ 	case MPOL_PREFERRED:
+@@ -1816,11 +1813,11 @@ unsigned slab_node(void)
+ 		struct zonelist *zonelist;
+ 		struct zone *zone;
+ 		enum zone_type highest_zoneidx = gfp_zone(GFP_KERNEL);
+-		zonelist = &NODE_DATA(numa_node_id())->node_zonelists[0];
++		zonelist = &NODE_DATA(node)->node_zonelists[0];
+ 		(void)first_zones_zonelist(zonelist, highest_zoneidx,
+ 							&policy->v.nodes,
+ 							&zone);
+-		return zone ? zone->node : numa_node_id();
++		return zone ? zone->node : node;
+ 	}
+ 
+ 	default:
+diff --git a/mm/slab.c b/mm/slab.c
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -3042,7 +3042,7 @@ static void *alternate_node_alloc(struct kmem_cache *cachep, gfp_t flags)
+ 	if (cpuset_do_slab_mem_spread() && (cachep->flags & SLAB_MEM_SPREAD))
+ 		nid_alloc = cpuset_slab_spread_node();
+ 	else if (current->mempolicy)
+-		nid_alloc = slab_node();
++		nid_alloc = mempolicy_slab_node();
+ 	if (nid_alloc != nid_here)
+ 		return ____cache_alloc_node(cachep, flags, nid_alloc);
+ 	return NULL;
+@@ -3074,7 +3074,7 @@ static void *fallback_alloc(struct kmem_cache *cache, gfp_t flags)
+ 
+ retry_cpuset:
+ 	cpuset_mems_cookie = get_mems_allowed();
+-	zonelist = node_zonelist(slab_node(), flags);
++	zonelist = node_zonelist(mempolicy_slab_node(), flags);
+ 
+ retry:
+ 	/*
+diff --git a/mm/slub.c b/mm/slub.c
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -1685,7 +1685,7 @@ static void *get_any_partial(struct kmem_cache *s, gfp_t flags,
+ 
+ 	do {
+ 		cpuset_mems_cookie = get_mems_allowed();
+-		zonelist = node_zonelist(slab_node(), flags);
++		zonelist = node_zonelist(mempolicy_slab_node(), flags);
+ 		for_each_zone_zonelist(zone, z, zonelist, high_zoneidx) {
+ 			struct kmem_cache_node *n;
+ 
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
