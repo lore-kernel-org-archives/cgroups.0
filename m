@@ -1,60 +1,63 @@
-From: David Rientjes <rientjes@google.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [patch 00/11] userspace out of memory handling
-Date: Thu, 6 Mar 2014 13:23:57 -0800 (PST)
-Message-ID: <alpine.DEB.2.02.1403061312020.25499@chino.kir.corp.google.com>
-References: <alpine.DEB.2.02.1403041952170.8067@chino.kir.corp.google.com> <20140306204923.GF14033@htj.dyndns.org> <alpine.DEB.2.02.1403061254240.25499@chino.kir.corp.google.com> <20140306205911.GG14033@htj.dyndns.org> <alpine.DEB.2.02.1403061301020.25499@chino.kir.corp.google.com>
+Date: Thu, 6 Mar 2014 16:29:38 -0500
+Message-ID: <20140306212938.GF17902@htj.dyndns.org>
+References: <alpine.DEB.2.02.1403041952170.8067@chino.kir.corp.google.com>
+ <20140306204923.GF14033@htj.dyndns.org>
+ <alpine.DEB.2.02.1403061254240.25499@chino.kir.corp.google.com>
+ <20140306205911.GG14033@htj.dyndns.org>
+ <alpine.DEB.2.02.1403061301020.25499@chino.kir.corp.google.com>
  <20140306211136.GA17902@htj.dyndns.org>
+ <alpine.DEB.2.02.1403061312020.25499@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=86rZsenIkdUOV/lJbdIQyY9lSK2YXixYronQwFC+1qM=;
-        b=ZT3dxe65NGHGBSi32suWNbdDGEXANoIKBKEAPglAt7CcWn44+P5kAggpBg+YqDYz28
-         GfSrUI0t8lAGZpe/njj3vQaKVvlx+LL22O6GyKsWz7u/tABe6xDwkpHG2pa3/euzise+
-         M2Uz5VjQCCTBX0RdCf/eYcOEFdVpgIRteL97IJAyiOxM8OBCO57StPy+JwPnLivrMsi8
-         78ZiVlEQoSCRpO3gScP7lFs3O7jkHPwQin2MdxGkU2haFK9n3h8NepCrhXDtgUibHkAG
-         ODh5u/YktwXJNjzQm2CY+oYe2rOrmjEJTw8lK9YtnG1aaAUby/x/q7TQH12m76rqbJiT
-         0A3w==
-In-Reply-To: <20140306211136.GA17902@htj.dyndns.org>
-Sender: linux-doc-owner@vger.kernel.org
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=OWV29C0pMJ698UITZKlPhZ68i2mHLDfTysGMvlcyb3c=;
+        b=KAj6F4CAqpwlhwdOW4wZItRqeg5YxTBSLgJ8Qxh2FsvjJlIRXQthIXhpu7Kxt6IQ6D
+         uylzHRJEAD7TuQu9Hyi7HKDhWInd2rm0/3Wrls9m2qH0UkYR5K4EBQvq3vScaK7bdC5Z
+         6vaIZPbdgc3bajg7dmKFck0IkERK2Ac542SHIDbyvaULxCMxyfb2VUsSmGqrz0BjeJZA
+         39t8m4DsN8F2yuneiJGt+euFkXjaLtdfJUntekN5QLUXXh5AoMsv0wKpuu37dRSCQFHT
+         9EkO3M+KffXQbrLcxUvXjRqxEXgu5u4iH/M8DmWVlpqpVZKCxHHIjnexfoPu8VOmlnd0
+         ZvVg==
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.02.1403061312020.25499@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
+To: David Rientjes <rientjes@google.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Christoph Lameter <cl@linux-foundation.org>, Pekka Enberg <penberg@kernel.org>, Mel Gorman <mgorman@suse.de>, Oleg Nesterov <oleg@redhat.com>, Rik van Riel <riel@redhat.com>, Jianguo Wu <wujianguo@huawei.com>, Tim Hockin <thockin@google.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
 
-On Thu, 6 Mar 2014, Tejun Heo wrote:
+On Thu, Mar 06, 2014 at 01:23:57PM -0800, David Rientjes wrote:
+> I'm referring to system oom handling as an example above, in case you 
+> missed my earlier email a few minutes ago: the previous patchset did not 
+> include support for system oom handling.  Nothing that I wrote above was 
+> possible with the first patchset.  This is the complete support.
 
-> > I'm not sure how you reach that conclusion: it's necessary because any 
-> > process handling the oom condition will need memory to do anything useful.  
-> > How else would a process that is handling a system oom condition, for 
-> > example, be able to obtain a list of processes, check memory usage, issue 
-> > a kill, do any logging, collect heap or smaps samples, or signal processes 
-> > to throttle incoming requests without having access to memory itself?  The 
-> > system is oom.
-> 
-> We're now just re-starting the whole discussion with all context lost.
-> How is this a good idea?  We talked about all this previously.  If you
-> have something to add, add there *please* so that other people can
-> track it too.
-> 
+But we were talking about system oom handling.  Yes, the patch didn't
+exist back then but the fundamental premises stay unchanged.  There's
+no point in restarting the whole thread.  You can refer to this
+patchset from that thread.  It's a logical thing to do.  We have all
+the context there.  I don't really understand why you're resisting it.
+It doesn't change the basis of the discussion.  The issues brought up
+before should still be addressed and it only makes sense to retain the
+context.
 
-I'm referring to system oom handling as an example above, in case you 
-missed my earlier email a few minutes ago: the previous patchset did not 
-include support for system oom handling.  Nothing that I wrote above was 
-possible with the first patchset.  This is the complete support.
+If you have more to add, including the existence of this
+implementation, let's please talk in the original thread.  It was long
+thread with a lot of points raised.  Let's please not replay that
+whole thread here unnecessarily.
 
-> That's completely fine but if that's your intention please at least
-> prefix the patchset with RFC and explicitly state that no consensus
-> has been reached (well, it was more like negative consensus from what
-> I remember) in the description so that it can't be picked up
-> accidentally.
-> 
+Thanks.
 
-This patchset provides a solution to a real-world problem that is not 
-solved with any other patchset.  I expect it to be reviewed as any other 
-patchset, it's not an "RFC" from my perspective: it's a proposal for 
-inclusion.  Don't worry, Andrew is not going to apply anything 
-accidentally.
+-- 
+tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
