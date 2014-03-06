@@ -1,106 +1,50 @@
-From: Hugh Dickins <hughd@google.com>
-Subject: Re: [PATCH 1/2] memcg: reparent charges of children before processing
- parent
-Date: Wed, 5 Mar 2014 18:53:58 -0800 (PST)
-Message-ID: <alpine.LSU.2.11.1403051843120.1529@eggly.anvils>
-References: <alpine.LSU.2.11.1402121500070.5029@eggly.anvils> <1645786.OfqIDFbIrl@akheu22.uni-muenster.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [patch 00/11] userspace out of memory handling
+Date: Thu, 6 Mar 2014 15:49:23 -0500
+Message-ID: <20140306204923.GF14033@htj.dyndns.org>
+References: <alpine.DEB.2.02.1403041952170.8067@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=6wwL26qJi60wkIXhKCZEFFrKjOPL+Gy/MBL+wDftUmg=;
-        b=KUkEIt+GkVHogvF3ZAUHQrOmmP9y+6/kBJpPZ3z6q8jlULO4h3HViiOeazINigPM+G
-         IzO7/oLd3z9xxMfIp3wfYM1jugdltg8rFbJF7iLF9uSHItd4rs9U/QN/uom6R0XkVdvi
-         3Ufu7ocLneXGr8WaIMXk+rRjvkHgD/15tNkApmq/0xlGmO1zZ7FI/TfzCFzvu9p6C7YW
-         QXPWXBgf7nC48OicCBR7zu4/t/MQk1Z2u4tabcRiFLnBd7hdkQP6Myo8sjZB4/Uyav6h
-         eMGpEr2vgznZKCYyinoMRmDAOkza0cdXlP6GMDcgmP6n4aToFbH8S96pX1qlWt4ZBkJK
-         lVjg==
-In-Reply-To: <1645786.OfqIDFbIrl@akheu22.uni-muenster.de>
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=GZgSmxHwzsLL5uiffmmyXZ8RKJ4cAMkpXt8S8M2mARg=;
+        b=GyrU7kF2zx8+2/pVZp5hniNKE2iJ41lVD1H6IT88FCzy1LkpCTsdODiFZVVLJoUCEd
+         u+WFq20rmgia5IxGMQS2M/32UB9iKvIzi9oJKdIiwPPcvK1oh2fo52/0xiEy8UNwGnR3
+         qDWzdpMtRIRLyZpwilIoA0hUjGAk46wUU1y4as0KXO9nWz7vkVJ9ZzvJovmxlIC4/8Nr
+         sRjmqIwYsq0vPITMh7N5FTL2jdKbYfOMSE/T2cEsyyT8PoXsshveYI2w97URIJTMuaPY
+         ySz5Evf+dUbevOdw0qJIsCDu3H2drqVa9JuUp2IhEvglQYYF9BulkqtmZfPZvw8ep5k2
+         CzgA==
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.02.1403041952170.8067@chino.kir.corp.google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Markus Blank-Burian <burian@muenster.de>
-Cc: Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Filipe Brandenburger <filbranden@google.com>, Li Zefan <lizefan@huawei.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Michel Lespinasse <walken@google.com>, Shawn Bohrer <shawn.bohrer@gmail.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+To: David Rientjes <rientjes@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Christoph Lameter <cl@linux-foundation.org>, Pekka Enberg <penberg@kernel.org>, Mel Gorman <mgorman@suse.de>, Oleg Nesterov <oleg@redhat.com>, Rik van Riel <riel@redhat.com>, Jianguo Wu <wujianguo@huawei.com>, Tim Hockin <thockin@google.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
 
-On Wed, 5 Mar 2014, Markus Blank-Burian wrote:
-
-> I wanted to give you small feedback, that this patch successfully fixes the 
-> problem with reparent_charges on our cluster. Thank you very much for finding 
-> and fixing this one!
+On Tue, Mar 04, 2014 at 07:58:38PM -0800, David Rientjes wrote:
+> This patchset implements userspace out of memory handling.
 > 
-
-That's great to hear, Markus: thanks a lot for letting us know.
-All credit to Filipe, who had the idea of what might be going wrong,
-and the best patch to fix it.
-
-Hugh
-
+> It is based on v3.14-rc5.  Individual patches will apply cleanly or you
+> may pull the entire series from
 > 
-> On Wednesday 12 February 2014 15:03:31 Hugh Dickins wrote:
-> > From: Filipe Brandenburger <filbranden@google.com>
-> > 
-> > Sometimes the cleanup after memcg hierarchy testing gets stuck in
-> > mem_cgroup_reparent_charges(), unable to bring non-kmem usage down to 0.
-> > 
-> > There may turn out to be several causes, but a major cause is this: the
-> > workitem to offline parent can get run before workitem to offline child;
-> > parent's mem_cgroup_reparent_charges() circles around waiting for the
-> > child's pages to be reparented to its lrus, but it's holding cgroup_mutex
-> > which prevents the child from reaching its mem_cgroup_reparent_charges().
-> > 
-> > Further testing showed that an ordered workqueue for cgroup_destroy_wq
-> > is not always good enough: percpu_ref_kill_and_confirm's call_rcu_sched
-> > stage on the way can mess up the order before reaching the workqueue.
-> > 
-> > Instead, when offlining a memcg, call mem_cgroup_reparent_charges() on
-> > all its children (and grandchildren, in the correct order) to have their
-> > charges reparented first.
-> > 
-> > Fixes: e5fca243abae ("cgroup: use a dedicated workqueue for cgroup
-> > destruction") Signed-off-by: Filipe Brandenburger <filbranden@google.com>
-> > Signed-off-by: Hugh Dickins <hughd@google.com>
-> > Cc: stable@vger.kernel.org # v3.10+ (but will need extra care)
-> > ---
-> > Or, you may prefer my alternative cgroup.c approach in 2/2:
-> > there's no need for both.  Please note that neither of these patches
-> > attempts to handle the unlikely case of racy charges made to child
-> > after its offline, but parent's offline coming before child's free:
-> > mem_cgroup_css_free()'s backstop call to mem_cgroup_reparent_charges()
-> > cannot help in that case, with or without these patches.  Fixing that
-> > would have to be a separate effort - Michal's?
-> > 
-> >  mm/memcontrol.c |   10 +++++++++-
-> >  1 file changed, 9 insertions(+), 1 deletion(-)
-> > 
-> > --- 3.14-rc2/mm/memcontrol.c	2014-02-02 18:49:07.897302115 -0800
-> > +++ linux/mm/memcontrol.c	2014-02-11 17:48:07.604582963 -0800
-> > @@ -6595,6 +6595,7 @@ static void mem_cgroup_css_offline(struc
-> >  {
-> >  	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-> >  	struct mem_cgroup_event *event, *tmp;
-> > +	struct cgroup_subsys_state *iter;
-> > 
-> >  	/*
-> >  	 * Unregister events and notify userspace.
-> > @@ -6611,7 +6612,14 @@ static void mem_cgroup_css_offline(struc
-> >  	kmem_cgroup_css_offline(memcg);
-> > 
-> >  	mem_cgroup_invalidate_reclaim_iterators(memcg);
-> > -	mem_cgroup_reparent_charges(memcg);
-> > +
-> > +	/*
-> > +	 * This requires that offlining is serialized.  Right now that is
-> > +	 * guaranteed because css_killed_work_fn() holds the cgroup_mutex.
-> > +	 */
-> > +	css_for_each_descendant_post(iter, css)
-> > +		mem_cgroup_reparent_charges(mem_cgroup_from_css(iter));
-> > +
-> >  	mem_cgroup_destroy_all_caches(memcg);
-> >  	vmpressure_cleanup(&memcg->vmpressure);
-> >  }
+> 	git://git.kernel.org/pub/scm/linux/kernel/git/rientjes/linux.git mm/oom
+> 
+> When the system or a memcg is oom, processes running on that system or
+> attached to that memcg cannot allocate memory.  It is impossible for a
+> process to reliably handle the oom condition from userspace.
+
+ISTR the conclusion last time was nack on the whole approach.  What
+changed between then and now?  I can't detect any fundamental changes
+from the description.
+
+Thanks.
+
+-- 
+tejun
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
