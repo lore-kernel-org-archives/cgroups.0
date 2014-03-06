@@ -1,50 +1,60 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [patch 11/11] mm, memcg: allow system oom killer to be disabled
-Date: Thu, 6 Mar 2014 16:15:29 -0500
-Message-ID: <20140306211529.GE17902@htj.dyndns.org>
-References: <alpine.DEB.2.02.1403041952170.8067@chino.kir.corp.google.com>
- <alpine.DEB.2.02.1403041957340.8067@chino.kir.corp.google.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [patch 00/11] userspace out of memory handling
+Date: Thu, 6 Mar 2014 13:23:57 -0800 (PST)
+Message-ID: <alpine.DEB.2.02.1403061312020.25499@chino.kir.corp.google.com>
+References: <alpine.DEB.2.02.1403041952170.8067@chino.kir.corp.google.com> <20140306204923.GF14033@htj.dyndns.org> <alpine.DEB.2.02.1403061254240.25499@chino.kir.corp.google.com> <20140306205911.GG14033@htj.dyndns.org> <alpine.DEB.2.02.1403061301020.25499@chino.kir.corp.google.com>
+ <20140306211136.GA17902@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=LsXpm+lbdO9MFSdlCWqKuGhiTn6Q8gWfjOO5Dw56s8k=;
-        b=ZMbd2fA/QUni1QhxHPZtKLfCDIEeoN144/a0W9vvWI+M7aY+KAtINBgsy1ekHUERBK
-         i8Zn/FPnsTnGCI7UToaWsjvATpoWutCg10jDP3c8MoLH+37FLkhO8NZcXWpPok05TjNv
-         gzjND3woD/l4GY+qSNtYDVHzbG2z6+0ZDnASZxzOcjMIsYcE+1bqPQuK1SjEVFJI7gxs
-         6d/oERPWksTL1VTRsDZrmFXepS1aGL/WdKCucGevdULMtUphhTiL9uWRyGR/I/jtB0+e
-         lRwFW+mtkQxMQH+FgQG8jFVB/fpwY+Pa8tNPB1HR+yhkNthGLkeq5jtbuKmqkNNEEGjV
-         G0jQ==
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1403041957340.8067@chino.kir.corp.google.com>
-Sender: owner-linux-mm@kvack.org
+        d=google.com; s=20120113;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version:content-type;
+        bh=86rZsenIkdUOV/lJbdIQyY9lSK2YXixYronQwFC+1qM=;
+        b=ZT3dxe65NGHGBSi32suWNbdDGEXANoIKBKEAPglAt7CcWn44+P5kAggpBg+YqDYz28
+         GfSrUI0t8lAGZpe/njj3vQaKVvlx+LL22O6GyKsWz7u/tABe6xDwkpHG2pa3/euzise+
+         M2Uz5VjQCCTBX0RdCf/eYcOEFdVpgIRteL97IJAyiOxM8OBCO57StPy+JwPnLivrMsi8
+         78ZiVlEQoSCRpO3gScP7lFs3O7jkHPwQin2MdxGkU2haFK9n3h8NepCrhXDtgUibHkAG
+         ODh5u/YktwXJNjzQm2CY+oYe2rOrmjEJTw8lK9YtnG1aaAUby/x/q7TQH12m76rqbJiT
+         0A3w==
+In-Reply-To: <20140306211136.GA17902@htj.dyndns.org>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
+To: Tejun Heo <tj@kernel.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Christoph Lameter <cl@linux-foundation.org>, Pekka Enberg <penberg@kernel.org>, Mel Gorman <mgorman@suse.de>, Oleg Nesterov <oleg@redhat.com>, Rik van Riel <riel@redhat.com>, Jianguo Wu <wujianguo@huawei.com>, Tim Hockin <thockin@google.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
 
-On Tue, Mar 04, 2014 at 07:59:46PM -0800, David Rientjes wrote:
-> Now that system oom conditions can properly be handled from userspace,
-> allow the oom killer to be disabled.  Otherwise, the kernel will
-> immediately kill a process and memory will be freed.  The userspace oom
-> handler may have a different policy.
+On Thu, 6 Mar 2014, Tejun Heo wrote:
+
+> > I'm not sure how you reach that conclusion: it's necessary because any 
+> > process handling the oom condition will need memory to do anything useful.  
+> > How else would a process that is handling a system oom condition, for 
+> > example, be able to obtain a list of processes, check memory usage, issue 
+> > a kill, do any logging, collect heap or smaps samples, or signal processes 
+> > to throttle incoming requests without having access to memory itself?  The 
+> > system is oom.
 > 
-> Signed-off-by: David Rientjes <rientjes@google.com>
+> We're now just re-starting the whole discussion with all context lost.
+> How is this a good idea?  We talked about all this previously.  If you
+> have something to add, add there *please* so that other people can
+> track it too.
+> 
 
-Until consensus on the whole approach can be reached,
+I'm referring to system oom handling as an example above, in case you 
+missed my earlier email a few minutes ago: the previous patchset did not 
+include support for system oom handling.  Nothing that I wrote above was 
+possible with the first patchset.  This is the complete support.
 
- Nacked-by: Tejun Heo <tj@kernel.org>
+> That's completely fine but if that's your intention please at least
+> prefix the patchset with RFC and explicitly state that no consensus
+> has been reached (well, it was more like negative consensus from what
+> I remember) in the description so that it can't be picked up
+> accidentally.
+> 
 
-Thanks.
-
--- 
-tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+This patchset provides a solution to a real-world problem that is not 
+solved with any other patchset.  I expect it to be reviewed as any other 
+patchset, it's not an "RFC" from my perspective: it's a proposal for 
+inclusion.  Don't worry, Andrew is not going to apply anything 
+accidentally.
