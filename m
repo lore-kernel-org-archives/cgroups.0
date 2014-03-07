@@ -1,41 +1,34 @@
-From: Alexandre LAURENT <pro.laurent.alexandre-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Fwd: blkio cgroups and precise io out control
-Date: Fri, 7 Mar 2014 16:06:47 +0100
-Message-ID: <CAN05tNWKP-_s1SMf4AudtcpLrs92UaO=ssfQNStEMtMdQZ42sw@mail.gmail.com>
-References: <CAN05tNWLRLt1Kr6vY9Gx8iTK38hfUBw5PKJH9SttuVHQ8Smfrg@mail.gmail.com>
-	<CAN05tNVaXy+1dGvPu_g94mPJ-hrGXtdVBEGU2hq0YnYE+Zq5sw@mail.gmail.com>
+From: Andi Kleen <andi-Vw/NltI1exuRpAAqCnN02g@public.gmane.org>
+Subject: Re: [patch 03/11] mm, mempolicy: remove per-process flag
+Date: Fri, 07 Mar 2014 09:20:39 -0800
+Message-ID: <877g866i3c.fsf@tassilo.jf.intel.com>
+References: <alpine.DEB.2.02.1403041952170.8067@chino.kir.corp.google.com>
+	<alpine.DEB.2.02.1403041954420.8067@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :content-type;
-        bh=Ud+YMU/sU59BQLm+ghsovhJRFjSHCNa9e1e16F+jyIc=;
-        b=jNJMWe6e2C/LZKBzaTzhtNq3za9ksi2vqJpwBtcUOXKSdhc8mA8bVWhfmNdXIZ1Q5x
-         Gnuv0JBFK4lcj8AvEzNkx6xA0fDeD7TOcoX1IuIKGyHu2YGbd+CfEFxPxAewb1SEsgZ4
-         +FpYnU85aiLO9G5VVqHl06juHaU34n6dxM/SXB2daDLk4QXyVWHXaDHdsEGmHu9ircvo
-         PuymrdT3jhTzhA5oQiA83B72bTSuUQIi0b5jc8TfIQm+A6OD648mcAonLW//vVRWjxHU
-         ez1EMj78eGhYn3JHOppAvFsPFFD1QTEF0HUDGVRqMpu5UXtkNfvpteMkLg94HkwoY+No
-         6OWA==
-In-Reply-To: <CAN05tNVaXy+1dGvPu_g94mPJ-hrGXtdVBEGU2hq0YnYE+Zq5sw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <alpine.DEB.2.02.1403041954420.8067-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
+	(David Rientjes's message of "Tue, 4 Mar 2014 19:59:16 -0800 (PST)")
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Christoph Lameter <cl-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jianguo Wu <wujianguo-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi,
+David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> writes:
+>
+> Per-process flags are a scarce resource so we should free them up
+> whenever possible and make them available.  We'll be using it shortly for
+> memcg oom reserves.
 
-I'm interested in controlling the I/O operations on my system and
-prioritizing writes of various programs. I'm then using the blkio
-throttling but, as stated in the documentation it does not perform
-well with buffered writes. However, I would be *very* interested in
-throttling buffered writes. I've seen Fengguang Wu patch:
-https://lkml.org/lkml/2012/4/23/70 but it does not seem to be included
-in current mainstream kernels. What would be my best option to achieve
-throttling on buffered writes? (experimental code is acceptable) Is
-there any experimental kernel patch or branch that I could use?
+I'm not convinced TCP_RR is a meaningfull benchmark for slab.
 
-Thanks,
+The shortness seems like an artificial problem.
 
-Alexandre Laurent
+Just add another flag word to the task_struct? That would seem 
+to be the obvious way. People will need it sooner or later anyways.
+
+-Andi
+
+-- 
+ak-VuQAYsv1563Yd54FQh9/CA@public.gmane.org -- Speaking for myself only
