@@ -1,66 +1,84 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 01/11] cgroup: cgroup->subsys[] should be cleared after the
-	css is offlined
-Date: Thu, 13 Mar 2014 15:50:03 -0400
-Message-ID: <1394740213-17626-2-git-send-email-tj@kernel.org>
+Subject: [PATCH 05/11] cgroup: remove NULL checks from [pr_cont_]cgroup_{name|path}()
+Date: Thu, 13 Mar 2014 15:50:07 -0400
+Message-ID: <1394740213-17626-6-git-send-email-tj@kernel.org>
 References: <1394740213-17626-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=X0Mh3gIEfWgNMCYFQ44Jy8cUZZs9MMbR3f/Len07umU=;
+        b=fr9XsbI6VEZGaYNod2+1fWBIA/tSQIPGwZ4zNoLKmeO9Caq+ByTlpLghSxBl7Dnj5G
+         Qq9p00EZJGb2m9d9Vj4Wa69gdue9eaVykKnKrCZ956NfEwl0aa4UMOnK/acb3juVmfHr
+         lnJEfYtoQ8bYCRFp/TgK4eIcaVeJ8i5W86i5cYZaL5ayWmRCE+4S6QfqYCV1OtC2rQxd
+         +N6glDJ55E3nAeRP6jdF08FtkvjYvrK0CyLE943d1uS3TMv8UIfQeRZe/P2WyvY+al7H
+         FIJgNEPXm08XyIoIQ+1gkr8OjksB67Dx4FmEp9776Jh3IaoZORhi5RFJc+MfS00rYJd0
+         AhCw==
+In-Reply-To: <1394740213-17626-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=RLeo1Y6ibV/jdjeTRtqSjog+yV4nOh+vAxwEoZAjs8Y=;
-	b=Cc80Ey49u6gb77HJHE/kvpwVBpYB8TsTx0auzYGSBKLc21untgofRF7U5kzrHZCOvv
-	RjuGIsX0tF/kZLenVZVx4zoGr0pZOgJ4Vq74UK2XGcWRhJ8o4TjANJom0J5FCwyQIkb0
-	dEkJ9nxEkVCIqU1lhUKr3Oa6lcjdleQP9E6DdutCuGqcbllfpMvO3rh2e35TE475gdlP
-	BEq9bJrU3gFB5OGKm+CBiibAKRUY5KXhN6lPztCJd1fZhgNapTsMed4V5gZC9KqD4WQ8
-	pre1b1cx2IeiBc4ACItz1Lpume+SzPgtQBTwS43BojoW683u56C3HQ/gJYmrpaJWjqSS
-	bRGQ==
-In-Reply-To: <1394740213-17626-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-After a css finishes offlining, offline_css() mistakenly performs
-RCU_INIT_POINTER(css->cgroup->subsys[ss->id], css) which just sets the
-cgroup->subsys[] pointer to the current value.  The intention was to
-clear it after offline is complete, not reassign the same value.
-
-Update it to assign NULL instead of the current value.  This makes
-cgroup_css() to return NULL once offline is complete.  All the
-existing users of the function either can handle NULL return already
-or guarantee that the css doesn't get offlined.
-
-While this is a bugfix, as css lifetime is currently tied to the
-cgroup it belongs to, this bug doesn't cause any actual problems.
+The dummy hierarchy is now a fully functional one and dummy_top has a
+kernfs_node associated with it.  Drop the NULL checks in
+[pr_cont_]cont_{name|path}() which are no longer necessary.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- kernel/cgroup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/cgroup.h | 24 ++++--------------------
+ 1 file changed, 4 insertions(+), 20 deletions(-)
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 306ad0e..ca19735 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -3535,7 +3535,7 @@ static void offline_css(struct cgroup_subsys_state *css)
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index acbb9a4..9f4f253 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -508,39 +508,23 @@ struct cgroup_subsys_state *seq_css(struct seq_file *seq);
  
- 	css->flags &= ~CSS_ONLINE;
- 	css->cgroup->nr_css--;
--	RCU_INIT_POINTER(css->cgroup->subsys[ss->id], css);
-+	RCU_INIT_POINTER(css->cgroup->subsys[ss->id], NULL);
+ static inline int cgroup_name(struct cgroup *cgrp, char *buf, size_t buflen)
+ {
+-	/* dummy_top doesn't have a kn associated */
+-	if (cgrp->kn)
+-		return kernfs_name(cgrp->kn, buf, buflen);
+-	else
+-		return strlcpy(buf, "/", buflen);
++	return kernfs_name(cgrp->kn, buf, buflen);
  }
  
- /**
+ static inline char * __must_check cgroup_path(struct cgroup *cgrp, char *buf,
+ 					      size_t buflen)
+ {
+-	/* dummy_top doesn't have a kn associated */
+-	if (cgrp->kn)
+-		return kernfs_path(cgrp->kn, buf, buflen);
+-	strlcpy(buf, "/", buflen);
+-	return (buflen <= 2) ? NULL : buf;
++	return kernfs_path(cgrp->kn, buf, buflen);
+ }
+ 
+ static inline void pr_cont_cgroup_name(struct cgroup *cgrp)
+ {
+-	/* dummy_top doesn't have a kn associated */
+-	if (cgrp->kn)
+-		pr_cont_kernfs_name(cgrp->kn);
+-	else
+-		pr_cont("/");
++	pr_cont_kernfs_name(cgrp->kn);
+ }
+ 
+ static inline void pr_cont_cgroup_path(struct cgroup *cgrp)
+ {
+-	/* dummy_top doesn't have a kn associated */
+-	if (cgrp->kn)
+-		pr_cont_kernfs_path(cgrp->kn);
+-	else
+-		pr_cont("/");
++	pr_cont_kernfs_path(cgrp->kn);
+ }
+ 
+ char *task_cgroup_path(struct task_struct *task, char *buf, size_t buflen);
 -- 
 1.8.5.3
