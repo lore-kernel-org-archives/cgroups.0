@@ -1,84 +1,231 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 05/11] cgroup: remove NULL checks from [pr_cont_]cgroup_{name|path}()
-Date: Thu, 13 Mar 2014 15:50:07 -0400
-Message-ID: <1394740213-17626-6-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 03/11] cgroup: reorganize cgroup bootstrapping
+Date: Thu, 13 Mar 2014 15:50:05 -0400
+Message-ID: <1394740213-17626-4-git-send-email-tj@kernel.org>
 References: <1394740213-17626-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=X0Mh3gIEfWgNMCYFQ44Jy8cUZZs9MMbR3f/Len07umU=;
-        b=fr9XsbI6VEZGaYNod2+1fWBIA/tSQIPGwZ4zNoLKmeO9Caq+ByTlpLghSxBl7Dnj5G
-         Qq9p00EZJGb2m9d9Vj4Wa69gdue9eaVykKnKrCZ956NfEwl0aa4UMOnK/acb3juVmfHr
-         lnJEfYtoQ8bYCRFp/TgK4eIcaVeJ8i5W86i5cYZaL5ayWmRCE+4S6QfqYCV1OtC2rQxd
-         +N6glDJ55E3nAeRP6jdF08FtkvjYvrK0CyLE943d1uS3TMv8UIfQeRZe/P2WyvY+al7H
-         FIJgNEPXm08XyIoIQ+1gkr8OjksB67Dx4FmEp9776Jh3IaoZORhi5RFJc+MfS00rYJd0
-         AhCw==
-In-Reply-To: <1394740213-17626-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=fgXWhftHNV4Cvh07MKUJJwZ90SyAZuhccvtrM2aiuY4=;
+        b=GzCpw8/RfLsxOsHjvDzh60Y6KHa2IRmTovSARlr6ETMfMhWny9GUtsr571AaD86wYj
+         oqxRZjxf1ThN+iI00qBkj7c2H2gFEXfi+1Yu0z0XD0wCbV5zHIcncBajrUH3vy3/sF8g
+         rXQ3kflufMKs3DDfSwwxBOFvc2hyn1Qp84wus6UvzQuTe+XDnlg05iw0vP/tGliYply5
+         weOIDv+SYTYe1j8K621BW8aBdCMjebkYnIdQg0oUwqowUVF72mnFioe7Jwn9R3jltbq2
+         OLUn1I3YMsZdVJ5GwBqealljwcu0uOR62iDVYzu2Wt/DfLveMrC6ioYXmhttq//eUm6n
+         kxBw==
+In-Reply-To: <1394740213-17626-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: lizefan@huawei.com
+Cc: cgroups@vger.kernel.org, containers@lists.linux-foundation.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-The dummy hierarchy is now a fully functional one and dummy_top has a
-kernfs_node associated with it.  Drop the NULL checks in
-[pr_cont_]cont_{name|path}() which are no longer necessary.
+* Fields of init_css_set and css_set_count are now set using
+  initializer instead of programmatically from cgroup_init_early().
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+* init_cgroup_root() now also takes @opts and performs the optional
+  part of initialization too.  The leftover part of
+  cgroup_root_from_opts() is collapsed into its only caller -
+  cgroup_mount().
+
+* Initialization of cgroup_root_count and linking of init_css_set are
+  moved from cgroup_init_early() to to cgroup_init().  None of the
+  early_init users depends on init_css_set being linked.
+
+* Subsystem initializations are moved after dummy hierarchy init and
+  init_css_set linking.
+
+These changes reorganize the bootstrap logic so that the dummy
+hierarchy can share the usual hierarchy init path and be made more
+normal.  These changes don't make noticeable behavior changes.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- include/linux/cgroup.h | 24 ++++--------------------
- 1 file changed, 4 insertions(+), 20 deletions(-)
+ kernel/cgroup.c | 100 +++++++++++++++++++++++++++-----------------------------
+ 1 file changed, 49 insertions(+), 51 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index acbb9a4..9f4f253 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -508,39 +508,23 @@ struct cgroup_subsys_state *seq_css(struct seq_file *seq);
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 7bf1459..12a0bda 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -338,16 +338,24 @@ struct cgrp_cset_link {
+ 	struct list_head	cgrp_link;
+ };
  
- static inline int cgroup_name(struct cgroup *cgrp, char *buf, size_t buflen)
- {
--	/* dummy_top doesn't have a kn associated */
--	if (cgrp->kn)
--		return kernfs_name(cgrp->kn, buf, buflen);
--	else
--		return strlcpy(buf, "/", buflen);
-+	return kernfs_name(cgrp->kn, buf, buflen);
+-/* The default css_set - used by init and its children prior to any
++/*
++ * The default css_set - used by init and its children prior to any
+  * hierarchies being mounted. It contains a pointer to the root state
+  * for each subsystem. Also used to anchor the list of css_sets. Not
+  * reference-counted, to improve performance when child cgroups
+  * haven't been created.
+  */
++static struct css_set init_css_set = {
++	.refcount		= ATOMIC_INIT(1),
++	.cgrp_links		= LIST_HEAD_INIT(init_css_set.cgrp_links),
++	.tasks			= LIST_HEAD_INIT(init_css_set.tasks),
++	.mg_tasks		= LIST_HEAD_INIT(init_css_set.mg_tasks),
++	.mg_preload_node	= LIST_HEAD_INIT(init_css_set.mg_preload_node),
++	.mg_node		= LIST_HEAD_INIT(init_css_set.mg_node),
++};
+ 
+-static struct css_set init_css_set;
+ static struct cgrp_cset_link init_cgrp_cset_link;
+-static int css_set_count;
++static int css_set_count	= 1;	/* 1 for init_css_set */
+ 
+ /*
+  * hash table for cgroup groups. This improves the performance to find
+@@ -1352,7 +1360,8 @@ static void init_cgroup_housekeeping(struct cgroup *cgrp)
+ 	cgrp->dummy_css.cgroup = cgrp;
  }
  
- static inline char * __must_check cgroup_path(struct cgroup *cgrp, char *buf,
- 					      size_t buflen)
+-static void init_cgroup_root(struct cgroupfs_root *root)
++static void init_cgroup_root(struct cgroupfs_root *root,
++			     struct cgroup_sb_opts *opts)
  {
--	/* dummy_top doesn't have a kn associated */
--	if (cgrp->kn)
--		return kernfs_path(cgrp->kn, buf, buflen);
--	strlcpy(buf, "/", buflen);
--	return (buflen <= 2) ? NULL : buf;
-+	return kernfs_path(cgrp->kn, buf, buflen);
+ 	struct cgroup *cgrp = &root->top_cgroup;
+ 
+@@ -1361,20 +1370,6 @@ static void init_cgroup_root(struct cgroupfs_root *root)
+ 	cgrp->root = root;
+ 	init_cgroup_housekeeping(cgrp);
+ 	idr_init(&root->cgroup_idr);
+-}
+-
+-static struct cgroupfs_root *cgroup_root_from_opts(struct cgroup_sb_opts *opts)
+-{
+-	struct cgroupfs_root *root;
+-
+-	if (!opts->subsys_mask && !opts->none)
+-		return ERR_PTR(-EINVAL);
+-
+-	root = kzalloc(sizeof(*root), GFP_KERNEL);
+-	if (!root)
+-		return ERR_PTR(-ENOMEM);
+-
+-	init_cgroup_root(root);
+ 
+ 	root->flags = opts->flags;
+ 	if (opts->release_agent)
+@@ -1383,7 +1378,6 @@ static struct cgroupfs_root *cgroup_root_from_opts(struct cgroup_sb_opts *opts)
+ 		strcpy(root->name, opts->name);
+ 	if (opts->cpuset_clone_children)
+ 		set_bit(CGRP_CPUSET_CLONE_CHILDREN, &root->top_cgroup.flags);
+-	return root;
  }
  
- static inline void pr_cont_cgroup_name(struct cgroup *cgrp)
- {
--	/* dummy_top doesn't have a kn associated */
--	if (cgrp->kn)
--		pr_cont_kernfs_name(cgrp->kn);
--	else
--		pr_cont("/");
-+	pr_cont_kernfs_name(cgrp->kn);
- }
+ static int cgroup_setup_root(struct cgroupfs_root *root, unsigned long ss_mask)
+@@ -1548,13 +1542,24 @@ retry:
+ 		goto out_unlock;
+ 	}
  
- static inline void pr_cont_cgroup_path(struct cgroup *cgrp)
- {
--	/* dummy_top doesn't have a kn associated */
--	if (cgrp->kn)
--		pr_cont_kernfs_path(cgrp->kn);
--	else
--		pr_cont("/");
-+	pr_cont_kernfs_path(cgrp->kn);
- }
+-	/* no such thing, create a new one */
+-	root = cgroup_root_from_opts(&opts);
+-	if (IS_ERR(root)) {
+-		ret = PTR_ERR(root);
++	/*
++	 * No such thing, create a new one.  name= matching without subsys
++	 * specification is allowed for already existing hierarchies but we
++	 * can't create new one without subsys specification.
++	 */
++	if (!opts.subsys_mask && !opts.none) {
++		ret = -EINVAL;
++		goto out_unlock;
++	}
++
++	root = kzalloc(sizeof(*root), GFP_KERNEL);
++	if (!root) {
++		ret = -ENOMEM;
+ 		goto out_unlock;
+ 	}
  
- char *task_cgroup_path(struct task_struct *task, char *buf, size_t buflen);
++	init_cgroup_root(root, &opts);
++
+ 	ret = cgroup_setup_root(root, opts.subsys_mask);
+ 	if (ret)
+ 		cgroup_free_root(root);
+@@ -4030,26 +4035,13 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
+  */
+ int __init cgroup_init_early(void)
+ {
++	static struct cgroup_sb_opts __initdata opts = { };
+ 	struct cgroup_subsys *ss;
+ 	int i;
+ 
+-	atomic_set(&init_css_set.refcount, 1);
+-	INIT_LIST_HEAD(&init_css_set.cgrp_links);
+-	INIT_LIST_HEAD(&init_css_set.tasks);
+-	INIT_LIST_HEAD(&init_css_set.mg_tasks);
+-	INIT_LIST_HEAD(&init_css_set.mg_preload_node);
+-	INIT_LIST_HEAD(&init_css_set.mg_node);
+-	INIT_HLIST_NODE(&init_css_set.hlist);
+-	css_set_count = 1;
+-	init_cgroup_root(&cgroup_dummy_root);
+-	cgroup_root_count = 1;
++	init_cgroup_root(&cgroup_dummy_root, &opts);
+ 	RCU_INIT_POINTER(init_task.cgroups, &init_css_set);
+ 
+-	init_cgrp_cset_link.cset = &init_css_set;
+-	init_cgrp_cset_link.cgrp = cgroup_dummy_top;
+-	list_add(&init_cgrp_cset_link.cset_link, &cgroup_dummy_top->cset_links);
+-	list_add(&init_cgrp_cset_link.cgrp_link, &init_css_set.cgrp_links);
+-
+ 	for_each_subsys(ss, i) {
+ 		WARN(!ss->css_alloc || !ss->css_free || ss->name || ss->id,
+ 		     "invalid cgroup_subsys %d:%s css_alloc=%p css_free=%p name:id=%d:%s\n",
+@@ -4077,22 +4069,10 @@ int __init cgroup_init(void)
+ {
+ 	struct cgroup_subsys *ss;
+ 	unsigned long key;
+-	int i, err;
++	int ssid, err;
+ 
+ 	BUG_ON(cgroup_init_cftypes(NULL, cgroup_base_files));
+ 
+-	for_each_subsys(ss, i) {
+-		if (!ss->early_init)
+-			cgroup_init_subsys(ss);
+-
+-		/*
+-		 * cftype registration needs kmalloc and can't be done
+-		 * during early_init.  Register base cftypes separately.
+-		 */
+-		if (ss->base_cftypes)
+-			WARN_ON(cgroup_add_cftypes(ss, ss->base_cftypes));
+-	}
+-
+ 	/* allocate id for the dummy hierarchy */
+ 	mutex_lock(&cgroup_mutex);
+ 
+@@ -4106,8 +4086,26 @@ int __init cgroup_init(void)
+ 			0, 1, GFP_KERNEL);
+ 	BUG_ON(err < 0);
+ 
++	cgroup_root_count = 1;
++	init_cgrp_cset_link.cset = &init_css_set;
++	init_cgrp_cset_link.cgrp = cgroup_dummy_top;
++	list_add(&init_cgrp_cset_link.cset_link, &cgroup_dummy_top->cset_links);
++	list_add(&init_cgrp_cset_link.cgrp_link, &init_css_set.cgrp_links);
++
+ 	mutex_unlock(&cgroup_mutex);
+ 
++	for_each_subsys(ss, ssid) {
++		if (!ss->early_init)
++			cgroup_init_subsys(ss);
++
++		/*
++		 * cftype registration needs kmalloc and can't be done
++		 * during early_init.  Register base cftypes separately.
++		 */
++		if (ss->base_cftypes)
++			WARN_ON(cgroup_add_cftypes(ss, ss->base_cftypes));
++	}
++
+ 	cgroup_kobj = kobject_create_and_add("cgroup", fs_kobj);
+ 	if (!cgroup_kobj)
+ 		return -ENOMEM;
 -- 
 1.8.5.3
