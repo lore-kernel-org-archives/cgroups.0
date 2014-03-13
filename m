@@ -1,51 +1,92 @@
-From: Tim Hockin <thockin@google.com>
-Subject: Re: [PATCH 2/2] net: Implement SO_PEERCGROUP
-Date: Thu, 13 Mar 2014 11:05:15 -0700
-Message-ID: <CAO_RewYiZVpbu8axKY+FtkaarjA_DohD2e==jcvdWn68ubcR+w@mail.gmail.com>
-References: <1394657163-7472-1-git-send-email-vgoyal@redhat.com>
- <1394657163-7472-3-git-send-email-vgoyal@redhat.com> <5320CAEC.6030008@amacapital.net>
- <CALCETrUTjN=XKwnO62P9roZtLLuk7_9Oi17Mj_Aa2ZFtZc1gVA@mail.gmail.com>
- <1394658983.32465.203.camel@willson.li.ssimo.org> <CALCETrU29CpcK4dVRD45BGOD7AVEudADiFxOgFgKWkpFzw07eg@mail.gmail.com>
- <1394673476.32465.215.camel@willson.li.ssimo.org> <CALCETrWbCuKfV4zMkZajDOGhGkKduW0C2L7uHv=vtvqhVeAc6w@mail.gmail.com>
- <1394675038.32465.223.camel@willson.li.ssimo.org> <CALCETrV7GE0YL1sDDqTUV81rWL9zk2vTR1-VLkR7CfTA-FSrgw@mail.gmail.com>
- <1394733077.32465.243.camel@willson.li.ssimo.org> <CALCETrXWzja6W6y=p9MrtynGZMsrD5KQu0KBK6Bs1dQxnesv2A@mail.gmail.com>
- <1394733526.32465.250.camel@willson.li.ssimo.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET cgroup/for-3.15] cgroup: prepare for the default unified
+	hierarchy
+Date: Thu, 13 Mar 2014 15:50:02 -0400
+Message-ID: <1394740213-17626-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-type;
-        bh=MEd2qBpLzzyG/URbrV56U8t1Am00Se3Wt3T03Yoz9SM=;
-        b=aCjb8A5m+hetFzRSPpIzcllFygIqzyeGqVgS5GLBORyqTl8FY+9L/BFeFYnCFxUljj
-         cpoCBw0r4f51tixnGurY1EzpWazn1yGlbgUCocKC3mNNhXfQYVv4lH3wZGlDidClxw+/
-         EAqdnAl12A5S5nqrGBJ1IOiXWZBuKePkAMmDnMDMN8cXqWQcO3SwC6E4XOPSArys5R6H
-         hwQKfFSgdbm3/fOszsPJ864qsLX2C7/c+NFKltnMCVR0h2r0mDGQbxmU9yJ0IhVXWIDl
-         VMHNU1LRmqyoLxtFk8fJNOZidGjU/KIAWP3F2PXIFf8fsSMOe9bFE37PFWC3lHZ8eD4A
-         Vndw==
-In-Reply-To: <1394733526.32465.250.camel@willson.li.ssimo.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Simo Sorce <ssorce@redhat.com>
-Cc: Andy Lutomirski <luto@amacapital.net>, Vivek Goyal <vgoyal@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Network Development <netdev@vger.kernel.org>, "David S. Miller" <davem@davemloft.net>, Tejun Heo <tj@kernel.org>, jkaluza@redhat.com, lpoetter@redhat.com, kay@redhat.com
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:from:to:cc:subject:date:message-id;
+	bh=ELhTi315jUsxNKe1t1R+3YqqHc06M1wbiajrXU89VwQ=;
+	b=j+HZbwva++glxxeBQ4zWY16GKMOGbELvuOeAreIBTOvHXs3BRu8B1JiYkfmpGGg1Rh
+	EY2SLFSQFNN9+iimtz6mRODmUKsUHSAiRVL7bnFz7/xvEXpSBqYopxTjEj3EQsBOFD3J
+	CL5p4lJFZqwM+pHLJdqJp98UgBEnrb2ut8JOzfrWJHgoGxCqd90Drak0SZh0/L8IvVT6
+	HY1HLkOe5GVmLN0qYjzdmWXHoX619iRnTiA9eH3yoAtKJJQ/wafJj0VUBR7HbdJXVsjE
+	TP1JPWilGwCwrI2YqogHestD6wfrjTl3R2sJVzB5DMITSJIQ/hQb5NjFEMu1zZmZ2U7B
+	/wCA==
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-I don't buy that it is not practical.  Not convenient, maybe.  Not
-clean, sure.  But it is practical - it uses mechanisms that exist on
-all kernels today.  That is a win, to me.
+Hello,
 
-On Thu, Mar 13, 2014 at 10:58 AM, Simo Sorce <ssorce@redhat.com> wrote:
-> On Thu, 2014-03-13 at 10:55 -0700, Andy Lutomirski wrote:
->>
->> So give each container its own unix socket.  Problem solved, no?
->
-> Not really practical if you have hundreds of containers.
->
-> Simo.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+The planned unified hierarchy is just around the corner.  We're gonna
+repurpose the dummy hierarchy to serve as the default unified
+hierarchy.  Controllers which aren't attached to other hierarchies are
+already automatically bound to the dummy hierarchy; however, the dummy
+hierarchy is minimally initialized during boot and can't currently act
+as a full hierarchy.
+
+This patchset gradually turns the dummy hierarchy into fully
+functional default one and makes it mountable via selecting
+sane_behavior without any subsystems specified.  While this patchset
+does make the default hierarchy mountable, the unified hierarchy
+functionality isn't implemented yet and cgroup creation in the default
+hierarchy is rejected for now.
+
+This lays down all the boilerplate work for the unified hierarchy.
+The next patchset will implement the actual unified functionality.
+
+This patchset contains the following eleven patches.
+
+ 0001-cgroup-cgroup-subsys-should-be-cleared-after-the-css.patch
+ 0002-cgroup-relocate-setting-of-CGRP_DEAD.patch
+ 0003-cgroup-reorganize-cgroup-bootstrapping.patch
+ 0004-cgroup-use-cgroup_setup_root-to-initialize-cgroup_du.patch
+ 0005-cgroup-remove-NULL-checks-from-pr_cont_-cgroup_-name.patch
+ 0006-cgroup-treat-cgroup_dummy_root-as-an-equivalent-hier.patch
+ 0007-cgroup-move-subsys_mask-from-cgroupfs_root-to-cgroup.patch
+ 0008-cgroup-rename-cgroup_dummy_root-and-related-names.patch
+ 0009-cgroup-drop-const-from-buffer-of-cftype-write_string.patch
+ 0010-cgroup-make-cgrp_dfl_root-mountable.patch
+ 0011-cgroup-implement-CFTYPE_ONLY_ON_DFL.patch
+
+0001-0002 are misc fix / prep.
+
+0003-0009 (mostly) turn the dummy hierarchy into a full hierarchy
+which takes on controllers which aren't attached to other hierarchies.
+
+0010-0011 make the default hierarchy mountable and implement
+CFTYPE_ONLY_DFL.
+
+This patchset is on top of cgroup/for-3.15 b8dadcb58d54 ("cpuset: use
+rcu_read_lock() to protect task_cs()").  diffstat follows.
+
+ block/blk-throttle.c      |    4
+ block/cfq-iosched.c       |    4
+ include/linux/cgroup.h    |   57 ++---
+ kernel/cgroup.c           |  464 +++++++++++++++++++++++++---------------------
+ kernel/cgroup_freezer.c   |    2
+ kernel/cpuset.c           |    2
+ mm/hugetlb_cgroup.c       |    2
+ mm/memcontrol.c           |    4
+ net/core/netprio_cgroup.c |    2
+ net/ipv4/tcp_memcontrol.c |    2
+ security/device_cgroup.c  |    4
+ 11 files changed, 295 insertions(+), 252 deletions(-)
+
+Thanks.
+
+--
+tejun
