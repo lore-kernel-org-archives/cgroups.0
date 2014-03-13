@@ -1,40 +1,46 @@
-From: Andy Lutomirski <luto@amacapital.net>
+From: Vivek Goyal <vgoyal@redhat.com>
 Subject: Re: [PATCH 2/2] net: Implement SO_PEERCGROUP
-Date: Thu, 13 Mar 2014 11:01:14 -0700
-Message-ID: <CALCETrWtVEjPGoJLe0CDuNW2cpSmh+ZvHOXJ_pLeZ=x+UUcShQ@mail.gmail.com>
-References: <1394657163-7472-1-git-send-email-vgoyal@redhat.com>
- <1394657163-7472-3-git-send-email-vgoyal@redhat.com> <5320CAEC.6030008@amacapital.net>
+Date: Thu, 13 Mar 2014 14:02:24 -0400
+Message-ID: <20140313180224.GJ18914@redhat.com>
+References: <1394657163-7472-3-git-send-email-vgoyal@redhat.com>
+ <5320CAEC.6030008@amacapital.net>
  <CALCETrUTjN=XKwnO62P9roZtLLuk7_9Oi17Mj_Aa2ZFtZc1gVA@mail.gmail.com>
- <1394658983.32465.203.camel@willson.li.ssimo.org> <CALCETrU29CpcK4dVRD45BGOD7AVEudADiFxOgFgKWkpFzw07eg@mail.gmail.com>
- <1394673476.32465.215.camel@willson.li.ssimo.org> <CALCETrWbCuKfV4zMkZajDOGhGkKduW0C2L7uHv=vtvqhVeAc6w@mail.gmail.com>
- <1394675038.32465.223.camel@willson.li.ssimo.org> <CALCETrV7GE0YL1sDDqTUV81rWL9zk2vTR1-VLkR7CfTA-FSrgw@mail.gmail.com>
- <1394733077.32465.243.camel@willson.li.ssimo.org> <CALCETrXWzja6W6y=p9MrtynGZMsrD5KQu0KBK6Bs1dQxnesv2A@mail.gmail.com>
- <1394733526.32465.250.camel@willson.li.ssimo.org>
+ <1394658983.32465.203.camel@willson.li.ssimo.org>
+ <CALCETrU29CpcK4dVRD45BGOD7AVEudADiFxOgFgKWkpFzw07eg@mail.gmail.com>
+ <1394673476.32465.215.camel@willson.li.ssimo.org>
+ <CALCETrWbCuKfV4zMkZajDOGhGkKduW0C2L7uHv=vtvqhVeAc6w@mail.gmail.com>
+ <1394675038.32465.223.camel@willson.li.ssimo.org>
+ <CALCETrV7GE0YL1sDDqTUV81rWL9zk2vTR1-VLkR7CfTA-FSrgw@mail.gmail.com>
+ <1394733077.32465.243.camel@willson.li.ssimo.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1394733526.32465.250.camel@willson.li.ssimo.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1394733077.32465.243.camel@willson.li.ssimo.org>
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Simo Sorce <ssorce@redhat.com>
-Cc: Vivek Goyal <vgoyal@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Network Development <netdev@vger.kernel.org>, "David S. Miller" <davem@davemloft.net>, Tejun Heo <tj@kernel.org>, jkaluza@redhat.com, lpoetter@redhat.com, kay@redhat.com
+Cc: Andy Lutomirski <luto@amacapital.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Network Development <netdev@vger.kernel.org>, "David S. Miller" <davem@davemloft.net>, Tejun Heo <tj@kernel.org>, jkaluza@redhat.com, lpoetter@redhat.com, kay@redhat.com
 
-On Thu, Mar 13, 2014 at 10:58 AM, Simo Sorce <ssorce@redhat.com> wrote:
-> On Thu, 2014-03-13 at 10:55 -0700, Andy Lutomirski wrote:
->>
->> So give each container its own unix socket.  Problem solved, no?
->
-> Not really practical if you have hundreds of containers.
+On Thu, Mar 13, 2014 at 01:51:17PM -0400, Simo Sorce wrote:
 
-I don't see the problem.  Sockets are cheap.
+[..]
+> > 1. Fix Docker to use user namespaces and use the uid of the requesting
+> > process via SCM_CREDENTIALS.
+> 
+> This is not practical, I have no control on what UIDs will be used
+> within a container,
 
->
-> Simo.
->
+I guess uid to container mapping has to be managed by somebody, say systemd.
+Then there systemd should export an API to query the container a uid is
+mapped into. So that should not be the real problem.
 
+> and IIRC user namespaces have severe limitations
+> that may make them unusable in some situations. Forcing the use of user
+> namespaces on docker to satisfy my use case is not in my power.
 
+I think that's the real practical problem. Adoption of user name space.
 
--- 
-Andy Lutomirski
-AMA Capital Management, LLC
+Thanks
+Vivek
