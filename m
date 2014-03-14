@@ -1,25 +1,31 @@
-From: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
+From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
 Subject: Re: [PATCH 2/2] net: Implement SO_PEERCGROUP
-Date: Thu, 13 Mar 2014 14:21:40 -0700
-Message-ID: <CALCETrUGOR=_QNvDXQ0+zvPg7ZKVVohaXj91EGop80hGM7xNLw@mail.gmail.com>
+Date: Fri, 14 Mar 2014 16:49:23 -0700
+Message-ID: <8761ng2vek.fsf@xmission.com>
 References: <1394658983.32465.203.camel@willson.li.ssimo.org>
- <CALCETrU29CpcK4dVRD45BGOD7AVEudADiFxOgFgKWkpFzw07eg@mail.gmail.com>
- <1394673476.32465.215.camel@willson.li.ssimo.org> <CALCETrWbCuKfV4zMkZajDOGhGkKduW0C2L7uHv=vtvqhVeAc6w@mail.gmail.com>
- <1394675038.32465.223.camel@willson.li.ssimo.org> <CALCETrV7GE0YL1sDDqTUV81rWL9zk2vTR1-VLkR7CfTA-FSrgw@mail.gmail.com>
- <1394733077.32465.243.camel@willson.li.ssimo.org> <CALCETrXWzja6W6y=p9MrtynGZMsrD5KQu0KBK6Bs1dQxnesv2A@mail.gmail.com>
- <20140313195349.GM18914@redhat.com> <CALCETrUj4aPEd6ujXnUJNFq+BQkfQoF=XRChP1p5=ZysTN-zwg@mail.gmail.com>
- <20140313200649.GN18914@redhat.com>
+	<CALCETrU29CpcK4dVRD45BGOD7AVEudADiFxOgFgKWkpFzw07eg@mail.gmail.com>
+	<1394673476.32465.215.camel@willson.li.ssimo.org>
+	<CALCETrWbCuKfV4zMkZajDOGhGkKduW0C2L7uHv=vtvqhVeAc6w@mail.gmail.com>
+	<1394675038.32465.223.camel@willson.li.ssimo.org>
+	<CALCETrV7GE0YL1sDDqTUV81rWL9zk2vTR1-VLkR7CfTA-FSrgw@mail.gmail.com>
+	<1394733077.32465.243.camel@willson.li.ssimo.org>
+	<CALCETrXWzja6W6y=p9MrtynGZMsrD5KQu0KBK6Bs1dQxnesv2A@mail.gmail.com>
+	<20140313195349.GM18914@redhat.com>
+	<CALCETrUj4aPEd6ujXnUJNFq+BQkfQoF=XRChP1p5=ZysTN-zwg@mail.gmail.com>
+	<20140313200649.GN18914@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20140313200649.GN18914-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20140313200649.GN18914-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> (Vivek Goyal's message of
+	"Thu, 13 Mar 2014 16:06:49 -0400")
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Simo Sorce <ssorce-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, kay-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Simo Sorce <ssorce-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-kernel@vger.kernel.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, jkaluza-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, kay-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-On Thu, Mar 13, 2014 at 1:06 PM, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
+
 > On Thu, Mar 13, 2014 at 12:58:14PM -0700, Andy Lutomirski wrote:
 >> On Thu, Mar 13, 2014 at 12:53 PM, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
 >> > On Thu, Mar 13, 2014 at 10:55:16AM -0700, Andy Lutomirski wrote:
@@ -42,9 +48,9 @@ On Thu, Mar 13, 2014 at 1:06 PM, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@publ
 >> >
 >> > IOW, what information/identifier does it contain which can be
 >> > used to map to pre-configrued per container/per namespace policies.
->>
+>> 
 >> Inode number, which will match that assigned to the container at runtime.
->>
+>> 
 >
 > But what would I do with this inode number. I am assuming this is
 > generated dynamically when respective namespace was created. To me
@@ -56,11 +62,11 @@ On Thu, Mar 13, 2014 at 1:06 PM, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@publ
 > For it to be useful, it should map to something more static which
 > user space understands.
 
-Like what?  I imagine that, at best, sssd will be hardcoding some
-understanding of Docker's cgroup names.  As an alternative, it could
-ask Docker for a uid or an inode number of something else -- it's
-hardcoding an understanding of Docker anyway.  And Docker needs to
-cooperate regardless, since otherwise it could change its cgroup
-naming or stop using cgroups entirely.
+But the mapping can be done in userspace.  stat all of the namespaces
+you care about, get their inode numbers, and then do a lookup.
 
---Andy
+Hard coding string based names in the kernel the way cgroups does is
+really pretty terrible and it seriously limits the flexibility of the
+api, and so far breaks nested containers.
+
+Eric
