@@ -1,78 +1,61 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.15] cgroup: prepare for the default unified
- hierarchy
-Date: Tue, 18 Mar 2014 11:55:07 +0800
-Message-ID: <5327C39B.10408@huawei.com>
-References: <1394740213-17626-1-git-send-email-tj@kernel.org>
+Subject: [PATCH] cgroup: fix a failure path in create_css()
+Date: Tue, 18 Mar 2014 17:02:36 +0800
+Message-ID: <53280BAC.5060404@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1394740213-17626-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On 2014/3/14 3:50, Tejun Heo wrote:
-> Hello,
-> 
-> The planned unified hierarchy is just around the corner.  We're gonna
-> repurpose the dummy hierarchy to serve as the default unified
-> hierarchy.  Controllers which aren't attached to other hierarchies are
-> already automatically bound to the dummy hierarchy; however, the dummy
-> hierarchy is minimally initialized during boot and can't currently act
-> as a full hierarchy.
-> 
-> This patchset gradually turns the dummy hierarchy into fully
-> functional default one and makes it mountable via selecting
-> sane_behavior without any subsystems specified.  While this patchset
-> does make the default hierarchy mountable, the unified hierarchy
-> functionality isn't implemented yet and cgroup creation in the default
-> hierarchy is rejected for now.
-> 
-> This lays down all the boilerplate work for the unified hierarchy.
-> The next patchset will implement the actual unified functionality.
-> 
-> This patchset contains the following eleven patches.
-> 
->  0001-cgroup-cgroup-subsys-should-be-cleared-after-the-css.patch
->  0002-cgroup-relocate-setting-of-CGRP_DEAD.patch
->  0003-cgroup-reorganize-cgroup-bootstrapping.patch
->  0004-cgroup-use-cgroup_setup_root-to-initialize-cgroup_du.patch
->  0005-cgroup-remove-NULL-checks-from-pr_cont_-cgroup_-name.patch
->  0006-cgroup-treat-cgroup_dummy_root-as-an-equivalent-hier.patch
->  0007-cgroup-move-subsys_mask-from-cgroupfs_root-to-cgroup.patch
->  0008-cgroup-rename-cgroup_dummy_root-and-related-names.patch
->  0009-cgroup-drop-const-from-buffer-of-cftype-write_string.patch
->  0010-cgroup-make-cgrp_dfl_root-mountable.patch
->  0011-cgroup-implement-CFTYPE_ONLY_ON_DFL.patch
-> 
-> 0001-0002 are misc fix / prep.
-> 
-> 0003-0009 (mostly) turn the dummy hierarchy into a full hierarchy
-> which takes on controllers which aren't attached to other hierarchies.
-> 
-> 0010-0011 make the default hierarchy mountable and implement
-> CFTYPE_ONLY_DFL.
-> 
-> This patchset is on top of cgroup/for-3.15 b8dadcb58d54 ("cpuset: use
-> rcu_read_lock() to protect task_cs()").  diffstat follows.
-> 
->  block/blk-throttle.c      |    4
->  block/cfq-iosched.c       |    4
->  include/linux/cgroup.h    |   57 ++---
->  kernel/cgroup.c           |  464 +++++++++++++++++++++++++---------------------
->  kernel/cgroup_freezer.c   |    2
->  kernel/cpuset.c           |    2
->  mm/hugetlb_cgroup.c       |    2
->  mm/memcontrol.c           |    4
->  net/core/netprio_cgroup.c |    2
->  net/ipv4/tcp_memcontrol.c |    2
->  security/device_cgroup.c  |    4
->  11 files changed, 295 insertions(+), 252 deletions(-)
-> 
+If online_css() fails, we should remove cgroup files belonging
+to css->ss.
 
-Looks good in general!
+Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 3790617..e673407 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -3408,17 +3408,17 @@ static int create_css(struct cgroup *cgrp, struct cgroup_subsys *ss)
+ 
+ 	err = percpu_ref_init(&css->refcnt, css_release);
+ 	if (err)
+-		goto err_free;
++		goto err_free_css;
+ 
+ 	init_css(css, ss, cgrp);
+ 
+ 	err = cgroup_populate_dir(cgrp, 1 << ss->id);
+ 	if (err)
+-		goto err_free;
++		goto err_free_percpu_ref;
+ 
+ 	err = online_css(css);
+ 	if (err)
+-		goto err_free;
++		goto err_clear_dir;
+ 
+ 	cgroup_get(cgrp);
+ 	css_get(css->parent);
+@@ -3434,8 +3434,11 @@ static int create_css(struct cgroup *cgrp, struct cgroup_subsys *ss)
+ 
+ 	return 0;
+ 
+-err_free:
++err_clear_dir:
++	cgroup_clear_dir(css->cgroup, 1 << css->ss->id);
++err_free_percpu_ref:
+ 	percpu_ref_cancel_init(&css->refcnt);
++err_free_css:
+ 	ss->css_free(css);
+ 	return err;
+ }
+-- 
+1.8.0.2
