@@ -1,92 +1,116 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup fixes for v3.14-rc7
-Date: Wed, 19 Mar 2014 12:23:00 -0400
-Message-ID: <20140319162300.GB19874@htj.dyndns.org>
+Subject: [PATCH cgroup/for-3.15] cgroup: fix cgroup_taskset walking order
+Date: Wed, 19 Mar 2014 17:45:56 -0400
+Message-ID: <20140319214556.GD3656@mtj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-         :content-disposition:user-agent;
-        bh=cQlQdnOIcRC2OqYEbGEd2+rouaIAXB2ykubUmFXRkGc=;
-        b=WdIY+dKJ3FdEjXbowjeijSy9wc2MkVYYnoMC0Jwne6NDbHnKjxs+KSjcl78ClCLxFw
-         INJR3vjzO3bU55LBeMswknbPgKKJlCShhVLXi9gLpJqlNgYmihLzgB7oMdCxmkAQR+sB
-         NlCAMNLigUzSa/4/Y6hcGVhdzI7QXSTOwI9Gq8VIJrzNi0G0sCd4Vq+RlO4hwnUv/bOP
-         RAISFqvWEs4OsZU7mcEjO6DNbXY91faVtmhZQcAv7j7+sdxPZ/vyeBB5KCmd58+Kj23G
-         +wbfPhG0FSN9vFhH+dhovnCvgeHxp506Po9GgyADXRq8X78EEUsft3cITk+RNemDSulK
-         pxug==
-Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+	:content-disposition:user-agent;
+	bh=8RQjkWa/XnByaNj6duwYAdRgDIIvL8TXXO4usC6mKSE=;
+	b=J6wIspqvCCQtp07a3I7KyY+ksG4tDGNaY6aI0wxAuRMnxSA9vxXqj/NikzR9EKzgfa
+	UOQDloPnb0ENSfSrPxO3sG7RoTbrsafMGQg3/KYUrf+2OOTYtBYK6qFLKa++ADCIYnon
+	RBvLAjbyxYmfT3EJLz3ZUtoeq0LjFJyIc05vzQODGkfb0VB+KIyGXkS+Ea2KRpDl0ydb
+	BfUgtnWx+W4b/xXs3kDFSlvdexgUIHELS2znZxizBBy3AisvOwAh5CHyOVx3z/HZp+TL
+	ob/lowIYbzWHsV6v8slZtscC81lLUr9Icn2NXIKpNJfsPv7hW9UMEG/aB7KZ0DWFzCXI
+	NUXg==
+Content-Disposition: inline
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Linus.
+From 1b9aba49eab5e85b0d3de8ba630cda6d68546297 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Wed, 19 Mar 2014 17:43:21 -0400
 
-One really late cgroup patch to fix error path in create_css().
-Hitting this bug would be pretty rare but still possible and it gets
-delayed we'd need to backport it through -stable anyway.  It only
-updates error path in create_css() and has low chance of new
-breakages.
+cgroup_taskset is used to track and iterate target tasks while
+migrating a task or process and should guarantee that the first task
+iterated is the task group leader if a process is being migrated.
 
-The following changes since commit 99afb0fd5f05aac467ffa85c36778fec4396209b:
+b3dc094e9390 ("cgroup: use css_set->mg_tasks to track target tasks
+during migration") replaced flex array cgroup_taskset->tc_array with
+css_set->mg_tasks list to remove process size limit and dynamic
+allocation during migration; unfortunately, it incorrectly used list
+operations which don't preserve order breaking the guarantee that
+cgroup_taskset_first() returns the leader for a process target.
 
-  cpuset: fix a race condition in __cpuset_node_allowed_softwall() (2014-02-27 09:39:54 -0500)
+Fix it by using order preserving list operations.  Note that as
+multiple src_csets may map to a single dst_cset, the iteration order
+may change across cgroup_task_migrate(); however, the leader is still
+guaranteed to be the first entry.
 
-are available in the git repository at:
+The switch to list_splice_tail_init() at the end of cgroup_migrate()
+isn't strictly necessary.  Let's still do it for consistency.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.14-fixes
-
-for you to fetch changes up to 3eb59ec64fc7a3f4576da23f811b39331b830ba2:
-
-  cgroup: fix a failure path in create_css() (2014-03-18 17:15:36 -0400)
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+Li, as the merge window is right around the corner, I think it'd be
+best to apply this one ASAP.  Applied to cgroup/for-3.15.
 
 Thanks.
 
-----------------------------------------------------------------
-Li Zefan (1):
-      cgroup: fix a failure path in create_css()
-
- kernel/cgroup.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ kernel/cgroup.c | 24 +++++++++++++++++++-----
+ 1 file changed, 19 insertions(+), 5 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 105f273..0c753dd 100644
+index 37b6d53..98a8045 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -4112,17 +4112,17 @@ static int create_css(struct cgroup *cgrp, struct cgroup_subsys *ss)
+@@ -1761,7 +1761,14 @@ static void cgroup_task_migrate(struct cgroup *old_cgrp,
  
- 	err = percpu_ref_init(&css->refcnt, css_release);
- 	if (err)
--		goto err_free;
-+		goto err_free_css;
+ 	get_css_set(new_cset);
+ 	rcu_assign_pointer(tsk->cgroups, new_cset);
+-	list_move(&tsk->cg_list, &new_cset->mg_tasks);
++
++	/*
++	 * Use move_tail so that cgroup_taskset_first() still returns the
++	 * leader after migration.  This works because cgroup_migrate()
++	 * ensures that the dst_cset of the leader is the first on the
++	 * tset's dst_csets list.
++	 */
++	list_move_tail(&tsk->cg_list, &new_cset->mg_tasks);
  
- 	init_css(css, ss, cgrp);
+ 	/*
+ 	 * We just gained a reference on old_cset by taking it from the
+@@ -1936,9 +1943,16 @@ static int cgroup_migrate(struct cgroup *cgrp, struct task_struct *leader,
+ 		if (!cset->mg_src_cgrp)
+ 			goto next;
  
- 	err = cgroup_populate_dir(cgrp, 1 << ss->subsys_id);
- 	if (err)
--		goto err_free;
-+		goto err_free_percpu_ref;
- 
- 	err = online_css(css);
- 	if (err)
--		goto err_free;
-+		goto err_clear_dir;
- 
- 	dget(cgrp->dentry);
- 	css_get(css->parent);
-@@ -4138,8 +4138,11 @@ static int create_css(struct cgroup *cgrp, struct cgroup_subsys *ss)
- 
- 	return 0;
- 
--err_free:
-+err_clear_dir:
-+	cgroup_clear_dir(css->cgroup, 1 << css->ss->subsys_id);
-+err_free_percpu_ref:
- 	percpu_ref_cancel_init(&css->refcnt);
-+err_free_css:
- 	ss->css_free(css);
- 	return err;
- }
+-		list_move(&task->cg_list, &cset->mg_tasks);
+-		list_move(&cset->mg_node, &tset.src_csets);
+-		list_move(&cset->mg_dst_cset->mg_node, &tset.dst_csets);
++		/*
++		 * cgroup_taskset_first() must always return the leader.
++		 * Take care to avoid disturbing the ordering.
++		 */
++		list_move_tail(&task->cg_list, &cset->mg_tasks);
++		if (list_empty(&cset->mg_node))
++			list_add_tail(&cset->mg_node, &tset.src_csets);
++		if (list_empty(&cset->mg_dst_cset->mg_node))
++			list_move_tail(&cset->mg_dst_cset->mg_node,
++				       &tset.dst_csets);
+ 	next:
+ 		if (!threadgroup)
+ 			break;
+@@ -1999,7 +2013,7 @@ out_release_tset:
+ 	down_write(&css_set_rwsem);
+ 	list_splice_init(&tset.dst_csets, &tset.src_csets);
+ 	list_for_each_entry_safe(cset, tmp_cset, &tset.src_csets, mg_node) {
+-		list_splice_init(&cset->mg_tasks, &cset->tasks);
++		list_splice_tail_init(&cset->mg_tasks, &cset->tasks);
+ 		list_del_init(&cset->mg_node);
+ 	}
+ 	up_write(&css_set_rwsem);
+-- 
+1.8.5.3
