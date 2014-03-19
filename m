@@ -1,47 +1,74 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cgroup: fix a failure path in create_css()
-Date: Tue, 18 Mar 2014 17:22:55 -0400
-Message-ID: <20140318212255.GC32357@mtj.dyndns.org>
-References: <53280BAC.5060404@huawei.com>
- <20140318152445.GA3642@htj.dyndns.org>
- <20140318161225.GD3642@htj.dyndns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHSET cgroup/for-3.15] cgroup: prepare for the default
+	unified hierarchy
+Date: Wed, 19 Mar 2014 10:25:44 -0400
+Message-ID: <20140319142544.GA19874@htj.dyndns.org>
+References: <1394740213-17626-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=f4y6fFb/OvG71rX+vmBqOxPWUp/ptrtoBt/HLDeHIxY=;
-        b=QSEyAPRWHR9GEIw2wFyJ2gy9NW5c1daSrBog+BdlN5Lf2+FxhT+Issv3thI2t13CIL
-         LbGuq67duyNU68k3nQaFTYRSsiT4SQ74UuDO/qR5Udhy73iiDG3x7HTan4y/hQvutTPf
-         VLbK/1LsojNBsaCnCZU97roM3yjvnE2xGvGhMQCHWtZudexZeOqj1qt1fTeW7gHce70G
-         nSzF8W+rf9t7XCYwQveIph6NrHEXbDqUKMYzDF+57VuOsm8NvDLUdJSVR7v+DgMzP2kT
-         r1gqNJBt6Fhycr4Ppa6x7lf7CUQwCVvd0y5RgEfNr/1wCIdo0Jq9HkmeqKaoIeDFi4vm
-         NHYw==
-Content-Disposition: inline
-In-Reply-To: <20140318161225.GD3642@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=vaPe+FIYqj7jCh4PikRyDUYPd6CroYJhdkcqCGpFxFQ=;
+	b=fEJDQ2GohTJvcla3W2KzQJgAJJIMsqcDmz24g0tOQG29E1MFzCK/Qc4J6GiDrbpj7h
+	jPyzNtVOIuVYTSwaSoYbEiQfJtX6UgrtraDGc70K0f6xasnpfN/ZAJWoOrsqmuqufOgt
+	ExTl8eQUT5NYjgbvnrezb5HOsiwG+DcxzNqtsTbDKKHthmZvv9P7edm144tXxQ9NFwgN
+	Vp8waTxy++9JFgooyO19IyN9ALRVhVmQBLFloVx7/2sIuCXgzzFvrV7pzBzvp4HHizxh
+	nEEORd7H38tlwwVfANGsmPL5dmS8V6/fGfxFgrMs5AKUn2wrW9Qf+/mO/4JvwosKrxhO
+	a48Q==
+Content-Disposition: inline
+In-Reply-To: <1394740213-17626-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Mar 18, 2014 at 12:12:25PM -0400, Tejun Heo wrote:
-> On Tue, Mar 18, 2014 at 11:24:45AM -0400, Tejun Heo wrote:
-> > On Tue, Mar 18, 2014 at 05:02:36PM +0800, Li Zefan wrote:
-> > > If online_css() fails, we should remove cgroup files belonging
-> > > to css->ss.
-> > > 
-> > > Signed-off-by: Li Zefan <lizefan@huawei.com>
-> > 
-> > Applied to libata/for-3.14-fixes.
+On Thu, Mar 13, 2014 at 03:50:02PM -0400, Tejun Heo wrote:
+> The planned unified hierarchy is just around the corner.  We're gonna
+> repurpose the dummy hierarchy to serve as the default unified
+> hierarchy.  Controllers which aren't attached to other hierarchies are
+> already automatically bound to the dummy hierarchy; however, the dummy
+> hierarchy is minimally initialized during boot and can't currently act
+> as a full hierarchy.
 > 
-> Hmmm... didn't apply cleanly and generated build error.  Looks like
-> the patch was generated against for-3.15.  Can you please regenerate
-> the patch against for-3.14-fixes?
+> This patchset gradually turns the dummy hierarchy into fully
+> functional default one and makes it mountable via selecting
+> sane_behavior without any subsystems specified.  While this patchset
+> does make the default hierarchy mountable, the unified hierarchy
+> functionality isn't implemented yet and cgroup creation in the default
+> hierarchy is rejected for now.
+> 
+> This lays down all the boilerplate work for the unified hierarchy.
+> The next patchset will implement the actual unified functionality.
+> 
+> This patchset contains the following eleven patches.
+> 
+>  0001-cgroup-cgroup-subsys-should-be-cleared-after-the-css.patch
+>  0002-cgroup-relocate-setting-of-CGRP_DEAD.patch
+>  0003-cgroup-reorganize-cgroup-bootstrapping.patch
+>  0004-cgroup-use-cgroup_setup_root-to-initialize-cgroup_du.patch
+>  0005-cgroup-remove-NULL-checks-from-pr_cont_-cgroup_-name.patch
+>  0006-cgroup-treat-cgroup_dummy_root-as-an-equivalent-hier.patch
+>  0007-cgroup-move-subsys_mask-from-cgroupfs_root-to-cgroup.patch
+>  0008-cgroup-rename-cgroup_dummy_root-and-related-names.patch
+>  0009-cgroup-drop-const-from-buffer-of-cftype-write_string.patch
+>  0010-cgroup-make-cgrp_dfl_root-mountable.patch
+>  0011-cgroup-implement-CFTYPE_ONLY_ON_DFL.patch
 
-Never mind.  Fixed up and applied to for-3.14-fixes.
+Applied 0002-0011 to libata/for-3.15.  0001 has the possibility to
+make css iterators malfunction as they don't exect the csses to be
+NULL.  It will be applied after iterators are updated to handle NULL
+csses.
 
 Thanks.
 
