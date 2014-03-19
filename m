@@ -1,76 +1,92 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.15] cgroup: prepare for the default
-	unified hierarchy
-Date: Wed, 19 Mar 2014 10:25:44 -0400
-Message-ID: <20140319142544.GA19874@htj.dyndns.org>
-References: <1394740213-17626-1-git-send-email-tj@kernel.org>
+Subject: [GIT PULL] cgroup fixes for v3.14-rc7
+Date: Wed, 19 Mar 2014 12:23:00 -0400
+Message-ID: <20140319162300.GB19874@htj.dyndns.org>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=cQlQdnOIcRC2OqYEbGEd2+rouaIAXB2ykubUmFXRkGc=;
+        b=WdIY+dKJ3FdEjXbowjeijSy9wc2MkVYYnoMC0Jwne6NDbHnKjxs+KSjcl78ClCLxFw
+         INJR3vjzO3bU55LBeMswknbPgKKJlCShhVLXi9gLpJqlNgYmihLzgB7oMdCxmkAQR+sB
+         NlCAMNLigUzSa/4/Y6hcGVhdzI7QXSTOwI9Gq8VIJrzNi0G0sCd4Vq+RlO4hwnUv/bOP
+         RAISFqvWEs4OsZU7mcEjO6DNbXY91faVtmhZQcAv7j7+sdxPZ/vyeBB5KCmd58+Kj23G
+         +wbfPhG0FSN9vFhH+dhovnCvgeHxp506Po9GgyADXRq8X78EEUsft3cITk+RNemDSulK
+         pxug==
+Content-Disposition: inline
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=vaPe+FIYqj7jCh4PikRyDUYPd6CroYJhdkcqCGpFxFQ=;
-	b=fEJDQ2GohTJvcla3W2KzQJgAJJIMsqcDmz24g0tOQG29E1MFzCK/Qc4J6GiDrbpj7h
-	jPyzNtVOIuVYTSwaSoYbEiQfJtX6UgrtraDGc70K0f6xasnpfN/ZAJWoOrsqmuqufOgt
-	ExTl8eQUT5NYjgbvnrezb5HOsiwG+DcxzNqtsTbDKKHthmZvv9P7edm144tXxQ9NFwgN
-	Vp8waTxy++9JFgooyO19IyN9ALRVhVmQBLFloVx7/2sIuCXgzzFvrV7pzBzvp4HHizxh
-	nEEORd7H38tlwwVfANGsmPL5dmS8V6/fGfxFgrMs5AKUn2wrW9Qf+/mO/4JvwosKrxhO
-	a48Q==
-Content-Disposition: inline
-In-Reply-To: <1394740213-17626-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Mar 13, 2014 at 03:50:02PM -0400, Tejun Heo wrote:
-> The planned unified hierarchy is just around the corner.  We're gonna
-> repurpose the dummy hierarchy to serve as the default unified
-> hierarchy.  Controllers which aren't attached to other hierarchies are
-> already automatically bound to the dummy hierarchy; however, the dummy
-> hierarchy is minimally initialized during boot and can't currently act
-> as a full hierarchy.
-> 
-> This patchset gradually turns the dummy hierarchy into fully
-> functional default one and makes it mountable via selecting
-> sane_behavior without any subsystems specified.  While this patchset
-> does make the default hierarchy mountable, the unified hierarchy
-> functionality isn't implemented yet and cgroup creation in the default
-> hierarchy is rejected for now.
-> 
-> This lays down all the boilerplate work for the unified hierarchy.
-> The next patchset will implement the actual unified functionality.
-> 
-> This patchset contains the following eleven patches.
-> 
->  0001-cgroup-cgroup-subsys-should-be-cleared-after-the-css.patch
->  0002-cgroup-relocate-setting-of-CGRP_DEAD.patch
->  0003-cgroup-reorganize-cgroup-bootstrapping.patch
->  0004-cgroup-use-cgroup_setup_root-to-initialize-cgroup_du.patch
->  0005-cgroup-remove-NULL-checks-from-pr_cont_-cgroup_-name.patch
->  0006-cgroup-treat-cgroup_dummy_root-as-an-equivalent-hier.patch
->  0007-cgroup-move-subsys_mask-from-cgroupfs_root-to-cgroup.patch
->  0008-cgroup-rename-cgroup_dummy_root-and-related-names.patch
->  0009-cgroup-drop-const-from-buffer-of-cftype-write_string.patch
->  0010-cgroup-make-cgrp_dfl_root-mountable.patch
->  0011-cgroup-implement-CFTYPE_ONLY_ON_DFL.patch
+Hello, Linus.
 
-Applied 0002-0011 to libata/for-3.15.  0001 has the possibility to
-make css iterators malfunction as they don't exect the csses to be
-NULL.  It will be applied after iterators are updated to handle NULL
-csses.
+One really late cgroup patch to fix error path in create_css().
+Hitting this bug would be pretty rare but still possible and it gets
+delayed we'd need to backport it through -stable anyway.  It only
+updates error path in create_css() and has low chance of new
+breakages.
+
+The following changes since commit 99afb0fd5f05aac467ffa85c36778fec4396209b:
+
+  cpuset: fix a race condition in __cpuset_node_allowed_softwall() (2014-02-27 09:39:54 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.14-fixes
+
+for you to fetch changes up to 3eb59ec64fc7a3f4576da23f811b39331b830ba2:
+
+  cgroup: fix a failure path in create_css() (2014-03-18 17:15:36 -0400)
 
 Thanks.
 
--- 
-tejun
+----------------------------------------------------------------
+Li Zefan (1):
+      cgroup: fix a failure path in create_css()
+
+ kernel/cgroup.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 105f273..0c753dd 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -4112,17 +4112,17 @@ static int create_css(struct cgroup *cgrp, struct cgroup_subsys *ss)
+ 
+ 	err = percpu_ref_init(&css->refcnt, css_release);
+ 	if (err)
+-		goto err_free;
++		goto err_free_css;
+ 
+ 	init_css(css, ss, cgrp);
+ 
+ 	err = cgroup_populate_dir(cgrp, 1 << ss->subsys_id);
+ 	if (err)
+-		goto err_free;
++		goto err_free_percpu_ref;
+ 
+ 	err = online_css(css);
+ 	if (err)
+-		goto err_free;
++		goto err_clear_dir;
+ 
+ 	dget(cgrp->dentry);
+ 	css_get(css->parent);
+@@ -4138,8 +4138,11 @@ static int create_css(struct cgroup *cgrp, struct cgroup_subsys *ss)
+ 
+ 	return 0;
+ 
+-err_free:
++err_clear_dir:
++	cgroup_clear_dir(css->cgroup, 1 << css->ss->subsys_id);
++err_free_percpu_ref:
+ 	percpu_ref_cancel_init(&css->refcnt);
++err_free_css:
+ 	ss->css_free(css);
+ 	return err;
+ }
