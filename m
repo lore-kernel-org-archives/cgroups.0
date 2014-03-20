@@ -1,116 +1,46 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH cgroup/for-3.15] cgroup: fix cgroup_taskset walking order
-Date: Wed, 19 Mar 2014 17:45:56 -0400
-Message-ID: <20140319214556.GD3656@mtj.dyndns.org>
-Mime-Version: 1.0
+From: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Subject: [RFC 0/4] Migrate timers away from cpuset on setting cpuset.quiesce
+Date: Thu, 20 Mar 2014 19:18:57 +0530
+Message-ID: <cover.1395322529.git.viresh.kumar@linaro.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-	:content-disposition:user-agent;
-	bh=8RQjkWa/XnByaNj6duwYAdRgDIIvL8TXXO4usC6mKSE=;
-	b=J6wIspqvCCQtp07a3I7KyY+ksG4tDGNaY6aI0wxAuRMnxSA9vxXqj/NikzR9EKzgfa
-	UOQDloPnb0ENSfSrPxO3sG7RoTbrsafMGQg3/KYUrf+2OOTYtBYK6qFLKa++ADCIYnon
-	RBvLAjbyxYmfT3EJLz3ZUtoeq0LjFJyIc05vzQODGkfb0VB+KIyGXkS+Ea2KRpDl0ydb
-	BfUgtnWx+W4b/xXs3kDFSlvdexgUIHELS2znZxizBBy3AisvOwAh5CHyOVx3z/HZp+TL
-	ob/lowIYbzWHsV6v8slZtscC81lLUr9Icn2NXIKpNJfsPv7hW9UMEG/aB7KZ0DWFzCXI
-	NUXg==
-Content-Disposition: inline
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: linaro-kernel-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 
-From 1b9aba49eab5e85b0d3de8ba630cda6d68546297 Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date: Wed, 19 Mar 2014 17:43:21 -0400
+For networking platforms we need to provide one isolated CPU per user space data
+plane thread. These CPUs should not be interrupted by kernel at all unless
+userspace has requested for some syscalls. And so must live in isolated mode.
+Currently, there are background kernel activities that are running on almost
+every CPU, like: timers/hrtimers/watchdogs/etc, and these are required to be
+migrated to other CPUs.
 
-cgroup_taskset is used to track and iterate target tasks while
-migrating a task or process and should guarantee that the first task
-iterated is the task group leader if a process is being migrated.
+This patchset tries to migrate un-pinned timers away in the first attempt. And
+support for migrating others like hrtimers/workqueues/etc would be added later.
 
-b3dc094e9390 ("cgroup: use css_set->mg_tasks to track target tasks
-during migration") replaced flex array cgroup_taskset->tc_array with
-css_set->mg_tasks list to remove process size limit and dynamic
-allocation during migration; unfortunately, it incorrectly used list
-operations which don't preserve order breaking the guarantee that
-cgroup_taskset_first() returns the leader for a process target.
+This has only went through basic testing currently on ARM Samsung Exynos board
+which only has two CPUs. Separate cpusets were created for these two CPUs and
+then timers were migrated from one cpuset to other.
 
-Fix it by using order preserving list operations.  Note that as
-multiple src_csets may map to a single dst_cset, the iteration order
-may change across cgroup_task_migrate(); however, the leader is still
-guaranteed to be the first entry.
+This option was earlier suggested by Peter Z. here.
 
-The switch to list_splice_tail_init() at the end of cgroup_migrate()
-isn't strictly necessary.  Let's still do it for consistency.
+https://lkml.org/lkml/2014/1/15/186
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
-Li, as the merge window is right around the corner, I think it'd be
-best to apply this one ASAP.  Applied to cgroup/for-3.15.
+Please provide your inputs on how this can be improved..
 
-Thanks.
+Viresh Kumar (4):
+  timer: track pinned timers with TIMER_PINNED flag
+  timer: don't migrate pinned timers
+  timer: create timer_quiesce_cpu() for cpusets.quiesce option
+  cpuset: Add cpusets.quiesce option
 
- kernel/cgroup.c | 24 +++++++++++++++++++-----
- 1 file changed, 19 insertions(+), 5 deletions(-)
+ include/linux/timer.h | 10 +++---
+ kernel/cpuset.c       | 56 +++++++++++++++++++++++++++++++
+ kernel/timer.c        | 92 +++++++++++++++++++++++++++++++++++++++++----------
+ 3 files changed, 136 insertions(+), 22 deletions(-)
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 37b6d53..98a8045 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1761,7 +1761,14 @@ static void cgroup_task_migrate(struct cgroup *old_cgrp,
- 
- 	get_css_set(new_cset);
- 	rcu_assign_pointer(tsk->cgroups, new_cset);
--	list_move(&tsk->cg_list, &new_cset->mg_tasks);
-+
-+	/*
-+	 * Use move_tail so that cgroup_taskset_first() still returns the
-+	 * leader after migration.  This works because cgroup_migrate()
-+	 * ensures that the dst_cset of the leader is the first on the
-+	 * tset's dst_csets list.
-+	 */
-+	list_move_tail(&tsk->cg_list, &new_cset->mg_tasks);
- 
- 	/*
- 	 * We just gained a reference on old_cset by taking it from the
-@@ -1936,9 +1943,16 @@ static int cgroup_migrate(struct cgroup *cgrp, struct task_struct *leader,
- 		if (!cset->mg_src_cgrp)
- 			goto next;
- 
--		list_move(&task->cg_list, &cset->mg_tasks);
--		list_move(&cset->mg_node, &tset.src_csets);
--		list_move(&cset->mg_dst_cset->mg_node, &tset.dst_csets);
-+		/*
-+		 * cgroup_taskset_first() must always return the leader.
-+		 * Take care to avoid disturbing the ordering.
-+		 */
-+		list_move_tail(&task->cg_list, &cset->mg_tasks);
-+		if (list_empty(&cset->mg_node))
-+			list_add_tail(&cset->mg_node, &tset.src_csets);
-+		if (list_empty(&cset->mg_dst_cset->mg_node))
-+			list_move_tail(&cset->mg_dst_cset->mg_node,
-+				       &tset.dst_csets);
- 	next:
- 		if (!threadgroup)
- 			break;
-@@ -1999,7 +2013,7 @@ out_release_tset:
- 	down_write(&css_set_rwsem);
- 	list_splice_init(&tset.dst_csets, &tset.src_csets);
- 	list_for_each_entry_safe(cset, tmp_cset, &tset.src_csets, mg_node) {
--		list_splice_init(&cset->mg_tasks, &cset->tasks);
-+		list_splice_tail_init(&cset->mg_tasks, &cset->tasks);
- 		list_del_init(&cset->mg_node);
- 	}
- 	up_write(&css_set_rwsem);
 -- 
-1.8.5.3
+1.7.12.rc2.18.g61b472e
