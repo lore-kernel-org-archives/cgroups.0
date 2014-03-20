@@ -1,153 +1,120 @@
-From: Viresh Kumar <viresh.kumar@linaro.org>
-Subject: [RFC 4/4] cpuset: Add cpusets.quiesce option
-Date: Thu, 20 Mar 2014 19:19:01 +0530
-Message-ID: <e643acf71086db239254d44c77d4966b2a4a01e5.1395322529.git.viresh.kumar@linaro.org>
-References: <cover.1395322529.git.viresh.kumar@linaro.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1395322529.git.viresh.kumar@linaro.org>
-In-Reply-To: <cover.1395322529.git.viresh.kumar@linaro.org>
-References: <cover.1395322529.git.viresh.kumar@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH cgroup/for-3.15] cgroup: break kernfs active_ref protection
+ in cgroup directory operations
+Date: Thu, 20 Mar 2014 11:23:06 -0400
+Message-ID: <20140320152306.GA8791@htj.dyndns.org>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=JtYgJ5m5hWSZdcO5XdKpETijTb+U2edRZn2l3CYPB+Q=;
+        b=JGzUHVRYQeRrqohBt1Vf/gj2MPnrZyfabtXxDF1sDUVxIRS3cxucM7ovJDwyVJ1hnJ
+         M1DkW8t9++KUdcqZbKnylw4SQoDQybfw1gSNCNPCD3PWjJXv6DOVhSyAYHEhaZEZEbd5
+         2dhVfRHuJvTd9troBz040unEKgMeMQ5Zc/O2x4DtquTQaUpZB1vp/C6maz02WGuvUlMt
+         OxxPT7ybvQNGJXhkhBQWqLYqlF4Ov3P1h+3XW1ly2gXRbFsXZ/QbPv5eXnxxEzLYxoti
+         snMzmI6jsAnZ/cJPKhoQyVfv+wRVyozDUMe69RvDYxd/jV5uj9xMGV+veEuesZnFmpI8
+         bsMg==
+Content-Disposition: inline
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tglx@linutronix.de, fweisbec@gmail.com, peterz@infradead.org, mingo@kernel.org, tj@kernel.org, lizefan@huawei.com
-Cc: linaro-kernel@lists.linaro.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Viresh Kumar <viresh.kumar@linaro.org>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-For networking applications platforms need to provide one CPU per each user
-space data plane thread. These CPUs should not be interrupted by kernel at all
-unless userspace has requested for some syscalls. Currently, there are
-background kernel activities that are running on almost every CPU, like:
-timers/hrtimers/watchdogs/etc, and these are required to be migrated to other
-CPUs.
+From e1b2dc176f2d5be7952c47a4e4e8f3b06a90db1c Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Thu, 20 Mar 2014 11:10:15 -0400
 
-To achieve that, this patch adds another option to cpusets, i.e. 'quiesce'.
-Writing '1' on this file would migrate these unbound/unpinned timers/workqueues
-away from the CPUs of the cpuset in question. Writing '0' has no effect and this
-file can't be read from userspace as we aren't maintaining a state here.
+cgroup_tree_mutex should nest above the kernfs active_ref protection;
+however, cgroup_create() and cgroup_rename() were grabbing
+cgroup_tree_mutex while under kernfs active_ref protection.  This has
+actualy possibility to lead to deadlocks in case these operations race
+against cgroup_rmdir() which invokes kernfs_remove() on directory
+kernfs_node while holding cgroup_tree_mutex.
 
-Currently, only timers are migrated. This would be followed by other kernel
-infrastructure later.
+Neither cgroup_create() or cgroup_rename() requires active_ref
+protection.  The former already has enough synchronization through
+cgroup_lock_live_group() and the latter doesn't care, so this can be
+fixed by updating both functions to break all active_ref protections
+before grabbing cgroup_tree_mutex.
 
-Suggested-by: Peter Zijlstra <peterz@infradead.org>
-Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
+While this patch fixes the immediate issue, it probably needs further
+work in the long term - kernfs directories should enable lockdep
+annotations and maybe the better way to handle this is marking
+directory nodes as not needing active_ref protection rather than
+breaking it in each operation.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
 ---
- kernel/cpuset.c | 56 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
+Hey,
 
-diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index 3d54c41..1b79ae6 100644
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -43,10 +43,12 @@
- #include <linux/pagemap.h>
- #include <linux/proc_fs.h>
- #include <linux/rcupdate.h>
-+#include <linux/tick.h>
- #include <linux/sched.h>
- #include <linux/seq_file.h>
- #include <linux/security.h>
- #include <linux/slab.h>
-+#include <linux/smp.h>
- #include <linux/spinlock.h>
- #include <linux/stat.h>
- #include <linux/string.h>
-@@ -150,6 +152,7 @@ typedef enum {
- 	CS_SCHED_LOAD_BALANCE,
- 	CS_SPREAD_PAGE,
- 	CS_SPREAD_SLAB,
-+	CS_QUIESCE,
- } cpuset_flagbits_t;
+Another last minute fix that I just committed.  I'm thinking maybe the
+right thing to do for cgroup directories is implementing a flag
+similar KERNFS_NO_ACTIVE_REF, which achieves similar thing but doesn't
+require each operation to break protection explicitly.  Anyways, this
+should be enough for now.
+
+Thanks!
+
+ kernel/cgroup.c | 27 ++++++++++++++++++++++++++-
+ 1 file changed, 26 insertions(+), 1 deletion(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 98a8045..58c67b3 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -2324,6 +2324,14 @@ static int cgroup_rename(struct kernfs_node *kn, struct kernfs_node *new_parent,
+ 	if (cgroup_sane_behavior(cgrp))
+ 		return -EPERM;
  
- /* convenient tests for these bits */
-@@ -1208,6 +1211,44 @@ static int update_relax_domain_level(struct cpuset *cs, s64 val)
- 	return 0;
++	/*
++	 * We're gonna grab cgroup_tree_mutex which nests outside kernfs
++	 * active_ref.  kernfs_rename() doesn't require active_ref
++	 * protection.  Break them before grabbing cgroup_tree_mutex.
++	 */
++	kernfs_break_active_protection(new_parent);
++	kernfs_break_active_protection(kn);
++
+ 	mutex_lock(&cgroup_tree_mutex);
+ 	mutex_lock(&cgroup_mutex);
+ 
+@@ -2331,6 +2339,9 @@ static int cgroup_rename(struct kernfs_node *kn, struct kernfs_node *new_parent,
+ 
+ 	mutex_unlock(&cgroup_mutex);
+ 	mutex_unlock(&cgroup_tree_mutex);
++
++	kernfs_unbreak_active_protection(kn);
++	kernfs_unbreak_active_protection(new_parent);
+ 	return ret;
  }
  
-+void timer_quiesce_cpu(void *cpu);
-+
-+/**
-+ * quiesce_cpuset - Move unbound timers/workqueues away from cpuset.cpus
-+ * @cs: cpuset to be quiesced
-+ *
-+ * For isolating a core with cpusets we require all unbound timers/workqueues to
-+ * move away for isolated core. For simplicity, currently we migrate these to
-+ * the first online CPU which is not part of tick_nohz_full_mask.
-+ *
-+ * Currently we are only migrating timers away.
-+ */
-+void quiesce_cpuset(struct cpuset *cs)
-+{
-+	int from_cpu, to_cpu;
-+	cpumask_t cpumask;
-+
-+	cpumask_andnot(&cpumask, cpu_online_mask, cs->cpus_allowed);
-+
-+#ifdef CONFIG_NO_HZ_FULL
-+	cpumask_andnot(&cpumask, &cpumask, tick_nohz_full_mask);
-+#endif
-+
-+	if (cpumask_empty(&cpumask)) {
-+		pr_err("%s: Couldn't find a CPU to migrate to\n", __func__);
-+		return;
-+	}
-+
-+	to_cpu = cpumask_first(&cpumask);
-+
-+	for_each_cpu(from_cpu, cs->cpus_allowed) {
-+		pr_debug("%s: Migrating from CPU:%d to CPU:%d\n", __func__,
-+				from_cpu, to_cpu);
-+		smp_call_function_single(to_cpu, timer_quiesce_cpu,
-+				(void *)from_cpu, true);
-+	}
-+}
-+
- /**
-  * update_tasks_flags - update the spread flags of tasks in the cpuset.
-  * @cs: the cpuset in which each task's spread flags needs to be changed
-@@ -1244,6 +1285,11 @@ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
- 	int spread_flag_changed;
- 	int err;
+@@ -3778,8 +3789,22 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
+ 			umode_t mode)
+ {
+ 	struct cgroup *parent = parent_kn->priv;
++	int ret;
  
-+	if (bit == CS_QUIESCE && turning_on) {
-+		quiesce_cpuset(cs);
-+		return 0;
-+	}
+-	return cgroup_create(parent, name, mode);
++	/*
++	 * cgroup_create() grabs cgroup_tree_mutex which nests outside
++	 * kernfs active_ref and cgroup_create() already synchronizes
++	 * properly against removal through cgroup_lock_live_group().
++	 * Break it before calling cgroup_create().
++	 */
++	cgroup_get(parent);
++	kernfs_break_active_protection(parent_kn);
 +
- 	trialcs = alloc_trial_cpuset(cs);
- 	if (!trialcs)
- 		return -ENOMEM;
-@@ -1526,6 +1572,7 @@ typedef enum {
- 	FILE_MEMORY_PRESSURE,
- 	FILE_SPREAD_PAGE,
- 	FILE_SPREAD_SLAB,
-+	FILE_CPU_QUIESCE,
- } cpuset_filetype_t;
- 
- static int cpuset_write_u64(struct cgroup_subsys_state *css, struct cftype *cft,
-@@ -1569,6 +1616,9 @@ static int cpuset_write_u64(struct cgroup_subsys_state *css, struct cftype *cft,
- 	case FILE_SPREAD_SLAB:
- 		retval = update_flag(CS_SPREAD_SLAB, cs, val);
- 		break;
-+	case FILE_CPU_QUIESCE:
-+		retval = update_flag(CS_QUIESCE, cs, val);
-+		break;
- 	default:
- 		retval = -EINVAL;
- 		break;
-@@ -1837,6 +1887,12 @@ static struct cftype files[] = {
- 		.private = FILE_MEMORY_PRESSURE_ENABLED,
- 	},
- 
-+	{
-+		.name = "quiesce",
-+		.write_u64 = cpuset_write_u64,
-+		.private = FILE_CPU_QUIESCE,
-+	},
++	ret = cgroup_create(parent, name, mode);
 +
- 	{ }	/* terminate */
- };
++	kernfs_unbreak_active_protection(parent_kn);
++	cgroup_put(parent);
++	return ret;
+ }
  
+ /*
 -- 
-1.7.12.rc2.18.g61b472e
+1.8.5.3
