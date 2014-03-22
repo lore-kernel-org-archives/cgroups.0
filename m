@@ -1,204 +1,58 @@
-From: Yu Zhao <yuzhao@google.com>
-Subject: [PATCH 2/3] swap: do not store private swap files on swap_list
-Date: Fri, 21 Mar 2014 15:50:33 -0700
-Message-ID: <1395442234-7493-3-git-send-email-yuzhao@google.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH 0/3] Per cgroup swap file support
+Date: Sat, 22 Mar 2014 11:43:24 -0400
+Message-ID: <20140322154324.GK4407@cmpxchg.org>
 References: <1395442234-7493-1-git-send-email-yuzhao@google.com>
+Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=6J71c5mDZYLl6pxiA/vim6O//NjMMn9g1vcuDknrQJE=;
-        b=MjB+gXaI/2NrXT0iM1YUbpfiv8Rtytt/g9vJFAcuoPTr138Eng+M1Cap1ZNH3TTQn3
-         e+O4GHyuPn5Vnn/3yuT/SeA2SGfSmqyQNdIoBU1muGnxFhDEAM4BJh6AaarugtQlH9k7
-         JhQ7YNG6rXruCu7HTs/Jf2IgKFh8H54Wgqs0TsGXuPgAZgDK6Nru7Z/Ncu593HpNomPD
-         5HP0Jarnc9JzJHzWotvlwDw66mUUE5rZXkWXBffmWbpi/VfrtbFffgAICQ71je/Rd9HF
-         PD/H9eUJrnv000PpadCu7kr9zSY6G+yQ1aSFcP88IoyyZJeLitFXSf0EOQmIrV61YUnb
-         g2rQ==
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=g10VG8cVr1NtNr3jzFX1UnLs74bMZKfOU0nwZ3D4Pmo=;
+	b=CKqy9E1mpbP+cDMrfQdOtr+mIf419YAwpCoUm6yg0Z6tSpMC8S03IpdexyEwMd2DbInE9HrudC8uFAjyiCN184Slb+JHlHflnCDY8/K17ZthX+p9g9MkUxwFQyx2ucZTMcP2+BJM5trDkrqzirGI10WKm8aZ3zRiBMi9aqyO8QQ=;
+Content-Disposition: inline
 In-Reply-To: <1395442234-7493-1-git-send-email-yuzhao@google.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, jamieliu@google.com, suleiman@google.com, Yu Zhao <yuzhao@google.com>
+To: Yu Zhao <yuzhao@google.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, jamieliu@google.com, suleiman@google.com
 
-From: Jamie Liu <jamieliu@google.com>
+Hello Yu!
 
-swap_list is used by get_swap_page() to find public swap files to swap
-to; in the case that there are many private swap files and few public
-swap files, get_swap_page() may waste time iterating through private
-swap files it can't swap to. Change _enable_swap_info() to not insert
-private swap files onto swap_list; this improves the performance of
-get_swap_page() in such cases, at the cost of making
-swap_store_swap_device() and swapoff() minutely slower (both of which
-are non-critical).
+On Fri, Mar 21, 2014 at 03:50:31PM -0700, Yu Zhao wrote:
+> This series of patches adds support to configure a cgroup to swap to a
+> particular file by using control file memory.swapfile.
+> 
+> A value of "default" in memory.swapfile indicates that this cgroup should
+> use the default, system-wide, swap files. A value of "none" indicates that
+> this cgroup should never swap. Other values are interpreted as the path
+> to a private swap file that can only be used by the owner (and its children).
+> 
+> The swap file has to be created and swapon() has to be done on it with
+> SWAP_FLAG_PRIVATE, before it can be used. This flag ensures that the swap
+> file is private and does not get used by others.
+> 
+> Jamie Liu (1):
+>   swap: do not store private swap files on swap_list
+> 
+> Suleiman Souhlal (2):
+>   mm/swap: support per memory cgroup swapfiles
+>   swap: Increase the maximum number of swap files to 8192.
+> 
+>  Documentation/cgroups/memory.txt  |  15 ++
+>  arch/x86/include/asm/pgtable_64.h |  63 ++++++--
+>  include/linux/memcontrol.h        |   2 +
+>  include/linux/swap.h              |  45 +++---
+>  mm/memcontrol.c                   |  76 ++++++++++
+>  mm/memory.c                       |   3 +-
+>  mm/shmem.c                        |   2 +-
+>  mm/swap_state.c                   |   2 +-
+>  mm/swapfile.c                     | 307 +++++++++++++++++++++++++++++++-------
+>  mm/vmscan.c                       |   2 +-
+>  10 files changed, 423 insertions(+), 94 deletions(-)
 
-Signed-off-by: Jamie Liu <jamieliu@google.com>
-Signed-off-by: Yu Zhao <yuzhao@google.com>
----
- mm/swapfile.c | 84 +++++++++++++++++++++++++++++++++--------------------------
- 1 file changed, 47 insertions(+), 37 deletions(-)
-
-diff --git a/mm/swapfile.c b/mm/swapfile.c
-index 18a8eee..27e147b 100644
---- a/mm/swapfile.c
-+++ b/mm/swapfile.c
-@@ -712,14 +712,14 @@ int swap_store_swap_device(const char *buf, int *_type)
- 
- 	mapping = victim->f_mapping;
- 	spin_lock(&swap_lock);
--	for (type = swap_list.head; type >= 0; type = swap_info[type]->next) {
-+	for (type = 0; type < nr_swapfiles; type++) {
- 		si = swap_info[type];
- 		if ((si->flags & SWP_WRITEOK) == SWP_WRITEOK) {
- 			if (si->swap_file->f_mapping == mapping)
- 				break;
- 		}
- 	}
--	if (type < 0) {
-+	if (type == nr_swapfiles) {
- 		err = -EINVAL;
- 	} else {
- 		err = 0;
-@@ -803,10 +803,7 @@ swp_entry_t get_swap_page(struct page *page)
- 			spin_unlock(&si->lock);
- 			continue;
- 		}
--		if (si->flags & SWP_PRIVATE) {
--			spin_unlock(&si->lock);
--			continue;
--		}
-+		BUG_ON(si->flags & SWP_PRIVATE);
- 
- 		swap_list.next = next;
- 
-@@ -957,11 +954,12 @@ static unsigned char swap_entry_free(struct swap_info_struct *p,
- 			p->lowest_bit = offset;
- 		if (offset > p->highest_bit)
- 			p->highest_bit = offset;
--		set_highest_priority_index(p->type);
- 		if (p->flags & SWP_PRIVATE)
- 			atomic_long_inc(&nr_private_swap_pages);
--		else
-+		else {
- 			atomic_long_inc(&nr_public_swap_pages);
-+			set_highest_priority_index(p->type);
-+		}
- 		p->inuse_pages--;
- 		frontswap_invalidate_page(p->type, offset);
- 		if (p->flags & SWP_BLKDEV) {
-@@ -1899,6 +1897,8 @@ static void _enable_swap_info(struct swap_info_struct *p, int prio,
- 
- 	if (prio >= 0)
- 		p->prio = prio;
-+	else if (p->flags & SWP_PRIVATE)
-+		p->prio = 0;
- 	else
- 		p->prio = --least_priority;
- 	p->swap_map = swap_map;
-@@ -1910,19 +1910,19 @@ static void _enable_swap_info(struct swap_info_struct *p, int prio,
- 	} else {
- 		atomic_long_add(p->pages, &nr_public_swap_pages);
- 		total_public_swap_pages += p->pages;
-+		/* insert swap space into swap_list: */
-+		prev = -1;
-+		for (i = swap_list.head; i >= 0; i = swap_info[i]->next) {
-+			if (p->prio >= swap_info[i]->prio)
-+				break;
-+			prev = i;
-+		}
-+		p->next = i;
-+		if (prev < 0)
-+			swap_list.head = swap_list.next = p->type;
-+		else
-+			swap_info[prev]->next = p->type;
- 	}
--	/* insert swap space into swap_list: */
--	prev = -1;
--	for (i = swap_list.head; i >= 0; i = swap_info[i]->next) {
--		if (p->prio >= swap_info[i]->prio)
--			break;
--		prev = i;
--	}
--	p->next = i;
--	if (prev < 0)
--		swap_list.head = swap_list.next = p->type;
--	else
--		swap_info[prev]->next = p->type;
- }
- 
- static void enable_swap_info(struct swap_info_struct *p, int prio,
-@@ -1978,15 +1978,25 @@ SYSCALL_DEFINE1(swapoff, const char __user *, specialfile)
- 	mapping = victim->f_mapping;
- 	prev = -1;
- 	spin_lock(&swap_lock);
--	for (type = swap_list.head; type >= 0; type = swap_info[type]->next) {
-+	for (type = 0; type < nr_swapfiles; type++) {
- 		p = swap_info[type];
- 		if (p->flags & SWP_WRITEOK) {
--			if (p->swap_file->f_mapping == mapping)
-+			if (p->swap_file->f_mapping == mapping) {
-+				/* Private swapfiles aren't in swap_list */
-+				if (p->flags & SWP_PRIVATE)
-+					break;
-+				/* Find type's predecessor in swap_list */
-+				for (i = swap_list.head; i >= 0;
-+				     i = swap_info[i]->next) {
-+					if (type == i)
-+						break;
-+					prev = i;
-+				}
- 				break;
-+			}
- 		}
--		prev = type;
- 	}
--	if (type < 0) {
-+	if (type == nr_swapfiles) {
- 		err = -EINVAL;
- 		spin_unlock(&swap_lock);
- 		goto out_dput;
-@@ -1998,24 +2008,24 @@ SYSCALL_DEFINE1(swapoff, const char __user *, specialfile)
- 		spin_unlock(&swap_lock);
- 		goto out_dput;
- 	}
--	if (prev < 0)
--		swap_list.head = p->next;
--	else
--		swap_info[prev]->next = p->next;
--	if (type == swap_list.next) {
--		/* just pick something that's safe... */
--		swap_list.next = swap_list.head;
--	}
- 	spin_lock(&p->lock);
--	if (p->prio < 0) {
--		for (i = p->next; i >= 0; i = swap_info[i]->next)
--			swap_info[i]->prio = p->prio--;
--		least_priority++;
--	}
- 	if (p->flags & SWP_PRIVATE) {
- 		atomic_long_sub(p->pages, &nr_private_swap_pages);
- 		total_private_swap_pages -= p->pages;
- 	} else {
-+		if (prev < 0)
-+			swap_list.head = p->next;
-+		else
-+			swap_info[prev]->next = p->next;
-+		if (type == swap_list.next) {
-+			/* just pick something that's safe... */
-+			swap_list.next = swap_list.head;
-+		}
-+		if (p->prio < 0) {
-+			for (i = p->next; i >= 0; i = swap_info[i]->next)
-+				swap_info[i]->prio = p->prio--;
-+			least_priority++;
-+		}
- 		atomic_long_sub(p->pages, &nr_public_swap_pages);
- 		total_public_swap_pages -= p->pages;
- 	}
--- 
-1.9.1.423.g4596e3a
+For feature patches like this, please include a rationale.  What is
+this functionality good for, and who is going to use this?
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
