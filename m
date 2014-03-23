@@ -1,61 +1,56 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 0/3] Per cgroup swap file support
-Date: Sat, 22 Mar 2014 11:43:24 -0400
-Message-ID: <20140322154324.GK4407@cmpxchg.org>
-References: <1395442234-7493-1-git-send-email-yuzhao@google.com>
+From: Monam Agarwal <monamagarwal123-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] kernel: Use RCU_INIT_POINTER(x, NULL) in cgroup.c
+Date: Mon, 24 Mar 2014 00:17:18 +0530
+Message-ID: <1395600438-9838-1-git-send-email-monamagarwal123@gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=g10VG8cVr1NtNr3jzFX1UnLs74bMZKfOU0nwZ3D4Pmo=;
-	b=CKqy9E1mpbP+cDMrfQdOtr+mIf419YAwpCoUm6yg0Z6tSpMC8S03IpdexyEwMd2DbInE9HrudC8uFAjyiCN184Slb+JHlHflnCDY8/K17ZthX+p9g9MkUxwFQyx2ucZTMcP2+BJM5trDkrqzirGI10WKm8aZ3zRiBMi9aqyO8QQ=;
-Content-Disposition: inline
-In-Reply-To: <1395442234-7493-1-git-send-email-yuzhao@google.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yu Zhao <yuzhao@google.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, jamieliu@google.com, suleiman@google.com
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=from:to:subject:date:message-id;
+	bh=briO3o/FnLage+F0Yu2d896o1m+xIlGnP4FQ3MFrGlg=;
+	b=eODT4KslOj8096sHdKyLCulovMEsA8qs3UuAGsl7Jy/9ynDVrXVaBF8hi0Xzae7wCX
+	8JvDp1lSsPeSPn0ebp6tHPabkoRoev1rI8Q8Wo3y2dI3nB7hPgInIUT0FvnyYtV0l78F
+	fYRDn4YX80wlArsNiN4v10+0jHBox/cKmZ0hwA2R0kmXXpqVudj/9R851T25osphxW80
+	LKK+E/cppk3lJ5SfHJ3zGmPFpcpQNB3S5TN5rBH34cIlAbG6Z2TrjhhMmpbeJqCkOrSb
+	1cv00Ndu/pu+yLFUGcLFKhAhG8Cl2cbDdjAb+LHgtsQM9fc2jaHF2obEwyKaDa7b+0yZ
+	1U7w==
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello Yu!
+This patch replaces rcu_assign_pointer(x, NULL) with RCU_INIT_POINTER(x, NULL)
 
-On Fri, Mar 21, 2014 at 03:50:31PM -0700, Yu Zhao wrote:
-> This series of patches adds support to configure a cgroup to swap to a
-> particular file by using control file memory.swapfile.
-> 
-> A value of "default" in memory.swapfile indicates that this cgroup should
-> use the default, system-wide, swap files. A value of "none" indicates that
-> this cgroup should never swap. Other values are interpreted as the path
-> to a private swap file that can only be used by the owner (and its children).
-> 
-> The swap file has to be created and swapon() has to be done on it with
-> SWAP_FLAG_PRIVATE, before it can be used. This flag ensures that the swap
-> file is private and does not get used by others.
-> 
-> Jamie Liu (1):
->   swap: do not store private swap files on swap_list
-> 
-> Suleiman Souhlal (2):
->   mm/swap: support per memory cgroup swapfiles
->   swap: Increase the maximum number of swap files to 8192.
-> 
->  Documentation/cgroups/memory.txt  |  15 ++
->  arch/x86/include/asm/pgtable_64.h |  63 ++++++--
->  include/linux/memcontrol.h        |   2 +
->  include/linux/swap.h              |  45 +++---
->  mm/memcontrol.c                   |  76 ++++++++++
->  mm/memory.c                       |   3 +-
->  mm/shmem.c                        |   2 +-
->  mm/swap_state.c                   |   2 +-
->  mm/swapfile.c                     | 307 +++++++++++++++++++++++++++++++-------
->  mm/vmscan.c                       |   2 +-
->  10 files changed, 423 insertions(+), 94 deletions(-)
+The rcu_assign_pointer() ensures that the initialization of a structure       
+is carried out before storing a pointer to that structure. 
+And in the case of the NULL pointer, there is no structure to initialize. 
+So, rcu_assign_pointer(p, NULL) can be safely converted to RCU_INIT_POINTER(p, NULL)
 
-For feature patches like this, please include a rationale.  What is
-this functionality good for, and who is going to use this?
+Signed-off-by: Monam Agarwal <monamagarwal123-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ kernel/cgroup.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 105f273..3462f62 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -4033,7 +4033,7 @@ static void css_release(struct percpu_ref *ref)
+ 	struct cgroup_subsys_state *css =
+ 		container_of(ref, struct cgroup_subsys_state, refcnt);
+ 
+-	rcu_assign_pointer(css->cgroup->subsys[css->ss->subsys_id], NULL);
++	RCU_INIT_POINTER(css->cgroup->subsys[css->ss->subsys_id], NULL);
+ 	call_rcu(&css->rcu_head, css_free_rcu_fn);
+ }
+ 
+-- 
+1.7.9.5
