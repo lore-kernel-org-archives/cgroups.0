@@ -1,56 +1,43 @@
-From: Monam Agarwal <monamagarwal123-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] kernel: Use RCU_INIT_POINTER(x, NULL) in cgroup.c
-Date: Mon, 24 Mar 2014 00:17:18 +0530
-Message-ID: <1395600438-9838-1-git-send-email-monamagarwal123@gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] kernel: Use RCU_INIT_POINTER(x, NULL) in cgroup.c
+Date: Mon, 24 Mar 2014 08:49:39 -0400
+Message-ID: <20140324124939.GA29892@mtj.dyndns.org>
+References: <1395600438-9838-1-git-send-email-monamagarwal123@gmail.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=l2i7HYWoQVCRO2W1IwHcSTmUQe6uM4TKTq1Uk6V4I1I=;
+        b=0VrrCPTj6r6gYrVIGX+EpPu5bwHcSD70u6Y2I5rGsK2epk1q9wvGkLgudGEgte3S+2
+         wi7ZxIVpbbDPf+EYRaKzuz/zIvF5PCegekkAg+0aRzwfucYI5yMZihqXHKXS72QHq+BG
+         RzssvOifS53Ekr8oOOWr6UJdHeB4bOSa8W583oLvSuhR8L5aQP+HG0+i+hKvJ8F++0mj
+         F92r3e51oXHZb8EbakrLBo73An7udA0GFpoYInatEPOqkCrqV4vzlkPf2u4WG4qt1WwX
+         /KkSrh/eyGNMGObKbWEn8nQcao+JYd+xUfIYKi1KDS9lFuOrWsHeTQZjEVEOReQmoA4W
+         TEXw==
+Content-Disposition: inline
+In-Reply-To: <1395600438-9838-1-git-send-email-monamagarwal123-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=from:to:subject:date:message-id;
-	bh=briO3o/FnLage+F0Yu2d896o1m+xIlGnP4FQ3MFrGlg=;
-	b=eODT4KslOj8096sHdKyLCulovMEsA8qs3UuAGsl7Jy/9ynDVrXVaBF8hi0Xzae7wCX
-	8JvDp1lSsPeSPn0ebp6tHPabkoRoev1rI8Q8Wo3y2dI3nB7hPgInIUT0FvnyYtV0l78F
-	fYRDn4YX80wlArsNiN4v10+0jHBox/cKmZ0hwA2R0kmXXpqVudj/9R851T25osphxW80
-	LKK+E/cppk3lJ5SfHJ3zGmPFpcpQNB3S5TN5rBH34cIlAbG6Z2TrjhhMmpbeJqCkOrSb
-	1cv00Ndu/pu+yLFUGcLFKhAhG8Cl2cbDdjAb+LHgtsQM9fc2jaHF2obEwyKaDa7b+0yZ
-	1U7w==
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Monam Agarwal <monamagarwal123-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-This patch replaces rcu_assign_pointer(x, NULL) with RCU_INIT_POINTER(x, NULL)
+On Mon, Mar 24, 2014 at 12:17:18AM +0530, Monam Agarwal wrote:
+> This patch replaces rcu_assign_pointer(x, NULL) with RCU_INIT_POINTER(x, NULL)
+> 
+> The rcu_assign_pointer() ensures that the initialization of a structure       
+> is carried out before storing a pointer to that structure. 
+> And in the case of the NULL pointer, there is no structure to initialize. 
+> So, rcu_assign_pointer(p, NULL) can be safely converted to RCU_INIT_POINTER(p, NULL)
+> 
+> Signed-off-by: Monam Agarwal <monamagarwal123-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-The rcu_assign_pointer() ensures that the initialization of a structure       
-is carried out before storing a pointer to that structure. 
-And in the case of the NULL pointer, there is no structure to initialize. 
-So, rcu_assign_pointer(p, NULL) can be safely converted to RCU_INIT_POINTER(p, NULL)
+Applied to cgroup/for-3.15.
 
-Signed-off-by: Monam Agarwal <monamagarwal123-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
----
- kernel/cgroup.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks.
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 105f273..3462f62 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -4033,7 +4033,7 @@ static void css_release(struct percpu_ref *ref)
- 	struct cgroup_subsys_state *css =
- 		container_of(ref, struct cgroup_subsys_state, refcnt);
- 
--	rcu_assign_pointer(css->cgroup->subsys[css->ss->subsys_id], NULL);
-+	RCU_INIT_POINTER(css->cgroup->subsys[css->ss->subsys_id], NULL);
- 	call_rcu(&css->rcu_head, css_free_rcu_fn);
- }
- 
 -- 
-1.7.9.5
+tejun
