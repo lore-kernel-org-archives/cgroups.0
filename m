@@ -1,39 +1,35 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+From: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 Subject: Re: [RFC 4/4] cpuset: Add cpusets.quiesce option
-Date: Thu, 27 Mar 2014 10:47:47 +0800
-Message-ID: <53339153.70708@huawei.com>
-References: <cover.1395322529.git.viresh.kumar@linaro.org> <e643acf71086db239254d44c77d4966b2a4a01e5.1395322529.git.viresh.kumar@linaro.org>
+Date: Thu, 27 Mar 2014 09:59:21 +0530
+Message-ID: <CAKohpom-OAcvhQqVv9Vy9aMHFEZNaO=sGrF=C=OFYuDv2RgQJQ@mail.gmail.com>
+References: <cover.1395322529.git.viresh.kumar@linaro.org>
+	<e643acf71086db239254d44c77d4966b2a4a01e5.1395322529.git.viresh.kumar@linaro.org>
+	<53339153.70708@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <e643acf71086db239254d44c77d4966b2a4a01e5.1395322529.git.viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+In-Reply-To: <53339153.70708-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linaro-kernel-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, =?ISO-8859-1?Q?Fr=E9d=E9ric_Weisbecker?= <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Lists linaro-kernel <linaro-kernel-cunTk1MwBs8s++Sfvej+rw@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On 2014/3/20 21:49, Viresh Kumar wrote:
-> For networking applications platforms need to provide one CPU per each user
-> space data plane thread. These CPUs should not be interrupted by kernel at all
-> unless userspace has requested for some syscalls. Currently, there are
-> background kernel activities that are running on almost every CPU, like:
-> timers/hrtimers/watchdogs/etc, and these are required to be migrated to other
-> CPUs.
-> 
-> To achieve that, this patch adds another option to cpusets, i.e. 'quiesce'.
-> Writing '1' on this file would migrate these unbound/unpinned timers/workqueues
-> away from the CPUs of the cpuset in question. Writing '0' has no effect and this
-> file can't be read from userspace as we aren't maintaining a state here.
-> 
+On 27 March 2014 08:17, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
+> This doesn't look like a complete solution, because newer timers/workqueues can
+> still run in those CPUs.
 
-This doesn't look like a complete solution, because newer timers/workqueues can
-still run in those CPUs. Seems like the proposal discussed is to support setting
-cpu affinity for workqueues through sysfs. If so, we can migrate workqueues when
-affinity is set, so we don't need this cpuset.quiesce ?
+The initial idea was to disable load balance between CPUs and then do this.
+So, that new timers and workqueues from other CPUs would never get
+queued on this CPU..
 
-> Currently, only timers are migrated. This would be followed by other kernel
-> infrastructure later.
-> 
-> Suggested-by: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-> Signed-off-by: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+But I think we can just modify get_nohz_timer_target() for making sure this
+for timers..
+
+> Seems like the proposal discussed is to support setting
+> cpu affinity for workqueues through sysfs. If so, we can migrate workqueues when
+> affinity is set, so we don't need this cpuset.quiesce ?
+
+That was another thread just for workqueues, but this one is about migrating
+everything else as well.. Probably some more additions apart from timers/
+hrtimers/wqs in future. So, for us it is still required :)
