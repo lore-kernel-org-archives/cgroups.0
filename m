@@ -1,35 +1,59 @@
-From: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC 4/4] cpuset: Add cpusets.quiesce option
-Date: Thu, 27 Mar 2014 09:59:21 +0530
-Message-ID: <CAKohpom-OAcvhQqVv9Vy9aMHFEZNaO=sGrF=C=OFYuDv2RgQJQ@mail.gmail.com>
-References: <cover.1395322529.git.viresh.kumar@linaro.org>
-	<e643acf71086db239254d44c77d4966b2a4a01e5.1395322529.git.viresh.kumar@linaro.org>
-	<53339153.70708@huawei.com>
+From: Sasha Levin <sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] cgroup: missing rcu read lock around task_css_set
+Date: Thu, 27 Mar 2014 11:35:09 -0400
+Message-ID: <5334452D.4080200@oracle.com>
+References: <1393729211-937-1-git-send-email-sasha.levin@oracle.com>
+	<20140303223327.GB26523@mtj.dyndns.org>
+	<5315057F.3030602@oracle.com>
+	<20140303224505.GE26523@mtj.dyndns.org>
+	<53150989.70307@oracle.com> <53160B6D.8020501@oracle.com>
+	<20140304194741.GA2204@htj.dyndns.org>
+	<53167662.5000801@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <53339153.70708-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, =?ISO-8859-1?Q?Fr=E9d=E9ric_Weisbecker?= <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Lists linaro-kernel <linaro-kernel-cunTk1MwBs8s++Sfvej+rw@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <53167662.5000801-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 27 March 2014 08:17, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
-> This doesn't look like a complete solution, because newer timers/workqueues can
-> still run in those CPUs.
+On 03/04/2014 07:57 PM, Li Zefan wrote:
+> On 2014/3/5 3:47, Tejun Heo wrote:
+>> On Tue, Mar 04, 2014 at 12:20:45PM -0500, Sasha Levin wrote:
+>>>> Hrm... there is a PF_EXITING check there already:
+>>>>
+>>>>      #define task_css_set_check(task, __c)            \
+>>>>          rcu_dereference_check((task)->cgroups,        \
+>>>>          lockdep_is_held(&cgroup_mutex) ||        \
+>>>>          lockdep_is_held(&css_set_rwsem) ||        \
+>>>>          ((task)->flags & PF_EXITING) || (__c))
+>>>>
+>>>> I see it's not happening on Linus's master so I'll run a bisection to figure out what broke it.
+>>>
+>>> Hi Tejun,
+>>>
+>>> It bisects down to your patch: "cgroup: drop task_lock() protection
+>>> around task->cgroups". I'll look into it later unless it's obvious
+>>> to you.
+>>
+>> Hmmm... maybe I'm confused and PF_EXITING is not set there and
+>> task_lock was what held off the lockdep warning.  Confused....
+>>
+>
+> Because this cgroup_exit() is called in a failure path in copy_process().
 
-The initial idea was to disable load balance between CPUs and then do this.
-So, that new timers and workqueues from other CPUs would never get
-queued on this CPU..
+It seems there was no conclusion here and it still happens in -next, anything
+we can do about it?
 
-But I think we can just modify get_nohz_timer_target() for making sure this
-for timers..
-
-> Seems like the proposal discussed is to support setting
-> cpu affinity for workqueues through sysfs. If so, we can migrate workqueues when
-> affinity is set, so we don't need this cpuset.quiesce ?
-
-That was another thread just for workqueues, but this one is about migrating
-everything else as well.. Probably some more additions apart from timers/
-hrtimers/wqs in future. So, for us it is still required :)
+Thanks,
+Sasha
