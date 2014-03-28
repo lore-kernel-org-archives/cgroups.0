@@ -1,92 +1,67 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 08/12] cgroup: allow cgroup creation and suppress automatic
-	css creation in the unified hierarchy
-Date: Thu, 27 Mar 2014 22:40:57 -0400
-Message-ID: <1395974461-12735-9-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 10/12] cgroup: update subsystem rebind restrictions
+Date: Thu, 27 Mar 2014 22:40:59 -0400
+Message-ID: <1395974461-12735-11-git-send-email-tj@kernel.org>
 References: <1395974461-12735-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=WBazYa0ZZXjMsLYDkL6lCAWI8E8SXBiSZTjGOOnEkUM=;
+        b=ph1+AEHZc7uZGxsxehz0ANl1nVhHaFevS9nfI8K616MfRxopFWtqsXWIh2cdIrmgCL
+         yk+N2dZAWx93IIn/DJ4Oj6BCNr5FLPQkJo/X3Qo+0NURJvPaRcK1NWwKOf07a4N1DY0Q
+         1C6Wx2aUuOd40Z0n/i3GFnHLRoCxmXuSyWMSLKtaN59Ojyy4n3hPpmlmHURbEKkRX5mV
+         gEFLlNhUJBqzTNWr07V/2XFz7IeOQikwWMJsPgB9TF5d69x49OVXVU0l4HixYecWAf1r
+         4z4nh0U3e61azz/IdxIXGKP6HGaVG+l7t9abBvD6D4qMQONrZo8PFvzB9k4QIKjHlC0C
+         DXPA==
+In-Reply-To: <1395974461-12735-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=v90lj8frGMyC/PlOIWTL76JrxvreWCt5a9FNcqPZSbk=;
-	b=w0hjFwbfxtWAUdzsBJbtRVttcNlMNsA5Ne3Tc/aZsWqeN2OhsIYSEliVDa8WiSoabT
-	kWfYzYRhy31aY20B4c89wGgjJhtb2cLqa3Uq8D4NPjCwn2HNhrMXywPst/ZiNn27VvXO
-	l3T9awqJkv0sCezsn3GP7jDbqO+vpI7BHdCvb2lxZha53oTkA2sUkkyK4sbbTSs02u4t
-	0jeegeCb3635oUKErBMbEE3FSOTTbSiISrXrC8h5Z2UEygKlkE6JoNTdtDhvOQyHgPBd
-	WcK0AKw/Bzhr2DsegcFokeKNLO217bTSlUSkUoXimfHQH5eKnI58Ge7OF8YvJHHRJ3mZ
-	7xnw==
-In-Reply-To: <1395974461-12735-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: lizefan@huawei.com
+Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-Now that effective css handling has been added and iterators updated
-accordingly, it's safe to allow cgroup creation in the default
-hierarchy.  Unblock cgroup creation in the default hierarchy.
+Because the default root couldn't have any non-root csses attached to
+it, rebinding away from it was always allowed; however, the default
+hierarchy will soon host the unified hierarchy and have non-root csses
+so the rebind restrictions need to be updated accordingly.
 
-As the default hierarchy will implement explicit enabling and
-disabling of controllers on each cgroup, suppress automatic css
-enabling on cgroup creation.
+Instead of special casing rebinding from the default hierarchy and
+then checking whether the source hierarchy has children cgroups, which
+implies non-root csses for !dfl hierarchies, simply check whether the
+source hierarchy has non-root csses for the subsystem using
+css_next_child().
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/cgroup.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ kernel/cgroup.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index c59946c..30f48b0 100644
+index e714ccf..0c67141 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -1115,8 +1115,10 @@ static int rebind_subsystems(struct cgroup_root *dst_root,
- 		src_root->subsys_mask &= ~(1 << ssid);
- 		src_root->cgrp.child_subsys_mask &= ~(1 << ssid);
+@@ -1051,16 +1051,12 @@ static int rebind_subsystems(struct cgroup_root *dst_root,
+ 		if (!(ss_mask & (1 << ssid)))
+ 			continue;
  
-+		/* default hierarchy doesn't enable controllers by default */
- 		dst_root->subsys_mask |= 1 << ssid;
--		dst_root->cgrp.child_subsys_mask |= 1 << ssid;
-+		if (dst_root != &cgrp_dfl_root)
-+			dst_root->cgrp.child_subsys_mask |= 1 << ssid;
- 
- 		if (ss->bind)
- 			ss->bind(css);
-@@ -3765,13 +3767,6 @@ static long cgroup_create(struct cgroup *parent, const char *name,
- 	struct cgroup_subsys *ss;
- 	struct kernfs_node *kn;
- 
--	/*
--	 * XXX: The default hierarchy isn't fully implemented yet.  Block
--	 * !root cgroup creation on it for now.
--	 */
--	if (root == &cgrp_dfl_root)
--		return -EINVAL;
+-		/* if @ss is on the dummy_root, we can always move it */
+-		if (ss->root == &cgrp_dfl_root)
+-			continue;
 -
- 	/* allocate the cgroup and its ID, 0 is reserved for the root */
- 	cgrp = kzalloc(sizeof(*cgrp), GFP_KERNEL);
- 	if (!cgrp)
-@@ -3853,7 +3848,12 @@ static long cgroup_create(struct cgroup *parent, const char *name,
- 		}
+-		/* if @ss has non-root cgroups attached to it, can't move */
+-		if (!list_empty(&ss->root->cgrp.children))
++		/* if @ss has non-root csses attached to it, can't move */
++		if (css_next_child(NULL, cgroup_css(&ss->root->cgrp, ss)))
+ 			return -EBUSY;
+ 
+ 		/* can't move between two non-dummy roots either */
+-		if (dst_root != &cgrp_dfl_root)
++		if (ss->root != &cgrp_dfl_root && dst_root != &cgrp_dfl_root)
+ 			return -EBUSY;
  	}
- 
--	cgrp->child_subsys_mask = parent->child_subsys_mask;
-+	/*
-+	 * On the default hierarchy, a child doesn't automatically inherit
-+	 * child_subsys_mask from the parent.  Each is configured manually.
-+	 */
-+	if (!cgroup_on_dfl(cgrp))
-+		cgrp->child_subsys_mask = parent->child_subsys_mask;
- 
- 	kernfs_activate(kn);
  
 -- 
 1.8.5.3
