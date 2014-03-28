@@ -1,60 +1,69 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup: missing rcu read lock around task_css_set
-Date: Fri, 28 Mar 2014 10:48:17 +0800
-Message-ID: <5334E2F1.3040809@huawei.com>
-References: <1393729211-937-1-git-send-email-sasha.levin@oracle.com>
-	<20140303223327.GB26523@mtj.dyndns.org>
-	<5315057F.3030602@oracle.com>
-	<20140303224505.GE26523@mtj.dyndns.org>
-	<53150989.70307@oracle.com> <53160B6D.8020501@oracle.com>
-	<20140304194741.GA2204@htj.dyndns.org>
-	<53167662.5000801@huawei.com> <5334452D.4080200@oracle.com>
+Subject: [PATCH 1/2] cgroup: fix spurious lockdep warning in cgroup_exit()
+Date: Fri, 28 Mar 2014 15:18:27 +0800
+Message-ID: <53352243.80805@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <5334452D.4080200-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Sasha Levin <sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Sasha Levin <sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On 2014/3/27 23:35, Sasha Levin wrote:
-> On 03/04/2014 07:57 PM, Li Zefan wrote:
->> On 2014/3/5 3:47, Tejun Heo wrote:
->>> On Tue, Mar 04, 2014 at 12:20:45PM -0500, Sasha Levin wrote:
->>>>> Hrm... there is a PF_EXITING check there already:
->>>>>
->>>>>      #define task_css_set_check(task, __c)            \
->>>>>          rcu_dereference_check((task)->cgroups,        \
->>>>>          lockdep_is_held(&cgroup_mutex) ||        \
->>>>>          lockdep_is_held(&css_set_rwsem) ||        \
->>>>>          ((task)->flags & PF_EXITING) || (__c))
->>>>>
->>>>> I see it's not happening on Linus's master so I'll run a bisection to figure out what broke it.
->>>>
->>>> Hi Tejun,
->>>>
->>>> It bisects down to your patch: "cgroup: drop task_lock() protection
->>>> around task->cgroups". I'll look into it later unless it's obvious
->>>> to you.
->>>
->>> Hmmm... maybe I'm confused and PF_EXITING is not set there and
->>> task_lock was what held off the lockdep warning.  Confused....
->>>
->>
->> Because this cgroup_exit() is called in a failure path in copy_process().
-> 
-> It seems there was no conclusion here and it still happens in -next, anything
-> we can do about it?
-> 
+cgroup_exit() is called in fork and exit path. If it's called in the
+failure path during fork, PF_EXITING isn't set, and then lockdep will
+complain.
 
-I'll send a patch to fix it. Thanks!
+Fix this by removing cgroup_exit() in that failure path. cgroup_fork()
+does nothing that needs cleanup.
+
+Reported-by: Sasha Levin <sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup.c | 3 +--
+ kernel/fork.c   | 5 ++---
+ 2 files changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 8f4ddbe..a53dbc6 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -4339,8 +4339,7 @@ void cgroup_post_fork(struct task_struct *child)
+  * notify_on_release(), then leave the task attached to the root cgroup in
+  * each hierarchy for the remainder of its exit.  No need to bother with
+  * init_css_set refcnting.  init_css_set never goes away and we can't race
+- * with migration path - either PF_EXITING is visible to migration path or
+- * @tsk never got on the tasklist.
++ * with migration path - PF_EXITING is visible to migration path.
+  */
+ void cgroup_exit(struct task_struct *tsk, int run_callbacks)
+ {
+diff --git a/kernel/fork.c b/kernel/fork.c
+index 3e02737..0477657 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -1274,7 +1274,7 @@ static struct task_struct *copy_process(unsigned long clone_flags,
+ 	if (IS_ERR(p->mempolicy)) {
+ 		retval = PTR_ERR(p->mempolicy);
+ 		p->mempolicy = NULL;
+-		goto bad_fork_cleanup_cgroup;
++		goto bad_fork_cleanup_threadgroup_lock;
+ 	}
+ #endif
+ #ifdef CONFIG_CPUSETS
+@@ -1526,11 +1526,10 @@ bad_fork_cleanup_policy:
+ 	perf_event_free_task(p);
+ #ifdef CONFIG_NUMA
+ 	mpol_put(p->mempolicy);
+-bad_fork_cleanup_cgroup:
++bad_fork_cleanup_threadgroup_lock:
+ #endif
+ 	if (clone_flags & CLONE_THREAD)
+ 		threadgroup_change_end(current);
+-	cgroup_exit(p, 0);
+ 	delayacct_tsk_free(p);
+ 	module_put(task_thread_info(p)->exec_domain->module);
+ bad_fork_cleanup_count:
+-- 
+1.8.0.2
