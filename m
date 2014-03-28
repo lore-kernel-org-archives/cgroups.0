@@ -1,134 +1,60 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 11/12] cgroup: prepare migration path for unified hierarchy
-Date: Thu, 27 Mar 2014 22:41:00 -0400
-Message-ID: <1395974461-12735-12-git-send-email-tj@kernel.org>
-References: <1395974461-12735-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=7/Yk2F8LLIHxSBLI/b2xqC913ISWquKKuMI1NVLdjIw=;
-        b=WhizyidQPi/FMCH9KJ15WpeP1XktJl5dYNOqcjosliVxv1aIzOEHVnkob0iGh7O3+F
-         Ruqn88kNEe4K2lcXs+ATcVoyZMUrk8MX7rM6y3x3/fy6au83dmNzCHfbJbzaLgUgHFD/
-         Z4q1Ym/2u2q0B40RvWT4Clk0CsTJZPSdlfI9MymiUfUII08E8Ersj8ZBbR/kfrWpOeSb
-         W3y04pkFIGoL8aHq/s7IX9EmV60LlIAOClbjSaJ4u4Xe6Bv5ayXrmGK+LpfofEBIWLym
-         E14QzYzh7AU8wbE82WdZmIwiVf8KXI41EUboQzsDH3S4hkG5wfArVQjmiwSmh3HE3ioq
-         o0ZA==
-In-Reply-To: <1395974461-12735-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] cgroup: missing rcu read lock around task_css_set
+Date: Fri, 28 Mar 2014 10:48:17 +0800
+Message-ID: <5334E2F1.3040809@huawei.com>
+References: <1393729211-937-1-git-send-email-sasha.levin@oracle.com>
+	<20140303223327.GB26523@mtj.dyndns.org>
+	<5315057F.3030602@oracle.com>
+	<20140303224505.GE26523@mtj.dyndns.org>
+	<53150989.70307@oracle.com> <53160B6D.8020501@oracle.com>
+	<20140304194741.GA2204@htj.dyndns.org>
+	<53167662.5000801@huawei.com> <5334452D.4080200@oracle.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com
-Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <5334452D.4080200-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Sasha Levin <sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Unified hierarchy implementation would require re-migrating tasks onto
-the same cgroup on the default hierarchy to reflect updated effective
-csses.  Update cgroup_migrate_prepare_dst() so that it accepts NULL as
-the destination cgrp.  When NULL is specified, the destination is
-considered to be the cgroup on the default hierarchy associated with
-each css_set.
+On 2014/3/27 23:35, Sasha Levin wrote:
+> On 03/04/2014 07:57 PM, Li Zefan wrote:
+>> On 2014/3/5 3:47, Tejun Heo wrote:
+>>> On Tue, Mar 04, 2014 at 12:20:45PM -0500, Sasha Levin wrote:
+>>>>> Hrm... there is a PF_EXITING check there already:
+>>>>>
+>>>>>      #define task_css_set_check(task, __c)            \
+>>>>>          rcu_dereference_check((task)->cgroups,        \
+>>>>>          lockdep_is_held(&cgroup_mutex) ||        \
+>>>>>          lockdep_is_held(&css_set_rwsem) ||        \
+>>>>>          ((task)->flags & PF_EXITING) || (__c))
+>>>>>
+>>>>> I see it's not happening on Linus's master so I'll run a bisection to figure out what broke it.
+>>>>
+>>>> Hi Tejun,
+>>>>
+>>>> It bisects down to your patch: "cgroup: drop task_lock() protection
+>>>> around task->cgroups". I'll look into it later unless it's obvious
+>>>> to you.
+>>>
+>>> Hmmm... maybe I'm confused and PF_EXITING is not set there and
+>>> task_lock was what held off the lockdep warning.  Confused....
+>>>
+>>
+>> Because this cgroup_exit() is called in a failure path in copy_process().
+> 
+> It seems there was no conclusion here and it still happens in -next, anything
+> we can do about it?
+> 
 
-After this change, the identity check in cgroup_migrate_add_src()
-isn't sufficient for noop detection as the associated csses may change
-without any cgroup association changing.  The only way to tell whether
-a migration is noop or not is testing whether the source and
-destination csets are identical.  The noop check in
-cgroup_migrate_add_src() is removed and cset identity test is added to
-cgroup_migreate_prepare_dst().  If it's detected that source and
-destination csets are identical, the cset is removed removed from
-@preloaded_csets and all the migration nodes are cleared which makes
-cgroup_migrate() ignore the cset.
-
-Also, make the function append the destination css_sets to
-@preloaded_list so that destination css_sets always come after source
-css_sets.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- kernel/cgroup.c | 34 +++++++++++++++++++++++-----------
- 1 file changed, 23 insertions(+), 11 deletions(-)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 0c67141..5faa115 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1901,10 +1901,6 @@ static void cgroup_migrate_add_src(struct css_set *src_cset,
- 
- 	src_cgrp = cset_cgroup_from_root(src_cset, dst_cgrp->root);
- 
--	/* nothing to do if this cset already belongs to the cgroup */
--	if (src_cgrp == dst_cgrp)
--		return;
--
- 	if (!list_empty(&src_cset->mg_preload_node))
- 		return;
- 
-@@ -1919,13 +1915,14 @@ static void cgroup_migrate_add_src(struct css_set *src_cset,
- 
- /**
-  * cgroup_migrate_prepare_dst - prepare destination css_sets for migration
-- * @dst_cgrp: the destination cgroup
-+ * @dst_cgrp: the destination cgroup (may be %NULL)
-  * @preloaded_csets: list of preloaded source css_sets
-  *
-  * Tasks are about to be moved to @dst_cgrp and all the source css_sets
-  * have been preloaded to @preloaded_csets.  This function looks up and
-- * pins all destination css_sets, links each to its source, and put them on
-- * @preloaded_csets.
-+ * pins all destination css_sets, links each to its source, and append them
-+ * to @preloaded_csets.  If @dst_cgrp is %NULL, the destination of each
-+ * source css_set is assumed to be its cgroup on the default hierarchy.
-  *
-  * This function must be called after cgroup_migrate_add_src() has been
-  * called on each migration source css_set.  After migration is performed
-@@ -1936,19 +1933,34 @@ static int cgroup_migrate_prepare_dst(struct cgroup *dst_cgrp,
- 				      struct list_head *preloaded_csets)
- {
- 	LIST_HEAD(csets);
--	struct css_set *src_cset;
-+	struct css_set *src_cset, *tmp_cset;
- 
- 	lockdep_assert_held(&cgroup_mutex);
- 
- 	/* look up the dst cset for each src cset and link it to src */
--	list_for_each_entry(src_cset, preloaded_csets, mg_preload_node) {
-+	list_for_each_entry_safe(src_cset, tmp_cset, preloaded_csets, mg_preload_node) {
- 		struct css_set *dst_cset;
- 
--		dst_cset = find_css_set(src_cset, dst_cgrp);
-+		dst_cset = find_css_set(src_cset,
-+					dst_cgrp ?: src_cset->dfl_cgrp);
- 		if (!dst_cset)
- 			goto err;
- 
- 		WARN_ON_ONCE(src_cset->mg_dst_cset || dst_cset->mg_dst_cset);
-+
-+		/*
-+		 * If src cset equals dst, it's noop.  Drop the src.
-+		 * cgroup_migrate() will skip the cset too.  Note that we
-+		 * can't handle src == dst as some nodes are used by both.
-+		 */
-+		if (src_cset == dst_cset) {
-+			src_cset->mg_src_cgrp = NULL;
-+			list_del_init(&src_cset->mg_preload_node);
-+			put_css_set(src_cset, false);
-+			put_css_set(dst_cset, false);
-+			continue;
-+		}
-+
- 		src_cset->mg_dst_cset = dst_cset;
- 
- 		if (list_empty(&dst_cset->mg_preload_node))
-@@ -1957,7 +1969,7 @@ static int cgroup_migrate_prepare_dst(struct cgroup *dst_cgrp,
- 			put_css_set(dst_cset, false);
- 	}
- 
--	list_splice(&csets, preloaded_csets);
-+	list_splice_tail(&csets, preloaded_csets);
- 	return 0;
- err:
- 	cgroup_migrate_finish(&csets);
--- 
-1.8.5.3
+I'll send a patch to fix it. Thanks!
