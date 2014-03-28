@@ -1,90 +1,82 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 2/2] cgroup: remove useless argument from cgroup_exit()
-Date: Fri, 28 Mar 2014 15:22:19 +0800
-Message-ID: <5335232B.70401@huawei.com>
-References: <53352243.80805@huawei.com>
+Subject: [PATCH v4 1/4] kmemleak: free internal objects only if there're no
+ leaks to be reported
+Date: Fri, 28 Mar 2014 18:50:10 +0800
+Message-ID: <533553E2.7050801@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <53352243.80805-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Sasha Levin <sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
+Currently if you stop kmemleak thread before disabling kmemleak,
+kmemleak objects will be freed and so you won't be able to check
+previously reported leaks.
 
+With this patch, kmemleak objects won't be freed if there're leaks
+that can be reported.
+
+v2: s/kmemleak_as_leaks/kmemleak_found_leaks
+
+Acked-by: Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>
 Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/cgroup.h | 4 ++--
- kernel/cgroup.c        | 5 ++---
- kernel/exit.c          | 2 +-
- 3 files changed, 5 insertions(+), 6 deletions(-)
+ mm/kmemleak.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index acbb9a4..13ffb06 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -33,7 +33,7 @@ extern int cgroup_init_early(void);
- extern int cgroup_init(void);
- extern void cgroup_fork(struct task_struct *p);
- extern void cgroup_post_fork(struct task_struct *p);
--extern void cgroup_exit(struct task_struct *p, int run_callbacks);
-+extern void cgroup_exit(struct task_struct *p);
- extern int cgroupstats_build(struct cgroupstats *stats,
- 				struct dentry *dentry);
+diff --git a/mm/kmemleak.c b/mm/kmemleak.c
+index 31f01c5..474379e 100644
+--- a/mm/kmemleak.c
++++ b/mm/kmemleak.c
+@@ -218,7 +218,8 @@ static int kmemleak_stack_scan = 1;
+ static DEFINE_MUTEX(scan_mutex);
+ /* setting kmemleak=on, will set this var, skipping the disable */
+ static int kmemleak_skip_disable;
+-
++/* If there are leaks that can be reported */
++static bool kmemleak_found_leaks;
  
-@@ -848,7 +848,7 @@ static inline int cgroup_init_early(void) { return 0; }
- static inline int cgroup_init(void) { return 0; }
- static inline void cgroup_fork(struct task_struct *p) {}
- static inline void cgroup_post_fork(struct task_struct *p) {}
--static inline void cgroup_exit(struct task_struct *p, int callbacks) {}
-+static inline void cgroup_exit(struct task_struct *p) {}
+ /*
+  * Early object allocation/freeing logging. Kmemleak is initialized after the
+@@ -1382,9 +1383,12 @@ static void kmemleak_scan(void)
+ 	}
+ 	rcu_read_unlock();
  
- static inline int cgroupstats_build(struct cgroupstats *stats,
- 					struct dentry *dentry)
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index a53dbc6..775a90d 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -4324,7 +4324,6 @@ void cgroup_post_fork(struct task_struct *child)
- /**
-  * cgroup_exit - detach cgroup from exiting task
-  * @tsk: pointer to task_struct of exiting process
-- * @run_callback: run exit callbacks?
-  *
-  * Description: Detach cgroup from @tsk and release it.
-  *
-@@ -4341,7 +4340,7 @@ void cgroup_post_fork(struct task_struct *child)
-  * init_css_set refcnting.  init_css_set never goes away and we can't race
-  * with migration path - PF_EXITING is visible to migration path.
-  */
--void cgroup_exit(struct task_struct *tsk, int run_callbacks)
-+void cgroup_exit(struct task_struct *tsk)
+-	if (new_leaks)
++	if (new_leaks) {
++		kmemleak_found_leaks = true;
++
+ 		pr_info("%d new suspected memory leaks (see "
+ 			"/sys/kernel/debug/kmemleak)\n", new_leaks);
++	}
+ 
+ }
+ 
+@@ -1592,6 +1596,8 @@ static void kmemleak_clear(void)
+ 		spin_unlock_irqrestore(&object->lock, flags);
+ 	}
+ 	rcu_read_unlock();
++
++	kmemleak_found_leaks = false;
+ }
+ 
+ /*
+@@ -1685,12 +1691,11 @@ static const struct file_operations kmemleak_fops = {
+ static void kmemleak_do_cleanup(struct work_struct *work)
  {
- 	struct cgroup_subsys *ss;
- 	struct css_set *cset;
-@@ -4363,7 +4362,7 @@ void cgroup_exit(struct task_struct *tsk, int run_callbacks)
- 	cset = task_css_set(tsk);
- 	RCU_INIT_POINTER(tsk->cgroups, &init_css_set);
+ 	struct kmemleak_object *object;
+-	bool cleanup = scan_thread == NULL;
  
--	if (run_callbacks && need_forkexit_callback) {
-+	if (need_forkexit_callback) {
- 		/* see cgroup_post_fork() for details */
- 		for_each_subsys(ss, i) {
- 			if (ss->exit) {
-diff --git a/kernel/exit.c b/kernel/exit.c
-index c3af836..c2ae892 100644
---- a/kernel/exit.c
-+++ b/kernel/exit.c
-@@ -797,7 +797,7 @@ void do_exit(long code)
- 	 */
- 	perf_event_exit_task(tsk);
+ 	mutex_lock(&scan_mutex);
+ 	stop_scan_thread();
  
--	cgroup_exit(tsk, 1);
-+	cgroup_exit(tsk);
- 
- 	if (group_dead)
- 		disassociate_ctty(1);
+-	if (cleanup) {
++	if (!kmemleak_found_leaks) {
+ 		rcu_read_lock();
+ 		list_for_each_entry_rcu(object, &object_list, object_list)
+ 			delete_object_full(object->pointer);
 -- 
 1.8.0.2
