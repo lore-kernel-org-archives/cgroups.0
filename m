@@ -1,84 +1,72 @@
-From: Tang Chen <tangchen-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: [PATCH 1/1] doc, mempolicy: Fix wrong document in numa_memory_policy.txt
-Date: Wed, 2 Apr 2014 11:53:02 +0800
-Message-ID: <1396410782-26208-1-git-send-email-tangchen@cn.fujitsu.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: Kernel scanning/freeing to relieve cgroup memory pressure
+Date: Wed, 2 Apr 2014 14:00:19 -0400
+Message-ID: <20140402180019.GL16631@htj.dyndns.org>
+References: <533C0BB4.4070009@gopivotal.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=trP+dlP9D6Q43GAhcCkN1hmDZTGypMLVTl2LofNPIzM=;
+        b=OfUvf19pY4EDN2UxA8WaqC9hvn3cT3aGLMtBkWPON2iFolbq1z8l/IfCC7x3rxxaox
+         qPOq6NEMocyRSjcFn+DnQ0JGLIuHxmpbdUEpPTsxswQBCOh2Afu+Jh/gM0cljBXT6EtD
+         Pw12vwpKpxCoySJ2N1hxggO6jdV01BkLmBBU3im5v2NOvvdqxLR8DJzwN85oUdHrIIBU
+         uKXSLzzfDCsBKAZaI/l8E8Bc7wjnyJrDd+rRl/3CDMy3l2YWRdp0AiYn5kQLVsVTFI+O
+         gSNPjGJNeo0GX61w5PuZDVH7rNdEi61JJ+vc4MQJ2pzA+uHc2BmUP2wEBTpnD44V9wdC
+         2YPQ==
+Content-Disposition: inline
+In-Reply-To: <533C0BB4.4070009-6n0RBC2Q8y8S+FvcfC7Uqw@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tangchen-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, guz.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org
+To: Glyn Normington <gnormington-6n0RBC2Q8y8S+FvcfC7Uqw@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-In document numa_memory_policy.txt, the following examples for flag
-MPOL_F_RELATIVE_NODES are incorrect.
+(cc'ing memcg maintainers and cgroup ML)
 
-	For example, consider a task that is attached to a cpuset with
-	mems 2-5 that sets an Interleave policy over the same set with
-	MPOL_F_RELATIVE_NODES.  If the cpuset's mems change to 3-7, the
-	interleave now occurs over nodes 3,5-6.  If the cpuset's mems
-	then change to 0,2-3,5, then the interleave occurs over nodes
-	0,3,5.
+On Wed, Apr 02, 2014 at 02:08:04PM +0100, Glyn Normington wrote:
+> Currently, a memory cgroup can hit its oom limit when pages could, in
+> principle, be reclaimed by the kernel except that the kernel does not
+> respond directly to cgroup-local memory pressure.
 
-According to the comment of the patch adding flag MPOL_F_RELATIVE_NODES,
-the nodemasks the user specifies should be considered relative to the
-current task's mems_allowed.
-(https://lkml.org/lkml/2008/2/29/428)
+So, ummm, it does.
 
-And according to numa_memory_policy.txt, if the user's nodemask includes
-nodes that are outside the range of the new set of allowed nodes, then
-the remap wraps around to the beginning of the nodemask and, if not already
-set, sets the node in the mempolicy nodemask.
+> A use case where this is important is running a moderately large Java
+> application in a memory cgroup in a PaaS environment where cost to the
+> user depends on the memory limit ([1]). Users need to tune the memory
+> limit to reduce their costs. During application initialisation large
+> numbers of JAR files are opened (read-only) and read while loading the
+> application code and its dependencies. This is reflected in a peak of
+> file cache usage which can push the memory cgroup memory usage
+> significantly higher than the value actually needed to run the application.
+> 
+> Possible approaches include (1) automatic response to cgroup-local
+> memory pressure in the kernel, and (2) a kernel API for reclaiming
+> memory from a cgroup which could be driven under oom notification (with
+> the oom killer disabled for the cgroup - it would be enabled if the
+> cgroup was still oom after calling the kernel to reclaim memory).
+> 
+> Clearly (1) is the preferred approach. The closest facility in the
+> kernel to (2) is to ask the kernel to free pagecache using `echo 1 >
+> /proc/sys/vms/drop_caches`, but that is too wide-ranging, especially in
+> a PaaS environment hosting multiple applications. A similar facility
+> could be provided for a cgroup via a cgroup pseudo-file
+> `memory.drop_caches`.
+> 
+> Other approaches include a mempressure cgroup ([2]) which would not be
+> suitable for PaaS applications. See [3] for Andrew Morton's response. A
+> related workaround ([4]) was included in the 3.6 kernel.
+> 
+> Related discussions:
+> [1] https://groups.google.com/a/cloudfoundry.org/d/topic/vcap-dev/6M8BDV_tq7w/discussion
+> [2]https://lwn.net/Articles/531077/ <https://lwn.net/Articles/531077/>
+> [3]https://lwn.net/Articles/531138/ <https://lwn.net/Articles/531138/>
+> [4]https://lkml.org/lkml/2013/6/6/462 <https://lkml.org/lkml/2013/6/6/462>&
+> https://github.com/torvalds/linux/commit/e62e384e
+> <https://github.com/torvalds/linux/commit/e62e384e>.
 
-So in the example, if the user specifies 2-5, for a task whose mems_allowed
-is 3-7, the nodemasks should be remapped the third, fourth, fifth, sixth
-node in mems_allowed.  like the following:
-
-	mems_allowed:       3  4  5  6  7
-
-	relative index:     0  1  2  3  4
-	                    5
-
-So the nodemasks should be remapped to 3,5-7, but not 3,5-6.
-
-And for a task whose mems_allowed is 0,2-3,5, the nodemasks should be
-remapped to 0,2-3,5, but not 0,3,5.
-
-	mems_allowed:       0  2  3  5
-
-        relative index:     0  1  2  3
-                            4  5
-
-
-Signed-off-by: Tang Chen <tangchen-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
----
- Documentation/vm/numa_memory_policy.txt | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/Documentation/vm/numa_memory_policy.txt b/Documentation/vm/numa_memory_policy.txt
-index 4e7da65..badb050 100644
---- a/Documentation/vm/numa_memory_policy.txt
-+++ b/Documentation/vm/numa_memory_policy.txt
-@@ -174,7 +174,6 @@ Components of Memory Policies
- 	allocation fails, the kernel will search other nodes, in order of
- 	increasing distance from the preferred node based on information
- 	provided by the platform firmware.
--	containing the cpu where the allocation takes place.
- 
- 	    Internally, the Preferred policy uses a single node--the
- 	    preferred_node member of struct mempolicy.  When the internal
-@@ -275,9 +274,9 @@ Components of Memory Policies
- 	    For example, consider a task that is attached to a cpuset with
- 	    mems 2-5 that sets an Interleave policy over the same set with
- 	    MPOL_F_RELATIVE_NODES.  If the cpuset's mems change to 3-7, the
--	    interleave now occurs over nodes 3,5-6.  If the cpuset's mems
-+	    interleave now occurs over nodes 3,5-7.  If the cpuset's mems
- 	    then change to 0,2-3,5, then the interleave occurs over nodes
--	    0,3,5.
-+	    0,2-3,5.
- 
- 	    Thanks to the consistent remapping, applications preparing
- 	    nodemasks to specify memory policies using this flag should
 -- 
-1.7.11.7
+tejun
