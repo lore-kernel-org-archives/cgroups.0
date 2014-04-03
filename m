@@ -1,9 +1,11 @@
 From: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Subject: Re: [GIT PULL] cgroup changes for v3.15-rc1
-Date: Thu, 3 Apr 2014 11:24:00 -0700
-Message-ID: <CA+55aFwBm202pchEH9A6vbJVdar9-T35pBF44cCt7FNjmno9sQ@mail.gmail.com>
+Date: Thu, 3 Apr 2014 12:01:23 -0700
+Message-ID: <CA+55aFw2+VKojzoF2aDaruOMKHikTO8J0HeK9DoDLZr+HqTWbg@mail.gmail.com>
 References: <20140403164911.GE24119@htj.dyndns.org>
 	<CA+55aFy1dm_CoTv+tihQ+m54G3gR9siOngurHsuKf9W3k1sKKw@mail.gmail.com>
+	<CA+55aFwBm202pchEH9A6vbJVdar9-T35pBF44cCt7FNjmno9sQ@mail.gmail.com>
+	<CAOS58YMckmoCocguf9BC_Wxbn3D2Rx3MArhgozO9qCj4g=5aDw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -11,22 +13,22 @@ Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@pub
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=mime-version:sender:in-reply-to:references:date:message-id:subject
 	:from:to:cc:content-type;
-	bh=hNuYeLw6gO2paMugGvJ/HKEkmX1JNt8EbS70AwDN0Mk=;
-	b=kfgjecQkCpOyarvEXNJEDyP18ysF7xQbeClzz6oQYL1oZKUKFZRTrcn3P0iJnqdYC6
-	2uP0I9vLy13I0y8v3JShae8FS2m+c3kqBqQfnFPOD4/ZW+P1LY4jUbLxwhAKGcYttydf
-	fln903sYpWGWKIf8Waqv6cWOxYtdNv91Z+QSyXqfs5Gr/8qB295X2N89zq5EKVIB3Uwu
-	dDxvXBzMqc6OYxCTo0h738oZ6OrpA1lsPZdPjGfh4MeJG85ph8jhodV9YHLzF8y0zd0f
-	5CKjGIApff0aIuL1vanj9r07QIVSovHfe2DVzhU1b3cZlQDvWv6jQaulfJT/L7Fh+zOh
-	pQ/g==
+	bh=3+eEWLsSp1P9rBkOR7eLfZAqo2vHdwGgafr++Y6WyrU=;
+	b=vmI1IRBoTzWpJvieEqKxjkRbsyeON2ciHupRu2/xKkxGl1DuC9p3LwMmhlD8sNQ/4B
+	srX5IWvxknUL2vD35VgeQzZNQmjLE2u/mQGmOfO4t4ZsXiNHeXBUrvPeBJxdcVcE5bo+
+	kRPOVUATMNxzGrQvZHpKH93HdsUsWrYlmkHnpkSSDcZPoGWAgrUVi5+7hVmdLWwcTXfe
+	HlsFG8x3h91g3MFBlWxpeVZOyal0WPWVWcaNd8Pki9456y5Z1Li3qQkCz/bs+IHmDoJI
+	osGDdPJ9Oy5sXmgs0pXoEqwKSRMAcL5Ro2BssAbDfsqADmn2UOSeWMlMvvpM+odveL3C
+	OtoQ==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=linux-foundation.org; s=google;
 	h=mime-version:sender:in-reply-to:references:date:message-id:subject
 	:from:to:cc:content-type;
-	bh=hNuYeLw6gO2paMugGvJ/HKEkmX1JNt8EbS70AwDN0Mk=;
-	b=g2zadGzMuvbRa+TaGqLE7/6tgWw1E5du88NrzG2N3GNbXqg+VYIqqMwTLETK3+Wae2
-	VDZbefJvQaICDJB4pGy0XyT0vdEHAyy0dLDXpa9oxszzFI5Ua8PmwmctUP2QpbFtPfE7
-	pIByypCF+IQh2bVZqF0geJ4GA9FYGbSN5snaY=
-In-Reply-To: <CA+55aFy1dm_CoTv+tihQ+m54G3gR9siOngurHsuKf9W3k1sKKw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+	bh=3+eEWLsSp1P9rBkOR7eLfZAqo2vHdwGgafr++Y6WyrU=;
+	b=QppChFaOZ2uLKRMTCy0huQUWJ6vJxy8CV8WahK8fUbGBfnEnUuYV2w4d6yBS0Xo6P7
+	sk/plufZMvgBQQYrrZnQoUxjGwwRD+9LuHQo6FR1w+Zb1IKAurmrhtZp9lji+P+nZLN8
+	OaRD5vRt7X9biIeiCMZ4/XA0PxS5tHdur4+tE=
+In-Reply-To: <CAOS58YMckmoCocguf9BC_Wxbn3D2Rx3MArhgozO9qCj4g=5aDw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -37,31 +39,56 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Thu, Apr 3, 2014 at 11:11 AM, Linus Torvalds
-<torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
->
-> And the "bool *new_sb_created" argument really makes *zero* sense to
-> kernfs_mount(). It was added to fix a namespace refcount leak, BUT
-> kernfs_mount() DOES NOT TAKE A NAMESPACE PARAMETER!
+[ Extending the participants list a bit ]
 
-Let me clarify that: the only reason I can see for why you'd care
-about whether a new sb has been created is because the new sb needs a
-namespace refcount.
+On Thu, Apr 3, 2014 at 11:34 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> On the road so sending from phone. Iirc the param is necessary to
+> distinguishe when a new sb is created so that it can be put properly later.
+> I think cgroup is leaking super ref now and li was planning to send a fix
+> once things are merged.
 
-Now, *if* there is some other reason to care, then the
-"new_sb_created" argument may make sense even for kernfs_mount(). I
-just don't see it. But if I'm wrong about that, then my alternate
-resolution is wrong. However, as far as I can tell, anything else
-should be properly refcounted by the mounting logic, and the "ns"
-parameter is the only thing that needs to be handled by the caller
-because it has that stupid opaque pointer that doesn't know its own
-type.
+So as far as I can tell, cgroup is fine, because the superblock itself
+is properly refcounted by the mounting code. It's the magic hidden
+"namespace" pointer that isn't properly refcounted, because that
+stupid sucker is typeless and depends on the namespace kind (so to
+drop a namespace pointer you need to pass in not just the pointer, but
+also the right "KOBJ_NS_TYPE_xxx" type, which right now is always
+KOBJ_NS_TYPE_NET).
 
-Could that perhaps be fixed? If kernfs_mount_ns() could just do the
-proper "grab" on the "void *ns" directly, all of the stupid
-"new_sb_created" crud could just go away, even for kernfs_mount_ns().
+Quite frankly, the whole "let's make the 'ns' pointer be a 'const void
+*' and rely on people passing the right type along" is some seriously
+crazy sh*t. Couldn't we force it to be a pointer to a union where the
+first member is the type, so that
 
-                  Linus
+ (a) we don't use "const void *" that casts silently a bit too well to
+*anything* (the "const" helps a bit, thankfully)
+
+ (b) we don't have to pass both pointer and type along, we can just
+pass the pointer, and the type can be looked up from it?
+
+Hmm? It *looks* like the only thing that generates namespace pointers
+right now is "net_namespace()", which just returns a "struct net *".
+Could we just add that "type" as the first member of that struct, and
+make the rule be (for any future namespaces) that the first member has
+to be an "int type" field?
+
+I might well have missed some other source that generates namespace
+pointers, but it really looks like right now all those namespace()
+things end up calling ->class->namespace(), and the only class that
+then implements a namespace pointer function is networking and that
+"net_namespace()". And I don't *think* that the networking code would
+mind having that "int type" at the head of the "struct net" it uses.
+
+The reason I'd like to have the type accessible from the pointer is
+that then we *could* use that type to index into the namespace ops,
+and grab reference counts etc. Instead of having that "const void *ns"
+pointer that you can't do anything about, and have to expect that the
+caller (that knows the type of it) will do the right thing wrt
+refcounting etc.
+
+Is there something I'm missing?
+
+            Linus
