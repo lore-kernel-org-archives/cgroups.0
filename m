@@ -1,68 +1,59 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Subject: Re: [GIT PULL] cgroup changes for v3.15-rc1
-Date: Thu, 3 Apr 2014 15:43:35 -0400
-Message-ID: <20140403194335.GC2472@mtj.dyndns.org>
+Date: Thu, 3 Apr 2014 13:02:45 -0700
+Message-ID: <CA+55aFw+jFdmmi6eZ6+RpLM9heyowfXsZxb6Y91GNkPU677PmA@mail.gmail.com>
 References: <20140403164911.GE24119@htj.dyndns.org>
- <CA+55aFy1dm_CoTv+tihQ+m54G3gR9siOngurHsuKf9W3k1sKKw@mail.gmail.com>
- <CA+55aFwBm202pchEH9A6vbJVdar9-T35pBF44cCt7FNjmno9sQ@mail.gmail.com>
- <CAOS58YMckmoCocguf9BC_Wxbn3D2Rx3MArhgozO9qCj4g=5aDw@mail.gmail.com>
- <CA+55aFw2+VKojzoF2aDaruOMKHikTO8J0HeK9DoDLZr+HqTWbg@mail.gmail.com>
+	<CA+55aFy1dm_CoTv+tihQ+m54G3gR9siOngurHsuKf9W3k1sKKw@mail.gmail.com>
+	<CA+55aFwBm202pchEH9A6vbJVdar9-T35pBF44cCt7FNjmno9sQ@mail.gmail.com>
+	<CAOS58YMckmoCocguf9BC_Wxbn3D2Rx3MArhgozO9qCj4g=5aDw@mail.gmail.com>
+	<CA+55aFw2+VKojzoF2aDaruOMKHikTO8J0HeK9DoDLZr+HqTWbg@mail.gmail.com>
+	<20140403194335.GC2472@mtj.dyndns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=ttZ2zRNfjZbSNaV4mfITFmKkzNbgrY2gCctSayS5NUc=;
-        b=YovDO0nn81A/Z8J3lBJr+6HeGjdXFVB44df+lAXML/bdVuGQRACHz7Vw5i2mpRae5p
-         IiEYTNhMs93PMtwRkRrpU+s/AOw3s9BkW2Ye8DH7r69lL1MX6Quaz2uqmoCmg5Z7CK7X
-         NhC4PJSt4LoVoSF0uy8X7oa7R5GIr2tBnWdBsg+AoQN2r78lTXKr225G2wbIfo+39EBI
-         fCuNJI4xgz6X1z8iDsvLuRk8gXcG+3u4240nZrlBaisIMvbXRUoe83JlFPeJJCcq53n9
-         ISXDv7EB1vYbxCF8xsbzuHarG9rUWfEyrnuKZn8BkTGZSteaueQ0P5hLmNTXpNR3sYXV
-         wmlg==
-Content-Disposition: inline
-In-Reply-To: <CA+55aFw2+VKojzoF2aDaruOMKHikTO8J0HeK9DoDLZr+HqTWbg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        h=mime-version:sender:in-reply-to:references:date:message-id:subject
+         :from:to:cc:content-type;
+        bh=a3O2k7nYeb//wz3+OcufAXbmefcQEwdZlxWWr3P8lSM=;
+        b=yI5c55fGPsLkK9PF+Z24wD72iDJPaX4yiOsx4HDemkms0N7kUWUS4awzy8k7kl8gkh
+         y7VIt1oNGrx9KWRkLhZIhLHDgo6t9W1Q/tpBBqkejxBf6aXd7s0jS+UGIDARKoZ+9mFw
+         48wwPBblReGCS5wI4l8YP8981vv5uPvDlIhcLFjjzs/bqkijZ1Rq/zwAgm8LEYr4baex
+         HtXw8xNmrSDOI8FTWvZ1KRoYJwtHPpR5y6kYLYtsxvSoiOfFI7COGp+kQ0y+o+uxUow+
+         gWMrw8e7uLlDGz9vK6LbKI/4tTPoM+b14SP4FUx/WyVup7TP9FbfCWAUTCasb1VucFiU
+         kURg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=mime-version:sender:in-reply-to:references:date:message-id:subject
+         :from:to:cc:content-type;
+        bh=a3O2k7nYeb//wz3+OcufAXbmefcQEwdZlxWWr3P8lSM=;
+        b=Y5O1SovMcx1W5KWxgTB0Ei5RoZbro52tOMsZRkivr9NBfPd1eNFA4RQ3PVEl7tkloP
+         5P56H9oeY3FG89liHXS79+DYMJSwLqt1AzY9oOxPlHOBy1GIMiX6/P0YJhGR/WpA2ABe
+         CuIBE85mybJ0gGi3arjIR+O8Fc3J9iS19ktqs=
+In-Reply-To: <20140403194335.GC2472-9pTldWuhBndy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+On Thu, Apr 3, 2014 at 12:43 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+>
+> Ah, I remembered the other way around.  We could leak cgroup_root
+> reference, not the other way around.  cgroup_mount() can be called
+> multiple times for the same sb and we inc cgroup_root's ref each time
+> but cgroup_kill_sb() only happens when the sb is released, so if we do
+> the following,
 
-On Thu, Apr 03, 2014 at 12:01:23PM -0700, Linus Torvalds wrote:
-> [ Extending the participants list a bit ]
-> 
-> On Thu, Apr 3, 2014 at 11:34 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> > On the road so sending from phone. Iirc the param is necessary to
-> > distinguishe when a new sb is created so that it can be put properly later.
-> > I think cgroup is leaking super ref now and li was planning to send a fix
-> > once things are merged.
-> 
-> So as far as I can tell, cgroup is fine, because the superblock itself
-> is properly refcounted by the mounting code. It's the magic hidden
+Oh, Christ, I see what you are talking about.
 
-Ah, I remembered the other way around.  We could leak cgroup_root
-reference, not the other way around.  cgroup_mount() can be called
-multiple times for the same sb and we inc cgroup_root's ref each time
-but cgroup_kill_sb() only happens when the sb is released, so if we do
-the following,
+That interface is all kinds of crazy.
 
- # mkdir cpuset cpuset1
- # mount -t cgroup -o cpuset cgroup cpuset
- # mount -t cgroup -o cpuset cgroup cpuset1
- # umount cpuset
- # umount cpuset1
+> The cgroup_root should be destroyed but it isn't, I think.  We'd need
+> to bump cgroup_root's refcnt only when a new sb is created.  It's
+> kinda ugly.  Hmmm...
 
-The cgroup_root should be destroyed but it isn't, I think.  We'd need
-to bump cgroup_root's refcnt only when a new sb is created.  It's
-kinda ugly.  Hmmm...
+Ok, so I guess we can use that "new_sb_created" thing, and I'll redo
+my merge resolution to reflect that. I do find this incredibly ugly.
 
-As for using specific type for ns tag, yeah, that'd be better
-regardless of this.  The opaqueness is a bit extreme now.
-
-Thanks.
-
--- 
-tejun
+              Linus
