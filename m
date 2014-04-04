@@ -1,148 +1,111 @@
-From: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH V2 3/8] timer: create timer_quiesce_cpu() to isolate CPU from timers
-Date: Fri,  4 Apr 2014 14:05:30 +0530
-Message-ID: <12833475ef32cb4ee832e40dbbc0445c4d8ab3e7.1396599474.git.viresh.kumar@linaro.org>
-References: <cover.1396599474.git.viresh.kumar@linaro.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <cover.1396599474.git.viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-In-Reply-To: <cover.1396599474.git.viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-References: <cover.1396599474.git.viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [GIT PULL] cgroup changes for v3.15-rc1
+Date: Fri, 4 Apr 2014 17:14:41 +0800
+Message-ID: <533E7801.8090604@huawei.com>
+References: <20140403164911.GE24119@htj.dyndns.org>
+	<CA+55aFy1dm_CoTv+tihQ+m54G3gR9siOngurHsuKf9W3k1sKKw@mail.gmail.com>
+	<CA+55aFwBm202pchEH9A6vbJVdar9-T35pBF44cCt7FNjmno9sQ@mail.gmail.com>
+	<CAOS58YMckmoCocguf9BC_Wxbn3D2Rx3MArhgozO9qCj4g=5aDw@mail.gmail.com>
+	<CA+55aFw2+VKojzoF2aDaruOMKHikTO8J0HeK9DoDLZr+HqTWbg@mail.gmail.com>
+	<20140403194335.GC2472@mtj.dyndns.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: linaro-kernel-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, linaro-networking-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, Arvind.Chauhan-5wv7dgnIgG8@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20140403194335.GC2472-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
 
-To isolate CPUs (isolate from timers) from sysfs using cpusets, we need some
-support from the timer core. i.e. A routine timer_quiesce_cpu() which would
-migrate away all the unpinned timers, but shouldn't touch the pinned ones.
+On 2014/4/4 3:43, Tejun Heo wrote:
+> Hello,
+> 
+> On Thu, Apr 03, 2014 at 12:01:23PM -0700, Linus Torvalds wrote:
+>> [ Extending the participants list a bit ]
+>>
+>> On Thu, Apr 3, 2014 at 11:34 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+>>> On the road so sending from phone. Iirc the param is necessary to
+>>> distinguishe when a new sb is created so that it can be put properly later.
+>>> I think cgroup is leaking super ref now and li was planning to send a fix
+>>> once things are merged.
+>>
+>> So as far as I can tell, cgroup is fine, because the superblock itself
+>> is properly refcounted by the mounting code. It's the magic hidden
+> 
+> Ah, I remembered the other way around.  We could leak cgroup_root
+> reference, not the other way around.  cgroup_mount() can be called
+> multiple times for the same sb and we inc cgroup_root's ref each time
+> but cgroup_kill_sb() only happens when the sb is released, so if we do
+> the following,
+> 
+>  # mkdir cpuset cpuset1
+>  # mount -t cgroup -o cpuset cgroup cpuset
+>  # mount -t cgroup -o cpuset cgroup cpuset1
+>  # umount cpuset
+>  # umount cpuset1
+> 
+> The cgroup_root should be destroyed but it isn't, I think.  We'd need
+> to bump cgroup_root's refcnt only when a new sb is created.
 
-This patch creates this routine.
+Yeah, I had been waiting for the kernfs change to be merged into mainline,
+so I can fix this cgroup refcnting, and here is the fix.
 
-Signed-off-by: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+====================
+
+[PATCH] cgroup: fix top cgroup refcnt leak
+
+As mount() and kill_sb() is not a one-to-one match, If we mount the same
+cgroupfs in serveral mount points, and then umount all of them, kill_sb()
+will be called only once.
+
+Try:
+        # mount -t cgroup -o cpuacct xxx /cgroup
+        # mount -t cgroup -o cpuacct xxx /cgroup2
+        # cat /proc/cgroups | grep cpuacct
+        cpuacct 2       1       1
+        # umount /cgroup
+        # umount /cgroup2
+        # cat /proc/cgroups | grep cpuacct
+        cpuacct 2       1       1
+
+You'll see cgroupfs will never be freed.
+
+Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/timer.h |  3 +++
- kernel/timer.c        | 54 ++++++++++++++++++++++++++++++++++++++++-----------
- 2 files changed, 46 insertions(+), 11 deletions(-)
+ kernel/cgroup.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/timer.h b/include/linux/timer.h
-index 2962403..1588a4f 100644
---- a/include/linux/timer.h
-+++ b/include/linux/timer.h
-@@ -196,6 +196,9 @@ extern void set_timer_slack(struct timer_list *time, int slack_hz);
-  */
- extern unsigned long get_next_timer_interrupt(unsigned long now);
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 2189462..48bd9c9 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1487,6 +1487,7 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 	struct cgroup_sb_opts opts;
+ 	struct dentry *dentry;
+ 	int ret;
++	bool new_sb;
  
-+/* To be used from cpusets, only */
-+extern void timer_quiesce_cpu(void *cpup);
-+
- /*
-  * Timer-statistics info:
-  */
-diff --git a/kernel/timer.c b/kernel/timer.c
-index 6c3a371..4676a07 100644
---- a/kernel/timer.c
-+++ b/kernel/timer.c
-@@ -1602,18 +1602,27 @@ static int init_timers_cpu(int cpu)
- 	return 0;
- }
- 
--#ifdef CONFIG_HOTPLUG_CPU
--static void migrate_timer_list(struct tvec_base *new_base, struct list_head *head)
-+#if defined(CONFIG_HOTPLUG_CPU) || defined(CONFIG_CPUSETS)
-+static void migrate_timer_list(struct tvec_base *new_base,
-+			       struct list_head *head, bool remove_pinned)
- {
- 	struct timer_list *timer;
-+	struct list_head pinned_list;
- 	int is_pinned;
- 
-+	INIT_LIST_HEAD(&pinned_list);
-+
- 	while (!list_empty(head)) {
- 		timer = list_first_entry(head, struct timer_list, entry);
--		/* We ignore the accounting on the dying cpu */
--		detach_timer(timer, false);
- 
- 		is_pinned = tbase_get_pinned(timer->base);
-+		if (!remove_pinned && is_pinned) {
-+			list_move_tail(&timer->entry, &pinned_list);
-+			continue;
-+		} else {
-+			/* We ignore the accounting on the dying cpu */
-+			detach_timer(timer, false);
-+		}
- 
- 		/* Check if CPU still has pinned timers */
- 		if (unlikely(WARN(is_pinned,
-@@ -1624,15 +1633,18 @@ static void migrate_timer_list(struct tvec_base *new_base, struct list_head *hea
- 		timer_set_base(timer, new_base);
- 		internal_add_timer(new_base, timer);
- 	}
-+
-+	if (!list_empty(&pinned_list))
-+		list_splice_tail(&pinned_list, head);
- }
- 
--static void migrate_timers(int cpu)
-+/* Migrate timers from 'cpu' to this_cpu */
-+static void __migrate_timers(int cpu, bool remove_pinned)
- {
- 	struct tvec_base *old_base;
- 	struct tvec_base *new_base;
- 	int i;
- 
--	BUG_ON(cpu_online(cpu));
- 	old_base = per_cpu(tvec_bases, cpu);
- 	new_base = get_cpu_var(tvec_bases);
  	/*
-@@ -1645,20 +1657,40 @@ static void migrate_timers(int cpu)
- 	BUG_ON(old_base->running_timer);
+ 	 * The first time anyone tries to mount a cgroup, enable the list
+@@ -1603,8 +1604,8 @@ out_unlock:
+ 	if (ret)
+ 		return ERR_PTR(ret);
  
- 	for (i = 0; i < TVR_SIZE; i++)
--		migrate_timer_list(new_base, old_base->tv1.vec + i);
-+		migrate_timer_list(new_base, old_base->tv1.vec + i,
-+				remove_pinned);
- 	for (i = 0; i < TVN_SIZE; i++) {
--		migrate_timer_list(new_base, old_base->tv2.vec + i);
--		migrate_timer_list(new_base, old_base->tv3.vec + i);
--		migrate_timer_list(new_base, old_base->tv4.vec + i);
--		migrate_timer_list(new_base, old_base->tv5.vec + i);
-+		migrate_timer_list(new_base, old_base->tv2.vec + i,
-+				remove_pinned);
-+		migrate_timer_list(new_base, old_base->tv3.vec + i,
-+				remove_pinned);
-+		migrate_timer_list(new_base, old_base->tv4.vec + i,
-+				remove_pinned);
-+		migrate_timer_list(new_base, old_base->tv5.vec + i,
-+				remove_pinned);
- 	}
- 
- 	spin_unlock(&old_base->lock);
- 	spin_unlock_irq(&new_base->lock);
- 	put_cpu_var(tvec_bases);
+-	dentry = kernfs_mount(fs_type, flags, root->kf_root, NULL);
+-	if (IS_ERR(dentry))
++	dentry = kernfs_mount(fs_type, flags, root->kf_root, &new_sb);
++	if (IS_ERR(dentry) || !new_sb)
+ 		cgroup_put(&root->cgrp);
+ 	return dentry;
  }
-+#endif /* CONFIG_HOTPLUG_CPU || CONFIG_CPUSETS */
-+
-+#ifdef CONFIG_HOTPLUG_CPU
-+static void migrate_timers(int cpu)
-+{
-+	BUG_ON(cpu_online(cpu));
-+	__migrate_timers(cpu, true);
-+}
- #endif /* CONFIG_HOTPLUG_CPU */
- 
-+#ifdef CONFIG_CPUSETS
-+void timer_quiesce_cpu(void *cpup)
-+{
-+	__migrate_timers(*(int *)cpup, false);
-+}
-+#endif /* CONFIG_CPUSETS */
-+
- static int timer_cpu_notify(struct notifier_block *self,
- 				unsigned long action, void *hcpu)
- {
 -- 
-1.7.12.rc2.18.g61b472e
+1.8.0.2
