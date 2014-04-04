@@ -1,91 +1,102 @@
-From: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH V2 4/8] hrtimer: update timer->state with 'pinned' information
-Date: Fri,  4 Apr 2014 14:05:31 +0530
-Message-ID: <489558160713494c5e8840aa5d6c22a8064aa603.1396599474.git.viresh.kumar@linaro.org>
-References: <cover.1396599474.git.viresh.kumar@linaro.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <cover.1396599474.git.viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-In-Reply-To: <cover.1396599474.git.viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-References: <cover.1396599474.git.viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Viresh Kumar <viresh.kumar@linaro.org>
+Subject: [PATCH V2 0/8] cpusets: Isolate CPUs via sysfs using cpusets
+Date: Fri,  4 Apr 2014 14:05:27 +0530
+Message-ID: <cover.1396599474.git.viresh.kumar@linaro.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: linaro-kernel-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, linaro-networking-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, Arvind.Chauhan-5wv7dgnIgG8@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+To: tglx@linutronix.de, fweisbec@gmail.com, peterz@infradead.org, mingo@kernel.org, tj@kernel.org, lizefan@huawei.com
+Cc: linaro-kernel@lists.linaro.org, linaro-networking@linaro.org, Arvind.Chauhan@arm.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Viresh Kumar <viresh.kumar@linaro.org>
 
-'Pinned' information would be required in migrate_hrtimers() now, as we can
-migrate non-pinned timers away without a hotplug (i.e. with cpuset.quiesce). And
-so we may need to identify pinned timers now, as we can't migrate them.
+We need to migrate away all the background kernel activities (Unbound) for
+systems requiring isolation of cores (HPC, Real time, networking, etc). After
+creating cpusets, you can write 1 or 0 to cpuset.quiesce file.
 
-This patch reuses the timer->state variable for setting this flag as there were
-enough number of free bits available in this variable. And there is no point
-increasing size of this struct by adding another field.
+In our case, we are working on a networking machine which wants to run time
+critical data plane threads on some CPUs, i.e. a single thread per CPU. And
+these CPUs shouldn't be interrupted at all by background kernel activities, like
+timers/hrtimers/workqueues/etc..
 
-Signed-off-by: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
----
- include/linux/hrtimer.h |  3 +++
- kernel/hrtimer.c        | 12 ++++++++++--
- 2 files changed, 13 insertions(+), 2 deletions(-)
+Writing '1': on this file would migrate unbound/unpinned timers and hrtimers
+away from the CPUs of the cpuset in question. Also it would disallow addition of
+any new unpinned timers & hrtimers to isolated CPUs.
 
-diff --git a/include/linux/hrtimer.h b/include/linux/hrtimer.h
-index 435ac4c..9fdb67b 100644
---- a/include/linux/hrtimer.h
-+++ b/include/linux/hrtimer.h
-@@ -55,6 +55,7 @@ enum hrtimer_restart {
-  * 0x01		enqueued into rbtree
-  * 0x02		callback function running
-  * 0x04		timer is migrated to another cpu
-+ * 0x08		timer is pinned to a cpu
-  *
-  * Special cases:
-  * 0x03		callback function running and enqueued
-@@ -81,6 +82,8 @@ enum hrtimer_restart {
- #define HRTIMER_STATE_ENQUEUED	0x01
- #define HRTIMER_STATE_CALLBACK	0x02
- #define HRTIMER_STATE_MIGRATE	0x04
-+#define HRTIMER_PINNED_SHIFT	3
-+#define HRTIMER_STATE_PINNED	(1 << HRTIMER_PINNED_SHIFT)
- 
- /**
-  * struct hrtimer - the basic hrtimer structure
-diff --git a/kernel/hrtimer.c b/kernel/hrtimer.c
-index d62fe32..c5a4bf4 100644
---- a/kernel/hrtimer.c
-+++ b/kernel/hrtimer.c
-@@ -905,7 +905,11 @@ static void __remove_hrtimer(struct hrtimer *timer, unsigned long newstate,
- 			hrtimer_force_reprogram(base->cpu_base, 1);
- 	}
- #endif
--	timer->state = newstate;
-+	/*
-+	 * We need to preserve PINNED state here, otherwise we may end up
-+	 * migrating pinned hrtimers as well.
-+	 */
-+	timer->state = newstate | (timer->state & HRTIMER_STATE_PINNED);
- }
- 
- /* remove hrtimer, called with base lock held */
-@@ -970,6 +974,10 @@ int __hrtimer_start_range_ns(struct hrtimer *timer, ktime_t tim,
- 
- 	timer_stats_hrtimer_set_start_info(timer);
- 
-+	/* Update pinned state */
-+	timer->state &= ~HRTIMER_STATE_PINNED;
-+	timer->state |= !!(mode & HRTIMER_MODE_PINNED) << HRTIMER_PINNED_SHIFT;
-+
- 	enqueue_hrtimer(timer);
- 
- 	/*
-@@ -1227,7 +1235,7 @@ static void __run_hrtimer(struct hrtimer *timer, ktime_t *now)
- 	 * hrtimer_start_range_ns() or in hrtimer_interrupt()
- 	 */
- 	if (restart != HRTIMER_NORESTART) {
--		BUG_ON(timer->state != HRTIMER_STATE_CALLBACK);
-+		BUG_ON(!(timer->state & HRTIMER_STATE_CALLBACK));
- 		enqueue_hrtimer(timer);
- 	}
- 
+Writing '0': will disable isolation of CPUs in current cpuset and unpinned
+timers/hrtimers would be allowed in future on these CPUs.
+
+This patchset allow us to do this. In the first few patches it builds basic
+infrastructure in timers and hrtimers and then finally use that in cpusets. Also
+it updates get_nohz_timer_target() to stop adding new timers/hrtimers to these
+isolated CPUs.
+
+V1: https://lkml.org/lkml/2014/3/20/319
+
+Not many comments received.
+
+Based on some other timers/hrtimers cleanup I did:
+http://comments.gmane.org/gmane.linux.kernel/1677797
+
+Available here: git://git.linaro.org/people/viresh.kumar/linux.git isolate-cpusets
+
+V1->V2:
+- Add support to migrate hrtimers as well (V1 only had timers)
+- cpuset.quiesce now supports writing 0 and reading as well
+- update get_nohz_timer_target() to stop adding new timers/hrtimers to these
+  isolated CPUs.
+- Minor fixups that I noticed
+
+Known issues:
+1. Patch: "timer: track pinned timers with TIMER_PINNED flag", following
+   reporting by kbuild system (Don't know how to fix this):
+
+	config: make ARCH=blackfin allyesconfig
+	
+	Note: the vireshk/timer-cleanup-for-tglx HEAD
+	ea63467ac9150cd86f4d960887116f99a2803b56 builds fine.  It only hurts
+	bisectibility.
+	
+	All error/warnings:
+	
+	   kernel/timer.c: In function 'init_timers':
+	>> kernel/timer.c:1683:2: error: call to '__compiletime_assert_1683'
+	>> declared with attribute error: BUILD_BUG_ON failed:
+	>> __alignof__(struct tvec_base) & TIMER_FLAG_MASK
+	
+2. Patch: "timer: don't migrate pinned timers", following reporting by kbuild
+   system (Not really a problem created due to this patch, but just highlighted
+   an existing bug. As pinned timers must be removed by owners before CPU goes
+   down):
+
+
+	smpboot: CPU 1 is now offline
+	------------[ cut here ]------------
+	WARNING: CPU: 0 PID: 1935 at kernel/timer.c:1621 migrate_timer_list+0xd6/0xf0()
+	migrate_timer_list: can't migrate pinned timer: ffffffff81f06a60, deactivating it
+	Modules linked in:
+
+
+Viresh Kumar (8):
+  timer: track pinned timers with TIMER_PINNED flag
+  timer: don't migrate pinned timers
+  timer: create timer_quiesce_cpu() to isolate CPU from timers
+  hrtimer: update timer->state with 'pinned' information
+  hrtimer: don't migrate pinned timers
+  hrtimer: create hrtimer_quiesce_cpu() to isolate CPU from hrtimers
+  cpuset: Create sysfs file: cpusets.quiesce to isolate CPUs
+  sched: don't queue timers on quiesced CPUs
+
+ Documentation/cgroups/cpusets.txt | 19 +++++++-
+ include/linux/cpuset.h            |  8 ++++
+ include/linux/hrtimer.h           |  6 +++
+ include/linux/timer.h             | 13 ++++--
+ kernel/cpuset.c                   | 76 ++++++++++++++++++++++++++++++++
+ kernel/hrtimer.c                  | 69 ++++++++++++++++++++++++-----
+ kernel/sched/core.c               |  9 ++--
+ kernel/timer.c                    | 91 +++++++++++++++++++++++++++++++--------
+ 8 files changed, 253 insertions(+), 38 deletions(-)
+
 -- 
 1.7.12.rc2.18.g61b472e
