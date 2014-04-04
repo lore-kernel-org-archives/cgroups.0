@@ -1,38 +1,69 @@
-From: Kevin Hilman <khilman-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC 2/4] timer: don't migrate pinned timers
-Date: Fri, 04 Apr 2014 08:15:19 -0700
-Message-ID: <7h8urlyvlk.fsf@paris.lan>
-References: <cover.1395322529.git.viresh.kumar@linaro.org>
-	<3fa0ea3a19a51ae2797a25e281763451ad8d2844.1395322529.git.viresh.kumar@linaro.org>
-	<7htxae5plh.fsf@paris.lan>
-	<CAKohpokYfdY+40kmhgrC6Yr9vfv4GtAW2Ph3+=57YbfmJsnU9w@mail.gmail.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH v2 0/3] Per-cgroup swap file support
+Date: Fri, 4 Apr 2014 13:10:56 -0400
+Message-ID: <20140404171056.GX14688@cmpxchg.org>
+References: <1396470849-26154-1-git-send-email-yuzhao@google.com>
+ <20140402205433.GW14688@cmpxchg.org>
+ <20140402212949.GA29322@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAKohpokYfdY+40kmhgrC6Yr9vfv4GtAW2Ph3+=57YbfmJsnU9w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-	(Viresh Kumar's message of "Tue, 1 Apr 2014 10:02:43 +0530")
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=1r2eSqn2SlaFfe0FQd4WeFaEY/Eb3FzVOGaJz4iaPP4=;
+	b=YwoN3UGovphMHNr47DL22ZDVDiD5w/+unjCC/KuCbglYVtA/SY5KFhVl6T8lV6PZvRDXmuhXKD4HTJM2sGiDTcoh9b1VVi5pCDkGFMRXWRCR080ucHKPOL42hXd0VpHaQ7APpzHeBb/zwrmzwp3fyN4TcSDaK1oi05bdmDS9mDE=;
+Content-Disposition: inline
+In-Reply-To: <20140402212949.GA29322@google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, =?utf-8?B?RnLDqWTDqXJpYw==?= Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Lists linaro-kernel <linaro-kernel-cunTk1MwBs8s++Sfvej+rw@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Yu Zhao <yuzhao@google.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, jamieliu@google.com, suleiman@google.com
 
-Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org> writes:
+Hi Yu,
 
-> On 31 March 2014 21:26, Kevin Hilman <khilman-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org> wrote:
->> Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org> writes:
->>> +             if (is_pinned) {
->>> +                     pr_warn("%s: can't migrate pinned timer: %p, removing it\n",
->>> +                                     __func__, timer);
->>
->> printk message will be confusing: removing it from what?
->
-> Hmm.. So, I am looking to do two modifications here. Just need inputs
-> if that would be the right thing to do:
->
-> - do a WARN() here as these timers should have been already removed
-> - change print to: "can't migrate pinned timer %p, deactivating timer"
->
-> Looks fine?
+On Wed, Apr 02, 2014 at 02:29:49PM -0700, Yu Zhao wrote:
+> On Wed, Apr 02, 2014 at 04:54:33PM -0400, Johannes Weiner wrote:
+> > On Wed, Apr 02, 2014 at 01:34:06PM -0700, Yu Zhao wrote:
+> > > This series of patches adds support to configure a cgroup to swap to a
+> > > particular file by using control file memory.swapfile.
+> > > 
+> > > Originally, cgroups share system-wide swap space and limiting cgroup swapping
+> > > is not possible. This patchset solves the problem by adding mechanism that
+> > > isolates cgroup swap spaces (i.e. per-cgroup swap file) so users can safely
+> > > enable swap for particular cgroups without worrying about one cgroup uses up
+> > > all swap space.
+> > 
+> > Isn't that what the swap controller is for?
+> 
+> Well, I should've used word "isolating" instead of "limiting" (and yes, the
+> example I gave is confusing too). MEMCG_SWAP limits swaping while per-cgroup
+> swap file not only limits but also isolates the swap space. In another word,
+> per-cgroup swap file acts like the cgroup owns its private swap file which
+> can be specified to a particular path when users want the cgroup to swap to
+> a disk volumes rather than the one used by default (system-wide) swap files.
 
-Yes.
+This is still too vague.  You want us to merge 300 lines of code and
+userspace ABI that we have to maintain indefinitely.  Please elaborate
+on the problem you are trying to solve and what type of workloads are
+affected, and then why per-cgroup swap files are the best solution to
+this problem.
+
+Also, there seems to be quite some overlap in functionality with the
+swap controller, so should we go down the per-cgroup swap file road,
+we might want to consider dropping the swap controller in exchange.
+
+Remember that Linux is a general-purpose operating system with many
+different applications, so obviously we want to maximize general
+usefulness out of any functionality we provide.  And for that it's
+important for us to truly understand the problem space.  Please keep
+this in mind when writing changelogs and introductory emails for new
+features.
+
+Thanks,
+Johannes
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
