@@ -1,69 +1,57 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v2 0/3] Per-cgroup swap file support
-Date: Fri, 4 Apr 2014 13:10:56 -0400
-Message-ID: <20140404171056.GX14688@cmpxchg.org>
-References: <1396470849-26154-1-git-send-email-yuzhao@google.com>
- <20140402205433.GW14688@cmpxchg.org>
- <20140402212949.GA29322@google.com>
+From: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [GIT PULL] cgroup changes for v3.15-rc1
+Date: Fri, 4 Apr 2014 18:06:54 -0700
+Message-ID: <CA+55aFyGz2q4iDEt56Bw+x_ri_-DQYLAKPJvk3Uxj9z-y+0uPw@mail.gmail.com>
+References: <20140403164911.GE24119@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=1r2eSqn2SlaFfe0FQd4WeFaEY/Eb3FzVOGaJz4iaPP4=;
-	b=YwoN3UGovphMHNr47DL22ZDVDiD5w/+unjCC/KuCbglYVtA/SY5KFhVl6T8lV6PZvRDXmuhXKD4HTJM2sGiDTcoh9b1VVi5pCDkGFMRXWRCR080ucHKPOL42hXd0VpHaQ7APpzHeBb/zwrmzwp3fyN4TcSDaK1oi05bdmDS9mDE=;
-Content-Disposition: inline
-In-Reply-To: <20140402212949.GA29322@google.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yu Zhao <yuzhao@google.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, x86@kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, jamieliu@google.com, suleiman@google.com
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=mime-version:sender:in-reply-to:references:date:message-id:subject
+	:from:to:cc:content-type;
+	bh=FmGVKPVrs3qF+aSQbmb/8vZ4aR5jH8MnqIVbzHW2q28=;
+	b=fAY0W7mN5DQcRp9YTGt0UaK5jR0N1TY4S8/zj/9b0mOnyqN7MtoYTk65wWtTsUKXkG
+	mABoyhGbEytYT5so5ZkJAPjpFbEO4hcVVqTvsdDiW6G2Gp2ElITzsSZUIjfDxvWHhzhe
+	CKOTXXKi2htLMcZ2alkn2B2Iz8wkiGEkkuZ/Z2KYqU+Jqr+X7/KtU8LfJ/+NSIwyAVq+
+	gevgE891KzIKycCxo+w60aUdOGi1bCeqT2E/U/8J4zqzn/aq+lRsHTS/VhUg+0YjkYSS
+	kK4kujzFxuL8f2MvQp5vnddb4UGRVjf1EnRI6uGlUR9ZoTjP5WZF3NqcFtoo+HEaQfaZ
+	1yRA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux-foundation.org; s=google;
+	h=mime-version:sender:in-reply-to:references:date:message-id:subject
+	:from:to:cc:content-type;
+	bh=FmGVKPVrs3qF+aSQbmb/8vZ4aR5jH8MnqIVbzHW2q28=;
+	b=Gh5l5Gt8ULxlp1pqaIZlVKOr9JQweb6q4ERsttY+G2khLNrJ2/G13HfgB6tGy+K9ms
+	6TaLJ2FgWQ45QJSjeYCB/vlV3+Z+MUtWVFawROyFVf3NrhHUF2UVVpX18uW0QZVEmara
+	HYFB/Tw6IKLL1nvcPROrLQ6uo+ZfHTjm50YpQ=
+In-Reply-To: <20140403164911.GE24119-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hi Yu,
+On Thu, Apr 3, 2014 at 9:49 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+>
+> A lot updates for cgroup [...]
 
-On Wed, Apr 02, 2014 at 02:29:49PM -0700, Yu Zhao wrote:
-> On Wed, Apr 02, 2014 at 04:54:33PM -0400, Johannes Weiner wrote:
-> > On Wed, Apr 02, 2014 at 01:34:06PM -0700, Yu Zhao wrote:
-> > > This series of patches adds support to configure a cgroup to swap to a
-> > > particular file by using control file memory.swapfile.
-> > > 
-> > > Originally, cgroups share system-wide swap space and limiting cgroup swapping
-> > > is not possible. This patchset solves the problem by adding mechanism that
-> > > isolates cgroup swap spaces (i.e. per-cgroup swap file) so users can safely
-> > > enable swap for particular cgroups without worrying about one cgroup uses up
-> > > all swap space.
-> > 
-> > Isn't that what the swap controller is for?
-> 
-> Well, I should've used word "isolating" instead of "limiting" (and yes, the
-> example I gave is confusing too). MEMCG_SWAP limits swaping while per-cgroup
-> swap file not only limits but also isolates the swap space. In another word,
-> per-cgroup swap file acts like the cgroup owns its private swap file which
-> can be specified to a particular path when users want the cgroup to swap to
-> a disk volumes rather than the one used by default (system-wide) swap files.
+Btw, just a heads up to let you know: I'm in the middle of bisecting
+why my machine no longer reboots cleanly, and while I'm a few boots
+away from pinpointing it exactly, it has now drilled down to the point
+that the only remaining commits are from your cgroup pull that I
+pulled yesterday.
 
-This is still too vague.  You want us to merge 300 lines of code and
-userspace ABI that we have to maintain indefinitely.  Please elaborate
-on the problem you are trying to solve and what type of workloads are
-affected, and then why per-cgroup swap files are the best solution to
-this problem.
+Maybe I screwed something up in the bisection and it's not 100%
+reliable, but I don't think so.
 
-Also, there seems to be quite some overlap in functionality with the
-swap controller, so should we go down the per-cgroup swap file road,
-we might want to consider dropping the swap controller in exchange.
+Will report back soon when I've narrowed it down more.
 
-Remember that Linux is a general-purpose operating system with many
-different applications, so obviously we want to maximize general
-usefulness out of any functionality we provide.  And for that it's
-important for us to truly understand the problem space.  Please keep
-this in mind when writing changelogs and introductory emails for new
-features.
-
-Thanks,
-Johannes
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+               Linus
