@@ -1,59 +1,43 @@
-From: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [GIT PULL] cgroup changes for v3.15-rc1
-Date: Fri, 4 Apr 2014 18:34:05 -0700
-Message-ID: <CA+55aFwM0aG1PHY7xOQbsFG+Ot4mL4=7yRnT7dssUaOyaLQ3GQ@mail.gmail.com>
-References: <20140403164911.GE24119@htj.dyndns.org>
-	<CA+55aFyGz2q4iDEt56Bw+x_ri_-DQYLAKPJvk3Uxj9z-y+0uPw@mail.gmail.com>
-	<CA+55aFy+Jt0B32kj=Ldz9Krp4DXcXSP4r-o3f-2LPcVs4udGVA@mail.gmail.com>
+From: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH V2 0/8] cpusets: Isolate CPUs via sysfs using cpusets
+Date: Sun, 06 Apr 2014 10:30:20 +0200
+Message-ID: <1396773020.11763.17.camel@marge.simpson.net>
+References: <cover.1396599474.git.viresh.kumar@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=mime-version:sender:in-reply-to:references:date:message-id:subject
-	:from:to:cc:content-type;
-	bh=Zlw38SpVSeroJFuDKn9aYtbuDQFhCkPMWAKGgcD4XC8=;
-	b=GFgndK+6yjN+SOuoX8D3NFCk5s0/AcyWFgW088ckiOStYSz9yd+xFmf6oVZ+eYU43e
-	7iten5yfmh1JqPnYxaOK5VZ3NhLuJGCyz/JPOCrsMPDaPwiipNI+qGwqLrcnhmgw4MPK
-	9lOUAaKpBbyLJ4bRfNvkGHi/zKfQt3/mi6As/ee5n4tEqRaIL5Ydw6vourIvmeulNbh0
-	b3/+xw66Sawk7CaBV59PVsQOGVTxsglqit4HnTtRAmZ90jd6s6MXa3iEUx1gM8iXnBdd
-	l9kq2EdUv5xyK3MUxq3k4l8+CJrWvG5rIzlxASg+l4E9f65RDZZ7AOnTHf+7FKcLFslJ
-	jnlQ==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=google;
-	h=mime-version:sender:in-reply-to:references:date:message-id:subject
-	:from:to:cc:content-type;
-	bh=Zlw38SpVSeroJFuDKn9aYtbuDQFhCkPMWAKGgcD4XC8=;
-	b=a+Sqq+0WViUvsJPLcaoldZSsK5DtK8HOfymfFEZlNiCUrWL7/3FHhXseEc/hQlAq5W
-	5mIBOOACgcGVefArtGnQX7Bn07U/3X8UqQCPH7sw6T3jz9T9B4cH4o3g5bHJzffHgZa6
-	l1t4P9BFIoGHxuT2uVVVAVaSA1ne9ldz8l4BE=
-In-Reply-To: <CA+55aFy+Jt0B32kj=Ldz9Krp4DXcXSP4r-o3f-2LPcVs4udGVA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+        d=gmail.com; s=20120113;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :content-type:content-transfer-encoding:mime-version;
+        bh=is1CLrnmKl9actpmTHUTQMwg7G2JPeu2qBJrmO7ry50=;
+        b=mqfUkY/CkB/uPmvEm08jCWjkNSBOPYoNbECN1UDr2Ux6Xy8+EH541Aw9RCpuVyMEGV
+         ifitGMWIBQIiwrUMt1j2O1w+mHad5e9pf4c5VBqhN3YGZyHmjZmMS7KwWOky2DrMe6FE
+         VxLRd3dS5mORJKrsfcpwksDAkHfKaZVLY6b2G5Ojon3fBsVW/Zl+qiHF9W2VC9j+dYst
+         uyXroYAnvKWZh5xHWwGofj0oGYn7tcpZgHnervvx8+vA6U/rY+UmAk/EjTC7s031AehG
+         rZ1bftdqf1hfdASIFieQ50hvTYRTGr0VtZiR3TdqYcJmyKiCN7d+yxRTvvPXjmu3x4KZ
+         M0eQ==
+In-Reply-To: <cover.1396599474.git.viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linaro-kernel-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, linaro-networking-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, Arvind.Chauhan-5wv7dgnIgG8@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Apr 4, 2014 at 6:11 PM, Linus Torvalds
-<torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
->
-> I'll try to pick kernels away from that, but that makes bisection much
-> less effective.
+On Fri, 2014-04-04 at 14:05 +0530, Viresh Kumar wrote: 
+> We need to migrate away all the background kernel activities (Unbound) for
+> systems requiring isolation of cores (HPC, Real time, networking, etc). After
+> creating cpusets, you can write 1 or 0 to cpuset.quiesce file.
 
-Ok, I think I'm away from the broken region. The problem seems to be in between
+I wonder if adding a quiesce switch is really necessary.
 
-good: 8e30e2b8ba0e ("cgroup: restructure locking and error handling in
-cgroup_mount()")
+Seems to me that if you don't have load balancing turned off, you can't
+be very concerned about perturbation, so this should be tied into the
+load balancing on/off switch as an extension to isolating cores from the
+#1 perturbation source, the scheduler.
 
-bad: 6f30558f37bf ("cgroup: make cgroup hold onto its kernfs_node")
+I also didn't notice a check for is_cpu_exclusive() at a glance, which
+would be a bug, but one that would go away if this additional isolation
+were coupled to the existing isolation switch.
 
-and let's see what bisect says about the rest.. Does that give you any ideas?
-
-            Linus
+-Mike
