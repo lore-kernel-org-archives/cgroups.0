@@ -1,45 +1,48 @@
-From: Markus Trippelsdorf <markus-xp2qqqlHh3xzoYq+O6RWwA@public.gmane.org>
-Subject: Re: [GIT PULL] cgroup changes for v3.15-rc1
-Date: Sun, 6 Apr 2014 16:31:58 +0200
-Message-ID: <20140406143158.GA14380@x4>
-References: <20140403164911.GE24119@htj.dyndns.org>
- <CA+55aFyGz2q4iDEt56Bw+x_ri_-DQYLAKPJvk3Uxj9z-y+0uPw@mail.gmail.com>
- <CA+55aFy+Jt0B32kj=Ldz9Krp4DXcXSP4r-o3f-2LPcVs4udGVA@mail.gmail.com>
+From: Viresh Kumar <viresh.kumar@linaro.org>
+Subject: Re: [PATCH V2 0/8] cpusets: Isolate CPUs via sysfs using cpusets
+Date: Mon, 7 Apr 2014 09:41:14 +0530
+Message-ID: <CAKohpomW3jpQEqFxD3m_br8GchJyq9-KSxW2x7JLCRqDgf4SAg@mail.gmail.com>
+References: <cover.1396599474.git.viresh.kumar@linaro.org>
+	<1396773020.11763.17.camel@marge.simpson.net>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=simple; d=mail.ud10.udmedia.de; h=
-	date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:in-reply-to; s=beta; bh=5y/S8wT6FuHq7TvMppOUaPQPqe
-	IQd+7J4E6nYpGTiLI=; b=PsqmZbxzrDth5ZjXc0q5S6EucSGM4OdF6BUetZm6mH
-	HLXykDEnLKPrtgR7G4KD0BfKgFZehwdNgIWlk/rOLebApx01eKGsi2uRczmaMTfc
-	XD132dyo88xbvFdSI9Hy1F3ijnDqTzjhfVqR8KjhOs+m5c20G5VYnl9mWTsy6LB3
-	E=
-Content-Disposition: inline
-In-Reply-To: <CA+55aFy+Jt0B32kj=Ldz9Krp4DXcXSP4r-o3f-2LPcVs4udGVA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1396773020.11763.17.camel@marge.simpson.net>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
+To: Mike Galbraith <umgwanakikbuti@gmail.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, =?ISO-8859-1?Q?Fr=E9d=E9ric_Weisbecker?= <fweisbec@gmail.com>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@kernel.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Lists linaro-kernel <linaro-kernel@lists.linaro.org>, Linaro Networking <linaro-networking@linaro.org>, Arvind Chauhan <Arvind.Chauhan@arm.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-On 2014.04.04 at 18:11 -0700, Linus Torvalds wrote:
-> On Fri, Apr 4, 2014 at 6:06 PM, Linus Torvalds
-> <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
-> >
-> > Will report back soon when I've narrowed it down more.
-> 
-> Ok, that may end up being harder than it looked. Commit
-> a755180bab81c038a6989d7ab746c702f1b3ec03 doesn't boot for me at all,
-> so apparently there are some really broken points in that whole
-> development chain.
+Hi Mike,
 
-FWIW I've seen similar boot failures, that started during this merge
-window, on my machine. I first thought they might be linker related so I
-opened a bug on: https://sourceware.org/bugzilla/show_bug.cgi?id=16788
-But if I remove e.g. a single printk the bug goes away...
-Unfortunately the same thing happens if I enable more debugging options,
-so I haven't tracked the issue down yet.
+On 6 April 2014 14:00, Mike Galbraith <umgwanakikbuti@gmail.com> wrote:
+> I wonder if adding a quiesce switch is really necessary.
+>
+> Seems to me that if you don't have load balancing turned off, you can't
+> be very concerned about perturbation, so this should be tied into the
+> load balancing on/off switch as an extension to isolating cores from the
+> #1 perturbation source, the scheduler.
 
--- 
-Markus
+Its more about not doing any background activities on these CPU which can
+be avoided. So, even if a add_timer() is issued from these isolated CPUs, it
+should goto the set chosen for doing background activity, unless add_timer_on()
+has been issued, in which case user wants that code to execute on the
+isolated core.
+
+Probably, yes, people would be disabling load_balancing between these
+cpusets to avoid migration of tasks to isolated core as well.. Atleast we
+are using it :)
+
+> I also didn't notice a check for is_cpu_exclusive() at a glance, which
+> would be a bug, but one that would go away if this additional isolation
+> were coupled to the existing isolation switch.
+
+Yeah, there is no check for that. But I didn't got your point completely.
+Why do I need to check for exclusivity on the isolated CPUs? So, that
+same CPU isn't isolated as well as non-isolated on two separate sets?
+
+Thanks for your feedback.
+
+--
+viresh
