@@ -1,78 +1,84 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH cgroup/for-3.15-fixes] cgroup: newly created dirs and files
-	should be owned by the creator
-Date: Mon, 7 Apr 2014 16:59:16 -0400
-Message-ID: <20140407205916.GD27461@htj.dyndns.org>
-References: <20140403164911.GE24119@htj.dyndns.org>
-	<CA+55aFyGz2q4iDEt56Bw+x_ri_-DQYLAKPJvk3Uxj9z-y+0uPw@mail.gmail.com>
-	<CA+55aFy+Jt0B32kj=Ldz9Krp4DXcXSP4r-o3f-2LPcVs4udGVA@mail.gmail.com>
-	<CA+55aFwM0aG1PHY7xOQbsFG+Ot4mL4=7yRnT7dssUaOyaLQ3GQ@mail.gmail.com>
+Subject: [GIT PULL] cgroup fixes for v3.15-rc1
+Date: Mon, 7 Apr 2014 17:23:05 -0400
+Message-ID: <20140407212305.GE27461@htj.dyndns.org>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=NIkJNwyNUTdsbdPF4HhTvjgA2dUbJsbSHWm1KcYo7Zg=;
+        b=dMXbNlMUFVOudOCmBFErElHTBOEfVZdi35X98VFvWCe+YVkUn+ckRVF2vRye3ZCmga
+         JunM4VA/kwSHXb9qdlEIvA1p+EUP8kZ11XsDTRbxY3GuHEdbBd7FmK1uxgVYPtAEhGoL
+         FMi5Zrvv4aulrQRgGF6p9hw+/Y95v6qXr18FZITXa7C64CrwnRVKgLZGXngWFQxLlb0J
+         qQxcQFnZb7lvI/fatPFtfcQgrZXlKkV2pS9NRlOoUxGhNEObwY4XM0lGXluTjhSA9cp7
+         DBQzb0vibyH6u6p3UlUYlV8sx/ihTayEF8UQR1T6FWPClFwhuGSYDo8n/QWI5oWW2Rnh
+         DliA==
+Content-Disposition: inline
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=dvOVdNO2JFoNByedWRIShdnKW6iNXq+LHoW7WxfqQaU=;
-	b=PJYczesss9Bm8zKAnudiJPvb9bp3mZL5za/jCgFxZb+Stj9KfK6ejqoiEdZwyaWq4w
-	MxehxUxZrg/7XpgYsFYZlVI6P2cjbN1pZOOhacJxdJKTTdR1nE+d8FPgE75GlPwqzypj
-	QbBP/m3lDAfDE6Z6GqsUui7TEDtydFTFFqXnqeQi/UHfQAfK9WOLbeph3ohX0wk1z+Ma
-	MNTVlfCPSYk3+3EZ9ODhpUi0GSiNajelAAX5p5KOkw4CWfPYLNvez4Sj8JSmWtPa7AbJ
-	LIiqOye4ZrxxjkUbemypeTu5uI2VR+LZoL5zWsAQig1h4En6wOy6yFk7CzyFD07PcVnU
-	sPxA==
-Content-Disposition: inline
-In-Reply-To: <CA+55aFwM0aG1PHY7xOQbsFG+Ot4mL4=7yRnT7dssUaOyaLQ3GQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Applied to cgroup/for-3.15.  Will soon send pull request for this one
-and the cgroup_root refcnt fix from Li.
+Hello, Linus.
+
+Two patches to fix fallouts from the kernfs conversion.  Li's patch to
+stop leaking cgroup_root refs across multiple mounts and the other
+fixes the 90s hang during shutdown caused by always using root's
+uid/gid for new cgroup dirs and files.
+
+The following changes since commit 4a4389abdd9822fdf3cc2ac6ed87eb811fd43acc:
+
+  Merge branch 'linux_next' of git://git.kernel.org/pub/scm/linux/kernel/git/mchehab/linux-edac (2014-04-03 17:07:17 -0700)
+
+are available in the git repository at:
+
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.15-fixes
+
+for you to fetch changes up to 49957f8e2a43035a97d05bddefa394492a969c0d:
+
+  cgroup: newly created dirs and files should be owned by the creator (2014-04-07 16:44:47 -0400)
 
 Thanks.
 
------- 8< ------
-From 49957f8e2a43035a97d05bddefa394492a969c0d Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date: Mon, 7 Apr 2014 16:44:47 -0400
+----------------------------------------------------------------
+Li Zefan (1):
+      cgroup: fix top cgroup refcnt leak
 
-While converting cgroup to kernfs, 2bd59d48ebfb ("cgroup: convert to
-kernfs") accidentally dropped the logic which makes newly created
-cgroup dirs and files owned by the current uid / gid.  This broke
-cases where cgroup subtree management is delegated to !root as the sub
-manager wouldn't be able to create more than single level of hierarchy
-or put tasks into child cgroups it created.
+Tejun Heo (1):
+      cgroup: newly created dirs and files should be owned by the creator
 
-Among other things, this breaks user session management in systemd and
-one of the symptoms was 90s hang during shutdown.  User session
-systemd running as the user creates a sub-service to initiate shutdown
-and tries to put kill(1) into it but fails because cgroup.procs is
-owned by root.  This leads to 90s hang during shutdown.
-
-Implement cgroup_kn_set_ugid() which sets a kn's uid and gid to those
-of the caller and use it from file and dir creation paths.
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Reported-by: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
----
- kernel/cgroup.c | 27 ++++++++++++++++++++++++++-
- 1 file changed, 26 insertions(+), 1 deletion(-)
+ kernel/cgroup.c | 32 +++++++++++++++++++++++++++++---
+ 1 file changed, 29 insertions(+), 3 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 0dfc732..9fcdaa7 100644
+index fede3d3..9fcdaa7 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -2346,11 +2346,26 @@ static int cgroup_rename(struct kernfs_node *kn, struct kernfs_node *new_parent,
+@@ -1487,6 +1487,7 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 	struct cgroup_sb_opts opts;
+ 	struct dentry *dentry;
+ 	int ret;
++	bool new_sb;
+ 
+ 	/*
+ 	 * The first time anyone tries to mount a cgroup, enable the list
+@@ -1603,8 +1604,8 @@ out_unlock:
+ 	if (ret)
+ 		return ERR_PTR(ret);
+ 
+-	dentry = kernfs_mount(fs_type, flags, root->kf_root, NULL);
+-	if (IS_ERR(dentry))
++	dentry = kernfs_mount(fs_type, flags, root->kf_root, &new_sb);
++	if (IS_ERR(dentry) || !new_sb)
+ 		cgroup_put(&root->cgrp);
+ 	return dentry;
+ }
+@@ -2345,11 +2346,26 @@ static int cgroup_rename(struct kernfs_node *kn, struct kernfs_node *new_parent,
  	return ret;
  }
  
@@ -99,7 +105,7 @@ index 0dfc732..9fcdaa7 100644
  
  #ifdef CONFIG_DEBUG_LOCK_ALLOC
  	key = &cft->lockdep_key;
-@@ -2358,7 +2373,13 @@ static int cgroup_add_file(struct cgroup *cgrp, struct cftype *cft)
+@@ -2357,7 +2373,13 @@ static int cgroup_add_file(struct cgroup *cgrp, struct cftype *cft)
  	kn = __kernfs_create_file(cgrp->kn, cgroup_file_name(cgrp, cft, name),
  				  cgroup_file_mode(cft), 0, cft->kf_ops, cft,
  				  NULL, false, key);
@@ -114,7 +120,7 @@ index 0dfc732..9fcdaa7 100644
  }
  
  /**
-@@ -3753,6 +3774,10 @@ static long cgroup_create(struct cgroup *parent, const char *name,
+@@ -3752,6 +3774,10 @@ static long cgroup_create(struct cgroup *parent, const char *name,
  	 */
  	idr_replace(&root->cgroup_idr, cgrp, cgrp->id);
  
@@ -125,5 +131,3 @@ index 0dfc732..9fcdaa7 100644
  	err = cgroup_addrm_files(cgrp, cgroup_base_files, true);
  	if (err)
  		goto err_destroy;
--- 
-1.9.0
