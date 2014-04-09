@@ -1,133 +1,75 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup fixes for v3.15-rc1
-Date: Mon, 7 Apr 2014 17:23:05 -0400
-Message-ID: <20140407212305.GE27461@htj.dyndns.org>
+Subject: [PATCHSET cgroup/for-3.16] cgroup: implement cgroup.populated
+Date: Wed,  9 Apr 2014 11:07:29 -0400
+Message-ID: <1397056052-2829-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-         :content-disposition:user-agent;
-        bh=NIkJNwyNUTdsbdPF4HhTvjgA2dUbJsbSHWm1KcYo7Zg=;
-        b=dMXbNlMUFVOudOCmBFErElHTBOEfVZdi35X98VFvWCe+YVkUn+ckRVF2vRye3ZCmga
-         JunM4VA/kwSHXb9qdlEIvA1p+EUP8kZ11XsDTRbxY3GuHEdbBd7FmK1uxgVYPtAEhGoL
-         FMi5Zrvv4aulrQRgGF6p9hw+/Y95v6qXr18FZITXa7C64CrwnRVKgLZGXngWFQxLlb0J
-         qQxcQFnZb7lvI/fatPFtfcQgrZXlKkV2pS9NRlOoUxGhNEObwY4XM0lGXluTjhSA9cp7
-         DBQzb0vibyH6u6p3UlUYlV8sx/ihTayEF8UQR1T6FWPClFwhuGSYDo8n/QWI5oWW2Rnh
-         DliA==
-Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:from:to:cc:subject:date:message-id;
+	bh=UPSmx4umNUEjTS39nRT+o+a9YbcdcmMdz3Jd7um/AlI=;
+	b=TuzmraLpo/qNmhhuw9eHfy9CuUhfNc1anhBcThUlNxBFfxdV0qjoViysWYpS2aJ+Aa
+	uj5m+0o9ne2hQdlP3FPGOcoGRniPUagvhg3RE/BqgQus65GBW5EajLZxgwNUpiYrx0pp
+	6OUpGtD58Nr8kmo9PrErd/0caXawFOZt921VqmueY9PktPUTaM/t/GbN93eFOXyET9MQ
+	YAWuzp60KLs+CXABqGYBHVrmlbY1QQqk5J0uJ60+IB+1fTdhEOAp9KQHuA80kyj5UuYt
+	v96OgWA82di1J3aUEIW3hyLHxOeExNJEgRsTly9g8QfIdItM3/WuRIo3882u4xLJzhhd
+	Nr0g==
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
+Cc: rlove-L7G0xEPcOZbYtjvyW6yDsg@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, kay-tD+1rO4QERM@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org, john-jueV0HHMeujJJrXXpGQQMAC/G2K4zDHf@public.gmane.org
 
-Hello, Linus.
+Hello,
 
-Two patches to fix fallouts from the kernfs conversion.  Li's patch to
-stop leaking cgroup_root refs across multiple mounts and the other
-fixes the 90s hang during shutdown caused by always using root's
-uid/gid for new cgroup dirs and files.
+(inotify folks, can you please review the second patch which hooks up
+ kernfs_notify() with fsnotify?  It works but directly invoking
+ fsnotify_parent() and fsnotify() feels a bit dirty.  Maybe something
+ like fsnotify_notify_modify_by_dentry() would make more sense?)
 
-The following changes since commit 4a4389abdd9822fdf3cc2ac6ed87eb811fd43acc:
+cgroup users often need a way to determine when a cgroup's
+subhierarchy becomes empty so that it can be cleaned up.  cgroup
+currently provides release_agent for it; unfortunately, this mechanism
+is riddled with issues.  This patchset implements a replacement
+mechanism "cgroup.subtree_populated" which can be used to monitor
+whether the cgroup's subhierarchy has tasks in it or not and triggers
+poll and [di]notify events when its content changes.
 
-  Merge branch 'linux_next' of git://git.kernel.org/pub/scm/linux/kernel/git/mchehab/linux-edac (2014-04-03 17:07:17 -0700)
+This patchset contains the following three patches.
 
-are available in the git repository at:
+ 0001-kernfs-implement-kernfs_root-supers-list.patch
+ 0002-kernfs-make-kernfs_notify-trigger-inotify-events-too.patch
+ 0003-cgroup-implement-cgroup.subtree_populated-for-the-de.patch
 
+0001-0002 add [di]notify notification to kernfs_notify().
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.15-fixes
+0003 implements cgroup.subtree_populated.
 
-for you to fetch changes up to 49957f8e2a43035a97d05bddefa394492a969c0d:
+This patchset is on top of "cgroup: implement unified hierarchy"
+patchset[1] and availalbe in the following git branch.
 
-  cgroup: newly created dirs and files should be owned by the creator (2014-04-07 16:44:47 -0400)
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-populated
 
-Thanks.
+diffstat follows.
 
-----------------------------------------------------------------
-Li Zefan (1):
-      cgroup: fix top cgroup refcnt leak
+ fs/kernfs/dir.c             |    1 
+ fs/kernfs/file.c            |   41 +++++++++++++++++++++++----
+ fs/kernfs/kernfs-internal.h |    5 +++
+ fs/kernfs/mount.c           |   11 +++++++
+ include/linux/cgroup.h      |   15 ++++++++++
+ include/linux/kernfs.h      |    4 ++
+ kernel/cgroup.c             |   65 +++++++++++++++++++++++++++++++++++++++++---
+ 7 files changed, 132 insertions(+), 10 deletions(-)
 
-Tejun Heo (1):
-      cgroup: newly created dirs and files should be owned by the creator
+--
+tejun
 
- kernel/cgroup.c | 32 +++++++++++++++++++++++++++++---
- 1 file changed, 29 insertions(+), 3 deletions(-)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index fede3d3..9fcdaa7 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1487,6 +1487,7 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 	struct cgroup_sb_opts opts;
- 	struct dentry *dentry;
- 	int ret;
-+	bool new_sb;
- 
- 	/*
- 	 * The first time anyone tries to mount a cgroup, enable the list
-@@ -1603,8 +1604,8 @@ out_unlock:
- 	if (ret)
- 		return ERR_PTR(ret);
- 
--	dentry = kernfs_mount(fs_type, flags, root->kf_root, NULL);
--	if (IS_ERR(dentry))
-+	dentry = kernfs_mount(fs_type, flags, root->kf_root, &new_sb);
-+	if (IS_ERR(dentry) || !new_sb)
- 		cgroup_put(&root->cgrp);
- 	return dentry;
- }
-@@ -2345,11 +2346,26 @@ static int cgroup_rename(struct kernfs_node *kn, struct kernfs_node *new_parent,
- 	return ret;
- }
- 
-+/* set uid and gid of cgroup dirs and files to that of the creator */
-+static int cgroup_kn_set_ugid(struct kernfs_node *kn)
-+{
-+	struct iattr iattr = { .ia_valid = ATTR_UID | ATTR_GID,
-+			       .ia_uid = current_fsuid(),
-+			       .ia_gid = current_fsgid(), };
-+
-+	if (uid_eq(iattr.ia_uid, GLOBAL_ROOT_UID) &&
-+	    gid_eq(iattr.ia_gid, GLOBAL_ROOT_GID))
-+		return 0;
-+
-+	return kernfs_setattr(kn, &iattr);
-+}
-+
- static int cgroup_add_file(struct cgroup *cgrp, struct cftype *cft)
- {
- 	char name[CGROUP_FILE_NAME_MAX];
- 	struct kernfs_node *kn;
- 	struct lock_class_key *key = NULL;
-+	int ret;
- 
- #ifdef CONFIG_DEBUG_LOCK_ALLOC
- 	key = &cft->lockdep_key;
-@@ -2357,7 +2373,13 @@ static int cgroup_add_file(struct cgroup *cgrp, struct cftype *cft)
- 	kn = __kernfs_create_file(cgrp->kn, cgroup_file_name(cgrp, cft, name),
- 				  cgroup_file_mode(cft), 0, cft->kf_ops, cft,
- 				  NULL, false, key);
--	return PTR_ERR_OR_ZERO(kn);
-+	if (IS_ERR(kn))
-+		return PTR_ERR(kn);
-+
-+	ret = cgroup_kn_set_ugid(kn);
-+	if (ret)
-+		kernfs_remove(kn);
-+	return ret;
- }
- 
- /**
-@@ -3752,6 +3774,10 @@ static long cgroup_create(struct cgroup *parent, const char *name,
- 	 */
- 	idr_replace(&root->cgroup_idr, cgrp, cgrp->id);
- 
-+	err = cgroup_kn_set_ugid(kn);
-+	if (err)
-+		goto err_destroy;
-+
- 	err = cgroup_addrm_files(cgrp, cgroup_base_files, true);
- 	if (err)
- 		goto err_destroy;
+[1] http://lkml.kernel.org/g/1395974461-12735-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
