@@ -1,253 +1,98 @@
-From: Jianyu Zhan <nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] mm/memcontrol.c: make mem_cgroup_read_stat() read all interested stat item in one go
-Date: Fri, 11 Apr 2014 01:11:08 +0800
-Message-ID: <1397149868-30401-1-git-send-email-nasa4836@gmail.com>
+From: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH 1/1] doc, mempolicy: Fix wrong document in numa_memory_policy.txt
+Date: Thu, 10 Apr 2014 16:23:55 -0700
+Message-ID: <5347280B.3000303@infradead.org>
+References: <1396410782-26208-1-git-send-email-tangchen@cn.fujitsu.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=from:to:cc:subject:date:message-id;
-        bh=hXWbFca5sUPmJtf+Z1eF9tI+XT7e0XMtUS7Lqpwm/Do=;
-        b=Rfszwi2PkrJVsmaMwhCcOk9pCl6cH57v4e8aM/5OfRt+lXGN7Y2M2c9kqh7rZp/TLW
-         ocHU214q3aNyGCNdG954che6tICoT9gCCSjE2I/Jn0FbFKUjgdzyAsk7tavEPI43WyBn
-         M25VyNUuzhJZfYEefIPzpY7q7TILoHMVE5fmH1nNJsZcc70LKTrLQtFCFuNJCIKWVKr/
-         i2VJMBtvi9j5dOcZYH3KqZAH0kKGNogz5Wh7FSEz9xYC+LxDkjWzaQL99arp/HVyd1EH
-         N3ErwbpZTh1XRh3WgiTc6W12F60/eY1E3Kwig9VhID1ZWDz0k5uXfZ7i+6o15RiFNQKA
-         C4Jw==
+In-Reply-To: <1396410782-26208-1-git-send-email-tangchen-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+To: Tang Chen <tangchen-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, guz.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-Currently, mem_cgroup_read_stat() is used for user interface. The
-user accounts memory usage by memory cgroup and he _always_ requires
-exact value because he accounts memory. So we don't use quick-and-fuzzy
--read-and-do-periodic-synchronization way. Thus, we iterate all cpus
-for one read.
+On 04/01/2014 08:53 PM, Tang Chen wrote:
+> In document numa_memory_policy.txt, the following examples for flag
+> MPOL_F_RELATIVE_NODES are incorrect.
+> 
+> 	For example, consider a task that is attached to a cpuset with
+> 	mems 2-5 that sets an Interleave policy over the same set with
+> 	MPOL_F_RELATIVE_NODES.  If the cpuset's mems change to 3-7, the
+> 	interleave now occurs over nodes 3,5-6.  If the cpuset's mems
+> 	then change to 0,2-3,5, then the interleave occurs over nodes
+> 	0,3,5.
+> 
+> According to the comment of the patch adding flag MPOL_F_RELATIVE_NODES,
+> the nodemasks the user specifies should be considered relative to the
+> current task's mems_allowed.
+> (https://lkml.org/lkml/2008/2/29/428)
+> 
+> And according to numa_memory_policy.txt, if the user's nodemask includes
+> nodes that are outside the range of the new set of allowed nodes, then
+> the remap wraps around to the beginning of the nodemask and, if not already
+> set, sets the node in the mempolicy nodemask.
+> 
+> So in the example, if the user specifies 2-5, for a task whose mems_allowed
+> is 3-7, the nodemasks should be remapped the third, fourth, fifth, sixth
+> node in mems_allowed.  like the following:
+> 
+> 	mems_allowed:       3  4  5  6  7
+> 
+> 	relative index:     0  1  2  3  4
+> 	                    5
+> 
+> So the nodemasks should be remapped to 3,5-7, but not 3,5-6.
+> 
+> And for a task whose mems_allowed is 0,2-3,5, the nodemasks should be
+> remapped to 0,2-3,5, but not 0,3,5.
+> 
+> 	mems_allowed:       0  2  3  5
+> 
+>         relative index:     0  1  2  3
+>                             4  5
+> 
+> 
+> Signed-off-by: Tang Chen <tangchen-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 
-And we mem_cgroup_usage() and mem_cgroup_recursive_stat() both finally
-call into mem_cgroup_read_stat().
+Wow.  This was not an April fools joke, right?
 
-However, these *stat snapshot* operations are implemented in a quite
-coarse way: it takes M*N iteration for each stat item(M=nr_memcgs,
-N=nr_possible_cpus). There are two deficiencies:
+Have there been any acks of this?  I haven't seen any responses to it.
 
-1. for every stat item, we have to iterate over all percpu value, which
-   is not so cache friendly.
-2. for every stat item, we call mem_cgroup_read_stat() once, which
-   increase the probablity of contending on pcp_counter_lock.
+Andrew, do you want to merge it?
 
-So, this patch improve this a bit. Concretely, for all interested stat
-items, mark them in a bitmap, and then make mem_cgroup_read_stat() read
-them all in one go.
 
-This is more efficient, and to some degree make it more like *stat snapshot*.
+> ---
+>  Documentation/vm/numa_memory_policy.txt | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/Documentation/vm/numa_memory_policy.txt b/Documentation/vm/numa_memory_policy.txt
+> index 4e7da65..badb050 100644
+> --- a/Documentation/vm/numa_memory_policy.txt
+> +++ b/Documentation/vm/numa_memory_policy.txt
+> @@ -174,7 +174,6 @@ Components of Memory Policies
+>  	allocation fails, the kernel will search other nodes, in order of
+>  	increasing distance from the preferred node based on information
+>  	provided by the platform firmware.
+> -	containing the cpu where the allocation takes place.
+>  
+>  	    Internally, the Preferred policy uses a single node--the
+>  	    preferred_node member of struct mempolicy.  When the internal
+> @@ -275,9 +274,9 @@ Components of Memory Policies
+>  	    For example, consider a task that is attached to a cpuset with
+>  	    mems 2-5 that sets an Interleave policy over the same set with
+>  	    MPOL_F_RELATIVE_NODES.  If the cpuset's mems change to 3-7, the
+> -	    interleave now occurs over nodes 3,5-6.  If the cpuset's mems
+> +	    interleave now occurs over nodes 3,5-7.  If the cpuset's mems
+>  	    then change to 0,2-3,5, then the interleave occurs over nodes
+> -	    0,3,5.
+> +	    0,2-3,5.
+>  
+>  	    Thanks to the consistent remapping, applications preparing
+>  	    nodemasks to specify memory policies using this flag should
+> 
 
-Signed-off-by: Jianyu Zhan <nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
----
- mm/memcontrol.c | 91 +++++++++++++++++++++++++++++++++++++++------------------
- 1 file changed, 62 insertions(+), 29 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 29501f0..009357e 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -347,7 +347,7 @@ struct mem_cgroup {
- 	struct mem_cgroup_stat_cpu __percpu *stat;
- 	/*
- 	 * used when a cpu is offlined or other synchronizations
--	 * See mem_cgroup_read_stat().
-+	 * See mem_cgroup_read_stat_vec().
- 	 */
- 	struct mem_cgroup_stat_cpu nocpu_base;
- 	spinlock_t pcp_counter_lock;
-@@ -855,7 +855,13 @@ mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_zone *mctz)
- 	return mz;
- }
- 
--/*
-+/**
-+ * @memcg: the mem_cgroup to account for.
-+ * @stat_bitmask: a bitmap record which stat items to read,
-+ *		each mem_cgroup_stat_index has its corresponding bit.
-+ * @stat_vec: a stat vector to hold the stat value for returing, caller
-+ *		shall take care of initializing it.
-+ *
-  * Implementation Note: reading percpu statistics for memcg.
-  *
-  * Both of vmstat[] and percpu_counter has threshold and do periodic
-@@ -874,22 +880,25 @@ mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_zone *mctz)
-  * common workload, threashold and synchonization as vmstat[] should be
-  * implemented.
-  */
--static long mem_cgroup_read_stat(struct mem_cgroup *memcg,
--				 enum mem_cgroup_stat_index idx)
-+static void mem_cgroup_read_stat_vec(struct mem_cgroup *memcg,
-+				 unsigned long *stat_bitmask,
-+				 long long *stat_vec)
- {
--	long val = 0;
- 	int cpu;
-+	int i;
- 
- 	get_online_cpus();
- 	for_each_online_cpu(cpu)
--		val += per_cpu(memcg->stat->count[idx], cpu);
-+		for_each_set_bit(i, stat_bitmask, MEM_CGROUP_STAT_NSTATS)
-+			stat_vec[i] += per_cpu(memcg->stat->count[i], cpu);
-+
- #ifdef CONFIG_HOTPLUG_CPU
- 	spin_lock(&memcg->pcp_counter_lock);
--	val += memcg->nocpu_base.count[idx];
-+	for_each_set_bit(i, stat_bitmask, MEM_CGROUP_STAT_NSTATS)
-+		stat_vec[i] += memcg->nocpu_base.count[i];
- 	spin_unlock(&memcg->pcp_counter_lock);
- #endif
- 	put_online_cpus();
--	return val;
- }
- 
- static void mem_cgroup_swap_statistics(struct mem_cgroup *memcg,
-@@ -1674,6 +1683,7 @@ void mem_cgroup_print_oom_info(struct mem_cgroup *memcg, struct task_struct *p)
- 	static DEFINE_MUTEX(oom_info_lock);
- 	struct mem_cgroup *iter;
- 	unsigned int i;
-+	DECLARE_BITMAP(stat_bitmask, MEM_CGROUP_STAT_NSTATS);
- 
- 	if (!p)
- 		return;
-@@ -1702,16 +1712,22 @@ void mem_cgroup_print_oom_info(struct mem_cgroup *memcg, struct task_struct *p)
- 		res_counter_read_u64(&memcg->kmem, RES_LIMIT) >> 10,
- 		res_counter_read_u64(&memcg->kmem, RES_FAILCNT));
- 
-+	bitmap_fill(stat_bitmask, MEM_CGROUP_STAT_NSTATS);
-+	if (!do_swap_account)
-+		clear_bit(MEM_CGROUP_STAT_SWAP, stat_bitmask);
- 	for_each_mem_cgroup_tree(iter, memcg) {
-+		long long stat_vec[MEM_CGROUP_STAT_NSTATS] = {0};
-+
- 		pr_info("Memory cgroup stats for ");
- 		pr_cont_cgroup_path(iter->css.cgroup);
- 		pr_cont(":");
- 
-+		mem_cgroup_read_stat_vec(iter, stat_bitmask, stat_vec);
- 		for (i = 0; i < MEM_CGROUP_STAT_NSTATS; i++) {
- 			if (i == MEM_CGROUP_STAT_SWAP && !do_swap_account)
- 				continue;
--			pr_cont(" %s:%ldKB", mem_cgroup_stat_names[i],
--				K(mem_cgroup_read_stat(iter, i)));
-+			pr_cont(" %s:%lldKB", mem_cgroup_stat_names[i],
-+				K(stat_vec[i]));
- 		}
- 
- 		for (i = 0; i < NR_LRU_LISTS; i++)
-@@ -4940,25 +4956,28 @@ out:
- 	return retval;
- }
- 
--
--static unsigned long mem_cgroup_recursive_stat(struct mem_cgroup *memcg,
--					       enum mem_cgroup_stat_index idx)
-+/* Callers should take care of initialize stat_vec array */
-+static void mem_cgroup_recursive_stat(struct mem_cgroup *memcg,
-+					unsigned long *stat_bitmask,
-+					long long *stat_vec)
- {
- 	struct mem_cgroup *iter;
--	long val = 0;
-+	int idx;
- 
- 	/* Per-cpu values can be negative, use a signed accumulator */
- 	for_each_mem_cgroup_tree(iter, memcg)
--		val += mem_cgroup_read_stat(iter, idx);
-+		mem_cgroup_read_stat_vec(iter, stat_bitmask, stat_vec);
- 
--	if (val < 0) /* race ? */
--		val = 0;
--	return val;
-+	for_each_set_bit(idx, stat_bitmask, MEM_CGROUP_STAT_NSTATS)
-+		if (stat_vec[idx] < 0) /* race ? */
-+			stat_vec[idx] = 0;
- }
- 
- static inline u64 mem_cgroup_usage(struct mem_cgroup *memcg, bool swap)
- {
- 	u64 val;
-+	DECLARE_BITMAP(stat_bitmask, MEM_CGROUP_STAT_NSTATS);
-+	long long stat_vec[MEM_CGROUP_STAT_NSTATS] = {0};
- 
- 	if (!mem_cgroup_is_root(memcg)) {
- 		if (!swap)
-@@ -4967,15 +4986,21 @@ static inline u64 mem_cgroup_usage(struct mem_cgroup *memcg, bool swap)
- 			return res_counter_read_u64(&memcg->memsw, RES_USAGE);
- 	}
- 
-+
- 	/*
- 	 * Transparent hugepages are still accounted for in MEM_CGROUP_STAT_RSS
- 	 * as well as in MEM_CGROUP_STAT_RSS_HUGE.
- 	 */
--	val = mem_cgroup_recursive_stat(memcg, MEM_CGROUP_STAT_CACHE);
--	val += mem_cgroup_recursive_stat(memcg, MEM_CGROUP_STAT_RSS);
--
-+	bitmap_zero(stat_bitmask, MEM_CGROUP_STAT_NSTATS);
-+	set_bit(MEM_CGROUP_STAT_CACHE, stat_bitmask);
-+	set_bit(MEM_CGROUP_STAT_RSS, stat_bitmask);
- 	if (swap)
--		val += mem_cgroup_recursive_stat(memcg, MEM_CGROUP_STAT_SWAP);
-+		set_bit(MEM_CGROUP_STAT_SWAP, stat_bitmask);
-+
-+	mem_cgroup_recursive_stat(memcg, stat_bitmask, stat_vec);
-+
-+	val = stat_vec[MEM_CGROUP_STAT_CACHE] + stat_vec[MEM_CGROUP_STAT_RSS] +
-+	      (swap ? stat_vec[MEM_CGROUP_STAT_SWAP] : 0);
- 
- 	return val << PAGE_SHIFT;
- }
-@@ -5349,12 +5374,19 @@ static int memcg_stat_show(struct seq_file *m, void *v)
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
- 	struct mem_cgroup *mi;
- 	unsigned int i;
-+	DECLARE_BITMAP(stat_bitmask, MEM_CGROUP_STAT_NSTATS);
-+	long long stat_vec[MEM_CGROUP_STAT_NSTATS] = {0};
-+
-+	bitmap_fill(stat_bitmask, MEM_CGROUP_STAT_NSTATS);
-+	if (!do_swap_account)
-+		clear_bit(MEM_CGROUP_STAT_SWAP, stat_bitmask);
-+	mem_cgroup_read_stat_vec(memcg, stat_bitmask, stat_vec);
- 
- 	for (i = 0; i < MEM_CGROUP_STAT_NSTATS; i++) {
- 		if (i == MEM_CGROUP_STAT_SWAP && !do_swap_account)
- 			continue;
--		seq_printf(m, "%s %ld\n", mem_cgroup_stat_names[i],
--			   mem_cgroup_read_stat(memcg, i) * PAGE_SIZE);
-+		seq_printf(m, "%s %lld\n", mem_cgroup_stat_names[i],
-+			   stat_vec[i] * PAGE_SIZE);
- 	}
- 
- 	for (i = 0; i < MEM_CGROUP_EVENTS_NSTATS; i++)
-@@ -5375,14 +5407,15 @@ static int memcg_stat_show(struct seq_file *m, void *v)
- 				   memsw_limit);
- 	}
- 
-+	for (i = 0; i < MEM_CGROUP_STAT_NSTATS; i++)
-+		stat_vec[i] = 0;
-+	mem_cgroup_recursive_stat(memcg, stat_bitmask, stat_vec);
- 	for (i = 0; i < MEM_CGROUP_STAT_NSTATS; i++) {
--		long long val = 0;
--
- 		if (i == MEM_CGROUP_STAT_SWAP && !do_swap_account)
- 			continue;
--		for_each_mem_cgroup_tree(mi, memcg)
--			val += mem_cgroup_read_stat(mi, i) * PAGE_SIZE;
--		seq_printf(m, "total_%s %lld\n", mem_cgroup_stat_names[i], val);
-+
-+		seq_printf(m, "total_%s %lld\n", mem_cgroup_stat_names[i],
-+				stat_vec[i] * PAGE_SIZE);
- 	}
- 
- 	for (i = 0; i < MEM_CGROUP_EVENTS_NSTATS; i++) {
 -- 
-1.9.0.GIT
+~Randy
