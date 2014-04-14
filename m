@@ -1,65 +1,45 @@
-From: Glyn Normington <gnormington@gopivotal.com>
-Subject: Re: Kernel scanning/freeing to relieve cgroup memory pressure
-Date: Mon, 14 Apr 2014 09:11:25 +0100
-Message-ID: <534B982D.8060106@gopivotal.com>
-References: <533C0BB4.4070009@gopivotal.com> <20140402180019.GL16631@htj.dyndns.org>
+From: Kevin Wilson <wkevils-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: A problem with memory.oom_control
+Date: Mon, 14 Apr 2014 14:54:23 +0300
+Message-ID: <CAGXs5wUdhEYQ-kGEPSD2A=OceZuA1tovLs04gPcRcqBPagQJCw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140402180019.GL16631@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:date:message-id:subject:from:to:content-type;
+        bh=azX9wl6xlRhTbuf9fotl12xKL5huCwo/ycIWlRKDrcM=;
+        b=gREtJVCgnHPDcrjyLg5qOGGCoSE7W5xOfJ43w7h9q9coMjoG7/XSNWFbhx5O7idqPg
+         jdHTu6z3LC7Pv25YAoMSI9cNRpDnl3zBFXMWoeVFKffx2al924ZPXR0FupbHeywGjVSF
+         neHvlec4uV5aDHNrCQH4m1J2Fo6xP3+E+ACo3L1b0hMPu8hm51M0uOGJIPoqLcv6KKyv
+         niKhHzsOwh4lkK3001ZnQzB62RCT9WF5Sx+kEU9LscDBsoLdyYLdSJf4CLyiZJ8idgO0
+         +5RKTIO9VRDiQ0eNsIAkfQbk5Yi0YNiuvWrVaUK4XHKrxkPzq+HhABWjUOgxAzL3TKea
+         HU4g==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>
-Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Johannes/Michal
+Hello,
 
-What are your thoughts on this matter? Do you see this as a valid 
-requirement?
+First I hope this mailing list is the proper one for asking the
+following question:
+I do the following, as root,  on Fedora 20 with 3.12.7-300.fc20.x86_64 kernel:
+
+create a cgroup called "0"
+/sys/fs/cgroup/memory/0
+
+run:
+
+echo "1" > /sys/fs/cgroup/memory/0/memory.oom_control
+bash: echo: write error: Invalid argument
+
+Why am I having this error  ?
+
+According to the documentation:
+
+http://lxr.free-electrons.com/source/Documentation/cgroups/memory.txt
+this should work.
 
 Regards,
-Glyn
-
-On 02/04/2014 19:00, Tejun Heo wrote:
-> (cc'ing memcg maintainers and cgroup ML)
->
-> On Wed, Apr 02, 2014 at 02:08:04PM +0100, Glyn Normington wrote:
->> Currently, a memory cgroup can hit its oom limit when pages could, in
->> principle, be reclaimed by the kernel except that the kernel does not
->> respond directly to cgroup-local memory pressure.
-> So, ummm, it does.
->
->> A use case where this is important is running a moderately large Java
->> application in a memory cgroup in a PaaS environment where cost to the
->> user depends on the memory limit ([1]). Users need to tune the memory
->> limit to reduce their costs. During application initialisation large
->> numbers of JAR files are opened (read-only) and read while loading the
->> application code and its dependencies. This is reflected in a peak of
->> file cache usage which can push the memory cgroup memory usage
->> significantly higher than the value actually needed to run the application.
->>
->> Possible approaches include (1) automatic response to cgroup-local
->> memory pressure in the kernel, and (2) a kernel API for reclaiming
->> memory from a cgroup which could be driven under oom notification (with
->> the oom killer disabled for the cgroup - it would be enabled if the
->> cgroup was still oom after calling the kernel to reclaim memory).
->>
->> Clearly (1) is the preferred approach. The closest facility in the
->> kernel to (2) is to ask the kernel to free pagecache using `echo 1 >
->> /proc/sys/vms/drop_caches`, but that is too wide-ranging, especially in
->> a PaaS environment hosting multiple applications. A similar facility
->> could be provided for a cgroup via a cgroup pseudo-file
->> `memory.drop_caches`.
->>
->> Other approaches include a mempressure cgroup ([2]) which would not be
->> suitable for PaaS applications. See [3] for Andrew Morton's response. A
->> related workaround ([4]) was included in the 3.6 kernel.
->>
->> Related discussions:
->> [1] https://groups.google.com/a/cloudfoundry.org/d/topic/vcap-dev/6M8BDV_tq7w/discussion
->> [2]https://lwn.net/Articles/531077/ <https://lwn.net/Articles/531077/>
->> [3]https://lwn.net/Articles/531138/ <https://lwn.net/Articles/531138/>
->> [4]https://lkml.org/lkml/2013/6/6/462 <https://lkml.org/lkml/2013/6/6/462>&
->> https://github.com/torvalds/linux/commit/e62e384e
->> <https://github.com/torvalds/linux/commit/e62e384e>.
+Kevin
