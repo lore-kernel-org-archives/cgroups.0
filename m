@@ -1,106 +1,73 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 06/12] cgroup: teach css_task_iter about effective csses
-Date: Mon, 14 Apr 2014 17:37:04 -0400
-Message-ID: <1397511430-2673-7-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 04/12] cgroup: make css_next_child() skip missing csses
+Date: Mon, 14 Apr 2014 17:37:02 -0400
+Message-ID: <1397511430-2673-5-git-send-email-tj@kernel.org>
 References: <1397511430-2673-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=PbGGtMN5Mnx9m0Y747e5zwmpXd/7peLVt4TfAvj8PRQ=;
-        b=wwUS+TaKy1jixw+cqVEQ5oUqYFrTthUTEMPP161+MYTN2T+XSZkU14mVJ8ednmvwRw
-         X+PuggsPKodahhoiGN7cu8psk28NxG+Udf2I26q6NquBdR4/c93MFx3o6YvYkRp83Tnj
-         /qaBrNa1RHq4YGT6kAJDEINb0ZRfhuFl1GZFAIwke/mF8WbU+RYGDzTZIWNjpkE1AB0G
-         OyFEdm/r+pBTmFKEdgxynfpCoMAIT+RJsc01+UDBKXqNVaBwrAWnjLfUlOVn+bhNR2uR
-         zGcEdLTzQghkerlMvg8kj2htem06FbAXY8ktaB3Nin3B+LyK6ylgol0sRnB/VXsfd6dI
-         W32A==
-In-Reply-To: <1397511430-2673-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com
-Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+	bh=Rjq4kFb1a14CdfIaXu/26P/z4dFOH/C4CecndbsYzJw=;
+	b=uIiYwAe38uCJf5b3fVXehWbwo66yFwok7FOV0RWYcBNaihfdc+1g2X/EixLAlm3QQQ
+	B52gsb8DtDjNFrOVTP1bLnwdPM8wes8t6sVTcgZqcnoNp67f0TKWq5qdL2c5cYOHcTGl
+	SvRyARdF+MDyIh75vXtPUpicKxwlVwYfzOeq1nHlPPrl0Yu//2UU0Me3N6v92Yyv5TXh
+	IbbCSBi+CNyQn7w7OJtVhN2Ct1WUhfqAU2scLGv2siAT0Z2Wa0mFRomKYzBzBd4Cd5kO
+	uW+wMzGGDGFEbHjxeQLHGi2Cw3Ntef1xgbTIb1L03lSyXngJOwUo2WqNQURJRnqqoEmd
+	Cd/g==
+In-Reply-To: <1397511430-2673-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Currently, css_task_iter iterates tasks associated with a css by
-visiting each css_set associated with the owning cgroup and walking
-tasks of each of them.  This works fine for !unified hierarchies as
-each cgroup has its own css for each associated subsystem on the
-hierarchy; however, on the planned unified hierarchy, a cgroup may not
-have csses associated and its tasks would be considered associated
-with the matching css of the nearest ancestor which has the subsystem
-enabled.
+css_next_child() walks the children of the specified css.  It does
+this by finding the next cgroup and then returning the requested css.
+On the default unified hierarchy, a cgroup may not have a css
+associated with it even if the hierarchy has the subsystem enabled.
+This patch updates css_next_child() so that it skips children without
+the requested css associated.
 
-This means that on the default unified hierarchy, just walking all
-tasks associated with a cgroup isn't enough to walk all tasks which
-are associated with the specified css.  If any of its children doesn't
-have the matching css enabled, task iteration should also include all
-tasks from the subtree.  We already added cgroup->e_csets[] to list
-all css_sets effectively associated with a given css and walk css_sets
-on that list instead to achieve such iteration.
-
-This patch updates css_task_iter iteration such that it walks css_sets
-on cgroup->e_csets[] instead of cgroup->cset_links if iteration is
-requested on an non-dummy css.  Thanks to the previous iteration
-update, this change can be achieved with the addition of
-css_task_iter->ss and minimal updates to css_advance_task_iter() and
-css_task_iter_start().
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- include/linux/cgroup.h |  2 ++
- kernel/cgroup.c        | 18 +++++++++++++++---
- 2 files changed, 17 insertions(+), 3 deletions(-)
+ kernel/cgroup.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index bee3905..18fcae3 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -842,6 +842,8 @@ css_next_descendant_post(struct cgroup_subsys_state *pos,
- 
- /* A css_task_iter should be treated as an opaque object */
- struct css_task_iter {
-+	struct cgroup_subsys		*ss;
-+
- 	struct list_head		*cset_pos;
- 	struct list_head		*cset_head;
- 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index bcf390f..0318bfc 100644
+index 29e8698..f525578 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -2872,8 +2872,14 @@ static void css_advance_task_iter(struct css_task_iter *it)
- 			it->cset_pos = NULL;
- 			return;
- 		}
--		link = list_entry(l, struct cgrp_cset_link, cset_link);
--		cset = link->cset;
-+
-+		if (it->ss) {
-+			cset = container_of(l, struct css_set,
-+					    e_cset_node[it->ss->id]);
-+		} else {
-+			link = list_entry(l, struct cgrp_cset_link, cset_link);
-+			cset = link->cset;
-+		}
- 	} while (list_empty(&cset->tasks) && list_empty(&cset->mg_tasks));
+@@ -2712,10 +2712,19 @@ css_next_child(struct cgroup_subsys_state *pos_css,
+ 				break;
+ 	}
  
- 	it->cset_pos = l;
-@@ -2910,7 +2916,13 @@ void css_task_iter_start(struct cgroup_subsys_state *css,
+-	if (&next->sibling == &cgrp->children)
+-		return NULL;
++	/*
++	 * @next, if not pointing to the head, can be dereferenced and is
++	 * the next sibling; however, it might have @ss disabled.  If so,
++	 * fast-forward to the next enabled one.
++	 */
++	while (&next->sibling != &cgrp->children) {
++		struct cgroup_subsys_state *next_css = cgroup_css(next, parent_css->ss);
  
- 	down_read(&css_set_rwsem);
+-	return cgroup_css(next, parent_css->ss);
++		if (next_css)
++			return next_css;
++		next = list_entry_rcu(next->sibling.next, struct cgroup, sibling);
++	}
++	return NULL;
+ }
  
--	it->cset_pos = &css->cgroup->cset_links;
-+	it->ss = css->ss;
-+
-+	if (it->ss)
-+		it->cset_pos = &css->cgroup->e_csets[css->ss->id];
-+	else
-+		it->cset_pos = &css->cgroup->cset_links;
-+
- 	it->cset_head = it->cset_pos;
- 
- 	css_advance_task_iter(it);
+ /**
 -- 
 1.9.0
