@@ -1,7 +1,7 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 09/12] cgroup: add css_set->dfl_cgrp
-Date: Mon, 14 Apr 2014 17:37:07 -0400
-Message-ID: <1397511430-2673-10-git-send-email-tj@kernel.org>
+Subject: [PATCH 10/12] cgroup: update subsystem rebind restrictions
+Date: Mon, 14 Apr 2014 17:37:08 -0400
+Message-ID: <1397511430-2673-11-git-send-email-tj@kernel.org>
 References: <1397511430-2673-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -9,13 +9,13 @@ Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=7zwwidgLkdZDIJkruA4bXyP8jRKZIYu81m0TRYn4cFA=;
-	b=mOCqhgpXcbtyhSj5G3i6TjG5FHNJevgC7UVZSevU5fLUGuHTHtTWkap+DwVhE+Oi36
-	WJfzmXtVlNuaDJQkC6Yxw8grhyZdriSfempxpUmc/KLdmTik8D5Ss176Cyzh2X7a+05D
-	LdTj0AJXvtjxI/dfMPVEnZPDVTZtsVMoKNoVP2MlHY+LEy1ELlINJ9qTMf4A6ha6RcZM
-	jxdgac+BPz8kPtdxIuEdxxUOMBcyNCuuiCqm9ZB/OhyhKCqVihLRyg08rn48iCSjLJSa
-	M44LId2nxoaUroB9s1oasCqPBJImzbMxD3lDwZqjdcPX1dzqW1SM4F8lqzc3/A9sO/3/
-	ECcg==
+	bh=dQ6DoOBd0m5UetrYREhv1nfitR+8tEPETE63HQy7j1w=;
+	b=ZWGN+KxCEcG2/Z4CJdSqgqpky9xWlqkS5z01HrS3mSb3iJ3Nd62/pdh7i87nTqkR0n
+	n5/aygnqggusGTanj6vDnBjC5GN2oL/+JbZoi7ey8nblfVOb6lLo25qF5NPpKC2kVT1b
+	Ba0xS7QGFS6TsrZli1kRXhs/FhVfl1NfcNEzvcHUkREV58n10g2B06T8eqg3PiZpCzqW
+	9GPaxA+VB2cXctrMs8bwP8mEmR190gAB6SQnjStNvGzAQmOtDFo7xTy54ZiVDjRuHb8A
+	ZvRWOGIMx3vDO9tnhloNNfJOjZSTlyYqP9/mNyz55RLsiHNYsPA3vCD8Jq083b4SxXFq
+	XMiw==
 In-Reply-To: <1397511430-2673-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -30,45 +30,45 @@ Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-To implement the unified hierarchy behavior, we'll need to be able to
-determine the associated cgroup on the default hierarchy from css_set.
-Let's add css_set->dfl_cgrp so that it can be accessed conveniently
-and efficiently.
+Because the default root couldn't have any non-root csses attached to
+it, rebinding away from it was always allowed; however, the default
+hierarchy will soon host the unified hierarchy and have non-root csses
+so the rebind restrictions need to be updated accordingly.
+
+Instead of special casing rebinding from the default hierarchy and
+then checking whether the source hierarchy has children cgroups, which
+implies non-root csses for !dfl hierarchies, simply check whether the
+source hierarchy has non-root csses for the subsystem using
+css_next_child().
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- include/linux/cgroup.h | 3 +++
- kernel/cgroup.c        | 4 ++++
- 2 files changed, 7 insertions(+)
+ kernel/cgroup.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 18fcae3..c49d161 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -354,6 +354,9 @@ struct css_set {
- 	 */
- 	struct list_head cgrp_links;
- 
-+	/* the default cgroup associated with this css_set */
-+	struct cgroup *dfl_cgrp;
-+
- 	/*
- 	 * Set of subsystem states, one for each subsystem. This array is
- 	 * immutable after creation apart from the init_css_set during
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 02c99a3..b4cd1fe 100644
+index b4cd1fe..888e037 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -651,6 +651,10 @@ static void link_css_set(struct list_head *tmp_links, struct css_set *cset,
- 	struct cgrp_cset_link *link;
+@@ -1051,16 +1051,12 @@ static int rebind_subsystems(struct cgroup_root *dst_root,
+ 		if (!(ss_mask & (1 << ssid)))
+ 			continue;
  
- 	BUG_ON(list_empty(tmp_links));
-+
-+	if (cgroup_on_dfl(cgrp))
-+		cset->dfl_cgrp = cgrp;
-+
- 	link = list_first_entry(tmp_links, struct cgrp_cset_link, cset_link);
- 	link->cset = cset;
- 	link->cgrp = cgrp;
+-		/* if @ss is on the dummy_root, we can always move it */
+-		if (ss->root == &cgrp_dfl_root)
+-			continue;
+-
+-		/* if @ss has non-root cgroups attached to it, can't move */
+-		if (!list_empty(&ss->root->cgrp.children))
++		/* if @ss has non-root csses attached to it, can't move */
++		if (css_next_child(NULL, cgroup_css(&ss->root->cgrp, ss)))
+ 			return -EBUSY;
+ 
+ 		/* can't move between two non-dummy roots either */
+-		if (dst_root != &cgrp_dfl_root)
++		if (ss->root != &cgrp_dfl_root && dst_root != &cgrp_dfl_root)
+ 			return -EBUSY;
+ 	}
+ 
 -- 
 1.9.0
