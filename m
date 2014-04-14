@@ -1,191 +1,74 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH RFC] blkcg: prepare blkcg knobs for default hierarchy
-Date: Mon, 14 Apr 2014 15:32:14 -0400
-Message-ID: <20140414193214.GC16835@htj.dyndns.org>
-References: <20140413013209.GC26252@mtj.dyndns.org>
- <20140414180824.GB9552@redhat.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: Kernel scanning/freeing to relieve cgroup memory pressure
+Date: Mon, 14 Apr 2014 16:50:34 -0400
+Message-ID: <20140414205034.GA6443@cmpxchg.org>
+References: <533C0BB4.4070009@gopivotal.com>
+ <20140402180019.GL16631@htj.dyndns.org>
+ <534B982D.8060106@gopivotal.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=C7qRpLyvGbrT2SSp7arLdUFXsakDx5FqhTr7FO1MeCI=;
-        b=d2qHfKV5CweTUa6EvI1va3AikPDVE53/c2AhU4hnRJMWDtMIGBiuB3GvPH7YTt9qNL
-         07GGZZvdPdPXNOI83L6uES4lQYyDl/lgTN0nzhRYbVjUzPpcKuFI40KPNkuhB409KITs
-         Rj00RI4uCgCBtO0IGYsWpj22gVnpJs3GggflR84J1ZSEr72QtoBYxPCcuoZmO7OBU+7O
-         E4nl0dVjQIEUFxmjuUomqpyUukeiu6AVsUnw/FkShZBXLOEUEZAFi2u8I9NmKbyonX/k
-         xKAFflprcR8X9r26iBWLrtqDqfXiIvcfUSu0vxwdts7nE+LY4sdRoEDD89Xm0m+MTbce
-         +Avg==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=VQJL9xdwigBjjbD/uHjUQ2NN8DaUnf2xjZZVHbM0Sqw=;
+	b=hzCjYDqPOdCcO7xNVijCNhwWIzG27p1Im8O+jxZvamNPIB5cT6D7WiBqnLGOmMy+bBj9L1K8Qv+B30cMAoheVm5Y5HF7T41akDkFJoWdalPEJbB7dSKV8bjpJYJ2zrpHH3tt5jEfFXlWtRBph6flxysWIGhHUg+58F7Qj93IbR8=;
 Content-Disposition: inline
-In-Reply-To: <20140414180824.GB9552@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <534B982D.8060106-6n0RBC2Q8y8S+FvcfC7Uqw@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vivek Goyal <vgoyal@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org
+To: Glyn Normington <gnormington-6n0RBC2Q8y8S+FvcfC7Uqw@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
-
-On Mon, Apr 14, 2014 at 02:08:24PM -0400, Vivek Goyal wrote:
-> Can you please also update Documentation/block/cfq-iosched.txt and
-> Documentation/cgroup/blkio-controller.txt to reflect these new
-> changes.
-
-Sure thing.
-
-> So now we have tree modes?
+On Mon, Apr 14, 2014 at 09:11:25AM +0100, Glyn Normington wrote:
+> Johannes/Michal
 > 
-> - Orignal multi hierachy mode
-> - Multi hierarchy with sane flag
-> 	- Sane flag modifies behavior of throttling.
-> - Unified hierarchy
-> 	- Changes tunables.
+> What are your thoughts on this matter? Do you see this as a valid
+> requirement?
 
-No, we don't.  __DEVEL__sane_behavior is a tool to implement unified
-hierarchy.  Once unified hierarchy lands, sane_behavior will be folded
-into unified hierarchy.
+As Tejun said, memory cgroups *do* respond to internal pressure and
+enter targetted reclaim before invoking the OOM killer.  So I'm not
+exactly sure what you are asking.
 
-> Looks like some of the changes are related to sane flag and others
-> are related to unified hierarchy. Will it make sense to break it down
-> int two patches.
-
-So, they're one and the same.
-
-> > * For cfq, weight[_device] behave inherently differently from the same
-> >   knobs on !root cgroups as root cgroup is treated as parallel to
-> >   immediate children.  Let's omit it for now.
+> On 02/04/2014 19:00, Tejun Heo wrote:
+> >(cc'ing memcg maintainers and cgroup ML)
+> >
+> >On Wed, Apr 02, 2014 at 02:08:04PM +0100, Glyn Normington wrote:
+> >>Currently, a memory cgroup can hit its oom limit when pages could, in
+> >>principle, be reclaimed by the kernel except that the kernel does not
+> >>respond directly to cgroup-local memory pressure.
+> >So, ummm, it does.
+> >
+> >>A use case where this is important is running a moderately large Java
+> >>application in a memory cgroup in a PaaS environment where cost to the
+> >>user depends on the memory limit ([1]). Users need to tune the memory
+> >>limit to reduce their costs. During application initialisation large
+> >>numbers of JAR files are opened (read-only) and read while loading the
+> >>application code and its dependencies. This is reflected in a peak of
+> >>file cache usage which can push the memory cgroup memory usage
+> >>significantly higher than the value actually needed to run the application.
+> >>
+> >>Possible approaches include (1) automatic response to cgroup-local
+> >>memory pressure in the kernel, and (2) a kernel API for reclaiming
+> >>memory from a cgroup which could be driven under oom notification (with
+> >>the oom killer disabled for the cgroup - it would be enabled if the
+> >>cgroup was still oom after calling the kernel to reclaim memory).
+> >>
+> >>Clearly (1) is the preferred approach. The closest facility in the
+> >>kernel to (2) is to ask the kernel to free pagecache using `echo 1 >
+> >>/proc/sys/vms/drop_caches`, but that is too wide-ranging, especially in
+> >>a PaaS environment hosting multiple applications. A similar facility
+> >>could be provided for a cgroup via a cgroup pseudo-file
+> >>`memory.drop_caches`.
+> >>
+> >>Other approaches include a mempressure cgroup ([2]) which would not be
+> >>suitable for PaaS applications. See [3] for Andrew Morton's response. A
+> >>related workaround ([4]) was included in the 3.6 kernel.
+> >>
+> >>Related discussions:
+> >>[1] https://groups.google.com/a/cloudfoundry.org/d/topic/vcap-dev/6M8BDV_tq7w/discussion
+> >>[2]https://lwn.net/Articles/531077/ <https://lwn.net/Articles/531077/>
+> >>[3]https://lwn.net/Articles/531138/ <https://lwn.net/Articles/531138/>
+> >>[4]https://lkml.org/lkml/2013/6/6/462 <https://lkml.org/lkml/2013/6/6/462>&
+> >>https://github.com/torvalds/linux/commit/e62e384e
+> >><https://github.com/torvalds/linux/commit/e62e384e>.
 > 
-> So now root cgroup will not have any cfq, weight[_device] knobs but
-> non root cgroups will have one? What's the harm in providing one for
-> root too for the sake of uniformity. That's a differnt thing thet root
-> does not have a competitor so value in that knob does not matter.
-
-Please see at the end of the mail.
-
-> > * cfq's time stats reports the total time slice consumed but its unit
-> >   is in jiffies and it's not reported per-device like all other stats.
-> >   Omit it for now.  If slice time is actually necessary, let's add it
-> >   in the form consistent with other stats.
-> 
-> To me this knob is also for debugging purposes. CFQ divides disk time
-> proportionally. And if one wants to see how disk time is being divided
-> among cgroups, this knob helps. This is more to verify whether our
-> algorithm is working fine or not and if disk time is being divided
-> in proportion to weights or not.
-> 
-> But again, I am not particular about this knob. Sounds more like
-> debugging stuff.
-
-If it is a debug knob, let's please require it to be enabled
-explicitly - ie. require a boot param which *clearly* indicates that
-this is a debug option; otherwise, we end up leaking internal details
-w/o actually intending or designing for it and userland is likely to
-grow dependency on it.
-
-> Google folks wanted all these knobs. And they said that they have lot
-> of more knobs which they carry internally.
-
-AFAIK, google folks forked cfq a couple years ago, I'm not sure how
-much this will affect them.
-
-> Personally I think io_queued might be a useful knob because it can
-> show current backlog on a particular cgroup and some tool might want
-> to dynamically monitor the queue lenghts of various cgroups and adjust
-> weights dynamically.
-> 
-> So this one might be worth retaining.
-
-Can we do that once we know for sure that this is actually necessary?
-I'm quite skeptical that this sort of snapshot stats are actually
-useful except for debugging.
-
-> > * cfq adds a number of stats knobs if CONFIG_DEBUG_BLK_CGROUP.  If
-> >   these are actually for debugging, they shouldn't show up by default
-> >   (ie. should be gated by kernel param or something).  If userland
-> >   already developed dependency on them, we need to take them out of
-> >   CONFIG_DEBUG_BLK_CGROUP.  Skip them for now.  We can add back the
-> >   relevant ones later.
-> 
-> I am fine with this. Again Google folks intorduced those. Not sure
-> if they still use those. Less stats are better.
-
-The same thing with above.  If these are really for debugging, let's
-please hide them better.
-
-> >   weight_device			-> cfq.weight_device
-> >   weight			-> cfq.weight
-> >   sectors_recursive		-> cfq.sectors
-> >   io_service_bytes_recursive	-> cfq.bytes
-> 
-> throttling has correspnding knob as throttle.io_service_bytes. So either
-> we can change the name of throttling knob to throttle.bytes or
-> chnage keep this one as it is (cfq.io_service_bytes) for the sake of
-> consistency.
-
-Yeah, thought about keeping them consistent but would that really
-matter?  Having internal consistency in cfq seems more important to
-me.
-
-> >   io_serviced_recursive		-> cfq.serviced
-> 
-> throttling layer uses throttle.io_serviced.
-
-Ditto.
-
-> Given the fact that throttling layer counts bios and CFQ counts requests
-> may be we can keep throttle.bio_serviced  and cfq.rq_serviced as names.
-> 
-> Or may be just throttle.bios and cfq.requests respectively.
-
-I'm not sure whether we want to rename throttle knobs.  Renaming cfq
-knobs makes sense as they need to be renamed for cfq. prefix anyway
-but throttle knobs are already mostly fine, so wouldn't it make sense
-to leave them as they are?  It makes things a bit incosistent between
-cfq and throttle but do we really care?
-
-> > @@ -761,6 +761,7 @@ EXPORT_SYMBOL_GPL(blkg_conf_finish);
-> >  struct cftype blkcg_files[] = {
-> >  	{
-> >  		.name = "reset_stats",
-> > +		.flags = CFTYPE_INSANE,
-> >  		.write_u64 = blkcg_reset_stats,
-> 
-> So this knob will not be user visible with unified hierarchy as well as with
-> sane behavior?
-> 
-> So this looks like a cleanup independent of unified hiearchy.
-
-Again, sane_behavior is subset of unified hierarchy and will be
-absorbed into unified hierarchy.  No need to make the distinction.
-
-> > +	/* files for default hierarchy, properly prefixed with cfq */
-> > +	{
-> > +		.name = "cfq.weight_device",
-> > +		.flags = CFTYPE_ONLY_ON_DFL | CFTYPE_NOT_ON_ROOT,
-> > +		.seq_show = cfqg_print_weight_device,
-> > +		.write_string = cfqg_set_weight_device,
-> > +	},
-> > +	{
-> > +		.name = "cfq.weight",
-> > +		.flags = CFTYPE_ONLY_ON_DFL | CFTYPE_NOT_ON_ROOT,
-> > +		.seq_show = cfq_print_weight,
-> > +		.write_u64 = cfq_set_weight,
-> > +	},
-> > +
-> 
-> What't the harm in providing these knobs for root too?
-
-Because I'm not sure about the benefits and it makes cfq behave
-differently from other controllers.  root cgroup behavior probably has
-to be special per controller so there's nothing fundamentally wrong
-with that.  I just am not sure whether this actually adds something
-significantly beneficial and it's kinda silly to commit to things when
-not really necessary.  Adding things later is easy, removing is not,
-so...
-
-Thanks.
-
--- 
-tejun
