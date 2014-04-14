@@ -1,88 +1,76 @@
-From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] device_cgroup: do not use rule acceptance function to
- validate access
-Date: Mon, 14 Apr 2014 10:47:54 -0400
-Message-ID: <20140414144736.GS29214@redhat.com>
+From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCHSET cgroup/for-3.15] cgroup: implement unified hierarchy
+Date: Mon, 14 Apr 2014 11:45:56 -0400
+Message-ID: <20140414154556.GA9552@redhat.com>
+References: <1395974461-12735-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1395974461-12735-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-may_access() is currently used to validate both new exceptions from children
-groups and to check if an access is allowed. This not only makes it hard to
-understand and maintain, but it's also incorrect.
+On Thu, Mar 27, 2014 at 10:40:49PM -0400, Tejun Heo wrote:
 
-It currently allows one to:
+[..]
+> This patchset finally implements the default unified hierarchy.  The
+> goal is providing enough flexibility while enforcing stricter common
+> structure where appropriate to address the above listed issues.
+> 
+> Controllers which aren't bound to other hierarchies are
+> automatically attached to the unified hierarchy,
 
-	# mkdir new_group
-	# cd new_group
-	# echo $$ >tasks
-	# echo "c 1:3 w" >devices.deny
-	# echo >/dev/null
-	# echo $?
-	0
+Hi Tejun,
 
-This patch implements the device file access check separately and fixes
-the issue.
+So this patchset does not *enforce* a single hierarchy? So user space
+can still mount other hierarchies.
 
-This is broken since c39a2a3018f8065cb5ea38b0314c1bbedb2cfa0d
+> which is different in
+> that controllers are enabled explicitly for each subtree.
+> "cgroup.subtree_control" controls which controllers are enabled on the
+> child cgroups.  Let's assume a hierarchy like the following.
+> 
+>   root - A - B - C
+>                \ D
+> 
+> root's "cgroup.subtree_control" determines which controllers are
+> enabled on A.  A's on B.  B's on C and D.  This coincides with the
+> fact that controllers on the immediate sub-level are used to
+> distribute the resources of the parent.  In fact, it's natural to
+> assume that resource control knobs of a child belong to its parent.
+> Enabling a controller in "cgroup.subtree_control" declares that
+> distribution of the respective resources of the cgroup will be
+> controlled.  Note that this means that controller enable states are
+> shared among siblings.
+> 
+> The default hierarchy has an extra restriction - only cgroups which
+> don't contain any task may have controllers enabled in
+> "cgroup.subtree_control".  Combined with the other properties of the
+> default hierarchy, this guarantees that, from the view point of
+> controllers, tasks are only on the leaf cgroups.  In other words, only
+> leaf csses may contain tasks.  This rules out situations where child
+> cgroups compete against internal tasks of the parent.
 
-After review, this should be considered for stable series.
+How does this work for root's tasks now? Given that task can only be
+in leaf cgroups, that means tasks can't be in / cgroup (If one wants
+to create some cgroups). Does that mean / will be empty and init system
+need to setup things right.
 
-Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Before one can create child cgroups, there will be some processes
+already running (init itlsef, kernel threads etc). I am assuming they
+will be running in /. So how would that work.
 
-diff --git a/security/device_cgroup.c b/security/device_cgroup.c
-index 8365909..d390d21 100644
---- a/security/device_cgroup.c
-+++ b/security/device_cgroup.c
-@@ -704,21 +704,35 @@ static int __devcgroup_check_permission(short type, u32 major, u32 minor,
- 				        short access)
- {
- 	struct dev_cgroup *dev_cgroup;
--	struct dev_exception_item ex;
--	int rc;
--
--	memset(&ex, 0, sizeof(ex));
--	ex.type = type;
--	ex.major = major;
--	ex.minor = minor;
--	ex.access = access;
-+	struct dev_exception_item *ex;
-+	enum devcg_behavior behavior;
-+	bool match = false;
- 
- 	rcu_read_lock();
- 	dev_cgroup = task_devcgroup(current);
--	rc = may_access(dev_cgroup, &ex, dev_cgroup->behavior);
-+	behavior = dev_cgroup->behavior;
-+	list_for_each_entry_rcu(ex, &dev_cgroup->exceptions, list) {
-+		if (type == DEV_BLOCK && !(ex->type & DEV_BLOCK))
-+			continue;
-+		if (type == DEV_CHAR && !(ex->type & DEV_CHAR))
-+			continue;
-+		if (ex->major != ~0 && major != ex->major)
-+			continue;
-+		if (ex->minor != ~0 && minor != ex->minor)
-+			continue;
-+		if (access & (~ex->access))
-+			continue;
-+		match = true;
-+		break;
-+	}
- 	rcu_read_unlock();
- 
--	if (!rc)
-+	if (behavior == DEVCG_DEFAULT_ALLOW && match)
-+		/* access matches a rule to disallow access */
-+		return -EPERM;
-+
-+	if (behavior == DEVCG_DEFAULT_DENY && !match)
-+		/* no exceptions found, default action is to deny access */
- 		return -EPERM;
- 
- 	return 0;
+Thanks
+Vivek
