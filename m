@@ -1,8 +1,7 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 08/12] cgroup: allow cgroup creation and suppress automatic
-	css creation in the unified hierarchy
-Date: Mon, 14 Apr 2014 17:37:06 -0400
-Message-ID: <1397511430-2673-9-git-send-email-tj@kernel.org>
+Subject: [PATCH 09/12] cgroup: add css_set->dfl_cgrp
+Date: Mon, 14 Apr 2014 17:37:07 -0400
+Message-ID: <1397511430-2673-10-git-send-email-tj@kernel.org>
 References: <1397511430-2673-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,13 +9,13 @@ Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=/tpsCk4yCvlQ30iMuMGoewaVU3T2l2EVT9qPt9Bb/cA=;
-	b=XwoJuHzd7fqPaOn0YHXDssXQHIZJUFlOCF3h99Em0WniTxvdyYm5ijeDrwVOxq9teZ
-	gkA6i1kAGfHweTh18K+WM+q5bNubWtg8HDd6GBzk6nwcXllAPmLTvFCn0zx1U3I3ogEj
-	Sblntugm59oXWJgj8s6xm0S1d1PwIfNNWSqiS9g9qaaD4Q0jnMkMHImVOARVmMcdbNi3
-	jCsWdxIkdTll0+NNZHIHPN1c6mZa9nMQmWqRscih+915/GTATSQpHNuQ0UL6nRC8NsSe
-	Zf/zFn5lJhNcucNfydijElUO2jeKWJSfrJV+pCHteUll+4Dy96C8SAdhZ2G9/wCO7XNV
-	Zmxg==
+	bh=7zwwidgLkdZDIJkruA4bXyP8jRKZIYu81m0TRYn4cFA=;
+	b=mOCqhgpXcbtyhSj5G3i6TjG5FHNJevgC7UVZSevU5fLUGuHTHtTWkap+DwVhE+Oi36
+	WJfzmXtVlNuaDJQkC6Yxw8grhyZdriSfempxpUmc/KLdmTik8D5Ss176Cyzh2X7a+05D
+	LdTj0AJXvtjxI/dfMPVEnZPDVTZtsVMoKNoVP2MlHY+LEy1ELlINJ9qTMf4A6ha6RcZM
+	jxdgac+BPz8kPtdxIuEdxxUOMBcyNCuuiCqm9ZB/OhyhKCqVihLRyg08rn48iCSjLJSa
+	M44LId2nxoaUroB9s1oasCqPBJImzbMxD3lDwZqjdcPX1dzqW1SM4F8lqzc3/A9sO/3/
+	ECcg==
 In-Reply-To: <1397511430-2673-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -31,62 +30,45 @@ Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Now that effective css handling has been added and iterators updated
-accordingly, it's safe to allow cgroup creation in the default
-hierarchy.  Unblock cgroup creation in the default hierarchy.
-
-As the default hierarchy will implement explicit enabling and
-disabling of controllers on each cgroup, suppress automatic css
-enabling on cgroup creation.
+To implement the unified hierarchy behavior, we'll need to be able to
+determine the associated cgroup on the default hierarchy from css_set.
+Let's add css_set->dfl_cgrp so that it can be accessed conveniently
+and efficiently.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- kernel/cgroup.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ include/linux/cgroup.h | 3 +++
+ kernel/cgroup.c        | 4 ++++
+ 2 files changed, 7 insertions(+)
 
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 18fcae3..c49d161 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -354,6 +354,9 @@ struct css_set {
+ 	 */
+ 	struct list_head cgrp_links;
+ 
++	/* the default cgroup associated with this css_set */
++	struct cgroup *dfl_cgrp;
++
+ 	/*
+ 	 * Set of subsystem states, one for each subsystem. This array is
+ 	 * immutable after creation apart from the init_css_set during
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 3de3951..02c99a3 100644
+index 02c99a3..b4cd1fe 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -1115,8 +1115,10 @@ static int rebind_subsystems(struct cgroup_root *dst_root,
- 		src_root->subsys_mask &= ~(1 << ssid);
- 		src_root->cgrp.child_subsys_mask &= ~(1 << ssid);
+@@ -651,6 +651,10 @@ static void link_css_set(struct list_head *tmp_links, struct css_set *cset,
+ 	struct cgrp_cset_link *link;
  
-+		/* default hierarchy doesn't enable controllers by default */
- 		dst_root->subsys_mask |= 1 << ssid;
--		dst_root->cgrp.child_subsys_mask |= 1 << ssid;
-+		if (dst_root != &cgrp_dfl_root)
-+			dst_root->cgrp.child_subsys_mask |= 1 << ssid;
- 
- 		if (ss->bind)
- 			ss->bind(css);
-@@ -3790,13 +3792,6 @@ static long cgroup_create(struct cgroup *parent, const char *name,
- 	struct cgroup_subsys *ss;
- 	struct kernfs_node *kn;
- 
--	/*
--	 * XXX: The default hierarchy isn't fully implemented yet.  Block
--	 * !root cgroup creation on it for now.
--	 */
--	if (root == &cgrp_dfl_root)
--		return -EINVAL;
--
- 	/* allocate the cgroup and its ID, 0 is reserved for the root */
- 	cgrp = kzalloc(sizeof(*cgrp), GFP_KERNEL);
- 	if (!cgrp)
-@@ -3882,7 +3877,12 @@ static long cgroup_create(struct cgroup *parent, const char *name,
- 		}
- 	}
- 
--	cgrp->child_subsys_mask = parent->child_subsys_mask;
-+	/*
-+	 * On the default hierarchy, a child doesn't automatically inherit
-+	 * child_subsys_mask from the parent.  Each is configured manually.
-+	 */
-+	if (!cgroup_on_dfl(cgrp))
-+		cgrp->child_subsys_mask = parent->child_subsys_mask;
- 
- 	kernfs_activate(kn);
- 
+ 	BUG_ON(list_empty(tmp_links));
++
++	if (cgroup_on_dfl(cgrp))
++		cset->dfl_cgrp = cgrp;
++
+ 	link = list_first_entry(tmp_links, struct cgrp_cset_link, cset_link);
+ 	link->cset = cset;
+ 	link->cgrp = cgrp;
 -- 
 1.9.0
