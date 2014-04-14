@@ -1,7 +1,8 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 05/12] cgroup: reorganize css_task_iter
-Date: Mon, 14 Apr 2014 17:37:03 -0400
-Message-ID: <1397511430-2673-6-git-send-email-tj@kernel.org>
+Subject: [PATCH 07/12] cgroup: cgroup->subsys[] should be cleared after the
+	css is offlined
+Date: Mon, 14 Apr 2014 17:37:05 -0400
+Message-ID: <1397511430-2673-8-git-send-email-tj@kernel.org>
 References: <1397511430-2673-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -9,13 +10,13 @@ Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=vsGkHeR6xLVD3E6hO1keVkzKWC+QJwUPatkOyloc4h0=;
-	b=PoyDdhhDy/CyemGpzoCR4K49/bMaFs7X4ogUiGG8Jd2swVDyD9skbjD0mB10epRWFy
-	i5vXKCHwZJQnB2kbO8brTHvLu8jcmzWOG/O3ZaX0EFD0gq4yvjOYEiKv6PoT8bPukBAd
-	b4k4uQMwx/NdWZk06tgbwgpMWOPprO0MIbdjYurj1KjGX63+bn7mz5Uh6xSRBT9Pimdo
-	LZUqeJEDsE7mg1w3y3tMDf/qBkEe2/Mjb6U+J+oyoVc2qkbM+UARBg3n4PyR6+DOl5dr
-	46hEoue8fgRHj9KOGLrDztKS5h0WLOlUge+GNdnIPhcpFeYAYdIzxTYjFY24VScWn4mq
-	PR5A==
+	bh=S9V0wEfDW7rtJMkhzBBBBWIQ8f5zi1Ty7QWsu4HLqKU=;
+	b=n58mjungyym9I6NJVdtMdpJnfFF4IdosqFqg9+j6eUG9ziY0cN/82HU5lOouQmP4Gr
+	3biJ8DGf/brl+8iB9Zl+ifU3NAKeR4jYEgAuXBe4rQSgEqImfBGXWMGLBG1LaOo4b2qf
+	aemGLrtUEPLVBiCmUmCHG7zY+XqAWjlNcwecuTg1isH2WV56pfggZWTjpPl1IgIGzjKJ
+	RZJdajdWmhSvnWbDCfSjtt46KER6eTtBMJyIVTHOJMiLxqc0+xIRQVlJPAr2FCOUhteT
+	yDEjXD3qjRDI3GoPp2kWEc1Q6ZjIr/uq2n9krKRuhkWE0TjqsPEca9qzLhdIzwasL9ri
+	eYrw==
 In-Reply-To: <1397511430-2673-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -30,137 +31,37 @@ Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-This patch reorganizes css_task_iter so that adding effective css
-support is easier.
+After a css finishes offlining, offline_css() mistakenly performs
+RCU_INIT_POINTER(css->cgroup->subsys[ss->id], css) which just sets the
+cgroup->subsys[] pointer to the current value.  The intention was to
+clear it after offline is complete, not reassign the same value.
 
-* s/->cset_link/->cset_pos/ and s/->task/->task_pos/ for consistency
+Update it to assign NULL instead of the current value.  This makes
+cgroup_css() to return NULL once offline is complete.  All the
+existing users of the function either can handle NULL return already
+or guarantee that the css doesn't get offlined.
 
-* ->origin_css is used to determine whether the iteration reached the
-  last css_set.  Replace it with explicit ->cset_head so that
-  css_advance_task_iter() doesn't have to know the termination
-  condition directly.
-
-* css_task_iter_next() currently assumes that it's walking list of
-  cgrp_cset_link and reaches into the current cset through the current
-  link to determine the termination conditions for task walking.  As
-  this won't always be true for effective css walking, add
-  ->tasks_head and ->mg_tasks_head and use them to control task
-  walking so that css_task_iter_next() doesn't have to know how
-  css_sets are being walked.
-
-This patch doesn't make any behavior changes.  The iteration logic
-stays unchanged after the patch.
+While this is a bugfix, as css lifetime is currently tied to the
+cgroup it belongs to, this bug doesn't cause any actual problems.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/cgroup.h |  9 ++++++---
- kernel/cgroup.c        | 33 +++++++++++++++++----------------
- 2 files changed, 23 insertions(+), 19 deletions(-)
+ kernel/cgroup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 33a0043..bee3905 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -842,9 +842,12 @@ css_next_descendant_post(struct cgroup_subsys_state *pos,
- 
- /* A css_task_iter should be treated as an opaque object */
- struct css_task_iter {
--	struct cgroup_subsys_state	*origin_css;
--	struct list_head		*cset_link;
--	struct list_head		*task;
-+	struct list_head		*cset_pos;
-+	struct list_head		*cset_head;
-+
-+	struct list_head		*task_pos;
-+	struct list_head		*tasks_head;
-+	struct list_head		*mg_tasks_head;
- };
- 
- void css_task_iter_start(struct cgroup_subsys_state *css,
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index f525578..bcf390f 100644
+index 0318bfc..3de3951 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -2861,27 +2861,30 @@ css_next_descendant_post(struct cgroup_subsys_state *pos,
-  */
- static void css_advance_task_iter(struct css_task_iter *it)
- {
--	struct list_head *l = it->cset_link;
-+	struct list_head *l = it->cset_pos;
- 	struct cgrp_cset_link *link;
- 	struct css_set *cset;
+@@ -3714,7 +3714,7 @@ static void offline_css(struct cgroup_subsys_state *css)
  
- 	/* Advance to the next non-empty css_set */
- 	do {
- 		l = l->next;
--		if (l == &it->origin_css->cgroup->cset_links) {
--			it->cset_link = NULL;
-+		if (l == it->cset_head) {
-+			it->cset_pos = NULL;
- 			return;
- 		}
- 		link = list_entry(l, struct cgrp_cset_link, cset_link);
- 		cset = link->cset;
- 	} while (list_empty(&cset->tasks) && list_empty(&cset->mg_tasks));
- 
--	it->cset_link = l;
-+	it->cset_pos = l;
- 
- 	if (!list_empty(&cset->tasks))
--		it->task = cset->tasks.next;
-+		it->task_pos = cset->tasks.next;
- 	else
--		it->task = cset->mg_tasks.next;
-+		it->task_pos = cset->mg_tasks.next;
-+
-+	it->tasks_head = &cset->tasks;
-+	it->mg_tasks_head = &cset->mg_tasks;
+ 	css->flags &= ~CSS_ONLINE;
+ 	css->cgroup->nr_css--;
+-	RCU_INIT_POINTER(css->cgroup->subsys[ss->id], css);
++	RCU_INIT_POINTER(css->cgroup->subsys[ss->id], NULL);
  }
  
  /**
-@@ -2907,8 +2910,8 @@ void css_task_iter_start(struct cgroup_subsys_state *css,
- 
- 	down_read(&css_set_rwsem);
- 
--	it->origin_css = css;
--	it->cset_link = &css->cgroup->cset_links;
-+	it->cset_pos = &css->cgroup->cset_links;
-+	it->cset_head = it->cset_pos;
- 
- 	css_advance_task_iter(it);
- }
-@@ -2924,12 +2927,10 @@ void css_task_iter_start(struct cgroup_subsys_state *css,
- struct task_struct *css_task_iter_next(struct css_task_iter *it)
- {
- 	struct task_struct *res;
--	struct list_head *l = it->task;
--	struct cgrp_cset_link *link = list_entry(it->cset_link,
--					struct cgrp_cset_link, cset_link);
-+	struct list_head *l = it->task_pos;
- 
- 	/* If the iterator cg is NULL, we have no tasks */
--	if (!it->cset_link)
-+	if (!it->cset_pos)
- 		return NULL;
- 	res = list_entry(l, struct task_struct, cg_list);
- 
-@@ -2940,13 +2941,13 @@ struct task_struct *css_task_iter_next(struct css_task_iter *it)
- 	 */
- 	l = l->next;
- 
--	if (l == &link->cset->tasks)
--		l = link->cset->mg_tasks.next;
-+	if (l == it->tasks_head)
-+		l = it->mg_tasks_head->next;
- 
--	if (l == &link->cset->mg_tasks)
-+	if (l == it->mg_tasks_head)
- 		css_advance_task_iter(it);
- 	else
--		it->task = l;
-+		it->task_pos = l;
- 
- 	return res;
- }
 -- 
 1.9.0
