@@ -1,112 +1,74 @@
-From: Hong Zhiguo <honkiko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Test of [PATCH] blk-throttle: simplify logic by token bucket algorithm
-Date: Tue, 15 Apr 2014 15:23:06 +0800
-Message-ID: <1397546586-6776-1-git-send-email-zhiguohong@tencent.com>
-References: <1397546303-6709-1-git-send-email-zhiguohong@tencent.com>
+From: Glyn Normington <gnormington-6n0RBC2Q8y8S+FvcfC7Uqw@public.gmane.org>
+Subject: Re: Kernel scanning/freeing to relieve cgroup memory pressure
+Date: Tue, 15 Apr 2014 09:38:10 +0100
+Message-ID: <534CEFF2.7090207@gopivotal.com>
+References: <533C0BB4.4070009@gopivotal.com> <20140402180019.GL16631@htj.dyndns.org> <534B982D.8060106@gopivotal.com> <20140414205034.GA6443@cmpxchg.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=RJhzVRBJ3KlUZDa/wfWpB1nCASqVOIrCXubW0nk5HVs=;
-        b=TdbpHtXfO+c5hCvWvrB+JCrYjhgVRMvku8Au7DHVgHhkkjIKogtGfLJ37bCwUqNvng
-         AmkyhMfs0HJV2ZlVX9+6uQ4QVeLN3e30aGh8BzosbaS1i932hjPNroEBgWBZ1lYiaM0G
-         Cy1Vd6WzxBNH+deCTlVZ6CpnNJl+gXxOAU4Z/ov3CTAZYQFq6Rm6fUruLTDwhttmkx4n
-         vbKE9DzOikPzpVt+Lv06PXQfERqXVO+kizGSfb/gV1Z9jpuHHEofaTDsRct+JVtjH1i1
-         lyutZxNNc0vsvudjesbt5QBxCZAlgsBIl2hk3bD5aHrGo561msNUXV2f2mJUVus3QWHK
-         cniQ==
-In-Reply-To: <1397546303-6709-1-git-send-email-zhiguohong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+In-Reply-To: <20140414205034.GA6443-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, Hong Zhiguo <zhiguohong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi, Vivek,
-
-I tested the PATCH again for some basic hierarchical setup as I did
-before.
-
-Preparation
-============
-1) mount subsys blkio with "__DEVEL__sane_behavior"
-2) Create 3 levels of directories under the blkio mount point:
-    mkdir 1
-    mkdir 1/2
-    mkdir 1/2/3
-    mkdir 4
-3) start 4 bash sessions, write their PIDs into:
-    1/cgroup.procs
-    1/2/cgroup.procs
-    1/2/3/cgroup.procs
-    4/cgroup.procs
-4) prepare 4 10MB files on sdb(ext4 fs)
-
-Note: in below hierarchy graph:
-    "[50k]" means configured value for read_bps_device is 50kB/s
-    "[-]"   means unlimit configured
-    "(50k)" means bandwidth reported by dd is 50kB/s
-
-Test A: 1 process throttled by ancestor group
-=============================================
-Hierarchy set-up:
-    (echo "8:16 204800" > 1/blkio.throttle.read_bps_device)
-    |-- 1 [200k]
-    |    `-- 2 [-]
-    |         `-- 3 [-]
-    `-- 4 [-]
-
-dd within group 3:
-    (drop cache then: dd if=10M-file-3 of=/dev/null)
-Result:
-    205kB/s (I did same test without the token-bucket patch, The
-result is also 205kB/s)
-
-dd within group 2:
-    (drop cache then: dd if=10M-file-2 of=/dev/null)
-Result:
-    205kB/s
-
-Test B: 4 processes in 3 levels of hierarchy, group 1 unlimited
-===============================================================
-Hierarchy set-up:
-    echo "8:16 204800" > 1/blkio.throttle.read_bps_device
-    echo "8:16 102400" > 1/2/blkio.throttle.read_bps_device
-    echo "8:16 51200"  > 1/2/3/blkio.throttle.read_bps_device
-    echo "8:16 51200"  > 4/blkio.throttle.read_bps_device
-    |-- 1 [-]
-    |    `-- 2 [100k]
-    |         `-- 3 [50k]
-    `-- 4 [50k]
-
-start 4 dd processes from 4 bash sessions
-    (dd if=10M-file-x of=/dev/null)
-Result:
-    |-- 1 (171M)
-    |    `-- 2 (51.9k)
-    |         `-- 3 (51.2k)
-    `-- 4 (51.3k)
-
-Test C: 4 processes in 3 levels of hierarchy
-=============================================
-Hierarchy set-up:
-    echo "8:16 204800" > 1/blkio.throttle.read_bps_device
-    echo "8:16 102400" > 1/2/blkio.throttle.read_bps_device
-    echo "8:16 51200"  > 1/2/3/blkio.throttle.read_bps_device
-    echo "8:16 51200"  > 4/blkio.throttle.read_bps_device
-    |-- 1 [200k]
-    |    `-- 2 [100k]
-    |         `-- 3 [50k]
-    `-- 4 [50k]
-
-write 10M-file-1 to 20M, others still 10M, so 4 dd processes
-take similar time.
-
-start 4 dd processes from 4 bash sessions
-    (dd if=10M-file-x of=/dev/null)
-Result:
-    |-- 1 (104k)
-    |    `-- 2 (52.8k)
-    |         `-- 3 (51.1k)
-    `-- 4 (51.4k)
+On 14/04/2014 21:50, Johannes Weiner wrote:
+> On Mon, Apr 14, 2014 at 09:11:25AM +0100, Glyn Normington wrote:
+>> Johannes/Michal
+>>
+>> What are your thoughts on this matter? Do you see this as a valid
+>> requirement?
+> As Tejun said, memory cgroups *do* respond to internal pressure and
+> enter targetted reclaim before invoking the OOM killer.  So I'm not
+> exactly sure what you are asking.
+We are repeatedly seeing a situation where a memory cgroup with a given 
+memory limit results in an application process in the cgroup being 
+killed oom during application initialisation. One theory is that dirty 
+file cache pages are not being written to disk to reduce memory 
+consumption before the oom killer is invoked. Should memory cgroups' 
+response to internal pressure include writing dirty file cache pages to 
+disk?
+>
+>> On 02/04/2014 19:00, Tejun Heo wrote:
+>>> (cc'ing memcg maintainers and cgroup ML)
+>>>
+>>> On Wed, Apr 02, 2014 at 02:08:04PM +0100, Glyn Normington wrote:
+>>>> Currently, a memory cgroup can hit its oom limit when pages could, in
+>>>> principle, be reclaimed by the kernel except that the kernel does not
+>>>> respond directly to cgroup-local memory pressure.
+>>> So, ummm, it does.
+>>>
+>>>> A use case where this is important is running a moderately large Java
+>>>> application in a memory cgroup in a PaaS environment where cost to the
+>>>> user depends on the memory limit ([1]). Users need to tune the memory
+>>>> limit to reduce their costs. During application initialisation large
+>>>> numbers of JAR files are opened (read-only) and read while loading the
+>>>> application code and its dependencies. This is reflected in a peak of
+>>>> file cache usage which can push the memory cgroup memory usage
+>>>> significantly higher than the value actually needed to run the application.
+>>>>
+>>>> Possible approaches include (1) automatic response to cgroup-local
+>>>> memory pressure in the kernel, and (2) a kernel API for reclaiming
+>>>> memory from a cgroup which could be driven under oom notification (with
+>>>> the oom killer disabled for the cgroup - it would be enabled if the
+>>>> cgroup was still oom after calling the kernel to reclaim memory).
+>>>>
+>>>> Clearly (1) is the preferred approach. The closest facility in the
+>>>> kernel to (2) is to ask the kernel to free pagecache using `echo 1 >
+>>>> /proc/sys/vms/drop_caches`, but that is too wide-ranging, especially in
+>>>> a PaaS environment hosting multiple applications. A similar facility
+>>>> could be provided for a cgroup via a cgroup pseudo-file
+>>>> `memory.drop_caches`.
+>>>>
+>>>> Other approaches include a mempressure cgroup ([2]) which would not be
+>>>> suitable for PaaS applications. See [3] for Andrew Morton's response. A
+>>>> related workaround ([4]) was included in the 3.6 kernel.
+>>>>
+>>>> Related discussions:
+>>>> [1] https://groups.google.com/a/cloudfoundry.org/d/topic/vcap-dev/6M8BDV_tq7w/discussion
+>>>> [2]https://lwn.net/Articles/531077/ <https://lwn.net/Articles/531077/>
+>>>> [3]https://lwn.net/Articles/531138/ <https://lwn.net/Articles/531138/>
+>>>> [4]https://lkml.org/lkml/2013/6/6/462 <https://lkml.org/lkml/2013/6/6/462>&
+>>>> https://github.com/torvalds/linux/commit/e62e384e
+>>>> <https://github.com/torvalds/linux/commit/e62e384e>.
