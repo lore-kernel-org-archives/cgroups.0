@@ -1,46 +1,110 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 3/3] cgroup: implement cgroup.subtree_populated for the
- default hierarchy
-Date: Tue, 15 Apr 2014 10:54:50 -0400
-Message-ID: <20140415145450.GL1863@htj.dyndns.org>
-References: <1397511846-2904-1-git-send-email-tj@kernel.org>
- <1397511846-2904-4-git-send-email-tj@kernel.org>
- <534C83F1.9020106@huawei.com>
+From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] device_cgroup: do not use rule acceptance function to
+ validate access
+Date: Tue, 15 Apr 2014 10:57:52 -0500
+Message-ID: <20140415155752.GC5184@sergelap>
+References: <20140414144736.GS29214@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=5bJha0T7zE5mXRS+Q6tCdMHbGfPtwwIzvfzF+DMWOR4=;
-        b=Itj3CI+r012OZrq9yQI0rOq/ysP6GZweVHKbFt6VF4RfpmXOoxpmcIC6EZp5TFg1HV
-         6Y4YXFV66wZrSKFwMnOwgf6ahUjrK13uBFv7qJ9rhJSQFSJEIwdVcs5YZmD2Hs+CAPa3
-         WWAU5tx2SsqOdHXoXjkSXjcnZeQR3Fq/4uGLoeD8aHd3dZ7GtSPqNBBeELb6nnSlr/uk
-         OsFRxA8CzIdR9LawLrmYD/+zovCVrZejgZjC6KjFSCHhzQuESshO7VMGEq1VVdfDp7m1
-         L1JNhwNV7UVRtmhUrul+u6DGiiYPyo4sc3r4h5q7J/hgDNhg3+wNMkimd6Hd7FjosYF6
-         tl1Q==
 Content-Disposition: inline
-In-Reply-To: <534C83F1.9020106-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20140414144736.GS29214-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, john-jueV0HHMeujJJrXXpGQQMAC/G2K4zDHf@public.gmane.org, rlove-L7G0xEPcOZbYtjvyW6yDsg@public.gmane.org, eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org, kay-tD+1rO4QERM@public.gmane.org
+To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-Hello,
+Quoting Aristeu Rozanski (aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
+> may_access() is currently used to validate both new exceptions from children
+> groups and to check if an access is allowed. This not only makes it hard to
+> understand and maintain, but it's also incorrect.
 
-On Tue, Apr 15, 2014 at 08:57:21AM +0800, Li Zefan wrote:
-> Is cgroup.tree_populated a better name?
+Heh, well one might argue that may_access() was more approriate at
+__devcgroup_check_permission(), should remain simpler, and parent_has_perm()
+should be the wrapper doing the extra bits.  That would be easier to
+read imo.
+
+In what you have here, you end up duplicating the
+list_for_each_entry_rcu.  I think you should at least have a common
+fn for that.
+
+I don't want to sound pedantic, but since the point of this patch is
+that simplicity/ease-of-reading would have prevented the bug ... :)
+
+> It currently allows one to:
 > 
-> cgroup.subtree_control controls child cgroups only, but .subtree_populated
-> shows 1 if there're tasks in the cgroup or its children, so the two
-> are a bit inconsistent to me.
+> 	# mkdir new_group
+> 	# cd new_group
+> 	# echo $$ >tasks
+> 	# echo "c 1:3 w" >devices.deny
+> 	# echo >/dev/null
+> 	# echo $?
+> 	0
+> 
+> This patch implements the device file access check separately and fixes
+> the issue.
+> 
+> This is broken since c39a2a3018f8065cb5ea38b0314c1bbedb2cfa0d
+> 
+> After review, this should be considered for stable series.
 
-Yes, good catch.  subtree_control affects subtree proper.
-subtree_populated covers self too.  The difference is subtle and the
-trade off between shared pattern in names and clarifying the subtlety
-didn't seem clear-cut to me.  Hmmm....
+Definately.
 
--- 
-tejun
+> Signed-off-by: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+
+I *think* it's ok, and I appreciate you finding and fixing the bug, but
+I don't think the result is as easy to read as it could be, so if you
+don't mind I'd like to wait for a new version to ack.  If you disagree
+with me, let me know and I'll re-read and (presumably) ack.
+
+> diff --git a/security/device_cgroup.c b/security/device_cgroup.c
+> index 8365909..d390d21 100644
+> --- a/security/device_cgroup.c
+> +++ b/security/device_cgroup.c
+> @@ -704,21 +704,35 @@ static int __devcgroup_check_permission(short type, u32 major, u32 minor,
+>  				        short access)
+>  {
+>  	struct dev_cgroup *dev_cgroup;
+> -	struct dev_exception_item ex;
+> -	int rc;
+> -
+> -	memset(&ex, 0, sizeof(ex));
+> -	ex.type = type;
+> -	ex.major = major;
+> -	ex.minor = minor;
+> -	ex.access = access;
+> +	struct dev_exception_item *ex;
+> +	enum devcg_behavior behavior;
+> +	bool match = false;
+>  
+>  	rcu_read_lock();
+>  	dev_cgroup = task_devcgroup(current);
+> -	rc = may_access(dev_cgroup, &ex, dev_cgroup->behavior);
+> +	behavior = dev_cgroup->behavior;
+> +	list_for_each_entry_rcu(ex, &dev_cgroup->exceptions, list) {
+> +		if (type == DEV_BLOCK && !(ex->type & DEV_BLOCK))
+> +			continue;
+> +		if (type == DEV_CHAR && !(ex->type & DEV_CHAR))
+> +			continue;
+> +		if (ex->major != ~0 && major != ex->major)
+> +			continue;
+> +		if (ex->minor != ~0 && minor != ex->minor)
+> +			continue;
+> +		if (access & (~ex->access))
+> +			continue;
+> +		match = true;
+> +		break;
+> +	}
+>  	rcu_read_unlock();
+>  
+> -	if (!rc)
+> +	if (behavior == DEVCG_DEFAULT_ALLOW && match)
+> +		/* access matches a rule to disallow access */
+> +		return -EPERM;
+> +
+> +	if (behavior == DEVCG_DEFAULT_DENY && !match)
+> +		/* no exceptions found, default action is to deny access */
+>  		return -EPERM;
+>  
+>  	return 0;
