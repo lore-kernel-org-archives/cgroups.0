@@ -1,54 +1,51 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.15] cgroup: implement unified hierarchy
-Date: Tue, 15 Apr 2014 00:57:41 -0400
-Message-ID: <20140415045741.GE1863@htj.dyndns.org>
-References: <1395974461-12735-1-git-send-email-tj@kernel.org>
-	<20140414154556.GA9552@redhat.com>
-	<20140414175236.GB15249@htj.dyndns.org>
-	<20140414181421.GC9552@redhat.com>
-	<20140414192139.GB16835@htj.dyndns.org>
-	<534CA050.8060709@huawei.com>
-Mime-Version: 1.0
+From: Hong Zhiguo <honkiko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH 0/2] blk-throttle: simplify logic by token bucket algorithm
+Date: Tue, 15 Apr 2014 15:18:21 +0800
+Message-ID: <1397546303-6709-1-git-send-email-zhiguohong@tencent.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=from:to:cc:subject:date:message-id;
+        bh=sOKXZ1Ub3tympOI3AG5/7czHIJ55jH/BzopRJWzvdWo=;
+        b=KjCPLY0iGJLXZoOxAHeI2p3oKi5iUdV5xN6AyH9ENAaXxWugzwyKVz4FfCdpviQURP
+         NUzLKWfnPzXVotSRi4+bWBmzdGUxXNGle2ISGPF/r1KyIXTunF1yw6pjRHTzZY9x4eH5
+         zBmhR0XrLkrOlFdjhLoNyyuGEpjrhgTnmf3JtQzAg+HANrAv7xRhRhP18RmXd40X1IvO
+         gAhHlwhLWTACshuDDyO0vEbPLYXX0rof3yr2QcOo/UCK4fAMrkSrw3X8bdXXqHoxH8Cr
+         7Tuey4ZkbqZdqUnP08fc5O7O+C2zaQZe096BbwO0GcKyy8DbmwfG4LJXQaMDtxp4Ad9w
+         iGbA==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=qca6/ECxME72U4kv63g9MVdlDgmkqCisKGLiFj/y03E=;
-	b=SAbd8stb4H7Jvgd2ZyzJAzvEtzvoRyr9j4oVhi/AyTGgUAbJ6Fh3sRGGKS2ses5Bux
-	YQFp3pUkWe1sopZ956028tpkaQ+T8OQ/0dilMl6EVJ8KaDl3BrX1SSkDBte0TClJSHqn
-	UlL0yM/QSd1KOPKnCcGE0M3DUg20NDQI6pMTJ5saUK2yUMd9M2NqlOjnQIRBtr9SH/hs
-	KFBVfeMf7dU2KZgm+jtoeXqupeGz/YMdn+WPDcSPVHidt9ZMFGBMWgIIx+ZMiiWL5Xcl
-	Wwrj5y5Uhfn2Qa5kA2z43SW45wrsxpPjLVZg5dSZduZFASZ0qgzKE6IiV9WVulDX5Gak
-	0TQw==
-Content-Disposition: inline
-In-Reply-To: <534CA050.8060709-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, Hong Zhiguo <zhiguohong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-Hello,
+From: Hong Zhiguo <zhiguohong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-On Tue, Apr 15, 2014 at 10:58:24AM +0800, Li Zefan wrote:
-> I know we should allow multiple hierarchies, but why we allow this even
-> if sane_behavior is specified?
+Based on the discussion with Vivek, Tejun and Jens.
 
-Oh, because we didn't have unified hierarchy before.  The whole
-sane_behavior thing is gonna go away.  It'll be absorbed into unified
-hierarchy and probably be handled as a separate filesystem type, so
-the current situation is transitional.
+Patch 1/2 implements basic token bucket rate limiting for blk-throttle.
+Patch 2/2 adjusts some behavior for the cases pointed out by Vivek:
+	- A huge bio may be allowed immediately after a long time of idle
+	- When token is trimmed for above case, should not trim ancestors
+	  when bio climbs up, instead, trim ancestors when bio is queued
+	  on lowest child group.
 
-Thanks.
+Trimming of iops token is not necessary. Since a bio always costs _one_ 
+iops token. Trimming it won't change the fact that current iops token is
+zero or not.
+
+Thanks Vivek for the ancestor over-trim issue and the proposed solution.
+I took another method inspired by Vivek's comments but I think more decent.
+Please help to review it.
+
+Hong Zhiguo (2):
+  blk-throttle: simplify logic by token bucket algorithm
+  blk-throttle: trim tokens generated for an idle tree
+
+ block/blk-throttle.c | 314 ++++++++++++++-------------------------------------
+ 1 file changed, 84 insertions(+), 230 deletions(-)
 
 -- 
-tejun
+1.8.1.2
