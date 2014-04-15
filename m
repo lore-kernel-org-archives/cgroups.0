@@ -1,20 +1,24 @@
-From: Jianyu Zhan <nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] cgroup: print pretty format in /proc/cgroups
-Date: Tue, 15 Apr 2014 20:47:45 +0800
-Message-ID: <1397566065-3028-1-git-send-email-nasa4836@gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: print pretty format in /proc/cgroups
+Date: Tue, 15 Apr 2014 08:51:11 -0400
+Message-ID: <20140415125111.GG1863@htj.dyndns.org>
+References: <1397566065-3028-1-git-send-email-nasa4836@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=from:to:cc:subject:date:message-id;
-	bh=s71ckqVAQ9Um7YIP1s5gvzXqFEga7Mr+zBLbZaBwelY=;
-	b=RDtgMF/O+XIiCTLtG0U8lluUghR1r/ES7J7qdaN4J+fk2Z/cFu6E5F28hJEE0lUwNz
-	tnTlU0J/oqC7AEiHIvuI6FYHFj8zKC/COBFO263acQYptfruL0tBCveySQv9IBnX1PNO
-	YsabRjT3FspnDk/WcCX/3xMPoddixgilsE9jKljcJZAQPLV3FCkVOzUE0ZeAVbpqMrai
-	bAudd75s5OlAQZhoE55E+aZqXpE4CwoRIJDArJiMAQaQgKwKjfw4BN9M1vC9rqo8uIiH
-	yuZZ4JdB6POHkTGtA2Vv6BwT4thC0mZmGXiEZw4ZMcH/J3nJcL1wwUm5lr9ieh5SJEod
-	a8EA==
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=6clrVouoduOaPGIvcLqPv6OUE0//g7YKmpeUegmi88w=;
+	b=Eh3Y4w3gcReNsQF8sWXbevlqP3wHJTM2kXd5uTJrxfwAi7Ar9C2XfSCUdgCpV01RgB
+	ADYEruvx7phNzmJp5Bqboq/IVRRL1kl5WKmUkTaVusZSLImZn6QW81ifPoAwTBhffYnA
+	ySMEJVsSkConnbVsa8pGMJ8yyFmkEyyvv3ncLXIrr/ua517YEcBfd//1ZiT7yf+t2o1P
+	DrqJVGR07TDv6pq4vf63B+5pO+R9nIau6I2vdbjRjAdxaiffJm7RDTXaxGmnlqw8bnHW
+	xBIz+RkT5hAGzruyRhOLMyOE5VSX/AZorllY7PH/r+JlDgHX9WFCHEJr6C+zmxDN7bH7
+	hW1g==
+Content-Disposition: inline
+In-Reply-To: <1397566065-3028-1-git-send-email-nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -25,60 +29,23 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+To: Jianyu Zhan <nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-I found that /proc/cgroups printed format has ugly alignment(see below).
+On Tue, Apr 15, 2014 at 08:47:45PM +0800, Jianyu Zhan wrote:
+> I found that /proc/cgroups printed format has ugly alignment(see below).
+> 
+> This patch confines every field in fixed-width(16 actually) range.
+> Though MAX_CGROUP_TYPE_NAMELEN is 32, but currently no subsystem
+> has name width more than 10, so 16 is a moderate width; besides, 16
+> figures could accomandate enormous huge number, so no need to worry
+> that these fields would clobber each other.
 
-This patch confines every field in fixed-width(16 actually) range.
-Though MAX_CGROUP_TYPE_NAMELEN is 32, but currently no subsystem
-has name width more than 10, so 16 is a moderate width; besides, 16
-figures could accomandate enormous huge number, so no need to worry
-that these fields would clobber each other.
+The problem there is that there could be programs / scripts parsing it
+assuming single tab between entries.  It surely is ugly but do we
+care?
 
-Before:
-  #subsys_name     hierarchy       num_cgroups     enabled
-  cpuset	2	1	1
-  cpu	3	1	1
-  cpuacct	3	1	1
-  memory	4	1	1
-  devices	5	1	1
-  freezer 6	1	1
-  net_cls	7	1	1
-  blkio	8	1	1
-  perf_event	9	1	1
-  hugetlb	10	1	1
+Thanks.
 
-Patch applied:
-  #subsys_name     hierarchy       num_cgroups     enabled
-  cpuset          2               1               1
-  cpu             3               1               1
-  cpuacct         3               1               1
-  memory          4               1               1
-  devices         5               1               1
-  freezer         6               1               1
-  net_cls         7               1               1
-  blkio           8               1               1
-  perf_event      9               1               1
-  hugetlb         10              1               1
-
-Signed-off-by: Jianyu Zhan <nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
----
- kernel/cgroup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 9fcdaa7..d981697 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -4347,7 +4347,7 @@ static int proc_cgroupstats_show(struct seq_file *m, void *v)
- 	mutex_lock(&cgroup_mutex);
- 
- 	for_each_subsys(ss, i)
--		seq_printf(m, "%s\t%d\t%d\t%d\n",
-+		seq_printf(m, "%-16s%-16d%-16d%-16d\n",
- 			   ss->name, ss->root->hierarchy_id,
- 			   atomic_read(&ss->root->nr_cgrps), !ss->disabled);
- 
 -- 
-1.9.0.GIT
+tejun
