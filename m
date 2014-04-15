@@ -1,47 +1,88 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.15] cgroup: implement unified hierarchy
-Date: Tue, 15 Apr 2014 10:58:24 +0800
-Message-ID: <534CA050.8060709@huawei.com>
-References: <1395974461-12735-1-git-send-email-tj@kernel.org>
-	<20140414154556.GA9552@redhat.com>
-	<20140414175236.GB15249@htj.dyndns.org>
-	<20140414181421.GC9552@redhat.com>
-	<20140414192139.GB16835@htj.dyndns.org>
+From: Kevin Wilson <wkevils-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: A problem with memory.oom_control
+Date: Tue, 15 Apr 2014 07:03:50 +0300
+Message-ID: <CAGXs5wVPsdPFm5EssN3_MSSermVMoUtAqc9XTH_YVN+bkPKVyA@mail.gmail.com>
+References: <CAGXs5wUdhEYQ-kGEPSD2A=OceZuA1tovLs04gPcRcqBPagQJCw@mail.gmail.com>
+	<534C9E45.9090005@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20140414192139.GB16835-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type:content-transfer-encoding;
+        bh=MWpXN/+YR8gG51y+kNQwYWwoGn8cPnRKwlInISz38Ak=;
+        b=j9T4SawlnmtKMCjooznGUVTBzV0cUbK8Rx41+vB+gIEhShidt5C4Q50QXtMKMT47Vt
+         X2hQQlNXYp64G/IH7g1xW6adjF/0bbNWMkck5Ro8aYxSmGMneJnB1G0f8/jrmnUm9AB2
+         jM0k7mIBfydGytCC6PZKYuPnJniLK6kq7qGiq1wfM/Dis2CQzDsPeIRZIWkoohE+nUBC
+         ahMW1e835yRswduaQ+K5iZKu/YUFYaWXxYHl+t75pokN1L/CGmfjP7Hm9yUtUxLp+s+5
+         f/bDDv1Co0uHRNUE8VLE7vL2WTHyU7gp4htmvaqC8OMJKdVQsgP9TsL7AdP7V/vfe2Rw
+         fODw==
+In-Reply-To: <534C9E45.9090005-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-on 2014/4/15 3:21, Tejun Heo wrote:
-> Hello,
-> 
-> On Mon, Apr 14, 2014 at 02:14:21PM -0400, Vivek Goyal wrote:
->> So is this an intermediate mode before we move to single hiearchy *only*
->> mode. AFAIK, you had mentioned that we will support legacy multiple
->> hiearchy mode but single hiearchy is the new default mode.
-> 
-> Hmmm?  It's a separate special hierarchy which can co-exist with other
-> hierarchies.  There's no inherent intermediacy to it.  As long as
-> traditional hierarchies exist, it's gonna be like this.
-> 
+Hi,
+Thanks to the fast response.
 
-I know we should allow multiple hierarchies, but why we allow this even
-if sane_behavior is specified?
+Indeed:
 
-Like this:
+#cat /sys/fs/cgroup/memory/memory.use_hierarchy
+1
 
-# mount -t cgroup -o cpuset,__DEVEL__sane_behavior xxx /cgroup
-# mount -t cgroup -o __DEVEL__sane_behavior xxx /cgroup2/
+#cat /sys/fs/cgroup/memory/0/memory.use_hierarchy
+1
+
+However:
+
+#echo 0 >  /sys/fs/cgroup/memory/memory.use_hierarchy
+bash: echo: write error: Device or resource busy
+
+#echo 0 >  /sys/fs/cgroup/memory/0/memory.use_hierarchy
+bash: echo: write error: Invalid argument
+
+So it seems that use_hierarchy cannot be changed via writing to sysfs
+
+Any advice ?
+Regards,
+Kevin
+
+
+
+
+On Tue, Apr 15, 2014 at 5:49 AM, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
+> =E4=BA=8E 2014/4/14 19:54, Kevin Wilson =E5=86=99=E9=81=93:
+>> Hello,
+>>
+>> First I hope this mailing list is the proper one for asking the
+>> following question:
+>> I do the following, as root,  on Fedora 20 with 3.12.7-300.fc20.x86_=
+64 kernel:
+>>
+>> create a cgroup called "0"
+>> /sys/fs/cgroup/memory/0
+>>
+>> run:
+>>
+>> echo "1" > /sys/fs/cgroup/memory/0/memory.oom_control
+>> bash: echo: write error: Invalid argument
+>>
+>> Why am I having this error  ?
+>>
+>> According to the documentation:
+>>
+>> http://lxr.free-electrons.com/source/Documentation/cgroups/memory.tx=
+t
+>> this should work.
+>>
+>
+> Check if /sys/fs/cgroup/memory/memory/use_hierarchy is 1, if so the f=
+ailure
+> is an expectecd bahavior.
+>
+> "This operation is only allowed to the top cgroup of a sub-hierarchy.=
+"
+>
