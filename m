@@ -1,33 +1,245 @@
-From: Andy Lutomirski <luto@amacapital.net>
-Subject: Re: [PATCH 2/2] net: Implement SO_PASSCGROUP to enable passing cgroup path
-Date: Wed, 16 Apr 2014 07:37:26 -0700
-Message-ID: <CALCETrVv8SPM5xjOVGy7qO2aq3FKtG2uG57J49nO7Wy0-gg0Ew@mail.gmail.com>
-References: <CALCETrURHNmLyccRiF_W8o2ozRMR4AaCjUE=_PU8z1+Pq6X2jQ@mail.gmail.com>
- <20140416002010.GA5035@redhat.com> <CALCETrWzHYN3kKcmDTFDfGhZqE4u9+6XDtiOu5nncbK_7KKH0g@mail.gmail.com>
- <20140416.085743.1614257692560892039.davem@davemloft.net>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v3 3/3] cgroup: implement cgroup.populated for the default
+ hierarchy
+Date: Wed, 16 Apr 2014 10:50:47 -0400
+Message-ID: <20140416145047.GC1257@htj.dyndns.org>
+References: <1397511846-2904-1-git-send-email-tj@kernel.org>
+ <1397511846-2904-4-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140416.085743.1614257692560892039.davem@davemloft.net>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=Qu9gHoR/Yxgr2Wk5RTITEKeremHE3y5ZY8Pb4qiyYj0=;
+        b=rBGgX+Wx/Y2TO7Y4MBtXzMIgsw0DxIlKbDs1INVdTFqSwgBYlaWGfXU4VFkGWSIpQn
+         Bz+zEyPebotsO/+ThLmbEn7/P21PrTy44+guiaZ3yEZOrXaDuH9HSQuF2R1WXN5bftqX
+         Flwg99kNLHz//gA49lSP4erEpoudNporctJO89AbOFMeR6BJgMr1Ddd/9inMkeJ8IPYt
+         SS3vsDg0p8lB6w8CGMBJ6pB0X3mU1nYW/EEV/Fy1lDLlelvqdcr9eznh6O5skPjQrWer
+         mh9Wxeq46DTO6WEN9v7TJ5QfkrS5SmOuV9hY9XGIMY+dxoy8y9BeP3zUYAI9aVaqKHHI
+         sZ/Q==
+Content-Disposition: inline
+In-Reply-To: <1397511846-2904-4-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Miller <davem@davemloft.net>
-Cc: Vivek Goyal <vgoyal@redhat.com>, Tejun Heo <tj@kernel.org>, Daniel Walsh <dwalsh@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, lpoetter@redhat.com, Simo Sorce <ssorce@redhat.com>, cgroups@vger.kernel.org, kay@redhat.com, Network Development <netdev@vger.kernel.org>
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, john-jueV0HHMeujJJrXXpGQQMAC/G2K4zDHf@public.gmane.org, rlove-L7G0xEPcOZbYtjvyW6yDsg@public.gmane.org, eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org, kay-tD+1rO4QERM@public.gmane.org
 
-On Wed, Apr 16, 2014 at 5:57 AM, David Miller <davem@davemloft.net> wrote:
->
-> Please, just stop.
+Hello,
 
-No.
+Renamed to cgroup.populated.  git branch updated accordingly.
 
-This thread is proposing an ABI.  This means that, if the ABI ends up
-in Linus's kernel, then it has to be supported forever.  Now is the
-time to find and fix any issues with it before they become much harder
-to fix.
+Thanks.
+------- 8< -------
+From bf3fd307267ce307c4c8ec41834d7bddb6441907 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Wed, 16 Apr 2014 10:48:38 -0400
 
-This ABI is especially tricky because programs will use it even if
-they don't explicitly try to.  So just adding the ABI may break
-existing assumptions that are relevant to security or correctness.
+cgroup users often need a way to determine when a cgroup's
+subhierarchy becomes empty so that it can be cleaned up.  cgroup
+currently provides release_agent for it; unfortunately, this mechanism
+is riddled with issues.
 
---Andy
+* It delivers events by forking and execing a userland binary
+  specified as the release_agent.  This is a long deprecated method of
+  notification delivery.  It's extremely heavy, slow and cumbersome to
+  integrate with larger infrastructure.
+
+* There is single monitoring point at the root.  There's no way to
+  delegate management of a subtree.
+
+* The event isn't recursive.  It triggers when a cgroup doesn't have
+  any tasks or child cgroups.  Events for internal nodes trigger only
+  after all children are removed.  This again makes it impossible to
+  delegate management of a subtree.
+
+* Events are filtered from the kernel side.  "notify_on_release" file
+  is used to subscribe to or suppress release event.  This is
+  unnecessarily complicated and probably done this way because event
+  delivery itself was expensive.
+
+This patch implements interface file "cgroup.populated" which can be
+used to monitor whether the cgroup's subhierarchy has tasks in it or
+not.  Its value is 0 if there is no task in the cgroup and its
+descendants; otherwise, 1, and kernfs_notify() notificaiton is
+triggers when the value changes, which can be monitored through poll
+and [di]notify.
+
+This is a lot ligther and simpler and trivially allows delegating
+management of subhierarchy - subhierarchy monitoring can block further
+propgation simply by putting itself or another process in the root of
+the subhierarchy and monitor events that it's interested in from there
+without interfering with monitoring higher in the tree.
+
+v2: Patch description updated as per Serge.
+
+v3: "cgroup.subtree_populated" renamed to "cgroup.populated".  The
+    subtree_ prefix was a bit confusing because
+    "cgroup.subtree_control" uses it to denote the tree rooted at the
+    cgroup sans the cgroup itself while the populated state includes
+    the cgroup itself.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Acked-by: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Cc: Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>
+---
+ include/linux/cgroup.h | 15 ++++++++++++
+ kernel/cgroup.c        | 65 ++++++++++++++++++++++++++++++++++++++++++++++----
+ 2 files changed, 76 insertions(+), 4 deletions(-)
+
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index ada2392..4b38e2d 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -154,6 +154,14 @@ struct cgroup {
+ 	/* the number of attached css's */
+ 	int nr_css;
+ 
++	/*
++	 * If this cgroup contains any tasks, it contributes one to
++	 * populated_cnt.  All children with non-zero popuplated_cnt of
++	 * their own contribute one.  The count is zero iff there's no task
++	 * in this cgroup or its subtree.
++	 */
++	int populated_cnt;
++
+ 	atomic_t refcnt;
+ 
+ 	/*
+@@ -166,6 +174,7 @@ struct cgroup {
+ 	struct cgroup *parent;		/* my parent */
+ 	struct kernfs_node *kn;		/* cgroup kernfs entry */
+ 	struct kernfs_node *control_kn;	/* kn for "cgroup.subtree_control" */
++	struct kernfs_node *populated_kn; /* kn for "cgroup.subtree_populated" */
+ 
+ 	/*
+ 	 * Monotonically increasing unique serial number which defines a
+@@ -264,6 +273,12 @@ enum {
+ 	 *
+ 	 * - "cgroup.clone_children" is removed.
+ 	 *
++	 * - "cgroup.subtree_populated" is available.  Its value is 0 if
++	 *   the cgroup and its descendants contain no task; otherwise, 1.
++	 *   The file also generates kernfs notification which can be
++	 *   monitored through poll and [di]notify when the value of the
++	 *   file changes.
++	 *
+ 	 * - If mount is requested with sane_behavior but without any
+ 	 *   subsystem, the default unified hierarchy is mounted.
+ 	 *
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 7986aa6..2412cb7 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -411,6 +411,43 @@ static struct css_set init_css_set = {
+ 
+ static int css_set_count	= 1;	/* 1 for init_css_set */
+ 
++/**
++ * cgroup_update_populated - updated populated count of a cgroup
++ * @cgrp: the target cgroup
++ * @populated: inc or dec populated count
++ *
++ * @cgrp is either getting the first task (css_set) or losing the last.
++ * Update @cgrp->populated_cnt accordingly.  The count is propagated
++ * towards root so that a given cgroup's populated_cnt is zero iff the
++ * cgroup and all its descendants are empty.
++ *
++ * @cgrp's interface file "cgroup.populated" is zero if
++ * @cgrp->populated_cnt is zero and 1 otherwise.  When @cgrp->populated_cnt
++ * changes from or to zero, userland is notified that the content of the
++ * interface file has changed.  This can be used to detect when @cgrp and
++ * its descendants become populated or empty.
++ */
++static void cgroup_update_populated(struct cgroup *cgrp, bool populated)
++{
++	lockdep_assert_held(&css_set_rwsem);
++
++	do {
++		bool trigger;
++
++		if (populated)
++			trigger = !cgrp->populated_cnt++;
++		else
++			trigger = !--cgrp->populated_cnt;
++
++		if (!trigger)
++			break;
++
++		if (cgrp->populated_kn)
++			kernfs_notify(cgrp->populated_kn);
++		cgrp = cgrp->parent;
++	} while (cgrp);
++}
++
+ /*
+  * hash table for cgroup groups. This improves the performance to find
+  * an existing css_set. This hash doesn't (currently) take into
+@@ -456,10 +493,13 @@ static void put_css_set_locked(struct css_set *cset, bool taskexit)
+ 		list_del(&link->cgrp_link);
+ 
+ 		/* @cgrp can't go away while we're holding css_set_rwsem */
+-		if (list_empty(&cgrp->cset_links) && notify_on_release(cgrp)) {
+-			if (taskexit)
+-				set_bit(CGRP_RELEASABLE, &cgrp->flags);
+-			check_for_release(cgrp);
++		if (list_empty(&cgrp->cset_links)) {
++			cgroup_update_populated(cgrp, false);
++			if (notify_on_release(cgrp)) {
++				if (taskexit)
++					set_bit(CGRP_RELEASABLE, &cgrp->flags);
++				check_for_release(cgrp);
++			}
+ 		}
+ 
+ 		kfree(link);
+@@ -668,7 +708,11 @@ static void link_css_set(struct list_head *tmp_links, struct css_set *cset,
+ 	link = list_first_entry(tmp_links, struct cgrp_cset_link, cset_link);
+ 	link->cset = cset;
+ 	link->cgrp = cgrp;
++
++	if (list_empty(&cgrp->cset_links))
++		cgroup_update_populated(cgrp, true);
+ 	list_move(&link->cset_link, &cgrp->cset_links);
++
+ 	/*
+ 	 * Always add links to the tail of the list so that the list
+ 	 * is sorted by order of hierarchy creation
+@@ -2643,6 +2687,12 @@ err_undo_css:
+ 	goto out_unlock;
+ }
+ 
++static int cgroup_populated_show(struct seq_file *seq, void *v)
++{
++	seq_printf(seq, "%d\n", (bool)seq_css(seq)->cgroup->populated_cnt);
++	return 0;
++}
++
+ static ssize_t cgroup_file_write(struct kernfs_open_file *of, char *buf,
+ 				 size_t nbytes, loff_t off)
+ {
+@@ -2809,6 +2859,8 @@ static int cgroup_add_file(struct cgroup *cgrp, struct cftype *cft)
+ 
+ 	if (cft->seq_show == cgroup_subtree_control_show)
+ 		cgrp->control_kn = kn;
++	else if (cft->seq_show == cgroup_populated_show)
++		cgrp->populated_kn = kn;
+ 	return 0;
+ }
+ 
+@@ -3918,6 +3970,11 @@ static struct cftype cgroup_base_files[] = {
+ 		.seq_show = cgroup_subtree_control_show,
+ 		.write_string = cgroup_subtree_control_write,
+ 	},
++	{
++		.name = "cgroup.populated",
++		.flags = CFTYPE_ONLY_ON_DFL | CFTYPE_NOT_ON_ROOT,
++		.seq_show = cgroup_populated_show,
++	},
+ 
+ 	/*
+ 	 * Historical crazy stuff.  These don't have "cgroup."  prefix and
+-- 
+1.9.0
