@@ -1,87 +1,96 @@
-From: Andy Lutomirski <luto@amacapital.net>
-Subject: Re: [PATCH 2/2] net: Implement SO_PASSCGROUP to enable passing cgroup path
-Date: Wed, 16 Apr 2014 13:24:32 -0700
-Message-ID: <CALCETrU9P+1Az+uuU_zE4uZZ-qmp5M_=YAXvfcK=rzQRbgoG5g@mail.gmail.com>
-References: <20140416.085743.1614257692560892039.davem@davemloft.net>
- <CALCETrVv8SPM5xjOVGy7qO2aq3FKtG2uG57J49nO7Wy0-gg0Ew@mail.gmail.com>
- <1397664837.19767.410.camel@willson.li.ssimo.org> <CALCETrXn7b6UuALpGUVoyQYfR2uzk5tj2ABV=dkvtFNgqM5sxQ@mail.gmail.com>
- <20140416180642.GG31074@redhat.com> <CALCETrVUw5+vCCONy1VTXpskbY_eZFo2CtbehwV5Mhj4d4+icw@mail.gmail.com>
- <20140416182530.GB550@redhat.com> <CALCETrUs1js3Br81ZkiQnsuWduzOiqDe3aV0K_z_zw0znSuiag@mail.gmail.com>
- <20140416190657.GK31074@redhat.com> <CALCETrUv56awd+UoO_f8LLL2FVq-Hc6Bd6iBGMqWjVGpgxgTSg@mail.gmail.com>
- <20140416193918.GM31074@redhat.com>
-Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140416193918.GM31074@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: [patch] mm: memcontrol: remove hierarchy restrictions for swappiness and oom_control
+Date: Wed, 16 Apr 2014 17:13:18 -0400
+Message-ID: <1397682798-22906-1-git-send-email-hannes@cmpxchg.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
+	h=Message-Id:Date:Subject:Cc:To:From; bh=UH7/Ud+LB8wUL4eDHew2WbiE8Dd/FWT8Z/qPTvlYsW0=;
+	b=safFNuKAEANEyqeiOz9FG5lxRQZwka2TKDYCtj1boLBEo7w6bfr1Fs1G7fI7m0ZrENJkjQDPYYNSoiixjHLnaO/AZOeLeIQ4F/pwTOWi78xQaTrqQ2b77iDlYAAmwZZ1TZBige8rEyGCMH1Sv9PGY3Uwn88rJk8YXA58RwNaWtU=;
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vivek Goyal <vgoyal@redhat.com>
-Cc: Simo Sorce <ssorce@redhat.com>, David Miller <davem@davemloft.net>, Tejun Heo <tj@kernel.org>, Daniel Walsh <dwalsh@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, lpoetter@redhat.com, cgroups@vger.kernel.org, kay@redhat.com, Network Development <netdev@vger.kernel.org>
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Apr 16, 2014 at 12:39 PM, Vivek Goyal <vgoyal@redhat.com> wrote:
-> On Wed, Apr 16, 2014 at 12:13:21PM -0700, Andy Lutomirski wrote:
->> On Wed, Apr 16, 2014 at 12:06 PM, Vivek Goyal <vgoyal@redhat.com> wrote:
->> > On Wed, Apr 16, 2014 at 11:35:13AM -0700, Andy Lutomirski wrote:
->> >> On Wed, Apr 16, 2014 at 11:25 AM, Vivek Goyal <vgoyal@redhat.com> wrote:
->> >> > On Wed, Apr 16, 2014 at 11:13:31AM -0700, Andy Lutomirski wrote:
->> >> >
->> >> > [..]
->> >> >> > Ok, so passing cgroup information is not necessarily a problem as long
->> >> >> > as it is not used for authentication. So say somebody is just logging
->> >> >> > all the client request and which cgroup client was in, that should not
->> >> >> > be a problem.
->> >> >>
->> >> >> Do you consider correct attribution of logging messages to be
->> >> >> important?  If so, then this is a kind of authentication, albeit one
->> >> >> where the impact of screwing it up is a bit lower.
->> >> >
->> >> > So not passing cgroup information makes attribution more correct. Just
->> >> > logging of information is authentication how? Both kernel and user space
->> >> > log message into /var/log/messages and kernel messages are prefixed with
->> >> > "kernel". So this somehow becomes are sort of authentication. I don't
->> >> > get it.
->> >>
->> >> I did a bad job of explaining what I meant.
->> >>
->> >> I think that, currently, log lines can be correctly attributed to the
->> >> kernel or to userspace, but determining where in userspace a log line
->> >> came from is a bit flaky.  One of the goals of these patches is to
->> >> make log attribution less flaky.  But if you want log attribution to
->> >> be completely correct, even in the presence of malicious programs,
->> >> then I think that the current patches aren't quite there.
->> >
->> > Why do you think that current patches are not there yet in the presence of
->> > malicious program. In your example, one program opened the socket and
->> > passed it to malicious program. And all the future messages are coming
->> > from malicious program. As long as receiver checks for SO_PASSCGROUP,
->> > it covers your example.
->>
->> This is backwards.  The malicious program opens the socket and passes
->> it to an unwitting non-malicious program.  That non-malicious program
->> sends messages, and the logging daemon things that the non-malicious
->> program actually intended for these messages to end up in the system
->> log.
->
-> Either way you look at it, I can't see the problem. Even without cgroup
-> info, in your example, a non-malicious programs error message will show
-> up at the receiver (Because malicious program passed that fd as stdout
-> to non-malicious program).
->
-> Are you complainig about this?
->
-> Or are you complaing that non-malicious program's cgroup info will show
-> up at the receiver. What's the problem with that. Receiver can use
-> SO_PASSCGROUP and get non-malicious programs cgroup and log it (along
-> with error message). I don't see where is the problem in that.
+Per-memcg swappiness and oom killing can currently not be tweaked on a
+memcg that is part of a hierarchy, but not the root of that hierarchy.
+Users have complained that they can't configure this when they turned
+on hierarchy mode.  In fact, with hierarchy mode becoming the default,
+this restriction disables the tunables entirely.
 
-I'm not talking about the risk that someone learns someone's cgroup.
-I'm talking about the risk that a malicious program can get a lot
-entry like: "whatever planted text"
-_SYSTEMD_UNIT=non-malicious.service.  That is, they've spoofed a log
-line.
+But there is no good reason for this restriction.  The settings for
+swappiness and OOM killing are taken from whatever memcg whose limit
+triggered reclaim and OOM invocation, regardless of its position in
+the hierarchy tree.
 
-If you don't care about spoofing of log lines, then there's no point
-to having the kernel validate them anyway.
+Allow setting swappiness on any group.  The knob on the root memcg
+already reads the global VM swappiness, make it writable as well.
 
---Andy
+Allow disabling the OOM killer on any non-root memcg.
+
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+---
+ mm/memcontrol.c | 29 +++++++----------------------
+ 1 file changed, 7 insertions(+), 22 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index e2a0d3986c74..edcc9513b419 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5548,22 +5548,14 @@ static int mem_cgroup_swappiness_write(struct cgroup_subsys_state *css,
+ 				       struct cftype *cft, u64 val)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+-	struct mem_cgroup *parent = mem_cgroup_from_css(css_parent(&memcg->css));
+ 
+-	if (val > 100 || !parent)
++	if (val > 100)
+ 		return -EINVAL;
+ 
+-	mutex_lock(&memcg_create_mutex);
+-
+-	/* If under hierarchy, only empty-root can set this value */
+-	if ((parent->use_hierarchy) || memcg_has_children(memcg)) {
+-		mutex_unlock(&memcg_create_mutex);
+-		return -EINVAL;
+-	}
+-
+-	memcg->swappiness = val;
+-
+-	mutex_unlock(&memcg_create_mutex);
++	if (css_parent(css))
++		memcg->swappiness = val;
++	else
++		vm_swappiness = val;
+ 
+ 	return 0;
+ }
+@@ -5895,22 +5887,15 @@ static int mem_cgroup_oom_control_write(struct cgroup_subsys_state *css,
+ 	struct cftype *cft, u64 val)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+-	struct mem_cgroup *parent = mem_cgroup_from_css(css_parent(&memcg->css));
+ 
+ 	/* cannot set to root cgroup and only 0 and 1 are allowed */
+-	if (!parent || !((val == 0) || (val == 1)))
++	if (!css_parent(css) || !((val == 0) || (val == 1)))
+ 		return -EINVAL;
+ 
+-	mutex_lock(&memcg_create_mutex);
+-	/* oom-kill-disable is a flag for subhierarchy. */
+-	if ((parent->use_hierarchy) || memcg_has_children(memcg)) {
+-		mutex_unlock(&memcg_create_mutex);
+-		return -EINVAL;
+-	}
+ 	memcg->oom_kill_disable = val;
+ 	if (!val)
+ 		memcg_oom_recover(memcg);
+-	mutex_unlock(&memcg_create_mutex);
++
+ 	return 0;
+ }
+ 
+-- 
+1.9.2
