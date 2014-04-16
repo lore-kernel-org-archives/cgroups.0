@@ -1,87 +1,69 @@
-From: Kay Sievers <kay-tD+1rO4QERM@public.gmane.org>
-Subject: Re: [PATCH 3/3] cgroup: implement cgroup.subtree_populated for the
-	default hierarchy
-Date: Tue, 15 Apr 2014 20:33:26 -0700
-Message-ID: <CAPXgP12kvPdX0QExwN2JphDfEW=d+7K2c_Y8DbomGd=YVy=VGQ@mail.gmail.com>
-References: <1397511846-2904-1-git-send-email-tj@kernel.org>
-	<1397511846-2904-4-git-send-email-tj@kernel.org>
-	<534DEF62.4090900@huawei.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Subject: Re: [PATCH 2/2] net: Implement SO_PASSCGROUP to enable passing cgroup path
+Date: Tue, 15 Apr 2014 20:47:54 -0700
+Message-ID: <CALCETrWzHYN3kKcmDTFDfGhZqE4u9+6XDtiOu5nncbK_7KKH0g@mail.gmail.com>
+References: <1397596546-10153-1-git-send-email-vgoyal@redhat.com>
+ <1397596546-10153-3-git-send-email-vgoyal@redhat.com> <CALCETrURHNmLyccRiF_W8o2ozRMR4AaCjUE=_PU8z1+Pq6X2jQ@mail.gmail.com>
+ <20140416002010.GA5035@redhat.com>
 Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140416002010.GA5035@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vrfy.org; s=google;
-	h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-	:cc:content-type;
-	bh=UHGSl6Tem/GY7VPeSi1fhmn2Pjc+2NZIdYfKVpq3Its=;
-	b=Fbsinfm6kCYOKZVUUV1V2h9//eoeG/56lQurx4jpyfftgRUzF0La87L/YCydbbZZdI
-	A7dO7TiqLRrMBVFKJ8MwrAR8s+y+z+Gk83K5qcZtgJggkTOiXZU5pet7kvzFfYOSZOyV
-	iaVKBtQj9o2lBTfVyRA1lXsiG/8W+jc7ZSJ6Y=
-In-Reply-To: <534DEF62.4090900-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: rlove-L7G0xEPcOZbYtjvyW6yDsg@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, john-jueV0HHMeujJJrXXpGQQMAC/G2K4zDHf@public.gmane.org
+To: Vivek Goyal <vgoyal@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Daniel Walsh <dwalsh@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, lpoetter@redhat.com, Simo Sorce <ssorce@redhat.com>, cgroups@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, kay@redhat.com, Network Development <netdev@vger.kernel.org>
 
-On Tue, Apr 15, 2014 at 7:48 PM, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
-> On 2014/4/15 5:44, Tejun Heo wrote:
->> cgroup users often need a way to determine when a cgroup's
->> subhierarchy becomes empty so that it can be cleaned up.  cgroup
->> currently provides release_agent for it; unfortunately, this mechanism
->> is riddled with issues.
->>
->> * It delivers events by forking and execing a userland binary
->>   specified as the release_agent.  This is a long deprecated method of
->>   notification delivery.  It's extremely heavy, slow and cumbersome to
->>   integrate with larger infrastructure.
->>
->> * There is single monitoring point at the root.  There's no way to
->>   delegate management of subtree.
->>
->> * The event isn't recursive.  It triggers when a cgroup doesn't have
->>   any tasks or child cgroups.  Events for internal nodes trigger only
->>   after all children are removed.  This again makes it impossible to
->>   delegate management of subtree.
->>
->> * Events are filtered from the kernel side.  "notify_on_release" file
->>   is used to subscribe to or suppress release event.  This is
->>   unnecessarily complicated and probably done this way because event
->>   delivery itself was expensive.
->>
->> This patch implements interface file "cgroup.subtree_populated" which
->> can be used to monitor whether the cgroup's subhierarchy has tasks in
->> it or not.  Its value is 0 if there is no task in the cgroup and its
->> descendants; otherwise, 1, and kernfs_notify() notificaiton is
->> triggers when the value changes, which can be monitored through poll
->> and [di]notify.
->>
+On Apr 15, 2014 5:20 PM, "Vivek Goyal" <vgoyal@redhat.com> wrote:
 >
-> For the old notification mechanism, the path of the cgroup that becomes
-> empty will be passed to the user specified release agent. Like this:
+> On Tue, Apr 15, 2014 at 02:53:13PM -0700, Andy Lutomirski wrote:
+> > On Tue, Apr 15, 2014 at 2:15 PM, Vivek Goyal <vgoyal@redhat.com> wrote:
+> > > This patch implements socket option SO_PASSCGROUP along the lines of
+> > > SO_PASSCRED.
+> > >
+> > > If SO_PASSCGROUP is set, then recvmsg() will get a control message
+> > > SCM_CGROUP which will contain the cgroup path of sender. This cgroup
+> > > belongs to first mounted hierarchy in the sytem.
+> > >
+> > > SCM_CGROUP control message can only be received and sender can not send
+> > > a SCM_CGROUP message. Kernel automatically generates one if receiver
+> > > chooses to receive one.
+> > >
+> > > This works both for unix stream and datagram sockets.
+> > >
+> > > cgroup information is passed only if either the sender or receiver has
+> > > SO_PASSCGROUP option set. This means for existing workloads they should
+> > > not see any significant performance impact of this change.
+> >
+> > This is odd.  Shouldn't an SCM_CGROUP cmsg be generated when the
+> > receiver has SO_PASSCGROUP set and the sender passes SCM_CGROUP to
+> > sendmsg?
 >
-> # cat /sbin/cpuset_release_agent
-> #!/bin/sh
-> rmdir /dev/cpuset/$1
+> How can receiver trust the cgroup info generated by sender. It needs to
+> be generated by kernel so that receiver can trust it.
 >
-> How do we achieve this using inotify?
->
-> - monitor all the cgroups, or
-> - monitor all the leaf cgroups, and travel cgrp->parent to delete all
->   empty cgroups.
-> - monitor root cgroup only, and travel the whole hierarchy to find
->   empy cgroups when it gets an fs event.
->
-> Seems none of them is scalible.
+> And if receiver needs to know cgroup of sender, receiver can just set
+> SO_PASSCGROUP on socket and receiver should get one SCM_CGROUP message
+> with each message received.
 
-The manager would add all cgroups as watches to one inotify file
-descriptor, it should not be problem to do that.
+I think the kernel should validate the data.
 
-Kay
+Here's an attack against SO_PEERCGROUP: if you create a container with
+a super secret name, then every time you connect to any unix socket,
+you leak the name.
+
+Here's an attack against SO_PASSCGROUP, as you implemented it: connect
+a socket and get someone else to write(2) to it.  This isn't very
+hard.  Now you've impersonated.
+
+I advocate for the following semantics: if sendmsg is passed a
+SCM_CGROUP cmsg, and that cmsg has the right cgroup, and the receiver
+has SO_PASSCGROUP set, then the receiver gets SCM_CGROUP.  If you try
+to lie using SCM_CGROUP, you get -EPERM.  If you set SO_PASSCGROUP,
+but your peer doesn't sent SCM_CREDS, you get nothing.
+
+This is immune to both attacks.  It should be cheaper, too, since
+there's no overhead for people who don't use it.
+
+--Andy
