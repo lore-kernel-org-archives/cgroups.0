@@ -1,96 +1,190 @@
-From: Simo Sorce <ssorce-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/2] net: Implement SO_PASSCGROUP to enable passing
- cgroup path
-Date: Wed, 16 Apr 2014 13:02:46 -0400
-Message-ID: <1397667766.19767.440.camel@willson.li.ssimo.org>
-References: <CALCETrURHNmLyccRiF_W8o2ozRMR4AaCjUE=_PU8z1+Pq6X2jQ@mail.gmail.com>
-	 <20140416002010.GA5035@redhat.com>
-	 <CALCETrWzHYN3kKcmDTFDfGhZqE4u9+6XDtiOu5nncbK_7KKH0g@mail.gmail.com>
-	 <20140416.085743.1614257692560892039.davem@davemloft.net>
-	 <CALCETrVv8SPM5xjOVGy7qO2aq3FKtG2uG57J49nO7Wy0-gg0Ew@mail.gmail.com>
-	 <1397664837.19767.410.camel@willson.li.ssimo.org>
-	 <CALCETrXn7b6UuALpGUVoyQYfR2uzk5tj2ABV=dkvtFNgqM5sxQ@mail.gmail.com>
+From: Jianyu Zhan <nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] kernfs: move the last knowledge of sysfs out from kernfs
+Date: Thu, 17 Apr 2014 01:24:18 +0800
+Message-ID: <1397669058-31720-1-git-send-email-nasa4836@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CALCETrXn7b6UuALpGUVoyQYfR2uzk5tj2ABV=dkvtFNgqM5sxQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
-Cc: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kay-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=from:to:cc:subject:date:message-id;
+	bh=YhZJBC3a2Navc0e+432s/aMvqsI11TkMszOuTE5oxs8=;
+	b=imwtISW/3gr3O/bwLAIWhkQju0OVNTcgozl5gWFrUk5r4I7T5eeTWy+boSfdCec+qs
+	0iXGKghlxKyFWrp/neeStJ3kw7FDtlVZmeYAUhvj5zGUtUBhZ/w4BbaBD9DhwznrBAOq
+	UpYnHdQR+A/ny/KNVnTXXjS55yftaCpb85kam2g+mhEoKOd5gpUqX8v9FO3upu4LiX5B
+	itc5jLyjbQ0Inf4Y7N2E7PcdlOaRlUsJgDkS6lzlGfTzdXZqakDmuGOJeEzR6jSossVM
+	GqzwOPw3RA4HAUOuXsREysN4B9KEUTQJjPddNkrc10md3NzTXwwUcYl/l//Dd88Q+KEq
+	CM6A==
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, 2014-04-16 at 09:31 -0700, Andy Lutomirski wrote:
-> On Wed, Apr 16, 2014 at 9:13 AM, Simo Sorce <ssorce-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
-> > On Wed, 2014-04-16 at 07:37 -0700, Andy Lutomirski wrote:
-> >> On Wed, Apr 16, 2014 at 5:57 AM, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org> wrote:
-> >> >
-> >> > Please, just stop.
-> >>
-> >> No.
-> >>
-> >> This thread is proposing an ABI.  This means that, if the ABI ends up
-> >> in Linus's kernel, then it has to be supported forever.  Now is the
-> >> time to find and fix any issues with it before they become much harder
-> >> to fix.
-> >
-> > Ok, but so far I haven't seen a single objection from you that has solid
-> > grounds.
-> 
-> CVE-2013-1959 was caused by a new kernel feature causing a call to
-> write(2) to behave as though the caller was authenticating itself to
-> something else where, in previous kernels, write(2) did not
-> authenticate.
-> 
-> Admittedly cgroups aren't currently as important as uid, but if this
-> changes, then SO_PASSCGROUP, as currently written, will have *exactly*
-> the same problem.
+On Thu, Apr 17, 2014 at 12:46 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> Please put it before @new_sb_created.
 
-Which is easy to foil by using SO_PEERCGROUP and find out who originally
-opened the socket, which is why that is also available!
+Ok.
 
-> > The only one that *may* be reasonable is the "secret" cgroup name one,
-> > however nobody seem to come up with a reason why it is legitimate to
-> > allow to keep cgroup names secret.
-> >
-> > And if you can come up with such a good reason the SO_NOPASSCGROUP
-> > option seem the right solution.
-> >
-> >> This ABI is especially tricky because programs will use it even if
-> >> they don't explicitly try to.  So just adding the ABI may break
-> >> existing assumptions that are relevant to security or correctness.
-> >
-> > It's not clear to me what you mean by this, either you explicitly use
-> > SO_PASSCGROUP or not, it's not like you can involuntarily add a flag ...
-> >
-> 
-> The issue here is that the receiver sets SO_(PASS|PEER)CGROUP, forcing
-> the sender to identify or authenticate itself.  The sender might not
-> want to identify itself.
+> Also, why isn't it unsigned long magic?
 
-You need to explain, why, on a host, when an application connects to
-another, it is ok to make it anonymous. If you do not want to expose
-yourself, do not talk to other applications in the first place.
+I just thought there may be more private data in the future, so I made
+it a void pointer. But now I think this is overskill and meaningless.
 
->   Even if you don't buy any secrecy arguments,
+Renewed patch here:
 
-I don't.
+There is still one residue of sysfs remaining: the sb_magic
+SYSFS_MAGIC. However this should be kernfs user specific,
+so this patch moves it out. Kerrnfs user should specify their
+magic number while mouting.
 
-> the sender might not intend to authenticate.  Certainly no existing
-> callers of connect or write intend to authenticate using their cgroup,
-> since current kernels don't have those semantics.
+Signed-off-by: Jianyu Zhan <nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ fs/kernfs/mount.c      | 11 ++++++-----
+ fs/sysfs/mount.c       |  4 +++-
+ include/linux/kernfs.h | 13 ++++++++-----
+ kernel/cgroup.c        |  4 +++-
+ 4 files changed, 20 insertions(+), 12 deletions(-)
 
-This is a passive check, it's the receiver that wants to make decisions
-about who is connecting, again if you do not want to "disclose"
-information do not connect in the first place ?
-
-In the rare case where you may have a legitimate reason to conceal a
-process, it will be very simply for the admin to set up a proxy process
-that will just terminate the original sender's identity and present only
-the proxy identity to the receiver and perform message passing between 2
-sockets.
-
-So I rest my case.
-
-Simo.
-
+diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
+index 6a5f04a..95dcd1d 100644
+--- a/fs/kernfs/mount.c
++++ b/fs/kernfs/mount.c
+@@ -62,7 +62,7 @@ struct kernfs_root *kernfs_root_from_sb(struct super_block *sb)
+ 	return NULL;
+ }
+ 
+-static int kernfs_fill_super(struct super_block *sb)
++static int kernfs_fill_super(struct super_block *sb, unsigned long magic)
+ {
+ 	struct kernfs_super_info *info = kernfs_info(sb);
+ 	struct inode *inode;
+@@ -70,7 +70,7 @@ static int kernfs_fill_super(struct super_block *sb)
+ 
+ 	sb->s_blocksize = PAGE_CACHE_SIZE;
+ 	sb->s_blocksize_bits = PAGE_CACHE_SHIFT;
+-	sb->s_magic = SYSFS_MAGIC;
++	sb->s_magic = magic;
+ 	sb->s_op = &kernfs_sops;
+ 	sb->s_time_gran = 1;
+ 
+@@ -131,6 +131,7 @@ const void *kernfs_super_ns(struct super_block *sb)
+  * @fs_type: file_system_type of the fs being mounted
+  * @flags: mount flags specified for the mount
+  * @root: kernfs_root of the hierarchy being mounted
++ * @magic: file system specific magic number
+  * @new_sb_created: tell the caller if we allocated a new superblock
+  * @ns: optional namespace tag of the mount
+  *
+@@ -142,8 +143,8 @@ const void *kernfs_super_ns(struct super_block *sb)
+  * The return value can be passed to the vfs layer verbatim.
+  */
+ struct dentry *kernfs_mount_ns(struct file_system_type *fs_type, int flags,
+-			       struct kernfs_root *root, bool *new_sb_created,
+-			       const void *ns)
++				struct kernfs_root *root, unsigned long magic,
++				bool *new_sb_created, const void *ns)
+ {
+ 	struct super_block *sb;
+ 	struct kernfs_super_info *info;
+@@ -166,7 +167,7 @@ struct dentry *kernfs_mount_ns(struct file_system_type *fs_type, int flags,
+ 		*new_sb_created = !sb->s_root;
+ 
+ 	if (!sb->s_root) {
+-		error = kernfs_fill_super(sb);
++		error = kernfs_fill_super(sb, magic);
+ 		if (error) {
+ 			deactivate_locked_super(sb);
+ 			return ERR_PTR(error);
+diff --git a/fs/sysfs/mount.c b/fs/sysfs/mount.c
+index a66ad61..024134e 100644
+--- a/fs/sysfs/mount.c
++++ b/fs/sysfs/mount.c
+@@ -13,6 +13,7 @@
+ #define DEBUG
+ 
+ #include <linux/fs.h>
++#include <linux/magic.h>
+ #include <linux/mount.h>
+ #include <linux/init.h>
+ #include <linux/user_namespace.h>
+@@ -38,7 +39,8 @@ static struct dentry *sysfs_mount(struct file_system_type *fs_type,
+ 	}
+ 
+ 	ns = kobj_ns_grab_current(KOBJ_NS_TYPE_NET);
+-	root = kernfs_mount_ns(fs_type, flags, sysfs_root, &new_sb, ns);
++	root = kernfs_mount_ns(fs_type, flags, sysfs_root,
++				SYSFS_MAGIC, &new_sb, ns);
+ 	if (IS_ERR(root) || !new_sb)
+ 		kobj_ns_drop(KOBJ_NS_TYPE_NET, ns);
+ 	return root;
+diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
+index b0122dc..5e363e1 100644
+--- a/include/linux/kernfs.h
++++ b/include/linux/kernfs.h
+@@ -280,8 +280,8 @@ void kernfs_notify(struct kernfs_node *kn);
+ 
+ const void *kernfs_super_ns(struct super_block *sb);
+ struct dentry *kernfs_mount_ns(struct file_system_type *fs_type, int flags,
+-			       struct kernfs_root *root, bool *new_sb_created,
+-			       const void *ns);
++			       struct kernfs_root *root, unsigned long magic,
++			       bool *new_sb_created, const void *ns);
+ void kernfs_kill_sb(struct super_block *sb);
+ 
+ void kernfs_init(void);
+@@ -374,7 +374,8 @@ static inline const void *kernfs_super_ns(struct super_block *sb)
+ 
+ static inline struct dentry *
+ kernfs_mount_ns(struct file_system_type *fs_type, int flags,
+-		struct kernfs_root *root, bool *new_sb_created, const void *ns)
++		struct kernfs_root *root, unsigned long magic,
++		bool *new_sb_created, const void *ns)
+ { return ERR_PTR(-ENOSYS); }
+ 
+ static inline void kernfs_kill_sb(struct super_block *sb) { }
+@@ -432,9 +433,11 @@ static inline int kernfs_rename(struct kernfs_node *kn,
+ 
+ static inline struct dentry *
+ kernfs_mount(struct file_system_type *fs_type, int flags,
+-	     struct kernfs_root *root, bool *new_sb_created)
++		struct kernfs_root *root, unsigned long magic,
++		bool *new_sb_created)
+ {
+-	return kernfs_mount_ns(fs_type, flags, root, new_sb_created, NULL);
++	return kernfs_mount_ns(fs_type, flags, root,
++				magic, new_sb_created, NULL);
+ }
+ 
+ #endif	/* __LINUX_KERNFS_H */
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 9fcdaa7..ab5a995 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -33,6 +33,7 @@
+ #include <linux/init_task.h>
+ #include <linux/kernel.h>
+ #include <linux/list.h>
++#include <linux/magic.h>
+ #include <linux/mm.h>
+ #include <linux/mutex.h>
+ #include <linux/mount.h>
+@@ -1604,7 +1605,8 @@ out_unlock:
+ 	if (ret)
+ 		return ERR_PTR(ret);
+ 
+-	dentry = kernfs_mount(fs_type, flags, root->kf_root, &new_sb);
++	dentry = kernfs_mount(fs_type, flags, root->kf_root,
++				CGROUP_SUPER_MAGIC, &new_sb);
+ 	if (IS_ERR(dentry) || !new_sb)
+ 		cgroup_put(&root->cgrp);
+ 	return dentry;
+-- 
+1.9.0.GIT
