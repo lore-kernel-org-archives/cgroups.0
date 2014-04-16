@@ -1,96 +1,100 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: [patch] mm: memcontrol: remove hierarchy restrictions for swappiness and oom_control
-Date: Wed, 16 Apr 2014 17:13:18 -0400
-Message-ID: <1397682798-22906-1-git-send-email-hannes@cmpxchg.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=Message-Id:Date:Subject:Cc:To:From; bh=UH7/Ud+LB8wUL4eDHew2WbiE8Dd/FWT8Z/qPTvlYsW0=;
-	b=safFNuKAEANEyqeiOz9FG5lxRQZwka2TKDYCtj1boLBEo7w6bfr1Fs1G7fI7m0ZrENJkjQDPYYNSoiixjHLnaO/AZOeLeIQ4F/pwTOWi78xQaTrqQ2b77iDlYAAmwZZ1TZBige8rEyGCMH1Sv9PGY3Uwn88rJk8YXA58RwNaWtU=;
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Michal Marek <mmarek@suse.cz>
+Subject: Re: [PATCH] scripts/tags.sh: add regular expression replacement pattern
+ for memcg
+Date: Wed, 16 Apr 2014 23:24:06 +0200
+Message-ID: <534EF4F6.8000900@suse.cz>
+References: <1397134732-29106-1-git-send-email-nasa4836@gmail.com>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1397134732-29106-1-git-send-email-nasa4836@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Jianyu Zhan <nasa4836@gmail.com>
+Cc: akpm@linux-foundation.org, michael.opdenacker@free-electrons.com, tkhai@yandex.ru, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-Per-memcg swappiness and oom killing can currently not be tweaked on a
-memcg that is part of a hierarchy, but not the root of that hierarchy.
-Users have complained that they can't configure this when they turned
-on hierarchy mode.  In fact, with hierarchy mode becoming the default,
-this restriction disables the tunables entirely.
+Dne 10.4.2014 14:58, Jianyu Zhan napsal(a):
+> Sorry, the comment in previous patch is somewhat misguiding, this patch
+> replaces that one.
+>  
+> Currently, no regular expression replacement patterns for PageCgroup*
+> flag-ops are defined, which causes quite a few pain while reading code. 
+> Just get rid of it.
+> 
+> Also, add a comment to inform people to add pattern for whatever new
+> flag-ops they add.
+> 
+> Signed-off-by: Jianyu Zhan <nasa4836@gmail.com>
+> ---
+>  include/linux/page_cgroup.h | 6 ++++++
+>  scripts/tags.sh             | 8 ++++++++
+>  2 files changed, 14 insertions(+)
+> 
+> diff --git a/include/linux/page_cgroup.h b/include/linux/page_cgroup.h
+> index 777a524..9c60b77 100644
+> --- a/include/linux/page_cgroup.h
+> +++ b/include/linux/page_cgroup.h
+> @@ -44,6 +44,12 @@ static inline void __init page_cgroup_init(void)
+>  struct page_cgroup *lookup_page_cgroup(struct page *page);
+>  struct page *lookup_cgroup_page(struct page_cgroup *pc);
+>  
+> +/*
+> + * Note, whenever you add a *PCGFLAG operation here, please add a
+> + * regular expression replacement pattern in scripts/tags.sh
+> + * to inform our friendly and smart tags generator.
+> + */
+> +
+>  #define TESTPCGFLAG(uname, lname)			\
 
-But there is no good reason for this restriction.  The settings for
-swappiness and OOM killing are taken from whatever memcg whose limit
-triggered reclaim and OOM invocation, regardless of its position in
-the hierarchy tree.
+Cgroup hackers - OK to add the above comment? It does not look like new
+macros are being defined here on a weekly basis...
 
-Allow setting swappiness on any group.  The knob on the root memcg
-already reads the global VM swappiness, make it writable as well.
 
-Allow disabling the OOM killer on any non-root memcg.
+>  static inline int PageCgroup##uname(struct page_cgroup *pc)	\
+>  	{ return test_bit(PCG_##lname, &pc->flags); }
+> diff --git a/scripts/tags.sh b/scripts/tags.sh
+> index 58c4559..c0d52d1 100755
+> --- a/scripts/tags.sh
+> +++ b/scripts/tags.sh
+> @@ -171,12 +171,16 @@ exuberant()
+>  	--regex-c++='/PAGEFLAG\(([^,)]*).*/ClearPage\1/'		\
+>  	--regex-c++='/TESTSETFLAG\(([^,)]*).*/TestSetPage\1/'		\
+>  	--regex-c++='/TESTPAGEFLAG\(([^,)]*).*/Page\1/'			\
+> +	--regex-c++='/TESTPCGFLAG\(([^,)]*).*/PageCgroup\1/'		\
+>  	--regex-c++='/SETPAGEFLAG\(([^,)]*).*/SetPage\1/'		\
+>  	--regex-c++='/__SETPAGEFLAG\(([^,)]*).*/__SetPage\1/'		\
+> +	--regex-c++='/SETPCGFLAG\(([^,)]*).*/SetPageCgroup\1/'		\
+>  	--regex-c++='/TESTCLEARFLAG\(([^,)]*).*/TestClearPage\1/'	\
+>  	--regex-c++='/__TESTCLEARFLAG\(([^,)]*).*/TestClearPage\1/'	\
+> +	--regex-c++='/TESTCLEARPCGFLAG\(([^,)]*).*/TestClearPageCgroup\1/' \
+>  	--regex-c++='/CLEARPAGEFLAG\(([^,)]*).*/ClearPage\1/'		\
+>  	--regex-c++='/__CLEARPAGEFLAG\(([^,)]*).*/__ClearPage\1/'	\
+> +	--regex-c++='/CLEARPCGFLAG\(([^,)]*).*/ClearPageCgroup\1/'	\
+>  	--regex-c++='/__PAGEFLAG\(([^,)]*).*/__SetPage\1/'		\
+>  	--regex-c++='/__PAGEFLAG\(([^,)]*).*/__ClearPage\1/'		\
+>  	--regex-c++='/PAGEFLAG_FALSE\(([^,)]*).*/Page\1/'		\
 
-Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
----
- mm/memcontrol.c | 29 +++++++----------------------
- 1 file changed, 7 insertions(+), 22 deletions(-)
+Please do not interleave the new defines with the <linux/page-flags.h>
+defines.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e2a0d3986c74..edcc9513b419 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5548,22 +5548,14 @@ static int mem_cgroup_swappiness_write(struct cgroup_subsys_state *css,
- 				       struct cftype *cft, u64 val)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
--	struct mem_cgroup *parent = mem_cgroup_from_css(css_parent(&memcg->css));
- 
--	if (val > 100 || !parent)
-+	if (val > 100)
- 		return -EINVAL;
- 
--	mutex_lock(&memcg_create_mutex);
--
--	/* If under hierarchy, only empty-root can set this value */
--	if ((parent->use_hierarchy) || memcg_has_children(memcg)) {
--		mutex_unlock(&memcg_create_mutex);
--		return -EINVAL;
--	}
--
--	memcg->swappiness = val;
--
--	mutex_unlock(&memcg_create_mutex);
-+	if (css_parent(css))
-+		memcg->swappiness = val;
-+	else
-+		vm_swappiness = val;
- 
- 	return 0;
- }
-@@ -5895,22 +5887,15 @@ static int mem_cgroup_oom_control_write(struct cgroup_subsys_state *css,
- 	struct cftype *cft, u64 val)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
--	struct mem_cgroup *parent = mem_cgroup_from_css(css_parent(&memcg->css));
- 
- 	/* cannot set to root cgroup and only 0 and 1 are allowed */
--	if (!parent || !((val == 0) || (val == 1)))
-+	if (!css_parent(css) || !((val == 0) || (val == 1)))
- 		return -EINVAL;
- 
--	mutex_lock(&memcg_create_mutex);
--	/* oom-kill-disable is a flag for subhierarchy. */
--	if ((parent->use_hierarchy) || memcg_has_children(memcg)) {
--		mutex_unlock(&memcg_create_mutex);
--		return -EINVAL;
--	}
- 	memcg->oom_kill_disable = val;
- 	if (!val)
- 		memcg_oom_recover(memcg);
--	mutex_unlock(&memcg_create_mutex);
-+
- 	return 0;
- }
- 
--- 
-1.9.2
+Michal
+
+> @@ -229,12 +233,16 @@ emacs()
+>  	--regex='/PAGEFLAG(\([^,)]*\).*/ClearPage\1/'		\
+>  	--regex='/TESTSETFLAG(\([^,)]*\).*/TestSetPage\1/'	\
+>  	--regex='/TESTPAGEFLAG(\([^,)]*\).*/Page\1/'		\
+> +	--regex='/TESTPCGFLAG\(([^,)]*).*/PageCgroup\1/'	\
+>  	--regex='/SETPAGEFLAG(\([^,)]*\).*/SetPage\1/'		\
+>  	--regex='/__SETPAGEFLAG(\([^,)]*\).*/__SetPage\1/'	\
+> +	--regex='/SETPCGFLAG\(([^,)]*).*/SetPageCgroup\1/'	\
+>  	--regex='/TESTCLEARFLAG(\([^,)]*\).*/TestClearPage\1/'	\
+>  	--regex='/__TESTCLEARFLAG(\([^,)]*\).*/TestClearPage\1/'	\
+> +	--regex='/TESTCLEARPCGFLAG\(([^,)]*).*/TestClearPageCgroup\1/' \
+>  	--regex='/CLEARPAGEFLAG(\([^,)]*\).*/ClearPage\1/'	\
+>  	--regex='/__CLEARPAGEFLAG(\([^,)]*\).*/__ClearPage\1/'	\
+> +	--regex='/CLEARPCGFLAG\(([^,)]*).*/ClearPageCgroup\1/'	\
+>  	--regex='/__PAGEFLAG(\([^,)]*\).*/__SetPage\1/'		\
+>  	--regex='/__PAGEFLAG(\([^,)]*\).*/__ClearPage\1/'	\
+>  	--regex='/PAGEFLAG_FALSE(\([^,)]*\).*/Page\1/'		\
+> 
