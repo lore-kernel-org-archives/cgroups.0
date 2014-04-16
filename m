@@ -1,245 +1,157 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.16] cgroup: add documentation about unified
-	hierarchy
-Date: Wed, 16 Apr 2014 09:51:20 -0400
-Message-ID: <20140416135120.GI30990@htj.dyndns.org>
-References: <20140414220917.GD1863@htj.dyndns.org>
-	<534DB46D.7090207@infradead.org>
+From: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
+Subject: Re: [PATCH 2/2] net: Implement SO_PASSCGROUP to enable passing cgroup path
+Date: Wed, 16 Apr 2014 07:34:41 -0700
+Message-ID: <CALCETrUTMSpd=NYn9QuO5Y3WY0uBhjNEHO0jCwZu0L59CpeDew@mail.gmail.com>
+References: <1397596546-10153-1-git-send-email-vgoyal@redhat.com>
+ <1397596546-10153-3-git-send-email-vgoyal@redhat.com> <CALCETrURHNmLyccRiF_W8o2ozRMR4AaCjUE=_PU8z1+Pq6X2jQ@mail.gmail.com>
+ <20140416002010.GA5035@redhat.com> <CALCETrWzHYN3kKcmDTFDfGhZqE4u9+6XDtiOu5nncbK_7KKH0g@mail.gmail.com>
+ <20140416101709.GA14131@redhat.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20140416101709.GA14131-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=3y6nuaQaagjPbBnaKINfOG/FHslICPtNCa5+PJd7C9I=;
-	b=uUIJ2UrW9MwxadxgKLFBl4xADjoIwzA2ssm2AmTnuUSseW9ZsAplSZsDMxIsFNlB6L
-	DYob9dqjEU9ZAB3diyFcGbwbdy8tCS4btUgCGMSY+peFko+qTLNZWtOFuFzbCS3nkZVr
-	loumw1qUG91En8h+XKfBPa9+5gKL17+n0o07HhQqvWYslfsOQ6NE3/8Hk+fIZc3e2m/X
-	H2M+GtOI3n9JPsc9MwobUp4nTQ0sepsrtM3DbLHGKt7BujPqmXTELmPrKiaqdZYY7wok
-	bUo8vToulEYTM0o9qaALh2bMJWnSlGlG9d6kEzzhTyLs9eQLtTQCXshY8SQpbkJ4Mh0k
-	O0mw==
-Content-Disposition: inline
-In-Reply-To: <534DB46D.7090207-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Brandon Philips <brandon.philips-JW9irJGTvgXQT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Kay Sievers <kay-tD+1rO4QERM@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Daniel Borkmann <dborkman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Simo Sorce <ssorce-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, kay-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello,
+On Wed, Apr 16, 2014 at 3:17 AM, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+> On Tue, Apr 15, 2014 at 08:47:54PM -0700, Andy Lutomirski wrote:
+>> On Apr 15, 2014 5:20 PM, "Vivek Goyal" <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+>> >
+>> > On Tue, Apr 15, 2014 at 02:53:13PM -0700, Andy Lutomirski wrote:
+>> > > On Tue, Apr 15, 2014 at 2:15 PM, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+>> > > > This patch implements socket option SO_PASSCGROUP along the lines of
+>> > > > SO_PASSCRED.
+>> > > >
+>> > > > If SO_PASSCGROUP is set, then recvmsg() will get a control message
+>> > > > SCM_CGROUP which will contain the cgroup path of sender. This cgroup
+>> > > > belongs to first mounted hierarchy in the sytem.
+>> > > >
+>> > > > SCM_CGROUP control message can only be received and sender can not send
+>> > > > a SCM_CGROUP message. Kernel automatically generates one if receiver
+>> > > > chooses to receive one.
+>> > > >
+>> > > > This works both for unix stream and datagram sockets.
+>> > > >
+>> > > > cgroup information is passed only if either the sender or receiver has
+>> > > > SO_PASSCGROUP option set. This means for existing workloads they should
+>> > > > not see any significant performance impact of this change.
+>> > >
+>> > > This is odd.  Shouldn't an SCM_CGROUP cmsg be generated when the
+>> > > receiver has SO_PASSCGROUP set and the sender passes SCM_CGROUP to
+>> > > sendmsg?
+>> >
+>> > How can receiver trust the cgroup info generated by sender. It needs to
+>> > be generated by kernel so that receiver can trust it.
+>> >
+>> > And if receiver needs to know cgroup of sender, receiver can just set
+>> > SO_PASSCGROUP on socket and receiver should get one SCM_CGROUP message
+>> > with each message received.
+>>
+>> I think the kernel should validate the data.
+>>
+>> Here's an attack against SO_PEERCGROUP: if you create a container with
+>> a super secret name, then every time you connect to any unix socket,
+>> you leak the name.
+>
+> One should be able to do that already today with SO_PASSCRED option and
+> then map pid to cgroup. Or if one is using user namespaces then go
+> through uid mappings and  figure out which container sent message.
 
-On Tue, Apr 15, 2014 at 03:36:29PM -0700, Randy Dunlap wrote:
-> > +cgroup allows arbitrary number of hierarchies and each hierarchy can
-> 
->           allows an arbitrary
-> 
-> > +host any number of controllers.  While this seems to provide high
-> 
->                                                         provide a high
+Not if you've locked down proc, perhaps by using hidepid.
 
-Updated.
+>
+>>
+>> Here's an attack against SO_PASSCGROUP, as you implemented it: connect
+>> a socket and get someone else to write(2) to it.  This isn't very
+>> hard.  Now you've impersonated.
+>
+> If you can get another process to write to your socket and impersonate,
+> then what will stop from that process to also send SCM_CGROUP message
+> also? So I don't see how SCM_CGROUP from client will solve this problem.
+>
 
-> > +depending on the specific controller.  IOW, hierarchy may be collapsed
-> 
-> please spell out IOW
+I can easily get other processed to write to my socket.  Passing that
+socket as stderr to a setuid program is probably the easiest way.
+Finding a service that accepts a socket using SCM_RIGHTS and writes to
+it is another.  It is supposed to be safe to write(2) to an untrusted
+file descriptor, or, at the very least, it is supposed to be a DoS at
+worst.  In this case, it's also either an information leak.
 
-Updated, but is this really necessary?
+It's true that SO_PASSCRED has the same problem.  I consider that to
+be a mistake, and I suspect that there are a large number of
+longstanding security problems caused by it.  Regardless, we shouldn't
+exacerbate this problem.  There is no legacy code using SCM_CGROUP at
+all right now, because the option has never been in a released kernel.
+ So let's get the interface right the first time around.
 
-> > +from leaf towards root when viewed from specific controllers.  For
-> > +example, a given configuration might not care about how memory is
-> > +distributed beyond certain level while still want to control how cpu
-> 
->                beyond a certain level while still wanting to control
+If I find some time later today, I can try to write a variant of the
+patch that only sends SCM_CGROUP when the sender requests it.
 
-Updated.
+On an unrelated note, what happens when there are multiple cgroup hierarchies?
 
-> I would prefer to see CPU instead of cpu (except when it refers to a
-> task or function).
+> Kernel cgroup verification will also not help in this case as sender
+> is sending his own cgroup.
 
-cpu sometimes refer to the cpu controller.  Will use CPU when it's
-actually referring to the CPU.
+Sure it will -- the sender sticks a string into SCM_CGROUP and the
+kernel checks it.
 
-> > +mixing unified hierarchy with the traditional multiple hierarchies in
-> > +fully backward compatible way.
-> 
->    a fully backward
+>
+>>
+>> I advocate for the following semantics: if sendmsg is passed a
+>> SCM_CGROUP cmsg, and that cmsg has the right cgroup, and the receiver
+>> has SO_PASSCGROUP set, then the receiver gets SCM_CGROUP.  If you try
+>> to lie using SCM_CGROUP, you get -EPERM.  If you set SO_PASSCGROUP,
+>> but your peer doesn't sent SCM_CREDS, you get nothing.
+>>
+>> This is immune to both attacks.  It should be cheaper, too, since
+>> there's no overhead for people who don't use it.
+>
+> I think you seem to be saying that a client's credentials should not be
+> visible to receiver until and unless client himself wants to reveal
+> those. IOW, it kind of looks like an anonymous mode of operation where
+> client connects to a socket but receiver client not want to reveal any of
+> the information about itself to receiver.
+>
+> I am not sure how useful that mode really is. If it is really useful, I
+> think one could implement another socket option on client side to
+> deny passing cgroup information to receiver. Say SO_NOPASSCGROUP.
 
-Updated.
+This won't help -- an attacker will simply not set that option, and
+the program being attacked is certainly not going to set
+SO_NOPASSCGROUP right before calling write.
 
-> > +
-> > +When read, the file contains space-separated list of currently enabled
-> 
->                        contains a space-separated
+>
+> Before we even get there, I will question that what's so secret about
+> cgroup information that one would like to hide it from receiver. We don't
+> hide uid, pid, gid.
+>
 
-Updated.
+I think we should hide uid, gid, and pid too, but that ship has sailed.
 
-> > +controllers.  A write to the file should contain spaced-separated list
-> 
->                                             contain a space-separated
+The bigger issue isn't hiding so much as accidental assertions of
+authority.  If a program accidentally leaks its uid, that's one thing.
+ If a program, by accidentally leaking its uid, causes another program
+to think that the sender wants some action to be taken on behalf of
+its uid, then there's a real security problem.
 
-Updated.
+> Secondly, how would client know when to send SCM_CGROUP to receiver. For
+> the use case I mentioned that init wants to log cgroup of every message
+> going into journal. How would client know that every message needs to
+> have SCM_CGROUP. By automatically getting client information when receiver
+> needs it, simplifies the things a lot without any client modificaiton.
 
-> > +2-3. cgroup.controllers
-> > +
-> > +Read-only "cgroup.controllers" contains space-separated list of
-> 
->                                   contains a space-separated
+I think that the client *should* be modified.  What if there's an
+existing program that runs as a container's root but does not intend
+to sign off on a message with its cgroup?
 
-Updated.
+In any event, I still think that the journald case has no need for any
+kernel changes at all.  From a very cursory inspection, the journal
+code expects to find a socket in /run/systemd/journal/socket.  It
+should be enough to stick a different socket into that location in
+each container.  This will work on all kernels and may even work
+without modifying any code in the container.
 
-> > +It is clear that this is something which needs to be addressed from
-> > +cgroup core proper in a uniform way so that controllers don't need to
-> > +worry about it and cgroup as a whole shows a consistent and logical
-> > +behavior.  To achieve that, unified hierarchy enforces the following
-> > +structural constraint.
-> 
->    structural constraint:
-
-Updated.
-
-> > +There are two things to note.  Firstly, the root cgroup is exempt from
-> > +the restriction.  Root contains tasks and anonymous resource
-> > +consumption which can't be associated with any other cgroup and
-> > +requires special treatment from most controllers.  How resource
-> > +consumption in the root cgroup is governed is upto each controller.
-> 
->                                                  up to
-
-Updated.
-
-> > +- There is single monitoring point at the root.  There's no way to
-> > +  delegate management of subtree.
-> 
-> "of subtree" seems incomplete...
-> At a minimum it should be "of a subtree."
-
-Changed to "of a subtree".
-
-> > +
-> > +- The event isn't recursive.  It triggers when a cgroup doesn't have
-> > +  any tasks or child cgroups.  Events for internal nodes trigger only
-> > +  after all children are removed.  This again makes it impossible to
-> > +  delegate management of subtree.
-> 
->                          of a subtree.
-
-Ditto.
-
-> > +
-> > +- Events are filtered from the kernel side.  "notify_on_release" file
-> 
->                                                 A "notify_on_release" file
-> 
-> > +  is used to subscribe to or suppress release event.  This is
-> 
->                                          release events.
-
-Updated.
-
-> > +  unnecessarily complicated and probably done this way because event
-> > +  delivery itself was expensive.
-> > +
-> > +Unified hierarchy implements interface file "cgroup.subtree_populated"
-> 
->                      implements an interface file
-
-Updated.
-
-> > +In unified hierarchy, release_agent mechanism is no longer supported
-> 
->                          the release_agent mechanism
-
-Updated.
-
-> > +This, in part, is to prevent cgroup interface from being inadvertently
-> 
->                         prevent the cgroup interface
-
-Updated.
-
-> > +cgroup" in race-free way or make multiple operations atomic against
-> 
->            in a race-free way
-
-Updated.
-
-> > +migration to another cgroup.
-> > +
-> > +Another aspect is that, for better or for worse, cgroup interface goes
-> 
->                                                     the cgroup interface goes
-
-Updated.
-
-> > +through far less scrutiny than regular interfaces for unprivileged
-> > +userland.  The upside is that cgroup is able to expose useful features
-> > +which may not be suitable for general consumption in reasonable time
-> 
->                                                      in a reasonable time
-
-Updated.
-
-> > +frame.  It provides a relatively short path between internal details
-> > +and userland-visible interface.  Of course, this shortcut comes with
-> > +high risk.  We go through what we go through for general kernel APIs
-> > +for good reasons.  It may end up leaking internal details in a way
-> > +which can exert significant pain by locking the kernel into a contract
-> > +that can't be maintained in a reasonable manner.
-> 
-> so the cgroup interface is not stable and won't be?
-
-It'll be as stable as any other administration interfaces - sysctl,
-iptables and so on, which are stable but can usually be deprecated if
-really necessary whereas a syscall interface exposed to lay programs
-has to be maintained for actual eternity.  It comes from the fact that
-the administrative tools are naturally more closely coupled with the
-kernel and the time it takes to reach the point where nobody notices
-removal of deprecated interface often measures in years rather than
-eternity.
-
-> > +Also, due to the specific nature, cgroup and its controllers don't
-> > +tend to attract attention from wide-scope of developers.  cgroup's
-> 
->                              from a wide scope of developers.
-
-Updated.
-
-> > +Keeping cgroup as an administration interface is both advantageous for
-> > +its role and an imperative given its nature.  Some of the cgroup
-> 
->             and imperative given
-
-Updated.  Dang articles.
-
-> Two comments that apply in multiple places:
-> 
-> a.  Call cgroup's interface files "files".  E.g.:
-> 
->   root's "cgroup.subtree_control" determines ...
-> 
-> becomes:
-> 
->   root's "cgroup.subtree_control" file determines
-> 
-> b.  Call cgroup controllers "controllers" or "controller".  E.g.:
-> 
->   memory currently doesn't have a way to control what happens between
-> 
-> becomes:
-> 
->   The memory controller currently doesn't have a way to control what happens between
-
-Updated.
-
-Thanks a lot for the review!
-
--- 
-tejun
+--Andy
