@@ -1,91 +1,49 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 3/3] cgroup: implement cgroup.subtree_populated for the
-	default hierarchy
-Date: Wed, 16 Apr 2014 12:20:01 +0800
-Message-ID: <534E04F1.4070104@huawei.com>
-References: <1397511846-2904-1-git-send-email-tj@kernel.org>
-	<1397511846-2904-4-git-send-email-tj@kernel.org>
-	<534DEF62.4090900@huawei.com>
-	<CAPXgP12kvPdX0QExwN2JphDfEW=d+7K2c_Y8DbomGd=YVy=VGQ@mail.gmail.com>
-	<87tx9uhr0j.fsf@x220.int.ebiederm.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: Kernel scanning/freeing to relieve cgroup memory pressure
+Date: Wed, 16 Apr 2014 11:11:22 +0200
+Message-ID: <20140416091122.GC12866@dhcp22.suse.cz>
+References: <533C0BB4.4070009@gopivotal.com>
+ <20140402180019.GL16631@htj.dyndns.org>
+ <534B982D.8060106@gopivotal.com>
+ <20140414205034.GA6443@cmpxchg.org>
+ <534CEFF2.7090207@gopivotal.com>
 Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <534CEFF2.7090207@gopivotal.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <87tx9uhr0j.fsf-JOvCrm2gF+uungPnsOpG7nhyD016LWXt@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Cc: rlove-L7G0xEPcOZbYtjvyW6yDsg@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, Kay Sievers <kay-tD+1rO4QERM@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org, john-jueV0HHMeujJJrXXpGQQMAC/G2K4zDHf@public.gmane.org
+To: Glyn Normington <gnormington@gopivotal.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On 2014/4/16 11:50, Eric W. Biederman wrote:
-> Kay Sievers <kay-tD+1rO4QERM@public.gmane.org> writes:
-> 
->> On Tue, Apr 15, 2014 at 7:48 PM, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
->>> On 2014/4/15 5:44, Tejun Heo wrote:
->>>> cgroup users often need a way to determine when a cgroup's
->>>> subhierarchy becomes empty so that it can be cleaned up.  cgroup
->>>> currently provides release_agent for it; unfortunately, this mechanism
->>>> is riddled with issues.
->>>>
->>>> * It delivers events by forking and execing a userland binary
->>>>   specified as the release_agent.  This is a long deprecated method of
->>>>   notification delivery.  It's extremely heavy, slow and cumbersome to
->>>>   integrate with larger infrastructure.
->>>>
->>>> * There is single monitoring point at the root.  There's no way to
->>>>   delegate management of subtree.
->>>>
->>>> * The event isn't recursive.  It triggers when a cgroup doesn't have
->>>>   any tasks or child cgroups.  Events for internal nodes trigger only
->>>>   after all children are removed.  This again makes it impossible to
->>>>   delegate management of subtree.
->>>>
->>>> * Events are filtered from the kernel side.  "notify_on_release" file
->>>>   is used to subscribe to or suppress release event.  This is
->>>>   unnecessarily complicated and probably done this way because event
->>>>   delivery itself was expensive.
->>>>
->>>> This patch implements interface file "cgroup.subtree_populated" which
->>>> can be used to monitor whether the cgroup's subhierarchy has tasks in
->>>> it or not.  Its value is 0 if there is no task in the cgroup and its
->>>> descendants; otherwise, 1, and kernfs_notify() notificaiton is
->>>> triggers when the value changes, which can be monitored through poll
->>>> and [di]notify.
->>>>
->>>
->>> For the old notification mechanism, the path of the cgroup that becomes
->>> empty will be passed to the user specified release agent. Like this:
->>>
->>> # cat /sbin/cpuset_release_agent
->>> #!/bin/sh
->>> rmdir /dev/cpuset/$1
->>>
->>> How do we achieve this using inotify?
->>>
->>> - monitor all the cgroups, or
->>> - monitor all the leaf cgroups, and travel cgrp->parent to delete all
->>>   empty cgroups.
->>> - monitor root cgroup only, and travel the whole hierarchy to find
->>>   empy cgroups when it gets an fs event.
->>>
->>> Seems none of them is scalible.
->>
->> The manager would add all cgroups as watches to one inotify file
->> descriptor, it should not be problem to do that.
-> 
-> inotify won't work on cgroupfs.
-> 
+On Tue 15-04-14 09:38:10, Glyn Normington wrote:
+> On 14/04/2014 21:50, Johannes Weiner wrote:
+> >On Mon, Apr 14, 2014 at 09:11:25AM +0100, Glyn Normington wrote:
+> >>Johannes/Michal
+> >>
+> >>What are your thoughts on this matter? Do you see this as a valid
+> >>requirement?
+> >As Tejun said, memory cgroups *do* respond to internal pressure and
+> >enter targetted reclaim before invoking the OOM killer.  So I'm not
+> >exactly sure what you are asking.
+> We are repeatedly seeing a situation where a memory cgroup with a given
+> memory limit results in an application process in the cgroup being killed
+> oom during application initialisation. One theory is that dirty file cache
+> pages are not being written to disk to reduce memory consumption before the
+> oom killer is invoked. Should memory cgroups' response to internal pressure
+> include writing dirty file cache pages to disk?
 
-Tejun's working on inotify support for cgroupfs, and I believe this patchset
-has been tested, so it works.
+This depends on the kernel version. OOM with a lot of dirty pages on
+memcg LRUs was a big problem. Now we are waiting for pages under
+writeback during reclaim which should prevent from such spurious OOMs.
+Which kernel versions are we talking about? The fix (or better said
+workaround) I am thinking about is e62e384e9da8 memcg: prevent OOM with
+too many dirty pages.
 
-So what do you mean by saying it won't work? Could you be more specific?
+I am still not sure I understand your setup and the problem. Could you
+describe your setup (what runs where under what limits), please?
+-- 
+Michal Hocko
+SUSE Labs
