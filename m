@@ -1,409 +1,244 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v2 cgroup/for-3.16] cgroup: add documentation about unified
-	hierarchy
-Date: Wed, 16 Apr 2014 10:52:48 -0400
-Message-ID: <20140416145248.GD1257@htj.dyndns.org>
-References: <20140414220917.GD1863@htj.dyndns.org>
+From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 2/2] net: Implement SO_PASSCGROUP to enable passing
+ cgroup path
+Date: Wed, 16 Apr 2014 11:10:57 -0400
+Message-ID: <20140416151057.GE31074@redhat.com>
+References: <1397596546-10153-1-git-send-email-vgoyal@redhat.com>
+ <1397596546-10153-3-git-send-email-vgoyal@redhat.com>
+ <CALCETrURHNmLyccRiF_W8o2ozRMR4AaCjUE=_PU8z1+Pq6X2jQ@mail.gmail.com>
+ <20140416002010.GA5035@redhat.com>
+ <CALCETrWzHYN3kKcmDTFDfGhZqE4u9+6XDtiOu5nncbK_7KKH0g@mail.gmail.com>
+ <20140416101709.GA14131@redhat.com>
+ <CALCETrUTMSpd=NYn9QuO5Y3WY0uBhjNEHO0jCwZu0L59CpeDew@mail.gmail.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CALCETrUTMSpd=NYn9QuO5Y3WY0uBhjNEHO0jCwZu0L59CpeDew-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=HZHKChRhlHy7dUTcqhp2qqZQ003ENSowZBZeytCbzNc=;
-	b=K+hQzPFQpm3RkPkEzAZnrmUpnB5u2oBHTpEqzgHAWsl37oMYeEe1WcZyFHo0GN6ArZ
-	1pTjIRHc85+JSaJOBRMGn71tSr1qTlJyOcgIFQZzkeH6FgZUT7UwZJWt4Mt+xJirnWuc
-	6o3V9DelzhhyXTH8pDitehmS5Tvp5zC5XTzvAMOo/pxXA1MOUVBhg3/88nU4AW1SbOGe
-	Pl/X8B83BuGRvFLP3jc9uOSd9wFAEuK3XdzmcCsB/ppAYJp+U3D0PTEU/0Jj1zBWaf29
-	wCrsSiZFGp1SoLDZXfZcoToBI2uxWepeO2PxZ9W+K7TrO9WfXJK5BkyK8jZ2KyiCBQOk
-	FchA==
-Content-Disposition: inline
-In-Reply-To: <20140414220917.GD1863-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Brandon Philips <brandon.philips-JW9irJGTvgXQT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Kay Sievers <kay-tD+1rO4QERM@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Daniel Borkmann <dborkman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Simo Sorce <ssorce-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, kay-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Unified hierarchy will be the new version of cgroup interface.  This
-patch adds Documentation/cgroups/unified-hierarchy.txt which describes
-the design and rationales of unified hierarchy.
+On Wed, Apr 16, 2014 at 07:34:41AM -0700, Andy Lutomirski wrote:
+> On Wed, Apr 16, 2014 at 3:17 AM, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+> > On Tue, Apr 15, 2014 at 08:47:54PM -0700, Andy Lutomirski wrote:
+> >> On Apr 15, 2014 5:20 PM, "Vivek Goyal" <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+> >> >
+> >> > On Tue, Apr 15, 2014 at 02:53:13PM -0700, Andy Lutomirski wrote:
+> >> > > On Tue, Apr 15, 2014 at 2:15 PM, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+> >> > > > This patch implements socket option SO_PASSCGROUP along the lines of
+> >> > > > SO_PASSCRED.
+> >> > > >
+> >> > > > If SO_PASSCGROUP is set, then recvmsg() will get a control message
+> >> > > > SCM_CGROUP which will contain the cgroup path of sender. This cgroup
+> >> > > > belongs to first mounted hierarchy in the sytem.
+> >> > > >
+> >> > > > SCM_CGROUP control message can only be received and sender can not send
+> >> > > > a SCM_CGROUP message. Kernel automatically generates one if receiver
+> >> > > > chooses to receive one.
+> >> > > >
+> >> > > > This works both for unix stream and datagram sockets.
+> >> > > >
+> >> > > > cgroup information is passed only if either the sender or receiver has
+> >> > > > SO_PASSCGROUP option set. This means for existing workloads they should
+> >> > > > not see any significant performance impact of this change.
+> >> > >
+> >> > > This is odd.  Shouldn't an SCM_CGROUP cmsg be generated when the
+> >> > > receiver has SO_PASSCGROUP set and the sender passes SCM_CGROUP to
+> >> > > sendmsg?
+> >> >
+> >> > How can receiver trust the cgroup info generated by sender. It needs to
+> >> > be generated by kernel so that receiver can trust it.
+> >> >
+> >> > And if receiver needs to know cgroup of sender, receiver can just set
+> >> > SO_PASSCGROUP on socket and receiver should get one SCM_CGROUP message
+> >> > with each message received.
+> >>
+> >> I think the kernel should validate the data.
+> >>
+> >> Here's an attack against SO_PEERCGROUP: if you create a container with
+> >> a super secret name, then every time you connect to any unix socket,
+> >> you leak the name.
+> >
+> > One should be able to do that already today with SO_PASSCRED option and
+> > then map pid to cgroup. Or if one is using user namespaces then go
+> > through uid mappings and  figure out which container sent message.
+> 
+> Not if you've locked down proc, perhaps by using hidepid.
+> 
 
-v2: Grammatical updates as per Randy Dunlap's review.
+I think before we dive into smaller details lets take a step back. Core of
+your argument seems to be that exposing cgroup information of sender to
+receiver is a security risk. Hence only sender should decide when to
+send that information and when not to.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
----
- Documentation/cgroups/unified-hierarchy.txt |  359 ++++++++++++++++++++++++++++
- 1 file changed, 359 insertions(+)
+I find several issues here.
 
---- /dev/null
-+++ b/Documentation/cgroups/unified-hierarchy.txt
-@@ -0,0 +1,359 @@
-+
-+Cgroup unified hierarchy
-+
-+April, 2014		Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-+
-+This document describes the changes made by unified hierarchy and
-+their rationales.  It will eventually be merged into the main cgroup
-+documentation.
-+
-+CONTENTS
-+
-+1. Background
-+2. Basic Operation
-+  2-1. Mounting
-+  2-2. cgroup.subtree_control
-+  2-3. cgroup.controllers
-+3. Structural Constraints
-+  3-1. Top-down
-+  3-2. No internal tasks
-+4. Other Changes
-+  4-1. [Un]populated Notification
-+  4-2. Other Core Changes
-+  4-3. Per-Controller Changes
-+    4-3-1. blkio
-+    4-3-2. cpuset
-+    4-3-3. memory
-+5. Planned Changes
-+  5-1. CAP for resource control
-+
-+
-+1. Background
-+
-+cgroup allows an arbitrary number of hierarchies and each hierarchy
-+can host any number of controllers.  While this seems to provide a
-+high level of flexibility, it isn't quite useful in practice.
-+
-+For example, as there is only one instance of each controller, utility
-+type controllers such as freezer which can be useful in all
-+hierarchies can only be used in one.  The issue is exacerbated by the
-+fact that controllers can't be moved around once hierarchies are
-+populated.  Another issue is that all controllers bound to a hierarchy
-+are forced to have exactly the same view of the hierarchy.  It isn't
-+possible to vary the granularity depending on the specific controller.
-+
-+In practice, these issues heavily limit which controllers can be put
-+on the same hierarchy and most configurations resort to putting each
-+controller on its own hierarchy.  Only closely related ones, such as
-+the cpu and cpuacct controllers, make sense to put on the same
-+hierarchy.  This often means that userland ends up managing multiple
-+similar hierarchies repeating the same steps on each hierarchy
-+whenever a hierarchy management operation is necessary.
-+
-+Unfortunately, support for multiple hierarchies comes at a steep cost.
-+Internal implementation in cgroup core proper is dazzlingly
-+complicated but more importantly the support for multiple hierarchies
-+restricts how cgroup is used in general and what controllers can do.
-+
-+There's no limit on how many hierarchies there may be, which means
-+that a task's cgroup membership can't be described in finite length.
-+The key may contain any varying number of entries and is unlimited in
-+length, which makes it highly awkward to handle and leads to addition
-+of controllers which exist only to identify membership, which in turn
-+exacerbates the original problem.
-+
-+Also, as a controller can't have any expectation regarding what shape
-+of hierarchies other controllers would be on, each controller has to
-+assume that all other controllers are operating on completely
-+orthogonal hierarchies.  This makes it impossible, or at least very
-+cumbersome, for controllers to cooperate with each other.
-+
-+In most use cases, putting controllers on hierarchies which are
-+completely orthogonal to each other isn't necessary.  What usually is
-+called for is the ability to have differing levels of granularity
-+depending on the specific controller.  In other words, hierarchy may
-+be collapsed from leaf towards root when viewed from specific
-+controllers.  For example, a given configuration might not care about
-+how memory is distributed beyond a certain level while still wanting
-+to control how CPU cycles are distributed.
-+
-+Unified hierarchy is the next version of cgroup interface.  It aims to
-+address the aforementioned issues by having more structure while
-+retaining enough flexibility for most use cases.  Various other
-+general and controller-specific interface issues are also addressed in
-+the process.
-+
-+
-+2. Basic Operation
-+
-+2-1. Mounting
-+
-+Currently, unified hierarchy can be mounted with the following mount
-+command.  Note that this is still under development and scheduled to
-+change soon.
-+
-+ mount -t cgroup -o __DEVEL__sane_behavior cgroup $MOUNT_POINT
-+
-+All controllers which are not bound to other hierarchies are
-+automatically bound to unified hierarchy and show up at the root of
-+it.  Controllers which are enabled only in the root of unified
-+hierarchy can be bound to other hierarchies at any time.  This allows
-+mixing unified hierarchy with the traditional multiple hierarchies in
-+a fully backward compatible way.
-+
-+
-+2-2. cgroup.subtree_control
-+
-+All cgroups on unified hierarchy have a "cgroup.subtree_control" file
-+which governs which controllers are enabled on the children of the
-+cgroup.  Let's assume a hierarchy like the following.
-+
-+  root - A - B - C
-+               \ D
-+
-+root's "cgroup.subtree_control" file determines which controllers are
-+enabled on A.  A's on B.  B's on C and D.  This coincides with the
-+fact that controllers on the immediate sub-level are used to
-+distribute the resources of the parent.  In fact, it's natural to
-+assume that resource control knobs of a child belong to its parent.
-+Enabling a controller in a "cgroup.subtree_control" file declares that
-+distribution of the respective resources of the cgroup will be
-+controlled.  Note that this means that controller enable states are
-+shared among siblings.
-+
-+When read, the file contains a space-separated list of currently
-+enabled controllers.  A write to the file should contain a
-+space-separated list of controllers with '+' or '-' prefixed (without
-+the quotes).  Controllers prefixed with '+' are enabled and '-'
-+disabled.  If a controller is listed multiple times, the last entry
-+wins.  The specific operations are executed atomically - either all
-+succeed or fail.
-+
-+
-+2-3. cgroup.controllers
-+
-+Read-only "cgroup.controllers" file contains a space-separated list of
-+controllers which can be enabled in the cgroup's
-+"cgroup.subtree_control" file.
-+
-+In the root cgroup, this lists controllers which are not bound to
-+other hierarchies and the content changes as controllers are bound to
-+and unbound from other hierarchies.
-+
-+In non-root cgroups, the content of this file equals that of the
-+parent's "cgroup.subtree_control" file as only controllers enabled
-+from the parent can be used in its children.
-+
-+
-+3. Structural Constraints
-+
-+3-1. Top-down
-+
-+As it doesn't make sense to nest control of an uncontrolled resource,
-+all non-root "cgroup.subtree_control" files can only contain
-+controllers which are enabled in the parent's "cgroup.subtree_control"
-+file.  A controller can be enabled only if the parent has the
-+controller enabled and a controller can't be disabled if one or more
-+children have it enabled.
-+
-+
-+3-2. No internal tasks
-+
-+One long-standing issue that cgroup faces is the competition between
-+tasks belonging to the parent cgroup and its children cgroups.  This
-+is inherently nasty as two different types of entities compete and
-+there is no agreed-upon obvious way to handle it.  Different
-+controllers are doing different things.
-+
-+The cpu controller considers tasks and cgroups as equivalents and maps
-+nice levels to cgroup weights.  This works for some cases but falls
-+flat when children should be allocated specific ratios of CPU cycles
-+and the number of internal tasks fluctuates - the ratios constantly
-+change as the number of competing entities fluctuates.  There also are
-+other issues.  The mapping from nice level to weight isn't obvious or
-+universal, and there are various other knobs which simply aren't
-+available for tasks.
-+
-+The blkio controller implicitly creates a hidden leaf node for each
-+cgroup to host the tasks.  The hidden leaf has its own copies of all
-+the knobs with "leaf_" prefixed.  While this allows equivalent control
-+over internal tasks, it's with serious drawbacks.  It always adds an
-+extra layer of nesting which may not be necessary, makes the interface
-+messy and significantly complicates the implementation.
-+
-+The memory controller currently doesn't have a way to control what
-+happens between internal tasks and child cgroups and the behavior is
-+not clearly defined.  There have been attempts to add ad-hoc behaviors
-+and knobs to tailor the behavior to specific workloads.  Continuing
-+this direction will lead to problems which will be extremely difficult
-+to resolve in the long term.
-+
-+Multiple controllers struggle with internal tasks and came up with
-+different ways to deal with it; unfortunately, all the approaches in
-+use now are severely flawed and, furthermore, the widely different
-+behaviors make cgroup as whole highly inconsistent.
-+
-+It is clear that this is something which needs to be addressed from
-+cgroup core proper in a uniform way so that controllers don't need to
-+worry about it and cgroup as a whole shows a consistent and logical
-+behavior.  To achieve that, unified hierarchy enforces the following
-+structural constraint:
-+
-+ Except for the root, only cgroups which don't contain any task may
-+ have controllers enabled in their "cgroup.subtree_control" files.
-+
-+Combined with other properties, this guarantees that, when a
-+controller is looking at the part of the hierarchy which has it
-+enabled, tasks are always only on the leaves.  This rules out
-+situations where child cgroups compete against internal tasks of the
-+parent.
-+
-+There are two things to note.  Firstly, the root cgroup is exempt from
-+the restriction.  Root contains tasks and anonymous resource
-+consumption which can't be associated with any other cgroup and
-+requires special treatment from most controllers.  How resource
-+consumption in the root cgroup is governed is up to each controller.
-+
-+Secondly, the restriction doesn't take effect if there is no enabled
-+controller in the cgroup's "cgroup.subtree_control" file.  This is
-+important as otherwise it wouldn't be possible to create children of a
-+populated cgroup.  To control resource distribution of a cgroup, the
-+cgroup must create children and transfer all its tasks to the children
-+before enabling controllers in its "cgroup.subtree_control" file.
-+
-+
-+4. Other Changes
-+
-+4-1. [Un]populated Notification
-+
-+cgroup users often need a way to determine when a cgroup's
-+subhierarchy becomes empty so that it can be cleaned up.  cgroup
-+currently provides release_agent for it; unfortunately, this mechanism
-+is riddled with issues.
-+
-+- It delivers events by forking and execing a userland binary
-+  specified as the release_agent.  This is a long deprecated method of
-+  notification delivery.  It's extremely heavy, slow and cumbersome to
-+  integrate with larger infrastructure.
-+
-+- There is single monitoring point at the root.  There's no way to
-+  delegate management of a subtree.
-+
-+- The event isn't recursive.  It triggers when a cgroup doesn't have
-+  any tasks or child cgroups.  Events for internal nodes trigger only
-+  after all children are removed.  This again makes it impossible to
-+  delegate management of a subtree.
-+
-+- Events are filtered from the kernel side.  A "notify_on_release"
-+  file is used to subscribe to or suppress release events.  This is
-+  unnecessarily complicated and probably done this way because event
-+  delivery itself was expensive.
-+
-+Unified hierarchy implements an interface file "cgroup.populated"
-+which can be used to monitor whether the cgroup's subhierarchy has
-+tasks in it or not.  Its value is 0 if there is no task in the cgroup
-+and its descendants; otherwise, 1.  poll and [id]notify events are
-+triggered when the value changes.
-+
-+This is significantly lighter and simpler and trivially allows
-+delegating management of subhierarchy - subhierarchy monitoring can
-+block further propagation simply by putting itself or another process
-+in the subhierarchy and monitor events that it's interested in from
-+there without interfering with monitoring higher in the tree.
-+
-+In unified hierarchy, the release_agent mechanism is no longer
-+supported and the interface files "release_agent" and
-+"notify_on_release" do not exist.
-+
-+
-+4-2. Other Core Changes
-+
-+- None of the mount options is allowed.
-+
-+- remount is disallowed.
-+
-+- rename(2) is disallowed.
-+
-+- The "tasks" file is removed.  Everything should at process
-+  granularity.  Use the "cgroup.procs" file instead.
-+
-+- The "cgroup.procs" file is not sorted.  pids will be unique unless
-+  they got recycled in-between reads.
-+
-+- The "cgroup.clone_children" file is removed.
-+
-+
-+4-3. Per-Controller Changes
-+
-+4-3-1. blkio
-+
-+- blk-throttle becomes properly hierarchical.
-+
-+
-+4-3-2. cpuset
-+
-+- Tasks are kept in empty cpusets after hotplug and take on the masks
-+  of the nearest non-empty ancestor, instead of being moved to it.
-+
-+- A task can be moved into an empty cpuset, and again it takes on the
-+  masks of the nearest non-empty ancestor.
-+
-+
-+4-3-3. memory
-+
-+- use_hierarchy is on by default and the cgroup file for the flag is
-+  not created.
-+
-+
-+5. Planned Changes
-+
-+5-1. CAP for resource control
-+
-+Unified hierarchy will require one of the capabilities(7), which is
-+yet to be decided, for all resource control related knobs.  Process
-+organization operations - creation of sub-cgroups and migration of
-+processes in sub-hierarchies may be delegated by changing the
-+ownership and/or permissions on the cgroup directory and
-+"cgroup.procs" interface file; however, all operations which affect
-+resource control - writes to a "cgroup.subtree_control" file or any
-+controller-specific knobs - will require an explicit CAP privilege.
-+
-+This, in part, is to prevent the cgroup interface from being
-+inadvertently promoted to programmable API used by non-privileged
-+binaries.  cgroup exposes various aspects of the system in ways which
-+aren't properly abstracted for direct consumption by regular programs.
-+This is an administration interface much closer to sysctl knobs than
-+system calls.  Even the basic access model, being filesystem path
-+based, isn't suitable for direct consumption.  There's no way to
-+access "my cgroup" in a race-free way or make multiple operations
-+atomic against migration to another cgroup.
-+
-+Another aspect is that, for better or for worse, the cgroup interface
-+goes through far less scrutiny than regular interfaces for
-+unprivileged userland.  The upside is that cgroup is able to expose
-+useful features which may not be suitable for general consumption in a
-+reasonable time frame.  It provides a relatively short path between
-+internal details and userland-visible interface.  Of course, this
-+shortcut comes with high risk.  We go through what we go through for
-+general kernel APIs for good reasons.  It may end up leaking internal
-+details in a way which can exert significant pain by locking the
-+kernel into a contract that can't be maintained in a reasonable
-+manner.
-+
-+Also, due to the specific nature, cgroup and its controllers don't
-+tend to attract attention from a wide scope of developers.  cgroup's
-+short history is already fraught with severely mis-designed
-+interfaces, unnecessary commitments to and exposing of internal
-+details, broken and dangerous implementations of various features.
-+
-+Keeping cgroup as an administration interface is both advantageous for
-+its role and imperative given its nature.  Some of the cgroup features
-+may make sense for unprivileged access.  If deemed justified, those
-+must be further abstracted and implemented as a different interface,
-+be it a system call or process-private filesystem, and survive through
-+the scrutiny that any interface for general consumption is required to
-+go through.
-+
-+Requiring CAP is not a complete solution but should serve as a
-+significant deterrent against spraying cgroup usages in non-privileged
-+programs.
+- Why exposing cgroup information of sender is a security risk?
+
+- How would a sender decide when to send SCM_CGROUP info and when not to.
+
+- Additional higher level protocols need to be established now between
+  sender and receiver so that they agree upon that cgroup information need
+  to be sent. This will just make the implementation complicated and 
+  this should be done only if benefits outweigh the cons.  
+
+> >
+> >>
+> >> Here's an attack against SO_PASSCGROUP, as you implemented it: connect
+> >> a socket and get someone else to write(2) to it.  This isn't very
+> >> hard.  Now you've impersonated.
+> >
+> > If you can get another process to write to your socket and impersonate,
+> > then what will stop from that process to also send SCM_CGROUP message
+> > also? So I don't see how SCM_CGROUP from client will solve this problem.
+> >
+> 
+> I can easily get other processed to write to my socket.  Passing that
+> socket as stderr to a setuid program is probably the easiest way.
+> Finding a service that accepts a socket using SCM_RIGHTS and writes to
+> it is another.  It is supposed to be safe to write(2) to an untrusted
+> file descriptor, or, at the very least, it is supposed to be a DoS at
+> worst.  In this case, it's also either an information leak.
+
+Hold on, so what's the problem here.
+
+- First of all, if you opened the connection SO_PEERCGROUP will still give
+  the right information to receiver. Does not matter if later you got some
+  priviliged process to write to that socket descriptor.
+
+- Now if you passed fd to a privliged process as stderr, it is not asking
+  for any services. And if it does, then there is a design issue on that
+  privliged service side. 
+
+I really don't see any issue here.
+
+> 
+> It's true that SO_PASSCRED has the same problem.  I consider that to
+> be a mistake, and I suspect that there are a large number of
+> longstanding security problems caused by it.  Regardless, we shouldn't
+> exacerbate this problem.  There is no legacy code using SCM_CGROUP at
+> all right now, because the option has never been in a released kernel.
+>  So let's get the interface right the first time around.
+> 
+> If I find some time later today, I can try to write a variant of the
+> patch that only sends SCM_CGROUP when the sender requests it.
+
+I don't think implementation is the issue here. You need to provide a
+stronger argument that why passing cgroup information is a security
+risk.
+
+> 
+> On an unrelated note, what happens when there are multiple cgroup hierarchies?
+> 
+
+People are moving away from multiple cgroup hierarchiy model. In future a
+single hiearchy is planned and multiple hierarchy will remain there only
+for backward compatibility.
+
+Passing cgroup of task in every hierarchy becomes too expensive. (4K per
+hierarchy). And its  not clear how many hierarchies are present in the
+system.
+
+So there is not much point in passing cgroup of task in every hierarchy as
+it is slowly being phased out.
+
+
+> > Kernel cgroup verification will also not help in this case as sender
+> > is sending his own cgroup.
+> 
+> Sure it will -- the sender sticks a string into SCM_CGROUP and the
+> kernel checks it.
+
+Kernel will check whether sender is sending right cgroup information or
+not. So in your example, if you passed fd to a privliged process and
+that process sends an SCM_CGROUP message, then kernel will just let
+it go. SCM_CGROUP contains the cgroup of priviliged process and that's
+the right information. 
+
+If a priviliged process is asking for a service on a fd passed by 
+unpriviliged process, that itself is a risk. And that risk will not
+be mitigated by forcing the usage of SCM_CGROUP. 
+
+> 
+> >
+> >>
+> >> I advocate for the following semantics: if sendmsg is passed a
+> >> SCM_CGROUP cmsg, and that cmsg has the right cgroup, and the receiver
+> >> has SO_PASSCGROUP set, then the receiver gets SCM_CGROUP.  If you try
+> >> to lie using SCM_CGROUP, you get -EPERM.  If you set SO_PASSCGROUP,
+> >> but your peer doesn't sent SCM_CREDS, you get nothing.
+> >>
+> >> This is immune to both attacks.  It should be cheaper, too, since
+> >> there's no overhead for people who don't use it.
+> >
+> > I think you seem to be saying that a client's credentials should not be
+> > visible to receiver until and unless client himself wants to reveal
+> > those. IOW, it kind of looks like an anonymous mode of operation where
+> > client connects to a socket but receiver client not want to reveal any of
+> > the information about itself to receiver.
+> >
+> > I am not sure how useful that mode really is. If it is really useful, I
+> > think one could implement another socket option on client side to
+> > deny passing cgroup information to receiver. Say SO_NOPASSCGROUP.
+> 
+> This won't help -- an attacker will simply not set that option, and
+> the program being attacked is certainly not going to set
+> SO_NOPASSCGROUP right before calling write.
+
+This was for the case where you gave example of "super secret container"
+which did not want to reveal its identity to receiver. 
+
+For the case of priviliged process asking for service on an fd passed
+by unpriviliged process, SCM_CGROUP will not help you either. So it is
+a bad idea to begin with.
+
+
+> 
+> >
+> > Before we even get there, I will question that what's so secret about
+> > cgroup information that one would like to hide it from receiver. We don't
+> > hide uid, pid, gid.
+> >
+> 
+> I think we should hide uid, gid, and pid too, but that ship has sailed.
+> 
+> The bigger issue isn't hiding so much as accidental assertions of
+> authority.  If a program accidentally leaks its uid, that's one thing.
+>  If a program, by accidentally leaking its uid, causes another program
+> to think that the sender wants some action to be taken on behalf of
+> its uid, then there's a real security problem.
+> 
+> > Secondly, how would client know when to send SCM_CGROUP to receiver. For
+> > the use case I mentioned that init wants to log cgroup of every message
+> > going into journal. How would client know that every message needs to
+> > have SCM_CGROUP. By automatically getting client information when receiver
+> > needs it, simplifies the things a lot without any client modificaiton.
+> 
+> I think that the client *should* be modified.  What if there's an
+> existing program that runs as a container's root but does not intend
+> to sign off on a message with its cgroup?
+
+That goes back to my previous question. Why revealing cgroup of sender
+is a problem.
+
+And in case we agree that it is a problem SO_NOPASSCGROUP will solve
+that problem.
+
+> 
+> In any event, I still think that the journald case has no need for any
+> kernel changes at all.  From a very cursory inspection, the journal
+> code expects to find a socket in /run/systemd/journal/socket.  It
+> should be enough to stick a different socket into that location in
+> each container.  This will work on all kernels and may even work
+> without modifying any code in the container.
+
+This is a little generic discussion. No containers here. Think of various
+services running in their own cgroups and logging messages into journal.
+
+And that's only one use case.
+
+Thanks
+Vivek
