@@ -1,58 +1,142 @@
-From: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
-Subject: Re: [PATCH 2/2] net: Implement SO_PASSCGROUP to enable passing cgroup path
-Date: Thu, 17 Apr 2014 11:05:01 -0700
-Message-ID: <CALCETrUd2yvLhngDE88j2EVdVpZWUorrK_n2=ox7S26KomsN9g@mail.gmail.com>
-References: <20140416180642.GG31074@redhat.com> <CALCETrVUw5+vCCONy1VTXpskbY_eZFo2CtbehwV5Mhj4d4+icw@mail.gmail.com>
- <20140416185936.GJ31074@redhat.com> <534FF61B.4010901@redhat.com>
- <1397750674.2628.44.camel@willson.li.ssimo.org> <CALCETrUrj2LtAoXp600BD2ANgE2UUEbTYQrK8hHqDR=qpeFPcg@mail.gmail.com>
- <1397751853.2628.50.camel@willson.li.ssimo.org> <CALCETrWNWvumFg9Qba0GEOjYop4WYe530tCPtakrhnoCrHqhUQ@mail.gmail.com>
- <1397753323.2628.60.camel@willson.li.ssimo.org> <CALCETrXj6kD3E+vsaWmkrSbaQYTu=c-Hsw640jh4O+FbojYk2g@mail.gmail.com>
- <20140417171256.GB25334@redhat.com> <CALCETrVq4HRpfWOAbZAQbyjuraQd=OxnW=WjSoe5JgBzRStiKg@mail.gmail.com>
- <1397756025.2628.64.camel@willson.li.ssimo.org> <CALCETrVBJFgKwRKBE2jAG6kiGgkJ+MyQiw2nyz5yj0h68kCk9A@mail.gmail.com>
- <1397756821.2628.69.camel@willson.li.ssimo.org>
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH] cgroup: Use more current logging style
+Date: Thu, 17 Apr 2014 11:05:55 -0700
+Message-ID: <1397757955.3104.11.camel@joe-AO725>
+References: <1397748555-6647-1-git-send-email-nasa4836@gmail.com>
+	 <20140417153800.GO15326@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1397756821.2628.69.camel-Hs+ccMQdwurzDu64bZtGtWD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140417153800.GO15326@htj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Simo Sorce <ssorce-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Daniel J Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kay-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Jianyu Zhan <nasa4836@gmail.com>, lizefan@huawei.com, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Apr 17, 2014 at 10:47 AM, Simo Sorce <ssorce-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
-> On Thu, 2014-04-17 at 10:35 -0700, Andy Lutomirski wrote:
->> On Thu, Apr 17, 2014 at 10:33 AM, Simo Sorce <ssorce-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
->> > On Thu, 2014-04-17 at 10:26 -0700, Andy Lutomirski wrote:
->> >>
->> >> Not really.  write(2) can't send SCM_CGROUP.  Callers of sendmsg(2)
->> >> who supply SCM_CGROUP are explicitly indicating that they want their
->> >> cgroup associated with that message.  Callers of write(2) and send(2)
->> >> are simply indicating that they have some bytes that they want to
->> >> shove into whatever's at the other end of the fd.
->> >
->> > But there is no attack vector that passes by tricking setuid binaries to
->> > write to pre-opened file descriptors on sendmsg(), and for the other
->> > cases (connected socket) journald can always cross check with
->> > SO_PEERCGROUP, so why do we care again ?
->>
->> Because the proposed code does not do what I described, at least as
->> far I as I can tell.
->
-> You do realize that we have been speaking in hypothetical for a while
-> now ?
->
-> Even without doing the SO_PEERCRED, you are not going to fool the log,
-> as it gathers a ton of other info about the process, and cgroup is just
-> one of the infos used to classify the log.
->
-> There are also credentials, pid, and a lot of other things.
-> Even if a setuid binary could be tricked to send a message with an
-> "impostor" cgroup don't you think you'd see other things out of place ?
-> (wrong uid, wrong pid, etc...).
+Use pr_fmt and remove embedded prefixes.
+Realign modified multi-line statements to open parenthesis.
+Convert embedded function name to "%s: ", __func__
 
-Credentials and pid have much the same problem because SCM_CREDENTIALS
-is screwed up.  That's not an excuse to screw up SCM_CGROUP in the
-same way.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
 
---Andy
+On Thu, 2014-04-17 at 11:38 -0400, Tejun Heo wrote:
+> Rolled 1-3 to the pending patchset.
+ 
+Perhaps something like this on top of the modified patches
+after being applied to -next.
+
+There was 1 trivial patch conflict on the Jianyu's patch 3/3
+
+ kernel/cgroup.c | 32 +++++++++++++++++---------------
+ 1 file changed, 17 insertions(+), 15 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 21a656e..5e6f193 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -26,6 +26,8 @@
+  *  distribution for more details.
+  */
+ 
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
+ #include <linux/cgroup.h>
+ #include <linux/cred.h>
+ #include <linux/ctype.h>
+@@ -1017,9 +1019,9 @@ static int rebind_subsystems(struct cgroup_root *dst_root,
+ 		 * Just warn about it and continue.
+ 		 */
+ 		if (cgrp_dfl_root_visible) {
+-			pr_warn("cgroup: failed to create files (%d) while rebinding 0x%lx to default root\n",
+-				   ret, ss_mask);
+-			pr_warn("cgroup: you may retry by moving them to a different hierarchy and unbinding\n");
++			pr_warn("failed to create files (%d) while rebinding 0x%lx to default root\n",
++				ret, ss_mask);
++			pr_warn("you may retry by moving them to a different hierarchy and unbinding\n");
+ 		}
+ 	}
+ 
+@@ -1210,12 +1212,12 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
+ 	/* Consistency checks */
+ 
+ 	if (opts->flags & CGRP_ROOT_SANE_BEHAVIOR) {
+-		pr_warn("cgroup: sane_behavior: this is still under development and its behaviors will change, proceed at your own risk\n");
++		pr_warn("sane_behavior: this is still under development and its behaviors will change, proceed at your own risk\n");
+ 
+ 		if ((opts->flags & (CGRP_ROOT_NOPREFIX | CGRP_ROOT_XATTR)) ||
+ 		    opts->cpuset_clone_children || opts->release_agent ||
+ 		    opts->name) {
+-			pr_err("cgroup: sane_behavior: noprefix, xattr, clone_children, release_agent and name are not allowed\n");
++			pr_err("sane_behavior: noprefix, xattr, clone_children, release_agent and name are not allowed\n");
+ 			return -EINVAL;
+ 		}
+ 	} else {
+@@ -1261,7 +1263,7 @@ static int cgroup_remount(struct kernfs_root *kf_root, int *flags, char *data)
+ 	unsigned long added_mask, removed_mask;
+ 
+ 	if (root->flags & CGRP_ROOT_SANE_BEHAVIOR) {
+-		pr_err("cgroup: sane_behavior: remount is not allowed\n");
++		pr_err("sane_behavior: remount is not allowed\n");
+ 		return -EINVAL;
+ 	}
+ 
+@@ -1274,7 +1276,7 @@ static int cgroup_remount(struct kernfs_root *kf_root, int *flags, char *data)
+ 		goto out_unlock;
+ 
+ 	if (opts.subsys_mask != root->cgrp.subsys_mask || opts.release_agent)
+-		pr_warn("cgroup: option changes via remount are deprecated (pid=%d comm=%s)\n",
++		pr_warn("option changes via remount are deprecated (pid=%d comm=%s)\n",
+ 			task_tgid_nr(current), current->comm);
+ 
+ 	added_mask = opts.subsys_mask & ~root->cgrp.subsys_mask;
+@@ -1283,7 +1285,7 @@ static int cgroup_remount(struct kernfs_root *kf_root, int *flags, char *data)
+ 	/* Don't allow flags or name to change at remount */
+ 	if (((opts.flags ^ root->flags) & CGRP_ROOT_OPTION_MASK) ||
+ 	    (opts.name && strcmp(opts.name, root->name))) {
+-		pr_err("cgroup: option or name mismatch, new: 0x%lx \"%s\", old: 0x%lx \"%s\"\n",
++		pr_err("option or name mismatch, new: 0x%lx \"%s\", old: 0x%lx \"%s\"\n",
+ 		       opts.flags & CGRP_ROOT_OPTION_MASK, opts.name ?: "",
+ 		       root->flags & CGRP_ROOT_OPTION_MASK, root->name);
+ 		ret = -EINVAL;
+@@ -1544,11 +1546,11 @@ retry:
+ 
+ 		if ((root->flags ^ opts.flags) & CGRP_ROOT_OPTION_MASK) {
+ 			if ((root->flags | opts.flags) & CGRP_ROOT_SANE_BEHAVIOR) {
+-				pr_err("cgroup: sane_behavior: new mount options should match the existing superblock\n");
++				pr_err("sane_behavior: new mount options should match the existing superblock\n");
+ 				ret = -EINVAL;
+ 				goto out_unlock;
+ 			} else {
+-				pr_warn("cgroup: new mount options do not match the existing superblock, will be ignored\n");
++				pr_warn("new mount options do not match the existing superblock, will be ignored\n");
+ 			}
+ 		}
+ 
+@@ -2415,8 +2417,8 @@ static int cgroup_addrm_files(struct cgroup *cgrp, struct cftype cfts[],
+ 		if (is_add) {
+ 			ret = cgroup_add_file(cgrp, cft);
+ 			if (ret) {
+-				pr_warn("cgroup_addrm_files: failed to add %s, err=%d\n",
+-					cft->name, ret);
++				pr_warn("%s: failed to add %s, err=%d\n",
++					__func__, cft->name, ret);
+ 				return ret;
+ 			}
+ 		} else {
+@@ -3666,10 +3668,10 @@ static int create_css(struct cgroup *cgrp, struct cgroup_subsys *ss)
+ 
+ 	if (ss->broken_hierarchy && !ss->warned_broken_hierarchy &&
+ 	    parent->parent) {
+-		pr_warn("cgroup: %s (%d) created nested cgroup for controller \"%s\" which has incomplete hierarchy support. Nested cgroups may change behavior in the future.\n",
+-			   current->comm, current->pid, ss->name);
++		pr_warn("%s (%d) created nested cgroup for controller \"%s\" which has incomplete hierarchy support. Nested cgroups may change behavior in the future.\n",
++			current->comm, current->pid, ss->name);
+ 		if (!strcmp(ss->name, "memory"))
+-			pr_warn("cgroup: \"memory\" requires setting use_hierarchy to 1 on the root.\n");
++			pr_warn("\"memory\" requires setting use_hierarchy to 1 on the root\n");
+ 		ss->warned_broken_hierarchy = true;
+ 	}
+ 
+
