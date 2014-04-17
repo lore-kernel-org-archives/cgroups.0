@@ -1,55 +1,55 @@
-From: Jianyu Zhan <nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] cgroup: clean up obsolete code and comment
-Date: Thu, 17 Apr 2014 22:21:27 +0800
-Message-ID: <CAHz2CGUESujf3np6a6-hOwqmA5p37F8YCV3XKtZ_7K+8tuU=2w@mail.gmail.com>
-References: <1397744056-31119-1-git-send-email-nasa4836@gmail.com>
-	<20140417141904.GH15326@htj.dyndns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: fix the retry path of cgroup_mount()
+Date: Thu, 17 Apr 2014 11:20:48 -0400
+Message-ID: <20140417152048.GL15326@htj.dyndns.org>
+References: <534F6C44.2060800@huawei.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=NqM62sLvWUqBLjlAfYKdIPnOM4xxcTGWNBDUNYll3BA=;
+        b=TKyG+nXwTBIqDTZGpoAuUEvblG14MPxgBDJeRXrco3uFNmQGR11nJ6sqL/fSOtMtv7
+         dhduRSDjvDMOgUO1hZjgz/rke8kQAl/MiT0pUIncTUOMg8on8BLbZ/BCE/wOxUFGWGXo
+         SxkGjyPkrMknpVw9xsMIzzKOtlMxFlDwew29twsU9P26eUXCUz9xquA+wCsoocWBYHNn
+         67xxpZK14jUtHEkzjR6DRtlBbuLJ8CwNsOtRBd7HPjNIQ2yaBsW1XvlQabZVTvflFuAp
+         ixztadzxC5WP3cwQJf1/AHDjQ35M+pn0dW6ddS6nMYEu4tEaOg/KIcy+dWTWv/WqsazF
+         rY3w==
+Content-Disposition: inline
+In-Reply-To: <534F6C44.2060800-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-	:cc:content-type;
-	bh=BE5tUGOLLNwCFfxtj2zM3ZYiXEb2Vw+TErN1m2S6sPI=;
-	b=UBBis07iRYLuh+UKNOlIMpnuAxYGdCIVt9ba1cYglcyBT85XDqLB3+TkO4hEgdCgg+
-	QLyamrsqKkV7Ied1FEEBLncBvh5RnKk6NAARsskdEZCS1lHSZzY1ETVEyiE0c9aEQnKH
-	4UOYjZxhMXrcNNufCW0YbQ0MZsOQW545bk3NLOqh+EEky17J7hj1IjAadA/py+rvDvpj
-	hsG+E9CYjHb46biS6wDKLVDgFZfYuDJgckF5fenvPj33S1P1/KqS85f7xcc9bBThZLRu
-	g7OidovmMMVeGeW2bP0sspWla02rMt4PnWDjWlh85eRAVbjq7Q9VwQ/y6cvmzc7Xeo0Q
-	JQXw==
-In-Reply-To: <20140417141904.GH15326-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Thu, Apr 17, 2014 at 10:19 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> And cgroup_subsys[] doesn't require cgroup_mutex protection anymore.
-> That comment and BUG_ON(!mutex_is_locked()) can be removed.  Can you
-> please separate these out into a separate patch?
->
->> 2. cgroup_pidlist_seq_operations has no more user, remove it.
->> 3. s/pr_warning/pr_warn/g, suggested by scripts/checkpatch.pl.
->
-> And let's put 2 and 3 in separate patches too.
->
->> Signed-off-by: Jianyu Zhan <nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->
-> Also, please regenerate the patches on top of the following branch.
->
->  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-populated-v2
+On Thu, Apr 17, 2014 at 01:53:08PM +0800, Li Zefan wrote:
+> If we hit the retry path, we'll call parse_cgroupfs_options() again,
+> but the string we pass to it has been modified by the previous call
+> to this function.
+> 
+> This bug can be observed by:
+> 
+>   # mount -t cgroup -o name=foo,cpuset xxx /mnt && umount /mnt && \
+>     mount -t cgroup -o name=foo,cpuset xxx /mnt
+>   mount: wrong fs type, bad option, bad superblock on xxx,
+>          missing codepage or helper program, or other error
+>   ...
+> 
+> The second mount passed "name=foo,cpuset" to the parser, and then it
+> hit the retry path and call the parser again, but this time the string
+> passed to the parser is "name=foo".
+> 
+> To fix this, we avoid calling parse_cgroupfs_options() again in this
+> case.
+> 
+> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Ok. This patch is based on review-populated-v2 already.
+Applied to cgroup/for-3.15-fixes.
 
+Thanks.
 
-Thanks,
-Jianyu Zhan
+-- 
+tejun
