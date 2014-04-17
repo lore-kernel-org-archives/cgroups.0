@@ -1,46 +1,131 @@
-From: Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: [PATCH 2/2] net: Implement SO_PASSCGROUP to enable passing
- cgroup path
-Date: Thu, 17 Apr 2014 09:41:23 -0400
-Message-ID: <20140417134123.GA15749@redhat.com>
-References: <1397664837.19767.410.camel@willson.li.ssimo.org>
- <CALCETrXn7b6UuALpGUVoyQYfR2uzk5tj2ABV=dkvtFNgqM5sxQ@mail.gmail.com>
- <20140416180642.GG31074@redhat.com>
- <CALCETrVUw5+vCCONy1VTXpskbY_eZFo2CtbehwV5Mhj4d4+icw@mail.gmail.com>
- <20140416182530.GB550@redhat.com>
- <CALCETrUs1js3Br81ZkiQnsuWduzOiqDe3aV0K_z_zw0znSuiag@mail.gmail.com>
- <20140416190657.GK31074@redhat.com>
- <CALCETrUv56awd+UoO_f8LLL2FVq-Hc6Bd6iBGMqWjVGpgxgTSg@mail.gmail.com>
- <20140416193918.GM31074@redhat.com>
- <CALCETrU9P+1Az+uuU_zE4uZZ-qmp5M_=YAXvfcK=rzQRbgoG5g@mail.gmail.com>
+From: Jianyu Zhan <nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] cgroup: clean up obsolete code and comment
+Date: Thu, 17 Apr 2014 22:14:16 +0800
+Message-ID: <1397744056-31119-1-git-send-email-nasa4836@gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CALCETrU9P+1Az+uuU_zE4uZZ-qmp5M_=YAXvfcK=rzQRbgoG5g@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Simo Sorce <ssorce@redhat.com>, David Miller <davem@davemloft.net>, Tejun Heo <tj@kernel.org>, Daniel Walsh <dwalsh@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, lpoetter@redhat.com, cgroups@vger.kernel.org, kay@redhat.com, Network Development <netdev@vger.kernel.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=from:to:cc:subject:date:message-id;
+	bh=UMsVOnfqoi5qIeKDgrEUX2oSm55C6Kr3UZXO2nfOEog=;
+	b=s3UKqKsNl6B214JeHc/tbAkTizc7fsJNwjOqvE0GMvkGF/BpX8JAGoJTWQa7OVPOGd
+	LZ//k2SJ8fbG1vJkmUY7oMVQpcCMatw/S4YDBziXVGCGHNsQNdyxAJIH8Lyy67kFACvL
+	FoeB5KvzTwOP1Gxz+HNrr3gbx4lSTpJ78eQ6+lwPt5jy1FGcZ3qsnqxxguGu8GByb78M
+	IugTrPpU9gRHzPbzlwPnLuxJwb7uM0WweIL+aGu6w76YgyhKVeS3+RPmrBqoIs12heSP
+	4lLKKleYdvXMF1fCmE0usw6BDQNS1KEVECfn0Hob5pS7TAPEltZufAtYHtDzKydmlCOF
+	aACw==
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On Wed, Apr 16, 2014 at 01:24:32PM -0700, Andy Lutomirski wrote:
+This patch purely makes cleanup.
 
-[..]
-> I'm not talking about the risk that someone learns someone's cgroup.
-> I'm talking about the risk that a malicious program can get a lot
-> entry like: "whatever planted text"
-> _SYSTEMD_UNIT=non-malicious.service.  That is, they've spoofed a log
-> line.
-> 
-> If you don't care about spoofing of log lines, then there's no point
-> to having the kernel validate them anyway.
+1. parse_cgroupfs_options() no longer takes refcounts on
+   subsystems to be used, update its comment.
+2. cgroup_pidlist_seq_operations has no more user, remove it.
+3. s/pr_warning/pr_warn/g, suggested by scripts/checkpatch.pl.
 
-What's wrong with this. A message came from a cgroup which maps to
-a unit xyz and it got logged.  I can't see what's wrong here.
+Signed-off-by: Jianyu Zhan <nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ kernel/cgroup.c | 31 +++++++++----------------------
+ 1 file changed, 9 insertions(+), 22 deletions(-)
 
-Anyway that message will get logged with unit information. These patches
-will just make getting unit information race free and more reliable.
-
-Thansk
-Vivek
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 8c314dd..ec5bfb2 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1127,9 +1127,9 @@ static int rebind_subsystems(struct cgroup_root *dst_root,
+ 		 * Just warn about it and continue.
+ 		 */
+ 		if (cgrp_dfl_root_visible) {
+-			pr_warning("cgroup: failed to create files (%d) while rebinding 0x%lx to default root\n",
++			pr_warn("cgroup: failed to create files (%d) while rebinding 0x%lx to default root\n",
+ 				   ret, ss_mask);
+-			pr_warning("cgroup: you may retry by moving them to a different hierarchy and unbinding\n");
++			pr_warn("cgroup: you may retry by moving them to a different hierarchy and unbinding\n");
+ 		}
+ 	}
+ 
+@@ -1223,10 +1223,8 @@ struct cgroup_sb_opts {
+ };
+ 
+ /*
+- * Convert a hierarchy specifier into a bitmask of subsystems and
+- * flags. Call with cgroup_mutex held to protect the cgroup_subsys[]
+- * array. This function takes refcounts on subsystems to be used, unless it
+- * returns error, in which case no refcounts are taken.
++ * Convert a hierarchy specifier into a bitmask of subsystems and flags.
++ * Call with cgroup_mutex held to protect the cgroup_subsys[] array.
+  */
+ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
+ {
+@@ -1332,7 +1330,7 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
+ 	/* Consistency checks */
+ 
+ 	if (opts->flags & CGRP_ROOT_SANE_BEHAVIOR) {
+-		pr_warning("cgroup: sane_behavior: this is still under development and its behaviors will change, proceed at your own risk\n");
++		pr_warn("cgroup: sane_behavior: this is still under development and its behaviors will change, proceed at your own risk\n");
+ 
+ 		if ((opts->flags & (CGRP_ROOT_NOPREFIX | CGRP_ROOT_XATTR)) ||
+ 		    opts->cpuset_clone_children || opts->release_agent ||
+@@ -1396,7 +1394,7 @@ static int cgroup_remount(struct kernfs_root *kf_root, int *flags, char *data)
+ 		goto out_unlock;
+ 
+ 	if (opts.subsys_mask != root->subsys_mask || opts.release_agent)
+-		pr_warning("cgroup: option changes via remount are deprecated (pid=%d comm=%s)\n",
++		pr_warn("cgroup: option changes via remount are deprecated (pid=%d comm=%s)\n",
+ 			   task_tgid_nr(current), current->comm);
+ 
+ 	added_mask = opts.subsys_mask & ~root->subsys_mask;
+@@ -1678,7 +1676,7 @@ retry:
+ 				ret = -EINVAL;
+ 				goto out_unlock;
+ 			} else {
+-				pr_warning("cgroup: new mount options do not match the existing superblock, will be ignored\n");
++				pr_warn("cgroup: new mount options do not match the existing superblock, will be ignored\n");
+ 			}
+ 		}
+ 
+@@ -3890,17 +3888,6 @@ static int cgroup_pidlist_show(struct seq_file *s, void *v)
+ 	return seq_printf(s, "%d\n", *(int *)v);
+ }
+ 
+-/*
+- * seq_operations functions for iterating on pidlists through seq_file -
+- * independent of whether it's tasks or procs
+- */
+-static const struct seq_operations cgroup_pidlist_seq_operations = {
+-	.start = cgroup_pidlist_start,
+-	.stop = cgroup_pidlist_stop,
+-	.next = cgroup_pidlist_next,
+-	.show = cgroup_pidlist_show,
+-};
+-
+ static u64 cgroup_read_notify_on_release(struct cgroup_subsys_state *css,
+ 					 struct cftype *cft)
+ {
+@@ -4189,10 +4176,10 @@ static int create_css(struct cgroup *cgrp, struct cgroup_subsys *ss)
+ 
+ 	if (ss->broken_hierarchy && !ss->warned_broken_hierarchy &&
+ 	    parent->parent) {
+-		pr_warning("cgroup: %s (%d) created nested cgroup for controller \"%s\" which has incomplete hierarchy support. Nested cgroups may change behavior in the future.\n",
++		pr_warn("cgroup: %s (%d) created nested cgroup for controller \"%s\" which has incomplete hierarchy support. Nested cgroups may change behavior in the future.\n",
+ 			   current->comm, current->pid, ss->name);
+ 		if (!strcmp(ss->name, "memory"))
+-			pr_warning("cgroup: \"memory\" requires setting use_hierarchy to 1 on the root.\n");
++			pr_warn("cgroup: \"memory\" requires setting use_hierarchy to 1 on the root.\n");
+ 		ss->warned_broken_hierarchy = true;
+ 	}
+ 
+-- 
+1.9.0.GIT
