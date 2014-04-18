@@ -1,48 +1,79 @@
-From: Hong zhi guo <honkiko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: Test of [PATCH] blk-throttle: simplify logic by token bucket algorithm
-Date: Fri, 18 Apr 2014 10:41:03 +0800
-Message-ID: <CAA7+ByUAZUxfo_jc84h386DQBGW_ump+ZoCFy-nr0wqLa8furA@mail.gmail.com>
-References: <1397546303-6709-1-git-send-email-zhiguohong@tencent.com>
-	<1397546586-6776-1-git-send-email-zhiguohong@tencent.com>
-	<20140415201448.GC13033@redhat.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch] mm: memcontrol: remove hierarchy restrictions for
+ swappiness and oom_control
+Date: Fri, 18 Apr 2014 13:36:11 +0200
+Message-ID: <20140418113611.GA7568@dhcp22.suse.cz>
+References: <1397682798-22906-1-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=k9q3JmkSznQSxoQOJpbLMpMU6+kg6YDivJh7Ln4vJqE=;
-        b=kqKmjT2k7eQu+f2G72c5dhckAJmAJjnoOvgxoA36+ZumeBnaOpWAykegL4Eg1flhH8
-         +twIlyVBPMEh7PXxbBPVPA3lQsFzPJAhkOtzzlx378ZF3ym05KDwPxH5ZH/+mXGgnGdS
-         AUiPVYnUOtLIdI3N+od4VqVTfEcMsu1R1NdR6n7OoZZLddPIQnWfL9Yb94zM7Vn6rRKc
-         YnWgTgqy4l5VUhGi1xAjHlonaupIV2gzInJo4n4oQJZcNd2zsJJGlTUfCE1+4VEfaBGH
-         9QjTqNzG2kM+T60YLHJ9VYNXRi/zZSw0HFCzdj+7dkm3Ovrkfre5F73SqF6CWaVYxkqX
-         1hXQ==
-In-Reply-To: <20140415201448.GC13033-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1397682798-22906-1-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Hong Zhiguo <zhiguohong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-I did it by:
-"mount -t cgroup -o blkio,__DEVEL__sane_behavior cgrp /cgroup"
+On Wed 16-04-14 17:13:18, Johannes Weiner wrote:
+> Per-memcg swappiness and oom killing can currently not be tweaked on a
+> memcg that is part of a hierarchy, but not the root of that hierarchy.
+> Users have complained that they can't configure this when they turned
+> on hierarchy mode.  In fact, with hierarchy mode becoming the default,
+> this restriction disables the tunables entirely.
 
-I'm using ubuntu 13.04 and replaced the kernel with my own build.
+Except when we would handle the first level under root differently,
+which is ugly.
 
+> But there is no good reason for this restriction. 
 
-On Wed, Apr 16, 2014 at 4:14 AM, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
->
-> What init system are you using? How did you specify sane flag. I am
-> using systemd with F20 and I don't know how to specify this flag
-> and test your patches.
->
-> Thanks
-> Vivek
+I had a patch for this somewhere on the think_more pile. I wasn't
+particularly happy about the semantic so I haven't posted it.
 
+> The settings for
+> swappiness and OOM killing are taken from whatever memcg whose limit
+> triggered reclaim and OOM invocation, regardless of its position in
+> the hierarchy tree.
 
+This is OK for the OOM knob because the memory pressure cannot be
+handled at that level in hierarchy and that is where the OOM happens.
 
+I am not so sure about the swappiness though. The swappiness tells us
+how to proportionally scan anon vs. file LRUs and those are per-memcg,
+not per-hierarchy (unlike the charge) so it makes sense to use it
+per-memcg IMO.
+
+Besides that using the reclaim target value might be quite confusing.
+Say, somebody wants to prevent from swapping in a certain group and
+yet the pages find their way to swap depending on where the reclaim is
+triggered from.
+Another thing would be that setting swappiness on an unlimited group has
+no effect although I would argue it makes some sense in configuration
+when parent is controlled by somebody else. I would like to tell how
+to reclaim me when I cannot say how much memory I can have. 
+
+It is true that we have a different behavior for the global reclaim
+already but I am not entirely happy about that. Having a different
+behavior for the global vs. limit reclaims just calls for troubles and
+should be avoided as much as possible.
+
+So let's think what is the best semantic before we merge this. I would
+be more inclined for using per-memcg swappiness all the time (root using
+the global knob) for all reclaims.
+
+> Allow setting swappiness on any group.  The knob on the root memcg
+> already reads the global VM swappiness, make it writable as well.
+
+I am OK with the change but I think we should discuss the semantic
+first.
+
+[...]
 -- 
-best regards
-Hong Zhiguo
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
