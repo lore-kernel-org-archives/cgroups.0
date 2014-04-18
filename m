@@ -1,18 +1,18 @@
 From: Jianyu Zhan <nasa4836@gmail.com>
-Subject: [PATCH 1/2] mm/memcontrol.c: remove meaningless while loop in mem_cgroup_iter()
-Date: Sat, 19 Apr 2014 06:58:55 +0800
-Message-ID: <1397861935-31595-1-git-send-email-nasa4836@gmail.com>
+Subject: [PATCH 2/2] mm/memcontrol.c: introduce helper mem_cgroup_zoneinfo_zone()
+Date: Sat, 19 Apr 2014 07:01:43 +0800
+Message-ID: <1397862103-31982-1-git-send-email-nasa4836@gmail.com>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=from:to:cc:subject:date:message-id;
-        bh=9Y98mECIHD95DNkieCJLarJnI89k3EcMvGl6aQjYrhc=;
-        b=hJNXklVUI2igd7h6RIr1wYRSsKo3P3cTsRiMyC/kGDhYhYizWG5zAdS6zvBdHRQND0
-         yBE2qT7R3dRUHvjFhesLQG5SKq6c2fkdmmLk4JjWrdslyEu2kMzs8go0KNo3QLT4Bn4F
-         Ygf67ccA6iJ+zPl2LwSrkedQpxUK28Hcpe/LY9tJ83YBXJEKHZ2HVX0QUrklBoXid6Vu
-         w1Adh/lDtInnR6fQQ32iBedeGLz7gA/IKwF1rFVSMJoRxjryGtuDkjWc06SH2nITjTlQ
-         he/i6qowLLjvBaMjI9fRHMHaubDCj+6BUeD9TmOnBXsKubpKork6/8dT/nl+kB0I60LC
-         dw7g==
+        bh=xjLzpvt9XxRYZmpeGX4JyVN0Hdq8dgdUqay/WHYX4co=;
+        b=TupyTHp+xyuU2Lkl1SctPpSwITEZAxzOLqhN2z57mAZ2pWkE4RLmDSUBMon8eW6uw2
+         V8lgSLvrY2XUBXVaRu6CZCB4kW6svvRhhAYnEz5ppQk7lLeA0D45ZBC7qrGYegqLLIqu
+         9IuAGjHq2qteEMbdb0Pa8plMkB45GCcz/yRz8hm44tA9r/hHwqM2LmVLO8NLqsqi05c9
+         9UImjqaqDpiS7K0jW7x9hqWThpQmy9A59Am9CvMvoF80HPh5B9zAsEPOiIS1Pu0XiiVk
+         iog9pfKqy1UtaYRUlQQQhKZHHeuJtC+QP8uqg56LuNCMGXlTD10M5FbtXaLLS1SfH99f
+         fNUQ==
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -21,100 +21,56 @@ Content-Transfer-Encoding: 7bit
 To: hannes@cmpxchg.org, mhocko@suse.cz, bsingharora@gmail.com, kamezawa.hiroyu@jp.fujitsu.com
 Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, nasa4836@gmail.com
 
-Currently, the iteration job in mem_cgroup_iter() all delegates
-to __mem_cgroup_iter_next(), which will skip dead node.
-
-Thus, the outer while loop in mem_cgroup_iter() is meaningless.
-It could be proven by this:
-
-1. memcg != NULL
-    we are done, no loop needed.
-2. memcg == NULL
-   2.1 prev != NULL, a round-trip is done, break out, no loop.
-   2.2 prev == NULL, this is impossible, since prev==NULL means
-       the initial interation, it will returns memcg==root.
-
-So, this patches remove this meaningless while loop.
+introduce helper mem_cgroup_zoneinfo_zone(). This will make
+mem_cgroup_iter() code more compact.
 
 Signed-off-by: Jianyu Zhan <nasa4836@gmail.com>
 ---
- mm/memcontrol.c | 49 ++++++++++++++++++++++---------------------------
- 1 file changed, 22 insertions(+), 27 deletions(-)
+ mm/memcontrol.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 29501f0..e0ce15c 100644
+index e0ce15c..80d9e38 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -1212,6 +1212,8 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
- {
- 	struct mem_cgroup *memcg = NULL;
- 	struct mem_cgroup *last_visited = NULL;
-+	struct mem_cgroup_reclaim_iter *uninitialized_var(iter);
-+	int uninitialized_var(seq);
+@@ -683,6 +683,15 @@ mem_cgroup_zoneinfo(struct mem_cgroup *memcg, int nid, int zid)
+ 	return &memcg->nodeinfo[nid]->zoneinfo[zid];
+ }
  
- 	if (mem_cgroup_disabled())
- 		return NULL;
-@@ -1229,40 +1231,33 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
- 	}
++static struct mem_cgroup_per_zone *
++mem_cgroup_zoneinfo_zone(struct mem_cgroup *memcg, struct zone *zone)
++{
++       int nid = zone_to_nid(zone);
++       int zid = zone_idx(zone);
++
++       return mem_cgroup_zoneinfo(memcg, nid, zid);
++}
++
+ struct cgroup_subsys_state *mem_cgroup_css(struct mem_cgroup *memcg)
+ {
+ 	return &memcg->css;
+@@ -1232,11 +1241,9 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
  
  	rcu_read_lock();
--	while (!memcg) {
--		struct mem_cgroup_reclaim_iter *uninitialized_var(iter);
--		int uninitialized_var(seq);
--
--		if (reclaim) {
--			int nid = zone_to_nid(reclaim->zone);
--			int zid = zone_idx(reclaim->zone);
--			struct mem_cgroup_per_zone *mz;
--
--			mz = mem_cgroup_zoneinfo(root, nid, zid);
--			iter = &mz->reclaim_iter[reclaim->priority];
--			if (prev && reclaim->generation != iter->generation) {
--				iter->last_visited = NULL;
--				goto out_unlock;
--			}
-+	if (reclaim) {
-+		int nid = zone_to_nid(reclaim->zone);
-+		int zid = zone_idx(reclaim->zone);
-+		struct mem_cgroup_per_zone *mz;
+ 	if (reclaim) {
+-		int nid = zone_to_nid(reclaim->zone);
+-		int zid = zone_idx(reclaim->zone);
+ 		struct mem_cgroup_per_zone *mz;
  
--			last_visited = mem_cgroup_iter_load(iter, root, &seq);
-+		mz = mem_cgroup_zoneinfo(root, nid, zid);
-+		iter = &mz->reclaim_iter[reclaim->priority];
-+		if (prev && reclaim->generation != iter->generation) {
-+			iter->last_visited = NULL;
-+			goto out_unlock;
- 		}
- 
--		memcg = __mem_cgroup_iter_next(root, last_visited);
-+		last_visited = mem_cgroup_iter_load(iter, root, &seq);
-+	}
- 
--		if (reclaim) {
--			mem_cgroup_iter_update(iter, last_visited, memcg, root,
--					seq);
-+	memcg = __mem_cgroup_iter_next(root, last_visited);
- 
--			if (!memcg)
--				iter->generation++;
--			else if (!prev && memcg)
--				reclaim->generation = iter->generation;
--		}
-+	if (reclaim) {
-+		mem_cgroup_iter_update(iter, last_visited, memcg, root,
-+				seq);
- 
--		if (prev && !memcg)
--			goto out_unlock;
-+		if (!memcg)
-+			iter->generation++;
-+		else if (!prev && memcg)
-+			reclaim->generation = iter->generation;
+-		mz = mem_cgroup_zoneinfo(root, nid, zid);
++		mz = mem_cgroup_zoneinfo_zone(root, reclaim->zone);
+ 		iter = &mz->reclaim_iter[reclaim->priority];
+ 		if (prev && reclaim->generation != iter->generation) {
+ 			iter->last_visited = NULL;
+@@ -1340,7 +1347,7 @@ struct lruvec *mem_cgroup_zone_lruvec(struct zone *zone,
+ 		goto out;
  	}
-+
- out_unlock:
- 	rcu_read_unlock();
- out_css_put:
+ 
+-	mz = mem_cgroup_zoneinfo(memcg, zone_to_nid(zone), zone_idx(zone));
++	mz = mem_cgroup_zoneinfo_zone(memcg, zone);
+ 	lruvec = &mz->lruvec;
+ out:
+ 	/*
 -- 
 1.9.0.GIT
 
