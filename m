@@ -1,89 +1,358 @@
-From: Andy Lutomirski <luto@amacapital.net>
-Subject: Re: [PATCH 2/2] net: Implement SO_PASSCGROUP to enable passing cgroup path
-Date: Mon, 21 Apr 2014 08:47:51 -0700
-Message-ID: <CALCETrW5RvbW-Hz_Y7oULP6sEfdhGBh51+mTj4RwobHV-ji+Kg@mail.gmail.com>
-References: <CALCETrXj6kD3E+vsaWmkrSbaQYTu=c-Hsw640jh4O+FbojYk2g@mail.gmail.com>
- <20140417171256.GB25334@redhat.com> <CALCETrVq4HRpfWOAbZAQbyjuraQd=OxnW=WjSoe5JgBzRStiKg@mail.gmail.com>
- <1397756025.2628.64.camel@willson.li.ssimo.org> <CALCETrVBJFgKwRKBE2jAG6kiGgkJ+MyQiw2nyz5yj0h68kCk9A@mail.gmail.com>
- <1397759013.2628.86.camel@willson.li.ssimo.org> <20140417185023.GA32527@redhat.com>
- <1397761817.2628.113.camel@willson.li.ssimo.org> <20140417191646.GA2461@redhat.com>
- <CALCETrW3F1+3qF3thrAmuoWVbRveBJ2=owpigh4mv6iAafoQCw@mail.gmail.com> <20140421150307.GA4367@redhat.com>
+From: Aristeu Rozanski <aris@redhat.com>
+Subject: [PATCH] device_cgroup: rework device access check and exception
+ checking
+Date: Mon, 21 Apr 2014 12:13:03 -0400
+Message-ID: <20140421161303.GG29214@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140421150307.GA4367@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: stable-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vivek Goyal <vgoyal@redhat.com>
-Cc: Simo Sorce <ssorce@redhat.com>, Daniel J Walsh <dwalsh@redhat.com>, David Miller <davem@davemloft.net>, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, lpoetter@redhat.com, cgroups@vger.kernel.org, kay@redhat.com, Network Development <netdev@vger.kernel.org>
+To: cgroups@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Serge Hallyn <serge.hallyn@canonical.com>, Li Zefan <lizefan@huawei.com>, stable@vger.kernel.org
 
-On Mon, Apr 21, 2014 at 8:03 AM, Vivek Goyal <vgoyal@redhat.com> wrote:
-> So what happened to logger use case where logger accepts stream
-> connections and logs the cgroup of client too.
->
-> W.r.t systemd, looks like journald is accepting connections at
-> /run/systemd/journal/stdout. (stdout_stream_new() and
-> server_open_stdout_socket()).
+Whenever a device file is opened and checked against current device
+cgroup rules, it uses the same function (may_access()) as when a new
+exception rule is added by writing devices.{allow,deny}. And in both
+cases, the algorithm is the same, doesn't matter the behavior.
 
-See stdout_stream_line.  As far as I can tell, journald already
-implements this in mostly sensible manner, with no help from the
-kernel required.
+First problem is having device access to be considered the same as rule
+checking. Consider the following structure:
 
-On my system, journalctl -f -o verbose says:
+	A	(default behavior: allow, exceptions disallow access)
+	 \
+	  B	(default behavior: allow, exceptions disallow access)
 
-Mon 2014-04-21 08:34:52.732065 PDT
-[s=4970edca25b4456d80b00e6e4cefd94b;i=2010;b=2d2454632c0f4f998a8d0158156ab743;m=66f5d274a;t=4f78f3d9a11a1;x=9902671f5a7e7bcc]
-    _UID=0
-    _BOOT_ID=2d2454632c0f4f998a8d0158156ab743
-[...]
-    _GID=500
-    _AUDIT_SESSION=1
-    _AUDIT_LOGINUID=500
-    _SYSTEMD_CGROUP=/user.slice/user-500.slice/session-1.scope
-    _SYSTEMD_SESSION=1
-    _SYSTEMD_OWNER_UID=500
-    _SYSTEMD_UNIT=session-1.scope
-    _SYSTEMD_SLICE=user-500.slice
-    SYSLOG_IDENTIFIER=sudo
-    _COMM=sudo
-    _EXE=/usr/bin/sudo
-    _SELINUX_CONTEXT=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
-    MESSAGE=luto : TTY=pts/1 ; PWD=/home/luto/apps/systemd ; USER=root
-; COMMAND=/usr/bin/journalctl -f -a
-    _PID=32393
-    _CMDLINE=sudo journalctl -f -a
-    _SOURCE_REALTIME_TIMESTAMP=1398094492732065
+A new exception is added to B by writing devices.deny:
 
-Unfortunately, the code in journald seems to be rather buggy and
-prefers the unit that it derives from the (racy!) cg_path_get_unit
-hack over the unit that is *already knows* (search the journald
-sources for STDOUT_STREAM_UNIT_ID), but the right fix is the FIX THE
-FSCKING JOURNALD BUG, not to change the kernel.
+	c 12:34 rw
 
-To summarize from my reading of how this crap words:
+When checking if that exception is allowed in may_access():
 
-When a unit is created, systemd opens a stream socket pointing at
-/run/systemd/journal/stdout.  It tells journald the unit, along with
-lots of other useful information.  journald records this association
-between the socket and the unit.  Systemd could tell journald the
-cgroup here, too, if it wanted it.
+	if (dev_cgroup->behavior == DEVCG_DEFAULT_ALLOW) {
+		if (behavior == DEVCG_DEFAULT_ALLOW) {
+			/* the exception will deny access to certain devices */
+			return true;
 
-Systemd then starts the unit, passing it the socket as stdout, if
-configured to do so.
+Which is ok, since B is not getting more privileges than A, it doesn't
+matter and the rule is accepted
 
-That unit logs something.  Journald then uses the crappy, racy ucred
-mechanism to resolve the cgroup, login id, unit, etc.
+Now, consider it's a device file open check and the process belongs to
+cgroup B. The access will be generated as:
 
-Your proposals are to either (a) replace that with an almost-as-buggy
-SO_PASSCGROUP option or to add SO_PEERCGROUP.  The latter would allow
-journald to figure out the cgroup that opened the socket.  The problem
-here is two-fold.  One: systemd already knows the cgroup it intends to
-use, and it can tell journald without kernel help.  Two: Systemd seems
-to open the stdout socket right before setting the cgroup, so the
-kernel's idea of what cgroup opened the socket is crap.
+	behavior: allow
+	exception: c 12:34 rw
 
-The solution to all of this seems straightforward: fix journald to use
-the information it already has, trusted, without races, from systemd.
+The very same chunk of code will allow it, even if there's an explicit
+exception telling to do otherwise.
 
---Andy
+A simple test case:
+
+	# mkdir new_group
+	# cd new_group
+	# echo $$ >tasks
+	# echo "c 1:3 w" >devices.deny
+	# echo >/dev/null
+	# echo $?
+	0
+
+This is a serious bug and was introduced on
+
+	c39a2a3018f8 devcg: prepare may_access() for hierarchy support
+
+To solve this problem, the device file open function was split from the
+new exception check.
+
+Second problem is how exceptions are processed by may_access(). The
+first part of the said function tries to match fully with an existing
+exception:
+
+	list_for_each_entry_rcu(ex, &dev_cgroup->exceptions, list) {
+		if ((refex->type & DEV_BLOCK) && !(ex->type & DEV_BLOCK))
+			continue;
+		if ((refex->type & DEV_CHAR) && !(ex->type & DEV_CHAR))
+			continue;
+		if (ex->major != ~0 && ex->major != refex->major)
+			continue;
+		if (ex->minor != ~0 && ex->minor != refex->minor)
+			continue;
+		if (refex->access & (~ex->access))
+			continue;
+		match = true;
+		break;
+	}
+
+That means the new exception should be contained into an existing one to
+be considered a match:
+
+	New exception		Existing	match?	notes
+	b 12:34 rwm		b 12:34 rwm	yes
+	b 12:34 r		b *:34 rw	yes
+	b 12:34 rw		b 12:34 w	no	extra "r"
+	b *:34 rw		b 12:34 rw	no	too broad "*"
+	b *:34 rw		b *:34 rwm	yes
+
+Which is fine in some cases. Consider:
+
+	A	(default behavior: deny, exceptions allow access)
+	 \
+	  B	(default behavior: deny, exceptions allow access)
+
+In this case the full match makes sense, the new exception cannot add
+more access than the parent allows
+
+But this doesn't always work, consider:
+
+	A	(default behavior: allow, exceptions disallow access)
+	 \
+	  B	(default behavior: deny, exceptions allow access)
+
+In this case, a new exception in B shouldn't match any of the exceptions
+in A, after all you can't allow something that was forbidden by A. But
+consider this scenario:
+
+	New exception	Existing in A	match?	outcome
+	b 12:34 rw	b 12:34 r	no	exception is accepted
+
+Because the new exception has "w" as extra, it doesn't match, so it'll
+be added to B's exception list.
+
+The same problem can happen during a file access check. Consider a
+cgroup with allow as default behavior:
+
+	Access		Exception	match?
+	b 12:34 rw	b 12:34 r	no
+
+In this case, the access didn't match any of the exceptions in the
+cgroup, which is required since exceptions will disallow access.
+
+To solve this problem, two new functions were created to match an
+exception either fully or partially. In the example above, a partial
+check will be performed and it'll produce a match since at least
+"b 12:34 r" from "b 12:34 rw" access matches.
+
+Cc: cgroups@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Serge Hallyn <serge.hallyn@canonical.com>
+Cc: Li Zefan <lizefan@huawei.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Aristeu Rozanski <arozansk@redhat.com>
+---
+ security/device_cgroup.c |  162 ++++++++++++++++++++++++++++++++++-----------
+ 1 files changed, 122 insertions(+), 40 deletions(-)
+
+diff --git a/security/device_cgroup.c b/security/device_cgroup.c
+index 8365909..b9048dc 100644
+--- a/security/device_cgroup.c
++++ b/security/device_cgroup.c
+@@ -306,57 +306,139 @@ static int devcgroup_seq_show(struct seq_file *m, void *v)
+ }
+ 
+ /**
+- * may_access - verifies if a new exception is part of what is allowed
+- *		by a dev cgroup based on the default policy +
+- *		exceptions. This is used to make sure a child cgroup
+- *		won't have more privileges than its parent or to
+- *		verify if a certain access is allowed.
+- * @dev_cgroup: dev cgroup to be tested against
+- * @refex: new exception
+- * @behavior: behavior of the exception
++ * match_exception	- iterates the exception list trying to match a rule
++ * 			  based on type, major, minor and access type. It is
++ * 			  considered a match if an exception is found that
++ * 			  will contain the entire range of provided parameters.
++ * @exceptions: list of exceptions
++ * @type: device type (DEV_BLOCK or DEV_CHAR)
++ * @major: device file major number, ~0 to match all
++ * @minor: device file minor number, ~0 to match all
++ * @access: permission mask (ACC_READ, ACC_WRITE, ACC_MKNOD)
++ *
++ * returns: true in case it matches an exception completely
+  */
+-static bool may_access(struct dev_cgroup *dev_cgroup,
+-		       struct dev_exception_item *refex,
+-		       enum devcg_behavior behavior)
++static bool match_exception(struct list_head *exceptions, short type,
++			    u32 major, u32 minor, short access)
+ {
+ 	struct dev_exception_item *ex;
+-	bool match = false;
+ 
+-	rcu_lockdep_assert(rcu_read_lock_held() ||
+-			   lockdep_is_held(&devcgroup_mutex),
+-			   "device_cgroup::may_access() called without proper synchronization");
++	list_for_each_entry_rcu(ex, exceptions, list) {
++		if ((type & DEV_BLOCK) && !(ex->type & DEV_BLOCK))
++			continue;
++		if ((type & DEV_CHAR) && !(ex->type & DEV_CHAR))
++			continue;
++		if (ex->major != ~0 && ex->major != major)
++			continue;
++		if (ex->minor != ~0 && ex->minor != minor)
++			continue;
++		/* provided access cannot have more than the exception rule */
++		if (access & (~ex->access))
++			continue;
++		return true;
++	}
++	return false;
++}
++
++/**
++ * match_exception_partial - iterates the exception list trying to match a rule
++ * 			     based on type, major, minor and access type. It is
++ * 			     considered a match if an exception's range is
++ * 			     found to contain *any* of the devices specified by
++ * 			     provided parameters. This is used to make sure no
++ * 			     extra access is being granted that is forbidden by
++ * 			     any of the exception list.
++ * @exceptions: list of exceptions
++ * @type: device type (DEV_BLOCK or DEV_CHAR)
++ * @major: device file major number, ~0 to match all
++ * @minor: device file minor number, ~0 to match all
++ * @access: permission mask (ACC_READ, ACC_WRITE, ACC_MKNOD)
++ *
++ * returns: true in case the provided range mat matches an exception completely
++ */
++static bool match_exception_partial(struct list_head *exceptions, short type,
++				    u32 major, u32 minor, short access)
++{
++	struct dev_exception_item *ex;
+ 
+-	list_for_each_entry_rcu(ex, &dev_cgroup->exceptions, list) {
+-		if ((refex->type & DEV_BLOCK) && !(ex->type & DEV_BLOCK))
++	list_for_each_entry_rcu(ex, exceptions, list) {
++		if ((type & DEV_BLOCK) && !(ex->type & DEV_BLOCK))
+ 			continue;
+-		if ((refex->type & DEV_CHAR) && !(ex->type & DEV_CHAR))
++		if ((type & DEV_CHAR) && !(ex->type & DEV_CHAR))
+ 			continue;
+-		if (ex->major != ~0 && ex->major != refex->major)
++		/*
++		 * We must be sure that both the exception and the provided
++		 * range aren't masking all devices
++		 */
++		if (ex->major != ~0 && major != ~0 && ex->major != major)
+ 			continue;
+-		if (ex->minor != ~0 && ex->minor != refex->minor)
++		if (ex->minor != ~0 && minor != ~0 && ex->minor != minor)
+ 			continue;
+-		if (refex->access & (~ex->access))
++		/*
++		 * In order to make sure the provided range isn't matching
++		 * an exception, all its access bits shouldn't match the
++		 * exception's access bits
++		 */
++		if (!(access & ex->access))
+ 			continue;
+-		match = true;
+-		break;
++		return true;
+ 	}
++	return false;
++}
++
++/**
++ * verify_new_ex - verifies if a new exception is part of what is allowed
++ *		   by a dev cgroup based on the default policy +
++ *		   exceptions. This is used to make sure a child cgroup
++ *		   won't have more privileges than its parent
++ * @dev_cgroup: dev cgroup to be tested against
++ * @refex: new exception
++ * @behavior: behavior of the exception's dev_cgroup
++ */
++static bool verify_new_ex(struct dev_cgroup *dev_cgroup,
++		          struct dev_exception_item *refex,
++		          enum devcg_behavior behavior)
++{
++	bool match = false;
++
++	rcu_lockdep_assert(rcu_read_lock_held() ||
++			   lockdep_is_held(&devcgroup_mutex),
++			   "device_cgroup:verify_new_ex called without proper synchronization");
+ 
+ 	if (dev_cgroup->behavior == DEVCG_DEFAULT_ALLOW) {
+ 		if (behavior == DEVCG_DEFAULT_ALLOW) {
+-			/* the exception will deny access to certain devices */
++			/*
++			 * new exception in the child doesn't matter, only
++			 * adding extra restrictions
++			 */ 
+ 			return true;
+ 		} else {
+-			/* the exception will allow access to certain devices */
++			/*
++			 * new exception in the child will add more devices
++			 * that can be acessed, so it can't match any of
++			 * parent's exceptions, even slightly
++			 */ 
++			match = match_exception_partial(&dev_cgroup->exceptions,
++							refex->type,
++							refex->major,
++							refex->minor,
++							refex->access);
++
+ 			if (match)
+-				/*
+-				 * a new exception allowing access shouldn't
+-				 * match an parent's exception
+-				 */
+ 				return false;
+ 			return true;
+ 		}
+ 	} else {
+-		/* only behavior == DEVCG_DEFAULT_DENY allowed here */
++		/*
++		 * Only behavior == DEVCG_DEFAULT_DENY allowed here, therefore
++		 * the new exception will add access to more devices and must
++		 * be contained completely in an parent's exception to be
++		 * allowed
++		 */
++		match = match_exception(&dev_cgroup->exceptions, refex->type,
++					refex->major, refex->minor,
++					refex->access);
++
+ 		if (match)
+ 			/* parent has an exception that matches the proposed */
+ 			return true;
+@@ -378,7 +460,7 @@ static int parent_has_perm(struct dev_cgroup *childcg,
+ 
+ 	if (!parent)
+ 		return 1;
+-	return may_access(parent, ex, childcg->behavior);
++	return verify_new_ex(parent, ex, childcg->behavior);
+ }
+ 
+ /**
+@@ -704,18 +786,18 @@ static int __devcgroup_check_permission(short type, u32 major, u32 minor,
+ 				        short access)
+ {
+ 	struct dev_cgroup *dev_cgroup;
+-	struct dev_exception_item ex;
+-	int rc;
+-
+-	memset(&ex, 0, sizeof(ex));
+-	ex.type = type;
+-	ex.major = major;
+-	ex.minor = minor;
+-	ex.access = access;
++	bool rc;
+ 
+ 	rcu_read_lock();
+ 	dev_cgroup = task_devcgroup(current);
+-	rc = may_access(dev_cgroup, &ex, dev_cgroup->behavior);
++	if (dev_cgroup->behavior == DEVCG_DEFAULT_ALLOW)
++		/* Can't match any of the exceptions, even partially */
++		rc = !match_exception_partial(&dev_cgroup->exceptions,
++					      type, major, minor, access);
++	else
++		/* Need to match completely one exception to be allowed */
++		rc = match_exception(&dev_cgroup->exceptions, type, major,
++				     minor, access);
+ 	rcu_read_unlock();
+ 
+ 	if (!rc)
+-- 
+1.7.1
