@@ -1,72 +1,50 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH 2/4] mm/memcontrol.c: use accessor to get id from css
-Date: Tue, 22 Apr 2014 12:01:03 +0200
-Message-ID: <20140422100103.GE29311@dhcp22.suse.cz>
-References: <cover.1398147734.git.nasa4836@gmail.com>
- <2c63c535f8202c6b605300a834cdf1c07d1bafc3.1398147734.git.nasa4836@gmail.com>
+From: Jianyu Zhan <nasa4836@gmail.com>
+Subject: Re: [PATCH 1/2] mm/memcontrol.c: remove meaningless while loop in mem_cgroup_iter()
+Date: Tue, 22 Apr 2014 18:17:09 +0800
+Message-ID: <CAHz2CGWrk3kuR=BLt2vT-8gxJVtJcj6h17ase9=1CoWXwK6a3w@mail.gmail.com>
+References: <1397861935-31595-1-git-send-email-nasa4836@gmail.com> <20140422094759.GC29311@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <2c63c535f8202c6b605300a834cdf1c07d1bafc3.1398147734.git.nasa4836@gmail.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-type;
+        bh=D08OKhC9wgnhOv7XGKlwNTMWKiyKIevczrW2xPP5/Zg=;
+        b=IACl9pwKiZsntTzliPm9uaU7+nUCfEbVuG9O3syduJqx8DGxkUz+YYd5H3VoiJg17t
+         bh5KYvmgIcN5eekt4H7mnhwzzybdhM0P6YMQ0zDf0IC3/2IT2WSj+303WQrueEhXfdgS
+         yVHJJmGSY4WzA52lYBDeQxRJ7z6oQU7ZrlzThWKP2Zaeu5eticwy9FOGqd9WSwmZJnIb
+         RLb8IOm1iAwtjuX+A3u2izxSSNmUcWyUoEjnJ32MXw4eggwpRpxXgr85Q16YYunZCzYY
+         G2q9n7rq3HDdFOnBQ3Wjopljr8QBw3bU96RPavbCiCaetOG6Yjmk/CglOO5D6cJAv1b1
+         CU7g==
+In-Reply-To: <20140422094759.GC29311@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jianyu Zhan <nasa4836@gmail.com>
-Cc: hannes@cmpxchg.org, bsingharora@gmail.com, kamezawa.hiroyu@jp.fujitsu.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, kamezawa.hiroyu@jp.fujitsu.com, Cgroups <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Tue 22-04-14 14:30:41, Jianyu Zhan wrote:
-> This is a prepared patch for converting from per-cgroup id to
-> per-subsystem id.
-> 
-> We should not access per-cgroup id directly, since this is implemetation
-> detail. Use the accessor css_from_id() instead.
-> 
-> This patch has no functional change.
-> 
-> Signed-off-by: Jianyu Zhan <nasa4836@gmail.com>
+On Tue, Apr 22, 2014 at 5:47 PM, Michal Hocko <mhocko@suse.cz> wrote:
+> What about
+>   3. last_visited == last_node in the tree
+>
+> __mem_cgroup_iter_next returns NULL and the iterator would return
+> without visiting anything.
 
-Acked-by: Michal Hocko <mhocko@suse.cz>
-Thanks!
+Hi,  Michal,
 
-> ---
->  mm/memcontrol.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 80d9e38..46333cb 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -528,10 +528,10 @@ static inline bool mem_cgroup_is_root(struct mem_cgroup *memcg)
->  static inline unsigned short mem_cgroup_id(struct mem_cgroup *memcg)
->  {
->  	/*
-> -	 * The ID of the root cgroup is 0, but memcg treat 0 as an
-> -	 * invalid ID, so we return (cgroup_id + 1).
-> +	 * The ID of css for the root cgroup is 0, but memcg treat 0 as an
-> +	 * invalid ID, so we return (id + 1).
->  	 */
-> -	return memcg->css.cgroup->id + 1;
-> +	return css_to_id(&memcg->css) + 1;
->  }
->  
->  static inline struct mem_cgroup *mem_cgroup_from_id(unsigned short id)
-> @@ -6407,7 +6407,7 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
->  	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
->  	struct mem_cgroup *parent = mem_cgroup_from_css(css_parent(css));
->  
-> -	if (css->cgroup->id > MEM_CGROUP_ID_MAX)
-> +	if (css_to_id(css) > MEM_CGROUP_ID_MAX)
->  		return -ENOSPC;
->  
->  	if (!parent)
-> -- 
-> 2.0.0-rc0
-> 
+yep,  if 3 last_visited == last_node, then this means we have done a round-trip,
+thus __mem_cgroup_iter_next returns NULL, in turn mem_cgroup_iter() return NULL.
 
--- 
-Michal Hocko
-SUSE Labs
+This is what comments above mem_cgroup_iter() says:
+
+>Returns references to children of the hierarchy below @root, or
+>* @root itself, or %NULL after a full round-trip.
+
+Actually, this condition could be reduced to conditon 2.1
+
+Thanks,
+Jianyu Zhan
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
