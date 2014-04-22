@@ -1,47 +1,31 @@
-From: Jianyu Zhan <nasa4836@gmail.com>
-Subject: Re: [PATCH 1/2] mm/memcontrol.c: remove meaningless while loop in mem_cgroup_iter()
-Date: Tue, 22 Apr 2014 19:53:50 +0800
-Message-ID: <CAHz2CGXETcRq3cBDvkPm8JKcRA4qkhJefxz_VsmMouqfsGN5SA@mail.gmail.com>
-References: <1397861935-31595-1-git-send-email-nasa4836@gmail.com>
- <20140422094759.GC29311@dhcp22.suse.cz> <CAHz2CGWrk3kuR=BLt2vT-8gxJVtJcj6h17ase9=1CoWXwK6a3w@mail.gmail.com>
- <20140422103420.GI29311@dhcp22.suse.cz> <CAHz2CGUZyv-dvUUoSi2Vk_vgPAMqRN4yEg4F4XsKQ8udHeo2bQ@mail.gmail.com>
- <20140422114838.GK29311@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH v2 cgroup/for-3.16] cgroup: add documentation about
+ unified hierarchy
+Date: Tue, 22 Apr 2014 18:27:07 +0200
+Message-ID: <20140422162707.GR29311@dhcp22.suse.cz>
+References: <20140414220917.GD1863@htj.dyndns.org>
+ <20140416145248.GD1257@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-type;
-        bh=uUrcKPlou+mHoxBudiWN6OS6ApnMVyE2VuUnHmh1094=;
-        b=e+XR1Rs3CUP2t+abwJs07Ql1cwKodrw3Nr+riqkIDiV1T0V0xK6oN+f3wtQdwKT+J2
-         3HdvsQzZ/DaWXfLdAhEh9uwQyBk5lByMDrreHqFY22BOQDMtQV2JOwHJ7iIWkSQj6aBr
-         1m21zpGlgY/eXGE9dh1OpJXyeIxy+E6gN1y8DH2o6c3wTrgXox9vOnnfO2VyIrzEOt2E
-         ipHkZw6/cDqaLi5Zf4rHWoyJWkovwPojLBpg1SrNw0J7Ku/QfKDJBEHJm6KmHYGjIjIQ
-         aKPsDFVIOAcH5LZj64Ikjpu76p+U17IplLm+pD1zGPTArgkrQEaVSloAs0/9yFPT8oez
-         BZXA==
-In-Reply-To: <20140422114838.GK29311@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20140416145248.GD1257-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Balbir Singh <bsingharora@gmail.com>, kamezawa.hiroyu@jp.fujitsu.com, Cgroups <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Aristeu Rozanski <arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Daniel Borkmann <dborkman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Thomas Graf <tgraf-G/eBtMaohhA@public.gmane.org>, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Kay Sievers <kay-tD+1rO4QERM@public.gmane.org>, Rohit Jnagal <jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Brandon Philips <brandon.philips-JW9irJGTvgXQT0dZR+AlfA@public.gmane.org>
 
-On Tue, Apr 22, 2014 at 7:48 PM, Michal Hocko <mhocko@suse.cz> wrote:
-> Dunno, this particular case is more explicit but it is also uglier so I
-> do not think this is an overall improvement. I would rather keep the
-> current state unless the change either simplifies the generated code
-> or it is much better to read.
+On Wed 16-04-14 10:52:48, Tejun Heo wrote:
+[....]
+> +The memory controller currently doesn't have a way to control what
+> +happens between internal tasks and child cgroups and the behavior is
+> +not clearly defined. 
 
-hmm, I agree.  I will give it more thinking.
+I am not sure I understand this. Could you be more specific what exactly
+is not clearly defined?
 
-Seem this has been merged into -mm.  Andrew, please drop it!
-
-Thanks,
-Jianyu Zhan
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks
+-- 
+Michal Hocko
+SUSE Labs
