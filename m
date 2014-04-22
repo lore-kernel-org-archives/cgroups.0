@@ -1,53 +1,34 @@
-From: Richard Davies <richard@arachsys.com>
-Subject: Re: Protection against container fork bombs [WAS: Re: memcg with
- kmem limit doesn't recover after disk i/o causes limit to be hit]
-Date: Tue, 22 Apr 2014 21:05:31 +0100
-Message-ID: <20140422200531.GA19334@alpha.arachsys.com>
-References: <20140416154650.GA3034@alpha.arachsys.com>
- <20140418155939.GE4523@dhcp22.suse.cz>
- <5351679F.5040908@parallels.com>
- <20140420142830.GC22077@alpha.arachsys.com>
- <20140422143943.20609800@oracle.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Subject: Re: [PATCH 0/2] net: Implement SO_PEERCGROUP and SO_PASSCGROUP socket options
+Date: Tue, 22 Apr 2014 13:08:59 -0700
+Message-ID: <CALCETrWHA5ZmzOHnz9LO+7v4byc8QiynGyjE_ju5sjokNqrjZA@mail.gmail.com>
+References: <1397596546-10153-1-git-send-email-vgoyal@redhat.com> <20140422.160558.627080587952506099.davem@davemloft.net>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20140422143943.20609800@oracle.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140422.160558.627080587952506099.davem@davemloft.net>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Dwight Engen <dwight.engen@oracle.com>
-Cc: Vladimir Davydov <vdavydov@parallels.com>, Frederic Weisbecker <fweisbec@gmail.com>, David Rientjes <rientjes@google.com>, Glauber Costa <glommer@parallels.com>, Tejun Heo <tj@kernel.org>, Max Kellermann <mk@cm4all.com>, Johannes Weiner <hannes@cmpxchg.org>, William Dauchy <wdauchy@gmail.com>, Tim Hockin <thockin@hockin.org>, Michal Hocko <mhocko@suse.cz>, Daniel Walsh <dwalsh@redhat.com>, Daniel Berrange <berrange@redhat.com>, cgroups@vger.kernel.org, containers@lists.linux-foundation.org, linux-mm@kvack.org
+To: David Miller <davem@davemloft.net>
+Cc: Vivek Goyal <vgoyal@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Network Development <netdev@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Simo Sorce <ssorce@redhat.com>, lpoetter@redhat.com, kay@redhat.com, Daniel Walsh <dwalsh@redhat.com>
 
-Dwight Engen wrote:
-> Richard Davies wrote:
-> > Vladimir Davydov wrote:
-> > > In short, kmem limiting for memory cgroups is currently broken. Do
-> > > not use it. We are working on making it usable though.
-...
-> > What is the best mechanism available today, until kmem limits mature?
-> >
-> > RLIMIT_NPROC exists but is per-user, not per-container.
-> >
-> > Perhaps there is an up-to-date task counter patchset or similar?
+On Tue, Apr 22, 2014 at 1:05 PM, David Miller <davem@davemloft.net> wrote:
+> From: Vivek Goyal <vgoyal@redhat.com>
+> Date: Tue, 15 Apr 2014 17:15:44 -0400
 >
-> I updated Frederic's task counter patches and included Max Kellermann's
-> fork limiter here:
+>> This is another version of patchset to add support passing cgroup
+>> information of client over unix socket API.
 >
-> http://thread.gmane.org/gmane.linux.kernel.containers/27212
+> I'm marking this patch series as "changes requested" in patchwork
+> because if we still end up adding this feature SO_PASSCGROUP needs to
+> be changed to behave like SO_PASSCRED.
 >
-> I can send you a more recent patchset (against 3.13.10) if you would
-> find it useful.
+> Specifically, like SO_PASSCRED, it should pass the "real" cgroup, ie.
+> the cgroup at socket open() time.
+>
 
-Yes please, I would be interested in that. Ideally even against 3.14.1 if
-you have that too.
+I suspect that making this change will render it useless,
+unfortunately.  I really want to understand the use case.
 
-Thanks,
-
-Richard.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+--Andy
