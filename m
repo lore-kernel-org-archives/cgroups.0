@@ -1,53 +1,48 @@
-From: Jianyu Zhan <nasa4836@gmail.com>
-Subject: [PATCH] hugetlb_cgroup: explicitly init the early_init field
-Date: Tue, 22 Apr 2014 13:30:20 +0800
-Message-ID: <1398144620-9630-1-git-send-email-nasa4836@gmail.com>
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=from:to:cc:subject:date:message-id;
-        bh=YVgkjX/gqiO9MfRl+BmPDbpDBjKOo8cxknR2xFym2F0=;
-        b=0ij4aTKn1M1a8bTo8DCtHHXDdHRKuZVTM7W+FbbBWZJYP0UUfuMm9LF5jvCzyak3D/
-         NyVyIBWkm/xxp38w3QEbTFW9KQw1o/HoXS9cqyvVPQylY42B+BvKEmJ8X9IQCoMSRDy9
-         8T4W1/TMjXvac94VOr8CBv8pPULIDdHPzIz/+h5m1LExaPTZ/Ko5rt6ubXINxNjC5LPv
-         o9smn3AdodqiB0zXQBjV1DrzD5ToSL8j/+f8SjUzx1D5kqAwLQUAmaNKAZVqAlR3HLqQ
-         5gO5naQaLTvc7Znu971WHxwHglbmciPiCVB+5WYINhVEKaGGHo1Yqx8fG9Eh4eCe4myB
-         Pr/w==
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: tj@kernel.org, lizefan@huawei.com
-Cc: containers@lists.linux-foundation.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, nasa4836@gmail.com
+From: Jianyu Zhan <nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] cgroup: use uninitialized_var() for may-be uninitialized
+	variable
+Date: Tue, 22 Apr 2014 13:44:39 +0800
+Message-ID: <1398145479-11400-1-git-send-email-nasa4836@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=from:to:cc:subject:date:message-id:mime-version:content-type
+	:content-transfer-encoding;
+	bh=sf0YgQgpkPBxlUhtUveEjfQECyQDDD7n9pZVKm4ikEo=;
+	b=FYdy9ZB8RpynTVE2QnlCjXu7AZk3AaSHcyZIm8QeZs8wDaR8mA9WbJEy0Iyq1f47fL
+	XqSua8a18XKi7EMgz9synL/RjfRpCT3DCxZu5H0vL7IAuH/Vgvez6FrGnJHMUPpoDWFG
+	zcWeCD6FU+fHSup2LTNfz52CajchzQfetsoylTpieMvRzT7JS20HkU1FnqoqqdcdbkKv
+	HFulCf4u/fkEvros3+jKELjD774dfEvRlTGA3kti8WognOWBzVd3nlUxC0+xUZVT4bhh
+	BwkGrFf+AF3uWavablE1WrNCVJL9v/U0Eq3GxaRXcSWEJktfznIIHbqnY2hug3kht9wX
+	EeTw==
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-For a cgroup subsystem who should init early, then it should carefully
-take care of the implementation of css_alloc, because it will be called
-before mm_init() setup the world.
-
-Luckily we don't, and we better explicitly assign the early_init field
-to 0, for document reason.
-
-Signed-off-by: Jianyu Zhan <nasa4836@gmail.com>
----
- mm/hugetlb_cgroup.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
-index 595d7fd..b5368f8 100644
---- a/mm/hugetlb_cgroup.c
-+++ b/mm/hugetlb_cgroup.c
-@@ -405,4 +405,5 @@ struct cgroup_subsys hugetlb_cgrp_subsys = {
- 	.css_alloc	= hugetlb_cgroup_css_alloc,
- 	.css_offline	= hugetlb_cgroup_css_offline,
- 	.css_free	= hugetlb_cgroup_css_free,
-+	.early_init	= 0,
- };
--- 
-2.0.0-rc0
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+VG8gc3VwcHJlc3MgdGhpcyB3YXJuaW5nOgoKIHdhcm5pbmc6IOKAmGVycuKAmSBtYXkgYmUgdXNl
+ZCB1bmluaXRpYWxpemVkIGluIHRoaXMgZnVuY3Rpb24gWy1XbWF5YmUtdW5pbml0aWFsaXplZF0K
+ICBpbnQgZXJyOwoJXgoKVXNlIHRoZSB1bmluaXRpYWxpemVkX3ZhcigpIHRvIGRlY2FscmUgZXJy
+LiBJdCBhbHNvIHNlcnZlcyB0byBiZSBnb29kIGRvY3VtZXRhdGlvbi4KClNpZ25lZC1vZmYtYnk6
+IEppYW55dSBaaGFuIDxuYXNhNDgzNkBnbWFpbC5jb20+Ci0tLQoga2VybmVsL2Nncm91cC5jIHwg
+MiArLQogMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pCgpkaWZm
+IC0tZ2l0IGEva2VybmVsL2Nncm91cC5jIGIva2VybmVsL2Nncm91cC5jCmluZGV4IDI0Njc1ZjUu
+LjkzMDU2OWMgMTAwNjQ0Ci0tLSBhL2tlcm5lbC9jZ3JvdXAuYworKysgYi9rZXJuZWwvY2dyb3Vw
+LmMKQEAgLTQxNDQsNyArNDE0NCw3IEBAIHN0YXRpYyBpbnQgY3JlYXRlX2NzcyhzdHJ1Y3QgY2dy
+b3VwICpjZ3JwLCBzdHJ1Y3QgY2dyb3VwX3N1YnN5cyAqc3MpCiB7CiAJc3RydWN0IGNncm91cCAq
+cGFyZW50ID0gY2dycC0+cGFyZW50OwogCXN0cnVjdCBjZ3JvdXBfc3Vic3lzX3N0YXRlICpjc3M7
+Ci0JaW50IGVycjsKKwlpbnQgdW5pbml0aWFsaXplZF92YXIoZXJyKTsKIAogCWxvY2tkZXBfYXNz
+ZXJ0X2hlbGQoJmNncm91cF9tdXRleCk7CiAKLS0gCjIuMC4wLXJjMAoKX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KQ29udGFpbmVycyBtYWlsaW5nIGxpc3QK
+Q29udGFpbmVyc0BsaXN0cy5saW51eC1mb3VuZGF0aW9uLm9yZwpodHRwczovL2xpc3RzLmxpbnV4
+Zm91bmRhdGlvbi5vcmcvbWFpbG1hbi9saXN0aW5mby9jb250YWluZXJz
