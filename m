@@ -1,51 +1,57 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 0/2] net: Implement SO_PEERCGROUP and SO_PASSCGROUP
- socket options
-Date: Tue, 22 Apr 2014 16:29:27 -0400 (EDT)
-Message-ID: <20140422.162927.2182797573155988911.davem@davemloft.net>
-References: <1397596546-10153-1-git-send-email-vgoyal@redhat.com>
-	<20140422.160558.627080587952506099.davem@davemloft.net>
-	<CALCETrWHA5ZmzOHnz9LO+7v4byc8QiynGyjE_ju5sjokNqrjZA@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 1/4] cgroup: introduce helper css_to_id()
+Date: Tue, 22 Apr 2014 16:31:26 -0400
+Message-ID: <20140422203126.GD2314@mtj.dyndns.org>
+References: <cover.1398147734.git.nasa4836@gmail.com>
+	<0414ce4418a6f0dd481586ce4059b97800bcc1ca.1398147734.git.nasa4836@gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <CALCETrWHA5ZmzOHnz9LO+7v4byc8QiynGyjE_ju5sjokNqrjZA@mail.gmail.com>
-Sender: netdev-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: Text/Plain; charset="us-ascii"
-To: luto@amacapital.net
-Cc: vgoyal@redhat.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, netdev@vger.kernel.org, tj@kernel.org, ssorce@redhat.com, lpoetter@redhat.com, kay@redhat.com, dwalsh@redhat.com
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=EQwqh1nf52GkBzGCBHClkAEwHfJqYkKxKdPqhs36Cmg=;
+	b=lhk5zonRz8frsn/A96hnEQ6QbRAejhYaO2+KWPfmvPkYtF9A03465pa2izMPk6wgsZ
+	E+BXLMtU7zfkvVGjWhgbRXO1y3xSqAYhSNDrqbt6GF8tsIFG5EkSl8TNEqZ6ru4XcKnO
+	0xrRZKWO/fGdbU0ennB39YokwOJDIh/dSWHup7IIi9djoBr5rEeKBceTKnCgMSOlJ0Oh
+	3fc6TZ6X0tEROUAr0MnzlY2T0uK6ULnzozJm5gcgwanJuZ1lhRpf07wM+0PS9c60rbn3
+	u1kWPKnS4S7xsBeVgv8sDC8NQEMtbVhDOvMK48hB/b0kwnCQ/LmO1YHcipIpkWVRhOyQ
+	c3EA==
+Content-Disposition: inline
+In-Reply-To: <0414ce4418a6f0dd481586ce4059b97800bcc1ca.1398147734.git.nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Jianyu Zhan <nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Tue, 22 Apr 2014 13:08:59 -0700
-
-> On Tue, Apr 22, 2014 at 1:05 PM, David Miller <davem@davemloft.net> wrote:
->> From: Vivek Goyal <vgoyal@redhat.com>
->> Date: Tue, 15 Apr 2014 17:15:44 -0400
->>
->>> This is another version of patchset to add support passing cgroup
->>> information of client over unix socket API.
->>
->> I'm marking this patch series as "changes requested" in patchwork
->> because if we still end up adding this feature SO_PASSCGROUP needs to
->> be changed to behave like SO_PASSCRED.
->>
->> Specifically, like SO_PASSCRED, it should pass the "real" cgroup, ie.
->> the cgroup at socket open() time.
->>
+On Tue, Apr 22, 2014 at 02:30:27PM +0800, Jianyu Zhan wrote:
+> This is a prepared patch for converting from per-cgroup id to
+> per-subsystem id.
 > 
-> I suspect that making this change will render it useless,
-> unfortunately.  I really want to understand the use case.
+> Some subsystems dereference the per-cgrpu id directly, but this is
+> implementation-specific, so it should be transparent for subsystems.
 
-There was no use case, it is simply the fact that when I discussed this
-feature with Vivek and Simo I told them that it should be implemented
-the same as the existing credential facilities.
+Hmm... why would cgroup ID be implementation-specific?  It's a
+published field
 
-For datagram situations there is no "peer" to consider in between
-sendmsg() calls, as the binding is only active during the sendmsg()
-call.
+> Use this accessor instead.
 
-That's why SO_PASSCRED exists in the first place.
+I'm not a big believer of trivial accessors.  They tend to obfuscate
+things more than helping anything.  Here, we need to switch from
+cgrp->id to css->id.  Wrapping cgrp->id by css_to_id() doesn't really
+help anything especially because there will be cases where we'd
+actually want cgroup IDs instead of css IDs too.
 
-Otherwise, without SO_PASSCGROUP, there is no way for datagram sockets
-to find out the peer's open() time cgroup.
+Thanks.
+
+-- 
+tejun
