@@ -1,20 +1,20 @@
 From: Jianyu Zhan <nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] cgroup: explicitly init the early_init field
-Date: Tue, 22 Apr 2014 13:27:29 +0800
-Message-ID: <1398144449-9325-1-git-send-email-nasa4836@gmail.com>
+Subject: [PATCH] cgroup_freezer: explicitly init the early_init field
+Date: Tue, 22 Apr 2014 13:28:09 +0800
+Message-ID: <1398144489-9412-1-git-send-email-nasa4836@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=from:to:cc:subject:date:message-id;
-	bh=6rM8Yv2IrVCZar91ogHr/eT0cS1xHw+Xdocdv1fO/ZU=;
-	b=m+vpqZ8bvML/kif7N9Y8XZe7NfntWPWZeC0DxldEWjgKMbp1DKlQZfOVQHeSdC2KrN
-	i/nwiXVvvdUnAETc+S8zmnt1jeLCWn+bCLc8tBDWdujP2fz3ExPW8HHWo0rC0n0Eyz1z
-	nbKFRbq0j7YephY6L+Ovo3DjkXQE1Qgjxl5XfiG9my8kcv4Z7kggPqsltdWMs6f9KvX+
-	5vGTqp393ddcgfkOfMhT02jxdoCVOb8fH6fEbaVDXV1EbwXdh7f7n4X6HFvF9zwM9o+e
-	xaID52+QxP6mtXkommbc3V9aR8fhrfyCO/IdMbqllK7rNC7AUM4kVM4i6i98AZgCD9Ci
-	kH+Q==
+	bh=BR2NImQ3F/RA6S6Osao8FwZrCBNytu48HKevG7Y5rTY=;
+	b=ajvVXlSFVzmjmyQJSN/RD0LAt3xauhNuucO6ayMoGw0XtD7FZL1KuICodRfssbCY6e
+	NOyIZaCHHvvKNAJXbxgXdKGPt2IAd53INc3+RRKgirRVsiwYj4uvrG4IG4cBMESntpPR
+	GBtVkuNR702iuAP++DH8Mc+ZnUKnGIcnONDGT2zR2KhJuH3Sxr++iC1yCR0Y8AzeZ810
+	BEh9zX6bHVfCV5VJM33hR61OSlvodgtFxRVFkT/WnzAE/rR4B1nGAwpnLC2UdIVReIKr
+	6SG1B3RIGOHinGxDf+VVvE6dLepT5vp8cU6rF4ohi6DHkpDG+mbVTLZu/Lq3G5jqREQE
+	Xm1w==
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -37,19 +37,18 @@ to 0, for document reason.
 
 Signed-off-by: Jianyu Zhan <nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- kernel/cgroup.c | 1 +
+ kernel/cgroup_freezer.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 559f822..f23cb67 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -5325,5 +5325,6 @@ struct cgroup_subsys debug_cgrp_subsys = {
- 	.css_alloc = debug_css_alloc,
- 	.css_free = debug_css_free,
- 	.base_cftypes = debug_files,
-+	.early_init = 0,
+diff --git a/kernel/cgroup_freezer.c b/kernel/cgroup_freezer.c
+index 2bc4a22..74fe7f7 100644
+--- a/kernel/cgroup_freezer.c
++++ b/kernel/cgroup_freezer.c
+@@ -501,4 +501,5 @@ struct cgroup_subsys freezer_cgrp_subsys = {
+ 	.attach		= freezer_attach,
+ 	.fork		= freezer_fork,
+ 	.base_cftypes	= files,
++	.early_init	= 0,
  };
- #endif /* CONFIG_CGROUP_DEBUG */
 -- 
 2.0.0-rc0
