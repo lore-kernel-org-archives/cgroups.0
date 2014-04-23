@@ -1,43 +1,47 @@
-From: Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: [PATCH 2/2] net: Implement SO_PASSCGROUP to enable passing
- cgroup path
-Date: Wed, 23 Apr 2014 12:45:37 -0400
-Message-ID: <20140423164537.GD24651@redhat.com>
-References: <1397596546-10153-1-git-send-email-vgoyal@redhat.com>
- <1397596546-10153-3-git-send-email-vgoyal@redhat.com>
- <CALCETrURHNmLyccRiF_W8o2ozRMR4AaCjUE=_PU8z1+Pq6X2jQ@mail.gmail.com>
- <20140416002010.GA5035@redhat.com>
- <CALCETrWzHYN3kKcmDTFDfGhZqE4u9+6XDtiOu5nncbK_7KKH0g@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH RFC] blkcg: prepare blkcg knobs for default hierarchy
+Date: Wed, 23 Apr 2014 13:01:41 -0400
+Message-ID: <20140423170141.GJ4781@htj.dyndns.org>
+References: <20140413013209.GC26252@mtj.dyndns.org>
+ <20140414180824.GB9552@redhat.com>
+ <20140414193214.GC16835@htj.dyndns.org>
+ <20140415135359.GA13033@redhat.com>
+ <20140415140650.GI1863@htj.dyndns.org>
+ <20140415141826.GB17018@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=zrsQ9yH06dGSBuQ/6ezFfLfxmF8EY0zJhgT4Z2YRYww=;
+        b=XnagRxQ5hTAl83nkt6DBzz2CcMXB8S91v00OTbc4AQsDedBGmlBzsS7y8YFhfTjzqz
+         dxLG43xtzr3uX/4ejfZQlyHg1kp7kPiiBmFMRAqvfyAoY24TFeTKhZbROBdG8pql7lCm
+         aX5dTK/r4MOFlTLV+c7vlT3GJuh9/wm5FJnufUSSYK1aTo2fxAvVPlFfbtd4oUk9Kdpx
+         qFogz8+DzkzpuPjkA3BeADiAhKOMwZArVHvZYFy7qcNhbJXH+O9PKrgP8z/kgZO5j+At
+         2AV7xpEl2YuRFZz3pEGofwNz5kLVcNq90LRrl7j50ZAkAkhm/UZAgmDdQzgdG5ZKE0xb
+         uU4w==
 Content-Disposition: inline
-In-Reply-To: <CALCETrWzHYN3kKcmDTFDfGhZqE4u9+6XDtiOu5nncbK_7KKH0g@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20140415141826.GB17018-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Tejun Heo <tj@kernel.org>, Daniel Walsh <dwalsh@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, lpoetter@redhat.com, Simo Sorce <ssorce@redhat.com>, cgroups@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, kay@redhat.com, Network Development <netdev@vger.kernel.org>
+To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Apr 15, 2014 at 08:47:54PM -0700, Andy Lutomirski wrote:
+On Tue, Apr 15, 2014 at 10:18:26AM -0400, Vivek Goyal wrote:
+> Ok, that's fine. Let us just document the knobs well so that people can
+> find which knob is giving what information and make cfq names better at
+> the expense of inconsistency of names with throttling layer.
 
-[..]
-> Here's an attack against SO_PASSCGROUP, as you implemented it: connect
-> a socket and get someone else to write(2) to it.  This isn't very
-> hard.  Now you've impersonated.
+I've been thinking about it more.  Why do we even have separate stats
+for common things like bytes transferred?  It doesn't serve any
+purpose to do double accounting and reporting on everything, does it?
+Shouldn't we just have single set of common stats for things like
+requests / bytes serviced?
 
-If this is a problem then I think kernel requires fixing. Because kernel
-will apply all resource management policies based on the cgroup at write(2)
-time and not based on open() time.
+Thanks.
 
-For example, blkio throttling policies. If you get a process in other
-cgroup to read/write to an fd, then IO throttling rules of that cgroup
-are applied and it does not matter who opened fd in first place.
-
-So SO_PASSCGROUP is not exactly same as SO_PASSCRED in that sense. If
-there are issues w.r.t authorization/authentication etc, then that
-should be a recommendation to user space that don't use cgroup info
-for unsafe cases.
-
-Thanks
-Vivek
+-- 
+tejun
