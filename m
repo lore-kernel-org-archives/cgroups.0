@@ -1,77 +1,62 @@
-From: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
-Subject: Re: [PATCH 0/2] net: Implement SO_PEERCGROUP and SO_PASSCGROUP socket options
-Date: Tue, 22 Apr 2014 17:37:26 -0700
-Message-ID: <CALCETrXzN=EOJk7HB3P9NuBCvpQohJ7Y9U75ew9fCrTeN77VCw@mail.gmail.com>
-References: <CALCETrWHA5ZmzOHnz9LO+7v4byc8QiynGyjE_ju5sjokNqrjZA@mail.gmail.com>
- <20140422.162927.2182797573155988911.davem@davemloft.net> <CALCETrX_TCbKy-3W590wG3rq9O3Hzbqc_wu3EGg7PKn2NNsTpQ@mail.gmail.com>
- <20140422.163251.1863774803211446171.davem@davemloft.net>
+From: Marian Marinov <mm-NV7Lj0SOnH0@public.gmane.org>
+Subject: Re: Protection against container fork bombs [WAS: Re: memcg with
+ kmem limit doesn't recover after disk i/o causes limit to be hit]
+Date: Wed, 23 Apr 2014 09:07:28 +0300
+Message-ID: <535758A0.5000500@yuhu.biz>
+References: <20140416154650.GA3034@alpha.arachsys.com> <20140418155939.GE4523@dhcp22.suse.cz> <5351679F.5040908@parallels.com> <20140420142830.GC22077@alpha.arachsys.com> <20140422143943.20609800@oracle.com> <20140422200531.GA19334@alpha.arachsys.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20140422.163251.1863774803211446171.davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yuhu.biz; s=default;
+	t=1398233250; bh=L6s5HtygfSWoyM0y4Y8T98uq0bhGMm5Gb36I5SpmxVM=;
+	h=Date:From:To:CC:Subject:References:In-Reply-To;
+	b=TdWrWxCjIl0/fM85Gad/URjM8HAkNoInYfgmTUSF7bMpnP6RYMuluzHF5I9qUUQPB
+	 FriNPUjhBhFSTEHWVFNolvN+XtkG+0VQ/pFytOtIfac5o9/pp4DitPCa7cdXDEW37L
+	 SzbLKhsRrqkozu0EGDkN/NWFMBnPxdmtEYlBefZw=
+In-Reply-To: <20140422200531.GA19334-2oeHp4OYwSjPZs67QiJbJtBPR1lH4CV8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Simo Sorce <ssorce-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, kay-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Richard Davies <richard-li8END47hbdWk0Htik3J/w@public.gmane.org>, Dwight Engen <dwight.engen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, William Dauchy <wdauchy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Daniel Berrange <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Tue, Apr 22, 2014 at 1:32 PM, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org> wrote:
-> From: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
-> Date: Tue, 22 Apr 2014 13:31:13 -0700
->
->> On Tue, Apr 22, 2014 at 1:29 PM, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org> wrote:
->>> From: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
->>> Date: Tue, 22 Apr 2014 13:08:59 -0700
+On 04/22/2014 11:05 PM, Richard Davies wrote:
+> Dwight Engen wrote:
+>> Richard Davies wrote:
+>>> Vladimir Davydov wrote:
+>>>> In short, kmem limiting for memory cgroups is currently broken. Do
+>>>> not use it. We are working on making it usable though.
+> ...
+>>> What is the best mechanism available today, until kmem limits mature?
 >>>
->>>> On Tue, Apr 22, 2014 at 1:05 PM, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org> wrote:
->>>>> From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->>>>> Date: Tue, 15 Apr 2014 17:15:44 -0400
->>>>>
->>>>>> This is another version of patchset to add support passing cgroup
->>>>>> information of client over unix socket API.
->>>>>
->>>>> I'm marking this patch series as "changes requested" in patchwork
->>>>> because if we still end up adding this feature SO_PASSCGROUP needs to
->>>>> be changed to behave like SO_PASSCRED.
->>>>>
->>>>> Specifically, like SO_PASSCRED, it should pass the "real" cgroup, ie.
->>>>> the cgroup at socket open() time.
->>>>>
->>>>
->>>> I suspect that making this change will render it useless,
->>>> unfortunately.  I really want to understand the use case.
+>>> RLIMIT_NPROC exists but is per-user, not per-container.
 >>>
->>> There was no use case, it is simply the fact that when I discussed this
->>> feature with Vivek and Simo I told them that it should be implemented
->>> the same as the existing credential facilities.
->>>
->>> For datagram situations there is no "peer" to consider in between
->>> sendmsg() calls, as the binding is only active during the sendmsg()
->>> call.
->>>
->>> That's why SO_PASSCRED exists in the first place.
->>>
->>> Otherwise, without SO_PASSCGROUP, there is no way for datagram sockets
->>> to find out the peer's open() time cgroup.
+>>> Perhaps there is an up-to-date task counter patchset or similar?
 >>
->> Right.
+>> I updated Frederic's task counter patches and included Max Kellermann's
+>> fork limiter here:
 >>
->> I'd still like to know what userspace applications want this feature.
->> The canonical example seems to be journald, but journald doesn't use
->> unix datagram sockets AFAICS, nor is the process that opened the
->> socket interesting (that process is always systemd).
+>> http://thread.gmane.org/gmane.linux.kernel.containers/27212
+>>
+>> I can send you a more recent patchset (against 3.13.10) if you would
+>> find it useful.
 >
-> It's about rounding out the interface properly, now, rather than having
-> to have a specific use case.
+> Yes please, I would be interested in that. Ideally even against 3.14.1 if
+> you have that too.
+
+Dwight, do you have these patches in any public repo?
+
+I would like to test them also.
+
+Marian
+
 >
-> I really don't consider a specific use case as a requirement in this
-> case.
-
-Sure, but we'll feel really dumb if some variant of this is merged and
-then we learn that it doesn't actually serve the intended purpose and
-we have to extend it before anyone uses it.
-
-I think that my SCM_IDENTITY proposal from the other thread would be
-better an all counts, but it's rather more complicated.
-
---Andy
+> Thanks,
+>
+> Richard.
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
