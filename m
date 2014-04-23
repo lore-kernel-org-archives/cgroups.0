@@ -1,58 +1,62 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.16] cgroup: implement cgroup.populated
-Date: Wed, 23 Apr 2014 11:16:38 -0400
-Message-ID: <20140423151638.GG4781@htj.dyndns.org>
-References: <1397056052-2829-1-git-send-email-tj@kernel.org>
-	<20140414213100.GA1863@htj.dyndns.org>
-	<20140414222658.GA18152@kroah.com>
-	<20140415161828.GA30990@htj.dyndns.org>
+From: Andy Lutomirski <luto@amacapital.net>
+Subject: Re: [PATCH 2/2] net: Implement SO_PASSCGROUP to enable passing cgroup path
+Date: Wed, 23 Apr 2014 08:37:56 -0700
+Message-ID: <CALCETrVhXPK2roQZ7sKMPbJOsLCaMwhUJdL-p0tbUqN8cubsjg@mail.gmail.com>
+References: <CALCETrVq4HRpfWOAbZAQbyjuraQd=OxnW=WjSoe5JgBzRStiKg@mail.gmail.com>
+ <1397756025.2628.64.camel@willson.li.ssimo.org> <CALCETrVBJFgKwRKBE2jAG6kiGgkJ+MyQiw2nyz5yj0h68kCk9A@mail.gmail.com>
+ <1397759013.2628.86.camel@willson.li.ssimo.org> <20140417185023.GA32527@redhat.com>
+ <1397761817.2628.113.camel@willson.li.ssimo.org> <20140417191646.GA2461@redhat.com>
+ <CALCETrW3F1+3qF3thrAmuoWVbRveBJ2=owpigh4mv6iAafoQCw@mail.gmail.com>
+ <20140421150307.GA4367@redhat.com> <CALCETrW5RvbW-Hz_Y7oULP6sEfdhGBh51+mTj4RwobHV-ji+Kg@mail.gmail.com>
+ <20140423150744.GC22755@redhat.com>
 Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140423150744.GC22755@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=92AtGNJO7+AVQuS1dx9OMrhdwPhlmBrA90K37ZrBMwA=;
-	b=Ylx9L6lMBCSsLBBBCFhV5Y848soINkfPmv/F+dga8O7PwIt5FAmBAHp2W+BZaeTugp
-	aSHwsYUyPM22whsgXs8AapyB+iWwuZRYaP9lUvP3djPqjAuz0cRwvrKbPW+zDEARaadM
-	6tP3i9rsNw9+4QZHSvyKL1dO37uDbRTs7/ixOi9yw/eOuSPMWqin3KfEmmHeoR6y81wa
-	1etGinaaF33RhxZlkTyeoAK74omfeSBNg9ul6AOPuPCCjvlNi2xxa/Hd0Xu6reNDMn3J
-	Cop/50Kp9Lf0pT23ktSEQtc/i1oeVWsHM+V6ZGWGdtO9PrAPwQwMyqpIxMAcQuRXcU0d
-	6yGA==
-Content-Disposition: inline
-In-Reply-To: <20140415161828.GA30990-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Cc: rlove-L7G0xEPcOZbYtjvyW6yDsg@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, kay-tD+1rO4QERM@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, eparis-FjpueFixGhCM4zKIHC2jIg@public.gmane.org, john-jueV0HHMeujJJrXXpGQQMAC/G2K4zDHf@public.gmane.org
+To: Vivek Goyal <vgoyal@redhat.com>
+Cc: Simo Sorce <ssorce@redhat.com>, Daniel J Walsh <dwalsh@redhat.com>, David Miller <davem@davemloft.net>, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, lpoetter@redhat.com, cgroups@vger.kernel.org, kay@redhat.com, Network Development <netdev@vger.kernel.org>
 
-On Tue, Apr 15, 2014 at 12:18:28PM -0400, Tejun Heo wrote:
-> Hello, Greg.
-> 
-> On Mon, Apr 14, 2014 at 03:26:58PM -0700, Greg KH wrote:
-> > Do you want me to pull this branch into my tree for 3.16 now?  I have no
-> > objection to you taking it, if that's easier for you, which ever is fine
-> > for me.
-> 
-> I think the best way to proceed would be applying 1-2 to
-> driver-core-next and then base cgroup/for-3.16 on top of it, but I'd
-> like to get some feedback from inotify people before proceeding.
+On Wed, Apr 23, 2014 at 8:07 AM, Vivek Goyal <vgoyal@redhat.com> wrote:
+> On Mon, Apr 21, 2014 at 08:47:51AM -0700, Andy Lutomirski wrote:
+>
+> [..]
+>> To summarize from my reading of how this crap words:
+>>
+>> When a unit is created, systemd opens a stream socket pointing at
+>> /run/systemd/journal/stdout.  It tells journald the unit, along with
+>> lots of other useful information.  journald records this association
+>> between the socket and the unit.  Systemd could tell journald the
+>> cgroup here, too, if it wanted it.
+>
+> Ok, that's a fair point. I looked at  connect_logger_as() and I see
+> that systemd does connect() on behalf of service being launched and
+> sets up fd and passes bunch of information to journald. So cgroup could
+> be one of the information and that would act like SO_PEERCGROUP in
+> this specific case. Not sure why it is not done though. I will let
+> systemd folks comment on that. I don't have enough background here.
+>
+> But this works in this specific case where there is a mechanism to
+> pass meta information to receiver. What about SSSD use case where
+> they want to know the cgroup of client and possibly provide differentiated
+> service based on client.
 
-Greg, can you please apply the first two patches to driver-core-next
-(or a separate branch which is pulled into driver-core-next, either
-way works for me as long as the branch is stable)?  I'll pull in the
-branch and route the third patch through cgroup/for-3.16.
+Separate sockets sounds like it will work just fine, if not better, here, to me.
 
-Thanks!
+>
+> Also Dan Walsh mentioned that what if a process directly wants to open
+> journal socket and log something to journal.
 
--- 
-tejun
+This is a fair point.  I think that cgroup is a very odd thing to log,
+but systemd unit isn't so strange.
+
+As I've said, I won't object strongly to SO_PEERCGROUP.  I think that
+applications that rely on it are likely to be annoying to their users,
+but I think the API itself is okay.
+
+I'd still rather see a good, general solution for sensibly identifying
+yourself to your peer, but that can wait.
+
+--Andy
