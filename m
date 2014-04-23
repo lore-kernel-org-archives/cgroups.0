@@ -1,46 +1,68 @@
-From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH RFC] blkcg: prepare blkcg knobs for default hierarchy
-Date: Wed, 23 Apr 2014 13:17:20 -0400
-Message-ID: <20140423171720.GF24651@redhat.com>
-References: <20140413013209.GC26252@mtj.dyndns.org>
- <20140414180824.GB9552@redhat.com>
- <20140414193214.GC16835@htj.dyndns.org>
- <20140415135359.GA13033@redhat.com>
- <20140415140650.GI1863@htj.dyndns.org>
- <20140415141826.GB17018@redhat.com>
- <20140423170141.GJ4781@htj.dyndns.org>
+From: Andy Lutomirski <luto@amacapital.net>
+Subject: Re: [PATCH 0/2] net: Implement SO_PEERCGROUP and SO_PASSCGROUP socket options
+Date: Wed, 23 Apr 2014 10:21:14 -0700
+Message-ID: <CALCETrX_+XNr+UGhR5u6d6VNmg6tKoszza6v5A=PC1P_24auHQ@mail.gmail.com>
+References: <1397596546-10153-1-git-send-email-vgoyal@redhat.com>
+ <20140422.160558.627080587952506099.davem@davemloft.net> <20140423155512.GA24651@redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20140423170141.GJ4781-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140423155512.GA24651@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Vivek Goyal <vgoyal@redhat.com>
+Cc: David Miller <davem@davemloft.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Network Development <netdev@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Simo Sorce <ssorce@redhat.com>, lpoetter@redhat.com, kay@redhat.com, Daniel Walsh <dwalsh@redhat.com>
 
-On Wed, Apr 23, 2014 at 01:01:41PM -0400, Tejun Heo wrote:
-> On Tue, Apr 15, 2014 at 10:18:26AM -0400, Vivek Goyal wrote:
-> > Ok, that's fine. Let us just document the knobs well so that people can
-> > find which knob is giving what information and make cfq names better at
-> > the expense of inconsistency of names with throttling layer.
-> 
-> I've been thinking about it more.  Why do we even have separate stats
-> for common things like bytes transferred?  It doesn't serve any
-> purpose to do double accounting and reporting on everything, does it?
-> Shouldn't we just have single set of common stats for things like
-> requests / bytes serviced?
+On Wed, Apr 23, 2014 at 8:55 AM, Vivek Goyal <vgoyal@redhat.com> wrote:
+> On Tue, Apr 22, 2014 at 04:05:58PM -0400, David Miller wrote:
+>> From: Vivek Goyal <vgoyal@redhat.com>
+>> Date: Tue, 15 Apr 2014 17:15:44 -0400
+>>
+>> > This is another version of patchset to add support passing cgroup
+>> > information of client over unix socket API.
+>>
+>> I'm marking this patch series as "changes requested" in patchwork
+>> because if we still end up adding this feature SO_PASSCGROUP needs to
+>> be changed to behave like SO_PASSCRED.
+>
+> Does this concern of passing of real uid apply to cgroups also. Even
+> if somebody tricks suid program to write to fd setup by under priviliged
+> program how would that pgram force setuid program to change cgroup.
+>
+> To me passing cgroup information looks more like "pid" information where
+> we pass the actual pid of setuid program and not the pid of parent who
+> setup fd.
+>
 
-I think we should just require two. One for measuring rate in terms
-of IOPS and other for measuring rate in terms of [kMG]B/sec.
+Relying on pid from SCM_CREDENTIALS is completely unsafe for the same
+reason that relying on euid was very dangerous back when
+SCM_CREDENTIALS would send euid.
 
-So exporting both sector and bytes seems redundant. May be exporting
-bytes and dropping sector interface will do. Is size of sector exported
-somewhere so that user space can easily convert bytes to sector if needed.
+This is why I think that all transmissions of process identity and
+credentials should be intentional on the part of the transmitter.
+write(2) is never a good place for this, and connect(2) and socket(2)
+are barely good places.  setsockopt and sendmsg are good places, and I
+think we should come up with a new, clean way to allow unix socket
+users to identify themselves.
 
-Number of bio/requests also will need to be exported so that one can come
-up with IOPS.
+For example, you could sendmsg an SCM_IDENTITY on datagram and
+seqpacket sockets, and you could setsockopt a SO_IDENTITY on streams;
+the receivers would receive SCM_IDENTITY or SO_PEERIDENTITY, *but only
+if the sender put an identity there*.  Problem solved completely, at
+least for users of the new interface.
 
-Thanks
-Vivek
+For an even bigger improvement, allow SCM_IDENTITY and SO_PEERIDENTITY
+to return things like pidfds once we have them.  This requires a bit
+of care to avoid fd leaks.
+
+Done right, people could start migrating away from anything that uses
+struct ucred.  It's too late to change all the old stuff, but, for
+example, the kernel netlink receivers could refuse to do
+privilege-requiring things unless the request sends an appropriate
+SCM_IDENTITY.  The trick from CVE-2014-0181 would result in a message
+with no SCM_IDENTITY at all, so no privileged actions would occur.
+
+If people actually like the explicit identity idea, I could try to prototype it.
+
+--Andy
