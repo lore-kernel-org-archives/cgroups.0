@@ -1,78 +1,43 @@
-From: Dwight Engen <dwight.engen@oracle.com>
-Subject: Re: Protection against container fork bombs [WAS: Re: memcg with
- kmem limit doesn't recover after disk i/o causes limit to be hit]
-Date: Wed, 23 Apr 2014 08:49:42 -0400
-Message-ID: <20140423084942.560ae837@oracle.com>
-References: <20140416154650.GA3034@alpha.arachsys.com>
-	<20140418155939.GE4523@dhcp22.suse.cz>
-	<5351679F.5040908@parallels.com>
-	<20140420142830.GC22077@alpha.arachsys.com>
-	<20140422143943.20609800@oracle.com>
-	<20140422200531.GA19334@alpha.arachsys.com>
-	<535758A0.5000500@yuhu.biz>
+From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] device_cgroup: rework device access check and exception
+ checking
+Date: Wed, 23 Apr 2014 10:32:27 -0400
+Message-ID: <20140423143226.GK29214@redhat.com>
+References: <20140421161303.GG29214@redhat.com>
+ <20140421223253.GB22730@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <535758A0.5000500@yuhu.biz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20140421223253.GB22730-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Marian Marinov <mm@yuhu.biz>
-Cc: Richard Davies <richard@arachsys.com>, Vladimir Davydov <vdavydov@parallels.com>, Frederic Weisbecker <fweisbec@gmail.com>, David Rientjes <rientjes@google.com>, Glauber Costa <glommer@parallels.com>, Tejun Heo <tj@kernel.org>, Max Kellermann <mk@cm4all.com>, Johannes Weiner <hannes@cmpxchg.org>, William Dauchy <wdauchy@gmail.com>, Tim Hockin <thockin@hockin.org>, Michal Hocko <mhocko@suse.cz>, Daniel Walsh <dwalsh@redhat.com>, Daniel Berrange <berrange@redhat.com>, cgroups@vger.kernel.org, containers@lists.linux-foundation.org, linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, 23 Apr 2014 09:07:28 +0300
-Marian Marinov <mm@yuhu.biz> wrote:
-
-> On 04/22/2014 11:05 PM, Richard Davies wrote:
-> > Dwight Engen wrote:
-> >> Richard Davies wrote:
-> >>> Vladimir Davydov wrote:
-> >>>> In short, kmem limiting for memory cgroups is currently broken.
-> >>>> Do not use it. We are working on making it usable though.
-> > ...
-> >>> What is the best mechanism available today, until kmem limits
-> >>> mature?
-> >>>
-> >>> RLIMIT_NPROC exists but is per-user, not per-container.
-> >>>
-> >>> Perhaps there is an up-to-date task counter patchset or similar?
-> >>
-> >> I updated Frederic's task counter patches and included Max
-> >> Kellermann's fork limiter here:
-> >>
-> >> http://thread.gmane.org/gmane.linux.kernel.containers/27212
-> >>
-> >> I can send you a more recent patchset (against 3.13.10) if you
-> >> would find it useful.
-> >
-> > Yes please, I would be interested in that. Ideally even against
-> > 3.14.1 if you have that too.
+On Mon, Apr 21, 2014 at 06:32:53PM -0400, Tejun Heo wrote:
+> On Mon, Apr 21, 2014 at 12:13:03PM -0400, Aristeu Rozanski wrote:
+> > Whenever a device file is opened and checked against current device
+> > cgroup rules, it uses the same function (may_access()) as when a new
+> > exception rule is added by writing devices.{allow,deny}. And in both
+> > cases, the algorithm is the same, doesn't matter the behavior.
+> ...
+> > Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> > Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+> > Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> > Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > Signed-off-by: Aristeu Rozanski <arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 > 
-> Dwight, do you have these patches in any public repo?
+> Applied to cgroup/for-3.15-fixes.
 > 
-> I would like to test them also.
+> A nit: Can you please prepare a separate patch to reformat the
+> function comments.  The usual style is single line at the top for the
+> function name and brief description.  The actual description should
+> come after the param list.
 
-Hi Marian, I put the patches against 3.13.11 and 3.14.1 up at:
+Will submit with a v3, another bug found :\
 
-git://github.com/dwengen/linux.git cpuacct-task-limit-3.13
-git://github.com/dwengen/linux.git cpuacct-task-limit-3.14
- 
-> Marian
-> 
-> >
-> > Thanks,
-> >
-> > Richard.
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe cgroups"
-> > in the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> >
-> 
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+Aristeu
