@@ -1,40 +1,45 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 2/2] net: Implement SO_PASSCGROUP to enable passing
- cgroup path
-Date: Wed, 23 Apr 2014 13:29:55 -0400 (EDT)
-Message-ID: <20140423.132955.671992126955940387.davem@davemloft.net>
-References: <20140416002010.GA5035@redhat.com>
-	<CALCETrWzHYN3kKcmDTFDfGhZqE4u9+6XDtiOu5nncbK_7KKH0g@mail.gmail.com>
-	<20140423164537.GD24651@redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH RFC] blkcg: prepare blkcg knobs for default hierarchy
+Date: Wed, 23 Apr 2014 14:52:31 -0400
+Message-ID: <20140423185231.GA4163@mtj.dyndns.org>
+References: <20140413013209.GC26252@mtj.dyndns.org>
+ <20140414180824.GB9552@redhat.com>
+ <20140414193214.GC16835@htj.dyndns.org>
+ <20140415135359.GA13033@redhat.com>
+ <20140415140650.GI1863@htj.dyndns.org>
+ <20140415141826.GB17018@redhat.com>
+ <20140423170141.GJ4781@htj.dyndns.org>
+ <20140423171720.GF24651@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140423164537.GD24651@redhat.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=63SYy8tIj4GLU+C1k2g/VkCAApqGFZimE1Hm6vZfbFY=;
+        b=Ot6CtYufrb58LnTwfiMQ03Sj1mUMd72QJEwDLK9zsPrl/VLGTpQMOStmebkzw3Jqlk
+         FhAhxuA2ocW22BS/LESpkfunqRlvAuP0wUkVRWFfWOsh19LsuGRgOCYlDvAKHURzUq0S
+         SWp3+cSTGADb6bdR1dQOi5/syZ07necy9Bp6B3RCyH9AX7oDzKOeX4AhosWaZGmOIODZ
+         OQ/JGInAQNrRr8xXLyUPyQf7aEedNiOGPCxpD+TvrEAL/zlGa0wryM9sd74FcVxSrN9f
+         9v32RzVrFSL9/M4GRK8rncuh/f2rgLsRAjM35xTZ0oJETkWibrJdbSIjxF+53XRiPtXx
+         Hrvw==
+Content-Disposition: inline
+In-Reply-To: <20140423171720.GF24651@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: Text/Plain; charset="us-ascii"
-To: vgoyal@redhat.com
-Cc: luto@amacapital.net, tj@kernel.org, dwalsh@redhat.com, linux-kernel@vger.kernel.org, lpoetter@redhat.com, ssorce@redhat.com, cgroups@vger.kernel.org, kay@redhat.com, netdev@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Vivek Goyal <vgoyal@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org
 
-From: Vivek Goyal <vgoyal@redhat.com>
-Date: Wed, 23 Apr 2014 12:45:37 -0400
+Hello,
 
-> On Tue, Apr 15, 2014 at 08:47:54PM -0700, Andy Lutomirski wrote:
-> 
-> [..]
->> Here's an attack against SO_PASSCGROUP, as you implemented it: connect
->> a socket and get someone else to write(2) to it.  This isn't very
->> hard.  Now you've impersonated.
-> 
-> If this is a problem then I think kernel requires fixing. Because kernel
-> will apply all resource management policies based on the cgroup at write(2)
-> time and not based on open() time.
+On Wed, Apr 23, 2014 at 01:17:20PM -0400, Vivek Goyal wrote:
+> I think we should just require two. One for measuring rate in terms
+> of IOPS and other for measuring rate in terms of [kMG]B/sec.
 
-Anyways, this is not even worth discussing.
+I meant between cfq and blk-throttle.  Why do we have separate stats
+for them to present ultimately the same numbers?
 
-We already agreed that the cgroup passed at write time with SO_PASSGROUP
-enabled should be the socket creation time cgroup.
-
-Just like SO_PASSCRED does.
-
-The identity given is thus the one at open() time.
+-- 
+tejun
