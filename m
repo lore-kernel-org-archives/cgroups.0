@@ -1,67 +1,71 @@
-From: Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: [PATCH 2/2] net: Implement SO_PASSCGROUP to enable passing
- cgroup path
-Date: Wed, 23 Apr 2014 12:01:06 -0400
-Message-ID: <20140423160106.GB24651@redhat.com>
-References: <CALCETrVBJFgKwRKBE2jAG6kiGgkJ+MyQiw2nyz5yj0h68kCk9A@mail.gmail.com>
- <1397759013.2628.86.camel@willson.li.ssimo.org>
- <20140417185023.GA32527@redhat.com>
- <1397761817.2628.113.camel@willson.li.ssimo.org>
- <20140417191646.GA2461@redhat.com>
- <CALCETrW3F1+3qF3thrAmuoWVbRveBJ2=owpigh4mv6iAafoQCw@mail.gmail.com>
- <20140421150307.GA4367@redhat.com>
- <CALCETrW5RvbW-Hz_Y7oULP6sEfdhGBh51+mTj4RwobHV-ji+Kg@mail.gmail.com>
- <20140423150744.GC22755@redhat.com>
- <CALCETrVhXPK2roQZ7sKMPbJOsLCaMwhUJdL-p0tbUqN8cubsjg@mail.gmail.com>
+From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 0/2] net: Implement SO_PEERCGROUP and SO_PASSCGROUP
+ socket options
+Date: Wed, 23 Apr 2014 12:16:21 -0400
+Message-ID: <20140423161621.GC24651@redhat.com>
+References: <1397596546-10153-1-git-send-email-vgoyal@redhat.com>
+ <20140422.160558.627080587952506099.davem@davemloft.net>
+ <20140423155512.GA24651@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <CALCETrVhXPK2roQZ7sKMPbJOsLCaMwhUJdL-p0tbUqN8cubsjg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20140423155512.GA24651-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Simo Sorce <ssorce@redhat.com>, Daniel J Walsh <dwalsh@redhat.com>, David Miller <davem@davemloft.net>, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, lpoetter@redhat.com, cgroups@vger.kernel.org, kay@redhat.com, Network Development <netdev@vger.kernel.org>
+To: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, ssorce-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, kay-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-On Wed, Apr 23, 2014 at 08:37:56AM -0700, Andy Lutomirski wrote:
-> On Wed, Apr 23, 2014 at 8:07 AM, Vivek Goyal <vgoyal@redhat.com> wrote:
-> > On Mon, Apr 21, 2014 at 08:47:51AM -0700, Andy Lutomirski wrote:
-> >
-> > [..]
-> >> To summarize from my reading of how this crap words:
-> >>
-> >> When a unit is created, systemd opens a stream socket pointing at
-> >> /run/systemd/journal/stdout.  It tells journald the unit, along with
-> >> lots of other useful information.  journald records this association
-> >> between the socket and the unit.  Systemd could tell journald the
-> >> cgroup here, too, if it wanted it.
-> >
-> > Ok, that's a fair point. I looked at  connect_logger_as() and I see
-> > that systemd does connect() on behalf of service being launched and
-> > sets up fd and passes bunch of information to journald. So cgroup could
-> > be one of the information and that would act like SO_PEERCGROUP in
-> > this specific case. Not sure why it is not done though. I will let
-> > systemd folks comment on that. I don't have enough background here.
-> >
-> > But this works in this specific case where there is a mechanism to
-> > pass meta information to receiver. What about SSSD use case where
-> > they want to know the cgroup of client and possibly provide differentiated
-> > service based on client.
+On Wed, Apr 23, 2014 at 11:55:12AM -0400, Vivek Goyal wrote:
+> On Tue, Apr 22, 2014 at 04:05:58PM -0400, David Miller wrote:
+> > From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> > Date: Tue, 15 Apr 2014 17:15:44 -0400
+> > 
+> > > This is another version of patchset to add support passing cgroup
+> > > information of client over unix socket API.
+> > 
+> > I'm marking this patch series as "changes requested" in patchwork
+> > because if we still end up adding this feature SO_PASSCGROUP needs to
+> > be changed to behave like SO_PASSCRED.
 > 
-> Separate sockets sounds like it will work just fine, if not better, here, to me.
+> Does this concern of passing of real uid apply to cgroups also. Even
+> if somebody tricks suid program to write to fd setup by under priviliged
+> program how would that pgram force setuid program to change cgroup.
+> 
+> To me passing cgroup information looks more like "pid" information where
+> we pass the actual pid of setuid program and not the pid of parent who
+> setup fd.
+> 
+> How would one trick setuid program change cgroup? If not, then this class
+> of attack does not seem to apply to SO_PASSCGROUP.
+> 
+> So I think real discussion here should be how "cgroup" information should
+> be used and not necessarily whether we should be passing cgroup
+> information of sender. This information is already available. One can
+> do SO_PASSCRED, get pid, get /proc/pid/cgroup and use cgroup in whatever
+> way they want.
 
-That's one way of doing it. But that can't be the argument to not provide
-another way of doing same thing with the help of single socket instead
-of maintaining multiple ones.
+Kernel uses cgroup information to provide service differentiation. So lets
+say hypothetically I write a logging program which gets the cgroup of
+clinent and uses that information to limit the log file size. Is that
+a problem?
 
-Setting up separate socket for each client will require knowing every
-client in advance so that one can socket appropriately. But mutiplexing
-everything on one socket, does not have that constraint and should make
-life little bit easier.
+First of all I am not aware how would I force setuid program to change
+cgroup. So even if one tricks setuid program to effectively convert it
+into "suid cat", cgroup information remains the same and there is no
+privilige escalation here.
 
-I think they will be just two different ways of doing things and user
-can choose one depending on what suits them.
+And one example Andy had mentioned that what if I pass fd to a service
+which accepts fd and it is running in a cgroup. Then we have a problem
+at kernel level also. What if that fd is a regular file and that service
+it outputting tons of data. Kernel will apply all resource management
+rules based one cgroup of *priviliged service* and not based on
+caller's cgroup who passed the fd to priviliged service. 
+
+So to me passing cgroup information around at run time and use that
+information for resource management in user space will very much
+be in line with what kernel is doing and will be no different.
 
 Thanks
 Vivek
