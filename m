@@ -1,100 +1,90 @@
-From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] device_cgroup: fix the comment format for recently added
- functions
-Date: Thu, 24 Apr 2014 15:33:21 -0400
-Message-ID: <20140424193321.GS29214@redhat.com>
+From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 2/2] net: Implement SO_PASSCGROUP to enable passing
+ cgroup path
+Date: Thu, 24 Apr 2014 16:34:27 -0400
+Message-ID: <20140424203427.GC19091@redhat.com>
+References: <20140416002010.GA5035@redhat.com>
+ <CALCETrWzHYN3kKcmDTFDfGhZqE4u9+6XDtiOu5nncbK_7KKH0g@mail.gmail.com>
+ <20140423164537.GD24651@redhat.com>
+ <20140423.132955.671992126955940387.davem@davemloft.net>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
+In-Reply-To: <20140423.132955.671992126955940387.davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+To: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Cc: luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lpoetter-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ssorce-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kay-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Moving more extensive explanations to the end of the comment.
+On Wed, Apr 23, 2014 at 01:29:55PM -0400, David Miller wrote:
+> From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Date: Wed, 23 Apr 2014 12:45:37 -0400
+> 
+> > On Tue, Apr 15, 2014 at 08:47:54PM -0700, Andy Lutomirski wrote:
+> > 
+> > [..]
+> >> Here's an attack against SO_PASSCGROUP, as you implemented it: connect
+> >> a socket and get someone else to write(2) to it.  This isn't very
+> >> hard.  Now you've impersonated.
+> > 
+> > If this is a problem then I think kernel requires fixing. Because kernel
+> > will apply all resource management policies based on the cgroup at write(2)
+> > time and not based on open() time.
+> 
+> Anyways, this is not even worth discussing.
+> 
+> We already agreed that the cgroup passed at write time with SO_PASSGROUP
+> enabled should be the socket creation time cgroup.
+> 
+> Just like SO_PASSCRED does.
+> 
+> The identity given is thus the one at open() time.
 
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Aristeu Rozanski <arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- security/device_cgroup.c |   33 ++++++++++++++++-----------------
- 1 files changed, 16 insertions(+), 17 deletions(-)
+Hi Dave,
 
-diff --git a/security/device_cgroup.c b/security/device_cgroup.c
-index abbe0b2..dbd2489 100644
---- a/security/device_cgroup.c
-+++ b/security/device_cgroup.c
-@@ -306,17 +306,17 @@ static int devcgroup_seq_show(struct seq_file *m, void *v)
- }
+I am not sure about few things. So I will ask.
+
+By open() time you mean at socket() time or at connect() time? I guess
+you mean connect() time as at socket() time there are no access control
+checks and even if socket fd is passed around, it does not matter. So
+connect() seems to be more close to open() as opposed to socket().
+
+You also mentioned that you want SO_PEERCGROUP and SO_PASSCGROUP as pairs
+like SO_PEERCRED and SO_PASSCRED. But to me, SO_PEERCRED and SO_PASSCRED
+are not *exact* pairs and are little different in their semantics.
+SO_PEERCRED gives us client creds at connect() time while SO_PASSCRED
+client's real creds at sendmsg() time. SO_PASSCRED does not store client's
+credential's at connect() time for datagram sockets.
+
+So which semantics are we looking for. If we are looking for same
+semantics as PEERCRED/PASSCRED, then I think my patches are already
+there and don't need modifications.
+
+But if we are looking for deviation SO_PASSCRED and store and pass
+sender's cgroup info retrieved at connect() time, then that requires
+rework of patches.
  
- /**
-- * match_exception	- iterates the exception list trying to match a rule
-- * 			  based on type, major, minor and access type. It is
-- * 			  considered a match if an exception is found that
-- * 			  will contain the entire range of provided parameters.
-+ * match_exception	- iterates the exception list trying to find a complete match
-  * @exceptions: list of exceptions
-  * @type: device type (DEV_BLOCK or DEV_CHAR)
-  * @major: device file major number, ~0 to match all
-  * @minor: device file minor number, ~0 to match all
-  * @access: permission mask (ACC_READ, ACC_WRITE, ACC_MKNOD)
-  *
-- * returns: true in case it matches an exception completely
-+ * It is considered a complete match if an exception is found that will
-+ * contain the entire range of provided parameters.
-+ *
-+ * Return: true in case it matches an exception completely
-  */
- static bool match_exception(struct list_head *exceptions, short type,
- 			    u32 major, u32 minor, short access)
-@@ -341,20 +341,19 @@ static bool match_exception(struct list_head *exceptions, short type,
- }
- 
- /**
-- * match_exception_partial - iterates the exception list trying to match a rule
-- * 			     based on type, major, minor and access type. It is
-- * 			     considered a match if an exception's range is
-- * 			     found to contain *any* of the devices specified by
-- * 			     provided parameters. This is used to make sure no
-- * 			     extra access is being granted that is forbidden by
-- * 			     any of the exception list.
-+ * match_exception_partial - iterates the exception list trying to find a partial match
-  * @exceptions: list of exceptions
-  * @type: device type (DEV_BLOCK or DEV_CHAR)
-  * @major: device file major number, ~0 to match all
-  * @minor: device file minor number, ~0 to match all
-  * @access: permission mask (ACC_READ, ACC_WRITE, ACC_MKNOD)
-  *
-- * returns: true in case the provided range mat matches an exception completely
-+ * It is considered a partial match if an exception's range is found to
-+ * contain *any* of the devices specified by provided parameters. This is
-+ * used to make sure no extra access is being granted that is forbidden by
-+ * any of the exception list.
-+ *
-+ * Return: true in case the provided range mat matches an exception completely
-  */
- static bool match_exception_partial(struct list_head *exceptions, short type,
- 				    u32 major, u32 minor, short access)
-@@ -387,13 +386,13 @@ static bool match_exception_partial(struct list_head *exceptions, short type,
- }
- 
- /**
-- * verify_new_ex - verifies if a new exception is part of what is allowed
-- *		   by a dev cgroup based on the default policy +
-- *		   exceptions. This is used to make sure a child cgroup
-- *		   won't have more privileges than its parent
-+ * verify_new_ex - verifies if a new exception is allowed by parent cgroup's permissions
-  * @dev_cgroup: dev cgroup to be tested against
-  * @refex: new exception
-  * @behavior: behavior of the exception's dev_cgroup
-+ *
-+ * This is used to make sure a child cgroup won't have more privileges
-+ * than its parent
-  */
- static bool verify_new_ex(struct dev_cgroup *dev_cgroup,
- 		          struct dev_exception_item *refex,
--- 
-1.7.1
+W.r.t privilige escalation by tricking setuid program to write to a 
+descriptor, I don't think my patches are susceptible to that. setuid
+programs don't change cgroups themselves, so even if caller tricks setuid
+to write to an fd, receiver will still receive same cgroup info.
+
+If caller launches setuid program in a different cgroup (using cgexec or some
+other program), that means caller has the privilige to get into that
+cgroup and there is no magic privilige escalation here because caller
+has the permission to go in destination cgroup. IOW, caller can not
+force/trick setuid program to run in a cgroup where caller does not
+have permission to run itself.
+
+Only caveat to this theory is what happens if setuid program changes
+cgroup at his own. As we don't have any notion of real/effective cgroups,
+I guess there needs to be a restriction on setuid programs to not change
+cgroups at their own.
+
+So which semantics you are looking for. Same as current SO_PASSCRED or
+freeze cgroup info at connect() time and pass that info.
+
+Thanks
+Vivek
