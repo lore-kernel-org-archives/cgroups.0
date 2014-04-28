@@ -1,102 +1,107 @@
-From: Serge Hallyn <serge.hallyn@ubuntu.com>
-Subject: Re: [PATCH] device_cgroup: check if exception removal is allowed
-Date: Mon, 28 Apr 2014 20:30:03 +0000
-Message-ID: <20140428203002.GA26218@ubuntumail>
-References: <20140424193254.GR29214@redhat.com>
+From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] device_cgroup: fix the comment format for recently added
+ functions
+Date: Mon, 28 Apr 2014 20:31:03 +0000
+Message-ID: <20140428203103.GB26218@ubuntumail>
+References: <20140424193321.GS29214@redhat.com>
 Mime-Version: 1.0
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20140424193254.GR29214@redhat.com>
-Sender: stable-owner@vger.kernel.org
+In-Reply-To: <20140424193321.GS29214-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aristeu Rozanski <aris@redhat.com>
-Cc: cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Serge Hallyn <serge.hallyn@canonical.com>, Li Zefan <lizefan@huawei.com>, stable@vger.kernel.org
+To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Quoting Aristeu Rozanski (aris@redhat.com):
-> In a scenario when the child cgroup is trying to remove an exception
-> which will effectively add more access rights, verify if the parent's
-> rules allow it.
+Quoting Aristeu Rozanski (aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
+> Moving more extensive explanations to the end of the comment.
 > 
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Serge Hallyn <serge.hallyn@canonical.com>
-> Cc: Li Zefan <lizefan@huawei.com>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Aristeu Rozanski <arozansk@redhat.com>
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-Thanks, this looks good.  (Though I'm going based on the comment of
-match_exception_partial() in the comment cleanup patch, as the tree
-I'm looking at doesn't yet have that fn;  still, looks good)
+Acked-by: Serge E. Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 
-Acked-by: Serge E. Hallyn <serge.hallyn@ubuntu.com>
-
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Aristeu Rozanski <arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 > ---
->  security/device_cgroup.c |   36 +++++++++++++++++++++++++++++++++---
->  1 files changed, 33 insertions(+), 3 deletions(-)
+>  security/device_cgroup.c |   33 ++++++++++++++++-----------------
+>  1 files changed, 16 insertions(+), 17 deletions(-)
 > 
 > diff --git a/security/device_cgroup.c b/security/device_cgroup.c
-> index b9048dc..abbe0b2 100644
+> index abbe0b2..dbd2489 100644
 > --- a/security/device_cgroup.c
 > +++ b/security/device_cgroup.c
-> @@ -463,6 +463,32 @@ static int parent_has_perm(struct dev_cgroup *childcg,
->  	return verify_new_ex(parent, ex, childcg->behavior);
+> @@ -306,17 +306,17 @@ static int devcgroup_seq_show(struct seq_file *m, void *v)
 >  }
 >  
-> +/*
-> + * parent_allows_removal - check if the parent cgroup allows an exception to
-> + *			   be removed
-> + * @childcg: child cgroup from where the exception will be removed
-> + * @ex: exception being removed
-> + */
-> +static bool parent_allows_removal(struct dev_cgroup *childcg,
-> +				  struct dev_exception_item *ex)
-> +{
-> +	struct dev_cgroup *parent = css_to_devcgroup(css_parent(&childcg->css));
-> +
-> +	if (!parent)
-> +		return true;
-> +
-> +	if (childcg->behavior == DEVCG_DEFAULT_DENY)
-> +		/* It's always allowed to remove access to devices */
-> +		return true;
-> +
-> +	/*
-> +	 * Make sure you're not removing part or a whole exception existing in
-> +	 * the parent cgroup
-> +	 */
-> +	return !match_exception_partial(&parent->exceptions, ex->type,
-> +					ex->major, ex->minor, ex->access);
-> +}
-> +
 >  /**
->   * may_allow_all - checks if it's possible to change the behavior to
->   *		   allow based on parent's rules.
-> @@ -698,17 +724,21 @@ static int devcgroup_update_access(struct dev_cgroup *devcgroup,
+> - * match_exception	- iterates the exception list trying to match a rule
+> - * 			  based on type, major, minor and access type. It is
+> - * 			  considered a match if an exception is found that
+> - * 			  will contain the entire range of provided parameters.
+> + * match_exception	- iterates the exception list trying to find a complete match
+>   * @exceptions: list of exceptions
+>   * @type: device type (DEV_BLOCK or DEV_CHAR)
+>   * @major: device file major number, ~0 to match all
+>   * @minor: device file minor number, ~0 to match all
+>   * @access: permission mask (ACC_READ, ACC_WRITE, ACC_MKNOD)
+>   *
+> - * returns: true in case it matches an exception completely
+> + * It is considered a complete match if an exception is found that will
+> + * contain the entire range of provided parameters.
+> + *
+> + * Return: true in case it matches an exception completely
+>   */
+>  static bool match_exception(struct list_head *exceptions, short type,
+>  			    u32 major, u32 minor, short access)
+> @@ -341,20 +341,19 @@ static bool match_exception(struct list_head *exceptions, short type,
+>  }
 >  
->  	switch (filetype) {
->  	case DEVCG_ALLOW:
-> -		if (!parent_has_perm(devcgroup, &ex))
-> -			return -EPERM;
->  		/*
->  		 * If the default policy is to allow by default, try to remove
->  		 * an matching exception instead. And be silent about it: we
->  		 * don't want to break compatibility
->  		 */
->  		if (devcgroup->behavior == DEVCG_DEFAULT_ALLOW) {
-> +			/* Check if the parent allows removing it first */
-> +			if (!parent_allows_removal(devcgroup, &ex))
-> +				return -EPERM;
->  			dev_exception_rm(devcgroup, &ex);
-> -			return 0;
-> +			break;
->  		}
-> +
-> +		if (!parent_has_perm(devcgroup, &ex))
-> +			return -EPERM;
->  		rc = dev_exception_add(devcgroup, &ex);
->  		break;
->  	case DEVCG_DENY:
+>  /**
+> - * match_exception_partial - iterates the exception list trying to match a rule
+> - * 			     based on type, major, minor and access type. It is
+> - * 			     considered a match if an exception's range is
+> - * 			     found to contain *any* of the devices specified by
+> - * 			     provided parameters. This is used to make sure no
+> - * 			     extra access is being granted that is forbidden by
+> - * 			     any of the exception list.
+> + * match_exception_partial - iterates the exception list trying to find a partial match
+>   * @exceptions: list of exceptions
+>   * @type: device type (DEV_BLOCK or DEV_CHAR)
+>   * @major: device file major number, ~0 to match all
+>   * @minor: device file minor number, ~0 to match all
+>   * @access: permission mask (ACC_READ, ACC_WRITE, ACC_MKNOD)
+>   *
+> - * returns: true in case the provided range mat matches an exception completely
+> + * It is considered a partial match if an exception's range is found to
+> + * contain *any* of the devices specified by provided parameters. This is
+> + * used to make sure no extra access is being granted that is forbidden by
+> + * any of the exception list.
+> + *
+> + * Return: true in case the provided range mat matches an exception completely
+>   */
+>  static bool match_exception_partial(struct list_head *exceptions, short type,
+>  				    u32 major, u32 minor, short access)
+> @@ -387,13 +386,13 @@ static bool match_exception_partial(struct list_head *exceptions, short type,
+>  }
+>  
+>  /**
+> - * verify_new_ex - verifies if a new exception is part of what is allowed
+> - *		   by a dev cgroup based on the default policy +
+> - *		   exceptions. This is used to make sure a child cgroup
+> - *		   won't have more privileges than its parent
+> + * verify_new_ex - verifies if a new exception is allowed by parent cgroup's permissions
+>   * @dev_cgroup: dev cgroup to be tested against
+>   * @refex: new exception
+>   * @behavior: behavior of the exception's dev_cgroup
+> + *
+> + * This is used to make sure a child cgroup won't have more privileges
+> + * than its parent
+>   */
+>  static bool verify_new_ex(struct dev_cgroup *dev_cgroup,
+>  		          struct dev_exception_item *refex,
 > -- 
 > 1.7.1
 > 
