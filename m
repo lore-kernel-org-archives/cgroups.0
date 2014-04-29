@@ -1,107 +1,81 @@
-From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] device_cgroup: fix the comment format for recently added
- functions
-Date: Mon, 28 Apr 2014 20:31:03 +0000
-Message-ID: <20140428203103.GB26218@ubuntumail>
-References: <20140424193321.GS29214@redhat.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: Protection against container fork bombs [WAS: Re: memcg with
+	kmem limit doesn't recover after disk i/o causes limit to be hit]
+Date: Tue, 29 Apr 2014 09:25:15 +0200
+Message-ID: <20140429072515.GB15058@dhcp22.suse.cz>
+References: <20140416154650.GA3034@alpha.arachsys.com>
+	<20140418155939.GE4523@dhcp22.suse.cz>
+	<5351679F.5040908@parallels.com>
+	<20140420142830.GC22077@alpha.arachsys.com>
+	<20140422143943.20609800@oracle.com>
+	<20140422200531.GA19334@alpha.arachsys.com>
+	<535758A0.5000500@yuhu.biz> <20140423084942.560ae837@oracle.com>
+	<20140428180025.GC25689@ubuntumail>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20140424193321.GS29214-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20140428180025.GC25689@ubuntumail>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Cc: Richard Davies <richard-li8END47hbdWk0Htik3J/w@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Marian Marinov <mm-NV7Lj0SOnH0@public.gmane.org>, Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, William Dauchy <wdauchy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Quoting Aristeu Rozanski (aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org):
-> Moving more extensive explanations to the end of the comment.
+On Mon 28-04-14 18:00:25, Serge Hallyn wrote:
+> Quoting Dwight Engen (dwight.engen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org):
+> > On Wed, 23 Apr 2014 09:07:28 +0300
+> > Marian Marinov <mm-NV7Lj0SOnH0@public.gmane.org> wrote:
+> > 
+> > > On 04/22/2014 11:05 PM, Richard Davies wrote:
+> > > > Dwight Engen wrote:
+> > > >> Richard Davies wrote:
+> > > >>> Vladimir Davydov wrote:
+> > > >>>> In short, kmem limiting for memory cgroups is currently broken.
+> > > >>>> Do not use it. We are working on making it usable though.
+> > > > ...
+> > > >>> What is the best mechanism available today, until kmem limits
+> > > >>> mature?
+> > > >>>
+> > > >>> RLIMIT_NPROC exists but is per-user, not per-container.
+> > > >>>
+> > > >>> Perhaps there is an up-to-date task counter patchset or similar?
+> > > >>
+> > > >> I updated Frederic's task counter patches and included Max
+> > > >> Kellermann's fork limiter here:
+> > > >>
+> > > >> http://thread.gmane.org/gmane.linux.kernel.containers/27212
+> > > >>
+> > > >> I can send you a more recent patchset (against 3.13.10) if you
+> > > >> would find it useful.
+> > > >
+> > > > Yes please, I would be interested in that. Ideally even against
+> > > > 3.14.1 if you have that too.
+> > > 
+> > > Dwight, do you have these patches in any public repo?
+> > > 
+> > > I would like to test them also.
+> > 
+> > Hi Marian, I put the patches against 3.13.11 and 3.14.1 up at:
+> > 
+> > git://github.com/dwengen/linux.git cpuacct-task-limit-3.13
+> > git://github.com/dwengen/linux.git cpuacct-task-limit-3.14
 > 
-> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+> Thanks, Dwight.  FWIW I'm agreed with Tim, Dwight, Richard, and Marian
+> that a task limit would be a proper cgroup extension, and specifically
+> that approximating that with a kmem limit is not a reasonable substitute.
 
-Acked-by: Serge E. Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-
-> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Aristeu Rozanski <arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> ---
->  security/device_cgroup.c |   33 ++++++++++++++++-----------------
->  1 files changed, 16 insertions(+), 17 deletions(-)
-> 
-> diff --git a/security/device_cgroup.c b/security/device_cgroup.c
-> index abbe0b2..dbd2489 100644
-> --- a/security/device_cgroup.c
-> +++ b/security/device_cgroup.c
-> @@ -306,17 +306,17 @@ static int devcgroup_seq_show(struct seq_file *m, void *v)
->  }
->  
->  /**
-> - * match_exception	- iterates the exception list trying to match a rule
-> - * 			  based on type, major, minor and access type. It is
-> - * 			  considered a match if an exception is found that
-> - * 			  will contain the entire range of provided parameters.
-> + * match_exception	- iterates the exception list trying to find a complete match
->   * @exceptions: list of exceptions
->   * @type: device type (DEV_BLOCK or DEV_CHAR)
->   * @major: device file major number, ~0 to match all
->   * @minor: device file minor number, ~0 to match all
->   * @access: permission mask (ACC_READ, ACC_WRITE, ACC_MKNOD)
->   *
-> - * returns: true in case it matches an exception completely
-> + * It is considered a complete match if an exception is found that will
-> + * contain the entire range of provided parameters.
-> + *
-> + * Return: true in case it matches an exception completely
->   */
->  static bool match_exception(struct list_head *exceptions, short type,
->  			    u32 major, u32 minor, short access)
-> @@ -341,20 +341,19 @@ static bool match_exception(struct list_head *exceptions, short type,
->  }
->  
->  /**
-> - * match_exception_partial - iterates the exception list trying to match a rule
-> - * 			     based on type, major, minor and access type. It is
-> - * 			     considered a match if an exception's range is
-> - * 			     found to contain *any* of the devices specified by
-> - * 			     provided parameters. This is used to make sure no
-> - * 			     extra access is being granted that is forbidden by
-> - * 			     any of the exception list.
-> + * match_exception_partial - iterates the exception list trying to find a partial match
->   * @exceptions: list of exceptions
->   * @type: device type (DEV_BLOCK or DEV_CHAR)
->   * @major: device file major number, ~0 to match all
->   * @minor: device file minor number, ~0 to match all
->   * @access: permission mask (ACC_READ, ACC_WRITE, ACC_MKNOD)
->   *
-> - * returns: true in case the provided range mat matches an exception completely
-> + * It is considered a partial match if an exception's range is found to
-> + * contain *any* of the devices specified by provided parameters. This is
-> + * used to make sure no extra access is being granted that is forbidden by
-> + * any of the exception list.
-> + *
-> + * Return: true in case the provided range mat matches an exception completely
->   */
->  static bool match_exception_partial(struct list_head *exceptions, short type,
->  				    u32 major, u32 minor, short access)
-> @@ -387,13 +386,13 @@ static bool match_exception_partial(struct list_head *exceptions, short type,
->  }
->  
->  /**
-> - * verify_new_ex - verifies if a new exception is part of what is allowed
-> - *		   by a dev cgroup based on the default policy +
-> - *		   exceptions. This is used to make sure a child cgroup
-> - *		   won't have more privileges than its parent
-> + * verify_new_ex - verifies if a new exception is allowed by parent cgroup's permissions
->   * @dev_cgroup: dev cgroup to be tested against
->   * @refex: new exception
->   * @behavior: behavior of the exception's dev_cgroup
-> + *
-> + * This is used to make sure a child cgroup won't have more privileges
-> + * than its parent
->   */
->  static bool verify_new_ex(struct dev_cgroup *dev_cgroup,
->  		          struct dev_exception_item *refex,
-> -- 
-> 1.7.1
-> 
+The current state of the kmem limit, which is improving a lot thanks to
+Vladimir, is not a reason for a new extension/controller. We are just
+not yet there.
+-- 
+Michal Hocko
+SUSE Labs
