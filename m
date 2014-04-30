@@ -1,117 +1,57 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 2/6] cgroup, memcg: allocate cgroup ID from 1
-Date: Wed, 30 Apr 2014 15:11:06 +0200
-Message-ID: <20140430131106.GE4357@dhcp22.suse.cz>
-References: <1398373333-1521-1-git-send-email-tj@kernel.org>
- <1398373333-1521-3-git-send-email-tj@kernel.org>
+From: Daniel J Walsh <dwalsh@redhat.com>
+Subject: Re: Protection against container fork bombs [WAS: Re: memcg with
+ kmem limit doesn't recover after disk i/o causes limit to be hit]
+Date: Wed, 30 Apr 2014 09:12:20 -0400
+Message-ID: <5360F6B4.9010308@redhat.com>
+References: <20140422200531.GA19334@alpha.arachsys.com> <535758A0.5000500@yuhu.biz> <20140423084942.560ae837@oracle.com> <20140428180025.GC25689@ubuntumail> <20140429072515.GB15058@dhcp22.suse.cz> <20140429130353.GA27354@ubuntumail> <20140429154345.GH15058@dhcp22.suse.cz> <CAO_RewYZDGLBAKit4CudTbqVk+zfDRX8kP0W6Zz90xJh7abM9Q@mail.gmail.com> <20140429165114.GE6129@localhost.localdomain> <CAO_Rewa20dneL8e3T4UPnu2Dkv28KTgFJR9_YSmRBKp-_yqewg@mail.gmail.com> <20140429214454.GF6129@localhost.localdomain>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1398373333-1521-3-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20140429214454.GF6129@localhost.localdomain>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+To: Frederic Weisbecker <fweisbec@gmail.com>, Tim Hockin <thockin@google.com>
+Cc: Michal Hocko <mhocko@suse.cz>, Serge Hallyn <serge.hallyn@ubuntu.com>, Richard Davies <richard@arachsys.com>, Vladimir Davydov <vdavydov@parallels.com>, Marian Marinov <mm@yuhu.biz>, Max Kellermann <mk@cm4all.com>, Tim Hockin <thockin@hockin.org>, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, Glauber Costa <glommer@parallels.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>, William Dauchy <wdauchy@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, David Rientjes <rientjes@google.com>
 
-On Thu 24-04-14 17:02:09, Tejun Heo wrote:
-> Currently, cgroup->id is allocated from 0, which is always assigned to
-> the root cgroup; unfortunately, memcg wants to use ID 0 to indicate
-> invalid IDs and ends up incrementing all IDs by one.
-> 
-> It's reasonable to reserve 0 for special purposes.  This patch updates
-> cgroup core so that ID 0 is not used and the root cgroups get ID 1.
-> The ID incrementing is removed form memcg.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-Sorry for a late response.
-Thanks for removing this hack from memcg!
-cgroup code change looks good at first glance but I am not familiar with
-all the recent changes so I do not feel to add my Reviewed-by.
+On 04/29/2014 05:44 PM, Frederic Weisbecker wrote:
+> On Tue, Apr 29, 2014 at 09:59:30AM -0700, Tim Hockin wrote:
+>> Here's the reason it doesn't work for us: It doesn't work.  It was
+>> something like 2 YEARS since we first wanted this, and it STILL does
+>> not work.
+> When I was working on the task counter cgroup subsystem 2 years
+> ago, the patches were actually pushed back by google people, in favour
+> of task stack kmem cgroup subsystem.
+>
+> The reason was that expressing the forkbomb issue in terms of
+> number of tasks as a resource is awkward and that the real resource
+> in the game comes from kernel memory exhaustion due to task stack being
+> allocated over and over, swap ping-pong and stuffs...
+>
+> And that was a pretty good argument. I still agree with that. Especially
+> since that could solve others people issues at the same time. kmem
+> cgroup has a quite large domain of application.
+>
+>> You're postponing a pretty simple request indefinitely in
+>> favor of a much more complex feature, which still doesn't really give
+>> me what I want.  What I want is an API that works like rlimit but
+>> per-cgroup, rather than per-UID.
+> The request is simple but I don't think that adding the task counter
+> cgroup subsystem is simpler than extending the kmem code to apply limits
+> to only task stack. Especially in terms of maintainance.
+>
+> Also you guys have very good mm kernel developers who are already
+> familiar with this.
+I would look at this from a Usability point of view.  It is a lot easier
+to understand number of processes then the mount of KMEM those processes
+will need.  Setting something like
+ProcessLimit=1000 in a systemd unit file is easy to explain.  Now if
+systemd has the ability to translate this into something that makes
+sense in terms of kmem cgroup, then my argument goes away.
 
-Anyway
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-
-for the change in the semantic and the memcg change.
-
-Thanks!
-
-> ---
->  include/linux/cgroup.h | 4 ++--
->  kernel/cgroup.c        | 4 ++--
->  mm/memcontrol.c        | 8 ++------
->  3 files changed, 6 insertions(+), 10 deletions(-)
-> 
-> diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-> index c6c703f..793f70a 100644
-> --- a/include/linux/cgroup.h
-> +++ b/include/linux/cgroup.h
-> @@ -144,8 +144,8 @@ struct cgroup {
->  	/*
->  	 * idr allocated in-hierarchy ID.
->  	 *
-> -	 * The ID of the root cgroup is always 0, and a new cgroup
-> -	 * will be assigned with a smallest available ID.
-> +	 * ID 0 is not used, the ID of the root cgroup is always 1, and a
-> +	 * new cgroup will be assigned with a smallest available ID.
->  	 *
->  	 * Allocating/Removing ID must be protected by cgroup_mutex.
->  	 */
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index 21667f3..3fa0463 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -1531,7 +1531,7 @@ static int cgroup_setup_root(struct cgroup_root *root, unsigned int ss_mask)
->  	lockdep_assert_held(&cgroup_tree_mutex);
->  	lockdep_assert_held(&cgroup_mutex);
->  
-> -	ret = idr_alloc(&root->cgroup_idr, root_cgrp, 0, 1, GFP_KERNEL);
-> +	ret = idr_alloc(&root->cgroup_idr, root_cgrp, 1, 2, GFP_KERNEL);
->  	if (ret < 0)
->  		goto out;
->  	root_cgrp->id = ret;
-> @@ -4225,7 +4225,7 @@ static long cgroup_create(struct cgroup *parent, const char *name,
->  	 * Temporarily set the pointer to NULL, so idr_find() won't return
->  	 * a half-baked cgroup.
->  	 */
-> -	cgrp->id = idr_alloc(&root->cgroup_idr, NULL, 1, 0, GFP_KERNEL);
-> +	cgrp->id = idr_alloc(&root->cgroup_idr, NULL, 2, 0, GFP_KERNEL);
->  	if (cgrp->id < 0) {
->  		err = -ENOMEM;
->  		goto err_unlock;
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 29501f0..1d0b297 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -527,18 +527,14 @@ static inline bool mem_cgroup_is_root(struct mem_cgroup *memcg)
->  
->  static inline unsigned short mem_cgroup_id(struct mem_cgroup *memcg)
->  {
-> -	/*
-> -	 * The ID of the root cgroup is 0, but memcg treat 0 as an
-> -	 * invalid ID, so we return (cgroup_id + 1).
-> -	 */
-> -	return memcg->css.cgroup->id + 1;
-> +	return memcg->css.cgroup->id;
->  }
->  
->  static inline struct mem_cgroup *mem_cgroup_from_id(unsigned short id)
->  {
->  	struct cgroup_subsys_state *css;
->  
-> -	css = css_from_id(id - 1, &memory_cgrp_subsys);
-> +	css = css_from_id(id, &memory_cgrp_subsys);
->  	return mem_cgroup_from_css(css);
->  }
->  
-> -- 
-> 1.9.0
-> 
-
--- 
-Michal Hocko
-SUSE Labs
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
