@@ -1,66 +1,53 @@
-From: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: Protection against container fork bombs [WAS: Re: memcg with
- kmem limit doesn't recover after disk i/o causes limit to be hit]
-Date: Tue, 29 Apr 2014 23:44:56 +0200
-Message-ID: <20140429214454.GF6129@localhost.localdomain>
-References: <20140422200531.GA19334@alpha.arachsys.com>
- <535758A0.5000500@yuhu.biz>
- <20140423084942.560ae837@oracle.com>
- <20140428180025.GC25689@ubuntumail>
- <20140429072515.GB15058@dhcp22.suse.cz>
- <20140429130353.GA27354@ubuntumail>
- <20140429154345.GH15058@dhcp22.suse.cz>
- <CAO_RewYZDGLBAKit4CudTbqVk+zfDRX8kP0W6Zz90xJh7abM9Q@mail.gmail.com>
- <20140429165114.GE6129@localhost.localdomain>
- <CAO_Rewa20dneL8e3T4UPnu2Dkv28KTgFJR9_YSmRBKp-_yqewg@mail.gmail.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: A problem with memory.oom_control
+Date: Wed, 30 Apr 2014 10:56:25 +0200
+Message-ID: <20140430085625.GB4357@dhcp22.suse.cz>
+References: <CAGXs5wUdhEYQ-kGEPSD2A=OceZuA1tovLs04gPcRcqBPagQJCw@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=Airhwqpt7/yEzRrtaZUQatFuVXJD0tmyZ7huyc7Ebl8=;
-        b=04BlfWlLexJlFt2D0ZBC0/IuWMJkpBJuTEj+t8o8hXsVc8V/EfUw1//v3bLh+t2vbE
-         1RSGffxLhXUEQTlheFj6hiI8CgpQaLt2sTyk5PE4ZA1lgnvIplrCuj3YPdSI5l3sKldJ
-         znAIJsQG2QFUBAta8/DLaQK4D+x2y30Kc9FOjPmTnKMKsdc4K/cfnrQvdFvHoFG/3Ov9
-         RDgMN/IiS3fv1pJHiAPxrCVrQQFhGNDXm/SEZ8HTK2l9jCFrXjQiai4Bxd8KrQCmbWp6
-         jG80tsQyyWXfQiT5aAZ74ZMjVNDD23txYnzMzOpM2vkwyybtDFPPEyQjuTRemNCsvQD6
-         xz3w==
 Content-Disposition: inline
-In-Reply-To: <CAO_Rewa20dneL8e3T4UPnu2Dkv28KTgFJR9_YSmRBKp-_yqewg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <CAGXs5wUdhEYQ-kGEPSD2A=OceZuA1tovLs04gPcRcqBPagQJCw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Richard Davies <richard-li8END47hbdWk0Htik3J/w@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Marian Marinov <mm-NV7Lj0SOnH0@public.gmane.org>, Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, William Dauchy <wdauchy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Kevin Wilson <wkevils-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Apr 29, 2014 at 09:59:30AM -0700, Tim Hockin wrote:
-> Here's the reason it doesn't work for us: It doesn't work.  It was
-> something like 2 YEARS since we first wanted this, and it STILL does
-> not work.
+On Mon 14-04-14 14:54:23, Kevin Wilson wrote:
+> Hello,
+> 
+> First I hope this mailing list is the proper one for asking the
+> following question:
+> I do the following, as root,  on Fedora 20 with 3.12.7-300.fc20.x86_64 kernel:
+> 
+> create a cgroup called "0"
+> /sys/fs/cgroup/memory/0
+> 
+> run:
+> 
+> echo "1" > /sys/fs/cgroup/memory/0/memory.oom_control
+> bash: echo: write error: Invalid argument
 
-When I was working on the task counter cgroup subsystem 2 years
-ago, the patches were actually pushed back by google people, in favour
-of task stack kmem cgroup subsystem.
+JFYI: a patch[1] which changes this behavior is in mmotm tree already
+and it will be probably merged into 3.15.
 
-The reason was that expressing the forkbomb issue in terms of
-number of tasks as a resource is awkward and that the real resource
-in the game comes from kernel memory exhaustion due to task stack being
-allocated over and over, swap ping-pong and stuffs...
+[1] https://lkml.org/lkml/2014/4/16/651
 
-And that was a pretty good argument. I still agree with that. Especially
-since that could solve others people issues at the same time. kmem
-cgroup has a quite large domain of application.
+> Why am I having this error  ?
+> 
+> According to the documentation:
+> 
+> http://lxr.free-electrons.com/source/Documentation/cgroups/memory.txt
+> this should work.
+> 
+> Regards,
+> Kevin
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-> You're postponing a pretty simple request indefinitely in
-> favor of a much more complex feature, which still doesn't really give
-> me what I want.  What I want is an API that works like rlimit but
-> per-cgroup, rather than per-UID.
-
-The request is simple but I don't think that adding the task counter
-cgroup subsystem is simpler than extending the kmem code to apply limits
-to only task stack. Especially in terms of maintainance.
-
-Also you guys have very good mm kernel developers who are already
-familiar with this.
+-- 
+Michal Hocko
+SUSE Labs
