@@ -1,239 +1,165 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [RFC PATCH] vmscan: memcg: Always use swappiness of the
- reclaimed memcg swappiness and oom_control
-Date: Wed, 30 Apr 2014 11:09:28 +0200
-Message-ID: <20140430090928.GC4357@dhcp22.suse.cz>
-References: <1397682798-22906-1-git-send-email-hannes@cmpxchg.org>
- <20140418113611.GA7568@dhcp22.suse.cz>
- <20140424121917.GB4107@cmpxchg.org>
- <20140424142704.GC7644@dhcp22.suse.cz>
+From: Raghavendra KT <raghavendra.kt.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCHSET cgroup/for-3.16] cgroup: implement unified hierarchy, v2
+Date: Wed, 30 Apr 2014 16:22:13 +0530
+Message-ID: <CAC4Lta22tg2Kw82=m5_axB3sfY-bEiP8N==tSOAehgAqw46KGQ@mail.gmail.com>
+References: <1397511430-2673-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20140424142704.GC7644-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=g2+2taJUfGpnLOaPYr+CHSMeIbDRxnirt3g7qRv1/ss=;
+        b=PLOAIIjNPP4r7mx+8E3qeniyzdRw+5NiG6vDrkpo6uwHJj25//EhyBk+oaJnRxwuma
+         MA0brWgYJQjHceWkjPNruPdoTaVw6sPWik0z7XqUygryM5gFMrAEq/WDiaa/Fky0QX3n
+         J3NM5GHFyzr1boM9m/w1sDxRjbS2ss+rZPp+qvkFhZcSHKsDKo6swIA7RzRT5oZsBnem
+         ob+hr87d/WTxnUPEEuURI5SynLHY4Y5oxzyln9/gl3a+EXaKbVr0e0Lj9FAbRFp4/WqC
+         9GW2LoDi2PeLWpJbz44cCMUxb583l+NOXkQXtsXDZsG5cr+e6yr3+yeeA3gwbhXQh1z0
+         UuaA==
+In-Reply-To: <1397511430-2673-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-ping
+On Tue, Apr 15, 2014 at 3:06 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> Hello,
+>
+> This is v2 of the unified hierarchy patchset.  Changes from v1[1] are,
+>
+> * Rebased on top of v3.15-rc1
+>
+> * Interface file "cgroup.controllers" which was only available in the
+>   root is now available in all cgroups.  This allows, e.g., a
+>   sub-manager in charge of a subtree to tell which controllers are
+>   available to it.
+>
+> cgroup currently allows creating arbitrary number of hierarchies and
+> any number of controllers may be associated with a given tree.  This
+> allows for huge amount of variance how tasks are associated with
+> various cgroups and controllers; unfortunately, the variance is
+> extreme to the extent that it unnecessarily complicates capabilities
+> which can otherwise be straight-forward and hinders implementation of
+> features which can benefit from coordination among different
+> controllers.
+>
+> Here are some of the issues which we're facing with the current
+> multiple hierarchies.
+>
+> * cgroup membership of a task can't be described in finite number of
+>   paths.  As there can be arbitrary number of hierarchies, the key
+>   describing a task's cgroup membership can be arbitrarily long.  This
+>   is painful when userland or other parts of the kernel needs to take
+>   cgroup membership into account and leads to proliferation of
+>   controllers which are just there to identify membership rather than
+>   actually control resources, which in turn exacerbates the problem.
+>
+> * Different controllers may or may not reside on the same hierarchy.
+>   Features or optimizations which can benefit from sharing the
+>   hierarchical organization either can't be implemented or becomes
+>   overly complicated.
+>
+> * Tasks of a process may belong to different cgroups, which doesn't
+>   make any sense for some controllers.  Those controllers end up
+>   ignoring such configurations in their own ways leading to
+>   inconsistent behavior.  In addition, in-process resource control
+>   fundamentally isn't something which belongs to cgroup.  As it has to
+>   be visible to the binary for the process, it must be part of the
+>   stable programming interface which is easily accessible to the
+>   process proper in an easy race-free way.
+>
+> * The current cgroup allows cgroups which have child cgroups to have
+>   tasks in it.  This means that the child cgroups end up competing
+>   against the internal tasks.  This introduces inherent ambiguity as
+>   the two are separate types of entities and the latter doesn't have
+>   the same control knobs assigned to them.
+>
+>   Different controllers are dealing with the issue in different ways.
+>   cpu treats internal tasks and child cgroups as equivalents, which
+>   makes giving a child cgroup a given ratio of the parent's cpu time
+>   difficult as the number of competing entities may fluctuate without
+>   any indication.  blkio, in my misguided attempt to deal with the
+>   issue, introduced a whole duplicate set of knobs for internal tasks
+>   and deal with them as if they belong to a separate child cgroup
+>   making the interface and implementation a mess.  memcg seems
+>   somewhat ambiguous on the issue but there are attempts to introduce
+>   ad-hoc modifications to tilt the way it's handled to suit specific
+>   use cases.
+>
+>   This is an inherent problem.  All of the solutions that different
+>   controllers came up with are unsatisfactory, the different behaviors
+>   greatly increases the level of inconsistency and complicates the
+>   controller implementations.
+>
+> This patchset finally implements the default unified hierarchy.  The
+> goal is providing enough flexibility while enforcing stricter common
+> structure where appropriate to address the above listed issues.
+>
+> Controllers which aren't bound to other hierarchies are
+> automatically attached to the unified hierarchy, which is different in
+> that controllers are enabled explicitly for each subtree.
+> "cgroup.subtree_control" controls which controllers are enabled on the
+> child cgroups.  Let's assume a hierarchy like the following.
+>
+>   root - A - B - C
+>                \ D
+>
+> root's "cgroup.subtree_control" determines which controllers are
+> enabled on A.  A's on B.  B's on C and D.  This coincides with the
+> fact that controllers on the immediate sub-level are used to
+> distribute the resources of the parent.  In fact, it's natural to
+> assume that resource control knobs of a child belong to its parent.
+> Enabling a controller in "cgroup.subtree_control" declares that
+> distribution of the respective resources of the cgroup will be
+> controlled.  Note that this means that controller enable states are
+> shared among siblings.
+>
+> The default hierarchy has an extra restriction - only cgroups which
+> don't contain any task may have controllers enabled in
+> "cgroup.subtree_control".  Combined with the other properties of the
+> default hierarchy, this guarantees that, from the view point of
+> controllers, tasks are only on the leaf cgroups.  In other words, only
+> leaf csses may contain tasks.  This rules out situations where child
+> cgroups compete against internal tasks of the parent.
+>
+> This patchset contains the following twelve patches.
+>
+>  0001-cgroup-update-cgroup-subsys_mask-to-child_subsys_mas.patch
+>  0002-cgroup-introduce-effective-cgroup_subsys_state.patch
+>  0003-cgroup-implement-cgroup-e_csets.patch
+>  0004-cgroup-make-css_next_child-skip-missing-csses.patch
+>  0005-cgroup-reorganize-css_task_iter.patch
+>  0006-cgroup-teach-css_task_iter-about-effective-csses.patch
+>  0007-cgroup-cgroup-subsys-should-be-cleared-after-the-css.patch
+>  0008-cgroup-allow-cgroup-creation-and-suppress-automatic-.patch
+>  0009-cgroup-add-css_set-dfl_cgrp.patch
+>  0010-cgroup-update-subsystem-rebind-restrictions.patch
+>  0011-cgroup-prepare-migration-path-for-unified-hierarchy.patch
+>  0012-cgroup-implement-dynamic-subtree-controller-enable-d.patch
+>
+> 0001 updates subsys_mask handling again to morph cgrp->subsys_mask to
+> cgrp->child_subsys_mask.
+>
+> 0002-0003 introduce effective cgroup.  The cgroup on the unified
+> hierarchy a task belongs to when viewed from a controller.
+>
+> 0004-0007 update iterators to handle effective cgroup correctly.
+>
+> 0008-0011 prepare various paths for explicit controller
+> enable/disable.
+>
+> 0012 implements explicit controller enable/disable.
+>
+> The patchset is on top of cgroup/for-3.15 01a971406177 ("cgroup: Use
+> RCU_INIT_POINTER(x, NULL) in cgroup.c") and also available in the
+> following git branch.
+>
+>  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-unified-v2
+>
 
-On Thu 24-04-14 16:27:04, Michal Hocko wrote:
-> On Thu 24-04-14 08:19:17, Johannes Weiner wrote:
-> > On Fri, Apr 18, 2014 at 01:36:11PM +0200, Michal Hocko wrote:
-> > > On Wed 16-04-14 17:13:18, Johannes Weiner wrote:
-> > > > Per-memcg swappiness and oom killing can currently not be tweaked on a
-> > > > memcg that is part of a hierarchy, but not the root of that hierarchy.
-> > > > Users have complained that they can't configure this when they turned
-> > > > on hierarchy mode.  In fact, with hierarchy mode becoming the default,
-> > > > this restriction disables the tunables entirely.
-> > > 
-> > > Except when we would handle the first level under root differently,
-> > > which is ugly.
-> > > 
-> > > > But there is no good reason for this restriction. 
-> > > 
-> > > I had a patch for this somewhere on the think_more pile. I wasn't
-> > > particularly happy about the semantic so I haven't posted it.
-> > > 
-> > > > The settings for
-> > > > swappiness and OOM killing are taken from whatever memcg whose limit
-> > > > triggered reclaim and OOM invocation, regardless of its position in
-> > > > the hierarchy tree.
-> > > 
-> > > This is OK for the OOM knob because the memory pressure cannot be
-> > > handled at that level in hierarchy and that is where the OOM happens.
-> > > 
-> > > I am not so sure about the swappiness though. The swappiness tells us
-> > > how to proportionally scan anon vs. file LRUs and those are per-memcg,
-> > > not per-hierarchy (unlike the charge) so it makes sense to use it
-> > > per-memcg IMO.
-> > > 
-> > > Besides that using the reclaim target value might be quite confusing.
-> > > Say, somebody wants to prevent from swapping in a certain group and
-> > > yet the pages find their way to swap depending on where the reclaim is
-> > > triggered from.
-> > > Another thing would be that setting swappiness on an unlimited group has
-> > > no effect although I would argue it makes some sense in configuration
-> > > when parent is controlled by somebody else. I would like to tell how
-> > > to reclaim me when I cannot say how much memory I can have. 
-> > > 
-> > > It is true that we have a different behavior for the global reclaim
-> > > already but I am not entirely happy about that. Having a different
-> > > behavior for the global vs. limit reclaims just calls for troubles and
-> > > should be avoided as much as possible.
-> > > 
-> > > So let's think what is the best semantic before we merge this. I would
-> > > be more inclined for using per-memcg swappiness all the time (root using
-> > > the global knob) for all reclaims.
-> > 
-> > Yeah, we've always used the triggering group's swappiness value but at
-> > the same time forced the whole hierarchy to have the same setting as
-> > the root.
-> > 
-> > I don't really feel strongly about this.  If you prefer the per-memcg
-> > swappiness I can send a followup patch - or you can.
-> 
-> OK, I originally thought this would be in the same patch but now that I
-> think about it some more it would be better to have it separate in case
-> it turns out this will cause some issues (at least
-> global_reclaim-always-use-global-vm_swappiness is a behavior change).
-> So what do you think about this?
-> ---
-> From 3a865b7b53aed96d93bbcf865028e63fd6f582ab Mon Sep 17 00:00:00 2001
-> From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> Date: Thu, 24 Apr 2014 15:28:05 +0200
-> Subject: [RFC PATCH] vmscan: memcg: Always use swappiness of the reclaimed memcg
-> 
-> The memory reclaim always uses swappiness of the reclaim target memcg
-> (origin of the memory pressure) or vm_swappiness for the global memory
-> reclaim. This behavior was consistent (except for difference between
-> global and hard limit reclaim) because swappiness was enforced to be
-> consistent within each memcg hierarchy.
-> 
-> After "mm: memcontrol: remove hierarchy restrictions for swappiness
-> and oom_control" each memcg can have its own swappiness independent on
-> hierarchical parents, though, so the consistency guarantee is gone.
-> This can lead to an unexpected behavior. Say that a group is explicitly
-> configured to not swapout by memory.swappiness=0 but its memory gets
-> swapped out anyway when the memory pressure comes from its parent with a
-> different swapping policy.
-> It is also unexpected that the knob is meaningless without setting the
-> hard limit which would trigger the reclaim and enforce the swappiness.
-> There are setups where the hard limit is configured higher in the
-> hierarchy by an administrator and children groups are under control of
-> somebody else who is interested in the swapout behavior but not
-> necessarily about the memory limit.
-> 
-> From a semantic point of view swappiness is an attribute defining
-> anon vs. file proportional scanning of LRU which is memcg specific
-> (unlike charges which are propagated up the hierarchy) so it should be
-> applied to the particular memcg's LRU regardless where the memory
-> pressure comes from.
-> 
-> This patch removes vmscan_swappiness() and stores the swappiness into
-> the scan_control structure. mem_cgroup_swappiness is then used to
-> provide the correct value before shrink_lruvec is called.  The global
-> vm_swappiness is used for the root memcg.
-> 
-> Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> ---
->  Documentation/cgroups/memory.txt | 15 +++++++--------
->  mm/vmscan.c                      | 18 ++++++++----------
->  2 files changed, 15 insertions(+), 18 deletions(-)
-> 
-> diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
-> index 4937e6fff9b4..b3429aec444c 100644
-> --- a/Documentation/cgroups/memory.txt
-> +++ b/Documentation/cgroups/memory.txt
-> @@ -540,14 +540,13 @@ Note:
->  
->  5.3 swappiness
->  
-> -Similar to /proc/sys/vm/swappiness, but only affecting reclaim that is
-> -triggered by this cgroup's hard limit.  The tunable in the root cgroup
-> -corresponds to the global swappiness setting.
-> -
-> -Please note that unlike the global swappiness, memcg knob set to 0
-> -really prevents from any swapping even if there is a swap storage
-> -available. This might lead to memcg OOM killer if there are no file
-> -pages to reclaim.
-> +Overrides /proc/sys/vm/swappiness for the particular group. The tunable
-> +in the root cgroup corresponds to the global swappiness setting.
-> +
-> +Please note that unlike during the global reclaim, limit reclaim
-> +enforces that 0 swappiness really prevents from any swapping even if
-> +there is a swap storage available. This might lead to memcg OOM killer
-> +if there are no file pages to reclaim.
->  
->  5.4 failcnt
->  
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 310e1f67625e..7d2f8226cbd0 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -86,6 +86,9 @@ struct scan_control {
->  	/* Scan (total_size >> priority) pages at once */
->  	int priority;
->  
-> +	/* anon vs. file LRUs scanning "ratio" */
-> +	int swappiness;
-> +
->  	/*
->  	 * The memory cgroup that hit its limit and as a result is the
->  	 * primary target of this reclaim invocation.
-> @@ -1833,13 +1836,6 @@ static unsigned long shrink_list(enum lru_list lru, unsigned long nr_to_scan,
->  	return shrink_inactive_list(nr_to_scan, lruvec, sc, lru);
->  }
->  
-> -static int vmscan_swappiness(struct scan_control *sc)
-> -{
-> -	if (global_reclaim(sc))
-> -		return vm_swappiness;
-> -	return mem_cgroup_swappiness(sc->target_mem_cgroup);
-> -}
-> -
->  enum scan_balance {
->  	SCAN_EQUAL,
->  	SCAN_FRACT,
-> @@ -1900,7 +1896,7 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
->  	 * using the memory controller's swap limit feature would be
->  	 * too expensive.
->  	 */
-> -	if (!global_reclaim(sc) && !vmscan_swappiness(sc)) {
-> +	if (!global_reclaim(sc) && !sc->swappiness) {
->  		scan_balance = SCAN_FILE;
->  		goto out;
->  	}
-> @@ -1910,7 +1906,7 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
->  	 * system is close to OOM, scan both anon and file equally
->  	 * (unless the swappiness setting disagrees with swapping).
->  	 */
-> -	if (!sc->priority && vmscan_swappiness(sc)) {
-> +	if (!sc->priority && sc->swappiness) {
->  		scan_balance = SCAN_EQUAL;
->  		goto out;
->  	}
-> @@ -1935,7 +1931,7 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
->  	 * With swappiness at 100, anonymous and file have the same priority.
->  	 * This scanning priority is essentially the inverse of IO cost.
->  	 */
-> -	anon_prio = vmscan_swappiness(sc);
-> +	anon_prio = sc->swappiness;
->  	file_prio = 200 - anon_prio;
->  
->  	/*
-> @@ -2221,6 +2217,7 @@ static void shrink_zone(struct zone *zone, struct scan_control *sc)
->  
->  			lruvec = mem_cgroup_zone_lruvec(zone, memcg);
->  
-> +			sc->swappiness = mem_cgroup_swappiness(memcg);
->  			shrink_lruvec(lruvec, sc);
->  
->  			/*
-> @@ -2678,6 +2675,7 @@ unsigned long mem_cgroup_shrink_node_zone(struct mem_cgroup *memcg,
->  		.may_swap = !noswap,
->  		.order = 0,
->  		.priority = 0,
-> +		.swappiness = mem_cgroup_swappiness(memcg),
->  		.target_mem_cgroup = memcg,
->  	};
->  	struct lruvec *lruvec = mem_cgroup_zone_lruvec(zone, memcg);
-> -- 
-> 1.9.2
-> 
-> -- 
-> Michal Hocko
-> SUSE Labs
-> 
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
+I have done the functional verification of above branch.  unified hierarchy
+changes works as per mentioned above (and documentation patch posted later).
 
--- 
-Michal Hocko
-SUSE Labs
+(thought better to report formally than never though it is late to report :) )
