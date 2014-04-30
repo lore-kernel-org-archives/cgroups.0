@@ -1,130 +1,237 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: Protection against container fork bombs [WAS: Re: memcg with
- kmem limit doesn't recover after disk i/o causes limit to be hit]
-Date: Wed, 30 Apr 2014 15:31:22 +0200
-Message-ID: <20140430133122.GG4357@dhcp22.suse.cz>
-References: <20140429130353.GA27354@ubuntumail>
- <20140429154345.GH15058@dhcp22.suse.cz>
- <CAO_RewYZDGLBAKit4CudTbqVk+zfDRX8kP0W6Zz90xJh7abM9Q@mail.gmail.com>
- <20140429165114.GE6129@localhost.localdomain>
- <CAO_Rewa20dneL8e3T4UPnu2Dkv28KTgFJR9_YSmRBKp-_yqewg@mail.gmail.com>
- <20140429170639.GA25609@dhcp22.suse.cz>
- <20140429133039.162d9dd7@oracle.com>
- <20140429180927.GB29606@alpha.arachsys.com>
- <20140429182742.GB25609@dhcp22.suse.cz>
- <53601B68.60906@yuhu.biz>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <53601B68.60906-NV7Lj0SOnH0@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [patch 1/9] mm: memcontrol: fold mem_cgroup_do_charge()
+Date: Wed, 30 Apr 2014 16:25:35 -0400
+Message-ID: <1398889543-23671-2-git-send-email-hannes@cmpxchg.org>
+References: <1398889543-23671-1-git-send-email-hannes@cmpxchg.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
+	h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From; bh=vs+SqvdHvnakQx/gMC/fTCtztMcc8A7LaaqQoWH3GPY=;
+	b=CGElFNDUKFoXjAqSN2Ak/lqf/2WYcFP4KJyJQaVt+OqtLF7fKeaT48djJFXTmcVhy+OSq9EXqteG1Y1flWKA6iWHXaXzKt2pyNMXpTttevGmJpgNAAwFIcKJOi0WqFRTvxpM+P7ZPmvtNPysDiNuweLOvo5dIN3MvJ0nC6uVnFU=;
+In-Reply-To: <1398889543-23671-1-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Marian Marinov <mm-NV7Lj0SOnH0@public.gmane.org>
-Cc: Richard Davies <richard-li8END47hbdWk0Htik3J/w@public.gmane.org>, Dwight Engen <dwight.engen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, William Dauchy <wdauchy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: linux-mm@kvack.org
+Cc: Michal Hocko <mhocko@suse.cz>, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed 30-04-14 00:36:40, Marian Marinov wrote:
-> On 04/29/2014 09:27 PM, Michal Hocko wrote:
-> >On Tue 29-04-14 19:09:27, Richard Davies wrote:
-> >>Dwight Engen wrote:
-> >>>Michal Hocko wrote:
-> >>>>Tim Hockin wrote:
-> >>>>>Here's the reason it doesn't work for us: It doesn't work.
-> >>>>
-> >>>>There is a "simple" solution for that. Help us to fix it.
-> >>>>
-> >>>>>It was something like 2 YEARS since we first wanted this, and it
-> >>>>>STILL does not work.
-> >>>>
-> >>>>My recollection is that it was primarily Parallels and Google asking
-> >>>>for the kmem accounting. The reason why I didn't fight against
-> >>>>inclusion although the implementation at the time didn't have a
-> >>>>proper slab shrinking implemented was that that would happen later.
-> >>>>Well, that later hasn't happened yet and we are slowly getting there.
-> >>>>
-> >>>>>You're postponing a pretty simple request indefinitely in
-> >>>>>favor of a much more complex feature, which still doesn't really
-> >>>>>give me what I want.
-> >>>>
-> >>>>But we cannot simply add a new interface that will have to be
-> >>>>maintained for ever just because something else that is supposed to
-> >>>>workaround bugs.
-> >>>>
-> >>>>>What I want is an API that works like rlimit but per-cgroup, rather
-> >>>>>than per-UID.
-> >>>>
-> >>>>You can use an out-of-tree patchset for the time being or help to get
-> >>>>kmem into shape. If there are principal reasons why kmem cannot be
-> >>>>used then you better articulate them.
-> >>>
-> >>>Is there a plan to separately account/limit stack pages vs kmem in
-> >>>general? Richard would have to verify, but I suspect kmem is not currently
-> >>>viable as a process limiter for him because icache/dcache/stack is all
-> >>>accounted together.
-> >>
-> >>Certainly I would like to be able to limit container fork-bombs without
-> >>limiting the amount of disk IO caching for processes in those containers.
-> >>
-> >>In my testing with of kmem limits, I needed a limit of 256MB or lower to
-> >>catch fork bombs early enough. I would definitely like more than 256MB of
-> >>disk caching.
-> >>
-> >>So if we go the "working kmem" route, I would like to be able to specify a
-> >>limit excluding disk cache.
-> >
-> >Page cache (which is what you mean by disk cache probably) is a
-> >userspace accounted memory with the memory cgroup controller. And you
-> >do not have to limit that one. Kmem accounting refers to kernel internal
-> >allocations - slab memory and per process kernel stack. You can see how
-> >much memory is allocated per container by memory.kmem.usage_in_bytes or
-> >have a look at /proc/slabinfo to see what kind of memory kernel
-> >allocates globally and might be accounted for a container as well.
-> >
-> >The primary problem with the kmem accounting right now is that such a
-> >memory is not "reclaimed" and so if the kmem limit is reached all the
-> >further kmem allocations fail. The biggest user of the kmem allocations
-> >on many systems is dentry and inode chache which is reclaimable easily.
-> >When this is implemented the kmem limit will be usable to both prevent
-> >forkbombs but also other DOS scenarios when the kernel is pushed to
-> >allocate a huge amount of memory.
-> 
-> I would have to disagree here.
-> If a container starts to create many processes it will use kmem, however my use cases, the memory is not the problem.
-> The simple scheduling of so many processes generates have load on the machine.
-> Even if I have the memory to handle this... the problem becomes the scheduling of all of these processes.
+This function was split out because mem_cgroup_try_charge() got too
+big.  But having essentially one sequence of operations arbitrarily
+split in half is not good for reworking the code.  Fold it back in.
 
-What prevents you from setting the kmem limit to NR_PROC * 8K + slab_pillow?
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ mm/memcontrol.c | 166 ++++++++++++++++++++++----------------------------------
+ 1 file changed, 64 insertions(+), 102 deletions(-)
 
-> Typical rsync of 2-3TB of small files(1-100k) will generate heavy pressure
-> on the kmem, but will would not produce many processes.
-
-Once we have a proper slab reclaim implementation this shouldn't be a
-problem.
-
-> On the other hand, forking thousands of processes with low memory footprint
-> will hit the scheduler a lot faster then hitting the kmem limit.
->
-> Kmem limit is something that we need! But firmly believe that we need
-> a simple NPROC limit for cgroups.
-
-Once again. If you feel that your usecase is not covered by the kmem
-limit follow up on the original email thread I have referenced earlier
-in the thread. Splitting up the discussion doesn't help at all.
-
-> -hackman
-> 
-> >
-> >HTH
-> >
-> >>I am also somewhat worried that normal software use could legitimately go
-> >>above 256MB of kmem (even excluding disk cache) - I got to 50MB in testing
-> >>just by booting a distro with a few daemons in a container.
-> >>
-> >>Richard.
-> >
-> 
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 29501f040568..75dfeb8fa98b 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2574,80 +2574,6 @@ static int memcg_cpu_hotplug_callback(struct notifier_block *nb,
+ 	return NOTIFY_OK;
+ }
+ 
+-
+-/* See mem_cgroup_try_charge() for details */
+-enum {
+-	CHARGE_OK,		/* success */
+-	CHARGE_RETRY,		/* need to retry but retry is not bad */
+-	CHARGE_NOMEM,		/* we can't do more. return -ENOMEM */
+-	CHARGE_WOULDBLOCK,	/* GFP_WAIT wasn't set and no enough res. */
+-};
+-
+-static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+-				unsigned int nr_pages, unsigned int min_pages,
+-				bool invoke_oom)
+-{
+-	unsigned long csize = nr_pages * PAGE_SIZE;
+-	struct mem_cgroup *mem_over_limit;
+-	struct res_counter *fail_res;
+-	unsigned long flags = 0;
+-	int ret;
+-
+-	ret = res_counter_charge(&memcg->res, csize, &fail_res);
+-
+-	if (likely(!ret)) {
+-		if (!do_swap_account)
+-			return CHARGE_OK;
+-		ret = res_counter_charge(&memcg->memsw, csize, &fail_res);
+-		if (likely(!ret))
+-			return CHARGE_OK;
+-
+-		res_counter_uncharge(&memcg->res, csize);
+-		mem_over_limit = mem_cgroup_from_res_counter(fail_res, memsw);
+-		flags |= MEM_CGROUP_RECLAIM_NOSWAP;
+-	} else
+-		mem_over_limit = mem_cgroup_from_res_counter(fail_res, res);
+-	/*
+-	 * Never reclaim on behalf of optional batching, retry with a
+-	 * single page instead.
+-	 */
+-	if (nr_pages > min_pages)
+-		return CHARGE_RETRY;
+-
+-	if (!(gfp_mask & __GFP_WAIT))
+-		return CHARGE_WOULDBLOCK;
+-
+-	if (gfp_mask & __GFP_NORETRY)
+-		return CHARGE_NOMEM;
+-
+-	ret = mem_cgroup_reclaim(mem_over_limit, gfp_mask, flags);
+-	if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
+-		return CHARGE_RETRY;
+-	/*
+-	 * Even though the limit is exceeded at this point, reclaim
+-	 * may have been able to free some pages.  Retry the charge
+-	 * before killing the task.
+-	 *
+-	 * Only for regular pages, though: huge pages are rather
+-	 * unlikely to succeed so close to the limit, and we fall back
+-	 * to regular pages anyway in case of failure.
+-	 */
+-	if (nr_pages <= (1 << PAGE_ALLOC_COSTLY_ORDER) && ret)
+-		return CHARGE_RETRY;
+-
+-	/*
+-	 * At task move, charge accounts can be doubly counted. So, it's
+-	 * better to wait until the end of task_move if something is going on.
+-	 */
+-	if (mem_cgroup_wait_acct_move(mem_over_limit))
+-		return CHARGE_RETRY;
+-
+-	if (invoke_oom)
+-		mem_cgroup_oom(mem_over_limit, gfp_mask, get_order(csize));
+-
+-	return CHARGE_NOMEM;
+-}
+-
+ /**
+  * mem_cgroup_try_charge - try charging a memcg
+  * @memcg: memcg to charge
+@@ -2664,7 +2590,11 @@ static int mem_cgroup_try_charge(struct mem_cgroup *memcg,
+ {
+ 	unsigned int batch = max(CHARGE_BATCH, nr_pages);
+ 	int nr_oom_retries = MEM_CGROUP_RECLAIM_RETRIES;
+-	int ret;
++	struct mem_cgroup *mem_over_limit;
++	struct res_counter *fail_res;
++	unsigned long nr_reclaimed;
++	unsigned long flags = 0;
++	unsigned long long size;
+ 
+ 	if (mem_cgroup_is_root(memcg))
+ 		goto done;
+@@ -2683,44 +2613,76 @@ static int mem_cgroup_try_charge(struct mem_cgroup *memcg,
+ 
+ 	if (gfp_mask & __GFP_NOFAIL)
+ 		oom = false;
+-again:
++retry:
+ 	if (consume_stock(memcg, nr_pages))
+ 		goto done;
+ 
+-	do {
+-		bool invoke_oom = oom && !nr_oom_retries;
++	size = batch * PAGE_SIZE;
++	if (!res_counter_charge(&memcg->res, size, &fail_res)) {
++		if (!do_swap_account)
++			goto done_restock;
++		if (!res_counter_charge(&memcg->memsw, size, &fail_res))
++			goto done_restock;
++		res_counter_uncharge(&memcg->res, size);
++		mem_over_limit = mem_cgroup_from_res_counter(fail_res, memsw);
++		flags |= MEM_CGROUP_RECLAIM_NOSWAP;
++	} else
++		mem_over_limit = mem_cgroup_from_res_counter(fail_res, res);
+ 
+-		/* If killed, bypass charge */
+-		if (fatal_signal_pending(current))
+-			goto bypass;
++	if (batch > nr_pages) {
++		batch = nr_pages;
++		goto retry;
++	}
+ 
+-		ret = mem_cgroup_do_charge(memcg, gfp_mask, batch,
+-					   nr_pages, invoke_oom);
+-		switch (ret) {
+-		case CHARGE_OK:
+-			break;
+-		case CHARGE_RETRY: /* not in OOM situation but retry */
+-			batch = nr_pages;
+-			goto again;
+-		case CHARGE_WOULDBLOCK: /* !__GFP_WAIT */
+-			goto nomem;
+-		case CHARGE_NOMEM: /* OOM routine works */
+-			if (!oom || invoke_oom)
+-				goto nomem;
+-			nr_oom_retries--;
+-			break;
+-		}
+-	} while (ret != CHARGE_OK);
++	if (!(gfp_mask & __GFP_WAIT))
++		goto nomem;
+ 
+-	if (batch > nr_pages)
+-		refill_stock(memcg, batch - nr_pages);
+-done:
+-	return 0;
++	if (gfp_mask & __GFP_NORETRY)
++		goto nomem;
++
++	nr_reclaimed = mem_cgroup_reclaim(mem_over_limit, gfp_mask, flags);
++
++	if (mem_cgroup_margin(mem_over_limit) >= batch)
++		goto retry;
++	/*
++	 * Even though the limit is exceeded at this point, reclaim
++	 * may have been able to free some pages.  Retry the charge
++	 * before killing the task.
++	 *
++	 * Only for regular pages, though: huge pages are rather
++	 * unlikely to succeed so close to the limit, and we fall back
++	 * to regular pages anyway in case of failure.
++	 */
++	if (nr_reclaimed && batch <= (1 << PAGE_ALLOC_COSTLY_ORDER))
++		goto retry;
++	/*
++	 * At task move, charge accounts can be doubly counted. So, it's
++	 * better to wait until the end of task_move if something is going on.
++	 */
++	if (mem_cgroup_wait_acct_move(mem_over_limit))
++		goto retry;
++
++	if (fatal_signal_pending(current))
++		goto bypass;
++
++	if (!oom)
++		goto nomem;
++
++	if (nr_oom_retries--)
++		goto retry;
++
++	mem_cgroup_oom(mem_over_limit, gfp_mask, get_order(batch));
+ nomem:
+ 	if (!(gfp_mask & __GFP_NOFAIL))
+ 		return -ENOMEM;
+ bypass:
+ 	return -EINTR;
++
++done_restock:
++	if (batch > nr_pages)
++		refill_stock(memcg, batch - nr_pages);
++done:
++	return 0;
+ }
+ 
+ /**
 -- 
-Michal Hocko
-SUSE Labs
+1.9.2
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
