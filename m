@@ -1,59 +1,56 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 2/2] mm/memcontrol.c: introduce helper
- mem_cgroup_zoneinfo_zone()
-Date: Thu, 1 May 2014 09:36:03 -0400
-Message-ID: <20140501133603.GA25536@cmpxchg.org>
-References: <1397862103-31982-1-git-send-email-nasa4836@gmail.com>
- <20140422095923.GD29311@dhcp22.suse.cz>
- <20140428150426.GB24807@dhcp22.suse.cz>
- <20140501125450.GA23420@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 6/6] cgroup, memcg: implement css->id and convert
+ css_from_id() to use it
+Date: Thu, 1 May 2014 11:46:30 -0400
+Message-ID: <20140501154630.GG31611@htj.dyndns.org>
+References: <1398373333-1521-1-git-send-email-tj@kernel.org>
+ <1398373333-1521-7-git-send-email-tj@kernel.org>
+ <535DCBFC.4000404@huawei.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=T2K2X32RBOvz5Vk3M1DncMmnYtLwNs7+blqbMR1V4gQ=;
-	b=g0O1BaATwuHrt35BasBbovK1biPIX6zVWsERz2rDFtCpss8qitVuxeeMgh0kSa1zEf833htro6XtK3j26na6/S3HNCV4BrruLJzTc4tsXMpO+lve+D32DJ2SJlMRVZ+yaylWesA5iyJfxlLWcMN3JoNhTDLm2akePFfNwEVppF8=;
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=B8sbXtxWMxhtnsDf+zboobA2oDB9sf60Hx6ngCHOoG8=;
+        b=bfo+qRQgIQYSlj3dpsy2vxE+sPj2MQFvmaMm47LIuUBjBFdQFu5lqj3a3+DJ4U5RMr
+         mRCh6T4ipM/1SEkgDZti06QeBKkVJndBB9PDI7fOthD1UWkvCwAGUpzFPLRDETqvk2yY
+         72bNoIpwDMOumfPeDOwGaEYpw8gLPkVVQVxwp6NgOYTfvz0Wo3Wqhe2nsSbihyZAIFhT
+         XLMj7PEUArmXZGdJ9385z6KiBSDtQf+gD8hAFZuriaf41TZzDiSzt8JWvXCouyjZy7l2
+         0SVr/ObwtHKK93/eiwqtTugXXLOnB5OCigmx7hAMOkol9TOcUrO2Jw2fqFxLStwK3Hic
+         ScYQ==
 Content-Disposition: inline
-In-Reply-To: <20140501125450.GA23420@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <535DCBFC.4000404-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Jianyu Zhan <nasa4836@gmail.com>, bsingharora@gmail.com, kamezawa.hiroyu@jp.fujitsu.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-[fix Andrew's email address]
-
-On Thu, May 01, 2014 at 08:54:50AM -0400, Johannes Weiner wrote:
-> On Mon, Apr 28, 2014 at 05:04:26PM +0200, Michal Hocko wrote:
-> > On Tue 22-04-14 11:59:23, Michal Hocko wrote:
-> > > On Sat 19-04-14 07:01:43, Jianyu Zhan wrote:
-> > > > introduce helper mem_cgroup_zoneinfo_zone(). This will make
-> > > > mem_cgroup_iter() code more compact.
-> > > 
-> > > I dunno. Helpers are usually nice but this one adds more code then it
-> > > removes. It also doesn't help the generated code.
-> > > 
-> > > So I don't see any reason to merge it.
+On Mon, Apr 28, 2014 at 11:33:16AM +0800, Li Zefan wrote:
+> On 2014/4/25 5:02, Tejun Heo wrote:
+> > Until now, cgroup->id has been used to identify all the associated
+> > csses and css_from_id() takes cgroup ID and returns the matching css
+> > by looking up the cgroup and then dereferencing the css associated
+> > with it; however, now that the lifetimes of cgroup and css are
+> > separate, this is incorrect and breaks on the unified hierarchy when a
+> > controller is disabled and enabled back again before the previous
+> > instance is released.
 > > 
-> > So should we drop it from mmotm?
+> > This patch adds css->id which is a subsystem-unique ID and converts
+> > css_from_id() to look up by the new css->id instead.  memcg is the
+> > only user of css_from_id() and also converted to use css->id instead.
+> > 
 > 
-> Yes, please.
-> 
-> > > > Signed-off-by: Jianyu Zhan <nasa4836@gmail.com>
-> > > > ---
-> > > >  mm/memcontrol.c | 15 +++++++++++----
-> > > >  1 file changed, 11 insertions(+), 4 deletions(-)
-> 
-> This helper adds no value, but more code and indirection.
-> 
-> Cc'd Andrew - this is about
-> mm-memcontrolc-introduce-helper-mem_cgroup_zoneinfo_zone.patch
-> mm-memcontrolc-introduce-helper-mem_cgroup_zoneinfo_zone-checkpatch-fixes.patch
-> 
-> Thanks!
+> netprio_cgroup also needs to be updated.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Why?  Wouldn't it be more natural to tie that to the associated
+cgroup's ID rather than the specific css instance.  It's different for
+memcg as it involves css refcnts but netprio_cgroup, AFAICS, only uses
+it for cgroup identification anyway.
+
+Thanks.
+
+-- 
+tejun
