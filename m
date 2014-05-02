@@ -1,80 +1,80 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.15] cgroup: implement unified hierarchy
-Date: Fri, 2 May 2014 11:12:50 -0400
-Message-ID: <20140502151250.GB10204@htj.dyndns.org>
-References: <1395974461-12735-1-git-send-email-tj@kernel.org>
-	<20140414154556.GA9552@redhat.com>
-	<20140414175236.GB15249@htj.dyndns.org>
-	<CAC4Lta0qd2vW4ENSOpzK+0i06MorzfmsZZZuW9xUtpZ_gWA9gA@mail.gmail.com>
+Subject: Re: [PATCH] device_cgroup: check if exception removal is allowed
+Date: Fri, 2 May 2014 11:29:30 -0400
+Message-ID: <20140502152930.GF10204@htj.dyndns.org>
+References: <20140424193254.GR29214@redhat.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=2e6Zw2pCOnJOgvCcn5R0Ubp+xoUGc+dcSBNrIubvqQ8=;
+        b=xCy1ScGz0WQhGqAP3THlPcxyBES2F1IHoF2L3GLh83JiDtE9/bNasPtHG7BA7V1awN
+         /PX+7mLZDEYMHELfDflGQFEIt3verIDYc8u/tiS/oxh89S82AQXtVFS1akk9e372PvA0
+         6Jy5WxyaMumcObwSG7yxOu8ZCvpeQLOpWBCzwhwqUo8BX9VR5HD3Y1kyAqL54VIJOree
+         x1WnEyCaTIoVAzBPZba9Am33LTkh019h8snZcjph2Rg2c3cVIu97GEup16yw1xsd1f8Y
+         RaKMBnGbk9ZB17QGpBiObsjXCiP3+EqkFZnLIKbsbZiRdOz3jB6WODSLjqCD1i5bv0fR
+         VxIQ==
+Content-Disposition: inline
+In-Reply-To: <20140424193254.GR29214-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=r250FSZ5e8Ofzug1D/r99Dozu2vDSVhvy74Ah/74dzQ=;
-	b=C4YOl2U8Q1rfl69z5pWfxEkZjGC1jyvI12zxnJNLLgMKjCICRThewSOi2dm+eTt0gy
-	ARwYxOitH+hDeHERXofClHeoukHYHzc1QOXtUYrNLV/R3UHKjcOPgDPTwFWwoTiCnK91
-	c+CuowS5CIABqRZ9Ts74tH/0ZHf7omASrlINrFyg0/wgYlVQY6XI62P3Uka3zV2zs+W5
-	/5nQsPdAtA4PUMVjjGQHwdM56UusDoow9UTIk9/KcBb2VAMC2ZGuOAwsOyGJ7XbbNqiw
-	J3P8YX2IuBibEVV3s96EEvEJ1NvwPvZDN9OKwAj492ZWpwK8l7j1FtO6eB6eutfpabj/
-	fCWg==
-Content-Disposition: inline
-In-Reply-To: <CAC4Lta0qd2vW4ENSOpzK+0i06MorzfmsZZZuW9xUtpZ_gWA9gA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Raghavendra KT <raghavendra.kt-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+On Thu, Apr 24, 2014 at 03:32:55PM -0400, Aristeu Rozanski wrote:
+> In a scenario when the child cgroup is trying to remove an exception
+> which will effectively add more access rights, verify if the parent's
+> rules allow it.
 
-On Wed, Apr 30, 2014 at 04:27:51PM +0530, Raghavendra KT wrote:
-> For some controllers like cpuset, when we have exclusive_cpu is set,
-> what about having a knob in the cpuset controller
-> to move the task to non-root (when option is set).
+Can you please elaborate a bit more on how the bug was introduced and
+what its implications are?  People can't really decipher what the
+patch means from the above text.
 
-I'm doubtful.
+> +/*
 
-> Because all the way along, though we have freedom to make the cpusets
-> exclusive and move tasks (say VMs) into them,
-> making sure they do not interfere with each other, we can not prevent
-> the other tasks spawned in a system eating into cpus of
-> exclusive cpuset since they go to root automatically.
+/**
 
-I believe the right thing to do would be starting / confining other
-tasks in the appropriate non-root cgroups.  cgroup already provides
-mechanisms to achieve that.  The rest is upto userland.
+> + * parent_allows_removal - check if the parent cgroup allows an exception to
+> + *			   be removed
 
-> Do you think having a knob, to make sure new tasks spawned go to say a
-> default  directory under root makes sense?
-> 
->  I understand that we could easily have a userspace script which could
-> achieve intended goal, but kernel solution
->  would really make the exclusive cpusets have exclusive access to cpus
-> it should have.
+Why is devcg using a different comment form from everything else?
 
-This would just be a more reliable implementation of an ad-hoc
-mechanism when it can already be properly achieved by managing cgroups
-of all processes in the system.
+/**
+ * FUNC_NAME - one line description
+ * @params: description
+ *
+ * Long description
+ */
 
-> (I also have a POC implemented for pre-unified hierarchy tree and
-> understand some bit of complications involved in that and
-> understand that we should not have complex policies in kernel for e.g.
-> filtering tasks based on patterns etc..).
+> + * @childcg: child cgroup from where the exception will be removed
+> + * @ex: exception being removed
+> + */
+> +static bool parent_allows_removal(struct dev_cgroup *childcg,
+> +				  struct dev_exception_item *ex)
+> +{
+> +	struct dev_cgroup *parent = css_to_devcgroup(css_parent(&childcg->css));
+> +
+> +	if (!parent)
+> +		return true;
+> +
+> +	if (childcg->behavior == DEVCG_DEFAULT_DENY)
+> +		/* It's always allowed to remove access to devices */
 
-As I wrote above, I think this is something to be solved from
-userland.  I'm very positively against adding this sort of hacky
-ad-hoc policies which serves one or a few use cases well while
-introducing possible long-term maintenance issues.
+If you don't wanna add {}, move the comment above if.
+
+> +		return true;
+> +
+> +	/*
+> +	 * Make sure you're not removing part or a whole exception existing in
+> +	 * the parent cgroup
+> +	 */
+> +	return !match_exception_partial(&parent->exceptions, ex->type,
+> +					ex->major, ex->minor, ex->access);
+> +}
 
 Thanks.
 
