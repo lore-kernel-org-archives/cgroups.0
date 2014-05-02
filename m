@@ -1,49 +1,60 @@
-From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] device_cgroup: fix the comment format for recently added
- functions
-Date: Fri, 2 May 2014 11:49:59 -0400
-Message-ID: <20140502154959.GH29214@redhat.com>
-References: <20140424193321.GS29214@redhat.com>
- <20140502153028.GG10204@htj.dyndns.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 2/2] mm/memcontrol.c: introduce helper
+ mem_cgroup_zoneinfo_zone()
+Date: Fri, 2 May 2014 15:05:16 -0700
+Message-ID: <20140502150516.d42792bad53d86fb727816bd@linux-foundation.org>
+References: <1397862103-31982-1-git-send-email-nasa4836@gmail.com>
+	<20140422095923.GD29311@dhcp22.suse.cz>
+	<20140428150426.GB24807@dhcp22.suse.cz>
+	<20140501125450.GA23420@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20140502153028.GG10204-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20140501125450.GA23420@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>, Jianyu Zhan <nasa4836@gmail.com>, bsingharora@gmail.com, kamezawa.hiroyu@jp.fujitsu.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.com
 
-Hi Tejun,
-On Fri, May 02, 2014 at 11:30:28AM -0400, Tejun Heo wrote:
-> On Thu, Apr 24, 2014 at 03:33:21PM -0400, Aristeu Rozanski wrote:
-> > @@ -306,17 +306,17 @@ static int devcgroup_seq_show(struct seq_file *m, void *v)
-> >  }
-> >  
-> >  /**
-> > - * match_exception	- iterates the exception list trying to match a rule
-> > - * 			  based on type, major, minor and access type. It is
-> > - * 			  considered a match if an exception is found that
-> > - * 			  will contain the entire range of provided parameters.
-> > + * match_exception	- iterates the exception list trying to find a complete match
-> >   * @exceptions: list of exceptions
-> >   * @type: device type (DEV_BLOCK or DEV_CHAR)
-> >   * @major: device file major number, ~0 to match all
-> >   * @minor: device file minor number, ~0 to match all
-> >   * @access: permission mask (ACC_READ, ACC_WRITE, ACC_MKNOD)
-> >   *
-> > - * returns: true in case it matches an exception completely
-> > + * It is considered a complete match if an exception is found that will
-> > + * contain the entire range of provided parameters.
-> > + *
-> > + * Return: true in case it matches an exception completely
+On Thu, 1 May 2014 08:54:50 -0400 Johannes Weiner <hannes@cmpxchg.org> wrote:
+
+> On Mon, Apr 28, 2014 at 05:04:26PM +0200, Michal Hocko wrote:
+> > On Tue 22-04-14 11:59:23, Michal Hocko wrote:
+> > > On Sat 19-04-14 07:01:43, Jianyu Zhan wrote:
+> > > > introduce helper mem_cgroup_zoneinfo_zone(). This will make
+> > > > mem_cgroup_iter() code more compact.
+> > > 
+> > > I dunno. Helpers are usually nice but this one adds more code then it
+> > > removes. It also doesn't help the generated code.
+> > > 
+> > > So I don't see any reason to merge it.
+> > 
+> > So should we drop it from mmotm?
 > 
-> Can you just merge "Return: " section into the paragraph?  Just go
-> "Returns true blah blah".
+> Yes, please.
+> 
+> > > > Signed-off-by: Jianyu Zhan <nasa4836@gmail.com>
+> > > > ---
+> > > >  mm/memcontrol.c | 15 +++++++++++----
+> > > >  1 file changed, 11 insertions(+), 4 deletions(-)
+> 
+> This helper adds no value, but more code and indirection.
+> 
+> Cc'd Andrew - this is about
+> mm-memcontrolc-introduce-helper-mem_cgroup_zoneinfo_zone.patch
+> mm-memcontrolc-introduce-helper-mem_cgroup_zoneinfo_zone-checkpatch-fixes.patch
 
-That goes against Documentation/kernel-doc-nano-HOWTO.txt.
+The patch seemed rather nice to me.  mem_cgroup_zoneinfo_zone()
+encapsulates a particular concept and gives it a name.  That's better
+than splattering the logic into callsites.
 
--- 
-Aristeu
+The patch makes no change to code size but that's because gcc is silly.
+Mark mem_cgroup_zoneinfo_zone() as noinline and the patch shrinks
+.text by 40 bytes.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
