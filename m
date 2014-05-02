@@ -1,43 +1,82 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [patch 0/9] mm: memcontrol: naturalize charge lifetime
-Date: Fri, 2 May 2014 13:26:28 +0200
-Message-ID: <20140502112627.GG3446@dhcp22.suse.cz>
-References: <1398889543-23671-1-git-send-email-hannes@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHSET cgroup/for-3.15] cgroup: implement unified hierarchy
+Date: Fri, 2 May 2014 11:12:50 -0400
+Message-ID: <20140502151250.GB10204@htj.dyndns.org>
+References: <1395974461-12735-1-git-send-email-tj@kernel.org>
+	<20140414154556.GA9552@redhat.com>
+	<20140414175236.GB15249@htj.dyndns.org>
+	<CAC4Lta0qd2vW4ENSOpzK+0i06MorzfmsZZZuW9xUtpZ_gWA9gA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1398889543-23671-1-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=r250FSZ5e8Ofzug1D/r99Dozu2vDSVhvy74Ah/74dzQ=;
+	b=C4YOl2U8Q1rfl69z5pWfxEkZjGC1jyvI12zxnJNLLgMKjCICRThewSOi2dm+eTt0gy
+	ARwYxOitH+hDeHERXofClHeoukHYHzc1QOXtUYrNLV/R3UHKjcOPgDPTwFWwoTiCnK91
+	c+CuowS5CIABqRZ9Ts74tH/0ZHf7omASrlINrFyg0/wgYlVQY6XI62P3Uka3zV2zs+W5
+	/5nQsPdAtA4PUMVjjGQHwdM56UusDoow9UTIk9/KcBb2VAMC2ZGuOAwsOyGJ7XbbNqiw
+	J3P8YX2IuBibEVV3s96EEvEJ1NvwPvZDN9OKwAj492ZWpwK8l7j1FtO6eB6eutfpabj/
+	fCWg==
+Content-Disposition: inline
+In-Reply-To: <CAC4Lta0qd2vW4ENSOpzK+0i06MorzfmsZZZuW9xUtpZ_gWA9gA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Raghavendra KT <raghavendra.kt-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Wed 30-04-14 16:25:34, Johannes Weiner wrote:
-[...]
->  Documentation/cgroups/memcg_test.txt |  160 +--
->  include/linux/memcontrol.h           |   94 +-
->  include/linux/page_cgroup.h          |   43 +-
->  include/linux/swap.h                 |   15 +-
->  kernel/events/uprobes.c              |    1 +
->  mm/filemap.c                         |   13 +-
->  mm/huge_memory.c                     |   51 +-
->  mm/memcontrol.c                      | 1724 ++++++++++++--------------------
->  mm/memory.c                          |   41 +-
->  mm/migrate.c                         |   46 +-
->  mm/rmap.c                            |    6 -
->  mm/shmem.c                           |   28 +-
->  mm/swap.c                            |   22 +
->  mm/swap_state.c                      |    8 +-
->  mm/swapfile.c                        |   21 +-
->  mm/truncate.c                        |    1 -
->  mm/vmscan.c                          |    9 +-
->  mm/zswap.c                           |    2 +-
->  18 files changed, 833 insertions(+), 1452 deletions(-)
+Hello,
 
-Impressive! I will get through the series but it will take some time.
+On Wed, Apr 30, 2014 at 04:27:51PM +0530, Raghavendra KT wrote:
+> For some controllers like cpuset, when we have exclusive_cpu is set,
+> what about having a knob in the cpuset controller
+> to move the task to non-root (when option is set).
+
+I'm doubtful.
+
+> Because all the way along, though we have freedom to make the cpusets
+> exclusive and move tasks (say VMs) into them,
+> making sure they do not interfere with each other, we can not prevent
+> the other tasks spawned in a system eating into cpus of
+> exclusive cpuset since they go to root automatically.
+
+I believe the right thing to do would be starting / confining other
+tasks in the appropriate non-root cgroups.  cgroup already provides
+mechanisms to achieve that.  The rest is upto userland.
+
+> Do you think having a knob, to make sure new tasks spawned go to say a
+> default  directory under root makes sense?
+> 
+>  I understand that we could easily have a userspace script which could
+> achieve intended goal, but kernel solution
+>  would really make the exclusive cpusets have exclusive access to cpus
+> it should have.
+
+This would just be a more reliable implementation of an ad-hoc
+mechanism when it can already be properly achieved by managing cgroups
+of all processes in the system.
+
+> (I also have a POC implemented for pre-unified hierarchy tree and
+> understand some bit of complications involved in that and
+> understand that we should not have complex policies in kernel for e.g.
+> filtering tasks based on patterns etc..).
+
+As I wrote above, I think this is something to be solved from
+userland.  I'm very positively against adding this sort of hacky
+ad-hoc policies which serves one or a few use cases well while
+introducing possible long-term maintenance issues.
+
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
+tejun
