@@ -1,138 +1,46 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch 9/9] mm: memcontrol: rewrite uncharge API
-Date: Sun, 4 May 2014 10:32:51 -0400
-Message-ID: <20140504143251.GA1524@cmpxchg.org>
-References: <1398889543-23671-1-git-send-email-hannes@cmpxchg.org>
- <1398889543-23671-10-git-send-email-hannes@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHSET cgroup/for-3.16] cgroup: implement css->id
+Date: Sun, 4 May 2014 15:18:11 -0400
+Message-ID: <20140504191811.GB26279@htj.dyndns.org>
+References: <1398373333-1521-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=1w+b0PWFSngsZq6xPSDpgIBo2GgxQDuUZck8Zub/1No=;
-	b=Qbh4otOyElNJpwxV+VAZPzFtOBJJiIm/hoix0Xdt3tuMsSbX62U0JWwIZBg7iPodhM4R2M9bNVY77lA4z4fBQukrPiMimi6be6fpumt7LpY8asP57d/Evf48APXVDQIS/h5p9BWRn4JwM1hGdhy1prcWys7sKwbIRkwrIhahCMI=;
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=lJwXKVDelnmCzzZr9rjh6O2c4iWMsbG5OlhR7XWNCIk=;
+        b=cu+wHCCE6/yc4++L4mJJNcEJQy3SmRWAQmWmsu8cwDigwtYcz0zlyY7PjPxwtJUpQC
+         u+8JdxVdwDNLjLI2NrkLCLj3DFux/+/ggLaD4eGuu4sHIJrMZY4tdwHXCiRooPER4Duc
+         dk74aep988yDOQs+xqVUZTSiTOaYZRcFjqlt5BhSAcy0whPNoH5AvKW3Qz/hBt0vVhEm
+         oaIugVEpHi+VzRKs2CbuMpoy/Bbh00ERjYd3oVzUqxuLUZAIbZ3+qaT/L4mWOn8L5y0l
+         ogkCAlXgjEG9dTxl2P/3qelpfRRD37IVW+7l2hbrOG4/hRsdXyuQnko8Mk7EMPuIB8BL
+         MsUw==
 Content-Disposition: inline
-In-Reply-To: <1398889543-23671-10-git-send-email-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1398373333-1521-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-mm@kvack.org
-Cc: Michal Hocko <mhocko@suse.cz>, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, nasa4836-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On Wed, Apr 30, 2014 at 04:25:43PM -0400, Johannes Weiner wrote:
-> The memcg uncharging code that is involved towards the end of a page's
-> lifetime - truncation, reclaim, swapout, migration - is impressively
-> complicated and fragile.
+On Thu, Apr 24, 2014 at 05:02:07PM -0400, Tejun Heo wrote:
+> Hello,
 > 
-> Because anonymous and file pages were always charged before they had
-> their page->mapping established, uncharges had to happen when the page
-> type could be known from the context, as in unmap for anonymous, page
-> cache removal for file and shmem pages, and swap cache truncation for
-> swap pages.  However, these operations also happen well before the
-> page is actually freed, and so a lot of synchronization is necessary:
-> 
-> - On page migration, the old page might be unmapped but then reused,
->   so memcg code has to prevent an untimely uncharge in that case.
->   Because this code - which should be a simple charge transfer - is so
->   special-cased, it is not reusable for replace_page_cache().
-> 
-> - Swap cache truncation happens during both swap-in and swap-out, and
->   possibly repeatedly before the page is actually freed.  This means
->   that the memcg swapout code is called from many contexts that make
->   no sense and it has to figure out the direction from page state to
->   make sure memory and memory+swap are always correctly charged.
-> 
-> But now that charged pages always have a page->mapping, introduce
-> mem_cgroup_uncharge(), which is called after the final put_page(),
-> when we know for sure that nobody is looking at the page anymore.
-> 
-> For page migration, introduce mem_cgroup_migrate(), which is called
-> after the migration is successful and the new page is fully rmapped.
-> Because the old page is no longer uncharged after migration, prevent
-> double charges by decoupling the page's memcg association (PCG_USED
-> and pc->mem_cgroup) from the page holding an actual charge.  The new
-> bits PCG_MEM and PCG_MEMSW represent the respective charges and are
-> transferred to the new page during migration.
-> 
-> mem_cgroup_migrate() is suitable for replace_page_cache() as well.
-> 
-> Swap accounting is massively simplified: because the page is no longer
-> uncharged as early as swap cache deletion, a new mem_cgroup_swapout()
-> can transfer the page's memory+swap charge (PCG_MEMSW) to the swap
-> entry before the final put_page() in page reclaim.
-> 
-> Finally, because pages are now charged under proper serialization
-> (anon: exclusive; cache: page lock; swapin: page lock; migration: page
-> lock), and uncharged under full exclusion, they can not race with
-> themselves.  Because they are also off-LRU during charge/uncharge,
-> charge migration can not race, with that, either.  Remove the crazily
-> expensive the page_cgroup lock and set pc->flags non-atomically.
-> 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> Until now, cgroup->id has been used to identify all the associated
+> csses and css_from_id() takes cgroup ID and returns the matching css
+> by looking up the cgroup and then dereferencing the css associated
+> with it; however, now that the lifetimes of cgroup and css are
+> separate, this is incorrect and breaks on the unified hierarchy when a
+> controller is disabled and enabled back again before the previous
+> instance is released.
 
-Follow-up fixlets to this change that fell out of more testing in
-production and more auditing so far:
+Aplied to cgroup/for-3.16.  I was a bit worried about possible
+conflicts with other memcg changes but they don't seem to conflict
+anywhere.
 
-- Document mem_cgroup_move_account() exclusion
-- Catch uncharged swapin readahead pages in mem_cgroup_swapout()
-- Fix DEBUG_VM build after last-minute identifier rename
-- Drop duplicate lru_cache_add_active_or_unevictable() in THP migration
+Thanks.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 0add8b7b3a6c..f73df16b8115 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3387,6 +3387,12 @@ static int mem_cgroup_move_account(struct page *page,
- 
- 	mem_cgroup_charge_statistics(from, page, -nr_pages);
- 
-+	/*
-+	 * It is safe to change pc->mem_cgroup here because the page
-+	 * is referenced, charged, and isolated - we can't race with
-+	 * uncharging, charging, migration, or LRU putback.
-+	 */
-+
- 	/* caller should have done css_get */
- 	pc->mem_cgroup = to;
- 	mem_cgroup_charge_statistics(to, page, nr_pages);
-@@ -6234,6 +6240,12 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
- 
- 	pc = lookup_page_cgroup(page);
- 
-+	/* Readahead page, never charged */
-+	if (!PageCgroupUsed(pc))
-+		return;
-+
-+	VM_BUG_ON_PAGE(!(pc->flags & PCG_MEMSW), page);
-+
- 	oldid = swap_cgroup_record(entry, mem_cgroup_id(pc->mem_cgroup));
- 	VM_BUG_ON_PAGE(oldid, page);
- 
-@@ -6723,8 +6735,8 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage,
- 	if (!PageCgroupUsed(pc))
- 		return;
- 
--	VM_BUG_ON_PAGE(!(pc->flags & PCG_MEM), page);
--	VM_BUG_ON_PAGE(!(pc->flags & PCG_MEMSW), page);
-+	VM_BUG_ON_PAGE(!(pc->flags & PCG_MEM), oldpage);
-+	VM_BUG_ON_PAGE(!(pc->flags & PCG_MEMSW), oldpage);
- 	pc->flags &= ~(PCG_MEM | PCG_MEMSW);
- 
- 	if (PageTransHuge(oldpage)) {
-diff --git a/mm/migrate.c b/mm/migrate.c
-index 80d33e62eb16..afe688021699 100644
---- a/mm/migrate.c
-+++ b/mm/migrate.c
-@@ -1839,7 +1839,6 @@ fail_putback:
- 	 */
- 	flush_cache_range(vma, mmun_start, mmun_end);
- 	page_add_new_anon_rmap(new_page, vma, mmun_start);
--	lru_cache_add_active_or_unevictable(new_page, vma);
- 	pmdp_clear_flush(vma, mmun_start, pmd);
- 	set_pmd_at(mm, mmun_start, pmd, entry);
- 	flush_tlb_range(vma, mmun_start, mmun_end);
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
