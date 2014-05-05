@@ -1,384 +1,167 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH cgroup/for-3.15-fixes 2/2] cgroup_freezer: replace
- freezer->lock with freezer_mutex
-Date: Mon, 5 May 2014 18:39:41 -0400
-Message-ID: <20140505223941.GV11231@htj.dyndns.org>
-References: <20140505223557.GU11231@htj.dyndns.org>
+Subject: [PATCH cgroup/for-3.15-fixes] blkcg: use trylock on blkcg_pol_mutex
+ in blkcg_reset_stats()
+Date: Mon, 5 May 2014 12:37:30 -0400
+Message-ID: <20140505163730.GL11231@htj.dyndns.org>
+References: <5363C04B.4010400@oracle.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=XxsWYIPCsU3a9TvD6ISEdzsB2olgF+UCEG4P8V+KcjM=;
-        b=BebHBhtGHXnEWxKAqkbnqVktdzFgj1EBDPSNPR3seAHaZqjr28bf9i8ZBy92p54CHt
-         xH0bhkLD3ni+/I6V+FfMWUXJrj9/bUk/kW+xCUf8C4jpSEr8otn9UANECpn9mM55KKYw
-         ud+xjsZL8HT0tgTsiBZsOulH9vdKAf5Y5IFaGUcVj32VlJVW5C9UDfPUUsqiNlyPQK8/
-         5uJakP/dPXNQ+eT1CX4AhCDZXdwcFI9y75/ge8EBRyomXK8SjanlXd/dgf7nTS6+f33A
-         unm0Z28xFpuFlmXrK+NPFy3m8atwyJ4uHh48l4SCBOzemiFpcZjq1c6dGTveEzZAz1tW
-         E51w==
+        bh=HhiFdNFA1AvxHIXRV+Ea+j0aqn+GZsJ2TOSw0c41g8A=;
+        b=ZRNmDpPyBuLJnS8gnlu6ALlzCucaz4MHW+7Ajc7k5gWdVsGxIEEPrHe6nOkPjCxhvh
+         Wn/RyVI6tw6MVA5xDplnq3odBp6E4AnNIrPYVWD6RaHgOIou3I7yf2oGky0v51VFfpOD
+         TbiU5+7EskW1aYm1qBfKTQoI6iorhtoUdFih9nVw7C2BBGUGK+CrH1GpBwMeCgfC1AiW
+         YGD++2zwS7BN0nlulBYyWvpYO7aGp1olkEsCQi7W4KMNOxLIZ3cG1y6kDdrUlRoiQR6e
+         OTpd6xcI5c6Zm86Jl14OqgOVtd/Wx41HhV9IMB7Od4VgeZyjUI+8+qWB36YZZGrE38Ce
+         TBfg==
 Content-Disposition: inline
-In-Reply-To: <20140505223557.GU11231-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+In-Reply-To: <5363C04B.4010400-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Rafael J. Wysocki" <rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Sasha Levin <sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+During the recent conversion of cgroup to kernfs, cgroup_tree_mutex
+which nests above both the kernfs s_active protection and cgroup_mutex
+is added to synchronize cgroup file type operations as cgroup_mutex
+needed to be grabbed from some file operations and thus can't be put
+above s_active protection.
 
-So, I apparently missed this one while converting css_set_rwlock to
-css_set_rwsem.  I thought about reverting that change but concluded
-that it'd be better to update locking from cgroup_freezer side.  It
-always bothered me that cgroup_freezer was walking all tasks in cgroup
-sub-hierarchies under IRQ-safe spinlock.  In general, freezer has been
-using way more intricate locking than required for it.
+While this arrangement mostly worked for cgroup, this triggered the
+following lockdep warning.
 
-This patch converts cgroup_freezer to use a shared mutex instead of
-per-cgroup spinlock for locking and fixes the rwsem-from-atomic issue
-at the same time.
+  ======================================================
+  [ INFO: possible circular locking dependency detected ]
+  3.15.0-rc3-next-20140430-sasha-00016-g4e281fa-dirty #429 Tainted: G        W
+  -------------------------------------------------------
+  trinity-c173/9024 is trying to acquire lock:
+  (blkcg_pol_mutex){+.+.+.}, at: blkcg_reset_stats (include/linux/spinlock.h:328 block/blk-cgroup.c:455)
 
-Thanks.
------- 8< ------
-From 77f01328c3e6d1eae95426543e338674e597e06a Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date: Mon, 5 May 2014 18:35:12 -0400
+  but task is already holding lock:
+  (s_active#89){++++.+}, at: kernfs_fop_write (fs/kernfs/file.c:283)
 
-After 96d365e0b86e ("cgroup: make css_set_lock a rwsem and rename it
-to css_set_rwsem"), css task iterators requires sleepable context as
-it may block on css_set_rwsem.  I missed that cgroup_freezer was
-iterating tasks under IRQ-safe spinlock freezer->lock.  This leads to
-errors like the following on freezer state reads and transitions.
+  which lock already depends on the new lock.
 
-  BUG: sleeping function called from invalid context at /work
- /os/work/kernel/locking/rwsem.c:20
-  in_atomic(): 0, irqs_disabled(): 0, pid: 462, name: bash
-  5 locks held by bash/462:
-   #0:  (sb_writers#7){.+.+.+}, at: [<ffffffff811f0843>] vfs_write+0x1a3/0x1c0
-   #1:  (&of->mutex){+.+.+.}, at: [<ffffffff8126d78b>] kernfs_fop_write+0xbb/0x170
-   #2:  (s_active#70){.+.+.+}, at: [<ffffffff8126d793>] kernfs_fop_write+0xc3/0x170
-   #3:  (freezer_mutex){+.+...}, at: [<ffffffff81135981>] freezer_write+0x61/0x1e0
-   #4:  (rcu_read_lock){......}, at: [<ffffffff81135973>] freezer_write+0x53/0x1e0
-  Preemption disabled at:[<ffffffff81104404>] console_unlock+0x1e4/0x460
 
-  CPU: 3 PID: 462 Comm: bash Not tainted 3.15.0-rc1-work+ #10
-  Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
-   ffff88000916a6d0 ffff88000e0a3da0 ffffffff81cf8c96 0000000000000000
-   ffff88000e0a3dc8 ffffffff810cf4f2 ffffffff82388040 ffff880013aaf740
-   0000000000000002 ffff88000e0a3de8 ffffffff81d05974 0000000000000246
+  the existing dependency chain (in reverse order) is:
+
+  -> #2 (s_active#89){++++.+}:
+  lock_acquire (arch/x86/include/asm/current.h:14 kernel/locking/lockdep.c:3602)
+  __kernfs_remove (arch/x86/include/asm/atomic.h:27 fs/kernfs/dir.c:352 fs/kernfs/dir.c:1024)
+  kernfs_remove_by_name_ns (fs/kernfs/dir.c:1219)
+  cgroup_addrm_files (include/linux/kernfs.h:427 kernel/cgroup.c:1074 kernel/cgroup.c:2899)
+  cgroup_clear_dir (kernel/cgroup.c:1092 (discriminator 2))
+  rebind_subsystems (kernel/cgroup.c:1144)
+  cgroup_setup_root (kernel/cgroup.c:1568)
+  cgroup_mount (kernel/cgroup.c:1716)
+  mount_fs (fs/super.c:1094)
+  vfs_kern_mount (fs/namespace.c:899)
+  do_mount (fs/namespace.c:2238 fs/namespace.c:2561)
+  SyS_mount (fs/namespace.c:2758 fs/namespace.c:2729)
+  tracesys (arch/x86/kernel/entry_64.S:746)
+
+  -> #1 (cgroup_tree_mutex){+.+.+.}:
+  lock_acquire (arch/x86/include/asm/current.h:14 kernel/locking/lockdep.c:3602)
+  mutex_lock_nested (kernel/locking/mutex.c:486 kernel/locking/mutex.c:587)
+  cgroup_add_cftypes (include/linux/list.h:76 kernel/cgroup.c:3040)
+  blkcg_policy_register (block/blk-cgroup.c:1106)
+  throtl_init (block/blk-throttle.c:1694)
+  do_one_initcall (init/main.c:789)
+  kernel_init_freeable (init/main.c:854 init/main.c:863 init/main.c:882 init/main.c:1003)
+  kernel_init (init/main.c:935)
+  ret_from_fork (arch/x86/kernel/entry_64.S:552)
+
+  -> #0 (blkcg_pol_mutex){+.+.+.}:
+  __lock_acquire (kernel/locking/lockdep.c:1840 kernel/locking/lockdep.c:1945 kernel/locking/lockdep.c:2131 kernel/locking/lockdep.c:3182)
+  lock_acquire (arch/x86/include/asm/current.h:14 kernel/locking/lockdep.c:3602)
+  mutex_lock_nested (kernel/locking/mutex.c:486 kernel/locking/mutex.c:587)
+  blkcg_reset_stats (include/linux/spinlock.h:328 block/blk-cgroup.c:455)
+  cgroup_file_write (kernel/cgroup.c:2714)
+  kernfs_fop_write (fs/kernfs/file.c:295)
+  vfs_write (fs/read_write.c:532)
+  SyS_write (fs/read_write.c:584 fs/read_write.c:576)
+  tracesys (arch/x86/kernel/entry_64.S:746)
+
+  other info that might help us debug this:
+
+  Chain exists of:
+  blkcg_pol_mutex --> cgroup_tree_mutex --> s_active#89
+
+   Possible unsafe locking scenario:
+
+	 CPU0                    CPU1
+	 ----                    ----
+    lock(s_active#89);
+				 lock(cgroup_tree_mutex);
+				 lock(s_active#89);
+    lock(blkcg_pol_mutex);
+
+   *** DEADLOCK ***
+
+  4 locks held by trinity-c173/9024:
+  #0: (&f->f_pos_lock){+.+.+.}, at: __fdget_pos (fs/file.c:714)
+  #1: (sb_writers#18){.+.+.+}, at: vfs_write (include/linux/fs.h:2255 fs/read_write.c:530)
+  #2: (&of->mutex){+.+.+.}, at: kernfs_fop_write (fs/kernfs/file.c:283)
+  #3: (s_active#89){++++.+}, at: kernfs_fop_write (fs/kernfs/file.c:283)
+
+  stack backtrace:
+  CPU: 3 PID: 9024 Comm: trinity-c173 Tainted: G        W     3.15.0-rc3-next-20140430-sasha-00016-g4e281fa-dirty #429
+   ffffffff919687b0 ffff8805f6373bb8 ffffffff8e52cdbb 0000000000000002
+   ffffffff919d8400 ffff8805f6373c08 ffffffff8e51fb88 0000000000000004
+   ffff8805f6373c98 ffff8805f6373c08 ffff88061be70d98 ffff88061be70dd0
   Call Trace:
-   [<ffffffff81cf8c96>] dump_stack+0x4e/0x7a
-   [<ffffffff810cf4f2>] __might_sleep+0x162/0x260
-   [<ffffffff81d05974>] down_read+0x24/0x60
-   [<ffffffff81133e87>] css_task_iter_start+0x27/0x70
-   [<ffffffff8113584d>] freezer_apply_state+0x5d/0x130
-   [<ffffffff81135a16>] freezer_write+0xf6/0x1e0
-   [<ffffffff8112eb88>] cgroup_file_write+0xd8/0x230
-   [<ffffffff8126d7b7>] kernfs_fop_write+0xe7/0x170
-   [<ffffffff811f0756>] vfs_write+0xb6/0x1c0
-   [<ffffffff811f121d>] SyS_write+0x4d/0xc0
-   [<ffffffff81d08292>] system_call_fastpath+0x16/0x1b
+  dump_stack (lib/dump_stack.c:52)
+  print_circular_bug (kernel/locking/lockdep.c:1216)
+  __lock_acquire (kernel/locking/lockdep.c:1840 kernel/locking/lockdep.c:1945 kernel/locking/lockdep.c:2131 kernel/locking/lockdep.c:3182)
+  lock_acquire (arch/x86/include/asm/current.h:14 kernel/locking/lockdep.c:3602)
+  mutex_lock_nested (kernel/locking/mutex.c:486 kernel/locking/mutex.c:587)
+  blkcg_reset_stats (include/linux/spinlock.h:328 block/blk-cgroup.c:455)
+  cgroup_file_write (kernel/cgroup.c:2714)
+  kernfs_fop_write (fs/kernfs/file.c:295)
+  vfs_write (fs/read_write.c:532)
+  SyS_write (fs/read_write.c:584 fs/read_write.c:576)
 
-freezer->lock used to be used in hot paths but that time is long gone
-and there's no reason for the lock to be IRQ-safe spinlock or even
-per-cgroup.  In fact, given the fact that a cgroup may contain large
-number of tasks, it's not a good idea to iterate over them while
-holding IRQ-safe spinlock.
+This is a highly unlikely but valid circular dependency between "echo
+1 > blkcg.reset_stats" and cfq module [un]loading.  cgroup is going
+through further locking update which will remove this complication but
+for now let's use trylock on blkcg_pol_mutex and retry the file
+operation if the trylock fails.
 
-Let's simplify locking by replacing per-cgroup freezer->lock with
-global freezer_mutex.  This also makes the comments explaining the
-intricacies of policy inheritance and the locking around it as the
-states are protected by a common mutex.
-
-The conversion is mostly straight-forward.  The followings are worth
-mentioning.
-
-* freezer_css_online() no longer needs double locking.
-
-* freezer_attach() now performs propagation simply while holding
-  freezer_mutex.  update_if_frozen() race no longer exists and the
-  comment is removed.
-
-* freezer_fork() now tests whether the task is in root cgroup using
-  the new task_css_is_root() without doing rcu_read_lock/unlock().  If
-  not, it grabs freezer_mutex and performs the operation.
-
-* freezer_read() and freezer_change_state() grab freezer_mutex across
-  the whole operation and pin the css while iterating so that each
-  descendant processing happens in sleepable context.
-
-Fixes: 96d365e0b86e ("cgroup: make css_set_lock a rwsem and rename it to css_set_rwsem")
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Reported-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+References: http://lkml.kernel.org/g/5363C04B.4010400-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
 ---
- kernel/cgroup_freezer.c | 112 ++++++++++++++++++++----------------------------
- 1 file changed, 46 insertions(+), 66 deletions(-)
+ block/blk-cgroup.c |   15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/kernel/cgroup_freezer.c b/kernel/cgroup_freezer.c
-index 2bc4a22..12ead0b 100644
---- a/kernel/cgroup_freezer.c
-+++ b/kernel/cgroup_freezer.c
-@@ -21,6 +21,7 @@
- #include <linux/uaccess.h>
- #include <linux/freezer.h>
- #include <linux/seq_file.h>
-+#include <linux/mutex.h>
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index e4a4145..1039fb9 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -451,7 +451,20 @@ static int blkcg_reset_stats(struct cgroup_subsys_state *css,
+ 	struct blkcg_gq *blkg;
+ 	int i;
  
- /*
-  * A cgroup is freezing if any FREEZING flags are set.  FREEZING_SELF is
-@@ -42,9 +43,10 @@ enum freezer_state_flags {
- struct freezer {
- 	struct cgroup_subsys_state	css;
- 	unsigned int			state;
--	spinlock_t			lock;
- };
- 
-+static DEFINE_MUTEX(freezer_mutex);
-+
- static inline struct freezer *css_freezer(struct cgroup_subsys_state *css)
- {
- 	return css ? container_of(css, struct freezer, css) : NULL;
-@@ -93,7 +95,6 @@ freezer_css_alloc(struct cgroup_subsys_state *parent_css)
- 	if (!freezer)
- 		return ERR_PTR(-ENOMEM);
- 
--	spin_lock_init(&freezer->lock);
- 	return &freezer->css;
- }
- 
-@@ -110,14 +111,7 @@ static int freezer_css_online(struct cgroup_subsys_state *css)
- 	struct freezer *freezer = css_freezer(css);
- 	struct freezer *parent = parent_freezer(freezer);
- 
--	/*
--	 * The following double locking and freezing state inheritance
--	 * guarantee that @cgroup can never escape ancestors' freezing
--	 * states.  See css_for_each_descendant_pre() for details.
--	 */
--	if (parent)
--		spin_lock_irq(&parent->lock);
--	spin_lock_nested(&freezer->lock, SINGLE_DEPTH_NESTING);
-+	mutex_lock(&freezer_mutex);
- 
- 	freezer->state |= CGROUP_FREEZER_ONLINE;
- 
-@@ -126,10 +120,7 @@ static int freezer_css_online(struct cgroup_subsys_state *css)
- 		atomic_inc(&system_freezing_cnt);
- 	}
- 
--	spin_unlock(&freezer->lock);
--	if (parent)
--		spin_unlock_irq(&parent->lock);
--
-+	mutex_unlock(&freezer_mutex);
- 	return 0;
- }
- 
-@@ -144,14 +135,14 @@ static void freezer_css_offline(struct cgroup_subsys_state *css)
- {
- 	struct freezer *freezer = css_freezer(css);
- 
--	spin_lock_irq(&freezer->lock);
-+	mutex_lock(&freezer_mutex);
- 
- 	if (freezer->state & CGROUP_FREEZING)
- 		atomic_dec(&system_freezing_cnt);
- 
- 	freezer->state = 0;
- 
--	spin_unlock_irq(&freezer->lock);
-+	mutex_unlock(&freezer_mutex);
- }
- 
- static void freezer_css_free(struct cgroup_subsys_state *css)
-@@ -175,7 +166,7 @@ static void freezer_attach(struct cgroup_subsys_state *new_css,
- 	struct task_struct *task;
- 	bool clear_frozen = false;
- 
--	spin_lock_irq(&freezer->lock);
-+	mutex_lock(&freezer_mutex);
+-	mutex_lock(&blkcg_pol_mutex);
++	/*
++	 * XXX: We invoke cgroup_add/rm_cftypes() under blkcg_pol_mutex
++	 * which ends up putting cgroup's internal cgroup_tree_mutex under
++	 * it; however, cgroup_tree_mutex is nested above cgroup file
++	 * active protection and grabbing blkcg_pol_mutex from a cgroup
++	 * file operation creates a possible circular dependency.  cgroup
++	 * internal locking is planned to go through further simplification
++	 * and this issue should go away soon.  For now, let's trylock
++	 * blkcg_pol_mutex and restart the write on failure.
++	 *
++	 * http://lkml.kernel.org/g/5363C04B.4010400-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
++	 */
++	if (!mutex_trylock(&blkcg_pol_mutex))
++		return restart_syscall();
+ 	spin_lock_irq(&blkcg->lock);
  
  	/*
- 	 * Make the new tasks conform to the current state of @new_css.
-@@ -197,21 +188,13 @@ static void freezer_attach(struct cgroup_subsys_state *new_css,
- 		}
- 	}
- 
--	spin_unlock_irq(&freezer->lock);
--
--	/*
--	 * Propagate FROZEN clearing upwards.  We may race with
--	 * update_if_frozen(), but as long as both work bottom-up, either
--	 * update_if_frozen() sees child's FROZEN cleared or we clear the
--	 * parent's FROZEN later.  No parent w/ !FROZEN children can be
--	 * left FROZEN.
--	 */
-+	/* propagate FROZEN clearing upwards */
- 	while (clear_frozen && (freezer = parent_freezer(freezer))) {
--		spin_lock_irq(&freezer->lock);
- 		freezer->state &= ~CGROUP_FROZEN;
- 		clear_frozen = freezer->state & CGROUP_FREEZING;
--		spin_unlock_irq(&freezer->lock);
- 	}
-+
-+	mutex_unlock(&freezer_mutex);
- }
- 
- /**
-@@ -228,9 +211,6 @@ static void freezer_fork(struct task_struct *task)
- {
- 	struct freezer *freezer;
- 
--	rcu_read_lock();
--	freezer = task_freezer(task);
--
- 	/*
- 	 * The root cgroup is non-freezable, so we can skip locking the
- 	 * freezer.  This is safe regardless of race with task migration.
-@@ -238,24 +218,18 @@ static void freezer_fork(struct task_struct *task)
- 	 * to do.  If we lost and root is the new cgroup, noop is still the
- 	 * right thing to do.
- 	 */
--	if (!parent_freezer(freezer))
--		goto out;
-+	if (task_css_is_root(task, freezer_cgrp_id))
-+		return;
- 
--	/*
--	 * Grab @freezer->lock and freeze @task after verifying @task still
--	 * belongs to @freezer and it's freezing.  The former is for the
--	 * case where we have raced against task migration and lost and
--	 * @task is already in a different cgroup which may not be frozen.
--	 * This isn't strictly necessary as freeze_task() is allowed to be
--	 * called spuriously but let's do it anyway for, if nothing else,
--	 * documentation.
--	 */
--	spin_lock_irq(&freezer->lock);
--	if (freezer == task_freezer(task) && (freezer->state & CGROUP_FREEZING))
-+	mutex_lock(&freezer_mutex);
-+	rcu_read_lock();
-+
-+	freezer = task_freezer(task);
-+	if (freezer->state & CGROUP_FREEZING)
- 		freeze_task(task);
--	spin_unlock_irq(&freezer->lock);
--out:
-+
- 	rcu_read_unlock();
-+	mutex_unlock(&freezer_mutex);
- }
- 
- /**
-@@ -281,22 +255,22 @@ static void update_if_frozen(struct cgroup_subsys_state *css)
- 	struct css_task_iter it;
- 	struct task_struct *task;
- 
--	WARN_ON_ONCE(!rcu_read_lock_held());
--
--	spin_lock_irq(&freezer->lock);
-+	lockdep_assert_held(&freezer_mutex);
- 
- 	if (!(freezer->state & CGROUP_FREEZING) ||
- 	    (freezer->state & CGROUP_FROZEN))
--		goto out_unlock;
-+		return;
- 
- 	/* are all (live) children frozen? */
-+	rcu_read_lock();
- 	css_for_each_child(pos, css) {
- 		struct freezer *child = css_freezer(pos);
- 
- 		if ((child->state & CGROUP_FREEZER_ONLINE) &&
- 		    !(child->state & CGROUP_FROZEN))
--			goto out_unlock;
-+			return;
- 	}
-+	rcu_read_unlock();
- 
- 	/* are all tasks frozen? */
- 	css_task_iter_start(css, &it);
-@@ -317,21 +291,29 @@ static void update_if_frozen(struct cgroup_subsys_state *css)
- 	freezer->state |= CGROUP_FROZEN;
- out_iter_end:
- 	css_task_iter_end(&it);
--out_unlock:
--	spin_unlock_irq(&freezer->lock);
- }
- 
- static int freezer_read(struct seq_file *m, void *v)
- {
- 	struct cgroup_subsys_state *css = seq_css(m), *pos;
- 
-+	mutex_lock(&freezer_mutex);
- 	rcu_read_lock();
- 
- 	/* update states bottom-up */
--	css_for_each_descendant_post(pos, css)
-+	css_for_each_descendant_post(pos, css) {
-+		if (!css_tryget(pos))
-+			continue;
-+		rcu_read_unlock();
-+
- 		update_if_frozen(pos);
- 
-+		rcu_read_lock();
-+		css_put(pos);
-+	}
-+
- 	rcu_read_unlock();
-+	mutex_unlock(&freezer_mutex);
- 
- 	seq_puts(m, freezer_state_strs(css_freezer(css)->state));
- 	seq_putc(m, '\n');
-@@ -373,7 +355,7 @@ static void freezer_apply_state(struct freezer *freezer, bool freeze,
- 				unsigned int state)
- {
- 	/* also synchronizes against task migration, see freezer_attach() */
--	lockdep_assert_held(&freezer->lock);
-+	lockdep_assert_held(&freezer_mutex);
- 
- 	if (!(freezer->state & CGROUP_FREEZER_ONLINE))
- 		return;
-@@ -414,31 +396,29 @@ static void freezer_change_state(struct freezer *freezer, bool freeze)
- 	 * descendant will try to inherit its parent's FREEZING state as
- 	 * CGROUP_FREEZING_PARENT.
- 	 */
-+	mutex_lock(&freezer_mutex);
- 	rcu_read_lock();
- 	css_for_each_descendant_pre(pos, &freezer->css) {
- 		struct freezer *pos_f = css_freezer(pos);
- 		struct freezer *parent = parent_freezer(pos_f);
- 
--		spin_lock_irq(&pos_f->lock);
-+		if (!css_tryget(pos))
-+			continue;
-+		rcu_read_unlock();
- 
--		if (pos_f == freezer) {
-+		if (pos_f == freezer)
- 			freezer_apply_state(pos_f, freeze,
- 					    CGROUP_FREEZING_SELF);
--		} else {
--			/*
--			 * Our update to @parent->state is already visible
--			 * which is all we need.  No need to lock @parent.
--			 * For more info on synchronization, see
--			 * freezer_post_create().
--			 */
-+		else
- 			freezer_apply_state(pos_f,
- 					    parent->state & CGROUP_FREEZING,
- 					    CGROUP_FREEZING_PARENT);
--		}
- 
--		spin_unlock_irq(&pos_f->lock);
-+		rcu_read_lock();
-+		css_put(pos);
- 	}
- 	rcu_read_unlock();
-+	mutex_unlock(&freezer_mutex);
- }
- 
- static int freezer_write(struct cgroup_subsys_state *css, struct cftype *cft,
--- 
-1.9.0
