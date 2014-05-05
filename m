@@ -1,147 +1,132 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH 2/2] mm/memcontrol.c: introduce helper
- mem_cgroup_zoneinfo_zone()
-Date: Mon, 5 May 2014 17:35:19 +0200
-Message-ID: <20140505153519.GE32598@dhcp22.suse.cz>
-References: <1397862103-31982-1-git-send-email-nasa4836@gmail.com>
- <20140422095923.GD29311@dhcp22.suse.cz>
- <20140428150426.GB24807@dhcp22.suse.cz>
- <20140501125450.GA23420@cmpxchg.org>
- <20140502150516.d42792bad53d86fb727816bd@linux-foundation.org>
- <20140502232908.GQ23420@cmpxchg.org>
- <20140502233138.GR23420@cmpxchg.org>
+From: Aristeu Rozanski <aris@redhat.com>
+Subject: [PATCH v3] device_cgroup: check if exception removal is allowed
+Date: Mon, 5 May 2014 11:18:59 -0400
+Message-ID: <20140505151858.GL29214@redhat.com>
+References: <20140424193254.GR29214@redhat.com>
+ <20140502152930.GF10204@htj.dyndns.org>
+ <20140505151431.GK29214@redhat.com>
+ <20140505151621.GJ11231@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <stable-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20140502233138.GR23420@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20140505151621.GJ11231@htj.dyndns.org>
+Sender: stable-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jianyu Zhan <nasa4836@gmail.com>, bsingharora@gmail.com, kamezawa.hiroyu@jp.fujitsu.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.com
+To: Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org, Serge Hallyn <serge.hallyn@canonical.com>, Li Zefan <lizefan@huawei.com>, stable@vger.kernel.org
 
-On Fri 02-05-14 19:31:38, Johannes Weiner wrote:
-> While in that area, I noticed that the soft limit tree updaters don't
-> actually use the memcg argument anymore...
-> 
-> ---
-> From: Johannes Weiner <hannes@cmpxchg.org>
-> Subject: [patch] mm: memcontrol: remove unnecessary memcg argument from soft
->  limit functions
-> 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+[PATCH v3 1/2] device_cgroup: check if exception removal is allowed
 
-Acked-by: Michal Hocko <mhocko@suse.cz>
+When the device cgroup hierarchy was introduced in
+	bd2953ebbb53 - devcg: propagate local changes down the hierarchy
 
-> ---
->  mm/memcontrol.c | 34 ++++++++++++++--------------------
->  1 file changed, 14 insertions(+), 20 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 83cbd5a0e62f..3381f76df084 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -714,11 +714,9 @@ soft_limit_tree_from_page(struct page *page)
->  	return &soft_limit_tree.rb_tree_per_node[nid]->rb_tree_per_zone[zid];
->  }
->  
-> -static void
-> -__mem_cgroup_insert_exceeded(struct mem_cgroup *memcg,
-> -				struct mem_cgroup_per_zone *mz,
-> -				struct mem_cgroup_tree_per_zone *mctz,
-> -				unsigned long long new_usage_in_excess)
-> +static void __mem_cgroup_insert_exceeded(struct mem_cgroup_per_zone *mz,
-> +					 struct mem_cgroup_tree_per_zone *mctz,
-> +					 unsigned long long new_usage_in_excess)
->  {
->  	struct rb_node **p = &mctz->rb_root.rb_node;
->  	struct rb_node *parent = NULL;
-> @@ -748,10 +746,8 @@ __mem_cgroup_insert_exceeded(struct mem_cgroup *memcg,
->  	mz->on_tree = true;
->  }
->  
-> -static void
-> -__mem_cgroup_remove_exceeded(struct mem_cgroup *memcg,
-> -				struct mem_cgroup_per_zone *mz,
-> -				struct mem_cgroup_tree_per_zone *mctz)
-> +static void __mem_cgroup_remove_exceeded(struct mem_cgroup_per_zone *mz,
-> +					 struct mem_cgroup_tree_per_zone *mctz)
->  {
->  	if (!mz->on_tree)
->  		return;
-> @@ -759,13 +755,11 @@ __mem_cgroup_remove_exceeded(struct mem_cgroup *memcg,
->  	mz->on_tree = false;
->  }
->  
-> -static void
-> -mem_cgroup_remove_exceeded(struct mem_cgroup *memcg,
-> -				struct mem_cgroup_per_zone *mz,
-> -				struct mem_cgroup_tree_per_zone *mctz)
-> +static void mem_cgroup_remove_exceeded(struct mem_cgroup_per_zone *mz,
-> +				       struct mem_cgroup_tree_per_zone *mctz)
->  {
->  	spin_lock(&mctz->lock);
-> -	__mem_cgroup_remove_exceeded(memcg, mz, mctz);
-> +	__mem_cgroup_remove_exceeded(mz, mctz);
->  	spin_unlock(&mctz->lock);
->  }
->  
-> @@ -792,12 +786,12 @@ static void mem_cgroup_update_tree(struct mem_cgroup *memcg, struct page *page)
->  			spin_lock(&mctz->lock);
->  			/* if on-tree, remove it */
->  			if (mz->on_tree)
-> -				__mem_cgroup_remove_exceeded(memcg, mz, mctz);
-> +				__mem_cgroup_remove_exceeded(mz, mctz);
->  			/*
->  			 * Insert again. mz->usage_in_excess will be updated.
->  			 * If excess is 0, no tree ops.
->  			 */
-> -			__mem_cgroup_insert_exceeded(memcg, mz, mctz, excess);
-> +			__mem_cgroup_insert_exceeded(mz, mctz, excess);
->  			spin_unlock(&mctz->lock);
->  		}
->  	}
-> @@ -813,7 +807,7 @@ static void mem_cgroup_remove_from_trees(struct mem_cgroup *memcg)
->  		for (zid = 0; zid < MAX_NR_ZONES; zid++) {
->  			mz = &memcg->nodeinfo[nid]->zoneinfo[zid];
->  			mctz = soft_limit_tree_node_zone(nid, zid);
-> -			mem_cgroup_remove_exceeded(memcg, mz, mctz);
-> +			mem_cgroup_remove_exceeded(mz, mctz);
->  		}
->  	}
->  }
-> @@ -836,7 +830,7 @@ retry:
->  	 * we will to add it back at the end of reclaim to its correct
->  	 * position in the tree.
->  	 */
-> -	__mem_cgroup_remove_exceeded(mz->memcg, mz, mctz);
-> +	__mem_cgroup_remove_exceeded(mz, mctz);
->  	if (!res_counter_soft_limit_excess(&mz->memcg->res) ||
->  		!css_tryget(&mz->memcg->css))
->  		goto retry;
-> @@ -4694,7 +4688,7 @@ unsigned long mem_cgroup_soft_limit_reclaim(struct zone *zone, int order,
->  					break;
->  			} while (1);
->  		}
-> -		__mem_cgroup_remove_exceeded(mz->memcg, mz, mctz);
-> +		__mem_cgroup_remove_exceeded(mz, mctz);
->  		excess = res_counter_soft_limit_excess(&mz->memcg->res);
->  		/*
->  		 * One school of thought says that we should not add
-> @@ -4705,7 +4699,7 @@ unsigned long mem_cgroup_soft_limit_reclaim(struct zone *zone, int order,
->  		 * term TODO.
->  		 */
->  		/* If excess == 0, no tree ops */
-> -		__mem_cgroup_insert_exceeded(mz->memcg, mz, mctz, excess);
-> +		__mem_cgroup_insert_exceeded(mz, mctz, excess);
->  		spin_unlock(&mctz->lock);
->  		css_put(&mz->memcg->css);
->  		loop++;
-> -- 
-> 1.9.2
-> 
+a specific case was overlooked. Consider the hierarchy bellow:
 
--- 
-Michal Hocko
-SUSE Labs
+	A	default policy: ALLOW, exceptions will deny access
+	 \
+	  B	default policy: ALLOW, exceptions will deny access
+
+There's no need to verify when an new exception is added to B because
+in this case exceptions will deny access to further devices, which is
+always fine. Hierarchy in device cgroup only makes sure B won't have
+more access than A.
+
+But when an exception is removed (by writing devices.allow), it isn't
+checked if the user is in fact removing an inherited exception from A,
+thus giving more access to B.
+
+Example:
+
+	# echo 'a' >A/devices.allow
+	# echo 'c 1:3 rw' >A/devices.deny
+	# echo $$ >A/B/tasks
+	# echo >/dev/null
+	-bash: /dev/null: Operation not permitted
+	# echo 'c 1:3 w' >A/B/devices.allow
+	# echo >/dev/null
+	#
+
+This shouldn't be allowed and this patch fixes it by making sure to never allow
+exceptions in this case to be removed if the exception is partially or fully
+present on the parent.
+
+v3: missing '*' in function description
+v2: improved log message and formatting fixes
+
+Cc: cgroups@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Serge Hallyn <serge.hallyn@canonical.com>
+Cc: Li Zefan <lizefan@huawei.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Aristeu Rozanski <arozansk@redhat.com>
+---
+ security/device_cgroup.c |   41 ++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 38 insertions(+), 3 deletions(-)
+
+--- github.orig/security/device_cgroup.c	2014-05-05 10:42:39.588430715 -0400
++++ github/security/device_cgroup.c	2014-05-05 11:17:35.408486409 -0400
+@@ -464,6 +464,37 @@ static int parent_has_perm(struct dev_cg
+ }
+ 
+ /**
++ * parent_allows_removal - verify if it's ok to remove an exception
++ * @childcg: child cgroup from where the exception will be removed
++ * @ex: exception being removed
++ *
++ * When removing an exception in cgroups with default ALLOW policy, it must
++ * be checked if removing it will give the child cgroup more access than the
++ * parent.
++ *
++ * Return: true if it's ok to remove exception, false otherwise
++ */
++static bool parent_allows_removal(struct dev_cgroup *childcg,
++				  struct dev_exception_item *ex)
++{
++	struct dev_cgroup *parent = css_to_devcgroup(css_parent(&childcg->css));
++
++	if (!parent)
++		return true;
++
++	/* It's always allowed to remove access to devices */
++	if (childcg->behavior == DEVCG_DEFAULT_DENY)
++		return true;
++
++	/*
++	 * Make sure you're not removing part or a whole exception existing in
++	 * the parent cgroup
++	 */
++	return !match_exception_partial(&parent->exceptions, ex->type,
++					ex->major, ex->minor, ex->access);
++}
++
++/**
+  * may_allow_all - checks if it's possible to change the behavior to
+  *		   allow based on parent's rules.
+  * @parent: device cgroup's parent
+@@ -698,17 +729,21 @@ 		case '\0':
+ 
+ 	switch (filetype) {
+ 	case DEVCG_ALLOW:
+-		if (!parent_has_perm(devcgroup, &ex))
+-			return -EPERM;
+ 		/*
+ 		 * If the default policy is to allow by default, try to remove
+ 		 * an matching exception instead. And be silent about it: we
+ 		 * don't want to break compatibility
+ 		 */
+ 		if (devcgroup->behavior == DEVCG_DEFAULT_ALLOW) {
++			/* Check if the parent allows removing it first */
++			if (!parent_allows_removal(devcgroup, &ex))
++				return -EPERM;
+ 			dev_exception_rm(devcgroup, &ex);
+-			return 0;
++			break;
+ 		}
++
++		if (!parent_has_perm(devcgroup, &ex))
++			return -EPERM;
+ 		rc = dev_exception_add(devcgroup, &ex);
+ 		break;
+ 	case DEVCG_DENY:
