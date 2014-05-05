@@ -1,63 +1,139 @@
-From: Raghavendra KT <raghavendra.kt.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.15] cgroup: implement unified hierarchy
-Date: Mon, 5 May 2014 22:07:47 +0530
-Message-ID: <CAC4Lta1rmtXeFBAJB_YA8wS9BHqkMSLAsV6q=obf_aQ--aud-Q@mail.gmail.com>
-References: <1395974461-12735-1-git-send-email-tj@kernel.org>
-	<20140414154556.GA9552@redhat.com>
-	<20140414175236.GB15249@htj.dyndns.org>
-	<CAC4Lta0qd2vW4ENSOpzK+0i06MorzfmsZZZuW9xUtpZ_gWA9gA@mail.gmail.com>
-	<20140502151250.GB10204@htj.dyndns.org>
+From: Serge Hallyn <serge.hallyn@ubuntu.com>
+Subject: Re: [PATCH v3] device_cgroup: check if exception removal is allowed
+Date: Mon, 5 May 2014 18:46:23 +0000
+Message-ID: <20140505184623.GC6068@ubuntumail>
+References: <20140424193254.GR29214@redhat.com>
+ <20140502152930.GF10204@htj.dyndns.org>
+ <20140505151431.GK29214@redhat.com>
+ <20140505151621.GJ11231@htj.dyndns.org>
+ <20140505151858.GL29214@redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=kkhPSI9JxJ0Wd5brJ3PJtz8tPxSqgSK4MLrkOYNIfw0=;
-        b=jQAcG9/Rr1i1bR19YVgylrbB+aJDPBx1P6Fj50zYamV2xzfM3u/m9a327ie482FR1R
-         hDwQlZ9hwQkvxDEP+a1AMH+N92GvmMCA2jXmt6mNrvq3z9v6qhAq46aIhb4qNU0EEXYb
-         NDfd24g80PnjIEOO/RLlrRdha5LwFUz+OPG9jse3Fx+47B6weAsKzpcfHM4cGyOHJFon
-         a13M9Sw0XddoMoTzKLiDLaXRZKlvwP0zZvGH9AYNRZW8rIsZtKADk8om1Hx8DJxHh70h
-         rHv6+grwORDK68w8Xh5E5AczokSDv60uKP5ba+dXDuAgGdU2Vp1Tw52uTcwn1fEyIBBv
-         stTw==
-In-Reply-To: <20140502151250.GB10204-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140505151858.GL29214@redhat.com>
+Sender: stable-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Aristeu Rozanski <aris@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Serge Hallyn <serge.hallyn@canonical.com>, Li Zefan <lizefan@huawei.com>, stable@vger.kernel.org
 
-On 5/2/14, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> Hello,
->
-> On Wed, Apr 30, 2014 at 04:27:51PM +0530, Raghavendra KT wrote:
-[...]
->> Because all the way along, though we have freedom to make the cpusets
->> exclusive and move tasks (say VMs) into them,
->> making sure they do not interfere with each other, we can not prevent
->> the other tasks spawned in a system eating into cpus of
->> exclusive cpuset since they go to root automatically.
->
-> I believe the right thing to do would be starting / confining other
-> tasks in the appropriate non-root cgroups.  cgroup already provides
-> mechanisms to achieve that.  The rest is upto userland.
->
+Quoting Aristeu Rozanski (aris@redhat.com):
+> [PATCH v3 1/2] device_cgroup: check if exception removal is allowed
+> 
+> When the device cgroup hierarchy was introduced in
+> 	bd2953ebbb53 - devcg: propagate local changes down the hierarchy
+> 
+> a specific case was overlooked. Consider the hierarchy bellow:
+> 
+> 	A	default policy: ALLOW, exceptions will deny access
+> 	 \
+> 	  B	default policy: ALLOW, exceptions will deny access
+> 
+> There's no need to verify when an new exception is added to B because
+> in this case exceptions will deny access to further devices, which is
+> always fine. Hierarchy in device cgroup only makes sure B won't have
+> more access than A.
+> 
+> But when an exception is removed (by writing devices.allow), it isn't
+> checked if the user is in fact removing an inherited exception from A,
+> thus giving more access to B.
+> 
+> Example:
+> 
+> 	# echo 'a' >A/devices.allow
+> 	# echo 'c 1:3 rw' >A/devices.deny
+> 	# echo $$ >A/B/tasks
+> 	# echo >/dev/null
+> 	-bash: /dev/null: Operation not permitted
+> 	# echo 'c 1:3 w' >A/B/devices.allow
+> 	# echo >/dev/null
+> 	#
+> 
+> This shouldn't be allowed and this patch fixes it by making sure to never allow
+> exceptions in this case to be removed if the exception is partially or fully
+> present on the parent.
+> 
+> v3: missing '*' in function description
+> v2: improved log message and formatting fixes
+> 
+> Cc: cgroups@vger.kernel.org
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Serge Hallyn <serge.hallyn@canonical.com>
 
-Thanks Tejun for the reply. I agree.
+(stared at this for quite some time, looks good, thanks :)
 
->> Do you think having a knob, to make sure new tasks spawned go to say a
->> default  directory under root makes sense?
->>
->>  I understand that we could easily have a userspace script which could
->> achieve intended goal, but kernel solution
->>  would really make the exclusive cpusets have exclusive access to cpus
->> it should have.
->
-> This would just be a more reliable implementation of an ad-hoc
-> mechanism when it can already be properly achieved by managing cgroups
-> of all processes in the system.
+Acked-by: Serge E. Hallyn <serge.hallyn@ubuntu.com>
 
-Correct. Perhaps your answer clears my dilemma to go for a userspace
-since I donot have any strong reason except convenience to go for a
-kernel solution.
+> Cc: Li Zefan <lizefan@huawei.com>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Aristeu Rozanski <arozansk@redhat.com>
+> ---
+>  security/device_cgroup.c |   41 ++++++++++++++++++++++++++++++++++++++---
+>  1 file changed, 38 insertions(+), 3 deletions(-)
+> 
+> --- github.orig/security/device_cgroup.c	2014-05-05 10:42:39.588430715 -0400
+> +++ github/security/device_cgroup.c	2014-05-05 11:17:35.408486409 -0400
+> @@ -464,6 +464,37 @@ static int parent_has_perm(struct dev_cg
+>  }
+>  
+>  /**
+> + * parent_allows_removal - verify if it's ok to remove an exception
+> + * @childcg: child cgroup from where the exception will be removed
+> + * @ex: exception being removed
+> + *
+> + * When removing an exception in cgroups with default ALLOW policy, it must
+> + * be checked if removing it will give the child cgroup more access than the
+> + * parent.
+> + *
+> + * Return: true if it's ok to remove exception, false otherwise
+> + */
+> +static bool parent_allows_removal(struct dev_cgroup *childcg,
+> +				  struct dev_exception_item *ex)
+> +{
+> +	struct dev_cgroup *parent = css_to_devcgroup(css_parent(&childcg->css));
+> +
+> +	if (!parent)
+> +		return true;
+> +
+> +	/* It's always allowed to remove access to devices */
+> +	if (childcg->behavior == DEVCG_DEFAULT_DENY)
+> +		return true;
+> +
+> +	/*
+> +	 * Make sure you're not removing part or a whole exception existing in
+> +	 * the parent cgroup
+> +	 */
+> +	return !match_exception_partial(&parent->exceptions, ex->type,
+> +					ex->major, ex->minor, ex->access);
+> +}
+> +
+> +/**
+>   * may_allow_all - checks if it's possible to change the behavior to
+>   *		   allow based on parent's rules.
+>   * @parent: device cgroup's parent
+> @@ -698,17 +729,21 @@ 		case '\0':
+>  
+>  	switch (filetype) {
+>  	case DEVCG_ALLOW:
+> -		if (!parent_has_perm(devcgroup, &ex))
+> -			return -EPERM;
+>  		/*
+>  		 * If the default policy is to allow by default, try to remove
+>  		 * an matching exception instead. And be silent about it: we
+>  		 * don't want to break compatibility
+>  		 */
+>  		if (devcgroup->behavior == DEVCG_DEFAULT_ALLOW) {
+> +			/* Check if the parent allows removing it first */
+> +			if (!parent_allows_removal(devcgroup, &ex))
+> +				return -EPERM;
+>  			dev_exception_rm(devcgroup, &ex);
+> -			return 0;
+> +			break;
+>  		}
+> +
+> +		if (!parent_has_perm(devcgroup, &ex))
+> +			return -EPERM;
+>  		rc = dev_exception_add(devcgroup, &ex);
+>  		break;
+>  	case DEVCG_DENY:
