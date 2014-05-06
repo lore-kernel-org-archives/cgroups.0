@@ -1,59 +1,82 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/4] cgroup: only allow space as the separator for "cgroup.subtree_control"
-Date: Tue,  6 May 2014 07:50:42 -0400
-Message-ID: <1399377044-29873-3-git-send-email-tj@kernel.org>
-References: <1399377044-29873-1-git-send-email-tj@kernel.org>
+Subject: [PATCHSET cgroup/for-3.16] cgroup: implement cftype->write()
+Date: Tue,  6 May 2014 08:44:21 -0400
+Message-ID: <1399380266-3324-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=mJXEscHiUIYYaMNMVTfRtU/uQqQlcmqzbLty5xBRfJM=;
-        b=0pYaKVXNEoT8l66mdP0HJ42UNllpxLeLKQiszdLGfyxe+bOxcfzt1W1+kV/o1Jjt6i
-         JXR+L/4c1CY4pB8ZZFXwqPmoz6w3LxVyKRugUbqnzXdubzMXp7mwj9qTeyXrd+83LdbV
-         h+gF9Uls7uI3tuK0NXUOsJKUZFqr0gUpHjT/2ced5LLM1t2t1p9rEnw9DOY5SktVLyhy
-         6H0wDjNfjSj/UM2tqsKHYidmBllkzMZV0QJcVAImUSTMqOXF16lHJprXj3dLidV2mikM
-         muN6wZ/BPAKZpoxxljaLukHKhcQhaOLgJWXbJvoTuPJdpdmnKUOllrUQDU12THXVbYJB
-         o2Ww==
-In-Reply-To: <1399377044-29873-1-git-send-email-tj@kernel.org>
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=P92hPbgTKR2VH+SLwLX7r5FBSZ1HmKU2z+bcU6FTtHw=;
+        b=sleiuEpVZ7hCqj3HmR/76NXt3AFT47x/p9MSPMuSEsoy5Fgmz+Kc/QlbgvHwoMrDTU
+         O4Whlg0svIy2pX0Y7puuKNgO19n1BMNyElZE0tw4Nfn0m5cW3FHdPkWbTp5kHN9tNtlk
+         Uhd9llY279cFc4ehiuF1ELKcHwCVthXIzrn6/l/nquDTm1ISoFiMf/aWZKMvnX9Oq15R
+         uRGkvcajT7mQgAsUY3kGxkuEvpUzOJLCbcu4+h1X3ilcdeJQJwu8P3MQqsooM3md9OmG
+         96tyZINv/2192/XxPCkICA2TMZhaKfF033RfLNi2Wnwb/m/1eFi0tQlCfLyJvhavVDiT
+         wvyQ==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, vgoyal@redhat.com, axboe@kernel.dk, hannes@cmpxchg.org, mhocko@suse.cz, arozansk@redhat.com
 
-I was confused that strsep() was equivalent to strtok_r() in skipping
-over consecutive delimiters.  strsep() just splits at the first
-occurrence of one of the delimiters which makes the parsing very
-inflexible, which makes allowing multiple whitespace chars as
-delimters kinda moot.  Let's just be consistently strict and require
-list of tokens separated by a single space.  This is what
-Documentation/cgroups/unified-hierarchy.txt describes too.
+Hello,
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- kernel/cgroup.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+This patchset implements a new cftype operation ->write() and replace
+->write_string() and ->trigger() with it.  ->write() is similar to
+->write_string() but maps directly to the kernfs write operation and
+has access to all available context information including the
+associated kernfs_open_file, which will make things like implementing
+kernfs active protection manipulation easier.
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 54fd12d..9066fe9 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -2542,11 +2542,11 @@ static int cgroup_subtree_control_write(struct cgroup_subsys_state *dummy_css,
- 	int ssid, ret;
- 
- 	/*
--	 * Parse input - white space separated list of subsystem names
--	 * prefixed with either + or -.
-+	 * Parse input - space separated list of subsystem names prefixed
-+	 * with either + or -.
- 	 */
- 	p = buffer;
--	while ((tok = strsep(&p, " \t\n"))) {
-+	while ((tok = strsep(&p, " "))) {
- 		for_each_subsys(ss, ssid) {
- 			if (ss->disabled || strcmp(tok + 1, ss->name))
- 				continue;
--- 
-1.9.0
+->write_string() becomes redundant and ->trigger() has always been
+spurious.  This patch replaces all users of the two methods to
+->write() and remove them.
+
+This patchset contains the following five patches.
+
+ 0001-cgroup-implement-cftype-write.patch
+ 0002-cgroup-replace-cftype-write_string-with-cftype-write.patch
+ 0003-cgroup-replace-cftype-trigger-with-cftype-write.patch
+ 0004-cgroup-convert-tasks-and-cgroup.procs-handle-to-use-.patch
+ 0005-cgroup-remove-cgroup-control_kn.patch
+
+0001 implements cftype->write().
+
+0002-0003 replace cftype->write_string() and ->trigger() with it.
+
+0004 convert "tasks" and "cgroup.procs" handler too.
+
+0005 removes cgroup->control_kn as the kernfs_node is now directly
+accessible from kernfs_open_file.
+
+This patchset is on top of
+
+  cgroup/for-3.16 12d3089c192c ("kernel/cpuset.c: convert printk to pr_foo()")
++ [1] [PATCHSET cgroup/for-3.16] cgroup: post unified hierarchy fixes and updates
+
+and available on the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-post-unified-updates
+
+diffstat follows.
+
+ block/blk-throttle.c      |   32 ++++++++---------
+ block/cfq-iosched.c       |   28 +++++++--------
+ include/linux/cgroup.h    |   40 +++++++++++----------
+ kernel/cgroup.c           |   85 +++++++++++++++++++++++-----------------------
+ kernel/cgroup_freezer.c   |   20 ++++------
+ kernel/cpuset.c           |   16 ++++----
+ mm/hugetlb_cgroup.c       |   33 +++++++++--------
+ mm/memcontrol.c           |   80 +++++++++++++++++++++++--------------------
+ net/ipv4/tcp_memcontrol.c |   31 +++++++++-------
+ security/device_cgroup.c  |   14 +++----
+ 10 files changed, 197 insertions(+), 182 deletions(-)
+
+Thanks.
+
+--
+tejun
+
+[1] http://lkml.kernel.org/g/1399377044-29873-1-git-send-email-tj@kernel.org
