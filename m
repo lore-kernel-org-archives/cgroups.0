@@ -1,95 +1,122 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCHSET cgroup/for-3.16] cgroup: remove cgroup_tree_mutex
-Date: Tue,  6 May 2014 16:19:26 -0400
-Message-ID: <1399407574-21472-1-git-send-email-tj@kernel.org>
+Subject: [PATCH 2/8] cgroup: collapse cgroup_create() into croup_mkdir()
+Date: Tue,  6 May 2014 16:19:28 -0400
+Message-ID: <1399407574-21472-3-git-send-email-tj@kernel.org>
+References: <1399407574-21472-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id;
-        bh=fKz9Ee3N7vq+zpUOHo3xf2itKqVGMJwZeUgknUrO6jA=;
-        b=ZMTgZroCDs6ibUR8NlinvFGpOHgh7NOPJivktqR+UOOAEutQnooB8V+qlQ4rr4i3f3
-         o9WliAEXasAh31qudZ0Oha7/khTNXVD5HYHKVJ3CPF0LxbvyLhrn/em5sILd17qVe8DU
-         tURQjkYEpLkV38pt4f5/8DIRre7hpPKwK3q0Nwf3WyPp28BjSQ/QrDwyhTSQAV0/oxKD
-         VFUJS+pvtRYDMK1V6nOm04RtMzSidbb7Y7gu7TDa032nX7PH+41eF71lQaV0aYcc0uJ7
-         Z2ZjHaN+3d4Pc5xbdoCu8Tbylp6bIexIHgDm4Mg9vR4ReMdSaqAlvSwVI94eQpJQMM1v
-         RqEQ==
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=kP2HiM1OZvZvIKYZzBvrhtNC5OS2MHuwLLkQpquMLOA=;
+        b=cLgy16yXWzwF7yK7v4PP1bpJQz7whUFkT/hFq4z6d6kdm2cc5GZFaSkrp9qSBT3G4v
+         vGYnXVkTY4d6rxnX2fiFflDZFKyCRwvh+dGGrPPaPp/meC5SwXSFNEaSk5mjHPu0O1rC
+         8/VXyU/onEq6iqPEGrQISF+r6Z74ILz0vFbZVyZODI08w7eijkbNZB+X9ZlH16NEuCO0
+         VFQhhuSGnM90jq8q1JBUb2pglcFyuSl7NQS4xP6058Ibl+Ae68qHsGvrzAjpIcXINhuK
+         VAEASo6GmOLaEunM1MK0TPOWeB60w6i+u55l0uvKI3xvW5DtyHRMyhBGamwmCScvw6rX
+         0IBQ==
+In-Reply-To: <1399407574-21472-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-Hello,
+cgroup_mkdir() is the sole user of cgroup_create().  Let's collapse
+the latter into the former.  This will help simplifying locking.
+While at it, remove now stale comment about inode locking.
 
-cgroup_tree_mutex was introduced during kernfs conversion to work
-around the cyclic locking dependency between kernfs active protection
-and cgroup_mutex.  Some file and directory operations need to acquire
-cgroup_mutex which puts the mutex under the kernfs active protection;
-however, cgroup also needs to access the hierarchy and the registered
-cftypes to detemine which files to remove, which obviously can't be
-done while holding cgroup_mutex anymore.
+This patch doesn't introduce any functional changes.
 
-cgroup_tree_mutex nests above both cgroup_mutex and kernfs active
-protection and protects hierarchy and cftypes so that those file
-operations can be performed while holding it without cgroup_mutex.
-This works but is kinda cumbersome as most places end up taking both
-cgroup_tree_mutex and cgroup_mutex and there's on-going friction on
-what needs to be protected by which combination.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ kernel/cgroup.c | 52 +++++++++++++---------------------------------------
+ 1 file changed, 13 insertions(+), 39 deletions(-)
 
-Furthermore, due to new requirements from subtree_control
-implementations, kernfs ended up growing full-blown mechanism to
-bypass active protection instead of just supporting self-removal and
-cgroup ended up using both mechanisms - two layered mutexes and active
-protection bypss - on different areas, which is totally unncessary.
-
-This patchset converts everything over to kernfs active protection
-bypass and drops cgroup_tree_mutex making cgroup locking noticeably
-simpler.  It contains the following eight patches.
-
- 0001-cgroup-reorganize-cgroup_create.patch
- 0002-cgroup-collapse-cgroup_create-into-croup_mkdir.patch
- 0003-cgroup-grab-cgroup_mutex-earlier-in-cgroup_subtree_c.patch
- 0004-cgroup-move-cgroup-kn-priv-clearing-to-cgroup_rmdir.patch
- 0005-cgroup-factor-out-cgroup_kn_lock_live-and-cgroup_kn_.patch
- 0006-cgroup-use-cgroup_kn_lock_live-in-other-cgroup-kernf.patch
- 0007-cgroup-nest-kernfs-active-protection-under-cgroup_mu.patch
- 0008-cgroup-remove-cgroup_tree_mutex.patch
-
-0001-0004 reorganize various kernfs handling paths so that they are
-more uniform in terms of active protection handling.
-
-0005 factors out two locking helpers - cgroup_kn_lock_live() and
-cgroup_kn_unlock() - which handle both kernfs active protection bypass
-and locking.
-
-0006 applies it to other kernfs method implementations which were
-grabbing cgroup_mutex under active protection.
-
-0007 reverses the locking dependency between cgroup_mutex and kernfs
-active protection so that the latter nests under the former, making
-cgroup_mutex equivalent to cgroup_tree_mutex.
-
-0008 removes cgroup_tree_mutex.
-
-This patchset is on top of
-
-  cgroup/for-3.16 12d3089c192c ("kernel/cpuset.c: convert printk to pr_foo()")
-+ [1] [PATCHSET cgroup/for-3.16] cgroup: post unified hierarchy fixes and updates
-+ [2] [PATCHSET cgroup/for-3.16] cgroup: implement cftype->write()
-
-and is available in the following git branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-kill-tree_mutex
-
-diffstat follows.  Thanks.
-
- kernel/cgroup.c |  385 +++++++++++++++++++++++---------------------------------
- 1 file changed, 163 insertions(+), 222 deletions(-)
-
---
-tejun
-
-[1] http://lkml.kernel.org/g/1399377044-29873-1-git-send-email-tj@kernel.org
-[2] http://lkml.kernel.org/g/1399380266-3324-1-git-send-email-tj@kernel.org
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 4d58229..69c0ed9 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -4236,30 +4236,24 @@ err_free_css:
+ 	return err;
+ }
+ 
+-/**
+- * cgroup_create - create a cgroup
+- * @parent: cgroup that will be parent of the new cgroup
+- * @name: name of the new cgroup
+- * @mode: mode to set on new cgroup
+- */
+-static long cgroup_create(struct cgroup *parent, const char *name,
+-			  umode_t mode)
++static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
++			umode_t mode)
+ {
+-	struct cgroup *cgrp;
++	struct cgroup *parent = parent_kn->priv, *cgrp;
+ 	struct cgroup_root *root = parent->root;
+-	int ssid, ret;
+ 	struct cgroup_subsys *ss;
+ 	struct kernfs_node *kn;
+-
+-	mutex_lock(&cgroup_tree_mutex);
++	int ssid, ret;
+ 
+ 	/*
+-	 * Only live parents can have children.  Note that the liveliness
+-	 * check isn't strictly necessary because cgroup_mkdir() and
+-	 * cgroup_rmdir() are fully synchronized by i_mutex; however, do it
+-	 * anyway so that locking is contained inside cgroup proper and we
+-	 * don't get nasty surprises if we ever grow another caller.
++	 * cgroup_mkdir() grabs cgroup_tree_mutex which nests outside
++	 * kernfs active_ref and cgroup_create() already synchronizes
++	 * properly against removal through cgroup_lock_live_group().
++	 * Break it before calling cgroup_create().
+ 	 */
++	cgroup_get(parent);
++	kernfs_break_active_protection(parent_kn);
++	mutex_lock(&cgroup_tree_mutex);
+ 	if (!cgroup_lock_live_group(parent)) {
+ 		ret = -ENODEV;
+ 		goto out_unlock_tree;
+@@ -4358,6 +4352,8 @@ out_unlock:
+ 	mutex_unlock(&cgroup_mutex);
+ out_unlock_tree:
+ 	mutex_unlock(&cgroup_tree_mutex);
++	kernfs_unbreak_active_protection(parent_kn);
++	cgroup_put(parent);
+ 	return ret;
+ 
+ out_destroy:
+@@ -4365,28 +4361,6 @@ out_destroy:
+ 	goto out_unlock;
+ }
+ 
+-static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
+-			umode_t mode)
+-{
+-	struct cgroup *parent = parent_kn->priv;
+-	int ret;
+-
+-	/*
+-	 * cgroup_create() grabs cgroup_tree_mutex which nests outside
+-	 * kernfs active_ref and cgroup_create() already synchronizes
+-	 * properly against removal through cgroup_lock_live_group().
+-	 * Break it before calling cgroup_create().
+-	 */
+-	cgroup_get(parent);
+-	kernfs_break_active_protection(parent_kn);
+-
+-	ret = cgroup_create(parent, name, mode);
+-
+-	kernfs_unbreak_active_protection(parent_kn);
+-	cgroup_put(parent);
+-	return ret;
+-}
+-
+ /*
+  * This is called when the refcnt of a css is confirmed to be killed.
+  * css_tryget() is now guaranteed to fail.
+-- 
+1.9.0
