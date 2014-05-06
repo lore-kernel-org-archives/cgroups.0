@@ -1,82 +1,56 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCHSET cgroup/for-3.16] cgroup: implement cftype->write()
-Date: Tue,  6 May 2014 08:44:21 -0400
-Message-ID: <1399380266-3324-1-git-send-email-tj@kernel.org>
+Subject: [PATCH 4/4] cgroup: use release_agent_path_lock in cgroup_release_agent_show()
+Date: Tue,  6 May 2014 07:50:44 -0400
+Message-ID: <1399377044-29873-5-git-send-email-tj@kernel.org>
+References: <1399377044-29873-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id;
-        bh=P92hPbgTKR2VH+SLwLX7r5FBSZ1HmKU2z+bcU6FTtHw=;
-        b=sleiuEpVZ7hCqj3HmR/76NXt3AFT47x/p9MSPMuSEsoy5Fgmz+Kc/QlbgvHwoMrDTU
-         O4Whlg0svIy2pX0Y7puuKNgO19n1BMNyElZE0tw4Nfn0m5cW3FHdPkWbTp5kHN9tNtlk
-         Uhd9llY279cFc4ehiuF1ELKcHwCVthXIzrn6/l/nquDTm1ISoFiMf/aWZKMvnX9Oq15R
-         uRGkvcajT7mQgAsUY3kGxkuEvpUzOJLCbcu4+h1X3ilcdeJQJwu8P3MQqsooM3md9OmG
-         96tyZINv/2192/XxPCkICA2TMZhaKfF033RfLNi2Wnwb/m/1eFi0tQlCfLyJvhavVDiT
-         wvyQ==
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=1bPYtvX20j7w0fr/ijILVAzVwJAaQiq+CFn/GmslBIU=;
+        b=qUwWFTIGlkKoepuAqbFrDZb5bViCQrjeTHFXUFExPReUqfmvqJuBoX1yABWBaj3Syv
+         vNTPLVQIsUINeUA5WoAijrHjUYBiDgFAQq27Rfh3xUyHn2cfOau+1n5HPRjQCn3QyVaH
+         g4PNn+YiUZcJvMdJjmGXjpqpjAjC3XMunLW7VjRNKLx4G75yTq99new1xWA5C6kTYLpd
+         pRqwy2yDxFe6J7ktzHfE4w9KOnVmn1PxewuqRpJPVaW6zutgxFSoi2gh6LeJ5BUIv7hx
+         BdOAXDezTubOPcrEXSYludFIJK0CA0QhOA+JnCT5PSv3Y7G6HTGUncWuGGro233zUbWH
+         xLag==
+In-Reply-To: <1399377044-29873-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, vgoyal@redhat.com, axboe@kernel.dk, hannes@cmpxchg.org, mhocko@suse.cz, arozansk@redhat.com
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-Hello,
+release_path is now protected by release_agent_path_lock to allow
+accessing it without grabbing cgroup_mutex; however,
+cgroup_release_agent_show() was still grabbing cgroup_mutex.  Let's
+convert it to release_agent_path_lock so that we don't have to worry
+about this one for the planned locking updates.
 
-This patchset implements a new cftype operation ->write() and replace
-->write_string() and ->trigger() with it.  ->write() is similar to
-->write_string() but maps directly to the kernfs write operation and
-has access to all available context information including the
-associated kernfs_open_file, which will make things like implementing
-kernfs active protection manipulation easier.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ kernel/cgroup.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-->write_string() becomes redundant and ->trigger() has always been
-spurious.  This patch replaces all users of the two methods to
-->write() and remove them.
-
-This patchset contains the following five patches.
-
- 0001-cgroup-implement-cftype-write.patch
- 0002-cgroup-replace-cftype-write_string-with-cftype-write.patch
- 0003-cgroup-replace-cftype-trigger-with-cftype-write.patch
- 0004-cgroup-convert-tasks-and-cgroup.procs-handle-to-use-.patch
- 0005-cgroup-remove-cgroup-control_kn.patch
-
-0001 implements cftype->write().
-
-0002-0003 replace cftype->write_string() and ->trigger() with it.
-
-0004 convert "tasks" and "cgroup.procs" handler too.
-
-0005 removes cgroup->control_kn as the kernfs_node is now directly
-accessible from kernfs_open_file.
-
-This patchset is on top of
-
-  cgroup/for-3.16 12d3089c192c ("kernel/cpuset.c: convert printk to pr_foo()")
-+ [1] [PATCHSET cgroup/for-3.16] cgroup: post unified hierarchy fixes and updates
-
-and available on the following git branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-post-unified-updates
-
-diffstat follows.
-
- block/blk-throttle.c      |   32 ++++++++---------
- block/cfq-iosched.c       |   28 +++++++--------
- include/linux/cgroup.h    |   40 +++++++++++----------
- kernel/cgroup.c           |   85 +++++++++++++++++++++++-----------------------
- kernel/cgroup_freezer.c   |   20 ++++------
- kernel/cpuset.c           |   16 ++++----
- mm/hugetlb_cgroup.c       |   33 +++++++++--------
- mm/memcontrol.c           |   80 +++++++++++++++++++++++--------------------
- net/ipv4/tcp_memcontrol.c |   31 +++++++++-------
- security/device_cgroup.c  |   14 +++----
- 10 files changed, 197 insertions(+), 182 deletions(-)
-
-Thanks.
-
---
-tejun
-
-[1] http://lkml.kernel.org/g/1399377044-29873-1-git-send-email-tj@kernel.org
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 3ced79a..57c2021 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -2373,11 +2373,10 @@ static int cgroup_release_agent_show(struct seq_file *seq, void *v)
+ {
+ 	struct cgroup *cgrp = seq_css(seq)->cgroup;
+ 
+-	if (!cgroup_lock_live_group(cgrp))
+-		return -ENODEV;
++	spin_lock(&release_agent_path_lock);
+ 	seq_puts(seq, cgrp->root->release_agent_path);
++	spin_unlock(&release_agent_path_lock);
+ 	seq_putc(seq, '\n');
+-	mutex_unlock(&cgroup_mutex);
+ 	return 0;
+ }
+ 
+-- 
+1.9.0
