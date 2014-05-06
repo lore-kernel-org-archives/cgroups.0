@@ -1,96 +1,83 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 3/4] cgroup: use restart_syscall() for retries after offline waits in cgroup_subtree_control_write()
-Date: Tue,  6 May 2014 07:50:43 -0400
-Message-ID: <1399377044-29873-4-git-send-email-tj@kernel.org>
-References: <1399377044-29873-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 5/5] cgroup: remove cgroup->control_kn
+Date: Tue,  6 May 2014 08:44:26 -0400
+Message-ID: <1399380266-3324-6-git-send-email-tj@kernel.org>
+References: <1399380266-3324-1-git-send-email-tj@kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=hnFZa8EQQlLs9+Eh8IFTtel+xeP7bZCiWLK1MbMm7IY=;
-        b=xpPGpKyjEGOulIuvqPhJb+J6AILHUw3FQVf+m3vIDi6N1E0HZ406L3HkP8MJvmouWs
-         WHk3SXD8j6ldHpEQzfXNpI7SAzgiKy7lBLZzt/Hvrbn10f38kWewZCIy3MWshQsycLtF
-         WjR5vJcgCwf+B7ijomW/X0PN83cO/sP5oJV274GkK33jAiYNgEO2S3Jb/Se/SuAib5KT
-         h8aC7OiE6ll8224EreoExAUvQq/vbfJucwYAv2Ehov6Ffg2+QtyiDjHyI/2QUpbbxmvg
-         S0nh2PfXZ+7dj0zb86HbVA+pjxHQNtQ7xvPnpbfZf6vJgycvCJP+tnB8PZrDjn9h21Ks
-         HYMA==
-In-Reply-To: <1399377044-29873-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=pNFWHMxjg0Tap7BOCCl3r9cmHu9HLskeLzYuhvEwOWM=;
+        b=aqfEtPbViN/ElpbVAwmSmh4B5mLSS0HBocvckovXzd5Fb69F4ZnkVYsU3m0gBHl4j1
+         mIUVoqUOwgJ8wmt9oOXGjKsMBKh8rVca5C3SE8oW3bIsWWkrQCYPoiScJ/ZBvmJyqyHb
+         bpDWFIJ2sPBIQiNn/00Yjz7FADIjJR8kwL73VSsydfrdDiWfy2WW+psWNus6lAvwSa3q
+         h8v+/U2A6Ewr7DG9Xb8BSCeycLqRsonKDIqecsTrnu/iggQdyh+Y8zSIbPjIwjS8sIky
+         a01hv0FTpJm18pTsGpRrdjguO5rAZAWqS5ITe+Tw57YFa0BRwGQHsoI2vV3I5LRzU7OC
+         12GA==
+In-Reply-To: <1399380266-3324-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-After waiting for a child to finish offline,
-cgroup_subtree_control_write() jumps up to retry from after the input
-parsing and active protection breaking.  This retry makes the
-scheduled locking update more difficult.  Let's simplify it by
-returning with restart_syscall() for retries.
+Now that cgroup_subtree_control_write() has access to the associated
+kernfs_open_file and thus the kernfs_node, there's no need to cache it
+in cgroup->control_kn on creation.  Remove cgroup->control_kn and use
+@of->kn directly.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- kernel/cgroup.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ include/linux/cgroup.h | 1 -
+ kernel/cgroup.c        | 8 +++-----
+ 2 files changed, 3 insertions(+), 6 deletions(-)
 
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index f8cfadb..037fa80 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -179,7 +179,6 @@ struct cgroup {
+ 
+ 	struct cgroup *parent;		/* my parent */
+ 	struct kernfs_node *kn;		/* cgroup kernfs entry */
+-	struct kernfs_node *control_kn;	/* kn for "cgroup.subtree_control" */
+ 	struct kernfs_node *populated_kn; /* kn for "cgroup.subtree_populated" */
+ 
+ 	/*
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 9066fe9..3ced79a 100644
+index 06ad484..eeb4b62 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -2535,7 +2535,7 @@ out_finish:
- static int cgroup_subtree_control_write(struct cgroup_subsys_state *dummy_css,
- 					struct cftype *cft, char *buffer)
- {
--	unsigned int enable_req = 0, disable_req = 0, enable, disable;
-+	unsigned int enable = 0, disable = 0;
- 	struct cgroup *cgrp = dummy_css->cgroup, *child;
- 	struct cgroup_subsys *ss;
- 	char *tok, *p;
-@@ -2552,11 +2552,11 @@ static int cgroup_subtree_control_write(struct cgroup_subsys_state *dummy_css,
- 				continue;
- 
- 			if (*tok == '+') {
--				enable_req |= 1 << ssid;
--				disable_req &= ~(1 << ssid);
-+				enable |= 1 << ssid;
-+				disable &= ~(1 << ssid);
- 			} else if (*tok == '-') {
--				disable_req |= 1 << ssid;
--				enable_req &= ~(1 << ssid);
-+				disable |= 1 << ssid;
-+				enable &= ~(1 << ssid);
- 			} else {
- 				return -EINVAL;
- 			}
-@@ -2574,9 +2574,6 @@ static int cgroup_subtree_control_write(struct cgroup_subsys_state *dummy_css,
+@@ -2578,7 +2578,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 	 * active_ref protection.
  	 */
  	cgroup_get(cgrp);
- 	kernfs_break_active_protection(cgrp->control_kn);
--retry:
--	enable = enable_req;
--	disable = disable_req;
+-	kernfs_break_active_protection(cgrp->control_kn);
++	kernfs_break_active_protection(of->kn);
  
  	mutex_lock(&cgroup_tree_mutex);
  
-@@ -2606,7 +2603,9 @@ retry:
- 				schedule();
- 				finish_wait(&child->offline_waitq, &wait);
- 				cgroup_put(child);
--				goto retry;
-+
-+				ret = restart_syscall();
-+				goto out_unbreak;
- 			}
- 
- 			/* unavailable or not enabled on the parent? */
-@@ -2690,6 +2689,7 @@ out_unlock:
- 	mutex_unlock(&cgroup_mutex);
+@@ -2695,7 +2695,7 @@ out_unlock:
  out_unlock_tree:
  	mutex_unlock(&cgroup_tree_mutex);
-+out_unbreak:
- 	kernfs_unbreak_active_protection(cgrp->control_kn);
+ out_unbreak:
+-	kernfs_unbreak_active_protection(cgrp->control_kn);
++	kernfs_unbreak_active_protection(of->kn);
  	cgroup_put(cgrp);
- 	return ret;
+ 	return ret ?: nbytes;
+ 
+@@ -2885,9 +2885,7 @@ static int cgroup_add_file(struct cgroup *cgrp, struct cftype *cft)
+ 		return ret;
+ 	}
+ 
+-	if (cft->seq_show == cgroup_subtree_control_show)
+-		cgrp->control_kn = kn;
+-	else if (cft->seq_show == cgroup_populated_show)
++	if (cft->seq_show == cgroup_populated_show)
+ 		cgrp->populated_kn = kn;
+ 	return 0;
+ }
 -- 
 1.9.0
