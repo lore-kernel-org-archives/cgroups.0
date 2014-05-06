@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/8] cgroup: collapse cgroup_create() into croup_mkdir()
-Date: Tue,  6 May 2014 16:19:28 -0400
-Message-ID: <1399407574-21472-3-git-send-email-tj@kernel.org>
+Subject: [PATCH 1/8] cgroup: reorganize cgroup_create()
+Date: Tue,  6 May 2014 16:19:27 -0400
+Message-ID: <1399407574-21472-2-git-send-email-tj@kernel.org>
 References: <1399407574-21472-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=kP2HiM1OZvZvIKYZzBvrhtNC5OS2MHuwLLkQpquMLOA=;
-        b=cLgy16yXWzwF7yK7v4PP1bpJQz7whUFkT/hFq4z6d6kdm2cc5GZFaSkrp9qSBT3G4v
-         vGYnXVkTY4d6rxnX2fiFflDZFKyCRwvh+dGGrPPaPp/meC5SwXSFNEaSk5mjHPu0O1rC
-         8/VXyU/onEq6iqPEGrQISF+r6Z74ILz0vFbZVyZODI08w7eijkbNZB+X9ZlH16NEuCO0
-         VFQhhuSGnM90jq8q1JBUb2pglcFyuSl7NQS4xP6058Ibl+Ae68qHsGvrzAjpIcXINhuK
-         VAEASo6GmOLaEunM1MK0TPOWeB60w6i+u55l0uvKI3xvW5DtyHRMyhBGamwmCScvw6rX
-         0IBQ==
+        bh=E52svHjwCFsRQh5i9JVwOOwaqvD5FGK/Yb3kMGhaCXA=;
+        b=eF03hZja6ACSQi5C2zosBdqZjhB2WeJe6kP+5OhtHIzpjvOd/7bvBXHBrq4UOqPP5j
+         lWE94o77ZPiKxbRegVwkRkjXBHz8/1vtWVkmk/QT3a55mzAqMIq1fk6mMytaO+jHBv09
+         /LhUQt3c+ojl3IgcRLbgjgeU4ouMmc7oMO27w2vmovUqT9NV0stTWSqBMN9reQjkshiu
+         +cqTQvlp5MS3SG53kWjHakn17hDhNozuFwJ2pszlCECs7+LXtydQIa/4eadayFjauGWb
+         kdWb9X2px4YbVayG2BeeZxgX43dp1wI+eSKKnDp/04IIwUsG3cEgtCMip0pjG3Xxw7NM
+         4jMg==
 In-Reply-To: <1399407574-21472-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,100 +23,163 @@ Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-cgroup_mkdir() is the sole user of cgroup_create().  Let's collapse
-the latter into the former.  This will help simplifying locking.
-While at it, remove now stale comment about inode locking.
+Reorganize cgroup_create() so that all paths share unlock out path.
 
-This patch doesn't introduce any functional changes.
+* All err_* labels are renamed to out_* as they're now shared by both
+  success and failure paths.
+
+* @err renamed to @ret for the similar reason as above and so that
+  it's more consistent with other functions.
+
+* cgroup memory allocation moved after locking so that freeing failed
+  cgroup happens before unlocking.  While this moves more code inside
+  critical section, memory allocations inside cgroup locking are
+  already pretty common and this is unlikely to make any noticeable
+  difference.
+
+* While at it, replace a stray @parent->root dereference with @root.
+
+This reorganization will help simplifying locking.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/cgroup.c | 52 +++++++++++++---------------------------------------
- 1 file changed, 13 insertions(+), 39 deletions(-)
+ kernel/cgroup.c | 69 ++++++++++++++++++++++++++++-----------------------------
+ 1 file changed, 34 insertions(+), 35 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 4d58229..69c0ed9 100644
+index da493a4..4d58229 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -4236,30 +4236,24 @@ err_free_css:
- 	return err;
- }
- 
--/**
-- * cgroup_create - create a cgroup
-- * @parent: cgroup that will be parent of the new cgroup
-- * @name: name of the new cgroup
-- * @mode: mode to set on new cgroup
-- */
--static long cgroup_create(struct cgroup *parent, const char *name,
--			  umode_t mode)
-+static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
-+			umode_t mode)
+@@ -4247,15 +4247,10 @@ static long cgroup_create(struct cgroup *parent, const char *name,
  {
--	struct cgroup *cgrp;
-+	struct cgroup *parent = parent_kn->priv, *cgrp;
+ 	struct cgroup *cgrp;
  	struct cgroup_root *root = parent->root;
--	int ssid, ret;
+-	int ssid, err;
++	int ssid, ret;
  	struct cgroup_subsys *ss;
  	struct kernfs_node *kn;
+ 
+-	/* allocate the cgroup and its ID, 0 is reserved for the root */
+-	cgrp = kzalloc(sizeof(*cgrp), GFP_KERNEL);
+-	if (!cgrp)
+-		return -ENOMEM;
 -
--	mutex_lock(&cgroup_tree_mutex);
-+	int ssid, ret;
+ 	mutex_lock(&cgroup_tree_mutex);
  
  	/*
--	 * Only live parents can have children.  Note that the liveliness
--	 * check isn't strictly necessary because cgroup_mkdir() and
--	 * cgroup_rmdir() are fully synchronized by i_mutex; however, do it
--	 * anyway so that locking is contained inside cgroup proper and we
--	 * don't get nasty surprises if we ever grow another caller.
-+	 * cgroup_mkdir() grabs cgroup_tree_mutex which nests outside
-+	 * kernfs active_ref and cgroup_create() already synchronizes
-+	 * properly against removal through cgroup_lock_live_group().
-+	 * Break it before calling cgroup_create().
+@@ -4266,8 +4261,15 @@ static long cgroup_create(struct cgroup *parent, const char *name,
+ 	 * don't get nasty surprises if we ever grow another caller.
  	 */
-+	cgroup_get(parent);
-+	kernfs_break_active_protection(parent_kn);
-+	mutex_lock(&cgroup_tree_mutex);
  	if (!cgroup_lock_live_group(parent)) {
- 		ret = -ENODEV;
- 		goto out_unlock_tree;
-@@ -4358,6 +4352,8 @@ out_unlock:
- 	mutex_unlock(&cgroup_mutex);
- out_unlock_tree:
- 	mutex_unlock(&cgroup_tree_mutex);
-+	kernfs_unbreak_active_protection(parent_kn);
-+	cgroup_put(parent);
- 	return ret;
+-		err = -ENODEV;
+-		goto err_unlock_tree;
++		ret = -ENODEV;
++		goto out_unlock_tree;
++	}
++
++	/* allocate the cgroup and its ID, 0 is reserved for the root */
++	cgrp = kzalloc(sizeof(*cgrp), GFP_KERNEL);
++	if (!cgrp) {
++		ret = -ENOMEM;
++		goto out_unlock;
+ 	}
  
- out_destroy:
-@@ -4365,28 +4361,6 @@ out_destroy:
- 	goto out_unlock;
+ 	/*
+@@ -4276,15 +4278,15 @@ static long cgroup_create(struct cgroup *parent, const char *name,
+ 	 */
+ 	cgrp->id = cgroup_idr_alloc(&root->cgroup_idr, NULL, 2, 0, GFP_NOWAIT);
+ 	if (cgrp->id < 0) {
+-		err = -ENOMEM;
+-		goto err_unlock;
++		ret = -ENOMEM;
++		goto out_free_cgrp;
+ 	}
+ 
+ 	init_cgroup_housekeeping(cgrp);
+ 
+ 	cgrp->parent = parent;
+ 	cgrp->dummy_css.parent = &parent->dummy_css;
+-	cgrp->root = parent->root;
++	cgrp->root = root;
+ 
+ 	if (notify_on_release(parent))
+ 		set_bit(CGRP_NOTIFY_ON_RELEASE, &cgrp->flags);
+@@ -4295,8 +4297,8 @@ static long cgroup_create(struct cgroup *parent, const char *name,
+ 	/* create the directory */
+ 	kn = kernfs_create_dir(parent->kn, name, mode, cgrp);
+ 	if (IS_ERR(kn)) {
+-		err = PTR_ERR(kn);
+-		goto err_free_id;
++		ret = PTR_ERR(kn);
++		goto out_free_id;
+ 	}
+ 	cgrp->kn = kn;
+ 
+@@ -4319,20 +4321,20 @@ static long cgroup_create(struct cgroup *parent, const char *name,
+ 	 */
+ 	cgroup_idr_replace(&root->cgroup_idr, cgrp, cgrp->id);
+ 
+-	err = cgroup_kn_set_ugid(kn);
+-	if (err)
+-		goto err_destroy;
++	ret = cgroup_kn_set_ugid(kn);
++	if (ret)
++		goto out_destroy;
+ 
+-	err = cgroup_addrm_files(cgrp, cgroup_base_files, true);
+-	if (err)
+-		goto err_destroy;
++	ret = cgroup_addrm_files(cgrp, cgroup_base_files, true);
++	if (ret)
++		goto out_destroy;
+ 
+ 	/* let's create and online css's */
+ 	for_each_subsys(ss, ssid) {
+ 		if (parent->child_subsys_mask & (1 << ssid)) {
+-			err = create_css(cgrp, ss);
+-			if (err)
+-				goto err_destroy;
++			ret = create_css(cgrp, ss);
++			if (ret)
++				goto out_destroy;
+ 		}
+ 	}
+ 
+@@ -4345,25 +4347,22 @@ static long cgroup_create(struct cgroup *parent, const char *name,
+ 
+ 	kernfs_activate(kn);
+ 
+-	mutex_unlock(&cgroup_mutex);
+-	mutex_unlock(&cgroup_tree_mutex);
+-
+-	return 0;
++	ret = 0;
++	goto out_unlock;
+ 
+-err_free_id:
++out_free_id:
+ 	cgroup_idr_remove(&root->cgroup_idr, cgrp->id);
+-err_unlock:
++out_free_cgrp:
++	kfree(cgrp);
++out_unlock:
+ 	mutex_unlock(&cgroup_mutex);
+-err_unlock_tree:
++out_unlock_tree:
+ 	mutex_unlock(&cgroup_tree_mutex);
+-	kfree(cgrp);
+-	return err;
++	return ret;
+ 
+-err_destroy:
++out_destroy:
+ 	cgroup_destroy_locked(cgrp);
+-	mutex_unlock(&cgroup_mutex);
+-	mutex_unlock(&cgroup_tree_mutex);
+-	return err;
++	goto out_unlock;
  }
  
--static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
--			umode_t mode)
--{
--	struct cgroup *parent = parent_kn->priv;
--	int ret;
--
--	/*
--	 * cgroup_create() grabs cgroup_tree_mutex which nests outside
--	 * kernfs active_ref and cgroup_create() already synchronizes
--	 * properly against removal through cgroup_lock_live_group().
--	 * Break it before calling cgroup_create().
--	 */
--	cgroup_get(parent);
--	kernfs_break_active_protection(parent_kn);
--
--	ret = cgroup_create(parent, name, mode);
--
--	kernfs_unbreak_active_protection(parent_kn);
--	cgroup_put(parent);
--	return ret;
--}
--
- /*
-  * This is called when the refcnt of a css is confirmed to be killed.
-  * css_tryget() is now guaranteed to fail.
+ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
 -- 
 1.9.0
