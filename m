@@ -1,83 +1,108 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 5/5] cgroup: remove cgroup->control_kn
-Date: Tue,  6 May 2014 08:44:26 -0400
-Message-ID: <1399380266-3324-6-git-send-email-tj@kernel.org>
+From: Aristeu Rozanski <arozansk@redhat.com>
+Subject: Re: [PATCH 2/5] cgroup: replace cftype->write_string() with
+ cftype->write()
+Date: Tue, 6 May 2014 08:54:24 -0400
+Message-ID: <20140506125423.GT29214@redhat.com>
 References: <1399380266-3324-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=pNFWHMxjg0Tap7BOCCl3r9cmHu9HLskeLzYuhvEwOWM=;
-        b=aqfEtPbViN/ElpbVAwmSmh4B5mLSS0HBocvckovXzd5Fb69F4ZnkVYsU3m0gBHl4j1
-         mIUVoqUOwgJ8wmt9oOXGjKsMBKh8rVca5C3SE8oW3bIsWWkrQCYPoiScJ/ZBvmJyqyHb
-         bpDWFIJ2sPBIQiNn/00Yjz7FADIjJR8kwL73VSsydfrdDiWfy2WW+psWNus6lAvwSa3q
-         h8v+/U2A6Ewr7DG9Xb8BSCeycLqRsonKDIqecsTrnu/iggQdyh+Y8zSIbPjIwjS8sIky
-         a01hv0FTpJm18pTsGpRrdjguO5rAZAWqS5ITe+Tw57YFa0BRwGQHsoI2vV3I5LRzU7OC
-         12GA==
-In-Reply-To: <1399380266-3324-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+ <1399380266-3324-3-git-send-email-tj@kernel.org>
+Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1399380266-3324-3-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: lizefan@huawei.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, vgoyal@redhat.com, axboe@kernel.dk, hannes@cmpxchg.org, mhocko@suse.cz
 
-Now that cgroup_subtree_control_write() has access to the associated
-kernfs_open_file and thus the kernfs_node, there's no need to cache it
-in cgroup->control_kn on creation.  Remove cgroup->control_kn and use
-@of->kn directly.
+On Tue, May 06, 2014 at 08:44:23AM -0400, Tejun Heo wrote:
+> Convert all cftype->write_string() users to the new cftype->write()
+> which maps directly to kernfs write operation and has full access to
+> kernfs and cgroup contexts.  The conversions are mostly mechanical.
+> 
+> * @css and @cft are accessed using of_css() and of_cft() accessors
+>   respectively instead of being specified as arguments.
+> 
+> * Should return @nbytes on success instead of 0.
+> 
+> * @buf is not trimmed automatically.  Trim if necessary.  Note that
+>   blkcg doesn't need this as blkg_conf_prep() can already handle
+>   whitespaces.
+> 
+> cftype->write_string() has no user left after the conversions and
+> removed.
+> 
+> While at it, remove unnecessary local variable @p in
+> cgroup_subtree_control_write() and stale comment about
+> CGROUP_LOCAL_BUFFER_SIZE in cgroup_freezer.c.
+> 
+> This patch doesn't introduce any visible behavior changes.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Vivek Goyal <vgoyal@redhat.com>
+> Cc: Jens Axboe <axboe@kernel.dk>
+> Cc: Li Zefan <lizefan@huawei.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Michal Hocko <mhocko@suse.cz>
+> Cc: Aristeu Rozanski <arozansk@redhat.com>
+> ---
+>  block/blk-throttle.c      | 32 ++++++++++++++++----------------
+>  block/cfq-iosched.c       | 28 ++++++++++++++--------------
+>  include/linux/cgroup.h    | 10 +---------
+>  kernel/cgroup.c           | 38 +++++++++++++++++++-------------------
+>  kernel/cgroup_freezer.c   | 20 +++++++++-----------
+>  kernel/cpuset.c           | 16 +++++++++-------
+>  mm/hugetlb_cgroup.c       | 17 +++++++++--------
+>  mm/memcontrol.c           | 46 +++++++++++++++++++++++++---------------------
+>  net/ipv4/tcp_memcontrol.c | 16 +++++++++-------
+>  security/device_cgroup.c  | 14 +++++++-------
+>  10 files changed, 118 insertions(+), 119 deletions(-)
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- include/linux/cgroup.h | 1 -
- kernel/cgroup.c        | 8 +++-----
- 2 files changed, 3 insertions(+), 6 deletions(-)
+(...)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index f8cfadb..037fa80 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -179,7 +179,6 @@ struct cgroup {
- 
- 	struct cgroup *parent;		/* my parent */
- 	struct kernfs_node *kn;		/* cgroup kernfs entry */
--	struct kernfs_node *control_kn;	/* kn for "cgroup.subtree_control" */
- 	struct kernfs_node *populated_kn; /* kn for "cgroup.subtree_populated" */
- 
- 	/*
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 06ad484..eeb4b62 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -2578,7 +2578,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 	 * active_ref protection.
- 	 */
- 	cgroup_get(cgrp);
--	kernfs_break_active_protection(cgrp->control_kn);
-+	kernfs_break_active_protection(of->kn);
- 
- 	mutex_lock(&cgroup_tree_mutex);
- 
-@@ -2695,7 +2695,7 @@ out_unlock:
- out_unlock_tree:
- 	mutex_unlock(&cgroup_tree_mutex);
- out_unbreak:
--	kernfs_unbreak_active_protection(cgrp->control_kn);
-+	kernfs_unbreak_active_protection(of->kn);
- 	cgroup_put(cgrp);
- 	return ret ?: nbytes;
- 
-@@ -2885,9 +2885,7 @@ static int cgroup_add_file(struct cgroup *cgrp, struct cftype *cft)
- 		return ret;
- 	}
- 
--	if (cft->seq_show == cgroup_subtree_control_show)
--		cgrp->control_kn = kn;
--	else if (cft->seq_show == cgroup_populated_show)
-+	if (cft->seq_show == cgroup_populated_show)
- 		cgrp->populated_kn = kn;
- 	return 0;
- }
+> diff --git a/security/device_cgroup.c b/security/device_cgroup.c
+> index 8365909..82d6b4f 100644
+> --- a/security/device_cgroup.c
+> +++ b/security/device_cgroup.c
+> @@ -651,27 +651,27 @@ static int devcgroup_update_access(struct dev_cgroup *devcgroup,
+>  	return rc;
+>  }
+>  
+> -static int devcgroup_access_write(struct cgroup_subsys_state *css,
+> -				  struct cftype *cft, char *buffer)
+> +static ssize_t devcgroup_access_write(struct kernfs_open_file *of,
+> +				      char *buf, size_t nbytes, loff_t off)
+>  {
+>  	int retval;
+>  
+>  	mutex_lock(&devcgroup_mutex);
+> -	retval = devcgroup_update_access(css_to_devcgroup(css),
+> -					 cft->private, buffer);
+> +	retval = devcgroup_update_access(css_to_devcgroup(of_css(of)),
+> +					 of_cft(of)->private, strstrip(buf));
+>  	mutex_unlock(&devcgroup_mutex);
+> -	return retval;
+> +	return retval ?: nbytes;
+>  }
+>  
+>  static struct cftype dev_cgroup_files[] = {
+>  	{
+>  		.name = "allow",
+> -		.write_string  = devcgroup_access_write,
+> +		.write = devcgroup_access_write,
+>  		.private = DEVCG_ALLOW,
+>  	},
+>  	{
+>  		.name = "deny",
+> -		.write_string = devcgroup_access_write,
+> +		.write = devcgroup_access_write,
+>  		.private = DEVCG_DENY,
+>  	},
+>  	{
+
+for the device_cgroup part
+Acked-by: Aristeu Rozanski <aris@redhat.com>
+
 -- 
-1.9.0
+Aristeu
