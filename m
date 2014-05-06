@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 4/8] cgroup: move cgroup->kn->priv clearing to cgroup_rmdir()
-Date: Tue,  6 May 2014 16:19:30 -0400
-Message-ID: <1399407574-21472-5-git-send-email-tj@kernel.org>
+Subject: [PATCH 6/8] cgroup: use cgroup_kn_lock_live() in other cgroup kernfs methods
+Date: Tue,  6 May 2014 16:19:32 -0400
+Message-ID: <1399407574-21472-7-git-send-email-tj@kernel.org>
 References: <1399407574-21472-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=CrhjKTaBkBwb/WsGsofmgWLz7DmdPbiQjCY48DHVI/Y=;
-        b=yHfUNsLcNafcRRvaAy3SAhPcTMAigAJmDIdeHmR1SkwEAUvUYY8LEr/0LYxs0x0Bfn
-         w1N9wASk2GHmujzF11QSBP8Zfoe2nIgU5NaXthKbcV4dexNgmBYv2lyK/o3pmZVCdTmf
-         ioR7gJ8rfsHwXu7W2fkqD5pyE7gXZbDNfEJw4r2fja1OgqB/y1uu8xrDIfb26HBOkiAt
-         KYNYUTfxn75IlMHOKe761y+ttpjGCgVaDzkWAv2NWvdmbf0n3h8UYUmCjaxprRjOVb7g
-         M3z/Rfaer7u7KQx8AZjmCFJrPxkG78k2g6h7JSR9WOEq9i2ssaPHOT2n1oryZSLX5vIr
-         ZWuA==
+        bh=bqm6Zyv6nqwMTMdLpYzcH5eJtHsWSD2dsxJ96S002+Q=;
+        b=mgunGyZ3BVUMNW2f5DDEvEhe9jYItZJxOqvaKDRB6hY1IdJaCiiU7IC1MHOi73ZdQN
+         SNZot5pGTZcXYhm2vQs7gJuCFg2t3/Xk10F7xZdTA9IC8TWGJ7ljPkq0jbzEhEe0bC0J
+         K0766FB0G1JW0APDyNw8xLtLYPucSGHPNon/08Xf/Viggjn7tPK4igCpRYpRltOTVMRd
+         WLF6QrgF7MxRRCMoXz60dw4/7OpU+w5NzNE20h6RxRJxn7eEuznu4Fr2HTDHM15fcfe6
+         kMih8GmnotjxuHKuuzaie0BNJ8iwY0K/Q8Wu4i+SPZojPJB3a8k6B3vGuayG8whH3va5
+         fQxw==
 In-Reply-To: <1399407574-21472-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,71 +23,103 @@ Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-The ->priv field of a cgroup directory kernfs_node points back to the
-cgroup.  This field is RCU cleared in cgroup_destroy_locked() for
-non-kernfs accesses from css_tryget_from_dir() and
-cgroupstats_build().
+Make __cgroup_procs_write() and cgroup_release_agent_write() use
+cgroup_kn_lock_live() and cgroup_kn_unlock() instead of
+cgroup_lock_live_group().  This puts the operations under both
+cgroup_tree_mutex and cgroup_mutex protection without circular
+dependency from kernfs active protection.  Also, this means that
+cgroup_mutex is no longer nested below kernfs active protection.
+There is no longer any place where the two locks interact.
 
-As these are only applicable to cgroups which finished creation
-successfully and fully initialized cgroups are always removed by
-cgroup_rmdir(), this can be safely moved to the end of cgroup_rmdir().
+This leaves cgroup_lock_live_group() without any user.  Removed.
 
-This will help simplifying cgroup locking and shouldn't introduce any
-behavior difference.
+This will help simplifying cgroup locking.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/cgroup.c | 23 ++++++++++++-----------
- 1 file changed, 12 insertions(+), 11 deletions(-)
+ kernel/cgroup.c | 39 ++++++++++++---------------------------
+ 1 file changed, 12 insertions(+), 27 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index f544e46..3118a63 100644
+index 1d0d5f7..281fce5 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -4547,17 +4547,7 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+@@ -386,23 +386,6 @@ static int notify_on_release(const struct cgroup *cgrp)
+ 			;						\
+ 		else
  
- 	/* remove @cgrp directory along with the base files */
- 	mutex_unlock(&cgroup_mutex);
+-/**
+- * cgroup_lock_live_group - take cgroup_mutex and check that cgrp is alive.
+- * @cgrp: the cgroup to be checked for liveness
+- *
+- * On success, returns true; the mutex should be later unlocked.  On
+- * failure returns false with no lock held.
+- */
+-static bool cgroup_lock_live_group(struct cgroup *cgrp)
+-{
+-	mutex_lock(&cgroup_mutex);
+-	if (cgroup_is_dead(cgrp)) {
+-		mutex_unlock(&cgroup_mutex);
+-		return false;
+-	}
+-	return true;
+-}
 -
--	/*
--	 * There are two control paths which try to determine cgroup from
--	 * dentry without going through kernfs - cgroupstats_build() and
--	 * css_tryget_from_dir().  Those are supported by RCU protecting
--	 * clearing of cgrp->kn->priv backpointer, which should happen
--	 * after all files under it have been removed.
--	 */
- 	kernfs_remove(cgrp->kn);	/* @cgrp has an extra ref on its kn */
--	RCU_INIT_POINTER(*(void __rcu __force **)&cgrp->kn->priv, NULL);
--
- 	mutex_lock(&cgroup_mutex);
+ /* the list of cgroups eligible for automatic release. Protected by
+  * release_list_lock */
+ static LIST_HEAD(release_list);
+@@ -2306,14 +2289,15 @@ static ssize_t __cgroup_procs_write(struct kernfs_open_file *of, char *buf,
+ {
+ 	struct task_struct *tsk;
+ 	const struct cred *cred = current_cred(), *tcred;
+-	struct cgroup *cgrp = of_css(of)->cgroup;
++	struct cgroup *cgrp;
+ 	pid_t pid;
+ 	int ret;
  
- 	return 0;
-@@ -4616,6 +4606,17 @@ static int cgroup_rmdir(struct kernfs_node *kn)
- 	mutex_unlock(&cgroup_tree_mutex);
+ 	if (kstrtoint(strstrip(buf), 0, &pid) || pid < 0)
+ 		return -EINVAL;
  
- 	kernfs_unbreak_active_protection(kn);
-+
-+	/*
-+	 * There are two control paths which try to determine cgroup from
-+	 * dentry without going through kernfs - cgroupstats_build() and
-+	 * css_tryget_from_dir().  Those are supported by RCU protecting
-+	 * clearing of kn->priv backpointer, which should happen after all
-+	 * files under it have been removed.
-+	 */
-+	if (!ret)
-+		RCU_INIT_POINTER(*(void __rcu __force **)&kn->priv, NULL);
-+
- 	cgroup_put(cgrp);
- 	return ret;
+-	if (!cgroup_lock_live_group(cgrp))
++	cgrp = cgroup_kn_lock_live(of->kn);
++	if (!cgrp)
+ 		return -ENODEV;
+ 
+ retry_find_task:
+@@ -2379,7 +2363,7 @@ retry_find_task:
+ 
+ 	put_task_struct(tsk);
+ out_unlock_cgroup:
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_kn_unlock(of->kn);
+ 	return ret ?: nbytes;
  }
-@@ -5175,7 +5176,7 @@ struct cgroup_subsys_state *css_tryget_from_dir(struct dentry *dentry,
- 	/*
- 	 * This path doesn't originate from kernfs and @kn could already
- 	 * have been or be removed at any point.  @kn->priv is RCU
--	 * protected for this access.  See destroy_locked() for details.
-+	 * protected for this access.  See cgroup_rmdir() for details.
- 	 */
- 	cgrp = rcu_dereference(kn->priv);
- 	if (cgrp)
+ 
+@@ -2429,17 +2413,18 @@ static ssize_t cgroup_procs_write(struct kernfs_open_file *of,
+ static ssize_t cgroup_release_agent_write(struct kernfs_open_file *of,
+ 					  char *buf, size_t nbytes, loff_t off)
+ {
+-	struct cgroup *cgrp = of_css(of)->cgroup;
+-	struct cgroup_root *root = cgrp->root;
++	struct cgroup *cgrp;
+ 
+-	BUILD_BUG_ON(sizeof(root->release_agent_path) < PATH_MAX);
+-	if (!cgroup_lock_live_group(cgrp))
++	BUILD_BUG_ON(sizeof(cgrp->root->release_agent_path) < PATH_MAX);
++
++	cgrp = cgroup_kn_lock_live(of->kn);
++	if (!cgrp)
+ 		return -ENODEV;
+ 	spin_lock(&release_agent_path_lock);
+-	strlcpy(root->release_agent_path, strstrip(buf),
+-		sizeof(root->release_agent_path));
++	strlcpy(cgrp->root->release_agent_path, strstrip(buf),
++		sizeof(cgrp->root->release_agent_path));
+ 	spin_unlock(&release_agent_path_lock);
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_kn_unlock(of->kn);
+ 	return nbytes;
+ }
+ 
 -- 
 1.9.0
