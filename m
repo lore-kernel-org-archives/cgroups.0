@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 3/8] cgroup: grab cgroup_mutex earlier in cgroup_subtree_control_write()
-Date: Tue,  6 May 2014 16:19:29 -0400
-Message-ID: <1399407574-21472-4-git-send-email-tj@kernel.org>
+Subject: [PATCH 7/8] cgroup: nest kernfs active protection under cgroup_mutex
+Date: Tue,  6 May 2014 16:19:33 -0400
+Message-ID: <1399407574-21472-8-git-send-email-tj@kernel.org>
 References: <1399407574-21472-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=RWobBymw4MCF1UEFfvcg36Gk6d2aVpEtbEFubAhxWFk=;
-        b=QMT/QaeUGrYgKxhuz1a1sI58Y7yiOJzgZH3HSzlLTMc36QUTw4anBzScDggRQ+Oe5q
-         vZ15mXR3adDXN9GZvHemyLrtkRzXsJp5u2japvqoSZBBdwY0ZLirTFOOwRqpoyyt9zWl
-         rzE1pIKOawZ/AkB1/XmP5lvDyA5VDigVzLwgyS9vVyIkvsN7CMoQgxrxT/5TOI52uLv6
-         cM8/eHYuA3EbDejlacc7f3HboDF0SgnuB2mQoM6/+yTBM8FFha8XsHe0J2uet5SEB45h
-         ihZEFMAGJyYPcH8+GREmUNSPROdwi6vd6dx7YbS17oSq9o7e89h5kNpmt1eIcWi/WruH
-         /5YQ==
+        bh=jMrjIV6LY/ti5cf8Zq70sbsM2zOsWTYVhtM6OgpJNrA=;
+        b=copYsWuED5ClymWFinrkf4ifV4Yx4NK2iEU5CRimWCqYXXo0m92h9yOq6JicGvr9Eg
+         5BDbYNdbYWepLiFBw71GUFbbEHHAl1wDHcVuly5fXbbwxwjQm2zo1qX+o21gtIC1+csb
+         F5d2HgOl03mpNH00WZG5P/IjJgf9hjo0tUJNF1vODnL/L7vrgh3AthUhBP/UHYLMyYLX
+         W9Og+Jhrbk6j8j3IlbmGfbt7FhpfH9tAy57G8tf9lz6k/6t+mOnUMkthQb1/dSiKyKAz
+         kBvVKOBkqgtAaVORqWLQ7qdCE2vAmeyPDBr73TPqHoODgy3reqMUuTH20K7SZhUsfqlJ
+         6+Mw==
 In-Reply-To: <1399407574-21472-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,71 +23,143 @@ Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-Move cgroup_lock_live_group() invocation upwards to right below
-cgroup_tree_mutex in cgroup_subtree_control_write().  This is to help
-the planned locking simplification.
+After the recent cgroup_kn_lock_live() changes, cgroup_mutex is no
+longer nested below kernfs active protection.  The two don't have any
+relationship now.
 
-This doesn't make any userland-visible behavioral changes.
+This patch nests kernfs active protection under cgroup_mutex.  All
+cftype operations now require both cgroup_tree_mutex and cgroup_mutex,
+temporary cgroup_mutex releases over kernfs operations are removed,
+and cgroup_add/rm_cftypes() grab both mutexes.
+
+This makes cgroup_tree_mutex redundant, which will be removed by the
+next patch.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/cgroup.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ kernel/cgroup.c | 27 ++++++++++++++++-----------
+ 1 file changed, 16 insertions(+), 11 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 69c0ed9..f544e46 100644
+index 281fce5..601a35d 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -2583,6 +2583,10 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 	kernfs_break_active_protection(of->kn);
- 
- 	mutex_lock(&cgroup_tree_mutex);
-+	if (!cgroup_lock_live_group(cgrp)) {
-+		ret = -ENODEV;
-+		goto out_unlock_tree;
-+	}
- 
- 	for_each_subsys(ss, ssid) {
- 		if (enable & (1 << ssid)) {
-@@ -2606,6 +2610,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 				cgroup_get(child);
- 				prepare_to_wait(&child->offline_waitq, &wait,
- 						TASK_UNINTERRUPTIBLE);
-+				mutex_unlock(&cgroup_mutex);
- 				mutex_unlock(&cgroup_tree_mutex);
- 				schedule();
- 				finish_wait(&child->offline_waitq, &wait);
-@@ -2620,7 +2625,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 			    (cgrp->parent &&
- 			     !(cgrp->parent->child_subsys_mask & (1 << ssid)))) {
- 				ret = -ENOENT;
--				goto out_unlock_tree;
-+				goto out_unlock;
- 			}
- 		} else if (disable & (1 << ssid)) {
- 			if (!(cgrp->child_subsys_mask & (1 << ssid))) {
-@@ -2632,7 +2637,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 			cgroup_for_each_live_child(child, cgrp) {
- 				if (child->child_subsys_mask & (1 << ssid)) {
- 					ret = -EBUSY;
--					goto out_unlock_tree;
-+					goto out_unlock;
- 				}
- 			}
- 		}
-@@ -2640,12 +2645,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 
- 	if (!enable && !disable) {
- 		ret = 0;
--		goto out_unlock_tree;
--	}
--
--	if (!cgroup_lock_live_group(cgrp)) {
--		ret = -ENODEV;
--		goto out_unlock_tree;
-+		goto out_unlock;
- 	}
+@@ -1127,7 +1127,7 @@ static struct cgroup *cgroup_kn_lock_live(struct kernfs_node *kn)
+ 		cgrp = kn->parent->priv;
  
  	/*
+-	 * We're gonna grab cgroup_tree_mutex which nests outside kernfs
++	 * We're gonna grab cgroup_mutex which nests outside kernfs
+ 	 * active_ref.  cgroup liveliness check alone provides enough
+ 	 * protection against removal.  Ensure @cgrp stays accessible and
+ 	 * break the active_ref protection.
+@@ -1150,6 +1150,7 @@ static void cgroup_rm_file(struct cgroup *cgrp, const struct cftype *cft)
+ 	char name[CGROUP_FILE_NAME_MAX];
+ 
+ 	lockdep_assert_held(&cgroup_tree_mutex);
++	lockdep_assert_held(&cgroup_mutex);
+ 	kernfs_remove_by_name(cgrp->kn, cgroup_file_name(cgrp, cft, name));
+ }
+ 
+@@ -1216,11 +1217,9 @@ static int rebind_subsystems(struct cgroup_root *dst_root, unsigned int ss_mask)
+ 	 * Nothing can fail from this point on.  Remove files for the
+ 	 * removed subsystems and rebind each subsystem.
+ 	 */
+-	mutex_unlock(&cgroup_mutex);
+ 	for_each_subsys(ss, ssid)
+ 		if (ss_mask & (1 << ssid))
+ 			cgroup_clear_dir(&ss->root->cgrp, 1 << ssid);
+-	mutex_lock(&cgroup_mutex);
+ 
+ 	for_each_subsys(ss, ssid) {
+ 		struct cgroup_root *src_root;
+@@ -2946,6 +2945,7 @@ static int cgroup_addrm_files(struct cgroup *cgrp, struct cftype cfts[],
+ 	int ret;
+ 
+ 	lockdep_assert_held(&cgroup_tree_mutex);
++	lockdep_assert_held(&cgroup_mutex);
+ 
+ 	for (cft = cfts; cft->name[0] != '\0'; cft++) {
+ 		/* does cft->flags tell us to skip this file on @cgrp? */
+@@ -2981,6 +2981,7 @@ static int cgroup_apply_cftypes(struct cftype *cfts, bool is_add)
+ 	int ret = 0;
+ 
+ 	lockdep_assert_held(&cgroup_tree_mutex);
++	lockdep_assert_held(&cgroup_mutex);
+ 
+ 	/* add/rm files for all cgroups created before */
+ 	css_for_each_descendant_pre(css, cgroup_css(root, ss)) {
+@@ -3049,6 +3050,7 @@ static int cgroup_init_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
+ static int cgroup_rm_cftypes_locked(struct cftype *cfts)
+ {
+ 	lockdep_assert_held(&cgroup_tree_mutex);
++	lockdep_assert_held(&cgroup_mutex);
+ 
+ 	if (!cfts || !cfts[0].ss)
+ 		return -ENOENT;
+@@ -3075,7 +3077,9 @@ int cgroup_rm_cftypes(struct cftype *cfts)
+ 	int ret;
+ 
+ 	mutex_lock(&cgroup_tree_mutex);
++	mutex_lock(&cgroup_mutex);
+ 	ret = cgroup_rm_cftypes_locked(cfts);
++	mutex_unlock(&cgroup_mutex);
+ 	mutex_unlock(&cgroup_tree_mutex);
+ 	return ret;
+ }
+@@ -3106,12 +3110,14 @@ int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
+ 		return ret;
+ 
+ 	mutex_lock(&cgroup_tree_mutex);
++	mutex_lock(&cgroup_mutex);
+ 
+ 	list_add_tail(&cfts->node, &ss->cfts);
+ 	ret = cgroup_apply_cftypes(cfts, true);
+ 	if (ret)
+ 		cgroup_rm_cftypes_locked(cfts);
+ 
++	mutex_unlock(&cgroup_mutex);
+ 	mutex_unlock(&cgroup_tree_mutex);
+ 	return ret;
+ }
+@@ -4446,6 +4452,7 @@ static void css_killed_ref_fn(struct percpu_ref *ref)
+ static void kill_css(struct cgroup_subsys_state *css)
+ {
+ 	lockdep_assert_held(&cgroup_tree_mutex);
++	lockdep_assert_held(&cgroup_mutex);
+ 
+ 	/*
+ 	 * This must happen before css is disassociated with its cgroup.
+@@ -4545,13 +4552,10 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 	/*
+ 	 * Initiate massacre of all css's.  cgroup_destroy_css_killed()
+ 	 * will be invoked to perform the rest of destruction once the
+-	 * percpu refs of all css's are confirmed to be killed.  This
+-	 * involves removing the subsystem's files, drop cgroup_mutex.
++	 * percpu refs of all css's are confirmed to be killed.
+ 	 */
+-	mutex_unlock(&cgroup_mutex);
+ 	for_each_css(css, ssid, cgrp)
+ 		kill_css(css);
+-	mutex_lock(&cgroup_mutex);
+ 
+ 	/* CGRP_DEAD is set, remove from ->release_list for the last time */
+ 	raw_spin_lock(&release_list_lock);
+@@ -4568,10 +4572,11 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 	if (!cgrp->nr_css)
+ 		cgroup_destroy_css_killed(cgrp);
+ 
+-	/* remove @cgrp directory along with the base files */
+-	mutex_unlock(&cgroup_mutex);
+-	kernfs_remove(cgrp->kn);	/* @cgrp has an extra ref on its kn */
+-	mutex_lock(&cgroup_mutex);
++	/*
++	 * Remove @cgrp directory along with the base files.  @cgrp has an
++	 * extra ref on its kn.
++	 */
++	kernfs_remove(cgrp->kn);
+ 
+ 	return 0;
+ };
 -- 
 1.9.0
