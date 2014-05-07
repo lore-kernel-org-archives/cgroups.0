@@ -1,50 +1,77 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.15-fixes 1/2] cgroup: introduce task_css_is_root()
-Date: Tue, 6 May 2014 23:29:55 -0400
-Message-ID: <CAOS58YPN=nfJi7YyZrgQ+xnhhidrTL7RXmMXzzM61+M40d4LNw@mail.gmail.com>
-References: <20140505223557.GU11231@htj.dyndns.org>
-	<53699F6E.3070107@huawei.com>
+From: Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 1/2] memcg: fold mem_cgroup_stolen
+Date: Wed, 7 May 2014 16:27:10 +0800
+Message-ID: <5369EE5E.50202@huawei.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:sender:in-reply-to:references:date:message-id:subject
-         :from:to:cc:content-type;
-        bh=HzcqRjzk7AfxpzqRnoC650mVoCP5iPNWfva4DSS32Eg=;
-        b=CZSdX9HR8/p+97CRxyg9jEDqXtcw+8+K1n8H36zClj+ucNbdSrtmQOHLUsCsGtFvHP
-         +LyPRa41PQv/cSFR8YF/7Lp17yRzPZXqayP8uFhLoQ1Z1nrRXhTFK/c0xG53Jn11gvNe
-         6wG3dYyQlL4A22rV6BoNmrhdURmHVtiFuSvUSEC5Fy995M0LVt/pFaYF9GLlZYnsNH2c
-         1XkXdrYnMi4sd0mWkLpIDh+eakToS21MlDDc3rGUXNv4TMWIJDWxvh2+R3rg0Qelok48
-         UaqYFtHqxfaSkJVhX2g0eKNwV3YaRXz4sZwFIQ3oGeZy+FHHBQITBHgBFfGah+r1OeKK
-         Zt5Q==
-In-Reply-To: <53699F6E.3070107-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rt-users <linux-rt-users-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-Hello,
+It is only used in __mem_cgroup_begin_update_page_stat(), the
+name is confusing and 2 routines for one thing also confuse people,
+so fold this function seems more clear.
 
-On Tue, May 6, 2014 at 10:50 PM, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
->> -static struct css_set init_css_set = {
->> +struct css_set init_css_set = {
->>       .refcount               = ATOMIC_INIT(1),
->>       .cgrp_links             = LIST_HEAD_INIT(init_css_set.cgrp_links),
->>       .tasks                  = LIST_HEAD_INIT(init_css_set.tasks),
->> @@ -356,6 +356,7 @@ static struct css_set init_css_set = {
->>       .mg_preload_node        = LIST_HEAD_INIT(init_css_set.mg_preload_node),
->>       .mg_node                = LIST_HEAD_INIT(init_css_set.mg_node),
->>  };
->> +EXPORT_SYMBOL_GPL(init_css_set);
->>
->
-> Why do we export this symbol?
+Signed-off-by: Qiang Huang <h.huangqiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c | 25 +++++++------------------
+ 1 file changed, 7 insertions(+), 18 deletions(-)
 
-LOL because I forgot that we removed module support. I'll drop the EXPORT.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 4f97662..5804d71 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1568,23 +1568,12 @@ static void mem_cgroup_end_move(struct mem_cgroup *memcg)
+ }
 
-Thanks.
+ /*
+- * 2 routines for checking "mem" is under move_account() or not.
++ * A routine for checking "mem" is under move_account() or not.
+  *
+- * mem_cgroup_stolen() -  checking whether a cgroup is mc.from or not. This
+- *			  is used for avoiding races in accounting.  If true,
+- *			  pc->mem_cgroup may be overwritten.
+- *
+- * mem_cgroup_under_move() - checking a cgroup is mc.from or mc.to or
+- *			  under hierarchy of moving cgroups. This is for
+- *			  waiting at hith-memory prressure caused by "move".
++ * Checking a cgroup is mc.from or mc.to or under hierarchy of
++ * moving cgroups. This is for waiting at hith-memory pressure
++ * caused by "move".
+  */
+-
+-static bool mem_cgroup_stolen(struct mem_cgroup *memcg)
+-{
+-	VM_BUG_ON(!rcu_read_lock_held());
+-	return atomic_read(&memcg->moving_account) > 0;
+-}
+-
+ static bool mem_cgroup_under_move(struct mem_cgroup *memcg)
+ {
+ 	struct mem_cgroup *from;
+@@ -1627,7 +1616,6 @@ static bool mem_cgroup_wait_acct_move(struct mem_cgroup *memcg)
+  * Take this lock when
+  * - a code tries to modify page's memcg while it's USED.
+  * - a code tries to modify page state accounting in a memcg.
+- * see mem_cgroup_stolen(), too.
+  */
+ static void move_lock_mem_cgroup(struct mem_cgroup *memcg,
+ 				  unsigned long *flags)
+@@ -2301,9 +2289,10 @@ again:
+ 	 * If this memory cgroup is not under account moving, we don't
+ 	 * need to take move_lock_mem_cgroup(). Because we already hold
+ 	 * rcu_read_lock(), any calls to move_account will be delayed until
+-	 * rcu_read_unlock() if mem_cgroup_stolen() == true.
++	 * rcu_read_unlock().
+ 	 */
+-	if (!mem_cgroup_stolen(memcg))
++	VM_BUG_ON(!rcu_read_lock_held());
++	if (atomic_read(&memcg->moving_account) <= 0)
+ 		return;
 
+ 	move_lock_mem_cgroup(memcg, flags);
 -- 
-tejun
+1.8.3
