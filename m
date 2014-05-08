@@ -1,44 +1,49 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch 4/9] mm: memcontrol: catch root bypass in move precharge
-Date: Thu, 8 May 2014 14:30:04 -0400
-Message-ID: <20140508183004.GQ19914@cmpxchg.org>
-References: <1398889543-23671-1-git-send-email-hannes@cmpxchg.org>
- <1398889543-23671-5-git-send-email-hannes@cmpxchg.org>
- <20140507145553.GJ9489@dhcp22.suse.cz>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-3.16] cgroup: rename css_tryget*() to
+ css_tryget_online*()
+Date: Thu, 8 May 2014 14:36:22 -0400
+Message-ID: <20140508183622.GR19914@cmpxchg.org>
+References: <20140507160429.GE26540@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=lyMgtrFFeOW4nLeZJ2Qjt4LWOkHm9cp4358PaWSUxeM=;
-	b=ULS4+kniGErty/PWisPC9AWX4Kg15o9qF1Wdm3FXsUGAM+KYflx1TeNd0D4hL19w3U0yqExjFg/iJzz5r86Nc1zIF8JHaggIImOTdzeqQg7J1uLKZG9wGHKXYVai9kfRlyEhp6Sxbxp4i8V7MdUq2SUJIQxWfD6yLXZIAm/NJIA=;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=5NMZSHqNT0ESRV5tAMBy1D9TRlE1kmYzVrLXHUDn9tE=;
+	b=sADf3c47qDbAmx9/0jHAPOklL7VJyEYMVcHiuX6cf/OPdC71a+FmjcpeMzsc0UYscCY3eVFIbMSfYka2F29p+A2BQKH2Y2HZeDwPN0IEUeTIWRM4XJ2gAkYXIAAU8uwwxCr2wFJvwEEULe+loAaaDC0EyKGMnbTMjvaLTKrx4Gg=;
 Content-Disposition: inline
-In-Reply-To: <20140507145553.GJ9489@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20140507160429.GE26540-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: linux-mm@kvack.org, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Arnaldo Carvalho de Melo <acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, May 07, 2014 at 04:55:53PM +0200, Michal Hocko wrote:
-> On Wed 30-04-14 16:25:38, Johannes Weiner wrote:
-> [...]
-> > @@ -6546,8 +6546,9 @@ one_by_one:
-> >  			cond_resched();
-> >  		}
-> >  		ret = mem_cgroup_try_charge(memcg, GFP_KERNEL, 1, false);
-> > +		if (ret == -EINTR)
-> > +			__mem_cgroup_cancel_charge(root_mem_cgroup, 1);
-> >  		if (ret)
-> > -			/* mem_cgroup_clear_mc() will do uncharge later */
+On Wed, May 07, 2014 at 12:04:29PM -0400, Tejun Heo wrote:
+> Unlike the more usual refcnting, what css_tryget() provides is the
+> distinction between online and offline csses instead of protection
+> against upping a refcnt which already reached zero.  cgroup is
+> planning to provide actual tryget which fails if the refcnt already
+> reached zero.  Let's rename the existing trygets so that they clearly
+> indicate that they're onliness.
 > 
-> I would prefer to keep the comment and explain that we will loose return
-> code on the way and that is why cancel on root has to be done here.
+> I thought about keeping the existing names as-are and introducing new
+> names for the planned actual tryget; however, given that each
+> controller participates in the synchronization of the online state, it
+> seems worthwhile to make it explicit that these functions are about
+> on/offline state.
+> 
+> Rename css_tryget() to css_tryget_online() and css_tryget_from_dir()
+> to css_tryget_online_from_dir().  This is pure rename.
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
+> Cc: Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>
+> Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: Arnaldo Carvalho de Melo <acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-That makes sense, I'll add an explanation of who is (un)charged when
-and where.  Thanks!
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
