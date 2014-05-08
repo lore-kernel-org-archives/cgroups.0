@@ -1,83 +1,51 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-3.15-fixes 2/2] cgroup_freezer: replace freezer->lock
- with freezer_mutex
-Date: Thu, 8 May 2014 09:23:14 +0800
-Message-ID: <536ADC82.20405@huawei.com>
-References: <20140505223557.GU11231@htj.dyndns.org> <20140505223941.GV11231@htj.dyndns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2 cgroup/for-3.15-fixes 1/2] cgroup: introduce
+ task_css_is_root()
+Date: Wed, 7 May 2014 21:32:06 -0400
+Message-ID: <20140508013206.GA2797@htj.dyndns.org>
+References: <20140505223557.GU11231@htj.dyndns.org>
+ <20140507130627.GA16702@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20140505223941.GV11231-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=5gdXIOi0rZIEow+zVApQGeI0rNeJv5PO1u54vapkYlk=;
+        b=eCPHyjwJ2qKEfzf8cJrcMvke4yFMPucUoFaTFAcEFMOLpX7fZBFmh4aawrEyHaoXLN
+         ednjBEC2jwdIDiRSGR+p1bNht0Pmyd/JtGnjH2sRgya2NpOOX/bqZ8O8cM6ZSYCakJi3
+         3V9ovhKwaIQTzepk4bIvO+6qwgJ+zxMKiljA0FHNFWGQ2Z7klz0WM4wbgwg0u9Q2CUNa
+         BEUOoWApjitlUkhEnsuuUGVtBPqvRaT1IFUSy+ALK4bA1PBk5ji+MubLxgoiYujBhiE4
+         1gSbyPrHv9KIzvIqkSLeDfRCnsnipjNbWBYx8k0zi3wHC5PvgbtpjihsNPlm3Yz9W/kA
+         hh2g==
+Content-Disposition: inline
+In-Reply-To: <20140507130627.GA16702-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Rafael J. Wysocki" <rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-> After 96d365e0b86e ("cgroup: make css_set_lock a rwsem and rename it
-> to css_set_rwsem"), css task iterators requires sleepable context as
-> it may block on css_set_rwsem.  I missed that cgroup_freezer was
-> iterating tasks under IRQ-safe spinlock freezer->lock.  This leads to
-> errors like the following on freezer state reads and transitions.
+On Wed, May 07, 2014 at 09:06:27AM -0400, Tejun Heo wrote:
+> Determining the css of a task usually requires RCU read lock as that's
+> the only thing which keeps the returned css accessible till its
+> reference is acquired; however, testing whether a task belongs to the
+> root can be performed without dereferencing the returned css by
+> comparing the returned pointer against the root one in init_css_set[]
+> which never changes.
 > 
->   BUG: sleeping function called from invalid context at /work
->  /os/work/kernel/locking/rwsem.c:20
->   in_atomic(): 0, irqs_disabled(): 0, pid: 462, name: bash
->   5 locks held by bash/462:
->    #0:  (sb_writers#7){.+.+.+}, at: [<ffffffff811f0843>] vfs_write+0x1a3/0x1c0
->    #1:  (&of->mutex){+.+.+.}, at: [<ffffffff8126d78b>] kernfs_fop_write+0xbb/0x170
->    #2:  (s_active#70){.+.+.+}, at: [<ffffffff8126d793>] kernfs_fop_write+0xc3/0x170
->    #3:  (freezer_mutex){+.+...}, at: [<ffffffff81135981>] freezer_write+0x61/0x1e0
->    #4:  (rcu_read_lock){......}, at: [<ffffffff81135973>] freezer_write+0x53/0x1e0
->   Preemption disabled at:[<ffffffff81104404>] console_unlock+0x1e4/0x460
+> Implement task_css_is_root() which can be invoked in any context.
+> This will be used by the scheduled cgroup_freezer change.
 > 
->   CPU: 3 PID: 462 Comm: bash Not tainted 3.15.0-rc1-work+ #10
->   Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
->    ffff88000916a6d0 ffff88000e0a3da0 ffffffff81cf8c96 0000000000000000
->    ffff88000e0a3dc8 ffffffff810cf4f2 ffffffff82388040 ffff880013aaf740
->    0000000000000002 ffff88000e0a3de8 ffffffff81d05974 0000000000000246
->   Call Trace:
->    [<ffffffff81cf8c96>] dump_stack+0x4e/0x7a
->    [<ffffffff810cf4f2>] __might_sleep+0x162/0x260
->    [<ffffffff81d05974>] down_read+0x24/0x60
->    [<ffffffff81133e87>] css_task_iter_start+0x27/0x70
->    [<ffffffff8113584d>] freezer_apply_state+0x5d/0x130
->    [<ffffffff81135a16>] freezer_write+0xf6/0x1e0
->    [<ffffffff8112eb88>] cgroup_file_write+0xd8/0x230
->    [<ffffffff8126d7b7>] kernfs_fop_write+0xe7/0x170
->    [<ffffffff811f0756>] vfs_write+0xb6/0x1c0
->    [<ffffffff811f121d>] SyS_write+0x4d/0xc0
->    [<ffffffff81d08292>] system_call_fastpath+0x16/0x1b
+> v2: cgroup no longer supports modular controllers.  No need to export
+>     init_css_set.  Pointed out by Li.
 > 
-> freezer->lock used to be used in hot paths but that time is long gone
-> and there's no reason for the lock to be IRQ-safe spinlock or even
-> per-cgroup.  In fact, given the fact that a cgroup may contain large
-> number of tasks, it's not a good idea to iterate over them while
-> holding IRQ-safe spinlock.
-> 
-> Let's simplify locking by replacing per-cgroup freezer->lock with
-> global freezer_mutex.  This also makes the comments explaining the
-> intricacies of policy inheritance and the locking around it as the
-> states are protected by a common mutex.
-> 
-> The conversion is mostly straight-forward.  The followings are worth
-> mentioning.
-> 
-> * freezer_css_online() no longer needs double locking.
-> 
-> * freezer_attach() now performs propagation simply while holding
->   freezer_mutex.  update_if_frozen() race no longer exists and the
->   comment is removed.
-> 
-> * freezer_fork() now tests whether the task is in root cgroup using
->   the new task_css_is_root() without doing rcu_read_lock/unlock().  If
->   not, it grabs freezer_mutex and performs the operation.
-> 
-> * freezer_read() and freezer_change_state() grab freezer_mutex across
->   the whole operation and pin the css while iterating so that each
->   descendant processing happens in sleepable context.
-> 
-> Fixes: 96d365e0b86e ("cgroup: make css_set_lock a rwsem and rename it to css_set_rwsem")
 > Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Applied 1-2 to cgroup/for-3.15-fixes.
+
+Thanks.
+
+-- 
+tejun
