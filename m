@@ -1,132 +1,101 @@
-From: Richard Davies <richard-li8END47hbdWk0Htik3J/w@public.gmane.org>
-Subject: Re: Protection against container fork bombs [WAS: Re: memcg with
-	kmem limit doesn't recover after disk i/o causes limit to be hit]
-Date: Thu, 8 May 2014 16:25:18 +0100
-Message-ID: <20140508152518.GA1091@alpha.arachsys.com>
-References: <20140418155939.GE4523@dhcp22.suse.cz>
-	<5351679F.5040908@parallels.com>
-	<20140420142830.GC22077@alpha.arachsys.com>
-	<20140422143943.20609800@oracle.com>
-	<20140422200531.GA19334@alpha.arachsys.com>
-	<535758A0.5000500@yuhu.biz> <20140423084942.560ae837@oracle.com>
-	<5368CA47.7030007@yuhu.biz> <20140507131514.43716518@oracle.com>
-	<536AB626.9070005@1h.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [patch 2/9] mm: memcontrol: rearrange charging fast path
+Date: Thu, 8 May 2014 14:22:24 -0400
+Message-ID: <20140508182224.GO19914@cmpxchg.org>
+References: <1398889543-23671-1-git-send-email-hannes@cmpxchg.org>
+ <1398889543-23671-3-git-send-email-hannes@cmpxchg.org>
+ <20140507143334.GH9489@dhcp22.suse.cz>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=YgHLwt8pWqBYkV46cT0OOh4b4uTduozaC9Jy9pFqLEk=;
+	b=ejRDR6WbGt4esh+A7i5sQBQta7m8KYZTkAAgHL839cdVdTtSvdQgcS7g9b95GA+PDHp8Od9mM3skaj2rr6yanVK4n4P7NGwx4RHvokRXll+taUy8eBuaMWLa67B8zLvxg4FKa7UGLoWipNU8Rfvgac9lvscmYFVW94BbrkWcOac=;
+Content-Disposition: inline
+In-Reply-To: <20140507143334.GH9489@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <536AB626.9070005-108MBtLGafw@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Marian Marinov <mm-108MBtLGafw@public.gmane.org>
-Cc: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Marian Marinov <mm-NV7Lj0SOnH0@public.gmane.org>, Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, William Dauchy <wdauchy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-mm@kvack.org, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Marian Marinov wrote:
-> On 05/07/2014 08:15 PM, Dwight Engen wrote:
-> >On Tue, 06 May 2014 14:40:55 +0300
-> >Marian Marinov <mm-NV7Lj0SOnH0@public.gmane.org> wrote:
-> >
-> >>On 04/23/2014 03:49 PM, Dwight Engen wrote:
-> >>>On Wed, 23 Apr 2014 09:07:28 +0300
-> >>>Marian Marinov <mm-NV7Lj0SOnH0@public.gmane.org> wrote:
-> >>>
-> >>>>On 04/22/2014 11:05 PM, Richard Davies wrote:
-> >>>>>Dwight Engen wrote:
-> >>>>>>Richard Davies wrote:
-> >>>>>>>Vladimir Davydov wrote:
-> >>>>>>>>In short, kmem limiting for memory cgroups is currently broken.
-> >>>>>>>>Do not use it. We are working on making it usable though.
-> >>>>>...
-> >>>>>>>What is the best mechanism available today, until kmem limits
-> >>>>>>>mature?
-> >>>>>>>
-> >>>>>>>RLIMIT_NPROC exists but is per-user, not per-container.
-> >>>>>>>
-> >>>>>>>Perhaps there is an up-to-date task counter patchset or similar?
-> >>>>>>
-> >>>>>>I updated Frederic's task counter patches and included Max
-> >>>>>>Kellermann's fork limiter here:
-> >>>>>>
-> >>>>>>http://thread.gmane.org/gmane.linux.kernel.containers/27212
-> >>>>>>
-> >>>>>>I can send you a more recent patchset (against 3.13.10) if you
-> >>>>>>would find it useful.
-> >>>>>
-> >>>>>Yes please, I would be interested in that. Ideally even against
-> >>>>>3.14.1 if you have that too.
-> >>>>
-> >>>>Dwight, do you have these patches in any public repo?
-> >>>>
-> >>>>I would like to test them also.
-> >>>
-> >>>Hi Marian, I put the patches against 3.13.11 and 3.14.1 up at:
-> >>>
-> >>>git://github.com/dwengen/linux.git cpuacct-task-limit-3.13
-> >>>git://github.com/dwengen/linux.git cpuacct-task-limit-3.14
-> >>>
-> >>Guys I tested the patches with 3.12.16. However I see a problem with
-> >>them.
-> >>
-> >>Trying to set the limit to a cgroup which already have processes in
-> >>it does not work:
-> >
-> >This is a similar check/limitation to the one for kmem in memcg, and is
-> >done here to keep the res_counters consistent and from going negative.
-> >It could probably be relaxed slightly by using res_counter_set_limit()
-> >instead, but you would still need to initially set a limit before
-> >adding tasks to the group.
+On Wed, May 07, 2014 at 04:33:34PM +0200, Michal Hocko wrote:
+> On Wed 30-04-14 16:25:36, Johannes Weiner wrote:
+> > The charging path currently starts out with OOM condition checks when
+> > OOM is the rarest possible case.
+> > 
+> > Rearrange this code to run OOM/task dying checks only after trying the
+> > percpu charge and the res_counter charge and bail out before entering
+> > reclaim.  Attempting a charge does not hurt an (oom-)killed task as
+> > much as every charge attempt having to check OOM conditions. 
 > 
-> I have removed the check entirely and still receive the EBUSY... I
-> just don't understand what is returning it. If you have any
-> pointers, I would be happy to take a look.
+> OK, I've never considered those to be measurable but it is true that the
+> numbers accumulate over time.
 > 
-> I'll look at set_limit(), thanks for pointing that one.
+> So yes, this makes sense.
 > 
-> What I'm proposing is the following checks:
+> > Also, only check __GFP_NOFAIL when the charge would actually fail.
 > 
->     if (val > RES_COUNTER_MAX || val < 0)
->         return -EBUSY;
->     if (val != 0 && val <= cgroup_task_count(cgrp))
->         return -EBUSY;
+> OK, but return ENOMEM as pointed below.
 > 
->     res_counter_write_u64(&ca->task_limit, type, val);
+> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> > ---
+> >  mm/memcontrol.c | 31 ++++++++++++++++---------------
+> >  1 file changed, 16 insertions(+), 15 deletions(-)
+> > 
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index 75dfeb8fa98b..6ce59146fec7 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -2598,21 +2598,6 @@ static int mem_cgroup_try_charge(struct mem_cgroup *memcg,
+> >  
+> >  	if (mem_cgroup_is_root(memcg))
+> >  		goto done;
+> > -	/*
+> > -	 * Unlike in global OOM situations, memcg is not in a physical
+> > -	 * memory shortage.  Allow dying and OOM-killed tasks to
+> > -	 * bypass the last charges so that they can exit quickly and
+> > -	 * free their memory.
+> > -	 */
+> > -	if (unlikely(test_thread_flag(TIF_MEMDIE) ||
+> > -		     fatal_signal_pending(current)))
+> > -		goto bypass;
 > 
-> This way we ensure that val is within the limits > 0 and <
-> RES_COUNTER_MAX. And also allow only values of 0 or greater then the
-> current task count.
+> This is missing "memcg: do not hang on OOM when killed by userspace OOM
+> access to memory reserves" - trivial to resolve.
 
-I have also noticed that I can't change many different cgroup limits while
-there are tasks running in the cgroup - not just cpuacct.task_limit, but
-also kmem and even normal memory.limit_in_bytes
+Yep, will rebase before the next submission.
 
-I would like to be able to change all of these limits, as long as the new
-limit is greater than the actual current use.
+> > -	if (unlikely(task_in_memcg_oom(current)))
+> > -		goto nomem;
+> > -
+> > -	if (gfp_mask & __GFP_NOFAIL)
+> > -		oom = false;
+> >  retry:
+> >  	if (consume_stock(memcg, nr_pages))
+> >  		goto done;
+> [...]
+> > @@ -2662,6 +2660,9 @@ retry:
+> >  	if (mem_cgroup_wait_acct_move(mem_over_limit))
+> >  		goto retry;
+> >  
+> > +	if (gfp_mask & __GFP_NOFAIL)
+> > +		goto bypass;
+> > +
+> 
+> This is a behavior change because we have returned ENOMEM previously
 
-Could a method like this be used for all of the others too?
+__GFP_NOFAIL must never return -ENOMEM, or we'd have to rename it ;-)
+It just looks like this in the patch, but this is the label code:
 
-Richard.
+nomem:
+	if (!(gfp_mask & __GFP_NOFAIL))
+		return -ENOMEM;
+bypass:
+	...
 
-> >>[root@sp2 lxc]# echo 50 > cpuacct.task_limit
-> >>-bash: echo: write error: Device or resource busy
-> >>[root@sp2 lxc]# echo 0 > cpuacct.task_limit
-> >>-bash: echo: write error: Device or resource busy
-> >>[root@sp2 lxc]#
-> >>
-> >>I have even tried to remove this check:
-> >>+               if (cgroup_task_count(cgrp)
-> >>|| !list_empty(&cgrp->children))
-> >>+                       return -EBUSY;
-> >>But still give me 'Device or resource busy'.
-> >>
-> >>Any pointers of why is this happening ?
-> >>
-> >>Marian
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
