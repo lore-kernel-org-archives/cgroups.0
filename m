@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 6/7] cgroup: use release_agent_path_lock in cgroup_release_agent_show()
-Date: Fri,  9 May 2014 15:32:54 -0400
-Message-ID: <1399663975-315-7-git-send-email-tj@kernel.org>
+Subject: [PATCH 4/7] cgroup: update and fix parsing of "cgroup.subtree_control"
+Date: Fri,  9 May 2014 15:32:52 -0400
+Message-ID: <1399663975-315-5-git-send-email-tj@kernel.org>
 References: <1399663975-315-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=cMLhzjQhorQhe3KbKIE7a/E5rL70y82OxDAFgvfHd+s=;
-        b=nfGmjyOqMtj/hVgJxAKQJtSZ09cJ659Txz/VgbpDuHxrl5wHt/aLbXjaTrIspQhqUY
-         yYKzlTjHo5E/ntV/e1TODEi4hw3IntyuWZxUys3+bKI9f9udwKjAe6zXzLiHuE8pMy5e
-         5PPBfojAu+pVYVDRK/K+i016g6IrnSbQPf5uSJ51BmRqajtPlQ9I2ghxQpgkiO6jSGlK
-         gs2N0xF6cv4KTOPbkeA0H7VZKfBnn0t1C0gTdJGtQ7Jwp8p3D+n1NKXl3UONCAwh2Xbr
-         9abTrqWv4YGixoMygBJClMPOmoidida0xOhF7ZLy3yax5mm5/3T4G3wAIZmo+MJOlk+q
-         F2pQ==
+        bh=FPYVH4T9dy++51uAaLSWQ5n+Ft7a58zIcJdTW3iPQIQ=;
+        b=0cCTF8FxhSyiESoHZXdYeQxStnjFn1GMqRFCcDCJDlNQRk2+xLm3M8t4fPVvKfY7eD
+         kFBVS/Hy485XkpjP0xGMjPMcPh+U42e1zFVIi7M2exQE8jnDdALFzGQ6iexSl0G+oSys
+         KT2Ax8w9jEiEUkoi6uKdoE0Nl5bhz2I4CRbQrPYDkfaruGuGvmkhhvwI3iG9QMO2i43e
+         QWUton51yGolanQkC6ziJEp4RSQ9GhXNKBOk9cnMStN7zsv2h6Prj0lMHoj92kgq21IW
+         cMb3akiUZMKeU0u6An1qQ2dPhuXF8UHDDfCvJwheE4vVlimpCVHxEOZuMwGrtJCNyXJK
+         MPtA==
 In-Reply-To: <1399663975-315-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,34 +23,46 @@ Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-release_path is now protected by release_agent_path_lock to allow
-accessing it without grabbing cgroup_mutex; however,
-cgroup_release_agent_show() was still grabbing cgroup_mutex.  Let's
-convert it to release_agent_path_lock so that we don't have to worry
-about this one for the planned locking updates.
+I was confused that strsep() was equivalent to strtok_r() in skipping
+over consecutive delimiters.  strsep() just splits at the first
+occurrence of one of the delimiters which makes the parsing very
+inflexible, which makes allowing multiple whitespace chars as
+delimters kinda moot.  Let's just be consistently strict and require
+list of tokens separated by spaces.  This is what
+Documentation/cgroups/unified-hierarchy.txt describes too.
+
+Also, parsing may access beyond the end of the string if the string
+ends with spaces or is zero-length.  Make sure it skips zero-length
+tokens.  Note that this also ensures that the parser doesn't puke on
+multiple consecutive spaces.
+
+v2: Add zero-length token skipping.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/cgroup.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ kernel/cgroup.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index ff92bac..7b55ca5 100644
+index 35daf89..b81e7c0 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -2373,11 +2373,10 @@ static int cgroup_release_agent_show(struct seq_file *seq, void *v)
- {
- 	struct cgroup *cgrp = seq_css(seq)->cgroup;
+@@ -2542,11 +2542,13 @@ static int cgroup_subtree_control_write(struct cgroup_subsys_state *dummy_css,
+ 	int ssid, ret;
  
--	if (!cgroup_lock_live_group(cgrp))
--		return -ENODEV;
-+	spin_lock(&release_agent_path_lock);
- 	seq_puts(seq, cgrp->root->release_agent_path);
-+	spin_unlock(&release_agent_path_lock);
- 	seq_putc(seq, '\n');
--	mutex_unlock(&cgroup_mutex);
- 	return 0;
- }
- 
+ 	/*
+-	 * Parse input - white space separated list of subsystem names
+-	 * prefixed with either + or -.
++	 * Parse input - space separated list of subsystem names prefixed
++	 * with either + or -.
+ 	 */
+ 	p = buffer;
+-	while ((tok = strsep(&p, " \t\n"))) {
++	while ((tok = strsep(&p, " "))) {
++		if (tok[0] =='\0')
++			continue;
+ 		for_each_subsys(ss, ssid) {
+ 			if (ss->disabled || strcmp(tok + 1, ss->name))
+ 				continue;
 -- 
 1.9.0
