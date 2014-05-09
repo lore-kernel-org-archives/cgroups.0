@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 4/9] cgroup: move check_for_release(parent) call to the end of cgroup_destroy_locked()
-Date: Fri,  9 May 2014 17:13:30 -0400
-Message-ID: <1399670015-23463-5-git-send-email-tj@kernel.org>
+Subject: [PATCH 2/9] cgroup: rename cgroup->dummy_css to ->self and move it to the top
+Date: Fri,  9 May 2014 17:13:28 -0400
+Message-ID: <1399670015-23463-3-git-send-email-tj@kernel.org>
 References: <1399670015-23463-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=pftK/LeTPlpFXkocsBHTbFrLXpMOpw/jrCVB3toJ3+4=;
-        b=qm4CTUQEAUz/WbStIjkzRo+TJnFr/RHtHdbuHlvrLMbSpmbCOI9ytjGAOGbc3y2vhO
-         epNh0Q07DW05wH3P+Wi3YJkdOIkBleIffpsdeTmeBbutVoZb208KikJCiYZBIl04O2op
-         5UwoEFq78K4mTiKog7Mf2yl0XKzwLqFD4Vpgy14pQTcrPQlvlkG3GSZcjJ27E3I1Cho0
-         T3Q5uXjfy6+FGJq63yivdpaXdSw7PQ+TDd5rAX/713dRjmfzfDEjODhO+jMdBY6DmeTc
-         y/3NflSWKroXyR0P1b0XvaeU3kQlnBi7THxDwvhgUvApwGMnHYmt7uVCiHuieEzA4s7g
-         M69g==
+        bh=TVOXUeC+nddMvSy3ufls3J0jNQltvk1sbXGOwQJ+Vxw=;
+        b=QchkKQ4Fbsd9weXHYkLPtuRgzvTy33qYArAFNDl1vKACfhdJiXqgQAeAmD8mZTUNWc
+         JYb3vngXHf4WLJcNix+DAXhMhNE8trtTlKksaB7+yOoP4fEiB9ZPOhi79THti9AcGykW
+         FHjrw0zfI3OIt3ezL5UsHsXSV+h+mIgjrYEbmoNN4JVxpQ+Ya9wuB8fS8E+HvwwGumik
+         rLzixmuklPvGKwdliTRoZzFqwdUxTCe7v5KBtTkPQO60wvjqkht00qxy3wF3oG3ULvKL
+         rwdcO2b+FlMCaQNKbeophpkEKgVkjQJ0WETKGNH/bkJeykhpUgzJtnvpsum5t16xahuz
+         5utQ==
 In-Reply-To: <1399670015-23463-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,68 +23,134 @@ Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-Currently, check_for_release() on the parent of a destroyed cgroup is
-invoked from cgroup_destroy_css_killed().  This is because this is
-where the destroyed cgroup can be removed from the parent's children
-list.  check_for_release() tests the emptiness of the list directly,
-so invoking it before removing the cgroup from the list makes it think
-that the parent still has children even when it no longer does.
+cgroup->dummy_css is used as the placeholder css when performing css
+oriended operations on the cgroup.  We're gonna shift more cgroup
+management to this css.  Let's rename it to ->self and move it to the
+top.
 
-This patch updates check_for_release() to use
-cgroup_has_live_children() instead of directly testing ->children
-emptiness and moves check_for_release(parent) earlier to the end of
-cgroup_destroy_locked().  As cgroup_has_live_children() ignores
-cgroups marked DEAD, check_for_release() functions correctly as long
-as it's called after asserting DEAD.
-
-This makes release notification slightly more timely and more
-importantly enables further simplification of cgroup destruction path.
+This is pure rename and field relocation.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/cgroup.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+ include/linux/cgroup.h |  6 +++---
+ kernel/cgroup.c        | 20 ++++++++++----------
+ 2 files changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index d369f19..45149b7 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -4541,6 +4541,9 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
- 	 */
- 	kernfs_remove(cgrp->kn);
- 
-+	set_bit(CGRP_RELEASABLE, &cgrp->parent->flags);
-+	check_for_release(cgrp->parent);
-+
- 	return 0;
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index aa7353d..164851e 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -143,6 +143,9 @@ enum {
  };
  
-@@ -4555,17 +4558,12 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
-  */
- static void cgroup_destroy_css_killed(struct cgroup *cgrp)
- {
--	struct cgroup *parent = cgrp->parent;
--
- 	lockdep_assert_held(&cgroup_mutex);
+ struct cgroup {
++	/* self css with NULL ->ss, points back to this cgroup */
++	struct cgroup_subsys_state self;
++
+ 	unsigned long flags;		/* "unsigned long" so bitops work */
  
- 	/* delete this cgroup from parent->children */
- 	list_del_rcu(&cgrp->sibling);
+ 	/*
+@@ -224,9 +227,6 @@ struct cgroup {
+ 	struct list_head pidlists;
+ 	struct mutex pidlist_mutex;
  
- 	cgroup_put(cgrp);
+-	/* dummy css with NULL ->ss, points back to this cgroup */
+-	struct cgroup_subsys_state dummy_css;
 -
--	set_bit(CGRP_RELEASABLE, &parent->flags);
--	check_for_release(parent);
+ 	/* For css percpu_ref killing and RCU-protected deletion */
+ 	struct rcu_head rcu_head;
+ 	struct work_struct destroy_work;
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 2755f33..b3708a8 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -220,7 +220,7 @@ static void cgroup_idr_remove(struct idr *idr, int id)
+ /**
+  * cgroup_css - obtain a cgroup's css for the specified subsystem
+  * @cgrp: the cgroup of interest
+- * @ss: the subsystem of interest (%NULL returns the dummy_css)
++ * @ss: the subsystem of interest (%NULL returns @cgrp->self)
+  *
+  * Return @cgrp's css (cgroup_subsys_state) associated with @ss.  This
+  * function must be called either under cgroup_mutex or rcu_read_lock() and
+@@ -235,13 +235,13 @@ static struct cgroup_subsys_state *cgroup_css(struct cgroup *cgrp,
+ 		return rcu_dereference_check(cgrp->subsys[ss->id],
+ 					lockdep_is_held(&cgroup_mutex));
+ 	else
+-		return &cgrp->dummy_css;
++		return &cgrp->self;
  }
  
- static int cgroup_rmdir(struct kernfs_node *kn)
-@@ -5005,7 +5003,7 @@ void cgroup_exit(struct task_struct *tsk)
- static void check_for_release(struct cgroup *cgrp)
- {
- 	if (cgroup_is_releasable(cgrp) &&
--	    list_empty(&cgrp->cset_links) && list_empty(&cgrp->children)) {
-+	    list_empty(&cgrp->cset_links) && !cgroup_has_live_children(cgrp)) {
- 		/*
- 		 * Control Group is currently removeable. If it's not
- 		 * already queued for a userspace notification, queue
+ /**
+  * cgroup_e_css - obtain a cgroup's effective css for the specified subsystem
+  * @cgrp: the cgroup of interest
+- * @ss: the subsystem of interest (%NULL returns the dummy_css)
++ * @ss: the subsystem of interest (%NULL returns @cgrp->self)
+  *
+  * Similar to cgroup_css() but returns the effctive css, which is defined
+  * as the matching css of the nearest ancestor including self which has @ss
+@@ -254,7 +254,7 @@ static struct cgroup_subsys_state *cgroup_e_css(struct cgroup *cgrp,
+ 	lockdep_assert_held(&cgroup_mutex);
+ 
+ 	if (!ss)
+-		return &cgrp->dummy_css;
++		return &cgrp->self;
+ 
+ 	if (!(cgrp->root->subsys_mask & (1 << ss->id)))
+ 		return NULL;
+@@ -288,7 +288,7 @@ struct cgroup_subsys_state *of_css(struct kernfs_open_file *of)
+ 	if (cft->ss)
+ 		return rcu_dereference_raw(cgrp->subsys[cft->ss->id]);
+ 	else
+-		return &cgrp->dummy_css;
++		return &cgrp->self;
+ }
+ EXPORT_SYMBOL_GPL(of_css);
+ 
+@@ -1551,7 +1551,7 @@ static void init_cgroup_housekeeping(struct cgroup *cgrp)
+ 	INIT_LIST_HEAD(&cgrp->release_list);
+ 	INIT_LIST_HEAD(&cgrp->pidlists);
+ 	mutex_init(&cgrp->pidlist_mutex);
+-	cgrp->dummy_css.cgroup = cgrp;
++	cgrp->self.cgroup = cgrp;
+ 
+ 	for_each_subsys(ss, ssid)
+ 		INIT_LIST_HEAD(&cgrp->e_csets[ssid]);
+@@ -3453,7 +3453,7 @@ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from)
+ 	 * ->can_attach() fails.
+ 	 */
+ 	do {
+-		css_task_iter_start(&from->dummy_css, &it);
++		css_task_iter_start(&from->self, &it);
+ 		task = css_task_iter_next(&it);
+ 		if (task)
+ 			get_task_struct(task);
+@@ -3718,7 +3718,7 @@ static int pidlist_array_load(struct cgroup *cgrp, enum cgroup_filetype type,
+ 	if (!array)
+ 		return -ENOMEM;
+ 	/* now, populate the array */
+-	css_task_iter_start(&cgrp->dummy_css, &it);
++	css_task_iter_start(&cgrp->self, &it);
+ 	while ((tsk = css_task_iter_next(&it))) {
+ 		if (unlikely(n == length))
+ 			break;
+@@ -3792,7 +3792,7 @@ int cgroupstats_build(struct cgroupstats *stats, struct dentry *dentry)
+ 	}
+ 	rcu_read_unlock();
+ 
+-	css_task_iter_start(&cgrp->dummy_css, &it);
++	css_task_iter_start(&cgrp->self, &it);
+ 	while ((tsk = css_task_iter_next(&it))) {
+ 		switch (tsk->state) {
+ 		case TASK_RUNNING:
+@@ -4273,7 +4273,7 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
+ 	init_cgroup_housekeeping(cgrp);
+ 
+ 	cgrp->parent = parent;
+-	cgrp->dummy_css.parent = &parent->dummy_css;
++	cgrp->self.parent = &parent->self;
+ 	cgrp->root = root;
+ 
+ 	if (notify_on_release(parent))
 -- 
 1.9.0
