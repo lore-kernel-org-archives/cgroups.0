@@ -1,56 +1,96 @@
-From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/5] cgroup: replace cftype->write_string() with
- cftype->write()
-Date: Thu, 8 May 2014 15:35:36 -0400
-Message-ID: <20140508193536.GA15449@redhat.com>
-References: <1399380266-3324-1-git-send-email-tj@kernel.org>
- <1399380266-3324-3-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1399380266-3324-3-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 5/7] cgroup: use restart_syscall() for retries after offline waits in cgroup_subtree_control_write()
+Date: Fri,  9 May 2014 15:32:53 -0400
+Message-ID: <1399663975-315-6-git-send-email-tj@kernel.org>
+References: <1399663975-315-1-git-send-email-tj@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=j0Ks298ZnN0m6zC2ZwtfOQykmads7f2kMhA09dgMvNc=;
+        b=uiAa77aalZ1LVi6ZKxMuRVNzMpQdP/FE+YlwG5n+wezhnDOb+fAGyLkBIC/X3Twpdm
+         IqupOZJMk45eq4zE3VL+VdCJPXuk6aX1eX4BvnaeSh291N3xByClp9iN+THKJ0cpBpGc
+         yXs5fQLdDoupp0xf7zYP+BdOYC8CYY+QrukKdfr5Arc3gi8qYmOPg/qFXaEWbXoTuuMY
+         6HpbMNIVw/xYMvjAD2YmdRkTvVGFHcaRyp+jHSbyUdKqO+7It03VbK31KOWHoZ/54WLw
+         VitkvwZleBYRDxMRqlA73DRW+3WrSEQSqoLJq+FD/mf1rhIqE4zQ5YYEUjCXzNtGipQV
+         bHHw==
+In-Reply-To: <1399663975-315-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: lizefan@huawei.com
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-On Tue, May 06, 2014 at 08:44:23AM -0400, Tejun Heo wrote:
-> Convert all cftype->write_string() users to the new cftype->write()
-> which maps directly to kernfs write operation and has full access to
-> kernfs and cgroup contexts.  The conversions are mostly mechanical.
-> 
-> * @css and @cft are accessed using of_css() and of_cft() accessors
->   respectively instead of being specified as arguments.
-> 
-> * Should return @nbytes on success instead of 0.
-> 
-> * @buf is not trimmed automatically.  Trim if necessary.  Note that
->   blkcg doesn't need this as blkg_conf_prep() can already handle
->   whitespaces.
-> 
-> cftype->write_string() has no user left after the conversions and
-> removed.
-> 
-> While at it, remove unnecessary local variable @p in
-> cgroup_subtree_control_write() and stale comment about
-> CGROUP_LOCAL_BUFFER_SIZE in cgroup_freezer.c.
-> 
-> This patch doesn't introduce any visible behavior changes.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> Cc: Aristeu Rozanski <arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> ---
->  block/blk-throttle.c      | 32 ++++++++++++++++----------------
->  block/cfq-iosched.c       | 28 ++++++++++++++--------------
+After waiting for a child to finish offline,
+cgroup_subtree_control_write() jumps up to retry from after the input
+parsing and active protection breaking.  This retry makes the
+scheduled locking update more difficult.  Let's simplify it by
+returning with restart_syscall() for retries.
 
-Ack to blk-throttle.c and cfq-iosched.c changes.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ kernel/cgroup.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-thanks
-Vivek
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index b81e7c0..ff92bac 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -2535,7 +2535,7 @@ out_finish:
+ static int cgroup_subtree_control_write(struct cgroup_subsys_state *dummy_css,
+ 					struct cftype *cft, char *buffer)
+ {
+-	unsigned int enable_req = 0, disable_req = 0, enable, disable;
++	unsigned int enable = 0, disable = 0;
+ 	struct cgroup *cgrp = dummy_css->cgroup, *child;
+ 	struct cgroup_subsys *ss;
+ 	char *tok, *p;
+@@ -2554,11 +2554,11 @@ static int cgroup_subtree_control_write(struct cgroup_subsys_state *dummy_css,
+ 				continue;
+ 
+ 			if (*tok == '+') {
+-				enable_req |= 1 << ssid;
+-				disable_req &= ~(1 << ssid);
++				enable |= 1 << ssid;
++				disable &= ~(1 << ssid);
+ 			} else if (*tok == '-') {
+-				disable_req |= 1 << ssid;
+-				enable_req &= ~(1 << ssid);
++				disable |= 1 << ssid;
++				enable &= ~(1 << ssid);
+ 			} else {
+ 				return -EINVAL;
+ 			}
+@@ -2576,9 +2576,6 @@ static int cgroup_subtree_control_write(struct cgroup_subsys_state *dummy_css,
+ 	 */
+ 	cgroup_get(cgrp);
+ 	kernfs_break_active_protection(cgrp->control_kn);
+-retry:
+-	enable = enable_req;
+-	disable = disable_req;
+ 
+ 	mutex_lock(&cgroup_tree_mutex);
+ 
+@@ -2608,7 +2605,9 @@ retry:
+ 				schedule();
+ 				finish_wait(&child->offline_waitq, &wait);
+ 				cgroup_put(child);
+-				goto retry;
++
++				ret = restart_syscall();
++				goto out_unbreak;
+ 			}
+ 
+ 			/* unavailable or not enabled on the parent? */
+@@ -2692,6 +2691,7 @@ out_unlock:
+ 	mutex_unlock(&cgroup_mutex);
+ out_unlock_tree:
+ 	mutex_unlock(&cgroup_tree_mutex);
++out_unbreak:
+ 	kernfs_unbreak_active_protection(cgrp->control_kn);
+ 	cgroup_put(cgrp);
+ 	return ret;
+-- 
+1.9.0
