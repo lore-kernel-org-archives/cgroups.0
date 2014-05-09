@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 14/14] cgroup: implement css_tryget()
-Date: Fri,  9 May 2014 17:31:31 -0400
-Message-ID: <1399671091-23867-15-git-send-email-tj@kernel.org>
+Subject: [PATCH 13/14] device_cgroup: use css_has_online_children() instead of has_children()
+Date: Fri,  9 May 2014 17:31:30 -0400
+Message-ID: <1399671091-23867-14-git-send-email-tj@kernel.org>
 References: <1399671091-23867-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=48vsfIxb5t3zVfVZxv8NUF2ZtSWsPinRkUUNpaMG9qE=;
-        b=VhFAS2QRjX01JZ8SDOG+x7omsl9CSmZyjehxCTUIKCchJtqtz2VXiualnjke81KeNh
-         2fisVmffbStXspOc+Eehc1zXXGOuS6dIIPjXqJYWpiWXB/rDXhOVFh8I/e/JAsUyD12Z
-         ngs1HbvUUvtRUKdXGPvqw7ewRomIcad9gGl4EMYUHvmW6j7DaXrl/BDppokzrPjYrF9t
-         2uTxx3vNUe6pml15mWM4Zo+IEDf4i2vHSpCvbUwXDqxVSj7QiLT+n3Twk6LIuvFTj3Dv
-         clGakLKTWXgw0LDY/X7BPWKgOrEnBu26jHZ9s/KxZvdO0/LvTaAXn+FOpkW7Ebr5b1o7
-         s6ww==
+        bh=xwX+SW6CMneekRj5U56s/MDVLUsFmmXsH8lSBX/dOgk=;
+        b=hI+AzWeFQ57jFHinUyPQ/M2StDjPncTkfQnrYreHM9FyGTJbUzpURVnF60p7ziir+q
+         xmN99Q6ipx89Fas8yML1JZwGQSRMP9jS4S/467EnJVnHrQPBygZSsE4OK0+1wgvOYQEF
+         pqZuDteKxNVbLTBR3nQ4Uo5I67ytRomULbK//KPO8BIklFd4DqNrUUymg64iJ8KwaGDv
+         cbtHCpRdbjegxEmNBdHgfcJlR6+QsbFHPRGcJZ1mb3Xj79q5O6oKh/MzxBj3edCUChAV
+         lAKKsxacVF5s8Sx9GM5Ol5el9PCtAHq69kHmyNb6Fft6xIziL2F4djbFu0CW0bjpRpKq
+         hz8Q==
 In-Reply-To: <1399671091-23867-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -21,46 +21,62 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, hannes@cmpxchg.org, Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, hannes@cmpxchg.org, Tejun Heo <tj@kernel.org>, Aristeu Rozanski <aris@redhat.com>, Serge Hallyn <serge.hallyn@ubuntu.com>
 
-Implement css_tryget() which tries to grab a cgroup_subsys_state's
-reference as long as it already hasn't reached zero.  Combined with
-the recent css iterator changes to include offline && !released csses
-during traversal, this can be used to access csses regardless of its
-online state.
+devcgroup_update_access() wants to know whether there are child
+cgroups which are online and visible to userland and has_children()
+may return false positive.  Replace it with css_has_online_children().
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Aristeu Rozanski <aris@redhat.com>
+Cc: Serge Hallyn <serge.hallyn@ubuntu.com>
 ---
- include/linux/cgroup.h | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ security/device_cgroup.c | 19 ++-----------------
+ 1 file changed, 2 insertions(+), 17 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index c8eb66e..6dd3867 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -111,6 +111,22 @@ static inline void css_get(struct cgroup_subsys_state *css)
+diff --git a/security/device_cgroup.c b/security/device_cgroup.c
+index 75b4b18..22de334 100644
+--- a/security/device_cgroup.c
++++ b/security/device_cgroup.c
+@@ -475,21 +475,6 @@ static int propagate_exception(struct dev_cgroup *devcg_root,
+ 	return rc;
  }
  
- /**
-+ * css_tryget - try to obtain a reference on the specified css
-+ * @css: target css
-+ *
-+ * Obtain a reference on @css unless it already has reached zero and is
-+ * being released.  This function doesn't care whether @css is on or
-+ * offline.  The caller naturally needs to ensure that @css is accessible
-+ * but doesn't have to be holding a reference on it - IOW, RCU protected
-+ * access is good enough for this function.  Returns %true if a reference
-+ * count was successfully obtained; %false otherwise.
-+ */
-+static inline bool css_tryget(struct cgroup_subsys_state *css)
-+{
-+	return percpu_ref_tryget(&css->refcnt);
-+}
-+
-+/**
-  * css_tryget_online - try to obtain a reference on the specified css if online
-  * @css: target css
-  *
+-static inline bool has_children(struct dev_cgroup *devcgroup)
+-{
+-	bool ret;
+-
+-	/*
+-	 * FIXME: There may be lingering offline csses and this function
+-	 * may return %true when there isn't any userland-visible child
+-	 * which is incorrect for our purposes.
+-	 */
+-	rcu_read_lock();
+-	ret = css_next_child(NULL, &devcgroup->css);
+-	rcu_read_unlock();
+-	return ret;
+-}
+-
+ /*
+  * Modify the exception list using allow/deny rules.
+  * CAP_SYS_ADMIN is needed for this.  It's at least separate from CAP_MKNOD
+@@ -522,7 +507,7 @@ static int devcgroup_update_access(struct dev_cgroup *devcgroup,
+ 	case 'a':
+ 		switch (filetype) {
+ 		case DEVCG_ALLOW:
+-			if (has_children(devcgroup))
++			if (css_has_online_children(&devcgroup->css))
+ 				return -EINVAL;
+ 
+ 			if (!may_allow_all(parent))
+@@ -538,7 +523,7 @@ static int devcgroup_update_access(struct dev_cgroup *devcgroup,
+ 				return rc;
+ 			break;
+ 		case DEVCG_DENY:
+-			if (has_children(devcgroup))
++			if (css_has_online_children(&devcgroup->css))
+ 				return -EINVAL;
+ 
+ 			dev_exception_clean(devcgroup);
 -- 
 1.9.0
