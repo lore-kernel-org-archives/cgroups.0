@@ -1,109 +1,345 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 03/14] memcg: update memcg_has_children() to use css_next_child()
-Date: Fri,  9 May 2014 17:31:20 -0400
-Message-ID: <1399671091-23867-4-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 01/14] cgroup: remove css_parent()
+Date: Fri,  9 May 2014 17:31:18 -0400
+Message-ID: <1399671091-23867-2-git-send-email-tj@kernel.org>
 References: <1399671091-23867-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=YUm/IJkAn53tYmxPIR8wTPI69ZmDwbzmUKP8aH0iNbk=;
-        b=Zcph/GtmLsnGzGUy7KEBTTcWXR7vE7yUHVEX/iaH2AluHJYjCBbOSd96+qvMnqHfq6
-         YixvzheNe0g1p04nRw2Db9SwzIQWUuNhELhMgLFF9rw8C9dbp7+1PvJdRd/BGAKhWHZZ
-         NCQ7HLPSHlOwnUBaFn5APf2eqtkz1DXk/T+/av5ckE6VyFHtqfzmWa84bY4872TSICqd
-         Qj8zokWWwxQanZDbXkdFAHYW21GFv+s2PxIcBYTCQSY1wjwphOPduxf8P2hMBQeZkGxB
-         mxxIRU4dCll+el81K9lRl2i+YGi2juR5v9pvgKd4vQ+aoU7UWNNMgCKRyU267q9//ghg
-         clfg==
-In-Reply-To: <1399671091-23867-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=Cc5kQNCDhs2mEX18M8bCt+MPEwv7p6r4dm3VJwU/8BY=;
+        b=fLnMsVlLRhdoomB1K1LP0S+lqYy9cD0R35Qpbm2A8YTaj8QUtlmFWy9JoTVvHpj0Fa
+         7LFjcuUOTGxeMIIi21EPufIDVpQLPt/RABuxoPXLbPxD0X7eJxvcFjNxZSR6bzvy+ZeY
+         CG0x9fANfyVaZOgYOwy8YbEtIWzssgRlTBXQ++2h8f0rpBPwFF9n0fogtSZ3qbYqYBg0
+         YaCSJuzhU7k8IDsnMPFxgRDfkekEveugujIHzAVfwFv84mWMW/wktViMIwqCnOekJjLQ
+         O1d9CMeryd5/1oT4Iv5bQAcfOMlU4Qa20jDsuEmXAhm1aKDKQ8ld/OJB6kQIUXSb7cka
+         yRCw==
+In-Reply-To: <1399671091-23867-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+To: lizefan@huawei.com
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, hannes@cmpxchg.org, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, Jens Axboe <axboe@kernel.dk>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Michal Hocko <mhocko@suse.cz>, Neil Horman <nhorman@tuxdriver.com>, "David S. Miller" <davem@davemloft.net>
 
-Currently, memcg_has_children() and mem_cgroup_hierarchy_write()
-directly test cgroup->children for list emptiness.  It's semantically
-correct in traditional hierarchies as it actually wants to test for
-any children dead or alive; however, cgroup->children is not a
-published field and scheduled to go away.
+cgroup in general is moving towards using cgroup_subsys_state as the
+fundamental structural component and css_parent() was introduced to
+convert from using cgroup->parent to css->parent.  It was quite some
+time ago and we're moving forward with making css more prominent.
 
-This patch moves out .use_hierarchy test out of memcg_has_children()
-and updates it to use css_next_child() to test whether there exists
-any children.  With .use_hierarchy test moved out, it can also be used
-by mem_cgroup_hierarchy_write().
+This patch drops the trivial wrapper css_parent() and let the users
+dereference css->parent.  While at it, explicitly mark fields of css
+which are public and immutable.
 
-A side note: As .use_hierarchy is going away, it doesn't really matter
-but I'm not sure about how it's used in __memcg_activate_kmem().  The
-condition tested by memcg_has_children() is mushy when seen from
-userland as its result is affected by dead csses which aren't visible
-from userland.  I think the rule would be a lot clearer if we have a
-dedicated "freshly minted" flag which gets cleared when the first task
-is migrated into it or the first child is created and then gate
-activation with that.
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Vivek Goyal <vgoyal@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Li Zefan <lizefan@huawei.com>
+Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>
+Cc: Neil Horman <nhorman@tuxdriver.com>
+Cc: "David S. Miller" <davem@davemloft.net>
 ---
- mm/memcontrol.c | 26 ++++++++++++++++----------
- 1 file changed, 16 insertions(+), 10 deletions(-)
+ block/blk-cgroup.h           |  2 +-
+ include/linux/cgroup.h       | 29 +++++++++++------------------
+ kernel/cgroup.c              |  8 ++++----
+ kernel/cgroup_freezer.c      |  2 +-
+ kernel/cpuset.c              |  2 +-
+ kernel/sched/core.c          |  2 +-
+ kernel/sched/cpuacct.c       |  2 +-
+ mm/hugetlb_cgroup.c          |  2 +-
+ mm/memcontrol.c              | 14 +++++++-------
+ net/core/netclassid_cgroup.c |  2 +-
+ net/core/netprio_cgroup.c    |  2 +-
+ security/device_cgroup.c     |  6 +++---
+ 12 files changed, 33 insertions(+), 40 deletions(-)
 
+diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+index 371fe8e..d692b29 100644
+--- a/block/blk-cgroup.h
++++ b/block/blk-cgroup.h
+@@ -204,7 +204,7 @@ static inline struct blkcg *bio_blkcg(struct bio *bio)
+  */
+ static inline struct blkcg *blkcg_parent(struct blkcg *blkcg)
+ {
+-	return css_to_blkcg(css_parent(&blkcg->css));
++	return css_to_blkcg(blkcg->css.parent);
+ }
+ 
+ /**
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 76dadd77..88c4d03 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -48,22 +48,28 @@ enum cgroup_subsys_id {
+ };
+ #undef SUBSYS
+ 
+-/* Per-subsystem/per-cgroup state maintained by the system. */
++/*
++ * Per-subsystem/per-cgroup state maintained by the system.  This is the
++ * fundamental structural building block that controllers deal with.
++ *
++ * Fields marked with "PI:" are public and immutable and may be accessed
++ * directly without synchronization.
++ */
+ struct cgroup_subsys_state {
+-	/* the cgroup that this css is attached to */
++	/* PI: the cgroup that this css is attached to */
+ 	struct cgroup *cgroup;
+ 
+-	/* the cgroup subsystem that this css is attached to */
++	/* PI: the cgroup subsystem that this css is attached to */
+ 	struct cgroup_subsys *ss;
+ 
+ 	/* reference count - access via css_[try]get() and css_put() */
+ 	struct percpu_ref refcnt;
+ 
+-	/* the parent css */
++	/* PI: the parent css */
+ 	struct cgroup_subsys_state *parent;
+ 
+ 	/*
+-	 * Subsys-unique ID.  0 is unused and root is always 1.  The
++	 * PI: Subsys-unique ID.  0 is unused and root is always 1.  The
+ 	 * matching css can be looked up using css_from_id().
+ 	 */
+ 	int id;
+@@ -665,19 +671,6 @@ struct cgroup_subsys {
+ #undef SUBSYS
+ 
+ /**
+- * css_parent - find the parent css
+- * @css: the target cgroup_subsys_state
+- *
+- * Return the parent css of @css.  This function is guaranteed to return
+- * non-NULL parent as long as @css isn't the root.
+- */
+-static inline
+-struct cgroup_subsys_state *css_parent(struct cgroup_subsys_state *css)
+-{
+-	return css->parent;
+-}
+-
+-/**
+  * task_css_set_check - obtain a task's css_set with extra access conditions
+  * @task: the task to obtain css_set for
+  * @__c: extra condition expression to be passed to rcu_dereference_check()
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 64ff413..dab8f35 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -3175,10 +3175,10 @@ css_next_descendant_pre(struct cgroup_subsys_state *pos,
+ 
+ 	/* no child, visit my or the closest ancestor's next sibling */
+ 	while (pos != root) {
+-		next = css_next_child(pos, css_parent(pos));
++		next = css_next_child(pos, pos->parent);
+ 		if (next)
+ 			return next;
+-		pos = css_parent(pos);
++		pos = pos->parent;
+ 	}
+ 
+ 	return NULL;
+@@ -3260,12 +3260,12 @@ css_next_descendant_post(struct cgroup_subsys_state *pos,
+ 		return NULL;
+ 
+ 	/* if there's an unvisited sibling, visit its leftmost descendant */
+-	next = css_next_child(pos, css_parent(pos));
++	next = css_next_child(pos, pos->parent);
+ 	if (next)
+ 		return css_leftmost_descendant(next);
+ 
+ 	/* no sibling left, visit parent */
+-	return css_parent(pos);
++	return pos->parent;
+ }
+ 
+ static bool cgroup_has_live_children(struct cgroup *cgrp)
+diff --git a/kernel/cgroup_freezer.c b/kernel/cgroup_freezer.c
+index f52c443..fee1ae63 100644
+--- a/kernel/cgroup_freezer.c
++++ b/kernel/cgroup_freezer.c
+@@ -59,7 +59,7 @@ static inline struct freezer *task_freezer(struct task_struct *task)
+ 
+ static struct freezer *parent_freezer(struct freezer *freezer)
+ {
+-	return css_freezer(css_parent(&freezer->css));
++	return css_freezer(freezer->css.parent);
+ }
+ 
+ bool cgroup_freezing(struct task_struct *task)
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index 2f4b08b..5b2a310 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -124,7 +124,7 @@ static inline struct cpuset *task_cs(struct task_struct *task)
+ 
+ static inline struct cpuset *parent_cs(struct cpuset *cs)
+ {
+-	return css_cs(css_parent(&cs->css));
++	return css_cs(cs->css.parent);
+ }
+ 
+ #ifdef CONFIG_NUMA
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 268a45e..ac61ad1 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -7586,7 +7586,7 @@ cpu_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+ static int cpu_cgroup_css_online(struct cgroup_subsys_state *css)
+ {
+ 	struct task_group *tg = css_tg(css);
+-	struct task_group *parent = css_tg(css_parent(css));
++	struct task_group *parent = css_tg(css->parent);
+ 
+ 	if (parent)
+ 		sched_online_group(tg, parent);
+diff --git a/kernel/sched/cpuacct.c b/kernel/sched/cpuacct.c
+index c143ee3..9cf350c 100644
+--- a/kernel/sched/cpuacct.c
++++ b/kernel/sched/cpuacct.c
+@@ -46,7 +46,7 @@ static inline struct cpuacct *task_ca(struct task_struct *tsk)
+ 
+ static inline struct cpuacct *parent_ca(struct cpuacct *ca)
+ {
+-	return css_ca(css_parent(&ca->css));
++	return css_ca(ca->css.parent);
+ }
+ 
+ static DEFINE_PER_CPU(u64, root_cpuacct_cpuusage);
+diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
+index a380681..493f758 100644
+--- a/mm/hugetlb_cgroup.c
++++ b/mm/hugetlb_cgroup.c
+@@ -52,7 +52,7 @@ static inline bool hugetlb_cgroup_is_root(struct hugetlb_cgroup *h_cg)
+ static inline struct hugetlb_cgroup *
+ parent_hugetlb_cgroup(struct hugetlb_cgroup *h_cg)
+ {
+-	return hugetlb_cgroup_from_css(css_parent(&h_cg->css));
++	return hugetlb_cgroup_from_css(h_cg->css.parent);
+ }
+ 
+ static inline bool hugetlb_cgroup_have_usage(struct hugetlb_cgroup *h_cg)
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 036453a..eb6e1b5 100644
+index b638a79..a5e0417 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -4834,18 +4834,23 @@ static void mem_cgroup_reparent_charges(struct mem_cgroup *memcg)
- 	} while (usage > 0);
- }
- 
-+/* test whether @memcg has children, dead or alive */
- static inline bool memcg_has_children(struct mem_cgroup *memcg)
+@@ -1540,7 +1540,7 @@ static unsigned long mem_cgroup_margin(struct mem_cgroup *memcg)
+ int mem_cgroup_swappiness(struct mem_cgroup *memcg)
  {
--	lockdep_assert_held(&memcg_create_mutex);
-+	bool ret;
-+
- 	/*
--	 * The lock does not prevent addition or deletion to the list
--	 * of children, but it prevents a new child from being
--	 * initialized based on this parent in css_online(), so it's
--	 * enough to decide whether hierarchically inherited
--	 * attributes can still be changed or not.
-+	 * The lock does not prevent addition or deletion of children, but
-+	 * it prevents a new child from being initialized based on this
-+	 * parent in css_online(), so it's enough to decide whether
-+	 * hierarchically inherited attributes can still be changed or not.
- 	 */
--	return memcg->use_hierarchy &&
--		!list_empty(&memcg->css.cgroup->children);
-+	lockdep_assert_held(&memcg_create_mutex);
-+
-+	rcu_read_lock();
-+	ret = css_next_child(NULL, &memcg->css);
-+	rcu_read_unlock();
-+	return ret;
- }
+ 	/* root ? */
+-	if (!css_parent(&memcg->css))
++	if (!memcg->css.parent)
+ 		return vm_swappiness;
  
- /*
-@@ -4921,7 +4926,7 @@ static int mem_cgroup_hierarchy_write(struct cgroup_subsys_state *css,
- 	 */
- 	if ((!parent_memcg || !parent_memcg->use_hierarchy) &&
- 				(val == 1 || val == 0)) {
--		if (list_empty(&memcg->css.cgroup->children))
-+		if (!memcg_has_children(memcg))
- 			memcg->use_hierarchy = val;
- 		else
- 			retval = -EBUSY;
-@@ -5038,7 +5043,8 @@ static int __memcg_activate_kmem(struct mem_cgroup *memcg,
- 	 * of course permitted.
- 	 */
+ 	return memcg->swappiness;
+@@ -4909,7 +4909,7 @@ static int mem_cgroup_hierarchy_write(struct cgroup_subsys_state *css,
+ {
+ 	int retval = 0;
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+-	struct mem_cgroup *parent_memcg = mem_cgroup_from_css(css_parent(&memcg->css));
++	struct mem_cgroup *parent_memcg = mem_cgroup_from_css(memcg->css.parent);
+ 
  	mutex_lock(&memcg_create_mutex);
--	if (cgroup_has_tasks(memcg->css.cgroup) || memcg_has_children(memcg))
-+	if (cgroup_has_tasks(memcg->css.cgroup) ||
-+	    (memcg->use_hierarchy && memcg_has_children(memcg)))
- 		err = -EBUSY;
- 	mutex_unlock(&memcg_create_mutex);
- 	if (err)
+ 
+@@ -5207,8 +5207,8 @@ static void memcg_get_hierarchical_limit(struct mem_cgroup *memcg,
+ 	if (!memcg->use_hierarchy)
+ 		goto out;
+ 
+-	while (css_parent(&memcg->css)) {
+-		memcg = mem_cgroup_from_css(css_parent(&memcg->css));
++	while (memcg->css.parent) {
++		memcg = mem_cgroup_from_css(memcg->css.parent);
+ 		if (!memcg->use_hierarchy)
+ 			break;
+ 		tmp = res_counter_read_u64(&memcg->res, RES_LIMIT);
+@@ -5443,7 +5443,7 @@ static int mem_cgroup_swappiness_write(struct cgroup_subsys_state *css,
+ 				       struct cftype *cft, u64 val)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+-	struct mem_cgroup *parent = mem_cgroup_from_css(css_parent(&memcg->css));
++	struct mem_cgroup *parent = mem_cgroup_from_css(memcg->css.parent);
+ 
+ 	if (val > 100 || !parent)
+ 		return -EINVAL;
+@@ -5790,7 +5790,7 @@ static int mem_cgroup_oom_control_write(struct cgroup_subsys_state *css,
+ 	struct cftype *cft, u64 val)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+-	struct mem_cgroup *parent = mem_cgroup_from_css(css_parent(&memcg->css));
++	struct mem_cgroup *parent = mem_cgroup_from_css(memcg->css.parent);
+ 
+ 	/* cannot set to root cgroup and only 0 and 1 are allowed */
+ 	if (!parent || !((val == 0) || (val == 1)))
+@@ -6407,7 +6407,7 @@ static int
+ mem_cgroup_css_online(struct cgroup_subsys_state *css)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+-	struct mem_cgroup *parent = mem_cgroup_from_css(css_parent(css));
++	struct mem_cgroup *parent = mem_cgroup_from_css(css->parent);
+ 
+ 	if (css->id > MEM_CGROUP_ID_MAX)
+ 		return -ENOSPC;
+diff --git a/net/core/netclassid_cgroup.c b/net/core/netclassid_cgroup.c
+index 22931e1..30d903b 100644
+--- a/net/core/netclassid_cgroup.c
++++ b/net/core/netclassid_cgroup.c
+@@ -42,7 +42,7 @@ cgrp_css_alloc(struct cgroup_subsys_state *parent_css)
+ static int cgrp_css_online(struct cgroup_subsys_state *css)
+ {
+ 	struct cgroup_cls_state *cs = css_cls_state(css);
+-	struct cgroup_cls_state *parent = css_cls_state(css_parent(css));
++	struct cgroup_cls_state *parent = css_cls_state(css->parent);
+ 
+ 	if (parent)
+ 		cs->classid = parent->classid;
+diff --git a/net/core/netprio_cgroup.c b/net/core/netprio_cgroup.c
+index b990cef..2f385b9 100644
+--- a/net/core/netprio_cgroup.c
++++ b/net/core/netprio_cgroup.c
+@@ -140,7 +140,7 @@ cgrp_css_alloc(struct cgroup_subsys_state *parent_css)
+ 
+ static int cgrp_css_online(struct cgroup_subsys_state *css)
+ {
+-	struct cgroup_subsys_state *parent_css = css_parent(css);
++	struct cgroup_subsys_state *parent_css = css->parent;
+ 	struct net_device *dev;
+ 	int ret = 0;
+ 
+diff --git a/security/device_cgroup.c b/security/device_cgroup.c
+index 82d6b4f..3116015 100644
+--- a/security/device_cgroup.c
++++ b/security/device_cgroup.c
+@@ -182,7 +182,7 @@ static inline bool is_devcg_online(const struct dev_cgroup *devcg)
+ static int devcgroup_online(struct cgroup_subsys_state *css)
+ {
+ 	struct dev_cgroup *dev_cgroup = css_to_devcgroup(css);
+-	struct dev_cgroup *parent_dev_cgroup = css_to_devcgroup(css_parent(css));
++	struct dev_cgroup *parent_dev_cgroup = css_to_devcgroup(css->parent);
+ 	int ret = 0;
+ 
+ 	mutex_lock(&devcgroup_mutex);
+@@ -374,7 +374,7 @@ static bool may_access(struct dev_cgroup *dev_cgroup,
+ static int parent_has_perm(struct dev_cgroup *childcg,
+ 				  struct dev_exception_item *ex)
+ {
+-	struct dev_cgroup *parent = css_to_devcgroup(css_parent(&childcg->css));
++	struct dev_cgroup *parent = css_to_devcgroup(childcg->css.parent);
+ 
+ 	if (!parent)
+ 		return 1;
+@@ -502,7 +502,7 @@ static int devcgroup_update_access(struct dev_cgroup *devcgroup,
+ 	char temp[12];		/* 11 + 1 characters needed for a u32 */
+ 	int count, rc = 0;
+ 	struct dev_exception_item ex;
+-	struct dev_cgroup *parent = css_to_devcgroup(css_parent(&devcgroup->css));
++	struct dev_cgroup *parent = css_to_devcgroup(devcgroup->css.parent);
+ 
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EPERM;
 -- 
 1.9.0
