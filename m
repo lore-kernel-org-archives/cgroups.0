@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 09/14] cgroup: introduce CSS_RELEASED and reduce css iteration fallback window
-Date: Fri,  9 May 2014 17:31:26 -0400
-Message-ID: <1399671091-23867-10-git-send-email-tj@kernel.org>
+Subject: [PATCH 10/14] cgroup: iterate cgroup_subsys_states directly
+Date: Fri,  9 May 2014 17:31:27 -0400
+Message-ID: <1399671091-23867-11-git-send-email-tj@kernel.org>
 References: <1399671091-23867-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=pkRKWCBgqYpTqCwQjtXXZOP1GLjZ2vYvf4aqSh/2nFY=;
-        b=fLYjDEUfuVQlnrV88pq1zPJSjDOkCA0wZDEUp/WTIuxjk2ClnhA71aLC9ky9nBFrdV
-         A6OT+IzEdKv9pBdik9uKuzi0Mpq5U93wviJjT6Z5im4/FSDSMfQpZA9Y3pEY+XhYo73s
-         lJWlG4AYZFxYlOX8Y6U/TGFyNplcj5w6z/v5pZyoRv2MXhJwE4QAVUVjWSxiDYDfd15n
-         kV/PKwM0tB2CL5PhzaqeRpyrA8N0lyvECGRpCtovFFcbt25PqZNjCvyVu6/2DokMP/1i
-         Pb1hw5Oqonh8WF++zMiUyZPzYZTAl6XR/MPNzue0K4w+G+KC9d4ZBU47YH//0XeQL+o5
-         sfYQ==
+        bh=I2Tp9pwApF4twwGZ9j70LIUrMPozlMeXqVq1ZyW6nGI=;
+        b=HwRjn//OHTwpWnb9bX2RtblClrKNamTf9TEZGrcLNCRkurRrLxLd9CYAotvIHNXoaQ
+         4D7RakcKSdbHqFzH+4A3qrLymSznuT/j+e7hCM4q9pqnsw6kRa22p//yE/QDIPcpRx8x
+         rpJD+g+x1hoHrLt0foHuq7Qr5a7RGfQ9PcWL75doQ2khwCbi1LQoTDmiwKqwjf5OateP
+         SWmzve5YKK5qsVgnhsJaZ9Zawbe9+5mAwgIvRblSHn3zFsAHlAgbk4lMITJjV7l8/4bD
+         3WrhY7mmTKhGWmgH5PtKSIY2s62W2dZQKdDBnWb0K0hoeMNJUgaloF4DtH54DB3SIxRg
+         GbRQ==
 In-Reply-To: <1399671091-23867-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,116 +23,216 @@ Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, hannes@cmpxchg.org, Tejun Heo <tj@kernel.org>
 
-css iterations allow the caller to drop RCU read lock.  As long as the
-caller keeps the current position accessible, it can simply re-grab
-RCU read lock later and continue iteration.  This is achieved by using
-CGRP_DEAD to detect whether the current positions next pointer is safe
-to dereference and if not re-iterate from the beginning to the next
-position using ->serial_nr.
+Currently, css_next_child() is implemented as finding the next child
+cgroup which has the css enabled, which used to be the only way to do
+it as only cgroups participated in sibling lists and thus could be
+iteratd.  This works as long as what's required during iteration is
+not missing online csses; however, it turns out that there are use
+cases where offlined but not yet released csses need to be iterated.
+This is difficult to implement through cgroup iteration the unified
+hierarchy as there may be multiple dying csses for the same subsystem
+associated with single cgroup.
 
-CGRP_DEAD is used as the marker to invalidate the next pointer and the
-only requirement is that the marker is set before the next sibling
-starts its RCU grace period.  Because CGRP_DEAD is set at the end of
-cgroup_destroy_locked() but the cgroup is unlinked when the reference
-count reaches zero, we currently have a rather large window where this
-fallback re-iteration logic can be triggered.
+After the recent changes, the cgroup self and regular csses behave
+identically in how they're linked and unlinked from the sibling lists
+including assertion of CSS_RELEASED and css_next_child() can simply
+switch to iterating csses directly.  This both simplifies the logic
+and ensures that all visible non-released csses are included in the
+iteration whether there are multiple dying csses for a subsystem or
+not.
 
-This patch introduces CSS_RELEASED which is set when a css is unlinked
-from its sibling list.  This still keeps the re-iteration logic
-working while drastically reducing the window of its activation.
-While at it, rewrite the comment in css_next_child() to reflect the
-new flag and better explain the synchronization.
+As all other iterators depend on css_next_child() for sibling
+iteration, this changes behaviors of all css iterators.  Add and
+update explanations on the css states which are included in traversal
+to all iterators.
 
-This will also enable iterating csses directly instead of through
-cgroups.
+As css iteration could always contain offlined csses, this shouldn't
+break any of the current users and new usages which need iteration of
+all on and offline csses can make use of the new semantics.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
 ---
- include/linux/cgroup.h |  1 +
- kernel/cgroup.c        | 41 ++++++++++++++++++++---------------------
- 2 files changed, 21 insertions(+), 21 deletions(-)
+ include/linux/cgroup.h | 44 ++++++++++++++++++++---------------
+ kernel/cgroup.c        | 62 ++++++++++++++++++++++++++++++--------------------
+ 2 files changed, 63 insertions(+), 43 deletions(-)
 
 diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index e65cc0f..634ecc1 100644
+index 634ecc1..58867ed 100644
 --- a/include/linux/cgroup.h
 +++ b/include/linux/cgroup.h
-@@ -95,6 +95,7 @@ struct cgroup_subsys_state {
- 
- /* bits in struct cgroup_subsys_state flags field */
- enum {
-+	CSS_RELEASED	= (1 << 0), /* refcnt reached zero, released */
- 	CSS_ONLINE	= (1 << 1), /* between ->css_online() and ->css_offline() */
- };
- 
+@@ -759,14 +759,14 @@ struct cgroup_subsys_state *css_from_id(int id, struct cgroup_subsys *ss);
+  * @pos: the css * to use as the loop cursor
+  * @parent: css whose children to walk
+  *
+- * Walk @parent's children.  Must be called under rcu_read_lock().  A child
+- * css which hasn't finished ->css_online() or already has finished
+- * ->css_offline() may show up during traversal and it's each subsystem's
+- * responsibility to verify that each @pos is alive.
++ * Walk @parent's children.  Must be called under rcu_read_lock().
+  *
+- * If a subsystem synchronizes against the parent in its ->css_online() and
+- * before starting iterating, a css which finished ->css_online() is
+- * guaranteed to be visible in the future iterations.
++ * If a subsystem synchronizes ->css_online() and the start of iteration, a
++ * css which finished ->css_online() is guaranteed to be visible in the
++ * future iterations and will stay visible until the last reference is put.
++ * A css which hasn't finished ->css_online() or already finished
++ * ->css_offline() may show up during traversal.  It's each subsystem's
++ * responsibility to synchronize against on/offlining.
+  *
+  * It is allowed to temporarily drop RCU read lock during iteration.  The
+  * caller is responsible for ensuring that @pos remains accessible until
+@@ -789,17 +789,16 @@ css_rightmost_descendant(struct cgroup_subsys_state *pos);
+  * @root: css whose descendants to walk
+  *
+  * Walk @root's descendants.  @root is included in the iteration and the
+- * first node to be visited.  Must be called under rcu_read_lock().  A
+- * descendant css which hasn't finished ->css_online() or already has
+- * finished ->css_offline() may show up during traversal and it's each
+- * subsystem's responsibility to verify that each @pos is alive.
++ * first node to be visited.  Must be called under rcu_read_lock().
+  *
+- * If a subsystem synchronizes against the parent in its ->css_online() and
+- * before starting iterating, and synchronizes against @pos on each
+- * iteration, any descendant css which finished ->css_online() is
+- * guaranteed to be visible in the future iterations.
++ * If a subsystem synchronizes ->css_online() and the start of iteration, a
++ * css which finished ->css_online() is guaranteed to be visible in the
++ * future iterations and will stay visible until the last reference is put.
++ * A css which hasn't finished ->css_online() or already finished
++ * ->css_offline() may show up during traversal.  It's each subsystem's
++ * responsibility to synchronize against on/offlining.
+  *
+- * In other words, the following guarantees that a descendant can't escape
++ * For example, the following guarantees that a descendant can't escape
+  * state updates of its ancestors.
+  *
+  * my_online(@css)
+@@ -855,8 +854,17 @@ css_next_descendant_post(struct cgroup_subsys_state *pos,
+  *
+  * Similar to css_for_each_descendant_pre() but performs post-order
+  * traversal instead.  @root is included in the iteration and the last
+- * node to be visited.  Note that the walk visibility guarantee described
+- * in pre-order walk doesn't apply the same to post-order walks.
++ * node to be visited.
++ *
++ * If a subsystem synchronizes ->css_online() and the start of iteration, a
++ * css which finished ->css_online() is guaranteed to be visible in the
++ * future iterations and will stay visible until the last reference is put.
++ * A css which hasn't finished ->css_online() or already finished
++ * ->css_offline() may show up during traversal.  It's each subsystem's
++ * responsibility to synchronize against on/offlining.
++ *
++ * Note that the walk visibility guarantee example described in pre-order
++ * walk doesn't apply the same to post-order walks.
+  */
+ #define css_for_each_descendant_post(pos, css)				\
+ 	for ((pos) = css_next_descendant_post(NULL, (css)); (pos);	\
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 3eda323..eaea062 100644
+index eaea062..e0953f7 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -3107,27 +3107,28 @@ css_next_child(struct cgroup_subsys_state *pos_css,
+@@ -3088,21 +3088,25 @@ static int cgroup_task_count(const struct cgroup *cgrp)
+ 
+ /**
+  * css_next_child - find the next child of a given css
+- * @pos_css: the current position (%NULL to initiate traversal)
+- * @parent_css: css whose children to walk
++ * @pos: the current position (%NULL to initiate traversal)
++ * @parent: css whose children to walk
+  *
+- * This function returns the next child of @parent_css and should be called
++ * This function returns the next child of @parent and should be called
+  * under either cgroup_mutex or RCU read lock.  The only requirement is
+- * that @parent_css and @pos_css are accessible.  The next sibling is
+- * guaranteed to be returned regardless of their states.
++ * that @parent and @pos are accessible.  The next sibling is guaranteed to
++ * be returned regardless of their states.
++ *
++ * If a subsystem synchronizes ->css_online() and the start of iteration, a
++ * css which finished ->css_online() is guaranteed to be visible in the
++ * future iterations and will stay visible until the last reference is put.
++ * A css which hasn't finished ->css_online() or already finished
++ * ->css_offline() may show up during traversal.  It's each subsystem's
++ * responsibility to synchronize against on/offlining.
+  */
+-struct cgroup_subsys_state *
+-css_next_child(struct cgroup_subsys_state *pos_css,
+-	       struct cgroup_subsys_state *parent_css)
++struct cgroup_subsys_state *css_next_child(struct cgroup_subsys_state *pos,
++					   struct cgroup_subsys_state *parent)
+ {
+-	struct cgroup *pos = pos_css ? pos_css->cgroup : NULL;
+-	struct cgroup *cgrp = parent_css->cgroup;
+-	struct cgroup *next;
++	struct cgroup_subsys_state *next;
+ 
  	cgroup_assert_mutex_or_rcu_locked();
  
- 	/*
--	 * @pos could already have been removed.  Once a cgroup is removed,
--	 * its ->sibling.next is no longer updated when its next sibling
--	 * changes.  As CGRP_DEAD assertion is serialized and happens
--	 * before the cgroup is taken off the ->sibling list, if we see it
--	 * unasserted, it's guaranteed that the next sibling hasn't
--	 * finished its grace period even if it's already removed, and thus
--	 * safe to dereference from this RCU critical section.  If
--	 * ->sibling.next is inaccessible, cgroup_is_dead() is guaranteed
--	 * to be visible as %true here.
-+	 * @pos could already have been unlinked from the sibling list.
-+	 * Once a cgroup is removed, its ->sibling.next is no longer
-+	 * updated when its next sibling changes.  CSS_RELEASED is set when
-+	 * @pos is taken off list, at which time its next pointer is valid,
-+	 * and, as releases are serialized, the one pointed to by the next
-+	 * pointer is guaranteed to not have started release yet.  This
-+	 * implies that if we observe !CSS_RELEASED on @pos in this RCU
-+	 * critical section, the one pointed to by its next pointer is
-+	 * guaranteed to not have finished its RCU grace period even if we
-+	 * have dropped rcu_read_lock() inbetween iterations.
- 	 *
--	 * If @pos is dead, its next pointer can't be dereferenced;
--	 * however, as each cgroup is given a monotonically increasing
--	 * unique serial number and always appended to the sibling list,
--	 * the next one can be found by walking the parent's children until
--	 * we see a cgroup with higher serial number than @pos's.  While
--	 * this path can be slower, it's taken only when either the current
--	 * cgroup is removed or iteration and removal race.
-+	 * If @pos has CSS_RELEASED set, its next pointer can't be
-+	 * dereferenced; however, as each css is given a monotonically
-+	 * increasing unique serial number and always appended to the
-+	 * sibling list, the next one can be found by walking the parent's
-+	 * children until the first css with higher serial number than
-+	 * @pos's.  While this path can be slower, it happens iff iteration
-+	 * races against release and the race window is very small.
+@@ -3127,27 +3131,21 @@ css_next_child(struct cgroup_subsys_state *pos_css,
+ 	 * races against release and the race window is very small.
  	 */
  	if (!pos) {
- 		next = list_entry_rcu(cgrp->self.children.next, struct cgroup, self.sibling);
--	} else if (likely(!cgroup_is_dead(pos))) {
-+	} else if (likely(!(pos->self.flags & CSS_RELEASED))) {
- 		next = list_entry_rcu(pos->self.sibling.next, struct cgroup, self.sibling);
+-		next = list_entry_rcu(cgrp->self.children.next, struct cgroup, self.sibling);
+-	} else if (likely(!(pos->self.flags & CSS_RELEASED))) {
+-		next = list_entry_rcu(pos->self.sibling.next, struct cgroup, self.sibling);
++		next = list_entry_rcu(parent->children.next, struct cgroup_subsys_state, sibling);
++	} else if (likely(!(pos->flags & CSS_RELEASED))) {
++		next = list_entry_rcu(pos->sibling.next, struct cgroup_subsys_state, sibling);
  	} else {
- 		list_for_each_entry_rcu(next, &cgrp->self.children, self.sibling)
-@@ -4138,6 +4139,7 @@ static void css_release_work_fn(struct work_struct *work)
- 
- 	mutex_lock(&cgroup_mutex);
- 
-+	css->flags |= CSS_RELEASED;
- 	list_del_rcu(&css->sibling);
- 
- 	if (ss) {
-@@ -4524,10 +4526,7 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+-		list_for_each_entry_rcu(next, &cgrp->self.children, self.sibling)
+-			if (next->self.serial_nr > pos->self.serial_nr)
++		list_for_each_entry_rcu(next, &parent->children, sibling)
++			if (next->serial_nr > pos->serial_nr)
+ 				break;
+ 	}
  
  	/*
- 	 * Mark @cgrp dead.  This prevents further task migration and child
--	 * creation by disabling cgroup_lock_live_group().  Note that
--	 * CGRP_DEAD assertion is depended upon by css_next_child() to
--	 * resume iteration after dropping RCU read lock.  See
--	 * css_next_child() for details.
-+	 * creation by disabling cgroup_lock_live_group().
+ 	 * @next, if not pointing to the head, can be dereferenced and is
+-	 * the next sibling; however, it might have @ss disabled.  If so,
+-	 * fast-forward to the next enabled one.
++	 * the next sibling.
  	 */
- 	set_bit(CGRP_DEAD, &cgrp->flags);
+-	while (&next->self.sibling != &cgrp->self.children) {
+-		struct cgroup_subsys_state *next_css = cgroup_css(next, parent_css->ss);
+-
+-		if (next_css)
+-			return next_css;
+-		next = list_entry_rcu(next->self.sibling.next, struct cgroup, self.sibling);
+-	}
++	if (&next->sibling != &parent->children)
++		return next;
+ 	return NULL;
+ }
  
+@@ -3164,6 +3162,13 @@ css_next_child(struct cgroup_subsys_state *pos_css,
+  * doesn't require the whole traversal to be contained in a single critical
+  * section.  This function will return the correct next descendant as long
+  * as both @pos and @root are accessible and @pos is a descendant of @root.
++ *
++ * If a subsystem synchronizes ->css_online() and the start of iteration, a
++ * css which finished ->css_online() is guaranteed to be visible in the
++ * future iterations and will stay visible until the last reference is put.
++ * A css which hasn't finished ->css_online() or already finished
++ * ->css_offline() may show up during traversal.  It's each subsystem's
++ * responsibility to synchronize against on/offlining.
+  */
+ struct cgroup_subsys_state *
+ css_next_descendant_pre(struct cgroup_subsys_state *pos,
+@@ -3251,6 +3256,13 @@ css_leftmost_descendant(struct cgroup_subsys_state *pos)
+  * section.  This function will return the correct next descendant as long
+  * as both @pos and @cgroup are accessible and @pos is a descendant of
+  * @cgroup.
++ *
++ * If a subsystem synchronizes ->css_online() and the start of iteration, a
++ * css which finished ->css_online() is guaranteed to be visible in the
++ * future iterations and will stay visible until the last reference is put.
++ * A css which hasn't finished ->css_online() or already finished
++ * ->css_offline() may show up during traversal.  It's each subsystem's
++ * responsibility to synchronize against on/offlining.
+  */
+ struct cgroup_subsys_state *
+ css_next_descendant_post(struct cgroup_subsys_state *pos,
 -- 
 1.9.0
