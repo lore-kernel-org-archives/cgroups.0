@@ -1,65 +1,53 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 02/14] cgroup: remove pointless has tasks/children test from mem_cgroup_force_empty()
-Date: Fri,  9 May 2014 17:31:19 -0400
-Message-ID: <1399671091-23867-3-git-send-email-tj@kernel.org>
-References: <1399671091-23867-1-git-send-email-tj@kernel.org>
+Subject: [PATCH cgroup/for-3.16] cgroup: fix rcu_read_lock() leak in
+ update_if_frozen()
+Date: Fri, 9 May 2014 23:29:41 -0400
+Message-ID: <20140510032941.GE22539@mtj.dyndns.org>
+References: <5369104d.Nn5Lpp7nwOehwnnC%fengguang.wu@intel.com>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=xWsRHD4oOxbW2qqYvhCvLROk7qqYMFCgnBzOkkwv8fQ=;
-        b=u8s5qpuOwqYrE9Bw7369YRpOhzx7omraX5G6R3K2RHryIohqFSlq4Y9w/kQS73JB/u
-         JvkHfNvq0HGUyy4lf3+2SfoIqQ4BrkB1iZcIxWOrQcTqw+PjdwjMWUbb4Z/Ds9mj7VgD
-         T90RXKCZ3gK3b90QsiA9fZ6QnzNlYFAJksgYaV+g8xRnrd5M3FF3yeXD4u4U35kVrDGU
-         5JHzeU3SLSmkgfqlsTUI87BoemSQxzv9yB53UgM2dgOGO2dwBFlI6ZFGOSmolvyBtKeJ
-         LfK/7H0aCVWPMCWlyEVxqymu7Gg4WkSXqEDCua+TQbTnfCzQup9oUKEVD6kA34pykCBw
-         a3Ww==
-In-Reply-To: <1399671091-23867-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=sPt3a4ksgPWlzfjIkd0fX92mHIZMaqawR/h1H1cWzY8=;
+        b=fgDB2GbrCF1oYgTF3Q90YBqvo2zTSANtjrEY92nOHBTdBl96jc5TCxAKYZivej0ZUO
+         C4Bkl4Pyz68IQ08bsv670rEuogt1KxpOnRL7ni24u+/m0BrDzACPaS9jblSI7sACNbBp
+         80bfvl8AY083BCSrSC2DwNMXeSRCqvlh2lCDivPoLnIiAsQMwLQMkAuEUx2iDkSz6vzh
+         ny8qA/fgmy8kRm0nGst0DIbD395sk82Ky5HxEOvVhREZtmvguEV8fqpedB4B8f8h/4Bb
+         l1L8FYwQKsGPecOMd+ssA3BInSDkC3xglKhAXt2wGPMS18EgWWniVoBMBYGNKwUtBS22
+         Ovwg==
+Content-Disposition: inline
+In-Reply-To: <5369104d.Nn5Lpp7nwOehwnnC%fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: kbuild test robot <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-mem_cgroup_force_empty() is used only from
-mem_cgroup_force_empty_write() and tests whether the target memcg has
-any tasks or children without any synchronization and then returns
--EBUSY if so.
-
-This is just weird.  The tests don't really mean anything as tasks and
-children may be added after the tests and it also makes the behavior
-of the knob arbitrary because there may be lingering offline and
-removed children on the children list for extended period of time -
-writes to the knob can return -EBUSY for reasons completely invisible
-to userland.
-
-The knob is best-effort anyway and the broken business test doesn't
-affect its operation.  Remove it.
+While updating cgroup_freezer locking, 68fafb77d827 ("cgroup_freezer:
+replace freezer->lock with freezer_mutex") introduced a bug in
+update_if_frozen() where it returns with rcu_read_lock() held.  Fix it
+by adding rcu_read_unlock() before returning.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Reported-by: kbuild test robot <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 ---
- mm/memcontrol.c | 5 -----
- 1 file changed, 5 deletions(-)
+ kernel/cgroup_freezer.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index a5e0417..036453a 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4857,11 +4857,6 @@ static inline bool memcg_has_children(struct mem_cgroup *memcg)
- static int mem_cgroup_force_empty(struct mem_cgroup *memcg)
- {
- 	int nr_retries = MEM_CGROUP_RECLAIM_RETRIES;
--	struct cgroup *cgrp = memcg->css.cgroup;
--
--	/* returns EBUSY if there is a task or if we come here twice. */
--	if (cgroup_has_tasks(cgrp) || !list_empty(&cgrp->children))
--		return -EBUSY;
+--- a/kernel/cgroup_freezer.c
++++ b/kernel/cgroup_freezer.c
+@@ -267,8 +267,10 @@ static void update_if_frozen(struct cgro
+ 		struct freezer *child = css_freezer(pos);
  
- 	/* we call try-to-free pages for make this cgroup empty */
- 	lru_add_drain_all();
--- 
-1.9.0
+ 		if ((child->state & CGROUP_FREEZER_ONLINE) &&
+-		    !(child->state & CGROUP_FROZEN))
++		    !(child->state & CGROUP_FROZEN)) {
++			rcu_read_unlock();
+ 			return;
++		}
+ 	}
+ 	rcu_read_unlock();
+ 
