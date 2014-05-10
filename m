@@ -1,53 +1,152 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH cgroup/for-3.16] cgroup: fix rcu_read_lock() leak in
- update_if_frozen()
-Date: Fri, 9 May 2014 23:29:41 -0400
-Message-ID: <20140510032941.GE22539@mtj.dyndns.org>
-References: <5369104d.Nn5Lpp7nwOehwnnC%fengguang.wu@intel.com>
+From: Fabian Frederick <fabf-AgBVmzD5pcezQB+pC5nmwQ@public.gmane.org>
+Subject: [PATCH V3] MM: make vmpressure_win dynamic
+Date: Sat, 10 May 2014 08:52:17 +0200
+Message-ID: <20140510085217.24a34794f0e4a4881c8eec0b@skynet.be>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=sPt3a4ksgPWlzfjIkd0fX92mHIZMaqawR/h1H1cWzY8=;
-        b=fgDB2GbrCF1oYgTF3Q90YBqvo2zTSANtjrEY92nOHBTdBl96jc5TCxAKYZivej0ZUO
-         C4Bkl4Pyz68IQ08bsv670rEuogt1KxpOnRL7ni24u+/m0BrDzACPaS9jblSI7sACNbBp
-         80bfvl8AY083BCSrSC2DwNMXeSRCqvlh2lCDivPoLnIiAsQMwLQMkAuEUx2iDkSz6vzh
-         ny8qA/fgmy8kRm0nGst0DIbD395sk82Ky5HxEOvVhREZtmvguEV8fqpedB4B8f8h/4Bb
-         l1L8FYwQKsGPecOMd+ssA3BInSDkC3xglKhAXt2wGPMS18EgWWniVoBMBYGNKwUtBS22
-         Ovwg==
-Content-Disposition: inline
-In-Reply-To: <5369104d.Nn5Lpp7nwOehwnnC%fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: kbuild test robot <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, akpm <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Davidlohr Bueso <davidlohr-VXdhtT5mjnY@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-While updating cgroup_freezer locking, 68fafb77d827 ("cgroup_freezer:
-replace freezer->lock with freezer_mutex") introduced a bug in
-update_if_frozen() where it returns with rcu_read_lock() held.  Fix it
-by adding rcu_read_unlock() before returning.
+This patch addresses TODO featuring in original version :
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Reported-by: kbuild test robot <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+"Make the window size depend on machine size, as we do for vmstat"
+
+It initializes vmpressure_win in vmstat using calculate_normal_threshold()
+based on each zone/cpu * SWAP_CLUSTER_SIZE instead of
+static SWAP_CLUSTER_MAX * 16 = 512
+
+Some values :
+
+CPU	MB	VMPRESSURE
+8	512	1024
+1	1024 	320
+2	1024 	640
+2	2048 	768
+4	2048	1152
+1	4096 	640
+4	4096 	1920
+...
+
+(No maximum vmpressure value currently defined)
+
+cf mm/vmstat.c: calculate_normal_threshold for further values
+
+vmpressure_win is refreshed through cpu notifier and exposed read-only in
+/proc/sys/vm/vmpressure_win
+
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Davidlohr Bueso <davidlohr-VXdhtT5mjnY@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Signed-off-by: Fabian Frederick <fabf-AgBVmzD5pcezQB+pC5nmwQ@public.gmane.org>
 ---
- kernel/cgroup_freezer.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+V3:
+  -Further description
+  -sysctl handler / ulong
+  -Cc list
 
---- a/kernel/cgroup_freezer.c
-+++ b/kernel/cgroup_freezer.c
-@@ -267,8 +267,10 @@ static void update_if_frozen(struct cgro
- 		struct freezer *child = css_freezer(pos);
+V2: Suggestions by Andrew Morton
+  -Expose vmpressure_win
+  -Remove spinlock
+
+ include/linux/swap.h | 4 ++++
+ kernel/sysctl.c      | 9 +++++++++
+ mm/vmpressure.c      | 4 +---
+ mm/vmstat.c          | 6 ++++++
+ 4 files changed, 20 insertions(+), 3 deletions(-)
+
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index 3507115..886897d 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -354,6 +354,10 @@ extern int vm_swappiness;
+ extern int remove_mapping(struct address_space *mapping, struct page *page);
+ extern unsigned long vm_total_pages;
  
- 		if ((child->state & CGROUP_FREEZER_ONLINE) &&
--		    !(child->state & CGROUP_FROZEN))
-+		    !(child->state & CGROUP_FROZEN)) {
-+			rcu_read_unlock();
- 			return;
-+		}
++#ifdef CONFIG_MEMCG
++extern unsigned long vmpressure_win;
++#endif
++
+ #ifdef CONFIG_NUMA
+ extern int zone_reclaim_mode;
+ extern int sysctl_min_unmapped_ratio;
+diff --git a/kernel/sysctl.c b/kernel/sysctl.c
+index 74f5b58..c0c5ea6 100644
+--- a/kernel/sysctl.c
++++ b/kernel/sysctl.c
+@@ -1202,6 +1202,15 @@ static struct ctl_table vm_table[] = {
+ 		.mode           = 0444 /* read-only */,
+ 		.proc_handler   = pdflush_proc_obsolete,
+ 	},
++#ifdef CONFIG_MEMCG
++	{
++		.procname	= "vmpressure_window",
++		.data		= &vmpressure_win,
++		.maxlen		= sizeof(vmpressure_win),
++		.mode		= 0444,
++		.proc_handler	= proc_doulongvec_minmax,
++	},
++#endif
+ 	{
+ 		.procname	= "swappiness",
+ 		.data		= &vm_swappiness,
+diff --git a/mm/vmpressure.c b/mm/vmpressure.c
+index d4042e7..d738670 100644
+--- a/mm/vmpressure.c
++++ b/mm/vmpressure.c
+@@ -35,10 +35,8 @@
+  * As the vmscan reclaimer logic works with chunks which are multiple of
+  * SWAP_CLUSTER_MAX, it makes sense to use it for the window size as well.
+  *
+- * TODO: Make the window size depend on machine size, as we do for vmstat
+- * thresholds. Currently we set it to 512 pages (2MB for 4KB pages).
+  */
+-static const unsigned long vmpressure_win = SWAP_CLUSTER_MAX * 16;
++unsigned long vmpressure_win = SWAP_CLUSTER_MAX * 16;
+ 
+ /*
+  * These thresholds are used when we account memory pressure through
+diff --git a/mm/vmstat.c b/mm/vmstat.c
+index 302dd07..ede68fd 100644
+--- a/mm/vmstat.c
++++ b/mm/vmstat.c
+@@ -20,6 +20,7 @@
+ #include <linux/writeback.h>
+ #include <linux/compaction.h>
+ #include <linux/mm_inline.h>
++#include <linux/swap.h>
+ 
+ #include "internal.h"
+ 
+@@ -163,11 +164,13 @@ void refresh_zone_stat_thresholds(void)
+ 	struct zone *zone;
+ 	int cpu;
+ 	int threshold;
++	unsigned long new_vmpressure_win = 0;
+ 
+ 	for_each_populated_zone(zone) {
+ 		unsigned long max_drift, tolerate_drift;
+ 
+ 		threshold = calculate_normal_threshold(zone);
++		new_vmpressure_win += threshold;
+ 
+ 		for_each_online_cpu(cpu)
+ 			per_cpu_ptr(zone->pageset, cpu)->stat_threshold
+@@ -184,6 +187,9 @@ void refresh_zone_stat_thresholds(void)
+ 			zone->percpu_drift_mark = high_wmark_pages(zone) +
+ 					max_drift;
  	}
- 	rcu_read_unlock();
++#ifdef CONFIG_MEMCG
++	vmpressure_win = new_vmpressure_win * SWAP_CLUSTER_MAX;
++#endif
+ }
  
+ void set_pgdat_percpu_threshold(pg_data_t *pgdat,
+-- 
+1.8.4.5
