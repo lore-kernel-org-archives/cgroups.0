@@ -1,56 +1,66 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [patch 2/9] mm: memcontrol: rearrange charging fast path
-Date: Mon, 12 May 2014 09:59:38 +0200
-Message-ID: <20140512075938.GB9564@dhcp22.suse.cz>
-References: <1398889543-23671-1-git-send-email-hannes@cmpxchg.org>
- <1398889543-23671-3-git-send-email-hannes@cmpxchg.org>
- <20140507143334.GH9489@dhcp22.suse.cz>
- <20140508182224.GO19914@cmpxchg.org>
+From: Andrey Wagin <avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Staring with 3.14 devices.allow can't be opened in read-write mode
+Date: Mon, 12 May 2014 15:10:12 +0400
+Message-ID: <CANaxB-xUm3rJ-Cbp72q-rQJO5mZe1qK6qXsQM=vh0U8upJ44+A@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20140508182224.GO19914-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=mime-version:date:message-id:subject:from:to:cc:content-type;
+	bh=k5fhiJXwMIdvArQqJCsksct2DR0Tk+0+CnlT59FRIhk=;
+	b=uV01445X7d5HC5S/BtDpSddJQLtZh/d3IfOJmqdFJ+LeNFACvY5AKu83IJyTJf584f
+	H/C3fONIiX0vsWc3FJc8tg/4T5EpqP+m0HEqCPqK0LawhxKOMgj6AEfdREzJ5WMJXk2q
+	9Ue3MIzqY8jLGq6Gt3+eLgFF7ifwSUTey4z8ke08UxE9GBtcAa80GNwJjflH9f/xFn3g
+	T7Z4E1g2xXz8bpS0VBRtUfNsTo2yBejIJ/8TaT1DXqzwtHnBOccBcpG1A96DNy48v/sm
+	TTl+vjsZux2uelK7YdH5ocWFt2+ao4q0Mu5vepnaLEvQdSI97QE7sb+QZiTtXmDQxxF/
+	W/fQ==
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: libcg-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
 
-On Thu 08-05-14 14:22:24, Johannes Weiner wrote:
-> On Wed, May 07, 2014 at 04:33:34PM +0200, Michal Hocko wrote:
-> > On Wed 30-04-14 16:25:36, Johannes Weiner wrote:
-[...]
-> > > -	if (unlikely(task_in_memcg_oom(current)))
-> > > -		goto nomem;
-> > > -
-> > > -	if (gfp_mask & __GFP_NOFAIL)
-> > > -		oom = false;
-> > >  retry:
-> > >  	if (consume_stock(memcg, nr_pages))
-> > >  		goto done;
-> > [...]
-> > > @@ -2662,6 +2660,9 @@ retry:
-> > >  	if (mem_cgroup_wait_acct_move(mem_over_limit))
-> > >  		goto retry;
-> > >  
-> > > +	if (gfp_mask & __GFP_NOFAIL)
-> > > +		goto bypass;
-> > > +
-> > 
-> > This is a behavior change because we have returned ENOMEM previously
-> 
-> __GFP_NOFAIL must never return -ENOMEM, or we'd have to rename it ;-)
-> It just looks like this in the patch, but this is the label code:
-> 
-> nomem:
-> 	if (!(gfp_mask & __GFP_NOFAIL))
-> 		return -ENOMEM;
-> bypass:
-> 	...
+Hello All,
 
-Ouch. Brain fart. Sorry...
+I found the "devices.allow" file can't be opened in read-write mode on
+the 3.14 kernel. I uses libcgroup, which opens devices.allow with
+O_RDWR. This works fine before 3.14 and fails one 3.14. This files has
+write-only permissions. I have tried to create a regular file with the
+same permission and kernel allows to open it with O_RDWR.
+So what do you think is it a problem, which must be fixed?
 
--- 
-Michal Hocko
-SUSE Labs
+5136  stat("/sys/fs/cgroup/devices//vz-101/devices.allow",
+{st_mode=S_IFREG|0200, st_size=0, ...}) = 0
+5136  open("/sys/fs/cgroup/devices//vz-101/devices.allow",
+O_RDONLY|O_CLOEXEC) = -1 EACCES (Permission denied)
+
+Linux avagin-fc19-cr 3.14.0+ #294 SMP Fri Apr 11 20:02:26 MSK 2014
+x86_64 x86_64 x86_64 GNU/Linux
+
+----> 1 os.open("/sys/fs/cgroup/devices/devices.deny", os.O_RDWR)
+
+OSError: [Errno 13] Permission denied: '/sys/fs/cgroup/devices/devices.deny'
+
+[root@avagin-fc19-cr ~]# ls -l /sys/fs/cgroup/devices/devices.deny
+--w------- 1 root root 0 May  7 15:16 /sys/fs/cgroup/devices/devices.deny
+
+
+Linux localhost.localdomain 3.13.8-200.fc20.x86_64 #1 SMP Tue Apr 1
+03:35:46 UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
+
+In [2]: os.open("/sys/fs/cgroup/devices/devices.deny", os.O_RDWR)
+Out[2]: 5
+
+[root@localhost avagin]# ls -l /sys/fs/cgroup/devices/devices.deny
+--w------- 1 root root 0 May  3 16:12 /sys/fs/cgroup/devices/devices.deny
+
+Thanks,
+Andrey
