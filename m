@@ -1,142 +1,68 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH driver-core-linus] kernfs, sysfs, cgroup: restrict extra perm
-	check on open to sysfs
-Date: Mon, 12 May 2014 13:56:27 -0400
-Message-ID: <20140512175627.GE1421@htj.dyndns.org>
-References: <CANaxB-xUm3rJ-Cbp72q-rQJO5mZe1qK6qXsQM=vh0U8upJ44+A@mail.gmail.com>
-	<20140512151908.GC1421@htj.dyndns.org>
+Subject: [GIT PULL] cgroup fixes for v3.15-rc5
+Date: Mon, 12 May 2014 14:15:23 -0400
+Message-ID: <20140512181523.GG1421@htj.dyndns.org>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=87JvGkJTWm0HCXn6uJ7G7uVjOfpYCbtbXCJZWMQ49Z0=;
+        b=bq1Mv9loYW7TJFO3PHqAGFlLS7YZAxMTiBpEjjaKAxVU1AB0ONsIBb9Je0ji6Y4YVR
+         NhxhLINTb8GgTa/am/3DxHoUI8ue9U1Y8kpn3VmpgEEzRsamXl0q3X49RmUvPOFs8z8/
+         F/Z/CaTz/jx+m9cgZE4q35B1Uzh111z5PAzqc4SltmU6j64R3/9XrfGM+uBSiW1uZQsB
+         Le5lg7uovcGTF4SjgNHqWG2phd7pu+c3kT/soMOQO31gO6ic7UKEcJgJLKRw0jlIZrLl
+         Nojay+a7aYCJV5T4jTSGZv4+JXhlhEF31wgRxEnhEcMSl2h22nW5jLbYbzKu2qIBZ8W0
+         q70g==
+Content-Disposition: inline
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=l4rET8MfPPUpguBTpBte2QwjGWwl6Ff6feZApKneEzQ=;
-	b=x1cJI5a0htCOMr+iDzFB/GSLt2Yy2+FMedZ13Jy0Y+nUMq8COAaeiObHDTaFN7KI6r
-	CAVVkc4kxqOzq07nkiQqmIQJFmXEDQtQIF3X66s0gvq5L0W2xtFK4YQhBvUKOtv3sW5j
-	hfvgLN3wbuhyf3PkZ9RZrHLDtAaDdE8iMxa3ukOpSTIrXlZqyLr8qOPesmJR8G8Dp5Qa
-	CiX0YESVMZZkpP3MLlj4hEWLeZzNAXaFj/5b+Gk9KtJxtBuMVJmCbtKdUKsxpngZGzUV
-	SUbW2D7mpEGal81BPdn9+cvsJ0X9f91jaiRazSwz9R5inrWRy7GKqqFwXD+WaKXZOuvK
-	4hRA==
-Content-Disposition: inline
-In-Reply-To: <20140512151908.GC1421-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, libcg-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-The kernfs open method - kernfs_fop_open() - inherited extra
-permission checks from sysfs.  While the vfs layer allows ignoring the
-read/write permissions checks if the issuer has CAP_DAC_OVERRIDE,
-sysfs explicitly denied open regardless of the cap if the file doesn't
-have any of the UGO perms of the requested access or doesn't implement
-the requested operation.  It can be debated whether this was a good
-idea or not but the behavior is too subtle and dangerous to change at
-this point.
+Hello, Linus.
 
-After cgroup got converted to kernfs, this extra perm check also got
-applied to cgroup breaking libcgroup which opens write-only files with
-O_RDWR as root.  This patch gates the extra open permission check with
-a new flag KERNFS_ROOT_EXTRA_OPEN_PERM_CHECK and enables it for sysfs.
-For sysfs, nothing changes.  For cgroup, root now can perform any
-operation regardless of the permissions as it was before kernfs
-conversion.  Note that kernfs still fails unimplemented operations
-with -EINVAL.
+During recent restructuring, device_cgroup unified config input check
+and enforcement logic; unfortunately, it turned out to share too much.
+Aristeu's patches fix the breakage and marked for -stable backport.
 
-While at it, add comments explaining KERNFS_ROOT flags.
+The other two patches are fallouts from kernfs conversion.  The blkcg
+change is temporary and will go away once kernfs internal locking gets
+simplified (patches pending).
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Reported-by: Andrey Wagin <avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-References: http://lkml.kernel.org/g/CANaxB-xUm3rJ-Cbp72q-rQJO5mZe1qK6qXsQM=vh0U8upJ44+A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org
-Fixes: 2bd59d48ebfb ("cgroup: convert to kernfs")
----
- fs/kernfs/file.c       |   19 +++++++++++--------
- fs/sysfs/mount.c       |    3 ++-
- include/linux/kernfs.h |   19 ++++++++++++++++++-
- 3 files changed, 31 insertions(+), 10 deletions(-)
+The following changes since commit c9eaa447e77efe77b7fa4c953bd62de8297fd6c5:
 
---- a/fs/kernfs/file.c
-+++ b/fs/kernfs/file.c
-@@ -610,6 +610,7 @@ static void kernfs_put_open_node(struct
- static int kernfs_fop_open(struct inode *inode, struct file *file)
- {
- 	struct kernfs_node *kn = file->f_path.dentry->d_fsdata;
-+	struct kernfs_root *root = kernfs_root(kn);
- 	const struct kernfs_ops *ops;
- 	struct kernfs_open_file *of;
- 	bool has_read, has_write, has_mmap;
-@@ -624,14 +625,16 @@ static int kernfs_fop_open(struct inode
- 	has_write = ops->write || ops->mmap;
- 	has_mmap = ops->mmap;
- 
--	/* check perms and supported operations */
--	if ((file->f_mode & FMODE_WRITE) &&
--	    (!(inode->i_mode & S_IWUGO) || !has_write))
--		goto err_out;
--
--	if ((file->f_mode & FMODE_READ) &&
--	    (!(inode->i_mode & S_IRUGO) || !has_read))
--		goto err_out;
-+	/* see the flag definition for details */
-+	if (root->flags & KERNFS_ROOT_EXTRA_OPEN_PERM_CHECK) {
-+		if ((file->f_mode & FMODE_WRITE) &&
-+		    (!(inode->i_mode & S_IWUGO) || !has_write))
-+			goto err_out;
-+
-+		if ((file->f_mode & FMODE_READ) &&
-+		    (!(inode->i_mode & S_IRUGO) || !has_read))
-+			goto err_out;
-+	}
- 
- 	/* allocate a kernfs_open_file for the file */
- 	error = -ENOMEM;
---- a/fs/sysfs/mount.c
-+++ b/fs/sysfs/mount.c
-@@ -63,7 +63,8 @@ int __init sysfs_init(void)
- {
- 	int err;
- 
--	sysfs_root = kernfs_create_root(NULL, 0, NULL);
-+	sysfs_root = kernfs_create_root(NULL, KERNFS_ROOT_EXTRA_OPEN_PERM_CHECK,
-+					NULL);
- 	if (IS_ERR(sysfs_root))
- 		return PTR_ERR(sysfs_root);
- 
---- a/include/linux/kernfs.h
-+++ b/include/linux/kernfs.h
-@@ -50,7 +50,24 @@ enum kernfs_node_flag {
- 
- /* @flags for kernfs_create_root() */
- enum kernfs_root_flag {
--	KERNFS_ROOT_CREATE_DEACTIVATED = 0x0001,
-+	/*
-+	 * kernfs_nodes are created in the deactivated state and invisible.
-+	 * They require explicit kernfs_activate() to become visible.  This
-+	 * can be used to make related nodes become visible atomically
-+	 * after all nodes are created successfully.
-+	 */
-+	KERNFS_ROOT_CREATE_DEACTIVATED		= 0x0001,
-+
-+	/*
-+	 * For regular flies, if the opener has CAP_DAC_OVERRIDE, open(2)
-+	 * succeeds regardless of the RW permissions.  sysfs had an extra
-+	 * layer of enforcement where open(2) fails with -EACCES regardless
-+	 * of CAP_DAC_OVERRIDE if the permission doesn't have the
-+	 * respective read or write access at all (none of S_IRUGO or
-+	 * S_IWUGO) or the respective operation isn't implemented.  The
-+	 * following flag enables that behavior.
-+	 */
-+	KERNFS_ROOT_EXTRA_OPEN_PERM_CHECK	= 0x0002,
- };
- 
- /* type-specific structures for kernfs_node union members */
+  Linux 3.15-rc1 (2014-04-13 14:18:35 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.15-fixes
+
+for you to fetch changes up to 36c38fb7144aa941dc072ba8f58b2dbe509c0345:
+
+  blkcg: use trylock on blkcg_pol_mutex in blkcg_reset_stats() (2014-05-05 13:48:18 -0400)
+
+Thanks.
+
+----------------------------------------------------------------
+Aristeu Rozanski (3):
+      device_cgroup: rework device access check and exception checking
+      device_cgroup: fix the comment format for recently added functions
+      device_cgroup: check if exception removal is allowed
+
+Li Zefan (1):
+      cgroup: fix the retry path of cgroup_mount()
+
+Tejun Heo (1):
+      blkcg: use trylock on blkcg_pol_mutex in blkcg_reset_stats()
+
+ block/blk-cgroup.c       |  15 +++-
+ kernel/cgroup.c          |   8 +-
+ security/device_cgroup.c | 202 +++++++++++++++++++++++++++++++++++++----------
+ 3 files changed, 177 insertions(+), 48 deletions(-)
+
+-- 
+tejun
