@@ -1,346 +1,154 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH 01/14] cgroup: remove css_parent()
-Date: Mon, 12 May 2014 15:16:54 +0200
-Message-ID: <20140512131654.GD9564@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 02/14] cgroup: remove pointless has tasks/children test
+ from mem_cgroup_force_empty()
+Date: Mon, 12 May 2014 16:53:24 +0200
+Message-ID: <20140512145324.GE9564@dhcp22.suse.cz>
 References: <1399671091-23867-1-git-send-email-tj@kernel.org>
- <1399671091-23867-2-git-send-email-tj@kernel.org>
+ <1399671091-23867-3-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1399671091-23867-2-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1399671091-23867-3-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: lizefan@huawei.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, hannes@cmpxchg.org, Vivek Goyal <vgoyal@redhat.com>, Jens Axboe <axboe@kernel.dk>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Neil Horman <nhorman@tuxdriver.com>, "David S. Miller" <davem@davemloft.net>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
 
-On Fri 09-05-14 17:31:18, Tejun Heo wrote:
-> cgroup in general is moving towards using cgroup_subsys_state as the
-> fundamental structural component and css_parent() was introduced to
-> convert from using cgroup->parent to css->parent.  It was quite some
-> time ago and we're moving forward with making css more prominent.
+On Fri 09-05-14 17:31:19, Tejun Heo wrote:
+> mem_cgroup_force_empty() is used only from
+> mem_cgroup_force_empty_write() and tests whether the target memcg has
+> any tasks or children without any synchronization and then returns
+> -EBUSY if so.
 > 
-> This patch drops the trivial wrapper css_parent() and let the users
-> dereference css->parent.  While at it, explicitly mark fields of css
-> which are public and immutable.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Vivek Goyal <vgoyal@redhat.com>
-> Cc: Jens Axboe <axboe@kernel.dk>
-> Cc: Li Zefan <lizefan@huawei.com>
-> Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Michal Hocko <mhocko@suse.cz>
-> Cc: Neil Horman <nhorman@tuxdriver.com>
-> Cc: "David S. Miller" <davem@davemloft.net>
+> This is just weird.  The tests don't really mean anything as tasks and
+> children may be added after the tests and it also makes the behavior
+> of the knob arbitrary because there may be lingering offline and
+> removed children on the children list for extended period of time -
+> writes to the knob can return -EBUSY for reasons completely invisible
+> to userland.
 
-For memcg part
-Acked-by: Michal Hocko <mhocko@suse.cz>
+Agreed.
 
-> ---
->  block/blk-cgroup.h           |  2 +-
->  include/linux/cgroup.h       | 29 +++++++++++------------------
->  kernel/cgroup.c              |  8 ++++----
->  kernel/cgroup_freezer.c      |  2 +-
->  kernel/cpuset.c              |  2 +-
->  kernel/sched/core.c          |  2 +-
->  kernel/sched/cpuacct.c       |  2 +-
->  mm/hugetlb_cgroup.c          |  2 +-
->  mm/memcontrol.c              | 14 +++++++-------
->  net/core/netclassid_cgroup.c |  2 +-
->  net/core/netprio_cgroup.c    |  2 +-
->  security/device_cgroup.c     |  6 +++---
->  12 files changed, 33 insertions(+), 40 deletions(-)
-> 
-> diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-> index 371fe8e..d692b29 100644
-> --- a/block/blk-cgroup.h
-> +++ b/block/blk-cgroup.h
-> @@ -204,7 +204,7 @@ static inline struct blkcg *bio_blkcg(struct bio *bio)
->   */
->  static inline struct blkcg *blkcg_parent(struct blkcg *blkcg)
->  {
-> -	return css_to_blkcg(css_parent(&blkcg->css));
-> +	return css_to_blkcg(blkcg->css.parent);
->  }
->  
->  /**
-> diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-> index 76dadd77..88c4d03 100644
-> --- a/include/linux/cgroup.h
-> +++ b/include/linux/cgroup.h
-> @@ -48,22 +48,28 @@ enum cgroup_subsys_id {
->  };
->  #undef SUBSYS
->  
-> -/* Per-subsystem/per-cgroup state maintained by the system. */
-> +/*
-> + * Per-subsystem/per-cgroup state maintained by the system.  This is the
-> + * fundamental structural building block that controllers deal with.
-> + *
-> + * Fields marked with "PI:" are public and immutable and may be accessed
-> + * directly without synchronization.
-> + */
->  struct cgroup_subsys_state {
-> -	/* the cgroup that this css is attached to */
-> +	/* PI: the cgroup that this css is attached to */
->  	struct cgroup *cgroup;
->  
-> -	/* the cgroup subsystem that this css is attached to */
-> +	/* PI: the cgroup subsystem that this css is attached to */
->  	struct cgroup_subsys *ss;
->  
->  	/* reference count - access via css_[try]get() and css_put() */
->  	struct percpu_ref refcnt;
->  
-> -	/* the parent css */
-> +	/* PI: the parent css */
->  	struct cgroup_subsys_state *parent;
->  
->  	/*
-> -	 * Subsys-unique ID.  0 is unused and root is always 1.  The
-> +	 * PI: Subsys-unique ID.  0 is unused and root is always 1.  The
->  	 * matching css can be looked up using css_from_id().
->  	 */
->  	int id;
-> @@ -665,19 +671,6 @@ struct cgroup_subsys {
->  #undef SUBSYS
->  
->  /**
-> - * css_parent - find the parent css
-> - * @css: the target cgroup_subsys_state
-> - *
-> - * Return the parent css of @css.  This function is guaranteed to return
-> - * non-NULL parent as long as @css isn't the root.
-> - */
-> -static inline
-> -struct cgroup_subsys_state *css_parent(struct cgroup_subsys_state *css)
-> -{
-> -	return css->parent;
-> -}
-> -
-> -/**
->   * task_css_set_check - obtain a task's css_set with extra access conditions
->   * @task: the task to obtain css_set for
->   * @__c: extra condition expression to be passed to rcu_dereference_check()
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index 64ff413..dab8f35 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -3175,10 +3175,10 @@ css_next_descendant_pre(struct cgroup_subsys_state *pos,
->  
->  	/* no child, visit my or the closest ancestor's next sibling */
->  	while (pos != root) {
-> -		next = css_next_child(pos, css_parent(pos));
-> +		next = css_next_child(pos, pos->parent);
->  		if (next)
->  			return next;
-> -		pos = css_parent(pos);
-> +		pos = pos->parent;
->  	}
->  
->  	return NULL;
-> @@ -3260,12 +3260,12 @@ css_next_descendant_post(struct cgroup_subsys_state *pos,
->  		return NULL;
->  
->  	/* if there's an unvisited sibling, visit its leftmost descendant */
-> -	next = css_next_child(pos, css_parent(pos));
-> +	next = css_next_child(pos, pos->parent);
->  	if (next)
->  		return css_leftmost_descendant(next);
->  
->  	/* no sibling left, visit parent */
-> -	return css_parent(pos);
-> +	return pos->parent;
->  }
->  
->  static bool cgroup_has_live_children(struct cgroup *cgrp)
-> diff --git a/kernel/cgroup_freezer.c b/kernel/cgroup_freezer.c
-> index f52c443..fee1ae63 100644
-> --- a/kernel/cgroup_freezer.c
-> +++ b/kernel/cgroup_freezer.c
-> @@ -59,7 +59,7 @@ static inline struct freezer *task_freezer(struct task_struct *task)
->  
->  static struct freezer *parent_freezer(struct freezer *freezer)
->  {
-> -	return css_freezer(css_parent(&freezer->css));
-> +	return css_freezer(freezer->css.parent);
->  }
->  
->  bool cgroup_freezing(struct task_struct *task)
-> diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-> index 2f4b08b..5b2a310 100644
-> --- a/kernel/cpuset.c
-> +++ b/kernel/cpuset.c
-> @@ -124,7 +124,7 @@ static inline struct cpuset *task_cs(struct task_struct *task)
->  
->  static inline struct cpuset *parent_cs(struct cpuset *cs)
->  {
-> -	return css_cs(css_parent(&cs->css));
-> +	return css_cs(cs->css.parent);
->  }
->  
->  #ifdef CONFIG_NUMA
-> diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-> index 268a45e..ac61ad1 100644
-> --- a/kernel/sched/core.c
-> +++ b/kernel/sched/core.c
-> @@ -7586,7 +7586,7 @@ cpu_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
->  static int cpu_cgroup_css_online(struct cgroup_subsys_state *css)
->  {
->  	struct task_group *tg = css_tg(css);
-> -	struct task_group *parent = css_tg(css_parent(css));
-> +	struct task_group *parent = css_tg(css->parent);
->  
->  	if (parent)
->  		sched_online_group(tg, parent);
-> diff --git a/kernel/sched/cpuacct.c b/kernel/sched/cpuacct.c
-> index c143ee3..9cf350c 100644
-> --- a/kernel/sched/cpuacct.c
-> +++ b/kernel/sched/cpuacct.c
-> @@ -46,7 +46,7 @@ static inline struct cpuacct *task_ca(struct task_struct *tsk)
->  
->  static inline struct cpuacct *parent_ca(struct cpuacct *ca)
->  {
-> -	return css_ca(css_parent(&ca->css));
-> +	return css_ca(ca->css.parent);
->  }
->  
->  static DEFINE_PER_CPU(u64, root_cpuacct_cpuusage);
-> diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
-> index a380681..493f758 100644
-> --- a/mm/hugetlb_cgroup.c
-> +++ b/mm/hugetlb_cgroup.c
-> @@ -52,7 +52,7 @@ static inline bool hugetlb_cgroup_is_root(struct hugetlb_cgroup *h_cg)
->  static inline struct hugetlb_cgroup *
->  parent_hugetlb_cgroup(struct hugetlb_cgroup *h_cg)
->  {
-> -	return hugetlb_cgroup_from_css(css_parent(&h_cg->css));
-> +	return hugetlb_cgroup_from_css(h_cg->css.parent);
->  }
->  
->  static inline bool hugetlb_cgroup_have_usage(struct hugetlb_cgroup *h_cg)
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index b638a79..a5e0417 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1540,7 +1540,7 @@ static unsigned long mem_cgroup_margin(struct mem_cgroup *memcg)
->  int mem_cgroup_swappiness(struct mem_cgroup *memcg)
->  {
->  	/* root ? */
-> -	if (!css_parent(&memcg->css))
-> +	if (!memcg->css.parent)
->  		return vm_swappiness;
->  
->  	return memcg->swappiness;
-> @@ -4909,7 +4909,7 @@ static int mem_cgroup_hierarchy_write(struct cgroup_subsys_state *css,
->  {
->  	int retval = 0;
->  	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-> -	struct mem_cgroup *parent_memcg = mem_cgroup_from_css(css_parent(&memcg->css));
-> +	struct mem_cgroup *parent_memcg = mem_cgroup_from_css(memcg->css.parent);
->  
->  	mutex_lock(&memcg_create_mutex);
->  
-> @@ -5207,8 +5207,8 @@ static void memcg_get_hierarchical_limit(struct mem_cgroup *memcg,
->  	if (!memcg->use_hierarchy)
->  		goto out;
->  
-> -	while (css_parent(&memcg->css)) {
-> -		memcg = mem_cgroup_from_css(css_parent(&memcg->css));
-> +	while (memcg->css.parent) {
-> +		memcg = mem_cgroup_from_css(memcg->css.parent);
->  		if (!memcg->use_hierarchy)
->  			break;
->  		tmp = res_counter_read_u64(&memcg->res, RES_LIMIT);
-> @@ -5443,7 +5443,7 @@ static int mem_cgroup_swappiness_write(struct cgroup_subsys_state *css,
->  				       struct cftype *cft, u64 val)
->  {
->  	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-> -	struct mem_cgroup *parent = mem_cgroup_from_css(css_parent(&memcg->css));
-> +	struct mem_cgroup *parent = mem_cgroup_from_css(memcg->css.parent);
->  
->  	if (val > 100 || !parent)
->  		return -EINVAL;
-> @@ -5790,7 +5790,7 @@ static int mem_cgroup_oom_control_write(struct cgroup_subsys_state *css,
->  	struct cftype *cft, u64 val)
->  {
->  	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-> -	struct mem_cgroup *parent = mem_cgroup_from_css(css_parent(&memcg->css));
-> +	struct mem_cgroup *parent = mem_cgroup_from_css(memcg->css.parent);
->  
->  	/* cannot set to root cgroup and only 0 and 1 are allowed */
->  	if (!parent || !((val == 0) || (val == 1)))
-> @@ -6407,7 +6407,7 @@ static int
->  mem_cgroup_css_online(struct cgroup_subsys_state *css)
->  {
->  	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-> -	struct mem_cgroup *parent = mem_cgroup_from_css(css_parent(css));
-> +	struct mem_cgroup *parent = mem_cgroup_from_css(css->parent);
->  
->  	if (css->id > MEM_CGROUP_ID_MAX)
->  		return -ENOSPC;
-> diff --git a/net/core/netclassid_cgroup.c b/net/core/netclassid_cgroup.c
-> index 22931e1..30d903b 100644
-> --- a/net/core/netclassid_cgroup.c
-> +++ b/net/core/netclassid_cgroup.c
-> @@ -42,7 +42,7 @@ cgrp_css_alloc(struct cgroup_subsys_state *parent_css)
->  static int cgrp_css_online(struct cgroup_subsys_state *css)
->  {
->  	struct cgroup_cls_state *cs = css_cls_state(css);
-> -	struct cgroup_cls_state *parent = css_cls_state(css_parent(css));
-> +	struct cgroup_cls_state *parent = css_cls_state(css->parent);
->  
->  	if (parent)
->  		cs->classid = parent->classid;
-> diff --git a/net/core/netprio_cgroup.c b/net/core/netprio_cgroup.c
-> index b990cef..2f385b9 100644
-> --- a/net/core/netprio_cgroup.c
-> +++ b/net/core/netprio_cgroup.c
-> @@ -140,7 +140,7 @@ cgrp_css_alloc(struct cgroup_subsys_state *parent_css)
->  
->  static int cgrp_css_online(struct cgroup_subsys_state *css)
->  {
-> -	struct cgroup_subsys_state *parent_css = css_parent(css);
-> +	struct cgroup_subsys_state *parent_css = css->parent;
->  	struct net_device *dev;
->  	int ret = 0;
->  
-> diff --git a/security/device_cgroup.c b/security/device_cgroup.c
-> index 82d6b4f..3116015 100644
-> --- a/security/device_cgroup.c
-> +++ b/security/device_cgroup.c
-> @@ -182,7 +182,7 @@ static inline bool is_devcg_online(const struct dev_cgroup *devcg)
->  static int devcgroup_online(struct cgroup_subsys_state *css)
->  {
->  	struct dev_cgroup *dev_cgroup = css_to_devcgroup(css);
-> -	struct dev_cgroup *parent_dev_cgroup = css_to_devcgroup(css_parent(css));
-> +	struct dev_cgroup *parent_dev_cgroup = css_to_devcgroup(css->parent);
->  	int ret = 0;
->  
->  	mutex_lock(&devcgroup_mutex);
-> @@ -374,7 +374,7 @@ static bool may_access(struct dev_cgroup *dev_cgroup,
->  static int parent_has_perm(struct dev_cgroup *childcg,
->  				  struct dev_exception_item *ex)
->  {
-> -	struct dev_cgroup *parent = css_to_devcgroup(css_parent(&childcg->css));
-> +	struct dev_cgroup *parent = css_to_devcgroup(childcg->css.parent);
->  
->  	if (!parent)
->  		return 1;
-> @@ -502,7 +502,7 @@ static int devcgroup_update_access(struct dev_cgroup *devcgroup,
->  	char temp[12];		/* 11 + 1 characters needed for a u32 */
->  	int count, rc = 0;
->  	struct dev_exception_item ex;
-> -	struct dev_cgroup *parent = css_to_devcgroup(css_parent(&devcgroup->css));
-> +	struct dev_cgroup *parent = css_to_devcgroup(devcgroup->css.parent);
->  
->  	if (!capable(CAP_SYS_ADMIN))
->  		return -EPERM;
-> -- 
-> 1.9.0
-> 
+> The knob is best-effort anyway and the broken business test doesn't
+> affect its operation.  Remove it.
+
+But I do not think that removing just the test is the right way to go.
+It is mem_cgroup_reparent_charges which bothers me because it loops
+until the current counter falls down to 0 and it also feels strange that
+a group can hand over pages up the hierarchy (or even to an unlimitted
+root if this is a top of a hierarchy).
+
+So I think that we want to get rid of reparenting as well.  The main use
+case as described by the documentation is:
+"
+  The typical use case for this interface is before calling rmdir().
+  Because rmdir() moves all pages to parent, some out-of-use page caches can be
+  moved to the parent. If you want to avoid that, force_empty will be useful.
+"
+
+rmdir will reparent pages implicitly so the reclaim part should be
+sufficient and it would be OK even with existing tasks. Subgroups would
+be little bit more tricky because the user doesn't have any control over
+which group of the hierarchy will get reclaimed.
+
+Anyway, the knob sucks - for the similar reasons why drop_cache sucks -
+especially when the check would be gone and it would be another way how
+to trigger reclaim anytime. Having the check doesn't prevent from races
+but it at least prevents abuse.
+
+So I would be rather for dropping the knob altogether, but that seems to
+be a long term thing. So let's start with deprecating it + remove the
+check with dropping reparenting part.
+
+What do you think about the following patch instead:
+---
+From 03f8cb2e1fd2636d859c54df9b58719fe96e0e54 Mon Sep 17 00:00:00 2001
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Date: Mon, 12 May 2014 16:34:17 +0200
+Subject: [PATCH] memcg: remove tasks/children test from from
+ mem_cgroup_force_empty
+
+Tejun has correctly pointed out that tasks/children test in
+mem_cgroup_force_empty is not correct because there is no other locking
+which preserves this state throughout the rest of the function so both
+new tasks can join the group or new children groups can be added while
+somebody is writing to memory.force_empty. A new task would break
+mem_cgroup_reparent_charges expectation that all failures as described
+by mem_cgroup_force_empty_list are temporal and there is no way out.
+
+The main use case for the knob as described by
+Documentation/cgroups/memory.txt is to:
+"
+  The typical use case for this interface is before calling rmdir().
+  Because rmdir() moves all pages to parent, some out-of-use page caches can be
+  moved to the parent. If you want to avoid that, force_empty will be useful.
+"
+
+This means that reparenting is not really required as rmdir will
+reparent pages implicitly from the safe context. If we remove it from
+mem_cgroup_force_empty then we are safe even with existing tasks because
+the number of reclaim attempts is bounded. Moreover the knob still does
+what the documentation claims (modulo reparenting which doesn't make any
+difference) and users might expect. Longterm we want to deprecate the
+whole knob and put the reparented pages to the tail of parent LRU during
+cgroup removal.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+---
+ Documentation/cgroups/memory.txt | 6 +-----
+ mm/memcontrol.c                  | 6 ------
+ 2 files changed, 1 insertion(+), 11 deletions(-)
+
+diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
+index cfcf14de2598..fc9fad984bfb 100644
+--- a/Documentation/cgroups/memory.txt
++++ b/Documentation/cgroups/memory.txt
+@@ -462,15 +462,11 @@ About use_hierarchy, see Section 6.
+ 
+ 5.1 force_empty
+   memory.force_empty interface is provided to make cgroup's memory usage empty.
+-  You can use this interface only when the cgroup has no tasks.
+   When writing anything to this
+ 
+   # echo 0 > memory.force_empty
+ 
+-  Almost all pages tracked by this memory cgroup will be unmapped and freed.
+-  Some pages cannot be freed because they are locked or in-use. Such pages are
+-  moved to parent (if use_hierarchy==1) or root (if use_hierarchy==0) and this
+-  cgroup will be empty.
++  the cgroup will be reclaimed and as many pages reclaimed as possible.
+ 
+   The typical use case for this interface is before calling rmdir().
+   Because rmdir() moves all pages to parent, some out-of-use page caches can be
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index f9b84fc2e9fe..912104d6d2a9 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4764,10 +4764,6 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg)
+ 	int nr_retries = MEM_CGROUP_RECLAIM_RETRIES;
+ 	struct cgroup *cgrp = memcg->css.cgroup;
+ 
+-	/* returns EBUSY if there is a task or if we come here twice. */
+-	if (cgroup_has_tasks(cgrp) || !list_empty(&cgrp->children))
+-		return -EBUSY;
+-
+ 	/* we call try-to-free pages for make this cgroup empty */
+ 	lru_add_drain_all();
+ 	/* try to free all pages in this cgroup */
+@@ -4786,8 +4782,6 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg)
+ 		}
+ 
+ 	}
+-	lru_add_drain();
+-	mem_cgroup_reparent_charges(memcg);
+ 
+ 	return 0;
+ }
+-- 
+2.0.0.rc0
 
 -- 
 Michal Hocko
