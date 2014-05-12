@@ -1,68 +1,177 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup fixes for v3.15-rc5
-Date: Mon, 12 May 2014 14:15:23 -0400
-Message-ID: <20140512181523.GG1421@htj.dyndns.org>
+From: Fabian Frederick <fabf-AgBVmzD5pcezQB+pC5nmwQ@public.gmane.org>
+Subject: Re: [PATCH V3] MM: make vmpressure_win dynamic
+Date: Mon, 12 May 2014 20:22:49 +0200
+Message-ID: <20140512202249.8f5b8475ba2c5018585e68b1@skynet.be>
+References: <20140510085217.24a34794f0e4a4881c8eec0b@skynet.be>
+	<20140512075537.GA9564@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-         :content-disposition:user-agent;
-        bh=87JvGkJTWm0HCXn6uJ7G7uVjOfpYCbtbXCJZWMQ49Z0=;
-        b=bq1Mv9loYW7TJFO3PHqAGFlLS7YZAxMTiBpEjjaKAxVU1AB0ONsIBb9Je0ji6Y4YVR
-         NhxhLINTb8GgTa/am/3DxHoUI8ue9U1Y8kpn3VmpgEEzRsamXl0q3X49RmUvPOFs8z8/
-         F/Z/CaTz/jx+m9cgZE4q35B1Uzh111z5PAzqc4SltmU6j64R3/9XrfGM+uBSiW1uZQsB
-         Le5lg7uovcGTF4SjgNHqWG2phd7pu+c3kT/soMOQO31gO6ic7UKEcJgJLKRw0jlIZrLl
-         Nojay+a7aYCJV5T4jTSGZv4+JXhlhEF31wgRxEnhEcMSl2h22nW5jLbYbzKu2qIBZ8W0
-         q70g==
-Content-Disposition: inline
+In-Reply-To: <20140512075537.GA9564-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, akpm <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Davidlohr Bueso <davidlohr-VXdhtT5mjnY@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello, Linus.
+On Mon, 12 May 2014 09:55:37 +0200
+Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
 
-During recent restructuring, device_cgroup unified config input check
-and enforcement logic; unfortunately, it turned out to share too much.
-Aristeu's patches fix the breakage and marked for -stable backport.
+> On Sat 10-05-14 08:52:17, Fabian Frederick wrote:
+> > This patch addresses TODO featuring in original version :
+> 
+> This is the 3rd version of the patch and I still fail to see the
+> motivation other than addressing a TODO which doesn't sound like a
+> sufficient justification to me. Why is the new scheme needed in the
+> first place? Why is calculate_normal_threshold a proper scheme?
+Nothing more than trying to have that value dynamic.
+As no one seems interested, let's just forget about that patch :)
 
-The other two patches are fallouts from kernfs conversion.  The blkcg
-change is temporary and will go away once kernfs internal locking gets
-simplified (patches pending).
+Regards,
+Fabian
+> 
+> > "Make the window size depend on machine size, as we do for vmstat"
+> > 
+> > It initializes vmpressure_win in vmstat using calculate_normal_threshold()
+> > based on each zone/cpu * SWAP_CLUSTER_SIZE instead of
+> > static SWAP_CLUSTER_MAX * 16 = 512
+> > 
+> > Some values :
+> > 
+> > CPU	MB	VMPRESSURE
+> > 8	512	1024
+> > 1	1024 	320
+> > 2	1024 	640
+> > 2	2048 	768
+> > 4	2048	1152
+> > 1	4096 	640
+> > 4	4096 	1920
+> > ...
+> > 
+> > (No maximum vmpressure value currently defined)
+> > 
+> > cf mm/vmstat.c: calculate_normal_threshold for further values
+> > 
+> > vmpressure_win is refreshed through cpu notifier and exposed read-only in
+> > /proc/sys/vm/vmpressure_win
+> > 
+> > Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> > Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+> > Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> > Cc: Davidlohr Bueso <davidlohr-VXdhtT5mjnY@public.gmane.org>
+> > Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> > Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > Signed-off-by: Fabian Frederick <fabf-AgBVmzD5pcezQB+pC5nmwQ@public.gmane.org>
+> > ---
+> > V3:
+> >   -Further description
+> >   -sysctl handler / ulong
+> >   -Cc list
+> > 
+> > V2: Suggestions by Andrew Morton
+> >   -Expose vmpressure_win
+> >   -Remove spinlock
+> > 
+> >  include/linux/swap.h | 4 ++++
+> >  kernel/sysctl.c      | 9 +++++++++
+> >  mm/vmpressure.c      | 4 +---
+> >  mm/vmstat.c          | 6 ++++++
+> >  4 files changed, 20 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/include/linux/swap.h b/include/linux/swap.h
+> > index 3507115..886897d 100644
+> > --- a/include/linux/swap.h
+> > +++ b/include/linux/swap.h
+> > @@ -354,6 +354,10 @@ extern int vm_swappiness;
+> >  extern int remove_mapping(struct address_space *mapping, struct page *page);
+> >  extern unsigned long vm_total_pages;
+> >  
+> > +#ifdef CONFIG_MEMCG
+> > +extern unsigned long vmpressure_win;
+> > +#endif
+> > +
+> >  #ifdef CONFIG_NUMA
+> >  extern int zone_reclaim_mode;
+> >  extern int sysctl_min_unmapped_ratio;
+> > diff --git a/kernel/sysctl.c b/kernel/sysctl.c
+> > index 74f5b58..c0c5ea6 100644
+> > --- a/kernel/sysctl.c
+> > +++ b/kernel/sysctl.c
+> > @@ -1202,6 +1202,15 @@ static struct ctl_table vm_table[] = {
+> >  		.mode           = 0444 /* read-only */,
+> >  		.proc_handler   = pdflush_proc_obsolete,
+> >  	},
+> > +#ifdef CONFIG_MEMCG
+> > +	{
+> > +		.procname	= "vmpressure_window",
+> > +		.data		= &vmpressure_win,
+> > +		.maxlen		= sizeof(vmpressure_win),
+> > +		.mode		= 0444,
+> > +		.proc_handler	= proc_doulongvec_minmax,
+> > +	},
+> > +#endif
+> >  	{
+> >  		.procname	= "swappiness",
+> >  		.data		= &vm_swappiness,
+> > diff --git a/mm/vmpressure.c b/mm/vmpressure.c
+> > index d4042e7..d738670 100644
+> > --- a/mm/vmpressure.c
+> > +++ b/mm/vmpressure.c
+> > @@ -35,10 +35,8 @@
+> >   * As the vmscan reclaimer logic works with chunks which are multiple of
+> >   * SWAP_CLUSTER_MAX, it makes sense to use it for the window size as well.
+> >   *
+> > - * TODO: Make the window size depend on machine size, as we do for vmstat
+> > - * thresholds. Currently we set it to 512 pages (2MB for 4KB pages).
+> >   */
+> > -static const unsigned long vmpressure_win = SWAP_CLUSTER_MAX * 16;
+> > +unsigned long vmpressure_win = SWAP_CLUSTER_MAX * 16;
+> >  
+> >  /*
+> >   * These thresholds are used when we account memory pressure through
+> > diff --git a/mm/vmstat.c b/mm/vmstat.c
+> > index 302dd07..ede68fd 100644
+> > --- a/mm/vmstat.c
+> > +++ b/mm/vmstat.c
+> > @@ -20,6 +20,7 @@
+> >  #include <linux/writeback.h>
+> >  #include <linux/compaction.h>
+> >  #include <linux/mm_inline.h>
+> > +#include <linux/swap.h>
+> >  
+> >  #include "internal.h"
+> >  
+> > @@ -163,11 +164,13 @@ void refresh_zone_stat_thresholds(void)
+> >  	struct zone *zone;
+> >  	int cpu;
+> >  	int threshold;
+> > +	unsigned long new_vmpressure_win = 0;
+> >  
+> >  	for_each_populated_zone(zone) {
+> >  		unsigned long max_drift, tolerate_drift;
+> >  
+> >  		threshold = calculate_normal_threshold(zone);
+> > +		new_vmpressure_win += threshold;
+> >  
+> >  		for_each_online_cpu(cpu)
+> >  			per_cpu_ptr(zone->pageset, cpu)->stat_threshold
+> > @@ -184,6 +187,9 @@ void refresh_zone_stat_thresholds(void)
+> >  			zone->percpu_drift_mark = high_wmark_pages(zone) +
+> >  					max_drift;
+> >  	}
+> > +#ifdef CONFIG_MEMCG
+> > +	vmpressure_win = new_vmpressure_win * SWAP_CLUSTER_MAX;
+> > +#endif
+> >  }
+> >  
+> >  void set_pgdat_percpu_threshold(pg_data_t *pgdat,
+> > -- 
+> > 1.8.4.5
+> 
+> -- 
+> Michal Hocko
+> SUSE Labs
 
-The following changes since commit c9eaa447e77efe77b7fa4c953bd62de8297fd6c5:
-
-  Linux 3.15-rc1 (2014-04-13 14:18:35 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.15-fixes
-
-for you to fetch changes up to 36c38fb7144aa941dc072ba8f58b2dbe509c0345:
-
-  blkcg: use trylock on blkcg_pol_mutex in blkcg_reset_stats() (2014-05-05 13:48:18 -0400)
-
-Thanks.
-
-----------------------------------------------------------------
-Aristeu Rozanski (3):
-      device_cgroup: rework device access check and exception checking
-      device_cgroup: fix the comment format for recently added functions
-      device_cgroup: check if exception removal is allowed
-
-Li Zefan (1):
-      cgroup: fix the retry path of cgroup_mount()
-
-Tejun Heo (1):
-      blkcg: use trylock on blkcg_pol_mutex in blkcg_reset_stats()
-
- block/blk-cgroup.c       |  15 +++-
- kernel/cgroup.c          |   8 +-
- security/device_cgroup.c | 202 +++++++++++++++++++++++++++++++++++++----------
- 3 files changed, 177 insertions(+), 48 deletions(-)
 
 -- 
-tejun
+Fabian Frederick <fabf-AgBVmzD5pcezQB+pC5nmwQ@public.gmane.org>
