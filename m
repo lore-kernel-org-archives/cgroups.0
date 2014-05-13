@@ -1,64 +1,57 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH] memcg: deprecate memory.force_empty knob
-Date: Tue, 13 May 2014 17:09:53 +0200
-Message-ID: <20140513150953.GC25996@dhcp22.suse.cz>
-References: <1399671091-23867-1-git-send-email-tj@kernel.org>
- <1399671091-23867-3-git-send-email-tj@kernel.org>
- <20140512145324.GE9564@dhcp22.suse.cz>
- <20140512145803.GF9564@dhcp22.suse.cz>
- <20140512150014.GB1421@htj.dyndns.org>
- <20140512152015.GH9564@dhcp22.suse.cz>
- <20140512152507.GD1421@htj.dyndns.org>
- <20140512153458.GJ9564@dhcp22.suse.cz>
- <20140513131655.GC18849@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 4/7] cgroup: update and fix parsing of
+ "cgroup.subtree_control"
+Date: Tue, 13 May 2014 11:18:33 -0400
+Message-ID: <20140513151833.GE23710@htj.dyndns.org>
+References: <1399663975-315-1-git-send-email-tj@kernel.org>
+ <1399663975-315-5-git-send-email-tj@kernel.org>
+ <537196D7.3020302@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=HWIj35lnTs1Hv1ORLXivSz1ABvfD8DpbaDhuSHNZTAE=;
+        b=vBEEAPVk+Z7buOXyz0+SopCfSTKaDN7jgNNv8OxCfJKVRHVMaceYUm2DvlGHaC3j0E
+         paONd4hfxcOK+5vmLEyvfIaTPHpeTHlBIhP5AwptVYHeMOmwawXMrcSh40Ae83R2XTLn
+         ppenxkjsaLN5ENdi4E4HCXGnINDTKqj6iNRPdgV6kkyBoF8QK+++daFslWsHDHu36ttY
+         /O/lhdM3gMQ8CEF+G2WwQZoUU/OJcVral1tRlvo0biZfoZrhi+61iBUBDfRV7oro2Y41
+         hHXYR3nhfhbypHyySLe1c+dodU1V4LFuOyHkx3ORWcHefZEpZz4O6gQ8/gjf4KCB1nDb
+         Rxzg==
 Content-Disposition: inline
-In-Reply-To: <20140513131655.GC18849-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <537196D7.3020302-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue 13-05-14 09:16:56, Johannes Weiner wrote:
-> On Mon, May 12, 2014 at 05:34:58PM +0200, Michal Hocko wrote:
-[...]
-> > >From 6f2a33df7750f0794b03f7a85aba02a4e631f2a0 Mon Sep 17 00:00:00 2001
-> > From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> > Date: Mon, 12 May 2014 16:20:46 +0200
-> > Subject: [PATCH] memcg: deprecate memory.force_empty knob
-> > 
-> > force_empty has been introduced primarily to drop memory before it gets
-> > reparented on the group removal. This alone doesn't sound fully
-> > justified because reparented pages which are not in use can be reclaimed
-> > also later when there is a memory pressure on the parent level.
-> > 
-> > Mark the knob CFTYPE_INSANE which tells the cgroup core that it
-> > shouldn't create the knob with the experimental sane_behavior. Other
-> > users will get informed about the deprecation and asked to tell us more.
-> > But I expect that most users will be simply cgroup remove handlers
-> > which do that since ever without having any good reason for it.
-> > 
-> > If somebody really cares and the reparented pages, which would be dropped
-> > otherwise, push out more important ones then we should fix the
-> > reparenting code and put pages to the tail.
-> > 
-> > Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+On Tue, May 13, 2014 at 11:51:51AM +0800, Li Zefan wrote:
+> > diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+> > index 35daf89..b81e7c0 100644
+> > --- a/kernel/cgroup.c
+> > +++ b/kernel/cgroup.c
+> > @@ -2542,11 +2542,13 @@ static int cgroup_subtree_control_write(struct cgroup_subsys_state *dummy_css,
+> >  	int ssid, ret;
+> >  
+> >  	/*
+> > -	 * Parse input - white space separated list of subsystem names
+> > -	 * prefixed with either + or -.
+> > +	 * Parse input - space separated list of subsystem names prefixed
+> > +	 * with either + or -.
+> >  	 */
+> >  	p = buffer;
+> > -	while ((tok = strsep(&p, " \t\n"))) {
+> > +	while ((tok = strsep(&p, " "))) {
+> > +		if (tok[0] =='\0')
 > 
-> I'm skeptical the printk will do anything useful, but you marked the
-> knob insane and that's the most important change.
+> if (tok[0] == '\0')
 
-Well, I suspect that most users will try the new semantic at the latest
-possible moment and then it can come up as a surprise. I would prefer to
-catch those as soon as possible. I am even thinking to push this to SLES
-to catch possible enterprise users.
+Oops, updated.
 
-> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Thanks.
 
-Thanks. OK, I will post it to Andrew. I guess he will want to have some
-rate-limiting or print-once semantic...
 -- 
-Michal Hocko
-SUSE Labs
+tejun
