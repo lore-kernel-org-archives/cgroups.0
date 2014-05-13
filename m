@@ -1,70 +1,68 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.16] cgroup: remove cgroup_tree_mutex
-Date: Tue, 13 May 2014 12:22:19 -0400
-Message-ID: <20140513162219.GB1866@htj.dyndns.org>
-References: <1399407574-21472-1-git-send-email-tj@kernel.org>
+Subject: Re: [PATCH 02/14] cgroup: remove pointless has tasks/children test
+ from mem_cgroup_force_empty()
+Date: Tue, 13 May 2014 12:46:19 -0400
+Message-ID: <20140513164619.GD1866@htj.dyndns.org>
+References: <1399671091-23867-1-git-send-email-tj@kernel.org>
+ <1399671091-23867-3-git-send-email-tj@kernel.org>
+ <20140512145324.GE9564@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=+yLkRjziE7YSR5SOl7V292Qa0KjVVxWS22OHL2D2A4U=;
-        b=tRJ7vLINLP5g/30oRmmGPmuAkuPs8S0Q8zyuKRmNMbiFkzc6aUpTNhKr9BBqmF9yqJ
-         1UtqMQ4f8Z+9WiUxZXYqxwO5vhHlsyYMmMZkYrLOLfsrvgqyKqgT1OTtnDUi0F0NeCNi
-         M/oRN+ojtLN4rSS/FmfLo4VB/i5o5uVhew33pRjyk1SUllmIj3Kci8CrNiG3kQoRJ8m8
-         um77QZCc6X7ifOSwT4fFzrld2dH8IkCqEL+Li9f4FOA3BQyXc1xjYrd425ZpSiM9/E1R
-         UBv5DOoEXYWNCkFwUP8v87m1na2af35x1XQMPiU0AxEca6VyPBOMG3sdssqK9zcIoh0w
-         rRzA==
+        bh=bklf754vV8975rYzKMuua4eajhwQGDWxqoaa91htYso=;
+        b=IdfPf6Y5ZWwyqozXfRlSdSKAffAGO5MkJq4osugUuR9ZGzuhaqtyStCLROvUXeBnS1
+         RuvTlj9OnVCP7TGnC9z1xQ68jK1ZMmQRHxcIaLY0diSO56chTb95zVCV+bwb6qdKSe2T
+         9WLjW10ZP5PE5gvIYQzJdBQL79qhoeAp1KZBnDoyPGfNYdzztBGinCMWEajwqIXxl2C4
+         4ibFW8GFZzEmubEZDl9qUQzlq1p6ANG4Y2tBP7RN1DVnXfW8ePtp0o/Sm70YGt33KnPr
+         nHovZZV+Xr/Kn4b/Z9fKRgqdTpAwO/QqjBcC1bTjIFXCCafC+rgWtWf8aHEiFchVROhd
+         tpfQ==
 Content-Disposition: inline
-In-Reply-To: <1399407574-21472-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <20140512145324.GE9564-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
 
-On Tue, May 06, 2014 at 04:19:26PM -0400, Tejun Heo wrote:
-> Hello,
+On Mon, May 12, 2014 at 04:53:24PM +0200, Michal Hocko wrote:
+> From 03f8cb2e1fd2636d859c54df9b58719fe96e0e54 Mon Sep 17 00:00:00 2001
+> From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> Date: Mon, 12 May 2014 16:34:17 +0200
+> Subject: [PATCH] memcg: remove tasks/children test from from
+>  mem_cgroup_force_empty
 > 
-> cgroup_tree_mutex was introduced during kernfs conversion to work
-> around the cyclic locking dependency between kernfs active protection
-> and cgroup_mutex.  Some file and directory operations need to acquire
-> cgroup_mutex which puts the mutex under the kernfs active protection;
-> however, cgroup also needs to access the hierarchy and the registered
-> cftypes to detemine which files to remove, which obviously can't be
-> done while holding cgroup_mutex anymore.
+> Tejun has correctly pointed out that tasks/children test in
+> mem_cgroup_force_empty is not correct because there is no other locking
+> which preserves this state throughout the rest of the function so both
+> new tasks can join the group or new children groups can be added while
+> somebody is writing to memory.force_empty. A new task would break
+> mem_cgroup_reparent_charges expectation that all failures as described
+> by mem_cgroup_force_empty_list are temporal and there is no way out.
 > 
-> cgroup_tree_mutex nests above both cgroup_mutex and kernfs active
-> protection and protects hierarchy and cftypes so that those file
-> operations can be performed while holding it without cgroup_mutex.
-> This works but is kinda cumbersome as most places end up taking both
-> cgroup_tree_mutex and cgroup_mutex and there's on-going friction on
-> what needs to be protected by which combination.
+> The main use case for the knob as described by
+> Documentation/cgroups/memory.txt is to:
+> "
+>   The typical use case for this interface is before calling rmdir().
+>   Because rmdir() moves all pages to parent, some out-of-use page caches can be
+>   moved to the parent. If you want to avoid that, force_empty will be useful.
+> "
 > 
-> Furthermore, due to new requirements from subtree_control
-> implementations, kernfs ended up growing full-blown mechanism to
-> bypass active protection instead of just supporting self-removal and
-> cgroup ended up using both mechanisms - two layered mutexes and active
-> protection bypss - on different areas, which is totally unncessary.
-> 
-> This patchset converts everything over to kernfs active protection
-> bypass and drops cgroup_tree_mutex making cgroup locking noticeably
-> simpler.  It contains the following eight patches.
-> 
->  0001-cgroup-reorganize-cgroup_create.patch
->  0002-cgroup-collapse-cgroup_create-into-croup_mkdir.patch
->  0003-cgroup-grab-cgroup_mutex-earlier-in-cgroup_subtree_c.patch
->  0004-cgroup-move-cgroup-kn-priv-clearing-to-cgroup_rmdir.patch
->  0005-cgroup-factor-out-cgroup_kn_lock_live-and-cgroup_kn_.patch
->  0006-cgroup-use-cgroup_kn_lock_live-in-other-cgroup-kernf.patch
->  0007-cgroup-nest-kernfs-active-protection-under-cgroup_mu.patch
->  0008-cgroup-remove-cgroup_tree_mutex.patch
+> This means that reparenting is not really required as rmdir will
+> reparent pages implicitly from the safe context. If we remove it from
+> mem_cgroup_force_empty then we are safe even with existing tasks because
+> the number of reclaim attempts is bounded. Moreover the knob still does
+> what the documentation claims (modulo reparenting which doesn't make any
+> difference) and users might expect. Longterm we want to deprecate the
+> whole knob and put the reparented pages to the tail of parent LRU during
+> cgroup removal.
 
-Applied to cgroup/for-3.16.
+Replaced the original patch with this one with Johannes' ack added.
 
-Thanks.
+Thanks!
 
 -- 
 tejun
