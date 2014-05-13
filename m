@@ -1,46 +1,42 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 5/7] cgroup: use restart_syscall() for retries after
- offline waits in cgroup_subtree_control_write()
-Date: Tue, 13 May 2014 11:19:07 -0400
-Message-ID: <20140513151907.GF23710@htj.dyndns.org>
-References: <1399663975-315-1-git-send-email-tj@kernel.org>
- <1399663975-315-6-git-send-email-tj@kernel.org>
- <5371A6DB.2050908@huawei.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH cgroup/for-3.16] cgroup: fix rcu_read_lock() leak in
+ update_if_frozen()
+Date: Tue, 13 May 2014 11:34:45 -0400
+Message-ID: <20140513153445.GG23710@htj.dyndns.org>
+References: <5369104d.Nn5Lpp7nwOehwnnC%fengguang.wu@intel.com>
+ <20140510032941.GE22539@mtj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=mpx3aOyRHBbam6pAv/PQzdhqqYSjH6MVDTOCBZqG7g0=;
-        b=pqvMyGS8mRDIwFnLQ3lMb4L36OjVwGtdjaaR+9xEKNqDjee5AhZttgHySol5XpCHAQ
-         tdmmJqyvSX71PoKEPN96Fq+VUIvva5eS3sRSblJe2MhAbgpSELgDmcHNZ4Fw0V+a7Tfo
-         dIkLFjBwK3j/xpJoMUgH/LdFfcvnFpn9GrB5pD2KyUtIa5HBaEb4QiweKxQnzK5oQGxc
-         bVC/U0ihNTNIP59k8+9VqQB5XBpO7/VXvH/kZkzyp7nE05sp8mg1YzOPeU6M2zhEHnkn
-         g14MFv+emEUh3L/QdrbVoexppfH7L//50mANse3E7HACIJhP7RWLRas+m4fzVw9//jLG
-         Ag/w==
+        bh=9luEPUR1nTF5jEW/1EfhDF0/dgVSnKpYTFw7uH3t1P8=;
+        b=KfdbESV4lKoxsYAUrQmH9FLDnMQVnqkEnUj3DVxayx1vw3zkBOPSg7dZNSoeWAVPTd
+         QDNReJrHYbNtPUkVJm2k+gkf5c/3NzTpYJPZU2bQiyWl1yP5qjv5ap4plJKbJws4srTs
+         spGgdk/MWpr7HyIWSNL3940fUSy5Ru6ouNQN9IW/6fHVE8a1LU4feRQhhbuskIKfPtKD
+         SkZJoL67u2WzbRWb05BkbfZYJlffEBNStKq87NCi1v2s8EAbESVwa+gafMLjgDpkbrvL
+         /c2HxcKIKNnycWyoQBUEeigNZL/TLMFEUbHaLKy8a3leA9HunDk7mYqBAtylQN+VsoSz
+         g7Ow==
 Content-Disposition: inline
-In-Reply-To: <5371A6DB.2050908-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20140510032941.GE22539@mtj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Li Zefan <lizefan@huawei.com>
+Cc: kbuild test robot <fengguang.wu@intel.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, May 13, 2014 at 01:00:11PM +0800, Li Zefan wrote:
-> Hi Tejun,
+On Fri, May 09, 2014 at 11:29:41PM -0400, Tejun Heo wrote:
+> While updating cgroup_freezer locking, 68fafb77d827 ("cgroup_freezer:
+> replace freezer->lock with freezer_mutex") introduced a bug in
+> update_if_frozen() where it returns with rcu_read_lock() held.  Fix it
+> by adding rcu_read_unlock() before returning.
 > 
-> On 2014/5/10 3:32, Tejun Heo wrote:
-> > After waiting for a child to finish offline,
-> > cgroup_subtree_control_write() jumps up to retry from after the input
-> > parsing and active protection breaking.  This retry makes the
-> > scheduled locking update more difficult.
-> 
-> Could you explain this sentence more specific? I don't understand what
-> "scheduled locking update" means.
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Reported-by: kbuild test robot <fengguang.wu@intel.com>
 
-Updating it to "planned cgroup_tree_mutex removal".
+Applied to cgroup/for-3.15-fixes.
 
 Thanks.
 
