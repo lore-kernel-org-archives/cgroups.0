@@ -1,71 +1,143 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.16] cgroup: use css->refcnt for cgroup
- reference counting
-Date: Wed, 14 May 2014 13:04:04 -0400
-Message-ID: <20140514170404.GC15690@htj.dyndns.org>
-References: <1399670015-23463-1-git-send-email-tj@kernel.org>
+Subject: [PATCH cgroup/for-3.16] cgroup: disallow debug controller on the
+ default hierarchy
+Date: Wed, 14 May 2014 19:33:07 -0400
+Message-ID: <20140514233307.GI15690@htj.dyndns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=C3COIr04c2JldHH16KHta7jqDEv9UzBpOtYUqEyYHvY=;
-        b=uF5mLEP05zVnLo2VvrEwPdLtgH6EGkop1dkQm1mVUKSfBdtZsBB1sk+V1r10KvSYPv
-         J3VFCiggQXhpGt2Do/Eiy5gqyOhSMa5ZK1iJiiW2pH9HksOGWrXusZZAfrqEWpNBIpZE
-         WNvDEowIXBAqDo0yA6lzNyBZCw8HgjZk/XpjYiEfa3b3ke3J9+dA6ukOFUNrbU7yfEDR
-         WsequLmf+NcqfmMhNZ6vO8AxpiRQwCxYgMVQhl+t7UpLwPwAEiUxJNwkgCDcp789j2TO
-         KJFqDWyRRXC9bTNj8cJ7C80Tu9mtanPRbm/kO/HATmkjnSBKEEg8Wdr1xFDr5lT2Wqvg
-         KEsA==
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=0NCAIVltDNFMfsQPy0UvrfQZHtFDrNaSkb+5Q3Zp9Qk=;
+        b=bYGwPAkucwoUm5kTWS5DmhYdJ+WWEur2pkk+v86F/lG1mJ2gRo9illLGlKgEkeN0k1
+         8KQScLn4rcWZ0m+SdxAdyqWM9nJrx/qlvlOq3dUuMj4p45yWp6TQzfyXVFBWuPiO9jFz
+         3D32cTsjK/6OP8Tq+itLR8RNRZUYX0tZHi91hCL8ph9qO1tPxJAwIX/iulbHZquwrsne
+         ruYrWle0ytxkjkmklLBuaiZszSqRBFM+EulQLxde/tYxDckMWmBzTv5bPwNNWl0j25gt
+         n3yieGurDOtJqMuj4YT044V29BuwD3tBP6oOrR6iMGDAPcLPPAakyEf/F59sS3D5M4R8
+         agnQ==
 Content-Disposition: inline
-In-Reply-To: <1399670015-23463-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, May 09, 2014 at 05:13:26PM -0400, Tejun Heo wrote:
-> Hello,
-> 
-> Currently, cgroup and css (cgroup_subsys_state) are separately
-> reference counted.  cgroup->refcnt is an atomic_t and css->refcnt is a
-> percpu_ref.  css is becoming the primary structural block and used
-> widely in various operaitons.  cgroup already has a css embedded in it
-> (cgroup->dummy_css) to use as its proxy in such operations; however,
-> there still are quite a few differences between cgroup and css
-> handling limitng how cgroup->dummy_css can be used.
-> 
-> This patchset makes cgroup use the embedded css's refcnt for reference
-> counting.  This closes one of the gaps between an cgroup embedded css,
-> which is renamed to cgroup->self early in the patchset, and a normal
-> css and will allow more unified handling of cgroups and csses.  In
-> addition, this makes cgroup refcnting use percpu_ref too, which is a
-> lot more scalable than an atomic_t.
-> 
-> Ultimately, it'd make things far simpler to assign a proper
-> cgroup_subsys to the cgroup embedded csses and handle them the same as
-> other csses; however, we can't yet do it thanks to multiple
-> hierarchies as we end up with multiple csses of the same subsystem for
-> the same task, but in the very long term, if multiple hierarchies can
-> be removed, that's where it's headed.
-> 
-> This patchset contains the following nine patches.
-> 
->  0001-cgroup-use-restart_syscall-for-mount-retries.patch
->  0002-cgroup-rename-cgroup-dummy_css-to-self-and-move-it-t.patch
->  0003-cgroup-separate-out-cgroup_has_live_children-from-cg.patch
->  0004-cgroup-move-check_for_release-parent-call-to-the-end.patch
->  0005-cgroup-move-cgroup-sibling-unlinking-to-cgroup_put.patch
->  0006-cgroup-remove-cgroup_destory_css_killed.patch
->  0007-cgroup-bounce-css-release-through-css-destroy_work.patch
->  0008-cgroup-enable-refcnting-for-root-csses.patch
->  0009-cgroup-use-cgroup-self.refcnt-for-cgroup-refcnting.patch
+The debug controller, as its name suggests, exposes cgroup core
+internals to userland to aid debugging.  Unfortunately, except for the
+name, there's no provision to prevent its usage in production
+configurations and the controller is widely enabled and mounted
+leaking internal details to userland.  Like most other debug
+information, the information exposed by debug isn't interesting even
+for debugging itself once the related parts are working reliably.
 
-Applied to cgroup/for-3.16.
+This controller has no reason for existing.  This patch implements
+cgrp_dfl_root_inhibit_ss_mask which can suppress specific subsystems
+on the default hierarchy and adds the debug subsystem to it so that it
+can be gradually deprecated as usages move towards the unified
+hierarchy.
 
-Thanks.
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ include/linux/cgroup.h        |    2 ++
+ include/linux/cgroup_subsys.h |   11 +++++++----
+ kernel/cgroup.c               |   21 ++++++++++++++++++---
+ 3 files changed, 27 insertions(+), 7 deletions(-)
 
--- 
-tejun
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -296,6 +296,8 @@ enum {
+ 	 *   the flag is not created.
+ 	 *
+ 	 * - blkcg: blk-throttle becomes properly hierarchical.
++	 *
++	 * - debug: disallowed on the default hierarchy.
+ 	 */
+ 	CGRP_ROOT_SANE_BEHAVIOR	= (1 << 0),
+ 
+--- a/include/linux/cgroup_subsys.h
++++ b/include/linux/cgroup_subsys.h
+@@ -7,10 +7,6 @@
+ SUBSYS(cpuset)
+ #endif
+ 
+-#if IS_ENABLED(CONFIG_CGROUP_DEBUG)
+-SUBSYS(debug)
+-#endif
+-
+ #if IS_ENABLED(CONFIG_CGROUP_SCHED)
+ SUBSYS(cpu)
+ #endif
+@@ -50,6 +46,13 @@ SUBSYS(net_prio)
+ #if IS_ENABLED(CONFIG_CGROUP_HUGETLB)
+ SUBSYS(hugetlb)
+ #endif
++
++/*
++ * The following subsystems are not supported on the default hierarchy.
++ */
++#if IS_ENABLED(CONFIG_CGROUP_DEBUG)
++SUBSYS(debug)
++#endif
+ /*
+  * DO NOT ADD ANY SUBSYSTEM WITHOUT EXPLICIT ACKS FROM CGROUP MAINTAINERS.
+  */
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -148,6 +148,13 @@ struct cgroup_root cgrp_dfl_root;
+  */
+ static bool cgrp_dfl_root_visible;
+ 
++/* some controllers are not supported in the default hierarchy */
++static const unsigned int cgrp_dfl_root_inhibit_ss_mask = 0
++#ifdef CONFIG_CGROUP_DEBUG
++	| (1 << debug_cgrp_id)
++#endif
++	;
++
+ /* The list of hierarchy roots */
+ 
+ static LIST_HEAD(cgroup_roots);
+@@ -1160,6 +1167,7 @@ static void cgroup_clear_dir(struct cgro
+ static int rebind_subsystems(struct cgroup_root *dst_root, unsigned int ss_mask)
+ {
+ 	struct cgroup_subsys *ss;
++	unsigned int tmp_ss_mask;
+ 	int ssid, i, ret;
+ 
+ 	lockdep_assert_held(&cgroup_mutex);
+@@ -1177,7 +1185,12 @@ static int rebind_subsystems(struct cgro
+ 			return -EBUSY;
+ 	}
+ 
+-	ret = cgroup_populate_dir(&dst_root->cgrp, ss_mask);
++	/* skip creating root files on dfl_root for inhibited subsystems */
++	tmp_ss_mask = ss_mask;
++	if (dst_root == &cgrp_dfl_root)
++		tmp_ss_mask &= ~cgrp_dfl_root_inhibit_ss_mask;
++
++	ret = cgroup_populate_dir(&dst_root->cgrp, tmp_ss_mask);
+ 	if (ret) {
+ 		if (dst_root != &cgrp_dfl_root)
+ 			return ret;
+@@ -2444,7 +2457,8 @@ static int cgroup_root_controllers_show(
+ {
+ 	struct cgroup *cgrp = seq_css(seq)->cgroup;
+ 
+-	cgroup_print_ss_mask(seq, cgrp->root->subsys_mask);
++	cgroup_print_ss_mask(seq, cgrp->root->subsys_mask &
++			     ~cgrp_dfl_root_inhibit_ss_mask);
+ 	return 0;
+ }
+ 
+@@ -2582,7 +2596,8 @@ static ssize_t cgroup_subtree_control_wr
+ 		if (tok[0] == '\0')
+ 			continue;
+ 		for_each_subsys(ss, ssid) {
+-			if (ss->disabled || strcmp(tok + 1, ss->name))
++			if (ss->disabled || strcmp(tok + 1, ss->name) ||
++			    ((1 << ss->id) & cgrp_dfl_root_inhibit_ss_mask))
+ 				continue;
+ 
+ 			if (*tok == '+') {
