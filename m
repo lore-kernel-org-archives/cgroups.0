@@ -1,85 +1,64 @@
-From: "Serge E. Hallyn" <serge@hallyn.com>
-Subject: Re: [PATCH 13/14] device_cgroup: use css_has_online_children()
- instead of has_children()
-Date: Wed, 14 May 2014 14:53:05 +0200
-Message-ID: <20140514125305.GB30376@mail.hallyn.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHSET cgroup/for-3.16] cgroup: iterate cgroup_subsys_states
+ directly
+Date: Wed, 14 May 2014 09:07:22 -0400
+Message-ID: <20140514130722.GE28815@htj.dyndns.org>
 References: <1399671091-23867-1-git-send-email-tj@kernel.org>
- <1399671091-23867-14-git-send-email-tj@kernel.org>
+ <5372EF45.8060701@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=YzUpGz0a5XU2pm2hq3GRC0g2ojAtSr7SvYa72U5h38A=;
+        b=vR+Pu5IhrMGXoLUFyCwxUjpcWvUMZJ60BGoJ+DdcfSGM6J0RtqskBHcFLs3z/14Lm3
+         yswwsnm0HiP3YPI3Y6BoJNCJKsRCMfgz8NLvu3q5T+Ol1KV+Xke7H0d+KDGgQm9PJdYE
+         iw7jiViVT+hS5soJ29lNjIyQIwZPK3yjI+MivxOPZ2uv6HB2uLOv32/5b8B+4Xa0787k
+         y3EL+v4Qia8hmlIAF3t4RA4EFNp4d14XeCaMDgPrssdmsEkzW3VDDU2bYtF/PfnuB6sl
+         PeuZdllRBZ7DPzDfoc/u+SetvAi6CD6Qu5wNUrxwUCC3bUKmq6mqcj6Lat2FPJ1wU2JG
+         TLCw==
 Content-Disposition: inline
-In-Reply-To: <1399671091-23867-14-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <5372EF45.8060701-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: lizefan@huawei.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, hannes@cmpxchg.org, Aristeu Rozanski <aris@redhat.com>, Serge Hallyn <serge.hallyn@ubuntu.com>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
 
-Quoting Tejun Heo (tj@kernel.org):
-> devcgroup_update_access() wants to know whether there are child
-> cgroups which are online and visible to userland and has_children()
-> may return false positive.  Replace it with css_has_online_children().
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Aristeu Rozanski <aris@redhat.com>
-> Cc: Serge Hallyn <serge.hallyn@ubuntu.com>
+Hello, Li.
 
-Acked-by: Serge Hallyn <serge.hallyn@canonical.com>
+On Wed, May 14, 2014 at 12:21:25PM +0800, Li Zefan wrote:
+> > There are now use cases where controllers need to iterate through
+> > csses regardless of their online state as long as they have positive
+> 
+> What use cases are we talking about here?
 
-> ---
->  security/device_cgroup.c | 19 ++-----------------
->  1 file changed, 2 insertions(+), 17 deletions(-)
-> 
-> diff --git a/security/device_cgroup.c b/security/device_cgroup.c
-> index 75b4b18..22de334 100644
-> --- a/security/device_cgroup.c
-> +++ b/security/device_cgroup.c
-> @@ -475,21 +475,6 @@ static int propagate_exception(struct dev_cgroup *devcg_root,
->  	return rc;
->  }
->  
-> -static inline bool has_children(struct dev_cgroup *devcgroup)
-> -{
-> -	bool ret;
-> -
-> -	/*
-> -	 * FIXME: There may be lingering offline csses and this function
-> -	 * may return %true when there isn't any userland-visible child
-> -	 * which is incorrect for our purposes.
-> -	 */
-> -	rcu_read_lock();
-> -	ret = css_next_child(NULL, &devcgroup->css);
-> -	rcu_read_unlock();
-> -	return ret;
-> -}
-> -
->  /*
->   * Modify the exception list using allow/deny rules.
->   * CAP_SYS_ADMIN is needed for this.  It's at least separate from CAP_MKNOD
-> @@ -522,7 +507,7 @@ static int devcgroup_update_access(struct dev_cgroup *devcgroup,
->  	case 'a':
->  		switch (filetype) {
->  		case DEVCG_ALLOW:
-> -			if (has_children(devcgroup))
-> +			if (css_has_online_children(&devcgroup->css))
->  				return -EINVAL;
->  
->  			if (!may_allow_all(parent))
-> @@ -538,7 +523,7 @@ static int devcgroup_update_access(struct dev_cgroup *devcgroup,
->  				return rc;
->  			break;
->  		case DEVCG_DENY:
-> -			if (has_children(devcgroup))
-> +			if (css_has_online_children(&devcgroup->css))
->  				return -EINVAL;
->  
->  			dev_exception_clean(devcgroup);
-> -- 
-> 1.9.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+memcg wants to be able to iterate all csses whose refcnts haven't
+reached zero yet so that it can treat offline csses the same way as
+online ones in terms of memory reclaim.  They don't contain new tasks
+so new charges won't be created but offlining won't try to transfer
+all charges to the parent but just leave the offline child attached
+until all charges are eventually reclaimed from the pressure from the
+parent.
+
+I'm not too familiar with the details but this makes sense in generic
+sense too.  Offline marks an object starting its draining phase and
+release marks the actual destruction point.  For controllers with
+persistent states like memcg, it's a lot more natural to deal offlined
+csses as "active but draining following the usual hierarchical
+operation" rather than trying to explicitly update the states from
+offline to move them to the parent especially as the effort there
+essentially is a waste as most of those moved charges aren't gonna be
+used in the parent and will be released eventually.
+
+Guaranteeing iteration of offline but not-released csses allow
+controllers to treat the draining stage between offline and release
+more or less identically to online state which in turn can make
+->css_offline() significantly simpler and lighter.
+
+Thanks.
+
+-- 
+tejun
