@@ -1,48 +1,50 @@
-From: Stephen Warren <swarren@wwwdotorg.org>
-Subject: Re: [PATCH 9/9] cgroup: use cgroup->self.refcnt for cgroup refcnting
-Date: Thu, 15 May 2014 15:56:51 -0600
-Message-ID: <53753823.2090402@wwwdotorg.org>
-References: <1399670015-23463-1-git-send-email-tj@kernel.org> <1399670015-23463-10-git-send-email-tj@kernel.org> <53751062.2050401@wwwdotorg.org>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCHSET cgroup/for-3.16] cgroup: iterate cgroup_subsys_states
+ directly
+Date: Fri, 16 May 2014 09:28:24 +0800
+Message-ID: <537569B8.5050402@huawei.com>
+References: <1399671091-23867-1-git-send-email-tj@kernel.org> <5372EF45.8060701@huawei.com> <20140514130722.GE28815@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <53751062.2050401@wwwdotorg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20140514130722.GE28815-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, lizefan@huawei.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, ARM kernel mailing list <linux-arm-kernel@lists.infradead.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
 
-On 05/15/2014 01:07 PM, Stephen Warren wrote:
-> On 05/09/2014 03:13 PM, Tejun Heo wrote:
->> Currently cgroup implements refcnting separately using atomic_t
->> cgroup->refcnt.  The destruction paths of cgroup and css are rather
->> complex and bear a lot of similiarities including the use of RCU and
->> bouncing to a work item.
+On2014/5/14 21:07, Tejun Heo wrote:
+> Hello, Li.
+> 
+> On Wed, May 14, 2014 at 12:21:25PM +0800, Li Zefan wrote:
+>>> There are now use cases where controllers need to iterate through
+>>> csses regardless of their online state as long as they have positive
 >>
->> This patch makes cgroup use the refcnt of self css for refcnting
->> instead of using its own.  This makes cgroup refcnting use css's
->> percpu refcnt and share the destruction mechanism.
->> ...
+>> What use cases are we talking about here?
 > 
-> In next-20150515, this patch causes silent boot failures on NVIDIA Tegra
-> ARM systems. There isn't even any earlyprintk. Reverting this one patch
-> solves this.
+> memcg wants to be able to iterate all csses whose refcnts haven't
+> reached zero yet so that it can treat offline csses the same way as
+> online ones in terms of memory reclaim.  They don't contain new tasks
+> so new charges won't be created but offlining won't try to transfer
+> all charges to the parent but just leave the offline child attached
+> until all charges are eventually reclaimed from the pressure from the
+> parent.
 > 
-> I was a bit surprised that cgroups would cause such an issue, but
-> looking at a normal kernel boot, I guess cgroup does get initialized
-> very early:
+> I'm not too familiar with the details but this makes sense in generic
+> sense too.  Offline marks an object starting its draining phase and
+> release marks the actual destruction point.  For controllers with
+> persistent states like memcg, it's a lot more natural to deal offlined
+> csses as "active but draining following the usual hierarchical
+> operation" rather than trying to explicitly update the states from
+> offline to move them to the parent especially as the effort there
+> essentially is a waste as most of those moved charges aren't gonna be
+> used in the parent and will be released eventually.
 > 
-> Uncompressing Linux... done, booting the kernel.
-> [    0.000000] Booting Linux on physical CPU 0x0
-> [    0.000000] Initializing cgroup subsys cpu
-> [    0.000000] Initializing cgroup subsys cpuacct
+> Guaranteeing iteration of offline but not-released csses allow
+> controllers to treat the draining stage between offline and release
+> more or less identically to online state which in turn can make
+> ->css_offline() significantly simpler and lighter.
 > 
-> Anyway, I'll try to track down what the problem is, but if someone
-> familiar with this patch could give it a look, that'd be very useful,
-> since I'm not at all familiar with this code or feature.
 
-It looks like this has something to do with the new code using percpu_
-functions from within cgroup_init_early, yet that function being called
-before init/main.c calls setup_per_cpu_areas() etc.? Unfortunately I
-have to run to some meetings now, so won't look at this until tomorrow.
+yeah, fair enough.
