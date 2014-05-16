@@ -1,50 +1,100 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCHSET cgroup/for-3.16] cgroup: iterate cgroup_subsys_states
  directly
-Date: Fri, 16 May 2014 09:28:24 +0800
-Message-ID: <537569B8.5050402@huawei.com>
-References: <1399671091-23867-1-git-send-email-tj@kernel.org> <5372EF45.8060701@huawei.com> <20140514130722.GE28815@htj.dyndns.org>
+Date: Fri, 16 May 2014 09:29:30 +0800
+Message-ID: <537569FA.9020801@huawei.com>
+References: <1399671091-23867-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20140514130722.GE28815-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+In-Reply-To: <1399671091-23867-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
 
-On2014/5/14 21:07, Tejun Heo wrote:
-> Hello, Li.
+On 2014/5/10 5:31, Tejun Heo wrote:
+> Hello,
 > 
-> On Wed, May 14, 2014 at 12:21:25PM +0800, Li Zefan wrote:
->>> There are now use cases where controllers need to iterate through
->>> csses regardless of their online state as long as they have positive
->>
->> What use cases are we talking about here?
+> Currently, while csses (cgroup_subsys_states) have ->parent linkage
+> too, only cgroups form full tree through their ->children and
+> ->sibling fields and css iterations naturally is implemented by
+> iterating cgroups and then dereferencing the css for the specified
+> subsystem.
 > 
-> memcg wants to be able to iterate all csses whose refcnts haven't
-> reached zero yet so that it can treat offline csses the same way as
-> online ones in terms of memory reclaim.  They don't contain new tasks
-> so new charges won't be created but offlining won't try to transfer
-> all charges to the parent but just leave the offline child attached
-> until all charges are eventually reclaimed from the pressure from the
-> parent.
+> There are now use cases where controllers need to iterate through
+> csses regardless of their online state as long as they have positive
+> reference.  This can't easily be achieved by iterating cgroups because
+> its css pointer array needs to be cleared on offline and there may be
+> multiple dying csses for a cgroup for the same subsystem and there's
+> only one pointer per cgroup-subsystem pair.
 > 
-> I'm not too familiar with the details but this makes sense in generic
-> sense too.  Offline marks an object starting its draining phase and
-> release marks the actual destruction point.  For controllers with
-> persistent states like memcg, it's a lot more natural to deal offlined
-> csses as "active but draining following the usual hierarchical
-> operation" rather than trying to explicitly update the states from
-> offline to move them to the parent especially as the effort there
-> essentially is a waste as most of those moved charges aren't gonna be
-> used in the parent and will be released eventually.
+> This patchset moves ->children and ->sibling from cgroup to css and
+> link all csses in proper trees and then make css iterators walk csses
+> directly instead of going through cgroups.  This achieves iteration of
+> all non-released csses while also simplifying the iteration
+> implementation.  This is also in line with the general direction of
+> using csses as the primary structural component.
 > 
-> Guaranteeing iteration of offline but not-released csses allow
-> controllers to treat the draining stage between offline and release
-> more or less identically to online state which in turn can make
-> ->css_offline() significantly simpler and lighter.
+> This patchset contains the following fourteen patches.
+> 
+>  0001-cgroup-remove-css_parent.patch
+>  0002-cgroup-remove-pointless-has-tasks-children-test-from.patch
+>  0003-memcg-update-memcg_has_children-to-use-css_next_chil.patch
+>  0004-device_cgroup-remove-direct-access-to-cgroup-childre.patch
+>  0005-cgroup-remove-cgroup-parent.patch
+>  0006-cgroup-move-cgroup-sibling-and-children-into-cgroup_.patch
+>  0007-cgroup-link-all-cgroup_subsys_states-in-their-siblin.patch
+>  0008-cgroup-move-cgroup-serial_nr-into-cgroup_subsys_stat.patch
+>  0009-cgroup-introduce-CSS_RELEASED-and-reduce-css-iterati.patch
+>  0010-cgroup-iterate-cgroup_subsys_states-directly.patch
+>  0011-cgroup-use-CSS_ONLINE-instead-of-CGRP_DEAD.patch
+>  0012-cgroup-convert-cgroup_has_live_children-into-css_has.patch
+>  0013-device_cgroup-use-css_has_online_children-instead-of.patch
+>  0014-cgroup-implement-css_tryget.patch
+> 
+> 0001-0004 are prep patches.
+> 
+> 0005-0008 move fields from cgroup to css and link csses in tree
+> structure instead of cgroups.
+> 
+> 0009-0010 implement direct css iteration.
+> 
+> 0011-0013 convert a cgroup based interface to a css one, which is now
+> possible as both are the same in terms of the tree structure, and fix
+> devcg brekage using it.
+> 
+> 0014 implements css_tryget() which is to be used to gain access to
+> offline but not-yet-released csses.
+> 
+> This pachset is on top of
+> 
+>  b9a63d0116e8 ("Merge branch 'for-3.16' of git://git.kernel.org/pub/scm/linux/kernel/git/tj/percpu into for-3.16")
+>  + [1] [PATCHSET v2 cgroup/for-3.16] cgroup: post unified hierarchy fixes and updates
+>  + [2] (REFRESHED) [PATCHSET cgroup/for-3.16] cgroup: implement cftype->write()
+>  + [3] (REFRESHED) [PATCHSET cgroup/for-3.16] cgroup: remove cgroup_tree_mutex
+>  + [4] [PATCHSET cgroup/for-3.16] cgroup: use css->refcnt for cgroup reference counting
+> 
+> and available in the following git branch.
+> 
+>  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-direct-css-iteration
+> 
+> diffstat follows.  Thanks.
+> 
+>  block/blk-cgroup.h           |    2 
+>  include/linux/cgroup.h       |  122 +++++++++++---------
+>  kernel/cgroup.c              |  257 ++++++++++++++++++++++++-------------------
+>  kernel/cgroup_freezer.c      |    2 
+>  kernel/cpuset.c              |    2 
+>  kernel/sched/core.c          |    2 
+>  kernel/sched/cpuacct.c       |    2 
+>  mm/hugetlb_cgroup.c          |    2 
+>  mm/memcontrol.c              |   45 +++----
+>  net/core/netclassid_cgroup.c |    2 
+>  net/core/netprio_cgroup.c    |    2 
+>  security/device_cgroup.c     |   17 --
+>  12 files changed, 251 insertions(+), 206 deletions(-)
 > 
 
-yeah, fair enough.
+Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
