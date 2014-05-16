@@ -1,73 +1,144 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 9/9] cgroup: use cgroup->self.refcnt for cgroup refcnting
-Date: Fri, 16 May 2014 10:37:18 -0400
-Message-ID: <20140516143718.GA5379@htj.dyndns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH cgroup/for-3.16] cgroup: introduce CSS_NO_REF and skip
+ refcnting on normal root csses
+Date: Fri, 16 May 2014 11:43:30 -0400
+Message-ID: <20140516154330.GB5379@htj.dyndns.org>
 References: <1399670015-23463-1-git-send-email-tj@kernel.org>
  <1399670015-23463-10-git-send-email-tj@kernel.org>
  <53751062.2050401@wwwdotorg.org>
  <53753823.2090402@wwwdotorg.org>
+ <20140516143718.GA5379@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=E4O3AJui+uUK8UpHd9uCOEvpk5+7vCtHmOZjGw6VaZo=;
-        b=JUUvUg7MagtKfXCsGg0wx+DE+BcOX/KgYW1AnvSvrayxdj2bncWM89wPW4N0dCVlYu
-         GjiwAOaWBzSRwdVB26TGvkWK/j0GidNa2gqIyCuhJ3m55lm6nSi+0NavTbtEf3fCIUMD
-         q0lTeGKJyvvMkEn2lsZaE/DbLdhKYKHHs1dFI8fa7wQ5bn7N7YiC15pQV4t8ST69Fc25
-         z3abbqBiJ+xNB2wO0D8pnI+ibb+NBVzjjiE7gafzewyiuNNE5WL+asBrEqag+XFqMKpA
-         qpJzSFlGW8wXepqp/1O+Ukm+BcILSB+bTqi2NcPSF8AdcENuhz5fz68/w3VNO31QY93m
-         cpVQ==
+        bh=wOQHaEeFYeI7856wbqDiM3X97W5DTThCmYjsQM5kEZk=;
+        b=B02SGjfT6gqViB/lxz6i+szzmw5z8gUO478sNLRDQ2LxewPNIAD2fcv15r4G6GY+Ky
+         g6E/yqAQ63f1itHmbcDKUHLv82Hyddeej5fPRbk/O0J2EUPqbQsuG7sqY98gJK93gjPL
+         M+Gy7CHyhXcy8/zlNi3Owbi5nKai1plqXE1vFDGIIK2NPfDFOorBAm7ofkjbfVqrOSz3
+         1c7m0a67/nsPIu0xFc2X1rfVBP2gfg8LcnblEE3NW5PMTFvw51scecnBs10Tp27SrZg4
+         ffpstzi3L/2AJy1hHdtdb7a3gnGMyWwU+VNUTGxWgO9BdFm80VHUJl2x4te3uni7P4au
+         qTAA==
 Content-Disposition: inline
-In-Reply-To: <53753823.2090402@wwwdotorg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20140516143718.GA5379-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: lizefan@huawei.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, ARM kernel mailing list <linux-arm-kernel@lists.infradead.org>
+To: Stephen Warren <swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, ARM kernel mailing list <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
 
-Hello, Stephen.
+From 49035d695d8f1c4bbe4e37480e5d06812818947c Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Fri, 16 May 2014 11:40:33 -0400
 
-On Thu, May 15, 2014 at 03:56:51PM -0600, Stephen Warren wrote:
-> On 05/15/2014 01:07 PM, Stephen Warren wrote:
-> > On 05/09/2014 03:13 PM, Tejun Heo wrote:
-> >> Currently cgroup implements refcnting separately using atomic_t
-> >> cgroup->refcnt.  The destruction paths of cgroup and css are rather
-> >> complex and bear a lot of similiarities including the use of RCU and
-> >> bouncing to a work item.
-> >>
-> >> This patch makes cgroup use the refcnt of self css for refcnting
-> >> instead of using its own.  This makes cgroup refcnting use css's
-> >> percpu refcnt and share the destruction mechanism.
-> >> ...
-> > 
-> > In next-20150515, this patch causes silent boot failures on NVIDIA Tegra
-> > ARM systems. There isn't even any earlyprintk. Reverting this one patch
-> > solves this.
-> > 
-> > I was a bit surprised that cgroups would cause such an issue, but
-> > looking at a normal kernel boot, I guess cgroup does get initialized
-> > very early:
-> > 
-> > Uncompressing Linux... done, booting the kernel.
-> > [    0.000000] Booting Linux on physical CPU 0x0
-> > [    0.000000] Initializing cgroup subsys cpu
-> > [    0.000000] Initializing cgroup subsys cpuacct
-> > 
-> > Anyway, I'll try to track down what the problem is, but if someone
-> > familiar with this patch could give it a look, that'd be very useful,
-> > since I'm not at all familiar with this code or feature.
-> 
-> It looks like this has something to do with the new code using percpu_
-> functions from within cgroup_init_early, yet that function being called
-> before init/main.c calls setup_per_cpu_areas() etc.? Unfortunately I
-> have to run to some meetings now, so won't look at this until tomorrow.
+9395a4500404 ("cgroup: enable refcnting for root csses") enabled
+reference counting for root csses (cgroup_subsys_states) so that
+cgroup's self csses can be used to manage the lifetime of the
+containing cgroups.
 
-Yeap, I know where the issue is.  Will post a fix soon.
+Unfortunately, this change was incorrect.  cpu controller uses
+early_init and starts using css reference counts on its root css from
+then on.  percpu_ref can't initialized during early init and its
+initialization is deferred till cgroup_init() time.  This means that
+cpu was using percpu_ref which wasn't properly initialized.  Due to
+the way percpu variables are laid out on x86, this didn't blow up
+immediately on x86 but ended up incrementing and decrementing the
+percpu variable at offset zero, whatever it may be; however, on other
+archs, this caused fault and early boot failure.
+
+As cgroup self csses still need working refcounting, we can't revert
+9395a4500404.  This patch adds CSS_NO_REF which explicitly inhibits
+reference counting on the css and sets it on all normal (non-self)
+csses.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Reported-by: Stephen Warren <swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org>
+Fixes: 9395a4500404 ("cgroup: enable refcnting for root csses")
+---
+Patch applied to cgroup/for-3.16.
 
 Thanks.
 
+ include/linux/cgroup.h | 11 ++++++++---
+ kernel/cgroup.c        |  9 +++++++--
+ 2 files changed, 15 insertions(+), 5 deletions(-)
+
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 76dadd77..1737db0 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -77,6 +77,7 @@ struct cgroup_subsys_state {
+ 
+ /* bits in struct cgroup_subsys_state flags field */
+ enum {
++	CSS_NO_REF	= (1 << 0), /* no reference counting for this css */
+ 	CSS_ONLINE	= (1 << 1), /* between ->css_online() and ->css_offline() */
+ };
+ 
+@@ -88,7 +89,8 @@ enum {
+  */
+ static inline void css_get(struct cgroup_subsys_state *css)
+ {
+-	percpu_ref_get(&css->refcnt);
++	if (!(css->flags & CSS_NO_REF))
++		percpu_ref_get(&css->refcnt);
+ }
+ 
+ /**
+@@ -103,7 +105,9 @@ static inline void css_get(struct cgroup_subsys_state *css)
+  */
+ static inline bool css_tryget_online(struct cgroup_subsys_state *css)
+ {
+-	return percpu_ref_tryget_live(&css->refcnt);
++	if (!(css->flags & CSS_NO_REF))
++		return percpu_ref_tryget_live(&css->refcnt);
++	return true;
+ }
+ 
+ /**
+@@ -114,7 +118,8 @@ static inline bool css_tryget_online(struct cgroup_subsys_state *css)
+  */
+ static inline void css_put(struct cgroup_subsys_state *css)
+ {
+-	percpu_ref_put(&css->refcnt);
++	if (!(css->flags & CSS_NO_REF))
++		percpu_ref_put(&css->refcnt);
+ }
+ 
+ /* bits in struct cgroup flags field */
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index c01e8e8..ad15bb7 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -4593,11 +4593,17 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss, bool early)
+ 	/* We don't handle early failures gracefully */
+ 	BUG_ON(IS_ERR(css));
+ 	init_and_link_css(css, ss, &cgrp_dfl_root.cgrp);
++
++	/*
++	 * Root csses are never destroyed and we can't initialize
++	 * percpu_ref during early init.  Disable refcnting.
++	 */
++	css->flags |= CSS_NO_REF;
++
+ 	if (early) {
+ 		/* allocation can't be done safely during early init */
+ 		css->id = 1;
+ 	} else {
+-		BUG_ON(percpu_ref_init(&css->refcnt, css_release));
+ 		css->id = cgroup_idr_alloc(&ss->css_idr, css, 1, 2, GFP_KERNEL);
+ 		BUG_ON(css->id < 0);
+ 	}
+@@ -4684,7 +4690,6 @@ int __init cgroup_init(void)
+ 			struct cgroup_subsys_state *css =
+ 				init_css_set.subsys[ss->id];
+ 
+-			BUG_ON(percpu_ref_init(&css->refcnt, css_release));
+ 			css->id = cgroup_idr_alloc(&ss->css_idr, css, 1, 2,
+ 						   GFP_KERNEL);
+ 			BUG_ON(css->id < 0);
 -- 
-tejun
+1.9.0
