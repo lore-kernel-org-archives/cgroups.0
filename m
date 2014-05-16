@@ -1,100 +1,73 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.16] cgroup: iterate cgroup_subsys_states
- directly
-Date: Fri, 16 May 2014 09:29:30 +0800
-Message-ID: <537569FA.9020801@huawei.com>
-References: <1399671091-23867-1-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 9/9] cgroup: use cgroup->self.refcnt for cgroup refcnting
+Date: Fri, 16 May 2014 10:37:18 -0400
+Message-ID: <20140516143718.GA5379@htj.dyndns.org>
+References: <1399670015-23463-1-git-send-email-tj@kernel.org>
+ <1399670015-23463-10-git-send-email-tj@kernel.org>
+ <53751062.2050401@wwwdotorg.org>
+ <53753823.2090402@wwwdotorg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1399671091-23867-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=E4O3AJui+uUK8UpHd9uCOEvpk5+7vCtHmOZjGw6VaZo=;
+        b=JUUvUg7MagtKfXCsGg0wx+DE+BcOX/KgYW1AnvSvrayxdj2bncWM89wPW4N0dCVlYu
+         GjiwAOaWBzSRwdVB26TGvkWK/j0GidNa2gqIyCuhJ3m55lm6nSi+0NavTbtEf3fCIUMD
+         q0lTeGKJyvvMkEn2lsZaE/DbLdhKYKHHs1dFI8fa7wQ5bn7N7YiC15pQV4t8ST69Fc25
+         z3abbqBiJ+xNB2wO0D8pnI+ibb+NBVzjjiE7gafzewyiuNNE5WL+asBrEqag+XFqMKpA
+         qpJzSFlGW8wXepqp/1O+Ukm+BcILSB+bTqi2NcPSF8AdcENuhz5fz68/w3VNO31QY93m
+         cpVQ==
+Content-Disposition: inline
+In-Reply-To: <53753823.2090402@wwwdotorg.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: lizefan@huawei.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, ARM kernel mailing list <linux-arm-kernel@lists.infradead.org>
 
-On 2014/5/10 5:31, Tejun Heo wrote:
-> Hello,
-> 
-> Currently, while csses (cgroup_subsys_states) have ->parent linkage
-> too, only cgroups form full tree through their ->children and
-> ->sibling fields and css iterations naturally is implemented by
-> iterating cgroups and then dereferencing the css for the specified
-> subsystem.
-> 
-> There are now use cases where controllers need to iterate through
-> csses regardless of their online state as long as they have positive
-> reference.  This can't easily be achieved by iterating cgroups because
-> its css pointer array needs to be cleared on offline and there may be
-> multiple dying csses for a cgroup for the same subsystem and there's
-> only one pointer per cgroup-subsystem pair.
-> 
-> This patchset moves ->children and ->sibling from cgroup to css and
-> link all csses in proper trees and then make css iterators walk csses
-> directly instead of going through cgroups.  This achieves iteration of
-> all non-released csses while also simplifying the iteration
-> implementation.  This is also in line with the general direction of
-> using csses as the primary structural component.
-> 
-> This patchset contains the following fourteen patches.
-> 
->  0001-cgroup-remove-css_parent.patch
->  0002-cgroup-remove-pointless-has-tasks-children-test-from.patch
->  0003-memcg-update-memcg_has_children-to-use-css_next_chil.patch
->  0004-device_cgroup-remove-direct-access-to-cgroup-childre.patch
->  0005-cgroup-remove-cgroup-parent.patch
->  0006-cgroup-move-cgroup-sibling-and-children-into-cgroup_.patch
->  0007-cgroup-link-all-cgroup_subsys_states-in-their-siblin.patch
->  0008-cgroup-move-cgroup-serial_nr-into-cgroup_subsys_stat.patch
->  0009-cgroup-introduce-CSS_RELEASED-and-reduce-css-iterati.patch
->  0010-cgroup-iterate-cgroup_subsys_states-directly.patch
->  0011-cgroup-use-CSS_ONLINE-instead-of-CGRP_DEAD.patch
->  0012-cgroup-convert-cgroup_has_live_children-into-css_has.patch
->  0013-device_cgroup-use-css_has_online_children-instead-of.patch
->  0014-cgroup-implement-css_tryget.patch
-> 
-> 0001-0004 are prep patches.
-> 
-> 0005-0008 move fields from cgroup to css and link csses in tree
-> structure instead of cgroups.
-> 
-> 0009-0010 implement direct css iteration.
-> 
-> 0011-0013 convert a cgroup based interface to a css one, which is now
-> possible as both are the same in terms of the tree structure, and fix
-> devcg brekage using it.
-> 
-> 0014 implements css_tryget() which is to be used to gain access to
-> offline but not-yet-released csses.
-> 
-> This pachset is on top of
-> 
->  b9a63d0116e8 ("Merge branch 'for-3.16' of git://git.kernel.org/pub/scm/linux/kernel/git/tj/percpu into for-3.16")
->  + [1] [PATCHSET v2 cgroup/for-3.16] cgroup: post unified hierarchy fixes and updates
->  + [2] (REFRESHED) [PATCHSET cgroup/for-3.16] cgroup: implement cftype->write()
->  + [3] (REFRESHED) [PATCHSET cgroup/for-3.16] cgroup: remove cgroup_tree_mutex
->  + [4] [PATCHSET cgroup/for-3.16] cgroup: use css->refcnt for cgroup reference counting
-> 
-> and available in the following git branch.
-> 
->  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-direct-css-iteration
-> 
-> diffstat follows.  Thanks.
-> 
->  block/blk-cgroup.h           |    2 
->  include/linux/cgroup.h       |  122 +++++++++++---------
->  kernel/cgroup.c              |  257 ++++++++++++++++++++++++-------------------
->  kernel/cgroup_freezer.c      |    2 
->  kernel/cpuset.c              |    2 
->  kernel/sched/core.c          |    2 
->  kernel/sched/cpuacct.c       |    2 
->  mm/hugetlb_cgroup.c          |    2 
->  mm/memcontrol.c              |   45 +++----
->  net/core/netclassid_cgroup.c |    2 
->  net/core/netprio_cgroup.c    |    2 
->  security/device_cgroup.c     |   17 --
->  12 files changed, 251 insertions(+), 206 deletions(-)
-> 
+Hello, Stephen.
 
-Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+On Thu, May 15, 2014 at 03:56:51PM -0600, Stephen Warren wrote:
+> On 05/15/2014 01:07 PM, Stephen Warren wrote:
+> > On 05/09/2014 03:13 PM, Tejun Heo wrote:
+> >> Currently cgroup implements refcnting separately using atomic_t
+> >> cgroup->refcnt.  The destruction paths of cgroup and css are rather
+> >> complex and bear a lot of similiarities including the use of RCU and
+> >> bouncing to a work item.
+> >>
+> >> This patch makes cgroup use the refcnt of self css for refcnting
+> >> instead of using its own.  This makes cgroup refcnting use css's
+> >> percpu refcnt and share the destruction mechanism.
+> >> ...
+> > 
+> > In next-20150515, this patch causes silent boot failures on NVIDIA Tegra
+> > ARM systems. There isn't even any earlyprintk. Reverting this one patch
+> > solves this.
+> > 
+> > I was a bit surprised that cgroups would cause such an issue, but
+> > looking at a normal kernel boot, I guess cgroup does get initialized
+> > very early:
+> > 
+> > Uncompressing Linux... done, booting the kernel.
+> > [    0.000000] Booting Linux on physical CPU 0x0
+> > [    0.000000] Initializing cgroup subsys cpu
+> > [    0.000000] Initializing cgroup subsys cpuacct
+> > 
+> > Anyway, I'll try to track down what the problem is, but if someone
+> > familiar with this patch could give it a look, that'd be very useful,
+> > since I'm not at all familiar with this code or feature.
+> 
+> It looks like this has something to do with the new code using percpu_
+> functions from within cgroup_init_early, yet that function being called
+> before init/main.c calls setup_per_cpu_areas() etc.? Unfortunately I
+> have to run to some meetings now, so won't look at this until tomorrow.
+
+Yeap, I know where the issue is.  Will post a fix soon.
+
+Thanks.
+
+-- 
+tejun
