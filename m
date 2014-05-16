@@ -1,75 +1,55 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-3.16] cgroup: iterate cgroup_subsys_states
- directly
-Date: Fri, 16 May 2014 12:08:35 -0400
-Message-ID: <20140516160835.GE5379@htj.dyndns.org>
-References: <1399671091-23867-1-git-send-email-tj@kernel.org>
+From: Stephen Warren <swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-3.16] cgroup: introduce CSS_NO_REF and skip
+ refcnting on normal root csses
+Date: Fri, 16 May 2014 10:59:37 -0600
+Message-ID: <537643F9.1030303@wwwdotorg.org>
+References: <1399670015-23463-1-git-send-email-tj@kernel.org> <1399670015-23463-10-git-send-email-tj@kernel.org> <53751062.2050401@wwwdotorg.org> <53753823.2090402@wwwdotorg.org> <20140516143718.GA5379@htj.dyndns.org> <20140516154330.GB5379@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=AyeEiNMP07cMgW8ZvUEumsn5dB/ZP8cyaSdf4+bXkCo=;
-        b=Sf/dRoh9kKTpFwmckP+l8IXe+o6LsuUmKsPjeO/EboKJox6eOY7vgsl2aMGsRaTeVy
-         RYFDWJGpyk4fAZwYjCgGcHTfyGLRiyYRll4sa3Vd6zg/B+3M78LNyYDaNq7XM11bZM3U
-         Dr++w7t2UwKxVDkaANIzj7w1f/nM47zsIL7KKT8439lluD5syTrbsjFboHopDfycfkdz
-         Vea2uYsUF4HWQ12rV8znE87wbYQTsBHWTXPjAjmfWd48cBmkkMPrlqR/34QNaWcDFiEX
-         sJaQFD4p22rdIqN/jXZhFf+UYfWT5VzWIXIoUSk4gqtM2Ax+4eGG6lSozOWgWbytgaAN
-         xJTQ==
-Content-Disposition: inline
-In-Reply-To: <1399671091-23867-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20140516154330.GB5379-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, ARM kernel mailing list <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
 
-On Fri, May 09, 2014 at 05:31:17PM -0400, Tejun Heo wrote:
-> Hello,
+On 05/16/2014 09:43 AM, Tejun Heo wrote:
+> From 49035d695d8f1c4bbe4e37480e5d06812818947c Mon Sep 17 00:00:00 2001
+> From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Date: Fri, 16 May 2014 11:40:33 -0400
 > 
-> Currently, while csses (cgroup_subsys_states) have ->parent linkage
-> too, only cgroups form full tree through their ->children and
-> ->sibling fields and css iterations naturally is implemented by
-> iterating cgroups and then dereferencing the css for the specified
-> subsystem.
+> 9395a4500404 ("cgroup: enable refcnting for root csses") enabled
+> reference counting for root csses (cgroup_subsys_states) so that
+> cgroup's self csses can be used to manage the lifetime of the
+> containing cgroups.
 > 
-> There are now use cases where controllers need to iterate through
-> csses regardless of their online state as long as they have positive
-> reference.  This can't easily be achieved by iterating cgroups because
-> its css pointer array needs to be cleared on offline and there may be
-> multiple dying csses for a cgroup for the same subsystem and there's
-> only one pointer per cgroup-subsystem pair.
+> Unfortunately, this change was incorrect.  cpu controller uses
+> early_init and starts using css reference counts on its root css from
+> then on.  percpu_ref can't initialized during early init and its
+> initialization is deferred till cgroup_init() time.  This means that
+> cpu was using percpu_ref which wasn't properly initialized.  Due to
+> the way percpu variables are laid out on x86, this didn't blow up
+> immediately on x86 but ended up incrementing and decrementing the
+> percpu variable at offset zero, whatever it may be; however, on other
+> archs, this caused fault and early boot failure.
 > 
-> This patchset moves ->children and ->sibling from cgroup to css and
-> link all csses in proper trees and then make css iterators walk csses
-> directly instead of going through cgroups.  This achieves iteration of
-> all non-released csses while also simplifying the iteration
-> implementation.  This is also in line with the general direction of
-> using csses as the primary structural component.
+> As cgroup self csses still need working refcounting, we can't revert
+> 9395a4500404.  This patch adds CSS_NO_REF which explicitly inhibits
+> reference counting on the css and sets it on all normal (non-self)
+> csses.
 > 
-> This patchset contains the following fourteen patches.
-> 
->  0001-cgroup-remove-css_parent.patch
->  0002-cgroup-remove-pointless-has-tasks-children-test-from.patch
->  0003-memcg-update-memcg_has_children-to-use-css_next_chil.patch
->  0004-device_cgroup-remove-direct-access-to-cgroup-childre.patch
->  0005-cgroup-remove-cgroup-parent.patch
->  0006-cgroup-move-cgroup-sibling-and-children-into-cgroup_.patch
->  0007-cgroup-link-all-cgroup_subsys_states-in-their-siblin.patch
->  0008-cgroup-move-cgroup-serial_nr-into-cgroup_subsys_stat.patch
->  0009-cgroup-introduce-CSS_RELEASED-and-reduce-css-iterati.patch
->  0010-cgroup-iterate-cgroup_subsys_states-directly.patch
->  0011-cgroup-use-CSS_ONLINE-instead-of-CGRP_DEAD.patch
->  0012-cgroup-convert-cgroup_has_live_children-into-css_has.patch
->  0013-device_cgroup-use-css_has_online_children-instead-of.patch
->  0014-cgroup-implement-css_tryget.patch
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Reported-by: Stephen Warren <swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org>
+> Fixes: 9395a4500404 ("cgroup: enable refcnting for root csses")
+> ---
+> Patch applied to cgroup/for-3.16.
 
-Applied to cgroup/for-3.16 with the minor updates to accomodate
-CSS_NO_REF.
+Unfortunately, this patch doesn't seem to solve the problem for me. I
+still get a hang/crash very early during boot, before earlyprintk stars.
 
-Thanks.
+I tried this patch on top of both next-20150115, and next-20150516. For
+both those kernels, reverting the original problematic patch does
+resolve the problem.
 
--- 
-tejun
+I'll try to investigate more later today.
