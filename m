@@ -1,47 +1,30 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [patch 8/9] mm: memcontrol: rewrite charge API
-Date: Fri, 23 May 2014 16:18:20 +0200
-Message-ID: <20140523141820.GE22135@dhcp22.suse.cz>
+From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [patch 7/9] mm: memcontrol: do not acquire page_cgroup lock for
+ kmem pages
+Date: Fri, 23 May 2014 18:29:31 +0400
+Message-ID: <20140523142929.GC3147@esperanza>
 References: <1398889543-23671-1-git-send-email-hannes@cmpxchg.org>
- <1398889543-23671-9-git-send-email-hannes@cmpxchg.org>
+ <1398889543-23671-8-git-send-email-hannes@cmpxchg.org>
+ <20140523133938.GC22135@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1398889543-23671-9-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <20140523133938.GC22135-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed 30-04-14 16:25:42, Johannes Weiner wrote:
-[...]
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index d3961fce1d54..6f48e292ffe7 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2574,163 +2574,6 @@ static int memcg_cpu_hotplug_callback(struct notifier_block *nb,
->  	return NOTIFY_OK;
->  }
->  
-> -/**
-> - * mem_cgroup_try_charge - try charging a memcg
-> - * @memcg: memcg to charge
-> - * @nr_pages: number of pages to charge
-> - * @oom: trigger OOM if reclaim fails
-> - *
-> - * Returns 0 if @memcg was charged successfully, -EINTR if the charge
-> - * was bypassed to root_mem_cgroup, and -ENOMEM if the charge failed.
-> - */
-> -static int mem_cgroup_try_charge(struct mem_cgroup *memcg,
-> -				 gfp_t gfp_mask,
-> -				 unsigned int nr_pages,
-> -				 bool oom)
+On Fri, May 23, 2014 at 03:39:38PM +0200, Michal Hocko wrote:
+> I am adding Vladimir to CC
+> 
+> On Wed 30-04-14 16:25:41, Johannes Weiner wrote:
+> > Kmem page charging and uncharging is serialized by means of exclusive
+> > access to the page.  Do not take the page_cgroup lock and don't set
+> > pc->flags atomically.
+> > 
+> > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-Why haven't you simply renamed mem_cgroup_try_charge to try_charge here?
-The code move is really hard to review.
-[...]
--- 
-Michal Hocko
-SUSE Labs
+Acked-by: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
