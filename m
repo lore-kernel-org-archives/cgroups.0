@@ -1,18 +1,17 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch 7/9] mm: memcontrol: do not acquire page_cgroup lock for
- kmem pages
-Date: Tue, 27 May 2014 15:53:42 -0400
-Message-ID: <20140527195342.GD2878@cmpxchg.org>
+Subject: Re: [patch 8/9] mm: memcontrol: rewrite charge API
+Date: Tue, 27 May 2014 16:05:16 -0400
+Message-ID: <20140527200516.GE2878@cmpxchg.org>
 References: <1398889543-23671-1-git-send-email-hannes@cmpxchg.org>
- <1398889543-23671-8-git-send-email-hannes@cmpxchg.org>
- <20140523133938.GC22135@dhcp22.suse.cz>
+ <1398889543-23671-9-git-send-email-hannes@cmpxchg.org>
+ <20140523145413.GF22135@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=FpAl/JuyduASvrtznNKD65hwqYdcebCP+JUjsUoKQco=;
-	b=EMxPjOsW8Ymb2zLgjr4ivSjYNd1LKzPKZosnCiISeHVO7d2nzQZbEqeJGHEksTZAuaKR3OpwLPX3nD57Hx9eUm6MeFT/+R0uJuVcNm/pbXLSuGDSDKr/rLXjcqpMpuGGgG0pZ2wfPNXnlRNUuO3NOP5CFQAOuMzJ4IKGMluLV/I=;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=xiWXnE/sYGNwlMBGFwvPqeXeJFQMvY7MSdWbULuYS/k=;
+	b=DSb7jItVybSUSvfLFvqMjf/6TCJDpn+iBH3aCCIcusrZHj2FX21awoDjmqO2jl+MAODL7BRFH/x+cUD7bDAd2jg0BfW7IlL2xcFFZVh72swUqd0Gj+5OrH0IU6tGytfFGAqn1a3p6sEFO0jjHYm1IxNMND491fDpvTJkZsVk8mM=;
 Content-Disposition: inline
-In-Reply-To: <20140523133938.GC22135@dhcp22.suse.cz>
+In-Reply-To: <20140523145413.GF22135@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -20,91 +19,72 @@ Content-Transfer-Encoding: 7bit
 To: Michal Hocko <mhocko@suse.cz>
 Cc: linux-mm@kvack.org, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, May 23, 2014 at 03:39:38PM +0200, Michal Hocko wrote:
-> I am adding Vladimir to CC
-> 
-> On Wed 30-04-14 16:25:41, Johannes Weiner wrote:
-> > Kmem page charging and uncharging is serialized by means of exclusive
-> > access to the page.  Do not take the page_cgroup lock and don't set
-> > pc->flags atomically.
+On Fri, May 23, 2014 at 04:54:13PM +0200, Michal Hocko wrote:
+> On Wed 30-04-14 16:25:42, Johannes Weiner wrote:
+> > The memcg charge API charges pages before they are rmapped - i.e. have
+> > an actual "type" - and so every callsite needs its own set of charge
+> > and uncharge functions to know what type is being operated on.
 > > 
-> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> 
-> The patch is correct I just have some comments below.
-> Anyway
-> Acked-by: Michal Hocko <mhocko@suse.cz>
-
-Thanks!
-
-> >  mm/memcontrol.c | 16 +++-------------
-> >  1 file changed, 3 insertions(+), 13 deletions(-)
+> > Rewrite the charge API to provide a generic set of try_charge(),
+> > commit_charge() and cancel_charge() transaction operations, much like
+> > what's currently done for swap-in:
 > > 
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index c528ae9ac230..d3961fce1d54 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -3535,10 +3535,8 @@ void __memcg_kmem_commit_charge(struct page *page, struct mem_cgroup *memcg,
-> >  	}
-> >  
+> >   mem_cgroup_try_charge() attempts to reserve a charge, reclaiming
+> >   pages from the memcg if necessary.
+> > 
+> >   mem_cgroup_commit_charge() commits the page to the charge once it
+> >   has a valid page->mapping and PageAnon() reliably tells the type.
+> > 
+> >   mem_cgroup_cancel_charge() aborts the transaction.
+> > 
+> > As pages need to be committed after rmap is established but before
+> > they are added to the LRU, page_add_new_anon_rmap() must stop doing
+> > LRU additions again.  Factor lru_cache_add_active_or_unevictable().
+> > 
+> > The order of functions in mm/memcontrol.c is entirely random, so this
+> > new charge interface is implemented at the end of the file, where all
+> > new or cleaned up, and documented code should go from now on.
 > 
-> 	/*
-> 	 * given page is newly allocated and invisible to everybody but
-> 	 * the caller so there is no need to use page_cgroup lock nor
-> 	 * SetPageCgroupUsed
-> 	 */
-> 
-> would be helpful?
+> I would prefer moving them after refactoring because the reviewing is
+> really harder this way. If such moving is needed at all.
 
-That makes sense, I added the following:
+I find it incredibly cumbersome to work with this code because of the
+ordering.  Sure, you use the search function of the editor, but you
+don't even know whether to look above or below, half of the hits are
+forward declarations etc.  Crappy code attracts more crappy code, so I
+feel strongly that we clean this up and raise the bar for the future.
 
-+       /*
-+        * The page is freshly allocated and not visible to any
-+        * outside callers yet.  Set up pc non-atomically.
-+        */
+As to the ordering: I chose this way because this really is a
+fundamental rewrite, and I figured it would be *easier* to read if you
+have the entire relevant code show up in the diff.  I.e. try_charge()
+is fully included, right next to its API entry function.
 
-> >  	pc = lookup_page_cgroup(page);
-> > -	lock_page_cgroup(pc);
-> >  	pc->mem_cgroup = memcg;
-> > -	SetPageCgroupUsed(pc);
-> > -	unlock_page_cgroup(pc);
-> > +	pc->flags = PCG_USED;
-> >  }
-> >  
-> >  void __memcg_kmem_uncharge_pages(struct page *page, int order)
-> > @@ -3548,19 +3546,11 @@ void __memcg_kmem_uncharge_pages(struct page *page, int order)
-> >  
-> >  
-> >  	pc = lookup_page_cgroup(page);
-> > -	/*
-> > -	 * Fast unlocked return. Theoretically might have changed, have to
-> > -	 * check again after locking.
-> > -	 */
-> 
-> This comment was there since the code has been merged. Maybe it was true
-> at the time but after "mm: get rid of __GFP_KMEMCG" it is definitely out
-> of date.
-> 
-> 	/*
-> 	 * the pages is going away and will be freed and nobody can see
-> 	 * it anymore so no need to take page_cgroup lock.
-> 	 */
-> >  	if (!PageCgroupUsed(pc))
-> >  		return;
-> >  
-> > -	lock_page_cgroup(pc);
-> > -	if (PageCgroupUsed(pc)) {
-> > -		memcg = pc->mem_cgroup;
-> > -		ClearPageCgroupUsed(pc);
-> > -	}
-> > -	unlock_page_cgroup(pc);
-> 
-> maybe add
-> 	WARN_ON_ONCE(pc->flags != PCG_USED);
-> 
-> to check for an unexpected flags usage in the kmem path?
+If this doesn't work for you - the reviewer - I'm happy to change it
+around and move the code separately.
 
-There is no overlap between page types that use PCG_USED and those
-that don't.  What would be the value of adding this?
+> size is saying the code is slightly bigger:
+>    text    data     bss     dec     hex filename
+>  487977   84898   45984  618859   9716b mm/built-in.o.7
+>  488276   84898   45984  619158   97296 mm/built-in.o.8
+> 
+> No biggie though.
+> 
+> It is true it get's rid of ~80LOC in memcontrol.c but it adds some more
+> outside of memcg. Most of the charging paths didn't get any easier, they
+> already know the type and they have to make sure they even commit the
+> charge now.
+> 
+> But maybe it is just me feeling that now that we have
+> mem_cgroup_charge_{anon,file,swapin} the API doesn't look so insane
+> anymore and so I am not tempted to change it that much.
+
+I should have been a little clearer in the changelog: this is mainly
+to make sure we never commit pages before their rmapping is
+established so that not only charging, but also uncharging can be
+drastically simplified.
+
+You already noticed that when looking at the next patch, but I'll make
+sure to mention it here as well.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
