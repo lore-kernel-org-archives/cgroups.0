@@ -1,119 +1,65 @@
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: [stable-3.10.y] possible unsafe locking warning
-Date: Wed, 28 May 2014 18:06:34 +0800
-Message-ID: <5385B52A.7050106@cn.fujitsu.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch 6/9] mm: memcontrol: remove ordering between
+ pc->mem_cgroup and PageCgroupUsed
+Date: Wed, 28 May 2014 13:31:07 +0200
+Message-ID: <20140528113107.GF9895@dhcp22.suse.cz>
+References: <1398889543-23671-1-git-send-email-hannes@cmpxchg.org>
+ <1398889543-23671-7-git-send-email-hannes@cmpxchg.org>
+ <20140523132043.GB22135@dhcp22.suse.cz>
+ <20140527194500.GC2878@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20140527194500.GC2878@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: stable@vger.kernel.org
-Cc: Cgroups <cgroups@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>, tangchen <tangchen@cn.fujitsu.com>
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: linux-mm@kvack.org, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi all,
-When offline the whole memory of a movable numa node on kernel stable-3.10-y,
-the following possible deadlock warning occurs.
+On Tue 27-05-14 15:45:00, Johannes Weiner wrote:
+> On Fri, May 23, 2014 at 03:20:43PM +0200, Michal Hocko wrote:
+> > On Wed 30-04-14 16:25:40, Johannes Weiner wrote:
+> > > There is a write barrier between setting pc->mem_cgroup and
+> > > PageCgroupUsed, which was added to allow LRU operations to lookup the
+> > > memcg LRU list of a page without acquiring the page_cgroup lock.  But
+> > > ever since 38c5d72f3ebe ("memcg: simplify LRU handling by new rule"),
+> > > pages are ensured to be off-LRU while charging, so nobody else is
+> > > changing LRU state while pc->mem_cgroup is being written.
+> > 
+> > This is quite confusing. Why do we have the lrucare path then?
+> 
+> Some charge paths start with the page on the LRU, lrucare makes sure
+> it's off during the charge.
 
-[ 2457.467359] 
-[ 2457.485175] =================================
-[ 2457.537325] [ INFO: inconsistent lock state ]
-[ 2457.589476] 3.10.39+ #4 Not tainted
-[ 2457.631218] ---------------------------------
-[ 2457.683370] inconsistent {RECLAIM_FS-ON-W} -> {IN-RECLAIM_FS-R} usage.
-[ 2457.761540] kswapd2/1151 [HC0[0]:SC0[0]:HE1:SE1] takes:
-[ 2457.824102]  (&sig->group_rwsem){+++++?}, at: [<ffffffff81071864>] exit_signals+0x24/0x130
-[ 2457.923538] {RECLAIM_FS-ON-W} state was registered at:
-[ 2457.985055]   [<ffffffff810bfc99>] mark_held_locks+0xb9/0x140
-[ 2458.053976]   [<ffffffff810c1e3a>] lockdep_trace_alloc+0x7a/0xe0
-[ 2458.126015]   [<ffffffff81194f47>] kmem_cache_alloc_trace+0x37/0x240
-[ 2458.202214]   [<ffffffff812c6e89>] flex_array_alloc+0x99/0x1a0
-[ 2458.272175]   [<ffffffff810da563>] cgroup_attach_task+0x63/0x430
-[ 2458.344214]   [<ffffffff810dcca0>] attach_task_by_pid+0x210/0x280
-[ 2458.417294]   [<ffffffff810dcd26>] cgroup_procs_write+0x16/0x20
-[ 2458.488287]   [<ffffffff810d8410>] cgroup_file_write+0x120/0x2c0
-[ 2458.560320]   [<ffffffff811b21a0>] vfs_write+0xc0/0x1f0
-[ 2458.622994]   [<ffffffff811b2bac>] SyS_write+0x4c/0xa0
-[ 2458.684618]   [<ffffffff815ec3c0>] tracesys+0xdd/0xe2
-[ 2458.745214] irq event stamp: 49
-[ 2458.782794] hardirqs last  enabled at (49): [<ffffffff815e2b56>] _raw_spin_unlock_irqrestore+0x36/0x70
-[ 2458.894388] hardirqs last disabled at (48): [<ffffffff815e337b>] _raw_spin_lock_irqsave+0x2b/0xa0
-[ 2459.000771] softirqs last  enabled at (0): [<ffffffff81059247>] copy_process.part.24+0x627/0x15f0
-[ 2459.107161] softirqs last disabled at (0): [<          (null)>]           (null)
-[ 2459.195852] 
-[ 2459.195852] other info that might help us debug this:
-[ 2459.274024]  Possible unsafe locking scenario:
-[ 2459.274024] 
-[ 2459.344911]        CPU0
-[ 2459.374161]        ----
-[ 2459.403408]   lock(&sig->group_rwsem);
-[ 2459.448490]   <Interrupt>
-[ 2459.479825]     lock(&sig->group_rwsem);
-[ 2459.526979] 
-[ 2459.526979]  *** DEADLOCK ***
-[ 2459.526979] 
-[ 2459.597866] no locks held by kswapd2/1151.
-[ 2459.646896] 
-[ 2459.646896] stack backtrace:
-[ 2459.699049] CPU: 30 PID: 1151 Comm: kswapd2 Not tainted 3.10.39+ #4
-[ 2459.774098] Hardware name: FUJITSU PRIMEQUEST2800E/SB, BIOS PRIMEQUEST 2000 Series BIOS Version 01.48 05/07/2014
-[ 2459.895983]  ffffffff82284bf0 ffff88085856bbf8 ffffffff815dbcf6 ffff88085856bc48
-[ 2459.985003]  ffffffff815d67c6 0000000000000000 ffff880800000001 ffff880800000001
-[ 2460.074024]  000000000000000a ffff88085edc9600 ffffffff810be0e0 0000000000000009
-[ 2460.163087] Call Trace:
-[ 2460.192345]  [<ffffffff815dbcf6>] dump_stack+0x19/0x1b
-[ 2460.253874]  [<ffffffff815d67c6>] print_usage_bug+0x1f7/0x208
-[ 2460.322679]  [<ffffffff810be0e0>] ? check_usage_backwards+0x160/0x160
-[ 2460.399807]  [<ffffffff810bfb5d>] mark_lock+0x21d/0x2a0
-[ 2460.462369]  [<ffffffff810c076a>] __lock_acquire+0x52a/0xb60
-[ 2460.530136]  [<ffffffff8101acd3>] ? native_sched_clock+0x13/0x80
-[ 2460.602065]  [<ffffffff8101ad49>] ? sched_clock+0x9/0x10
-[ 2460.665668]  [<ffffffff81096f05>] ? sched_clock_cpu+0xb5/0x100
-[ 2460.735516]  [<ffffffff810c1592>] lock_acquire+0xa2/0x140
-[ 2460.800156]  [<ffffffff81071864>] ? exit_signals+0x24/0x130
-[ 2460.866885]  [<ffffffff81158ca0>] ? balance_pgdat+0x5e0/0x5e0
-[ 2460.935691]  [<ffffffff815e01e1>] down_read+0x51/0xa0
-[ 2460.996166]  [<ffffffff81071864>] ? exit_signals+0x24/0x130
-[ 2461.062888]  [<ffffffff81071864>] exit_signals+0x24/0x130
-[ 2461.127536]  [<ffffffff81060d55>] do_exit+0xb5/0xa50
-[ 2461.186976]  [<ffffffff810841e0>] ? wake_up_bit+0x30/0x30
-[ 2461.251629]  [<ffffffff81158ca0>] ? balance_pgdat+0x5e0/0x5e0
-[ 2461.320433]  [<ffffffff8108303b>] kthread+0xdb/0x100
-[ 2461.379870]  [<ffffffff815e12eb>] ? wait_for_completion+0x3b/0x110
-[ 2461.453879]  [<ffffffff81082f60>] ? kthread_create_on_node+0x140/0x140
-[ 2461.532049]  [<ffffffff815ec0ec>] ret_from_fork+0x7c/0xb0
-[ 2461.596689]  [<ffffffff81082f60>] ? kthread_create_on_node+0x140/0x140
+Yeah, I know I just wanted to point that the changelog might be
+confusing and so mentioning this aspect would be nice...
 
-And when reference to the related code(kernel-3.10.y), it seems that cgroup_attach_task(thread-2,
-attach kswapd) trigger kswapd(reclaim memory?) when trying to alloc memory(flex_array_alloc) under
-the protection of sig->group_rwsem, but meanwhile the kswapd(thread-1) is in the exit routine
-(because it was marked SHOULD STOP when offline pages completed), which needs to acquire
-sig->group_rwsem in exit_signals(), so the deadlock occurs.
+> > The code is quite tricky so this deserves a more detailed explanation
+> > IMO.
+> > 
+> > There are only 3 paths which check both the flag and mem_cgroup (
+> > without page_cgroup_lock) get_mctgt_type* and mem_cgroup_page_lruvec AFAICS.
+> > None of them have rmb so there was no guarantee about ordering anyway.
+> 
+> Yeah, exactly.  As per the changelog, this is a remnant of the way it
+> used to work but it's no longer needed because of guaranteed off-LRU
+> state.
+> 
+> > > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> > 
+> > Anyway, the change is welcome
+> > Acked-by: Michal Hocko <mhocko@suse.cz>
+> 
+> Thanks!
 
-       thread-1                           			 |            thread-2
-                                                                 |
-__offline_pages():                                               | system_call_fastpath()
-|-> kswapd_stop(node);                                           | |-> ......
-    |-> kthread_stop(kswapd)                                     | |-> cgroup_file_write()
-        |-> set_bit(KTHREAD_SHOULD_STOP, &kthread->flags);       | |-> ......
-        |-> wake_up_process(k)                                   | |-> attach_task_by_pid()
-            |                                                    |     |-> threadgroup_lock(tsk)
-|<----------|                                                    |        // Here, got the lock.
-|-> kswapd()                                                     |    |-> ...
-    |-> if (kthread_should_stop())                               |     |-> cgroup_attach_task()
-            return;                                              |         |-> flex_array_alloc()
-            |                                                    |             |-> kzalloc()
-|<----------|                                                    |                |-> wait for kswapd to reclaim memory
-|-> kthread()                                                    |
-    |-> do_exit(ret)                                             |
-        |-> exit_signals()                                       |
-            |-> threadgroup_change_begin(tsk)                    |
-                |-> down_read(&tsk->signal->group_rwsem)         |
-                    // Here, acquire the lock. 
+-- 
+Michal Hocko
+SUSE Labs
 
-If my analysis is correct, the latest kernel may have the same issue, though the flex_array was replaced
-by list, but we still need to alloc memory(e.g. in find_css_set()), so the race may still occur.
-Any comments about this? If I missed something, please correct me.:)
-
-Regards,
-Gu
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
