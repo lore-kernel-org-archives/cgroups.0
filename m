@@ -1,93 +1,46 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch 8/9] mm: memcontrol: rewrite charge API
-Date: Tue, 27 May 2014 16:05:16 -0400
-Message-ID: <20140527200516.GE2878@cmpxchg.org>
-References: <1398889543-23671-1-git-send-email-hannes@cmpxchg.org>
- <1398889543-23671-9-git-send-email-hannes@cmpxchg.org>
- <20140523145413.GF22135@dhcp22.suse.cz>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-3.16] cgroup: clean up MAINTAINERS entries
+Date: Wed, 28 May 2014 15:46:15 +0800
+Message-ID: <53859447.4050001@huawei.com>
+References: <20140513194958.GD28815@htj.dyndns.org> <20140519203339.GE27506@mtj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=xiWXnE/sYGNwlMBGFwvPqeXeJFQMvY7MSdWbULuYS/k=;
-	b=DSb7jItVybSUSvfLFvqMjf/6TCJDpn+iBH3aCCIcusrZHj2FX21awoDjmqO2jl+MAODL7BRFH/x+cUD7bDAd2jg0BfW7IlL2xcFFZVh72swUqd0Gj+5OrH0IU6tGytfFGAqn1a3p6sEFO0jjHYm1IxNMND491fDpvTJkZsVk8mM=;
-Content-Disposition: inline
-In-Reply-To: <20140523145413.GF22135@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20140519203339.GE27506-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: linux-mm@kvack.org, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-On Fri, May 23, 2014 at 04:54:13PM +0200, Michal Hocko wrote:
-> On Wed 30-04-14 16:25:42, Johannes Weiner wrote:
-> > The memcg charge API charges pages before they are rmapped - i.e. have
-> > an actual "type" - and so every callsite needs its own set of charge
-> > and uncharge functions to know what type is being operated on.
-> > 
-> > Rewrite the charge API to provide a generic set of try_charge(),
-> > commit_charge() and cancel_charge() transaction operations, much like
-> > what's currently done for swap-in:
-> > 
-> >   mem_cgroup_try_charge() attempts to reserve a charge, reclaiming
-> >   pages from the memcg if necessary.
-> > 
-> >   mem_cgroup_commit_charge() commits the page to the charge once it
-> >   has a valid page->mapping and PageAnon() reliably tells the type.
-> > 
-> >   mem_cgroup_cancel_charge() aborts the transaction.
-> > 
-> > As pages need to be committed after rmap is established but before
-> > they are added to the LRU, page_add_new_anon_rmap() must stop doing
-> > LRU additions again.  Factor lru_cache_add_active_or_unevictable().
-> > 
-> > The order of functions in mm/memcontrol.c is entirely random, so this
-> > new charge interface is implemented at the end of the file, where all
-> > new or cleaned up, and documented code should go from now on.
+On 2014/5/20 4:33, Tejun Heo wrote:
+> On Tue, May 13, 2014 at 03:49:58PM -0400, Tejun Heo wrote:
+>> There are currently three cgroup related entries in MAINTAINERS.  Make
+>> the following updates.
+>>
+>> * Make the names - both cgroup and cpuset - singular.  We're mixing
+>>   singular and plural all over the place for no good reason.
+>>
+>> * Drop containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org from CGROUP.  That list
+>>   doesn't have much to do with cgroup per-se.
+>>
+>> * Add Documentation field to CGROUP.
+>>
+>> * Drop mm/*cgroup* from CGROUP.  memcg has separate maintainers.
+>>
+>> * Prefix the controller-specific ones with "CONTROL CGROUP -" and
+>>   collect cgroup related entries under the core one.
+>>
+>> * Add (MEMCG) abbreviation to MEMCG entry.
+>>
+>> * Drop Balbir Singh and KAMEZAWA Hiroyuki from memcg maintainers.  It
+>>   has been quite a while since both actually worked on memcg.
+>>
+>> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 > 
-> I would prefer moving them after refactoring because the reviewing is
-> really harder this way. If such moving is needed at all.
-
-I find it incredibly cumbersome to work with this code because of the
-ordering.  Sure, you use the search function of the editor, but you
-don't even know whether to look above or below, half of the hits are
-forward declarations etc.  Crappy code attracts more crappy code, so I
-feel strongly that we clean this up and raise the bar for the future.
-
-As to the ordering: I chose this way because this really is a
-fundamental rewrite, and I figured it would be *easier* to read if you
-have the entire relevant code show up in the diff.  I.e. try_charge()
-is fully included, right next to its API entry function.
-
-If this doesn't work for you - the reviewer - I'm happy to change it
-around and move the code separately.
-
-> size is saying the code is slightly bigger:
->    text    data     bss     dec     hex filename
->  487977   84898   45984  618859   9716b mm/built-in.o.7
->  488276   84898   45984  619158   97296 mm/built-in.o.8
+> Applied to cgroup/for-3.16.
 > 
-> No biggie though.
-> 
-> It is true it get's rid of ~80LOC in memcontrol.c but it adds some more
-> outside of memcg. Most of the charging paths didn't get any easier, they
-> already know the type and they have to make sure they even commit the
-> charge now.
-> 
-> But maybe it is just me feeling that now that we have
-> mem_cgroup_charge_{anon,file,swapin} the API doesn't look so insane
-> anymore and so I am not tempted to change it that much.
 
-I should have been a little clearer in the changelog: this is mainly
-to make sure we never commit pages before their rmapping is
-established so that not only charging, but also uncharging can be
-drastically simplified.
+Late ack for the cgroup and cpuset parts.
 
-You already noticed that when looking at the next patch, but I'll make
-sure to mention it here as well.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Don't know why I overlooked this and the debug controller patch...
