@@ -1,17 +1,21 @@
-From: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [stable-3.10.y] possible unsafe locking warning
-Date: Wed, 28 May 2014 07:26:37 -0700
-Message-ID: <20140528142637.GB24250@kroah.com>
+Date: Wed, 28 May 2014 11:48:56 -0400
+Message-ID: <20140528154856.GD1419@htj.dyndns.org>
 References: <5385B52A.7050106@cn.fujitsu.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha1; c=relaxed/relaxed; d=
-	messagingengine.com; h=date:from:to:cc:subject:message-id
-	:references:mime-version:content-type:in-reply-to; s=smtpout;
-	 bh=jGH3+uzx00v2MGra+Y6bTLIvbos=; b=qqMPfk+G0uArEU4HRBLradEcLMvW
-	qPOcHWKC80z1oR7nNcvh/lEllyBSTH+BkywAcJy1oYgNhOzx8QYL4KAIAinKqefv
-	o2M345UNHARtPgERs2YZ7HuyKAg+SIv3loQxSajSmcsw3DNMb9unjI2BKah6z63X
-	SaefrooFFRWVvec=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=7VAiqhymfMFwOgnVZaImrqYFounK7dmjCxhjMakEtj0=;
+        b=Bzqb6SL0VpIldPxFolBzaWfsz/7LrqvuGtHo7nH+3XHVsvvOgg2Hzwf58XVs/NrdUT
+         o/rqkbfuc9vm/XmAk1nwG9AMFhlMX5GqZmNfN8O1+pjRpFZunjbRpddqAr40Xi/rOBc9
+         qQmRps7vQ5Qe1+MUisDEBZsCRVbq8yBvzDLIA8BHoosW2AZlDzFSwOWG7+W382hsq0YM
+         G9qY76J3zXkkdhUoyMSdB5LhLKQnnXJd44hFErBU30i8RtFYilGy8xZU+KxfHgZ8ii8I
+         8xlrFplwGj3ABc0iI3MCJJ4hR2lkMuUZBiD2rhN9sqqvEFwwZqk/RYgkLyVuMPyiyhsq
+         KAbw==
 Content-Disposition: inline
 In-Reply-To: <5385B52A.7050106-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
@@ -19,18 +23,13 @@ List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Gu Zheng <guz.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Yasuaki Ishimatsu <isimatu.yasuaki-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, tangchen <tangchen-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Yasuaki Ishimatsu <isimatu.yasuaki-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, tangchen <tangchen-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+
+(cc'ing Johannes for mm-foo)
+
+Hello,
 
 On Wed, May 28, 2014 at 06:06:34PM +0800, Gu Zheng wrote:
-> Hi all,
-> When offline the whole memory of a movable numa node on kernel stable-3.10-y,
-> the following possible deadlock warning occurs.
-> 
-> [ 2457.467359] 
-> [ 2457.485175] =================================
-> [ 2457.537325] [ INFO: inconsistent lock state ]
-> [ 2457.589476] 3.10.39+ #4 Not tainted
-> [ 2457.631218] ---------------------------------
 > [ 2457.683370] inconsistent {RECLAIM_FS-ON-W} -> {IN-RECLAIM_FS-R} usage.
 > [ 2457.761540] kswapd2/1151 [HC0[0]:SC0[0]:HE1:SE1] takes:
 > [ 2457.824102]  (&sig->group_rwsem){+++++?}, at: [<ffffffff81071864>] exit_signals+0x24/0x130
@@ -74,27 +73,21 @@ On Wed, May 28, 2014 at 06:06:34PM +0800, Gu Zheng wrote:
 > [ 2460.163087] Call Trace:
 > [ 2460.192345]  [<ffffffff815dbcf6>] dump_stack+0x19/0x1b
 > [ 2460.253874]  [<ffffffff815d67c6>] print_usage_bug+0x1f7/0x208
-> [ 2460.322679]  [<ffffffff810be0e0>] ? check_usage_backwards+0x160/0x160
 > [ 2460.399807]  [<ffffffff810bfb5d>] mark_lock+0x21d/0x2a0
 > [ 2460.462369]  [<ffffffff810c076a>] __lock_acquire+0x52a/0xb60
-> [ 2460.530136]  [<ffffffff8101acd3>] ? native_sched_clock+0x13/0x80
-> [ 2460.602065]  [<ffffffff8101ad49>] ? sched_clock+0x9/0x10
-> [ 2460.665668]  [<ffffffff81096f05>] ? sched_clock_cpu+0xb5/0x100
 > [ 2460.735516]  [<ffffffff810c1592>] lock_acquire+0xa2/0x140
-> [ 2460.800156]  [<ffffffff81071864>] ? exit_signals+0x24/0x130
-> [ 2460.866885]  [<ffffffff81158ca0>] ? balance_pgdat+0x5e0/0x5e0
 > [ 2460.935691]  [<ffffffff815e01e1>] down_read+0x51/0xa0
-> [ 2460.996166]  [<ffffffff81071864>] ? exit_signals+0x24/0x130
 > [ 2461.062888]  [<ffffffff81071864>] exit_signals+0x24/0x130
 > [ 2461.127536]  [<ffffffff81060d55>] do_exit+0xb5/0xa50
-> [ 2461.186976]  [<ffffffff810841e0>] ? wake_up_bit+0x30/0x30
-> [ 2461.251629]  [<ffffffff81158ca0>] ? balance_pgdat+0x5e0/0x5e0
 > [ 2461.320433]  [<ffffffff8108303b>] kthread+0xdb/0x100
-> [ 2461.379870]  [<ffffffff815e12eb>] ? wait_for_completion+0x3b/0x110
-> [ 2461.453879]  [<ffffffff81082f60>] ? kthread_create_on_node+0x140/0x140
 > [ 2461.532049]  [<ffffffff815ec0ec>] ret_from_fork+0x7c/0xb0
-> [ 2461.596689]  [<ffffffff81082f60>] ? kthread_create_on_node+0x140/0x140
-> 
+
+The lockdep warning is about threadgroup_lock being grabbed by kswapd
+which is depended upon during memory reclaim when the lock may be held
+by tasks which may wait on memory reclaim.  From the backtrace, it
+looks like the right thing to do is marking the kswapd that it's no
+longer a memory reclaimer once before it starts exiting.
+
 > And when reference to the related code(kernel-3.10.y), it seems that cgroup_attach_task(thread-2,
 > attach kswapd) trigger kswapd(reclaim memory?) when trying to alloc memory(flex_array_alloc) under
 > the protection of sig->group_rwsem, but meanwhile the kswapd(thread-1) is in the exit routine
@@ -126,8 +119,11 @@ On Wed, May 28, 2014 at 06:06:34PM +0800, Gu Zheng wrote:
 > by list, but we still need to alloc memory(e.g. in find_css_set()), so the race may still occur.
 > Any comments about this? If I missed something, please correct me.:)
 
-Can you test the latest kernel release to verify this?  There's nothing
-we can do to an old kernel version that isn't already fixed in upstream
-first.
+Not sure whether this can actually happen but if so the right fix
+would be making thread-2 not wait for kswapd which is exiting and can
+no longer serve as memory reclaimer.
 
-greg k-h
+Thanks.
+
+-- 
+tejun
