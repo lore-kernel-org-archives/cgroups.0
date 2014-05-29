@@ -1,237 +1,64 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch 01/10] mm: memcontrol: fold mem_cgroup_do_charge()
-Date: Thu, 29 May 2014 12:15:53 -0400
-Message-ID: <1401380162-24121-2-git-send-email-hannes@cmpxchg.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: [patch 07/10] mm: memcontrol: remove ordering between pc->mem_cgroup and PageCgroupUsed
+Date: Thu, 29 May 2014 12:15:59 -0400
+Message-ID: <1401380162-24121-8-git-send-email-hannes@cmpxchg.org>
 References: <1401380162-24121-1-git-send-email-hannes@cmpxchg.org>
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From; bh=ZPOdoeqV6lWdHBDO5pXOiAxup8ducw10GpVeqcm5EDw=;
-	b=fKCCMoOFzS5RGoQVnkJnWAUSVcE2E0omO+rdkHP3PiyfoJzz3zuvvWYWx7Kx+P16tEKDS1/S3G58Q782utm0bkXD/mYQH+fxzplkWEyVgaGUtUtErGauF8Ih9JIdck4l2BTluiLBmOrXe2+GjWPYmGe2LJabkGLL+PKYl5Wy4Lo=;
-In-Reply-To: <1401380162-24121-1-git-send-email-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+	h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From; bh=ryx6jCH+67DJM7QaM+IGnsxNaXLKZhvMnHXdTidCT04=;
+	b=oY/aqVzKqCaIJR0RwnPWAV4+G7eaLoiUSG7mlvarRXeUjdktsTSIavXzZz2D7R4aYZuv1jVhTiutOsf+oF6YIJZ0PZn5gbEx5jyzbU4S8dsX71p6/hsiN6z6gk6TWLuHheRsav5e8L80msKiUYxLbGFdfNFo8GH/61BKrOasEQM=;
+In-Reply-To: <1401380162-24121-1-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, Vladimir Davydov <vdavydov@parallels.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-This function was split out because mem_cgroup_try_charge() got too
-big.  But having essentially one sequence of operations arbitrarily
-split in half is not good for reworking the code.  Fold it back in.
+There is a write barrier between setting pc->mem_cgroup and
+PageCgroupUsed, which was added to allow LRU operations to lookup the
+memcg LRU list of a page without acquiring the page_cgroup lock.
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+But ever since 38c5d72f3ebe ("memcg: simplify LRU handling by new
+rule"), pages are ensured to be off-LRU while charging, so nobody else
+is changing LRU state while pc->mem_cgroup is being written, and there
+are no read barriers anymore.
+
+Remove the unnecessary write barrier.
+
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 ---
- mm/memcontrol.c | 166 ++++++++++++++++++++++----------------------------------
- 1 file changed, 64 insertions(+), 102 deletions(-)
+ mm/memcontrol.c | 9 ---------
+ 1 file changed, 9 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 4df733e13727..c3c10ab98355 100644
+index 84195a80068c..f71eec597001 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2552,80 +2552,6 @@ static int memcg_cpu_hotplug_callback(struct notifier_block *nb,
- 	return NOTIFY_OK;
- }
+@@ -2842,14 +2842,6 @@ static void __mem_cgroup_commit_charge(struct mem_cgroup *memcg,
+ 	}
  
--
--/* See mem_cgroup_try_charge() for details */
--enum {
--	CHARGE_OK,		/* success */
--	CHARGE_RETRY,		/* need to retry but retry is not bad */
--	CHARGE_NOMEM,		/* we can't do more. return -ENOMEM */
--	CHARGE_WOULDBLOCK,	/* GFP_WAIT wasn't set and no enough res. */
--};
--
--static int mem_cgroup_do_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
--				unsigned int nr_pages, unsigned int min_pages,
--				bool invoke_oom)
--{
--	unsigned long csize = nr_pages * PAGE_SIZE;
--	struct mem_cgroup *mem_over_limit;
--	struct res_counter *fail_res;
--	unsigned long flags = 0;
--	int ret;
--
--	ret = res_counter_charge(&memcg->res, csize, &fail_res);
--
--	if (likely(!ret)) {
--		if (!do_swap_account)
--			return CHARGE_OK;
--		ret = res_counter_charge(&memcg->memsw, csize, &fail_res);
--		if (likely(!ret))
--			return CHARGE_OK;
--
--		res_counter_uncharge(&memcg->res, csize);
--		mem_over_limit = mem_cgroup_from_res_counter(fail_res, memsw);
--		flags |= MEM_CGROUP_RECLAIM_NOSWAP;
--	} else
--		mem_over_limit = mem_cgroup_from_res_counter(fail_res, res);
+ 	pc->mem_cgroup = memcg;
 -	/*
--	 * Never reclaim on behalf of optional batching, retry with a
--	 * single page instead.
+-	 * We access a page_cgroup asynchronously without lock_page_cgroup().
+-	 * Especially when a page_cgroup is taken from a page, pc->mem_cgroup
+-	 * is accessed after testing USED bit. To make pc->mem_cgroup visible
+-	 * before USED bit, we need memory barrier here.
+-	 * See mem_cgroup_add_lru_list(), etc.
 -	 */
--	if (nr_pages > min_pages)
--		return CHARGE_RETRY;
--
--	if (!(gfp_mask & __GFP_WAIT))
--		return CHARGE_WOULDBLOCK;
--
--	if (gfp_mask & __GFP_NORETRY)
--		return CHARGE_NOMEM;
--
--	ret = mem_cgroup_reclaim(mem_over_limit, gfp_mask, flags);
--	if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
--		return CHARGE_RETRY;
--	/*
--	 * Even though the limit is exceeded at this point, reclaim
--	 * may have been able to free some pages.  Retry the charge
--	 * before killing the task.
--	 *
--	 * Only for regular pages, though: huge pages are rather
--	 * unlikely to succeed so close to the limit, and we fall back
--	 * to regular pages anyway in case of failure.
--	 */
--	if (nr_pages <= (1 << PAGE_ALLOC_COSTLY_ORDER) && ret)
--		return CHARGE_RETRY;
--
--	/*
--	 * At task move, charge accounts can be doubly counted. So, it's
--	 * better to wait until the end of task_move if something is going on.
--	 */
--	if (mem_cgroup_wait_acct_move(mem_over_limit))
--		return CHARGE_RETRY;
--
--	if (invoke_oom)
--		mem_cgroup_oom(mem_over_limit, gfp_mask, get_order(csize));
--
--	return CHARGE_NOMEM;
--}
--
- /**
-  * mem_cgroup_try_charge - try charging a memcg
-  * @memcg: memcg to charge
-@@ -2642,7 +2568,11 @@ static int mem_cgroup_try_charge(struct mem_cgroup *memcg,
- {
- 	unsigned int batch = max(CHARGE_BATCH, nr_pages);
- 	int nr_oom_retries = MEM_CGROUP_RECLAIM_RETRIES;
--	int ret;
-+	struct mem_cgroup *mem_over_limit;
-+	struct res_counter *fail_res;
-+	unsigned long nr_reclaimed;
-+	unsigned long flags = 0;
-+	unsigned long long size;
+-	smp_wmb();
+ 	SetPageCgroupUsed(pc);
  
- 	if (mem_cgroup_is_root(memcg))
- 		goto done;
-@@ -2662,44 +2592,76 @@ static int mem_cgroup_try_charge(struct mem_cgroup *memcg,
- 
- 	if (gfp_mask & __GFP_NOFAIL)
- 		oom = false;
--again:
-+retry:
- 	if (consume_stock(memcg, nr_pages))
- 		goto done;
- 
--	do {
--		bool invoke_oom = oom && !nr_oom_retries;
-+	size = batch * PAGE_SIZE;
-+	if (!res_counter_charge(&memcg->res, size, &fail_res)) {
-+		if (!do_swap_account)
-+			goto done_restock;
-+		if (!res_counter_charge(&memcg->memsw, size, &fail_res))
-+			goto done_restock;
-+		res_counter_uncharge(&memcg->res, size);
-+		mem_over_limit = mem_cgroup_from_res_counter(fail_res, memsw);
-+		flags |= MEM_CGROUP_RECLAIM_NOSWAP;
-+	} else
-+		mem_over_limit = mem_cgroup_from_res_counter(fail_res, res);
- 
--		/* If killed, bypass charge */
--		if (fatal_signal_pending(current))
--			goto bypass;
-+	if (batch > nr_pages) {
-+		batch = nr_pages;
-+		goto retry;
-+	}
- 
--		ret = mem_cgroup_do_charge(memcg, gfp_mask, batch,
--					   nr_pages, invoke_oom);
--		switch (ret) {
--		case CHARGE_OK:
--			break;
--		case CHARGE_RETRY: /* not in OOM situation but retry */
--			batch = nr_pages;
--			goto again;
--		case CHARGE_WOULDBLOCK: /* !__GFP_WAIT */
--			goto nomem;
--		case CHARGE_NOMEM: /* OOM routine works */
--			if (!oom || invoke_oom)
--				goto nomem;
--			nr_oom_retries--;
--			break;
--		}
--	} while (ret != CHARGE_OK);
-+	if (!(gfp_mask & __GFP_WAIT))
-+		goto nomem;
- 
--	if (batch > nr_pages)
--		refill_stock(memcg, batch - nr_pages);
--done:
--	return 0;
-+	if (gfp_mask & __GFP_NORETRY)
-+		goto nomem;
-+
-+	nr_reclaimed = mem_cgroup_reclaim(mem_over_limit, gfp_mask, flags);
-+
-+	if (mem_cgroup_margin(mem_over_limit) >= batch)
-+		goto retry;
-+	/*
-+	 * Even though the limit is exceeded at this point, reclaim
-+	 * may have been able to free some pages.  Retry the charge
-+	 * before killing the task.
-+	 *
-+	 * Only for regular pages, though: huge pages are rather
-+	 * unlikely to succeed so close to the limit, and we fall back
-+	 * to regular pages anyway in case of failure.
-+	 */
-+	if (nr_reclaimed && batch <= (1 << PAGE_ALLOC_COSTLY_ORDER))
-+		goto retry;
-+	/*
-+	 * At task move, charge accounts can be doubly counted. So, it's
-+	 * better to wait until the end of task_move if something is going on.
-+	 */
-+	if (mem_cgroup_wait_acct_move(mem_over_limit))
-+		goto retry;
-+
-+	if (fatal_signal_pending(current))
-+		goto bypass;
-+
-+	if (!oom)
-+		goto nomem;
-+
-+	if (nr_oom_retries--)
-+		goto retry;
-+
-+	mem_cgroup_oom(mem_over_limit, gfp_mask, get_order(batch));
- nomem:
- 	if (!(gfp_mask & __GFP_NOFAIL))
- 		return -ENOMEM;
- bypass:
- 	return -EINTR;
-+
-+done_restock:
-+	if (batch > nr_pages)
-+		refill_stock(memcg, batch - nr_pages);
-+done:
-+	return 0;
- }
- 
- /**
+ 	if (lrucare) {
+@@ -3531,7 +3523,6 @@ void mem_cgroup_split_huge_fixup(struct page *head)
+ 	for (i = 1; i < HPAGE_PMD_NR; i++) {
+ 		pc = head_pc + i;
+ 		pc->mem_cgroup = memcg;
+-		smp_wmb();/* see __commit_charge() */
+ 		pc->flags = head_pc->flags & ~PCGF_NOCOPY_AT_SPLIT;
+ 	}
+ 	__this_cpu_sub(memcg->stat->count[MEM_CGROUP_STAT_RSS_HUGE],
 -- 
 1.9.3
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
