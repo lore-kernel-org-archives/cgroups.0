@@ -1,85 +1,40 @@
-From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+From: David Rientjes <rientjes@google.com>
 Subject: Re: [patch] mm, memcg: periodically schedule when emptying page
  list
-Date: Mon, 2 Jun 2014 16:44:34 -0700 (PDT)
-Message-ID: <alpine.LSU.2.11.1406021637170.5627@eggly.anvils>
-References: <alpine.DEB.2.02.1406021612550.6487@chino.kir.corp.google.com>
+Date: Mon, 2 Jun 2014 16:48:46 -0700 (PDT)
+Message-ID: <alpine.DEB.2.02.1406021648260.8495@chino.kir.corp.google.com>
+References: <alpine.DEB.2.02.1406021612550.6487@chino.kir.corp.google.com> <alpine.LSU.2.11.1406021637170.5627@eggly.anvils>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=date:from:to:cc:subject:in-reply-to:message-id:references
          :user-agent:mime-version:content-type;
-        bh=mBpnYmNNHVV75pJqP9CHoQyEAKqacqRkiJtI/EjI+z4=;
-        b=M8/HRvHf3gkBJaUH5OHNxbMW3vJMIlZTnBVtzhnQIj6ZeEbPq20Csw/vwuQ3HuV4E/
-         QSEu5TGZcF1a5KNSsPnYbR9Twh+NwEXKGRYJ4xsoGsT8uQF352pW8z3pYCeI3AeikCl9
-         SorR/nSmUUkDMHkH1tvrF7ZBgvmOkGLA9B95ufGmdbsDEFvPgMQ9uKsHPYFpfAbJwp8N
-         2Sf/Egb6pjogVRMQh5zTI9e/gDLg7wKQGAmHzGcmYxfnrHHY74dj4FrJ63NvOcSINnjf
-         sRxwMe4EtYPK8Fatia+m0t/bIxa7GGTfhlEpvhRwA5qXz9912VcMrPczi9sXn/FRZbGk
-         2YRQ==
-In-Reply-To: <alpine.DEB.2.02.1406021612550.6487-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=kBGqm0TYNCa+PcfI9ZiCjKlvjp6yp3cn2sXLY/63VfE=;
+        b=E+WD6RY9z7XrF9ABV1DxcdhOa2wjJc6GzBpXTPu8yfXl7IyKfdx/NuisVvyMohv6Th
+         VtN2sbhn4nWIcK16zQ/D2wSoazrx3VikUoUdY2/jdPTJSiUbG2CHiZsVJV7v5Xn9S0qj
+         Abq2mji8tzCLniy0NL/+1d9F7JQBjCmrVUx3kZrAA4U57Ft3OCo9y5I8TfXYi/saSTDf
+         vX4OfIkjEDK5EoMGq2EimDEXseQwun/vM01aCxfHBplrEfR4ypmWeEysZvQg871t34i8
+         QuKKrdN/IJ5TkKbzK2h/+L5WMFSXQeBR0qg8RBEa0FoPTEVmSQuWT9Lvo56vUW4XrCyq
+         KbWQ==
+In-Reply-To: <alpine.LSU.2.11.1406021637170.5627@eggly.anvils>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hugh Dickins <hughd@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On Mon, 2 Jun 2014, David Rientjes wrote:
+On Mon, 2 Jun 2014, Hugh Dickins wrote:
 
-> mem_cgroup_force_empty_list() can iterate a large number of pages on an lru and 
-> mem_cgroup_move_parent() doesn't return an errno unless certain criteria, none 
-> of which indicate that the iteration may be taking too long, is met.
+> Why not just move that cond_resched() down below the if/else?
+> No need to test need_resched() separately, and this page is not busy.
 > 
-> We have encountered the following stack trace many times indicating
-> "need_resched set for > 51000020 ns (51 ticks) without schedule", for example:
-> 
-> 	scheduler_tick()
-> 	<timer irq>
-> 	mem_cgroup_move_account+0x4d/0x1d5
-> 	mem_cgroup_move_parent+0x8d/0x109
-> 	mem_cgroup_reparent_charges+0x149/0x2ba
-> 	mem_cgroup_css_offline+0xeb/0x11b
-> 	cgroup_offline_fn+0x68/0x16b
-> 	process_one_work+0x129/0x350
-> 
-> If this iteration is taking too long, indicated by need_resched(), then 
-> periodically schedule and continue from where we last left off.
-> 
-> Signed-off-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> ---
->  mm/memcontrol.c | 10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -4764,6 +4764,7 @@ static void mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
->  	do {
->  		struct page_cgroup *pc;
->  		struct page *page;
-> +		int ret;
->  
->  		spin_lock_irqsave(&zone->lru_lock, flags);
->  		if (list_empty(list)) {
-> @@ -4781,8 +4782,13 @@ static void mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
->  
->  		pc = lookup_page_cgroup(page);
->  
-> -		if (mem_cgroup_move_parent(page, pc, memcg)) {
-> -			/* found lock contention or "pc" is obsolete. */
-> +		ret = mem_cgroup_move_parent(page, pc, memcg);
-> +		if (ret || need_resched()) {
-> +			/*
-> +			 * Couldn't grab the page reference, isolate the page,
-> +			 * there was a pc mismatch, or we simply need to
-> +			 * schedule because this is taking too long.
-> +			 */
->  			busy = page;
->  			cond_resched();
->  		} else
 
-Why not just move that cond_resched() down below the if/else?
-No need to test need_resched() separately, and this page is not busy.
+Would you like to propose your version from our kernel instead?
 
-Hugh
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
