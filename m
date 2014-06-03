@@ -1,80 +1,79 @@
-From: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH RFC - TAKE TWO - 00/12] New version of the BFQ I/O
-	Scheduler
-Date: Tue, 03 Jun 2014 06:12:45 +0200
-Message-ID: <1401768765.6214.39.camel@marge.simpson.net>
-References: <20140528221929.GG1419@htj.dyndns.org>
-	<1401354343-5527-1-git-send-email-paolo.valente@unimore.it>
-	<20140530160712.GG24871@htj.dyndns.org>
-	<464F6CBE-A63E-46EF-A90D-BF8450430444@unimore.it>
-	<20140530232804.GA5057@htj.dyndns.org>
-	<20140602111432.GA3737@amd.pavel.ucw.cz>
-	<20140602173332.GB8912@htj.dyndns.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch v2] mm, memcg: periodically schedule when emptying page
+ list
+Date: Tue, 3 Jun 2014 08:27:42 +0200
+Message-ID: <20140603062742.GA1321@dhcp22.suse.cz>
+References: <alpine.DEB.2.02.1406021612550.6487@chino.kir.corp.google.com>
+ <alpine.DEB.2.02.1406021749590.13910@chino.kir.corp.google.com>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.02.1406021749590.13910@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=message-id:subject:from:to:cc:date:in-reply-to:references
-	:content-type:content-transfer-encoding:mime-version;
-	bh=cWiZgs2GZ31e1je8eoRnWO+hnMGgPF5J21ik31m2v38=;
-	b=uvZN7ltFs6HcHeFtyhPvWWShE8wbp8+SpbhoSKhBS9hugCedO6XSiH2S7N2cpa79uc
-	Ai1kwIOKCwtKIgY82Dv49Bu7hCt0dO8q8taBYTSq8Str8EFdrNtNyUNarWKKw38L99V4
-	WRgagTRdypVqGSuNqe9b+32MVU+ODFzgm0jB7afyMnToYXJqFwifuV46IFCK4ZVha3hC
-	yOe45PpZG2uQyyb19tVcLBui5Qr+oXmqGIOI5RAlY0jNL8hQUcLVkTUwzbqXrY3RJt5p
-	Vk6qrCH8bLRBeCoRKRcl8v4wPkmDrvUdSHS+Y6Z2/szObaLYK9MRK6VBWYNRWbvmhWC4
-	WMag==
-In-Reply-To: <20140602173332.GB8912-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Paolo Valente <paolo.valente-rcYM44yAMweonA0d6jMUrA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Fabio Checconi <fchecconi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Pavel Machek <pavel-+ZI9xUNit7I@public.gmane.org>, Arianna Avanzini <avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Rientjes <rientjes@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On Mon, 2014-06-02 at 13:33 -0400, Tejun Heo wrote: 
-> Hello, Pavel.
+On Mon 02-06-14 17:51:25, David Rientjes wrote:
+> From: Hugh Dickins <hughd@google.com>
 > 
-> On Mon, Jun 02, 2014 at 01:14:33PM +0200, Pavel Machek wrote:
-> > Now.. I see it is more work for storage maintainers, because there'll
-> > be more code to maintain in the interim. But perhaps user advantages
-> > are worth it?
+> mem_cgroup_force_empty_list() can iterate a large number of pages on an lru and 
+> mem_cgroup_move_parent() doesn't return an errno unless certain criteria, none 
+> of which indicate that the iteration may be taking too long, is met.
 > 
-> I'm quite skeptical about going that route.  Not necessarily because
-> of the extra amount of work but more the higher probability of getting
-> into situation where we can neither push forward or back out.  It's
-> difficult to define clear deadline and there will likely be unforeseen
-> challenges in the planned convergence of the two schedulers,
-> eventually, it isn't too unlikely to be in a situation where we have
-> to admit defeat and just keep both schedulers.  Note that developer
-> overhead isn't the only factor here.  Providing two slightly different
-> alternatives inevitably makes userland grow dependencies on subtleties
-> of both and there's a lot less pressure to make judgement calls and
-> take appropriate trade-offs, which have fairly high chance of
-> deadlocking progress towards any direction.
+> We have encountered the following stack trace many times indicating
+> "need_resched set for > 51000020 ns (51 ticks) without schedule", for example:
+> 
+> 	scheduler_tick()
+> 	<timer irq>
+> 	mem_cgroup_move_account+0x4d/0x1d5
+> 	mem_cgroup_move_parent+0x8d/0x109
+> 	mem_cgroup_reparent_charges+0x149/0x2ba
+> 	mem_cgroup_css_offline+0xeb/0x11b
+> 	cgroup_offline_fn+0x68/0x16b
+> 	process_one_work+0x129/0x350
+> 
+> If this iteration is taking too long, we still need to do cond_resched() even 
+> when an individual page is not busy.
+> 
+> [rientjes@google.com: changelog]
+> Signed-off-by: Hugh Dickins <hughd@google.com>
+> Signed-off-by: David Rientjes <rientjes@google.com>
 
-But OTOH..
+Acked-by: Michal Hocko <mhocko@suse.cz>
 
-This thing (allegedly) fixes issues that have existed for ages, issues
-which have (also allegedly) not been fixed in all that time despite a
-number of people having done a lot of this and that over the years.  If
-the claims are true, seems to me that would make BFQ a bit special, and
-perhaps worth some extra leeway and effort to ensure that what we are
-being offered on a silver plate doesn't molder away out of tree forever.
+Thanks!
 
-If it were say put in staging, and it were stated right up front that it
-isn't ever going to go further (Jens already said that more or less),
-and _will_ drop dead if it stagnates, that would surely increase the
-test base to shake out problem spots (surely it has some), and allow
-users who meet an issue in either IO scheduler to verify it with the
-flick of a switch every step of the way to whichever ending, and maybe
-even motivate other IO people to help with the merge and/or to compare
-their changes at the flick of that same switch.
+> ---
+>  v2: always reschedule if needed, "page" itself may not have a pc mismatch
+>      or been unable to isolate.
+> 
+>  mm/memcontrol.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -4784,9 +4784,9 @@ static void mem_cgroup_force_empty_list(struct mem_cgroup *memcg,
+>  		if (mem_cgroup_move_parent(page, pc, memcg)) {
+>  			/* found lock contention or "pc" is obsolete. */
+>  			busy = page;
+> -			cond_resched();
+>  		} else
+>  			busy = NULL;
+> +		cond_resched();
+>  	} while (!list_empty(list));
+>  }
+>  
 
--Mike
+-- 
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
