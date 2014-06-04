@@ -1,91 +1,142 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH RFC - TAKE TWO - 10/12] block, bfq: add Early Queue Merge
- (EQM)
-Date: Wed, 4 Jun 2014 09:04:46 -0400
-Message-ID: <20140604130446.GA5004@htj.dyndns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH RFC - TAKE TWO - 11/12] block, bfq: boost the throughput
+ on NCQ-capable flash-based devices
+Date: Wed, 4 Jun 2014 09:56:27 -0400
+Message-ID: <20140604135627.GB5004@htj.dyndns.org>
 References: <20140528221929.GG1419@htj.dyndns.org>
  <1401354343-5527-1-git-send-email-paolo.valente@unimore.it>
- <1401354343-5527-11-git-send-email-paolo.valente@unimore.it>
- <20140601000331.GA29085@htj.dyndns.org>
- <3B7B1A46-46EB-4C52-A52C-4F79C71D14C2@unimore.it>
- <20140603162844.GD26210@htj.dyndns.org>
- <91383F1F-69C3-4B88-B51E-30204818F1AB@unimore.it>
+ <1401354343-5527-12-git-send-email-paolo.valente@unimore.it>
+ <20140531115216.GB5057@htj.dyndns.org>
+ <36BFDB73-AEC2-4B87-9FD6-205E9431E722@unimore.it>
+ <20140603171124.GE26210@htj.dyndns.org>
+ <03CDD106-DB18-4E8F-B3D6-2AAD45782A06@unimore.it>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=Mn6ual8i2DXx7mQDcFGk8P9eiTf6vArK+vdqpA/J184=;
-        b=TreHKUz07G4QuXc5kXUrf/63k8YbbMclj7ggFQTkF9LvwkG892FLBQE+cWwDM4YrF2
-         IL6hzu/1zf1oFxobjVja9u7WF9czy41z4u4Hdtgp4gzMpMMZZ4ri+TjzZXzPx6hK4IAC
-         x0/oaia0JWMaBcSFfC1m6jFyWiklHDZZXgGGYdqUqggfbcI4wTBYAn8t+ez1Qtw998At
-         sLiPJ2HHZUshVThP8TGnRd4NMtMi++/wx2s2yJgemdjS6Ts8vNLwKD9zRovJfJMmNFPs
-         14UR2lbJEbmxY4RVGFTS0/QQKPpbSTF1lkJhWzOYjJn5tDatmgaAKWYu8Udnuf1aMyv+
-         wz3w==
+         :content-type:content-disposition:content-transfer-encoding
+         :in-reply-to:user-agent;
+        bh=l2BylzeHv6Wg5MICvGEs9Vj1A8LN1jLfWhpN4/Albq8=;
+        b=BoRFlu8NyySGAAfQhrAHdlnz0X2alWy6sy47C35c6Y+LAMLGORUbBAoWxXx25nSnfR
+         nH+8Xs58nl6c+MItRTpaz42V7RjWBSBKXvLkqvYrJEENdxTFF+U4iWo+sZOug+aOZcvV
+         rJw5b7SLfjq1ojG6LD9SE5/iGc8uv9E6DrL4VIs9sw86H9glgnbbMyQrhjPn9Dgxqjfd
+         rF1xJsJx4+uVPY85xiFTB/tJwn9WHd5bytuGeIylYUZXcovLK7jVl936WR/3X0AYuF3q
+         YN61ifFjHmLdM7MONhA2eVa31SJGVUclFh6BXV+1Cy0HAQyaHr7QOic/VWT+AKyGQVM6
+         CUyg==
 Content-Disposition: inline
-In-Reply-To: <91383F1F-69C3-4B88-B51E-30204818F1AB@unimore.it>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <03CDD106-DB18-4E8F-B3D6-2AAD45782A06-rcYM44yAMweonA0d6jMUrA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Paolo Valente <paolo.valente@unimore.it>
-Cc: Jens Axboe <axboe@kernel.dk>, Li Zefan <lizefan@huawei.com>, Fabio Checconi <fchecconi@gmail.com>, Arianna Avanzini <avanzini.arianna@gmail.com>, linux-kernel@vger.kernel.org, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, Mauro Andreolini <mauro.andreolini@unimore.it>
+Content-Type: text/plain; charset="utf-8"
+To: Paolo Valente <paolo.valente-rcYM44yAMweonA0d6jMUrA@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Fabio Checconi <fchecconi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Arianna Avanzini <avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+Hello, Paolo.
 
-On Wed, Jun 04, 2014 at 01:47:36PM +0200, Paolo Valente wrote:
-> > I think I'm a bit confused because it's named "early" queue merge
-> > while it actually moves queue merging later than cfq - set_request()
-> > happens before bio/rq merging.
-> 
-> 
-> There is probably something I am missing here, because, as can be seen in blk-core.c,
-> around line 1495, elv_set_request() is invoked in the context of the get_request() function,
-> which in its turn is called from blk_queue_bio() *after* attempting both a plug merge
-> and a merge with one of the requests in the block layer's cache. The first
-> attempt is lockless and doesn't involve the I/O scheduler, but the
-> second attempt includes invoking the allow_merge_fn hook of the scheduler
-> (elv_merge() -> elv_rq_merge_ok() -> elv_iosched_allow_merge()).
+On Wed, Jun 04, 2014 at 09:29:20AM +0200, Paolo Valente wrote:
+> > Shouldn't the comparison be against the benefit of "not idling
+> > selectively" vs "always idling" when blkcg is in use?
+> >=20
+>=20
+> Exactly. I=E2=80=99m sorry if I wrote things/sentences that did not l=
+et this
+> point be clear. Maybe this lack of clarity is a further consequence
+> of the annoying =E2=80=9Cnot not=E2=80=9D scheme adopted in the code =
+and in the
+> comments.
 
-Ah, you're right, set_request doesn't happen if a bio is merged into
-an existing request.
+Ah, no, it was just me misreading the message.
 
-> > Oh, as long as it makes measureable difference, I have no objection;
-> > however, I do think more explanation and comments would be nice.  I
-> > still can't quite understand why retrying on each merge attempt would
-> > make so much difference.  Maybe I just failed to understand what you
-> > wrote in the commit message.
-> 
-> If we remember well, one of the problems was exactly that a different request
-> may become the head request of the in-service queue between two rq merge
-> attempts. If we do not retry on every attempt, we lose the chance
-> to merge the queue at hand with the in-service queue. The two queues may
-> then diverge, and hence have no other opportunity to be merged.
-> 
-> > Is it because the cooperating tasks
-> > issue IOs which grow large and close enough after merges but not on
-> > the first bio issuance?  If so, why isn't doing it on rq merge time
-> > enough?  Is the timing sensitive enough for certain workloads that
-> > waiting till unplug time misses the opportunity?  But plugging should
-> > be relatively short compared to the time actual IOs take, so why would
-> > it be that sensitive?  What am I missing here?
-> 
-> The problem is not the duration of the plugging, but the fact that, if a request merge
-> succeeds for a bio, then there will be no set_request invocation for that bio.
-> Therefore, without early merging, there will be no queue merge at all.
-> 
-> If my replies are correct and convince you, then I will use them to integrate and
-> hopefully improve the documentation for this patch.
+> > I'm not really convinced about the approach.  With rotating disks, =
+we
+> > know that allowing queue depth > 1 generaly lowers both throughput =
+and
+> > responsiveness and brings benefits in quite restricted cases.  It
+> > seems rather backwards to always allow QD > 1 and then try to optim=
+ize
+> > in an attempt to recover what's lost.  Wouldn't it make far more se=
+nse
+> > to actively maintain QD =3D=3D 1 by default and allow QD > 1 in spe=
+cific
+> > cases where it can be determined to be more beneficial than harmful=
+?
+>=20
+> Although QD =3D=3D 1 is not denoted explicitly as default, what you s=
+uggest is exactly what bfq does.=20
+I see.
 
-Ah, okay, so it's about missing the chance to look for cooperating
-queues when merge succeeds.  Yeah, that makes a lot more sense to me.
-If that's the case, wouldn't it be better to try finding cooperating
-queues after each merge success rather than each allow_merge()
-invocation?  And let's please document what we're catching with the
-extra attempts.
+> >> I do not know how widespread a mechanism like ulatencyd is
+> >> precisely, but in the symmetric scenario it creates, the throughpu=
+t
+> >> on, e.g., an HDD would drop by half if the workload is mostly rand=
+om
+> >> and we removed the more complex mechanism we set up.  Wouldn't thi=
+s
+> >> be bad?
+> >=20
+> > It looks like a lot of complexity for optimization for a very
+> > specific, likely unreliable (in terms of its triggering condition),
+> > use case.  The triggering condition is just too specific.
+>=20
+> Actually we have been asked several times to improve random-I/O
+> performance on HDDs over the last years, by people recording, for
+> the typical tasks performed by their machines, much lower throughput
+> than with the other schedulers. Major problems have been reported
+> for server workloads (database, web), and for btrfs. According to
+> the feedback received after introducing this optimization in bfq,
+> those problems seem to be finally gone.
+
+I see.  The equal priority part can probably work in enough cases to
+be meaningful given that it just depends on the busy queues having the
+same weight instead of everything in the system.  It'd nice to note
+that in the comment tho.
+
+I'm still quite skeptical about the cgroup part tho.  The triggering
+condition is too specific and fragile.  If I'm reading the bfq blkcg
+implementation correctly, it seems to be applying the scheduling
+algorithm recursively walking down the tree one level at a time.  cfq
+does it differently.  cfq flattens the hierarchy by calculating the
+nested weight of each active leaf queue and schedule all of them from
+the same service tree.  IOW, scheduling algorithm per-se doesn't care
+about the hierarchy.  All it sees are differing weights competing
+equally regardless of the hierarchical structure.
+
+If the same strategy can be applied to bfq, possibly the same strategy
+of checking whether all the active queues have the same weight can be
+used regardless of blkcg?  That'd be simpler and a lot more robust.
+
+Another thing I'm curious about is that the logic that you're using to
+disable idling assumes that the disk will serve the queued commands
+more or less in fair manner over time, right?  If so, why does queues
+having the same weight matter?  Shouldn't the bandwidth scheduling
+eventually make them converge to the specified weights over time?
+Isn't wr_coeff > 1 test enough for maintaining reasonable
+responsiveness?
+
+> Besides, turning back to bfq, if its low-latency heuristics are
+> disabled for non rotational devices, then, according to our results
+> with slower devices, such as SD Cards and eMMCs, latency becomes
+> easily unbearable, with no throughput gain.
+
+Hmmm... looking at the nonrot optimizations again, so yeah assuming
+the weight counting is necessary for NCQ hdds the part specific to
+ssds isn't that big.  You probably wanna sequence it the other way
+around tho.  This really should be primarily about disks at this
+point.
+
+The thing which still makes me cringe is how it scatters
+blk_queue_nonrot() tests across multiple places without clear
+explanation on what's going on.  A bfqq being constantly seeky or not
+doesn't have much to do with whether the device is rotational or not.
+Its effect does and I don't think avoiding the overhead of keeping the
+counters is meaningful.  Things like this make the code a lot harder
+to maintain in the long term as code is organized according to
+seemingly arbitrary optimization rather than semantic structure.  So,
+let's please keep the accounting and optimization separate.
 
 Thanks.
 
--- 
+--=20
 tejun
