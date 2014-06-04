@@ -1,71 +1,79 @@
-From: Pavel Machek <pavel-+ZI9xUNit7I@public.gmane.org>
-Subject: Re: [PATCH RFC - TAKE TWO - 00/12] New version of the BFQ I/O
- Scheduler
-Date: Wed, 4 Jun 2014 10:39:55 +0200
-Message-ID: <20140604083955.GA878@amd.pavel.ucw.cz>
-References: <20140528221929.GG1419@htj.dyndns.org>
- <1401354343-5527-1-git-send-email-paolo.valente@unimore.it>
- <20140530160712.GG24871@htj.dyndns.org>
- <464F6CBE-A63E-46EF-A90D-BF8450430444@unimore.it>
- <20140530232804.GA5057@htj.dyndns.org>
- <20140602111432.GA3737@amd.pavel.ucw.cz>
- <20140602130226.GA14654@amd.pavel.ucw.cz>
- <FCFE0106-A4DD-4DEF-AAAE-040F3823A447@unimore.it>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/3] cgroup: don't destroy the default root
+Date: Wed, 4 Jun 2014 16:40:28 +0800
+Message-ID: <538EDB7C.2070405@huawei.com>
+References: <538D4956.5050205@huawei.com> <20140603125728.GA26210@htj.dyndns.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <FCFE0106-A4DD-4DEF-AAAE-040F3823A447-rcYM44yAMweonA0d6jMUrA@public.gmane.org>
+In-Reply-To: <20140603125728.GA26210-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Paolo Valente <paolo.valente-rcYM44yAMweonA0d6jMUrA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Fabio Checconi <fchecconi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Arianna Avanzini <avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hi!
-
-> > Like this: I applied patch over today's git... 
-> > 
-> > I only see last bits of panic...
-> > 
-> > Call trace:
-> > __bfq_bfqq_expire
-> > bfq_bfqq_expire
-> > bfq_dispatch_requests
-> > sci_request_fn
-> > ...
-> > EIP: T.1839+0x26
-
-> > Any ideas?
-> > 			
+On 2014/6/3 20:57, Tejun Heo wrote:
+> Hello, Li.
 > 
-> We have tried to think about ways to trigger this failure, but in vain. Unfortunately, so far no user has reported any failure with this last version of bfq either. Finally, we have gone through a new static analysis, but also in this case uselessly.
+> On Tue, Jun 03, 2014 at 12:04:38PM +0800, Li Zefan wrote:
+>>  static void cgroup_get(struct cgroup *cgrp)
+>>  {
+>>  	WARN_ON_ONCE(cgroup_is_dead(cgrp));
+>> -	css_get(&cgrp->self);
+>> +	if (!(cgrp->self.flags & CSS_NO_REF))
+>> +		css_get(&cgrp->self);
 > 
-> So, if you are willing to retry, we have put online a version of the code filled with many BUG_ONs. I hope they can make it easier to track down the bug. The archive is here:
-> http://algogroup.unimore.it/people/paolo/disk_sched/debugging-patches/3.15.0-rc8-v7rc5.tgz
->
+> Hmmm?  The same condition is tested by css_get().  Why should it be
+> tested again here?
+> 
 
-BUG: Unable to handle kernel paging request ad dee22fa0
-IP: bfq_del_bfqq_busy+0x4d
-...
-Tainted: GW 3.15.0-rc8+
-...
-Call trace:
-__bfq_bfqq_expire
-bfq_bfqq_expire
-? bfq_bfqq_expire
-? bfq_bfqq_expire
-bfq_idle_slice_timer
-call_timer_fn
-...
+Oh, I completely ignored that.
 
-> Should this attempt be useless as well, I will, if you do not mind, try by asking you more details about your system and reproducing your configuration as much as I can.
->
+>>  static void cgroup_put(struct cgroup *cgrp)
+>>  {
+>> -	css_put(&cgrp->self);
+>> +	if (!(cgrp->self.flags & CSS_NO_REF))
+>> +		css_put(&cgrp->self);
+> 
+> Ditto.
+> 
+>> @@ -1781,10 +1783,12 @@ static void cgroup_kill_sb(struct super_block *sb)
+>>  	 * This prevents new mounts by disabling percpu_ref_tryget_live().
+>>  	 * cgroup_mount() may wait for @root's release.
+>>  	 */
+>> -	if (css_has_online_children(&root->cgrp.self))
+>> +	if (css_has_online_children(&root->cgrp.self)) {
+>>  		cgroup_put(&root->cgrp);
+>> -	else
+>> -		percpu_ref_kill(&root->cgrp.self.refcnt);
+>> +	} else {
+>> +		if (root != &cgrp_dfl_root)
+>> +			percpu_ref_kill(&root->cgrp.self.refcnt);
+>> +	}
+> 
+> As conceptually percpu_ref_kill() just puts the base ref and the
+> dfl_root's refcnt never reaches zero, it won't actually trigger.
 
-See the preivous email...
+Yes it will, just try mount && umount.
 
-Best regards,
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+I think it's because cgroup_get() is a no-op for CSS_NO_REF, so it has
+only the base ref, so percpu_ref_iill() will actually schedule the
+call to css_release().
+
+> Hmmm.... wouldn't the above leak a ref each time the default hierarchy
+> is unmounted tho?  Shouldn't it be like the following?
+> 
+
+cgroup_get() is a no-op for root cgroup of the default root, so there's
+no leak, but still better to call cgroup_put().
+
+I'll send an updated patch.
+
+> 	if (root == &cgrp_dfl_root || css_has_online_children(...))
+> 		cgroup_put(&root->cgrp);
+> 	else
+> 		percpu_ref_kill(...);
+> 
+> Thanks.
+> 
