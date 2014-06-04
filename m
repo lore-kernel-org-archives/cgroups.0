@@ -1,62 +1,58 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/3] cgroup: make the default root invisible when it's
- umounted
-Date: Wed, 4 Jun 2014 16:59:59 +0800
-Message-ID: <538EE00F.10406@huawei.com>
-References: <538D4956.5050205@huawei.com> <538D4982.10905@huawei.com> <20140603130144.GB26210@htj.dyndns.org>
+From: Pavel Machek <pavel-+ZI9xUNit7I@public.gmane.org>
+Subject: Re: [PATCH RFC - TAKE TWO - 00/12] New version of the BFQ I/O
+	Scheduler
+Date: Wed, 4 Jun 2014 11:08:56 +0200
+Message-ID: <20140604090856.GA1196@amd.pavel.ucw.cz>
+References: <20140528221929.GG1419@htj.dyndns.org>
+	<1401354343-5527-1-git-send-email-paolo.valente@unimore.it>
+	<20140530160712.GG24871@htj.dyndns.org>
+	<464F6CBE-A63E-46EF-A90D-BF8450430444@unimore.it>
+	<20140530232804.GA5057@htj.dyndns.org>
+	<20140602111432.GA3737@amd.pavel.ucw.cz>
+	<20140602130226.GA14654@amd.pavel.ucw.cz>
+	<FCFE0106-A4DD-4DEF-AAAE-040F3823A447@unimore.it>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20140603130144.GB26210-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <FCFE0106-A4DD-4DEF-AAAE-040F3823A447-rcYM44yAMweonA0d6jMUrA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Paolo Valente <paolo.valente-rcYM44yAMweonA0d6jMUrA@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Fabio Checconi <fchecconi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Arianna Avanzini <avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 2014/6/3 21:01, Tejun Heo wrote:
-> On Tue, Jun 03, 2014 at 12:05:22PM +0800, Li Zefan wrote:
->> Before this patch (in a fresh system):
->>
->>    # cat /proc/$$/cgroup
->>    # mount -t cgroup -o __DEVEL__sane_behavior xxx /cgroup
->>    # umount /cgroup
->>    # cat /proc/$$/cgroup
->>    0:cpuset,cpu,cpuacct,memory,devices,freezer,net_cls,blkio,perf_event,net_prio,hugetlb:/
->>
->> After this patch (in a fresh system):
->>
->>    # cat ...
->>    # mount ...
->>    # umount ...
->>    # cat /proc/$$/cgroup
->>    #
->>
->> You won't see the default root after it's umounted.
-> 
-> Hmmmm... I intentionally left it visible tho.  The only reason we gate
-> its visibility is avoid disturbing userland which doesn't know about
-> and won't use the unified hierarchy.  If the userland starts making
-> use of it, there's no reason to hide it again especially as that's
-> consistent with how other hierarchies behave too - they keep showing
-> up if they have lingering refs.
-> 
+Hi!
 
-The example I gave is the same result if sane_behavior is not specified,
-so this is a behavioural change for the old interface?
+> Should this attempt be useless as well, I will, if you do not mind,
+>try by asking you more details about your system and reproducing your
+>configuration as much as I can.
 
-Do we need a fix like this?
+It fails during boot or shortly after that when clicking in gnome2
+desktop. I had BFQ as a default scheduler.
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 3f46165..6f10cff 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1789,6 +1789,9 @@ static void cgroup_kill_sb(struct super_block *sb)
- 	else
- 		percpu_ref_kill(&root->cgrp.self.refcnt);
+Now I set CFQ as a default and it boots (as expected).
 
-+	if (root == &cgrp_dfl_root && !cgroup_sane_behavior(&root->cgrp))
-+		cgrp_dfl_root_visible = false;
-+
- 	kernfs_kill_sb(sb);
- 
+root@duo:~# cat /sys/block/sda/queue/scheduler 
+noop deadline [cfq] bfq 
+root@duo:~# echo bfq > /sys/block/sda/queue/scheduler
+root@duo:~# dmesg | grep WARN
+WARNING: CPU: 1 PID: 1 at net/wireless/reg.c:479
+regulatory_init+0x88/0xf5()
+root@duo:~# 
+
+Hmm, and I seem to have pretty much functional system.
+
+I'll try to do some benchmarks now.
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
