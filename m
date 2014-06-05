@@ -1,129 +1,100 @@
-From: Gu Zheng <guz.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [stable-3.10.y] possible unsafe locking warning
-Date: Thu, 5 Jun 2014 13:44:38 +0800
-Message-ID: <539003C6.9060308@cn.fujitsu.com>
-References: <5385B52A.7050106@cn.fujitsu.com> <20140528154856.GD1419@htj.dyndns.org>
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Subject: [PATCH] mm/mempolicy: fix sleeping function called from invalid context
+Date: Thu, 5 Jun 2014 16:28:52 +0800
+Message-ID: <53902A44.50005@cn.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20140528154856.GD1419-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Yasuaki Ishimatsu <isimatu.yasuaki-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, tangchen <tangchen-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+To: linux-kernel <linux-kernel@vger.kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, Cgroups <cgroups@vger.kernel.org>, stable@vger.kernel.org
 
-Hi Tejun,
-Sorry for late replay.
-On 05/28/2014 11:48 PM, Tejun Heo wrote:
+When running with the kernel(3.15-rc7+), the follow bug occurs:
+[ 9969.258987] BUG: sleeping function called from invalid context at kernel/locking/mutex.c:586
+[ 9969.359906] in_atomic(): 1, irqs_disabled(): 0, pid: 160655, name: python
+[ 9969.441175] INFO: lockdep is turned off.
+[ 9969.488184] CPU: 26 PID: 160655 Comm: python Tainted: G       A      3.15.0-rc7+ #85
+[ 9969.581032] Hardware name: FUJITSU-SV PRIMEQUEST 1800E/SB, BIOS PRIMEQUEST 1000 Series BIOS Version 1.39 11/16/2012
+[ 9969.706052]  ffffffff81a20e60 ffff8803e941fbd0 ffffffff8162f523 ffff8803e941fd18
+[ 9969.795323]  ffff8803e941fbe0 ffffffff8109995a ffff8803e941fc58 ffffffff81633e6c
+[ 9969.884710]  ffffffff811ba5dc ffff880405c6b480 ffff88041fdd90a0 0000000000002000
+[ 9969.974071] Call Trace:
+[ 9970.003403]  [<ffffffff8162f523>] dump_stack+0x4d/0x66
+[ 9970.065074]  [<ffffffff8109995a>] __might_sleep+0xfa/0x130
+[ 9970.130743]  [<ffffffff81633e6c>] mutex_lock_nested+0x3c/0x4f0
+[ 9970.200638]  [<ffffffff811ba5dc>] ? kmem_cache_alloc+0x1bc/0x210
+[ 9970.272610]  [<ffffffff81105807>] cpuset_mems_allowed+0x27/0x140
+[ 9970.344584]  [<ffffffff811b1303>] ? __mpol_dup+0x63/0x150
+[ 9970.409282]  [<ffffffff811b1385>] __mpol_dup+0xe5/0x150
+[ 9970.471897]  [<ffffffff811b1303>] ? __mpol_dup+0x63/0x150
+[ 9970.536585]  [<ffffffff81068c86>] ? copy_process.part.23+0x606/0x1d40
+[ 9970.613763]  [<ffffffff810bf28d>] ? trace_hardirqs_on+0xd/0x10
+[ 9970.683660]  [<ffffffff810ddddf>] ? monotonic_to_bootbased+0x2f/0x50
+[ 9970.759795]  [<ffffffff81068cf0>] copy_process.part.23+0x670/0x1d40
+[ 9970.834885]  [<ffffffff8106a598>] do_fork+0xd8/0x380
+[ 9970.894375]  [<ffffffff81110e4c>] ? __audit_syscall_entry+0x9c/0xf0
+[ 9970.969470]  [<ffffffff8106a8c6>] SyS_clone+0x16/0x20
+[ 9971.030011]  [<ffffffff81642009>] stub_clone+0x69/0x90
+[ 9971.091573]  [<ffffffff81641c29>] ? system_call_fastpath+0x16/0x1b
 
-> (cc'ing Johannes for mm-foo)
-> 
-> Hello,
-> 
-> On Wed, May 28, 2014 at 06:06:34PM +0800, Gu Zheng wrote:
->> [ 2457.683370] inconsistent {RECLAIM_FS-ON-W} -> {IN-RECLAIM_FS-R} usage.
->> [ 2457.761540] kswapd2/1151 [HC0[0]:SC0[0]:HE1:SE1] takes:
->> [ 2457.824102]  (&sig->group_rwsem){+++++?}, at: [<ffffffff81071864>] exit_signals+0x24/0x130
->> [ 2457.923538] {RECLAIM_FS-ON-W} state was registered at:
->> [ 2457.985055]   [<ffffffff810bfc99>] mark_held_locks+0xb9/0x140
->> [ 2458.053976]   [<ffffffff810c1e3a>] lockdep_trace_alloc+0x7a/0xe0
->> [ 2458.126015]   [<ffffffff81194f47>] kmem_cache_alloc_trace+0x37/0x240
->> [ 2458.202214]   [<ffffffff812c6e89>] flex_array_alloc+0x99/0x1a0
->> [ 2458.272175]   [<ffffffff810da563>] cgroup_attach_task+0x63/0x430
->> [ 2458.344214]   [<ffffffff810dcca0>] attach_task_by_pid+0x210/0x280
->> [ 2458.417294]   [<ffffffff810dcd26>] cgroup_procs_write+0x16/0x20
->> [ 2458.488287]   [<ffffffff810d8410>] cgroup_file_write+0x120/0x2c0
->> [ 2458.560320]   [<ffffffff811b21a0>] vfs_write+0xc0/0x1f0
->> [ 2458.622994]   [<ffffffff811b2bac>] SyS_write+0x4c/0xa0
->> [ 2458.684618]   [<ffffffff815ec3c0>] tracesys+0xdd/0xe2
->> [ 2458.745214] irq event stamp: 49
->> [ 2458.782794] hardirqs last  enabled at (49): [<ffffffff815e2b56>] _raw_spin_unlock_irqrestore+0x36/0x70
->> [ 2458.894388] hardirqs last disabled at (48): [<ffffffff815e337b>] _raw_spin_lock_irqsave+0x2b/0xa0
->> [ 2459.000771] softirqs last  enabled at (0): [<ffffffff81059247>] copy_process.part.24+0x627/0x15f0
->> [ 2459.107161] softirqs last disabled at (0): [<          (null)>]           (null)
->> [ 2459.195852] 
->> [ 2459.195852] other info that might help us debug this:
->> [ 2459.274024]  Possible unsafe locking scenario:
->> [ 2459.274024] 
->> [ 2459.344911]        CPU0
->> [ 2459.374161]        ----
->> [ 2459.403408]   lock(&sig->group_rwsem);
->> [ 2459.448490]   <Interrupt>
->> [ 2459.479825]     lock(&sig->group_rwsem);
->> [ 2459.526979] 
->> [ 2459.526979]  *** DEADLOCK ***
->> [ 2459.526979] 
->> [ 2459.597866] no locks held by kswapd2/1151.
->> [ 2459.646896] 
->> [ 2459.646896] stack backtrace:
->> [ 2459.699049] CPU: 30 PID: 1151 Comm: kswapd2 Not tainted 3.10.39+ #4
->> [ 2459.774098] Hardware name: FUJITSU PRIMEQUEST2800E/SB, BIOS PRIMEQUEST 2000 Series BIOS Version 01.48 05/07/2014
->> [ 2459.895983]  ffffffff82284bf0 ffff88085856bbf8 ffffffff815dbcf6 ffff88085856bc48
->> [ 2459.985003]  ffffffff815d67c6 0000000000000000 ffff880800000001 ffff880800000001
->> [ 2460.074024]  000000000000000a ffff88085edc9600 ffffffff810be0e0 0000000000000009
->> [ 2460.163087] Call Trace:
->> [ 2460.192345]  [<ffffffff815dbcf6>] dump_stack+0x19/0x1b
->> [ 2460.253874]  [<ffffffff815d67c6>] print_usage_bug+0x1f7/0x208
->> [ 2460.399807]  [<ffffffff810bfb5d>] mark_lock+0x21d/0x2a0
->> [ 2460.462369]  [<ffffffff810c076a>] __lock_acquire+0x52a/0xb60
->> [ 2460.735516]  [<ffffffff810c1592>] lock_acquire+0xa2/0x140
->> [ 2460.935691]  [<ffffffff815e01e1>] down_read+0x51/0xa0
->> [ 2461.062888]  [<ffffffff81071864>] exit_signals+0x24/0x130
->> [ 2461.127536]  [<ffffffff81060d55>] do_exit+0xb5/0xa50
->> [ 2461.320433]  [<ffffffff8108303b>] kthread+0xdb/0x100
->> [ 2461.532049]  [<ffffffff815ec0ec>] ret_from_fork+0x7c/0xb0
-> 
-> The lockdep warning is about threadgroup_lock being grabbed by kswapd
-> which is depended upon during memory reclaim when the lock may be held
-> by tasks which may wait on memory reclaim.  From the backtrace, it
-> looks like the right thing to do is marking the kswapd that it's no
-> longer a memory reclaimer once before it starts exiting.
-> 
->> And when reference to the related code(kernel-3.10.y), it seems that cgroup_attach_task(thread-2,
->> attach kswapd) trigger kswapd(reclaim memory?) when trying to alloc memory(flex_array_alloc) under
->> the protection of sig->group_rwsem, but meanwhile the kswapd(thread-1) is in the exit routine
->> (because it was marked SHOULD STOP when offline pages completed), which needs to acquire
->> sig->group_rwsem in exit_signals(), so the deadlock occurs.
->>
->>        thread-1                           			 |            thread-2
->>                                                                  |
->> __offline_pages():                                               | system_call_fastpath()
->> |-> kswapd_stop(node);                                           | |-> ......
->>     |-> kthread_stop(kswapd)                                     | |-> cgroup_file_write()
->>         |-> set_bit(KTHREAD_SHOULD_STOP, &kthread->flags);       | |-> ......
->>         |-> wake_up_process(k)                                   | |-> attach_task_by_pid()
->>             |                                                    |     |-> threadgroup_lock(tsk)
->> |<----------|                                                    |        // Here, got the lock.
->> |-> kswapd()                                                     |    |-> ...
->>     |-> if (kthread_should_stop())                               |     |-> cgroup_attach_task()
->>             return;                                              |         |-> flex_array_alloc()
->>             |                                                    |             |-> kzalloc()
->> |<----------|                                                    |                |-> wait for kswapd to reclaim memory
->> |-> kthread()                                                    |
->>     |-> do_exit(ret)                                             |
->>         |-> exit_signals()                                       |
->>             |-> threadgroup_change_begin(tsk)                    |
->>                 |-> down_read(&tsk->signal->group_rwsem)         |
->>                     // Here, acquire the lock. 
->>
->> If my analysis is correct, the latest kernel may have the same issue, though the flex_array was replaced
->> by list, but we still need to alloc memory(e.g. in find_css_set()), so the race may still occur.
->> Any comments about this? If I missed something, please correct me.:)
-> 
-> Not sure whether this can actually happen but if so the right fix
-> would be making thread-2 not wait for kswapd which is exiting and can
-> no longer serve as memory reclaimer.
+The cause is that cpuset_mems_allowed() try to take mutex_lock(&callback_mutex)
+under the rcu_read_lock(which was hold in __mpol_dup()). And in cpuset_mems_allowed(),
+the access to cpuset is under rcu_read_lock, so in __mpol_dup, we can reduce the
+rcu_read_lock protection region to protect the access to cpuset only in
+current_cpuset_is_being_rebound(). So that we can avoid this bug.
 
-Thanks for your suggestion, I'll try this way if possible.
+Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+---
+ kernel/cpuset.c |    8 +++++++-
+ mm/mempolicy.c  |    2 --
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
-To Johannes:
-Any comment about this issue and Tejun's suggestion?
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index 3d54c41..a735402 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -1188,7 +1188,13 @@ done:
+ 
+ int current_cpuset_is_being_rebound(void)
+ {
+-	return task_cs(current) == cpuset_being_rebound;
++	int ret;
++
++	rcu_read_lock();
++	ret = task_cs(current) == cpuset_being_rebound;
++	rcu_read_unlock();
++
++	return ret;
+ }
+ 
+ static int update_relax_domain_level(struct cpuset *cs, s64 val)
+diff --git a/mm/mempolicy.c b/mm/mempolicy.c
+index 78e1472..b58a9d5 100644
+--- a/mm/mempolicy.c
++++ b/mm/mempolicy.c
+@@ -2138,7 +2138,6 @@ struct mempolicy *__mpol_dup(struct mempolicy *old)
+ 	} else
+ 		*new = *old;
+ 
+-	rcu_read_lock();
+ 	if (current_cpuset_is_being_rebound()) {
+ 		nodemask_t mems = cpuset_mems_allowed(current);
+ 		if (new->flags & MPOL_F_REBINDING)
+@@ -2146,7 +2145,6 @@ struct mempolicy *__mpol_dup(struct mempolicy *old)
+ 		else
+ 			mpol_rebind_policy(new, &mems, MPOL_REBIND_ONCE);
+ 	}
+-	rcu_read_unlock();
+ 	atomic_set(&new->refcnt, 1);
+ 	return new;
+ }
+-- 
+1.7.7
 
-Best regards,
-Gu
-
-> 
-> Thanks.
-> 
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
