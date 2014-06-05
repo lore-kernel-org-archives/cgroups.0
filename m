@@ -1,55 +1,41 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: disallow disabled controllers on the default
- hierarchy
-Date: Thu, 5 Jun 2014 09:53:29 -0400
-Message-ID: <20140605135329.GB21607@htj.dyndns.org>
-References: <5390356E.70305@huawei.com>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=lkJEsRjy9eiGY62R2vzVGlJe7E18fcOGrhUzKun5dUA=;
-        b=cRQIhyOqd34OwVO9U1U3Ud4wcFxMWujWyPhTY36BjhfTyGzI930YXv4ZfdcWeeU9He
-         bfxHWQziQSreXOP1SDMg4HmvAhwUPohWPHRD9zG4U66d6ucJoOp98+Hw6GXiugLHBNY3
-         ed4OGlTFcmZvx3cTJMWEUwXr/GUnuhz3PO8r5xLMngY0ucg6Vnwnt0FkJUevJKJGnGqx
-         U0JntLrLHOf7UBSoCVNfOMIz8YAMvwZfQf+H8gaR8m5nlQBZuqwlG1YCtEViOKuS2LRM
-         6NORnpUuXtVaHcw3R4rM77+tXjzCtulj8hGJd8rD9fIrkGE7l+x6yOorYSPMq7jMSB9x
-         YZsQ==
-Content-Disposition: inline
-In-Reply-To: <5390356E.70305-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Richard Weinberger <richard@nod.at>
+Subject: oom: Be less verbose
+Date: Thu,  5 Jun 2014 16:00:40 +0200
+Message-ID: <1401976841-3899-1-git-send-email-richard@nod.at>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: hannes@cmpxchg.org
+Cc: mhocko@suse.cz, bsingharora@gmail.com, kamezawa.hiroyu@jp.fujitsu.com, akpm@linux-foundation.org, vdavydov@parallels.com, tj@kernel.org, handai.szj@taobao.com, rientjes@google.com, oleg@redhat.com, rusty@rustcorp.com.au, kirill.shutemov@linux.intel.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, Jun 05, 2014 at 05:16:30PM +0800, Li Zefan wrote:
-> After booting with cgroup_disable=memory, I still saw memcg files
-> in the default hierarchy, and I can write to them, though it won't
-> take effect.
-> 
->   # dmesg
->   ...
->   Disabling memory control group subsystem
->   ...
->   # mount -t cgroup -o __DEVEL__sane_behavior xxx /cgroup
->   # ls /cgroup
->   ...
->   memory.failcnt                   memory.move_charge_at_immigrate
->   memory.force_empty               memory.numa_stat
->   memory.limit_in_bytes            memory.oom_control
->   ...
->   # cat /cgroup/memory.usage_in_bytes
->   0
-> 
-> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Processes within Linux containers very often hit their memory limits.
+This has the side effect that the kernel log gets spammed all day with
+useless OOM messages.
+If a userspace program listens to the memory cgroup event fd to
+get notified upon OOM we can avoid this spamming and be less verbose.
 
-Applied to cgroup/for-3.16 w/ minor comment update.
+With this patch applied the OOM killer will only print much details
+if nobody listens to the affected memory cgroup event fd.
+I can also think of a new sysctl like "vm.oom_verbose=1" to guarantee the old
+behavior even if we have listeners.
 
-Thanks.
+What do you think?
 
--- 
-tejun
+Thanks,
+//richard
+
+[RFC][PATCH] oom: Be less verbose if the oom_control event fd has listeners
+--
+ include/linux/memcontrol.h |    6 ++++++
+ mm/memcontrol.c            |   20 ++++++++++++++++++++
+ mm/oom_kill.c              |    2 +-
+ 3 files changed, 27 insertions(+), 1 deletion(-)
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
