@@ -1,23 +1,27 @@
-From: Gu Zheng <guz.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
 Subject: Re: [PATCH] mm/mempolicy: fix sleeping function called from invalid
  context
-Date: Fri, 6 Jun 2014 17:34:29 +0800
-Message-ID: <53918B25.5010703@cn.fujitsu.com>
-References: <53902A44.50005@cn.fujitsu.com> <20140605141833.GA26830@kroah.com>
+Date: Fri, 6 Jun 2014 18:07:45 +0800
+Message-ID: <539192F1.7050308@cn.fujitsu.com>
+References: <53902A44.50005@cn.fujitsu.com> <20140605132339.ddf6df4a0cf5c14d17eb8691@linux-foundation.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20140605141833.GA26830-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20140605132339.ddf6df4a0cf5c14d17eb8691@linux-foundation.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
-Cc: linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, Cgroups <cgroups@vger.kernel.org>, stable@vger.kernel.org, Li Zefan <lizefan@huawei.com>
 
-Hi Greg,
-On 06/05/2014 10:18 PM, Greg KH wrote:
+(cc'ing Li)
 
-> On Thu, Jun 05, 2014 at 04:28:52PM +0800, Gu Zheng wrote:
+Hi Andrew,
+Thanks for your comment.
+On 06/06/2014 04:23 AM, Andrew Morton wrote:
+
+> On Thu, 5 Jun 2014 16:28:52 +0800 Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
+> 
 >> When running with the kernel(3.15-rc7+), the follow bug occurs:
 >> [ 9969.258987] BUG: sleeping function called from invalid context at kernel/locking/mutex.c:586
 >> [ 9969.359906] in_atomic(): 1, irqs_disabled(): 0, pid: 160655, name: python
@@ -52,33 +56,46 @@ On 06/05/2014 10:18 PM, Greg KH wrote:
 >> rcu_read_lock protection region to protect the access to cpuset only in
 >> current_cpuset_is_being_rebound(). So that we can avoid this bug.
 >>
->> Signed-off-by: Gu Zheng <guz.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
->> ---
->>  kernel/cpuset.c |    8 +++++++-
->>  mm/mempolicy.c  |    2 --
->>  2 files changed, 7 insertions(+), 3 deletions(-)
+>> ...
+>>
+>> --- a/kernel/cpuset.c
+>> +++ b/kernel/cpuset.c
+>> @@ -1188,7 +1188,13 @@ done:
+>>  
+>>  int current_cpuset_is_being_rebound(void)
+>>  {
+>> -	return task_cs(current) == cpuset_being_rebound;
+>> +	int ret;
+>> +
+>> +	rcu_read_lock();
+>> +	ret = task_cs(current) == cpuset_being_rebound;
+>> +	rcu_read_unlock();
+>> +
+>> +	return ret;
+>>  }
 > 
-> <formletter>
-> 
-> This is not the correct way to submit patches for inclusion in the
-> stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
-> for how to do this properly.
+> Looks fishy to me.  If the rcu_read_lock() stabilizes
+> cpuset_being_rebound then cpuset_being_rebound can change immediately
+> after rcu_read_unlock() and `ret' is now wrong.
+
+IMO, whether cpuset_being_rebound changed or not is immaterial here, we
+just want to know whether the cpuset is being rebound at that point.
 
 > 
-> </formletter>
+> Anyway.  Tejun, this one is yours please ;)
 
-Thanks for your reminder.
-I'll follow the right rules.
+To Tejun, Li:
+Any comment? And if I misread something, please correct me?
 
-Regards,
+Thanks,
 Gu
 
-> 
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
 > .
 > 
 
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
