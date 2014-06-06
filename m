@@ -1,7 +1,7 @@
 From: Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>
-Subject: [patch added to the 3.12 stable tree] device_cgroup: check if exception removal is allowed
-Date: Fri,  6 Jun 2014 14:50:29 +0200
-Message-ID: <1402059090-31277-85-git-send-email-jslaby@suse.cz>
+Subject: [patch added to the 3.12 stable tree] device_cgroup: rework device access check and exception checking
+Date: Fri,  6 Jun 2014 14:50:28 +0200
+Message-ID: <1402059090-31277-84-git-send-email-jslaby@suse.cz>
 References: <1402059090-31277-1-git-send-email-jslaby@suse.cz>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1402059090-31277-1-git-send-email-jslaby-AlSwsSmVLrQ@public.gmane.org>
@@ -11,7 +11,7 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Aristeu Rozanski <arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>
+Cc: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Aristeu Rozanski <arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>
 
 From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
@@ -20,122 +20,349 @@ objections, please let us know.
 
 ===============
 
-commit d2c2b11cfa134f4fbdcc34088824da26a084d8de upstream.
+commit 79d719749d23234e9b725098aa49133f3ef7299d upstream.
 
-[PATCH v3 1/2] device_cgroup: check if exception removal is allowed
+Whenever a device file is opened and checked against current device
+cgroup rules, it uses the same function (may_access()) as when a new
+exception rule is added by writing devices.{allow,deny}. And in both
+cases, the algorithm is the same, doesn't matter the behavior.
 
-When the device cgroup hierarchy was introduced in
-	bd2953ebbb53 - devcg: propagate local changes down the hierarchy
+First problem is having device access to be considered the same as rule
+checking. Consider the following structure:
 
-a specific case was overlooked. Consider the hierarchy bellow:
-
-	A	default policy: ALLOW, exceptions will deny access
+	A	(default behavior: allow, exceptions disallow access)
 	 \
-	  B	default policy: ALLOW, exceptions will deny access
+	  B	(default behavior: allow, exceptions disallow access)
 
-There's no need to verify when an new exception is added to B because
-in this case exceptions will deny access to further devices, which is
-always fine. Hierarchy in device cgroup only makes sure B won't have
-more access than A.
+A new exception is added to B by writing devices.deny:
 
-But when an exception is removed (by writing devices.allow), it isn't
-checked if the user is in fact removing an inherited exception from A,
-thus giving more access to B.
+	c 12:34 rw
 
-Example:
+When checking if that exception is allowed in may_access():
 
-	# echo 'a' >A/devices.allow
-	# echo 'c 1:3 rw' >A/devices.deny
-	# echo $$ >A/B/tasks
+	if (dev_cgroup->behavior == DEVCG_DEFAULT_ALLOW) {
+		if (behavior == DEVCG_DEFAULT_ALLOW) {
+			/* the exception will deny access to certain devices */
+			return true;
+
+Which is ok, since B is not getting more privileges than A, it doesn't
+matter and the rule is accepted
+
+Now, consider it's a device file open check and the process belongs to
+cgroup B. The access will be generated as:
+
+	behavior: allow
+	exception: c 12:34 rw
+
+The very same chunk of code will allow it, even if there's an explicit
+exception telling to do otherwise.
+
+A simple test case:
+
+	# mkdir new_group
+	# cd new_group
+	# echo $$ >tasks
+	# echo "c 1:3 w" >devices.deny
 	# echo >/dev/null
-	-bash: /dev/null: Operation not permitted
-	# echo 'c 1:3 w' >A/B/devices.allow
-	# echo >/dev/null
-	#
+	# echo $?
+	0
 
-This shouldn't be allowed and this patch fixes it by making sure to never allow
-exceptions in this case to be removed if the exception is partially or fully
-present on the parent.
+This is a serious bug and was introduced on
 
-v3: missing '*' in function description
-v2: improved log message and formatting fixes
+	c39a2a3018f8 devcg: prepare may_access() for hierarchy support
+
+To solve this problem, the device file open function was split from the
+new exception check.
+
+Second problem is how exceptions are processed by may_access(). The
+first part of the said function tries to match fully with an existing
+exception:
+
+	list_for_each_entry_rcu(ex, &dev_cgroup->exceptions, list) {
+		if ((refex->type & DEV_BLOCK) && !(ex->type & DEV_BLOCK))
+			continue;
+		if ((refex->type & DEV_CHAR) && !(ex->type & DEV_CHAR))
+			continue;
+		if (ex->major != ~0 && ex->major != refex->major)
+			continue;
+		if (ex->minor != ~0 && ex->minor != refex->minor)
+			continue;
+		if (refex->access & (~ex->access))
+			continue;
+		match = true;
+		break;
+	}
+
+That means the new exception should be contained into an existing one to
+be considered a match:
+
+	New exception		Existing	match?	notes
+	b 12:34 rwm		b 12:34 rwm	yes
+	b 12:34 r		b *:34 rw	yes
+	b 12:34 rw		b 12:34 w	no	extra "r"
+	b *:34 rw		b 12:34 rw	no	too broad "*"
+	b *:34 rw		b *:34 rwm	yes
+
+Which is fine in some cases. Consider:
+
+	A	(default behavior: deny, exceptions allow access)
+	 \
+	  B	(default behavior: deny, exceptions allow access)
+
+In this case the full match makes sense, the new exception cannot add
+more access than the parent allows
+
+But this doesn't always work, consider:
+
+	A	(default behavior: allow, exceptions disallow access)
+	 \
+	  B	(default behavior: deny, exceptions allow access)
+
+In this case, a new exception in B shouldn't match any of the exceptions
+in A, after all you can't allow something that was forbidden by A. But
+consider this scenario:
+
+	New exception	Existing in A	match?	outcome
+	b 12:34 rw	b 12:34 r	no	exception is accepted
+
+Because the new exception has "w" as extra, it doesn't match, so it'll
+be added to B's exception list.
+
+The same problem can happen during a file access check. Consider a
+cgroup with allow as default behavior:
+
+	Access		Exception	match?
+	b 12:34 rw	b 12:34 r	no
+
+In this case, the access didn't match any of the exceptions in the
+cgroup, which is required since exceptions will disallow access.
+
+To solve this problem, two new functions were created to match an
+exception either fully or partially. In the example above, a partial
+check will be performed and it'll produce a match since at least
+"b 12:34 r" from "b 12:34 rw" access matches.
 
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Signed-off-by: Aristeu Rozanski <arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Acked-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Signed-off-by: Jiri Slaby <jslaby-AlSwsSmVLrQ@public.gmane.org>
 ---
- security/device_cgroup.c | 41 ++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 38 insertions(+), 3 deletions(-)
+ security/device_cgroup.c | 162 +++++++++++++++++++++++++++++++++++------------
+ 1 file changed, 122 insertions(+), 40 deletions(-)
 
 diff --git a/security/device_cgroup.c b/security/device_cgroup.c
-index 70a76321fc4f..e34818192c8d 100644
+index c123628d3f84..70a76321fc4f 100644
 --- a/security/device_cgroup.c
 +++ b/security/device_cgroup.c
-@@ -477,6 +477,37 @@ static int parent_has_perm(struct dev_cgroup *childcg,
+@@ -319,57 +319,139 @@ static int devcgroup_seq_read(struct cgroup_subsys_state *css,
  }
  
  /**
-+ * parent_allows_removal - verify if it's ok to remove an exception
-+ * @childcg: child cgroup from where the exception will be removed
-+ * @ex: exception being removed
+- * may_access - verifies if a new exception is part of what is allowed
+- *		by a dev cgroup based on the default policy +
+- *		exceptions. This is used to make sure a child cgroup
+- *		won't have more privileges than its parent or to
+- *		verify if a certain access is allowed.
+- * @dev_cgroup: dev cgroup to be tested against
+- * @refex: new exception
+- * @behavior: behavior of the exception
++ * match_exception	- iterates the exception list trying to match a rule
++ * 			  based on type, major, minor and access type. It is
++ * 			  considered a match if an exception is found that
++ * 			  will contain the entire range of provided parameters.
++ * @exceptions: list of exceptions
++ * @type: device type (DEV_BLOCK or DEV_CHAR)
++ * @major: device file major number, ~0 to match all
++ * @minor: device file minor number, ~0 to match all
++ * @access: permission mask (ACC_READ, ACC_WRITE, ACC_MKNOD)
 + *
-+ * When removing an exception in cgroups with default ALLOW policy, it must
-+ * be checked if removing it will give the child cgroup more access than the
-+ * parent.
-+ *
-+ * Return: true if it's ok to remove exception, false otherwise
-+ */
-+static bool parent_allows_removal(struct dev_cgroup *childcg,
-+				  struct dev_exception_item *ex)
-+{
-+	struct dev_cgroup *parent = css_to_devcgroup(css_parent(&childcg->css));
-+
-+	if (!parent)
++ * returns: true in case it matches an exception completely
+  */
+-static bool may_access(struct dev_cgroup *dev_cgroup,
+-		       struct dev_exception_item *refex,
+-		       enum devcg_behavior behavior)
++static bool match_exception(struct list_head *exceptions, short type,
++			    u32 major, u32 minor, short access)
+ {
+ 	struct dev_exception_item *ex;
+-	bool match = false;
+ 
+-	rcu_lockdep_assert(rcu_read_lock_held() ||
+-			   lockdep_is_held(&devcgroup_mutex),
+-			   "device_cgroup::may_access() called without proper synchronization");
++	list_for_each_entry_rcu(ex, exceptions, list) {
++		if ((type & DEV_BLOCK) && !(ex->type & DEV_BLOCK))
++			continue;
++		if ((type & DEV_CHAR) && !(ex->type & DEV_CHAR))
++			continue;
++		if (ex->major != ~0 && ex->major != major)
++			continue;
++		if (ex->minor != ~0 && ex->minor != minor)
++			continue;
++		/* provided access cannot have more than the exception rule */
++		if (access & (~ex->access))
++			continue;
 +		return true;
-+
-+	/* It's always allowed to remove access to devices */
-+	if (childcg->behavior == DEVCG_DEFAULT_DENY)
-+		return true;
-+
-+	/*
-+	 * Make sure you're not removing part or a whole exception existing in
-+	 * the parent cgroup
-+	 */
-+	return !match_exception_partial(&parent->exceptions, ex->type,
-+					ex->major, ex->minor, ex->access);
++	}
++	return false;
 +}
 +
 +/**
-  * may_allow_all - checks if it's possible to change the behavior to
-  *		   allow based on parent's rules.
-  * @parent: device cgroup's parent
-@@ -711,17 +742,21 @@ static int devcgroup_update_access(struct dev_cgroup *devcgroup,
++ * match_exception_partial - iterates the exception list trying to match a rule
++ * 			     based on type, major, minor and access type. It is
++ * 			     considered a match if an exception's range is
++ * 			     found to contain *any* of the devices specified by
++ * 			     provided parameters. This is used to make sure no
++ * 			     extra access is being granted that is forbidden by
++ * 			     any of the exception list.
++ * @exceptions: list of exceptions
++ * @type: device type (DEV_BLOCK or DEV_CHAR)
++ * @major: device file major number, ~0 to match all
++ * @minor: device file minor number, ~0 to match all
++ * @access: permission mask (ACC_READ, ACC_WRITE, ACC_MKNOD)
++ *
++ * returns: true in case the provided range mat matches an exception completely
++ */
++static bool match_exception_partial(struct list_head *exceptions, short type,
++				    u32 major, u32 minor, short access)
++{
++	struct dev_exception_item *ex;
  
- 	switch (filetype) {
- 	case DEVCG_ALLOW:
--		if (!parent_has_perm(devcgroup, &ex))
--			return -EPERM;
- 		/*
- 		 * If the default policy is to allow by default, try to remove
- 		 * an matching exception instead. And be silent about it: we
- 		 * don't want to break compatibility
- 		 */
- 		if (devcgroup->behavior == DEVCG_DEFAULT_ALLOW) {
-+			/* Check if the parent allows removing it first */
-+			if (!parent_allows_removal(devcgroup, &ex))
-+				return -EPERM;
- 			dev_exception_rm(devcgroup, &ex);
--			return 0;
-+			break;
- 		}
+-	list_for_each_entry_rcu(ex, &dev_cgroup->exceptions, list) {
+-		if ((refex->type & DEV_BLOCK) && !(ex->type & DEV_BLOCK))
++	list_for_each_entry_rcu(ex, exceptions, list) {
++		if ((type & DEV_BLOCK) && !(ex->type & DEV_BLOCK))
+ 			continue;
+-		if ((refex->type & DEV_CHAR) && !(ex->type & DEV_CHAR))
++		if ((type & DEV_CHAR) && !(ex->type & DEV_CHAR))
+ 			continue;
+-		if (ex->major != ~0 && ex->major != refex->major)
++		/*
++		 * We must be sure that both the exception and the provided
++		 * range aren't masking all devices
++		 */
++		if (ex->major != ~0 && major != ~0 && ex->major != major)
+ 			continue;
+-		if (ex->minor != ~0 && ex->minor != refex->minor)
++		if (ex->minor != ~0 && minor != ~0 && ex->minor != minor)
+ 			continue;
+-		if (refex->access & (~ex->access))
++		/*
++		 * In order to make sure the provided range isn't matching
++		 * an exception, all its access bits shouldn't match the
++		 * exception's access bits
++		 */
++		if (!(access & ex->access))
+ 			continue;
+-		match = true;
+-		break;
++		return true;
+ 	}
++	return false;
++}
 +
-+		if (!parent_has_perm(devcgroup, &ex))
-+			return -EPERM;
- 		rc = dev_exception_add(devcgroup, &ex);
- 		break;
- 	case DEVCG_DENY:
++/**
++ * verify_new_ex - verifies if a new exception is part of what is allowed
++ *		   by a dev cgroup based on the default policy +
++ *		   exceptions. This is used to make sure a child cgroup
++ *		   won't have more privileges than its parent
++ * @dev_cgroup: dev cgroup to be tested against
++ * @refex: new exception
++ * @behavior: behavior of the exception's dev_cgroup
++ */
++static bool verify_new_ex(struct dev_cgroup *dev_cgroup,
++		          struct dev_exception_item *refex,
++		          enum devcg_behavior behavior)
++{
++	bool match = false;
++
++	rcu_lockdep_assert(rcu_read_lock_held() ||
++			   lockdep_is_held(&devcgroup_mutex),
++			   "device_cgroup:verify_new_ex called without proper synchronization");
+ 
+ 	if (dev_cgroup->behavior == DEVCG_DEFAULT_ALLOW) {
+ 		if (behavior == DEVCG_DEFAULT_ALLOW) {
+-			/* the exception will deny access to certain devices */
++			/*
++			 * new exception in the child doesn't matter, only
++			 * adding extra restrictions
++			 */
+ 			return true;
+ 		} else {
+-			/* the exception will allow access to certain devices */
++			/*
++			 * new exception in the child will add more devices
++			 * that can be acessed, so it can't match any of
++			 * parent's exceptions, even slightly
++			 */
++			match = match_exception_partial(&dev_cgroup->exceptions,
++							refex->type,
++							refex->major,
++							refex->minor,
++							refex->access);
++
+ 			if (match)
+-				/*
+-				 * a new exception allowing access shouldn't
+-				 * match an parent's exception
+-				 */
+ 				return false;
+ 			return true;
+ 		}
+ 	} else {
+-		/* only behavior == DEVCG_DEFAULT_DENY allowed here */
++		/*
++		 * Only behavior == DEVCG_DEFAULT_DENY allowed here, therefore
++		 * the new exception will add access to more devices and must
++		 * be contained completely in an parent's exception to be
++		 * allowed
++		 */
++		match = match_exception(&dev_cgroup->exceptions, refex->type,
++					refex->major, refex->minor,
++					refex->access);
++
+ 		if (match)
+ 			/* parent has an exception that matches the proposed */
+ 			return true;
+@@ -391,7 +473,7 @@ static int parent_has_perm(struct dev_cgroup *childcg,
+ 
+ 	if (!parent)
+ 		return 1;
+-	return may_access(parent, ex, childcg->behavior);
++	return verify_new_ex(parent, ex, childcg->behavior);
+ }
+ 
+ /**
+@@ -720,18 +802,18 @@ static int __devcgroup_check_permission(short type, u32 major, u32 minor,
+ 				        short access)
+ {
+ 	struct dev_cgroup *dev_cgroup;
+-	struct dev_exception_item ex;
+-	int rc;
+-
+-	memset(&ex, 0, sizeof(ex));
+-	ex.type = type;
+-	ex.major = major;
+-	ex.minor = minor;
+-	ex.access = access;
++	bool rc;
+ 
+ 	rcu_read_lock();
+ 	dev_cgroup = task_devcgroup(current);
+-	rc = may_access(dev_cgroup, &ex, dev_cgroup->behavior);
++	if (dev_cgroup->behavior == DEVCG_DEFAULT_ALLOW)
++		/* Can't match any of the exceptions, even partially */
++		rc = !match_exception_partial(&dev_cgroup->exceptions,
++					      type, major, minor, access);
++	else
++		/* Need to match completely one exception to be allowed */
++		rc = match_exception(&dev_cgroup->exceptions, type, major,
++				     minor, access);
+ 	rcu_read_unlock();
+ 
+ 	if (!rc)
 -- 
 1.9.3
