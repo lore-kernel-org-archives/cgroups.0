@@ -1,35 +1,59 @@
-From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: blkio write controls
-Date: Mon, 9 Jun 2014 14:29:16 -0400
-Message-ID: <20140609182916.GC31499@redhat.com>
-References: <B937BB93-F803-4DA1-AC31-F98DC3C52766@linkedin.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: Re: [PATCH] mm/mempolicy: fix sleeping function called from invalid
+ context
+Date: Tue, 10 Jun 2014 10:58:45 +0800
+Message-ID: <53967465.7070908@huawei.com>
+References: <53902A44.50005@cn.fujitsu.com> <20140605132339.ddf6df4a0cf5c14d17eb8691@linux-foundation.org> <539192F1.7050308@cn.fujitsu.com> <alpine.DEB.2.02.1406081539140.21744@chino.kir.corp.google.com> <539574F1.2060701@cn.fujitsu.com> <alpine.DEB.2.02.1406090209460.24247@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <B937BB93-F803-4DA1-AC31-F98DC3C52766-mkn/cI4rzrdWk0Htik3J/w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <alpine.DEB.2.02.1406090209460.24247@chino.kir.corp.google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Travis Thompson <tthompson-mkn/cI4rzrdWk0Htik3J/w@public.gmane.org>
-Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: David Rientjes <rientjes@google.com>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, Cgroups <cgroups@vger.kernel.org>, stable@vger.kernel.org
 
-On Thu, Jun 05, 2014 at 09:31:52PM +0000, Travis Thompson wrote:
-> Hello,
->=20
-> I=E2=80=99m currently working on blkio integration for Hadoop YARN an=
-d I was wondering what the status of write throttling is?  My understan=
-ding right now is it doesn=E2=80=99t work because of buffered writes an=
-d so the kernel doesn=E2=80=99t know where the io is coming from and do=
-esn=E2=80=99t throttle it.
->=20
+On 2014/6/9 17:13, David Rientjes wrote:
+> On Mon, 9 Jun 2014, Gu Zheng wrote:
+> 
+>>> I think your patch addresses the problem that you're reporting but misses 
+>>> the larger problem with cpuset.mems rebinding on fork().  When the 
+>>> forker's task_struct is duplicated (which includes ->mems_allowed) and it 
+>>> races with an update to cpuset_being_rebound in update_tasks_nodemask() 
+>>> then the task's mems_allowed doesn't get updated.
+>>
+>> Yes, you are right, this patch just wants to address the bug reported above.
+>> The race condition you mentioned above inherently exists there, but it is yet
+>> another issue, the rcu lock here makes no sense to it, and I think we need
+>> additional sync-mechanisms if want to fix it.
+> 
+> Yes, the rcu lock is not providing protection for any critical section 
+> here that requires (1) the forker's cpuset to be stored in 
+> cpuset_being_rebound or (2) the forked thread's cpuset to be rebound by 
+> the cpuset nodemask update, and no race involving the two.
+>
 
-Hi Travis,
+Yes, this is a long-standing issue. Besides the race you described, the child
+task's mems_allowed can be wrong if the cpuset's nodemask changes before the
+child has been added to the cgroup's tasklist.
 
-You are right. Throttling for buffered writes still does not work becau=
-se
-we have not tracked the original writer who dirtied the pages in page
-cache.
+I remember Tejun once said he wanted to disallow task migration between
+cgroups during fork, and that should fix this problem.
+ 
+>> But thinking more, though the current implementation has flaw, but I worry
+>> about the negative effect if we really want to fix it. Or maybe the fear
+>> is unnecessary.:) 
+>>
+> 
+> It needs to be slightly rewritten to work properly without negatively 
+> impacting the latency of fork().  Do you have the cycles to do it?
+> 
 
-Thanks
-Vivek
+Sounds you have other idea?
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
