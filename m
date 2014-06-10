@@ -1,59 +1,58 @@
-From: Li Zefan <lizefan@huawei.com>
-Subject: Re: [PATCH] mm/mempolicy: fix sleeping function called from invalid
- context
-Date: Tue, 10 Jun 2014 10:58:45 +0800
-Message-ID: <53967465.7070908@huawei.com>
-References: <53902A44.50005@cn.fujitsu.com> <20140605132339.ddf6df4a0cf5c14d17eb8691@linux-foundation.org> <539192F1.7050308@cn.fujitsu.com> <alpine.DEB.2.02.1406081539140.21744@chino.kir.corp.google.com> <539574F1.2060701@cn.fujitsu.com> <alpine.DEB.2.02.1406090209460.24247@chino.kir.corp.google.com>
+From: Alin Dobre <alin.dobre-1hSFou9RDDldEee+Cai+ZQ@public.gmane.org>
+Subject: Re: Protection against container fork bombs [WAS: Re: memcg with
+	kmem limit doesn't recover after disk i/o causes limit to be hit]
+Date: Tue, 10 Jun 2014 13:18:03 +0100
+Message-ID: <5396F77B.6040604@elastichosts.com>
+References: <20140416154650.GA3034@alpha.arachsys.com>
+	<20140418155939.GE4523@dhcp22.suse.cz>
+	<5351679F.5040908@parallels.com>
+	<20140420142830.GC22077@alpha.arachsys.com>
+	<20140422143943.20609800@oracle.com>
+	<20140422200531.GA19334@alpha.arachsys.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <alpine.DEB.2.02.1406090209460.24247@chino.kir.corp.google.com>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: David Rientjes <rientjes@google.com>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, Cgroups <cgroups@vger.kernel.org>, stable@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20140422200531.GA19334-2oeHp4OYwSjPZs67QiJbJtBPR1lH4CV8@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Richard Davies <richard-li8END47hbdWk0Htik3J/w@public.gmane.org>, Dwight Engen <dwight.engen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, William Dauchy <wdauchy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 2014/6/9 17:13, David Rientjes wrote:
-> On Mon, 9 Jun 2014, Gu Zheng wrote:
-> 
->>> I think your patch addresses the problem that you're reporting but misses 
->>> the larger problem with cpuset.mems rebinding on fork().  When the 
->>> forker's task_struct is duplicated (which includes ->mems_allowed) and it 
->>> races with an update to cpuset_being_rebound in update_tasks_nodemask() 
->>> then the task's mems_allowed doesn't get updated.
+On 22/04/14 21:05, Richard Davies wrote:
+> Dwight Engen wrote:
+>> Richard Davies wrote:
+>>> Vladimir Davydov wrote:
+>>>> In short, kmem limiting for memory cgroups is currently broken. Do
+>>>> not use it. We are working on making it usable though.
+> ...
+>>> What is the best mechanism available today, until kmem limits mature?
+>>>
+>>> RLIMIT_NPROC exists but is per-user, not per-container.
+>>>
+>>> Perhaps there is an up-to-date task counter patchset or similar?
 >>
->> Yes, you are right, this patch just wants to address the bug reported above.
->> The race condition you mentioned above inherently exists there, but it is yet
->> another issue, the rcu lock here makes no sense to it, and I think we need
->> additional sync-mechanisms if want to fix it.
-> 
-> Yes, the rcu lock is not providing protection for any critical section 
-> here that requires (1) the forker's cpuset to be stored in 
-> cpuset_being_rebound or (2) the forked thread's cpuset to be rebound by 
-> the cpuset nodemask update, and no race involving the two.
->
-
-Yes, this is a long-standing issue. Besides the race you described, the child
-task's mems_allowed can be wrong if the cpuset's nodemask changes before the
-child has been added to the cgroup's tasklist.
-
-I remember Tejun once said he wanted to disallow task migration between
-cgroups during fork, and that should fix this problem.
- 
->> But thinking more, though the current implementation has flaw, but I worry
->> about the negative effect if we really want to fix it. Or maybe the fear
->> is unnecessary.:) 
+>> I updated Frederic's task counter patches and included Max Kellermann's
+>> fork limiter here:
 >>
+>> http://thread.gmane.org/gmane.linux.kernel.containers/27212
+>>
+>> I can send you a more recent patchset (against 3.13.10) if you would
+>> find it useful.
 > 
-> It needs to be slightly rewritten to work properly without negatively 
-> impacting the latency of fork().  Do you have the cycles to do it?
-> 
+> Yes please, I would be interested in that. Ideally even against 3.14.1 if
+> you have that too.
 
-Sounds you have other idea?
+Any chance for a 3.15 rebase, since the changes from cgroup_fork() makes
+the operation no longer trivial.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Cheers,
+Alin.
