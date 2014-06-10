@@ -1,117 +1,58 @@
-From: Marian Marinov <mm-NV7Lj0SOnH0@public.gmane.org>
-Subject: Re: Protection against container fork bombs [WAS: Re: memcg with
- kmem limit doesn't recover after disk i/o causes limit to be hit]
-Date: Tue, 10 Jun 2014 17:50:11 +0300
-Message-ID: <53971B23.8000509@yuhu.biz>
-References: <20140416154650.GA3034@alpha.arachsys.com>	<20140418155939.GE4523@dhcp22.suse.cz>	<5351679F.5040908@parallels.com>	<20140420142830.GC22077@alpha.arachsys.com>	<20140422143943.20609800@oracle.com>	<20140422200531.GA19334@alpha.arachsys.com>	<535758A0.5000500@yuhu.biz> <20140423084942.560ae837@oracle.com>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] mm/mempolicy: fix sleeping function called from invalid
+ context
+Date: Tue, 10 Jun 2014 15:16:10 -0700 (PDT)
+Message-ID: <alpine.DEB.2.02.1406101512340.32203@chino.kir.corp.google.com>
+References: <53902A44.50005@cn.fujitsu.com> <20140605132339.ddf6df4a0cf5c14d17eb8691@linux-foundation.org> <539192F1.7050308@cn.fujitsu.com> <alpine.DEB.2.02.1406081539140.21744@chino.kir.corp.google.com> <539574F1.2060701@cn.fujitsu.com>
+ <alpine.DEB.2.02.1406090209460.24247@chino.kir.corp.google.com> <53967465.7070908@huawei.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="3GVEq5bqWT2KnhLROH8Ev1bRXASdGQ3PF"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yuhu.biz; s=default;
-	t=1402411804; bh=oVJaycz3H9nvIpMyqNevhtFZmEPDimHnlFaQhVhDyFk=;
-	h=Date:From:To:CC:Subject:References:In-Reply-To;
-	b=hYvnTxwcMSePAjc92yxgvmhPaWmFC4+WEm5A1c4xLXtvnAsTIrFH+2/Z0EC9/WgdX
-	 NyZ99ue1TRZxnz6nNIzQ5ueAxVZmFXGcMw+KrjiSYGxU4mPqM74qc3DWRxQUfxzL4K
-	 LcRS7lqW568upHYu6LH3k/J93dkqzm2UBVwvmZ0A=
-In-Reply-To: <20140423084942.560ae837-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version:content-type;
+        bh=Txd2YoQOeLXXr1Gkj/AkTa7PFnAhp/ni/V9jrCtHoAs=;
+        b=muvcwrgb1LaB7/Ksik+V6F2H2uSCF3eUUIvOaHIN77jiKu8xsdDAc43EjLt7N7607M
+         YhIq9W6oUtXh82quEUEo8cZDxQr3oIQM9xR6UmBn/IgmUc3204vam5WlV+H8IK2YD9vU
+         dSSK56QfezpFEl4sBBzTKxQ/lkROUlkZU6LVjXoJrswnDmppzSB2ryO3+YIclBuKy9SZ
+         ArCHd6p9ruskD1yB63rjObzCbBxunKf6X54GOM7eT8frRSEjmT9kGj3SuRDG+ZWXK5xN
+         AfWFzLnyaY+E1gqMSDGSuJJjoQqmo8mV5t5R19bgNOE8gEzaoE9euPVKbKpIrpLT5LKJ
+         VuiA==
+In-Reply-To: <53967465.7070908-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: Dwight Engen <dwight.engen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: Richard Davies <richard-li8END47hbdWk0Htik3J/w@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Glauber Costa <glommer-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, William Dauchy <wdauchy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Daniel Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Daniel Berrange <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Gu Zheng <guz.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---3GVEq5bqWT2KnhLROH8Ev1bRXASdGQ3PF
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Tue, 10 Jun 2014, Li Zefan wrote:
 
-On 04/23/2014 03:49 PM, Dwight Engen wrote:
-> On Wed, 23 Apr 2014 09:07:28 +0300
-> Marian Marinov <mm-NV7Lj0SOnH0@public.gmane.org> wrote:
->=20
->> On 04/22/2014 11:05 PM, Richard Davies wrote:
->>> Dwight Engen wrote:
->>>> Richard Davies wrote:
->>>>> Vladimir Davydov wrote:
->>>>>> In short, kmem limiting for memory cgroups is currently broken.
->>>>>> Do not use it. We are working on making it usable though.
->>> ...
->>>>> What is the best mechanism available today, until kmem limits
->>>>> mature?
->>>>>
->>>>> RLIMIT_NPROC exists but is per-user, not per-container.
->>>>>
->>>>> Perhaps there is an up-to-date task counter patchset or similar?
->>>>
->>>> I updated Frederic's task counter patches and included Max
->>>> Kellermann's fork limiter here:
->>>>
->>>> http://thread.gmane.org/gmane.linux.kernel.containers/27212
->>>>
->>>> I can send you a more recent patchset (against 3.13.10) if you
->>>> would find it useful.
->>>
->>> Yes please, I would be interested in that. Ideally even against
->>> 3.14.1 if you have that too.
->>
->> Dwight, do you have these patches in any public repo?
->>
->> I would like to test them also.
->=20
-> Hi Marian, I put the patches against 3.13.11 and 3.14.1 up at:
->=20
-> git://github.com/dwengen/linux.git cpuacct-task-limit-3.13
-> git://github.com/dwengen/linux.git cpuacct-task-limit-3.14
+> > Yes, the rcu lock is not providing protection for any critical section 
+> > here that requires (1) the forker's cpuset to be stored in 
+> > cpuset_being_rebound or (2) the forked thread's cpuset to be rebound by 
+> > the cpuset nodemask update, and no race involving the two.
+> >
+> 
+> Yes, this is a long-standing issue. Besides the race you described, the child
+> task's mems_allowed can be wrong if the cpuset's nodemask changes before the
+> child has been added to the cgroup's tasklist.
+> 
+> I remember Tejun once said he wanted to disallow task migration between
+> cgroups during fork, and that should fix this problem.
+>  
 
-I did a backport of the patches to 3.12.16 and forward ported them to 3.1=
-2.20.
+Ok, I don't want to fix it in cpusets if cgroups will eventually prevent 
+it, so I need an understanding of the long term plan.  Will cgroups 
+continue to allow migration during fork(), Tejun?
 
-I'm very happy with how they work.
+> > It needs to be slightly rewritten to work properly without negatively 
+> > impacting the latency of fork().  Do you have the cycles to do it?
+> > 
+> 
+> Sounds you have other idea?
+> 
 
-I used the patches on machines with 10-20k processes and it worked perfec=
-tly when some of the containers spawned 100s of
-processes. It really saved us when one of the containers was attacked :)
-
-The only thing that I'm going to add is on the fly change of the limit.
-
-Marian
-
-> =20
->> Marian
->>
->>>
->>> Thanks,
->>>
->>> Richard.
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe cgroups"
->>> in the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>>
->>
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
->=20
-
-
-
---3GVEq5bqWT2KnhLROH8Ev1bRXASdGQ3PF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iEYEARECAAYFAlOXGyMACgkQ4mt9JeIbjJSbZwCfYE/EfljGWfMgz0MxBcNArv+1
-uIIAnjDyTp++AzAotNpxNRj5ZyBtdi85
-=ruWh
------END PGP SIGNATURE-----
-
---3GVEq5bqWT2KnhLROH8Ev1bRXASdGQ3PF--
+It wouldn't be too difficult with a cgroup post fork callback into the 
+cpuset code to rebind the nodemask if it has changed, but with my above 
+concern those might be yanked out eventually :)
