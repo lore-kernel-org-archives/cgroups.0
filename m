@@ -1,101 +1,128 @@
-From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: docker crashes rcuos in __blkg_release_rcu
-Date: Wed, 11 Jun 2014 12:32:29 -0400
-Message-ID: <20140611163229.GA12974@redhat.com>
-References: <alpine.DEB.2.02.1406081816540.17948@jlaw-desktop.mno.stratus.com>
- <20140609174708.GA31499@redhat.com>
- <20140609182728.GB31499@redhat.com>
- <20140610143906.0d2f35d0@jlaw-desktop.mno.stratus.com>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20140610143906.0d2f35d0-ceYW5R1vr2hcrvxNGtJwk767FWEIOpWeVpNB7YpNyf8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Joe Lawrence <joe.lawrence-7+ureL1bLXNBDgjK7y7TUQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Paolo Valente <paolo.valente-rcYM44yAMweonA0d6jMUrA@public.gmane.org>
+Subject: Re: BFQ speed tests [was Re: [PATCH RFC - TAKE TWO - 00/12] New
+	version of the BFQ I/O Scheduler]
+Date: Wed, 11 Jun 2014 22:39:31 +0200
+Message-ID: <DE2B8BBD-EFC6-46C7-8B0E-DC2CBCBDBC6A@unimore.it>
+References: <20140528221929.GG1419@htj.dyndns.org>
+	<1401354343-5527-1-git-send-email-paolo.valente@unimore.it>
+	<20140530160712.GG24871@htj.dyndns.org>
+	<464F6CBE-A63E-46EF-A90D-BF8450430444@unimore.it>
+	<20140530232804.GA5057@htj.dyndns.org>
+	<20140602111432.GA3737@amd.pavel.ucw.cz>
+	<20140602130226.GA14654@amd.pavel.ucw.cz>
+	<FCFE0106-A4DD-4DEF-AAAE-040F3823A447@unimore.it>
+	<20140604100358.GA4799@amd.pavel.ucw.cz>
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20140604100358.GA4799-tWAi6jLit6GreWDznjuHag@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Pavel Machek <pavel-+ZI9xUNit7I@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Fabio Checconi <fchecconi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Arianna Avanzini <avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Jun 10, 2014 at 02:39:06PM -0400, Joe Lawrence wrote:
-> 
-> Hi Vivek,
-> 
-> Thanks for taking a look.  For extra debugging, I wrote a quick set of
-> kprobes that:
-> 
->   1 - On blkg_alloc entry, save the request_queue's kobj address in a
->       list
->   2 - On kobject_put entry, dump the stack if the kobj is found in that
->       list
-> 
-> and this was the trace for the final kobject put for the
-> request_queue before a crash:
-> 
-> JL: kobject_put kobj(queue) @ ffff88084d89c9e8, refcount=1
-> ------------[ cut here ]------------
-> WARNING: CPU: 27 PID: 11060 at /h/jlawrenc/kprobes/docker/probes_blk.c:166 kret_entry_kobject_put+0x47/0x50 [docker_debug]()
-> [ ... snip modules ... ]
-> CPU: 27 PID: 11060 Comm: docker Tainted: G        W  OE 3.15.0 #1
-> Hardware name: Stratus ftServer 6400/G7LAZ, BIOS BIOS Version 6.3:57 12/25/2013
->  0000000000000000 0000000093cbdc81 ffff88104196fae8 ffffffff8162738d
->  0000000000000000 ffff88104196fb20 ffffffff8106d81d ffff88084d89c9e8
->  ffff881041912cd0 ffffffffa0181020 ffff88104196fbe0 ffffffffa01810c8
-> Call Trace:
->  [<ffffffff8162738d>] dump_stack+0x45/0x56
->  [<ffffffff8106d81d>] warn_slowpath_common+0x7d/0xa0
->  [<ffffffff8106d94a>] warn_slowpath_null+0x1a/0x20
->  [<ffffffffa017f107>] kret_entry_kobject_put+0x47/0x50 [docker_debug]
->  [<ffffffff816335ee>] pre_handler_kretprobe+0x9e/0x1c0
->  [<ffffffff81635a2f>] opt_pre_handler+0x4f/0x90
->  [<ffffffff81631dd7>] optimized_callback+0x97/0xb0
->  [<ffffffff812dde01>] ? kobject_put+0x1/0x60
->  [<ffffffff812b4561>] ? blk_cleanup_queue+0x101/0x1a0
->  [<ffffffffa011114b>] ? __dm_destroy+0x1db/0x260 [dm_mod]
->  [<ffffffffa0111f53>] ? dm_destroy+0x13/0x20 [dm_mod]
->  [<ffffffffa0117a2e>] ? dev_remove+0x11e/0x180 [dm_mod]
->  [<ffffffffa0117910>] ? dev_suspend+0x250/0x250 [dm_mod]
->  [<ffffffffa0118105>] ? ctl_ioctl+0x255/0x500 [dm_mod]
->  [<ffffffff8118483f>] ? do_wp_page+0x38f/0x750
->  [<ffffffffa01183c3>] ? dm_ctl_ioctl+0x13/0x20 [dm_mod]
->  [<ffffffff811e1c20>] ? do_vfs_ioctl+0x2e0/0x4a0
->  [<ffffffff81277d56>] ? file_has_perm+0xa6/0xb0
->  [<ffffffff811e1e61>] ? SyS_ioctl+0x81/0xa0
->  [<ffffffff816381e9>] ? system_call_fastpath+0x16/0x1b
-> ---[ end trace b4b8112437afdac8 ]---
->  
-> so I think when dm_destroy() is called, it leads to the request_queue
-> in question going away.
-> 
-> > I am wondering if we need to take a reference on the queue
-> > (blk_get_queue()) in blkg_alloc(), to make sure request queue is
-> > still around when blkg is being freed.
-> 
-> I experimented with this and the crash does go away (and the docker
-> invocation completes successfully).  I wasn't sure where the
-> accompanying blk_put_queue() should go.  If I put it in blkg_free, the
-> kref accounting doesn't seem to even out, ie they never fall to zero.
 
-CC cgroups list.
+Il giorno 04/giu/2014, alle ore 12:03, Pavel Machek <pavel-+ZI9xUNit7I@public.gmane.org> ha scrit=
+to:
 
-Ok, I think I figured out why reference counting does not seem to even
-out.
+> Hi!
+> =
 
-There are two ways to destroy blkg. Either device goes away and
-blk_release_queue() will take care of removing blkg or cgroup is deleted
-and that will take care of cleaning up blkg. I think only exception is
-root blkg where one can not delete root cgroup so it is cleaned up only
-when request queue goes away.
+>> Should this attempt be useless as well, I will, if you do not mind, try =
+by asking you more details about your system and reproducing your configura=
+tion as much as I can.
+>> =
 
-Now if blkg holds a reference to queue, then blk_release_queue() never
-gets called. And root blkg can't be cleaned till queue goes away. So
-this seems like chicken and egg situation.
+> =
 
-Even for non-root blkg, blkg will not be cleaned till cgroup goes away.
+> Try making BFQ the default scheduler. That seems to break it for me,
+> when selected at runtime, it looks stable.
 
-Tejun, any thoughts on how to solve this issue. Delaying blkg release
-in rcu context and then expecting queue to be still present is causing
-this problem.
+As I have already written to you privately, we have fixed the bug. It was a
+clerical error, made while turning the original patchset into the series of
+patches we have then submitted.
 
-Thanks
-Vivek
+The new patchset is available here:
+http://algogroup.unimore.it/people/paolo/disk_sched/debugging-patches/3.16.=
+0-rc0-v7rc5.tgz
+
+I=92m not submitting this new, fixed patchset by email, because, before doi=
+ng that,
+we want to apply all the changes recommended by Tejun, and try to turn the
+new patchset into a 'transformer' of cfq into bfq (of course, should it be =
+better
+to proceed in a different way also for this intermediate new version of bfq,
+we are willing to).
+
+> =
+
+> Anyway, here are some speed tests. Background load:
+> [=85]
+> root@duo:/data/tmp# echo cfq > /sys/block/sda/queue/scheduler =
+
+> root@duo:/data/tmp# echo 3 > /proc/sys/vm/drop_caches
+> root@duo:/data/tmp# cat /dev/zero > delme; cat /dev/zero > delme;cat
+> /dev/zero > delme;cat /dev/zero > delme;cat /dev/zero > delme;cat
+> /dev/zero > delme
+> =
+
+> (Machine was running out of disk space.)
+> =
+
+> (I alternate between cfq and bfq).
+> =
+
+> Benchmark. I chose git describe because it is part of kernel build
+> sometimes .. and I actually wait for that.
+> [=85]
+
+We have solved also this regression, related to both the queue-merge
+mechanism and the heuristic for providing a low-latency to soft real-time
+applications. The new patchset contains also this fix. We have repeated
+your tests (and other similar tests) with this fixed version of bfq.
+These are now our results with your tests.
+
+# Test with background writes
+
+[root@bfq-testbed data]# echo cfq > /sys/block/sda/queue/scheduler
+[root@bfq-testbed data]# echo 3 > /proc/sys/vm/drop_caches
+[root@bfq-testbed data]# cat /dev/zero > delme; cat /dev/zero > delme;cat
+/dev/zero > delme;cat /dev/zero > delme;cat /dev/zero > delme;cat
+/dev/zero > delme
+
+[root@bfq-testbed linux-lkml]# time git describe
+v3.15-rc8-78-gd531c25
+
+# BFQ
+0.24user 0.14system 0:07.42elapsed 5%CPU
+# CFQ
+0.24user 0.16system 0:08.39elapsed 4%CPU
+# BFQ
+0.25user 0.15system 0:08.45elapsed 4%CPU
+# CFQ
+0.26user 0.15system 0:09.11elapsed 4%CPU
+
+# Results without background workload
+
+# BFQ
+0.23user 0.12system 0:07.23elapsed 4%CPU
+# CFQ
+0.25user 0.13system 0:07.36elapsed 5%CPU
+# BFQ
+0.23user 0.14system 0:07.24elapsed 5%CPU
+# CFQ
+0.22user 0.14system 0:07.36elapsed 5%CPU
+
+Any feedback on these and other tests is more than welcome.
+
+Thanks,
+Paolo
