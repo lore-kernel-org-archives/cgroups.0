@@ -1,103 +1,93 @@
-From: Paolo Valente <paolo.valente-rcYM44yAMweonA0d6jMUrA@public.gmane.org>
-Subject: Re: BFQ speed tests [was Re: [PATCH RFC - TAKE TWO - 00/12] New
-	version of the BFQ I/O Scheduler]
-Date: Wed, 11 Jun 2014 22:45:06 +0200
-Message-ID: <6A4905B2-ACAA-419D-9C83-659BE9A5B20B@unimore.it>
-References: <20140528221929.GG1419@htj.dyndns.org>
-	<1401354343-5527-1-git-send-email-paolo.valente@unimore.it>
-	<20140530160712.GG24871@htj.dyndns.org>
-	<464F6CBE-A63E-46EF-A90D-BF8450430444@unimore.it>
-	<20140530232804.GA5057@htj.dyndns.org>
-	<20140602111432.GA3737@amd.pavel.ucw.cz>
-	<20140602130226.GA14654@amd.pavel.ucw.cz>
-	<FCFE0106-A4DD-4DEF-AAAE-040F3823A447@unimore.it>
-	<20140604100358.GA4799@amd.pavel.ucw.cz>
-	<4888F93F-D58D-48DD-81A6-A6D61C452D92@unimore.it>
-	<s5hsink3mxk.wl%tiwai@suse.de>
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <s5hsink3mxk.wl%tiwai-l3A5Bk7waGM@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Takashi Iwai <tiwai-l3A5Bk7waGM@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Fabio Checconi <fchecconi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Pavel Machek <pavel-+ZI9xUNit7I@public.gmane.org>, Arianna Avanzini <avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: libcontainer for linux
+Date: Wed, 11 Jun 2014 23:14:19 +0000
+Message-ID: <1402528459.2523.89.camel@dabdike.int.hansenpartnership.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7BIT
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Language: en-US
+Content-ID: <199289E40FEB1140BACCD094D055219A-ruSsrxOD6xDby3iVrkZq2A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: "containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Cc: "devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org" <devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
+[Cc'd cgroups because this affects cgroups as well as containers]
 
-Il giorno 04/giu/2014, alle ore 13:59, Takashi Iwai <tiwai-l3A5Bk7waGM@public.gmane.org> ha scri=
-tto:
+Hi All,
 
-> [=85]
-> I've been using BFQ for a while and noticed also some obvious
-> regression in some operations, notably git, too.
-> For example, git grep regresses badly.
-> =
+As some of you know, Parallels has been running a libct project to
+expose the granular capabilities of containers for a while:
 
-> I ran "test git grep foo > /dev/null" on linux kernel repos on both
-> rotational disk and SSD.
-> [=85]
-> =
+https://github.com/xemul/libct
 
-> BFQ seems behaving bad when reading many small files.
-> =
+This is a buildable linkable library with C/C++ and Python bindings.
 
+At around the same time, Docker also started a libcontainer project
+written in go so they could orchestrate containers natively instead of
+relying on toolkits like LXC:
 
-The fix I described in my last reply to Pavel's speed tests
-(https://lkml.org/lkml/2014/6/4/94) apparently solves also this problem.
-As I wrote in that reply, the new fixed version of bfq is here:
-http://algogroup.unimore.it/people/paolo/disk_sched/debugging-patches/3.16.=
-0-rc0-v7rc5.tgz
+https://github.com/dotcloud/docker/tree/master/pkg/libcontainer/
 
-These are our results, for your test, with this fixed version of bfq.
+This is a go language based project which currently only provides go
+bindings.
 
-time git grep foo > /dev/null
+As of yesterday, we agreed to merge both projects.  Initially the merger
+will be a kind of chimera which really compiles the guts of libct and
+libcontainer separately to provide all the bindings (Go/C/C++/Python)
+but the long term goal is that we would merge the two so that the Go
+part of libcontainer uses the libct API so that we eventually unify the
+code paths.  When the code paths are unified it will give us the ability
+to deploy docker on to the 2.6.32 OpenVZ kernel, and it should give
+Docker the ability to do checkpoint/restore and live migration via the
+CRIU project (the interface to which is also being integrated into
+libct).
 
-Rotational disk:
- CFQ:
-   2.86user 4.87system 0:29.51elapsed 26%CPU
-   2.87user 4.87system 0:30.30elapsed 25%CPU
-   2.82user 4.90system 0:29.13elapsed 26%CPU
+Just in the interests of full disclosure from the libct side, this is
+our current list of requirements:
 
- BFQ:
-   2.81user 4.97system 0:25.96elapsed 29%CPU
-   2.83user 5.02system 0:24.79elapsed 31%CPU
-   2.85user 4.95system 0:24.73elapsed 31%CPU
+     1. C/C++ bindings                                      +
+     2. Python bindings                                     +
+     3. Fine grained support for namespaces and cgroups     +
+     4. Extendable support for different private FS         +/-
+     5. Extendable support for different NICs               +/-
+     6. Support for external bind mounts                    +
+     7. Ability to enter a CT                               +
+     8. Ability to configure running CT                     -/+
+     9. Integration with CRIU for checkpointing             -
+    10. Integration with CRIU for migration                 -
+    11. Ability to operate on remote host                   -
+    12. Ability to be used by non-root App                  +
+    13. Ability to resurrect after sudden App crash         -
+    14. Ability to work on OpenVZ kernel (backend)          -
+    15. Ability to run libct supporting tools on older (OpenVZ) kernels
+        (depends on above)                                  -
+    16. Theoretical ability to be compiled on Solaris/BSD for unified
+        zones and jails management                          -
+        (does it make any sense?)
+    17. Integration with Docker libcontainer to give any container
+        system implementing the ability to deploy docker
+        packages                                            +/-
 
-SSD:
- CFQ:
-   2.04user 3.93system 0:03.88elapsed 153%CPU
-   2.12user 3.85system 0:03.89elapsed 153%CPU
-   2.05user 3.92system 0:03.89elapsed 153%CPU
+Where + means implemented, - means to be implemented and +/- means in
+process of being implemented.  Some of these requirements may may be
+rendered moot by the merger of the projects, but I thought this could be
+a way of launching the discussion for anyone who's interested.
 
- BFQ:
-   2.10user 3.86system 0:03.89elapsed 153%CPU
-   2.05user 3.90system 0:03.88elapsed 153%CPU
-   2.01user 3.95system 0:03.89elapsed 153%CPU
+The purpose of this library is twofold: The main reason is to expose
+application container features in a manner independent of all of our
+current container "flavours" (an OpenVZ container is different from an
+LXC container, which is different from a docker container etc.) which
+should allow people who want to create new and interesting containerised
+applications not to have to worry about what platform they pick.  The
+second is because we can use libcontainers to base all of our current
+toolkits on.  This may sound esoteric, but it would give you the ability
+to run, say, docker or lxc containers securely on an OpenVZ 2.6.32
+kernel (something that can't be done easily today).
 
-time git grep foo HEAD > /dev/null
+At some point there will be a development list for libcontainers, but
+for now containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org would seem to be usable
+for this.
 
-SSD:
- CFQ:
-   5.11user 0.38system 0:06.71elapsed 81%CPU
-   5.21user 0.36system 0:06.78elapsed 82%CPU
-   5.05user 0.41system 0:06.69elapsed 81%CPU
-
- BFQ:
-   5.17user 0.39system 0:06.77elapsed 82%CPU
-   5.13user 0.37system 0:06.73elapsed 81%CPU
-   5.17user 0.37system 0:06.78elapsed 81%CPU
-
-Should you be willing to provide further feedback on this and other tests,
-we would of course really appreciate it.
-
-Thanks again for your report,
-Paolo
+James
