@@ -1,104 +1,235 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 5/5] cgroup: fix a race between cgroup_mount() and cgroup_kill_sb()
-Date: Thu, 12 Jun 2014 14:33:05 +0800
-Message-ID: <539949A1.90301@huawei.com>
-References: <53994943.60703@huawei.com>
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Subject: Re: [stable-3.10.y] possible unsafe locking warning
+Date: Thu, 12 Jun 2014 15:18:13 +0800
+Message-ID: <53995435.1000402@cn.fujitsu.com>
+References: <5385B52A.7050106@cn.fujitsu.com> <20140528154856.GD1419@htj.dyndns.org> <539003C6.9060308@cn.fujitsu.com> <20140605132400.GW2878@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <53994943.60703-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20140605132400.GW2878@cmpxchg.org>
+Sender: stable-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Tejun Heo <tj@kernel.org>, stable@vger.kernel.org, Cgroups <cgroups@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>, tangchen <tangchen@cn.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org
 
-We've converted cgroup to kernfs so cgroup won't be intertwined with
-vfs objects and locking, but there are dark areas.
+Hi Johannes,
+Sorry for late.
+The patch works well with stable kernel-3.10.y, the warning is gone.
+Thank you and Tejun very much.:)
 
-Run two instances of this script concurrently:
+Regards,
+Gu
+On 06/05/2014 09:24 PM, Johannes Weiner wrote:
 
-    for ((; ;))
-    {
-    	mount -t cgroup -o cpuacct xxx /cgroup
-    	umount /cgroup
-    }
+> Hi,
+> 
+> [cc'ing Andrew and linux-mm for patch review and inclusion]
+> 
+> On Thu, Jun 05, 2014 at 01:44:38PM +0800, Gu Zheng wrote:
+>> Hi Tejun,
+>> Sorry for late replay.
+>> On 05/28/2014 11:48 PM, Tejun Heo wrote:
+>>
+>>> (cc'ing Johannes for mm-foo)
+>>>
+>>> Hello,
+>>>
+>>> On Wed, May 28, 2014 at 06:06:34PM +0800, Gu Zheng wrote:
+>>>> [ 2457.683370] inconsistent {RECLAIM_FS-ON-W} -> {IN-RECLAIM_FS-R} usage.
+>>>> [ 2457.761540] kswapd2/1151 [HC0[0]:SC0[0]:HE1:SE1] takes:
+>>>> [ 2457.824102]  (&sig->group_rwsem){+++++?}, at: [<ffffffff81071864>] exit_signals+0x24/0x130
+>>>> [ 2457.923538] {RECLAIM_FS-ON-W} state was registered at:
+>>>> [ 2457.985055]   [<ffffffff810bfc99>] mark_held_locks+0xb9/0x140
+>>>> [ 2458.053976]   [<ffffffff810c1e3a>] lockdep_trace_alloc+0x7a/0xe0
+>>>> [ 2458.126015]   [<ffffffff81194f47>] kmem_cache_alloc_trace+0x37/0x240
+>>>> [ 2458.202214]   [<ffffffff812c6e89>] flex_array_alloc+0x99/0x1a0
+>>>> [ 2458.272175]   [<ffffffff810da563>] cgroup_attach_task+0x63/0x430
+>>>> [ 2458.344214]   [<ffffffff810dcca0>] attach_task_by_pid+0x210/0x280
+>>>> [ 2458.417294]   [<ffffffff810dcd26>] cgroup_procs_write+0x16/0x20
+>>>> [ 2458.488287]   [<ffffffff810d8410>] cgroup_file_write+0x120/0x2c0
+>>>> [ 2458.560320]   [<ffffffff811b21a0>] vfs_write+0xc0/0x1f0
+>>>> [ 2458.622994]   [<ffffffff811b2bac>] SyS_write+0x4c/0xa0
+>>>> [ 2458.684618]   [<ffffffff815ec3c0>] tracesys+0xdd/0xe2
+>>>> [ 2458.745214] irq event stamp: 49
+>>>> [ 2458.782794] hardirqs last  enabled at (49): [<ffffffff815e2b56>] _raw_spin_unlock_irqrestore+0x36/0x70
+>>>> [ 2458.894388] hardirqs last disabled at (48): [<ffffffff815e337b>] _raw_spin_lock_irqsave+0x2b/0xa0
+>>>> [ 2459.000771] softirqs last  enabled at (0): [<ffffffff81059247>] copy_process.part.24+0x627/0x15f0
+>>>> [ 2459.107161] softirqs last disabled at (0): [<          (null)>]           (null)
+>>>> [ 2459.195852] 
+>>>> [ 2459.195852] other info that might help us debug this:
+>>>> [ 2459.274024]  Possible unsafe locking scenario:
+>>>> [ 2459.274024] 
+>>>> [ 2459.344911]        CPU0
+>>>> [ 2459.374161]        ----
+>>>> [ 2459.403408]   lock(&sig->group_rwsem);
+>>>> [ 2459.448490]   <Interrupt>
+>>>> [ 2459.479825]     lock(&sig->group_rwsem);
+>>>> [ 2459.526979] 
+>>>> [ 2459.526979]  *** DEADLOCK ***
+>>>> [ 2459.526979] 
+>>>> [ 2459.597866] no locks held by kswapd2/1151.
+>>>> [ 2459.646896] 
+>>>> [ 2459.646896] stack backtrace:
+>>>> [ 2459.699049] CPU: 30 PID: 1151 Comm: kswapd2 Not tainted 3.10.39+ #4
+>>>> [ 2459.774098] Hardware name: FUJITSU PRIMEQUEST2800E/SB, BIOS PRIMEQUEST 2000 Series BIOS Version 01.48 05/07/2014
+>>>> [ 2459.895983]  ffffffff82284bf0 ffff88085856bbf8 ffffffff815dbcf6 ffff88085856bc48
+>>>> [ 2459.985003]  ffffffff815d67c6 0000000000000000 ffff880800000001 ffff880800000001
+>>>> [ 2460.074024]  000000000000000a ffff88085edc9600 ffffffff810be0e0 0000000000000009
+>>>> [ 2460.163087] Call Trace:
+>>>> [ 2460.192345]  [<ffffffff815dbcf6>] dump_stack+0x19/0x1b
+>>>> [ 2460.253874]  [<ffffffff815d67c6>] print_usage_bug+0x1f7/0x208
+>>>> [ 2460.399807]  [<ffffffff810bfb5d>] mark_lock+0x21d/0x2a0
+>>>> [ 2460.462369]  [<ffffffff810c076a>] __lock_acquire+0x52a/0xb60
+>>>> [ 2460.735516]  [<ffffffff810c1592>] lock_acquire+0xa2/0x140
+>>>> [ 2460.935691]  [<ffffffff815e01e1>] down_read+0x51/0xa0
+>>>> [ 2461.062888]  [<ffffffff81071864>] exit_signals+0x24/0x130
+>>>> [ 2461.127536]  [<ffffffff81060d55>] do_exit+0xb5/0xa50
+>>>> [ 2461.320433]  [<ffffffff8108303b>] kthread+0xdb/0x100
+>>>> [ 2461.532049]  [<ffffffff815ec0ec>] ret_from_fork+0x7c/0xb0
+>>>
+>>> The lockdep warning is about threadgroup_lock being grabbed by kswapd
+>>> which is depended upon during memory reclaim when the lock may be held
+>>> by tasks which may wait on memory reclaim.  From the backtrace, it
+>>> looks like the right thing to do is marking the kswapd that it's no
+>>> longer a memory reclaimer once before it starts exiting.
+> 
+> Yeah, that makes sense.  In fact, we can reset *all* the
+> reclaim-specific per-task states the second it stops performing
+> reclaim work.
+> 
+>>>> And when reference to the related code(kernel-3.10.y), it seems that cgroup_attach_task(thread-2,
+>>>> attach kswapd) trigger kswapd(reclaim memory?) when trying to alloc memory(flex_array_alloc) under
+>>>> the protection of sig->group_rwsem, but meanwhile the kswapd(thread-1) is in the exit routine
+>>>> (because it was marked SHOULD STOP when offline pages completed), which needs to acquire
+>>>> sig->group_rwsem in exit_signals(), so the deadlock occurs.
+>>>>
+>>>>        thread-1                           			 |            thread-2
+>>>>                                                                  |
+>>>> __offline_pages():                                               | system_call_fastpath()
+>>>> |-> kswapd_stop(node);                                           | |-> ......
+>>>>     |-> kthread_stop(kswapd)                                     | |-> cgroup_file_write()
+>>>>         |-> set_bit(KTHREAD_SHOULD_STOP, &kthread->flags);       | |-> ......
+>>>>         |-> wake_up_process(k)                                   | |-> attach_task_by_pid()
+>>>>             |                                                    |     |-> threadgroup_lock(tsk)
+>>>> |<----------|                                                    |        // Here, got the lock.
+>>>> |-> kswapd()                                                     |    |-> ...
+>>>>     |-> if (kthread_should_stop())                               |     |-> cgroup_attach_task()
+>>>>             return;                                              |         |-> flex_array_alloc()
+>>>>             |                                                    |             |-> kzalloc()
+>>>> |<----------|                                                    |                |-> wait for kswapd to reclaim memory
+>>>> |-> kthread()                                                    |
+>>>>     |-> do_exit(ret)                                             |
+>>>>         |-> exit_signals()                                       |
+>>>>             |-> threadgroup_change_begin(tsk)                    |
+>>>>                 |-> down_read(&tsk->signal->group_rwsem)         |
+>>>>                     // Here, acquire the lock. 
+>>>>
+>>>> If my analysis is correct, the latest kernel may have the same issue, though the flex_array was replaced
+>>>> by list, but we still need to alloc memory(e.g. in find_css_set()), so the race may still occur.
+>>>> Any comments about this? If I missed something, please correct me.:)
+>>>
+>>> Not sure whether this can actually happen but if so the right fix
+>>> would be making thread-2 not wait for kswapd which is exiting and can
+>>> no longer serve as memory reclaimer.
+> 
+> There is never a direct wait for a specific kswapd thread in the
+> waitqueue sense.  The allocator wakes up the kswapds for all nodes
+> allowed in the allocation, then retries the allocation a few times in
+> the hope that kswapd does something before entering reclaim itself.
+> 
+> How far back do we need this in stable?
+> 
+> ---
+> 
+>>From c3d76e3c208bc90b64b804ffefa114b920cab47e Mon Sep 17 00:00:00 2001
+> From: Johannes Weiner <hannes@cmpxchg.org>
+> Date: Thu, 5 Jun 2014 08:37:01 -0400
+> Subject: [patch] mm: vmscan: clear kswapd's special reclaim powers before
+>  exiting
+> 
+> When kswapd exits, it can end up taking locks that were previously
+> held by allocating tasks while they waited for reclaim.  Lockdep
+> currently warns about this:
+> 
+> On Wed, May 28, 2014 at 06:06:34PM +0800, Gu Zheng wrote:
+>> [ 2457.683370] inconsistent {RECLAIM_FS-ON-W} -> {IN-RECLAIM_FS-R} usage.
+>> [ 2457.761540] kswapd2/1151 [HC0[0]:SC0[0]:HE1:SE1] takes:
+>> [ 2457.824102]  (&sig->group_rwsem){+++++?}, at: [<ffffffff81071864>] exit_signals+0x24/0x130
+>> [ 2457.923538] {RECLAIM_FS-ON-W} state was registered at:
+>> [ 2457.985055]   [<ffffffff810bfc99>] mark_held_locks+0xb9/0x140
+>> [ 2458.053976]   [<ffffffff810c1e3a>] lockdep_trace_alloc+0x7a/0xe0
+>> [ 2458.126015]   [<ffffffff81194f47>] kmem_cache_alloc_trace+0x37/0x240
+>> [ 2458.202214]   [<ffffffff812c6e89>] flex_array_alloc+0x99/0x1a0
+>> [ 2458.272175]   [<ffffffff810da563>] cgroup_attach_task+0x63/0x430
+>> [ 2458.344214]   [<ffffffff810dcca0>] attach_task_by_pid+0x210/0x280
+>> [ 2458.417294]   [<ffffffff810dcd26>] cgroup_procs_write+0x16/0x20
+>> [ 2458.488287]   [<ffffffff810d8410>] cgroup_file_write+0x120/0x2c0
+>> [ 2458.560320]   [<ffffffff811b21a0>] vfs_write+0xc0/0x1f0
+>> [ 2458.622994]   [<ffffffff811b2bac>] SyS_write+0x4c/0xa0
+>> [ 2458.684618]   [<ffffffff815ec3c0>] tracesys+0xdd/0xe2
+>> [ 2458.745214] irq event stamp: 49
+>> [ 2458.782794] hardirqs last  enabled at (49): [<ffffffff815e2b56>] _raw_spin_unlock_irqrestore+0x36/0x70
+>> [ 2458.894388] hardirqs last disabled at (48): [<ffffffff815e337b>] _raw_spin_lock_irqsave+0x2b/0xa0
+>> [ 2459.000771] softirqs last  enabled at (0): [<ffffffff81059247>] copy_process.part.24+0x627/0x15f0
+>> [ 2459.107161] softirqs last disabled at (0): [<          (null)>]           (null)
+>> [ 2459.195852]
+>> [ 2459.195852] other info that might help us debug this:
+>> [ 2459.274024]  Possible unsafe locking scenario:
+>> [ 2459.274024]
+>> [ 2459.344911]        CPU0
+>> [ 2459.374161]        ----
+>> [ 2459.403408]   lock(&sig->group_rwsem);
+>> [ 2459.448490]   <Interrupt>
+>> [ 2459.479825]     lock(&sig->group_rwsem);
+>> [ 2459.526979]
+>> [ 2459.526979]  *** DEADLOCK ***
+>> [ 2459.526979]
+>> [ 2459.597866] no locks held by kswapd2/1151.
+>> [ 2459.646896]
+>> [ 2459.646896] stack backtrace:
+>> [ 2459.699049] CPU: 30 PID: 1151 Comm: kswapd2 Not tainted 3.10.39+ #4
+>> [ 2459.774098] Hardware name: FUJITSU PRIMEQUEST2800E/SB, BIOS PRIMEQUEST 2000 Series BIOS Version 01.48 05/07/2014
+>> [ 2459.895983]  ffffffff82284bf0 ffff88085856bbf8 ffffffff815dbcf6 ffff88085856bc48
+>> [ 2459.985003]  ffffffff815d67c6 0000000000000000 ffff880800000001 ffff880800000001
+>> [ 2460.074024]  000000000000000a ffff88085edc9600 ffffffff810be0e0 0000000000000009
+>> [ 2460.163087] Call Trace:
+>> [ 2460.192345]  [<ffffffff815dbcf6>] dump_stack+0x19/0x1b
+>> [ 2460.253874]  [<ffffffff815d67c6>] print_usage_bug+0x1f7/0x208
+>> [ 2460.399807]  [<ffffffff810bfb5d>] mark_lock+0x21d/0x2a0
+>> [ 2460.462369]  [<ffffffff810c076a>] __lock_acquire+0x52a/0xb60
+>> [ 2460.735516]  [<ffffffff810c1592>] lock_acquire+0xa2/0x140
+>> [ 2460.935691]  [<ffffffff815e01e1>] down_read+0x51/0xa0
+>> [ 2461.062888]  [<ffffffff81071864>] exit_signals+0x24/0x130
+>> [ 2461.127536]  [<ffffffff81060d55>] do_exit+0xb5/0xa50
+>> [ 2461.320433]  [<ffffffff8108303b>] kthread+0xdb/0x100
+>> [ 2461.532049]  [<ffffffff815ec0ec>] ret_from_fork+0x7c/0xb0
+> 
+> This is because the kswapd thread is still marked as a reclaimer at
+> the time of exit.  But because it is exiting, nobody is actually
+> waiting on it to make reclaim progress anymore, and it's nothing but a
+> regular thread at this point.  Be tidy and strip it of all its powers
+> (PF_MEMALLOC, PF_SWAPWRITE, PF_KSWAPD, and the lockdep reclaim state)
+> before returning from the thread function.
+> 
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> ---
+>  mm/vmscan.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 9a63d13739a6..4ac2eab860d2 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -3425,7 +3425,10 @@ static int kswapd(void *p)
+>  		}
+>  	}
+>  
+> +	tsk->flags &= ~(PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD);
+>  	current->reclaim_state = NULL;
+> +	lockdep_clear_current_reclaim_state();
+> +
+>  	return 0;
+>  }
+>  
 
-After a while, I saw two mount processes were stuck at retrying, because
-they were waiting for a subsystem to become free, but the root associated
-with this subsystem never got freed.
-
-This can happen, if thread A is in the process of killing superblock but
-hasn't called percpu_ref_kill(), and at this time thread B is mounting
-the same cgroup root and finds the root in the root list and performs
-percpu_ref_try_get().
-
-To fix this, we increase the refcnt of the superblock instead of increasing
-the percpu refcnt of cgroup root.
-
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
-
-A better fix is welcome!
-
----
- kernel/cgroup.c | 24 ++++++++++++++----------
- 1 file changed, 14 insertions(+), 10 deletions(-)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index bd37e8d..94e1814 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1654,7 +1654,7 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 	struct dentry *dentry;
- 	int ret;
- 	int i;
--	bool new_sb;
-+	bool sb_pinned = false;
- 
- 	/*
- 	 * The first time anyone tries to mount a cgroup, enable the list
-@@ -1735,19 +1735,21 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 		}
- 
- 		/*
--		 * A root's lifetime is governed by its root cgroup.
--		 * tryget_live failure indicate that the root is being
--		 * destroyed.  Wait for destruction to complete so that the
--		 * subsystems are free.  We can use wait_queue for the wait
--		 * but this path is super cold.  Let's just sleep for a bit
--		 * and retry.
-+		 * This may fail for two reasons:
-+		 * - A concurrent mount is in process. We wait for that mount
-+		     to complete.
-+		 * - The superblock is being destroyed. We wait for the
-+		 *   desctruction to complete so that the subsystems are free.
-+		 * We can use wait_queue for the wait but this path is super
-+		 * cold.  Let's just sleep for a bit and retry.
- 		 */
--		if (!percpu_ref_tryget_live(&root->cgrp.self.refcnt)) {
-+		if (!kernfs_pin_sb(root->kf_root, NULL)) {
- 			mutex_unlock(&cgroup_mutex);
- 			msleep(10);
- 			ret = restart_syscall();
- 			goto out_free;
- 		}
-+		sb_pinned = true;
- 
- 		ret = 0;
- 		goto out_unlock;
-@@ -1784,8 +1786,10 @@ out_free:
- 	if (ret)
- 		return ERR_PTR(ret);
- 
--	dentry = kernfs_mount(fs_type, flags, root->kf_root, &new_sb);
--	if (IS_ERR(dentry) || !new_sb)
-+	dentry = kernfs_mount(fs_type, flags, root->kf_root, NULL);
-+	if (sb_pinned)
-+		kernfs_drop_sb(root->kf_root, NULL);
-+	if (!sb_pinned && IS_ERR(dentry))
- 		cgroup_put(&root->cgrp);
- 	return dentry;
- }
--- 
-1.8.0.2
