@@ -1,46 +1,79 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 2/5] percpu-ref: introduce percpu_ref_alive()
-Date: Thu, 12 Jun 2014 14:31:47 +0800
-Message-ID: <53994953.4060703@huawei.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: [PATCH 3/5] cgroup: fix mount failure in a corner case
+Date: Thu, 12 Jun 2014 14:32:13 +0800
+Message-ID: <5399496D.6060003@huawei.com>
 References: <53994943.60703@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <53994943.60703-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <53994943.60703@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-This is used to check if the percpu_ref has been killed.
+  # cat test.sh
+  #! /bin/bash
 
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+  mount -t cgroup -o cpu xxx /cgroup
+  umount /cgroup
+
+  mount -t cgroup -o cpu,cpuacct xxx /cgroup
+  umount /cgroup
+  # ./test.sh
+  mount: xxx already mounted or /cgroup busy
+  mount: according to mtab, xxx is already mounted on /cgroup
+
+It's because the cgroupfs_root of the first mount was under destruction
+asynchronously.
+
+Fix this by delaying and then retrying mount in this case.
+
+Signed-off-by: Li Zefan <lizefan@huawei.com>
 ---
- include/linux/percpu-refcount.h | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ kernel/cgroup.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/include/linux/percpu-refcount.h b/include/linux/percpu-refcount.h
-index dba35c4..1d5f2b3 100644
---- a/include/linux/percpu-refcount.h
-+++ b/include/linux/percpu-refcount.h
-@@ -96,6 +96,17 @@ static inline void percpu_ref_kill(struct percpu_ref *ref)
- #define REF_STATUS(count)	(((unsigned long) count) & PCPU_STATUS_MASK)
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 1c65f24..bd37e8d 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1648,10 +1648,12 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 			 int flags, const char *unused_dev_name,
+ 			 void *data)
+ {
++	struct cgroup_subsys *ss;
+ 	struct cgroup_root *root;
+ 	struct cgroup_sb_opts opts;
+ 	struct dentry *dentry;
+ 	int ret;
++	int i;
+ 	bool new_sb;
  
- /**
-+ * percpu_ref_alive - check if the ref has been killed
-+ * @ref: percpu_ref to check
-+ *
-+ * Return true if percpu_ref_kill() has been called to drop the initial ref.
-+ */
-+static inline bool percpu_ref_alive(struct percpu_ref *ref)
-+{
-+	return !(REF_STATUS(ref->pcpu_count) == PCPU_REF_DEAD);
-+}
+ 	/*
+@@ -1677,6 +1679,22 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 		goto out_unlock;
+ 	}
+ 
++	/*
++	 * If some subsystems have been bound to existing cgroup hierarchies,
++	 * but those hierachies are being destroyed, let's wait a little bit
++	 * and retry.
++	 */
++	for_each_subsys(ss, i) {
++		if (!(opts.subsys_mask & (1 << i)))
++			continue;
++		if (!percpu_ref_alive(&ss->root->cgrp.self.refcnt)) {
++			mutex_unlock(&cgroup_mutex);
++			msleep(10);
++			ret = restart_syscall();
++			goto out_free;
++		}
++	}
 +
-+/**
-  * percpu_ref_get - increment a percpu refcount
-  * @ref: percpu_ref to get
-  *
+ 	for_each_root(root) {
+ 		bool name_match = false;
+ 
 -- 
 1.8.0.2
