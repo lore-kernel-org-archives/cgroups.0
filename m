@@ -1,93 +1,48 @@
-From: James Bottomley <jbottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: libcontainer for linux
-Date: Wed, 11 Jun 2014 23:14:19 +0000
-Message-ID: <1402528459.2523.89.camel@dabdike.int.hansenpartnership.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 1/5] cgroup: fix broken css_has_online_children()
+Date: Thu, 12 Jun 2014 14:31:31 +0800
+Message-ID: <53994943.60703@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Language: en-US
-Content-ID: <199289E40FEB1140BACCD094D055219A-ruSsrxOD6xDby3iVrkZq2A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Cc: "devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org" <devel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-[Cc'd cgroups because this affects cgroups as well as containers]
+After running:
 
-Hi All,
+  # mount -t cgroup cpu xxx /cgroup && mkdir /cgroup/sub && \
+    rmdir /cgroup/sub && umount /cgroup
 
-As some of you know, Parallels has been running a libct project to
-expose the granular capabilities of containers for a while:
+I found the cgroup root still existed:
 
-https://github.com/xemul/libct
+  # cat /proc/cgroups
+  #subsys_name    hierarchy       num_cgroups     enabled
+  cpuset  0       1       1
+  cpu     1       1       1
+  ...
 
-This is a buildable linkable library with C/C++ and Python bindings.
+It turned out css_has_online_children() is broken.
 
-At around the same time, Docker also started a libcontainer project
-written in go so they could orchestrate containers natively instead of
-relying on toolkits like LXC:
+Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-https://github.com/dotcloud/docker/tree/master/pkg/libcontainer/
-
-This is a go language based project which currently only provides go
-bindings.
-
-As of yesterday, we agreed to merge both projects.  Initially the merger
-will be a kind of chimera which really compiles the guts of libct and
-libcontainer separately to provide all the bindings (Go/C/C++/Python)
-but the long term goal is that we would merge the two so that the Go
-part of libcontainer uses the libct API so that we eventually unify the
-code paths.  When the code paths are unified it will give us the ability
-to deploy docker on to the 2.6.32 OpenVZ kernel, and it should give
-Docker the ability to do checkpoint/restore and live migration via the
-CRIU project (the interface to which is also being integrated into
-libct).
-
-Just in the interests of full disclosure from the libct side, this is
-our current list of requirements:
-
-     1. C/C++ bindings                                      +
-     2. Python bindings                                     +
-     3. Fine grained support for namespaces and cgroups     +
-     4. Extendable support for different private FS         +/-
-     5. Extendable support for different NICs               +/-
-     6. Support for external bind mounts                    +
-     7. Ability to enter a CT                               +
-     8. Ability to configure running CT                     -/+
-     9. Integration with CRIU for checkpointing             -
-    10. Integration with CRIU for migration                 -
-    11. Ability to operate on remote host                   -
-    12. Ability to be used by non-root App                  +
-    13. Ability to resurrect after sudden App crash         -
-    14. Ability to work on OpenVZ kernel (backend)          -
-    15. Ability to run libct supporting tools on older (OpenVZ) kernels
-        (depends on above)                                  -
-    16. Theoretical ability to be compiled on Solaris/BSD for unified
-        zones and jails management                          -
-        (does it make any sense?)
-    17. Integration with Docker libcontainer to give any container
-        system implementing the ability to deploy docker
-        packages                                            +/-
-
-Where + means implemented, - means to be implemented and +/- means in
-process of being implemented.  Some of these requirements may may be
-rendered moot by the merger of the projects, but I thought this could be
-a way of launching the discussion for anyone who's interested.
-
-The purpose of this library is twofold: The main reason is to expose
-application container features in a manner independent of all of our
-current container "flavours" (an OpenVZ container is different from an
-LXC container, which is different from a docker container etc.) which
-should allow people who want to create new and interesting containerised
-applications not to have to worry about what platform they pick.  The
-second is because we can use libcontainers to base all of our current
-toolkits on.  This may sound esoteric, but it would give you the ability
-to run, say, docker or lxc containers securely on an OpenVZ 2.6.32
-kernel (something that can't be done easily today).
-
-At some point there will be a development list for libcontainers, but
-for now containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org would seem to be usable
-for this.
-
-James
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 05b8ca4..1c65f24 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -3327,7 +3327,7 @@ bool css_has_online_children(struct cgroup_subsys_state *css)
+ 
+ 	rcu_read_lock();
+ 	css_for_each_child(child, css) {
+-		if (css->flags & CSS_ONLINE) {
++		if (child->flags & CSS_ONLINE) {
+ 			ret = true;
+ 			break;
+ 		}
+-- 
+1.8.0.2
