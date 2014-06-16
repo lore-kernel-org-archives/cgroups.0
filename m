@@ -1,88 +1,84 @@
-From: Paolo Valente <paolo.valente-rcYM44yAMweonA0d6jMUrA@public.gmane.org>
-Subject: Re: [PATCH RFC - TAKE TWO - 10/12] block, bfq: add Early Queue Merge (EQM)
-Date: Mon, 16 Jun 2014 13:23:34 +0200
-Message-ID: <EB40F548-C6D3-441D-B67B-2FCA8C797563@unimore.it>
-References: <20140528221929.GG1419@htj.dyndns.org> <1401354343-5527-1-git-send-email-paolo.valente@unimore.it> <1401354343-5527-11-git-send-email-paolo.valente@unimore.it> <20140601000331.GA29085@htj.dyndns.org> <3B7B1A46-46EB-4C52-A52C-4F79C71D14C2@unimore.it> <20140603162844.GD26210@htj.dyndns.org> <91383F1F-69C3-4B88-B51E-30204818F1AB@unimore.it> <20140604130446.GA5004@htj.dyndns.org>
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: [patch 00/12] mm: memcontrol: naturalize charge lifetime v3
+Date: Mon, 16 Jun 2014 15:54:20 -0400
+Message-ID: <1402948472-8175-1-git-send-email-hannes@cmpxchg.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20140604130446.GA5004-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
+	h=Message-Id:Date:Subject:Cc:To:From; bh=nuOIz+kBFGferAe1BLFfdH+wGeCn8vNr8KtblULCNxY=;
+	b=OrO01OyjhPhZEH8/NoRBWywmqMnN7gXiZg1mT7kGU5poASBUJbz/Hs0yw2zCG8+HqlKKmXu5Uu2KgFl8pKTIZTXEdixHlc99RXR7rSkqy1apEtYNq9WYZqQXVAKy/vRmEa/IIuD8Tm6S4jHCfd7ktG8aEPkGvyX/xoBXn/VJ87Y=;
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Fabio Checconi <fchecconi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Arianna Avanzini <avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mauro Andreolini <mauro.andreolini-rcYM44yAMweonA0d6jMUrA@public.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 Hi,
 
-Il giorno 04/giu/2014, alle ore 15:04, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> ha scr=
-itto:
+this is v3 of the memcg charge naturalization series.  Changes since
+v2 include:
 
-> Hello,
->=20
->> [=85]
+o make THP charges use __GFP_NORETRY to prevent excessive reclaim (Michal)
+o simplify move precharging while in the area
+o add acks & rebase to v3.16-rc1
 
->> The problem is not the duration of the plugging, but the fact that, =
-if a request merge
->> succeeds for a bio, then there will be no set_request invocation for=
- that bio.
->> Therefore, without early merging, there will be no queue merge at al=
-l.
->>=20
->> If my replies are correct and convince you, then I will use them to =
-integrate and
->> hopefully improve the documentation for this patch.
->=20
-> Ah, okay, so it's about missing the chance to look for cooperating
-> queues when merge succeeds.  Yeah, that makes a lot more sense to me.
-> If that's the case, wouldn't it be better to try finding cooperating
-> queues after each merge success rather than each allow_merge()
-> invocation?
+These patches rework memcg charge lifetime to integrate more naturally
+with the lifetime of user pages.  This drastically simplifies the code
+and reduces charging and uncharging overhead.  The most expensive part
+of charging and uncharging is the page_cgroup bit spinlock, which is
+removed entirely after this series.
 
-If I have correctly understandood your question, then the answer is unf=
-ortunately no.
+Here are the top-10 profile entries of a stress test that reads a 128G
+sparse file on a freshly booted box, without even a dedicated cgroup
+(i.e. executing in the root memcg).  Before:
 
-=46irst, without any queue-merge control in allow_merge, a bio-merge at=
-tempt would
-fail if the destination queue of the bio differs from the queue contain=
-ing the target rq,
-even if the two queues should be merged. With early queue merge, not on=
-ly the two
-queues are merged, but also the request-merge attempt succeeds.
+    15.36%              cat  [kernel.kallsyms]   [k] copy_user_generic_string                  
+    13.31%              cat  [kernel.kallsyms]   [k] memset                                    
+    11.48%              cat  [kernel.kallsyms]   [k] do_mpage_readpage                         
+     4.23%              cat  [kernel.kallsyms]   [k] get_page_from_freelist                    
+     2.38%              cat  [kernel.kallsyms]   [k] put_page                                  
+     2.32%              cat  [kernel.kallsyms]   [k] __mem_cgroup_commit_charge                
+     2.18%          kswapd0  [kernel.kallsyms]   [k] __mem_cgroup_uncharge_common              
+     1.92%          kswapd0  [kernel.kallsyms]   [k] shrink_page_list                          
+     1.86%              cat  [kernel.kallsyms]   [k] __radix_tree_lookup                       
+     1.62%              cat  [kernel.kallsyms]   [k] __pagevec_lru_add_fn                      
 
-Second, if the queue-merge check was executed only after a successful r=
-equest merge,
-then, in the case of a request-merge failure, the next chance to merge =
-the destination queue
-of the bio with some other queue would be in the next add_request. But,=
- according to the
-what we already discussed in some previous emails, waiting for the add_=
-request is usually
-too much with, e.g., the I/O generated by QEMU I/O threads.
+After:
 
-In the end, moving queue merging to after successful request merges wou=
-ld most certainly
-cause the throughput to drop.
+    15.67%           cat  [kernel.kallsyms]   [k] copy_user_generic_string                  
+    13.48%           cat  [kernel.kallsyms]   [k] memset                                    
+    11.42%           cat  [kernel.kallsyms]   [k] do_mpage_readpage                         
+     3.98%           cat  [kernel.kallsyms]   [k] get_page_from_freelist                    
+     2.46%           cat  [kernel.kallsyms]   [k] put_page                                  
+     2.13%       kswapd0  [kernel.kallsyms]   [k] shrink_page_list                          
+     1.88%           cat  [kernel.kallsyms]   [k] __radix_tree_lookup                       
+     1.67%           cat  [kernel.kallsyms]   [k] __pagevec_lru_add_fn                      
+     1.39%       kswapd0  [kernel.kallsyms]   [k] free_pcppages_bulk                        
+     1.30%           cat  [kernel.kallsyms]   [k] kfree                                     
 
+As you can see, the memcg footprint has shrunk quite a bit.
 
->  And let's please document what we're catching with the
-> extra attempts.
->=20
+   text    data     bss     dec     hex filename
+  37970    9892     400   48262    bc86 mm/memcontrol.o.old
+  35303    9892     400   45595    b21b mm/memcontrol.o
 
-Definitely, thanks,
-
-Paolo
-
-> Thanks.
->=20
-> --=20
-> tejun
-
-
---
-Paolo Valente                                                =20
-Algogroup
-Dipartimento di Fisica, Informatica e Matematica	=09
-Via Campi, 213/B
-41125 Modena - Italy        				 =20
-homepage:  http://algogroup.unimore.it/people/paolo/
+ Documentation/cgroups/memcg_test.txt |  160 +---
+ include/linux/memcontrol.h           |   94 +--
+ include/linux/page_cgroup.h          |   43 +-
+ include/linux/swap.h                 |   15 +-
+ kernel/events/uprobes.c              |    1 +
+ mm/filemap.c                         |   13 +-
+ mm/huge_memory.c                     |   57 +-
+ mm/memcontrol.c                      | 1516 ++++++++++++----------------------
+ mm/memory.c                          |   43 +-
+ mm/migrate.c                         |   44 +-
+ mm/rmap.c                            |   20 -
+ mm/shmem.c                           |   32 +-
+ mm/swap.c                            |   40 +
+ mm/swap_state.c                      |    8 +-
+ mm/swapfile.c                        |   21 +-
+ mm/truncate.c                        |    9 -
+ mm/vmscan.c                          |   12 +-
+ mm/zswap.c                           |    2 +-
+ 18 files changed, 754 insertions(+), 1376 deletions(-)
