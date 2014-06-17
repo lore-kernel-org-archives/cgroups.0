@@ -1,55 +1,51 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch 00/12] mm: memcontrol: naturalize charge lifetime v3
-Date: Tue, 17 Jun 2014 18:36:15 +0200
-Message-ID: <20140617163615.GD9572@dhcp22.suse.cz>
-References: <1402948472-8175-1-git-send-email-hannes@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 1/5] cgroup: fix broken css_has_online_children()
+Date: Tue, 17 Jun 2014 15:26:21 -0400
+Message-ID: <20140617192621.GO31819@htj.dyndns.org>
+References: <53994943.60703@huawei.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=qKYI6iFXJm9sNKLRNoabbXsWiaFHaVJOAoRkFAH10FE=;
-        b=ThKnzQsOJuUiyTrS7fGbtZaZN9BO/sRBQ9lPczi6avDQZ3pYnaoocCHSK+PlS0FODm
-         gCh1MXInPUP6OlkGXJlxtb/L/prwNWeTTBoQ0cucss/pRK1vuZKPFEPVj98vMuTK2e0j
-         +wpJ5Nas+0feJuoOb+aytbmTQS4zHdU8cOs4bSQNWT5m1Eb5fX8x7FUeIeeDBzlSdgMa
-         BSMULN5vXMlRL/DPKqFhembVTdWjyPZlfFUGkBhje52jPEhfhUVA6afs2vsj0vAg6YFJ
-         BI/XngTaqn3nqykelC8XZiHyRcU1QxUQrunP0xioGTBGk5wvXYN46HHY8sm2rk/hyDSr
-         URCw==
+        bh=KiqizsuaM+sH2YKSOY0SZx3qjmhhQegGmzzxfKVWEIw=;
+        b=q7gBGclKVliTTvPLQglUv34iKq8dvHhThkPMq0gLnpN1OONEwutTZTPMeKBSDhxg1a
+         AKEEj0rvEt+6SGqBdpCgWUtn+Erl9/22B4llQ5tkWhHiJHu+HzVnJL14Hxklda/yIpnd
+         uEh6P8gi4FA1ADsxIAmk6RMIrt0q3KZ8H5iYMPoxskyBKQHYjCZ0SMVIW7RC8vcCzsW5
+         P7xm058vUeiJufUmFO8kaBcpC7LJcpNj5h01qzVZfsToI9cISs3xp6Ua8LT6h8JWzv+L
+         Y9GXb9oRv5gohB1xXHp3ng+gGHZgw3RL+HpkFLCoKpUUKLFGFZs38l3TWOpirFLboIhC
+         7hbQ==
 Content-Disposition: inline
-In-Reply-To: <1402948472-8175-1-git-send-email-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <53994943.60703-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, Vladimir Davydov <vdavydov@parallels.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Mon 16-06-14 15:54:20, Johannes Weiner wrote:
-> Hi,
+On Thu, Jun 12, 2014 at 02:31:31PM +0800, Li Zefan wrote:
+> After running:
 > 
-> this is v3 of the memcg charge naturalization series.  Changes since
-> v2 include:
+>   # mount -t cgroup cpu xxx /cgroup && mkdir /cgroup/sub && \
+>     rmdir /cgroup/sub && umount /cgroup
 > 
-> o make THP charges use __GFP_NORETRY to prevent excessive reclaim (Michal)
-> o simplify move precharging while in the area
-> o add acks & rebase to v3.16-rc1
+> I found the cgroup root still existed:
+> 
+>   # cat /proc/cgroups
+>   #subsys_name    hierarchy       num_cgroups     enabled
+>   cpuset  0       1       1
+>   cpu     1       1       1
+>   ...
+> 
+> It turned out css_has_online_children() is broken.
+> 
+> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-I still didn't get to the last two patches and they need a more
-throughout review. The rest is good and nice on its own and maybe it
-would be easier if those go in first.
+Applied to cgroup/for-3.16-fixes.
 
-I would like to get to the last two ASAP but this is heavier and I am
-quite swamped by other small tasks last weeks so I do not want to delay
-the whole series.
+Thanks.
 
-What do you think?
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
