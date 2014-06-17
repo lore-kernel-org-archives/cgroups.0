@@ -1,126 +1,110 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch 06/12] mm: memcontrol: simplify move precharge function
-Date: Tue, 17 Jun 2014 16:59:30 +0200
-Message-ID: <20140617145930.GE19886@dhcp22.suse.cz>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [patch 03/12] mm: huge_memory: use GFP_TRANSHUGE when charging
+ huge pages
+Date: Tue, 17 Jun 2014 11:30:18 -0400
+Message-ID: <20140617153018.GA7331@cmpxchg.org>
 References: <1402948472-8175-1-git-send-email-hannes@cmpxchg.org>
- <1402948472-8175-7-git-send-email-hannes@cmpxchg.org>
+ <1402948472-8175-4-git-send-email-hannes@cmpxchg.org>
+ <20140617134745.GB19886@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=DZYmVJTqxe6uBmGTNQ7gTk4vwL+o2BVbXcOyHAKK0qQ=;
+	b=a+u22Ai8Lszavo+e2MKl1quKEZjf6XNDT3F9vpwRQtMfZurHRGpNjZvP+AJ2s09O0qUvkrvzxDjPwBRepDlkv9Q2hmZUrjKF2Mvs0QbTUVhKLLh13yTBzEhB6zp/aYptIzej5YPq6/xNU19AazZJ8NYL2RJ9EEO8IqmTFroD1uc=;
 Content-Disposition: inline
-In-Reply-To: <1402948472-8175-7-git-send-email-hannes@cmpxchg.org>
+In-Reply-To: <20140617134745.GB19886@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
+To: Michal Hocko <mhocko@suse.cz>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, Vladimir Davydov <vdavydov@parallels.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Mon 16-06-14 15:54:26, Johannes Weiner wrote:
-> The move precharge function does some baroque things: it tries raw
-> res_counter charging of the entire amount first, and then falls back
-> to a loop of one-by-one charges, with checks for pending signals and
-> cond_resched() batching.
+On Tue, Jun 17, 2014 at 03:47:45PM +0200, Michal Hocko wrote:
+> On Mon 16-06-14 15:54:23, Johannes Weiner wrote:
+> > Transparent huge page charges prefer falling back to regular pages
+> > rather than spending a lot of time in direct reclaim.
+> > 
+> > Desired reclaim behavior is usually declared in the gfp mask, but THP
+> > charges use GFP_KERNEL and then rely on the fact that OOM is disabled
+> > for THP charges, and that OOM-disabled charges currently skip reclaim.
 > 
-> Just use mem_cgroup_try_charge() without __GFP_WAIT for the first bulk
-> charge attempt.  In the one-by-one loop, remove the signal check (this
-> is already checked in try_charge), and simply call cond_resched()
-> after every charge - it's not that expensive.
+> OOM-disabled charges do one round of reclaim currently.
 
-Agreed. There shouldn't be any calls to res_counters for {un}charging
-outside of mem_cgroup_try_charge and kmem variant.
+Oops, fixed in v4.
 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-
-Acked-by: Michal Hocko <mhocko@suse.cz>
-
-> ---
->  mm/memcontrol.c | 51 +++++++++++++++++----------------------------------
->  1 file changed, 17 insertions(+), 34 deletions(-)
+> > Needless to say, this is anything but obvious and quite error prone.
+> > 
+> > Convert THP charges to use GFP_TRANSHUGE instead, which implies
+> > __GFP_NORETRY, to indicate the low-latency requirement.
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 9c646b9b56f4..3d9df94896a7 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -6372,55 +6372,38 @@ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
->  
->  #ifdef CONFIG_MMU
->  /* Handlers for move charge at task migration. */
-> -#define PRECHARGE_COUNT_AT_ONCE	256
->  static int mem_cgroup_do_precharge(unsigned long count)
->  {
-> -	int ret = 0;
-> -	int batch_count = PRECHARGE_COUNT_AT_ONCE;
-> -	struct mem_cgroup *memcg = mc.to;
-> +	int ret;
->  
-> -	if (mem_cgroup_is_root(memcg)) {
-> +	if (mem_cgroup_is_root(mc.to)) {
->  		mc.precharge += count;
->  		/* we don't need css_get for root */
->  		return ret;
->  	}
-> -	/* try to charge at once */
-> -	if (count > 1) {
-> -		struct res_counter *dummy;
-> -		/*
-> -		 * "memcg" cannot be under rmdir() because we've already checked
-> -		 * by cgroup_lock_live_cgroup() that it is not removed and we
-> -		 * are still under the same cgroup_mutex. So we can postpone
-> -		 * css_get().
-> -		 */
-> -		if (res_counter_charge(&memcg->res, PAGE_SIZE * count, &dummy))
-> -			goto one_by_one;
-> -		if (do_swap_account && res_counter_charge(&memcg->memsw,
-> -						PAGE_SIZE * count, &dummy)) {
-> -			res_counter_uncharge(&memcg->res, PAGE_SIZE * count);
-> -			goto one_by_one;
-> -		}
-> +
-> +	/* Try a single bulk charge without reclaim first */
-> +	ret = mem_cgroup_try_charge(mc.to, GFP_KERNEL & ~__GFP_WAIT,
-> +				    count, false);
-> +	if (!ret) {
->  		mc.precharge += count;
->  		return ret;
->  	}
-> -one_by_one:
-> -	/* fall back to one by one charge */
-> +
-> +	/* Try charges one by one with reclaim */
->  	while (count--) {
-> -		if (signal_pending(current)) {
-> -			ret = -EINTR;
-> -			break;
-> -		}
-> -		if (!batch_count--) {
-> -			batch_count = PRECHARGE_COUNT_AT_ONCE;
-> -			cond_resched();
-> -		}
-> -		ret = mem_cgroup_try_charge(memcg, GFP_KERNEL, 1, false);
-> +		ret = mem_cgroup_try_charge(mc.to, GFP_KERNEL, 1, false);
-> +		/*
-> +		 * In case of failure, any residual charges against
-> +		 * mc.to will be dropped by mem_cgroup_clear_mc()
-> +		 * later on.
-> +		 */
->  		if (ret)
-> -			/* mem_cgroup_clear_mc() will do uncharge later */
->  			return ret;
->  		mc.precharge++;
-> +		cond_resched();
->  	}
-> -	return ret;
-> +	return 0;
->  }
->  
->  /**
-> -- 
-> 2.0.0
+> OK, this makes sense. It would be ideal if we could use the same gfp as
+> for allocation but that would be too much churn I guess because some
+> allocator use a allocation helper which deduces proper gfp flags without
+> giving them back to the caller.
 > 
+> Nevertheless, I would still prefer if 05/12 was moved before
+> this patch because this is strictly speaking a behavior change.
 
--- 
-Michal Hocko
-SUSE Labs
+Yes, that's bungled up, thanks for catching that.  So here is the
+order I put it in (reverse git history order of course):
+
+commit d0d31c8d4f4cf91edcffa704e8c65ca62af24cf8
+Author: Johannes Weiner <hannes@cmpxchg.org>
+Date:   Mon Apr 14 08:16:09 2014 -0400
+
+    mm: memcontrol: retry reclaim for oom-disabled and __GFP_NOFAIL charges
+    
+    There is no reason why oom-disabled and __GFP_NOFAIL charges should
+    try to reclaim only once when every other charge tries several times
+    before giving up.  Make them all retry the same number of times.
+    
+    Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+
+commit 69f5c6c1a6553a04d7701012a73b2477df8d5a19
+Author: Johannes Weiner <hannes@cmpxchg.org>
+Date:   Thu Jun 5 22:02:26 2014 -0400
+
+    mm: huge_memory: use GFP_TRANSHUGE when charging huge pages
+    
+    Transparent huge page charges prefer falling back to regular pages
+    rather than spending a lot of time in direct reclaim.
+    
+    Desired reclaim behavior is usually declared in the gfp mask, but THP
+    charges use GFP_KERNEL and then rely on the fact that OOM is disabled
+    for THP charges, and that OOM-disabled charges don't retry reclaim.
+    Needless to say, this is anything but obvious and quite error prone.
+    
+    Convert THP charges to use GFP_TRANSHUGE instead, which implies
+    __GFP_NORETRY, to indicate the low-latency requirement.
+    
+    Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+    Acked-by: Michal Hocko <mhocko@suse.cz>
+
+commit d485e6b4ed62885d54c57c18c5427e2f174c9012
+Author: Johannes Weiner <hannes@cmpxchg.org>
+Date:   Tue May 27 15:23:18 2014 -0400
+
+    mm: memcontrol: reclaim at least once for __GFP_NORETRY
+    
+    Currently, __GFP_NORETRY tries charging once and gives up before even
+    trying to reclaim.  Bring the behavior on par with the page allocator
+    and reclaim at least once before giving up.
+    
+    Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+    Acked-by: Michal Hocko <mhocko@suse.cz>
+
+This first changes __GFP_NORETRY to provide THP-required semantics,
+then switches THP over to it, then fixes oom-disabled/NOFAIL charges.
+
+Does that make more sense?
+
+> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> 
+> Anyway
+> Acked-by: Michal Hocko <mhocko@suse.cz>
+
+Thanks!
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
