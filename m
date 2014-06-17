@@ -1,42 +1,23 @@
-From: Kamal Mostafa <kamal-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Subject: [3.13.y.z extended stable] Patch "device_cgroup: check if exception removal is allowed" has been added to staging queue
-Date: Tue, 17 Jun 2014 14:42:11 -0700
-Message-ID: <1403041331-8077-1-git-send-email-kamal@canonical.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Kamal Mostafa <kamal@canonical.com>
+Subject: [PATCH 3.13 087/212] device_cgroup: check if exception removal is allowed
+Date: Tue, 17 Jun 2014 14:43:01 -0700
+Message-ID: <1403041506-13646-88-git-send-email-kamal@canonical.com>
+References: <1403041506-13646-1-git-send-email-kamal@canonical.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1403041506-13646-1-git-send-email-kamal@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Aristeu Rozanski <arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kamal Mostafa <kamal-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, kernel-team-nLRlyDuq1AZFpShjVBNYrg@public.gmane.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org, kernel-team@lists.ubuntu.com
+Cc: cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Aristeu Rozanski <arozansk@redhat.com>, Tejun Heo <tj@kernel.org>, Kamal Mostafa <kamal@canonical.com>
 
-This is a note to let you know that I have just added a patch titled
+3.13.11.4 -stable review patch.  If anyone has any objections, please let me know.
 
-    device_cgroup: check if exception removal is allowed
+------------------
 
-to the linux-3.13.y-queue branch of the 3.13.y.z extended stable tree 
-which can be found at:
-
- http://kernel.ubuntu.com/git?p=ubuntu/linux.git;a=shortlog;h=refs/heads/linux-3.13.y-queue
-
-This patch is scheduled to be released in version 3.13.11.4.
-
-If you, or anyone else, feels it should not be added to this tree, please 
-reply to this email.
-
-For more information about the 3.13.y.z tree, see
-https://wiki.ubuntu.com/Kernel/Dev/ExtendedStable
-
-Thanks.
--Kamal
-
-------
-
-From 152e5116473774df795e48c4364a868d47a05e27 Mon Sep 17 00:00:00 2001
-From: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Date: Mon, 5 May 2014 11:18:59 -0400
-Subject: device_cgroup: check if exception removal is allowed
+From: Aristeu Rozanski <aris@redhat.com>
 
 commit d2c2b11cfa134f4fbdcc34088824da26a084d8de upstream.
 
@@ -78,12 +59,12 @@ present on the parent.
 v3: missing '*' in function description
 v2: improved log message and formatting fixes
 
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Aristeu Rozanski <arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Acked-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Signed-off-by: Kamal Mostafa <kamal-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Cc: cgroups@vger.kernel.org
+Cc: Li Zefan <lizefan@huawei.com>
+Signed-off-by: Aristeu Rozanski <arozansk@redhat.com>
+Acked-by: Serge Hallyn <serge.hallyn@canonical.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Kamal Mostafa <kamal@canonical.com>
 ---
  security/device_cgroup.c | 41 ++++++++++++++++++++++++++++++++++++++---
  1 file changed, 38 insertions(+), 3 deletions(-)
@@ -94,7 +75,7 @@ index 8e62b67..7fac654 100644
 +++ b/security/device_cgroup.c
 @@ -467,6 +467,37 @@ static int parent_has_perm(struct dev_cgroup *childcg,
  }
-
+ 
  /**
 + * parent_allows_removal - verify if it's ok to remove an exception
 + * @childcg: child cgroup from where the exception will be removed
@@ -131,7 +112,7 @@ index 8e62b67..7fac654 100644
   *		   allow based on parent's rules.
   * @parent: device cgroup's parent
 @@ -701,17 +732,21 @@ static int devcgroup_update_access(struct dev_cgroup *devcgroup,
-
+ 
  	switch (filetype) {
  	case DEVCG_ALLOW:
 -		if (!parent_has_perm(devcgroup, &ex))
@@ -155,5 +136,5 @@ index 8e62b67..7fac654 100644
  		rc = dev_exception_add(devcgroup, &ex);
  		break;
  	case DEVCG_DENY:
---
+-- 
 1.9.1
