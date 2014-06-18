@@ -1,12 +1,12 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch 11/13] mm: memcontrol: do not acquire page_cgroup lock for kmem pages
-Date: Wed, 18 Jun 2014 16:40:43 -0400
-Message-ID: <1403124045-24361-12-git-send-email-hannes@cmpxchg.org>
+Subject: [patch 10/13] mm: memcontrol: remove ordering between pc->mem_cgroup and PageCgroupUsed
+Date: Wed, 18 Jun 2014 16:40:42 -0400
+Message-ID: <1403124045-24361-11-git-send-email-hannes@cmpxchg.org>
 References: <1403124045-24361-1-git-send-email-hannes@cmpxchg.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From; bh=x6RC+zv14ieS8uZCmB7bHFuUbDhd4IG91jp7Ow+1L4c=;
-	b=R1EZmbEdY4vaMdh7p5YiP1279mPbUqDwixlufKUjCYB2RIwraoylccXWAffp6x0O8APFwDTkUOuW/3t6zwadfTQvujeOcbZUqqpe4NvHeQvqtwxrg446qe+4afJ/BNjYPnsIdH+LjIJMgV4GUrxxkD4HF6MhUtU88B3gHMohETw=;
+	h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From; bh=ph18LU18wiFwnCQ7Y0SQpc9kcx2Xz7qH3d+vHsYxtG8=;
+	b=SNWMGHf1c6DCj4rKDA2zmU3LxaYsZCcOoQbfeKYWSrnS/z3bo+4ToWGTZpXCmlEecJPHVO5IrhiOFopgZUk/9weM0fpE03QygfMcsuaHvUBMpLYfgPZQu10ub6nzOv5LMBWK3mYXaEY62WrVpr3IjY5AdorMbUYZP2QXfmiSaw4=;
 In-Reply-To: <1403124045-24361-1-git-send-email-hannes@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -16,61 +16,50 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Michal Hocko <mhocko@suse.cz>, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Kmem page charging and uncharging is serialized by means of exclusive
-access to the page.  Do not take the page_cgroup lock and don't set
-pc->flags atomically.
+There is a write barrier between setting pc->mem_cgroup and
+PageCgroupUsed, which was added to allow LRU operations to lookup the
+memcg LRU list of a page without acquiring the page_cgroup lock.
+
+But ever since 38c5d72f3ebe ("memcg: simplify LRU handling by new
+rule"), pages are ensured to be off-LRU while charging, so nobody else
+is changing LRU state while pc->mem_cgroup is being written, and there
+are no read barriers anymore.
+
+Remove the unnecessary write barrier.
 
 Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 Acked-by: Michal Hocko <mhocko@suse.cz>
-Acked-by: Vladimir Davydov <vdavydov@parallels.com>
 ---
- mm/memcontrol.c | 21 +++++++--------------
- 1 file changed, 7 insertions(+), 14 deletions(-)
+ mm/memcontrol.c | 9 ---------
+ 1 file changed, 9 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 199bd50359ad..5e7f8e7dc0d8 100644
+index d2b8429002c0..199bd50359ad 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -3407,12 +3407,13 @@ void __memcg_kmem_commit_charge(struct page *page, struct mem_cgroup *memcg,
- 		memcg_uncharge_kmem(memcg, PAGE_SIZE << order);
- 		return;
+@@ -2795,14 +2795,6 @@ static void __mem_cgroup_commit_charge(struct mem_cgroup *memcg,
  	}
--
-+	/*
-+	 * The page is freshly allocated and not visible to any
-+	 * outside callers yet.  Set up pc non-atomically.
-+	 */
- 	pc = lookup_page_cgroup(page);
--	lock_page_cgroup(pc);
+ 
  	pc->mem_cgroup = memcg;
--	SetPageCgroupUsed(pc);
--	unlock_page_cgroup(pc);
-+	pc->flags = PCG_USED;
- }
- 
- void __memcg_kmem_uncharge_pages(struct page *page, int order)
-@@ -3422,19 +3423,11 @@ void __memcg_kmem_uncharge_pages(struct page *page, int order)
- 
- 
- 	pc = lookup_page_cgroup(page);
 -	/*
--	 * Fast unlocked return. Theoretically might have changed, have to
--	 * check again after locking.
+-	 * We access a page_cgroup asynchronously without lock_page_cgroup().
+-	 * Especially when a page_cgroup is taken from a page, pc->mem_cgroup
+-	 * is accessed after testing USED bit. To make pc->mem_cgroup visible
+-	 * before USED bit, we need memory barrier here.
+-	 * See mem_cgroup_add_lru_list(), etc.
 -	 */
- 	if (!PageCgroupUsed(pc))
- 		return;
+-	smp_wmb();
+ 	SetPageCgroupUsed(pc);
  
--	lock_page_cgroup(pc);
--	if (PageCgroupUsed(pc)) {
--		memcg = pc->mem_cgroup;
--		ClearPageCgroupUsed(pc);
--	}
--	unlock_page_cgroup(pc);
-+	memcg = pc->mem_cgroup;
-+	pc->flags = 0;
- 
- 	/*
- 	 * We trust that only if there is a memcg associated with the page, it
+ 	if (lrucare) {
+@@ -3483,7 +3475,6 @@ void mem_cgroup_split_huge_fixup(struct page *head)
+ 	for (i = 1; i < HPAGE_PMD_NR; i++) {
+ 		pc = head_pc + i;
+ 		pc->mem_cgroup = memcg;
+-		smp_wmb();/* see __commit_charge() */
+ 		pc->flags = head_pc->flags & ~PCGF_NOCOPY_AT_SPLIT;
+ 	}
+ 	__this_cpu_sub(memcg->stat->count[MEM_CGROUP_STAT_RSS_HUGE],
 -- 
 2.0.0
 
