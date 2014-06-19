@@ -1,59 +1,191 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: docker crashes rcuos in __blkg_release_rcu
-Date: Thu, 19 Jun 2014 16:26:40 -0400
-Message-ID: <20140619202640.GA9814@mtj.dyndns.org>
+Subject: [PATCH block/for-linus] blkcg: fix use-after-free in
+ __blkg_release_rcu() by making blkcg_gq refcnt an atomic_t
+Date: Thu, 19 Jun 2014 17:42:57 -0400
+Message-ID: <20140619214257.GE9814@mtj.dyndns.org>
 References: <alpine.DEB.2.02.1406081816540.17948@jlaw-desktop.mno.stratus.com>
  <20140609174708.GA31499@redhat.com>
  <20140609182728.GB31499@redhat.com>
  <20140610143906.0d2f35d0@jlaw-desktop.mno.stratus.com>
  <20140611163229.GA12974@redhat.com>
+ <20140619202640.GA9814@mtj.dyndns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=c95mA25K/lxTl3YwQ9/HqSh9HtBBy2rajttKGhc2GWg=;
-        b=kzKTTY0PiuKN2C9y1ZIcOnCgjWjIQWCREkiqREKCITGqCyT+rH8BIgoB/Wiclp3IOm
-         TG/3iymiqXZyHV0RU/zvgiJFT2vaevktIocTFjsXQFRezxhgm+L3DmhAsKU0YuQZzqyD
-         3ZwkO5pgdw0H23yhcEdr2+4tg0Ycpn0qTSMN00JAo+e6o9FZE5ujgPMS7iquAbwCM4wG
-         h7zeeBxeCMDKFf/st29m+KJLcvQhO5TAocdTPdZ8ablm2zXpPJEbfjfEMZDicGFpaC67
-         wzpqIN5dDv4syxNORJBBi/J3lAQYFcfAcm/j9TjgdrWhFGDDhQLWiEYazwICFTJ0IUpw
-         8oVw==
+        bh=53IDakLoVXFlQtfK+9wQdtqzkhG4O/gqiRGq0W4JUmM=;
+        b=JmRK4vltlrv7ZXxbwpP+Xqy56F0j6agiSgJ5fAkOLtuekkYKwCfcn+feYS7kC7GElB
+         X8pWv19OnY/083zKu3JEvMIJoc9+yFa3YumNh/sX4d8uATxripWfhprrbRFDvVK1SX/E
+         WmYfx7MBMp72AqFKNr2NwPUUlQTNx1UkJfE6D8Ai3nzFotu1qFL/3/4lKKufXPVT2TpC
+         4EScjCh43Hfk7yqvtWdjdlPWtGXlWsS0gPnKgi972KlJN+h05JaSfriaenPl0U4zuVMh
+         zK+4bwQJQm6UFPiRqrtlFdBnJwcDWLKKSdi+Lmkgz8OL3zEoqa9CK98jdYUd503QY/SR
+         1qPA==
 Content-Disposition: inline
-In-Reply-To: <20140611163229.GA12974-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20140619202640.GA9814-9pTldWuhBndy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Joe Lawrence <joe.lawrence-7+ureL1bLXNBDgjK7y7TUQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Joe Lawrence <joe.lawrence-7+ureL1bLXNBDgjK7y7TUQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Sorry about the late reply.
+Hello,
 
-On Wed, Jun 11, 2014 at 12:32:29PM -0400, Vivek Goyal wrote:
-> Tejun, any thoughts on how to solve this issue. Delaying blkg release
-> in rcu context and then expecting queue to be still present is causing
-> this problem.
+So, this patch should do.  Joe, Vivek, can one of you guys please
+verify that the oops goes away with this patch?
 
-Heh, this is hilarious.  If you look at the comment right above
-__blkg_release_rcu(), it says
+Jens, the original thread can be read at
 
- * A group is RCU protected, but having an rcu lock does not mean that one
- * can access all the fields of blkg and assume these are valid.  For
- * example, don't try to follow throtl_data and request queue links.
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  http://thread.gmane.org/gmane.linux.kernel/1720729
 
-And yet the code brazenly derefs the ->q link to access the lock there
-and causes oops.  This is from 2a4fd070ee85 ("blkcg: move bulk of
-blkcg_gq release operations to the RCU callback").  I stupidly didn't
-realize what I was doing even while moving the comment itself.
+The fix converts blkg->refcnt from int to atomic_t.  It does some
+overhead but it should be minute compared to everything else which is
+going on and the involved cacheline bouncing, so I think it's highly
+unlikely to cause any noticeable difference.  Also, the refcnt in
+question should be converted to a perpcu_ref for blk-mq anyway, so the
+atomic_t is likely to go away pretty soon anyway.
 
-Well, the obvious solution is making blkg ref an atomic.  I was
-planning to convert it to percpu_ref anyway.  We can first convert it
-to atomic_t for -stable and then to percpu_ref.  Will prep a patch.
+Thanks.
 
-Thanks for tracking it down!
+------- 8< -------
+__blkg_release_rcu() may be invoked after the associated request_queue
+is released with a RCU grace period inbetween.  As such, the function
+and callbacks invoked from it must not dereference the associated
+request_queue.  This is clearly indicated in the comment above the
+function.
 
--- 
-tejun
+Unfortunately, while trying to fix a different issue, 2a4fd070ee85
+("blkcg: move bulk of blkcg_gq release operations to the RCU
+callback") ignored this and added [un]locking of @blkg->q->queue_lock
+to __blkg_release_rcu().  This of course can cause oops as the
+request_queue may be long gone by the time this code gets executed.
+
+  general protection fault: 0000 [#1] SMP
+  CPU: 21 PID: 30 Comm: rcuos/21 Not tainted 3.15.0 #1
+  Hardware name: Stratus ftServer 6400/G7LAZ, BIOS BIOS Version 6.3:57 12/25/2013
+  task: ffff880854021de0 ti: ffff88085403c000 task.ti: ffff88085403c000
+  RIP: 0010:[<ffffffff8162e9e5>]  [<ffffffff8162e9e5>] _raw_spin_lock_irq+0x15/0x60
+  RSP: 0018:ffff88085403fdf0  EFLAGS: 00010086
+  RAX: 0000000000020000 RBX: 0000000000000010 RCX: 0000000000000000
+  RDX: 000060ef80008248 RSI: 0000000000000286 RDI: 6b6b6b6b6b6b6b6b
+  RBP: ffff88085403fdf0 R08: 0000000000000286 R09: 0000000000009f39
+  R10: 0000000000020001 R11: 0000000000020001 R12: ffff88103c17a130
+  R13: ffff88103c17a080 R14: 0000000000000000 R15: 0000000000000000
+  FS:  0000000000000000(0000) GS:ffff88107fca0000(0000) knlGS:0000000000000000
+  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+  CR2: 00000000006e5ab8 CR3: 000000000193d000 CR4: 00000000000407e0
+  Stack:
+   ffff88085403fe18 ffffffff812cbfc2 ffff88103c17a130 0000000000000000
+   ffff88103c17a130 ffff88085403fec0 ffffffff810d1d28 ffff880854021de0
+   ffff880854021de0 ffff88107fcaec58 ffff88085403fe80 ffff88107fcaec30
+  Call Trace:
+   [<ffffffff812cbfc2>] __blkg_release_rcu+0x72/0x150
+   [<ffffffff810d1d28>] rcu_nocb_kthread+0x1e8/0x300
+   [<ffffffff81091d81>] kthread+0xe1/0x100
+   [<ffffffff8163813c>] ret_from_fork+0x7c/0xb0
+  Code: ff 47 04 48 8b 7d 08 be 00 02 00 00 e8 55 48 a4 ff 5d c3 0f 1f 00 66 66 66 66 90 55 48 89 e5
+  +fa 66 66 90 66 66 90 b8 00 00 02 00 <f0> 0f c1 07 89 c2 c1 ea 10 66 39 c2 75 02 5d c3 83 e2 fe 0f
+  +b7
+  RIP  [<ffffffff8162e9e5>] _raw_spin_lock_irq+0x15/0x60
+   RSP <ffff88085403fdf0>
+
+The request_queue locking was added because blkcg_gq->refcnt is an int
+protected with the queue lock and __blkg_release_rcu() needs to put
+the parent.  Let's fix it by making blkcg_gq->refcnt an atomic_t and
+dropping queue locking in the function.
+
+Given the general heavy weight of the current request_queue and blkcg
+operations, this is unlikely to cause any noticeable overhead.
+Moreover, blkcg_gq->refcnt is likely to be converted to percpu_ref in
+the near future, so whatever (most likely negligible) overhead it may
+add is temporary.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Reported-by: Joe Lawrence <joe.lawrence-7+ureL1bLXNBDgjK7y7TUQ@public.gmane.org>
+Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Link: http://lkml.kernel.org/g/alpine.DEB.2.02.1406081816540.17948-ceYW5R1vr2hcrvxNGtJwk767FWEIOpWeVpNB7YpNyf8@public.gmane.org
+Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+---
+ block/blk-cgroup.c |    7 ++-----
+ block/blk-cgroup.h |   17 +++++++----------
+ 2 files changed, 9 insertions(+), 15 deletions(-)
+
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -80,7 +80,7 @@ static struct blkcg_gq *blkg_alloc(struc
+ 	blkg->q = q;
+ 	INIT_LIST_HEAD(&blkg->q_node);
+ 	blkg->blkcg = blkcg;
+-	blkg->refcnt = 1;
++	atomic_set(&blkg->refcnt, 1);
+ 
+ 	/* root blkg uses @q->root_rl, init rl only for !root blkgs */
+ 	if (blkcg != &blkcg_root) {
+@@ -399,11 +399,8 @@ void __blkg_release_rcu(struct rcu_head
+ 
+ 	/* release the blkcg and parent blkg refs this blkg has been holding */
+ 	css_put(&blkg->blkcg->css);
+-	if (blkg->parent) {
+-		spin_lock_irq(blkg->q->queue_lock);
++	if (blkg->parent)
+ 		blkg_put(blkg->parent);
+-		spin_unlock_irq(blkg->q->queue_lock);
+-	}
+ 
+ 	blkg_free(blkg);
+ }
+--- a/block/blk-cgroup.h
++++ b/block/blk-cgroup.h
+@@ -18,6 +18,7 @@
+ #include <linux/seq_file.h>
+ #include <linux/radix-tree.h>
+ #include <linux/blkdev.h>
++#include <linux/atomic.h>
+ 
+ /* Max limits for throttle policy */
+ #define THROTL_IOPS_MAX		UINT_MAX
+@@ -104,7 +105,7 @@ struct blkcg_gq {
+ 	struct request_list		rl;
+ 
+ 	/* reference count */
+-	int				refcnt;
++	atomic_t			refcnt;
+ 
+ 	/* is this blkg online? protected by both blkcg and q locks */
+ 	bool				online;
+@@ -257,13 +258,12 @@ static inline int blkg_path(struct blkcg
+  * blkg_get - get a blkg reference
+  * @blkg: blkg to get
+  *
+- * The caller should be holding queue_lock and an existing reference.
++ * The caller should be holding an existing reference.
+  */
+ static inline void blkg_get(struct blkcg_gq *blkg)
+ {
+-	lockdep_assert_held(blkg->q->queue_lock);
+-	WARN_ON_ONCE(!blkg->refcnt);
+-	blkg->refcnt++;
++	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
++	atomic_inc(&blkg->refcnt);
+ }
+ 
+ void __blkg_release_rcu(struct rcu_head *rcu);
+@@ -271,14 +271,11 @@ void __blkg_release_rcu(struct rcu_head
+ /**
+  * blkg_put - put a blkg reference
+  * @blkg: blkg to put
+- *
+- * The caller should be holding queue_lock.
+  */
+ static inline void blkg_put(struct blkcg_gq *blkg)
+ {
+-	lockdep_assert_held(blkg->q->queue_lock);
+-	WARN_ON_ONCE(blkg->refcnt <= 0);
+-	if (!--blkg->refcnt)
++	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
++	if (atomic_dec_and_test(&blkg->refcnt))
+ 		call_rcu(&blkg->rcu_head, __blkg_release_rcu);
+ }
+ 
