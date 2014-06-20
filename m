@@ -1,189 +1,50 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: Re: [PATCH block/for-linus] blkcg: fix use-after-free in
- __blkg_release_rcu() by making blkcg_gq refcnt an atomic_t
-Date: Fri, 20 Jun 2014 14:50:02 -0400
-Message-ID: <20140620145002.1d5d2b78@jlaw-desktop.mno.stratus.com>
-References: <alpine.DEB.2.02.1406081816540.17948@jlaw-desktop.mno.stratus.com>
-	<20140609174708.GA31499@redhat.com>
-	<20140609182728.GB31499@redhat.com>
-	<20140610143906.0d2f35d0@jlaw-desktop.mno.stratus.com>
-	<20140611163229.GA12974@redhat.com>
-	<20140619202640.GA9814@mtj.dyndns.org>
-	<20140619214257.GE9814@mtj.dyndns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 3/5] cgroup: fix mount failure in a corner case
+Date: Fri, 20 Jun 2014 15:10:25 -0400
+Message-ID: <20140620191025.GA28324@mtj.dyndns.org>
+References: <53994943.60703@huawei.com>
+ <5399496D.6060003@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140619214257.GE9814@mtj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=Htw72IC0nAcEaFbrlMvHkFYeGvmsnZ+LTcGin7kmmEI=;
+        b=MKBQnoMFxrwqjafg3Rs0dVCE+2VeQGXuk+xw76D57e4Uq0rXI4vkX2AXGlEt/j4Q8S
+         32FSfhP65LWk3OoIDz8qvLJls9l6PziVW1tUtpWO/u0WASwdheO8lol+wOpUQeYIgJjX
+         hMQ7Os2v1CHs2dMB1EbeVBvYjG6CuJ697ZrUiDVKwlMnyGSWpsJEaTHIg0nXmpKxUG7U
+         1iudDavJKJ9k1pb8lAtnuwsgt4q5i+xYgMrwie5jKd3kQM9QLOg63GZRyAweqIAMhlzY
+         HmgjfP7kYDtSGCeKAxb0tvoVBacw14qdSoouPy7eIj7J7qFrrNVn1elM5iI7ySQ+1vlM
+         ONMQ==
+Content-Disposition: inline
+In-Reply-To: <5399496D.6060003-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, Cgroups <cgroups@vger.kernel.org>, Vivek Goyal <vgoyal@redhat.com>
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Thu, 19 Jun 2014 17:42:57 -0400
-Tejun Heo <tj@kernel.org> wrote:
+On Thu, Jun 12, 2014 at 02:32:13PM +0800, Li Zefan wrote:
+> @@ -1677,6 +1679,22 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+>  		goto out_unlock;
+>  	}
+>  
+> +	/*
+> +	 * If some subsystems have been bound to existing cgroup hierarchies,
+> +	 * but those hierachies are being destroyed, let's wait a little bit
+> +	 * and retry.
+> +	 */
+> +	for_each_subsys(ss, i) {
+> +		if (!(opts.subsys_mask & (1 << i)))
+> +			continue;
+> +		if (!percpu_ref_alive(&ss->root->cgrp.self.refcnt)) {
 
-> Hello,
-> 
-> So, this patch should do.  Joe, Vivek, can one of you guys please
-> verify that the oops goes away with this patch?
+Can't we just do tryget_live() instead and then put before retrying?
+It's not exactly a hot path and the operations are dirt cheap anyway.
 
-Tejun -- thanks for fixing!  Looks good here, no issues running w/slub
-debug enabled.
+Thanks.
 
--- Joe
-
-
-> Jens, the original thread can be read at
-> 
->   http://thread.gmane.org/gmane.linux.kernel/1720729
-> 
-> The fix converts blkg->refcnt from int to atomic_t.  It does some
-> overhead but it should be minute compared to everything else which is
-> going on and the involved cacheline bouncing, so I think it's highly
-> unlikely to cause any noticeable difference.  Also, the refcnt in
-> question should be converted to a perpcu_ref for blk-mq anyway, so the
-> atomic_t is likely to go away pretty soon anyway.
-> 
-> Thanks.
-> 
-> ------- 8< -------
-> __blkg_release_rcu() may be invoked after the associated request_queue
-> is released with a RCU grace period inbetween.  As such, the function
-> and callbacks invoked from it must not dereference the associated
-> request_queue.  This is clearly indicated in the comment above the
-> function.
-> 
-> Unfortunately, while trying to fix a different issue, 2a4fd070ee85
-> ("blkcg: move bulk of blkcg_gq release operations to the RCU
-> callback") ignored this and added [un]locking of @blkg->q->queue_lock
-> to __blkg_release_rcu().  This of course can cause oops as the
-> request_queue may be long gone by the time this code gets executed.
-> 
->   general protection fault: 0000 [#1] SMP
->   CPU: 21 PID: 30 Comm: rcuos/21 Not tainted 3.15.0 #1
->   Hardware name: Stratus ftServer 6400/G7LAZ, BIOS BIOS Version 6.3:57 12/25/2013
->   task: ffff880854021de0 ti: ffff88085403c000 task.ti: ffff88085403c000
->   RIP: 0010:[<ffffffff8162e9e5>]  [<ffffffff8162e9e5>] _raw_spin_lock_irq+0x15/0x60
->   RSP: 0018:ffff88085403fdf0  EFLAGS: 00010086
->   RAX: 0000000000020000 RBX: 0000000000000010 RCX: 0000000000000000
->   RDX: 000060ef80008248 RSI: 0000000000000286 RDI: 6b6b6b6b6b6b6b6b
->   RBP: ffff88085403fdf0 R08: 0000000000000286 R09: 0000000000009f39
->   R10: 0000000000020001 R11: 0000000000020001 R12: ffff88103c17a130
->   R13: ffff88103c17a080 R14: 0000000000000000 R15: 0000000000000000
->   FS:  0000000000000000(0000) GS:ffff88107fca0000(0000) knlGS:0000000000000000
->   CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->   CR2: 00000000006e5ab8 CR3: 000000000193d000 CR4: 00000000000407e0
->   Stack:
->    ffff88085403fe18 ffffffff812cbfc2 ffff88103c17a130 0000000000000000
->    ffff88103c17a130 ffff88085403fec0 ffffffff810d1d28 ffff880854021de0
->    ffff880854021de0 ffff88107fcaec58 ffff88085403fe80 ffff88107fcaec30
->   Call Trace:
->    [<ffffffff812cbfc2>] __blkg_release_rcu+0x72/0x150
->    [<ffffffff810d1d28>] rcu_nocb_kthread+0x1e8/0x300
->    [<ffffffff81091d81>] kthread+0xe1/0x100
->    [<ffffffff8163813c>] ret_from_fork+0x7c/0xb0
->   Code: ff 47 04 48 8b 7d 08 be 00 02 00 00 e8 55 48 a4 ff 5d c3 0f 1f 00 66 66 66 66 90 55 48 89 e5
->   +fa 66 66 90 66 66 90 b8 00 00 02 00 <f0> 0f c1 07 89 c2 c1 ea 10 66 39 c2 75 02 5d c3 83 e2 fe 0f
->   +b7
->   RIP  [<ffffffff8162e9e5>] _raw_spin_lock_irq+0x15/0x60
->    RSP <ffff88085403fdf0>
-> 
-> The request_queue locking was added because blkcg_gq->refcnt is an int
-> protected with the queue lock and __blkg_release_rcu() needs to put
-> the parent.  Let's fix it by making blkcg_gq->refcnt an atomic_t and
-> dropping queue locking in the function.
-> 
-> Given the general heavy weight of the current request_queue and blkcg
-> operations, this is unlikely to cause any noticeable overhead.
-> Moreover, blkcg_gq->refcnt is likely to be converted to percpu_ref in
-> the near future, so whatever (most likely negligible) overhead it may
-> add is temporary.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Reported-by: Joe Lawrence <joe.lawrence@stratus.com>
-> Cc: Vivek Goyal <vgoyal@redhat.com>
-> Link: http://lkml.kernel.org/g/alpine.DEB.2.02.1406081816540.17948@jlaw-desktop.mno.stratus.com
-> Cc: stable@vger.kernel.org
-> ---
->  block/blk-cgroup.c |    7 ++-----
->  block/blk-cgroup.h |   17 +++++++----------
->  2 files changed, 9 insertions(+), 15 deletions(-)
-> 
-> --- a/block/blk-cgroup.c
-> +++ b/block/blk-cgroup.c
-> @@ -80,7 +80,7 @@ static struct blkcg_gq *blkg_alloc(struc
->  	blkg->q = q;
->  	INIT_LIST_HEAD(&blkg->q_node);
->  	blkg->blkcg = blkcg;
-> -	blkg->refcnt = 1;
-> +	atomic_set(&blkg->refcnt, 1);
->  
->  	/* root blkg uses @q->root_rl, init rl only for !root blkgs */
->  	if (blkcg != &blkcg_root) {
-> @@ -399,11 +399,8 @@ void __blkg_release_rcu(struct rcu_head
->  
->  	/* release the blkcg and parent blkg refs this blkg has been holding */
->  	css_put(&blkg->blkcg->css);
-> -	if (blkg->parent) {
-> -		spin_lock_irq(blkg->q->queue_lock);
-> +	if (blkg->parent)
->  		blkg_put(blkg->parent);
-> -		spin_unlock_irq(blkg->q->queue_lock);
-> -	}
->  
->  	blkg_free(blkg);
->  }
-> --- a/block/blk-cgroup.h
-> +++ b/block/blk-cgroup.h
-> @@ -18,6 +18,7 @@
->  #include <linux/seq_file.h>
->  #include <linux/radix-tree.h>
->  #include <linux/blkdev.h>
-> +#include <linux/atomic.h>
->  
->  /* Max limits for throttle policy */
->  #define THROTL_IOPS_MAX		UINT_MAX
-> @@ -104,7 +105,7 @@ struct blkcg_gq {
->  	struct request_list		rl;
->  
->  	/* reference count */
-> -	int				refcnt;
-> +	atomic_t			refcnt;
->  
->  	/* is this blkg online? protected by both blkcg and q locks */
->  	bool				online;
-> @@ -257,13 +258,12 @@ static inline int blkg_path(struct blkcg
->   * blkg_get - get a blkg reference
->   * @blkg: blkg to get
->   *
-> - * The caller should be holding queue_lock and an existing reference.
-> + * The caller should be holding an existing reference.
->   */
->  static inline void blkg_get(struct blkcg_gq *blkg)
->  {
-> -	lockdep_assert_held(blkg->q->queue_lock);
-> -	WARN_ON_ONCE(!blkg->refcnt);
-> -	blkg->refcnt++;
-> +	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
-> +	atomic_inc(&blkg->refcnt);
->  }
->  
->  void __blkg_release_rcu(struct rcu_head *rcu);
-> @@ -271,14 +271,11 @@ void __blkg_release_rcu(struct rcu_head
->  /**
->   * blkg_put - put a blkg reference
->   * @blkg: blkg to put
-> - *
-> - * The caller should be holding queue_lock.
->   */
->  static inline void blkg_put(struct blkcg_gq *blkg)
->  {
-> -	lockdep_assert_held(blkg->q->queue_lock);
-> -	WARN_ON_ONCE(blkg->refcnt <= 0);
-> -	if (!--blkg->refcnt)
-> +	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
-> +	if (atomic_dec_and_test(&blkg->refcnt))
->  		call_rcu(&blkg->rcu_head, __blkg_release_rcu);
->  }
->  
+-- 
+tejun
