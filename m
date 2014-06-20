@@ -1,68 +1,74 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 5/5] cgroup: fix a race between cgroup_mount() and
- cgroup_kill_sb()
-Date: Fri, 20 Jun 2014 15:35:21 -0400
-Message-ID: <20140620193521.GB28324@mtj.dyndns.org>
-References: <53994943.60703@huawei.com>
- <539949A1.90301@huawei.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] mm/mempolicy: fix sleeping function called from invalid
+ context
+Date: Fri, 20 Jun 2014 17:01:37 -0400
+Message-ID: <20140620210137.GA2059@mtj.dyndns.org>
+References: <53902A44.50005@cn.fujitsu.com>
+ <20140605132339.ddf6df4a0cf5c14d17eb8691@linux-foundation.org>
+ <539192F1.7050308@cn.fujitsu.com>
+ <alpine.DEB.2.02.1406081539140.21744@chino.kir.corp.google.com>
+ <539574F1.2060701@cn.fujitsu.com>
+ <alpine.DEB.2.02.1406090209460.24247@chino.kir.corp.google.com>
+ <53967465.7070908@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=fdnOjmCrQmLmoFb7vj9UNHVEIZ8JAL25yre4RPpm3Eo=;
-        b=fygF9nzBiWp/NflOdO9SW+UhiCxKsOYT20wbBfiimQSu3HVWs+YUabiG7vTI8SBtk+
-         b4/lDuXWULBVHGi41xKP2pAU6sDyGs+hc1jVdf0PR6ka9rw6Xf4FA4vai2Ybr96ckN1a
-         6WEiAAqlqro0HuOVoB8pp32ucXqxhfNLHKoqDQr3lZgPsef8pkstwX4urzeG0Fu3CbLd
-         rQwHRQsLeO2G/xLgq5vg69DVmsPcu/Rfeg6qg/RlAryrjoVs3AMNbm1+89aIh83jZN/G
-         I0VA1/8Hxs17EM4ddlL4q0vMpi0BcjNrYS04+NXfu6hi9LY9oKpmkLfuJKWZbGOrNcaP
-         leMQ==
+        bh=g4Ny76HiT475upywSE7A56amUdbjPyO2JjiGY8XDvx4=;
+        b=HDAlIkrXljbrdj9Zwxb3qBa4s2xxsbE1QOqbdvLR++H0fQUEpaTovdwvIUWI7DzQWK
+         t1RS39jehbOH2ZZcszw57NPkoCkYf2S3B3QP/2lVm1w+iCB77w7sFQuN0EMev1aCBJmk
+         dgLbnHqWbzXQFpL4Jk3egqjtEjEjPiqDMD2mucbeht4jYvCLzdruZFXYKEDKtdKpr9cH
+         miU/k8BIsmSAuICDpQFfTqgkEzF5xD4IF0LVtJu8vxZkTO6mJ9resP66BYITlEUP0M1A
+         jCQti5RAcucHv/mhPU0IVOX53o0oAbeu5+4YJcGmCF+O5/YONPPiuRqgZ99pPO/+HNqH
+         BF3A==
 Content-Disposition: inline
-In-Reply-To: <539949A1.90301-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <53967465.7070908@huawei.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Li Zefan <lizefan@huawei.com>
+Cc: David Rientjes <rientjes@google.com>, Gu Zheng <guz.fnst@cn.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, Cgroups <cgroups@vger.kernel.org>, stable@vger.kernel.org
 
 Hello, Li.
 
 Sorry about the long delay.
 
-On Thu, Jun 12, 2014 at 02:33:05PM +0800, Li Zefan wrote:
-> We've converted cgroup to kernfs so cgroup won't be intertwined with
-> vfs objects and locking, but there are dark areas.
+On Tue, Jun 10, 2014 at 10:58:45AM +0800, Li Zefan wrote:
+> Yes, this is a long-standing issue. Besides the race you described, the child
+> task's mems_allowed can be wrong if the cpuset's nodemask changes before the
+> child has been added to the cgroup's tasklist.
 > 
-> Run two instances of this script concurrently:
-> 
->     for ((; ;))
->     {
->     	mount -t cgroup -o cpuacct xxx /cgroup
->     	umount /cgroup
->     }
-> 
-> After a while, I saw two mount processes were stuck at retrying, because
-> they were waiting for a subsystem to become free, but the root associated
-> with this subsystem never got freed.
-> 
-> This can happen, if thread A is in the process of killing superblock but
-> hasn't called percpu_ref_kill(), and at this time thread B is mounting
-> the same cgroup root and finds the root in the root list and performs
-> percpu_ref_try_get().
-> 
-> To fix this, we increase the refcnt of the superblock instead of increasing
-> the percpu refcnt of cgroup root.
+> I remember Tejun once said he wanted to disallow task migration between
+> cgroups during fork, and that should fix this problem.
 
-Ah, right.  Gees, I'm really hating the fact that we have ->mount but
-not ->umount.  However, can't we make it a bit simpler by just
-introducing a mutex protecting looking up and refing up an existing
-root and a sb going away?  The only problem is that the refcnt being
-killed isn't atomic w.r.t. new live ref coming up, right?  Why not
-just add a mutex around them so that they can't race?
+I'm having trouble remembering but yeah enforcing stricter behavior
+across fork could be beneficial.  Hmmm... the problem with making
+forks exclusive against migrations is that we'll end up adding more
+locking to the fork path which isn't too nice.
+
+Hmmm... other controllers (cgroup_freezer) can reliably synchronize
+the child's state to the cgroup it belongs to.  Why can't cpuset?  Is
+there something fundamentally missing in the cgroup API?
+
+> > It needs to be slightly rewritten to work properly without negatively 
+> > impacting the latency of fork().  Do you have the cycles to do it?
+> > 
+> 
+> Sounds you have other idea?
+
+I don't think the suggested patch breaks anything more than it was
+broken before and we should probably apply it for the time being.  Li?
 
 Thanks.
 
 -- 
 tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
