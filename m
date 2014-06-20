@@ -1,53 +1,41 @@
-From: Dave Hansen <dave-gkUM19QKKo4@public.gmane.org>
-Subject: Re: [PATCH] cgroup:cgroup_mount: Fix uninitialized warning
-Date: Fri, 20 Jun 2014 08:57:56 -0700
-Message-ID: <CABq-xd3o2rjwKMa2HR9GvDwOHFr-9i1kwjauc0KzeYZNf02scA@mail.gmail.com>
-References: <CABYERD89BtTTJh8j0d0kvCU-xNEy8YJhFaPFr+hjuy5gWQoVNg@mail.gmail.com>
-	<20140419125706.GA3277@htj.dyndns.org>
+From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Subject: Re: [PATCH block/for-linus] blkcg: fix use-after-free in __blkg_release_rcu()
+ by making blkcg_gq refcnt an atomic_t
+Date: Fri, 20 Jun 2014 12:50:53 -0600
+Message-ID: <53A4828D.9000200@kernel.dk>
+References: <alpine.DEB.2.02.1406081816540.17948@jlaw-desktop.mno.stratus.com> <20140609174708.GA31499@redhat.com> <20140609182728.GB31499@redhat.com> <20140610143906.0d2f35d0@jlaw-desktop.mno.stratus.com> <20140611163229.GA12974@redhat.com> <20140619202640.GA9814@mtj.dyndns.org> <20140619214257.GE9814@mtj.dyndns.org> <20140620143901.GC7354@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=mime-version:sender:in-reply-to:references:date:message-id:subject
-	:from:to:cc:content-type;
-	bh=9Pn2uQS4GUi7Mbx3/cpkpfeNz3DaoZGtfnaT572p25c=;
-	b=Sau6Q4VSudG2iCBNQaySCcVdTuwSi+mQxHyIkFjk3ReuiP1TLCxXdWuMEmunt17ghq
-	BA0dsH352cAMI15dq3y+3boT+AkGoaCk9+rQqPoOQNPPxrIKtmntVVLLgRXEjbAw09qb
-	RAidEAbCl/L9JKTYqEZbElfHKbfgzYR90AYZm16pr3C7rdnGsMN0KcU5/BWaV6QkwuC4
-	xQ+k9HXD0/CITZWjXw2EqHEt3V/H+tHK71hj7JtCmI/AeEHX9QJLddylV8wpQOseYSS8
-	4VCLKEp37CT9Rbs+ip4lHI1ONJQEZfnlMSazs7p2ddOPrFdstODjqrgma9MWMzlyNJG8
-	Juaw==
-In-Reply-To: <20140419125706.GA3277-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Takeshi Misawa <jeantsuru-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20140620143901.GC7354-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Joe Lawrence <joe.lawrence-7+ureL1bLXNBDgjK7y7TUQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-SSdtIHNlZWluZyB0aGlzIHRvbyBpbiBMaW51cydzIGN1cnJlbnQgdHJlZSAodjMuMTYtcmMxLTEx
-Mi1nODk0ZTU1Mikgd2l0aDoKCmdjYyB2ZXJzaW9uIDQuNi4zIDIwMTIwMzA2IChSZWQgSGF0IDQu
-Ni4zLTIpIChHQ0MpCgoKCk9uIFNhdCwgQXByIDE5LCAyMDE0IGF0IDU6NTcgQU0sIFRlanVuIEhl
-byA8dGpAa2VybmVsLm9yZz4gd3JvdGU6Cgo+IE9uIFNhdCwgQXByIDE5LCAyMDE0IGF0IDA5OjUy
-OjE0UE0gKzA5MDAsIFRha2VzaGkgTWlzYXdhIHdyb3RlOgo+ID4gVGhpcyBwYXRjaCBmaXhlcyB0
-aGUgZm9sbG93aW5nIHdhcm5pbmcuCj4gPgo+ID4ga2VybmVsL2Nncm91cC5jOiBJbiBmdW5jdGlv
-biDigJhjZ3JvdXBfbW91bnTigJk6Cj4gPiBrZXJuZWwvY2dyb3VwLmM6MTYwOToxMzogd2Fybmlu
-Zzog4oCYcm9vdOKAmSBtYXkgYmUgdXNlZCB1bmluaXRpYWxpemVkIGluCj4gdGhpcwo+ID4gZnVu
-Y3Rpb24KPgo+IFdoaWNoIGNvbXBpbGVyIGFyZSB5b3UgdXNpbmc/ICBUaGlzIGlzIGEgc3B1cmlv
-dXMgd2FybmluZyB3aGljaCB0aGUKPiBjb21waWxlciBzaG91bGQgYmUgYWJsZSB0byBhdm9pZCBw
-cmV0dHkgZWFzaWx5Lgo+Cj4gVGhhbmtzLgo+Cj4gLS0KPiB0ZWp1bgo+IC0tCj4gVG8gdW5zdWJz
-Y3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LWtl
-cm5lbCIgaW4KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVs
-Lm9yZwo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFq
-b3Jkb21vLWluZm8uaHRtbAo+IFBsZWFzZSByZWFkIHRoZSBGQVEgYXQgIGh0dHA6Ly93d3cudHV4
-Lm9yZy9sa21sLwo+CgoKCi0tIApEYXZlCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fCkNvbnRhaW5lcnMgbWFpbGluZyBsaXN0CkNvbnRhaW5lcnNAbGlzdHMu
-bGludXgtZm91bmRhdGlvbi5vcmcKaHR0cHM6Ly9saXN0cy5saW51eGZvdW5kYXRpb24ub3JnL21h
-aWxtYW4vbGlzdGluZm8vY29udGFpbmVycw==
+On 06/20/2014 08:39 AM, Vivek Goyal wrote:
+> On Thu, Jun 19, 2014 at 05:42:57PM -0400, Tejun Heo wrote:
+>> Hello,
+>>
+>> So, this patch should do.  Joe, Vivek, can one of you guys please
+>> verify that the oops goes away with this patch?
+> 
+> Hi Tejun,
+> 
+> This patch seems to fix the issue for me. Tried 10 times and no crash.
+> 
+> So now one need to hold queue lock for getting refernce on the group
+> only if caller does not already have a reference and if group has been
+> looked up from some tree/queue etc. I guess only such usage seems to
+> be in blkg_create() where we take a reference on parent after looking
+> it up.
+> 
+> This patch looks good to me.
+> 
+> Acked-by: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+
+Thanks. Tejun, I'll queue this up for this cycle.
+
+-- 
+Jens Axboe
