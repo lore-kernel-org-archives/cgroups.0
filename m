@@ -1,200 +1,235 @@
-From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH block/for-linus] blkcg: fix use-after-free in
- __blkg_release_rcu() by making blkcg_gq refcnt an atomic_t
-Date: Fri, 20 Jun 2014 10:39:01 -0400
-Message-ID: <20140620143901.GC7354@redhat.com>
-References: <alpine.DEB.2.02.1406081816540.17948@jlaw-desktop.mno.stratus.com>
- <20140609174708.GA31499@redhat.com>
- <20140609182728.GB31499@redhat.com>
- <20140610143906.0d2f35d0@jlaw-desktop.mno.stratus.com>
- <20140611163229.GA12974@redhat.com>
- <20140619202640.GA9814@mtj.dyndns.org>
- <20140619214257.GE9814@mtj.dyndns.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [memcontrol] WARNING: CPU: 0 PID: 1 at kernel/res_counter.c:28
+ res_counter_uncharge_locked()
+Date: Fri, 20 Jun 2014 11:42:10 -0400
+Message-ID: <20140620154209.GI7331@cmpxchg.org>
+References: <20140620102704.GA8912@localhost>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=28r7pL4BzJj/YnlmMG+nHgPTOYaFVgK5r9nqQNPMnlY=;
+	b=p+L9/N81X+r9saNBX8sKsKPmRa2QvXNdJIwd120EiRdXdPA6CG6/eYbHjXp7qNqq/sp6s7Blrb13ooySNgnAtLyM1orgDNEr8R9J4GPhs+gSD/Fkrf/AlRkht3kBuNcvBzNvjyPX5tGacpPcF+MJY9hkDPZmDCvCBI6nTz1DpoU=;
 Content-Disposition: inline
-In-Reply-To: <20140619214257.GE9814-9pTldWuhBndy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20140620102704.GA8912@localhost>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Joe Lawrence <joe.lawrence-7+ureL1bLXNBDgjK7y7TUQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Fengguang Wu <fengguang.wu@intel.com>, Jet Chen <jet.chen@intel.com>, Yuanhan Liu <yuanhan.liu@intel.com>, LKP <lkp@01.org>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, Jun 19, 2014 at 05:42:57PM -0400, Tejun Heo wrote:
-> Hello,
+On Fri, Jun 20, 2014 at 06:27:04PM +0800, Fengguang Wu wrote:
+> Greetings,
 > 
-> So, this patch should do.  Joe, Vivek, can one of you guys please
-> verify that the oops goes away with this patch?
+> 0day kernel testing robot got the below dmesg and the first bad commit is
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
 
-Hi Tejun,
+Thanks for the bisect.
 
-This patch seems to fix the issue for me. Tried 10 times and no crash.
+> commit ddc5bfec501f4be3f9e89084c2db270c0c45d1d6
+> Author:     Johannes Weiner <hannes@cmpxchg.org>
+> AuthorDate: Fri Jun 20 10:27:58 2014 +1000
+> Commit:     Stephen Rothwell <sfr@canb.auug.org.au>
+> CommitDate: Fri Jun 20 10:27:58 2014 +1000
+> 
+>     mm: memcontrol: rewrite uncharge API
+>     
+>     The memcg uncharging code that is involved towards the end of a page's
+>     lifetime - truncation, reclaim, swapout, migration - is impressively
+>     complicated and fragile.
+>     
+>     Because anonymous and file pages were always charged before they had their
+>     page->mapping established, uncharges had to happen when the page type
+>     could still be known from the context; as in unmap for anonymous, page
+>     cache removal for file and shmem pages, and swap cache truncation for swap
+>     pages.  However, these operations happen well before the page is actually
+>     freed, and so a lot of synchronization is necessary:
+>     
+>     - Charging, uncharging, page migration, and charge migration all need
+>       to take a per-page bit spinlock as they could race with uncharging.
+>     
+>     - Swap cache truncation happens during both swap-in and swap-out, and
+>       possibly repeatedly before the page is actually freed.  This means
+>       that the memcg swapout code is called from many contexts that make
+>       no sense and it has to figure out the direction from page state to
+>       make sure memory and memory+swap are always correctly charged.
+>     
+>     - On page migration, the old page might be unmapped but then reused,
+>       so memcg code has to prevent untimely uncharging in that case.
+>       Because this code - which should be a simple charge transfer - is so
+>       special-cased, it is not reusable for replace_page_cache().
+>     
+>     But now that charged pages always have a page->mapping, introduce
+>     mem_cgroup_uncharge(), which is called after the final put_page(), when we
+>     know for sure that nobody is looking at the page anymore.
+>     
+>     For page migration, introduce mem_cgroup_migrate(), which is called after
+>     the migration is successful and the new page is fully rmapped.  Because
+>     the old page is no longer uncharged after migration, prevent double
+>     charges by decoupling the page's memcg association (PCG_USED and
+>     pc->mem_cgroup) from the page holding an actual charge.  The new bits
+>     PCG_MEM and PCG_MEMSW represent the respective charges and are transferred
+>     to the new page during migration.
+>     
+>     mem_cgroup_migrate() is suitable for replace_page_cache() as well, which
+>     gets rid of mem_cgroup_replace_page_cache().
+>     
+>     Swap accounting is massively simplified: because the page is no longer
+>     uncharged as early as swap cache deletion, a new mem_cgroup_swapout() can
+>     transfer the page's memory+swap charge (PCG_MEMSW) to the swap entry
+>     before the final put_page() in page reclaim.
+>     
+>     Finally, page_cgroup changes are now protected by whatever protection the
+>     page itself offers: anonymous pages are charged under the page table lock,
+>     whereas page cache insertions, swapin, and migration hold the page lock.
+>     Uncharging happens under full exclusion with no outstanding references.
+>     Charging and uncharging also ensure that the page is off-LRU, which
+>     serializes against charge migration.  Remove the very costly page_cgroup
+>     lock and set pc->flags non-atomically.
+>     
+>     Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+>     Cc: Michal Hocko <mhocko@suse.cz>
+>     Cc: Hugh Dickins <hughd@google.com>
+>     Cc: Tejun Heo <tj@kernel.org>
+>     Cc: Vladimir Davydov <vdavydov@parallels.com>
+>     Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> 
+> +-----------------------------------------------------------------------+------------+------------+---------------+
+> |                                                                       | 5b647620c6 | ddc5bfec50 | next-20140620 |
+> +-----------------------------------------------------------------------+------------+------------+---------------+
+> | boot_successes                                                        | 60         | 0          | 0             |
+> | boot_failures                                                         | 0          | 20         | 13            |
+> | WARNING:CPU:PID:at_kernel/res_counter.c:res_counter_uncharge_locked() | 0          | 20         | 13            |
+> | backtrace:vm_munmap                                                   | 0          | 20         | 13            |
+> | backtrace:SyS_munmap                                                  | 0          | 20         | 13            |
+> | backtrace:do_sys_open                                                 | 0          | 20         | 13            |
+> | backtrace:SyS_open                                                    | 0          | 20         | 13            |
+> | backtrace:do_execve                                                   | 0          | 20         | 13            |
+> | backtrace:SyS_execve                                                  | 0          | 20         | 13            |
+> | backtrace:do_group_exit                                               | 0          | 20         | 13            |
+> | backtrace:SyS_exit_group                                              | 0          | 20         | 13            |
+> | backtrace:SYSC_renameat2                                              | 0          | 11         | 8             |
+> | backtrace:SyS_rename                                                  | 0          | 11         | 8             |
+> | backtrace:do_munmap                                                   | 0          | 11         | 8             |
+> | backtrace:SyS_brk                                                     | 0          | 11         | 8             |
+> | Out_of_memory:Kill_process                                            | 0          | 1          |               |
+> | backtrace:do_unlinkat                                                 | 0          | 9          | 5             |
+> | backtrace:SyS_unlink                                                  | 0          | 9          | 5             |
+> | backtrace:SYSC_umount                                                 | 0          | 9          |               |
+> | backtrace:SyS_umount                                                  | 0          | 9          |               |
+> | backtrace:cleanup_mnt_work                                            | 0          | 0          | 5             |
+> +-----------------------------------------------------------------------+------------+------------+---------------+
+> 
+> [    2.747397] debug: unmapping init [mem 0xffff880001a3a000-0xffff880001bfffff]
+> [    2.748630] debug: unmapping init [mem 0xffff8800021ad000-0xffff8800021fffff]
+> [    2.752857] ------------[ cut here ]------------
+> [    2.753355] WARNING: CPU: 0 PID: 1 at kernel/res_counter.c:28 res_counter_uncharge_locked+0x48/0x74()
+> [    2.753355] CPU: 0 PID: 1 Comm: init Not tainted 3.16.0-rc1-00238-gddc5bfe #1
+> [    2.753355] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
+> [    2.753355]  0000000000000000 ffff880012073c50 ffffffff81a23b9d ffff880012073c88
+> [    2.753355]  ffffffff810bc765 ffffffff8111fac8 0000000000001000 ffff88001200fa50
+> [    2.753355]  0000000000000001 ffff88001200fa01 ffff880012073c98 ffffffff810bc84b
+> [    2.753355] Call Trace:
+> [    2.753355]  [<ffffffff81a23b9d>] dump_stack+0x19/0x1b
+> [    2.753355]  [<ffffffff810bc765>] warn_slowpath_common+0x73/0x8c
+> [    2.753355]  [<ffffffff8111fac8>] ? res_counter_uncharge_locked+0x48/0x74
+> [    2.753355]  [<ffffffff810bc84b>] warn_slowpath_null+0x1a/0x1c
+> [    2.753355]  [<ffffffff8111fac8>] res_counter_uncharge_locked+0x48/0x74
+> [    2.753355]  [<ffffffff8111fd02>] res_counter_uncharge_until+0x4e/0xa9
+> [    2.753355]  [<ffffffff8111fd70>] res_counter_uncharge+0x13/0x15
+> [    2.753355]  [<ffffffff8119499c>] mem_cgroup_uncharge_end+0x73/0x8d
+> [    2.753355]  [<ffffffff8115735e>] release_pages+0x1f2/0x20d
+> [    2.753355]  [<ffffffff8116cc3a>] tlb_flush_mmu_free+0x28/0x43
+> [    2.753355]  [<ffffffff8116d5e5>] tlb_flush_mmu+0x20/0x23
+> [    2.753355]  [<ffffffff8116d5fc>] tlb_finish_mmu+0x14/0x39
+> [    2.753355]  [<ffffffff811730c1>] unmap_region+0xcd/0xdf
+> [    2.753355]  [<ffffffff81172b0e>] ? vma_gap_callbacks_propagate+0x18/0x33
+> [    2.753355]  [<ffffffff81174bf1>] do_munmap+0x252/0x2e0
+> [    2.753355]  [<ffffffff81174cc3>] vm_munmap+0x44/0x5c
+> [    2.753355]  [<ffffffff81174cfe>] SyS_munmap+0x23/0x29
+> [    2.753355]  [<ffffffff81a31567>] system_call_fastpath+0x16/0x1b
+> [    2.753355] ---[ end trace cfeb07101f6fbdfb ]---
+> [    2.780913] ------------[ cut here ]------------
 
-So now one need to hold queue lock for getting refernce on the group
-only if caller does not already have a reference and if group has been
-looked up from some tree/queue etc. I guess only such usage seems to
-be in blkg_create() where we take a reference on parent after looking
-it up.
+This is an underflow that happens with memcg enabled but memcg-swap
+disabled - the memsw counter is not accounted, but then unaccounted.
 
-This patch looks good to me.
+Andrew, can you please put this in to fix the uncharge rewrite patch
+mentioned above?
 
-Acked-by: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
 
-Thanks
-Vivek
+From 29bcfcf54494467008aaf9d4e37771d3b2e2c2c7 Mon Sep 17 00:00:00 2001
+From: Johannes Weiner <hannes@cmpxchg.org>
+Date: Fri, 20 Jun 2014 11:09:14 -0400
+Subject: [patch] mm: memcontrol: rewrite uncharge API fix
 
-> 
-> Jens, the original thread can be read at
-> 
->   http://thread.gmane.org/gmane.linux.kernel/1720729
-> 
-> The fix converts blkg->refcnt from int to atomic_t.  It does some
-> overhead but it should be minute compared to everything else which is
-> going on and the involved cacheline bouncing, so I think it's highly
-> unlikely to cause any noticeable difference.  Also, the refcnt in
-> question should be converted to a perpcu_ref for blk-mq anyway, so the
-> atomic_t is likely to go away pretty soon anyway.
-> 
-> Thanks.
-> 
-> ------- 8< -------
-> __blkg_release_rcu() may be invoked after the associated request_queue
-> is released with a RCU grace period inbetween.  As such, the function
-> and callbacks invoked from it must not dereference the associated
-> request_queue.  This is clearly indicated in the comment above the
-> function.
-> 
-> Unfortunately, while trying to fix a different issue, 2a4fd070ee85
-> ("blkcg: move bulk of blkcg_gq release operations to the RCU
-> callback") ignored this and added [un]locking of @blkg->q->queue_lock
-> to __blkg_release_rcu().  This of course can cause oops as the
-> request_queue may be long gone by the time this code gets executed.
-> 
->   general protection fault: 0000 [#1] SMP
->   CPU: 21 PID: 30 Comm: rcuos/21 Not tainted 3.15.0 #1
->   Hardware name: Stratus ftServer 6400/G7LAZ, BIOS BIOS Version 6.3:57 12/25/2013
->   task: ffff880854021de0 ti: ffff88085403c000 task.ti: ffff88085403c000
->   RIP: 0010:[<ffffffff8162e9e5>]  [<ffffffff8162e9e5>] _raw_spin_lock_irq+0x15/0x60
->   RSP: 0018:ffff88085403fdf0  EFLAGS: 00010086
->   RAX: 0000000000020000 RBX: 0000000000000010 RCX: 0000000000000000
->   RDX: 000060ef80008248 RSI: 0000000000000286 RDI: 6b6b6b6b6b6b6b6b
->   RBP: ffff88085403fdf0 R08: 0000000000000286 R09: 0000000000009f39
->   R10: 0000000000020001 R11: 0000000000020001 R12: ffff88103c17a130
->   R13: ffff88103c17a080 R14: 0000000000000000 R15: 0000000000000000
->   FS:  0000000000000000(0000) GS:ffff88107fca0000(0000) knlGS:0000000000000000
->   CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->   CR2: 00000000006e5ab8 CR3: 000000000193d000 CR4: 00000000000407e0
->   Stack:
->    ffff88085403fe18 ffffffff812cbfc2 ffff88103c17a130 0000000000000000
->    ffff88103c17a130 ffff88085403fec0 ffffffff810d1d28 ffff880854021de0
->    ffff880854021de0 ffff88107fcaec58 ffff88085403fe80 ffff88107fcaec30
->   Call Trace:
->    [<ffffffff812cbfc2>] __blkg_release_rcu+0x72/0x150
->    [<ffffffff810d1d28>] rcu_nocb_kthread+0x1e8/0x300
->    [<ffffffff81091d81>] kthread+0xe1/0x100
->    [<ffffffff8163813c>] ret_from_fork+0x7c/0xb0
->   Code: ff 47 04 48 8b 7d 08 be 00 02 00 00 e8 55 48 a4 ff 5d c3 0f 1f 00 66 66 66 66 90 55 48 89 e5
->   +fa 66 66 90 66 66 90 b8 00 00 02 00 <f0> 0f c1 07 89 c2 c1 ea 10 66 39 c2 75 02 5d c3 83 e2 fe 0f
->   +b7
->   RIP  [<ffffffff8162e9e5>] _raw_spin_lock_irq+0x15/0x60
->    RSP <ffff88085403fdf0>
-> 
-> The request_queue locking was added because blkcg_gq->refcnt is an int
-> protected with the queue lock and __blkg_release_rcu() needs to put
-> the parent.  Let's fix it by making blkcg_gq->refcnt an atomic_t and
-> dropping queue locking in the function.
-> 
-> Given the general heavy weight of the current request_queue and blkcg
-> operations, this is unlikely to cause any noticeable overhead.
-> Moreover, blkcg_gq->refcnt is likely to be converted to percpu_ref in
-> the near future, so whatever (most likely negligible) overhead it may
-> add is temporary.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Reported-by: Joe Lawrence <joe.lawrence-7+ureL1bLXNBDgjK7y7TUQ@public.gmane.org>
-> Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Link: http://lkml.kernel.org/g/alpine.DEB.2.02.1406081816540.17948-ceYW5R1vr2hcrvxNGtJwk767FWEIOpWeVpNB7YpNyf8@public.gmane.org
-> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> ---
->  block/blk-cgroup.c |    7 ++-----
->  block/blk-cgroup.h |   17 +++++++----------
->  2 files changed, 9 insertions(+), 15 deletions(-)
-> 
-> --- a/block/blk-cgroup.c
-> +++ b/block/blk-cgroup.c
-> @@ -80,7 +80,7 @@ static struct blkcg_gq *blkg_alloc(struc
->  	blkg->q = q;
->  	INIT_LIST_HEAD(&blkg->q_node);
->  	blkg->blkcg = blkcg;
-> -	blkg->refcnt = 1;
-> +	atomic_set(&blkg->refcnt, 1);
->  
->  	/* root blkg uses @q->root_rl, init rl only for !root blkgs */
->  	if (blkcg != &blkcg_root) {
-> @@ -399,11 +399,8 @@ void __blkg_release_rcu(struct rcu_head
->  
->  	/* release the blkcg and parent blkg refs this blkg has been holding */
->  	css_put(&blkg->blkcg->css);
-> -	if (blkg->parent) {
-> -		spin_lock_irq(blkg->q->queue_lock);
-> +	if (blkg->parent)
->  		blkg_put(blkg->parent);
-> -		spin_unlock_irq(blkg->q->queue_lock);
-> -	}
->  
->  	blkg_free(blkg);
->  }
-> --- a/block/blk-cgroup.h
-> +++ b/block/blk-cgroup.h
-> @@ -18,6 +18,7 @@
->  #include <linux/seq_file.h>
->  #include <linux/radix-tree.h>
->  #include <linux/blkdev.h>
-> +#include <linux/atomic.h>
->  
->  /* Max limits for throttle policy */
->  #define THROTL_IOPS_MAX		UINT_MAX
-> @@ -104,7 +105,7 @@ struct blkcg_gq {
->  	struct request_list		rl;
->  
->  	/* reference count */
-> -	int				refcnt;
-> +	atomic_t			refcnt;
->  
->  	/* is this blkg online? protected by both blkcg and q locks */
->  	bool				online;
-> @@ -257,13 +258,12 @@ static inline int blkg_path(struct blkcg
->   * blkg_get - get a blkg reference
->   * @blkg: blkg to get
->   *
-> - * The caller should be holding queue_lock and an existing reference.
-> + * The caller should be holding an existing reference.
->   */
->  static inline void blkg_get(struct blkcg_gq *blkg)
->  {
-> -	lockdep_assert_held(blkg->q->queue_lock);
-> -	WARN_ON_ONCE(!blkg->refcnt);
-> -	blkg->refcnt++;
-> +	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
-> +	atomic_inc(&blkg->refcnt);
->  }
->  
->  void __blkg_release_rcu(struct rcu_head *rcu);
-> @@ -271,14 +271,11 @@ void __blkg_release_rcu(struct rcu_head
->  /**
->   * blkg_put - put a blkg reference
->   * @blkg: blkg to put
-> - *
-> - * The caller should be holding queue_lock.
->   */
->  static inline void blkg_put(struct blkcg_gq *blkg)
->  {
-> -	lockdep_assert_held(blkg->q->queue_lock);
-> -	WARN_ON_ONCE(blkg->refcnt <= 0);
-> -	if (!--blkg->refcnt)
-> +	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
-> +	if (atomic_dec_and_test(&blkg->refcnt))
->  		call_rcu(&blkg->rcu_head, __blkg_release_rcu);
->  }
->  
+It's not entirely clear whether do_swap_account or PCG_MEMSW is the
+authoritative answer to whether a page is swap-accounted or not.  This
+currently leads to the following memsw counter underflow when swap
+accounting is disabled:
+
+[    2.753355] WARNING: CPU: 0 PID: 1 at kernel/res_counter.c:28 res_counter_uncharge_locked+0x48/0x74()
+[    2.753355] CPU: 0 PID: 1 Comm: init Not tainted 3.16.0-rc1-00238-gddc5bfe #1
+[    2.753355] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
+[    2.753355]  0000000000000000 ffff880012073c50 ffffffff81a23b9d ffff880012073c88
+[    2.753355]  ffffffff810bc765 ffffffff8111fac8 0000000000001000 ffff88001200fa50
+[    2.753355]  0000000000000001 ffff88001200fa01 ffff880012073c98 ffffffff810bc84b
+[    2.753355] Call Trace:
+[    2.753355]  [<ffffffff81a23b9d>] dump_stack+0x19/0x1b
+[    2.753355]  [<ffffffff810bc765>] warn_slowpath_common+0x73/0x8c
+[    2.753355]  [<ffffffff8111fac8>] ? res_counter_uncharge_locked+0x48/0x74
+[    2.753355]  [<ffffffff810bc84b>] warn_slowpath_null+0x1a/0x1c
+[    2.753355]  [<ffffffff8111fac8>] res_counter_uncharge_locked+0x48/0x74
+[    2.753355]  [<ffffffff8111fd02>] res_counter_uncharge_until+0x4e/0xa9
+[    2.753355]  [<ffffffff8111fd70>] res_counter_uncharge+0x13/0x15
+[    2.753355]  [<ffffffff8119499c>] mem_cgroup_uncharge_end+0x73/0x8d
+[    2.753355]  [<ffffffff8115735e>] release_pages+0x1f2/0x20d
+[    2.753355]  [<ffffffff8116cc3a>] tlb_flush_mmu_free+0x28/0x43
+[    2.753355]  [<ffffffff8116d5e5>] tlb_flush_mmu+0x20/0x23
+[    2.753355]  [<ffffffff8116d5fc>] tlb_finish_mmu+0x14/0x39
+[    2.753355]  [<ffffffff811730c1>] unmap_region+0xcd/0xdf
+[    2.753355]  [<ffffffff81172b0e>] ? vma_gap_callbacks_propagate+0x18/0x33
+[    2.753355]  [<ffffffff81174bf1>] do_munmap+0x252/0x2e0
+[    2.753355]  [<ffffffff81174cc3>] vm_munmap+0x44/0x5c
+[    2.753355]  [<ffffffff81174cfe>] SyS_munmap+0x23/0x29
+[    2.753355]  [<ffffffff81a31567>] system_call_fastpath+0x16/0x1b
+[    2.753355] ---[ end trace cfeb07101f6fbdfb ]---
+
+Don't set PCG_MEMSW when swap accounting is disabled, so that
+uncharging only has to look at this per-page flag.
+
+mem_cgroup_swapout() could also fully rely on this flag, but as it can
+bail out before even looking up the page_cgroup, check do_swap_account
+as a performance optimization and only sanity test for PCG_MEMSW.
+
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ mm/memcontrol.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 94d7c40b9f26..d6a20935f9c4 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2740,7 +2740,7 @@ static void commit_charge(struct page *page, struct mem_cgroup *memcg,
+ 	 *   have the page locked
+ 	 */
+ 	pc->mem_cgroup = memcg;
+-	pc->flags = PCG_USED | PCG_MEM | PCG_MEMSW;
++	pc->flags = PCG_USED | PCG_MEM | (do_swap_account ? PCG_MEMSW : 0);
+ 
+ 	if (lrucare) {
+ 		if (was_on_lru) {
+@@ -6598,7 +6598,7 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage,
+ 		return;
+ 
+ 	VM_BUG_ON_PAGE(!(pc->flags & PCG_MEM), oldpage);
+-	VM_BUG_ON_PAGE(!(pc->flags & PCG_MEMSW), oldpage);
++	VM_BUG_ON_PAGE(do_swap_account && !(pc->flags & PCG_MEMSW), oldpage);
+ 	pc->flags &= ~(PCG_MEM | PCG_MEMSW);
+ 
+ 	if (PageTransHuge(oldpage)) {
+-- 
+2.0.0
