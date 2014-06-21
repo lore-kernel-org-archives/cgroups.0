@@ -1,142 +1,87 @@
-From: Sasha Levin <sasha.levin@oracle.com>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Subject: Re: [patch 13/13] mm: memcontrol: rewrite uncharge API
-Date: Fri, 20 Jun 2014 20:34:43 -0400
-Message-ID: <53A4D323.5080808@oracle.com>
-References: <1403124045-24361-1-git-send-email-hannes@cmpxchg.org> <1403124045-24361-14-git-send-email-hannes@cmpxchg.org>
+Date: Fri, 20 Jun 2014 17:56:48 -0700
+Message-ID: <20140620175648.666cae72.akpm@linux-foundation.org>
+References: <1403124045-24361-1-git-send-email-hannes@cmpxchg.org>
+	<1403124045-24361-14-git-send-email-hannes@cmpxchg.org>
+	<53A4D323.5080808@oracle.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1403124045-24361-14-git-send-email-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <53A4D323.5080808-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sasha Levin <sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 06/18/2014 04:40 PM, Johannes Weiner wrote:
-> The memcg uncharging code that is involved towards the end of a page's
-> lifetime - truncation, reclaim, swapout, migration - is impressively
-> complicated and fragile.
-> 
-> Because anonymous and file pages were always charged before they had
-> their page->mapping established, uncharges had to happen when the page
-> type could still be known from the context; as in unmap for anonymous,
-> page cache removal for file and shmem pages, and swap cache truncation
-> for swap pages.  However, these operations happen well before the page
-> is actually freed, and so a lot of synchronization is necessary:
-> 
-> - Charging, uncharging, page migration, and charge migration all need
->   to take a per-page bit spinlock as they could race with uncharging.
-> 
-> - Swap cache truncation happens during both swap-in and swap-out, and
->   possibly repeatedly before the page is actually freed.  This means
->   that the memcg swapout code is called from many contexts that make
->   no sense and it has to figure out the direction from page state to
->   make sure memory and memory+swap are always correctly charged.
-> 
-> - On page migration, the old page might be unmapped but then reused,
->   so memcg code has to prevent untimely uncharging in that case.
->   Because this code - which should be a simple charge transfer - is so
->   special-cased, it is not reusable for replace_page_cache().
-> 
-> But now that charged pages always have a page->mapping, introduce
-> mem_cgroup_uncharge(), which is called after the final put_page(),
-> when we know for sure that nobody is looking at the page anymore.
-> 
-> For page migration, introduce mem_cgroup_migrate(), which is called
-> after the migration is successful and the new page is fully rmapped.
-> Because the old page is no longer uncharged after migration, prevent
-> double charges by decoupling the page's memcg association (PCG_USED
-> and pc->mem_cgroup) from the page holding an actual charge.  The new
-> bits PCG_MEM and PCG_MEMSW represent the respective charges and are
-> transferred to the new page during migration.
-> 
-> mem_cgroup_migrate() is suitable for replace_page_cache() as well,
-> which gets rid of mem_cgroup_replace_page_cache().
-> 
-> Swap accounting is massively simplified: because the page is no longer
-> uncharged as early as swap cache deletion, a new mem_cgroup_swapout()
-> can transfer the page's memory+swap charge (PCG_MEMSW) to the swap
-> entry before the final put_page() in page reclaim.
-> 
-> Finally, page_cgroup changes are now protected by whatever protection
-> the page itself offers: anonymous pages are charged under the page
-> table lock, whereas page cache insertions, swapin, and migration hold
-> the page lock.  Uncharging happens under full exclusion with no
-> outstanding references.  Charging and uncharging also ensure that the
-> page is off-LRU, which serializes against charge migration.  Remove
-> the very costly page_cgroup lock and set pc->flags non-atomically.
-> 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+On Fri, 20 Jun 2014 20:34:43 -0400 Sasha Levin <sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> wrote:
 
-Hi Johannes,
+> I'm seeing the following when booting a VM, bisection pointed me to this
+> patch.
+> 
+> [   32.830823] BUG: using __this_cpu_add() in preemptible [00000000] code: mkdir/8677
 
-I'm seeing the following when booting a VM, bisection pointed me to this
-patch.
+Thanks.  This one was fixed earlier today.
 
-[   32.830823] BUG: using __this_cpu_add() in preemptible [00000000] code: mkdir/8677
-[   32.831522] caller is __this_cpu_preempt_check+0x13/0x20
-[   32.832079] CPU: 35 PID: 8677 Comm: mkdir Not tainted 3.16.0-rc1-next-20140620-sasha-00023-g8fc12ed #700
-[   32.832898]  ffffffffb27ea69d ffff8800cb91b618 ffffffffb151820b 0000000000000002
-[   32.833607]  0000000000000023 ffff8800cb91b648 ffffffffaeb4c799 ffff88006efa5b60
-[   32.834318]  ffffea0007cff9c0 0000000000000001 0000000000000001 ffff8800cb91b658
-[   32.835030] Call Trace:
-[   32.835257] dump_stack (lib/dump_stack.c:52)
-[   32.835755] check_preemption_disabled (./arch/x86/include/asm/preempt.h:80 lib/smp_processor_id.c:49)
-[   32.836336] __this_cpu_preempt_check (lib/smp_processor_id.c:63)
-[   32.836991] mem_cgroup_charge_statistics.isra.23 (mm/memcontrol.c:930)
-[   32.837682] commit_charge (mm/memcontrol.c:2761)
-[   32.838187] ? _raw_spin_unlock_irq (./arch/x86/include/asm/paravirt.h:819 include/linux/spinlock_api_smp.h:168 kernel/locking/spinlock.c:199)
-[   32.838735] ? get_parent_ip (kernel/sched/core.c:2546)
-[   32.839230] mem_cgroup_commit_charge (mm/memcontrol.c:6519)
-[   32.839807] __add_to_page_cache_locked (mm/filemap.c:588 include/linux/jump_label.h:115 include/trace/events/filemap.h:50 mm/filemap.c:589)
-[   32.840479] add_to_page_cache_lru (mm/filemap.c:627)
-[   32.841048] read_cache_pages (mm/readahead.c:92)
-[   32.841560] ? v9fs_cache_session_get_key (fs/9p/cache.c:306)
-[   32.842145] ? v9fs_write_begin (fs/9p/vfs_addr.c:99)
-[   32.842694] v9fs_vfs_readpages (fs/9p/vfs_addr.c:127)
-[   32.843251] __do_page_cache_readahead (mm/readahead.c:123 mm/readahead.c:200)
-[   32.843848] ? __do_page_cache_readahead (include/linux/rcupdate.h:877 mm/readahead.c:178)
-[   32.844435] ? __const_udelay (arch/x86/lib/delay.c:126)
-[   32.844944] filemap_fault (include/linux/memcontrol.h:141 include/linux/memcontrol.h:198 mm/filemap.c:1869)
-[   32.845465] ? __rcu_read_unlock (kernel/rcu/update.c:97)
-[   32.845999] __do_fault (mm/memory.c:2705)
-[   32.846472] ? mem_cgroup_try_charge (include/linux/cgroup.h:158 mm/memcontrol.c:6467)
-[   32.847048] do_cow_fault (mm/memory.c:2936)
-[   32.847561] __handle_mm_fault (mm/memory.c:3078 mm/memory.c:3205 mm/memory.c:3322)
-[   32.848092] ? __const_udelay (arch/x86/lib/delay.c:126)
-[   32.848596] ? __rcu_read_unlock (kernel/rcu/update.c:97)
-[   32.849157] handle_mm_fault (mm/memory.c:3345)
-[   32.849665] __do_page_fault (arch/x86/mm/fault.c:1230)
-[   32.850239] ? kvm_clock_read (./arch/x86/include/asm/preempt.h:90 arch/x86/kernel/kvmclock.c:86)
-[   32.850963] ? sched_clock (./arch/x86/include/asm/paravirt.h:192 arch/x86/kernel/tsc.c:305)
-[   32.851442] ? sched_clock_local (kernel/sched/clock.c:214)
-[   32.852034] ? context_tracking_user_exit (kernel/context_tracking.c:184)
-[   32.852669] ? __this_cpu_preempt_check (lib/smp_processor_id.c:63)
-[   32.853243] ? trace_hardirqs_off_caller (kernel/locking/lockdep.c:2638 (discriminator 2))
-[   32.853854] trace_do_page_fault (arch/x86/mm/fault.c:1313 include/linux/jump_label.h:115 include/linux/context_tracking_state.h:27 include/linux/context_tracking.h:45 arch/x86/mm/fault.c:1314)
-[   32.854393] do_async_page_fault (arch/x86/kernel/kvm.c:264)
-[   32.854924] async_page_fault (arch/x86/kernel/entry_64.S:1322)
-[   32.855507] ? __clear_user (arch/x86/lib/usercopy_64.c:22)
-[   32.855999] ? __clear_user (arch/x86/lib/usercopy_64.c:18 arch/x86/lib/usercopy_64.c:21)
-[   32.856488] clear_user (arch/x86/lib/usercopy_64.c:54)
-[   32.856997] padzero (fs/binfmt_elf.c:122)
-[   32.857440] load_elf_binary (fs/binfmt_elf.c:909 (discriminator 1))
-[   32.857949] ? search_binary_handler (fs/exec.c:1374)
-[   32.858550] ? preempt_count_sub (kernel/sched/core.c:2602)
-[   32.859089] search_binary_handler (fs/exec.c:1375)
-[   32.859654] do_execve_common.isra.19 (fs/exec.c:1412 fs/exec.c:1508)
-[   32.860319] ? do_execve_common.isra.19 (./arch/x86/include/asm/current.h:14 fs/exec.c:1406 fs/exec.c:1508)
-[   32.860949] do_execve (fs/exec.c:1551)
-[   32.861390] SyS_execve (fs/exec.c:1602)
-[   32.861848] stub_execve (arch/x86/kernel/entry_64.S:662)
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: memcg: mem_cgroup_charge_statistics needs preempt_disable
 
+preempt_disable was previously disabled by lock_page_cgroup which has been
+removed by "mm: memcontrol: rewrite uncharge API".
 
-Thanks,
-Sasha
+This fixes the a flood of splats like this:
+[    3.149371] BUG: using __this_cpu_add() in preemptible [00000000] code: udevd/1271
+[    3.151458] caller is __this_cpu_preempt_check+0x13/0x15
+[    3.152927] CPU: 0 PID: 1271 Comm: udevd Not tainted 3.15.0-test1 #366
+[    3.154637] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+[    3.156788]  0000000000000000 ffff88000005fba8 ffffffff814efe3f 0000000000000000
+[    3.158810]  ffff88000005fbd8 ffffffff8125b969 ffff880007413448 0000000000000001
+[    3.160836]  ffffea00001e8c00 0000000000000001 ffff88000005fbe8 ffffffff8125b9a8
+[    3.162950] Call Trace:
+[    3.163598]  [<ffffffff814efe3f>] dump_stack+0x4e/0x7a
+[    3.164942]  [<ffffffff8125b969>] check_preemption_disabled+0xd2/0xe5
+[    3.166618]  [<ffffffff8125b9a8>] __this_cpu_preempt_check+0x13/0x15
+[    3.168267]  [<ffffffff8112b630>] mem_cgroup_charge_statistics.isra.36+0xb5/0xc6
+[    3.170169]  [<ffffffff8112d2c5>] commit_charge+0x23c/0x256
+[    3.171823]  [<ffffffff8113101b>] mem_cgroup_commit_charge+0xb8/0xd7
+[    3.173838]  [<ffffffff810f5dab>] shmem_getpage_gfp+0x399/0x605
+[    3.175363]  [<ffffffff810f7456>] shmem_write_begin+0x3d/0x58
+[    3.176854]  [<ffffffff810e1361>] generic_perform_write+0xbc/0x192
+[    3.178445]  [<ffffffff8114a086>] ? file_update_time+0x34/0xac
+[    3.179952]  [<ffffffff810e2ae4>] __generic_file_aio_write+0x2c0/0x300
+[    3.181655]  [<ffffffff810e2b76>] generic_file_aio_write+0x52/0xbd
+[    3.183234]  [<ffffffff81133944>] do_sync_write+0x59/0x78
+[    3.184630]  [<ffffffff81133ea8>] vfs_write+0xc4/0x181
+[    3.185957]  [<ffffffff81134801>] SyS_write+0x4a/0x91
+[    3.187258]  [<ffffffff814fd30e>] tracesys+0xd0/0xd5
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Signed-off-by: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+---
+
+ mm/memcontrol.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff -puN mm/memcontrol.c~mm-memcontrol-rewrite-uncharge-api-fix-4 mm/memcontrol.c
+--- a/mm/memcontrol.c~mm-memcontrol-rewrite-uncharge-api-fix-4
++++ a/mm/memcontrol.c
+@@ -904,6 +904,8 @@ static void mem_cgroup_charge_statistics
+ 					 struct page *page,
+ 					 int nr_pages)
+ {
++	preempt_disable();
++
+ 	/*
+ 	 * Here, RSS means 'mapped anon' and anon's SwapCache. Shmem/tmpfs is
+ 	 * counted as CACHE even if it's on ANON LRU.
+@@ -928,6 +930,7 @@ static void mem_cgroup_charge_statistics
+ 	}
+ 
+ 	__this_cpu_add(memcg->stat->nr_page_events, nr_pages);
++	preempt_enable();
+ }
+ 
+ unsigned long mem_cgroup_get_lru_size(struct lruvec *lruvec, enum lru_list lru)
+_
