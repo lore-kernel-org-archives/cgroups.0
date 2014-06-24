@@ -1,39 +1,36 @@
-From: Chris Burroughs <chris.burroughs-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: limiting RSS only with memory controller
-Date: Mon, 23 Jun 2014 16:12:05 -0400
-Message-ID: <53A88A15.4010802@gmail.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: Re: [PATCH 3/5] cgroup: fix mount failure in a corner case
+Date: Tue, 24 Jun 2014 09:15:01 +0800
+Message-ID: <53A8D115.5060302@huawei.com>
+References: <53994943.60703@huawei.com> <5399496D.6060003@huawei.com> <20140620191025.GA28324@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=message-id:date:from:user-agent:mime-version:to:subject
-         :content-type:content-transfer-encoding;
-        bh=iAL2L+sC1WdgrXSOEhpnRmsYlWqMYzGCu5M+r2KzLIM=;
-        b=Nv7l6WAjr+f9kfEVAyyqZGSfSXeAD8Y9o+UO4aLDqX2KlNsE4bTdbPehnUBtPre58Y
-         ihkQGVVimKaddGlsfzNpOhp0BNLUpNDH2Zg4ErYcskI8PmvxqBy7v6HI3ntatlPm/I0O
-         4Ix+t303gMckf9f9eOt605ppYdO2vsTCsy3liFNKSkly/yY3XUAmn2fEVNRM78X6Y0ve
-         7yT+kIuJJe3ZYviFcQdi8turrxw9v2ovJMBlnTsNNarlNXShGOfMMs1gKx5w/GoISRqU
-         ZCYRJo+86eREtRapDjdlSyls58p29OhLQcDgMTAQtYn3cDxQhjb0s9oIOyKDDgpcurp/
-         QW8Q==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140620191025.GA28324@mtj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-My understanding is that memory.limit_in_bytes limits RSS and page cache 
-use.  I would like to only limit RSS.  Is there currently a way to do 
-that with the memory controller?
+On 2014/6/21 3:10, Tejun Heo wrote:
+> On Thu, Jun 12, 2014 at 02:32:13PM +0800, Li Zefan wrote:
+>> @@ -1677,6 +1679,22 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+>>  		goto out_unlock;
+>>  	}
+>>  
+>> +	/*
+>> +	 * If some subsystems have been bound to existing cgroup hierarchies,
+>> +	 * but those hierachies are being destroyed, let's wait a little bit
+>> +	 * and retry.
+>> +	 */
+>> +	for_each_subsys(ss, i) {
+>> +		if (!(opts.subsys_mask & (1 << i)))
+>> +			continue;
+>> +		if (!percpu_ref_alive(&ss->root->cgrp.self.refcnt)) {
+> 
+> Can't we just do tryget_live() instead and then put before retrying?
+> It's not exactly a hot path and the operations are dirt cheap anyway.
+> 
 
-If not (which I think is the case) could someone point me to a 
-discussion on why that's so?  The docs [1] reference an OLS BOFs but I 
-don't see any details on RSS+page-cache limiting in the notes [2] from 
-that event.
-
-
-[1] "At OLS, at the resource management BoF, everyone suggested
-that we handle both page cache and RSS together." - 
-https://www.kernel.org/doc/Documentation/cgroups/memory.txt
-
-
-[2] https://lkml.org/lkml/2006/7/26/237
+No much difference, though would be a bit more code. I can do that.
