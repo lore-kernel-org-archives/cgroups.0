@@ -1,55 +1,74 @@
-From: Li Zefan <lizefan@huawei.com>
-Subject: Re: [PATCH] mm/mempolicy: fix sleeping function called from invalid
- context
-Date: Tue, 24 Jun 2014 10:28:12 +0800
-Message-ID: <53A8E23C.4050103@huawei.com>
-References: <53902A44.50005@cn.fujitsu.com> <20140605132339.ddf6df4a0cf5c14d17eb8691@linux-foundation.org> <539192F1.7050308@cn.fujitsu.com> <alpine.DEB.2.02.1406081539140.21744@chino.kir.corp.google.com> <539574F1.2060701@cn.fujitsu.com> <alpine.DEB.2.02.1406090209460.24247@chino.kir.corp.google.com> <53967465.7070908@huawei.com> <20140620210137.GA2059@mtj.dyndns.org>
+From: Lei Li <lilei@linux.vnet.ibm.com>
+Subject: Re: [PATCH] Documentation: Update remove_from_page_cache with delete_from_page_cache
+Date: Tue, 24 Jun 2014 15:35:55 +0800
+Message-ID: <53A92A5B.4070403@linux.vnet.ibm.com>
+References: <1403514679-24632-1-git-send-email-lilei@linux.vnet.ibm.com> <20140623092305.GF9743@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20140620210137.GA2059@mtj.dyndns.org>
-Sender: stable-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20140623092305.GF9743@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: David Rientjes <rientjes@google.com>, Gu Zheng <guz.fnst@cn.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, Cgroups <cgroups@vger.kernel.org>, stable@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Michal Hocko <mhocko@suse.cz>
+Cc: hannes@cmpxchg.org, tj@kernel.org, akpm@linux-foundation.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On 2014/6/21 5:01, Tejun Heo wrote:
-> Hello, Li.
-> 
-> Sorry about the long delay.
-> 
-> On Tue, Jun 10, 2014 at 10:58:45AM +0800, Li Zefan wrote:
->> Yes, this is a long-standing issue. Besides the race you described, the child
->> task's mems_allowed can be wrong if the cpuset's nodemask changes before the
->> child has been added to the cgroup's tasklist.
+
+On 06/23/2014 05:23 PM, Michal Hocko wrote:
+> On Mon 23-06-14 17:11:19, Lei Li wrote:
+>> remove_from_page_cache has been renamed to delete_from_page_cache
+>> since Commit 702cfbf9 ("mm: goodbye remove_from_page_cache()"), adapt
+>> to it in Memcg documentation.
 >>
->> I remember Tejun once said he wanted to disallow task migration between
->> cgroups during fork, and that should fix this problem.
-> 
-> I'm having trouble remembering but yeah enforcing stricter behavior
-> across fork could be beneficial.  Hmmm... the problem with making
-> forks exclusive against migrations is that we'll end up adding more
-> locking to the fork path which isn't too nice.
-> 
-> Hmmm... other controllers (cgroup_freezer) can reliably synchronize
-> the child's state to the cgroup it belongs to.  Why can't cpuset?  Is
-> there something fundamentally missing in the cgroup API?
-> 
+>> Signed-off-by: Lei Li <lilei@linux.vnet.ibm.com>
+> This conflicts with the current mmotm tree because of Johannes' {un}charge rewrite.
+> Anyway the comment is not up-to-date anyway. __delete_from_page_cache is
+> called from more places and I do not see quite a good reason why to keep
+> this in the documentation.
+> I would just remove this note as it doesn't serve any useful purpose.
 
-cgroup_freezer uses the fork callback. We can also do this for cpuset as
-suggested by David, which adds a little bit overhead to the fork path.
+Thanks for your reply.
+Just take a quick look at Johannes' patch of rewriting uncharge API. I'll
+resend a patch with the note removed.
 
-David, care to send out a patch?
 
->>> It needs to be slightly rewritten to work properly without negatively 
->>> impacting the latency of fork().  Do you have the cycles to do it?
->>>
+Thanks,
+
+Lei
+
+>
+>> ---
+>>   Documentation/cgroups/memcg_test.txt | 4 ++--
+>>   1 file changed, 2 insertions(+), 2 deletions(-)
 >>
->> Sounds you have other idea?
-> 
-> I don't think the suggested patch breaks anything more than it was
-> broken before and we should probably apply it for the time being.  Li?
-> 
+>> diff --git a/Documentation/cgroups/memcg_test.txt b/Documentation/cgroups/memcg_test.txt
+>> index 80ac454..b2d6ccc 100644
+>> --- a/Documentation/cgroups/memcg_test.txt
+>> +++ b/Documentation/cgroups/memcg_test.txt
+>> @@ -171,10 +171,10 @@ Under below explanation, we assume CONFIG_MEM_RES_CTRL_SWAP=y.
+>>   	- add_to_page_cache_locked().
+>>   
+>>   	uncharged at
+>> -	- __remove_from_page_cache().
+>> +	- __delete_from_page_cache().
+>>   
+>>   	The logic is very clear. (About migration, see below)
+>> -	Note: __remove_from_page_cache() is called by remove_from_page_cache()
+>> +	Note: __delete_from_page_cache() is called by delete_from_page_cache()
+>>   	and __remove_mapping().
+>>   
+>>   6. Shmem(tmpfs) Page Cache
+>> -- 
+>> 1.8.5.3
+>>
+>> --
+>> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+>> the body to majordomo@kvack.org.  For more info on Linux MM,
+>> see: http://www.linux-mm.org/ .
+>> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
 
-Yeah, we should apply Gu Zheng's patch any way.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
