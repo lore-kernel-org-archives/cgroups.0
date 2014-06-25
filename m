@@ -1,20 +1,32 @@
-From: Li Zefan <lizefan@huawei.com>
-Subject: Re: [PATCH V2] mm/mempolicy: fix sleeping function called from invalid
- context
-Date: Wed, 25 Jun 2014 16:35:46 +0800
-Message-ID: <53AA89E2.4080304@huawei.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH V2] mm/mempolicy: fix sleeping function called from
+ invalid context
+Date: Wed, 25 Jun 2014 09:43:45 -0400
+Message-ID: <20140625134345.GA26883@htj.dyndns.org>
 References: <53AA2C7E.3050707@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=lkEkDU27A4OzBJ9NILxto29V4BBNLGY8dQ1ZX/WxwyQ=;
+        b=RMBjq1IHgKmhiSX/UivoDCDQYLqu2I+ayxbLGppdLH61nN9nh1WjwhH733Y/hCQaH+
+         yReEDqV5mOsi6csAV5qeXQGESt0lsNIIDdNzmmn/y592rSHWpB06QGOJAEnGKzRi2/m7
+         4fEMhZ+usbrL0tv8LpAItQoMwvwwNa27sloeBI7INHp2fLFhT/aj+/4v/MEwJx89MNtL
+         JsULgqfysOotNO79bDqdvwNMiNZoze/S5RWSXmwXRs0jJfvmyNRvG7bDB+S002ShGISC
+         CzMC0vCXnUZ2SscX4AkKFxDM2bHSbYkbuolsVu0sdmPNyF9PuBlRVrXq4YFJ6/INuLSV
+         5/aQ==
+Content-Disposition: inline
 In-Reply-To: <53AA2C7E.3050707@cn.fujitsu.com>
-Sender: stable-owner@vger.kernel.org
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, Cgroups <cgroups@vger.kernel.org>, stable@vger.kernel.org, David Rientjes <rientjes@google.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, Cgroups <cgroups@vger.kernel.org>, stable@vger.kernel.org, Li Zefan <lizefan@huawei.com>, David Rientjes <rientjes@google.com>
 
-On 2014/6/25 9:57, Gu Zheng wrote:
+On Wed, Jun 25, 2014 at 09:57:18AM +0800, Gu Zheng wrote:
 > When runing with the kernel(3.15-rc7+), the follow bug occurs:
 > [ 9969.258987] BUG: sleeping function called from invalid context at kernel/locking/mutex.c:586
 > [ 9969.359906] in_atomic(): 1, irqs_disabled(): 0, pid: 160655, name: python
@@ -61,4 +73,17 @@ On 2014/6/25 9:57, Gu Zheng wrote:
 > Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
 > Cc: stable <stable@vger.kernel.org>
 
-Acked-by: Li Zefan <lizefan@huawei.com>
+Applied to cgroup/for-3.16-fixes w/ minor updates to patch subject and
+description.  Please format the text to 80 columns.  The error
+messages are fine but it's usually nicer to remove the timestamps.
+
+Thanks.
+
+-- 
+tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
