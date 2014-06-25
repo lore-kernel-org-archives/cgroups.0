@@ -1,45 +1,54 @@
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: Re: [PATCH] mm/mempolicy: fix sleeping function called from invalid
- context
-Date: Wed, 25 Jun 2014 08:57:03 +0800
-Message-ID: <53AA1E5F.10800@cn.fujitsu.com>
-References: <53902A44.50005@cn.fujitsu.com> <20140605132339.ddf6df4a0cf5c14d17eb8691@linux-foundation.org> <539192F1.7050308@cn.fujitsu.com> <alpine.DEB.2.02.1406081539140.21744@chino.kir.corp.google.com> <539574F1.2060701@cn.fujitsu.com> <alpine.DEB.2.02.1406090209460.24247@chino.kir.corp.google.com> <53967465.7070908@huawei.com> <20140620210137.GA2059@mtj.dyndns.org> <53A8E23C.4050103@huawei.com> <20140624205832.GB14909@htj.dyndns.org>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 5/5] cgroup: fix a race between cgroup_mount() and cgroup_kill_sb()
+Date: Wed, 25 Jun 2014 09:56:31 +0800
+Message-ID: <53AA2C4F.30808@huawei.com>
+References: <53994943.60703@huawei.com> <539949A1.90301@huawei.com> <20140620193521.GB28324@mtj.dyndns.org> <53A8D2B8.4080107@huawei.com> <20140624210119.GC14909@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20140624205832.GB14909@htj.dyndns.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20140624210119.GC14909-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, Cgroups <cgroups@vger.kernel.org>, stable@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hi Tejun,
-On 06/25/2014 04:58 AM, Tejun Heo wrote:
-
-> Hello,
+On 2014/6/25 5:01, Tejun Heo wrote:
+> Hello, Li.
 > 
-> On Tue, Jun 24, 2014 at 10:28:12AM +0800, Li Zefan wrote:
->>> I don't think the suggested patch breaks anything more than it was
->>> broken before and we should probably apply it for the time being.  Li?
+> On Tue, Jun 24, 2014 at 09:22:00AM +0800, Li Zefan wrote:
+>>> Ah, right.  Gees, I'm really hating the fact that we have ->mount but
+>>> not ->umount.  However, can't we make it a bit simpler by just
+>>> introducing a mutex protecting looking up and refing up an existing
+>>> root and a sb going away?  The only problem is that the refcnt being
+>>> killed isn't atomic w.r.t. new live ref coming up, right?  Why not
+>>> just add a mutex around them so that they can't race?
 >>
->> Yeah, we should apply Gu Zheng's patch any way.
+>> Well, kill_sb() is called with sb->s_umount held, while kernfs_mount()
+>> returned with sb->s_umount held, so adding a mutex will lead to ABBA
+>> deadlock.
 > 
-> Gu Zheng, can you please respin the patch with updated explanation on
-> the temporary nature of the change.  I'll apply it once Li acks it.
-
-OK, I'll resend it soon.
-
-Regards,
-Gu
-
-> 
-> Thanks.
+> Hmmm?  Why does that matter?  The only region in cgroup_mount() which
+> needs to be put inside such mutex would be root lookup, no?
 > 
 
+unfortunately that won't help. I think what you suggest is:
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+cgroup_mount()
+{
+	mutex_lock();
+	lookup_cgroup_root();
+	mutex_unlock();
+	kernfs_mount();
+}
+
+cgroup_kill_sb()
+{
+	mutex_lock();
+	percpu_ref_kill();
+	mutex_Unlock();
+	kernfs_kill_sb();
+}
+
+See, we may still be destroying the superblock after we've succeeded
+in getting the refcnt of cgroup root.
