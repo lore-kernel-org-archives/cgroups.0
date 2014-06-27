@@ -1,73 +1,81 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2 1/3] cgroup: fix mount failure in a corner case
-Date: Fri, 27 Jun 2014 15:10:08 +0800
-Message-ID: <53AD18D0.3090100@huawei.com>
+From: Li Zefan <lizefan@huawei.com>
+Subject: [PATCH v2 2/3] kernfs: introduce kernfs_pin_sb()
+Date: Fri, 27 Jun 2014 15:10:48 +0800
+Message-ID: <53AD18F8.4050501@huawei.com>
+References: <53AD18D0.3090100@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <53AD18D0.3090100@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-  # cat test.sh
-  #! /bin/bash
+kernfs_pin_sb() tries to get a refcnt of the superblock.
 
-  mount -t cgroup -o cpu xxx /cgroup
-  umount /cgroup
-
-  mount -t cgroup -o cpu,cpuacct xxx /cgroup
-  umount /cgroup
-  # ./test.sh
-  mount: xxx already mounted or /mnt busy
-  mount: according to mtab, xxx is already mounted on /mnt
-
-It's because the cgroupfs_root of the first mount was under destruction
-asynchronously.
-
-Fix this by delaying and then retrying mount for this case.
+This will be used by cgroupfs.
 
 v2:
-- use percpu_ref_tryget_live() rather that introducing
-  percpu_ref_alive(). (Tejun)
-- adjust comment.
+- make kernfs_pin_sb() return pointer to the superblock.
+- drop kernfs_drop_sb().
 
-Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Li Zefan <lizefan@huawei.com>
 ---
- kernel/cgroup.c | 27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+ fs/kernfs/mount.c      | 27 +++++++++++++++++++++++++++
+ include/linux/kernfs.h |  1 +
+ 2 files changed, 28 insertions(+)
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 1c65f24..ae2b382 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1648,10 +1648,12 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 			 int flags, const char *unused_dev_name,
- 			 void *data)
+diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
+index f25a7c0..616c5c4 100644
+--- a/fs/kernfs/mount.c
++++ b/fs/kernfs/mount.c
+@@ -210,6 +210,33 @@ void kernfs_kill_sb(struct super_block *sb)
+ 	kernfs_put(root_kn);
+ }
+ 
++/**
++ * kernfs_pin_sb: try to pin the superblock associated with a kernfs_root
++ * @kernfs_root: the kernfs_root in question
++ * @ns: the namespace tag
++ *
++ * Pin the superblock so the superblock won't be destroyed in subsequent
++ * operations. Return NULL if there's no superblock associated to this
++ * kernfs_root, or -EINVAL if the superblock is being freed.
++ */
++struct super_block *kernfs_pin_sb(struct kernfs_root *root, const void *ns)
++{
++	struct kernfs_super_info *info;
++	struct super_block *sb = NULL;
++
++	mutex_lock(&kernfs_mutex);
++	list_for_each_entry(info, &root->supers, node) {
++		if (info->ns == ns) {
++			sb = info->sb;
++			if (!atomic_inc_not_zero(&info->sb->s_active))
++				sb = ERR_PTR(-EINVAL);
++			break;
++		}
++	}
++	mutex_unlock(&kernfs_mutex);
++	return sb;
++}
++
+ void __init kernfs_init(void)
  {
-+	struct cgroup_subsys *ss;
- 	struct cgroup_root *root;
- 	struct cgroup_sb_opts opts;
- 	struct dentry *dentry;
- 	int ret;
-+	int i, j = -1;
- 	bool new_sb;
+ 	kernfs_node_cache = kmem_cache_create("kernfs_node_cache",
+diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
+index 589318b..9096296 100644
+--- a/include/linux/kernfs.h
++++ b/include/linux/kernfs.h
+@@ -287,6 +287,7 @@ struct dentry *kernfs_mount_ns(struct file_system_type *fs_type, int flags,
+ 			       struct kernfs_root *root, bool *new_sb_created,
+ 			       const void *ns);
+ void kernfs_kill_sb(struct super_block *sb);
++struct super_block *kernfs_pin_sb(struct kernfs_root *root, const void *ns);
  
- 	/*
-@@ -1677,6 +1679,23 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 		goto out_unlock;
- 	}
+ void kernfs_init(void);
  
-+	/*
-+	 * Destruction of cgroup root is asynchronous, so we may fail to
-+	 * mount a cgroupfs if it immediately follows a umount. Let's wait
-+	 * a little bit and retry.
-+	 */
-+	for_each_subsys(ss, i) {
-+		if (!(opts.subsys_mask & (1 << i)))
-+			continue;
-+		if (!percpu_ref_tryget_live(&ss->root->cgrp.self.refcnt)) {
-+			mutex_unlock(&cgroup_mutex);
-+			msleep(10);
-+			ret = restart_syscall
+-- 
+1.8.0.2
