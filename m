@@ -1,25 +1,25 @@
-From: Li Zefan <lizefan@huawei.com>
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH v2 1/3] cgroup: fix mount failure in a corner case
-Date: Fri, 27 Jun 2014 16:16:18 +0800
-Message-ID: <53AD2852.2060304@huawei.com>
-References: <53AD18D0.3090100@huawei.com>
+Date: Fri, 27 Jun 2014 17:13:12 +0800
+Message-ID: <53AD35A8.7030908@huawei.com>
+References: <53AD18D0.3090100@huawei.com> <53AD2852.2060304@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <53AD18D0.3090100@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <53AD2852.2060304-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Oh sorry the cut&paste was incomplete. Here's the complete one:
+Made a mistake again.. :(
 
-================
 
-From: Li Zefan <lizefan@huawei.com>
-Date: Thu, 12 Jun 2014 09:11:00 +0800
-Subject: [PATCH v2 1/3] cgroup: fix mount failure in a corner case
+==============
+
+From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 1/3] cgroup: fix mount failure in a corner case
 
   # cat test.sh
   #! /bin/bash
@@ -43,13 +43,13 @@ v2:
   percpu_ref_alive(). (Tejun)
 - adjust comment.
 
-Signed-off-by: Li Zefan <lizefan@huawei.com>
+Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
  kernel/cgroup.c | 29 +++++++++++++++++++++++++++++
  1 file changed, 29 insertions(+)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 1c65f24..6826227 100644
+index 1c65f24..b94449f 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
 @@ -1648,10 +1648,12 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
@@ -76,7 +76,7 @@ index 1c65f24..6826227 100644
 +	 */
 +	for_each_subsys(ss, i) {
 +		if (!(opts.subsys_mask & (1 << i)) ||
-+		    ss->root === &cgrp_dfl_root)
++		    ss->root == &cgrp_dfl_root)
 +			continue;
 +
 +		if (!percpu_ref_tryget_live(&ss->root->cgrp.self.refcnt)) {
@@ -108,4 +108,3 @@ index 1c65f24..6826227 100644
  
 -- 
 1.8.0.2
-
