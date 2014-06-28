@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/6] cgroup: introduce cgroup->subtree_control
-Date: Fri, 27 Jun 2014 21:03:08 -0400
-Message-ID: <1403917392-32555-3-git-send-email-tj@kernel.org>
+Subject: [PATCH 5/6] cgroup: implement cgroup_subsys->depends_on
+Date: Fri, 27 Jun 2014 21:03:11 -0400
+Message-ID: <1403917392-32555-6-git-send-email-tj@kernel.org>
 References: <1403917392-32555-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=YLFei3OvBniaAzbE/7aefmaL3HUdlsNYCzPWjhh14Wc=;
-        b=JPRuNq51cs8cApOv1uHe9vP25xmHrLItX2M0+2rQ6jF6Fj8Mbi6KD0UBgkKMomU+Pr
-         23m31nDjX5qOh82BNBZNLFe3UUhhx6y1eFrYGUD7PxYLKpG9bI3JHSVrcmS0z2/7rPHH
-         FNOcCDyzaHfVbNOWaKDE4MdoEFnucCIcSLaE73yvdQvxFdH6VI2MPv4l7ms4tzrzD4DG
-         Tero1DvxPy5BK8MjaAatzM3sZ1r/hhYM9pixzmrAbNWAa2zwS+f+9yTO042f5E9bFcLC
-         jq4csTN0KonWc/lwJW0dlMT1Eis3956s0J4YsMTBQ7Y6hNUonle/YEHqCxe8u2Q3mZs8
-         W1Cg==
+        bh=8sT8UwoQIrIcHVqpS6RMqO3tsR8PWknzCrW7mdEriOM=;
+        b=WJ8AhC/0lLUtMvEZIUsfhern8W+On4mkLHCKE/CZ2fWhvEHojLL+2WWuMsw0iFNcPB
+         V7BssEyrOLbEPkj+mGmI9MidnTXo3HJwjuCQZmSfM5xJEOWXf5APbN2/uYl6GF0/RzZP
+         tc83qmRHLhUdwLqvLa3OPZRjKcBW8q5QhQqhy4FA7M3agCCMF7fOOf+zNAS/gA02x1NX
+         IWrmvKdIP+WsE4gEA2K1wMFImWeVDdNWkwEtLNKf8GGBfInwVgbOMe0O37QWyukRcGxb
+         o8xaai4fS/cOJ9dUPj40ERsfMHA98aVKzou1Ioaqj/n+/7yfPES4UneSicJ2ZyK1+4i4
+         Ob/g==
 In-Reply-To: <1403917392-32555-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,184 +23,155 @@ Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, hannes@cmpxchg.org, mhocko@suse.cz, vgoyal@redhat.com, axboe@kernel.dk, Tejun Heo <tj@kernel.org>
 
-cgroup is implementing support for subsystem dependency which would
-require a way to enable a subsystem even when it's not directly
-configured through "cgroup.subtree_control".
+Currently, the blkio subsystem attributes all of writeback IOs to the
+root.  One of the issues is that there's no way to tell who originated
+a writeback IO from block layer.  Those IOs are usually issued
+asynchronously from a task which didn't have anything to do with
+actually generating the dirty pages.  The memory subsystem, when
+enabled, already keeps track of the ownership of each dirty page and
+it's desirable for blkio to piggyback instead of adding its own
+per-page tag.
 
-Previously, cgroup->child_subsys_mask directly reflected
-"cgroup.subtree_control" and the enabled subsystems in the child
-cgroups.  This patch adds cgroup->subtree_control which
-"cgroup.subtree_control" operates on.  cgroup->child_subsys_mask is
-now calculated from cgroup->subtree_control by
-cgroup_refresh_child_subsys_mask(), which sets it identical to
-cgroup->subtree_control for now.
+blkio piggybacking on memory is an implementation detail which
+preferably should be handled automatically without requiring explicit
+userland action.  To achieve that, this patch implements
+cgroup_subsys->depends_on which contains the mask of subsystems which
+should be enabled together when the subsystem is enabled.
 
-This will allow using cgroup->child_subsys_mask for all the enabled
-subsystems including the implicit ones and ->subtree_control for
-tracking the explicitly requested ones.  This patch keeps the two
-masks identical and doesn't introduce any behavior changes.
+The previous patches already implemented the support for enabled but
+invisible subsystems and cgroup_subsys->depends_on can be easily
+implemented by updating cgroup_refresh_child_subsys_mask() so that it
+calculates cgroup->child_subsys_mask considering
+cgroup_subsys->depends_on of the explicitly enabled subsystems.
+
+Documentation/cgroups/unified-hierarchy.txt is updated to explain that
+subsystems may not become immediately available after being unused
+from userland and that dependency could be a factor in it.  As
+subsystems may already keep residual references, this doesn't
+significantly change how subsystem rebinding can be used.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- include/linux/cgroup.h |  8 +++++++-
- kernel/cgroup.c        | 46 +++++++++++++++++++++++++++++-----------------
- 2 files changed, 36 insertions(+), 18 deletions(-)
+ Documentation/cgroups/unified-hierarchy.txt | 23 ++++++++++++--
+ include/linux/cgroup.h                      |  9 ++++++
+ kernel/cgroup.c                             | 49 ++++++++++++++++++++++++++++-
+ 3 files changed, 77 insertions(+), 4 deletions(-)
 
+diff --git a/Documentation/cgroups/unified-hierarchy.txt b/Documentation/cgroups/unified-hierarchy.txt
+index 324b182..a7a2205 100644
+--- a/Documentation/cgroups/unified-hierarchy.txt
++++ b/Documentation/cgroups/unified-hierarchy.txt
+@@ -97,9 +97,26 @@ change soon.
+ All controllers which are not bound to other hierarchies are
+ automatically bound to unified hierarchy and show up at the root of
+ it.  Controllers which are enabled only in the root of unified
+-hierarchy can be bound to other hierarchies at any time.  This allows
+-mixing unified hierarchy with the traditional multiple hierarchies in
+-a fully backward compatible way.
++hierarchy can be bound to other hierarchies.  This allows mixing
++unified hierarchy with the traditional multiple hierarchies in a fully
++backward compatible way.
++
++A controller can be moved across hierarchies only after the controller
++is no longer referenced in its current hierarchy.  Because per-cgroup
++controller states are destroyed asynchronously and controllers may
++have lingering references, a controller may not show up immediately on
++the unified hierarchy after the final umount of the previous
++hierarchy.  Similarly, a controller should be fully disabled to be
++moved out of the unified hierarchy and it may take some time for the
++disabled controller to become available for other hierarchies;
++furthermore, due to dependencies among controllers, other controllers
++may need to be disabled too.
++
++While useful for development and manual configurations, dynamically
++moving controllers between the unified and other hierarchies is
++strongly discouraged for production use.  It is recommended to decide
++the hierarchies and controller associations before starting using the
++controllers.
+ 
+ 
+ 2-2. cgroup.subtree_control
 diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 8a111dd..8d52c8e 100644
+index db99e3b..28853e7 100644
 --- a/include/linux/cgroup.h
 +++ b/include/linux/cgroup.h
-@@ -203,7 +203,13 @@ struct cgroup {
- 	struct kernfs_node *kn;		/* cgroup kernfs entry */
- 	struct kernfs_node *populated_kn; /* kn for "cgroup.subtree_populated" */
+@@ -693,6 +693,15 @@ struct cgroup_subsys {
  
--	/* the bitmask of subsystems enabled on the child cgroups */
+ 	/* base cftypes, automatically registered with subsys itself */
+ 	struct cftype *base_cftypes;
++
 +	/*
-+	 * The bitmask of subsystems enabled on the child cgroups.
-+	 * ->subtree_control is the one configured through
-+	 * "cgroup.subtree_control" while ->child_subsys_mask is the
-+	 * effective one which may have more subsystems enabled.
++	 * A subsystem may depend on other subsystems.  When such subsystem
++	 * is enabled on a cgroup, the depended-upon subsystems are enabled
++	 * together if available.  Subsystems enabled due to dependency are
++	 * not visible to userland until explicitly enabled.  The following
++	 * specifies the mask of subsystems that this one depends on.
 +	 */
-+	unsigned int subtree_control;
- 	unsigned int child_subsys_mask;
++	unsigned int depends_on;
+ };
  
- 	/* Private pointers for each registered subsystem */
+ #define SUBSYS(_x) extern struct cgroup_subsys _x ## _cgrp_subsys;
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index a46d7e2..14a9d88 100644
+index 3a6b77d..cd02e99 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -1036,6 +1036,11 @@ static void cgroup_put(struct cgroup *cgrp)
+@@ -1037,9 +1037,56 @@ static void cgroup_put(struct cgroup *cgrp)
  	css_put(&cgrp->self);
  }
  
-+static void cgroup_refresh_child_subsys_mask(struct cgroup *cgrp)
-+{
-+	cgrp->child_subsys_mask = cgrp->subtree_control;
-+}
++/**
++ * cgroup_refresh_child_subsys_mask - update child_subsys_mask
++ * @cgrp: the target cgroup
++ *
++ * On the default hierarchy, a subsystem may request other subsystems to be
++ * enabled together through its ->depends_on mask.  In such cases, more
++ * subsystems than specified in "cgroup.subtree_control" may be enabled.
++ *
++ * This function determines which subsystems need to be enabled given the
++ * current @cgrp->subtree_control and records it in
++ * @cgrp->child_subsys_mask.  The resulting mask is always a superset of
++ * @cgrp->subtree_control and follows the usual hierarchy rules.
++ */
+ static void cgroup_refresh_child_subsys_mask(struct cgroup *cgrp)
+ {
+-	cgrp->child_subsys_mask = cgrp->subtree_control;
++	struct cgroup *parent = cgroup_parent(cgrp);
++	unsigned int cur_ss_mask = cgrp->subtree_control;
++	struct cgroup_subsys *ss;
++	int ssid;
 +
- /**
-  * cgroup_kn_unlock - unlocking helper for cgroup kernfs methods
-  * @kn: the kernfs_node being serviced
-@@ -1208,12 +1213,15 @@ static int rebind_subsystems(struct cgroup_root *dst_root, unsigned int ss_mask)
- 		up_write(&css_set_rwsem);
- 
- 		src_root->subsys_mask &= ~(1 << ssid);
--		src_root->cgrp.child_subsys_mask &= ~(1 << ssid);
-+		src_root->cgrp.subtree_control &= ~(1 << ssid);
-+		cgroup_refresh_child_subsys_mask(&src_root->cgrp);
- 
- 		/* default hierarchy doesn't enable controllers by default */
- 		dst_root->subsys_mask |= 1 << ssid;
--		if (dst_root != &cgrp_dfl_root)
--			dst_root->cgrp.child_subsys_mask |= 1 << ssid;
-+		if (dst_root != &cgrp_dfl_root) {
-+			dst_root->cgrp.subtree_control |= 1 << ssid;
-+			cgroup_refresh_child_subsys_mask(&dst_root->cgrp);
-+		}
- 
- 		if (ss->bind)
- 			ss->bind(css);
-@@ -2454,7 +2462,7 @@ static int cgroup_controllers_show(struct seq_file *seq, void *v)
- {
- 	struct cgroup *cgrp = seq_css(seq)->cgroup;
- 
--	cgroup_print_ss_mask(seq, cgroup_parent(cgrp)->child_subsys_mask);
-+	cgroup_print_ss_mask(seq, cgroup_parent(cgrp)->subtree_control);
- 	return 0;
- }
- 
-@@ -2463,7 +2471,7 @@ static int cgroup_subtree_control_show(struct seq_file *seq, void *v)
- {
- 	struct cgroup *cgrp = seq_css(seq)->cgroup;
- 
--	cgroup_print_ss_mask(seq, cgrp->child_subsys_mask);
-+	cgroup_print_ss_mask(seq, cgrp->subtree_control);
- 	return 0;
- }
- 
-@@ -2608,7 +2616,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 
- 	for_each_subsys(ss, ssid) {
- 		if (enable & (1 << ssid)) {
--			if (cgrp->child_subsys_mask & (1 << ssid)) {
-+			if (cgrp->subtree_control & (1 << ssid)) {
- 				enable &= ~(1 << ssid);
- 				continue;
- 			}
-@@ -2616,7 +2624,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 			/* unavailable or not enabled on the parent? */
- 			if (!(cgrp_dfl_root.subsys_mask & (1 << ssid)) ||
- 			    (cgroup_parent(cgrp) &&
--			     !(cgroup_parent(cgrp)->child_subsys_mask & (1 << ssid)))) {
-+			     !(cgroup_parent(cgrp)->subtree_control & (1 << ssid)))) {
- 				ret = -ENOENT;
- 				goto out_unlock;
- 			}
-@@ -2644,14 +2652,14 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 				return restart_syscall();
- 			}
- 		} else if (disable & (1 << ssid)) {
--			if (!(cgrp->child_subsys_mask & (1 << ssid))) {
-+			if (!(cgrp->subtree_control & (1 << ssid))) {
- 				disable &= ~(1 << ssid);
- 				continue;
- 			}
- 
- 			/* a child has it enabled? */
- 			cgroup_for_each_live_child(child, cgrp) {
--				if (child->child_subsys_mask & (1 << ssid)) {
-+				if (child->subtree_control & (1 << ssid)) {
- 					ret = -EBUSY;
- 					goto out_unlock;
- 				}
-@@ -2665,7 +2673,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 	}
- 
- 	/*
--	 * Except for the root, child_subsys_mask must be zero for a cgroup
-+	 * Except for the root, subtree_control must be zero for a cgroup
- 	 * with tasks so that child cgroups don't compete against tasks.
- 	 */
- 	if (enable && cgroup_parent(cgrp) && !list_empty(&cgrp->cset_links)) {
-@@ -2673,8 +2681,9 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 		goto out_unlock;
- 	}
- 
--	cgrp->child_subsys_mask |= enable;
--	cgrp->child_subsys_mask &= ~disable;
-+	cgrp->subtree_control |= enable;
-+	cgrp->subtree_control &= ~disable;
-+	cgroup_refresh_child_subsys_mask(cgrp);
- 
- 	/* create new csses */
- 	for_each_subsys(ss, ssid) {
-@@ -2713,8 +2722,9 @@ out_unlock:
- 	return ret ?: nbytes;
- 
- err_undo_css:
--	cgrp->child_subsys_mask &= ~enable;
--	cgrp->child_subsys_mask |= disable;
-+	cgrp->subtree_control &= ~enable;
-+	cgrp->subtree_control |= disable;
-+	cgroup_refresh_child_subsys_mask(cgrp);
- 
- 	for_each_subsys(ss, ssid) {
- 		if (!(enable & (1 << ssid)))
-@@ -4428,10 +4438,12 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
- 
- 	/*
- 	 * On the default hierarchy, a child doesn't automatically inherit
--	 * child_subsys_mask from the parent.  Each is configured manually.
-+	 * subtree_control from the parent.  Each is configured manually.
- 	 */
--	if (!cgroup_on_dfl(cgrp))
--		cgrp->child_subsys_mask = parent->child_subsys_mask;
++	lockdep_assert_held(&cgroup_mutex);
++
 +	if (!cgroup_on_dfl(cgrp)) {
-+		cgrp->subtree_control = parent->subtree_control;
-+		cgroup_refresh_child_subsys_mask(cgrp);
++		cgrp->child_subsys_mask = cur_ss_mask;
++		return;
 +	}
++
++	while (true) {
++		unsigned int new_ss_mask = cur_ss_mask;
++
++		for_each_subsys(ss, ssid)
++			if (cur_ss_mask & (1 << ssid))
++				new_ss_mask |= ss->depends_on;
++
++		/*
++		 * Mask out subsystems which aren't available.  This can
++		 * happen only if some depended-upon subsystems were bound
++		 * to non-default hierarchies.
++		 */
++		if (parent)
++			new_ss_mask &= parent->child_subsys_mask;
++		else
++			new_ss_mask &= cgrp->root->subsys_mask;
++
++		if (new_ss_mask == cur_ss_mask)
++			break;
++		cur_ss_mask = new_ss_mask;
++	}
++
++	cgrp->child_subsys_mask = cur_ss_mask;
+ }
  
- 	kernfs_activate(kn);
- 
+ /**
 -- 
 1.9.3
