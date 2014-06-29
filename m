@@ -1,53 +1,47 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 1/3] cgroup: fix mount failure in a corner case
-Date: Sat, 28 Jun 2014 07:58:39 -0400
-Message-ID: <20140628115743.GB10829@htj.dyndns.org>
-References: <53AD18D0.3090100@huawei.com>
- <53AD2852.2060304@huawei.com>
- <53AD35A8.7030908@huawei.com>
-Mime-Version: 1.0
+From: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+Subject: [PATCH -trivial 3/4] mm: memcontrol: Spelling s/invlidate/invalidate/, s/trucate/truncate/
+Date: Sun, 29 Jun 2014 12:21:38 +0200
+Message-ID: <1404037299-31570-3-git-send-email-geert@linux-m68k.org>
+References: <1404037299-31570-1-git-send-email-geert@linux-m68k.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=wUsaJq19i4KwVw3I1Y7HQFBggzWAGgnZLvuF7JOss6w=;
-        b=p0dDygmGPZx4rAKslfFrUEP9mfZ0Re+nsmstY/L2yYEy3xqTjteNOJQ8p1RZclmWMv
-         Hvy+B3EtmRrWduhAe5XDzjN7/qmNPC9reaG3sAp9cXqsAJyI/kT+0bNDTKhabYtAyXAd
-         68WL607468C7UYJ1LqgIwwgvq8Hfd4BW+RZfR63zbZZnrFc/rpF6ideEf5DWIsow74Qb
-         hXvK4eFP5kVd/VWTn1GJqaSaJZWUCtktW8OE203CVjTAdSHpc7VAjZBaMfn5c+r+UoeB
-         8cgeIyWAOfd0UgmPUDBwA7L4GMN+naa3K9DvaHIYarLT/BxD77+bOjwX4U5BXTA7I4sI
-         SBZg==
-Content-Disposition: inline
-In-Reply-To: <53AD35A8.7030908-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=8zbYFMLurMnTHRc6RNzwrifOZ/rQzbeeq/Rtiet34+8=;
+        b=B+y52n/P95OxDFsYzTGNKI1r4zNzkMXBK/RPPWqMKdrijIhfM0zci2s8iSBz4DvqIx
+         UrjfSJeEWWktlKJn9cdWE+zJO0WovOf3+dw2anR/Qv9MJAbfyCmL/dLNCCekknf+hEiL
+         cbqA3WtITWBwM6eAA9D4LzandPd0tT3MLCSseXLAdKdIIbAk2PH1CxrIhwn7lVTZWF1O
+         SeGIy1gRD5MI3TxP/Bcy5Jo6hD6CPQYcghwPOUvmI6ZKlTB8xVlqyckhYMuG4UySrPNZ
+         DD/dILHdER9m6aBQigFYa1sPYgey1sxboh0zrgprk4N3HZ0SeHV6VlQV/eg3MZmgSO57
+         HHdw==
+In-Reply-To: <1404037299-31570-1-git-send-email-geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Jiri Kosina <trivial-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Li.
+Signed-off-by: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+---
+ mm/memcontrol.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On Fri, Jun 27, 2014 at 05:13:12PM +0800, Li Zefan wrote:
-> +	for_each_subsys(ss, i) {
-> +		if (!(opts.subsys_mask & (1 << i)) ||
-> +		    ss->root == &cgrp_dfl_root)
-> +			continue;
-> +
-> +		if (!percpu_ref_tryget_live(&ss->root->cgrp.self.refcnt)) {
-> +			mutex_unlock(&cgroup_mutex);
-> +			msleep(10);
-> +			ret = restart_syscall();
-> +			goto out_free;
-> +		}
-
-Why not just put it immediately?  We know that it's not gonna be
-destroyed while holding cgroup_mutex.  It may look a bit weird but
-this is a pretty special case anyway and deferring put doesn't buy
-anything.
-
-Thanks.
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index a2c7bcb0e6eb..2c010573668e 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4034,7 +4034,7 @@ void mem_cgroup_uncharge_cache_page(struct page *page)
+ }
+ 
+ /*
+- * Batch_start/batch_end is called in unmap_page_range/invlidate/trucate.
++ * Batch_start/batch_end is called in unmap_page_range/invalidate/truncate.
+  * In that cases, pages are freed continuously and we can expect pages
+  * are in the same memcg. All these calls itself limits the number of
+  * pages freed at once, then uncharge_start/end() is called properly.
 -- 
-tejun
+1.9.1
