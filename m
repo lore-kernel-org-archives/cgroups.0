@@ -1,95 +1,41 @@
-From: Chai Wen <chaiw.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: pretty format of /proc/cgoups stats showing
-Date: Wed, 2 Jul 2014 16:52:39 +0800
-Message-ID: <53B3C857.9000409@cn.fujitsu.com>
-References: <1404289478-5554-1-git-send-email-chaiw.fnst@cn.fujitsu.com> <53B3C712.1090807@huawei.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC] cgroups: Resource controller for open files.
+Date: Wed, 2 Jul 2014 10:33:00 -0400
+Message-ID: <20140702143300.GB23275@htj.dyndns.org>
+References: <1404311407-4851-1-git-send-email-merimus@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <53B3C712.1090807-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=wAAV1iUg8hjUwO9T33kENDr2Ej5nCYr4qLVGnSC5Cto=;
+        b=aorlISztlfcImlLichzUwWfR+ON5V2nT6WD8P4M35BElPdKHqriOUpS2kRNYsvxfip
+         RHcdwmHYpi5xAcE4QWNcA9KmZVA+KP/2iTeflNWZ/u3en8l9UIXP41b1heOJmK0mxbOn
+         AX/4DeQNsgu9xKj2XIbo/mPmEd6Sbmf8u/Dsp5Jh3mB7sqHPdTylYqhrlD6LAiCM3EZf
+         /7/hLCBqMc6yB19N20dIEt0aS915ybj1RDdWPkHW5F6uuZXUWP6q0YFSvv0x0g/qMepN
+         kVEXInwV2Tm2FjkPBtABaO6bpTJYiDFPNskkYFk6uV7CJ/yhTSzAEL/0x9aiRti4ce7W
+         pNKw==
+Content-Disposition: inline
+In-Reply-To: <1404311407-4851-1-git-send-email-merimus-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Binder Makin <merimus-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dmj-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 07/02/2014 04:47 PM, Li Zefan wrote:
+Hello,
 
-> On 2014/7/2 16:24, chai wen wrote:
->> Just make /proc/cgroups have a better appearance, the original is a little
->> misleading as its print format.
->>
->> Before:
->> #subsys_name	hierarchy	num_cgroups	enabled
->> cpuset	0	1	1
->> cpu	0	1	1
->> cpuacct	0	1	1
->> devices	0	1	1
->> freezer	0	1	1
->> net_cls	0	1	1
->> blkio	0	1	1
->> perf_event	0	1	1
->>
->> After:
->> #subsys_name       hierarchy          num_groups         enabled           
->> cpuset             0                  1                  1                 
->> cpu                0                  1                  1                 
->> cpuacct            0                  1                  1                 
->> devices            0                  1                  1                 
->> freezer            0                  1                  1                 
->> net_cls            0                  1                  1                 
->> blkio              0                  1                  1                 
->> perf_event         0                  1                  1                 
->>
->>
->> Signed-off-by: chai wen <chaiw.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-> 
-> Someone posted a similar patch long ago, and it was rejected, because
-> there may be userspace programs/scripts depending on the current format,
-> and this change will break them.
+On Wed, Jul 02, 2014 at 10:30:07AM -0400, Binder Makin wrote:
+> Add a resource controller for limiting the number of open
+> file handles.  This allows us to catch misbehaving processes
+> and return EMFILE instead of ENOMEM for kernel memory limits.
 
+cc'ing memcg people.  Isn't kmemcg supposed to cover this by
+controlling kernel memory usage?
 
-OK, it's reasonable at that point.
-
-thanks
-chai wen
-
-> 
->> ---
->>  kernel/cgroup.c |    5 +++--
->>  1 files changed, 3 insertions(+), 2 deletions(-)
->>
->> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
->> index 7868fc3..54c839e 100644
->> --- a/kernel/cgroup.c
->> +++ b/kernel/cgroup.c
->> @@ -4883,7 +4883,8 @@ static int proc_cgroupstats_show(struct seq_file *m, void *v)
->>  	struct cgroup_subsys *ss;
->>  	int i;
->>  
->> -	seq_puts(m, "#subsys_name\thierarchy\tnum_cgroups\tenabled\n");
->> +	seq_printf(m, "%-18s %-18s %-18s %-18s\n", "#subsys_name", "hierarchy",
->> +		   "num_groups", "enabled");
->>  	/*
->>  	 * ideally we don't want subsystems moving around while we do this.
->>  	 * cgroup_mutex is also necessary to guarantee an atomic snapshot of
->> @@ -4892,7 +4893,7 @@ static int proc_cgroupstats_show(struct seq_file *m, void *v)
->>  	mutex_lock(&cgroup_mutex);
->>  
->>  	for_each_subsys(ss, i)
->> -		seq_printf(m, "%s\t%d\t%d\t%d\n",
->> +		seq_printf(m, "%-18s %-18d %-18d %-18d\n",
->>  			   ss->name, ss->root->hierarchy_id,
->>  			   atomic_read(&ss->root->nr_cgrps), !ss->disabled);
->>  
->>
-> 
-> .
-> 
-
-
+Thanks.
 
 -- 
-Regards
-
-Chai Wen
+tejun
