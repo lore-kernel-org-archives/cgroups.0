@@ -1,42 +1,49 @@
-From: Tejun Heo <tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [RFC] cgroups: Resource controller for open files.
-Date: Wed, 2 Jul 2014 10:49:01 -0400
-Message-ID: <20140702144901.GC23275@htj.dyndns.org>
+Date: Wed, 2 Jul 2014 11:02:34 -0400
+Message-ID: <20140702150234.GD23275@htj.dyndns.org>
 References: <1404311407-4851-1-git-send-email-merimus@google.com>
  <20140702143300.GB23275@htj.dyndns.org>
  <CAANmLtwwbKBi+zZ01ywbeMnzu5a0UvqEz-_zHJLNtBVso2=ibg@mail.gmail.com>
+ <20140702144901.GC23275@htj.dyndns.org>
+ <CAANmLtwQkwrfQK0QK5LZSGqw7Z2+L-CSC_5TuSko1QtYo8WFfQ@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=6aiqAGscFUYhCCcE3fXPWVB4Mm7Czm3dDqWg1o6ek/w=;
-        b=SUX9Dkl9maKxhqhF+OvsLdq7qBK6VjF0FAmXhDszijUCSVQxd9ej77n0f0wJY0Wjut
-         ejAy9HNOh5nMIWtP4T0jXnXTGCWm8BZ1l6eufThCPv7zQ5wSmD9vAbtaQkxbn9xl3/7k
-         qeE2dDPNqHNEWN4tyPDOzyauMlQsuRZmPi4MO66AktLRlqXZ3klsnhANYMja3UDH3Axr
-         yrSez0ekyn50j8dLvGYVonK3PIioWbC7CsiHZZI9CqRWeerwhBwu4q/lK6hLWuXVAM7u
-         ePFt+Mew8mN3o+YTme7pXUbXvl7dN9i98ZQ3IgmWXfv4OJRbln89Is2+liNI88W4MsqE
-         UA+w==
+        bh=luXj7cp9H6Ue4Spq1WvfHshuw3Ws67WIhPBcA3Pw+NQ=;
+        b=K+PIc+XdMP0y6UgJb2DzIdlikeeDJ6lhu+25Nf8x4ue1BRljmEJ+tHX7shbaGsP2WD
+         RR1psydHL4bwW8ee1d9Nr8R4uNbrAzc74zi8PnMpSW3C1ZVs2WKb6283z3Q97D1OoM1D
+         g13z+vDZfSD9M0YlB4IxBVSwC0SFyKo+J1fEvbIbUDh/9VhtvXhHkCJ4JQqtfSahIi2a
+         7x9TFS8wzmfX2IDCtBcHomQCQi+u3nOQTu1U2h/xDkKkI1MnGyqNpNcc40CsN7L1DL+J
+         tfZ5N9s2fEtankyFZYuPtIcyUXB9IQOQZWajmUcMZzP62yGwjF2tylhalqmZCMv2rHBY
+         Zc6g==
 Content-Disposition: inline
-In-Reply-To: <CAANmLtwwbKBi+zZ01ywbeMnzu5a0UvqEz-_zHJLNtBVso2=ibg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAANmLtwQkwrfQK0QK5LZSGqw7Z2+L-CSC_5TuSko1QtYo8WFfQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Binder Makin <merimus@google.com>
-Cc: viro@zeniv.linux.org.uk, linux-kernel@vger.kernel.org, Daniel Jacobowitz <dmj@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org
+To: Binder Makin <merimus-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Jacobowitz <dmj-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+On Wed, Jul 02, 2014 at 10:55:01AM -0400, Binder Makin wrote:
+> It does allow processes which are used to handling file handled to deal
+> with the situation more cleanly.
+> If you get the ENOMEM then you are out of memory and you kill the process,
+> but if you are out of file handles we can clean up the open handles and
+> continue.
 
-On Wed, Jul 02, 2014 at 10:46:59AM -0400, Binder Makin wrote:
-> kmem keeps the cgroup from DOSing the machine but then you can get a ENOMEM
-> out of some call which is trying to allocate kernel memory.
-> People are used to limiting file handles from rlimits and the EMFILE is
-> easier for them to debug/fix.
-
-EMFILE instead of ENOMEM seems really thin as the sole rationale for a
-whole new controller, doesn't it?
+I don't know.  If the program can manage fds dynamically, it may as
+well police itself under a sensible limit.  I get that programs which
+already work with EMFILE may benefit from this but this isn't adding
+any essential feature and the same goal can be trivially achieved
+without any help from kernel as the benefits from EMFILE handling
+assumes the program is well-behaving.  I'm very doubtful that
+custom-fitting kernel behavior to specific and rather peculiar program
+behaviors is a healthy approach.
 
 Thanks.
 
