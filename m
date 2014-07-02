@@ -1,51 +1,63 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC] cgroups: Resource controller for open files.
-Date: Wed, 2 Jul 2014 11:02:34 -0400
-Message-ID: <20140702150234.GD23275@htj.dyndns.org>
-References: <1404311407-4851-1-git-send-email-merimus@google.com>
- <20140702143300.GB23275@htj.dyndns.org>
- <CAANmLtwwbKBi+zZ01ywbeMnzu5a0UvqEz-_zHJLNtBVso2=ibg@mail.gmail.com>
- <20140702144901.GC23275@htj.dyndns.org>
- <CAANmLtwQkwrfQK0QK5LZSGqw7Z2+L-CSC_5TuSko1QtYo8WFfQ@mail.gmail.com>
-Mime-Version: 1.0
+Subject: [PATCHSET cgroup/for-3.17] cgroup: remove sane_behavior support on non-default hierarchies
+Date: Wed,  2 Jul 2014 19:45:43 -0400
+Message-ID: <1404344747-7957-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=luXj7cp9H6Ue4Spq1WvfHshuw3Ws67WIhPBcA3Pw+NQ=;
-        b=K+PIc+XdMP0y6UgJb2DzIdlikeeDJ6lhu+25Nf8x4ue1BRljmEJ+tHX7shbaGsP2WD
-         RR1psydHL4bwW8ee1d9Nr8R4uNbrAzc74zi8PnMpSW3C1ZVs2WKb6283z3Q97D1OoM1D
-         g13z+vDZfSD9M0YlB4IxBVSwC0SFyKo+J1fEvbIbUDh/9VhtvXhHkCJ4JQqtfSahIi2a
-         7x9TFS8wzmfX2IDCtBcHomQCQi+u3nOQTu1U2h/xDkKkI1MnGyqNpNcc40CsN7L1DL+J
-         tfZ5N9s2fEtankyFZYuPtIcyUXB9IQOQZWajmUcMZzP62yGwjF2tylhalqmZCMv2rHBY
-         Zc6g==
-Content-Disposition: inline
-In-Reply-To: <CAANmLtwQkwrfQK0QK5LZSGqw7Z2+L-CSC_5TuSko1QtYo8WFfQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=WMrlzDJYzRLSc+Ao+9+jubKM4WgcKF3yMbx13NOi9y8=;
+        b=BOJn3/iFjlMCkMcydFYhPhWaKQT/rsxkCxtl/UQPZCeSdm3O1aeIDb8yKyYvRiZpbK
+         ZX+K16Rr4kaDAxGeApsXEojE8/zEDt0ZLsAnC8ccXVZQzFiXMOUBpYoP+kCIL2wdcOQs
+         bnNuzYVDPYtb+PU6ZHbuW8xgzJ01/+L+E1JVBh/65DibYkjKWsb1u2JlpbpR1xwEcxWM
+         th2tuGMTJcuwLuV3IHgVwsW6yZSWDUBX4oUkRUrhRReIpe31G8tiURJgtXYxjHaU7VlI
+         +tAjtP30haisHip7H7KQdQWcI7bYwvHKWVPS/Jd8a9TIrhjBk4Di+37yEs0d4QMbYz8c
+         kfIA==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Binder Makin <merimus-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Jacobowitz <dmj-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Jul 02, 2014 at 10:55:01AM -0400, Binder Makin wrote:
-> It does allow processes which are used to handling file handled to deal
-> with the situation more cleanly.
-> If you get the ENOMEM then you are out of memory and you kill the process,
-> but if you are out of file handles we can clean up the open handles and
-> continue.
+Hello,
 
-I don't know.  If the program can manage fds dynamically, it may as
-well police itself under a sensible limit.  I get that programs which
-already work with EMFILE may benefit from this but this isn't adding
-any essential feature and the same goal can be trivially achieved
-without any help from kernel as the benefits from EMFILE handling
-assumes the program is well-behaving.  I'm very doubtful that
-custom-fitting kernel behavior to specific and rather peculiar program
-behaviors is a healthy approach.
+sane_behavior has been used as a development vehicle for the default
+unified hierarchy.  Now that the default hierarchy is in place, the
+flag became redundant and confusing as its usage is allowed on all
+hierarchies.  There are gonna be either the default hierarchy or
+legacy ones.  Let's make that clear by removing sane_behavior support
+on non-default hierarchies.
 
-Thanks.
+This patchset contains the following four patches.
 
--- 
+ 0001-cgroup-remove-CGRP_ROOT_OPTION_MASK.patch
+ 0002-cgroup-make-interface-file-cgroup.sane_behavior-lega.patch
+ 0003-cgroup-remove-sane_behavior-support-on-non-default-h.patch
+ 0004-cgroup-clean-up-sane_behavior-handling.patch
+
+0001 is a trivial cleanup.
+
+0002 removes "cgroup.sane_behavior" from the default hierarchy.
+
+0003 removes sane_behavior support on non-default hierarchies.
+
+0004 cleans up sane_behavior handling.
+
+This patchset is on top of a497c3ba1d97 ("Linux 3.16-rc2") and
+available in the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-dfl-instead-of-sane
+
+diffstat follows.  Thanks.
+
+ block/blk-throttle.c   |    6 +-
+ include/linux/cgroup.h |  128 ++++++++++++++++++++-----------------------------
+ kernel/cgroup.c        |   96 +++++++++++++++---------------------
+ kernel/cpuset.c        |   33 +++++-------
+ mm/memcontrol.c        |    7 +-
+ 5 files changed, 117 insertions(+), 153 deletions(-)
+
+--
 tejun
