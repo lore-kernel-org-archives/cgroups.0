@@ -1,69 +1,69 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH cgroup/for-3.16-fixes] cpuset: break kernfs active
- protection in cpuset_write_resmask()
-Date: Tue, 1 Jul 2014 16:43:26 -0400
-Message-ID: <20140701204326.GB12459@htj.dyndns.org>
-References: <53B0DD8D.5060805@huawei.com>
- <20140630194732.GF14807@htj.dyndns.org>
+From: chai wen <chaiw.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Subject: [PATCH] cgroup: pretty format of /proc/cgoups stats showing
+Date: Wed, 2 Jul 2014 16:24:38 +0800
+Message-ID: <1404289478-5554-1-git-send-email-chaiw.fnst@cn.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=GMjD+Mzr55pXgGgyzsSKxquLLFrnai9tpVk87vZY0DM=;
-        b=WOA7v5SGUu4WN9PvsCVZp1UYOPvNe7kcvLQy4Ns5UJFQNHmtePbcuRsmiwI6CfEoi3
-         Eqe5owCfmNJC35M6jwzh2cRSEj+MAVm5SuwmARuWYZ8j0OQyHNFz7K1F5TAaDl/ZFdx3
-         EerEq07C+w5WnBeaf+Bx9zfoFQXNyly1p9DS53FS0kEaO0Ihh7YO/D64Y/9g83VTZfRj
-         Ck69j5ddu9VuASwjpNfltxFfWiZfQ7pmQn0DFoB+CFGFJDoZ6sLACpNkCuUpFTgcFhWS
-         aAOBuXOAVA8J0mIVpk38MfgJnNbsLFkipIKEfc0pd7TngdgRSKGeapQEfgmSE+QziYgC
-         TUPA==
-Content-Disposition: inline
-In-Reply-To: <20140630194732.GF14807@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, chai wen <chaiw.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 
-On Mon, Jun 30, 2014 at 03:47:32PM -0400, Tejun Heo wrote:
-> Hey, Li.
-> 
-> Can you please test this patch and ack it?
-> 
-> Thanks.
-> ------ 8< ------
-> Writing to either "cpuset.cpus" or "cpuset.mems" file flushes
-> cpuset_hotplug_work so that cpu or memory hotunplug doesn't end up
-> migrating tasks off a cpuset after new resources are added to it.
-> 
-> As cpuset_hotplug_work calls into cgroup core via
-> cgroup_transfer_tasks(), this flushing adds the dependency to cgroup
-> core locking from cpuset_write_resmak().  This used to be okay because
-> cgroup interface files were protected by a different mutex; however,
-> 8353da1f91f1 ("cgroup: remove cgroup_tree_mutex") simplified the
-> cgroup core locking and this dependency became a deadlock hazard -
-> cgroup file removal performed under cgroup core lock tries to drain
-> on-going file operation which is trying to flush cpuset_hotplug_work
-> blocked on the same cgroup core lock.
-> 
-> The locking simplification was done because kernfs added an a lot
-> easier way to deal with circular dependencies involving kernfs active
-> protection.  Let's use the same strategy in cpuset and break active
-> protection in cpuset_write_resmask().  While it isn't the prettiest,
-> this is a very rare, likely unique, situation which also goes away on
-> the unified hierarchy.
-> 
-> The commands to trigger the deadlock warning without the patch and the
-> lockdep output follow.
-...
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Reported-by: Li Zefan <lizefan@huawei.com>
+Just make /proc/cgroups have a better appearance, the original is a little
+misleading as its print format.
 
-Applied to cgroup/for-3.16-fixes.
+Before:
+#subsys_name	hierarchy	num_cgroups	enabled
+cpuset	0	1	1
+cpu	0	1	1
+cpuacct	0	1	1
+devices	0	1	1
+freezer	0	1	1
+net_cls	0	1	1
+blkio	0	1	1
+perf_event	0	1	1
 
-Thanks.
+After:
+#subsys_name       hierarchy          num_groups         enabled           
+cpuset             0                  1                  1                 
+cpu                0                  1                  1                 
+cpuacct            0                  1                  1                 
+devices            0                  1                  1                 
+freezer            0                  1                  1                 
+net_cls            0                  1                  1                 
+blkio              0                  1                  1                 
+perf_event         0                  1                  1                 
 
+
+Signed-off-by: chai wen <chaiw.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+---
+ kernel/cgroup.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 7868fc3..54c839e 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -4883,7 +4883,8 @@ static int proc_cgroupstats_show(struct seq_file *m, void *v)
+ 	struct cgroup_subsys *ss;
+ 	int i;
+ 
+-	seq_puts(m, "#subsys_name\thierarchy\tnum_cgroups\tenabled\n");
++	seq_printf(m, "%-18s %-18s %-18s %-18s\n", "#subsys_name", "hierarchy",
++		   "num_groups", "enabled");
+ 	/*
+ 	 * ideally we don't want subsystems moving around while we do this.
+ 	 * cgroup_mutex is also necessary to guarantee an atomic snapshot of
+@@ -4892,7 +4893,7 @@ static int proc_cgroupstats_show(struct seq_file *m, void *v)
+ 	mutex_lock(&cgroup_mutex);
+ 
+ 	for_each_subsys(ss, i)
+-		seq_printf(m, "%s\t%d\t%d\t%d\n",
++		seq_printf(m, "%-18s %-18d %-18d %-18d\n",
+ 			   ss->name, ss->root->hierarchy_id,
+ 			   atomic_read(&ss->root->nr_cgrps), !ss->disabled);
+ 
 -- 
-tejun
+1.7.1
