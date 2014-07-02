@@ -1,214 +1,209 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/5] cgroup: rename cgroup_subsys->base_cftypes to ->legacy_cftypes
-Date: Wed,  2 Jul 2014 19:50:52 -0400
-Message-ID: <1404345055-8196-3-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 1/5] cgroup: split cgroup_base_files[] into cgroup_{dfl|legacy}_base_files[]
+Date: Wed,  2 Jul 2014 19:50:51 -0400
+Message-ID: <1404345055-8196-2-git-send-email-tj@kernel.org>
 References: <1404345055-8196-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=uvTfHyW3GCyCYerKRu2ZWjbuc2neXEfNFk/2wSz+2Zk=;
-        b=hzrMAd59X4vpfp+yBRCgzak16I10CSlGMVPUjf14RX3LFuaTyFtFfWNe0ZSfMMm/Gn
-         zxr32AD3Kr5aasHKV4ikhWcOT6vcfCewbCzBM2ZvuAMy2/WtkvWQ4l8C5UhF8+MahSMN
-         xmoCGB7rP343SPxVxLci0YRDjKn4x0HuhhvY/NZTgjCG44fyAehI/kz2JUyP7A7gcuLY
-         3aC3hJQbYfwulUSqtTLPpKwasVD80zm8Inw6AvYHkUOYUs7IRmT7uQtBeOowb2t2U+GR
-         bzttYhzc26q2j1AcHtWcDhqbNTNKVOLoGhF7wiGWvhJwaBMY2cszqNXOilhb0R1STpXo
-         ooyQ==
-In-Reply-To: <1404345055-8196-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=8sWKQRj8ndTrVAp151AjRHsV2+NWEw3A9RqhTAhfSOc=;
+        b=ZXtsygeMXRg0W3Y2+BklzDBKRfercmazh+IdHNNBesyG6f+fdv2iY8hixA/Nv4UQ4n
+         e8LPscGf9AMt+YNHxvfo5JLN9ab706XUCjr23Onc5Za1xVIY8VbYUz+KXNFDQ4FLcUgu
+         jSnhZP0QotfjNTjcz6d1qr8JAzmN4OGxTU2oRcCbTGT3VQ9+3xfDLhb9xdqhFABatNeU
+         E+eTZiQmax45lXHIv7wvD0c/MXyZ1FMIUo5ST3pRnA4nN26KJKe0ewvl5KhL8OhZOkTf
+         LRD7uEMoLjaSC5ugN1VkslBPPjSaXybRG2tm5p/owak6CPMxDMwQjgC8QNR8XsAgLiIQ
+         j/dg==
+In-Reply-To: <1404345055-8196-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Vivek Goyal <vgoyal@redhat.com>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Paul Mackerras <paulus@samba.org>, Ingo Molnar <mingo@redhat.com>, Arnaldo Carvalho de Melo <acme@kernel.org>, Aristeu Rozanski <aris@redhat.com>, Neil Horman <nhorman@tuxdriver.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Currently, cgroup_subsys->base_cftypes is used for both the unified
-default hierarchy and legacy ones and subsystems can mark each file
-with either CFTYPE_ONLY_ON_DFL or CFTYPE_INSANE if it has to appear
-only on one of them.  This is quite hairy and error-prone.  Also, we
-may end up exposing interface files to the default hierarchy without
-thinking it through.
+Currently cgroup_base_files[] contains the cgroup core interface files
+for both legacy and default hierarchies with each file tagged with
+CFTYPE_INSANE and CFTYPE_ONLY_ON_DFL.  This is difficult to read.
 
-cgroup_subsys will grow two separate cftype arrays and apply each only
-on the hierarchies of the matching type.  This will allow organizing
-cftypes in a lot clearer way and encourage subsystems to scrutinize
-the interface which is being exposed in the new default hierarchy.
+Let's separate it out to two separate tables, cgroup_dfl_base_files[]
+and cgroup_legacy_base_files[], and use the appropriate one in
+cgroup_mkdir() depending on the hierarchy type.  This makes tagging
+each file unnecessary.
 
-In preparation, this patch renames cgroup_subsys->base_cftypes to
-cgroup_subsys->legacy_cftypes.  This patch is pure rename.
+This patch doesn't introduce any behavior changes.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
-Cc: Li Zefan <lizefan@huawei.com>
-Cc: Vivek Goyal <vgoyal@redhat.com>
-Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: Arnaldo Carvalho de Melo <acme@kernel.org>
-Cc: Aristeu Rozanski <aris@redhat.com>
-Cc: Neil Horman <nhorman@tuxdriver.com>
-Cc: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/blk-cgroup.c           | 2 +-
- include/linux/cgroup.h       | 2 +-
- kernel/cgroup.c              | 4 ++--
- kernel/cgroup_freezer.c      | 2 +-
- kernel/cpuset.c              | 2 +-
- kernel/sched/core.c          | 2 +-
- kernel/sched/cpuacct.c       | 2 +-
- mm/memcontrol.c              | 2 +-
- net/core/netclassid_cgroup.c | 2 +-
- net/core/netprio_cgroup.c    | 2 +-
- security/device_cgroup.c     | 2 +-
- 11 files changed, 12 insertions(+), 12 deletions(-)
+ kernel/cgroup.c | 75 ++++++++++++++++++++++++++++++++++++---------------------
+ 1 file changed, 47 insertions(+), 28 deletions(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 069bc20..d8a331d 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -924,7 +924,7 @@ struct cgroup_subsys blkio_cgrp_subsys = {
- 	.css_offline = blkcg_css_offline,
- 	.css_free = blkcg_css_free,
- 	.can_attach = blkcg_can_attach,
--	.base_cftypes = blkcg_files,
-+	.legacy_cftypes = blkcg_files,
- };
- EXPORT_SYMBOL_GPL(blkio_cgrp_subsys);
- 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 46e4661..c75742c 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -663,7 +663,7 @@ struct cgroup_subsys {
- 	struct list_head cfts;
- 
- 	/* base cftypes, automatically registered with subsys itself */
--	struct cftype *base_cftypes;
-+	struct cftype *legacy_cftypes;	/* used on the legacy hierarchies */
- };
- 
- #define SUBSYS(_x) extern struct cgroup_subsys _x ## _cgrp_subsys;
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 7210b3f..51b67fc 100644
+index 1c56924..7210b3f 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -4772,7 +4772,7 @@ int __init cgroup_init(void)
- 		 */
- 		if (!ss->disabled) {
- 			cgrp_dfl_root.subsys_mask |= 1 << ss->id;
--			WARN_ON(cgroup_add_cftypes(ss, ss->base_cftypes));
-+			WARN_ON(cgroup_add_cftypes(ss, ss->legacy_cftypes));
- 		}
+@@ -180,7 +180,8 @@ static u64 css_serial_nr_next = 1;
+  */
+ static int need_forkexit_callback __read_mostly;
+ 
+-static struct cftype cgroup_base_files[];
++static struct cftype cgroup_dfl_base_files[];
++static struct cftype cgroup_legacy_base_files[];
+ 
+ static void cgroup_put(struct cgroup *cgrp);
+ static int rebind_subsystems(struct cgroup_root *dst_root,
+@@ -1558,6 +1559,7 @@ static int cgroup_setup_root(struct cgroup_root *root, unsigned int ss_mask)
+ {
+ 	LIST_HEAD(tmp_links);
+ 	struct cgroup *root_cgrp = &root->cgrp;
++	struct cftype *base_files;
+ 	struct css_set *cset;
+ 	int i, ret;
+ 
+@@ -1595,7 +1597,12 @@ static int cgroup_setup_root(struct cgroup_root *root, unsigned int ss_mask)
  	}
+ 	root_cgrp->kn = root->kf_root->kn;
  
-@@ -5362,6 +5362,6 @@ static struct cftype debug_files[] =  {
- struct cgroup_subsys debug_cgrp_subsys = {
- 	.css_alloc = debug_css_alloc,
- 	.css_free = debug_css_free,
--	.base_cftypes = debug_files,
-+	.legacy_cftypes = debug_files,
- };
- #endif /* CONFIG_CGROUP_DEBUG */
-diff --git a/kernel/cgroup_freezer.c b/kernel/cgroup_freezer.c
-index a79e40f..92b98cc 100644
---- a/kernel/cgroup_freezer.c
-+++ b/kernel/cgroup_freezer.c
-@@ -480,5 +480,5 @@ struct cgroup_subsys freezer_cgrp_subsys = {
- 	.css_free	= freezer_css_free,
- 	.attach		= freezer_attach,
- 	.fork		= freezer_fork,
--	.base_cftypes	= files,
-+	.legacy_cftypes	= files,
- };
-diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index f9d4807..3d3150c 100644
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -1953,7 +1953,7 @@ struct cgroup_subsys cpuset_cgrp_subsys = {
- 	.can_attach = cpuset_can_attach,
- 	.cancel_attach = cpuset_cancel_attach,
- 	.attach = cpuset_attach,
--	.base_cftypes = files,
-+	.legacy_cftypes = files,
- 	.early_init = 1,
- };
+-	ret = cgroup_addrm_files(root_cgrp, cgroup_base_files, true);
++	if (root == &cgrp_dfl_root)
++		base_files = cgroup_dfl_base_files;
++	else
++		base_files = cgroup_legacy_base_files;
++
++	ret = cgroup_addrm_files(root_cgrp, base_files, true);
+ 	if (ret)
+ 		goto destroy_root;
  
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 3bdf01b..6628e80 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -8088,7 +8088,7 @@ struct cgroup_subsys cpu_cgrp_subsys = {
- 	.can_attach	= cpu_cgroup_can_attach,
- 	.attach		= cpu_cgroup_attach,
- 	.exit		= cpu_cgroup_exit,
--	.base_cftypes	= cpu_files,
-+	.legacy_cftypes	= cpu_files,
- 	.early_init	= 1,
- };
+@@ -3985,7 +3992,8 @@ static int cgroup_clone_children_write(struct cgroup_subsys_state *css,
+ 	return 0;
+ }
  
-diff --git a/kernel/sched/cpuacct.c b/kernel/sched/cpuacct.c
-index 9cf350c..dd7cbb5 100644
---- a/kernel/sched/cpuacct.c
-+++ b/kernel/sched/cpuacct.c
-@@ -278,6 +278,6 @@ void cpuacct_account_field(struct task_struct *p, int index, u64 val)
- struct cgroup_subsys cpuacct_cgrp_subsys = {
- 	.css_alloc	= cpuacct_css_alloc,
- 	.css_free	= cpuacct_css_free,
--	.base_cftypes	= files,
-+	.legacy_cftypes	= files,
- 	.early_init	= 1,
- };
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index f986671..0dd9378 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -7024,7 +7024,7 @@ struct cgroup_subsys memory_cgrp_subsys = {
- 	.cancel_attach = mem_cgroup_cancel_attach,
- 	.attach = mem_cgroup_move_task,
- 	.bind = mem_cgroup_bind,
--	.base_cftypes = mem_cgroup_files,
-+	.legacy_cftypes = mem_cgroup_files,
- 	.early_init = 0,
- };
+-static struct cftype cgroup_base_files[] = {
++/* cgroup core interface files for the default hierarchy */
++static struct cftype cgroup_dfl_base_files[] = {
+ 	{
+ 		.name = "cgroup.procs",
+ 		.seq_start = cgroup_pidlist_start,
+@@ -3997,46 +4005,51 @@ static struct cftype cgroup_base_files[] = {
+ 		.mode = S_IRUGO | S_IWUSR,
+ 	},
+ 	{
+-		.name = "cgroup.clone_children",
+-		.flags = CFTYPE_INSANE,
+-		.read_u64 = cgroup_clone_children_read,
+-		.write_u64 = cgroup_clone_children_write,
+-	},
+-	{
+-		.name = "cgroup.sane_behavior",
+-		.flags = CFTYPE_INSANE | CFTYPE_ONLY_ON_ROOT,
+-		.seq_show = cgroup_sane_behavior_show,
+-	},
+-	{
+ 		.name = "cgroup.controllers",
+-		.flags = CFTYPE_ONLY_ON_DFL | CFTYPE_ONLY_ON_ROOT,
++		.flags = CFTYPE_ONLY_ON_ROOT,
+ 		.seq_show = cgroup_root_controllers_show,
+ 	},
+ 	{
+ 		.name = "cgroup.controllers",
+-		.flags = CFTYPE_ONLY_ON_DFL | CFTYPE_NOT_ON_ROOT,
++		.flags = CFTYPE_NOT_ON_ROOT,
+ 		.seq_show = cgroup_controllers_show,
+ 	},
+ 	{
+ 		.name = "cgroup.subtree_control",
+-		.flags = CFTYPE_ONLY_ON_DFL,
+ 		.seq_show = cgroup_subtree_control_show,
+ 		.write = cgroup_subtree_control_write,
+ 	},
+ 	{
+ 		.name = "cgroup.populated",
+-		.flags = CFTYPE_ONLY_ON_DFL | CFTYPE_NOT_ON_ROOT,
++		.flags = CFTYPE_NOT_ON_ROOT,
+ 		.seq_show = cgroup_populated_show,
+ 	},
++};
  
-diff --git a/net/core/netclassid_cgroup.c b/net/core/netclassid_cgroup.c
-index 30d903b..1f2a126 100644
---- a/net/core/netclassid_cgroup.c
-+++ b/net/core/netclassid_cgroup.c
-@@ -107,5 +107,5 @@ struct cgroup_subsys net_cls_cgrp_subsys = {
- 	.css_online		= cgrp_css_online,
- 	.css_free		= cgrp_css_free,
- 	.attach			= cgrp_attach,
--	.base_cftypes		= ss_files,
-+	.legacy_cftypes		= ss_files,
- };
-diff --git a/net/core/netprio_cgroup.c b/net/core/netprio_cgroup.c
-index 2f385b9..cbd0a19 100644
---- a/net/core/netprio_cgroup.c
-+++ b/net/core/netprio_cgroup.c
-@@ -249,7 +249,7 @@ struct cgroup_subsys net_prio_cgrp_subsys = {
- 	.css_online	= cgrp_css_online,
- 	.css_free	= cgrp_css_free,
- 	.attach		= net_prio_attach,
--	.base_cftypes	= ss_files,
-+	.legacy_cftypes	= ss_files,
- };
+-	/*
+-	 * Historical crazy stuff.  These don't have "cgroup."  prefix and
+-	 * don't exist if sane_behavior.  If you're depending on these, be
+-	 * prepared to be burned.
+-	 */
++/* cgroup core interface files for the legacy hierarchies */
++static struct cftype cgroup_legacy_base_files[] = {
++	{
++		.name = "cgroup.procs",
++		.seq_start = cgroup_pidlist_start,
++		.seq_next = cgroup_pidlist_next,
++		.seq_stop = cgroup_pidlist_stop,
++		.seq_show = cgroup_pidlist_show,
++		.private = CGROUP_FILE_PROCS,
++		.write = cgroup_procs_write,
++		.mode = S_IRUGO | S_IWUSR,
++	},
++	{
++		.name = "cgroup.clone_children",
++		.read_u64 = cgroup_clone_children_read,
++		.write_u64 = cgroup_clone_children_write,
++	},
++	{
++		.name = "cgroup.sane_behavior",
++		.flags = CFTYPE_ONLY_ON_ROOT,
++		.seq_show = cgroup_sane_behavior_show,
++	},
+ 	{
+ 		.name = "tasks",
+-		.flags = CFTYPE_INSANE,		/* use "procs" instead */
+ 		.seq_start = cgroup_pidlist_start,
+ 		.seq_next = cgroup_pidlist_next,
+ 		.seq_stop = cgroup_pidlist_stop,
+@@ -4047,13 +4060,12 @@ static struct cftype cgroup_base_files[] = {
+ 	},
+ 	{
+ 		.name = "notify_on_release",
+-		.flags = CFTYPE_INSANE,
+ 		.read_u64 = cgroup_read_notify_on_release,
+ 		.write_u64 = cgroup_write_notify_on_release,
+ 	},
+ 	{
+ 		.name = "release_agent",
+-		.flags = CFTYPE_INSANE | CFTYPE_ONLY_ON_ROOT,
++		.flags = CFTYPE_ONLY_ON_ROOT,
+ 		.seq_show = cgroup_release_agent_show,
+ 		.write = cgroup_release_agent_write,
+ 		.max_write_len = PATH_MAX - 1,
+@@ -4330,6 +4342,7 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
+ 	struct cgroup_root *root;
+ 	struct cgroup_subsys *ss;
+ 	struct kernfs_node *kn;
++	struct cftype *base_files;
+ 	int ssid, ret;
  
- static int netprio_device_event(struct notifier_block *unused,
-diff --git a/security/device_cgroup.c b/security/device_cgroup.c
-index d9d69e6..188c1d2 100644
---- a/security/device_cgroup.c
-+++ b/security/device_cgroup.c
-@@ -796,7 +796,7 @@ struct cgroup_subsys devices_cgrp_subsys = {
- 	.css_free = devcgroup_css_free,
- 	.css_online = devcgroup_online,
- 	.css_offline = devcgroup_offline,
--	.base_cftypes = dev_cgroup_files,
-+	.legacy_cftypes = dev_cgroup_files,
- };
+ 	parent = cgroup_kn_lock_live(parent_kn);
+@@ -4400,7 +4413,12 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
+ 	if (ret)
+ 		goto out_destroy;
  
- /**
+-	ret = cgroup_addrm_files(cgrp, cgroup_base_files, true);
++	if (cgroup_on_dfl(cgrp))
++		base_files = cgroup_dfl_base_files;
++	else
++		base_files = cgroup_legacy_base_files;
++
++	ret = cgroup_addrm_files(cgrp, base_files, true);
+ 	if (ret)
+ 		goto out_destroy;
+ 
+@@ -4719,7 +4737,8 @@ int __init cgroup_init(void)
+ 	unsigned long key;
+ 	int ssid, err;
+ 
+-	BUG_ON(cgroup_init_cftypes(NULL, cgroup_base_files));
++	BUG_ON(cgroup_init_cftypes(NULL, cgroup_dfl_base_files));
++	BUG_ON(cgroup_init_cftypes(NULL, cgroup_legacy_base_files));
+ 
+ 	mutex_lock(&cgroup_mutex);
+ 
 -- 
 1.9.3
