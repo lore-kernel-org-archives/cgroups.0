@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 3/5] cgroup: replace cgroup_add_cftypes() with cgroup_add_legacy_cftypes()
-Date: Wed,  2 Jul 2014 19:50:53 -0400
-Message-ID: <1404345055-8196-4-git-send-email-tj@kernel.org>
+Subject: [PATCH 5/5] cgroup: make CFTYPE_ONLY_ON_DFL and CFTYPE_NO_ internal to cgroup core
+Date: Wed,  2 Jul 2014 19:50:55 -0400
+Message-ID: <1404345055-8196-6-git-send-email-tj@kernel.org>
 References: <1404345055-8196-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=aWX25ugX4Nf5OMr8oKGZcvKqWb37IbzciglmMAcOiD0=;
-        b=olvUAuHWDtsx2lH8J8YOK5HwgdxQHRHH/FMwNqhj+NeO2szWhPn2KaNkmiJdPWCB1J
-         b4S8NzMB4IdkJF1SiQyFHCNSSNz3AzrUQZmtfDpM7ZtXLob4kkvIpjxbK2MmKvsVyjk7
-         jDPPFw3jIUoXX4PGMUMIThh6ADcLkW6TdBGgxztzcSiAVEqZ7AKqOWEaY0gpz1iYe51V
-         INoMx1vNNnuIDVMgGKF8seXo13WAk2kYGH1BaVnsCqRUeNQLEhop8AkPyFLY27Vq2QXM
-         BtYKXjZNgob407c2NNhK/s0k/GyNr1lj7jswY8Hq6kMVqGvL5fI1fioUmU9+XgGJuqG4
-         tskQ==
+        bh=m5KdzfO60IOdh8vDzmUXJ5ETsCg7Z0TVYpZIBM7cqYs=;
+        b=OoejRJuiIAWmWulyrDoFhX9Hl1sI8c6YfaLrspCIp7+YdC9sriyier8BAL6l7f3xz6
+         9vYBwyTLHYxaM6bYCRvAJXgx4ycTl9SAzBCyDeadYUFZbniy87jAE8io0KXPX7GoQIen
+         zX6UC3k8DvSdMSZKUjnQxl/6N5Fe4JV+vm/t7OzXU/rjShIXZl5AMcaJxtv/iIzMkKtB
+         xZq8AeSvfp1ESPNx49QILwids38aM0QmBGCL76/66DtPash0xGMZtwqpFBXytXW7I6/x
+         ItHxJJGBCXdp2VUDoShm8EvFeGfjwTBwLERUIvuxyOWH/B8o4LFAAnpr6AyBzIZTpOLg
+         8ptQ==
 In-Reply-To: <1404345055-8196-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -21,138 +21,75 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Neil Horman <nhorman@tuxdriver.com>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-Currently, cftypes added by cgroup_add_cftypes() are used for both the
-unified default hierarchy and legacy ones and subsystems can mark each
-file with either CFTYPE_ONLY_ON_DFL or CFTYPE_INSANE if it has to
-appear only on one of them.  This is quite hairy and error-prone.
-Also, we may end up exposing interface files to the default hierarchy
-without thinking it through.
+cgroup now distinguishes cftypes for the default and legacy
+hierarchies more explicitly by using separate arrays and
+CFTYPE_ONLY_ON_DFL and CFTYPE_INSANE should be and are used only
+inside cgroup core proper.  Let's make it clear that the flags are
+internal by prefixing them with double underscores.
 
-cgroup_subsys will grow two separate cftype addition functions and
-apply each only on the hierarchies of the matching type.  This will
-allow organizing cftypes in a lot clearer way and encourage subsystems
-to scrutinize the interface which is being exposed in the new default
-hierarchy.
-
-In preparation, this patch adds cgroup_add_legacy_cftypes() which
-currently is a simple wrapper around cgroup_add_cftypes() and replaces
-all cgroup_add_cftypes() usages with it.
-
-While at it, this patch drops a completely spurious return from
-__hugetlb_cgroup_file_init().
-
-This patch doesn't introduce any functional differences.
+CFTYPE_INSANE is renamed to __CFTYPE_NOT_ON_DFL for consistency.  The
+two flags are also collected and assigned bits >= 16 so that they
+aren't mixed with the published flags.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
-Cc: Neil Horman <nhorman@tuxdriver.com>
-Cc: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
 ---
- block/blk-cgroup.c        | 3 ++-
- include/linux/cgroup.h    | 2 +-
- kernel/cgroup.c           | 7 ++++++-
- mm/hugetlb_cgroup.c       | 5 ++---
- mm/memcontrol.c           | 3 ++-
- net/ipv4/tcp_memcontrol.c | 2 +-
- 6 files changed, 14 insertions(+), 8 deletions(-)
+ include/linux/cgroup.h | 6 ++++--
+ kernel/cgroup.c        | 8 ++++----
+ 2 files changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index d8a331d..3885775 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -1116,7 +1116,8 @@ int __init blkcg_policy_register(struct blkcg_policy *pol)
- 
- 	/* everything is in place, add intf files for the new policy */
- 	if (pol->cftypes)
--		WARN_ON(cgroup_add_cftypes(&blkio_cgrp_subsys, pol->cftypes));
-+		WARN_ON(cgroup_add_legacy_cftypes(&blkio_cgrp_subsys,
-+						  pol->cftypes));
- 	ret = 0;
- out_unlock:
- 	mutex_unlock(&blkcg_pol_mutex);
 diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index c75742c..a75a37f 100644
+index 62a2be1..c047887c 100644
 --- a/include/linux/cgroup.h
 +++ b/include/linux/cgroup.h
-@@ -582,7 +582,7 @@ static inline void pr_cont_cgroup_path(struct cgroup *cgrp)
+@@ -376,9 +376,11 @@ struct css_set {
+ enum {
+ 	CFTYPE_ONLY_ON_ROOT	= (1 << 0),	/* only create on root cgrp */
+ 	CFTYPE_NOT_ON_ROOT	= (1 << 1),	/* don't create on root cgrp */
+-	CFTYPE_INSANE		= (1 << 2),	/* don't create if sane_behavior */
+ 	CFTYPE_NO_PREFIX	= (1 << 3),	/* (DON'T USE FOR NEW FILES) no subsys prefix */
+-	CFTYPE_ONLY_ON_DFL	= (1 << 4),	/* only on default hierarchy */
++
++	/* internal flags, do not use outside cgroup core proper */
++	__CFTYPE_ONLY_ON_DFL	= (1 << 16),	/* only on default hierarchy */
++	__CFTYPE_NOT_ON_DFL	= (1 << 17),	/* not on default hierarchy */
+ };
  
- char *task_cgroup_path(struct task_struct *task, char *buf, size_t buflen);
- 
--int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
-+int cgroup_add_legacy_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
- int cgroup_rm_cftypes(struct cftype *cfts);
- 
- bool cgroup_is_descendant(struct cgroup *cgrp, struct cgroup *ancestor);
+ #define MAX_CFTYPE_NAME		64
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 51b67fc..311d42b 100644
+index 94cdb7b..028ebf1 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -3060,7 +3060,7 @@ int cgroup_rm_cftypes(struct cftype *cfts)
-  * function currently returns 0 as long as @cfts registration is successful
-  * even if some file creation attempts on existing cgroups fail.
-  */
--int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
-+static int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
- {
- 	int ret;
+@@ -2921,9 +2921,9 @@ static int cgroup_addrm_files(struct cgroup *cgrp, struct cftype cfts[],
  
-@@ -3085,6 +3085,11 @@ int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
- 	return ret;
+ 	for (cft = cfts; cft->name[0] != '\0'; cft++) {
+ 		/* does cft->flags tell us to skip this file on @cgrp? */
+-		if ((cft->flags & CFTYPE_ONLY_ON_DFL) && !cgroup_on_dfl(cgrp))
++		if ((cft->flags & __CFTYPE_ONLY_ON_DFL) && !cgroup_on_dfl(cgrp))
+ 			continue;
+-		if ((cft->flags & CFTYPE_INSANE) && cgroup_on_dfl(cgrp))
++		if ((cft->flags & __CFTYPE_NOT_ON_DFL) && cgroup_on_dfl(cgrp))
+ 			continue;
+ 		if ((cft->flags & CFTYPE_NOT_ON_ROOT) && !cgroup_parent(cgrp))
+ 			continue;
+@@ -3104,7 +3104,7 @@ int cgroup_add_dfl_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
+ 	struct cftype *cft;
+ 
+ 	for (cft = cfts; cft && cft->name[0] != '\0'; cft++)
+-		cft->flags |= CFTYPE_ONLY_ON_DFL;
++		cft->flags |= __CFTYPE_ONLY_ON_DFL;
+ 	return cgroup_add_cftypes(ss, cfts);
  }
  
-+int cgroup_add_legacy_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
-+{
-+	return cgroup_add_cftypes(ss, cfts);
-+}
-+
- /**
-  * cgroup_task_count - count the number of tasks in a cgroup.
-  * @cgrp: the cgroup in question
-diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
-index 493f758..9aae6f4 100644
---- a/mm/hugetlb_cgroup.c
-+++ b/mm/hugetlb_cgroup.c
-@@ -358,9 +358,8 @@ static void __init __hugetlb_cgroup_file_init(int idx)
- 	cft = &h->cgroup_files[4];
- 	memset(cft, 0, sizeof(*cft));
+@@ -3121,7 +3121,7 @@ int cgroup_add_legacy_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
+ 	struct cftype *cft;
  
--	WARN_ON(cgroup_add_cftypes(&hugetlb_cgrp_subsys, h->cgroup_files));
--
--	return;
-+	WARN_ON(cgroup_add_legacy_cftypes(&hugetlb_cgrp_subsys,
-+					  h->cgroup_files));
+ 	for (cft = cfts; cft && cft->name[0] != '\0'; cft++)
+-		cft->flags |= CFTYPE_INSANE;
++		cft->flags |= __CFTYPE_NOT_ON_DFL;
+ 	return cgroup_add_cftypes(ss, cfts);
  }
  
- void __init hugetlb_cgroup_file_init(void)
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 0dd9378..a629611 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -7041,7 +7041,8 @@ __setup("swapaccount=", enable_swap_account);
- 
- static void __init memsw_file_init(void)
- {
--	WARN_ON(cgroup_add_cftypes(&memory_cgrp_subsys, memsw_cgroup_files));
-+	WARN_ON(cgroup_add_legacy_cftypes(&memory_cgrp_subsys,
-+					  memsw_cgroup_files));
- }
- 
- static void __init enable_swap_cgroup(void)
-diff --git a/net/ipv4/tcp_memcontrol.c b/net/ipv4/tcp_memcontrol.c
-index f7a2ec3..3af5226 100644
---- a/net/ipv4/tcp_memcontrol.c
-+++ b/net/ipv4/tcp_memcontrol.c
-@@ -222,7 +222,7 @@ static struct cftype tcp_files[] = {
- 
- static int __init tcp_memcontrol_init(void)
- {
--	WARN_ON(cgroup_add_cftypes(&memory_cgrp_subsys, tcp_files));
-+	WARN_ON(cgroup_add_legacy_cftypes(&memory_cgrp_subsys, tcp_files));
- 	return 0;
- }
- __initcall(tcp_memcontrol_init);
 -- 
 1.9.3
