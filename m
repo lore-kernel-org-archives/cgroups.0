@@ -1,76 +1,75 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 6/5] cgroup: initialize cgrp_dfl_root_inhibit_ss_mask from
- !->dfl_files test
-Date: Thu, 3 Jul 2014 11:21:03 -0400
-Message-ID: <20140703152103.GF16191@htj.dyndns.org>
-References: <1404345055-8196-1-git-send-email-tj@kernel.org>
+From: Li Zefan <lizefan@huawei.com>
+Subject: Re: [PATCHSET cgroup/for-3.17] cgroup, blkcg, memcg: make blkcg depend
+ on memcg on unified hierarchy
+Date: Fri, 4 Jul 2014 14:29:17 +0800
+Message-ID: <53B649BD.2010705@huawei.com>
+References: <1403917392-32555-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=3DH8VpSevudUGQSBw+k0MH2uE8a80165t6hPJvFQ3x8=;
-        b=EkiI11PzsImSgT5h269grul+ChtdCrPRUAiVJ3e/bv0y/W7gFWdjwnlPfPV1g6k7km
-         mCgnCzycO0jAVRq7orJchjS35XQlfTm2IEPfJS5ec3jY1KCjMtneKw9vGKUHfpLaHu6E
-         YRRBxGBpdr5Knh8jPMRrlGkgdGKTKryiGay2vzYivGn7QH+lLW2566XlUOJDmo4Iee8o
-         QL1F/F0c7iCRHCxtklexEDPo2wP1VUlLLrCYaHIrzpXsqaZrSm5z9+Veu5xJuNPa5crg
-         +7nXGhCy995rzMQUPKQKN66N8cKsVL7y8Ok8zK6u7ubAUS33TbKnKPcD1hyEeSXWcIYa
-         5YOg==
-Content-Disposition: inline
-In-Reply-To: <1404345055-8196-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1403917392-32555-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, hannes@cmpxchg.org, mhocko@suse.cz, vgoyal@redhat.com, axboe@kernel.dk
 
-From 29e5e8eac7ade8af5880020c91db9bc1c470596a Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date: Thu, 3 Jul 2014 11:18:31 -0400
+Hi Tejun,
 
-cgrp_dfl_root_inhibit_ss_mask determines which subsystems are not
-supported on the default hierarchy and is currently initialized
-statically and just includes the debug subsystem.  Now that there's
-cgroup_subsys->dfl_files, we can easily tell which subsystems support
-the default hierarchy or not.
+On 2014/6/28 9:03, Tejun Heo wrote:
+> Hello, guys.
+> 
+> Currently, the blkio subsystem attributes all of writeback IOs to the
+> root.  One of the issues is that there's no way to tell who originated
+> a writeback IO from block layer.  Those IOs are usually issued
+> asynchronously from a task which didn't have anything to do with
+> actually generating the dirty pages.  The memory subsystem, when
+> enabled, already keeps track of the ownership of each dirty page and
+> it's desirable for blkio to piggyback instead of adding its own
+> per-page tag.
 
-Let's initialize cgrp_dfl_root_inhibit_ss_mask by testing whether
-cgroup_subsys->dfl_files is NULL.  After all, subsystems with NULL
-->dfl_files aren't useable on the default hierarchy anyway.
+It's great to see this being worked on!
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- kernel/cgroup.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+> 
+> This can be achieved on the unified hierarchy without too much
+> difficulty.  This patchset implements a dependency mechanism in the
+> cgroup such that a subsystem can depends on other subsystems.  If
+> available, the depended-upon subsystems are enabled together
+> implicitly when the subsystem is turned on.  Implicitly enabled
+> subsystems are invisible and the dependencies are transparent to
+> userland.
+> 
+> This patchset implements the dependency mechanism in cgroup core and
+> make blkcg depend on memcg.  This doesn't actually solve the writeback
+> problem yet but is an important step.
+> 
+> This patchset contains the following six patches.
+> 
+>  0001-cgroup-reorganize-cgroup_subtree_control_write.patch
+>  0002-cgroup-introduce-cgroup-subtree_control.patch
+>  0003-cgroup-make-interface-files-visible-iff-enabled-on-c.patch
+>  0004-cgroup-implement-cgroup_subsys-css_reset.patch
+>  0005-cgroup-implement-cgroup_subsys-depends_on.patch
+>  0006-blkcg-memcg-make-blkcg-depend-on-memcg-on-the-defaul.patch
+> 
+> 0001-0005 gradually implement the dependency mechanism.
+> 
+> 0006 makes blkcg depend on memcg.
+> 
+> This patchset is on top of a497c3ba1d97 ("Linux 3.16-rc2") and
+> available in the following git branch.
+> 
+>  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-dependency
+> 
+> diffstat follows.  Thanks.
+> 
+>  Documentation/cgroups/cgroups.txt           |   14 +
+>  Documentation/cgroups/unified-hierarchy.txt |   23 ++-
+>  block/blk-cgroup.c                          |    7
+>  include/linux/cgroup.h                      |   20 ++
+>  kernel/cgroup.c                             |  201 ++++++++++++++++++++++------
+>  mm/memcontrol.c                             |   24 +++
+>  6 files changed, 243 insertions(+), 46 deletions(-)
+> 
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index bc38c75..a7fce52 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -156,11 +156,7 @@ static bool cgrp_dfl_root_visible;
- static bool cgroup_legacy_files_on_dfl;
- 
- /* some controllers are not supported in the default hierarchy */
--static const unsigned int cgrp_dfl_root_inhibit_ss_mask = 0
--#ifdef CONFIG_CGROUP_DEBUG
--	| (1 << debug_cgrp_id)
--#endif
--	;
-+static unsigned int cgrp_dfl_root_inhibit_ss_mask;
- 
- /* The list of hierarchy roots */
- 
-@@ -4818,6 +4814,9 @@ int __init cgroup_init(void)
- 		if (cgroup_legacy_files_on_dfl && !ss->dfl_cftypes)
- 			ss->dfl_cftypes = ss->legacy_cftypes;
- 
-+		if (!ss->dfl_cftypes)
-+			cgrp_dfl_root_inhibit_ss_mask |= 1 << ss->id;
-+
- 		if (ss->dfl_cftypes == ss->legacy_cftypes) {
- 			WARN_ON(cgroup_add_cftypes(ss, ss->dfl_cftypes));
- 		} else {
--- 
-1.9.3
+Acked-by: Li Zefan <lizefan@huawei.com>
