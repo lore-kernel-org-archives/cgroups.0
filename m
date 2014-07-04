@@ -1,75 +1,59 @@
-From: Li Zefan <lizefan@huawei.com>
-Subject: Re: [PATCHSET cgroup/for-3.17] cgroup, blkcg, memcg: make blkcg depend
- on memcg on unified hierarchy
-Date: Fri, 4 Jul 2014 14:29:17 +0800
-Message-ID: <53B649BD.2010705@huawei.com>
-References: <1403917392-32555-1-git-send-email-tj@kernel.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH RFC 0/5] Virtual Memory Resource Controller for cgroups
+Date: Fri, 4 Jul 2014 14:16:21 +0200
+Message-ID: <20140704121621.GE12466@dhcp22.suse.cz>
+References: <cover.1404383187.git.vdavydov@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1403917392-32555-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <cover.1404383187.git.vdavydov@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, hannes@cmpxchg.org, mhocko@suse.cz, vgoyal@redhat.com, axboe@kernel.dk
+Content-Transfer-Encoding: 7bit
+To: Vladimir Davydov <vdavydov@parallels.com>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Hugh Dickins <hughd@google.com>, David Rientjes <rientjes@google.com>, Pavel Emelyanov <xemul@parallels.com>, Balbir Singh <bsingharora@gmail.com>
 
-Hi Tejun,
+On Thu 03-07-14 16:48:16, Vladimir Davydov wrote:
+> Hi,
+> 
+> Typically, when a process calls mmap, it isn't given all the memory pages it
+> requested immediately. Instead, only its address space is grown, while the
+> memory pages will be actually allocated on the first use. If the system fails
+> to allocate a page, it will have no choice except invoking the OOM killer,
+> which may kill this or any other process. Obviously, it isn't the best way of
+> telling the user that the system is unable to handle his request. It would be
+> much better to fail mmap with ENOMEM instead.
+> 
+> That's why Linux has the memory overcommit control feature, which accounts and
+> limits VM size that may contribute to mem+swap, i.e. private writable mappings
+> and shared memory areas. However, currently it's only available system-wide,
+> and there's no way of avoiding OOM in cgroups.
+>
+> This patch set is an attempt to fill the gap. It implements the resource
+> controller for cgroups that accounts and limits address space allocations that
+> may contribute to mem+swap.
 
-On 2014/6/28 9:03, Tejun Heo wrote:
-> Hello, guys.
-> 
-> Currently, the blkio subsystem attributes all of writeback IOs to the
-> root.  One of the issues is that there's no way to tell who originated
-> a writeback IO from block layer.  Those IOs are usually issued
-> asynchronously from a task which didn't have anything to do with
-> actually generating the dirty pages.  The memory subsystem, when
-> enabled, already keeps track of the ownership of each dirty page and
-> it's desirable for blkio to piggyback instead of adding its own
-> per-page tag.
+Well, I am not really sure how helpful is this. Could you be more
+specific about real use cases? If the only problem is that memcg OOM can
+trigger to easily then I do not think this is the right approach to
+handle it. Strict no-overcommit is basically unusable for many
+workloads. Especially those which try to do their own memory usage
+optimization in a much larger address space.
 
-It's great to see this being worked on!
+Once I get from internal things (which will happen soon hopefully) I
+will post a series with a new sets of memcg limits. One of them is
+high_limit which can be used as a trigger for memcg reclaim. Unlike
+hard_limit there won't be any OOM if the reclaim fails at this stage. So
+if the high_limit is configured properly the admin will have enough time
+to make additional steps before OOM happens.
+[...]
+-- 
+Michal Hocko
+SUSE Labs
 
-> 
-> This can be achieved on the unified hierarchy without too much
-> difficulty.  This patchset implements a dependency mechanism in the
-> cgroup such that a subsystem can depends on other subsystems.  If
-> available, the depended-upon subsystems are enabled together
-> implicitly when the subsystem is turned on.  Implicitly enabled
-> subsystems are invisible and the dependencies are transparent to
-> userland.
-> 
-> This patchset implements the dependency mechanism in cgroup core and
-> make blkcg depend on memcg.  This doesn't actually solve the writeback
-> problem yet but is an important step.
-> 
-> This patchset contains the following six patches.
-> 
->  0001-cgroup-reorganize-cgroup_subtree_control_write.patch
->  0002-cgroup-introduce-cgroup-subtree_control.patch
->  0003-cgroup-make-interface-files-visible-iff-enabled-on-c.patch
->  0004-cgroup-implement-cgroup_subsys-css_reset.patch
->  0005-cgroup-implement-cgroup_subsys-depends_on.patch
->  0006-blkcg-memcg-make-blkcg-depend-on-memcg-on-the-defaul.patch
-> 
-> 0001-0005 gradually implement the dependency mechanism.
-> 
-> 0006 makes blkcg depend on memcg.
-> 
-> This patchset is on top of a497c3ba1d97 ("Linux 3.16-rc2") and
-> available in the following git branch.
-> 
->  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-dependency
-> 
-> diffstat follows.  Thanks.
-> 
->  Documentation/cgroups/cgroups.txt           |   14 +
->  Documentation/cgroups/unified-hierarchy.txt |   23 ++-
->  block/blk-cgroup.c                          |    7
->  include/linux/cgroup.h                      |   20 ++
->  kernel/cgroup.c                             |  201 ++++++++++++++++++++++------
->  mm/memcontrol.c                             |   24 +++
->  6 files changed, 243 insertions(+), 46 deletions(-)
-> 
-
-Acked-by: Li Zefan <lizefan@huawei.com>
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
