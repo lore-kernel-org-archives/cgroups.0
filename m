@@ -1,133 +1,223 @@
-From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH RFC 0/5] Virtual Memory Resource Controller for cgroups
-Date: Fri, 4 Jul 2014 19:38:53 +0400
-Message-ID: <20140704153853.GA369@esperanza>
-References: <cover.1404383187.git.vdavydov@parallels.com>
- <20140704121621.GE12466@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v2 1/5] cgroup: split cgroup_base_files[] into
+ cgroup_{dfl|legacy}_base_files[]
+Date: Fri, 4 Jul 2014 13:11:13 -0400
+Message-ID: <20140704171113.GA11787@mtj.dyndns.org>
+References: <1404345055-8196-1-git-send-email-tj@kernel.org>
+ <1404345055-8196-2-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=hgwp8tcnNhnH4gqrxuFS+pQ5nSdBHsbD7diOL9ubzjU=;
+        b=bMlIotN5B9T+PzPEpR8tsdo69S82/JKWcdfqtBYQnwPlpkEPkye0k0r0822WkVWVb9
+         1YEF2+f7E/K3KVkD2W6bOQDScEy59diWrfOKsCieT4mMvSW6XF/Gy9x2gXDI/WCpKOZ6
+         BoYQoRVT3m0AVY2Qh+v/19/OyBCONopAIQjJYuSr5uGHwOZyAH4LBacT/730G070/N+d
+         tHZe56cl5pYiZHaTPe35MNeUiMQTuzmzhQXJICGifyQ5OyKunrbOc2Nzv3oJB5Q4cEYI
+         ich1ZGO8Kf/LXTnoDM78U2jPePYx9osGaxGP1PaKiLSLJBF0vAtiggufyoSXbMRRj7O/
+         YFDQ==
 Content-Disposition: inline
-In-Reply-To: <20140704121621.GE12466-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <1404345055-8196-2-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi Michal,
+From f41924c8f07dcda07a31a08117bac077fde13626 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Fri, 4 Jul 2014 13:06:42 -0400
 
-On Fri, Jul 04, 2014 at 02:16:21PM +0200, Michal Hocko wrote:
-> On Thu 03-07-14 16:48:16, Vladimir Davydov wrote:
-> > Hi,
-> > 
-> > Typically, when a process calls mmap, it isn't given all the memory pages it
-> > requested immediately. Instead, only its address space is grown, while the
-> > memory pages will be actually allocated on the first use. If the system fails
-> > to allocate a page, it will have no choice except invoking the OOM killer,
-> > which may kill this or any other process. Obviously, it isn't the best way of
-> > telling the user that the system is unable to handle his request. It would be
-> > much better to fail mmap with ENOMEM instead.
-> > 
-> > That's why Linux has the memory overcommit control feature, which accounts and
-> > limits VM size that may contribute to mem+swap, i.e. private writable mappings
-> > and shared memory areas. However, currently it's only available system-wide,
-> > and there's no way of avoiding OOM in cgroups.
-> >
-> > This patch set is an attempt to fill the gap. It implements the resource
-> > controller for cgroups that accounts and limits address space allocations that
-> > may contribute to mem+swap.
-> 
-> Well, I am not really sure how helpful is this. Could you be more
-> specific about real use cases? If the only problem is that memcg OOM can
-> trigger to easily then I do not think this is the right approach to
-> handle it.
+Currently cgroup_base_files[] contains the cgroup core interface files
+for both legacy and default hierarchies with each file tagged with
+CFTYPE_INSANE and CFTYPE_ONLY_ON_DFL.  This is difficult to read.
 
-The problem is that an application inside a container is currently given
-no hints on how much memory it may actually consume. It can mmap a huge
-area and eventually find itself killed or swapped out after using
-several percent of it. This can be painful sometimes. Let me give an
-example.
+Let's separate it out to two separate tables, cgroup_dfl_base_files[]
+and cgroup_legacy_base_files[], and use the appropriate one in
+cgroup_mkdir() depending on the hierarchy type.  This makes tagging
+each file unnecessary.
 
-Suppose a user wants to run some computational workload, which may take
-several days. He doesn't exactly know how much memory it will consume,
-so he decides to start with buying a 1G container for it. He then starts
-the workload in the container and sees it's working fine for some time.
-So he decides he guessed the container size right and now only has to
-wait for a day or two. Suppose the workload actually wants 10G. Or it
-can consume up to 100G and has some weird logic to determine how much
-memory the system may give it, e.g. trying to mmap as much as possible.
-Suppose the server the container is running on has 1000G. The workload
-won't fail immediately then. It will be allowed to consume 1G, which may
-take quite long, but finally it will either fail with OOM or become
-really sluggish due to swap out. The user will probably be frustrated to
-see his workload failed when he comes back in a day or two, because it
-will cost him money and time. This wouldn't happen if there were the VM
-limit, which stopped the application immediately at start giving the
-user a hint that something is going wrong and he needs to either tune
-his application (e.g. setting -Xmsn for java) or buy a bigger container.
+This patch doesn't introduce any behavior changes.
 
-You can argue that the container may have a kind of meminfo
-virtualization and any sane application must go and check it, but (1)
-not all applications do that (some may try mmap-until-failure
-heuristic), (2) there may be several unrelated processes inside CT, each
-checking that there are pretty of free mem according to meminfo, mmaping
-it and failing later, (3) it may be an application container, which
-doesn't have proc mounted.
+v2: cgroup_dfl_base_files[] was missing the termination entry
+    triggering WARN in cgroup_init_cftypes() for 0day kernel testing
+    robot.  Fixed.
 
-I guess that's why most distributions have overcommit limited by default
-(vm.overcommit_memory!=2).
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Jet Chen <jet.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+---
+ kernel/cgroup.c | 76 ++++++++++++++++++++++++++++++++++++---------------------
+ 1 file changed, 48 insertions(+), 28 deletions(-)
 
-> Strict no-overcommit is basically unusable for many workloads.
-> Especially those which try to do their own memory usage optimization
-> in a much larger address space.
-
-Sure, 'no-overcommit' is definitely unusable, but we can set it to e.g.
-twice memcg limit. This will allow to overcommit memory to some extent,
-but fail for really large allocations that can never be served.
-
-> Once I get from internal things (which will happen soon hopefully) I
-> will post a series with a new sets of memcg limits. One of them is
-> high_limit which can be used as a trigger for memcg reclaim. Unlike
-> hard_limit there won't be any OOM if the reclaim fails at this stage. So
-> if the high_limit is configured properly the admin will have enough time
-> to make additional steps before OOM happens.
-
-High/low limits that start reclaim on internal/external pressure are
-definitely a very nice feature (may be even more useful that strict
-limits). However, they won't help us against overcommit inside a
-container. AFAIC,
-
- - low limit will allow the container to consume as much as he wants
-   until it triggers global memory pressure, then it will be shrunk back
-   to its limit aggressively;
-
- - high limit means allow to breach the limit, but trigger reclaim
-   asynchronously (a kind of kswapd) or synchronously when it happens.
-
-Right?
-
-Considering the example I've given above, both of these won't help if
-the system has other active CTs: the container will be forcefully kept
-around its high/low limit and, since it's definitely not enough for it,
-it will be finally killed crossing out the computations it's spent so
-much time on. High limit won't be good for the container even if there's
-no other load on the node - it will be constantly swapping out anon
-memory and evicting file caches. The application won't die quickly then,
-but it will get a heavy slowdown, which is no better than killing I
-guess.
-
-Also, I guess it'd be beneficial to have
-
- - mlocked pages accounting per cgroup, because they affect memory
-   reclaim, and how low/high limits work, so it'd be nice to have them
-   limited to a sane value;
-
- - shmem areas accounting per cgroup, because the total amount of shmem
-   on the system is limited, and it'll be no good if malicious
-   containers eat it all.
-
-IMO It wouldn't be a good idea to overwhelm memcg with those limits, the
-VM controller suits much better.
-
-Thanks.
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 1c56924..50858ff 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -180,7 +180,8 @@ static u64 css_serial_nr_next = 1;
+  */
+ static int need_forkexit_callback __read_mostly;
+ 
+-static struct cftype cgroup_base_files[];
++static struct cftype cgroup_dfl_base_files[];
++static struct cftype cgroup_legacy_base_files[];
+ 
+ static void cgroup_put(struct cgroup *cgrp);
+ static int rebind_subsystems(struct cgroup_root *dst_root,
+@@ -1558,6 +1559,7 @@ static int cgroup_setup_root(struct cgroup_root *root, unsigned int ss_mask)
+ {
+ 	LIST_HEAD(tmp_links);
+ 	struct cgroup *root_cgrp = &root->cgrp;
++	struct cftype *base_files;
+ 	struct css_set *cset;
+ 	int i, ret;
+ 
+@@ -1595,7 +1597,12 @@ static int cgroup_setup_root(struct cgroup_root *root, unsigned int ss_mask)
+ 	}
+ 	root_cgrp->kn = root->kf_root->kn;
+ 
+-	ret = cgroup_addrm_files(root_cgrp, cgroup_base_files, true);
++	if (root == &cgrp_dfl_root)
++		base_files = cgroup_dfl_base_files;
++	else
++		base_files = cgroup_legacy_base_files;
++
++	ret = cgroup_addrm_files(root_cgrp, base_files, true);
+ 	if (ret)
+ 		goto destroy_root;
+ 
+@@ -3985,7 +3992,8 @@ static int cgroup_clone_children_write(struct cgroup_subsys_state *css,
+ 	return 0;
+ }
+ 
+-static struct cftype cgroup_base_files[] = {
++/* cgroup core interface files for the default hierarchy */
++static struct cftype cgroup_dfl_base_files[] = {
+ 	{
+ 		.name = "cgroup.procs",
+ 		.seq_start = cgroup_pidlist_start,
+@@ -3997,46 +4005,52 @@ static struct cftype cgroup_base_files[] = {
+ 		.mode = S_IRUGO | S_IWUSR,
+ 	},
+ 	{
+-		.name = "cgroup.clone_children",
+-		.flags = CFTYPE_INSANE,
+-		.read_u64 = cgroup_clone_children_read,
+-		.write_u64 = cgroup_clone_children_write,
+-	},
+-	{
+-		.name = "cgroup.sane_behavior",
+-		.flags = CFTYPE_INSANE | CFTYPE_ONLY_ON_ROOT,
+-		.seq_show = cgroup_sane_behavior_show,
+-	},
+-	{
+ 		.name = "cgroup.controllers",
+-		.flags = CFTYPE_ONLY_ON_DFL | CFTYPE_ONLY_ON_ROOT,
++		.flags = CFTYPE_ONLY_ON_ROOT,
+ 		.seq_show = cgroup_root_controllers_show,
+ 	},
+ 	{
+ 		.name = "cgroup.controllers",
+-		.flags = CFTYPE_ONLY_ON_DFL | CFTYPE_NOT_ON_ROOT,
++		.flags = CFTYPE_NOT_ON_ROOT,
+ 		.seq_show = cgroup_controllers_show,
+ 	},
+ 	{
+ 		.name = "cgroup.subtree_control",
+-		.flags = CFTYPE_ONLY_ON_DFL,
+ 		.seq_show = cgroup_subtree_control_show,
+ 		.write = cgroup_subtree_control_write,
+ 	},
+ 	{
+ 		.name = "cgroup.populated",
+-		.flags = CFTYPE_ONLY_ON_DFL | CFTYPE_NOT_ON_ROOT,
++		.flags = CFTYPE_NOT_ON_ROOT,
+ 		.seq_show = cgroup_populated_show,
+ 	},
++	{ }	/* terminate */
++};
+ 
+-	/*
+-	 * Historical crazy stuff.  These don't have "cgroup."  prefix and
+-	 * don't exist if sane_behavior.  If you're depending on these, be
+-	 * prepared to be burned.
+-	 */
++/* cgroup core interface files for the legacy hierarchies */
++static struct cftype cgroup_legacy_base_files[] = {
++	{
++		.name = "cgroup.procs",
++		.seq_start = cgroup_pidlist_start,
++		.seq_next = cgroup_pidlist_next,
++		.seq_stop = cgroup_pidlist_stop,
++		.seq_show = cgroup_pidlist_show,
++		.private = CGROUP_FILE_PROCS,
++		.write = cgroup_procs_write,
++		.mode = S_IRUGO | S_IWUSR,
++	},
++	{
++		.name = "cgroup.clone_children",
++		.read_u64 = cgroup_clone_children_read,
++		.write_u64 = cgroup_clone_children_write,
++	},
++	{
++		.name = "cgroup.sane_behavior",
++		.flags = CFTYPE_ONLY_ON_ROOT,
++		.seq_show = cgroup_sane_behavior_show,
++	},
+ 	{
+ 		.name = "tasks",
+-		.flags = CFTYPE_INSANE,		/* use "procs" instead */
+ 		.seq_start = cgroup_pidlist_start,
+ 		.seq_next = cgroup_pidlist_next,
+ 		.seq_stop = cgroup_pidlist_stop,
+@@ -4047,13 +4061,12 @@ static struct cftype cgroup_base_files[] = {
+ 	},
+ 	{
+ 		.name = "notify_on_release",
+-		.flags = CFTYPE_INSANE,
+ 		.read_u64 = cgroup_read_notify_on_release,
+ 		.write_u64 = cgroup_write_notify_on_release,
+ 	},
+ 	{
+ 		.name = "release_agent",
+-		.flags = CFTYPE_INSANE | CFTYPE_ONLY_ON_ROOT,
++		.flags = CFTYPE_ONLY_ON_ROOT,
+ 		.seq_show = cgroup_release_agent_show,
+ 		.write = cgroup_release_agent_write,
+ 		.max_write_len = PATH_MAX - 1,
+@@ -4330,6 +4343,7 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
+ 	struct cgroup_root *root;
+ 	struct cgroup_subsys *ss;
+ 	struct kernfs_node *kn;
++	struct cftype *base_files;
+ 	int ssid, ret;
+ 
+ 	parent = cgroup_kn_lock_live(parent_kn);
+@@ -4400,7 +4414,12 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
+ 	if (ret)
+ 		goto out_destroy;
+ 
+-	ret = cgroup_addrm_files(cgrp, cgroup_base_files, true);
++	if (cgroup_on_dfl(cgrp))
++		base_files = cgroup_dfl_base_files;
++	else
++		base_files = cgroup_legacy_base_files;
++
++	ret = cgroup_addrm_files(cgrp, base_files, true);
+ 	if (ret)
+ 		goto out_destroy;
+ 
+@@ -4719,7 +4738,8 @@ int __init cgroup_init(void)
+ 	unsigned long key;
+ 	int ssid, err;
+ 
+-	BUG_ON(cgroup_init_cftypes(NULL, cgroup_base_files));
++	BUG_ON(cgroup_init_cftypes(NULL, cgroup_dfl_base_files));
++	BUG_ON(cgroup_init_cftypes(NULL, cgroup_legacy_base_files));
+ 
+ 	mutex_lock(&cgroup_mutex);
+ 
+-- 
+1.9.3
