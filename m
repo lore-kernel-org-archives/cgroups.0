@@ -1,45 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 05/12] cpuset: use effective cpumask to build sched
- domains
-Date: Wed, 9 Jul 2014 15:18:36 -0400
-Message-ID: <20140709191836.GA21090@htj.dyndns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3 03/12] cpuset: update cs->effective_{cpus,mems} when
+ config changes
+Date: Wed, 9 Jul 2014 15:57:26 -0400
+Message-ID: <20140709195726.GB21090@htj.dyndns.org>
 References: <53BD0174.4060002@huawei.com>
- <53BD01B6.403@huawei.com>
+ <53BD01A1.2060302@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=DBMxgCP3unpwtO4UB7deoNFToj3q9L9lWST6t2miWC0=;
-        b=HIFki0L+SpQwJ7VwyfP5PS1RQyWDVibOihtbvsHR720MEJnNg5SNdq7oNaXkuNBHPZ
-         lzCZYeoBBwiRFxkMxWg1fN1QuEz5LdCwTXuDdJY4V2d44jXLwk40fYPxHTsmFcTkbizj
-         UY1bxsi6bBiwO1oLMcl5PRkOxKVk4gZeqXT1X4FrM0f7UjJMo1KHyxDJvC3HoENNohTk
-         Oy6iW6ch03nm5by5vwpEXEyHLA9Rfe8oDYQugUN0yNVnvzOP6hqno8aw5p4thxFQj1CM
-         nWFEAeXOrBxLz18x5BH2oml0TxR2dykjgr8KnvxO2FlWO0QURC7E5rjAtguZDQ64b2H2
-         mYXg==
+        bh=E3F90vokytXetq+55u6X9dOjthlIMH2aNEYey4raBws=;
+        b=KBVmwRaQtQ49j1F3P69xAo6GifuXBfYGxqBxygjsJT3QFxsn9g75YagQqTNklKulHR
+         G1QOmHUwqPqsAsiYkvbBuQk8AvCAh3/9fYfSiH84x++2Tzjxwy5z5AJBeDpUcgOAuQ0+
+         v+I+6m98XZzIHmC7babgnZvI+KPpjFO2x74J7f/ayuvOU5kWX5g9XT41thfQi4SAWY5I
+         rfqlXf0MmJfbzx62UuFuTboCr/PXn8oImUuD01YsdlljAUFmqMO0+GDl4q6xXXrpsbYu
+         1BoSNH58iIjqTkdZxYfrEwMK1LABkJeEGBazCEKucpbO/RXAlDm5Ndt8ZwW5zltuYliz
+         qVmg==
 Content-Disposition: inline
-In-Reply-To: <53BD01B6.403@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <53BD01A1.2060302-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, cgroups <cgroups@vger.kernel.org>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Wed, Jul 09, 2014 at 04:47:50PM +0800, Li Zefan wrote:
-> +		/*
-> +		 * If the effective cpumask of any non-empty cpuset is changed,
-> +		 * we need to rebuild sched domains.
-> +		 */
-> +		if (!cpumask_empty(cp->cpus_allowed) &&
-> +		    is_sched_load_balance(cp))
-> +			need_rebuild_sched_domains = true;
+On Wed, Jul 09, 2014 at 04:47:29PM +0800, Li Zefan wrote:
+> +static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus)
 
-Hmmm... is this because if cpus_allowed is empty, the effective always
-equals the parent?  If so, let's update the comment so that it
-explains why the code is like that.  The current comment just explains
-what it does which isn't very helpful.
+Let's please use a variable name which clearly indicates that it's a
+temp place.  Something like @cpus_buf?  Ditto with mems.
 
 Thanks.
 
