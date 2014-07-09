@@ -1,59 +1,63 @@
-From: Li Zefan <lizefan@huawei.com>
-Subject: Re: [PATCHSET cgroup/for-3.17] cgroup: remove sane_behavior support
- on non-default hierarchies
-Date: Wed, 9 Jul 2014 15:25:00 +0800
-Message-ID: <53BCEE4C.6080006@huawei.com>
-References: <1404344747-7957-1-git-send-email-tj@kernel.org>
+From: Vladimir Davydov <vdavydov@parallels.com>
+Subject: Re: [PATCH RFC 0/5] Virtual Memory Resource Controller for cgroups
+Date: Wed, 9 Jul 2014 11:52:52 +0400
+Message-ID: <20140709075252.GB31067@esperanza>
+References: <cover.1404383187.git.vdavydov@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1404344747-7957-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <cover.1404383187.git.vdavydov@parallels.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Hugh Dickins <hughd@google.com>, David Rientjes <rientjes@google.com>, Pavel Emelyanov <xemul@parallels.com>, Balbir Singh <bsingharora@gmail.com>
 
-On 2014/7/3 7:45, Tejun Heo wrote:
-> Hello,
+On Thu, Jul 03, 2014 at 04:48:16PM +0400, Vladimir Davydov wrote:
+> Hi,
 > 
-> sane_behavior has been used as a development vehicle for the default
-> unified hierarchy.  Now that the default hierarchy is in place, the
-> flag became redundant and confusing as its usage is allowed on all
-> hierarchies.  There are gonna be either the default hierarchy or
-> legacy ones.  Let's make that clear by removing sane_behavior support
-> on non-default hierarchies.
+> Typically, when a process calls mmap, it isn't given all the memory pages it
+> requested immediately. Instead, only its address space is grown, while the
+> memory pages will be actually allocated on the first use. If the system fails
+> to allocate a page, it will have no choice except invoking the OOM killer,
+> which may kill this or any other process. Obviously, it isn't the best way of
+> telling the user that the system is unable to handle his request. It would be
+> much better to fail mmap with ENOMEM instead.
 > 
-> This patchset contains the following four patches.
+> That's why Linux has the memory overcommit control feature, which accounts and
+> limits VM size that may contribute to mem+swap, i.e. private writable mappings
+> and shared memory areas. However, currently it's only available system-wide,
+> and there's no way of avoiding OOM in cgroups.
 > 
->  0001-cgroup-remove-CGRP_ROOT_OPTION_MASK.patch
->  0002-cgroup-make-interface-file-cgroup.sane_behavior-lega.patch
->  0003-cgroup-remove-sane_behavior-support-on-non-default-h.patch
->  0004-cgroup-clean-up-sane_behavior-handling.patch
+> This patch set is an attempt to fill the gap. It implements the resource
+> controller for cgroups that accounts and limits address space allocations that
+> may contribute to mem+swap.
 > 
-> 0001 is a trivial cleanup.
+> The interface is similar to the one of the memory cgroup except it controls
+> virtual memory usage, not actual memory allocation:
 > 
-> 0002 removes "cgroup.sane_behavior" from the default hierarchy.
+>   vm.usage_in_bytes            current vm usage of processes inside cgroup
+>                                (read-only)
 > 
-> 0003 removes sane_behavior support on non-default hierarchies.
+>   vm.max_usage_in_bytes        max vm.usage_in_bytes, can be reset by writing 0
 > 
-> 0004 cleans up sane_behavior handling.
+>   vm.limit_in_bytes            vm.usage_in_bytes must be <= vm.limite_in_bytes;
+>                                allocations that hit the limit will be failed
+>                                with ENOMEM
 > 
-> This patchset is on top of a497c3ba1d97 ("Linux 3.16-rc2") and
-> available in the following git branch.
+>   vm.failcnt                   number of times the limit was hit, can be reset
+>                                by writing 0
 > 
->  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-dfl-instead-of-sane
-> 
-> diffstat follows.  Thanks.
-> 
->  block/blk-throttle.c   |    6 +-
->  include/linux/cgroup.h |  128 ++++++++++++++++++++-----------------------------
->  kernel/cgroup.c        |   96 +++++++++++++++---------------------
->  kernel/cpuset.c        |   33 +++++-------
->  mm/memcontrol.c        |    7 +-
->  5 files changed, 117 insertions(+), 153 deletions(-)
-> 
+> In future, the controller can be easily extended to account for locked pages
+> and shmem.
 
-Acked-by: Li Zefan <lizefan@huawei.com>
+Any thoughts on this?
 
-I'm rebasing my cpuset patchset against this.
+Thanks.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
