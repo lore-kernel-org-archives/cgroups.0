@@ -1,57 +1,62 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3 12/12] cpuset: export effective masks to userspace
-Date: Wed, 9 Jul 2014 16:24:08 -0400
-Message-ID: <20140709202408.GE21090@htj.dyndns.org>
-References: <53BD0174.4060002@huawei.com>
- <53BD0215.8060305@huawei.com>
- <20140709201549.GD21090@htj.dyndns.org>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=zviSMfA4CjztCxpuSRtqI1QVvO08BPs2cWk/GrA2Z1g=;
-        b=LTvr6EErHK3h6HCvB1cjsaSvEgcqC9pDe4GTDWwGXrsaeuWHzywEaSgRaZ+dAGexTk
-         ncVO0gntemV+mTeYPnTA3P6c56UTYKrKpP7JZqZKZZ7kmPa/NyTK+ctrHk7uBngnad9B
-         bHSlCjqugMjLQ3EB6rqHb8QqjXfqoyKIowQ2bCOk9Ctz6AcTpGDRnswEp2EywfgwL8Ww
-         DH9BI/7SA3pnnEa8M+JAiBDsxm9jnwGCgffqq4bXF5nURdxZD7dOsUiVNAIbY1Bv6SfT
-         mzEPUysa5or0rN4Z+J4R815ZtAoh7bId2/SikoMXt9rg62nzfcW7t/52cTY8FhBL3UZs
-         od5Q==
-Content-Disposition: inline
-In-Reply-To: <20140709201549.GD21090-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
+From: Paolo Valente <paolo.valente-rcYM44yAMweonA0d6jMUrA@public.gmane.org>
+Subject: Re: [PATCH RFC - TAKE TWO - 00/12] New version of the BFQ I/O
+	Scheduler
+Date: Wed, 9 Jul 2014 22:54:39 +0200
+Message-ID: <D03E1FFB-E614-4758-8639-D45D40E74A02@unimore.it>
+References: <20140528221929.GG1419@htj.dyndns.org>
+	<1401354343-5527-1-git-send-email-paolo.valente@unimore.it>
+	<20140530160712.GG24871@htj.dyndns.org>
+	<538926F6.7080409@kernel.dk>
+	<20140531051635.GA19925@mtj.dyndns.org>
+	<538C8A47.1050502@kernel.dk>
+	<0A5218F8-0215-4B4F-959B-EE5AAEFC164A@unimore.it>
+	<20140619014600.GA20100@mtj.dyndns.org>
+	<53A24B1C.1070004@kernel.dk>
+	<8F719638-0CD7-4BD2-8F4F-088913A0EE2D@unimore.it>
+	<20140623192022.GA19660@mtj.dyndns.org>
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20140623192022.GA19660-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Fabio Checconi <fchecconi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Arianna Avanzini <avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Jul 09, 2014 at 04:15:49PM -0400, Tejun Heo wrote:
-> On Wed, Jul 09, 2014 at 04:49:25PM +0800, Li Zefan wrote:
-> > cpuset.cpus and cpuset.mems are the configured masks, and we need
-> > to export effective masks to userspace, so users know the real
-> > cpus_allowed and mems_allowed that apply to the tasks in a cpuset.
-> > 
-> > v2:
-> > - export those masks unconditionally, suggested by Tejun.
-> > 
-> > Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Hoping that it may help people get a better idea of the features of bfq (while we work on the patches), I just uploaded a new, shorter demo (7 minutes) of BFQ with an SSD:
+http://youtu.be/KhZl9LjCKuU
+
+Paolo
+
+Il giorno 23/giu/2014, alle ore 21:20, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> ha scritto:
+
+> On Mon, Jun 23, 2014 at 03:53:09PM +0200, Paolo Valente wrote:
+>> I will wait shortly for a possible feedback on this proposal, and,
+>> then, if nothing has still to be changed or refined, silently start
+>> the process.
 > 
-> I applied this patch but there's a pending patchset to split legacy
-> and dfl cftype arrays, so maybe doing it separately makes more sense
-> now, I'm not sure.  Anyways, we need to review cpuset interface for
-> the default hierarchy anyway.  At least the memory pressure knobs
-> should go.  It's measuring something which is completely
-> implementation dependent.
+> We'll prolly end up doing a few iterations but overall it sounds good
+> to me.
+> 
+> Thanks.
+> 
+> -- 
+> tejun
 
-The exclusive knobs too.  These are purely to aid configuration.
-memory_migrate is questionable too given that we're moving towards the
-model where the controllers are set up before the cgroup gets
-populated.  Also, if necessary, this should be implementable from
-userland with migrate_pages(2).
 
-Thanks.
-
--- 
-tejun
+--
+Paolo Valente                                                 
+Algogroup
+Dipartimento di Fisica, Informatica e Matematica		
+Via Campi, 213/B
+41125 Modena - Italy        				  
+homepage:  http://algogroup.unimore.it/people/paolo/
