@@ -1,67 +1,180 @@
 From: Li Zefan <lizefan@huawei.com>
-Subject: [PATCH v3 00/12] cpuset: separate configured masks and effective
- masks
-Date: Wed, 9 Jul 2014 16:46:44 +0800
-Message-ID: <53BD0174.4060002@huawei.com>
+Subject: [PATCH v3 01/12] cpuset: add cs->effective_cpus and cs->effective_mems
+Date: Wed, 9 Jul 2014 16:47:03 +0800
+Message-ID: <53BD0187.9060309@huawei.com>
+References: <53BD0174.4060002@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <53BD0174.4060002@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj@kernel.org>
 Cc: LKML <linux-kernel@vger.kernel.org>, cgroups <cgroups@vger.kernel.org>
 
-This patcheset introduces behavior changes, but only for default hierarchy
+We're going to have separate user-configured masks and effective ones.
 
-- We introduce new interfaces cpuset.effective_cpus and cpuset.effective_mems,
-  while cpuset.cpus and cpuset.mems will be configured masks.
+Eventually configured masks can only be changed by writing cpuset.cpus
+and cpuset.mems, and they won't be restricted by parent cpuset. While
+effective masks reflect cpu/memory hotplug and hierachical restriction,
+and these are the real masks that apply to the tasks in the cpuset.
 
-- The configured masks can be changed by writing cpuset.cpus/mems only. They
-  won't be changed when hotplug happens.
+We calculate effective mask this way:
+  - top cpuset's effective_mask == online_mask, otherwise
+  - cpuset's effective_mask == configured_mask & parent effective_mask,
+    if the result is empty, it inherits parent effective mask.
 
-- Users can config cpus and mems without restrictions from the parent cpuset.
-  effective masks will enforce the hierarchical behavior.
+Those behavior changes are for default hierarchy only. For legacy
+hierachy, effective_mask and configured_mask are the same, so we won't
+break old interfaces.
 
-- Users can also config cpus and mems to have already offlined CPU/nodes.
+This patch adds the effective masks to struct cpuset and initializes
+them. The effective masks of the top cpuset is the same with configured
+masks, and a child cpuset inherits its parent's effective masks.
 
-- When a CPU/node is onlined, it will be brought back to the effective masks
-  if it's in the configured masks.
-
-- We build sched domains based on effective cpumask but not configured cpumask.
-
-v3:
-- rebased against "cgroup: remove sane_behavior support on non-default hierarchies"
-- addressed previous review comments
-- adjusted some code, comment and changelog slightly
+This won't introduce behavior change.
 
 v2:
-- fixed two bugs
-- made changelogs more verbose
-- added more comments
-- changed cs->real_{mems,cpus}_allowed to cs->effective_{mems, cpus}
-- splitted "cpuset: enable onlined cpu/node in effective masks" into 2 patches
-- exported cpuset.effective_{cpus,mems} unconditionally
+- s/real_{mems,cpus}_allowed/effective_{mems,cpus}, suggested by Tejun.
+- don't init effective masks in cpuset_css_online() if !cgroup_on_dfl.
 
+Signed-off-by: Li Zefan <lizefan@huawei.com>
+---
+ kernel/cpuset.c | 59 ++++++++++++++++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 48 insertions(+), 11 deletions(-)
 
-Li Zefan (12):
-  cpuset: add cs->effective_cpus and cs->effective_mems
-  cpuset: update cpuset->effective_{cpus,mems} at hotplug
-  cpuset: update cs->effective_{cpus,mems} when config changes
-  cpuset: inherit ancestor's masks if effective_{cpus,mems} becomes
-    empty
-  cpuset: use effective cpumask to build sched domains
-  cpuset: initialize top_cpuset's configured masks at mount
-  cpuset: apply cs->effective_{cpus,mems}
-  cpuset: make cs->{cpus,mems}_allowed as user-configured masks
-  cpuset: refactor cpuset_hotplug_update_tasks()
-  cpuset: enable onlined cpu/node in effective masks
-  cpuset: allow writing offlined masks to cpuset.cpus/mems
-  cpuset: export effective masks to userspace
-
- kernel/cpuset.c | 493 ++++++++++++++++++++++++++++++++++----------------------
- 1 file changed, 304 insertions(+), 189 deletions(-)
-
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index f9d4807..ef0974c 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -76,8 +76,14 @@ struct cpuset {
+ 	struct cgroup_subsys_state css;
+ 
+ 	unsigned long flags;		/* "unsigned long" so bitops work */
+-	cpumask_var_t cpus_allowed;	/* CPUs allowed to tasks in cpuset */
+-	nodemask_t mems_allowed;	/* Memory Nodes allowed to tasks */
++
++	/* user-configured CPUs and Memory Nodes allow to tasks */
++	cpumask_var_t cpus_allowed;
++	nodemask_t mems_allowed;
++
++	/* effective CPUs and Memory Nodes allow to tasks */
++	cpumask_var_t effective_cpus;
++	nodemask_t effective_mems;
+ 
+ 	/*
+ 	 * This is old Memory Nodes tasks took on.
+@@ -376,13 +382,20 @@ static struct cpuset *alloc_trial_cpuset(struct cpuset *cs)
+ 	if (!trial)
+ 		return NULL;
+ 
+-	if (!alloc_cpumask_var(&trial->cpus_allowed, GFP_KERNEL)) {
+-		kfree(trial);
+-		return NULL;
+-	}
+-	cpumask_copy(trial->cpus_allowed, cs->cpus_allowed);
++	if (!alloc_cpumask_var(&trial->cpus_allowed, GFP_KERNEL))
++		goto free_cs;
++	if (!alloc_cpumask_var(&trial->effective_cpus, GFP_KERNEL))
++		goto free_cpus;
+ 
++	cpumask_copy(trial->cpus_allowed, cs->cpus_allowed);
++	cpumask_copy(trial->effective_cpus, cs->effective_cpus);
+ 	return trial;
++
++free_cpus:
++	free_cpumask_var(trial->cpus_allowed);
++free_cs:
++	kfree(trial);
++	return NULL;
+ }
+ 
+ /**
+@@ -391,6 +404,7 @@ static struct cpuset *alloc_trial_cpuset(struct cpuset *cs)
+  */
+ static void free_trial_cpuset(struct cpuset *trial)
+ {
++	free_cpumask_var(trial->effective_cpus);
+ 	free_cpumask_var(trial->cpus_allowed);
+ 	kfree(trial);
+ }
+@@ -1848,18 +1862,26 @@ cpuset_css_alloc(struct cgroup_subsys_state *parent_css)
+ 	cs = kzalloc(sizeof(*cs), GFP_KERNEL);
+ 	if (!cs)
+ 		return ERR_PTR(-ENOMEM);
+-	if (!alloc_cpumask_var(&cs->cpus_allowed, GFP_KERNEL)) {
+-		kfree(cs);
+-		return ERR_PTR(-ENOMEM);
+-	}
++	if (!alloc_cpumask_var(&cs->cpus_allowed, GFP_KERNEL))
++		goto free_cs;
++	if (!alloc_cpumask_var(&cs->effective_cpus, GFP_KERNEL))
++		goto free_cpus;
+ 
+ 	set_bit(CS_SCHED_LOAD_BALANCE, &cs->flags);
+ 	cpumask_clear(cs->cpus_allowed);
+ 	nodes_clear(cs->mems_allowed);
++	cpumask_clear(cs->effective_cpus);
++	nodes_clear(cs->effective_mems);
+ 	fmeter_init(&cs->fmeter);
+ 	cs->relax_domain_level = -1;
+ 
+ 	return &cs->css;
++
++free_cpus:
++	free_cpumask_var(cs->cpus_allowed);
++free_cs:
++	kfree(cs);
++	return ERR_PTR(-ENOMEM);
+ }
+ 
+ static int cpuset_css_online(struct cgroup_subsys_state *css)
+@@ -1882,6 +1904,13 @@ static int cpuset_css_online(struct cgroup_subsys_state *css)
+ 
+ 	cpuset_inc();
+ 
++	mutex_lock(&callback_mutex);
++	if (cgroup_on_dfl(cs->css.cgroup)) {
++		cpumask_copy(cs->effective_cpus, parent->effective_cpus);
++		cs->effective_mems = parent->effective_mems;
++	}
++	mutex_unlock(&callback_mutex);
++
+ 	if (!test_bit(CGRP_CPUSET_CLONE_CHILDREN, &css->cgroup->flags))
+ 		goto out_unlock;
+ 
+@@ -1941,6 +1970,7 @@ static void cpuset_css_free(struct cgroup_subsys_state *css)
+ {
+ 	struct cpuset *cs = css_cs(css);
+ 
++	free_cpumask_var(cs->effective_cpus);
+ 	free_cpumask_var(cs->cpus_allowed);
+ 	kfree(cs);
+ }
+@@ -1969,9 +1999,13 @@ int __init cpuset_init(void)
+ 
+ 	if (!alloc_cpumask_var(&top_cpuset.cpus_allowed, GFP_KERNEL))
+ 		BUG();
++	if (!alloc_cpumask_var(&top_cpuset.effective_cpus, GFP_KERNEL))
++		BUG();
+ 
+ 	cpumask_setall(top_cpuset.cpus_allowed);
+ 	nodes_setall(top_cpuset.mems_allowed);
++	cpumask_setall(top_cpuset.effective_cpus);
++	nodes_setall(top_cpuset.effective_mems);
+ 
+ 	fmeter_init(&top_cpuset.fmeter);
+ 	set_bit(CS_SCHED_LOAD_BALANCE, &top_cpuset.flags);
+@@ -2207,6 +2241,9 @@ void __init cpuset_init_smp(void)
+ 	top_cpuset.mems_allowed = node_states[N_MEMORY];
+ 	top_cpuset.old_mems_allowed = top_cpuset.mems_allowed;
+ 
++	cpumask_copy(top_cpuset.effective_cpus, cpu_active_mask);
++	top_cpuset.effective_mems = node_states[N_MEMORY];
++
+ 	register_hotmemory_notifier(&cpuset_track_online_nodes_nb);
+ }
+ 
 -- 
 1.8.0.2
-
