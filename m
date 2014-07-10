@@ -1,62 +1,69 @@
-From: Paolo Valente <paolo.valente-rcYM44yAMweonA0d6jMUrA@public.gmane.org>
-Subject: Re: [PATCH RFC - TAKE TWO - 00/12] New version of the BFQ I/O
-	Scheduler
-Date: Wed, 9 Jul 2014 22:54:39 +0200
-Message-ID: <D03E1FFB-E614-4758-8639-D45D40E74A02@unimore.it>
-References: <20140528221929.GG1419@htj.dyndns.org>
-	<1401354343-5527-1-git-send-email-paolo.valente@unimore.it>
-	<20140530160712.GG24871@htj.dyndns.org>
-	<538926F6.7080409@kernel.dk>
-	<20140531051635.GA19925@mtj.dyndns.org>
-	<538C8A47.1050502@kernel.dk>
-	<0A5218F8-0215-4B4F-959B-EE5AAEFC164A@unimore.it>
-	<20140619014600.GA20100@mtj.dyndns.org>
-	<53A24B1C.1070004@kernel.dk>
-	<8F719638-0CD7-4BD2-8F4F-088913A0EE2D@unimore.it>
-	<20140623192022.GA19660@mtj.dyndns.org>
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL] cgroup fixes for v3.16-rc4
+Date: Thu, 10 Jul 2014 11:25:22 -0400
+Message-ID: <20140710152522.GF6609@htj.dyndns.org>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=UTZxFSMeLZxRytbEGIze3vLlg3Ae0wex1wBkYyaa2H4=;
+        b=lzehDY6kUULT5WaiHIRxkcQGJTSQa42gmPL71YnislHtkqnCnN0V2Wn/+RrFW2yb8z
+         iGKLnlivNbkIE+qVBRGNBxQ2M1NYhfwXJLrvrPS9AuG9z+u8GS0IGbEWzlMM/9Nw1aiU
+         h4waE2VussyTCrllLkSHWLEUXvZf5D/+cewUYa4u4pyFu4047fgiEJIKPUfAu5YK+7Od
+         zNabbDWZLa94ZXd3DDJSSEt9cbUqK0ZQO0oaYz4LCWnGfEQtpA5ypfOwtL1iEollB3nw
+         jWfinKCyNGe87LJcY5XskPcQx85TZCr61pvzGscxwf8hN7kaVJY3iaNLgObBLxpXU/Mh
+         Pjww==
+Content-Disposition: inline
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20140623192022.GA19660-9pTldWuhBndy/B6EtB590w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Fabio Checconi <fchecconi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Arianna Avanzini <avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hoping that it may help people get a better idea of the features of bfq (while we work on the patches), I just uploaded a new, shorter demo (7 minutes) of BFQ with an SSD:
-http://youtu.be/KhZl9LjCKuU
+Hello, again.
 
-Paolo
+Mostly fixes for the fallouts from the recent cgroup core changes.
+The decoupled nature of cgroup dynamic hierarchy management
+(hierarchies are created dynamically on mount but may or may not be
+reused once unmounted depending on remaining usages) led to more
+ugliness being added to kernfs.  Hopefully, this is the last of it.
 
-Il giorno 23/giu/2014, alle ore 21:20, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> ha scritto:
+Thanks.
 
-> On Mon, Jun 23, 2014 at 03:53:09PM +0200, Paolo Valente wrote:
->> I will wait shortly for a possible feedback on this proposal, and,
->> then, if nothing has still to be changed or refined, silently start
->> the process.
-> 
-> We'll prolly end up doing a few iterations but overall it sounds good
-> to me.
-> 
-> Thanks.
-> 
-> -- 
-> tejun
+The following changes since commit ebe06187bf2aec10d537ce4595e416035367d703:
 
+  epoll: fix use-after-free in eventpoll_release_file (2014-06-16 17:21:59 -1000)
 
---
-Paolo Valente                                                 
-Algogroup
-Dipartimento di Fisica, Informatica e Matematica		
-Via Campi, 213/B
-41125 Modena - Italy        				  
-homepage:  http://algogroup.unimore.it/people/paolo/
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.16-fixes
+
+for you to fetch changes up to 76bb5ab8f6e3e7bebdcefec4146ff305e7d0b465:
+
+  cpuset: break kernfs active protection in cpuset_write_resmask() (2014-07-01 16:42:28 -0400)
+
+----------------------------------------------------------------
+Gu Zheng (1):
+      cpuset,mempolicy: fix sleeping function called from invalid context
+
+Li Zefan (4):
+      cgroup: fix broken css_has_online_children()
+      cgroup: fix mount failure in a corner case
+      kernfs: introduce kernfs_pin_sb()
+      cgroup: fix a race between cgroup_mount() and cgroup_kill_sb()
+
+Tejun Heo (1):
+      cpuset: break kernfs active protection in cpuset_write_resmask()
+
+ fs/kernfs/mount.c      | 30 ++++++++++++++++++++++++++
+ include/linux/kernfs.h |  1 +
+ kernel/cgroup.c        | 58 +++++++++++++++++++++++++++++++++++++++++++-------
+ kernel/cpuset.c        | 20 ++++++++++++++++-
+ mm/mempolicy.c         |  2 --
+ 5 files changed, 100 insertions(+), 11 deletions(-)
+
+-- 
+tejun
