@@ -1,69 +1,66 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup fixes for v3.16-rc4
-Date: Thu, 10 Jul 2014 11:25:22 -0400
-Message-ID: <20140710152522.GF6609@htj.dyndns.org>
+From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH RFC 0/5] Virtual Memory Resource Controller for cgroups
+Date: Thu, 10 Jul 2014 20:35:45 +0400
+Message-ID: <20140710163545.GA835@esperanza>
+References: <cover.1404383187.git.vdavydov@parallels.com>
+ <20140709075252.GB31067@esperanza>
+ <CAAAKZwsRDb6a062SFZYv-1SDYyD12uTzVMpdZt0CtdDjoddNVg@mail.gmail.com>
+ <20140709163631.GG6685@esperanza>
+ <CAHH2K0Y2OH9scJ8FGkL3M124RSfoUFiELNhGNTHJEsaCEm+hiQ@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-         :content-disposition:user-agent;
-        bh=UTZxFSMeLZxRytbEGIze3vLlg3Ae0wex1wBkYyaa2H4=;
-        b=lzehDY6kUULT5WaiHIRxkcQGJTSQa42gmPL71YnislHtkqnCnN0V2Wn/+RrFW2yb8z
-         iGKLnlivNbkIE+qVBRGNBxQ2M1NYhfwXJLrvrPS9AuG9z+u8GS0IGbEWzlMM/9Nw1aiU
-         h4waE2VussyTCrllLkSHWLEUXvZf5D/+cewUYa4u4pyFu4047fgiEJIKPUfAu5YK+7Od
-         zNabbDWZLa94ZXd3DDJSSEt9cbUqK0ZQO0oaYz4LCWnGfEQtpA5ypfOwtL1iEollB3nw
-         jWfinKCyNGe87LJcY5XskPcQx85TZCr61pvzGscxwf8hN7kaVJY3iaNLgObBLxpXU/Mh
-         Pjww==
 Content-Disposition: inline
+In-Reply-To: <CAHH2K0Y2OH9scJ8FGkL3M124RSfoUFiELNhGNTHJEsaCEm+hiQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Hello, again.
+Hi Greg,
 
-Mostly fixes for the fallouts from the recent cgroup core changes.
-The decoupled nature of cgroup dynamic hierarchy management
-(hierarchies are created dynamically on mount but may or may not be
-reused once unmounted depending on remaining usages) led to more
-ugliness being added to kernfs.  Hopefully, this is the last of it.
+On Wed, Jul 09, 2014 at 10:04:21AM -0700, Greg Thelen wrote:
+> On Wed, Jul 9, 2014 at 9:36 AM, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
+> > Hi Tim,
+> >
+> > On Wed, Jul 09, 2014 at 08:08:07AM -0700, Tim Hockin wrote:
+> >> How is this different from RLIMIT_AS?  You specifically mentioned it
+> >> earlier but you don't explain how this is different.
+> >
+> > The main difference is that RLIMIT_AS is per process while this
+> > controller is per cgroup. RLIMIT_AS doesn't allow us to limit VSIZE for
+> > a group of unrelated or cooperating through shmem processes.
+> >
+> > Also RLIMIT_AS accounts for total VM usage (including file mappings),
+> > while this only charges private writable and shared mappings, whose
+> > faulted-in pages always occupy mem+swap and therefore cannot be just
+> > synced and dropped like file pages. In other words, this controller
+> > works exactly as the global overcommit control.
+> >
+> >> From my perspective, this is pointless.  There's plenty of perfectly
+> >> correct software that mmaps files without concern for VSIZE, because
+> >> they never fault most of those pages in.
+> >
+> > But there's also software that correctly handles ENOMEM returned by
+> > mmap. For example, mongodb keeps growing its buffers until mmap fails.
+> > Therefore, if there's no overcommit control, it will be OOM-killed
+> > sooner or later, which may be pretty annoying. And we did have customers
+> > complaining about that.
+> 
+> Is mongodb's buffer growth causing the oom kills?
+
+We saw this happened on our customer's node some time ago. A container
+running mongodb and several other services got OOM-kills from time to
+time, which made the customer unhappy. Limiting overcommit helped then.
+
+> If yes, I wonder if apps, like mongodb, that want ENOMEM should (1)
+> use MAP_POPULATE and (2) we change vm_map_pgoff() to propagate
+> mm_populate() ENOMEM failures back to mmap()?
+
+This way we may fault-in lots of pages, evicting someone's working set
+along the way, only to get ENOMEM eventually. This doesn't look optimal.
+Also, this requires modifications of userspace apps, which isn't always
+possible.
 
 Thanks.
-
-The following changes since commit ebe06187bf2aec10d537ce4595e416035367d703:
-
-  epoll: fix use-after-free in eventpoll_release_file (2014-06-16 17:21:59 -1000)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.16-fixes
-
-for you to fetch changes up to 76bb5ab8f6e3e7bebdcefec4146ff305e7d0b465:
-
-  cpuset: break kernfs active protection in cpuset_write_resmask() (2014-07-01 16:42:28 -0400)
-
-----------------------------------------------------------------
-Gu Zheng (1):
-      cpuset,mempolicy: fix sleeping function called from invalid context
-
-Li Zefan (4):
-      cgroup: fix broken css_has_online_children()
-      cgroup: fix mount failure in a corner case
-      kernfs: introduce kernfs_pin_sb()
-      cgroup: fix a race between cgroup_mount() and cgroup_kill_sb()
-
-Tejun Heo (1):
-      cpuset: break kernfs active protection in cpuset_write_resmask()
-
- fs/kernfs/mount.c      | 30 ++++++++++++++++++++++++++
- include/linux/kernfs.h |  1 +
- kernel/cgroup.c        | 58 +++++++++++++++++++++++++++++++++++++++++++-------
- kernel/cpuset.c        | 20 ++++++++++++++++-
- mm/mempolicy.c         |  2 --
- 5 files changed, 100 insertions(+), 11 deletions(-)
-
--- 
-tejun
