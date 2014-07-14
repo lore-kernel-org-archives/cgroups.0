@@ -1,208 +1,215 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [patch 12/13] mm: memcontrol: rewrite charge API
-Date: Mon, 14 Jul 2014 17:04:46 +0200
-Message-ID: <20140714150446.GD30713@dhcp22.suse.cz>
-References: <1403124045-24361-1-git-send-email-hannes@cmpxchg.org>
- <1403124045-24361-13-git-send-email-hannes@cmpxchg.org>
-Mime-Version: 1.0
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 1/6] cgroup: split cgroup_base_files[] into cgroup_{dfl|legacy}_base_files[]
+Date: Mon, 14 Jul 2014 11:44:03 -0400
+Message-ID: <1405352648-4279-2-git-send-email-tj@kernel.org>
+References: <1405352648-4279-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1403124045-24361-13-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=JFFrL76WmI1B4U2NPf0TTv7LHvXB1gYBaBJR2SK7idk=;
+        b=UgzwY7YDJju2vMTUaI3fXXt8eUeaRoIN02gUrTSeXQEHzPZl8A+wZ6+er87eCFI3t8
+         hbv2y+87x2n+Hzdg/s5XXM2yLLFu/vEWp4Nft1mMAxF4g/j8e78j6s1I6vXVZqii1sxE
+         6Wp5rVn8pDMmeI1kTM/aWK11vM+ZixDrJLo57KX7ylg5e/4A70WiPwRex93Eh8llPevM
+         MeDim2xerCHgx7NzBP9lYLDHP2poelxXlimE8GhFDbTiKPl9kVm7G08tqEa8ASFWj+qf
+         RxiBWyD5I35FA9MH5vXP+vmSr+igB+dEW0foQW35iRg8A+yjJZg7QAw0/+JzSKvPppXe
+         wXVw==
+In-Reply-To: <1405352648-4279-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jet Chen <jet.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-Hi,
-I've finally manage to untagle myself from internal stuff...
+Currently cgroup_base_files[] contains the cgroup core interface files
+for both legacy and default hierarchies with each file tagged with
+CFTYPE_INSANE and CFTYPE_ONLY_ON_DFL.  This is difficult to read.
 
-On Wed 18-06-14 16:40:44, Johannes Weiner wrote:
-> The memcg charge API charges pages before they are rmapped - i.e. have
-> an actual "type" - and so every callsite needs its own set of charge
-> and uncharge functions to know what type is being operated on.  Worse,
-> uncharge has to happen from a context that is still type-specific,
-> rather than at the end of the page's lifetime with exclusive access,
-> and so requires a lot of synchronization.
-> 
-> Rewrite the charge API to provide a generic set of try_charge(),
-> commit_charge() and cancel_charge() transaction operations, much like
-> what's currently done for swap-in:
-> 
->   mem_cgroup_try_charge() attempts to reserve a charge, reclaiming
->   pages from the memcg if necessary.
-> 
->   mem_cgroup_commit_charge() commits the page to the charge once it
->   has a valid page->mapping and PageAnon() reliably tells the type.
-> 
->   mem_cgroup_cancel_charge() aborts the transaction.
-> 
-> This reduces the charge API and enables subsequent patches to
-> drastically simplify uncharging.
-> 
-> As pages need to be committed after rmap is established but before
-> they are added to the LRU, page_add_new_anon_rmap() must stop doing
-> LRU additions again.  Revive lru_cache_add_active_or_unevictable().
+Let's separate it out to two separate tables, cgroup_dfl_base_files[]
+and cgroup_legacy_base_files[], and use the appropriate one in
+cgroup_mkdir() depending on the hierarchy type.  This makes tagging
+each file unnecessary.
 
-I think it would make more sense to do
-lru_cache_add_active_or_unevictable in a separate patch for easier
-review. Too late, though...
+This patch doesn't introduce any behavior changes.
 
-Few comments bellow
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+v2: cgroup_dfl_base_files[] was missing the termination entry
+    triggering WARN in cgroup_init_cftypes() for 0day kernel testing
+    robot.  Fixed.
 
-The patch looks correct but the code is quite tricky so I hope I didn't
-miss anything.
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Jet Chen <jet.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+---
+ kernel/cgroup.c | 76 ++++++++++++++++++++++++++++++++++++---------------------
+ 1 file changed, 48 insertions(+), 28 deletions(-)
 
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-
-> ---
->  Documentation/cgroups/memcg_test.txt |  32 +--
->  include/linux/memcontrol.h           |  53 ++---
->  include/linux/swap.h                 |   3 +
->  kernel/events/uprobes.c              |   1 +
->  mm/filemap.c                         |   9 +-
->  mm/huge_memory.c                     |  57 +++--
->  mm/memcontrol.c                      | 407 ++++++++++++++---------------------
->  mm/memory.c                          |  41 ++--
->  mm/rmap.c                            |  19 --
->  mm/shmem.c                           |  24 ++-
->  mm/swap.c                            |  34 +++
->  mm/swapfile.c                        |  14 +-
->  12 files changed, 314 insertions(+), 380 deletions(-)
-> 
-[...]
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index eb65d29516ca..1a9a096858e0 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -54,28 +54,11 @@ struct mem_cgroup_reclaim_cookie {
->  };
->  
->  #ifdef CONFIG_MEMCG
-> -/*
-> - * All "charge" functions with gfp_mask should use GFP_KERNEL or
-> - * (gfp_mask & GFP_RECLAIM_MASK). In current implementatin, memcg doesn't
-> - * alloc memory but reclaims memory from all available zones. So, "where I want
-> - * memory from" bits of gfp_mask has no meaning. So any bits of that field is
-> - * available but adding a rule is better. charge functions' gfp_mask should
-> - * be set to GFP_KERNEL or gfp_mask & GFP_RECLAIM_MASK for avoiding ambiguous
-> - * codes.
-> - * (Of course, if memcg does memory allocation in future, GFP_KERNEL is sane.)
-> - */
-
-I think we should slightly modify the comment but the primary idea
-should stay there. What about the following?
-/*
- * Although memcg charge functions do not allocate any memory they are
- * still getting GFP mask to control the reclaim process (therefore
- * gfp_mask & GFP_RECLAIM_MASK is expected).
- * GFP_KERNEL should be used for the general charge path without any
- * constraints for the reclaim
- * __GFP_WAIT should be cleared for atomic contexts
- * __GFP_NORETRY should be set for charges which might fail rather than
- * spend too much time reclaiming
- * __GFP_NOFAIL should be set for charges which cannot fail.
- */
-
-> -
-> -extern int mem_cgroup_charge_anon(struct page *page, struct mm_struct *mm,
-> -				gfp_t gfp_mask);
-> -/* for swap handling */
-> -extern int mem_cgroup_try_charge_swapin(struct mm_struct *mm,
-> -		struct page *page, gfp_t mask, struct mem_cgroup **memcgp);
-> -extern void mem_cgroup_commit_charge_swapin(struct page *page,
-> -					struct mem_cgroup *memcg);
-> -extern void mem_cgroup_cancel_charge_swapin(struct mem_cgroup *memcg);
-> -
-> -extern int mem_cgroup_charge_file(struct page *page, struct mm_struct *mm,
-> -					gfp_t gfp_mask);
-> +int mem_cgroup_try_charge(struct page *page, struct mm_struct *mm,
-> +			  gfp_t gfp_mask, struct mem_cgroup **memcgp);
-> +void mem_cgroup_commit_charge(struct page *page, struct mem_cgroup *memcg,
-> +			      bool lrucare);
-> +void mem_cgroup_cancel_charge(struct page *page, struct mem_cgroup *memcg);
->  
->  struct lruvec *mem_cgroup_zone_lruvec(struct zone *, struct mem_cgroup *);
->  struct lruvec *mem_cgroup_page_lruvec(struct page *, struct zone *);
-
-[...]
-
-> @@ -948,6 +951,7 @@ static int do_huge_pmd_wp_page_fallback(struct mm_struct *mm,
->  					struct page *page,
->  					unsigned long haddr)
->  {
-> +	struct mem_cgroup *memcg;
->  	spinlock_t *ptl;
->  	pgtable_t pgtable;
->  	pmd_t _pmd;
-> @@ -968,20 +972,21 @@ static int do_huge_pmd_wp_page_fallback(struct mm_struct *mm,
->  					       __GFP_OTHER_NODE,
->  					       vma, address, page_to_nid(page));
->  		if (unlikely(!pages[i] ||
-> -			     mem_cgroup_charge_anon(pages[i], mm,
-> -						       GFP_KERNEL))) {
-> +			     mem_cgroup_try_charge(pages[i], mm, GFP_KERNEL,
-> +						   &memcg))) {
->  			if (pages[i])
->  				put_page(pages[i]);
-> -			mem_cgroup_uncharge_start();
->  			while (--i >= 0) {
-> -				mem_cgroup_uncharge_page(pages[i]);
-> +				memcg = (void *)page_private(pages[i]);
-
-Hmm, OK the memcg couldn't go away even if mm owner has left it because
-the charge is already there and the page is not on LRU so the
-mem_cgroup_css_free will wait until we uncharge it or put to LRU.
-
-> +				set_page_private(pages[i], 0);
-> +				mem_cgroup_cancel_charge(pages[i], memcg);
->  				put_page(pages[i]);
->  			}
-> -			mem_cgroup_uncharge_end();
->  			kfree(pages);
->  			ret |= VM_FAULT_OOM;
->  			goto out;
->  		}
-
-		/*
-		 * Pages might end up charged to a different memcgs
-		 * because the mm owner might move while we are allocating
-		 * them. Abuse ->private field to store the charged
-		 * memcg until we know whether to commit or cancel the
-		 * charge.
-		 */
-> +		set_page_private(pages[i], (unsigned long)memcg);
->  	}
->  
->  	for (i = 0; i < HPAGE_PMD_NR; i++) {
-
-[...]
-
-> +/**
-> + * mem_cgroup_commit_charge - commit a page charge
-> + * @page: page to charge
-> + * @memcg: memcg to charge the page to
-> + * @lrucare: page might be on LRU already
-> + *
-> + * Finalize a charge transaction started by mem_cgroup_try_charge(),
-> + * after page->mapping has been set up.  This must happen atomically
-> + * as part of the page instantiation, i.e. under the page table lock
-> + * for anonymous pages, under the page lock for page and swap cache.
-> + *
-> + * In addition, the page must not be on the LRU during the commit, to
-> + * prevent racing with task migration.  If it might be, use @lrucare.
-> + *
-> + * Use mem_cgroup_cancel_charge() to cancel the transaction instead.
-> + */
-> +void mem_cgroup_commit_charge(struct page *page, struct mem_cgroup *memcg,
-> +			      bool lrucare)
-
-I think we should be explicit that this is only required for LRU pages.
-kmem doesn't have to finalize the transaction.
-
-[...]
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 28f7d47..7e5fee5 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -180,7 +180,8 @@ static u64 css_serial_nr_next = 1;
+  */
+ static int need_forkexit_callback __read_mostly;
+ 
+-static struct cftype cgroup_base_files[];
++static struct cftype cgroup_dfl_base_files[];
++static struct cftype cgroup_legacy_base_files[];
+ 
+ static void cgroup_put(struct cgroup *cgrp);
+ static int rebind_subsystems(struct cgroup_root *dst_root,
+@@ -1614,6 +1615,7 @@ static int cgroup_setup_root(struct cgroup_root *root, unsigned int ss_mask)
+ {
+ 	LIST_HEAD(tmp_links);
+ 	struct cgroup *root_cgrp = &root->cgrp;
++	struct cftype *base_files;
+ 	struct css_set *cset;
+ 	int i, ret;
+ 
+@@ -1651,7 +1653,12 @@ static int cgroup_setup_root(struct cgroup_root *root, unsigned int ss_mask)
+ 	}
+ 	root_cgrp->kn = root->kf_root->kn;
+ 
+-	ret = cgroup_addrm_files(root_cgrp, cgroup_base_files, true);
++	if (root == &cgrp_dfl_root)
++		base_files = cgroup_dfl_base_files;
++	else
++		base_files = cgroup_legacy_base_files;
++
++	ret = cgroup_addrm_files(root_cgrp, base_files, true);
+ 	if (ret)
+ 		goto destroy_root;
+ 
+@@ -4095,7 +4102,8 @@ static int cgroup_clone_children_write(struct cgroup_subsys_state *css,
+ 	return 0;
+ }
+ 
+-static struct cftype cgroup_base_files[] = {
++/* cgroup core interface files for the default hierarchy */
++static struct cftype cgroup_dfl_base_files[] = {
+ 	{
+ 		.name = "cgroup.procs",
+ 		.seq_start = cgroup_pidlist_start,
+@@ -4107,46 +4115,52 @@ static struct cftype cgroup_base_files[] = {
+ 		.mode = S_IRUGO | S_IWUSR,
+ 	},
+ 	{
+-		.name = "cgroup.clone_children",
+-		.flags = CFTYPE_INSANE,
+-		.read_u64 = cgroup_clone_children_read,
+-		.write_u64 = cgroup_clone_children_write,
+-	},
+-	{
+-		.name = "cgroup.sane_behavior",
+-		.flags = CFTYPE_INSANE | CFTYPE_ONLY_ON_ROOT,
+-		.seq_show = cgroup_sane_behavior_show,
+-	},
+-	{
+ 		.name = "cgroup.controllers",
+-		.flags = CFTYPE_ONLY_ON_DFL | CFTYPE_ONLY_ON_ROOT,
++		.flags = CFTYPE_ONLY_ON_ROOT,
+ 		.seq_show = cgroup_root_controllers_show,
+ 	},
+ 	{
+ 		.name = "cgroup.controllers",
+-		.flags = CFTYPE_ONLY_ON_DFL | CFTYPE_NOT_ON_ROOT,
++		.flags = CFTYPE_NOT_ON_ROOT,
+ 		.seq_show = cgroup_controllers_show,
+ 	},
+ 	{
+ 		.name = "cgroup.subtree_control",
+-		.flags = CFTYPE_ONLY_ON_DFL,
+ 		.seq_show = cgroup_subtree_control_show,
+ 		.write = cgroup_subtree_control_write,
+ 	},
+ 	{
+ 		.name = "cgroup.populated",
+-		.flags = CFTYPE_ONLY_ON_DFL | CFTYPE_NOT_ON_ROOT,
++		.flags = CFTYPE_NOT_ON_ROOT,
+ 		.seq_show = cgroup_populated_show,
+ 	},
++	{ }	/* terminate */
++};
+ 
+-	/*
+-	 * Historical crazy stuff.  These don't have "cgroup."  prefix and
+-	 * don't exist if sane_behavior.  If you're depending on these, be
+-	 * prepared to be burned.
+-	 */
++/* cgroup core interface files for the legacy hierarchies */
++static struct cftype cgroup_legacy_base_files[] = {
++	{
++		.name = "cgroup.procs",
++		.seq_start = cgroup_pidlist_start,
++		.seq_next = cgroup_pidlist_next,
++		.seq_stop = cgroup_pidlist_stop,
++		.seq_show = cgroup_pidlist_show,
++		.private = CGROUP_FILE_PROCS,
++		.write = cgroup_procs_write,
++		.mode = S_IRUGO | S_IWUSR,
++	},
++	{
++		.name = "cgroup.clone_children",
++		.read_u64 = cgroup_clone_children_read,
++		.write_u64 = cgroup_clone_children_write,
++	},
++	{
++		.name = "cgroup.sane_behavior",
++		.flags = CFTYPE_ONLY_ON_ROOT,
++		.seq_show = cgroup_sane_behavior_show,
++	},
+ 	{
+ 		.name = "tasks",
+-		.flags = CFTYPE_INSANE,		/* use "procs" instead */
+ 		.seq_start = cgroup_pidlist_start,
+ 		.seq_next = cgroup_pidlist_next,
+ 		.seq_stop = cgroup_pidlist_stop,
+@@ -4157,13 +4171,12 @@ static struct cftype cgroup_base_files[] = {
+ 	},
+ 	{
+ 		.name = "notify_on_release",
+-		.flags = CFTYPE_INSANE,
+ 		.read_u64 = cgroup_read_notify_on_release,
+ 		.write_u64 = cgroup_write_notify_on_release,
+ 	},
+ 	{
+ 		.name = "release_agent",
+-		.flags = CFTYPE_INSANE | CFTYPE_ONLY_ON_ROOT,
++		.flags = CFTYPE_ONLY_ON_ROOT,
+ 		.seq_show = cgroup_release_agent_show,
+ 		.write = cgroup_release_agent_write,
+ 		.max_write_len = PATH_MAX - 1,
+@@ -4444,6 +4457,7 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
+ 	struct cgroup_root *root;
+ 	struct cgroup_subsys *ss;
+ 	struct kernfs_node *kn;
++	struct cftype *base_files;
+ 	int ssid, ret;
+ 
+ 	parent = cgroup_kn_lock_live(parent_kn);
+@@ -4514,7 +4528,12 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
+ 	if (ret)
+ 		goto out_destroy;
+ 
+-	ret = cgroup_addrm_files(cgrp, cgroup_base_files, true);
++	if (cgroup_on_dfl(cgrp))
++		base_files = cgroup_dfl_base_files;
++	else
++		base_files = cgroup_legacy_base_files;
++
++	ret = cgroup_addrm_files(cgrp, base_files, true);
+ 	if (ret)
+ 		goto out_destroy;
+ 
+@@ -4836,7 +4855,8 @@ int __init cgroup_init(void)
+ 	unsigned long key;
+ 	int ssid, err;
+ 
+-	BUG_ON(cgroup_init_cftypes(NULL, cgroup_base_files));
++	BUG_ON(cgroup_init_cftypes(NULL, cgroup_dfl_base_files));
++	BUG_ON(cgroup_init_cftypes(NULL, cgroup_legacy_base_files));
+ 
+ 	mutex_lock(&cgroup_mutex);
+ 
 -- 
-Michal Hocko
-SUSE Labs
+1.9.3
