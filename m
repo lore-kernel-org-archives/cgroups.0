@@ -1,85 +1,214 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCHSET v2 cgroup/for-3.17] cgroup: distinguish the default and legacy hierarchies when handling cftypes
-Date: Mon, 14 Jul 2014 11:44:02 -0400
-Message-ID: <1405352648-4279-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 2/6] cgroup: rename cgroup_subsys->base_cftypes to ->legacy_cftypes
+Date: Mon, 14 Jul 2014 11:44:04 -0400
+Message-ID: <1405352648-4279-3-git-send-email-tj@kernel.org>
+References: <1405352648-4279-1-git-send-email-tj@kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id;
-        bh=aOIAtKg6by6+AT95ajkkKm/BAIpVZs71nn+T41+NbAU=;
-        b=vpaWBLXmooVNr0UW+dX+AffuxyG6vIKjz3JnNTF1vaqvuoZBVbuEu+OQxUCifWrMDc
-         +3stlhHT/mNGkoQT8pu9iC5cM9o7NWQE0g31Xa+vjs++GEfs0z7Xkjzu0Z5+HaxD9Okk
-         IXOXg1LJEaq3Md3tsIb0EZ8o+ae8ret27XUXbpFCJBS+bnth/PTuSBs0Ei1C2tU8wevz
-         BJcccVsNfuQlAloZoEDsWihGlmNGyi6D7xs3Hkw640Za2pVwR+EXJ+zWHL65XflJnOnH
-         s+0e3a2gpIh4MfgyK40kdCiYU3akm/1RqMSOny07ZmBdeo0B1kNwsN/FJVVUAg3K/RlS
-         QQFg==
-Sender: linux-kernel-owner@vger.kernel.org
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=scxQRkR3aTeKfhIvt6OlOwqnpw/TzVmwusDxAK8iqj4=;
+        b=p41oWLXagNVxYW5vzIgj1yhFbKWyI+cvL0gMMlUnXSddB+R8LtFWtQG6gyMG1EXVGu
+         UyZn/k/U1vqDBZ2SypHgpsPvRkt14sBmuwab820cdJnDQNLdYH9TyqWUN6DDGMdOb2S4
+         3/9hYTvimCelMPo+um7d8FXXutexDCoGmcGwX6a0stJA4NhdR4ISmx517VNoBDYGE51n
+         i8S2YdgPpMhZvPVhP6XLZUqbOZ+Uulj19ezs2UhMv840KtBHl7Z63vOxb5hp7CUto2mn
+         jx5AhNMfN4YAZqzNovPO5q4f81w8JFavPFVKmeMoCwhTuHdPsN8ZWa6s5w/QAm5XyPes
+         84GA==
+In-Reply-To: <1405352648-4279-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Arnaldo Carvalho de Melo <acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-Hello,
+Currently, cgroup_subsys->base_cftypes is used for both the unified
+default hierarchy and legacy ones and subsystems can mark each file
+with either CFTYPE_ONLY_ON_DFL or CFTYPE_INSANE if it has to appear
+only on one of them.  This is quite hairy and error-prone.  Also, we
+may end up exposing interface files to the default hierarchy without
+thinking it through.
 
-This is v2 of dfl_files patchset.  Changes from the last version [1]
-are
+cgroup_subsys will grow two separate cftype arrays and apply each only
+on the hierarchies of the matching type.  This will allow organizing
+cftypes in a lot clearer way and encourage subsystems to scrutinize
+the interface which is being exposed in the new default hierarchy.
 
-* Rebased on top of cgroup/for-3.17.
+In preparation, this patch renames cgroup_subsys->base_cftypes to
+cgroup_subsys->legacy_cftypes.  This patch is pure rename.
 
-* 0004 updated so that CFTYPE_ONLY_ON_DFL and CFTYPE_INSANE are
-  cleared when cfts are removed as suggested by Li.
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Acked-by: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
+Cc: Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Arnaldo Carvalho de Melo <acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+---
+ block/blk-cgroup.c           | 2 +-
+ include/linux/cgroup.h       | 2 +-
+ kernel/cgroup.c              | 4 ++--
+ kernel/cgroup_freezer.c      | 2 +-
+ kernel/cpuset.c              | 2 +-
+ kernel/sched/core.c          | 2 +-
+ kernel/sched/cpuacct.c       | 2 +-
+ mm/memcontrol.c              | 2 +-
+ net/core/netclassid_cgroup.c | 2 +-
+ net/core/netprio_cgroup.c    | 2 +-
+ security/device_cgroup.c     | 2 +-
+ 11 files changed, 12 insertions(+), 12 deletions(-)
 
-Until now, cftype arrays carried files for both the default and legacy
-hierarchies and the files which needed to be used on only one of them
-were flagged with either CFTYPE_ONLY_ON_DFL or CFTYPE_INSANE.  This
-gets confusing very quickly and we may end up exposing interface files
-to the default hierarchy without thinking it through.
-
-This patchset makes cgroup core provide separate sets of interfaces
-for cftype handling so that the cftypes for the default and legacy
-hierarchies are clearly distinguished.  This makes all the existing
-subsystem interface files legacy-only by default and all subsystems
-will have no interface file created when enabled on the default
-hierarchy.  Each subsystem should explicitly review and compose the
-interface for the default hierarchy.
-
-This patchset contains the following six patches.
-
- 0001-cgroup-split-cgroup_base_files-into-cgroup_-dfl-lega.patch
- 0002-cgroup-rename-cgroup_subsys-base_cftypes-to-legacy_c.patch
- 0003-cgroup-replace-cgroup_add_cftypes-with-cgroup_add_le.patch
- 0004-cgroup-distinguish-the-default-and-legacy-hierarchie.patch
- 0005-cgroup-make-CFTYPE_ONLY_ON_DFL-and-CFTYPE_NO_-intern.patch
- 0006-cgroup-initialize-cgrp_dfl_root_inhibit_ss_mask-from.patch
-
-This patchset is on top of afd1a8b3e0bc ("cpuset: export effective
-masks to userspace")
-
-and available in the following git branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-dfl_files-v2
-
-diffstat follows.  Thanks.
-
- Documentation/cgroups/unified-hierarchy.txt |   18 ++-
- block/blk-cgroup.c                          |    5
- include/linux/cgroup.h                      |   17 ++
- kernel/cgroup.c                             |  160 +++++++++++++++++++++-------
- kernel/cgroup_freezer.c                     |    2
- kernel/cpuset.c                             |    2
- kernel/sched/core.c                         |    2
- kernel/sched/cpuacct.c                      |    2
- mm/hugetlb_cgroup.c                         |    5
- mm/memcontrol.c                             |    6 -
- net/core/netclassid_cgroup.c                |    2
- net/core/netprio_cgroup.c                   |    2
- net/ipv4/tcp_memcontrol.c                   |    2
- security/device_cgroup.c                    |    2
- 14 files changed, 160 insertions(+), 67 deletions(-)
-
---
-tejun
-
-[1] http://lkml.kernel.org/g/1404345055-8196-1-git-send-email-tj@kernel.org
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 63c3cd4..5cfbc72 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -924,7 +924,7 @@ struct cgroup_subsys blkio_cgrp_subsys = {
+ 	.css_offline = blkcg_css_offline,
+ 	.css_free = blkcg_css_free,
+ 	.can_attach = blkcg_can_attach,
+-	.base_cftypes = blkcg_files,
++	.legacy_cftypes = blkcg_files,
+ #ifdef CONFIG_MEMCG
+ 	/*
+ 	 * This ensures that, if available, memcg is automatically enabled
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 7bb2744..a6e9c2e 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -672,7 +672,7 @@ struct cgroup_subsys {
+ 	struct list_head cfts;
+ 
+ 	/* base cftypes, automatically registered with subsys itself */
+-	struct cftype *base_cftypes;
++	struct cftype *legacy_cftypes;	/* used on the legacy hierarchies */
+ 
+ 	/*
+ 	 * A subsystem may depend on other subsystems.  When such subsystem
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 7e5fee5..6496a83 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -4890,7 +4890,7 @@ int __init cgroup_init(void)
+ 		 */
+ 		if (!ss->disabled) {
+ 			cgrp_dfl_root.subsys_mask |= 1 << ss->id;
+-			WARN_ON(cgroup_add_cftypes(ss, ss->base_cftypes));
++			WARN_ON(cgroup_add_cftypes(ss, ss->legacy_cftypes));
+ 		}
+ 	}
+ 
+@@ -5480,6 +5480,6 @@ static struct cftype debug_files[] =  {
+ struct cgroup_subsys debug_cgrp_subsys = {
+ 	.css_alloc = debug_css_alloc,
+ 	.css_free = debug_css_free,
+-	.base_cftypes = debug_files,
++	.legacy_cftypes = debug_files,
+ };
+ #endif /* CONFIG_CGROUP_DEBUG */
+diff --git a/kernel/cgroup_freezer.c b/kernel/cgroup_freezer.c
+index a79e40f..92b98cc 100644
+--- a/kernel/cgroup_freezer.c
++++ b/kernel/cgroup_freezer.c
+@@ -480,5 +480,5 @@ struct cgroup_subsys freezer_cgrp_subsys = {
+ 	.css_free	= freezer_css_free,
+ 	.attach		= freezer_attach,
+ 	.fork		= freezer_fork,
+-	.base_cftypes	= files,
++	.legacy_cftypes	= files,
+ };
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index 53a9bbf..f337f42 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -2036,7 +2036,7 @@ struct cgroup_subsys cpuset_cgrp_subsys = {
+ 	.cancel_attach	= cpuset_cancel_attach,
+ 	.attach		= cpuset_attach,
+ 	.bind		= cpuset_bind,
+-	.base_cftypes	= files,
++	.legacy_cftypes	= files,
+ 	.early_init	= 1,
+ };
+ 
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 3bdf01b..6628e80 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -8088,7 +8088,7 @@ struct cgroup_subsys cpu_cgrp_subsys = {
+ 	.can_attach	= cpu_cgroup_can_attach,
+ 	.attach		= cpu_cgroup_attach,
+ 	.exit		= cpu_cgroup_exit,
+-	.base_cftypes	= cpu_files,
++	.legacy_cftypes	= cpu_files,
+ 	.early_init	= 1,
+ };
+ 
+diff --git a/kernel/sched/cpuacct.c b/kernel/sched/cpuacct.c
+index 9cf350c..dd7cbb5 100644
+--- a/kernel/sched/cpuacct.c
++++ b/kernel/sched/cpuacct.c
+@@ -278,6 +278,6 @@ void cpuacct_account_field(struct task_struct *p, int index, u64 val)
+ struct cgroup_subsys cpuacct_cgrp_subsys = {
+ 	.css_alloc	= cpuacct_css_alloc,
+ 	.css_free	= cpuacct_css_free,
+-	.base_cftypes	= files,
++	.legacy_cftypes	= files,
+ 	.early_init	= 1,
+ };
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index a2a4bd6..8331f27 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -7048,7 +7048,7 @@ struct cgroup_subsys memory_cgrp_subsys = {
+ 	.cancel_attach = mem_cgroup_cancel_attach,
+ 	.attach = mem_cgroup_move_task,
+ 	.bind = mem_cgroup_bind,
+-	.base_cftypes = mem_cgroup_files,
++	.legacy_cftypes = mem_cgroup_files,
+ 	.early_init = 0,
+ };
+ 
+diff --git a/net/core/netclassid_cgroup.c b/net/core/netclassid_cgroup.c
+index 30d903b..1f2a126 100644
+--- a/net/core/netclassid_cgroup.c
++++ b/net/core/netclassid_cgroup.c
+@@ -107,5 +107,5 @@ struct cgroup_subsys net_cls_cgrp_subsys = {
+ 	.css_online		= cgrp_css_online,
+ 	.css_free		= cgrp_css_free,
+ 	.attach			= cgrp_attach,
+-	.base_cftypes		= ss_files,
++	.legacy_cftypes		= ss_files,
+ };
+diff --git a/net/core/netprio_cgroup.c b/net/core/netprio_cgroup.c
+index 2f385b9..cbd0a19 100644
+--- a/net/core/netprio_cgroup.c
++++ b/net/core/netprio_cgroup.c
+@@ -249,7 +249,7 @@ struct cgroup_subsys net_prio_cgrp_subsys = {
+ 	.css_online	= cgrp_css_online,
+ 	.css_free	= cgrp_css_free,
+ 	.attach		= net_prio_attach,
+-	.base_cftypes	= ss_files,
++	.legacy_cftypes	= ss_files,
+ };
+ 
+ static int netprio_device_event(struct notifier_block *unused,
+diff --git a/security/device_cgroup.c b/security/device_cgroup.c
+index d9d69e6..188c1d2 100644
+--- a/security/device_cgroup.c
++++ b/security/device_cgroup.c
+@@ -796,7 +796,7 @@ struct cgroup_subsys devices_cgrp_subsys = {
+ 	.css_free = devcgroup_css_free,
+ 	.css_online = devcgroup_online,
+ 	.css_offline = devcgroup_offline,
+-	.base_cftypes = dev_cgroup_files,
++	.legacy_cftypes = dev_cgroup_files,
+ };
+ 
+ /**
+-- 
+1.9.3
