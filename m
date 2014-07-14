@@ -1,59 +1,43 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 4/5] cgroup: distinguish the default and legacy hierarchies
- when handling cftypes
-Date: Mon, 14 Jul 2014 10:13:27 +0800
-Message-ID: <53C33CC7.3020707@huawei.com>
-References: <1404345055-8196-1-git-send-email-tj@kernel.org> <1404345055-8196-5-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 4/5] cgroup: distinguish the default and legacy
+ hierarchies when handling cftypes
+Date: Mon, 14 Jul 2014 10:42:57 -0400
+Message-ID: <20140714144257.GD31610@htj.dyndns.org>
+References: <1404345055-8196-1-git-send-email-tj@kernel.org>
+ <1404345055-8196-5-git-send-email-tj@kernel.org>
+ <53C33CC7.3020707@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1404345055-8196-5-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=vwCKPFDRE9c5cf08wDueb5wOrza61OacR3uO7N73eXs=;
+        b=sTujrPSlG4vPZlBHsYuz4bRyK4Z54uKvOTtlpSmTvV8gR/2jshrIjnP8M3W8MN43Go
+         VIA5HnyIqUaJuD9cJwUAB9WkHR5AoerOOmK0q2zIU6/XqoScqOQRO/ewHpmH5NTf/2Ur
+         uhjJx5c9LlqU10rmfVD5nFiFMh2jRxYi/3qhjDujvIlzz3I7/vZM/ILjJqyT5GMDKigO
+         x/DHDqUslo9Aab8Z9M9q/yyDT58IJ+DDG8MmJ0AMGDHfWTa8yyLjj9VNaxpC8B7VXifJ
+         9gbNAREahtlslkcC3A0FUUpv0+l4wqX5Hpfk4mgqlurJSc7V0WumHceiQNSHqKGDpiYa
+         LEGw==
+Content-Disposition: inline
+In-Reply-To: <53C33CC7.3020707-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Arnaldo Carvalho de Melo <acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-> @@ -3085,8 +3091,37 @@ static int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
->  	return ret;
->  }
->  
-> +/**
-> + * cgroup_add_dfl_cftypes - add an array of cftypes for default hierarchy
-> + * @ss: target cgroup subsystem
-> + * @cfts: zero-length name terminated array of cftypes
-> + *
-> + * Similar to cgroup_add_cftypes() but the added files are only used for
-> + * the default hierarchy.
-> + */
-> +int cgroup_add_dfl_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
-> +{
-> +	struct cftype *cft;
-> +
-> +	for (cft = cfts; cft && cft->name[0] != '\0'; cft++)
-> +		cft->flags |= CFTYPE_ONLY_ON_DFL;
+On Mon, Jul 14, 2014 at 10:13:27AM +0800, Li Zefan wrote:
+> I think we should remove this flag in cgroup_rm_cftypes_locked(). Otherwise
+> if we call cgroup_add_dlf_cftypes() and then cgroup_rm_cftypes() and then
+> cgroup_add_legacy_cftypes() for the same @cfts, both CFTYPE_ONLY_ON_DFL and
+> CFTYPE_INSANE are set.
 
-I think we should remove this flag in cgroup_rm_cftypes_locked(). Otherwise
-if we call cgroup_add_dlf_cftypes() and then cgroup_rm_cftypes() and then
-cgroup_add_legacy_cftypes() for the same @cfts, both CFTYPE_ONLY_ON_DFL and
-CFTYPE_INSANE are set.
+Heh, that's unlikely to actually happen but yes clearing would be
+better.  Will update accordingly.
 
-> +	return cgroup_add_cftypes(ss, cfts);
-> +}
-> +
-> +/**
-> + * cgroup_add_legacy_cftypes - add an array of cftypes for legacy hierarchies
-> + * @ss: target cgroup subsystem
-> + * @cfts: zero-length name terminated array of cftypes
-> + *
-> + * Similar to cgroup_add_cftypes() but the added files are only used for
-> + * the legacy hierarchies.
-> + */
->  int cgroup_add_legacy_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
->  {
-> +	struct cftype *cft;
-> +
-> +	for (cft = cfts; cft && cft->name[0] != '\0'; cft++)
-> +		cft->flags |= CFTYPE_INSANE;
->  	return cgroup_add_cftypes(ss, cfts);
->  }
+Thanks.
+
+-- 
+tejun
