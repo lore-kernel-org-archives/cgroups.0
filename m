@@ -1,158 +1,162 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 3/6] cgroup: replace cgroup_add_cftypes() with cgroup_add_legacy_cftypes()
-Date: Mon, 14 Jul 2014 11:44:05 -0400
-Message-ID: <1405352648-4279-4-git-send-email-tj@kernel.org>
-References: <1405352648-4279-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=/hBBkORbOFF0Wt4u/kmWyizH+fIdNzkUkNXeYGENalk=;
-        b=vABEW1mpF3JlMTIvp5kcnjaRqsaNL5DzxH9C5aqs+3Jd8OkkoM/YRcklltapOPF/yY
-         ckm6Xfq4PzshuxAfF4p/TMwTABSJw+wQ4x5utZamq9lGH8Yw15/lkkHf16X2sL5yAVIo
-         hWsl0XX8XrH29w0+JNj0roUX8frQWUeBFxfwbmmP1WSY7FooGlG3+lEG6qJTZ1apHvpf
-         mmvsKlGB89i3bLVBh6ce9X5LaTXhxRGThW/OL6MhXbjEWzLKuJx0jT3zBN7I86cEZosR
-         HlsXeq1Ty8FIqCrhf4Coc7AuRfiu1Y9zhwamKb2TRjE0kdDFkWgV6WQ4ux7ZqXJjDVRs
-         SfWw==
-In-Reply-To: <1405352648-4279-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [patch 12/13] mm: memcontrol: rewrite charge API
+Date: Mon, 14 Jul 2014 13:13:24 -0400
+Message-ID: <20140714171324.GQ29639@cmpxchg.org>
+References: <1403124045-24361-1-git-send-email-hannes@cmpxchg.org>
+ <1403124045-24361-13-git-send-email-hannes@cmpxchg.org>
+ <20140714150446.GD30713@dhcp22.suse.cz>
+Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=tq3nqm33cN3ch1KzuB4JLz1xzuHFwNhaJof+sUzRKfM=;
+	b=ZmeVzNAVgMHotEkZVqJqMmtbcQgfXoERk3p0Nwl5uX0yZGjIg2HX1/K5r/TWfCOA+Qy2kwnLMxi1U4tgrPEbxeyxGEyvoJUa1hLv6m8Zq28HjYUKLwaSm0VxVjKcWwELaNbTHos61mtsLK4Fqu9evC5L/tGcKy42DxD8E1q9Z1g=;
+Content-Disposition: inline
+In-Reply-To: <20140714150446.GD30713@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Currently, cftypes added by cgroup_add_cftypes() are used for both the
-unified default hierarchy and legacy ones and subsystems can mark each
-file with either CFTYPE_ONLY_ON_DFL or CFTYPE_INSANE if it has to
-appear only on one of them.  This is quite hairy and error-prone.
-Also, we may end up exposing interface files to the default hierarchy
-without thinking it through.
+On Mon, Jul 14, 2014 at 05:04:46PM +0200, Michal Hocko wrote:
+> Hi,
+> I've finally manage to untagle myself from internal stuff...
+> 
+> On Wed 18-06-14 16:40:44, Johannes Weiner wrote:
+> > The memcg charge API charges pages before they are rmapped - i.e. have
+> > an actual "type" - and so every callsite needs its own set of charge
+> > and uncharge functions to know what type is being operated on.  Worse,
+> > uncharge has to happen from a context that is still type-specific,
+> > rather than at the end of the page's lifetime with exclusive access,
+> > and so requires a lot of synchronization.
+> > 
+> > Rewrite the charge API to provide a generic set of try_charge(),
+> > commit_charge() and cancel_charge() transaction operations, much like
+> > what's currently done for swap-in:
+> > 
+> >   mem_cgroup_try_charge() attempts to reserve a charge, reclaiming
+> >   pages from the memcg if necessary.
+> > 
+> >   mem_cgroup_commit_charge() commits the page to the charge once it
+> >   has a valid page->mapping and PageAnon() reliably tells the type.
+> > 
+> >   mem_cgroup_cancel_charge() aborts the transaction.
+> > 
+> > This reduces the charge API and enables subsequent patches to
+> > drastically simplify uncharging.
+> > 
+> > As pages need to be committed after rmap is established but before
+> > they are added to the LRU, page_add_new_anon_rmap() must stop doing
+> > LRU additions again.  Revive lru_cache_add_active_or_unevictable().
+> 
+> I think it would make more sense to do
+> lru_cache_add_active_or_unevictable in a separate patch for easier
+> review. Too late, though...
+> 
+> Few comments bellow
+> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> 
+> The patch looks correct but the code is quite tricky so I hope I didn't
+> miss anything.
+> 
+> Acked-by: Michal Hocko <mhocko@suse.cz>
 
-cgroup_subsys will grow two separate cftype addition functions and
-apply each only on the hierarchies of the matching type.  This will
-allow organizing cftypes in a lot clearer way and encourage subsystems
-to scrutinize the interface which is being exposed in the new default
-hierarchy.
+Thanks!
 
-In preparation, this patch adds cgroup_add_legacy_cftypes() which
-currently is a simple wrapper around cgroup_add_cftypes() and replaces
-all cgroup_add_cftypes() usages with it.
+> > @@ -54,28 +54,11 @@ struct mem_cgroup_reclaim_cookie {
+> >  };
+> >  
+> >  #ifdef CONFIG_MEMCG
+> > -/*
+> > - * All "charge" functions with gfp_mask should use GFP_KERNEL or
+> > - * (gfp_mask & GFP_RECLAIM_MASK). In current implementatin, memcg doesn't
+> > - * alloc memory but reclaims memory from all available zones. So, "where I want
+> > - * memory from" bits of gfp_mask has no meaning. So any bits of that field is
+> > - * available but adding a rule is better. charge functions' gfp_mask should
+> > - * be set to GFP_KERNEL or gfp_mask & GFP_RECLAIM_MASK for avoiding ambiguous
+> > - * codes.
+> > - * (Of course, if memcg does memory allocation in future, GFP_KERNEL is sane.)
+> > - */
+> 
+> I think we should slightly modify the comment but the primary idea
+> should stay there. What about the following?
+> /*
+>  * Although memcg charge functions do not allocate any memory they are
+>  * still getting GFP mask to control the reclaim process (therefore
+>  * gfp_mask & GFP_RECLAIM_MASK is expected).
+>  * GFP_KERNEL should be used for the general charge path without any
+>  * constraints for the reclaim
+>  * __GFP_WAIT should be cleared for atomic contexts
+>  * __GFP_NORETRY should be set for charges which might fail rather than
+>  * spend too much time reclaiming
+>  * __GFP_NOFAIL should be set for charges which cannot fail.
+>  */
 
-While at it, this patch drops a completely spurious return from
-__hugetlb_cgroup_file_init().
+What *is* the primary idea here?
 
-This patch doesn't introduce any functional differences.
+Taking any kind of gfp mask and interpreting the bits that pertain to
+you is done in a lot of places already, and there really is no need to
+duplicate the documentation and risk it getting stale and misleading.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Acked-by: Neil Horman <nhorman@tuxdriver.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
-Cc: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
----
- block/blk-cgroup.c        | 3 ++-
- include/linux/cgroup.h    | 2 +-
- kernel/cgroup.c           | 7 ++++++-
- mm/hugetlb_cgroup.c       | 5 ++---
- mm/memcontrol.c           | 3 ++-
- net/ipv4/tcp_memcontrol.c | 2 +-
- 6 files changed, 14 insertions(+), 8 deletions(-)
+> > @@ -948,6 +951,7 @@ static int do_huge_pmd_wp_page_fallback(struct mm_struct *mm,
+> >  					struct page *page,
+> >  					unsigned long haddr)
+> >  {
+> > +	struct mem_cgroup *memcg;
+> >  	spinlock_t *ptl;
+> >  	pgtable_t pgtable;
+> >  	pmd_t _pmd;
+> > @@ -968,20 +972,21 @@ static int do_huge_pmd_wp_page_fallback(struct mm_struct *mm,
+> >  					       __GFP_OTHER_NODE,
+> >  					       vma, address, page_to_nid(page));
+> >  		if (unlikely(!pages[i] ||
+> > -			     mem_cgroup_charge_anon(pages[i], mm,
+> > -						       GFP_KERNEL))) {
+> > +			     mem_cgroup_try_charge(pages[i], mm, GFP_KERNEL,
+> > +						   &memcg))) {
+> >  			if (pages[i])
+> >  				put_page(pages[i]);
+> > -			mem_cgroup_uncharge_start();
+> >  			while (--i >= 0) {
+> > -				mem_cgroup_uncharge_page(pages[i]);
+> > +				memcg = (void *)page_private(pages[i]);
+> 
+> Hmm, OK the memcg couldn't go away even if mm owner has left it because
+> the charge is already there and the page is not on LRU so the
+> mem_cgroup_css_free will wait until we uncharge it or put to LRU.
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 5cfbc72..2541cf0 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -1124,7 +1124,8 @@ int __init blkcg_policy_register(struct blkcg_policy *pol)
- 
- 	/* everything is in place, add intf files for the new policy */
- 	if (pol->cftypes)
--		WARN_ON(cgroup_add_cftypes(&blkio_cgrp_subsys, pol->cftypes));
-+		WARN_ON(cgroup_add_legacy_cftypes(&blkio_cgrp_subsys,
-+						  pol->cftypes));
- 	ret = 0;
- out_unlock:
- 	mutex_unlock(&blkcg_pol_mutex);
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index a6e9c2e..f5f0fee 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -590,7 +590,7 @@ static inline void pr_cont_cgroup_path(struct cgroup *cgrp)
- 
- char *task_cgroup_path(struct task_struct *task, char *buf, size_t buflen);
- 
--int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
-+int cgroup_add_legacy_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
- int cgroup_rm_cftypes(struct cftype *cfts);
- 
- bool cgroup_is_descendant(struct cgroup *cgrp, struct cgroup *ancestor);
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 6496a83..c275aa4 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -3170,7 +3170,7 @@ int cgroup_rm_cftypes(struct cftype *cfts)
-  * function currently returns 0 as long as @cfts registration is successful
-  * even if some file creation attempts on existing cgroups fail.
-  */
--int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
-+static int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
- {
- 	int ret;
- 
-@@ -3195,6 +3195,11 @@ int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
- 	return ret;
- }
- 
-+int cgroup_add_legacy_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
-+{
-+	return cgroup_add_cftypes(ss, cfts);
-+}
-+
- /**
-  * cgroup_task_count - count the number of tasks in a cgroup.
-  * @cgrp: the cgroup in question
-diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
-index 493f758..9aae6f4 100644
---- a/mm/hugetlb_cgroup.c
-+++ b/mm/hugetlb_cgroup.c
-@@ -358,9 +358,8 @@ static void __init __hugetlb_cgroup_file_init(int idx)
- 	cft = &h->cgroup_files[4];
- 	memset(cft, 0, sizeof(*cft));
- 
--	WARN_ON(cgroup_add_cftypes(&hugetlb_cgrp_subsys, h->cgroup_files));
--
--	return;
-+	WARN_ON(cgroup_add_legacy_cftypes(&hugetlb_cgrp_subsys,
-+					  h->cgroup_files));
- }
- 
- void __init hugetlb_cgroup_file_init(void)
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 8331f27..b6b3c6f 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -7065,7 +7065,8 @@ __setup("swapaccount=", enable_swap_account);
- 
- static void __init memsw_file_init(void)
- {
--	WARN_ON(cgroup_add_cftypes(&memory_cgrp_subsys, memsw_cgroup_files));
-+	WARN_ON(cgroup_add_legacy_cftypes(&memory_cgrp_subsys,
-+					  memsw_cgroup_files));
- }
- 
- static void __init enable_swap_cgroup(void)
-diff --git a/net/ipv4/tcp_memcontrol.c b/net/ipv4/tcp_memcontrol.c
-index f7a2ec3..3af5226 100644
---- a/net/ipv4/tcp_memcontrol.c
-+++ b/net/ipv4/tcp_memcontrol.c
-@@ -222,7 +222,7 @@ static struct cftype tcp_files[] = {
- 
- static int __init tcp_memcontrol_init(void)
- {
--	WARN_ON(cgroup_add_cftypes(&memory_cgrp_subsys, tcp_files));
-+	WARN_ON(cgroup_add_legacy_cftypes(&memory_cgrp_subsys, tcp_files));
- 	return 0;
- }
- __initcall(tcp_memcontrol_init);
--- 
-1.9.3
+Yep, res_counter charges have always pinned the memcg.  We already
+used this exact protocol and relied on the same lifetime rules for
+swapin charging.
+
+> > +/**
+> > + * mem_cgroup_commit_charge - commit a page charge
+> > + * @page: page to charge
+> > + * @memcg: memcg to charge the page to
+> > + * @lrucare: page might be on LRU already
+> > + *
+> > + * Finalize a charge transaction started by mem_cgroup_try_charge(),
+> > + * after page->mapping has been set up.  This must happen atomically
+> > + * as part of the page instantiation, i.e. under the page table lock
+> > + * for anonymous pages, under the page lock for page and swap cache.
+> > + *
+> > + * In addition, the page must not be on the LRU during the commit, to
+> > + * prevent racing with task migration.  If it might be, use @lrucare.
+> > + *
+> > + * Use mem_cgroup_cancel_charge() to cancel the transaction instead.
+> > + */
+> > +void mem_cgroup_commit_charge(struct page *page, struct mem_cgroup *memcg,
+> > +			      bool lrucare)
+> 
+> I think we should be explicit that this is only required for LRU pages.
+> kmem doesn't have to finalize the transaction.
+
+The function itself only applies to user/LRU pages.  kmem has its own
+separate API for charge/commit/cancel/uncharge.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
