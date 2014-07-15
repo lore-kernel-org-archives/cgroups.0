@@ -1,81 +1,88 @@
-From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCHSET v2 cgroup/for-3.17] cgroup: distinguish the default
- and legacy hierarchies when handling cftypes
-Date: Tue, 15 Jul 2014 18:27:23 +0800
-Message-ID: <53C5020B.60303@huawei.com>
-References: <1405352648-4279-1-git-send-email-tj@kernel.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch 13/13] mm: memcontrol: rewrite uncharge API
+Date: Tue, 15 Jul 2014 14:19:35 +0200
+Message-ID: <20140715121935.GB9366@dhcp22.suse.cz>
+References: <1403124045-24361-1-git-send-email-hannes@cmpxchg.org>
+ <1403124045-24361-14-git-send-email-hannes@cmpxchg.org>
+ <20140715082545.GA9366@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1405352648-4279-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20140715082545.GA9366@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-9"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-=D3=DA 2014/7/14 23:44, Tejun Heo =D0=B4=B5=C0:
-> Hello,
->=20
-> This is v2 of dfl_files patchset.  Changes from the last version [1]
-> are
->=20
-> * Rebased on top of cgroup/for-3.17.
->=20
-> * 0004 updated so that CFTYPE_ONLY_ON_DFL and CFTYPE_INSANE are
->   cleared when cfts are removed as suggested by Li.
->=20
-> Until now, cftype arrays carried files for both the default and legac=
-y
-> hierarchies and the files which needed to be used on only one of them
-> were flagged with either CFTYPE_ONLY_ON_DFL or CFTYPE_INSANE.  This
-> gets confusing very quickly and we may end up exposing interface file=
-s
-> to the default hierarchy without thinking it through.
->=20
-> This patchset makes cgroup core provide separate sets of interfaces
-> for cftype handling so that the cftypes for the default and legacy
-> hierarchies are clearly distinguished.  This makes all the existing
-> subsystem interface files legacy-only by default and all subsystems
-> will have no interface file created when enabled on the default
-> hierarchy.  Each subsystem should explicitly review and compose the
-> interface for the default hierarchy.
->=20
-> This patchset contains the following six patches.
->=20
->  0001-cgroup-split-cgroup_base_files-into-cgroup_-dfl-lega.patch
->  0002-cgroup-rename-cgroup_subsys-base_cftypes-to-legacy_c.patch
->  0003-cgroup-replace-cgroup_add_cftypes-with-cgroup_add_le.patch
->  0004-cgroup-distinguish-the-default-and-legacy-hierarchie.patch
->  0005-cgroup-make-CFTYPE_ONLY_ON_DFL-and-CFTYPE_NO_-intern.patch
->  0006-cgroup-initialize-cgrp_dfl_root_inhibit_ss_mask-from.patch
->=20
-> This patchset is on top of afd1a8b3e0bc ("cpuset: export effective
-> masks to userspace")
->=20
-> and available in the following git branch.
->=20
->  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-d=
-fl_files-v2
->=20
-> diffstat follows.  Thanks.
->=20
->  Documentation/cgroups/unified-hierarchy.txt |   18 ++-
->  block/blk-cgroup.c                          |    5
->  include/linux/cgroup.h                      |   17 ++
->  kernel/cgroup.c                             |  160 +++++++++++++++++=
-++++-------
->  kernel/cgroup_freezer.c                     |    2
->  kernel/cpuset.c                             |    2
->  kernel/sched/core.c                         |    2
->  kernel/sched/cpuacct.c                      |    2
->  mm/hugetlb_cgroup.c                         |    5
->  mm/memcontrol.c                             |    6 -
->  net/core/netclassid_cgroup.c                |    2
->  net/core/netprio_cgroup.c                   |    2
->  net/ipv4/tcp_memcontrol.c                   |    2
->  security/device_cgroup.c                    |    2
->  14 files changed, 160 insertions(+), 67 deletions(-)
->=20
+[...]
+> +/**
+> + * mem_cgroup_migrate - migrate a charge to another page
+> + * @oldpage: currently charged page
+> + * @newpage: page to transfer the charge to
+> + * @lrucare: page might be on LRU already
 
-Acked-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+which one? I guess the newpage?
+
+> + *
+> + * Migrate the charge from @oldpage to @newpage.
+> + *
+> + * Both pages must be locked, @newpage->mapping must be set up.
+> + */
+> +void mem_cgroup_migrate(struct page *oldpage, struct page *newpage,
+> +			bool lrucare)
+> +{
+> +	unsigned int nr_pages = 1;
+> +	struct page_cgroup *pc;
+> +
+> +	VM_BUG_ON_PAGE(!PageLocked(oldpage), oldpage);
+> +	VM_BUG_ON_PAGE(!PageLocked(newpage), newpage);
+> +	VM_BUG_ON_PAGE(PageLRU(oldpage), oldpage);
+> +	VM_BUG_ON_PAGE(PageLRU(newpage), newpage);
+
+	VM_BUG_ON_PAGE(PageLRU(newpage) && !lruvec, newpage);
+
+> +	VM_BUG_ON_PAGE(PageAnon(oldpage) != PageAnon(newpage), newpage);
+> +
+> +	if (mem_cgroup_disabled())
+> +		return;
+> +
+> +	pc = lookup_page_cgroup(oldpage);
+> +	if (!PageCgroupUsed(pc))
+> +		return;
+> +
+> +	/* Already migrated */
+> +	if (!(pc->flags & PCG_MEM))
+> +		return;
+> +
+> +	VM_BUG_ON_PAGE(do_swap_account && !(pc->flags & PCG_MEMSW), oldpage);
+> +	pc->flags &= ~(PCG_MEM | PCG_MEMSW);
+
+What about PCG_USED?
+Wouldn't we uncharge the currently transfered charge when oldpage does
+its last put_page when the migration is done?
+
+On a not directly related note. I was quite surprised to see that
+__unmap_and_move calls putback_lru_page on oldpage even when migration
+succeeded. So it goes through mem_cgroup_page_lruvec which checks
+PCG_USED and resets pc->mem_cgroup to root for !PCG_USED.
+
+> +
+> +	if (PageTransHuge(oldpage)) {
+> +		nr_pages <<= compound_order(oldpage);
+> +		VM_BUG_ON_PAGE(!PageTransHuge(oldpage), oldpage);
+> +		VM_BUG_ON_PAGE(!PageTransHuge(newpage), newpage);
+> +	}
+> +
+> +	commit_charge(newpage, pc->mem_cgroup, nr_pages, lrucare);
+> +}
+-- 
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
