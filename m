@@ -1,80 +1,73 @@
 From: Michal Hocko <mhocko@suse.cz>
 Subject: Re: [patch 13/13] mm: memcontrol: rewrite uncharge API
-Date: Tue, 15 Jul 2014 17:56:00 +0200
-Message-ID: <20140715155600.GA29269@dhcp22.suse.cz>
+Date: Tue, 15 Jul 2014 18:07:35 +0200
+Message-ID: <20140715160735.GB29269@dhcp22.suse.cz>
 References: <1403124045-24361-1-git-send-email-hannes@cmpxchg.org>
  <1403124045-24361-14-git-send-email-hannes@cmpxchg.org>
- <20140715082545.GA9366@dhcp22.suse.cz>
- <20140715142350.GD9366@dhcp22.suse.cz>
- <20140715150937.GS29639@cmpxchg.org>
- <20140715151818.GE9366@dhcp22.suse.cz>
- <20140715154643.GT29639@cmpxchg.org>
+ <20140715155537.GA19454@nhori.bos.redhat.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=856WHkVOStseM8dG0xxAPC+Tw6SxddirwPhCxYj4oQQ=;
-        b=Gb2K0v7i1cCLgxzsAGem3959BrmSGJDkBtjTxaVzJZ3tvU8OaGoT4HQjZ8CZeQic81
-         VUSkkm1gg1tmRZfWNvANzVVZd+jUCYyppF9eNH18HePam5adKwd8hNbvnGQBbaGz81+J
-         ZJO1Obz+48GX0fRzxWWfC2NmajmAbC6Y7chTFiyA3I2WOPyukLRPRBBtY0BMlxuZprVK
-         sf9Ec8yoZdjoki4as6Terd5EqRSaJjpEKdYwr/Y3iYrhLVHBfutBQsefKsA9CPbrdE/H
-         BxWZhJg15mdKC0ZLUi6oGVZPMGBASvJzZHH5w/HW1Oi/ZYsWnzMk6nyi9ANFZLAV5SmF
-         D84w==
+        bh=QgxLQ9JpgU350X3q9ObQ2EKnzDrenvukIHOIYDusuWk=;
+        b=0xdFGen3wanaENhAx+F2wMQgXdV7hgVFHQ6VE4RC717WpySRa6jVIfFfcNTwzRtK6o
+         KJui3/X+6gqZwjj82BMnSB5toTjYRB3i55Li7J9nzdCDM7dk08qLbrUy02tcUP3OqKso
+         Ijd9rsG1qriiUx3NoF9FGkv0hEUNq0CIhxtSBmXA36zwPk3LGjcPrBI3zKFht4crwtdS
+         Z+tWimQPS7+mSlMYHeO4M9cGUr+STy0ScB1skG9lbfNE5oEanRpjB7M2MKH4qp/rURn3
+         /Hu0Y8yYCd1k0n/zAiTS6/uqgsQdIApnk3CQtuaMBioV7QkDDSbL2YsbXgleprD8HlXY
+         rlog==
 Content-Disposition: inline
-In-Reply-To: <20140715154643.GT29639@cmpxchg.org>
+In-Reply-To: <20140715155537.GA19454@nhori.bos.redhat.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue 15-07-14 11:46:43, Johannes Weiner wrote:
-> On Tue, Jul 15, 2014 at 05:18:18PM +0200, Michal Hocko wrote:
-> > On Tue 15-07-14 11:09:37, Johannes Weiner wrote:
-> > > On Tue, Jul 15, 2014 at 04:23:50PM +0200, Michal Hocko wrote:
-> > > > On Tue 15-07-14 10:25:45, Michal Hocko wrote:
-> > [...]
-> > > > > @@ -2760,15 +2752,15 @@ static void commit_charge(struct page *page, struct mem_cgroup *memcg,
-> > > > >  		spin_unlock_irq(&zone->lru_lock);
-> > > > >  	}
-> > > > >  
-> > > > > -	mem_cgroup_charge_statistics(memcg, page, anon, nr_pages);
-> > > > > -	unlock_page_cgroup(pc);
-> > > > > -
-> > > > > +	local_irq_disable();
-> > > > > +	mem_cgroup_charge_statistics(memcg, page, nr_pages);
-> > > > >  	/*
-> > > > >  	 * "charge_statistics" updated event counter. Then, check it.
-> > > > >  	 * Insert ancestor (and ancestor's ancestors), to softlimit RB-tree.
-> > > > >  	 * if they exceeds softlimit.
-> > > > >  	 */
-> > > > >  	memcg_check_events(memcg, page);
-> > > > > +	local_irq_enable();
-> > > > 
-> > > > preempt_{enable,disbale} should be sufficient for
-> > > > mem_cgroup_charge_statistics and memcg_check_events no?
-> > > > The first one is about per-cpu accounting (and that should be atomic
-> > > > wrt. IRQ on the same CPU) and the later one uses IRQ safe locks down in
-> > > > mem_cgroup_update_tree.
-> > > 
-> > > How could it be atomic wrt. IRQ on the local CPU when IRQs that modify
-> > > the counters can fire on the local CPU?
-> > 
-> > I meant that __this_atomic_add and __this_cpu_inc should be atomic wrt. IRQ.
-> > We do not care that an IRQ might jump in between two per-cpu operations.
-> > This is racy from other CPUs anyway.
+On Tue 15-07-14 11:55:37, Naoya Horiguchi wrote:
+> On Wed, Jun 18, 2014 at 04:40:45PM -0400, Johannes Weiner wrote:
+> ...
+> > diff --git a/mm/swap.c b/mm/swap.c
+> > index a98f48626359..3074210f245d 100644
+> > --- a/mm/swap.c
+> > +++ b/mm/swap.c
+> > @@ -62,6 +62,7 @@ static void __page_cache_release(struct page *page)
+> >  		del_page_from_lru_list(page, lruvec, page_off_lru(page));
+> >  		spin_unlock_irqrestore(&zone->lru_lock, flags);
+> >  	}
+> > +	mem_cgroup_uncharge(page);
+> >  }
+> >  
+> >  static void __put_single_page(struct page *page)
 > 
-> It's really about a single RMW (+=) being interrupted by an IRQ.
-> this_cpu_ guarantees IRQ-atomicity, but __this_cpu_ does not.
+> This seems to cause a list breakage in hstate->hugepage_activelist
+> when freeing a hugetlbfs page.
 
-Yes, you are right. I was too x86 centric where both add and inc are
-really a single instruction. Generic implementation already shows I was
-wrong.
+This looks like a fall out from
+http://marc.info/?l=linux-mm&m=140475936311294&w=2
 
-Sorry for the noise!
+I didn't get to review this one but the easiest fix seems to be check
+HugePage and do not call uncharge.
+
+> For hugetlbfs, we uncharge in free_huge_page() which is called after
+> __page_cache_release(), so I think that we don't have to uncharge here.
+> 
+> In my testing, moving mem_cgroup_uncharge() inside if (PageLRU) block
+> fixed the problem, so if that works for you, could you fold the change
+> into your patch?
+> 
+> Thanks,
+> Naoya Horiguchi
+> 
+> --
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo@kvack.org.  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+
 -- 
 Michal Hocko
 SUSE Labs
