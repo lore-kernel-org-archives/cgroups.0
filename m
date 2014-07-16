@@ -1,9 +1,8 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
+From: Naoya Horiguchi <n-horiguchi-PaJj6Psr51x8UrSeD/g0lQ@public.gmane.org>
 Subject: Re: [patch 13/13] mm: memcontrol: rewrite uncharge API
-Date: Wed, 16 Jul 2014 10:14:47 -0400
-Message-ID: <20140716141447.GY29639@cmpxchg.org>
-References: <1403124045-24361-1-git-send-email-hannes@cmpxchg.org>
- <1403124045-24361-14-git-send-email-hannes@cmpxchg.org>
+Date: Wed, 16 Jul 2014 10:57:36 -0400
+Message-ID: <20140716145736.GA9794@nhori.redhat.com>
+References: <1403124045-24361-14-git-send-email-hannes@cmpxchg.org>
  <20140715155537.GA19454@nhori.bos.redhat.com>
  <20140715160735.GB29269@dhcp22.suse.cz>
  <20140715173439.GU29639@cmpxchg.org>
@@ -12,219 +11,43 @@ References: <1403124045-24361-1-git-send-email-hannes@cmpxchg.org>
  <20140715204953.GA21016@nhori.bos.redhat.com>
  <20140715214843.GX29639@cmpxchg.org>
  <20140716133050.GA4644@nhori.redhat.com>
+ <20140716141447.GY29639@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=XzEO0qPLAIJuvePhgeHhrJvHUWp3mrPhrqcCm3XTXR8=;
-	b=g2uZG0hRjPXc/oxW03XJlqYGRt+AvGKAYODPFB6+eEUzFvsMbII/3LjJm1rXdfax3Gyhl3C6RfYlNF7kkRy8u1HNW4mpH05QmgiZqihBf2Du9L15stF1bB0fjZ0rKLADp3dwEkzN7Acwsyg7YlzqkM8ctzVjaBPxsIPbal7XRFc=;
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20140716133050.GA4644@nhori.redhat.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20140716141447.GY29639-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>
-Cc: Michal Hocko <mhocko@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Jul 16, 2014 at 09:30:50AM -0400, Naoya Horiguchi wrote:
-> On Tue, Jul 15, 2014 at 05:48:43PM -0400, Johannes Weiner wrote:
-> > On Tue, Jul 15, 2014 at 04:49:53PM -0400, Naoya Horiguchi wrote:
-> > > I feel that these 2 messages have the same cause (just appear differently).
-> > > __add_to_page_cache_locked() (and mem_cgroup_try_charge()) can be called
-> > > for hugetlb, while we avoid calling mem_cgroup_migrate()/mem_cgroup_uncharge()
-> > > for hugetlb. This seems to make page_cgroup of the hugepage inconsistent,
-> > > and results in the bad page bug ("page dumped because: cgroup check failed").
-> > > So maybe some more PageHuge check is necessary around the charging code.
-> > 
-> > This struck me as odd because I don't remember removing a PageHuge()
-> > call in the charge path and wondered how it worked before my changes:
-> > apparently it just checked PageCompound() in mem_cgroup_charge_file().
-> > 
-> > So it's not fallout of the new uncharge batching code, but was already
-> > broken during the rewrite of the charge API because then hugetlb pages
-> > entered the charging code.
-> > 
-> > Anyway, we don't have file-specific charging code anymore, and the
-> > PageCompound() check would have required changing anyway for THP
-> > cache.  So I guess the solution is checking PageHuge() in charge,
-> > uncharge, and migrate for now.  Oh well.
-> > 
-> > How about this?
+On Wed, Jul 16, 2014 at 10:14:47AM -0400, Johannes Weiner wrote:
+...
+> > >  	free_hot_cold_page(page, false);
+> > >  }
+> > >  
+> > > @@ -75,7 +75,10 @@ static void __put_compound_page(struct page *page)
+> > >  {
+> > >  	compound_page_dtor *dtor;
+> > >  
+> > > -	__page_cache_release(page);
+> > > +	if (!PageHuge(page)) {
+> > > +		__page_cache_release(page);
+> > > +		mem_cgroup_uncharge_page(page);
 > 
-> With tweaking a bit, this patch solved the problem, thanks!
+> I reverted all these mm/swap.c changes again as well.  Instead,
+> mem_cgroup_uncharge() now does a preliminary check if the page is
+> charged before it touches page->lru.
 > 
-> > diff --git a/mm/filemap.c b/mm/filemap.c
-> > index 9c99d6868a5e..b61194273b56 100644
-> > --- a/mm/filemap.c
-> > +++ b/mm/filemap.c
-> > @@ -564,9 +564,12 @@ static int __add_to_page_cache_locked(struct page *page,
-> >  	VM_BUG_ON_PAGE(!PageLocked(page), page);
-> >  	VM_BUG_ON_PAGE(PageSwapBacked(page), page);
-> >  
-> > -	error = mem_cgroup_try_charge(page, current->mm, gfp_mask, &memcg);
-> > -	if (error)
-> > -		return error;
-> > +	if (!PageHuge(page)) {
-> > +		error = mem_cgroup_try_charge(page, current->mm,
-> > +					      gfp_mask, &memcg);
-> > +		if (error)
-> > +			return error;
-> > +	}
-> >  
-> >  	error = radix_tree_maybe_preload(gfp_mask & ~__GFP_HIGHMEM);
-> >  	if (error) {
+> That should be much more robust: now the vetting whether a page is
+> valid for memcg happens at charge time only, all other operations
+> check first if a page is charged before doing anything else to it.
 > 
-> We have mem_cgroup_commit_charge() later in __add_to_page_cache_locked(),
-> so adding "if (!PageHuge(page))" for it is necessary too.
+> These two places should be the only ones that need fixing then:
 
-You are right.  Annotated them all now.
+This change also passed my testing, so the problem should be fixed.
 
-> > diff --git a/mm/migrate.c b/mm/migrate.c
-> > index 7f5a42403fae..dabed2f08609 100644
-> > --- a/mm/migrate.c
-> > +++ b/mm/migrate.c
-> > @@ -781,7 +781,8 @@ static int move_to_new_page(struct page *newpage, struct page *page,
-> >  		if (!PageAnon(newpage))
-> >  			newpage->mapping = NULL;
-> >  	} else {
-> > -		mem_cgroup_migrate(page, newpage, false);
-> > +		if (!PageHuge(page))
-> > +			mem_cgroup_migrate(page, newpage, false);
-
-I deleted this again as it was a followup fix to hugepages getting
-wrongfully charged as file cache.  They shouldn't be, and
-mem_cgroup_migrate() checks whether the page is charged.
-
-> >  		if (remap_swapcache)
-> >  			remove_migration_ptes(page, newpage);
-> >  		if (!PageAnon(page))
-> > diff --git a/mm/swap.c b/mm/swap.c
-> > index 3461f2f5be20..97b6ec132398 100644
-> > --- a/mm/swap.c
-> > +++ b/mm/swap.c
-> > @@ -62,12 +62,12 @@ static void __page_cache_release(struct page *page)
-> >  		del_page_from_lru_list(page, lruvec, page_off_lru(page));
-> >  		spin_unlock_irqrestore(&zone->lru_lock, flags);
-> >  	}
-> > -	mem_cgroup_uncharge(page);
-> >  }
-> >  
-> >  static void __put_single_page(struct page *page)
-> >  {
-> >  	__page_cache_release(page);
-> > +	mem_cgroup_uncharge_page(page);
-> 
-> My kernel is based on mmotm-2014-07-09-17-08, where mem_cgroup_uncharge_page()
-> does not exist any more. Maybe mem_cgroup_uncharge(page) seems correct.
-
-Sorry, I should have build tested.  The name is still reflex...
-
-> >  	free_hot_cold_page(page, false);
-> >  }
-> >  
-> > @@ -75,7 +75,10 @@ static void __put_compound_page(struct page *page)
-> >  {
-> >  	compound_page_dtor *dtor;
-> >  
-> > -	__page_cache_release(page);
-> > +	if (!PageHuge(page)) {
-> > +		__page_cache_release(page);
-> > +		mem_cgroup_uncharge_page(page);
-
-I reverted all these mm/swap.c changes again as well.  Instead,
-mem_cgroup_uncharge() now does a preliminary check if the page is
-charged before it touches page->lru.
-
-That should be much more robust: now the vetting whether a page is
-valid for memcg happens at charge time only, all other operations
-check first if a page is charged before doing anything else to it.
-
-These two places should be the only ones that need fixing then:
-
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 9c99d6868a5e..bfe0745a704d 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -31,6 +31,7 @@
- #include <linux/security.h>
- #include <linux/cpuset.h>
- #include <linux/hardirq.h> /* for BUG_ON(!in_atomic()) only */
-+#include <linux/hugetlb.h>
- #include <linux/memcontrol.h>
- #include <linux/cleancache.h>
- #include <linux/rmap.h>
-@@ -558,19 +559,24 @@ static int __add_to_page_cache_locked(struct page *page,
- 				      pgoff_t offset, gfp_t gfp_mask,
- 				      void **shadowp)
- {
-+	int huge = PageHuge(page);
- 	struct mem_cgroup *memcg;
- 	int error;
- 
- 	VM_BUG_ON_PAGE(!PageLocked(page), page);
- 	VM_BUG_ON_PAGE(PageSwapBacked(page), page);
- 
--	error = mem_cgroup_try_charge(page, current->mm, gfp_mask, &memcg);
--	if (error)
--		return error;
-+	if (!huge) {
-+		error = mem_cgroup_try_charge(page, current->mm,
-+					      gfp_mask, &memcg);
-+		if (error)
-+			return error;
-+	}
- 
- 	error = radix_tree_maybe_preload(gfp_mask & ~__GFP_HIGHMEM);
- 	if (error) {
--		mem_cgroup_cancel_charge(page, memcg);
-+		if (!huge)
-+			mem_cgroup_cancel_charge(page, memcg);
- 		return error;
- 	}
- 
-@@ -585,14 +591,16 @@ static int __add_to_page_cache_locked(struct page *page,
- 		goto err_insert;
- 	__inc_zone_page_state(page, NR_FILE_PAGES);
- 	spin_unlock_irq(&mapping->tree_lock);
--	mem_cgroup_commit_charge(page, memcg, false);
-+	if (!huge)
-+		mem_cgroup_commit_charge(page, memcg, false);
- 	trace_mm_filemap_add_to_page_cache(page);
- 	return 0;
- err_insert:
- 	page->mapping = NULL;
- 	/* Leave page->index set: truncation relies upon it */
- 	spin_unlock_irq(&mapping->tree_lock);
--	mem_cgroup_cancel_charge(page, memcg);
-+	if (!huge)
-+		mem_cgroup_cancel_charge(page, memcg);
- 	page_cache_release(page);
- 	return error;
- }
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 063080e35459..b5de5deddbfb 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -6635,9 +6635,16 @@ static void uncharge_list(struct list_head *page_list)
-  */
- void mem_cgroup_uncharge(struct page *page)
- {
-+	struct page_cgroup *pc;
-+
- 	if (mem_cgroup_disabled())
- 		return;
- 
-+	/* Don't touch page->lru of any random page, pre-check: */
-+	pc = lookup_page_cgroup(page);
-+	if (!PageCgroupUsed(pc))
-+		return;
-+
- 	INIT_LIST_HEAD(&page->lru);
- 	uncharge_list(&page->lru);
- }
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks,
+Naoya Horiguchi
