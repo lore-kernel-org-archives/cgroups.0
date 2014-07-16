@@ -1,90 +1,126 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH RFC 0/5] Virtual Memory Resource Controller for cgroups
-Date: Wed, 16 Jul 2014 14:01:47 +0200
-Message-ID: <20140716120146.GI7121@dhcp22.suse.cz>
-References: <cover.1404383187.git.vdavydov@parallels.com>
- <20140704121621.GE12466@dhcp22.suse.cz>
- <20140704153853.GA369@esperanza>
+From: Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>
+Subject: Re: [patch 13/13] mm: memcontrol: rewrite uncharge API
+Date: Wed, 16 Jul 2014 09:30:50 -0400
+Message-ID: <20140716133050.GA4644@nhori.redhat.com>
+References: <1403124045-24361-1-git-send-email-hannes@cmpxchg.org>
+ <1403124045-24361-14-git-send-email-hannes@cmpxchg.org>
+ <20140715155537.GA19454@nhori.bos.redhat.com>
+ <20140715160735.GB29269@dhcp22.suse.cz>
+ <20140715173439.GU29639@cmpxchg.org>
+ <20140715184358.GA31550@nhori.bos.redhat.com>
+ <20140715190454.GW29639@cmpxchg.org>
+ <20140715204953.GA21016@nhori.bos.redhat.com>
+ <20140715214843.GX29639@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20140704153853.GA369@esperanza>
+In-Reply-To: <20140715214843.GX29639@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov@parallels.com>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Hugh Dickins <hughd@google.com>, David Rientjes <rientjes@google.com>, Pavel Emelyanov <xemul@parallels.com>, Balbir Singh <bsingharora@gmail.com>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri 04-07-14 19:38:53, Vladimir Davydov wrote:
-> Hi Michal,
+On Tue, Jul 15, 2014 at 05:48:43PM -0400, Johannes Weiner wrote:
+> On Tue, Jul 15, 2014 at 04:49:53PM -0400, Naoya Horiguchi wrote:
+> > I feel that these 2 messages have the same cause (just appear differently).
+> > __add_to_page_cache_locked() (and mem_cgroup_try_charge()) can be called
+> > for hugetlb, while we avoid calling mem_cgroup_migrate()/mem_cgroup_uncharge()
+> > for hugetlb. This seems to make page_cgroup of the hugepage inconsistent,
+> > and results in the bad page bug ("page dumped because: cgroup check failed").
+> > So maybe some more PageHuge check is necessary around the charging code.
 > 
-> On Fri, Jul 04, 2014 at 02:16:21PM +0200, Michal Hocko wrote:
-[...]
-> > Once I get from internal things (which will happen soon hopefully) I
-> > will post a series with a new sets of memcg limits. One of them is
-> > high_limit which can be used as a trigger for memcg reclaim. Unlike
-> > hard_limit there won't be any OOM if the reclaim fails at this stage. So
-> > if the high_limit is configured properly the admin will have enough time
-> > to make additional steps before OOM happens.
+> This struck me as odd because I don't remember removing a PageHuge()
+> call in the charge path and wondered how it worked before my changes:
+> apparently it just checked PageCompound() in mem_cgroup_charge_file().
 > 
-> High/low limits that start reclaim on internal/external pressure are
-> definitely a very nice feature (may be even more useful that strict
-> limits). However, they won't help us against overcommit inside a
-> container. AFAIC,
+> So it's not fallout of the new uncharge batching code, but was already
+> broken during the rewrite of the charge API because then hugetlb pages
+> entered the charging code.
 > 
->  - low limit will allow the container to consume as much as he wants
->    until it triggers global memory pressure, then it will be shrunk back
->    to its limit aggressively;
-
-No, this is not like soft_limit. Any external pressure (e.g. coming from
-some of the parents) will exclude memcgs which are below its low_limit.
-If there is no way to proceed because all groups in the currently
-reclaimed hierarchy are below its low limit then it will ignore the low
-limit. So this is an optimistic working set protection.
-
->  - high limit means allow to breach the limit, but trigger reclaim
->    asynchronously (a kind of kswapd) or synchronously when it happens.
-
-No, we will start with the direct reclaim as we do for the hard limit.
-The only change wrt. hard limit is that we do not trigger OOM if the
-reclaim fails.
-
-> Right?
+> Anyway, we don't have file-specific charging code anymore, and the
+> PageCompound() check would have required changing anyway for THP
+> cache.  So I guess the solution is checking PageHuge() in charge,
+> uncharge, and migrate for now.  Oh well.
 > 
-> Considering the example I've given above, both of these won't help if
-> the system has other active CTs: the container will be forcefully kept
-> around its high/low limit and, since it's definitely not enough for it,
-> it will be finally killed crossing out the computations it's spent so
-> much time on. High limit won't be good for the container even if there's
-> no other load on the node - it will be constantly swapping out anon
-> memory and evicting file caches. The application won't die quickly then,
-> but it will get a heavy slowdown, which is no better than killing I
-> guess.
+> How about this?
 
-It will get vmpressure notifications though and can help to release
-excessive buffers which were allocated optimistically.
+With tweaking a bit, this patch solved the problem, thanks!
 
-> Also, I guess it'd be beneficial to have
-> 
->  - mlocked pages accounting per cgroup, because they affect memory
->    reclaim, and how low/high limits work, so it'd be nice to have them
->    limited to a sane value;
-> 
->  - shmem areas accounting per cgroup, because the total amount of shmem
->    on the system is limited, and it'll be no good if malicious
->    containers eat it all.
-> 
-> IMO It wouldn't be a good idea to overwhelm memcg with those limits, the
-> VM controller suits much better.
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index 9c99d6868a5e..b61194273b56 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -564,9 +564,12 @@ static int __add_to_page_cache_locked(struct page *page,
+>  	VM_BUG_ON_PAGE(!PageLocked(page), page);
+>  	VM_BUG_ON_PAGE(PageSwapBacked(page), page);
+>  
+> -	error = mem_cgroup_try_charge(page, current->mm, gfp_mask, &memcg);
+> -	if (error)
+> -		return error;
+> +	if (!PageHuge(page)) {
+> +		error = mem_cgroup_try_charge(page, current->mm,
+> +					      gfp_mask, &memcg);
+> +		if (error)
+> +			return error;
+> +	}
+>  
+>  	error = radix_tree_maybe_preload(gfp_mask & ~__GFP_HIGHMEM);
+>  	if (error) {
 
-yeah, I do not think adding more to memcg is a good idea. I am still not
-sure whether working around bad design decisions in applications is a
-good rationale for a new controller.
+We have mem_cgroup_commit_charge() later in __add_to_page_cache_locked(),
+so adding "if (!PageHuge(page))" for it is necessary too.
 
--- 
-Michal Hocko
-SUSE Labs
+> diff --git a/mm/migrate.c b/mm/migrate.c
+> index 7f5a42403fae..dabed2f08609 100644
+> --- a/mm/migrate.c
+> +++ b/mm/migrate.c
+> @@ -781,7 +781,8 @@ static int move_to_new_page(struct page *newpage, struct page *page,
+>  		if (!PageAnon(newpage))
+>  			newpage->mapping = NULL;
+>  	} else {
+> -		mem_cgroup_migrate(page, newpage, false);
+> +		if (!PageHuge(page))
+> +			mem_cgroup_migrate(page, newpage, false);
+>  		if (remap_swapcache)
+>  			remove_migration_ptes(page, newpage);
+>  		if (!PageAnon(page))
+> diff --git a/mm/swap.c b/mm/swap.c
+> index 3461f2f5be20..97b6ec132398 100644
+> --- a/mm/swap.c
+> +++ b/mm/swap.c
+> @@ -62,12 +62,12 @@ static void __page_cache_release(struct page *page)
+>  		del_page_from_lru_list(page, lruvec, page_off_lru(page));
+>  		spin_unlock_irqrestore(&zone->lru_lock, flags);
+>  	}
+> -	mem_cgroup_uncharge(page);
+>  }
+>  
+>  static void __put_single_page(struct page *page)
+>  {
+>  	__page_cache_release(page);
+> +	mem_cgroup_uncharge_page(page);
+
+My kernel is based on mmotm-2014-07-09-17-08, where mem_cgroup_uncharge_page()
+does not exist any more. Maybe mem_cgroup_uncharge(page) seems correct.
+
+>  	free_hot_cold_page(page, false);
+>  }
+>  
+> @@ -75,7 +75,10 @@ static void __put_compound_page(struct page *page)
+>  {
+>  	compound_page_dtor *dtor;
+>  
+> -	__page_cache_release(page);
+> +	if (!PageHuge(page)) {
+> +		__page_cache_release(page);
+> +		mem_cgroup_uncharge_page(page);
+
+ditto.
+
+Thanks,
+Naoya Horiguchi
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
