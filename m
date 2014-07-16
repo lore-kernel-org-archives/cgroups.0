@@ -1,156 +1,261 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 3/6] cgroup: replace cgroup_add_cftypes() with
- cgroup_add_legacy_cftypes()
-Date: Wed, 16 Jul 2014 11:45:07 +0200
-Message-ID: <20140716094507.GG7121@dhcp22.suse.cz>
+Subject: Re: [PATCH 4/6] cgroup: distinguish the default and legacy
+ hierarchies when handling cftypes
+Date: Wed, 16 Jul 2014 11:46:16 +0200
+Message-ID: <20140716094616.GH7121@dhcp22.suse.cz>
 References: <1405352648-4279-1-git-send-email-tj@kernel.org>
- <1405352648-4279-4-git-send-email-tj@kernel.org>
+ <1405352648-4279-5-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1405352648-4279-4-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <1405352648-4279-5-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Arnaldo Carvalho de Melo <acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Aneesh Kumar K.V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 
-On Mon 14-07-14 11:44:05, Tejun Heo wrote:
-> Currently, cftypes added by cgroup_add_cftypes() are used for both the
-> unified default hierarchy and legacy ones and subsystems can mark each
-> file with either CFTYPE_ONLY_ON_DFL or CFTYPE_INSANE if it has to
-> appear only on one of them.  This is quite hairy and error-prone.
-> Also, we may end up exposing interface files to the default hierarchy
-> without thinking it through.
+On Mon 14-07-14 11:44:06, Tejun Heo wrote:
+> Until now, cftype arrays carried files for both the default and legacy
+> hierarchies and the files which needed to be used on only one of them
+> were flagged with either CFTYPE_ONLY_ON_DFL or CFTYPE_INSANE.  This
+> gets confusing very quickly and we may end up exposing interface files
+> to the default hierarchy without thinking it through.
 > 
-> cgroup_subsys will grow two separate cftype addition functions and
-> apply each only on the hierarchies of the matching type.  This will
-> allow organizing cftypes in a lot clearer way and encourage subsystems
-> to scrutinize the interface which is being exposed in the new default
-> hierarchy.
+> This patch makes cgroup core provide separate sets of interfaces for
+> cftype handling so that the cftypes for the default and legacy
+> hierarchies are clearly distinguished.  The previous two patches
+> renamed the existing ones so that they clearly indicate that they're
+> for the legacy hierarchies.  This patch adds the interface for the
+> default hierarchy and apply them selectively depending on the
+> hierarchy type.
 > 
-> In preparation, this patch adds cgroup_add_legacy_cftypes() which
-> currently is a simple wrapper around cgroup_add_cftypes() and replaces
-> all cgroup_add_cftypes() usages with it.
+> * cftypes added through cgroup_subsys->dfl_cftypes and
+>   cgroup_add_dfl_cftypes() only show up on the default hierarchy.
 > 
-> While at it, this patch drops a completely spurious return from
-> __hugetlb_cgroup_file_init().
+> * cftypes added through cgroup_subsys->legacy_cftypes and
+>   cgroup_add_legacy_cftypes() only show up on the legacy hierarchies.
 > 
-> This patch doesn't introduce any functional differences.
+> * cgroup_subsys->dfl_cftypes and ->legacy_cftypes can point to the
+>   same array for the cases where the interface files are identical on
+>   both types of hierarchies.
+> 
+> * This makes all the existing subsystem interface files legacy-only by
+>   default and all subsystems will have no interface file created when
+>   enabled on the default hierarchy.  Each subsystem should explicitly
+>   review and compose the interface for the default hierarchy.
+> 
+> * A boot param "cgroup__DEVEL__legacy_files_on_dfl" is added which
+>   makes subsystems which haven't decided the interface files for the
+>   default hierarchy to present the legacy files on the default
+>   hierarchy so that its behavior on the default hierarchy can be
+>   tested.  As the awkward name suggests, this is for development only.
+> 
+> * memcg's CFTYPE_INSANE on "use_hierarchy" is noop now as the whole
+>   array isn't used on the default hierarchy.  The flag is removed.
+> 
+> v2: Updated documentation for cgroup__DEVEL__legacy_files_on_dfl.
+> 
+> v3: Clear CFTYPE_ONLY_ON_DFL and CFTYPE_INSANE when cfts are removed
+>     as suggested by Li.
 > 
 > Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 > Acked-by: Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
 > Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 > Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
+> Cc: Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>
+> Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: Arnaldo Carvalho de Melo <acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Aristeu Rozanski <aris-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 > Cc: Aneesh Kumar K.V <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+
+As mentioned on the other email I will cook up a patch to allow basic
+knobs for memcg.
 
 Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
 > ---
->  block/blk-cgroup.c        | 3 ++-
->  include/linux/cgroup.h    | 2 +-
->  kernel/cgroup.c           | 7 ++++++-
->  mm/hugetlb_cgroup.c       | 5 ++---
->  mm/memcontrol.c           | 3 ++-
->  net/ipv4/tcp_memcontrol.c | 2 +-
->  6 files changed, 14 insertions(+), 8 deletions(-)
+>  Documentation/cgroups/unified-hierarchy.txt | 18 ++++++---
+>  include/linux/cgroup.h                      |  9 ++++-
+>  kernel/cgroup.c                             | 62 +++++++++++++++++++++++++++--
+>  mm/memcontrol.c                             |  1 -
+>  4 files changed, 78 insertions(+), 12 deletions(-)
 > 
-> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-> index 5cfbc72..2541cf0 100644
-> --- a/block/blk-cgroup.c
-> +++ b/block/blk-cgroup.c
-> @@ -1124,7 +1124,8 @@ int __init blkcg_policy_register(struct blkcg_policy *pol)
+> diff --git a/Documentation/cgroups/unified-hierarchy.txt b/Documentation/cgroups/unified-hierarchy.txt
+> index a7a2205..4f45632 100644
+> --- a/Documentation/cgroups/unified-hierarchy.txt
+> +++ b/Documentation/cgroups/unified-hierarchy.txt
+> @@ -94,12 +94,18 @@ change soon.
 >  
->  	/* everything is in place, add intf files for the new policy */
->  	if (pol->cftypes)
-> -		WARN_ON(cgroup_add_cftypes(&blkio_cgrp_subsys, pol->cftypes));
-> +		WARN_ON(cgroup_add_legacy_cftypes(&blkio_cgrp_subsys,
-> +						  pol->cftypes));
->  	ret = 0;
->  out_unlock:
->  	mutex_unlock(&blkcg_pol_mutex);
+>   mount -t cgroup -o __DEVEL__sane_behavior cgroup $MOUNT_POINT
+>  
+> -All controllers which are not bound to other hierarchies are
+> -automatically bound to unified hierarchy and show up at the root of
+> -it.  Controllers which are enabled only in the root of unified
+> -hierarchy can be bound to other hierarchies.  This allows mixing
+> -unified hierarchy with the traditional multiple hierarchies in a fully
+> -backward compatible way.
+> +All controllers which support the unified hierarchy and are not bound
+> +to other hierarchies are automatically bound to unified hierarchy and
+> +show up at the root of it.  Controllers which are enabled only in the
+> +root of unified hierarchy can be bound to other hierarchies.  This
+> +allows mixing unified hierarchy with the traditional multiple
+> +hierarchies in a fully backward compatible way.
+> +
+> +For development purposes, the following boot parameter makes all
+> +controllers to appear on the unified hierarchy whether supported or
+> +not.
+> +
+> + cgroup__DEVEL__legacy_files_on_dfl
+>  
+>  A controller can be moved across hierarchies only after the controller
+>  is no longer referenced in its current hierarchy.  Because per-cgroup
 > diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-> index a6e9c2e..f5f0fee 100644
+> index f5f0fee..9f76236 100644
 > --- a/include/linux/cgroup.h
 > +++ b/include/linux/cgroup.h
-> @@ -590,7 +590,7 @@ static inline void pr_cont_cgroup_path(struct cgroup *cgrp)
+> @@ -590,6 +590,7 @@ static inline void pr_cont_cgroup_path(struct cgroup *cgrp)
 >  
 >  char *task_cgroup_path(struct task_struct *task, char *buf, size_t buflen);
 >  
-> -int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
-> +int cgroup_add_legacy_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
+> +int cgroup_add_dfl_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
+>  int cgroup_add_legacy_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
 >  int cgroup_rm_cftypes(struct cftype *cfts);
 >  
->  bool cgroup_is_descendant(struct cgroup *cgrp, struct cgroup *ancestor);
+> @@ -671,8 +672,12 @@ struct cgroup_subsys {
+>  	 */
+>  	struct list_head cfts;
+>  
+> -	/* base cftypes, automatically registered with subsys itself */
+> -	struct cftype *legacy_cftypes;	/* used on the legacy hierarchies */
+> +	/*
+> +	 * Base cftypes which are automatically registered.  The two can
+> +	 * point to the same array.
+> +	 */
+> +	struct cftype *dfl_cftypes;	/* for the default hierarchy */
+> +	struct cftype *legacy_cftypes;	/* for the legacy hierarchies */
+>  
+>  	/*
+>  	 * A subsystem may depend on other subsystems.  When such subsystem
 > diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index 6496a83..c275aa4 100644
+> index c275aa4..374ebdf 100644
 > --- a/kernel/cgroup.c
 > +++ b/kernel/cgroup.c
-> @@ -3170,7 +3170,7 @@ int cgroup_rm_cftypes(struct cftype *cfts)
->   * function currently returns 0 as long as @cfts registration is successful
->   * even if some file creation attempts on existing cgroups fail.
+> @@ -149,6 +149,12 @@ struct cgroup_root cgrp_dfl_root;
 >   */
-> -int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
-> +static int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
->  {
->  	int ret;
+>  static bool cgrp_dfl_root_visible;
 >  
-> @@ -3195,6 +3195,11 @@ int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
+> +/*
+> + * Set by the boot param of the same name and makes subsystems with NULL
+> + * ->dfl_files to use ->legacy_files on the default hierarchy.
+> + */
+> +static bool cgroup_legacy_files_on_dfl;
+> +
+>  /* some controllers are not supported in the default hierarchy */
+>  static const unsigned int cgrp_dfl_root_inhibit_ss_mask = 0
+>  #ifdef CONFIG_CGROUP_DEBUG
+> @@ -3085,6 +3091,9 @@ static void cgroup_exit_cftypes(struct cftype *cfts)
+>  			kfree(cft->kf_ops);
+>  		cft->kf_ops = NULL;
+>  		cft->ss = NULL;
+> +
+> +		/* revert flags set by cgroup core while adding @cfts */
+> +		cft->flags &= ~(CFTYPE_ONLY_ON_DFL | CFTYPE_INSANE);
+>  	}
+>  }
+>  
+> @@ -3195,8 +3204,37 @@ static int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
 >  	return ret;
 >  }
 >  
-> +int cgroup_add_legacy_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
+> +/**
+> + * cgroup_add_dfl_cftypes - add an array of cftypes for default hierarchy
+> + * @ss: target cgroup subsystem
+> + * @cfts: zero-length name terminated array of cftypes
+> + *
+> + * Similar to cgroup_add_cftypes() but the added files are only used for
+> + * the default hierarchy.
+> + */
+> +int cgroup_add_dfl_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
 > +{
+> +	struct cftype *cft;
+> +
+> +	for (cft = cfts; cft && cft->name[0] != '\0'; cft++)
+> +		cft->flags |= CFTYPE_ONLY_ON_DFL;
 > +	return cgroup_add_cftypes(ss, cfts);
 > +}
 > +
->  /**
->   * cgroup_task_count - count the number of tasks in a cgroup.
->   * @cgrp: the cgroup in question
-> diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
-> index 493f758..9aae6f4 100644
-> --- a/mm/hugetlb_cgroup.c
-> +++ b/mm/hugetlb_cgroup.c
-> @@ -358,9 +358,8 @@ static void __init __hugetlb_cgroup_file_init(int idx)
->  	cft = &h->cgroup_files[4];
->  	memset(cft, 0, sizeof(*cft));
->  
-> -	WARN_ON(cgroup_add_cftypes(&hugetlb_cgrp_subsys, h->cgroup_files));
-> -
-> -	return;
-> +	WARN_ON(cgroup_add_legacy_cftypes(&hugetlb_cgrp_subsys,
-> +					  h->cgroup_files));
+> +/**
+> + * cgroup_add_legacy_cftypes - add an array of cftypes for legacy hierarchies
+> + * @ss: target cgroup subsystem
+> + * @cfts: zero-length name terminated array of cftypes
+> + *
+> + * Similar to cgroup_add_cftypes() but the added files are only used for
+> + * the legacy hierarchies.
+> + */
+>  int cgroup_add_legacy_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
+>  {
+> +	struct cftype *cft;
+> +
+> +	for (cft = cfts; cft && cft->name[0] != '\0'; cft++)
+> +		cft->flags |= CFTYPE_INSANE;
+>  	return cgroup_add_cftypes(ss, cfts);
 >  }
 >  
->  void __init hugetlb_cgroup_file_init(void)
+> @@ -4893,9 +4931,19 @@ int __init cgroup_init(void)
+>  		 * disabled flag and cftype registration needs kmalloc,
+>  		 * both of which aren't available during early_init.
+>  		 */
+> -		if (!ss->disabled) {
+> -			cgrp_dfl_root.subsys_mask |= 1 << ss->id;
+> -			WARN_ON(cgroup_add_cftypes(ss, ss->legacy_cftypes));
+> +		if (ss->disabled)
+> +			continue;
+> +
+> +		cgrp_dfl_root.subsys_mask |= 1 << ss->id;
+> +
+> +		if (cgroup_legacy_files_on_dfl && !ss->dfl_cftypes)
+> +			ss->dfl_cftypes = ss->legacy_cftypes;
+> +
+> +		if (ss->dfl_cftypes == ss->legacy_cftypes) {
+> +			WARN_ON(cgroup_add_cftypes(ss, ss->dfl_cftypes));
+> +		} else {
+> +			WARN_ON(cgroup_add_dfl_cftypes(ss, ss->dfl_cftypes));
+> +			WARN_ON(cgroup_add_legacy_cftypes(ss, ss->legacy_cftypes));
+>  		}
+>  	}
+>  
+> @@ -5291,6 +5339,14 @@ static int __init cgroup_disable(char *str)
+>  }
+>  __setup("cgroup_disable=", cgroup_disable);
+>  
+> +static int __init cgroup_set_legacy_files_on_dfl(char *str)
+> +{
+> +	printk("cgroup: using legacy files on the default hierarchy\n");
+> +	cgroup_legacy_files_on_dfl = true;
+> +	return 0;
+> +}
+> +__setup("cgroup__DEVEL__legacy_files_on_dfl", cgroup_set_legacy_files_on_dfl);
+> +
+>  /**
+>   * css_tryget_online_from_dir - get corresponding css from a cgroup dentry
+>   * @dentry: directory dentry of interest
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 8331f27..b6b3c6f 100644
+> index b6b3c6f..45c10c6 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -7065,7 +7065,8 @@ __setup("swapaccount=", enable_swap_account);
->  
->  static void __init memsw_file_init(void)
->  {
-> -	WARN_ON(cgroup_add_cftypes(&memory_cgrp_subsys, memsw_cgroup_files));
-> +	WARN_ON(cgroup_add_legacy_cftypes(&memory_cgrp_subsys,
-> +					  memsw_cgroup_files));
->  }
->  
->  static void __init enable_swap_cgroup(void)
-> diff --git a/net/ipv4/tcp_memcontrol.c b/net/ipv4/tcp_memcontrol.c
-> index f7a2ec3..3af5226 100644
-> --- a/net/ipv4/tcp_memcontrol.c
-> +++ b/net/ipv4/tcp_memcontrol.c
-> @@ -222,7 +222,7 @@ static struct cftype tcp_files[] = {
->  
->  static int __init tcp_memcontrol_init(void)
->  {
-> -	WARN_ON(cgroup_add_cftypes(&memory_cgrp_subsys, tcp_files));
-> +	WARN_ON(cgroup_add_legacy_cftypes(&memory_cgrp_subsys, tcp_files));
->  	return 0;
->  }
->  __initcall(tcp_memcontrol_init);
+> @@ -6003,7 +6003,6 @@ static struct cftype mem_cgroup_files[] = {
+>  	},
+>  	{
+>  		.name = "use_hierarchy",
+> -		.flags = CFTYPE_INSANE,
+>  		.write_u64 = mem_cgroup_hierarchy_write,
+>  		.read_u64 = mem_cgroup_hierarchy_read,
+>  	},
 > -- 
 > 1.9.3
 > 
