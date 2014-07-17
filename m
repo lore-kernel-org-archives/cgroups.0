@@ -1,41 +1,49 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: memcg swap doesn't work in mmotm-2014-07-09-17-08?
-Date: Wed, 16 Jul 2014 17:26:11 -0400
-Message-ID: <20140716212611.GD29639@cmpxchg.org>
-References: <20140716181007.GA8524@nhori.redhat.com>
- <20140716183727.GB29639@cmpxchg.org>
- <20140716193129.GB8524@nhori.redhat.com>
- <20140716195721.GC29639@cmpxchg.org>
- <20140716201147.GD8524@nhori.redhat.com>
- <20140716204346.GE8524@nhori.redhat.com>
-Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=sxaLBnK9AzodYTGqlV0bwb+itZC9+wd84CCUarYoFt8=;
-	b=j8ICTjlyJAgYGtyCnBx/9uH+HBqMtrph718N6o2TmonAHck5nvo7DXMOG56ZXJVaQj6HfTa3imNfO8aM2lNTHfYMikTkE1O2HjJims731xsTMikRdrxWYpKUAsUCh3VzxZaoNciUMUf7hvKm2Tn5FcPyQePUHMq1wFB571Ll/PQ=;
-Content-Disposition: inline
-In-Reply-To: <20140716204346.GE8524@nhori.redhat.com>
-Sender: owner-linux-mm@kvack.org
+From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 2/5] sched: new clone flag CLONE_NEWCGROUP for cgroup namespace
+Date: Thu, 17 Jul 2014 12:52:08 -0700
+Message-ID: <1405626731-12220-3-git-send-email-adityakali@google.com>
+References: <adityakali-cgroupns>
+ <1405626731-12220-1-git-send-email-adityakali@google.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=b55HDid9jv00CJe7eL+CKPnwMeC1IhuFO7ygktV2GfA=;
+        b=XAftDUtknGrhiNwRiNHFGhHvRhttfAsLoEBgLR7tHm5Und9b0fd5kJ+cKmseZRU8bc
+         wzajxyJYIbPG8WPL+1vnNIOAVlRUeDcqcs0LQ8Yo+wjETpALCl6pFMnotfV/nN4yCf7G
+         oIrdM7hz6Z49Qtlg2iFssn5yYiQRKaJw54WEY6r+SoshSwfanQXMomw+7vp2pr2zo5Jp
+         BbwImmMwpBUCr/RW4sPEtiWPtv/05Yii/BTpmgcrx9YRRp85z4dyBAJgFIcumeJnK1JK
+         aR+VAhvkugQAubIfcPb11iXVf54n4Mqf/jaDicU50YT4icqFHCjHMXtJUoaHHW6ScOHW
+         SshA==
+In-Reply-To: <1405626731-12220-1-git-send-email-adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Naoya Horiguchi <n-horiguchi@ah.jp.nec.com>
-Cc: linux-mm@kvack.org, Michal Hocko <mhocko@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, Naoya Horiguchi <nao.horiguchi@gmail.com>
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Wed, Jul 16, 2014 at 04:43:46PM -0400, Naoya Horiguchi wrote:
-> On Wed, Jul 16, 2014 at 04:11:47PM -0400, Naoya Horiguchi wrote:
-> ...
-> > > I was running on 3.16.0-rc5-mm1-00480-gab7ca1e1e407 (latest mmots).
-> > 
-> > I'll try this kernel.
-> > If that passes, this problem is fixed implicitly, so that's fine :)
-> 
-> Not reproduced in the latest mmots, so the problem is already fixed.
+CLONE_NEWCGROUP will be used to create new cgroup namespace.
 
-Thanks for making sure, Naoya-san!
+Signed-off-by: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ include/uapi/linux/sched.h | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/include/uapi/linux/sched.h b/include/uapi/linux/sched.h
+index 34f9d73..2f90d00 100644
+--- a/include/uapi/linux/sched.h
++++ b/include/uapi/linux/sched.h
+@@ -21,8 +21,7 @@
+ #define CLONE_DETACHED		0x00400000	/* Unused, ignored */
+ #define CLONE_UNTRACED		0x00800000	/* set if the tracing process can't force CLONE_PTRACE on this clone */
+ #define CLONE_CHILD_SETTID	0x01000000	/* set the TID in the child */
+-/* 0x02000000 was previously the unused CLONE_STOPPED (Start in stopped state)
+-   and is now available for re-use. */
++#define CLONE_NEWCGROUP		0x02000000	/* New cgroup namespace */
+ #define CLONE_NEWUTS		0x04000000	/* New utsname group? */
+ #define CLONE_NEWIPC		0x08000000	/* New ipcs */
+ #define CLONE_NEWUSER		0x10000000	/* New user namespace */
+-- 
+2.0.0.526.g5318336
