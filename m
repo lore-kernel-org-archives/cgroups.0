@@ -1,63 +1,69 @@
-From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 5/5] cgroup: introduce cgroup namespaces
-Date: Thu, 17 Jul 2014 13:55:43 -0700
-Message-ID: <CAGr1F2Ht1q_nYGJwmQvEEyj8r3R1stgD=g3s8_5zYOTogjz-UQ@mail.gmail.com>
-References: <1405626731-12220-1-git-send-email-adityakali@google.com>
-	<1405626731-12220-6-git-send-email-adityakali@google.com>
-	<CALCETrWXMMGzptvEu6TfzTjBou4t==W39_nNB5FJwSk2Zy8uCQ@mail.gmail.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch 13/13] mm: memcontrol: rewrite uncharge API
+Date: Fri, 18 Jul 2014 09:12:46 +0200
+Message-ID: <20140718071246.GA21565@dhcp22.suse.cz>
+References: <1403124045-24361-1-git-send-email-hannes@cmpxchg.org>
+ <1403124045-24361-14-git-send-email-hannes@cmpxchg.org>
+ <20140715082545.GA9366@dhcp22.suse.cz>
+ <20140715121935.GB9366@dhcp22.suse.cz>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=dBbmwTbbbfJ7+ZsLVOwurIMgS3Xw8YvWRBMZKmmyV40=;
+        b=dkvZH0P8hBHfknbEcRdbhBOEtPIsEKMLo8pD42YmmlXYRLFDZJg3utgPBsXFRrS0h7
+         MNVVZCcuuw7z+xmdpXAh+aqNIb+Cuqst/pOZgnSaP4IfDrwxM4jz8EYvqUCgaCvOmj28
+         DuETNAPUZ0QrbAdR8dsiUaCi1TAEy+ajp0/0wgSVgQteE9N/RMG1iJkr88A2JbV5PT82
+         lABVPPS02Q8rH7wxal/qMNydFVntNugmQJ0QbocIGE6SP1Nh2sKucFMehuLEoDh+gW4p
+         PuJms4DjIKjqsdh4Cw1xhUW9ovdbPYU52XwUnv07t2CYyse7ifApTWxATfOc77tnZMgY
+         l8hg==
+Content-Disposition: inline
+In-Reply-To: <20140715121935.GB9366@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20120113;
-	h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-	:cc:content-type;
-	bh=l5h8NTfbYt3W6AU0O0HelnX/JOi4VIOn0DlyCVSsVNg=;
-	b=TfYIVc98dCadL9yvxRJpaXoyXaeL+2ZAF/+RRVeNEz4ymlpwiZHZKhGuReIzQ61ZzH
-	DDTbpr9fTtRVYZymn3ewd9I5lxz6BYpVqMeOgJpjj5H1gFoX4up+w2Mp01m0/v3lFdJv
-	vmVXaHzwB375194rO+Eql8XzIv960KqW9E/4cKrg0SPAbjmTy45C7rn0+CY7BKpiy5my
-	pXk5HElvO5A/rillycop1z29DEbuFDdSrpFhgUPEpeFUzSDT8/6KCxr/Sh0rcPJ+gtv+
-	LAXBsrd2gt53WlUH7Q/fpTrBrDiXzwOAzStZVWmDv0LFlXPrnkD9LPTdsNy6czRHfJOx
-	4x9w==
-In-Reply-To: <CALCETrWXMMGzptvEu6TfzTjBou4t==W39_nNB5FJwSk2Zy8uCQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
-Cc: Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Jul 17, 2014 at 12:57 PM, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org> wrote:
-> On Thu, Jul 17, 2014 at 12:52 PM, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->> Introduce the ability to create new cgroup namespace. The newly created
->> cgroup namespace remembers the 'struct cgroup *root_cgrp' at the point
->> of creation of the cgroup namespace. The task that creates the new
->> cgroup namespace and all its future children will now be restricted only
->> to the cgroup hierarchy under this root_cgrp. In the first version,
->> setns() is not supported for cgroup namespaces.
->> The main purpose of cgroup namespace is to virtualize the contents
->> of /proc/self/cgroup file. Processes inside a cgroup namespace
->> are only able to see paths relative to their namespace root.
->> This allows container-tools (like libcontainer, lxc, lmctfy, etc.)
->> to create completely virtualized containers without leaking system
->> level cgroup hierarchy to the task.
->
-> What happens if someone moves a task in a cgroup namespace outside of
-> the namespace root cgroup?
->
+On Tue 15-07-14 14:19:35, Michal Hocko wrote:
+> [...]
+> > +/**
+> > + * mem_cgroup_migrate - migrate a charge to another page
+> > + * @oldpage: currently charged page
+> > + * @newpage: page to transfer the charge to
+> > + * @lrucare: page might be on LRU already
+> 
+> which one? I guess the newpage?
+> 
+> > + *
+> > + * Migrate the charge from @oldpage to @newpage.
+> > + *
+> > + * Both pages must be locked, @newpage->mapping must be set up.
+> > + */
+> > +void mem_cgroup_migrate(struct page *oldpage, struct page *newpage,
+> > +			bool lrucare)
+> > +{
+> > +	unsigned int nr_pages = 1;
+> > +	struct page_cgroup *pc;
+> > +
+> > +	VM_BUG_ON_PAGE(!PageLocked(oldpage), oldpage);
+> > +	VM_BUG_ON_PAGE(!PageLocked(newpage), newpage);
+> > +	VM_BUG_ON_PAGE(PageLRU(oldpage), oldpage);
+> > +	VM_BUG_ON_PAGE(PageLRU(newpage), newpage);
+> 
+> 	VM_BUG_ON_PAGE(PageLRU(newpage) && !lruvec, newpage);
 
-Attempt to move a task outside of cgroupns root will fail with EPERM.
-This is true irrespective of the privileges of the process attempting
-this. Once cgroupns is created, the task will be confined to the
-cgroup hierarchy under its cgroupns root until it dies.
-
-> --Andy
+I guess everything except these two notes got addressed.
 
 -- 
-Aditya
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
