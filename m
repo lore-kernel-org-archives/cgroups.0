@@ -1,64 +1,81 @@
-From: Miklos Szeredi <miklos@szeredi.hu>
-Subject: Re: [patch 13/13] mm: memcontrol: rewrite uncharge API
-Date: Fri, 18 Jul 2014 17:12:54 +0200
-Message-ID: <CAJfpegt9k+YULet3vhmG3br7zSiHy-DRL+MiEE=HRzcs+mLzbw@mail.gmail.com>
-References: <1403124045-24361-1-git-send-email-hannes@cmpxchg.org>
-	<1403124045-24361-14-git-send-email-hannes@cmpxchg.org>
-	<20140715082545.GA9366@dhcp22.suse.cz>
-	<20140715121935.GB9366@dhcp22.suse.cz>
-	<20140718071246.GA21565@dhcp22.suse.cz>
-	<20140718144554.GG29639@cmpxchg.org>
+From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 0/5] RFC: CGroup Namespaces
+Date: Fri, 18 Jul 2014 16:00:04 +0000
+Message-ID: <20140718160004.GC20686@ubuntumail>
+References: <adityakali-cgroupns>
+ <1405626731-12220-1-git-send-email-adityakali@google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=szeredi.hu; s=google;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=v+i6kLJpdqcQf6jou+iOnAw6ah07lWFi7RD5dwINpSc=;
-        b=fxmtyEadGFwX6Aq3my2/nP6mojnLrKkspIhuetE3KmIDtCQo3EDKA3CEqNXQoXjsiA
-         vvQuxscDWr3+wpxhJ/02doNTWXoqLsQ7tBzAwx3b4bniUov42hhx0sPD5DIhnn5TlBYj
-         Cmibig1Qr3tPflUySL/Gdl12psyOMkkzAJV6w=
-In-Reply-To: <20140718144554.GG29639@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1405626731-12220-1-git-send-email-adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+To: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On Fri, Jul 18, 2014 at 4:45 PM, Johannes Weiner <hannes@cmpxchg.org> wrote:
+Quoting Aditya Kali (adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org):
+> Background
+>   Cgroups and Namespaces are used together to create =E2=80=9Cvirtual=
+=E2=80=9D
+>   containers that isolates the host environment from the processes
+>   running in container. But since cgroups themselves are not
+>   =E2=80=9Cvirtualized=E2=80=9D, the task is always able to see globa=
+l cgroups view
+>   through cgroupfs mount and via /proc/self/cgroup file.
+>=20
+>   $ cat /proc/self/cgroup=20
+>   0:cpuset,cpu,cpuacct,memory,devices,freezer,hugetlb:/batchjobs/c_jo=
+b_id1
+>=20
+>   This exposure of cgroup names to the processes running inside a
+>   container results in some problems:
+>   (1) The container names are typically host-container-management-age=
+nt
+>       (systemd, docker/libcontainer, etc.) data and leaking its name =
+(or
+>       leaking the hierarchy) reveals too much information about the h=
+ost
+>       system.
+>   (2) It makes the container migration across machines (CRIU) more
+>       difficult as the container names need to be unique across the
+>       machines in the migration domain.
+>   (3) It makes it difficult to run container management tools (like
+>       docker/libcontainer, lmctfy, etc.) within virtual containers
+>       without adding dependency on some state/agent present outside t=
+he
+>       container.
+>=20
+>   Note that the feature proposed here is completely different than th=
+e
+>   =E2=80=9Cns cgroup=E2=80=9D feature which existed in the linux kern=
+el until recently.
+>   The ns cgroup also attempted to connect cgroups and namespaces by
+>   creating a new cgroup every time a new namespace was created. It di=
+d
+>   not solve any of the above mentioned problems and was later dropped
+>   from the kernel.
+>=20
+> Introducing CGroup Namespaces
+>   With unified cgroup hierarchy
+>   (Documentation/cgroups/unified-hierarchy.txt), the containers can n=
+ow
+>   have a much more coherent cgroup view and its easy to associate a
+>   container with a single cgroup. This also allows us to virtualize t=
+he
+>   cgroup view for tasks inside the container.
 
-> I assumed the source page would always be new, according to this part
-> in fuse_try_move_page():
->
->         /*
->          * This is a new and locked page, it shouldn't be mapped or
->          * have any special flags on it
->          */
->         if (WARN_ON(page_mapped(oldpage)))
->                 goto out_fallback_unlock;
->         if (WARN_ON(page_has_private(oldpage)))
->                 goto out_fallback_unlock;
->         if (WARN_ON(PageDirty(oldpage) || PageWriteback(oldpage)))
->                 goto out_fallback_unlock;
->         if (WARN_ON(PageMlocked(oldpage)))
->                 goto out_fallback_unlock;
->
-> However, it's in the page cache and I can't really convince myself
-> that it's not also on the LRU.  Miklos, I have trouble pinpointing
-> where oldpage is instantiated exactly and what state it might be in -
-> can it already be on the LRU?
+Hi,
 
-oldpage comes from ->readpages() (*NOT* ->readpage()), i.e. readahead.
+So right now we basically do this in userspace using cgmanager.  Each
+container/chroot/whatever that has a cgproxy is 'locked' under that
+proxy's cgroup.  So if root in a container asks the cgproxy for the
+cgroup of pid 2000, and cgproxy is in /lxc/u1 while pid 2000 in the
+container is in /lxc/u1/service1, then the response will be '/service1'=
+=2E
+Same happens with creating cgroups, moving pids into cgroups, etc.
 
-AFAICS it is added to the LRU in read_cache_pages(), so it looks like
-it is definitely on the LRU at that point.
+(Hoping to take a close look at this set early next week)
 
-Thanks,
-Miklos
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-serge
