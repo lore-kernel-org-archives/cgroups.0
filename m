@@ -1,94 +1,66 @@
-From: Miklos Szeredi <miklos-sUDqSbJrdHQHWmgEVkV9KA@public.gmane.org>
-Subject: Re: [patch 13/13] mm: memcontrol: rewrite uncharge API
-Date: Tue, 22 Jul 2014 17:44:43 +0200
-Message-ID: <CAJfpegscT-ptQzq__uUV2TOn7Uvs6x4FdWGTQb9Fe9MEJr2KjA@mail.gmail.com>
-References: <1403124045-24361-1-git-send-email-hannes@cmpxchg.org>
-	<1403124045-24361-14-git-send-email-hannes@cmpxchg.org>
-	<20140715082545.GA9366@dhcp22.suse.cz>
-	<20140715121935.GB9366@dhcp22.suse.cz>
-	<20140718071246.GA21565@dhcp22.suse.cz>
-	<20140718144554.GG29639@cmpxchg.org>
-	<CAJfpegt9k+YULet3vhmG3br7zSiHy-DRL+MiEE=HRzcs+mLzbw@mail.gmail.com>
-	<20140719173911.GA1725@cmpxchg.org>
-	<20140722150825.GA4517@dhcp22.suse.cz>
+From: Mike Qiu <qiudayu@linux.vnet.ibm.com>
+Subject: WARNING: at kernel/cpuset.c:1139
+Date: Wed, 23 Jul 2014 10:50:29 +0800
+Message-ID: <53CF22F5.6000206@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=szeredi.hu; s=google;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=okTfT8Elz/HP6IqqtnYCJ1Cdh/swhahET+xjfugWSz8=;
-        b=B33E1a+/GLgqe//qr+E5dW6yg0F4cJITURt/dJq2Hn0rPYuDCPeN87THRP3wW0hACE
-         dJjdF125jnESvAMxX/8+fNtIpq7Msy4Qhz3kJ5bGdt27tPM4kHtENyBR6OJYyLJjer7q
-         HReP/bmIuenoP1cY2f060bR1TVHdhUbFBb0Ec=
-In-Reply-To: <20140722150825.GA4517-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: cgroups@vger.kernel.org
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, lizefan@huawei.com
 
-On Tue, Jul 22, 2014 at 5:08 PM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
-> On Sat 19-07-14 13:39:11, Johannes Weiner wrote:
->> On Fri, Jul 18, 2014 at 05:12:54PM +0200, Miklos Szeredi wrote:
->> > On Fri, Jul 18, 2014 at 4:45 PM, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
->> >
->> > > I assumed the source page would always be new, according to this part
->> > > in fuse_try_move_page():
->> > >
->> > >         /*
->> > >          * This is a new and locked page, it shouldn't be mapped or
->> > >          * have any special flags on it
->> > >          */
->> > >         if (WARN_ON(page_mapped(oldpage)))
->> > >                 goto out_fallback_unlock;
->> > >         if (WARN_ON(page_has_private(oldpage)))
->> > >                 goto out_fallback_unlock;
->> > >         if (WARN_ON(PageDirty(oldpage) || PageWriteback(oldpage)))
->> > >                 goto out_fallback_unlock;
->> > >         if (WARN_ON(PageMlocked(oldpage)))
->> > >                 goto out_fallback_unlock;
->> > >
->> > > However, it's in the page cache and I can't really convince myself
->> > > that it's not also on the LRU.  Miklos, I have trouble pinpointing
->> > > where oldpage is instantiated exactly and what state it might be in -
->> > > can it already be on the LRU?
->> >
->> > oldpage comes from ->readpages() (*NOT* ->readpage()), i.e. readahead.
->> >
->> > AFAICS it is added to the LRU in read_cache_pages(), so it looks like
->> > it is definitely on the LRU at that point.
->
-> OK, so my understanding of the code was wrong :/ and staring at it for
-> quite a while didn't help much. The fuse code is so full of indirection
-> it makes my head spin.
+commit 734d45130cb ("cpuset: update cs->effective_{cpus, mems} when 
+config changes") introduce the below warning in my server.
 
-Definitely needs a rewrite.  But forget the complexities for the
-moment and just consider this single case:
-
- ->readpages() is called to do some readahead, pages are locked, added
-to the page cache and, AFAICS, charged to a memcg (in
-add_to_page_cache_lru()).
-
- - fuse sends a READ request to userspace and it gets a reply with
-splice(... SPLICE_F_MOVE).  What this means that a bunch of pages of
-indefinite origin are to replace (if possible) the pages already in
-the page cache.  If not possible, for some reason, it falls back to
-copying the contents.  So, AFAICS, the oldpage and the newpage can be
-charged to a different memcg.
-
->
-> How should we test this code path, Miklos?
-
-  fusexmp_fh -osplice_write,splice_move /mnt/fuse
-
-This will mirror / under /mnt/fuse and will use splice to move data
-from the underlying filesystem to the fuse filesystem, hopefully.
-
-It would be useful if it had some instrumentation telling us the
-actual number of pages successfully moved, but it doesn't have that
-yet.
+[   35.652137] ------------[ cut here ]------------
+[   35.652141] WARNING: at kernel/cpuset.c:1139
+[   35.652142] Modules linked in: ebtable_nat xt_CHECKSUM bridge stp llc 
+be2iscsi iscsi_boot_sysfs bnx2i cnic uio cxgb4i cxgb4 cxgb3i cxgb3 mdio 
+libcxgbi ib_iser iptable_mangle nf_conntrack_ipv4 rdma_cm nf_defrag_ipv4 
+xt_conntrack iw_cm nf_conntrack ib_cm ib_sa ib_mad ebtable_filter 
+ib_core ebtables ip6_tables ib_addr iscsi_tcp libiscsi_tcp libiscsi 
+scsi_transport_iscsi e1000e ses ptp enclosure pps_core be2net shpchp 
+vhost_net tun macvtap macvlan vhost kvm binfmt_misc uinput lpfc 
+scsi_transport_fc ipr
+[   35.652185] CPU: 36 PID: 1363 Comm: libvirtd Not tainted 
+3.16.0-rc5-next-20140721+ #93
+[   35.652187] task: c0000003b3443a00 ti: c0000003bb008000 task.ti: 
+c0000003bb008000
+[   35.652189] NIP: c00000000015ff38 LR: c00000000015ff2c CTR: 
+0000000000000000
+[   35.652190] REGS: c0000003bb00b850 TRAP: 0700   Not tainted 
+(3.16.0-rc5-next-20140721+)
+[   35.652191] MSR: 9000000000029032 <SF,HV,EE,ME,IR,DR,RI> CR: 
+24004824  XER: 00000000
+[   35.652196] CFAR: c00000000045f6cc SOFTE: 1
+GPR00: c00000000015ff04 c0000003bb00bad0 c00000000145acf8 0000000000000001
+GPR04: c0000003b3dae5d0 0000000000000100 0000000000000000 0000000000000000
+GPR08: c0000003b3dae548 0000000000000004 0000000000000000 0000000000000004
+GPR12: 0000000000000001 c00000000feea200 0000008066727bd8 0000008066727a30
+GPR16: 00000080667dfa08 0000008066727a68 00000080667279f8 00000080667279d0
+GPR20: c00000000166acf8 c0000003b3dae530 c000000001311990 c0000003b3dae5d0
+GPR24: c0000003b3dae530 c0000003b3dadc00 c0000003b3dae400 0000000000000001
+GPR28: 0000000000000000 c000000001311968 c0000003b1873100 c0000003b3dae400
+[   35.652219] NIP [c00000000015ff38] .cpuset_write_resmask+0x438/0x8c0
+[   35.652221] LR [c00000000015ff2c] .cpuset_write_resmask+0x42c/0x8c0
+[   35.652222] Call Trace:
+[   35.652224] [c0000003bb00bad0] [c00000000015ff04] 
+.cpuset_write_resmask+0x404/0x8c0 (unreliable)
+[   35.652227] [c0000003bb00bba0] [c000000000156f08] 
+.cgroup_file_write+0x78/0x190
+[   35.652230] [c0000003bb00bc50] [c00000000030c490] 
+.kernfs_fop_write+0x150/0x1e0
+[   35.652233] [c0000003bb00bcf0] [c00000000026b6d0] .vfs_write+0xe0/0x270
+[   35.652235] [c0000003bb00bd90] [c00000000026be24] .SyS_write+0x64/0x110
+[   35.652238] [c0000003bb00be30] [c00000000000a158] syscall_exit+0x0/0x98
+[   35.652239] Instruction dump:
+[   35.652240] e93a0000 39549528 e9290118 7fa95000 419e0024 7ea3ab78 
+7ee4bb78 38a00100
+[   35.652243] 482ff719 60000000 2fa30000 419e0008 <0fe00000> 7f43d378 
+4bfffa71 813a006c
+[   35.652247] ---[ end trace f91b0c3aadfe71a6 ]---
 
 Thanks,
-Miklos
+Mike
