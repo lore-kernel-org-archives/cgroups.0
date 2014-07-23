@@ -1,40 +1,43 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: WARNING: at kernel/cpuset.c:1139
-Date: Wed, 23 Jul 2014 11:12:20 -0400
-Message-ID: <20140723151220.GD7103@htj.dyndns.org>
-References: <53CF22F5.6000206@linux.vnet.ibm.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [patch 13/13] mm: memcontrol: rewrite uncharge API
+Date: Wed, 23 Jul 2014 17:19:09 +0200
+Message-ID: <20140723151909.GC16721@dhcp22.suse.cz>
+References: <20140715082545.GA9366@dhcp22.suse.cz>
+ <20140715121935.GB9366@dhcp22.suse.cz>
+ <20140718071246.GA21565@dhcp22.suse.cz>
+ <20140718144554.GG29639@cmpxchg.org>
+ <CAJfpegt9k+YULet3vhmG3br7zSiHy-DRL+MiEE=HRzcs+mLzbw@mail.gmail.com>
+ <20140719173911.GA1725@cmpxchg.org>
+ <20140722150825.GA4517@dhcp22.suse.cz>
+ <CAJfpegscT-ptQzq__uUV2TOn7Uvs6x4FdWGTQb9Fe9MEJr2KjA@mail.gmail.com>
+ <20140723143847.GB16721@dhcp22.suse.cz>
+ <20140723150608.GF1725@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=ojr09V4jXJwAFtZMNvFx/XAinaeGWoRbuoURAtWdWiU=;
-        b=sQofewE/ZfbKdPI+insKKf4ku7lNiZ+3CkHpHS2E5xUR2lr5i5yxXdprf8AApNQplH
-         xZCqEn2OoBtqdDSFuDefNhucYrPzUdKdN4RlR2lHLfo5P4un8dFmxw2+iDXrxrOuq3yh
-         a1+WFsGpS2HG0a0nH+79wJorCn0ON+JAS+6K7HgDlFwurZEZghilRXdkYpMCuWc5AkPz
-         ZF53rc2gyBNL+M0/WLN9rslxoqoOrELOdbaZCk5wWHJ5gaoNuBrwtxgxmmksi8asFIK8
-         dewqfmLwNG7BPzBRhTUcLP+CapL1HW7qnzuhaMO0/0UdOdi0vPD+KmNVY98GdtUh/ewi
-         D+eQ==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <53CF22F5.6000206@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20140723150608.GF1725-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mike Qiu <qiudayu@linux.vnet.ibm.com>
-Cc: cgroups@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, lizefan@huawei.com
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Miklos Szeredi <miklos-sUDqSbJrdHQHWmgEVkV9KA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Wed, Jul 23, 2014 at 10:50:29AM +0800, Mike Qiu wrote:
-> commit 734d45130cb ("cpuset: update cs->effective_{cpus, mems} when config
-> changes") introduce the below warning in my server.
+On Wed 23-07-14 11:06:08, Johannes Weiner wrote:
+> On Wed, Jul 23, 2014 at 04:38:47PM +0200, Michal Hocko wrote:
+[...]
+> > OK, thanks for the clarification. I had this feeling but couldn't wrap
+> > my head around the indirection of the code.
+> > 
+> > It seems that checkig PageCgroupUsed(new) and bail out early in
+> > mem_cgroup_migrate should just work, no?
 > 
-> [   35.652137] ------------[ cut here ]------------
-> [   35.652141] WARNING: at kernel/cpuset.c:1139
+> If the new page is already charged as page cache, we could just drop
+> the call to mem_cgroup_migrate() altogether.
 
-Hah, can you reproduce it?  If so, can you detail how?
-
-Thanks.
+Yeah, it is just that we do not want to do all the
+page->page_cgroup->PageCgroupUsed thing in replace_page_cache_page.
 
 -- 
-tejun
+Michal Hocko
+SUSE Labs
