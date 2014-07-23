@@ -1,68 +1,70 @@
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [RFC Patch V1 09/30] mm, memcg: Use cpu_to_mem()/numa_mem_id()
- to support memoryless node
-Date: Wed, 23 Jul 2014 11:18:15 +0800
-Message-ID: <53CF2977.2040307@linux.intel.com>
-References: <1405064267-11678-1-git-send-email-jiang.liu@linux.intel.com> <1405064267-11678-10-git-send-email-jiang.liu@linux.intel.com> <20140718073614.GC21453@dhcp22.suse.cz>
+From: Vladimir Davydov <vdavydov@parallels.com>
+Subject: Re: [PATCH RFC 0/5] Virtual Memory Resource Controller for cgroups
+Date: Wed, 23 Jul 2014 18:08:37 +0400
+Message-ID: <20140723140837.GE30850@esperanza>
+References: <cover.1404383187.git.vdavydov@parallels.com>
+ <20140704121621.GE12466@dhcp22.suse.cz>
+ <20140704153853.GA369@esperanza>
+ <20140716120146.GI7121@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20140718073614.GC21453@dhcp22.suse.cz>
+Content-Disposition: inline
+In-Reply-To: <20140716120146.GI7121@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Michal Hocko <mhocko@suse.cz>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@suse.de>, David Rientjes <rientjes@google.com>, Mike Galbraith <umgwanakikbuti@gmail.com>, Peter Zijlstra <peterz@infradead.org>, "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>, Johannes Weiner <hannes@cmpxchg.org>, Tony Luck <tony.luck@intel.com>, linux-mm@kvack.org, linux-hotplug@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>, Rik van Riel <riel@redhat.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Hugh Dickins <hughd@google.com>, David Rientjes <rientjes@google.com>, Pavel Emelyanov <xemul@parallels.com>, Balbir Singh <bsingharora@gmail.com>
 
-Hi Michal,
-	Thanks for your comments! As discussed, we will
-rework the patch set in another direction to hide memoryless
-node from normal slab users.
-Regards!
-Gerry
+On Wed, Jul 16, 2014 at 02:01:47PM +0200, Michal Hocko wrote:
+> On Fri 04-07-14 19:38:53, Vladimir Davydov wrote:
+> > Considering the example I've given above, both of these won't help if
+> > the system has other active CTs: the container will be forcefully kept
+> > around its high/low limit and, since it's definitely not enough for it,
+> > it will be finally killed crossing out the computations it's spent so
+> > much time on. High limit won't be good for the container even if there's
+> > no other load on the node - it will be constantly swapping out anon
+> > memory and evicting file caches. The application won't die quickly then,
+> > but it will get a heavy slowdown, which is no better than killing I
+> > guess.
+> 
+> It will get vmpressure notifications though and can help to release
+> excessive buffers which were allocated optimistically.
 
-On 2014/7/18 15:36, Michal Hocko wrote:
-> On Fri 11-07-14 15:37:26, Jiang Liu wrote:
->> When CONFIG_HAVE_MEMORYLESS_NODES is enabled, cpu_to_node()/numa_node_id()
->> may return a node without memory, and later cause system failure/panic
->> when calling kmalloc_node() and friends with returned node id.
->> So use cpu_to_mem()/numa_mem_id() instead to get the nearest node with
->> memory for the/current cpu.
->>
->> If CONFIG_HAVE_MEMORYLESS_NODES is disabled, cpu_to_mem()/numa_mem_id()
->> is the same as cpu_to_node()/numa_node_id().
+But the user will only get the notification *after* his application has
+touched the memory within the limit, which may take quite a long time.
+
+> > Also, I guess it'd be beneficial to have
+> > 
+> >  - mlocked pages accounting per cgroup, because they affect memory
+> >    reclaim, and how low/high limits work, so it'd be nice to have them
+> >    limited to a sane value;
+> > 
+> >  - shmem areas accounting per cgroup, because the total amount of shmem
+> >    on the system is limited, and it'll be no good if malicious
+> >    containers eat it all.
+> > 
+> > IMO It wouldn't be a good idea to overwhelm memcg with those limits, the
+> > VM controller suits much better.
 > 
-> The change makes difference only for really tiny memcgs. If we really
-> have all pages on unevictable list or anon with no swap allowed and that
-> is the reason why no node is set in scan_nodes mask then reclaiming
-> memoryless node or any arbitrary close one doesn't make any difference.
-> The current memcg might not have any memory on that node at all.
-> 
-> So the change doesn't make any practical difference and the changelog is
-> misleading.
-> 
->> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->> ---
->>  mm/memcontrol.c |    2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index a2c7bcb0e6eb..d6c4b7255ca9 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -1933,7 +1933,7 @@ int mem_cgroup_select_victim_node(struct mem_cgroup *memcg)
->>  	 * we use curret node.
->>  	 */
->>  	if (unlikely(node == MAX_NUMNODES))
->> -		node = numa_node_id();
->> +		node = numa_mem_id();
->>  
->>  	memcg->last_scanned_node = node;
->>  	return node;
->> -- 
->> 1.7.10.4
->>
-> 
+> yeah, I do not think adding more to memcg is a good idea. I am still not
+> sure whether working around bad design decisions in applications is a
+> good rationale for a new controller.
+
+Where do you see "bad design decision" in the example I've given above?
+To recap, the user doesn't know how much memory his application is going
+to consume and he wants to be notified about a potential failure as soon
+as possible instead of waiting until it touches all the memory within
+the container limit.
+
+Also, what's wrong if an application wants to eat a lot of shared
+memory, which is a limited resource? Suppose the user sets memsw.limit
+for his container to half of RAM hoping it's isolated and won't cause
+any troubles, but eventually he finds other workloads failing on the
+host due to the processes inside it has eaten all available shmem.
+
+Thanks.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
