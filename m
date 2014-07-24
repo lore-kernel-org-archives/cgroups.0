@@ -1,76 +1,163 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [patch 13/13] mm: memcontrol: rewrite uncharge API
-Date: Thu, 24 Jul 2014 11:02:57 +0200
-Message-ID: <20140724090257.GB14578@dhcp22.suse.cz>
-References: <20140718144554.GG29639@cmpxchg.org>
- <CAJfpegt9k+YULet3vhmG3br7zSiHy-DRL+MiEE=HRzcs+mLzbw@mail.gmail.com>
- <20140719173911.GA1725@cmpxchg.org>
- <20140722150825.GA4517@dhcp22.suse.cz>
- <CAJfpegscT-ptQzq__uUV2TOn7Uvs6x4FdWGTQb9Fe9MEJr2KjA@mail.gmail.com>
- <20140723143847.GB16721@dhcp22.suse.cz>
- <20140723150608.GF1725@cmpxchg.org>
- <CAJfpegs-k5QC+42SzLKUSaHrdPxWBaT_dF+SOPqoDvg8h5p_Tw@mail.gmail.com>
- <20140723210241.GH1725@cmpxchg.org>
- <20140724084644.GA14578@dhcp22.suse.cz>
+From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/5] kernfs: Add API to get generate relative kernfs path
+Date: Thu, 24 Jul 2014 15:10:50 +0000
+Message-ID: <20140724151049.GK26600@ubuntumail>
+References: <adityakali-cgroupns>
+ <1405626731-12220-1-git-send-email-adityakali@google.com>
+ <1405626731-12220-2-git-send-email-adityakali@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20140724084644.GA14578-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1405626731-12220-2-git-send-email-adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Miklos Szeredi <miklos-sUDqSbJrdHQHWmgEVkV9KA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On Thu 24-07-14 10:46:44, Michal Hocko wrote:
-> On Wed 23-07-14 17:02:41, Johannes Weiner wrote:
-[...]
-> We can reduce the lookup only to lruvec==true case, no?
-
-Dohh
-s@can@should@
-
-newpage shouldn't charged in all other cases and it would be bug.
-Or am I missing something?
-
-> Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Quoting Aditya Kali (adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org):
+> The new function kernfs_path_from_node() generates and returns
+> kernfs path of a given kernfs_node relative to a given parent
+> kernfs_node.
 > 
-> > ---
-> >  mm/memcontrol.c | 6 ++++++
-> >  1 file changed, 6 insertions(+)
-> > 
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index b7c9a202dee9..3eaa6e83c168 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -6660,6 +6660,12 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage,
-> >  	if (mem_cgroup_disabled())
-> >  		return;
-> >  
-> > +	/* Page cache replacement: new page already charged? */
-> > +	pc = lookup_page_cgroup(newpage);
-> > +	if (PageCgroupUsed(pc))
-> > +		return;
-> > +
-> > +	/* Re-entrant migration: old page already uncharged? */
-> >  	pc = lookup_page_cgroup(oldpage);
-> >  	if (!PageCgroupUsed(pc))
-> >  		return;
-> > -- 
-> > 2.0.0
-> > 
+> Signed-off-by: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> ---
+>  fs/kernfs/dir.c        | 51 ++++++++++++++++++++++++++++++++++++++++----------
+>  include/linux/kernfs.h |  3 +++
+>  2 files changed, 44 insertions(+), 10 deletions(-)
 > 
+> diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
+> index a693f5b..2224f08 100644
+> --- a/fs/kernfs/dir.c
+> +++ b/fs/kernfs/dir.c
+> @@ -44,14 +44,22 @@ static int kernfs_name_locked(struct kernfs_node *kn, char *buf, size_t buflen)
+>  	return strlcpy(buf, kn->parent ? kn->name : "/", buflen);
+>  }
+>  
+> -static char * __must_check kernfs_path_locked(struct kernfs_node *kn, char *buf,
+> -					      size_t buflen)
+> +static char * __must_check kernfs_path_from_node_locked(
+> +	struct kernfs_node *kn_root,
+> +	struct kernfs_node *kn,
+> +	char *buf,
+> +	size_t buflen)
+>  {
+>  	char *p = buf + buflen;
+>  	int len;
+>  
+>  	*--p = '\0';
+
+I realize this is currently couldn't happen (hm, well through the
+EXPORT_SYMBOL_GPL(kernfs_path) it actually could), and it's the same in the
+current code, but could you add a BUG_ON(!buflen) here?
+
+Otherwise looks good to me.
+
+Acked-by: Serge E. Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+
+
+>  
+> +	if (kn == kn_root) {
+> +		*--p = '/';
+> +		return p;
+> +	}
+> +
+>  	do {
+>  		len = strlen(kn->name);
+>  		if (p - buf < len + 1) {
+> @@ -63,6 +71,8 @@ static char * __must_check kernfs_path_locked(struct kernfs_node *kn, char *buf,
+>  		memcpy(p, kn->name, len);
+>  		*--p = '/';
+>  		kn = kn->parent;
+> +		if (kn == kn_root)
+> +			break;
+>  	} while (kn && kn->parent);
+>  
+>  	return p;
+> @@ -92,26 +102,47 @@ int kernfs_name(struct kernfs_node *kn, char *buf, size_t buflen)
+>  }
+>  
+>  /**
+> - * kernfs_path - build full path of a given node
+> + * kernfs_path_from_node - build path of node @kn relative to @kn_root.
+> + * @kn_root: parent kernfs_node relative to which we need to build the path
+>   * @kn: kernfs_node of interest
+> - * @buf: buffer to copy @kn's name into
+> + * @buf: buffer to copy @kn's path into
+>   * @buflen: size of @buf
+>   *
+> - * Builds and returns the full path of @kn in @buf of @buflen bytes.  The
+> - * path is built from the end of @buf so the returned pointer usually
+> + * Builds and returns @kn's path relative to @kn_root. @kn_root is expected to
+> + * be parent of @kn at some level. If this is not true or if @kn_root is NULL,
+> + * then full path of @kn is returned.
+> + * The path is built from the end of @buf so the returned pointer usually
+>   * doesn't match @buf.  If @buf isn't long enough, @buf is nul terminated
+>   * and %NULL is returned.
+>   */
+> -char *kernfs_path(struct kernfs_node *kn, char *buf, size_t buflen)
+> +char *kernfs_path_from_node(struct kernfs_node *kn_root, struct kernfs_node *kn,
+> +			    char *buf, size_t buflen)
+>  {
+>  	unsigned long flags;
+>  	char *p;
+>  
+>  	spin_lock_irqsave(&kernfs_rename_lock, flags);
+> -	p = kernfs_path_locked(kn, buf, buflen);
+> +	p = kernfs_path_from_node_locked(kn_root, kn, buf, buflen);
+>  	spin_unlock_irqrestore(&kernfs_rename_lock, flags);
+>  	return p;
+>  }
+> +EXPORT_SYMBOL_GPL(kernfs_path_from_node);
+> +
+> +/**
+> + * kernfs_path - build full path of a given node
+> + * @kn: kernfs_node of interest
+> + * @buf: buffer to copy @kn's name into
+> + * @buflen: size of @buf
+> + *
+> + * Builds and returns the full path of @kn in @buf of @buflen bytes.  The
+> + * path is built from the end of @buf so the returned pointer usually
+> + * doesn't match @buf.  If @buf isn't long enough, @buf is nul terminated
+> + * and %NULL is returned.
+> + */
+> +char *kernfs_path(struct kernfs_node *kn, char *buf, size_t buflen)
+> +{
+> +	return kernfs_path_from_node(NULL, kn, buf, buflen);
+> +}
+>  EXPORT_SYMBOL_GPL(kernfs_path);
+>  
+>  /**
+> @@ -145,8 +176,8 @@ void pr_cont_kernfs_path(struct kernfs_node *kn)
+>  
+>  	spin_lock_irqsave(&kernfs_rename_lock, flags);
+>  
+> -	p = kernfs_path_locked(kn, kernfs_pr_cont_buf,
+> -			       sizeof(kernfs_pr_cont_buf));
+> +	p = kernfs_path_from_node_locked(NULL, kn, kernfs_pr_cont_buf,
+> +					 sizeof(kernfs_pr_cont_buf));
+>  	if (p)
+>  		pr_cont("%s", p);
+>  	else
+> diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
+> index 20f4935..1627341 100644
+> --- a/include/linux/kernfs.h
+> +++ b/include/linux/kernfs.h
+> @@ -257,6 +257,9 @@ static inline bool kernfs_ns_enabled(struct kernfs_node *kn)
+>  }
+>  
+>  int kernfs_name(struct kernfs_node *kn, char *buf, size_t buflen);
+> +char * __must_check kernfs_path_from_node(struct kernfs_node *root_kn,
+> +					  struct kernfs_node *kn, char *buf,
+> +					  size_t buflen);
+>  char * __must_check kernfs_path(struct kernfs_node *kn, char *buf,
+>  				size_t buflen);
+>  void pr_cont_kernfs_name(struct kernfs_node *kn);
 > -- 
-> Michal Hocko
-> SUSE Labs
+> 2.0.0.526.g5318336
 > 
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
-
--- 
-Michal Hocko
-SUSE Labs
+> _______________________________________________
+> Containers mailing list
+> Containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+> https://lists.linuxfoundation.org/mailman/listinfo/containers
