@@ -1,115 +1,381 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch 13/13] mm: memcontrol: rewrite uncharge API
-Date: Fri, 25 Jul 2014 13:34:06 -0400
-Message-ID: <20140725173406.GL1725@cmpxchg.org>
-References: <20140722150825.GA4517@dhcp22.suse.cz>
- <CAJfpegscT-ptQzq__uUV2TOn7Uvs6x4FdWGTQb9Fe9MEJr2KjA@mail.gmail.com>
- <20140723143847.GB16721@dhcp22.suse.cz>
- <20140723150608.GF1725@cmpxchg.org>
- <CAJfpegs-k5QC+42SzLKUSaHrdPxWBaT_dF+SOPqoDvg8h5p_Tw@mail.gmail.com>
- <20140723210241.GH1725@cmpxchg.org>
- <20140724084644.GA14578@dhcp22.suse.cz>
- <20140724090257.GB14578@dhcp22.suse.cz>
- <20140725152654.GK1725@cmpxchg.org>
- <20140725154320.GB18303@dhcp22.suse.cz>
+From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 0/5] RFC: CGroup Namespaces
+Date: Fri, 25 Jul 2014 12:29:52 -0700
+Message-ID: <CAGr1F2GcAema-E2q6PFj=R0Z505iD7JshrMuMdfPTJ95wMiQMA@mail.gmail.com>
+References: <1405626731-12220-1-git-send-email-adityakali@google.com> <20140724163628.GN26600@ubuntumail>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=qgh/PxOP+ChkCia7R2nJg+LiBf2Pb92kBzB+L82dl9A=;
-	b=pgWQK4zbJi6Yrnw12xdsOV6750YjVmoRwDl3HGsIukmBQXSOj6DdvjB5WIEfHgp68/tHup24w3ukp7p3p9B1kcmUtPoEuftBKDvN/kLzsr/1pfnFLGSWZKourUVwPdri5Li89Fkb32TQdYUB6Yvwxqh9wgfbGLTTCtZgG9xTW5w=;
-Content-Disposition: inline
-In-Reply-To: <20140725154320.GB18303@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-type:content-transfer-encoding;
+        bh=JGF7BgVK27ekfniB9Nc4aiAHuD8E1WWhyjXSni/0j88=;
+        b=BbpQBoZs9Pi309wf3H87iw6KuIsOdVjLY7xzD0AqwOwOCamzDO2qyghzTPwTVhlkIY
+         hZmY12rtMQRUumG46vVuPhkKDcfjjzFc3rl6wwYXhXKnwTGmXHBuaoeq5aPvtfYuZcX8
+         MMWdtI3iAlOqHrkS9B6xs0hl+rI7xUtLXq3KvHrZToF2tx/f5grmjfL3ai7hDUZoxR8P
+         Yl1qrdpB64K1fUnSSdVYCo3Rk20KNHpc/RQnyRsiOWXI3B+yc+MUb6iVgOTd8K0CMyK7
+         b5vUMDAGG7azr8HcnoyxJc/YiYLFxeVkYqoKuia5pLUDdjtLSKV3CKlQysQC1/7CFp4F
+         kBrQ==
+In-Reply-To: <20140724163628.GN26600@ubuntumail>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+To: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
 
-On Fri, Jul 25, 2014 at 05:43:20PM +0200, Michal Hocko wrote:
-> On Fri 25-07-14 11:26:54, Johannes Weiner wrote:
-> > On Thu, Jul 24, 2014 at 11:02:57AM +0200, Michal Hocko wrote:
-> > > On Thu 24-07-14 10:46:44, Michal Hocko wrote:
-> > > > On Wed 23-07-14 17:02:41, Johannes Weiner wrote:
-> > > [...]
-> > > > We can reduce the lookup only to lruvec==true case, no?
-> > > 
-> > > Dohh
-> > > s@can@should@
-> > > 
-> > > newpage shouldn't charged in all other cases and it would be bug.
-> > > Or am I missing something?
-> > 
-> > Yeah, but I'd hate to put that assumption onto the @lrucare parameter,
-> > it just coincides.
-> 
-> Yes, you are right. Maybe replace_page_cache_page should have it's own
-> memcg variant which does all the trickery and then call
-> mem_cgroup_migrate when necessary...
+Thank you for your review. I have tried to respond to both your emails =
+here.
 
-The code flow doesn't really lend itself to nesting.  It's basically
-three steps: validate input, clear the old page, commit the new page.
+On Thu, Jul 24, 2014 at 9:36 AM, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>=
+ wrote:
+> Quoting Aditya Kali (adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org):
+>> Background
+>>   Cgroups and Namespaces are used together to create =E2=80=9Cvirtua=
+l=E2=80=9D
+>>   containers that isolates the host environment from the processes
+>>   running in container. But since cgroups themselves are not
+>>   =E2=80=9Cvirtualized=E2=80=9D, the task is always able to see glob=
+al cgroups view
+>>   through cgroupfs mount and via /proc/self/cgroup file.
+>>
+> Hi,
+>
+> A few questions/comments:
+>
+> 1. Based on this description, am I to understand that after doing a
+>    cgroupns unshare, 'mount -t cgroup cgroup /mnt' by default will
+>    still mount the global root cgroup?  Any plans on "changing" that?
 
-void mem_cgroup_migrate(struct page *oldpage, struct page *newpage)
-{
-	VM_BUG_ON_PAGE(!PageLocked(oldpage), oldpage);
-	VM_BUG_ON_PAGE(!PageLocked(newpage), newpage);
-	VM_BUG_ON_PAGE(PageLRU(oldpage), oldpage);
-	VM_BUG_ON_PAGE(PageLRU(newpage), newpage);
-	VM_BUG_ON_PAGE(PageAnon(oldpage) != PageAnon(newpage), newpage);
-	VM_BUG_ON_PAGE(PageTransHuge(oldpage) != PageTransHuge(newpage),
-		       newpage);
+This is suggested in the "Possible Extensions of CGROUPNS" section.
+More details below.
 
-	if (mem_cgroup_disabled())
-		return;
+>    Will attempts to change settings of a cgroup which is not under
+>    our current ns be rejected?  (That should be easy to do given your
+>    patch 1/5).  Sorry if it's done in the set, I'm jumping around...
+>
 
-	/* Re-entrant migration: old page already uncharged? */
-	pc = lookup_page_cgroup(oldpage);
-	if (!PageCgroupUsed(pc))
-		return;
+Currently, only 'cgroup_attach_task', 'cgroup_mkdir' and
+'cgroup_rmdir' of cgroups outside of cgroupns-root are prevented. The
+read/write of actual cgroup properties are not prevented. Usual
+permission checks continue to apply for those. I was hoping that
+should be enough, but see more comments towards the end.
 
-	VM_BUG_ON_PAGE(!(pc->flags & PCG_MEM), oldpage);
-	VM_BUG_ON_PAGE(do_swap_account && !(pc->flags & PCG_MEMSW), oldpage);
+> 2. What would be the reprecussions of allowing cgroupns unshare so
+>    long as you have ns_capable(CAP_SYS_ADMIN) to the user_ns which
+>    created your current ns cgroup?  It'd be a shame if that wasn't
+>    on the roadmap.
+>
 
-	pc->flags = 0;
-	commit_charge(newpage, pc->mem_cgroup, false);
-}
+Its certainly on the roadmap, just that some logistics were not clear
+at this time. As pointed out by Andy Lutomirski on [PATCH 5/5] of this
+series, if we allow cgroupns creation to ns_capable(CAP_SYS_ADMIN)
+processes, we may need some kind of explicit permission from the
+cgroup subsystem to allow this. One approach could be an explicit
+cgroup.may_unshare setting. Alternatively, the cgroup directory (which
+is going to become the cgroupns-root) ownership could also be used
+here. i.e., the process is ns_capable(CAP_SYS_ADMIN) && it owns the
+cgroup directory. There seems to be already a function that allows
+similar thing and might be sufficient:
 
-void mem_cgroup_replace_page_cache(struct page *oldpage, struct page *newpage)
-{
-	struct page_cgroup *pc;
-	int isolated;
+/**
+ * capable_wrt_inode_uidgid - Check nsown_capable and uid and gid mappe=
+d
+ * @inode: The inode in question
+ * @cap: The capability in question
+ *
+ * Return true if the current task has the given capability targeted at
+ * its own user namespace and that the given inode's uid and gid are
+ * mapped into the current user namespace.
+ */
+bool capable_wrt_inode_uidgid(const struct inode *inode, int cap)
 
-	VM_BUG_ON_PAGE(!PageLocked(oldpage), oldpage);
-	VM_BUG_ON_PAGE(!PageLocked(newpage), newpage);
+What do you think? We can enable this for non-init userns once this is
+decided on.
 
-	if (mem_cgroup_disabled())
-		return;
 
-	/* New page already charged? */
-	pc = lookup_page_cgroup(newpage);
-	if (PageCgroupUsed(pc))
-		return;
+> 3. The un-namespaced view of /proc/self/cgroup from a sibling cgroupn=
+s
+>    makes me wonder whether it wouldn't be more appropriate to leave
+>    /proc/self/cgroup always un-filtered, and use /proc/self/nscgroup
+>    (or somesuch) to provide the namespaced view.  /proc/self/nscgroup
+>    would simply be empty (or say (invalid) or (unreachable)) from a
+>    sibling ns.  That will give criu and admin tools like lxc/docker a=
+ll
+>    they need to do simple cgroup setup.
+>
 
-	pc = lookup_page_cgroup(oldpage);
+It may work for lxc/docker and new applications that use the new
+interface. But its difficult to change numerous existing user
+applications and libraries that depend on /proc/self/cgroup. Moreover,
+even with the new interface, /proc/self/cgroup will continue to leak
+system level cgroup information. And fixing this leak is critical to
+make the container migratable.
 
-	VM_BUG_ON_PAGE(!(pc->flags & PCG_MEM), oldpage);
-	VM_BUG_ON_PAGE(do_swap_account && !(pc->flags & PCG_MEMSW), oldpage);
+Its easy to correctly handle the read of /proc/<pid>/cgroup from a
+sibling cgroupns. Instead of showing unfiltered view, we could just
+not show anything (same behavior when the cgroup hierarchy is not
+mounted). Will that be more acceptable? I can make that change in the
+next version of this series.
 
-	lock_page_lru(oldpage, &isolated);
-	pc->flags = 0;
-	unlock_page_lru(oldpage, isolated);
 
-	commit_charge(newpage, pc->mem_cgroup, true);
-}
+>>   $ cat /proc/self/cgroup
+>>   0:cpuset,cpu,cpuacct,memory,devices,freezer,hugetlb:/batchjobs/c_j=
+ob_id1
+>>
+>>   This exposure of cgroup names to the processes running inside a
+>>   container results in some problems:
+>>   (1) The container names are typically host-container-management-ag=
+ent
+>>       (systemd, docker/libcontainer, etc.) data and leaking its name=
+ (or
+>>       leaking the hierarchy) reveals too much information about the =
+host
+>>       system.
+>>   (2) It makes the container migration across machines (CRIU) more
+>>       difficult as the container names need to be unique across the
+>>       machines in the migration domain.
+>>   (3) It makes it difficult to run container management tools (like
+>>       docker/libcontainer, lmctfy, etc.) within virtual containers
+>>       without adding dependency on some state/agent present outside =
+the
+>>       container.
+>>
+>>   Note that the feature proposed here is completely different than t=
+he
+>>   =E2=80=9Cns cgroup=E2=80=9D feature which existed in the linux ker=
+nel until recently.
+>>   The ns cgroup also attempted to connect cgroups and namespaces by
+>>   creating a new cgroup every time a new namespace was created. It d=
+id
+>>   not solve any of the above mentioned problems and was later droppe=
+d
+>>   from the kernel.
+>>
+>> Introducing CGroup Namespaces
+>>   With unified cgroup hierarchy
+>>   (Documentation/cgroups/unified-hierarchy.txt), the containers can =
+now
+>>   have a much more coherent cgroup view and its easy to associate a
+>>   container with a single cgroup. This also allows us to virtualize =
+the
+>>   cgroup view for tasks inside the container.
+>>
+>>   The new CGroup Namespace allows a process to =E2=80=9Cunshare=E2=80=
+=9D its cgroup
+>>   hierarchy starting from the cgroup its currently in.
+>>   For Ex:
+>>   $ cat /proc/self/cgroup
+>>   0:cpuset,cpu,cpuacct,memory,devices,freezer,hugetlb:/batchjobs/c_j=
+ob_id1
+>>   $ ls -l /proc/self/ns/cgroup
+>>   lrwxrwxrwx 1 root root 0 2014-07-15 10:37 /proc/self/ns/cgroup -> =
+cgroup:[4026531835]
+>>   $ ~/unshare -c  # calls unshare(CLONE_NEWCGROUP) and exec=E2=80=99=
+s /bin/bash
+>>   [ns]$ ls -l /proc/self/ns/cgroup
+>>   lrwxrwxrwx 1 root root 0 2014-07-15 10:35 /proc/self/ns/cgroup -> =
+cgroup:[4026532183]
+>>   # From within new cgroupns, process sees that its in the root cgro=
+up
+>>   [ns]$ cat /proc/self/cgroup
+>>   0:cpuset,cpu,cpuacct,memory,devices,freezer,hugetlb:/
+>>
+>>   # From global cgroupns:
+>>   $ cat /proc/<pid>/cgroup
+>>   0:cpuset,cpu,cpuacct,memory,devices,freezer,hugetlb:/batchjobs/c_j=
+ob_id1
+>>
+>>   The virtualization of /proc/self/cgroup file combined with restric=
+ting
+>>   the view of cgroup hierarchy by bind-mounting for the
+>>   $CGROUP_MOUNT/batchjobs/c_job_id1/ directory to
+>>   $CONTAINER_CHROOT/sys/fs/cgroup/) should provide a completely isol=
+ated
+>>   cgroup view inside the container.
+>>
+>>   In its current simplistic form, the cgroup namespaces provide
+>>   following behavior:
+>>
+>>   (1) The =E2=80=9Croot=E2=80=9D cgroup for a cgroup namespace is th=
+e cgroup in which
+>>       the process calling unshare is running.
+>>       For ex. if a process in /batchjobs/c_job_id1 cgroup calls unsh=
+are,
+>>       cgroup /batchjobs/c_job_id1 becomes the cgroupns-root.
+>>       For the init_cgroup_ns, this is the real root (=E2=80=9C/=E2=80=
+=9D) cgroup
+>>       (identified in code as cgrp_dfl_root.cgrp).
+>>
+>>   (2) The cgroupns-root cgroup does not change even if the namespace
+>>       creator process later moves to a different cgroup.
+>>       $ ~/unshare -c # unshare cgroupns in some cgroup
+>>       [ns]$ cat /proc/self/cgroup
+>>       0:cpuset,cpu,cpuacct,memory,devices,freezer,hugetlb:/
+>>       [ns]$ mkdir sub_cgrp_1
+>>       [ns]$ echo 0 > sub_cgrp_1/cgroup.procs
+>>       [ns]$ cat /proc/self/cgroup
+>>       0:cpuset,cpu,cpuacct,memory,devices,freezer,hugetlb:/sub_cgrp_=
+1
+>>
+>>   (3) Each process gets its CGROUPNS specific view of
+>>       /proc/<pid>/cgroup.
+>>   (a) Processes running inside the cgroup namespace will be able to =
+see
+>>       cgroup paths (in /proc/self/cgroup) only inside their root cgr=
+oup
+>>       [ns]$ sleep 100000 &  # From within unshared cgroupns
+>>       [1] 7353
+>>       [ns]$ echo 7353 > sub_cgrp_1/cgroup.procs
+>>       [ns]$ cat /proc/7353/cgroup
+>>       0:cpuset,cpu,cpuacct,memory,devices,freezer,hugetlb:/sub_cgrp_=
+1
+>>
+>>   (b) From global cgroupns, the real cgroup path will be visible:
+>>       $ cat /proc/7353/cgroup
+>>       0:cpuset,cpu,cpuacct,memory,devices,freezer,hugetlb:/batchjobs=
+/c_job_id1/sub_cgrp_1
+>>
+>>   (c) From a sibling cgroupns, the real path will be visible:
+>>       [ns2]$ cat /proc/7353/cgroup
+>>       0:cpuset,cpu,cpuacct,memory,devices,freezer,hugetlb:/batchjobs=
+/c_job_id1/sub_cgrp_1
+>>       (In correct container setup though, it should not be possible =
+to
+>>        access PIDs in another container in the first place. This can=
+ be
+>>        detected changed if desired.)
+>>
+>>   (4) Processes inside a cgroupns are not allowed to move out of the
+>>       cgroupns-root. This is true even if a privileged process in gl=
+obal
+>>       cgroupns tries to move the process out of its cgroupns-root.
+>>
+>>       # From global cgroupns
+>>       $ cat /proc/7353/cgroup
+>>       0:cpuset,cpu,cpuacct,memory,devices,freezer,hugetlb:/batchjobs=
+/c_job_id1/sub_cgrp_1
+>>       # cgroupns-root for 7353 is /batchjobs/c_job_id1
+>>       $ echo 7353 > batchjobs/c_job_id2/cgroup.procs
+>>       -bash: echo: write error: Operation not permitted
+>>
+>>   (5) setns() is not supported for cgroup namespace in the initial
+>>       version.
+>
+> This combined with the full-path reporting for peer ns cgroups could =
+make
+> for fun antics when attaching to an existing container (since we'd ha=
+ve
+> to unshare into a new ns cgroup with the same roto as the container).
+> I understand you are implying this will be fixed soon though.
+>
 
-Only the call to commit_charge() is the same and there is a little bit
-of overlap in the VM_BUG_ON_PAGEs...  I'd rather have a single migrate
-function, because it's so small that the code is simpler than nesting
-and/or duplicating multiple functions.
+I am thinking the setns() will be only allowed if
+target_cgrpns->cgroupns_root is_descendant_of
+current_cgrpns->cgroupns_root. i.e., you will only be setns to a
+cgroup namespace which is rooted deeper in hierarchy than your own (in
+addition to checking capable_wrt_inode_uidgid(target_cgrpns_inode)).
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+In addition to this, we need to decide whether its OK for setns() to
+also change the cgroup of the task. Consider following example:
+
+[A] ----> [B] ----> C
+    ----> D
+
+[A] and [B] are cgroupns-roots. Now, if a task in Cgroup D (which is
+under cgroupns [A]) attempts to setns() to cgroupns [B], then its
+cgroup should change from /A/D to /A/B. I am concerned about the
+side-effects this might cause. Though otherwise, this is a very useful
+feature for containers. One could argue that this is similar to
+setns() to a mount-namespace which is pivot_root'd somewhere else (in
+which case, the attaching task's root "/" moves implicitly with
+setns).
+
+Alternatively, we could only allow setns() if
+target_cgrpns->cgroupns_root =3D=3D current->cgroup . I.e., taking abov=
+e
+example again, if process in Cgroup D wants to setns() to cgroupns
+[B], then it will first need to move to Cgroup B, and only then the
+setns() will succeed. This makes sure that there is no implicit cgroup
+move.
+
+WDYT? I haven't prototyped this yet, but will send out a patch after
+this series is accepted.
+
+>>   (6) When some thread from a multi-threaded process unshares its
+>>       cgroup-namespace, the new cgroupns gets applied to the entire
+>>       process (all the threads). This should be OK since
+>>       unified-hierarchy only allows process-level containerization. =
+So
+>>       all the threads in the process will have the same cgroup. And =
+both
+>>       - changing cgroups and unsharing namespaces - are protected un=
+der
+>>       threadgroup_lock(task).
+>>
+>>   (7) The cgroup namespace is alive as long as there is atleast 1
+>>       process inside it. When the last process exits, the cgroup
+>>       namespace is destroyed. The cgroupns-root and the actual cgrou=
+ps
+>>       remain though.
+>>
+>> Implementation
+>>   The current patch-set is based on top of Tejun's cgroup tree (for-=
+next
+>>   branch). Its fairly non-intrusive and provides above mentioned
+>>   features.
+>>
+>> Possible extensions of CGROUPNS:
+>>   (1) The Documentation/cgroups/unified-hierarchy.txt mentions use o=
+f
+>>       capabilities to restrict cgroups to administrative users. CGro=
+up
+>>       namespaces could be of help here. With cgroup namespaces, it m=
+ight
+>>       be possible to delegate administration of sub-cgroups under a
+>>       cgroupns-root to the cgroupns owner.
+>
+> That would be nice.
+>
+>>   (2) Provide a cgroupns specific cgroupfs mount. i.e., the followin=
+g
+>>       command when ran from inside a cgroupns should only mount the
+>>       hierarchy from cgroupns-root cgroup:
+>>       $ mount -t cgroup cgroup <cgroup-mountpoint>
+>>       # -o __DEVEL__sane_behavior should be implicit
+>>
+>>       This is similar to how procfs can be mounted for every PIDNS. =
+This
+>>       may have some usecases.
+>
+> Sorry - I see this answers the first part of a question in my previou=
+s email.
+> However, the question of whether changes to limits in cgroups which a=
+re not
+> under our cgroup-ns-root are allowed.
+>
+> Admittedly the current case with cgmanager is the same - in that it d=
+epends
+> on proper setup of the container - but cgmanager is geared to recomme=
+nd
+> not mounting the cgroups in the container at all (and we can reject s=
+uch
+> mounts in the contaienr altogether with no loss in functionality) whe=
+reas
+> you are here encouraging such mounts.  Which is fine - so long as you=
+ then
+> fully address the potential issues.
+
+It will be nice to have this, but frankly, it may add a bit of
+complexity in the cgroup/kernfs code (I will have to prototype and
+see). Also same behavior can be obtained simply by bind-mounting
+cgroupns-root inside the container. So I am currently inclining
+towards rejecting such mounts in favor of simplicity.
+
+Regarding disallowing writes to cgroup files outside of your
+cgroupns-root, I think it should possible implement it easily. I will
+include it in the next revision of this series.
+
+Thanks,
+--=20
+Aditya
