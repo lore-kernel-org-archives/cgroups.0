@@ -1,109 +1,46 @@
-From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 4/5] cgroup: export cgroup_get() and cgroup_put()
-Date: Thu, 24 Jul 2014 17:03:16 +0000
-Message-ID: <20140724170316.GS26600@ubuntumail>
-References: <adityakali-cgroupns>
- <1405626731-12220-1-git-send-email-adityakali@google.com>
- <1405626731-12220-5-git-send-email-adityakali@google.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [patch 13/13] mm: memcontrol: rewrite uncharge API
+Date: Fri, 25 Jul 2014 11:26:54 -0400
+Message-ID: <20140725152654.GK1725@cmpxchg.org>
+References: <CAJfpegt9k+YULet3vhmG3br7zSiHy-DRL+MiEE=HRzcs+mLzbw@mail.gmail.com>
+ <20140719173911.GA1725@cmpxchg.org>
+ <20140722150825.GA4517@dhcp22.suse.cz>
+ <CAJfpegscT-ptQzq__uUV2TOn7Uvs6x4FdWGTQb9Fe9MEJr2KjA@mail.gmail.com>
+ <20140723143847.GB16721@dhcp22.suse.cz>
+ <20140723150608.GF1725@cmpxchg.org>
+ <CAJfpegs-k5QC+42SzLKUSaHrdPxWBaT_dF+SOPqoDvg8h5p_Tw@mail.gmail.com>
+ <20140723210241.GH1725@cmpxchg.org>
+ <20140724084644.GA14578@dhcp22.suse.cz>
+ <20140724090257.GB14578@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=u0iFqbTIGUddRsAcSYMcbGxsIZ+du0c7Eg8JotJLWgU=;
+	b=ayToAOFL4ufFcy2scSSadgDyXu5GU78mTDdBqShlBgyHbd00cHGQnXMyLKyvq/ySPTr+zGSUNNhgTb/fGKb41CLNI/2SRa5vyud9rbM0Ek7I0qqPFETZK5SvTfeu5CB7Lx21+GdEN4cilec54FXGFqvU5TkEYcaBQGyBHI0BLRk=;
 Content-Disposition: inline
-In-Reply-To: <1405626731-12220-5-git-send-email-adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20140724090257.GB14578-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Miklos Szeredi <miklos-sUDqSbJrdHQHWmgEVkV9KA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Quoting Aditya Kali (adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org):
-> move cgroup_get() and cgroup_put() into cgroup.h so that
-> they can be called from other places.
+On Thu, Jul 24, 2014 at 11:02:57AM +0200, Michal Hocko wrote:
+> On Thu 24-07-14 10:46:44, Michal Hocko wrote:
+> > On Wed 23-07-14 17:02:41, Johannes Weiner wrote:
+> [...]
+> > We can reduce the lookup only to lruvec==true case, no?
 > 
-> Signed-off-by: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Dohh
+> s@can@should@
+> 
+> newpage shouldn't charged in all other cases and it would be bug.
+> Or am I missing something?
 
-Acked-by: Serge E. Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Yeah, but I'd hate to put that assumption onto the @lrucare parameter,
+it just coincides.
 
-> ---
->  include/linux/cgroup.h | 17 +++++++++++++++++
->  kernel/cgroup.c        | 18 ------------------
->  2 files changed, 17 insertions(+), 18 deletions(-)
-> 
-> diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-> index 707c302..4ea477f 100644
-> --- a/include/linux/cgroup.h
-> +++ b/include/linux/cgroup.h
-> @@ -530,6 +530,23 @@ static inline bool cgroup_on_dfl(const struct cgroup *cgrp)
->  	return cgrp->root == &cgrp_dfl_root;
->  }
->  
-> +/* convenient tests for these bits */
-> +static inline bool cgroup_is_dead(const struct cgroup *cgrp)
-> +{
-> +	return !(cgrp->self.flags & CSS_ONLINE);
-> +}
-> +
-> +static inline void cgroup_get(struct cgroup *cgrp)
-> +{
-> +	WARN_ON_ONCE(cgroup_is_dead(cgrp));
-> +	css_get(&cgrp->self);
-> +}
-> +
-> +static inline void cgroup_put(struct cgroup *cgrp)
-> +{
-> +	css_put(&cgrp->self);
-> +}
-> +
->  /* no synchronization, the result can only be used as a hint */
->  static inline bool cgroup_has_tasks(struct cgroup *cgrp)
->  {
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index 1671345..8552513 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -185,7 +185,6 @@ static int need_forkexit_callback __read_mostly;
->  static struct cftype cgroup_dfl_base_files[];
->  static struct cftype cgroup_legacy_base_files[];
->  
-> -static void cgroup_put(struct cgroup *cgrp);
->  static int rebind_subsystems(struct cgroup_root *dst_root,
->  			     unsigned int ss_mask);
->  static int cgroup_destroy_locked(struct cgroup *cgrp);
-> @@ -286,12 +285,6 @@ static struct cgroup_subsys_state *cgroup_e_css(struct cgroup *cgrp,
->  	return cgroup_css(cgrp, ss);
->  }
->  
-> -/* convenient tests for these bits */
-> -static inline bool cgroup_is_dead(const struct cgroup *cgrp)
-> -{
-> -	return !(cgrp->self.flags & CSS_ONLINE);
-> -}
-> -
->  struct cgroup_subsys_state *of_css(struct kernfs_open_file *of)
->  {
->  	struct cgroup *cgrp = of->kn->parent->priv;
-> @@ -1029,17 +1022,6 @@ static umode_t cgroup_file_mode(const struct cftype *cft)
->  	return mode;
->  }
->  
-> -static void cgroup_get(struct cgroup *cgrp)
-> -{
-> -	WARN_ON_ONCE(cgroup_is_dead(cgrp));
-> -	css_get(&cgrp->self);
-> -}
-> -
-> -static void cgroup_put(struct cgroup *cgrp)
-> -{
-> -	css_put(&cgrp->self);
-> -}
-> -
->  /**
->   * cgroup_refresh_child_subsys_mask - update child_subsys_mask
->   * @cgrp: the target cgroup
-> -- 
-> 2.0.0.526.g5318336
-> 
-> _______________________________________________
-> Containers mailing list
-> Containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-> https://lists.linuxfoundation.org/mailman/listinfo/containers
+> > Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+
+Thanks!
