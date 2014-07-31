@@ -1,41 +1,128 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cpuset: fix the WARN_ON() in update_nodemasks_hier()
-Date: Wed, 30 Jul 2014 11:27:39 -0400
-Message-ID: <20140730152739.GA23734@htj.dyndns.org>
-References: <53D899A1.3080003@huawei.com>
+From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 2/5] sched: new clone flag CLONE_NEWCGROUP for cgroup namespace
+Date: Thu, 31 Jul 2014 12:48:43 -0700
+Message-ID: <CAGr1F2FAiSFR_Y3t1=eBVoAtJvh4m=cNUi+vG146nDkgtBjisQ@mail.gmail.com>
+References: <1405626731-12220-1-git-send-email-adityakali@google.com>
+ <1405626731-12220-3-git-send-email-adityakali@google.com> <20140724170119.GR26600@ubuntumail>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=KTcvJiOWeyfv7kLQyx7RN1W9aIig5Vv/0v7dYX2ELfM=;
-        b=JDximlet8AjkaGM/Ry5/JiNlwvio5a1dJlz2lR54XWj3DL6+9Ij5vHtll0b2c0dMZK
-         WVGAfFY0nU+tqGVfeK4a+VnVouaH1AG+40qJ/LGodMQHbEaFe2AChHX2TEN3XOYi4wFC
-         JO1jrXoivPv2/3WhFVU6ut2Z8cZPKKK5MAdG4r2c6JRIPMp8LCjXTgUENsxp0WEvpa6J
-         kWtQXZl5iJc0PD698e8Q9AacAjbsgAlGzVggsNnmPpSqkNuEgoZ/baMn3EuIHNFmQ853
-         D1O2SLtJsUFku8A9Ayu32czBRf3ThJ9pMq179bcQamw1/cS5pGBGf9oxYZHLZhlKxEQ/
-         XsFA==
-Content-Disposition: inline
-In-Reply-To: <53D899A1.3080003-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+        d=google.com; s=20120113;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-type;
+        bh=waQnn+trC3S06NDgDEQyHiLVIGZHpQ7yZnhmxBqbb58=;
+        b=RE/WJby/M4/ySR3WGXr/kInFr1U4nUPWsmTzdOjYc01ZPn9nHZBxvTfNwuU1grVZXC
+         tTMZZT70rqGxsnHp5zYJkcoLqcqIXbwZbmHhd172wGw1r30AKJQOIuCxkAC/AblL8RCm
+         +9Zr2ol6bWDPd8XFTtyAoUWtHGKj7iFS8aLo0L99WYMw4+4AzWq2VDgC+zL+f1QCeGhx
+         iuzKUuIAvLpY0gufTfdQZyb3NIE9CYzJrBZxs1BBGlVDHg6iFQHuGOUgM214IkHTpiJe
+         dD7vXCB6crSyzB9SnbUyQ8KmOw4BmPB2pusrpWn1KV6mFh54wqztRsV9/9pSbH6xiQ30
+         43Kw==
+In-Reply-To: <20140724170119.GR26600@ubuntumail>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Mike Qiu <qiudayu-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 
-On Wed, Jul 30, 2014 at 03:07:13PM +0800, Li Zefan wrote:
-> The WARN_ON() is used to check if we break the legal hierarchy, on
-> which the effective mems should be equal to configured mems.
-> 
-> Reported-by: Mike Qiu <qiudayu-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-> Tested-by: Mike Qiu <qiudayu-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+On Thu, Jul 24, 2014 at 10:01 AM, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org> wrote:
+> Quoting Aditya Kali (adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org):
+>> CLONE_NEWCGROUP will be used to create new cgroup namespace.
+>>
+>
+> This is fine and I'm not looking to bikeshed, but am wondering - did
+> you consider any other ways beside unshare (i.e. a new mount option
+> to cgroupfs)?  If so, do you have a list of the downsides of those?
+> (I mainly ask bc clone flags are still a scarce commodity)
+>
 
-Applied to cgroup/for-3.17.
+I did consider couple of other ways:
 
-Thanks.
+(1) having a cgroup.ns_root (or something) cgroup file. If this value
+is '1', it would mean that all processes it and its descendant cgroups
+will have their cgroup paths in /proc/self/cgroup terminated at this
+cgroup.
+ For ex:
+[A] --> [B] --> C
+    | --> [D] --> E
+
+[A], [B] and [D] has cgroup.ns_root = 1.
+* all processes in cgroup C & E will see their cgroup path as /C and
+/E respectively
+* all processes in cgroup B & D will see their own cgroup path as /
+
+In this model, its easy to know what to show if process is looking at
+its own cgroup paths (/proc/self/cgroup). It gets tricky when you are
+looking at other process's /proc/<pid>/cgroup. We may be able to come
+up with some hacky way read correct value, but depending on the
+cgroupfs mount, it may not make sense.
+One other major drawback of this approach is that "every" process in
+the cgroup will now get a restricted view. i.e., you cannot change
+cgroups without affecting your view. And this is undesirable for
+administrative processes.
+
+(2) Another idea that I didn't pursue further (and is a bit hacky as
+above) was having cgroup.ns_procs (like cgroup.procs, but all the pids
+in cgroup.ns_procs will have their /proc/self/cgroup restricted).
+Writing a pid to cgroup.ns_procs implies that you are writing it to
+cgroup.procs too. But, not vise-versa. So, you could move yourself in
+another cgroup by writing your pid in cgroup.procs, but not in
+cgroup.ns_procs, thus preventing from getting "rooted". I This was to
+solve administrative process issue in the above appraoch. But I think
+this is very clunky too and I find semantics for this approach to be
+non-intuitive. It almost looks like moving towards a separate "ns"
+subsystem. But as we already know, its a path to failure.
+
+I didn't think of using a mount option. I imagine the mount option
+(something like -o root=/bathjobs/container_1) could be used to
+restrict the visibility of cgroupfs inside the container's mount
+namespace. i.e., the value you read from /proc/<pid>/cgroup now
+depends on what mount namespace you are in. Its similar to cgroup
+namespace, but just that the cgroupns_root is now stored in the
+'struct mnt_namespace' instead of a separate 'struct
+cgroup_namespace'. But, since mount namespace on creation inherits
+mounts from its parent, the first cgroupfs mount in a mount namespace
+is now treated specially. Also, its not possible to restrict cgroups
+without mount namespace now. This is interesting and may not be too
+bad. I am willing to give this a try. But I feel the cgroup namespace
+approach fits well in-line with other namespaces where it does one
+thing - virtualize the view of /proc/<pid>/cgroup file for processes
+inside the namespace. The semantics are more intuitive as they are
+similar to other namespaces.
+
+Thanks,
+
+>> Signed-off-by: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>
+> Acked-by: Serge E. Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+>
+>> ---
+>>  include/uapi/linux/sched.h | 3 +--
+>>  1 file changed, 1 insertion(+), 2 deletions(-)
+>>
+>> diff --git a/include/uapi/linux/sched.h b/include/uapi/linux/sched.h
+>> index 34f9d73..2f90d00 100644
+>> --- a/include/uapi/linux/sched.h
+>> +++ b/include/uapi/linux/sched.h
+>> @@ -21,8 +21,7 @@
+>>  #define CLONE_DETACHED               0x00400000      /* Unused, ignored */
+>>  #define CLONE_UNTRACED               0x00800000      /* set if the tracing process can't force CLONE_PTRACE on this clone */
+>>  #define CLONE_CHILD_SETTID   0x01000000      /* set the TID in the child */
+>> -/* 0x02000000 was previously the unused CLONE_STOPPED (Start in stopped state)
+>> -   and is now available for re-use. */
+>> +#define CLONE_NEWCGROUP              0x02000000      /* New cgroup namespace */
+>>  #define CLONE_NEWUTS         0x04000000      /* New utsname group? */
+>>  #define CLONE_NEWIPC         0x08000000      /* New ipcs */
+>>  #define CLONE_NEWUSER                0x10000000      /* New user namespace */
+>> --
+>> 2.0.0.526.g5318336
+>>
+>> _______________________________________________
+>> Containers mailing list
+>> Containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+>> https://lists.linuxfoundation.org/mailman/listinfo/containers
+
+
 
 -- 
-tejun
+Aditya
