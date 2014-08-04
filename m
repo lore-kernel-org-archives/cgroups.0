@@ -1,128 +1,119 @@
-From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/5] sched: new clone flag CLONE_NEWCGROUP for cgroup namespace
-Date: Thu, 31 Jul 2014 12:48:43 -0700
-Message-ID: <CAGr1F2FAiSFR_Y3t1=eBVoAtJvh4m=cNUi+vG146nDkgtBjisQ@mail.gmail.com>
-References: <1405626731-12220-1-git-send-email-adityakali@google.com>
- <1405626731-12220-3-git-send-email-adityakali@google.com> <20140724170119.GR26600@ubuntumail>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL] cgroup changes for v3.17-rc1
+Date: Mon, 4 Aug 2014 10:15:11 -0400
+Message-ID: <20140804141511.GC26230@htj.dyndns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-type;
-        bh=waQnn+trC3S06NDgDEQyHiLVIGZHpQ7yZnhmxBqbb58=;
-        b=RE/WJby/M4/ySR3WGXr/kInFr1U4nUPWsmTzdOjYc01ZPn9nHZBxvTfNwuU1grVZXC
-         tTMZZT70rqGxsnHp5zYJkcoLqcqIXbwZbmHhd172wGw1r30AKJQOIuCxkAC/AblL8RCm
-         +9Zr2ol6bWDPd8XFTtyAoUWtHGKj7iFS8aLo0L99WYMw4+4AzWq2VDgC+zL+f1QCeGhx
-         iuzKUuIAvLpY0gufTfdQZyb3NIE9CYzJrBZxs1BBGlVDHg6iFQHuGOUgM214IkHTpiJe
-         dD7vXCB6crSyzB9SnbUyQ8KmOw4BmPB2pusrpWn1KV6mFh54wqztRsV9/9pSbH6xiQ30
-         43Kw==
-In-Reply-To: <20140724170119.GR26600@ubuntumail>
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=bELptP+JTQETtcHQzRf/hu4Y6m+ITWwebbhHDdQHpx8=;
+        b=hjDA6b1WS5kYun8cDxWttNuwY3OyYcv5G50T1jLm4SluQniWyqikVmR0X5Bw6Hg/1k
+         6cws9mqD0uV1VOokhxMwfKPgRD656aWUMXSRbJtqiDXw1joK5EIfqXcZvMzcWh1iVmH8
+         BDKoF+LtpgJ+fSgdP8WqtZ6E21qp1idZKoTgExDlr78qaeAbQw/KnnZE1sZBy35sHwk/
+         GtagMb4InQ/RQXtoxBT1Kg7Hby+/rlDSDkkNUCD9rX8ox0nUOhSXrT3NjlaPsrYX/a3R
+         IaWTjCd9+avUQ0+lTw670S5uI92XXcgK4Xg1/l6gy3Fa7mEwNtPyCEHA9gqlqf3IsKfN
+         vehw==
+Content-Disposition: inline
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On Thu, Jul 24, 2014 at 10:01 AM, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org> wrote:
-> Quoting Aditya Kali (adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org):
->> CLONE_NEWCGROUP will be used to create new cgroup namespace.
->>
->
-> This is fine and I'm not looking to bikeshed, but am wondering - did
-> you consider any other ways beside unshare (i.e. a new mount option
-> to cgroupfs)?  If so, do you have a list of the downsides of those?
-> (I mainly ask bc clone flags are still a scarce commodity)
->
+Hello, Linus.
 
-I did consider couple of other ways:
+Mostly changes to get the v2 interface ready.  The core features are
+mostly ready now and I think it's reasonable to expect to drop the
+devel mask in one or two devel cycles at least for a subset of
+controllers.
 
-(1) having a cgroup.ns_root (or something) cgroup file. If this value
-is '1', it would mean that all processes it and its descendant cgroups
-will have their cgroup paths in /proc/self/cgroup terminated at this
-cgroup.
- For ex:
-[A] --> [B] --> C
-    | --> [D] --> E
+* cgroup added a controller dependency mechanism so that block cgroup
+  can depend on memory cgroup.  This will be used to finally support
+  IO provisioning on the writeback traffic, which is currently being
+  implemented.
 
-[A], [B] and [D] has cgroup.ns_root = 1.
-* all processes in cgroup C & E will see their cgroup path as /C and
-/E respectively
-* all processes in cgroup B & D will see their own cgroup path as /
+* The v2 interface now uses a separate table so that the interface
+  files for the new interface are explicitly declared in one place.
+  Each controller will explicitly review and add the files for the new
+  interface.
 
-In this model, its easy to know what to show if process is looking at
-its own cgroup paths (/proc/self/cgroup). It gets tricky when you are
-looking at other process's /proc/<pid>/cgroup. We may be able to come
-up with some hacky way read correct value, but depending on the
-cgroupfs mount, it may not make sense.
-One other major drawback of this approach is that "every" process in
-the cgroup will now get a restricted view. i.e., you cannot change
-cgroups without affecting your view. And this is undesirable for
-administrative processes.
+* cpuset is getting ready for the hierarchical behavior which is in
+  the similar style with other controllers so that an ancestor's
+  configuration change doesn't change the descendants' configurations
+  irreversibly and processes aren't silently migrated when a CPU or
+  node goes down.
 
-(2) Another idea that I didn't pursue further (and is a bit hacky as
-above) was having cgroup.ns_procs (like cgroup.procs, but all the pids
-in cgroup.ns_procs will have their /proc/self/cgroup restricted).
-Writing a pid to cgroup.ns_procs implies that you are writing it to
-cgroup.procs too. But, not vise-versa. So, you could move yourself in
-another cgroup by writing your pid in cgroup.procs, but not in
-cgroup.ns_procs, thus preventing from getting "rooted". I This was to
-solve administrative process issue in the above appraoch. But I think
-this is very clunky too and I find semantics for this approach to be
-non-intuitive. It almost looks like moving towards a separate "ns"
-subsystem. But as we already know, its a path to failure.
+All the changes are to the new interface and no behavior changed for
+the multiple hierarchies.
 
-I didn't think of using a mount option. I imagine the mount option
-(something like -o root=/bathjobs/container_1) could be used to
-restrict the visibility of cgroupfs inside the container's mount
-namespace. i.e., the value you read from /proc/<pid>/cgroup now
-depends on what mount namespace you are in. Its similar to cgroup
-namespace, but just that the cgroupns_root is now stored in the
-'struct mnt_namespace' instead of a separate 'struct
-cgroup_namespace'. But, since mount namespace on creation inherits
-mounts from its parent, the first cgroupfs mount in a mount namespace
-is now treated specially. Also, its not possible to restrict cgroups
-without mount namespace now. This is interesting and may not be too
-bad. I am willing to give this a try. But I feel the cgroup namespace
-approach fits well in-line with other namespaces where it does one
-thing - virtualize the view of /proc/<pid>/cgroup file for processes
-inside the namespace. The semantics are more intuitive as they are
-similar to other namespaces.
+Thanks.
 
-Thanks,
+The following changes since commit a497c3ba1d97fc69c1e78e7b96435ba8c2cb42ee:
 
->> Signed-off-by: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
->
-> Acked-by: Serge E. Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
->
->> ---
->>  include/uapi/linux/sched.h | 3 +--
->>  1 file changed, 1 insertion(+), 2 deletions(-)
->>
->> diff --git a/include/uapi/linux/sched.h b/include/uapi/linux/sched.h
->> index 34f9d73..2f90d00 100644
->> --- a/include/uapi/linux/sched.h
->> +++ b/include/uapi/linux/sched.h
->> @@ -21,8 +21,7 @@
->>  #define CLONE_DETACHED               0x00400000      /* Unused, ignored */
->>  #define CLONE_UNTRACED               0x00800000      /* set if the tracing process can't force CLONE_PTRACE on this clone */
->>  #define CLONE_CHILD_SETTID   0x01000000      /* set the TID in the child */
->> -/* 0x02000000 was previously the unused CLONE_STOPPED (Start in stopped state)
->> -   and is now available for re-use. */
->> +#define CLONE_NEWCGROUP              0x02000000      /* New cgroup namespace */
->>  #define CLONE_NEWUTS         0x04000000      /* New utsname group? */
->>  #define CLONE_NEWIPC         0x08000000      /* New ipcs */
->>  #define CLONE_NEWUSER                0x10000000      /* New user namespace */
->> --
->> 2.0.0.526.g5318336
->>
->> _______________________________________________
->> Containers mailing list
->> Containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
->> https://lists.linuxfoundation.org/mailman/listinfo/containers
+  Linux 3.16-rc2 (2014-06-21 19:02:54 -1000)
 
+are available in the git repository at:
 
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.17
+
+for you to fetch changes up to a13812683f1118ee4deed88d8d9bc2c268358b2e:
+
+  cpuset: fix the WARN_ON() in update_nodemasks_hier() (2014-07-30 11:26:58 -0400)
+
+----------------------------------------------------------------
+Li Zefan (13):
+      cpuset: add cs->effective_cpus and cs->effective_mems
+      cpuset: update cpuset->effective_{cpus,mems} at hotplug
+      cpuset: update cs->effective_{cpus, mems} when config changes
+      cpuset: inherit ancestor's masks if effective_{cpus, mems} becomes empty
+      cpuset: use effective cpumask to build sched domains
+      cpuset: initialize top_cpuset's configured masks at mount
+      cpuset: apply cs->effective_{cpus,mems}
+      cpuset: make cs->{cpus, mems}_allowed as user-configured masks
+      cpuset: refactor cpuset_hotplug_update_tasks()
+      cpuset: enable onlined cpu/node in effective masks
+      cpuset: allow writing offlined masks to cpuset.cpus/mems
+      cpuset: export effective masks to userspace
+      cpuset: fix the WARN_ON() in update_nodemasks_hier()
+
+Tejun Heo (16):
+      cgroup: reorganize cgroup_subtree_control_write()
+      cgroup: introduce cgroup->subtree_control
+      cgroup: make interface files visible iff enabled on cgroup->subtree_control
+      cgroup: implement cgroup_subsys->css_reset()
+      cgroup: implement cgroup_subsys->depends_on
+      blkcg, memcg: make blkcg depend on memcg on the default hierarchy
+      cgroup: remove CGRP_ROOT_OPTION_MASK
+      cgroup: make interface file "cgroup.sane_behavior" legacy-only
+      cgroup: remove sane_behavior support on non-default hierarchies
+      cgroup: clean up sane_behavior handling
+      cgroup: split cgroup_base_files[] into cgroup_{dfl|legacy}_base_files[]
+      cgroup: rename cgroup_subsys->base_cftypes to ->legacy_cftypes
+      cgroup: replace cgroup_add_cftypes() with cgroup_add_legacy_cftypes()
+      cgroup: distinguish the default and legacy hierarchies when handling cftypes
+      cgroup: make CFTYPE_ONLY_ON_DFL and CFTYPE_NO_ internal to cgroup core
+      cgroup: initialize cgrp_dfl_root_inhibit_ss_mask from !->dfl_files test
+
+ Documentation/cgroups/cgroups.txt           |  14 +
+ Documentation/cgroups/unified-hierarchy.txt |  35 +-
+ block/blk-cgroup.c                          |  13 +-
+ block/blk-throttle.c                        |   6 +-
+ include/linux/cgroup.h                      | 165 ++++-----
+ kernel/cgroup.c                             | 453 +++++++++++++++++--------
+ kernel/cgroup_freezer.c                     |   2 +-
+ kernel/cpuset.c                             | 500 +++++++++++++++++-----------
+ kernel/sched/core.c                         |   2 +-
+ kernel/sched/cpuacct.c                      |   2 +-
+ mm/hugetlb_cgroup.c                         |   5 +-
+ mm/memcontrol.c                             |  37 +-
+ net/core/netclassid_cgroup.c                |   2 +-
+ net/core/netprio_cgroup.c                   |   2 +-
+ net/ipv4/tcp_memcontrol.c                   |   2 +-
+ security/device_cgroup.c                    |   2 +-
+ 16 files changed, 806 insertions(+), 436 deletions(-)
 
 -- 
-Aditya
+tejun
