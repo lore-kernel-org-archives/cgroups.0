@@ -1,67 +1,53 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch] mm: memcontrol: clean up reclaim size variable use in try_charge()
-Date: Mon,  4 Aug 2014 16:35:02 -0400
-Message-ID: <1407184502-20818-1-git-send-email-hannes@cmpxchg.org>
-Return-path: <owner-linux-mm@kvack.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: [patch 0/4] mm: memcontrol: populate unified hierarchy interface
+Date: Mon,  4 Aug 2014 17:14:53 -0400
+Message-ID: <1407186897-21048-1-git-send-email-hannes@cmpxchg.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
-	h=Message-Id:Date:Subject:Cc:To:From; bh=2Xh8X8pBGeOHvHn8MXwIyN2kGg4og2FSntEONw27Da8=;
-	b=WCelSV8M7DtFCPcRegoZwzflFGLORUfOHnk0Pgt9yKRwSIorn+VEn/fOIcnlIG7hkMgoRjHyyNePnKSk4UPRxaOy7JFw60UAmCGde8GBBAG54JN0XaEfbNakRP14FTKVuW746tb8iGGviqRlpZiRqyBrKYrG0moPTI1IRAkbpSs=;
-Sender: owner-linux-mm@kvack.org
+	h=Message-Id:Date:Subject:Cc:To:From; bh=duQWQ+xHE3uvmTxU2znFwmRz67dBlJHQs8VCTL1cnFg=;
+	b=TpkEhI0BB0n254UY67rRlxBIpuPPkBYlXTkW1g6aZbSHtKIwCzKFnfS9tuWozksTYMvzV15jjGLg6qYJksRtZ3vdGEis1G5Qt99hu+0/twgWABYt0XrU85j+ZSjilIG1II/xPsRsOG0uz8Z9Z5cebMsal5sUXQ3GnQCG2JnLg2c=;
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Charge reclaim and OOM currently use the charge batch variable, but
-batching is already disabled at that point.  To simplify the charge
-logic, the batch variable is reset to the original request size when
-reclaim is entered, so it's functionally equal, but it's misleading.
+Hi,
 
-Switch reclaim/OOM to nr_pages, which is the original request size.
+the ongoing versioning of the cgroup user interface gives us a chance
+to clean up the memcg control interface and fix a lot of
+inconsistencies and ugliness that crept in over time.
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- mm/memcontrol.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+This series adds a minimal set of control files to the new memcg
+interface to get basic memcg functionality going in unified hierarchy:
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 8d65dadeec1b..ec4dcf1b9562 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2574,7 +2574,7 @@ retry:
- 
- 	nr_reclaimed = mem_cgroup_reclaim(mem_over_limit, gfp_mask, flags);
- 
--	if (mem_cgroup_margin(mem_over_limit) >= batch)
-+	if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
- 		goto retry;
- 
- 	if (gfp_mask & __GFP_NORETRY)
-@@ -2588,7 +2588,7 @@ retry:
- 	 * unlikely to succeed so close to the limit, and we fall back
- 	 * to regular pages anyway in case of failure.
- 	 */
--	if (nr_reclaimed && batch <= (1 << PAGE_ALLOC_COSTLY_ORDER))
-+	if (nr_reclaimed && nr_pages <= (1 << PAGE_ALLOC_COSTLY_ORDER))
- 		goto retry;
- 	/*
- 	 * At task move, charge accounts can be doubly counted. So, it's
-@@ -2606,7 +2606,7 @@ retry:
- 	if (fatal_signal_pending(current))
- 		goto bypass;
- 
--	mem_cgroup_oom(mem_over_limit, gfp_mask, get_order(batch));
-+	mem_cgroup_oom(mem_over_limit, gfp_mask, get_order(nr_pages));
- nomem:
- 	if (!(gfp_mask & __GFP_NOFAIL))
- 		return -ENOMEM;
--- 
-2.0.3
+- memory.current: a read-only file that shows current memory usage.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+- memory.high: a file that allows setting a high limit on the memory
+  usage.  This is an elastic limit, which is enforced via direct
+  reclaim, so allocators are throttled once it's reached, but it can
+  be exceeded and does not trigger OOM kills.  This should be a much
+  more suitable default upper boundary for the majority of use cases
+  that are better off with some elasticity than with sudden OOM kills.
+
+- memory.max: a file that allows setting a maximum limit on memory
+  usage which is ultimately enforced by OOM killing tasks in the
+  group.  This is for setups that want strict isolation at the cost of
+  task death above a certain point.  However, even those can still
+  combine the max limit with the high limit to approach OOM situations
+  gracefully and with time to intervene.
+
+- memory.vmstat: vmstat-style per-memcg statistics.  Very minimal for
+  now (lru stats, allocations and frees, faults), but fixing
+  fundamental issues of the old memory.stat file, including gross
+  misnomers like pgpgin/pgpgout for pages charged/uncharged etc.
+
+ Documentation/cgroups/unified-hierarchy.txt |  18 +++
+ include/linux/res_counter.h                 |  29 +++++
+ include/linux/swap.h                        |   3 +-
+ kernel/res_counter.c                        |   3 +
+ mm/memcontrol.c                             | 177 +++++++++++++++++++++++++---
+ mm/vmscan.c                                 |   3 +-
+ 6 files changed, 216 insertions(+), 17 deletions(-)
