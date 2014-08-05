@@ -1,90 +1,134 @@
-From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/5] sched: new clone flag CLONE_NEWCGROUP for cgroup
- namespace
-Date: Mon, 4 Aug 2014 23:12:55 +0000
-Message-ID: <20140804231255.GM12438@ubuntumail>
-References: <1405626731-12220-1-git-send-email-adityakali@google.com>
- <1405626731-12220-3-git-send-email-adityakali@google.com>
- <20140724170119.GR26600@ubuntumail>
- <CAGr1F2FAiSFR_Y3t1=eBVoAtJvh4m=cNUi+vG146nDkgtBjisQ@mail.gmail.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [patch] mm: memcontrol: avoid charge statistics churn during
+ page migration
+Date: Tue, 5 Aug 2014 14:24:34 +0200
+Message-ID: <20140805122434.GD15908@dhcp22.suse.cz>
+References: <1407184469-20741-1-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <CAGr1F2FAiSFR_Y3t1=eBVoAtJvh4m=cNUi+vG146nDkgtBjisQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <1407184469-20741-1-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Quoting Aditya Kali (adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org):
-> On Thu, Jul 24, 2014 at 10:01 AM, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org> wrote:
-> > Quoting Aditya Kali (adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org):
-> >> CLONE_NEWCGROUP will be used to create new cgroup namespace.
-> >>
-> >
-> > This is fine and I'm not looking to bikeshed, but am wondering - did
-> > you consider any other ways beside unshare (i.e. a new mount option
-> > to cgroupfs)?  If so, do you have a list of the downsides of those?
-> > (I mainly ask bc clone flags are still a scarce commodity)
-> >
+On Mon 04-08-14 16:34:29, Johannes Weiner wrote:
+> Charge migration currently disables IRQs twice to update the charge
+> statistics for the old page and then again for the new page.
 > 
-> I did consider couple of other ways:
-> 
-> (1) having a cgroup.ns_root (or something) cgroup file. If this value
-> is '1', it would mean that all processes it and its descendant cgroups
-> will have their cgroup paths in /proc/self/cgroup terminated at this
-> cgroup.
->  For ex:
-> [A] --> [B] --> C
->     | --> [D] --> E
-> 
-> [A], [B] and [D] has cgroup.ns_root = 1.
-> * all processes in cgroup C & E will see their cgroup path as /C and
-> /E respectively
-> * all processes in cgroup B & D will see their own cgroup path as /
-> 
-> In this model, its easy to know what to show if process is looking at
-> its own cgroup paths (/proc/self/cgroup). It gets tricky when you are
-> looking at other process's /proc/<pid>/cgroup. We may be able to come
-> up with some hacky way read correct value, but depending on the
-> cgroupfs mount, it may not make sense.
-> One other major drawback of this approach is that "every" process in
-> the cgroup will now get a restricted view. i.e., you cannot change
-> cgroups without affecting your view. And this is undesirable for
-> administrative processes.
-> 
-> (2) Another idea that I didn't pursue further (and is a bit hacky as
-> above) was having cgroup.ns_procs (like cgroup.procs, but all the pids
-> in cgroup.ns_procs will have their /proc/self/cgroup restricted).
-> Writing a pid to cgroup.ns_procs implies that you are writing it to
-> cgroup.procs too. But, not vise-versa. So, you could move yourself in
-> another cgroup by writing your pid in cgroup.procs, but not in
-> cgroup.ns_procs, thus preventing from getting "rooted". I This was to
-> solve administrative process issue in the above appraoch. But I think
-> this is very clunky too and I find semantics for this approach to be
-> non-intuitive. It almost looks like moving towards a separate "ns"
-> subsystem. But as we already know, its a path to failure.
-> 
-> I didn't think of using a mount option. I imagine the mount option
-> (something like -o root=/bathjobs/container_1) could be used to
-> restrict the visibility of cgroupfs inside the container's mount
-> namespace. i.e., the value you read from /proc/<pid>/cgroup now
-> depends on what mount namespace you are in. Its similar to cgroup
-> namespace, but just that the cgroupns_root is now stored in the
-> 'struct mnt_namespace' instead of a separate 'struct
-> cgroup_namespace'. But, since mount namespace on creation inherits
-> mounts from its parent, the first cgroupfs mount in a mount namespace
-> is now treated specially. Also, its not possible to restrict cgroups
-> without mount namespace now. This is interesting and may not be too
-> bad. I am willing to give this a try. But I feel the cgroup namespace
-> approach fits well in-line with other namespaces where it does one
-> thing - virtualize the view of /proc/<pid>/cgroup file for processes
-> inside the namespace. The semantics are more intuitive as they are
-> similar to other namespaces.
+> But migration is a seemless transition of a charge from one physical
+> page to another one of the same size, so this should be a non-event
+> from an accounting point of view.  Leave the statistics alone.
 
-Yeah, let's stick with what you have :)
+Moving stats to mem_cgroup_commit_charge sounds logical to me but does
+this work properly even for the fuse replace page cache case when old
+and new pages can already live in different memcgs?
 
-thanks,
--serge
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> ---
+>  mm/memcontrol.c | 35 ++++++++++-------------------------
+>  1 file changed, 10 insertions(+), 25 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 475ecadd9646..8d65dadeec1b 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2728,7 +2728,7 @@ static void unlock_page_lru(struct page *page, int isolated)
+>  }
+>  
+>  static void commit_charge(struct page *page, struct mem_cgroup *memcg,
+> -			  unsigned int nr_pages, bool lrucare)
+> +			  bool lrucare)
+>  {
+>  	struct page_cgroup *pc = lookup_page_cgroup(page);
+>  	int isolated;
+> @@ -2765,16 +2765,6 @@ static void commit_charge(struct page *page, struct mem_cgroup *memcg,
+>  
+>  	if (lrucare)
+>  		unlock_page_lru(page, isolated);
+> -
+> -	local_irq_disable();
+> -	mem_cgroup_charge_statistics(memcg, page, nr_pages);
+> -	/*
+> -	 * "charge_statistics" updated event counter. Then, check it.
+> -	 * Insert ancestor (and ancestor's ancestors), to softlimit RB-tree.
+> -	 * if they exceeds softlimit.
+> -	 */
+> -	memcg_check_events(memcg, page);
+> -	local_irq_enable();
+>  }
+>  
+>  static DEFINE_MUTEX(set_limit_mutex);
+> @@ -6460,12 +6450,17 @@ void mem_cgroup_commit_charge(struct page *page, struct mem_cgroup *memcg,
+>  	if (!memcg)
+>  		return;
+>  
+> +	commit_charge(page, memcg, lrucare);
+> +
+>  	if (PageTransHuge(page)) {
+>  		nr_pages <<= compound_order(page);
+>  		VM_BUG_ON_PAGE(!PageTransHuge(page), page);
+>  	}
+>  
+> -	commit_charge(page, memcg, nr_pages, lrucare);
+> +	local_irq_disable();
+> +	mem_cgroup_charge_statistics(memcg, page, nr_pages);
+> +	memcg_check_events(memcg, page);
+> +	local_irq_enable();
+>  
+>  	if (do_swap_account && PageSwapCache(page)) {
+>  		swp_entry_t entry = { .val = page_private(page) };
+> @@ -6651,7 +6646,6 @@ void mem_cgroup_uncharge_list(struct list_head *page_list)
+>  void mem_cgroup_migrate(struct page *oldpage, struct page *newpage,
+>  			bool lrucare)
+>  {
+> -	unsigned int nr_pages = 1;
+>  	struct page_cgroup *pc;
+>  	int isolated;
+>  
+> @@ -6660,6 +6654,8 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage,
+>  	VM_BUG_ON_PAGE(!lrucare && PageLRU(oldpage), oldpage);
+>  	VM_BUG_ON_PAGE(!lrucare && PageLRU(newpage), newpage);
+>  	VM_BUG_ON_PAGE(PageAnon(oldpage) != PageAnon(newpage), newpage);
+> +	VM_BUG_ON_PAGE(PageTransHuge(oldpage) != PageTransHuge(newpage),
+> +		       newpage);
+>  
+>  	if (mem_cgroup_disabled())
+>  		return;
+> @@ -6677,12 +6673,6 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage,
+>  	VM_BUG_ON_PAGE(!(pc->flags & PCG_MEM), oldpage);
+>  	VM_BUG_ON_PAGE(do_swap_account && !(pc->flags & PCG_MEMSW), oldpage);
+>  
+> -	if (PageTransHuge(oldpage)) {
+> -		nr_pages <<= compound_order(oldpage);
+> -		VM_BUG_ON_PAGE(!PageTransHuge(oldpage), oldpage);
+> -		VM_BUG_ON_PAGE(!PageTransHuge(newpage), newpage);
+> -	}
+> -
+>  	if (lrucare)
+>  		lock_page_lru(oldpage, &isolated);
+>  
+> @@ -6691,12 +6681,7 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage,
+>  	if (lrucare)
+>  		unlock_page_lru(oldpage, isolated);
+>  
+> -	local_irq_disable();
+> -	mem_cgroup_charge_statistics(pc->mem_cgroup, oldpage, -nr_pages);
+> -	memcg_check_events(pc->mem_cgroup, oldpage);
+> -	local_irq_enable();
+> -
+> -	commit_charge(newpage, pc->mem_cgroup, nr_pages, lrucare);
+> +	commit_charge(newpage, pc->mem_cgroup, lrucare);
+>  }
+>  
+>  /*
+> -- 
+> 2.0.3
+> 
+
+-- 
+Michal Hocko
+SUSE Labs
