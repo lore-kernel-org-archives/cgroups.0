@@ -1,14 +1,14 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [patch 0/4] mm: memcontrol: populate unified hierarchy interface
-Date: Tue, 5 Aug 2014 17:27:40 +0200
-Message-ID: <20140805152740.GI15908@dhcp22.suse.cz>
+Subject: Re: [patch 1/4] mm: memcontrol: reduce reclaim invocations for
+ higher order requests
+Date: Thu, 7 Aug 2014 15:08:22 +0200
+Message-ID: <20140807130822.GB12730@dhcp22.suse.cz>
 References: <1407186897-21048-1-git-send-email-hannes@cmpxchg.org>
- <20140805124033.GF15908@dhcp22.suse.cz>
- <20140805135325.GB14734@cmpxchg.org>
+ <1407186897-21048-2-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20140805135325.GB14734-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <1407186897-21048-2-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -16,165 +16,146 @@ Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue 05-08-14 09:53:25, Johannes Weiner wrote:
-> On Tue, Aug 05, 2014 at 02:40:33PM +0200, Michal Hocko wrote:
-> > On Mon 04-08-14 17:14:53, Johannes Weiner wrote:
-> > > Hi,
-> > > 
-> > > the ongoing versioning of the cgroup user interface gives us a chance
-> > > to clean up the memcg control interface and fix a lot of
-> > > inconsistencies and ugliness that crept in over time.
-> > 
-> > The first patch doesn't fit into the series and should be posted
-> > separately.
+On Mon 04-08-14 17:14:54, Johannes Weiner wrote:
+> Instead of passing the request size to direct reclaim, memcg just
+> manually loops around reclaiming SWAP_CLUSTER_MAX pages until the
+> charge can succeed.  That potentially wastes scan progress when huge
+> page allocations require multiple invocations, which always have to
+> restart from the default scan priority.
 > 
-> It's a prerequisite for the high limit implementation.
+> Pass the request size as a reclaim target to direct reclaim and leave
+> it to that code to reach the goal.
 
-I do not think it is strictly needed. I am even not sure whether the
-patch is OK and have to think more about it. I think you can throttle
-high limit breachers by SWAP_CLUSTER_MAX for now.
+THP charge then will ask for 512 pages to be (direct) reclaimed. That
+is _a lot_ and I would expect long stalls to achieve this target. I
+would also expect quick priority drop down and potential over-reclaim
+for small and moderately sized memcgs (e.g. memcg with 1G worth of pages
+would need to drop down below DEF_PRIORITY-2 to have a chance to scan
+that many pages). All that done for a charge which can fallback to a
+single page charge.
 
-> > > This series adds a minimal set of control files to the new memcg
-> > > interface to get basic memcg functionality going in unified hierarchy:
-> > 
-> > Hmm, I have posted RFC for new knobs quite some time ago and the
-> > discussion died without some questions answered and now you are coming
-> > with a new one. I cannot say I would be happy about that.
+The current code is quite hostile to THP when we are close to the limit
+but solving this by introducing long stalls instead doesn't sound like a
+proper approach to me.
+
+> Charging will still have to loop in case concurrent allocations steal
+> reclaim effort, but at least it doesn't have to loop to meet even the
+> basic request size.  This also prepares the memcg reclaim API for use
+> with the planned high limit, to reclaim excess with a single call.
 > 
-> I remembered open questions mainly about other things like swappiness,
-> charge immigration, kmem limits.  My bad, I should have checked.  Here
-> are your concerns on these basic knobs from that email:
-> 
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 > ---
+>  include/linux/swap.h |  3 ++-
+>  mm/memcontrol.c      | 15 +++++++++------
+>  mm/vmscan.c          |  3 ++-
+>  3 files changed, 13 insertions(+), 8 deletions(-)
 > 
-> On Thu, Jul 17, 2014 at 03:45:09PM +0200, Michal Hocko wrote:
-> > On Wed 16-07-14 11:58:14, Johannes Weiner wrote:
-> > > How about "memory.current"?
-> > 
-> > I wanted old users to change the minimum possible when moving to unified
-> > hierarchy so I didn't touch the old names.
-> > Why should we make the end users life harder? If there is general
-> > agreement I have no problem with renaming I just do not think it is
-> > really necessary because there is no real reason why configurations
-> > which do not use any of the deprecated or unified-hierarchy-only
-> > features shouldn't run in both unified and legacy hierarchies without
-> > any changes.
+> diff --git a/include/linux/swap.h b/include/linux/swap.h
+> index 1b72060f093a..473a3ae4cdd6 100644
+> --- a/include/linux/swap.h
+> +++ b/include/linux/swap.h
+> @@ -327,7 +327,8 @@ extern void lru_cache_add_active_or_unevictable(struct page *page,
+>  extern unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
+>  					gfp_t gfp_mask, nodemask_t *mask);
+>  extern int __isolate_lru_page(struct page *page, isolate_mode_t mode);
+> -extern unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *mem,
+> +extern unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+> +						  unsigned long nr_pages,
+>  						  gfp_t gfp_mask, bool noswap);
+>  extern unsigned long mem_cgroup_shrink_node_zone(struct mem_cgroup *mem,
+>  						gfp_t gfp_mask, bool noswap,
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index ec4dcf1b9562..ddffeeda2d52 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -1793,6 +1793,7 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  }
+>  
+>  static unsigned long mem_cgroup_reclaim(struct mem_cgroup *memcg,
+> +					unsigned long nr_pages,
+>  					gfp_t gfp_mask,
+>  					unsigned long flags)
+>  {
+> @@ -1808,7 +1809,8 @@ static unsigned long mem_cgroup_reclaim(struct mem_cgroup *memcg,
+>  	for (loop = 0; loop < MEM_CGROUP_MAX_RECLAIM_LOOPS; loop++) {
+>  		if (loop)
+>  			drain_all_stock_async(memcg);
+> -		total += try_to_free_mem_cgroup_pages(memcg, gfp_mask, noswap);
+> +		total += try_to_free_mem_cgroup_pages(memcg, nr_pages,
+> +						      gfp_mask, noswap);
+>  		/*
+>  		 * Allow limit shrinkers, which are triggered directly
+>  		 * by userspace, to catch signals and stop reclaim
+> @@ -1816,7 +1818,7 @@ static unsigned long mem_cgroup_reclaim(struct mem_cgroup *memcg,
+>  		 */
+>  		if (total && (flags & MEM_CGROUP_RECLAIM_SHRINK))
+>  			break;
+> -		if (mem_cgroup_margin(memcg))
+> +		if (mem_cgroup_margin(memcg) >= nr_pages)
+>  			break;
+>  		/*
+>  		 * If nothing was reclaimed after two attempts, there
+> @@ -2572,7 +2574,8 @@ retry:
+>  	if (!(gfp_mask & __GFP_WAIT))
+>  		goto nomem;
+>  
+> -	nr_reclaimed = mem_cgroup_reclaim(mem_over_limit, gfp_mask, flags);
+> +	nr_reclaimed = mem_cgroup_reclaim(mem_over_limit, nr_pages,
+> +					  gfp_mask, flags);
+>  
+>  	if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
+>  		goto retry;
+> @@ -3718,7 +3721,7 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+>  		if (!ret)
+>  			break;
+>  
+> -		mem_cgroup_reclaim(memcg, GFP_KERNEL,
+> +		mem_cgroup_reclaim(memcg, 1, GFP_KERNEL,
+>  				   MEM_CGROUP_RECLAIM_SHRINK);
+>  		curusage = res_counter_read_u64(&memcg->res, RES_USAGE);
+>  		/* Usage is reduced ? */
+> @@ -3777,7 +3780,7 @@ static int mem_cgroup_resize_memsw_limit(struct mem_cgroup *memcg,
+>  		if (!ret)
+>  			break;
+>  
+> -		mem_cgroup_reclaim(memcg, GFP_KERNEL,
+> +		mem_cgroup_reclaim(memcg, 1, GFP_KERNEL,
+>  				   MEM_CGROUP_RECLAIM_NOSWAP |
+>  				   MEM_CGROUP_RECLAIM_SHRINK);
+>  		curusage = res_counter_read_u64(&memcg->memsw, RES_USAGE);
+> @@ -4028,7 +4031,7 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg)
+>  		if (signal_pending(current))
+>  			return -EINTR;
+>  
+> -		progress = try_to_free_mem_cgroup_pages(memcg, GFP_KERNEL,
+> +		progress = try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL,
+>  						false);
+>  		if (!progress) {
+>  			nr_retries--;
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index d698f4f7b0f2..7db33f100db4 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -2747,6 +2747,7 @@ unsigned long mem_cgroup_shrink_node_zone(struct mem_cgroup *memcg,
+>  }
+>  
+>  unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+> +					   unsigned long nr_pages,
+>  					   gfp_t gfp_mask,
+>  					   bool noswap)
+>  {
+> @@ -2754,7 +2755,7 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+>  	unsigned long nr_reclaimed;
+>  	int nid;
+>  	struct scan_control sc = {
+> -		.nr_to_reclaim = SWAP_CLUSTER_MAX,
+> +		.nr_to_reclaim = max(nr_pages, SWAP_CLUSTER_MAX),
+>  		.gfp_mask = (gfp_mask & GFP_RECLAIM_MASK) |
+>  				(GFP_HIGHUSER_MOVABLE & ~GFP_RECLAIM_MASK),
+>  		.target_mem_cgroup = memcg,
+> -- 
+> 2.0.3
 > 
-> There is the rub, though: you can't *not* use new interfaces.  We are
-> getting rid of the hard limit as the default and we really want people
-> to rethink their configuration in the light of this.  And even if you
-> would just use the hard limit as before, there is no way we can leave
-> the name 'memory.limit_in_bytes' when we have in fact 4 different
-> limits.
-
-We could theoretically keep a single limit and turn other limits into
-watermarks. I am _not_ suggesting that now because I haven't thought
-that through but I just think we should discuss other possible ways
-before we go on.
-
-> So I don't see any way how we can stay 100% backward compatible even
-> with the most basic memcg functionality of setting an upper limit.
-> 
-> And once you acknowledge that current users don't get around *some*
-> adjustments, we really owe it to new users to present a clean and
-> consistent interface.
->
-> > I do realize that this is a _new_ API so we can do such radical changes
-> > but I am also aware that some people have to maintain their stacks on
-> > top of different kernels and it really sucks to maintain two different
-> > configurations. In such a case it would be easier for those users to
-> > stay with the legacy mode which is a fair option but I would much rather
-> > see them move to the new API sooner rather than later.
-> 
-> There is no way you can use the exact same scripts/configurations for
-> the old and new API at the same time when the most basic way of using
-> cgroups and memcg changed in v2.
-
-OK, this is a fair point. Cgroups configuration is probably a bigger
-problem. If a script rely on a tool/library to setup the hierarchy then
-that tool/library can probably do the mapping from old names to new as
-well otherwise it would need to be rewritten at least for cgroup part.
-
-I have no idea how tools (e.g. libcgroup, libvirt and others) will adapt
-to the new API and support of both APIs at the same time, though.
-
-> ---
-> 
-> > One of the concern was renaming knobs which represent the same
-> > functionality as before. I have posted some concerns but haven't heard
-> > back anything. This series doesn't give any rationale for renaming
-> > either.
-> > It is true we have a v2 but that doesn't necessarily mean we should put
-> > everything upside down.
-> 
-> I'm certainly not going out of my way to turn things upside down, but
-> the old interface is outrageous.  I'm sorry if you can't see that it
-> badly needs to be cleaned up and fixed.  This is the time to do that.
-
-Of course I can see many problems. But please let's think twice and even
-more times when doing radical changes. Many decisions sound reasonable
-at the time but then they turn out bad much later.
-
-> > > - memory.current: a read-only file that shows current memory usage.
-> > 
-> > Even if we go with renaming existing knobs I really hate this name. The
-> > old one was too long but this is not descriptive enough. Same applies to
-> > max and high. I would expect at least limit in the name.
-> 
-> Memory cgroups are about accounting and limiting memory usage.  That's
-> all they do.  In that context, current, min, low, high, max seem
-> perfectly descriptive to me, adding usage and limit seems redundant.
-
-Getting naming right is always pain and different people will always
-have different views. For example I really do not like memory.current
-and would prefer memory.usage much more. I am not a native speaker but
-`usage' sounds much less ambiguous to me. Whether shorter (without _limit
-suffix) names for limits are better I don't know. They certainly seem
-more descriptive with the suffix to me.
-
-> We name syscalls creat() and open() and stat() because, while you have
-> to look at the manpage once, they are easy to remember, easy to type,
-> and they keep the code using them readable.
-> 
-> memory.usage_in_bytes was the opposite approach: it tried to describe
-> all there is to this knob in the name itself, assuming tab completion
-> would help you type that long name.  But we are more and more moving
-> away from ad-hoc scripting of cgroups and I don't want to optimize for
-> that anymore at the cost of really unwieldy identifiers.
-
-I agree with you. _in_bytes is definitely excessive. It can be nicely
-demonstrated by the fact that different units are allowed when setting
-the value.
- 
-> Like with all user interfaces, we should provide a short and catchy
-> name and then provide the details in the documentation.
-> 
-> > > - memory.high: a file that allows setting a high limit on the memory
-> > >   usage.  This is an elastic limit, which is enforced via direct
-> > >   reclaim, so allocators are throttled once it's reached, but it can
-> > >   be exceeded and does not trigger OOM kills.  This should be a much
-> > >   more suitable default upper boundary for the majority of use cases
-> > >   that are better off with some elasticity than with sudden OOM kills.
-> > 
-> > I also thought you wanted to have all the new limits in the single
-> > series. My series is sitting idle until we finally come to conclusion
-> > which is the first set of exposed knobs. So I do not understand why are
-> > you coming with it right now.
-> 
-> I still would like to, but I'm not sure we can get the guarantees
-> working in time as unified hierarchy leaves its experimental status.
-
-That shouldn't happen sooner than in next (maybe in 2) devel cycle(s)
-(http://marc.info/?l=linux-kernel&m=140716172618366).
-
-> And I'm fairly confident that we know how the upper limits should
-> behave and that we are no longer going to change that, and that we
-> have a decent understanding on how the guarantees are going to work.
-
-I think we should first settle with the new knobs before we introduce
-new ones. I understand you would like to have high limit as a preferable
-way from the early beginning but I think that can wait while the new API
-is still in devel mode.
 
 -- 
 Michal Hocko
