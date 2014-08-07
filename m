@@ -1,252 +1,230 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch 2/4] mm: memcontrol: add memory.current and memory.high
- to default hierarchy
-Date: Thu, 7 Aug 2014 15:39:20 +0200
-Message-ID: <20140807133920.GD12730@dhcp22.suse.cz>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [patch 0/4] mm: memcontrol: populate unified hierarchy interface
+Date: Thu, 7 Aug 2014 10:21:31 -0400
+Message-ID: <20140807142131.GC14734@cmpxchg.org>
 References: <1407186897-21048-1-git-send-email-hannes@cmpxchg.org>
- <1407186897-21048-3-git-send-email-hannes@cmpxchg.org>
- <20140807133614.GC12730@dhcp22.suse.cz>
+ <20140805124033.GF15908@dhcp22.suse.cz>
+ <20140805135325.GB14734@cmpxchg.org>
+ <20140805152740.GI15908@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=WZW4IwH5YCJOBULzGrufn+b/MIWhyn8oN8KMCzge2Kg=;
+	b=h3Ehgj38ej/NfVBnG1lATvxl1XXJdMV88elbcJ9EC6kvBvtiJjOGnsajn0KTiXpngpln88QRnL76GEZ/OBve/7rrWSQDhu2v21PyzPa3AgzstyRWm898wPAF7cnnWQIj8aAP0gtEpAleMzAzilH7TR6K2WmHwYdrk5qTC/jusu4=;
 Content-Disposition: inline
-In-Reply-To: <20140807133614.GC12730@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20140805152740.GI15908@dhcp22.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
+To: Michal Hocko <mhocko@suse.cz>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu 07-08-14 15:36:14, Michal Hocko wrote:
-> On Mon 04-08-14 17:14:55, Johannes Weiner wrote:
-> [...]
-> > @@ -132,6 +137,19 @@ u64 res_counter_uncharge(struct res_counter *counter, unsigned long val);
-> >  u64 res_counter_uncharge_until(struct res_counter *counter,
-> >  			       struct res_counter *top,
-> >  			       unsigned long val);
-> > +
-> > +static inline unsigned long long res_counter_high(struct res_counter *cnt)
+On Tue, Aug 05, 2014 at 05:27:40PM +0200, Michal Hocko wrote:
+> On Tue 05-08-14 09:53:25, Johannes Weiner wrote:
+> > On Tue, Aug 05, 2014 at 02:40:33PM +0200, Michal Hocko wrote:
+> > > On Mon 04-08-14 17:14:53, Johannes Weiner wrote:
+> > > > Hi,
+> > > > 
+> > > > the ongoing versioning of the cgroup user interface gives us a chance
+> > > > to clean up the memcg control interface and fix a lot of
+> > > > inconsistencies and ugliness that crept in over time.
+> > > 
+> > > The first patch doesn't fit into the series and should be posted
+> > > separately.
+> > 
+> > It's a prerequisite for the high limit implementation.
 > 
-> soft limit used res_counter_soft_limit_excess which has quite a long
-> name but at least those two should be consistent.
-> I will post two helper patches which I have used to make this and other
-> operations on res counter easier as a reply to this.
+> I do not think it is strictly needed. I am even not sure whether the
+> patch is OK and have to think more about it. I think you can throttle
+> high limit breachers by SWAP_CLUSTER_MAX for now.
 
-These two are sleeping in my queue for quite some time. I didn't get to
-post them yet but if you think they will make sense I can try to rebase
-them on the current tree and post.
----
-From 3f3185306b225931a45387f288645ba9044565d0 Mon Sep 17 00:00:00 2001
-From: Michal Hocko <mhocko@suse.cz>
-Date: Thu, 19 Jun 2014 19:14:31 +0200
-Subject: [PATCH 1/2] res_counter: provide res_counter_write_u64
+It really doesn't work once you have higher order pages.  THP-heavy
+workloads overshoot the high limit by a lot if you reclaim 32 pages
+for every 512 charged.
 
-to allow setting member based value setting. This will reduce code
-duplication for the new limits added by this patch series.
+In my tests, with the change in question, even heavily swapping THP
+loads consistently stay around the high limit, whereas without it the
+memory consumption quickly overshoots.
 
-Use the new helper to replace one-off res_counter_set_soft_limit.
+> > > > This series adds a minimal set of control files to the new memcg
+> > > > interface to get basic memcg functionality going in unified hierarchy:
+> > > 
+> > > Hmm, I have posted RFC for new knobs quite some time ago and the
+> > > discussion died without some questions answered and now you are coming
+> > > with a new one. I cannot say I would be happy about that.
+> > 
+> > I remembered open questions mainly about other things like swappiness,
+> > charge immigration, kmem limits.  My bad, I should have checked.  Here
+> > are your concerns on these basic knobs from that email:
+> > 
+> > ---
+> > 
+> > On Thu, Jul 17, 2014 at 03:45:09PM +0200, Michal Hocko wrote:
+> > > On Wed 16-07-14 11:58:14, Johannes Weiner wrote:
+> > > > How about "memory.current"?
+> > > 
+> > > I wanted old users to change the minimum possible when moving to unified
+> > > hierarchy so I didn't touch the old names.
+> > > Why should we make the end users life harder? If there is general
+> > > agreement I have no problem with renaming I just do not think it is
+> > > really necessary because there is no real reason why configurations
+> > > which do not use any of the deprecated or unified-hierarchy-only
+> > > features shouldn't run in both unified and legacy hierarchies without
+> > > any changes.
+> > 
+> > There is the rub, though: you can't *not* use new interfaces.  We are
+> > getting rid of the hard limit as the default and we really want people
+> > to rethink their configuration in the light of this.  And even if you
+> > would just use the hard limit as before, there is no way we can leave
+> > the name 'memory.limit_in_bytes' when we have in fact 4 different
+> > limits.
+> 
+> We could theoretically keep a single limit and turn other limits into
+> watermarks. I am _not_ suggesting that now because I haven't thought
+> that through but I just think we should discuss other possible ways
+> before we go on.
 
-Signed-off-by: Michal Hocko <mhocko@suse.cz>
----
- include/linux/res_counter.h | 14 ++------------
- kernel/res_counter.c        | 14 ++++++++++++++
- mm/memcontrol.c             |  2 +-
- 3 files changed, 17 insertions(+), 13 deletions(-)
+I am definitely open to discuss your alternative suggestions, but for
+that you have to actually propose them. :)
 
-diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
-index 56b7bc32db4f..bea7f9f45f7a 100644
---- a/include/linux/res_counter.h
-+++ b/include/linux/res_counter.h
-@@ -71,6 +71,8 @@ struct res_counter {
- 
- u64 res_counter_read_u64(struct res_counter *counter, int member);
- 
-+void res_counter_write_u64(struct res_counter *counter, int member, u64 val);
-+
- ssize_t res_counter_read(struct res_counter *counter, int member,
- 		const char __user *buf, size_t nbytes, loff_t *pos,
- 		int (*read_strategy)(unsigned long long val, char *s));
-@@ -208,16 +210,4 @@ static inline int res_counter_set_limit(struct res_counter *cnt,
- 	return ret;
- }
- 
--static inline int
--res_counter_set_soft_limit(struct res_counter *cnt,
--				unsigned long long soft_limit)
--{
--	unsigned long flags;
--
--	spin_lock_irqsave(&cnt->lock, flags);
--	cnt->soft_limit = soft_limit;
--	spin_unlock_irqrestore(&cnt->lock, flags);
--	return 0;
--}
--
- #endif
-diff --git a/kernel/res_counter.c b/kernel/res_counter.c
-index e791130f85a7..4789c2323a94 100644
---- a/kernel/res_counter.c
-+++ b/kernel/res_counter.c
-@@ -171,11 +171,25 @@ u64 res_counter_read_u64(struct res_counter *counter, int member)
- 
- 	return ret;
- }
-+
-+void res_counter_write_u64(struct res_counter *counter, int member, u64 val)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&counter->lock, flags);
-+	*res_counter_member(counter, member) = val;
-+	spin_unlock_irqrestore(&counter->lock, flags);
-+}
- #else
- u64 res_counter_read_u64(struct res_counter *counter, int member)
- {
- 	return *res_counter_member(counter, member);
- }
-+
-+void res_counter_write_u64(struct res_counter *counter, int member, u64 val)
-+{
-+	*res_counter_member(counter, member) = val;
-+}
- #endif
- 
- int res_counter_memparse_write_strategy(const char *buf,
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index d1b311687769..1ad5d4a2bc4e 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4378,7 +4378,7 @@ static ssize_t mem_cgroup_write(struct kernfs_open_file *of,
- 		 * control without swap
- 		 */
- 		if (type == _MEM)
--			ret = res_counter_set_soft_limit(&memcg->res, val);
-+			res_counter_write_u64(&memcg->res, name, val);
- 		else
- 			ret = -EINVAL;
- 		break;
--- 
-2.1.0.rc1
+The reason why I want existing users to rethink the approach to memory
+limiting is that the current hard limit completely fails to partition
+and isolate in a practical manner, and we are changing the fundamental
+approach here.  Pretending to provide backward compatibility through
+the names of control knobs is specious, and will lead to more issues
+than it actually solves.
+
+> > > One of the concern was renaming knobs which represent the same
+> > > functionality as before. I have posted some concerns but haven't heard
+> > > back anything. This series doesn't give any rationale for renaming
+> > > either.
+> > > It is true we have a v2 but that doesn't necessarily mean we should put
+> > > everything upside down.
+> > 
+> > I'm certainly not going out of my way to turn things upside down, but
+> > the old interface is outrageous.  I'm sorry if you can't see that it
+> > badly needs to be cleaned up and fixed.  This is the time to do that.
+> 
+> Of course I can see many problems. But please let's think twice and even
+> more times when doing radical changes. Many decisions sound reasonable
+> at the time but then they turn out bad much later.
+
+These are radical changes, and I'm sorry that my justifications were
+very terse.  I've updated this patch to include the following in
+Documentation/cgroups/unified-hierarchy.txt:
 
 ---
-From 8c79f2c209f806b97ec368c3e649ef58caeb7e99 Mon Sep 17 00:00:00 2001
-From: Michal Hocko <mhocko@suse.cz>
-Date: Thu, 19 Jun 2014 19:42:25 +0200
-Subject: [PATCH 2/2] memcg, res_counter: replace res_counter_soft_limit_excess
- by a more generic helper
 
-Later patches in the series will add new limits which we will want to
-check for excess as well so change the current on-off
-res_counter_soft_limit_excess to a more generic helper.
+4-3-3. memory
 
-Signed-off-by: Michal Hocko <mhocko@suse.cz>
+Memory cgroups account and limit the memory consumption of cgroups,
+but the current limit semantics make the feature hard to use and
+creates problems in existing configurations.
+
+4.3.3.1 No more default hard limit
+
+'memory.limit_in_bytes' is the current upper limit that can not be
+exceeded under any circumstances.  If it can not be met by direct
+reclaim, the tasks in the cgroup are OOM killed.
+
+While this may look like a valid approach to partition the machine, in
+practice workloads expand and contract during runtime, and it's
+impossible to get the machine-wide configuration right: if users set
+this hard limit conservatively, they are plagued by cgroup-internal
+OOM kills while another group's memory might be idle.  If they set it
+too generously, precious resources are wasted.  As a result, many
+users overcommit such that the sum of all hard limits exceed the
+machine size, but this puts the actual burden of containment on global
+reclaim and OOM handling.  This led to further extremes, such as the
+demand for having global reclaim honor group-specific priorities and
+minimums, and the ability to handle global OOM situations from
+userspace using task-specific physical memory reserves.  All these
+outcomes and developments show the utter failure of hard limits to
+practically partition the machine for maximum resource utilization.
+
+In unified hierarchy, the primary means of limiting memory consumption
+is 'memory.high'.  It's enforced by direct reclaim but can be exceeded
+under severe memory pressure.  Memory pressure created by this limit
+still applies mainly to the group itself, but it prefers offloading
+the excess to the rest of the system in order to avoid OOM killing.
+Configurations can start out by setting this limit to a conservative
+estimate of the average workload size and then make upward adjustments
+based on monitoring high limit excess, workload performance, and the
+global memory situation.
+
+In untrusted environments, users may wish to limit the amount of such
+offloading in order to contain malicious workloads.  For that purpose,
+a hard upper limit can be set through 'memory.max'.
+
+'memory.pressure_level' was added for userspace to monitor memory
+pressure based on reclaim efficiency, but the window between initial
+memory pressure and an OOM kill is very short with hard limits.  By
+the time high pressure is reported to userspace it's often too late to
+still intervene before the group goes OOM, thus severely limiting the
+usefulness of this feature for anticipating looming OOM situations.
+
+This new approach to limiting allows packing workloads more densely
+based on their average workingset size.  Coinciding peaks of multiple
+groups are handled by throttling allocations within the groups rather
+than putting the full burden on global reclaim and OOM handling, and
+pressure situations build up gracefully and allow better monitoring.
+
 ---
- include/linux/res_counter.h | 21 +++++++++++++++------
- mm/memcontrol.c             | 10 +++++-----
- 2 files changed, 20 insertions(+), 11 deletions(-)
 
-diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
-index bea7f9f45f7a..9015013784fa 100644
---- a/include/linux/res_counter.h
-+++ b/include/linux/res_counter.h
-@@ -156,23 +156,32 @@ static inline unsigned long long res_counter_margin(struct res_counter *cnt)
- }
- 
- /**
-- * Get the difference between the usage and the soft limit
-+ * Get the difference between the usage and the limit defined
-+ * by the given member
-  * @cnt: The counter
-  *
-- * Returns 0 if usage is less than or equal to soft limit
-- * The difference between usage and soft limit, otherwise.
-+ * Returns 0 if usage is less than or equal to the limit defined
-+ * by member or the difference otherwise.
-  */
- static inline unsigned long long
--res_counter_soft_limit_excess(struct res_counter *cnt)
-+res_counter_limit_excess(struct res_counter *cnt, int member)
- {
- 	unsigned long long excess;
-+	unsigned long long limit;
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&cnt->lock, flags);
--	if (cnt->usage <= cnt->soft_limit)
-+	switch(member) {
-+		case RES_SOFT_LIMIT:
-+			limit = cnt->soft_limit;
-+			break;
-+		default:
-+			BUG();
-+	}
-+	if (cnt->usage <= limit)
- 		excess = 0;
- 	else
--		excess = cnt->usage - cnt->soft_limit;
-+		excess = cnt->usage - limit;
- 	spin_unlock_irqrestore(&cnt->lock, flags);
- 	return excess;
- }
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 1ad5d4a2bc4e..75b5db78e9be 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -773,7 +773,7 @@ static void mem_cgroup_update_tree(struct mem_cgroup *memcg, struct page *page)
- 	 */
- 	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
- 		mz = mem_cgroup_page_zoneinfo(memcg, page);
--		excess = res_counter_soft_limit_excess(&memcg->res);
-+		excess = res_counter_limit_excess(&memcg->res, RES_SOFT_LIMIT);
- 		/*
- 		 * We have to update the tree if mz is on RB-tree or
- 		 * mem is over its softlimit.
-@@ -827,7 +827,7 @@ retry:
- 	 * position in the tree.
- 	 */
- 	__mem_cgroup_remove_exceeded(mz, mctz);
--	if (!res_counter_soft_limit_excess(&mz->memcg->res) ||
-+	if (!res_counter_limit_excess(&mz->memcg->res, RES_SOFT_LIMIT) ||
- 	    !css_tryget_online(&mz->memcg->css))
- 		goto retry;
- done:
-@@ -1983,7 +1983,7 @@ static int mem_cgroup_soft_reclaim(struct mem_cgroup *root_memcg,
- 		.priority = 0,
- 	};
- 
--	excess = res_counter_soft_limit_excess(&root_memcg->res) >> PAGE_SHIFT;
-+	excess = res_counter_limit_excess(&root_memcg->res, RES_SOFT_LIMIT) >> PAGE_SHIFT;
- 
- 	while (1) {
- 		victim = mem_cgroup_iter(root_memcg, victim, &reclaim);
-@@ -2014,7 +2014,7 @@ static int mem_cgroup_soft_reclaim(struct mem_cgroup *root_memcg,
- 		total += mem_cgroup_shrink_node_zone(victim, gfp_mask, false,
- 						     zone, &nr_scanned);
- 		*total_scanned += nr_scanned;
--		if (!res_counter_soft_limit_excess(&root_memcg->res))
-+		if (!res_counter_limit_excess(&root_memcg->res, RES_SOFT_LIMIT))
- 			break;
- 	}
- 	mem_cgroup_iter_break(root_memcg, victim);
-@@ -3941,7 +3941,7 @@ unsigned long mem_cgroup_soft_limit_reclaim(struct zone *zone, int order,
- 			} while (1);
- 		}
- 		__mem_cgroup_remove_exceeded(mz, mctz);
--		excess = res_counter_soft_limit_excess(&mz->memcg->res);
-+		excess = res_counter_limit_excess(&mz->memcg->res, RES_SOFT_LIMIT);
- 		/*
- 		 * One school of thought says that we should not add
- 		 * back the node to the tree if reclaim returns 0.
--- 
-2.1.0.rc1
+> > > > - memory.current: a read-only file that shows current memory usage.
+> > > 
+> > > Even if we go with renaming existing knobs I really hate this name. The
+> > > old one was too long but this is not descriptive enough. Same applies to
+> > > max and high. I would expect at least limit in the name.
+> > 
+> > Memory cgroups are about accounting and limiting memory usage.  That's
+> > all they do.  In that context, current, min, low, high, max seem
+> > perfectly descriptive to me, adding usage and limit seems redundant.
+> 
+> Getting naming right is always pain and different people will always
+> have different views. For example I really do not like memory.current
+> and would prefer memory.usage much more. I am not a native speaker but
+> `usage' sounds much less ambiguous to me. Whether shorter (without _limit
+> suffix) names for limits are better I don't know. They certainly seem
+> more descriptive with the suffix to me.
 
--- 
-Michal Hocko
-SUSE Labs
+These knobs control the most fundamental behavior of memory cgroups,
+which is accounting and then limiting memory consumption, so I think
+we can agree at least that we want something short and poignant here
+that stands out compared to secondary controls, feature toggles etc.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+The reason I went with memory.current over memory.usage is that it's
+more consistent with the limit names I chose, which is memory.high and
+memory.max.  Going with memory.usage begs the question what memory.max
+applies to, and now you need to add 'usage' or 'limit' to high/max as
+well (and 'guarantee' to min/low), which moves us away from short and
+poignant towards more specific niche control names.  memory.current,
+memory.high, memory.max all imply the same thing: memory consumption -
+what memory cgroups is fundamentally about.
+
+> > We name syscalls creat() and open() and stat() because, while you have
+> > to look at the manpage once, they are easy to remember, easy to type,
+> > and they keep the code using them readable.
+> >
+> > memory.usage_in_bytes was the opposite approach: it tried to describe
+> > all there is to this knob in the name itself, assuming tab completion
+> > would help you type that long name.  But we are more and more moving
+> > away from ad-hoc scripting of cgroups and I don't want to optimize for
+> > that anymore at the cost of really unwieldy identifiers.
+> 
+> I agree with you. _in_bytes is definitely excessive. It can be nicely
+> demonstrated by the fact that different units are allowed when setting
+> the value.
+
+It's maybe misleading for that reason, but that wasn't my main point.
+
+There are certain things we can imply in the name and either explain
+in the documentation or assume from the context, and _in_bytes is one
+such piece of information.  It's something that you need to know once
+and don't need to be reminded of everytime you type that control name.
+
+Likewise, I'm extending this argument that we don't need to include
+'usage' or 'limit' in any of these basic knobs, because that's *the*
+thing that memory cgroups do.  It's up to secondary controls to pick
+names that do not create ambiguity with those core controls.
