@@ -1,27 +1,53 @@
-From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Subject: cgroups manpage
-Date: Fri, 8 Aug 2014 22:01:25 +0200
-Message-ID: <20140808200125.GA24978@mail.hallyn.com>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [patch 0/4] mm: memcontrol: populate unified hierarchy interface v2
+Date: Fri,  8 Aug 2014 17:38:10 -0400
+Message-ID: <1407533894-25845-1-git-send-email-hannes@cmpxchg.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cmpxchg.org; s=zene;
+	h=Message-Id:Date:Subject:Cc:To:From; bh=PXbdEFWYZR2VXSd5z/g4iTKhcFiXPj8salTY0fs+CUw=;
+	b=SMB5POJZcsvV61bJV/NqH9OqqT5C7yH25QI2//HR3QHr460AUuuFPLUO+VjyXnF4RHpu4I8a6jJfjzOZ47AUeUxpFvglj1ri1Q9imcjOtsp3DDuedX2CScDTsi3jARcYq3JugfDRJSwl2hCdgvdylPVdbdPgjGpit1Iwff7aDRY=;
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Michael Kerrisk (man-pages)" <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Linux Containers <containers-qjLDD68F18O7TbgM5vRIOg@public.gmane.org>
+To: linux-mm@kvack.org
+Cc: Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Vladimir Davydov <vdavydov@parallels.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
 Hi,
 
-For quite some time I've been meaning to write a proper manpage for cgroups.
-I've gotten a start on it, but since I'm keeping it in github anyway and
-going so slowly, I figure I should let people know I'm working on it, and
-that contributions are appreciated :)
+memory cgroups are fundamentally broken when it comes to partitioning
+the machine for many concurrent jobs.  In real life, workloads expand
+and contract over time, and the hard limit is too static to reflect
+this - it either wastes memory outside of the group, or wastes memory
+inside the group.  As a result, the hard limit is mostly just used to
+catch extreme consumption peaks, while workload trimming and balancing
+is left to global reclaim and global OOM handling.  That in turn
+requires more and more cgroup-awareness on the global level to make up
+for the lack of useful policy enforcement on the cgroup level itself.
 
-The tree is at git://github.com/hallyn/cgroup.man
+The ongoing versioning of the cgroup user interface gives us a chance
+to fix such brokenness, and also clean up the interface and fix a lot
+of the inconsistencies and ugliness that crept in over time.
 
-I do think I'll find time in the next two weeks to fill a bunch more in, so
-hopefully I can pass it over to Michael at or after linuxcon.
+This series adds a minimal set of control files to version 2 of the
+memcg interface, implementing a new approach to machine partitioning.
 
--serge
+Version 2 of this series is in response to feedback from Michal.  Some
+of the changes are in code, but mostly it improves the documentation
+and changelogs to describe the fundamental problems with the original
+approach to machine partitioning and makes a case for the new model.
+
+ Documentation/cgroups/unified-hierarchy.txt |  65 ++++++++
+ include/linux/res_counter.h                 |  29 ++++
+ include/linux/swap.h                        |   6 +-
+ kernel/res_counter.c                        |   3 +
+ mm/memcontrol.c                             | 250 +++++++++++++++++++---------
+ mm/vmscan.c                                 |   7 +-
+ 6 files changed, 277 insertions(+), 83 deletions(-)
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
