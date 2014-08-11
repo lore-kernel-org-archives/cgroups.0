@@ -1,145 +1,65 @@
-From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Subject: Re: [PATCH -mm] slab: fix cpuset check in fallback_alloc
-Date: Mon, 11 Aug 2014 11:13:15 +0400
-Message-ID: <20140811071315.GA18709@esperanza>
-References: <1407692891-24312-1-git-send-email-vdavydov@parallels.com>
- <alpine.DEB.2.02.1408101512500.706@chino.kir.corp.google.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch 1/4] mm: memcontrol: reduce reclaim invocations for
+ higher order requests
+Date: Mon, 11 Aug 2014 09:49:50 +0200
+Message-ID: <20140811074950.GA15312@dhcp22.suse.cz>
+References: <1407186897-21048-1-git-send-email-hannes@cmpxchg.org>
+ <1407186897-21048-2-git-send-email-hannes@cmpxchg.org>
+ <20140807130822.GB12730@dhcp22.suse.cz>
+ <20140807153141.GD14734@cmpxchg.org>
+ <20140808123258.GK4004@dhcp22.suse.cz>
+ <20140808132635.GJ14734@cmpxchg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1408101512500.706-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20140808132635.GJ14734@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sun, Aug 10, 2014 at 03:43:21PM -0700, David Rientjes wrote:
-> On Sun, 10 Aug 2014, Vladimir Davydov wrote:
-> 
-> > fallback_alloc is called on kmalloc if the preferred node doesn't have
-> > free or partial slabs and there's no pages on the node's free list
-> > (GFP_THISNODE allocations fail). Before invoking the reclaimer it tries
-> > to locate a free or partial slab on other allowed nodes' lists. While
-> > iterating over the preferred node's zonelist it skips those zones which
-> > cpuset_zone_allowed_hardwall returns false for. That means that for a
-> > task bound to a specific node using cpusets fallback_alloc will always
-> > ignore free slabs on other nodes and go directly to the reclaimer,
-> > which, however, may allocate from other nodes if cpuset.mem_hardwall is
-> > unset (default). As a result, we may get lists of free slabs grow
-> > without bounds on other nodes, which is bad, because inactive slabs are
-> > only evicted by cache_reap at a very slow rate and cannot be dropped
-> > forcefully.
-> > 
-> > To reproduce the issue, run a process that will walk over a directory
-> > tree with lots of files inside a cpuset bound to a node that constantly
-> > experiences memory pressure. Look at num_slabs vs active_slabs growth as
-> > reported by /proc/slabinfo.
-> > 
-> > We should use cpuset_zone_allowed_softwall in fallback_alloc. Since it
-> > can sleep, we only call it on __GFP_WAIT allocations. For atomic
-> > allocations we simply ignore cpusets, which is in agreement with the
-> > cpuset documenation (see the comment to __cpuset_node_allowed_softwall).
-> > 
-> 
-> If that rule were ever changed, nobody would think to modify the 
-> fallback_alloc() behavior in the slab allocator.  Why can't 
-> cpuset_zone_allowed_hardwall() just return 1 for !__GFP_WAIT?
-> 
-> I don't think this issue is restricted only to slab, it's for all callers 
-> of cpuset_zone_allowed_softwall() that could possibly be atomic.  I think 
-> it would be better to determine if cpuset_zone_allowed() should be 
-> hardwall or softwall depending on the gfp flags.
-> 
-> Let's add Li, the cpuset maintainer.  Any reason we can't do this?
-> ---
+On Fri 08-08-14 09:26:35, Johannes Weiner wrote:
+> On Fri, Aug 08, 2014 at 02:32:58PM +0200, Michal Hocko wrote:
+> > On Thu 07-08-14 11:31:41, Johannes Weiner wrote:
 [...]
-> diff --git a/mm/slab.c b/mm/slab.c
-> --- a/mm/slab.c
-> +++ b/mm/slab.c
-> @@ -3047,16 +3047,19 @@ retry:
->  	 * from existing per node queues.
->  	 */
->  	for_each_zone_zonelist(zone, z, zonelist, high_zoneidx) {
-> -		nid = zone_to_nid(zone);
-> +		struct kmem_cache_node *n;
->  
-> -		if (cpuset_zone_allowed_hardwall(zone, flags) &&
-> -			get_node(cache, nid) &&
-> -			get_node(cache, nid)->free_objects) {
-> -				obj = ____cache_alloc_node(cache,
-> -					flags | GFP_THISNODE, nid);
-> -				if (obj)
-> -					break;
-> -		}
-> +		nid = zone_to_nid(zone);
-> +		if (!cpuset_zone_allowed(zone, flags | __GFP_HARDWALL))
+> > > although system time is reduced with the high limit.
+> > > High limit reclaim with SWAP_CLUSTER_MAX has better fault latency but
+> > > it doesn't actually contain the workload - with 1G high and a 4G load,
+> > > the consumption at the end of the run is 3.7G.
+> > 
+> > Wouldn't it help to simply fail the charge and allow the charger to
+> > fallback for THP allocations if the usage is above high limit too
+> > much? The follow up single page charge fallback would be still
+> > throttled.
+> 
+> This is about defining the limit semantics in unified hierarchy, and
+> not really the time or place to optimize THP charge latency.
+> 
+> What are you trying to accomplish here?
 
-We must use softwall check here, otherwise we will proceed to
-alloc_pages even if there are lots of free slabs on other nodes.
-alloc_pages, in turn, may allocate from other nodes in case
-cpuset.mem_hardwall=0, because it uses softwall check, so it may add yet
-another free slab to another node's list even if it isn't empty. As a
-result, we may get free list bloating on other nodes. I've seen a
-machine with one of its nodes almost completely filled with inactive
-slabs for buffer_heads (dozens of GBs) w/o any chance to drop them. So,
-this is a bug that must be fixed.
+Well there are two things. The first one is that this patch changes the way
+how THP are charged for the hard limit without any data to back it up in the
+changelog. This is the primary concern.
 
-Note, for SLUB using hardwall check in get_any_partial won't lead to
-such a problem, because once added a new slab is loaded to a per cpu
-list forcing any further user to allocate from it. Strictly speaking, we
-should use softwall check there either though.
+The other part is the high limit behavior for large excess. You have
+chosen to reclaim all excessive charges even when quite a lot of pages
+might be direct reclaimed. This is potentially dangerous because the
+excess might be really huge (consider multiple tasks charging THPs
+simultaneously on many CPUs). Do you really want to direct reclaim
+nr_online_cpus * 512 pages in the single direct reclaim pass and for
+all those cpus? This is an extreme case, all right, but the point
+stays. There has to be a certain cap. Also it seems that the primary
+source of troubles is THP so the question is. Do we really want to push
+hard to reclaim enough charges or do we rather fail THP charge and go
+with single page retry?
+-- 
+Michal Hocko
+SUSE Labs
 
-> +			continue;
-> +		n = get_node(cache, nid);
-> +		if (!n)
-> +			continue;
-> +		if (!n->free_objects)
-> +			continue;
-> +		obj = ____cache_alloc_node(cache, flags | GFP_THISNODE, nid);
-> +		if (obj)
-> +			break;
->  	}
->  
->  	if (!obj) {
-> diff --git a/mm/slub.c b/mm/slub.c
-> --- a/mm/slub.c
-> +++ b/mm/slub.c
-> @@ -1671,20 +1671,22 @@ static void *get_any_partial(struct kmem_cache *s, gfp_t flags,
->  			struct kmem_cache_node *n;
->  
->  			n = get_node(s, zone_to_nid(zone));
-> +			if (!n)
-> +				continue;
-> +			if (!cpuset_zone_allowed(zone, flags | __GFP_HARDWALL))
-> +				continue;
-> +			if (n->nr_parial <= s->min_partial)
-> +				continue;
->  
-> -			if (n && cpuset_zone_allowed_hardwall(zone, flags) &&
-> -					n->nr_partial > s->min_partial) {
-> -				object = get_partial_node(s, n, c, flags);
-> -				if (object) {
-> -					/*
-> -					 * Don't check read_mems_allowed_retry()
-> -					 * here - if mems_allowed was updated in
-> -					 * parallel, that was a harmless race
-> -					 * between allocation and the cpuset
-> -					 * update
-> -					 */
-> -					return object;
-> -				}
-> +			object = get_partial_node(s, n, c, flags);
-> +			if (object) {
-> +				/*
-> +				 * Don't check read_mems_allowed_retry() here -
-> +				 * if mems_allowed was updated in parallel,
-> +				 * that was a harmless race between allocation
-> +				 * and the cpuset update.
-> +				 */
-> +				return object;
->  			}
->  		}
->  	} while (read_mems_allowed_retry(cpuset_mems_cookie));
-[...]
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
