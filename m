@@ -1,73 +1,204 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [PATCH -mm] slab: fix cpuset check in fallback_alloc
-Date: Mon, 11 Aug 2014 14:05:18 -0700 (PDT)
-Message-ID: <alpine.DEB.2.02.1408111354330.24240@chino.kir.corp.google.com>
-References: <1407692891-24312-1-git-send-email-vdavydov@parallels.com> <alpine.DEB.2.02.1408101512500.706@chino.kir.corp.google.com> <20140811071315.GA18709@esperanza> <alpine.DEB.2.02.1408110433140.15519@chino.kir.corp.google.com>
- <20140811121739.GB18709@esperanza>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch 1/4] mm: memcontrol: reduce reclaim invocations for
+ higher order requests
+Date: Wed, 13 Aug 2014 16:59:04 +0200
+Message-ID: <20140813145904.GC2775@dhcp22.suse.cz>
+References: <1407186897-21048-1-git-send-email-hannes@cmpxchg.org>
+ <1407186897-21048-2-git-send-email-hannes@cmpxchg.org>
+ <20140807130822.GB12730@dhcp22.suse.cz>
+ <20140807153141.GD14734@cmpxchg.org>
+ <20140808123258.GK4004@dhcp22.suse.cz>
+ <20140808132635.GJ14734@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=WReMFHGme9c4iqg1CH3vXtdTxFFqFMfDbJyQb023PMk=;
-        b=aGLr1PI6xVE1lfxv05wY3Vkd3chnPZps5p8UoZwSAdyLvnO6oo1HVA4jZK/o/Z4mW+
-         fkc7b2T3yrFRTIY+13+0VgQfMgP4F5wYOU2v0R05nGLhf7epkzf/udeywW2CNUrRzsUc
-         4l4iJF7X0vXUu/65idV1DnnFUMAkos59Kg2frigLi8vfU/AdVJQANmLUav5R7GedGo0O
-         epEJgl21AHHq8kF6HR49ZnuNsVdpLHZjqiRELkkJMpqGsTKdlZ3eLj/brhztUPYHDTII
-         fkLc0KklRIfEp5GcASLKLWEhAWfPEbtyqh+ei8YX5AipXDlgSWRJ8a9+dEx9g2KErcZc
-         bvVA==
-In-Reply-To: <20140811121739.GB18709@esperanza>
+Content-Disposition: inline
+In-Reply-To: <20140808132635.GJ14734@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov@parallels.com>
-Cc: Li Zefan <lizefan@huawei.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, Joonsoo Kim <iamjoonsoo.kim@lge.com>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 11 Aug 2014, Vladimir Davydov wrote:
-
-> > diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-> > --- a/mm/page_alloc.c
-> > +++ b/mm/page_alloc.c
-> > @@ -1963,7 +1963,7 @@ zonelist_scan:
-> >  
-> >  	/*
-> >  	 * Scan zonelist, looking for a zone with enough free.
-> > -	 * See also __cpuset_node_allowed_softwall() comment in kernel/cpuset.c.
-> > +	 * See __cpuset_node_allowed() comment in kernel/cpuset.c.
-> >  	 */
-> >  	for_each_zone_zonelist_nodemask(zone, z, zonelist,
-> >  						high_zoneidx, nodemask) {
-> > @@ -1974,7 +1974,7 @@ zonelist_scan:
-> >  				continue;
-> >  		if (cpusets_enabled() &&
-> >  			(alloc_flags & ALLOC_CPUSET) &&
-> > -			!cpuset_zone_allowed_softwall(zone, gfp_mask))
-> > +			!cpuset_zone_allowed(zone, gfp_mask))
-> >  				continue;
+On Fri 08-08-14 09:26:35, Johannes Weiner wrote:
+> On Fri, Aug 08, 2014 at 02:32:58PM +0200, Michal Hocko wrote:
+> > On Thu 07-08-14 11:31:41, Johannes Weiner wrote:
+[...]
+> > > THP latencies are actually the same when comparing high limit nr_pages
+> > > reclaim with the current hard limit SWAP_CLUSTER_MAX reclaim,
+> > 
+> > Are you sure about this? I fail to see how they can be same as THP
+> > allocations/charges are __GFP_NORETRY so there is only one reclaim
+> > round for the hard limit reclaim followed by the charge failure if
+> > it is not successful.
 > 
-> So, this is get_page_from_freelist. It's called from
-> __alloc_pages_nodemask with alloc_flags always having ALLOC_CPUSET bit
-> set and from __alloc_pages_slowpath with alloc_flags having ALLOC_CPUSET
-> bit set only for __GFP_WAIT allocations. That said, w/o your patch we
-> try to respect cpusets for all allocations, including atomic, and only
-> ignore cpusets if tight on memory (freelist's empty) for !__GFP_WAIT
-> allocations, while with your patch we always ignore cpusets for
-> !__GFP_WAIT allocations. Not sure if it really matters though, because
-> usually one uses cpuset.mems in conjunction with cpuset.cpus and it
-> won't make any difference then. It also doesn't conflict with any cpuset
-> documentation.
+> I use this test program that faults in anon pages, reports average and
+> max for every 512-page chunk (THP size), then reports the aggregate at
+> the end:
 > 
+> memory.max:
+> 
+> avg=18729us max=450625us
+> 
+> real    0m14.335s
+> user    0m0.157s
+> sys     0m6.307s
+> 
+> memory.high:
+> 
+> avg=18676us max=457499us
+> 
+> real    0m14.375s
+> user    0m0.046s
+> sys     0m4.294s
 
-Yeah, that's why I'm asking Li, the cpuset maintainer, if we can do this.  
-The only thing that we get by falling back to the page allocator slowpath 
-is that kswapd gets woken up before the allocation is attempted without 
-ALLOC_CPUSET.  It seems pointless to wakeup kswapd when the allocation can 
-succeed on any node.  Even with the patch, if the allocation fails because 
-all nodes are below their min watermark, then we still fallback to the 
-slowpath and wake up kswapd but there's nothing much else we can do 
-because it's !__GFP_WAIT.
+I was playing with something like that as well. mmap 800MB anon mapping
+in 256MB memcg (kvm guest had 1G RAM and 2G swap so the global reclaim
+doesn't trigger and the host 2G free memory), start faulting in from
+THP aligned address and measured each fault. Then I was recording
+mm_vmscan_lru_shrink_inactive and mm_vmscan_memcg_reclaim_{begin,end}
+tracepoints to see how the reclaim went.
+
+I was testing two setups
+1) fault in every 4k page
+2) fault in only 2M aligned addresses.
+
+The first simulates the case where successful THP allocation saves
+follow up 511 fallback charges and so the excessive reclaim might
+pay off.
+The second one simulates potential time wasting when memory is used
+extremely sparsely and any latencies would be unwelcome.
+
+(new refers to nr_reclaim target, old to SWAP_CLUSTER_MAX, thponly
+faults only 2M aligned addresses, 4k pages are faulted otherwise)
+
+vmstat says:
+out.256m.new-thponly.vmstat.after:pswpin 44
+out.256m.new-thponly.vmstat.after:pswpout 154681
+out.256m.new-thponly.vmstat.after:thp_fault_alloc 399
+out.256m.new-thponly.vmstat.after:thp_fault_fallback 0
+out.256m.new-thponly.vmstat.after:thp_split 302
+
+out.256m.old-thponly.vmstat.after:pswpin 28
+out.256m.old-thponly.vmstat.after:pswpout 31271
+out.256m.old-thponly.vmstat.after:thp_fault_alloc 149
+out.256m.old-thponly.vmstat.after:thp_fault_fallback 250
+out.256m.old-thponly.vmstat.after:thp_split 61
+
+out.256m.new.vmstat.after:pswpin 48
+out.256m.new.vmstat.after:pswpout 169530
+out.256m.new.vmstat.after:thp_fault_alloc 399
+out.256m.new.vmstat.after:thp_fault_fallback 0
+out.256m.new.vmstat.after:thp_split 331
+
+out.256m.old.vmstat.after:pswpin 47
+out.256m.old.vmstat.after:pswpout 156514
+out.256m.old.vmstat.after:thp_fault_alloc 127
+out.256m.old.vmstat.after:thp_fault_fallback 272
+out.256m.old.vmstat.after:thp_split 127
+
+As expected new managed to fault in all requests as THP without a single
+fallback allocation while with the old reclaim we got to the limit and
+then most of the THP charges failed and fallen back to single page
+charge.
+
+Note the increased swapout activity for new. It is almost 5x more for
+thponly and +8% with per-page faults. This looks like a fallout from the
+over-reclaim in smaller priorities.
+
+Tracepoints will tell us the priority at which we ended up the reclaim
+round:
+- trace.new-thponly
+  Count Priority
+      1 3
+      2 5
+    159 6
+     24 7
+- trace.old-thponly
+    230 10
+      1 11
+      1 12
+      1 3
+     39 9
+
+Again expected that the priority is falling down for the new much more.
+
+- trace.new
+    229 0
+      3 12
+- trace.old
+    294 0
+      2 1
+     25 10
+      1 11
+      3 12
+      8 2
+      8 3
+     20 4
+     33 5
+     21 6
+     43 7
+   1286 8
+   1279 9
+
+And here as well, we have to reclaim much more because we do much more
+charges so the load benefits a bit from the high reclaim target.
+
+mm_vmscan_memcg_reclaim_end tracepoint tells us also how many pages were
+reclaimed during each run and the cummulative numbers are:
+- trace.new-thponly: 139029
+- trace.old-thponly: 11344
+- trace.new: 139687
+- trace.old: 139887
+
+time -v says:
+out.256m.new-thponly.time:      System time (seconds): 1.50
+out.256m.new-thponly.time:      Elapsed (wall clock) time (h:mm:ss or m:ss): 0:13.56
+out.256m.old-thponly.time:      System time (seconds): 0.45
+out.256m.old-thponly.time:      Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.76
+
+out.256m.new.time:      System time (seconds): 1.45
+out.256m.new.time:      Elapsed (wall clock) time (h:mm:ss or m:ss): 0:15.12
+out.256m.old.time:      System time (seconds): 2.08
+out.256m.old.time:      Elapsed (wall clock) time (h:mm:ss or m:ss): 0:15.26
+
+I guess this is expected as well. Sparse access doesn't amortize the
+costly reclaim for each charged THP. On the other hand it can help a bit
+if the whole mmap is populated.
+
+If we compare fault latencies then we get the following:
+- the worst latency [ms]:
+out.256m.new-thponly 1991
+out.256m.old-thponly 1838
+out.256m.new 6197
+out.256m.old 5538
+
+- top 5 worst latencies (sum in [ms]):
+out.256m.new-thponly 5694
+out.256m.old-thponly 3168
+out.256m.new 9498
+out.256m.old 8291
+
+- top 10
+out.256m.new-thponly 7139
+out.256m.old-thponly 3193
+out.256m.new 11786
+out.256m.old 9347
+
+- top 100
+out.256m.new-thponly 13035
+out.256m.old-thponly 3434
+out.256m.new 14634
+out.256m.old 12881
+
+I think this shows up that my concern about excessive reclaim and stalls
+is real and it is worse when the memory is used sparsely. It is true it
+might help when the whole THP section is used and so the additional cost
+is amortized but the more sparsely each THP section is used the higher
+overhead you are adding without userspace actually asking for it.
+-- 
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
