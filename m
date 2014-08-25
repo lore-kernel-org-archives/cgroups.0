@@ -1,7 +1,7 @@
 From: Dongsheng Yang <yangds.fnst@cn.fujitsu.com>
-Subject: [PATCH] cgroup: fix a typo in comment.
-Date: Mon, 25 Aug 2014 19:27:52 +0800
-Message-ID: <1408966072-2142-1-git-send-email-yangds.fnst@cn.fujitsu.com>
+Subject: [PATCH] cgroup: Introduce cgroup_detach_task().
+Date: Mon, 25 Aug 2014 19:28:16 +0800
+Message-ID: <1408966096-2209-1-git-send-email-yangds.fnst@cn.fujitsu.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
@@ -11,36 +11,106 @@ Content-Transfer-Encoding: 7bit
 To: tj@kernel.org, lizefan@huawei.com
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dongsheng Yang <yangds.fnst@cn.fujitsu.com>
 
-There is no function named cgroup_enable_task_cg_links().
-Instead, the correct function name in this comment should
-be cgroup_enabled_task_cg_lists().
+Currently, the only method to detach a task from a cgroup is moving
+it to others. It looks not natrual to me.
+
+Inspired by cgroup_subtree_control_write(), this patch introduce allow
+user to at-detach a process to/from a cgroup by echo "+/-pid" to
+cgroup.procs. In addition, we keep the old method to allow user
+echo "pid" without "+/-" to cgroup.procs as a attaching behavior.
 
 Signed-off-by: Dongsheng Yang <yangds.fnst@cn.fujitsu.com>
 ---
- kernel/cgroup.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ kernel/cgroup.c | 62 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 60 insertions(+), 2 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 7dc8788..64bbb56 100644
+index 7dc8788..11ef4ac 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -5161,7 +5161,7 @@ void cgroup_post_fork(struct task_struct *child)
- 	int i;
+@@ -2348,6 +2348,43 @@ static int cgroup_attach_task(struct cgroup *dst_cgrp,
+ 	return ret;
+ }
  
- 	/*
--	 * This may race against cgroup_enable_task_cg_links().  As that
-+	 * This may race against cgroup_enable_task_cg_lists().  As that
- 	 * function sets use_task_css_set_links before grabbing
- 	 * tasklist_lock and we just went through tasklist_lock to add
- 	 * @child, it's guaranteed that either we see the set
-@@ -5176,7 +5176,7 @@ void cgroup_post_fork(struct task_struct *child)
- 	 * when implementing operations which need to migrate all tasks of
- 	 * a cgroup to another.
- 	 *
--	 * Note that if we lose to cgroup_enable_task_cg_links(), @child
-+	 * Note that if we lose to cgroup_enable_task_cg_lists(), @child
- 	 * will remain in init_css_set.  This is safe because all tasks are
- 	 * in the init_css_set before cg_links is enabled and there's no
- 	 * operation which transfers all tasks out of init_css_set.
++/**
++ * cgroup_detach_task - detach a task or a whole threadgroup to a cgroup
++ * @src_cgrp: the cgroup to detach from
++ * @leader: the task or the leader of the threadgroup to be attached
++ * @threadgroup: attach the whole threadgroup?
++ *
++ * Call holding cgroup_mutex and threadgroup_lock of @leader.
++ */
++static int cgroup_detach_task(struct cgroup *src_cgrp __maybe_unused,
++			      struct task_struct *leader, bool threadgroup)
++{
++	LIST_HEAD(preloaded_csets);
++	struct task_struct *task;
++	int ret;
++
++	/* look up all src csets */
++	down_read(&css_set_rwsem);
++	rcu_read_lock();
++	task = leader;
++	do {
++		cgroup_migrate_add_src(task_css_set(task), &cgrp_dfl_root.cgrp,
++				       &preloaded_csets);
++		if (!threadgroup)
++			break;
++	} while_each_thread(leader, task);
++	rcu_read_unlock();
++	up_read(&css_set_rwsem);
++
++	/* prepare dst csets and commit */
++	ret = cgroup_migrate_prepare_dst(&cgrp_dfl_root.cgrp, &preloaded_csets);
++	if (!ret)
++		ret = cgroup_migrate(&cgrp_dfl_root.cgrp, leader, threadgroup);
++
++	cgroup_migrate_finish(&preloaded_csets);
++	return ret;
++}
++
+ /*
+  * Find the task_struct of the task to attach by vpid and pass it along to the
+  * function to attach either it or all tasks in its threadgroup. Will lock
+@@ -2361,8 +2398,26 @@ static ssize_t __cgroup_procs_write(struct kernfs_open_file *of, char *buf,
+ 	struct cgroup *cgrp;
+ 	pid_t pid;
+ 	int ret;
++	bool attach;
+ 
+-	if (kstrtoint(strstrip(buf), 0, &pid) || pid < 0)
++	/*
++	 * Parse input - space separated list of subsystem names prefixed
++	 * with either + or -.
++	 */
++	buf = strstrip(buf);
++	if (*buf == '+') {
++		attach = true;
++		buf++;
++	} else if (*buf == '-') {
++		attach = false;
++		buf++;
++	} else {
++		if (!isdigit(*buf))
++			return -EINVAL;
++		attach = true;
++	}
++
++	if (kstrtoint(buf, 0, &pid) || pid < 0)
+ 		return -EINVAL;
+ 
+ 	cgrp = cgroup_kn_lock_live(of->kn);
+@@ -2426,7 +2481,10 @@ retry_find_task:
+ 		}
+ 	}
+ 
+-	ret = cgroup_attach_task(cgrp, tsk, threadgroup);
++	if (attach)
++		ret = cgroup_attach_task(cgrp, tsk, threadgroup);
++	else
++		ret = cgroup_detach_task(cgrp, tsk, threadgroup);
+ 
+ 	threadgroup_unlock(tsk);
+ 
 -- 
 1.8.4.2
