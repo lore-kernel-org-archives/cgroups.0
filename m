@@ -1,15 +1,15 @@
-From: Dongsheng Yang <yangds.fnst@cn.fujitsu.com>
-Subject: [PATCH] cgroup: Introduce cgroup_detach_task().
-Date: Mon, 25 Aug 2014 19:28:16 +0800
-Message-ID: <1408966096-2209-1-git-send-email-yangds.fnst@cn.fujitsu.com>
+From: Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Subject: [PATCH V2] cgroup: Introduce cgroup_detach_task().
+Date: Mon, 25 Aug 2014 19:32:10 +0800
+Message-ID: <1408966330-2374-1-git-send-email-yangds.fnst@cn.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj@kernel.org, lizefan@huawei.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dongsheng Yang <yangds.fnst@cn.fujitsu.com>
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 
 Currently, the only method to detach a task from a cgroup is moving
 it to others. It looks not natrual to me.
@@ -19,13 +19,17 @@ user to at-detach a process to/from a cgroup by echo "+/-pid" to
 cgroup.procs. In addition, we keep the old method to allow user
 echo "pid" without "+/-" to cgroup.procs as a attaching behavior.
 
-Signed-off-by: Dongsheng Yang <yangds.fnst@cn.fujitsu.com>
+Signed-off-by: Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 ---
- kernel/cgroup.c | 62 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 60 insertions(+), 2 deletions(-)
+
+From v1:
+	*Sorry for a incorrect comment in v1.
+
+ kernel/cgroup.c | 61 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 59 insertions(+), 2 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 7dc8788..11ef4ac 100644
+index 7dc8788..a4bb604 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
 @@ -2348,6 +2348,43 @@ static int cgroup_attach_task(struct cgroup *dst_cgrp,
@@ -72,7 +76,7 @@ index 7dc8788..11ef4ac 100644
  /*
   * Find the task_struct of the task to attach by vpid and pass it along to the
   * function to attach either it or all tasks in its threadgroup. Will lock
-@@ -2361,8 +2398,26 @@ static ssize_t __cgroup_procs_write(struct kernfs_open_file *of, char *buf,
+@@ -2361,8 +2398,25 @@ static ssize_t __cgroup_procs_write(struct kernfs_open_file *of, char *buf,
  	struct cgroup *cgrp;
  	pid_t pid;
  	int ret;
@@ -80,8 +84,7 @@ index 7dc8788..11ef4ac 100644
  
 -	if (kstrtoint(strstrip(buf), 0, &pid) || pid < 0)
 +	/*
-+	 * Parse input - space separated list of subsystem names prefixed
-+	 * with either + or -.
++	 * Parse input - pid prefixed with either + or -.
 +	 */
 +	buf = strstrip(buf);
 +	if (*buf == '+') {
@@ -100,7 +103,7 @@ index 7dc8788..11ef4ac 100644
  		return -EINVAL;
  
  	cgrp = cgroup_kn_lock_live(of->kn);
-@@ -2426,7 +2481,10 @@ retry_find_task:
+@@ -2426,7 +2480,10 @@ retry_find_task:
  		}
  	}
  
