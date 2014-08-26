@@ -1,49 +1,92 @@
-From: "Ni, Xun" <xun.ni-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: RE: [PATCH V2] cgroup: Introduce cgroup_detach_task().
-Date: Tue, 26 Aug 2014 02:22:26 +0000
-Message-ID: <91E2D863603AD4478F101CE81E76E45D01B5AA9A@SHSMSX103.ccr.corp.intel.com>
-References: <1408966330-2374-1-git-send-email-yangds.fnst@cn.fujitsu.com>
-	<20140825141220.GA31066@mtj.dyndns.org>
-	<CA+qeAOq7hYq-TJMh8jQpJy=nWwk2FsUMSS1Hd=-JkhLLXbweEQ@mail.gmail.com>
-	<20140825144710.GA21688@htj.dyndns.org>
-	<CA+qeAOpiW41i3dKyxYp_G9kB=Z9Kr7ZXeJOyq8QZP=qy6H6T3Q@mail.gmail.com>
-	<53FBE468.6050805@huawei.com>
- <CA+qeAOq-=Yzi6tNq_-2O3yYamxXH99fTd=BUFSrbgcvxW5sRSA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+From: Toshiaki Makita <makita.toshiaki-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
+Subject: [PATCH] cfq-iosched: Fix wrong children_weight calculation
+Date: Tue, 26 Aug 2014 20:56:36 +0900
+Message-ID: <1409054196-20945-1-git-send-email-makita.toshiaki@lab.ntt.co.jp>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CA+qeAOq-=Yzi6tNq_-2O3yYamxXH99fTd=BUFSrbgcvxW5sRSA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Content-Language: en-US
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Dongsheng Yang <dongsheng081251-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: Toshiaki Makita <makita.toshiaki-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-TWF5YmUgeW91ciBwb2ludCBjYW4gYmUgYWRkZWQgdG8gdGhlIFJFQURNRSBvciBGQVEgZm9yIGNn
-cm91cC4gVHJ5IHRvIHNob290IGEgcGF0Y2ggZm9yIHRoYXQsIGl0IHdpbGwgYmUgbW9yZSBlZmZl
-Y3RpdmUuLi4NCg0KVGhhbmtzLA0KWHVuDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpG
-cm9tOiBjZ3JvdXBzLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmNncm91cHMtb3duZXJA
-dmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgRG9uZ3NoZW5nIFlhbmcNClNlbnQ6IFR1ZXNk
-YXksIEF1Z3VzdCAyNiwgMjAxNCAxMDoxNiBBTQ0KVG86IExpIFplZmFuDQpDYzogVGVqdW4gSGVv
-OyBEb25nc2hlbmcgWWFuZzsgY2dyb3Vwc0B2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2
-Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFJlOiBbUEFUQ0ggVjJdIGNncm91cDogSW50cm9kdWNl
-IGNncm91cF9kZXRhY2hfdGFzaygpLg0KDQpPbiBUdWUsIEF1ZyAyNiwgMjAxNCBhdCA5OjM1IEFN
-LCBMaSBaZWZhbiA8bGl6ZWZhbkBodWF3ZWkuY29tPiB3cm90ZToNCj4gT24gMjAxNC84LzI1IDIz
-OjAwLCBEb25nc2hlbmcgWWFuZyB3cm90ZToNCj4+IE9uIE1vbiwgQXVnIDI1LCAyMDE0IGF0IDEw
-OjQ3IFBNLCBUZWp1biBIZW8gPHRqQGtlcm5lbC5vcmc+IHdyb3RlOg0KPj4+IE9uIE1vbiwgQXVn
-IDI1LCAyMDE0IGF0IDEwOjQ2OjAzUE0gKzA4MDAsIERvbmdzaGVuZyBZYW5nIHdyb3RlOg0KPj4+
-PiBNeSBwb2ludCBoZXJlIGlzIHRoYXQgYXR0YWNoaW5nIGFuZCBkZXRhY2hpbmcgYXJlIGEgcGFp
-ciBvZiBvcGVyYXRpb25zLg0KPj4+DQo+Pj4gVGhlcmUgaXMgbm8gZGV0YWNoaW5nIGZyb20gYSBj
-Z3JvdXAuICBBIHRhc2sgaXMgYWx3YXlzIGF0dGFjaGVkIHRvIGEgDQo+Pj4gY2dyb3VwIHdoZXRo
-ZXIgdGhhdCdzIGEgcm9vdCBvciBub24tcm9vdCBjZ3JvdXAuDQo+Pg0KPj4gT2tleSwgSSBzaG91
-bGQgbm90IHRoaW5rIGl0IGFzIGF0dGFjaGluZyBhbmQgZGV0YWNoaW5nLiBKdXN0IHRyZWF0IA0K
-Pj4gdGhlbSBhcyBhIG1vdmUgYmV0d2VlbiByb290IGFuZCBub24tcm9vdCBjZ3JvdXAuDQo+Pg0K
-Pj4gSXQgc291bmRzIHJlYXNvbmFibGUgdG8gbWUgbm93Lg0KPj4NCj4NCj4gSSBmcm9tIHRpbWUg
-dG8gdGltZSBoYXZlIHRvIGV4cGxhaW4gdGhpcyB0byBvdGhlciBwZW9wbGUuDQoNCkhhLCB3ZSB1
-c3VhbGx5IHdhbnQgdG8gZmluZCBhIGRldGFjaCBmdW5jdGlvbiB3aGVuIHdlIHNhdyBhIGZ1bmN0
-aW9uIG5hbWVkIGFzIGNncm91cF9hdHRhY2hfdGFzaygpLg0KPg0KLS0NClRvIHVuc3Vic2NyaWJl
-IGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBjZ3JvdXBzIiBpbiB0
-aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZyBNb3JlIG1h
-am9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0
-bWwNCg==
+cfq_group_service_tree_add() is applying new_weight at the beginning of
+the function via cfq_update_group_weight().
+This actually allows weight to change between adding it to and subtracting
+it from children_weight, and triggers WARN_ON_ONCE() in
+cfq_group_service_tree_del(), or even causes oops by divide error during
+vfr calculation in cfq_group_service_tree_add().
+
+The detailed scenario is as follows:
+1. Create blkio cgroups X and Y as a child of X.
+   Set X's weight to 500 and perform some I/O to apply new_weight.
+   This X's I/O completes before starting Y's I/O.
+2. Y starts I/O and cfq_group_service_tree_add() is called with Y.
+3. cfq_group_service_tree_add() walks up the tree during children_weight
+   calculation and adds parent X's weight (500) to children_weight of root.
+   children_weight becomes 500.
+4. Set X's weight to 1000.
+5. X starts I/O and cfq_group_service_tree_add() is called with X.
+6. cfq_group_service_tree_add() applies its new_weight (1000).
+7. I/O of Y completes and cfq_group_service_tree_del() is called with Y.
+8. I/O of X completes and cfq_group_service_tree_del() is called with X.
+9. cfq_group_service_tree_del() subtracts X's weight (1000) from
+   children_weight of root. children_weight becomes -500.
+   This triggers WARN_ON_ONCE().
+10. Set X's weight to 500.
+11. X starts I/O and cfq_group_service_tree_add() is called with X.
+12. cfq_group_service_tree_add() applies its new_weight (500) and adds it
+    to children_weight of root. children_weight becomes 0. Calcularion of
+    vfr triggers oops by divide error.
+
+weight should be updated right before adding it to children_weight.
+
+Reported-by: Ruki Sekiya <sekiya.ruki-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
+Signed-off-by: Toshiaki Makita <makita.toshiaki-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
+---
+ block/cfq-iosched.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index cadc378..d749463 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -1275,12 +1275,16 @@ __cfq_group_service_tree_add(struct cfq_rb_root *st, struct cfq_group *cfqg)
+ static void
+ cfq_update_group_weight(struct cfq_group *cfqg)
+ {
+-	BUG_ON(!RB_EMPTY_NODE(&cfqg->rb_node));
+-
+ 	if (cfqg->new_weight) {
+ 		cfqg->weight = cfqg->new_weight;
+ 		cfqg->new_weight = 0;
+ 	}
++}
++
++static void
++cfq_update_group_leaf_weight(struct cfq_group *cfqg)
++{
++	BUG_ON(!RB_EMPTY_NODE(&cfqg->rb_node));
+ 
+ 	if (cfqg->new_leaf_weight) {
+ 		cfqg->leaf_weight = cfqg->new_leaf_weight;
+@@ -1299,7 +1303,7 @@ cfq_group_service_tree_add(struct cfq_rb_root *st, struct cfq_group *cfqg)
+ 	/* add to the service tree */
+ 	BUG_ON(!RB_EMPTY_NODE(&cfqg->rb_node));
+ 
+-	cfq_update_group_weight(cfqg);
++	cfq_update_group_leaf_weight(cfqg);
+ 	__cfq_group_service_tree_add(st, cfqg);
+ 
+ 	/*
+@@ -1323,6 +1327,7 @@ cfq_group_service_tree_add(struct cfq_rb_root *st, struct cfq_group *cfqg)
+ 	 */
+ 	while ((parent = cfqg_parent(pos))) {
+ 		if (propagate) {
++			cfq_update_group_weight(pos);
+ 			propagate = !parent->nr_active++;
+ 			parent->children_weight += pos->weight;
+ 		}
+-- 
+1.8.1.2
