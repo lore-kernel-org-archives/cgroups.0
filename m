@@ -1,201 +1,69 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 Subject: Re: [RFC] memory cgroup: my thoughts on memsw
-Date: Fri, 05 Sep 2014 07:03:57 +0900
-Message-ID: <5408E1CD.3090004@jp.fujitsu.com>
+Date: Fri, 5 Sep 2014 12:28:46 +0400
+Message-ID: <20140905082846.GA25641@esperanza>
 References: <20140904143055.GA20099@esperanza>
+ <5408E1CD.3090004@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20140904143055.GA20099@esperanza>
+Content-Disposition: inline
+In-Reply-To: <5408E1CD.3090004-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Motohiro Kosaki <Motohiro.Kosaki-gkcJ3tX5bYHQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Pavel Emelianov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Konstantin Khorenko <khorenko-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, LKML-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML-cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Motohiro Kosaki <Motohiro.Kosaki-gkcJ3tX5bYHQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Pavel Emelianov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Konstantin Khorenko <khorenko-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, LKML-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML-cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-(2014/09/04 23:30), Vladimir Davydov wrote:
-> Hi,
->
-> Over its long history the memory cgroup has been developed rapidly, but
-> rather in a disordered manner. As a result, today we have a bunch of
-> features that are practically unusable and wants redesign (soft limits)
-> or even not working (kmem accounting), not talking about the messy user
-> interface we have (the _in_bytes suffix is driving me mad :-).
->
-> Fortunately, thanks to Tejun's unified cgroup hierarchy, we have a great
-> chance to drop or redesign some of the old features and their
-> interfaces. We should use this opportunity to examine every aspect of
-> the memory cgroup design, because we will probably not be granted such a
-> present in future.
->
-> That's why I'm starting a series of RFC's with *my thoughts* not only on
-> kmem accounting, which I've been trying to fix for a while, but also on
-> other parts of the memory cgroup. I'll be happy if anybody reads this to
-> the end, but please don't kick me too hard if something will look stupid
-> to you :-)
->
->
-> Today's topic is (surprisingly!) the memsw resource counter and where it
-> fails to satisfy user requests.
->
-> Let's start from the very beginning. The memory cgroup has basically two
-> resource counters (not counting kmem, which is unusable anyway):
-> mem_cgroup->res (configured by memory.limit), which counts the total
-> amount of user pages charged to the cgroup, and mem_cgroup->memsw
-> (memory.memsw.limit), which is basically res + the cgroup's swap usage.
-> Obviously, memsw always has both the value and limit less than the value
-> and limit of res. That said, we have three options:
->
->   - memory.limit=inf, memory.memsw.limit=inf
->     No limits, only accounting.
->
->   - memory.limit=L<inf, memory.memsw.limit=inf
->     Not allowed to use more than L bytes of user pages, but use as much
->     swap as you want.
->
->   - memory.limit=L<inf, memory.memsw.limit=S<inf, L<=S
->     Not allowed to use more than L bytes of user memory. Swap *plus*
->     memory usage is limited by S.
->
-> When it comes to *hard* limits everything looks fine, but hard limits
-> are not efficient for partitioning a large system among lots of
-> containers, because it's hard to predict the right value for the limit,
-> besides many workloads will do better when they are granted more file
-> caches. There we need a kind of soft limit that is only used on global
-> memory pressure to shrink containers exceeding it.
->
->
-> Obviously the soft limit must be less than memory.limit and therefore
-> memory.memsw.limit. And here comes a problem. Suppose admin sets a
-> relatively high memsw.limit (say half of RAM) and a low soft limit for a
-> container hoping it will use it for file caches when there's free
-> memory, but when hard times come it will be shrunk back to the soft
-> limit quickly. Suppose the container, instead of using the granted
-> memory for caches, creates a lot of anonymous data filling up to its
-> memsw limit (i.e. half of RAM). Then, when admin starts other
-> containers, he might find out that they are effectively using only half
-> of RAM. Why can this happen? See below.
->
-> For example, if there's no or a little swap. It's pretty common for
-> customers not to bother about creating TBs of swap to back TBs of RAM
-> they have. One might propose to issue OOM if we can't reclaim anything
-> from a container exceeding its soft limit. OK, let it be so, although
-> it's still not agreed upon AFAIK.
->
-> Another case. There's plenty of swap space out there so that we can swap
-> out the guilty container completely. However, it will take us some
-> reasonable amount of time especially if the container isn't standing
-> still, but keeps touching its data. If other containers are mostly using
-> file caches, they will experience heavy pressure for a long time, not
-> saying about the slowdown caused by high disk usage. Unfair. One might
-> object that we can set a limit on IO operations for the culprit (more
-> limits and dependencies among them, I doubt admins will be happy!). This
-> will slow it down and guarantee it won't be swapping back in pages that
-> are being swapped out due to high memory pressure. However, disks have
-> limited speed. That means, it doesn't solve the problem with unfair
-> slowdown of other containers. What is worse, if we impose IO limit we
-> will slow down swap out by ourselves! Because we shouldn't ignore IO
-> limit for swap out, otherwise the system will be prune to DOS attacks
-> targeted on disk from inside containers, which is what IO limit (as well
-> as any other limit) is to protect against.
->
-> Or perhaps, I'm missing something and malicious behaviour isn't
-> considered when developing cgroups?!
->
->
-> To sum it up, the current mem + memsw configuration scheme doesn't allow
-> us to limit swap usage if we want to partition the system dynamically
-> using soft limits. Actually, it also looks rather confusing to me. We
-> have mem limit and mem+swap limit. I bet that from the first glance, an
-> average admin will think it's possible to limit swap usage by setting
-> the limits so that the difference between memory.memsw.limit and
-> memory.limit equals the maximal swap usage, but (surprise!) it isn't
-> really so. It holds if there's no global memory pressure, but otherwise
-> swap usage is only limited by memory.memsw.limit! IMHO, it isn't
-> something obvious.
->
->
-> Finally, my understanding (may be crazy!) how the things should be
-> configured. Just like now, there should be mem_cgroup->res accounting
-> and limiting total user memory (cache+anon) usage for processes inside
-> cgroups. This is where there's nothing to do. However, mem_cgroup->memsw
-> should be reworked to account *only* memory that may be swapped out plus
-> memory that has been swapped out (i.e. swap usage).
->
-> This way, by setting memsw.limit (or how it should be called) less than
-> memory soft limit we would solve the problem I described above. The
-> container would be then allowed to use only file caches above its
-> memsw.limit, which are usually easily shrinkable, and get OOM-kill while
-> trying to eat too much swappable memory.
->
-> The configuration will also be less confusing then IMO:
->
->   - memory.limit - container can't use memory above this
->   - memory.memsw.limit - container can't use swappable memory above this
->
->  From this it clearly follows maximal swap usage is limited by
-> memory.memsw.limit.
->
-> One more thought. Anon memory and file caches are different and should
-> be handled differently, so mixing them both under the same counter looks
-> strange to me. Moreover, they are *already* handled differently
-> throughout the kernel - just look at mm/vmscan.c. Here are the
-> differences between them I see:
->
->   - Anon memory is handled by the user application, while file caches are
->     all on the kernel. That means the application will *definitely* die
->     w/o anon memory. W/o file caches it usually can survive, but the more
->     caches it has the better it feels.
->
->   - Anon memory is not that easy to reclaim. Swap out is a really slow
->     process, because data are usually read/written w/o any specific
->     order. Dropping file caches is much easier. Typically we have lots of
->     clean pages there.
->
->   - Swap space is limited. And today, it's OK to have TBs of RAM and only
->     several GBs of swap. Customers simply don't want to waste their disk
->     space on that.
->
-> IMO, these lead us to the need for limiting swap/swappable memory usage,
-> but not swap+mem usage.
->
->
-> Now, a bad thing about such a change (if it were ever considered).
-> There's no way to convert old settings to new, i.e. if we currently have
->
->    mem <= L,
->    mem + swap <= S,
->    L <= S,
->
-> we can set
->
->    mem <= L1,
->    swappable_mem <= S1,
->
-> where either
->
-> L1 = L, S1 = S
->
-> or
->
-> L1 = L, S1 = S - L,
->
-> but both configurations won't be exactly the same. In the first case
-> memory+swap usage will be limited by L+S, not by S. In the second case,
-> although memory+swap<S, the container won't be able to use more than S-L
-> anonymous memory. This is the price we would have to pay if we decided
-> to go with this change...
->
->
-> Questions, comments, complains, threats?
->
+Hi Kamezawa,
 
-If one hits anon+swap limit, it just means OOM. Hitting limit means process's death.
-Is it useful ?
+Thanks for reading this :-)
+
+On Fri, Sep 05, 2014 at 07:03:57AM +0900, Kamezawa Hiroyuki wrote:
+> (2014/09/04 23:30), Vladimir Davydov wrote:
+> >  - memory.limit - container can't use memory above this
+> >  - memory.memsw.limit - container can't use swappable memory above this
+> 
+> If one hits anon+swap limit, it just means OOM. Hitting limit means
+> process's death.
+
+Basically yes. Hitting the memory.limit will result in swap out + cache
+reclaim no matter if it's an anon charge or a page cache one. Hitting
+the swappable memory limit (anon+swap) can only occur on anon charge and
+if it happens we have no choice rather than invoking OOM.
+
+Frankly, I don't see anything wrong in such a behavior. Why is it worse
+than the current behavior where we also kill processes if a cgroup
+reaches memsw.limit and we can't reclaim page caches?
+
+I admit I may be missing something. So I'd appreciate if you could
+provide me with a use case where we want *only* the current behavior and
+my proposal is a no-go.
+
+> Is it useful ?
+
+I think so, at least, if we want to use soft limits. The point is we
+will have to kill a process if it eats too much anon memory *anyway*
+when it comes to global memory pressure, but before finishing it we'll
+be torturing the culprit as well as *innocent* processes by issuing
+massive reclaim, as I tried to point out in the example above. IMO, this
+is no good.
+
+Besides, I believe such a distinction between swappable memory and
+caches would look more natural to users. Everyone got used to it
+actually. For example, when an admin or user or any userspace utility
+looks at the output of free(1), it primarily pays attention to free
+memory "-/+ buffers/caches", because almost all memory is usually full
+with file caches. And they know that caches easy come, easy go. IMO, for
+them it'd be more useful to limit this to avoid nasty surprises in the
+future, and only set some hints for page cache reclaim.
+
+The only exception is strict sand-boxing, but AFAIU we can sand-box apps
+perfectly well with this either, because we would still have a strict
+memory limit and a limit on maximal swap usage.
+
+Please sorry if the idea looks to you totally stupid (may be it is!),
+but let's just try to consider every possibility we have in mind.
 
 Thanks,
--Kame
-
-
-
-
+Vladimir
