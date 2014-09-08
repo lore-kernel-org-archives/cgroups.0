@@ -1,122 +1,70 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [RFC] memory cgroup: my thoughts on memsw
-Date: Sat, 06 Sep 2014 08:15:44 +0900
-Message-ID: <540A4420.2030504@jp.fujitsu.com>
-References: <20140904143055.GA20099@esperanza> <5408E1CD.3090004@jp.fujitsu.com> <20140905082846.GA25641@esperanza> <5409C6BB.7060009@jp.fujitsu.com> <20140905160029.GF25641@esperanza>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL] cgroup fixes for v3.17-rc4
+Date: Mon, 8 Sep 2014 10:20:25 +0900
+Message-ID: <20140908012025.GF5061@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140905160029.GF25641@esperanza>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=lV1T9ivYvTwsY2OXXWOQejoBQgFrEjDpc+AdcwPyWvE=;
+        b=QEIquSojzt4HlLIGgX0XyPYLkNNLUO6DMhyE+vfCkPA2gRrh2F16D9AVOb5/bXjcy9
+         oA29dDs/MOMC6qGS0f7209aAIKB4VPsT8DgVtxOqsZabXtcTqHgAwKfRFUNXAoxX9kEH
+         wFWvfV+0K6E6Y5jlQA1knBvPEa7erq96KTUZfZoEJzqSOknquB9+Tn9IQBnn22ucbKR8
+         /fQPi3V8QPpqFZefasDwh+nNoFUHYNUGO6nscF3xnSoDJSx70MdAaI3+rc9hm9Tij2NL
+         74z31rLxy2nGp7HJwpb9W4jI+5jxVpk1TAXZd26B2f6CYb9P7sB1OY8cUUChLCyiETrS
+         e5Rw==
+Content-Disposition: inline
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Vladimir Davydov <vdavydov@parallels.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Hugh Dickins <hughd@google.com>, Motohiro Kosaki <Motohiro.Kosaki@us.fujitsu.com>, Glauber Costa <glommer@gmail.com>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Pavel Emelianov <xemul@parallels.com>, Konstantin Khorenko <khorenko@parallels.com>, LKML-MM <linux-mm@kvack.org>, LKML-cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-(2014/09/06 1:00), Vladimir Davydov wrote:
-> On Fri, Sep 05, 2014 at 11:20:43PM +0900, Kamezawa Hiroyuki wrote:
->> Basically, I don't like OOM Kill. Anyone don't like it, I think.
->>
->> In recent container use, application may be build as "stateless" and
->> kill-and-respawn may not be problematic, but I think killing "a" process
->> by oom-kill is too naive.
->>
->> If your proposal is triggering notification to user space at hitting
->> anon+swap limit, it may be useful.
->> ...Some container-cluster management software can handle it.
->> For example, container may be restarted.
->>
->> Memcg has threshold notifier and vmpressure notifier.
->> I think you can enhance it.
-> [...]
->> My point is that "killing a process" tend not to be able to fix the situation.
->> For example, fork-bomb by "make -j" cannot be handled by it.
->>
->> So, I don't want to think about enhancing OOM-Kill. Please think of better
->> way to survive. With the help of countainer-management-softwares, I think
->> we can have several choices.
->>
->> Restart contantainer (killall) may be the best if container app is stateless.
->> Or container-management can provide some failover.
->
-> The problem I'm trying to set out is not about OOM actually (sorry if
-> the way I explain is confusing). We could probably configure OOM to kill
-> a whole cgroup (not just a process) and/or improve user-notification so
-> that the userspace could react somehow. I'm sure it must and will be
-> discussed one day.
->
-> The problem is that *before* invoking OOM on *global* pressure we're
-> trying to reclaim containers' memory and if there's progress we won't
-> invoke OOM. This can result in a huge slow down of the whole system (due
-> to swap out).
->
-use SSD or zram for swap device.
+Hello, Linus.
 
+Up until now, cgroup has allowed any character including '\n' in
+cgroup names; unfortunately, as '\n' is used as the row delimiter in
+/proc/$PID/cgroup, '\n' in a cgroup name makes the content of the file
+ambiguous to parse.  This pull request includes Alban's patch to
+disallow '\n' in cgroup names.  While this is a userland visible
+behavior change, given the craziness of allowing '\n' and its
+implications, I believe the change is justified.  The patch is marked
+for -stable backport.
 
->> The 1st reason we added memsw.limit was for avoiding that the whole swap
->> is used up by a cgroup where memory-leak of forkbomb running and not for
->> some intellegent controls.
->>
->>  From your opinion, I feel what you want is avoiding charging against page-caches.
->> But thiking docker at el, page-cache is not shared between containers any more.
->> I think "including cache" makes sense.
->
-> Not exactly. It's not about sharing caches among containers. The point
-> is (1) it's difficult to estimate the size of file caches that will max
-> out the performance of a container, and (2) a typical workload will
-> perform better and put less pressure on disk if it has more caches.
->
-> Now imagine a big host running a small number of containers and
-> therefore having a lot of free memory most of time, but still
-> experiencing load spikes once an hour/day/whatever when memory usage
-> raises up drastically. It'd be unwise to set hard limits for those
-> containers that are running regularly, because they'd probably perform
-> much better if they had more file caches. So the admin decides to use
-> soft limits instead. He is forced to use memsw.limit > the soft limit,
-> but this is unsafe, because the container may eat anon memory up to
-> memsw.limit then, and anon memory isn't easy to get rid of when it comes
-> to the global pressure. If the admin had a mean to limit swappable
-> memory, he could avoid it. This is what I was trying to illustrate by
-> the example in the first e-mail of this thread.
->
-> Note if there were no soft limits, the current setup would be just fine,
-> otherwise it fails. And soft limits are proved to be useful AFAIK.
->  
+Two other patches from Li to fix a possible oops when cgroup
+destruction races against other file operations and one from Vivek to
+fix a unified hierarchy devel behavior.
 
-As you noticed, hitting anon+swap limit just means oom-kill.
-My point is that using oom-killer for "server management" just seems crazy.
+Thanks.
 
-Let my clarify things. your proposal was.
-  1. soft-limit will be a main feature for server management.
-  2. Because of soft-limit, global memory reclaim runs.
-  3. Using swap at global memory reclaim can cause poor performance.
-  4. So, making use of OOM-Killer for avoiding swap.
+The following changes since commit 7d1311b93e58ed55f3a31cc8f94c4b8fe988a2b9:
 
-I can't agree "4". I think
+  Linux 3.17-rc1 (2014-08-16 10:40:26 -0600)
 
-  - don't configure swap.
-  - use zram
-  - use SSD for swap
-Or
-  - provide a way to notify usage of "anon+swap" to container management software.
+are available in the git repository at:
 
-    Now we have "vmpressure". Container management software can kill or respawn container
-    with using user-defined policy for avoidng swap.
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.17-fixes
 
-    If you don't want to run kswapd at all, threshold notifier enhancement may be required.
+for you to fetch changes up to aa32362f011c6e863132b16c1761487166a4bad2:
 
-/proc/meminfo provides total number of ANON/CACHE pages.
-Many things can be done in userland.
+  cgroup: check cgroup liveliness before unbreaking kernfs (2014-09-05 01:36:19 +0900)
 
-And your idea can't help swap-out caused by memory pressure comes from "zones".
-I guess vmpressure will be a total win. The kernel may need some enhancement
-but I don't like to make use of oom-killer as a part of feature for avoiding swap.
+----------------------------------------------------------------
+Alban Crequy (1):
+      cgroup: reject cgroup names with '\n'
 
-Thanks,
--Kame
+Li Zefan (2):
+      cgroup: delay the clearing of cgrp->kn->priv
+      cgroup: check cgroup liveliness before unbreaking kernfs
 
+Vivek Goyal (1):
+      cgroup: Display legacy cgroup files on default hierarchy
 
+ kernel/cgroup.c | 47 +++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 33 insertions(+), 14 deletions(-)
 
-
-
-
+-- 
+tejun
