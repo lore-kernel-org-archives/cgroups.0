@@ -1,25 +1,23 @@
-From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+From: Vladimir Davydov <vdavydov@parallels.com>
 Subject: Re: [PATCH RFC 2/2] memcg: add threshold for anon rss
-Date: Fri, 12 Sep 2014 12:27:04 +0400
-Message-ID: <20140912082704.GH4151@esperanza>
+Date: Fri, 12 Sep 2014 13:02:58 +0400
+Message-ID: <20140912090258.GI4151@esperanza>
 References: <cover.1410447097.git.vdavydov@parallels.com>
  <b7e7abb6cadc1301a775177ef3d4f4944192c579.1410447097.git.vdavydov@parallels.com>
- <5411D9E2.5030408@gmail.com>
+ <54124AFC.6020700@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <5411D9E2.5030408-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <54124AFC.6020700@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Motohiro Kosaki <Motohiro.Kosaki-gkcJ3tX5bYHQFUHtdCDX3A@public.gmane.org>, Glauber Costa <glommer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Pavel Emelianov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Konstantin Khorenko <khorenko-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Hugh Dickins <hughd@google.com>, Motohiro Kosaki <Motohiro.Kosaki@us.fujitsu.com>, Glauber Costa <glommer@gmail.com>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Pavel Emelianov <xemul@parallels.com>, Konstantin Khorenko <khorenko@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-Hi Austin,
-
-On Thu, Sep 11, 2014 at 01:20:34PM -0400, Austin S Hemmelgarn wrote:
-> On 2014-09-11 11:41, Vladimir Davydov wrote:
+On Fri, Sep 12, 2014 at 10:23:08AM +0900, Kamezawa Hiroyuki wrote:
+> (2014/09/12 0:41), Vladimir Davydov wrote:
 > > Though hard memory limits suit perfectly for sand-boxing, they are not
 > > that efficient when it comes to partitioning a server's resources among
 > > multiple containers. The point is a container consuming a particular
@@ -36,23 +34,7 @@ On Thu, Sep 11, 2014 at 01:20:34PM -0400, Austin S Hemmelgarn wrote:
 > > very slow or even impossible (if there's no swap) to reclaim its
 > > resources back to the limit. As a result the whole system will be
 > > feeling bad until it finally realizes the culprit must die.
-> I have actually seen this happen on a number of occasions.  I use
-> cgroups to sandbox anything I run under wine (cause it's gotten so good
-> at mimicking windows that a number of windows viruses will run on it),
-> and have had issues with wine processes with memory leaks bringing the
-> system to it's knees on occasion.  There are a lot of other stupid
-> programs out there too, I've seen stuff that does it's own caching, but
-> doesn't free any of the cached items until it either gets a failed
-> malloc() or the system starts swapping it out.
-
-Good example. For desktop users, it can be solved by setting hard memsw
-limit, but when there are hundreds of containers running on the same
-server setting memsw limit for each container would be just inflexible.
-There might be containers that would make use of extra file caches, and
-hard limiting them would increase overall disk load. OTOH setting only
-soft limit would be dangerous if there's e.g. a wine user in one of the
-containers.
-
+> > 
 > > Currently we have no way to react to anonymous memory + swap usage
 > > growth inside a container: the memsw counter accounts both anonymous
 > > memory and file caches and swap, so we have neither a limit for
@@ -76,41 +58,47 @@ containers.
 > > Nevertheless, I implement his idea in this RFC. I hope this will fuel
 > > the debate, because sadly enough nobody seems to care about this
 > > problem.
+> > 
+> > So this patch adds the "memory.rss" file that shows the amount of
+> > anonymous memory consumed by a cgroup and the event to handle threshold
+> > notifications coming from it. The notification works exactly in the same
+> > fashion as the existing memory/memsw usage notifications.
+> > 
+> >
 > 
-> So, I've actually been following the discussion mentioned above rather
-> closely, I just haven't had the time to comment on it.
-> Personally, I think both ideas have merits, but would like to propose a
-> third solution.
+> So, now, you know you can handle "threshould".
 > 
-> I would propose that we keep memsw like it is right now (because being
-> able to limit the sum of anon+cache+swap is useful, especially if you
-> are using cgroups to do strict partitioning of a machine), but give it a
-> better name (vss maybe?), add a separate counter for anonymous memory
-> and swap, and then provide for each of them an option to control whether
-> the OOM killer is used when the limit is hit (possibly with the option
-> of a delay before running the OOM killer), and a separate option for
-> threshold notifications.  Users than would be able to choose whether
-> they want a particular container killed when it hits a particular limit,
-> and whether or not they want notifications when it gets within a certain
-> percentage of the limit, or potentially both.
+> If you want to implement "automatic-oom-killall-in-a-contanier-threshold-in-kernel",
+> I don't have any objections.
+> 
+> What you want is not limit, you want a trigger for killing process.
+> Threshold + Kill is enough, using res_counter for that is overspec.
 
-The problem is adding yet another counter means extra overhead, more
-code written, wider user interface. I don't think anybody would accept
-that. There is even an opinion we don't need a separate kmem limit (i.e.
-kmem should only be accounted in mem and memsw).
+I'm still unsure if it's always enough. Handing this job out to the
+userspace may work in 90% percent of situations, but fail under some
+circumstances (a bunch of containers go mad so that the userspace daemon
+doesn't react in time). Can the admin take a risk like that?
 
-> We still need to have a way to hard limit sum of anon+cache+swap (and
-> ideally kmem once that is working correctly), because that useful for
-> systems that have to provide guaranteed minimum amounts of virtual
-> memory to containers.
+> You don't need res_counter and don't need to break other guy's use case.
 
-Do you have any use cases where anon+swap and anon+cache can't satisfy
-the user request while anon+cache+swap and anon+cache can? I'd
-appreciate if you could provide me with one, because currently I'm
-pretty convinced that anon+swap and anon+cache would be sufficient for
-both sand-boxing and loose partitioning, it'd be just a bit different to
-configure. That's why for now I stand for substituting anon+cache+swap
-with anon+swap.
+This is the time when we have a great chance to rework the user
+interface. That's why I started this thread.
+
+From what I read from the comment to the memsw patch and slides,
+anon+swap wasn't even considered as an alternative to anon+cache+swap.
+The only question raised was "Why not a separate swap limit, why
+mem+swap?". It was clearly answered "no need to recharge on swap
+in/out", but anon+swap isn't a bit worse in this respect - caches can't
+migrate from swap to mem anyway. I guess nobody considered the anon+swap
+alternative, simply because there was no notion of soft limits at that
+time, so mem+swap had no problems. But today the things have changed, so
+let's face it now. Why not anon+swap?
 
 Thanks,
 Vladimir
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
