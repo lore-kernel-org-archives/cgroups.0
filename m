@@ -1,62 +1,53 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH RFC] memcg: revert kmem.tcp accounting
-Date: Fri, 12 Sep 2014 14:43:26 -0700
-Message-ID: <20140912144326.a8d5153d7c91d220ea89924a@linux-foundation.org>
-References: <1410535618-9601-1-git-send-email-vdavydov@parallels.com>
-	<20140912171809.GA24469@dhcp22.suse.cz>
-	<20140912175516.GB6298@mtj.dyndns.org>
+From: "John Wei" <johntwei-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: How cpu entitlement is calculated/enforce for cpu subgroup?
+Date: Sun, 14 Sep 2014 17:51:05 -0700
+Message-ID: <08a001cfd07f$2219bd90$664d38b0$@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20140912175516.GB6298@mtj.dyndns.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=from:to:subject:date:message-id:mime-version:content-type
+         :content-transfer-encoding:thread-index:content-language;
+        bh=6BlGMpXbKlcXdXXvMcVgyc8thLuXy1nzbO3f+Ix//hU=;
+        b=AYttqg9p2Y15TD1E++cgjB5HZHASdVE71H7otGrJHVLuBEskOGw2FNniZsJUCNLIxV
+         NuaJ0gKYPmS2GjFqZ3mc43kEf3y7gjYbCnTqdK8UVMXCXLbZcX9WoV+oFBd/ZGCIknOD
+         qHeruFxpT5XuRwAckfZuwPeXvBbOtmKlmGv7kqFQZDNwlCiFg4UEvfD6Tjly77mHyrVr
+         WeaTcEil/to39SDBsubKs+4rVcM4rAS7QBw0mjsPoMyaBbFvCtFrbSJUon2+wXum3VdH
+         JBGFcPBqrhghyWr9EuRUHhQWWSTj/Q/zEL8qYTPJxt9FldTOVPXM8UQxhI3KSoVyOcgt
+         F0jg==
+Content-Language: en-us
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, "David S. Miller" <davem@davemloft.net>, Johannes Weiner <hannes@cmpxchg.org>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Glauber Costa <glommer@gmail.com>, Pavel Emelianov <xemul@parallels.com>, Greg Thelen <gthelen@google.com>, Eric Dumazet <eric.dumazet@gmail.com>, "Eric W. Biederman" <ebiederm@xmission.com>
+To: 'LKML-cgroups' <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Sat, 13 Sep 2014 02:55:16 +0900 Tejun Heo <tj@kernel.org> wrote:
+I understand that CPU entitlement is based on cpu.share. If all the groups
+are defined at first level, that is simple.
+Once subgroups are defined, cgroups behave differently.
+If you define cgroups hierarchy, then CPU entitlement is enforced base on
+the cpu.share of "each" group and subgroup.
+For example:
+* group A has 1024 cpu.share
+   Group A has two subgroup: A1, A2. Each has 1024 cpu.share
+* group B has 1024 cpu.share
+If you run process(es) in group, A, A1, A2, and, B. Each group and subgroups
+get 25% of all the CPU.
 
-> Hello, guys.
-> 
-> On Fri, Sep 12, 2014 at 07:18:09PM +0200, Michal Hocko wrote:
-> > On Fri 12-09-14 19:26:58, Vladimir Davydov wrote:
-> > > memory.kmem.tcp.limit_in_bytes works as the system-wide tcp_mem sysctl,
-> > > but per memory cgroup. While the existence of the latter is justified
-> > > (it prevents the system from becoming unusable due to uncontrolled tcp
-> > > buffers growth) the reason why we need such a knob in containers isn't
-> > > clear to me.
-> > 
-> > Parallels was the primary driver for this change. I haven't heard of
-> > anybody using the feature other than Parallels. I also remember there
-> > was a strong push for this feature before it was merged besides there
-> > were some complains at the time. I do not remember details (and I am
-> > one half way gone for the weekend now) so I do not have pointers to
-> > discussions.
-> > 
-> > I would love to get rid of the code and I am pretty sure that networking
-> > people would love this go even more. I didn't plan to provide kmem.tcp.*
-> > knobs for the cgroups v2 interface but getting rid of it altogether
-> > sounds even better. I am just not sure whether some additional users
-> > grown over time.
-> > Nevertheless I am really curious. What has changed that Parallels is not
-> > interested in kmem.tcp anymore?
-> 
-> So, I'd love to see this happen too but I don't think we can do this.
-> People use published interface.  The usages might be utterly one-off
-> and mental but let's please not underestimate the sometimes senseless
-> creativity found in the wild.  We simply can't remove a bunch of
-> control knobs like this.
+Below is an example on defining cgroup hierarchy
+Cpu = /cgroups/hierarchy
+Cpuacct = /cgroup/hierarch
+Memory = /cgroup/hierarch
 
-17 files changed, 51 insertions(+), 761 deletions(-)
+If you do not define cgroup hierarchy, then cgroup treat A/A1/A2 as one
+group and will get 50% CPU, and B will get 50% as well.
+I can understand the reason why it is implemented this way. But, I don't
+understand how cgroup divide that 50%  between A, A1, and A2.
+During my testing, I found A1 and A2 received 10%, while the processes in
+group A received about 30% CPU. All together, processes in A/A1/A2 received
+about 50% CPU.
 
-Sob.
+What is the formulate for this scenario? Is there a document for this.
 
-Is there a convenient way of disabling the whole thing and adding a
-please-tell-us printk?  If nobody tells us for a year or two then zap.
+John
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
