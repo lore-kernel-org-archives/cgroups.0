@@ -1,39 +1,78 @@
-From: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: How cpu entitlement is calculated/enforce for cpu subgroup?
-Date: Mon, 15 Sep 2014 10:22:34 +0530
-Message-ID: <CAKTCnzn_ojuS8LD-6V32dv5_wnxg5=Tp4sb0Usa-qFi34MxvEw@mail.gmail.com>
-References: <08a001cfd07f$2219bd90$664d38b0$@gmail.com>
-	<541652F5.5010604@gmail.com>
-	<CAKTCnzkVx7_aeTrYKQCBXoSj2w4z-cMSqOEYJRkLVAEGz_bdrA@mail.gmail.com>
+From: Vladimir Davydov <vdavydov@parallels.com>
+Subject: Re: [PATCH RFC] memcg: revert kmem.tcp accounting
+Date: Mon, 15 Sep 2014 11:36:00 +0400
+Message-ID: <20140915073600.GA11353@esperanza>
+References: <1410535618-9601-1-git-send-email-vdavydov@parallels.com>
+ <20140912171809.GA24469@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=ln74EnypsYLf7ToW6ztLxQmjR+G/ONL44cDJM/Zskps=;
-        b=zm/0rOD74tod1RNVkgiec7jOD9K0aY7FQfJb5/6dNFdHamGYVeEoHbP6Rsmi5kp+6W
-         JgZ6V27BVnN0Mdm16vZOXtknsUMnEW80aRZES37vKP0q+k6ak231f2OxuYnjQewMZwKb
-         4IIbDqgnudIs1OuWLUb3HgAJ9krqZEyomM3OnBBRfltZE3kla45uxRPvz3b357cg6BMQ
-         Wivbs1rVEDvApZIvSAlfoq05k/Nk6Mrf3kBnk3xKfCXg1/pEUGrz2T85HPyNoU+BOfbK
-         eQ2q0UPs+EmICsBSFP6k8HBXW8N5Ex8hK5yrhjdvPaoeYDncBh2TOUwnRsmQnHPQH7IK
-         qocQ==
-In-Reply-To: <CAKTCnzkVx7_aeTrYKQCBXoSj2w4z-cMSqOEYJRkLVAEGz_bdrA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20140912171809.GA24469@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: james <wjn740-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: John Wei <johntwei-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, LKML-cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, "David S. Miller" <davem@davemloft.net>, Johannes Weiner <hannes@cmpxchg.org>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Glauber Costa <glommer@gmail.com>, Pavel Emelianov <xemul@parallels.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Eric Dumazet <eric.dumazet@gmail.com>, "Eric W. Biederman" <ebiederm@xmission.com>
 
-Use weights to understand how it works. A/A1/A2 can be written as
+Hi Michal,
 
-      A
-A1      A2
+On Fri, Sep 12, 2014 at 07:18:09PM +0200, Michal Hocko wrote:
+> On Fri 12-09-14 19:26:58, Vladimir Davydov wrote:
+> > memory.kmem.tcp.limit_in_bytes works as the system-wide tcp_mem sysctl,
+> > but per memory cgroup. While the existence of the latter is justified
+> > (it prevents the system from becoming unusable due to uncontrolled tcp
+> > buffers growth) the reason why we need such a knob in containers isn't
+> > clear to me.
+> 
+> Parallels was the primary driver for this change. I haven't heard of
+> anybody using the feature other than Parallels. I also remember there
+> was a strong push for this feature before it was merged besides there
+> were some complains at the time. I do not remember details (and I am
+> one half way gone for the weekend now) so I do not have pointers to
+> discussions.
+> 
+> I would love to get rid of the code and I am pretty sure that networking
+> people would love this go even more. I didn't plan to provide kmem.tcp.*
+> knobs for the cgroups v2 interface but getting rid of it altogether
+> sounds even better. I am just not sure whether some additional users
+> grown over time.
+> Nevertheless I am really curious. What has changed that Parallels is not
+> interested in kmem.tcp anymore?
 
-50% of A for A1 and A2 and 50% for the task in A. A itself receives
-50% of the CPU. So the task in A gets 25% and the remaining A1 and A2
-get 12.5% each (add up to 25%)
+In our product (OpenVZ) we have home-bred counters for many types of
+resources, but we stopped setting limits for most of them, including tcp
+buffers accounting, long time ago, and our customers don't set them
+either. In the next product release we are going to drop them all and
+use only mem, anon+swap, and kmem limits.
 
-Ideally you should see a distribution of 12.5, 12. 5 and 25, but due
-to round up and short term monitoring, you might see 10, 10, 30
+I don't know what was the reason to push this stuff, because I wasn't in
+it at that time. From what I read from comments to the patches I found
+it was something like the first step towards kmem accounting. However,
+if we had fully functioning kmem accounting there would be no point in
+this.
+
+> 
+> [...]
+> 
+> Anyway, more than welcome
+> Acked-by: Michal Hocko <mhocko@suse.cz>
+
+Thank you.
+
+> 
+> In case we happened to grow more users, which I hope hasn't happened, we
+> would need to keep this around at least with the legacy cgroups API.
+
+The whole CONFIG_MEMCG_KMEM is marked as DON'T ENABLE IT, BECAUSE IT
+DOESN'T WORK (kudos to you). That's why I think we could probably close
+our eye to wailing users if any.
+
+Thanks,
+Vladimir
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
