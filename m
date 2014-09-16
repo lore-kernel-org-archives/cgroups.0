@@ -1,98 +1,78 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [RFC] memory cgroup: my thoughts on memsw
-Date: Tue, 16 Sep 2014 10:34:55 +0900
-Message-ID: <541793BF.7070106@jp.fujitsu.com>
-References: <20140904143055.GA20099@esperanza> <20140915191435.GA8950@cmpxchg.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH RFC] memcg: revert kmem.tcp accounting
+Date: Tue, 16 Sep 2014 15:14:01 +0900
+Message-ID: <20140916061401.GD805@mtj.dyndns.org>
+References: <1410535618-9601-1-git-send-email-vdavydov@parallels.com>
+ <20140912171809.GA24469@dhcp22.suse.cz>
+ <20140912175516.GB6298@mtj.dyndns.org>
+ <20140915074257.GB11353@esperanza>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20140915191435.GA8950@cmpxchg.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=l7byZFuA9bz5Z8Qwuij7xNy4axDH4kHbyFb1MDF1nl8=;
+        b=BXp1HcRJbehVyhLQ7VXYCh7HnccB3pT/IvxSz8Gzc842cuucazlx09nhrLwl2BZ+Pa
+         9g1pWGUqoFPAV5TGy63noAuFlCFxWL/eFOqB4FYuTyUw5OcpDZz0ph+Z0+efw6M+4j6V
+         oamXXl5+gH0RfasAEIfQZ9CdRzZaDxEHYl5lnLIy+EYkgaZO3fxpCCb8omocF9rrH4YK
+         a55P/GGAkGiwFLy+hP7OikYSlUwlzClOVk8tA62PPUmhL4BGwBk+MT0bg/4Vtf2X9zzt
+         Lclxd1RK2ZFc1upkAtRtNxczh+lWcAm1CG08XjP5STQVx3+Bb+gmOIu1vGy2inPJNRO6
+         MH/g==
+Content-Disposition: inline
+In-Reply-To: <20140915074257.GB11353@esperanza>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov@parallels.com>
-Cc: Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Hugh Dickins <hughd@google.com>, Motohiro Kosaki <Motohiro.Kosaki@us.fujitsu.com>, Glauber Costa <glommer@gmail.com>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Pavel Emelianov <xemul@parallels.com>, Konstantin Khorenko <khorenko@parallels.com>, LKML-MM <linux-mm@kvack.org>, LKML-cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Vladimir Davydov <vdavydov@parallels.com>
+Cc: Michal Hocko <mhocko@suse.cz>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, "David S. Miller" <davem@davemloft.net>, Johannes Weiner <hannes@cmpxchg.org>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Glauber Costa <glommer@gmail.com>, Pavel Emelianov <xemul@parallels.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Eric Dumazet <eric.dumazet@gmail.com>, "Eric W. Biederman" <ebiederm@xmission.com>
 
-(2014/09/16 4:14), Johannes Weiner wrote:
-> Hi Vladimir,
->
-> On Thu, Sep 04, 2014 at 06:30:55PM +0400, Vladimir Davydov wrote:
->> To sum it up, the current mem + memsw configuration scheme doesn't allow
->> us to limit swap usage if we want to partition the system dynamically
->> using soft limits. Actually, it also looks rather confusing to me. We
->> have mem limit and mem+swap limit. I bet that from the first glance, an
->> average admin will think it's possible to limit swap usage by setting
->> the limits so that the difference between memory.memsw.limit and
->> memory.limit equals the maximal swap usage, but (surprise!) it isn't
->> really so. It holds if there's no global memory pressure, but otherwise
->> swap usage is only limited by memory.memsw.limit! IMHO, it isn't
->> something obvious.
->
-> Agreed, memory+swap accounting & limiting is broken.
->
->>   - Anon memory is handled by the user application, while file caches are
->>     all on the kernel. That means the application will *definitely* die
->>     w/o anon memory. W/o file caches it usually can survive, but the more
->>     caches it has the better it feels.
->>
->>   - Anon memory is not that easy to reclaim. Swap out is a really slow
->>     process, because data are usually read/written w/o any specific
->>     order. Dropping file caches is much easier. Typically we have lots of
->>     clean pages there.
->>
->>   - Swap space is limited. And today, it's OK to have TBs of RAM and only
->>     several GBs of swap. Customers simply don't want to waste their disk
->>     space on that.
->
->> Finally, my understanding (may be crazy!) how the things should be
->> configured. Just like now, there should be mem_cgroup->res accounting
->> and limiting total user memory (cache+anon) usage for processes inside
->> cgroups. This is where there's nothing to do. However, mem_cgroup->memsw
->> should be reworked to account *only* memory that may be swapped out plus
->> memory that has been swapped out (i.e. swap usage).
->
-> But anon pages are not a resource, they are a swap space liability.
-> Think of virtual memory vs. physical pages - the use of one does not
-> necessarily result in the use of the other.  Without memory pressure,
-> anonymous pages do not consume swap space.
->
-> What we *should* be accounting and limiting here is the actual finite
-> resource: swap space.  Whenever we try to swap a page, its owner
-> should be charged for the swap space - or the swapout be rejected.
->
-> For hard limit reclaim, the semantics of a swap space limit would be
-> fairly obvious, because it's clear who the offender is.
->
-> However, in an overcommitted machine, the amount of swap space used by
-> a particular group depends just as much on the behavior of the other
-> groups in the system, so the per-group swap limit should be enforced
-> even during global reclaim to feed back pressure on whoever is causing
-> the swapout.  If reclaim fails, the global OOM killer triggers, which
-> should then off the group with the biggest soft limit excess.
->
-> As far as implementation goes, it should be doable to try-charge from
-> add_to_swap() and keep the uncharging in swap_entry_free().
->
-> We'll also have to extend the global OOM killer to be memcg-aware, but
-> we've been meaning to do that anyway.
->
+Hello, Vladimir.
 
-When we introduced memsw limitation, we tried to avoid affecting global memory reclaim.
-Then, we did memory+swap limitation.
+On Mon, Sep 15, 2014 at 11:42:57AM +0400, Vladimir Davydov wrote:
+> > So, I'd love to see this happen too but I don't think we can do this.
+> > People use published interface.  The usages might be utterly one-off
+> > and mental but let's please not underestimate the sometimes senseless
+> > creativity found in the wild.  We simply can't remove a bunch of
+> > control knobs like this.
+> 
+> We definitely can't remove something properly operating and widely used,
+> but kmem limits are not working and never worked properly due to lack of
+> kmem shrinkers, and furthermore CONFIG_MEMCG_KMEM, which tcp accounting
+> is enabled by, is marked as UNDER DEVELOPMENT.
 
-Now, global memory reclaim is memcg-aware. So, I think swap-limitation rather than
-anon+swap may be a choice. The change will reduce res_counter access. Hmm, it will be
-desireble to move anon pages to Unevictable if memcg's swap slot is 0.
+I don't think marking config options as "UNDER DEVELOPMENT" in its
+help documentation means anything.  It's a rather silly thing to do.
+Not many people pay much attention to the help texts and once somebody
+somewhere enabled the option for a distro, it's as free in the wild as
+any other kernel feature and CONFIG_MEMCG_KMEM is enabled by a lot of
+distros.  The same goes with the "debug" controller.  It doesn't mean
+much that it has "debug" in its name.  Once it's out in the wild,
+there will be someone making use of it in some weird way.
 
-Anyway, I think softlimit should be re-implemented, 1st. It will be starting point.
+If a debug feature has to be in the mainline kernel, the fact that
+it's a debug feature must be explicitly chosen in each use.  IOW, gate
+it by an unwieldy boot param which makes it painfully clear that it's
+enabling an unstable debug feature and print out a loud warning
+message about it.
 
-Thanks,
--Kame
+As it currently stands, CONFIG_MEMCG_KMEM is as good as any other
+enabled kernel option.  The help text saying that it's experimental
+does not mean anything especially when it doesn't even depend on
+CONFIG_BROKEN.
 
+So, the argument "the option was explained as experimental in help
+text" doesn't fly at all.  We can still try to deprecate it gradually
+if the cleanup seems worthwhile; however, with v2 interface pending,
+I'm not sure how meaningful that'd be.  We'd have to carry quite a bit
+of v1 code around anyway and I'd like to keep v1 interface as static
+as possible.  No reason to shake that at this point.
 
+Thanks.
 
-
-
+-- 
+tejun
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
