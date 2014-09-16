@@ -1,59 +1,91 @@
-From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: Re: [PATCH RFC] memcg: revert kmem.tcp accounting
-Date: Tue, 16 Sep 2014 12:38:10 +0400
-Message-ID: <20140916083810.GB32139@esperanza>
-References: <1410535618-9601-1-git-send-email-vdavydov@parallels.com>
- <20140912171809.GA24469@dhcp22.suse.cz>
- <20140912175516.GB6298@mtj.dyndns.org>
- <20140915074257.GB11353@esperanza>
- <20140916061401.GD805@mtj.dyndns.org>
+From: Cong Wang <xiyou.wangcong-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Kernel crash in cgroup_pidlist_destroy_work_fn()
+Date: Tue, 16 Sep 2014 16:56:16 -0700
+Message-ID: <CAM_iQpVNzx1r8x-bP5CoiCX8PFk15JYHw_XfpYvJGgdkFHj8Gw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20140916061401.GD805@mtj.dyndns.org>
-Sender: owner-linux-mm@kvack.org
+Content-Type: multipart/mixed; boundary=001a11333dc84687730503377fa7
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:date:message-id:subject:from:to:cc:content-type;
+        bh=tvJedym7gg8C41czoO8adVO9tJ2vqH5yRHCb/1ySLkM=;
+        b=SNRyc90k8S1CE2MRXGquI9dnaaI0KzQHSset1d3pFkmcQCZxuzTWTbdHfG+sWSAXTB
+         brQ5Cyfh+crT2JTIpjFprqZc0mny5yGhO6A8dsW6ObjUjMtQOL7sQSdzRH7ZrKrO7vMd
+         wkFTmruprmw2FAUhBYPfG2LPgcIfeWaraJKZIQcLzAk7nGAC6IrpB4Ql4Xx8YvwhCIGN
+         MMvDWrIPItVZEO70qZpRGMZNHqCjLeNH5rhX7kBwvlH5Ax8mAjvVB7eVTD4OICnEH4co
+         W0mJx3K8RzYCr++CyKbmoknv4sFJqtjqcL+XAGzlks9G/Mz9lEkvfI5J3PoqxPIkje4H
+         9/MA==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Michal Hocko <mhocko@suse.cz>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, "David S. Miller" <davem@davemloft.net>, Johannes Weiner <hannes@cmpxchg.org>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Glauber Costa <glommer@gmail.com>, Pavel Emelianov <xemul@parallels.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Eric Dumazet <eric.dumazet@gmail.com>, "Eric W. Biederman" <ebiederm@xmission.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Sep 16, 2014 at 03:14:01PM +0900, Tejun Heo wrote:
-> I don't think marking config options as "UNDER DEVELOPMENT" in its
-> help documentation means anything.  It's a rather silly thing to do.
-> Not many people pay much attention to the help texts and once somebody
-> somewhere enabled the option for a distro, it's as free in the wild as
-> any other kernel feature and CONFIG_MEMCG_KMEM is enabled by a lot of
-> distros.  The same goes with the "debug" controller.  It doesn't mean
-> much that it has "debug" in its name.  Once it's out in the wild,
-> there will be someone making use of it in some weird way.
-> 
-> If a debug feature has to be in the mainline kernel, the fact that
-> it's a debug feature must be explicitly chosen in each use.  IOW, gate
-> it by an unwieldy boot param which makes it painfully clear that it's
-> enabling an unstable debug feature and print out a loud warning
-> message about it.
-> 
-> As it currently stands, CONFIG_MEMCG_KMEM is as good as any other
-> enabled kernel option.  The help text saying that it's experimental
-> does not mean anything especially when it doesn't even depend on
-> CONFIG_BROKEN.
-> 
-> So, the argument "the option was explained as experimental in help
-> text" doesn't fly at all.  We can still try to deprecate it gradually
-> if the cleanup seems worthwhile; however, with v2 interface pending,
-> I'm not sure how meaningful that'd be.  We'd have to carry quite a bit
-> of v1 code around anyway and I'd like to keep v1 interface as static
-> as possible.  No reason to shake that at this point.
+--001a11333dc84687730503377fa7
+Content-Type: text/plain; charset=UTF-8
 
-Fair enough, thank you for the clarification. I hope we'll be able to
-get rid of it in a year or two when cgroup v2 becomes stable.
+Hi, Tejun
 
-Thanks,
-Vladimir
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+We saw some kernel null pointer dereference in
+cgroup_pidlist_destroy_work_fn(), more precisely at
+__mutex_lock_slowpath(), on 3.14. I can show you the full stack trace
+on request.
+
+Looking at the code, it seems flush_workqueue() doesn't care about new
+incoming works, it only processes currently pending ones, if this is
+correct, then we could have the following race condition:
+
+cgroup_pidlist_destroy_all():
+        //...
+        mutex_lock(&cgrp->pidlist_mutex);
+        list_for_each_entry_safe(l, tmp_l, &cgrp->pidlists, links)
+                mod_delayed_work(cgroup_pidlist_destroy_wq,
+&l->destroy_dwork, 0);
+        mutex_unlock(&cgrp->pidlist_mutex);
+
+        // <--- another process calls cgroup_pidlist_start() here
+since mutex is released
+
+        flush_workqueue(cgroup_pidlist_destroy_wq); // <--- another
+process adds new pidlist and queue work in pararell
+        BUG_ON(!list_empty(&cgrp->pidlists)); // <--- This check is
+passed, list_add() could happen after this
+
+
+Therefore, the newly added pidlist will point to a freed cgroup, and
+when it is freed in the delayed work we will crash.
+
+The attached patch (compile test ONLY) could be a possible fix, since
+it will check and hold a refcount on this cgroup in
+cgroup_pidlist_start(). But I could very easily miss something here
+since there are many cgroup changes after 3.14 and I don't follow
+cgroup development.
+
+What do you think?
+
+Thanks.
+
+--001a11333dc84687730503377fa7
+Content-Type: text/plain; charset=US-ASCII; name="cgroup.diff"
+Content-Disposition: attachment; filename="cgroup.diff"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_i05wdl4n0
+
+ZGlmZiAtLWdpdCBhL2tlcm5lbC9jZ3JvdXAuYyBiL2tlcm5lbC9jZ3JvdXAuYwppbmRleCA5NDBh
+Y2VkLi4yMjA2MTUxIDEwMDY0NAotLS0gYS9rZXJuZWwvY2dyb3VwLmMKKysrIGIva2VybmVsL2Nn
+cm91cC5jCkBAIC00MDg0LDYgKzQwODQsOSBAQCBzdGF0aWMgdm9pZCAqY2dyb3VwX3BpZGxpc3Rf
+c3RhcnQoc3RydWN0IHNlcV9maWxlICpzLCBsb2ZmX3QgKnBvcykKIAlpbnQgaW5kZXggPSAwLCBw
+aWQgPSAqcG9zOwogCWludCAqaXRlciwgcmV0OwogCisJaWYgKCFjZ3JvdXBfdHJ5Z2V0KGNncnAp
+KQorCQlyZXR1cm4gTlVMTDsKKwogCW11dGV4X2xvY2soJmNncnAtPnBpZGxpc3RfbXV0ZXgpOwog
+CiAJLyoKQEAgLTQxMzIsMTMgKzQxMzUsMTUgQEAgc3RhdGljIHZvaWQgKmNncm91cF9waWRsaXN0
+X3N0YXJ0KHN0cnVjdCBzZXFfZmlsZSAqcywgbG9mZl90ICpwb3MpCiAKIHN0YXRpYyB2b2lkIGNn
+cm91cF9waWRsaXN0X3N0b3Aoc3RydWN0IHNlcV9maWxlICpzLCB2b2lkICp2KQogeworCXN0cnVj
+dCBjZ3JvdXAgKmNncnAgPSBzZXFfY3NzKHMpLT5jZ3JvdXA7CiAJc3RydWN0IGtlcm5mc19vcGVu
+X2ZpbGUgKm9mID0gcy0+cHJpdmF0ZTsKIAlzdHJ1Y3QgY2dyb3VwX3BpZGxpc3QgKmwgPSBvZi0+
+cHJpdjsKIAogCWlmIChsKQogCQltb2RfZGVsYXllZF93b3JrKGNncm91cF9waWRsaXN0X2Rlc3Ry
+b3lfd3EsICZsLT5kZXN0cm95X2R3b3JrLAogCQkJCSBDR1JPVVBfUElETElTVF9ERVNUUk9ZX0RF
+TEFZKTsKLQltdXRleF91bmxvY2soJnNlcV9jc3MocyktPmNncm91cC0+cGlkbGlzdF9tdXRleCk7
+CisJbXV0ZXhfdW5sb2NrKCZjZ3JwLT5waWRsaXN0X211dGV4KTsKKwljZ3JvdXBfcHV0KGNncnAp
+OwogfQogCiBzdGF0aWMgdm9pZCAqY2dyb3VwX3BpZGxpc3RfbmV4dChzdHJ1Y3Qgc2VxX2ZpbGUg
+KnMsIHZvaWQgKnYsIGxvZmZfdCAqcG9zKQo=
+--001a11333dc84687730503377fa7--
