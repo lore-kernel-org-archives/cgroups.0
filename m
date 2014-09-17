@@ -1,7 +1,7 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 3/4] cgroup: remove bogus comments
-Date: Wed, 17 Sep 2014 18:19:24 +0800
-Message-ID: <5419602C.4080303@huawei.com>
+Subject: [PATCH 2/4] ccgroup: remove redundant code in cgroup_rmdir()
+Date: Wed, 17 Sep 2014 18:18:34 +0800
+Message-ID: <54195FFA.6050600@huawei.com>
 References: <54195FE1.9030607@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -13,32 +13,31 @@ Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-We never grab cgroup mutex in fork and exit paths no matter whether
-notify_on_release is set or not.
+We no longer clear kn->priv in cgroup_rmdir(), so we don't need
+to get an extra refcnt.
 
 Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- kernel/cgroup.c | 8 --------
- 1 file changed, 8 deletions(-)
+ kernel/cgroup.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 26b8cb9..1abb554 100644
+index 0ce9d9e..26b8cb9 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -967,14 +967,6 @@ static struct cgroup *task_cgroup_from_root(struct task_struct *task,
-  * knows that the cgroup won't be removed, as cgroup_rmdir()
-  * needs that mutex.
-  *
-- * The fork and exit callbacks cgroup_fork() and cgroup_exit(), don't
-- * (usually) take cgroup_mutex.  These are the two most performance
-- * critical pieces of code here.  The exception occurs on cgroup_exit(),
-- * when a task in a notify_on_release cgroup exits.  Then cgroup_mutex
-- * is taken, and if the cgroup count is zero, a usermode call made
-- * to the release agent with the name of the cgroup (path relative to
-- * the root of cgroup file system) as the argument.
-- *
-  * A cgroup can only be deleted if both its 'count' of using tasks
-  * is zero, and its list of 'children' cgroups is empty.  Since all
-  * tasks in the system use _some_ cgroup, and since there is always at
+@@ -4841,13 +4841,10 @@ static int cgroup_rmdir(struct kernfs_node *kn)
+ 	cgrp = cgroup_kn_lock_live(kn);
+ 	if (!cgrp)
+ 		return 0;
+-	cgroup_get(cgrp);	/* for @kn->priv clearing */
+ 
+ 	ret = cgroup_destroy_locked(cgrp);
+ 
+ 	cgroup_kn_unlock(kn);
+-
+-	cgroup_put(cgrp);
+ 	return ret;
+ }
+ 
 -- 
 1.8.0.2
