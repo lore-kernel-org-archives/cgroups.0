@@ -1,76 +1,54 @@
 From: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: Kernel crash in cgroup_pidlist_destroy_work_fn()
-Date: Wed, 17 Sep 2014 17:26:07 +0800
-Message-ID: <541953AF.7000201@huawei.com>
-References: <CAM_iQpVNzx1r8x-bP5CoiCX8PFk15JYHw_XfpYvJGgdkFHj8Gw@mail.gmail.com> <54191C41.3080003@huawei.com>
+Subject: [PATCH 1/4] cgroup: remove some useless forward declarations
+Date: Wed, 17 Sep 2014 18:18:09 +0800
+Message-ID: <54195FE1.9030607@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <54191C41.3080003-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Cong Wang <xiyou.wangcong-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On 2014/9/17 13:29, Li Zefan wrote:
-> On 2014/9/17 7:56, Cong Wang wrote:
->> Hi, Tejun
->>
->>
->> We saw some kernel null pointer dereference in
->> cgroup_pidlist_destroy_work_fn(), more precisely at
->> __mutex_lock_slowpath(), on 3.14. I can show you the full stack trace
->> on request.
->>
-> 
-> Yes, please.
-> 
->> Looking at the code, it seems flush_workqueue() doesn't care about new
->> incoming works, it only processes currently pending ones, if this is
->> correct, then we could have the following race condition:
->>
->> cgroup_pidlist_destroy_all():
->>         //...
->>         mutex_lock(&cgrp->pidlist_mutex);
->>         list_for_each_entry_safe(l, tmp_l, &cgrp->pidlists, links)
->>                 mod_delayed_work(cgroup_pidlist_destroy_wq,
->> &l->destroy_dwork, 0);
->>         mutex_unlock(&cgrp->pidlist_mutex);
->>
->>         // <--- another process calls cgroup_pidlist_start() here
->> since mutex is released
->>
->>         flush_workqueue(cgroup_pidlist_destroy_wq); // <--- another
->> process adds new pidlist and queue work in pararell
->>         BUG_ON(!list_empty(&cgrp->pidlists)); // <--- This check is
->> passed, list_add() could happen after this
->>
-> 
-> Did you confirm this is what happened when the bug was triggered?
-> 
-> I don't think the race condition you described exists. In 3.14 kernel,
-> cgroup_diput() won't be called if there is any thread running
-> cgroup_pidlist_start(). This is guaranteed by vfs.
-> 
-> But newer kernels are different. Looks like the bug exists in those
-> kernels.
-> 
 
-Newer kernels should be also fine.
+Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ include/linux/cgroup.h | 1 -
+ kernel/cgroup.c        | 2 --
+ 2 files changed, 3 deletions(-)
 
-If cgroup_pidlist_destroy_all() is called, it means kernfs has already
-removed the tasks file, and even if you still have it opened, when
-you try to read it, it will immediately return an errno.
-
-                                fd = open(cgrp/tasks)
-cgroup_rmdir(cgrp)
-  cgroup_destroy_locked(c)
-    kernfs_remove()
-  ...
-css_free_work_fn()
-  cgroup_pidlist_destroy_all()
-                               read(fd of cgrp/tasks)
-                                 return -ENODEV
-
-So cgroup_pidlist_destroy_all() won't race with cgroup_pidlist_start().
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index b5223c5..f7898e0 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -27,7 +27,6 @@
+ 
+ struct cgroup_root;
+ struct cgroup_subsys;
+-struct inode;
+ struct cgroup;
+ 
+ extern int cgroup_init_early(void);
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 940aced..0ce9d9e 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -185,7 +185,6 @@ static int need_forkexit_callback __read_mostly;
+ static struct cftype cgroup_dfl_base_files[];
+ static struct cftype cgroup_legacy_base_files[];
+ 
+-static void cgroup_put(struct cgroup *cgrp);
+ static int rebind_subsystems(struct cgroup_root *dst_root,
+ 			     unsigned int ss_mask);
+ static int cgroup_destroy_locked(struct cgroup *cgrp);
+@@ -195,7 +194,6 @@ static void css_release(struct percpu_ref *ref);
+ static void kill_css(struct cgroup_subsys_state *css);
+ static int cgroup_addrm_files(struct cgroup *cgrp, struct cftype cfts[],
+ 			      bool is_add);
+-static void cgroup_pidlist_destroy_all(struct cgroup *cgrp);
+ 
+ /* IDR wrappers which synchronize using cgroup_idr_lock */
+ static int cgroup_idr_alloc(struct idr *idr, void *ptr, int start, int end,
+-- 
+1.8.0.2
