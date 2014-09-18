@@ -1,230 +1,129 @@
-From: Greg Thelen <gthelen@google.com>
-Subject: Re: [RFC] memory cgroup: weak points of kmem accounting design
-Date: Wed, 17 Sep 2014 21:04:00 -0700
-Message-ID: <xr93r3z9ctje.fsf@gthelen.mtv.corp.google.com>
-References: <20140915104437.GA11886@esperanza> <CABCjUKCkgoG07djfLEpqo0sBwgKts0iMepwNsh_RdNVTVtYH3A@mail.gmail.com> <20140916083124.GA32139@esperanza>
+From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 1/2] cgroup: simplify proc_cgroup_show()
+Date: Thu, 18 Sep 2014 16:03:15 +0800
+Message-ID: <541A91C3.9000305@huawei.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=references:from:to:cc:subject:date:in-reply-to:message-id
-         :mime-version:content-type;
-        bh=QXLivt/uv3NNRn1lwQb2nruDLmMwtrnbpo4RNKNwTuU=;
-        b=HgvLLdvMk+rTHDYQmFoELWI8BEkSrQlAjCIydJoi+q8gGmCUsLNnOxYUhjN2+r5mUk
-         h6tJ16F3CC5crtqQHHDfthuIHpJUH4BxgwJns+23OlT7kCtSpvQsGZh+uQmnzT+7R1qN
-         rhFaWtnB62zw19t1KR9EnC1uHnuOm7u3hrBaWWAsLFxKP0QbWJIAzIZt01lNMAjKwD3d
-         udY7RpM4CZU2M2ZDitC5P+IkPyQMJzU+ofuj0VlSHKJELxy9rs7XcycOU8NlLftdjt/q
-         3gWgZ/EZS8WZzZfsVqmorqu7SYdQAzQaKQjC+/6xu4Lj8cB49FRrkBSrNp7EVKBq9I5H
-         lwGg==
-In-reply-to: <20140916083124.GA32139@esperanza>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov@parallels.com>
-Cc: Suleiman Souhlal <suleiman@google.com>, LKML <linux-kernel@vger.kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Hugh Dickins <hughd@google.com>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Motohiro Kosaki <Motohiro.Kosaki@us.fujitsu.com>, Dave Chinner <david@fromorbit.com>, Glauber Costa <glommer@gmail.com>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Pavel Emelianov <xemul@parallels.com>, Konstantin Khorenko <khorenko@parallels.com>, LKML-MM <linux-mm@kvack.org>, LKML-cgroups <cgroups@vger.kernel.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
+Use the ONE macro instead of REG, and we can simplify proc_cgroup_show().
 
-On Tue, Sep 16 2014, Vladimir Davydov wrote:
+Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ fs/proc/base.c         | 19 ++-----------------
+ include/linux/cgroup.h |  3 ++-
+ kernel/cgroup.c        | 18 +++---------------
+ 3 files changed, 7 insertions(+), 33 deletions(-)
 
-> Hi Suleiman,
->
-> On Mon, Sep 15, 2014 at 12:13:33PM -0700, Suleiman Souhlal wrote:
->> On Mon, Sep 15, 2014 at 3:44 AM, Vladimir Davydov
->> <vdavydov@parallels.com> wrote:
->> > Hi,
->> >
->> > I'd like to discuss downsides of the kmem accounting part of the memory
->> > cgroup controller and a possible way to fix them. I'd really appreciate
->> > if you could share your thoughts on it.
->> >
->> > The idea lying behind the kmem accounting design is to provide each
->> > memory cgroup with its private copy of every kmem_cache and list_lru
->> > it's going to use. This is implemented by bundling these structures with
->> > arrays storing per-memcg copies. The arrays are referenced by css id.
->> > When a process in a cgroup tries to allocate an object from a kmem cache
->> > we first find out which cgroup the process resides in, then look up the
->> > cache copy corresponding to the cgroup, and finally allocate a new
->> > object from the private cache. Similarly, on addition/deletion of an
->> > object from a list_lru, we first obtain the kmem cache the object was
->> > allocated from, then look up the memory cgroup which the cache belongs
->> > to, and finally add/remove the object from the private copy of the
->> > list_lru corresponding to the cgroup.
->> >
->> > Though simple it looks from the first glance, it has a number of serious
->> > weaknesses:
->> >
->> >  - Providing each memory cgroup with its own kmem cache increases
->> >    external fragmentation.
->> 
->> I haven't seen any evidence of this being a problem (but that doesn't
->> mean it doesn't exist).
->
-> Actually, it's rather speculative. For example, if we have say a hundred
-> of extra objects per cache (fragmented or in per-cpu stocks) of size 256
-> bytes, then for one cache the overhead would be 25K, which is
-> negligible. Now if there are thousand cgroups using the cache, we have
-> to pay 25M, which is noticeable. Anyway, to estimate this exactly, one
-> needs to run a typical workload inside a cgroup.
->
->>
->> >  - SLAB isn't ready to deal with thousands of caches: its algorithm
->> >    walks over all system caches and shrinks them periodically, which may
->> >    be really costly if we have thousands active memory cgroups.
->> 
->> This could be throttled.
->
-> It could be, but then we'd have more objects in per-cpu stocks, which
-> means more memory overhead.
->
->> 
->> >
->> >  - Caches may now be created/destroyed frequently and from various
->> >    places: on system cache destruction, on cgroup offline, from a work
->> >    struct scheduled by kmalloc. Synchronizing them properly is really
->> >    difficult. I've fixed some places, but it's still desperately buggy.
->> 
->> Agreed.
->> 
->> >  - It's hard to determine when we should destroy a cache that belongs to
->> >    a dead memory cgroup. The point is both SLAB and SLUB implementations
->> >    always keep some pages in stock for performance reasons, so just
->> >    scheduling cache destruction work from kfree once the last slab page
->> >    is freed isn't enough - it will normally never happen for SLUB and
->> >    may take really long for SLAB. Of course, we can forbid SL[AU]B
->> >    algorithm to stock pages in dead caches, but it looks ugly and has
->> >    negative impact on performance (I did this, but finally decided to
->> >    revert). Another approach could be scanning dead caches periodically
->> >    or on memory pressure, but that would be ugly too.
->> 
->> Not sure about slub, but for SLAB doesn't cache_reap take care of that?
->
-> It is, but it takes some time. If we decide to throttle it, then it'll
-> take even longer. Anyway, SLUB has nothing like that, therefore we'd
-> have to handle different algorithms in different ways, which I
-> particularly dislike.
->
->> 
->> >
->> >  - The arrays for storing per-memcg copies can get really large,
->> >    especially if we finally decide to leave dead memory cgroups hanging
->> >    until memory pressure reaps objects assigned to them and let them
->> >    free. How can we deal with an array of, say, 20K elements? Simply
->> >    allocating them with kmal^W vmalloc will result in memory wastes. It
->> >    will be particularly funny if the user wants to provide each cgroup
->> >    with a separate mount point: each super block will have a list_lru
->> >    for every memory cgroup, but only one of them will be really used.
->> >    That said we need a kind of dynamic reclaimable arrays. Radix trees
->> >    would fit, but they are way slower than plain arrays, which is a
->> >    no-go, because we want to look up on each kmalloc, list_lru_add/del,
->> >    which are fast paths.
->> 
->> The initial design we had was to have an array indexed by "cache id"
->> in struct memcg, instead of the current array indexed by "css id" in
->> struct kmem_cache.
->> The initial design doesn't have the problem you're describing here, as
->> far as I can tell.
->
-> It is indexed by "cache id", not "css id", but it doesn't matter
-> actually. Suppose, when a cgroup is taken offline it still has kmem
-> objects accounted to it. Then we have to keep its "cache id" along with
-> the caches hosting the objects until all the objects are freed. All
-> caches and, what is worse, list_lru's will have to keep a spare slot for
-> this id then.
->
->> 
->> > The more I think about these issues the more confident I get that the
->> > whole design is screwed up. So I'd like to discuss a possible
->> > alternative to it.
->> >
->> > The alternative is dumb simple. Let's allocate objects of all memory
->> > cgroups from the same cache. To determine which memory cgroup the object
->> > is accounted to on kfree, a pointer to the owner memory cgroup or its
->> > css id is stored with the object. For each kind of shrinkable object
->> > (inodes, dentries) a separate list_lru is introduced per each memory
->> > cgroup. To store inodes and dentries allocated by a memory cgroup in
->> > those lists, we add an additional list_head to them.
->> >
->> > Obviously such an approach wouldn't be affected by any of the issues of
->> > the current implementation I enumerated above, so these are the benefits
->> > of it. The downsides would be:
->> >
->> >  - Memory wastes. Each kmalloc'ed object must have a pointer to the
->> >    memory cgroup it's accounted to. Each shrinkable object must have an
->> >    extra list_head with it. However, there wouldn't be external
->> >    fragmentation like with per-memcg caches, which would probably
->> >    compensate for that.
->> 
->> The extra memory overhead seems like it would be really bad for small objects.
->
-> I agree. That's why I'm far not sure about it and want to listen to what
-> others think. Any ideas how we could fix the issues of the current
-> design (mainly handling of per-memcg arrays) are more than welcome.
->
->> 
->> >  - Performance. We have to charge on each kmalloc, not on each slab page
->> >    allocation as it's the case with per memcg caches. However, I think
->> >    per cpu stocks would resolve this problem.
->> 
->> Maybe I'm wrong, but it seems like implementing per-memcg per-cpu
->> stocks for this will be a non-trivial amount of code that would couple
->> memcg and slab/slub pretty tightly.
->
-> I don't think so. We could encapsulate per-cpu stocks in memcontrol.c
-> publishing only charge/uncharge functions to slab internals. We would
-> have to write some extra code, but we'd be able to get rid of all that
-> synchronization stuff necessary for per-memcg cache creation/destruction
-> in return.
->
->> 
->> >  - Inflexibility. It wouldn't be easy to add a new kind of shrinkable
->> >    object as it's the case with per memcg lru lists. We have to make the
->> >    kmem cache used for the object allocations store list_head with each
->> >    object and add yet another list_lru to the mem_cgroup struct. But do
->> >    we really need such a level of flexibility? On memcg pressure we only
->> >    want to shrink dentries and inodes. Will there be anything else?
->> >
->> > Any comments, thoughts, proposals are really welcome.
->> 
->> It also seems like with this approach, it would be difficult to have
->> something like per-memcg slabinfo, which has been invaluable for
->> diagnosing memory issues.
->
-> Yeah, there wouldn't be any per-memcg slabinfo then. At best, we could
-> show the number of objects used by a particular cgroup. However, do we
-> really need per-memcg slabinfo? I mean slab is something system-wide: if
-> there's a leak in it, it means something is wrong with a part of a
-> kernel, not a process in a cgroup. From this point all cgroups seem to
-> be equal.
->
-> Thanks,
-> Vladimir
-
-I've found per memcg per cache type stats useful in answering "why is my
-container oom?"  While these are kernel allocations, it is common for
-user space operations to cause these allocations (e.g. lots of open file
-descriptors).  So I don't specifically need per memcg slabinfo formatted
-data, but at the least a per memcg per cache type active object count
-would be very useful.  Thus I imagine each memcg would have an array of
-slab cache types each with per-cpu active object counters.  Per-cpu is
-used to avoid trashing those counters between cpus as objects are
-allocated and freed.
-
-As you say only memcg shrinkable cache types would need list heads.  I
-assume these per memcg shrinkable object list heads would be per cache
-type per cpu list heads for cache performance.  Allocation of a dentry
-today uses the normal slab management structures.  In this proposal I
-suspect the dentry would be dual indexed: once in the global slab/slub
-dentry lru and once in the per memcg dentry list.  If true, this might
-be a hot path regression allocation speed regression.
-
-Do you have a shrinker design in mind?  I suspect this new design would
-involve a per memcg dcache shrinker which grabs a big per-memcg dcache
-lock while walking the dentry list.  The classic per superblock
-shrinkers would not used for memcg shrinking.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/fs/proc/base.c b/fs/proc/base.c
+index baf852b..6b96892 100644
+--- a/fs/proc/base.c
++++ b/fs/proc/base.c
+@@ -376,21 +376,6 @@ static const struct file_operations proc_lstats_operations = {
+ 
+ #endif
+ 
+-#ifdef CONFIG_CGROUPS
+-static int cgroup_open(struct inode *inode, struct file *file)
+-{
+-	struct pid *pid = PROC_I(inode)->pid;
+-	return single_open(file, proc_cgroup_show, pid);
+-}
+-
+-static const struct file_operations proc_cgroup_operations = {
+-	.open		= cgroup_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= single_release,
+-};
+-#endif
+-
+ #ifdef CONFIG_PROC_PID_CPUSET
+ 
+ static int cpuset_open(struct inode *inode, struct file *file)
+@@ -2576,7 +2561,7 @@ static const struct pid_entry tgid_base_stuff[] = {
+ 	REG("cpuset",     S_IRUGO, proc_cpuset_operations),
+ #endif
+ #ifdef CONFIG_CGROUPS
+-	REG("cgroup",  S_IRUGO, proc_cgroup_operations),
++	ONE("cgroup",  S_IRUGO, proc_cgroup_show),
+ #endif
+ 	ONE("oom_score",  S_IRUGO, proc_oom_score),
+ 	REG("oom_adj",    S_IRUGO|S_IWUSR, proc_oom_adj_operations),
+@@ -2922,7 +2907,7 @@ static const struct pid_entry tid_base_stuff[] = {
+ 	REG("cpuset",    S_IRUGO, proc_cpuset_operations),
+ #endif
+ #ifdef CONFIG_CGROUPS
+-	REG("cgroup",  S_IRUGO, proc_cgroup_operations),
++	ONE("cgroup",  S_IRUGO, proc_cgroup_show),
+ #endif
+ 	ONE("oom_score", S_IRUGO, proc_oom_score),
+ 	REG("oom_adj",   S_IRUGO|S_IWUSR, proc_oom_adj_operations),
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index f7898e0..a5d9b8f 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -37,7 +37,8 @@ extern void cgroup_exit(struct task_struct *p);
+ extern int cgroupstats_build(struct cgroupstats *stats,
+ 				struct dentry *dentry);
+ 
+-extern int proc_cgroup_show(struct seq_file *, void *);
++extern int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
++			    struct pid *pid, struct task_struct *tsk);
+ 
+ /* define the enumeration of all cgroup subsystems */
+ #define SUBSYS(_x) _x ## _cgrp_id,
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 1abb554..e91bc3c 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -5040,12 +5040,9 @@ core_initcall(cgroup_wq_init);
+  *  - Print task's cgroup paths into seq_file, one line for each hierarchy
+  *  - Used for /proc/<pid>/cgroup.
+  */
+-
+-/* TODO: Use a proper seq_file iterator */
+-int proc_cgroup_show(struct seq_file *m, void *v)
++int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
++		     struct pid *pid, struct task_struct *tsk)
+ {
+-	struct pid *pid;
+-	struct task_struct *tsk;
+ 	char *buf, *path;
+ 	int retval;
+ 	struct cgroup_root *root;
+@@ -5055,14 +5052,6 @@ int proc_cgroup_show(struct seq_file *m, void *v)
+ 	if (!buf)
+ 		goto out;
+ 
+-	retval = -ESRCH;
+-	pid = m->private;
+-	tsk = get_pid_task(pid, PIDTYPE_PID);
+-	if (!tsk)
+-		goto out_free;
+-
+-	retval = 0;
+-
+ 	mutex_lock(&cgroup_mutex);
+ 	down_read(&css_set_rwsem);
+ 
+@@ -5092,11 +5081,10 @@ int proc_cgroup_show(struct seq_file *m, void *v)
+ 		seq_putc(m, '\n');
+ 	}
+ 
++	retval = 0;
+ out_unlock:
+ 	up_read(&css_set_rwsem);
+ 	mutex_unlock(&cgroup_mutex);
+-	put_task_struct(tsk);
+-out_free:
+ 	kfree(buf);
+ out:
+ 	return retval;
+-- 
+1.8.0.2
