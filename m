@@ -1,103 +1,104 @@
 From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 1/2] cgroup: simplify proc_cgroup_show()
-Date: Thu, 18 Sep 2014 16:03:15 +0800
-Message-ID: <541A91C3.9000305@huawei.com>
+Subject: [PATCH 2/2] cpuset: simplify proc_cpuset_show()
+Date: Thu, 18 Sep 2014 16:03:36 +0800
+Message-ID: <541A91D8.8070407@huawei.com>
+References: <541A91C3.9000305@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <541A91C3.9000305-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Use the ONE macro instead of REG, and we can simplify proc_cgroup_show().
+Use the ONE macro instead of REG, and we can simplify proc_cpuset_show().
 
 Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- fs/proc/base.c         | 19 ++-----------------
- include/linux/cgroup.h |  3 ++-
- kernel/cgroup.c        | 18 +++---------------
- 3 files changed, 7 insertions(+), 33 deletions(-)
+ fs/proc/base.c         | 20 ++------------------
+ include/linux/cpuset.h |  3 ++-
+ kernel/cpuset.c        | 15 +++------------
+ 3 files changed, 7 insertions(+), 31 deletions(-)
 
 diff --git a/fs/proc/base.c b/fs/proc/base.c
-index baf852b..6b96892 100644
+index 6b96892..4e8aa35 100644
 --- a/fs/proc/base.c
 +++ b/fs/proc/base.c
-@@ -376,21 +376,6 @@ static const struct file_operations proc_lstats_operations = {
+@@ -376,22 +376,6 @@ static const struct file_operations proc_lstats_operations = {
  
  #endif
  
--#ifdef CONFIG_CGROUPS
--static int cgroup_open(struct inode *inode, struct file *file)
+-#ifdef CONFIG_PROC_PID_CPUSET
+-
+-static int cpuset_open(struct inode *inode, struct file *file)
 -{
 -	struct pid *pid = PROC_I(inode)->pid;
--	return single_open(file, proc_cgroup_show, pid);
+-	return single_open(file, proc_cpuset_show, pid);
 -}
 -
--static const struct file_operations proc_cgroup_operations = {
--	.open		= cgroup_open,
+-static const struct file_operations proc_cpuset_operations = {
+-	.open		= cpuset_open,
 -	.read		= seq_read,
 -	.llseek		= seq_lseek,
 -	.release	= single_release,
 -};
 -#endif
 -
+ static int proc_oom_score(struct seq_file *m, struct pid_namespace *ns,
+ 			  struct pid *pid, struct task_struct *task)
+ {
+@@ -2558,7 +2542,7 @@ static const struct pid_entry tgid_base_stuff[] = {
+ 	REG("latency",  S_IRUGO, proc_lstats_operations),
+ #endif
  #ifdef CONFIG_PROC_PID_CPUSET
- 
- static int cpuset_open(struct inode *inode, struct file *file)
-@@ -2576,7 +2561,7 @@ static const struct pid_entry tgid_base_stuff[] = {
- 	REG("cpuset",     S_IRUGO, proc_cpuset_operations),
+-	REG("cpuset",     S_IRUGO, proc_cpuset_operations),
++	ONE("cpuset",     S_IRUGO, proc_cpuset_show),
  #endif
  #ifdef CONFIG_CGROUPS
--	REG("cgroup",  S_IRUGO, proc_cgroup_operations),
-+	ONE("cgroup",  S_IRUGO, proc_cgroup_show),
+ 	ONE("cgroup",  S_IRUGO, proc_cgroup_show),
+@@ -2904,7 +2888,7 @@ static const struct pid_entry tid_base_stuff[] = {
+ 	REG("latency",  S_IRUGO, proc_lstats_operations),
  #endif
- 	ONE("oom_score",  S_IRUGO, proc_oom_score),
- 	REG("oom_adj",    S_IRUGO|S_IWUSR, proc_oom_adj_operations),
-@@ -2922,7 +2907,7 @@ static const struct pid_entry tid_base_stuff[] = {
- 	REG("cpuset",    S_IRUGO, proc_cpuset_operations),
+ #ifdef CONFIG_PROC_PID_CPUSET
+-	REG("cpuset",    S_IRUGO, proc_cpuset_operations),
++	ONE("cpuset",    S_IRUGO, proc_cpuset_show),
  #endif
  #ifdef CONFIG_CGROUPS
--	REG("cgroup",  S_IRUGO, proc_cgroup_operations),
-+	ONE("cgroup",  S_IRUGO, proc_cgroup_show),
- #endif
- 	ONE("oom_score", S_IRUGO, proc_oom_score),
- 	REG("oom_adj",   S_IRUGO|S_IWUSR, proc_oom_adj_operations),
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index f7898e0..a5d9b8f 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -37,7 +37,8 @@ extern void cgroup_exit(struct task_struct *p);
- extern int cgroupstats_build(struct cgroupstats *stats,
- 				struct dentry *dentry);
+ 	ONE("cgroup",  S_IRUGO, proc_cgroup_show),
+diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
+index ade2390..0d4e067 100644
+--- a/include/linux/cpuset.h
++++ b/include/linux/cpuset.h
+@@ -86,7 +86,8 @@ extern void __cpuset_memory_pressure_bump(void);
  
--extern int proc_cgroup_show(struct seq_file *, void *);
-+extern int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
+ extern void cpuset_task_status_allowed(struct seq_file *m,
+ 					struct task_struct *task);
+-extern int proc_cpuset_show(struct seq_file *, void *);
++extern int proc_cpuset_show(struct seq_file *m, struct pid_namespace *ns,
 +			    struct pid *pid, struct task_struct *tsk);
  
- /* define the enumeration of all cgroup subsystems */
- #define SUBSYS(_x) _x ## _cgrp_id,
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 1abb554..e91bc3c 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -5040,12 +5040,9 @@ core_initcall(cgroup_wq_init);
-  *  - Print task's cgroup paths into seq_file, one line for each hierarchy
-  *  - Used for /proc/<pid>/cgroup.
+ extern int cpuset_mem_spread_node(void);
+ extern int cpuset_slab_spread_node(void);
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index 22874d7..a37f4ed 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -2729,10 +2729,9 @@ void __cpuset_memory_pressure_bump(void)
+  *    and we take cpuset_mutex, keeping cpuset_attach() from changing it
+  *    anyway.
   */
--
--/* TODO: Use a proper seq_file iterator */
--int proc_cgroup_show(struct seq_file *m, void *v)
-+int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
+-int proc_cpuset_show(struct seq_file *m, void *unused_v)
++int proc_cpuset_show(struct seq_file *m, struct pid_namespace *ns,
 +		     struct pid *pid, struct task_struct *tsk)
  {
 -	struct pid *pid;
 -	struct task_struct *tsk;
- 	char *buf, *path;
+ 	char *buf, *p;
+ 	struct cgroup_subsys_state *css;
  	int retval;
- 	struct cgroup_root *root;
-@@ -5055,14 +5052,6 @@ int proc_cgroup_show(struct seq_file *m, void *v)
+@@ -2742,24 +2741,16 @@ int proc_cpuset_show(struct seq_file *m, void *unused_v)
  	if (!buf)
  		goto out;
  
@@ -107,23 +108,21 @@ index 1abb554..e91bc3c 100644
 -	if (!tsk)
 -		goto out_free;
 -
--	retval = 0;
--
- 	mutex_lock(&cgroup_mutex);
- 	down_read(&css_set_rwsem);
- 
-@@ -5092,11 +5081,10 @@ int proc_cgroup_show(struct seq_file *m, void *v)
- 		seq_putc(m, '\n');
- 	}
- 
-+	retval = 0;
- out_unlock:
- 	up_read(&css_set_rwsem);
- 	mutex_unlock(&cgroup_mutex);
+ 	retval = -ENAMETOOLONG;
+ 	rcu_read_lock();
+ 	css = task_css(tsk, cpuset_cgrp_id);
+ 	p = cgroup_path(css->cgroup, buf, PATH_MAX);
+ 	rcu_read_unlock();
+ 	if (!p)
+-		goto out_put_task;
++		goto out_free;
+ 	seq_puts(m, p);
+ 	seq_putc(m, '\n');
+ 	retval = 0;
+-out_put_task:
 -	put_task_struct(tsk);
--out_free:
+ out_free:
  	kfree(buf);
  out:
- 	return retval;
 -- 
 1.8.0.2
