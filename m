@@ -1,59 +1,39 @@
-From: Juri Lelli <juri.lelli-5wv7dgnIgG8@public.gmane.org>
-Subject: Re: [PATCH 2/3] sched/deadline: fix bandwidth check/update when migrating
- tasks between exclusive cpusets
-Date: Fri, 19 Sep 2014 13:46:22 +0100
-Message-ID: <541C259E.4010207@arm.com>
-References: <1411118561-26323-1-git-send-email-juri.lelli@arm.com> <1411118561-26323-3-git-send-email-juri.lelli@arm.com> <541C17D6.5020608@bmw-carit.de>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: remove redundant check in cgroup_ino()
+Date: Fri, 19 Sep 2014 09:17:08 -0400
+Message-ID: <20140919131708.GA30493@mtj.dyndns.org>
+References: <541BE96B.1090605@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <541C17D6.5020608-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=T12zJUizA0P8EvbtGJQD4945OXlO2eUxp5ogn1qjyCc=;
+        b=pCU1/h7J2NHG+ui7e/AbD6kfmjxBXfyUa8Ki/oEbmE0kW9MrKvbHnqeUzNajhPTQ7i
+         3CLqW/QJa4p8/Y0FA18IJPERYUo9K07y7MoCwrFd+1kOcRzMg9AFclShqatBr+Skjw/H
+         DSSgk8gxRY4i8Y+cu5WpjVKkbpjFHV+ihLhXwV6r5JQQWdarBJyKDovBG6l4OrFl/K77
+         wLYX6z1c9MHNDQ839IhfO2gl5xdZMC+6E7FLOu6ETUEoHnbaB1k4PJkWxUBNZo7mhS88
+         u7WusTPv9Lx/pclZ6ElXnRdyxxCWWx94Neky3U9cQwj/lL3lmzhJmzDdoLhqxHeXzZSk
+         YT4Q==
+Content-Disposition: inline
+In-Reply-To: <541BE96B.1090605-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org" <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: "mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "juri.lelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <juri.lelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "raistlin-k2GhghHVRtY@public.gmane.org" <raistlin-k2GhghHVRtY@public.gmane.org>, "michael-dyjBcgdgk7Pe9wHmmfpqLFaTQe2KTcn/@public.gmane.org" <michael-dyjBcgdgk7Pe9wHmmfpqLFaTQe2KTcn/@public.gmane.org>, "fchecconi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <fchecconi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "vincent-9z8vmPu0pS/iB9QmIjCX8w@public.gmane.org" <vincent-9z8vmPu0pS/iB9QmIjCX8w@public.gmane.org>, "luca.abeni-3IIOeSMMxS4@public.gmane.org" <luca.abeni-3IIOeSMMxS4@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Naoya Horiguchi <n-horiguchi-PaJj6Psr51x8UrSeD/g0lQ@public.gmane.org>
 
-Hi Daniel,
-
-On 19/09/14 12:47, Daniel Wagner wrote:
-> Hi,
+On Fri, Sep 19, 2014 at 04:29:31PM +0800, Zefan Li wrote:
+> After we implemented default unified hierarchy, cgrp->kn can never
+> be NULL.
 > 
-> On 09/19/2014 11:22 AM, Juri Lelli wrote:
->> Exclusive cpusets are the only way users can restrict SCHED_DEADLINE tasks
->> affinity (performing what is commonly called clustered scheduling).
->> Unfortunately, such thing is currently broken for two reasons:
->>
->>  - No check is performed when the user tries to attach a task to
->>    an exlusive cpuset (recall that exclusive cpusets have an
->>    associated maximum allowed bandwidth).
->>
->>  - Bandwidths of source and destination cpusets are not correctly
->>    updated after a task is migrated between them.
->>
->> This patch fixes both things at once, as they are opposite faces
->> of the same coin.
->>
->> The check is performed in cpuset_can_attach(), as there aren't any
->> points of failure after that function. The updated is split in two
->> halves. We first reserve bandwidth in the destination cpuset, after
->> we pass the check in cpuset_can_attach(). And we then release
->> bandwidth from the source cpuset when the task's affinity is
->> actually changed. Even if there can be time windows when sched_setattr()
->> may erroneously fail in the source cpuset, we are fine with it, as
->> we can't perfom an atomic update of both cpusets at once.
->>
->> Reported-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-> 
-> Ack
-> 
-> I have no special test for this, I just let my test running which was
-> fixed by patch #1. Works fine though. I'll plan to write some test for this.
-> 
+> Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Ok, thanks. Just mind that the problem fixed by patch 3/3 may sometime
-affect this too. I should have definitely put 3/3 on top of the patchset :/.
+Applied to cgroup/for-3.18.
 
-Thanks,
+Thanks.
 
-- Juri
+-- 
+tejun
