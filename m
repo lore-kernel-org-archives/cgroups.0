@@ -1,76 +1,40 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 Subject: Re: Racy manipulation of task_struct->flags in cgroups code causes
  hard to reproduce kernel panics
-Date: Sat, 20 Sep 2014 13:28:19 -0400
-Message-ID: <20140920172819.GD3681@htj.dyndns.org>
+Date: Sat, 20 Sep 2014 20:04:18 +0200
+Message-ID: <20140920180418.GR2832@worktop.localdomain>
 References: <201409192053.IHJ35462.JLOMOSOFFVtQFH@I-love.SAKURA.ne.jp>
  <541D16EA.70407@huawei.com>
+ <20140920143012.GL2832@worktop.localdomain>
+ <CAGXu5j+P_kcgZuqYsemgL0KU_zRhz5HGJ6seh2oLyyst=cZP6g@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=zal/m5iWQQ66uPzRlhRn5xdYsvWNntC0AxB+mw2L3Yw=;
-        b=Vcwo3oHlgyXzPA2ovaJl+kYc5plJ0hstjIy/f6fJnmOQSTJXTl9rkt2Pr85QMO1NYW
-         PQmGsQPAXU9WYe2nusvVDIcK0Swr6O/nGN/vrxd0XWT0cmN3roYUVHu4CxYIGH/4lkTp
-         mzEBIZ1tZ3gu+ihPczziazwWHdVzSTdNO65W7unPMN+IOo4DzZgFDHEf3OeLt1vVpGG1
-         2Ztb1x04cesGQB8JdR/Hg1SbgoSxy01Jje9Bz9b0Xx9zoZLvIYjHecu+uhyvLOo01a+5
-         26QSoKNmx7ayGGlMiQXtuSS10JdZ7rweJyXjjexzNiimN3DbM5qYogDYaxgZWgN+P/hu
-         I+ug==
 Content-Disposition: inline
-In-Reply-To: <541D16EA.70407-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <CAGXu5j+P_kcgZuqYsemgL0KU_zRhz5HGJ6seh2oLyyst=cZP6g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fernando_b1-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org
+To: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, fernando_b1-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org
 
-Hello,
-
-On Sat, Sep 20, 2014 at 01:55:54PM +0800, Zefan Li wrote:
-> > Then, what made current->flags to unexpectedly preserve PF_USED_MATH flag?
-> > The user is running cgrulesengd process in order to utilize cpuset cgroup.
-> > Thus, cpuset_update_task_spread_flag() is called when cgrulesengd process
-> > writes someone's pid to /cgroup/cpuset/$group/tasks interface.
-> > 
-> > cpuset_update_task_spread_flag() is updating other thread's
-> > "struct task_struct"->flags without exclusion control or atomic
-> > operations!
-> > 
-> > ---------- linux-2.6.32-358.23.2.el6/kernel/cpuset.c ----------
-> > 300:/*
-> > 301: * update task's spread flag if cpuset's page/slab spread flag is set
-> > 302: *
-> > 303: * Called with callback_mutex/cgroup_mutex held
-> > 304: */
-> > 305:static void cpuset_update_task_spread_flag(struct cpuset *cs,
-> > 306:                                    struct task_struct *tsk)
-> > 307:{
-> > 308:    if (is_spread_page(cs))
-> > 309:            tsk->flags |= PF_SPREAD_PAGE;
-> > 310:    else
-> > 311:            tsk->flags &= ~PF_SPREAD_PAGE;
-> > 312:    if (is_spread_slab(cs))
-> > 313:            tsk->flags |= PF_SPREAD_SLAB;
-> > 314:    else
-> > 315:            tsk->flags &= ~PF_SPREAD_SLAB;
-> > 316:}
+On Sat, Sep 20, 2014 at 10:15:50AM -0700, Kees Cook wrote:
+> On Sat, Sep 20, 2014 at 7:30 AM, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
+> > On Sat, Sep 20, 2014 at 01:55:54PM +0800, Zefan Li wrote:
+> >> We should make the updating of this flag atomic.
+> >
+> >>  /* Per-process atomic flags. */
+> >>  #define PFA_NO_NEW_PRIVS 0x00000001  /* May not gain new privileges. */
+> >> +#define PFA_SPREAD_PAGE  0x00000002  /* Spread page cache over cpuset */
+> >> +#define PFA_SPREAD_SLAB  0x00000004  /* Spread some slab caches over cpuset */
+> >
+> > Ooh, I was not ware we had those.. /me checks where that came from. Hmm
+> > weird, while I did get that patch it had a seccomp prefix when landing
+> > in my inbox so I ignored it. However the commit has a sched prefix
+> > (which I would not have ignored). Dubious things happened here.
 > 
-> We should make the updating of this flag atomic.
+> The series went through a lot of revisions, so it probably gained the
+> sched prefix later in its life. Is there anything that needs changing
+> about how this has been implemented?
 
-Ugh, why do we even implement that in cpuset.  This should be handled
-by MPOL_INTERLEAVE.  It feels like people have been using cpuset as
-the dumpsite that people used w/o thinking much.  Going forward, let's
-please confine cpuset to collective cpu and memory affinity
-configuration.  It really shouldn't be implementing novel features for
-scheduler or mm.
-
-Anyways, yeah, the patch looks correct to me.  Can you please send a
-version w/ proper description and sob?
-
-Thanks.
-
--- 
-tejun
+No, don't think so, just got surprised.
