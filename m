@@ -1,43 +1,79 @@
-From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cgroup: fix missing unlock in cgroup_release_agent()
-Date: Sat, 20 Sep 2014 14:35:43 +0800
-Message-ID: <541D203F.4020902@huawei.com>
+From: Zefan Li <lizefan@huawei.com>
+Subject: [PATCH] cgroup: remove redundant variable in cgroup_mount()
+Date: Sat, 20 Sep 2014 14:49:10 +0800
+Message-ID: <541D2366.2020107@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-The patch 971ff4935538: "cgroup: use a per-cgroup work for release
-agent" from Sep 18, 2014, leads to the following static checker
-warning:
+Both pinned_sb and new_sb indicate if a new superblock is needed,
+so we can just remove new_sb.
 
-	kernel/cgroup.c:5310 cgroup_release_agent()
-	warn: 'mutex:&cgroup_mutex' is sometimes locked here and sometimes unlocked.
+Note now we must check if kernfs_tryget_sb() returns NULL, because
+when it returns NULL, kernfs_mount() may still re-use an existing
+superblock, which is just allocated by another concurent mount.
 
-Reported-by: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Suggested-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Zefan Li <lizefan@huawei.com>
 ---
- kernel/cgroup.c | 3 +++
- 1 file changed, 3 insertions(+)
+
+Hi Tejun,
+
+I think you wanted to see the @new_sb argument removed from kernfs_mount(),
+but it's also used in debugfs and we can't use kernfs_tryget_sb() to
+replace the new_sb check.
+
+---
+ kernel/cgroup.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 7f23551..33f15b3 100644
+index 33f15b3..15a2387 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -5290,7 +5290,10 @@ static void cgroup_release_agent(struct work_struct *work)
+@@ -1694,7 +1694,6 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 	struct dentry *dentry;
+ 	int ret;
+ 	int i;
+-	bool new_sb;
  
- 	mutex_unlock(&cgroup_mutex);
- 	call_usermodehelper(argv[0], argv, envp, UMH_WAIT_EXEC);
-+	goto out_free;
- out:
-+	mutex_unlock(&cgroup_mutex);
-+out_free:
- 	kfree(agentbuf);
- 	kfree(pathbuf);
+ 	/*
+ 	 * The first time anyone tries to mount a cgroup, enable the list
+@@ -1785,7 +1784,7 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
+ 		 * path is super cold.  Let's just sleep a bit and retry.
+ 		 */
+ 		pinned_sb = kernfs_pin_sb(root->kf_root, NULL);
+-		if (IS_ERR(pinned_sb) ||
++		if (IS_ERR_OR_NULL(pinned_sb) ||
+ 		    !percpu_ref_tryget_live(&root->cgrp.self.refcnt)) {
+ 			mutex_unlock(&cgroup_mutex);
+ 			if (!IS_ERR_OR_NULL(pinned_sb))
+@@ -1831,18 +1830,16 @@ out_free:
+ 		return ERR_PTR(ret);
+ 
+ 	dentry = kernfs_mount(fs_type, flags, root->kf_root,
+-				CGROUP_SUPER_MAGIC, &new_sb);
+-	if (IS_ERR(dentry) || !new_sb)
++				CGROUP_SUPER_MAGIC, NULL);
++	if (IS_ERR(dentry) || pinned_sb)
+ 		cgroup_put(&root->cgrp);
+ 
+ 	/*
+ 	 * If @pinned_sb, we're reusing an existing root and holding an
+ 	 * extra ref on its sb.  Mount is complete.  Put the extra ref.
+ 	 */
+-	if (pinned_sb) {
+-		WARN_ON(new_sb);
++	if (pinned_sb)
+ 		deactivate_super(pinned_sb);
+-	}
+ 
+ 	return dentry;
  }
 -- 
 1.8.0.2
