@@ -1,79 +1,31 @@
-From: Zefan Li <lizefan@huawei.com>
-Subject: [PATCH] cgroup: remove redundant variable in cgroup_mount()
-Date: Sat, 20 Sep 2014 14:49:10 +0800
-Message-ID: <541D2366.2020107@huawei.com>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: Racy manipulation of task_struct->flags in cgroups code causes
+ hard to reproduce kernel panics
+Date: Sat, 20 Sep 2014 16:30:12 +0200
+Message-ID: <20140920143012.GL2832@worktop.localdomain>
+References: <201409192053.IHJ35462.JLOMOSOFFVtQFH@I-love.SAKURA.ne.jp>
+ <541D16EA.70407@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <541D16EA.70407-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fernando_b1-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org
 
-Both pinned_sb and new_sb indicate if a new superblock is needed,
-so we can just remove new_sb.
+On Sat, Sep 20, 2014 at 01:55:54PM +0800, Zefan Li wrote:
+> We should make the updating of this flag atomic.
 
-Note now we must check if kernfs_tryget_sb() returns NULL, because
-when it returns NULL, kernfs_mount() may still re-use an existing
-superblock, which is just allocated by another concurent mount.
+>  /* Per-process atomic flags. */
+>  #define PFA_NO_NEW_PRIVS 0x00000001	/* May not gain new privileges. */
+> +#define PFA_SPREAD_PAGE  0x00000002	/* Spread page cache over cpuset */
+> +#define PFA_SPREAD_SLAB  0x00000004	/* Spread some slab caches over cpuset */
 
-Suggested-by: Tejun Heo <tj@kernel.org>
-Signed-off-by: Zefan Li <lizefan@huawei.com>
----
+Ooh, I was not ware we had those.. /me checks where that came from. Hmm
+weird, while I did get that patch it had a seccomp prefix when landing
+in my inbox so I ignored it. However the commit has a sched prefix
+(which I would not have ignored). Dubious things happened here.
 
-Hi Tejun,
-
-I think you wanted to see the @new_sb argument removed from kernfs_mount(),
-but it's also used in debugfs and we can't use kernfs_tryget_sb() to
-replace the new_sb check.
-
----
- kernel/cgroup.c | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 33f15b3..15a2387 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1694,7 +1694,6 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 	struct dentry *dentry;
- 	int ret;
- 	int i;
--	bool new_sb;
- 
- 	/*
- 	 * The first time anyone tries to mount a cgroup, enable the list
-@@ -1785,7 +1784,7 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
- 		 * path is super cold.  Let's just sleep a bit and retry.
- 		 */
- 		pinned_sb = kernfs_pin_sb(root->kf_root, NULL);
--		if (IS_ERR(pinned_sb) ||
-+		if (IS_ERR_OR_NULL(pinned_sb) ||
- 		    !percpu_ref_tryget_live(&root->cgrp.self.refcnt)) {
- 			mutex_unlock(&cgroup_mutex);
- 			if (!IS_ERR_OR_NULL(pinned_sb))
-@@ -1831,18 +1830,16 @@ out_free:
- 		return ERR_PTR(ret);
- 
- 	dentry = kernfs_mount(fs_type, flags, root->kf_root,
--				CGROUP_SUPER_MAGIC, &new_sb);
--	if (IS_ERR(dentry) || !new_sb)
-+				CGROUP_SUPER_MAGIC, NULL);
-+	if (IS_ERR(dentry) || pinned_sb)
- 		cgroup_put(&root->cgrp);
- 
- 	/*
- 	 * If @pinned_sb, we're reusing an existing root and holding an
- 	 * extra ref on its sb.  Mount is complete.  Put the extra ref.
- 	 */
--	if (pinned_sb) {
--		WARN_ON(new_sb);
-+	if (pinned_sb)
- 		deactivate_super(pinned_sb);
--	}
- 
- 	return dentry;
- }
--- 
-1.8.0.2
