@@ -1,7 +1,7 @@
 From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: [PATCH -mm 10/14] memcg: add rwsem to sync against memcg_caches arrays relocation
-Date: Sun, 21 Sep 2014 19:14:42 +0400
-Message-ID: <4711e5b4c4fcd37d839cd5b23643b3b077b12406.1411301245.git.vdavydov@parallels.com>
+Subject: [PATCH -mm 12/14] list_lru: organize all list_lrus to list
+Date: Sun, 21 Sep 2014 19:14:44 +0400
+Message-ID: <9e53255f042f70c7bc076009d8ee8d16581c9011.1411301245.git.vdavydov@parallels.com>
 References: <cover.1411301245.git.vdavydov@parallels.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
@@ -13,179 +13,81 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Dave Chinner <david@fromorbit.com>, Glauber Costa <glommer@gmail.com>, Suleiman Souhlal <suleiman@google.com>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-We need a stable value of memcg_max_cache_ids in kmem_cache_create()
-(memcg_alloc_cache_params() wants it for root caches), where we only
-hold the slab_mutex and no memcg-related locks. As a result, we have to
-update memcg_cache_ids under the slab_mutex, which we can only take from
-the slab's side. This looks awkward and will become even worse when
-per-memcg list_lru is introduced, which also wants stable access to
-memcg_max_cache_ids.
-
-To get rid of this dependency between the memcg_max_cache_ids and the
-slab_mutex, this patch introduces a special rwsem. The rwsem is held for
-writing during memcg_caches arrays relocation and memcg_max_cache_ids
-updates. Therefore one can take it for reading to get a stable access to
-memcg_caches arrays and/or memcg_max_cache_ids.
-
-Currently the semaphore is taken for reading only from
-kmem_cache_create, right before taking the slab_mutex, so right now
-there's no point in using rwsem instead of mutex. However, once list_lru
-is made per-memcg it will allow list_lru initializations to proceed
-concurrently.
+I need it for making list_lru memcg-aware.
 
 Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
 ---
- include/linux/memcontrol.h |   15 +++++++++++++--
- mm/memcontrol.c            |   28 ++++++++++++++++++----------
- mm/slab_common.c           |   10 +++++-----
- 3 files changed, 36 insertions(+), 17 deletions(-)
+ include/linux/list_lru.h |    3 +++
+ mm/list_lru.c            |   29 +++++++++++++++++++++++++++++
+ 2 files changed, 32 insertions(+)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 7c1bf0a84950..f2cd342d6544 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -419,8 +419,13 @@ extern struct static_key memcg_kmem_enabled_key;
-  * The maximal number of kmem-active memory cgroups that can exist on the
-  * system. May grow, but never shrinks. The value returned by memcg_cache_id()
-  * is always less.
-+ *
-+ * To prevent memcg_max_cache_ids from growing, memcg_lock_cache_id_space() can
-+ * be used. It's backed by rw semaphore.
-  */
- extern int memcg_max_cache_ids;
-+extern void memcg_lock_cache_id_space(void);
-+extern void memcg_unlock_cache_id_space(void);
+diff --git a/include/linux/list_lru.h b/include/linux/list_lru.h
+index 53c1d6b78270..ee9486ac0621 100644
+--- a/include/linux/list_lru.h
++++ b/include/linux/list_lru.h
+@@ -31,6 +31,9 @@ struct list_lru_node {
  
- static inline bool memcg_kmem_enabled(void)
- {
-@@ -449,8 +454,6 @@ void __memcg_kmem_uncharge_pages(struct page *page, int order);
+ struct list_lru {
+ 	struct list_lru_node	*node;
++#ifdef CONFIG_MEMCG_KMEM
++	struct list_head	list;
++#endif
+ };
  
- int memcg_cache_id(struct mem_cgroup *memcg);
+ void list_lru_destroy(struct list_lru *lru);
+diff --git a/mm/list_lru.c b/mm/list_lru.c
+index 07e198c77888..53086eda7942 100644
+--- a/mm/list_lru.c
++++ b/mm/list_lru.c
+@@ -10,6 +10,33 @@
+ #include <linux/list_lru.h>
+ #include <linux/slab.h>
  
--void memcg_update_array_size(int num_groups);
--
- struct kmem_cache *
- __memcg_kmem_get_cache(struct kmem_cache *cachep, gfp_t gfp);
- 
-@@ -587,6 +590,14 @@ static inline int memcg_cache_id(struct mem_cgroup *memcg)
- 	return -1;
- }
- 
-+static inline void memcg_lock_cache_id_space(void)
++#ifdef CONFIG_MEMCG_KMEM
++static LIST_HEAD(list_lrus);
++static DEFINE_SPINLOCK(list_lrus_lock);
++
++static void list_lru_register(struct list_lru *lru)
++{
++	spin_lock(&list_lrus_lock);
++	list_add(&lru->list, &list_lrus);
++	spin_unlock(&list_lrus_lock);
++}
++
++static void list_lru_unregister(struct list_lru *lru)
++{
++	spin_lock(&list_lrus_lock);
++	list_del(&lru->list);
++	spin_unlock(&list_lrus_lock);
++}
++#else
++static void list_lru_register(struct list_lru *lru)
 +{
 +}
 +
-+static inline void memcg_unlock_cache_id_space(void)
++static void list_lru_unregister(struct list_lru *lru)
 +{
 +}
++#endif /* CONFIG_MEMCG_KMEM */
 +
- static inline struct kmem_cache *
- memcg_kmem_get_cache(struct kmem_cache *cachep, gfp_t gfp)
+ bool list_lru_add(struct list_lru *lru, struct list_head *item)
  {
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 0020824dee96..0c6d412ae5a3 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -621,6 +621,19 @@ static void disarm_sock_keys(struct mem_cgroup *memcg)
- static DEFINE_IDA(memcg_cache_ida);
- int memcg_max_cache_ids;
- 
-+/* Protects memcg_max_cache_ids */
-+static DECLARE_RWSEM(memcg_cache_id_space_sem);
-+
-+void memcg_lock_cache_id_space(void)
-+{
-+	down_read(&memcg_cache_id_space_sem);
-+}
-+
-+void memcg_unlock_cache_id_space(void)
-+{
-+	up_read(&memcg_cache_id_space_sem);
-+}
-+
- /*
-  * MIN_SIZE is different than 1, because we would like to avoid going through
-  * the alloc/free process all the time. In a small machine, 4 kmem-limited
-@@ -2937,6 +2950,7 @@ static int memcg_alloc_cache_id(void)
- 	 * There's no space for the new id in memcg_caches arrays,
- 	 * so we have to grow them.
- 	 */
-+	down_write(&memcg_cache_id_space_sem);
- 
- 	size = 2 * (id + 1);
- 	if (size < MEMCG_CACHES_MIN_SIZE)
-@@ -2948,6 +2962,10 @@ static int memcg_alloc_cache_id(void)
- 	err = memcg_update_all_caches(size);
- 	mutex_unlock(&memcg_slab_mutex);
- 
-+	if (!err)
-+		memcg_max_cache_ids = size;
-+	up_write(&memcg_cache_id_space_sem);
-+
- 	if (err) {
- 		ida_simple_remove(&memcg_cache_ida, id);
- 		return err;
-@@ -2961,16 +2979,6 @@ static void memcg_free_cache_id(int id)
- 	ida_simple_remove(&memcg_cache_ida, id);
- }
- 
--/*
-- * We should update the current array size iff all caches updates succeed. This
-- * can only be done from the slab side. The slab mutex needs to be held when
-- * calling this.
-- */
--void memcg_update_array_size(int num)
--{
--	memcg_max_cache_ids = num;
--}
--
- static void memcg_register_cache(struct mem_cgroup *memcg,
- 				 struct kmem_cache *root_cache)
- {
-diff --git a/mm/slab_common.c b/mm/slab_common.c
-index cc6e18437f6c..4e2b9040a49f 100644
---- a/mm/slab_common.c
-+++ b/mm/slab_common.c
-@@ -157,8 +157,8 @@ int memcg_update_all_caches(int num_memcgs)
- {
- 	struct kmem_cache *s;
- 	int ret = 0;
--	mutex_lock(&slab_mutex);
- 
-+	mutex_lock(&slab_mutex);
- 	list_for_each_entry(s, &slab_caches, list) {
- 		if (!is_root_cache(s))
- 			continue;
-@@ -169,11 +169,8 @@ int memcg_update_all_caches(int num_memcgs)
- 		 * up to this point in an updated state.
- 		 */
- 		if (ret)
--			goto out;
-+			break;
+ 	int nid = page_to_nid(virt_to_page(item));
+@@ -137,12 +164,14 @@ int list_lru_init_key(struct list_lru *lru, struct lock_class_key *key)
+ 		INIT_LIST_HEAD(&lru->node[i].list);
+ 		lru->node[i].nr_items = 0;
  	}
--
--	memcg_update_array_size(num_memcgs);
--out:
- 	mutex_unlock(&slab_mutex);
- 	return ret;
++	list_lru_register(lru);
+ 	return 0;
  }
-@@ -290,6 +287,8 @@ kmem_cache_create(const char *name, size_t size, size_t align,
+ EXPORT_SYMBOL_GPL(list_lru_init_key);
  
- 	get_online_cpus();
- 	get_online_mems();
-+	memcg_lock_cache_id_space(); /* memcg_alloc_cache_params() needs a
-+					stable value of memcg_max_cache_ids */
- 
- 	mutex_lock(&slab_mutex);
- 
-@@ -328,6 +327,7 @@ kmem_cache_create(const char *name, size_t size, size_t align,
- out_unlock:
- 	mutex_unlock(&slab_mutex);
- 
-+	memcg_unlock_cache_id_space();
- 	put_online_mems();
- 	put_online_cpus();
- 
+ void list_lru_destroy(struct list_lru *lru)
+ {
++	list_lru_unregister(lru);
+ 	kfree(lru->node);
+ }
+ EXPORT_SYMBOL_GPL(list_lru_destroy);
 -- 
 1.7.10.4
 
