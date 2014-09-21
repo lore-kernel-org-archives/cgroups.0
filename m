@@ -1,74 +1,126 @@
-From: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
-Subject: Re: Racy manipulation of task_struct->flags in cgroups code causes hard to reproduce kernel panics
-Date: Sun, 21 Sep 2014 14:15:11 +0900
-Message-ID: <201409211415.GJG26578.MFQOHtSFVJLOOF@I-love.SAKURA.ne.jp>
-References: <201409192053.IHJ35462.JLOMOSOFFVtQFH@I-love.SAKURA.ne.jp>
-	<541D16EA.70407@huawei.com>
-	<20140920172819.GD3681@htj.dyndns.org>
+From: Vladimir Davydov <vdavydov@parallels.com>
+Subject: [PATCH -mm 00/14] Per memcg slab shrinkers
+Date: Sun, 21 Sep 2014 19:14:32 +0400
+Message-ID: <cover.1411301245.git.vdavydov@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20140920172819.GD3681-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, miaox-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org
-Cc: peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fernando_b1-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Dave Chinner <david@fromorbit.com>, Glauber Costa <glommer@gmail.com>, Suleiman Souhlal <suleiman@google.com>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-Tejun Heo wrote:
-> Hello,
-> 
-> On Sat, Sep 20, 2014 at 01:55:54PM +0800, Zefan Li wrote:
-> > > Then, what made current->flags to unexpectedly preserve PF_USED_MATH flag?
-> > > The user is running cgrulesengd process in order to utilize cpuset cgroup.
-> > > Thus, cpuset_update_task_spread_flag() is called when cgrulesengd process
-> > > writes someone's pid to /cgroup/cpuset/$group/tasks interface.
-> > > 
-> > > cpuset_update_task_spread_flag() is updating other thread's
-> > > "struct task_struct"->flags without exclusion control or atomic
-> > > operations!
-> > > 
-> > > ---------- linux-2.6.32-358.23.2.el6/kernel/cpuset.c ----------
-> > > 300:/*
-> > > 301: * update task's spread flag if cpuset's page/slab spread flag is set
-> > > 302: *
-> > > 303: * Called with callback_mutex/cgroup_mutex held
-> > > 304: */
-> > > 305:static void cpuset_update_task_spread_flag(struct cpuset *cs,
-> > > 306:                                    struct task_struct *tsk)
-> > > 307:{
-> > > 308:    if (is_spread_page(cs))
-> > > 309:            tsk->flags |= PF_SPREAD_PAGE;
-> > > 310:    else
-> > > 311:            tsk->flags &= ~PF_SPREAD_PAGE;
-> > > 312:    if (is_spread_slab(cs))
-> > > 313:            tsk->flags |= PF_SPREAD_SLAB;
-> > > 314:    else
-> > > 315:            tsk->flags &= ~PF_SPREAD_SLAB;
-> > > 316:}
-> > 
-> > We should make the updating of this flag atomic.
-> 
-> Ugh, why do we even implement that in cpuset.  This should be handled
-> by MPOL_INTERLEAVE.  It feels like people have been using cpuset as
-> the dumpsite that people used w/o thinking much.  Going forward, let's
-> please confine cpuset to collective cpu and memory affinity
-> configuration.  It really shouldn't be implementing novel features for
-> scheduler or mm.
-> 
-> Anyways, yeah, the patch looks correct to me.  Can you please send a
-> version w/ proper description and sob?
-> 
+Hi,
 
-This race condition exists since commit 950592f7b991 ("cpusets: update
-tasks' page/slab spread flags in time") (i.e. Linux 2.6.31 and later)
-but "struct task_struct"->atomic_flags was added in Linux 3.17.
+Kmem accounting of memcg is unusable now, because it lacks slab shrinker
+support. That means when we hit the limit we will get ENOMEM w/o any
+chance to recover. What we should do then is to call shrink_slab, which
+would reclaim old inode/dentry caches from this cgroup. This is what
+this patch set is intended to do.
 
-If use of ->atomic_flags for cpuset is acceptable, how should we fix
-older kernels? Backport ->atomic_flags?
+Basically, it does two things. First, it introduces the notion of
+per-memcg slab shrinker. A shrinker that wants to reclaim objects per
+cgroup should mark itself as SHRINKER_MEMCG_AWARE. Then it will be
+passed the memory cgroup to scan from in shrink_control->memcg. For such
+shrinkers shrink_slab iterates over the whole cgroup subtree under the
+target cgroup and calls the shrinker for each kmem-active memory cgroup.
 
-> Thanks.
-> 
-> -- 
-> tejun
-> 
+Secondly, this patch set makes the list_lru structure per-memcg. It's
+done transparently to list_lru users - everything they have to do is to
+tell list_lru_init that they want memcg-aware list_lru. Then the
+list_lru will automatically distribute objects among per-memcg lists
+basing on which cgroup the object is accounted to. This way to make FS
+shrinkers (icache, dcache) memcg-aware we only need to make them use
+memcg-aware list_lru, and this is what this patch set does.
+
+The main difference of this patch set from my previous attempts to push
+memcg aware shrinkers is in how it handles css offline. Now we don't let
+list_lrus corresponding to dead memory cgroups hang around till all
+objects are freed. Instead we move lru items to the parent cgroup's lru
+list. This is really important, because this allows us to release
+memcg_cache_id used for indexing in per-memcg arrays. If we don't do
+this, the arrays will grow uncontrollably, which is really bad. Note, in
+comparison to user memory reparenting, which Johannes is going to get
+rid of, it's not racy and much easier to implement although it does
+impose some limitations on how list_lru locking can be implemented.
+Another difference is that it doesn't reparent charges, only list_lru
+entries - the css will be dangling until the last kmem object is freed.
+
+As before, this patch set only enables per-memcg kmem reclaim when the
+pressure goes from memory.limit, not from memory.kmem.limit. Handling
+memory.kmem.limit is going to be tricky due to GFP_NOFS allocations, it
+will probably require a sort of soft limit to work properly. I'm leaving
+this for future work.
+
+The patch set basically consists of three main parts and organized as
+follows:
+
+ - Patches 1-3 implement per-memcg shrinker core with patches 1 and 2
+   preparing list_lru users for upcoming changes and patch 3 tuning
+   shrink_slab.
+
+ - Patches 4-10 make memcg core release cache ids on offline doing a bit
+   of cleanup in the meanwhile. This is easy, because kmem_caches don't
+   need the cache id after css offline since there can't be allocations
+   going from a dead memcg. Note that most of these patches (namely 4-6,
+   and 8) were once merged, but then I decided to drop them, because I
+   didn't know how to deal with list_lrus at that time (see
+   https://lkml.org/lkml/2014/7/23/218).
+
+ - Finally patches 11-14 make list_lru per-memcg and mark FS shrinkers
+   as memcg-aware. This is the most difficult part of this patch set
+   with patch 13 (unlucky :-) doing the most important work.
+
+Reviews are more than welcome.
+
+Thanks,
+
+Vladimir Davydov (14):
+  list_lru: introduce list_lru_shrink_{count,walk}
+  fs: consolidate {nr,free}_cached_objects args in shrink_control
+  vmscan: shrink slab on memcg pressure
+  memcg: use mem_cgroup_id for per memcg cache naming
+  memcg: add pointer to owner cache to memcg_cache_params
+  memcg: keep all children of each root cache on a list
+  memcg: update memcg_caches array entries on the slab side
+  memcg: release memcg_cache_id on css offline
+  memcg: rename some cache id related variables
+  memcg: add rwsem to sync against memcg_caches arrays relocation
+  list_lru: get rid of ->active_nodes
+  list_lru: organize all list_lrus to list
+  list_lru: introduce per-memcg lists
+  fs: make shrinker memcg aware
+
+ fs/dcache.c                |   14 +-
+ fs/gfs2/main.c             |    2 +-
+ fs/gfs2/quota.c            |    6 +-
+ fs/inode.c                 |    7 +-
+ fs/internal.h              |    7 +-
+ fs/super.c                 |   36 ++--
+ fs/xfs/xfs_buf.c           |    9 +-
+ fs/xfs/xfs_qm.c            |    9 +-
+ fs/xfs/xfs_super.c         |    7 +-
+ include/linux/fs.h         |    6 +-
+ include/linux/list_lru.h   |   85 +++++----
+ include/linux/memcontrol.h |   60 ++++--
+ include/linux/shrinker.h   |   10 +-
+ include/linux/slab.h       |    5 +-
+ mm/list_lru.c              |  434 +++++++++++++++++++++++++++++++++++++++++---
+ mm/memcontrol.c            |  254 +++++++++++++++++++-------
+ mm/slab.c                  |   40 ++--
+ mm/slab.h                  |   27 ++-
+ mm/slab_common.c           |   65 +++----
+ mm/slub.c                  |   41 +++--
+ mm/vmscan.c                |   87 +++++++--
+ mm/workingset.c            |    9 +-
+ 22 files changed, 925 insertions(+), 295 deletions(-)
+
+-- 
+1.7.10.4
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
