@@ -1,85 +1,97 @@
-From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: Re: [patch 3/3] mm: memcontrol: continue cache reclaim from offlined
- groups
-Date: Mon, 22 Sep 2014 12:32:04 +0400
-Message-ID: <20140922083204.GC18526@esperanza>
-References: <1411243235-24680-1-git-send-email-hannes@cmpxchg.org>
- <1411243235-24680-4-git-send-email-hannes@cmpxchg.org>
+From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [patch v2] mm: memcontrol: convert reclaim iterator to simple
+ css refcounting
+Date: Mon, 22 Sep 2014 13:53:21 +0400
+Message-ID: <20140922095321.GA20398@esperanza>
+References: <1411161059-16552-1-git-send-email-hannes@cmpxchg.org>
+ <20140919212843.GA23861@cmpxchg.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1411243235-24680-4-git-send-email-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20140919212843.GA23861-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: linux-mm@kvack.org, Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sat, Sep 20, 2014 at 04:00:35PM -0400, Johannes Weiner wrote:
-> On cgroup deletion, outstanding page cache charges are moved to the
-> parent group so that they're not lost and can be reclaimed during
-> pressure on/inside said parent.  But this reparenting is fairly tricky
-> and its synchroneous nature has led to several lock-ups in the past.
+On Fri, Sep 19, 2014 at 05:28:43PM -0400, Johannes Weiner wrote:
+> The memcg reclaim iterators use a complicated weak reference scheme to
+> prevent pinning cgroups indefinitely in the absence of memory pressure.
 > 
-> Since css iterators now also include offlined css, memcg iterators can
-> be changed to include offlined children during reclaim of a group, and
-> leftover cache can just stay put.
+> However, during the ongoing cgroup core rework, css lifetime has been
+> decoupled such that a pinned css no longer interferes with removal of
+> the user-visible cgroup, and all this complexity is now unnecessary.
 > 
-> There is a slight change of behavior in that charges of deleted groups
-> no longer show up as local charges in the parent.  But they are still
-> included in the parent's hierarchical statistics.
-> 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 > ---
->  mm/memcontrol.c | 260 ++------------------------------------------------------
->  1 file changed, 5 insertions(+), 255 deletions(-)
+>  mm/memcontrol.c | 201 ++++++++++----------------------------------------------
+>  1 file changed, 34 insertions(+), 167 deletions(-)
 > 
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 019a44ac25d6..48531433a2fc 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -736,8 +736,6 @@ static void disarm_static_keys(struct mem_cgroup *memcg)
->  	disarm_kmem_keys(memcg);
->  }
->  
-> -static void drain_all_stock_async(struct mem_cgroup *memcg);
-> -
->  static struct mem_cgroup_per_zone *
->  mem_cgroup_zone_zoneinfo(struct mem_cgroup *memcg, struct zone *zone)
+[...]
+> -static void mem_cgroup_iter_invalidate(struct mem_cgroup *root)
+> -{
+> -	/*
+> -	 * When a group in the hierarchy below root is destroyed, the
+> -	 * hierarchy iterator can no longer be trusted since it might
+> -	 * have pointed to the destroyed group.  Invalidate it.
+> -	 */
+> -	atomic_inc(&root->dead_count);
+
+After your patch is applied, mem_cgroup->dead_count is not used any
+more. Please remove it.
+
+[...]
+> @@ -1300,8 +1183,11 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
+>  				   struct mem_cgroup *prev,
+>  				   struct mem_cgroup_reclaim_cookie *reclaim)
 >  {
-> @@ -1208,7 +1206,7 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
->  				goto out_unlock;
->  			continue;
->  		}
-> -		if (css == &root->css || css_tryget_online(css)) {
-> +		if (css == &root->css || css_tryget(css)) {
->  			memcg = mem_cgroup_from_css(css);
->  			break;
->  		}
-> @@ -2349,10 +2347,12 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
->   * of the hierarchy under it. sync flag says whether we should block
-
-Please update the comment.
-
->   * until the work is done.
->   */
-> -static void drain_all_stock(struct mem_cgroup *root_memcg, bool sync)
-> +static void drain_all_stock(struct mem_cgroup *root_memcg)
->  {
->  	int cpu, curcpu;
+> +	struct mem_cgroup_per_zone *uninitialized_var(mz);
+> +	struct cgroup_subsys_state *css = NULL;
+> +	int uninitialized_var(priority);
+>  	struct mem_cgroup *memcg = NULL;
+> -	struct mem_cgroup *last_visited = NULL;
+> +	struct mem_cgroup *pos = NULL;
 >  
-> +	if (!mutex_trylock(&percpu_charge_mutex))
-> +		return;
+>  	if (mem_cgroup_disabled())
+>  		return NULL;
+> @@ -1310,50 +1196,51 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
+>  		root = root_mem_cgroup;
+>  
+>  	if (prev && !reclaim)
+> -		last_visited = prev;
+> +		pos = prev;
+>  
+>  	if (!root->use_hierarchy && root != root_mem_cgroup) {
+>  		if (prev)
+> -			goto out_css_put;
+> +			goto out;
+>  		return root;
+>  	}
+>  
+>  	rcu_read_lock();
+> -	while (!memcg) {
+> -		struct mem_cgroup_reclaim_iter *uninitialized_var(iter);
+> -		int uninitialized_var(seq);
+>  
+> -		if (reclaim) {
+> -			struct mem_cgroup_per_zone *mz;
+> +	if (reclaim) {
+> +		mz = mem_cgroup_zone_zoneinfo(root, reclaim->zone);
+> +		priority = reclaim->priority;
+>  
+> -			mz = mem_cgroup_zone_zoneinfo(root, reclaim->zone);
+> -			iter = &mz->reclaim_iter[reclaim->priority];
+> -			if (prev && reclaim->generation != iter->generation) {
 
-It's not obvious why we need it here. The old code has an explanatory
-comment. Could you please add one?
+Again, you are removing all generation checks, but leaving
+mem_cgroup_reclaim_cookie->generation defined. Please remove it too.
+
+BTW, don't we still need the generation check to eliminate the
+possibility of a process iterating infinitely over a memory cgroup tree
+in case of concurrent reclaim?
 
 Thanks,
 Vladimir
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
