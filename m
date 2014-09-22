@@ -1,28 +1,48 @@
-From: Zefan Li <lizefan@huawei.com>
-Subject: Re: [PATCH 1/3] sched: fix confusing PFA_NO_NEW_PRIVS constant
-Date: Mon, 22 Sep 2014 12:44:51 +0800
-Message-ID: <541FA943.5070009@huawei.com>
-References: <541F9C96.10705@huawei.com> <20140922040214.GE23583@htj.dyndns.org>
+From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2 1/3][RESEND] sched: fix confusing PFA_NO_NEW_PRIVS constant
+Date: Mon, 22 Sep 2014 13:44:13 +0800
+Message-ID: <541FB72D.2020809@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140922040214.GE23583@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Ingo Molnar <mingo@kernel.org>, Peter Zijlstra <peterz@infradead.org>, keescook@chromium.org, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org
 
-On 2014/9/22 12:02, Tejun Heo wrote:
-> On Mon, Sep 22, 2014 at 11:50:46AM +0800, Zefan Li wrote:
->> From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
->>
->> Commit 1d4457f99928 ("sched: move no_new_privs into new atomic flags")
->> defined PFA_NO_NEW_PRIVS as hexadecimal value, but it is confusing
->> because it is used as bit number. Redefine it as decimal bit number.
-> 
-> It's also changing the bit position, which is fine but should be
-> mentioned in the description.
-> 
+From: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
 
-I've resent the patch with changelog updated.
+Commit 1d4457f99928 ("sched: move no_new_privs into new atomic flags")
+defined PFA_NO_NEW_PRIVS as hexadecimal value, but it is confusing
+because it is used as bit number. Redefine it as decimal bit number.
+
+Note this changes the bit position of PFA_NOW_NEW_PRIVS from 1 to 0.
+
+Signed-off-by: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
+Acked-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+[ lizf: slightly modified subject and changelog ]
+Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+
+Oops, forgot the "From" line...
+
+---
+ include/linux/sched.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 5c2c885..4557765 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1957,7 +1957,7 @@ static inline void memalloc_noio_restore(unsigned int flags)
+ }
+ 
+ /* Per-process atomic flags. */
+-#define PFA_NO_NEW_PRIVS 0x00000001	/* May not gain new privileges. */
++#define PFA_NO_NEW_PRIVS 0	/* May not gain new privileges. */
+ 
+ static inline bool task_no_new_privs(struct task_struct *p)
+ {
+-- 
+1.8.0.2
