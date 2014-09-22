@@ -1,48 +1,74 @@
-From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2 1/3][RESEND] sched: fix confusing PFA_NO_NEW_PRIVS constant
-Date: Mon, 22 Sep 2014 13:44:13 +0800
-Message-ID: <541FB72D.2020809@huawei.com>
+From: Vladimir Davydov <vdavydov@parallels.com>
+Subject: Re: [PATCH -mm 00/14] Per memcg slab shrinkers
+Date: Mon, 22 Sep 2014 11:04:46 +0400
+Message-ID: <20140922070446.GD32416@esperanza>
+References: <cover.1411301245.git.vdavydov@parallels.com>
+ <20140921160012.GA996@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20140921160012.GA996@mtj.dyndns.org>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Dave Chinner <david@fromorbit.com>, Glauber Costa <glommer@gmail.com>, Suleiman Souhlal <suleiman@google.com>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-From: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
+Hi Tejun,
 
-Commit 1d4457f99928 ("sched: move no_new_privs into new atomic flags")
-defined PFA_NO_NEW_PRIVS as hexadecimal value, but it is confusing
-because it is used as bit number. Redefine it as decimal bit number.
+On Sun, Sep 21, 2014 at 12:00:12PM -0400, Tejun Heo wrote:
+> On Sun, Sep 21, 2014 at 07:14:32PM +0400, Vladimir Davydov wrote:
+> ...
+> > list. This is really important, because this allows us to release
+> > memcg_cache_id used for indexing in per-memcg arrays. If we don't do
+> > this, the arrays will grow uncontrollably, which is really bad. Note, in
+> > comparison to user memory reparenting, which Johannes is going to get
+> 
+> I don't know the code well and haven't read the patches and could
+> easilya be completely off the mark, but, if the size of slab array is
+> the only issue, wouldn't it be easier to separate that part out?  The
+> indexing is only necessary for allocating new items, right?  Can't
+> that part be shutdown and the index freed on offline and the rest stay
+> till release?  
 
-Note this changes the bit position of PFA_NOW_NEW_PRIVS from 1 to 0.
+That's exactly what I did in this set. I release the cache index on css
+offline, but I don't reparent kmem charges, or merge kmem slabs, or
+whatever, because we only need to index caches on allocations. So kmem
+caches corresponding to a dead memory cgroup will be hanging around
+until the last object is freed. And they will be holding a css reference
+just like swap charges do and user memory charges will after Johannes'
+rework.
 
-Signed-off-by: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
-Acked-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-[ lizf: slightly modified subject and changelog ]
-Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
+However, we still need the cache index for list_lru, which is made
+per-memcg in this patch set. The point is the objects accounted to a
+memory cgroup can be added/removed from lru lists even after the cgroup
+death. If we just set the cache index of a dead cgroup to its parent's,
+the objects will be added/removed from an active list_lru, but there
+still might be some objects left on the list_lru of the dead cgroup. We
+have to move them in order to release the cache index.
 
-Oops, forgot the "From" line...
+> Things like reparenting tends to add fair amount of complexity and hot
+> path overheads which aren't necessary otherwise.
 
----
- include/linux/sched.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+There is no overhead added to hot paths *due to reparenting* in this set
+AFAIU. And the code is way simpler than that of the user charges
+reparenting, because the usage scenario of list_lru is much simpler than
+that of lruvec. E.g. we don't have to retry, we are guaranteed to
+succeed after the first scan. Just look at the two function doing the
+stuff - memcg_reparent_all_list_lrus and reparent_memcg_lru in patch 13
+- ain't they complex?
 
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 5c2c885..4557765 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1957,7 +1957,7 @@ static inline void memalloc_noio_restore(unsigned int flags)
- }
- 
- /* Per-process atomic flags. */
--#define PFA_NO_NEW_PRIVS 0x00000001	/* May not gain new privileges. */
-+#define PFA_NO_NEW_PRIVS 0	/* May not gain new privileges. */
- 
- static inline bool task_no_new_privs(struct task_struct *p)
- {
--- 
-1.8.0.2
+I'd like to emphasize this once again - the reparenting I'm talking
+about is not about charges, we're not waiting until kmem res drops to 0.
+I just move list_lru items from one list to another on css offline, w/o
+retries, waiting, or some weird checks here and there.
+
+Thanks,
+Vladimir
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
