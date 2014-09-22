@@ -1,68 +1,40 @@
 From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: Re: [PATCH -mm 00/14] Per memcg slab shrinkers
-Date: Mon, 22 Sep 2014 11:04:46 +0400
-Message-ID: <20140922070446.GD32416@esperanza>
-References: <cover.1411301245.git.vdavydov@parallels.com>
- <20140921160012.GA996@mtj.dyndns.org>
+Subject: Re: [patch 1/3] mm: memcontrol: take a css reference for each
+ charged page
+Date: Mon, 22 Sep 2014 12:24:02 +0400
+Message-ID: <20140922082402.GA18526@esperanza>
+References: <1411243235-24680-1-git-send-email-hannes@cmpxchg.org>
+ <1411243235-24680-2-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20140921160012.GA996@mtj.dyndns.org>
+In-Reply-To: <1411243235-24680-2-git-send-email-hannes@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Dave Chinner <david@fromorbit.com>, Glauber Costa <glommer@gmail.com>, Suleiman Souhlal <suleiman@google.com>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: linux-mm@kvack.org, Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Tejun,
-
-On Sun, Sep 21, 2014 at 12:00:12PM -0400, Tejun Heo wrote:
-> On Sun, Sep 21, 2014 at 07:14:32PM +0400, Vladimir Davydov wrote:
-> ...
-> > list. This is really important, because this allows us to release
-> > memcg_cache_id used for indexing in per-memcg arrays. If we don't do
-> > this, the arrays will grow uncontrollably, which is really bad. Note, in
-> > comparison to user memory reparenting, which Johannes is going to get
+On Sat, Sep 20, 2014 at 04:00:33PM -0400, Johannes Weiner wrote:
+> Charges currently pin the css indirectly by playing tricks during
+> css_offline(): user pages stall the offlining process until all of
+> them have been reparented, whereas kmemcg acquires a keep-alive
+> reference if outstanding kernel pages are detected at that point.
 > 
-> I don't know the code well and haven't read the patches and could
-> easilya be completely off the mark, but, if the size of slab array is
-> the only issue, wouldn't it be easier to separate that part out?  The
-> indexing is only necessary for allocating new items, right?  Can't
-> that part be shutdown and the index freed on offline and the rest stay
-> till release?  
+> In preparation for removing all this complexity, make the pinning
+> explicit and acquire a css references for every charged page.
+> 
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 
-That's exactly what I did in this set. I release the cache index on css
-offline, but I don't reparent kmem charges, or merge kmem slabs, or
-whatever, because we only need to index caches on allocations. So kmem
-caches corresponding to a dead memory cgroup will be hanging around
-until the last object is freed. And they will be holding a css reference
-just like swap charges do and user memory charges will after Johannes'
-rework.
+Reviewed-by: Vladimir Davydov <vdavydov@parallels.com>
 
-However, we still need the cache index for list_lru, which is made
-per-memcg in this patch set. The point is the objects accounted to a
-memory cgroup can be added/removed from lru lists even after the cgroup
-death. If we just set the cache index of a dead cgroup to its parent's,
-the objects will be added/removed from an active list_lru, but there
-still might be some objects left on the list_lru of the dead cgroup. We
-have to move them in order to release the cache index.
+Nit: In __mem_cgroup_clear_mc, we have the following hunk:
 
-> Things like reparenting tends to add fair amount of complexity and hot
-> path overheads which aren't necessary otherwise.
+>		for (i = 0; i < mc.moved_swap; i++)
+>			css_put(&mc.from->css);
 
-There is no overhead added to hot paths *due to reparenting* in this set
-AFAIU. And the code is way simpler than that of the user charges
-reparenting, because the usage scenario of list_lru is much simpler than
-that of lruvec. E.g. we don't have to retry, we are guaranteed to
-succeed after the first scan. Just look at the two function doing the
-stuff - memcg_reparent_all_list_lrus and reparent_memcg_lru in patch 13
-- ain't they complex?
-
-I'd like to emphasize this once again - the reparenting I'm talking
-about is not about charges, we're not waiting until kmem res drops to 0.
-I just move list_lru items from one list to another on css offline, w/o
-retries, waiting, or some weird checks here and there.
+Now we can simplify it using css_put_many.
 
 Thanks,
 Vladimir
