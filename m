@@ -1,54 +1,68 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH -mm 00/14] Per memcg slab shrinkers
-Date: Sun, 21 Sep 2014 12:00:12 -0400
-Message-ID: <20140921160012.GA996@mtj.dyndns.org>
-References: <cover.1411301245.git.vdavydov@parallels.com>
+From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: Racy manipulation of task_struct->flags in cgroups code causes
+ hard to reproduce kernel panics
+Date: Mon, 22 Sep 2014 10:15:50 +0800
+Message-ID: <541F8656.2030409@huawei.com>
+References: <201409192053.IHJ35462.JLOMOSOFFVtQFH@I-love.SAKURA.ne.jp> <541D16EA.70407@huawei.com> <20140920172819.GD3681@htj.dyndns.org> <201409211415.GJG26578.MFQOHtSFVJLOOF@I-love.SAKURA.ne.jp>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=SqIrJzrlC6GLdhu/+oFztMnVZKgAScFUPW7ePAYGxSs=;
-        b=YcZLIsxh+ScLFMjLq6k+QEZ+OMJxxT87NTiTX8UPvdf5Z0yQMrZY2+7m/1msnPOumL
-         +HQJ7kL9zzlxpdo4Yzq3pZpoOLAoO88ycrPnT3IqxUVom7Fd+E17x+al5p7F2kc9PJYp
-         Il2d2/qczEh1wuUjpMn0WY5bgSgbFNh+PTo20zDbjeR7pq4R7ZpOL69xDMUcVtdrVONe
-         qut4MybF/bNVcCS/nnf4C/6Jc/ivs3JBjlmshlY9mDwPiBBrbhq4KD82ROBrN5UwHVF4
-         IJAY1ILL+undFqchT3ldY5J51Hy0vGoNHnhJpAn8InukNUyAOBYpFanOjlf8mvF400vy
-         LWZQ==
-Content-Disposition: inline
-In-Reply-To: <cover.1411301245.git.vdavydov@parallels.com>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <201409211415.GJG26578.MFQOHtSFVJLOOF-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov@parallels.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Dave Chinner <david@fromorbit.com>, Glauber Costa <glommer@gmail.com>, Suleiman Souhlal <suleiman@google.com>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+To: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, miaox-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fernando_b1-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org
 
-Hello,
+>> On Sat, Sep 20, 2014 at 01:55:54PM +0800, Zefan Li wrote:
+>>>> Then, what made current->flags to unexpectedly preserve PF_USED_MATH flag?
+>>>> The user is running cgrulesengd process in order to utilize cpuset cgroup.
+>>>> Thus, cpuset_update_task_spread_flag() is called when cgrulesengd process
+>>>> writes someone's pid to /cgroup/cpuset/$group/tasks interface.
+>>>>
+>>>> cpuset_update_task_spread_flag() is updating other thread's
+>>>> "struct task_struct"->flags without exclusion control or atomic
+>>>> operations!
+>>>>
+>>>> ---------- linux-2.6.32-358.23.2.el6/kernel/cpuset.c ----------
+>>>> 300:/*
+>>>> 301: * update task's spread flag if cpuset's page/slab spread flag is set
+>>>> 302: *
+>>>> 303: * Called with callback_mutex/cgroup_mutex held
+>>>> 304: */
+>>>> 305:static void cpuset_update_task_spread_flag(struct cpuset *cs,
+>>>> 306:                                    struct task_struct *tsk)
+>>>> 307:{
+>>>> 308:    if (is_spread_page(cs))
+>>>> 309:            tsk->flags |= PF_SPREAD_PAGE;
+>>>> 310:    else
+>>>> 311:            tsk->flags &= ~PF_SPREAD_PAGE;
+>>>> 312:    if (is_spread_slab(cs))
+>>>> 313:            tsk->flags |= PF_SPREAD_SLAB;
+>>>> 314:    else
+>>>> 315:            tsk->flags &= ~PF_SPREAD_SLAB;
+>>>> 316:}
+>>>
+>>> We should make the updating of this flag atomic.
+>>
+>> Ugh, why do we even implement that in cpuset.  This should be handled
+>> by MPOL_INTERLEAVE.  It feels like people have been using cpuset as
+>> the dumpsite that people used w/o thinking much.  Going forward, let's
+>> please confine cpuset to collective cpu and memory affinity
+>> configuration.  It really shouldn't be implementing novel features for
+>> scheduler or mm.
+>>
+>> Anyways, yeah, the patch looks correct to me.  Can you please send a
+>> version w/ proper description and sob?
+>>
+> 
+> This race condition exists since commit 950592f7b991 ("cpusets: update
+> tasks' page/slab spread flags in time") (i.e. Linux 2.6.31 and later)
+> but "struct task_struct"->atomic_flags was added in Linux 3.17.
+> 
+> If use of ->atomic_flags for cpuset is acceptable, how should we fix
+> older kernels? Backport ->atomic_flags?
+> 
 
-On Sun, Sep 21, 2014 at 07:14:32PM +0400, Vladimir Davydov wrote:
-...
-> list. This is really important, because this allows us to release
-> memcg_cache_id used for indexing in per-memcg arrays. If we don't do
-> this, the arrays will grow uncontrollably, which is really bad. Note, in
-> comparison to user memory reparenting, which Johannes is going to get
-
-I don't know the code well and haven't read the patches and could
-easilya be completely off the mark, but, if the size of slab array is
-the only issue, wouldn't it be easier to separate that part out?  The
-indexing is only necessary for allocating new items, right?  Can't
-that part be shutdown and the index freed on offline and the rest stay
-till release?  Things like reparenting tends to add fair amount of
-complexity and hot path overheads which aren't necessary otherwise.
-
-Thanks.
-
--- 
-tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Yeah, we'll just add tsk->atomic_flags to struct task_struct when
+backporting this patch for stable trees.
