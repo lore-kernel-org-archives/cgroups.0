@@ -1,61 +1,58 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
+From: Michal Hocko <mhocko@suse.cz>
 Subject: Re: [patch] mm: memcontrol: lockless page counters
-Date: Mon, 22 Sep 2014 11:50:49 -0400
-Message-ID: <20140922155049.GA6630@cmpxchg.org>
+Date: Mon, 22 Sep 2014 19:28:00 +0200
+Message-ID: <20140922172800.GA4343@dhcp22.suse.cz>
 References: <1411132928-16143-1-git-send-email-hannes@cmpxchg.org>
  <20140922144436.GG336@dhcp22.suse.cz>
+ <20140922155049.GA6630@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=iVRCLHsG3p4FOt8/k229Zy4F4Y3PUVNVQOl+K/O9bsY=;
+        b=WpEeMsRGGAe2ccq0yXt9ZM4QnyGspG9gQkoD3iUqiRO/2Y6esIRHRQ5uXVyRRRUcU8
+         0thlprUjQA9e/JwsKsZab9p6SikxMukBrJJvrOZKeBIEXIzS7NrFm4DILTkhA2+5JMPI
+         YBjyl13osF1yGay+cOuBSs9CkD/SdjYIRii/ep+EGnga+/R+034jwLv6Kggg7emqUvDf
+         zQ13pxwWjeR3S8Nd5GNUrdpF/Pk/eku/XCBD4f5uaxM9vsIBd/1e2IDn+wZDDyGPsJ1I
+         eUm5LWjPQSA/R3I3CYeNayBjyNJZmNlvRZDSvNvhhXbIWX5XJCCv2obh5TVbCnx+rMvL
+         0x2A==
 Content-Disposition: inline
-In-Reply-To: <20140922144436.GG336@dhcp22.suse.cz>
+In-Reply-To: <20140922155049.GA6630@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
+To: Johannes Weiner <hannes@cmpxchg.org>
 Cc: linux-mm@kvack.org, Greg Thelen <gthelen@google.com>, Dave Hansen <dave@sr71.net>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Sep 22, 2014 at 04:44:36PM +0200, Michal Hocko wrote:
-> On Fri 19-09-14 09:22:08, Johannes Weiner wrote:
-> > Memory is internally accounted in bytes, using spinlock-protected
-> > 64-bit counters, even though the smallest accounting delta is a page.
-> > The counter interface is also convoluted and does too many things.
-> > 
-> > Introduce a new lockless word-sized page counter API, then change all
-> > memory accounting over to it and remove the old one.  The translation
-> > from and to bytes then only happens when interfacing with userspace.
+On Mon 22-09-14 11:50:49, Johannes Weiner wrote:
+> On Mon, Sep 22, 2014 at 04:44:36PM +0200, Michal Hocko wrote:
+> > On Fri 19-09-14 09:22:08, Johannes Weiner wrote:
+[...]
+> > Nevertheless I think that the counter should live outside of memcg (it
+> > is ugly and bad in general to make HUGETLB controller depend on MEMCG
+> > just to have a counter). If you made kernel/page_counter.c and led both
+> > containers select CONFIG_PAGE_COUNTER then you do not need a dependency
+> > on MEMCG and I would find it cleaner in general.
 > 
-> Dunno why but I thought other controllers use res_counter as well. But
-> this doesn't seem to be the case so this is perfectly reasonable way
-> forward.
+> The reason I did it this way is because the hugetlb controller simply
+> accounts and limits a certain type of memory and in the future I would
+> like to make it a memcg extension, just like kmem and swap.
 
-You were fooled by its generic name!  It really is a lot less generic
-than what it was designed for, and there are no new users in sight.
+I am not sure this is the right way to go. Hugetlb has always been
+"special" and I do not see any advantage to pull its specialness into
+memcg proper. It would just make the code more complicated. I can also
+imagine users who simply do not want to pay memcg overhead and use only
+hugetlb controller.
 
-> I have only glanced through the patch and it mostly seems good to me 
-> (I have to look more closely on the atomicity of hierarchical operations).
-> 
-> Nevertheless I think that the counter should live outside of memcg (it
-> is ugly and bad in general to make HUGETLB controller depend on MEMCG
-> just to have a counter). If you made kernel/page_counter.c and led both
-> containers select CONFIG_PAGE_COUNTER then you do not need a dependency
-> on MEMCG and I would find it cleaner in general.
-
-The reason I did it this way is because the hugetlb controller simply
-accounts and limits a certain type of memory and in the future I would
-like to make it a memcg extension, just like kmem and swap.
-
-Once that is done, page counters can become fully private, but until
-then I think it's a good idea to make them part of memcg to express
-this relationship and to ensure we are moving in the same direction.
-
-> > Aside from the locking costs, this gets rid of the icky unsigned long
-> > long types in the very heart of memcg, which is great for 32 bit and
-> > also makes the code a lot more readable.
-> 
-> Definitely. Nice work!
-
-Thanks!
+Besides that it is not like a separate page_counter with a clear
+interface would cause more maintenance overhead so I really do not see
+any reason to pull it into memcg.
+-- 
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
