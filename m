@@ -1,196 +1,83 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [patch] mm: memcontrol: lockless page counters
-Date: Tue, 23 Sep 2014 16:46:50 +0900
-Message-ID: <5421256A.8080708@jp.fujitsu.com>
-References: <1411132928-16143-1-git-send-email-hannes@cmpxchg.org>
+From: Juri Lelli <juri.lelli@arm.com>
+Subject: Re: [PATCH 2/3] sched/deadline: fix bandwidth check/update when migrating
+ tasks between exclusive cpusets
+Date: Tue, 23 Sep 2014 09:09:27 +0100
+Message-ID: <54212AB7.3070406@arm.com>
+References: <1411118561-26323-1-git-send-email-juri.lelli@arm.com>	<1411118561-26323-3-git-send-email-juri.lelli@arm.com> <87k34vo3vb.fsf@cecht.legt.fr>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1411132928-16143-1-git-send-email-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <87k34vo3vb.fsf@cecht.legt.fr>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>, linux-mm@kvack.org
-Cc: Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Dave Hansen <dave@sr71.net>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Vincent Legout <vincent@legout.info>
+Cc: "peterz@infradead.org" <peterz@infradead.org>, "mingo@redhat.com" <mingo@redhat.com>, "juri.lelli@gmail.com" <juri.lelli@gmail.com>, "raistlin@linux.it" <raistlin@linux.it>, "michael@amarulasolutions.com" <michael@amarulasolutions.com>, "fchecconi@gmail.com" <fchecconi@gmail.com>, "daniel.wagner@bmw-carit.de" <daniel.wagner@bmw-carit.de>, "luca.abeni@unitn.it" <luca.abeni@unitn.it>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Li Zefan <lizefan@huawei.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>
 
-(2014/09/19 22:22), Johannes Weiner wrote:
-> Memory is internally accounted in bytes, using spinlock-protected
-> 64-bit counters, even though the smallest accounting delta is a page.
-> The counter interface is also convoluted and does too many things.
+Hi Vincent,
+
+On 22/09/14 20:24, Vincent Legout wrote:
+> Hello,
 > 
-> Introduce a new lockless word-sized page counter API, then change all
-> memory accounting over to it and remove the old one.  The translation
-> from and to bytes then only happens when interfacing with userspace.
+> Juri Lelli <juri.lelli@arm.com> writes:
 > 
-> Aside from the locking costs, this gets rid of the icky unsigned long
-> long types in the very heart of memcg, which is great for 32 bit and
-> also makes the code a lot more readable.
+>> Exclusive cpusets are the only way users can restrict SCHED_DEADLINE tasks
+>> affinity (performing what is commonly called clustered scheduling).
+>> Unfortunately, such thing is currently broken for two reasons:
+>>
+>>  - No check is performed when the user tries to attach a task to
+>>    an exlusive cpuset (recall that exclusive cpusets have an
+>>    associated maximum allowed bandwidth).
+>>
+>>  - Bandwidths of source and destination cpusets are not correctly
+>>    updated after a task is migrated between them.
+>>
+>> This patch fixes both things at once, as they are opposite faces
+>> of the same coin.
+>>
+>> The check is performed in cpuset_can_attach(), as there aren't any
+>> points of failure after that function. The updated is split in two
+>> halves. We first reserve bandwidth in the destination cpuset, after
+>> we pass the check in cpuset_can_attach(). And we then release
+>> bandwidth from the source cpuset when the task's affinity is
+>> actually changed. Even if there can be time windows when sched_setattr()
+>> may erroneously fail in the source cpuset, we are fine with it, as
+>> we can't perfom an atomic update of both cpusets at once.
 > 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> Thanks, this seems to fix the other problem I had. However, this bug,
+> which I never had before, now happens randomly (with or without patch
+> 3/3):
+> 
+> Sep 19 09:54:37 starbuck kernel: [ 1309.728678] ------------[ cut here ]------------
+> Sep 19 09:54:37 starbuck kernel: [ 1309.728699] kernel BUG at kernel/sched/deadline.c:819!
+> Sep 19 09:54:37 starbuck kernel: [ 1309.728719] invalid opcode: 0000 [#1] PREEMPT SMP 
+> Sep 19 09:54:37 starbuck kernel: [ 1309.728744] Modules linked in: nfsv3 rpcsec_gss_krb5 nfsv4 dm_crypt nfsd auth_rpcgss oid_registry exportfs nfs_acl nfs lockd sunrpc bridge stp llc lp coretemp kvm_intel kvm ppdev ioatdma microcode ipmi_si parport_pc lpc_ich dca mfd_core parport ipmi_msghandler joydev serio_raw hid_generic usbhid hid crc32c_intel psmouse e1000e ptp pps_core
+> Sep 19 09:54:37 starbuck kernel: [ 1309.728928] CPU: 5 PID: 0 Comm: swapper/5 Not tainted 3.16.0+ #20
+> Sep 19 09:54:37 starbuck kernel: [ 1309.728950] Hardware name: empty empty/S7002, BIOS 'V1.10.B10   ' 05/03/2011
+> Sep 19 09:54:37 starbuck kernel: [ 1309.728977] task: ffff88023691c920 ti: ffff88023692c000 task.ti: ffff88023692c000
+> Sep 19 09:54:37 starbuck kernel: [ 1309.729003] RIP: 0010:[<ffffffff810a543e>]  [<ffffffff810a543e>] enqueue_task_dl+0x44e/0x450
+> Sep 19 09:54:37 starbuck kernel: [ 1309.729041] RSP: 0018:ffff88043fc23e68  EFLAGS: 00010082
+> Sep 19 09:54:37 starbuck kernel: [ 1309.729060] RAX: 0000000000000000 RBX: ffff880434edb0c0 RCX: ffff880434edb2f8
+> Sep 19 09:54:37 starbuck kernel: [ 1309.729086] RDX: 0000000000000008 RSI: ffff880434edb0c0 RDI: 0000000000000000
+> Sep 19 09:54:37 starbuck kernel: [ 1309.729140] RBP: ffff88043fc23ea8 R08: 0000000000000001 R09: 000002cb4aebb39d
+> Sep 19 09:54:37 starbuck kernel: [ 1309.729193] R10: 13955a8129438cf2 R11: 0000000000000202 R12: 0000000000000008
+> Sep 19 09:54:37 starbuck kernel: [ 1309.729247] R13: ffff88043fc33f00 R14: ffff88043fc2e0e0 R15: ffff880434edb2f8
+> Sep 19 09:54:37 starbuck kernel: [ 1309.729301] FS:  0000000000000000(0000) GS:ffff88043fc20000(0000) knlGS:0000000000000000
+> Sep 19 09:54:37 starbuck kernel: [ 1309.729383] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+> Sep 19 09:54:37 starbuck kernel: [ 1309.729436] CR2: 0000000000000000 CR3: 0000000435a07000 CR4: 00000000000027e0
+> 
 
-I like this patch because I hate res_counter very much.
+This can be related to the problems Daniel is also experiencing.
 
-a few nitpick comments..
+> My script launches 6 processes and schedules them on 2 cpusets where
+> each cpuset contains only one cpu. It moves processes from one cpuset to
+> another and also updates their runtime. I can investigate more and try
+> to provide a short script to reproduce if needed.
+> 
 
-<snip>
-
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 19df5d857411..bf8fb1a05597 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -54,6 +54,38 @@ struct mem_cgroup_reclaim_cookie {
->   };
->   
->   #ifdef CONFIG_MEMCG
-> +
-> +struct page_counter {
-> +	atomic_long_t count;
-> +	unsigned long limit;
-> +	struct page_counter *parent;
-> +
-> +	/* legacy */
-> +	unsigned long watermark;
-> +	unsigned long limited;
-> +};
-
-I guees all attributes should be on the same cache line. How about align this to cache ?
-And legacy values are not very important to be atomic by design, right ?
-
-> +
-> +#if BITS_PER_LONG == 32
-> +#define PAGE_COUNTER_MAX ULONG_MAX
-> +#else
-> +#define PAGE_COUNTER_MAX (ULONG_MAX / PAGE_SIZE)
-> +#endif
-> +
-<snip>
-
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index e2def11f1ec1..dfd3b15a57e8 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -25,7 +25,6 @@
->    * GNU General Public License for more details.
->    */
->   
-> -#include <linux/res_counter.h>
->   #include <linux/memcontrol.h>
->   #include <linux/cgroup.h>
->   #include <linux/mm.h>
-> @@ -66,6 +65,117 @@
->   
->   #include <trace/events/vmscan.h>
->   
-> +int page_counter_cancel(struct page_counter *counter, unsigned long nr_pages)
-> +{
-> +	long new;
-> +
-> +	new = atomic_long_sub_return(nr_pages, &counter->count);
-> +
-> +	if (WARN_ON(unlikely(new < 0)))
-> +		atomic_long_set(&counter->count, 0);
-
- WARN_ON_ONCE() ?
- Or I prefer atomic_add(&counter->count, nr_pages) rather than set to 0
- because if a buggy call's "nr_pages" is enough big, following calls to
- page_counter_cacnel() will show more logs.
-
-> +
-> +	return new > 1;
-> +}
-> +
-> +int page_counter_charge(struct page_counter *counter, unsigned long nr_pages,
-> +			struct page_counter **fail)
-> +{
-> +	struct page_counter *c;
-> +
-> +	for (c = counter; c; c = c->parent) {
-> +		for (;;) {
-> +			unsigned long count;
-> +			unsigned long new;
-> +
-> +			count = atomic_long_read(&c->count);
-> +
-> +			new = count + nr_pages;
-> +			if (new > c->limit) {
-> +				c->limited++;
-> +				if (fail) {
-> +					*fail = c;
-> +					goto failed;
-> +				}
-  seeing res_counter(), c ret code for this case should be -ENOMEM.
-> +			}
-> +
-> +			if (atomic_long_cmpxchg(&c->count, count, new) != count)
-> +				continue;
-> +
-> +			if (new > c->watermark)
-> +				c->watermark = new;
-> +
-> +			break;
-> +		}
-> +	}
-> +	return 0;
-> +
-> +failed:
-> +	for (c = counter; c != *fail; c = c->parent)
-> +		page_counter_cancel(c, nr_pages);
-> +
-> +	return -ENOMEM;
-> +}
-> +
-> +int page_counter_uncharge(struct page_counter *counter, unsigned long nr_pages)
-> +{
-> +	struct page_counter *c;
-> +	int ret = 1;
-> +
-> +	for (c = counter; c; c = c->parent) {
-> +		int remainder;
-> +
-> +		remainder = page_counter_cancel(c, nr_pages);
-> +		if (c == counter && !remainder)
-> +			ret = 0;
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +int page_counter_limit(struct page_counter *counter, unsigned long limit)
-> +{
-> +	for (;;) {
-> +		unsigned long count;
-> +		unsigned long old;
-> +
-> +		count = atomic_long_read(&counter->count);
-> +
-> +		old = xchg(&counter->limit, limit);
-> +
-> +		if (atomic_long_read(&counter->count) != count) {
-> +			counter->limit = old;
-> +			continue;
-> +		}
-> +
-> +		if (count > limit) {
-> +			counter->limit = old;
-> +			return -EBUSY;
-> +		}
-> +
-> +		return 0;
-> +	}
-> +}
-
-I think the whole "updating limit"  ops should be mutual exclusive. It seems
-there will be trouble if multiple updater comes at once.
-So, "xchg" isn't required. calllers should have their own locks.
+I should be able to dig into this next week. But yes, in the meantime a
+script would be useful to reproduce the problem.
 
 Thanks,
--Kame
 
-
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+- Juri
