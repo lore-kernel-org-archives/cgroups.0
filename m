@@ -1,44 +1,48 @@
-From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: Re: [patch] mm: memcontrol: support transparent huge pages under
- pressure
-Date: Tue, 23 Sep 2014 15:56:55 +0400
-Message-ID: <20140923115655.GJ18526@esperanza>
-References: <1411132840-16025-1-git-send-email-hannes@cmpxchg.org>
- <xr934mvykgiv.fsf@gthelen.mtv.corp.google.com>
- <20140923082927.GG18526@esperanza>
- <20140923114827.GB13593@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [GIT PULL] cgroup fixes for v3.17-rc6
+Date: Tue, 23 Sep 2014 09:05:33 -0400
+Message-ID: <20140923130533.GA14905@mtj.dyndns.org>
+References: <20140923063353.GK11740@mtj.dyndns.org>
+ <54211707.8090604@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=DYTm1pf6siwDGKtxFdphaCP5uzkjlWx2jugZCU2PKPU=;
+        b=RNvI+bpKAUscQrzBjn9RTDRfKXtfJZn8iEa3rC60WXJ/7OGY4xUN//CYlY9do5hgjh
+         axnuDTU/aQ4h0boN4Mov7PcVeYCUcTKZ+DhVafY5VlwxW9LNwnELIXu7re6iX2j0zfZS
+         ymOnsew/br2JNB7qNw1DuhngJmwAADmcoDS82dzjWIqv2KivNzcR9tcyhKVeRF7gxIg7
+         QFMglRC6HxbjL5biid7KqWqffNltyeWuP9XyKrjrgmiYaUhcspu5deSrQF7DJLDZqAXv
+         4CD/LbEPXTlf72a6CXbxPBBpY+4+cr+4SPVzoLcIuzoGPTdo7+RbwzDn3vB/jthyyf9J
+         skVQ==
 Content-Disposition: inline
-In-Reply-To: <20140923114827.GB13593@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <54211707.8090604-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Greg Thelen <gthelen@google.com>, linux-mm@kvack.org, Michal Hocko <mhocko@suse.cz>, Dave Hansen <dave@sr71.net>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Sep 23, 2014 at 07:48:27AM -0400, Johannes Weiner wrote:
-> On Tue, Sep 23, 2014 at 12:29:27PM +0400, Vladimir Davydov wrote:
-> > On Mon, Sep 22, 2014 at 10:52:50PM -0700, Greg Thelen wrote:
-> > > In this condition, if res usage is at limit then there's no point in
-> > > swapping because memsw.usage is already maximal.  Prior to this patch
-> > > I think the kernel did the right thing, but not afterwards.
-> > > 
-> > > Before this patch:
-> > >   if res.usage == res.limit, try_charge() indirectly calls
-> > >   try_to_free_mem_cgroup_pages(noswap=true)
+On Tue, Sep 23, 2014 at 02:45:27PM +0800, Zefan Li wrote:
+> On 2014/9/23 14:33, Tejun Heo wrote:
+> > Hello, Linus.
 > > 
-> > But this is wrong. If we fail to charge res, we should try to do swap
-> > out along with page cache reclaim. Swap out won't affect memsw.usage,
-> > but will diminish res.usage so that the allocation may succeed.
+> > One late fix for cgroup.  I was waiting for another set of fixes for a
+> > long-standing obscure cpuset bug but am not sure whether they'll be
+> > ready before v3.17 release.  This one is a simple fix for a mutex
+> > unlock balance bug, which is detected by coccinelle and probably won't
+> > trigger in the wild, introduced during this devel cycle.
+> > 
 > 
-> But we know that the memsw limit must be hit as well in that case, and
-> swapping only makes progress in the sense that we are then succeeding
-> the memory charge.  But we still fail to charge memsw.
+> It was introduced in 3.14, and it was detected by my eyes, not coccinelle. ;)
 
-Yeah, I admit I said nonsense. The problem Greg pointed out does exist.
-I think your second patch (charging memsw before res) should fix it.
+Hah, I got it completely mixed up with another patch in my head.  Will
+post an updated pull request.  My apologies.
 
-Thanks,
-Vladimir
+Thanks.
+
+-- 
+tejun
