@@ -1,120 +1,319 @@
-From: Zefan Li <lizefan@huawei.com>
-Subject: [PATCH v2 3/3] cpuset: PF_SPREAD_PAGE and PF_SPREAD_SLAB should be
- atomic flags
-Date: Tue, 23 Sep 2014 14:05:25 +0800
-Message-ID: <54210DA5.4040606@huawei.com>
-References: <54210D3F.2090409@huawei.com>
+From: Greg Thelen <gthelen@google.com>
+Subject: Re: [patch] mm: memcontrol: support transparent huge pages under pressure
+Date: Mon, 22 Sep 2014 22:52:50 -0700
+Message-ID: <xr934mvykgiv.fsf@gthelen.mtv.corp.google.com>
+References: <1411132840-16025-1-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <54210D3F.2090409@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=references:from:to:cc:subject:date:in-reply-to:message-id
+         :mime-version:content-type;
+        bh=JbdSnHKvLy9qWAbXrnDvEK/aak8zh7dTA2xWwYcrqcE=;
+        b=Zsnok/aR4GuKSNHwOPYOd5y4QSLw00IR/fpXbIxprww5LomVIjvS3hiH+vZdf9pS1J
+         +zgWEX/Laen86JaTep2iUeA8xA+FB5a2usHayCacFozG1XEN0Ivgjhmop+isewsI6ycV
+         V+tyx/se+5kJH7x2z2G/8QTc+G0OPvLhLwvRgLY8iBOoT45fV9ysN7siWW4pfmo+GaZM
+         0p+vFqpu0SI3u9y09cG5ygImGMLO8e0qaanepMBkhDitjogfK5cUwdJ9R2W2ddIG+cWg
+         /YdbyreIEhnEtO+8Oy46HpgQABRxYkFBI3vKl9LTR7WkNWktqwZnju3g92n3zDwLgJjj
+         zxoA==
+In-reply-to: <1411132840-16025-1-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@kernel.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Miao Xie <miaox@cn.fujitsu.com>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Kees Cook <keescook@chromium.org>
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: linux-mm@kvack.org, Michal Hocko <mhocko@suse.cz>, Dave Hansen <dave@sr71.net>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-When we change cpuset.memory_spread_{page,slab}, cpuset will flip
-PF_SPREAD_{PAGE,SLAB} bit of tsk->flags for each task in that cpuset.
-This should be done using atomic bitops, but currently we don't,
-which is broken.
 
-Tetsuo reported a hard-to-reproduce kernel crash on RHEL6, which happend
-when one thread tried to clear PF_USED_MATH while at the same time another
-thread tried to flip PF_SPREAD_PAGE/PF_SPREAD_SLAB. They both operate on
-the same task.
+On Fri, Sep 19 2014, Johannes Weiner wrote:
 
-Here's the full report:
-https://lkml.org/lkml/2014/9/19/230
+> In a memcg with even just moderate cache pressure, success rates for
+> transparent huge page allocations drop to zero, wasting a lot of
+> effort that the allocator puts into assembling these pages.
+>
+> The reason for this is that the memcg reclaim code was never designed
+> for higher-order charges.  It reclaims in small batches until there is
+> room for at least one page.  Huge pages charges only succeed when
+> these batches add up over a series of huge faults, which is unlikely
+> under any significant load involving order-0 allocations in the group.
+>
+> Remove that loop on the memcg side in favor of passing the actual
+> reclaim goal to direct reclaim, which is already set up and optimized
+> to meet higher-order goals efficiently.
+>
+> This brings memcg's THP policy in line with the system policy: if the
+> allocator painstakingly assembles a hugepage, memcg will at least make
+> an honest effort to charge it.  As a result, transparent hugepage
+> allocation rates amid cache activity are drastically improved:
+>
+>                                       vanilla                 patched
+> pgalloc                 4717530.80 (  +0.00%)   4451376.40 (  -5.64%)
+> pgfault                  491370.60 (  +0.00%)    225477.40 ( -54.11%)
+> pgmajfault                    2.00 (  +0.00%)         1.80 (  -6.67%)
+> thp_fault_alloc               0.00 (  +0.00%)       531.60 (+100.00%)
+> thp_fault_fallback          749.00 (  +0.00%)       217.40 ( -70.88%)
+>
+> [ Note: this may in turn increase memory consumption from internal
+>   fragmentation, which is an inherent risk of transparent hugepages.
+>   Some setups may have to adjust the memcg limits accordingly to
+>   accomodate this - or, if the machine is already packed to capacity,
+>   disable the transparent huge page feature. ]
 
-To fix this, we make PF_SPREAD_PAGE and PF_SPARED_SLAB atomic flags.
+We're using an earlier version of this patch, so I approve of the
+general direction.  But I have some feedback.
 
-Cc: Peter Zijlstra <peterz@infradead.org>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: Miao Xie <miaox@cn.fujitsu.com>
-Cc: Kees Cook <keescook@chromium.org>
-Fixes: 950592f7b991 ("cpusets: update tasks' page/slab spread flags in time")
-Cc: <stable@vger.kernel.org> # 2.6.31+
-Reported-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Signed-off-by: Zefan Li <lizefan@huawei.com>
----
- include/linux/cpuset.h | 4 ++--
- include/linux/sched.h  | 6 ++++--
- kernel/cpuset.c        | 9 +++++----
- 3 files changed, 11 insertions(+), 8 deletions(-)
+The memsw aspect of this change seems somewhat separate.  Can it be
+split into a different patch?
 
-diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
-index 0d4e067..2f073db 100644
---- a/include/linux/cpuset.h
-+++ b/include/linux/cpuset.h
-@@ -94,12 +94,12 @@ extern int cpuset_slab_spread_node(void);
- 
- static inline int cpuset_do_page_mem_spread(void)
- {
--	return current->flags & PF_SPREAD_PAGE;
-+	return task_spread_page(current);
- }
- 
- static inline int cpuset_do_slab_mem_spread(void)
- {
--	return current->flags & PF_SPREAD_SLAB;
-+	return task_spread_slab(current);
- }
- 
- extern int current_cpuset_is_being_rebound(void);
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 04a2ae2..ee634d1 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1903,8 +1903,6 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut,
- #define PF_KTHREAD	0x00200000	/* I am a kernel thread */
- #define PF_RANDOMIZE	0x00400000	/* randomize virtual address space */
- #define PF_SWAPWRITE	0x00800000	/* Allowed to write to swap */
--#define PF_SPREAD_PAGE	0x01000000	/* Spread page cache over cpuset */
--#define PF_SPREAD_SLAB	0x02000000	/* Spread some slab caches over cpuset */
- #define PF_NO_SETAFFINITY 0x04000000	/* Userland is not allowed to meddle with cpus_allowed */
- #define PF_MCE_EARLY    0x08000000      /* Early kill for mce process policy */
- #define PF_MUTEX_TESTER	0x20000000	/* Thread belongs to the rt mutex tester */
-@@ -1958,6 +1956,8 @@ static inline void memalloc_noio_restore(unsigned int flags)
- 
- /* Per-process atomic flags. */
- #define PFA_NO_NEW_PRIVS 0	/* May not gain new privileges. */
-+#define PFA_SPREAD_PAGE  1      /* Spread page cache over cpuset */
-+#define PFA_SPREAD_SLAB  2      /* Spread some slab caches over cpuset */
- 
- #define TASK_PFA_BITOPS(name, func)				\
- static inline bool task_##func(struct task_struct *p)		\
-@@ -1970,6 +1970,8 @@ static inline void task_clear_##func(struct task_struct *p)	\
- { clear_bit(PFA_##name, &p->atomic_flags); }
- 
- TASK_PFA_BITOPS(NO_NEW_PRIVS, no_new_privs)
-+TASK_PFA_BITOPS(SPREAD_PAGE, spread_page)
-+TASK_PFA_BITOPS(SPREAD_SLAB, spread_slab)
- 
- /*
-  * task->jobctl flags
-diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index a37f4ed..1f107c7 100644
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -365,13 +365,14 @@ static void cpuset_update_task_spread_flag(struct cpuset *cs,
- 					struct task_struct *tsk)
- {
- 	if (is_spread_page(cs))
--		tsk->flags |= PF_SPREAD_PAGE;
-+		task_set_spread_page(tsk);
- 	else
--		tsk->flags &= ~PF_SPREAD_PAGE;
-+		task_clear_spread_page(tsk);
-+
- 	if (is_spread_slab(cs))
--		tsk->flags |= PF_SPREAD_SLAB;
-+		task_set_spread_slab(tsk);
- 	else
--		tsk->flags &= ~PF_SPREAD_SLAB;
-+		task_clear_spread_slab(tsk);
- }
- 
- /*
--- 
-1.8.0.2
+The memsw aspect of this patch seems to change behavior.  Is this
+intended?  If so, a mention of it in the commit log would assuage the
+reader.  I'll explain...  Assume a machine with swap enabled and
+res.limit==memsw.limit, thus memsw_is_minimum is true.  My understanding
+is that memsw.usage represents sum(ram_usage, swap_usage).  So when
+memsw_is_minimum=true, then both swap_usage=0 and
+memsw.usage==res.usage.  In this condition, if res usage is at limit
+then there's no point in swapping because memsw.usage is already
+maximal.  Prior to this patch I think the kernel did the right thing,
+but not afterwards.
+
+Before this patch:
+  if res.usage == res.limit, try_charge() indirectly calls
+  try_to_free_mem_cgroup_pages(noswap=true)
+
+After this patch:
+  if res.usage == res.limit, try_charge() calls
+  try_to_free_mem_cgroup_pages(may_swap=true)
+
+Notice the inverted swap-is-allowed value.
+
+I haven't had time to look at your other outstanding memcg patches.
+These comments were made with this patch in isolation.
+
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> ---
+>  include/linux/swap.h |  6 ++--
+>  mm/memcontrol.c      | 86 +++++++++++-----------------------------------------
+>  mm/vmscan.c          |  7 +++--
+>  3 files changed, 25 insertions(+), 74 deletions(-)
+>
+> diff --git a/include/linux/swap.h b/include/linux/swap.h
+> index ea4f926e6b9b..37a585beef5c 100644
+> --- a/include/linux/swap.h
+> +++ b/include/linux/swap.h
+> @@ -327,8 +327,10 @@ extern void lru_cache_add_active_or_unevictable(struct page *page,
+>  extern unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
+>  					gfp_t gfp_mask, nodemask_t *mask);
+>  extern int __isolate_lru_page(struct page *page, isolate_mode_t mode);
+> -extern unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *mem,
+> -						  gfp_t gfp_mask, bool noswap);
+> +extern unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+> +						  unsigned long nr_pages,
+> +						  gfp_t gfp_mask,
+> +						  bool may_swap);
+>  extern unsigned long mem_cgroup_shrink_node_zone(struct mem_cgroup *mem,
+>  						gfp_t gfp_mask, bool noswap,
+>  						struct zone *zone,
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 9431024e490c..e2def11f1ec1 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -315,9 +315,6 @@ struct mem_cgroup {
+>  	/* OOM-Killer disable */
+>  	int		oom_kill_disable;
+>  
+> -	/* set when res.limit == memsw.limit */
+> -	bool		memsw_is_minimum;
+> -
+>  	/* protect arrays of thresholds */
+>  	struct mutex thresholds_lock;
+>  
+> @@ -481,14 +478,6 @@ enum res_type {
+>  #define OOM_CONTROL		(0)
+>  
+>  /*
+> - * Reclaim flags for mem_cgroup_hierarchical_reclaim
+> - */
+> -#define MEM_CGROUP_RECLAIM_NOSWAP_BIT	0x0
+> -#define MEM_CGROUP_RECLAIM_NOSWAP	(1 << MEM_CGROUP_RECLAIM_NOSWAP_BIT)
+> -#define MEM_CGROUP_RECLAIM_SHRINK_BIT	0x1
+> -#define MEM_CGROUP_RECLAIM_SHRINK	(1 << MEM_CGROUP_RECLAIM_SHRINK_BIT)
+> -
+> -/*
+>   * The memcg_create_mutex will be held whenever a new cgroup is created.
+>   * As a consequence, any change that needs to protect against new child cgroups
+>   * appearing has to hold it as well.
+> @@ -1794,42 +1783,6 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  			 NULL, "Memory cgroup out of memory");
+>  }
+>  
+> -static unsigned long mem_cgroup_reclaim(struct mem_cgroup *memcg,
+> -					gfp_t gfp_mask,
+> -					unsigned long flags)
+> -{
+> -	unsigned long total = 0;
+> -	bool noswap = false;
+> -	int loop;
+> -
+> -	if (flags & MEM_CGROUP_RECLAIM_NOSWAP)
+> -		noswap = true;
+> -	if (!(flags & MEM_CGROUP_RECLAIM_SHRINK) && memcg->memsw_is_minimum)
+> -		noswap = true;
+> -
+> -	for (loop = 0; loop < MEM_CGROUP_MAX_RECLAIM_LOOPS; loop++) {
+> -		if (loop)
+> -			drain_all_stock_async(memcg);
+> -		total += try_to_free_mem_cgroup_pages(memcg, gfp_mask, noswap);
+> -		/*
+> -		 * Allow limit shrinkers, which are triggered directly
+> -		 * by userspace, to catch signals and stop reclaim
+> -		 * after minimal progress, regardless of the margin.
+> -		 */
+> -		if (total && (flags & MEM_CGROUP_RECLAIM_SHRINK))
+> -			break;
+> -		if (mem_cgroup_margin(memcg))
+> -			break;
+> -		/*
+> -		 * If nothing was reclaimed after two attempts, there
+> -		 * may be no reclaimable pages in this hierarchy.
+> -		 */
+> -		if (loop && !total)
+> -			break;
+> -	}
+> -	return total;
+> -}
+> -
+>  /**
+>   * test_mem_cgroup_node_reclaimable
+>   * @memcg: the target memcg
+> @@ -2532,8 +2485,9 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	struct mem_cgroup *mem_over_limit;
+>  	struct res_counter *fail_res;
+>  	unsigned long nr_reclaimed;
+> -	unsigned long flags = 0;
+>  	unsigned long long size;
+> +	bool may_swap = true;
+> +	bool drained = false;
+>  	int ret = 0;
+>  
+>  	if (mem_cgroup_is_root(memcg))
+> @@ -2550,7 +2504,7 @@ retry:
+>  			goto done_restock;
+>  		res_counter_uncharge(&memcg->res, size);
+>  		mem_over_limit = mem_cgroup_from_res_counter(fail_res, memsw);
+> -		flags |= MEM_CGROUP_RECLAIM_NOSWAP;
+> +		may_swap = false;
+>  	} else
+>  		mem_over_limit = mem_cgroup_from_res_counter(fail_res, res);
+>  
+> @@ -2576,11 +2530,18 @@ retry:
+>  	if (!(gfp_mask & __GFP_WAIT))
+>  		goto nomem;
+>  
+> -	nr_reclaimed = mem_cgroup_reclaim(mem_over_limit, gfp_mask, flags);
+> +	nr_reclaimed = try_to_free_mem_cgroup_pages(mem_over_limit, nr_pages,
+> +						    gfp_mask, may_swap);
+>  
+>  	if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
+>  		goto retry;
+>  
+> +	if (!drained) {
+> +		drain_all_stock_async(mem_over_limit);
+> +		drained = true;
+> +		goto retry;
+> +	}
+> +
+>  	if (gfp_mask & __GFP_NORETRY)
+>  		goto nomem;
+>  	/*
+> @@ -3655,19 +3616,13 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+>  			enlarge = 1;
+>  
+>  		ret = res_counter_set_limit(&memcg->res, val);
+> -		if (!ret) {
+> -			if (memswlimit == val)
+> -				memcg->memsw_is_minimum = true;
+> -			else
+> -				memcg->memsw_is_minimum = false;
+> -		}
+>  		mutex_unlock(&set_limit_mutex);
+>  
+>  		if (!ret)
+>  			break;
+>  
+> -		mem_cgroup_reclaim(memcg, GFP_KERNEL,
+> -				   MEM_CGROUP_RECLAIM_SHRINK);
+> +		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, true);
+> +
+>  		curusage = res_counter_read_u64(&memcg->res, RES_USAGE);
+>  		/* Usage is reduced ? */
+>  		if (curusage >= oldusage)
+> @@ -3714,20 +3669,13 @@ static int mem_cgroup_resize_memsw_limit(struct mem_cgroup *memcg,
+>  		if (memswlimit < val)
+>  			enlarge = 1;
+>  		ret = res_counter_set_limit(&memcg->memsw, val);
+> -		if (!ret) {
+> -			if (memlimit == val)
+> -				memcg->memsw_is_minimum = true;
+> -			else
+> -				memcg->memsw_is_minimum = false;
+> -		}
+>  		mutex_unlock(&set_limit_mutex);
+>  
+>  		if (!ret)
+>  			break;
+>  
+> -		mem_cgroup_reclaim(memcg, GFP_KERNEL,
+> -				   MEM_CGROUP_RECLAIM_NOSWAP |
+> -				   MEM_CGROUP_RECLAIM_SHRINK);
+> +		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, false);
+> +
+>  		curusage = res_counter_read_u64(&memcg->memsw, RES_USAGE);
+>  		/* Usage is reduced ? */
+>  		if (curusage >= oldusage)
+> @@ -3976,8 +3924,8 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg)
+>  		if (signal_pending(current))
+>  			return -EINTR;
+>  
+> -		progress = try_to_free_mem_cgroup_pages(memcg, GFP_KERNEL,
+> -						false);
+> +		progress = try_to_free_mem_cgroup_pages(memcg, 1,
+> +							GFP_KERNEL, true);
+>  		if (!progress) {
+>  			nr_retries--;
+>  			/* maybe some writeback is necessary */
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index b672e2c6becc..97d31ec17d06 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -2759,21 +2759,22 @@ unsigned long mem_cgroup_shrink_node_zone(struct mem_cgroup *memcg,
+>  }
+>  
+>  unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+> +					   unsigned long nr_pages,
+>  					   gfp_t gfp_mask,
+> -					   bool noswap)
+> +					   bool may_swap)
+>  {
+>  	struct zonelist *zonelist;
+>  	unsigned long nr_reclaimed;
+>  	int nid;
+>  	struct scan_control sc = {
+> -		.nr_to_reclaim = SWAP_CLUSTER_MAX,
+> +		.nr_to_reclaim = max(nr_pages, SWAP_CLUSTER_MAX),
+>  		.gfp_mask = (gfp_mask & GFP_RECLAIM_MASK) |
+>  				(GFP_HIGHUSER_MOVABLE & ~GFP_RECLAIM_MASK),
+>  		.target_mem_cgroup = memcg,
+>  		.priority = DEF_PRIORITY,
+>  		.may_writepage = !laptop_mode,
+>  		.may_unmap = 1,
+> -		.may_swap = !noswap,
+> +		.may_swap = may_swap,
+>  	};
+>  
+>  	/*
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
