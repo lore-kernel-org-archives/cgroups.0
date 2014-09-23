@@ -1,64 +1,101 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 3/3] cpuset: PF_SPREAD_PAGE and PF_SPREAD_SLAB should
- beatomic flags
-Date: Tue, 23 Sep 2014 09:13:19 -0400
-Message-ID: <20140923131319.GC14905@mtj.dyndns.org>
-References: <54210D3F.2090409@huawei.com>
- <54210DA5.4040606@huawei.com>
- <201409231955.FDB73406.FOOJLOVQMHFSFt@I-love.SAKURA.ne.jp>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [patch] mm: memcontrol: lockless page counters
+Date: Tue, 23 Sep 2014 15:25:53 +0200
+Message-ID: <20140923132553.GB10046@dhcp22.suse.cz>
+References: <1411132928-16143-1-git-send-email-hannes@cmpxchg.org>
+ <20140922144436.GG336@dhcp22.suse.cz>
+ <20140922155049.GA6630@cmpxchg.org>
+ <20140922172800.GA4343@dhcp22.suse.cz>
+ <20140922195829.GA5197@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=BwJotwpKHYxCNxAnVUjEHIe8XP+xNiu1+JZssEQWoKk=;
-        b=uLU8hLcRjfTO+A3QKujAH0ViciXYUZF28vQe5Y8Dei3XJ5erjZRUJgR0xdD5SbYWII
-         KB5+j1lV1rUXgmUxFvUgUFZZ/6IWm3xpkvaGtes9DUFau82REgJGMfT7vNrpgJBOM4IB
-         m1Dd5iYPOCreF2RF1TWX3Ll7LJAta56bJURXnvQG6gp8Z9/3KSkIXTxISiYfX+2vzZcp
-         wbirxW6wVATX94Dp0jmKna18aHy8zZ75FuY/MUzuRw9amN8A2+n+Lmb7HpANIir4yjka
-         xRwYa0pV62BlcjstrJl3sPIud0NVCqFLOA5oA6kF2wJ5viL6x7f4OIYcS0I3mM8It1c7
-         yOUg==
 Content-Disposition: inline
-In-Reply-To: <201409231955.FDB73406.FOOJLOVQMHFSFt-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
+In-Reply-To: <20140922195829.GA5197-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, miaox-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Hansen <dave-gkUM19QKKo4@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Sep 23, 2014 at 07:55:48PM +0900, Tetsuo Handa wrote:
-> Zefan Li wrote:
-> > Tetsuo reported a hard-to-reproduce kernel crash on RHEL6, which happend
+On Mon 22-09-14 15:58:29, Johannes Weiner wrote:
+> On Mon, Sep 22, 2014 at 07:28:00PM +0200, Michal Hocko wrote:
+> > On Mon 22-09-14 11:50:49, Johannes Weiner wrote:
+> > > On Mon, Sep 22, 2014 at 04:44:36PM +0200, Michal Hocko wrote:
+> > > > On Fri 19-09-14 09:22:08, Johannes Weiner wrote:
+> > [...]
+> > > > Nevertheless I think that the counter should live outside of memcg (it
+> > > > is ugly and bad in general to make HUGETLB controller depend on MEMCG
+> > > > just to have a counter). If you made kernel/page_counter.c and led both
+> > > > containers select CONFIG_PAGE_COUNTER then you do not need a dependency
+> > > > on MEMCG and I would find it cleaner in general.
+> > > 
+> > > The reason I did it this way is because the hugetlb controller simply
+> > > accounts and limits a certain type of memory and in the future I would
+> > > like to make it a memcg extension, just like kmem and swap.
+> > 
+> > I am not sure this is the right way to go. Hugetlb has always been
+> > "special" and I do not see any advantage to pull its specialness into
+> > memcg proper.
+> >
+> > It would just make the code more complicated. I can also imagine
+> > users who simply do not want to pay memcg overhead and use only
+> > hugetlb controller.
 > 
-> s/happend/happened/
-> 
-> > @@ -1972,6 +1973,14 @@ static inline void memalloc_noio_restore(unsigned int flags)
-> >  TASK_PFA_TEST(NO_NEW_PRIVS, no_new_privs)
-> >  TASK_PFA_SET(NO_NEW_PRIVS, no_new_privs)
-> >  
-> > +TASK_PFA_TEST(SPREAD_PAGE, spread_page)
-> > +TASK_PFA_SET(SPREAD_PAGE, spread_page)
-> > +TASK_PFA_CLEAR(SPREAD_PAGE, spread_page)
-> > +
-> > +TASK_PFA_TEST(SPREAD_SLAB, spread_slab)
-> > +TASK_PFA_SET(SPREAD_SLAB, spread_slab)
-> > +TASK_PFA_CLEAR(SPREAD_SLAB, spread_slab)
-> > +
-> 
-> I wonder how adding 3 macro lines differs from 3 inlined functions.
-> Personally, from LXR (source code browser) point of view, inlined functions
-> are more friendly than macros. Also, I wonder about the cost of extracting
-> macros in a file which is likely included by every file but referenced
-> by few files. Speak of SPREAD_PAGE and SPREAD_SLAB, they should be defined
-> as inlined functions in include/linux/cpuset.h rather than as macros in
-> include/linux/sched.h ?
+> We already group user memory, kernel memory, and swap space together,
+> what makes hugetlb-backed memory special?
 
-I think sched.h is fine along w/ inlines for other flags but yeah we
-might be better off just open-coding them.
+There is only a little overlap between LRU backed and kmem accounted
+memory with hugetlb which has always been standing aside from the rest
+of the memory management code (THP being a successor which fits in much
+better and which is already covered by memcg). It has basically its own
+code path for every aspect of its object life cycle and internal data
+structures which are in many ways not compatible with regular user or
+kmem memory. Merging the controllers would require to merge hugetlb code
+closer the MM code. Until then it just doesn't make sense to me.
 
-Thanks.
+> It's much easier to organize the code if all those closely related
+> things are grouped together.
 
+Could you be more specific please? How can pulling hugetlb details would
+help other !hugetlb code paths?
+
+> It's also better for the user interface to have a single memory
+> controller.
+
+I have seen so much confusion coming from hugetlb vs. THP that I think
+the quite opposite is true. Besides that we would need a separate limit
+for hugetlb accounted memory anyway so having a small and specialized
+controller for specialized memory sounds like a proper way to go.
+
+Finally, as mentioned in previous email, you might have users interested
+only in hugetlb controller with memcg disabled.
+
+> We're also close to the point where we don't differentiate between the
+> root group and dedicated groups in terms of performance, Dave's tests
+> fell apart at fairly high concurrency, and I'm already getting rid of
+> the lock he saw contended.
+
+Sure but this has nothing to do with it. Hugetlb can safely use the same
+lockless counter as a replacement for res_counter and benefit from it
+even though the contention hasn't been seen/reported yet.
+
+> The downsides of fragmenting our configuration- and testspace, our
+> user interface, and our code base by far outweigh the benefits of
+> offering a dedicated hugetlb controller.
+
+Could you be more specific please? Hugetlb has to be configured and
+tested separately whether it would be in a separate controller or not.
+
+Last but not least, even if this turns out to make some sense in
+the future please do not mix those things together here. Your
+res_counter -> page_counter transition makes a lot of sense for both
+controllers. And it is a huge improvement. I do not see any reason
+to pull a conceptually nontrivial merging/dependency of two separate
+controllers into the picture. If you think it makes some sense then
+bring that up later for a separate discussion.
+
+Thanks!
 -- 
-tejun
+Michal Hocko
+SUSE Labs
