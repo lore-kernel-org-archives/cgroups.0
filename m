@@ -1,75 +1,48 @@
-From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 2/3] sched: add a macro to define bitops for task atomic
- flags
-Date: Tue, 23 Sep 2014 14:52:50 +0800
-Message-ID: <542118C2.6030302@huawei.com>
-References: <54210D3F.2090409@huawei.com> <54210D7B.8030103@huawei.com> <CAGXu5jJKNJ=PsTtkPaoMyCNf2fK07szP-hv4NdaiDVx4tHacQw@mail.gmail.com>
+From: Zefan Li <lizefan@huawei.com>
+Subject: [PATCH v3 1/3] sched: fix confusing PFA_NO_NEW_PRIVS constant
+Date: Tue, 23 Sep 2014 15:44:19 +0800
+Message-ID: <542124D3.9000007@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAGXu5jJKNJ=PsTtkPaoMyCNf2fK07szP-hv4NdaiDVx4tHacQw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, Miao Xie <miaox-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@kernel.org>, Kees Cook <keescook@chromium.org>, Miao Xie <miaox@cn.fujitsu.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
->> -static inline bool task_no_new_privs(struct task_struct *p)
->> -{
->> -       return test_bit(PFA_NO_NEW_PRIVS, &p->atomic_flags);
->> -}
->> -
->> -static inline void task_set_no_new_privs(struct task_struct *p)
->> -{
->> -       set_bit(PFA_NO_NEW_PRIVS, &p->atomic_flags);
->> -}
->> +#define TASK_PFA_BITOPS(name, func)                            \
->> +static inline bool task_##func(struct task_struct *p)          \
->> +{ return test_bit(PFA_##name, &p->atomic_flags); }             \
->> +                                                               \
->> +static inline void task_set_##func(struct task_struct *p)      \
->> +{ set_bit(PFA_##name, &p->atomic_flags); }                     \
->> +                                                               \
->> +static inline void task_clear_##func(struct task_struct *p)    \
->> +{ clear_bit(PFA_##name, &p->atomic_flags); }
->> +
->> +TASK_PFA_BITOPS(NO_NEW_PRIVS, no_new_privs)
-> 
-> One thing I don't like about this is that task_clear_no_new_privs()
-> ends up getting defined, and it should absolutely never be used. NNP
-> should never be cleared or there could be security issues. I realize
-> this isn't a very useful nit-pick, but I'd rather the function wasn't
-> even available for someone to accidentally use. Maybe break up the
-> macro with some kind of "write only" version like:
-> 
-> #define TASK_PFA_BITOPS_WO(name, func)                            \
-> static inline bool task_##func(struct task_struct *p)          \
-> { return test_bit(PFA_##name, &p->atomic_flags); }             \
-> static inline void task_set_##func(struct task_struct *p)      \
-> { set_bit(PFA_##name, &p->atomic_flags); }
-> 
-> #define TASK_PFA_BITOPS(name, func)                            \
-> TASK_PFA_BITOPS_WO(name, func);          \
-> static inline void task_clear_##func(struct task_struct *p)    \
-> { clear_bit(PFA_##name, &p->atomic_flags); }
-> 
-> TASK_PFA_BITOPS_WO(NO_NEW_PRIVS, no_new_privs)
-> 
-> And then all the new users can use TASK_PFA_BITOPS() normally since
-> they expect to use "clear"?
-> 
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
 
-Now I'm inclined to do this:
+Commit 1d4457f99928 ("sched: move no_new_privs into new atomic flags")
+defined PFA_NO_NEW_PRIVS as hexadecimal value, but it is confusing
+because it is used as bit number. Redefine it as decimal bit number.
 
-+#define TASK_PFA_TEST(name, func)					\
-+	static inline bool task_##func(struct task_struct *p)		\
-+	{ return test_bit(PFA_##name, &p->atomic_flags); }
-+#define TASK_PFA_SET(name, func)					\
-+	static inline void task_set_##func(struct task_struct *p)	\
-+	{ set_bit(PFA_##name, &p->atomic_flags); }
-+#define TASK_PFA_CLEAR(name, func)					\
-+	static inline void task_clear_##func(struct task_struct *p)	\
-+	{ clear_bit(PFA_##name, &p->atomic_flags); }
-+
-+TASK_PFA_TEST(NO_NEW_PRIVS, no_new_privs)
-+TASK_PFA_SET(NO_NEW_PRIVS, no_new_privs)
+Note this changes the bit position of PFA_NOW_NEW_PRIVS from 1 to 0.
+
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: Miao Xie <miaox@cn.fujitsu.com>
+Cc: Kees Cook <keescook@chromium.org>
+Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Acked-by: Kees Cook <keescook@chromium.org>
+[ lizf: slightly modified subject and changelog ]
+Signed-off-by: Zefan Li <lizefan@huawei.com>
+---
+ include/linux/sched.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 5c2c885..4557765 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1957,7 +1957,7 @@ static inline void memalloc_noio_restore(unsigned int flags)
+ }
+ 
+ /* Per-process atomic flags. */
+-#define PFA_NO_NEW_PRIVS 0x00000001	/* May not gain new privileges. */
++#define PFA_NO_NEW_PRIVS 0	/* May not gain new privileges. */
+ 
+ static inline bool task_no_new_privs(struct task_struct *p)
+ {
+-- 
+1.8.0.2
