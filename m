@@ -1,72 +1,64 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT UPDATED PULL] cgroup fixes for v3.17-rc6
-Date: Tue, 23 Sep 2014 09:10:20 -0400
-Message-ID: <20140923131020.GB14905@mtj.dyndns.org>
-References: <20140923063353.GK11740@mtj.dyndns.org>
+Subject: Re: [PATCH v2 3/3] cpuset: PF_SPREAD_PAGE and PF_SPREAD_SLAB should
+ beatomic flags
+Date: Tue, 23 Sep 2014 09:13:19 -0400
+Message-ID: <20140923131319.GC14905@mtj.dyndns.org>
+References: <54210D3F.2090409@huawei.com>
+ <54210DA5.4040606@huawei.com>
+ <201409231955.FDB73406.FOOJLOVQMHFSFt@I-love.SAKURA.ne.jp>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=M50apc5eRozHWCMNvUzzurUUQObwQGo4T5xP5PqRdXw=;
-        b=FlkqZI6UkkBExOTHU+LrGOIqAOjHoaAWcH2xHLY+ExicXkBvqheBuoVSpobpAWmVf2
-         7wqL9JDKoYF6RT79EaiezdGgDuOH/MzbNAsRtbtMIpCE+uHH1SnDTlzpMe7TzWW2s+p7
-         mOam8fud5JraYluXacWyDt1SeRgWoyId7V9O3nvjUTjfXxZoIvCMfrzi/iqiNjHFc0HH
-         58+wibxMP2jlWigndJuBXuM0s7TRgNsofJOi617vi8kUi0dJf23TvA2BkU6r1hwCCZsn
-         2ns7swpuwc7PEhZ7ZIMSLcS+xkOdvsVl1jH5ZsBp9uIR5ED4f9Kk1Cbcrzz7vBRrDWOl
-         ZoPQ==
+        bh=BwJotwpKHYxCNxAnVUjEHIe8XP+xNiu1+JZssEQWoKk=;
+        b=uLU8hLcRjfTO+A3QKujAH0ViciXYUZF28vQe5Y8Dei3XJ5erjZRUJgR0xdD5SbYWII
+         KB5+j1lV1rUXgmUxFvUgUFZZ/6IWm3xpkvaGtes9DUFau82REgJGMfT7vNrpgJBOM4IB
+         m1Dd5iYPOCreF2RF1TWX3Ll7LJAta56bJURXnvQG6gp8Z9/3KSkIXTxISiYfX+2vzZcp
+         wbirxW6wVATX94Dp0jmKna18aHy8zZ75FuY/MUzuRw9amN8A2+n+Lmb7HpANIir4yjka
+         xRwYa0pV62BlcjstrJl3sPIud0NVCqFLOA5oA6kF2wJ5viL6x7f4OIYcS0I3mM8It1c7
+         yOUg==
 Content-Disposition: inline
-In-Reply-To: <20140923063353.GK11740-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+In-Reply-To: <201409231955.FDB73406.FOOJLOVQMHFSFt-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, miaox-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org
 
-Hello, Linus.
+On Tue, Sep 23, 2014 at 07:55:48PM +0900, Tetsuo Handa wrote:
+> Zefan Li wrote:
+> > Tetsuo reported a hard-to-reproduce kernel crash on RHEL6, which happend
+> 
+> s/happend/happened/
+> 
+> > @@ -1972,6 +1973,14 @@ static inline void memalloc_noio_restore(unsigned int flags)
+> >  TASK_PFA_TEST(NO_NEW_PRIVS, no_new_privs)
+> >  TASK_PFA_SET(NO_NEW_PRIVS, no_new_privs)
+> >  
+> > +TASK_PFA_TEST(SPREAD_PAGE, spread_page)
+> > +TASK_PFA_SET(SPREAD_PAGE, spread_page)
+> > +TASK_PFA_CLEAR(SPREAD_PAGE, spread_page)
+> > +
+> > +TASK_PFA_TEST(SPREAD_SLAB, spread_slab)
+> > +TASK_PFA_SET(SPREAD_SLAB, spread_slab)
+> > +TASK_PFA_CLEAR(SPREAD_SLAB, spread_slab)
+> > +
+> 
+> I wonder how adding 3 macro lines differs from 3 inlined functions.
+> Personally, from LXR (source code browser) point of view, inlined functions
+> are more friendly than macros. Also, I wonder about the cost of extracting
+> macros in a file which is likely included by every file but referenced
+> by few files. Speak of SPREAD_PAGE and SPREAD_SLAB, they should be defined
+> as inlined functions in include/linux/cpuset.h rather than as macros in
+> include/linux/sched.h ?
 
-One late fix for cgroup.  I was waiting for another set of fixes for a
-long-standing obscure cpuset bug but am not sure whether they'll be
-ready before v3.17 release.  This one is a simple fix for a mutex
-unlock balance bug in an allocation failure path in
-pidlist_array_load().  The bug was introduced in v3.14 and the fix is
-tagged for -stable.
+I think sched.h is fine along w/ inlines for other flags but yeah we
+might be better off just open-coding them.
 
 Thanks.
-
-The following changes since commit aa32362f011c6e863132b16c1761487166a4bad2:
-
-  cgroup: check cgroup liveliness before unbreaking kernfs (2014-09-05 01:36:19 +0900)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.17-fixes
-
-for you to fetch changes up to eb4aec84d6bdf98d00cedb41c18000f7a31e648a:
-
-  cgroup: fix unbalanced locking (2014-09-18 12:32:52 -0400)
-
-----------------------------------------------------------------
-Zefan Li (1):
-      cgroup: fix unbalanced locking
-
- kernel/cgroup.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 940aced..3a73f99 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -3985,7 +3985,6 @@ static int pidlist_array_load(struct cgroup *cgrp, enum cgroup_filetype type,
- 
- 	l = cgroup_pidlist_find_create(cgrp, type);
- 	if (!l) {
--		mutex_unlock(&cgrp->pidlist_mutex);
- 		pidlist_free(array);
- 		return -ENOMEM;
- 	}
 
 -- 
 tejun
