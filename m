@@ -1,143 +1,57 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch v2] mm: memcontrol: convert reclaim iterator to simple
- css refcounting
-Date: Wed, 24 Sep 2014 18:47:39 +0200
-Message-ID: <20140924164739.GA15897@dhcp22.suse.cz>
-References: <1411161059-16552-1-git-send-email-hannes@cmpxchg.org>
- <20140919212843.GA23861@cmpxchg.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [patch] mm: memcontrol: lockless page counters
+Date: Wed, 24 Sep 2014 12:51:28 -0400
+Message-ID: <20140924165128.GA9968@cmpxchg.org>
+References: <1411132928-16143-1-git-send-email-hannes@cmpxchg.org>
+ <20140922144158.GC20398@esperanza>
+ <20140922185736.GB6630@cmpxchg.org>
+ <20140923110634.GH18526@esperanza>
+ <20140923132801.GA14302@cmpxchg.org>
+ <20140923152150.GL18526@esperanza>
+ <20140923170525.GA28460@cmpxchg.org>
+ <20140924133316.GA4558@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=Cnkp/0WEaTEaTApup0jGqic0VY5h+bFPQrfIr33Urr8=;
-        b=gGPkL1LxVKnG4MsoTEXdtWgsQPO4RpuQZRPkrhF9twQUCpXqdD0wzQqJ27hTnuPRuj
-         SYLyW4/4P9F8pk+io/N4/yG4C4ng1IGMaBGxz9HwP4El09RVfyKTQO8k+xSU8ulEdlGW
-         rpws/WjoVd51LS4S6Ep1mL17iAi+hRSv0HxghuS73WE/c2kGV5Yz90BazH+Pzthi327f
-         0C/cl/T8Kr6rroEDC+AqGErQRj70fFKaWiwbaqCQ3mwRWfHv3kAEvLkW0CC+UijQ83qM
-         WoyYBUjf6sRaj4x6RqIDzfzkSSB5mdwNySTIdsZYwQxkJDaoP0pbj3c0rHTs0E/V81Lh
-         gJLA==
 Content-Disposition: inline
-In-Reply-To: <20140919212843.GA23861@cmpxchg.org>
+In-Reply-To: <20140924133316.GA4558@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, Greg Thelen <gthelen@google.com>, Dave Hansen <dave@sr71.net>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri 19-09-14 17:28:43, Johannes Weiner wrote:
-> From: Johannes Weiner <hannes@cmpxchg.org>
-> Date: Fri, 19 Sep 2014 12:39:18 -0400
-> Subject: [patch v2] mm: memcontrol: convert reclaim iterator to simple css
->  refcounting
+On Wed, Sep 24, 2014 at 03:33:16PM +0200, Michal Hocko wrote:
+> On Tue 23-09-14 13:05:25, Johannes Weiner wrote:
+> [...]
+> > How about the following update?  Don't be thrown by the
+> > page_counter_cancel(), I went back to it until we find something more
+> > suitable.  But as long as it's documented and has only 1.5 callsites,
+> > it shouldn't matter all that much TBH.
+> > 
+> > Thanks for your invaluable feedback so far, and sorry if the original
+> > patch was hard to review.  I'll try to break it up, to me it's usually
+> > easier to verify new functions by looking at the callers in the same
+> > patch, but I can probably remove the res_counter in a follow-up patch.
 > 
-> The memcg reclaim iterators use a complicated weak reference scheme to
-> prevent pinning cgroups indefinitely in the absence of memory pressure.
-> 
-> However, during the ongoing cgroup core rework, css lifetime has been
-> decoupled such that a pinned css no longer interferes with removal of
-> the user-visible cgroup, and all this complexity is now unnecessary.
+> The original patch was really huge and rather hard to review. Having
+> res_counter removal in a separate patch would be definitely helpful.
 
-I very much welcome simplification in this area but I would also very much
-appreciate more details why some checks are no longer needed. Why don't
-we need ->generation or (next_css->flags & CSS_ONLINE) check anymore?
+Sorry, I just saw your follow-up after sending out v2.  Yes, I split
+out the res_counter removal, so the patch is a lot smaller.
 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> ---
->  mm/memcontrol.c | 201 ++++++++++----------------------------------------------
->  1 file changed, 34 insertions(+), 167 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index dfd3b15a57e8..154161bb7d4c 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-[...]
->  	rcu_read_lock();
-> -	while (!memcg) {
-> -		struct mem_cgroup_reclaim_iter *uninitialized_var(iter);
-> -		int uninitialized_var(seq);
->  
-> -		if (reclaim) {
-> -			struct mem_cgroup_per_zone *mz;
-> +	if (reclaim) {
-> +		mz = mem_cgroup_zone_zoneinfo(root, reclaim->zone);
-> +		priority = reclaim->priority;
->  
-> -			mz = mem_cgroup_zone_zoneinfo(root, reclaim->zone);
-> -			iter = &mz->reclaim_iter[reclaim->priority];
-> -			if (prev && reclaim->generation != iter->generation) {
-> -				iter->last_visited = NULL;
-> -				goto out_unlock;
-> -			}
-> -
-> -			last_visited = mem_cgroup_iter_load(iter, root, &seq);
-> -		}
-> -
-> -		memcg = __mem_cgroup_iter_next(root, last_visited);
-> +		do {
-> +			pos = ACCESS_ONCE(mz->reclaim_iter[priority]);
-> +		} while (pos && !css_tryget(&pos->css));
+> I would even lobby to have the new page_counter in a separate patch with
+> the detailed description of the semantic and expected usage. Lockless
+> schemes are always tricky and hard to review.
 
-This is a bit confusing. AFAIU css_tryget fails only when the current
-ref count is zero already. When do we keep cached memcg with zero count
-behind? We always do css_get after cmpxchg.
+I was considering that (before someone explicitely asked for it) but
+ended up thinking it's better to have the API go in along with the
+main user, which often helps understanding.  The users of the API are
+unchanged, except for requiring callers to serialize limit updates.
+And I commented all race conditions inside the counter code, hopefully
+that helps, but let me know if things are unclear in v2.
 
-Hmm, there is a small window between cmpxchg and css_get when we store
-the current memcg into the reclaim_iter[priority]. If the current memcg
-is root then we do not take any css reference before cmpxchg and so it
-might drop down to zero in the mean time so other CPU might see zero I
-guess. But I do not see how css_get after cmpxchg on such css works.
-I guess I should go and check the css reference counting again.
-
-Anyway this would deserve a comment.
-
-> +	}
->  
-> -		if (reclaim) {
-> -			mem_cgroup_iter_update(iter, last_visited, memcg, root,
-> -					seq);
-> +	if (pos)
-> +		css = &pos->css;
->  
-> -			if (!memcg)
-> -				iter->generation++;
-> -			else if (!prev && memcg)
-> -				reclaim->generation = iter->generation;
-> +	for (;;) {
-> +		css = css_next_descendant_pre(css, &root->css);
-> +		if (!css) {
-> +			if (prev)
-> +				goto out_unlock;
-> +			continue;
-> +		}
-> +		if (css == &root->css || css_tryget_online(css)) {
-> +			memcg = mem_cgroup_from_css(css);
-> +			break;
->  		}
-> +	}
->  
-> -		if (prev && !memcg)
-> -			goto out_unlock;
-> +	if (reclaim) {
-> +		if (cmpxchg(&mz->reclaim_iter[priority], pos, memcg) == pos)
-> +			css_get(&memcg->css);
-> +		if (pos)
-> +			css_put(&pos->css);
->  	}
-> +
->  out_unlock:
->  	rcu_read_unlock();
-> -out_css_put:
-> +out:
->  	if (prev && prev != root)
->  		css_put(&prev->css);
->  
-[...]
--- 
-Michal Hocko
-SUSE Labs
+Thanks
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
