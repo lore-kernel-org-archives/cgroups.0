@@ -1,146 +1,100 @@
-From: Greg Thelen <gthelen@google.com>
-Subject: Re: [patch] mm: memcontrol: support transparent huge pages under pressure
-Date: Tue, 23 Sep 2014 17:07:57 -0700
-Message-ID: <xr9338bhkhha.fsf@gthelen.mtv.corp.google.com>
-References: <1411132840-16025-1-git-send-email-hannes@cmpxchg.org> <xr934mvykgiv.fsf@gthelen.mtv.corp.google.com> <20140923111657.GA13593@cmpxchg.org>
+From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 3/3] cpuset: PF_SPREAD_PAGE and PF_SPREAD_SLAB should
+ beatomic flags
+Date: Wed, 24 Sep 2014 11:01:04 +0800
+Message-ID: <542233F0.1080402@huawei.com>
+References: <54210D3F.2090409@huawei.com> <54210DA5.4040606@huawei.com> <201409231955.FDB73406.FOOJLOVQMHFSFt@I-love.SAKURA.ne.jp>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=references:from:to:cc:subject:date:in-reply-to:message-id
-         :mime-version:content-type;
-        bh=eKM9364VLlNpQkoGFKLLbaCGutl90YISuSAs5f8pDwQ=;
-        b=lGuxx7ULOxJAv5/mGGB/tJmngqzf2D8yiOWRyyG0BEswkcOiJMdMfSGSvwyTm2bXJu
-         sGmk6FQ2Rxnr7iCLSU1Oiuxge9VO1FB5ytvOJgoxCgJSOEqt7IhaKyut4e48GOjJdeRA
-         e6GnYBXAluxBQbNUkoSQPo3+t3+bHMMG51Od2lIsWDtcOwvHxjuWXVP8Usmx0nwTdy/8
-         oSOhFNRgHDABlKfpC2mveSnhRYA1hwABpmUWo22mLkjs5OoiSR/ZqHOssFzcaiJGrADv
-         36DWLDDu5ysrWzQWPXHqXjQ3wfn2jNYIPrXvqNjXIA5o8PqDPDOoCnQSQ5Lu4071PeVC
-         c2xg==
-In-reply-to: <20140923111657.GA13593@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <201409231955.FDB73406.FOOJLOVQMHFSFt-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: linux-mm@kvack.org, Michal Hocko <mhocko@suse.cz>, Dave Hansen <dave@sr71.net>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, miaox-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org
 
+On 2014/9/23 18:55, Tetsuo Handa wrote:
+> Zefan Li wrote:
+>> Tetsuo reported a hard-to-reproduce kernel crash on RHEL6, which happend
+> 
+> s/happend/happened/
+> 
+>> @@ -1972,6 +1973,14 @@ static inline void memalloc_noio_restore(unsigned int flags)
+>>  TASK_PFA_TEST(NO_NEW_PRIVS, no_new_privs)
+>>  TASK_PFA_SET(NO_NEW_PRIVS, no_new_privs)
+>>  
+>> +TASK_PFA_TEST(SPREAD_PAGE, spread_page)
+>> +TASK_PFA_SET(SPREAD_PAGE, spread_page)
+>> +TASK_PFA_CLEAR(SPREAD_PAGE, spread_page)
+>> +
+>> +TASK_PFA_TEST(SPREAD_SLAB, spread_slab)
+>> +TASK_PFA_SET(SPREAD_SLAB, spread_slab)
+>> +TASK_PFA_CLEAR(SPREAD_SLAB, spread_slab)
+>> +
+> 
+> I wonder how adding 3 macro lines differs from 3 inlined functions.
+> Personally, from LXR (source code browser) point of view, inlined functions
+> are more friendly than macros. Also, I wonder about the cost of extracting
+> macros in a file which is likely included by every file but referenced
+> by few files. Speak of SPREAD_PAGE and SPREAD_SLAB, they should be defined
+> as inlined functions in include/linux/cpuset.h rather than as macros in
+> include/linux/sched.h ?
+> .
 
-On Tue, Sep 23 2014, Johannes Weiner wrote:
+Though tsk->atomic_flags were newly introduced in 3.17 merge window, we
+already have 3 flags, and we may see more flags added.
 
-> On Mon, Sep 22, 2014 at 10:52:50PM -0700, Greg Thelen wrote:
->> 
->> On Fri, Sep 19 2014, Johannes Weiner wrote:
->> 
->> > In a memcg with even just moderate cache pressure, success rates for
->> > transparent huge page allocations drop to zero, wasting a lot of
->> > effort that the allocator puts into assembling these pages.
->> >
->> > The reason for this is that the memcg reclaim code was never designed
->> > for higher-order charges.  It reclaims in small batches until there is
->> > room for at least one page.  Huge pages charges only succeed when
->> > these batches add up over a series of huge faults, which is unlikely
->> > under any significant load involving order-0 allocations in the group.
->> >
->> > Remove that loop on the memcg side in favor of passing the actual
->> > reclaim goal to direct reclaim, which is already set up and optimized
->> > to meet higher-order goals efficiently.
->> >
->> > This brings memcg's THP policy in line with the system policy: if the
->> > allocator painstakingly assembles a hugepage, memcg will at least make
->> > an honest effort to charge it.  As a result, transparent hugepage
->> > allocation rates amid cache activity are drastically improved:
->> >
->> >                                       vanilla                 patched
->> > pgalloc                 4717530.80 (  +0.00%)   4451376.40 (  -5.64%)
->> > pgfault                  491370.60 (  +0.00%)    225477.40 ( -54.11%)
->> > pgmajfault                    2.00 (  +0.00%)         1.80 (  -6.67%)
->> > thp_fault_alloc               0.00 (  +0.00%)       531.60 (+100.00%)
->> > thp_fault_fallback          749.00 (  +0.00%)       217.40 ( -70.88%)
->> >
->> > [ Note: this may in turn increase memory consumption from internal
->> >   fragmentation, which is an inherent risk of transparent hugepages.
->> >   Some setups may have to adjust the memcg limits accordingly to
->> >   accomodate this - or, if the machine is already packed to capacity,
->> >   disable the transparent huge page feature. ]
->> 
->> We're using an earlier version of this patch, so I approve of the
->> general direction.  But I have some feedback.
->> 
->> The memsw aspect of this change seems somewhat separate.  Can it be
->> split into a different patch?
->> 
->> The memsw aspect of this patch seems to change behavior.  Is this
->> intended?  If so, a mention of it in the commit log would assuage the
->> reader.  I'll explain...  Assume a machine with swap enabled and
->> res.limit==memsw.limit, thus memsw_is_minimum is true.  My understanding
->> is that memsw.usage represents sum(ram_usage, swap_usage).  So when
->> memsw_is_minimum=true, then both swap_usage=0 and
->> memsw.usage==res.usage.  In this condition, if res usage is at limit
->> then there's no point in swapping because memsw.usage is already
->> maximal.  Prior to this patch I think the kernel did the right thing,
->> but not afterwards.
->> 
->> Before this patch:
->>   if res.usage == res.limit, try_charge() indirectly calls
->>   try_to_free_mem_cgroup_pages(noswap=true)
->> 
->> After this patch:
->>   if res.usage == res.limit, try_charge() calls
->>   try_to_free_mem_cgroup_pages(may_swap=true)
->> 
->> Notice the inverted swap-is-allowed value.
->
-> For some reason I had myself convinced that this is dead code due to a
-> change in callsites a long time ago, but you are right that currently
-> try_charge() relies on it, thanks for pointing it out.
->
-> However, memsw is always equal to or bigger than the memory limit - so
-> instead of keeping a separate state variable to track when memory
-> failure implies memsw failure, couldn't we just charge memsw first?
->
-> How about the following?  But yeah, I'd split this into a separate
-> patch now.
+Those macros make the code easier to read, and emacs and cscope can also
+understand them.
 
-Looks good to me.  Thanks.
+I'd vote for this:
 
-Acked-by: Greg Thelen <gthelen@google.com>
+TASK_PFA_TEST(NO_NEW_PRIVS, no_new_privs)
+TASK_PFA_SET(NO_NEW_PRIVS, no_new_privs)
 
-> ---
->  mm/memcontrol.c | 15 ++++++++-------
->  1 file changed, 8 insertions(+), 7 deletions(-)
->
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index e2def11f1ec1..7c9a8971d0f4 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2497,16 +2497,17 @@ retry:
->  		goto done;
->  
->  	size = batch * PAGE_SIZE;
-> -	if (!res_counter_charge(&memcg->res, size, &fail_res)) {
-> -		if (!do_swap_account)
-> +	if (!do_swap_account ||
-> +	    !res_counter_charge(&memcg->memsw, size, &fail_res)) {
-> +		if (!res_counter_charge(&memcg->res, size, &fail_res))
->  			goto done_restock;
-> -		if (!res_counter_charge(&memcg->memsw, size, &fail_res))
-> -			goto done_restock;
-> -		res_counter_uncharge(&memcg->res, size);
-> +		if (do_swap_account)
-> +			res_counter_uncharge(&memcg->memsw, size);
-> +		mem_over_limit = mem_cgroup_from_res_counter(fail_res, res);
-> +	} else {
->  		mem_over_limit = mem_cgroup_from_res_counter(fail_res, memsw);
->  		may_swap = false;
-> -	} else
-> -		mem_over_limit = mem_cgroup_from_res_counter(fail_res, res);
-> +	}
->  
->  	if (batch > nr_pages) {
->  		batch = nr_pages;
+TASK_PFA_TEST(SPREAD_PAGE, spread_page)
+TASK_PFA_SET(SPREAD_PAGE, spread_page)
+TASK_PFA_CLEAR(SPREAD_PAGE, spread_page)
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+TASK_PFA_TEST(SPREAD_SLAB, spread_slab)
+TASK_PFA_SET(SPREAD_SLAB, spread_slab)
+TASK_PFA_CLEAR(SPREAD_SLAB, spread_slab)
+
+over this:
+
+static inline bool task_no_new_privs(struct task_struct *p)
+{
+	return test_bit(PFA_NO_NEW_PRIVS, &p->atomic_flags);
+}
+static inline void task_set_new_privs(struct task_struct *p)
+{
+	set_bit(PFA_NO_NEW_PRIVS, &p->atomic_flags);
+}
+
+static inline bool task_spread_page(struct task_struct *p)
+{
+	return test_bit(PFA_SPREAD_PAGE, &p->atomic_flags);
+}
+static inline void task_set_spread_page(struct task_struct *p)
+{
+	set_bit(PFA_SPREAD_PAGE, &p->atomic_flags);
+}
+static inline void task_clear_spread_page(struct task_struct *p)
+{
+	clear_bit(PFA_SPREAD_PAGE, &p->atomic_flags);
+}
+
+static inline bool task_spread_slab(struct task_struct *p)
+{
+	return test_bit(PFA_SPREAD_SLAB, &p->atomic_flags);
+}
+static inline void task_set_spread_slab(struct task_struct *p)
+{
+	set_bit(PFA_SPREAD_SLAB, &p->atomic_flags);
+}
+static inline void task_clear_spread_slab(struct task_struct *p)
+{
+	clear_bit(PFA_SPREAD_SLAB, &p->atomic_flags);
+}
+
