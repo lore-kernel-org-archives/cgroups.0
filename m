@@ -1,45 +1,50 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 3/3] cpuset: PF_SPREAD_PAGE and PF_SPREAD_SLAB should
- be atomic flags
-Date: Wed, 24 Sep 2014 09:06:20 -0400
-Message-ID: <20140924130620.GB16555@htj.dyndns.org>
-References: <54210D3F.2090409@huawei.com>
- <54210DA5.4040606@huawei.com>
- <201409231955.FDB73406.FOOJLOVQMHFSFt@I-love.SAKURA.ne.jp>
- <542233F0.1080402@huawei.com>
- <201409242044.GFJ81269.FJFVQOLSHtFMOO@I-love.SAKURA.ne.jp>
+Subject: Re: [PATCH v3 1/3] sched: fix confusing PFA_NO_NEW_PRIVS constant
+Date: Wed, 24 Sep 2014 09:22:18 -0400
+Message-ID: <20140924132218.GC16555@htj.dyndns.org>
+References: <542124D3.9000007@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=IyWy/AlTM0iQLsUYjwc+9k+4riZ4Czq+/tJpshKTbJo=;
-        b=Kc0qfK9uhugqYQUGvbiFHj71LxS+rnPEwzvB+81xnvt4IPq6QpT8wPNqy8STXNFA12
-         JiJ8EL0DLBS8CNLeYqUptGaewlvCj3TMVcGFrF4DtG68UZvLh1sYK8myMh+sa78JYz8l
-         629UwtxQv3Kai+nit80BWDZYY9nbgjAdlO70ckJgHjn9nQiKawFHYSSPNTxb3JlBq1Zi
-         SYFqXSrVG0sXLlt/BaQmmMOw8vJWs51QzKl0jOTI9Nf0jhoW83hppV0MUd8oRHevRE9Q
-         TOhXfPI2VPz0PP4oFn03//KcTnm1wUni7HzXzBfKNLNBUb57ahhJi/xG4DZGBD0qTbI6
-         KYKA==
+        bh=nd2ifG2tSx+pOSzYk1fKL9Z3iuE5uN88O0/6qb4Aemk=;
+        b=ElcZeE9wi0htvIWBmSYSsxyMAZdKA+TLHuZSjChRvhVNgstxGKFuCVl6fEMXehtzTj
+         eB02bM/NQdUiB0Nx6dYsOERqTRNpideErlU0cYljzJROoDqed45cEoUqjmkBb2d4ZBMd
+         OdlutROAtOH5kuMgr4BlRzLJFKBLAYRDWJwT5AkpFFsZcVP8oFN7srmsprq5siKUa9BK
+         hCQUx74oAf0S3tQmz5WDi08zjjCZEYZpFWJDebhYR0Iim1xp53STRdt5hr5rGacPLBFB
+         3bXp8UG5vtkDxTFK115yELWnSmEQKaViSBanNROd0yCEBjRcIPBz2E+ZpcqbwKa8Pnyb
+         3IpA==
 Content-Disposition: inline
-In-Reply-To: <201409242044.GFJ81269.FJFVQOLSHtFMOO-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
+In-Reply-To: <542124D3.9000007-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, miaox-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org
+To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Miao Xie <miaox-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Wed, Sep 24, 2014 at 08:44:43PM +0900, Tetsuo Handa wrote:
-> Tejun Heo wrote:
-> > All the patches look good to me.  I can't say I'm a big fan of
-> > function defining macros but I don't have prettier alternatives
-> > either.  Once Peter/Ingo acks the patches, I'll route them through
-> > cgroup/for-3.17-fixes.
+On Tue, Sep 23, 2014 at 03:44:19PM +0800, Zefan Li wrote:
+> From: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
 > 
-> Peter and Ingo, are these patches OK for you?
+> Commit 1d4457f99928 ("sched: move no_new_privs into new atomic flags")
+> defined PFA_NO_NEW_PRIVS as hexadecimal value, but it is confusing
+> because it is used as bit number. Redefine it as decimal bit number.
+> 
+> Note this changes the bit position of PFA_NOW_NEW_PRIVS from 1 to 0.
+> 
+> Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+> Cc: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Miao Xie <miaox-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+> Cc: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+> Signed-off-by: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
+> Acked-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+> [ lizf: slightly modified subject and changelog ]
+> Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Peter acked.  I'll apply the patches to cgroup/for-3.17-fixes.
+Applied 1-3 to cgroup/for-3.17-fixes w/ the typo spotted by davidr
+fixed.
 
 Thanks.
 
