@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch 1/3] mm: memcontrol: do not kill uncharge batching in free_pages_and_swap_cache
-Date: Wed, 24 Sep 2014 11:08:56 -0400
-Message-ID: <1411571338-8178-2-git-send-email-hannes@cmpxchg.org>
+Subject: [patch 3/3] mm: memcontrol: fix transparent huge page allocations under pressure
+Date: Wed, 24 Sep 2014 11:08:58 -0400
+Message-ID: <1411571338-8178-4-git-send-email-hannes@cmpxchg.org>
 References: <1411571338-8178-1-git-send-email-hannes@cmpxchg.org>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1411571338-8178-1-git-send-email-hannes@cmpxchg.org>
@@ -13,152 +13,227 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Greg Thelen <gthelen@google.com>, Vladimir Davydov <vdavydov@parallels.com>, Dave Hansen <dave@sr71.net>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Michal Hocko <mhocko@suse.cz>
+In a memcg with even just moderate cache pressure, success rates for
+transparent huge page allocations drop to zero, wasting a lot of
+effort that the allocator puts into assembling these pages.
 
-free_pages_and_swap_cache limits release_pages to PAGEVEC_SIZE chunks.
-This is not a big deal for the normal release path but it completely
-kills memcg uncharge batching which reduces res_counter spin_lock
-contention. Dave has noticed this with his page fault scalability test
-case on a large machine when the lock was basically dominating on all
-CPUs:
-    80.18%    80.18%  [kernel]               [k] _raw_spin_lock
-                  |
-                  --- _raw_spin_lock
-                     |
-                     |--66.59%-- res_counter_uncharge_until
-                     |          res_counter_uncharge
-                     |          uncharge_batch
-                     |          uncharge_list
-                     |          mem_cgroup_uncharge_list
-                     |          release_pages
-                     |          free_pages_and_swap_cache
-                     |          tlb_flush_mmu_free
-                     |          |
-                     |          |--90.12%-- unmap_single_vma
-                     |          |          unmap_vmas
-                     |          |          unmap_region
-                     |          |          do_munmap
-                     |          |          vm_munmap
-                     |          |          sys_munmap
-                     |          |          system_call_fastpath
-                     |          |          __GI___munmap
-                     |          |
-                     |           --9.88%-- tlb_flush_mmu
-                     |                     tlb_finish_mmu
-                     |                     unmap_region
-                     |                     do_munmap
-                     |                     vm_munmap
-                     |                     sys_munmap
-                     |                     system_call_fastpath
-                     |                     __GI___munmap
+The reason for this is that the memcg reclaim code was never designed
+for higher-order charges.  It reclaims in small batches until there is
+room for at least one page.  Huge page charges only succeed when these
+batches add up over a series of huge faults, which is unlikely under
+any significant load involving order-0 allocations in the group.
 
-In his case the load was running in the root memcg and that part
-has been handled by reverting 05b843012335 ("mm: memcontrol: use
-root_mem_cgroup res_counter") because this is a clear regression,
-but the problem remains inside dedicated memcgs.
+Remove that loop on the memcg side in favor of passing the actual
+reclaim goal to direct reclaim, which is already set up and optimized
+to meet higher-order goals efficiently.
 
-There is no reason to limit release_pages to PAGEVEC_SIZE batches other
-than lru_lock held times. This logic, however, can be moved inside the
-function. mem_cgroup_uncharge_list and free_hot_cold_page_list do not
-hold any lock for the whole pages_to_free list so it is safe to call
-them in a single run.
+This brings memcg's THP policy in line with the system policy: if the
+allocator painstakingly assembles a hugepage, memcg will at least make
+an honest effort to charge it.  As a result, transparent hugepage
+allocation rates amid cache activity are drastically improved:
 
-Page reference count and LRU handling is moved to release_lru_pages and
-that is run in PAGEVEC_SIZE batches.
+                                      vanilla                 patched
+pgalloc                 4717530.80 (  +0.00%)   4451376.40 (  -5.64%)
+pgfault                  491370.60 (  +0.00%)    225477.40 ( -54.11%)
+pgmajfault                    2.00 (  +0.00%)         1.80 (  -6.67%)
+thp_fault_alloc               0.00 (  +0.00%)       531.60 (+100.00%)
+thp_fault_fallback          749.00 (  +0.00%)       217.40 ( -70.88%)
 
-Reported-by: Dave Hansen <dave@sr71.net>
-Signed-off-by: Michal Hocko <mhocko@suse.cz>
+[ Note: this may in turn increase memory consumption from internal
+  fragmentation, which is an inherent risk of transparent hugepages.
+  Some setups may have to adjust the memcg limits accordingly to
+  accomodate this - or, if the machine is already packed to capacity,
+  disable the transparent huge page feature. ]
+
 Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Reviewed-by: Vladimir Davydov <vdavydov@parallels.com>
 ---
- mm/swap.c       | 27 +++++++++++++++++++++------
- mm/swap_state.c | 14 ++++----------
- 2 files changed, 25 insertions(+), 16 deletions(-)
+ include/linux/swap.h |  6 +++--
+ mm/memcontrol.c      | 69 +++++++++++++---------------------------------------
+ mm/vmscan.c          |  7 +++---
+ 3 files changed, 25 insertions(+), 57 deletions(-)
 
-diff --git a/mm/swap.c b/mm/swap.c
-index 6b2dc3897cd5..8af99dd68dd2 100644
---- a/mm/swap.c
-+++ b/mm/swap.c
-@@ -888,9 +888,9 @@ void lru_add_drain_all(void)
- }
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index ea4f926e6b9b..37a585beef5c 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -327,8 +327,10 @@ extern void lru_cache_add_active_or_unevictable(struct page *page,
+ extern unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
+ 					gfp_t gfp_mask, nodemask_t *mask);
+ extern int __isolate_lru_page(struct page *page, isolate_mode_t mode);
+-extern unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *mem,
+-						  gfp_t gfp_mask, bool noswap);
++extern unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
++						  unsigned long nr_pages,
++						  gfp_t gfp_mask,
++						  bool may_swap);
+ extern unsigned long mem_cgroup_shrink_node_zone(struct mem_cgroup *mem,
+ 						gfp_t gfp_mask, bool noswap,
+ 						struct zone *zone,
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 89c920156c2a..c2c75262a209 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -478,14 +478,6 @@ enum res_type {
+ #define OOM_CONTROL		(0)
  
  /*
-- * Batched page_cache_release().  Decrement the reference count on all the
-- * passed pages.  If it fell to zero then remove the page from the LRU and
-- * free it.
-+ * Batched lru release. Decrement the reference count on all the passed pages.
-+ * If it fell to zero then remove the page from the LRU and add it to the given
-+ * list to be freed by the caller.
-  *
-  * Avoid taking zone->lru_lock if possible, but if it is taken, retain it
-  * for the remainder of the operation.
-@@ -900,10 +900,10 @@ void lru_add_drain_all(void)
-  * grabbed the page via the LRU.  If it did, give up: shrink_inactive_list()
-  * will free it.
-  */
--void release_pages(struct page **pages, int nr, bool cold)
-+static void release_lru_pages(struct page **pages, int nr,
-+			      struct list_head *pages_to_free)
- {
- 	int i;
--	LIST_HEAD(pages_to_free);
- 	struct zone *zone = NULL;
- 	struct lruvec *lruvec;
- 	unsigned long uninitialized_var(flags);
-@@ -943,11 +943,26 @@ void release_pages(struct page **pages, int nr, bool cold)
- 		/* Clear Active bit in case of parallel mark_page_accessed */
- 		__ClearPageActive(page);
- 
--		list_add(&page->lru, &pages_to_free);
-+		list_add(&page->lru, pages_to_free);
- 	}
- 	if (zone)
- 		spin_unlock_irqrestore(&zone->lru_lock, flags);
-+}
-+/*
-+ * Batched page_cache_release(). Frees and uncharges all given pages
-+ * for which the reference count drops to 0.
-+ */
-+void release_pages(struct page **pages, int nr, bool cold)
-+{
-+	LIST_HEAD(pages_to_free);
- 
-+	while (nr) {
-+		int batch = min(nr, PAGEVEC_SIZE);
-+
-+		release_lru_pages(pages, batch, &pages_to_free);
-+		pages += batch;
-+		nr -= batch;
-+	}
- 	mem_cgroup_uncharge_list(&pages_to_free);
- 	free_hot_cold_page_list(&pages_to_free, cold);
- }
-diff --git a/mm/swap_state.c b/mm/swap_state.c
-index ef1f39139b71..154444918685 100644
---- a/mm/swap_state.c
-+++ b/mm/swap_state.c
-@@ -265,18 +265,12 @@ void free_page_and_swap_cache(struct page *page)
- void free_pages_and_swap_cache(struct page **pages, int nr)
- {
- 	struct page **pagep = pages;
-+	int i;
- 
- 	lru_add_drain();
--	while (nr) {
--		int todo = min(nr, PAGEVEC_SIZE);
--		int i;
+- * Reclaim flags for mem_cgroup_hierarchical_reclaim
+- */
+-#define MEM_CGROUP_RECLAIM_NOSWAP_BIT	0x0
+-#define MEM_CGROUP_RECLAIM_NOSWAP	(1 << MEM_CGROUP_RECLAIM_NOSWAP_BIT)
+-#define MEM_CGROUP_RECLAIM_SHRINK_BIT	0x1
+-#define MEM_CGROUP_RECLAIM_SHRINK	(1 << MEM_CGROUP_RECLAIM_SHRINK_BIT)
 -
--		for (i = 0; i < todo; i++)
--			free_swap_cache(pagep[i]);
--		release_pages(pagep, todo, false);
--		pagep += todo;
--		nr -= todo;
--	}
-+	for (i = 0; i < nr; i++)
-+		free_swap_cache(pagep[i]);
-+	release_pages(pagep, nr, false);
+-/*
+  * The memcg_create_mutex will be held whenever a new cgroup is created.
+  * As a consequence, any change that needs to protect against new child cgroups
+  * appearing has to hold it as well.
+@@ -1791,40 +1783,6 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 			 NULL, "Memory cgroup out of memory");
  }
  
- /*
+-static unsigned long mem_cgroup_reclaim(struct mem_cgroup *memcg,
+-					gfp_t gfp_mask,
+-					unsigned long flags)
+-{
+-	unsigned long total = 0;
+-	bool noswap = false;
+-	int loop;
+-
+-	if (flags & MEM_CGROUP_RECLAIM_NOSWAP)
+-		noswap = true;
+-
+-	for (loop = 0; loop < MEM_CGROUP_MAX_RECLAIM_LOOPS; loop++) {
+-		if (loop)
+-			drain_all_stock_async(memcg);
+-		total += try_to_free_mem_cgroup_pages(memcg, gfp_mask, noswap);
+-		/*
+-		 * Allow limit shrinkers, which are triggered directly
+-		 * by userspace, to catch signals and stop reclaim
+-		 * after minimal progress, regardless of the margin.
+-		 */
+-		if (total && (flags & MEM_CGROUP_RECLAIM_SHRINK))
+-			break;
+-		if (mem_cgroup_margin(memcg))
+-			break;
+-		/*
+-		 * If nothing was reclaimed after two attempts, there
+-		 * may be no reclaimable pages in this hierarchy.
+-		 */
+-		if (loop && !total)
+-			break;
+-	}
+-	return total;
+-}
+-
+ /**
+  * test_mem_cgroup_node_reclaimable
+  * @memcg: the target memcg
+@@ -2527,8 +2485,9 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	struct mem_cgroup *mem_over_limit;
+ 	struct res_counter *fail_res;
+ 	unsigned long nr_reclaimed;
+-	unsigned long flags = 0;
+ 	unsigned long long size;
++	bool may_swap = true;
++	bool drained = false;
+ 	int ret = 0;
+ 
+ 	if (mem_cgroup_is_root(memcg))
+@@ -2547,7 +2506,7 @@ retry:
+ 		mem_over_limit = mem_cgroup_from_res_counter(fail_res, res);
+ 	} else {
+ 		mem_over_limit = mem_cgroup_from_res_counter(fail_res, memsw);
+-		flags |= MEM_CGROUP_RECLAIM_NOSWAP;
++		may_swap = false;
+ 	}
+ 
+ 	if (batch > nr_pages) {
+@@ -2572,11 +2531,18 @@ retry:
+ 	if (!(gfp_mask & __GFP_WAIT))
+ 		goto nomem;
+ 
+-	nr_reclaimed = mem_cgroup_reclaim(mem_over_limit, gfp_mask, flags);
++	nr_reclaimed = try_to_free_mem_cgroup_pages(mem_over_limit, nr_pages,
++						    gfp_mask, may_swap);
+ 
+ 	if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
+ 		goto retry;
+ 
++	if (!drained) {
++		drain_all_stock_async(mem_over_limit);
++		drained = true;
++		goto retry;
++	}
++
+ 	if (gfp_mask & __GFP_NORETRY)
+ 		goto nomem;
+ 	/*
+@@ -3652,8 +3618,8 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+ 		if (!ret)
+ 			break;
+ 
+-		mem_cgroup_reclaim(memcg, GFP_KERNEL,
+-				   MEM_CGROUP_RECLAIM_SHRINK);
++		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, true);
++
+ 		curusage = res_counter_read_u64(&memcg->res, RES_USAGE);
+ 		/* Usage is reduced ? */
+ 		if (curusage >= oldusage)
+@@ -3703,9 +3669,8 @@ static int mem_cgroup_resize_memsw_limit(struct mem_cgroup *memcg,
+ 		if (!ret)
+ 			break;
+ 
+-		mem_cgroup_reclaim(memcg, GFP_KERNEL,
+-				   MEM_CGROUP_RECLAIM_NOSWAP |
+-				   MEM_CGROUP_RECLAIM_SHRINK);
++		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, false);
++
+ 		curusage = res_counter_read_u64(&memcg->memsw, RES_USAGE);
+ 		/* Usage is reduced ? */
+ 		if (curusage >= oldusage)
+@@ -3954,8 +3919,8 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg)
+ 		if (signal_pending(current))
+ 			return -EINTR;
+ 
+-		progress = try_to_free_mem_cgroup_pages(memcg, GFP_KERNEL,
+-						false);
++		progress = try_to_free_mem_cgroup_pages(memcg, 1,
++							GFP_KERNEL, true);
+ 		if (!progress) {
+ 			nr_retries--;
+ 			/* maybe some writeback is necessary */
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 06123f20a326..dcb47074ae03 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -2759,21 +2759,22 @@ unsigned long mem_cgroup_shrink_node_zone(struct mem_cgroup *memcg,
+ }
+ 
+ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
++					   unsigned long nr_pages,
+ 					   gfp_t gfp_mask,
+-					   bool noswap)
++					   bool may_swap)
+ {
+ 	struct zonelist *zonelist;
+ 	unsigned long nr_reclaimed;
+ 	int nid;
+ 	struct scan_control sc = {
+-		.nr_to_reclaim = SWAP_CLUSTER_MAX,
++		.nr_to_reclaim = max(nr_pages, SWAP_CLUSTER_MAX),
+ 		.gfp_mask = (gfp_mask & GFP_RECLAIM_MASK) |
+ 				(GFP_HIGHUSER_MOVABLE & ~GFP_RECLAIM_MASK),
+ 		.target_mem_cgroup = memcg,
+ 		.priority = DEF_PRIORITY,
+ 		.may_writepage = !laptop_mode,
+ 		.may_unmap = 1,
+-		.may_swap = !noswap,
++		.may_swap = may_swap,
+ 	};
+ 
+ 	/*
 -- 
 2.1.0
 
