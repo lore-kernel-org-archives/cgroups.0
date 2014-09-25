@@ -1,15 +1,27 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: [patch] mm: memcontrol: do not iterate uninitialized memcgs
-Date: Wed, 24 Sep 2014 22:31:18 -0400
-Message-ID: <1411612278-4707-1-git-send-email-hannes@cmpxchg.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [patch v2] mm: memcontrol: do not iterate uninitialized memcgs
+Date: Wed, 24 Sep 2014 22:40:55 -0400
+Message-ID: <20140925024054.GA4888@cmpxchg.org>
+References: <1411612278-4707-1-git-send-email-hannes@cmpxchg.org>
+Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1411612278-4707-1-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+
+Argh, buggy css_put() against the root.  Hand grenades, everywhere.
+Update:
+
+---
+From 9b0b4d72d71cd8acd7aaa58d2006c751decc8739 Mon Sep 17 00:00:00 2001
+From: Johannes Weiner <hannes@cmpxchg.org>
+Date: Wed, 24 Sep 2014 22:00:20 -0400
+Subject: [patch] mm: memcontrol: do not iterate uninitialized memcgs
 
 The cgroup iterators yield css objects that have not yet gone through
 css_online(), but they are not complete memcgs at this point and so
@@ -26,14 +38,14 @@ memcg-specific flag that is set after the memcg has been initialized
 in css_online(), and read before mem_cgroup_iter() callers access the
 memcg members.
 
-Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>	[3.12+]
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Cc: <stable@vger.kernel.org>	[3.12+]
 ---
- mm/memcontrol.c | 35 ++++++++++++++++++++++++++++++-----
- 1 file changed, 30 insertions(+), 5 deletions(-)
+ mm/memcontrol.c | 36 +++++++++++++++++++++++++++++++-----
+ 1 file changed, 31 insertions(+), 5 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 306b6470784c..71ed15e3a148 100644
+index 306b6470784c..bafdac0f724e 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
 @@ -292,6 +292,9 @@ struct mem_cgroup {
@@ -46,7 +58,7 @@ index 306b6470784c..71ed15e3a148 100644
  	/*
  	 * the counter to account for mem+swap usage.
  	 */
-@@ -1090,10 +1093,22 @@ skip_node:
+@@ -1090,10 +1093,23 @@ skip_node:
  	 * skipping css reference should be safe.
  	 */
  	if (next_css) {
@@ -54,11 +66,12 @@ index 306b6470784c..71ed15e3a148 100644
 -		    ((next_css->flags & CSS_ONLINE) &&
 -		     css_tryget_online(next_css)))
 -			return mem_cgroup_from_css(next_css);
-+		if (next_css == &root->css ||
-+		    css_tryget_online(next_css)) {
-+			struct mem_cgroup *memcg;
++		struct mem_cgroup *memcg = mem_cgroup_from_css(next_css);
 +
-+			memcg = mem_cgroup_from_css(next_css);
++		if (next_css == &root->css)
++			return memcg;
++
++		if (css_tryget_online(next_css)) {
 +			if (memcg->initialized) {
 +				/*
 +				 * Make sure the caller's accesses to
@@ -73,7 +86,7 @@ index 306b6470784c..71ed15e3a148 100644
  
  		prev_css = next_css;
  		goto skip_node;
-@@ -5413,6 +5428,7 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
+@@ -5413,6 +5429,7 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
  {
  	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
  	struct mem_cgroup *parent = mem_cgroup_from_css(css->parent);
@@ -81,7 +94,7 @@ index 306b6470784c..71ed15e3a148 100644
  
  	if (css->id > MEM_CGROUP_ID_MAX)
  		return -ENOSPC;
-@@ -5449,7 +5465,16 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
+@@ -5449,7 +5466,16 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
  	}
  	mutex_unlock(&memcg_create_mutex);
  
@@ -101,3 +114,9 @@ index 306b6470784c..71ed15e3a148 100644
  /*
 -- 
 2.1.0
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
