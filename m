@@ -1,72 +1,69 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [patch] mm: memcontrol: do not iterate uninitialized memcgs
-Date: Wed, 24 Sep 2014 22:57:58 -0400
-Message-ID: <20140925025758.GA6903@mtj.dyndns.org>
-References: <1411612278-4707-1-git-send-email-hannes@cmpxchg.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch v2] mm: memcontrol: convert reclaim iterator to simple
+ css refcounting
+Date: Thu, 25 Sep 2014 12:01:30 +0200
+Message-ID: <20140925100130.GC12090@dhcp22.suse.cz>
+References: <1411161059-16552-1-git-send-email-hannes@cmpxchg.org>
+ <20140919212843.GA23861@cmpxchg.org>
+ <20140924164739.GA15897@dhcp22.suse.cz>
+ <20140924171653.GA10082@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=wA6DuxbvQIsdMKaIZX6oXnJYn22WnTO1RKznjrdhb7c=;
-        b=Vu1nOK9p0K+csu0nVPlwua8qsO9X9dgSiEAn412+Jabbbi58R0s9ScUpMxwqvGe6xa
-         Z40p+aeM9Zx3gy+nXX+22G5NgaL//lyGX0mbMFVkUM2kPLMbwKikGWQeLnAmDEktzSqr
-         iog+dcnd9URLEv3ewnnnmSkJX+rxP7sk8LRvr9+hDD2ruAbRXL5lbCCTSBJQpvunVIJT
-         uPxhRSZ4Fe10qV2cYX4oEtwJdkxFuuDmWpbhNaV1crFx96Gi1igEHjWzQ2KJ9B/iwCDk
-         IYgrQtHEJxV+tfW3or32bZOw3Jt0A41H8evxEkdKDoreK4O615AY36GOV5zuBGIYuxJM
-         J/1w==
+        bh=NGxrqfIaVKUY0y5yqgGJigWLwxbvyH7wjfPIisIMgyU=;
+        b=qu3PuxAUNai2Gh/lFnG/rUktBSUeFutmRqKy7/wsmfVrIceQG/qG3jisCh0lNHTUtu
+         cc8fmyWpJbZYKkxBmrw2uxUzaFdt1hrfwVEdJ/eLPgWkP6McKFDNA0nfQaDhfrP6hP80
+         BsiigeVAIOD3GhVq3ouA3xmRhxCpAaD0G014Z6Jzt4gtPd5IV92INK0uziK4hUfZ4eHD
+         qXyn57ZqoYV0t5qEMIV+rtJNoYwSI1rip3Pq+Z8PBXQbAssrSOfiYEeF1qI5QiTFGLJ6
+         5wvgTOh4o7NsTDMT8Yro2qvf2UqTrzwIHMf2WhmytxS0lBQz3WROGaQlRppsqIlVnkiY
+         8mDw==
 Content-Disposition: inline
-In-Reply-To: <1411612278-4707-1-git-send-email-hannes@cmpxchg.org>
+In-Reply-To: <20140924171653.GA10082@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello,
+On Wed 24-09-14 13:16:53, Johannes Weiner wrote:
+> On Wed, Sep 24, 2014 at 06:47:39PM +0200, Michal Hocko wrote:
+> > On Fri 19-09-14 17:28:43, Johannes Weiner wrote:
+[...]
+> > > -		memcg = __mem_cgroup_iter_next(root, last_visited);
+> > > +		do {
+> > > +			pos = ACCESS_ONCE(mz->reclaim_iter[priority]);
+> > > +		} while (pos && !css_tryget(&pos->css));
+> > 
+> > This is a bit confusing. AFAIU css_tryget fails only when the current
+> > ref count is zero already. When do we keep cached memcg with zero count
+> > behind? We always do css_get after cmpxchg.
+> > 
+> > Hmm, there is a small window between cmpxchg and css_get when we store
+> > the current memcg into the reclaim_iter[priority]. If the current memcg
+> > is root then we do not take any css reference before cmpxchg and so it
+> > might drop down to zero in the mean time so other CPU might see zero I
+> > guess. But I do not see how css_get after cmpxchg on such css works.
+> > I guess I should go and check the css reference counting again.
+> 
+> It's not about root or the newly stored memcg, it's that you might
+> read the position right before it's replaced and css_put(), at which
 
-On Wed, Sep 24, 2014 at 10:31:18PM -0400, Johannes Weiner wrote:
-..
-> not meet the ordering requirements for memcg, and so we still may see
-> partially initialized memcgs from the iterators.
+OK, got it
 
-It's mainly the other way around - a fully initialized css may not
-show up in an iteration, but given that there's no memory ordering or
-synchronization around the flag, anything can happen.
+	CPU0					CPU1
+pos = reclaim_iter[priority]
+					cmpxchg(reclaim_iter[priority], pos, memcg)
+					css_put(pos)	# -> 0
+css_tryget(pos)
 
-...
-> +		if (next_css == &root->css ||
-> +		    css_tryget_online(next_css)) {
-> +			struct mem_cgroup *memcg;
-> +
-> +			memcg = mem_cgroup_from_css(next_css);
-> +			if (memcg->initialized) {
-> +				/*
-> +				 * Make sure the caller's accesses to
-> +				 * the memcg members are issued after
-> +				 * we see this flag set.
-
-I usually prefer if the comment points to the exact location that the
-matching memory barriers live.  Sometimes it's difficult to locate the
-partner barrier even w/ the functional explanation.
-
-> +				 */
-> +				smp_rmb();
-> +				return memcg;
-
-In an unlikely event this rmb becomes an issue, a self-pointing
-pointer which is set/read using smp_store_release() and
-smp_load_acquire() respectively can do with plain barrier() on the
-reader side on archs which don't need data dependency barrier
-(basically everything except alpha).  Not sure whether that'd be more
-or less readable than this tho.
-
-Thanks.
-
+Thanks!
 -- 
-tejun
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
