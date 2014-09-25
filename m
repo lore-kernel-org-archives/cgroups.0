@@ -1,74 +1,45 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [patch v2] mm: memcontrol: convert reclaim iterator to simple
- css refcounting
-Date: Wed, 24 Sep 2014 21:29:30 -0400
-Message-ID: <20140925012930.GA26745@htj.dyndns.org>
-References: <1411161059-16552-1-git-send-email-hannes@cmpxchg.org>
- <20140919212843.GA23861@cmpxchg.org>
- <20140924164739.GA15897@dhcp22.suse.cz>
- <20140924171653.GA10082@cmpxchg.org>
+From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v4 1/3] sched: fix confusing PFA_NO_NEW_PRIVS constant
+Date: Thu, 25 Sep 2014 09:40:17 +0800
+Message-ID: <54237281.5020308@huawei.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=YZe5v45cF17CB6IYiGa+J7Zf2airs95OYML8GwRzJKI=;
-        b=vIDaYL5meIEQuRMlCoE7ChvkOa/x6D60Lkuyo/nKEiEgJrlq1Uv/kTns3UocZM3D0l
-         Z+6hyi7Cudk0bnCZqIP29O23kL9wkbSa1yFdbatKou1w/zpdxcdNNXEvxK+kqybmbBRr
-         sapX/lLoJZjyawByhcICt0iIYRPn386PTTsQ9ArIGuYDQUUZfWXIYySP5D0D1zMHqMGW
-         BwiNYlMRTodHlMMK1IBsbkfP9M+cKz0meg+qN46ZB8LcbDQzOCofiArptCxjg3wWWjVA
-         jEPXDuqu1Yahukc0PNwsHf/dahj1LOUcVgqyQ60lLr5tpdGUggNitz+q0cqfCQN2j88/
-         I9lA==
-Content-Disposition: inline
-In-Reply-To: <20140924171653.GA10082@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Miao Xie <miaox-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Hello,
+Commit 1d4457f99928 ("sched: move no_new_privs into new atomic flags")
+defined PFA_NO_NEW_PRIVS as hexadecimal value, but it is confusing
+because it is used as bit number. Redefine it as decimal bit number.
 
-On Wed, Sep 24, 2014 at 01:16:53PM -0400, Johannes Weiner wrote:
-> Tejun, should maybe the iterators not return css before they have
-> CSS_ONLINE set?  It seems odd to have memcg reach into cgroup like
-> that to check if published objects are actually fully initialized.
-> Background is this patch:
+Note this changes the bit position of PFA_NOW_NEW_PRIVS from 1 to 0.
 
-So, memcontrol shouldn't be doing that but at the same time cgroup
-core can't do it for any controller.  One of the requirements of the
-iterations is that it shouldn't miss any css which has been onlined by
-its controller; however, because each controller defines its own
-locking, cgroup core has no way knowing when a css finishes
-initialization.  If it includes after ->css_online() is complete, the
-iteration may happen between when the controller considers the css
-fully initialized and cgroup core sets CSS_ONLINE.  The only thing
-cgroup core can do is including all csses which *could* be considered
-online by the controller and let it filter accordingly.
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Miao Xie <miaox-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Signed-off-by: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
+Acked-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+[ lizf: slightly modified subject and changelog ]
+Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ include/linux/sched.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-IOW, the precise moment a css becomes online is not known to the
-cgroup core as cgroup core locking and controller locking are
-completely independent.  The current memcg implementation is broken in
-that memcg iterator is testing CSS_ONLINE which is set *after*
-->css_online() is complete and iterations can happen inbetween where
-the online css may be omitted because it's not marked online by cgroup
-core yet.  This may be okay for memcg's use of iterators but for
-things like freezer, for example, this can break things horribly.
-
-Anyways, the right thing to do is removing the CSS_ONLINE testing and
-implementing memcg's own way of marking an object as fully initialized
-according to its synchronization and iteration requirements.  So,
-yeah, it's a glaring layering violation which should be removed.
-
-Thanks.
-
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 5c2c885..4557765 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1957,7 +1957,7 @@ static inline void memalloc_noio_restore(unsigned int flags)
+ }
+ 
+ /* Per-process atomic flags. */
+-#define PFA_NO_NEW_PRIVS 0x00000001	/* May not gain new privileges. */
++#define PFA_NO_NEW_PRIVS 0	/* May not gain new privileges. */
+ 
+ static inline bool task_no_new_privs(struct task_struct *p)
+ {
 -- 
-tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+1.8.0.2
