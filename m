@@ -1,119 +1,72 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch v2] mm: memcontrol: do not iterate uninitialized memcgs
-Date: Wed, 24 Sep 2014 22:40:55 -0400
-Message-ID: <20140925024054.GA4888@cmpxchg.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [patch] mm: memcontrol: do not iterate uninitialized memcgs
+Date: Wed, 24 Sep 2014 22:57:58 -0400
+Message-ID: <20140925025758.GA6903@mtj.dyndns.org>
 References: <1411612278-4707-1-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=wA6DuxbvQIsdMKaIZX6oXnJYn22WnTO1RKznjrdhb7c=;
+        b=Vu1nOK9p0K+csu0nVPlwua8qsO9X9dgSiEAn412+Jabbbi58R0s9ScUpMxwqvGe6xa
+         Z40p+aeM9Zx3gy+nXX+22G5NgaL//lyGX0mbMFVkUM2kPLMbwKikGWQeLnAmDEktzSqr
+         iog+dcnd9URLEv3ewnnnmSkJX+rxP7sk8LRvr9+hDD2ruAbRXL5lbCCTSBJQpvunVIJT
+         uPxhRSZ4Fe10qV2cYX4oEtwJdkxFuuDmWpbhNaV1crFx96Gi1igEHjWzQ2KJ9B/iwCDk
+         IYgrQtHEJxV+tfW3or32bZOw3Jt0A41H8evxEkdKDoreK4O615AY36GOV5zuBGIYuxJM
+         J/1w==
 Content-Disposition: inline
 In-Reply-To: <1411612278-4707-1-git-send-email-hannes@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Argh, buggy css_put() against the root.  Hand grenades, everywhere.
-Update:
+Hello,
 
----
-From 9b0b4d72d71cd8acd7aaa58d2006c751decc8739 Mon Sep 17 00:00:00 2001
-From: Johannes Weiner <hannes@cmpxchg.org>
-Date: Wed, 24 Sep 2014 22:00:20 -0400
-Subject: [patch] mm: memcontrol: do not iterate uninitialized memcgs
+On Wed, Sep 24, 2014 at 10:31:18PM -0400, Johannes Weiner wrote:
+..
+> not meet the ordering requirements for memcg, and so we still may see
+> partially initialized memcgs from the iterators.
 
-The cgroup iterators yield css objects that have not yet gone through
-css_online(), but they are not complete memcgs at this point and so
-the memcg iterators should not return them.  d8ad30559715 ("mm/memcg:
-iteration skip memcgs not yet fully initialized") set out to implement
-exactly this, but it uses CSS_ONLINE, a cgroup-internal flag that does
-not meet the ordering requirements for memcg, and so we still may see
-partially initialized memcgs from the iterators.
+It's mainly the other way around - a fully initialized css may not
+show up in an iteration, but given that there's no memory ordering or
+synchronization around the flag, anything can happen.
 
-The cgroup core can not reasonably provide a clear answer on whether
-the object around the css has been fully initialized, as that depends
-on controller-specific locking and lifetime rules.  Thus, introduce a
-memcg-specific flag that is set after the memcg has been initialized
-in css_online(), and read before mem_cgroup_iter() callers access the
-memcg members.
+...
+> +		if (next_css == &root->css ||
+> +		    css_tryget_online(next_css)) {
+> +			struct mem_cgroup *memcg;
+> +
+> +			memcg = mem_cgroup_from_css(next_css);
+> +			if (memcg->initialized) {
+> +				/*
+> +				 * Make sure the caller's accesses to
+> +				 * the memcg members are issued after
+> +				 * we see this flag set.
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-Cc: <stable@vger.kernel.org>	[3.12+]
----
- mm/memcontrol.c | 36 +++++++++++++++++++++++++++++++-----
- 1 file changed, 31 insertions(+), 5 deletions(-)
+I usually prefer if the comment points to the exact location that the
+matching memory barriers live.  Sometimes it's difficult to locate the
+partner barrier even w/ the functional explanation.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 306b6470784c..bafdac0f724e 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -292,6 +292,9 @@ struct mem_cgroup {
- 	/* vmpressure notifications */
- 	struct vmpressure vmpressure;
- 
-+	/* css_online() has been completed */
-+	bool initialized;
-+
- 	/*
- 	 * the counter to account for mem+swap usage.
- 	 */
-@@ -1090,10 +1093,23 @@ skip_node:
- 	 * skipping css reference should be safe.
- 	 */
- 	if (next_css) {
--		if ((next_css == &root->css) ||
--		    ((next_css->flags & CSS_ONLINE) &&
--		     css_tryget_online(next_css)))
--			return mem_cgroup_from_css(next_css);
-+		struct mem_cgroup *memcg = mem_cgroup_from_css(next_css);
-+
-+		if (next_css == &root->css)
-+			return memcg;
-+
-+		if (css_tryget_online(next_css)) {
-+			if (memcg->initialized) {
-+				/*
-+				 * Make sure the caller's accesses to
-+				 * the memcg members are issued after
-+				 * we see this flag set.
-+				 */
-+				smp_rmb();
-+				return memcg;
-+			}
-+			css_put(next_css);
-+		}
- 
- 		prev_css = next_css;
- 		goto skip_node;
-@@ -5413,6 +5429,7 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
- 	struct mem_cgroup *parent = mem_cgroup_from_css(css->parent);
-+	int ret;
- 
- 	if (css->id > MEM_CGROUP_ID_MAX)
- 		return -ENOSPC;
-@@ -5449,7 +5466,16 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
- 	}
- 	mutex_unlock(&memcg_create_mutex);
- 
--	return memcg_init_kmem(memcg, &memory_cgrp_subsys);
-+	ret = memcg_init_kmem(memcg, &memory_cgrp_subsys);
-+	if (ret)
-+		return ret;
-+
-+	/* Make sure the initialization is visible before the flag */
-+	smp_wmb();
-+
-+	memcg->initialized = true;
-+
-+	return 0;
- }
- 
- /*
+> +				 */
+> +				smp_rmb();
+> +				return memcg;
+
+In an unlikely event this rmb becomes an issue, a self-pointing
+pointer which is set/read using smp_store_release() and
+smp_load_acquire() respectively can do with plain barrier() on the
+reader side on archs which don't need data dependency barrier
+(basically everything except alpha).  Not sure whether that'd be more
+or less readable than this tho.
+
+Thanks.
+
 -- 
-2.1.0
+tejun
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
