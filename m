@@ -1,145 +1,174 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch] mm: memcontrol: do not iterate uninitialized memcgs
-Date: Thu, 25 Sep 2014 16:23:12 +0200
-Message-ID: <20140925142312.GE11080@dhcp22.suse.cz>
-References: <1411612278-4707-1-git-send-email-hannes@cmpxchg.org>
- <20140925025758.GA6903@mtj.dyndns.org>
- <20140925134342.GB22508@cmpxchg.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [patch 2/3] mm: memcontrol: simplify detecting when the
+ memory+swap limit is hit
+Date: Thu, 25 Sep 2014 17:27:54 +0200
+Message-ID: <20140925152754.GF11080@dhcp22.suse.cz>
+References: <1411571338-8178-1-git-send-email-hannes@cmpxchg.org>
+ <1411571338-8178-3-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=hJ+uuZOM7ovuh2LdsJ9/ZP+69D6aV5qKPO8EBEhj4k4=;
-        b=bIM5cLJPbb/HcxTSFo1ZVurms67yaA+2JGfLFsCvS0xcqxzZndxwyUK+d37dI0zTlb
-         3+7ZRd1eI1kpnE4MtjuuX0qj41BQjrH50DmBweS1ZsSvfwSGbJnO7eL6fCjO9Nz0XH5H
-         /Etk69tLQG0Hbnj1bfON0GSq+kTjDBkg5JX5TTk2xhoIBvmO8dhubBm1RwxIVOHUBeNP
-         YZ4W+MUwB1yRNZ9X/ZXTAG59dYhJT06B5xMpnTdQt5MTK1ucdvuDgqZhy5NxW/1+brlr
-         XBvP2euoPthQoC/x2EfbA29KmnrTJei5GPbH9xjqpbDoxjaGxlizB2PpA+/SK99T6yJW
-         dBYA==
+        bh=LJZ5jRGjwsTEoL5HpOsePxmXLGdVwtlfETrvsf8kOP4=;
+        b=BbxBIVa92yMc0ZK/IkrstHXUCUV02T9oAjXRZQ1FZbq2+pv2S8hY5aOPMcnFxX1c+/
+         LD/N8i/05eBzH5i4pI1mL6EGnlD0Wy+hb1f5G7SGDHrzAJygAsSW/H7Q+B/yBGMPNGiF
+         e2xSLhIiTg7fMCQZjeiZv5gAdk3MyAI/ArT/ZwwoQI3NaIkULfhxrbZDnS0E9NuEKdf9
+         GsZGu0tF/LeWY/8VaDAftIVExEE3xAiMP5kzZ86a8b+/kZp39W1LKc7iDa6SiI4tvDvl
+         bdjqwXL59k+5Q18DisKigXp2smLFb+713b1T35r2SEr1LsOe6JDh/IEQk+dtGBOvJsPx
+         +YxQ==
 Content-Disposition: inline
-In-Reply-To: <20140925134342.GB22508@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1411571338-8178-3-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Peter Zijlstra <peterz@infradead.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Dave Hansen <dave-gkUM19QKKo4@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu 25-09-14 09:43:42, Johannes Weiner wrote:
-[...]
-> From 1cd659f42f399adc58522d478f54587c8c4dd5cc Mon Sep 17 00:00:00 2001
-> From: Johannes Weiner <hannes@cmpxchg.org>
-> Date: Wed, 24 Sep 2014 22:00:20 -0400
-> Subject: [patch] mm: memcontrol: do not iterate uninitialized memcgs
+On Wed 24-09-14 11:08:57, Johannes Weiner wrote:
+> When attempting to charge pages, we first charge the memory counter
+> and then the memory+swap counter.  If one of the counters is at its
+> limit, we enter reclaim, but if it's the memory+swap counter, reclaim
+> shouldn't swap because that wouldn't change the situation.  However,
+> if the counters have the same limits, we never get to the memory+swap
+> limit.  To know whether reclaim should swap or not, there is a state
+> flag that indicates whether the limits are equal and whether hitting
+> the memory limit implies hitting the memory+swap limit.
 > 
-> The cgroup iterators yield css objects that have not yet gone through
-> css_online(), but they are not complete memcgs at this point and so
-> the memcg iterators should not return them.  d8ad30559715 ("mm/memcg:
-> iteration skip memcgs not yet fully initialized") set out to implement
-> exactly this, but it uses CSS_ONLINE, a cgroup-internal flag that does
-> not meet the ordering requirements for memcg, and so the iterator may
-> skip over initialized groups, or return partially initialized memcgs.
+> Just try the memory+swap counter first.
+
+OK, this makes sense and makes the reclaim code little bit more
+readable (). I would just add that the patch shouldn't have any visible
+effectes because that is not apparent from the description.
+
 > 
-> The cgroup core can not reasonably provide a clear answer on whether
-> the object around the css has been fully initialized, as that depends
-> on controller-specific locking and lifetime rules.  Thus, introduce a
-> memcg-specific flag that is set after the memcg has been initialized
-> in css_online(), and read before mem_cgroup_iter() callers access the
-> memcg members.
-> 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: <stable@vger.kernel.org>	[3.12+]
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-I am not an expert (obviously) on memory barriers but from
-Documentation/memory-barriers.txt, my understanding is that
-smp_load_acquire and smp_store_release is exactly what we need here.
-"
-However, after an ACQUIRE on a given variable, all memory accesses
-preceding any prior RELEASE on that same variable are guaranteed to be
-visible.
-"
-
-Acked-by: Michal Hocko <mhocko@suse.cz>
-
-Stable backport would be trickier because ACQUIRE/RELEASE were
-introduced later but smp_mb() should be safe replacement.
-
-Thanks!
+Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
 > ---
->  mm/memcontrol.c | 36 +++++++++++++++++++++++++++++++-----
->  1 file changed, 31 insertions(+), 5 deletions(-)
+>  mm/memcontrol.c | 47 +++++++++++++----------------------------------
+>  1 file changed, 13 insertions(+), 34 deletions(-)
 > 
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 306b6470784c..23976fd885fd 100644
+> index 1ec22bf380d0..89c920156c2a 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -292,6 +292,9 @@ struct mem_cgroup {
->  	/* vmpressure notifications */
->  	struct vmpressure vmpressure;
+> @@ -315,9 +315,6 @@ struct mem_cgroup {
+>  	/* OOM-Killer disable */
+>  	int		oom_kill_disable;
 >  
-> +	/* css_online() has been completed */
-> +	int initialized;
-> +
->  	/*
->  	 * the counter to account for mem+swap usage.
->  	 */
-> @@ -1090,10 +1093,21 @@ skip_node:
->  	 * skipping css reference should be safe.
->  	 */
->  	if (next_css) {
-> -		if ((next_css == &root->css) ||
-> -		    ((next_css->flags & CSS_ONLINE) &&
-> -		     css_tryget_online(next_css)))
-> -			return mem_cgroup_from_css(next_css);
-> +		struct mem_cgroup *memcg = mem_cgroup_from_css(next_css);
-> +
-> +		if (next_css == &root->css)
-> +			return memcg;
-> +
-> +		if (css_tryget_online(next_css)) {
-> +			/*
-> +			 * Make sure the memcg is initialized:
-> +			 * mem_cgroup_css_online() orders the the
-> +			 * initialization against setting the flag.
-> +			 */
-> +			if (smp_load_acquire(&memcg->initialized))
-> +				return memcg;
-> +			css_put(next_css);
-> +		}
+> -	/* set when res.limit == memsw.limit */
+> -	bool		memsw_is_minimum;
+> -
+>  	/* protect arrays of thresholds */
+>  	struct mutex thresholds_lock;
 >  
->  		prev_css = next_css;
->  		goto skip_node;
-> @@ -5413,6 +5427,7 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
+> @@ -1804,8 +1801,6 @@ static unsigned long mem_cgroup_reclaim(struct mem_cgroup *memcg,
+>  
+>  	if (flags & MEM_CGROUP_RECLAIM_NOSWAP)
+>  		noswap = true;
+> -	if (!(flags & MEM_CGROUP_RECLAIM_SHRINK) && memcg->memsw_is_minimum)
+> -		noswap = true;
+>  
+>  	for (loop = 0; loop < MEM_CGROUP_MAX_RECLAIM_LOOPS; loop++) {
+>  		if (loop)
+> @@ -2543,16 +2538,17 @@ retry:
+>  		goto done;
+>  
+>  	size = batch * PAGE_SIZE;
+> -	if (!res_counter_charge(&memcg->res, size, &fail_res)) {
+> -		if (!do_swap_account)
+> +	if (!do_swap_account ||
+> +	    !res_counter_charge(&memcg->memsw, size, &fail_res)) {
+> +		if (!res_counter_charge(&memcg->res, size, &fail_res))
+>  			goto done_restock;
+> -		if (!res_counter_charge(&memcg->memsw, size, &fail_res))
+> -			goto done_restock;
+> -		res_counter_uncharge(&memcg->res, size);
+> +		if (do_swap_account)
+> +			res_counter_uncharge(&memcg->memsw, size);
+> +		mem_over_limit = mem_cgroup_from_res_counter(fail_res, res);
+> +	} else {
+>  		mem_over_limit = mem_cgroup_from_res_counter(fail_res, memsw);
+>  		flags |= MEM_CGROUP_RECLAIM_NOSWAP;
+> -	} else
+> -		mem_over_limit = mem_cgroup_from_res_counter(fail_res, res);
+> +	}
+>  
+>  	if (batch > nr_pages) {
+>  		batch = nr_pages;
+> @@ -3615,7 +3611,6 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+>  				unsigned long long val)
 >  {
->  	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
->  	struct mem_cgroup *parent = mem_cgroup_from_css(css->parent);
-> +	int ret;
+>  	int retry_count;
+> -	u64 memswlimit, memlimit;
+>  	int ret = 0;
+>  	int children = mem_cgroup_count_children(memcg);
+>  	u64 curusage, oldusage;
+> @@ -3642,24 +3637,16 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+>  		 * We have to guarantee memcg->res.limit <= memcg->memsw.limit.
+>  		 */
+>  		mutex_lock(&set_limit_mutex);
+> -		memswlimit = res_counter_read_u64(&memcg->memsw, RES_LIMIT);
+> -		if (memswlimit < val) {
+> +		if (res_counter_read_u64(&memcg->memsw, RES_LIMIT) < val) {
+>  			ret = -EINVAL;
+>  			mutex_unlock(&set_limit_mutex);
+>  			break;
+>  		}
 >  
->  	if (css->id > MEM_CGROUP_ID_MAX)
->  		return -ENOSPC;
-> @@ -5449,7 +5464,18 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
->  	}
->  	mutex_unlock(&memcg_create_mutex);
+> -		memlimit = res_counter_read_u64(&memcg->res, RES_LIMIT);
+> -		if (memlimit < val)
+> +		if (res_counter_read_u64(&memcg->res, RES_LIMIT) < val)
+>  			enlarge = 1;
 >  
-> -	return memcg_init_kmem(memcg, &memory_cgrp_subsys);
-> +	ret = memcg_init_kmem(memcg, &memory_cgrp_subsys);
-> +	if (ret)
-> +		return ret;
-> +
-> +	/*
-> +	 * Make sure the memcg is initialized: mem_cgroup_iter()
-> +	 * orders reading memcg->initialized against its callers
-> +	 * reading the memcg members.
-> +	 */
-> +	smp_store_release(&memcg->initialized, 1);
-> +
-> +	return 0;
->  }
+>  		ret = res_counter_set_limit(&memcg->res, val);
+> -		if (!ret) {
+> -			if (memswlimit == val)
+> -				memcg->memsw_is_minimum = true;
+> -			else
+> -				memcg->memsw_is_minimum = false;
+> -		}
+>  		mutex_unlock(&set_limit_mutex);
 >  
->  /*
+>  		if (!ret)
+> @@ -3684,7 +3671,7 @@ static int mem_cgroup_resize_memsw_limit(struct mem_cgroup *memcg,
+>  					unsigned long long val)
+>  {
+>  	int retry_count;
+> -	u64 memlimit, memswlimit, oldusage, curusage;
+> +	u64 oldusage, curusage;
+>  	int children = mem_cgroup_count_children(memcg);
+>  	int ret = -EBUSY;
+>  	int enlarge = 0;
+> @@ -3703,22 +3690,14 @@ static int mem_cgroup_resize_memsw_limit(struct mem_cgroup *memcg,
+>  		 * We have to guarantee memcg->res.limit <= memcg->memsw.limit.
+>  		 */
+>  		mutex_lock(&set_limit_mutex);
+> -		memlimit = res_counter_read_u64(&memcg->res, RES_LIMIT);
+> -		if (memlimit > val) {
+> +		if (res_counter_read_u64(&memcg->res, RES_LIMIT) > val) {
+>  			ret = -EINVAL;
+>  			mutex_unlock(&set_limit_mutex);
+>  			break;
+>  		}
+> -		memswlimit = res_counter_read_u64(&memcg->memsw, RES_LIMIT);
+> -		if (memswlimit < val)
+> +		if (res_counter_read_u64(&memcg->memsw, RES_LIMIT) < val)
+>  			enlarge = 1;
+>  		ret = res_counter_set_limit(&memcg->memsw, val);
+> -		if (!ret) {
+> -			if (memlimit == val)
+> -				memcg->memsw_is_minimum = true;
+> -			else
+> -				memcg->memsw_is_minimum = false;
+> -		}
+>  		mutex_unlock(&set_limit_mutex);
+>  
+>  		if (!ret)
 > -- 
 > 2.1.0
 > 
@@ -147,9 +176,3 @@ Thanks!
 -- 
 Michal Hocko
 SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
