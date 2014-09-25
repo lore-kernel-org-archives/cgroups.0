@@ -1,100 +1,71 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [patch 1/3] mm: memcontrol: do not kill uncharge batching in
- free_pages_and_swap_cache
-Date: Wed, 24 Sep 2014 14:15:44 -0700
-Message-ID: <20140924141544.72fbfd323252a18d275d063e@linux-foundation.org>
-References: <1411571338-8178-1-git-send-email-hannes@cmpxchg.org>
-	<1411571338-8178-2-git-send-email-hannes@cmpxchg.org>
-	<20140924124234.3fdb59d6cdf7e9c4d6260adb@linux-foundation.org>
-	<20140924210322.GA11017@cmpxchg.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [patch v2] mm: memcontrol: convert reclaim iterator to simple
+ css refcounting
+Date: Wed, 24 Sep 2014 21:29:30 -0400
+Message-ID: <20140925012930.GA26745@htj.dyndns.org>
+References: <1411161059-16552-1-git-send-email-hannes@cmpxchg.org>
+ <20140919212843.GA23861@cmpxchg.org>
+ <20140924164739.GA15897@dhcp22.suse.cz>
+ <20140924171653.GA10082@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20140924210322.GA11017@cmpxchg.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=YZe5v45cF17CB6IYiGa+J7Zf2airs95OYML8GwRzJKI=;
+        b=vIDaYL5meIEQuRMlCoE7ChvkOa/x6D60Lkuyo/nKEiEgJrlq1Uv/kTns3UocZM3D0l
+         Z+6hyi7Cudk0bnCZqIP29O23kL9wkbSa1yFdbatKou1w/zpdxcdNNXEvxK+kqybmbBRr
+         sapX/lLoJZjyawByhcICt0iIYRPn386PTTsQ9ArIGuYDQUUZfWXIYySP5D0D1zMHqMGW
+         BwiNYlMRTodHlMMK1IBsbkfP9M+cKz0meg+qN46ZB8LcbDQzOCofiArptCxjg3wWWjVA
+         jEPXDuqu1Yahukc0PNwsHf/dahj1LOUcVgqyQ60lLr5tpdGUggNitz+q0cqfCQN2j88/
+         I9lA==
+Content-Disposition: inline
+In-Reply-To: <20140924171653.GA10082@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Greg Thelen <gthelen@google.com>, Vladimir Davydov <vdavydov@parallels.com>, Dave Hansen <dave@sr71.net>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 24 Sep 2014 17:03:22 -0400 Johannes Weiner <hannes@cmpxchg.org> wrote:
+Hello,
 
-> > Obviously it's not very important - presumably the common case is that
-> > the LRU contains lengthy sequences of pages from the same zone.  Maybe.
-> 
-> Even then, the end result is more concise and busts the lock where
-> it's actually taken, making the whole thing a bit more obvious:
+On Wed, Sep 24, 2014 at 01:16:53PM -0400, Johannes Weiner wrote:
+> Tejun, should maybe the iterators not return css before they have
+> CSS_ONLINE set?  It seems odd to have memcg reach into cgroup like
+> that to check if published objects are actually fully initialized.
+> Background is this patch:
 
-Yes, that did come out better.
+So, memcontrol shouldn't be doing that but at the same time cgroup
+core can't do it for any controller.  One of the requirements of the
+iterations is that it shouldn't miss any css which has been onlined by
+its controller; however, because each controller defines its own
+locking, cgroup core has no way knowing when a css finishes
+initialization.  If it includes after ->css_online() is complete, the
+iteration may happen between when the controller considers the css
+fully initialized and cgroup core sets CSS_ONLINE.  The only thing
+cgroup core can do is including all csses which *could* be considered
+online by the controller and let it filter accordingly.
 
-> From: Michal Hocko <mhocko@suse.cz>
-> Date: Fri, 5 Sep 2014 11:16:17 +0200
-> Subject: [patch] mm: memcontrol: do not kill uncharge batching in
->  free_pages_and_swap_cache
-> 
-> free_pages_and_swap_cache limits release_pages to PAGEVEC_SIZE chunks.
-> This is not a big deal for the normal release path but it completely
-> kills memcg uncharge batching which reduces res_counter spin_lock
-> contention. Dave has noticed this with his page fault scalability test
-> case on a large machine when the lock was basically dominating on all
-> CPUs:
->     80.18%    80.18%  [kernel]               [k] _raw_spin_lock
->                   |
->                   --- _raw_spin_lock
->                      |
->                      |--66.59%-- res_counter_uncharge_until
->                      |          res_counter_uncharge
->                      |          uncharge_batch
->                      |          uncharge_list
->                      |          mem_cgroup_uncharge_list
->                      |          release_pages
->                      |          free_pages_and_swap_cache
->                      |          tlb_flush_mmu_free
->                      |          |
->                      |          |--90.12%-- unmap_single_vma
->                      |          |          unmap_vmas
->                      |          |          unmap_region
->                      |          |          do_munmap
->                      |          |          vm_munmap
->                      |          |          sys_munmap
->                      |          |          system_call_fastpath
->                      |          |          __GI___munmap
->                      |          |
->                      |           --9.88%-- tlb_flush_mmu
->                      |                     tlb_finish_mmu
->                      |                     unmap_region
->                      |                     do_munmap
->                      |                     vm_munmap
->                      |                     sys_munmap
->                      |                     system_call_fastpath
->                      |                     __GI___munmap
-> 
-> In his case the load was running in the root memcg and that part
-> has been handled by reverting 05b843012335 ("mm: memcontrol: use
-> root_mem_cgroup res_counter") because this is a clear regression,
-> but the problem remains inside dedicated memcgs.
-> 
-> There is no reason to limit release_pages to PAGEVEC_SIZE batches other
-> than lru_lock held times. This logic, however, can be moved inside the
-> function. mem_cgroup_uncharge_list and free_hot_cold_page_list do not
-> hold any lock for the whole pages_to_free list so it is safe to call
-> them in a single run.
-> 
-> In release_pages, break the lock at least every SWAP_CLUSTER_MAX (32)
-> pages, then remove the batching from free_pages_and_swap_cache.
+IOW, the precise moment a css becomes online is not known to the
+cgroup core as cgroup core locking and controller locking are
+completely independent.  The current memcg implementation is broken in
+that memcg iterator is testing CSS_ONLINE which is set *after*
+->css_online() is complete and iterations can happen inbetween where
+the online css may be omitted because it's not marked online by cgroup
+core yet.  This may be okay for memcg's use of iterators but for
+things like freezer, for example, this can break things horribly.
 
-I beefed this paragraph up a bit:
+Anyways, the right thing to do is removing the CSS_ONLINE testing and
+implementing memcg's own way of marking an object as fully initialized
+according to its synchronization and iteration requirements.  So,
+yeah, it's a glaring layering violation which should be removed.
 
-: The release_pages() code was previously breaking the lru_lock each
-: PAGEVEC_SIZE pages (ie, 14 pages).  However this code has no usage of
-: pagevecs so switch to breaking the lock at least every SWAP_CLUSTER_MAX
-: (32) pages.  This means that the lock acquisition frequency is
-: approximately halved and the max hold times are approximately doubled.
-:
-: The now unneeded batching is removed from free_pages_and_swap_cache().
+Thanks.
 
-I doubt if the increased irq-off time will hurt anyone, but who knows...
-
+-- 
+tejun
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
