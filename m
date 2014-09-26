@@ -1,87 +1,478 @@
-From: Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
-Subject: Re: [PATCH] Revert "cgroup: remove redundant variable in
- cgroup_mount()"
-Date: Fri, 26 Sep 2014 06:58:25 +0100
-Message-ID: <20140926055825.GO7996@ZenIV.linux.org.uk>
-References: <1411704205-28995-1-git-send-email-lizefan@huawei.com>
- <20140926042617.GA14426@htj.dyndns.org>
- <20140926045352.GN7996@ZenIV.linux.org.uk>
- <20140926050457.GB14426@htj.dyndns.org>
+From: Vladimir Davydov <vdavydov@parallels.com>
+Subject: Re: [patch 1/3] mm: memcontrol: lockless page counters
+Date: Fri, 26 Sep 2014 14:31:05 +0400
+Message-ID: <20140926103104.GE29445@esperanza>
+References: <1411573390-9601-1-git-send-email-hannes@cmpxchg.org>
+ <1411573390-9601-2-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20140926050457.GB14426-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1411573390-9601-2-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: linux-mm@kvack.org, Greg Thelen <gthelen@google.com>, Michal Hocko <mhocko@suse.cz>, Dave Hansen <dave@sr71.net>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Sep 26, 2014 at 01:04:57AM -0400, Tejun Heo wrote:
-> On Fri, Sep 26, 2014 at 05:53:52AM +0100, Al Viro wrote:
-> > On Fri, Sep 26, 2014 at 12:26:17AM -0400, Tejun Heo wrote:
-> > > On Fri, Sep 26, 2014 at 12:03:25PM +0800, Zefan Li wrote:
-> > > > This reverts commit 0c7bf3e8cab7900e17ce7f97104c39927d835469.
-> ...
-> > > > Cc: Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
-> > > > Reported-by: Andrey Wagin <avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> > > > Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> > > 
-> > > Applied to cgroup/for-3.18.
-> > 
-> > Er?  It's a clear regression since 3.16; shouldn't it go into mainline
-> > before 3.17-final?  Another thing: AFAICS, if kernfs_fill_super() fails,
+Hi Johannes,
+
+On Wed, Sep 24, 2014 at 11:43:08AM -0400, Johannes Weiner wrote:
+> Memory is internally accounted in bytes, using spinlock-protected
+> 64-bit counters, even though the smallest accounting delta is a page.
+> The counter interface is also convoluted and does too many things.
 > 
-> Hmmm?  This is reverting 0c7bf3e8cab7 which was committed six days ago
-> to cgroup/for-3.18.
-
-*blink*
-Right you are, I forgot that the tree I'm currently in gets -next as one of
-remotes, so seeing that commit there doesn't imply it being in mainline.
-My apologies.  I plead going near-blind from digging through shitloads of
-callchains leading to __d_move() and __d_rehash() since yesterday ;-/
-Oh, well - looks like either I'll go completely insane or fs/dcache.c will
-shrink quite a bit come next cycle...
-
-> > you get unbalanced kernfs_put() on the cleanup path - kernfs_kill_sb()
-> > will be called in those cases as well.  IOW, we'd better move that
-> >         kernfs_get(info->root->kn);
-> > in kernfs_fill_super() all way up to the point before kernfs_get_inode().
-> > Something like this:
-> > 
-> > Signed-off-by: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
-> > ---
-> > diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
-> > index f973ae9..e5e92e3 100644
-> > --- a/fs/kernfs/mount.c
-> > +++ b/fs/kernfs/mount.c
-> > @@ -74,6 +74,7 @@ static int kernfs_fill_super(struct super_block *sb, unsigned long magic)
-> >  	sb->s_magic = magic;
-> >  	sb->s_op = &kernfs_sops;
-> >  	sb->s_time_gran = 1;
-> > +	kernfs_get(info->root->kn);
-> >  
-> >  	/* get root inode, initialize and unlock it */
-> >  	mutex_lock(&kernfs_mutex);
-> > @@ -90,7 +91,6 @@ static int kernfs_fill_super(struct super_block *sb, unsigned long magic)
-> >  		pr_debug("%s: could not get root dentry!\n", __func__);
-> >  		return -ENOMEM;
-> >  	}
-> > -	kernfs_get(info->root->kn);
+> Introduce a new lockless word-sized page counter API, then change all
+> memory accounting over to it and remove the old one.  The translation
+> from and to bytes then only happens when interfacing with userspace.
 > 
-> Ooh, right.  Will test & send the patch to Greg.
+> Aside from the locking costs, this gets rid of the icky unsigned long
+> long types in the very heart of memcg, which is great for 32 bit and
+> also makes the code a lot more readable.
+> 
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 
-OK...  You'll need some way to force those failures to be able to test it -
-they are normally triggered when you are very low on memory, i.e. the failure
-exits won't trigger on normal testing (and near OOM you could easily fail
-not reaching that point at all).
+It looks much better to me. A few comments below, mostly nit picking.
 
-Normally I'm doing such testing by something like slapping
-	if (!strcmp(current->comm, "bugger"))
-		return -ENOMEM;
-in there, followed by cp /bin/mount /tmp/bugger; /tmp/bugger -t cgroup <...>
-Hell knows, maybe it would be worth to add a debugging option that would
-check some sysctl and if it's non-zero, looked through the call chain in
-kmem_cache_alloc() in search of such address, failing allocation if found.
-Never got around to doing it properly, might or might not be useful...
+[...]
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index c2c75262a209..52c24119be69 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+[...]
+> @@ -1490,12 +1495,23 @@ int mem_cgroup_inactive_anon_is_low(struct lruvec *lruvec)
+>   */
+>  static unsigned long mem_cgroup_margin(struct mem_cgroup *memcg)
+>  {
+> -	unsigned long long margin;
+> +	unsigned long margin = 0;
+> +	unsigned long count;
+> +	unsigned long limit;
+>  
+> -	margin = res_counter_margin(&memcg->res);
+> -	if (do_swap_account)
+> -		margin = min(margin, res_counter_margin(&memcg->memsw));
+> -	return margin >> PAGE_SHIFT;
+> +	count = page_counter_read(&memcg->memory);
+> +	limit = ACCESS_ONCE(memcg->memory.limit);
+> +	if (count < limit)
+
+Nit: IMO this looks unwieldier and less readable than
+res_counter_margin. And two lines below we repeat this.
+
+> +		margin = limit - count;
+> +
+> +	if (do_swap_account) {
+> +		count = page_counter_read(&memcg->memsw);
+> +		limit = ACCESS_ONCE(memcg->memsw.limit);
+> +		if (count < limit)
+> +			margin = min(margin, limit - count);
+> +	}
+> +
+> +	return margin;
+>  }
+>  
+>  int mem_cgroup_swappiness(struct mem_cgroup *memcg)
+[...]
+> @@ -1685,30 +1698,19 @@ static int mem_cgroup_count_children(struct mem_cgroup *memcg)
+>  }
+>  
+>  /*
+> - * Return the memory (and swap, if configured) limit for a memcg.
+> + * Return the memory (and swap, if configured) maximum consumption for a memcg.
+
+Nit: Why did you change the comment? Now it doesn't seem to be relevant.
+
+>   */
+> -static u64 mem_cgroup_get_limit(struct mem_cgroup *memcg)
+> +static unsigned long mem_cgroup_get_limit(struct mem_cgroup *memcg)
+>  {
+> -	u64 limit;
+> +	unsigned long limit;
+>  
+> -	limit = res_counter_read_u64(&memcg->res, RES_LIMIT);
+> -
+> -	/*
+> -	 * Do not consider swap space if we cannot swap due to swappiness
+> -	 */
+> +	limit = memcg->memory.limit;
+>  	if (mem_cgroup_swappiness(memcg)) {
+> -		u64 memsw;
+> +		unsigned long memsw_limit;
+>  
+> -		limit += total_swap_pages << PAGE_SHIFT;
+> -		memsw = res_counter_read_u64(&memcg->memsw, RES_LIMIT);
+> -
+> -		/*
+> -		 * If memsw is finite and limits the amount of swap space
+> -		 * available to this memcg, return that limit.
+> -		 */
+> -		limit = min(limit, memsw);
+> +		memsw_limit = memcg->memsw.limit;
+> +		limit = min(limit + total_swap_pages, memsw_limit);
+>  	}
+> -
+>  	return limit;
+>  }
+>  
+[...]
+> @@ -4114,25 +4109,27 @@ out:
+>  }
+>  
+>  static int memcg_activate_kmem(struct mem_cgroup *memcg,
+> -			       unsigned long long limit)
+> +			       unsigned long nr_pages)
+>  {
+>  	int ret;
+>  
+>  	mutex_lock(&activate_kmem_mutex);
+> -	ret = __memcg_activate_kmem(memcg, limit);
+> +	ret = __memcg_activate_kmem(memcg, nr_pages);
+>  	mutex_unlock(&activate_kmem_mutex);
+>  	return ret;
+>  }
+>  
+>  static int memcg_update_kmem_limit(struct mem_cgroup *memcg,
+> -				   unsigned long long val)
+> +				   unsigned long limit)
+>  {
+>  	int ret;
+>  
+> +	mutex_lock(&memcg_limit_mutex);
+>  	if (!memcg_kmem_is_active(memcg))
+> -		ret = memcg_activate_kmem(memcg, val);
+> +		ret = memcg_activate_kmem(memcg, limit);
+
+I think we can now get rid of the activate_kmem_mutex, but this should
+be done separately of course.
+
+>  	else
+> -		ret = res_counter_set_limit(&memcg->kmem, val);
+> +		ret = page_counter_limit(&memcg->kmem, limit);
+> +	mutex_unlock(&memcg_limit_mutex);
+>  	return ret;
+>  }
+>  
+[...]
+> @@ -5570,10 +5530,10 @@ static void mem_cgroup_css_reset(struct cgroup_subsys_state *css)
+>  {
+>  	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+>  
+> -	mem_cgroup_resize_limit(memcg, ULLONG_MAX);
+> -	mem_cgroup_resize_memsw_limit(memcg, ULLONG_MAX);
+> -	memcg_update_kmem_limit(memcg, ULLONG_MAX);
+> -	res_counter_set_soft_limit(&memcg->res, ULLONG_MAX);
+> +	mem_cgroup_resize_limit(memcg, PAGE_COUNTER_MAX);
+> +	mem_cgroup_resize_memsw_limit(memcg, PAGE_COUNTER_MAX);
+> +	memcg_update_kmem_limit(memcg, PAGE_COUNTER_MAX);
+
+I think we should do it only if memcg_kmem_is_active, but that's a
+different story.
+
+> +	memcg->soft_limit = 0;
+>  }
+>  
+>  #ifdef CONFIG_MMU
+[...]
+> diff --git a/mm/page_counter.c b/mm/page_counter.c
+> new file mode 100644
+> index 000000000000..51c45921b8d1
+> --- /dev/null
+> +++ b/mm/page_counter.c
+> @@ -0,0 +1,191 @@
+> +/*
+> + * Lockless hierarchical page accounting & limiting
+> + *
+> + * Copyright (C) 2014 Red Hat, Inc., Johannes Weiner
+> + */
+> +#include <linux/page_counter.h>
+> +#include <linux/atomic.h>
+> +
+> +/**
+> + * page_counter_cancel - take pages out of the local counter
+> + * @counter: counter
+> + * @nr_pages: number of pages to cancel
+> + *
+> + * Returns whether there are remaining pages in the counter.
+> + */
+> +int page_counter_cancel(struct page_counter *counter, unsigned long nr_pages)
+> +{
+> +	long new;
+> +
+> +	new = atomic_long_sub_return(nr_pages, &counter->count);
+> +
+> +	if (WARN_ON_ONCE(new < 0))
+> +		atomic_long_add(nr_pages, &counter->count);
+> +
+> +	return new > 0;
+> +}
+> +
+> +/**
+> + * page_counter_charge - hierarchically charge pages
+> + * @counter: counter
+> + * @nr_pages: number of pages to charge
+> + *
+> + * NOTE: This may exceed the configured counter limits.
+> + */
+> +void page_counter_charge(struct page_counter *counter, unsigned long nr_pages)
+> +{
+> +	struct page_counter *c;
+> +
+> +	for (c = counter; c; c = c->parent) {
+> +		long new;
+> +
+> +		new = atomic_long_add_return(nr_pages, &c->count);
+> +		/*
+> +		 * This is racy, but with the per-cpu caches on top
+> +		 * it's just a ballpark metric anyway; and with lazy
+> +		 * cache reclaim, the majority of workloads peg the
+> +		 * watermark to the group limit soon after launch.
+> +		 */
+> +		if (new > c->watermark)
+> +			c->watermark = new;
+> +	}
+> +}
+> +
+> +/**
+> + * page_counter_try_charge - try to hierarchically charge pages
+> + * @counter: counter
+> + * @nr_pages: number of pages to charge
+> + * @fail: points first counter to hit its limit, if any
+> + *
+> + * Returns 0 on success, or -ENOMEM and @fail if the counter or one of
+> + * its ancestors has hit its limit.
+> + */
+> +int page_counter_try_charge(struct page_counter *counter,
+> +			    unsigned long nr_pages,
+> +			    struct page_counter **fail)
+> +{
+> +	struct page_counter *c;
+> +
+> +	for (c = counter; c; c = c->parent) {
+> +		long new;
+> +		/*
+> +		 * Charge speculatively to avoid an expensive CAS.  If
+> +		 * a bigger charge fails, it might falsely lock out a
+> +		 * racing smaller charge and send it into reclaim
+> +		 * eraly, but the error is limited to the difference
+
+Nit: s/eraly/early
+
+> +		 * between the two sizes, which is less than 2M/4M in
+> +		 * case of a THP locking out a regular page charge.
+> +		 */
+> +		new = atomic_long_add_return(nr_pages, &c->count);
+> +		if (new > c->limit) {
+> +			atomic_long_sub(nr_pages, &c->count);
+> +			/*
+> +			 * This is racy, but the failcnt is only a
+> +			 * ballpark metric anyway.
+> +			 */
+
+I still don't think that the failcnt is completely useless. As I
+mentioned previously, it can be used to check whether the workload is
+behaving badly due to memcg limits or for some other reason. And I don't
+see why it couldn't be atomic. This isn't a show stopper though.
+
+> +			c->failcnt++;
+> +			*fail = c;
+> +			goto failed;
+> +		}
+> +		/*
+> +		 * This is racy, but with the per-cpu caches on top
+> +		 * it's just a ballpark metric anyway; and with lazy
+> +		 * cache reclaim, the majority of workloads peg the
+> +		 * watermark to the group limit soon after launch.
+
+Not for kmem, I think.
+
+> +		 */
+> +		if (new > c->watermark)
+> +			c->watermark = new;
+> +	}
+> +	return 0;
+> +
+> +failed:
+> +	for (c = counter; c != *fail; c = c->parent)
+> +		page_counter_cancel(c, nr_pages);
+> +
+> +	return -ENOMEM;
+> +}
+> +
+> +/**
+> + * page_counter_uncharge - hierarchically uncharge pages
+> + * @counter: counter
+> + * @nr_pages: number of pages to uncharge
+> + *
+> + * Returns whether there are remaining charges in @counter.
+> + */
+> +int page_counter_uncharge(struct page_counter *counter, unsigned long nr_pages)
+> +{
+> +	struct page_counter *c;
+> +	int ret = 1;
+> +
+> +	for (c = counter; c; c = c->parent) {
+> +		int remainder;
+> +
+> +		remainder = page_counter_cancel(c, nr_pages);
+> +		if (c == counter && !remainder)
+> +			ret = 0;
+> +	}
+> +
+> +	return ret;
+> +}
+> +
+> +/**
+> + * page_counter_limit - limit the number of pages allowed
+> + * @counter: counter
+> + * @limit: limit to set
+> + *
+> + * Returns 0 on success, -EBUSY if the current number of pages on the
+> + * counter already exceeds the specified limit.
+> + *
+> + * The caller must serialize invocations on the same counter.
+> + */
+> +int page_counter_limit(struct page_counter *counter, unsigned long limit)
+> +{
+> +	for (;;) {
+> +		unsigned long old;
+> +		long count;
+> +
+> +		count = atomic_long_read(&counter->count);
+> +
+> +		old = xchg(&counter->limit, limit);
+
+Why do you use xchg here?
+
+> +
+> +		if (atomic_long_read(&counter->count) != count) {
+> +			counter->limit = old;
+> +			continue;
+> +		}
+> +
+> +		if (count > limit) {
+> +			counter->limit = old;
+> +			return -EBUSY;
+> +		}
+
+I have a suspicion that this can race with page_counter_try_charge.
+Look, access to c->limit is not marked as volatile in try_charge so the
+compiler is allowed to issue read only once, in the very beginning of
+the try_charge function. Then try_charge may succeed after the limit was
+actually updated to a smaller value.
+
+Strictly speaking, using ACCESS_ONCE in try_charge wouldn't be enough
+AFAIU. There must be memory barriers here and there.
+
+> +
+> +		return 0;
+> +	}
+> +}
+> +
+> +/**
+> + * page_counter_memparse - memparse() for page counter limits
+> + * @buf: string to parse
+> + * @nr_pages: returns the result in number of pages
+> + *
+> + * Returns -EINVAL, or 0 and @nr_pages on success.  @nr_pages will be
+> + * limited to %PAGE_COUNTER_MAX.
+> + */
+> +int page_counter_memparse(const char *buf, unsigned long *nr_pages)
+> +{
+> +	char unlimited[] = "-1";
+> +	char *end;
+> +	u64 bytes;
+> +
+> +	if (!strncmp(buf, unlimited, sizeof(unlimited))) {
+> +		*nr_pages = PAGE_COUNTER_MAX;
+> +		return 0;
+> +	}
+> +
+> +	bytes = memparse(buf, &end);
+> +	if (*end != '\0')
+> +		return -EINVAL;
+> +
+> +	*nr_pages = min(bytes / PAGE_SIZE, (u64)PAGE_COUNTER_MAX);
+> +
+> +	return 0;
+> +}
+> diff --git a/net/ipv4/tcp_memcontrol.c b/net/ipv4/tcp_memcontrol.c
+> index 1d191357bf88..272327134a1b 100644
+> --- a/net/ipv4/tcp_memcontrol.c
+> +++ b/net/ipv4/tcp_memcontrol.c
+[...]
+> @@ -126,43 +134,36 @@ static ssize_t tcp_cgroup_write(struct kernfs_open_file *of,
+>  	return ret ?: nbytes;
+>  }
+>  
+> -static u64 tcp_read_stat(struct mem_cgroup *memcg, int type, u64 default_val)
+> -{
+> -	struct cg_proto *cg_proto;
+> -
+> -	cg_proto = tcp_prot.proto_cgroup(memcg);
+> -	if (!cg_proto)
+> -		return default_val;
+> -
+> -	return res_counter_read_u64(&cg_proto->memory_allocated, type);
+> -}
+> -
+> -static u64 tcp_read_usage(struct mem_cgroup *memcg)
+> -{
+> -	struct cg_proto *cg_proto;
+> -
+> -	cg_proto = tcp_prot.proto_cgroup(memcg);
+> -	if (!cg_proto)
+> -		return atomic_long_read(&tcp_memory_allocated) << PAGE_SHIFT;
+> -
+> -	return res_counter_read_u64(&cg_proto->memory_allocated, RES_USAGE);
+> -}
+> -
+>  static u64 tcp_cgroup_read(struct cgroup_subsys_state *css, struct cftype *cft)
+>  {
+>  	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+> +	struct cg_proto *cg_proto = tcp_prot.proto_cgroup(memcg);
+>  	u64 val;
+>  
+>  	switch (cft->private) {
+>  	case RES_LIMIT:
+> -		val = tcp_read_stat(memcg, RES_LIMIT, RES_COUNTER_MAX);
+> +		if (!cg_proto)
+> +			return PAGE_COUNTER_MAX;
+
+For compatibility it must be ULLONG_MAX.
+
+> +		val = cg_proto->memory_allocated.limit;
+> +		val *= PAGE_SIZE;
+>  		break;
+>  	case RES_USAGE:
+> -		val = tcp_read_usage(memcg);
+> +		if (!cg_proto)
+> +			val = atomic_long_read(&tcp_memory_allocated);
+> +		else
+> +			val = page_counter_read(&cg_proto->memory_allocated);
+> +		val *= PAGE_SIZE;
+>  		break;
+>  	case RES_FAILCNT:
+> +		if (!cg_proto)
+> +			return 0;
+> +		val = cg_proto->memory_allocated.failcnt;
+> +		break;
+>  	case RES_MAX_USAGE:
+> -		val = tcp_read_stat(memcg, cft->private, 0);
+> +		if (!cg_proto)
+> +			return 0;
+> +		val = cg_proto->memory_allocated.watermark;
+> +		val *= PAGE_SIZE;
+>  		break;
+>  	default:
+>  		BUG();
+[...]
+
+Thanks,
+Vladimir
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
