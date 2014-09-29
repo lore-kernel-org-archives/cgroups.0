@@ -1,84 +1,267 @@
-From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: Re: [PATCH -mm 00/14] Per memcg slab shrinkers
-Date: Mon, 29 Sep 2014 11:02:53 +0400
-Message-ID: <20140929070252.GA16447@esperanza>
-References: <cover.1411301245.git.vdavydov@parallels.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch 3/3] mm: memcontrol: fix transparent huge page
+ allocations under pressure
+Date: Mon, 29 Sep 2014 15:57:07 +0200
+Message-ID: <20140929135707.GA25956@dhcp22.suse.cz>
+References: <1411571338-8178-1-git-send-email-hannes@cmpxchg.org>
+ <1411571338-8178-4-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <cover.1411301245.git.vdavydov@parallels.com>
+In-Reply-To: <1411571338-8178-4-git-send-email-hannes@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Dave Chinner <david@fromorbit.com>, Glauber Costa <glommer@gmail.com>, Suleiman Souhlal <suleiman@google.com>, Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Vladimir Davydov <vdavydov@parallels.com>, Dave Hansen <dave@sr71.net>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-ping
+On Wed 24-09-14 11:08:58, Johannes Weiner wrote:
+> In a memcg with even just moderate cache pressure, success rates for
+> transparent huge page allocations drop to zero, wasting a lot of
+> effort that the allocator puts into assembling these pages.
+> 
+> The reason for this is that the memcg reclaim code was never designed
+> for higher-order charges.  It reclaims in small batches until there is
+> room for at least one page.  Huge page charges only succeed when these
+> batches add up over a series of huge faults, which is unlikely under
+> any significant load involving order-0 allocations in the group.
+> 
+> Remove that loop on the memcg side in favor of passing the actual
+> reclaim goal to direct reclaim, which is already set up and optimized
+> to meet higher-order goals efficiently.
 
-On Sun, Sep 21, 2014 at 07:14:32PM +0400, Vladimir Davydov wrote:
-> Hi,
+I had concerns the last time you were posting similar patch
+(http://marc.info/?l=linux-mm&m=140803277013080&w=2) but I do not see
+any of them neither mentioned nor addressed here. Especially unexpected
+long stalls and excessive swapout. 512 pages target for direct reclaim
+is too much. Especially for smaller memcgs where we would need to drop
+the priority considerably to even scan that many pages.
+
+THP charges close to the limit are definitely a problem but this
+is way too risky to fix this problem IMO. Maybe a better approach
+would be to limit the reclaim to (clean) page cache (aka
+MEM_CGROUP_RECLAIM_NOSWAP). The risk of long stalls should be much
+lower and excessive swapouts shouldn't happen at all. What is the point
+to swap out a large number of pages just to allow THP charge which can
+be used very sparsely?
+
+> This brings memcg's THP policy in line with the system policy: if the
+> allocator painstakingly assembles a hugepage, memcg will at least make
+> an honest effort to charge it.  As a result, transparent hugepage
+> allocation rates amid cache activity are drastically improved:
 > 
-> Kmem accounting of memcg is unusable now, because it lacks slab shrinker
-> support. That means when we hit the limit we will get ENOMEM w/o any
-> chance to recover. What we should do then is to call shrink_slab, which
-> would reclaim old inode/dentry caches from this cgroup. This is what
-> this patch set is intended to do.
+>                                       vanilla                 patched
+> pgalloc                 4717530.80 (  +0.00%)   4451376.40 (  -5.64%)
+> pgfault                  491370.60 (  +0.00%)    225477.40 ( -54.11%)
+> pgmajfault                    2.00 (  +0.00%)         1.80 (  -6.67%)
+> thp_fault_alloc               0.00 (  +0.00%)       531.60 (+100.00%)
+> thp_fault_fallback          749.00 (  +0.00%)       217.40 ( -70.88%)
+
+What is the load and configuration that you have measured?
+ 
+> [ Note: this may in turn increase memory consumption from internal
+>   fragmentation, which is an inherent risk of transparent hugepages.
+>   Some setups may have to adjust the memcg limits accordingly to
+>   accomodate this - or, if the machine is already packed to capacity,
+>   disable the transparent huge page feature. ]
 > 
-> Basically, it does two things. First, it introduces the notion of
-> per-memcg slab shrinker. A shrinker that wants to reclaim objects per
-> cgroup should mark itself as SHRINKER_MEMCG_AWARE. Then it will be
-> passed the memory cgroup to scan from in shrink_control->memcg. For such
-> shrinkers shrink_slab iterates over the whole cgroup subtree under the
-> target cgroup and calls the shrinker for each kmem-active memory cgroup.
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> Reviewed-by: Vladimir Davydov <vdavydov@parallels.com>
+> ---
+>  include/linux/swap.h |  6 +++--
+>  mm/memcontrol.c      | 69 +++++++++++++---------------------------------------
+>  mm/vmscan.c          |  7 +++---
+>  3 files changed, 25 insertions(+), 57 deletions(-)
 > 
-> Secondly, this patch set makes the list_lru structure per-memcg. It's
-> done transparently to list_lru users - everything they have to do is to
-> tell list_lru_init that they want memcg-aware list_lru. Then the
-> list_lru will automatically distribute objects among per-memcg lists
-> basing on which cgroup the object is accounted to. This way to make FS
-> shrinkers (icache, dcache) memcg-aware we only need to make them use
-> memcg-aware list_lru, and this is what this patch set does.
+> diff --git a/include/linux/swap.h b/include/linux/swap.h
+> index ea4f926e6b9b..37a585beef5c 100644
+> --- a/include/linux/swap.h
+> +++ b/include/linux/swap.h
+> @@ -327,8 +327,10 @@ extern void lru_cache_add_active_or_unevictable(struct page *page,
+>  extern unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
+>  					gfp_t gfp_mask, nodemask_t *mask);
+>  extern int __isolate_lru_page(struct page *page, isolate_mode_t mode);
+> -extern unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *mem,
+> -						  gfp_t gfp_mask, bool noswap);
+> +extern unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+> +						  unsigned long nr_pages,
+> +						  gfp_t gfp_mask,
+> +						  bool may_swap);
+>  extern unsigned long mem_cgroup_shrink_node_zone(struct mem_cgroup *mem,
+>  						gfp_t gfp_mask, bool noswap,
+>  						struct zone *zone,
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 89c920156c2a..c2c75262a209 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -478,14 +478,6 @@ enum res_type {
+>  #define OOM_CONTROL		(0)
+>  
+>  /*
+> - * Reclaim flags for mem_cgroup_hierarchical_reclaim
+> - */
+> -#define MEM_CGROUP_RECLAIM_NOSWAP_BIT	0x0
+> -#define MEM_CGROUP_RECLAIM_NOSWAP	(1 << MEM_CGROUP_RECLAIM_NOSWAP_BIT)
+> -#define MEM_CGROUP_RECLAIM_SHRINK_BIT	0x1
+> -#define MEM_CGROUP_RECLAIM_SHRINK	(1 << MEM_CGROUP_RECLAIM_SHRINK_BIT)
+> -
+> -/*
+>   * The memcg_create_mutex will be held whenever a new cgroup is created.
+>   * As a consequence, any change that needs to protect against new child cgroups
+>   * appearing has to hold it as well.
+> @@ -1791,40 +1783,6 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  			 NULL, "Memory cgroup out of memory");
+>  }
+>  
+> -static unsigned long mem_cgroup_reclaim(struct mem_cgroup *memcg,
+> -					gfp_t gfp_mask,
+> -					unsigned long flags)
+> -{
+> -	unsigned long total = 0;
+> -	bool noswap = false;
+> -	int loop;
+> -
+> -	if (flags & MEM_CGROUP_RECLAIM_NOSWAP)
+> -		noswap = true;
+> -
+> -	for (loop = 0; loop < MEM_CGROUP_MAX_RECLAIM_LOOPS; loop++) {
+> -		if (loop)
+> -			drain_all_stock_async(memcg);
+> -		total += try_to_free_mem_cgroup_pages(memcg, gfp_mask, noswap);
+> -		/*
+> -		 * Allow limit shrinkers, which are triggered directly
+> -		 * by userspace, to catch signals and stop reclaim
+> -		 * after minimal progress, regardless of the margin.
+> -		 */
+> -		if (total && (flags & MEM_CGROUP_RECLAIM_SHRINK))
+> -			break;
+> -		if (mem_cgroup_margin(memcg))
+> -			break;
+> -		/*
+> -		 * If nothing was reclaimed after two attempts, there
+> -		 * may be no reclaimable pages in this hierarchy.
+> -		 */
+> -		if (loop && !total)
+> -			break;
+> -	}
+> -	return total;
+> -}
+> -
+>  /**
+>   * test_mem_cgroup_node_reclaimable
+>   * @memcg: the target memcg
+> @@ -2527,8 +2485,9 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	struct mem_cgroup *mem_over_limit;
+>  	struct res_counter *fail_res;
+>  	unsigned long nr_reclaimed;
+> -	unsigned long flags = 0;
+>  	unsigned long long size;
+> +	bool may_swap = true;
+> +	bool drained = false;
+>  	int ret = 0;
+>  
+>  	if (mem_cgroup_is_root(memcg))
+> @@ -2547,7 +2506,7 @@ retry:
+>  		mem_over_limit = mem_cgroup_from_res_counter(fail_res, res);
+>  	} else {
+>  		mem_over_limit = mem_cgroup_from_res_counter(fail_res, memsw);
+> -		flags |= MEM_CGROUP_RECLAIM_NOSWAP;
+> +		may_swap = false;
+>  	}
+>  
+>  	if (batch > nr_pages) {
+> @@ -2572,11 +2531,18 @@ retry:
+>  	if (!(gfp_mask & __GFP_WAIT))
+>  		goto nomem;
+>  
+> -	nr_reclaimed = mem_cgroup_reclaim(mem_over_limit, gfp_mask, flags);
+> +	nr_reclaimed = try_to_free_mem_cgroup_pages(mem_over_limit, nr_pages,
+> +						    gfp_mask, may_swap);
+>  
+>  	if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
+>  		goto retry;
+>  
+> +	if (!drained) {
+> +		drain_all_stock_async(mem_over_limit);
+> +		drained = true;
+> +		goto retry;
+> +	}
+> +
+>  	if (gfp_mask & __GFP_NORETRY)
+>  		goto nomem;
+>  	/*
+> @@ -3652,8 +3618,8 @@ static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
+>  		if (!ret)
+>  			break;
+>  
+> -		mem_cgroup_reclaim(memcg, GFP_KERNEL,
+> -				   MEM_CGROUP_RECLAIM_SHRINK);
+> +		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, true);
+> +
+>  		curusage = res_counter_read_u64(&memcg->res, RES_USAGE);
+>  		/* Usage is reduced ? */
+>  		if (curusage >= oldusage)
+> @@ -3703,9 +3669,8 @@ static int mem_cgroup_resize_memsw_limit(struct mem_cgroup *memcg,
+>  		if (!ret)
+>  			break;
+>  
+> -		mem_cgroup_reclaim(memcg, GFP_KERNEL,
+> -				   MEM_CGROUP_RECLAIM_NOSWAP |
+> -				   MEM_CGROUP_RECLAIM_SHRINK);
+> +		try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, false);
+> +
+>  		curusage = res_counter_read_u64(&memcg->memsw, RES_USAGE);
+>  		/* Usage is reduced ? */
+>  		if (curusage >= oldusage)
+> @@ -3954,8 +3919,8 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg)
+>  		if (signal_pending(current))
+>  			return -EINTR;
+>  
+> -		progress = try_to_free_mem_cgroup_pages(memcg, GFP_KERNEL,
+> -						false);
+> +		progress = try_to_free_mem_cgroup_pages(memcg, 1,
+> +							GFP_KERNEL, true);
+>  		if (!progress) {
+>  			nr_retries--;
+>  			/* maybe some writeback is necessary */
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 06123f20a326..dcb47074ae03 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -2759,21 +2759,22 @@ unsigned long mem_cgroup_shrink_node_zone(struct mem_cgroup *memcg,
+>  }
+>  
+>  unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+> +					   unsigned long nr_pages,
+>  					   gfp_t gfp_mask,
+> -					   bool noswap)
+> +					   bool may_swap)
+>  {
+>  	struct zonelist *zonelist;
+>  	unsigned long nr_reclaimed;
+>  	int nid;
+>  	struct scan_control sc = {
+> -		.nr_to_reclaim = SWAP_CLUSTER_MAX,
+> +		.nr_to_reclaim = max(nr_pages, SWAP_CLUSTER_MAX),
+>  		.gfp_mask = (gfp_mask & GFP_RECLAIM_MASK) |
+>  				(GFP_HIGHUSER_MOVABLE & ~GFP_RECLAIM_MASK),
+>  		.target_mem_cgroup = memcg,
+>  		.priority = DEF_PRIORITY,
+>  		.may_writepage = !laptop_mode,
+>  		.may_unmap = 1,
+> -		.may_swap = !noswap,
+> +		.may_swap = may_swap,
+>  	};
+>  
+>  	/*
+> -- 
+> 2.1.0
 > 
-> The main difference of this patch set from my previous attempts to push
-> memcg aware shrinkers is in how it handles css offline. Now we don't let
-> list_lrus corresponding to dead memory cgroups hang around till all
-> objects are freed. Instead we move lru items to the parent cgroup's lru
-> list. This is really important, because this allows us to release
-> memcg_cache_id used for indexing in per-memcg arrays. If we don't do
-> this, the arrays will grow uncontrollably, which is really bad. Note, in
-> comparison to user memory reparenting, which Johannes is going to get
-> rid of, it's not racy and much easier to implement although it does
-> impose some limitations on how list_lru locking can be implemented.
-> Another difference is that it doesn't reparent charges, only list_lru
-> entries - the css will be dangling until the last kmem object is freed.
-> 
-> As before, this patch set only enables per-memcg kmem reclaim when the
-> pressure goes from memory.limit, not from memory.kmem.limit. Handling
-> memory.kmem.limit is going to be tricky due to GFP_NOFS allocations, it
-> will probably require a sort of soft limit to work properly. I'm leaving
-> this for future work.
-> 
-> The patch set basically consists of three main parts and organized as
-> follows:
-> 
->  - Patches 1-3 implement per-memcg shrinker core with patches 1 and 2
->    preparing list_lru users for upcoming changes and patch 3 tuning
->    shrink_slab.
-> 
->  - Patches 4-10 make memcg core release cache ids on offline doing a bit
->    of cleanup in the meanwhile. This is easy, because kmem_caches don't
->    need the cache id after css offline since there can't be allocations
->    going from a dead memcg. Note that most of these patches (namely 4-6,
->    and 8) were once merged, but then I decided to drop them, because I
->    didn't know how to deal with list_lrus at that time (see
->    https://lkml.org/lkml/2014/7/23/218).
-> 
->  - Finally patches 11-14 make list_lru per-memcg and mark FS shrinkers
->    as memcg-aware. This is the most difficult part of this patch set
->    with patch 13 (unlucky :-) doing the most important work.
-> 
-> Reviews are more than welcome.
+
+-- 
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
