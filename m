@@ -1,56 +1,69 @@
-From: Paul McQuade <paulmcquad@gmail.com>
-Subject: [PATCH] mm: memcontrol Use #include <linux/uaccess.h>
-Date: Wed,  1 Oct 2014 16:44:56 +0100
-Message-ID: <1412178296-2972-1-git-send-email-paulmcquad@gmail.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH] mm: memcontrol Use #include <linux/uaccess.h>
+Date: Wed, 1 Oct 2014 17:56:34 +0200
+Message-ID: <20141001155634.GB4405@dhcp22.suse.cz>
+References: <1412178296-2972-1-git-send-email-paulmcquad@gmail.com>
+Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=from:to:cc:subject:date:message-id;
-        bh=9vbTFw2j9qg9w7ROamDtBFKGRNHx1Ws98NYTzPRtJhE=;
-        b=FDRJahS+f7Fm1+lKrOtZCkMpyk3oZVxL3vbhuHIXBIsKJA++rpXa9P6Q7/FbU/4LSz
-         bke/iaGxVr36XsCOr2+8Glp3mZm59xCXiSlxLuOAOTYwZFUt3sNbZ1Yf2qivtSK83nRh
-         TO8h6mNtS3p1VieAwQK/xYVX1Oaol2Kzgqows+L74+bqDfI3CHV1aPX7hdJOGsjpJFlV
-         Hl1MmCXK3sjZKMOOMLzlgnLBEhXZ7Zx2RN+TNomsXgIoxrU/U+msXyrLBamZ2Yd+9KNb
-         Q+YQlvZViFA2Fd3kAlbqlKzL5jGabQ6O6GhVNrZgXMsl04D8ifIoieZ46JIH1DIO8GTf
-         Fl5Q==
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=5ypUp9ZU8nTzBrSrl8n07HMoQuNH7i0bWrGPJPgH6ts=;
+        b=YEDcojFp9aiDnETXMg2dJ2HKJn+OF9XX/4wQHfFwDsx7EYIWZpjONLLyQ8sJUi6I5m
+         L6nFUC4Q4ICCIwtOtluMbXEefx1UrIohmuYKcdEK8I2GZyhyHUn5qbDbG79R4Gmhz7gm
+         j+tL2Dcu9qsVUEipXCUrEKELLThoIp91WZk44vBQNj6wiIPkxKJpL7qBlOynz1lKGOVX
+         a3/y7gJ9M5c769p4NLZ2bug1VWaOd2DU8dJWX2xxFOeOZ7F2F7hsjEv33AaUMY9btRNe
+         79U0dhNZ3Ey8TZntE0IeD5Ca9v59+cWdZqKuFwXy6Jy4P3rV0+dhkjDqSdENmFgmi3yD
+         Llkg==
+Content-Disposition: inline
+In-Reply-To: <1412178296-2972-1-git-send-email-paulmcquad@gmail.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: paulmcquad@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, mhocko@suse.cz, hannes@cmpxchg.org
+To: Paul McQuade <paulmcquad@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, hannes@cmpxchg.org
 
-Remove asm headers for linux headers
+On Wed 01-10-14 16:44:56, Paul McQuade wrote:
+> Remove asm headers for linux headers
 
-Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
----
- mm/memcontrol.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I think we do not need this header at all these days. There are no
+direct operations on user memory in memcontrol.c.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 085dc6d..51dbe80 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -56,14 +56,14 @@
- #include <linux/oom.h>
- #include <linux/lockdep.h>
- #include <linux/file.h>
-+#include <linux/uaccess.h>
-+
- #include "internal.h"
- #include <net/sock.h>
- #include <net/ip.h>
- #include <net/tcp_memcontrol.h>
- #include "slab.h"
- 
--#include <asm/uaccess.h>
--
- #include <trace/events/vmscan.h>
- 
- struct cgroup_subsys memory_cgrp_subsys __read_mostly;
+> Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
+> ---
+>  mm/memcontrol.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 085dc6d..51dbe80 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -56,14 +56,14 @@
+>  #include <linux/oom.h>
+>  #include <linux/lockdep.h>
+>  #include <linux/file.h>
+> +#include <linux/uaccess.h>
+> +
+>  #include "internal.h"
+>  #include <net/sock.h>
+>  #include <net/ip.h>
+>  #include <net/tcp_memcontrol.h>
+>  #include "slab.h"
+>  
+> -#include <asm/uaccess.h>
+> -
+>  #include <trace/events/vmscan.h>
+>  
+>  struct cgroup_subsys memory_cgrp_subsys __read_mostly;
+> -- 
+> 1.9.1
+> 
+
 -- 
-1.9.1
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
