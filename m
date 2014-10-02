@@ -1,74 +1,240 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [patch 1/3] mm: memcontrol: lockless page counters
-Date: Thu, 2 Oct 2014 08:07:48 -0400
-Message-ID: <20141002120748.GA1359@cmpxchg.org>
+Date: Thu, 2 Oct 2014 11:01:35 -0400
+Message-ID: <20141002150135.GA1394@cmpxchg.org>
 References: <1411573390-9601-1-git-send-email-hannes@cmpxchg.org>
  <1411573390-9601-2-git-send-email-hannes@cmpxchg.org>
- <20140926103104.GE29445@esperanza>
+ <20140930110622.GB4456@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20140926103104.GE29445@esperanza>
+In-Reply-To: <20140930110622.GB4456@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov@parallels.com>
-Cc: linux-mm@kvack.org, Greg Thelen <gthelen@google.com>, Michal Hocko <mhocko@suse.cz>, Dave Hansen <dave@sr71.net>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov@parallels.com>, Greg Thelen <gthelen@google.com>, Dave Hansen <dave@sr71.net>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Vladimir,
+Hi Michal,
 
-On Fri, Sep 26, 2014 at 02:31:05PM +0400, Vladimir Davydov wrote:
-> > @@ -1490,12 +1495,23 @@ int mem_cgroup_inactive_anon_is_low(struct lruvec *lruvec)
-> >   */
-> >  static unsigned long mem_cgroup_margin(struct mem_cgroup *memcg)
-> >  {
-> > -	unsigned long long margin;
-> > +	unsigned long margin = 0;
-> > +	unsigned long count;
-> > +	unsigned long limit;
-> >  
-> > -	margin = res_counter_margin(&memcg->res);
-> > -	if (do_swap_account)
-> > -		margin = min(margin, res_counter_margin(&memcg->memsw));
-> > -	return margin >> PAGE_SHIFT;
-> > +	count = page_counter_read(&memcg->memory);
-> > +	limit = ACCESS_ONCE(memcg->memory.limit);
-> > +	if (count < limit)
+On Tue, Sep 30, 2014 at 01:06:22PM +0200, Michal Hocko wrote:
+> On Wed 24-09-14 11:43:08, Johannes Weiner wrote:
+> > Memory is internally accounted in bytes, using spinlock-protected
+> > 64-bit counters, even though the smallest accounting delta is a page.
+> > The counter interface is also convoluted and does too many things.
+> > 
+> > Introduce a new lockless word-sized page counter API, then change all
+> > memory accounting over to it and remove the old one.  The translation
+> > from and to bytes then only happens when interfacing with userspace.
+> > 
+> > Aside from the locking costs, this gets rid of the icky unsigned long
+> > long types in the very heart of memcg, which is great for 32 bit and
+> > also makes the code a lot more readable.
 > 
-> Nit: IMO this looks unwieldier and less readable than
-> res_counter_margin. And two lines below we repeat this.
+> Please describe the usual use pattern of the API. It is much easier to
+> read it here than pulling it out from the source.
 
-Let's add page_counter_margin() once we have a second user ;-) I
-really want to keep this API concise.
+Could you explain what you are looking for?  I can't find any examples
+in git log that I could base this on.
 
-> > +		margin = limit - count;
-> > +
-> > +	if (do_swap_account) {
-> > +		count = page_counter_read(&memcg->memsw);
-> > +		limit = ACCESS_ONCE(memcg->memsw.limit);
-> > +		if (count < limit)
-> > +			margin = min(margin, limit - count);
-> > +	}
-> > +
-> > +	return margin;
-> >  }
-> >  
-> >  int mem_cgroup_swappiness(struct mem_cgroup *memcg)
+> Also I would expect some testing results. Especially on a larger machine
+> (I guess you rely on Dave here, right?).
+
+Yes, I will supply that as soon as we have results for the higher-end
+machines.
+
+> Thanks for splitting the original patch and extracting the counter
+> to a separate file. I think we should add F: mm/page_counter.c under
+> MEMCG maintenance section.
+
+Good idea, I'll do that.
+
+> More comments inline (I only got to page_counter for now and will check
+> the res_counter replacement in another go)
+> 
+> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> > ---
+> >  Documentation/cgroups/memory.txt |   4 +-
+> >  include/linux/memcontrol.h       |   5 +-
+> >  include/linux/page_counter.h     |  49 +++
+> >  include/net/sock.h               |  26 +-
+> >  init/Kconfig                     |   5 +-
+> >  mm/Makefile                      |   1 +
+> >  mm/memcontrol.c                  | 635 ++++++++++++++++++---------------------
+> >  mm/page_counter.c                | 191 ++++++++++++
+> >  net/ipv4/tcp_memcontrol.c        |  87 +++---
+> >  9 files changed, 598 insertions(+), 405 deletions(-)
+> >  create mode 100644 include/linux/page_counter.h
+> >  create mode 100644 mm/page_counter.c
+> > 
 > [...]
-> > @@ -1685,30 +1698,19 @@ static int mem_cgroup_count_children(struct mem_cgroup *memcg)
-> >  }
-> >  
-> >  /*
-> > - * Return the memory (and swap, if configured) limit for a memcg.
-> > + * Return the memory (and swap, if configured) maximum consumption for a memcg.
+> > diff --git a/include/linux/page_counter.h b/include/linux/page_counter.h
+> > new file mode 100644
+> > index 000000000000..d92d18949474
+> > --- /dev/null
+> > +++ b/include/linux/page_counter.h
+> > @@ -0,0 +1,49 @@
+> > +#ifndef _LINUX_PAGE_COUNTER_H
+> > +#define _LINUX_PAGE_COUNTER_H
+> > +
+> > +#include <linux/atomic.h>
+> > +
+> > +struct page_counter {
+> > +	atomic_long_t count;
+> > +	unsigned long limit;
+> > +	struct page_counter *parent;
+> > +
+> > +	/* legacy */
+> > +	unsigned long watermark;
 > 
-> Nit: Why did you change the comment? Now it doesn't seem to be relevant.
+> The name suggest this is a restriction not a highest usage mark.
+> max_count would be less confusing.
 
-Yes, it's a left-over from when I wanted to generally move away from
-the term limit due to its ambiguity.  But that's another story, so I
-reverted this hunk.
+Interesting, where do you get restriction?  We use the watermark term
+all over the kernel to mean "highest usage"; it's based on this:
 
+http://en.wikipedia.org/wiki/High_water_mark
+
+> > +	unsigned long failcnt;
+> > +};
+> > +
+> > +#if BITS_PER_LONG == 32
+> > +#define PAGE_COUNTER_MAX LONG_MAX
+> > +#else
+> > +#define PAGE_COUNTER_MAX (LONG_MAX / PAGE_SIZE)
+> > +#endif
+> 
+> It is not clear to me why you need a separate definitions here. LONG_MAX
+> seems to be good for both 32b and 64b.
+
+Because we need space to convert these to 64-bit bytes for the user
+interface.  On 32 bit, we naturally have another 33 to spare above
+LONG_MAX, but on 64 bit we need to reserve the necessary bits.
+
+(u64)PAGE_COUNTER_MAX * PAGE_SIZE can't overflow.
+
+> [...]
+> > diff --git a/mm/page_counter.c b/mm/page_counter.c
+> > new file mode 100644
+> > index 000000000000..51c45921b8d1
+> > --- /dev/null
+> > +++ b/mm/page_counter.c
+> > @@ -0,0 +1,191 @@
+> > +/*
+> > + * Lockless hierarchical page accounting & limiting
+> > + *
+> > + * Copyright (C) 2014 Red Hat, Inc., Johannes Weiner
+> > + */
+> > +#include <linux/page_counter.h>
+> > +#include <linux/atomic.h>
+> > +
+> > +/**
+> > + * page_counter_cancel - take pages out of the local counter
+> > + * @counter: counter
+> > + * @nr_pages: number of pages to cancel
+> > + *
+> > + * Returns whether there are remaining pages in the counter.
+> > + */
+> > +int page_counter_cancel(struct page_counter *counter, unsigned long nr_pages)
+> > +{
+> > +	long new;
+> > +
+> > +	new = atomic_long_sub_return(nr_pages, &counter->count);
+> > +
+> 
+> This really deserves a comment IMO. Something like the following:
+> 	/*
+> 	 * Charges and uncharges are always ordered properly from memory
+> 	 * ordering point of view. The only case where underflow can happen
+> 	 * is a mismatched uncharge. Report it and fix it up now rather
+> 	 * than blow up later.
+> 	 */
+> > +	if (WARN_ON_ONCE(new < 0))
+> > +		atomic_long_add(nr_pages, &counter->count);
+> 
+> anyway this doesn't look correct because you can have false positives:
+> [counter->count = 1]
+> 	CPU0					CPU1
+> new = atomic_long_sub_return(THP)
+> 					new = atomic_long_sub_return(1)
+> (new < 0)				(new < 0)
+>   atomic_long_add(THP)			  atomic_add(1)
+> 
+> So we will end up with counter->count = 1 rather than 0. I think you
+> need to use a lock in the slow path. Something like
+> 
+> 	if (new < 0) {
+> 		unsigned long flags;
+> 
+> 		/*
+> 		 * Multiple uncharger might race together and we do not
+> 		 * want to let any of them revert the uncharge just
+> 		 * because a faulty uncharge and the fixup are not
+> 		 * atomic.
+> 		 */
+> 		atomic_lond_add(nr_pages, &counter->count);
+> 
+> 		spin_lock_irqsave(&counter->lock, flags);
+> 		new = atomic_long_sub_return(nr_pages, &counter->count);
+> 		if (WARN_ON(new < 0))
+> 			atomic_long_add(nr_pages, &counter->count);
+> 		spin_unlock_irqrestore(&counter->lock, flags);
+> 	}
+
+What are we trying to accomplish here?  We know the counter value no
+longer reflects reality when it underflows.  Reverting an unrelated
+charge doesn't change that.  I'm just going to leave the warning in
+there with a comment and then remove the fix-up.
+
+> > +/**
+> > + * page_counter_charge - hierarchically charge pages
+> > + * @counter: counter
+> > + * @nr_pages: number of pages to charge
+> > + *
+> > + * NOTE: This may exceed the configured counter limits.
+> 
+> The name is rather awkward. It sounds like a standard way to charge the
+> counter. I would rather stick to _nofail suffix and the following
+> addition to the doc.
+> "
+> Can be called only from contexts where the charge failure cannot be
+> handled. This should be rare and used with extreme caution.
+> "
+
+We extensively use the do()/try_do() pattern for operations that can
+fail conditionally, and it never implies a standard way - it depends
+on the user which one is used more often.  There are more css_tryget()
+than css_get() for example.
+
+As per your request, this is now a generic hierarchical page counter
+library, and we may very well grow users that don't even use the
+optional limit feature.  For them, page_counter_charge() is the only
+sensible way to add pages.
+
+Using this function doesn't require any more or less caution than
+using any other function.  The code just has to make sense.
+
+> > + */
+> > +void page_counter_charge(struct page_counter *counter, unsigned long nr_pages)
+> > +{
+> > +	struct page_counter *c;
+> > +
+> > +	for (c = counter; c; c = c->parent) {
+> > +		long new;
+> > +
+> > +		new = atomic_long_add_return(nr_pages, &c->count);
+> > +		/*
+> > +		 * This is racy, but with the per-cpu caches on top
+> > +		 * it's just a ballpark metric anyway; and with lazy
+> > +		 * cache reclaim, the majority of workloads peg the
+> > +		 * watermark to the group limit soon after launch.
+> > +		 */
+> > +		if (new > c->watermark)
+> > +			c->watermark = new;
+> > +	}
+> > +}
+> > +
 > > +/**
 > > + * page_counter_try_charge - try to hierarchically charge pages
 > > + * @counter: counter
@@ -91,46 +257,27 @@ reverted this hunk.
 > > +		 * a bigger charge fails, it might falsely lock out a
 > > +		 * racing smaller charge and send it into reclaim
 > > +		 * eraly, but the error is limited to the difference
-> 
-> Nit: s/eraly/early
-
-Corrected, thanks.
-
 > > +		 * between the two sizes, which is less than 2M/4M in
 > > +		 * case of a THP locking out a regular page charge.
 > > +		 */
-> > +		new = atomic_long_add_return(nr_pages, &c->count);
-> > +		if (new > c->limit) {
-> > +			atomic_long_sub(nr_pages, &c->count);
-> > +			/*
-> > +			 * This is racy, but the failcnt is only a
-> > +			 * ballpark metric anyway.
-> > +			 */
 > 
-> I still don't think that the failcnt is completely useless. As I
-> mentioned previously, it can be used to check whether the workload is
-> behaving badly due to memcg limits or for some other reason. And I don't
-> see why it couldn't be atomic. This isn't a show stopper though.
+> If this ever turns out to be a problem then we can check the size of the
+> overflow and retry if it is > nr_online_cpus or something like that. Not
+> worth bothering now I guess but definitely good to have this documented.
+> I would even like to have it in the changelog for users bisecting an
+> excessive reclaim because it is easier to find that in the changelog
+> than in the code.
 
-I'm not saying it's useless, just that this level of accuracy should
-be sufficient.  Wouldn't you agree?  Making it atomic wouldn't be a
-problem, either, of course, it's just that it adds more code and
-wrapper indirections for little benefit.
+If a failing THP charge races with a bunch of order-0 allocations they
+will enter reclaim less than 2MB before they would have had to enter
+reclaim anyway.  It's like temporarily lowering the limit by lt 2MB.
 
-> > +			c->failcnt++;
-> > +			*fail = c;
-> > +			goto failed;
-> > +		}
-> > +		/*
-> > +		 * This is racy, but with the per-cpu caches on top
-> > +		 * it's just a ballpark metric anyway; and with lazy
-> > +		 * cache reclaim, the majority of workloads peg the
-> > +		 * watermark to the group limit soon after launch.
-> 
-> Not for kmem, I think.
-
-Ah, good point.  Regardless, the level of accuracy should be
-sufficient here as well, so I'm going to update the comment, ok?
+So workloads whose workingsets come within one THP of the limit might
+see temporary increases in reclaim activity when a THP happens to be
+the allocation exceeding the limit.  But THP allocations are not
+reliable in the first place, so anything operating within such a range
+is liable to variation anyway and we'd contribute marginally to the
+noise.  Is this worth bothering?
 
 > > +/**
 > > + * page_counter_limit - limit the number of pages allowed
@@ -151,9 +298,6 @@ sufficient here as well, so I'm going to update the comment, ok?
 > > +		count = atomic_long_read(&counter->count);
 > > +
 > > +		old = xchg(&counter->limit, limit);
-> 
-> Why do you use xchg here?
-> 
 > > +
 > > +		if (atomic_long_read(&counter->count) != count) {
 > > +			counter->limit = old;
@@ -165,96 +309,82 @@ sufficient here as well, so I'm going to update the comment, ok?
 > > +			return -EBUSY;
 > > +		}
 > 
-> I have a suspicion that this can race with page_counter_try_charge.
-> Look, access to c->limit is not marked as volatile in try_charge so the
-> compiler is allowed to issue read only once, in the very beginning of
-> the try_charge function. Then try_charge may succeed after the limit was
-> actually updated to a smaller value.
+> Ordering doesn't make much sense to me here. Say you really want to set
+> limit < count. You are effectively pushing all concurrent charges to
+> the reclaim even though you would revert your change and return with
+> EBUSY later on.
+>
+> Wouldn't (count > limit) check make more sense right after the first
+> atomic_long_read?
+> Also the second count check should be sufficient to check > count and
+> retry only when the count has increased.
+> Finally continuous flow of charges can keep this loop running for quite
+> some time and trigger lockup detector. cond_resched before continue
+> would handle that. Something like the following:
 > 
-> Strictly speaking, using ACCESS_ONCE in try_charge wouldn't be enough
-> AFAIU. There must be memory barriers here and there.
-
-The barriers are implied in change-return atomics, which is why there
-is an xchg.  But it's clear that this needs to be documented.  This?:
-
-diff --git a/mm/page_counter.c b/mm/page_counter.c
-index 4f2321d5293e..a4b220fe8ebc 100644
---- a/mm/page_counter.c
-+++ b/mm/page_counter.c
-@@ -75,6 +75,12 @@ int page_counter_try_charge(struct page_counter *counter,
- 		 * early, but the error is limited to the difference
- 		 * between the two sizes, which is less than 2M/4M in
- 		 * case of a THP locking out a regular page charge.
-+		 *
-+		 * The atomic_long_add_return() implies a full memory
-+		 * barrier between incrementing the count and reading
-+		 * the limit.  When racing with page_counter_limit(),
-+		 * we either see the new limit or the setter sees the
-+		 * counter has changed and retries.
- 		 */
- 		new = atomic_long_add_return(nr_pages, &c->count);
- 		if (new > c->limit) {
-@@ -145,7 +151,15 @@ int page_counter_limit(struct page_counter *counter, unsigned long limit)
- 		long count;
- 
- 		count = atomic_long_read(&counter->count);
--
-+		/*
-+		 * The xchg implies two full memory barriers before
-+		 * and after, so the read-swap-read is ordered and
-+		 * ensures coherency with page_counter_try_charge():
-+		 * that function modifies the count before checking
-+		 * the limit, so if it sees the old limit, we see the
-+		 * modified counter and retry.  This guarantees we
-+		 * never successfully set a limit below the counter.
-+		 */
- 		old = xchg(&counter->limit, limit);
- 
- 		if (atomic_long_read(&counter->count) != count) {
-
-> > @@ -126,43 +134,36 @@ static ssize_t tcp_cgroup_write(struct kernfs_open_file *of,
-> >  	return ret ?: nbytes;
-> >  }
-> >  
-> > -static u64 tcp_read_stat(struct mem_cgroup *memcg, int type, u64 default_val)
-> > -{
-> > -	struct cg_proto *cg_proto;
-> > -
-> > -	cg_proto = tcp_prot.proto_cgroup(memcg);
-> > -	if (!cg_proto)
-> > -		return default_val;
-> > -
-> > -	return res_counter_read_u64(&cg_proto->memory_allocated, type);
-> > -}
-> > -
-> > -static u64 tcp_read_usage(struct mem_cgroup *memcg)
-> > -{
-> > -	struct cg_proto *cg_proto;
-> > -
-> > -	cg_proto = tcp_prot.proto_cgroup(memcg);
-> > -	if (!cg_proto)
-> > -		return atomic_long_read(&tcp_memory_allocated) << PAGE_SHIFT;
-> > -
-> > -	return res_counter_read_u64(&cg_proto->memory_allocated, RES_USAGE);
-> > -}
-> > -
-> >  static u64 tcp_cgroup_read(struct cgroup_subsys_state *css, struct cftype *cft)
-> >  {
-> >  	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-> > +	struct cg_proto *cg_proto = tcp_prot.proto_cgroup(memcg);
-> >  	u64 val;
-> >  
-> >  	switch (cft->private) {
-> >  	case RES_LIMIT:
-> > -		val = tcp_read_stat(memcg, RES_LIMIT, RES_COUNTER_MAX);
-> > +		if (!cg_proto)
-> > +			return PAGE_COUNTER_MAX;
+> 	for (;;) {
+> 		unsigned long old;
+> 		long count;
 > 
-> For compatibility it must be ULLONG_MAX.
+> 		count = atomic_long_read(&counter->count);
+> 		if (count > limit)
+> 			return -EBUSY;
+> 
+> 		old = xchg(&counter->limit, limit);
+> 
+> 		/* Recheck for concurrent charges */
+> 		if (atomic_long_read(&counter->count) > count) {
+> 			counter->limit = old;
+> 			cond_resched();
+> 			continue;
+> 		}
+> 
+> 		return 0;
+> 	}
 
-If the controller is actually enabled, the maximum settable limit is
-PAGE_COUNTER_MAX, so it's probably better to be consistent.  I'm going
-out on a limb here and say that this won't break any existing users ;)
+This is susceptible to spurious -EBUSY during races with speculative
+charges and uncharges.  My code avoids that by retrying until we set
+the limit without any concurrent counter operations first, before
+moving on to implementing policy and rollback.
+
+Some reclaim activity caused by a limit that the user is trying to set
+anyway should be okay.  I'd rather have a reliable syscall.
+
+But the cond_resched() is a good idea, I'll add that, thanks.
+
+> > +/**
+> > + * page_counter_memparse - memparse() for page counter limits
+> > + * @buf: string to parse
+> > + * @nr_pages: returns the result in number of pages
+> > + *
+> > + * Returns -EINVAL, or 0 and @nr_pages on success.  @nr_pages will be
+> > + * limited to %PAGE_COUNTER_MAX.
+> > + */
+> > +int page_counter_memparse(const char *buf, unsigned long *nr_pages)
+> > +{
+> > +	char unlimited[] = "-1";
+> > +	char *end;
+> > +	u64 bytes;
+> > +
+> > +	if (!strncmp(buf, unlimited, sizeof(unlimited))) {
+> > +		*nr_pages = PAGE_COUNTER_MAX;
+> > +		return 0;
+> > +	}
+> > +
+> > +	bytes = memparse(buf, &end);
+> > +	if (*end != '\0')
+> > +		return -EINVAL;
+> 
+> res_counter used to round up to the next page boundary and there is no
+> reason to not do the same here.
+
+The user is specifying an exact number of bytes that she doesn't want
+the cgroup to exceed under the threat of OOM.  I see two options: if
+those few bytes really matter, it would be rude to round up a strict
+upper limit.  If they don't, it's pointless additional code.
+
+I'm guessing the latter is the case, but either way it doesn't make
+sense to round up.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
