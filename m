@@ -1,66 +1,81 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH] cpusets: Make cpus_allowed and mems_allowed masks
- hotplug invariant
-Date: Wed, 8 Oct 2014 12:18:28 +0200
-Message-ID: <20141008101828.GG10832@worktop.programming.kicks-ass.net>
-References: <20141008070739.1170.33313.stgit@preeti.in.ibm.com>
- <20141008080706.GC10832@worktop.programming.kicks-ass.net>
- <543505EF.7070804@linux.vnet.ibm.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [patch 1/3] mm: memcontrol: lockless page counters
+Date: Wed, 8 Oct 2014 08:31:34 -0400
+Message-ID: <20141008123134.GA14361@cmpxchg.org>
+References: <1411573390-9601-1-git-send-email-hannes@cmpxchg.org>
+ <1411573390-9601-2-git-send-email-hannes@cmpxchg.org>
+ <20141007151543.GE14243@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <543505EF.7070804@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20141007151543.GE14243@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Preeti U Murthy <preeti@linux.vnet.ibm.com>
-Cc: svaidy@linux.vnet.ibm.com, rjw@rjwysocki.net, lizefan@huawei.com, anton@samba.org, tj@kernel.org, paulmck@linux.vnet.ibm.com, mingo@kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: linux-mm@kvack.org, Vladimir Davydov <vdavydov@parallels.com>, Greg Thelen <gthelen@google.com>, Dave Hansen <dave@sr71.net>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Oct 08, 2014 at 03:07:51PM +0530, Preeti U Murthy wrote:
-
-> > I still completely hate all that.. It basically makes cpusets useless,
-> > they no longer guarantee anything, it makes then an optional placement
-> > hint instead.
+On Tue, Oct 07, 2014 at 05:15:43PM +0200, Michal Hocko wrote:
+> On Wed 24-09-14 11:43:08, Johannes Weiner wrote:
+> > @@ -1490,12 +1495,23 @@ int mem_cgroup_inactive_anon_is_low(struct lruvec *lruvec)
+> >   */
+> >  static unsigned long mem_cgroup_margin(struct mem_cgroup *memcg)
+> >  {
+> > -	unsigned long long margin;
+> > +	unsigned long margin = 0;
+> > +	unsigned long count;
+> > +	unsigned long limit;
+> >  
+> > -	margin = res_counter_margin(&memcg->res);
+> > -	if (do_swap_account)
+> > -		margin = min(margin, res_counter_margin(&memcg->memsw));
+> > -	return margin >> PAGE_SHIFT;
+> > +	count = page_counter_read(&memcg->memory);
+> > +	limit = ACCESS_ONCE(memcg->memory.limit);
+> > +	if (count < limit)
+> > +		margin = limit - count;
+> > +
+> > +	if (do_swap_account) {
+> > +		count = page_counter_read(&memcg->memsw);
+> > +		limit = ACCESS_ONCE(memcg->memsw.limit);
+> > +		if (count < limit)
 > 
-> Why do you say they don't guarantee anything? We ensure that we always
-> run on the cpus in our cpuset which are online. We do not run in any
-> arbitrary cpuset. We also do not wait unreasonably on an offline cpu to
-> come back. What we are doing is ensuring that if the resources that we
-> began with are available we use them. Why is this not a logical thing to
-> expect?
+> I guess you wanted (count <= limit) here?
 
-Because if you randomly hotplug cpus your tasks can randomly flip
-between sets.
+Yes.  Fixed it up, thanks.
 
-Therefore there is no strict containment and no guarantees.
-
-> > You also break long standing behaviour.
+> > @@ -2293,33 +2295,31 @@ static DEFINE_MUTEX(percpu_charge_mutex);
+> >  static bool consume_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+> >  {
+> >  	struct memcg_stock_pcp *stock;
+> > -	bool ret = true;
+> > +	bool ret = false;
+> >  
+> >  	if (nr_pages > CHARGE_BATCH)
+> > -		return false;
+> > +		return ret;
+> >  
+> >  	stock = &get_cpu_var(memcg_stock);
+> > -	if (memcg == stock->cached && stock->nr_pages >= nr_pages)
+> > +	if (memcg == stock->cached && stock->nr_pages >= nr_pages) {
+> >  		stock->nr_pages -= nr_pages;
+> > -	else /* need to call res_counter_charge */
+> > -		ret = false;
+> > +		ret = true;
+> > +	}
+> >  	put_cpu_var(memcg_stock);
+> >  	return ret;
 > 
-> Which is? As I understand cpusets are meant to ensure a dedicated set of
-> resources to some tasks. We cannot scheduler the tasks anywhere outside
-> this set as long as they are available. And when they are not, currently
-> we move them to their parents,
+> This change is not really needed but at least it woke me up after some
+> monotonic and mechanical changes...
 
-No currently we hard break affinity and never look back. That move to
-parent and back crap is all new fangled stuff, and broken because of the
-above argument.
+This hunk started with removing the res_counter_charge comment.  IIRC,
+Andrew advocated minor cleanups in the area in the past, so I figured
+I make the thing a bit more readable while I'm there anyway.
 
-> but you had also suggested killing the
-> task. Maybe this can be debated. But what behavior are we changing by
-> ensuring that we retain our original configuration at all times?
-
-See above, by pretending hotplug is a sane operation you loose all
-guarantees.
-
-> > Also, power is insane if it needs/uses hotplug for operational crap
-> > like that.
-> 
-> SMT 8 on Power8 can help/hinder workloads. Hence we dynamically switch
-> the modes at runtime.
-
-That's just a horrible piece of crap hack and you deserve any and all
-pain you get from doing it.
-
-Randomly removing/adding cpus like that is horrible and makes a mockery
-of all the affinity interfaces we have.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
