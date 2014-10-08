@@ -1,58 +1,78 @@
-From: Raghavendra KT <raghavendra.kt@linux.vnet.ibm.com>
-Subject: Re: [PATCH] cpusets: Make cpus_allowed and mems_allowed masks hotplug invariant
-Date: Wed, 8 Oct 2014 20:24:26 +0530
-Message-ID: <CAC4Lta2AS6M5upg8n9Qu5+1pqCMF3j8_cYuLAS1DH9C_BQP0PA@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] cgroup changes for v3.18-rc1
+Date: Wed, 8 Oct 2014 11:10:58 -0400
+Message-ID: <20141008151058.GC8184@htj.dyndns.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:sender:date:message-id:subject:from:to:cc:content-type;
-        bh=+DZ98Fn5CQWtZkbtvoIuB16efdyMBfKmMNS4MgfjJDI=;
-        b=z0HTnSvLCtcwi+LAnt8QeXlJH34jCZSj0k5ja8O2ZPHyR6YpRvQfDa1BtNc4Z1iFPQ
-         TXK5/7J+NhDM+xzd9EiP/GClHdL/1mUazdgLNlpJiJnEzHMm0UYbRTAcPXM3oboCRuqi
-         tcDsRVrerpICLNHUaMzNUA1JftcmSiycKchFHIgz1mBmJPdSAR8NOs9N5SWDbj7MSRR4
-         41EvumzPH6pKPNmkRwxZ5suoBL5A4yHZeiHOuBKlay0JcZHF6F2rz9r29aGMUZmkeXIy
-         jXi4WvcxRS+e56d9iCm3ew273RhrZkaPZuu94zWDFenqhkobVHRQ9/dfwNzjfG/PTnMF
-         ykNg==
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=Qoy+munP7uJfGKy4R2kTn48ZC4gNnKTUZanyXS7cBzs=;
+        b=iAfvbbIoAhsbLvaH2GkF0utshWKeQuIsPNCmagFuL1Ubq48P3at0f3N9t2igARralo
+         BpzUCLpW8o0qmN77S0pyDAK78qIHv7/meokfoR8L2qdqo2VvfB5UT+Z/8d8i8ZGY3Q2p
+         9WXC5TkIlCm+X9X0y2fjbicG0u74/Qnk1zAjelF7f7RM6AkQcYu/vhBdTlIm9tPHUrZZ
+         QQEL1NmWRvMhlUvPkstGOf3K6FEbv04PX3cHhaF7JvY/Zf5Xyfhu6l9B1aLOBhTFPk1O
+         Ux4/pLwl/ed7q+LZCJrw0jiULxBGHW7ybug66OJHU9zxuxFqm9qLrpLlNrVMnGQaGrqA
+         1n+g==
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Preeti U Murthy <preeti@linux.vnet.ibm.com>
-Cc: svaidy@linux.vnet.ibm.com, Peter Zijlstra <peterz@infradead.org>, rjw@rjwysocki.net, lizefan@huawei.com, Anton Blanchard <anton@samba.org>, Tejun Heo <tj@kernel.org>, Paul McKenney <paulmck@linux.vnet.ibm.com>, Ingo Molnar <mingo@kernel.org>, cgroups@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org
 
-On Wed, Oct 8, 2014 at 12:37 PM, Preeti U Murthy
-<preeti@linux.vnet.ibm.com> wrote:
-> There are two masks associated with cpusets. The cpus/mems_allowed
-> and effective_cpus/mems. On the legacy hierarchy both these masks
-> are consistent with each other. This is the intersection of their
-> value and the currently active cpus. This means that we destroy the
-> original values set in these masks on each cpu/mem hot unplug operation.
->         As a consequence when we hot plug back the cpus/mems, the tasks
-> no longer run on them and performance degrades, inspite of having
-> resources to run on.
->
-> This effect is not seen in the default hierarchy since the
-> allowed and effective masks are distinctly maintained.
-> allowed masks are never touched once configured and effective masks
-> alone are hotplug variant.
->
-> This patch replicates the above design even for the legacy hierarchy,
-> so that:
->
-> 1. Tasks always run on the cpus/memory nodes that they are allowed to run on
-> as long as they are online. The allowed masks are hotplug invariant.
->
-> 2. When all cpus/memory nodes in a cpuset are hot unplugged out, the tasks
-> are moved to their nearest ancestor which has resources to run on.
+Hello, Linus.
 
-Hi Preeti,
+Nothing too interesting.  Just a handful of cleanup patches.  The pull
+of for-3.17-fixes was to put follow-up cleanups on top of a fix patch.
 
-I may be missing some thing here could you please explain when do we get
-tasks move out of a cpuset after this patch and why it is even necessary?
+Thanks.
 
-IIUC, with default hierarchy we should never hit a case where we have empty
-effective cpuset and hence remove_tasks_in_empty_cpuset should never happen. no?
+The following changes since commit aa32362f011c6e863132b16c1761487166a4bad2:
 
-if my assumption is correct then we should remove
-remove_tasks_in_empty_cpuset itself...
+  cgroup: check cgroup liveliness before unbreaking kernfs (2014-09-05 01:36:19 +0900)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.18
+
+for you to fetch changes up to e756c7b698604f11a979f2781d06eb7b80aba363:
+
+  Revert "cgroup: remove redundant variable in cgroup_mount()" (2014-09-26 00:16:23 -0400)
+
+----------------------------------------------------------------
+Dongsheng Yang (1):
+      cgroup: fix a typo in comment.
+
+Li Zefan (3):
+      cgroup: remove some useless forward declarations
+      cgroup: remove redundant code in cgroup_rmdir()
+      cgroup: remove bogus comments
+
+Tejun Heo (1):
+      Merge branch 'for-3.17-fixes' of ra.kernel.org:/.../tj/cgroup into for-3.18
+
+Zefan Li (9):
+      cgroup: use a per-cgroup work for release agent
+      cgroup: simplify proc_cgroup_show()
+      cpuset: simplify proc_cpuset_show()
+      cgroup: remove redundant check in cgroup_ino()
+      perf/cgroup: Remove perf_put_cgroup()
+      cgroup: remove CGRP_RELEASABLE flag
+      cgroup: fix missing unlock in cgroup_release_agent()
+      cgroup: remove redundant variable in cgroup_mount()
+      Revert "cgroup: remove redundant variable in cgroup_mount()"
+
+ fs/proc/base.c         |  39 ++---------
+ include/linux/cgroup.h |  26 ++-----
+ include/linux/cpuset.h |   3 +-
+ kernel/cgroup.c        | 184 ++++++++++++++-----------------------------------
+ kernel/cpuset.c        |  15 +---
+ kernel/events/core.c   |   7 +-
+ mm/memory-failure.c    |   2 +-
+ 7 files changed, 71 insertions(+), 205 deletions(-)
+
+-- 
+tejun
