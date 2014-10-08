@@ -1,78 +1,95 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] cgroup changes for v3.18-rc1
-Date: Wed, 8 Oct 2014 11:10:58 -0400
-Message-ID: <20141008151058.GC8184@htj.dyndns.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch 3/3] mm: memcontrol: fix transparent huge page
+ allocations under pressure
+Date: Wed, 8 Oct 2014 17:33:29 +0200
+Message-ID: <20141008153329.GF4592@dhcp22.suse.cz>
+References: <1411571338-8178-1-git-send-email-hannes@cmpxchg.org>
+ <1411571338-8178-4-git-send-email-hannes@cmpxchg.org>
+ <20140929135707.GA25956@dhcp22.suse.cz>
+ <20140929175700.GA20053@cmpxchg.org>
+ <20141007135950.GD14243@dhcp22.suse.cz>
+ <20141008011106.GA12339@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-         :content-disposition:user-agent;
-        bh=Qoy+munP7uJfGKy4R2kTn48ZC4gNnKTUZanyXS7cBzs=;
-        b=iAfvbbIoAhsbLvaH2GkF0utshWKeQuIsPNCmagFuL1Ubq48P3at0f3N9t2igARralo
-         BpzUCLpW8o0qmN77S0pyDAK78qIHv7/meokfoR8L2qdqo2VvfB5UT+Z/8d8i8ZGY3Q2p
-         9WXC5TkIlCm+X9X0y2fjbicG0u74/Qnk1zAjelF7f7RM6AkQcYu/vhBdTlIm9tPHUrZZ
-         QQEL1NmWRvMhlUvPkstGOf3K6FEbv04PX3cHhaF7JvY/Zf5Xyfhu6l9B1aLOBhTFPk1O
-         Ux4/pLwl/ed7q+LZCJrw0jiULxBGHW7ybug66OJHU9zxuxFqm9qLrpLlNrVMnGQaGrqA
-         1n+g==
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20141008011106.GA12339@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Vladimir Davydov <vdavydov@parallels.com>, Dave Hansen <dave@sr71.net>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, Linus.
+[I do not have time to get over all points here and will be offline
+until Monday - will get back to the rest then]
 
-Nothing too interesting.  Just a handful of cleanup patches.  The pull
-of for-3.17-fixes was to put follow-up cleanups on top of a fix patch.
+On Tue 07-10-14 21:11:06, Johannes Weiner wrote:
+> On Tue, Oct 07, 2014 at 03:59:50PM +0200, Michal Hocko wrote:
+[...]
+> > I am completely missing any notes about potential excessive
+> > swapouts or longer reclaim stalls which are a natural side effect of direct
+> > reclaim with a larger target (or is this something we do not agree on?).
+> 
+> Yes, we disagree here.  Why is reclaiming 2MB once worse than entering
+> reclaim 16 times to reclaim SWAP_CLUSTER_MAX?
 
-Thanks.
+You can enter DEF_PRIORITY reclaim 16 times and reclaim your target but
+you need at least 512<<DEF_PRIORITY pages on your LRUs to do it in a
+single run on that priority. So especially small groups will pay more
+and would be subject to mentioned problems (e.g. over-reclaim).
 
-The following changes since commit aa32362f011c6e863132b16c1761487166a4bad2:
+> There is no inherent difference in reclaiming a big chunk and
+> reclaiming many small chunks that add up to the same size.
+ 
+[...]
 
-  cgroup: check cgroup liveliness before unbreaking kernfs (2014-09-05 01:36:19 +0900)
+> > Another part that matters is the size. Memcgs might be really small and
+> > that changes the math. Large reclaim target will get to low prio reclaim
+> > and thus the excessive reclaim.
+> 
+> I already addressed page size vs. memcg size before.
+> 
+> However, low priority reclaim does not result in excessive reclaim.
+> The reclaim goal is checked every time it scanned SWAP_CLUSTER_MAX
+> pages, and it exits if the goal has been met.  See shrink_lruvec(),
+> shrink_zone() etc.
 
-are available in the git repository at:
+Now I am confused. shrink_zone will bail out but shrink_lruvec will loop
+over nr[...] until they are empty and only updates the numbers to be
+roughly proportional once:
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-3.18
+                if (nr_reclaimed < nr_to_reclaim || scan_adjusted)
+                        continue;
 
-for you to fetch changes up to e756c7b698604f11a979f2781d06eb7b80aba363:
+                /*
+                 * For kswapd and memcg, reclaim at least the number of pages
+                 * requested. Ensure that the anon and file LRUs are scanned
+                 * proportionally what was requested by get_scan_count(). We
+                 * stop reclaiming one LRU and reduce the amount scanning
+                 * proportional to the original scan target.
+                 */
+		[...]
+		scan_adjusted = true;
 
-  Revert "cgroup: remove redundant variable in cgroup_mount()" (2014-09-26 00:16:23 -0400)
+Or do you rely on
+                /*
+                 * It's just vindictive to attack the larger once the smaller
+                 * has gone to zero.  And given the way we stop scanning the
+                 * smaller below, this makes sure that we only make one nudge
+                 * towards proportionality once we've got nr_to_reclaim.
+                 */
+                if (!nr_file || !nr_anon)
+                        break;
 
-----------------------------------------------------------------
-Dongsheng Yang (1):
-      cgroup: fix a typo in comment.
+and SCAN_FILE because !inactive_file_is_low?
 
-Li Zefan (3):
-      cgroup: remove some useless forward declarations
-      cgroup: remove redundant code in cgroup_rmdir()
-      cgroup: remove bogus comments
-
-Tejun Heo (1):
-      Merge branch 'for-3.17-fixes' of ra.kernel.org:/.../tj/cgroup into for-3.18
-
-Zefan Li (9):
-      cgroup: use a per-cgroup work for release agent
-      cgroup: simplify proc_cgroup_show()
-      cpuset: simplify proc_cpuset_show()
-      cgroup: remove redundant check in cgroup_ino()
-      perf/cgroup: Remove perf_put_cgroup()
-      cgroup: remove CGRP_RELEASABLE flag
-      cgroup: fix missing unlock in cgroup_release_agent()
-      cgroup: remove redundant variable in cgroup_mount()
-      Revert "cgroup: remove redundant variable in cgroup_mount()"
-
- fs/proc/base.c         |  39 ++---------
- include/linux/cgroup.h |  26 ++-----
- include/linux/cpuset.h |   3 +-
- kernel/cgroup.c        | 184 ++++++++++++++-----------------------------------
- kernel/cpuset.c        |  15 +---
- kernel/events/core.c   |   7 +-
- mm/memory-failure.c    |   2 +-
- 7 files changed, 71 insertions(+), 205 deletions(-)
-
+[...]
 -- 
-tejun
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
