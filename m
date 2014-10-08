@@ -1,722 +1,253 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [patch 3/3] kernel: res_counter: remove the unused API
-Date: Tue, 7 Oct 2014 17:26:32 +0200
-Message-ID: <20141007152632.GG14243@dhcp22.suse.cz>
-References: <1411573390-9601-1-git-send-email-hannes@cmpxchg.org>
- <1411573390-9601-4-git-send-email-hannes@cmpxchg.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [patch 3/3] mm: memcontrol: fix transparent huge page
+ allocations under pressure
+Date: Tue, 7 Oct 2014 21:11:06 -0400
+Message-ID: <20141008011106.GA12339@cmpxchg.org>
+References: <1411571338-8178-1-git-send-email-hannes@cmpxchg.org>
+ <1411571338-8178-4-git-send-email-hannes@cmpxchg.org>
+ <20140929135707.GA25956@dhcp22.suse.cz>
+ <20140929175700.GA20053@cmpxchg.org>
+ <20141007135950.GD14243@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1411573390-9601-4-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20141007135950.GD14243@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Hansen <dave-gkUM19QKKo4@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Greg Thelen <gthelen@google.com>, Vladimir Davydov <vdavydov@parallels.com>, Dave Hansen <dave@sr71.net>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed 24-09-14 11:43:10, Johannes Weiner wrote:
-> All memory accounting and limiting has been switched over to the
-> lockless page counters.  Bye, res_counter!
+On Tue, Oct 07, 2014 at 03:59:50PM +0200, Michal Hocko wrote:
+> On Mon 29-09-14 13:57:00, Johannes Weiner wrote:
+> > Every change we make is a trade-off and bears a certain risk.  THP is
+> > a trade-off, it's pretty pointless to ignore the upsides and ride
+> > around on the downsides.  Of course there are downsides.  This patch
+> > makes THP work properly inside memcg, which invites both the upsides
+> > as well as the downsides of THP into memcg.  But they are well known
+> > and we can deal with them. 
 > 
+> I do not see any evaluation nor discussion of the upsides and downsides
+> in the changelog. You are selling this as a net win which I cannot
+> agree with.
 
-More than happily
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+I'm not sure why you want me to regurgitate the pros and cons of
+transparent huge pages here.  They have been a well-established
+default feature for a while now, and they are currently not working
+properly inside memcg, which this patch addresses.
 
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> ---
->  Documentation/cgroups/resource_counter.txt | 197 -------------------------
->  include/linux/res_counter.h                | 223 -----------------------------
->  init/Kconfig                               |   6 -
->  kernel/Makefile                            |   1 -
->  kernel/res_counter.c                       | 211 ---------------------------
->  5 files changed, 638 deletions(-)
->  delete mode 100644 Documentation/cgroups/resource_counter.txt
->  delete mode 100644 include/linux/res_counter.h
->  delete mode 100644 kernel/res_counter.c
+The only valid argument against merging this patch at this point can
+be that THP inside memcg will lead to distinct issues that do not
+exist on the global level.  So let's find out if there are any, okay?
+
+> I am completely missing any notes about potential excessive
+> swapouts or longer reclaim stalls which are a natural side effect of direct
+> reclaim with a larger target (or is this something we do not agree on?).
+
+Yes, we disagree here.  Why is reclaiming 2MB once worse than entering
+reclaim 16 times to reclaim SWAP_CLUSTER_MAX?  There is no inherent
+difference in reclaiming a big chunk and reclaiming many small chunks
+that add up to the same size.
+
+It's only different if you don't actually use the full 2MB pages, but
+then the issue simply boils down to increased memory consumption.  But
+that is easy to deal with and I offered two solutions in my changelog.
+
+> What is an admin/user supposed to do when one of the above happens?
+> Disable THP globally?
+
+I already wrote all that.  It would be easier if you read my entire
+line of reasoning instead of attacking fragments in isolation, so that
+we can make forward progress on this.
+
+> I still remember when THP was introduced and we have seen boatload of
+> reclaim related bugs. These were exactly those long stalls, excessive
+> swapouts and reclaim.
+
+THP certainly had a bumpy introduction, and I can understand that you
+want to prevent the same happening to memcg.
+
+But it's important to evaluate which THP costs actually translate to
+memcg.  The worst problems we had came *not* from faulting in bigger
+steps, but from creating physically contiguous pages: aggressive lumpy
+reclaim, (synchroneous) migration, reclaim beyond the allocation size
+to create breathing room for compaction etc.  This is a massive amount
+of work ON TOP of the bigger fault granularity.
+
+Memcg only has to reclaim the allocation size in individual 4k pages.
+Our only risk from THP is internal fragmentation from users not fully
+utilizing the entire 2MB regions, but the work we MIGHT waste is
+negligible compared to the work we are DEFINITELY wasting right now by
+failing to charge already allocated THPs.
+
+> > Why is THP inside memcg special?
 > 
-> diff --git a/Documentation/cgroups/resource_counter.txt b/Documentation/cgroups/resource_counter.txt
-> deleted file mode 100644
-> index 762ca54eb929..000000000000
-> --- a/Documentation/cgroups/resource_counter.txt
-> +++ /dev/null
-> @@ -1,197 +0,0 @@
-> -
-> -		The Resource Counter
-> -
-> -The resource counter, declared at include/linux/res_counter.h,
-> -is supposed to facilitate the resource management by controllers
-> -by providing common stuff for accounting.
-> -
-> -This "stuff" includes the res_counter structure and routines
-> -to work with it.
-> -
-> -
-> -
-> -1. Crucial parts of the res_counter structure
-> -
-> - a. unsigned long long usage
-> -
-> - 	The usage value shows the amount of a resource that is consumed
-> -	by a group at a given time. The units of measurement should be
-> -	determined by the controller that uses this counter. E.g. it can
-> -	be bytes, items or any other unit the controller operates on.
-> -
-> - b. unsigned long long max_usage
-> -
-> - 	The maximal value of the usage over time.
-> -
-> - 	This value is useful when gathering statistical information about
-> -	the particular group, as it shows the actual resource requirements
-> -	for a particular group, not just some usage snapshot.
-> -
-> - c. unsigned long long limit
-> -
-> - 	The maximal allowed amount of resource to consume by the group. In
-> -	case the group requests for more resources, so that the usage value
-> -	would exceed the limit, the resource allocation is rejected (see
-> -	the next section).
-> -
-> - d. unsigned long long failcnt
-> -
-> - 	The failcnt stands for "failures counter". This is the number of
-> -	resource allocation attempts that failed.
-> -
-> - c. spinlock_t lock
-> -
-> - 	Protects changes of the above values.
-> -
-> -
-> -
-> -2. Basic accounting routines
-> -
-> - a. void res_counter_init(struct res_counter *rc,
-> -				struct res_counter *rc_parent)
-> -
-> - 	Initializes the resource counter. As usual, should be the first
-> -	routine called for a new counter.
-> -
-> -	The struct res_counter *parent can be used to define a hierarchical
-> -	child -> parent relationship directly in the res_counter structure,
-> -	NULL can be used to define no relationship.
-> -
-> - c. int res_counter_charge(struct res_counter *rc, unsigned long val,
-> -				struct res_counter **limit_fail_at)
-> -
-> -	When a resource is about to be allocated it has to be accounted
-> -	with the appropriate resource counter (controller should determine
-> -	which one to use on its own). This operation is called "charging".
-> -
-> -	This is not very important which operation - resource allocation
-> -	or charging - is performed first, but
-> -	  * if the allocation is performed first, this may create a
-> -	    temporary resource over-usage by the time resource counter is
-> -	    charged;
-> -	  * if the charging is performed first, then it should be uncharged
-> -	    on error path (if the one is called).
-> -
-> -	If the charging fails and a hierarchical dependency exists, the
-> -	limit_fail_at parameter is set to the particular res_counter element
-> -	where the charging failed.
-> -
-> - d. u64 res_counter_uncharge(struct res_counter *rc, unsigned long val)
-> -
-> -	When a resource is released (freed) it should be de-accounted
-> -	from the resource counter it was accounted to.  This is called
-> -	"uncharging". The return value of this function indicate the amount
-> -	of charges still present in the counter.
-> -
-> -	The _locked routines imply that the res_counter->lock is taken.
-> -
-> - e. u64 res_counter_uncharge_until
-> -		(struct res_counter *rc, struct res_counter *top,
-> -		 unsigned long val)
-> -
-> -	Almost same as res_counter_uncharge() but propagation of uncharge
-> -	stops when rc == top. This is useful when kill a res_counter in
-> -	child cgroup.
-> -
-> - 2.1 Other accounting routines
-> -
-> -    There are more routines that may help you with common needs, like
-> -    checking whether the limit is reached or resetting the max_usage
-> -    value. They are all declared in include/linux/res_counter.h.
-> -
-> -
-> -
-> -3. Analyzing the resource counter registrations
-> -
-> - a. If the failcnt value constantly grows, this means that the counter's
-> -    limit is too tight. Either the group is misbehaving and consumes too
-> -    many resources, or the configuration is not suitable for the group
-> -    and the limit should be increased.
-> -
-> - b. The max_usage value can be used to quickly tune the group. One may
-> -    set the limits to maximal values and either load the container with
-> -    a common pattern or leave one for a while. After this the max_usage
-> -    value shows the amount of memory the container would require during
-> -    its common activity.
-> -
-> -    Setting the limit a bit above this value gives a pretty good
-> -    configuration that works in most of the cases.
-> -
-> - c. If the max_usage is much less than the limit, but the failcnt value
-> -    is growing, then the group tries to allocate a big chunk of resource
-> -    at once.
-> -
-> - d. If the max_usage is much less than the limit, but the failcnt value
-> -    is 0, then this group is given too high limit, that it does not
-> -    require. It is better to lower the limit a bit leaving more resource
-> -    for other groups.
-> -
-> -
-> -
-> -4. Communication with the control groups subsystem (cgroups)
-> -
-> -All the resource controllers that are using cgroups and resource counters
-> -should provide files (in the cgroup filesystem) to work with the resource
-> -counter fields. They are recommended to adhere to the following rules:
-> -
-> - a. File names
-> -
-> - 	Field name	File name
-> -	---------------------------------------------------
-> -	usage		usage_in_<unit_of_measurement>
-> -	max_usage	max_usage_in_<unit_of_measurement>
-> -	limit		limit_in_<unit_of_measurement>
-> -	failcnt		failcnt
-> -	lock		no file :)
-> -
-> - b. Reading from file should show the corresponding field value in the
-> -    appropriate format.
-> -
-> - c. Writing to file
-> -
-> - 	Field		Expected behavior
-> -	----------------------------------
-> -	usage		prohibited
-> -	max_usage	reset to usage
-> -	limit		set the limit
-> -	failcnt		reset to zero
-> -
-> -
-> -
-> -5. Usage example
-> -
-> - a. Declare a task group (take a look at cgroups subsystem for this) and
-> -    fold a res_counter into it
-> -
-> -	struct my_group {
-> -		struct res_counter res;
-> -
-> -		<other fields>
-> -	}
-> -
-> - b. Put hooks in resource allocation/release paths
-> -
-> - 	int alloc_something(...)
-> -	{
-> -		if (res_counter_charge(res_counter_ptr, amount) < 0)
-> -			return -ENOMEM;
-> -
-> -		<allocate the resource and return to the caller>
-> -	}
-> -
-> -	void release_something(...)
-> -	{
-> -		res_counter_uncharge(res_counter_ptr, amount);
-> -
-> -		<release the resource>
-> -	}
-> -
-> -    In order to keep the usage value self-consistent, both the
-> -    "res_counter_ptr" and the "amount" in release_something() should be
-> -    the same as they were in the alloc_something() when the releasing
-> -    resource was allocated.
-> -
-> - c. Provide the way to read res_counter values and set them (the cgroups
-> -    still can help with it).
-> -
-> - c. Compile and run :)
-> diff --git a/include/linux/res_counter.h b/include/linux/res_counter.h
-> deleted file mode 100644
-> index 56b7bc32db4f..000000000000
-> --- a/include/linux/res_counter.h
-> +++ /dev/null
-> @@ -1,223 +0,0 @@
-> -#ifndef __RES_COUNTER_H__
-> -#define __RES_COUNTER_H__
-> -
-> -/*
-> - * Resource Counters
-> - * Contain common data types and routines for resource accounting
-> - *
-> - * Copyright 2007 OpenVZ SWsoft Inc
-> - *
-> - * Author: Pavel Emelianov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-> - *
-> - * See Documentation/cgroups/resource_counter.txt for more
-> - * info about what this counter is.
-> - */
-> -
-> -#include <linux/spinlock.h>
-> -#include <linux/errno.h>
-> -
-> -/*
-> - * The core object. the cgroup that wishes to account for some
-> - * resource may include this counter into its structures and use
-> - * the helpers described beyond
-> - */
-> -
-> -struct res_counter {
-> -	/*
-> -	 * the current resource consumption level
-> -	 */
-> -	unsigned long long usage;
-> -	/*
-> -	 * the maximal value of the usage from the counter creation
-> -	 */
-> -	unsigned long long max_usage;
-> -	/*
-> -	 * the limit that usage cannot exceed
-> -	 */
-> -	unsigned long long limit;
-> -	/*
-> -	 * the limit that usage can be exceed
-> -	 */
-> -	unsigned long long soft_limit;
-> -	/*
-> -	 * the number of unsuccessful attempts to consume the resource
-> -	 */
-> -	unsigned long long failcnt;
-> -	/*
-> -	 * the lock to protect all of the above.
-> -	 * the routines below consider this to be IRQ-safe
-> -	 */
-> -	spinlock_t lock;
-> -	/*
-> -	 * Parent counter, used for hierarchial resource accounting
-> -	 */
-> -	struct res_counter *parent;
-> -};
-> -
-> -#define RES_COUNTER_MAX ULLONG_MAX
-> -
-> -/**
-> - * Helpers to interact with userspace
-> - * res_counter_read_u64() - returns the value of the specified member.
-> - * res_counter_read/_write - put/get the specified fields from the
-> - * res_counter struct to/from the user
-> - *
-> - * @counter:     the counter in question
-> - * @member:  the field to work with (see RES_xxx below)
-> - * @buf:     the buffer to opeate on,...
-> - * @nbytes:  its size...
-> - * @pos:     and the offset.
-> - */
-> -
-> -u64 res_counter_read_u64(struct res_counter *counter, int member);
-> -
-> -ssize_t res_counter_read(struct res_counter *counter, int member,
-> -		const char __user *buf, size_t nbytes, loff_t *pos,
-> -		int (*read_strategy)(unsigned long long val, char *s));
-> -
-> -int res_counter_memparse_write_strategy(const char *buf,
-> -					unsigned long long *res);
-> -
-> -/*
-> - * the field descriptors. one for each member of res_counter
-> - */
-> -
-> -enum {
-> -	RES_USAGE,
-> -	RES_MAX_USAGE,
-> -	RES_LIMIT,
-> -	RES_FAILCNT,
-> -	RES_SOFT_LIMIT,
-> -};
-> -
-> -/*
-> - * helpers for accounting
-> - */
-> -
-> -void res_counter_init(struct res_counter *counter, struct res_counter *parent);
-> -
-> -/*
-> - * charge - try to consume more resource.
-> - *
-> - * @counter: the counter
-> - * @val: the amount of the resource. each controller defines its own
-> - *       units, e.g. numbers, bytes, Kbytes, etc
-> - *
-> - * returns 0 on success and <0 if the counter->usage will exceed the
-> - * counter->limit
-> - *
-> - * charge_nofail works the same, except that it charges the resource
-> - * counter unconditionally, and returns < 0 if the after the current
-> - * charge we are over limit.
-> - */
-> -
-> -int __must_check res_counter_charge(struct res_counter *counter,
-> -		unsigned long val, struct res_counter **limit_fail_at);
-> -int res_counter_charge_nofail(struct res_counter *counter,
-> -		unsigned long val, struct res_counter **limit_fail_at);
-> -
-> -/*
-> - * uncharge - tell that some portion of the resource is released
-> - *
-> - * @counter: the counter
-> - * @val: the amount of the resource
-> - *
-> - * these calls check for usage underflow and show a warning on the console
-> - *
-> - * returns the total charges still present in @counter.
-> - */
-> -
-> -u64 res_counter_uncharge(struct res_counter *counter, unsigned long val);
-> -
-> -u64 res_counter_uncharge_until(struct res_counter *counter,
-> -			       struct res_counter *top,
-> -			       unsigned long val);
-> -/**
-> - * res_counter_margin - calculate chargeable space of a counter
-> - * @cnt: the counter
-> - *
-> - * Returns the difference between the hard limit and the current usage
-> - * of resource counter @cnt.
-> - */
-> -static inline unsigned long long res_counter_margin(struct res_counter *cnt)
-> -{
-> -	unsigned long long margin;
-> -	unsigned long flags;
-> -
-> -	spin_lock_irqsave(&cnt->lock, flags);
-> -	if (cnt->limit > cnt->usage)
-> -		margin = cnt->limit - cnt->usage;
-> -	else
-> -		margin = 0;
-> -	spin_unlock_irqrestore(&cnt->lock, flags);
-> -	return margin;
-> -}
-> -
-> -/**
-> - * Get the difference between the usage and the soft limit
-> - * @cnt: The counter
-> - *
-> - * Returns 0 if usage is less than or equal to soft limit
-> - * The difference between usage and soft limit, otherwise.
-> - */
-> -static inline unsigned long long
-> -res_counter_soft_limit_excess(struct res_counter *cnt)
-> -{
-> -	unsigned long long excess;
-> -	unsigned long flags;
-> -
-> -	spin_lock_irqsave(&cnt->lock, flags);
-> -	if (cnt->usage <= cnt->soft_limit)
-> -		excess = 0;
-> -	else
-> -		excess = cnt->usage - cnt->soft_limit;
-> -	spin_unlock_irqrestore(&cnt->lock, flags);
-> -	return excess;
-> -}
-> -
-> -static inline void res_counter_reset_max(struct res_counter *cnt)
-> -{
-> -	unsigned long flags;
-> -
-> -	spin_lock_irqsave(&cnt->lock, flags);
-> -	cnt->max_usage = cnt->usage;
-> -	spin_unlock_irqrestore(&cnt->lock, flags);
-> -}
-> -
-> -static inline void res_counter_reset_failcnt(struct res_counter *cnt)
-> -{
-> -	unsigned long flags;
-> -
-> -	spin_lock_irqsave(&cnt->lock, flags);
-> -	cnt->failcnt = 0;
-> -	spin_unlock_irqrestore(&cnt->lock, flags);
-> -}
-> -
-> -static inline int res_counter_set_limit(struct res_counter *cnt,
-> -		unsigned long long limit)
-> -{
-> -	unsigned long flags;
-> -	int ret = -EBUSY;
-> -
-> -	spin_lock_irqsave(&cnt->lock, flags);
-> -	if (cnt->usage <= limit) {
-> -		cnt->limit = limit;
-> -		ret = 0;
-> -	}
-> -	spin_unlock_irqrestore(&cnt->lock, flags);
-> -	return ret;
-> -}
-> -
-> -static inline int
-> -res_counter_set_soft_limit(struct res_counter *cnt,
-> -				unsigned long long soft_limit)
-> -{
-> -	unsigned long flags;
-> -
-> -	spin_lock_irqsave(&cnt->lock, flags);
-> -	cnt->soft_limit = soft_limit;
-> -	spin_unlock_irqrestore(&cnt->lock, flags);
-> -	return 0;
-> -}
-> -
-> -#endif
-> diff --git a/init/Kconfig b/init/Kconfig
-> index eddec767b7ee..e503efe34bc0 100644
-> --- a/init/Kconfig
-> +++ b/init/Kconfig
-> @@ -977,12 +977,6 @@ config CGROUP_CPUACCT
->  	  Provides a simple Resource Controller for monitoring the
->  	  total CPU consumed by the tasks in a cgroup.
+> For one thing the global case is hitting its limit (watermarks) much
+> more slowly and gracefully because it has kswapd working on the
+> background before we are getting into troubles. Memcg will just hit the
+> wall and rely solely on the direct reclaim so everything we do will end
+> up latency sensitive.
+
+THP allocations do not wake up kswapd, they go into direct reclaim.
+It's likely that kswapd balancing triggered by concurrent order-0
+allocations will help THP somewhat, but because the global level needs
+contiguous pages, it will still likely enter direct reclaim and direct
+compaction.  For example, on my 16G desktop, there are 12MB between
+the high and low watermark in the Normal zone; compaction needs double
+the allocation size to work, so kswapd can cache reclaim work for up
+to 3 THP in the best case (which those concurrent order-0 allocations
+that woke kswapd in the first place will likely eat into), and direct
+compaction will still have to run.
+
+So AFAICS the synchroneous work required to fit a THP inside memcg is
+much less.  And again, under pressure all this global work is already
+expensed at that point anyway.
+
+> Moreover, THP allocations have self regulatory mechanisms to prevent
+> from excessive stalls. This means that THP allocations are less probable
+> under heavy memory pressure.
+
+These mechanisms exist for migration/compaction, but direct reclaim is
+still fairly persistent - again, see should_continue_reclaim().
+
+Am I missing something?
+
+> On the other hand, memcg might be under serious memory pressure when
+> THP charge comes. The only back off mechanism we use in memcg is
+> GFP_NORETRY and that happens after one round of the reclaim. So we
+> should make sure that the first round of the reclaim doesn't take
+> terribly long.
+
+The same applies globally.  ANY allocation under serious memory
+pressure will have a high latency, but nobody forces you to use THP in
+an already underprovisioned environment.
+
+> Another part that matters is the size. Memcgs might be really small and
+> that changes the math. Large reclaim target will get to low prio reclaim
+> and thus the excessive reclaim.
+
+I already addressed page size vs. memcg size before.
+
+However, low priority reclaim does not result in excessive reclaim.
+The reclaim goal is checked every time it scanned SWAP_CLUSTER_MAX
+pages, and it exits if the goal has been met.  See shrink_lruvec(),
+shrink_zone() etc.
+
+> The size also makes any potential problem much more probable because the
+> limit would be hit much more often than extremely low memory conditions
+> globally.
+>
+> Also the reclaim decisions are subtly different for memcg because of the
+> missing per-memcg dirty throttling and flushing. So we can stall on
+> pages under writeback or get stuck in the write out path which is not
+> the case for direct reclaim during THP allocation. A large reclaim
+> target is more probable to hit into dirty or writeback pages.
+
+These things again boil down to potential internal fragmentation and
+higher memory consumption, as 16 128k reclaims are equally likely to
+hit both problems as one 2MB reclaim.
+
+> > Preventing THP faults from swapping is a reasonable proposal, but
+> > again has nothing to do with memcg.
+> 
+> If we can do this inside the direct reclaim path then I am all for it
+> because this means less trickery in the memcg code.
+> 
+> I am still not sure this is sufficient because memcg still might stall
+> on IO so the safest approach would be ~GFP_IO reclaim for memcg reclaim
+> path.
+> 
+> I feel strong about the first one (.may_swap = 0) and would be OK with
+> your patch if this is added (to the memcg or common path).
+> GFP_IO is an extra safety step. Smaller groups would be more likely to
+> fail to reclaim enough and so THP success rate will be lower but that
+> doesn't sound terribly wrong to me. I am not insisting on it, though.
+
+Would you like to propose the no-swapping patch for the generic
+reclaim code?  I'm certainly not against it, but I think the reason
+nobody has proposed this yet is that the VM is heavily tuned to prefer
+cache reclaim anyway and it's rare that environments run out of cache
+and actually swap.  It usually means that memory is underprovisioned.
+
+So I wouldn't be opposed to it as a fail-safe, in case worst comes to
+worst, but I think it's a lot less important than you do.
+
+> > However, in this particular case a regression is trivial to pinpoint
+> > (comparing vmstat, profiles), and trivial to rectify in the field by
+> > changing the memcg limits or disabling THP.
+> 
+> > What we DO know is that there are very good use cases for THP, but THP
+> > inside memcg is broken:
+> 
+> All those usecases rely on amortizing THP initial costs by less faults
+> (assuming the memory range is not used sparsely too much) and the TLB
+> pressure reduction. Once we are hitting swap or excessive reclaim all
+> the bets are off and THP is no longer beneficial.
+
+Yes, we agree on this, just disagree on the importance of that case.
+And both problem and solution would be unrelated to this patch.
+
+> > THP does worse inside a memcg when compared to
+> > bare metal environments of the same size, both in terms of success
+> > rate, as well as in fault latency due to wasted page allocator work.
+> 
+> Because memcg is not equivalent to the bare metal with the same amount
+> of memory. If for nothing else then because the background reclaim is
+> missing.
+
+Which THP is explicitely not using globally.
+
+> > Plus, the code is illogical, redundant, and full of magic numbers.
+> 
+> I am not objecting to the removal of magic numbers and to getting rid of
+> retry loops outside of direct reclaim path (aka mem_cgroup_reclaim). I
+> would be willing to take a risk and get rid of them just to make the
+> code saner. Because those were never justified properly and look more or
+> less random. This would be a separate patch of course.
 >  
-> -config RESOURCE_COUNTERS
-> -	bool "Resource counters"
-> -	help
-> -	  This option enables controller independent resource accounting
-> -	  infrastructure that works with cgroups.
-> -
->  config PAGE_COUNTER
->         bool
->  
-> diff --git a/kernel/Makefile b/kernel/Makefile
-> index 726e18443da0..245953354974 100644
-> --- a/kernel/Makefile
-> +++ b/kernel/Makefile
-> @@ -58,7 +58,6 @@ obj-$(CONFIG_USER_NS) += user_namespace.o
->  obj-$(CONFIG_PID_NS) += pid_namespace.o
->  obj-$(CONFIG_DEBUG_SYNCHRO_TEST) += synchro-test.o
->  obj-$(CONFIG_IKCONFIG) += configs.o
-> -obj-$(CONFIG_RESOURCE_COUNTERS) += res_counter.o
->  obj-$(CONFIG_SMP) += stop_machine.o
->  obj-$(CONFIG_KPROBES_SANITY_TEST) += test_kprobes.o
->  obj-$(CONFIG_AUDIT) += audit.o auditfilter.o
-> diff --git a/kernel/res_counter.c b/kernel/res_counter.c
-> deleted file mode 100644
-> index e791130f85a7..000000000000
-> --- a/kernel/res_counter.c
-> +++ /dev/null
-> @@ -1,211 +0,0 @@
-> -/*
-> - * resource cgroups
-> - *
-> - * Copyright 2007 OpenVZ SWsoft Inc
-> - *
-> - * Author: Pavel Emelianov <xemul-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-> - *
-> - */
-> -
-> -#include <linux/types.h>
-> -#include <linux/parser.h>
-> -#include <linux/fs.h>
-> -#include <linux/res_counter.h>
-> -#include <linux/uaccess.h>
-> -#include <linux/mm.h>
-> -
-> -void res_counter_init(struct res_counter *counter, struct res_counter *parent)
-> -{
-> -	spin_lock_init(&counter->lock);
-> -	counter->limit = RES_COUNTER_MAX;
-> -	counter->soft_limit = RES_COUNTER_MAX;
-> -	counter->parent = parent;
-> -}
-> -
-> -static u64 res_counter_uncharge_locked(struct res_counter *counter,
-> -				       unsigned long val)
-> -{
-> -	if (WARN_ON(counter->usage < val))
-> -		val = counter->usage;
-> -
-> -	counter->usage -= val;
-> -	return counter->usage;
-> -}
-> -
-> -static int res_counter_charge_locked(struct res_counter *counter,
-> -				     unsigned long val, bool force)
-> -{
-> -	int ret = 0;
-> -
-> -	if (counter->usage + val > counter->limit) {
-> -		counter->failcnt++;
-> -		ret = -ENOMEM;
-> -		if (!force)
-> -			return ret;
-> -	}
-> -
-> -	counter->usage += val;
-> -	if (counter->usage > counter->max_usage)
-> -		counter->max_usage = counter->usage;
-> -	return ret;
-> -}
-> -
-> -static int __res_counter_charge(struct res_counter *counter, unsigned long val,
-> -				struct res_counter **limit_fail_at, bool force)
-> -{
-> -	int ret, r;
-> -	unsigned long flags;
-> -	struct res_counter *c, *u;
-> -
-> -	r = ret = 0;
-> -	*limit_fail_at = NULL;
-> -	local_irq_save(flags);
-> -	for (c = counter; c != NULL; c = c->parent) {
-> -		spin_lock(&c->lock);
-> -		r = res_counter_charge_locked(c, val, force);
-> -		spin_unlock(&c->lock);
-> -		if (r < 0 && !ret) {
-> -			ret = r;
-> -			*limit_fail_at = c;
-> -			if (!force)
-> -				break;
-> -		}
-> -	}
-> -
-> -	if (ret < 0 && !force) {
-> -		for (u = counter; u != c; u = u->parent) {
-> -			spin_lock(&u->lock);
-> -			res_counter_uncharge_locked(u, val);
-> -			spin_unlock(&u->lock);
-> -		}
-> -	}
-> -	local_irq_restore(flags);
-> -
-> -	return ret;
-> -}
-> -
-> -int res_counter_charge(struct res_counter *counter, unsigned long val,
-> -			struct res_counter **limit_fail_at)
-> -{
-> -	return __res_counter_charge(counter, val, limit_fail_at, false);
-> -}
-> -
-> -int res_counter_charge_nofail(struct res_counter *counter, unsigned long val,
-> -			      struct res_counter **limit_fail_at)
-> -{
-> -	return __res_counter_charge(counter, val, limit_fail_at, true);
-> -}
-> -
-> -u64 res_counter_uncharge_until(struct res_counter *counter,
-> -			       struct res_counter *top,
-> -			       unsigned long val)
-> -{
-> -	unsigned long flags;
-> -	struct res_counter *c;
-> -	u64 ret = 0;
-> -
-> -	local_irq_save(flags);
-> -	for (c = counter; c != top; c = c->parent) {
-> -		u64 r;
-> -		spin_lock(&c->lock);
-> -		r = res_counter_uncharge_locked(c, val);
-> -		if (c == counter)
-> -			ret = r;
-> -		spin_unlock(&c->lock);
-> -	}
-> -	local_irq_restore(flags);
-> -	return ret;
-> -}
-> -
-> -u64 res_counter_uncharge(struct res_counter *counter, unsigned long val)
-> -{
-> -	return res_counter_uncharge_until(counter, NULL, val);
-> -}
-> -
-> -static inline unsigned long long *
-> -res_counter_member(struct res_counter *counter, int member)
-> -{
-> -	switch (member) {
-> -	case RES_USAGE:
-> -		return &counter->usage;
-> -	case RES_MAX_USAGE:
-> -		return &counter->max_usage;
-> -	case RES_LIMIT:
-> -		return &counter->limit;
-> -	case RES_FAILCNT:
-> -		return &counter->failcnt;
-> -	case RES_SOFT_LIMIT:
-> -		return &counter->soft_limit;
-> -	};
-> -
-> -	BUG();
-> -	return NULL;
-> -}
-> -
-> -ssize_t res_counter_read(struct res_counter *counter, int member,
-> -		const char __user *userbuf, size_t nbytes, loff_t *pos,
-> -		int (*read_strategy)(unsigned long long val, char *st_buf))
-> -{
-> -	unsigned long long *val;
-> -	char buf[64], *s;
-> -
-> -	s = buf;
-> -	val = res_counter_member(counter, member);
-> -	if (read_strategy)
-> -		s += read_strategy(*val, s);
-> -	else
-> -		s += sprintf(s, "%llu\n", *val);
-> -	return simple_read_from_buffer((void __user *)userbuf, nbytes,
-> -			pos, buf, s - buf);
-> -}
-> -
-> -#if BITS_PER_LONG == 32
-> -u64 res_counter_read_u64(struct res_counter *counter, int member)
-> -{
-> -	unsigned long flags;
-> -	u64 ret;
-> -
-> -	spin_lock_irqsave(&counter->lock, flags);
-> -	ret = *res_counter_member(counter, member);
-> -	spin_unlock_irqrestore(&counter->lock, flags);
-> -
-> -	return ret;
-> -}
-> -#else
-> -u64 res_counter_read_u64(struct res_counter *counter, int member)
-> -{
-> -	return *res_counter_member(counter, member);
-> -}
-> -#endif
-> -
-> -int res_counter_memparse_write_strategy(const char *buf,
-> -					unsigned long long *resp)
-> -{
-> -	char *end;
-> -	unsigned long long res;
-> -
-> -	/* return RES_COUNTER_MAX(unlimited) if "-1" is specified */
-> -	if (*buf == '-') {
-> -		int rc = kstrtoull(buf + 1, 10, &res);
-> -
-> -		if (rc)
-> -			return rc;
-> -		if (res != 1)
-> -			return -EINVAL;
-> -		*resp = RES_COUNTER_MAX;
-> -		return 0;
-> -	}
-> -
-> -	res = memparse(buf, &end);
-> -	if (*end != '\0')
-> -		return -EINVAL;
-> -
-> -	if (PAGE_ALIGN(res) >= res)
-> -		res = PAGE_ALIGN(res);
-> -	else
-> -		res = RES_COUNTER_MAX;
-> -
-> -	*resp = res;
-> -
-> -	return 0;
-> -}
-> -- 
-> 2.1.0
+> > Based on this, this patch seems like a net improvement.
 > 
+> Sigh, yes, if we ignore all the downsides everything will look like a
+> net improvement :/
 
--- 
-Michal Hocko
-SUSE Labs
+I don't think you honestly read my email.
+
+> > > > This brings memcg's THP policy in line with the system policy: if the
+> > > > allocator painstakingly assembles a hugepage, memcg will at least make
+> > > > an honest effort to charge it.  As a result, transparent hugepage
+> > > > allocation rates amid cache activity are drastically improved:
+> > > > 
+> > > >                                       vanilla                 patched
+> > > > pgalloc                 4717530.80 (  +0.00%)   4451376.40 (  -5.64%)
+> > > > pgfault                  491370.60 (  +0.00%)    225477.40 ( -54.11%)
+> > > > pgmajfault                    2.00 (  +0.00%)         1.80 (  -6.67%)
+> > > > thp_fault_alloc               0.00 (  +0.00%)       531.60 (+100.00%)
+> > > > thp_fault_fallback          749.00 (  +0.00%)       217.40 ( -70.88%)
+> > > 
+> > > What is the load and configuration that you have measured?
+> > 
+> > It's just a single linear disk writer and another thread that faults
+> > in an anonymous range in 4k steps.
+> 
+> This is really vague description...
+> Which portion of the limit is the anon consumer, what is the memcg limit
+> size, IO size, etc...? I find it really interesting that _all_ THP
+> charges failed so the memcg had to be almost fully populated by the page
+> cache already when the thread tries so fault in the first huge page.
+>
+> Also 4k steps is basically the best case for THP because the full THP
+> block is populated. The question is how the system behaves when THP
+> ranges are populated sparsely (because this is often the case).
+
+You are missing the point :(
+
+Sure there are cases that don't benefit from THP, this test just shows
+that THP inside memcg can be trivially broken - which harms cases that
+WOULD benefit.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
