@@ -1,122 +1,71 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [patch 3/3] mm: memcontrol: fix transparent huge page
- allocations under pressure
-Date: Wed, 8 Oct 2014 13:47:25 -0400
-Message-ID: <20141008174725.GA31706@cmpxchg.org>
-References: <1411571338-8178-1-git-send-email-hannes@cmpxchg.org>
- <1411571338-8178-4-git-send-email-hannes@cmpxchg.org>
- <20140929135707.GA25956@dhcp22.suse.cz>
- <20140929175700.GA20053@cmpxchg.org>
- <20141007135950.GD14243@dhcp22.suse.cz>
- <20141008011106.GA12339@cmpxchg.org>
- <20141008153329.GF4592@dhcp22.suse.cz>
+From: Preeti U Murthy <preeti-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Subject: Re: [PATCH] cpusets: Make cpus_allowed and mems_allowed masks hotplug
+ invariant
+Date: Thu, 09 Oct 2014 10:42:02 +0530
+Message-ID: <54361922.8070808@linux.vnet.ibm.com>
+References: <CAC4Lta2AS6M5upg8n9Qu5+1pqCMF3j8_cYuLAS1DH9C_BQP0PA@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20141008153329.GF4592-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <CAC4Lta2AS6M5upg8n9Qu5+1pqCMF3j8_cYuLAS1DH9C_BQP0PA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Dave Hansen <dave-gkUM19QKKo4@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Raghavendra KT <raghavendra.kt-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: svaidy-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Anton Blanchard <anton-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paul McKenney <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Wed, Oct 08, 2014 at 05:33:29PM +0200, Michal Hocko wrote:
-> [I do not have time to get over all points here and will be offline
-> until Monday - will get back to the rest then]
+Hi Raghu,
+
+On 10/08/2014 08:24 PM, Raghavendra KT wrote:
+> On Wed, Oct 8, 2014 at 12:37 PM, Preeti U Murthy
+> <preeti-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org> wrote:
+>> There are two masks associated with cpusets. The cpus/mems_allowed
+>> and effective_cpus/mems. On the legacy hierarchy both these masks
+>> are consistent with each other. This is the intersection of their
+>> value and the currently active cpus. This means that we destroy the
+>> original values set in these masks on each cpu/mem hot unplug operation.
+>>         As a consequence when we hot plug back the cpus/mems, the tasks
+>> no longer run on them and performance degrades, inspite of having
+>> resources to run on.
+>>
+>> This effect is not seen in the default hierarchy since the
+>> allowed and effective masks are distinctly maintained.
+>> allowed masks are never touched once configured and effective masks
+>> alone are hotplug variant.
+>>
+>> This patch replicates the above design even for the legacy hierarchy,
+>> so that:
+>>
+>> 1. Tasks always run on the cpus/memory nodes that they are allowed to run on
+>> as long as they are online. The allowed masks are hotplug invariant.
+>>
+>> 2. When all cpus/memory nodes in a cpuset are hot unplugged out, the tasks
+>> are moved to their nearest ancestor which has resources to run on.
 > 
-> On Tue 07-10-14 21:11:06, Johannes Weiner wrote:
-> > On Tue, Oct 07, 2014 at 03:59:50PM +0200, Michal Hocko wrote:
-> [...]
-> > > I am completely missing any notes about potential excessive
-> > > swapouts or longer reclaim stalls which are a natural side effect of direct
-> > > reclaim with a larger target (or is this something we do not agree on?).
-> > 
-> > Yes, we disagree here.  Why is reclaiming 2MB once worse than entering
-> > reclaim 16 times to reclaim SWAP_CLUSTER_MAX?
+> Hi Preeti,
 > 
-> You can enter DEF_PRIORITY reclaim 16 times and reclaim your target but
-> you need at least 512<<DEF_PRIORITY pages on your LRUs to do it in a
-> single run on that priority. So especially small groups will pay more
-> and would be subject to mentioned problems (e.g. over-reclaim).
+> I may be missing some thing here could you please explain when do we get
+> tasks move out of a cpuset after this patch and why it is even necessary?
 
-No, even low priority scans bail out shortly after nr_to_reclaim.
+On the legacy hierarchy the tasks are moved to their parents cpusets if
+the cpuset to which they were initially bound becomes empty. What the
+patch does has nothing to do with moving tasks when the cpuset to which
+they are bound becomes empty.The point 2 above was mentioned to merely
+state that this part of the behavior is not really changed with the
+patch. The patch merely ensures that the original cpuset configuration
+is not messed with during hotplug operations.
 
-> > There is no inherent difference in reclaiming a big chunk and
-> > reclaiming many small chunks that add up to the same size.
->  
-> [...]
 > 
-> > > Another part that matters is the size. Memcgs might be really small and
-> > > that changes the math. Large reclaim target will get to low prio reclaim
-> > > and thus the excessive reclaim.
-> > 
-> > I already addressed page size vs. memcg size before.
-> > 
-> > However, low priority reclaim does not result in excessive reclaim.
-> > The reclaim goal is checked every time it scanned SWAP_CLUSTER_MAX
-> > pages, and it exits if the goal has been met.  See shrink_lruvec(),
-> > shrink_zone() etc.
+> IIUC, with default hierarchy we should never hit a case where we have empty
+> effective cpuset and hence remove_tasks_in_empty_cpuset should never happen. no?
 > 
-> Now I am confused. shrink_zone will bail out but shrink_lruvec will loop
-> over nr[...] until they are empty and only updates the numbers to be
-> roughly proportional once:
+> if my assumption is correct then we should remove
+> remove_tasks_in_empty_cpuset itself...
+
+remove_tasks_in_empty_cpuset() is called on the legacy hierarchy when
+the cpuset becomes empty, hence we require it. But you are right its not
+called on the default hierarchy.
+
+Regards
+Preeti U Murthy
 > 
->                 if (nr_reclaimed < nr_to_reclaim || scan_adjusted)
->                         continue;
-> 
->                 /*
->                  * For kswapd and memcg, reclaim at least the number of pages
->                  * requested. Ensure that the anon and file LRUs are scanned
->                  * proportionally what was requested by get_scan_count(). We
->                  * stop reclaiming one LRU and reduce the amount scanning
->                  * proportional to the original scan target.
->                  */
-> 		[...]
-> 		scan_adjusted = true;
-> 
-> Or do you rely on
->                 /*
->                  * It's just vindictive to attack the larger once the smaller
->                  * has gone to zero.  And given the way we stop scanning the
->                  * smaller below, this makes sure that we only make one nudge
->                  * towards proportionality once we've got nr_to_reclaim.
->                  */
->                 if (!nr_file || !nr_anon)
->                         break;
-> 
-> and SCAN_FILE because !inactive_file_is_low?
-
-That function is indeed quite confusing.
-
-Once nr_to_reclaim has been met, it looks at both LRUs and decides
-which one has the smaller scan target left, sets it to 0, and then
-scales the bigger target in proportion - that means if it scanned 10%
-of nr[file], it sets nr[anon] to 10% of its original size, minus the
-anon pages it already scanned.  Based on that alone, overscanning is
-limited to twice the requested size, i.e. 4MB for a 2MB THP page,
-regardless of how low the priority drops.
-
-In practice, the VM is heavily biased to avoid swapping.  The forceful
-SCAN_FILE you point out is one condition that avoids the proportional
-scan most of the time.  But even the proportional scan is heavily
-biased towards cache - every cache insertion decreases the file
-recent_rotated/recent_scanned ratio, whereas anon faults do not.
-
-On top of that, anon pages start out on the active list, whereas cache
-starts on the inactive, which means that the majority of the anon scan
-target - should there be one - usually translates to deactivation.
-
-So in most cases, I'd expect the scanner to bail after nr_to_reclaim
-cache pages, and in low cache situations it might scan up to 2MB worth
-of anon pages, a small amount of which it might swap.
-
-I don't particularly like the decisions the current code makes, but it
-should work.  We have put in a lot of effort to prevent overreclaim in
-the last few years, and a big part of this was decoupling the priority
-level from the actual reclaim results.  Nowadays, the priority level
-should merely dictate the scan window and have no impact on the number
-of pages actually reclaimed.  I don't expect that it will, but if it
-does, that's a reclaim bug that needs to be addressed.  If we ask for
-N pages, it should never reclaim significantly more than that,
-regardless of how aggressively it has to scan to accomplish that.
