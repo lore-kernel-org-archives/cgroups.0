@@ -1,357 +1,223 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch 1/5] mm: memcontrol: convert reclaim iterator to simple css refcounting
-Date: Tue, 14 Oct 2014 12:20:33 -0400
-Message-ID: <1413303637-23862-2-git-send-email-hannes@cmpxchg.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: [patch 3/5] mm: memcontrol: remove obsolete kmemcg pinning tricks
+Date: Tue, 14 Oct 2014 12:20:35 -0400
+Message-ID: <1413303637-23862-4-git-send-email-hannes@cmpxchg.org>
 References: <1413303637-23862-1-git-send-email-hannes@cmpxchg.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1413303637-23862-1-git-send-email-hannes@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1413303637-23862-1-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Vladimir Davydov <vdavydov@parallels.com>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-The memcg reclaim iterators use a complicated weak reference scheme to
-prevent pinning cgroups indefinitely in the absence of memory pressure.
+As charges now pin the css explicitely, there is no more need for
+kmemcg to acquire a proxy reference for outstanding pages during
+offlining, or maintain state to identify such "dead" groups.
 
-However, during the ongoing cgroup core rework, css lifetime has been
-decoupled such that a pinned css no longer interferes with removal of
-the user-visible cgroup, and all this complexity is now unnecessary.
+This was the last user of the uncharge functions' return values, so
+remove them as well.
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Reviewed-by: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 ---
- mm/memcontrol.c | 250 +++++++++++++++++---------------------------------------
- 1 file changed, 76 insertions(+), 174 deletions(-)
+ include/linux/page_counter.h |  4 +--
+ mm/memcontrol.c              | 74 +-------------------------------------------
+ mm/page_counter.c            | 23 +++-----------
+ 3 files changed, 7 insertions(+), 94 deletions(-)
 
+diff --git a/include/linux/page_counter.h b/include/linux/page_counter.h
+index d92d18949474..a878ef61d073 100644
+--- a/include/linux/page_counter.h
++++ b/include/linux/page_counter.h
+@@ -32,12 +32,12 @@ static inline unsigned long page_counter_read(struct page_counter *counter)
+ 	return atomic_long_read(&counter->count);
+ }
+ 
+-int page_counter_cancel(struct page_counter *counter, unsigned long nr_pages);
++void page_counter_cancel(struct page_counter *counter, unsigned long nr_pages);
+ void page_counter_charge(struct page_counter *counter, unsigned long nr_pages);
+ int page_counter_try_charge(struct page_counter *counter,
+ 			    unsigned long nr_pages,
+ 			    struct page_counter **fail);
+-int page_counter_uncharge(struct page_counter *counter, unsigned long nr_pages);
++void page_counter_uncharge(struct page_counter *counter, unsigned long nr_pages);
+ int page_counter_limit(struct page_counter *counter, unsigned long limit);
+ int page_counter_memparse(const char *buf, unsigned long *nr_pages);
+ 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b62972c80055..67dabe8b0aa6 100644
+index a3feead6be15..7551e12f8ff7 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -143,14 +143,8 @@ struct mem_cgroup_stat_cpu {
- 	unsigned long targets[MEM_CGROUP_NTARGETS];
+@@ -369,7 +369,6 @@ struct mem_cgroup {
+ /* internal only representation about the status of kmem accounting. */
+ enum {
+ 	KMEM_ACCOUNTED_ACTIVE, /* accounted by this cgroup itself */
+-	KMEM_ACCOUNTED_DEAD, /* dead memcg with pending kmem charges */
  };
  
--struct mem_cgroup_reclaim_iter {
--	/*
--	 * last scanned hierarchy member. Valid only if last_dead_count
--	 * matches memcg->dead_count of the hierarchy root group.
--	 */
--	struct mem_cgroup *last_visited;
--	int last_dead_count;
--
-+struct reclaim_iter {
-+	struct mem_cgroup *position;
- 	/* scan generation, increased every round-trip */
- 	unsigned int generation;
- };
-@@ -162,7 +156,7 @@ struct mem_cgroup_per_zone {
- 	struct lruvec		lruvec;
- 	unsigned long		lru_size[NR_LRU_LISTS];
- 
--	struct mem_cgroup_reclaim_iter reclaim_iter[DEF_PRIORITY + 1];
-+	struct reclaim_iter	iter[DEF_PRIORITY + 1];
- 
- 	struct rb_node		tree_node;	/* RB tree node */
- 	unsigned long		usage_in_excess;/* Set to the value by which */
-@@ -346,7 +340,6 @@ struct mem_cgroup {
- 	struct mem_cgroup_stat_cpu nocpu_base;
- 	spinlock_t pcp_counter_lock;
- 
--	atomic_t	dead_count;
- #if defined(CONFIG_MEMCG_KMEM) && defined(CONFIG_INET)
- 	struct cg_proto tcp_mem;
- #endif
-@@ -1067,122 +1060,6 @@ static struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm)
- 	return memcg;
+ #ifdef CONFIG_MEMCG_KMEM
+@@ -383,22 +382,6 @@ static bool memcg_kmem_is_active(struct mem_cgroup *memcg)
+ 	return test_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_account_flags);
  }
  
--/*
-- * Returns a next (in a pre-order walk) alive memcg (with elevated css
-- * ref. count) or NULL if the whole root's subtree has been visited.
-- *
-- * helper function to be used by mem_cgroup_iter
-- */
--static struct mem_cgroup *__mem_cgroup_iter_next(struct mem_cgroup *root,
--		struct mem_cgroup *last_visited)
--{
--	struct cgroup_subsys_state *prev_css, *next_css;
--
--	prev_css = last_visited ? &last_visited->css : NULL;
--skip_node:
--	next_css = css_next_descendant_pre(prev_css, &root->css);
--
--	/*
--	 * Even if we found a group we have to make sure it is
--	 * alive. css && !memcg means that the groups should be
--	 * skipped and we should continue the tree walk.
--	 * last_visited css is safe to use because it is
--	 * protected by css_get and the tree walk is rcu safe.
--	 *
--	 * We do not take a reference on the root of the tree walk
--	 * because we might race with the root removal when it would
--	 * be the only node in the iterated hierarchy and mem_cgroup_iter
--	 * would end up in an endless loop because it expects that at
--	 * least one valid node will be returned. Root cannot disappear
--	 * because caller of the iterator should hold it already so
--	 * skipping css reference should be safe.
--	 */
--	if (next_css) {
--		struct mem_cgroup *memcg = mem_cgroup_from_css(next_css);
--
--		if (next_css == &root->css)
--			return memcg;
--
--		if (css_tryget_online(next_css)) {
--			/*
--			 * Make sure the memcg is initialized:
--			 * mem_cgroup_css_online() orders the the
--			 * initialization against setting the flag.
--			 */
--			if (smp_load_acquire(&memcg->initialized))
--				return memcg;
--			css_put(next_css);
--		}
--
--		prev_css = next_css;
--		goto skip_node;
--	}
--
--	return NULL;
--}
--
--static void mem_cgroup_iter_invalidate(struct mem_cgroup *root)
+-static void memcg_kmem_mark_dead(struct mem_cgroup *memcg)
 -{
 -	/*
--	 * When a group in the hierarchy below root is destroyed, the
--	 * hierarchy iterator can no longer be trusted since it might
--	 * have pointed to the destroyed group.  Invalidate it.
+-	 * Our caller must use css_get() first, because memcg_uncharge_kmem()
+-	 * will call css_put() if it sees the memcg is dead.
 -	 */
--	atomic_inc(&root->dead_count);
--}
--
--static struct mem_cgroup *
--mem_cgroup_iter_load(struct mem_cgroup_reclaim_iter *iter,
--		     struct mem_cgroup *root,
--		     int *sequence)
--{
--	struct mem_cgroup *position = NULL;
--	/*
--	 * A cgroup destruction happens in two stages: offlining and
--	 * release.  They are separated by a RCU grace period.
--	 *
--	 * If the iterator is valid, we may still race with an
--	 * offlining.  The RCU lock ensures the object won't be
--	 * released, tryget will fail if we lost the race.
--	 */
--	*sequence = atomic_read(&root->dead_count);
--	if (iter->last_dead_count == *sequence) {
--		smp_rmb();
--		position = iter->last_visited;
--
--		/*
--		 * We cannot take a reference to root because we might race
--		 * with root removal and returning NULL would end up in
--		 * an endless loop on the iterator user level when root
--		 * would be returned all the time.
--		 */
--		if (position && position != root &&
--		    !css_tryget_online(&position->css))
--			position = NULL;
--	}
--	return position;
--}
--
--static void mem_cgroup_iter_update(struct mem_cgroup_reclaim_iter *iter,
--				   struct mem_cgroup *last_visited,
--				   struct mem_cgroup *new_position,
--				   struct mem_cgroup *root,
--				   int sequence)
--{
--	/* root reference counting symmetric to mem_cgroup_iter_load */
--	if (last_visited && last_visited != root)
--		css_put(&last_visited->css);
--	/*
--	 * We store the sequence count from the time @last_visited was
--	 * loaded successfully instead of rereading it here so that we
--	 * don't lose destruction events in between.  We could have
--	 * raced with the destruction of @new_position after all.
--	 */
--	iter->last_visited = new_position;
 -	smp_wmb();
--	iter->last_dead_count = sequence;
+-	if (test_bit(KMEM_ACCOUNTED_ACTIVE, &memcg->kmem_account_flags))
+-		set_bit(KMEM_ACCOUNTED_DEAD, &memcg->kmem_account_flags);
 -}
 -
- /**
-  * mem_cgroup_iter - iterate over memory cgroup hierarchy
-  * @root: hierarchy root
-@@ -1204,8 +1081,10 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
- 				   struct mem_cgroup *prev,
- 				   struct mem_cgroup_reclaim_cookie *reclaim)
- {
-+	struct reclaim_iter *uninitialized_var(iter);
-+	struct cgroup_subsys_state *css = NULL;
- 	struct mem_cgroup *memcg = NULL;
--	struct mem_cgroup *last_visited = NULL;
-+	struct mem_cgroup *pos = NULL;
- 
- 	if (mem_cgroup_disabled())
- 		return NULL;
-@@ -1214,50 +1093,93 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
- 		root = root_mem_cgroup;
- 
- 	if (prev && !reclaim)
--		last_visited = prev;
-+		pos = prev;
- 
- 	if (!root->use_hierarchy && root != root_mem_cgroup) {
- 		if (prev)
--			goto out_css_put;
-+			goto out;
- 		return root;
- 	}
- 
- 	rcu_read_lock();
--	while (!memcg) {
--		struct mem_cgroup_reclaim_iter *uninitialized_var(iter);
--		int uninitialized_var(seq);
--
--		if (reclaim) {
--			struct mem_cgroup_per_zone *mz;
--
--			mz = mem_cgroup_zone_zoneinfo(root, reclaim->zone);
--			iter = &mz->reclaim_iter[reclaim->priority];
--			if (prev && reclaim->generation != iter->generation) {
--				iter->last_visited = NULL;
--				goto out_unlock;
--			}
- 
--			last_visited = mem_cgroup_iter_load(iter, root, &seq);
-+	if (reclaim) {
-+		struct mem_cgroup_per_zone *mz;
-+
-+		mz = mem_cgroup_zone_zoneinfo(root, reclaim->zone);
-+		iter = &mz->iter[reclaim->priority];
-+
-+		if (prev && reclaim->generation != iter->generation)
-+			goto out_unlock;
-+
-+		do {
-+			pos = ACCESS_ONCE(iter->position);
-+			/*
-+			 * A racing update may change the position and
-+			 * put the last reference, hence css_tryget(),
-+			 * or retry to see the updated position.
-+			 */
-+		} while (pos && !css_tryget(&pos->css));
-+	}
-+
-+	if (pos)
-+		css = &pos->css;
-+
-+	for (;;) {
-+		css = css_next_descendant_pre(css, &root->css);
-+		if (!css) {
-+			/*
-+			 * Reclaimers share the hierarchy walk, and a
-+			 * new one might jump in right at the end of
-+			 * the hierarchy - make sure they see at least
-+			 * one group and restart from the beginning.
-+			 */
-+			if (!prev)
-+				continue;
-+			break;
- 		}
- 
--		memcg = __mem_cgroup_iter_next(root, last_visited);
-+		/*
-+		 * Verify the css and acquire a reference.  The root
-+		 * is provided by the caller, so we know it's alive
-+		 * and kicking, and don't take an extra reference.
-+		 */
-+		memcg = mem_cgroup_from_css(css);
- 
--		if (reclaim) {
--			mem_cgroup_iter_update(iter, last_visited, memcg, root,
--					seq);
-+		if (css == &root->css)
-+			break;
-+
-+		if (css_tryget_online(css)) {
-+			/*
-+			 * Make sure the memcg is initialized:
-+			 * mem_cgroup_css_online() orders the the
-+			 * initialization against setting the flag.
-+			 */
-+			if (smp_load_acquire(&memcg->initialized))
-+				break;
- 
--			if (!memcg)
--				iter->generation++;
--			else if (!prev && memcg)
--				reclaim->generation = iter->generation;
-+			css_put(css);
- 		}
- 
--		if (prev && !memcg)
--			goto out_unlock;
-+		memcg = NULL;
-+	}
-+
-+	if (reclaim) {
-+		if (cmpxchg(&iter->position, pos, memcg) == pos && memcg)
-+			css_get(&memcg->css);
-+
-+		if (pos)
-+			css_put(&pos->css);
-+
-+		if (!memcg)
-+			iter->generation++;
-+		else if (!prev)
-+			reclaim->generation = iter->generation;
- 	}
-+
- out_unlock:
- 	rcu_read_unlock();
--out_css_put:
-+out:
- 	if (prev && prev != root)
- 		css_put(&prev->css);
- 
-@@ -5438,24 +5360,6 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
- 	return 0;
- }
- 
--/*
-- * Announce all parents that a group from their hierarchy is gone.
-- */
--static void mem_cgroup_invalidate_reclaim_iterators(struct mem_cgroup *memcg)
+-static bool memcg_kmem_test_and_clear_dead(struct mem_cgroup *memcg)
 -{
--	struct mem_cgroup *parent = memcg;
--
--	while ((parent = parent_mem_cgroup(parent)))
--		mem_cgroup_iter_invalidate(parent);
+-	return test_and_clear_bit(KMEM_ACCOUNTED_DEAD,
+-				  &memcg->kmem_account_flags);
+-}
+ #endif
+ 
+ /* Stuffs for move charges at task migration. */
+@@ -2741,22 +2724,7 @@ static void memcg_uncharge_kmem(struct mem_cgroup *memcg,
+ 	if (do_swap_account)
+ 		page_counter_uncharge(&memcg->memsw, nr_pages);
+ 
+-	/* Not down to 0 */
+-	if (page_counter_uncharge(&memcg->kmem, nr_pages)) {
+-		css_put_many(&memcg->css, nr_pages);
+-		return;
+-	}
 -
 -	/*
--	 * if the root memcg is not hierarchical we have to check it
--	 * explicitely.
+-	 * Releases a reference taken in kmem_cgroup_css_offline in case
+-	 * this last uncharge is racing with the offlining code or it is
+-	 * outliving the memcg existence.
+-	 *
+-	 * The memory barrier imposed by test&clear is paired with the
+-	 * explicit one in memcg_kmem_mark_dead().
 -	 */
--	if (!root_mem_cgroup->use_hierarchy)
--		mem_cgroup_iter_invalidate(root_mem_cgroup);
--}
--
- static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
+-	if (memcg_kmem_test_and_clear_dead(memcg))
+-		css_put(&memcg->css);
++	page_counter_uncharge(&memcg->kmem, nr_pages);
+ 
+ 	css_put_many(&memcg->css, nr_pages);
+ }
+@@ -4740,40 +4708,6 @@ static void memcg_destroy_kmem(struct mem_cgroup *memcg)
  {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-@@ -5476,8 +5380,6 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
+ 	mem_cgroup_sockets_destroy(memcg);
+ }
+-
+-static void kmem_cgroup_css_offline(struct mem_cgroup *memcg)
+-{
+-	if (!memcg_kmem_is_active(memcg))
+-		return;
+-
+-	/*
+-	 * kmem charges can outlive the cgroup. In the case of slab
+-	 * pages, for instance, a page contain objects from various
+-	 * processes. As we prevent from taking a reference for every
+-	 * such allocation we have to be careful when doing uncharge
+-	 * (see memcg_uncharge_kmem) and here during offlining.
+-	 *
+-	 * The idea is that that only the _last_ uncharge which sees
+-	 * the dead memcg will drop the last reference. An additional
+-	 * reference is taken here before the group is marked dead
+-	 * which is then paired with css_put during uncharge resp. here.
+-	 *
+-	 * Although this might sound strange as this path is called from
+-	 * css_offline() when the referencemight have dropped down to 0 and
+-	 * shouldn't be incremented anymore (css_tryget_online() would
+-	 * fail) we do not have other options because of the kmem
+-	 * allocations lifetime.
+-	 */
+-	css_get(&memcg->css);
+-
+-	memcg_kmem_mark_dead(memcg);
+-
+-	if (page_counter_read(&memcg->kmem))
+-		return;
+-
+-	if (memcg_kmem_test_and_clear_dead(memcg))
+-		css_put(&memcg->css);
+-}
+ #else
+ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
+ {
+@@ -4783,10 +4717,6 @@ static int memcg_init_kmem(struct mem_cgroup *memcg, struct cgroup_subsys *ss)
+ static void memcg_destroy_kmem(struct mem_cgroup *memcg)
+ {
+ }
+-
+-static void kmem_cgroup_css_offline(struct mem_cgroup *memcg)
+-{
+-}
+ #endif
  
- 	kmem_cgroup_css_offline(memcg);
+ /*
+@@ -5390,8 +5320,6 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
+ 	}
+ 	spin_unlock(&memcg->event_list_lock);
  
--	mem_cgroup_invalidate_reclaim_iterators(memcg);
+-	kmem_cgroup_css_offline(memcg);
 -
  	/*
  	 * This requires that offlining is serialized.  Right now that is
  	 * guaranteed because css_killed_work_fn() holds the cgroup_mutex.
+diff --git a/mm/page_counter.c b/mm/page_counter.c
+index fc4990c6bb5b..71a0e92e7051 100644
+--- a/mm/page_counter.c
++++ b/mm/page_counter.c
+@@ -12,19 +12,14 @@
+  * page_counter_cancel - take pages out of the local counter
+  * @counter: counter
+  * @nr_pages: number of pages to cancel
+- *
+- * Returns whether there are remaining pages in the counter.
+  */
+-int page_counter_cancel(struct page_counter *counter, unsigned long nr_pages)
++void page_counter_cancel(struct page_counter *counter, unsigned long nr_pages)
+ {
+ 	long new;
+ 
+ 	new = atomic_long_sub_return(nr_pages, &counter->count);
+-
+ 	/* More uncharges than charges? */
+ 	WARN_ON_ONCE(new < 0);
+-
+-	return new > 0;
+ }
+ 
+ /**
+@@ -113,23 +108,13 @@ failed:
+  * page_counter_uncharge - hierarchically uncharge pages
+  * @counter: counter
+  * @nr_pages: number of pages to uncharge
+- *
+- * Returns whether there are remaining charges in @counter.
+  */
+-int page_counter_uncharge(struct page_counter *counter, unsigned long nr_pages)
++void page_counter_uncharge(struct page_counter *counter, unsigned long nr_pages)
+ {
+ 	struct page_counter *c;
+-	int ret = 1;
+ 
+-	for (c = counter; c; c = c->parent) {
+-		int remainder;
+-
+-		remainder = page_counter_cancel(c, nr_pages);
+-		if (c == counter && !remainder)
+-			ret = 0;
+-	}
+-
+-	return ret;
++	for (c = counter; c; c = c->parent)
++		page_counter_cancel(c, nr_pages);
+ }
+ 
+ /**
 -- 
 2.1.2
