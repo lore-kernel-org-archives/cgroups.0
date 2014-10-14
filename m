@@ -1,26 +1,23 @@
-From: Wang Nan <wangnan0-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup/kmemleak: add kmemleak_free() for cgroup deallocations.
-Date: Tue, 14 Oct 2014 19:49:44 +0800
-Message-ID: <543D0DD8.10201@huawei.com>
-References: <1411004285-42101-1-git-send-email-wangnan0@huawei.com>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH resend] cgroup/kmemleak: add kmemleak_free() for cgroup
+ deallocations.
+Date: Tue, 14 Oct 2014 13:50:34 +0200
+Message-ID: <20141014115034.GA8727@dhcp22.suse.cz>
+References: <1413287164-77051-1-git-send-email-wangnan0@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1411004285-42101-1-git-send-email-wangnan0-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1413287164-77051-1-git-send-email-wangnan0-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Wang Nan <wangnan0-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-Hi,
+[Adding Andrew who seems to be the right one to pick this up]
 
-I can't find this patch appear in any tree, is there any problem?
-
-As Michal Hocko's suggestion, I resent this patch with stable tag added. Please review.
-
-Thanks.
-
-On 2014/9/18 9:38, Wang Nan wrote:
+On Tue 14-10-14 19:46:04, Wang Nan wrote:
 > Commit ff7ee93f4 introduces kmemleak_alloc() for alloc_page_cgroup(),
 > but corresponding kmemleak_free() is missing, which makes kmemleak be
 > wrongly disabled after memory offlining. Log is pasted at the end of
@@ -71,8 +68,18 @@ On 2014/9/18 9:38, Wang Nan wrote:
 > [   46.617892]      [<ffffffff81ce46a9>] x86_64_start_kernel+0xf5/0xfc
 > [   46.617892]      [<ffffffffffffffff>] 0xffffffffffffffff
 > 
-> Signed-off-by: Wang Nan <wangnan0-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Fixes: ff7ee93f4 (cgroup/kmemleak: Annotate alloc_page() for cgroup allocations)
+> Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> # v3.2+
 > Cc: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
+> Signed-off-by: Wang Nan <wangnan0-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> ---
+> 
+> Resend with stable tag.
+> 
+> Please refer to https://lkml.org/lkml/2014/9/17/746
+> 
 > ---
 >  mm/page_cgroup.c | 1 +
 >  1 file changed, 1 insertion(+)
@@ -89,5 +96,10 @@ On 2014/9/18 9:38, Wang Nan wrote:
 >  		free_pages_exact(addr, table_size);
 >  	}
 >  }
+> -- 
+> 1.8.4
 > 
 
+-- 
+Michal Hocko
+SUSE Labs
