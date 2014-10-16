@@ -1,62 +1,45 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch 2/5] mm: memcontrol: take a css reference for each
- charged page
-Date: Wed, 15 Oct 2014 14:44:10 -0400
-Message-ID: <20141015184410.GB6442@phnom.home.cmpxchg.org>
-References: <1413303637-23862-1-git-send-email-hannes@cmpxchg.org>
- <1413303637-23862-3-git-send-email-hannes@cmpxchg.org>
- <20141015151836.GG23547@dhcp22.suse.cz>
+From: Paul Bolle <pebolle@tiscali.nl>
+Subject: Re: [patch 3/3] kernel: res_counter: remove the unused API
+Date: Thu, 16 Oct 2014 09:20:34 +0200
+Message-ID: <1413444034.2128.27.camel@x220>
+References: <1413251163-8517-1-git-send-email-hannes@cmpxchg.org>
+	 <1413251163-8517-4-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20141015151836.GG23547@dhcp22.suse.cz>
+In-Reply-To: <1413251163-8517-4-git-send-email-hannes@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Valentin Rothberg <valentinrothberg@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Wed, Oct 15, 2014 at 05:18:36PM +0200, Michal Hocko wrote:
-> On Tue 14-10-14 12:20:34, Johannes Weiner wrote:
-> > Charges currently pin the css indirectly by playing tricks during
-> > css_offline(): user pages stall the offlining process until all of
-> > them have been reparented, whereas kmemcg acquires a keep-alive
-> > reference if outstanding kernel pages are detected at that point.
-> > 
-> > In preparation for removing all this complexity, make the pinning
-> > explicit and acquire a css references for every charged page.
-> > 
-> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> > Reviewed-by: Vladimir Davydov <vdavydov@parallels.com>
+On Mon, 2014-10-13 at 21:46 -0400, Johannes Weiner wrote:
+> All memory accounting and limiting has been switched over to the
+> lockless page counters.  Bye, res_counter!
 > 
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> Acked-by: Vladimir Davydov <vdavydov@parallels.com>
 > Acked-by: Michal Hocko <mhocko@suse.cz>
-> 
-> > ---
-> >  include/linux/cgroup.h          | 26 +++++++++++++++++++++++
-> >  include/linux/percpu-refcount.h | 47 +++++++++++++++++++++++++++++++++--------
-> >  mm/memcontrol.c                 | 21 ++++++++++++++----
-> >  3 files changed, 81 insertions(+), 13 deletions(-)
-> > 
-> [...]
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index 67dabe8b0aa6..a3feead6be15 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -2256,6 +2256,7 @@ static void drain_stock(struct memcg_stock_pcp *stock)
-> >  		page_counter_uncharge(&old->memory, stock->nr_pages);
-> >  		if (do_swap_account)
-> >  			page_counter_uncharge(&old->memsw, stock->nr_pages);
-> > +		css_put_many(&old->css, stock->nr_pages);
-> 
-> I have suggested to add a comment about pairing css_get here because the
-> corresponding refill_stock doesn't take any reference which might be
-> little bit confusing. Nothing earth shattering of course...
 
-Ah, but this isn't the counter-part to refill_stock(), consume_stock()
-is.  The references are taken for the charges, and those two functions
-do not change the account.  css get/put pair exactly like page counter
-charge/uncharge.
+This patch landed in today's linux-next (ie, next 20141016).
+
+>  Documentation/cgroups/resource_counter.txt | 197 -------------------------
+>  include/linux/res_counter.h                | 223 -----------------------------
+>  init/Kconfig                               |   6 -
+>  kernel/Makefile                            |   1 -
+>  kernel/res_counter.c                       | 211 ---------------------------
+>  5 files changed, 638 deletions(-)
+>  delete mode 100644 Documentation/cgroups/resource_counter.txt
+>  delete mode 100644 include/linux/res_counter.h
+>  delete mode 100644 kernel/res_counter.c
+
+There's a last reference to CONFIG_RESOURCE_COUNTERS in
+Documentation/cgroups/memory.txt. That reference could be dropped too,
+couldn't it?
+
+
+Paul Bolle
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
