@@ -1,7 +1,7 @@
-From: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
+From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCHv1 7/8] cgroup: cgroup namespace setns support
-Date: Thu, 16 Oct 2014 14:17:18 -0700
-Message-ID: <CALCETrWA8zrd2u6yiPx3OtmkpjuGpjiRJ1L1tAvow-hJRUaT7Q@mail.gmail.com>
+Date: Thu, 16 Oct 2014 14:22:18 -0700
+Message-ID: <CAGr1F2EH0ynfFihTh1dv=n1faxUh0zS3ggk303bwGnDnW2PUCw@mail.gmail.com>
 References: <1413235430-22944-1-git-send-email-adityakali@google.com>
 	<1413235430-22944-8-git-send-email-adityakali@google.com>
 	<20141016211236.GA4308@mail.hallyn.com>
@@ -9,6 +9,16 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20120113;
+	h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+	:cc:content-type;
+	bh=ah4Oz2Dy4i7I0qPcU9oVCakldbJZUvYwjJNKJP+NeAQ=;
+	b=McCqYRINW8u6R9DX8Tt03zjzX0iLwhifhF1sEaUrnUChAOzGfF5DJAmTtaIHpjKw1Q
+	A3buPNuBnpwafRznj8ZXijW1NKxxjxOrsXoPpxubK2EWGDN53aNRhoZsYp9ju+oMSd0C
+	593PYkCESDE/02LUmD/G2f0t9452usz/maLLHKvoXPrCFmskvgGPYyMv1P5fJofxcgdO
+	f2Tj1+z2SPMKAOOmOLQh3VDBKHIJ+qRbV8adiOd2yi5s1jb1LoURlyHFmMiBcznqZ4Cb
+	9IH4g1U4bLh+jhhooC0xEXHGYCfJePzd62AESEK8imLuDHPUYhhYSD1gRiwmXCrSlivN
+	EA6A==
 In-Reply-To: <20141016211236.GA4308-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -21,7 +31,7 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Cc: Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
 On Thu, Oct 16, 2014 at 2:12 PM, Serge E. Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org> wrote:
 > Quoting Aditya Kali (adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org):
@@ -42,12 +52,14 @@ On Thu, Oct 16, 2014 at 2:12 PM, Serge E. Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@p
 > below condition0 but my cgroup is not a descendent of the
 > container's cgroup.
 >
-
-Presumably you need to ask your friendly cgroup manager to stick you
-in that cgroup first.  Or we need to generally allow tasks to move
-themselves deeper in the hierarchy, but that seems like a big change.
-
---Andy
+This condition is there because we don't want to do implicit cgroup
+changes when a process attaches to another cgroupns. cgroupns tries to
+preserve the invariant that at any point, your current cgroup is
+always under the cgroupns-root of your cgroup namespace. But in your
+example, if we allow a process in "session-c12.scope" container to
+attach to cgroupns root'ed at "session-c12.scope/x1" container
+(without implicitly moving its cgroup), then this invariant won't
+hold.
 
 >
 >> * target cgroupns-root is same as or deeper than task's current
@@ -127,5 +139,4 @@ themselves deeper in the hierarchy, but that seems like a big change.
 
 
 -- 
-Andy Lutomirski
-AMA Capital Management, LLC
+Aditya
