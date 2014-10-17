@@ -1,59 +1,64 @@
-From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCHv1 7/8] cgroup: cgroup namespace setns support
-Date: Thu, 16 Oct 2014 23:47:10 +0200
-Message-ID: <20141016214710.GA4759@mail.hallyn.com>
-References: <1413235430-22944-1-git-send-email-adityakali@google.com>
-	<1413235430-22944-8-git-send-email-adityakali@google.com>
-	<20141016211236.GA4308@mail.hallyn.com>
-	<CAGr1F2EH0ynfFihTh1dv=n1faxUh0zS3ggk303bwGnDnW2PUCw@mail.gmail.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [patch 4/5] mm: memcontrol: continue cache reclaim from offlined
+ groups
+Date: Thu, 16 Oct 2014 23:02:21 -0400
+Message-ID: <20141017030221.GA8506@phnom.home.cmpxchg.org>
+References: <1413303637-23862-1-git-send-email-hannes@cmpxchg.org>
+ <1413303637-23862-5-git-send-email-hannes@cmpxchg.org>
+ <20141015152555.GI23547@dhcp22.suse.cz>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20141015152555.GI23547@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CAGr1F2EH0ynfFihTh1dv=n1faxUh0zS3ggk303bwGnDnW2PUCw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Quoting Aditya Kali (adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org):
-> On Thu, Oct 16, 2014 at 2:12 PM, Serge E. Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org> wrote:
-> > Quoting Aditya Kali (adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org):
-> >> setns on a cgroup namespace is allowed only if
-> >> * task has CAP_SYS_ADMIN in its current user-namespace and
-> >>   over the user-namespace associated with target cgroupns.
-> >> * task's current cgroup is descendent of the target cgroupns-root
-> >>   cgroup.
-> >
-> > What is the point of this?
-> >
-> > If I'm a user logged into
-> > /lxc/c1/user.slice/user-1000.slice/session-c12.scope and I start
-> > a container which is in
-> > /lxc/c1/user.slice/user-1000.slice/session-c12.scope/x1
-> > then I will want to be able to enter the container's cgroup.
-> > The container's cgroup root is under my own (satisfying the
-> > below condition0 but my cgroup is not a descendent of the
-> > container's cgroup.
-> >
-> This condition is there because we don't want to do implicit cgroup
-> changes when a process attaches to another cgroupns. cgroupns tries to
-> preserve the invariant that at any point, your current cgroup is
-> always under the cgroupns-root of your cgroup namespace. But in your
-> example, if we allow a process in "session-c12.scope" container to
-> attach to cgroupns root'ed at "session-c12.scope/x1" container
-> (without implicitly moving its cgroup), then this invariant won't
-> hold.
+On Wed, Oct 15, 2014 at 05:25:55PM +0200, Michal Hocko wrote:
+> On Tue 14-10-14 12:20:36, Johannes Weiner wrote:
+> > On cgroup deletion, outstanding page cache charges are moved to the
+> > parent group so that they're not lost and can be reclaimed during
+> > pressure on/inside said parent.  But this reparenting is fairly tricky
+> > and its synchroneous nature has led to several lock-ups in the past.
+> > 
+> > Since css iterators now also include offlined css, memcg iterators can
+> > be changed to include offlined children during reclaim of a group, and
+> > leftover cache can just stay put.
+> 
+> I think it would be nice to mention c2931b70a32c (cgroup: iterate
+> cgroup_subsys_states directly) here to have a full context about the
+> tryget vs tryget_online.
 
-Oh, I see.  Guess that should be workable.  Thanks.
+Yes, that commit is probably the most direct dependency.
 
--serge
+Andrew, could you update the changelog in place to have that paragraph
+read
+
+Since c2931b70a32c ("cgroup: iterate cgroup_subsys_states directly")
+css iterators now also include offlined css, so memcg iterators can be
+changed to include offlined children during reclaim of a group, and
+leftover cache can just stay put.
+
+please?  Thanks!
+
+> > There is a slight change of behavior in that charges of deleted groups
+> > no longer show up as local charges in the parent.  But they are still
+> > included in the parent's hierarchical statistics.
+> 
+> Thank you for pulling drain_stock cleanup out. This made the patch so
+> much easier to review.
+>  
+> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> 
+> Acked-by: Michal Hocko <mhocko@suse.cz>
+
+Thanks you!
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
