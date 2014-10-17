@@ -1,64 +1,30 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch 4/5] mm: memcontrol: continue cache reclaim from offlined
- groups
-Date: Thu, 16 Oct 2014 23:02:21 -0400
-Message-ID: <20141017030221.GA8506@phnom.home.cmpxchg.org>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [patch 4/5] mm: memcontrol: continue cache reclaim from
+ offlined groups
+Date: Thu, 16 Oct 2014 21:42:40 -0700
+Message-ID: <20141016214240.ade3712f.akpm@linux-foundation.org>
 References: <1413303637-23862-1-git-send-email-hannes@cmpxchg.org>
- <1413303637-23862-5-git-send-email-hannes@cmpxchg.org>
- <20141015152555.GI23547@dhcp22.suse.cz>
+	<1413303637-23862-5-git-send-email-hannes@cmpxchg.org>
+	<20141015152555.GI23547@dhcp22.suse.cz>
+	<20141017030221.GA8506@phnom.home.cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20141015152555.GI23547@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20141017030221.GA8506-HTCKtW7iVlxqnrmGgq4/JMIURNUf+fel@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Oct 15, 2014 at 05:25:55PM +0200, Michal Hocko wrote:
-> On Tue 14-10-14 12:20:36, Johannes Weiner wrote:
-> > On cgroup deletion, outstanding page cache charges are moved to the
-> > parent group so that they're not lost and can be reclaimed during
-> > pressure on/inside said parent.  But this reparenting is fairly tricky
-> > and its synchroneous nature has led to several lock-ups in the past.
-> > 
-> > Since css iterators now also include offlined css, memcg iterators can
-> > be changed to include offlined children during reclaim of a group, and
-> > leftover cache can just stay put.
+On Thu, 16 Oct 2014 23:02:21 -0400 Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+
+> Andrew, could you update the changelog in place to have that paragraph
+> read
 > 
-> I think it would be nice to mention c2931b70a32c (cgroup: iterate
-> cgroup_subsys_states directly) here to have a full context about the
-> tryget vs tryget_online.
+> Since c2931b70a32c ("cgroup: iterate cgroup_subsys_states directly")
+> css iterators now also include offlined css, so memcg iterators can be
+> changed to include offlined children during reclaim of a group, and
+> leftover cache can just stay put.
 
-Yes, that commit is probably the most direct dependency.
-
-Andrew, could you update the changelog in place to have that paragraph
-read
-
-Since c2931b70a32c ("cgroup: iterate cgroup_subsys_states directly")
-css iterators now also include offlined css, so memcg iterators can be
-changed to include offlined children during reclaim of a group, and
-leftover cache can just stay put.
-
-please?  Thanks!
-
-> > There is a slight change of behavior in that charges of deleted groups
-> > no longer show up as local charges in the parent.  But they are still
-> > included in the parent's hierarchical statistics.
-> 
-> Thank you for pulling drain_stock cleanup out. This made the patch so
-> much easier to review.
->  
-> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> 
-> Acked-by: Michal Hocko <mhocko@suse.cz>
-
-Thanks you!
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Done.
