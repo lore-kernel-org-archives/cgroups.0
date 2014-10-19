@@ -1,81 +1,75 @@
-From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
-Subject: Re: [PATCHv1 7/8] cgroup: cgroup namespace setns support
-Date: Sat, 18 Oct 2014 22:23:39 -0700
-Message-ID: <87iojgmy3o.fsf@x220.int.ebiederm.org>
-References: <1413235430-22944-1-git-send-email-adityakali@google.com>
-	<1413235430-22944-8-git-send-email-adityakali@google.com>
-	<20141016211236.GA4308@mail.hallyn.com>
-	<CAGr1F2EH0ynfFihTh1dv=n1faxUh0zS3ggk303bwGnDnW2PUCw@mail.gmail.com>
-	<20141016214710.GA4759@mail.hallyn.com>
-Mime-Version: 1.0
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [patch] mm: memcontrol: update mem_cgroup_page_lruvec() documentation
+Date: Sun, 19 Oct 2014 11:30:16 -0400
+Message-ID: <1413732616-15962-1-git-send-email-hannes@cmpxchg.org>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20141016214710.GA4759-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org> (Serge E. Hallyn's
-	message of "Thu, 16 Oct 2014 23:47:10 +0200")
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Cc: Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Hugh Dickins <hughd@google.com>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-"Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org> writes:
+7512102cf64d ("memcg: fix GPF when cgroup removal races with last
+exit") added a pc->mem_cgroup reset into mem_cgroup_page_lruvec() to
+prevent a crash where an anon page gets uncharged on unmap, the memcg
+is released, and then the final LRU isolation on free dereferences the
+stale pc->mem_cgroup pointer.
 
-> Quoting Aditya Kali (adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org):
->> On Thu, Oct 16, 2014 at 2:12 PM, Serge E. Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org> wrote:
->> > Quoting Aditya Kali (adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org):
->> >> setns on a cgroup namespace is allowed only if
->> >> * task has CAP_SYS_ADMIN in its current user-namespace and
->> >>   over the user-namespace associated with target cgroupns.
->> >> * task's current cgroup is descendent of the target cgroupns-root
->> >>   cgroup.
->> >
->> > What is the point of this?
->> >
->> > If I'm a user logged into
->> > /lxc/c1/user.slice/user-1000.slice/session-c12.scope and I start
->> > a container which is in
->> > /lxc/c1/user.slice/user-1000.slice/session-c12.scope/x1
->> > then I will want to be able to enter the container's cgroup.
->> > The container's cgroup root is under my own (satisfying the
->> > below condition0 but my cgroup is not a descendent of the
->> > container's cgroup.
->> >
->> This condition is there because we don't want to do implicit cgroup
->> changes when a process attaches to another cgroupns. cgroupns tries to
->> preserve the invariant that at any point, your current cgroup is
->> always under the cgroupns-root of your cgroup namespace. But in your
->> example, if we allow a process in "session-c12.scope" container to
->> attach to cgroupns root'ed at "session-c12.scope/x1" container
->> (without implicitly moving its cgroup), then this invariant won't
->> hold.
->
-> Oh, I see.  Guess that should be workable.  Thanks.
+But since 0a31bc97c80c ("mm: memcontrol: rewrite uncharge API"), pages
+are only uncharged AFTER that final LRU isolation, which guarantees
+the memcg's lifetime until then.  pc->mem_cgroup now only needs to be
+reset for swapcache readahead pages.
 
-Which has me looking at what the rules are for moving through
-the cgroup hierarchy.
+Update the comment and callsite requirements accordingly.
 
-As long as we have write access to cgroup.procs and are allowed
-to open the file for write, we can move any of our own tasks
-into the cgroup.  So the cgroup namespace rules don't seem
-to be a problem.
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ mm/memcontrol.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-Andy can you please take a look at the permission checks in
-__cgroup_procs_write.  
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 3a203c7ec6c7..fc1d7ca96b9d 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1262,9 +1262,13 @@ struct lruvec *mem_cgroup_zone_lruvec(struct zone *zone,
+ }
+ 
+ /**
+- * mem_cgroup_page_lruvec - return lruvec for adding an lru page
++ * mem_cgroup_page_lruvec - return lruvec for isolating/putting an LRU page
+  * @page: the page
+  * @zone: zone of the page
++ *
++ * This function is only safe when following the LRU page isolation
++ * and putback protocol: the LRU lock must be held, and the page must
++ * either be PageLRU() or the caller must have isolated/allocated it.
+  */
+ struct lruvec *mem_cgroup_page_lruvec(struct page *page, struct zone *zone)
+ {
+@@ -1282,13 +1286,9 @@ struct lruvec *mem_cgroup_page_lruvec(struct page *page, struct zone *zone)
+ 	memcg = pc->mem_cgroup;
+ 
+ 	/*
+-	 * Surreptitiously switch any uncharged offlist page to root:
+-	 * an uncharged page off lru does nothing to secure
+-	 * its former mem_cgroup from sudden removal.
+-	 *
+-	 * Our caller holds lru_lock, and PageCgroupUsed is updated
+-	 * under page_cgroup lock: between them, they make all uses
+-	 * of pc->mem_cgroup safe.
++	 * Swapcache readahead pages are added to the LRU - and
++	 * possibly migrated - before they are charged.  Ensure
++	 * pc->mem_cgroup is sane.
+ 	 */
+ 	if (!PageLRU(page) && !PageCgroupUsed(pc) && memcg != root_mem_cgroup)
+ 		pc->mem_cgroup = memcg = root_mem_cgroup;
+-- 
+2.1.2
 
-As I read the code I see 3 security gaffaws in the permssion check.
-- Using current->cred instead of file->f_cred.
-- Not checking tcred->euid.
-- Checking GLOBAL_ROOT_UID instead of having a capable call.
-
-The file permission on cgroup.procs seem just sufficient to keep
-to keep those bugs from being easily exploitable.
-
-Eric
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
