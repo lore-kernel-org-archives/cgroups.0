@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch] mm: memcontrol: micro-optimize mem_cgroup_update_page_stat()
-Date: Mon, 20 Oct 2014 11:17:39 -0400
-Message-ID: <1413818259-10913-1-git-send-email-hannes@cmpxchg.org>
+Subject: [patch 0/4] mm: memcontrol: remove the page_cgroup->flags field
+Date: Mon, 20 Oct 2014 11:22:08 -0400
+Message-ID: <1413818532-11042-1-git-send-email-hannes@cmpxchg.org>
 Return-path: <owner-linux-mm@kvack.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -9,41 +9,16 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Hugh Dickins <hughd@google.com>, Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Do not look up the page_cgroup when the memory controller is
-runtime-disabled, but do assert that the locking protocol is followed
-under DEBUG_VM regardless.  Also remove the unused flags variable.
+Hi,
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- mm/memcontrol.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+this series gets rid of the remaining page_cgroup flags, thus cutting
+the memcg per-page overhead down to one pointer.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 76892eb89d26..bea3fddb3372 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2177,13 +2177,14 @@ void mem_cgroup_update_page_stat(struct page *page,
- 				 enum mem_cgroup_stat_index idx, int val)
- {
- 	struct mem_cgroup *memcg;
--	struct page_cgroup *pc = lookup_page_cgroup(page);
--	unsigned long uninitialized_var(flags);
-+	struct page_cgroup *pc;
-+
-+	VM_BUG_ON(!rcu_read_lock_held());
- 
- 	if (mem_cgroup_disabled())
- 		return;
- 
--	VM_BUG_ON(!rcu_read_lock_held());
-+	pc = lookup_page_cgroup(page);
- 	memcg = pc->mem_cgroup;
- 	if (unlikely(!memcg || !PageCgroupUsed(pc)))
- 		return;
--- 
-2.1.2
+ include/linux/page_cgroup.h |  12 ----
+ mm/memcontrol.c             | 154 ++++++++++++++++++------------------------
+ 2 files changed, 64 insertions(+), 102 deletions(-)
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
