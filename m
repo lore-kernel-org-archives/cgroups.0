@@ -1,65 +1,71 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch 1/4] mm: memcontrol: uncharge pages on swapout
-Date: Mon, 20 Oct 2014 11:22:09 -0400
-Message-ID: <1413818532-11042-2-git-send-email-hannes@cmpxchg.org>
-References: <1413818532-11042-1-git-send-email-hannes@cmpxchg.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1413818532-11042-1-git-send-email-hannes@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch] mm: memcontrol: micro-optimize
+ mem_cgroup_update_page_stat()
+Date: Mon, 20 Oct 2014 20:59:44 +0200
+Message-ID: <20141020185944.GC505@dhcp22.suse.cz>
+References: <1413818259-10913-1-git-send-email-hannes@cmpxchg.org>
+Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=+l2Ipaq89fV72Cj2+ZiSnSO9KzP0bFrrQR5WsfMThHU=;
+        b=ZmG5RTw6B6Ax1bpcVV+pVnCkrPkW2m8GizsVPMi/MgvrwMK+JNBMnlOVISqvPGNIVM
+         8U37U1JWYiAtDWwAWoSoUNw60Y53jDeC7HTqxMn+8rWZ73ZXoQO58UDgVodHyHRDWwzD
+         IGDaiSEeCcXtUrhHYRARmDVEvFoBkIAC49eel0SUeXv+gWW6vS8e6LhzjkV0iy/5Sdx3
+         v4B0veiLd07MfdRvogzIjUI4DOJ4kL8yHrJ9FxqH9Pt8AjqUZfvitMbBt+meShJdxgIE
+         KWeZGUD+L/4gQV7PA6mzcvLndKuvQwN4lU7+GZZ6Q9QbFWbtlGsocnWJItDbFRwb1xIr
+         zWTQ==
+Content-Disposition: inline
+In-Reply-To: <1413818259-10913-1-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Hugh Dickins <hughd@google.com>, Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-mem_cgroup_swapout() is called with exclusive access to the page at
-the end of the page's lifetime.  Instead of clearing the PCG_MEMSW
-flag and deferring the uncharge, just do it right away.  This allows
-follow-up patches to simplify the uncharge code.
+On Mon 20-10-14 11:17:39, Johannes Weiner wrote:
+> Do not look up the page_cgroup when the memory controller is
+> runtime-disabled, but do assert that the locking protocol is followed
+> under DEBUG_VM regardless.  Also remove the unused flags variable.
+> 
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Acked-by: Michal Hocko <mhocko@suse.cz>
+
+mem_cgroup_split_huge_fixup is following the same pattern and might be
+folded into this one. I can send a separate patch if you prefer, though.
 ---
- mm/memcontrol.c | 17 +++++++++++++----
- 1 file changed, 13 insertions(+), 4 deletions(-)
-
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index bea3fddb3372..7709f17347f3 100644
+index 3a203c7ec6c7..544e32292c7f 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -5799,6 +5799,7 @@ static void __init enable_swap_cgroup(void)
+@@ -3167,7 +3167,7 @@ static inline void memcg_unregister_all_caches(struct mem_cgroup *memcg)
   */
- void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+ void mem_cgroup_split_huge_fixup(struct page *head)
  {
-+	struct mem_cgroup *memcg;
+-	struct page_cgroup *head_pc = lookup_page_cgroup(head);
++	struct page_cgroup *head_pc;
  	struct page_cgroup *pc;
- 	unsigned short oldid;
- 
-@@ -5815,13 +5816,21 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+ 	struct mem_cgroup *memcg;
+ 	int i;
+@@ -3175,6 +3175,8 @@ void mem_cgroup_split_huge_fixup(struct page *head)
+ 	if (mem_cgroup_disabled())
  		return;
  
- 	VM_BUG_ON_PAGE(!(pc->flags & PCG_MEMSW), page);
-+	memcg = pc->mem_cgroup;
- 
--	oldid = swap_cgroup_record(entry, mem_cgroup_id(pc->mem_cgroup));
-+	oldid = swap_cgroup_record(entry, mem_cgroup_id(memcg));
- 	VM_BUG_ON_PAGE(oldid, page);
-+	mem_cgroup_swap_statistics(memcg, true);
- 
--	pc->flags &= ~PCG_MEMSW;
--	css_get(&pc->mem_cgroup->css);
--	mem_cgroup_swap_statistics(pc->mem_cgroup, true);
-+	pc->flags = 0;
++	head_pc = lookup_page_cgroup(head);
 +
-+	if (!mem_cgroup_is_root(memcg))
-+		page_counter_uncharge(&memcg->memory, 1);
-+
-+	local_irq_disable();
-+	mem_cgroup_charge_statistics(memcg, page, -1);
-+	memcg_check_events(memcg, page);
-+	local_irq_enable();
- }
- 
- /**
+ 	memcg = head_pc->mem_cgroup;
+ 	for (i = 1; i < HPAGE_PMD_NR; i++) {
+ 		pc = head_pc + i;
 -- 
-2.1.2
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
