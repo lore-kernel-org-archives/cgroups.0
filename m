@@ -1,82 +1,57 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch 3/4] mm: page-writeback: inline account_page_dirtied() into single caller
-Date: Tue, 21 Oct 2014 16:21:35 -0400
-Message-ID: <1413922896-29042-3-git-send-email-hannes@cmpxchg.org>
-References: <1413922896-29042-1-git-send-email-hannes@cmpxchg.org>
+Subject: Re: [patch 1/4] mm: memcontrol: uncharge pages on swapout
+Date: Tue, 21 Oct 2014 16:39:07 -0400
+Message-ID: <20141021203907.GA29116@phnom.home.cmpxchg.org>
+References: <1413818532-11042-1-git-send-email-hannes@cmpxchg.org>
+ <1413818532-11042-2-git-send-email-hannes@cmpxchg.org>
+ <5445B1E8.1010100@jp.fujitsu.com>
+Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1413922896-29042-1-git-send-email-hannes@cmpxchg.org>
+Content-Disposition: inline
+In-Reply-To: <5445B1E8.1010100@jp.fujitsu.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-A follow-up patch would have changed the call signature.  To save the
-trouble, just fold it instead.
+On Tue, Oct 21, 2014 at 10:07:52AM +0900, Kamezawa Hiroyuki wrote:
+> (2014/10/21 0:22), Johannes Weiner wrote:
+> > mem_cgroup_swapout() is called with exclusive access to the page at
+> > the end of the page's lifetime.  Instead of clearing the PCG_MEMSW
+> > flag and deferring the uncharge, just do it right away.  This allows
+> > follow-up patches to simplify the uncharge code.
+> > 
+> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> > ---
+> >   mm/memcontrol.c | 17 +++++++++++++----
+> >   1 file changed, 13 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index bea3fddb3372..7709f17347f3 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -5799,6 +5799,7 @@ static void __init enable_swap_cgroup(void)
+> >    */
+> >   void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+> >   {
+> > +	struct mem_cgroup *memcg;
+> >   	struct page_cgroup *pc;
+> >   	unsigned short oldid;
+> >   
+> > @@ -5815,13 +5816,21 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+> >   		return;
+> >   
+> >   	VM_BUG_ON_PAGE(!(pc->flags & PCG_MEMSW), page);
+> shouldn't be removed ?
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- include/linux/mm.h  |  1 -
- mm/page-writeback.c | 23 ++++-------------------
- 2 files changed, 4 insertions(+), 20 deletions(-)
+It's still a legitimate check at this point.  But it's removed later
+in the series when PCG_MEMSW itself goes away.
 
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 27eb1bfbe704..b46461116cd2 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -1235,7 +1235,6 @@ int __set_page_dirty_no_writeback(struct page *page);
- int redirty_page_for_writepage(struct writeback_control *wbc,
- 				struct page *page);
- void account_page_dirtied(struct page *page, struct address_space *mapping);
--void account_page_writeback(struct page *page);
- int set_page_dirty(struct page *page);
- int set_page_dirty_lock(struct page *page);
- int clear_page_dirty_for_io(struct page *page);
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index ff24c9d83112..ff6a5b07211e 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -2116,23 +2116,6 @@ void account_page_dirtied(struct page *page, struct address_space *mapping)
- EXPORT_SYMBOL(account_page_dirtied);
- 
- /*
-- * Helper function for set_page_writeback family.
-- *
-- * The caller must hold mem_cgroup_begin/end_update_page_stat() lock
-- * while calling this function.
-- * See test_set_page_writeback for example.
-- *
-- * NOTE: Unlike account_page_dirtied this does not rely on being atomic
-- * wrt interrupts.
-- */
--void account_page_writeback(struct page *page)
--{
--	mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_WRITEBACK);
--	inc_zone_page_state(page, NR_WRITEBACK);
--}
--EXPORT_SYMBOL(account_page_writeback);
--
--/*
-  * For address_spaces which do not use buffers.  Just tag the page as dirty in
-  * its radix tree.
-  *
-@@ -2410,8 +2393,10 @@ int __test_set_page_writeback(struct page *page, bool keep_write)
- 	} else {
- 		ret = TestSetPageWriteback(page);
- 	}
--	if (!ret)
--		account_page_writeback(page);
-+	if (!ret) {
-+		mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_WRITEBACK);
-+		inc_zone_page_state(page, NR_WRITEBACK);
-+	}
- 	mem_cgroup_end_update_page_stat(page, &locked, &memcg_flags);
- 	return ret;
- 
--- 
-2.1.2
+> Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+
+Thanks!
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
