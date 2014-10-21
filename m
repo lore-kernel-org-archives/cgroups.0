@@ -1,75 +1,89 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [patch 1/4] mm: memcontrol: uncharge pages on swapout
-Date: Tue, 21 Oct 2014 10:07:52 +0900
-Message-ID: <5445B1E8.1010100@jp.fujitsu.com>
-References: <1413818532-11042-1-git-send-email-hannes@cmpxchg.org> <1413818532-11042-2-git-send-email-hannes@cmpxchg.org>
+From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
+Subject: Re: [PATCHv1 7/8] cgroup: cgroup namespace setns support
+Date: Mon, 20 Oct 2014 21:49:49 -0700
+Message-ID: <87zjcq10ya.fsf@x220.int.ebiederm.org>
+References: <1413235430-22944-1-git-send-email-adityakali@google.com>
+	<1413235430-22944-8-git-send-email-adityakali@google.com>
+	<20141016211236.GA4308@mail.hallyn.com>
+	<CAGr1F2EH0ynfFihTh1dv=n1faxUh0zS3ggk303bwGnDnW2PUCw@mail.gmail.com>
+	<20141016214710.GA4759@mail.hallyn.com>
+	<87iojgmy3o.fsf@x220.int.ebiederm.org>
+	<CALCETrUC=yW72d2hDzjESmZAt85x1WcGz4L-DrtY5YXAQxbpMA@mail.gmail.com>
+	<44072106-c0f3-46b8-b2b5-9b1cbd1b7d88@email.android.com>
+	<CALCETrXhGnBM_xx=Auz3WRQXkqhGGTWuZN=PU+A9HZ7Ek27FLA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1413818532-11042-2-git-send-email-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CALCETrXhGnBM_xx=Auz3WRQXkqhGGTWuZN=PU+A9HZ7Ek27FLA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+	(Andy Lutomirski's message of "Mon, 20 Oct 2014 17:20:44 -0700")
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>
-Cc: Hugh Dickins <hughd@google.com>, Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
+Cc: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, "linux-kernel@vger.kernel.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-(2014/10/21 0:22), Johannes Weiner wrote:
-> mem_cgroup_swapout() is called with exclusive access to the page at
-> the end of the page's lifetime.  Instead of clearing the PCG_MEMSW
-> flag and deferring the uncharge, just do it right away.  This allows
-> follow-up patches to simplify the uncharge code.
-> 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> ---
->   mm/memcontrol.c | 17 +++++++++++++----
->   1 file changed, 13 insertions(+), 4 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index bea3fddb3372..7709f17347f3 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5799,6 +5799,7 @@ static void __init enable_swap_cgroup(void)
->    */
->   void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
->   {
-> +	struct mem_cgroup *memcg;
->   	struct page_cgroup *pc;
->   	unsigned short oldid;
->   
-> @@ -5815,13 +5816,21 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
->   		return;
->   
->   	VM_BUG_ON_PAGE(!(pc->flags & PCG_MEMSW), page);
-shouldn't be removed ?
+Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org> writes:
 
+> On Sun, Oct 19, 2014 at 9:55 PM, Eric W.Biederman <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org> wrote:
+>>
+>>
+>> On October 19, 2014 1:26:29 PM CDT, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org> wrote:
 
-> +	memcg = pc->mem_cgroup;
->   
-> -	oldid = swap_cgroup_record(entry, mem_cgroup_id(pc->mem_cgroup));
-> +	oldid = swap_cgroup_record(entry, mem_cgroup_id(memcg));
->   	VM_BUG_ON_PAGE(oldid, page);
-> +	mem_cgroup_swap_statistics(memcg, true);
->   
-> -	pc->flags &= ~PCG_MEMSW;
-> -	css_get(&pc->mem_cgroup->css);
-> -	mem_cgroup_swap_statistics(pc->mem_cgroup, true);
-> +	pc->flags = 0;
-> +
-> +	if (!mem_cgroup_is_root(memcg))
-> +		page_counter_uncharge(&memcg->memory, 1);
-> +
-> +	local_irq_disable();
-> +	mem_cgroup_charge_statistics(memcg, page, -1);
-> +	memcg_check_events(memcg, page);
-> +	local_irq_enable();
->   }
->   
+>>> Is the idea
+>>>that you want a privileged user wrt a cgroupns's userns to be able to
+>>>use this?  If so:
+>>>
+>>>Yes, that current_cred() thing is bogus.  (Actually, this is probably
+>>>exploitable right now if any cgroup.procs inode anywhere on the system
+>>>lets non-root write.)  (Can we have some kernel debugging option that
+>>>makes any use of current_cred() in write(2) warn?)
+>>>
+>>>We really need a weaker version of may_ptrace for this kind of stuff.
+>>>Maybe the existing may_ptrace stuff is okay, actually.  But this is
+>>>completely missing group checks, cap checks, capabilities wrt the
+>>>userns, etc.
+>>>
+>>>Also, I think that, if this version of the patchset allows non-init
+>>>userns to unshare cgroupns, then the issue of what permission is
+>>>needed to lock the cgroup hierarchy like that needs to be addressed,
+>>>because unshare(CLONE_NEWUSER|CLONE_NEWCGROUP) will effectively pin
+>>>the calling task with no permission required.  Bolting on a fix later
+>>>will be a mess.
+>>
+>> I imagine the pinning would be like the userns.
+>>
+>> Ah but there is a potentially serious issue with the pinning.
+>> With pinning we can make it impossible for root to move us to a different cgroup.
+>>
+>> I am not certain how serious that is but it bears thinking about.
+>> If we don't implement pinning we should be able to implent everything with just filesystem mount options, and no new namespace required.
+>>
+>> Sigh.
+>>
+>> I am too tired tonight to see the end game in this.
+>
+> Possible solution:
+>
+> Ditch the pinning.  That is, if you're outside a cgroupns (or you have
+> a non-ns-confined cgroupfs mounted), then you can move a task in a
+> cgroupns outside of its root cgroup.  If you do this, then the task
+> thinks its cgroup is something like "../foo" or "../../foo".
 
-Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Of the possible solutions that seems attractive to me, simply because
+we sometimes want to allow clever things to occur.
 
+Does anyone know of a reason (beyond pretty printing) why we need
+cgroupns to restrict the subset of cgroups processes can be in?
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+I would expect permissions on the cgroup directories themselves, and
+limited visiblilty would be (in general) to achieve the desired
+visiblity.
+
+> While we're at it, consider making setns for a cgroupns *not* change
+> the caller's cgroup.  Is there any reason it really needs to?
+
+setns doesn't but nsenter is going to need to change the cgroup 
+if the pinning requirement is kept.  nsenenter is going to want to
+change the cgroup if the pinning requirement is dropped.
+
+Eric
