@@ -1,153 +1,52 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch 1/4] mm: memcontrol: uncharge pages on swapout
-Date: Tue, 21 Oct 2014 17:03:28 -0400
-Message-ID: <20141021210328.GB29116@phnom.home.cmpxchg.org>
-References: <1413818532-11042-1-git-send-email-hannes@cmpxchg.org>
- <1413818532-11042-2-git-send-email-hannes@cmpxchg.org>
- <20141021125252.GN16496@esperanza>
+Subject: Re: [patch 4/4] mm: memcontrol: simplify per-memcg page statistics
+ accounting
+Date: Tue, 21 Oct 2014 17:05:54 -0400
+Message-ID: <20141021210554.GC29116@phnom.home.cmpxchg.org>
+References: <1413922896-29042-1-git-send-email-hannes@cmpxchg.org>
+ <1413922896-29042-4-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20141021125252.GN16496@esperanza>
+In-Reply-To: <1413922896-29042-4-git-send-email-hannes@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov@parallels.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Oct 21, 2014 at 04:52:52PM +0400, Vladimir Davydov wrote:
-> On Mon, Oct 20, 2014 at 11:22:09AM -0400, Johannes Weiner wrote:
-> > mem_cgroup_swapout() is called with exclusive access to the page at
-> > the end of the page's lifetime.  Instead of clearing the PCG_MEMSW
-> > flag and deferring the uncharge, just do it right away.  This allows
-> > follow-up patches to simplify the uncharge code.
-> > 
-> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> > ---
-> >  mm/memcontrol.c | 17 +++++++++++++----
-> >  1 file changed, 13 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index bea3fddb3372..7709f17347f3 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -5799,6 +5799,7 @@ static void __init enable_swap_cgroup(void)
-> >   */
-> >  void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
-> >  {
-> > +	struct mem_cgroup *memcg;
-> >  	struct page_cgroup *pc;
-> >  	unsigned short oldid;
-> >  
-> > @@ -5815,13 +5816,21 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
-> >  		return;
-> >  
-> >  	VM_BUG_ON_PAGE(!(pc->flags & PCG_MEMSW), page);
-> > +	memcg = pc->mem_cgroup;
-> >  
-> > -	oldid = swap_cgroup_record(entry, mem_cgroup_id(pc->mem_cgroup));
-> > +	oldid = swap_cgroup_record(entry, mem_cgroup_id(memcg));
-> >  	VM_BUG_ON_PAGE(oldid, page);
-> > +	mem_cgroup_swap_statistics(memcg, true);
-> >  
-> > -	pc->flags &= ~PCG_MEMSW;
-> > -	css_get(&pc->mem_cgroup->css);
-> > -	mem_cgroup_swap_statistics(pc->mem_cgroup, true);
-> > +	pc->flags = 0;
-> > +
-> > +	if (!mem_cgroup_is_root(memcg))
-> > +		page_counter_uncharge(&memcg->memory, 1);
-> 
-> AFAIU it removes batched uncharge of swapped out pages, doesn't it? Will
-> it affect performance?
+On Tue, Oct 21, 2014 at 04:21:36PM -0400, Johannes Weiner wrote:
+> @@ -315,13 +290,13 @@ mem_cgroup_print_oom_info(struct mem_cgroup *memcg, struct task_struct *p)
+>  {
+>  }
+>  
+> -static inline void mem_cgroup_begin_update_page_stat(struct page *page,
+> +static inline void mem_cgroup_begin_page_stat(struct page *page,
+>  					bool *locked, unsigned long *flags)
 
-During swapout and with lockless page counters?  I don't think so.
+I forgot to refresh after fixing the allnoconfig build.  Andrew could
+you fold the following please if/when merging this patch?  Thanks!
 
-> Besides, it looks asymmetric with respect to the page cache uncharge
-> path, where we still defer uncharge to mem_cgroup_uncharge_list(), and I
-> personally rather dislike this asymmetry.
-
-The asymmetry is inherent in the fact that we mave memory and
-memory+swap accounting, and here a memory charge is transferred out to
-swap.  Before, the asymmetry was in mem_cgroup_uncharge_list() where
-we separate out memory and memsw pages (which the next patch fixes).
-
-So nothing changed, the ugliness was just moved around.  I actually
-like it better now that it's part of the swap controller, because
-that's where the nastiness actually comes from.  This will all go away
-when we account swap separately.  Then, swapped pages can keep their
-memory charge until mem_cgroup_uncharge() again and the swap charge
-will be completely independent from it.  This reshuffling is just
-necessary because it allows us to get rid of the per-page flag.
-
-> > +	local_irq_disable();
-> > +	mem_cgroup_charge_statistics(memcg, page, -1);
-> > +	memcg_check_events(memcg, page);
-> > +	local_irq_enable();
-> 
-> AFAICT mem_cgroup_swapout() is called under mapping->tree_lock with irqs
-> disabled, so we should use irq_save/restore here.
-
-Good catch!  I don't think this function actually needs to be called
-under the tree_lock, so I'd rather send a follow-up that moves it out.
-For now, this should be sufficient:
-
----
-
-From 3a40bd3b85a70db104ade873007dbb84b5117993 Mon Sep 17 00:00:00 2001
-From: Johannes Weiner <hannes@cmpxchg.org>
-Date: Tue, 21 Oct 2014 16:53:14 -0400
-Subject: [patch] mm: memcontrol: uncharge pages on swapout fix
-
-Vladimir notes:
-
-> > +   local_irq_disable();
-> > +   mem_cgroup_charge_statistics(memcg, page, -1);
-> > +   memcg_check_events(memcg, page);
-> > +   local_irq_enable();
->
-> AFAICT mem_cgroup_swapout() is called under mapping->tree_lock with irqs
-> disabled, so we should use irq_save/restore here.
-
-But this function doesn't actually need to be called under the tree
-lock.  So for now, simply remove the irq-disabling altogether and rely
-on the caller's IRQ state.  Later on, we'll move it out from there and
-add back the simple, non-saving IRQ-disabling.
-
-Reported-by: Vladimir Davydov <vdavydov@parallels.com>
 Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 ---
- mm/memcontrol.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 8dc46aa9ae8f..c688fb73ff35 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5806,6 +5806,9 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
- 	VM_BUG_ON_PAGE(PageLRU(page), page);
- 	VM_BUG_ON_PAGE(page_count(page), page);
- 
-+	/* XXX: caller holds IRQ-safe mapping->tree_lock */
-+	VM_BUG_ON(!irqs_disabled());
-+
- 	if (!do_swap_account)
- 		return;
- 
-@@ -5827,10 +5830,8 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
- 	if (!mem_cgroup_is_root(memcg))
- 		page_counter_uncharge(&memcg->memory, 1);
- 
--	local_irq_disable();
- 	mem_cgroup_charge_statistics(memcg, page, -1);
- 	memcg_check_events(memcg, page);
--	local_irq_enable();
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 4dc4a2aec440..ea007615e8f9 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -290,9 +290,10 @@ mem_cgroup_print_oom_info(struct mem_cgroup *memcg, struct task_struct *p)
+ {
  }
  
- /**
--- 
-2.1.2
+-static inline void mem_cgroup_begin_page_stat(struct page *page,
++static inline struct mem_cgroup *mem_cgroup_begin_page_stat(struct page *page,
+ 					bool *locked, unsigned long *flags)
+ {
++	return NULL;
+ }
+ 
+ static inline void mem_cgroup_end_page_stat(struct mem_cgroup *memcg,
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
