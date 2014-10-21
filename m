@@ -1,87 +1,74 @@
-From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: Re: [patch 1/4] mm: memcontrol: uncharge pages on swapout
-Date: Tue, 21 Oct 2014 16:52:52 +0400
-Message-ID: <20141021125252.GN16496@esperanza>
-References: <1413818532-11042-1-git-send-email-hannes@cmpxchg.org>
- <1413818532-11042-2-git-send-email-hannes@cmpxchg.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [patch] mm: memcontrol: fix missed end-writeback accounting
+Date: Tue, 21 Oct 2014 14:19:10 -0400
+Message-ID: <1413915550-5651-1-git-send-email-hannes@cmpxchg.org>
 Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <1413818532-11042-2-git-send-email-hannes@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@suse.cz>, Hugh Dickins <hughd@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Oct 20, 2014 at 11:22:09AM -0400, Johannes Weiner wrote:
-> mem_cgroup_swapout() is called with exclusive access to the page at
-> the end of the page's lifetime.  Instead of clearing the PCG_MEMSW
-> flag and deferring the uncharge, just do it right away.  This allows
-> follow-up patches to simplify the uncharge code.
-> 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> ---
->  mm/memcontrol.c | 17 +++++++++++++----
->  1 file changed, 13 insertions(+), 4 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index bea3fddb3372..7709f17347f3 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5799,6 +5799,7 @@ static void __init enable_swap_cgroup(void)
->   */
->  void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
->  {
-> +	struct mem_cgroup *memcg;
->  	struct page_cgroup *pc;
->  	unsigned short oldid;
->  
-> @@ -5815,13 +5816,21 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
->  		return;
->  
->  	VM_BUG_ON_PAGE(!(pc->flags & PCG_MEMSW), page);
-> +	memcg = pc->mem_cgroup;
->  
-> -	oldid = swap_cgroup_record(entry, mem_cgroup_id(pc->mem_cgroup));
-> +	oldid = swap_cgroup_record(entry, mem_cgroup_id(memcg));
->  	VM_BUG_ON_PAGE(oldid, page);
-> +	mem_cgroup_swap_statistics(memcg, true);
->  
-> -	pc->flags &= ~PCG_MEMSW;
-> -	css_get(&pc->mem_cgroup->css);
-> -	mem_cgroup_swap_statistics(pc->mem_cgroup, true);
-> +	pc->flags = 0;
-> +
-> +	if (!mem_cgroup_is_root(memcg))
-> +		page_counter_uncharge(&memcg->memory, 1);
+0a31bc97c80c ("mm: memcontrol: rewrite uncharge API") changed page
+migration to uncharge the old page right away.  The page is locked,
+unmapped, truncated, and off the LRU.  But it could race with a
+finishing writeback, which then doesn't get unaccounted properly:
 
-AFAIU it removes batched uncharge of swapped out pages, doesn't it? Will
-it affect performance?
+test_clear_page_writeback()              migration
+  acquire pc->mem_cgroup->move_lock
+                                           wait_on_page_writeback()
+  TestClearPageWriteback()
+                                           mem_cgroup_migrate()
+                                             clear PCG_USED
+  if (PageCgroupUsed(pc))
+    decrease memcg pages under writeback
+  release pc->mem_cgroup->move_lock
 
-Besides, it looks asymmetric with respect to the page cache uncharge
-path, where we still defer uncharge to mem_cgroup_uncharge_list(), and I
-personally rather dislike this asymmetry.
+One solution for this would be to simply remove the PageCgroupUsed()
+check, as RCU protects the memcg anyway.
 
-> +
-> +	local_irq_disable();
-> +	mem_cgroup_charge_statistics(memcg, page, -1);
-> +	memcg_check_events(memcg, page);
-> +	local_irq_enable();
+However, it's more robust to acknowledge that migration is really
+modifying the charge state of alive pages in this case, and so it
+should participate in the protocol specifically designed for this.
 
-AFAICT mem_cgroup_swapout() is called under mapping->tree_lock with irqs
-disabled, so we should use irq_save/restore here.
+Fixes: 0a31bc97c80c ("mm: memcontrol: rewrite uncharge API")
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Cc: "3.17" <stable@vger.kernel.org>
+---
+ mm/memcontrol.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-Thanks,
-Vladimir
-
->  }
->  
->  /**
-> -- 
-> 2.1.2
-> 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 3a203c7ec6c7..b35a44e9cd37 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6148,6 +6148,7 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage,
+ 			bool lrucare)
+ {
+ 	struct page_cgroup *pc;
++	unsigned long flags;
+ 	int isolated;
+ 
+ 	VM_BUG_ON_PAGE(!PageLocked(oldpage), oldpage);
+@@ -6177,7 +6178,14 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage,
+ 	if (lrucare)
+ 		lock_page_lru(oldpage, &isolated);
+ 
++	/*
++	 * The page is locked, unmapped, truncated, and off the LRU,
++	 * but there might still be references, e.g. from finishing
++	 * writeback.  Follow the charge moving protocol here.
++	 */
++	move_lock_mem_cgroup(pc->mem_cgroup, &flags);
+ 	pc->flags = 0;
++	move_unlock_mem_cgroup(pc->mem_cgroup, &flags);
+ 
+ 	if (lrucare)
+ 		unlock_page_lru(oldpage, isolated);
+-- 
+2.1.2
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
