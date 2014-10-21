@@ -1,102 +1,90 @@
-From: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
-Subject: Re: [PATCHv1 7/8] cgroup: cgroup namespace setns support
-Date: Mon, 20 Oct 2014 22:49:02 -0700
-Message-ID: <CALCETrVFKvtHpTfY3kuE5ZTrwQAzuDmk6dm-mbQffDHAZmq-KQ@mail.gmail.com>
-References: <1413235430-22944-1-git-send-email-adityakali@google.com>
-	<1413235430-22944-8-git-send-email-adityakali@google.com>
-	<20141016211236.GA4308@mail.hallyn.com>
-	<CAGr1F2EH0ynfFihTh1dv=n1faxUh0zS3ggk303bwGnDnW2PUCw@mail.gmail.com>
-	<20141016214710.GA4759@mail.hallyn.com>
-	<87iojgmy3o.fsf@x220.int.ebiederm.org>
-	<CALCETrUC=yW72d2hDzjESmZAt85x1WcGz4L-DrtY5YXAQxbpMA@mail.gmail.com>
-	<44072106-c0f3-46b8-b2b5-9b1cbd1b7d88@email.android.com>
-	<CALCETrXhGnBM_xx=Auz3WRQXkqhGGTWuZN=PU+A9HZ7Ek27FLA@mail.gmail.com>
-	<87zjcq10ya.fsf@x220.int.ebiederm.org>
-	<CALCETrVkMtsnEh57jFZrdx5vHbz97BdO7OuupT+xVNnWpJjxng@mail.gmail.com>
-	<87lhoayo59.fsf@x220.int.ebiederm.org>
+From: Vladimir Davydov <vdavydov@parallels.com>
+Subject: Re: [patch 1/4] mm: memcontrol: uncharge pages on swapout
+Date: Tue, 21 Oct 2014 16:52:52 +0400
+Message-ID: <20141021125252.GN16496@esperanza>
+References: <1413818532-11042-1-git-send-email-hannes@cmpxchg.org>
+ <1413818532-11042-2-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1413818532-11042-2-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <87lhoayo59.fsf-JOvCrm2gF+uungPnsOpG7nhyD016LWXt@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Cc: Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Oct 20, 2014 at 10:42 PM, Eric W. Biederman
-<ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org> wrote:
-> Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org> writes:
->
->> On Mon, Oct 20, 2014 at 9:49 PM, Eric W. Biederman
->> <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org> wrote:
->>> Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org> writes:
->>>> Possible solution:
->>>>
->>>> Ditch the pinning.  That is, if you're outside a cgroupns (or you have
->>>> a non-ns-confined cgroupfs mounted), then you can move a task in a
->>>> cgroupns outside of its root cgroup.  If you do this, then the task
->>>> thinks its cgroup is something like "../foo" or "../../foo".
->>>
->>> Of the possible solutions that seems attractive to me, simply because
->>> we sometimes want to allow clever things to occur.
->>>
->>> Does anyone know of a reason (beyond pretty printing) why we need
->>> cgroupns to restrict the subset of cgroups processes can be in?
->>>
->>> I would expect permissions on the cgroup directories themselves, and
->>> limited visiblilty would be (in general) to achieve the desired
->>> visiblity.
->>
->> This makes the security impact of cgroupns very easy to understand,
->> right?  Because there really won't be any -- cgroupns only affects
->> reads from /proc and what cgroupfs shows, but it doesn't change any
->> actual cgroups, nor does it affect any cgroup *changes*.
->
-> It seems like what we have described is chcgrouproot aka chroot for
-> cgroups.  At which point I think there are potentially similar security
-> issues as for chroot.  Can we confuse a setuid root process if we make
-> it's cgroup names look different.
->
-> Of course the confusing root concern is handled by the usual namespace
-> security checks that are already present.
+On Mon, Oct 20, 2014 at 11:22:09AM -0400, Johannes Weiner wrote:
+> mem_cgroup_swapout() is called with exclusive access to the page at
+> the end of the page's lifetime.  Instead of clearing the PCG_MEMSW
+> flag and deferring the uncharge, just do it right away.  This allows
+> follow-up patches to simplify the uncharge code.
+> 
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> ---
+>  mm/memcontrol.c | 17 +++++++++++++----
+>  1 file changed, 13 insertions(+), 4 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index bea3fddb3372..7709f17347f3 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -5799,6 +5799,7 @@ static void __init enable_swap_cgroup(void)
+>   */
+>  void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+>  {
+> +	struct mem_cgroup *memcg;
+>  	struct page_cgroup *pc;
+>  	unsigned short oldid;
+>  
+> @@ -5815,13 +5816,21 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+>  		return;
+>  
+>  	VM_BUG_ON_PAGE(!(pc->flags & PCG_MEMSW), page);
+> +	memcg = pc->mem_cgroup;
+>  
+> -	oldid = swap_cgroup_record(entry, mem_cgroup_id(pc->mem_cgroup));
+> +	oldid = swap_cgroup_record(entry, mem_cgroup_id(memcg));
+>  	VM_BUG_ON_PAGE(oldid, page);
+> +	mem_cgroup_swap_statistics(memcg, true);
+>  
+> -	pc->flags &= ~PCG_MEMSW;
+> -	css_get(&pc->mem_cgroup->css);
+> -	mem_cgroup_swap_statistics(pc->mem_cgroup, true);
+> +	pc->flags = 0;
+> +
+> +	if (!mem_cgroup_is_root(memcg))
+> +		page_counter_uncharge(&memcg->memory, 1);
 
-I think that the chroot issues are mostly in two categories: setuid
-confusion (not an issue here as you described) and chroot escapes.
-cgroupns escapes aren't a big deal, I think -- admins should deny the
-confined task the right to write to cgroupfs outside its hierarchy, by
-setting cgroupfs permissions appropriately and/or avoiding mounting
-cgroupfs outside the hierarchy.
+AFAIU it removes batched uncharge of swapped out pages, doesn't it? Will
+it affect performance?
 
->
-> I do wonder if we think of this as chcgrouproot if there is a simpler
-> implementation.
+Besides, it looks asymmetric with respect to the page cache uncharge
+path, where we still defer uncharge to mem_cgroup_uncharge_list(), and I
+personally rather dislike this asymmetry.
 
-Could be.  I'll defer to Aditya for that one.
+> +
+> +	local_irq_disable();
+> +	mem_cgroup_charge_statistics(memcg, page, -1);
+> +	memcg_check_events(memcg, page);
+> +	local_irq_enable();
 
->
->>>> While we're at it, consider making setns for a cgroupns *not* change
->>>> the caller's cgroup.  Is there any reason it really needs to?
->>>
->>> setns doesn't but nsenter is going to need to change the cgroup
->>> if the pinning requirement is kept.  nsenenter is going to want to
->>> change the cgroup if the pinning requirement is dropped.
->>>
->>
->> It seems easy enough for nsenter to change the cgroup all by itself.
->
-> Again.  I don't think anyone has suggested or implemented anything
-> different.
+AFAICT mem_cgroup_swapout() is called under mapping->tree_lock with irqs
+disabled, so we should use irq_save/restore here.
 
-The current patchset seems to punt on this decision by just failing
-the setns call if the caller is outside the cgroup in question.
+Thanks,
+Vladimir
 
---Andy
+>  }
+>  
+>  /**
+> -- 
+> 2.1.2
+> 
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
