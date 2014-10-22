@@ -1,415 +1,291 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch 2/2] mm: memcontrol: fix missed end-writeback page accounting
-Date: Wed, 22 Oct 2014 14:29:28 -0400
-Message-ID: <1414002568-21042-3-git-send-email-hannes@cmpxchg.org>
-References: <1414002568-21042-1-git-send-email-hannes@cmpxchg.org>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1414002568-21042-1-git-send-email-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCHv1 7/8] cgroup: cgroup namespace setns support
+Date: Wed, 22 Oct 2014 11:37:55 -0700
+Message-ID: <CAGr1F2EBDCVrXZd7fOdffQ2C0c25T8co4wfxRc8P0Jb18yq2uQ@mail.gmail.com>
+References: <1413235430-22944-1-git-send-email-adityakali@google.com>
+	<1413235430-22944-8-git-send-email-adityakali@google.com>
+	<20141016211236.GA4308@mail.hallyn.com>
+	<CAGr1F2EH0ynfFihTh1dv=n1faxUh0zS3ggk303bwGnDnW2PUCw@mail.gmail.com>
+	<20141016214710.GA4759@mail.hallyn.com>
+	<87iojgmy3o.fsf@x220.int.ebiederm.org>
+	<CALCETrUC=yW72d2hDzjESmZAt85x1WcGz4L-DrtY5YXAQxbpMA@mail.gmail.com>
+	<44072106-c0f3-46b8-b2b5-9b1cbd1b7d88@email.android.com>
+	<CALCETrXhGnBM_xx=Auz3WRQXkqhGGTWuZN=PU+A9HZ7Ek27FLA@mail.gmail.com>
+	<87zjcq10ya.fsf@x220.int.ebiederm.org>
+	<CALCETrVkMtsnEh57jFZrdx5vHbz97BdO7OuupT+xVNnWpJjxng@mail.gmail.com>
+	<87lhoayo59.fsf@x220.int.ebiederm.org>
+	<CALCETrVFKvtHpTfY3kuE5ZTrwQAzuDmk6dm-mbQffDHAZmq-KQ@mail.gmail.com>
+	<CAGr1F2Ee2MCKOwALR2YV7ppDmyHxO6+EsHqSc1+WcwKFPPQB0w@mail.gmail.com>
+	<CALCETrWXDMRsexfvmh2CiMW4WX0ZLJ4pJvzHU55PEBk=NmnyZg@mail.gmail.com>
+	<CAGr1F2FdQ4VF1_o7mdybZ-WhLLhFxdgkNnzotHOwnhLU8W+YCw@mail.gmail.com>
+	<CALCETrXEAegFmSs2LnfSJR0tQmqZudnESDER8CoqKxOCBFMwdA@mail.gmail.com>
+	<CAGr1F2HYGG9=jwugywD8tUdB+dOjN4z+3BSpqL_m2aaM+3Rz1A@mail.gmail.com>
+	<CALCETrUtqozUE=Lr5d2dBKd_vaLzfVvVv8g6ZALz1MWqVzj9dQ@mail.gmail.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20120113;
+	h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+	:cc:content-type;
+	bh=WyV7/ULfu1RODrmuk5MoX0OHHrGnoCVqwQE27HickHs=;
+	b=geULZgm+X2WmHEBGgLj7Sj6awXL6AjiFLawqFf5Suoqb29f06x75j+l+78teFQLVL4
+	RKYTiZ+7Iel3HoeiaxKq+YnHa/2ofFWQsrXVKN+qBYu6O/7hnUFHQnmt3BBpldWI4zNF
+	BMhU5KohJbZ+spo01AenJUS2xF6eC83e7SULigFr2BXuJwlbHRg40nPa//eTlTp11tDc
+	LtZZnKEOOlXfvjHiW06l+UfqOW2KjNMmDJEhuHETiVv5vY4aphLpbHJge2xhEUwK65dT
+	CTDzvpw1riv40Zy+jYHmKoTupuasuwxZRlf2GUT+vQxCTFA+UwicyzYLm4UOlOspGqce
+	mMQQ==
+In-Reply-To: <CALCETrUtqozUE=Lr5d2dBKd_vaLzfVvVv8g6ZALz1MWqVzj9dQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
+Cc: Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-0a31bc97c80c ("mm: memcontrol: rewrite uncharge API") changed page
-migration to uncharge the old page right away.  The page is locked,
-unmapped, truncated, and off the LRU, but it could race with writeback
-ending, which then doesn't unaccount the page properly:
+On Tue, Oct 21, 2014 at 5:58 PM, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org> wrote:
+> On Tue, Oct 21, 2014 at 5:46 PM, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+>> On Tue, Oct 21, 2014 at 3:42 PM, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org> wrote:
+>>> On Tue, Oct 21, 2014 at 3:33 PM, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+>>>> On Tue, Oct 21, 2014 at 12:02 PM, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org> wrote:
+>>>>> On Tue, Oct 21, 2014 at 11:49 AM, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+>>>>>> On Mon, Oct 20, 2014 at 10:49 PM, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org> wrote:
+>>>>>>> On Mon, Oct 20, 2014 at 10:42 PM, Eric W. Biederman
+>>>>>>> <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org> wrote:
+>>>>>>>>
+>>>>>>>> I do wonder if we think of this as chcgrouproot if there is a simpler
+>>>>>>>> implementation.
+>>>>>>>
+>>>>>>> Could be.  I'll defer to Aditya for that one.
+>>>>>>>
+>>>>>>
+>>>>>> More than chcgrouproot, its probably closer to pivot_cgroup_root. In
+>>>>>> addition to restricting the process to a cgroup-root, new processes
+>>>>>> entering the container should also be implicitly contained within the
+>>>>>> cgroup-root of that container.
+>>>>>
+>>>>> Why?  Concretely, why should this be in the kernel namespace code
+>>>>> instead of in userspace?
+>>>>>
+>>>>
+>>>> Userspace can do it too. Though then there will be possibility of
+>>>> having processes in the same mount namespace with different
+>>>> cgroup-roots. Deriving contents of /proc/<pid>/cgroup becomes even
+>>>> more complex. Thats another reason why it might not be good idea to
+>>>> tie cgroups with mount namespace.
+>>>>
+>>>>>> Implementing pivot_cgroup_root would
+>>>>>> probably involve overloading mount-namespace to now understand cgroup
+>>>>>> filesystem too. I did attempt combining cgroupns-root with mntns
+>>>>>> earlier (not via a new syscall though), but came to the conclusion
+>>>>>> that its just simpler to have a separate cgroup namespace and get
+>>>>>> clear semantics. One of the issues was that implicitly changing cgroup
+>>>>>> on setns to mntns seemed like a huge undesirable side-effect.
+>>>>>>
+>>>>>> About pinning: I really feel that it should be OK to pin processes
+>>>>>> within cgroupns-root. I think thats one of the most important feature
+>>>>>> of cgroup-namespace since its most common usecase is to containerize
+>>>>>> un-trusted processes - processes that, for their entire lifetime, need
+>>>>>> to remain inside their container.
+>>>>>
+>>>>> So don't let them out.  None of the other namespaces have this kind of
+>>>>> constraint:
+>>>>>
+>>>>>  - If you're in a mntns, you can still use fds from outside.
+>>>>>  - If you're in a netns, you can still use sockets from outside the namespace.
+>>>>>  - If you're in an ipcns, you can still use ipc handles from outside.
+>>>>
+>>>> But none of the namespaces allow you to allocate new fds/sockets/ipc
+>>>> handles in the outside namespace. I think moving a process outside of
+>>>> cgroupns-root is like allocating a resource outside of your namespace.
+>>>
+>>> In a pidns, you can see outside tasks if you have an outside procfs
+>>> mounted, but, if you don't, then you can't.  Wouldn't cgroupns be just
+>>> like that?  You wouldn't be able to escape your cgroup as long as you
+>>> don't have an inappropriate cgroupfs mounted.
+>>>
+>>
+>> I am not if we should only depend on restricted visibility for this
+>> though. More details below.
+>>
+>>>
+>>>>>
+>>>>>> And with explicit permission from
+>>>>>> cgroup subsystem (something like cgroup.may_unshare as you had
+>>>>>> suggested previously), we can make sure that unprivileged processes
+>>>>>> cannot pin themselves. Also, maintaining this invariant (your current
+>>>>>> cgroup is always under your cgroupns-root) keeps the code and the
+>>>>>> semantics simple.
+>>>>>
+>>>>> I actually think it makes the semantics more complex.  The less policy
+>>>>> you stick in the kernel, the easier it is to understand the impact of
+>>>>> that policy.
+>>>>>
+>>>>
+>>>> My inclination is towards keeping things simpler - both in code as
+>>>> well as in configuration. I agree that cgroupns might seem
+>>>> "less-flexible", but in its current form, it encourages consistent
+>>>> container configuration. If you have a process that needs to move
+>>>> around between cgroups belonging to different containers, then that
+>>>> process should probably not be inside any container's cgroup
+>>>> namespace. Allowing that will just make the cgroup namespace
+>>>> pretty-much meaningless.
+>>>
+>>> The problem with pinning is that preventing it causes problems
+>>> (specifically, either something potentially complex and incompatible
+>>> needs to be added or unprivileged processes will be able to pin
+>>> themselves).
+>>>
+>>> Unless I'm missing something, a normal cgroupns user doesn't actually
+>>> need kernel pinning support to effectively constrain its members'
+>>> cgroups.
+>>>
+>>
+>> So there are 2 scenarios to consider:
+>>
+>> We have 2 containers with cgroups: /container1 and /container2
+>> Assume process P is running under cgroupns-root '/container1'
+>>
+>> (1) process P wants to 'write' to cgroup.procs outside its
+>> cgroupns-root (say to /container2/cgroup.procs)
+>
+> This, at least, doesn't have the problem with unprivileged processes
+> pinning themselves.
+>
+>> (2) An admin process running in init_cgroup_ns (or any parent cgroupns
+>> with cgroupns-root above /container1) wants to write pid of process P
+>> to /container2/cgroup.procs (which lies outside of P's cgroupns-root)
+>>
+>> For (1), I think its ok to reject such a write. This is consistent
+>> with the restriction in cgroup_file_write added in 'Patch 6' of this
+>> set. I believe this should be independent of visibility of the cgroup
+>> hierarchy for P.
+>>
+>> For (2), we may allow the write to succeed if we make sure that the
+>> process doing the write is an admin process (with CAP_SYS_ADMIN in its
+>> userns AND over P's cgroupns->user_ns).
+>
+> Why is its userns relevant?
+>
+> Why not just check whether the target cgroup is in the process doing
+> the write's cgroupns? (NB: you need to check f_cred, here, not
+> current_cred(), but that's orthogonal.)  Then the policy becomes: no
+> user of cgroupfs can move any process outside of the cgroupfs's user's
+> cgroupns root.
+>
+Humm .. it doesn't have to be. I think its simpler to not enforce
+artificial permission checks unless there is a security concern (and
+in this case, there doesn't seem to be any). So I will leave the
+capability check out from here.
 
-test_clear_page_writeback()              migration
-  acquire pc->mem_cgroup->move_lock
-                                           wait_on_page_writeback()
-  TestClearPageWriteback()
-                                           mem_cgroup_migrate()
-                                             clear PCG_USED
-  if (PageCgroupUsed(pc))
-    decrease memcg pages under writeback
-  release pc->mem_cgroup->move_lock
+> I think I'm okay with this.
+>
+>> If this write succeeds, then:
+>> (a) process P's /proc/<pid>/cgroup does not show anything when viewed
+>> by 'self' or any other process in P's cgrgroupns. I would really like
+>> to avoid showing relative paths or paths outside the cgroupns-root
+>
+> The empty string seems just as problematic to me.
 
-The per-page statistics interface is heavily optimized to avoid a
-function call and a lookup_page_cgroup() in the file unmap fast path,
-which means it doesn't verify whether a page is still charged before
-clearing PageWriteback() and it has to do it in the stat update later.
+Actually, there is no right answer here. Our options are:
+* show relative path
+-- this will break userspace as /proc/<pid>/cgroup does not show
+relative paths today. This is also very ambiguous (is it relative to
+cgroupns-root or relative to /proc/<pid>cgroup file reader's cgroup?).
 
-Rework it so that it looks up the page's memcg once at the beginning
-of the transaction and then uses it throughout.  The charge will be
-verified before clearing PageWriteback() and migration can't uncharge
-the page as long as that is still set.  The RCU lock will protect the
-memcg past uncharge.
+* show absolute path
+-- this will also wrong as the process won't be able to make sense of
+it unless it has exposure to the global cgroup hierarchy.
+-- worse case is this that the global path also exists under the
+cgroupns-root ... so now the process thinks its in completely wrong
+cgroup
+-- this exposes system
 
-As far as losing the optimization goes, the following test results are
-from a microbenchmark that maps, faults, and unmaps a 4GB sparse file
-three times in a nested fashion, so that there are two negative passes
-that don't account but still go through the new transaction overhead.
-There is no actual difference:
+* show only "/"
+-- this is arguably better, but if the process tires to verify that
+its pid is in cgroup.procs of the cgroupns-root, its in for a
+surprise!
 
-old:     33.195102545 seconds time elapsed       ( +-  0.01% )
-new:     33.199231369 seconds time elapsed       ( +-  0.03% )
+In either case, whatever we expose, the userspace won't be able to use
+this path correctly (worse yet, it associates wrong cgroup for that
+path). So I think its best to not print out the line for default
+hierarchy at all. This happens today when cgroupfs is not mounted. I
+am open to other suggestions.
 
-The time spent in page_remove_rmap()'s callees still adds up to the
-same, but the time spent in the function itself seems reduced:
+>
+>> (b) if process P does 'mount -t cgroup cgroup <mnt>', it will still be
+>> only able to mount and see cgroup hierarchy under its cgroupns-root
+>> (d) if process P tries to write to any cgroup file outside of its
+>> cgroupns-root (assuming that hierarchy is visible to it for whatever
+>> reason), it will fail as in (1)
+>
+> I'm still unconvinced that this serves any purpose.  If you give
+> DAC/MAC permission to a task to write to something, and you give it
+> access to an fd or mount pointing there, and you don't want it writing
+> there, then *don't do that*.  I'm not really seeing why cgroupns needs
+> special treatment here.
+>
 
-    # Children      Self  Command        Shared Object       Symbol
-old:     0.12%     0.11%  filemapstress  [kernel.kallsyms]   [k] page_remove_rmap
-new:     0.12%     0.08%  filemapstress  [kernel.kallsyms]   [k] page_remove_rmap
+There was a suggestion on the previous version of this patch-set that
+we need to prevent processes inside cgroupns to not be able to modify
+settings of cgroups outside of its cgroupns-root. But I agree with
+your point that cgroupns should not enforce unnecessary access-control
+restrictions. Its job is only to virtualize the view of
+/proc/<pid>/cgroup file as much as possible (100% virtualized for a
+correctly setup container). This will get rid of most of patch 6/8
+"cgroup: restrict cgroup operations within task's cgroupns" of this
+series. The only check we keep is in cgroup_attach_task() which
+ensures that target-cgroup is descendant of current's cgroupns-root
+and prevents processes from escaping their cgroupns on their own.
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-Cc: "3.17" <stable@kernel.org>
----
- include/linux/memcontrol.h | 58 ++++++++++++++--------------------------------
- mm/memcontrol.c            | 54 ++++++++++++++++++------------------------
- mm/page-writeback.c        | 22 ++++++++++--------
- mm/rmap.c                  | 20 ++++++++--------
- 4 files changed, 61 insertions(+), 93 deletions(-)
+>>
+>> i.e., in summary, you can't escape out of cgroupns-root yourself. You
+>> will need help from an admin process running under some parent
+>> cgroupns-root to move you out. Is that workable for your usecase? Most
+>> of the things above already happen with the current patch-set, so it
+>> should be easy to enable this.
+>>
+>> Though there are still some open issues like:
+>> * what happens if you move all the processes out of /container1 and
+>> then 'rmdir /container1'? As it is now, you won't be able to setns()
+>> to that cgroupns anymore. But the cgroupns will still hang around
+>> until the processes switch their cgroupns.
+>
+> Seems okay.
+>
+>> * should we then also allow setns() without first entering the
+>> cgroupns-root? setns also checks the same conditions as in (a) plus it
+>> checks that your current cgroup is descendant of target cgroupns-root.
+>> Alternatively we can special-case setns() to own cgroupns so that it
+>> doesn't fail.
+>
+> I think setns should completely ignore the caller's cgroup and should
+> not change it.  Userspace can do this.
+>
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 0daf383f8f1c..ea007615e8f9 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -139,48 +139,23 @@ static inline bool mem_cgroup_disabled(void)
- 	return false;
- }
- 
--void __mem_cgroup_begin_update_page_stat(struct page *page, bool *locked,
--					 unsigned long *flags);
--
--extern atomic_t memcg_moving;
--
--static inline void mem_cgroup_begin_update_page_stat(struct page *page,
--					bool *locked, unsigned long *flags)
--{
--	if (mem_cgroup_disabled())
--		return;
--	rcu_read_lock();
--	*locked = false;
--	if (atomic_read(&memcg_moving))
--		__mem_cgroup_begin_update_page_stat(page, locked, flags);
--}
--
--void __mem_cgroup_end_update_page_stat(struct page *page,
--				unsigned long *flags);
--static inline void mem_cgroup_end_update_page_stat(struct page *page,
--					bool *locked, unsigned long *flags)
--{
--	if (mem_cgroup_disabled())
--		return;
--	if (*locked)
--		__mem_cgroup_end_update_page_stat(page, flags);
--	rcu_read_unlock();
--}
--
--void mem_cgroup_update_page_stat(struct page *page,
--				 enum mem_cgroup_stat_index idx,
--				 int val);
--
--static inline void mem_cgroup_inc_page_stat(struct page *page,
-+struct mem_cgroup *mem_cgroup_begin_page_stat(struct page *page, bool *locked,
-+					      unsigned long *flags);
-+void mem_cgroup_end_page_stat(struct mem_cgroup *memcg, bool locked,
-+			      unsigned long flags);
-+void mem_cgroup_update_page_stat(struct mem_cgroup *memcg,
-+				 enum mem_cgroup_stat_index idx, int val);
-+
-+static inline void mem_cgroup_inc_page_stat(struct mem_cgroup *memcg,
- 					    enum mem_cgroup_stat_index idx)
- {
--	mem_cgroup_update_page_stat(page, idx, 1);
-+	mem_cgroup_update_page_stat(memcg, idx, 1);
- }
- 
--static inline void mem_cgroup_dec_page_stat(struct page *page,
-+static inline void mem_cgroup_dec_page_stat(struct mem_cgroup *memcg,
- 					    enum mem_cgroup_stat_index idx)
- {
--	mem_cgroup_update_page_stat(page, idx, -1);
-+	mem_cgroup_update_page_stat(memcg, idx, -1);
- }
- 
- unsigned long mem_cgroup_soft_limit_reclaim(struct zone *zone, int order,
-@@ -315,13 +290,14 @@ mem_cgroup_print_oom_info(struct mem_cgroup *memcg, struct task_struct *p)
- {
- }
- 
--static inline void mem_cgroup_begin_update_page_stat(struct page *page,
-+static inline struct mem_cgroup *mem_cgroup_begin_page_stat(struct page *page,
- 					bool *locked, unsigned long *flags)
- {
-+	return NULL;
- }
- 
--static inline void mem_cgroup_end_update_page_stat(struct page *page,
--					bool *locked, unsigned long *flags)
-+static inline void mem_cgroup_end_page_stat(struct mem_cgroup *memcg,
-+					bool locked, unsigned long flags)
- {
- }
- 
-@@ -343,12 +319,12 @@ static inline bool mem_cgroup_oom_synchronize(bool wait)
- 	return false;
- }
- 
--static inline void mem_cgroup_inc_page_stat(struct page *page,
-+static inline void mem_cgroup_inc_page_stat(struct mem_cgroup *memcg,
- 					    enum mem_cgroup_stat_index idx)
- {
- }
- 
--static inline void mem_cgroup_dec_page_stat(struct page *page,
-+static inline void mem_cgroup_dec_page_stat(struct mem_cgroup *memcg,
- 					    enum mem_cgroup_stat_index idx)
- {
- }
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 3a203c7ec6c7..d84f316ac901 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1463,12 +1463,8 @@ int mem_cgroup_swappiness(struct mem_cgroup *memcg)
-  *         start move here.
-  */
- 
--/* for quick checking without looking up memcg */
--atomic_t memcg_moving __read_mostly;
--
- static void mem_cgroup_start_move(struct mem_cgroup *memcg)
- {
--	atomic_inc(&memcg_moving);
- 	atomic_inc(&memcg->moving_account);
- 	synchronize_rcu();
- }
-@@ -1479,10 +1475,8 @@ static void mem_cgroup_end_move(struct mem_cgroup *memcg)
- 	 * Now, mem_cgroup_clear_mc() may call this function with NULL.
- 	 * We check NULL in callee rather than caller.
- 	 */
--	if (memcg) {
--		atomic_dec(&memcg_moving);
-+	if (memcg)
- 		atomic_dec(&memcg->moving_account);
--	}
- }
- 
- /*
-@@ -2132,26 +2126,32 @@ cleanup:
-  * account and taking the move_lock in the slowpath.
-  */
- 
--void __mem_cgroup_begin_update_page_stat(struct page *page,
--				bool *locked, unsigned long *flags)
-+struct mem_cgroup *mem_cgroup_begin_page_stat(struct page *page,
-+					      bool *locked,
-+					      unsigned long *flags)
- {
- 	struct mem_cgroup *memcg;
- 	struct page_cgroup *pc;
- 
-+	rcu_read_lock();
-+
-+	if (mem_cgroup_disabled())
-+		return NULL;
-+
- 	pc = lookup_page_cgroup(page);
- again:
- 	memcg = pc->mem_cgroup;
- 	if (unlikely(!memcg || !PageCgroupUsed(pc)))
--		return;
-+		return NULL;
- 	/*
- 	 * If this memory cgroup is not under account moving, we don't
- 	 * need to take move_lock_mem_cgroup(). Because we already hold
- 	 * rcu_read_lock(), any calls to move_account will be delayed until
- 	 * rcu_read_unlock().
- 	 */
--	VM_BUG_ON(!rcu_read_lock_held());
-+	*locked = false;
- 	if (atomic_read(&memcg->moving_account) <= 0)
--		return;
-+		return memcg;
- 
- 	move_lock_mem_cgroup(memcg, flags);
- 	if (memcg != pc->mem_cgroup || !PageCgroupUsed(pc)) {
-@@ -2159,36 +2159,26 @@ again:
- 		goto again;
- 	}
- 	*locked = true;
-+
-+	return memcg;
- }
- 
--void __mem_cgroup_end_update_page_stat(struct page *page, unsigned long *flags)
-+void mem_cgroup_end_page_stat(struct mem_cgroup *memcg, bool locked,
-+			      unsigned long flags)
- {
--	struct page_cgroup *pc = lookup_page_cgroup(page);
-+	if (memcg && locked)
-+		move_unlock_mem_cgroup(memcg, &flags);
- 
--	/*
--	 * It's guaranteed that pc->mem_cgroup never changes while
--	 * lock is held because a routine modifies pc->mem_cgroup
--	 * should take move_lock_mem_cgroup().
--	 */
--	move_unlock_mem_cgroup(pc->mem_cgroup, flags);
-+	rcu_read_unlock();
- }
- 
--void mem_cgroup_update_page_stat(struct page *page,
-+void mem_cgroup_update_page_stat(struct mem_cgroup *memcg,
- 				 enum mem_cgroup_stat_index idx, int val)
- {
--	struct mem_cgroup *memcg;
--	struct page_cgroup *pc = lookup_page_cgroup(page);
--	unsigned long uninitialized_var(flags);
--
--	if (mem_cgroup_disabled())
--		return;
--
- 	VM_BUG_ON(!rcu_read_lock_held());
--	memcg = pc->mem_cgroup;
--	if (unlikely(!memcg || !PageCgroupUsed(pc)))
--		return;
- 
--	this_cpu_add(memcg->stat->count[idx], val);
-+	if (memcg)
-+		this_cpu_add(memcg->stat->count[idx], val);
- }
- 
- /*
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index ff6a5b07211e..19ceae87522d 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -2327,11 +2327,12 @@ EXPORT_SYMBOL(clear_page_dirty_for_io);
- int test_clear_page_writeback(struct page *page)
- {
- 	struct address_space *mapping = page_mapping(page);
--	int ret;
--	bool locked;
- 	unsigned long memcg_flags;
-+	struct mem_cgroup *memcg;
-+	bool locked;
-+	int ret;
- 
--	mem_cgroup_begin_update_page_stat(page, &locked, &memcg_flags);
-+	memcg = mem_cgroup_begin_page_stat(page, &locked, &memcg_flags);
- 	if (mapping) {
- 		struct backing_dev_info *bdi = mapping->backing_dev_info;
- 		unsigned long flags;
-@@ -2352,22 +2353,23 @@ int test_clear_page_writeback(struct page *page)
- 		ret = TestClearPageWriteback(page);
- 	}
- 	if (ret) {
--		mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_WRITEBACK);
-+		mem_cgroup_dec_page_stat(memcg, MEM_CGROUP_STAT_WRITEBACK);
- 		dec_zone_page_state(page, NR_WRITEBACK);
- 		inc_zone_page_state(page, NR_WRITTEN);
- 	}
--	mem_cgroup_end_update_page_stat(page, &locked, &memcg_flags);
-+	mem_cgroup_end_page_stat(memcg, locked, memcg_flags);
- 	return ret;
- }
- 
- int __test_set_page_writeback(struct page *page, bool keep_write)
- {
- 	struct address_space *mapping = page_mapping(page);
--	int ret;
--	bool locked;
- 	unsigned long memcg_flags;
-+	struct mem_cgroup *memcg;
-+	bool locked;
-+	int ret;
- 
--	mem_cgroup_begin_update_page_stat(page, &locked, &memcg_flags);
-+	memcg = mem_cgroup_begin_page_stat(page, &locked, &memcg_flags);
- 	if (mapping) {
- 		struct backing_dev_info *bdi = mapping->backing_dev_info;
- 		unsigned long flags;
-@@ -2394,10 +2396,10 @@ int __test_set_page_writeback(struct page *page, bool keep_write)
- 		ret = TestSetPageWriteback(page);
- 	}
- 	if (!ret) {
--		mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_WRITEBACK);
-+		mem_cgroup_inc_page_stat(memcg, MEM_CGROUP_STAT_WRITEBACK);
- 		inc_zone_page_state(page, NR_WRITEBACK);
- 	}
--	mem_cgroup_end_update_page_stat(page, &locked, &memcg_flags);
-+	mem_cgroup_end_page_stat(memcg, locked, memcg_flags);
- 	return ret;
- 
- }
-diff --git a/mm/rmap.c b/mm/rmap.c
-index 116a5053415b..f574046f77d4 100644
---- a/mm/rmap.c
-+++ b/mm/rmap.c
-@@ -1042,15 +1042,16 @@ void page_add_new_anon_rmap(struct page *page,
-  */
- void page_add_file_rmap(struct page *page)
- {
--	bool locked;
-+	struct mem_cgroup *memcg;
- 	unsigned long flags;
-+	bool locked;
- 
--	mem_cgroup_begin_update_page_stat(page, &locked, &flags);
-+	memcg = mem_cgroup_begin_page_stat(page, &locked, &flags);
- 	if (atomic_inc_and_test(&page->_mapcount)) {
- 		__inc_zone_page_state(page, NR_FILE_MAPPED);
--		mem_cgroup_inc_page_stat(page, MEM_CGROUP_STAT_FILE_MAPPED);
-+		mem_cgroup_inc_page_stat(memcg, MEM_CGROUP_STAT_FILE_MAPPED);
- 	}
--	mem_cgroup_end_update_page_stat(page, &locked, &flags);
-+	mem_cgroup_end_page_stat(memcg, locked, flags);
- }
- 
- /**
-@@ -1061,9 +1062,10 @@ void page_add_file_rmap(struct page *page)
-  */
- void page_remove_rmap(struct page *page)
- {
-+	struct mem_cgroup *uninitialized_var(memcg);
- 	bool anon = PageAnon(page);
--	bool locked;
- 	unsigned long flags;
-+	bool locked;
- 
- 	/*
- 	 * The anon case has no mem_cgroup page_stat to update; but may
-@@ -1071,7 +1073,7 @@ void page_remove_rmap(struct page *page)
- 	 * we hold the lock against page_stat move: so avoid it on anon.
- 	 */
- 	if (!anon)
--		mem_cgroup_begin_update_page_stat(page, &locked, &flags);
-+		memcg = mem_cgroup_begin_page_stat(page, &locked, &flags);
- 
- 	/* page still mapped by someone else? */
- 	if (!atomic_add_negative(-1, &page->_mapcount))
-@@ -1096,8 +1098,7 @@ void page_remove_rmap(struct page *page)
- 				-hpage_nr_pages(page));
- 	} else {
- 		__dec_zone_page_state(page, NR_FILE_MAPPED);
--		mem_cgroup_dec_page_stat(page, MEM_CGROUP_STAT_FILE_MAPPED);
--		mem_cgroup_end_update_page_stat(page, &locked, &flags);
-+		mem_cgroup_dec_page_stat(memcg, MEM_CGROUP_STAT_FILE_MAPPED);
- 	}
- 	if (unlikely(PageMlocked(page)))
- 		clear_page_mlock(page);
-@@ -1110,10 +1111,9 @@ void page_remove_rmap(struct page *page)
- 	 * Leaving it set also helps swapoff to reinstate ptes
- 	 * faster for those pages still in swapcache.
- 	 */
--	return;
- out:
- 	if (!anon)
--		mem_cgroup_end_update_page_stat(page, &locked, &flags);
-+		mem_cgroup_end_page_stat(memcg, locked, flags);
- }
- 
- /*
+All above changes more or less means that tasks cannot pin themselves
+by unsharing cgroupns. Do you agree that we don't need that "explicit
+permission from cgroupfs" anymore (via cgroup.may_unshare file or
+other mechanism)?
+
+>> * migration for these processes will be tricky, if not impossible. But
+>> the admin trying to do this probably doesn't care about it or will
+>> provision for it.
+>
+> Migration for processes in a mntns that have a current directory
+> outside their mntns is also difficult or impossible.  Same with
+> pidnses with an fd pointing at /proc/self from an outside-the-pid-ns
+> procfs.  Nothing new here.
+>
+> --Andy
+
+Thanks for the review!
+
 -- 
-2.1.2
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Aditya
