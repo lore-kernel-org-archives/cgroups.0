@@ -1,386 +1,126 @@
-From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [patch 4/4] mm: memcontrol: remove unnecessary PCG_USED pc->mem_cgroup
- valid flag
-Date: Wed, 22 Oct 2014 10:54:59 +0900
-Message-ID: <54470E73.4010402@jp.fujitsu.com>
-References: <1413818532-11042-1-git-send-email-hannes@cmpxchg.org> <1413818532-11042-5-git-send-email-hannes@cmpxchg.org>
+From: Vladimir Davydov <vdavydov@parallels.com>
+Subject: Re: [patch 1/4] mm: memcontrol: inline memcg->move_lock locking
+Date: Wed, 22 Oct 2014 10:48:54 +0400
+Message-ID: <20141022064854.GR16496@esperanza>
+References: <1413922896-29042-1-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1413818532-11042-5-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1413922896-29042-1-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-(2014/10/21 0:22), Johannes Weiner wrote:
-> pc->mem_cgroup had to be left intact after uncharge for the final LRU
-> removal, and !PCG_USED indicated whether the page was uncharged.  But
-> since 0a31bc97c80c ("mm: memcontrol: rewrite uncharge API") pages are
-> uncharged after the final LRU removal.  Uncharge can simply clear the
-> pointer and the PCG_USED/PageCgroupUsed sites can test that instead.
+On Tue, Oct 21, 2014 at 04:21:33PM -0400, Johannes Weiner wrote:
+> The wrappers around taking and dropping the memcg->move_lock spinlock
+> add nothing of value.  Inline the spinlock calls into the callsites.
 > 
-> Because this is the last page_cgroup flag, this patch reduces the
-> memcg per-page overhead to a single pointer.
-> 
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 
-awesome.
-Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Acked-by: Vladimir Davydov <vdavydov@parallels.com>
 
 > ---
->   include/linux/page_cgroup.h |  10 -----
->   mm/memcontrol.c             | 107 +++++++++++++++++---------------------------
->   2 files changed, 42 insertions(+), 75 deletions(-)
+>  mm/memcontrol.c | 34 +++++++++-------------------------
+>  1 file changed, 9 insertions(+), 25 deletions(-)
 > 
-> diff --git a/include/linux/page_cgroup.h b/include/linux/page_cgroup.h
-> index 97536e685843..1289be6b436c 100644
-> --- a/include/linux/page_cgroup.h
-> +++ b/include/linux/page_cgroup.h
-> @@ -1,11 +1,6 @@
->   #ifndef __LINUX_PAGE_CGROUP_H
->   #define __LINUX_PAGE_CGROUP_H
->   
-> -enum {
-> -	/* flags for mem_cgroup */
-> -	PCG_USED = 0x01,	/* This page is charged to a memcg */
-> -};
-> -
->   struct pglist_data;
->   
->   #ifdef CONFIG_MEMCG
-> @@ -19,7 +14,6 @@ struct mem_cgroup;
->    * then the page cgroup for pfn always exists.
->    */
->   struct page_cgroup {
-> -	unsigned long flags;
->   	struct mem_cgroup *mem_cgroup;
->   };
->   
-> @@ -39,10 +33,6 @@ static inline void page_cgroup_init(void)
->   
->   struct page_cgroup *lookup_page_cgroup(struct page *page);
->   
-> -static inline int PageCgroupUsed(struct page_cgroup *pc)
-> -{
-> -	return !!(pc->flags & PCG_USED);
-> -}
->   #else /* !CONFIG_MEMCG */
->   struct page_cgroup;
->   
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 1d66ac49e702..48d49c6b08d1 100644
+> index 293db8234179..1ff125d2a427 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -1284,14 +1284,12 @@ struct lruvec *mem_cgroup_page_lruvec(struct page *page, struct zone *zone)
->   
->   	pc = lookup_page_cgroup(page);
->   	memcg = pc->mem_cgroup;
+> @@ -1507,23 +1507,6 @@ static bool mem_cgroup_wait_acct_move(struct mem_cgroup *memcg)
+>  	return false;
+>  }
+>  
+> -/*
+> - * Take this lock when
+> - * - a code tries to modify page's memcg while it's USED.
+> - * - a code tries to modify page state accounting in a memcg.
+> - */
+> -static void move_lock_mem_cgroup(struct mem_cgroup *memcg,
+> -				  unsigned long *flags)
+> -{
+> -	spin_lock_irqsave(&memcg->move_lock, *flags);
+> -}
 > -
->   	/*
->   	 * Swapcache readahead pages are added to the LRU - and
-> -	 * possibly migrated - before they are charged.  Ensure
-> -	 * pc->mem_cgroup is sane.
-> +	 * possibly migrated - before they are charged.
->   	 */
-> -	if (!PageLRU(page) && !PageCgroupUsed(pc) && memcg != root_mem_cgroup)
-> -		pc->mem_cgroup = memcg = root_mem_cgroup;
-> +	if (!memcg)
-> +		memcg = root_mem_cgroup;
->   
->   	mz = mem_cgroup_page_zoneinfo(memcg, page);
->   	lruvec = &mz->lruvec;
-> @@ -2141,7 +2139,7 @@ void __mem_cgroup_begin_update_page_stat(struct page *page,
->   	pc = lookup_page_cgroup(page);
->   again:
->   	memcg = pc->mem_cgroup;
-> -	if (unlikely(!memcg || !PageCgroupUsed(pc)))
-> +	if (unlikely(!memcg))
->   		return;
->   	/*
->   	 * If this memory cgroup is not under account moving, we don't
-> @@ -2154,7 +2152,7 @@ again:
->   		return;
->   
->   	move_lock_mem_cgroup(memcg, flags);
-> -	if (memcg != pc->mem_cgroup || !PageCgroupUsed(pc)) {
-> +	if (memcg != pc->mem_cgroup) {
->   		move_unlock_mem_cgroup(memcg, flags);
->   		goto again;
->   	}
-> @@ -2186,7 +2184,7 @@ void mem_cgroup_update_page_stat(struct page *page,
->   
->   	pc = lookup_page_cgroup(page);
->   	memcg = pc->mem_cgroup;
-> -	if (unlikely(!memcg || !PageCgroupUsed(pc)))
-> +	if (unlikely(!memcg))
->   		return;
->   
->   	this_cpu_add(memcg->stat->count[idx], val);
-> @@ -2525,9 +2523,10 @@ struct mem_cgroup *try_get_mem_cgroup_from_page(struct page *page)
->   	VM_BUG_ON_PAGE(!PageLocked(page), page);
->   
->   	pc = lookup_page_cgroup(page);
-> -	if (PageCgroupUsed(pc)) {
-> -		memcg = pc->mem_cgroup;
-> -		if (memcg && !css_tryget_online(&memcg->css))
-> +	memcg = pc->mem_cgroup;
+> -static void move_unlock_mem_cgroup(struct mem_cgroup *memcg,
+> -				unsigned long *flags)
+> -{
+> -	spin_unlock_irqrestore(&memcg->move_lock, *flags);
+> -}
+> -
+>  #define K(x) ((x) << (PAGE_SHIFT-10))
+>  /**
+>   * mem_cgroup_print_oom_info: Print OOM information relevant to memory controller.
+> @@ -2013,7 +1996,7 @@ again:
+>  		return;
+>  	/*
+>  	 * If this memory cgroup is not under account moving, we don't
+> -	 * need to take move_lock_mem_cgroup(). Because we already hold
+> +	 * need to take &memcg->move_lock. Because we already hold
+>  	 * rcu_read_lock(), any calls to move_account will be delayed until
+>  	 * rcu_read_unlock().
+>  	 */
+> @@ -2021,9 +2004,9 @@ again:
+>  	if (atomic_read(&memcg->moving_account) <= 0)
+>  		return;
+>  
+> -	move_lock_mem_cgroup(memcg, flags);
+> +	spin_lock_irqsave(&memcg->move_lock, *flags);
+>  	if (memcg != pc->mem_cgroup) {
+> -		move_unlock_mem_cgroup(memcg, flags);
+> +		spin_unlock_irqrestore(&memcg->move_lock, *flags);
+>  		goto again;
+>  	}
+>  	*locked = true;
+> @@ -2038,7 +2021,7 @@ void __mem_cgroup_end_update_page_stat(struct page *page, unsigned long *flags)
+>  	 * lock is held because a routine modifies pc->mem_cgroup
+>  	 * should take move_lock_mem_cgroup().
+>  	 */
+> -	move_unlock_mem_cgroup(pc->mem_cgroup, flags);
+> +	spin_unlock_irqrestore(&pc->mem_cgroup->move_lock, *flags);
+>  }
+>  
+>  void mem_cgroup_update_page_stat(struct page *page,
+> @@ -3083,7 +3066,7 @@ static int mem_cgroup_move_account(struct page *page,
+>  	if (pc->mem_cgroup != from)
+>  		goto out_unlock;
+>  
+> -	move_lock_mem_cgroup(from, &flags);
+> +	spin_lock_irqsave(&from->move_lock, flags);
+>  
+>  	if (!PageAnon(page) && page_mapped(page)) {
+>  		__this_cpu_sub(from->stat->count[MEM_CGROUP_STAT_FILE_MAPPED],
+> @@ -3107,7 +3090,8 @@ static int mem_cgroup_move_account(struct page *page,
+>  
+>  	/* caller should have done css_get */
+>  	pc->mem_cgroup = to;
+> -	move_unlock_mem_cgroup(from, &flags);
+> +	spin_unlock_irqrestore(&from->move_lock, flags);
 > +
-> +	if (memcg) {
-> +		if (!css_tryget_online(&memcg->css))
->   			memcg = NULL;
->   	} else if (PageSwapCache(page)) {
->   		ent.val = page_private(page);
-> @@ -2578,7 +2577,7 @@ static void commit_charge(struct page *page, struct mem_cgroup *memcg,
->   	struct page_cgroup *pc = lookup_page_cgroup(page);
->   	int isolated;
->   
-> -	VM_BUG_ON_PAGE(PageCgroupUsed(pc), page);
-> +	VM_BUG_ON_PAGE(pc->mem_cgroup, page);
->   	/*
->   	 * we don't need page_cgroup_lock about tail pages, becase they are not
->   	 * accessed by any other context at this point.
-> @@ -2593,7 +2592,7 @@ static void commit_charge(struct page *page, struct mem_cgroup *memcg,
->   
->   	/*
->   	 * Nobody should be changing or seriously looking at
-> -	 * pc->mem_cgroup and pc->flags at this point:
-> +	 * pc->mem_cgroup at this point:
->   	 *
->   	 * - the page is uncharged
->   	 *
-> @@ -2606,7 +2605,6 @@ static void commit_charge(struct page *page, struct mem_cgroup *memcg,
->   	 *   have the page locked
->   	 */
->   	pc->mem_cgroup = memcg;
-> -	pc->flags = PCG_USED;
->   
->   	if (lrucare)
->   		unlock_page_lru(page, isolated);
-> @@ -3120,37 +3118,22 @@ void __memcg_kmem_commit_charge(struct page *page, struct mem_cgroup *memcg,
->   		memcg_uncharge_kmem(memcg, 1 << order);
->   		return;
->   	}
-> -	/*
-> -	 * The page is freshly allocated and not visible to any
-> -	 * outside callers yet.  Set up pc non-atomically.
-> -	 */
->   	pc = lookup_page_cgroup(page);
->   	pc->mem_cgroup = memcg;
-> -	pc->flags = PCG_USED;
->   }
->   
->   void __memcg_kmem_uncharge_pages(struct page *page, int order)
->   {
-> -	struct mem_cgroup *memcg = NULL;
-> -	struct page_cgroup *pc;
-> -
-> -
-> -	pc = lookup_page_cgroup(page);
-> -	if (!PageCgroupUsed(pc))
-> -		return;
-> -
-> -	memcg = pc->mem_cgroup;
-> -	pc->flags = 0;
-> +	struct page_cgroup *pc = lookup_page_cgroup(page);
-> +	struct mem_cgroup *memcg = pc->mem_cgroup;
->   
-> -	/*
-> -	 * We trust that only if there is a memcg associated with the page, it
-> -	 * is a valid allocation
-> -	 */
->   	if (!memcg)
->   		return;
->   
->   	VM_BUG_ON_PAGE(mem_cgroup_is_root(memcg), page);
-> +
->   	memcg_uncharge_kmem(memcg, 1 << order);
-> +	pc->mem_cgroup = NULL;
->   }
->   #else
->   static inline void memcg_unregister_all_caches(struct mem_cgroup *memcg)
-> @@ -3168,21 +3151,16 @@ static inline void memcg_unregister_all_caches(struct mem_cgroup *memcg)
->    */
->   void mem_cgroup_split_huge_fixup(struct page *head)
->   {
-> -	struct page_cgroup *head_pc = lookup_page_cgroup(head);
-> -	struct page_cgroup *pc;
-> -	struct mem_cgroup *memcg;
-> +	struct page_cgroup *pc = lookup_page_cgroup(head);
->   	int i;
->   
->   	if (mem_cgroup_disabled())
->   		return;
->   
-> -	memcg = head_pc->mem_cgroup;
-> -	for (i = 1; i < HPAGE_PMD_NR; i++) {
-> -		pc = head_pc + i;
-> -		pc->mem_cgroup = memcg;
-> -		pc->flags = head_pc->flags;
-> -	}
-> -	__this_cpu_sub(memcg->stat->count[MEM_CGROUP_STAT_RSS_HUGE],
-> +	for (i = 1; i < HPAGE_PMD_NR; i++)
-> +		pc[i].mem_cgroup = pc[0].mem_cgroup;
-> +
-> +	__this_cpu_sub(pc[0].mem_cgroup->stat->count[MEM_CGROUP_STAT_RSS_HUGE],
->   		       HPAGE_PMD_NR);
->   }
->   #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
-> @@ -3232,7 +3210,7 @@ static int mem_cgroup_move_account(struct page *page,
->   		goto out;
->   
->   	ret = -EINVAL;
-> -	if (!PageCgroupUsed(pc) || pc->mem_cgroup != from)
-> +	if (pc->mem_cgroup != from)
->   		goto out_unlock;
->   
->   	move_lock_mem_cgroup(from, &flags);
-> @@ -3342,7 +3320,7 @@ static struct page_cgroup *lookup_page_cgroup_used(struct page *page)
->   	 * the first time, i.e. during boot or memory hotplug;
->   	 * or when mem_cgroup_disabled().
->   	 */
-> -	if (likely(pc) && PageCgroupUsed(pc))
-> +	if (likely(pc) && pc->mem_cgroup)
->   		return pc;
->   	return NULL;
->   }
-> @@ -3360,10 +3338,8 @@ void mem_cgroup_print_bad_page(struct page *page)
->   	struct page_cgroup *pc;
->   
->   	pc = lookup_page_cgroup_used(page);
-> -	if (pc) {
-> -		pr_alert("pc:%p pc->flags:%lx pc->mem_cgroup:%p\n",
-> -			 pc, pc->flags, pc->mem_cgroup);
-> -	}
-> +	if (pc)
-> +		pr_alert("pc:%p pc->mem_cgroup:%p\n", pc, pc->mem_cgroup);
->   }
->   #endif
->   
-> @@ -5330,7 +5306,7 @@ static enum mc_target_type get_mctgt_type(struct vm_area_struct *vma,
->   		 * mem_cgroup_move_account() checks the pc is valid or
->   		 * not under LRU exclusion.
->   		 */
-> -		if (PageCgroupUsed(pc) && pc->mem_cgroup == mc.from) {
-> +		if (pc->mem_cgroup == mc.from) {
->   			ret = MC_TARGET_PAGE;
->   			if (target)
->   				target->page = page;
-> @@ -5366,7 +5342,7 @@ static enum mc_target_type get_mctgt_type_thp(struct vm_area_struct *vma,
->   	if (!move_anon())
->   		return ret;
->   	pc = lookup_page_cgroup(page);
-> -	if (PageCgroupUsed(pc) && pc->mem_cgroup == mc.from) {
-> +	if (pc->mem_cgroup == mc.from) {
->   		ret = MC_TARGET_PAGE;
->   		if (target) {
->   			get_page(page);
-> @@ -5810,18 +5786,17 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
->   		return;
->   
->   	pc = lookup_page_cgroup(page);
-> +	memcg = pc->mem_cgroup;
->   
->   	/* Readahead page, never charged */
-> -	if (!PageCgroupUsed(pc))
-> +	if (!memcg)
->   		return;
->   
-> -	memcg = pc->mem_cgroup;
-> -
->   	oldid = swap_cgroup_record(entry, mem_cgroup_id(memcg));
->   	VM_BUG_ON_PAGE(oldid, page);
->   	mem_cgroup_swap_statistics(memcg, true);
->   
-> -	pc->flags = 0;
-> +	pc->mem_cgroup = NULL;
->   
->   	if (!mem_cgroup_is_root(memcg))
->   		page_counter_uncharge(&memcg->memory, 1);
-> @@ -5895,7 +5870,7 @@ int mem_cgroup_try_charge(struct page *page, struct mm_struct *mm,
->   		 * the page lock, which serializes swap cache removal, which
->   		 * in turn serializes uncharging.
->   		 */
-> -		if (PageCgroupUsed(pc))
-> +		if (pc->mem_cgroup)
->   			goto out;
->   	}
->   
-> @@ -6057,13 +6032,13 @@ static void uncharge_list(struct list_head *page_list)
->   		VM_BUG_ON_PAGE(page_count(page), page);
->   
->   		pc = lookup_page_cgroup(page);
-> -		if (!PageCgroupUsed(pc))
-> +		if (!pc->mem_cgroup)
->   			continue;
->   
->   		/*
->   		 * Nobody should be changing or seriously looking at
-> -		 * pc->mem_cgroup and pc->flags at this point, we have
-> -		 * fully exclusive access to the page.
-> +		 * pc->mem_cgroup at this point, we have fully
-> +		 * exclusive access to the page.
->   		 */
->   
->   		if (memcg != pc->mem_cgroup) {
-> @@ -6086,7 +6061,7 @@ static void uncharge_list(struct list_head *page_list)
->   		else
->   			nr_file += nr_pages;
->   
-> -		pc->flags = 0;
-> +		pc->mem_cgroup = NULL;
->   
->   		pgpgout++;
->   	} while (next != page_list);
-> @@ -6112,7 +6087,7 @@ void mem_cgroup_uncharge(struct page *page)
->   
->   	/* Don't touch page->lru of any random page, pre-check: */
->   	pc = lookup_page_cgroup(page);
-> -	if (!PageCgroupUsed(pc))
-> +	if (!pc->mem_cgroup)
->   		return;
->   
->   	INIT_LIST_HEAD(&page->lru);
-> @@ -6148,6 +6123,7 @@ void mem_cgroup_uncharge_list(struct list_head *page_list)
->   void mem_cgroup_migrate(struct page *oldpage, struct page *newpage,
->   			bool lrucare)
->   {
-> +	struct mem_cgroup *memcg;
->   	struct page_cgroup *pc;
->   	int isolated;
->   
-> @@ -6164,7 +6140,7 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage,
->   
->   	/* Page cache replacement: new page already charged? */
->   	pc = lookup_page_cgroup(newpage);
-> -	if (PageCgroupUsed(pc))
-> +	if (pc->mem_cgroup)
->   		return;
->   
->   	/*
-> @@ -6174,18 +6150,19 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage,
->   	 * reclaim just put back on the LRU but has not released yet.
->   	 */
->   	pc = lookup_page_cgroup(oldpage);
-> -	if (!PageCgroupUsed(pc))
-> +	memcg = pc->mem_cgroup;
-> +	if (!memcg)
->   		return;
->   
->   	if (lrucare)
->   		lock_page_lru(oldpage, &isolated);
->   
-> -	pc->flags = 0;
-> +	pc->mem_cgroup = NULL;
->   
->   	if (lrucare)
->   		unlock_page_lru(oldpage, isolated);
->   
-> -	commit_charge(newpage, pc->mem_cgroup, lrucare);
-> +	commit_charge(newpage, memcg, lrucare);
->   }
->   
->   /*
+>  	ret = 0;
+>  
+>  	local_irq_disable();
+> @@ -6033,9 +6017,9 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage,
+>  	 * but there might still be references, e.g. from finishing
+>  	 * writeback.  Follow the charge moving protocol here.
+>  	 */
+> -	move_lock_mem_cgroup(memcg, &flags);
+> +	spin_lock_irqsave(&memcg->move_lock, flags);
+>  	pc->mem_cgroup = NULL;
+> -	move_unlock_mem_cgroup(memcg, &flags);
+> +	spin_unlock_irqrestore(&memcg->move_lock, flags);
+>  
+>  	if (lrucare)
+>  		unlock_page_lru(oldpage, isolated);
+> -- 
+> 2.1.2
 > 
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
