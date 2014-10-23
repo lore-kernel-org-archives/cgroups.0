@@ -1,42 +1,43 @@
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH] memcg: Fix NULL pointer deref in task_in_mem_cgroup()
-Date: Thu, 23 Oct 2014 18:47:45 +0200
-Message-ID: <1414082865-4091-1-git-send-email-jack@suse.cz>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [patch] mm: memcontrol: fold
+ mem_cgroup_start_move()/mem_cgroup_end_move()
+Date: Thu, 23 Oct 2014 13:53:38 -0400
+Message-ID: <20141023175338.GA15937@phnom.home.cmpxchg.org>
+References: <1414075327-15039-1-git-send-email-hannes@cmpxchg.org>
+ <20141023155607.GN23011@dhcp22.suse.cz>
+Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20141023155607.GN23011@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Michal Hocko <mhocko@suse.cz>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, Jan Kara <jack@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-'curr' pointer in task_in_mem_cgroup() can be NULL when we race with
-somebody clearing task->mm. Check for it before dereferencing the
-pointer.
+On Thu, Oct 23, 2014 at 05:56:07PM +0200, Michal Hocko wrote:
+> On Thu 23-10-14 10:42:07, Johannes Weiner wrote:
+> > Having these functions and their documentation split out and somewhere
+> > makes it harder, not easier, to follow what's going on.
+> > 
+> > Inline them directly where charge moving is prepared and finished, and
+> > put an explanation right next to it.
+> 
+> I do not see the open coded version much more readable or maintainable to be
+> honest. mem_cgroup_{start,end}_move are a good markers of the transaction.
 
-Coverity-id: 1198369
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- mm/memcontrol.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+What transaction, though?  The names are really non-descript and they
+actively hide what's going on.  mem_cgroup_start_move() could mean
+anything that prepares for moving and it doesn't seem out of place in
+can_attach().  atomic_inc(&memcg->moving_account) on the other hand is
+much more specific and nicely shows that we are currently forcing the
+page stat update slow path way too early.  There is no reason to make
+it take the move_lock while we are still counting rss and precharging,
+we are not actually moving charges and flipping pc->mem_cgroups yet.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 23976fd885fd..18ab127a0767 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1469,7 +1469,8 @@ bool task_in_mem_cgroup(struct task_struct *task,
- 	 * hierarchy(even if use_hierarchy is disabled in "memcg").
- 	 */
- 	ret = mem_cgroup_same_or_subtree(memcg, curr);
--	css_put(&curr->css);
-+	if (curr)
-+		css_put(&curr->css);
- 	return ret;
- }
- 
--- 
-1.8.1.4
+[ I already have a patch to relocate it into mem_cgroup_move_charge(),
+  but let's let the dust in -mm settle a bit first. :-) ]
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
