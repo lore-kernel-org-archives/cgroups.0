@@ -1,112 +1,42 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch] mm: memcontrol: fold
- mem_cgroup_start_move()/mem_cgroup_end_move()
-Date: Thu, 23 Oct 2014 17:56:07 +0200
-Message-ID: <20141023155607.GN23011@dhcp22.suse.cz>
-References: <1414075327-15039-1-git-send-email-hannes@cmpxchg.org>
-Mime-Version: 1.0
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH] memcg: Fix NULL pointer deref in task_in_mem_cgroup()
+Date: Thu, 23 Oct 2014 18:47:45 +0200
+Message-ID: <1414082865-4091-1-git-send-email-jack@suse.cz>
 Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <1414075327-15039-1-git-send-email-hannes@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, Jan Kara <jack@suse.cz>
 
-On Thu 23-10-14 10:42:07, Johannes Weiner wrote:
-> Having these functions and their documentation split out and somewhere
-> makes it harder, not easier, to follow what's going on.
-> 
-> Inline them directly where charge moving is prepared and finished, and
-> put an explanation right next to it.
+'curr' pointer in task_in_mem_cgroup() can be NULL when we race with
+somebody clearing task->mm. Check for it before dereferencing the
+pointer.
 
-I do not see the open coded version much more readable or maintainable to be
-honest. mem_cgroup_{start,end}_move are a good markers of the transaction.
-But I do not have strong opinion about this. The preparation and
-move_lock parts are so far from each other that either way would be
-non-trivial to follow. That being said, I do not really care much.
+Coverity-id: 1198369
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ mm/memcontrol.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Your comment is better and more clear though.
-
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> ---
->  mm/memcontrol.c | 40 ++++++++++++----------------------------
->  1 file changed, 12 insertions(+), 28 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 3cd4f1e0bfb3..5b5c784dc39d 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1447,32 +1447,6 @@ int mem_cgroup_swappiness(struct mem_cgroup *memcg)
->  }
->  
->  /*
-> - * memcg->moving_account is used for checking possibility that some thread is
-> - * calling move_account(). When a thread on CPU-A starts moving pages under
-> - * a memcg, other threads should check memcg->moving_account under
-> - * rcu_read_lock(), like this:
-> - *
-> - *         CPU-A                                    CPU-B
-> - *                                              rcu_read_lock()
-> - *         memcg->moving_account+1              if (memcg->mocing_account)
-> - *                                                   take heavy locks.
-> - *         synchronize_rcu()                    update something.
-> - *                                              rcu_read_unlock()
-> - *         start move here.
-> - */
-> -
-> -static void mem_cgroup_start_move(struct mem_cgroup *memcg)
-> -{
-> -	atomic_inc(&memcg->moving_account);
-> -	synchronize_rcu();
-> -}
-> -
-> -static void mem_cgroup_end_move(struct mem_cgroup *memcg)
-> -{
-> -	atomic_dec(&memcg->moving_account);
-> -}
-> -
-> -/*
->   * A routine for checking "mem" is under move_account() or not.
->   *
->   * Checking a cgroup is mc.from or mc.to or under hierarchy of
-> @@ -5431,7 +5405,8 @@ static void mem_cgroup_clear_mc(void)
->  	mc.from = NULL;
->  	mc.to = NULL;
->  	spin_unlock(&mc.lock);
-> -	mem_cgroup_end_move(from);
-> +
-> +	atomic_dec(&memcg->moving_account);
->  }
->  
->  static int mem_cgroup_can_attach(struct cgroup_subsys_state *css,
-> @@ -5464,7 +5439,16 @@ static int mem_cgroup_can_attach(struct cgroup_subsys_state *css,
->  			VM_BUG_ON(mc.precharge);
->  			VM_BUG_ON(mc.moved_charge);
->  			VM_BUG_ON(mc.moved_swap);
-> -			mem_cgroup_start_move(from);
-> +
-> +			/*
-> +			 * Signal mem_cgroup_begin_page_stat() to take
-> +			 * the memcg's move_lock while we're moving
-> +			 * its pages to another memcg.  Then wait for
-> +			 * already started RCU-only updates to finish.
-> +			 */
-> +			atomic_inc(&memcg->moving_account);
-> +			synchronize_rcu();
-> +
->  			spin_lock(&mc.lock);
->  			mc.from = from;
->  			mc.to = memcg;
-> -- 
-> 2.1.2
-> 
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 23976fd885fd..18ab127a0767 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1469,7 +1469,8 @@ bool task_in_mem_cgroup(struct task_struct *task,
+ 	 * hierarchy(even if use_hierarchy is disabled in "memcg").
+ 	 */
+ 	ret = mem_cgroup_same_or_subtree(memcg, curr);
+-	css_put(&curr->css);
++	if (curr)
++		css_put(&curr->css);
+ 	return ret;
+ }
+ 
 -- 
-Michal Hocko
-SUSE Labs
+1.8.1.4
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
