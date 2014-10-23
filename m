@@ -1,46 +1,61 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [patch 2/2] mm: memcontrol: fix missed end-writeback page
- accounting
-Date: Thu, 23 Oct 2014 10:14:43 -0400
-Message-ID: <20141023141443.GA20526@phnom.home.cmpxchg.org>
-References: <1414002568-21042-1-git-send-email-hannes@cmpxchg.org>
- <1414002568-21042-3-git-send-email-hannes@cmpxchg.org>
- <20141023130331.GC23011@dhcp22.suse.cz>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20141023130331.GC23011-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [patch] mm: memcontrol: uncharge pages on swapout fix
+Date: Thu, 23 Oct 2014 10:31:40 -0400
+Message-ID: <1414074700-13995-1-git-send-email-hannes@cmpxchg.org>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Vladimir Davydov <vdavydov@parallels.com>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Oct 23, 2014 at 03:03:31PM +0200, Michal Hocko wrote:
-> On Wed 22-10-14 14:29:28, Johannes Weiner wrote:
-> > 0a31bc97c80c ("mm: memcontrol: rewrite uncharge API") changed page
-> > migration to uncharge the old page right away.  The page is locked,
-> > unmapped, truncated, and off the LRU, but it could race with writeback
-> > ending, which then doesn't unaccount the page properly:
-> > 
-> > test_clear_page_writeback()              migration
-> >   acquire pc->mem_cgroup->move_lock
-> 
-> I do not think that mentioning move_lock is important/helpful here
-> because the hot path which is taken all the time (except when there is a
-> task move in progress) doesn't take it.
-> Besides that it is not even relevant for the race.
+Vladimir notes:
 
-You're right.  It's not worth mentioning the transaction setup/finish
-at all, because migration does not participate in that protocol.  How
-about this?  Andrew, could you please copy-paste this into the patch?
+> > +   local_irq_disable();
+> > +   mem_cgroup_charge_statistics(memcg, page, -1);
+> > +   memcg_check_events(memcg, page);
+> > +   local_irq_enable();
+>
+> AFAICT mem_cgroup_swapout() is called under mapping->tree_lock with irqs
+> disabled, so we should use irq_save/restore here.
 
-test_clear_page_writeback()              migration
-                                           wait_on_page_writeback()
-  TestClearPageWriteback()
-                                           mem_cgroup_migrate()
-                                             clear PCG_USED
-  mem_cgroup_update_page_stat()
-    if (PageCgroupUsed(pc))
-      decrease memcg pages under writeback
+Simply remove the irq-disabling altogether and rely on the caller
+holding the mapping->tree_lock for now.
+
+Reported-by: Vladimir Davydov <vdavydov@parallels.com>
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Acked-by: Vladimir Davydov <vdavydov@parallels.com>
+---
+ mm/memcontrol.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+For "mm: memcontrol: uncharge pages on swapout" in -mm.
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index ae9b630e928b..09fece0eb9f1 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5777,10 +5777,11 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+ 	if (!mem_cgroup_is_root(memcg))
+ 		page_counter_uncharge(&memcg->memory, 1);
+ 
+-	local_irq_disable();
++	/* XXX: caller holds IRQ-safe mapping->tree_lock */
++	VM_BUG_ON(!irqs_disabled());
++
+ 	mem_cgroup_charge_statistics(memcg, page, -1);
+ 	memcg_check_events(memcg, page);
+-	local_irq_enable();
+ }
+ 
+ /**
+-- 
+2.1.2
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
