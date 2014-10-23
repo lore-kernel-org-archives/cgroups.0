@@ -1,16 +1,12 @@
 From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch 2/2] mm: memcontrol: fix missed end-writeback page
- accounting
-Date: Thu, 23 Oct 2014 17:03:21 +0200
-Message-ID: <20141023150321.GJ23011@dhcp22.suse.cz>
-References: <1414002568-21042-1-git-send-email-hannes@cmpxchg.org>
- <1414002568-21042-3-git-send-email-hannes@cmpxchg.org>
- <20141022133936.44f2d2931948ce13477b5e64@linux-foundation.org>
- <20141023135729.GB24269@phnom.home.cmpxchg.org>
+Subject: Re: [patch] mm: memcontrol: inline memcg->move_lock locking
+Date: Thu, 23 Oct 2014 17:09:40 +0200
+Message-ID: <20141023150940.GL23011@dhcp22.suse.cz>
+References: <1414074782-14340-1-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20141023135729.GB24269@phnom.home.cmpxchg.org>
+In-Reply-To: <1414074782-14340-1-git-send-email-hannes@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -18,138 +14,87 @@ Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu 23-10-14 09:57:29, Johannes Weiner wrote:
-[...]
-> From b518d88254b01be8c6c0c4a496d9f311f0c71b4a Mon Sep 17 00:00:00 2001
-> From: Johannes Weiner <hannes@cmpxchg.org>
-> Date: Thu, 23 Oct 2014 09:29:06 -0400
-> Subject: [patch] mm: rmap: split out page_remove_file_rmap()
-> 
-> page_remove_rmap() has too many branches on PageAnon() and is hard to
-> follow.  Move the file part into a separate function.
+On Thu 23-10-14 10:33:02, Johannes Weiner wrote:
+> The wrappers around taking and dropping the memcg->move_lock spinlock
+> add nothing of value.  Inline the spinlock calls into the callsites.
 > 
 > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> Acked-by: Vladimir Davydov <vdavydov@parallels.com>
 
-Reviewed-by: Michal Hocko <mhocko@suse.cz>
+Acked-by: Michal Hocko <mhocko@suse.cz>
 
 > ---
->  mm/rmap.c | 78 +++++++++++++++++++++++++++++++++++++--------------------------
->  1 file changed, 46 insertions(+), 32 deletions(-)
+>  mm/memcontrol.c | 28 ++++++----------------------
+>  1 file changed, 6 insertions(+), 22 deletions(-)
 > 
-> diff --git a/mm/rmap.c b/mm/rmap.c
-> index f574046f77d4..19886fb2f13a 100644
-> --- a/mm/rmap.c
-> +++ b/mm/rmap.c
-> @@ -1054,6 +1054,36 @@ void page_add_file_rmap(struct page *page)
->  	mem_cgroup_end_page_stat(memcg, locked, flags);
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 09fece0eb9f1..a5c9aa4688e8 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -1522,23 +1522,6 @@ static bool mem_cgroup_wait_acct_move(struct mem_cgroup *memcg)
+>  	return false;
 >  }
 >  
-> +static void page_remove_file_rmap(struct page *page)
-> +{
-> +	struct mem_cgroup *memcg;
-> +	unsigned long flags;
-> +	bool locked;
-> +
-> +	memcg = mem_cgroup_begin_page_stat(page, &locked, &flags);
-> +
-> +	/* page still mapped by someone else? */
-> +	if (!atomic_add_negative(-1, &page->_mapcount))
-> +		goto out;
-> +
-> +	/* Hugepages are not counted in NR_FILE_MAPPED for now. */
-> +	if (unlikely(PageHuge(page)))
-> +		goto out;
-> +
-> +	/*
-> +	 * We use the irq-unsafe __{inc|mod}_zone_page_stat because
-> +	 * these counters are not modified in interrupt context, and
-> +	 * pte lock(a spinlock) is held, which implies preemption disabled.
-> +	 */
-> +	__dec_zone_page_state(page, NR_FILE_MAPPED);
-> +	mem_cgroup_dec_page_stat(memcg, MEM_CGROUP_STAT_FILE_MAPPED);
-> +
-> +	if (unlikely(PageMlocked(page)))
-> +		clear_page_mlock(page);
-> +out:
-> +	mem_cgroup_end_page_stat(memcg, locked, flags);
-> +}
-> +
->  /**
->   * page_remove_rmap - take down pte mapping from a page
->   * @page: page to remove mapping from
-> @@ -1062,46 +1092,33 @@ void page_add_file_rmap(struct page *page)
->   */
->  void page_remove_rmap(struct page *page)
->  {
-> -	struct mem_cgroup *uninitialized_var(memcg);
-> -	bool anon = PageAnon(page);
-> -	unsigned long flags;
-> -	bool locked;
+> -/*
+> - * Take this lock when
+> - * - a code tries to modify page's memcg while it's USED.
+> - * - a code tries to modify page state accounting in a memcg.
+> - */
+> -static void move_lock_mem_cgroup(struct mem_cgroup *memcg,
+> -				  unsigned long *flags)
+> -{
+> -	spin_lock_irqsave(&memcg->move_lock, *flags);
+> -}
 > -
-> -	/*
-> -	 * The anon case has no mem_cgroup page_stat to update; but may
-> -	 * uncharge_page() below, where the lock ordering can deadlock if
-> -	 * we hold the lock against page_stat move: so avoid it on anon.
-> -	 */
-> -	if (!anon)
-> -		memcg = mem_cgroup_begin_page_stat(page, &locked, &flags);
-> +	if (!PageAnon(page)) {
-> +		page_remove_file_rmap(page);
-> +		return;
-> +	}
+> -static void move_unlock_mem_cgroup(struct mem_cgroup *memcg,
+> -				unsigned long *flags)
+> -{
+> -	spin_unlock_irqrestore(&memcg->move_lock, *flags);
+> -}
+> -
+>  #define K(x) ((x) << (PAGE_SHIFT-10))
+>  /**
+>   * mem_cgroup_print_oom_info: Print OOM information relevant to memory controller.
+> @@ -2156,9 +2139,9 @@ again:
+>  	if (atomic_read(&memcg->moving_account) <= 0)
+>  		return memcg;
 >  
->  	/* page still mapped by someone else? */
->  	if (!atomic_add_negative(-1, &page->_mapcount))
-> -		goto out;
-> +		return;
-> +
-> +	/* Hugepages are not counted in NR_ANON_PAGES for now. */
-> +	if (unlikely(PageHuge(page)))
-> +		return;
+> -	move_lock_mem_cgroup(memcg, flags);
+> +	spin_lock_irqsave(&memcg->move_lock, *flags);
+>  	if (memcg != pc->mem_cgroup) {
+> -		move_unlock_mem_cgroup(memcg, flags);
+> +		spin_unlock_irqrestore(&memcg->move_lock, *flags);
+>  		goto again;
+>  	}
+>  	*locked = true;
+> @@ -2176,7 +2159,7 @@ void mem_cgroup_end_page_stat(struct mem_cgroup *memcg, bool locked,
+>  			      unsigned long flags)
+>  {
+>  	if (memcg && locked)
+> -		move_unlock_mem_cgroup(memcg, &flags);
+> +		spin_unlock_irqrestore(&memcg->move_lock, flags);
 >  
->  	/*
-> -	 * Hugepages are not counted in NR_ANON_PAGES nor NR_FILE_MAPPED
-> -	 * and not charged by memcg for now.
-> -	 *
->  	 * We use the irq-unsafe __{inc|mod}_zone_page_stat because
->  	 * these counters are not modified in interrupt context, and
-> -	 * these counters are not modified in interrupt context, and
->  	 * pte lock(a spinlock) is held, which implies preemption disabled.
->  	 */
-> -	if (unlikely(PageHuge(page)))
-> -		goto out;
-> -	if (anon) {
-> -		if (PageTransHuge(page))
-> -			__dec_zone_page_state(page,
-> -					      NR_ANON_TRANSPARENT_HUGEPAGES);
-> -		__mod_zone_page_state(page_zone(page), NR_ANON_PAGES,
-> -				-hpage_nr_pages(page));
-> -	} else {
-> -		__dec_zone_page_state(page, NR_FILE_MAPPED);
-> -		mem_cgroup_dec_page_stat(memcg, MEM_CGROUP_STAT_FILE_MAPPED);
-> -	}
-> +	if (PageTransHuge(page))
-> +		__dec_zone_page_state(page, NR_ANON_TRANSPARENT_HUGEPAGES);
-> +
-> +	__mod_zone_page_state(page_zone(page), NR_ANON_PAGES,
-> +			      -hpage_nr_pages(page));
-> +
->  	if (unlikely(PageMlocked(page)))
->  		clear_page_mlock(page);
-> +
->  	/*
->  	 * It would be tidy to reset the PageAnon mapping here,
->  	 * but that might overwrite a racing page_add_anon_rmap
-> @@ -1111,9 +1128,6 @@ void page_remove_rmap(struct page *page)
->  	 * Leaving it set also helps swapoff to reinstate ptes
->  	 * faster for those pages still in swapcache.
->  	 */
-> -out:
-> -	if (!anon)
-> -		mem_cgroup_end_page_stat(memcg, locked, flags);
+>  	rcu_read_unlock();
 >  }
+> @@ -3219,7 +3202,7 @@ static int mem_cgroup_move_account(struct page *page,
+>  	if (pc->mem_cgroup != from)
+>  		goto out_unlock;
 >  
->  /*
+> -	move_lock_mem_cgroup(from, &flags);
+> +	spin_lock_irqsave(&from->move_lock, flags);
+>  
+>  	if (!PageAnon(page) && page_mapped(page)) {
+>  		__this_cpu_sub(from->stat->count[MEM_CGROUP_STAT_FILE_MAPPED],
+> @@ -3243,7 +3226,8 @@ static int mem_cgroup_move_account(struct page *page,
+>  
+>  	/* caller should have done css_get */
+>  	pc->mem_cgroup = to;
+> -	move_unlock_mem_cgroup(from, &flags);
+> +	spin_unlock_irqrestore(&from->move_lock, flags);
+> +
+>  	ret = 0;
+>  
+>  	local_irq_disable();
 > -- 
 > 2.1.2
 > 
