@@ -1,89 +1,115 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH] memcg: Fix NULL pointer deref in task_in_mem_cgroup()
-Date: Fri, 24 Oct 2014 10:58:07 +0200
-Message-ID: <20141024085807.GA28644@dhcp22.suse.cz>
-References: <1414082865-4091-1-git-send-email-jack@suse.cz>
- <20141023181929.GB15937@phnom.home.cmpxchg.org>
-Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20141023181929.GB15937@phnom.home.cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+From: Juri Lelli <juri.lelli@arm.com>
+Subject: [PATCH 2/4] sched/deadline: ensure that updates to exclusive cpusets don't break AC
+Date: Fri, 24 Oct 2014 10:16:36 +0100
+Message-ID: <1414142198-18552-3-git-send-email-juri.lelli@arm.com>
+References: <1414142198-18552-1-git-send-email-juri.lelli@arm.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1414142198-18552-1-git-send-email-juri.lelli@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Jan Kara <jack@suse.cz>, cgroups@vger.kernel.org, linux-mm@kvack.org
+To: linux-kernel@vger.kernel.org, peterz@infradead.org
+Cc: juri.lelli@gmail.com, mingo@redhat.com, daniel.wagner@bmw-carit.de, vincent@legout.info, Juri Lelli <juri.lelli@arm.com>, Dario Faggioli <raistlin@linux.it>, Michael Trimarchi <michael@amarulasolutions.com>, Fabio Checconi <fchecconi@gmail.com>, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org
 
-On Thu 23-10-14 14:19:29, Johannes Weiner wrote:
-> On Thu, Oct 23, 2014 at 06:47:45PM +0200, Jan Kara wrote:
-> > 'curr' pointer in task_in_mem_cgroup() can be NULL when we race with
-> > somebody clearing task->mm. Check for it before dereferencing the
-> > pointer.
-> 
-> If task->mm is already NULL, we fall back to mem_cgroup_from_task(),
-> which definitely returns a memcg unless you pass NULL in there.  So I
-> don't see how that could happen, and the NULL checks in the fallback
-> branch as well as in __mem_cgroup_same_or_subtree seem bogus to me.
+How we deal with updates to exclusive cpusets is currently broken.
+As an example, suppose we have an exclusive cpuset composed of
+two cpus: A[cpu0,cpu1]. We can assign SCHED_DEADLINE task to it
+up to the allowed bandwidth. If we want now to modify cpusetA's
+cpumask, we have to check that removing a cpu's amount of
+bandwidth doesn't break AC guarantees. This thing isn't checked
+in the current code.
 
-It came from 3a981f482cc2 (memcg: fix use_hierarchy css_is_ancestor oops
-regression). I do not see mem_cgroup_same_or_subtree called from
-page_referenced path so it is probably gone.
-task_in_mem_cgroup is just confused because curr can never be NULL as
-the task is never NULL.
+This patch fixes the problem above, denying an update if the
+new cpumask won't have enough bandwidth for SCHED_DEADLINE tasks
+that are currently active.
+
+Signed-off-by: Juri Lelli <juri.lelli@arm.com>
+Reported-by: Peter Zijlstra <peterz@infradead.org>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Juri Lelli <juri.lelli@gmail.com>
+Cc: Dario Faggioli <raistlin@linux.it>
+Cc: Michael Trimarchi <michael@amarulasolutions.com>
+Cc: Fabio Checconi <fchecconi@gmail.com>
+Cc: Li Zefan <lizefan@huawei.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org
 ---
-From e78d0ed29aa6732773109bd5ad69ac887d76bb78 Mon Sep 17 00:00:00 2001
-From: Michal Hocko <mhocko@suse.cz>
-Date: Fri, 24 Oct 2014 10:46:08 +0200
-Subject: [PATCH] memcg: Do not check NULL in __mem_cgroup_same_or_subtree
+ include/linux/sched.h |  2 ++
+ kernel/cpuset.c       | 10 ++++++++++
+ kernel/sched/core.c   | 21 +++++++++++++++++++++
+ 3 files changed, 33 insertions(+)
 
-3a981f482cc2 (memcg: fix use_hierarchy css_is_ancestor oops
-regression) has added NULL check into __mem_cgroup_same_or_subtree to
-fix an oops in the page_referenced path. This is no longer needed
-because all current paths are getting non-NULL memcg.
-
-task_in_mem_cgroup is a little bit confused and assumes that
-mem_cgroup_from_task may return NULL but this can never happen as the
-task is alaways non-NULL. So get rid of that check as well.
-
-Signed-off-by: Michal Hocko <mhocko@suse.cz>
----
- mm/memcontrol.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 3a203c7ec6c7..62064a5b496a 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1339,7 +1339,7 @@ bool __mem_cgroup_same_or_subtree(const struct mem_cgroup *root_memcg,
- {
- 	if (root_memcg == memcg)
- 		return true;
--	if (!root_memcg->use_hierarchy || !memcg)
-+	if (!root_memcg->use_hierarchy)
- 		return false;
- 	return cgroup_is_descendant(memcg->css.cgroup, root_memcg->css.cgroup);
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index f225f20..d4ed0db 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -2032,6 +2032,8 @@ static inline void tsk_restore_flags(struct task_stru=
+ct *task,
+ =09task->flags |=3D orig_flags & flags;
  }
-@@ -1374,8 +1374,7 @@ bool task_in_mem_cgroup(struct task_struct *task,
- 		 */
- 		rcu_read_lock();
- 		curr = mem_cgroup_from_task(task);
--		if (curr)
--			css_get(&curr->css);
-+		css_get(&curr->css);
- 		rcu_read_unlock();
- 	}
- 	/*
--- 
-2.1.1
+=20
++extern int cpuset_cpumask_can_shrink(const struct cpumask *cur,
++=09=09=09=09     const struct cpumask *trial);
+ extern int task_can_attach(struct task_struct *p,
+ =09=09=09   const struct cpumask *cs_cpus_allowed);
+ #ifdef CONFIG_SMP
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index ab9be24..9066cc7 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -505,6 +505,16 @@ static int validate_change(struct cpuset *cur, struct =
+cpuset *trial)
+ =09=09=09goto out;
+ =09}
+=20
++=09/*
++=09 * We can't shrink if we won't have enough room for SCHED_DEADLINE
++=09 * tasks.
++=09 */
++=09ret =3D -EBUSY;
++=09if (is_cpu_exclusive(cur) &&
++=09    !cpuset_cpumask_can_shrink(cur->cpus_allowed,
++=09=09=09=09       trial->cpus_allowed))
++=09=09goto out;
++
+ =09ret =3D 0;
+ out:
+ =09rcu_read_unlock();
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 07ec9bb..35674eb 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -4622,6 +4622,27 @@ void init_idle(struct task_struct *idle, int cpu)
+ #endif
+ }
+=20
++int cpuset_cpumask_can_shrink(const struct cpumask *cur,
++=09=09=09      const struct cpumask *trial)
++{
++=09int ret =3D 1, trial_cpus;
++=09struct dl_bw *cur_dl_b;
++=09unsigned long flags;
++
++=09rcu_read_lock_sched();
++=09cur_dl_b =3D dl_bw_of(cpumask_any(cur));
++=09trial_cpus =3D cpumask_weight(trial);
++
++=09raw_spin_lock_irqsave(&cur_dl_b->lock, flags);
++=09if (cur_dl_b->bw !=3D -1 &&
++=09    cur_dl_b->bw * trial_cpus < cur_dl_b->total_bw)
++=09=09ret =3D 0;
++=09raw_spin_unlock_irqrestore(&cur_dl_b->lock, flags);
++=09rcu_read_unlock_sched();
++
++=09return ret;
++}
++
+ int task_can_attach(struct task_struct *p,
+ =09=09    const struct cpumask *cs_cpus_allowed)
+ {
+--=20
+2.1.2
 
-
--- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
