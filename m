@@ -1,93 +1,56 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch] mm: memcontrol: shorten the page statistics update slowpath
-Date: Fri, 24 Oct 2014 09:40:20 -0400
-Message-ID: <1414158020-25347-1-git-send-email-hannes@cmpxchg.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH] memcg: Fix NULL pointer deref in task_in_mem_cgroup()
+Date: Fri, 24 Oct 2014 15:42:13 +0200
+Message-ID: <20141024134213.GC28644@dhcp22.suse.cz>
+References: <1414082865-4091-1-git-send-email-jack@suse.cz>
+ <20141023181929.GB15937@phnom.home.cmpxchg.org>
+ <20141024085807.GA28644@dhcp22.suse.cz>
+ <20141024133605.GA17987@phnom.home.cmpxchg.org>
+Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20141024133605.GA17987@phnom.home.cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Jan Kara <jack@suse.cz>, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-While moving charges from one memcg to another, page stat updates must
-acquire the old memcg's move_lock to prevent double accounting.  That
-situation is denoted by an increased memcg->move_accounting.  However,
-the charge moving code declares this way too early for now, even
-before summing up the RSS and pre-allocating destination charges.
+On Fri 24-10-14 09:36:05, Johannes Weiner wrote:
+> On Fri, Oct 24, 2014 at 10:58:07AM +0200, Michal Hocko wrote:
+> > On Thu 23-10-14 14:19:29, Johannes Weiner wrote:
+> > > On Thu, Oct 23, 2014 at 06:47:45PM +0200, Jan Kara wrote:
+> > > > 'curr' pointer in task_in_mem_cgroup() can be NULL when we race with
+> > > > somebody clearing task->mm. Check for it before dereferencing the
+> > > > pointer.
+> > > 
+> > > If task->mm is already NULL, we fall back to mem_cgroup_from_task(),
+> > > which definitely returns a memcg unless you pass NULL in there.  So I
+> > > don't see how that could happen, and the NULL checks in the fallback
+> > > branch as well as in __mem_cgroup_same_or_subtree seem bogus to me.
+> > 
+> > It came from 3a981f482cc2 (memcg: fix use_hierarchy css_is_ancestor oops
+> > regression). I do not see mem_cgroup_same_or_subtree called from
+> > page_referenced path so it is probably gone.
+> 
+> It's still there in invalid_page_referenced_vma().  And it can still
+> pass NULL.
 
-Shorten this slowpath mode by increasing memcg->move_accounting only
-right before walking the task's address space with the intention of
-actually moving the pages.
+Ohh, my bad. I wasn't careful enough to check mm_match_cgroup.
+ 
+> > task_in_mem_cgroup is just confused because curr can never be NULL as
+> > the task is never NULL.
+> 
+> That's correct.
+> 
+> My patches to clean all this up have been stress-tested over night, I
+> will send them out in a jiffy.
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- mm/memcontrol.c | 21 ++++++++-------------
- 1 file changed, 8 insertions(+), 13 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c50176429fa3..23cf27cca370 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5263,8 +5263,6 @@ static void __mem_cgroup_clear_mc(void)
- 
- static void mem_cgroup_clear_mc(void)
- {
--	struct mem_cgroup *from = mc.from;
--
- 	/*
- 	 * we must clear moving_task before waking up waiters at the end of
- 	 * task migration.
-@@ -5275,8 +5273,6 @@ static void mem_cgroup_clear_mc(void)
- 	mc.from = NULL;
- 	mc.to = NULL;
- 	spin_unlock(&mc.lock);
--
--	atomic_dec(&from->moving_account);
- }
- 
- static int mem_cgroup_can_attach(struct cgroup_subsys_state *css,
-@@ -5310,15 +5306,6 @@ static int mem_cgroup_can_attach(struct cgroup_subsys_state *css,
- 			VM_BUG_ON(mc.moved_charge);
- 			VM_BUG_ON(mc.moved_swap);
- 
--			/*
--			 * Signal mem_cgroup_begin_page_stat() to take
--			 * the memcg's move_lock while we're moving
--			 * its pages to another memcg.  Then wait for
--			 * already started RCU-only updates to finish.
--			 */
--			atomic_inc(&from->moving_account);
--			synchronize_rcu();
--
- 			spin_lock(&mc.lock);
- 			mc.from = from;
- 			mc.to = memcg;
-@@ -5450,6 +5437,13 @@ static void mem_cgroup_move_charge(struct mm_struct *mm)
- 	struct vm_area_struct *vma;
- 
- 	lru_add_drain_all();
-+	/*
-+	 * Signal mem_cgroup_begin_page_stat() to take the memcg's
-+	 * move_lock while we're moving its pages to another memcg.
-+	 * Then wait for already started RCU-only updates to finish.
-+	 */
-+	atomic_inc(&mc.from->moving_account);
-+	synchronize_rcu();
- retry:
- 	if (unlikely(!down_read_trylock(&mm->mmap_sem))) {
- 		/*
-@@ -5482,6 +5476,7 @@ retry:
- 			break;
- 	}
- 	up_read(&mm->mmap_sem);
-+	atomic_dec(&mc.from->moving_account);
- }
- 
- static void mem_cgroup_move_task(struct cgroup_subsys_state *css,
+Will wait for your patch.
 -- 
-2.1.2
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
