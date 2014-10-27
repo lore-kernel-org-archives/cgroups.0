@@ -1,44 +1,99 @@
-From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCHv1 5/8] cgroup: introduce cgroup namespaces
-Date: Sat, 25 Oct 2014 05:16:08 +0200
-Message-ID: <20141025031608.GA13250@mail.hallyn.com>
-References: <1413235430-22944-1-git-send-email-adityakali@google.com>
-	<1413235430-22944-6-git-send-email-adityakali@google.com>
-	<20141016163703.GE1392@mail.hallyn.com>
-	<CAGr1F2E0VdBafZg6P2yeP6bgxsMEm53fEuT29HTLygTKobgi-w@mail.gmail.com>
+From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [patch] mm: memcontrol: shorten the page statistics update
+ slowpath
+Date: Mon, 27 Oct 2014 13:08:02 +0300
+Message-ID: <20141027100802.GA12335@esperanza>
+References: <1414158020-25347-1-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <CAGr1F2E0VdBafZg6P2yeP6bgxsMEm53fEuT29HTLygTKobgi-w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1414158020-25347-1-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Quoting Aditya Kali (adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org):
-> >> +void free_cgroup_ns(struct cgroup_namespace *ns)
-> >> +{
-> >> +     cgroup_put(ns->root_cgrp);
-> >> +     put_user_ns(ns->user_ns);
-> >
-> > This is a problem on error patch in copy_cgroup_ns.  The
-> > alloc_cgroup_ns() doesn't initialize these values, so if
-> > you should fail in proc_alloc_inum() you'll show up here
-> > with fandom values in ns->*.
-> >
+On Fri, Oct 24, 2014 at 09:40:20AM -0400, Johannes Weiner wrote:
+> While moving charges from one memcg to another, page stat updates must
+> acquire the old memcg's move_lock to prevent double accounting.  That
+> situation is denoted by an increased memcg->move_accounting.  However,
+> the charge moving code declares this way too early for now, even
+> before summing up the RSS and pre-allocating destination charges.
 > 
-> I don't see the codepath that leads to calling free_cgroup_ns() with
-> uninitialized members. We don't call free_cgroup_ns() on the error
-> path in copy_cgroup_ns().
+> Shorten this slowpath mode by increasing memcg->move_accounting only
+> right before walking the task's address space with the intention of
+> actually moving the pages.
+> 
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-Hm, yeah, I'm not seeing it now, sorry.
+Reviewed-by: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+
+> ---
+>  mm/memcontrol.c | 21 ++++++++-------------
+>  1 file changed, 8 insertions(+), 13 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index c50176429fa3..23cf27cca370 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -5263,8 +5263,6 @@ static void __mem_cgroup_clear_mc(void)
+>  
+>  static void mem_cgroup_clear_mc(void)
+>  {
+> -	struct mem_cgroup *from = mc.from;
+> -
+>  	/*
+>  	 * we must clear moving_task before waking up waiters at the end of
+>  	 * task migration.
+> @@ -5275,8 +5273,6 @@ static void mem_cgroup_clear_mc(void)
+>  	mc.from = NULL;
+>  	mc.to = NULL;
+>  	spin_unlock(&mc.lock);
+> -
+> -	atomic_dec(&from->moving_account);
+>  }
+>  
+>  static int mem_cgroup_can_attach(struct cgroup_subsys_state *css,
+> @@ -5310,15 +5306,6 @@ static int mem_cgroup_can_attach(struct cgroup_subsys_state *css,
+>  			VM_BUG_ON(mc.moved_charge);
+>  			VM_BUG_ON(mc.moved_swap);
+>  
+> -			/*
+> -			 * Signal mem_cgroup_begin_page_stat() to take
+> -			 * the memcg's move_lock while we're moving
+> -			 * its pages to another memcg.  Then wait for
+> -			 * already started RCU-only updates to finish.
+> -			 */
+> -			atomic_inc(&from->moving_account);
+> -			synchronize_rcu();
+> -
+>  			spin_lock(&mc.lock);
+>  			mc.from = from;
+>  			mc.to = memcg;
+> @@ -5450,6 +5437,13 @@ static void mem_cgroup_move_charge(struct mm_struct *mm)
+>  	struct vm_area_struct *vma;
+>  
+>  	lru_add_drain_all();
+> +	/*
+> +	 * Signal mem_cgroup_begin_page_stat() to take the memcg's
+> +	 * move_lock while we're moving its pages to another memcg.
+> +	 * Then wait for already started RCU-only updates to finish.
+> +	 */
+> +	atomic_inc(&mc.from->moving_account);
+> +	synchronize_rcu();
+>  retry:
+>  	if (unlikely(!down_read_trylock(&mm->mmap_sem))) {
+>  		/*
+> @@ -5482,6 +5476,7 @@ retry:
+>  			break;
+>  	}
+>  	up_read(&mm->mmap_sem);
+> +	atomic_dec(&mc.from->moving_account);
+>  }
+>  
+>  static void mem_cgroup_move_task(struct cgroup_subsys_state *css,
+> -- 
+> 2.1.2
+> 
