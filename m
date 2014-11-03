@@ -1,55 +1,26 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch] mm: memcontrol: remove stale page_cgroup_lock comment
-Date: Mon, 3 Nov 2014 16:28:48 +0100
-Message-ID: <20141103152848.GD10156@dhcp22.suse.cz>
-References: <1414898060-4658-1-git-send-email-hannes@cmpxchg.org>
+From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Subject: Re: [patch 1/3] mm: embed the memcg pointer directly into struct
+ page
+Date: Mon, 03 Nov 2014 11:42:35 -0500 (EST)
+Message-ID: <20141103.114235.2147567115691592307.davem@davemloft.net>
+References: <1414898156-4741-1-git-send-email-hannes@cmpxchg.org>
+	<20141103080208.GA7052@js1304-P5Q-DELUXE>
+	<20141103150942.GA32052@phnom.home.cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <1414898060-4658-1-git-send-email-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20141103150942.GA32052-HTCKtW7iVlxqnrmGgq4/JMIURNUf+fel@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: Text/Plain; charset="us-ascii"
+To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sat 01-11-14 23:14:20, Johannes Weiner wrote:
-> There is no cgroup-specific page lock anymore.
-> 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Date: Mon, 3 Nov 2014 10:09:42 -0500
 
-Acked-by: Michal Hocko <mhocko@suse.cz>
+> Please re-introduce this code when your new usecase is ready to be
+> upstreamed.  There is little reason to burden an unrelated feature
+> with a sizable chunk of dead code for a vague future user.
 
-> ---
->  mm/memcontrol.c | 4 ----
->  1 file changed, 4 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 38f0647a2f12..d20928597a07 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2467,10 +2467,6 @@ static void commit_charge(struct page *page, struct mem_cgroup *memcg,
->  	int isolated;
->  
->  	VM_BUG_ON_PAGE(pc->mem_cgroup, page);
-> -	/*
-> -	 * we don't need page_cgroup_lock about tail pages, becase they are not
-> -	 * accessed by any other context at this point.
-> -	 */
->  
->  	/*
->  	 * In some cases, SwapCache and FUSE(splice_buf->radixtree), the page
-> -- 
-> 2.1.3
-> 
-
--- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
++1
