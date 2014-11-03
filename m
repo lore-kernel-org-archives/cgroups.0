@@ -1,118 +1,45 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch 3/3] mm: move page->mem_cgroup bad page handling into generic code
-Date: Sat,  1 Nov 2014 23:15:56 -0400
-Message-ID: <1414898156-4741-3-git-send-email-hannes@cmpxchg.org>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [patch 1/3] mm: embed the memcg pointer directly into struct
+ page
+Date: Sun, 02 Nov 2014 23:22:45 -0500 (EST)
+Message-ID: <20141102.232245.1502900027200657150.davem@davemloft.net>
 References: <1414898156-4741-1-git-send-email-hannes@cmpxchg.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1414898156-4741-1-git-send-email-hannes@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, Tejun Heo <tj@kernel.org>, David Miller <davem@davemloft.net>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: Text/Plain; charset="us-ascii"
+To: hannes@cmpxchg.org
+Cc: akpm@linux-foundation.org, mhocko@suse.cz, vdavydov@parallels.com, tj@kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Now that the external page_cgroup data structure and its lookup is
-gone, let the generic bad_page() check for page->mem_cgroup sanity.
+From: Johannes Weiner <hannes@cmpxchg.org>
+Date: Sat,  1 Nov 2014 23:15:54 -0400
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- include/linux/memcontrol.h |  4 ----
- mm/debug.c                 |  5 ++++-
- mm/memcontrol.c            | 15 ---------------
- mm/page_alloc.c            | 12 ++++++++----
- 4 files changed, 12 insertions(+), 24 deletions(-)
+> Memory cgroups used to have 5 per-page pointers.  To allow users to
+> disable that amount of overhead during runtime, those pointers were
+> allocated in a separate array, with a translation layer between them
+> and struct page.
+> 
+> There is now only one page pointer remaining: the memcg pointer, that
+> indicates which cgroup the page is associated with when charged.  The
+> complexity of runtime allocation and the runtime translation overhead
+> is no longer justified to save that *potential* 0.19% of memory.  With
+> CONFIG_SLUB, page->mem_cgroup actually sits in the doubleword padding
+> after the page->private member and doesn't even increase struct page,
+> and then this patch actually saves space.  Remaining users that care
+> can still compile their kernels without CONFIG_MEMCG.
+> 
+>    text    data     bss     dec     hex     filename
+> 8828345 1725264  983040 11536649 b00909  vmlinux.old
+> 8827425 1725264  966656 11519345 afc571  vmlinux.new
+> 
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index dafba59b31b4..e789551d4db0 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -173,10 +173,6 @@ static inline void mem_cgroup_count_vm_event(struct mm_struct *mm,
- void mem_cgroup_split_huge_fixup(struct page *head);
- #endif
- 
--#ifdef CONFIG_DEBUG_VM
--bool mem_cgroup_bad_page_check(struct page *page);
--void mem_cgroup_print_bad_page(struct page *page);
--#endif
- #else /* CONFIG_MEMCG */
- struct mem_cgroup;
- 
-diff --git a/mm/debug.c b/mm/debug.c
-index 5ce45c9a29b5..0e58f3211f89 100644
---- a/mm/debug.c
-+++ b/mm/debug.c
-@@ -95,7 +95,10 @@ void dump_page_badflags(struct page *page, const char *reason,
- 		dump_flags(page->flags & badflags,
- 				pageflag_names, ARRAY_SIZE(pageflag_names));
- 	}
--	mem_cgroup_print_bad_page(page);
-+#ifdef CONFIG_MEMCG
-+	if (page->mem_cgroup)
-+		pr_alert("page->mem_cgroup:%p\n", page->mem_cgroup);
-+#endif
- }
- 
- void dump_page(struct page *page, const char *reason)
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index fbb41a170eae..3645641513a1 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3157,21 +3157,6 @@ static inline int mem_cgroup_move_swap_account(swp_entry_t entry,
- }
- #endif
- 
--#ifdef CONFIG_DEBUG_VM
--bool mem_cgroup_bad_page_check(struct page *page)
--{
--	if (mem_cgroup_disabled())
--		return false;
--
--	return page->mem_cgroup != NULL;
--}
--
--void mem_cgroup_print_bad_page(struct page *page)
--{
--	pr_alert("page->mem_cgroup:%p\n", page->mem_cgroup);
--}
--#endif
--
- static DEFINE_MUTEX(memcg_limit_mutex);
- 
- static int mem_cgroup_resize_limit(struct mem_cgroup *memcg,
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 6a952237a677..161da09fcda2 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -653,8 +653,10 @@ static inline int free_pages_check(struct page *page)
- 		bad_reason = "PAGE_FLAGS_CHECK_AT_FREE flag(s) set";
- 		bad_flags = PAGE_FLAGS_CHECK_AT_FREE;
- 	}
--	if (unlikely(mem_cgroup_bad_page_check(page)))
--		bad_reason = "cgroup check failed";
-+#ifdef CONFIG_MEMCG
-+	if (unlikely(page->mem_cgroup))
-+		bad_reason = "page still charged to cgroup";
-+#endif
- 	if (unlikely(bad_reason)) {
- 		bad_page(page, bad_reason, bad_flags);
- 		return 1;
-@@ -920,8 +922,10 @@ static inline int check_new_page(struct page *page)
- 		bad_reason = "PAGE_FLAGS_CHECK_AT_PREP flag set";
- 		bad_flags = PAGE_FLAGS_CHECK_AT_PREP;
- 	}
--	if (unlikely(mem_cgroup_bad_page_check(page)))
--		bad_reason = "cgroup check failed";
-+#ifdef CONFIG_MEMCG
-+	if (unlikely(page->mem_cgroup))
-+		bad_reason = "page still charged to cgroup";
-+#endif
- 	if (unlikely(bad_reason)) {
- 		bad_page(page, bad_reason, bad_flags);
- 		return 1;
--- 
-2.1.3
+Looks great:
+
+Acked-by: David S. Miller <davem@davemloft.net>
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
