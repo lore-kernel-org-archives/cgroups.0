@@ -1,48 +1,55 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [patch 1/3] mm: embed the memcg pointer directly into struct page
-Date: Mon, 3 Nov 2014 10:09:42 -0500
-Message-ID: <20141103150942.GA32052@phnom.home.cmpxchg.org>
-References: <1414898156-4741-1-git-send-email-hannes@cmpxchg.org>
- <20141103080208.GA7052@js1304-P5Q-DELUXE>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [patch] mm: memcontrol: remove stale page_cgroup_lock comment
+Date: Mon, 3 Nov 2014 16:28:48 +0100
+Message-ID: <20141103152848.GD10156@dhcp22.suse.cz>
+References: <1414898060-4658-1-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20141103080208.GA7052@js1304-P5Q-DELUXE>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1414898060-4658-1-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Joonsoo,
+On Sat 01-11-14 23:14:20, Johannes Weiner wrote:
+> There is no cgroup-specific page lock anymore.
+> 
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 
-On Mon, Nov 03, 2014 at 05:02:08PM +0900, Joonsoo Kim wrote:
-> On Sat, Nov 01, 2014 at 11:15:54PM -0400, Johannes Weiner wrote:
-> > Memory cgroups used to have 5 per-page pointers.  To allow users to
-> > disable that amount of overhead during runtime, those pointers were
-> > allocated in a separate array, with a translation layer between them
-> > and struct page.
-> 
-> Hello, Johannes.
-> 
-> I'd like to leave this translation layer.
-> Could you just disable that code with #ifdef until next user comes?
-> 
-> In our company, we uses PAGE_OWNER on mm tree which is the feature
-> saying who allocates the page. To use PAGE_OWNER needs modifying
-> struct page and then needs re-compile. This re-compile makes us difficult
-> to use this feature. So, we decide to implement run-time configurable
-> PAGE_OWNER through page_cgroup's translation layer code. Moreover, with
-> this infrastructure, I plan to implement some other debugging feature.
-> 
-> Because of my laziness, it didn't submitted to LKML. But, I will
-> submit it as soon as possible. If the code is removed, I would
-> copy-and-paste the code, but, it would cause lose of the history on
-> that code. So if possible, I'd like to leave that code now.
+Acked-by: Michal Hocko <mhocko@suse.cz>
 
-Please re-introduce this code when your new usecase is ready to be
-upstreamed.  There is little reason to burden an unrelated feature
-with a sizable chunk of dead code for a vague future user.
+> ---
+>  mm/memcontrol.c | 4 ----
+>  1 file changed, 4 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 38f0647a2f12..d20928597a07 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2467,10 +2467,6 @@ static void commit_charge(struct page *page, struct mem_cgroup *memcg,
+>  	int isolated;
+>  
+>  	VM_BUG_ON_PAGE(pc->mem_cgroup, page);
+> -	/*
+> -	 * we don't need page_cgroup_lock about tail pages, becase they are not
+> -	 * accessed by any other context at this point.
+> -	 */
+>  
+>  	/*
+>  	 * In some cases, SwapCache and FUSE(splice_buf->radixtree), the page
+> -- 
+> 2.1.3
+> 
 
-Thanks
+-- 
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
