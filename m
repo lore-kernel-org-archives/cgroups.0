@@ -1,56 +1,39 @@
 From: Michal Hocko <mhocko@suse.cz>
 Subject: Re: [patch 1/3] mm: embed the memcg pointer directly into struct page
-Date: Mon, 3 Nov 2014 18:02:28 +0100
-Message-ID: <20141103170228.GH10156@dhcp22.suse.cz>
+Date: Mon, 3 Nov 2014 18:17:48 +0100
+Message-ID: <20141103171748.GI10156@dhcp22.suse.cz>
 References: <1414898156-4741-1-git-send-email-hannes@cmpxchg.org>
- <20141103080208.GA7052@js1304-P5Q-DELUXE>
- <20141103150942.GA32052@phnom.home.cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20141103150942.GA32052@phnom.home.cmpxchg.org>
+In-Reply-To: <1414898156-4741-1-git-send-email-hannes@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@parallels.com>, Tejun Heo <tj@kernel.org>, David Miller <davem@davemloft.net>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@parallels.com>, Tejun Heo <tj@kernel.org>, David Miller <davem@davemloft.net>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon 03-11-14 10:09:42, Johannes Weiner wrote:
-> Hi Joonsoo,
-> 
-> On Mon, Nov 03, 2014 at 05:02:08PM +0900, Joonsoo Kim wrote:
-> > On Sat, Nov 01, 2014 at 11:15:54PM -0400, Johannes Weiner wrote:
-> > > Memory cgroups used to have 5 per-page pointers.  To allow users to
-> > > disable that amount of overhead during runtime, those pointers were
-> > > allocated in a separate array, with a translation layer between them
-> > > and struct page.
-> > 
-> > Hello, Johannes.
-> > 
-> > I'd like to leave this translation layer.
-> > Could you just disable that code with #ifdef until next user comes?
-> > 
-> > In our company, we uses PAGE_OWNER on mm tree which is the feature
-> > saying who allocates the page. To use PAGE_OWNER needs modifying
-> > struct page and then needs re-compile. This re-compile makes us difficult
-> > to use this feature. So, we decide to implement run-time configurable
-> > PAGE_OWNER through page_cgroup's translation layer code. Moreover, with
-> > this infrastructure, I plan to implement some other debugging feature.
-> > 
-> > Because of my laziness, it didn't submitted to LKML. But, I will
-> > submit it as soon as possible. If the code is removed, I would
-> > copy-and-paste the code, but, it would cause lose of the history on
-> > that code. So if possible, I'd like to leave that code now.
-> 
-> Please re-introduce this code when your new usecase is ready to be
-> upstreamed.  There is little reason to burden an unrelated feature
-> with a sizable chunk of dead code for a vague future user.
-
-Completely agreed! I would hate to have some random feature piggy back
-on memcg internal structures. For that to be acceptable the page_cgroup
-would have to be abstracted into a more generic structure which wouldn't
-be under CONFIG_MEMCG anyway.
+Documentation/cgroups/memory.txt is outdate even more hopelessly than
+before. It deserves a complete rewrite but I guess something like the
+following should be added in the meantime to prepare potential readers
+about the trap.
+---
+diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
+index 67613ff0270c..46b2b5080317 100644
+--- a/Documentation/cgroups/memory.txt
++++ b/Documentation/cgroups/memory.txt
+@@ -1,5 +1,10 @@
+ Memory Resource Controller
+ 
++NOTE: This document is hopelessly outdated and it asks for a complete
++      rewrite. It still contains a useful information so we are keeping it
++      here but make sure to check the current code if you need a deeper
++      understanding.
++
+ NOTE: The Memory Resource Controller has generically been referred to as the
+       memory controller in this document. Do not confuse memory controller
+       used here with the memory controller that is used in hardware.
 -- 
 Michal Hocko
 SUSE Labs
