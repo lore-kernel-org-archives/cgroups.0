@@ -1,29 +1,43 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [patch 3/3] mm: move page->mem_cgroup bad page handling into
- generic code
-Date: Sun, 02 Nov 2014 23:23:00 -0500 (EST)
-Message-ID: <20141102.232300.35454786891449365.davem@davemloft.net>
+From: Joonsoo Kim <iamjoonsoo.kim@lge.com>
+Subject: Re: [patch 1/3] mm: embed the memcg pointer directly into struct page
+Date: Mon, 3 Nov 2014 17:02:08 +0900
+Message-ID: <20141103080208.GA7052@js1304-P5Q-DELUXE>
 References: <1414898156-4741-1-git-send-email-hannes@cmpxchg.org>
-	<1414898156-4741-3-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1414898156-4741-3-git-send-email-hannes@cmpxchg.org>
+Content-Disposition: inline
+In-Reply-To: <1414898156-4741-1-git-send-email-hannes@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: Text/Plain; charset="us-ascii"
-To: hannes@cmpxchg.org
-Cc: akpm@linux-foundation.org, mhocko@suse.cz, vdavydov@parallels.com, tj@kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, Tejun Heo <tj@kernel.org>, David Miller <davem@davemloft.net>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Johannes Weiner <hannes@cmpxchg.org>
-Date: Sat,  1 Nov 2014 23:15:56 -0400
+On Sat, Nov 01, 2014 at 11:15:54PM -0400, Johannes Weiner wrote:
+> Memory cgroups used to have 5 per-page pointers.  To allow users to
+> disable that amount of overhead during runtime, those pointers were
+> allocated in a separate array, with a translation layer between them
+> and struct page.
 
-> Now that the external page_cgroup data structure and its lookup is
-> gone, let the generic bad_page() check for page->mem_cgroup sanity.
-> 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Hello, Johannes.
 
-Acked-by: David S. Miller <davem@davemloft.net>
+I'd like to leave this translation layer.
+Could you just disable that code with #ifdef until next user comes?
+
+In our company, we uses PAGE_OWNER on mm tree which is the feature
+saying who allocates the page. To use PAGE_OWNER needs modifying
+struct page and then needs re-compile. This re-compile makes us difficult
+to use this feature. So, we decide to implement run-time configurable
+PAGE_OWNER through page_cgroup's translation layer code. Moreover, with
+this infrastructure, I plan to implement some other debugging feature.
+
+Because of my laziness, it didn't submitted to LKML. But, I will
+submit it as soon as possible. If the code is removed, I would
+copy-and-paste the code, but, it would cause lose of the history on
+that code. So if possible, I'd like to leave that code now.
+
+Thanks.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
