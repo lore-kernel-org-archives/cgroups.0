@@ -1,222 +1,56 @@
-From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCHv2 7/7] cgroup: mount cgroupns-root when inside non-init
- cgroupns
-Date: Mon, 03 Nov 2014 17:59:56 -0800
-Message-ID: <5458331C.50008@google.com>
-References: <adityakali-cgroupns> <1414783141-6947-1-git-send-email-adityakali@google.com> <1414783141-6947-8-git-send-email-adityakali@google.com>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Subject: Re: [patch 1/3] mm: embed the memcg pointer directly into struct
+ page
+Date: Tue, 4 Nov 2014 17:36:39 +0900
+Message-ID: <54589017.9060604@jp.fujitsu.com>
+References: <1414898156-4741-1-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=message-id:date:from:user-agent:mime-version:to:cc:subject
-         :references:in-reply-to:content-type:content-transfer-encoding;
-        bh=1V0DSA0fLfmOPm06RUlH84EWggdue1e3MnlYkb/agwg=;
-        b=jhUunhKTWd97GU/3CXLUW/yvfzOl9UigJy3NrhelwqQ82Y/P+dQ1Bng6vLMKvr/0RX
-         OKh/Ju3ioTp2B7gFcDbd7QrcdlBpPe21M7TNMuCsmZT25S3llLE7BH2blJuku2GuzP/E
-         k/hInhB60imYI3/VbwRwkp0kTI/h8N/nEsYem5OI+xgg+dYKF47V9c0hFM65zp2SMY/4
-         3sEimb91Mu5xJ2Gya+hjiL1y5BW0J2t5hWnVKsl2mHcUbleDqBAC1nP4NaRmmr2rFaXW
-         LltJelbXxpRmIrTs3oVbqYzl9a0zSInfTPP/j36S5z1JIz1ckrt23RFz5UAJHs3DZYke
-         UpyA==
-In-Reply-To: <1414783141-6947-8-git-send-email-adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1414898156-4741-1-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-This patch enables cgroup mounting inside userns when a process
-as appropriate privileges. The cgroup filesystem mounted is
-rooted at the cgroupns-root. Thus, in a container-setup, only
-the hierarchy under the cgroupns-root is exposed inside the container.
-This allows container management tools to run inside the containers
-without depending on any global state.
-In order to support this, a new kernfs api is added to lookup the
-dentry for the cgroupns-root.
+(2014/11/02 12:15), Johannes Weiner wrote:
+> Memory cgroups used to have 5 per-page pointers.  To allow users to
+> disable that amount of overhead during runtime, those pointers were
+> allocated in a separate array, with a translation layer between them
+> and struct page.
+> 
+> There is now only one page pointer remaining: the memcg pointer, that
+> indicates which cgroup the page is associated with when charged.  The
+> complexity of runtime allocation and the runtime translation overhead
+> is no longer justified to save that *potential* 0.19% of memory.  With
+> CONFIG_SLUB, page->mem_cgroup actually sits in the doubleword padding
+> after the page->private member and doesn't even increase struct page,
+> and then this patch actually saves space.  Remaining users that care
+> can still compile their kernels without CONFIG_MEMCG.
+> 
+>     text    data     bss     dec     hex     filename
+> 8828345 1725264  983040 11536649 b00909  vmlinux.old
+> 8827425 1725264  966656 11519345 afc571  vmlinux.new
+> 
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> ---
+>   include/linux/memcontrol.h  |   6 +-
+>   include/linux/mm_types.h    |   5 +
+>   include/linux/mmzone.h      |  12 --
+>   include/linux/page_cgroup.h |  53 --------
+>   init/main.c                 |   7 -
+>   mm/memcontrol.c             | 124 +++++------------
+>   mm/page_alloc.c             |   2 -
+>   mm/page_cgroup.c            | 319 --------------------------------------------
+>   8 files changed, 41 insertions(+), 487 deletions(-)
+> 
 
-Signed-off-by: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
-  fs/kernfs/mount.c      | 48 
-++++++++++++++++++++++++++++++++++++++++++++++++
-  include/linux/kernfs.h |  2 ++
-  kernel/cgroup.c        | 46 +++++++++++++++++++++++++++++++++++++++++++++-
-  3 files changed, 95 insertions(+), 1 deletion(-)
+Great! 
+Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
 
-diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
-index f973ae9..efe5e15 100644
---- a/fs/kernfs/mount.c
-+++ b/fs/kernfs/mount.c
-@@ -62,6 +62,54 @@ struct kernfs_root *kernfs_root_from_sb(struct 
-super_block *sb)
-  	return NULL;
-  }
+BTW, init/Kconfig comments shouldn't be updated ?
+(I'm sorry if it has been updated since your latest fix.)
 
-+/**
-+ * kernfs_obtain_root - get a dentry for the given kernfs_node
-+ * @sb: the kernfs super_block
-+ * @kn: kernfs_node for which a dentry is needed
-+ *
-+ * This can used used by callers which want to mount only a part of the 
-kernfs
-+ * as root of the filesystem.
-+ */
-+struct dentry *kernfs_obtain_root(struct super_block *sb,
-+				  struct kernfs_node *kn)
-+{
-+	struct dentry *dentry;
-+	struct inode *inode;
-+
-+	BUG_ON(sb->s_op != &kernfs_sops);
-+
-+	/* inode for the given kernfs_node should already exist. */
-+	inode = ilookup(sb, kn->ino);
-+	if (!inode) {
-+		pr_debug("kernfs: could not get inode for '");
-+		pr_cont_kernfs_path(kn);
-+		pr_cont("'.\n");
-+		return ERR_PTR(-EINVAL);
-+	}
-+
-+	/* instantiate and link root dentry */
-+	dentry = d_obtain_root(inode);
-+	if (!dentry) {
-+		pr_debug("kernfs: could not get dentry for '");
-+		pr_cont_kernfs_path(kn);
-+		pr_cont("'.\n");
-+		return ERR_PTR(-ENOMEM);
-+	}
-+
-+	/* If this is a new dentry, set it up. We need kernfs_mutex because this
-+	 * may be called by callers other than kernfs_fill_super. */
-+	mutex_lock(&kernfs_mutex);
-+	if (!dentry->d_fsdata) {
-+		kernfs_get(kn);
-+		dentry->d_fsdata = kn;
-+	} else {
-+		WARN_ON(dentry->d_fsdata != kn);
-+	}
-+	mutex_unlock(&kernfs_mutex);
-+
-+	return dentry;
-+}
-+
-  static int kernfs_fill_super(struct super_block *sb, unsigned long magic)
-  {
-  	struct kernfs_super_info *info = kernfs_info(sb);
-diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
-index 3c2be75..b9538e0 100644
---- a/include/linux/kernfs.h
-+++ b/include/linux/kernfs.h
-@@ -274,6 +274,8 @@ void kernfs_put(struct kernfs_node *kn);
-  struct kernfs_node *kernfs_node_from_dentry(struct dentry *dentry);
-  struct kernfs_root *kernfs_root_from_sb(struct super_block *sb);
 
-+struct dentry *kernfs_obtain_root(struct super_block *sb,
-+				  struct kernfs_node *kn);
-  struct kernfs_root *kernfs_create_root(struct kernfs_syscall_ops *scops,
-  				       unsigned int flags, void *priv);
-  void kernfs_destroy_root(struct kernfs_root *root);
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 7e5d597..8008c4c 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1389,6 +1389,14 @@ static int parse_cgroupfs_options(char *data, 
-struct cgroup_sb_opts *opts)
-  			return -ENOENT;
-  	}
-
-+	/* If inside a non-init cgroup namespace, only allow default hierarchy
-+	 * to be mounted.
-+	 */
-+	if ((current->nsproxy->cgroup_ns != &init_cgroup_ns) &&
-+	    !(opts->flags & CGRP_ROOT_SANE_BEHAVIOR)) {
-+		return -EINVAL;
-+	}
-+
-  	if (opts->flags & CGRP_ROOT_SANE_BEHAVIOR) {
-  		pr_warn("sane_behavior: this is still under development and its 
-behaviors will change, proceed at your own risk\n");
-  		if (nr_opts != 1) {
-@@ -1581,6 +1589,15 @@ static void init_cgroup_root(struct cgroup_root 
-*root,
-  		set_bit(CGRP_CPUSET_CLONE_CHILDREN, &root->cgrp.flags);
-  }
-
-+struct dentry *cgroupns_get_root(struct super_block *sb,
-+				 struct cgroup_namespace *ns)
-+{
-+	struct dentry *nsdentry;
-+
-+	nsdentry = kernfs_obtain_root(sb, ns->root_cgrp->kn);
-+	return nsdentry;
-+}
-+
-  static int cgroup_setup_root(struct cgroup_root *root, unsigned int 
-ss_mask)
-  {
-  	LIST_HEAD(tmp_links);
-@@ -1685,6 +1702,14 @@ static struct dentry *cgroup_mount(struct 
-file_system_type *fs_type,
-  	int ret;
-  	int i;
-  	bool new_sb;
-+	struct cgroup_namespace *ns =
-+		get_cgroup_ns(current->nsproxy->cgroup_ns);
-+
-+	/* Check if the caller has permission to mount. */
-+	if (!ns_capable(ns->user_ns, CAP_SYS_ADMIN)) {
-+		put_cgroup_ns(ns);
-+		return ERR_PTR(-EPERM);
-+	}
-
-  	/*
-  	 * The first time anyone tries to mount a cgroup, enable the list
-@@ -1817,11 +1842,28 @@ out_free:
-  	kfree(opts.release_agent);
-  	kfree(opts.name);
-
--	if (ret)
-+	if (ret) {
-+		put_cgroup_ns(ns);
-  		return ERR_PTR(ret);
-+	}
-
-  	dentry = kernfs_mount(fs_type, flags, root->kf_root,
-  				CGROUP_SUPER_MAGIC, &new_sb);
-+
-+	if (!IS_ERR(dentry) && (root == &cgrp_dfl_root)) {
-+		/* If this mount is for the default hierarchy in non-init cgroup
-+		 * namespace, then instead of root cgroup's dentry, we return
-+		 * the dentry corresponding to the cgroupns->root_cgrp.
-+		 */
-+		if (ns != &init_cgroup_ns) {
-+			struct dentry *nsdentry;
-+
-+			nsdentry = cgroupns_get_root(dentry->d_sb, ns);
-+			dput(dentry);
-+			dentry = nsdentry;
-+		}
-+	}
-+
-  	if (IS_ERR(dentry) || !new_sb)
-  		cgroup_put(&root->cgrp);
-
-@@ -1834,6 +1876,7 @@ out_free:
-  		deactivate_super(pinned_sb);
-  	}
-
-+	put_cgroup_ns(ns);
-  	return dentry;
-  }
-
-@@ -1862,6 +1905,7 @@ static struct file_system_type cgroup_fs_type = {
-  	.name = "cgroup",
-  	.mount = cgroup_mount,
-  	.kill_sb = cgroup_kill_sb,
-+	.fs_flags = FS_USERNS_MOUNT,
-  };
-
-  static struct kobject *cgroup_kobj;
--- 
-2.1.0.rc2.206.gedb03e5
 
