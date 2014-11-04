@@ -1,100 +1,78 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
+From: Michal Hocko <mhocko@suse.cz>
 Subject: Re: [patch 1/3] mm: embed the memcg pointer directly into struct page
-Date: Tue, 4 Nov 2014 08:27:01 -0500
-Message-ID: <20141104132701.GA18441@phnom.home.cmpxchg.org>
+Date: Tue, 4 Nov 2014 14:41:10 +0100
+Message-ID: <20141104134110.GD22207@dhcp22.suse.cz>
 References: <1414898156-4741-1-git-send-email-hannes@cmpxchg.org>
  <54589017.9060604@jp.fujitsu.com>
+ <20141104132701.GA18441@phnom.home.cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <54589017.9060604@jp.fujitsu.com>
+In-Reply-To: <20141104132701.GA18441@phnom.home.cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, Tejun Heo <tj@kernel.org>, David Miller <davem@davemloft.net>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@parallels.com>, Tejun Heo <tj@kernel.org>, David Miller <davem@davemloft.net>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Nov 04, 2014 at 05:36:39PM +0900, Kamezawa Hiroyuki wrote:
-> (2014/11/02 12:15), Johannes Weiner wrote:
-> > Memory cgroups used to have 5 per-page pointers.  To allow users to
-> > disable that amount of overhead during runtime, those pointers were
-> > allocated in a separate array, with a translation layer between them
-> > and struct page.
-> > 
-> > There is now only one page pointer remaining: the memcg pointer, that
-> > indicates which cgroup the page is associated with when charged.  The
-> > complexity of runtime allocation and the runtime translation overhead
-> > is no longer justified to save that *potential* 0.19% of memory.  With
-> > CONFIG_SLUB, page->mem_cgroup actually sits in the doubleword padding
-> > after the page->private member and doesn't even increase struct page,
-> > and then this patch actually saves space.  Remaining users that care
-> > can still compile their kernels without CONFIG_MEMCG.
-> > 
-> >     text    data     bss     dec     hex     filename
-> > 8828345 1725264  983040 11536649 b00909  vmlinux.old
-> > 8827425 1725264  966656 11519345 afc571  vmlinux.new
-> > 
-> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> > ---
-> >   include/linux/memcontrol.h  |   6 +-
-> >   include/linux/mm_types.h    |   5 +
-> >   include/linux/mmzone.h      |  12 --
-> >   include/linux/page_cgroup.h |  53 --------
-> >   init/main.c                 |   7 -
-> >   mm/memcontrol.c             | 124 +++++------------
-> >   mm/page_alloc.c             |   2 -
-> >   mm/page_cgroup.c            | 319 --------------------------------------------
-> >   8 files changed, 41 insertions(+), 487 deletions(-)
-> > 
+On Tue 04-11-14 08:27:01, Johannes Weiner wrote:
+> From: Johannes Weiner <hannes@cmpxchg.org>
+> Subject: [patch] mm: move page->mem_cgroup bad page handling into generic code fix
 > 
-> Great! 
-> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+> Remove obsolete memory saving recommendations from the MEMCG Kconfig
+> help text.
 
-Thank you!
+The memory overhead is still there. So I do not think it is good to
+remove the message altogether. The current overhead might be 4 or 8B
+depending on the configuration. What about
+"
+	Note that setting this option might increase fixed memory
+	overhead associated with each page descriptor in the system.
+	The memory overhead depends on the architecture and other
+	configuration options which have influence on the size and
+	alignment on the page descriptor (struct page). Namely
+	CONFIG_SLUB has a requirement for page alignment to two words
+	which in turn means that 64b systems might not see any memory
+	overhead as the additional data fits into alignment. On the
+	other hand 32b systems might see 8B memory overhead.
+"
 
-> BTW, init/Kconfig comments shouldn't be updated ?
-> (I'm sorry if it has been updated since your latest fix.)
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> ---
+>  init/Kconfig | 12 ------------
+>  1 file changed, 12 deletions(-)
+> 
+> diff --git a/init/Kconfig b/init/Kconfig
+> index 01b7f2a6abf7..d68d8b0780b3 100644
+> --- a/init/Kconfig
+> +++ b/init/Kconfig
+> @@ -983,18 +983,6 @@ config MEMCG
+>  	  Provides a memory resource controller that manages both anonymous
+>  	  memory and page cache. (See Documentation/cgroups/memory.txt)
+>  
+> -	  Note that setting this option increases fixed memory overhead
+> -	  associated with each page of memory in the system. By this,
+> -	  8(16)bytes/PAGE_SIZE on 32(64)bit system will be occupied by memory
+> -	  usage tracking struct at boot. Total amount of this is printed out
+> -	  at boot.
+> -
+> -	  Only enable when you're ok with these trade offs and really
+> -	  sure you need the memory resource controller. Even when you enable
+> -	  this, you can set "cgroup_disable=memory" at your boot option to
+> -	  disable memory resource controller and you can avoid overheads.
+> -	  (and lose benefits of memory resource controller)
+> -
+>  config MEMCG_SWAP
+>  	bool "Memory Resource Controller Swap Extension"
+>  	depends on MEMCG && SWAP
+> -- 
+> 2.1.3
+> 
 
-Good point.  How about this?
-
----
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch] mm: move page->mem_cgroup bad page handling into generic code fix
-
-Remove obsolete memory saving recommendations from the MEMCG Kconfig
-help text.
-
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- init/Kconfig | 12 ------------
- 1 file changed, 12 deletions(-)
-
-diff --git a/init/Kconfig b/init/Kconfig
-index 01b7f2a6abf7..d68d8b0780b3 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -983,18 +983,6 @@ config MEMCG
- 	  Provides a memory resource controller that manages both anonymous
- 	  memory and page cache. (See Documentation/cgroups/memory.txt)
- 
--	  Note that setting this option increases fixed memory overhead
--	  associated with each page of memory in the system. By this,
--	  8(16)bytes/PAGE_SIZE on 32(64)bit system will be occupied by memory
--	  usage tracking struct at boot. Total amount of this is printed out
--	  at boot.
--
--	  Only enable when you're ok with these trade offs and really
--	  sure you need the memory resource controller. Even when you enable
--	  this, you can set "cgroup_disable=memory" at your boot option to
--	  disable memory resource controller and you can avoid overheads.
--	  (and lose benefits of memory resource controller)
--
- config MEMCG_SWAP
- 	bool "Memory Resource Controller Swap Extension"
- 	depends on MEMCG && SWAP
 -- 
-2.1.3
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
