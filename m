@@ -1,52 +1,103 @@
-From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCHv2 0/7] CGroup Namespaces
-Date: Tue, 4 Nov 2014 08:10:30 -0500
-Message-ID: <20141104131030.GA2937@redhat.com>
-References: <adityakali-cgroupns>
-	<1414783141-6947-1-git-send-email-adityakali@google.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [patch 1/3] mm: embed the memcg pointer directly into struct page
+Date: Tue, 4 Nov 2014 08:27:01 -0500
+Message-ID: <20141104132701.GA18441@phnom.home.cmpxchg.org>
+References: <1414898156-4741-1-git-send-email-hannes@cmpxchg.org>
+ <54589017.9060604@jp.fujitsu.com>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <54589017.9060604@jp.fujitsu.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1414783141-6947-1-git-send-email-adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, Tejun Heo <tj@kernel.org>, David Miller <davem@davemloft.net>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Oct 31, 2014 at 12:18:54PM -0700, Aditya Kali wrote:
-[..]
->  fs/kernfs/dir.c                  | 194 ++++++++++++++++++++++++++++++++++-----
->  fs/kernfs/mount.c                |  48 ++++++++++
->  fs/proc/namespaces.c             |   1 +
->  include/linux/cgroup.h           |  41 ++++++++-
->  include/linux/cgroup_namespace.h |  36 ++++++++
->  include/linux/kernfs.h           |   5 +
->  include/linux/nsproxy.h          |   2 +
->  include/linux/proc_ns.h          |   4 +
->  include/uapi/linux/sched.h       |   3 +-
->  kernel/Makefile                  |   2 +-
->  kernel/cgroup.c                  | 108 +++++++++++++++++-----
->  kernel/cgroup_namespace.c        | 148 +++++++++++++++++++++++++++++
->  kernel/fork.c                    |   2 +-
->  kernel/nsproxy.c                 |  19 +++-
+On Tue, Nov 04, 2014 at 05:36:39PM +0900, Kamezawa Hiroyuki wrote:
+> (2014/11/02 12:15), Johannes Weiner wrote:
+> > Memory cgroups used to have 5 per-page pointers.  To allow users to
+> > disable that amount of overhead during runtime, those pointers were
+> > allocated in a separate array, with a translation layer between them
+> > and struct page.
+> > 
+> > There is now only one page pointer remaining: the memcg pointer, that
+> > indicates which cgroup the page is associated with when charged.  The
+> > complexity of runtime allocation and the runtime translation overhead
+> > is no longer justified to save that *potential* 0.19% of memory.  With
+> > CONFIG_SLUB, page->mem_cgroup actually sits in the doubleword padding
+> > after the page->private member and doesn't even increase struct page,
+> > and then this patch actually saves space.  Remaining users that care
+> > can still compile their kernels without CONFIG_MEMCG.
+> > 
+> >     text    data     bss     dec     hex     filename
+> > 8828345 1725264  983040 11536649 b00909  vmlinux.old
+> > 8827425 1725264  966656 11519345 afc571  vmlinux.new
+> > 
+> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> > ---
+> >   include/linux/memcontrol.h  |   6 +-
+> >   include/linux/mm_types.h    |   5 +
+> >   include/linux/mmzone.h      |  12 --
+> >   include/linux/page_cgroup.h |  53 --------
+> >   init/main.c                 |   7 -
+> >   mm/memcontrol.c             | 124 +++++------------
+> >   mm/page_alloc.c             |   2 -
+> >   mm/page_cgroup.c            | 319 --------------------------------------------
+> >   8 files changed, 41 insertions(+), 487 deletions(-)
+> > 
+> 
+> Great! 
+> Acked-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
 
-Hi Aditya,
+Thank you!
 
-Can we provide a documentation file for cgroup namespace behavior. Say,
-Documentation/namespaces/cgroup-namespace.txt.
+> BTW, init/Kconfig comments shouldn't be updated ?
+> (I'm sorry if it has been updated since your latest fix.)
 
-Namespaces are complicated and it might be a good idea to keep one .txt
-file for each namespace.
+Good point.  How about this?
 
-Thanks
-Vivek
+---
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [patch] mm: move page->mem_cgroup bad page handling into generic code fix
+
+Remove obsolete memory saving recommendations from the MEMCG Kconfig
+help text.
+
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ init/Kconfig | 12 ------------
+ 1 file changed, 12 deletions(-)
+
+diff --git a/init/Kconfig b/init/Kconfig
+index 01b7f2a6abf7..d68d8b0780b3 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -983,18 +983,6 @@ config MEMCG
+ 	  Provides a memory resource controller that manages both anonymous
+ 	  memory and page cache. (See Documentation/cgroups/memory.txt)
+ 
+-	  Note that setting this option increases fixed memory overhead
+-	  associated with each page of memory in the system. By this,
+-	  8(16)bytes/PAGE_SIZE on 32(64)bit system will be occupied by memory
+-	  usage tracking struct at boot. Total amount of this is printed out
+-	  at boot.
+-
+-	  Only enable when you're ok with these trade offs and really
+-	  sure you need the memory resource controller. Even when you enable
+-	  this, you can set "cgroup_disable=memory" at your boot option to
+-	  disable memory resource controller and you can avoid overheads.
+-	  (and lose benefits of memory resource controller)
+-
+ config MEMCG_SWAP
+ 	bool "Memory Resource Controller Swap Extension"
+ 	depends on MEMCG && SWAP
+-- 
+2.1.3
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
