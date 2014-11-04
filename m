@@ -1,81 +1,53 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch 1/3] mm: embed the memcg pointer directly into struct page
-Date: Tue, 4 Nov 2014 14:41:10 +0100
-Message-ID: <20141104134110.GD22207@dhcp22.suse.cz>
-References: <1414898156-4741-1-git-send-email-hannes@cmpxchg.org>
- <54589017.9060604@jp.fujitsu.com>
- <20141104132701.GA18441@phnom.home.cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHv2 7/7] cgroup: mount cgroupns-root when inside non-init
+ cgroupns
+Date: Tue, 4 Nov 2014 08:46:33 -0500
+Message-ID: <20141104134633.GA14014@htj.dyndns.org>
+References: <1414783141-6947-1-git-send-email-adityakali@google.com>
+ <1414783141-6947-8-git-send-email-adityakali@google.com>
+ <87y4rvrakn.fsf@x220.int.ebiederm.org>
+ <CAGr1F2Hd_PS_AscBGMXdZC9qkHGRUp-MeQvJksDOQkRBB3RGoA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=D7V2cNEX+wt6IFs1d/GSzQQpP84Clf7U4pGf3OXhXCs=;
+        b=spFfpodp3CCA6puTVoISI7vUtRx6TiBbWWmk4VlLXwJ7ZkZUIKItiZzQcyTyhd6idw
+         5g9dEk70eNbEuw3QTLsrwOGx+sKN2bP3bxYlNv+PhomgryQtmITFGXcJ+hmYxggQqmj8
+         wF0q9sG4lW1t2eycW4ShJZfyOlsn4xLmQySqrjWFxVT2enEaxGwM4RCzHJ99KKEZFfiC
+         XMfNp0ELrZm0wjrhMBL3REb45UAtqanVxXO2jo0iVDhawNw1fH/ZCy9KGYm1mszWUQbd
+         XpfoKvOvt4WGAZYgKYsqv3tPmk+R2J5uITIS77Eb4WB7Zct61IQcX77cmL52RvQO79Ra
+         XlpQ==
 Content-Disposition: inline
-In-Reply-To: <20141104132701.GA18441@phnom.home.cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <CAGr1F2Hd_PS_AscBGMXdZC9qkHGRUp-MeQvJksDOQkRBB3RGoA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@parallels.com>, Tejun Heo <tj@kernel.org>, David Miller <davem@davemloft.net>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Rohit Jnagal <jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Tue 04-11-14 08:27:01, Johannes Weiner wrote:
-> From: Johannes Weiner <hannes@cmpxchg.org>
-> Subject: [patch] mm: move page->mem_cgroup bad page handling into generic code fix
-> 
-> Remove obsolete memory saving recommendations from the MEMCG Kconfig
-> help text.
+Hello, Aditya.
 
-The memory overhead is still there. So I do not think it is good to
-remove the message altogether. The current overhead might be 4 or 8B
-depending on the configuration. What about
-"
-	Note that setting this option might increase fixed memory
-	overhead associated with each page descriptor in the system.
-	The memory overhead depends on the architecture and other
-	configuration options which have influence on the size and
-	alignment on the page descriptor (struct page). Namely
-	CONFIG_SLUB has a requirement for page alignment to two words
-	which in turn means that 64b systems might not see any memory
-	overhead as the additional data fits into alignment. On the
-	other hand 32b systems might see 8B memory overhead.
-"
+On Mon, Nov 03, 2014 at 02:43:47PM -0800, Aditya Kali wrote:
+> I agree that this is effectively bind-mounting, but doing this in kernel
+> makes it really convenient for the userspace. The process that sets up the
+> container doesn't need to care whether it should bind-mount cgroupfs inside
+> the container or not. The tasks inside the container can mount cgroupfs on
+> as-needed basis. The root container manager can simply unshare cgroupns and
+> forget about the internal setup. I think this is useful just for the reason
+> that it makes life much simpler for userspace.
 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> ---
->  init/Kconfig | 12 ------------
->  1 file changed, 12 deletions(-)
-> 
-> diff --git a/init/Kconfig b/init/Kconfig
-> index 01b7f2a6abf7..d68d8b0780b3 100644
-> --- a/init/Kconfig
-> +++ b/init/Kconfig
-> @@ -983,18 +983,6 @@ config MEMCG
->  	  Provides a memory resource controller that manages both anonymous
->  	  memory and page cache. (See Documentation/cgroups/memory.txt)
->  
-> -	  Note that setting this option increases fixed memory overhead
-> -	  associated with each page of memory in the system. By this,
-> -	  8(16)bytes/PAGE_SIZE on 32(64)bit system will be occupied by memory
-> -	  usage tracking struct at boot. Total amount of this is printed out
-> -	  at boot.
-> -
-> -	  Only enable when you're ok with these trade offs and really
-> -	  sure you need the memory resource controller. Even when you enable
-> -	  this, you can set "cgroup_disable=memory" at your boot option to
-> -	  disable memory resource controller and you can avoid overheads.
-> -	  (and lose benefits of memory resource controller)
-> -
->  config MEMCG_SWAP
->  	bool "Memory Resource Controller Swap Extension"
->  	depends on MEMCG && SWAP
-> -- 
-> 2.1.3
-> 
+If it's okay to require userland to just do bind mounting, I'd be far
+happier with that.  cgroup mount code is already overcomplicated
+because of the dynamic matching of supers to mounts when it could just
+have told userland to use bind mounting.  Doesn't the host side have
+to set up some of the filesystem layouts anyway?  Does it really
+matter that we require the host to set up cgroup hierarchy too?
+
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
