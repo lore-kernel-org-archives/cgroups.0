@@ -1,58 +1,102 @@
-From: Joonsoo Kim <iamjoonsoo.kim@lge.com>
-Subject: Re: [patch 1/3] mm: embed the memcg pointer directly into struct page
-Date: Tue, 4 Nov 2014 09:40:45 +0900
-Message-ID: <20141104004045.GC8412@js1304-P5Q-DELUXE>
-References: <1414898156-4741-1-git-send-email-hannes@cmpxchg.org>
- <20141103080208.GA7052@js1304-P5Q-DELUXE>
- <20141103150942.GA32052@phnom.home.cmpxchg.org>
+From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCHv2 7/7] cgroup: mount cgroupns-root when inside non-init
+	cgroupns
+Date: Mon, 3 Nov 2014 16:49:41 -0800
+Message-ID: <CAGr1F2Ecd3vCkDHVpFevZDLt+J49MimYh0va9u7JEJVTLHq8uQ@mail.gmail.com>
+References: <1414783141-6947-1-git-send-email-adityakali@google.com>
+	<1414783141-6947-8-git-send-email-adityakali@google.com>
+	<CALCETrXTaZ3SJ_t-gnbc93BVZXg-912NqO78kFd0Tpi-5-dZoQ@mail.gmail.com>
+	<CAGr1F2FuPQxLraYv7PstJ9c8H-XQsgawaAtj4AS77B+_0k2o+A@mail.gmail.com>
+	<CALCETrW64-6xC6psP-8k0H-1GfVnWBTeEBNSrE_sH+-DFtuZQQ@mail.gmail.com>
+	<CAGr1F2GX45gC-V7kEzVjp-EiYfdPDVBRs+99nASpgFVAdYX+1w@mail.gmail.com>
+	<CALCETrUB_xx5zno26k5UjAFt77nZTpgyndD4AuBSZxiZBNjXSw@mail.gmail.com>
+	<CAGr1F2EV4p_nJP_oMe3N8pBPedAZHbdB=XCMPjSEZTC9jmZoAg@mail.gmail.com>
+	<CALCETrXeG2t=fW9HbkirDZudw9pbDwoqDq5ygJBkBMbqqoDAvw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20141103150942.GA32052@phnom.home.cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, Tejun Heo <tj@kernel.org>, David Miller <davem@davemloft.net>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20120113;
+	h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+	:cc:content-type;
+	bh=LMfGj2bjhHjLiih+7JPWmDXF/WikKtU+lXmGL5bGqeE=;
+	b=Vz4IAlVb+7vl/aZMSrat0N0FLMNe8pD/b93rNsyzgcvJh+JyVkBgzuZJOwNnEk0NGg
+	qmycX8duifJcXfLx71L08aOaDNa3TWsdXvJN1EBuojlTwCM71eDVXatV6P3cu4G1iFYI
+	DnRp0s+Bn60SkdIpcn17TIKT8yVRBSWitYpGjvdbs76kLt5nk8bq7LQwT+0UOUqxUibu
+	mitDNHcxCXTvh8zb52om4a5W4P7cCr3nB48S1NFkcAOK5VnH1ckBuVkAyuIhW2gyfd6Q
+	f936G5z7XfY1U774+pFo1HKS3abF/866Wmh/hVALKqgj4fkwoT3FS9KNo7p4Mv3QMbPA
+	+gPA==
+In-Reply-To: <CALCETrXeG2t=fW9HbkirDZudw9pbDwoqDq5ygJBkBMbqqoDAvw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
+Cc: Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Mon, Nov 03, 2014 at 10:09:42AM -0500, Johannes Weiner wrote:
-> Hi Joonsoo,
-> 
-> On Mon, Nov 03, 2014 at 05:02:08PM +0900, Joonsoo Kim wrote:
-> > On Sat, Nov 01, 2014 at 11:15:54PM -0400, Johannes Weiner wrote:
-> > > Memory cgroups used to have 5 per-page pointers.  To allow users to
-> > > disable that amount of overhead during runtime, those pointers were
-> > > allocated in a separate array, with a translation layer between them
-> > > and struct page.
-> > 
-> > Hello, Johannes.
-> > 
-> > I'd like to leave this translation layer.
-> > Could you just disable that code with #ifdef until next user comes?
-> > 
-> > In our company, we uses PAGE_OWNER on mm tree which is the feature
-> > saying who allocates the page. To use PAGE_OWNER needs modifying
-> > struct page and then needs re-compile. This re-compile makes us difficult
-> > to use this feature. So, we decide to implement run-time configurable
-> > PAGE_OWNER through page_cgroup's translation layer code. Moreover, with
-> > this infrastructure, I plan to implement some other debugging feature.
-> > 
-> > Because of my laziness, it didn't submitted to LKML. But, I will
-> > submit it as soon as possible. If the code is removed, I would
-> > copy-and-paste the code, but, it would cause lose of the history on
-> > that code. So if possible, I'd like to leave that code now.
-> 
-> Please re-introduce this code when your new usecase is ready to be
-> upstreamed.  There is little reason to burden an unrelated feature
-> with a sizable chunk of dead code for a vague future user.
+On Mon, Nov 3, 2014 at 4:17 PM, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org> wrote:
+> On Mon, Nov 3, 2014 at 4:12 PM, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+>> On Mon, Nov 3, 2014 at 3:48 PM, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org> wrote:
+>>> On Mon, Nov 3, 2014 at 3:23 PM, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+>>>> On Mon, Nov 3, 2014 at 3:15 PM, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org> wrote:
+>>>>> On Mon, Nov 3, 2014 at 3:12 PM, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+>>>>>> On Fri, Oct 31, 2014 at 5:07 PM, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org> wrote:
+>>>>>>> On Fri, Oct 31, 2014 at 12:19 PM, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+>>>>>>>>         if (opts->flags & CGRP_ROOT_SANE_BEHAVIOR) {
+>>>>>>>>                 pr_warn("sane_behavior: this is still under development and its behaviors will change, proceed at your own risk\n");
+>>>>>>>> -               if (nr_opts != 1) {
+>>>>>>>> +               if (nr_opts > 1) {
+>>>>>>>>                         pr_err("sane_behavior: no other mount options allowed\n");
+>>>>>>>>                         return -EINVAL;
+>>>>>>>
+>>>>>>> This looks wrong.  But, if you make the change above, then it'll be right.
+>>>>>>>
+>>>>>>
+>>>>>> It would have been nice if simple 'mount -t cgroup cgroup <mnt>' from
+>>>>>> cgroupns does the right thing automatically.
+>>>>>>
+>>>>>
+>>>>> This is a debatable point, but it's not what I meant.  Won't your code
+>>>>> let 'mount -t cgroup -o one_evil_flag cgroup mountpoint' through?
+>>>>>
+>>>>
+>>>> I don't think so. This check "if (nr_opts > 1)" is nested under "if
+>>>> (opts->flags & CGRP_ROOT_SANE_BEHAVIOR)". So we know that there is
+>>>> atleast 1 option ('__DEVEL__sane_behavior') present (implicit or not).
+>>>> Addition of 'one_evil_flag' will make nr_opts = 2 and result in EINVAL
+>>>> here.
+>>>
+>>> But the implicit __DEVEL__sane_behavior doesn't increment nr_opts, right?
+>>>
+>>
+>> Yes. Hence this change makes sure that we don't return EINVAL when
+>> nr_opts == 0 or nr_opts == 1 :)
+>> That way, both of the following are equivalent when inside non-init cgroupns:
+>>
+>> (1) $ mount -t cgroup -o __DEVEL__sane_behavior cgroup mountpoint
+>> (2) $ mount -t cgroup cgroup mountpoint
+>>
+>> Any other mount option will trigger the error here.
+>
+> I still don't get it.  Can you walk me through why mount -o
+> some_other_option -t cgroup cgroup mountpoint causes -EINVAL?
+>
 
-Okay.
+Argh! You are right. I was totally convinced that this works. But it
+clearly doesn't if you specify 1 legit mount option. I wanted to make
+it work for both cases (1) and (2) above. But then this check will
+have to be changed :(
+Sorry about the back and forth. I am just going to make it return
+EINVAL if __DEVEL_sane_behavior is not specified as suggested in the
+beginning.
 
-Thanks.
+> --Andy
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+Aditya
