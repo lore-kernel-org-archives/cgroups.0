@@ -1,59 +1,48 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch 1/3] mm: embed the memcg pointer directly into struct page
-Date: Tue, 4 Nov 2014 08:48:41 -0500
-Message-ID: <20141104134841.GB18441@phnom.home.cmpxchg.org>
-References: <20141103210607.GA24091@node.dhcp.inet.fi>
- <20141103213628.GA11428@phnom.home.cmpxchg.org>
- <20141103215206.GB24091@node.dhcp.inet.fi>
- <20141103.165807.2039166055692354811.davem@davemloft.net>
- <20141103223626.GA12006@phnom.home.cmpxchg.org>
- <20141104130652.GC22207@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHv2 7/7] cgroup: mount cgroupns-root when inside non-init
+ cgroupns
+Date: Tue, 4 Nov 2014 08:57:26 -0500
+Message-ID: <20141104135726.GB14014@htj.dyndns.org>
+References: <1414783141-6947-1-git-send-email-adityakali@google.com>
+ <1414783141-6947-8-git-send-email-adityakali@google.com>
+ <CALCETrXTaZ3SJ_t-gnbc93BVZXg-912NqO78kFd0Tpi-5-dZoQ@mail.gmail.com>
+ <CAGr1F2FuPQxLraYv7PstJ9c8H-XQsgawaAtj4AS77B+_0k2o+A@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=s1y64mY1ZEboNR2a3HjehdNmNtKD781ScAR+yn+JPUM=;
+        b=L4nK9G9lMX6mnEsdMFye5tb/KK0DniVfZsvuVxys+t7eC5uoWtsLsSySh0xlE6cnX5
+         Y/2TOfg8Qj1SOIseAhw9rMBalOmH2VuMPSURzmFb1SmG8Gx//jRb+wHaJG44LWHA6rmU
+         Mn488q3DFB358tk0qghbjy6IEbfLUfhWg/GI6meTDssbf0+3oGzGmdCelR7BnYA8Xfpl
+         7jHmCKr48wQaNUDX2TQsSKW5pTHhN3F8j9rqH+FaI3ecSV1V9vHZPLtrz2GBXKYHzhQM
+         jo9oO1dMt0XEaytVZ5Fk/qkuKkzBJb5p7nU2dQ/8B3oajp8/UkxZxjADNdVP28ulyywE
+         jkvA==
 Content-Disposition: inline
-In-Reply-To: <20141104130652.GC22207@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <CAGr1F2FuPQxLraYv7PstJ9c8H-XQsgawaAtj4AS77B+_0k2o+A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: David Miller <davem@davemloft.net>, kirill@shutemov.name, akpm@linux-foundation.org, vdavydov@parallels.com, tj@kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Rohit Jnagal <jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Tue, Nov 04, 2014 at 02:06:52PM +0100, Michal Hocko wrote:
-> The code size grows (~1.5k) most probably due to struct page pointer
-> arithmetic (but I haven't checked that) but the data section shrinks
-> for SLAB. So we have additional 1.6k for SLUB. I guess this is
-> acceptable.
-> 
->    text    data     bss     dec     hex filename
-> 8427489  887684 3186688 12501861         bec365 mmotm/vmlinux.slab
-> 8429060  883588 3186688 12499336         beb988 page_cgroup/vmlinux.slab
-> 
-> 8438894  883428 3186688 12509010         bedf52 mmotm/vmlinux.slub
-> 8440529  883428 3186688 12510645         bee5b5 page_cgroup/vmlinux.slub
+Hello, Aditya.
 
-That's unexpected.  It's not much, but how could the object size grow
-at all when that much code is removed and we replace the lookups with
-simple struct member accesses?  Are you positive these are the right
-object files, in the right order?
+On Mon, Nov 03, 2014 at 03:12:28PM -0800, Aditya Kali wrote:
+> I think the sane-behavior flag is only temporary and will be removed
+> anyways, right? So I didn't bother asking user to supply it. But I can
+> make the change as you suggested. We just have to make sure that tasks
+> inside cgroupns cannot mount non-default hierarchies as it would be a
+> regression.
 
-> So to me it sounds like the savings for 64b are worth minor inconvenience
-> for 32b which is clearly on decline and I would definitely not encourage
-> people to use PAE kernels with a lot of memory where the difference
-> might matter. For the most x86 32b deployments (laptops with 4G) the
-> difference shouldn't be noticeable. I am not familiar with other archs
-> so the situation might be different there.
+I'm not sure whether supporting mounting from inside a ns is even
+necessary but, if it is, can't you just test against cgrp_dfl_root?
+There's no reason to do anything differnetly for ns mounting.
 
-On 32 bit, the overhead is 0.098% of memory, so 4MB on a 4G machine.
-This should be acceptable, even for the three people that run on the
-cutting edge of 3.18-based PAE distribution kernels. :-)
+Thanks.
 
-> This should probably go into the changelog, I guess.
-
-Which part?
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
