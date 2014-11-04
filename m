@@ -1,53 +1,59 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHv2 7/7] cgroup: mount cgroupns-root when inside non-init
- cgroupns
-Date: Tue, 4 Nov 2014 08:46:33 -0500
-Message-ID: <20141104134633.GA14014@htj.dyndns.org>
-References: <1414783141-6947-1-git-send-email-adityakali@google.com>
- <1414783141-6947-8-git-send-email-adityakali@google.com>
- <87y4rvrakn.fsf@x220.int.ebiederm.org>
- <CAGr1F2Hd_PS_AscBGMXdZC9qkHGRUp-MeQvJksDOQkRBB3RGoA@mail.gmail.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [patch 1/3] mm: embed the memcg pointer directly into struct page
+Date: Tue, 4 Nov 2014 08:48:41 -0500
+Message-ID: <20141104134841.GB18441@phnom.home.cmpxchg.org>
+References: <20141103210607.GA24091@node.dhcp.inet.fi>
+ <20141103213628.GA11428@phnom.home.cmpxchg.org>
+ <20141103215206.GB24091@node.dhcp.inet.fi>
+ <20141103.165807.2039166055692354811.davem@davemloft.net>
+ <20141103223626.GA12006@phnom.home.cmpxchg.org>
+ <20141104130652.GC22207@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=D7V2cNEX+wt6IFs1d/GSzQQpP84Clf7U4pGf3OXhXCs=;
-        b=spFfpodp3CCA6puTVoISI7vUtRx6TiBbWWmk4VlLXwJ7ZkZUIKItiZzQcyTyhd6idw
-         5g9dEk70eNbEuw3QTLsrwOGx+sKN2bP3bxYlNv+PhomgryQtmITFGXcJ+hmYxggQqmj8
-         wF0q9sG4lW1t2eycW4ShJZfyOlsn4xLmQySqrjWFxVT2enEaxGwM4RCzHJ99KKEZFfiC
-         XMfNp0ELrZm0wjrhMBL3REb45UAtqanVxXO2jo0iVDhawNw1fH/ZCy9KGYm1mszWUQbd
-         XpfoKvOvt4WGAZYgKYsqv3tPmk+R2J5uITIS77Eb4WB7Zct61IQcX77cmL52RvQO79Ra
-         XlpQ==
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <CAGr1F2Hd_PS_AscBGMXdZC9qkHGRUp-MeQvJksDOQkRBB3RGoA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20141104130652.GC22207@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Rohit Jnagal <jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: David Miller <davem@davemloft.net>, kirill@shutemov.name, akpm@linux-foundation.org, vdavydov@parallels.com, tj@kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, Aditya.
+On Tue, Nov 04, 2014 at 02:06:52PM +0100, Michal Hocko wrote:
+> The code size grows (~1.5k) most probably due to struct page pointer
+> arithmetic (but I haven't checked that) but the data section shrinks
+> for SLAB. So we have additional 1.6k for SLUB. I guess this is
+> acceptable.
+> 
+>    text    data     bss     dec     hex filename
+> 8427489  887684 3186688 12501861         bec365 mmotm/vmlinux.slab
+> 8429060  883588 3186688 12499336         beb988 page_cgroup/vmlinux.slab
+> 
+> 8438894  883428 3186688 12509010         bedf52 mmotm/vmlinux.slub
+> 8440529  883428 3186688 12510645         bee5b5 page_cgroup/vmlinux.slub
 
-On Mon, Nov 03, 2014 at 02:43:47PM -0800, Aditya Kali wrote:
-> I agree that this is effectively bind-mounting, but doing this in kernel
-> makes it really convenient for the userspace. The process that sets up the
-> container doesn't need to care whether it should bind-mount cgroupfs inside
-> the container or not. The tasks inside the container can mount cgroupfs on
-> as-needed basis. The root container manager can simply unshare cgroupns and
-> forget about the internal setup. I think this is useful just for the reason
-> that it makes life much simpler for userspace.
+That's unexpected.  It's not much, but how could the object size grow
+at all when that much code is removed and we replace the lookups with
+simple struct member accesses?  Are you positive these are the right
+object files, in the right order?
 
-If it's okay to require userland to just do bind mounting, I'd be far
-happier with that.  cgroup mount code is already overcomplicated
-because of the dynamic matching of supers to mounts when it could just
-have told userland to use bind mounting.  Doesn't the host side have
-to set up some of the filesystem layouts anyway?  Does it really
-matter that we require the host to set up cgroup hierarchy too?
+> So to me it sounds like the savings for 64b are worth minor inconvenience
+> for 32b which is clearly on decline and I would definitely not encourage
+> people to use PAE kernels with a lot of memory where the difference
+> might matter. For the most x86 32b deployments (laptops with 4G) the
+> difference shouldn't be noticeable. I am not familiar with other archs
+> so the situation might be different there.
 
-Thanks.
+On 32 bit, the overhead is 0.098% of memory, so 4MB on a 4G machine.
+This should be acceptable, even for the three people that run on the
+cutting edge of 3.18-based PAE distribution kernels. :-)
 
--- 
-tejun
+> This should probably go into the changelog, I guess.
+
+Which part?
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
