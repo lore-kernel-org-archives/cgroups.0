@@ -1,110 +1,51 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [patch 1/3] mm: embed the memcg pointer directly into struct page
-Date: Tue, 4 Nov 2014 15:50:02 +0100
-Message-ID: <20141104145002.GE22207@dhcp22.suse.cz>
-References: <20141103210607.GA24091@node.dhcp.inet.fi>
- <20141103213628.GA11428@phnom.home.cmpxchg.org>
- <20141103215206.GB24091@node.dhcp.inet.fi>
- <20141103.165807.2039166055692354811.davem@davemloft.net>
- <20141103223626.GA12006@phnom.home.cmpxchg.org>
- <20141104130652.GC22207@dhcp22.suse.cz>
- <20141104134841.GB18441@phnom.home.cmpxchg.org>
+From: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
+Subject: Re: [PATCHv2 7/7] cgroup: mount cgroupns-root when inside non-init cgroupns
+Date: Tue, 4 Nov 2014 07:00:15 -0800
+Message-ID: <CALCETrUggQCJyxsTWRNrjt3GM=R0VMU6RjMkU1aw3YUNMx1xEw@mail.gmail.com>
+References: <1414783141-6947-1-git-send-email-adityakali@google.com>
+ <1414783141-6947-8-git-send-email-adityakali@google.com> <87y4rvrakn.fsf@x220.int.ebiederm.org>
+ <CAGr1F2Hd_PS_AscBGMXdZC9qkHGRUp-MeQvJksDOQkRBB3RGoA@mail.gmail.com> <20141104134633.GA14014@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20141104134841.GB18441-HTCKtW7iVlxqnrmGgq4/JMIURNUf+fel@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20141104134633.GA14014-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Rohit Jnagal <jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Tue 04-11-14 08:48:41, Johannes Weiner wrote:
-> On Tue, Nov 04, 2014 at 02:06:52PM +0100, Michal Hocko wrote:
-> > The code size grows (~1.5k) most probably due to struct page pointer
-> > arithmetic (but I haven't checked that) but the data section shrinks
-> > for SLAB. So we have additional 1.6k for SLUB. I guess this is
-> > acceptable.
-> > 
-> >    text    data     bss     dec     hex filename
-> > 8427489  887684 3186688 12501861         bec365 mmotm/vmlinux.slab
-> > 8429060  883588 3186688 12499336         beb988 page_cgroup/vmlinux.slab
-> > 
-> > 8438894  883428 3186688 12509010         bedf52 mmotm/vmlinux.slub
-> > 8440529  883428 3186688 12510645         bee5b5 page_cgroup/vmlinux.slub
-> 
-> That's unexpected.  It's not much, but how could the object size grow
-> at all when that much code is removed and we replace the lookups with
-> simple struct member accesses?  Are you positive these are the right
-> object files, in the right order?
+On Tue, Nov 4, 2014 at 5:46 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> Hello, Aditya.
+>
+> On Mon, Nov 03, 2014 at 02:43:47PM -0800, Aditya Kali wrote:
+>> I agree that this is effectively bind-mounting, but doing this in kernel
+>> makes it really convenient for the userspace. The process that sets up the
+>> container doesn't need to care whether it should bind-mount cgroupfs inside
+>> the container or not. The tasks inside the container can mount cgroupfs on
+>> as-needed basis. The root container manager can simply unshare cgroupns and
+>> forget about the internal setup. I think this is useful just for the reason
+>> that it makes life much simpler for userspace.
+>
+> If it's okay to require userland to just do bind mounting, I'd be far
+> happier with that.  cgroup mount code is already overcomplicated
+> because of the dynamic matching of supers to mounts when it could just
+> have told userland to use bind mounting.  Doesn't the host side have
+> to set up some of the filesystem layouts anyway?  Does it really
+> matter that we require the host to set up cgroup hierarchy too?
+>
 
-Double checked (the base is [1] and page_cgroup refers to these 3
-patches). Please note that this is a distribution config (OpenSUSE
-13.2) so it enables a lot of things. And I would really expect that 36B
-resp. 40B pointer arithmetic will do more instructions than 32B and this
-piles up when it is used all over the place.
+Sort of, but only sort of.
 
-memcontrol.o shrinks 0.2k
-$ size {mmotm,page_cgroup}/mm/memcontrol.o
-   text    data     bss     dec     hex filename
-  25337    3095       2   28434    6f12 mmotm/mm/memcontrol.o
-  25123    3095       2   28220    6e3c page_cgroup/mm/memcontrol.o
+You can create a container by unsharing namespaces, mounting
+everything, and then calling pivot_root.  But this is unpleasant
+because of the strange way that pid namespaces work -- you generally
+have to fork first, so this gets tedious.  And it doesn't integrate
+well with things like fstab or other container-side configuration
+mechanisms.
 
-and page_cgroup.o saves 0.5k
-$ size mmotm/mm/page_cgroup.o page_cgroup/mm/swap_cgroup.o 
-   text    data     bss     dec     hex filename
-   1419      24     352    1795     703 mmotm/mm/page_cgroup.o
-    849      24     348    1221     4c5 page_cgroup/mm/swap_cgroup.o
+It's nicer if you can unshare namespaces, mount the bare minimum,
+pivot_root, and let the contained software do as much setup as
+possible.
 
-But built-in.o files grow or keep the same size (this is with
-CONFIG_SLAB and gcc 4.8.2)
-$ size {mmotm,page_cgroup}/*/built-in.o | sort -k1 -n | awk '!/text/{new = (i++ % 2); if (!new) {val = $1; last_line=$0} else if ($1-val != 0) {diff = $1 - val; printf("%s\n%s diff %d\n", last_line, $0, diff); sum+=diff}}END{printf("Sum diff %d\n", sum)}'
-  14481   19586      81   34148    8564 mmotm/init/built-in.o
-  14483   19586      81   34150    8566 page_cgroup/init/built-in.o diff 2
-  68679    2082      12   70773   11475 mmotm/crypto/built-in.o
-  68711    2082      12   70805   11495 page_cgroup/crypto/built-in.o diff 32
- 131583   26496    2376  160455   272c7 mmotm/lib/built-in.o
- 131631   26496    2376  160503   272f7 page_cgroup/lib/built-in.o diff 48
- 229809   12346    1548  243703   3b7f7 mmotm/block/built-in.o
- 229937   12346    1548  243831   3b877 page_cgroup/block/built-in.o diff 128
- 308015   20442   16280  344737   542a1 mmotm/security/built-in.o
- 308031   20442   16280  344753   542b1 page_cgroup/security/built-in.o diff 16
- 507979   47110   27236  582325   8e2b5 mmotm/mm/built-in.o
- 508540   47110   27236  582886   8e4e6 page_cgroup/mm/built-in.o diff 561
-1033752   77064   13212 1124028  1126bc mmotm/fs/built-in.o
-1033784   77064   13212 1124060  1126dc page_cgroup/fs/built-in.o diff 32
-1099218   51979   33512 1184709  1213c5 mmotm/net/built-in.o
-1099282   51979   33512 1184773  121405 page_cgroup/net/built-in.o diff 64
-1180475  127020  705068 2012563  1eb593 mmotm/kernel/built-in.o
-1180683  127020  705068 2012771  1eb663 page_cgroup/kernel/built-in.o diff 208
-2193400  152698   34856 2380954  24549a mmotm/drivers/built-in.o
-2193528  152698   34856 2381082  24551a page_cgroup/drivers/built-in.o diff 128
-Sum diff 1219
-
-this is not a complete list but mm part eats only 0.5k the rest is small
-but it adds up.
-
-> > So to me it sounds like the savings for 64b are worth minor inconvenience
-> > for 32b which is clearly on decline and I would definitely not encourage
-> > people to use PAE kernels with a lot of memory where the difference
-> > might matter. For the most x86 32b deployments (laptops with 4G) the
-> > difference shouldn't be noticeable. I am not familiar with other archs
-> > so the situation might be different there.
-> 
-> On 32 bit, the overhead is 0.098% of memory, so 4MB on a 4G machine.
-> This should be acceptable, even for the three people that run on the
-> cutting edge of 3.18-based PAE distribution kernels. :-)
-> 
-> > This should probably go into the changelog, I guess.
-> 
-> Which part?
-
-About potential increased memory footprint on 32b systems (aka don't
-sell it as a full win ;))
-
----
-[1] https://git.kernel.org/cgit/linux/kernel/git/mhocko/mm.git/tag/?h=since-3.17&id=mmotm-2014-10-29-14-19
--- 
-Michal Hocko
-SUSE Labs
+--Andy
