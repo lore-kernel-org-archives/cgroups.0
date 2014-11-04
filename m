@@ -1,77 +1,52 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch 1/3] mm: embed the memcg pointer directly into struct page
-Date: Tue, 4 Nov 2014 14:06:52 +0100
-Message-ID: <20141104130652.GC22207@dhcp22.suse.cz>
-References: <20141103210607.GA24091@node.dhcp.inet.fi>
- <20141103213628.GA11428@phnom.home.cmpxchg.org>
- <20141103215206.GB24091@node.dhcp.inet.fi>
- <20141103.165807.2039166055692354811.davem@davemloft.net>
- <20141103223626.GA12006@phnom.home.cmpxchg.org>
+From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCHv2 0/7] CGroup Namespaces
+Date: Tue, 4 Nov 2014 08:10:30 -0500
+Message-ID: <20141104131030.GA2937@redhat.com>
+References: <adityakali-cgroupns>
+	<1414783141-6947-1-git-send-email-adityakali@google.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20141103223626.GA12006@phnom.home.cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: David Miller <davem@davemloft.net>, kirill@shutemov.name, akpm@linux-foundation.org, vdavydov@parallels.com, tj@kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1414783141-6947-1-git-send-email-adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-On Mon 03-11-14 17:36:26, Johannes Weiner wrote:
-[...]
-> Also, nobody is using that space currently, and I can save memory by
-> moving the pointer in there.  Should we later add another pointer to
-> struct page we are only back to the status quo - with the difference
-> that booting with cgroup_disable=memory will no longer save the extra
-> pointer per page, but again, if you care that much, you can disable
-> memory cgroups at compile-time.
+On Fri, Oct 31, 2014 at 12:18:54PM -0700, Aditya Kali wrote:
+[..]
+>  fs/kernfs/dir.c                  | 194 ++++++++++++++++++++++++++++++++++-----
+>  fs/kernfs/mount.c                |  48 ++++++++++
+>  fs/proc/namespaces.c             |   1 +
+>  include/linux/cgroup.h           |  41 ++++++++-
+>  include/linux/cgroup_namespace.h |  36 ++++++++
+>  include/linux/kernfs.h           |   5 +
+>  include/linux/nsproxy.h          |   2 +
+>  include/linux/proc_ns.h          |   4 +
+>  include/uapi/linux/sched.h       |   3 +-
+>  kernel/Makefile                  |   2 +-
+>  kernel/cgroup.c                  | 108 +++++++++++++++++-----
+>  kernel/cgroup_namespace.c        | 148 +++++++++++++++++++++++++++++
+>  kernel/fork.c                    |   2 +-
+>  kernel/nsproxy.c                 |  19 +++-
 
-There would be a slight inconvenience for 32b machines with distribution
-kernels which cannot simply drop CONFIG_MEMCG from the config.
-Especially those 32b machines with a lot of memory.
+Hi Aditya,
 
-I have checked configuration used for OpenSUSE PAE kernel. Both the
-struct page and the code size grow. There are additional 4B with SLAB
-and SLUB gets 8 because of the alignment in the struct page. So the
-overhead is 4B per page with SLUB.
+Can we provide a documentation file for cgroup namespace behavior. Say,
+Documentation/namespaces/cgroup-namespace.txt.
 
-This doesn't sound too bad to me considering that 64b actually even
-saves some space with SLUB and it is at the same level with SLAB and
-more importantly gets rid of the lookup in hot paths.
+Namespaces are complicated and it might be a good idea to keep one .txt
+file for each namespace.
 
-The code size grows (~1.5k) most probably due to struct page pointer
-arithmetic (but I haven't checked that) but the data section shrinks
-for SLAB. So we have additional 1.6k for SLUB. I guess this is
-acceptable.
-
-   text    data     bss     dec     hex filename
-8427489  887684 3186688 12501861         bec365 mmotm/vmlinux.slab
-8429060  883588 3186688 12499336         beb988 page_cgroup/vmlinux.slab
-
-8438894  883428 3186688 12509010         bedf52 mmotm/vmlinux.slub
-8440529  883428 3186688 12510645         bee5b5 page_cgroup/vmlinux.slub
-
-So to me it sounds like the savings for 64b are worth minor inconvenience
-for 32b which is clearly on decline and I would definitely not encourage
-people to use PAE kernels with a lot of memory where the difference
-might matter. For the most x86 32b deployments (laptops with 4G) the
-difference shouldn't be noticeable. I am not familiar with other archs
-so the situation might be different there.
-
-If this would be a problem for some reason, though, we can reintroduce
-the external page descriptor and translation layer conditionally
-depending on the arch. It seems there will be some users of the external
-descriptors anyway so a struct page_external can hold memcg pointer as
-well.
-
-This should probably go into the changelog, I guess.
--- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks
+Vivek
