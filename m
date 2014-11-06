@@ -1,70 +1,71 @@
-From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCHv2 0/7] CGroup Namespaces
-Date: Thu, 6 Nov 2014 09:33:45 -0800
-Message-ID: <CAGr1F2Hm4+aCUz3RqkgUhbJAQtWvUbb2CRDkW5rJSZkwLM_huw@mail.gmail.com>
-References: <1414783141-6947-1-git-send-email-adityakali@google.com>
-	<20141104131030.GA2937@redhat.com>
+From: Konstantin Khlebnikov <koct9i-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [patch 1/3] mm: embed the memcg pointer directly into struct page
+Date: Thu, 6 Nov 2014 22:55:58 +0400
+Message-ID: <CALYGNiO85ts2J_c8fiYHGDe5gEhb4QMB_HAsST3opdwumUptFg@mail.gmail.com>
+References: <1414898156-4741-1-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=p80P8hC1BkQovDgSTUom2qQ4H1QoUkF3ZhQJ5rUAt/U=;
+        b=nNd3mH54paWRf7SecfUuFuS2CqPYODqUGZ2tsFE9fle8r3IXkwnh6aIVV0b8CGc3ll
+         rCBSwIgGyMc97SPpyWHr8ANYJtevwsBzxdUEsGV0RamGGWypsHkvR8q7XwdybXK1wUcv
+         2Q2OaU1Lg30IV+8JrBl7egzJ61vp9f//ro81Fpxm+sUIX/Z5Tos/wABPRE/qeZ0M0uO+
+         d7dyjK8F2eEgIInRR7kePZVYhI3o6F6osVDjUtTHhfOr2ccDWLnQTG4AxliQ5L6Ssd0W
+         rOBqgkuJnPx8lgqGTWZvGLGB37L2Kh2qUjQmO0M58V1fVWoSI/tj3FcQrY3GO4MVnZqA
+         /VDw==
+In-Reply-To: <1414898156-4741-1-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20120113;
-	h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-	:cc:content-type;
-	bh=Ol2MjebrP3VajSX4iXuXUMbepz5B9S09g/wWkZVkOLM=;
-	b=OJMip2FSbhgvfKhx0l/XmCAzqNvm1UPaGF81/xijFUQrxUPwruhHq7QW7FuZwDml27
-	fgSAQRPetVrs3tRCu2OIRjHMB4LGX1yPi6DzlNGeh0gNp3nmNVorSCmJn62TAoIrSWma
-	Gkqgiuf18qOxENrs/SWGFDgILjKyWceY3t46GWKisxw2RUJ7bmbKOdpn28ArAxRmbf8T
-	2R1PPJDnW4a4PuvfjO8ZAGIXCB2TgF9qmgH/voZLFmLpTzykPOXNxI7Ml1li6qJJNQG6
-	KeJ6JQqgZeL+fluP0hc4Bun7GjkRKl+BioLasJ/btEeAd7XXjK9ghui/Ym5gOlIcfE4N
-	cfPw==
-In-Reply-To: <20141104131030.GA2937-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Tue, Nov 4, 2014 at 5:10 AM, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
-> On Fri, Oct 31, 2014 at 12:18:54PM -0700, Aditya Kali wrote:
-> [..]
->>  fs/kernfs/dir.c                  | 194 ++++++++++++++++++++++++++++++++++-----
->>  fs/kernfs/mount.c                |  48 ++++++++++
->>  fs/proc/namespaces.c             |   1 +
->>  include/linux/cgroup.h           |  41 ++++++++-
->>  include/linux/cgroup_namespace.h |  36 ++++++++
->>  include/linux/kernfs.h           |   5 +
->>  include/linux/nsproxy.h          |   2 +
->>  include/linux/proc_ns.h          |   4 +
->>  include/uapi/linux/sched.h       |   3 +-
->>  kernel/Makefile                  |   2 +-
->>  kernel/cgroup.c                  | 108 +++++++++++++++++-----
->>  kernel/cgroup_namespace.c        | 148 +++++++++++++++++++++++++++++
->>  kernel/fork.c                    |   2 +-
->>  kernel/nsproxy.c                 |  19 +++-
+On Sun, Nov 2, 2014 at 6:15 AM, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+> Memory cgroups used to have 5 per-page pointers.  To allow users to
+> disable that amount of overhead during runtime, those pointers were
+> allocated in a separate array, with a translation layer between them
+> and struct page.
 >
-> Hi Aditya,
+> There is now only one page pointer remaining: the memcg pointer, that
+> indicates which cgroup the page is associated with when charged.  The
+> complexity of runtime allocation and the runtime translation overhead
+> is no longer justified to save that *potential* 0.19% of memory.  With
+> CONFIG_SLUB, page->mem_cgroup actually sits in the doubleword padding
+> after the page->private member and doesn't even increase struct page,
+> and then this patch actually saves space.  Remaining users that care
+> can still compile their kernels without CONFIG_MEMCG.
 >
-> Can we provide a documentation file for cgroup namespace behavior. Say,
-> Documentation/namespaces/cgroup-namespace.txt.
+>    text    data     bss     dec     hex     filename
+> 8828345 1725264  983040 11536649 b00909  vmlinux.old
+> 8827425 1725264  966656 11519345 afc571  vmlinux.new
 >
-Yes, definitely. I will add it as soon as we have a consensus on the
-overall series.
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-> Namespaces are complicated and it might be a good idea to keep one .txt
-> file for each namespace.
->
-> Thanks
-> Vivek
+Great! Never thought I'd see this. =)
+
+Acked-by: Konstantin Khlebnikov <koct9i-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
 
-Thanks,
--- 
-Aditya
+> ---
+>  include/linux/memcontrol.h  |   6 +-
+>  include/linux/mm_types.h    |   5 +
+>  include/linux/mmzone.h      |  12 --
+>  include/linux/page_cgroup.h |  53 --------
+>  init/main.c                 |   7 -
+>  mm/memcontrol.c             | 124 +++++------------
+>  mm/page_alloc.c             |   2 -
+>  mm/page_cgroup.c            | 319 --------------------------------------------
+>  8 files changed, 41 insertions(+), 487 deletions(-)
+>
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index d4575a1d6e99..dafba59b31b4 100644
+
+
+
+> the body to majordomo-Bw31MaZKKs0EbZ0PF+XxCw@public.gmane.org  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Don't email: <a href=mailto:"dont-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org"> email-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org </a>
