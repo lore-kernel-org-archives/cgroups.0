@@ -1,89 +1,103 @@
-From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCHv2 7/7] cgroup: mount cgroupns-root when inside non-init cgroupns
-Date: Wed, 12 Nov 2014 09:48:18 -0800
-Message-ID: <CAGr1F2Ho1kGVbVHxX1wY2PMhiAYgp6Tdnshj1pkV9pAeQLO=Qw@mail.gmail.com>
-References: <1414783141-6947-1-git-send-email-adityakali@google.com>
- <1414783141-6947-8-git-send-email-adityakali@google.com> <87y4rvrakn.fsf@x220.int.ebiederm.org>
- <CAGr1F2Hd_PS_AscBGMXdZC9qkHGRUp-MeQvJksDOQkRBB3RGoA@mail.gmail.com>
- <20141104134633.GA14014@htj.dyndns.org> <CALCETrUggQCJyxsTWRNrjt3GM=R0VMU6RjMkU1aw3YUNMx1xEw@mail.gmail.com>
- <20141104155052.GA7027@mail.hallyn.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH cgroup/for-3.19 1/3] cgroup: separate out
+ cgroup_calc_child_subsys_mask() from cgroup_refresh_child_subsys_mask()
+Date: Thu, 13 Nov 2014 16:58:13 -0500
+Message-ID: <20141113215813.GA2598@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-type;
-        bh=pxgqzDppxlor2Rg+v+1qzgLoePh+omj7YjnlCvKSAQ8=;
-        b=m7xGgDGXfcDbNI0dxK8zTCgcWVIO0/yyfK6nNYGZbXTmhleSMx9Msb/AAbzGwaCRqR
-         ffIHlEfb/xDyacjjJZJHIYSHwxSr3cy1ovew9+DLhcc+dJ+JBq5w0Ulm/4RLOVqRiAom
-         zWc0bjkZGZNTxjIC+P8N8pFbi07KVetFi6ZnIuqhrYHTygitO5iHw0x2zJAro6ZiAKOF
-         4lRJtHDY6Wn/6e3ob4IgZI41Q/AdJxzmhQpbI6+O+FBlCu/DWm4NhbbaBQogM0iWmaxT
-         CohAdjQOIwGbeNna8UdX/flrdJBLbedZKGcjjyzu3xiIHOOoBImsxbLcoDZCu8/0iSE3
-         HKBg==
-In-Reply-To: <20141104155052.GA7027-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=gdk4A6u/diF7Tyn7FdBalVMZ9UlM5l26lo25PYlm4dU=;
+        b=vd6CYVyOvF4mSWlUHCDv3K24Lx5yyItg4osFdwu9nqbfnGGs721M2F1/rz62S+v72x
+         pZUAcIf7DyQEO4IUJlbeyOtptkxFWvdYI9fgpjLo64YzWcb6OJh8ZTuTZM/LUjdXxdu8
+         fxg/IgK31ECGaQ/5av8G9HACMN9dOg2Yq+9buwWSdANWdO3suhKD5zyHERYPYdlvu4IS
+         BiIDR7l1d5SvZ6RCIqCnwNAoyH6g9cqXRrYR8MSMDaXYPuGx1y/+Tsxve7tdkHHQ3cCy
+         Wzhz06UbiBWw24as3/OGLGGDYoL3TlOUUwjiBAlfgpt+8j6KWiMVWTFWuBrDcPHu8Kg1
+         Skmg==
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Cc: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Li Zefan <lizefan@huawei.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-I agree with what Andy and Serge has to say. The ability to mount
-cgroupfs inside userns also seems consistent with other kernel
-interfaces like sysfs, procfs, etc.
+cgroup_refresh_child_subsys_mask() calculates and updates the
+effective @cgrp->child_subsys_maks according to the current
+@cgrp->subtree_control.  Separate out the calculation part into
+cgroup_calc_child_subsys_mask().  This will be used to fix a bug in
+the async css offline wait logic.
 
-Though it would be great if we can atleast merge the rest of the
-patches first while we address the mounting part.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ kernel/cgroup.c |   36 ++++++++++++++++++++++++------------
+ 1 file changed, 24 insertions(+), 12 deletions(-)
 
-Thanks for your feedback.
-
-On Tue, Nov 4, 2014 at 7:50 AM, Serge E. Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org> wrote:
->
-> Quoting Andy Lutomirski (luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org):
-> > On Tue, Nov 4, 2014 at 5:46 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> > > Hello, Aditya.
-> > >
-> > > On Mon, Nov 03, 2014 at 02:43:47PM -0800, Aditya Kali wrote:
-> > >> I agree that this is effectively bind-mounting, but doing this in kernel
-> > >> makes it really convenient for the userspace. The process that sets up the
-> > >> container doesn't need to care whether it should bind-mount cgroupfs inside
-> > >> the container or not. The tasks inside the container can mount cgroupfs on
-> > >> as-needed basis. The root container manager can simply unshare cgroupns and
-> > >> forget about the internal setup. I think this is useful just for the reason
-> > >> that it makes life much simpler for userspace.
-> > >
-> > > If it's okay to require userland to just do bind mounting, I'd be far
-> > > happier with that.  cgroup mount code is already overcomplicated
-> > > because of the dynamic matching of supers to mounts when it could just
-> > > have told userland to use bind mounting.  Doesn't the host side have
-> > > to set up some of the filesystem layouts anyway?  Does it really
-> > > matter that we require the host to set up cgroup hierarchy too?
-> > >
-> >
-> > Sort of, but only sort of.
-> >
-> > You can create a container by unsharing namespaces, mounting
-> > everything, and then calling pivot_root.  But this is unpleasant
-> > because of the strange way that pid namespaces work -- you generally
-> > have to fork first, so this gets tedious.  And it doesn't integrate
-> > well with things like fstab or other container-side configuration
-> > mechanisms.
-> >
-> > It's nicer if you can unshare namespaces, mount the bare minimum,
-> > pivot_root, and let the contained software do as much setup as
-> > possible.
->
-> Also, the bind-mount requires the container manager to know where
-> the guest distro will want the cgroups mounted.
->
-> -serge
-> _______________________________________________
-> Containers mailing list
-> Containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-> https://lists.linuxfoundation.org/mailman/listinfo/containers
-
-
-
-
--- 
-Aditya
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1019,31 +1019,30 @@ static void cgroup_put(struct cgroup *cg
+ }
+ 
+ /**
+- * cgroup_refresh_child_subsys_mask - update child_subsys_mask
++ * cgroup_calc_child_subsys_mask - calculate child_subsys_mask
+  * @cgrp: the target cgroup
++ * @subtree_control: the new subtree_control mask to consider
+  *
+  * On the default hierarchy, a subsystem may request other subsystems to be
+  * enabled together through its ->depends_on mask.  In such cases, more
+  * subsystems than specified in "cgroup.subtree_control" may be enabled.
+  *
+- * This function determines which subsystems need to be enabled given the
+- * current @cgrp->subtree_control and records it in
+- * @cgrp->child_subsys_mask.  The resulting mask is always a superset of
+- * @cgrp->subtree_control and follows the usual hierarchy rules.
++ * This function calculates which subsystems need to be enabled if
++ * @subtree_control is to be applied to @cgrp.  The returned mask is always
++ * a superset of @subtree_control and follows the usual hierarchy rules.
+  */
+-static void cgroup_refresh_child_subsys_mask(struct cgroup *cgrp)
++static unsigned int cgroup_calc_child_subsys_mask(struct cgroup *cgrp,
++						  unsigned int subtree_control)
+ {
+ 	struct cgroup *parent = cgroup_parent(cgrp);
+-	unsigned int cur_ss_mask = cgrp->subtree_control;
++	unsigned int cur_ss_mask = subtree_control;
+ 	struct cgroup_subsys *ss;
+ 	int ssid;
+ 
+ 	lockdep_assert_held(&cgroup_mutex);
+ 
+-	if (!cgroup_on_dfl(cgrp)) {
+-		cgrp->child_subsys_mask = cur_ss_mask;
+-		return;
+-	}
++	if (!cgroup_on_dfl(cgrp))
++		return cur_ss_mask;
+ 
+ 	while (true) {
+ 		unsigned int new_ss_mask = cur_ss_mask;
+@@ -1067,7 +1066,20 @@ static void cgroup_refresh_child_subsys_
+ 		cur_ss_mask = new_ss_mask;
+ 	}
+ 
+-	cgrp->child_subsys_mask = cur_ss_mask;
++	return cur_ss_mask;
++}
++
++/**
++ * cgroup_refresh_child_subsys_mask - update child_subsys_mask
++ * @cgrp: the target cgroup
++ *
++ * Update @cgrp->child_subsys_mask according to the current
++ * @cgrp->subtree_control using cgroup_calc_child_subsys_mask().
++ */
++static void cgroup_refresh_child_subsys_mask(struct cgroup *cgrp)
++{
++	cgrp->child_subsys_mask =
++		cgroup_calc_child_subsys_mask(cgrp, cgrp->subtree_control);
+ }
+ 
+ /**
