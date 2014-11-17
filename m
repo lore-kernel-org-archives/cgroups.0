@@ -1,24 +1,24 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 2/3 cgroup/for-3.19] cgroup: add
- cgroup_subsys->css_e_css_changed()
-Date: Mon, 17 Nov 2014 15:57:34 -0500
-Message-ID: <20141117205734.GB23126@htj.dyndns.org>
+Subject: [PATCH 3/3 cgroup/for-3.19] cgroup: implement cgroup_get_e_css()
+Date: Mon, 17 Nov 2014 15:58:55 -0500
+Message-ID: <20141117205855.GC23126@htj.dyndns.org>
 References: <20141117205652.GA23126@htj.dyndns.org>
+ <20141117205734.GB23126@htj.dyndns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=5BjUCTRz6RuqYWq/2fxzhEOkXyKqZJrF7NB90FYbfEA=;
-        b=SzZIxEzUAfcqWqMEQzvrZr9JFGAT8/dO6+of250qZfjKYZzBuvtb+0b+7zYfeVhkNm
-         8eJFFy97O3Lk8GigOi6ePfeovFkN2EcHZ3m6tzk/2TLDA6OrsKTBgh/zmOmI0dlLroiP
-         m36D8xOc12NR9aDuGK4riJktgrwmKwc34pNQhDafm8bAbZi4sYP3J/jAmDH5qukzVHzg
-         53gAjETp4BSp/OdJ3SWgKSu3tCJhRmfjY3lFlvfqndWEqCCdePkPRc/oO+5FvbZ7WUJd
-         hBHl1fUYhNfN5VXbiz9bfAEnMffcYixnaWBQQUlTmt0Xl5y1X78NT0LxRh3o0pqiXxW+
-         6JWQ==
+        bh=6MJn4yes2/gIobkX4X6Mqug8OzAqi1g7py9OGQ91eVQ=;
+        b=r+IArPnB3RONMYHjnR5RdeODQw5uYW0Bbox7mXINEtcvtKwwy5n1WOYw8/rlEI5zwH
+         gI7Y6yOFfEdmAwYtCBG2lVvbEOWopG7Ny5d7N2jCI9rjo+q5grLcknJK0PV9o8P+5/sB
+         u2a1fdctcpIqszbm6pvGDjvXsh+ybdK1IF79NhPgp050/bl6qmMGaNDfe8ymgcmONonA
+         1RoXN3Pjs3nuEzecr7xNA0mWSKHlVNOkmvqZx6L6Fj1gY8miKnT7yN0rNb2YpnJfKMzU
+         7nMHKCZ74Mm2R1kTczYiOXSubk+hUkEAIZQQSVN3QCEcuVsaZ/qh+AvDJX/SYUZ3CjNr
+         1zpQ==
 Content-Disposition: inline
-In-Reply-To: <20141117205652.GA23126-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+In-Reply-To: <20141117205734.GB23126-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -26,52 +26,83 @@ Content-Transfer-Encoding: 7bit
 To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Add a new cgroup_subsys operatoin ->css_e_css_changed().  This is
-invoked if any of the effective csses seen from the css's cgroup may
-have changed.  This will be used to implement cgroup writeback
-support.
+Implement cgroup_get_e_css() which finds and gets the effective css
+for the specified cgroup and subsystem combination.  This function
+always returns a valid pinned css.  This will be used by cgroup
+writeback support.
+
+While at it, add comment to cgroup_e_css() to explain why that
+function is different from cgroup_get_e_css() and has to test
+cgrp->child_subsys_mask instead of cgroup_css(cgrp, ss).
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/cgroup.h |    1 +
- kernel/cgroup.c        |   18 ++++++++++++++++++
- 2 files changed, 19 insertions(+)
+ include/linux/cgroup.h |    2 ++
+ kernel/cgroup.c        |   37 +++++++++++++++++++++++++++++++++++++
+ 2 files changed, 39 insertions(+)
 
 --- a/include/linux/cgroup.h
 +++ b/include/linux/cgroup.h
-@@ -615,6 +615,7 @@ struct cgroup_subsys {
- 	void (*css_released)(struct cgroup_subsys_state *css);
- 	void (*css_free)(struct cgroup_subsys_state *css);
- 	void (*css_reset)(struct cgroup_subsys_state *css);
-+	void (*css_e_css_changed)(struct cgroup_subsys_state *css);
+@@ -910,6 +910,8 @@ void css_task_iter_end(struct css_task_i
+ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *);
+ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from);
  
- 	int (*can_attach)(struct cgroup_subsys_state *css,
- 			  struct cgroup_taskset *tset);
++struct cgroup_subsys_state *cgroup_get_e_css(struct cgroup *cgroup,
++					     struct cgroup_subsys *ss);
+ struct cgroup_subsys_state *css_tryget_online_from_dir(struct dentry *dentry,
+ 						       struct cgroup_subsys *ss);
+ 
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -2836,6 +2836,24 @@ static ssize_t cgroup_subtree_control_wr
- 		}
- 	}
+@@ -277,6 +277,10 @@ static struct cgroup_subsys_state *cgrou
+ 	if (!(cgrp->root->subsys_mask & (1 << ss->id)))
+ 		return NULL;
  
 +	/*
-+	 * The effective csses of all the descendants (excluding @cgrp) may
-+	 * have changed.  Subsystems can optionally subscribe to this event
-+	 * by implementing ->css_e_css_changed() which is invoked if any of
-+	 * the effective csses seen from the css's cgroup may have changed.
++	 * This function is used while updating css associations and thus
++	 * can't test the csses directly.  Use ->child_subsys_mask.
 +	 */
-+	for_each_subsys(ss, ssid) {
-+		struct cgroup_subsys_state *this_css = cgroup_css(cgrp, ss);
-+		struct cgroup_subsys_state *css;
+ 	while (cgroup_parent(cgrp) &&
+ 	       !(cgroup_parent(cgrp)->child_subsys_mask & (1 << ss->id)))
+ 		cgrp = cgroup_parent(cgrp);
+@@ -284,6 +288,39 @@ static struct cgroup_subsys_state *cgrou
+ 	return cgroup_css(cgrp, ss);
+ }
+ 
++/**
++ * cgroup_get_e_css - get a cgroup's effective css for the specified subsystem
++ * @cgrp: the cgroup of interest
++ * @ss: the subsystem of interest
++ *
++ * Find and get the effective css of @cgrp for @ss.  The effective css is
++ * defined as the matching css of the nearest ancestor including self which
++ * has @ss enabled.  If @ss is not mounted on the hierarchy @cgrp is on,
++ * the root css is returned, so this function always returns a valid css.
++ * The returned css must be put using css_put().
++ */
++struct cgroup_subsys_state *cgroup_get_e_css(struct cgroup *cgrp,
++					     struct cgroup_subsys *ss)
++{
++	struct cgroup_subsys_state *css;
 +
-+		if (!ss->css_e_css_changed || !this_css)
-+			continue;
++	rcu_read_lock();
 +
-+		css_for_each_descendant_pre(css, this_css)
-+			if (css != this_css)
-+				ss->css_e_css_changed(css);
-+	}
++	do {
++		css = cgroup_css(cgrp, ss);
 +
- 	kernfs_activate(cgrp->kn);
- 	ret = 0;
- out_unlock:
++		if (css && css_tryget_online(css))
++			goto out_unlock;
++		cgrp = cgroup_parent(cgrp);
++	} while (cgrp);
++
++	css = init_css_set.subsys[ss->id];
++	css_get(css);
++out_unlock:
++	rcu_read_unlock();
++	return css;
++}
++
+ /* convenient tests for these bits */
+ static inline bool cgroup_is_dead(const struct cgroup *cgrp)
+ {
