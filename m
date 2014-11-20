@@ -1,217 +1,292 @@
-From: <zhiyuan_zhu@htc.com>
-Subject: =?gb2312?B?tPC4tDogtPC4tDogbG93IG1lbW9yeSBraWxsZXI=?=
-Date: Thu, 20 Nov 2014 12:05:00 +0000
-Message-ID: <AF7C0ADF1FEABA4DABABB97411952A2EC91FE0@CN-MBX02.HTC.COM.TW>
+From: Weijie Yang <weijieut@gmail.com>
+Subject: =?UTF-8?B?UmU6IOetlOWkjTog562U5aSNOiBsb3cgbWVtb3J5IGtpbGxlcg==?=
+Date: Thu, 20 Nov 2014 22:19:05 +0800
+Message-ID: <CABdxLJGViULvRt7nptNzYZN3E7szN3k4BvQAMUrJ7oMBNcoOoQ@mail.gmail.com>
 References: <AF7C0ADF1FEABA4DABABB97411952A2EC91E38@CN-MBX02.HTC.COM.TW>
- <20141120095802.GA24575@dhcp22.suse.cz>
- <AF7C0ADF1FEABA4DABABB97411952A2EC91EF5@CN-MBX02.HTC.COM.TW>
- <20141120101855.GB24575@dhcp22.suse.cz>
+	<20141120095802.GA24575@dhcp22.suse.cz>
+	<AF7C0ADF1FEABA4DABABB97411952A2EC91EF5@CN-MBX02.HTC.COM.TW>
+	<20141120101855.GB24575@dhcp22.suse.cz>
+	<AF7C0ADF1FEABA4DABABB97411952A2EC91FE0@CN-MBX02.HTC.COM.TW>
 Mime-Version: 1.0
-Content-Type: multipart/alternative; boundary="__=_Part_Boundary_009_1837996101.507241841"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/alternative; boundary=047d7bd761d6c8249205084b020e
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20141120101855.GB24575@dhcp22.suse.cz>
-Content-Language: zh-CN
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=Zxhz/rxO3TkBKN5xmWccXrPol8XR2w3SItrrvd42jEk=;
+        b=KG97O9BKDQlLmwvLPcnLmlvoQWOg7AYFFy0SdzJn46+1ORCHP9cAdYnnIQ3l+SGbPp
+         zqFWC0PbvfyDMvUuvWxnSO6d/6FZ939n+I5Tbu7zK1UW4q7GD2LMr+kqxEKxOoy9rVtC
+         cAsD8FKLwSvVpMdSAS3E8wdutYUwXHCVGGCu7d3whGNpKwjSLZoHiiGFHnxuFHjmo2hi
+         eojRwO1rgCud0zLYpTkIg/7dizRamBF9N5TuIMxS4ogU42n2ir2h5t83VK7bVeKnn19e
+         p4Si6mAMRQzF1sSIbgZpBCST4pQpIUNUDiJzrp8ObP/EY2oReOJU3FKb0aP3gLtL/2zs
+         9yMA==
+In-Reply-To: <AF7C0ADF1FEABA4DABABB97411952A2EC91FE0@CN-MBX02.HTC.COM.TW>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-To: mhocko@suse.cz
-Cc: hannes@cmpxchg.org, Future_Zhou@htc.com, Rachel_Zhang@htc.com, bsingharora@gmail.com, kamezawa.hiroyu@jp.fujitsu.com, cgroups@vger.kernel.org, linux-mm@kvack.org, greg@kroah.com, Sai_Shen@htc.com
+To: zhiyuan_zhu@htc.com
+Cc: mhocko@suse.cz, hannes@cmpxchg.org, Future_Zhou@htc.com, Rachel_Zhang@htc.com, bsingharora@gmail.com, kamezawa.hiroyu@jp.fujitsu.com, cgroups@vger.kernel.org, linux-mm@kvack.org, greg@kroah.com, Sai_Shen@htc.com
 
-VGhpcyBpcyBNSU1FIG11bHRpcGFydCA3Lg==
---__=_Part_Boundary_009_1837996101.507241841
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+--047d7bd761d6c8249205084b020e
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-SGkgR3JlZy9NaWNoYWwNClZlcnkgc29ycnkgSSBoYXZlIGEgbWlzdGFrZSBpbiBwcmV2aW91cyBt
-YWlsLiAoSXQgc2hvdWxkIGJlIG5yX2ZpbGVfcGFnZXMgbm90IG5yX2ZyZWVfcGFnZXMpDQpJIHJl
-YXJyYW5nZSB0aGlzIHByb2JsZW0uDQoNCi8vICoqKioqKioqKioqIGxvZyBiZWdpbiAqKioqKioq
-KioqDQo2ICAgICAgMTYxMDMwLjA4NDE0NCAgICAgICAyMDE0LTExLTA3IDIxOjQ0OjUzLjMwNCAg
-ICAgICAgbG93bWVtb3J5a2lsbGVyOiBLaWxsaW5nICdvbS5odGMubGF1bmNoZXInICg0NDg2KSwg
-YWRqIDI5NCwNCjYgICAgICAxNjEwMzAuMDg0MTQ0ICAgICAgIDIwMTQtMTEtMDcgMjE6NDQ6NTMu
-MzA0ICAgICAgICAgICB0byBmcmVlIDQ3ODU2a0Igb24gYmVoYWxmIG9mICdrd29ya2VyL3U4OjE0
-JyAoMjA1OTQpIGJlY2F1c2UNCjYgICAgICAxNjEwMzAuMDg0MTQ0ICAgICAgIDIwMTQtMTEtMDcg
-MjE6NDQ6NTMuMzA0ICAgICAgICAgICBjYWNoZSA3MjQ2MGtCIGlzIGJlbG93IGxpbWl0IDczNzI4
-a0IgZm9yIG9vbV9zY29yZV9hZGogMjM1DQovLyAgKioqKiAvcHJvYy9tZW1pbmZvICdzIHJlc3Vs
-dA0KNCAgICAgIDE2MTAzMC4wODQ3OTcgICAgICAgMjAxNC0xMS0wNyAyMTo0NDo1My4zMDQgICAg
-ICAgIENhY2hlZDogICAgICAgICAgIDE0MjQ0OCBrQg0KLy8gKioqKioqKioqKiogbG9nIGVuZCAq
-KioqKioqKioqDQoNCkFmdGVyIEkgY2hlY2tlZCB0aGUgYW5kcm9pZCdzIGxvdyBtZW1vcnkgc3Ry
-YXRlZ3k6IGtlcm5lbC9kcml2ZXJzL3N0YWdpbmcvYW5kcm9pZC9sb3dtZW1vcnlraWxsZXIuYw0K
-DQovLyAqKioqKiogY29kZSBiZWdpbiAqKioqKioqKioNCgkJb3RoZXJfZmlsZSA9IGdsb2JhbF9w
-YWdlX3N0YXRlKE5SX0ZJTEVfUEFHRVMpIC0NCgkJCQkJCWdsb2JhbF9wYWdlX3N0YXRlKE5SX1NI
-TUVNKSAtDQoJCQkJCQl0b3RhbF9zd2FwY2FjaGVfcGFnZXMoKTsNCg0KCQlsb3dtZW1fcHJpbnQo
-MSwgIktpbGxpbmcgJyVzJyAoJWQpLCBhZGogJWhkLFxuIiBcDQoJCQkJIiAgIHRvIGZyZWUgJWxk
-a0Igb24gYmVoYWxmIG9mICclcycgKCVkKSBiZWNhdXNlXG4iIFwNCgkJCQkiICAgY2FjaGUgJWxk
-a0IgaXMgYmVsb3cgbGltaXQgJWxka0IgZm9yIG9vbV9zY29yZV9hZGogJWhkXG4iIFwNCgkJCQki
-ICAgRnJlZSBtZW1vcnkgaXMgJWxka0IgYWJvdmUgcmVzZXJ2ZWRcbiIsDQoJCQkgICAgIHNlbGVj
-dGVkLT5jb21tLCBzZWxlY3RlZC0+cGlkLA0KCQkJICAgICBzZWxlY3RlZF9vb21fc2NvcmVfYWRq
-LA0KCQkJICAgICBzZWxlY3RlZF90YXNrc2l6ZSAqIChsb25nKShQQUdFX1NJWkUgLyAxMDI0KSwN
-CgkJCSAgICAgY3VycmVudC0+Y29tbSwgY3VycmVudC0+cGlkLA0KCQkJICAgICBvdGhlcl9maWxl
-ICogKGxvbmcpKFBBR0VfU0laRSAvIDEwMjQpLA0KCQkJICAgICBtaW5mcmVlICogKGxvbmcpKFBB
-R0VfU0laRSAvIDEwMjQpLA0KCQkJICAgICBtaW5fc2NvcmVfYWRqLA0KCQkJICAgICBvdGhlcl9m
-cmVlICogKGxvbmcpKFBBR0VfU0laRSAvIDEwMjQpKTsNCi8vICoqKioqKiogY29kZSBlbmQgKioq
-KioqKioqKioqDQoNClNvIGFuZHJvaWQncyBzdHJhdGVneSdzIGZyZWUgbWVtb3J5IGlzID0gb3Ro
-ZXJfZmlsZSA9IChuciBmaWxlIHBhZ2VzIC0gbnIgc2htZW0gLSB0b3RhbCBzd2FwY2FjaGUgcGFn
-ZXMpICogNEsgPSBbY2FjaGUgNzI0NjBrQl0NCkJ1dCB0aGUgc3lzdGVtJ3MgZnJlZSBtZW1vcnkg
-aXM6IENhY2hlZDogICAgICAgIDE0MjQ0OCBrQiAgLy8gZnJvbSAvcHJvYy9tZW1pbmZvDQoNCkFu
-ZCBzeXN0ZW0ncyBmcmVlIG1lbW9yeSBpczogQ2FjaGVkICsgTWVtRnJlZSArIEJ1ZmZlcnMgaXMg
-bGFyZ2VseSB0aGFuIHRoZSBtZW1vcnkgd2hpY2ggYW5yb2lkIGxvd21lbW9yeWtpbGxlciBjYWxj
-dWxhdGVkIG1lbW9yeSBbY2FjaGUgNzI0NjBLXQ0KQXQgdGhpcyB0aW1lIHBvaW50LCBzeXN0ZW0g
-d2lsbCBraWxsIHNvbWUgaW1wb3J0YW50IHByb2Nlc3NlcywgYnV0IHN5c3RlbSBoYXZlIGVub3Vn
-aCBtZW1vcnkuDQpUaGlzIGlzIGFuZHJvaWQncyBsb3dtZW1vcnlraWxsZXIgZGVmZWN0PyBvciBM
-aW51eCBrZXJuZWwgbWVtb3J5J3MgZGVmZWN0Pw0KDQpTbyBJIGhhdmUgc29tZSBxdWVzdGlvbnM6
-DQpJIGhhdmUgYSBxdWVzdGlvbjogd2hhdCdzIHRoZSBuciBmaWxlIHBhZ2VzIG1lYW4/IFdoYXQg
-ZGlmZmVyZW50IGJldHdlZW4gbnJfZmlsZV9wYWdlcyBmcm9tIENhY2hlZCAoZnJvbSAvcHJvYy9t
-ZW1pbmZvKT8NCkFuZCBuciBzaG1lbSwgc3dhcGNhY2hlIHBhZ2VzIGFyZSBzbWFsbCwgc28gSSB0
-aGluayB0aGlzIGlzIHRoZSBrZXkgcHJvYmxlbSB3aHkgYW5kcm9pZCdzIHN0cmFnZWd5IGNhbGN1
-bGF0ZWQgZnJlZSBtZW1vcnkgaXMgbGFyZ2VseSBsZXNzIHRoYW4gL3Byb2MvbWVtaW5mbyBDYWNo
-ZWQncyB2YWx1ZS4NCg0KVGhhbmtzDQpaaGl5dWFuIHpodQ0KDQotLS0tLdPKvP7Urbz+LS0tLS0N
-CreivP7IyzogTWljaGFsIEhvY2tvIFttYWlsdG86bWhvY2tvQHN1c2UuY3pdIA0Kt6LLzcqxvOQ6
-IDIwMTTE6jEx1MIyMMjVIDE4OjE5DQrK1bz+yMs6IFpoaXl1YW4gWmh1KNbs1r7faCkNCrOty806
-IGhhbm5lc0BjbXB4Y2hnLm9yZzsgRnV0dXJlIFpob3Uo1tzOtIHtKTsgUmFjaGVsIFpoYW5nKI+I
-rJMpOyBic2luZ2hhcm9yYUBnbWFpbC5jb207IGthbWV6YXdhLmhpcm95dUBqcC5mdWppdHN1LmNv
-bTsgY2dyb3Vwc0B2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LW1tQGt2YWNrLm9yZzsgZ3JlZ0Brcm9h
-aC5jb20NCtb3zOI6IFJlOiC08Li0OiBsb3cgbWVtb3J5IGtpbGxlcg0KDQpPbiBUaHUgMjAtMTEt
-MTQgMTA6MDk6MjUsIHpoaXl1YW5femh1QGh0Yy5jb20gd3JvdGU6DQo+IEhpIE1pY2hhbA0KPiBU
-aGFua3MgZm9yIHlvdXIga2luZGx5IHN1cHBvcnQuDQo+IEkgZ290IGEgZGV2aWNlLCBhbmQgZHVt
-cCB0aGUgL3Byb2MvbWVtaW5mbyBhbmQgL3Byb2Mvdm1zdGF0IGZpbGVzLCANCj4gdGhleSBhcmUg
-dGhlIExpbnV4IHN0YW5kYXJkIHByb2MgZmlsZXMuDQo+IEkgZm91bmQgdGhhdDogQ2FjaGVkID0g
-MzM5ODgwIEtCLCBidXQgbnJfZnJlZV9wYWdlcz0xNDY3NSo0ID0gNTg3MDBLQiANCj4gYW5kIG5y
-X3NobWVtID0gNTA4KjQ9MjAzMktCDQo+DQo+IG5yX3NobWVtIGlzIGp1c3QgYSBsaXR0bGUgbWVt
-b3J5LCBhbmQgbnIgZnJlZSBwYWdlcyArIG5yX3NobWVtIGlzIA0KPiBsYXJnZWx5IGxlc3MgdGhh
-biBDYWNoZWQuICBTbyB3aHkgbnJfZnJlZV9wYWdlcyBpcyBsYXJnZWx5IGxlc3MgdGhhbiANCj4g
-Q2FjaGVkPyBUaGFuayB5b3UuDQoNCm5yX2ZyZWVfcGFnZXMgcmVmZXJzIHRvIHBhZ2VzIHdoaWNo
-IGFyZSBub3QgYWxsb2NhdGVkLiBDYWNoZWQgcmVmZXJlcyB0byBhIHVzZWQgbWVtb3J5IHdoaWNo
-IGlzIGVhc2lseSByZWNsYWltYWJsZSBzbyBpdCBjYW4gYmUgcmV1c2VkIHNob3VsZCB0aGVyZSBi
-ZSBhIG5lZWQgYW5kIGZyZWUgbWVtb3J5IGRyb3BzIGRvd24uIFNvIHRoaXMgaXMgYSBub3JtYWwg
-c2l0dWF0aW9uLiBIb3cgaXMgdGhpcyByZWxhdGVkIHRvIHRoZSBsb3dtZW1vcnkga2lsbGVyIHF1
-ZXN0aW9uIHBvc3RlZCBwcmV2aW91c2x5Pw0KDQpbLi4uXQ0KLS0NCk1pY2hhbCBIb2Nrbw0KU1VT
-RSBMYWJzDQo=
+On Thu, Nov 20, 2014 at 8:05 PM, <zhiyuan_zhu@htc.com> wrote:
 
---__=_Part_Boundary_009_1837996101.507241841
-Content-Type: text/html; charset="gb2312"
-Content-Transfer-Encoding: base64
+> Hi Greg/Michal
+> Very sorry I have a mistake in previous mail. (It should be nr_file_pages=
+ not nr_free_pages)
+> I rearrange this problem.
+>
+> // *********** log begin **********
+> 6      161030.084144       2014-11-07 21:44:53.304        lowmemorykiller=
+: Killing 'om.htc.launcher' (4486), adj 294,
+> 6      161030.084144       2014-11-07 21:44:53.304           to free 4785=
+6kB on behalf of 'kworker/u8:14' (20594) because
+> 6      161030.084144       2014-11-07 21:44:53.304           cache 72460k=
+B is below limit 73728kB for oom_score_adj 235
+> //  **** /proc/meminfo 's result
+> 4      161030.084797       2014-11-07 21:44:53.304        Cached:        =
+   142448 kB
+> // *********** log end **********
+>
+> After I checked the android's low memory strategy: kernel/drivers/staging=
+/android/lowmemorykiller.c
+>
+> // ****** code begin *********
+> other_file =3D global_page_state(NR_FILE_PAGES) -
+> global_page_state(NR_SHMEM) -
+> total_swapcache_pages();
+>
+> lowmem_print(1, "Killing '%s' (%d), adj %hd,\n" \
+> "   to free %ldkB on behalf of '%s' (%d) because\n" \
+> "   cache %ldkB is below limit %ldkB for oom_score_adj %hd\n" \
+> "   Free memory is %ldkB above reserved\n",
+>      selected->comm, selected->pid,
+>      selected_oom_score_adj,
+>      selected_tasksize * (long)(PAGE_SIZE / 1024),
+>      current->comm, current->pid,
+>      other_file * (long)(PAGE_SIZE / 1024),
+>      minfree * (long)(PAGE_SIZE / 1024),
+>      min_score_adj,
+>      other_free * (long)(PAGE_SIZE / 1024));
+> // ******* code end ************
+>
+> So android's strategy's free memory is =3D other_file =3D (nr file pages =
+- nr shmem - total swapcache pages) * 4K =3D [cache 72460kB]
+> But the system's free memory is: Cached:        142448 kB  // from /proc/=
+meminfo
+>
+> And system's free memory is: Cached + MemFree + Buffers is largely than t=
+he memory which anroid lowmemorykiller calculated memory [cache 72460K]
+> At this time point, system will kill some important processes, but system=
+ have enough memory.
+> This is android's lowmemorykiller defect? or Linux kernel memory's defect=
+?
+>
+> So I have some questions:
+> I have a question: what's the nr file pages mean? What different between =
+nr_file_pages from Cached (from /proc/meminfo)?
+> And nr shmem, swapcache pages are small, so I think this is the key probl=
+em why android's stragegy calculated free memory is largely less than /proc=
+/meminfo Cached's value.
+>
+>
+Why lowmemkiller -total_swapcache_pages()? see commit 058dbde92:
 
-PHByZT4NCkhpJiMzMjtHcmVnL01pY2hhbA0KVmVyeSYjMzI7c29ycnkmIzMyO0kmIzMyO2hhdmUm
-IzMyO2EmIzMyO21pc3Rha2UmIzMyO2luJiMzMjtwcmV2aW91cyYjMzI7bWFpbC4mIzMyOyhJdCYj
-MzI7c2hvdWxkJiMzMjtiZSYjMzI7bnJfZmlsZV9wYWdlcyYjMzI7bm90JiMzMjtucl9mcmVlX3Bh
-Z2VzKQ0KSSYjMzI7cmVhcnJhbmdlJiMzMjt0aGlzJiMzMjtwcm9ibGVtLg0KDQovLyYjMzI7Kioq
-KioqKioqKiomIzMyO2xvZyYjMzI7YmVnaW4mIzMyOyoqKioqKioqKioNCjYmIzMyOyYjMzI7JiMz
-MjsmIzMyOyYjMzI7JiMzMjsxNjEwMzAuMDg0MTQ0JiMzMjsmIzMyOyYjMzI7JiMzMjsmIzMyOyYj
-MzI7JiMzMjsyMDE0LTExLTA3JiMzMjsyMTo0NDo1My4zMDQmIzMyOyYjMzI7JiMzMjsmIzMyOyYj
-MzI7JiMzMjsmIzMyOyYjMzI7bG93bWVtb3J5a2lsbGVyOiYjMzI7S2lsbGluZyYjMzI7JiMzOTtv
-bS5odGMubGF1bmNoZXImIzM5OyYjMzI7KDQ0ODYpLCYjMzI7YWRqJiMzMjsyOTQsDQo2JiMzMjsm
-IzMyOyYjMzI7JiMzMjsmIzMyOyYjMzI7MTYxMDMwLjA4NDE0NCYjMzI7JiMzMjsmIzMyOyYjMzI7
-JiMzMjsmIzMyOyYjMzI7MjAxNC0xMS0wNyYjMzI7MjE6NDQ6NTMuMzA0JiMzMjsmIzMyOyYjMzI7
-JiMzMjsmIzMyOyYjMzI7JiMzMjsmIzMyOyYjMzI7JiMzMjsmIzMyO3RvJiMzMjtmcmVlJiMzMjs0
-Nzg1NmtCJiMzMjtvbiYjMzI7YmVoYWxmJiMzMjtvZiYjMzI7JiMzOTtrd29ya2VyL3U4OjE0JiMz
-OTsmIzMyOygyMDU5NCkmIzMyO2JlY2F1c2UNCjYmIzMyOyYjMzI7JiMzMjsmIzMyOyYjMzI7JiMz
-MjsxNjEwMzAuMDg0MTQ0JiMzMjsmIzMyOyYjMzI7JiMzMjsmIzMyOyYjMzI7JiMzMjsyMDE0LTEx
-LTA3JiMzMjsyMTo0NDo1My4zMDQmIzMyOyYjMzI7JiMzMjsmIzMyOyYjMzI7JiMzMjsmIzMyOyYj
-MzI7JiMzMjsmIzMyOyYjMzI7Y2FjaGUmIzMyOzcyNDYwa0ImIzMyO2lzJiMzMjtiZWxvdyYjMzI7
-bGltaXQmIzMyOzczNzI4a0ImIzMyO2ZvciYjMzI7b29tX3Njb3JlX2FkaiYjMzI7MjM1DQovLyYj
-MzI7JiMzMjsqKioqJiMzMjsvcHJvYy9tZW1pbmZvJiMzMjsmIzM5O3MmIzMyO3Jlc3VsdA0KNCYj
-MzI7JiMzMjsmIzMyOyYjMzI7JiMzMjsmIzMyOzE2MTAzMC4wODQ3OTcmIzMyOyYjMzI7JiMzMjsm
-IzMyOyYjMzI7JiMzMjsmIzMyOzIwMTQtMTEtMDcmIzMyOzIxOjQ0OjUzLjMwNCYjMzI7JiMzMjsm
-IzMyOyYjMzI7JiMzMjsmIzMyOyYjMzI7JiMzMjtDYWNoZWQ6JiMzMjsmIzMyOyYjMzI7JiMzMjsm
-IzMyOyYjMzI7JiMzMjsmIzMyOyYjMzI7JiMzMjsmIzMyOzE0MjQ0OCYjMzI7a0INCi8vJiMzMjsq
-KioqKioqKioqKiYjMzI7bG9nJiMzMjtlbmQmIzMyOyoqKioqKioqKioNCg0KQWZ0ZXImIzMyO0km
-IzMyO2NoZWNrZWQmIzMyO3RoZSYjMzI7YW5kcm9pZCYjMzk7cyYjMzI7bG93JiMzMjttZW1vcnkm
-IzMyO3N0cmF0ZWd5OiYjMzI7a2VybmVsL2RyaXZlcnMvc3RhZ2luZy9hbmRyb2lkL2xvd21lbW9y
-eWtpbGxlci5jDQoNCi8vJiMzMjsqKioqKiomIzMyO2NvZGUmIzMyO2JlZ2luJiMzMjsqKioqKioq
-KioNCm90aGVyX2ZpbGUmIzMyOz0mIzMyO2dsb2JhbF9wYWdlX3N0YXRlKE5SX0ZJTEVfUEFHRVMp
-JiMzMjstDQpnbG9iYWxfcGFnZV9zdGF0ZShOUl9TSE1FTSkmIzMyOy0NCnRvdGFsX3N3YXBjYWNo
-ZV9wYWdlcygpOw0KDQpsb3dtZW1fcHJpbnQoMSwmIzMyOyZxdW90O0tpbGxpbmcmIzMyOyYjMzk7
-JXMmIzM5OyYjMzI7KCVkKSwmIzMyO2FkaiYjMzI7JWhkLCYjOTI7biZxdW90OyYjMzI7JiM5MjsN
-CiZxdW90OyYjMzI7JiMzMjsmIzMyO3RvJiMzMjtmcmVlJiMzMjslbGRrQiYjMzI7b24mIzMyO2Jl
-aGFsZiYjMzI7b2YmIzMyOyYjMzk7JXMmIzM5OyYjMzI7KCVkKSYjMzI7YmVjYXVzZSYjOTI7biZx
-dW90OyYjMzI7JiM5MjsNCiZxdW90OyYjMzI7JiMzMjsmIzMyO2NhY2hlJiMzMjslbGRrQiYjMzI7
-aXMmIzMyO2JlbG93JiMzMjtsaW1pdCYjMzI7JWxka0ImIzMyO2ZvciYjMzI7b29tX3Njb3JlX2Fk
-aiYjMzI7JWhkJiM5MjtuJnF1b3Q7JiMzMjsmIzkyOw0KJnF1b3Q7JiMzMjsmIzMyOyYjMzI7RnJl
-ZSYjMzI7bWVtb3J5JiMzMjtpcyYjMzI7JWxka0ImIzMyO2Fib3ZlJiMzMjtyZXNlcnZlZCYjOTI7
-biZxdW90OywNCiYjMzI7JiMzMjsmIzMyOyYjMzI7JiMzMjtzZWxlY3RlZC0mZ3Q7Y29tbSwmIzMy
-O3NlbGVjdGVkLSZndDtwaWQsDQomIzMyOyYjMzI7JiMzMjsmIzMyOyYjMzI7c2VsZWN0ZWRfb29t
-X3Njb3JlX2FkaiwNCiYjMzI7JiMzMjsmIzMyOyYjMzI7JiMzMjtzZWxlY3RlZF90YXNrc2l6ZSYj
-MzI7KiYjMzI7KGxvbmcpKFBBR0VfU0laRSYjMzI7LyYjMzI7MTAyNCksDQomIzMyOyYjMzI7JiMz
-MjsmIzMyOyYjMzI7Y3VycmVudC0mZ3Q7Y29tbSwmIzMyO2N1cnJlbnQtJmd0O3BpZCwNCiYjMzI7
-JiMzMjsmIzMyOyYjMzI7JiMzMjtvdGhlcl9maWxlJiMzMjsqJiMzMjsobG9uZykoUEFHRV9TSVpF
-JiMzMjsvJiMzMjsxMDI0KSwNCiYjMzI7JiMzMjsmIzMyOyYjMzI7JiMzMjttaW5mcmVlJiMzMjsq
-JiMzMjsobG9uZykoUEFHRV9TSVpFJiMzMjsvJiMzMjsxMDI0KSwNCiYjMzI7JiMzMjsmIzMyOyYj
-MzI7JiMzMjttaW5fc2NvcmVfYWRqLA0KJiMzMjsmIzMyOyYjMzI7JiMzMjsmIzMyO290aGVyX2Zy
-ZWUmIzMyOyomIzMyOyhsb25nKShQQUdFX1NJWkUmIzMyOy8mIzMyOzEwMjQpKTsNCi8vJiMzMjsq
-KioqKioqJiMzMjtjb2RlJiMzMjtlbmQmIzMyOyoqKioqKioqKioqKg0KDQpTbyYjMzI7YW5kcm9p
-ZCYjMzk7cyYjMzI7c3RyYXRlZ3kmIzM5O3MmIzMyO2ZyZWUmIzMyO21lbW9yeSYjMzI7aXMmIzMy
-Oz0mIzMyO290aGVyX2ZpbGUmIzMyOz0mIzMyOyhuciYjMzI7ZmlsZSYjMzI7cGFnZXMmIzMyOy0m
-IzMyO25yJiMzMjtzaG1lbSYjMzI7LSYjMzI7dG90YWwmIzMyO3N3YXBjYWNoZSYjMzI7cGFnZXMp
-JiMzMjsqJiMzMjs0SyYjMzI7PSYjMzI7W2NhY2hlJiMzMjs3MjQ2MGtCXQ0KQnV0JiMzMjt0aGUm
-IzMyO3N5c3RlbSYjMzk7cyYjMzI7ZnJlZSYjMzI7bWVtb3J5JiMzMjtpczomIzMyO0NhY2hlZDom
-IzMyOyYjMzI7JiMzMjsmIzMyOyYjMzI7JiMzMjsmIzMyOyYjMzI7MTQyNDQ4JiMzMjtrQiYjMzI7
-JiMzMjsvLyYjMzI7ZnJvbSYjMzI7L3Byb2MvbWVtaW5mbw0KDQpBbmQmIzMyO3N5c3RlbSYjMzk7
-cyYjMzI7ZnJlZSYjMzI7bWVtb3J5JiMzMjtpczomIzMyO0NhY2hlZCYjMzI7KyYjMzI7TWVtRnJl
-ZSYjMzI7KyYjMzI7QnVmZmVycyYjMzI7aXMmIzMyO2xhcmdlbHkmIzMyO3RoYW4mIzMyO3RoZSYj
-MzI7bWVtb3J5JiMzMjt3aGljaCYjMzI7YW5yb2lkJiMzMjtsb3dtZW1vcnlraWxsZXImIzMyO2Nh
-bGN1bGF0ZWQmIzMyO21lbW9yeSYjMzI7W2NhY2hlJiMzMjs3MjQ2MEtdDQpBdCYjMzI7dGhpcyYj
-MzI7dGltZSYjMzI7cG9pbnQsJiMzMjtzeXN0ZW0mIzMyO3dpbGwmIzMyO2tpbGwmIzMyO3NvbWUm
-IzMyO2ltcG9ydGFudCYjMzI7cHJvY2Vzc2VzLCYjMzI7YnV0JiMzMjtzeXN0ZW0mIzMyO2hhdmUm
-IzMyO2Vub3VnaCYjMzI7bWVtb3J5Lg0KVGhpcyYjMzI7aXMmIzMyO2FuZHJvaWQmIzM5O3MmIzMy
-O2xvd21lbW9yeWtpbGxlciYjMzI7ZGVmZWN0JiM2MzsmIzMyO29yJiMzMjtMaW51eCYjMzI7a2Vy
-bmVsJiMzMjttZW1vcnkmIzM5O3MmIzMyO2RlZmVjdCYjNjM7DQoNClNvJiMzMjtJJiMzMjtoYXZl
-JiMzMjtzb21lJiMzMjtxdWVzdGlvbnM6DQpJJiMzMjtoYXZlJiMzMjthJiMzMjtxdWVzdGlvbjom
-IzMyO3doYXQmIzM5O3MmIzMyO3RoZSYjMzI7bnImIzMyO2ZpbGUmIzMyO3BhZ2VzJiMzMjttZWFu
-JiM2MzsmIzMyO1doYXQmIzMyO2RpZmZlcmVudCYjMzI7YmV0d2VlbiYjMzI7bnJfZmlsZV9wYWdl
-cyYjMzI7ZnJvbSYjMzI7Q2FjaGVkJiMzMjsoZnJvbSYjMzI7L3Byb2MvbWVtaW5mbykmIzYzOw0K
-QW5kJiMzMjtuciYjMzI7c2htZW0sJiMzMjtzd2FwY2FjaGUmIzMyO3BhZ2VzJiMzMjthcmUmIzMy
-O3NtYWxsLCYjMzI7c28mIzMyO0kmIzMyO3RoaW5rJiMzMjt0aGlzJiMzMjtpcyYjMzI7dGhlJiMz
-MjtrZXkmIzMyO3Byb2JsZW0mIzMyO3doeSYjMzI7YW5kcm9pZCYjMzk7cyYjMzI7c3RyYWdlZ3km
-IzMyO2NhbGN1bGF0ZWQmIzMyO2ZyZWUmIzMyO21lbW9yeSYjMzI7aXMmIzMyO2xhcmdlbHkmIzMy
-O2xlc3MmIzMyO3RoYW4mIzMyOy9wcm9jL21lbWluZm8mIzMyO0NhY2hlZCYjMzk7cyYjMzI7dmFs
-dWUuDQoNClRoYW5rcw0KWmhpeXVhbiYjMzI7emh1DQoNCi0tLS0tJiMzNzAzODsmIzIwMjE0OyYj
-MjE0MDc7JiMyMDIxNDstLS0tLQ0KJiMyMTQ1NzsmIzIwMjE0OyYjMjAxNTQ7OiYjMzI7TWljaGFs
-JiMzMjtIb2NrbyYjMzI7W21haWx0bzptaG9ja29Ac3VzZS5jel0mIzMyOw0KJiMyMTQ1NzsmIzM2
-ODY1OyYjMjYxMDI7JiMzODM4ODs6JiMzMjsyMDE0JiMyNDE4MDsxMSYjMjYzNzY7MjAmIzI2MDg1
-OyYjMzI7MTg6MTkNCiYjMjU5MTA7JiMyMDIxNDsmIzIwMTU0OzomIzMyO1poaXl1YW4mIzMyO1po
-dSgmIzI2NDE3OyYjMjQ1MzU7JiMzNjk2MDspDQomIzI1MjIwOyYjMzY4NjU7OiYjMzI7aGFubmVz
-QGNtcHhjaGcub3JnOyYjMzI7RnV0dXJlJiMzMjtaaG91KCYjMjE2MDg7JiMyNjQxMDsmIzIwMzU4
-Oyk7JiMzMjtSYWNoZWwmIzMyO1poYW5nKCYjMjQzNzM7JiMyOTgwMTspOyYjMzI7YnNpbmdoYXJv
-cmFAZ21haWwuY29tOyYjMzI7a2FtZXphd2EuaGlyb3l1QGpwLmZ1aml0c3UuY29tOyYjMzI7Y2dy
-b3Vwc0B2Z2VyLmtlcm5lbC5vcmc7JiMzMjtsaW51eC1tbUBrdmFjay5vcmc7JiMzMjtncmVnQGty
-b2FoLmNvbQ0KJiMyMDAyNzsmIzM5MDY0OzomIzMyO1JlOiYjMzI7JiMzMTU3MjsmIzIyNzk3Ozom
-IzMyO2xvdyYjMzI7bWVtb3J5JiMzMjtraWxsZXINCg0KT24mIzMyO1RodSYjMzI7MjAtMTEtMTQm
-IzMyOzEwOjA5OjI1LCYjMzI7emhpeXVhbl96aHVAaHRjLmNvbSYjMzI7d3JvdGU6DQomZ3Q7JiMz
-MjtIaSYjMzI7TWljaGFsDQomZ3Q7JiMzMjtUaGFua3MmIzMyO2ZvciYjMzI7eW91ciYjMzI7a2lu
-ZGx5JiMzMjtzdXBwb3J0Lg0KJmd0OyYjMzI7SSYjMzI7Z290JiMzMjthJiMzMjtkZXZpY2UsJiMz
-MjthbmQmIzMyO2R1bXAmIzMyO3RoZSYjMzI7L3Byb2MvbWVtaW5mbyYjMzI7YW5kJiMzMjsvcHJv
-Yy92bXN0YXQmIzMyO2ZpbGVzLCYjMzI7DQomZ3Q7JiMzMjt0aGV5JiMzMjthcmUmIzMyO3RoZSYj
-MzI7TGludXgmIzMyO3N0YW5kYXJkJiMzMjtwcm9jJiMzMjtmaWxlcy4NCiZndDsmIzMyO0kmIzMy
-O2ZvdW5kJiMzMjt0aGF0OiYjMzI7Q2FjaGVkJiMzMjs9JiMzMjszMzk4ODAmIzMyO0tCLCYjMzI7
-YnV0JiMzMjtucl9mcmVlX3BhZ2VzPTE0Njc1KjQmIzMyOz0mIzMyOzU4NzAwS0ImIzMyOw0KJmd0
-OyYjMzI7YW5kJiMzMjtucl9zaG1lbSYjMzI7PSYjMzI7NTA4KjQ9MjAzMktCDQomZ3Q7DQomZ3Q7
-JiMzMjtucl9zaG1lbSYjMzI7aXMmIzMyO2p1c3QmIzMyO2EmIzMyO2xpdHRsZSYjMzI7bWVtb3J5
-LCYjMzI7YW5kJiMzMjtuciYjMzI7ZnJlZSYjMzI7cGFnZXMmIzMyOysmIzMyO25yX3NobWVtJiMz
-MjtpcyYjMzI7DQomZ3Q7JiMzMjtsYXJnZWx5JiMzMjtsZXNzJiMzMjt0aGFuJiMzMjtDYWNoZWQu
-JiMzMjsmIzMyO1NvJiMzMjt3aHkmIzMyO25yX2ZyZWVfcGFnZXMmIzMyO2lzJiMzMjtsYXJnZWx5
-JiMzMjtsZXNzJiMzMjt0aGFuJiMzMjsNCiZndDsmIzMyO0NhY2hlZCYjNjM7JiMzMjtUaGFuayYj
-MzI7eW91Lg0KDQpucl9mcmVlX3BhZ2VzJiMzMjtyZWZlcnMmIzMyO3RvJiMzMjtwYWdlcyYjMzI7
-d2hpY2gmIzMyO2FyZSYjMzI7bm90JiMzMjthbGxvY2F0ZWQuJiMzMjtDYWNoZWQmIzMyO3JlZmVy
-ZXMmIzMyO3RvJiMzMjthJiMzMjt1c2VkJiMzMjttZW1vcnkmIzMyO3doaWNoJiMzMjtpcyYjMzI7
-ZWFzaWx5JiMzMjtyZWNsYWltYWJsZSYjMzI7c28mIzMyO2l0JiMzMjtjYW4mIzMyO2JlJiMzMjty
-ZXVzZWQmIzMyO3Nob3VsZCYjMzI7dGhlcmUmIzMyO2JlJiMzMjthJiMzMjtuZWVkJiMzMjthbmQm
-IzMyO2ZyZWUmIzMyO21lbW9yeSYjMzI7ZHJvcHMmIzMyO2Rvd24uJiMzMjtTbyYjMzI7dGhpcyYj
-MzI7aXMmIzMyO2EmIzMyO25vcm1hbCYjMzI7c2l0dWF0aW9uLiYjMzI7SG93JiMzMjtpcyYjMzI7
-dGhpcyYjMzI7cmVsYXRlZCYjMzI7dG8mIzMyO3RoZSYjMzI7bG93bWVtb3J5JiMzMjtraWxsZXIm
-IzMyO3F1ZXN0aW9uJiMzMjtwb3N0ZWQmIzMyO3ByZXZpb3VzbHkmIzYzOw0KDQpbLi4uXQ0KLS0N
-Ck1pY2hhbCYjMzI7SG9ja28NClNVU0UmIzMyO0xhYnMNCg0KPC9wcmU+PHRhYmxlPjx0cj48dGQ+
-PCEtLXR5cGU6aHRtbC0tPjwhLS17LS0+Q09ORklERU5USUFMSVRZIE5PVEUgOiBUaGUgaW5mb3Jt
-YXRpb24gaW4gdGhpcyBlLW1haWwgaXMgY29uZmlkZW50aWFsIGFuZCBwcml2aWxlZ2VkOyBpdCBp
-cyBpbnRlbmRlZCBmb3IgdXNlIHNvbGVseSBieSB0aGUgaW5kaXZpZHVhbCBvciBlbnRpdHkgbmFt
-ZWQgYXMgdGhlIHJlY2lwaWVudCBoZXJlb2YuIERpc2Nsb3N1cmUsIGNvcHlpbmcsIGRpc3RyaWJ1
-dGlvbiwgb3IgdXNlIG9mIHRoZSBjb250ZW50cyBvZiB0aGlzIGUtbWFpbCBieSBwZXJzb25zIG90
-aGVyIHRoYW4gdGhlIGludGVuZGVkIHJlY2lwaWVudCBpcyBzdHJpY3RseSBwcm9oaWJpdGVkIGFu
-ZCBtYXkgdmlvbGF0ZSBhcHBsaWNhYmxlIGxhd3MuIElmIHlvdSBoYXZlIHJlY2VpdmVkIHRoaXMg
-ZS1tYWlsIGluIGVycm9yLCBwbGVhc2UgZGVsZXRlIHRoZSBvcmlnaW5hbCBtZXNzYWdlIGFuZCBu
-b3RpZnkgdXMgYnkgcmV0dXJuIGVtYWlsIG9yIGNvbGxlY3QgY2FsbCBpbW1lZGlhdGVseS4gVGhh
-bmsgeW91LiBIVEMgQ29ycG9yYXRpb248IS0tfS0tPjwvdGQ+PC90cj48L3RhYmxlPg==
+staging: android: lowmemorykiller: neglect swap cached pages in other_file
+With ZRAM enabled it is observed that lowmemory killer
+doesn't trigger properly. swap cached pages are
+accounted in NR_FILE, and lowmemorykiller considers
+this as reclaimable and adds to other_file. But these
+pages can't be reclaimed unless lowmemorykiller triggers.
+So subtract swap pages from other_file.
 
---__=_Part_Boundary_009_1837996101.507241841--
+
+and commit 31d59a4198f will also make help, please check it.
+
+
+> Thanks
+> Zhiyuan zhu
+>
+> -----=E9=82=AE=E4=BB=B6=E5=8E=9F=E4=BB=B6-----
+> =E5=8F=91=E4=BB=B6=E4=BA=BA: Michal Hocko [mailto:mhocko@suse.cz]
+> =E5=8F=91=E9=80=81=E6=97=B6=E9=97=B4: 2014=E5=B9=B411=E6=9C=8820=E6=97=A5=
+ 18:19
+> =E6=94=B6=E4=BB=B6=E4=BA=BA: Zhiyuan Zhu(=E6=9C=B1=E5=BF=97=E9=81=A0)
+> =E6=8A=84=E9=80=81: hannes@cmpxchg.org; Future Zhou(=E5=91=A8=E6=9C=AA=E4=
+=BE=86); Rachel Zhang(=E5=BC=B5=E7=91=A9); bsingharora@gmail.com; kamezawa.=
+hiroyu@jp.fujitsu.com; cgroups@vger.kernel.org; linux-mm@kvack.org; greg@kr=
+oah.com
+> =E4=B8=BB=E9=A2=98: Re: =E7=AD=94=E5=A4=8D: low memory killer
+>
+> On Thu 20-11-14 10:09:25, zhiyuan_zhu@htc.com wrote:
+> > Hi Michal
+> > Thanks for your kindly support.
+> > I got a device, and dump the /proc/meminfo and /proc/vmstat files,
+> > they are the Linux standard proc files.
+> > I found that: Cached =3D 339880 KB, but nr_free_pages=3D14675*4 =3D 587=
+00KB
+> > and nr_shmem =3D 508*4=3D2032KB
+> >
+> > nr_shmem is just a little memory, and nr free pages + nr_shmem is
+> > largely less than Cached.  So why nr_free_pages is largely less than
+> > Cached? Thank you.
+>
+> nr_free_pages refers to pages which are not allocated. Cached referes to =
+a used memory which is easily reclaimable so it can be reused should there =
+be a need and free memory drops down. So this is a normal situation. How is=
+ this related to the lowmemory killer question posted previously?
+>
+> [...]
+> --
+> Michal Hocko
+> SUSE Labs
+>
+>
+> CONFIDENTIALITY NOTE : The information in this e-mail is confidential and
+> privileged; it is intended for use solely by the individual or entity nam=
+ed
+> as the recipient hereof. Disclosure, copying, distribution, or use of the
+> contents of this e-mail by persons other than the intended recipient is
+> strictly prohibited and may violate applicable laws. If you have received
+> this e-mail in error, please delete the original message and notify us by
+> return email or collect call immediately. Thank you. HTC Corporation
+>
+
+--047d7bd761d6c8249205084b020e
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div class=3D"gmail_extra"><div class=3D"gmail_quote">On T=
+hu, Nov 20, 2014 at 8:05 PM,  <span dir=3D"ltr">&lt;<a href=3D"mailto:zhiyu=
+an_zhu@htc.com" target=3D"_blank">zhiyuan_zhu@htc.com</a>&gt;</span> wrote:=
+<br><blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8ex;bor=
+der-left-width:1px;border-left-color:rgb(204,204,204);border-left-style:sol=
+id;padding-left:1ex"><pre>Hi Greg/Michal
+Very sorry I have a mistake in previous mail. (It should be nr_file_pages n=
+ot nr_free_pages)
+I rearrange this problem.
+
+// *********** log begin **********
+6      161030.084144       2014-11-07 21:44:53.304        lowmemorykiller: =
+Killing &#39;om.htc.launcher&#39; (4486), adj 294,
+6      161030.084144       2014-11-07 21:44:53.304           to free 47856k=
+B on behalf of &#39;kworker/u8:14&#39; (20594) because
+6      161030.084144       2014-11-07 21:44:53.304           cache 72460kB =
+is below limit 73728kB for oom_score_adj 235
+//  **** /proc/meminfo &#39;s result
+4      161030.084797       2014-11-07 21:44:53.304        Cached:          =
+ 142448 kB
+// *********** log end **********
+
+After I checked the android&#39;s low memory strategy: kernel/drivers/stagi=
+ng/android/lowmemorykiller.c
+
+// ****** code begin *********
+other_file =3D global_page_state(NR_FILE_PAGES) -
+global_page_state(NR_SHMEM) -
+total_swapcache_pages();
+
+lowmem_print(1, &quot;Killing &#39;%s&#39; (%d), adj %hd,\n&quot; \
+&quot;   to free %ldkB on behalf of &#39;%s&#39; (%d) because\n&quot; \
+&quot;   cache %ldkB is below limit %ldkB for oom_score_adj %hd\n&quot; \
+&quot;   Free memory is %ldkB above reserved\n&quot;,
+     selected-&gt;comm, selected-&gt;pid,
+     selected_oom_score_adj,
+     selected_tasksize * (long)(PAGE_SIZE / 1024),
+     current-&gt;comm, current-&gt;pid,
+     other_file * (long)(PAGE_SIZE / 1024),
+     minfree * (long)(PAGE_SIZE / 1024),
+     min_score_adj,
+     other_free * (long)(PAGE_SIZE / 1024));
+// ******* code end ************
+
+So android&#39;s strategy&#39;s free memory is =3D other_file =3D (nr file =
+pages - nr shmem - total swapcache pages) * 4K =3D [cache 72460kB]
+But the system&#39;s free memory is: Cached:        142448 kB  // from /pro=
+c/meminfo
+
+And system&#39;s free memory is: Cached + MemFree + Buffers is largely than=
+ the memory which anroid lowmemorykiller calculated memory [cache 72460K]
+At this time point, system will kill some important processes, but system h=
+ave enough memory.
+This is android&#39;s lowmemorykiller defect? or Linux kernel memory&#39;s =
+defect?
+
+So I have some questions:
+I have a question: what&#39;s the nr file pages mean? What different betwee=
+n nr_file_pages from Cached (from /proc/meminfo)?
+And nr shmem, swapcache pages are small, so I think this is the key problem=
+ why android&#39;s stragegy calculated free memory is largely less than /pr=
+oc/meminfo Cached&#39;s value.</pre></blockquote><div><br></div><div>Why lo=
+wmemkiller -total_swapcache_pages()? see commit=C2=A0058dbde92:</div><div><=
+br></div><div><div>staging: android: lowmemorykiller: neglect swap cached p=
+ages in other_file</div><div>With ZRAM enabled it is observed that lowmemor=
+y killer</div><div>doesn&#39;t trigger properly. swap cached pages are</div=
+><div>accounted in NR_FILE, and lowmemorykiller considers</div><div>this as=
+ reclaimable and adds to other_file. But these</div><div>pages can&#39;t be=
+ reclaimed unless lowmemorykiller triggers.</div><div>So subtract swap page=
+s from other_file.</div><div><br></div></div><div><br></div><div>and commit=
+=C2=A031d59a4198f will also make help, please check it.</div><div>=C2=A0</d=
+iv><blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8ex;bord=
+er-left-width:1px;border-left-color:rgb(204,204,204);border-left-style:soli=
+d;padding-left:1ex"><pre>Thanks
+Zhiyuan zhu
+
+-----=E9=82=AE=E4=BB=B6=E5=8E=9F=E4=BB=B6-----
+=E5=8F=91=E4=BB=B6=E4=BA=BA: Michal Hocko [mailto:<a href=3D"mailto:mhocko@=
+suse.cz" target=3D"_blank">mhocko@suse.cz</a>]=20
+=E5=8F=91=E9=80=81=E6=97=B6=E9=97=B4: 2014=E5=B9=B411=E6=9C=8820=E6=97=A5 1=
+8:19
+=E6=94=B6=E4=BB=B6=E4=BA=BA: Zhiyuan Zhu(=E6=9C=B1=E5=BF=97=E9=81=A0)
+=E6=8A=84=E9=80=81: <a href=3D"mailto:hannes@cmpxchg.org" target=3D"_blank"=
+>hannes@cmpxchg.org</a>; Future Zhou(=E5=91=A8=E6=9C=AA=E4=BE=86); Rachel Z=
+hang(=E5=BC=B5=E7=91=A9); <a href=3D"mailto:bsingharora@gmail.com" target=
+=3D"_blank">bsingharora@gmail.com</a>; <a href=3D"mailto:kamezawa.hiroyu@jp=
+.fujitsu.com" target=3D"_blank">kamezawa.hiroyu@jp.fujitsu.com</a>; <a href=
+=3D"mailto:cgroups@vger.kernel.org" target=3D"_blank">cgroups@vger.kernel.o=
+rg</a>; <a href=3D"mailto:linux-mm@kvack.org" target=3D"_blank">linux-mm@kv=
+ack.org</a>; <a href=3D"mailto:greg@kroah.com" target=3D"_blank">greg@kroah=
+.com</a>
+=E4=B8=BB=E9=A2=98: Re: =E7=AD=94=E5=A4=8D: low memory killer
+
+On Thu 20-11-14 10:09:25, <a href=3D"mailto:zhiyuan_zhu@htc.com" target=3D"=
+_blank">zhiyuan_zhu@htc.com</a> wrote:
+&gt; Hi Michal
+&gt; Thanks for your kindly support.
+&gt; I got a device, and dump the /proc/meminfo and /proc/vmstat files,=20
+&gt; they are the Linux standard proc files.
+&gt; I found that: Cached =3D 339880 KB, but nr_free_pages=3D14675*4 =3D 58=
+700KB=20
+&gt; and nr_shmem =3D 508*4=3D2032KB
+&gt;
+&gt; nr_shmem is just a little memory, and nr free pages + nr_shmem is=20
+&gt; largely less than Cached.  So why nr_free_pages is largely less than=
+=20
+&gt; Cached? Thank you.
+
+nr_free_pages refers to pages which are not allocated. Cached referes to a =
+used memory which is easily reclaimable so it can be reused should there be=
+ a need and free memory drops down. So this is a normal situation. How is t=
+his related to the lowmemory killer question posted previously?
+
+[...]
+--
+Michal Hocko
+SUSE Labs
+
+</pre><div class=3D""><div class=3D"h5"><table><tbody><tr><td>CONFIDENTIALI=
+TY NOTE : The information in this e-mail is confidential and privileged; it=
+ is intended for use solely by the individual or entity named as the recipi=
+ent hereof. Disclosure, copying, distribution, or use of the contents of th=
+is e-mail by persons other than the intended recipient is strictly prohibit=
+ed and may violate applicable laws. If you have received this e-mail in err=
+or, please delete the original message and notify us by return email or col=
+lect call immediately. Thank you. HTC Corporation</td></tr></tbody></table>=
+</div></div></blockquote></div><br></div></div>
+
+--047d7bd761d6c8249205084b020e--
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
