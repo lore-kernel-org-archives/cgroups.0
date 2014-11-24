@@ -1,122 +1,52 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: =?utf-8?B?562U5aSNOiDnrZTlpI0=?= =?utf-8?Q?=3A?= low memory
- killer
-Date: Mon, 24 Nov 2014 17:17:57 +0100
-Message-ID: <20141124161554.GA11742@curandero.mameluci.net>
-References: <AF7C0ADF1FEABA4DABABB97411952A2EC91E38@CN-MBX02.HTC.COM.TW>
- <20141120095802.GA24575@dhcp22.suse.cz>
- <AF7C0ADF1FEABA4DABABB97411952A2EC91EF5@CN-MBX02.HTC.COM.TW>
- <20141120101855.GB24575@dhcp22.suse.cz>
- <AF7C0ADF1FEABA4DABABB97411952A2EC91FE0@CN-MBX02.HTC.COM.TW>
-Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+From: SeongJae Park <sj38.park@gmail.com>
+Subject: [PATCH] cgroups: Documentation: fix wrong cgroupfs paths
+Date: Tue, 25 Nov 2014 01:39:19 +0900
+Message-ID: <1416847159-3895-1-git-send-email-sj38.park@gmail.com>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=ECstwTdOlK5SvvW8x975mQLCoS+4tHl9mf0DpzWqad8=;
-        b=oT+IOX3yuf/pUXJVmGrlP4P+zgSDALSrH4Zrzaah1+v3RKpvKlyvk+xa4BNBhhQmfh
-         T3XFDk/k2PsThYjU2ke8lmcCSqW0Ok6VQqqtF571nSC/EQZARionFLq3DX0+FCTs6RVS
-         UNLRK06DOq75RAUk4F74vFgfr+yFPccNVk3D3VnCr3TP/AOImmBW1wwGPVp6yjPezBjj
-         lckFszZ8Kte0TzIxhZ6ZwBx7wSi9rYkXXiK0YuLCZwTx6MEXpwuwsQ5Bs0Agk1KfpJsD
-         6z93yAGEZqR0c2VbgwA2+jaFLtYntd3tcEBpMdU2MxMisdEDB2K2dcgJb/8iBAwogi2M
-         IwCw==
-Content-Disposition: inline
-In-Reply-To: <AF7C0ADF1FEABA4DABABB97411952A2EC91FE0@CN-MBX02.HTC.COM.TW>
-Sender: owner-linux-mm@kvack.org
+        h=from:to:cc:subject:date:message-id;
+        bh=OlnRWF6Mfc7Awl1RgjupJ3aouBTEkUhsy1PUtVTxBxQ=;
+        b=BqpGJI00LDAN3ZQOySngc1fPvDrPKiJ2JTqnjyouzwbQEjZzA8ROuVrpTamrG2Dshw
+         r4yPimlwNnyJ0z8JHfCd2Erse+OxCOQDWxIKIcc3BY8v0hsAlRw7qEQI8+8Pnp8vjpxF
+         b8mVFYwbmQqpwIV1X6BVKgkjPH4lvHgtVt6Y0glGXfcE5yTN2NPn7D9C/yoTILtH0pft
+         EPvl+ZEA/7yF8tVGlN+50mznj/NQuDxzl1R0ByPOQyRz2EqNkWZilY7JCYeXPxL1+Y0j
+         m+8IBoo8/N02yc+uG67aWvxwi29Izv22TYU/jXlebF/Tf8UU6/1QgDNvX+JcnlE+MZK8
+         U4tQ==
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: zhiyuan_zhu@htc.com
-Cc: hannes@cmpxchg.org, Future_Zhou@htc.com, Rachel_Zhang@htc.com, bsingharora@gmail.com, kamezawa.hiroyu@jp.fujitsu.com, cgroups@vger.kernel.org, linux-mm@kvack.org, greg@kroah.com, Sai_Shen@htc.com
+To: tj@kernel.org
+Cc: lizefan@huawei.com, corbet@lwn.net, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, SeongJae Park <sj38.park@gmail.com>
 
-On Thu 20-11-14 12:05:00, zhiyuan_zhu@htc.com wrote:
-> Hi Greg/Michal
-> Very sorry I have a mistake in previous mail. (It should be nr_file_pages not nr_free_pages)
-> I rearrange this problem.
-> 
-> // *********** log begin **********
-> 6      161030.084144       2014-11-07 21:44:53.304        lowmemorykiller: Killing 'om.htc.launcher' (4486), adj 294,
-> 6      161030.084144       2014-11-07 21:44:53.304           to free 47856kB on behalf of 'kworker/u8:14' (20594) because
-> 6      161030.084144       2014-11-07 21:44:53.304           cache 72460kB is below limit 73728kB for oom_score_adj 235
+Few paths used as example to describe cgroupfs usage have been wrong
+from f6e07d38078e ("Documentation: update cgroupfs mount point") by
+mistake. This patch fix those trivial wrong paths.
 
-This is missing the last line which dumps Free memory (at least from the
-snippet below, because nothing like that is in the current driver code
-anymore)
+Signed-off-by: SeongJae Park <sj38.park@gmail.com>
+---
+ Documentation/cgroups/cgroups.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> //  **** /proc/meminfo 's result
-> 4      161030.084797       2014-11-07 21:44:53.304        Cached:           142448 kB
-> // *********** log end **********
-> 
-> After I checked the android's low memory strategy: kernel/drivers/staging/android/lowmemorykiller.c
-> 
-> // ****** code begin *********
-> 		other_file = global_page_state(NR_FILE_PAGES) -
-> 						global_page_state(NR_SHMEM) -
-> 						total_swapcache_pages();
-> 
-> 		lowmem_print(1, "Killing '%s' (%d), adj %hd,\n" \
-> 				"   to free %ldkB on behalf of '%s' (%d) because\n" \
-> 				"   cache %ldkB is below limit %ldkB for oom_score_adj %hd\n" \
-> 				"   Free memory is %ldkB above reserved\n",
-> 			     selected->comm, selected->pid,
-> 			     selected_oom_score_adj,
-> 			     selected_tasksize * (long)(PAGE_SIZE / 1024),
-> 			     current->comm, current->pid,
-> 			     other_file * (long)(PAGE_SIZE / 1024),
-> 			     minfree * (long)(PAGE_SIZE / 1024),
-> 			     min_score_adj,
-> 			     other_free * (long)(PAGE_SIZE / 1024));
-> // ******* code end ************
-> 
-> So android's strategy's free memory is = other_file = (nr file pages - nr shmem - total swapcache pages) * 4K = [cache 72460kB]
-> But the system's free memory is: Cached:        142448 kB  // from /proc/meminfo
-
-I have already pointed you at meminfo_proc_show() which calculates the
-shown value as:
-	cached = global_page_state(NR_FILE_PAGES) -
-	                        total_swapcache_pages() - i.bufferram;
-
-That means that the two differ by NR_SHMEM - i.bufferram. 
-
-> And system's free memory is: Cached + MemFree + Buffers is largely
-> than the memory which anroid lowmemorykiller calculated memory [cache
-> 72460K] At this time point, system will kill some important processes,
-> but system have enough memory.  This is android's lowmemorykiller
-> defect? or Linux kernel memory's defect?
-
-It looks most likely be lowmemory killer bug but this is hard to tell as
-I do not know which kernel version are you looking at and what are the
-additional patch on top of Vanilla kernel.
-The upstream code doesn't care about Cached value as presented by
-/proc/meminfo
-
-> So I have some questions:
-> I have a question: what's the nr file pages mean?
-
-It counts page cache pages (aka pages backed by a file). This includes
-also SHMEM pages.
-
-> What different between nr_file_pages from Cached (from /proc/meminfo)?
-
-See above about meminfo_proc_show.
-
-> And nr shmem, swapcache pages are small, so I think this is the key
-> problem why android's stragegy calculated free memory is largely less
-> than /proc/meminfo Cached's value.
-
-I do not see the value of shmem and swapcache from the time when the
-situation was evaluated.
-
-Anyway I do not think there would be problem with counters but rather
-the way how they are used by lowmemory killer and I would be looking
-into that code first before checking the core kernel.
+diff --git a/Documentation/cgroups/cgroups.txt b/Documentation/cgroups/cgroups.txt
+index 10c949b..f935fac 100644
+--- a/Documentation/cgroups/cgroups.txt
++++ b/Documentation/cgroups/cgroups.txt
+@@ -312,10 +312,10 @@ the "cpuset" cgroup subsystem, the steps are something like:
+  2) mkdir /sys/fs/cgroup/cpuset
+  3) mount -t cgroup -ocpuset cpuset /sys/fs/cgroup/cpuset
+  4) Create the new cgroup by doing mkdir's and write's (or echo's) in
+-    the /sys/fs/cgroup virtual file system.
++    the /sys/fs/cgroup/cpuset virtual file system.
+  5) Start a task that will be the "founding father" of the new job.
+  6) Attach that task to the new cgroup by writing its PID to the
+-    /sys/fs/cgroup/cpuset/tasks file for that cgroup.
++    /sys/fs/cgroup/cpuset tasks file for that cgroup.
+  7) fork, exec or clone the job tasks from this founding father task.
+ 
+ For example, the following sequence of commands will setup a cgroup
 -- 
-Michal Hocko
-SUSE Labs
+1.9.1
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
