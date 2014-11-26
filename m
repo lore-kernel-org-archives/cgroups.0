@@ -1,50 +1,67 @@
-From: SeongJae Park <sj38.park@gmail.com>
-Subject: Re: [PATCH] cgroups: Documentation: fix wrong cgroupfs paths
-Date: Tue, 25 Nov 2014 03:41:15 +0900
-Message-ID: <CAEjAshqxpgAsO69zkNkb-CgbofHtXDriKP3CWwDeEcZJLF6jwA@mail.gmail.com>
-References: <1416847159-3895-1-git-send-email-sj38.park@gmail.com> <20141124104530.78a0050e@lwn.net>
+From: Richard Weinberger <richard.weinberger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCHv2 0/7] CGroup Namespaces
+Date: Wed, 26 Nov 2014 23:58:55 +0100
+Message-ID: <CAFLxGvybiem34J3zrtVhW=4itSdczassNt9RcuxnpJQeAz-JVA@mail.gmail.com>
+References: <1414783141-6947-1-git-send-email-adityakali@google.com>
+	<20141104131030.GA2937@redhat.com>
+	<CAGr1F2Hm4+aCUz3RqkgUhbJAQtWvUbb2CRDkW5rJSZkwLM_huw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-type;
-        bh=+SOLdB3bXxk3t4y3KrDiRESF9OJeP3i/hVUB94/USwE=;
-        b=cEVNsLqrVEVaCr1bp/f4SjFudpMgtNshbTa+AfTGskG3h153/B95tMmzFQwqevqlmM
-         EZKMhNdrHmUyYTxbEHpbfKZokuk+HQRxfH93gV71e4v0q0L/UsOhWVNy5slHmGeG7VFH
-         FDl+Q3Xh4DzaWNhhduEr4k13KaT6jUREXwNwkiNzYY9dzGbni66w5Pc5U9Y4+A+wd/ct
-         7wzZAS+sX0E2DksHp+PHLL0wPxU0eM60/Dv8gANhoIl958kepnhGlZ0LiR950nHDHr8j
-         POvH7OyPn4cR63Gx7fnFI2ql6nmeCD58M8Sb2FhmQCy9Oq79C6zkPRV71c0QyAbYhf4Q
-         M3Mw==
-In-Reply-To: <20141124104530.78a0050e@lwn.net>
-Sender: linux-doc-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jonathan Corbet <corbet@lwn.net>
-Cc: tj@kernel.org, lizefan@huawei.com, cgroups@vger.kernel.org, linux-doc <linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+	:cc:content-type;
+	bh=BB0whnD+p6u5X3nrLyirZKo+Wjpn0tpaDbjOOj9rZX0=;
+	b=KVpOAiPyyq/EsCG6LBLcPmVe4T8NiBaH1NS7qwu6y1NVOVhkK0cDJ6SqQhQwKuV/jz
+	EyVpBYCPP5U3GtdfNW0zPkw1kIJOTeIyJn731aHCXvN6xXvurKq0ee1QtG9eCHztU5IE
+	FZvp/TyQE7NFYZJokVhWT16kSb/RKGdB+eZF3je1R0x7saCxT4JHeI3H/p8oYIAkyC3T
+	6drMKYl8a/ccl1E9W+GZtnX6ThzlkDchVahoaA6lYXrhxSgt9SBhWihGkFpVf5fhZ+rb
+	dnV6McBaP2pSb4rAnNqymmkcI/+YySdi5GePnpe9NeafjT7CAOa+ehO7MxvRSCqRC/1u
+	9oQw==
+In-Reply-To: <CAGr1F2Hm4+aCUz3RqkgUhbJAQtWvUbb2CRDkW5rJSZkwLM_huw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Tue, Nov 25, 2014 at 2:45 AM, Jonathan Corbet <corbet@lwn.net> wrote:
-> On Tue, 25 Nov 2014 01:39:19 +0900
-> SeongJae Park <sj38.park@gmail.com> wrote:
->
->>   6) Attach that task to the new cgroup by writing its PID to the
->> -    /sys/fs/cgroup/cpuset/tasks file for that cgroup.
->> +    /sys/fs/cgroup/cpuset tasks file for that cgroup.
->
-> That one looks like it was correct before the change...?  What am I
-> missing here?
+On Thu, Nov 6, 2014 at 6:33 PM, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> On Tue, Nov 4, 2014 at 5:10 AM, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+>> On Fri, Oct 31, 2014 at 12:18:54PM -0700, Aditya Kali wrote:
+>> [..]
+>>>  fs/kernfs/dir.c                  | 194 ++++++++++++++++++++++++++++++++++-----
+>>>  fs/kernfs/mount.c                |  48 ++++++++++
+>>>  fs/proc/namespaces.c             |   1 +
+>>>  include/linux/cgroup.h           |  41 ++++++++-
+>>>  include/linux/cgroup_namespace.h |  36 ++++++++
+>>>  include/linux/kernfs.h           |   5 +
+>>>  include/linux/nsproxy.h          |   2 +
+>>>  include/linux/proc_ns.h          |   4 +
+>>>  include/uapi/linux/sched.h       |   3 +-
+>>>  kernel/Makefile                  |   2 +-
+>>>  kernel/cgroup.c                  | 108 +++++++++++++++++-----
+>>>  kernel/cgroup_namespace.c        | 148 +++++++++++++++++++++++++++++
+>>>  kernel/fork.c                    |   2 +-
+>>>  kernel/nsproxy.c                 |  19 +++-
+>>
+>> Hi Aditya,
+>>
+>> Can we provide a documentation file for cgroup namespace behavior. Say,
+>> Documentation/namespaces/cgroup-namespace.txt.
+>>
+> Yes, definitely. I will add it as soon as we have a consensus on the
+> overall series.
 
-It should represents /sys/fs/cgroup/cpuset/<*new cgroup name*>/tasks,
-not /sys/fs/cgroup/cpuset/tasks.
+Do you have a public git repository which contains your patches?
 
-If there are better suggestions or anything I am missing, please let me
-know.
-
+-- 
 Thanks,
-SeongJae Park
-
->
-> Thanks,
->
-> jon
+//richard
