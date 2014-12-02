@@ -1,67 +1,61 @@
-From: Richard Weinberger <richard.weinberger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCHv2 0/7] CGroup Namespaces
-Date: Wed, 26 Nov 2014 23:58:55 +0100
-Message-ID: <CAFLxGvybiem34J3zrtVhW=4itSdczassNt9RcuxnpJQeAz-JVA@mail.gmail.com>
-References: <1414783141-6947-1-git-send-email-adityakali@google.com>
-	<20141104131030.GA2937@redhat.com>
-	<CAGr1F2Hm4+aCUz3RqkgUhbJAQtWvUbb2CRDkW5rJSZkwLM_huw@mail.gmail.com>
+From: Michele Curti <michele.curti@gmail.com>
+Subject: [PATCH] mm/memcontrol: fix defined but not used compiler warning
+Date: Tue, 2 Dec 2014 12:07:52 +0100
+Message-ID: <20141202110752.GA11327@powerline.azcom-win.it>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=uwHcwg+3HXBsgUCl3xNs9lo0ZN8lweUiiwbQ9BOyOn8=;
+        b=oSZHgJuDeqeeSoUPs1otN83CAlRVgcbwpYlGdzlgciCiTiYLhXdQZ9wFpDjWfSCzYi
+         3bm+xWx4NZ5BsBsnCZ/HNHSTiuaTTLoyWV+jlQyjb7IAynaCFchcNTx4px7F8g2SWIpu
+         Fvf5wKKhz4fFS+5TArTwhvGlJNEZ3LnHua7Ymhfz/tHEOnjSbM5vO3LkDbhmWvdwPhqb
+         qJms7kcHA32mG4ARDDVR/DLuQV++ZtlX9Q9p7PaLJGZoeDx1hx9gtFIqLmqkdD9dAFhA
+         t6ZiWDyXSVY4kJ6g8kMOeUP86/KjzOJFmB4mB5GgGxZZvoJgRoMWHEKQ4U+dSFVBL1hZ
+         fgjg==
+Content-Disposition: inline
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-	:cc:content-type;
-	bh=BB0whnD+p6u5X3nrLyirZKo+Wjpn0tpaDbjOOj9rZX0=;
-	b=KVpOAiPyyq/EsCG6LBLcPmVe4T8NiBaH1NS7qwu6y1NVOVhkK0cDJ6SqQhQwKuV/jz
-	EyVpBYCPP5U3GtdfNW0zPkw1kIJOTeIyJn731aHCXvN6xXvurKq0ee1QtG9eCHztU5IE
-	FZvp/TyQE7NFYZJokVhWT16kSb/RKGdB+eZF3je1R0x7saCxT4JHeI3H/p8oYIAkyC3T
-	6drMKYl8a/ccl1E9W+GZtnX6ThzlkDchVahoaA6lYXrhxSgt9SBhWihGkFpVf5fhZ+rb
-	dnV6McBaP2pSb4rAnNqymmkcI/+YySdi5GePnpe9NeafjT7CAOa+ehO7MxvRSCqRC/1u
-	9oQw==
-In-Reply-To: <CAGr1F2Hm4+aCUz3RqkgUhbJAQtWvUbb2CRDkW5rJSZkwLM_huw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: hannes@cmpxchg.org, mhocko@suse.cz
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Thu, Nov 6, 2014 at 6:33 PM, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> On Tue, Nov 4, 2014 at 5:10 AM, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
->> On Fri, Oct 31, 2014 at 12:18:54PM -0700, Aditya Kali wrote:
->> [..]
->>>  fs/kernfs/dir.c                  | 194 ++++++++++++++++++++++++++++++++++-----
->>>  fs/kernfs/mount.c                |  48 ++++++++++
->>>  fs/proc/namespaces.c             |   1 +
->>>  include/linux/cgroup.h           |  41 ++++++++-
->>>  include/linux/cgroup_namespace.h |  36 ++++++++
->>>  include/linux/kernfs.h           |   5 +
->>>  include/linux/nsproxy.h          |   2 +
->>>  include/linux/proc_ns.h          |   4 +
->>>  include/uapi/linux/sched.h       |   3 +-
->>>  kernel/Makefile                  |   2 +-
->>>  kernel/cgroup.c                  | 108 +++++++++++++++++-----
->>>  kernel/cgroup_namespace.c        | 148 +++++++++++++++++++++++++++++
->>>  kernel/fork.c                    |   2 +-
->>>  kernel/nsproxy.c                 |  19 +++-
->>
->> Hi Aditya,
->>
->> Can we provide a documentation file for cgroup namespace behavior. Say,
->> Documentation/namespaces/cgroup-namespace.txt.
->>
-> Yes, definitely. I will add it as soon as we have a consensus on the
-> overall series.
+test_mem_cgroup_node_reclaimable is used only when MAX_NUMNODES > 1,
+so move it into the compiler if statement
 
-Do you have a public git repository which contains your patches?
+Signed-off-by: Michele Curti <michele.curti@gmail.com>
+---
+ mm/memcontrol.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index c6ac50e..84531a9 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1615,6 +1615,7 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	oom_kill_process(chosen, gfp_mask, order, points, totalpages, memcg,
+ 			 NULL, "Memory cgroup out of memory");
+ }
++#if MAX_NUMNODES > 1
+ 
+ /**
+  * test_mem_cgroup_node_reclaimable
+@@ -1638,7 +1639,6 @@ static bool test_mem_cgroup_node_reclaimable(struct mem_cgroup *memcg,
+ 	return false;
+ 
+ }
+-#if MAX_NUMNODES > 1
+ 
+ /*
+  * Always updating the nodemask is not very good - even if we have an empty
 -- 
-Thanks,
-//richard
+2.1.3
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
