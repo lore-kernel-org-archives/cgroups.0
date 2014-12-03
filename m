@@ -1,30 +1,43 @@
-From: Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>
-Subject: Re: [PATCH 2/2] cgroups: Documentation: fix trivial typos and wrong
- paragraph numberings
-Date: Wed, 3 Dec 2014 09:01:13 -0500
-Message-ID: <20141203090113.359198f6@lwn.net>
-References: <1417607625-2775-1-git-send-email-sj38.park@gmail.com>
-	<1417607625-2775-2-git-send-email-sj38.park@gmail.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH] mm: memcontrol.c:  Cleaning up function that are not
+ used anywhere
+Date: Wed, 3 Dec 2014 10:22:31 -0500
+Message-ID: <20141203152231.GA2822@phnom.home.cmpxchg.org>
+References: <1417560083-27157-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1417607625-2775-2-git-send-email-sj38.park-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1417560083-27157-1-git-send-email-rickard_strandqvist-IW2WV5XWFqGZkjO+N0TKoMugMpMbD5Xr@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: SeongJae Park <sj38.park-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, trivial-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Rickard Strandqvist <rickard_strandqvist-IW2WV5XWFqGZkjO+N0TKoMugMpMbD5Xr@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed,  3 Dec 2014 20:53:45 +0900
-SeongJae Park <sj38.park-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+On Tue, Dec 02, 2014 at 11:41:23PM +0100, Rickard Strandqvist wrote:
+> Remove function mem_cgroup_lru_names_not_uptodate() that is not used anywhere.
+> 
+> This was partially found by using a static code analysis program called cppcheck.
+> 
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist-IW2WV5XWFqGZkjO+N0TKoMugMpMbD5Xr@public.gmane.org>
+> ---
+>  mm/memcontrol.c |    5 -----
+>  1 file changed, 5 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index d6ac0e3..5edd1fe 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -4379,11 +4379,6 @@ static int memcg_numa_stat_show(struct seq_file *m, void *v)
+>  }
+>  #endif /* CONFIG_NUMA */
+>  
+> -static inline void mem_cgroup_lru_names_not_uptodate(void)
+> -{
+> -	BUILD_BUG_ON(ARRAY_SIZE(mem_cgroup_lru_names) != NR_LRU_LISTS);
+> -}
 
->  Documentation/cgroups/cpusets.txt | 6 +++---
->  Documentation/cgroups/memory.txt  | 8 ++++----
->  2 files changed, 7 insertions(+), 7 deletions(-)
-
-I applied patch 1 to my docs tree, but this one doesn't apply.  Which
-kernel did you base it on?
-
-Thanks,
-
-jon
+That assertion doesn't work in an unused function, but we still want
+this check.  Please move the BUILD_BUG_ON() to the beginning of
+memcg_stat_show() instead.
