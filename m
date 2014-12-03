@@ -1,37 +1,67 @@
-From: Jonathan Corbet <corbet@lwn.net>
-Subject: Re: [PATCH 2/2] cgroups: Documentation: fix trivial typos and wrong
- paragraph numberings
-Date: Wed, 3 Dec 2014 11:43:08 -0500
-Message-ID: <20141203114308.3898e74e@lwn.net>
-References: <1417607625-2775-1-git-send-email-sj38.park@gmail.com>
-	<1417607625-2775-2-git-send-email-sj38.park@gmail.com>
-	<20141203090113.359198f6@lwn.net>
-	<alpine.DEB.2.10.1412040033120.1819@hxeon>
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Subject: Re: [PATCH] mm: memcontrol.c: Cleaning up function that are not used anywhere
+Date: Wed, 3 Dec 2014 18:04:18 +0100
+Message-ID: <CAFo99gbCJzErKz2o3WHa8C8OKTaqPq-+iiJhAZOq41F6W5+8YA@mail.gmail.com>
+References: <1417560083-27157-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+ <20141203152231.GA2822@phnom.home.cmpxchg.org> <20141203155451.GI23236@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.10.1412040033120.1819@hxeon>
-Sender: linux-doc-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20141203155451.GI23236@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: SeongJae Park <sj38.park@gmail.com>
-Cc: tj@kernel.org, lizefan@huawei.com, trivial@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Thu, 4 Dec 2014 00:36:09 +0900 (KST)
-SeongJae Park <sj38.park@gmail.com> wrote:
+2014-12-03 16:54 GMT+01:00 Michal Hocko <mhocko@suse.cz>:
+> On Wed 03-12-14 10:22:31, Johannes Weiner wrote:
+>> On Tue, Dec 02, 2014 at 11:41:23PM +0100, Rickard Strandqvist wrote:
+>> > Remove function mem_cgroup_lru_names_not_uptodate() that is not used anywhere.
+>> >
+>> > This was partially found by using a static code analysis program called cppcheck.
+>> >
+>> > Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+>> > ---
+>> >  mm/memcontrol.c |    5 -----
+>> >  1 file changed, 5 deletions(-)
+>> >
+>> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> > index d6ac0e3..5edd1fe 100644
+>> > --- a/mm/memcontrol.c
+>> > +++ b/mm/memcontrol.c
+>> > @@ -4379,11 +4379,6 @@ static int memcg_numa_stat_show(struct seq_file *m, void *v)
+>> >  }
+>> >  #endif /* CONFIG_NUMA */
+>> >
+>> > -static inline void mem_cgroup_lru_names_not_uptodate(void)
+>> > -{
+>> > -   BUILD_BUG_ON(ARRAY_SIZE(mem_cgroup_lru_names) != NR_LRU_LISTS);
+>> > -}
+>>
+>> That assertion doesn't work in an unused function, but we still want
+>> this check.  Please move the BUILD_BUG_ON() to the beginning of
+>> memcg_stat_show() instead.
+>
+> Ohh. I have completely missed the point of the check! Moving the check
+> to memcg_stat_show sounds like a good idea.
+>
+> --
+> Michal Hocko
+> SUSE Labs
 
-> I based it on latest linux-next tree.
-> 
-> Looks like I should based it on linux-docs tree. I will do for my later 
-> patches for documentations.
-> 
-> Below is the patch 2 based on linux-docs tree.
+Hi
 
-Thanks, but the best thing to do might be to have Andrew Morton take the
-original patch. His tree already contains the other changes to that file;
-keeping things there will help to avoid conflicts and dependencies during
-the merge window.
+Ok, sure I'll fix that!
 
-Thanks,
+It will take a few days before I will have access to my workstation,
+however, but the new patch on the way...
 
-jon
+Kind regards
+Rickard Strandqvist
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
