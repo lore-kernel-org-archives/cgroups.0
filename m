@@ -1,67 +1,94 @@
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Subject: Re: [PATCH] mm: memcontrol.c: Cleaning up function that are not used anywhere
-Date: Wed, 3 Dec 2014 18:04:18 +0100
-Message-ID: <CAFo99gbCJzErKz2o3WHa8C8OKTaqPq-+iiJhAZOq41F6W5+8YA@mail.gmail.com>
-References: <1417560083-27157-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
- <20141203152231.GA2822@phnom.home.cmpxchg.org> <20141203155451.GI23236@dhcp22.suse.cz>
+From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCHv3 0/8] CGroup Namespaces
+Date: Thu,  4 Dec 2014 17:55:42 -0800
+Message-ID: <1417744550-6461-1-git-send-email-adityakali@google.com>
+References: <adityakali-cgroupns>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20141203155451.GI23236@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20120113;
+	h=from:to:cc:subject:date:message-id:in-reply-to:references;
+	bh=ITqsD6h3y+Hm7gijyniUcnWTansY0eJw8Pbnrh/bdMY=;
+	b=BSA7M0QBQnWUiXSYv7i3TT8bTO2vTQ2DycmBaVnVH8EEWkdbEs+CywW/+bFzyicgeb
+	QFTYuRGUdOvh5xrYGJcYFtIwZTqY9Aq4q00Txz2F7WYeQD4f9smWrj8Zpw+jpBRycQt4
+	MAFuNsXiu0Ln3YUHESG+Fl0MaDg1NjCD/tcl/KzW6vVD5N6VR9IZ88moNZD957JHcIP0
+	YzAFSrA3NqbC3looEmAr0JWG0sC0DldjMu0sCl4cF6s4Duqc/nO+adfFno0C/xWOJXkW
+	ynhmO+aHniv2a/0qW/Zg5l/UXgqVKgJpKA0JzJyyG9KTBmz26fPVNtKxR1oVJ5KF5+g5
+	eGhg==
+In-Reply-To: <adityakali-cgroupns>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: richard.weinberger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-2014-12-03 16:54 GMT+01:00 Michal Hocko <mhocko@suse.cz>:
-> On Wed 03-12-14 10:22:31, Johannes Weiner wrote:
->> On Tue, Dec 02, 2014 at 11:41:23PM +0100, Rickard Strandqvist wrote:
->> > Remove function mem_cgroup_lru_names_not_uptodate() that is not used anywhere.
->> >
->> > This was partially found by using a static code analysis program called cppcheck.
->> >
->> > Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
->> > ---
->> >  mm/memcontrol.c |    5 -----
->> >  1 file changed, 5 deletions(-)
->> >
->> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> > index d6ac0e3..5edd1fe 100644
->> > --- a/mm/memcontrol.c
->> > +++ b/mm/memcontrol.c
->> > @@ -4379,11 +4379,6 @@ static int memcg_numa_stat_show(struct seq_file *m, void *v)
->> >  }
->> >  #endif /* CONFIG_NUMA */
->> >
->> > -static inline void mem_cgroup_lru_names_not_uptodate(void)
->> > -{
->> > -   BUILD_BUG_ON(ARRAY_SIZE(mem_cgroup_lru_names) != NR_LRU_LISTS);
->> > -}
->>
->> That assertion doesn't work in an unused function, but we still want
->> this check.  Please move the BUILD_BUG_ON() to the beginning of
->> memcg_stat_show() instead.
->
-> Ohh. I have completely missed the point of the check! Moving the check
-> to memcg_stat_show sounds like a good idea.
->
-> --
-> Michal Hocko
-> SUSE Labs
+Another spin for CGroup Namespaces feature.
 
-Hi
+Changes from V2:
+1. Added documentation in Documentation/cgroups/namespace.txt
+2. Fixed a bug that caused crash
+3. Incorporated some other suggestions from last patchset:
+   - removed use of threadgroup_lock() while creating new cgroupns
+   - use task_lock() instead of rcu_read_lock() while accessing
+     task->nsproxy
+   - optimized setns() to own cgroupns
+   - simplified code around sane-behavior mount option parsing
+4. Restored ACKs from Serge Hallyn from v1 on few patches that have
+   not changed since then.
 
-Ok, sure I'll fix that!
+Changes from V1:
+1. No pinning of processes within cgroupns. Tasks can be freely moved
+   across cgroups even outside of their cgroupns-root. Usual DAC/MAC policies
+   apply as before.
+2. Path in /proc/<pid>/cgroup is now always shown and is relative to
+   cgroupns-root. So path can contain '/..' strings depending on cgroupns-root
+   of the reader and cgroup of <pid>.
+3. setns() does not require the process to first move under target
+   cgroupns-root.
 
-It will take a few days before I will have access to my workstation,
-however, but the new patch on the way...
+Changes form RFC (V0):
+1. setns support for cgroupns
+2. 'mount -t cgroup cgroup <mntpt>' from inside a cgroupns now
+   mounts the cgroup hierarcy with cgroupns-root as the filesystem root.
+3. writes to cgroup files outside of cgroupns-root are not allowed
+4. visibility of /proc/<pid>/cgroup is further restricted by not showing
+   anything if the <pid> is in a sibling cgroupns and its cgroup falls outside
+   your cgroupns-root.
 
-Kind regards
-Rickard Strandqvist
+---
+ Documentation/cgroups/namespace.txt | 147 +++++++++++++++++++++++++++
+ fs/kernfs/dir.c                     | 195 ++++++++++++++++++++++++++++++++----
+ fs/kernfs/mount.c                   |  48 +++++++++
+ fs/proc/namespaces.c                |   1 +
+ include/linux/cgroup.h              |  52 +++++++++-
+ include/linux/cgroup_namespace.h    |  36 +++++++
+ include/linux/kernfs.h              |   5 +
+ include/linux/nsproxy.h             |   2 +
+ include/linux/proc_ns.h             |   4 +
+ include/uapi/linux/sched.h          |   3 +-
+ kernel/Makefile                     |   2 +-
+ kernel/cgroup.c                     | 106 +++++++++++++++-----
+ kernel/cgroup_namespace.c           | 140 ++++++++++++++++++++++++++
+ kernel/fork.c                       |   2 +-
+ kernel/nsproxy.c                    |  19 +++-
+ 15 files changed, 711 insertions(+), 51 deletions(-)
+ create mode 100644 Documentation/cgroups/namespace.txt
+ create mode 100644 include/linux/cgroup_namespace.h
+ create mode 100644 kernel/cgroup_namespace.c
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+[PATCHv3 1/8] kernfs: Add API to generate relative kernfs path
+[PATCHv3 2/8] sched: new clone flag CLONE_NEWCGROUP for cgroup
+[PATCHv3 3/8] cgroup: add function to get task's cgroup on default
+[PATCHv3 4/8] cgroup: export cgroup_get() and cgroup_put()
+[PATCHv3 5/8] cgroup: introduce cgroup namespaces
+[PATCHv3 6/8] cgroup: cgroup namespace setns support
+[PATCHv3 7/8] cgroup: mount cgroupns-root when inside non-init cgroupns
+[PATCHv3 8/8] cgroup: Add documentation for cgroup namespaces
