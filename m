@@ -1,8 +1,7 @@
 From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCHv3 2/8] sched: new clone flag CLONE_NEWCGROUP for cgroup
-	namespace
-Date: Thu,  4 Dec 2014 17:55:44 -0800
-Message-ID: <1417744550-6461-3-git-send-email-adityakali@google.com>
+Subject: [PATCHv3 4/8] cgroup: export cgroup_get() and cgroup_put()
+Date: Thu,  4 Dec 2014 17:55:46 -0800
+Message-ID: <1417744550-6461-5-git-send-email-adityakali@google.com>
 References: <adityakali-cgroupns>
 	<1417744550-6461-1-git-send-email-adityakali@google.com>
 Mime-Version: 1.0
@@ -11,13 +10,13 @@ Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20120113;
 	h=from:to:cc:subject:date:message-id:in-reply-to:references;
-	bh=Udk6f3Iaj5pRn/A1KuUjhX4F/kNmoGW2KXn4oMeXlnE=;
-	b=cCDWpR+Op2Tez/2Wq1Zxd4QtvMTO7prDNl4gjVyg6tsu1nUXVZbecIpK87xnaF/hFj
-	4h3gcm9hwc/1aG0syW/NKVzzZaKb0ucHURmjrJVXl7SbQDioVd6N5jlhfd5tQjmHfqRs
-	cuhu+bqU5t7i8DdrjBiIIJiPUvrKYs/6qNDwvG/B6bZYbByCmKUr7Mp2xxMyXy+yDe6m
-	OqU9C2p0NycinWbyfrFuNcwPKiyHFPtuUTw/+kpxmmUGlgEYi6I/Z4pQSzj2E3nbM0td
-	ojvtqq+CfroKNb3gN0688KbZR+tqu9Kp4auxtEP7cI60FAv5cDmcrLh3mBrorSKLgYcv
-	Xdfw==
+	bh=srNR+zNuBW+4VieQLXhE5ApbQMWillTweuMGhTVLYK4=;
+	b=Bm6qvdSXHxVdmJSxAn3yKCZkmf4+HGhzanlsOaDcLp9T8kF0EfPxofB3GR1WcVH2Uc
+	sOxPllGdEfHmHO+hBQFTObKtAp/6jbKM8A6MMwE7nwQ/BxnYNAqjcEifrBNPcvMfGbod
+	HIUwEuMIR2hOMZWfmEC82omiQyTjHWQdHTC5DqyXso3b50V/MoWlxev5a7ZBvT0P8KY+
+	1K7EdcXTL6FMBGoOSwLZ2tbJjhMtlZ/pq6GrB4Pc7TKmntTCBQ9EluMI9o88UVE0Cm3A
+	45K5vAHlcV0nvCNJfIaPVBE/73+8LtRx+BnvmRRqyTuvqAmZRyQlhvcvNSScXaOImmVG
+	17gQ==
 In-Reply-To: <1417744550-6461-1-git-send-email-adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
@@ -32,27 +31,88 @@ Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public
 To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 Cc: richard.weinberger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-CLONE_NEWCGROUP will be used to create new cgroup namespace.
+move cgroup_get() and cgroup_put() into cgroup.h so that
+they can be called from other places.
 
 Acked-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 Signed-off-by: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- include/uapi/linux/sched.h | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ include/linux/cgroup.h | 22 ++++++++++++++++++++++
+ kernel/cgroup.c        | 22 ----------------------
+ 2 files changed, 22 insertions(+), 22 deletions(-)
 
-diff --git a/include/uapi/linux/sched.h b/include/uapi/linux/sched.h
-index 34f9d73..2f90d00 100644
---- a/include/uapi/linux/sched.h
-+++ b/include/uapi/linux/sched.h
-@@ -21,8 +21,7 @@
- #define CLONE_DETACHED		0x00400000	/* Unused, ignored */
- #define CLONE_UNTRACED		0x00800000	/* set if the tracing process can't force CLONE_PTRACE on this clone */
- #define CLONE_CHILD_SETTID	0x01000000	/* set the TID in the child */
--/* 0x02000000 was previously the unused CLONE_STOPPED (Start in stopped state)
--   and is now available for re-use. */
-+#define CLONE_NEWCGROUP		0x02000000	/* New cgroup namespace */
- #define CLONE_NEWUTS		0x04000000	/* New utsname group? */
- #define CLONE_NEWIPC		0x08000000	/* New ipcs */
- #define CLONE_NEWUSER		0x10000000	/* New user namespace */
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index d6930de..6e7533b 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -521,6 +521,28 @@ static inline bool cgroup_on_dfl(const struct cgroup *cgrp)
+ 	return cgrp->root == &cgrp_dfl_root;
+ }
+ 
++/* convenient tests for these bits */
++static inline bool cgroup_is_dead(const struct cgroup *cgrp)
++{
++	return !(cgrp->self.flags & CSS_ONLINE);
++}
++
++static inline void cgroup_get(struct cgroup *cgrp)
++{
++	WARN_ON_ONCE(cgroup_is_dead(cgrp));
++	css_get(&cgrp->self);
++}
++
++static inline bool cgroup_tryget(struct cgroup *cgrp)
++{
++	return css_tryget(&cgrp->self);
++}
++
++static inline void cgroup_put(struct cgroup *cgrp)
++{
++	css_put(&cgrp->self);
++}
++
+ /* no synchronization, the result can only be used as a hint */
+ static inline bool cgroup_has_tasks(struct cgroup *cgrp)
+ {
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 5d8fc84..e12d36e 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -321,12 +321,6 @@ out_unlock:
+ 	return css;
+ }
+ 
+-/* convenient tests for these bits */
+-static inline bool cgroup_is_dead(const struct cgroup *cgrp)
+-{
+-	return !(cgrp->self.flags & CSS_ONLINE);
+-}
+-
+ struct cgroup_subsys_state *of_css(struct kernfs_open_file *of)
+ {
+ 	struct cgroup *cgrp = of->kn->parent->priv;
+@@ -1039,22 +1033,6 @@ static umode_t cgroup_file_mode(const struct cftype *cft)
+ 	return mode;
+ }
+ 
+-static void cgroup_get(struct cgroup *cgrp)
+-{
+-	WARN_ON_ONCE(cgroup_is_dead(cgrp));
+-	css_get(&cgrp->self);
+-}
+-
+-static bool cgroup_tryget(struct cgroup *cgrp)
+-{
+-	return css_tryget(&cgrp->self);
+-}
+-
+-static void cgroup_put(struct cgroup *cgrp)
+-{
+-	css_put(&cgrp->self);
+-}
+-
+ /**
+  * cgroup_calc_child_subsys_mask - calculate child_subsys_mask
+  * @cgrp: the target cgroup
 -- 
 2.2.0.rc0.207.ga3a616c
