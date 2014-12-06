@@ -1,65 +1,52 @@
-From: Chen Gang <gang.chen.5i5j@gmail.com>
-Subject: [PATCH] mm: memcontrol: Skip test_mem_cgroup_node_reclaimable() when
- no MAX_NUMNODES or not more than 1
-Date: Sat, 06 Dec 2014 06:27:57 +0800
-Message-ID: <5482316D.607@gmail.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Subject: [PATCH] mm: memcontrol.c:  Cleaning up function that are not used anywhere
+Date: Sat,  6 Dec 2014 17:45:56 +0100
+Message-ID: <1417884356-3086-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=message-id:date:from:user-agent:mime-version:to:cc:subject
-         :content-type:content-transfer-encoding;
-        bh=jsWPaQ+NStinDzFYKFAA78JNUMWuB5tKJ5TrIHdRj1g=;
-        b=FjI5KNsAZ0zXF3F2bqOO2/iqahHxbkp8LadYG80Q+DU6cdsDv+0zPU5uv1sSyfXFd3
-         4AjcB4g9MJlbZEXZWkPqj1YGYKbIjeNWAC6ptu8ZajJVevruOPO0B3Z/Ac9tddhMeLi4
-         D1uf/XD9VKNTLC5h/ypOrXexlEx3gNC/ew5kree9xwHWZX49fnCDiOUOXDQyxd8sz11L
-         7R0rkOBhpJfAyJGraK715L+rofNe2cetoBaQSirClOuaXUtj7vXQeVtq4VA5I+/Ve+c7
-         OMj+1S01P9pwrj/v3HnEEVu/ikUnNVP9V6aTMOcT+P3hoZCn7lfV5mc/4Ehh0bU39Ub/
-         HVvg==
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: hannes@cmpxchg.org, mhocko@suse.cz
-Cc: cgroups@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-test_mem_cgroup_node_reclaimable() is only used when "MAX_NUMNODES > 1",
-so move it into related quote.
+Remove function mem_cgroup_lru_names_not_uptodate() that is not used anywhere.
+And move BUILD_BUG_ON() to the beginning of memcg_stat_show() instead.
 
-The related warning (with allmodconfig under parisc):
+This was partially found by using a static code analysis program called cppcheck.
 
-    CC      mm/memcontrol.o
-  mm/memcontrol.c:1629:13: warning: 'test_mem_cgroup_node_reclaimable' defined but not used [-Wunused-function]
-   static bool test_mem_cgroup_node_reclaimable(struct mem_cgroup *memcg,
-               ^
-
-Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 ---
- mm/memcontrol.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ mm/memcontrol.c |    7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c6ac50e..d538b08 100644
+index d6ac0e3..5e2f0f3 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -1616,6 +1616,7 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 			 NULL, "Memory cgroup out of memory");
+@@ -4379,17 +4379,14 @@ static int memcg_numa_stat_show(struct seq_file *m, void *v)
  }
+ #endif /* CONFIG_NUMA */
  
-+#if MAX_NUMNODES > 1
- /**
-  * test_mem_cgroup_node_reclaimable
-  * @memcg: the target memcg
-@@ -1638,7 +1639,6 @@ static bool test_mem_cgroup_node_reclaimable(struct mem_cgroup *memcg,
- 	return false;
+-static inline void mem_cgroup_lru_names_not_uptodate(void)
+-{
+-	BUILD_BUG_ON(ARRAY_SIZE(mem_cgroup_lru_names) != NR_LRU_LISTS);
+-}
+-
+ static int memcg_stat_show(struct seq_file *m, void *v)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
+ 	struct mem_cgroup *mi;
+ 	unsigned int i;
  
- }
--#if MAX_NUMNODES > 1
- 
- /*
-  * Always updating the nodemask is not very good - even if we have an empty
++	BUILD_BUG_ON(ARRAY_SIZE(mem_cgroup_lru_names) != NR_LRU_LISTS);
++
+ 	for (i = 0; i < MEM_CGROUP_STAT_NSTATS; i++) {
+ 		if (i == MEM_CGROUP_STAT_SWAP && !do_swap_account)
+ 			continue;
 -- 
-1.9.3
+1.7.10.4
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
