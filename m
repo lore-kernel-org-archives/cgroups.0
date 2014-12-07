@@ -1,80 +1,53 @@
-From: Michal Hocko <mhocko@suse.cz>
+From: Chen Gang <gang.chen.5i5j-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH] mm: memcontrol: Skip test_mem_cgroup_node_reclaimable()
  when no MAX_NUMNODES or not more than 1
-Date: Sun, 7 Dec 2014 11:33:10 +0100
-Message-ID: <20141207103310.GJ15892@dhcp22.suse.cz>
-References: <5482316D.607@gmail.com>
+Date: Sun, 07 Dec 2014 21:53:47 +0800
+Message-ID: <51ggckac0utecg6rqx48nkmc.1417960383505@email.android.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Content-Transfer-Encoding: base64
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=AV687cHudfdZjlXK9h1hml1YBnoI/D1WIZyWGZRKowg=;
-        b=IL/r7Xnn/RNva16fsE+sdzsH5Su+TX4qLVB1Q+NvKmlAWq6SDNI2X8iMyMsoEi+vdn
-         YwkKfQ7wsomadXwggxBshDbLfHFWm6EM/+67FBAZ05346WhOgjxTZVceWZ5VHPm5HDws
-         URzDGgtVqmbyMfZ620G+7wLEhJk39HEgdd//RDhljwXeA6C5ykMnG7aBuUzPTnBZ5jwm
-         7PKW8epBsCO9p7Z7xA2RyxCTafNnkOAA4lyrFgcPtzKZjd3CtHHrq2FLGAlKjhiJfu3P
-         nALU65EjBFMcbFceZo8ntoQM0EykA5ozFd9MPo5vWL77NWxN75/N+sC5a9yijh2PS7/O
-         N7iA==
-Content-Disposition: inline
-In-Reply-To: <5482316D.607@gmail.com>
-Sender: owner-linux-mm@kvack.org
+        h=date:subject:message-id:from:to:cc:mime-version:content-type
+         :content-transfer-encoding;
+        bh=HJ/H6JC8FqnnudXkRUbH9aj7/zhTZEO6I/h8/826r+Q=;
+        b=RQogKmJ+kFKgzRMew5QCveIkt6nxp4GCcHEBlqQ4NXM37V6Kqu0I1503wPsI+/B8oi
+         0V3pTC+xlE0UA/zJk9M8qD6HDwVJ0VruzOv/9cO+XUF8JnK9WdcThNSAVxR3sxLsfVfd
+         m1mMJ2RUbqi5DgjldBRvqhlYYF5ee33+uIRSx1IyJRAWaF/Si10+o5oWu67pwWmph+6e
+         lqeiig78rqiLU3oAfPZ7Tm0fX8HS+BiWcjjYLeSPEC/HuhLnXKhB/7CSpOWS0YlCgPpN
+         TSDpVEVQ+/lD7oPJ/a4IZG32THWBcMpoI3nA6+PqOge3GqoqzCDSM9uwITS+S2FZJqif
+         56Cg==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Chen Gang <gang.chen.5i5j@gmail.com>
-Cc: hannes@cmpxchg.org, cgroups@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-mm@kvack.org
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, " linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hi,
-this has been fixed last week already
-http://marc.info/?l=linux-mm&m=141751847710864&w=2
-
-On Sat 06-12-14 06:27:57, Chen Gang wrote:
-> test_mem_cgroup_node_reclaimable() is only used when "MAX_NUMNODES > 1",
-> so move it into related quote.
-> 
-> The related warning (with allmodconfig under parisc):
-> 
->     CC      mm/memcontrol.o
->   mm/memcontrol.c:1629:13: warning: 'test_mem_cgroup_node_reclaimable' defined but not used [-Wunused-function]
->    static bool test_mem_cgroup_node_reclaimable(struct mem_cgroup *memcg,
->                ^
-> 
-> Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
-> ---
->  mm/memcontrol.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index c6ac50e..d538b08 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1616,6 +1616,7 @@ static void mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
->  			 NULL, "Memory cgroup out of memory");
->  }
->  
-> +#if MAX_NUMNODES > 1
->  /**
->   * test_mem_cgroup_node_reclaimable
->   * @memcg: the target memcg
-> @@ -1638,7 +1639,6 @@ static bool test_mem_cgroup_node_reclaimable(struct mem_cgroup *memcg,
->  	return false;
->  
->  }
-> -#if MAX_NUMNODES > 1
->  
->  /*
->   * Always updating the nodemask is not very good - even if we have an empty
-> -- 
-> 1.9.3
-
--- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+T0ssIHRoYW5rcy4gSSBzaGFsbCB0cnkgdG8gc2VuZCBhbm90aGVyIHBhdGNoIHRvIHVwc3RyZWFt
+IGtlcm5lbAp3aXRoaW4gdGhpcyBtb250aC4KClNlbmQgZnJvbSBMZW5vdm8gQTc4OHQuCgpNaWNo
+YWwgSG9ja28gPG1ob2Nrb0BzdXNlLmN6PiB3cm90ZToKCj5IaSwKPnRoaXMgaGFzIGJlZW4gZml4
+ZWQgbGFzdCB3ZWVrIGFscmVhZHkKPmh0dHA6Ly9tYXJjLmluZm8vP2w9bGludXgtbW0mbT0xNDE3
+NTE4NDc3MTA4NjQmdz0yCj4KPk9uIFNhdCAwNi0xMi0xNCAwNjoyNzo1NywgQ2hlbiBHYW5nIHdy
+b3RlOgo+PiB0ZXN0X21lbV9jZ3JvdXBfbm9kZV9yZWNsYWltYWJsZSgpIGlzIG9ubHkgdXNlZCB3
+aGVuICJNQVhfTlVNTk9ERVMgPiAxIiwKPj4gc28gbW92ZSBpdCBpbnRvIHJlbGF0ZWQgcXVvdGUu
+Cj4+IAo+PiBUaGUgcmVsYXRlZCB3YXJuaW5nICh3aXRoIGFsbG1vZGNvbmZpZyB1bmRlciBwYXJp
+c2MpOgo+PiAKPj4gICAgIENDICAgICAgbW0vbWVtY29udHJvbC5vCj4+ICAgbW0vbWVtY29udHJv
+bC5jOjE2Mjk6MTM6IHdhcm5pbmc6ICd0ZXN0X21lbV9jZ3JvdXBfbm9kZV9yZWNsYWltYWJsZScg
+ZGVmaW5lZCBidXQgbm90IHVzZWQgWy1XdW51c2VkLWZ1bmN0aW9uXQo+PiAgICBzdGF0aWMgYm9v
+bCB0ZXN0X21lbV9jZ3JvdXBfbm9kZV9yZWNsYWltYWJsZShzdHJ1Y3QgbWVtX2Nncm91cCAqbWVt
+Y2csCj4+ICAgICAgICAgICAgICAgIF4KPj4gCj4+IFNpZ25lZC1vZmYtYnk6IENoZW4gR2FuZyA8
+Z2FuZy5jaGVuLjVpNWpAZ21haWwuY29tPgo+PiAtLS0KPj4gIG1tL21lbWNvbnRyb2wuYyB8IDIg
+Ky0KPj4gIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQo+PiAK
+Pj4gZGlmZiAtLWdpdCBhL21tL21lbWNvbnRyb2wuYyBiL21tL21lbWNvbnRyb2wuYwo+PiBpbmRl
+eCBjNmFjNTBlLi5kNTM4YjA4IDEwMDY0NAo+PiAtLS0gYS9tbS9tZW1jb250cm9sLmMKPj4gKysr
+IGIvbW0vbWVtY29udHJvbC5jCj4+IEBAIC0xNjE2LDYgKzE2MTYsNyBAQCBzdGF0aWMgdm9pZCBt
+ZW1fY2dyb3VwX291dF9vZl9tZW1vcnkoc3RydWN0IG1lbV9jZ3JvdXAgKm1lbWNnLCBnZnBfdCBn
+ZnBfbWFzaywKPj4gIAkJCSBOVUxMLCAiTWVtb3J5IGNncm91cCBvdXQgb2YgbWVtb3J5Iik7Cj4+
+ICB9Cj4+ICAKPj4gKyNpZiBNQVhfTlVNTk9ERVMgPiAxCj4+ICAvKioKPj4gICAqIHRlc3RfbWVt
+X2Nncm91cF9ub2RlX3JlY2xhaW1hYmxlCj4+ICAgKiBAbWVtY2c6IHRoZSB0YXJnZXQgbWVtY2cK
+Pj4gQEAgLTE2MzgsNyArMTYzOSw2IEBAIHN0YXRpYyBib29sIHRlc3RfbWVtX2Nncm91cF9ub2Rl
+X3JlY2xhaW1hYmxlKHN0cnVjdCBtZW1fY2dyb3VwICptZW1jZywKPj4gIAlyZXR1cm4gZmFsc2U7
+Cj4+ICAKPj4gIH0KPj4gLSNpZiBNQVhfTlVNTk9ERVMgPiAxCj4+ICAKPj4gIC8qCj4+ICAgKiBB
+bHdheXMgdXBkYXRpbmcgdGhlIG5vZGVtYXNrIGlzIG5vdCB2ZXJ5IGdvb2QgLSBldmVuIGlmIHdl
+IGhhdmUgYW4gZW1wdHkKPj4gLS0gCj4+IDEuOS4zCj4KPi0tIAo+TWljaGFsIEhvY2tvCj5TVVNF
+IExhYnMK
