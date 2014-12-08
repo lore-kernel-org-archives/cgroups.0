@@ -1,53 +1,127 @@
-From: Chen Gang <gang.chen.5i5j-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: Skip test_mem_cgroup_node_reclaimable()
- when no MAX_NUMNODES or not more than 1
-Date: Sun, 07 Dec 2014 21:53:47 +0800
-Message-ID: <51ggckac0utecg6rqx48nkmc.1417960383505@email.android.com>
+From: "fugang.duan@freescale.com" <fugang.duan@freescale.com>
+Subject: RE: [Question] page allocation failure
+Date: Mon, 8 Dec 2014 03:18:24 +0000
+Message-ID: <BLUPR03MB37391D4A29CD2F3452B6EFFF5640@BLUPR03MB373.namprd03.prod.outlook.com>
+References: <BLUPR03MB373E2C46779976D0794B804F5790@BLUPR03MB373.namprd03.prod.outlook.com>
+ <20141205125559.GC2321@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=date:subject:message-id:from:to:cc:mime-version:content-type
-         :content-transfer-encoding;
-        bh=HJ/H6JC8FqnnudXkRUbH9aj7/zhTZEO6I/h8/826r+Q=;
-        b=RQogKmJ+kFKgzRMew5QCveIkt6nxp4GCcHEBlqQ4NXM37V6Kqu0I1503wPsI+/B8oi
-         0V3pTC+xlE0UA/zJk9M8qD6HDwVJ0VruzOv/9cO+XUF8JnK9WdcThNSAVxR3sxLsfVfd
-         m1mMJ2RUbqi5DgjldBRvqhlYYF5ee33+uIRSx1IyJRAWaF/Si10+o5oWu67pwWmph+6e
-         lqeiig78rqiLU3oAfPZ7Tm0fX8HS+BiWcjjYLeSPEC/HuhLnXKhB/7CSpOWS0YlCgPpN
-         TSDpVEVQ+/lD7oPJ/a4IZG32THWBcMpoI3nA6+PqOge3GqoqzCDSM9uwITS+S2FZJqif
-         56Cg==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, " linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20141205125559.GC2321@dhcp22.suse.cz>
+Content-Language: en-US
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+To: Michal Hocko <mhocko@suse.cz>, "rmk+kernel@arm.linux.org.uk" <rmk+kernel@arm.linux.org.uk>
+Cc: "andi@firstfloor.org" <andi@firstfloor.org>, "catalin.marinas@arm.com" <catalin.marinas@arm.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "cl@linux-foundation.org" <cl@linux-foundation.org>, "vegardno@ifi.uio.no" <vegardno@ifi.uio.no>, "penberg@kernel.org" <penberg@kernel.org>, "bsingharora@gmail.com" <bsingharora@gmail.com>, "kamezawa.hiroyu@jp.fujitsu.com" <kamezawa.hiroyu@jp.fujitsu.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "davem@davemloft.net" <davem@davemloft.net>, "eric.dumazet@gmail.com" <eric.dumazet@gmail.com>, "ezequiel.garcia@free-electrons.com" <ezequiel.garcia@free-electrons.com>, "David.Laight@ACULAB.COM" <David.Laight@ACULAB.COM>
 
-T0ssIHRoYW5rcy4gSSBzaGFsbCB0cnkgdG8gc2VuZCBhbm90aGVyIHBhdGNoIHRvIHVwc3RyZWFt
-IGtlcm5lbAp3aXRoaW4gdGhpcyBtb250aC4KClNlbmQgZnJvbSBMZW5vdm8gQTc4OHQuCgpNaWNo
-YWwgSG9ja28gPG1ob2Nrb0BzdXNlLmN6PiB3cm90ZToKCj5IaSwKPnRoaXMgaGFzIGJlZW4gZml4
-ZWQgbGFzdCB3ZWVrIGFscmVhZHkKPmh0dHA6Ly9tYXJjLmluZm8vP2w9bGludXgtbW0mbT0xNDE3
-NTE4NDc3MTA4NjQmdz0yCj4KPk9uIFNhdCAwNi0xMi0xNCAwNjoyNzo1NywgQ2hlbiBHYW5nIHdy
-b3RlOgo+PiB0ZXN0X21lbV9jZ3JvdXBfbm9kZV9yZWNsYWltYWJsZSgpIGlzIG9ubHkgdXNlZCB3
-aGVuICJNQVhfTlVNTk9ERVMgPiAxIiwKPj4gc28gbW92ZSBpdCBpbnRvIHJlbGF0ZWQgcXVvdGUu
-Cj4+IAo+PiBUaGUgcmVsYXRlZCB3YXJuaW5nICh3aXRoIGFsbG1vZGNvbmZpZyB1bmRlciBwYXJp
-c2MpOgo+PiAKPj4gICAgIENDICAgICAgbW0vbWVtY29udHJvbC5vCj4+ICAgbW0vbWVtY29udHJv
-bC5jOjE2Mjk6MTM6IHdhcm5pbmc6ICd0ZXN0X21lbV9jZ3JvdXBfbm9kZV9yZWNsYWltYWJsZScg
-ZGVmaW5lZCBidXQgbm90IHVzZWQgWy1XdW51c2VkLWZ1bmN0aW9uXQo+PiAgICBzdGF0aWMgYm9v
-bCB0ZXN0X21lbV9jZ3JvdXBfbm9kZV9yZWNsYWltYWJsZShzdHJ1Y3QgbWVtX2Nncm91cCAqbWVt
-Y2csCj4+ICAgICAgICAgICAgICAgIF4KPj4gCj4+IFNpZ25lZC1vZmYtYnk6IENoZW4gR2FuZyA8
-Z2FuZy5jaGVuLjVpNWpAZ21haWwuY29tPgo+PiAtLS0KPj4gIG1tL21lbWNvbnRyb2wuYyB8IDIg
-Ky0KPj4gIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQo+PiAK
-Pj4gZGlmZiAtLWdpdCBhL21tL21lbWNvbnRyb2wuYyBiL21tL21lbWNvbnRyb2wuYwo+PiBpbmRl
-eCBjNmFjNTBlLi5kNTM4YjA4IDEwMDY0NAo+PiAtLS0gYS9tbS9tZW1jb250cm9sLmMKPj4gKysr
-IGIvbW0vbWVtY29udHJvbC5jCj4+IEBAIC0xNjE2LDYgKzE2MTYsNyBAQCBzdGF0aWMgdm9pZCBt
-ZW1fY2dyb3VwX291dF9vZl9tZW1vcnkoc3RydWN0IG1lbV9jZ3JvdXAgKm1lbWNnLCBnZnBfdCBn
-ZnBfbWFzaywKPj4gIAkJCSBOVUxMLCAiTWVtb3J5IGNncm91cCBvdXQgb2YgbWVtb3J5Iik7Cj4+
-ICB9Cj4+ICAKPj4gKyNpZiBNQVhfTlVNTk9ERVMgPiAxCj4+ICAvKioKPj4gICAqIHRlc3RfbWVt
-X2Nncm91cF9ub2RlX3JlY2xhaW1hYmxlCj4+ICAgKiBAbWVtY2c6IHRoZSB0YXJnZXQgbWVtY2cK
-Pj4gQEAgLTE2MzgsNyArMTYzOSw2IEBAIHN0YXRpYyBib29sIHRlc3RfbWVtX2Nncm91cF9ub2Rl
-X3JlY2xhaW1hYmxlKHN0cnVjdCBtZW1fY2dyb3VwICptZW1jZywKPj4gIAlyZXR1cm4gZmFsc2U7
-Cj4+ICAKPj4gIH0KPj4gLSNpZiBNQVhfTlVNTk9ERVMgPiAxCj4+ICAKPj4gIC8qCj4+ICAgKiBB
-bHdheXMgdXBkYXRpbmcgdGhlIG5vZGVtYXNrIGlzIG5vdCB2ZXJ5IGdvb2QgLSBldmVuIGlmIHdl
-IGhhdmUgYW4gZW1wdHkKPj4gLS0gCj4+IDEuOS4zCj4KPi0tIAo+TWljaGFsIEhvY2tvCj5TVVNF
-IExhYnMK
+From: Michal Hocko <mhocko@suse.cz> Sent: Friday, December 05, 2014 8:56 PM
+> To: Duan Fugang-B38611
+> Cc: andi@firstfloor.org; catalin.marinas@arm.com; hannes@cmpxchg.org;
+> cl@linux-foundation.org; vegardno@ifi.uio.no; penberg@kernel.org;
+> bsingharora@gmail.com; kamezawa.hiroyu@jp.fujitsu.com; linux-mm@kvack.org=
+;
+> cgroups@vger.kernel.org; davem@davemloft.net; eric.dumazet@gmail.com;
+> ezequiel.garcia@free-electrons.com; David.Laight@ACULAB.COM
+> Subject: Re: [Question] page allocation failure
+>=20
+> On Fri 05-12-14 10:22:49, fugang.duan@freescale.com wrote:
+> [...]
+> > [Playing  (List Repeated)][Vol=3D01][00:02:54/00:04:07]swapper/0: page
+> > allocation failure: order:0, mode:0x200020
+> > CPU: 0 PID: 0 Comm: swapper/0 Not tainted 3.10.53-1.1.0_ga+g67f859d #1
+> > [<80013b00>] (unwind_backtrace+0x0/0xf4) from [<80011524>]
+> > (show_stack+0x10/0x14) [<80011524>] (show_stack+0x10/0x14) from
+> > [<80094474>] (warn_alloc_failed+0xe0/0x118) [<80094474>]
+> > (warn_alloc_failed+0xe0/0x118) from [<8009723c>]
+> > (__alloc_pages_nodemask+0x640/0x89c)
+> > [<8009723c>] (__alloc_pages_nodemask+0x640/0x89c) from [<800c13e4>]
+> > (new_slab+0x1e4/0x218) [<800c13e4>] (new_slab+0x1e4/0x218) from
+> > [<8067ef38>] (__slab_alloc.isra.64.constprop.69+0x380/0x590)
+> > [<8067ef38>] (__slab_alloc.isra.64.constprop.69+0x380/0x590) from
+> > [<800c29a8>] (kmem_cache_alloc+0xdc/0x110) [<800c29a8>]
+> > (kmem_cache_alloc+0xdc/0x110) from [<805197d0>] (build_skb+0x28/0x98)
+> > [<805197d0>] (build_skb+0x28/0x98) from [<8051c0c8>]
+> > (__netdev_alloc_skb+0x54/0xfc) [<8051c0c8>]
+> > (__netdev_alloc_skb+0x54/0xfc) from [<803ab878>]
+> > (fec_enet_rx_napi+0x758/0xa28) [<803ab878>]
+> > (fec_enet_rx_napi+0x758/0xa28) from [<80527618>]
+> > (net_rx_action+0xbc/0x17c) [<80527618>] (net_rx_action+0xbc/0x17c)
+> > from [<800332ec>] (__do_softirq+0x120/0x200) [<800332ec>]
+> > (__do_softirq+0x120/0x200) from [<80033460>] (do_softirq+0x50/0x58)
+> > [<80033460>] (do_softirq+0x50/0x58) from [<800336fc>]
+> > (irq_exit+0x9c/0xd0) [<800336fc>] (irq_exit+0x9c/0xd0) from
+> > [<8000e94c>] (handle_IRQ+0x44/0x90) [<8000e94c>]
+> > (handle_IRQ+0x44/0x90) from [<80008558>] (gic_handle_irq+0x2c/0x5c)
+> > [<80008558>] (gic_handle_irq+0x2c/0x5c) from [<8000dc80>]
+> > (__irq_svc+0x40/0x70) Exception stack(0x80cbff20 to 0x80cbff68)
+> > ff20: 80cbff68 00003fee b2931c73 00000ee2 b292c14d 00000ee2 81597180
+> > 80ccbd68
+> > ff40: 00000000 00000000 80cbe000 80cbe000 00000017 80cbff68 8005fbd4
+> > 80456db0
+> > ff60: 60010013 ffffffff
+> > [<8000dc80>] (__irq_svc+0x40/0x70) from [<80456db0>]
+> > (cpuidle_enter_state+0x50/0xe0) [<80456db0>]
+> > (cpuidle_enter_state+0x50/0xe0) from [<80456ef0>]
+> > (cpuidle_idle_call+0xb0/0x148) [<80456ef0>]
+> > (cpuidle_idle_call+0xb0/0x148) from [<8000ec68>]
+> > (arch_cpu_idle+0x10/0x54) [<8000ec68>] (arch_cpu_idle+0x10/0x54) from
+> > [<8005f4a8>] (cpu_startup_entry+0x104/0x150) [<8005f4a8>]
+> > (cpu_startup_entry+0x104/0x150) from [<80c71a9c>]
+> > (start_kernel+0x324/0x330)
+> > Mem-info:
+> > DMA per-cpu:
+> > CPU    0: hi:  186, btch:  31 usd: 208
+> > CPU    1: hi:  186, btch:  31 usd:   0
+> > CPU    2: hi:  186, btch:  31 usd:   0
+> > CPU    3: hi:  186, btch:  31 usd:  97
+> > active_anon:11642 inactive_anon:331 isolated_anon:0
+> > active_file:78585 inactive_file:79182 isolated_file:0
+> > unevictable:0 dirty:0 writeback:0 unstable:0
+> > free:35948 slab_reclaimable:1318 slab_unreclaimable:2242
+> > mapped:5698 shmem:367 pagetables:477 bounce:0
+> > free_cma:35784
+> > DMA free:143792kB min:3336kB low:4168kB high:5004kB
+> > active_anon:46568kB inactive_anon:1324kB active_file:314340kB
+> > inactive_file:316728kB unevictable:0kB isolated(anon):0kB
+> > isolated(file):0kB present:1048576kB managed:697164kB mlocked:0kB
+> > dirty:0kB writeback:0kB mapped:22792kB shmem:1468kB
+> > slab_reclaimable:5272kB slab_unreclaimable:8968kB kernel_stack:1704kB
+> > pagetables:1908kB unstable:0kB bounce:0kB free_cma:143136kB
+> > writeback_tmp:0kB pages_scanned:51 all_unreclaimable? no
+> > lowmem_reserve[]: 0 0 0 0
+> > DMA: 4452*4kB (UC) 4382*8kB (UC) 4111*16kB (UC) 786*32kB (UC) 0*64kB
+> > 0*128kB 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB 0*8192kB 0*16384kB
+> > 0*32768kB =3D 143792kB
+>=20
+> All your remaining memory is apparently reserved for C - CMA allocator.
+> I would recommend to contact CMA people and check your configuration with
+> them.
+
+Thanks for your response. I add Russell king in the loop.=20
+
+>=20
+> > 158126 total pagecache pages
+> > 0 pages in swap cache
+> > Swap cache stats: add 0, delete 0, find 0/0 Free swap  =3D 0kB Total
+> > swap =3D 0kB
+> > SLUB: Unable to allocate memory on node -1 (gfp=3D0x20)
+> >   cache: kmalloc-192, object size: 192, buffer size: 192, default order=
+:
+> 0, min order: 0
+> >   node 0: slabs: 0, objs: 0, free: 0
+> > [Playing  (List Repeated)][Vol=3D01][00:02:56/00:04:07]
+> >
+> >
+> > Regards,
+> > Andy
+>=20
+> --
+> Michal Hocko
+> SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
