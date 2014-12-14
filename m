@@ -1,16 +1,15 @@
-From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCHv3 7/8] cgroup: mount cgroupns-root when inside non-init
-	cgroupns
-Date: Fri, 12 Dec 2014 16:55:00 +0800
-Message-ID: <548AAD64.8040004@huawei.com>
+From: Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>
+Subject: Re: [PATCHv3 8/8] cgroup: Add documentation for cgroup namespaces
+Date: Mon, 15 Dec 2014 00:05:50 +0100
+Message-ID: <548E17CE.8010704@nod.at>
 References: <adityakali-cgroupns>
 	<1417744550-6461-1-git-send-email-adityakali@google.com>
-	<1417744550-6461-8-git-send-email-adityakali@google.com>
+	<1417744550-6461-9-git-send-email-adityakali@google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <1417744550-6461-8-git-send-email-adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1417744550-6461-9-git-send-email-adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -21,213 +20,135 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: richard.weinberger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 
-On 2014/12/5 9:55, Aditya Kali wrote:
-> This patch enables cgroup mounting inside userns when a process
-> as appropriate privileges. The cgroup filesystem mounted is
+Aditya,
 
-s/as/has
+I gave your patch set a try but it does not work for me.
+Maybe you can bring some light into the issues I'm facing.
+Sadly I still had no time to dig into your code.
 
-> rooted at the cgroupns-root. Thus, in a container-setup, only
-> the hierarchy under the cgroupns-root is exposed inside the container.
-> This allows container management tools to run inside the containers
-> without depending on any global state.
-> In order to support this, a new kernfs api is added to lookup the
-> dentry for the cgroupns-root.
-> 
+Am 05.12.2014 um 02:55 schrieb Aditya Kali:
 > Signed-off-by: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 > ---
->  fs/kernfs/mount.c      | 48 ++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/kernfs.h |  2 ++
->  kernel/cgroup.c        | 46 +++++++++++++++++++++++++++++++++++++++++++++-
->  3 files changed, 95 insertions(+), 1 deletion(-)
+>  Documentation/cgroups/namespace.txt | 147 ++++++++++++++++++++++++++++++++++++
+>  1 file changed, 147 insertions(+)
+>  create mode 100644 Documentation/cgroups/namespace.txt
 > 
-> diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
-> index f973ae9..efe5e15 100644
-> --- a/fs/kernfs/mount.c
-> +++ b/fs/kernfs/mount.c
-> @@ -62,6 +62,54 @@ struct kernfs_root *kernfs_root_from_sb(struct super_block *sb)
->  	return NULL;
->  }
->  
-> +/**
-> + * kernfs_obtain_root - get a dentry for the given kernfs_node
-> + * @sb: the kernfs super_block
-> + * @kn: kernfs_node for which a dentry is needed
-> + *
-> + * This can used used by callers which want to mount only a part of the kernfs
+> diff --git a/Documentation/cgroups/namespace.txt b/Documentation/cgroups/namespace.txt
+> new file mode 100644
+> index 0000000..6480379
+> --- /dev/null
+> +++ b/Documentation/cgroups/namespace.txt
+> @@ -0,0 +1,147 @@
+> +			CGroup Namespaces
+> +
+> +CGroup Namespace provides a mechanism to virtualize the view of the
+> +/proc/<pid>/cgroup file. The CLONE_NEWCGROUP clone-flag can be used with
+> +clone() and unshare() syscalls to create a new cgroup namespace.
+> +The process running inside the cgroup namespace will have its /proc/<pid>/cgroup
+> +output restricted to cgroupns-root. cgroupns-root is the cgroup of the process
+> +at the time of creation of the cgroup namespace.
+> +
+> +Prior to CGroup Namespace, the /proc/<pid>/cgroup file used to show complete
+> +path of the cgroup of a process. In a container setup (where a set of cgroups
+> +and namespaces are intended to isolate processes), the /proc/<pid>/cgroup file
+> +may leak potential system level information to the isolated processes.
+> +
+> +For Example:
+> +  $ cat /proc/self/cgroup
+> +  0:cpuset,cpu,cpuacct,memory,devices,freezer,hugetlb:/batchjobs/container_id1
+> +
+> +The path '/batchjobs/container_id1' can generally be considered as system-data
+> +and its desirable to not expose it to the isolated process.
+> +
+> +CGroup Namespaces can be used to restrict visibility of this path.
+> +For Example:
+> +  # Before creating cgroup namespace
+> +  $ ls -l /proc/self/ns/cgroup
+> +  lrwxrwxrwx 1 root root 0 2014-07-15 10:37 /proc/self/ns/cgroup -> cgroup:[4026531835]
+> +  $ cat /proc/self/cgroup
+> +  0:cpuset,cpu,cpuacct,memory,devices,freezer,hugetlb:/batchjobs/container_id1
+> +
+> +  # unshare(CLONE_NEWCGROUP) and exec /bin/bash
+> +  $ ~/unshare -c
+> +  [ns]$ ls -l /proc/self/ns/cgroup
+> +  lrwxrwxrwx 1 root root 0 2014-07-15 10:35 /proc/self/ns/cgroup -> cgroup:[4026532183]
+> +  # From within new cgroupns, process sees that its in the root cgroup
+> +  [ns]$ cat /proc/self/cgroup
+> +  0:cpuset,cpu,cpuacct,memory,devices,freezer,hugetlb:/
+> +
+> +  # From global cgroupns:
+> +  $ cat /proc/<pid>/cgroup
+> +  0:cpuset,cpu,cpuacct,memory,devices,freezer,hugetlb:/batchjobs/container_id1
+> +
+> +  # Unshare cgroupns along with userns and mountns
+> +  # Following calls unshare(CLONE_NEWCGROUP|CLONE_NEWUSER|CLONE_NEWNS), then
+> +  # sets up uid/gid map and execs /bin/bash
+> +  $ ~/unshare -c -u -m
 
-s/used used/be used/
+This command does not issue CLONE_NEWUSER, -U does.
 
-s/which/who
+> +  # Originally, we were in /batchjobs/container_id1 cgroup. Mount our own cgroup
+> +  # hierarchy.
+> +  [ns]$ mount -t cgroup cgroup /tmp/cgroup
+> +  [ns]$ ls -l /tmp/cgroup
+> +  total 0
+> +  -r--r--r-- 1 root root 0 2014-10-13 09:32 cgroup.controllers
+> +  -r--r--r-- 1 root root 0 2014-10-13 09:32 cgroup.populated
+> +  -rw-r--r-- 1 root root 0 2014-10-13 09:25 cgroup.procs
+> +  -rw-r--r-- 1 root root 0 2014-10-13 09:32 cgroup.subtree_control
 
-> + * as root of the filesystem.
-> + */
-> +struct dentry *kernfs_obtain_root(struct super_block *sb,
-> +				  struct kernfs_node *kn)
-> +{
-> +	struct dentry *dentry;
-> +	struct inode *inode;
-> +
-> +	BUG_ON(sb->s_op != &kernfs_sops);
-> +
-> +	/* inode for the given kernfs_node should already exist. */
-> +	inode = ilookup(sb, kn->ino);
-> +	if (!inode) {
-> +		pr_debug("kernfs: could not get inode for '");
-> +		pr_cont_kernfs_path(kn);
-> +		pr_cont("'.\n");
-> +		return ERR_PTR(-EINVAL);
-> +	}
-> +
-> +	/* instantiate and link root dentry */
-> +	dentry = d_obtain_root(inode);
-> +	if (!dentry) {
-> +		pr_debug("kernfs: could not get dentry for '");
-> +		pr_cont_kernfs_path(kn);
-> +		pr_cont("'.\n");
-> +		return ERR_PTR(-ENOMEM);
-> +	}
-> +
-> +	/* If this is a new dentry, set it up. We need kernfs_mutex because this
-> +	 * may be called by callers other than kernfs_fill_super. */
+I've patched libvirt-lxc to issue CLONE_NEWCGROUP and not bind mount cgroupfs into a container.
+But I'm unable to mount cgroupfs within the container, mount(2) is failing with EINVAL.
+And /proc/self/cgroup still shows the cgroup from outside.
 
-/*
- * ...
- */
+---cut---
+container:/ # ls /sys/fs/cgroup/
+container:/ # mount -t cgroup none /sys/fs/cgroup/
+mount: wrong fs type, bad option, bad superblock on none,
+       missing codepage or helper program, or other error
 
-> +	mutex_lock(&kernfs_mutex);
-> +	if (!dentry->d_fsdata) {
-> +		kernfs_get(kn);
-> +		dentry->d_fsdata = kn;
-> +	} else {
-> +		WARN_ON(dentry->d_fsdata != kn);
-> +	}
-> +	mutex_unlock(&kernfs_mutex);
-> +
-> +	return dentry;
-> +}
+       In some cases useful info is found in syslog - try
+       dmesg | tail or so.
+container:/ # cat /proc/self/cgroup
+8:memory:/machine/test00.libvirt-lxc
+7:devices:/machine/test00.libvirt-lxc
+6:hugetlb:/
+5:cpuset:/machine/test00.libvirt-lxc
+4:blkio:/machine/test00.libvirt-lxc
+3:cpu,cpuacct:/machine/test00.libvirt-lxc
+2:freezer:/machine/test00.libvirt-lxc
+1:name=systemd:/user.slice/user-0.slice/session-c2.scope
+container:/ # ls -la /proc/self/ns
+total 0
+dr-x--x--x 2 root root 0 Dec 14 23:02 .
+dr-xr-xr-x 8 root root 0 Dec 14 23:02 ..
+lrwxrwxrwx 1 root root 0 Dec 14 23:02 cgroup -> cgroup:[4026532240]
+lrwxrwxrwx 1 root root 0 Dec 14 23:02 ipc -> ipc:[4026532238]
+lrwxrwxrwx 1 root root 0 Dec 14 23:02 mnt -> mnt:[4026532235]
+lrwxrwxrwx 1 root root 0 Dec 14 23:02 net -> net:[4026532242]
+lrwxrwxrwx 1 root root 0 Dec 14 23:02 pid -> pid:[4026532239]
+lrwxrwxrwx 1 root root 0 Dec 14 23:02 user -> user:[4026532234]
+lrwxrwxrwx 1 root root 0 Dec 14 23:02 uts -> uts:[4026532236]
+container:/ #
 
-Seperate this as a standalone patch?
+#host side
+lxc-os132:~ # ls -la /proc/self/ns
+total 0
+dr-x--x--x 2 root root 0 Dec 14 23:56 .
+dr-xr-xr-x 8 root root 0 Dec 14 23:56 ..
+lrwxrwxrwx 1 root root 0 Dec 14 23:56 cgroup -> cgroup:[4026531835]
+lrwxrwxrwx 1 root root 0 Dec 14 23:56 ipc -> ipc:[4026531839]
+lrwxrwxrwx 1 root root 0 Dec 14 23:56 mnt -> mnt:[4026531840]
+lrwxrwxrwx 1 root root 0 Dec 14 23:56 net -> net:[4026531957]
+lrwxrwxrwx 1 root root 0 Dec 14 23:56 pid -> pid:[4026531836]
+lrwxrwxrwx 1 root root 0 Dec 14 23:56 user -> user:[4026531837]
+lrwxrwxrwx 1 root root 0 Dec 14 23:56 uts -> uts:[4026531838]
+---cut---
 
-> +
->  static int kernfs_fill_super(struct super_block *sb, unsigned long magic)
->  {
->  	struct kernfs_super_info *info = kernfs_info(sb);
-> diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
-> index 3c2be75..b9538e0 100644
-> --- a/include/linux/kernfs.h
-> +++ b/include/linux/kernfs.h
-> @@ -274,6 +274,8 @@ void kernfs_put(struct kernfs_node *kn);
->  struct kernfs_node *kernfs_node_from_dentry(struct dentry *dentry);
->  struct kernfs_root *kernfs_root_from_sb(struct super_block *sb);
->  
-> +struct dentry *kernfs_obtain_root(struct super_block *sb,
-> +				  struct kernfs_node *kn);
->  struct kernfs_root *kernfs_create_root(struct kernfs_syscall_ops *scops,
->  				       unsigned int flags, void *priv);
->  void kernfs_destroy_root(struct kernfs_root *root);
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index b1ae6d9..e779890 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -1438,6 +1438,14 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
->  			return -ENOENT;
->  	}
->  
-> +	/* If inside a non-init cgroup namespace, only allow default hierarchy
-> +	 * to be mounted.
-> +	 */
+Any ideas?
 
-/*
- * ...
- */
-
-> +	if ((current->nsproxy->cgroup_ns != &init_cgroup_ns) &&
-> +	    !(opts->flags & CGRP_ROOT_SANE_BEHAVIOR)) {
-> +		return -EINVAL;
-> +	}
-> +
->  	if (opts->flags & CGRP_ROOT_SANE_BEHAVIOR) {
->  		pr_warn("sane_behavior: this is still under development and its behaviors will change, proceed at your own risk\n");
->  		if (nr_opts != 1) {
-> @@ -1630,6 +1638,15 @@ static void init_cgroup_root(struct cgroup_root *root,
->  		set_bit(CGRP_CPUSET_CLONE_CHILDREN, &root->cgrp.flags);
->  }
->  
-> +struct dentry *cgroupns_get_root(struct super_block *sb,
-> +				 struct cgroup_namespace *ns)
-> +{
-> +	struct dentry *nsdentry;
-> +
-> +	nsdentry = kernfs_obtain_root(sb, ns->root_cgrp->kn);
-> +	return nsdentry;
-> +}
-> +
->  static int cgroup_setup_root(struct cgroup_root *root, unsigned int ss_mask)
->  {
->  	LIST_HEAD(tmp_links);
-> @@ -1734,6 +1751,14 @@ static struct dentry *cgroup_mount(struct file_system_type *fs_type,
->  	int ret;
->  	int i;
->  	bool new_sb;
-> +	struct cgroup_namespace *ns =
-> +		get_cgroup_ns(current->nsproxy->cgroup_ns);
-> +
-> +	/* Check if the caller has permission to mount. */
-> +	if (!ns_capable(ns->user_ns, CAP_SYS_ADMIN)) {
-> +		put_cgroup_ns(ns);
-> +		return ERR_PTR(-EPERM);
-> +	}
->  
->  	/*
->  	 * The first time anyone tries to mount a cgroup, enable the list
-> @@ -1866,11 +1891,28 @@ out_free:
->  	kfree(opts.release_agent);
->  	kfree(opts.name);
->  
-> -	if (ret)
-> +	if (ret) {
-> +		put_cgroup_ns(ns);
->  		return ERR_PTR(ret);
-> +	}
->  
->  	dentry = kernfs_mount(fs_type, flags, root->kf_root,
->  				CGROUP_SUPER_MAGIC, &new_sb);
-> +
-> +	if (!IS_ERR(dentry) && (root == &cgrp_dfl_root)) {
-> +		/* If this mount is for the default hierarchy in non-init cgroup
-> +		 * namespace, then instead of root cgroup's dentry, we return
-> +		 * the dentry corresponding to the cgroupns->root_cgrp.
-> +		 */
-> +		if (ns != &init_cgroup_ns) {
-> +			struct dentry *nsdentry;
-> +
-> +			nsdentry = cgroupns_get_root(dentry->d_sb, ns);
-> +			dput(dentry);
-> +			dentry = nsdentry;
-> +		}
-> +	}
-> +
->  	if (IS_ERR(dentry) || !new_sb)
->  		cgroup_put(&root->cgrp);
->  
-> @@ -1883,6 +1925,7 @@ out_free:
->  		deactivate_super(pinned_sb);
->  	}
->  
-> +	put_cgroup_ns(ns);
->  	return dentry;
->  }
->  
-> @@ -1911,6 +1954,7 @@ static struct file_system_type cgroup_fs_type = {
->  	.name = "cgroup",
->  	.mount = cgroup_mount,
->  	.kill_sb = cgroup_kill_sb,
-> +	.fs_flags = FS_USERNS_MOUNT,
->  };
->  
->  static struct kobject *cgroup_kobj;
-> 
+Thanks,
+//richard
