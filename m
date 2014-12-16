@@ -1,7 +1,7 @@
-From: Michal Hocko <mhocko@suse.cz>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [PATCH] memcg: Provide knob for force OOM into the memcg
-Date: Tue, 16 Dec 2014 14:39:35 +0100
-Message-ID: <20141216133935.GK22914@dhcp22.suse.cz>
+Date: Tue, 16 Dec 2014 11:59:22 -0500
+Message-ID: <20141216165922.GA30984@phnom.home.cmpxchg.org>
 References: <1418736335-30915-1-git-send-email-cpandya@codeaurora.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
@@ -12,9 +12,9 @@ List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Chintan Pandya <cpandya@codeaurora.org>
-Cc: hannes@cmpxchg.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: mhocko@suse.cz, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue 16-12-14 18:55:35, Chintan Pandya wrote:
+On Tue, Dec 16, 2014 at 06:55:35PM +0530, Chintan Pandya wrote:
 > We may want to use memcg to limit the total memory
 > footprint of all the processes within the one group.
 > This may lead to a situation where any arbitrary
@@ -25,84 +25,17 @@ On Tue 16-12-14 18:55:35, Chintan Pandya wrote:
 > avoid such scenarios, provide a convenient knob
 > by which we can forcefully trigger OOM and make
 > a room for upcoming process.
-> 
-> To trigger force OOM,
-> $ echo 1 > /<memcg_path>/memory.force_oom
 
-What would prevent another task deplete that memory shortly after you
-triggered OOM and end up in the same situation? E.g. while the moving
-task is migrating its charges to the new group...
+Why do you move tasks around during runtime?  Rather than scanning
+thousands or millions of page table entries to relocate a task and its
+private memory to another configuration domain, wouldn't it be easier to
+just keep the task in a dedicated cgroup and reconfigure that instead?
 
-Why cannot you simply disable OOM killer in that memcg and handle it
-from userspace properly?
-
-> Signed-off-by: Chintan Pandya <cpandya@codeaurora.org>
-> ---
->  mm/memcontrol.c | 29 +++++++++++++++++++++++++++++
->  1 file changed, 29 insertions(+)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index ef91e85..4c68aa7 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -3305,6 +3305,30 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg)
->  	return 0;
->  }
->  
-> +static int mem_cgroup_force_oom(struct cgroup *cont, unsigned int event)
-> +{
-> +	struct mem_cgroup *memcg = mem_cgroup_from_cont(cont);
-> +	int ret;
-> +
-> +	if (mem_cgroup_is_root(memcg))
-> +		return -EINVAL;
-> +
-> +	css_get(&memcg->css);
-> +	ret = mem_cgroup_handle_oom(memcg, GFP_KERNEL, 0);
-> +	css_put(&memcg->css);
-> +
-> +	return ret;
-> +}
-> +
-> +static int mem_cgroup_force_oom_write(struct cgroup *cgrp,
-> +				struct cftype *cft, u64 val)
-> +{
-> +	if (val > 1 || val < 1)
-> +		return -EINVAL;
-> +
-> +	return mem_cgroup_force_oom(cgrp, 0);
-> +}
-> +
->  static ssize_t mem_cgroup_force_empty_write(struct kernfs_open_file *of,
->  					    char *buf, size_t nbytes,
->  					    loff_t off)
-> @@ -4442,6 +4466,11 @@ static struct cftype mem_cgroup_files[] = {
->  		.write = mem_cgroup_force_empty_write,
->  	},
->  	{
-> +		.name = "force_oom",
-> +		.trigger = mem_cgroup_force_oom,
-> +		.write_u64 = mem_cgroup_force_oom_write,
-> +	},
-> +	{
->  		.name = "use_hierarchy",
->  		.write_u64 = mem_cgroup_hierarchy_write,
->  		.read_u64 = mem_cgroup_hierarchy_read,
-> -- 
-> Chintan Pandya
-> 
-> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a
-> member of the Code Aurora Forum, hosted by The Linux Foundation
-> 
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo@kvack.org.  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
-
--- 
-Michal Hocko
-SUSE Labs
+There doesn't seem to be a strong usecase for charge migration that
+couldn't be solved by doing things slightly differently from userspace.
+Certainly not something that justifies the complexity that it adds to
+memcg model and it's synchronization requirements from VM hotpaths.
+Hence, I'm inclined to not add charge moving to version 2 of memcg.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
