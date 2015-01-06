@@ -1,138 +1,121 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 07/45] writeback: attribute stats to the matching per-cgroup bdi_writeback
-Date: Tue,  6 Jan 2015 16:25:44 -0500
-Message-ID: <1420579582-8516-8-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 21/45] writeback: make writeback_in_progress() take bdi_writeback instead of backing_dev_info
+Date: Tue,  6 Jan 2015 16:25:58 -0500
+Message-ID: <1420579582-8516-22-git-send-email-tj@kernel.org>
 References: <1420579582-8516-1-git-send-email-tj@kernel.org>
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=7sxpKhNmptvO2fngMKzwAkONhSIDQgV5cFb9kivVHLk=;
-        b=JHWZu63JuNi35PXY/dedqlQnjuk02r0/JFNC7LIA/ynT1cLIXGbufIsG/gnHiG97Yr
-         yDOULuuwfFvtR3dEiYX3CsvD6rjT24xs3jp3MpXwDU7N5HoCYnwpmL6w+ceean3+izK7
-         ZDIpk4KYy+rnmnoOPrXDrNR+J3tLw6pA42MweYd797PcQtlOQ1XZ6lVauriETwYB49At
-         XkcvceKacEqedXBy5ojzTckqAjhC1QKriqeT2j/gli/1TwDZs40bs21b4oCk+bUIzEVi
-         VAx0zuzo37PlMpbOUZ+p8jN31NY3qMpzi/tAj+vf5Ivi7EsW65BRfzu286B3E+9Jvilz
-         wPSw==
-In-Reply-To: <1420579582-8516-1-git-send-email-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+        bh=rncqn2evumpjiiIdCJBqfXgbKwUtENdJFYGgF7z1YDw=;
+        b=ySu2TOaS7yEV49JSfeql5A9qCVldEk5IM13sVScaQs1DHPJ6ApDXkOX8NxAmjCb9Ab
+         Gk0dW4NqTR32M3l97R/KLyhlRg4KpvA/HWTOQva9C63o9+dfc+4la3dMomBFt8F/KzCS
+         daF2wltSv1UaR+aLXOmwNa4bBkmqD83C2e81HzWBC1yOHZkjm8IawSPYkbDaS2XM5doH
+         RY9vqlpjyQAk+mEkZyQbihNmOJvFOt0oi1ZvX5fVpkoPSwXjFudvDWG83bDd7rapTaIh
+         4222bA6IczYxpca2Y6tHo9S+BxUdgMl/aicqkEjiSoCCzX3G1XPKoNz0ee379n/u2rNv
+         Kvow==
+In-Reply-To: <1420579582-8516-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, Tejun Heo <tj@kernel.org>
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Until now, all WB_* stats were accounted against the root wb
-(bdi_writeback), now that multiple wb (bdi_writeback) support is in
-place, let's attributes the stats to the respective per-cgroup wb's.
+writeback_in_progress() currently takes @bdi and returns whether
+writeback is in progress on its root wb (bdi_writeback).  In
+preparation for cgroup writeback support, make it take wb instead.
+While at it, make it an inline function.
 
-WB_RECLAIMABLE and WB_DIRTIED are attributed to the page's dirty cgwb
-(per-cgroup wb) and WB_WRITEBACK to writeback cgwb.
-__test_set_page_writeback() is updated so that dirty cgwb association
-takes place before WB_WRITEBACK increment so that the latter can make
-use of the association.
+This patch doesn't make any functional difference.
 
-As no filesystem has FS_CGROUP_WRITEBACK yet, this doesn't lead to
-visible behavior differences.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Jan Kara <jack@suse.cz>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
 ---
- mm/filemap.c        |  2 +-
- mm/page-writeback.c | 18 ++++++++++++------
- mm/truncate.c       |  3 +--
- 3 files changed, 14 insertions(+), 9 deletions(-)
+ fs/fs-writeback.c           | 15 +--------------
+ include/linux/backing-dev.h | 12 +++++++++++-
+ mm/page-writeback.c         |  4 ++--
+ 3 files changed, 14 insertions(+), 17 deletions(-)
 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 98a6675..faa577d 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -211,7 +211,7 @@ void __delete_from_page_cache(struct page *page, void *shadow)
- 	 */
- 	if (PageDirty(page) && mapping_cap_account_dirty(mapping)) {
- 		dec_zone_page_state(page, NR_FILE_DIRTY);
--		dec_wb_stat(&mapping->backing_dev_info->wb, WB_RECLAIMABLE);
-+		dec_wb_stat(page_cgwb_dirty(page), WB_RECLAIMABLE);
- 		page_blkcg_detach_dirty(page);
- 	}
- }
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index 18d8e72..6ab113b 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -53,19 +53,6 @@ struct wb_writeback_work {
+ 	struct completion *done;	/* set if the caller waits */
+ };
+ 
+-/**
+- * writeback_in_progress - determine whether there is writeback in progress
+- * @bdi: the device's backing_dev_info structure.
+- *
+- * Determine whether there is writeback waiting to be handled against a
+- * backing device.
+- */
+-int writeback_in_progress(struct backing_dev_info *bdi)
+-{
+-	return test_bit(WB_writeback_running, &bdi->wb.state);
+-}
+-EXPORT_SYMBOL(writeback_in_progress);
+-
+ static inline struct inode *wb_inode(struct list_head *head)
+ {
+ 	return list_entry(head, struct inode, i_wb_list);
+@@ -1501,7 +1488,7 @@ int try_to_writeback_inodes_sb_nr(struct super_block *sb,
+ 				  unsigned long nr,
+ 				  enum wb_reason reason)
+ {
+-	if (writeback_in_progress(sb->s_bdi))
++	if (writeback_in_progress(&sb->s_bdi->wb))
+ 		return 1;
+ 
+ 	if (!down_read_trylock(&sb->s_umount))
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index c6278ee..953fa01 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -186,7 +186,17 @@ int bdi_set_max_ratio(struct backing_dev_info *bdi, unsigned int max_ratio);
+ extern struct backing_dev_info default_backing_dev_info;
+ extern struct backing_dev_info noop_backing_dev_info;
+ 
+-int writeback_in_progress(struct backing_dev_info *bdi);
++/**
++ * writeback_in_progress - determine whether there is writeback in progress
++ * @wb: bdi_writeback of interest
++ *
++ * Determine whether there is writeback waiting to be handled against a
++ * bdi_writeback.
++ */
++static inline bool writeback_in_progress(struct bdi_writeback *wb)
++{
++	return test_bit(WB_writeback_running, &wb->state);
++}
+ 
+ static inline int wb_congested(struct bdi_writeback *wb, int bdi_bits)
+ {
 diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 6475504..d1fea3a 100644
+index 190e2a2..b250ee2 100644
 --- a/mm/page-writeback.c
 +++ b/mm/page-writeback.c
-@@ -2159,10 +2159,13 @@ EXPORT_SYMBOL(__set_page_dirty_nobuffers);
- void account_page_redirty(struct page *page)
- {
- 	struct address_space *mapping = page->mapping;
-+
- 	if (mapping && mapping_cap_account_dirty(mapping)) {
-+		struct bdi_writeback *wb = page_cgwb_dirty(page);
-+
- 		current->nr_dirtied--;
- 		dec_zone_page_state(page, NR_DIRTIED);
--		dec_wb_stat(&mapping->backing_dev_info->wb, WB_DIRTIED);
-+		dec_wb_stat(wb, WB_DIRTIED);
- 	}
- }
- EXPORT_SYMBOL(account_page_redirty);
-@@ -2300,9 +2303,10 @@ int clear_page_dirty_for_io(struct page *page)
- 		 * exclusion.
- 		 */
- 		if (TestClearPageDirty(page)) {
-+			struct bdi_writeback *wb = page_cgwb_dirty(page);
-+
- 			dec_zone_page_state(page, NR_FILE_DIRTY);
--			dec_wb_stat(&mapping->backing_dev_info->wb,
--				    WB_RECLAIMABLE);
-+			dec_wb_stat(wb, WB_RECLAIMABLE);
- 			page_blkcg_detach_dirty(page);
- 			return 1;
+@@ -1449,7 +1449,7 @@ static void balance_dirty_pages(struct address_space *mapping,
+ 			break;
  		}
-@@ -2330,9 +2334,11 @@ int test_clear_page_writeback(struct page *page)
- 						page_index(page),
- 						PAGECACHE_TAG_WRITEBACK);
- 			if (bdi_cap_account_writeback(bdi)) {
--				__dec_wb_stat(&bdi->wb, WB_WRITEBACK);
-+				struct bdi_writeback *wb = page_cgwb_wb(page);
-+
-+				__dec_wb_stat(wb, WB_WRITEBACK);
- 				page_blkcg_detach_wb(page);
--				__wb_writeout_inc(&bdi->wb);
-+				__wb_writeout_inc(wb);
- 			}
- 		}
- 		spin_unlock_irqrestore(&mapping->tree_lock, flags);
-@@ -2366,8 +2372,8 @@ int __test_set_page_writeback(struct page *page, bool keep_write)
- 						page_index(page),
- 						PAGECACHE_TAG_WRITEBACK);
- 			if (bdi_cap_account_writeback(bdi)) {
--				__inc_wb_stat(&bdi->wb, WB_WRITEBACK);
- 				page_blkcg_attach_wb(page);
-+				__inc_wb_stat(page_cgwb_wb(page), WB_WRITEBACK);
- 			}
- 		}
- 		if (!PageDirty(page))
-diff --git a/mm/truncate.c b/mm/truncate.c
-index caae624..1658e34 100644
---- a/mm/truncate.c
-+++ b/mm/truncate.c
-@@ -112,8 +112,7 @@ void cancel_dirty_page(struct page *page, unsigned int account_size)
- 		struct address_space *mapping = page->mapping;
- 		if (mapping && mapping_cap_account_dirty(mapping)) {
- 			dec_zone_page_state(page, NR_FILE_DIRTY);
--			dec_wb_stat(&mapping->backing_dev_info->wb,
--				    WB_RECLAIMABLE);
-+			dec_wb_stat(page_cgwb_dirty(page), WB_RECLAIMABLE);
- 			if (account_size)
- 				task_io_account_cancelled_write(account_size);
- 			page_blkcg_detach_dirty(page);
+ 
+-		if (unlikely(!writeback_in_progress(bdi)))
++		if (unlikely(!writeback_in_progress(wb)))
+ 			bdi_start_background_writeback(bdi);
+ 
+ 		if (!strictlimit)
+@@ -1568,7 +1568,7 @@ pause:
+ 	if (!dirty_exceeded && wb->dirty_exceeded)
+ 		wb->dirty_exceeded = 0;
+ 
+-	if (writeback_in_progress(bdi))
++	if (writeback_in_progress(wb))
+ 		return;
+ 
+ 	/*
 -- 
 2.1.0
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
