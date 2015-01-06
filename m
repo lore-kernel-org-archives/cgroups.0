@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 11/45] writeback, blkcg: propagate non-root blkcg congestion state
-Date: Tue,  6 Jan 2015 16:25:48 -0500
-Message-ID: <1420579582-8516-12-git-send-email-tj@kernel.org>
+Subject: [PATCH 17/45] writeback: make bdi->min/max_ratio handling cgroup writeback aware
+Date: Tue,  6 Jan 2015 16:25:54 -0500
+Message-ID: <1420579582-8516-18-git-send-email-tj@kernel.org>
 References: <1420579582-8516-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=flCz7BTEpmUgXwAUztV39dmO8WwkmhNOnD+eXjbg7i4=;
-        b=ek3aNmpi4z9KXleoKBeVqYFMPKQyWBWJ9F32t/Kg+jS5qwEK5RHinDA95nM8fJ+pCN
-         jR9h+CcMF+V1x3HeIoM6sQjLxXYgfYJl7h+eAj+ABh/v5wANvATvBDhcufvdGDzteOTD
-         pyfsM7b53kQgKu95GDj7f1huRrCOmFBmak+78cB8VsxAfiEFCRijmkcfVKZun+sseJ+W
-         t3EWMO3ITLKO7xnhuZ2nEEIAqhbNycJaWIZAT1jWKh1GHDGDx/xi1qH0LZfXM11BfqUG
-         Y3VS0Tsr1DkFbBJpEzXHZYR5jgMSSKnKmuvtCVZXfVO2+KP3zmelEGGpgpz6GLNq2qQ7
-         f8pA==
+        bh=3HlF9rKEADAte8gWa5ZOhKg2l69946KrD+Jyl2ttyyk=;
+        b=cRD9pnv+NkcsnQeTpwPOk6N39BUMzlF0GUbUIAK8qb2sXVW0U1c1L+fnjfv2glueBx
+         RgUmRxXqQmhYFQlOaSCHo8fpmuz44IQ8fZhYNEqak1lIXiDwrfX3ViT+SimVaA3gvOn4
+         r7ZOAs5jXAwXUefGaiyzUUWZAjnuMwXEkxKJpT8MQXj2pd8ff67DVTv5dKTiiO/b0oUK
+         ajE3XcBiYENrH1YI/dn6ZhPBheIy8XjZRBEj/MjJV7rdP+Ei9Ut8ZVyzINuefMPm28Uq
+         luLVEmJnQM6HDaT0jw2zAFr71UlCgFkSLnKhpXy/raECTLG1Q+uj/YclwZNu/j29Z+n2
+         6NYw==
 In-Reply-To: <1420579582-8516-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,60 +23,95 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, Tejun Heo <tj@kernel.org>
 
-Now that bdi layer can handle per cgwb (cgroup bdi_writeback)
-congestion state, blk_{set|clear}_congested() can propagate non-root
-blkcg congestion state to them.
+bdi->min/max_ratio are user-configurable per-bdi knobs which regulate
+dirty limit of each bdi.  For cgroup writeback, they need to be
+further distributed across wb's (bdi_writeback's) belonging to the
+configured bdi.
 
-This can be easily achieved by disabling the root_rl tests in
-blk_{set|clear}_congested().  Note that we still need those tests when
-!CONFIG_CGROUP_WRITEBACK as otherwise we'll end up flipping root blkcg
-wb's congestion state for events happening on other blkcgs.
+This patch introduces wb_min_max_ratio() which distributes
+bdi->min/max_ratio according to a wb's proportion in the total active
+bandwidth of its bdi.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
-Cc: Vivek Goyal <vgoyal@redhat.com>
 ---
- block/blk-core.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+ mm/page-writeback.c | 46 ++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 42 insertions(+), 4 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index c9a7d6c..d731f1a 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -65,23 +65,26 @@ static struct workqueue_struct *kblockd_workqueue;
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index cc0ce70..e1b74d7 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -155,6 +155,42 @@ static unsigned long writeout_period_time = 0;
+  */
+ #define VM_COMPLETIONS_PERIOD_LEN (3*HZ)
  
- static void blk_clear_congested(struct request_list *rl, int sync)
- {
--	if (rl != &rl->q->root_rl)
--		return;
- #ifdef CONFIG_CGROUP_WRITEBACK
- 	clear_wb_congested(rl->blkg->wb, sync);
- #else
--	clear_wb_congested(&rl->q->backing_dev_info.wb, sync);
++#ifdef CONFIG_CGROUP_WRITEBACK
++
++static void wb_min_max_ratio(struct bdi_writeback *wb,
++			     unsigned long *minp, unsigned long *maxp)
++{
++	unsigned long this_bw = wb->avg_write_bandwidth;
++	unsigned long tot_bw = atomic_long_read(&wb->bdi->tot_write_bandwidth);
++	unsigned long long min = wb->bdi->min_ratio;
++	unsigned long long max = wb->bdi->min_ratio;
++
 +	/*
-+	 * If !CGROUP_WRITEBACK, all blkg's map to bdi->wb and we shouldn't
-+	 * flip its congestion state for events on other blkcgs.
++	 * @wb may already be clean by the time control reaches here and
++	 * the total may not include its bw.
 +	 */
-+	if (rl == &rl->q->root_rl)
-+		clear_wb_congested(&rl->q->backing_dev_info.wb, sync);
- #endif
- }
- 
- static void blk_set_congested(struct request_list *rl, int sync)
++	if (this_bw < tot_bw) {
++		min *= this_bw;
++		max *= this_bw;
++		do_div(min, tot_bw);
++		do_div(max, tot_bw);
++	}
++
++	*minp = min;
++	*maxp = max;
++}
++
++#else	/* CONFIG_CGROUP_WRITEBACK */
++
++static void wb_min_max_ratio(struct bdi_writeback *wb,
++			     unsigned long *minp, unsigned long *maxp)
++{
++	*minp = wb->bdi->min_ratio;
++	*maxp = wb->bdi->max_ratio;
++}
++
++#endif	/* CONFIG_CGROUP_WRITEBACK */
++
+ /*
+  * In a memory zone, there is a certain amount of pages we consider
+  * available for the page cache, which is essentially the number of
+@@ -539,9 +575,9 @@ static unsigned long hard_dirty_limit(unsigned long thresh)
+  */
+ unsigned long wb_dirty_limit(struct bdi_writeback *wb, unsigned long dirty)
  {
--	if (rl != &rl->q->root_rl)
--		return;
- #ifdef CONFIG_CGROUP_WRITEBACK
- 	set_wb_congested(rl->blkg->wb, sync);
- #else
--	set_wb_congested(&rl->q->backing_dev_info.wb, sync);
-+	/* see blk_clear_congested() */
-+	if (rl == &rl->q->root_rl)
-+		set_wb_congested(&rl->q->backing_dev_info.wb, sync);
- #endif
- }
+-	struct backing_dev_info *bdi = wb->bdi;
+ 	u64 wb_dirty;
+ 	long numerator, denominator;
++	unsigned long wb_min_ratio, wb_max_ratio;
  
+ 	/*
+ 	 * Calculate this BDI's share of the dirty ratio.
+@@ -552,9 +588,11 @@ unsigned long wb_dirty_limit(struct bdi_writeback *wb, unsigned long dirty)
+ 	wb_dirty *= numerator;
+ 	do_div(wb_dirty, denominator);
+ 
+-	wb_dirty += (dirty * bdi->min_ratio) / 100;
+-	if (wb_dirty > (dirty * bdi->max_ratio) / 100)
+-		wb_dirty = dirty * bdi->max_ratio / 100;
++	wb_min_max_ratio(wb, &wb_min_ratio, &wb_max_ratio);
++
++	wb_dirty += (dirty * wb_min_ratio) / 100;
++	if (wb_dirty > (dirty * wb_max_ratio) / 100)
++		wb_dirty = dirty * wb_max_ratio / 100;
+ 
+ 	return wb_dirty;
+ }
 -- 
 2.1.0
 
