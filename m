@@ -1,33 +1,67 @@
-From: Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>
-Subject: Re: [PATCHv3 8/8] cgroup: Add documentation for cgroup namespaces
-Date: Tue, 06 Jan 2015 01:17:22 +0100
-Message-ID: <54AB2992.6060707@nod.at>
-References: <1417744550-6461-1-git-send-email-adityakali@google.com> <1417744550-6461-9-git-send-email-adityakali@google.com> <548E17CE.8010704@nod.at> <CAGr1F2HA6mzFwgp5ngX8P7=198-5CmCjLmuCJ8j3eQ08J2d9Qw@mail.gmail.com> <54AB15BD.8020007@nod.at> <87lhlgpyxk.fsf@x220.int.ebiederm.org> <CAGr1F2HSi_D07r2c5CKOsjSR1+58k9G2MrtACsd+HV6XKvJ7cA@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 1/2 cgroup/for-3.20] cgroup: reorder SUBSYS(blkio) in
+ cgroup_subsys.h
+Date: Tue, 6 Jan 2015 11:57:20 -0500
+Message-ID: <20150106165720.GI3077@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAGr1F2HSi_D07r2c5CKOsjSR1+58k9G2MrtACsd+HV6XKvJ7cA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=MTN+Nh0hRASUnv6bq6wZ6G/pdP02OdJvkV4OSYS6NnY=;
+        b=1DYOOGbN2PCgTsZ/TZOfmaxPmB2yKIk3ERUn17b+jHd63xG7y4vocEWhcKFa9Bpf1g
+         lsQMAwcc5/TMYe4l2wDzBNZxQoNItewI6W6pcJ1C+FI70Qf6N2dO25ePcouJ2ymC7D7f
+         I+CcIbqGagcJfXfDBCuCPsbHaapgfoLEY70KCjjmlTyLAT9WiaR7HA5MJDsEr8zkHlqa
+         v4YQwT7M0NpxReF+0/1XM5TuNzQC7rw0kB/w1nanr1/pJQkM0No7LI9+KHNa62KaEZez
+         QppxQ4XNh+gBYyXIwvdxsbuA2WS5r99lnv+CJaoCFZgktv571Zw6M8cGCFdAm8eQAu7r
+         0tEA==
+Content-Disposition: inline
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Rohit Jnagal <jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Am 06.01.2015 um 01:10 schrieb Aditya Kali:
-> Since the old/default behavior is on its way out, I didn't invest time
-> in fixing that. Also, some of the properties that make
-> cgroup-namespace simpler are only provided by unified hierarchy (for
-> example: a single root-cgroup per container).
+The scheduled cgroup writeback support requires blkio to be
+initialized before memcg as memcg needs to provide certain blkcg
+related functionalities.  Relocate blkio so that it's right above
+memory.
 
-Does the new sane cgroupfs behavior even have a single real world user?
-I always thought it isn't stable yet.
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+Hello,
 
-Linux distros currently use systemd v210. They don't dare to use a newer one.
-Even *if* systemd would support the sane sane cgroupfs behavior in the most recent
-version it will take 1-2 years until it would hit a recent distro.
+These are two trivial patches to prepare for the cgroup writeback
+support.  Applying to cgroup/for-3.20.
 
-So please support also the old and nasty behavior such that one day we can run current
-systemd distros in Linux containers.
+Thanks.
 
-Thanks,
-//richard
+ include/linux/cgroup_subsys.h |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+--- a/include/linux/cgroup_subsys.h
++++ b/include/linux/cgroup_subsys.h
+@@ -15,6 +15,10 @@ SUBSYS(cpu)
+ SUBSYS(cpuacct)
+ #endif
+ 
++#if IS_ENABLED(CONFIG_BLK_CGROUP)
++SUBSYS(blkio)
++#endif
++
+ #if IS_ENABLED(CONFIG_MEMCG)
+ SUBSYS(memory)
+ #endif
+@@ -31,10 +35,6 @@ SUBSYS(freezer)
+ SUBSYS(net_cls)
+ #endif
+ 
+-#if IS_ENABLED(CONFIG_BLK_CGROUP)
+-SUBSYS(blkio)
+-#endif
+-
+ #if IS_ENABLED(CONFIG_CGROUP_PERF)
+ SUBSYS(perf_event)
+ #endif
