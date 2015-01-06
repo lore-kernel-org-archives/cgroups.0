@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 41/45] writeback: make __writeback_single_inode() cgroup writeback aware
-Date: Tue,  6 Jan 2015 16:26:18 -0500
-Message-ID: <1420579582-8516-42-git-send-email-tj@kernel.org>
+Subject: [PATCH 26/45] writeback: implement wb_wait_for_single_work()
+Date: Tue,  6 Jan 2015 16:26:03 -0500
+Message-ID: <1420579582-8516-27-git-send-email-tj@kernel.org>
 References: <1420579582-8516-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=xRtH2RGlXR6/nbwrqk50q+hhyaaEl1mum1+ZPCB8jHQ=;
-        b=DahYpeNJkXeUEkDFOE4Jh9pTzYZQJjalMWAQT2qKykrZ8HWI59FQyAICcMD/RpwFH0
-         v2TvFBgNRELbOU7VqV7g+gF3YS2xcOHD+Hu5Vy735w/lXDKo0trkiklYmoBm0/2b4BWC
-         B+VOm5dK/MektKoTRexr3L1K6XlOXiWMHVpn2VL1PONpDLQOCRBmH/rJp9WYi6/nTwIR
-         yRASul4rodwhTN7COIDhG4Xh1eqlSjqIZIDD+vB8poNMq8CevACXThMN2Cd3HpcoazQw
-         C+K8mdj6CjP5Ns5rrMHGbfT8qAMnjBKvjgkCn8h1SPDaGaVO76rAMDCt9KlTDxZq4iDU
-         VkUA==
+        bh=FpSsf+lYC6euJSvVlbKikj33uSs8SXbrdH2T0yVYXjI=;
+        b=FQESIs3Dgc0LfWGxZ/WS2ArNrrOOeNk96/wHJIwDOIkagrEFPj4W07Kmwa9UJlnB4Z
+         I5a3aW2v82Bj7ppuFgsz5BXRWkjm+b/h6JsieMDfppb6b+G8+8dCDbmcLCp1CtDvOFZj
+         ZVmsfA3hLs2SD+hql7Tq6RzjoxYYp+l8R4guqesFwCD2MK/buHJ073D+5YeF7J3zEXG9
+         UDVnV044GILuq1TkMriYv2CjB2PqEk8k/rHxYBwdfjq7MhmxlFDxiFpEn+Ttc0gYh10c
+         K8ylMgh8aszy8+t2878WxpL034MNLEDr5KumxnFaoL4WTxPBc6i5yerHNMDK+HwSUFo1
+         A39Q==
 In-Reply-To: <1420579582-8516-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,87 +23,115 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, Tejun Heo <tj@kernel.org>
 
-Metadata is always dirtied against the root cgroup and should thus be
-written out only by the root cgroup writeback.  This patch updates
-__writeback_single_inode() so that it skips writing out metadata if
-the writeback is for a non-root cgroup.  wbc_skip_metadata() is added
-to decide whether to skip metadata writeback.
+For cgroup writeback, multiple wb_writeback_work items may need to be
+issuedto accomplish a single task.  The previous patch updated the
+waiting mechanism such that wb_wait_for_completion() can wait for
+multiple work items.
+
+Issuing mulitple work items involves memory allocation which may fail.
+As most writeback operations can't fail or blocked on memory
+allocation, in such cases, we'll fall back to sequential issuing of an
+on-stack work item, which would need to be waited upon sequentially.
+
+This patch implements wb_wait_for_single_work() which waits for a
+single work item independently from wb_completion waiting so that such
+fallback mechanism can be used without getting tangled with the usual
+issuing / completion operation.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
 ---
- fs/fs-writeback.c | 29 ++++++++++++++++++++++++++---
- 1 file changed, 26 insertions(+), 3 deletions(-)
+ fs/fs-writeback.c | 47 +++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 45 insertions(+), 2 deletions(-)
 
 diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index dbfd0b0..2bb14d5 100644
+index 6527692..6889077 100644
 --- a/fs/fs-writeback.c
 +++ b/fs/fs-writeback.c
-@@ -684,6 +684,19 @@ static inline bool iwbl_still_has_dirty_pages(struct inode_wb_link *iwbl,
- 	return test_bit(IWBL_DIRTY_PAGES, &iwbl->data);
+@@ -52,6 +52,8 @@ struct wb_writeback_work {
+ 	unsigned int for_background:1;
+ 	unsigned int for_sync:1;	/* sync(2) WB_SYNC_ALL writeback */
+ 	unsigned int auto_free:1;	/* free on completion */
++	unsigned int single_wait:1;
++	unsigned int single_done:1;
+ 	enum wb_reason reason;		/* why was writeback initiated? */
+ 
+ 	struct list_head list;		/* pending work list */
+@@ -99,8 +101,11 @@ static void wb_queue_work(struct bdi_writeback *wb,
+ 	trace_writeback_queue(wb->bdi, work);
+ 
+ 	spin_lock_bh(&wb->work_lock);
+-	if (!test_bit(WB_registered, &wb->state))
++	if (!test_bit(WB_registered, &wb->state)) {
++		if (work->single_wait)
++			work->single_done = 1;
+ 		goto out_unlock;
++	}
+ 	if (work->done)
+ 		atomic_inc(&work->done->cnt);
+ 	list_add_tail(&work->list, &wb->work_list);
+@@ -199,6 +204,32 @@ force_root:
  }
- 
-+/**
-+ * wbc_skip_metadata - determine whether to skip writing out metadata
-+ * @wbc: writeback_control in effect
-+ *
-+ * Called by __writeback_single_inode() to decide whether to skip writing
-+ * out metadata.  Metadata is always dirtied against the root cgroup and
-+ * should only be written out by the root.
-+ */
-+static inline bool wbc_skip_metadata(struct writeback_control *wbc)
-+{
-+	return wbc->iwbl && !iwbl_is_root(wbc->iwbl);
-+}
-+
- #else	/* CONFIG_CGROUP_WRITEBACK */
- 
- static void init_cgwb_dirty_page_context(struct dirty_context *dctx)
-@@ -791,6 +804,11 @@ static inline bool iwbl_still_has_dirty_pages(struct inode_wb_link *iwbl,
- 	return mapping_tagged(inode->i_mapping, PAGECACHE_TAG_DIRTY);
- }
- 
-+static inline bool wbc_skip_metadata(struct writeback_control *wbc)
-+{
-+	return false;
-+}
-+
- #endif	/* CONFIG_CGROUP_WRITEBACK */
  
  /**
-@@ -1128,6 +1146,7 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
- 	struct address_space *mapping = inode->i_mapping;
- 	struct inode_wb_link *iwbl = inode_writeback_iwbl(inode, wbc);
- 	long nr_to_write = wbc->nr_to_write;
-+	bool skip_metadata = wbc_skip_metadata(wbc);
- 	unsigned dirty;
- 	int ret;
- 
-@@ -1144,7 +1163,7 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
- 	 * separate, external IO completion path and ->sync_fs for guaranteeing
- 	 * inode metadata is written back correctly.
- 	 */
--	if (wbc->sync_mode == WB_SYNC_ALL && !wbc->for_sync) {
-+	if (wbc->sync_mode == WB_SYNC_ALL && !wbc->for_sync && !skip_metadata) {
- 		int err = filemap_fdatawait(mapping);
- 		if (ret == 0)
- 			ret = err;
-@@ -1157,8 +1176,12 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
- 	 */
- 	spin_lock(&inode->i_lock);
- 
--	dirty = inode->i_state & I_DIRTY;
--	inode->i_state &= ~I_DIRTY;
-+	if (skip_metadata)
-+		dirty = inode->i_state & I_DIRTY_PAGES;
-+	else
-+		dirty = inode->i_state & I_DIRTY;
++ * wb_wait_for_single_work - wait for completion of a single bdi_writeback_work
++ * @bdi: bdi the work item was issued to
++ * @work: work item to wait for
++ *
++ * Wait for the completion of @work which was issued to one of @bdi's
++ * bdi_writeback's.  The caller must have set @work->single_wait before
++ * issuing it.  This wait operates independently fo
++ * wb_wait_for_completion() and also disables automatic freeing of @work.
++ */
++static void wb_wait_for_single_work(struct backing_dev_info *bdi,
++				    struct wb_writeback_work *work)
++{
++	if (WARN_ON_ONCE(!work->single_wait))
++		return;
 +
-+	inode->i_state &= ~dirty;
++	wait_event(bdi->wb_waitq, work->single_done);
++
++	/*
++	 * Paired with smp_wmb() in wb_do_writeback() and ensures that all
++	 * modifications to @work prior to assertion of ->single_done is
++	 * visible to the caller once this function returns.
++	 */
++	smp_rmb();
++}
++
++/**
+  * wb_split_bdi_pages - split nr_pages to write according to bandwidth
+  * @wb: target bdi_writeback to split @nr_pages to
+  * @nr_pages: number of pages to write for the whole bdi
+@@ -1209,14 +1240,26 @@ static long wb_do_writeback(struct bdi_writeback *wb)
+ 	set_bit(WB_writeback_running, &wb->state);
+ 	while ((work = get_next_work_item(wb)) != NULL) {
+ 		struct wb_completion *done = work->done;
++		bool need_wake_up = false;
  
- 	/*
- 	 * Paired with smp_mb() in __mark_inode_dirty_dctx().  This allows
+ 		trace_writeback_exec(wb->bdi, work);
+ 
+ 		wrote += wb_writeback(wb, work);
+ 
+-		if (work->auto_free)
++		if (work->single_wait) {
++			WARN_ON_ONCE(work->auto_free);
++			/* paired w/ rmb in wb_wait_for_single_work() */
++			smp_wmb();
++			work->single_done = 1;
++			need_wake_up = true;
++		} else if (work->auto_free) {
+ 			kfree(work);
++		}
++
+ 		if (done && atomic_dec_and_test(&done->cnt))
++			need_wake_up = true;
++
++		if (need_wake_up)
+ 			wake_up_all(&wb->bdi->wb_waitq);
+ 	}
+ 
 -- 
 2.1.0
 
