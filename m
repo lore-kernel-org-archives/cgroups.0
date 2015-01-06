@@ -1,110 +1,72 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 11/16] writeback: move lingering dirty IO lists transfer from bdi_destroy() to wb_exit()
-Date: Tue,  6 Jan 2015 14:29:12 -0500
-Message-ID: <1420572557-11572-12-git-send-email-tj@kernel.org>
+Subject: [PATCH 05/16] blkcg: implement task_get_blkcg_css()
+Date: Tue,  6 Jan 2015 14:29:06 -0500
+Message-ID: <1420572557-11572-6-git-send-email-tj@kernel.org>
 References: <1420572557-11572-1-git-send-email-tj@kernel.org>
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=lQ0rlhFl+yW14BEqT3zz5HADXzPY4GinSwPajf0mOG4=;
-        b=ES9iwTJmpsnd1HxaNF8gzCBeEyyM4P2hoMS2OzQFAg/fGUyOryjceOAADc5mKq1Y/o
-         x4fxUW++EhlkLwN9gi5zh5Pdyu4afG/Dlqk9zUnkXGhw6k6sMzLsdCAGe/7IEHXdgaym
-         YgU8IwsQQuSUPaspVHIK6S6GUUflCa7n311lEiybL8+xq/j1NDZkBsnpLyctEJkp075b
-         sITG+O+KaLh7libA/WtdxsFsf3Ew4qyHIVPnDIl55opbsSCHWqSjqYGkgIJhBWNzDw1b
-         VyP12kao+23LnzR9TeJNdQ47b9WKOqBIeCJMw3ZzUjp7DvkffbYzBJGZg2ccEMu0ax/h
-         Xjsg==
+        bh=PQAbI56x8q3o1oUCsyS/mHjy/Qt+rWQsazkrL8tgTwk=;
+        b=UVxpizV5ROGY92KQUUvvwMJg3RHQcK1YiPQnJruMaU4Rl23OuJ0b4u5+arcpGhEV4V
+         ZhU1P2kjpa10erOqCeDc9c3AMQ46g40b4B5J1VLyOktK45GwxViCnxzWE4SJ+nclPUoa
+         ++Rq3anOMX53Nwk7E1VbEMYcRpkpY1PuA0tFybFmdncJAbmdLBAwBHhB/y+v+ULVoniG
+         plJI0bXW6uYQAybuREbNCoqKm68axU2QQk3jH4CcpqgfOjDfPDiGVai2e6aven7HKCzo
+         hIIWoHVOiuv5fJ4h0dmYpSgvubPIW+KVJEY/EKvN1E4BIGhtFBvWW9WeplW3+Ysc4TDr
+         Hx7w==
 In-Reply-To: <1420572557-11572-1-git-send-email-tj@kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, Tejun Heo <tj@kernel.org>, Wu Fengguang <fengguang.wu@intel.com>
+Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, Tejun Heo <tj@kernel.org>
 
-If a bdi still has dirty IOs on destruction, bdi_destroy() transfers
-them to the default bdi; however, dirty IO lists belong to wb
-(bdi_writeback) not bdi (backing_dev_info) and after the recent
-changes we now have wb_exit() which handles destruction of a wb.  Move
-the transfer logic to wb_exit().
-
-This patch is pure reorganization.
+Implement a wrapper around task_get_css() to acquire the blkcg css for
+a given task.  The wrapper is necessary for !CONFIG_BLK_CGROUP as
+blkio_cgrp_id would be undefined.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Jan Kara <jack@suse.cz>
-Cc: Wu Fengguang <fengguang.wu@intel.com>
 ---
- mm/backing-dev.c | 48 ++++++++++++++++++++++++------------------------
- 1 file changed, 24 insertions(+), 24 deletions(-)
+ include/linux/blk-cgroup.h | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-index 4a41567..dbd321e 100644
---- a/mm/backing-dev.c
-+++ b/mm/backing-dev.c
-@@ -491,6 +491,30 @@ static void wb_exit(struct bdi_writeback *wb)
- 
- 	WARN_ON(delayed_work_pending(&wb->dwork));
- 
-+	/*
-+	 * Splice our entries to the default_backing_dev_info.  This
-+	 * condition shouldn't happen.  @wb must be empty at this point and
-+	 * dirty inodes on it might cause other issues.  This workaround is
-+	 * added by ce5f8e779519 ("writeback: splice dirty inode entries to
-+	 * default bdi on bdi_destroy()") without root-causing the issue.
-+	 *
-+	 * http://lkml.kernel.org/g/1253038617-30204-11-git-send-email-jens.axboe@oracle.com
-+	 * http://thread.gmane.org/gmane.linux.file-systems/35341/focus=35350
-+	 *
-+	 * We should probably add WARN_ON() to find out whether it still
-+	 * happens and track it down if so.
-+	 */
-+	if (wb_has_dirty_io(wb)) {
-+		struct bdi_writeback *dst = &default_backing_dev_info.wb;
-+
-+		bdi_lock_two(wb, dst);
-+		list_splice(&wb->b_dirty, &dst->b_dirty);
-+		list_splice(&wb->b_io, &dst->b_io);
-+		list_splice(&wb->b_more_io, &dst->b_more_io);
-+		spin_unlock(&wb->list_lock);
-+		spin_unlock(&dst->list_lock);
-+	}
-+
- 	for (i = 0; i < NR_WB_STAT_ITEMS; i++)
- 		percpu_counter_destroy(&wb->stat[i]);
- 
-@@ -518,30 +542,6 @@ EXPORT_SYMBOL(bdi_init);
- 
- void bdi_destroy(struct backing_dev_info *bdi)
- {
--	/*
--	 * Splice our entries to the default_backing_dev_info.  This
--	 * condition shouldn't happen.  @wb must be empty at this point and
--	 * dirty inodes on it might cause other issues.  This workaround is
--	 * added by ce5f8e779519 ("writeback: splice dirty inode entries to
--	 * default bdi on bdi_destroy()") without root-causing the issue.
--	 *
--	 * http://lkml.kernel.org/g/1253038617-30204-11-git-send-email-jens.axboe@oracle.com
--	 * http://thread.gmane.org/gmane.linux.file-systems/35341/focus=35350
--	 *
--	 * We should probably add WARN_ON() to find out whether it still
--	 * happens and track it down if so.
--	 */
--	if (bdi_has_dirty_io(bdi)) {
--		struct bdi_writeback *dst = &default_backing_dev_info.wb;
--
--		bdi_lock_two(&bdi->wb, dst);
--		list_splice(&bdi->wb.b_dirty, &dst->b_dirty);
--		list_splice(&bdi->wb.b_io, &dst->b_io);
--		list_splice(&bdi->wb.b_more_io, &dst->b_more_io);
--		spin_unlock(&bdi->wb.list_lock);
--		spin_unlock(&dst->list_lock);
--	}
--
- 	bdi_unregister(bdi);
- 	wb_exit(&bdi->wb);
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index 65f0c17..4dc643f 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -195,6 +195,12 @@ static inline struct blkcg *bio_blkcg(struct bio *bio)
+ 	return task_blkcg(current);
  }
+ 
++static inline struct cgroup_subsys_state *
++task_get_blkcg_css(struct task_struct *task)
++{
++	return task_get_css(task, blkio_cgrp_id);
++}
++
+ /**
+  * blkcg_parent - get the parent of a blkcg
+  * @blkcg: blkcg of interest
+@@ -573,6 +579,12 @@ struct blkcg_policy {
+ 
+ #define blkcg_root_css	((struct cgroup_subsys_state *)ERR_PTR(-EINVAL))
+ 
++static inline struct cgroup_subsys_state *
++task_get_blkcg_css(struct task_struct *task)
++{
++	return NULL;
++}
++
+ #ifdef CONFIG_BLOCK
+ 
+ static inline struct blkcg_gq *blkg_lookup(struct blkcg *blkcg, void *key) { return NULL; }
 -- 
 2.1.0
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
