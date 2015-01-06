@@ -1,21 +1,21 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 23/45] writeback: make wakeup_flusher_threads() handle multiple bdi_writeback's
-Date: Tue,  6 Jan 2015 16:26:00 -0500
-Message-ID: <1420579582-8516-24-git-send-email-tj@kernel.org>
+Subject: [PATCH 36/45] writeback: dirty inodes against their matching cgroup bdi_writeback's
+Date: Tue,  6 Jan 2015 16:26:13 -0500
+Message-ID: <1420579582-8516-37-git-send-email-tj@kernel.org>
 References: <1420579582-8516-1-git-send-email-tj@kernel.org>
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=MVJKYcSMwXVL470qdzPjDsuYPwLg7YogOQ8p8mCvfl0=;
-        b=bP1xW1H8H+Ke4XoDzUnZcWjqyOyMxYw/JQ4mcTAoL1JIXwpPPaUY4m5Ib0W40UXOD7
-         cQbNsbIl+uDsiLO1PDXiallPkR3E1Hokn/Y6QGJN1p/3CmiLWP4hWYRZxF2WwGJfzXqF
-         jzOhzbr7QhR01oid9BPI5ORsRTSGWz/+6rD4p3CG/bLnc7HhUTmFtAv2CkctDAZtbuTU
-         h3xyVVOC6NCBtBbkl2hekm71pLOMawzstTM7bCLKkdi38jcqms+j9SYaOxaUnXRkK/OI
-         U0hAXfKxSsNcwaBD7nxQfu6tYZagvnEn2EPpzJJFLTOs94X7mvbs0ycFgpY4/ZHoBCRa
-         rvyA==
+        bh=TL4o8FQFetAFd2prggY1xLSeDHFsN+kGsYEBcTDDLFQ=;
+        b=sRhruNOhwIDOCt4KEoe7CalME8Jn9Ubp8Q5s3XXqh2/ciaKzeKpjUlghVhqbMBegGf
+         aUfF1Eum5YC76YofvxPX7NaubnNZaWw62mW3VL0B3b/byL5u1ph9dRj89ra0zzROMmoz
+         xhg6+2Jk+0VPLdTuVAdRA1tg/ecvgjqBAYuhiVaJH+eNEetQKvh1qZ6pNrRFvPcLlaGu
+         XLvf9RRMP6PdARfL8otF95607YgsRHU+zPqarz/mNuVaxEnHc5oGkDvDJEN7isEMdyqw
+         Ypjs5s4Um0kwH7DZq6S5FBoBvQneVP08EspsLOq9U7ygXf2Kvc+DOWKIZIuy0bK06GQd
+         PsVQ==
 In-Reply-To: <1420579582-8516-1-git-send-email-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,95 +23,84 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, Tejun Heo <tj@kernel.org>
 
-wakeup_flusher_threads() currently only starts writeback on the root
-wb (bdi_writeback).  For cgroup writeback support, update the function
-to wake up all wbs and distribute the number of pages to write
-according to the proportion of each wb's write bandwidth, which is
-implemented in wb_split_bdi_pages().
+mark_inode_dirty_dctx() always dirtied the inode against the root wb
+(bdi_writeback).  The previous patches added all the infrastructure
+necessary to attribute an inode against the wb of the dirtying cgroup.
+
+On entry to mark_inode_dirty_dctx(), @dctx now carries the matching wb
+and iwbl (inode_wb_link).  This patch updates mark_inode_dirty_dctx()
+so that it uses the wb and iwbl from @dctx instead of unconditionally
+using the root ones.
+
+Currently, none of the filesystems has FS_CGROUP_WRITEBACK and all
+pages will keep being dirtied against the root wb.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
 ---
- fs/fs-writeback.c | 46 ++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 44 insertions(+), 2 deletions(-)
+ fs/fs-writeback.c | 22 ++++++++++------------
+ 1 file changed, 10 insertions(+), 12 deletions(-)
 
 diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index c209ff1..8bf13e6 100644
+index df99b5b..dfcf5dd 100644
 --- a/fs/fs-writeback.c
 +++ b/fs/fs-writeback.c
-@@ -164,6 +164,34 @@ force_root:
- 	dctx->wb = &bdi->wb;
- }
+@@ -1734,8 +1734,9 @@ static noinline void block_dump___mark_inode_dirty(struct inode *inode)
+ void mark_inode_dirty_dctx(struct dirty_context *dctx, int flags)
+ {
+ 	struct inode *inode = dctx->inode;
++	struct inode_wb_link *iwbl = dctx->iwbl;
++	struct bdi_writeback *wb = dctx->wb;
+ 	struct super_block *sb = inode->i_sb;
+-	struct backing_dev_info *bdi = NULL;
  
-+/**
-+ * wb_split_bdi_pages - split nr_pages to write according to bandwidth
-+ * @wb: target bdi_writeback to split @nr_pages to
-+ * @nr_pages: number of pages to write for the whole bdi
-+ *
-+ * Split @wb's portion of @nr_pages according to @wb's write bandwidth in
-+ * relation to the total write bandwidth of all wb's w/ dirty inodes on
-+ * @wb->bdi.
-+ */
-+static long wb_split_bdi_pages(struct bdi_writeback *wb, long nr_pages)
-+{
-+	unsigned long this_bw = wb->avg_write_bandwidth;
-+	unsigned long tot_bw = atomic_long_read(&wb->bdi->tot_write_bandwidth);
-+
-+	if (nr_pages == LONG_MAX)
-+		return LONG_MAX;
-+
-+	/*
-+	 * This may be called on clean wb's and proportional distribution
-+	 * may not make sense, just use the original @nr_pages in those
-+	 * cases.  In general, we wanna err on the side of writing more.
-+	 */
-+	if (!tot_bw || this_bw >= tot_bw)
-+		return nr_pages;
-+	else
-+		return DIV_ROUND_UP_ULL((u64)nr_pages * this_bw, tot_bw);
-+}
-+
- #else	/* CONFIG_CGROUP_WRITEBACK */
+ 	/*
+ 	 * Don't do this for I_DIRTY_PAGES - that doesn't actually
+@@ -1764,7 +1765,6 @@ void mark_inode_dirty_dctx(struct dirty_context *dctx, int flags)
  
- static void init_cgwb_dirty_page_context(struct dirty_context *dctx)
-@@ -171,6 +199,11 @@ static void init_cgwb_dirty_page_context(struct dirty_context *dctx)
- 	dctx->wb = &dctx->mapping->backing_dev_info->wb;
- }
+ 	spin_lock(&inode->i_lock);
+ 	if ((inode->i_state & flags) != flags) {
+-		struct inode_wb_link *iwbl = &inode->i_wb_link;
+ 		const int was_dirty = inode->i_state & I_DIRTY;
  
-+static long wb_split_bdi_pages(struct bdi_writeback *wb, long nr_pages)
-+{
-+	return nr_pages;
-+}
-+
- #endif	/* CONFIG_CGROUP_WRITEBACK */
+ 		inode->i_state |= flags;
+@@ -1794,19 +1794,17 @@ void mark_inode_dirty_dctx(struct dirty_context *dctx, int flags)
+ 		 */
+ 		if (!was_dirty) {
+ 			bool wakeup_bdi = false;
+-			bdi = inode_to_bdi(inode);
  
- /**
-@@ -1221,8 +1254,17 @@ void wakeup_flusher_threads(long nr_pages, enum wb_reason reason)
- 		nr_pages = get_nr_dirty_pages();
+ 			spin_unlock(&inode->i_lock);
+-			spin_lock(&bdi->wb.list_lock);
++			spin_lock(&wb->list_lock);
  
- 	rcu_read_lock();
--	list_for_each_entry_rcu(bdi, &bdi_list, bdi_list)
--		wb_start_writeback(&bdi->wb, nr_pages, false, reason);
-+	list_for_each_entry_rcu(bdi, &bdi_list, bdi_list) {
-+		struct bdi_writeback *wb;
-+		struct wb_iter iter;
-+
-+		if (!bdi_has_dirty_io(bdi))
-+			continue;
-+
-+		bdi_for_each_wb(wb, bdi, &iter, 0)
-+			wb_start_writeback(wb, wb_split_bdi_pages(wb, nr_pages),
-+					   false, reason);
-+	}
- 	rcu_read_unlock();
- }
+-			WARN(bdi_cap_writeback_dirty(bdi) &&
+-			     !test_bit(WB_registered, &bdi->wb.state),
+-			     "bdi-%s not registered\n", bdi->name);
++			WARN(bdi_cap_writeback_dirty(wb->bdi) &&
++			     !test_bit(WB_registered, &wb->state),
++			     "bdi-%s not registered\n", wb->bdi->name);
  
+ 			iwbl->dirtied_when = jiffies;
+-			wakeup_bdi = iwbl_move_locked(iwbl, &bdi->wb,
+-						      &bdi->wb.b_dirty);
+-			spin_unlock(&bdi->wb.list_lock);
++			wakeup_bdi = iwbl_move_locked(iwbl, wb, &wb->b_dirty);
++			spin_unlock(&wb->list_lock);
+ 
+ 			/*
+ 			 * If this is the first dirty inode for this bdi,
+@@ -1814,8 +1812,8 @@ void mark_inode_dirty_dctx(struct dirty_context *dctx, int flags)
+ 			 * to make sure background write-back happens
+ 			 * later.
+ 			 */
+-			if (bdi_cap_writeback_dirty(bdi) && wakeup_bdi)
+-				wb_wakeup_delayed(&bdi->wb);
++			if (bdi_cap_writeback_dirty(wb->bdi) && wakeup_bdi)
++				wb_wakeup_delayed(wb);
+ 			return;
+ 		}
+ 	}
 -- 
 2.1.0
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
