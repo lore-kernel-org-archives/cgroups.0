@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 34/45] vfs, writeback: implement support for multiple inode_wb_link's
-Date: Tue,  6 Jan 2015 16:26:11 -0500
-Message-ID: <1420579582-8516-35-git-send-email-tj@kernel.org>
+Subject: [PATCH 39/45] writeback: make DIRTY_PAGES tracking cgroup writeback aware
+Date: Tue,  6 Jan 2015 16:26:16 -0500
+Message-ID: <1420579582-8516-40-git-send-email-tj@kernel.org>
 References: <1420579582-8516-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=ISClPzy3Tcdv5K9ByvZ4RDFqVsWWkF5SHk5tQruqcY0=;
-        b=uilo2s4t1tmKufLMga+s/LLg1kOnalEUuwc6GXfU83tsboV/gbhBsQd0PC0ZgTN8y7
-         wf2je/X8lxZIIIyhVKRKmLkhWwwoPx42M1Ua2rL0q0/dP9rOo60WtgpUh58tQVI6JrwX
-         2rUq9Kr6sZ5O9e7vzF/LACmdfQQZS1VYLNJX9O4sovsQS1ReWzjKXssk4YZpr//30hxH
-         d0jphNp0u7XNX4C7/HiukxdeGx+gWOZ/EYWe88g5ccMEEFv1mhbZCiJcOyGlm/ju53y2
-         fGFbT7d/J2zJ10qNwQXg9JTY5h9AO5S1ThmoXg0msdvSN1rYYf43nRFKBSyuRCE/8MDj
-         Xaog==
+        bh=j8J+mKOavWXZ+L+JQ016SifX7FDgZsXLY34opESRWso=;
+        b=A0K3xRDBxVMBQmkSFfSXxi1ZhEZr4mNJ+ABcVz+bRZwi/VnVmvwYKUkzMmriJTxOVH
+         w2JXncK5qcipJddSoaPzc+eSo0gBAyyZHnCGR6X//pcZXPwgwAubR/lK+OliSRSV6nt2
+         Q8x+WY8M2o7BeeyYjGOAZSAhhImxeqQsy0Fp/NyGaMmKJPlTNbCVRxHeK5uf6JZyuiR1
+         JVMDfjsKXxJJSkmLLPu+TLRZIaeM7TeAQ9dfKyH7Z7iLcHWc0pr+/c+NicVYsU3z8xrx
+         7YzuXY5hiVIJ58jN5HYkJwh2rii62n8yPwWaQkqJSxmTgLRgvTuwnsH6Mpyiw6gdQeFz
+         /9jg==
 In-Reply-To: <1420579582-8516-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -21,555 +21,507 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, Tejun Heo <tj@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, Tejun Heo <tj@kernel.org>
 
-An inode may be written to from more than one cgroups and for cgroup
-writeback support to work properly the inode needs to be on the dirty
-lists of all wb's (bdi_writeback's) corresponding to the dirtying
-cgroups so that writeback on each cgroup can keep track of and process
-the inode.
+I_DIRTY_PAGES on inode->i_state tracks whether its address_space
+contains dirty pages.  When cgroup writeback is used, an address_space
+can be dirtied against multiple wb's (bdi_writeback's) and we want to
+be able to track dirty state per iwbl (inode_wb_link).
 
-The previous patches separated out iwbl (inode_wb_link which) is used
-to dirty an inode against a wb (bdi_writeback).  Currently, there's
-only one embedded iwbl per inode which can be used to dirty the inode
-against the root wb.  This patch introduces icgwbl (inode_cgwb_link)
-which includes iwbl and can be used to link an inode to a non-root
-cgroup wb.
+This patch adds IWBL_DIRTY_PAGES which tracks whether an iwbl has
+dirty pages.  It's set along with I_DIRTY_PAGES when an inode gets
+dirtied but because the radix tree tags can't carry which iwbl's pages
+are dirtied against, whether an iwbl became clean can't be decided by
+testing PAGECACHE_TAG_DIRTY.  Instead, it's opportunistically cleared
+after a whole address_space writeback and when I_DIRTY_PAGES is
+cleared.  This isn't ideal but the cost of inaccuracies should be
+reasonable.  See the comment on top of I_DIRTY_PAGES definition for
+more info.
 
-Each icgwbl points to the associated inode directly and wb through its
-iwbl, and is linked on inode->i_cgwb_links and wb->icgwbls.  They're
-created on demand and destroyed only when either the associated inode
-or wb is destroyed.  When a page is about to be dirtied, the matching
-i[cg]wbl is looked up or created and recorded in the newly added
-dirty_context->iwbl field.  The next patch will use the field to link
-inodes against their matching cgroup wb's.
+Note that non-root iwbl's are only attributed with dirty pages, the
+metadata dirtiness - I_DIRTY_SYNC and I_DIRTY_DATASYNC - are always
+attributed to the root iwbl.  This means that when an inode gets
+dirtied for both metadata and dirty pages from non-root cgroup, it
+will dirty both the root iwbl for the metadata and the matching cgroup
+iwbl for the dirty pages.
 
-Currently, icgwbls are linked on a linked list on each inode and
-linearly looked up on each dirtying attempt, which is an obvious
-scalability bottleneck.  We want an RCU-safe balanced tree here but
-the kernel doesn't have such indexing structure in tree yet.  Given
-that dirtying the same inode from numerous different cgroups isn't too
-frequent, I think the linear list is a bandaid we can use for now but
-we really should switch to something proper (e.g. a bonsai tree) soon.
+This encapsulates I_DIRTY_* manipulations and testing through new
+functions - iwbl_has_enough_dirty(), iwbl_set_dirty() and
+iwbl_still_has_dirty_pages() - and introduces another mb which is
+paired with the one in __mark_inode_dirty_dctx() to interlock
+IWBL_DIRTY_PAGES testing and clearing.  Comments for the mb's are
+updated to reflect it.
 
-This patch adds a struct hlist_head to struct inode when
-CONFIG_CGROUP_WRITEBACK adding the size of a pointer to it.
+write_cache_pages() is updated to use
+mapping_writeback_{maybe|confirm}_whole() to clear IWBL_DIRTY_PAGES
+opportunistically.  Filesystems which implement custom writepages
+should be updated similarly to support cgroup writeback.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: Christoph Hellwig <hch@infradead.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
 ---
- fs/fs-writeback.c                | 121 ++++++++++++++++++++++++++++++++++-----
- fs/inode.c                       |   3 +
- include/linux/backing-dev-defs.h |  34 +++++++++++
- include/linux/backing-dev.h      |  77 +++++++++++++++++++++++--
- include/linux/fs.h               |   3 +
- mm/backing-dev.c                 |  80 ++++++++++++++++++++++++++
- 6 files changed, 300 insertions(+), 18 deletions(-)
+ fs/fs-writeback.c                | 186 +++++++++++++++++++++++++++++++--------
+ include/linux/backing-dev-defs.h |  17 ++++
+ include/linux/backing-dev.h      |  72 +++++++++++++++
+ mm/page-writeback.c              |  21 ++++-
+ 4 files changed, 255 insertions(+), 41 deletions(-)
 
 diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index ab77ed2..d10c231 100644
+index 562b75f..dbfd0b0 100644
 --- a/fs/fs-writeback.c
 +++ b/fs/fs-writeback.c
-@@ -182,6 +182,18 @@ static void iwbl_del_locked(struct inode_wb_link *iwbl,
- 	}
+@@ -619,6 +619,71 @@ static inline void wbc_set_iwbl(struct writeback_control *wbc,
+ 	wbc->iwbl = iwbl;
  }
  
-+static void iwbl_del(struct inode_wb_link *iwbl)
++/**
++ * iwbl_has_enough_dirty - does an iwbl and its inode have dirty bits already?
++ * @iwbl: inode_wb_link of interest
++ * @inode: inode @iwbl belongs to
++ * @dirty: I_DIRTY_* bits to be set
++ *
++ * @inode is being dirtied with @dirty by @iwbl's cgroup, test whether
++ * @iwbl and @inode already have all the dirty bits set.  Each iwbl has
++ * separate %IWBL_DIRTY_PAGES bit which should be also set if @dirty has
++ * %I_DIRTY_PAGES.
++ */
++static inline bool iwbl_has_enough_dirty(struct inode_wb_link *iwbl,
++					 struct inode *inode, int dirty)
 +{
-+	struct bdi_writeback *wb = iwbl_to_wb(iwbl);
-+
-+	if (list_empty(&iwbl->dirty_list))
-+		return;
-+
-+	spin_lock(&wb->list_lock);
-+	iwbl_del_locked(iwbl, wb);
-+	spin_unlock(&wb->list_lock);
-+}
-+
- /*
-  * Wait for writeback on an inode to complete. Called with i_lock held.
-  * Caller must make sure inode cannot go away when we drop i_lock.
-@@ -260,16 +272,34 @@ static void init_cgwb_dirty_page_context(struct dirty_context *dctx)
- 	 * back to the root blkcg.
- 	 */
- 	blkcg_css = page_blkcg_attach_dirty(dctx->page);
--	dctx->wb = cgwb_lookup_create(bdi, blkcg_css);
--	if (!dctx->wb) {
--		page_blkcg_detach_dirty(dctx->page);
--		goto force_root;
-+
-+	/* if iwbl already exists, wb can be determined from that too */
-+	dctx->iwbl = iwbl_lookup(dctx->inode, blkcg_css);
-+	if (dctx->iwbl) {
-+		dctx->wb = iwbl_to_wb(dctx->iwbl);
-+		return;
- 	}
-+
-+	/* slow path, let's create wb and iwbl */
-+	dctx->wb = cgwb_lookup_create(bdi, blkcg_css);
-+	if (!dctx->wb)
-+		goto detach_dirty;
-+
-+	dctx->iwbl = iwbl_create(dctx->inode, dctx->wb);
-+	if (!dctx->iwbl)
-+		goto detach_dirty;
-+
- 	return;
- 
-+detach_dirty:
-+	page_blkcg_detach_dirty(dctx->page);
- force_root:
- 	page_blkcg_force_root_dirty(dctx->page);
- 	dctx->wb = &bdi->wb;
-+	if (dctx->inode)
-+		dctx->iwbl = &dctx->inode->i_wb_link;
-+	else
-+		dctx->iwbl = NULL;
- }
- 
- /**
-@@ -420,11 +450,78 @@ static void inode_sleep_on_writeback(struct inode *inode)
- 	finish_wait(wqh, &wait);
- }
- 
-+static inline struct inode_cgwb_link *icgwbl_first(struct inode *inode)
-+{
-+	struct hlist_node *node =
-+		rcu_dereference_check(hlist_first_rcu(&inode->i_cgwb_links),
-+			lockdep_is_held(&inode_to_bdi(inode)->icgwbls_lock));
-+
-+	return hlist_entry_safe(node, struct inode_cgwb_link, inode_node);
-+}
-+
-+static inline struct inode_cgwb_link *icgwbl_next(struct inode_cgwb_link *pos,
-+						  struct inode *inode)
-+{
-+	struct hlist_node *node =
-+		rcu_dereference_check(hlist_next_rcu(&pos->inode_node),
-+			lockdep_is_held(&inode_to_bdi(inode)->icgwbls_lock));
-+
-+	return hlist_entry_safe(node, struct inode_cgwb_link, inode_node);
++	return (inode->i_state & dirty) == dirty &&
++		(!(dirty & I_DIRTY_PAGES) ||
++		 test_bit(IWBL_DIRTY_PAGES, &iwbl->data));
 +}
 +
 +/**
-+ * inode_for_each_icgwbl - walk all icgwbl's of an inode
-+ * @cur: cursor struct inode_cgwb_link pointer
-+ * @nxt: temp struct inode_cgwb_link pointer
-+ * @inode: inode to walk icgwbl's of
++ * iwbl_set_dirty - set dirty bits on an iwbl and its inode
++ * @iwbl: ionde_wb_link of interest
++ * @inode: inode @iwbl belongs to
++ * @dirty: I_DIRTY_* bits to be set
 + *
-+ * Walk @inode's icgwbl's (inode_cgwb_link's).  rcu_read_lock() must be
-+ * held throughout iteration.
++ * Set @dirty on @iwbl and @inode and return whether @iwbl was already
++ * dirty.  @iwbl only carries the data dirty bit through %IWBL_DIRTY_PAGES.
 + */
-+#define inode_for_each_icgwbl(cur, nxt, inode)				\
-+	for ((cur) = icgwbl_first((inode)),				\
-+	     (nxt) = (cur) ? icgwbl_next((cur), (inode)) : NULL;	\
-+	     (cur);							\
-+	     (cur) = (nxt),						\
-+	     (nxt) = (nxt) ? icgwbl_next((nxt), (inode)) : NULL)
-+
-+static void inode_icgwbls_del(struct inode *inode)
++static inline bool iwbl_set_dirty(struct inode_wb_link *iwbl,
++				  struct inode *inode, int dirty)
 +{
-+	LIST_HEAD(to_free);
-+	struct backing_dev_info *bdi = inode_to_bdi(inode);
-+	struct inode_cgwb_link *icgwbl, *next;
-+	unsigned long flags;
++	bool was_dirty = test_bit(IWBL_DIRTY_PAGES, &iwbl->data);
 +
-+	spin_lock_irqsave(&bdi->icgwbls_lock, flags);
++	/* metadata dirty bit is always attributed to the root */
++	if (iwbl_is_root(iwbl))
++		was_dirty |= inode->i_state & (I_DIRTY_SYNC | I_DIRTY_DATASYNC);
 +
-+	/* I_FREEING must be set here to disallow further iwbl_create() */
-+	WARN_ON_ONCE(!(inode->i_state & I_FREEING));
++	inode->i_state |= dirty;
++	if (dirty & I_DIRTY_PAGES)
++		set_bit(IWBL_DIRTY_PAGES, &iwbl->data);
++	return was_dirty;
++}
 +
-+	/*
-+	 * We don't wanna nest wb->list_lock under bdi->icgwbls_lock as the
-+	 * latter is irq-safe and the former isn't.  Queue icgwbls on
-+	 * @to_free and perform iwbl_del() and freeing after releasing
-+	 * bdi->icgwbls_lock.
-+	 */
-+	inode_for_each_icgwbl(icgwbl, next, inode) {
-+		hlist_del_rcu(&icgwbl->inode_node);
-+		list_move(&icgwbl->wb_node, &to_free);
++/**
++ * iwbl_still_has_dirty_pages - does an iwbl have dirty pages after writeback?
++ * @iwbl: inode_wb_link of interest
++ * @inode: inode @iwbl belongs to
++ *
++ * Called from requeue_inode() after writing back @inode for @iwbl to
++ * determine whether @iwbl still has dirty pages and should thus be
++ * requeued.  This function can update IWBL_DIRTY_PAGES and may also
++ * spuriously return true.
++ *
++ * See IWBL_DIRTY_PAGES definition for more info.
++ */
++static inline bool iwbl_still_has_dirty_pages(struct inode_wb_link *iwbl,
++					      struct inode *inode)
++{
++	if (!mapping_tagged(inode->i_mapping, PAGECACHE_TAG_DIRTY)) {
++		clear_bit(IWBL_DIRTY_PAGES, &iwbl->data);
++		return false;
 +	}
-+
-+	spin_unlock_irqrestore(&bdi->icgwbls_lock, flags);
-+
-+	list_for_each_entry_safe(icgwbl, next, &to_free, wb_node) {
-+		iwbl_del(&icgwbl->iwbl);
-+		kfree_rcu(icgwbl, rcu);
-+	}
++	return test_bit(IWBL_DIRTY_PAGES, &iwbl->data);
 +}
 +
  #else	/* CONFIG_CGROUP_WRITEBACK */
  
  static void init_cgwb_dirty_page_context(struct dirty_context *dctx)
+@@ -705,6 +770,27 @@ static inline void wbc_set_iwbl(struct writeback_control *wbc,
  {
- 	dctx->wb = &dctx->mapping->backing_dev_info->wb;
-+	dctx->iwbl = dctx->inode ? &dctx->inode->i_wb_link : NULL;
  }
  
- static long wb_split_bdi_pages(struct bdi_writeback *wb, long nr_pages)
-@@ -467,6 +564,10 @@ static void inode_sleep_on_writeback(struct inode *inode)
- 	finish_wait(wqh, &wait);
- }
- 
-+static void inode_icgwbls_del(struct inode *inode)
++static inline bool iwbl_has_enough_dirty(struct inode_wb_link *iwbl,
++					 struct inode *inode, int dirty)
 +{
++	return (inode->i_state & dirty) == dirty;
++}
++
++static inline bool iwbl_set_dirty(struct inode_wb_link *iwbl,
++				  struct inode *inode, int dirty)
++{
++	bool was_dirty = inode->i_state & I_DIRTY;
++
++	inode->i_state |= dirty;
++	return was_dirty;
++}
++
++static inline bool iwbl_still_has_dirty_pages(struct inode_wb_link *iwbl,
++					      struct inode *inode)
++{
++	return mapping_tagged(inode->i_mapping, PAGECACHE_TAG_DIRTY);
 +}
 +
  #endif	/* CONFIG_CGROUP_WRITEBACK */
  
  /**
-@@ -510,6 +611,7 @@ void init_dirty_inode_context(struct dirty_context *dctx, struct inode *inode)
- 	memset(dctx, 0, sizeof(*dctx));
- 	dctx->inode = inode;
- 	dctx->wb = &inode_to_bdi(inode)->wb;
-+	dctx->iwbl = &inode->i_wb_link;
- }
- 
- void wb_start_writeback(struct bdi_writeback *wb, long nr_pages,
-@@ -565,15 +667,8 @@ void wb_start_background_writeback(struct bdi_writeback *wb)
-  */
- void inode_wb_list_del(struct inode *inode)
- {
--	struct inode_wb_link *iwbl = &inode->i_wb_link;
--	struct bdi_writeback *wb = iwbl_to_wb(iwbl);
--
--	if (list_empty(&iwbl->dirty_list))
--		return;
--
--	spin_lock(&wb->list_lock);
--	iwbl_del_locked(iwbl, wb);
--	spin_unlock(&wb->list_lock);
-+	iwbl_del(&inode->i_wb_link);
-+	inode_icgwbls_del(inode);
- }
- 
- /*
-diff --git a/fs/inode.c b/fs/inode.c
-index 66c9b68..8a55494 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -374,6 +374,9 @@ void inode_init_once(struct inode *inode)
- 	INIT_LIST_HEAD(&inode->i_lru);
- 	address_space_init_once(&inode->i_data);
- 	i_size_ordered_init(inode);
-+#ifdef CONFIG_CGROUP_WRITEBACK
-+	INIT_HLIST_HEAD(&inode->i_cgwb_links);
-+#endif
- #ifdef CONFIG_FSNOTIFY
- 	INIT_HLIST_HEAD(&inode->i_fsnotify_marks);
- #endif
-diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
-index 01f27e3..e448edc 100644
---- a/include/linux/backing-dev-defs.h
-+++ b/include/linux/backing-dev-defs.h
-@@ -99,6 +99,7 @@ struct bdi_writeback {
- #ifdef CONFIG_CGROUP_WRITEBACK
- 	struct cgroup_subsys_state *blkcg_css; /* the blkcg we belong to */
- 	struct list_head blkcg_node;	/* anchored at blkcg->wb_list */
-+	struct list_head icgwbls;	/* inode_cgwb_links of this wb */
- 	union {
- 		struct list_head shutdown_node;
- 		struct rcu_head rcu;
-@@ -127,6 +128,7 @@ struct backing_dev_info {
- 	struct bdi_writeback wb; /* the root writeback info for this bdi */
- #ifdef CONFIG_CGROUP_WRITEBACK
- 	struct radix_tree_root cgwb_tree; /* radix tree of !root cgroup wbs */
-+	spinlock_t icgwbls_lock; /* protects wb->icgwbls and inode->i_cgwb_links */
- #endif
- 	wait_queue_head_t wb_waitq;
- 
-@@ -157,6 +159,37 @@ struct inode_wb_link {
- };
- 
- /*
-+ * Used to link a dirty inode on a non-root wb (bdi_writeback).  An inode
-+ * may have multiple of these as it gets dirtied on non-root wb's.  Linked
-+ * on both the inode and wb and destroyed when either goes away.
-+ *
-+ * TODO: When an inode is being dirtied against a non-root wb, its
-+ * ->i_wb_link is searched linearly to locate the matching icgwbl
-+ * (inode_cgwb_link).  The linear search is a scalability bottleneck but
-+ * the kernel currently don't have an indexing data structure which would
-+ * fit this use case.  A balanced tree which can be walked under RCU read
-+ * lock is necessary (e.g. bonsai tree).  Once such indexing data structure
-+ * is necessary, icgwbl should be converted to use that.
-+ */
-+struct inode_cgwb_link {
-+	struct inode_wb_link	iwbl;
-+
-+	struct inode		*inode;		/* the associated inode */
-+
-+	/*
-+	 * ->inode_node is anchored at inode->i_wb_links and ->wb_node at
-+	 * bdi_writeback->icgwbls.  Both are write-protected by
-+	 * bdi->icgwbls_lock but the former can be traversed under RCU and
-+	 * is sorted by the associated blkcg ID to allow traversal
-+	 * continuation after dropping RCU read lock.
-+	 */
-+	struct hlist_node	inode_node;	/* RCU-safe, sorted */
-+	struct list_head	wb_node;
-+
-+	struct rcu_head		rcu;
-+};
-+
-+/*
-  * The following structure carries context used during page and inode
-  * dirtying.  Should be initialized with init_dirty_{inode|page}_context().
-  */
-@@ -165,6 +198,7 @@ struct dirty_context {
- 	struct inode		*inode;
- 	struct address_space	*mapping;
- 	struct bdi_writeback	*wb;
-+	struct inode_wb_link	*iwbl;
- };
- 
- enum {
-diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index bc69c7f..6c16d10 100644
---- a/include/linux/backing-dev.h
-+++ b/include/linux/backing-dev.h
-@@ -274,16 +274,13 @@ void init_dirty_page_context(struct dirty_context *dctx, struct page *page,
- 			     struct address_space *mapping);
- void init_dirty_inode_context(struct dirty_context *dctx, struct inode *inode);
- 
--static inline struct inode *iwbl_to_inode(struct inode_wb_link *iwbl)
--{
--	return container_of(iwbl, struct inode, i_wb_link);
--}
--
- #ifdef CONFIG_CGROUP_WRITEBACK
- 
- void cgwb_blkcg_released(struct cgroup_subsys_state *blkcg_css);
- int __cgwb_create(struct backing_dev_info *bdi,
- 		  struct cgroup_subsys_state *blkcg_css);
-+struct inode_wb_link *iwbl_create(struct inode *inode,
-+				  struct bdi_writeback *wb);
- int mapping_congested(struct address_space *mapping, struct task_struct *task,
- 		      int bdi_bits);
- 
-@@ -469,6 +466,60 @@ static inline struct bdi_writeback *iwbl_to_wb(struct inode_wb_link *iwbl)
- 	return (void *)(iwbl->data & ~IWBL_FLAGS_MASK);
- }
- 
-+static inline bool iwbl_is_root(struct inode_wb_link *iwbl)
-+{
-+	struct bdi_writeback *wb = iwbl_to_wb(iwbl);
-+
-+	return wb->blkcg_css == blkcg_root_css;
-+}
-+
-+static inline struct inode *iwbl_to_inode(struct inode_wb_link *iwbl)
-+{
-+	if (iwbl_is_root(iwbl)) {
-+		return container_of(iwbl, struct inode, i_wb_link);
-+	} else {
-+		struct inode_cgwb_link *icgwbl =
-+			container_of(iwbl, struct inode_cgwb_link, iwbl);
-+		return icgwbl->inode;
-+	}
-+}
-+
-+/**
-+ * iwbl_lookup - lookup iwbl for dirtying an inode against a blkcg_css
-+ * @inode: target inode
-+ * @blkcg_css: target blkcg_css
-+ *
-+ * Lookup iwbl (inode_wb_link) for dirtying @inode against @blkcg_css.  If
-+ * found, the returned iwbl is associated with the bdi_writeback of
-+ * @blkcg_css on @inode's bdi.  If not found, %NULL is returned.
-+ *
-+ * The returned iwbl remains accessible as long as both @inode and
-+ * @blkcg_css are alive.
-+ */
-+static inline struct inode_wb_link *
-+iwbl_lookup(struct inode *inode, struct cgroup_subsys_state *blkcg_css)
-+{
-+	struct inode_wb_link *iwbl = NULL;
-+	struct inode_cgwb_link *icgwbl;
-+
-+	if (blkcg_css == blkcg_root_css)
-+		return &inode->i_wb_link;
-+
-+	/*
-+	 * RCU protects the lookup itself.  Once looked up, the iwbl's
-+	 * lifetime is governed by those of @inode and @blkcg_css.
-+	 */
-+	rcu_read_lock();
-+	hlist_for_each_entry_rcu(icgwbl, &inode->i_cgwb_links, inode_node) {
-+		if (iwbl_to_wb(&icgwbl->iwbl)->blkcg_css == blkcg_css) {
-+			iwbl = &icgwbl->iwbl;
-+			break;
-+		}
-+	}
-+	rcu_read_unlock();
-+	return iwbl;
-+}
-+
- #else	/* CONFIG_CGROUP_WRITEBACK */
- 
- static inline bool mapping_cgwb_enabled(struct address_space *mapping)
-@@ -522,6 +573,11 @@ static inline void init_i_wb_link(struct inode *inode)
- {
- }
- 
-+static inline struct inode *iwbl_to_inode(struct inode_wb_link *iwbl)
-+{
-+	return container_of(iwbl, struct inode, i_wb_link);
-+}
-+
- static inline struct bdi_writeback *iwbl_to_wb(struct inode_wb_link *iwbl)
- {
- 	struct inode *inode = iwbl_to_inode(iwbl);
-@@ -529,6 +585,17 @@ static inline struct bdi_writeback *iwbl_to_wb(struct inode_wb_link *iwbl)
- 	return &inode_to_bdi(inode)->wb;
- }
- 
-+static inline bool iwbl_is_root(struct inode_wb_link *iwbl)
-+{
-+	return true;
-+}
-+
-+static inline struct inode_wb_link *
-+iwbl_lookup(struct inode *inode, struct cgroup_subsys_state *blkcg_css)
-+{
-+	return &inode->i_wb_link;
-+}
-+
- #endif	/* CONFIG_CGROUP_WRITEBACK */
- 
- static inline int mapping_read_congested(struct address_space *mapping,
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index fb261b4..b394821 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -609,6 +609,9 @@ struct inode {
- 
- 	struct hlist_node	i_hash;
- 	struct inode_wb_link	i_wb_link;	/* backing dev IO list */
-+#ifdef CONFIG_CGROUP_WRITEBACK
-+	struct hlist_head	i_cgwb_links;	/* sorted inode_cgwb_links */
-+#endif
- 	struct list_head	i_lru;		/* inode LRU list */
- 	struct list_head	i_sb_list;
- 	union {
-diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-index cc8d21a..e4db465 100644
---- a/mm/backing-dev.c
-+++ b/mm/backing-dev.c
-@@ -464,6 +464,7 @@ int __cgwb_create(struct backing_dev_info *bdi,
- 		return -ENOMEM;
+@@ -999,7 +1085,7 @@ static void requeue_inode(struct inode_wb_link *iwbl, struct bdi_writeback *wb,
+ 		return;
  	}
  
-+	INIT_LIST_HEAD(&wb->icgwbls);
- 	wb->blkcg_css = blkcg_css;
- 	set_bit(WB_registered, &wb->state); /* cgwbs are always registered */
+-	if (mapping_tagged(inode->i_mapping, PAGECACHE_TAG_DIRTY)) {
++	if (iwbl_still_has_dirty_pages(iwbl, inode)) {
+ 		/*
+ 		 * We didn't write back all the pages.  nfs_writepages()
+ 		 * sometimes bales out without doing anything.
+@@ -1017,7 +1103,8 @@ static void requeue_inode(struct inode_wb_link *iwbl, struct bdi_writeback *wb,
+ 			 */
+ 			redirty_tail(iwbl, wb);
+ 		}
+-	} else if (inode->i_state & I_DIRTY) {
++	} else if (iwbl_is_root(iwbl) &&
++		   (inode->i_state & (I_DIRTY_SYNC | I_DIRTY_DATASYNC))) {
+ 		/*
+ 		 * Filesystems can dirty the inode during writeback operations,
+ 		 * such as delayed allocation during submission or metadata
+@@ -1074,14 +1161,14 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
+ 	inode->i_state &= ~I_DIRTY;
  
-@@ -532,16 +533,31 @@ static void cgwb_shutdown_commit(struct list_head *to_shutdown)
- 
- static void cgwb_exit(struct bdi_writeback *wb)
- {
-+	struct inode_cgwb_link *icgwbl, *next;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&wb->bdi->icgwbls_lock, flags);
-+	list_for_each_entry_safe(icgwbl, next, &wb->icgwbls, wb_node) {
-+		WARN_ON_ONCE(!list_empty(&icgwbl->iwbl.dirty_list));
-+		hlist_del_rcu(&icgwbl->inode_node);
-+		list_del(&icgwbl->wb_node);
-+		kfree_rcu(icgwbl, rcu);
-+	}
-+	spin_unlock_irqrestore(&wb->bdi->icgwbls_lock, flags);
-+
- 	WARN_ON(!radix_tree_delete(&wb->bdi->cgwb_tree, wb->blkcg_css->id));
- 	list_del(&wb->blkcg_node);
-+
- 	wb_exit(wb);
- 	kfree_rcu(wb, rcu);
+ 	/*
+-	 * Paired with smp_mb() in __mark_inode_dirty().  This allows
+-	 * __mark_inode_dirty() to test i_state without grabbing i_lock -
+-	 * either they see the I_DIRTY bits cleared or we see the dirtied
+-	 * inode.
++	 * Paired with smp_mb() in __mark_inode_dirty_dctx().  This allows
++	 * the function to perform iwbl_has_enough_dirty() test without
++	 * grabbing i_lock - either they see the dirty bits cleared or we
++	 * see the dirtied inode.
+ 	 *
+ 	 * I_DIRTY_PAGES is always cleared together above even if @mapping
+ 	 * still has dirty pages.  The flag is reinstated after smp_mb() if
+-	 * necessary.  This guarantees that either __mark_inode_dirty()
++	 * necessary to guarantee that either __mark_inode_dirty_dctx()
+ 	 * sees clear I_DIRTY_PAGES or we see PAGECACHE_TAG_DIRTY.
+ 	 */
+ 	smp_mb();
+@@ -1729,31 +1816,7 @@ static noinline void block_dump___mark_inode_dirty(struct inode *inode)
+ 	}
  }
  
- static void cgwb_bdi_init(struct backing_dev_info *bdi)
+-/**
+- *	mark_inode_dirty_dctx -	internal function
+- *	@dctx: dirty_context containing the target inode
+- *	@flags: what kind of dirty (i.e. I_DIRTY_SYNC)
+- *	Mark an inode as dirty. Callers should use mark_inode_dirty or
+- *  	mark_inode_dirty_sync.
+- *
+- * Put the inode on the super block's dirty list.
+- *
+- * CAREFUL! We mark it dirty unconditionally, but move it onto the
+- * dirty list only if it is hashed or if it refers to a blockdev.
+- * If it was not hashed, it will never be added to the dirty list
+- * even if it is later hashed, as it will have been marked dirty already.
+- *
+- * In short, make sure you hash any inodes _before_ you start marking
+- * them dirty.
+- *
+- * Note that for blockdevs, iwbl->dirtied_when represents the dirtying time of
+- * the block-special inode (/dev/hda1) itself.  And the ->dirtied_when field of
+- * the kernel-internal blockdev inode represents the dirtying time of the
+- * blockdev's pages.  This is why for I_DIRTY_PAGES we always use
+- * page->mapping->host, so the page-dirtying time is recorded in the internal
+- * blockdev inode.
+- */
+-void mark_inode_dirty_dctx(struct dirty_context *dctx, int flags)
++static void __mark_inode_dirty_dctx(struct dirty_context *dctx, int flags)
  {
-+	INIT_LIST_HEAD(&bdi->wb.icgwbls);
- 	bdi->wb.blkcg_css = blkcg_root_css;
- 	INIT_RADIX_TREE(&bdi->cgwb_tree, GFP_ATOMIC);
-+	spin_lock_init(&bdi->icgwbls_lock);
+ 	struct inode *inode = dctx->inode;
+ 	struct inode_wb_link *iwbl = dctx->iwbl;
+@@ -1774,22 +1837,23 @@ void mark_inode_dirty_dctx(struct dirty_context *dctx, int flags)
+ 	}
+ 
+ 	/*
+-	 * Paired with smp_mb() in __writeback_single_inode() for the
+-	 * following lockless i_state test.  See there for details.
++	 * Paired with smp_mb()'s in __writeback_single_inode() and
++	 * mapping_writeback_maybe_whole() for the following lockless
++	 * iwbl_has_enough_dirty() test.  See there for details.
+ 	 */
+ 	smp_mb();
+ 
+-	if ((inode->i_state & flags) == flags)
++	if (iwbl_has_enough_dirty(iwbl, inode, flags))
+ 		return;
+ 
+ 	if (unlikely(block_dump))
+ 		block_dump___mark_inode_dirty(inode);
+ 
+ 	spin_lock(&inode->i_lock);
+-	if ((inode->i_state & flags) != flags) {
+-		const int was_dirty = inode->i_state & I_DIRTY;
++	if (!iwbl_has_enough_dirty(iwbl, inode, flags)) {
++		bool was_dirty;
+ 
+-		inode->i_state |= flags;
++		was_dirty = iwbl_set_dirty(iwbl, inode, flags);
+ 
+ 		/*
+ 		 * If the inode is being synced, just update its dirty state.
+@@ -1845,6 +1909,52 @@ out_unlock_inode:
+ }
+ EXPORT_SYMBOL(mark_inode_dirty_dctx);
+ 
++/**
++ *	mark_inode_dirty_dctx -	internal function
++ *	@dctx: dirty_context containing the target inode
++ *	@flags: what kind of dirty (i.e. I_DIRTY_SYNC)
++ *	Mark an inode as dirty. Callers should use mark_inode_dirty or
++ *  	mark_inode_dirty_sync.
++ *
++ * Put the inode on the super block's dirty list.
++ *
++ * CAREFUL! We mark it dirty unconditionally, but move it onto the
++ * dirty list only if it is hashed or if it refers to a blockdev.
++ * If it was not hashed, it will never be added to the dirty list
++ * even if it is later hashed, as it will have been marked dirty already.
++ *
++ * In short, make sure you hash any inodes _before_ you start marking
++ * them dirty.
++ *
++ * Note that for blockdevs, iwbl->dirtied_when represents the dirtying time of
++ * the block-special inode (/dev/hda1) itself.  And the ->dirtied_when field of
++ * the kernel-internal blockdev inode represents the dirtying time of the
++ * blockdev's pages.  This is why for I_DIRTY_PAGES we always use
++ * page->mapping->host, so the page-dirtying time is recorded in the internal
++ * blockdev inode.
++ */
++void mark_inode_dirty_dctx(struct dirty_context *dctx, int flags)
++{
++	/*
++	 * I_DIRTY_PAGES should dirty @dctx->iwbl but I_DIRTY_[DATA]SYNC
++	 * should always dirty the root iwbl.  If @dctx->iwbl is root, we
++	 * can do both at the same time; otherwise, handle the two dirtying
++	 * separately.
++	 */
++	if (iwbl_is_root(dctx->iwbl) ||
++	    !(flags & (I_DIRTY_SYNC | I_DIRTY_DATASYNC))) {
++		__mark_inode_dirty_dctx(dctx, flags);
++		return;
++	}
++
++	if (flags & I_DIRTY_PAGES)
++		__mark_inode_dirty_dctx(dctx, I_DIRTY_PAGES);
++
++	flags &= ~I_DIRTY_PAGES;
++	if (flags)
++		__mark_inode_dirty(dctx->inode, flags);
++}
++
+ void __mark_inode_dirty(struct inode *inode, int flags)
+ {
+ 	struct dirty_context dctx;
+diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
+index 6d64a0e..5e0381c 100644
+--- a/include/linux/backing-dev-defs.h
++++ b/include/linux/backing-dev-defs.h
+@@ -52,9 +52,26 @@ enum wb_stat_item {
+  *
+  *  Tracks whether writeback is in progress for an iwbl.  If this bit is
+  *  set for any iwbl on an inode, the inode's I_SYNC is set too.
++ *
++ * IWBL_DIRTY_PAGES
++ *
++ *  Tracks whether an iwbl has dirty pages.  This bit is asserted when a
++ *  page is dirtied against it; unfortunately, unlike I_DIRTY_PAGES which
++ *  can be cleared reliably by testing PAGECACHE_TAG_DIRTY after a
++ *  writeback, there's no way to reliably determine whether an iwbl is
++ *  clean and the bit may remain set spuriously w/o dirty pages.
++ *
++ *  mapping_writeback_{maybe|confirm}_whole() are used to opportunistically
++ *  clear the bit if a writeback attempt successfully sweeps all the dirty
++ *  pages.  It also gets cleared when PAGECACHE_TAG_DIRTY test indicates
++ *  that the whole address_space is clean.  While the bit may remain set
++ *  spuriously for a while, the duration of such inaccuracy should be
++ *  reasonably limited as a periodic cyclic writeback triggered on a clean
++ *  iwbl will notice the clean state.
+  */
+ enum {
+ 	IWBL_SYNC		= 0,
++	IWBL_DIRTY_PAGES,
+ 
+ 	IWBL_FLAGS_BITS,
+ 	IWBL_FLAGS_MASK		= (1UL << IWBL_FLAGS_BITS) - 1,
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index 57dd200..5d919bc 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -575,6 +575,66 @@ static inline pgoff_t *mapping_writeback_index(struct address_space *mapping,
  }
  
  /**
-@@ -613,6 +629,70 @@ void cgwb_blkcg_released(struct cgroup_subsys_state *blkcg_css)
- 	spin_unlock_irq(&cgwb_lock);
- }
- 
-+/**
-+ * iwbl_create - create an inode_cgwb_link
-+ * @inode: target inode
-+ * @wb: target bdi_writeback
++ * mapping_writeback_maybe_whole - prepare for possible whole writeback
++ * @mapping: address_space under writeback
++ * @wbc: writeback_control in effect
 + *
-+ * Try to create an iwbl (inode_wb_link) for dirtying @inode against @wb.
-+ * This function can be called under any context without locking as long as
-+ * @inode and @wb are kept alive.  See iwbl_lookup() for details.
++ * @mapping is being written back according to @wbc and it may write back
++ * all dirty pages.  This function must be called before such writeback is
++ * started and matched with mapping_writeback_confirm_whole() which is
++ * called after the writeback.  Combined, these two functions can detect
++ * clean condition on the associated inode_wb_link and clear
++ * %IWBL_DIRTY_PAGES on it so that its writeback work can be selectively
++ * turned off even while the inode is dirty on other cgroups.
 + *
-+ * Returns the pointer to the created or found icgwbl on success, %NULL on
-+ * failure.
++ * See IWBL_DIRTY_PAGES definition for more info.
 + */
-+struct inode_wb_link *iwbl_create(struct inode *inode, struct bdi_writeback *wb)
++static inline void
++mapping_writeback_maybe_whole(struct address_space *mapping,
++			      struct writeback_control *wbc)
 +{
-+	struct inode_wb_link *iwbl = NULL;
-+	struct inode_cgwb_link *icgwbl;
-+	unsigned long flags;
++	struct inode *inode = mapping->host;
 +
-+	icgwbl = kzalloc(sizeof(*icgwbl), GFP_ATOMIC);
-+	if (!icgwbl)
-+		return NULL;
++	if (!inode)
++		return;
 +
-+	icgwbl->iwbl.data = (unsigned long)wb;
-+	INIT_LIST_HEAD(&icgwbl->iwbl.dirty_list);
-+	icgwbl->inode = inode;
-+
-+	spin_lock_irqsave(&wb->bdi->icgwbls_lock, flags);
++	clear_bit(IWBL_DIRTY_PAGES, &inode_writeback_iwbl(inode, wbc)->data);
 +
 +	/*
-+	 * Testing I_FREEING under icgwbls_lock guarantees that no new
-+	 * icgwbl's will be created after inode_icgwbls_del().
++	 * Paired with smp_mb() in __mark_inode_dirty_dctx().  Clearing
++	 * IWBL_DIRTY_PAGES before the following mb and reinstating it
++	 * later if writeback skips over some pages guarantees that either
++	 * __mark_inode_dirty_dctx() sees clear IWBL_DIRTY_PAGES or we see
++	 * all the dirtied pages.
 +	 */
-+	if (inode->i_state & I_FREEING)
-+		goto out_unlock;
-+
-+	iwbl = iwbl_lookup(inode, wb->blkcg_css);
-+	if (!iwbl) {
-+		struct inode_cgwb_link *prev = NULL, *pos;
-+		int blkcg_id = wb->blkcg_css->id;
-+
-+		/* i_cgwb_links is sorted by blkcg ID */
-+		hlist_for_each_entry_rcu(pos, &inode->i_cgwb_links, inode_node) {
-+			if (iwbl_to_wb(&pos->iwbl)->blkcg_css->id > blkcg_id)
-+				break;
-+			prev = pos;
-+		}
-+		if (prev)
-+			hlist_add_behind_rcu(&icgwbl->inode_node,
-+					     &prev->inode_node);
-+		else
-+			hlist_add_head_rcu(&icgwbl->inode_node,
-+					   &inode->i_cgwb_links);
-+
-+		list_add(&icgwbl->wb_node, &wb->icgwbls);
-+
-+		iwbl = &icgwbl->iwbl;
-+		icgwbl = NULL;
-+	}
-+out_unlock:
-+	spin_unlock_irqrestore(&wb->bdi->icgwbls_lock, flags);
-+	kfree(icgwbl);
-+	return iwbl;
++	smp_mb__after_atomic();
 +}
 +
- #else	/* CONFIG_CGROUP_WRITEBACK */
++/**
++ * mapping_writeback_confirm_whole - confirm whether whole writeback took place
++ * @mapping: address_space under writeback
++ * @wbc: writeback_control in effect
++ * @wrote_whole: were all pages written out?
++ *
++ * @mapping is being written back according to @wbc and
++ * mapping_writeback_maybe_whole() was called because it could write back
++ * all dirty pages.  The writeback function must call this function to
++ * indicate whether all pages were actually written out or not.  See
++ * mapping_writeback_maybe_whole() for more info.
++ */
++static inline void
++mapping_writeback_confirm_whole(struct address_space *mapping,
++				struct writeback_control *wbc, bool wrote_whole)
++{
++	struct inode *inode = mapping->host;
++
++	if (!inode || wrote_whole)
++		return;
++
++	set_bit(IWBL_DIRTY_PAGES, &inode_writeback_iwbl(inode, wbc)->data);
++}
++
++/**
+  * wbc_blkcg_css - return the blkcg_css associated with a wbc
+  * @wbc: writeback_control of interest
+  *
+@@ -682,6 +742,18 @@ static inline pgoff_t *mapping_writeback_index(struct address_space *mapping,
+ 	return &mapping->writeback_index;
+ }
  
- static void cgwb_bdi_init(struct backing_dev_info *bdi) { }
++static inline void
++mapping_writeback_maybe_whole(struct address_space *mapping,
++			      struct writeback_control *wbc)
++{
++}
++
++static inline void
++mapping_writeback_confirm_whole(struct address_space *mapping,
++				struct writeback_control *wbc, bool wrote_whole)
++{
++}
++
+ static inline struct cgroup_subsys_state *
+ wbc_blkcg_css(struct writeback_control *wbc)
+ {
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 753d76f..dd15bb3 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -1904,6 +1904,7 @@ int write_cache_pages(struct address_space *mapping,
+ {
+ 	int ret = 0;
+ 	int done = 0;
++	int skipped_dirty = 0;
+ 	struct pagevec pvec;
+ 	int nr_pages;
+ 	pgoff_t *writeback_index_ptr = mapping_writeback_index(mapping, wbc);
+@@ -1913,6 +1914,7 @@ int write_cache_pages(struct address_space *mapping,
+ 	pgoff_t done_index;
+ 	int cycled;
+ 	int range_whole = 0;
++	int maybe_whole = 0;
+ 	int tag;
+ 
+ 	pagevec_init(&pvec, 0);
+@@ -1924,13 +1926,20 @@ int write_cache_pages(struct address_space *mapping,
+ 		else
+ 			cycled = 0;
+ 		end = -1;
++		maybe_whole = 1;
+ 	} else {
+ 		index = wbc->range_start >> PAGE_CACHE_SHIFT;
+ 		end = wbc->range_end >> PAGE_CACHE_SHIFT;
+-		if (wbc->range_start == 0 && wbc->range_end == LLONG_MAX)
++		if (wbc->range_start == 0 && wbc->range_end == LLONG_MAX) {
+ 			range_whole = 1;
++			maybe_whole = 1;
++		}
+ 		cycled = 1; /* ignore range_cyclic tests */
+ 	}
++
++	if (maybe_whole)
++		mapping_writeback_maybe_whole(mapping, wbc);
++
+ 	if (wbc->sync_mode == WB_SYNC_ALL || wbc->tagged_writepages)
+ 		tag = PAGECACHE_TAG_TOWRITE;
+ 	else
+@@ -1990,10 +1999,12 @@ continue_unlock:
+ 			}
+ 
+ 			if (PageWriteback(page)) {
+-				if (wbc->sync_mode != WB_SYNC_NONE)
++				if (wbc->sync_mode != WB_SYNC_NONE) {
+ 					wait_on_page_writeback(page);
+-				else
++				} else {
++					skipped_dirty = 1;
+ 					goto continue_unlock;
++				}
+ 			}
+ 
+ 			BUG_ON(PageWriteback(page));
+@@ -2004,6 +2015,7 @@ continue_unlock:
+ 			ret = (*writepage)(page, wbc, data);
+ 			if (unlikely(ret)) {
+ 				if (ret == AOP_WRITEPAGE_ACTIVATE) {
++					skipped_dirty = 1;
+ 					unlock_page(page);
+ 					ret = 0;
+ 				} else {
+@@ -2051,6 +2063,9 @@ continue_unlock:
+ 	if (wbc->range_cyclic || (range_whole && wbc->nr_to_write > 0))
+ 		*writeback_index_ptr = done_index;
+ 
++	if (maybe_whole)
++		mapping_writeback_confirm_whole(mapping, wbc,
++						!done && !skipped_dirty);
+ 	return ret;
+ }
+ EXPORT_SYMBOL(write_cache_pages);
 -- 
 2.1.0
 
