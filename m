@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 03/45] memcg: encode page_cgflags in the lower bits of page->mem_cgroup
-Date: Tue,  6 Jan 2015 16:25:40 -0500
-Message-ID: <1420579582-8516-4-git-send-email-tj@kernel.org>
+Subject: [PATCH 12/45] writeback: implement and use mapping_congested()
+Date: Tue,  6 Jan 2015 16:25:49 -0500
+Message-ID: <1420579582-8516-13-git-send-email-tj@kernel.org>
 References: <1420579582-8516-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=MkQNW4fEt8zFRH1jQLVgc5T7H/AwRlZtWpXiV8oXx60=;
-        b=dSu1I3UijhWDZ45dtnI1ww91oeCQMGedCOaJYobbxGuF0yVTi0Vj52+9P225BjvRjL
-         eOcoEq0Xl7eSflsDuVGPyMpGGqwgQzv2mTLXr4kuJrw2rzmrsJxT32HyZVRfaSNLmLBL
-         Qe8t0A0WzwZVzLKH0q4WTJIw7K7ooybPqShOXSt/gS77BgOm7L8sNgk6Cx39uD0D9frm
-         QenWfdRNtKhtOudWQpJLPgJg8G1J67vNQhY6+HUA34ei3DY0nBEOyz7ZoHuXyLPIr/Ma
-         X6BU5/9g80Ur8SmCSiPPCEUiO5GJxdx6b+OsRR5mmTuNuDD/hbqE085EyyQh3GoWnszK
-         DDdQ==
+        bh=KYksmk/H7lNY2Mkpk4/EVPWJIWpU7R0j/kmtsJSe9iI=;
+        b=b624G/8nRC9n9GSN53NOJy5Ky34L5B0sfWJKLwYqShdrRoVgK5Kv+oxpkb/MnIiBub
+         t+vX410n28N240hpBLwu9VaWNsxXEiJTUkhZp0Pl5Msug9ueviIdyrsFQC6BJh4T0/Wi
+         4H7JZs8wdVZ1GuHatSiKB3slAqgk0EWVQYwq4CzRzpNZCLTeSkgftn1+YkS2mQ6wTB7m
+         k6+A8XA4TZ74yo9rlhTxXtxEQatzlXVBYzguFNBu3731iVsNu4RhqOn2QK3bL63pWD1Q
+         sPuIcCN77nzhH1bnGbNYChMmy9CwEN7bouGd2JXjwI0Y1+1I2VzoLam4lKcgEHaZy13x
+         CaEQ==
 In-Reply-To: <1420579582-8516-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,344 +23,198 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, Tejun Heo <tj@kernel.org>
 
-cgroup writeback support will require several bits per page.  They can
-easily be encoded in the lower bits of page->mem_cgroup which only
-increases the alignement of struct mem_cgroup.  This patch
+In several places, bdi_congested() and its wrappers are used to
+determine whether more IOs should be issued.  With cgroup writeback
+support, this question can't be answered solely based on the bdi
+(backing_dev_info).  It's dependent on whether the filesystem and bdi
+support cgroup writeback and the blkcg the asking task belongs to.
 
-* Converts page->mem_cgroup to unsigned long so that nobody
-  dereferences it directly and bit operations are easier.
+This patch implements mapping_congested() and its wrappers which take
+@mapping and @task and determines the congestion state considering
+cgroup writeback for the combination.  The new functions replace
+bdi_*congested() calls in places where the query is about specific
+mapping and task.
 
-* Introduces enum page_cgflags which will list the flags.  It
-  currently only defines PCG_FLAGS_BITS and PCG_FLAGS_MASK.  The
-  former is used to align struct mem_cgroup accordingly.
-
-* Adds and applies two accessors - page_memcg_is_set() and
-  page_memcg().
-
-With PCG_FLAGS_BITS at zero, this patch shouldn't introduce any
-noticeable functional changes.
+There are several filesystem users which also fit this criteria but
+they should be updated when each filesystem implements cgroup
+writeback support.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Jan Kara <jack@suse.cz>
+Cc: Vivek Goyal <vgoyal@redhat.com>
 ---
- include/linux/mm_types.h |  3 +-
- mm/debug.c               |  2 +-
- mm/memcontrol.c          | 84 ++++++++++++++++++++++++++++++++----------------
- 3 files changed, 59 insertions(+), 30 deletions(-)
+ fs/fs-writeback.c           | 34 ++++++++++++++++++++++++++++++++++
+ include/linux/backing-dev.h | 27 +++++++++++++++++++++++++++
+ mm/fadvise.c                |  2 +-
+ mm/readahead.c              |  2 +-
+ mm/vmscan.c                 | 12 ++++++------
+ 5 files changed, 69 insertions(+), 8 deletions(-)
 
-diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
-index 97f2bb3..7f6c5ef 100644
---- a/include/linux/mm_types.h
-+++ b/include/linux/mm_types.h
-@@ -21,7 +21,6 @@
- #define AT_VECTOR_SIZE (2*(AT_VECTOR_SIZE_ARCH + AT_VECTOR_SIZE_BASE + 1))
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index 3b54835..43c1fb2 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -109,6 +109,40 @@ out_unlock:
+ #ifdef CONFIG_CGROUP_WRITEBACK
  
- struct address_space;
--struct mem_cgroup;
- 
- #define USE_SPLIT_PTE_PTLOCKS	(NR_CPUS >= CONFIG_SPLIT_PTLOCK_CPUS)
- #define USE_SPLIT_PMD_PTLOCKS	(USE_SPLIT_PTE_PTLOCKS && \
-@@ -176,7 +175,7 @@ struct page {
- 	};
- 
- #ifdef CONFIG_MEMCG
--	struct mem_cgroup *mem_cgroup;
-+	unsigned long mem_cgroup;
- #endif
- 
- 	/*
-diff --git a/mm/debug.c b/mm/debug.c
-index 0e58f32..94d91f9 100644
---- a/mm/debug.c
-+++ b/mm/debug.c
-@@ -97,7 +97,7 @@ void dump_page_badflags(struct page *page, const char *reason,
- 	}
- #ifdef CONFIG_MEMCG
- 	if (page->mem_cgroup)
--		pr_alert("page->mem_cgroup:%p\n", page->mem_cgroup);
-+		pr_alert("page->mem_cgroup:%p\n", (void *)page->mem_cgroup);
- #endif
- }
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 202e386..3ab3f04 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -87,6 +87,35 @@ static int really_do_swap_account __initdata;
- #define do_swap_account		0
- #endif
- 
-+/*
-+ * Lower bits of page->mem_cgroup encodes the following flags.  Use
-+ * page_memcg*() and page_cgflags*() to access the pointer and flags
-+ * respectively.  The flags can be used only while the pointer is set and
-+ * are cleared together with it.
+ /**
++ * mapping_congested - test whether a mapping is congested for a task
++ * @mapping: address space to test for congestion
++ * @task: task to test congestion for
++ * @bdi_bits: mask of WB_[a]sync_congested bits to test
++ *
++ * Tests whether @mapping is congested for @task.  @bdi_bits is the mask of
++ * congestion bits to test and the return value is the mask of set bits.
++ *
++ * If cgroup writeback is enabled for @mapping, its congestion state for
++ * @task is determined by whether the cgwb (cgroup bdi_writeback) for the
++ * blkcg of %current on @mapping->backing_dev_info is congested; otherwise,
++ * the root's congestion state is used.
 + */
-+enum page_cgflags {
-+	PCG_FLAGS_BITS		= 0,
-+	PCG_FLAGS_MASK		= ((1UL << PCG_FLAGS_BITS) - 1),
-+};
-+
-+/* struct mem_cgroup should be accordingly aligned */
-+#define MEM_CGROUP_ALIGN						\
-+	((1UL << PCG_FLAGS_BITS) >= __alignof__(unsigned long long) ?	\
-+	 (1UL << PCG_FLAGS_BITS) : __alignof__(unsigned long long))
-+
-+static bool page_memcg_is_set(struct page *page)
++int mapping_congested(struct address_space *mapping,
++		      struct task_struct *task, int bdi_bits)
 +{
-+	if (page->mem_cgroup) {
-+		WARN_ON_ONCE(!(page->mem_cgroup & ~PCG_FLAGS_MASK));
-+		return true;
-+	}
-+	return false;
++	struct backing_dev_info *bdi = mapping->backing_dev_info;
++	struct bdi_writeback *wb;
++	int ret = 0;
++
++	if (!mapping_cgwb_enabled(mapping))
++		return wb_congested(&bdi->wb, bdi_bits);
++
++	rcu_read_lock();
++	wb = cgwb_lookup(bdi, task_css(task, blkio_cgrp_id));
++	if (wb)
++		ret = wb_congested(wb, bdi_bits);
++	rcu_read_unlock();
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(mapping_congested);
++
++/**
+  * init_cgwb_dirty_page_context - init cgwb part of dirty_context
+  * @dctx: dirty_context being initialized
+  *
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index be66668..0b1ac4b 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -263,6 +263,8 @@ void init_dirty_inode_context(struct dirty_context *dctx, struct inode *inode);
+ void cgwb_blkcg_released(struct cgroup_subsys_state *blkcg_css);
+ int __cgwb_create(struct backing_dev_info *bdi,
+ 		  struct cgroup_subsys_state *blkcg_css);
++int mapping_congested(struct address_space *mapping, struct task_struct *task,
++		      int bdi_bits);
+ 
+ /**
+  * mapping_cgwb_enabled - test whether cgroup writeback is enabled on a mapping
+@@ -383,6 +385,12 @@ static inline void cgwb_blkcg_released(struct cgroup_subsys_state *blkcg_css)
+ {
+ }
+ 
++static inline int mapping_congested(struct address_space *mapping,
++				    struct task_struct *task, int bdi_bits)
++{
++	return wb_congested(&mapping->backing_dev_info->wb, bdi_bits);
 +}
 +
-+static struct mem_cgroup *page_memcg(struct page *page)
+ static inline struct bdi_writeback *
+ cgwb_lookup(struct backing_dev_info *bdi, struct cgroup_subsys_state *blkcg_css)
+ {
+@@ -408,6 +416,25 @@ static inline struct bdi_writeback *page_cgwb_wb(struct page *page)
+ 
+ #endif	/* CONFIG_CGROUP_WRITEBACK */
+ 
++static inline int mapping_read_congested(struct address_space *mapping,
++					 struct task_struct *task)
 +{
-+	return (void *)(page->mem_cgroup & ~PCG_FLAGS_MASK);
++	return mapping_congested(mapping, task, 1 << WB_sync_congested);
 +}
- 
- static const char * const mem_cgroup_stat_names[] = {
- 	"cache",
-@@ -362,7 +391,7 @@ struct mem_cgroup {
- 
- 	struct mem_cgroup_per_node *nodeinfo[0];
- 	/* WARNING: nodeinfo must be the last member here */
--};
-+} __aligned(MEM_CGROUP_ALIGN);
- 
- #ifdef CONFIG_MEMCG_KMEM
- static bool memcg_kmem_is_active(struct mem_cgroup *memcg)
-@@ -1268,7 +1297,7 @@ struct lruvec *mem_cgroup_page_lruvec(struct page *page, struct zone *zone)
- 		goto out;
- 	}
- 
--	memcg = page->mem_cgroup;
-+	memcg = page_memcg(page);
- 	/*
- 	 * Swapcache readahead pages are added to the LRU - and
- 	 * possibly migrated - before they are charged.
-@@ -2011,7 +2040,7 @@ struct mem_cgroup *mem_cgroup_begin_page_stat(struct page *page)
- 	if (mem_cgroup_disabled())
- 		return NULL;
- again:
--	memcg = page->mem_cgroup;
-+	memcg = page_memcg(page);
- 	if (unlikely(!memcg))
- 		return NULL;
- 
-@@ -2019,7 +2048,7 @@ again:
- 		return memcg;
- 
- 	spin_lock_irqsave(&memcg->move_lock, flags);
--	if (memcg != page->mem_cgroup) {
-+	if (memcg != page_memcg(page)) {
- 		spin_unlock_irqrestore(&memcg->move_lock, flags);
- 		goto again;
- 	}
-@@ -2401,7 +2430,7 @@ struct mem_cgroup *try_get_mem_cgroup_from_page(struct page *page)
- 
- 	VM_BUG_ON_PAGE(!PageLocked(page), page);
- 
--	memcg = page->mem_cgroup;
-+	memcg = page_memcg(page);
- 	if (memcg) {
- 		if (!css_tryget_online(&memcg->css))
- 			memcg = NULL;
-@@ -2453,7 +2482,7 @@ static void commit_charge(struct page *page, struct mem_cgroup *memcg,
++
++static inline int mapping_write_congested(struct address_space *mapping,
++					  struct task_struct *task)
++{
++	return mapping_congested(mapping, task, 1 << WB_async_congested);
++}
++
++static inline int mapping_rw_congested(struct address_space *mapping,
++				       struct task_struct *task)
++{
++	return mapping_congested(mapping, task, (1 << WB_sync_congested) |
++						(1 << WB_async_congested));
++}
++
+ static inline int bdi_congested(struct backing_dev_info *bdi, int bdi_bits)
  {
- 	int isolated;
+ 	return wb_congested(&bdi->wb, bdi_bits);
+diff --git a/mm/fadvise.c b/mm/fadvise.c
+index 2ad7adf..c7347d7 100644
+--- a/mm/fadvise.c
++++ b/mm/fadvise.c
+@@ -113,7 +113,7 @@ SYSCALL_DEFINE4(fadvise64_64, int, fd, loff_t, offset, loff_t, len, int, advice)
+ 	case POSIX_FADV_NOREUSE:
+ 		break;
+ 	case POSIX_FADV_DONTNEED:
+-		if (!bdi_write_congested(mapping->backing_dev_info))
++		if (!mapping_write_congested(mapping, current))
+ 			__filemap_fdatawrite_range(mapping, offset, endbyte,
+ 						   WB_SYNC_NONE);
  
--	VM_BUG_ON_PAGE(page->mem_cgroup, page);
-+	VM_BUG_ON_PAGE(page_memcg_is_set(page), page);
- 
+diff --git a/mm/readahead.c b/mm/readahead.c
+index 17b9172..beb930c 100644
+--- a/mm/readahead.c
++++ b/mm/readahead.c
+@@ -541,7 +541,7 @@ page_cache_async_readahead(struct address_space *mapping,
  	/*
- 	 * In some cases, SwapCache and FUSE(splice_buf->radixtree), the page
-@@ -2476,7 +2505,7 @@ static void commit_charge(struct page *page, struct mem_cgroup *memcg,
- 	 * - a page cache insertion, a swapin fault, or a migration
- 	 *   have the page locked
+ 	 * Defer asynchronous read-ahead on IO congestion.
  	 */
--	page->mem_cgroup = memcg;
-+	page->mem_cgroup = (unsigned long)memcg;
- 
- 	if (lrucare)
- 		unlock_page_lru(page, isolated);
-@@ -2751,12 +2780,12 @@ void __memcg_kmem_commit_charge(struct page *page, struct mem_cgroup *memcg,
- 		memcg_uncharge_kmem(memcg, 1 << order);
+-	if (bdi_read_congested(mapping->backing_dev_info))
++	if (mapping_read_congested(mapping, current))
  		return;
- 	}
--	page->mem_cgroup = memcg;
-+	page->mem_cgroup = (unsigned long)memcg;
+ 
+ 	/* do read-ahead */
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 5e8772b..95b98c7 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -411,14 +411,14 @@ static inline int is_page_cache_freeable(struct page *page)
+ 	return page_count(page) - page_has_private(page) == 2;
  }
  
- void __memcg_kmem_uncharge_pages(struct page *page, int order)
+-static int may_write_to_queue(struct backing_dev_info *bdi,
+-			      struct scan_control *sc)
++static int may_write_to_mapping(struct address_space *mapping,
++				struct scan_control *sc)
  {
--	struct mem_cgroup *memcg = page->mem_cgroup;
-+	struct mem_cgroup *memcg = page_memcg(page);
- 
- 	if (!memcg)
- 		return;
-@@ -2764,7 +2793,7 @@ void __memcg_kmem_uncharge_pages(struct page *page, int order)
- 	VM_BUG_ON_PAGE(mem_cgroup_is_root(memcg), page);
- 
- 	memcg_uncharge_kmem(memcg, 1 << order);
--	page->mem_cgroup = NULL;
-+	page->mem_cgroup = 0;
+ 	if (current->flags & PF_SWAPWRITE)
+ 		return 1;
+-	if (!bdi_write_congested(bdi))
++	if (!mapping_write_congested(mapping, current))
+ 		return 1;
+-	if (bdi == current->backing_dev_info)
++	if (mapping->backing_dev_info == current->backing_dev_info)
+ 		return 1;
+ 	return 0;
  }
- #endif /* CONFIG_MEMCG_KMEM */
- 
-@@ -2778,15 +2807,16 @@ void __memcg_kmem_uncharge_pages(struct page *page, int order)
-  */
- void mem_cgroup_split_huge_fixup(struct page *head)
- {
-+	struct mem_cgroup *memcg = page_memcg(head);
- 	int i;
- 
- 	if (mem_cgroup_disabled())
- 		return;
- 
- 	for (i = 1; i < HPAGE_PMD_NR; i++)
--		head[i].mem_cgroup = head->mem_cgroup;
-+		head[i].mem_cgroup = (unsigned long)memcg;
- 
--	__this_cpu_sub(head->mem_cgroup->stat->count[MEM_CGROUP_STAT_RSS_HUGE],
-+	__this_cpu_sub(memcg->stat->count[MEM_CGROUP_STAT_RSS_HUGE],
- 		       HPAGE_PMD_NR);
- }
- #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
-@@ -2834,7 +2864,7 @@ static int mem_cgroup_move_account(struct page *page,
- 		goto out;
- 
- 	ret = -EINVAL;
--	if (page->mem_cgroup != from)
-+	if (page_memcg(page) != from)
- 		goto out_unlock;
- 
- 	spin_lock_irqsave(&from->move_lock, flags);
-@@ -2860,7 +2890,7 @@ static int mem_cgroup_move_account(struct page *page,
- 	 */
- 
- 	/* caller should have done css_get */
--	page->mem_cgroup = to;
-+	page->mem_cgroup = (unsigned long)to;
- 	spin_unlock_irqrestore(&from->move_lock, flags);
- 
- 	ret = 0;
-@@ -4838,7 +4868,7 @@ static enum mc_target_type get_mctgt_type(struct vm_area_struct *vma,
- 		 * mem_cgroup_move_account() checks the page is valid or
- 		 * not under LRU exclusion.
- 		 */
--		if (page->mem_cgroup == mc.from) {
-+		if (page_memcg(page) == mc.from) {
- 			ret = MC_TARGET_PAGE;
- 			if (target)
- 				target->page = page;
-@@ -4872,7 +4902,7 @@ static enum mc_target_type get_mctgt_type_thp(struct vm_area_struct *vma,
- 	VM_BUG_ON_PAGE(!page || !PageHead(page), page);
- 	if (!move_anon())
- 		return ret;
--	if (page->mem_cgroup == mc.from) {
-+	if (page_memcg(page) == mc.from) {
- 		ret = MC_TARGET_PAGE;
- 		if (target) {
- 			get_page(page);
-@@ -5316,7 +5346,7 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
- 	if (!do_swap_account)
- 		return;
- 
--	memcg = page->mem_cgroup;
-+	memcg = page_memcg(page);
- 
- 	/* Readahead page, never charged */
- 	if (!memcg)
-@@ -5326,7 +5356,7 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
- 	VM_BUG_ON_PAGE(oldid, page);
- 	mem_cgroup_swap_statistics(memcg, true);
- 
--	page->mem_cgroup = NULL;
-+	page->mem_cgroup = 0;
- 
- 	if (!mem_cgroup_is_root(memcg))
- 		page_counter_uncharge(&memcg->memory, 1);
-@@ -5400,7 +5430,7 @@ int mem_cgroup_try_charge(struct page *page, struct mm_struct *mm,
- 		 * the page lock, which serializes swap cache removal, which
- 		 * in turn serializes uncharging.
- 		 */
--		if (page->mem_cgroup)
-+		if (page_memcg_is_set(page))
- 			goto out;
+@@ -497,7 +497,7 @@ static pageout_t pageout(struct page *page, struct address_space *mapping,
  	}
+ 	if (mapping->a_ops->writepage == NULL)
+ 		return PAGE_ACTIVATE;
+-	if (!may_write_to_queue(mapping->backing_dev_info, sc))
++	if (!may_write_to_mapping(mapping, sc))
+ 		return PAGE_KEEP;
  
-@@ -5560,7 +5590,7 @@ static void uncharge_list(struct list_head *page_list)
- 		VM_BUG_ON_PAGE(PageLRU(page), page);
- 		VM_BUG_ON_PAGE(page_count(page), page);
- 
--		if (!page->mem_cgroup)
-+		if (!page_memcg_is_set(page))
- 			continue;
- 
- 		/*
-@@ -5569,13 +5599,13 @@ static void uncharge_list(struct list_head *page_list)
- 		 * exclusive access to the page.
+ 	if (clear_page_dirty_for_io(page)) {
+@@ -885,7 +885,7 @@ static unsigned long shrink_page_list(struct list_head *page_list,
  		 */
+ 		mapping = page_mapping(page);
+ 		if (((dirty || writeback) && mapping &&
+-		     bdi_write_congested(mapping->backing_dev_info)) ||
++		     mapping_write_congested(mapping, current)) ||
+ 		    (writeback && PageReclaim(page)))
+ 			nr_congested++;
  
--		if (memcg != page->mem_cgroup) {
-+		if (memcg != page_memcg(page)) {
- 			if (memcg) {
- 				uncharge_batch(memcg, pgpgout, nr_anon, nr_file,
- 					       nr_huge, page);
- 				pgpgout = nr_anon = nr_file = nr_huge = 0;
- 			}
--			memcg = page->mem_cgroup;
-+			memcg = page_memcg(page);
- 		}
- 
- 		if (PageTransHuge(page)) {
-@@ -5589,7 +5619,7 @@ static void uncharge_list(struct list_head *page_list)
- 		else
- 			nr_file += nr_pages;
- 
--		page->mem_cgroup = NULL;
-+		page->mem_cgroup = 0;
- 
- 		pgpgout++;
- 	} while (next != page_list);
-@@ -5612,7 +5642,7 @@ void mem_cgroup_uncharge(struct page *page)
- 		return;
- 
- 	/* Don't touch page->lru of any random page, pre-check: */
--	if (!page->mem_cgroup)
-+	if (!page_memcg_is_set(page))
- 		return;
- 
- 	INIT_LIST_HEAD(&page->lru);
-@@ -5663,7 +5693,7 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage,
- 		return;
- 
- 	/* Page cache replacement: new page already charged? */
--	if (newpage->mem_cgroup)
-+	if (page_memcg_is_set(newpage))
- 		return;
- 
- 	/*
-@@ -5672,14 +5702,14 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage,
- 	 * uncharged page when the PFN walker finds a page that
- 	 * reclaim just put back on the LRU but has not released yet.
- 	 */
--	memcg = oldpage->mem_cgroup;
-+	memcg = page_memcg(oldpage);
- 	if (!memcg)
- 		return;
- 
- 	if (lrucare)
- 		lock_page_lru(oldpage, &isolated);
- 
--	oldpage->mem_cgroup = NULL;
-+	oldpage->mem_cgroup = 0;
- 
- 	if (lrucare)
- 		unlock_page_lru(oldpage, isolated);
 -- 
 2.1.0
 
