@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 37/45] writeback: make writeback_control carry the inode_wb_link being served
-Date: Tue,  6 Jan 2015 16:26:14 -0500
-Message-ID: <1420579582-8516-38-git-send-email-tj@kernel.org>
+Subject: [PATCH 31/45] vfs, writeback: add inode_wb_link->data point to the associated bdi_writeback
+Date: Tue,  6 Jan 2015 16:26:08 -0500
+Message-ID: <1420579582-8516-32-git-send-email-tj@kernel.org>
 References: <1420579582-8516-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=+tmE7HaU96lY1LCrllzdTyiD3zPe35JQPVefcsm8nFA=;
-        b=PtHYOKIFOfXHR42iASCdPHQSSsmmOCMzz23cVT7WLDpNK7jfxiyr4NTlP095ECeVd6
-         DtRZQYJ45B2wu5pk5rjX7LPn3P6BfImTmB5h0YAxpjFROPrkuB5NVo9u078NFkXAthNb
-         EpHhAa9F1XjZuRdKAfqfnw3y2TXtQTYS+piyPRasO9mlG8P12jIO2Swk1BxSoWywret8
-         DDYeDuAfrZWZpuhJOgUTAi6h878wgeqVSHHAVA3DSNi3dM9x0F+JLCoihTwdbvRipJ4J
-         2oCNIj14RRVQKPn5uBojjhZjnvL6h12wAB8SUVDBK5TkBCZW75mRCUQEjIoeCnzlDjVW
-         bW0w==
+        bh=u2sCM5mf1p7xVCUyS4oERcigDkqBdyw4xHfnq64FNiQ=;
+        b=oeKCDFvjh25S7Qxc4MuI5iWOQKHxY/K9kbp0LJs5IUjsykINXPRKLcB0XmaU3oERDI
+         rsd97CGX0H8epZOj0wl8bSu6uFT4i9qnk0O7LTF/35Uz5cFpDs1/p94yNkkFc/Tf7xeC
+         azmCGa1ue4LXiDR+UN8u3K0L1R/FXdrRnl3FzaS2mkUwUDe2RN93x3/C7wc6riWo13LN
+         Z6Q9ZMrcf6tmOMDAvOLuxj9NaTbMyEsIu+kc+GyPJ75ZgAMNcA3C02pU2GTWDO4lPi7U
+         S0fGi6g1DGCpogjfFi+0PxkYugrJxtcuwD2e4BES5iAE9QAFJhlQkn8SmXGsP71tHhrI
+         E2WQ==
 In-Reply-To: <1420579582-8516-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -21,300 +21,194 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, Tejun Heo <tj@kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>
 
-A wbc (writeback_control) is constructed at the beginning of writeback
-and passed throughout the writeback path.  It serves as the control
-structure carrying both in and out parameters for writeback of each
-inode.  This patch adds wbc->iwbl so that it also carries the cgroup
-writeback context.
+If CONFIG_CGROUP_WRITEBACK, add ->data to iwbl (inode_wb_link) which
+is an unsigned long value which points to the associated wb
+(bdi_writeback) with its upper bits and carries IWBL_* flags, none of
+which is defined yet, in the lower.  iwbl_to_wb() is added to retrieve
+the associated wb from a iwbl.
 
-wbc_set_iwbl(), which is called by writeback_sb_inodes() while kicking
-off writeback of each inode, associates the wbc with the iwbl
-(inode_wb_link) being serviced.  inode_writeback_iwbl() and
-bdi_writeback_wb() are used to determine the iwbl from inode and wb
-(bdi_writeback) from bdi being serviced considering wbc->iwbl.  If the
-wbc has a specific iwbl associated with it, the iwbl is used to
-determine them; otherwise, the root cgroup is assumed.
+Places which were mapping inode to wb through inode_to_bdi() are
+converted to use iwbl_to_wb(&inode->i_wb_link) instead.  ->data is set
+by init_i_wb_link() function on inode initialization and when a bdev
+inode changes its associated bdi.
 
-This allows accessing the current cgroup wb and iwbl being serviced
-throughout the writeback path.  __writeback_single_inode(), which used
-to assume the root iwbl, are updated to use inode_writeback_iwbl().
-writeback_single_inode() now also uses inode_wirteback_iwbl() and
-drops @wb and determines it using iwbl_to_wb() instead.  For
-clear_page_dirty_for_io() which used to re-lookup the dirty wb using
-page_cgwb_dirty(), a new function, clear_page_dirty_for_io_wbc() which
-takes additional @wbc and uses bdi_writeback_wb(), is added.
-
-This patch also adds wbc_blkcg_css() which determines whether the
-current writebfffack is for a specific cgroup and which cgroup.  This
-will be used by future patches.
-
-This propagates the cgroup writeback context throughout most of
-writeback path so that the cgroup specific data is accessible without
-repeating lookups from page blkcg.
+When CONFIG_CGROUP_ENABLED is enabled, this adds a pointer to struct
+inode.  This patch currently doesn't make any behavioral difference
+but will allow associating a single inode with multiple wb's which is
+necessary for cgroup writeback support.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: Christoph Hellwig <hch@infradead.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
 ---
- fs/fs-writeback.c           | 36 ++++++++++++++++++++------
- include/linux/backing-dev.h | 62 +++++++++++++++++++++++++++++++++++++++++++++
- include/linux/writeback.h   |  3 +++
- mm/page-writeback.c         | 21 ++++++++++++---
- 4 files changed, 111 insertions(+), 11 deletions(-)
+ fs/block_dev.c                   |  1 +
+ fs/fs-writeback.c                |  8 ++++----
+ fs/inode.c                       |  1 +
+ include/linux/backing-dev-defs.h | 27 ++++++++++++++++++++++++++-
+ include/linux/backing-dev.h      | 30 ++++++++++++++++++++++++++++++
+ 5 files changed, 62 insertions(+), 5 deletions(-)
 
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 0413d3f..855f850 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -61,6 +61,7 @@ static void bdev_inode_switch_bdi(struct inode *inode,
+ 		spin_lock(&inode->i_lock);
+ 		if (!(inode->i_state & I_DIRTY)) {
+ 			inode->i_data.backing_dev_info = dst;
++			init_i_wb_link(inode);
+ 			spin_unlock(&inode->i_lock);
+ 			return;
+ 		}
 diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index dfcf5dd..562b75f 100644
+index 0a10dd8..2a5e400 100644
 --- a/fs/fs-writeback.c
 +++ b/fs/fs-writeback.c
-@@ -604,6 +604,21 @@ static void inode_icgwbls_del(struct inode *inode)
- 	}
- }
- 
-+/**
-+ * wbc_set_iwbl - associate a wbc with an iwbl
-+ * @wbc: target writeback_control
-+ * @iwbl: inode_wb_link to associate @wbc with
-+ *
-+ * Writeback for @iwbl is about to be performed with @wbc as the control
-+ * structure.  Associate @wbc with @iwbl so that writeback implementation
-+ * can retrieve @iwbl from @wbc.
-+ */
-+static inline void wbc_set_iwbl(struct writeback_control *wbc,
-+				struct inode_wb_link *iwbl)
-+{
-+	wbc->iwbl = iwbl;
-+}
-+
- #else	/* CONFIG_CGROUP_WRITEBACK */
- 
- static void init_cgwb_dirty_page_context(struct dirty_context *dctx)
-@@ -685,6 +700,11 @@ static void inode_icgwbls_del(struct inode *inode)
+@@ -507,8 +507,7 @@ static void iwbl_del_locked(struct inode_wb_link *iwbl,
+ void inode_wb_list_del(struct inode *inode)
  {
- }
- 
-+static inline void wbc_set_iwbl(struct writeback_control *wbc,
-+				struct inode_wb_link *iwbl)
-+{
-+}
-+
- #endif	/* CONFIG_CGROUP_WRITEBACK */
- 
- /**
-@@ -1019,7 +1039,7 @@ static int
- __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
- {
- 	struct address_space *mapping = inode->i_mapping;
--	struct inode_wb_link *iwbl = &inode->i_wb_link;
-+	struct inode_wb_link *iwbl = inode_writeback_iwbl(inode, wbc);
- 	long nr_to_write = wbc->nr_to_write;
- 	unsigned dirty;
- 	int ret;
-@@ -1090,10 +1110,10 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
-  * and does more profound writeback list handling in writeback_sb_inodes().
-  */
- static int
--writeback_single_inode(struct inode *inode, struct bdi_writeback *wb,
--		       struct writeback_control *wbc)
-+writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
- {
--	struct inode_wb_link *iwbl = &inode->i_wb_link;
-+	struct inode_wb_link *iwbl = inode_writeback_iwbl(inode, wbc);
+ 	struct inode_wb_link *iwbl = &inode->i_wb_link;
+-	struct backing_dev_info *bdi = inode_to_bdi(inode);
+-	struct bdi_writeback *wb = &bdi->wb;
 +	struct bdi_writeback *wb = iwbl_to_wb(iwbl);
- 	int ret = 0;
  
- 	spin_lock(&inode->i_lock);
-@@ -1222,6 +1242,8 @@ static long writeback_sb_inodes(struct super_block *sb,
- 			break;
- 		}
- 
-+		wbc_set_iwbl(&wbc, iwbl);
-+
- 		/*
- 		 * Don't bother with new inodes or inodes being freed, first
- 		 * kind does not need periodic writeout yet, and for the latter
-@@ -2020,7 +2042,6 @@ EXPORT_SYMBOL(sync_inodes_sb);
+ 	if (list_empty(&iwbl->dirty_list))
+ 		return;
+@@ -1787,7 +1786,7 @@ EXPORT_SYMBOL(sync_inodes_sb);
   */
  int write_inode_now(struct inode *inode, int sync)
  {
--	struct bdi_writeback *wb = iwbl_to_wb(&inode->i_wb_link);
+-	struct bdi_writeback *wb = &inode_to_bdi(inode)->wb;
++	struct bdi_writeback *wb = iwbl_to_wb(&inode->i_wb_link);
  	struct writeback_control wbc = {
  		.nr_to_write = LONG_MAX,
  		.sync_mode = sync ? WB_SYNC_ALL : WB_SYNC_NONE,
-@@ -2032,7 +2053,7 @@ int write_inode_now(struct inode *inode, int sync)
- 		wbc.nr_to_write = 0;
- 
- 	might_sleep();
--	return writeback_single_inode(inode, wb, &wbc);
-+	return writeback_single_inode(inode, &wbc);
- }
- EXPORT_SYMBOL(write_inode_now);
- 
-@@ -2049,8 +2070,7 @@ EXPORT_SYMBOL(write_inode_now);
+@@ -1816,7 +1815,8 @@ EXPORT_SYMBOL(write_inode_now);
   */
  int sync_inode(struct inode *inode, struct writeback_control *wbc)
  {
--	return writeback_single_inode(inode, iwbl_to_wb(&inode->i_wb_link),
--				      wbc);
-+	return writeback_single_inode(inode, wbc);
+-	return writeback_single_inode(inode, &inode_to_bdi(inode)->wb, wbc);
++	return writeback_single_inode(inode, iwbl_to_wb(&inode->i_wb_link),
++				      wbc);
  }
  EXPORT_SYMBOL(sync_inode);
  
+diff --git a/fs/inode.c b/fs/inode.c
+index 7ec49ad..b38d7d6 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -195,6 +195,7 @@ int inode_init_always(struct super_block *sb, struct inode *inode)
+ 	inode->i_fsnotify_mask = 0;
+ #endif
+ 
++	init_i_wb_link(inode);
+ 	this_cpu_inc(nr_inodes);
+ 
+ 	return 0;
+diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
+index 8bc80bd..9720cac 100644
+--- a/include/linux/backing-dev-defs.h
++++ b/include/linux/backing-dev-defs.h
+@@ -43,6 +43,24 @@ enum wb_stat_item {
+ 
+ #define WB_STAT_BATCH (8*(1+ilog2(nr_cpu_ids)))
+ 
++/*
++ * IWBL_* flags which occupy the lower bits of inode_wb_link->data.  The
++ * upper bits point to bdi_writeback, so the number of these flags
++ * determines the minimum alignment of bdi_writeback.
++ */
++enum {
++	IWBL_FLAGS_BITS,
++	IWBL_FLAGS_MASK		= (1UL << IWBL_FLAGS_BITS) - 1,
++};
++
++/*
++ * Align bdi_writeback so that inode_wb_link->data can carry IWBL_* flags
++ * in the lower bits but don't let it fall below that of ullong.
++ */
++#define BDI_WRITEBACK_ALIGN	\
++	((1UL << IWBL_FLAGS_BITS) > __alignof(unsigned long long) ?	\
++	 (1UL << IWBL_FLAGS_BITS) : __alignof(unsigned long long))
++
+ struct bdi_writeback {
+ 	struct backing_dev_info *bdi;	/* our parent bdi */
+ 
+@@ -86,7 +104,7 @@ struct bdi_writeback {
+ 		struct rcu_head rcu;
+ 	};
+ #endif
+-};
++} __aligned(BDI_WRITEBACK_ALIGN);
+ 
+ struct backing_dev_info {
+ 	struct list_head bdi_list;
+@@ -127,6 +145,13 @@ struct backing_dev_info {
+  * one at ->i_wb_link which is used for the root wb.
+  */
+ struct inode_wb_link {
++#ifdef CONFIG_CGROUP_WRITEBACK
++	/*
++	 * Upper bits point to the associated bdi_writeback.  Lower carry
++	 * IWBL_* flags.  Use iwbl_to_wb() to reach the bdi_writeback.
++	 */
++	unsigned long		data;
++#endif
+ 	struct list_head	dirty_list;
+ };
+ 
 diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index 6c16d10..5a163fa 100644
+index 6ced0f4..bc69c7f 100644
 --- a/include/linux/backing-dev.h
 +++ b/include/linux/backing-dev.h
-@@ -520,6 +520,50 @@ iwbl_lookup(struct inode *inode, struct cgroup_subsys_state *blkcg_css)
- 	return iwbl;
- }
+@@ -450,6 +450,25 @@ static inline struct bdi_writeback *__wb_iter_init(struct wb_iter *iter,
+ 	for ((wb_cur) = __wb_iter_init(iter, bdi, start_blkcg_id);	\
+ 	     (wb_cur); (wb_cur) = __wb_iter_next(iter, bdi))
  
 +/**
-+ * inode_writeback_iwbl - determine the inode_wb_link under writeback
-+ * @inode: inode under writeback
-+ * @wbc: writeback_control in effect
++ * init_i_wb_link - (re)initialize inode->i_wb_link
++ * @inode: inode of interest
 + *
-+ * Called from code path which is writing back @inode with @wbc to
-+ * determine the iwbl (inode_wb_link) this writeback is for.  Guaranteed to
-+ * return a valid iwbl.
++ * Initialize @inode->i_wb_link.  Usually invoked on inode initialization.
++ * One special case is the bdev inodes which are associated with different
++ * bdi's over their lifetimes.  This function must be called each time the
++ * associated bdi changes.
 + */
-+static inline struct inode_wb_link *
-+inode_writeback_iwbl(struct inode *inode, struct writeback_control *wbc)
++static inline void init_i_wb_link(struct inode *inode)
 +{
-+	return wbc->iwbl ?: &inode->i_wb_link;
++	inode->i_wb_link.data = (unsigned long)&inode_to_bdi(inode)->wb;
 +}
 +
-+/**
-+ * bdi_writeback_wb - determine the bdi_writeback under writeback
-+ * @bdi: backing_dev_info under writeback
-+ * @wbc: writeback_control in effect
-+ *
-+ * Called from code path which is writing back @bdi with @wbc to determine
-+ * the wb (bdi_writebck) this writeback is for.  Guaranteed to return a
-+ * valid wb.
-+ */
-+static inline struct bdi_writeback *
-+bdi_writeback_wb(struct backing_dev_info *bdi, struct writeback_control *wbc)
++static inline struct bdi_writeback *iwbl_to_wb(struct inode_wb_link *iwbl)
 +{
-+	return wbc->iwbl ? iwbl_to_wb(wbc->iwbl) : &bdi->wb;
-+}
-+
-+/**
-+ * wbc_blkcg_css - return the blkcg_css associated with a wbc
-+ * @wbc: writeback_control of interest
-+ *
-+ * Return the blkcg_css of the inode_wb_link @wbc is associated with.  If
-+ * @wbc hasn't been associated with an iwbl using wbc_set_iwbl(), %NULL is
-+ * returned.
-+ */
-+static inline struct cgroup_subsys_state *
-+wbc_blkcg_css(struct writeback_control *wbc)
-+{
-+	return wbc->iwbl ? iwbl_to_wb(wbc->iwbl)->blkcg_css : NULL;
++	return (void *)(iwbl->data & ~IWBL_FLAGS_MASK);
 +}
 +
  #else	/* CONFIG_CGROUP_WRITEBACK */
  
  static inline bool mapping_cgwb_enabled(struct address_space *mapping)
-@@ -596,6 +640,24 @@ iwbl_lookup(struct inode *inode, struct cgroup_subsys_state *blkcg_css)
- 	return &inode->i_wb_link;
- }
+@@ -499,6 +518,17 @@ struct wb_iter {
+ 	     ({	(wb_cur) = !(iter)->next_id++ ? &(bdi)->wb : NULL;	\
+ 	     }); )
  
-+static inline struct inode_wb_link *
-+inode_writeback_iwbl(struct inode *inode, struct writeback_control *wbc)
++static inline void init_i_wb_link(struct inode *inode)
 +{
-+	return &inode->i_wb_link;
 +}
 +
-+static inline struct bdi_writeback *
-+bdi_writeback_wb(struct backing_dev_info *bdi, struct writeback_control *wbc)
++static inline struct bdi_writeback *iwbl_to_wb(struct inode_wb_link *iwbl)
 +{
-+	return &bdi->wb;
-+}
++	struct inode *inode = iwbl_to_inode(iwbl);
 +
-+static inline struct cgroup_subsys_state *
-+wbc_blkcg_css(struct writeback_control *wbc)
-+{
-+	return NULL;
++	return &inode_to_bdi(inode)->wb;
 +}
 +
  #endif	/* CONFIG_CGROUP_WRITEBACK */
  
  static inline int mapping_read_congested(struct address_space *mapping,
-diff --git a/include/linux/writeback.h b/include/linux/writeback.h
-index 75349bb..dad1953 100644
---- a/include/linux/writeback.h
-+++ b/include/linux/writeback.h
-@@ -84,6 +84,9 @@ struct writeback_control {
- 	unsigned for_reclaim:1;		/* Invoked from the page allocator */
- 	unsigned range_cyclic:1;	/* range_start is cyclic */
- 	unsigned for_sync:1;		/* sync(2) WB_SYNC_ALL writeback */
-+#ifdef CONFIG_CGROUP_WRITEBACK
-+	struct inode_wb_link *iwbl;	/* iwbl this writeback is for */
-+#endif
- };
- 
- /*
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 4cf365c..3e31458 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -148,6 +148,9 @@ static struct timer_list writeout_period_timer =
- 		TIMER_DEFERRED_INITIALIZER(writeout_period, 0, 0);
- static unsigned long writeout_period_time = 0;
- 
-+static int clear_page_dirty_for_io_wbc(struct page *page,
-+				       struct writeback_control *wbc);
-+
- /*
-  * Length of period for aging writeout fractions of bdis. This is an
-  * arbitrarily chosen number. The longer the period, the slower fractions will
-@@ -1993,7 +1996,7 @@ continue_unlock:
- 			}
- 
- 			BUG_ON(PageWriteback(page));
--			if (!clear_page_dirty_for_io(page))
-+			if (!clear_page_dirty_for_io_wbc(page, wbc))
- 				goto continue_unlock;
- 
- 			trace_wbc_writepage(wbc, mapping->backing_dev_info);
-@@ -2326,7 +2329,8 @@ EXPORT_SYMBOL(set_page_dirty_lock);
-  * This incoherency between the page's dirty flag and radix-tree tag is
-  * unfortunate, but it only exists while the page is locked.
-  */
--int clear_page_dirty_for_io(struct page *page)
-+static int clear_page_dirty_for_io_wbc(struct page *page,
-+				       struct writeback_control *wbc)
- {
- 	struct address_space *mapping = page_mapping(page);
- 
-@@ -2369,7 +2373,8 @@ int clear_page_dirty_for_io(struct page *page)
- 		 * exclusion.
- 		 */
- 		if (TestClearPageDirty(page)) {
--			struct bdi_writeback *wb = page_cgwb_dirty(page);
-+			struct backing_dev_info *bdi = mapping->backing_dev_info;
-+			struct bdi_writeback *wb = bdi_writeback_wb(bdi, wbc);
- 
- 			dec_zone_page_state(page, NR_FILE_DIRTY);
- 			dec_wb_stat(wb, WB_RECLAIMABLE);
-@@ -2380,6 +2385,16 @@ int clear_page_dirty_for_io(struct page *page)
- 	}
- 	return TestClearPageDirty(page);
- }
-+
-+int clear_page_dirty_for_io(struct page *page)
-+{
-+	struct writeback_control wbc = {
-+		.sync_mode = WB_SYNC_ALL,
-+		.nr_to_write = 1,
-+	};
-+
-+	return clear_page_dirty_for_io_wbc(page, &wbc);
-+}
- EXPORT_SYMBOL(clear_page_dirty_for_io);
- 
- int test_clear_page_writeback(struct page *page)
 -- 
 2.1.0
 
