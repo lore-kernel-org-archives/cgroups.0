@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 12/45] writeback: implement and use mapping_congested()
-Date: Tue,  6 Jan 2015 16:25:49 -0500
-Message-ID: <1420579582-8516-13-git-send-email-tj@kernel.org>
+Subject: [PATCH 23/45] writeback: make wakeup_flusher_threads() handle multiple bdi_writeback's
+Date: Tue,  6 Jan 2015 16:26:00 -0500
+Message-ID: <1420579582-8516-24-git-send-email-tj@kernel.org>
 References: <1420579582-8516-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=KYksmk/H7lNY2Mkpk4/EVPWJIWpU7R0j/kmtsJSe9iI=;
-        b=b624G/8nRC9n9GSN53NOJy5Ky34L5B0sfWJKLwYqShdrRoVgK5Kv+oxpkb/MnIiBub
-         t+vX410n28N240hpBLwu9VaWNsxXEiJTUkhZp0Pl5Msug9ueviIdyrsFQC6BJh4T0/Wi
-         4H7JZs8wdVZ1GuHatSiKB3slAqgk0EWVQYwq4CzRzpNZCLTeSkgftn1+YkS2mQ6wTB7m
-         k6+A8XA4TZ74yo9rlhTxXtxEQatzlXVBYzguFNBu3731iVsNu4RhqOn2QK3bL63pWD1Q
-         sPuIcCN77nzhH1bnGbNYChMmy9CwEN7bouGd2JXjwI0Y1+1I2VzoLam4lKcgEHaZy13x
-         CaEQ==
+        bh=MVJKYcSMwXVL470qdzPjDsuYPwLg7YogOQ8p8mCvfl0=;
+        b=bP1xW1H8H+Ke4XoDzUnZcWjqyOyMxYw/JQ4mcTAoL1JIXwpPPaUY4m5Ib0W40UXOD7
+         cQbNsbIl+uDsiLO1PDXiallPkR3E1Hokn/Y6QGJN1p/3CmiLWP4hWYRZxF2WwGJfzXqF
+         jzOhzbr7QhR01oid9BPI5ORsRTSGWz/+6rD4p3CG/bLnc7HhUTmFtAv2CkctDAZtbuTU
+         h3xyVVOC6NCBtBbkl2hekm71pLOMawzstTM7bCLKkdi38jcqms+j9SYaOxaUnXRkK/OI
+         U0hAXfKxSsNcwaBD7nxQfu6tYZagvnEn2EPpzJJFLTOs94X7mvbs0ycFgpY4/ZHoBCRa
+         rvyA==
 In-Reply-To: <1420579582-8516-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,197 +23,89 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, Tejun Heo <tj@kernel.org>
 
-In several places, bdi_congested() and its wrappers are used to
-determine whether more IOs should be issued.  With cgroup writeback
-support, this question can't be answered solely based on the bdi
-(backing_dev_info).  It's dependent on whether the filesystem and bdi
-support cgroup writeback and the blkcg the asking task belongs to.
-
-This patch implements mapping_congested() and its wrappers which take
-@mapping and @task and determines the congestion state considering
-cgroup writeback for the combination.  The new functions replace
-bdi_*congested() calls in places where the query is about specific
-mapping and task.
-
-There are several filesystem users which also fit this criteria but
-they should be updated when each filesystem implements cgroup
-writeback support.
+wakeup_flusher_threads() currently only starts writeback on the root
+wb (bdi_writeback).  For cgroup writeback support, update the function
+to wake up all wbs and distribute the number of pages to write
+according to the proportion of each wb's write bandwidth, which is
+implemented in wb_split_bdi_pages().
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
-Cc: Vivek Goyal <vgoyal@redhat.com>
 ---
- fs/fs-writeback.c           | 34 ++++++++++++++++++++++++++++++++++
- include/linux/backing-dev.h | 27 +++++++++++++++++++++++++++
- mm/fadvise.c                |  2 +-
- mm/readahead.c              |  2 +-
- mm/vmscan.c                 | 12 ++++++------
- 5 files changed, 69 insertions(+), 8 deletions(-)
+ fs/fs-writeback.c | 46 ++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 44 insertions(+), 2 deletions(-)
 
 diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 3b54835..43c1fb2 100644
+index c209ff1..8bf13e6 100644
 --- a/fs/fs-writeback.c
 +++ b/fs/fs-writeback.c
-@@ -109,6 +109,40 @@ out_unlock:
- #ifdef CONFIG_CGROUP_WRITEBACK
- 
- /**
-+ * mapping_congested - test whether a mapping is congested for a task
-+ * @mapping: address space to test for congestion
-+ * @task: task to test congestion for
-+ * @bdi_bits: mask of WB_[a]sync_congested bits to test
-+ *
-+ * Tests whether @mapping is congested for @task.  @bdi_bits is the mask of
-+ * congestion bits to test and the return value is the mask of set bits.
-+ *
-+ * If cgroup writeback is enabled for @mapping, its congestion state for
-+ * @task is determined by whether the cgwb (cgroup bdi_writeback) for the
-+ * blkcg of %current on @mapping->backing_dev_info is congested; otherwise,
-+ * the root's congestion state is used.
-+ */
-+int mapping_congested(struct address_space *mapping,
-+		      struct task_struct *task, int bdi_bits)
-+{
-+	struct backing_dev_info *bdi = mapping->backing_dev_info;
-+	struct bdi_writeback *wb;
-+	int ret = 0;
-+
-+	if (!mapping_cgwb_enabled(mapping))
-+		return wb_congested(&bdi->wb, bdi_bits);
-+
-+	rcu_read_lock();
-+	wb = cgwb_lookup(bdi, task_css(task, blkio_cgrp_id));
-+	if (wb)
-+		ret = wb_congested(wb, bdi_bits);
-+	rcu_read_unlock();
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(mapping_congested);
-+
-+/**
-  * init_cgwb_dirty_page_context - init cgwb part of dirty_context
-  * @dctx: dirty_context being initialized
-  *
-diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index be66668..0b1ac4b 100644
---- a/include/linux/backing-dev.h
-+++ b/include/linux/backing-dev.h
-@@ -263,6 +263,8 @@ void init_dirty_inode_context(struct dirty_context *dctx, struct inode *inode);
- void cgwb_blkcg_released(struct cgroup_subsys_state *blkcg_css);
- int __cgwb_create(struct backing_dev_info *bdi,
- 		  struct cgroup_subsys_state *blkcg_css);
-+int mapping_congested(struct address_space *mapping, struct task_struct *task,
-+		      int bdi_bits);
- 
- /**
-  * mapping_cgwb_enabled - test whether cgroup writeback is enabled on a mapping
-@@ -383,6 +385,12 @@ static inline void cgwb_blkcg_released(struct cgroup_subsys_state *blkcg_css)
- {
+@@ -164,6 +164,34 @@ force_root:
+ 	dctx->wb = &bdi->wb;
  }
  
-+static inline int mapping_congested(struct address_space *mapping,
-+				    struct task_struct *task, int bdi_bits)
++/**
++ * wb_split_bdi_pages - split nr_pages to write according to bandwidth
++ * @wb: target bdi_writeback to split @nr_pages to
++ * @nr_pages: number of pages to write for the whole bdi
++ *
++ * Split @wb's portion of @nr_pages according to @wb's write bandwidth in
++ * relation to the total write bandwidth of all wb's w/ dirty inodes on
++ * @wb->bdi.
++ */
++static long wb_split_bdi_pages(struct bdi_writeback *wb, long nr_pages)
 +{
-+	return wb_congested(&mapping->backing_dev_info->wb, bdi_bits);
++	unsigned long this_bw = wb->avg_write_bandwidth;
++	unsigned long tot_bw = atomic_long_read(&wb->bdi->tot_write_bandwidth);
++
++	if (nr_pages == LONG_MAX)
++		return LONG_MAX;
++
++	/*
++	 * This may be called on clean wb's and proportional distribution
++	 * may not make sense, just use the original @nr_pages in those
++	 * cases.  In general, we wanna err on the side of writing more.
++	 */
++	if (!tot_bw || this_bw >= tot_bw)
++		return nr_pages;
++	else
++		return DIV_ROUND_UP_ULL((u64)nr_pages * this_bw, tot_bw);
 +}
 +
- static inline struct bdi_writeback *
- cgwb_lookup(struct backing_dev_info *bdi, struct cgroup_subsys_state *blkcg_css)
- {
-@@ -408,6 +416,25 @@ static inline struct bdi_writeback *page_cgwb_wb(struct page *page)
+ #else	/* CONFIG_CGROUP_WRITEBACK */
  
+ static void init_cgwb_dirty_page_context(struct dirty_context *dctx)
+@@ -171,6 +199,11 @@ static void init_cgwb_dirty_page_context(struct dirty_context *dctx)
+ 	dctx->wb = &dctx->mapping->backing_dev_info->wb;
+ }
+ 
++static long wb_split_bdi_pages(struct bdi_writeback *wb, long nr_pages)
++{
++	return nr_pages;
++}
++
  #endif	/* CONFIG_CGROUP_WRITEBACK */
  
-+static inline int mapping_read_congested(struct address_space *mapping,
-+					 struct task_struct *task)
-+{
-+	return mapping_congested(mapping, task, 1 << WB_sync_congested);
-+}
-+
-+static inline int mapping_write_congested(struct address_space *mapping,
-+					  struct task_struct *task)
-+{
-+	return mapping_congested(mapping, task, 1 << WB_async_congested);
-+}
-+
-+static inline int mapping_rw_congested(struct address_space *mapping,
-+				       struct task_struct *task)
-+{
-+	return mapping_congested(mapping, task, (1 << WB_sync_congested) |
-+						(1 << WB_async_congested));
-+}
-+
- static inline int bdi_congested(struct backing_dev_info *bdi, int bdi_bits)
- {
- 	return wb_congested(&bdi->wb, bdi_bits);
-diff --git a/mm/fadvise.c b/mm/fadvise.c
-index 2ad7adf..c7347d7 100644
---- a/mm/fadvise.c
-+++ b/mm/fadvise.c
-@@ -113,7 +113,7 @@ SYSCALL_DEFINE4(fadvise64_64, int, fd, loff_t, offset, loff_t, len, int, advice)
- 	case POSIX_FADV_NOREUSE:
- 		break;
- 	case POSIX_FADV_DONTNEED:
--		if (!bdi_write_congested(mapping->backing_dev_info))
-+		if (!mapping_write_congested(mapping, current))
- 			__filemap_fdatawrite_range(mapping, offset, endbyte,
- 						   WB_SYNC_NONE);
+ /**
+@@ -1221,8 +1254,17 @@ void wakeup_flusher_threads(long nr_pages, enum wb_reason reason)
+ 		nr_pages = get_nr_dirty_pages();
  
-diff --git a/mm/readahead.c b/mm/readahead.c
-index 17b9172..beb930c 100644
---- a/mm/readahead.c
-+++ b/mm/readahead.c
-@@ -541,7 +541,7 @@ page_cache_async_readahead(struct address_space *mapping,
- 	/*
- 	 * Defer asynchronous read-ahead on IO congestion.
- 	 */
--	if (bdi_read_congested(mapping->backing_dev_info))
-+	if (mapping_read_congested(mapping, current))
- 		return;
- 
- 	/* do read-ahead */
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 5e8772b..95b98c7 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -411,14 +411,14 @@ static inline int is_page_cache_freeable(struct page *page)
- 	return page_count(page) - page_has_private(page) == 2;
+ 	rcu_read_lock();
+-	list_for_each_entry_rcu(bdi, &bdi_list, bdi_list)
+-		wb_start_writeback(&bdi->wb, nr_pages, false, reason);
++	list_for_each_entry_rcu(bdi, &bdi_list, bdi_list) {
++		struct bdi_writeback *wb;
++		struct wb_iter iter;
++
++		if (!bdi_has_dirty_io(bdi))
++			continue;
++
++		bdi_for_each_wb(wb, bdi, &iter, 0)
++			wb_start_writeback(wb, wb_split_bdi_pages(wb, nr_pages),
++					   false, reason);
++	}
+ 	rcu_read_unlock();
  }
- 
--static int may_write_to_queue(struct backing_dev_info *bdi,
--			      struct scan_control *sc)
-+static int may_write_to_mapping(struct address_space *mapping,
-+				struct scan_control *sc)
- {
- 	if (current->flags & PF_SWAPWRITE)
- 		return 1;
--	if (!bdi_write_congested(bdi))
-+	if (!mapping_write_congested(mapping, current))
- 		return 1;
--	if (bdi == current->backing_dev_info)
-+	if (mapping->backing_dev_info == current->backing_dev_info)
- 		return 1;
- 	return 0;
- }
-@@ -497,7 +497,7 @@ static pageout_t pageout(struct page *page, struct address_space *mapping,
- 	}
- 	if (mapping->a_ops->writepage == NULL)
- 		return PAGE_ACTIVATE;
--	if (!may_write_to_queue(mapping->backing_dev_info, sc))
-+	if (!may_write_to_mapping(mapping, sc))
- 		return PAGE_KEEP;
- 
- 	if (clear_page_dirty_for_io(page)) {
-@@ -885,7 +885,7 @@ static unsigned long shrink_page_list(struct list_head *page_list,
- 		 */
- 		mapping = page_mapping(page);
- 		if (((dirty || writeback) && mapping &&
--		     bdi_write_congested(mapping->backing_dev_info)) ||
-+		     mapping_write_congested(mapping, current)) ||
- 		    (writeback && PageReclaim(page)))
- 			nr_congested++;
  
 -- 
 2.1.0
