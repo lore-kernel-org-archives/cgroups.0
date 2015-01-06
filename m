@@ -1,71 +1,114 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 44/45] mpage: make __mpage_writepage() honor cgroup writeback
-Date: Tue,  6 Jan 2015 16:26:21 -0500
-Message-ID: <1420579582-8516-45-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 41/45] writeback: make __writeback_single_inode() cgroup writeback aware
+Date: Tue,  6 Jan 2015 16:26:18 -0500
+Message-ID: <1420579582-8516-42-git-send-email-tj@kernel.org>
 References: <1420579582-8516-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=r4EO6mI3xHOFRnn+yNVzTgCFcfpDdTtDovIMXrbqfbQ=;
-        b=COai3s+oCvuNupkKjYpCLzTsi7RoYsdl2EfWoqQArkubjz3v5Dy8jCfkacJPV7LLqC
-         qWBj6ZYQCPSpKBnaTHim76UrOwHh5zyx9A5cDen8LgSCHoG4clX1g9KuZQu+eOQl+sgO
-         /pUoWTkOS4f+ajYjBQJj9O6+qoHNzd8n77WKauWv1qU4cr7D+Q4k5xtuzOLmQ7OJlfn/
-         eCrIvHBMJZuoC7AvpdBMYOj4gMMIiary8rM0jDWFC8Pt+SAqJNRnl+8QLYV4Ya6wG6OQ
-         OOOC3Cww7JByt1JrXI+RZFlhMaRbibvXlHeUseUbxO1ZUZcQxzGG28jHBuXpYmSCxvJJ
-         IU3w==
-In-Reply-To: <1420579582-8516-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=xRtH2RGlXR6/nbwrqk50q+hhyaaEl1mum1+ZPCB8jHQ=;
+        b=DahYpeNJkXeUEkDFOE4Jh9pTzYZQJjalMWAQT2qKykrZ8HWI59FQyAICcMD/RpwFH0
+         v2TvFBgNRELbOU7VqV7g+gF3YS2xcOHD+Hu5Vy735w/lXDKo0trkiklYmoBm0/2b4BWC
+         B+VOm5dK/MektKoTRexr3L1K6XlOXiWMHVpn2VL1PONpDLQOCRBmH/rJp9WYi6/nTwIR
+         yRASul4rodwhTN7COIDhG4Xh1eqlSjqIZIDD+vB8poNMq8CevACXThMN2Cd3HpcoazQw
+         C+K8mdj6CjP5Ns5rrMHGbfT8qAMnjBKvjgkCn8h1SPDaGaVO76rAMDCt9KlTDxZq4iDU
+         VkUA==
+In-Reply-To: <1420579582-8516-1-git-send-email-tj@kernel.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+To: axboe@kernel.dk
+Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, Tejun Heo <tj@kernel.org>
 
-__mpage_writepage() is used to implement mpage_writepages() which in
-turn is used for ->writepages() of various filesystems.  All writeback
-logic is now updated to handle cgroup writeback and the block cgroup
-to issue IOs for is encoded in writeback_control and can be retrieved
-using wbc_blkcg_css(); however, __mpage_writepage() currently ignores
-the blkcg indicated by wbc and issues all bio's without explicit blkcg
-association.
+Metadata is always dirtied against the root cgroup and should thus be
+written out only by the root cgroup writeback.  This patch updates
+__writeback_single_inode() so that it skips writing out metadata if
+the writeback is for a non-root cgroup.  wbc_skip_metadata() is added
+to decide whether to skip metadata writeback.
 
-This patch updates __mpage_writepage() so that the issued bio's are
-associated with wbc_blkcg_css().
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Jan Kara <jack@suse.cz>
 ---
- fs/mpage.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ fs/fs-writeback.c | 29 ++++++++++++++++++++++++++---
+ 1 file changed, 26 insertions(+), 3 deletions(-)
 
-diff --git a/fs/mpage.c b/fs/mpage.c
-index 587c7ed..84921b2 100644
---- a/fs/mpage.c
-+++ b/fs/mpage.c
-@@ -595,6 +595,8 @@ page_is_mapped:
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index dbfd0b0..2bb14d5 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -684,6 +684,19 @@ static inline bool iwbl_still_has_dirty_pages(struct inode_wb_link *iwbl,
+ 	return test_bit(IWBL_DIRTY_PAGES, &iwbl->data);
+ }
  
- alloc_new:
- 	if (bio == NULL) {
-+		struct cgroup_subsys_state *blkcg_css;
++/**
++ * wbc_skip_metadata - determine whether to skip writing out metadata
++ * @wbc: writeback_control in effect
++ *
++ * Called by __writeback_single_inode() to decide whether to skip writing
++ * out metadata.  Metadata is always dirtied against the root cgroup and
++ * should only be written out by the root.
++ */
++static inline bool wbc_skip_metadata(struct writeback_control *wbc)
++{
++	return wbc->iwbl && !iwbl_is_root(wbc->iwbl);
++}
 +
- 		if (first_unmapped == blocks_per_page) {
- 			if (!bdev_write_page(bdev, blocks[0] << (blkbits - 9),
- 								page, wbc)) {
-@@ -606,6 +608,10 @@ alloc_new:
- 				bio_get_nr_vecs(bdev), GFP_NOFS|__GFP_HIGH);
- 		if (bio == NULL)
- 			goto confused;
+ #else	/* CONFIG_CGROUP_WRITEBACK */
+ 
+ static void init_cgwb_dirty_page_context(struct dirty_context *dctx)
+@@ -791,6 +804,11 @@ static inline bool iwbl_still_has_dirty_pages(struct inode_wb_link *iwbl,
+ 	return mapping_tagged(inode->i_mapping, PAGECACHE_TAG_DIRTY);
+ }
+ 
++static inline bool wbc_skip_metadata(struct writeback_control *wbc)
++{
++	return false;
++}
 +
-+		blkcg_css = wbc_blkcg_css(wbc);
-+		if (blkcg_css)
-+			bio_associate_blkcg(bio, blkcg_css);
- 	}
+ #endif	/* CONFIG_CGROUP_WRITEBACK */
+ 
+ /**
+@@ -1128,6 +1146,7 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
+ 	struct address_space *mapping = inode->i_mapping;
+ 	struct inode_wb_link *iwbl = inode_writeback_iwbl(inode, wbc);
+ 	long nr_to_write = wbc->nr_to_write;
++	bool skip_metadata = wbc_skip_metadata(wbc);
+ 	unsigned dirty;
+ 	int ret;
+ 
+@@ -1144,7 +1163,7 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
+ 	 * separate, external IO completion path and ->sync_fs for guaranteeing
+ 	 * inode metadata is written back correctly.
+ 	 */
+-	if (wbc->sync_mode == WB_SYNC_ALL && !wbc->for_sync) {
++	if (wbc->sync_mode == WB_SYNC_ALL && !wbc->for_sync && !skip_metadata) {
+ 		int err = filemap_fdatawait(mapping);
+ 		if (ret == 0)
+ 			ret = err;
+@@ -1157,8 +1176,12 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
+ 	 */
+ 	spin_lock(&inode->i_lock);
+ 
+-	dirty = inode->i_state & I_DIRTY;
+-	inode->i_state &= ~I_DIRTY;
++	if (skip_metadata)
++		dirty = inode->i_state & I_DIRTY_PAGES;
++	else
++		dirty = inode->i_state & I_DIRTY;
++
++	inode->i_state &= ~dirty;
  
  	/*
+ 	 * Paired with smp_mb() in __mark_inode_dirty_dctx().  This allows
 -- 
 2.1.0
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
