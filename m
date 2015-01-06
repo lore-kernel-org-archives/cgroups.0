@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 25/45] writeback: implement bdi_wait_for_completion()
-Date: Tue,  6 Jan 2015 16:26:02 -0500
-Message-ID: <1420579582-8516-26-git-send-email-tj@kernel.org>
+Subject: [PATCH 33/45] writeback: minor reorganization of fs/fs-writeback.c
+Date: Tue,  6 Jan 2015 16:26:10 -0500
+Message-ID: <1420579582-8516-34-git-send-email-tj@kernel.org>
 References: <1420579582-8516-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=UIjJ26nFQhLN6wSr3FtgGUeF4rbrPm3b3CURXbi6UmU=;
-        b=rTfH+7eSFi/ao0/2DFxCESB7oSot+8qKLQ1Xg4uPSqzoxTJ+hltpLEsFRASnHvE5Ij
-         sRiAKU2xN9rpVfQVNHxDbEx33cXMLryR0ywG9itICGg0UeMqHnXTcblmpmRUwYWMOHUW
-         vfOgTsBB7yasJhnoaNaq/oQFQr+19iFInAuXpkIwq2MViulQfaYceEcr50ILpLq664l+
-         lMnV8v4ySIdF5x/C+1aEoAxsVz4vRjUUD3OIIIfDTVjeGjbMuLNKsNeJ3QkOXyWjS3Zs
-         ZpGNFihrSDWzkitaX4488EX+kXOYCQOQJ+4iTsujUUZnqHRq+Mm9Bb9zjJt9tDbSaa/Y
-         +Kbg==
+        bh=OnX+NSB+MQZeHc3I9JmksfZgaoobSZqSn/473tCRq0Q=;
+        b=Cljgwnkxm6P3Jmg0O+78DTGvPZeMlkNPUekUJ1uViKfl5Ev4Ku7fNJHyACkNNTn8Mf
+         DW11Dpwoe+lZy+VyfWVZegekUEu0CgZNtxxLrAwq/WcW6N2la2+lLMJKTh8B1He32Rjp
+         JEPKRALvacQkhpm390GUu6938xhn/OvcFpGjjxzkPHTF6YZansYs0At+OpbJLQ7t11ZC
+         t1t4TQueA7weZxwwcNDlGEeGsWEzqorFOK0TmgszMQEfyxwrS0Kir84yTZ++5ueLb1mP
+         BKy4tpo6mL9ezHj/qnXnVwwHhLix73YCi/VCjHeQczmwg/UKCZjo27Xb1FyK+QNR2inX
+         zPzQ==
 In-Reply-To: <1420579582-8516-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,185 +23,265 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, Tejun Heo <tj@kernel.org>
 
-If the completion of a wb_writeback_work can be waited upon by setting
-its ->done to a struct completion and waiting on it; however, for
-cgroup writeback support, it's necessary to issue multiple work items
-to multiple bdi_writebacks and wait for the completion of all.
+Move iwbl_{move|del}_locked() and __inode_wait_for_writeback() upwards
+before #ifdef CONFIG_CGROUP_WRITEBACK block and make separate
+identical copies of __inode_wait_for_writeback() in the #ifdef and
+#else branches.  The relocation and two copies will help following
+cgroup writeback changes.
 
-This patch implements wb_completion which can wait for multiple work
-items and replaces the struct completion with it.  It can be defined
-using DEFINE_WB_COMPLETION_ONSTACK(), used for multiple work items and
-waited for by wb_wait_for_completion().
-
-Nobody currently issues multiple work items and this patch doesn't
-introduce any behavior changes.
+This is pure reorganization.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
 ---
- fs/fs-writeback.c                | 57 +++++++++++++++++++++++++++++++---------
- include/linux/backing-dev-defs.h |  2 ++
- mm/backing-dev.c                 |  1 +
- 3 files changed, 48 insertions(+), 12 deletions(-)
+ fs/fs-writeback.c | 199 ++++++++++++++++++++++++++++++------------------------
+ 1 file changed, 109 insertions(+), 90 deletions(-)
 
 diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 3c012b8..6527692 100644
+index 6851088..ab77ed2 100644
 --- a/fs/fs-writeback.c
 +++ b/fs/fs-writeback.c
-@@ -34,6 +34,10 @@
-  */
- #define MIN_WRITEBACK_PAGES	(4096UL >> (PAGE_CACHE_SHIFT - 10))
- 
-+struct wb_completion {
-+	atomic_t		cnt;
-+};
-+
- /*
-  * Passed into wb_writeback(), essentially a subset of writeback_control
-  */
-@@ -51,9 +55,21 @@ struct wb_writeback_work {
- 	enum wb_reason reason;		/* why was writeback initiated? */
- 
- 	struct list_head list;		/* pending work list */
--	struct completion *done;	/* set if the caller waits */
-+	struct wb_completion *done;	/* set if the caller waits */
- };
- 
-+/*
-+ * If one wants to wait for one or more wb_writeback_works, each work's
-+ * ->done should be set to a wb_completion defined using the following
-+ * macro.  Once all work items are issued with wb_queue_work(), the caller
-+ * can wait for the completion of all using wb_wait_for_completion().  Work
-+ * items which are waited upon aren't freed automatically on completion.
-+ */
-+#define DEFINE_WB_COMPLETION_ONSTACK(cmpl)				\
-+	struct wb_completion cmpl = {					\
-+		.cnt		= ATOMIC_INIT(1),			\
-+	}
-+
- static inline struct inode *wb_inode(struct list_head *head)
- {
- 	return list_entry(head, struct inode, i_wb_list);
-@@ -83,17 +99,34 @@ static void wb_queue_work(struct bdi_writeback *wb,
- 	trace_writeback_queue(wb->bdi, work);
- 
- 	spin_lock_bh(&wb->work_lock);
--	if (!test_bit(WB_registered, &wb->state)) {
--		if (work->done)
--			complete(work->done);
-+	if (!test_bit(WB_registered, &wb->state))
- 		goto out_unlock;
--	}
-+	if (work->done)
-+		atomic_inc(&work->done->cnt);
- 	list_add_tail(&work->list, &wb->work_list);
- 	mod_delayed_work(bdi_wq, &wb->dwork, 0);
- out_unlock:
- 	spin_unlock_bh(&wb->work_lock);
+@@ -132,6 +132,75 @@ static void wb_wait_for_completion(struct backing_dev_info *bdi,
+ 	wait_event(bdi->wb_waitq, !atomic_read(&done->cnt));
  }
  
 +/**
-+ * wb_wait_for_completion - wait for completion of bdi_writeback_works
-+ * @bdi: bdi work items were issued to
-+ * @done: target wb_completion
++ * iwbl_move_locked - move an inode_wb_link onto a bdi_writeback IO list
++ * @iwbl: inode_wb_link to be moved
++ * @wb: target bdi_writeback
++ * @head: one of @wb->b_{dirty|io|more_io}
 + *
-+ * Wait for one or more work items issued to @bdi with their ->done field
-+ * set to @done, which should have been defined with
-+ * DEFINE_WB_COMPLETION_ONSTACK().  This function returns after all such
-+ * work items are completed.  Work items which are waited upon aren't freed
-+ * automatically on completion.
++ * Move @iwbl->dirty_list to @list of @wb and set %WB_has_dirty_io.
++ * Returns %true if all IO lists were empty before; otherwise, %false.
 + */
-+static void wb_wait_for_completion(struct backing_dev_info *bdi,
-+				   struct wb_completion *done)
++static bool iwbl_move_locked(struct inode_wb_link *iwbl,
++			     struct bdi_writeback *wb, struct list_head *head)
 +{
-+	atomic_dec(&done->cnt);		/* put down the initial count */
-+	wait_event(bdi->wb_waitq, !atomic_read(&done->cnt));
++	assert_spin_locked(&wb->list_lock);
++
++	list_move(&iwbl->dirty_list, head);
++
++	if (wb_has_dirty_io(wb)) {
++		return false;
++	} else {
++		set_bit(WB_has_dirty_io, &wb->state);
++		WARN_ON_ONCE(!wb->avg_write_bandwidth);
++		atomic_long_add(wb->avg_write_bandwidth,
++				&wb->bdi->tot_write_bandwidth);
++		return true;
++	}
++}
++
++/**
++ * iwbl_del_locked - remove an inode_wb_link from its bdi_writeback IO list
++ * @iwbl: inode_wb_link to be removed
++ * @wb: bdi_writeback @inode is being removed from
++ *
++ * Remove @iwbl which may be on one of @wb->b_{dirty|io|more_io} lists and
++ * clear %WB_has_dirty_io if all are empty afterwards.
++ */
++static void iwbl_del_locked(struct inode_wb_link *iwbl,
++			    struct bdi_writeback *wb)
++{
++	assert_spin_locked(&wb->list_lock);
++
++	list_del_init(&iwbl->dirty_list);
++
++	if (wb_has_dirty_io(wb) && list_empty(&wb->b_dirty) &&
++	    list_empty(&wb->b_io) && list_empty(&wb->b_more_io)) {
++		clear_bit(WB_has_dirty_io, &wb->state);
++		WARN_ON_ONCE(atomic_long_sub_return(wb->avg_write_bandwidth,
++					&wb->bdi->tot_write_bandwidth) < 0);
++	}
++}
++
++/*
++ * Wait for writeback on an inode to complete. Called with i_lock held.
++ * Caller must make sure inode cannot go away when we drop i_lock.
++ */
++static void __inode_wait_for_writeback(struct inode *inode)
++	__releases(inode->i_lock)
++	__acquires(inode->i_lock)
++{
++	DEFINE_WAIT_BIT(wq, &inode->i_state, __I_SYNC);
++	wait_queue_head_t *wqh;
++
++	wqh = bit_waitqueue(&inode->i_state, __I_SYNC);
++	while (inode->i_state & I_SYNC) {
++		spin_unlock(&inode->i_lock);
++		__wait_on_bit(wqh, &wq, bit_wait, TASK_UNINTERRUPTIBLE);
++		spin_lock(&inode->i_lock);
++	}
 +}
 +
  #ifdef CONFIG_CGROUP_WRITEBACK
  
  /**
-@@ -1175,7 +1208,7 @@ static long wb_do_writeback(struct bdi_writeback *wb)
- 
- 	set_bit(WB_writeback_running, &wb->state);
- 	while ((work = get_next_work_item(wb)) != NULL) {
--		struct completion *done = work->done;
-+		struct wb_completion *done = work->done;
- 
- 		trace_writeback_exec(wb->bdi, work);
- 
-@@ -1183,8 +1216,8 @@ static long wb_do_writeback(struct bdi_writeback *wb)
- 
- 		if (work->auto_free)
- 			kfree(work);
--		if (done)
--			complete(done);
-+		if (done && atomic_dec_and_test(&done->cnt))
-+			wake_up_all(&wb->bdi->wb_waitq);
- 	}
- 
- 	/*
-@@ -1482,7 +1515,7 @@ void writeback_inodes_sb_nr(struct super_block *sb,
- 			    unsigned long nr,
- 			    enum wb_reason reason)
- {
--	DECLARE_COMPLETION_ONSTACK(done);
-+	DEFINE_WB_COMPLETION_ONSTACK(done);
- 	struct wb_writeback_work work = {
- 		.sb			= sb,
- 		.sync_mode		= WB_SYNC_NONE,
-@@ -1497,7 +1530,7 @@ void writeback_inodes_sb_nr(struct super_block *sb,
- 		return;
- 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
- 	wb_queue_work(&bdi->wb, &work);
--	wait_for_completion(&done);
-+	wb_wait_for_completion(bdi, &done);
+@@ -331,6 +400,26 @@ restart:
+ 	rcu_read_unlock();
  }
- EXPORT_SYMBOL(writeback_inodes_sb_nr);
  
-@@ -1564,7 +1597,7 @@ EXPORT_SYMBOL(try_to_writeback_inodes_sb);
-  */
- void sync_inodes_sb(struct super_block *sb)
- {
--	DECLARE_COMPLETION_ONSTACK(done);
-+	DEFINE_WB_COMPLETION_ONSTACK(done);
- 	struct wb_writeback_work work = {
- 		.sb		= sb,
- 		.sync_mode	= WB_SYNC_ALL,
-@@ -1582,7 +1615,7 @@ void sync_inodes_sb(struct super_block *sb)
- 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
- 
- 	wb_queue_work(&bdi->wb, &work);
--	wait_for_completion(&done);
-+	wb_wait_for_completion(bdi, &done);
- 
- 	wait_sb_inodes(sb);
- }
-diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
-index 4ceda83..bc1b9e7 100644
---- a/include/linux/backing-dev-defs.h
-+++ b/include/linux/backing-dev-defs.h
-@@ -110,6 +110,8 @@ struct backing_dev_info {
- #ifdef CONFIG_CGROUP_WRITEBACK
- 	struct radix_tree_root cgwb_tree; /* radix tree of !root cgroup wbs */
- #endif
-+	wait_queue_head_t wb_waitq;
++/*
++ * Sleep until I_SYNC is cleared. This function must be called with i_lock
++ * held and drops it. It is aimed for callers not holding any inode reference
++ * so once i_lock is dropped, inode can go away.
++ */
++static void inode_sleep_on_writeback(struct inode *inode)
++	__releases(inode->i_lock)
++{
++	DEFINE_WAIT(wait);
++	wait_queue_head_t *wqh = bit_waitqueue(&inode->i_state, __I_SYNC);
++	int sleep;
 +
- 	struct device *dev;
++	prepare_to_wait(wqh, &wait, TASK_UNINTERRUPTIBLE);
++	sleep = inode->i_state & I_SYNC;
++	spin_unlock(&inode->i_lock);
++	if (sleep)
++		schedule();
++	finish_wait(wqh, &wait);
++}
++
+ #else	/* CONFIG_CGROUP_WRITEBACK */
  
- 	struct timer_list laptop_mode_wb_timer;
-diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-index b4a5d9b..171fffd 100644
---- a/mm/backing-dev.c
-+++ b/mm/backing-dev.c
-@@ -631,6 +631,7 @@ int bdi_init(struct backing_dev_info *bdi)
- 	bdi->max_ratio = 100;
- 	bdi->max_prop_frac = FPROP_FRAC_BASE;
- 	INIT_LIST_HEAD(&bdi->bdi_list);
-+	init_waitqueue_head(&bdi->wb_waitq);
+ static void init_cgwb_dirty_page_context(struct dirty_context *dctx)
+@@ -358,6 +447,26 @@ static void bdi_split_work_to_wbs(struct backing_dev_info *bdi,
+ 	}
+ }
  
- 	err = wb_init(&bdi->wb, bdi, GFP_KERNEL);
- 	if (err)
++/*
++ * Sleep until I_SYNC is cleared. This function must be called with i_lock
++ * held and drops it. It is aimed for callers not holding any inode reference
++ * so once i_lock is dropped, inode can go away.
++ */
++static void inode_sleep_on_writeback(struct inode *inode)
++	__releases(inode->i_lock)
++{
++	DEFINE_WAIT(wait);
++	wait_queue_head_t *wqh = bit_waitqueue(&inode->i_state, __I_SYNC);
++	int sleep;
++
++	prepare_to_wait(wqh, &wait, TASK_UNINTERRUPTIBLE);
++	sleep = inode->i_state & I_SYNC;
++	spin_unlock(&inode->i_lock);
++	if (sleep)
++		schedule();
++	finish_wait(wqh, &wait);
++}
++
+ #endif	/* CONFIG_CGROUP_WRITEBACK */
+ 
+ /**
+@@ -451,56 +560,6 @@ void wb_start_background_writeback(struct bdi_writeback *wb)
+ 	wb_wakeup(wb);
+ }
+ 
+-/**
+- * iwbl_move_locked - move an inode_wb_link onto a bdi_writeback IO list
+- * @iwbl: inode_wb_link to be moved
+- * @wb: target bdi_writeback
+- * @head: one of @wb->b_{dirty|io|more_io}
+- *
+- * Move @iwbl->dirty_list to @list of @wb and set %WB_has_dirty_io.
+- * Returns %true if all IO lists were empty before; otherwise, %false.
+- */
+-static bool iwbl_move_locked(struct inode_wb_link *iwbl,
+-			     struct bdi_writeback *wb, struct list_head *head)
+-{
+-	assert_spin_locked(&wb->list_lock);
+-
+-	list_move(&iwbl->dirty_list, head);
+-
+-	if (wb_has_dirty_io(wb)) {
+-		return false;
+-	} else {
+-		set_bit(WB_has_dirty_io, &wb->state);
+-		WARN_ON_ONCE(!wb->avg_write_bandwidth);
+-		atomic_long_add(wb->avg_write_bandwidth,
+-				&wb->bdi->tot_write_bandwidth);
+-		return true;
+-	}
+-}
+-
+-/**
+- * iwbl_del_locked - remove an inode_wb_link from its bdi_writeback IO list
+- * @iwbl: inode_wb_link to be removed
+- * @wb: bdi_writeback @inode is being removed from
+- *
+- * Remove @iwbl which may be on one of @wb->b_{dirty|io|more_io} lists and
+- * clear %WB_has_dirty_io if all are empty afterwards.
+- */
+-static void iwbl_del_locked(struct inode_wb_link *iwbl,
+-			    struct bdi_writeback *wb)
+-{
+-	assert_spin_locked(&wb->list_lock);
+-
+-	list_del_init(&iwbl->dirty_list);
+-
+-	if (wb_has_dirty_io(wb) && list_empty(&wb->b_dirty) &&
+-	    list_empty(&wb->b_io) && list_empty(&wb->b_more_io)) {
+-		clear_bit(WB_has_dirty_io, &wb->state);
+-		WARN_ON_ONCE(atomic_long_sub_return(wb->avg_write_bandwidth,
+-					&wb->bdi->tot_write_bandwidth) < 0);
+-	}
+-}
+-
+ /*
+  * Remove the inode from the writeback list it is on.
+  */
+@@ -657,26 +716,6 @@ static int write_inode(struct inode *inode, struct writeback_control *wbc)
+ }
+ 
+ /*
+- * Wait for writeback on an inode to complete. Called with i_lock held.
+- * Caller must make sure inode cannot go away when we drop i_lock.
+- */
+-static void __inode_wait_for_writeback(struct inode *inode)
+-	__releases(inode->i_lock)
+-	__acquires(inode->i_lock)
+-{
+-	DEFINE_WAIT_BIT(wq, &inode->i_state, __I_SYNC);
+-	wait_queue_head_t *wqh;
+-
+-	wqh = bit_waitqueue(&inode->i_state, __I_SYNC);
+-	while (inode->i_state & I_SYNC) {
+-		spin_unlock(&inode->i_lock);
+-		__wait_on_bit(wqh, &wq, bit_wait,
+-			      TASK_UNINTERRUPTIBLE);
+-		spin_lock(&inode->i_lock);
+-	}
+-}
+-
+-/*
+  * Wait for writeback on an inode to complete. Caller must have inode pinned.
+  */
+ void inode_wait_for_writeback(struct inode *inode)
+@@ -687,26 +726,6 @@ void inode_wait_for_writeback(struct inode *inode)
+ }
+ 
+ /*
+- * Sleep until I_SYNC is cleared. This function must be called with i_lock
+- * held and drops it. It is aimed for callers not holding any inode reference
+- * so once i_lock is dropped, inode can go away.
+- */
+-static void inode_sleep_on_writeback(struct inode *inode)
+-	__releases(inode->i_lock)
+-{
+-	DEFINE_WAIT(wait);
+-	wait_queue_head_t *wqh = bit_waitqueue(&inode->i_state, __I_SYNC);
+-	int sleep;
+-
+-	prepare_to_wait(wqh, &wait, TASK_UNINTERRUPTIBLE);
+-	sleep = inode->i_state & I_SYNC;
+-	spin_unlock(&inode->i_lock);
+-	if (sleep)
+-		schedule();
+-	finish_wait(wqh, &wait);
+-}
+-
+-/*
+  * Find proper writeback list for the inode depending on its current state and
+  * possibly also change of its state while we were doing writeback.  Here we
+  * handle things such as livelock prevention or fairness of writeback among
 -- 
 2.1.0
