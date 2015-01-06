@@ -1,21 +1,21 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 15/45] writeback: make bdi_has_dirty_io() take multiple bdi_writeback's into account
-Date: Tue,  6 Jan 2015 16:25:52 -0500
-Message-ID: <1420579582-8516-16-git-send-email-tj@kernel.org>
+Subject: [PATCH 07/45] writeback: attribute stats to the matching per-cgroup bdi_writeback
+Date: Tue,  6 Jan 2015 16:25:44 -0500
+Message-ID: <1420579582-8516-8-git-send-email-tj@kernel.org>
 References: <1420579582-8516-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=CnuQkKq3R/tDVJW4tK4d8c+Cn3sxgY7D45ArFJLR//s=;
-        b=jxza2sPPuMBVSn8yW+bPxpQV+jVoUpqx+yVpUtSiQpC9L3BF8WfT5ecow2lUZYDXTx
-         AzAwpEztZ4P0HBwrJiISkPntGPFSMSBFhDYFJrvcxkf1BQE8ptR/1scjx9xpDgyAJKje
-         Zd1eIl/MvYU6pGkUaRg9/NR0BzuzTz+Orm4/2wBJC/mIXKWI9gVt+ey6R79gN39z92X4
-         G98JXrDrbl5YvyD+i+UIOJj7EDFDOMPN7oU/6OLKKyvYtMp0g9joUDLxdSgEj404/b8S
-         LUjvIrs94hOvuvNFmrFHcRTSMw1aFH9NkVH+NJGy1MbjbqFLon1+9A/5Lmyf71LRLNAE
-         A9WQ==
+        bh=7sxpKhNmptvO2fngMKzwAkONhSIDQgV5cFb9kivVHLk=;
+        b=JHWZu63JuNi35PXY/dedqlQnjuk02r0/JFNC7LIA/ynT1cLIXGbufIsG/gnHiG97Yr
+         yDOULuuwfFvtR3dEiYX3CsvD6rjT24xs3jp3MpXwDU7N5HoCYnwpmL6w+ceean3+izK7
+         ZDIpk4KYy+rnmnoOPrXDrNR+J3tLw6pA42MweYd797PcQtlOQ1XZ6lVauriETwYB49At
+         XkcvceKacEqedXBy5ojzTckqAjhC1QKriqeT2j/gli/1TwDZs40bs21b4oCk+bUIzEVi
+         VAx0zuzo37PlMpbOUZ+p8jN31NY3qMpzi/tAj+vf5Ivi7EsW65BRfzu286B3E+9Jvilz
+         wPSw==
 In-Reply-To: <1420579582-8516-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,151 +23,116 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, Tejun Heo <tj@kernel.org>
 
-bdi_has_dirty_io() used to only reflect whether the root wb
-(bdi_writeback) has dirty inodes.  For cgroup writeback support, it
-needs to take all active wb's into account.  If any wb on the bdi has
-dirty inodes, bdi_has_dirty_io() should return true.
+Until now, all WB_* stats were accounted against the root wb
+(bdi_writeback), now that multiple wb (bdi_writeback) support is in
+place, let's attributes the stats to the respective per-cgroup wb's.
 
-To achieve that, as inode_wb_list_{move|del}_locked() now keep track
-of the dirty state transition of each wb, the number of dirty wbs can
-be counted in the bdi; however, bdi is already aggregating
-wb->avg_write_bandwidth which can easily be guaranteed to be > 0 if
-there are any dirty inodes by ensuring wb->avg_write_bandwidth can't
-dip below 1.  bdi_has_dirty_io() can simply test whether
-bdi->tot_write_bandwidth is zero or not.
+WB_RECLAIMABLE and WB_DIRTIED are attributed to the page's dirty cgwb
+(per-cgroup wb) and WB_WRITEBACK to writeback cgwb.
+__test_set_page_writeback() is updated so that dirty cgwb association
+takes place before WB_WRITEBACK increment so that the latter can make
+use of the association.
 
-While this bumps the value of wb->avg_write_bandwidth to one when it
-used to be zero, this shouldn't cause any meaningful behavior
-difference.
-
-bdi_has_dirty_io() is made an inline function which tests whether
-->tot_write_bandwidth is non-zero.  Also, WARN_ON_ONCE()'s on its
-value are added to inode_wb_list_{move|del}_locked().
+As no filesystem has FS_CGROUP_WRITEBACK yet, this doesn't lead to
+visible behavior differences.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
 ---
- fs/fs-writeback.c                |  5 +++--
- include/linux/backing-dev-defs.h |  8 ++++++--
- include/linux/backing-dev.h      | 10 +++++++++-
- mm/backing-dev.c                 |  5 -----
- mm/page-writeback.c              | 10 +++++++---
- 5 files changed, 25 insertions(+), 13 deletions(-)
+ mm/filemap.c        |  2 +-
+ mm/page-writeback.c | 18 ++++++++++++------
+ mm/truncate.c       |  3 +--
+ 3 files changed, 14 insertions(+), 9 deletions(-)
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index d41728b..35d32ad 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -312,6 +312,7 @@ static bool inode_wb_list_move_locked(struct inode *inode,
- 		return false;
- 	} else {
- 		set_bit(WB_has_dirty_io, &wb->state);
-+		WARN_ON_ONCE(!wb->avg_write_bandwidth);
- 		atomic_long_add(wb->avg_write_bandwidth,
- 				&wb->bdi->tot_write_bandwidth);
- 		return true;
-@@ -336,8 +337,8 @@ static void inode_wb_list_del_locked(struct inode *inode,
- 	if (wb_has_dirty_io(wb) && list_empty(&wb->b_dirty) &&
- 	    list_empty(&wb->b_io) && list_empty(&wb->b_more_io)) {
- 		clear_bit(WB_has_dirty_io, &wb->state);
--		atomic_long_sub(wb->avg_write_bandwidth,
--				&wb->bdi->tot_write_bandwidth);
-+		WARN_ON_ONCE(atomic_long_sub_return(wb->avg_write_bandwidth,
-+					&wb->bdi->tot_write_bandwidth) < 0);
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 98a6675..faa577d 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -211,7 +211,7 @@ void __delete_from_page_cache(struct page *page, void *shadow)
+ 	 */
+ 	if (PageDirty(page) && mapping_cap_account_dirty(mapping)) {
+ 		dec_zone_page_state(page, NR_FILE_DIRTY);
+-		dec_wb_stat(&mapping->backing_dev_info->wb, WB_RECLAIMABLE);
++		dec_wb_stat(page_cgwb_dirty(page), WB_RECLAIMABLE);
+ 		page_blkcg_detach_dirty(page);
  	}
  }
- 
-diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
-index e1f5f08..4ceda83 100644
---- a/include/linux/backing-dev-defs.h
-+++ b/include/linux/backing-dev-defs.h
-@@ -60,7 +60,7 @@ struct bdi_writeback {
- 	unsigned long dirtied_stamp;
- 	unsigned long written_stamp;	/* pages written at bw_time_stamp */
- 	unsigned long write_bandwidth;	/* the estimated write bandwidth */
--	unsigned long avg_write_bandwidth; /* further smoothed write bw */
-+	unsigned long avg_write_bandwidth; /* further smoothed write bw, > 0 */
- 
- 	/*
- 	 * The base dirty throttle rate, re-calculated on every 200ms.
-@@ -100,7 +100,11 @@ struct backing_dev_info {
- 	unsigned int min_ratio;
- 	unsigned int max_ratio, max_prop_frac;
- 
--	atomic_long_t tot_write_bandwidth; /* sum of active avg_write_bw */
-+	/*
-+	 * Sum of avg_write_bw of wbs with dirty inodes.  > 0 if there are
-+	 * any dirty wbs, which is depended upon by bdi_has_dirty().
-+	 */
-+	atomic_long_t tot_write_bandwidth;
- 
- 	struct bdi_writeback wb; /* the root writeback info for this bdi */
- #ifdef CONFIG_CGROUP_WRITEBACK
-diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index 533ff86..49feb0b 100644
---- a/include/linux/backing-dev.h
-+++ b/include/linux/backing-dev.h
-@@ -30,7 +30,6 @@ void bdi_start_writeback(struct backing_dev_info *bdi, long nr_pages,
- 			enum wb_reason reason);
- void bdi_start_background_writeback(struct backing_dev_info *bdi);
- void wb_workfn(struct work_struct *work);
--bool bdi_has_dirty_io(struct backing_dev_info *bdi);
- void wb_wakeup_delayed(struct bdi_writeback *wb);
- 
- extern spinlock_t bdi_lock;
-@@ -43,6 +42,15 @@ static inline bool wb_has_dirty_io(struct bdi_writeback *wb)
- 	return test_bit(WB_has_dirty_io, &wb->state);
- }
- 
-+static inline bool bdi_has_dirty_io(struct backing_dev_info *bdi)
-+{
-+	/*
-+	 * @bdi->tot_write_bandwidth is guaranteed to be > 0 if there are
-+	 * any dirty wbs.  See wb_update_write_bandwidth().
-+	 */
-+	return atomic_long_read(&bdi->tot_write_bandwidth);
-+}
-+
- static inline void __add_wb_stat(struct bdi_writeback *wb,
- 				 enum wb_stat_item item, s64 amount)
- {
-diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-index 9d69e7c..b4a5d9b 100644
---- a/mm/backing-dev.c
-+++ b/mm/backing-dev.c
-@@ -307,11 +307,6 @@ static int __init default_bdi_init(void)
- }
- subsys_initcall(default_bdi_init);
- 
--bool bdi_has_dirty_io(struct backing_dev_info *bdi)
--{
--	return wb_has_dirty_io(&bdi->wb);
--}
--
- /*
-  * This function is used when the first inode for this wb is marked dirty. It
-  * wakes-up the corresponding bdi thread which should then take care of the
 diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 176d0fb..cc0ce70 100644
+index 6475504..d1fea3a 100644
 --- a/mm/page-writeback.c
 +++ b/mm/page-writeback.c
-@@ -879,9 +879,13 @@ static void wb_update_write_bandwidth(struct bdi_writeback *wb,
- 		avg += (old - avg) >> 3;
- 
- out:
--	if (wb_has_dirty_io(wb))
--		atomic_long_add(avg - wb->avg_write_bandwidth,
--				&wb->bdi->tot_write_bandwidth);
-+	/* keep avg > 0 to guarantee that tot > 0 if there are dirty wbs */
-+	avg = max(avg, 1LU);
-+	if (wb_has_dirty_io(wb)) {
-+		long delta = avg - wb->avg_write_bandwidth;
-+		WARN_ON_ONCE(atomic_long_add_return(delta,
-+					&wb->bdi->tot_write_bandwidth) <= 0);
-+	}
- 	wb->write_bandwidth = bw;
- 	wb->avg_write_bandwidth = avg;
+@@ -2159,10 +2159,13 @@ EXPORT_SYMBOL(__set_page_dirty_nobuffers);
+ void account_page_redirty(struct page *page)
+ {
+ 	struct address_space *mapping = page->mapping;
++
+ 	if (mapping && mapping_cap_account_dirty(mapping)) {
++		struct bdi_writeback *wb = page_cgwb_dirty(page);
++
+ 		current->nr_dirtied--;
+ 		dec_zone_page_state(page, NR_DIRTIED);
+-		dec_wb_stat(&mapping->backing_dev_info->wb, WB_DIRTIED);
++		dec_wb_stat(wb, WB_DIRTIED);
+ 	}
  }
+ EXPORT_SYMBOL(account_page_redirty);
+@@ -2300,9 +2303,10 @@ int clear_page_dirty_for_io(struct page *page)
+ 		 * exclusion.
+ 		 */
+ 		if (TestClearPageDirty(page)) {
++			struct bdi_writeback *wb = page_cgwb_dirty(page);
++
+ 			dec_zone_page_state(page, NR_FILE_DIRTY);
+-			dec_wb_stat(&mapping->backing_dev_info->wb,
+-				    WB_RECLAIMABLE);
++			dec_wb_stat(wb, WB_RECLAIMABLE);
+ 			page_blkcg_detach_dirty(page);
+ 			return 1;
+ 		}
+@@ -2330,9 +2334,11 @@ int test_clear_page_writeback(struct page *page)
+ 						page_index(page),
+ 						PAGECACHE_TAG_WRITEBACK);
+ 			if (bdi_cap_account_writeback(bdi)) {
+-				__dec_wb_stat(&bdi->wb, WB_WRITEBACK);
++				struct bdi_writeback *wb = page_cgwb_wb(page);
++
++				__dec_wb_stat(wb, WB_WRITEBACK);
+ 				page_blkcg_detach_wb(page);
+-				__wb_writeout_inc(&bdi->wb);
++				__wb_writeout_inc(wb);
+ 			}
+ 		}
+ 		spin_unlock_irqrestore(&mapping->tree_lock, flags);
+@@ -2366,8 +2372,8 @@ int __test_set_page_writeback(struct page *page, bool keep_write)
+ 						page_index(page),
+ 						PAGECACHE_TAG_WRITEBACK);
+ 			if (bdi_cap_account_writeback(bdi)) {
+-				__inc_wb_stat(&bdi->wb, WB_WRITEBACK);
+ 				page_blkcg_attach_wb(page);
++				__inc_wb_stat(page_cgwb_wb(page), WB_WRITEBACK);
+ 			}
+ 		}
+ 		if (!PageDirty(page))
+diff --git a/mm/truncate.c b/mm/truncate.c
+index caae624..1658e34 100644
+--- a/mm/truncate.c
++++ b/mm/truncate.c
+@@ -112,8 +112,7 @@ void cancel_dirty_page(struct page *page, unsigned int account_size)
+ 		struct address_space *mapping = page->mapping;
+ 		if (mapping && mapping_cap_account_dirty(mapping)) {
+ 			dec_zone_page_state(page, NR_FILE_DIRTY);
+-			dec_wb_stat(&mapping->backing_dev_info->wb,
+-				    WB_RECLAIMABLE);
++			dec_wb_stat(page_cgwb_dirty(page), WB_RECLAIMABLE);
+ 			if (account_size)
+ 				task_io_account_cancelled_write(account_size);
+ 			page_blkcg_detach_dirty(page);
 -- 
 2.1.0
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
