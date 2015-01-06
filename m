@@ -1,72 +1,83 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET RFC block/for-next] writeback: cgroup writeback support
-Date: Tue, 6 Jan 2015 16:44:26 -0500
-Message-ID: <20150106214426.GA24106@htj.dyndns.org>
-References: <1420579582-8516-1-git-send-email-tj@kernel.org>
+From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCHv3 8/8] cgroup: Add documentation for cgroup namespaces
+Date: Tue, 6 Jan 2015 15:20:38 -0800
+Message-ID: <CAGr1F2EGOUSEd3-G4PS0mq=9kU1nWG4CwHUOQaNUATepc11_Sw@mail.gmail.com>
+References: <1417744550-6461-1-git-send-email-adityakali@google.com>
+ <1417744550-6461-9-git-send-email-adityakali@google.com> <548E17CE.8010704@nod.at>
+ <CAGr1F2HA6mzFwgp5ngX8P7=198-5CmCjLmuCJ8j3eQ08J2d9Qw@mail.gmail.com>
+ <54AB15BD.8020007@nod.at> <87lhlgpyxk.fsf@x220.int.ebiederm.org>
+ <CAGr1F2HSi_D07r2c5CKOsjSR1+58k9G2MrtACsd+HV6XKvJ7cA@mail.gmail.com> <54AB2992.6060707@nod.at>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=9uTAxKahJwScas1QCC8FjAW/lxqREfhJ1ToN9TDcdwQ=;
-        b=V0KrGWxo/UY4Yhu1WkevFlAWtzLOFHIqu2p+Vy33b/4QM6f7Qae2yPHV2ue5xYRoZk
-         JqWnj/OjDx7uRMMCGieGkATNHC1xiDEW3QB63RBKh9mVyfTzRqPDGjArr+J7iE0HFeFB
-         pL5P3wyVc34TvhitqD1CfyPo9O/x+sIYoEz71YkLOC6dFaCpeRUXr2OXEtYiTJuBCLj3
-         dvl8xZV4CEKdcXuMNK2xCNffwNWWlZRSY1NtbWhroEKOgWdFq9yMEaqS71x4beUuQaiq
-         RoTpuQ4GjHrbOXTmjW3SQfVov9qKJhr8t+d+l3eJq97j682Y2pE+SCGKVLa+nCJh+6VD
-         sjNg==
-Content-Disposition: inline
-In-Reply-To: <1420579582-8516-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        d=google.com; s=20120113;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-type;
+        bh=kO8PVx5nf2VlJ+Wd4DT1SyCeapgw+AOmOD12rIs8QEk=;
+        b=G6BmV8YXaHfJT6PPBG2EOiLyqcpqpZILtXSx+mHlRVn1s1QJO5jc1AOfQxzWZfFwXR
+         W3MhJXpOZH4V/vo/PG41JNnYy64aZ+WCgrM+ZkIZhskTKQ3guz9miKLCIl2lW+rvAjzZ
+         mQH3LgMVTrmPfp+42dfmLxK0gaLc8pHSw/iRwgflziqv4DRDX+LyZlMS34D+OiYEBHOh
+         IHOOqfpeiUnjv5GKacSn7UJO1z5GY6DwudXce8TW/rcExOL74CThou35uXpFd0HeHnDT
+         zObKjme5qvGrb9szpoF1n9KraqfoRXeJrrwZvQ8PFDErgt93m6o/+2aenIo7nvHzVRAH
+         dr5g==
+In-Reply-To: <54AB2992.6060707-/L3Ra7n9ekc@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com
+To: Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>
+Cc: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Rohit Jnagal <jnagal-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Hello, again.  A bit of addition.
+I understand your point. But it will add some complexity to the code.
 
-On Tue, Jan 06, 2015 at 04:25:37PM -0500, Tejun Heo wrote:
-...
-> Overall design
-> --------------
+Before trying to make it work for non-unified hierarchy cases, I would
+like to get a clearer idea.
+What do you expect to be mounted when you run:
+  container:/ # mount -t cgroup none /sys/fs/cgroup/
+from inside the container?
 
-What's going on in this patchset is fairly straight forward.  The main
-thing which is happening is that a bdi is being split into multiple
-per-cgroup pieces.  Each split bdi, represented by bdi_writeback,
-behaves mostly identically with how bdi behaved before.
+Note that cgroup-namespace wont be able to change the way cgroups are
+mounted .. i.e., if say cpu and cpuacct subsystems are mounted
+together at a single mount-point, then we cannot mount them any other
+way (inside a container or outside). This restriction exists today and
+cgroup-namespaces won't change that.
 
-Complications mostly arise from filesystems and inodes having to deal
-with multiple split bdi's instead of one, but those are mostly
-straight-forward 1:N mapping issues.  It does get tedious here and
-there but doesn't complicate the overall picture.  This
-straight-forwardness pays off when dealing with interaction issues
-which would have been extremely hairy otherwise.  More on this while
-discussing balance_dirty_pages.
+So, If on the host we have:
+root@adityakali-vm2:/sys/fs/cgroup# cat /proc/mounts | grep cgroup
+tmpfs /sys/fs/cgroup tmpfs rw,relatime 0 0
+cgroup /sys/fs/cgroup/cpu cgroup rw,relatime,cpuset,cpu,cpuacct 0 0
+cgroup /sys/fs/cgroup/mem cgroup rw,relatime,memory,hugetlb 0 0
+cgroup /sys/fs/cgroup/rest cgroup
+rw,relatime,devices,freezer,net_cls,blkio,perf_event,net_prio 0 0
 
-...
-> Missing pieces
-> --------------
-...
-> * balance_dirty_pages currently doesn't consider the task's memcg when
->   calculating the number of dirtyable pages.  This means that tasks in
->   memcg won't have the benefit of smooth background writeback and will
->   bump into direct reclaim all the time.  This has always been like
->   this but with cgroup writeback support, this is also finally
->   fixable.  I'll work on this as the earlier part gets settled.
+And inside the container we want each subsystem to be on its own
+mount-point, then it will fail. Do you think even then its useful to
+support virtualizing paths for non-unified hierarchies?
 
-This has always been a really thorny issue but now that each wb
-behaves as an independent writeback domain, this can be solved nicely.
-Each cgroup can carry the fraction of writebandwidth against the whole
-system and each task can carry its fraction against its memcg.
-balance_dirty_pages can now stagger these two ratios and then apply it
-against the memory which *may* be dirtyable to the task's memcg and
-then throttle the dirtier accordingly.  This works out exactly as a
-straight-forward extension of the global logic which is proven to
-work.  This really is pieces falling into places.
+Thanks,
 
-Thanks.
+
+On Mon, Jan 5, 2015 at 4:17 PM, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org> wrote:
+> Am 06.01.2015 um 01:10 schrieb Aditya Kali:
+>> Since the old/default behavior is on its way out, I didn't invest time
+>> in fixing that. Also, some of the properties that make
+>> cgroup-namespace simpler are only provided by unified hierarchy (for
+>> example: a single root-cgroup per container).
+>
+> Does the new sane cgroupfs behavior even have a single real world user?
+> I always thought it isn't stable yet.
+>
+> Linux distros currently use systemd v210. They don't dare to use a newer one.
+> Even *if* systemd would support the sane sane cgroupfs behavior in the most recent
+> version it will take 1-2 years until it would hit a recent distro.
+>
+> So please support also the old and nasty behavior such that one day we can run current
+> systemd distros in Linux containers.
+>
+> Thanks,
+> //richard
+
+
 
 -- 
-tejun
+Aditya
