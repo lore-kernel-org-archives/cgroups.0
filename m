@@ -1,129 +1,58 @@
 From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCHSET RFC block/for-next] writeback: cgroup writeback support
-Date: Fri, 9 Jan 2015 16:23:36 -0500
-Message-ID: <20150109212336.GB2785@htj.dyndns.org>
+Date: Fri, 9 Jan 2015 16:36:13 -0500
+Message-ID: <20150109213613.GC2785@htj.dyndns.org>
 References: <1420579582-8516-1-git-send-email-tj@kernel.org>
- <20150106214426.GA24106@htj.dyndns.org>
- <20150107234532.GD25000@dastard>
+ <20150108093057.GD14705@quack.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=ckj8JVsMrn4xxbl0/uA7v8jL/jeFYuGK84tqvWYlTkk=;
-        b=K4JIBT/QAAvj+qAOYMuJ7u5MFZYUDiQw+4BxmCyTiSa5bDNwmLpFrtVM3iby/24Fkc
-         vlaWWCu7e/ZiWLu58Qc+xfSXKCVlRUmK7ScPbYOtmdztevT7chnpB8ef9W8QIaugfqxm
-         h0rYf55V0nbt9eYIvmktKRMv3nOkbPa8VJdJ3RtfesKN66ubpEqM4huYAoOAYPU189yC
-         IrUg9FrB3nLi9XWtaZDVHxciz1nWrBmdq4a2CmEutvpJhACL5scZYhvWpWj0wzhlbRLU
-         kGPzeohhQdmYVOPBtKOgpTpQR5cNqe30zwQuV7/uNttPdLCsJTRX4w7iyZj7UtW8IxO6
-         u4DA==
+        bh=53tuEtfZLVu0zUxfwPD2ukqOB/y49LZqjyrJ/61/Yfg=;
+        b=Ij6vz6iC9b/J/TVQ3onZjvEEMBAjojiQxttl2qntTYr2paqy9elk5e4KRaLGNnBee4
+         jS3aPu1puS6ULmo/r1JYWuxyZ7MNsYtkoh2RNXHljfeTlJw2d09d9OVj3/XPRC0aEnkb
+         zuyf7yqRMSu7WgG7BEE5o9QP3TQ1TOpfAFJwaczuszP067RpCTAKpKSUA5YNczlmrf+k
+         xKkxT0i4NW1vf/mIOzRjxJH7cqhcUZMNWkWqlSr9Wff2kOVtSC1lrnduNizoHJJ6aV9J
+         ur+mh1UJAMl2/CcJw1uEuTB4adS09AfsceMHASoX0Aue3DR0qBaMlcYSxoL1dq4Lvy9f
+         9kYQ==
 Content-Disposition: inline
-In-Reply-To: <20150107234532.GD25000@dastard>
+In-Reply-To: <20150108093057.GD14705@quack.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Dave Chinner <david@fromorbit.com>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com
+To: Jan Kara <jack@suse.cz>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com
 
-Hello, Dave.
+Hello, Jan.
 
-On Thu, Jan 08, 2015 at 10:45:32AM +1100, Dave Chinner wrote:
-> > Complications mostly arise from filesystems and inodes having to deal
-> > with multiple split bdi's instead of one, but those are mostly
-> > straight-forward 1:N mapping issues.  It does get tedious here and
-> > there but doesn't complicate the overall picture.
-> 
-> Some filesystems don't track metadata-dirty inode state in the bdi
-> lists, and instead track that in their own lists (usually deep
-> inside the journalling subsystem). i.e. I_DIRTY_PAGES are the only
-> dirty state that is tracked in the VFS. i.e. inode metadata
-> writeback will still be considered global, but pages won't be. Hence
-> you might get pages written back quickly, but the inodes are going
-> to remain dirty and unreclaimable until the filesystem flushes some
-> time in the future after the journal is committed and the inode
-> written...
+On Thu, Jan 08, 2015 at 10:30:57AM +0100, Jan Kara wrote:
+> > * An inode may have pages dirtied by different memcgs, which naturally
+> >   means that it should be able to be dirtied against multiple wb's.
+> >   To support linking an inode against multiple wb's, iwbl
+> >   (inode_wb_link) is introduced.  An inode has multiple iwbl's
+> >   associated with it if it's dirty against multiple wb's.
+>
+>   Is the ability for inode to belong to multiple memcgs really worth the
+> effort? It brings significant complications (see also Dave's email) and
+> the last time we were discussing cgroup writeback support the demand from
+> users for this was small... How hard would it be to just start with an
+> implementation which attaches the inode to the first memcg that dirties it
+> (and detaches it when inode gets clean)? And implement sharing of inodes
+> among mecgs only if there's a real demand for it?
 
-I'm not sure I'm following.  What writeback layer provides is cgroup
-awareness when dealing with I_DIRTY_PAGES.  Metadata writebacks will
-become automatically cgroup-aware to the extent they go through
-regular page dirtying mechanism.  If some don't go through that
-channel (e.g. journals shouldn't to avoid priority inversion), it's
-upto the specific filesystem to decide how to handle them.  In most
-cases, I imagine they'd be sent down as originating from the root
-cgroup, ie, as the system cost.  Specific filesystems can be more
-sophisticated, I suppose.
-
-Ultimately, the only thing which matters is with which cgroup a bio is
-associated when issued.  What's implemented in this patchset is
-propagation of memcg tags for pagecache pages.  If necessary, further
-mechanisms can be added, but this should cover the basics.
-
-> There has also been talk of allowing filesystems to directly track
-> dirty page state as well - the discussion came out of the way tux3
-> was tracking and committing delta changes to file data. Now that
-> hasn't gone anywhere, but I'm wondering what impact this patch set
-> would have on such proposals?
-
-Would such a filesystem take over writeback mechanism too?  The
-implemented mechanism is fairly modular and the counterparts in each
-filesystem should be able to use them the same way the core writeback
-code does.  I'm afraid I can't say much without knowing further
-details.
-
-> Similarly, I'm concerned about additional overhead in the writeback
-> path - we can easily drive the flusher thread to be CPU bound on IO
-> subsystems that have decent bandwidth (low GB/s), so adding more
-> overhead to every page we have to flush is going to reduce
-> performance on these systems. Do you have any idea what impact
-> just enabling the memcg/blkcg tracking has on writeback performance
-> and CPU consumption?
-
-I measured avg sys+user time of 50 iterations of
-
-  fs_mark -d /mnt/tmp/ -s 104857600 -n 32
-
-on an ext2 on a ramdisk, which should put the hot path part - page
-faulting and inode dirtying - under spotlight.  cgroup writeback
-enabled but not used case consumes around 1% more cpu time - AVG 6.616
-STDEV 0.050 w/o this patchset, AVG 6.682 STDEV 0.046 with.  This is an
-extreme case and while it isn't free the overhead is fairly low.
-
-> A further complication for data writeback is that some filesystems
-> do their own adjacent page write clustering own inside their own
-> ->writepages/->writepage implementations. Both ext4 and XFS do this,
-> and it makes no sense from a system and filesystem performance
-> perspective to turn sequential ranges of dirty pages into much
-> slower, semi-random IO just because the pages belong to different
-> memcgs. It's not a good idea to compromise bulk writeback
-> throughput under memory pressure just because a different memcgs
-> write to the same files, so what is going to be the impact of
-> filesystems ignoring memcg ownership during writeback clustering?
-
-I don't think that's a good idea.  Implementing that isn't hard.
-Range writeback can simply avoid skipping pages from different
-cgroups; however, different cgroups can have vastly different
-characteristics.  One may be configured to have a majority of the
-available bandwidth while another has to scrap by with few hundreds of
-k's per sec.  Initiating write out on pages which belong to the former
-from the writeback of the latter may cause serious priority inversion
-issues.
-
-Maybe we can think of optimizations down the road but I'd strongly
-prefer to stick to simple and clear divisions among cgroups.  Also, a
-file highly interleaved by multiple cgroups isn't a particularly
-likely use case.
-
-> Finally, distros are going to ship with this always enabled, so what
-> is the overall increase in the size of the struct inode on a 64
-> bit system with it enabled?
-
-This was in the head message, but, to repeat, two more pointers if
-!CONFIG_IMA, which is the case for fedora at least.  If CONFIG_IMA is
-enabled, it becomes three pointers.  In my test setup, before the
-patchset or CONFIG_CGROUP_WRITEBACK disabled, it's 544 bytes and w/
-CONFIG_CGROUP_WRITEBACK 560.
+This was something I spent quite some time debating back and forth.
+IMO, the complexity added from having to handle dirtying against
+multiple cgroups isn't that high in the scheme of things.  It enables
+use cases where different regions of an inode are actively shared by
+multiple cgroups and more importantly makes unexpected behaviors a lot
+less likely by aligning what writeback and blkcg sees with memcg's
+perception.  As mentioned in the head message, this gives us the
+ability to hook up dirty ratio handling correctly for each memcg.
+That working properly strongly hinges on everybody involved seeing the
+same picture.
 
 Thanks.
 
