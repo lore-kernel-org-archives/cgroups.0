@@ -1,17 +1,17 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: [patch 2/2] mm: memcontrol: default hierarchy interface for memory
 Date: Thu,  8 Jan 2015 23:15:04 -0500
-Message-ID: <1420776904-8559-2-git-send-email-hannes__22010.1801133298$1420776967$gmane$org@cmpxchg.org>
+Message-ID: <1420776904-8559-2-git-send-email-hannes__16284.21058781$1420776982$gmane$org@cmpxchg.org>
 References: <1420776904-8559-1-git-send-email-hannes@cmpxchg.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1420776904-8559-1-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1420776904-8559-1-git-send-email-hannes@cmpxchg.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, Greg Thelen <gthelen@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
 Introduce the basic control files to account, partition, and limit
 memory using cgroups in default hierarchy mode.
@@ -125,7 +125,7 @@ the current interface are worth pointing out and explaining:
     the new interface carries a new configuration model, the naming
     conventions in it necessarily differ from the old interface.
 
-Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 ---
  include/linux/memcontrol.h |  32 ++++++
  mm/memcontrol.c            | 247 +++++++++++++++++++++++++++++++++++++++++++--
