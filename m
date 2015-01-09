@@ -1,86 +1,127 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCHSET RFC block/for-next] writeback: cgroup writeback support
-Date: Thu, 8 Jan 2015 10:30:57 +0100
-Message-ID: <20150108093057.GD14705@quack.suse.cz>
-References: <1420579582-8516-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <1420579582-8516-1-git-send-email-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: [patch 1/2] mm: page_counter: pull "-1" handling out of page_counter_memparse()
+Date: Thu,  8 Jan 2015 23:15:03 -0500
+Message-ID: <1420776904-8559-1-git-send-email-hannes@cmpxchg.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-  Hello,
+It was convenient to have the generic function handle it, as all
+callsites agreed.  Subsequent patches will add new user interfaces
+that do not want to support the "-1" special string.
 
-On Tue 06-01-15 16:25:37, Tejun Heo wrote:
-> blkio cgroup (blkcg) is severely crippled in that it can only control
-> read and direct write IOs.  blkcg can't tell which cgroup should be
-> held responsible for a given writeback IO and charges all of them to
-> the root cgroup - all normal write traffic ends up in the root cgroup.
-> Although the problem has been identified years ago, mainly because it
-> interacts with so many subsystems, it hasn't been solved yet.
-> 
-> This patchset finally implements cgroup writeback support so that
-> writeback of a page is attributed to the corresponding blkcg of the
-> memcg that the page belongs to.
-> 
-> Overall design
-> --------------
-> 
-> * This requires cooperation between memcg and blkcg.  The IOs are
->   charged to the blkcg that the page's memcg corresponds to.  This
->   currently works only on the unified hierarchy.
-> 
-> * Each memcg maintains reference counted front and back pointers to
->   the correspending blkcg.  Whenever a page gets dirtied or initiates
->   writeback, it uses the blkcg the front one points to.  The reference
->   counting ensures that the association remains till the page is done
->   and having front and back pointers guarantees that the association
->   can change without being live-locked by pages being contiuously
->   dirtied.
-> 
-> * struct bdi_writeback (wb) was always embedded in struct
->   backing_dev_info (bdi) and the distinction between the two wasn't
->   clear.  This patchset makes wb operate as an independent writeback
-> 
->   execution.  bdi->wb is still embedded and serves the root cgroup but
->   other wb's can be associated with a single bdi each serving a
->   non-root wb.
-> 
-> * All writeback operations are made per-wb instead of per-bdi.
->   bdi-wide operations are split across all member wb's.  If some
->   finite amount needs to be distributed, be it number of pages to
->   writeback or bdi->min/max_ratio, it's distributed according to the
->   bandwidth proportion a wb has in the bdi.
-> 
-> * Non-root wb's host and write back only dirty pages (I_DIRTY_PAGES).
->   I_DIRTY_[DATA]SYNC is always handled by the root wb.
-> 
-> * An inode may have pages dirtied by different memcgs, which naturally
->   means that it should be able to be dirtied against multiple wb's.
->   To support linking an inode against multiple wb's, iwbl
->   (inode_wb_link) is introduced.  An inode has multiple iwbl's
->   associated with it if it's dirty against multiple wb's.
-  Is the ability for inode to belong to multiple memcgs really worth the
-effort? It brings significant complications (see also Dave's email) and
-the last time we were discussing cgroup writeback support the demand from
-users for this was small... How hard would it be to just start with an
-implementation which attaches the inode to the first memcg that dirties it
-(and detaches it when inode gets clean)? And implement sharing of inodes
-among mecgs only if there's a real demand for it?
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+---
+ mm/hugetlb_cgroup.c       | 10 +++++++---
+ mm/memcontrol.c           | 20 ++++++++++++++------
+ mm/page_counter.c         |  6 ------
+ net/ipv4/tcp_memcontrol.c | 10 +++++++---
+ 4 files changed, 28 insertions(+), 18 deletions(-)
 
-								Honza
-
+diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
+index 037e1c00a5b7..ee3fc80adba1 100644
+--- a/mm/hugetlb_cgroup.c
++++ b/mm/hugetlb_cgroup.c
+@@ -279,9 +279,13 @@ static ssize_t hugetlb_cgroup_write(struct kernfs_open_file *of,
+ 		return -EINVAL;
+ 
+ 	buf = strstrip(buf);
+-	ret = page_counter_memparse(buf, &nr_pages);
+-	if (ret)
+-		return ret;
++	if (!strcmp(buf, "-1")) {
++		nr_pages = PAGE_COUNTER_MAX;
++	} else {
++		ret = page_counter_memparse(buf, &nr_pages);
++		if (ret)
++			return ret;
++	}
+ 
+ 	idx = MEMFILE_IDX(of_cft(of)->private);
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 202e3862d564..20486da85750 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3400,9 +3400,13 @@ static ssize_t mem_cgroup_write(struct kernfs_open_file *of,
+ 	int ret;
+ 
+ 	buf = strstrip(buf);
+-	ret = page_counter_memparse(buf, &nr_pages);
+-	if (ret)
+-		return ret;
++	if (!strcmp(buf, "-1")) {
++		nr_pages = PAGE_COUNTER_MAX;
++	} else {
++		ret = page_counter_memparse(buf, &nr_pages);
++		if (ret)
++			return ret;
++	}
+ 
+ 	switch (MEMFILE_ATTR(of_cft(of)->private)) {
+ 	case RES_LIMIT:
+@@ -3768,9 +3772,13 @@ static int __mem_cgroup_usage_register_event(struct mem_cgroup *memcg,
+ 	unsigned long usage;
+ 	int i, size, ret;
+ 
+-	ret = page_counter_memparse(args, &threshold);
+-	if (ret)
+-		return ret;
++	if (!strcmp(args, "-1")) {
++		threshold = PAGE_COUNTER_MAX;
++	} else {
++		ret = page_counter_memparse(args, &threshold);
++		if (ret)
++			return ret;
++	}
+ 
+ 	mutex_lock(&memcg->thresholds_lock);
+ 
+diff --git a/mm/page_counter.c b/mm/page_counter.c
+index a009574fbba9..0d4f9daf68bd 100644
+--- a/mm/page_counter.c
++++ b/mm/page_counter.c
+@@ -173,15 +173,9 @@ int page_counter_limit(struct page_counter *counter, unsigned long limit)
+  */
+ int page_counter_memparse(const char *buf, unsigned long *nr_pages)
+ {
+-	char unlimited[] = "-1";
+ 	char *end;
+ 	u64 bytes;
+ 
+-	if (!strncmp(buf, unlimited, sizeof(unlimited))) {
+-		*nr_pages = PAGE_COUNTER_MAX;
+-		return 0;
+-	}
+-
+ 	bytes = memparse(buf, &end);
+ 	if (*end != '\0')
+ 		return -EINVAL;
+diff --git a/net/ipv4/tcp_memcontrol.c b/net/ipv4/tcp_memcontrol.c
+index 272327134a1b..a9d9fcb4dc25 100644
+--- a/net/ipv4/tcp_memcontrol.c
++++ b/net/ipv4/tcp_memcontrol.c
+@@ -120,9 +120,13 @@ static ssize_t tcp_cgroup_write(struct kernfs_open_file *of,
+ 	switch (of_cft(of)->private) {
+ 	case RES_LIMIT:
+ 		/* see memcontrol.c */
+-		ret = page_counter_memparse(buf, &nr_pages);
+-		if (ret)
+-			break;
++		if (!strcmp(buf, "-1")) {
++			nr_pages = PAGE_COUNTER_MAX;
++		} else {
++			ret = page_counter_memparse(buf, &nr_pages);
++			if (ret)
++				break;
++		}
+ 		mutex_lock(&tcp_limit_mutex);
+ 		ret = tcp_update_limit(memcg, nr_pages);
+ 		mutex_unlock(&tcp_limit_mutex);
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+2.2.0
