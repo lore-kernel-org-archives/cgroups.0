@@ -1,23 +1,23 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Subject: [patch 3/3] mm: memcontrol: consolidate swap controller code
 Date: Fri,  9 Jan 2015 21:14:01 -0500
-Message-ID: <1420856041-27647-3-git-send-email-hannes__44238.302173517$1420856079$gmane$org@cmpxchg.org>
+Message-ID: <1420856041-27647-3-git-send-email-hannes__30197.8631563999$1420856083$gmane$org@cmpxchg.org>
 References: <1420856041-27647-1-git-send-email-hannes@cmpxchg.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1420856041-27647-1-git-send-email-hannes@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1420856041-27647-1-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 The swap controller code is scattered all over the file.  Gather all
 the code that isn't directly needed by the memory controller at the
 end of the file in its own CONFIG_MEMCG_SWAP section.
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 ---
  mm/memcontrol.c | 264 +++++++++++++++++++++++++++-----------------------------
  1 file changed, 125 insertions(+), 139 deletions(-)
