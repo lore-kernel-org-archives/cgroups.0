@@ -1,8 +1,10 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: [patch 1/3] mm: memcontrol: remove unnecessary soft limit tree node test
-Date: Fri,  9 Jan 2015 21:13:59 -0500
-Message-ID: <1420856041-27647-1-git-send-email-hannes__41651.5402416282$1420856103$gmane$org@cmpxchg.org>
+Subject: [patch 2/3] mm: memcontrol: consolidate memory controller initialization
+Date: Fri,  9 Jan 2015 21:14:00 -0500
+Message-ID: <1420856041-27647-2-git-send-email-hannes__4019.77288206599$1420856105$gmane$org@cmpxchg.org>
+References: <1420856041-27647-1-git-send-email-hannes@cmpxchg.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1420856041-27647-1-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -11,32 +13,97 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-kzalloc_node() automatically falls back to nodes with suitable memory.
+The initialization code for the per-cpu charge stock and the soft
+limit tree is compact enough to inline it into mem_cgroup_init().
 
 Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 ---
- mm/memcontrol.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ mm/memcontrol.c | 57 ++++++++++++++++++++++++---------------------------------
+ 1 file changed, 24 insertions(+), 33 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index fd9e542fc26f..aad254b30708 100644
+index aad254b30708..f66bb8f83ac9 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -4520,13 +4520,10 @@ static void __init mem_cgroup_soft_limit_tree_init(void)
+@@ -2137,17 +2137,6 @@ static void drain_local_stock(struct work_struct *dummy)
+ 	clear_bit(FLUSHING_CACHED_CHARGE, &stock->flags);
+ }
+ 
+-static void __init memcg_stock_init(void)
+-{
+-	int cpu;
+-
+-	for_each_possible_cpu(cpu) {
+-		struct memcg_stock_pcp *stock =
+-					&per_cpu(memcg_stock, cpu);
+-		INIT_WORK(&stock->work, drain_local_stock);
+-	}
+-}
+-
+ /*
+  * Cache charges(val) to local per_cpu area.
+  * This will be consumed by consume_stock() function, later.
+@@ -4516,26 +4505,6 @@ struct mem_cgroup *parent_mem_cgroup(struct mem_cgroup *memcg)
+ }
+ EXPORT_SYMBOL(parent_mem_cgroup);
+ 
+-static void __init mem_cgroup_soft_limit_tree_init(void)
+-{
+-	struct mem_cgroup_tree_per_node *rtpn;
+-	struct mem_cgroup_tree_per_zone *rtpz;
+-	int node, zone;
+-
+-	for_each_node(node) {
+-		rtpn = kzalloc_node(sizeof(*rtpn), GFP_KERNEL, node);
+-		BUG_ON(!rtpn);
+-
+-		soft_limit_tree.rb_tree_per_node[node] = rtpn;
+-
+-		for (zone = 0; zone < MAX_NR_ZONES; zone++) {
+-			rtpz = &rtpn->rb_tree_per_zone[zone];
+-			rtpz->rb_root = RB_ROOT;
+-			spin_lock_init(&rtpz->lock);
+-		}
+-	}
+-}
+-
+ static struct cgroup_subsys_state * __ref
+ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
  {
- 	struct mem_cgroup_tree_per_node *rtpn;
- 	struct mem_cgroup_tree_per_zone *rtpz;
--	int tmp, node, zone;
-+	int node, zone;
- 
- 	for_each_node(node) {
--		tmp = node;
--		if (!node_state(node, N_NORMAL_MEMORY))
--			tmp = -1;
--		rtpn = kzalloc_node(sizeof(*rtpn), GFP_KERNEL, tmp);
-+		rtpn = kzalloc_node(sizeof(*rtpn), GFP_KERNEL, node);
- 		BUG_ON(!rtpn);
- 
- 		soft_limit_tree.rb_tree_per_node[node] = rtpn;
+@@ -5927,10 +5896,32 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage,
+  */
+ static int __init mem_cgroup_init(void)
+ {
++	int cpu, nid;
++
+ 	hotcpu_notifier(memcg_cpu_hotplug_callback, 0);
++
++	for_each_possible_cpu(cpu)
++		INIT_WORK(&per_cpu_ptr(&memcg_stock, cpu)->work,
++			  drain_local_stock);
++
++	for_each_node(nid) {
++		struct mem_cgroup_tree_per_node *rtpn;
++		int zone;
++
++		rtpn = kzalloc_node(sizeof(*rtpn), GFP_KERNEL, nid);
++
++		for (zone = 0; zone < MAX_NR_ZONES; zone++) {
++			struct mem_cgroup_tree_per_zone *rtpz;
++
++			rtpz = &rtpn->rb_tree_per_zone[zone];
++			rtpz->rb_root = RB_ROOT;
++			spin_lock_init(&rtpz->lock);
++		}
++		soft_limit_tree.rb_tree_per_node[nid] = rtpn;
++	}
++
+ 	enable_swap_cgroup();
+-	mem_cgroup_soft_limit_tree_init();
+-	memcg_stock_init();
++
+ 	return 0;
+ }
+ subsys_initcall(mem_cgroup_init);
 -- 
 2.2.0
