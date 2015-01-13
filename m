@@ -1,149 +1,61 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [patch 2/2] mm: memcontrol: default hierarchy interface for
- memory
-Date: Mon, 12 Jan 2015 15:37:16 -0800
-Message-ID: <20150112153716.d54e90c634b70d49e8bb8688@linux-foundation.org>
-References: <1420776904-8559-1-git-send-email-hannes@cmpxchg.org>
-	<1420776904-8559-2-git-send-email-hannes@cmpxchg.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1420776904-8559-2-git-send-email-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+From: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] memcg: remove extra newlines from memcg oom kill log
+Date: Mon, 12 Jan 2015 22:45:39 -0800
+Message-ID: <1421131539-3211-1-git-send-email-gthelen@google.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=from:to:cc:subject:date:message-id;
+        bh=KQ1Dk0LyKR9P72SJtY/2LD5dWWFo+z0x7c/Ox/SbQkA=;
+        b=pW983NOYoCYuPWRcKpX4HUYECjHJF07P/A9C2jNLDgOxz7DZmbGmnHDhN9+dvD1oUI
+         2LTpg6TNHk13jcZbOgqNFk1Pde4jFCzYELrpLN3E+iAW/kZQ80GSz1HoPHydzBMUTtO5
+         yYQaXJleWH+JpC0X8MSXmTAr3jpDzsuqnMlyNUgJv+y32StGXE88fbV1/Hxc5x8+B+r5
+         ktwp4HYdzYak0j6EGvfh1ILPDdxJnkf2uPELiSts1lL2h1NnNH8h68R0s0ArYj3QeV99
+         daDOQB0LeY6n7UUuQP+h9xL2sFNzClVIPejH2ZKkxeflfCJx7QjpAZPFK25Dx+WEYCPX
+         kSGA==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, Greg Thelen <gthelen@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Thu,  8 Jan 2015 23:15:04 -0500 Johannes Weiner <hannes@cmpxchg.org> wrote:
+Commit e61734c55c24 ("cgroup: remove cgroup->name") added two extra
+newlines to memcg oom kill log messages.  This makes dmesg hard to read
+and parse.  The issue affects 3.15+.
+Example:
+  Task in /t                          <<< extra #1
+   killed as a result of limit of /t
+                                      <<< extra #2
+  memory: usage 102400kB, limit 102400kB, failcnt 274712
 
-> Introduce the basic control files to account, partition, and limit
-> memory using cgroups in default hierarchy mode.
-> 
-> This interface versioning allows us to address fundamental design
-> issues in the existing memory cgroup interface, further explained
-> below.  The old interface will be maintained indefinitely, but a
-> clearer model and improved workload performance should encourage
-> existing users to switch over to the new one eventually.
-> 
-> The control files are thus:
-> 
->   - memory.current shows the current consumption of the cgroup and its
->     descendants, in bytes.
-> 
->   - memory.low configures the lower end of the cgroup's expected
->     memory consumption range.  The kernel considers memory below that
->     boundary to be a reserve - the minimum that the workload needs in
->     order to make forward progress - and generally avoids reclaiming
->     it, unless there is an imminent risk of entering an OOM situation.
+Remove the extra newlines from memcg oom kill messages, so the messages
+look like:
+  Task in /t killed as a result of limit of /t
+  memory: usage 102400kB, limit 102400kB, failcnt 240649
 
-The code appears to be ascribing a special meaning to low==0: you can
-write "none" to set this.  But I'm not seeing any description of this?
+Fixes: e61734c55c24 ("cgroup: remove cgroup->name")
+Signed-off-by: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
->   - memory.high configures the upper end of the cgroup's expected
->     memory consumption range.  A cgroup whose consumption grows beyond
->     this threshold is forced into direct reclaim, to work off the
->     excess and to throttle new allocations heavily, but is generally
->     allowed to continue and the OOM killer is not invoked.
-> 
->   - memory.max configures the hard maximum amount of memory that the
->     cgroup is allowed to consume before the OOM killer is invoked.
-> 
->   - memory.events shows event counters that indicate how often the
->     cgroup was reclaimed while below memory.low, how often it was
->     forced to reclaim excess beyond memory.high, how often it hit
->     memory.max, and how often it entered OOM due to memory.max.  This
->     allows users to identify configuration problems when observing a
->     degradation in workload performance.  An overcommitted system will
->     have an increased rate of low boundary breaches, whereas increased
->     rates of high limit breaches, maximum hits, or even OOM situations
->     will indicate internally overcommitted cgroups.
-> 
-> For existing users of memory cgroups, the following deviations from
-> the current interface are worth pointing out and explaining:
-> 
->   - The original lower boundary, the soft limit, is defined as a limit
->     that is per default unset.  As a result, the set of cgroups that
->     global reclaim prefers is opt-in, rather than opt-out.  The costs
->     for optimizing these mostly negative lookups are so high that the
->     implementation, despite its enormous size, does not even provide
->     the basic desirable behavior.  First off, the soft limit has no
->     hierarchical meaning.  All configured groups are organized in a
->     global rbtree and treated like equal peers, regardless where they
->     are located in the hierarchy.  This makes subtree delegation
->     impossible.  Second, the soft limit reclaim pass is so aggressive
->     that it not just introduces high allocation latencies into the
->     system, but also impacts system performance due to overreclaim, to
->     the point where the feature becomes self-defeating.
-> 
->     The memory.low boundary on the other hand is a top-down allocated
->     reserve.  A cgroup enjoys reclaim protection when it and all its
->     ancestors are below their low boundaries, which makes delegation
->     of subtrees possible.  Secondly, new cgroups have no reserve per
->     default and in the common case most cgroups are eligible for the
->     preferred reclaim pass.  This allows the new low boundary to be
->     efficiently implemented with just a minor addition to the generic
->     reclaim code, without the need for out-of-band data structures and
->     reclaim passes.  Because the generic reclaim code considers all
->     cgroups except for the ones running low in the preferred first
->     reclaim pass, overreclaim of individual groups is eliminated as
->     well, resulting in much better overall workload performance.
-> 
->   - The original high boundary, the hard limit, is defined as a strict
->     limit that can not budge, even if the OOM killer has to be called.
->     But this generally goes against the goal of making the most out of
->     the available memory.  The memory consumption of workloads varies
->     during runtime, and that requires users to overcommit.  But doing
->     that with a strict upper limit requires either a fairly accurate
->     prediction of the working set size or adding slack to the limit.
->     Since working set size estimation is hard and error prone, and
->     getting it wrong results in OOM kills, most users tend to err on
->     the side of a looser limit and end up wasting precious resources.
-> 
->     The memory.high boundary on the other hand can be set much more
->     conservatively.  When hit, it throttles allocations by forcing
->     them into direct reclaim to work off the excess, but it never
->     invokes the OOM killer.  As a result, a high boundary that is
->     chosen too aggressively will not terminate the processes, but
->     instead it will lead to gradual performance degradation.  The user
->     can monitor this and make corrections until the minimal memory
->     footprint that still gives acceptable performance is found.
-> 
->     In extreme cases, with many concurrent allocations and a complete
->     breakdown of reclaim progress within the group, the high boundary
->     can be exceeded.  But even then it's mostly better to satisfy the
->     allocation from the slack available in other groups or the rest of
->     the system than killing the group.  Otherwise, memory.max is there
->     to limit this type of spillover and ultimately contain buggy or
->     even malicious applications.
-> 
->   - The existing control file names are unwieldy and inconsistent in
->     many different ways.  For example, the upper boundary hit count is
->     exported in the memory.failcnt file, but an OOM event count has to
->     be manually counted by listening to memory.oom_control events, and
->     lower boundary / soft limit events have to be counted by first
->     setting a threshold for that value and then counting those events.
->     Also, usage and limit files encode their units in the filename.
->     That makes the filenames very long, even though this is not
->     information that a user needs to be reminded of every time they
->     type out those names.
-> 
->     To address these naming issues, as well as to signal clearly that
->     the new interface carries a new configuration model, the naming
->     conventions in it necessarily differ from the old interface.
-
-This all sounds pretty major.  How much trouble is this change likely to
-cause existing memcg users?
-
-> include/linux/memcontrol.h |  32 ++++++
-> mm/memcontrol.c            | 247 +++++++++++++++++++++++++++++++++++++++++++--
-> mm/vmscan.c                |  22 +++-
-
-No Documentation/cgroups/memory.txt?
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 851924fa5170..683b4782019b 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1477,9 +1477,9 @@ void mem_cgroup_print_oom_info(struct mem_cgroup *memcg, struct task_struct *p)
+ 
+ 	pr_info("Task in ");
+ 	pr_cont_cgroup_path(task_cgroup(p, memory_cgrp_id));
+-	pr_info(" killed as a result of limit of ");
++	pr_cont(" killed as a result of limit of ");
+ 	pr_cont_cgroup_path(memcg->css.cgroup);
+-	pr_info("\n");
++	pr_cont("\n");
+ 
+ 	rcu_read_unlock();
+ 
+-- 
+2.2.0.rc0.207.ga3a616c
