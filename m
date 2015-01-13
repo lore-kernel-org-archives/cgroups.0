@@ -1,24 +1,24 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [patch 2/2] mm: memcontrol: default hierarchy interface for
  memory
 Date: Tue, 13 Jan 2015 10:50:40 -0500
-Message-ID: <20150113155040.GC8180__49707.8686989427$1421164261$gmane$org@phnom.home.cmpxchg.org>
+Message-ID: <20150113155040.GC8180__4568.96674954823$1421164265$gmane$org@phnom.home.cmpxchg.org>
 References: <1420776904-8559-1-git-send-email-hannes@cmpxchg.org>
  <1420776904-8559-2-git-send-email-hannes@cmpxchg.org>
  <20150112153716.d54e90c634b70d49e8bb8688@linux-foundation.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20150112153716.d54e90c634b70d49e8bb8688-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20150112153716.d54e90c634b70d49e8bb8688@linux-foundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, Greg Thelen <gthelen@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
 On Mon, Jan 12, 2015 at 03:37:16PM -0800, Andrew Morton wrote:
-> On Thu,  8 Jan 2015 23:15:04 -0500 Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+> On Thu,  8 Jan 2015 23:15:04 -0500 Johannes Weiner <hannes@cmpxchg.org> wrote:
 > 
 > > Introduce the basic control files to account, partition, and limit
 > > memory using cgroups in default hierarchy mode.
