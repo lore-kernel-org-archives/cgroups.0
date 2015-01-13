@@ -1,21 +1,21 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: [patch] mm: memcontrol: fold move_anon() and move_file()
 Date: Tue, 13 Jan 2015 13:59:52 -0500
-Message-ID: <1421175592-14179-1-git-send-email-hannes__40485.4871951558$1421175631$gmane$org@cmpxchg.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Message-ID: <1421175592-14179-1-git-send-email-hannes__23093.1406644688$1421175647$gmane$org@cmpxchg.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
 Turn the move type enum into flags and give the flags field a shorter
 name.  Once that is done, move_anon() and move_file() are simple
 enough to just fold them into the callsites.
 
-Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 ---
  mm/memcontrol.c | 49 ++++++++++++++++++-------------------------------
  1 file changed, 18 insertions(+), 31 deletions(-)
