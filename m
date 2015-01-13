@@ -1,114 +1,72 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [patch] mm: memcontrol: default hierarchy interface for memory fix
-Date: Tue, 13 Jan 2015 14:02:39 -0500
-Message-ID: <1421175759-14350-1-git-send-email-hannes__42041.6384273723$1421175792$gmane$org@cmpxchg.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [patch 2/2] mm: memcontrol: default hierarchy interface for
+ memory
+Date: Tue, 13 Jan 2015 12:52:58 -0800
+Message-ID: <20150113125258.0d7d3da2920234fc9461ef69@linux-foundation.org>
+References: <1420776904-8559-1-git-send-email-hannes@cmpxchg.org>
+	<1420776904-8559-2-git-send-email-hannes@cmpxchg.org>
+	<20150112153716.d54e90c634b70d49e8bb8688@linux-foundation.org>
+	<20150113155040.GC8180@phnom.home.cmpxchg.org>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@parallels.com>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20150113155040.GC8180-HTCKtW7iVlxqnrmGgq4/JMIURNUf+fel@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Document and rationalize where the default hierarchy interface differs
-from the traditional memory cgroups interface.
+On Tue, 13 Jan 2015 10:50:40 -0500 Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- Documentation/cgroups/unified-hierarchy.txt | 80 +++++++++++++++++++++++++++++
- 1 file changed, 80 insertions(+)
+> On Mon, Jan 12, 2015 at 03:37:16PM -0800, Andrew Morton wrote:
+> > On Thu,  8 Jan 2015 23:15:04 -0500 Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+> > 
+> > > Introduce the basic control files to account, partition, and limit
+> > > memory using cgroups in default hierarchy mode.
+> > > 
+> > > This interface versioning allows us to address fundamental design
+> > > issues in the existing memory cgroup interface, further explained
+> > > below.  The old interface will be maintained indefinitely, but a
+> > > clearer model and improved workload performance should encourage
+> > > existing users to switch over to the new one eventually.
+> > > 
+> > > The control files are thus:
+> > > 
+> > >   - memory.current shows the current consumption of the cgroup and its
+> > >     descendants, in bytes.
+> > > 
+> > >   - memory.low configures the lower end of the cgroup's expected
+> > >     memory consumption range.  The kernel considers memory below that
+> > >     boundary to be a reserve - the minimum that the workload needs in
+> > >     order to make forward progress - and generally avoids reclaiming
+> > >     it, unless there is an imminent risk of entering an OOM situation.
+> > 
+> > The code appears to be ascribing a special meaning to low==0: you can
+> > write "none" to set this.  But I'm not seeing any description of this?
+> 
+> Ah, yes.
+> 
+> The memory.limit_in_bytes and memory.soft_limit_in_bytes currently
+> show 18446744073709551615 per default, which is a silly way of saying
+> "this limit is inactive".  And echoing -1 into the control file is an
+> even sillier way of setting this state.  So the new interface just
+> calls this state "none".  Internally, 0 and Very High Number represent
+> this unconfigured state for memory.low and memory.high, respectively.
+> 
+> I added a bullet point at the end of the changelog below.
 
-diff --git a/Documentation/cgroups/unified-hierarchy.txt b/Documentation/cgroups/unified-hierarchy.txt
-index 4f4563277864..643af9bb9a07 100644
---- a/Documentation/cgroups/unified-hierarchy.txt
-+++ b/Documentation/cgroups/unified-hierarchy.txt
-@@ -327,6 +327,86 @@ supported and the interface files "release_agent" and
- - use_hierarchy is on by default and the cgroup file for the flag is
-   not created.
- 
-+- The original lower boundary, the soft limit, is defined as a limit
-+  that is per default unset.  As a result, the set of cgroups that
-+  global reclaim prefers is opt-in, rather than opt-out.  The costs
-+  for optimizing these mostly negative lookups are so high that the
-+  implementation, despite its enormous size, does not even provide the
-+  basic desirable behavior.  First off, the soft limit has no
-+  hierarchical meaning.  All configured groups are organized in a
-+  global rbtree and treated like equal peers, regardless where they
-+  are located in the hierarchy.  This makes subtree delegation
-+  impossible.  Second, the soft limit reclaim pass is so aggressive
-+  that it not just introduces high allocation latencies into the
-+  system, but also impacts system performance due to overreclaim, to
-+  the point where the feature becomes self-defeating.
-+
-+  The memory.low boundary on the other hand is a top-down allocated
-+  reserve.  A cgroup enjoys reclaim protection when it and all its
-+  ancestors are below their low boundaries, which makes delegation of
-+  subtrees possible.  Secondly, new cgroups have no reserve per
-+  default and in the common case most cgroups are eligible for the
-+  preferred reclaim pass.  This allows the new low boundary to be
-+  efficiently implemented with just a minor addition to the generic
-+  reclaim code, without the need for out-of-band data structures and
-+  reclaim passes.  Because the generic reclaim code considers all
-+  cgroups except for the ones running low in the preferred first
-+  reclaim pass, overreclaim of individual groups is eliminated as
-+  well, resulting in much better overall workload performance.
-+
-+- The original high boundary, the hard limit, is defined as a strict
-+  limit that can not budge, even if the OOM killer has to be called.
-+  But this generally goes against the goal of making the most out of
-+  the available memory.  The memory consumption of workloads varies
-+  during runtime, and that requires users to overcommit.  But doing
-+  that with a strict upper limit requires either a fairly accurate
-+  prediction of the working set size or adding slack to the limit.
-+  Since working set size estimation is hard and error prone, and
-+  getting it wrong results in OOM kills, most users tend to err on the
-+  side of a looser limit and end up wasting precious resources.
-+
-+  The memory.high boundary on the other hand can be set much more
-+  conservatively.  When hit, it throttles allocations by forcing them
-+  into direct reclaim to work off the excess, but it never invokes the
-+  OOM killer.  As a result, a high boundary that is chosen too
-+  aggressively will not terminate the processes, but instead it will
-+  lead to gradual performance degradation.  The user can monitor this
-+  and make corrections until the minimal memory footprint that still
-+  gives acceptable performance is found.
-+
-+  In extreme cases, with many concurrent allocations and a complete
-+  breakdown of reclaim progress within the group, the high boundary
-+  can be exceeded.  But even then it's mostly better to satisfy the
-+  allocation from the slack available in other groups or the rest of
-+  the system than killing the group.  Otherwise, memory.max is there
-+  to limit this type of spillover and ultimately contain buggy or even
-+  malicious applications.
-+
-+- The original control file names are unwieldy and inconsistent in
-+  many different ways.  For example, the upper boundary hit count is
-+  exported in the memory.failcnt file, but an OOM event count has to
-+  be manually counted by listening to memory.oom_control events, and
-+  lower boundary / soft limit events have to be counted by first
-+  setting a threshold for that value and then counting those events.
-+  Also, usage and limit files encode their units in the filename.
-+  That makes the filenames very long, even though this is not
-+  information that a user needs to be reminded of every time they type
-+  out those names.
-+
-+  To address these naming issues, as well as to signal clearly that
-+  the new interface carries a new configuration model, the naming
-+  conventions in it necessarily differ from the old interface.
-+
-+- The original limit files indicate the state of an unset limit with a
-+  Very High Number, and a configured limit can be unset by echoing -1
-+  into those files.  But that very high number is implementation and
-+  architecture dependent and not very descriptive.  And while -1 can
-+  be understood as an underflow into the highest possible value, -2 or
-+  -10M etc. do not work, so it's not consistent.
-+
-+  memory.low and memory.high will indicate "none" if the boundary is
-+  not configured, and a configured boundary can be unset by writing
-+  "none" into these files as well.
- 
- 5. Planned Changes
- 
--- 
-2.2.0
+Added, thanks.
+
+> > This all sounds pretty major.  How much trouble is this change likely to
+> > cause existing memcg users?
+> 
+> That is actually entirely up to the user in question.
+> 
+> 1. The old cgroup interface remains in place as long as there are
+> users, so, technically, nothing has to change unless they want to.
+
+It would be good to zap the old interface one day.  Maybe we won't ever
+be able to, but we should try.  Once this has all settled down and is
+documented, how about we add a couple of printk_once's to poke people
+in the new direction?
