@@ -1,361 +1,205 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [patch 3/3] mm: memcontrol: consolidate swap controller code
-Date: Tue, 13 Jan 2015 16:01:33 +0100
-Message-ID: <20150113150133.GI25318@dhcp22.suse.cz>
-References: <1420856041-27647-1-git-send-email-hannes@cmpxchg.org>
- <1420856041-27647-3-git-send-email-hannes@cmpxchg.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [patch 2/2] mm: memcontrol: default hierarchy interface for
+ memory
+Date: Tue, 13 Jan 2015 10:50:40 -0500
+Message-ID: <20150113155040.GC8180__49707.8686989427$1421164261$gmane$org@phnom.home.cmpxchg.org>
+References: <1420776904-8559-1-git-send-email-hannes@cmpxchg.org>
+ <1420776904-8559-2-git-send-email-hannes@cmpxchg.org>
+ <20150112153716.d54e90c634b70d49e8bb8688@linux-foundation.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=KyaH21xiV8dxoMnDgPf5/+/WEeFlCvB/F6JKlyDTOLo=;
-        b=aT9fhnFvc9wrNVuMXcnOvd9sLZ6ftzqFrJdEvUkMRri+QUPNfUbekmaRp0BrdWkNO1
-         K97VYSNa9Y1fOE/kgDlWDOEeDBQB/ysPI8vu5vn42rRLYlgpvk8xZwTxuJQKdQzYuvqK
-         nIUNsOgADFJ+EbT2zeEiFpcbou3uzbafdGxbhKxfjzxwrbfVZ/4FnuW8l19esf93AvLR
-         OTp/l1Zi1udHw6UA3xRF/3e1or71SqFr24rtTRNiNifDGzHkZ2/ma7YvccL//Nb8r3TN
-         Cclvt4MLAov5nnEdmN0dtrZDvHKIk5Z+PumeN5RZIyCBK2a2qPLXj8Ccp830CJAH42tl
-         /NIw==
 Content-Disposition: inline
-In-Reply-To: <1420856041-27647-3-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <20150112153716.d54e90c634b70d49e8bb8688-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri 09-01-15 21:14:01, Johannes Weiner wrote:
-> The swap controller code is scattered all over the file.  Gather all
-> the code that isn't directly needed by the memory controller at the
-> end of the file in its own CONFIG_MEMCG_SWAP section.
-
-Well, the idea was to stick with corresponding infrastructure I guess.
-memsw_cgroup_files where together with mem_cgroup_files, swap accounting
-with the charge routines. Putting everything together is certainly
-an option as well. I do not feel strongly about either way. I tend
-to dislike code churn but if it makes further changes easier then
-definitely no objections from me.
-
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> ---
->  mm/memcontrol.c | 264 +++++++++++++++++++++++++++-----------------------------
->  1 file changed, 125 insertions(+), 139 deletions(-)
+On Mon, Jan 12, 2015 at 03:37:16PM -0800, Andrew Morton wrote:
+> On Thu,  8 Jan 2015 23:15:04 -0500 Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index f66bb8f83ac9..5a5769e8b12c 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -72,22 +72,13 @@ EXPORT_SYMBOL(memory_cgrp_subsys);
->  #define MEM_CGROUP_RECLAIM_RETRIES	5
->  static struct mem_cgroup *root_mem_cgroup __read_mostly;
->  
-> +/* Whether the swap controller is active */
->  #ifdef CONFIG_MEMCG_SWAP
-> -/* Turned on only when memory cgroup is enabled && really_do_swap_account = 1 */
->  int do_swap_account __read_mostly;
-> -
-> -/* for remember boot option*/
-> -#ifdef CONFIG_MEMCG_SWAP_ENABLED
-> -static int really_do_swap_account __initdata = 1;
-> -#else
-> -static int really_do_swap_account __initdata;
-> -#endif
-> -
->  #else
->  #define do_swap_account		0
->  #endif
->  
-> -
->  static const char * const mem_cgroup_stat_names[] = {
->  	"cache",
->  	"rss",
-> @@ -4382,34 +4373,6 @@ static struct cftype mem_cgroup_legacy_files[] = {
->  	{ },	/* terminate */
->  };
->  
-> -#ifdef CONFIG_MEMCG_SWAP
-> -static struct cftype memsw_cgroup_files[] = {
-> -	{
-> -		.name = "memsw.usage_in_bytes",
-> -		.private = MEMFILE_PRIVATE(_MEMSWAP, RES_USAGE),
-> -		.read_u64 = mem_cgroup_read_u64,
-> -	},
-> -	{
-> -		.name = "memsw.max_usage_in_bytes",
-> -		.private = MEMFILE_PRIVATE(_MEMSWAP, RES_MAX_USAGE),
-> -		.write = mem_cgroup_reset,
-> -		.read_u64 = mem_cgroup_read_u64,
-> -	},
-> -	{
-> -		.name = "memsw.limit_in_bytes",
-> -		.private = MEMFILE_PRIVATE(_MEMSWAP, RES_LIMIT),
-> -		.write = mem_cgroup_write,
-> -		.read_u64 = mem_cgroup_read_u64,
-> -	},
-> -	{
-> -		.name = "memsw.failcnt",
-> -		.private = MEMFILE_PRIVATE(_MEMSWAP, RES_FAILCNT),
-> -		.write = mem_cgroup_reset,
-> -		.read_u64 = mem_cgroup_read_u64,
-> -	},
-> -	{ },	/* terminate */
-> -};
-> -#endif
->  static int alloc_mem_cgroup_per_zone_info(struct mem_cgroup *memcg, int node)
->  {
->  	struct mem_cgroup_per_node *pn;
-> @@ -5415,37 +5378,6 @@ struct cgroup_subsys memory_cgrp_subsys = {
->  	.early_init = 0,
->  };
->  
-> -#ifdef CONFIG_MEMCG_SWAP
-> -static int __init enable_swap_account(char *s)
-> -{
-> -	if (!strcmp(s, "1"))
-> -		really_do_swap_account = 1;
-> -	else if (!strcmp(s, "0"))
-> -		really_do_swap_account = 0;
-> -	return 1;
-> -}
-> -__setup("swapaccount=", enable_swap_account);
-> -
-> -static void __init memsw_file_init(void)
-> -{
-> -	WARN_ON(cgroup_add_legacy_cftypes(&memory_cgrp_subsys,
-> -					  memsw_cgroup_files));
-> -}
-> -
-> -static void __init enable_swap_cgroup(void)
-> -{
-> -	if (!mem_cgroup_disabled() && really_do_swap_account) {
-> -		do_swap_account = 1;
-> -		memsw_file_init();
-> -	}
-> -}
-> -
-> -#else
-> -static void __init enable_swap_cgroup(void)
-> -{
-> -}
-> -#endif
-> -
->  /**
->   * mem_cgroup_events - count memory events against a cgroup
->   * @memcg: the memory cgroup
-> @@ -5496,74 +5428,6 @@ bool mem_cgroup_low(struct mem_cgroup *root, struct mem_cgroup *memcg)
->  	return true;
->  }
->  
-> -#ifdef CONFIG_MEMCG_SWAP
-> -/**
-> - * mem_cgroup_swapout - transfer a memsw charge to swap
-> - * @page: page whose memsw charge to transfer
-> - * @entry: swap entry to move the charge to
-> - *
-> - * Transfer the memsw charge of @page to @entry.
-> - */
-> -void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
-> -{
-> -	struct mem_cgroup *memcg;
-> -	unsigned short oldid;
-> -
-> -	VM_BUG_ON_PAGE(PageLRU(page), page);
-> -	VM_BUG_ON_PAGE(page_count(page), page);
-> -
-> -	if (!do_swap_account)
-> -		return;
-> -
-> -	memcg = page->mem_cgroup;
-> -
-> -	/* Readahead page, never charged */
-> -	if (!memcg)
-> -		return;
-> -
-> -	oldid = swap_cgroup_record(entry, mem_cgroup_id(memcg));
-> -	VM_BUG_ON_PAGE(oldid, page);
-> -	mem_cgroup_swap_statistics(memcg, true);
-> -
-> -	page->mem_cgroup = NULL;
-> -
-> -	if (!mem_cgroup_is_root(memcg))
-> -		page_counter_uncharge(&memcg->memory, 1);
-> -
-> -	/* XXX: caller holds IRQ-safe mapping->tree_lock */
-> -	VM_BUG_ON(!irqs_disabled());
-> -
-> -	mem_cgroup_charge_statistics(memcg, page, -1);
-> -	memcg_check_events(memcg, page);
-> -}
-> -
-> -/**
-> - * mem_cgroup_uncharge_swap - uncharge a swap entry
-> - * @entry: swap entry to uncharge
-> - *
-> - * Drop the memsw charge associated with @entry.
-> - */
-> -void mem_cgroup_uncharge_swap(swp_entry_t entry)
-> -{
-> -	struct mem_cgroup *memcg;
-> -	unsigned short id;
-> -
-> -	if (!do_swap_account)
-> -		return;
-> -
-> -	id = swap_cgroup_record(entry, 0);
-> -	rcu_read_lock();
-> -	memcg = mem_cgroup_lookup(id);
-> -	if (memcg) {
-> -		if (!mem_cgroup_is_root(memcg))
-> -			page_counter_uncharge(&memcg->memsw, 1);
-> -		mem_cgroup_swap_statistics(memcg, false);
-> -		css_put(&memcg->css);
-> -	}
-> -	rcu_read_unlock();
-> -}
-> -#endif
-> -
->  /**
->   * mem_cgroup_try_charge - try charging a page
->   * @page: page to charge
-> @@ -5920,8 +5784,130 @@ static int __init mem_cgroup_init(void)
->  		soft_limit_tree.rb_tree_per_node[nid] = rtpn;
->  	}
->  
-> -	enable_swap_cgroup();
-> -
->  	return 0;
->  }
->  subsys_initcall(mem_cgroup_init);
-> +
-> +#ifdef CONFIG_MEMCG_SWAP
-> +/**
-> + * mem_cgroup_swapout - transfer a memsw charge to swap
-> + * @page: page whose memsw charge to transfer
-> + * @entry: swap entry to move the charge to
-> + *
-> + * Transfer the memsw charge of @page to @entry.
-> + */
-> +void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
-> +{
-> +	struct mem_cgroup *memcg;
-> +	unsigned short oldid;
-> +
-> +	VM_BUG_ON_PAGE(PageLRU(page), page);
-> +	VM_BUG_ON_PAGE(page_count(page), page);
-> +
-> +	if (!do_swap_account)
-> +		return;
-> +
-> +	memcg = page->mem_cgroup;
-> +
-> +	/* Readahead page, never charged */
-> +	if (!memcg)
-> +		return;
-> +
-> +	oldid = swap_cgroup_record(entry, mem_cgroup_id(memcg));
-> +	VM_BUG_ON_PAGE(oldid, page);
-> +	mem_cgroup_swap_statistics(memcg, true);
-> +
-> +	page->mem_cgroup = NULL;
-> +
-> +	if (!mem_cgroup_is_root(memcg))
-> +		page_counter_uncharge(&memcg->memory, 1);
-> +
-> +	/* XXX: caller holds IRQ-safe mapping->tree_lock */
-> +	VM_BUG_ON(!irqs_disabled());
-> +
-> +	mem_cgroup_charge_statistics(memcg, page, -1);
-> +	memcg_check_events(memcg, page);
-> +}
-> +
-> +/**
-> + * mem_cgroup_uncharge_swap - uncharge a swap entry
-> + * @entry: swap entry to uncharge
-> + *
-> + * Drop the memsw charge associated with @entry.
-> + */
-> +void mem_cgroup_uncharge_swap(swp_entry_t entry)
-> +{
-> +	struct mem_cgroup *memcg;
-> +	unsigned short id;
-> +
-> +	if (!do_swap_account)
-> +		return;
-> +
-> +	id = swap_cgroup_record(entry, 0);
-> +	rcu_read_lock();
-> +	memcg = mem_cgroup_lookup(id);
-> +	if (memcg) {
-> +		if (!mem_cgroup_is_root(memcg))
-> +			page_counter_uncharge(&memcg->memsw, 1);
-> +		mem_cgroup_swap_statistics(memcg, false);
-> +		css_put(&memcg->css);
-> +	}
-> +	rcu_read_unlock();
-> +}
-> +
-> +/* for remember boot option*/
-> +#ifdef CONFIG_MEMCG_SWAP_ENABLED
-> +static int really_do_swap_account __initdata = 1;
-> +#else
-> +static int really_do_swap_account __initdata;
-> +#endif
-> +
-> +static int __init enable_swap_account(char *s)
-> +{
-> +	if (!strcmp(s, "1"))
-> +		really_do_swap_account = 1;
-> +	else if (!strcmp(s, "0"))
-> +		really_do_swap_account = 0;
-> +	return 1;
-> +}
-> +__setup("swapaccount=", enable_swap_account);
-> +
-> +static struct cftype memsw_cgroup_files[] = {
-> +	{
-> +		.name = "memsw.usage_in_bytes",
-> +		.private = MEMFILE_PRIVATE(_MEMSWAP, RES_USAGE),
-> +		.read_u64 = mem_cgroup_read_u64,
-> +	},
-> +	{
-> +		.name = "memsw.max_usage_in_bytes",
-> +		.private = MEMFILE_PRIVATE(_MEMSWAP, RES_MAX_USAGE),
-> +		.write = mem_cgroup_reset,
-> +		.read_u64 = mem_cgroup_read_u64,
-> +	},
-> +	{
-> +		.name = "memsw.limit_in_bytes",
-> +		.private = MEMFILE_PRIVATE(_MEMSWAP, RES_LIMIT),
-> +		.write = mem_cgroup_write,
-> +		.read_u64 = mem_cgroup_read_u64,
-> +	},
-> +	{
-> +		.name = "memsw.failcnt",
-> +		.private = MEMFILE_PRIVATE(_MEMSWAP, RES_FAILCNT),
-> +		.write = mem_cgroup_reset,
-> +		.read_u64 = mem_cgroup_read_u64,
-> +	},
-> +	{ },	/* terminate */
-> +};
-> +
-> +static int __init mem_cgroup_swap_init(void)
-> +{
-> +	if (!mem_cgroup_disabled() && really_do_swap_account) {
-> +		do_swap_account = 1;
-> +		WARN_ON(cgroup_add_legacy_cftypes(&memory_cgrp_subsys,
-> +						  memsw_cgroup_files));
-> +	}
-> +	return 0;
-> +}
-> +subsys_initcall(mem_cgroup_swap_init);
-> +
-> +#endif /* CONFIG_MEMCG_SWAP */
-> -- 
-> 2.2.0
+> > Introduce the basic control files to account, partition, and limit
+> > memory using cgroups in default hierarchy mode.
+> > 
+> > This interface versioning allows us to address fundamental design
+> > issues in the existing memory cgroup interface, further explained
+> > below.  The old interface will be maintained indefinitely, but a
+> > clearer model and improved workload performance should encourage
+> > existing users to switch over to the new one eventually.
+> > 
+> > The control files are thus:
+> > 
+> >   - memory.current shows the current consumption of the cgroup and its
+> >     descendants, in bytes.
+> > 
+> >   - memory.low configures the lower end of the cgroup's expected
+> >     memory consumption range.  The kernel considers memory below that
+> >     boundary to be a reserve - the minimum that the workload needs in
+> >     order to make forward progress - and generally avoids reclaiming
+> >     it, unless there is an imminent risk of entering an OOM situation.
 > 
+> The code appears to be ascribing a special meaning to low==0: you can
+> write "none" to set this.  But I'm not seeing any description of this?
 
--- 
-Michal Hocko
-SUSE Labs
+Ah, yes.
+
+The memory.limit_in_bytes and memory.soft_limit_in_bytes currently
+show 18446744073709551615 per default, which is a silly way of saying
+"this limit is inactive".  And echoing -1 into the control file is an
+even sillier way of setting this state.  So the new interface just
+calls this state "none".  Internally, 0 and Very High Number represent
+this unconfigured state for memory.low and memory.high, respectively.
+
+I added a bullet point at the end of the changelog below.
+
+> >   - memory.high configures the upper end of the cgroup's expected
+> >     memory consumption range.  A cgroup whose consumption grows beyond
+> >     this threshold is forced into direct reclaim, to work off the
+> >     excess and to throttle new allocations heavily, but is generally
+> >     allowed to continue and the OOM killer is not invoked.
+> > 
+> >   - memory.max configures the hard maximum amount of memory that the
+> >     cgroup is allowed to consume before the OOM killer is invoked.
+> > 
+> >   - memory.events shows event counters that indicate how often the
+> >     cgroup was reclaimed while below memory.low, how often it was
+> >     forced to reclaim excess beyond memory.high, how often it hit
+> >     memory.max, and how often it entered OOM due to memory.max.  This
+> >     allows users to identify configuration problems when observing a
+> >     degradation in workload performance.  An overcommitted system will
+> >     have an increased rate of low boundary breaches, whereas increased
+> >     rates of high limit breaches, maximum hits, or even OOM situations
+> >     will indicate internally overcommitted cgroups.
+> > 
+> > For existing users of memory cgroups, the following deviations from
+> > the current interface are worth pointing out and explaining:
+> > 
+> >   - The original lower boundary, the soft limit, is defined as a limit
+> >     that is per default unset.  As a result, the set of cgroups that
+> >     global reclaim prefers is opt-in, rather than opt-out.  The costs
+> >     for optimizing these mostly negative lookups are so high that the
+> >     implementation, despite its enormous size, does not even provide
+> >     the basic desirable behavior.  First off, the soft limit has no
+> >     hierarchical meaning.  All configured groups are organized in a
+> >     global rbtree and treated like equal peers, regardless where they
+> >     are located in the hierarchy.  This makes subtree delegation
+> >     impossible.  Second, the soft limit reclaim pass is so aggressive
+> >     that it not just introduces high allocation latencies into the
+> >     system, but also impacts system performance due to overreclaim, to
+> >     the point where the feature becomes self-defeating.
+> > 
+> >     The memory.low boundary on the other hand is a top-down allocated
+> >     reserve.  A cgroup enjoys reclaim protection when it and all its
+> >     ancestors are below their low boundaries, which makes delegation
+> >     of subtrees possible.  Secondly, new cgroups have no reserve per
+> >     default and in the common case most cgroups are eligible for the
+> >     preferred reclaim pass.  This allows the new low boundary to be
+> >     efficiently implemented with just a minor addition to the generic
+> >     reclaim code, without the need for out-of-band data structures and
+> >     reclaim passes.  Because the generic reclaim code considers all
+> >     cgroups except for the ones running low in the preferred first
+> >     reclaim pass, overreclaim of individual groups is eliminated as
+> >     well, resulting in much better overall workload performance.
+> > 
+> >   - The original high boundary, the hard limit, is defined as a strict
+> >     limit that can not budge, even if the OOM killer has to be called.
+> >     But this generally goes against the goal of making the most out of
+> >     the available memory.  The memory consumption of workloads varies
+> >     during runtime, and that requires users to overcommit.  But doing
+> >     that with a strict upper limit requires either a fairly accurate
+> >     prediction of the working set size or adding slack to the limit.
+> >     Since working set size estimation is hard and error prone, and
+> >     getting it wrong results in OOM kills, most users tend to err on
+> >     the side of a looser limit and end up wasting precious resources.
+> > 
+> >     The memory.high boundary on the other hand can be set much more
+> >     conservatively.  When hit, it throttles allocations by forcing
+> >     them into direct reclaim to work off the excess, but it never
+> >     invokes the OOM killer.  As a result, a high boundary that is
+> >     chosen too aggressively will not terminate the processes, but
+> >     instead it will lead to gradual performance degradation.  The user
+> >     can monitor this and make corrections until the minimal memory
+> >     footprint that still gives acceptable performance is found.
+> > 
+> >     In extreme cases, with many concurrent allocations and a complete
+> >     breakdown of reclaim progress within the group, the high boundary
+> >     can be exceeded.  But even then it's mostly better to satisfy the
+> >     allocation from the slack available in other groups or the rest of
+> >     the system than killing the group.  Otherwise, memory.max is there
+> >     to limit this type of spillover and ultimately contain buggy or
+> >     even malicious applications.
+> > 
+> >   - The existing control file names are unwieldy and inconsistent in
+> >     many different ways.  For example, the upper boundary hit count is
+> >     exported in the memory.failcnt file, but an OOM event count has to
+> >     be manually counted by listening to memory.oom_control events, and
+> >     lower boundary / soft limit events have to be counted by first
+> >     setting a threshold for that value and then counting those events.
+> >     Also, usage and limit files encode their units in the filename.
+> >     That makes the filenames very long, even though this is not
+> >     information that a user needs to be reminded of every time they
+> >     type out those names.
+> > 
+> >     To address these naming issues, as well as to signal clearly that
+> >     the new interface carries a new configuration model, the naming
+> >     conventions in it necessarily differ from the old interface.
+
+  - The existing limit files indicate the state of an unset limit with
+    a very high number, and a configured limit can be unset by echoing
+    -1 into those files.  But that very high number is implementation
+    and architecture dependent and not very descriptive.  And while -1
+    can be understood as an underflow into the highest possible value,
+    -2 or -10M etc. do not work, so it's quite inconsistent.
+
+    memory.low and memory.high will indicate "none" if the boundary is
+    not configured, and a configured boundary can be unset by writing
+    "none" into these files as well.
+
+Does that sound good?
+
+> This all sounds pretty major.  How much trouble is this change likely to
+> cause existing memcg users?
+
+That is actually entirely up to the user in question.
+
+1. The old cgroup interface remains in place as long as there are
+users, so, technically, nothing has to change unless they want to.
+
+2. While default settings and behavior of memory.low slightly differ
+from memory.soft_limit_in_bytes, the new interface is compatible with
+most existing usecases.  Anybody who currently only hard limits can
+set memory.max to the same value as memory.limit_in_bytes and be done.
+A configuration that uses soft limits should be easy to translate to
+memory.low, AFAIK it's already only used for the reserve semantics.
+
+3. That being said, even though they are not forced to, of course we
+want users to rethink their approach to machine partitioning because
+that is likely going to improve their workload performance and their
+memory utilization.  If they go down this route, they have to figure
+out the workloads' minimal amount of memory to run acceptably and set
+memory.low.  Then they need to figure out the amount of slack they
+want to afford each workload during idle times - this trades the
+available cache window in the group against startup/allocation latency
+in other groups - and set the memory.high accordingly.  The job
+launcher/admin can then parcel off the system's memory by considering
+some value between the low and high boundary as the average target
+size of each group, depending on the desired level of overcommit.
+
+> > include/linux/memcontrol.h |  32 ++++++
+> > mm/memcontrol.c            | 247 +++++++++++++++++++++++++++++++++++++++++++--
+> > mm/vmscan.c                |  22 +++-
+> 
+> No Documentation/cgroups/memory.txt?
+
+That file has a bit of an identity crisis, where interface description
+is entangled with irrelevant (and out-of-date) implementation details.
+
+It would be a lot better to have a single cgroup interface document
+that covers the generic interface and all available controllers with
+consistent language and level of detail.  Better for users, probably
+also better for developers to cross check if new interfaces integrate
+nicely into the existing model.  I'll kick something off.
+
+Thanks!
