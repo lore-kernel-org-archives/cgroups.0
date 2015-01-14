@@ -1,21 +1,21 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [patch 2/2] mm: memcontrol: default hierarchy interface for
  memory
 Date: Wed, 14 Jan 2015 12:19:44 -0500
-Message-ID: <20150114171944.GB32040__41625.7064360709$1421256003$gmane$org@phnom.home.cmpxchg.org>
+Message-ID: <20150114171944.GB32040__2473.55546239323$1421256014$gmane$org@phnom.home.cmpxchg.org>
 References: <1420776904-8559-1-git-send-email-hannes@cmpxchg.org>
  <1420776904-8559-2-git-send-email-hannes@cmpxchg.org>
  <20150114153425.GF4706@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20150114153425.GF4706-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20150114153425.GF4706@dhcp22.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@parallels.com>, Greg Thelen <gthelen@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
 On Wed, Jan 14, 2015 at 04:34:25PM +0100, Michal Hocko wrote:
 > On Thu 08-01-15 23:15:04, Johannes Weiner wrote:
