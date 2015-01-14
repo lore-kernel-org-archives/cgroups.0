@@ -1,70 +1,53 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [patch] mm: memcontrol: fold move_anon() and move_file()
-Date: Wed, 14 Jan 2015 16:42:10 +0100
-Message-ID: <20150114154210.GG4706@dhcp22.suse.cz>
-References: <1421175592-14179-1-git-send-email-hannes@cmpxchg.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [patch 2/2] mm: memcontrol: default hierarchy interface for
+ memory
+Date: Wed, 14 Jan 2015 11:01:01 -0500
+Message-ID: <20150114160101.GA30018__10155.4131870673$1421251280$gmane$org@phnom.home.cmpxchg.org>
+References: <1420776904-8559-1-git-send-email-hannes@cmpxchg.org>
+ <1420776904-8559-2-git-send-email-hannes@cmpxchg.org>
+ <xr93a91mz2s7.fsf@gthelen.mtv.corp.google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=DOtWP78DuPWzR/704nuhcOVLqlMXLEVqCgDH0ce6n6Y=;
-        b=kw3JT1+zWZr2wWAx5Kv/Ps93Q0/CICLDzMp1sYPvhxovmOZImTRUBRhK6925ncse/P
-         jiY8PeCYKG5rkyAJ9BHc5of3dBJerzgSSTJxGRIsf8egr/SQn3zZzK3SSym1Z7gu63V2
-         OPbgUW6oF7FhpfWqlO5x4mfpYtkN6+vwDGp8dSJckUuaUbyhn2UUszqoqnpGLLYeHFxT
-         UFMvtzc5e0Z3JOTN1ALEv1acOVGjzj5xhC5o+HF4rIoSZf4NZd9i51q8Dl/w3mDUWA/F
-         clSURTvdvzWPNP8I9ayO/GvjDBa/rl2jEfRuIc3NNxranhNKCjEaDM2r/EoiDmSqA1J6
-         xpNw==
 Content-Disposition: inline
-In-Reply-To: <1421175592-14179-1-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <xr93a91mz2s7.fsf-aSPv4SP+Du0KgorLzL7FmE7CuiCeIGUxQQ4Iyu8u01E@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue 13-01-15 13:59:52, Johannes Weiner wrote:
-> Turn the move type enum into flags and give the flags field a shorter
-> name.  Once that is done, move_anon() and move_file() are simple
-> enough to just fold them into the callsites.
+On Tue, Jan 13, 2015 at 03:20:08PM -0800, Greg Thelen wrote:
 > 
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-
-Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-
-one nit below
-
-> ---
->  mm/memcontrol.c | 49 ++++++++++++++++++-------------------------------
->  1 file changed, 18 insertions(+), 31 deletions(-)
+> On Thu, Jan 08 2015, Johannes Weiner wrote:
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 5a5769e8b12c..692e96407627 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -360,21 +360,18 @@ static bool memcg_kmem_is_active(struct mem_cgroup *memcg)
->  
->  /* Stuffs for move charges at task migration. */
->  /*
-> - * Types of charges to be moved. "move_charge_at_immitgrate" and
-> - * "immigrate_flags" are treated as a left-shifted bitmap of these types.
-> + * Types of charges to be moved.
->   */
-> -enum move_type {
-> -	MOVE_CHARGE_TYPE_ANON,	/* private anonymous page and swap of it */
-> -	MOVE_CHARGE_TYPE_FILE,	/* file page(including tmpfs) and swap of it */
-> -	NR_MOVE_TYPE,
-> -};
-> +#define MOVE_ANON	0x1U
-> +#define MOVE_FILE	0x2U
-> +#define MOVE_MASK	0x3U
+> > Introduce the basic control files to account, partition, and limit
+> > memory using cgroups in default hierarchy mode.
+> >
+> > This interface versioning allows us to address fundamental design
+> > issues in the existing memory cgroup interface, further explained
+> > below.  The old interface will be maintained indefinitely, but a
+> > clearer model and improved workload performance should encourage
+> > existing users to switch over to the new one eventually.
+> >
+> > The control files are thus:
+> >
+> >   - memory.current shows the current consumption of the cgroup and its
+> >     descendants, in bytes.
+> >
+> >   - memory.low configures the lower end of the cgroup's expected
+> >     memory consumption range.  The kernel considers memory below that
+> >     boundary to be a reserve - the minimum that the workload needs in
+> >     order to make forward progress - and generally avoids reclaiming
+> >     it, unless there is an imminent risk of entering an OOM situation.
+> 
+> So this is try-hard, but no-promises interface.  No complaints.  But I
+> assume that an eventual extension is a more rigid memory.min which
+> specifies a minimum working set under which an container would prefer an
+> oom kill to thrashing.
 
-#define MOVE_MASK	(MOVE_ANON | MOVE_FILE)
-
-would be probably better
-[...]
--- 
-Michal Hocko
-SUSE Labs
+Yes, memory.min would nicely complement memory.max and I wouldn't be
+opposed to adding it.  However, that does require at least some level
+of cgroup-awareness in the global OOM killer in order to route kills
+meaningfully according to cgroup configuration, which is mainly why I
+deferred it in this patch.
