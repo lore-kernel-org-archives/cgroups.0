@@ -1,208 +1,51 @@
-From: Konstantin Khebnikov <khlebnikov@yandex-team.ru>
-Subject: [PATCH 5/6] delay-injection: resource management via procrastination
-Date: Thu, 15 Jan 2015 21:49:17 +0300
-Message-ID: <20150115184917.10450.38284.stgit@buzz>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 3/6] memcg: track shared inodes with dirty pages
+Date: Thu, 15 Jan 2015 13:55:43 -0500
+Message-ID: <20150115185543.GA28195@htj.dyndns.org>
 References: <20150115180242.10450.92.stgit@buzz>
+ <20150115184914.10450.51964.stgit@buzz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
-	t=1421347757; bh=TRAlPmM0kI9fHlGN5kNcsBhsdLb0qhrXUPtuBdPtm4k=;
-	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
-	 User-Agent:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	b=jE3LEaiOLYtkag8ApdraWACN3blqahuM/MPOp0Lrnt2AF6En58OwCfqzleE+rEwme
-	 Mo1elsyk2ghn4pFIaBNpjaWwUR5keq41bToZZeka5LFW66GGgivimweD5rIAyUUQaf
-	 5Z5dXQPselPggl5OkbwPxYyeNHVx9XHWRzF/mZeY=
-In-Reply-To: <20150115180242.10450.92.stgit@buzz>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=gDRPE5mTMxsT8cIsylHzvuu9WLrGPdXL6TWA7mFiHlY=;
+        b=vcC6k/zbhWbrPZCnnpYkiHlJFoB5QiCnzDw8ZPCtP7CT97WMmkQs7ZZ2co52r02aUG
+         zbVIzrOVyVXWcp5YtFUmMVOr+kF5e79Meoh+a+H+or4JG9ZHNOQktQ8Sa4mX+4MKTosT
+         7CXcEYbxhH+WoEflr/Upmo+P3bGhOIaEVJ8tfq3dgCaE+FgK0eZ3lAZjaTdovHw3m+zL
+         unXRfeIAiJ1XYzNq+drph/GPoxlx/zZGUgJmqLfblnCghoW5NIzOtZ8lorvSCPsUBqeM
+         /d+c+uxxjeiFIEmphxfwyTQEwZEucAgrYJic1OzFi0VS8n5juxAdnYOfeRzJDZRluwnp
+         HNAA==
+Content-Disposition: inline
+In-Reply-To: <20150115184914.10450.51964.stgit@buzz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-mm@kvack.org, cgroups@vger.kernel.org
-Cc: Roman Gushchin <klamm@yandex-team.ru>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-fsdevel@vger.kernel.org, koct9i@gmail.com
+Content-Transfer-Encoding: 7bit
+To: Konstantin Khebnikov <khlebnikov@yandex-team.ru>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Roman Gushchin <klamm@yandex-team.ru>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, koct9i@gmail.com
 
-From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+On Thu, Jan 15, 2015 at 09:49:14PM +0300, Konstantin Khebnikov wrote:
+> From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+> 
+> Inode is owned only by one memory cgroup, but if it's shared it might
+> contain pages from multiple cgroups. This patch detects this situation
+> in memory reclaiemer and marks dirty inode with flag I_DIRTY_SHARED
+> which is cleared only when data is completely written. Memcg writeback
+> always writes such inodes.
+> 
+> Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
 
-inject_delay() allows to pause current task before returning
-into userspace in place where kernel doesn't hold any locks
-thus wait wouldn't introduce any priority-inversion problems.
+This conflicts with the writeback cgroup support patchset which will
+solve the writeback and memcg problem a lot more comprehensively.
 
-This code abuses existing task-work and 'TASK_PARKED' state.
-Parked tasks are killable and don't contribute into cpu load.
+ http://lkml.kernel.org/g/1420579582-8516-1-git-send-email-tj@kernel.org
 
-Together with percpu_ratelimit this could be used in this manner:
+Thanks.
 
-if (percpu_ratelimit_charge(&ratelimit, events))
-        inject_delay(percpu_ratelimit_target(&ratelimit));
-
-Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
----
- include/linux/sched.h        |    7 ++++
- include/trace/events/sched.h |    7 ++++
- kernel/sched/core.c          |   66 ++++++++++++++++++++++++++++++++++++++++++
- kernel/sched/fair.c          |   12 ++++++++
- 4 files changed, 92 insertions(+)
-
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 8db31ef..2363918 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1132,6 +1132,7 @@ struct sched_statistics {
- 	u64			iowait_sum;
- 
- 	u64			sleep_start;
-+	u64			delay_start;
- 	u64			sleep_max;
- 	s64			sum_sleep_runtime;
- 
-@@ -1662,6 +1663,10 @@ struct task_struct {
- 	unsigned long timer_slack_ns;
- 	unsigned long default_timer_slack_ns;
- 
-+	/* Pause task till this time before returning into userspace */
-+	ktime_t delay_injection_target;
-+	struct callback_head delay_injection_work;
-+
- #ifdef CONFIG_FUNCTION_GRAPH_TRACER
- 	/* Index of current stored address in ret_stack */
- 	int curr_ret_stack;
-@@ -2277,6 +2282,8 @@ extern void set_curr_task(int cpu, struct task_struct *p);
- 
- void yield(void);
- 
-+extern void inject_delay(ktime_t target);
-+
- /*
-  * The default (Linux) execution domain.
-  */
-diff --git a/include/trace/events/sched.h b/include/trace/events/sched.h
-index 30fedaf..d35154e 100644
---- a/include/trace/events/sched.h
-+++ b/include/trace/events/sched.h
-@@ -365,6 +365,13 @@ DEFINE_EVENT(sched_stat_template, sched_stat_blocked,
- 	     TP_ARGS(tsk, delay));
- 
- /*
-+ * Tracepoint for accounting delay-injection
-+ */
-+DEFINE_EVENT(sched_stat_template, sched_stat_delayed,
-+	     TP_PROTO(struct task_struct *tsk, u64 delay),
-+	     TP_ARGS(tsk, delay));
-+
-+/*
-  * Tracepoint for accounting runtime (time the task is executing
-  * on a CPU).
-  */
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index c0accc0..7a9d6a1 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -65,6 +65,7 @@
- #include <linux/unistd.h>
- #include <linux/pagemap.h>
- #include <linux/hrtimer.h>
-+#include <linux/task_work.h>
- #include <linux/tick.h>
- #include <linux/debugfs.h>
- #include <linux/ctype.h>
-@@ -8377,3 +8378,68 @@ void dump_cpu_task(int cpu)
- 	pr_info("Task dump for CPU %d:\n", cpu);
- 	sched_show_task(cpu_curr(cpu));
- }
-+
-+#define DELAY_INJECTION_SLACK_NS	(NSEC_PER_SEC / 50)
-+
-+static enum hrtimer_restart delay_injection_wakeup(struct hrtimer *timer)
-+{
-+	struct hrtimer_sleeper *t =
-+		container_of(timer, struct hrtimer_sleeper, timer);
-+	struct task_struct *task = t->task;
-+
-+	t->task = NULL;
-+	if (task)
-+		wake_up_state(task, TASK_PARKED);
-+
-+	return HRTIMER_NORESTART;
-+}
-+
-+/*
-+ * Here delayed task sleeps in 'P'arked state.
-+ */
-+static void delay_injection_sleep(struct callback_head *head)
-+{
-+	struct task_struct *task = current;
-+	struct hrtimer_sleeper t;
-+
-+	head->func = NULL;
-+	__set_task_state(task, TASK_WAKEKILL | TASK_PARKED);
-+	hrtimer_init_on_stack(&t.timer, CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
-+	hrtimer_set_expires_range_ns(&t.timer, current->delay_injection_target,
-+				     DELAY_INJECTION_SLACK_NS);
-+
-+	t.timer.function = delay_injection_wakeup;
-+	t.task = task;
-+
-+	hrtimer_start_expires(&t.timer, HRTIMER_MODE_ABS);
-+	if (!hrtimer_active(&t.timer))
-+		t.task = NULL;
-+
-+	if (likely(t.task))
-+		schedule();
-+
-+	hrtimer_cancel(&t.timer);
-+	destroy_hrtimer_on_stack(&t.timer);
-+
-+	__set_task_state(task, TASK_RUNNING);
-+}
-+
-+/*
-+ * inject_delay - injects delay before returning into userspace
-+ * @target: absolute monotomic timestamp to sleeping for,
-+ *	    task will not return into userspace before this time
-+ */
-+void inject_delay(ktime_t target)
-+{
-+	struct task_struct *task = current;
-+
-+	if (ktime_after(target, task->delay_injection_target)) {
-+		task->delay_injection_target = target;
-+		if (!task->delay_injection_work.func) {
-+			init_task_work(&task->delay_injection_work,
-+					delay_injection_sleep);
-+			task_work_add(task, &task->delay_injection_work, true);
-+		}
-+	}
-+}
-+EXPORT_SYMBOL(inject_delay);
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 40667cb..2e3269b 100644
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -2944,6 +2944,15 @@ static void enqueue_sleeper(struct cfs_rq *cfs_rq, struct sched_entity *se)
- 			account_scheduler_latency(tsk, delta >> 10, 0);
- 		}
- 	}
-+	if (se->statistics.delay_start) {
-+		u64 delta = rq_clock(rq_of(cfs_rq)) - se->statistics.delay_start;
-+
-+		if ((s64)delta < 0)
-+			delta = 0;
-+
-+		se->statistics.delay_start = 0;
-+		trace_sched_stat_delayed(tsk, delta);
-+	}
- #endif
- }
- 
-@@ -3095,6 +3104,9 @@ dequeue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
- 				se->statistics.sleep_start = rq_clock(rq_of(cfs_rq));
- 			if (tsk->state & TASK_UNINTERRUPTIBLE)
- 				se->statistics.block_start = rq_clock(rq_of(cfs_rq));
-+			if ((tsk->state & TASK_PARKED) &&
-+			    tsk->delay_injection_target.tv64)
-+				se->statistics.delay_start = rq_clock(rq_of(cfs_rq));
- 		}
- #endif
- 	}
+-- 
+tejun
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
