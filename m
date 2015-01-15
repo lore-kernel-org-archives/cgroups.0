@@ -1,109 +1,88 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [patch 2/2] mm: memcontrol: default hierarchy interface for
- memory
-Date: Thu, 15 Jan 2015 18:08:17 +0100
-Message-ID: <20150115170817.GE7008@dhcp22.suse.cz>
-References: <1420776904-8559-1-git-send-email-hannes@cmpxchg.org>
- <1420776904-8559-2-git-send-email-hannes@cmpxchg.org>
- <20150114153425.GF4706@dhcp22.suse.cz>
- <20150114171944.GB32040@phnom.home.cmpxchg.org>
+From: Konstantin Khebnikov <khlebnikov@yandex-team.ru>
+Subject: [PATCHSET RFC 0/6] memcg: inode-based dirty-set controller
+Date: Thu, 15 Jan 2015 21:49:10 +0300
+Message-ID: <20150115180242.10450.92.stgit@buzz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=s29IJZMgBqlTKIPGvf9ycS7YRMjr8/0hjQ2mVZoi5Fo=;
-        b=lA3fLDxLaI455rZ5G5kxwdAyFy0vEEKZWBOy4Tjiw4Yk1j+4AF6f80EXDN36SKXmWI
-         uRfxapyVLUqowoP1Hyciu5nREA1VZVp57A14UU5Nm/MmpDUHf5lxQhxfMd67g6NZ+gG6
-         TdkZuOy2w8ksclL1KCZXCC0gmC8fYdmFPS16SnanuhVvPt7vYC2pSiC8NVHHOYQ+yXrb
-         v99o5kE/CrRG6PrJcSYdWW8JBOuBwo0nUYiCp+wdcMDAFP+7SLqAZZ+oCEl7pXiCU/HF
-         qq8CX6QlcHJBiEGc2gMfaMAtsm4VrY65KCyNIhy3X5ZFAnHt9vNGw4FmNH43xq1vOnyR
-         vZYg==
-Content-Disposition: inline
-In-Reply-To: <20150114171944.GB32040@phnom.home.cmpxchg.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
+	t=1421347751; bh=9IeJm21PS/1TUCckpKk5Chnkrt/SLSJf1j1kgjW96GU=;
+	h=Subject:From:To:Cc:Date:Message-ID:User-Agent:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding;
+	b=bHI6OLQLkuFkcw2sHlTFocsdudd41NqZV56GhrMmK3lqRcbiQx1aaMUqUzlrIxlnQ
+	 ur3AnzUYxyNz2U5ElnnrN7/aviSg1k7cyYBfRJWJcHpP2vNFWrdOcQhontb5swmVlp
+	 joEQfOEUIQzsm952x5HQlza7/M6KSp34qrBdmVVs=
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@parallels.com>, Greg Thelen <gthelen@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-mm@kvack.org, cgroups@vger.kernel.org
+Cc: Roman Gushchin <klamm@yandex-team.ru>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-fsdevel@vger.kernel.org, koct9i@gmail.com
 
-On Wed 14-01-15 12:19:44, Johannes Weiner wrote:
-> On Wed, Jan 14, 2015 at 04:34:25PM +0100, Michal Hocko wrote:
-> > On Thu 08-01-15 23:15:04, Johannes Weiner wrote:
-[...]
-> > > @@ -2322,6 +2325,12 @@ static bool shrink_zone(struct zone *zone, struct scan_control *sc,
-> > >  			struct lruvec *lruvec;
-> > >  			int swappiness;
-> > >  
-> > > +			if (mem_cgroup_low(root, memcg)) {
-> > > +				if (!sc->may_thrash)
-> > > +					continue;
-> > > +				mem_cgroup_events(memcg, MEMCG_LOW, 1);
-> > > +			}
-> > > +
-> > >  			lruvec = mem_cgroup_zone_lruvec(zone, memcg);
-> > >  			swappiness = mem_cgroup_swappiness(memcg);
-> > >  
-> > > @@ -2343,8 +2352,7 @@ static bool shrink_zone(struct zone *zone, struct scan_control *sc,
-> > >  				mem_cgroup_iter_break(root, memcg);
-> > >  				break;
-> > >  			}
-> > > -			memcg = mem_cgroup_iter(root, memcg, &reclaim);
-> > > -		} while (memcg);
-> > > +		} while ((memcg = mem_cgroup_iter(root, memcg, &reclaim)));
-> > 
-> > I had a similar code but then I could trigger quick priority drop downs
-> > during parallel reclaim with multiple low limited groups. I've tried to
-> > address that by retrying shrink_zone if it hasn't called shrink_lruvec
-> > at all. Still not ideal because it can livelock theoretically, but I
-> > haven't seen that in my testing.
-> 
-> Do you remember the circumstances and the exact configuration?
+This is ressurection of my old RFC patch for dirty-set accounting cgroup [1]
+Now it's merged into memory cgroup and got bandwidth controller as a bonus.
 
-Well, I was testing heavy parallel memory intensive load (combination of
-anon and file) in one memcg and many (hundreds of) idle memcgs to see
-how much overhead memcg traversing would cost us. And I misconfigured by
-setting idle memcgs low-limit to -1 instead of 0. There is nothing
-running in them.
-I've noticed that I can see more pages reclaimed than expected and also
-higher runtime which turned out to be related to longer stalls during
-reclaim rather than the cost of the memcg reclaim iterator.  Debugging
-has shown that many direct reclaimers were racing over low-limited
-groups and dropped to lower priorities. The race window was apparently
-much much smaller than a noop shrink_lruvec run.
+That shows alternative solution: less accurate but much less monstrous than
+accurate page-based dirty-set controller from Tejun Heo.
 
-So in a sense this was a mis-configured system because I do not expect
-so many low limited groups in real life but there was still something
-reclaimable so the machine wasn't really over-committed. So this points
-to an issue which might happen, albeit in a smaller scale, if there are
-many groups, heavy reclaim and some reclaimers unlucky to race and see
-only low-limited groups.
- 
-> I tested this with around 30 containerized kernel build jobs whose low
-> boundaries pretty much added up to the available physical memory and
-> never observed this.  That being said, thrashing is an emergency path
-> and users should really watch the memory.events low counter.  After
-> all, if global reclaim frequently has to ignore the reserve settings,
-> what's the point of having them in the first place?
+Memory overhead: +1 pointer into struct address_space.
+Perfomance overhead is almost zero, no new locks added.
 
-Sure, over-committed low limit is a misconfiguration. But this is not
-what happened in my testing.
+Idea is stright forward: link each inode to some cgroup when first dirty
+page appers and account all dirty pages to it. Writeback is implemented
+as single per-bdi writeback work which writes only inodes which belong
+to memory cgroups where amount of dirty memory is beyond thresholds.
 
-> So while I see that this might burn some cpu cycles when the system is
-> misconfigured, and that we could definitely be smarter about this, I'm
-> not convinced we have to rush a workaround before moving ahead with
-> this patch, especially not one that is prone to livelock the system.
+Third patch adds trick for handling shared inodes which have dirty pages
+from several cgroups: it marks whole inode as shared and alters writeback
+filter for it.
 
-OK, then do not merge it to the original patch. If for nothing else then
-for bisectability. I will post a patch separately. I still think we
-should consider a way how to address it sooner or later because the
-result would be non trivial to debug.
+The rest is an example of bandwith and iops controller build on top of that.
+Design is completely original, I bet nobody ever used task-works for that =)
 
--- 
-Michal Hocko
-SUSE Labs
+[1] [PATCH RFC] fsio: filesystem io accounting cgroup
+http://marc.info/?l=linux-kernel&m=137331569501655&w=2
+
+Patches also available here:
+https://github.com/koct9i/linux.git branch memcg_dirty_control
+
+---
+
+Konstantin Khebnikov (6):
+      memcg: inode-based dirty and writeback pages accounting
+      memcg: dirty-set limiting and filtered writeback
+      memcg: track shared inodes with dirty pages
+      percpu_ratelimit: high-performance ratelimiting counter
+      delay-injection: resource management via procrastination
+      memcg: filesystem bandwidth controller
+
+
+ block/blk-core.c                 |    2 
+ fs/direct-io.c                   |    2 
+ fs/fs-writeback.c                |   22 ++
+ fs/inode.c                       |    1 
+ include/linux/backing-dev.h      |    1 
+ include/linux/fs.h               |   14 +
+ include/linux/memcontrol.h       |   27 +++
+ include/linux/percpu_ratelimit.h |   45 ++++
+ include/linux/sched.h            |    7 +
+ include/linux/writeback.h        |    1 
+ include/trace/events/sched.h     |    7 +
+ include/trace/events/writeback.h |    1 
+ kernel/sched/core.c              |   66 +++++++
+ kernel/sched/fair.c              |   12 +
+ lib/Makefile                     |    1 
+ lib/percpu_ratelimit.c           |  168 +++++++++++++++++
+ mm/memcontrol.c                  |  381 ++++++++++++++++++++++++++++++++++++++
+ mm/page-writeback.c              |   32 +++
+ mm/readahead.c                   |    2 
+ mm/truncate.c                    |    1 
+ mm/vmscan.c                      |    4 
+ 21 files changed, 787 insertions(+), 10 deletions(-)
+ create mode 100644 include/linux/percpu_ratelimit.h
+ create mode 100644 lib/percpu_ratelimit.c
+
+--
+Signature
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
