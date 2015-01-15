@@ -1,18 +1,18 @@
 From: Konstantin Khebnikov <khlebnikov@yandex-team.ru>
-Subject: [PATCH 4/6] percpu_ratelimit: high-performance ratelimiting counter
-Date: Thu, 15 Jan 2015 21:49:15 +0300
-Message-ID: <20150115184915.10450.1814.stgit@buzz>
+Subject: [PATCH 6/6] memcg: filesystem bandwidth controller
+Date: Thu, 15 Jan 2015 21:49:18 +0300
+Message-ID: <20150115184918.10450.86621.stgit@buzz>
 References: <20150115180242.10450.92.stgit@buzz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
-	t=1421347756; bh=wOv1PlVgMQl9MYsSv2PzPsdGZZme1IAi2WQOlmDzgds=;
+	t=1421347759; bh=NJ5N+FafP3Rv33TlsLJG0yYiFw4uM2rGYVLtt9jTvjQ=;
 	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
 	 User-Agent:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	b=psTQ55Xd3ZfUITPFN6jnxBb02fjek/EC/u5Z+ipDpG1J7c0NQ/VQ6IEkqVOGIPH1n
-	 ZmpioEXFIfz6xwACbsWT2mzlzrPZYg+oOCgDfTzEsArGP2QrQgbDSMkbX09Hb67yME
-	 8pX6orjNcz6843QbZMQRvtfQWbYT9b5SvphKQnmg=
+	b=w4Me4ymboZqyQobHnIw6Ud6kz9Zns1TTYjB6K8P2xyKvG+KfORepLotSX8MHOLO2e
+	 juxRUddEP+XKchCBRmYi1af2zZhlfsEFupJZEskTZqktoEVqDboeovpQRNhTW1def2
+	 H7uEto0nkfPa0Xr+SS9FSb/Bj93nWy+mc7kgpavg=
 In-Reply-To: <20150115180242.10450.92.stgit@buzz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -22,260 +22,288 @@ Cc: Roman Gushchin <klamm@yandex-team.ru>, Jan Kara <jack@suse.cz>, Dave Chinner
 
 From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
 
-Parameters:
-period   - interval between refills (100ms should be fine)
-quota    - events refill per period
-deadline - interval to utilize unused past quota (1s by default)
-latency  - maximum injected delay (10s by default)
+This is example of filesystem bandwidth controller build on the top of
+dirty memory accounting, percpu_ratelimit and delay-injection.
 
-Quota sums into 'budget' and spreads across cpus.
+Cgroup charges read/write requests into rate-limiters and injects delays
+which controls overall speed.
+
+Interface:
+memory.fs_bps_limit     bytes per second, 0 == unlimited
+memory.fs_iops_limit    iops limit, 0 == unlimited
+Statistics: fs_io_bytes and fs_io_operations in memory.stat
+
+For small bandwidth limits memory limit also must be set into corresponded
+value otherwise injected delay after writing dirty-set might be enormous.
 
 Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
 ---
- include/linux/percpu_ratelimit.h |   45 ++++++++++
- lib/Makefile                     |    1 
- lib/percpu_ratelimit.c           |  168 ++++++++++++++++++++++++++++++++++++++
- 3 files changed, 214 insertions(+)
- create mode 100644 include/linux/percpu_ratelimit.h
- create mode 100644 lib/percpu_ratelimit.c
+ block/blk-core.c           |    2 +
+ fs/direct-io.c             |    2 +
+ include/linux/memcontrol.h |    4 ++
+ mm/memcontrol.c            |  102 +++++++++++++++++++++++++++++++++++++++++++-
+ mm/readahead.c             |    2 +
+ 5 files changed, 110 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/percpu_ratelimit.h b/include/linux/percpu_ratelimit.h
-new file mode 100644
-index 0000000..42c45d4
---- /dev/null
-+++ b/include/linux/percpu_ratelimit.h
-@@ -0,0 +1,45 @@
-+#ifndef _LINUX_PERCPU_RATELIMIT_H
-+#define _LINUX_PERCPU_RATELIMIT_H
-+
-+#include <linux/hrtimer.h>
-+
-+struct percpu_ratelimit {
-+	struct hrtimer  timer;
-+	ktime_t		target;		/* time of next refill */
-+	ktime_t		deadline;	/* interval to utilize past budget */
-+	ktime_t		latency;	/* maximum injected delay */
-+	ktime_t		period;		/* interval between refills */
-+	u64		quota;		/* events refill per period */
-+	u64		budget;		/* amount of available events */
-+	u64		total;		/* consumed and pre-charged events */
-+	raw_spinlock_t	lock;		/* protect the state */
-+	u32		cpu_batch;	/* events in per-cpu precharge */
-+	u32 __percpu	*cpu_budget;	/* per-cpu precharge */
-+};
-+
-+static inline bool percpu_ratelimit_blocked(struct percpu_ratelimit *rl)
-+{
-+       return hrtimer_active(&rl->timer);
-+}
-+
-+static inline ktime_t percpu_ratelimit_target(struct percpu_ratelimit *rl)
-+{
-+	return rl->target;
-+}
-+
-+static inline int percpu_ratelimit_wait(struct percpu_ratelimit *rl)
-+{
-+	ktime_t target = rl->target;
-+
-+	return schedule_hrtimeout_range(&target, ktime_to_ns(rl->period),
-+					HRTIMER_MODE_ABS);
-+}
-+
-+int percpu_ratelimit_init(struct percpu_ratelimit *rl, gfp_t gfp);
-+void percpu_ratelimit_destroy(struct percpu_ratelimit *rl);
-+void percpu_ratelimit_setup(struct percpu_ratelimit *rl, u64 quota, u64 period);
-+u64 percpu_ratelimit_quota(struct percpu_ratelimit *rl, u64 period);
-+bool percpu_ratelimit_charge(struct percpu_ratelimit *rl, u64 events);
-+u64 percpu_ratelimit_sum(struct percpu_ratelimit *rl);
-+
-+#endif /* _LINUX_PERCPU_RATELIMIT_H */
-diff --git a/lib/Makefile b/lib/Makefile
-index 3c3b30b..b20ab47 100644
---- a/lib/Makefile
-+++ b/lib/Makefile
-@@ -21,6 +21,7 @@ lib-$(CONFIG_SMP) += cpumask.o
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 3ad4055..799f5f5 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1966,6 +1966,7 @@ void submit_bio(int rw, struct bio *bio)
+ 			count_vm_events(PGPGOUT, count);
+ 		} else {
+ 			task_io_account_read(bio->bi_iter.bi_size);
++			mem_cgroup_account_bandwidth(bio->bi_iter.bi_size);
+ 			count_vm_events(PGPGIN, count);
+ 		}
  
- lib-y	+= kobject.o klist.o
- obj-y	+= lockref.o
-+obj-y   += percpu_ratelimit.o
+@@ -2208,6 +2209,7 @@ void blk_account_io_start(struct request *rq, bool new_io)
+ 		}
+ 		part_round_stats(cpu, part);
+ 		part_inc_in_flight(part, rw);
++		mem_cgroup_account_ioop();
+ 		rq->part = part;
+ 	}
  
- obj-y += bcd.o div64.o sort.o parser.o halfmd4.o debug_locks.o random32.o \
- 	 bust_spinlocks.o hexdump.o kasprintf.o bitmap.o scatterlist.o \
-diff --git a/lib/percpu_ratelimit.c b/lib/percpu_ratelimit.c
-new file mode 100644
-index 0000000..8254683
---- /dev/null
-+++ b/lib/percpu_ratelimit.c
-@@ -0,0 +1,168 @@
+diff --git a/fs/direct-io.c b/fs/direct-io.c
+index e181b6b..9c60a82 100644
+--- a/fs/direct-io.c
++++ b/fs/direct-io.c
+@@ -24,6 +24,7 @@
+ #include <linux/types.h>
+ #include <linux/fs.h>
+ #include <linux/mm.h>
++#include <linux/memcontrol.h>
+ #include <linux/slab.h>
+ #include <linux/highmem.h>
+ #include <linux/pagemap.h>
+@@ -775,6 +776,7 @@ submit_page_section(struct dio *dio, struct dio_submit *sdio, struct page *page,
+ 		 * Read accounting is performed in submit_bio()
+ 		 */
+ 		task_io_account_write(len);
++		mem_cgroup_account_bandwidth(len);
+ 	}
+ 
+ 	/*
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 3f89e9b..633310e 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -183,6 +183,8 @@ bool mem_cgroup_dirty_limits(struct address_space *mapping, unsigned long *dirty
+ bool mem_cgroup_dirty_exceeded(struct inode *inode);
+ void mem_cgroup_poke_writeback(struct address_space *mapping,
+ 			       struct mem_cgroup *memcg);
++void mem_cgroup_account_bandwidth(unsigned long bytes);
++void mem_cgroup_account_ioop(void);
+ 
+ #else /* CONFIG_MEMCG */
+ struct mem_cgroup;
+@@ -362,6 +364,8 @@ static inline bool mem_cgroup_dirty_limits(struct address_space *mapping, unsign
+ static inline bool mem_cgroup_dirty_exceeded(struct inode *inode) { return false; }
+ static inline void mem_cgroup_poke_writeback(struct address_space *mapping,
+ 					     struct mem_cgroup *memcg) { }
++static inline void mem_cgroup_account_bandwidth(unsigned long bytes) {}
++static inline void mem_cgroup_account_ioop(void) {}
+ 
+ #endif /* CONFIG_MEMCG */
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index d9d345c..f49fbbf 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -27,6 +27,7 @@
+ 
+ #include <linux/page_counter.h>
+ #include <linux/memcontrol.h>
 +#include <linux/percpu_ratelimit.h>
+ #include <linux/cgroup.h>
+ #include <linux/mm.h>
+ #include <linux/hugetlb.h>
+@@ -368,6 +369,9 @@ struct mem_cgroup {
+ 	unsigned int dirty_exceeded;
+ 	unsigned int dirty_ratio;
+ 
++	struct percpu_ratelimit iobw;
++	struct percpu_ratelimit ioop;
 +
-+static void __percpu_ratelimit_setup(struct percpu_ratelimit *rl,
-+				     u64 period, u64 quota)
+ 	struct mem_cgroup_per_node *nodeinfo[0];
+ 	/* WARNING: nodeinfo must be the last member here */
+ };
+@@ -3762,6 +3766,12 @@ static int memcg_stat_show(struct seq_file *m, void *v)
+ 	seq_printf(m, "fs_dirty_threshold %llu\n", (u64)PAGE_SIZE *
+ 			memcg->dirty_threshold);
+ 
++	seq_printf(m, "fs_io_bytes %llu\n",
++			percpu_ratelimit_sum(&memcg->iobw));
++	seq_printf(m, "fs_io_operations %llu\n",
++			percpu_ratelimit_sum(&memcg->ioop));
++
++
+ #ifdef CONFIG_DEBUG_VM
+ 	{
+ 		int nid, zid;
+@@ -3833,6 +3843,40 @@ static int mem_cgroup_dirty_ratio_write(struct cgroup_subsys_state *css,
+ 	return 0;
+ }
+ 
++static u64 mem_cgroup_get_bps_limit(
++		struct cgroup_subsys_state *css, struct cftype *cft)
 +{
-+	rl->period = ns_to_ktime(period);
-+	rl->quota = quota;
-+	rl->total += quota - rl->budget;
-+	rl->budget = quota;
-+	if (do_div(quota, num_possible_cpus() * 2))
-+		quota++;
-+	rl->cpu_batch = min_t(u64, UINT_MAX, quota);
-+	rl->target = ktime_get();
++	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
++
++	return percpu_ratelimit_quota(&memcg->iobw, NSEC_PER_SEC);
 +}
 +
-+static enum hrtimer_restart ratelimit_unblock(struct hrtimer *t)
++static int mem_cgroup_set_bps_limit(
++		struct cgroup_subsys_state *css, struct cftype *cft, u64 val)
 +{
-+	struct percpu_ratelimit *rl = container_of(t, struct percpu_ratelimit, timer);
-+	enum hrtimer_restart ret = HRTIMER_NORESTART;
-+	ktime_t now = t->base->get_time();
++	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
 +
-+	raw_spin_lock(&rl->lock);
-+	if (ktime_after(rl->target, now)) {
-+		hrtimer_set_expires_range(t, rl->target, rl->period);
-+		ret = HRTIMER_RESTART;
-+	}
-+	raw_spin_unlock(&rl->lock);
-+
-+	return ret;
-+}
-+
-+int percpu_ratelimit_init(struct percpu_ratelimit *rl, gfp_t gfp)
-+{
-+	memset(rl, 0, sizeof(*rl));
-+	rl->cpu_budget = alloc_percpu_gfp(typeof(*rl->cpu_budget), gfp);
-+	if (!rl->cpu_budget)
-+		return -ENOMEM;
-+	raw_spin_lock_init(&rl->lock);
-+	hrtimer_init(&rl->timer, CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
-+	rl->timer.function = ratelimit_unblock;
-+	rl->deadline = ns_to_ktime(NSEC_PER_SEC);
-+	rl->latency  = ns_to_ktime(NSEC_PER_SEC * 10);
-+	__percpu_ratelimit_setup(rl, NSEC_PER_SEC, ULLONG_MAX);
++	percpu_ratelimit_setup(&memcg->iobw, val, NSEC_PER_SEC);
 +	return 0;
 +}
-+EXPORT_SYMBOL_GPL(percpu_ratelimit_init);
 +
-+void percpu_ratelimit_destroy(struct percpu_ratelimit *rl)
++static u64 mem_cgroup_get_iops_limit(
++		struct cgroup_subsys_state *css, struct cftype *cft)
 +{
-+	free_percpu(rl->cpu_budget);
-+	hrtimer_cancel(&rl->timer);
-+}
-+EXPORT_SYMBOL_GPL(percpu_ratelimit_destroy);
++	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
 +
-+static void percpu_ratelimit_drain(void *info)
-+{
-+	struct percpu_ratelimit *rl = info;
-+
-+	__this_cpu_write(*rl->cpu_budget, 0);
++	return percpu_ratelimit_quota(&memcg->ioop, NSEC_PER_SEC);
 +}
 +
-+void percpu_ratelimit_setup(struct percpu_ratelimit *rl, u64 quota, u64 period)
++static int mem_cgroup_set_iops_limit(
++		struct cgroup_subsys_state *css, struct cftype *cft, u64 val)
 +{
-+	unsigned long flags;
++	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
 +
-+	if (!quota || !period) {
-+		quota = ULLONG_MAX;
-+		period = NSEC_PER_SEC;
-+	} else if (period > NSEC_PER_SEC / 10) {
-+		u64 quant = div_u64(quota * NSEC_PER_SEC / 10, period);
++	percpu_ratelimit_setup(&memcg->ioop, val, NSEC_PER_SEC);
++	return 0;
++}
 +
-+		if (quant > 20) {
-+			quota = quant;
-+			period = NSEC_PER_SEC / 10;
-+		}
+ static void __mem_cgroup_threshold(struct mem_cgroup *memcg, bool swap)
+ {
+ 	struct mem_cgroup_threshold_ary *t;
+@@ -4489,6 +4533,16 @@ static struct cftype mem_cgroup_files[] = {
+ 		.write_u64 = mem_cgroup_dirty_ratio_write,
+ 	},
+ 	{
++		.name = "fs_bps_limit",
++		.read_u64 = mem_cgroup_get_bps_limit,
++		.write_u64 = mem_cgroup_set_bps_limit,
++	},
++	{
++		.name = "fs_iops_limit",
++		.read_u64 = mem_cgroup_get_iops_limit,
++		.write_u64 = mem_cgroup_set_iops_limit,
++	},
++	{
+ 		.name = "move_charge_at_immigrate",
+ 		.read_u64 = mem_cgroup_move_charge_read,
+ 		.write_u64 = mem_cgroup_move_charge_write,
+@@ -4621,7 +4675,9 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
+ 		return NULL;
+ 
+ 	if (percpu_counter_init(&memcg->nr_dirty, 0, GFP_KERNEL) ||
+-	    percpu_counter_init(&memcg->nr_writeback, 0, GFP_KERNEL))
++	    percpu_counter_init(&memcg->nr_writeback, 0, GFP_KERNEL) ||
++	    percpu_ratelimit_init(&memcg->iobw, GFP_KERNEL) ||
++	    percpu_ratelimit_init(&memcg->ioop, GFP_KERNEL))
+ 		goto out_free;
+ 
+ 	memcg->stat = alloc_percpu(struct mem_cgroup_stat_cpu);
+@@ -4633,6 +4689,8 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
+ out_free:
+ 	percpu_counter_destroy(&memcg->nr_dirty);
+ 	percpu_counter_destroy(&memcg->nr_writeback);
++	percpu_ratelimit_destroy(&memcg->iobw);
++	percpu_ratelimit_destroy(&memcg->ioop);
+ 	kfree(memcg);
+ 	return NULL;
+ }
+@@ -4659,6 +4717,8 @@ static void __mem_cgroup_free(struct mem_cgroup *memcg)
+ 
+ 	percpu_counter_destroy(&memcg->nr_dirty);
+ 	percpu_counter_destroy(&memcg->nr_writeback);
++	percpu_ratelimit_destroy(&memcg->iobw);
++	percpu_ratelimit_destroy(&memcg->ioop);
+ 	free_percpu(memcg->stat);
+ 
+ 	disarm_static_keys(memcg);
+@@ -5956,8 +6016,44 @@ void mem_cgroup_inc_page_writeback(struct address_space *mapping)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_mapping(mapping);
+ 
+-	for (; memcg; memcg = parent_mem_cgroup(memcg))
++	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
+ 		percpu_counter_inc(&memcg->nr_writeback);
++		percpu_ratelimit_charge(&memcg->iobw, PAGE_CACHE_SIZE);
 +	}
 +
-+	raw_spin_lock_irqsave(&rl->lock, flags);
-+	__percpu_ratelimit_setup(rl, period, quota);
-+	raw_spin_unlock_irqrestore(&rl->lock, flags);
-+	on_each_cpu(percpu_ratelimit_drain, rl, 1);
-+	hrtimer_cancel(&rl->timer);
-+}
-+EXPORT_SYMBOL_GPL(percpu_ratelimit_setup);
-+
-+u64 percpu_ratelimit_quota(struct percpu_ratelimit *rl, u64 period)
-+{
-+	unsigned long flags;
-+	u64 quota;
-+
-+	raw_spin_lock_irqsave(&rl->lock, flags);
-+	if (rl->quota == ULLONG_MAX)
-+		quota = 0;
-+	else
-+		quota = div64_u64(rl->quota * period, ktime_to_ns(rl->period));
-+	raw_spin_unlock_irqrestore(&rl->lock, flags);
-+
-+	return quota;
-+}
-+EXPORT_SYMBOL_GPL(percpu_ratelimit_quota);
-+
-+/*
-+ * Charges events, returns true if ratelimit is blocked and caller should sleep.
-+ */
-+bool percpu_ratelimit_charge(struct percpu_ratelimit *rl, u64 events)
-+{
-+	unsigned long flags;
-+	u64 budget, delta;
-+	ktime_t now, deadline;
-+
-+	preempt_disable();
-+	budget = __this_cpu_read(*rl->cpu_budget);
-+	if (likely(budget >= events)) {
-+		__this_cpu_sub(*rl->cpu_budget, events);
-+	} else {
-+		now = ktime_get();
-+		raw_spin_lock_irqsave(&rl->lock, flags);
-+		deadline = ktime_sub(now, rl->deadline);
-+		if (ktime_after(deadline, rl->target))
-+			rl->target = deadline;
-+		budget += rl->budget;
-+		if (budget >= events + rl->cpu_batch) {
-+			budget -= events;
-+		} else {
-+			delta = events + rl->cpu_batch - budget;
-+			if (do_div(delta, rl->quota))
-+				delta++;
-+			rl->target = ktime_add_ns(rl->target,
-+					ktime_to_ns(rl->period) * delta);
-+			deadline = ktime_add(now, rl->latency);
-+			if (ktime_after(rl->target, deadline))
-+				rl->target = deadline;
-+			delta *= rl->quota;
-+			rl->total += delta;
-+			budget += delta - events;
-+		}
-+		rl->budget = budget - rl->cpu_batch;
-+		__this_cpu_write(*rl->cpu_budget, rl->cpu_batch);
-+		if (!hrtimer_active(&rl->timer) && ktime_after(rl->target, now))
-+			hrtimer_start_range_ns(&rl->timer, rl->target,
-+					ktime_to_ns(rl->period),
-+					HRTIMER_MODE_ABS);
-+		raw_spin_unlock_irqrestore(&rl->lock, flags);
++	rcu_read_lock();
++	memcg = mem_cgroup_from_task(current);
++	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
++		if (percpu_ratelimit_blocked(&memcg->iobw))
++			inject_delay(percpu_ratelimit_target(&memcg->iobw));
 +	}
-+	preempt_enable();
-+
-+	return percpu_ratelimit_blocked(rl);
++	rcu_read_unlock();
 +}
-+EXPORT_SYMBOL_GPL(percpu_ratelimit_charge);
 +
-+/*
-+ * Returns count of consumed events.
-+ */
-+u64 percpu_ratelimit_sum(struct percpu_ratelimit *rl)
++void mem_cgroup_account_bandwidth(unsigned long bytes)
 +{
-+	unsigned long flags;
-+	int cpu;
-+	s64 ret;
++	struct mem_cgroup *memcg;
 +
-+	raw_spin_lock_irqsave(&rl->lock, flags);
-+	ret = rl->total - rl->budget;
-+	for_each_online_cpu(cpu)
-+		ret -= per_cpu(*rl->cpu_budget, cpu);
-+	raw_spin_unlock_irqrestore(&rl->lock, flags);
-+
-+	return ret;
++	rcu_read_lock();
++	memcg = mem_cgroup_from_task(current);
++	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
++		if (percpu_ratelimit_charge(&memcg->iobw, bytes))
++			inject_delay(percpu_ratelimit_target(&memcg->iobw));
++	}
++	rcu_read_unlock();
 +}
-+EXPORT_SYMBOL_GPL(percpu_ratelimit_sum);
++
++void mem_cgroup_account_ioop(void)
++{
++	struct mem_cgroup *memcg;
++
++	rcu_read_lock();
++	memcg = mem_cgroup_from_task(current);
++	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
++		if (percpu_ratelimit_charge(&memcg->ioop, 1))
++			inject_delay(percpu_ratelimit_target(&memcg->ioop));
++	}
++	rcu_read_unlock();
+ }
+ 
+ void mem_cgroup_dec_page_writeback(struct address_space *mapping)
+@@ -6038,6 +6134,8 @@ bool mem_cgroup_dirty_limits(struct address_space *mapping,
+ 		if (dirty > background) {
+ 			if (!memcg->dirty_exceeded)
+ 				memcg->dirty_exceeded = 1;
++			if (percpu_ratelimit_blocked(&memcg->iobw))
++				inject_delay(percpu_ratelimit_target(&memcg->iobw));
+ 			rcu_read_unlock();
+ 			if (dirty > (background + threshold) / 2 &&
+ 			    !test_and_set_bit(BDI_memcg_writeback_running,
+diff --git a/mm/readahead.c b/mm/readahead.c
+index 17b9172..7c7ec23 100644
+--- a/mm/readahead.c
++++ b/mm/readahead.c
+@@ -16,6 +16,7 @@
+ #include <linux/pagevec.h>
+ #include <linux/pagemap.h>
+ #include <linux/syscalls.h>
++#include <linux/memcontrol.h>
+ #include <linux/file.h>
+ 
+ #include "internal.h"
+@@ -102,6 +103,7 @@ int read_cache_pages(struct address_space *mapping, struct list_head *pages,
+ 			break;
+ 		}
+ 		task_io_account_read(PAGE_CACHE_SIZE);
++		mem_cgroup_account_bandwidth(PAGE_CACHE_SIZE);
+ 	}
+ 	return ret;
+ }
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
