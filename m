@@ -1,119 +1,112 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
+From: Michal Hocko <mhocko@suse.cz>
 Subject: Re: [patch 2/2] mm: memcontrol: default hierarchy interface for
  memory
-Date: Wed, 14 Jan 2015 12:19:44 -0500
-Message-ID: <20150114171944.GB32040__2473.55546239323$1421256014$gmane$org@phnom.home.cmpxchg.org>
+Date: Thu, 15 Jan 2015 18:08:17 +0100
+Message-ID: <20150115170817.GE7008@dhcp22.suse.cz>
 References: <1420776904-8559-1-git-send-email-hannes@cmpxchg.org>
  <1420776904-8559-2-git-send-email-hannes@cmpxchg.org>
  <20150114153425.GF4706@dhcp22.suse.cz>
+ <20150114171944.GB32040@phnom.home.cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=s29IJZMgBqlTKIPGvf9ycS7YRMjr8/0hjQ2mVZoi5Fo=;
+        b=lA3fLDxLaI455rZ5G5kxwdAyFy0vEEKZWBOy4Tjiw4Yk1j+4AF6f80EXDN36SKXmWI
+         uRfxapyVLUqowoP1Hyciu5nREA1VZVp57A14UU5Nm/MmpDUHf5lxQhxfMd67g6NZ+gG6
+         TdkZuOy2w8ksclL1KCZXCC0gmC8fYdmFPS16SnanuhVvPt7vYC2pSiC8NVHHOYQ+yXrb
+         v99o5kE/CrRG6PrJcSYdWW8JBOuBwo0nUYiCp+wdcMDAFP+7SLqAZZ+oCEl7pXiCU/HF
+         qq8CX6QlcHJBiEGc2gMfaMAtsm4VrY65KCyNIhy3X5ZFAnHt9vNGw4FmNH43xq1vOnyR
+         vZYg==
 Content-Disposition: inline
-In-Reply-To: <20150114153425.GF4706@dhcp22.suse.cz>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20150114171944.GB32040@phnom.home.cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
+To: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@parallels.com>, Greg Thelen <gthelen@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Jan 14, 2015 at 04:34:25PM +0100, Michal Hocko wrote:
-> On Thu 08-01-15 23:15:04, Johannes Weiner wrote:
-> [...]
-> > @@ -2353,6 +2353,22 @@ done_restock:
-> >  	css_get_many(&memcg->css, batch);
-> >  	if (batch > nr_pages)
-> >  		refill_stock(memcg, batch - nr_pages);
-> > +	/*
-> > +	 * If the hierarchy is above the normal consumption range,
-> > +	 * make the charging task trim the excess.
-> > +	 */
-> > +	do {
-> > +		unsigned long nr_pages = page_counter_read(&memcg->memory);
-> > +		unsigned long high = ACCESS_ONCE(memcg->high);
-> > +
-> > +		if (nr_pages > high) {
-> > +			mem_cgroup_events(memcg, MEMCG_HIGH, 1);
-> > +
-> > +			try_to_free_mem_cgroup_pages(memcg, nr_pages - high,
-> > +						     gfp_mask, true);
-> > +		}
+On Wed 14-01-15 12:19:44, Johannes Weiner wrote:
+> On Wed, Jan 14, 2015 at 04:34:25PM +0100, Michal Hocko wrote:
+> > On Thu 08-01-15 23:15:04, Johannes Weiner wrote:
+[...]
+> > > @@ -2322,6 +2325,12 @@ static bool shrink_zone(struct zone *zone, struct scan_control *sc,
+> > >  			struct lruvec *lruvec;
+> > >  			int swappiness;
+> > >  
+> > > +			if (mem_cgroup_low(root, memcg)) {
+> > > +				if (!sc->may_thrash)
+> > > +					continue;
+> > > +				mem_cgroup_events(memcg, MEMCG_LOW, 1);
+> > > +			}
+> > > +
+> > >  			lruvec = mem_cgroup_zone_lruvec(zone, memcg);
+> > >  			swappiness = mem_cgroup_swappiness(memcg);
+> > >  
+> > > @@ -2343,8 +2352,7 @@ static bool shrink_zone(struct zone *zone, struct scan_control *sc,
+> > >  				mem_cgroup_iter_break(root, memcg);
+> > >  				break;
+> > >  			}
+> > > -			memcg = mem_cgroup_iter(root, memcg, &reclaim);
+> > > -		} while (memcg);
+> > > +		} while ((memcg = mem_cgroup_iter(root, memcg, &reclaim)));
+> > 
+> > I had a similar code but then I could trigger quick priority drop downs
+> > during parallel reclaim with multiple low limited groups. I've tried to
+> > address that by retrying shrink_zone if it hasn't called shrink_lruvec
+> > at all. Still not ideal because it can livelock theoretically, but I
+> > haven't seen that in my testing.
 > 
-> As I've said before I am not happy about this. Heavy parallel load
-> hitting on the limit can generate really high reclaim targets causing
-> over reclaim and long stalls. Moreover portions of the excess would be
-> reclaimed multiple times which is not necessary.
->
-> I am not entirely happy about reclaiming nr_pages for THP_PAGES already
-> and this might be much worse, more probable and less predictable.
-> 
-> I believe the target should be capped somehow. nr_pages sounds like a
-> compromise. It would still throttle the charger and scale much better.
+> Do you remember the circumstances and the exact configuration?
 
-That's fair enough, I'll experiment with this.
+Well, I was testing heavy parallel memory intensive load (combination of
+anon and file) in one memcg and many (hundreds of) idle memcgs to see
+how much overhead memcg traversing would cost us. And I misconfigured by
+setting idle memcgs low-limit to -1 instead of 0. There is nothing
+running in them.
+I've noticed that I can see more pages reclaimed than expected and also
+higher runtime which turned out to be related to longer stalls during
+reclaim rather than the cost of the memcg reclaim iterator.  Debugging
+has shown that many direct reclaimers were racing over low-limited
+groups and dropped to lower priorities. The race window was apparently
+much much smaller than a noop shrink_lruvec run.
 
-> > +static int memory_events_show(struct seq_file *m, void *v)
-> > +{
-> > +	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> > +
-> > +	seq_printf(m, "low %lu\n", mem_cgroup_read_events(memcg, MEMCG_LOW));
-> > +	seq_printf(m, "high %lu\n", mem_cgroup_read_events(memcg, MEMCG_HIGH));
-> > +	seq_printf(m, "max %lu\n", mem_cgroup_read_events(memcg, MEMCG_MAX));
-> > +	seq_printf(m, "oom %lu\n", mem_cgroup_read_events(memcg, MEMCG_OOM));
-> > +
-> > +	return 0;
-> > +}
-> 
-> OK, but I really think we need a way of OOM notification for user space
-> OOM handling as well - including blocking the OOM killer as we have
-> now.  This is not directly related to this patch so it doesn't have to
-> happen right now, we should just think about the proper interface if
-> oom_control is consider not suitable.
+So in a sense this was a mis-configured system because I do not expect
+so many low limited groups in real life but there was still something
+reclaimable so the machine wasn't really over-committed. So this points
+to an issue which might happen, albeit in a smaller scale, if there are
+many groups, heavy reclaim and some reclaimers unlucky to race and see
+only low-limited groups.
+ 
+> I tested this with around 30 containerized kernel build jobs whose low
+> boundaries pretty much added up to the available physical memory and
+> never observed this.  That being said, thrashing is an emergency path
+> and users should really watch the memory.events low counter.  After
+> all, if global reclaim frequently has to ignore the reserve settings,
+> what's the point of having them in the first place?
 
-Yes, I think OOM control should be a separate discussion.
+Sure, over-committed low limit is a misconfiguration. But this is not
+what happened in my testing.
 
-> > @@ -2322,6 +2325,12 @@ static bool shrink_zone(struct zone *zone, struct scan_control *sc,
-> >  			struct lruvec *lruvec;
-> >  			int swappiness;
-> >  
-> > +			if (mem_cgroup_low(root, memcg)) {
-> > +				if (!sc->may_thrash)
-> > +					continue;
-> > +				mem_cgroup_events(memcg, MEMCG_LOW, 1);
-> > +			}
-> > +
-> >  			lruvec = mem_cgroup_zone_lruvec(zone, memcg);
-> >  			swappiness = mem_cgroup_swappiness(memcg);
-> >  
-> > @@ -2343,8 +2352,7 @@ static bool shrink_zone(struct zone *zone, struct scan_control *sc,
-> >  				mem_cgroup_iter_break(root, memcg);
-> >  				break;
-> >  			}
-> > -			memcg = mem_cgroup_iter(root, memcg, &reclaim);
-> > -		} while (memcg);
-> > +		} while ((memcg = mem_cgroup_iter(root, memcg, &reclaim)));
-> 
-> I had a similar code but then I could trigger quick priority drop downs
-> during parallel reclaim with multiple low limited groups. I've tried to
-> address that by retrying shrink_zone if it hasn't called shrink_lruvec
-> at all. Still not ideal because it can livelock theoretically, but I
-> haven't seen that in my testing.
+> So while I see that this might burn some cpu cycles when the system is
+> misconfigured, and that we could definitely be smarter about this, I'm
+> not convinced we have to rush a workaround before moving ahead with
+> this patch, especially not one that is prone to livelock the system.
 
-Do you remember the circumstances and the exact configuration?
+OK, then do not merge it to the original patch. If for nothing else then
+for bisectability. I will post a patch separately. I still think we
+should consider a way how to address it sooner or later because the
+result would be non trivial to debug.
 
-I tested this with around 30 containerized kernel build jobs whose low
-boundaries pretty much added up to the available physical memory and
-never observed this.  That being said, thrashing is an emergency path
-and users should really watch the memory.events low counter.  After
-all, if global reclaim frequently has to ignore the reserve settings,
-what's the point of having them in the first place?
+-- 
+Michal Hocko
+SUSE Labs
 
-So while I see that this might burn some cpu cycles when the system is
-misconfigured, and that we could definitely be smarter about this, I'm
-not convinced we have to rush a workaround before moving ahead with
-this patch, especially not one that is prone to livelock the system.
-
-> Other than that the patch looks OK and I am happy this has moved
-> forward finally.
-
-Thanks! I'm glad we're getting somewhere as well.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
