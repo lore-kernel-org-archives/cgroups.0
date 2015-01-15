@@ -1,18 +1,18 @@
 From: Konstantin Khebnikov <khlebnikov@yandex-team.ru>
-Subject: [PATCH 6/6] memcg: filesystem bandwidth controller
-Date: Thu, 15 Jan 2015 21:49:18 +0300
-Message-ID: <20150115184918.10450.86621.stgit@buzz>
+Subject: [PATCH 5/6] delay-injection: resource management via procrastination
+Date: Thu, 15 Jan 2015 21:49:17 +0300
+Message-ID: <20150115184917.10450.38284.stgit@buzz>
 References: <20150115180242.10450.92.stgit@buzz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
-	t=1421347759; bh=NJ5N+FafP3Rv33TlsLJG0yYiFw4uM2rGYVLtt9jTvjQ=;
+	t=1421347757; bh=TRAlPmM0kI9fHlGN5kNcsBhsdLb0qhrXUPtuBdPtm4k=;
 	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
 	 User-Agent:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	b=w4Me4ymboZqyQobHnIw6Ud6kz9Zns1TTYjB6K8P2xyKvG+KfORepLotSX8MHOLO2e
-	 juxRUddEP+XKchCBRmYi1af2zZhlfsEFupJZEskTZqktoEVqDboeovpQRNhTW1def2
-	 H7uEto0nkfPa0Xr+SS9FSb/Bj93nWy+mc7kgpavg=
+	b=jE3LEaiOLYtkag8ApdraWACN3blqahuM/MPOp0Lrnt2AF6En58OwCfqzleE+rEwme
+	 Mo1elsyk2ghn4pFIaBNpjaWwUR5keq41bToZZeka5LFW66GGgivimweD5rIAyUUQaf
+	 5Z5dXQPselPggl5OkbwPxYyeNHVx9XHWRzF/mZeY=
 In-Reply-To: <20150115180242.10450.92.stgit@buzz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -22,288 +22,187 @@ Cc: Roman Gushchin <klamm@yandex-team.ru>, Jan Kara <jack@suse.cz>, Dave Chinner
 
 From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
 
-This is example of filesystem bandwidth controller build on the top of
-dirty memory accounting, percpu_ratelimit and delay-injection.
+inject_delay() allows to pause current task before returning
+into userspace in place where kernel doesn't hold any locks
+thus wait wouldn't introduce any priority-inversion problems.
 
-Cgroup charges read/write requests into rate-limiters and injects delays
-which controls overall speed.
+This code abuses existing task-work and 'TASK_PARKED' state.
+Parked tasks are killable and don't contribute into cpu load.
 
-Interface:
-memory.fs_bps_limit     bytes per second, 0 == unlimited
-memory.fs_iops_limit    iops limit, 0 == unlimited
-Statistics: fs_io_bytes and fs_io_operations in memory.stat
+Together with percpu_ratelimit this could be used in this manner:
 
-For small bandwidth limits memory limit also must be set into corresponded
-value otherwise injected delay after writing dirty-set might be enormous.
+if (percpu_ratelimit_charge(&ratelimit, events))
+        inject_delay(percpu_ratelimit_target(&ratelimit));
 
 Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
 ---
- block/blk-core.c           |    2 +
- fs/direct-io.c             |    2 +
- include/linux/memcontrol.h |    4 ++
- mm/memcontrol.c            |  102 +++++++++++++++++++++++++++++++++++++++++++-
- mm/readahead.c             |    2 +
- 5 files changed, 110 insertions(+), 2 deletions(-)
+ include/linux/sched.h        |    7 ++++
+ include/trace/events/sched.h |    7 ++++
+ kernel/sched/core.c          |   66 ++++++++++++++++++++++++++++++++++++++++++
+ kernel/sched/fair.c          |   12 ++++++++
+ 4 files changed, 92 insertions(+)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 3ad4055..799f5f5 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1966,6 +1966,7 @@ void submit_bio(int rw, struct bio *bio)
- 			count_vm_events(PGPGOUT, count);
- 		} else {
- 			task_io_account_read(bio->bi_iter.bi_size);
-+			mem_cgroup_account_bandwidth(bio->bi_iter.bi_size);
- 			count_vm_events(PGPGIN, count);
- 		}
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 8db31ef..2363918 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1132,6 +1132,7 @@ struct sched_statistics {
+ 	u64			iowait_sum;
  
-@@ -2208,6 +2209,7 @@ void blk_account_io_start(struct request *rq, bool new_io)
- 		}
- 		part_round_stats(cpu, part);
- 		part_inc_in_flight(part, rw);
-+		mem_cgroup_account_ioop();
- 		rq->part = part;
- 	}
+ 	u64			sleep_start;
++	u64			delay_start;
+ 	u64			sleep_max;
+ 	s64			sum_sleep_runtime;
  
-diff --git a/fs/direct-io.c b/fs/direct-io.c
-index e181b6b..9c60a82 100644
---- a/fs/direct-io.c
-+++ b/fs/direct-io.c
-@@ -24,6 +24,7 @@
- #include <linux/types.h>
- #include <linux/fs.h>
- #include <linux/mm.h>
-+#include <linux/memcontrol.h>
- #include <linux/slab.h>
- #include <linux/highmem.h>
+@@ -1662,6 +1663,10 @@ struct task_struct {
+ 	unsigned long timer_slack_ns;
+ 	unsigned long default_timer_slack_ns;
+ 
++	/* Pause task till this time before returning into userspace */
++	ktime_t delay_injection_target;
++	struct callback_head delay_injection_work;
++
+ #ifdef CONFIG_FUNCTION_GRAPH_TRACER
+ 	/* Index of current stored address in ret_stack */
+ 	int curr_ret_stack;
+@@ -2277,6 +2282,8 @@ extern void set_curr_task(int cpu, struct task_struct *p);
+ 
+ void yield(void);
+ 
++extern void inject_delay(ktime_t target);
++
+ /*
+  * The default (Linux) execution domain.
+  */
+diff --git a/include/trace/events/sched.h b/include/trace/events/sched.h
+index 30fedaf..d35154e 100644
+--- a/include/trace/events/sched.h
++++ b/include/trace/events/sched.h
+@@ -365,6 +365,13 @@ DEFINE_EVENT(sched_stat_template, sched_stat_blocked,
+ 	     TP_ARGS(tsk, delay));
+ 
+ /*
++ * Tracepoint for accounting delay-injection
++ */
++DEFINE_EVENT(sched_stat_template, sched_stat_delayed,
++	     TP_PROTO(struct task_struct *tsk, u64 delay),
++	     TP_ARGS(tsk, delay));
++
++/*
+  * Tracepoint for accounting runtime (time the task is executing
+  * on a CPU).
+  */
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index c0accc0..7a9d6a1 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -65,6 +65,7 @@
+ #include <linux/unistd.h>
  #include <linux/pagemap.h>
-@@ -775,6 +776,7 @@ submit_page_section(struct dio *dio, struct dio_submit *sdio, struct page *page,
- 		 * Read accounting is performed in submit_bio()
- 		 */
- 		task_io_account_write(len);
-+		mem_cgroup_account_bandwidth(len);
- 	}
- 
- 	/*
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 3f89e9b..633310e 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -183,6 +183,8 @@ bool mem_cgroup_dirty_limits(struct address_space *mapping, unsigned long *dirty
- bool mem_cgroup_dirty_exceeded(struct inode *inode);
- void mem_cgroup_poke_writeback(struct address_space *mapping,
- 			       struct mem_cgroup *memcg);
-+void mem_cgroup_account_bandwidth(unsigned long bytes);
-+void mem_cgroup_account_ioop(void);
- 
- #else /* CONFIG_MEMCG */
- struct mem_cgroup;
-@@ -362,6 +364,8 @@ static inline bool mem_cgroup_dirty_limits(struct address_space *mapping, unsign
- static inline bool mem_cgroup_dirty_exceeded(struct inode *inode) { return false; }
- static inline void mem_cgroup_poke_writeback(struct address_space *mapping,
- 					     struct mem_cgroup *memcg) { }
-+static inline void mem_cgroup_account_bandwidth(unsigned long bytes) {}
-+static inline void mem_cgroup_account_ioop(void) {}
- 
- #endif /* CONFIG_MEMCG */
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index d9d345c..f49fbbf 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -27,6 +27,7 @@
- 
- #include <linux/page_counter.h>
- #include <linux/memcontrol.h>
-+#include <linux/percpu_ratelimit.h>
- #include <linux/cgroup.h>
- #include <linux/mm.h>
- #include <linux/hugetlb.h>
-@@ -368,6 +369,9 @@ struct mem_cgroup {
- 	unsigned int dirty_exceeded;
- 	unsigned int dirty_ratio;
- 
-+	struct percpu_ratelimit iobw;
-+	struct percpu_ratelimit ioop;
-+
- 	struct mem_cgroup_per_node *nodeinfo[0];
- 	/* WARNING: nodeinfo must be the last member here */
- };
-@@ -3762,6 +3766,12 @@ static int memcg_stat_show(struct seq_file *m, void *v)
- 	seq_printf(m, "fs_dirty_threshold %llu\n", (u64)PAGE_SIZE *
- 			memcg->dirty_threshold);
- 
-+	seq_printf(m, "fs_io_bytes %llu\n",
-+			percpu_ratelimit_sum(&memcg->iobw));
-+	seq_printf(m, "fs_io_operations %llu\n",
-+			percpu_ratelimit_sum(&memcg->ioop));
-+
-+
- #ifdef CONFIG_DEBUG_VM
- 	{
- 		int nid, zid;
-@@ -3833,6 +3843,40 @@ static int mem_cgroup_dirty_ratio_write(struct cgroup_subsys_state *css,
- 	return 0;
+ #include <linux/hrtimer.h>
++#include <linux/task_work.h>
+ #include <linux/tick.h>
+ #include <linux/debugfs.h>
+ #include <linux/ctype.h>
+@@ -8377,3 +8378,68 @@ void dump_cpu_task(int cpu)
+ 	pr_info("Task dump for CPU %d:\n", cpu);
+ 	sched_show_task(cpu_curr(cpu));
  }
- 
-+static u64 mem_cgroup_get_bps_limit(
-+		struct cgroup_subsys_state *css, struct cftype *cft)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
 +
-+	return percpu_ratelimit_quota(&memcg->iobw, NSEC_PER_SEC);
++#define DELAY_INJECTION_SLACK_NS	(NSEC_PER_SEC / 50)
++
++static enum hrtimer_restart delay_injection_wakeup(struct hrtimer *timer)
++{
++	struct hrtimer_sleeper *t =
++		container_of(timer, struct hrtimer_sleeper, timer);
++	struct task_struct *task = t->task;
++
++	t->task = NULL;
++	if (task)
++		wake_up_state(task, TASK_PARKED);
++
++	return HRTIMER_NORESTART;
 +}
 +
-+static int mem_cgroup_set_bps_limit(
-+		struct cgroup_subsys_state *css, struct cftype *cft, u64 val)
++/*
++ * Here delayed task sleeps in 'P'arked state.
++ */
++static void delay_injection_sleep(struct callback_head *head)
 +{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
++	struct task_struct *task = current;
++	struct hrtimer_sleeper t;
 +
-+	percpu_ratelimit_setup(&memcg->iobw, val, NSEC_PER_SEC);
-+	return 0;
++	head->func = NULL;
++	__set_task_state(task, TASK_WAKEKILL | TASK_PARKED);
++	hrtimer_init_on_stack(&t.timer, CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
++	hrtimer_set_expires_range_ns(&t.timer, current->delay_injection_target,
++				     DELAY_INJECTION_SLACK_NS);
++
++	t.timer.function = delay_injection_wakeup;
++	t.task = task;
++
++	hrtimer_start_expires(&t.timer, HRTIMER_MODE_ABS);
++	if (!hrtimer_active(&t.timer))
++		t.task = NULL;
++
++	if (likely(t.task))
++		schedule();
++
++	hrtimer_cancel(&t.timer);
++	destroy_hrtimer_on_stack(&t.timer);
++
++	__set_task_state(task, TASK_RUNNING);
 +}
 +
-+static u64 mem_cgroup_get_iops_limit(
-+		struct cgroup_subsys_state *css, struct cftype *cft)
++/*
++ * inject_delay - injects delay before returning into userspace
++ * @target: absolute monotomic timestamp to sleeping for,
++ *	    task will not return into userspace before this time
++ */
++void inject_delay(ktime_t target)
 +{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
++	struct task_struct *task = current;
 +
-+	return percpu_ratelimit_quota(&memcg->ioop, NSEC_PER_SEC);
-+}
-+
-+static int mem_cgroup_set_iops_limit(
-+		struct cgroup_subsys_state *css, struct cftype *cft, u64 val)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-+
-+	percpu_ratelimit_setup(&memcg->ioop, val, NSEC_PER_SEC);
-+	return 0;
-+}
-+
- static void __mem_cgroup_threshold(struct mem_cgroup *memcg, bool swap)
- {
- 	struct mem_cgroup_threshold_ary *t;
-@@ -4489,6 +4533,16 @@ static struct cftype mem_cgroup_files[] = {
- 		.write_u64 = mem_cgroup_dirty_ratio_write,
- 	},
- 	{
-+		.name = "fs_bps_limit",
-+		.read_u64 = mem_cgroup_get_bps_limit,
-+		.write_u64 = mem_cgroup_set_bps_limit,
-+	},
-+	{
-+		.name = "fs_iops_limit",
-+		.read_u64 = mem_cgroup_get_iops_limit,
-+		.write_u64 = mem_cgroup_set_iops_limit,
-+	},
-+	{
- 		.name = "move_charge_at_immigrate",
- 		.read_u64 = mem_cgroup_move_charge_read,
- 		.write_u64 = mem_cgroup_move_charge_write,
-@@ -4621,7 +4675,9 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
- 		return NULL;
- 
- 	if (percpu_counter_init(&memcg->nr_dirty, 0, GFP_KERNEL) ||
--	    percpu_counter_init(&memcg->nr_writeback, 0, GFP_KERNEL))
-+	    percpu_counter_init(&memcg->nr_writeback, 0, GFP_KERNEL) ||
-+	    percpu_ratelimit_init(&memcg->iobw, GFP_KERNEL) ||
-+	    percpu_ratelimit_init(&memcg->ioop, GFP_KERNEL))
- 		goto out_free;
- 
- 	memcg->stat = alloc_percpu(struct mem_cgroup_stat_cpu);
-@@ -4633,6 +4689,8 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
- out_free:
- 	percpu_counter_destroy(&memcg->nr_dirty);
- 	percpu_counter_destroy(&memcg->nr_writeback);
-+	percpu_ratelimit_destroy(&memcg->iobw);
-+	percpu_ratelimit_destroy(&memcg->ioop);
- 	kfree(memcg);
- 	return NULL;
- }
-@@ -4659,6 +4717,8 @@ static void __mem_cgroup_free(struct mem_cgroup *memcg)
- 
- 	percpu_counter_destroy(&memcg->nr_dirty);
- 	percpu_counter_destroy(&memcg->nr_writeback);
-+	percpu_ratelimit_destroy(&memcg->iobw);
-+	percpu_ratelimit_destroy(&memcg->ioop);
- 	free_percpu(memcg->stat);
- 
- 	disarm_static_keys(memcg);
-@@ -5956,8 +6016,44 @@ void mem_cgroup_inc_page_writeback(struct address_space *mapping)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_mapping(mapping);
- 
--	for (; memcg; memcg = parent_mem_cgroup(memcg))
-+	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
- 		percpu_counter_inc(&memcg->nr_writeback);
-+		percpu_ratelimit_charge(&memcg->iobw, PAGE_CACHE_SIZE);
++	if (ktime_after(target, task->delay_injection_target)) {
++		task->delay_injection_target = target;
++		if (!task->delay_injection_work.func) {
++			init_task_work(&task->delay_injection_work,
++					delay_injection_sleep);
++			task_work_add(task, &task->delay_injection_work, true);
++		}
 +	}
-+
-+	rcu_read_lock();
-+	memcg = mem_cgroup_from_task(current);
-+	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
-+		if (percpu_ratelimit_blocked(&memcg->iobw))
-+			inject_delay(percpu_ratelimit_target(&memcg->iobw));
-+	}
-+	rcu_read_unlock();
 +}
-+
-+void mem_cgroup_account_bandwidth(unsigned long bytes)
-+{
-+	struct mem_cgroup *memcg;
-+
-+	rcu_read_lock();
-+	memcg = mem_cgroup_from_task(current);
-+	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
-+		if (percpu_ratelimit_charge(&memcg->iobw, bytes))
-+			inject_delay(percpu_ratelimit_target(&memcg->iobw));
-+	}
-+	rcu_read_unlock();
-+}
-+
-+void mem_cgroup_account_ioop(void)
-+{
-+	struct mem_cgroup *memcg;
-+
-+	rcu_read_lock();
-+	memcg = mem_cgroup_from_task(current);
-+	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
-+		if (percpu_ratelimit_charge(&memcg->ioop, 1))
-+			inject_delay(percpu_ratelimit_target(&memcg->ioop));
-+	}
-+	rcu_read_unlock();
- }
- 
- void mem_cgroup_dec_page_writeback(struct address_space *mapping)
-@@ -6038,6 +6134,8 @@ bool mem_cgroup_dirty_limits(struct address_space *mapping,
- 		if (dirty > background) {
- 			if (!memcg->dirty_exceeded)
- 				memcg->dirty_exceeded = 1;
-+			if (percpu_ratelimit_blocked(&memcg->iobw))
-+				inject_delay(percpu_ratelimit_target(&memcg->iobw));
- 			rcu_read_unlock();
- 			if (dirty > (background + threshold) / 2 &&
- 			    !test_and_set_bit(BDI_memcg_writeback_running,
-diff --git a/mm/readahead.c b/mm/readahead.c
-index 17b9172..7c7ec23 100644
---- a/mm/readahead.c
-+++ b/mm/readahead.c
-@@ -16,6 +16,7 @@
- #include <linux/pagevec.h>
- #include <linux/pagemap.h>
- #include <linux/syscalls.h>
-+#include <linux/memcontrol.h>
- #include <linux/file.h>
- 
- #include "internal.h"
-@@ -102,6 +103,7 @@ int read_cache_pages(struct address_space *mapping, struct list_head *pages,
- 			break;
++EXPORT_SYMBOL(inject_delay);
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 40667cb..2e3269b 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -2944,6 +2944,15 @@ static void enqueue_sleeper(struct cfs_rq *cfs_rq, struct sched_entity *se)
+ 			account_scheduler_latency(tsk, delta >> 10, 0);
  		}
- 		task_io_account_read(PAGE_CACHE_SIZE);
-+		mem_cgroup_account_bandwidth(PAGE_CACHE_SIZE);
  	}
- 	return ret;
++	if (se->statistics.delay_start) {
++		u64 delta = rq_clock(rq_of(cfs_rq)) - se->statistics.delay_start;
++
++		if ((s64)delta < 0)
++			delta = 0;
++
++		se->statistics.delay_start = 0;
++		trace_sched_stat_delayed(tsk, delta);
++	}
+ #endif
  }
+ 
+@@ -3095,6 +3104,9 @@ dequeue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
+ 				se->statistics.sleep_start = rq_clock(rq_of(cfs_rq));
+ 			if (tsk->state & TASK_UNINTERRUPTIBLE)
+ 				se->statistics.block_start = rq_clock(rq_of(cfs_rq));
++			if ((tsk->state & TASK_PARKED) &&
++			    tsk->delay_injection_target.tv64)
++				se->statistics.delay_start = rq_clock(rq_of(cfs_rq));
+ 		}
+ #endif
+ 	}
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
