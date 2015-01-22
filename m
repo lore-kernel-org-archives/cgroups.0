@@ -1,58 +1,50 @@
-From: William Dauchy <william-M8Sm6a3kpgNeoWH0uzbU5w@public.gmane.org>
-Subject: ps stuck on cmdline reading
-Date: Wed, 21 Jan 2015 10:58:08 +0100
-Message-ID: <20150121095808.GA18656@gandi.net>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] mm: memcontrol: uninitialized "ret" variables
+Date: Thu, 22 Jan 2015 16:30:44 +0300
+Message-ID: <20150122133044.GA23668@mwanda>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="G4iJoqBmSsgzjUCe"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.cz>, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-janitors@vger.kernel.org
 
+We recently re-arranged the code in these functions and now static
+checkers complain that "ret" is uninitialized.  Oddly enough GCC is fine
+with this code.
 
---G4iJoqBmSsgzjUCe
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Fixes: d1ebc463cf89 ('mm: page_counter: pull "-1" handling out of page_counter_memparse()')
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Hello,
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 323a01f..7af7834 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3422,7 +3422,7 @@ static ssize_t mem_cgroup_write(struct kernfs_open_file *of,
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
+ 	unsigned long nr_pages;
+-	int ret;
++	int ret = 0;
+ 
+ 	buf = strstrip(buf);
+ 	if (!strcmp(buf, "-1")) {
+@@ -3799,7 +3799,8 @@ static int __mem_cgroup_usage_register_event(struct mem_cgroup *memcg,
+ 	struct mem_cgroup_threshold_ary *new;
+ 	unsigned long threshold;
+ 	unsigned long usage;
+-	int i, size, ret;
++	int i, size;
++	int ret = 0;
+ 
+ 	if (!strcmp(args, "-1")) {
+ 		threshold = PAGE_COUNTER_MAX;
 
-I am sometines triggering an issue on a v3.14.x (v3.14.18 here) where
-the `ps auxwwf` is stuck.
-The setup is several containers which own several process and with
-memory limit on each cgroup.
-A strace reveals the `ps` command is stuck on a read of a cmdline
-file. The concerned process itself is on a non-interruptible IO state.
-The ps command is executed in the global cgroup.
-
-I also had a similar issue on a 3.10.x some months ago where ps was
-stuck; the reason was the memory limit of the cgroup was reached and I
-only had to add some pages available to the conatiner in order to
-unlock the ps command.
-But in my case the cgroups which own the pid has still lots of memory
-available and I did not found a way to unlock the process.
-
-I don't know how to reproduce the issue but I am sometimes triggering
-it.
-
-Does someone has some hint? How can I get more debug info about it?
-
-Thanks,
---=20
-William
-
---G4iJoqBmSsgzjUCe
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlS/eDAACgkQ1I6eqOUidQHB9QCghFdug/nSzM7n7SctzT8fFCr5
-e34An3ABD+HX1r98bNLblYPOkbEEjqee
-=0lQp
------END PGP SIGNATURE-----
-
---G4iJoqBmSsgzjUCe--
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
