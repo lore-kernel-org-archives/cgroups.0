@@ -1,34 +1,39 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [patch] mm: memcontrol: uninitialized "ret" variables
-Date: Thu, 22 Jan 2015 10:25:35 -0500
-Message-ID: <20150122152535.GB27368@phnom.home.cmpxchg.org>
-References: <20150122133044.GA23668@mwanda>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [patch] mm: memcontrol: default hierarchy interface for memory
+ fix - "none"
+Date: Fri, 23 Jan 2015 12:03:53 -0500
+Message-ID: <20150123170353.GA12036@phnom.home.cmpxchg.org>
+References: <1421508107-29377-1-git-send-email-hannes@cmpxchg.org>
+ <20150120133711.GI25342@dhcp22.suse.cz>
+ <20150120143002.GB11181@phnom.home.cmpxchg.org>
+ <20150120143644.GL25342@dhcp22.suse.cz>
+ <CAOS58YNZFuSP6cKLAkYKkK+QUDxwngnKE5UGHmAL7n3PygraaQ@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <kernel-janitors-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20150122133044.GA23668@mwanda>
-Sender: kernel-janitors-owner@vger.kernel.org
+In-Reply-To: <CAOS58YNZFuSP6cKLAkYKkK+QUDxwngnKE5UGHmAL7n3PygraaQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Michal Hocko <mhocko@suse.cz>, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-janitors@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hi Dan,
-
-On Thu, Jan 22, 2015 at 04:30:44PM +0300, Dan Carpenter wrote:
-> We recently re-arranged the code in these functions and now static
-> checkers complain that "ret" is uninitialized.  Oddly enough GCC is fine
-> with this code.
+On Tue, Jan 20, 2015 at 12:00:11PM -0500, Tejun Heo wrote:
+> Hello,
 > 
-> Fixes: d1ebc463cf89 ('mm: page_counter: pull "-1" handling out of page_counter_memparse()')
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> On Tue, Jan 20, 2015 at 9:36 AM, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org> wrote:
+> > On Tue 20-01-15 09:30:02, Johannes Weiner wrote:
+> > [...]
+> >> Another possibility would be "infinity",
+> >
+> > yes infinity definitely sounds much better to me.
+> 
+> FWIW, I prefer "max". It's shorter and clear enough. I don't think
+> there's anything ambiguous about "the memory max limit is at its
+> maximum". No need to introduce a different term.
 
-This code was again re-arranged in -mm, and that
+While I don't feel too strongly, I do agree with this.  I don't see
+much potential for confusion, and "max" is much shorter and sweeter.
 
-  ret = page_counter_memparse()
-
-is now happening unconditionally, so I think it should be fine.  The
-latest mmots snapshot (mmots-2015-01-21-16-38) has it.
-
-Thanks!
+Michal?
