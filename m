@@ -1,84 +1,67 @@
-From: Tejun Heo <tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [RFC] Making memcg track ownership per address_space or anon_vma
-Date: Fri, 30 Jan 2015 01:27:37 -0500
-Message-ID: <20150130062737.GB25699@htj.dyndns.org>
+Date: Fri, 30 Jan 2015 11:07:22 -0500
+Message-ID: <20150130160722.GA26111@htj.dyndns.org>
 References: <20150130044324.GA25699@htj.dyndns.org>
  <xr93h9v8yfrv.fsf@gthelen.mtv.corp.google.com>
+ <20150130062737.GB25699@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=PqMjQ5hZ0oq3GZoqF6+zBrspiwiVfF4GVdtmT/DuNLw=;
-        b=lcfxQV0r72DkrcywFQzMhmErtt80KAqRcWnyhTqDx2u9TjKen695TK3lU3xHuQPN6U
-         5BrOUsylw3pngUck8Ckw5D4Dt4Vl9u743nZ+VXKBONqtLOaeQIe7B5wUlCcUSgx7aWrh
-         /L6oL45s4YBwxZQjQcM28eh9N4/bgTdDpg2BPYWXGO7dv/5wCasgZer9kbcewnNLj6Tp
-         32Pxsk7a6YUzW2lWaqsJGVFFIsuoTbRGeAeYOHEHtZfmBhGiTDbE6IfDcg6IjswDmeEX
-         O8lxH85Qjb+PpIhGSBRPnDvbth6565HJRRyuQcUt3iq8maFornXNoi/OFSJy9++EN4ez
-         17XQ==
+        bh=dLVdT0bD0RxTLwRZKDVmf1uWJ5gHkhuKQnsEt2qAXSk=;
+        b=PHiF69Mr0x6zFQ0yGD7SbpQgrFwO3v0hkTASgmMzUCopU9v5J6Fkq3Wth2Zo4Z37CV
+         Q14esaaFMzoRwBlq8TSC9PDATV8Xv1dF1lGq9//UA15pbk36P2gFyfrSWSHk6g++kN60
+         DuMAvz8kbbboJfy+FslER6SHdmxUiDimo765vxkvRdonjdAwbhDwra7EeVmRhboBfC3T
+         ReBbG2++OASKCip2fD4rWh9zgFzrajI4Hl6TnQyy+WdeuNf/HwRjWKnCGp6KU01hChSo
+         7huKpPVI3y0rBn6W0bdxgSeEEZitHAoV2pMCgl6u7BVwOxn9wEa5Lm+jYLdVr+x/WziG
+         mWJg==
 Content-Disposition: inline
-In-Reply-To: <xr93h9v8yfrv.fsf@gthelen.mtv.corp.google.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20150130062737.GB25699-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Greg Thelen <gthelen@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, Li Zefan <lizefan@huawei.com>, hughd@google.com, Konstantin Khebnikov <khlebnikov@yandex-team.ru>
+To: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Konstantin Khebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
 
-Hello, Greg.
+Hey, again.
 
-On Thu, Jan 29, 2015 at 09:55:53PM -0800, Greg Thelen wrote:
-> I find simplification appealing.  But I not sure it will fly, if for no
-> other reason than the shared accountings.  I'm ignoring intentional
-> sharing, used by carefully crafted apps, and just thinking about
-> incidental sharing (e.g. libc).
-> 
-> Example:
-> 
-> $ mkdir small
-> $ echo 1M > small/memory.limit_in_bytes
-> $ (echo $BASHPID > small/cgroup.procs && exec sleep 1h) &
-> 
-> $ mkdir big
-> $ echo 10G > big/memory.limit_in_bytes
-> $ (echo $BASHPID > big/cgroup.procs && exec mlockall_database 1h) &
-> 
-> Assuming big/mlockall_database mlocks all of libc, then it will oom kill
-> the small memcg because libc is owned by small due it having touched it
-> first.  It'd be hard to figure out what small did wrong to deserve the
-> oom kill.
+On Fri, Jan 30, 2015 at 01:27:37AM -0500, Tejun Heo wrote:
+> The previous behavior was pretty unpredictable in terms of shared file
+> ownership too.  I wonder whether the better thing to do here is either
+> charging cases like this to the common ancestor or splitting the
+> charge equally among the accessors, which might be doable for ro
+> files.
 
-The previous behavior was pretty unpredictable in terms of shared file
-ownership too.  I wonder whether the better thing to do here is either
-charging cases like this to the common ancestor or splitting the
-charge equally among the accessors, which might be doable for ro
-files.
+I've been thinking more about this.  It's true that doing per-page
+association allows for avoiding confronting the worst side effects of
+inode sharing head-on, but it is a tradeoff with fairly weak
+justfications.  The only thing we're gaining is side-stepping the
+blunt of the problem in an awkward manner and the loss of clarity in
+taking this compromised position has nasty ramifications when we try
+to connect it with the rest of the world.
 
-> FWIW we've been using memcg writeback where inodes have a memcg
-> writeback owner.  Once multiple memcg write to an inode then the inode
-> becomes writeback shared which makes it more likely to be written.  Once
-> cleaned the inode is then again able to be privately owned:
-> https://lkml.org/lkml/2011/8/17/200
+I could be missing something major but the more I think about it, it
+looks to me that the right thing to do here is accounting per-inode
+and charging shared inodes to the nearest common ancestor.  The
+resulting behavior would be way more logical and predicatable than the
+current one, which would make it straight forward to integrate memcg
+with blkcg and writeback.
 
-The problem is that it introduces deviations between memcg and
-writeback / blkcg which will mess up pressure propagation.  Writeback
-pressure can't be determined without its associated memcg and neither
-can dirty balancing.  We sure can simplify things by trading off
-accuracies at places but let's please try to do that throughout the
-stack, not in the midpoint, so that we can say "if you do this, it'll
-behave this way and you can see it showing up there".  The thing is if
-we leave it half-way, in time, some will try to actively exploit
-memcg's page granularity and we'll have to deal with writeback
-behavior which is difficult to even characterize.
+One of the problems that I can think of off the top of my head is that
+it'd involve more regular use of charge moving; however, this is an
+operation which is per-inode rather than per-page and still gonna be
+fairly infrequent.  Another one is that if we move memcg over to this
+behavior, it's likely to affect the behavior on the traditional
+hierarchies too as we sure as hell don't want to switch between the
+two major behaviors dynamically but given that behaviors on inode
+sharing aren't very well supported yet, this can be an acceptable
+change.
 
 Thanks.
 
 -- 
 tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
