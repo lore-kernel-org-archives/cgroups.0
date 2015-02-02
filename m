@@ -1,38 +1,46 @@
-From: Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>
-Subject: [PATCH 0/5] mm: Some .text savings
-Date: Tue,  3 Feb 2015 00:50:11 +0100
-Message-ID: <1422921016-27618-1-git-send-email-linux@rasmusvillemoes.dk>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Subject: [PATCH 5/5] kernel/cpuset.c: Mark cpuset_init_current_mems_allowed as __init
+Date: Tue,  3 Feb 2015 00:50:16 +0100
+Message-ID: <1422921016-27618-6-git-send-email-linux@rasmusvillemoes.dk>
+References: <1422921016-27618-1-git-send-email-linux@rasmusvillemoes.dk>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=rasmusvillemoes.dk; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=zJT473c2NrEJWcJe5nFTvTLWRtOueBweDpdqvjAVoEs=;
-        b=Keq6Gex4d07cSpYvYzGf9U/4NYi4VukhkNzJ/Gj7UrYRg0vomvF5S0hbHnIp/J3x/X
-         TACrDa2FV7ALAenjjISLnshpJESVJ112p7WAj5aUUctY5RP+y9dCiTGAnWQAjh2TGTyT
-         t1UI/a4xWKy/VK680SRAa2+qk97hNaEV++vvg=
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=1b+GuOwrSyQSp6PcBuaa9sD9pESWFOpfxLRt+8b+C/g=;
+        b=I4kSHW8vpW4m5kUUJPvj+N0QqunjUmL+gM0GQsOEx5R0qVPH2+UGZk3UsSQAnnbRyX
+         VAak83TdLTvAdz9qv3kkjJffixrlrKtQLLiqb3RLnz+TCUq/O8iuSAjzkqYDCR4IKdlY
+         3C5o00cGy7ed4lNFw1m55XO5QYJXvE8PgmhmU=
+In-Reply-To: <1422921016-27618-1-git-send-email-linux@rasmusvillemoes.dk>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>, Li Zefan <lizefan@huawei.com>
+Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Only compile-tested, but I think these should be ok. Net saving aroung
-450 bytes of .text.
+The only caller of cpuset_init_current_mems_allowed is the __init
+annotated build_all_zonelists_init, so we can also make the former
+__init.
 
-Rasmus Villemoes (5):
-  mm/internal.h: Don't split printk call in two
-  mm/page_alloc.c: Pull out init code from build_all_zonelists
-  mm/mm_init.c: Mark mminit_verify_zonelist as __init
-  mm/mm_init.c: Mark mminit_loglevel __meminitdata
-  kernel/cpuset.c: Mark cpuset_init_current_mems_allowed as __init
+Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+---
+ kernel/cpuset.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- kernel/cpuset.c |  2 +-
- mm/internal.h   |  6 ++++--
- mm/mm_init.c    |  4 ++--
- mm/page_alloc.c | 17 ++++++++++++++---
- 4 files changed, 21 insertions(+), 8 deletions(-)
-
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index 64b257f6bca2..c54a1dae6c11 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -2400,7 +2400,7 @@ void cpuset_cpus_allowed_fallback(struct task_struct *tsk)
+ 	 */
+ }
+ 
+-void cpuset_init_current_mems_allowed(void)
++void __init cpuset_init_current_mems_allowed(void)
+ {
+ 	nodes_setall(current->mems_allowed);
+ }
 -- 
 2.1.3
