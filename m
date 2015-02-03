@@ -1,46 +1,43 @@
-From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Subject: [PATCH 5/5] kernel/cpuset.c: Mark cpuset_init_current_mems_allowed as __init
-Date: Tue,  3 Feb 2015 00:50:16 +0100
-Message-ID: <1422921016-27618-6-git-send-email-linux@rasmusvillemoes.dk>
-References: <1422921016-27618-1-git-send-email-linux@rasmusvillemoes.dk>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: ps stuck on cmdline reading
+Date: Tue, 3 Feb 2015 20:40:36 +0100
+Message-ID: <20150203194036.GA2490@dhcp22.suse.cz>
+References: <20150121095808.GA18656@gandi.net>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=rasmusvillemoes.dk; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=1b+GuOwrSyQSp6PcBuaa9sD9pESWFOpfxLRt+8b+C/g=;
-        b=I4kSHW8vpW4m5kUUJPvj+N0QqunjUmL+gM0GQsOEx5R0qVPH2+UGZk3UsSQAnnbRyX
-         VAak83TdLTvAdz9qv3kkjJffixrlrKtQLLiqb3RLnz+TCUq/O8iuSAjzkqYDCR4IKdlY
-         3C5o00cGy7ed4lNFw1m55XO5QYJXvE8PgmhmU=
-In-Reply-To: <1422921016-27618-1-git-send-email-linux@rasmusvillemoes.dk>
-Sender: linux-kernel-owner@vger.kernel.org
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=xF8COFCzhKuaJaI76s3xnBRRIwK4ApEt/H59kG8qqtk=;
+        b=mNvUXoD7XCpKM4aFZEy0H83xPvaAnVexLzN4c9WVqW7dHG3oXoaaYPddxRu0qvzJAD
+         IX+aXgh363fRvdCO3M1viWGKPn18DrVPVVBFZFfdD8zegrHCD/C8T+Kp4nb3lP5Vf+Mz
+         hGOTEDZl6BL3hq5e1V1tyEbbql0AGkrD0CAKWsY47vVwwCrb+xruXhQIJal532bzLNSZ
+         Swsts8zWf4bYQxfvWJFEQomq6gGzK/GhI/Ngo1L8wskSKDwtMWegb8ijg4f2mmkHSTPZ
+         15WOLnzjDdB51pwNOpyH4KZhQvlL1O5GsKsm+Qxp6nDY3Mqwt/qFrejY0j6vq+D4/Mso
+         DZcA==
+Content-Disposition: inline
+In-Reply-To: <20150121095808.GA18656-M8Sm6a3kpgNeoWH0uzbU5w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>, Li Zefan <lizefan@huawei.com>
-Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: William Dauchy <william-M8Sm6a3kpgNeoWH0uzbU5w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-The only caller of cpuset_init_current_mems_allowed is the __init
-annotated build_all_zonelists_init, so we can also make the former
-__init.
+On Wed 21-01-15 10:58:08, William Dauchy wrote:
+> Hello,
+> 
+> I am sometines triggering an issue on a v3.14.x (v3.14.18 here) where
+> the `ps auxwwf` is stuck.
+> The setup is several containers which own several process and with
+> memory limit on each cgroup.
+> A strace reveals the `ps` command is stuck on a read of a cmdline
+> file. The concerned process itself is on a non-interruptible IO state.
+> The ps command is executed in the global cgroup.
 
-Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
----
- kernel/cpuset.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+What does /proc/<ps pid>/stack say?
 
-diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index 64b257f6bca2..c54a1dae6c11 100644
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -2400,7 +2400,7 @@ void cpuset_cpus_allowed_fallback(struct task_struct *tsk)
- 	 */
- }
- 
--void cpuset_init_current_mems_allowed(void)
-+void __init cpuset_init_current_mems_allowed(void)
- {
- 	nodes_setall(current->mems_allowed);
- }
 -- 
-2.1.3
+Michal Hocko
+SUSE Labs
