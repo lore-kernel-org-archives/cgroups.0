@@ -1,9 +1,8 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: "Serge E. Hallyn" <serge@hallyn.com>
 Subject: Re: [PATCHv3 8/8] cgroup: Add documentation for cgroup namespaces
-Date: Wed, 11 Feb 2015 11:03:47 -0500
-Message-ID: <20150211160347.GE21356@htj.duckdns.org>
-References: <20150107230615.GA28630@htj.dyndns.org>
- <87fvbm2nni.fsf@x220.int.ebiederm.org>
+Date: Wed, 11 Feb 2015 17:18:51 +0100
+Message-ID: <20150211161851.GB1579@mail.hallyn.com>
+References: <87fvbm2nni.fsf@x220.int.ebiederm.org>
  <87y4peyxw5.fsf@x220.int.ebiederm.org>
  <20150107233553.GC28630@htj.dyndns.org>
  <20150211034616.GA25022@mail.hallyn.com>
@@ -12,46 +11,37 @@ References: <20150107230615.GA28630@htj.dyndns.org>
  <87oap1qbv3.fsf@x220.int.ebiederm.org>
  <20150211051704.GB24897@mtj.duckdns.org>
  <20150211160023.GA1579@mail.hallyn.com>
+ <20150211160347.GE21356@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=z9/fDqct4UKmhBv8U99RGqltxEXYDWT6pL++lRrrvGw=;
-        b=Vs7OvGoiXqa153NhOUz2rWmMqRs1DUcmrq9pATY0MfVpDiMeeCoLO/OvFM4kuQekYa
-         a3uyFgN+WEREcwNKVsGfTnntE5j6XlhGnQdavrC/qWiP5G7nKl/CuM6UQtZhu4EHZn9E
-         8Hw4cFvV3fScEb/Jn4GTybLkp98wmszJ7Fxq3yWBV76FfPm1pKiYZC+hL4dmmH6VFJXG
-         FIhpX8WN8rsXUjS5E8g9+AR6oKsBtAR/RWgjMIouzYUafaeOZawycyD4s/eJ1i6x1dUN
-         UC4EGcq9uwcqPN1U4I/pXFxNVb0LKjEmh2PCgWGLErRgRy2Exy80S5ItorWX/Nrn+IKo
-         VZkQ==
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20150211160023.GA1579-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20150211160347.GE21356@htj.duckdns.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Cc: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: "Serge E. Hallyn" <serge@hallyn.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Richard Weinberger <richard@nod.at>, Linux API <linux-api@vger.kernel.org>, Linux Containers <containers@lists.linux-foundation.org>, Serge Hallyn <serge.hallyn@ubuntu.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Andy Lutomirski <luto@amacapital.net>, cgroups mailinglist <cgroups@vger.kernel.org>, Ingo Molnar <mingo@redhat.com>
 
-On Wed, Feb 11, 2015 at 05:00:23PM +0100, Serge E. Hallyn wrote:
-> We absolutely would love to use cgroup namespaces to run older
-> userspace in containers.  I don't know that it's actually possible
-> to do both that and use unified hierarchy at the same time though,
-> which is unfortunate.  So an Ubuntu 12.04 container will never, afaics,
-> be able to run inside an ubuntu 16.04 host that is using unified
-> hierarchy, without using backported newer versions of lxc (etc) in
-> the container.
+Quoting Tejun Heo (tj@kernel.org):
+> On Wed, Feb 11, 2015 at 05:00:23PM +0100, Serge E. Hallyn wrote:
+> > We absolutely would love to use cgroup namespaces to run older
+> > userspace in containers.  I don't know that it's actually possible
+> > to do both that and use unified hierarchy at the same time though,
+> > which is unfortunate.  So an Ubuntu 12.04 container will never, afaics,
+> > be able to run inside an ubuntu 16.04 host that is using unified
+> > hierarchy, without using backported newer versions of lxc (etc) in
+> > the container.
+> 
+> So, the constraint there are the controllers.  A controller can't be
+> attached to two hierarchies at the same time for obvious reasons, so
+> regardless of NS, you can't use the same controller on a unified
+> hierarchy *and* a traditional hierarchy.  NS doesn't adds or
+> substracts from the situation.  If you decide to attach a controller
+> to a traditional hierarchy, that's where it's gonna be available.  If
+> you attach it to the unified hierarchy, the same story.
 
-So, the constraint there are the controllers.  A controller can't be
-attached to two hierarchies at the same time for obvious reasons, so
-regardless of NS, you can't use the same controller on a unified
-hierarchy *and* a traditional hierarchy.  NS doesn't adds or
-substracts from the situation.  If you decide to attach a controller
-to a traditional hierarchy, that's where it's gonna be available.  If
-you attach it to the unified hierarchy, the same story.
+Right, exactly.
 
-Thanks.
-
--- 
-tejun
+thanks,
+-serge
