@@ -1,69 +1,96 @@
-From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [RFC] Making memcg track ownership per address_space or anon_vma
-Date: Wed, 11 Feb 2015 08:32:27 +0100
-Message-ID: <20150211073227.GB30939@quack.suse.cz>
-References: <20150204170656.GA18858@htj.dyndns.org>
- <xr93zj8ti6ca.fsf@gthelen.mtv.corp.google.com>
- <20150205131514.GD25736@htj.dyndns.org>
- <xr93siekt3p3.fsf@gthelen.mtv.corp.google.com>
- <20150205222522.GA10580@htj.dyndns.org>
- <xr93pp9nucrt.fsf@gthelen.mtv.corp.google.com>
- <20150206141746.GB10580@htj.dyndns.org>
- <CAHH2K0bxvc34u1PugVQsSfxXhmN8qU6KRpiCWwOVBa6BPqMDOg@mail.gmail.com>
- <20150207143839.GA9926@htj.dyndns.org>
- <20150211021906.GA21356@htj.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHv3 8/8] cgroup: Add documentation for cgroup namespaces
+Date: Wed, 11 Feb 2015 09:36:38 -0500
+Message-ID: <20150211143638.GD21356@htj.duckdns.org>
+References: <20150107230615.GA28630@htj.dyndns.org>
+ <87fvbm2nni.fsf@x220.int.ebiederm.org>
+ <87y4peyxw5.fsf@x220.int.ebiederm.org>
+ <20150107233553.GC28630@htj.dyndns.org>
+ <20150211034616.GA25022@mail.hallyn.com>
+ <20150211040957.GC21356@htj.duckdns.org>
+ <20150211042942.GA27931@mail.hallyn.com>
+ <87oap1qbv3.fsf@x220.int.ebiederm.org>
+ <20150211051704.GB24897@mtj.duckdns.org>
+ <87twytklkv.fsf@x220.int.ebiederm.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=IFU9AlCPcdwxA7fEBjBksM7Z7hLFNviHKtbSNKQ6PJQ=;
+        b=cLhnqlJzuZNtI2jSuuTiTfpmg7NhFKsvuzj3tjoLZNoK4MZdeRj0K/EH4IS6u7fdta
+         clO7cr26XOx4Tau4yYYIXHPvWSh0YoRRA+MbxpeUCPX3m4LJEWRIJ2B1uK78FlOcG9wu
+         YyoAPJ9GqAWSp/BeG4+PgqGcREQ0A2LUl4l2LgbuwfihOhkDUPDmhbYiUHFt9dejFqB9
+         rTMIBytE4BqiqA6RKap3MfuDWjYkU+IKeQcnxDMoh0G4DV38ItPX4eI6NzYkDNGr3wPT
+         80wk7WuAanCHms7BeTtHA5xqmVBp/iVYPt5ygn37+Br08N+IEWaPoO5e+zXvWVUl/pmF
+         bPmw==
 Content-Disposition: inline
-In-Reply-To: <20150211021906.GA21356-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <87twytklkv.fsf-JOvCrm2gF+uungPnsOpG7nhyD016LWXt@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+Cc: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-  Hello Tejun,
+Hey,
 
-On Tue 10-02-15 21:19:06, Tejun Heo wrote:
-> On Sat, Feb 07, 2015 at 09:38:39AM -0500, Tejun Heo wrote:
-> > If we can argue that memcg and blkcg having different views is
-> > meaningful and characterize and justify the behaviors stemming from
-> > the deviation, sure, that'd be fine, but I don't think we have that as
-> > of now.
-...
-> So, based on the assumption that write sharings are mostly incidental
-> and temporary (ie. we're basically declaring that we don't support
-> persistent write sharing), how about something like the following?
-> 
-> 1. memcg contiues per-page tracking.
-> 
-> 2. Each inode is associated with a single blkcg at a given time and
->    written out by that blkcg.
-> 
-> 3. While writing back, if the number of pages from foreign memcg's is
->    higher than certain ratio of total written pages, the inode is
->    marked as disowned and the writeback instance is optionally
->    terminated early.  e.g. if the ratio of foreign pages is over 50%
->    after writing out the number of pages matching 5s worth of write
->    bandwidth for the bdi, mark the inode as disowned.
-> 
-> 4. On the following dirtying of the inode, the inode is associated
->    with the matching blkcg of the dirtied page.  Note that this could
->    be the next cycle as the inode could already have been marked dirty
->    by the time the above condition triggered.  In that case, the
->    following writeback would be terminated early too.
-> 
-> This should provide sufficient corrective pressure so that incidental
-> and temporary sharing of an inode doesn't become a persistent issue
-> while keeping the complexity necessary for implementing such pressure
-> fairly minimal and self-contained.  Also, the changes necessary for
-> individual filesystems would be minimal.
-  I like this proposal. It looks simple enough and when inodes aren't
-pernamently write-shared it converges to the blkcg that is currently
-writing to the inode. So ack from me.
+On Wed, Feb 11, 2015 at 12:29:20AM -0600, Eric W. Biederman wrote:
+> In general namespaces are not necessary if your scope of names
+> already has hierarchy.  Which means that new interfaces can almost
+> always be designed in such a way that you can support containers without
+> needing to add any special namespace support.  Which typically results
+> in more flexible and useful APIs for everyone, with no real code cost.
 
-								Honza
+Sure, and cgroup ns support isn't doing anything weird there.  Just
+bind mounting a subhierarchy is enough for the core features.  The ns
+part is dealing with things which can't easily be tied to such
+hierarchical scoping like path reported under through proc and even
+handling that can be achieved by, for example, marking delegation
+points in cgroup proper and forcing tasks beyond that point to
+consider that as its origin when determining the path to report.
+
+However, note that something like that is inherently similar to what's
+being provided by other namespaces.  It is true that it can be
+implemented outside namespace facility proper but that doesn't
+automatically make that the right choice and it's more likely to be
+worse - we'd be introducing a different way to perform about the same
+thing.
+
+So, the argument that adding namespace interface except for backward
+compatibility doesn't seem to hold water.  Like it or not, namespace
+is serving as a platform for certain type of features and we'd be
+foolish to not to consider putting a related feature together there
+and I fail to see a valid technical argument as of yet.
+
+> Further in the cgroup namespace patchset I looked at a while ago, the
+> only reason for having a cgroup namespace was to provide a measure of
+> backwards compatibility with existing userspace.  I expect removing the
+> /proc/<pid>/cgroup file and replacing it with something in cgroupfs
+> itself would serve just as well if backwards compatibility is not the
+> objective.  Or possibly replacincg /proc/<pid>/cgroup into a magic
+> symlink onto somewhere in the unified cgroupfs itself.
+
+No matter what we do, we'd still need to mark the delegation point
+somehow; otherwise, there's no way to produce a scoped identifier.
+This isn't really about backward compatibility but rather the feature
+to scope a subhierarcy properly.
+
+> I just don't see any point in doing weird silly namespace things to keep
+> existing userspace working when the existing userspace won't work.
+
+If it's too different from existing namespaces, sure, doing something
+is definitely an option but is it?
+
+> As such if a namespace doesn't implement compatibility with the existing
+> userspace it gets my nack.
+
+Hmmm.... I don't think making the proposed NS support to work across
+all hierarchies including the traditional multiple ones would be too
+difficult.  That should work then, right?
+
+Thanks.
+
 -- 
-Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-SUSE Labs, CR
+tejun
