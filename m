@@ -1,55 +1,62 @@
 From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 1/3] cpuset: initialize effective masks when clone_children
- is enabled
-Date: Fri, 13 Feb 2015 11:19:49 +0800
-Message-ID: <54DD6D55.2070603@huawei.com>
+Subject: [PATCH 2/3] cpuset: fix a warning when clearing configured masks
+ in old hierarchy
+Date: Fri, 13 Feb 2015 11:20:30 +0800
+Message-ID: <54DD6D7E.4020804@huawei.com>
+References: <54DD6D55.2070603@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <54DD6D55.2070603-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Christian Brauner <christianvanbrauner-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, =?GB2312?B?U3SopnBoYW5lIEdyYWJlcg==?= <stgraber-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-If clone_children is enabled, effective masks won't be initialized
-due to the bug:
+When we clear cpuset.cpus, cpuset.effective_cpus won't be cleared:
 
   # mount -t cgroup -o cpuset xxx /mnt
-  # echo 1 > cgroup.clone_children
   # mkdir /mnt/tmp
-  # cat /mnt/tmp/
-  # cat cpuset.effective_cpus
-
+  # echo 0 > /mnt/tmp/cpuset.cpus
+  # echo > /mnt/tmp/cpuset.cpus
   # cat cpuset.cpus
+
+  # cat cpuset.effective_cpus
   0-15
 
-And then this cpuset won't constrain the tasks in it.
+And a kernel warning in update_cpumasks_hier() is triggered:
 
-Either the bug or the fix has no effect on unified hierarchy, as
-there's no clone_chidren flag there any more.
+ ------------[ cut here ]------------
+ WARNING: CPU: 0 PID: 4028 at kernel/cpuset.c:894 update_cpumasks_hier+0x471/0x650()
 
-Reported-by: Christian Brauner <christianvanbrauner-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Reported-by: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> # 3.17+
 Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- kernel/cpuset.c | 2 ++
- 1 file changed, 2 insertions(+)
+ kernel/cpuset.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index 64b257f..7e9d711 100644
+index 7e9d711..29463c2 100644
 --- a/kernel/cpuset.c
 +++ b/kernel/cpuset.c
-@@ -1992,7 +1992,9 @@ static int cpuset_css_online(struct cgroup_subsys_state *css)
+@@ -873,7 +873,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus)
+ 		 * If it becomes empty, inherit the effective mask of the
+ 		 * parent, which is guaranteed to have some CPUs.
+ 		 */
+-		if (cpumask_empty(new_cpus))
++		if (cgroup_on_dfl(cp->css.cgroup) && cpumask_empty(new_cpus))
+ 			cpumask_copy(new_cpus, parent->effective_cpus);
  
- 	spin_lock_irq(&callback_lock);
- 	cs->mems_allowed = parent->mems_allowed;
-+	cs->effective_mems = parent->mems_allowed;
- 	cpumask_copy(cs->cpus_allowed, parent->cpus_allowed);
-+	cpumask_copy(cs->effective_cpus, parent->cpus_allowed);
- 	spin_unlock_irq(&callback_lock);
- out_unlock:
- 	mutex_unlock(&cpuset_mutex);
+ 		/* Skip the whole subtree if the cpumask remains the same. */
+@@ -1129,7 +1129,7 @@ static void update_nodemasks_hier(struct cpuset *cs, nodemask_t *new_mems)
+ 		 * If it becomes empty, inherit the effective mask of the
+ 		 * parent, which is guaranteed to have some MEMs.
+ 		 */
+-		if (nodes_empty(*new_mems))
++		if (cgroup_on_dfl(cp->css.cgroup) && nodes_empty(*new_mems))
+ 			*new_mems = parent->effective_mems;
+ 
+ 		/* Skip the whole subtree if the nodemask remains the same. */
 -- 
 1.8.0.2
