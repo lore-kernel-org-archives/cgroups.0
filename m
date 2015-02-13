@@ -1,8 +1,7 @@
 From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/3] cpuset: initialize effective masks when clone_children
- is enabled
-Date: Fri, 13 Feb 2015 11:21:09 +0800
-Message-ID: <54DD6DA5.9030207@huawei.com>
+Subject: [PATCH 3/3] cpuset: Fix cpuset sched_relax_domain_level
+Date: Fri, 13 Feb 2015 11:58:07 +0800
+Message-ID: <54DD764F.9080208@huawei.com>
 References: <54DD6D55.2070603@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -33,6 +32,10 @@ Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> # 3.9+
 Signed-off-by: Jason Low <jason.low2-VXdhtT5mjnY@public.gmane.org>
 Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
+
+This is a resend. I forgot to edit the subject when sending this patch...
+
+---
  kernel/cpuset.c | 3 ---
  1 file changed, 3 deletions(-)
 
@@ -50,5 +53,4 @@ index 29463c2..9e25599 100644
  		/* skip the whole subtree if @cp doesn't have any CPU */
  		if (cpumask_empty(cp->cpus_allowed)) {
  			pos_css = css_rightmost_descendant(pos_css);
--- 
-1.8.0.2
+-- 1.8.0.2
