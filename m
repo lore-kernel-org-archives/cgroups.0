@@ -1,8 +1,8 @@
 From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 2/3] cpuset: fix a warning when clearing configured masks
- in old hierarchy
-Date: Fri, 13 Feb 2015 11:20:30 +0800
-Message-ID: <54DD6D7E.4020804@huawei.com>
+Subject: Re: [PATCH 1/3] cpuset: initialize effective masks when clone_children
+ is enabled
+Date: Fri, 13 Feb 2015 11:21:09 +0800
+Message-ID: <54DD6DA5.9030207@huawei.com>
 References: <54DD6D55.2070603@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -12,51 +12,43 @@ Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: Jason Low <jason.low2-VXdhtT5mjnY@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-When we clear cpuset.cpus, cpuset.effective_cpus won't be cleared:
+From: Jason Low <jason.low2-VXdhtT5mjnY@public.gmane.org>
 
-  # mount -t cgroup -o cpuset xxx /mnt
-  # mkdir /mnt/tmp
-  # echo 0 > /mnt/tmp/cpuset.cpus
-  # echo > /mnt/tmp/cpuset.cpus
-  # cat cpuset.cpus
+The cpuset.sched_relax_domain_level can control how far we do
+immediate load balancing on a system. However, it was found on recent
+kernels that echo'ing a value into cpuset.sched_relax_domain_level
+did not reduce any immediate load balancing.
 
-  # cat cpuset.effective_cpus
-  0-15
+The reason this occurred was because the update_domain_attr_tree() traversal
+did not update for the "top_cpuset". This resulted in nothing being changed
+when modifying the sched_relax_domain_level parameter.
 
-And a kernel warning in update_cpumasks_hier() is triggered:
+This patch is able to address that problem by having update_domain_attr_tree()
+allow updates for the root in the cpuset traversal.
 
- ------------[ cut here ]------------
- WARNING: CPU: 0 PID: 4028 at kernel/cpuset.c:894 update_cpumasks_hier+0x471/0x650()
-
-Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> # 3.17+
+Fixes: fc560a26acce ("cpuset: replace cpuset->stack_list with cpuset_for_each_descendant_pre()")
+Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> # 3.9+
+Signed-off-by: Jason Low <jason.low2-VXdhtT5mjnY@public.gmane.org>
 Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- kernel/cpuset.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ kernel/cpuset.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
 diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index 7e9d711..29463c2 100644
+index 29463c2..9e25599 100644
 --- a/kernel/cpuset.c
 +++ b/kernel/cpuset.c
-@@ -873,7 +873,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus)
- 		 * If it becomes empty, inherit the effective mask of the
- 		 * parent, which is guaranteed to have some CPUs.
- 		 */
--		if (cpumask_empty(new_cpus))
-+		if (cgroup_on_dfl(cp->css.cgroup) && cpumask_empty(new_cpus))
- 			cpumask_copy(new_cpus, parent->effective_cpus);
+@@ -548,9 +548,6 @@ static void update_domain_attr_tree(struct sched_domain_attr *dattr,
  
- 		/* Skip the whole subtree if the cpumask remains the same. */
-@@ -1129,7 +1129,7 @@ static void update_nodemasks_hier(struct cpuset *cs, nodemask_t *new_mems)
- 		 * If it becomes empty, inherit the effective mask of the
- 		 * parent, which is guaranteed to have some MEMs.
- 		 */
--		if (nodes_empty(*new_mems))
-+		if (cgroup_on_dfl(cp->css.cgroup) && nodes_empty(*new_mems))
- 			*new_mems = parent->effective_mems;
- 
- 		/* Skip the whole subtree if the nodemask remains the same. */
+ 	rcu_read_lock();
+ 	cpuset_for_each_descendant_pre(cp, pos_css, root_cs) {
+-		if (cp == root_cs)
+-			continue;
+-
+ 		/* skip the whole subtree if @cp doesn't have any CPU */
+ 		if (cpumask_empty(cp->cpus_allowed)) {
+ 			pos_css = css_rightmost_descendant(pos_css);
 -- 
 1.8.0.2
