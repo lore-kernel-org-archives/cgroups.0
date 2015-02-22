@@ -1,43 +1,45 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH 23/27] cgroup: Remove use of seq_printf return value
-Date: Sat, 21 Feb 2015 18:53:50 -0800
-Message-ID: <bbe7b355b687cf112bfeed3bc5e2a9cdef8d9d50.1424573328.git.joe@perches.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 23/27] cgroup: Remove use of seq_printf return value
+Date: Sun, 22 Feb 2015 08:41:32 -0500
+Message-ID: <20150222134132.GA3964@htj.duckdns.org>
 References: <cover.1424573328.git.joe@perches.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1424573328.git.joe@perches.com>
-Sender: linux-kernel-owner@vger.kernel.org
+ <bbe7b355b687cf112bfeed3bc5e2a9cdef8d9d50.1424573328.git.joe@perches.com>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=Sg3uuLKnitRkOBeirAE4PtLBwdOqPrsT1FWmNJeRA4Q=;
+        b=QlCeF0zbQqOcQ3sfRKjCYrFM8FfB8k2mgJ2tf42o02fK5PZNirbfIBjTSCQ1yzMrc6
+         KV1zcCEQpHBvNtdG6gcsA0xcr1VX4/LEvYk/wF4qkC74k7E3f+F5g/fgkIIiyFhTiCzt
+         vSlhMYhWORvHdFj0i750bvvpczgb0UrM4VrsVPCEi/lbb5J0+9xhR2lFSwo5yvNlz2sM
+         Vn2JI1eJhtvc73NBIyeWhmbuDwWBY1UIUFhy/pFZvDDS99KUqZyzdvbo0X82K3oy8VQ8
+         RIQ4FgB1niV9nLGhEsKivwx75Rk/ftc0UFJOG39Hp4J6kC3DPPuia0wnxJWVend03o2R
+         A+Xg==
+Content-Disposition: inline
+In-Reply-To: <bbe7b355b687cf112bfeed3bc5e2a9cdef8d9d50.1424573328.git.joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-The seq_printf return value, because it's frequently misused,
-will eventually be converted to void.
+On Sat, Feb 21, 2015 at 06:53:50PM -0800, Joe Perches wrote:
+> The seq_printf return value, because it's frequently misused,
+> will eventually be converted to void.
+> 
+> See: commit 1f33c41c03da ("seq_file: Rename seq_overflow() to
+>      seq_has_overflowed() and make public")
+> 
+> Signed-off-by: Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
 
-See: commit 1f33c41c03da ("seq_file: Rename seq_overflow() to
-     seq_has_overflowed() and make public")
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- kernel/cgroup.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Please feel free to route the patch as you see fit.
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 29a7b2c..e8c7e8c 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -4199,7 +4199,9 @@ static void *cgroup_pidlist_next(struct seq_file *s, void *v, loff_t *pos)
- 
- static int cgroup_pidlist_show(struct seq_file *s, void *v)
- {
--	return seq_printf(s, "%d\n", *(int *)v);
-+	seq_printf(s, "%d\n", *(int *)v);
-+
-+	return 0;
- }
- 
- static u64 cgroup_read_notify_on_release(struct cgroup_subsys_state *css,
+Thanks.
+
 -- 
-2.1.2
+tejun
