@@ -1,65 +1,56 @@
-From: Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>
-Subject: Re: [PATCH] mm/memcontrol: fix NULL pointer dereference when
- use_hierarchy is 0
-Date: Wed, 25 Feb 2015 10:20:13 +0900
-Message-ID: <20150225012013.GC16796@js1304-P5Q-DELUXE>
-References: <1424150699-5395-1-git-send-email-iamjoonsoo.kim@lge.com>
- <20150217083327.GA32017@dhcp22.suse.cz>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [PATCH 1/2] cpusets,isolcpus: exclude isolcpus from load balancing
+ in cpusets
+Date: Tue, 24 Feb 2015 18:10:56 -0800 (PST)
+Message-ID: <alpine.DEB.2.10.1502241810420.19547@chino.kir.corp.google.com>
+References: <1424727906-4460-1-git-send-email-riel@redhat.com> <1424727906-4460-2-git-send-email-riel@redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20150217083327.GA32017-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version:content-type;
+        bh=pqR7oqb+4FcvN+AL6zFphX9zNS3s1uFR1hbFC8JAISw=;
+        b=mTD1UGzKvdqhbvy1FdbmvN6D4AMDaCubsLbCPp+Eo1k3FEl4+mce1Dm934HXnmSsQr
+         wmpaaasucn2U6IKdABoC7AyaTElHsq0w/YD+qMwY5urxm2W01CmR6Z4BhRRcHPPlar5t
+         gU+akwHRH1jch1RTCuGbZZFvZqxnLd6nEFMRQ/S+KssQRqeGe+jzDbCiB86wz8xLxpNK
+         PX0pwHI+BMNdO01MMeWb7byo2p/kl1T0WUDw7Dzp81A76Gd0QDIUk3SuxtBzBt43dXAX
+         yvilmZI8ageD08i2ZP4Lm4TcKYYBB8jO7HvYyXK27pcSbh1q9WxcMO48MLLGTtTqSo/V
+         8p6Q==
+In-Reply-To: <1424727906-4460-2-git-send-email-riel@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Rik van Riel <riel@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>, Clark Williams <williams@redhat.com>, Li Zefan <lizefan@huawei.com>, Ingo Molnar <mingo@redhat.com>, Luiz Capitulino <lcapitulino@redhat.com>, cgroups@vger.kernel.org
 
-On Tue, Feb 17, 2015 at 09:33:27AM +0100, Michal Hocko wrote:
-> On Tue 17-02-15 14:24:59, Joonsoo Kim wrote:
-> > It can be possible to return NULL in parent_mem_cgroup()
-> > if use_hierarchy is 0.
-> 
-> This alone is not sufficient because the low limit is present only in
-> the unified hierarchy API and there is no use_hierarchy there. The
-> primary issue here is that the memcg has 0 usage so the previous
-> check for usage will not stop us. And that is bug IMO.
-> 
-> I think that the following patch would be more correct from semantic
-> POV:
-> ---
-> >From f5d74671d30e44c50b45b4464c92f536f1dbdff6 Mon Sep 17 00:00:00 2001
-> From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-> Date: Tue, 17 Feb 2015 08:02:12 +0100
-> Subject: [PATCH] memcg: fix low limit calculation
-> 
-> A memcg is considered low limited even when the current usage is equal
-> to the low limit. This leads to interesting side effects e.g.
-> groups/hierarchies with no memory accounted are considered protected and
-> so the reclaim will emit MEMCG_LOW event when encountering them.
-> 
-> Another and much bigger issue was reported by Joonsoo Kim. He has hit a
-> NULL ptr dereference with the legacy cgroup API which even doesn't have
-> low limit exposed. The limit is 0 by default but the initial check fails
-> for memcg with 0 consumption and parent_mem_cgroup() would return NULL
-> if use_hierarchy is 0 and so page_counter_read would try to dereference
-> NULL.
-> 
-> I suppose that the current implementation is just an overlook because
-> the documentation in Documentation/cgroups/unified-hierarchy.txt says:
-> "
-> The memory.low boundary on the other hand is a top-down allocated
-> reserve.  A cgroup enjoys reclaim protection when it and all its
-> ancestors are below their low boundaries
-> "
-> 
-> Fix the usage and the low limit comparision in mem_cgroup_low accordingly.
-> 
-> Fixes: 241994ed8649 (mm: memcontrol: default hierarchy interface for memory)
-> Reported-by: Joonsoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+On Mon, 23 Feb 2015, riel@redhat.com wrote:
 
-Good! This fixes my issue.
+> From: Rik van Riel <riel@redhat.com>
+> 
+> Ensure that cpus specified with the isolcpus= boot commandline
+> option stay outside of the load balancing in the kernel scheduler.
+> 
+> Operations like load balancing can introduce unwanted latencies,
+> which is exactly what the isolcpus= commandline is there to prevent.
+> 
+> Previously, simply creating a new cpuset, without even touching the
+> cpuset.cpus field inside the new cpuset, would undo the effects of
+> isolcpus=, by creating a scheduler domain spanning the whole system,
+> and setting up load balancing inside that domain. The cpuset root
+> cpuset.cpus file is read-only, so there was not even a way to undo
+> that effect.
+> 
+> This does not impact the majority of cpusets users, since isolcpus=
+> is a fairly specialized feature used for realtime purposes.
+> 
+> Cc: Peter Zijlstra <peterz@infradead.org>
+> Cc: Clark Williams <williams@redhat.com>
+> Cc: Li Zefan <lizefan@huawei.com>
+> Cc: Ingo Molnar <mingo@redhat.com>
+> Cc: Luiz Capitulino <lcapitulino@redhat.com>
+> Cc: cgroups@vger.kernel.org
+> Signed-off-by: Rik van Riel <riel@redhat.com>
 
-Thanks.
+Tested-by: David Rientjes <rientjes@google.com>
