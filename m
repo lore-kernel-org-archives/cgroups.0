@@ -1,101 +1,65 @@
-From: riel@redhat.com
-Subject: [PATCH 2/2] cpusets,isolcpus: add file to show isolated cpus in cpuset
-Date: Mon, 23 Feb 2015 16:45:06 -0500
-Message-ID: <1424727906-4460-3-git-send-email-riel@redhat.com>
-References: <1424727906-4460-1-git-send-email-riel@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1424727906-4460-1-git-send-email-riel@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>
+Subject: Re: [PATCH] mm/memcontrol: fix NULL pointer dereference when
+ use_hierarchy is 0
+Date: Wed, 25 Feb 2015 10:20:13 +0900
+Message-ID: <20150225012013.GC16796@js1304-P5Q-DELUXE>
+References: <1424150699-5395-1-git-send-email-iamjoonsoo.kim@lge.com>
+ <20150217083327.GA32017@dhcp22.suse.cz>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20150217083327.GA32017-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org
-Cc: Rik van Riel <riel@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Clark Williams <williams@redhat.com>, Li Zefan <lizefan@huawei.com>, Ingo Molnar <mingo@redhat.com>, Luiz Capitulino <lcapitulino@redhat.com>, cgroups@vger.kernel.org
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Rik van Riel <riel@redhat.com>
+On Tue, Feb 17, 2015 at 09:33:27AM +0100, Michal Hocko wrote:
+> On Tue 17-02-15 14:24:59, Joonsoo Kim wrote:
+> > It can be possible to return NULL in parent_mem_cgroup()
+> > if use_hierarchy is 0.
+> 
+> This alone is not sufficient because the low limit is present only in
+> the unified hierarchy API and there is no use_hierarchy there. The
+> primary issue here is that the memcg has 0 usage so the previous
+> check for usage will not stop us. And that is bug IMO.
+> 
+> I think that the following patch would be more correct from semantic
+> POV:
+> ---
+> >From f5d74671d30e44c50b45b4464c92f536f1dbdff6 Mon Sep 17 00:00:00 2001
+> From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> Date: Tue, 17 Feb 2015 08:02:12 +0100
+> Subject: [PATCH] memcg: fix low limit calculation
+> 
+> A memcg is considered low limited even when the current usage is equal
+> to the low limit. This leads to interesting side effects e.g.
+> groups/hierarchies with no memory accounted are considered protected and
+> so the reclaim will emit MEMCG_LOW event when encountering them.
+> 
+> Another and much bigger issue was reported by Joonsoo Kim. He has hit a
+> NULL ptr dereference with the legacy cgroup API which even doesn't have
+> low limit exposed. The limit is 0 by default but the initial check fails
+> for memcg with 0 consumption and parent_mem_cgroup() would return NULL
+> if use_hierarchy is 0 and so page_counter_read would try to dereference
+> NULL.
+> 
+> I suppose that the current implementation is just an overlook because
+> the documentation in Documentation/cgroups/unified-hierarchy.txt says:
+> "
+> The memory.low boundary on the other hand is a top-down allocated
+> reserve.  A cgroup enjoys reclaim protection when it and all its
+> ancestors are below their low boundaries
+> "
+> 
+> Fix the usage and the low limit comparision in mem_cgroup_low accordingly.
+> 
+> Fixes: 241994ed8649 (mm: memcontrol: default hierarchy interface for memory)
+> Reported-by: Joonsoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 
-The previous patch makes it so the code skips over isolcpus when
-building scheduler load balancing domains. This makes it hard to
-see for a user which of the CPUs in a cpuset are participating in
-load balancing, and which ones are isolated cpus.
+Good! This fixes my issue.
 
-Add a cpuset.isolcpus file with info on which cpus in a cpuset are
-isolated CPUs.
-
-This file is read-only for now. In the future we could extend things
-so isolcpus can be changed at run time, for the root (system wide)
-cpuset only.
-
-Cc: Peter Zijlstra <peterz@infradead.org>
-Cc: Clark Williams <williams@redhat.com>
-Cc: Li Zefan <lizefan@huawei.com>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: Luiz Capitulino <lcapitulino@redhat.com>
-Cc: cgroups@vger.kernel.org
-Signed-off-by: Rik van Riel <riel@redhat.com>
----
- kernel/cpuset.c | 27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
-
-diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index 1ad63fa37cb4..19ad5d3377f8 100644
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -1563,6 +1563,7 @@ typedef enum {
- 	FILE_MEMORY_PRESSURE,
- 	FILE_SPREAD_PAGE,
- 	FILE_SPREAD_SLAB,
-+	FILE_ISOLCPUS,
- } cpuset_filetype_t;
- 
- static int cpuset_write_u64(struct cgroup_subsys_state *css, struct cftype *cft,
-@@ -1704,6 +1705,23 @@ static ssize_t cpuset_write_resmask(struct kernfs_open_file *of,
- 	return retval ?: nbytes;
- }
- 
-+static size_t cpuset_sprintf_isolcpus(char *s, ssize_t pos, struct cpuset *cs)
-+{
-+	cpumask_var_t my_isolated_cpus;
-+	ssize_t count;
-+	
-+	if (!alloc_cpumask_var(&my_isolated_cpus, GFP_KERNEL))
-+		return 0;
-+
-+	cpumask_and(my_isolated_cpus, cs->cpus_allowed, cpu_isolated_map);
-+
-+	count = cpulist_scnprintf(s, pos, my_isolated_cpus);
-+
-+	free_cpumask_var(my_isolated_cpus);
-+
-+	return count;
-+}
-+
- /*
-  * These ascii lists should be read in a single call, by using a user
-  * buffer large enough to hold the entire map.  If read in smaller
-@@ -1738,6 +1756,9 @@ static int cpuset_common_seq_show(struct seq_file *sf, void *v)
- 	case FILE_EFFECTIVE_MEMLIST:
- 		s += nodelist_scnprintf(s, count, cs->effective_mems);
- 		break;
-+	case FILE_ISOLCPUS:
-+		s += cpuset_sprintf_isolcpus(s, count, cs);
-+		break;
- 	default:
- 		ret = -EINVAL;
- 		goto out_unlock;
-@@ -1906,6 +1927,12 @@ static struct cftype files[] = {
- 		.private = FILE_MEMORY_PRESSURE_ENABLED,
- 	},
- 
-+	{
-+		.name = "isolcpus",
-+		.seq_show = cpuset_common_seq_show,
-+		.private = FILE_ISOLCPUS,
-+	},
-+
- 	{ }	/* terminate */
- };
- 
--- 
-1.9.3
+Thanks.
