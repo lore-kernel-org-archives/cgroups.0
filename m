@@ -1,7 +1,7 @@
 From: riel@redhat.com
-Subject: [PATCH 2/2] cpusets,isolcpus: add file to show isolated cpus in cpuset
-Date: Wed, 25 Feb 2015 11:38:08 -0500
-Message-ID: <1424882288-2910-3-git-send-email-riel@redhat.com>
+Subject: [PATCH 1/2] cpusets,isolcpus: exclude isolcpus from load balancing in cpusets
+Date: Wed, 25 Feb 2015 11:38:07 -0500
+Message-ID: <1424882288-2910-2-git-send-email-riel@redhat.com>
 References: <1424882288-2910-1-git-send-email-riel@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1424882288-2910-1-git-send-email-riel@redhat.com>
@@ -11,90 +11,125 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: linux-kernel@vger.kernel.org
-Cc: Rik van Riel <riel@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Clark Williams <williams@redhat.com>, Li Zefan <lizefan@huawei.com>, Ingo Molnar <mingo@redhat.com>, Luiz Capitulino <lcapitulino@redhat.com>, David Rientjes <rientjes@google.com>, Mike Galbraith <umgwanakikbuti@gmail.com>, cgroups@vger.kernel.org
+Cc: Rik van Riel <riel@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Clark Williams <williams@redhat.com>, Li Zefan <lizefan@huawei.com>, Ingo Molnar <mingo@redhat.com>, Luiz Capitulino <lcapitulino@redhat.com>, Mike Galbraith <umgwanakikbuti@gmail.com>, cgroups@vger.kernel.org
 
 From: Rik van Riel <riel@redhat.com>
 
-The previous patch makes it so the code skips over isolcpus when
-building scheduler load balancing domains. This makes it hard to
-see for a user which of the CPUs in a cpuset are participating in
-load balancing, and which ones are isolated cpus.
+Ensure that cpus specified with the isolcpus= boot commandline
+option stay outside of the load balancing in the kernel scheduler.
 
-Add a cpuset.isolcpus file with info on which cpus in a cpuset are
-isolated CPUs.
+Operations like load balancing can introduce unwanted latencies,
+which is exactly what the isolcpus= commandline is there to prevent.
 
-This file is read-only for now. In the future we could extend things
-so isolcpus can be changed at run time, for the root (system wide)
-cpuset only.
+Previously, simply creating a new cpuset, without even touching the
+cpuset.cpus field inside the new cpuset, would undo the effects of
+isolcpus=, by creating a scheduler domain spanning the whole system,
+and setting up load balancing inside that domain. The cpuset root
+cpuset.cpus file is read-only, so there was not even a way to undo
+that effect.
+
+This does not impact the majority of cpusets users, since isolcpus=
+is a fairly specialized feature used for realtime purposes.
 
 Cc: Peter Zijlstra <peterz@infradead.org>
 Cc: Clark Williams <williams@redhat.com>
 Cc: Li Zefan <lizefan@huawei.com>
 Cc: Ingo Molnar <mingo@redhat.com>
 Cc: Luiz Capitulino <lcapitulino@redhat.com>
-Cc: David Rientjes <rientjes@google.com>
 Cc: Mike Galbraith <umgwanakikbuti@gmail.com>
 Cc: cgroups@vger.kernel.org
 Signed-off-by: Rik van Riel <riel@redhat.com>
+Tested-by: David Rientjes <rientjes@google.com>
 ---
- kernel/cpuset.c | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ include/linux/sched.h |  2 ++
+ kernel/cpuset.c       | 13 +++++++++++--
+ kernel/sched/core.c   |  2 +-
+ 3 files changed, 14 insertions(+), 3 deletions(-)
 
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 6d77432e14ff..aeae02435717 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1038,6 +1038,8 @@ static inline struct cpumask *sched_domain_span(struct sched_domain *sd)
+ extern void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
+ 				    struct sched_domain_attr *dattr_new);
+ 
++extern cpumask_var_t cpu_isolated_map;
++
+ /* Allocate an array of sched domains, for partition_sched_domains(). */
+ cpumask_var_t *alloc_sched_domains(unsigned int ndoms);
+ void free_sched_domains(cpumask_var_t doms[], unsigned int ndoms);
 diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index b544e5229d99..94bf59588e23 100644
+index 1d1fe9361d29..b544e5229d99 100644
 --- a/kernel/cpuset.c
 +++ b/kernel/cpuset.c
-@@ -1563,6 +1563,7 @@ typedef enum {
- 	FILE_MEMORY_PRESSURE,
- 	FILE_SPREAD_PAGE,
- 	FILE_SPREAD_SLAB,
-+	FILE_ISOLCPUS,
- } cpuset_filetype_t;
+@@ -625,6 +625,7 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 	int csn;		/* how many cpuset ptrs in csa so far */
+ 	int i, j, k;		/* indices for partition finding loops */
+ 	cpumask_var_t *doms;	/* resulting partition; i.e. sched domains */
++	cpumask_var_t non_isolated_cpus;  /* load balanced CPUs */
+ 	struct sched_domain_attr *dattr;  /* attributes for custom domains */
+ 	int ndoms = 0;		/* number of sched domains in result */
+ 	int nslot;		/* next empty doms[] struct cpumask slot */
+@@ -634,6 +635,10 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 	dattr = NULL;
+ 	csa = NULL;
  
- static int cpuset_write_u64(struct cgroup_subsys_state *css, struct cftype *cft,
-@@ -1704,6 +1705,20 @@ static ssize_t cpuset_write_resmask(struct kernfs_open_file *of,
- 	return retval ?: nbytes;
++	if (!alloc_cpumask_var(&non_isolated_cpus, GFP_KERNEL))
++		goto done;
++	cpumask_andnot(non_isolated_cpus, cpu_possible_mask, cpu_isolated_map);
++
+ 	/* Special case for the 99% of systems with one, full, sched domain */
+ 	if (is_sched_load_balance(&top_cpuset)) {
+ 		ndoms = 1;
+@@ -646,7 +651,8 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 			*dattr = SD_ATTR_INIT;
+ 			update_domain_attr_tree(dattr, &top_cpuset);
+ 		}
+-		cpumask_copy(doms[0], top_cpuset.effective_cpus);
++		cpumask_and(doms[0], top_cpuset.effective_cpus,
++				     non_isolated_cpus);
+ 
+ 		goto done;
+ 	}
+@@ -669,7 +675,8 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 		 * the corresponding sched domain.
+ 		 */
+ 		if (!cpumask_empty(cp->cpus_allowed) &&
+-		    !is_sched_load_balance(cp))
++		    !(is_sched_load_balance(cp) &&
++		      cpumask_intersects(cp->cpus_allowed, non_isolated_cpus)))
+ 			continue;
+ 
+ 		if (is_sched_load_balance(cp))
+@@ -751,6 +758,7 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 
+ 			if (apn == b->pn) {
+ 				cpumask_or(dp, dp, b->effective_cpus);
++				cpumask_and(dp, dp, non_isolated_cpus);
+ 				if (dattr)
+ 					update_domain_attr_tree(dattr + nslot, b);
+ 
+@@ -763,6 +771,7 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 	BUG_ON(nslot != ndoms);
+ 
+ done:
++	free_cpumask_var(non_isolated_cpus);
+ 	kfree(csa);
+ 
+ 	/*
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index f0f831e8a345..3db1beace19b 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -5812,7 +5812,7 @@ cpu_attach_domain(struct sched_domain *sd, struct root_domain *rd, int cpu)
  }
  
-+static void cpuset_seq_print_isolcpus(struct seq_file *sf, struct cpuset *cs)
-+{
-+	cpumask_var_t my_isolated_cpus;
-+
-+	if (!alloc_cpumask_var(&my_isolated_cpus, GFP_KERNEL))
-+		return;
-+
-+	cpumask_and(my_isolated_cpus, cs->cpus_allowed, cpu_isolated_map);
-+
-+	seq_printf(sf, "%*pbl\n", nodemask_pr_args(my_isolated_cpus));
-+
-+	free_cpumask_var(my_isolated_cpus);
-+}
-+
- /*
-  * These ascii lists should be read in a single call, by using a user
-  * buffer large enough to hold the entire map.  If read in smaller
-@@ -1733,6 +1748,9 @@ static int cpuset_common_seq_show(struct seq_file *sf, void *v)
- 	case FILE_EFFECTIVE_MEMLIST:
- 		seq_printf(sf, "%*pbl\n", nodemask_pr_args(&cs->effective_mems));
- 		break;
-+	case FILE_ISOLCPUS:
-+		cpuset_seq_print_isolcpus(sf, cs);
-+		break;
- 	default:
- 		ret = -EINVAL;
- 	}
-@@ -1893,6 +1911,12 @@ static struct cftype files[] = {
- 		.private = FILE_MEMORY_PRESSURE_ENABLED,
- 	},
+ /* cpus with isolated domains */
+-static cpumask_var_t cpu_isolated_map;
++cpumask_var_t cpu_isolated_map;
  
-+	{
-+		.name = "isolcpus",
-+		.seq_show = cpuset_common_seq_show,
-+		.private = FILE_ISOLCPUS,
-+	},
-+
- 	{ }	/* terminate */
- };
- 
+ /* Setup the mask of cpus configured for isolated domains */
+ static int __init isolated_cpu_setup(char *str)
 -- 
 2.1.0
