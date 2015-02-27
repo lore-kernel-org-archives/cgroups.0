@@ -1,54 +1,57 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH 1/2] cpusets,isolcpus: exclude isolcpus from load
- balancing in cpusets
-Date: Fri, 27 Feb 2015 10:32:31 +0100
-Message-ID: <20150227093231.GG21418@twins.programming.kicks-ass.net>
-References: <1424882288-2910-1-git-send-email-riel@redhat.com>
- <1424882288-2910-2-git-send-email-riel@redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH RFC 0/2] add nproc cgroup subsystem
+Date: Fri, 27 Feb 2015 06:49:40 -0500
+Message-ID: <20150227114940.GB3964@htj.duckdns.org>
+References: <1424660891-12719-1-git-send-email-cyphar@cyphar.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=+R/kasZOe2NxlwCcE4f1zhju2KX+phuZqYo1+DegRPM=;
+        b=Zp8gauS3Z5gb59oMiti8apwLKR7pqsJZ0ef7ujyeH90XdL39iM1ZEsv1xaxzmFO9Th
+         tPrdFwdI+mddQXXxFv6gQ+saoHOMxBWAm4aSSv2qzsoMhx0J2PyWo7u7AiC6P7Lh47Yx
+         DDWRUDKyaUa6IsPcuJllmGZw8sLH30XZwx2QzKahYxC7uDUVPrUqiGEZ1hSerFpr7Js3
+         zpCrdJZ1SUxhgz7S764TfdLFmw9a/6eYmIncyet6xIUDUsb+FuDlWLZIQA6H95T/32vV
+         oLcjyTRRvUKpFKkSJ3Vwh/nIiP5crAAfqbDWO1XY6AzUIOGMnFpIyB7gADxqmg1kYTZX
+         2ojw==
 Content-Disposition: inline
-In-Reply-To: <1424882288-2910-2-git-send-email-riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1424660891-12719-1-git-send-email-cyphar@cyphar.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Clark Williams <williams-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Luiz Capitulino <lcapitulino-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Aleksa Sarai <cyphar@cyphar.com>
+Cc: lizefan@huawei.com, mingo@redhat.com, peterz@infradead.org, richard@nod.at, fweisbec@gmail.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Wed, Feb 25, 2015 at 11:38:07AM -0500, riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org wrote:
-> From: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> 
-> Ensure that cpus specified with the isolcpus= boot commandline
-> option stay outside of the load balancing in the kernel scheduler.
-> 
-> Operations like load balancing can introduce unwanted latencies,
-> which is exactly what the isolcpus= commandline is there to prevent.
-> 
-> Previously, simply creating a new cpuset, without even touching the
-> cpuset.cpus field inside the new cpuset, would undo the effects of
-> isolcpus=, by creating a scheduler domain spanning the whole system,
-> and setting up load balancing inside that domain. The cpuset root
-> cpuset.cpus file is read-only, so there was not even a way to undo
-> that effect.
-> 
-> This does not impact the majority of cpusets users, since isolcpus=
-> is a fairly specialized feature used for realtime purposes.
-> 
-> Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-> Cc: Clark Williams <williams-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: Luiz Capitulino <lcapitulino-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Signed-off-by: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Tested-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Hello,
 
-Might I asked you to update Documentation/cgroups/cpusets.txt with this
-knowledge? While it does mentions isolcpus it does not clarify the
-interaction between it and cpusets.
+On Mon, Feb 23, 2015 at 02:08:09PM +1100, Aleksa Sarai wrote:
+> The current state of resource limitation for the number of open
+> processes (as well as the number of open file descriptors) requires you
+> to use setrlimit(2), which means that you are limited to resource
+> limiting process trees rather than resource limiting cgroups (which is
+> the point of cgroups).
+> 
+> There was a patch to implement this in 2011[1], but that was rejected
+> because it implemented a general-purpose rlimit subsystem -- which meant
+> that you couldn't control distinct resource limits in different
+> heirarchies. This patch implements a resource controller *specifically*
+> for the number of processes in a cgroup, overcoming this issue.
+> 
+> There has been a similar attempt to implement a resource controller for
+> the number of open file descriptors[2], which has not been merged
+> becasue the reasons were dubious. Merely from a "sane interface"
+> perspective, it should be possible to utilise cgroups to do such
+> rudimentary resource management (which currently only exists for process
+> trees).
 
-Other than that,
+This isn't a proper resource to control.  kmemcg just grew proper
+reclaim support and will be useable to control kernel side of memory
+consumption.
 
-Acked-by: Peter Zijlstra (Intel) <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Thanks.
+
+-- 
+tejun
