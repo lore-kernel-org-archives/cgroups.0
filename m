@@ -1,59 +1,36 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH RFC 0/2] add nproc cgroup subsystem
-Date: Fri, 27 Feb 2015 14:35:39 -0500
-Message-ID: <20150227193539.GO3964@htj.duckdns.org>
-References: <1424660891-12719-1-git-send-email-cyphar@cyphar.com>
- <20150227114940.GB3964@htj.duckdns.org>
- <54F09E62.8000007@gmail.com>
- <20150227170640.GK3964@htj.duckdns.org>
- <54F0BC51.4050506@gmail.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [PATCH 3/2] cpusets,isolcpus: document relationship between
+ cpusets & isolcpus
+Date: Fri, 27 Feb 2015 13:15:20 -0800 (PST)
+Message-ID: <alpine.DEB.2.10.1502271315090.2122@chino.kir.corp.google.com>
+References: <1424882288-2910-1-git-send-email-riel@redhat.com> <1424882288-2910-2-git-send-email-riel@redhat.com> <20150227093231.GG21418@twins.programming.kicks-ass.net> <20150227120803.07db15fe@annuminas.surriel.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=jzmzxCAhxFhqR/25L2bQ8H34I3gF3QSrVinzjcUCkzw=;
-        b=uEhx9XzyEUGCVV7KggLBVRSmGaVVAgd+e7BlaL6MpMyO4BBNYz4GesRwPGTJovFz5g
-         b6bpX8X+evCH/o2cebO8A6y7g8vMDe/K0+Jr+ITV2Q+S2Pk7GPpa6KXDXbtyIVQolzI4
-         nIkszfDp4Ii8yAamSQtu9Jddy7EUX61T+ko9B7TywI+xSczSRX0E6c2MMyO2p9nnY+NJ
-         I5gtiaDN/xrfmra7OEn/KXw6zn3drgUMKD1amnKfXTReu3y64hsB5Cmy32/5NLW4Gm7a
-         HWMNGD+UxGMnR4P1UbPeH1fecowM6iHFQApQmONgLUEWpxQCzYEzLv3t58Ku7iokkJPq
-         fK7g==
-Content-Disposition: inline
-In-Reply-To: <54F0BC51.4050506-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=google.com; s=20120113;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version:content-type;
+        bh=bOTXtFR4Jfrso4kRWrSMFZJ+JxHb5TSq75GX4NEb+Qo=;
+        b=VwsUaRDeGBFph4NRXFiIK1M8GPXb7usNloRL/TbAkf5rvfC2gAgNMg//Kyq1OuXNWo
+         M8XvljS2AJ96u4Gpdt9/yb5x8XAORVoR+90Kj1fM0ZAjXzOOzShFfaW1JNuArp/kHPF5
+         coK+6jE30P19hadbPvUOgma/RJK2oBbzvU9C1w6prP1ZAZL9VfFyeSSlf1eP+nfiVvhd
+         8K12PjIOca0yx/6B1GgECuUQE4ItXKt0pLgJ0rJAa55HRvcucv21jforC4AI3nFzpJek
+         +WoW89ZGewviWz5g+HS/nCZhOA62HAks4FcpcnOTvNN6P4bkNCIdOW5ixoePz0n7raa9
+         +Uzg==
+In-Reply-To: <20150227120803.07db15fe@annuminas.surriel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, richard-/L3Ra7n9ekc@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Rik van Riel <riel@redhat.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, Clark Williams <williams@redhat.com>, Li Zefan <lizefan@huawei.com>, Ingo Molnar <mingo@redhat.com>, Luiz Capitulino <lcapitulino@redhat.com>, Mike Galbraith <umgwanakikbuti@gmail.com>, cgroups@vger.kernel.org
 
-Hello, Austin.
+On Fri, 27 Feb 2015, Rik van Riel wrote:
 
-On Fri, Feb 27, 2015 at 01:49:53PM -0500, Austin S Hemmelgarn wrote:
-> As far as being trivial to achieve, I'm assuming you are referring to rlimit
-> and PAM's limits module, both of which have their own issues. Using
-> pam_limits.so to limit processes isn't trivial because it requires calling
-> through PAM to begin with, which almost no software that isn't login related
-> does, and rlimits are tricky to set up properly with the granularity that
-> having a cgroup would provide.
-...
-> PID's are a fundamental resource, you run out and it's an only marginally
-> better situation than OOM, namely, if you don't already have a shell open
-> which has kill builtin (because you can't fork), or have some other reliable
-> way to terminate processes without forking, you are stuck either waiting for
-> the problem to resolve itself, or have to reset the system.
+> Document the subtly changed relationship between cpusets and isolcpus.
+> Turns out the old documentation did not quite match the code...
+> 
+> Signed-off-by: Rik van Riel <riel@redhat.com>
+> Suggested-by: Peter Zijlstra <peterz@infradead.org>
 
-Right, this is an a lot more valid argument.  Currently, we're capping
-max pid at 4M which translates to some tens of gigs of memory which
-isn't a crazy amount on modern machines.  The hard(er) barrier would
-be around 2^30 (2^29 from futex side, apparently) which would also be
-reacheable on configurations w/ terabytes of memory.
-
-I'll think more about it and get back.
-
-Thanks a lot.
-
--- 
-tejun
+Acked-by: David Rientjes <rientjes@google.com>
