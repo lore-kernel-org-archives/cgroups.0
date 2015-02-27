@@ -1,52 +1,215 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH RFC 0/2] add nproc cgroup subsystem
-Date: Fri, 27 Feb 2015 16:49:04 -0500
-Message-ID: <20150227214904.GQ3964@htj.duckdns.org>
-References: <1424660891-12719-1-git-send-email-cyphar@cyphar.com>
- <20150227114940.GB3964@htj.duckdns.org>
- <54F09E62.8000007@gmail.com>
- <20150227170640.GK3964@htj.duckdns.org>
- <CAAAKZwtDS+MNd3wTheGUrNVbP7qLX_u3vo+YDOAbsU-Rq=Ot2w@mail.gmail.com>
- <20150227174503.GM3964@htj.duckdns.org>
- <CAAAKZwvuR2X7EEZz+UWRCGYajaJQ+VzXYfDEq6EQnssv9+6FJQ@mail.gmail.com>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [patch v2 1/3] mm: remove GFP_THISNODE
+Date: Fri, 27 Feb 2015 14:16:52 -0800 (PST)
+Message-ID: <alpine.DEB.2.10.1502271415510.7225@chino.kir.corp.google.com>
+References: <alpine.DEB.2.10.1502251621010.10303@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=4HXyMZuxSSHSa4Th/jFY4WzIW/AqJDPMSSOHAjAnqsA=;
-        b=G61LJ8m37wlc4hG9MUXEM4dVUtt+J2+zYl/VBNlcwZAKBGoRcm8Th6JknxpKzrcCMd
-         W2rhUx1hu/g2FqRWredbx/JDpDHuDsksAQyfwJsTxnLfVBEoPC/zm7ZMbDjvvwv57r5s
-         LrRR27PiMVhD4p20sEoIik7LcNyov9xIKEcE5X5mCtf46XSCLXJ9C+KYCMxYJD3jfEUN
-         EiIBVMRSRt8USWayZIia5vjswGlPYxrp59EfOMXne/zf8QMeYzG+30I2FLOBfcPPqMsn
-         NrCwPe4qacsDvZ9uyoAfN+GLg1ulYHfV/UyZ/HDlfmeFZIfq2uP/50hF0WIVIym/I/VV
-         AUSA==
-Content-Disposition: inline
-In-Reply-To: <CAAAKZwvuR2X7EEZz+UWRCGYajaJQ+VzXYfDEq6EQnssv9+6FJQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        d=google.com; s=20120113;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version:content-type;
+        bh=QbiCDKqOVp7YJqFSfJK5ZSYWXLl3MqymgAQI/Z8TcWY=;
+        b=MEJfqMoIK5V8NZOXCtOTdAIMjCG2Q6DHCYtmR0BENZd6x5aqG7LdBHefnwnDjvuT4F
+         Zekxi0GaxTo6LT2WA8MwpMvhpvuP4TqZck7RJXlAZ16ZrQvKKHZPdKU5XQVf5KVBaml/
+         2tKPagM/kuoxNGFBu+NrHy7dU56CNEpsv2K8GyTy5BnZAad0oxYrvLE47ut/C+cnqycR
+         zMA/F/M/XMvJwHHby24NH4eip7Rf/GSzUou/Gw5Ko1qNgfIB9L/BqVoTYEcTrV0Ic/KK
+         oYNe6jXtQk0TT7cAMAUB++Rnns51ke+0FITWwtUao2JqiW4D3dF8PHLmS1p0KlIZ7O00
+         psnw==
+In-Reply-To: <alpine.DEB.2.10.1502251621010.10303-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tim Hockin <thockin@hockin.org>
-Cc: Austin S Hemmelgarn <ahferroin7@gmail.com>, Aleksa Sarai <cyphar@cyphar.com>, Li Zefan <lizefan@huawei.com>, mingo <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, richard <richard@nod.at>, =?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Pravin Shelar <pshelar-l0M0P4e3n4LQT0dZR+AlfA@public.gmane.org>, Jarno Rajahalme <jrajahalme-l0M0P4e3n4LQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dev-yBygre7rU0TnMu66kgdUjQ@public.gmane.org
 
-On Fri, Feb 27, 2015 at 01:45:09PM -0800, Tim Hockin wrote:
-> Are you willing to put a drop-dead date on it?  If we don't have
-> kmemcg working well enough to _actually_ bound PID usage and FD usage
-> by, say, June 1st, will you then accept a patch to this effect?  If
-> the answer is no, then I have zero faith that it's coming any time
-> soon - I heard this 2 years ago.  I believed you then.
+NOTE: this is not about __GFP_THISNODE, this is only about GFP_THISNODE.
 
-Tim, cut this bullshit.  That's not how kernel development works.
-Contribute to techincal discussion or shut it.  I'm really getting
-tired of your whining without any useful substance.
+GFP_THISNODE is a secret combination of gfp bits that have different
+behavior than expected.  It is a combination of __GFP_THISNODE,
+__GFP_NORETRY, and __GFP_NOWARN and is special-cased in the page allocator
+slowpath to fail without trying reclaim even though it may be used in
+combination with __GFP_WAIT.
 
-> I see further downthread that you said you'll think about it.  Thank
-> you.  Just because our use cases are not normal does not mean we're
-> not valid :)
+An example of the problem this creates: commit e97ca8e5b864 ("mm: fix 
+GFP_THISNODE callers and clarify") fixed up many users of GFP_THISNODE
+that really just wanted __GFP_THISNODE.  The problem doesn't end there,
+however, because even it was a no-op for alloc_misplaced_dst_page(),
+which also sets __GFP_NORETRY and __GFP_NOWARN, and
+migrate_misplaced_transhuge_page(), where __GFP_NORETRY and __GFP_NOWAIT
+is set in GFP_TRANSHUGE.  Converting GFP_THISNODE to __GFP_THISNODE is
+a no-op in these cases since the page allocator special-cases
+__GFP_THISNODE && __GFP_NORETRY && __GFP_NOWARN.
 
-And can you even see why that made progress?
+It's time to just remove GFP_THISNODE entirely.  We leave __GFP_THISNODE
+to restrict an allocation to a local node, but remove GFP_THISNODE and
+its obscurity.  Instead, we require that a caller clear __GFP_WAIT if it
+wants to avoid reclaim.
 
--- 
-tejun
+This allows the aforementioned functions to actually reclaim as they
+should.  It also enables any future callers that want to do
+__GFP_THISNODE but also __GFP_NORETRY && __GFP_NOWARN to reclaim.  The
+rule is simple: if you don't want to reclaim, then don't set __GFP_WAIT.
+
+Aside: ovs_flow_stats_update() really wants to avoid reclaim as well, so
+it is unchanged.
+
+Signed-off-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ v2: fix typos in commit message per Vlastimil
+
+ include/linux/gfp.h    | 10 ----------
+ mm/page_alloc.c        | 22 ++++++----------------
+ mm/slab.c              | 22 ++++++++++++++++++----
+ net/openvswitch/flow.c |  4 +++-
+ 4 files changed, 27 insertions(+), 31 deletions(-)
+
+diff --git a/include/linux/gfp.h b/include/linux/gfp.h
+--- a/include/linux/gfp.h
++++ b/include/linux/gfp.h
+@@ -117,16 +117,6 @@ struct vm_area_struct;
+ 			 __GFP_NOMEMALLOC | __GFP_NORETRY | __GFP_NOWARN | \
+ 			 __GFP_NO_KSWAPD)
+ 
+-/*
+- * GFP_THISNODE does not perform any reclaim, you most likely want to
+- * use __GFP_THISNODE to allocate from a given node without fallback!
+- */
+-#ifdef CONFIG_NUMA
+-#define GFP_THISNODE	(__GFP_THISNODE | __GFP_NOWARN | __GFP_NORETRY)
+-#else
+-#define GFP_THISNODE	((__force gfp_t)0)
+-#endif
+-
+ /* This mask makes up all the page movable related flags */
+ #define GFP_MOVABLE_MASK (__GFP_RECLAIMABLE|__GFP_MOVABLE)
+ 
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -2355,13 +2355,7 @@ __alloc_pages_may_oom(gfp_t gfp_mask, unsigned int order,
+ 		/* The OOM killer does not compensate for light reclaim */
+ 		if (!(gfp_mask & __GFP_FS))
+ 			goto out;
+-		/*
+-		 * GFP_THISNODE contains __GFP_NORETRY and we never hit this.
+-		 * Sanity check for bare calls of __GFP_THISNODE, not real OOM.
+-		 * The caller should handle page allocation failure by itself if
+-		 * it specifies __GFP_THISNODE.
+-		 * Note: Hugepage uses it but will hit PAGE_ALLOC_COSTLY_ORDER.
+-		 */
++		/* The OOM killer may not free memory on a specific node */
+ 		if (gfp_mask & __GFP_THISNODE)
+ 			goto out;
+ 	}
+@@ -2615,15 +2609,11 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
+ 	}
+ 
+ 	/*
+-	 * GFP_THISNODE (meaning __GFP_THISNODE, __GFP_NORETRY and
+-	 * __GFP_NOWARN set) should not cause reclaim since the subsystem
+-	 * (f.e. slab) using GFP_THISNODE may choose to trigger reclaim
+-	 * using a larger set of nodes after it has established that the
+-	 * allowed per node queues are empty and that nodes are
+-	 * over allocated.
++	 * If this allocation cannot block and it is for a specific node, then
++	 * fail early.  There's no need to wakeup kswapd or retry for a
++	 * speculative node-specific allocation.
+ 	 */
+-	if (IS_ENABLED(CONFIG_NUMA) &&
+-	    (gfp_mask & GFP_THISNODE) == GFP_THISNODE)
++	if (IS_ENABLED(CONFIG_NUMA) && (gfp_mask & __GFP_THISNODE) && !wait)
+ 		goto nopage;
+ 
+ retry:
+@@ -2816,7 +2806,7 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
+ 	/*
+ 	 * Check the zones suitable for the gfp_mask contain at least one
+ 	 * valid zone. It's possible to have an empty zonelist as a result
+-	 * of GFP_THISNODE and a memoryless node
++	 * of __GFP_THISNODE and a memoryless node
+ 	 */
+ 	if (unlikely(!zonelist->_zonerefs->zone))
+ 		return NULL;
+diff --git a/mm/slab.c b/mm/slab.c
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -857,6 +857,11 @@ static inline void *____cache_alloc_node(struct kmem_cache *cachep,
+ 	return NULL;
+ }
+ 
++static inline gfp_t gfp_exact_node(gfp_t flags)
++{
++	return flags;
++}
++
+ #else	/* CONFIG_NUMA */
+ 
+ static void *____cache_alloc_node(struct kmem_cache *, gfp_t, int);
+@@ -1023,6 +1028,15 @@ static inline int cache_free_alien(struct kmem_cache *cachep, void *objp)
+ 
+ 	return __cache_free_alien(cachep, objp, node, page_node);
+ }
++
++/*
++ * Construct gfp mask to allocate from a specific node but do not invoke reclaim
++ * or warn about failures.
++ */
++static inline gfp_t gfp_exact_node(gfp_t flags)
++{
++	return (flags | __GFP_THISNODE | __GFP_NOWARN) & ~__GFP_WAIT;
++}
+ #endif
+ 
+ /*
+@@ -2825,7 +2839,7 @@ alloc_done:
+ 	if (unlikely(!ac->avail)) {
+ 		int x;
+ force_grow:
+-		x = cache_grow(cachep, flags | GFP_THISNODE, node, NULL);
++		x = cache_grow(cachep, gfp_exact_node(flags), node, NULL);
+ 
+ 		/* cache_grow can reenable interrupts, then ac could change. */
+ 		ac = cpu_cache_get(cachep);
+@@ -3019,7 +3033,7 @@ retry:
+ 			get_node(cache, nid) &&
+ 			get_node(cache, nid)->free_objects) {
+ 				obj = ____cache_alloc_node(cache,
+-					flags | GFP_THISNODE, nid);
++					gfp_exact_node(flags), nid);
+ 				if (obj)
+ 					break;
+ 		}
+@@ -3047,7 +3061,7 @@ retry:
+ 			nid = page_to_nid(page);
+ 			if (cache_grow(cache, flags, nid, page)) {
+ 				obj = ____cache_alloc_node(cache,
+-					flags | GFP_THISNODE, nid);
++					gfp_exact_node(flags), nid);
+ 				if (!obj)
+ 					/*
+ 					 * Another processor may allocate the
+@@ -3118,7 +3132,7 @@ retry:
+ 
+ must_grow:
+ 	spin_unlock(&n->list_lock);
+-	x = cache_grow(cachep, flags | GFP_THISNODE, nodeid, NULL);
++	x = cache_grow(cachep, gfp_exact_node(flags), nodeid, NULL);
+ 	if (x)
+ 		goto retry;
+ 
+diff --git a/net/openvswitch/flow.c b/net/openvswitch/flow.c
+--- a/net/openvswitch/flow.c
++++ b/net/openvswitch/flow.c
+@@ -100,7 +100,9 @@ void ovs_flow_stats_update(struct sw_flow *flow, __be16 tcp_flags,
+ 
+ 				new_stats =
+ 					kmem_cache_alloc_node(flow_stats_cache,
+-							      GFP_THISNODE |
++							      GFP_NOWAIT |
++							      __GFP_THISNODE |
++							      __GFP_NOWARN |
+ 							      __GFP_NOMEMALLOC,
+ 							      node);
+ 				if (likely(new_stats)) {
