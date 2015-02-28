@@ -1,42 +1,24 @@
 From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v4 2/2] cpusets,isolcpus: add file to show isolated cpus
- in cpuset
-Date: Sat, 28 Feb 2015 11:22:32 +0800
-Message-ID: <54F13478.2070502@huawei.com>
-References: <1424882288-2910-1-git-send-email-riel@redhat.com> <1424882288-2910-3-git-send-email-riel@redhat.com> <54EEFE15.3010005@huawei.com> <20150226121231.6fcba7e8@annuminas.surriel.com>
+Subject: Re: [PATCH 3/2] cpusets,isolcpus: document relationship between cpusets
+ & isolcpus
+Date: Sat, 28 Feb 2015 11:23:10 +0800
+Message-ID: <54F1349E.8040000@huawei.com>
+References: <1424882288-2910-1-git-send-email-riel@redhat.com> <1424882288-2910-2-git-send-email-riel@redhat.com> <20150227093231.GG21418@twins.programming.kicks-ass.net> <20150227120803.07db15fe@annuminas.surriel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20150226121231.6fcba7e8-XDFsmL65zczMw9PXcw3sFBL4W9x8LtSr@public.gmane.org>
+In-Reply-To: <20150227120803.07db15fe-XDFsmL65zczMw9PXcw3sFBL4W9x8LtSr@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Clark Williams <williams-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Luiz Capitulino <lcapitulino-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Clark Williams <williams-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Luiz Capitulino <lcapitulino-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-> Subject: cpusets,isolcpus: add file to show isolated cpus in cpuset
+On 2015/2/28 1:08, Rik van Riel wrote:
+> Document the subtly changed relationship between cpusets and isolcpus.
+> Turns out the old documentation did not quite match the code...
 > 
-> The previous patch makes it so the code skips over isolcpus when
-> building scheduler load balancing domains. This makes it hard to
-> see for a user which of the CPUs in a cpuset are participating in
-> load balancing, and which ones are isolated cpus.
-> 
-> Add a cpuset.isolcpus file with info on which cpus in a cpuset are
-> isolated CPUs.
-> 
-> This file is read-only for now. In the future we could extend things
-> so isolcpus can be changed at run time, for the root (system wide)
-> cpuset only.
-> 
-> Acked-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-> Cc: Clark Williams <williams-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: Luiz Capitulino <lcapitulino-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Cc: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 > Signed-off-by: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Suggested-by: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
 Acked-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
