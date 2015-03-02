@@ -1,94 +1,49 @@
-From: Vlastimil Babka <vbabka@suse.cz>
-Subject: Re: [patch v2 1/3] mm: remove GFP_THISNODE
-Date: Mon, 02 Mar 2015 17:02:08 +0100
-Message-ID: <54F48980.3090008@suse.cz>
-References: <alpine.DEB.2.10.1502251621010.10303@chino.kir.corp.google.com> <alpine.DEB.2.10.1502271415510.7225@chino.kir.corp.google.com> <54F469C1.9090601@suse.cz> <alpine.DEB.2.11.1503020944200.5540@gentwo.org>
+From: Mike Galbraith <umgwanakikbuti@gmail.com>
+Subject: Re: [PATCH v4 2/2] cpusets,isolcpus: add file to show isolated cpus
+ in cpuset
+Date: Mon, 02 Mar 2015 17:02:57 +0100
+Message-ID: <1425312177.12094.15.camel@gmail.com>
+References: <1424882288-2910-1-git-send-email-riel@redhat.com>
+	 <1424882288-2910-3-git-send-email-riel@redhat.com>
+	 <54EEFE15.3010005@huawei.com>
+	 <20150226121231.6fcba7e8@annuminas.surriel.com>
+	 <20150302090933.GH21418@twins.programming.kicks-ass.net>
+	 <1425300290.5863.17.camel@gmail.com>
+	 <20150302152924.GD17694@htj.duckdns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <alpine.DEB.2.11.1503020944200.5540@gentwo.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :content-type:mime-version:content-transfer-encoding;
+        bh=SxSBhcpZe3ndsATyTEHbUV/bYvy5onLYUOLHNwStVxk=;
+        b=J7oaUDBSw2T7aDuYtJWtjITrWHCkC+oBElxQjpkwoJaqTmpoRSr5kWPaWT3jBfy3PF
+         Y5jeIshPq7wLx9umB+lE3OjLx6tV+JL54iMgOg0WdVHtSMph9zVxP7U2AtL6n429/JJ1
+         v14BMZ4cMxrE+qZkk1DNFsrjGOvkHq1EBVCXLYf4HCWvQJajqtRKmhnzJ5E85Z/VXoqx
+         HzeEzFBz4us/w18C0tEWZIUypurld0TrsytL5rVZ56eFSftugYDCE9jpuwLin/LL5aDz
+         ZAr5Sp/ExdMOoaxzlC37vE+ywDEwxTjUpQw1Mkxy3SSigJ8cZLoRlwSNRSmFP06ckiSo
+         E1oA==
+In-Reply-To: <20150302152924.GD17694@htj.duckdns.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Christoph Lameter <cl@linux.com>
-Cc: David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Pekka Enberg <penberg@kernel.org>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>, Pravin Shelar <pshelar@nicira.com>, Jarno Rajahalme <jrajahalme@nicira.com>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, netdev@vger.kernel.org, cgroups@vger.kernel.org, dev@openvswitch.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Peter Zijlstra <peterz@infradead.org>, Rik van Riel <riel@redhat.com>, Zefan Li <lizefan@huawei.com>, linux-kernel@vger.kernel.org, Clark Williams <williams@redhat.com>, Ingo Molnar <mingo@redhat.com>, Luiz Capitulino <lcapitulino@redhat.com>, David Rientjes <rientjes@google.com>, cgroups@vger.kernel.org
 
-On 03/02/2015 04:46 PM, Christoph Lameter wrote:
-> On Mon, 2 Mar 2015, Vlastimil Babka wrote:
+On Mon, 2015-03-02 at 10:29 -0500, Tejun Heo wrote:
+> On Mon, Mar 02, 2015 at 01:44:50PM +0100, Mike Galbraith wrote:
+> > Hm, I'm now all system-disease-ified now (still hate the bloody thing),
+> > and have no problem isolating cpus via cpusets, modulo workqueues
+> > wanting a bat upside the head.
 > 
->> So it would be IMHO better for longer-term maintainability to have the
->> relevant __GFP_THISNODE callers pass also __GFP_NO_KSWAPD to denote these
->> opportunistic allocation attempts, instead of having this subtle semantic
-> 
-> You are thinking about an opportunistic allocation attempt in SLAB?
-> 
-> AFAICT SLAB allocations should trigger reclaim.
-> 
+> It shouldn't be difficult to teach workqueue pools to follow the same
+> rules.  This matters only for the unbound ones anyway, right?
 
-Well, let me quote your commit 952f3b51beb5:
+Well, those are the only ones we can do anything about.  Dirt simple
+diddling of the workqueue default mask as sched domains are
+added/removed should do it I think.  Automatically moving any existing
+unbound worker away from isolated cores at the same time would be a
+bonus, most important is that no new threads sneak in.
 
---------
-commit 952f3b51beb592f3f1de15adcdef802fc086ea91
-Author: Christoph Lameter <clameter@sgi.com>
-Date:   Wed Dec 6 20:33:26 2006 -0800
-
-    [PATCH] GFP_THISNODE must not trigger global reclaim
-    
-    The intent of GFP_THISNODE is to make sure that an allocation occurs on a
-    particular node.  If this is not possible then NULL needs to be returned so
-    that the caller can choose what to do next on its own (the slab allocator
-    depends on that).
-    
-    However, GFP_THISNODE currently triggers reclaim before returning a failure
-    (GFP_THISNODE means GFP_NORETRY is set).  If we have over allocated a node
-    then we will currently do some reclaim before returning NULL.  The caller
-    may want memory from other nodes before reclaim should be triggered.  (If
-    the caller wants reclaim then he can directly use __GFP_THISNODE instead).
-    
-    There is no flag to avoid reclaim in the page allocator and adding yet
-    another GFP_xx flag would be difficult given that we are out of available
-    flags.
-    
-    So just compare and see if all bits for GFP_THISNODE (__GFP_THISNODE,
-    __GFP_NORETRY and __GFP_NOWARN) are set.  If so then we return NULL before
-    waking up kswapd.
-    
-    Signed-off-by: Christoph Lameter <clameter@sgi.com>
-    Signed-off-by: Andrew Morton <akpm@osdl.org>
-    Signed-off-by: Linus Torvalds <torvalds@osdl.org>
-
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 5d123b3..dc8753b 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -1151,6 +1151,17 @@ restart:
-        if (page)
-                goto got_pg;
- 
-+       /*
-+        * GFP_THISNODE (meaning __GFP_THISNODE, __GFP_NORETRY and
-+        * __GFP_NOWARN set) should not cause reclaim since the subsystem
-+        * (f.e. slab) using GFP_THISNODE may choose to trigger reclaim
-+        * using a larger set of nodes after it has established that the
-+        * allowed per node queues are empty and that nodes are
-+        * over allocated.
-+        */
-+       if (NUMA_BUILD && (gfp_mask & GFP_THISNODE) == GFP_THISNODE)
-+               goto nopage;
-+
-        for (z = zonelist->zones; *z; z++)
-                wakeup_kswapd(*z, order);
---------
-
-So it seems to me that *at least some* allocations in slab are supposed
-to work like this? Of course it's possible that since 2006, more
-allocation sites in slab started passing GFP_THISNODE without realizing
-this semantics. In that case, such sites should be fixed. (I think David
-already mentioned some in this thread?)
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+	-Mike
