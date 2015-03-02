@@ -1,54 +1,60 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH RFC 0/2] add nproc cgroup subsystem
-Date: Mon, 2 Mar 2015 08:54:21 -0500
-Message-ID: <20150302135421.GB17694@htj.duckdns.org>
-References: <20150227114940.GB3964@htj.duckdns.org>
- <54F09E62.8000007@gmail.com>
- <20150227170640.GK3964@htj.duckdns.org>
- <54F0BC51.4050506@gmail.com>
- <CAOviyajSOY6kTiwTA+APf9VGT=Ui=0QQH6KUqwaxHB3ahuJk2g@mail.gmail.com>
- <20150228115926.GA1005@htj.duckdns.org>
- <CAAAKZws45c3PhFQMGrm_K+OZV+KOyGV9sXTakHcTfNP1kHxzOQ@mail.gmail.com>
- <20150228164353.GR3964@htj.duckdns.org>
- <54F461F3.3030903@gmail.com>
- <CAOviyahKJthwLTND51HhaRNB_KJC60T7HFHjdqPZf3pQmAUAhw@mail.gmail.com>
+From: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v4 2/2] cpusets,isolcpus: add file to show isolated cpus
+ in cpuset
+Date: Mon, 02 Mar 2015 09:35:32 -0500
+Message-ID: <54F47534.7070204@redhat.com>
+References: <1424882288-2910-1-git-send-email-riel@redhat.com>	 <1424882288-2910-3-git-send-email-riel@redhat.com>	 <54EEFE15.3010005@huawei.com>	 <20150226121231.6fcba7e8@annuminas.surriel.com>	 <20150302090933.GH21418@twins.programming.kicks-ass.net> <1425300290.5863.17.camel@gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=BrfLQjU5OnNYfSF6A9ySQG7M24WWYmLtFjqzRQJjbVM=;
-        b=WFMJo0zxWE6u1I/09u99sAEN+PMadwyKu+dg1ZcVIEdnd3hzGhPbexr9YOZA8y7lzV
-         8WHEzA0PEVcuUNrJBNO0JKrkJSLAfXoQ09BNWsgBavw7dt9nbzcHXSz/BrhTB+7HSgkv
-         CKFmdoQy7V2nwJX5PSihz808FHlqirs6SSz9Xo9eTWWix7Ex+sN+y3XxLR4JMWP5rQEF
-         TDbpN7WwwBlLyvlWt36sdL70d+aPkqtWT8DTNEligVrgMENR3gP72NRQ2/gJD5kX0mI6
-         Cz4hnxprYIt+MC7o1UGuK+B09bL5L1tz+Jo16j1LgMWziy8qTl4Ro+48ymlGB78r+G5O
-         tpBw==
-Content-Disposition: inline
-In-Reply-To: <CAOviyahKJthwLTND51HhaRNB_KJC60T7HFHjdqPZf3pQmAUAhw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <1425300290.5863.17.camel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-Cc: Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tim Hockin <thockin-Rl2oBbRerpQdnm+yROfE0A@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, richard-/L3Ra7n9ekc@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Clark Williams <williams-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Luiz Capitulino <lcapitulino-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Mar 03, 2015 at 12:31:19AM +1100, Aleksa Sarai wrote:
-> > If 16-bit PID's aren't a concern anymore, then why do we still default to
-> > treating it like a 16-bit signed int (the default for
-> > /proc/sys/kernel/pid_max is 32768)?
+On 03/02/2015 07:44 AM, Mike Galbraith wrote:
+> On Mon, 2015-03-02 at 10:09 +0100, Peter Zijlstra wrote:
+>> On Thu, Feb 26, 2015 at 12:12:31PM -0500, Rik van Riel wrote:
+>>> Subject: cpusets,isolcpus: add file to show isolated cpus in cpuset
+>>>
+>>> The previous patch makes it so the code skips over isolcpus when
+>>> building scheduler load balancing domains. This makes it hard to
+>>> see for a user which of the CPUs in a cpuset are participating in
+>>> load balancing, and which ones are isolated cpus.
+>>>
+>>> Add a cpuset.isolcpus file with info on which cpus in a cpuset are
+>>> isolated CPUs.
+>>>
+>>> This file is read-only for now. In the future we could extend things
+>>> so isolcpus can be changed at run time, for the root (system wide)
+>>> cpuset only.
+>>>
+>>> Acked-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>>> Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+>>> Cc: Clark Williams <williams-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>>> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+>>> Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>>> Cc: Luiz Capitulino <lcapitulino-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>>> Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>>> Cc: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>>> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+>>> Signed-off-by: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>>
+>> So let me start off by saying I hate isolcpus ;-)
+>>
+>> Let me further state that I had hopes we could extend cpusets to
+>> natively provide the functionality isolcpus has, and kill isolcpus.
 > 
-> I just want to emphasise that *even if* we changed to another default
-> limit, the mere existence of a system-wide pid_max makes PIDs a
-> resource.
+> +1
+> 
+> That's where nohz_full goop belongs too.
 
-We seem to fail to communicate.  The primary reason why pid promotes
-itself to a global resource status is because it's globally capped way
-below its backing resource's (kernel memory) limit and it is very
-difficult to make it not so due to direct userland dependencies on it.
-
-Thanks.
+Except nohz_full and isolcpus are very much global attributes of
+each CPU, so I am not sure whether it would make sense to allow
+configuration of this attribute anywhere other than the root
+cpuset.
 
 -- 
-tejun
+All rights reversed
