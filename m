@@ -1,43 +1,52 @@
-From: Christoph Lameter <cl@linux.com>
-Subject: Re: [patch v2 1/3] mm: remove GFP_THISNODE
-Date: Mon, 2 Mar 2015 10:08:19 -0600 (CST)
-Message-ID: <alpine.DEB.2.11.1503021007030.6245@gentwo.org>
-References: <alpine.DEB.2.10.1502251621010.10303@chino.kir.corp.google.com> <alpine.DEB.2.10.1502271415510.7225@chino.kir.corp.google.com> <54F469C1.9090601@suse.cz> <alpine.DEB.2.11.1503020944200.5540@gentwo.org> <54F48980.3090008@suse.cz>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <54F48980.3090008@suse.cz>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=comcast.net;
-	s=q20140121; t=1425312501;
-	bh=nSTuJmDf2Trha0xb7xFgaiHyLOA+AKbK32ekEOJEthM=;
-	h=Received:Received:Received:Received:Date:From:To:Subject:
-	 Message-ID:Content-Type;
-	b=VQZtkZps7sa/wAbFDYEtXeGvwZv6G/H+J1xxTgiUHh3Rh7xleQUlyRTUDxuP/xBI6
-	 hNkLm9yP9q29G14vx071cg+M0wpXDf33OgeEX4xHkWh53/yFOUloMYAd9yjHACFOr9
-	 aUbAWTk4Z6BjOSxM863T6FqI2VVYPDUgEOG5YS6cfmX1lPfZR2TcbQS5UQkhz133US
-	 /WxyC+zvJVcQ1Sv0CmIX6vl+Ee3fnYJ+RDfm98K/izC90A2/gzKz792sxg/6xKs3od
-	 C56qf1YwC7GRAgWs4ohYuSov2pSvyu6JnM6NaMQRvnZL3NUwPZa91jDFf+4lEVodU8
-	 opmnMR9K5cMCA==
-Sender: owner-linux-mm@kvack.org
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v4 2/2] cpusets,isolcpus: add file to show isolated cpus
+ in cpuset
+Date: Mon, 2 Mar 2015 11:09:03 -0500
+Message-ID: <20150302160903.GE17694@htj.duckdns.org>
+References: <1424882288-2910-1-git-send-email-riel@redhat.com>
+ <1424882288-2910-3-git-send-email-riel@redhat.com>
+ <54EEFE15.3010005@huawei.com>
+ <20150226121231.6fcba7e8@annuminas.surriel.com>
+ <20150302090933.GH21418@twins.programming.kicks-ass.net>
+ <1425300290.5863.17.camel@gmail.com>
+ <20150302152924.GD17694@htj.duckdns.org>
+ <1425312177.12094.15.camel@gmail.com>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=/rvn10bL/i2CCz4dRcFECCPlCQ6/4eVNLqG2M/2q1X0=;
+        b=n6QpNBU/shXfcnhVkldkj7hMmNJPBq4j1CSoQOjyeHYAZPUsQexa5NrrugmV4oGyiF
+         CPRAr2OSBnWcY8kwGB3Nq7TbY+MbFo7ccVzXdlycW8PzGZUsFsXYdLGw29iH4gTXTDOl
+         73oZokdXHmnajEmFtHk5rPzJ6vTogSVYX7C9HGzgiP/X64Cg+tdiqiHIT1ekFmvSl7Bl
+         2LGRj9LVp6XIIZSHVma45NT2zScoTqgXfY8FTa4RQBV7oavmOmYBnMq8IbYn9CmuO/za
+         l08ZkHqESfFXBLmXf2xN+zIBngjxBqlJlEhGAuO7crGEbY+U0CqEKgVkS43ja8LFU3UO
+         3iqw==
+Content-Disposition: inline
+In-Reply-To: <1425312177.12094.15.camel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vlastimil Babka <vbabka@suse.cz>
-Cc: David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Pekka Enberg <penberg@kernel.org>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>, Pravin Shelar <pshelar@nicira.com>, Jarno Rajahalme <jrajahalme@nicira.com>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, netdev@vger.kernel.org, cgroups@vger.kernel.org, dev@openvswitch.org
+To: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Clark Williams <williams-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Luiz Capitulino <lcapitulino-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, 2 Mar 2015, Vlastimil Babka wrote:
+On Mon, Mar 02, 2015 at 05:02:57PM +0100, Mike Galbraith wrote:
+> Well, those are the only ones we can do anything about.  Dirt simple
+> diddling of the workqueue default mask as sched domains are
+> added/removed should do it I think.  Automatically moving any existing
+> unbound worker away from isolated cores at the same time would be a
+> bonus, most important is that no new threads sneak in.
 
-> > You are thinking about an opportunistic allocation attempt in SLAB?
-> >
-> > AFAICT SLAB allocations should trigger reclaim.
-> >
->
-> Well, let me quote your commit 952f3b51beb5:
+Worker pools are immutable once created and configuraiton changes are
+achieved by creating new pools and draining old ones but at any rate
+making it follow config changes is almost trivial.  Figuring out
+configuration policy might take a bit of effort tho.  Can you point me
+to what specific configuration it should be following?
 
-This was about global reclaim. Local reclaim is good and that can be
-done via zone_reclaim.
+Thanks.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
