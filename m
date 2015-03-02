@@ -1,45 +1,35 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v4 2/2] cpusets,isolcpus: add file to show isolated cpus
- in cpuset
-Date: Mon, 2 Mar 2015 10:29:24 -0500
-Message-ID: <20150302152924.GD17694@htj.duckdns.org>
-References: <1424882288-2910-1-git-send-email-riel@redhat.com>
- <1424882288-2910-3-git-send-email-riel@redhat.com>
- <54EEFE15.3010005@huawei.com>
- <20150226121231.6fcba7e8@annuminas.surriel.com>
- <20150302090933.GH21418@twins.programming.kicks-ass.net>
- <1425300290.5863.17.camel@gmail.com>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=2uVzzSTOs62ohLxEkd4DhKukHvLemBo1EEBWo6L3YfU=;
-        b=JPgCrmojM37c4Pz+iEPxmwKn5ENOcvVnuQD/c4nZeXQ2g9Eb4DmPTWZKe50FfWz8cb
-         YXxQ8P8kjv5zv3gIPtsQoZvYvIOYGjghwkKzy4hWlgHE5PLAyFNgKBRZ3oE2O7KQ3D86
-         I5FWStX0vsgoBV8wDYb/UCNaHRNOXGoUbtFxAQRHM3rplxIZhBGPjeuQ88Tk5dR6WUAV
-         tXcUOLUlNcWl9S5mD7MstKlmJwqDRJIn/jeWT9h+A2IRhL/DZK/hcL7Ge5G7jLJBlfKW
-         CPgaNtJ3tlzKcDyGGw2RI8PCaBO1H0uKvP1HgM/U126rv1xn4EsHtdjv46v2/Wk3NuiP
-         QDyg==
-Content-Disposition: inline
-In-Reply-To: <1425300290.5863.17.camel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Christoph Lameter <cl@linux.com>
+Subject: Re: [patch v2 1/3] mm: remove GFP_THISNODE
+Date: Mon, 2 Mar 2015 09:46:33 -0600 (CST)
+Message-ID: <alpine.DEB.2.11.1503020944200.5540@gentwo.org>
+References: <alpine.DEB.2.10.1502251621010.10303@chino.kir.corp.google.com> <alpine.DEB.2.10.1502271415510.7225@chino.kir.corp.google.com> <54F469C1.9090601@suse.cz>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <54F469C1.9090601@suse.cz>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=comcast.net;
+	s=q20140121; t=1425311195;
+	bh=DYUEaHt7pKMpZWPD7v/v4GSmdsWVMzL/061RgDBQFIE=;
+	h=Received:Received:Received:Received:Date:From:To:Subject:
+	 Message-ID:Content-Type;
+	b=T5LV+jahKA35t3gljf333BYptB3TeltL3KnBNULZqjFbdtrpqhmd/CoFzy2L/K+ww
+	 bNWlq04V/xUmk3eRz1pAw9mFCU1FqI6KTHDAVMrVoSWOF8sMJBffUffsa7spudOl10
+	 K6qVnUu69SgD0TRoUaSxvdYEnxI+2rJgV+KW/nYqKi/b5lPbDITqWIv74Xagght+5Y
+	 0QzsDsubWGHkCFlcHLAq8Wj2C5aE8qXSrUWmNtOckMwgF12XdgX7VggPpe+VXH8YBq
+	 hxm5IQmY/1SjhbzmZJgHo9fddsG9v+AA2MPAtIqRXRGyEg0KWJIALwsqhr5F6/9VAt
+	 VRITHruu4MGvg==
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Clark Williams <williams-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Luiz Capitulino <lcapitulino-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Vlastimil Babka <vbabka@suse.cz>
+Cc: David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Pekka Enberg <penberg@kernel.org>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>, Pravin Shelar <pshelar@nicira.com>, Jarno Rajahalme <jrajahalme@nicira.com>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, netdev@vger.kernel.org, cgroups@vger.kernel.org, dev@openvswitch.org
 
-On Mon, Mar 02, 2015 at 01:44:50PM +0100, Mike Galbraith wrote:
-> Hm, I'm now all system-disease-ified now (still hate the bloody thing),
-> and have no problem isolating cpus via cpusets, modulo workqueues
-> wanting a bat upside the head.
+On Mon, 2 Mar 2015, Vlastimil Babka wrote:
 
-It shouldn't be difficult to teach workqueue pools to follow the same
-rules.  This matters only for the unbound ones anyway, right?
+> So it would be IMHO better for longer-term maintainability to have the
+> relevant __GFP_THISNODE callers pass also __GFP_NO_KSWAPD to denote these
+> opportunistic allocation attempts, instead of having this subtle semantic
 
-Thanks.
+You are thinking about an opportunistic allocation attempt in SLAB?
 
--- 
-tejun
+AFAICT SLAB allocations should trigger reclaim.
