@@ -1,72 +1,52 @@
-From: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [cgroup:for-next 5/6] kernel/cpuset.c:1710:53: error: 'cpu_isolated_map'
- undeclared
-Date: Mon, 02 Mar 2015 13:10:10 -0500
-Message-ID: <54F4A782.4050605@redhat.com>
-References: <201503030135.5JcSQnmv%fengguang.wu@intel.com>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [patch v2 1/3] mm: remove GFP_THISNODE
+Date: Mon, 2 Mar 2015 12:40:24 -0800 (PST)
+Message-ID: <alpine.DEB.2.10.1503021239410.20808@chino.kir.corp.google.com>
+References: <alpine.DEB.2.10.1502251621010.10303@chino.kir.corp.google.com> <alpine.DEB.2.10.1502271415510.7225@chino.kir.corp.google.com> <54F469C1.9090601@suse.cz> <alpine.DEB.2.11.1503020944200.5540@gentwo.org> <54F48980.3090008@suse.cz>
+ <alpine.DEB.2.11.1503021007030.6245@gentwo.org> <54F48E68.6070706@suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <201503030135.5JcSQnmv%fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version:content-type;
+        bh=oLGlg63XP5dqF9CfExAGqOOCou+kHD9jWefkj7PnMQ0=;
+        b=mZAePDyA3WA92wxTtuv2Utchc67VVAtgHPFDE25F5iN3m+Hod89OfrdLLsbR+h4N/8
+         BckD/lpQvvGCLKAwZZc8Lv0hO773ObNObRxZdSYGgXKwplYZhnnOPoO4IiSumVToQvIU
+         3tTY7X8z9OyrVbtq1FBpQTggVqa6wLlrrkGA9LBPIqUACIn8f3rPfi27FkfxtVZqfJnR
+         5++xRZPcztQGnlsWDwmobn1HFh/+kzD7t+nVDNuslvyd/RU8wc+evV+if6sUh5bTxieH
+         e5sU8arBJ2I8KoAKVcocZME0pEAyTmHN3VOwHtk/LCqfuAy5oe4Rf2IHZV4QRJ2jHxES
+         bFWQ==
+In-Reply-To: <54F48E68.6070706@suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: kbuild test robot <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Vlastimil Babka <vbabka@suse.cz>
+Cc: Christoph Lameter <cl@linux.com>, Andrew Morton <akpm@linux-foundation.org>, Pekka Enberg <penberg@kernel.org>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>, Pravin Shelar <pshelar@nicira.com>, Jarno Rajahalme <jrajahalme@nicira.com>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, netdev@vger.kernel.org, cgroups@vger.kernel.org, dev@openvswitch.org
 
-On 03/02/2015 12:24 PM, kbuild test robot wrote:
-> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-> head:   43315c496d458ba0603c7f019d063bcbf3b6779e
-> commit: 87793a671b15d945ea1c278c441af9e5b7d3dd73 [5/6] cpusets,isolcpus: add file to show isolated cpus in cpuset
-> config: um-x86_64_defconfig (attached as .config)
-> reproduce:
->   git checkout 87793a671b15d945ea1c278c441af9e5b7d3dd73
->   # save the attached .config to linux build tree
->   make ARCH=um SUBARCH=x86_64
+On Mon, 2 Mar 2015, Vlastimil Babka wrote:
+
+> > > > You are thinking about an opportunistic allocation attempt in SLAB?
+> > > > 
+> > > > AFAICT SLAB allocations should trigger reclaim.
+> > > > 
+> > > 
+> > > Well, let me quote your commit 952f3b51beb5:
+> > 
+> > This was about global reclaim. Local reclaim is good and that can be
+> > done via zone_reclaim.
 > 
-> All error/warnings:
+> Right, so the patch is a functional change for zone_reclaim_mode == 1, where
+> !__GFP_WAIT will prevent it.
 > 
->    kernel/cpuset.c: In function 'cpuset_seq_print_isolcpus':
->>> kernel/cpuset.c:1710:53: error: 'cpu_isolated_map' undeclared (first use in this function)
->      cpumask_and(print_isolated_cpus, cs->cpus_allowed, cpu_isolated_map);
->                                                         ^
->    kernel/cpuset.c:1710:53: note: each undeclared identifier is reported only once for each function it appears in
-> 
-> vim +/cpu_isolated_map +1710 kernel/cpuset.c
-> 
->   1704	
->   1705	/* protected by the lock in cpuset_common_seq_show */
->   1706	static cpumask_var_t print_isolated_cpus;
->   1707	
->   1708	static void cpuset_seq_print_isolcpus(struct seq_file *sf, struct cpuset *cs)
->   1709	{
->> 1710		cpumask_and(print_isolated_cpus, cs->cpus_allowed, cpu_isolated_map);
->   1711	
->   1712		seq_printf(sf, "%*pbl\n", cpumask_pr_args(print_isolated_cpus));
->   1713	}
 
-This seems to break because the test is building a
-UP kernel with CONFIG_CPUSETS=y
+My patch is not a functional change, get_page_from_freelist() handles 
+zone_reclaim_mode == 1 properly in the page allocator fastpath.  This 
+patch only touches the slowpath.
 
-It should be fairly easy to fix this up by moving the
-cpu_isolated_map outside CONFIG_SMP, but I wonder if
-that is desirable to the scheduler people, especially
-given that cpusets does not seem particularly useful
-on a UP system...
-
-I can see a few ways to fix this:
-
-1) Move cpu_isolated_map outside CONFIG_SMP, like
-   cpu_possible_mask, etc...
-
-2) Change cpumask_and and related functions to just
-   ignore all their arguments when building a UP
-   kernel, which would allow us to drop cpu_possible_mask
-   and others when building a UP kernel
-
-3) Making CONFIG_CPUSETS dependent on CONFIG_SMP
-
-Any preferences?
-
--- 
-All rights reversed
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
