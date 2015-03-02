@@ -1,74 +1,51 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v4 2/2] cpusets,isolcpus: add file to show isolated cpus
- in cpuset
-Date: Mon, 2 Mar 2015 12:01:16 -0500
-Message-ID: <20150302170116.GJ17694@htj.duckdns.org>
-References: <1424882288-2910-1-git-send-email-riel@redhat.com>
- <1424882288-2910-3-git-send-email-riel@redhat.com>
- <54EEFE15.3010005@huawei.com>
- <20150226121231.6fcba7e8@annuminas.surriel.com>
+Subject: Re: [PATCH 1/2] cgroup: call cgroup_subsys->bind on cgroup subsys
+ initialization
+Date: Mon, 2 Mar 2015 12:12:57 -0500
+Message-ID: <20150302171257.GL17694@htj.duckdns.org>
+References: <131af5f5ee0eec55d0f94a785db4be04baf01f51.1424356325.git.vdavydov@parallels.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=Zk4SqEKQuXww8Nd6PBCV/6DhzwRznktJxS6XRgGnSM4=;
-        b=Ho+u1t60w88H7wQZg3fC/k7PYZB1H6+E1b1IRtcwc5KIZNPeacCG3NpwXex0BXermt
-         U0mFKUEIa+4mcA+aqe+PRWFlc7lvZ+dRtybgTE1IHSQmOare8dChefnHwK5kA29TeJLw
-         a58yKZRguPR728p8MtJi+9UndHhx1tYi/+1523LPCqbyREWZMSB+fIaUtWjSVhUfyyUe
-         vK3ecfP6EqfpDbb4/Oa6foSNP6dKHEt31ewlwWWgAbRsrx6XQKFQ6igh2TYWOiNUF7jx
-         /ROCW8+93As8lmMPTBhha/PGfXN7ILTVDQ5IGGf8Bzf/Ba5DFzCSyI1y3LtMBMdmTY6K
-         5eMA==
+        bh=8HdT6bYHDLQoFZSuClvKJzU4e1xM8tvbLdwsg6uRmj8=;
+        b=LO6IlSYocoxhJnp8CWOBliiEqsKlOFLduMYcjIvQiTDO8Ao2x/t42lnLOmrcA5zUM/
+         NPmotpnzyR3sQ1m6fqWhHuyy+/br4jN4mpCMGR839W/FufGAIvGqb+xwmkPDRlq49xEV
+         tsqbW1iWBAfjK99DItg9mwA4LeKZJYdlRAzTx6hz0Qi+VCEhmVLX+mKnbntNTZNXleGp
+         O3djyQ2tVvGzIIqIq4f8Zbuuc4mxhrWyu9Lk9AjW8aPrhvd1VbMKCxl5YgiYvFJHD8aJ
+         F2kcXbgyk2GxTdb/eHlnawHYgXeOdt/I6CMpu7W/h6Vek3dlTn0YQPpvbhWKqG6xQRWJ
+         navA==
 Content-Disposition: inline
-In-Reply-To: <20150226121231.6fcba7e8@annuminas.surriel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <131af5f5ee0eec55d0f94a785db4be04baf01f51.1424356325.git.vdavydov@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Rik van Riel <riel@redhat.com>
-Cc: Zefan Li <lizefan@huawei.com>, linux-kernel@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>, Clark Williams <williams@redhat.com>, Ingo Molnar <mingo@redhat.com>, Luiz Capitulino <lcapitulino@redhat.com>, David Rientjes <rientjes@google.com>, Mike Galbraith <umgwanakikbuti@gmail.com>, cgroups@vger.kernel.org
+To: Vladimir Davydov <vdavydov@parallels.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Feb 26, 2015 at 12:12:31PM -0500, Rik van Riel wrote:
-> On Thu, 26 Feb 2015 19:05:57 +0800
-> Zefan Li <lizefan@huawei.com> wrote:
+On Thu, Feb 19, 2015 at 05:34:46PM +0300, Vladimir Davydov wrote:
+> Currently, we call cgroup_subsys->bind only on unmount, remount, and
+> when creating a new root on mount. Since the default hierarchy root is
+> created in cgroup_init, we will not call cgroup_subsys->bind if the
+> default hierarchy is freshly mounted. As a result, some controllers will
+> behave incorrectly (most notably, the "memory" controller will not
+> enable hierarchy support). Fix this by calling cgroup_subsys->bind right
+> after initializing a cgroup subsystem.
 > 
-> > Make it return -ENOMEM ? Or make it a global variable and allocate memory for it
-> > in cpuset_init().
-> 
-> Here you are. This addresses your concern, as well as the
-> issue David Rientjes found earlier.
-> 
-> ---8<---
-> 
-> Subject: cpusets,isolcpus: add file to show isolated cpus in cpuset
-> 
-> The previous patch makes it so the code skips over isolcpus when
-> building scheduler load balancing domains. This makes it hard to
-> see for a user which of the CPUs in a cpuset are participating in
-> load balancing, and which ones are isolated cpus.
-> 
-> Add a cpuset.isolcpus file with info on which cpus in a cpuset are
-> isolated CPUs.
-> 
-> This file is read-only for now. In the future we could extend things
-> so isolcpus can be changed at run time, for the root (system wide)
-> cpuset only.
-> 
-> Acked-by: David Rientjes <rientjes@google.com>
-> Cc: Peter Zijlstra <peterz@infradead.org>
-> Cc: Clark Williams <williams@redhat.com>
-> Cc: Li Zefan <lizefan@huawei.com>
-> Cc: Ingo Molnar <mingo@redhat.com>
-> Cc: Luiz Capitulino <lcapitulino@redhat.com>
-> Cc: David Rientjes <rientjes@google.com>
-> Cc: Mike Galbraith <umgwanakikbuti@gmail.com>
-> Cc: cgroups@vger.kernel.org
-> Signed-off-by: Rik van Riel <riel@redhat.com>
+> Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
 
-Applied 1-2 to cgroup/for-4.1.
+Applied to cgroup/for-4.0-fixes.
 
 Thanks.
 
 -- 
 tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
