@@ -1,35 +1,94 @@
-From: Christoph Lameter <cl@linux.com>
+From: Vlastimil Babka <vbabka@suse.cz>
 Subject: Re: [patch v2 1/3] mm: remove GFP_THISNODE
-Date: Mon, 2 Mar 2015 09:46:33 -0600 (CST)
-Message-ID: <alpine.DEB.2.11.1503020944200.5540@gentwo.org>
-References: <alpine.DEB.2.10.1502251621010.10303@chino.kir.corp.google.com> <alpine.DEB.2.10.1502271415510.7225@chino.kir.corp.google.com> <54F469C1.9090601@suse.cz>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <54F469C1.9090601@suse.cz>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=comcast.net;
-	s=q20140121; t=1425311195;
-	bh=DYUEaHt7pKMpZWPD7v/v4GSmdsWVMzL/061RgDBQFIE=;
-	h=Received:Received:Received:Received:Date:From:To:Subject:
-	 Message-ID:Content-Type;
-	b=T5LV+jahKA35t3gljf333BYptB3TeltL3KnBNULZqjFbdtrpqhmd/CoFzy2L/K+ww
-	 bNWlq04V/xUmk3eRz1pAw9mFCU1FqI6KTHDAVMrVoSWOF8sMJBffUffsa7spudOl10
-	 K6qVnUu69SgD0TRoUaSxvdYEnxI+2rJgV+KW/nYqKi/b5lPbDITqWIv74Xagght+5Y
-	 0QzsDsubWGHkCFlcHLAq8Wj2C5aE8qXSrUWmNtOckMwgF12XdgX7VggPpe+VXH8YBq
-	 hxm5IQmY/1SjhbzmZJgHo9fddsG9v+AA2MPAtIqRXRGyEg0KWJIALwsqhr5F6/9VAt
-	 VRITHruu4MGvg==
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Date: Mon, 02 Mar 2015 17:02:08 +0100
+Message-ID: <54F48980.3090008@suse.cz>
+References: <alpine.DEB.2.10.1502251621010.10303@chino.kir.corp.google.com> <alpine.DEB.2.10.1502271415510.7225@chino.kir.corp.google.com> <54F469C1.9090601@suse.cz> <alpine.DEB.2.11.1503020944200.5540@gentwo.org>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: Vlastimil Babka <vbabka@suse.cz>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <alpine.DEB.2.11.1503020944200.5540@gentwo.org>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Christoph Lameter <cl@linux.com>
 Cc: David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Pekka Enberg <penberg@kernel.org>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>, Pravin Shelar <pshelar@nicira.com>, Jarno Rajahalme <jrajahalme@nicira.com>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, netdev@vger.kernel.org, cgroups@vger.kernel.org, dev@openvswitch.org
 
-On Mon, 2 Mar 2015, Vlastimil Babka wrote:
+On 03/02/2015 04:46 PM, Christoph Lameter wrote:
+> On Mon, 2 Mar 2015, Vlastimil Babka wrote:
+> 
+>> So it would be IMHO better for longer-term maintainability to have the
+>> relevant __GFP_THISNODE callers pass also __GFP_NO_KSWAPD to denote these
+>> opportunistic allocation attempts, instead of having this subtle semantic
+> 
+> You are thinking about an opportunistic allocation attempt in SLAB?
+> 
+> AFAICT SLAB allocations should trigger reclaim.
+> 
 
-> So it would be IMHO better for longer-term maintainability to have the
-> relevant __GFP_THISNODE callers pass also __GFP_NO_KSWAPD to denote these
-> opportunistic allocation attempts, instead of having this subtle semantic
+Well, let me quote your commit 952f3b51beb5:
 
-You are thinking about an opportunistic allocation attempt in SLAB?
+--------
+commit 952f3b51beb592f3f1de15adcdef802fc086ea91
+Author: Christoph Lameter <clameter@sgi.com>
+Date:   Wed Dec 6 20:33:26 2006 -0800
 
-AFAICT SLAB allocations should trigger reclaim.
+    [PATCH] GFP_THISNODE must not trigger global reclaim
+    
+    The intent of GFP_THISNODE is to make sure that an allocation occurs on a
+    particular node.  If this is not possible then NULL needs to be returned so
+    that the caller can choose what to do next on its own (the slab allocator
+    depends on that).
+    
+    However, GFP_THISNODE currently triggers reclaim before returning a failure
+    (GFP_THISNODE means GFP_NORETRY is set).  If we have over allocated a node
+    then we will currently do some reclaim before returning NULL.  The caller
+    may want memory from other nodes before reclaim should be triggered.  (If
+    the caller wants reclaim then he can directly use __GFP_THISNODE instead).
+    
+    There is no flag to avoid reclaim in the page allocator and adding yet
+    another GFP_xx flag would be difficult given that we are out of available
+    flags.
+    
+    So just compare and see if all bits for GFP_THISNODE (__GFP_THISNODE,
+    __GFP_NORETRY and __GFP_NOWARN) are set.  If so then we return NULL before
+    waking up kswapd.
+    
+    Signed-off-by: Christoph Lameter <clameter@sgi.com>
+    Signed-off-by: Andrew Morton <akpm@osdl.org>
+    Signed-off-by: Linus Torvalds <torvalds@osdl.org>
+
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 5d123b3..dc8753b 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -1151,6 +1151,17 @@ restart:
+        if (page)
+                goto got_pg;
+ 
++       /*
++        * GFP_THISNODE (meaning __GFP_THISNODE, __GFP_NORETRY and
++        * __GFP_NOWARN set) should not cause reclaim since the subsystem
++        * (f.e. slab) using GFP_THISNODE may choose to trigger reclaim
++        * using a larger set of nodes after it has established that the
++        * allowed per node queues are empty and that nodes are
++        * over allocated.
++        */
++       if (NUMA_BUILD && (gfp_mask & GFP_THISNODE) == GFP_THISNODE)
++               goto nopage;
++
+        for (z = zonelist->zones; *z; z++)
+                wakeup_kswapd(*z, order);
+--------
+
+So it seems to me that *at least some* allocations in slab are supposed
+to work like this? Of course it's possible that since 2006, more
+allocation sites in slab started passing GFP_THISNODE without realizing
+this semantics. In that case, such sites should be fixed. (I think David
+already mentioned some in this thread?)
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
