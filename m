@@ -1,49 +1,230 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch v2 1/3] mm: remove GFP_THISNODE
-Date: Mon, 2 Mar 2015 12:40:24 -0800 (PST)
-Message-ID: <alpine.DEB.2.10.1503021239410.20808@chino.kir.corp.google.com>
-References: <alpine.DEB.2.10.1502251621010.10303@chino.kir.corp.google.com> <alpine.DEB.2.10.1502271415510.7225@chino.kir.corp.google.com> <54F469C1.9090601@suse.cz> <alpine.DEB.2.11.1503020944200.5540@gentwo.org> <54F48980.3090008@suse.cz>
- <alpine.DEB.2.11.1503021007030.6245@gentwo.org> <54F48E68.6070706@suse.cz>
+From: Chen Gang <762976180@qq.com>
+Subject: [PATCH] mm: memcontrol: Let mem_cgroup_move_account() have effect
+ only if MMU enabled
+Date: Tue, 03 Mar 2015 06:42:01 +0800
+Message-ID: <54F4E739.6040805@qq.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=oLGlg63XP5dqF9CfExAGqOOCou+kHD9jWefkj7PnMQ0=;
-        b=mZAePDyA3WA92wxTtuv2Utchc67VVAtgHPFDE25F5iN3m+Hod89OfrdLLsbR+h4N/8
-         BckD/lpQvvGCLKAwZZc8Lv0hO773ObNObRxZdSYGgXKwplYZhnnOPoO4IiSumVToQvIU
-         3tTY7X8z9OyrVbtq1FBpQTggVqa6wLlrrkGA9LBPIqUACIn8f3rPfi27FkfxtVZqfJnR
-         5++xRZPcztQGnlsWDwmobn1HFh/+kzD7t+nVDNuslvyd/RU8wc+evV+if6sUh5bTxieH
-         e5sU8arBJ2I8KoAKVcocZME0pEAyTmHN3VOwHtk/LCqfuAy5oe4Rf2IHZV4QRJ2jHxES
-         bFWQ==
-In-Reply-To: <54F48E68.6070706@suse.cz>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201307;
+	t=1425335649; bh=hkkhmHJ99Z+ivqFd/YMvAlUw1MkQMNfoSOFlFNc55ZI=;
+	h=X-QQ-mid:Received:X-QQ-SSF:X-QQ-FEAT:X-QQ-GoodBg:Message-ID:Date:From:User-Agent:MIME-Version:To:CC:Subject:Content-Type:Content-Transfer-Encoding:
+	 X-QQ-SENDSIZE;
+	b=dZYyYqMljcHUQKlMLZJ9ev3Rmr800/dUatns2ZIAZjr/4+SHk0DssHnVVb8GMFXoH
+	 6j7vF1tj+I11e+N1n94KW3tqBTJk/4rfSywVWM2EuEt9fkelMNrWH+LqYuomY+eaTR
+	 KcPOy0z33AmSQ5K+1G+zdbvQJ/jrzQv2q53eF3DA=
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vlastimil Babka <vbabka@suse.cz>
-Cc: Christoph Lameter <cl@linux.com>, Andrew Morton <akpm@linux-foundation.org>, Pekka Enberg <penberg@kernel.org>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, Mel Gorman <mgorman@suse.de>, Pravin Shelar <pshelar@nicira.com>, Jarno Rajahalme <jrajahalme@nicira.com>, Li Zefan <lizefan@huawei.com>, Greg Thelen <gthelen@google.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, netdev@vger.kernel.org, cgroups@vger.kernel.org, dev@openvswitch.org
+Content-Type: text/plain; charset="us-ascii"
+To: hannes@cmpxchg.org, mhocko@suse.cz
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Mon, 2 Mar 2015, Vlastimil Babka wrote:
+When !MMU, it will report warning. The related warning with allmodconfig
+under c6x:
 
-> > > > You are thinking about an opportunistic allocation attempt in SLAB?
-> > > > 
-> > > > AFAICT SLAB allocations should trigger reclaim.
-> > > > 
-> > > 
-> > > Well, let me quote your commit 952f3b51beb5:
-> > 
-> > This was about global reclaim. Local reclaim is good and that can be
-> > done via zone_reclaim.
-> 
-> Right, so the patch is a functional change for zone_reclaim_mode == 1, where
-> !__GFP_WAIT will prevent it.
-> 
+    CC      mm/memcontrol.o
+  mm/memcontrol.c:2802:12: warning: 'mem_cgroup_move_account' defined but not used [-Wunused-function]
+   static int mem_cgroup_move_account(struct page *page,
+              ^
 
-My patch is not a functional change, get_page_from_freelist() handles 
-zone_reclaim_mode == 1 properly in the page allocator fastpath.  This 
-patch only touches the slowpath.
+Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
+---
+ mm/memcontrol.c | 172 ++++++++++++++++++++++++++++----------------------------
+ 1 file changed, 86 insertions(+), 86 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 0c86945..80f26f5 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2785,92 +2785,6 @@ void mem_cgroup_split_huge_fixup(struct page *head)
+ }
+ #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
+ 
+-/**
+- * mem_cgroup_move_account - move account of the page
+- * @page: the page
+- * @nr_pages: number of regular pages (>1 for huge pages)
+- * @from: mem_cgroup which the page is moved from.
+- * @to:	mem_cgroup which the page is moved to. @from != @to.
+- *
+- * The caller must confirm following.
+- * - page is not on LRU (isolate_page() is useful.)
+- * - compound_lock is held when nr_pages > 1
+- *
+- * This function doesn't do "charge" to new cgroup and doesn't do "uncharge"
+- * from old cgroup.
+- */
+-static int mem_cgroup_move_account(struct page *page,
+-				   unsigned int nr_pages,
+-				   struct mem_cgroup *from,
+-				   struct mem_cgroup *to)
+-{
+-	unsigned long flags;
+-	int ret;
+-
+-	VM_BUG_ON(from == to);
+-	VM_BUG_ON_PAGE(PageLRU(page), page);
+-	/*
+-	 * The page is isolated from LRU. So, collapse function
+-	 * will not handle this page. But page splitting can happen.
+-	 * Do this check under compound_page_lock(). The caller should
+-	 * hold it.
+-	 */
+-	ret = -EBUSY;
+-	if (nr_pages > 1 && !PageTransHuge(page))
+-		goto out;
+-
+-	/*
+-	 * Prevent mem_cgroup_migrate() from looking at page->mem_cgroup
+-	 * of its source page while we change it: page migration takes
+-	 * both pages off the LRU, but page cache replacement doesn't.
+-	 */
+-	if (!trylock_page(page))
+-		goto out;
+-
+-	ret = -EINVAL;
+-	if (page->mem_cgroup != from)
+-		goto out_unlock;
+-
+-	spin_lock_irqsave(&from->move_lock, flags);
+-
+-	if (!PageAnon(page) && page_mapped(page)) {
+-		__this_cpu_sub(from->stat->count[MEM_CGROUP_STAT_FILE_MAPPED],
+-			       nr_pages);
+-		__this_cpu_add(to->stat->count[MEM_CGROUP_STAT_FILE_MAPPED],
+-			       nr_pages);
+-	}
+-
+-	if (PageWriteback(page)) {
+-		__this_cpu_sub(from->stat->count[MEM_CGROUP_STAT_WRITEBACK],
+-			       nr_pages);
+-		__this_cpu_add(to->stat->count[MEM_CGROUP_STAT_WRITEBACK],
+-			       nr_pages);
+-	}
+-
+-	/*
+-	 * It is safe to change page->mem_cgroup here because the page
+-	 * is referenced, charged, and isolated - we can't race with
+-	 * uncharging, charging, migration, or LRU putback.
+-	 */
+-
+-	/* caller should have done css_get */
+-	page->mem_cgroup = to;
+-	spin_unlock_irqrestore(&from->move_lock, flags);
+-
+-	ret = 0;
+-
+-	local_irq_disable();
+-	mem_cgroup_charge_statistics(to, page, nr_pages);
+-	memcg_check_events(to, page);
+-	mem_cgroup_charge_statistics(from, page, -nr_pages);
+-	memcg_check_events(from, page);
+-	local_irq_enable();
+-out_unlock:
+-	unlock_page(page);
+-out:
+-	return ret;
+-}
+-
+ #ifdef CONFIG_MEMCG_SWAP
+ static void mem_cgroup_swap_statistics(struct mem_cgroup *memcg,
+ 					 bool charge)
+@@ -4822,6 +4736,92 @@ static struct page *mc_handle_file_pte(struct vm_area_struct *vma,
+ 	return page;
+ }
+ 
++/**
++ * mem_cgroup_move_account - move account of the page
++ * @page: the page
++ * @nr_pages: number of regular pages (>1 for huge pages)
++ * @from: mem_cgroup which the page is moved from.
++ * @to:	mem_cgroup which the page is moved to. @from != @to.
++ *
++ * The caller must confirm following.
++ * - page is not on LRU (isolate_page() is useful.)
++ * - compound_lock is held when nr_pages > 1
++ *
++ * This function doesn't do "charge" to new cgroup and doesn't do "uncharge"
++ * from old cgroup.
++ */
++static int mem_cgroup_move_account(struct page *page,
++				   unsigned int nr_pages,
++				   struct mem_cgroup *from,
++				   struct mem_cgroup *to)
++{
++	unsigned long flags;
++	int ret;
++
++	VM_BUG_ON(from == to);
++	VM_BUG_ON_PAGE(PageLRU(page), page);
++	/*
++	 * The page is isolated from LRU. So, collapse function
++	 * will not handle this page. But page splitting can happen.
++	 * Do this check under compound_page_lock(). The caller should
++	 * hold it.
++	 */
++	ret = -EBUSY;
++	if (nr_pages > 1 && !PageTransHuge(page))
++		goto out;
++
++	/*
++	 * Prevent mem_cgroup_migrate() from looking at page->mem_cgroup
++	 * of its source page while we change it: page migration takes
++	 * both pages off the LRU, but page cache replacement doesn't.
++	 */
++	if (!trylock_page(page))
++		goto out;
++
++	ret = -EINVAL;
++	if (page->mem_cgroup != from)
++		goto out_unlock;
++
++	spin_lock_irqsave(&from->move_lock, flags);
++
++	if (!PageAnon(page) && page_mapped(page)) {
++		__this_cpu_sub(from->stat->count[MEM_CGROUP_STAT_FILE_MAPPED],
++			       nr_pages);
++		__this_cpu_add(to->stat->count[MEM_CGROUP_STAT_FILE_MAPPED],
++			       nr_pages);
++	}
++
++	if (PageWriteback(page)) {
++		__this_cpu_sub(from->stat->count[MEM_CGROUP_STAT_WRITEBACK],
++			       nr_pages);
++		__this_cpu_add(to->stat->count[MEM_CGROUP_STAT_WRITEBACK],
++			       nr_pages);
++	}
++
++	/*
++	 * It is safe to change page->mem_cgroup here because the page
++	 * is referenced, charged, and isolated - we can't race with
++	 * uncharging, charging, migration, or LRU putback.
++	 */
++
++	/* caller should have done css_get */
++	page->mem_cgroup = to;
++	spin_unlock_irqrestore(&from->move_lock, flags);
++
++	ret = 0;
++
++	local_irq_disable();
++	mem_cgroup_charge_statistics(to, page, nr_pages);
++	memcg_check_events(to, page);
++	mem_cgroup_charge_statistics(from, page, -nr_pages);
++	memcg_check_events(from, page);
++	local_irq_enable();
++out_unlock:
++	unlock_page(page);
++out:
++	return ret;
++}
++
+ static enum mc_target_type get_mctgt_type(struct vm_area_struct *vma,
+ 		unsigned long addr, pte_t ptent, union mc_target *target)
+ {
+-- 
+1.9.3
+
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
