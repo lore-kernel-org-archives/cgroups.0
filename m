@@ -1,45 +1,51 @@
-From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup: Use kvfree in pidlist_free()
-Date: Tue, 3 Mar 2015 11:36:04 +0800
-Message-ID: <54F52C24.9050309@huawei.com>
-References: <jpgioej3tep.fsf@redhat.com>
+From: Javier Martinez Canillas <javier.martinez@collabora.co.uk>
+Subject: [PATCH 1/1] cgroup: fix var may be used uninitialized warning
+Date: Tue,  3 Mar 2015 09:59:47 +0100
+Message-ID: <1425373187-7227-1-git-send-email-javier.martinez@collabora.co.uk>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <jpgioej3tep.fsf-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Bandan Das <bsd-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Javier Martinez Canillas <javier.martinez@collabora.co.uk>
 
-On 2015/3/3 6:51, Bandan Das wrote:
-> 
-> The wrapper already calls the appropriate free
-> function, use it instead of spinning our own.
-> 
-> Signed-off-by: Bandan Das <bsd-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+When building cgroup, GCC warns that the root variable
+may be used uninitialized in the cgroup_mount function.
 
-Acked-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+kernel/cgroup.c: In function =E2=80=98cgroup_mount=E2=80=99:
+kernel/cgroup.c:1886:13: warning: =E2=80=98root=E2=80=99 may be used un=
+initialized in this function [-Wuninitialized]
+kernel/cgroup.c:1742:22: note: =E2=80=98root=E2=80=99 was declared here
 
-> ---
->  kernel/cgroup.c | 5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
-> 
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index 29a7b2c..c19d66d 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -3806,10 +3806,7 @@ static void *pidlist_allocate(int count)
->  
->  static void pidlist_free(void *p)
->  {
-> -	if (is_vmalloc_addr(p))
-> -		vfree(p);
-> -	else
-> -		kfree(p);
-> +	kvfree(p);
->  }
->  
->  /*
-> 
+This can never happen because if the struct cgroup_root
+can't be allocated, ret is set to -ENOMEM and the error
+returned so the code using root is not reachable. But
+set root to NULL just to silence the compiler warning.
+
+Signed-off-by: Javier Martinez Canillas <javier.martinez@collabora.co.u=
+k>
+---
+
+This patch is on top of today's linux-next (tag: next-20150303).
+
+ kernel/cgroup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 9a567836ee3a..bf1172d1c831 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1739,7 +1739,7 @@ static struct dentry *cgroup_mount(struct file_sy=
+stem_type *fs_type,
+ {
+ 	struct super_block *pinned_sb =3D NULL;
+ 	struct cgroup_subsys *ss;
+-	struct cgroup_root *root;
++	struct cgroup_root *root =3D NULL;
+ 	struct cgroup_sb_opts opts;
+ 	struct dentry *dentry;
+ 	int ret;
+--=20
+2.1.3
