@@ -1,47 +1,45 @@
-From: Javier Martinez Canillas <javier.martinez-ZGY8ohtN/8pPYcu2f3hruQ@public.gmane.org>
-Subject: Re: [PATCH 1/1] cgroup: fix var may be used uninitialized warning
-Date: Tue, 03 Mar 2015 16:12:49 +0100
-Message-ID: <54F5CF71.7060405@collabora.co.uk>
-References: <1425373187-7227-1-git-send-email-javier.martinez@collabora.co.uk> <20150303134642.GD3122@htj.duckdns.org>
+From: Chen Gang <dsg_gchen_5257@sohu.com>
+Subject: Re: [PATCH] mm: memcontrol: Let mem_cgroup_move_account() have effect
+ only if MMU enabled
+Date: Wed, 04 Mar 2015 04:01:04 +0800
+Message-ID: <54F61300.1070409@sohu.com>
+References: <54F4E739.6040805@qq.com> <20150303134524.GE2409@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20150303134642.GD3122-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20150303134524.GE2409@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Michal Hocko <mhocko@suse.cz>
+Cc: hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-mm@kvack.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Chen Gang <762976180@qq.com>
 
-Hello Tejun,
+On 3/3/15 21:45, Michal Hocko wrote:
+> On Tue 03-03-15 06:42:01, Chen Gang wrote:
+>> When !MMU, it will report warning. The related warning with allmodconfig
+>> under c6x:
+> 
+> Does it even make any sense to enable CONFIG_MEMCG when !CONFIG_MMU?
+> Is anybody using this configuration and is it actually usable? My
+> knowledge about CONFIG_MMU is close to zero so I might be missing
+> something but I do not see a point into fixing compile warnings when
+> the whole subsystem is not usable in the first place.
+> 
 
-On 03/03/2015 02:46 PM, Tejun Heo wrote:
-> On Tue, Mar 03, 2015 at 09:59:47AM +0100, Javier Martinez Canillas wr=
-ote:
->> When building cgroup, GCC warns that the root variable
->> may be used uninitialized in the cgroup_mount function.
->>=20
->> kernel/cgroup.c: In function =E2=80=98cgroup_mount=E2=80=99:
->> kernel/cgroup.c:1886:13: warning: =E2=80=98root=E2=80=99 may be used=
- uninitialized in this function [-Wuninitialized]
->> kernel/cgroup.c:1742:22: note: =E2=80=98root=E2=80=99 was declared h=
-ere
->>=20
->> This can never happen because if the struct cgroup_root
->> can't be allocated, ret is set to -ENOMEM and the error
->> returned so the code using root is not reachable. But
->> set root to NULL just to silence the compiler warning.
->=20
-> Which compiler are you on?
->
+For me, only according to the current code, the original author assumes
+CONFIG_MEMCG can still have effect when !CONFIG_MMU: "or, he/she needn't
+use CONFIG_MMU switch macro in memcontrol.c".
 
-Yeah, I noticed that I was using a pretty old 4.7.2 GCC on
-that machine and the warning indeed is not seen with 4.9.1.
+Welcome any other members' ideas, too.
 
-Sorry for the noise...
+Thanks.
+-- 
+Chen Gang
 
-> Thanks.
->
+Open, share, and attitude like air, water, and life which God blessed
 
-Best regard,
-Javier
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
