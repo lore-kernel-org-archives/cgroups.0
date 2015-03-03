@@ -1,51 +1,49 @@
-From: Javier Martinez Canillas <javier.martinez@collabora.co.uk>
-Subject: [PATCH 1/1] cgroup: fix var may be used uninitialized warning
-Date: Tue,  3 Mar 2015 09:59:47 +0100
-Message-ID: <1425373187-7227-1-git-send-email-javier.martinez@collabora.co.uk>
+From: Zefan Li <lizefan@huawei.com>
+Subject: Re: [PATCH v4 2/2] cpusets,isolcpus: add file to show isolated cpus
+ in cpuset
+Date: Tue, 3 Mar 2015 17:51:27 +0800
+Message-ID: <54F5841F.3020402@huawei.com>
+References: <1424882288-2910-1-git-send-email-riel@redhat.com> <1424882288-2910-3-git-send-email-riel@redhat.com> <54EEFE15.3010005@huawei.com> <20150226121231.6fcba7e8@annuminas.surriel.com> <54F4000B.5000901@huawei.com> <20150302091213.GI21418@twins.programming.kicks-ass.net>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150302091213.GI21418@twins.programming.kicks-ass.net>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Javier Martinez Canillas <javier.martinez@collabora.co.uk>
+Content-Type: text/plain; charset="us-ascii"
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Rik van Riel <riel@redhat.com>, linux-kernel@vger.kernel.org, Clark Williams <williams@redhat.com>, Ingo Molnar <mingo@redhat.com>, Luiz Capitulino <lcapitulino@redhat.com>, David Rientjes <rientjes@google.com>, Mike Galbraith <umgwanakikbuti@gmail.com>, cgroups@vger.kernel.org
 
-When building cgroup, GCC warns that the root variable
-may be used uninitialized in the cgroup_mount function.
+On 2015/3/2 17:12, Peter Zijlstra wrote:
+> On Mon, Mar 02, 2015 at 02:15:39PM +0800, Zefan Li wrote:
+>> Hi Rik,
+>>
+>>> Subject: cpusets,isolcpus: add file to show isolated cpus in cpuset
+>>>
+>>> The previous patch makes it so the code skips over isolcpus when
+>>> building scheduler load balancing domains. This makes it hard to
+>>> see for a user which of the CPUs in a cpuset are participating in
+>>> load balancing, and which ones are isolated cpus.
+>>>
+>>> Add a cpuset.isolcpus file with info on which cpus in a cpuset are
+>>> isolated CPUs.
+>>>
+>>> This file is read-only for now. In the future we could extend things
+>>> so isolcpus can be changed at run time, for the root (system wide)
+>>> cpuset only.
+>>>
+>>
+>> One Question, why not add a /sys/devices/system/cpu/isolated instead?
+> 
+> It would leave userspace to calculate the result for any one cpuset
+> itself.
 
-kernel/cgroup.c: In function =E2=80=98cgroup_mount=E2=80=99:
-kernel/cgroup.c:1886:13: warning: =E2=80=98root=E2=80=99 may be used un=
-initialized in this function [-Wuninitialized]
-kernel/cgroup.c:1742:22: note: =E2=80=98root=E2=80=99 was declared here
+It's trivial. Instead of reading cpuset.isolcpus, now we read cpuset.cpus
+and /sys/.../isolated.
 
-This can never happen because if the struct cgroup_root
-can't be allocated, ret is set to -ENOMEM and the error
-returned so the code using root is not reachable. But
-set root to NULL just to silence the compiler warning.
+> Furthermore, is that /sys thing visible for all nested
+> containers?
+> .
+> 
 
-Signed-off-by: Javier Martinez Canillas <javier.martinez@collabora.co.u=
-k>
----
-
-This patch is on top of today's linux-next (tag: next-20150303).
-
- kernel/cgroup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 9a567836ee3a..bf1172d1c831 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1739,7 +1739,7 @@ static struct dentry *cgroup_mount(struct file_sy=
-stem_type *fs_type,
- {
- 	struct super_block *pinned_sb =3D NULL;
- 	struct cgroup_subsys *ss;
--	struct cgroup_root *root;
-+	struct cgroup_root *root =3D NULL;
- 	struct cgroup_sb_opts opts;
- 	struct dentry *dentry;
- 	int ret;
---=20
-2.1.3
+Never tried nested containers, but I think so.
