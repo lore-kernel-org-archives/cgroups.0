@@ -1,45 +1,44 @@
-From: Chen Gang <dsg_gchen_5257@sohu.com>
-Subject: Re: [PATCH] mm: memcontrol: Let mem_cgroup_move_account() have effect
- only if MMU enabled
-Date: Wed, 04 Mar 2015 04:01:04 +0800
-Message-ID: <54F61300.1070409@sohu.com>
-References: <54F4E739.6040805@qq.com> <20150303134524.GE2409@dhcp22.suse.cz>
+From: Zefan Li <lizefan@huawei.com>
+Subject: [PATCH -next] cpuset: initialize cpuset a bit early
+Date: Wed, 4 Mar 2015 17:09:33 +0800
+Message-ID: <54F6CBCD.50009@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20150303134524.GE2409@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@suse.cz>
-Cc: hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-mm@kvack.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Chen Gang <762976180@qq.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Ming Lei <tom.leiming@gmail.com>, Vladimir Davydov <vdavydov@parallels.com>
 
-On 3/3/15 21:45, Michal Hocko wrote:
-> On Tue 03-03-15 06:42:01, Chen Gang wrote:
->> When !MMU, it will report warning. The related warning with allmodconfig
->> under c6x:
-> 
-> Does it even make any sense to enable CONFIG_MEMCG when !CONFIG_MMU?
-> Is anybody using this configuration and is it actually usable? My
-> knowledge about CONFIG_MMU is close to zero so I might be missing
-> something but I do not see a point into fixing compile warnings when
-> the whole subsystem is not usable in the first place.
-> 
+Now we call ss->bind() in cgroup_init(), so cgroup_init() will
+call cpuset_bind() and then the latter will access top_cpuset's
+cpumask, which is NULL, because cpuset_init() is called after
+cgroup_init()
 
-For me, only according to the current code, the original author assumes
-CONFIG_MEMCG can still have effect when !CONFIG_MMU: "or, he/she needn't
-use CONFIG_MMU switch macro in memcontrol.c".
+The simplest fix is to swap cgroup_init() and cpuset_init().
 
-Welcome any other members' ideas, too.
+Cc: Vladimir Davydov <vdavydov@parallels.com>
+Fixes: 295458e67284 ("cgroup: call cgroup_subsys->bind on cgroup subsys initialization")
+Reported by: Ming Lei <tom.leiming@gmail.com>
+Signed-off-by: Zefan Li <lizefan@huawei.com>
+---
+ init/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks.
+diff --git a/init/main.c b/init/main.c
+index 61b9937..50d1e95 100644
+--- a/init/main.c
++++ b/init/main.c
+@@ -667,8 +667,8 @@ asmlinkage __visible void __init start_kernel(void)
+ 	page_writeback_init();
+ 	proc_root_init();
+ 	nsfs_init();
+-	cgroup_init();
+ 	cpuset_init();
++	cgroup_init();
+ 	taskstats_init_early();
+ 	delayacct_init();
+ 
 -- 
-Chen Gang
-
-Open, share, and attitude like air, water, and life which God blessed
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+1.8.0.2
