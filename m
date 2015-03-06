@@ -1,226 +1,375 @@
-From: Aleksa Sarai <cyphar@cyphar.com>
-Subject: [PATCH v4 1/2] cgroups: allow a cgroup subsystem to reject a fork
-Date: Fri,  6 Mar 2015 12:45:56 +1100
-Message-ID: <1425606357-6337-2-git-send-email-cyphar@cyphar.com>
+From: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v4 2/2] cgroups: add a pids subsystem
+Date: Fri,  6 Mar 2015 12:45:57 +1100
+Message-ID: <1425606357-6337-3-git-send-email-cyphar@cyphar.com>
 References: <1424660891-12719-1-git-send-email-cyphar@cyphar.com>
  <1425606357-6337-1-git-send-email-cyphar@cyphar.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1425606357-6337-1-git-send-email-cyphar@cyphar.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1425606357-6337-1-git-send-email-cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj@kernel.org, lizefan@huawei.com, mingo@redhat.com, peterz@infradead.org
-Cc: richard@nod.at, fweisbec@gmail.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Aleksa Sarai <cyphar@cyphar.com>
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
+Cc: richard-/L3Ra7n9ekc@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
 
-Add a new cgroup subsystem callback can_fork that conditionally
-states whether or not the fork is accepted or rejected with a cgroup
-policy.
+Adds a new single-purpose pids subsystem to limit the number of
+tasks that can run inside a cgroup. Essentially this is an
+implementation of RLIMIT_NPROC that will applies to a cgroup rather than
+a process tree.
 
-Make the cgroup subsystem can_fork callback return an error code so
-that subsystems can accept or reject a fork from completing with a
-custom error value, before the process is exposed.
+PIDs are fundamentally a global resource, and it is possible to reach
+PID exhaustion inside a cgroup without hitting any reasonable kmemcg
+policy. Once you've hit PID exhaustion, you're only in a marginally
+better state than OOM. This subsystem allows PID exhaustion inside a
+cgroup to be prevented.
 
-In addition, add a cancel_fork callback so that if an error occurs later
-in the forking process, any state modified by can_fork can be reverted.
-
-In order for can_fork to deal with a task that has an accurate css_set,
-move the css_set updating to cgroup_fork (where it belongs).
-
-This is in preparation for implementing the pids cgroup subsystem.
-
-Signed-off-by: Aleksa Sarai <cyphar@cyphar.com>
+Signed-off-by: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/cgroup.h |  9 ++++++
- kernel/cgroup.c        | 82 ++++++++++++++++++++++++++++++++++++++++----------
- kernel/fork.c          | 12 +++++++-
- 3 files changed, 86 insertions(+), 17 deletions(-)
+ include/linux/cgroup_subsys.h |   4 +
+ init/Kconfig                  |  11 ++
+ kernel/Makefile               |   1 +
+ kernel/cgroup_pids.c          | 282 ++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 298 insertions(+)
+ create mode 100644 kernel/cgroup_pids.c
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index b9cb94c..43ed1ee 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -32,6 +32,8 @@ struct cgroup;
- extern int cgroup_init_early(void);
- extern int cgroup_init(void);
- extern void cgroup_fork(struct task_struct *p);
-+extern int cgroup_can_fork(struct task_struct *p);
-+extern void cgroup_cancel_fork(struct task_struct *p);
- extern void cgroup_post_fork(struct task_struct *p);
- extern void cgroup_exit(struct task_struct *p);
- extern int cgroupstats_build(struct cgroupstats *stats,
-@@ -649,6 +651,8 @@ struct cgroup_subsys {
- 			      struct cgroup_taskset *tset);
- 	void (*attach)(struct cgroup_subsys_state *css,
- 		       struct cgroup_taskset *tset);
-+	int (*can_fork)(struct task_struct *task);
-+	void (*cancel_fork)(struct task_struct *task);
- 	void (*fork)(struct task_struct *task);
- 	void (*exit)(struct cgroup_subsys_state *css,
- 		     struct cgroup_subsys_state *old_css,
-@@ -948,6 +952,11 @@ struct cgroup_subsys_state;
- static inline int cgroup_init_early(void) { return 0; }
- static inline int cgroup_init(void) { return 0; }
- static inline void cgroup_fork(struct task_struct *p) {}
-+static inline int cgroup_can_fork(struct task_struct *p)
-+{
-+	return 0;
-+}
-+static inline void cgroup_cancel_fork(struct task_struct *p) {}
- static inline void cgroup_post_fork(struct task_struct *p) {}
- static inline void cgroup_exit(struct task_struct *p) {}
+diff --git a/include/linux/cgroup_subsys.h b/include/linux/cgroup_subsys.h
+index e4a96fb..a198822 100644
+--- a/include/linux/cgroup_subsys.h
++++ b/include/linux/cgroup_subsys.h
+@@ -47,6 +47,10 @@ SUBSYS(net_prio)
+ SUBSYS(hugetlb)
+ #endif
  
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 29a7b2c..378badb 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -182,6 +182,9 @@ static u64 css_serial_nr_next = 1;
++#if IS_ENABLED(CONFIG_CGROUP_PIDS)
++SUBSYS(pids)
++#endif
++
+ /*
+  * The following subsystems are not supported on the default hierarchy.
   */
- static int need_forkexit_callback __read_mostly;
+diff --git a/init/Kconfig b/init/Kconfig
+index f5dbc6d..88364c9 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -1054,6 +1054,17 @@ config CGROUP_HUGETLB
+ 	  control group is tracked in the third page lru pointer. This means
+ 	  that we cannot use the controller with huge page less than 3 pages.
  
-+/* Ditto for the can_fork/cancel_fork callbacks. */
-+static int need_canfork_callback __read_mostly;
++config CGROUP_PIDS
++	bool "Process number limiting on cgroups"
++	help
++	  This options enables the setting of process number limits in the scope
++	  of a cgroup. Any attempt to fork more processes than is allowed in the
++	  cgroup will fail. PIDs are fundamentally a global resource because it
++	  is fairly trivial to reach PID exhaustion before you reach even a
++	  conservative kmemcg limit. As a result, it is possible to grind a
++	  system to halt without being limited by other cgroup policies. The pids
++	  cgroup subsystem is designed to stop this from happening.
 +
- static struct cftype cgroup_dfl_base_files[];
- static struct cftype cgroup_legacy_base_files[];
- 
-@@ -4933,6 +4936,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss, bool early)
- 	init_css_set.subsys[ss->id] = css;
- 
- 	need_forkexit_callback |= ss->fork || ss->exit;
-+	need_canfork_callback |= ss->can_fork || ss->cancel_fork;
- 
- 	/* At system boot, before all subsystems have been
- 	 * registered, no tasks have been forked, so we don't
-@@ -5183,22 +5187,6 @@ void cgroup_fork(struct task_struct *child)
- {
- 	RCU_INIT_POINTER(child->cgroups, &init_css_set);
- 	INIT_LIST_HEAD(&child->cg_list);
--}
--
--/**
-- * cgroup_post_fork - called on a new task after adding it to the task list
-- * @child: the task in question
-- *
-- * Adds the task to the list running through its css_set if necessary and
-- * call the subsystem fork() callbacks.  Has to be after the task is
-- * visible on the task list in case we race with the first call to
-- * cgroup_task_iter_start() - to guarantee that the new task ends up on its
-- * list.
-- */
--void cgroup_post_fork(struct task_struct *child)
--{
--	struct cgroup_subsys *ss;
--	int i;
- 
- 	/*
- 	 * This may race against cgroup_enable_task_cg_lists().  As that
-@@ -5233,6 +5221,68 @@ void cgroup_post_fork(struct task_struct *child)
- 		}
- 		up_write(&css_set_rwsem);
- 	}
+ config CGROUP_PERF
+ 	bool "Enable perf_event per-cpu per-container group (cgroup) monitoring"
+ 	depends on PERF_EVENTS && CGROUPS
+diff --git a/kernel/Makefile b/kernel/Makefile
+index 1408b33..e823592 100644
+--- a/kernel/Makefile
++++ b/kernel/Makefile
+@@ -53,6 +53,7 @@ obj-$(CONFIG_BACKTRACE_SELF_TEST) += backtracetest.o
+ obj-$(CONFIG_COMPAT) += compat.o
+ obj-$(CONFIG_CGROUPS) += cgroup.o
+ obj-$(CONFIG_CGROUP_FREEZER) += cgroup_freezer.o
++obj-$(CONFIG_CGROUP_PIDS) += cgroup_pids.o
+ obj-$(CONFIG_CPUSETS) += cpuset.o
+ obj-$(CONFIG_UTS_NS) += utsname.o
+ obj-$(CONFIG_USER_NS) += user_namespace.o
+diff --git a/kernel/cgroup_pids.c b/kernel/cgroup_pids.c
+new file mode 100644
+index 0000000..a97fd0e
+--- /dev/null
++++ b/kernel/cgroup_pids.c
+@@ -0,0 +1,282 @@
++/*
++ * Process number limiting subsys for cgroups.
++ *
++ * Copyright (C) 2015 Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
++ *
++ */
++
++#include <linux/kernel.h>
++#include <linux/atomic.h>
++#include <linux/cgroup.h>
++#include <linux/slab.h>
++
++#define PIDS_UNLIMITED -1
++
++struct pids {
++	struct pids *parent;
++	struct cgroup_subsys_state css;
++
++	atomic_long_t counter;
++	long limit;
++};
++
++static inline struct pids *css_pids(struct cgroup_subsys_state *css)
++{
++	return css ? container_of(css, struct pids, css) : NULL;
 +}
 +
-+/**
-+ * cgroup_can_fork - called on a new task before the process is exposed.
-+ * @child: the task in question.
-+ *
-+ * This calls the subsystem can_fork() callbacks. If the can_fork() callback
-+ * returns an error, the fork aborts with that error code. This allows for
-+ * a cgroup subsystem to conditionally allow or deny new forks.
-+ */
-+int cgroup_can_fork(struct task_struct *child)
++static inline struct pids *task_pids(struct task_struct *task)
 +{
-+	struct cgroup_subsys *ss;
-+	int i;
++	return css_pids(task_css(task, pids_cgrp_id));
++}
 +
-+	if (need_canfork_callback) {
-+		int retval;
++static struct pids *parent_pids(struct pids *pids)
++{
++	return css_pids(pids->css.parent);
++}
 +
-+		for_each_subsys(ss, i)
-+			if (ss->can_fork) {
-+				retval = ss->can_fork(child);
-+				if (retval)
-+					return retval;
-+			}
-+	}
++static struct cgroup_subsys_state *
++pids_css_alloc(struct cgroup_subsys_state *parent)
++{
++	struct pids *pids;
 +
++	pids = kzalloc(sizeof(struct pids), GFP_KERNEL);
++	if (!pids)
++		return ERR_PTR(-ENOMEM);
++
++	return &pids->css;
++}
++
++static int pids_css_online(struct cgroup_subsys_state *css)
++{
++	struct pids *pids = css_pids(css);
++	long limit = -1;
++
++	pids->parent = parent_pids(pids);
++	if (pids->parent)
++		limit = pids->parent->limit;
++
++	pids->limit = limit;
++	atomic_long_set(&pids->counter, 0);
 +	return 0;
 +}
 +
-+/**
-+ * cgroup_cancel_fork - called if a fork failed after cgroup_can_fork()
-+ * @child: the task in question
-+ *
-+ * This calls the cancel_fork() callbacks if a fork failed *after*
-+ * cgroup_can_fork() succeded.
-+ */
-+void cgroup_cancel_fork(struct task_struct *child)
++static void pids_css_free(struct cgroup_subsys_state *css)
 +{
-+	struct cgroup_subsys *ss;
-+	int i;
-+
-+	if (need_canfork_callback) {
-+		for_each_subsys(ss, i)
-+			if (ss->cancel_fork)
-+				ss->cancel_fork(child);
-+	}
++	kfree(css_pids(css));
 +}
 +
 +/**
-+ * cgroup_post_fork - called on a new task after adding it to the task list
-+ * @child: the task in question
++ * pids_cancel - uncharge the local pid count
++ * @pids: the pid cgroup state
++ * @num: the number of pids to cancel
 + *
-+ * Adds the task to the list running through its css_set if necessary and
-+ * call the subsystem fork() callbacks.  Has to be after the task is
-+ * visible on the task list in case we race with the first call to
-+ * cgroup_task_iter_start() - to guarantee that the new task ends up on its
-+ * list.
++ * This function will WARN if the pid count goes under 0,
++ * but will not prevent it.
 + */
-+void cgroup_post_fork(struct task_struct *child)
++static void pids_cancel(struct pids *pids, int num)
 +{
-+	struct cgroup_subsys *ss;
-+	int i;
- 
- 	/*
- 	 * Call ss->fork().  This must happen after @child is linked on
-diff --git a/kernel/fork.c b/kernel/fork.c
-index cf65139..35850a9 100644
---- a/kernel/fork.c
-+++ b/kernel/fork.c
-@@ -1469,6 +1469,14 @@ static struct task_struct *copy_process(unsigned long clone_flags,
- 	p->task_works = NULL;
- 
- 	/*
-+	 * Ensure that the cgroup subsystem policies allow the new process to be
-+	 * forked.
-+	 */
-+	retval = cgroup_can_fork(p);
-+	if (retval)
-+		goto bad_fork_free_pid;
++	long new;
++
++	new = atomic_long_sub_return(num, &pids->counter);
 +
 +	/*
- 	 * Make it visible to the rest of the system, but dont wake it up yet.
- 	 * Need tasklist lock for parent etc handling!
- 	 */
-@@ -1504,7 +1512,7 @@ static struct task_struct *copy_process(unsigned long clone_flags,
- 		spin_unlock(&current->sighand->siglock);
- 		write_unlock_irq(&tasklist_lock);
- 		retval = -ERESTARTNOINTR;
--		goto bad_fork_free_pid;
-+		goto bad_fork_cgroup_cancel;
- 	}
- 
- 	if (likely(p->pid)) {
-@@ -1556,6 +1564,8 @@ static struct task_struct *copy_process(unsigned long clone_flags,
- 
- 	return p;
- 
-+bad_fork_cgroup_cancel:
-+	cgroup_cancel_fork(p);
- bad_fork_free_pid:
- 	if (pid != &init_struct_pid)
- 		free_pid(pid);
++	 * A negative count is invalid, but pids_cancel() can't fail.
++	 * So just emit a WARN.
++	 */
++	WARN_ON(new < 0);
++}
++
++/**
++ * pids_charge - hierarchically uncharge the pid count
++ * @pids: the pid cgroup state
++ * @num: the number of pids to uncharge
++ *
++ * This function will not allow the pid count to go under 0,
++ * and will WARN if a caller attempts to do so.
++ */
++static void pids_uncharge(struct pids *pids, int num)
++{
++	struct pids *p;
++
++	for (p = pids; p; p = p->parent)
++		pids_cancel(p, num);
++}
++
++/**
++ * pids_charge - hierarchically charge the pid count
++ * @pids: the pid cgroup state
++ * @num: the number of pids to charge
++ *
++ * This function does *not* follow the pid limit set. It will not
++ * fail and the new pid count may exceed the limit.
++ */
++static void pids_charge(struct pids *pids, int num)
++{
++	struct pids *p;
++
++	for (p = pids; p; p = p->parent)
++		atomic_long_add(num, &p->counter);
++}
++
++/**
++ * pids_try_charge - hierarchically try to charge the pid count
++ * @pids: the pid cgroup state
++ * @num: the number of pids to charge
++ *
++ * This function follows the set limit. It can fail if the charge
++ * would cause the new value to exceed the limit.
++ * Returns 0 if the charge succeded, otherwise -EAGAIN.
++ */
++static int pids_try_charge(struct pids *pids, int num)
++{
++	struct pids *p, *fail;
++
++	for (p = pids; p; p = p->parent) {
++		long new;
++
++		new = atomic_long_add_return(num, &p->counter);
++
++		if (p->limit == PIDS_UNLIMITED)
++			continue;
++
++		if (new > p->limit) {
++			atomic_long_sub(num, &p->counter);
++			fail = p;
++			goto revert;
++		}
++	}
++
++	return 0;
++
++revert:
++	for (p = pids; p != fail; p = p->parent)
++		pids_cancel(pids, num);
++
++	return -EAGAIN;
++}
++
++static int pids_can_attach(struct cgroup_subsys_state *css,
++			   struct cgroup_taskset *tset)
++{
++	struct pids *pids = css_pids(css);
++	unsigned long num_tasks = 0;
++	struct task_struct *task;
++
++	cgroup_taskset_for_each(task, tset)
++		num_tasks++;
++
++	/*
++	 * Attaching to a cgroup is allowed to overcome the
++	 * the PID limit, so that organisation operations aren't
++	 * blocked by the `pids` cgroup controller.
++	 */
++	pids_charge(pids, num_tasks);
++	return 0;
++}
++
++static void pids_cancel_attach(struct cgroup_subsys_state *css,
++			       struct cgroup_taskset *tset)
++{
++	struct pids *pids = css_pids(css);
++	unsigned long num_tasks = 0;
++	struct task_struct *task;
++
++	cgroup_taskset_for_each(task, tset)
++		num_tasks++;
++
++	pids_uncharge(pids, num_tasks);
++}
++
++static int pids_can_fork(struct task_struct *task)
++{
++	struct pids *pids = task_pids(task);
++
++	return pids_try_charge(pids, 1);
++}
++
++static void pids_cancel_fork(struct task_struct *task)
++{
++	struct pids *pids = task_pids(task);
++
++	pids_uncharge(pids, 1);
++}
++
++static void pids_exit(struct cgroup_subsys_state *css,
++		      struct cgroup_subsys_state *old_css,
++		      struct task_struct *task)
++{
++	struct pids *pids = css_pids(old_css);
++
++	/*
++	 * cgroup_exit() gets called as part of the cleanup code when
++	 * copy_process() fails. This should ignored, because the
++	 * pids_cancel_fork callback already deals with the cgroup failed fork
++	 * case.
++	 */
++	if (!(task->flags & PF_EXITING))
++		return;
++
++	pids_uncharge(pids, 1);
++}
++
++static int pids_write_max(struct cgroup_subsys_state *css,
++			  struct cftype *cft, s64 val)
++{
++	struct pids *pids = css_pids(css);
++
++	/* PIDS_UNLIMITED is the only legal negative value. */
++	if (val < 0 && val != PIDS_UNLIMITED)
++		return -EINVAL;
++
++	/*
++	 * Limit updates don't need to be mutex'd, since they
++	 * are more of a "soft" limit in the sense that you can
++	 * set a limit which is smaller than the current count
++	 * to stop any *new* processes from spawning.
++	 */
++	pids->limit = val;
++	return 0;
++}
++
++static s64 pids_read_max(struct cgroup_subsys_state *css,
++			 struct cftype *cft)
++{
++	struct pids *pids = css_pids(css);
++
++	return pids->limit;
++}
++
++static s64 pids_read_current(struct cgroup_subsys_state *css,
++			     struct cftype *cft)
++{
++	struct pids *pids = css_pids(css);
++
++	return atomic_long_read(&pids->counter);
++}
++
++static struct cftype files[] = {
++	{
++		.name = "max",
++		.write_s64 = pids_write_max,
++		.read_s64 = pids_read_max,
++	},
++	{
++		.name = "current",
++		.read_s64 = pids_read_current,
++	},
++	{ }	/* terminate */
++};
++
++struct cgroup_subsys pids_cgrp_subsys = {
++	.css_alloc	= pids_css_alloc,
++	.css_online	= pids_css_online,
++	.css_free	= pids_css_free,
++	.can_attach	= pids_can_attach,
++	.cancel_attach	= pids_cancel_attach,
++	.can_fork	= pids_can_fork,
++	.cancel_fork	= pids_cancel_fork,
++	.exit		= pids_exit,
++	.legacy_cftypes	= files,
++	.early_init	= 0,
++};
 -- 
 2.3.1
