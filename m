@@ -1,78 +1,34 @@
-From: riel@redhat.com
-Subject: [PATCH 1/4] sched,isolcpu: make cpu_isolated_map visible outside scheduler
-Date: Mon,  9 Mar 2015 12:12:07 -0400
-Message-ID: <1425917530-1771-2-git-send-email-riel@redhat.com>
-References: <1425917530-1771-1-git-send-email-riel@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1425917530-1771-1-git-send-email-riel@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v4 2/2] cgroups: add a pids subsystem
+Date: Mon, 09 Mar 2015 14:58:11 -0400
+Message-ID: <54FDED43.4050908@gmail.com>
+References: <1424660891-12719-1-git-send-email-cyphar@cyphar.com> <1425606357-6337-1-git-send-email-cyphar@cyphar.com> <1425606357-6337-3-git-send-email-cyphar@cyphar.com> <20150309033405.GE13283@htj.duckdns.org>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: tj@kernel.org
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, lizefan@huawei.com, Rik van Riel <riel@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Clark Williams <williams@redhat.com>, Ingo Molnar <mingo@redhat.com>, Luiz Capitulino <lcapitulino@redhat.com>, David Rientjes <rientjes@google.com>, Mike Galbraith <umgwanakikbuti@gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=message-id:disposition-notification-to:date:from:user-agent
+         :mime-version:to:cc:subject:references:in-reply-to:content-type
+         :content-transfer-encoding;
+        bh=+0YCy1w9TTm1uNuiBF1EeRSMO5UgW/fNDtgJFRkQOWg=;
+        b=qKDD1WpQivdDpgzC6Vdv9eR7qcet2FiU3RN9CFLELplAkYpnaPJUC8ZevXFGP2bTPv
+         H4T9bidBOgiPD1NTU++EgFkxfpC3I2sNSt/9yn/W79Mm90t2eDuTBELL7jsI9cW9fKVY
+         aaWl4PU+bHye77kHPlUkPSAVQN/1V+nlvVWmyKRX57SPYsXoAtUpVBHgUiTidNVWY0KR
+         kIRjAcP23uGu0ya/K2uy+RZnjYgHgQ1/pu4FnExyp7vp3wMJ8jGVyiDqGUw9nxCUW/TI
+         vd8Z8INDy5stbl5myGAX+A+F13oa8MYzEFgDZSc4WPBFDOk6r/kXM3atTIQjkn4Iauz5
+         4xaQ==
+In-Reply-To: <20150309033405.GE13283-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, richard-/L3Ra7n9ekc@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Rik van Riel <riel@redhat.com>
-
-Needed by the next patch. Also makes cpu_isolated_map present
-when compiled without SMP and/or with CONFIG_NR_CPUS=1, like
-the other cpu masks.
-
-At some point we may want to clean things up so cpumasks do
-not exist in UP kernels. Maybe something for the CONFIG_TINY
-crowd.
-
-Cc: Peter Zijlstra <peterz@infradead.org>
-Cc: Clark Williams <williams@redhat.com>
-Cc: Li Zefan <lizefan@huawei.com>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: Luiz Capitulino <lcapitulino@redhat.com>
-Cc: David Rientjes <rientjes@google.com>
-Cc: Mike Galbraith <umgwanakikbuti@gmail.com>
-Cc: cgroups@vger.kernel.org
-Signed-off-by: Rik van Riel <riel@redhat.com>
----
- include/linux/sched.h | 2 ++
- kernel/sched/core.c   | 6 +++---
- 2 files changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 6d77432e14ff..ca365d79480c 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -329,6 +329,8 @@ extern asmlinkage void schedule_tail(struct task_struct *prev);
- extern void init_idle(struct task_struct *idle, int cpu);
- extern void init_idle_bootup_task(struct task_struct *idle);
- 
-+extern cpumask_var_t cpu_isolated_map;
-+
- extern int runqueue_is_locked(int cpu);
- 
- #if defined(CONFIG_SMP) && defined(CONFIG_NO_HZ_COMMON)
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index f0f831e8a345..b578bb23410b 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -306,6 +306,9 @@ __read_mostly int scheduler_running;
-  */
- int sysctl_sched_rt_runtime = 950000;
- 
-+/* cpus with isolated domains */
-+cpumask_var_t cpu_isolated_map;
-+
- /*
-  * this_rq_lock - lock this runqueue and disable interrupts.
-  */
-@@ -5811,9 +5814,6 @@ cpu_attach_domain(struct sched_domain *sd, struct root_domain *rd, int cpu)
- 	update_top_cache_domain(cpu);
- }
- 
--/* cpus with isolated domains */
--static cpumask_var_t cpu_isolated_map;
--
- /* Setup the mask of cpus configured for isolated domains */
- static int __init isolated_cpu_setup(char *str)
- {
--- 
-2.1.0
+On 2015-03-08 23:34, Tejun Heo wrote:
+>
+> Does pids limit make sense in the root cgroup?
+>
+I would say it kind of does, although I would just expect it to track 
+/proc/sys/kernel/pid_max (either as a read-only value, or as an 
+alternative way to set it).
