@@ -1,40 +1,99 @@
-From: Austin S Hemmelgarn <ahferroin7@gmail.com>
-Subject: Re: [PATCH v4 2/2] cgroups: add a pids subsystem
-Date: Thu, 12 Mar 2015 11:35:53 -0400
-Message-ID: <5501B259.60902@gmail.com>
-References: <1424660891-12719-1-git-send-email-cyphar@cyphar.com>	<1425606357-6337-1-git-send-email-cyphar@cyphar.com>	<1425606357-6337-3-git-send-email-cyphar@cyphar.com>	<20150309033405.GE13283@htj.duckdns.org>	<54FDED43.4050908@gmail.com>	<CAOviyah2KCu9K7D_H2zAf3LYbnj65P39YPmNamfA=-SSNq4hOg@mail.gmail.com>	<54FED651.6040100@gmail.com>	<CAOviyagpCNcAN4hdhsxffdpE+yDmw+NXx+FikTe64GJ1hQeXhQ@mail.gmail.com>	<55005BAC.9060405@gmail.com> <CAOviyahChsruXvjfu6EJCi49o6R38DHj5iLV92HuyJtfn2a81A@mail.gmail.com>
+From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH -mm] memcg: zap mem_cgroup_lookup
+Date: Fri, 13 Mar 2015 17:57:22 +0300
+Message-ID: <1426258642-14074-1-git-send-email-vdavydov@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=message-id:disposition-notification-to:date:from:user-agent
-         :mime-version:to:cc:subject:references:in-reply-to:content-type
-         :content-transfer-encoding;
-        bh=F1LS1fkJrbojfKeGHYjWu3ogdWYGgP/6tPdGI81WlgM=;
-        b=OwPB6LULaJQC3Smmyub61Rd8ogw9jmiZd50XU8HY+Ls0kmVml+7sYC6GQQJ7KBaNYW
-         UYgSndxwc/oB4rPe8X+TkOGutXggcyd0IMK0nPcBqB8N+Sdq2n3RiOVeZzeJ+Qr2/E6M
-         /DfrVrmtaiwXvV4l7WtqyOvBrqUQMwN6oNkX+kVV7oNQUzoPupzbPQ0hEZSTbbstbpPL
-         NjXQbRlln8rtFJEnOe00fuMxP/ZFMRnySu0cgHQT4CxrhbmtRcgrJlatu1olEax/bccV
-         0d5YKcMx+/lg2Iey2CHvV7oUnzuESETRvM3ytmtKCzv9sQCzDutpWMVrrlw5uYucEAcJ
-         Z3ug==
-In-Reply-To: <CAOviyahChsruXvjfu6EJCi49o6R38DHj5iLV92HuyJtfn2a81A@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Aleksa Sarai <cyphar@cyphar.com>
-Cc: Tejun Heo <tj@kernel.org>, lizefan@huawei.com, mingo@redhat.com, peterz@infradead.org, richard@nod.at, =?UTF-8?B?RnLDqWTDqXJpYyBXZWlzYmVj?= =?UTF-8?B?a2Vy?= <fweisbec@gmail.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 2015-03-11 22:28, Aleksa Sarai wrote:
->> I did not necessarily word this very clearly.  What I meant is that
->> /proc/sys/kernel/pid_max is essentially an external limiting factor that
->> caps the total number of pids that can be under the root cgroup and it's
->> children, not that the cgroup in any way payed attention to it.  It might be
->> useful to be able to just disable the sysctl option and set the value
->> through the root cgroup, solely or consistency, although such usage isn't
->> something I would consider essential in any way.
->
-> Maybe this is something that can be reviewed as a separate patchset to this
-> one? I'd much prefer that we actually get per-cgroup process limiting merged
-> first, then deal with such features separately.
-My thought exactly.
+mem_cgroup_lookup is a wrapper around mem_cgroup_from_id, which checks
+that id != 0 before issuing the function call. Today, there is no point
+in this additional check apart from optimization, because there is no
+css with id <= 0, so that css_from_id, called by mem_cgroup_from_id,
+will return NULL for any id <= 0. Since mem_cgroup_from_id is only
+called from mem_cgroup_lookup, let us zap mem_cgroup_lookup,
+substituting calls to it with mem_cgroup_from_id and moving the check if
+id > 0 to css_from_id.
+
+Signed-off-by: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+---
+ kernel/cgroup.c |    2 +-
+ mm/memcontrol.c |   24 ++++++++----------------
+ 2 files changed, 9 insertions(+), 17 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 29a7b2cc593e..747e953ffee9 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -5451,7 +5451,7 @@ struct cgroup_subsys_state *css_tryget_online_from_dir(struct dentry *dentry,
+ struct cgroup_subsys_state *css_from_id(int id, struct cgroup_subsys *ss)
+ {
+ 	WARN_ON_ONCE(!rcu_read_lock_held());
+-	return idr_find(&ss->css_idr, id);
++	return id > 0 ? idr_find(&ss->css_idr, id) : NULL;
+ }
+ 
+ #ifdef CONFIG_CGROUP_DEBUG
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index d18d3a6e7337..f9df75ef55d7 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -454,6 +454,12 @@ static inline unsigned short mem_cgroup_id(struct mem_cgroup *memcg)
+ 	return memcg->css.id;
+ }
+ 
++/*
++ * A helper function to get mem_cgroup from ID. must be called under
++ * rcu_read_lock().  The caller is responsible for calling
++ * css_tryget_online() if the mem_cgroup is used for charging. (dropping
++ * refcnt from swap can be called against removed memcg.)
++ */
+ static inline struct mem_cgroup *mem_cgroup_from_id(unsigned short id)
+ {
+ 	struct cgroup_subsys_state *css;
+@@ -2341,20 +2347,6 @@ static void cancel_charge(struct mem_cgroup *memcg, unsigned int nr_pages)
+ }
+ 
+ /*
+- * A helper function to get mem_cgroup from ID. must be called under
+- * rcu_read_lock().  The caller is responsible for calling
+- * css_tryget_online() if the mem_cgroup is used for charging. (dropping
+- * refcnt from swap can be called against removed memcg.)
+- */
+-static struct mem_cgroup *mem_cgroup_lookup(unsigned short id)
+-{
+-	/* ID 0 is unused ID */
+-	if (!id)
+-		return NULL;
+-	return mem_cgroup_from_id(id);
+-}
+-
+-/*
+  * try_get_mem_cgroup_from_page - look up page's memcg association
+  * @page: the page
+  *
+@@ -2380,7 +2372,7 @@ struct mem_cgroup *try_get_mem_cgroup_from_page(struct page *page)
+ 		ent.val = page_private(page);
+ 		id = lookup_swap_cgroup_id(ent);
+ 		rcu_read_lock();
+-		memcg = mem_cgroup_lookup(id);
++		memcg = mem_cgroup_from_id(id);
+ 		if (memcg && !css_tryget_online(&memcg->css))
+ 			memcg = NULL;
+ 		rcu_read_unlock();
+@@ -5859,7 +5851,7 @@ void mem_cgroup_uncharge_swap(swp_entry_t entry)
+ 
+ 	id = swap_cgroup_record(entry, 0);
+ 	rcu_read_lock();
+-	memcg = mem_cgroup_lookup(id);
++	memcg = mem_cgroup_from_id(id);
+ 	if (memcg) {
+ 		if (!mem_cgroup_is_root(memcg))
+ 			page_counter_uncharge(&memcg->memsw, 1);
+-- 
+1.7.10.4
