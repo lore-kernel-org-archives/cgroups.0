@@ -1,8 +1,8 @@
 From: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH 3/4] cpusets,isolcpus: add file to show isolated cpus
  in cpuset
-Date: Wed, 18 Mar 2015 19:40:15 -0400
-Message-ID: <550A0CDF.1060709@redhat.com>
+Date: Wed, 18 Mar 2015 21:45:45 -0400
+Message-ID: <550A2A49.4060704@redhat.com>
 References: <1425917530-1771-1-git-send-email-riel@redhat.com> <1425917530-1771-4-git-send-email-riel@redhat.com> <20150318164745.GA21564@htj.duckdns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -33,11 +33,10 @@ On 03/18/2015 12:47 PM, Tejun Heo wrote:
 > Didn't Li say that this is trivially computable from userland?  I'm
 > not sure this knob actually belongs to cpuset.
 
-I don't know whether the information to compute this is
-always visible from userland.  I am happy to drop this
-patch if Li prefers things that way, though.
+Going back through my email, it looks like Li
+previously acked this patch.
 
-Li?
+That explains why I'm confused about your comment :)
 
 -- 
 All rights reversed
