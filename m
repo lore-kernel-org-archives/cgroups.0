@@ -1,57 +1,56 @@
-From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 3/4] cpusets,isolcpus: add file to show isolated cpus
- in cpuset
-Date: Thu, 19 Mar 2015 14:28:12 +0800
-Message-ID: <550A6C7C.1030204@huawei.com>
-References: <1425917530-1771-1-git-send-email-riel@redhat.com> <1425917530-1771-4-git-send-email-riel@redhat.com> <20150318164745.GA21564@htj.duckdns.org> <550A0CDF.1060709@redhat.com> <550A2B4C.5030705@huawei.com> <550A2C48.6080807@redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v4 RESEND 0/4] cpusets,isolcpus: exclude isolcpus from
+ load balancing in cpusets
+Date: Thu, 19 Mar 2015 14:30:01 -0400
+Message-ID: <20150319183001.GD19657@htj.duckdns.org>
+References: <1425917530-1771-1-git-send-email-riel@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <550A2C48.6080807-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=1TmFDreLqUZ90ZOiSRL0Gce4vkDcxWHxWrQklRGLVmM=;
+        b=tVLVa/ztph3ryqpKnOmKqgIAI2O+M7Z1fuJ1D63jITrks11gQSj0L1CuuDMtAigU38
+         XBhNDMy1YdV10pR8Cx1b97ccpf5GTSF7qQbW6oz+77d1j2QAfH2n0v91FNkPcEB2nvcH
+         3J377fJZA8Nlqnmi+CNRe8kAi2V9Vy6ak6b+ZoHO5f/vZLlMGftKw4vpCm6nD40gCJB/
+         cvhjtKpmN8TMxgV/RUWmHUluY3N7ynQ8x2UztOHXUokflX+oBxGsj0yiXOshy3+Wu/jM
+         cynbe33h/0k9CBudg4kH78i+gB7EpQO0CQIkaWIghcx+DMYgDFqtFmX/6p20eEUDzCyB
+         Ow+A==
+Content-Disposition: inline
+In-Reply-To: <1425917530-1771-1-git-send-email-riel@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Clark Williams <williams-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Luiz Capitulino <lcapitulino-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: riel@redhat.com
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, lizefan@huawei.com
 
-On 2015/3/19 9:54, Rik van Riel wrote:
-> On 03/18/2015 09:50 PM, Zefan Li wrote:
->> On 2015/3/19 7:40, Rik van Riel wrote:
->>> On 03/18/2015 12:47 PM, Tejun Heo wrote:
->>>> On Mon, Mar 09, 2015 at 12:12:09PM -0400, riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org wrote:
->>>>> From: Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->>>>>
->>>>> The previous patch makes it so the code skips over isolcpus when
->>>>> building scheduler load balancing domains. This makes it hard to
->>>>> see for a user which of the CPUs in a cpuset are participating in
->>>>> load balancing, and which ones are isolated cpus.
->>>>>
->>>>> Add a cpuset.isolcpus file with info on which cpus in a cpuset are
->>>>> isolated CPUs.
->>>>>
->>>>> This file is read-only for now. In the future we could extend things
->>>>> so isolcpus can be changed at run time, for the root (system wide)
->>>>> cpuset only.
->>>>
->>>> Didn't Li say that this is trivially computable from userland?  I'm
->>>> not sure this knob actually belongs to cpuset.
->>>
->>> I don't know whether the information to compute this is
->>> always visible from userland.  I am happy to drop this
->>> patch if Li prefers things that way, though.
->>>
->>
->> What I proposed is adding /sys/devices/system/cpu/isolated. Sysfs is
->> visible in containers, unless specially configured not so.
+On Mon, Mar 09, 2015 at 12:12:06PM -0400, riel@redhat.com wrote:
+> Ensure that cpus specified with the isolcpus= boot commandline
+> option stay outside of the load balancing in the kernel scheduler.
 > 
-> OK, are you willing to take patches 1, 2, and the first hunk of patch
-> 4 now? I can submit a patch to add /sys/devices/system/cpu/isolated
-> on Friday, to the appropriate maintainer.
+> Operations like load balancing can introduce unwanted latencies,
+> which is exactly what the isolcpus= commandline is there to prevent.
 > 
-
-Other patches look good to me.
-
-> (taking tomorrow off to go hiking on the last full day of winter)
+> Previously, simply creating a new cpuset, without even touching the
+> cpuset.cpus field inside the new cpuset, would undo the effects of
+> isolcpus=, by creating a scheduler domain spanning the whole system,
+> and setting up load balancing inside that domain. The cpuset root
+> cpuset.cpus file is read-only, so there was not even a way to undo
+> that effect.
 > 
+> This does not impact the majority of cpusets users, since isolcpus=
+> is a fairly specialized feature used for realtime purposes.
+> 
+> This version fixes the UP compilation issue, in the same way done
+> for the other cpumasks.
 
-Have a good day!
+Applied 1, 2, and 4 to cgroup/for-4.1.  I collected the acks from the
+previous threads.  Can you please collect them when posting new
+revisions in the future?
+
+Thanks.
+
+-- 
+tejun
