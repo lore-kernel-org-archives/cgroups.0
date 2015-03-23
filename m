@@ -1,210 +1,281 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 18/18] mm: vmscan: remove memcg stalling on writeback pages during direct reclaim
-Date: Mon, 23 Mar 2015 01:07:47 -0400
-Message-ID: <1427087267-16592-19-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 15/18] writeback: implement memcg wb_domain
+Date: Mon, 23 Mar 2015 01:07:44 -0400
+Message-ID: <1427087267-16592-16-git-send-email-tj@kernel.org>
 References: <1427087267-16592-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=6g92CWgvjqls6lFUIjEw006cz7fUIMtQxMJ3IMCRcWc=;
-        b=C2592wS9Wn9ArXRvhyJUo7JQJ++9hVmb7TX8yDaYL8f6YMNRFD0AkkrZfPDB44pVm3
-         CJIxVNiAmc5uVgclq8tVCDbRsBlTVr8qkLl+PKqvHm254Ae12L1fe3IijC7mBqXEPtIH
-         uFWw6H23GHwt18UNMegSPrSCoF4WdjZlNpPC5BD6NEsyr2TDGTH1AZI0a/HgNRHjJ/6R
-         4I9soAJthdnMjHQ0es8uUpuIoOnmvX1Mxzib9gfpF60KBB/M8Zo29laQLMRCExQDrstw
-         J6VRWFggSSj2pLpV7yMiNBVn3586hQXxgKqDCqMOUclzJAlBlsXrgS3cNPq/4hEwa4Dg
-         RzQA==
-In-Reply-To: <1427087267-16592-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=xcc1g3RCtPSMAUutiRPEmYpzjPtfhtjOQlrTbZ9fZHE=;
+        b=O/wuVdJltO19N7k9r5Rgp28p/sNrAJ3Xi8NW1Kf90WnK+nevXrUlIqK8lIYkpCnb9c
+         3+e+G+hPvJDO91t/1k2b/9h9Ey8Wfl6Exifc7ezYKEjX7FwaPeYxsSQWg6RBmghjkVgD
+         LXAva0ko5J95w4Q+G0e88ieoI7FuWbe3S9ruZsU7ivQ4GbjYS5GEjoviATPPkMuKyFiC
+         555Uk89yjI1L37Q+ol6kK66OP9sAazz3VCkZdEwzvJCXGfOnsMZTCQsEOWfk/opxA6UN
+         +tdibVeqrai2OtM/dW7IUp6ZZjNilDF0G0J/vtJdFvD/ps7LOsaTrXgchq66DcoUWWyh
+         Y3Ww==
+In-Reply-To: <1427087267-16592-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>, Vladimir Davydov <vdavydov@parallels.com>
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Because writeback wasn't cgroup aware before, the usual dirty
-throttling mechanism in balance_dirty_pages() didn't work for
-processes under memcg limit.  The writeback path didn't know how much
-memory is available or how fast the dirty pages are being written out
-for a given memcg and balance_dirty_pages() didn't have any measure of
-IO back pressure for the memcg.
+Dirtyable memory is distributed to a wb (bdi_writeback) according to
+the relative bandwidth the wb is writing out in the whole system.
+This distribution is global - each wb is measured against all other
+wb's and gets the proportinately sized portion of the memory in the
+whole system.
 
-To work around the issue, memcg implemented an ad-hoc dirty throttling
-mechanism in the direct reclaim path by stalling on pages under
-writeback which are encountered during direct reclaim scan.  This is
-rather ugly and crude - none of the configurability, fairness, or
-bandwidth-proportional distribution of the normal path.
+For cgroup writeback, the amount of dirtyable memory is scoped by
+memcg and thus each wb would need to be measured and controlled in its
+memcg.  IOW, a wb will belong to two writeback domains - the global
+and memcg domains.
 
-The previous patches implemented proper memcg aware dirty throttling
-and the ad-hoc mechanism is no longer necessary.  Remove it.
+The previous patches laid the groundwork to support the two wb_domains
+and this patch implements memcg wb_domain.  memcg->cgwb_domain is
+initialized on css online and destroyed on css release,
+wb->memcg_completions is added, and __wb_writeout_inc() is updated to
+increment completions against both global and memcg wb_domains.
 
-Note: I removed the parts which seemed obvious and it behaves fine
-      while testing but my understanding of this code path is
-      rudimentary and it's quite possible that I got something wrong.
-      Please let me know if I got some wrong or more global_reclaim()
-      sites should be updated.
+The following patches will update balance_dirty_pages() and its
+subroutines to actually consider memcg wb_domain for throttling.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Jan Kara <jack@suse.cz>
-Cc: Wu Fengguang <fengguang.wu@intel.com>
-Cc: Greg Thelen <gthelen@google.com>
-Cc: Vladimir Davydov <vdavydov@parallels.com>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Cc: Wu Fengguang <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- mm/vmscan.c | 109 ++++++++++++++++++------------------------------------------
- 1 file changed, 33 insertions(+), 76 deletions(-)
+ include/linux/backing-dev-defs.h |  1 +
+ include/linux/memcontrol.h       | 12 +++++++++++-
+ include/linux/writeback.h        |  3 +++
+ mm/backing-dev.c                 |  9 ++++++++-
+ mm/memcontrol.c                  | 39 +++++++++++++++++++++++++++++++++++++++
+ mm/page-writeback.c              | 25 +++++++++++++++++++++++++
+ 6 files changed, 87 insertions(+), 2 deletions(-)
 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 9f8d3c0..d084c95 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -929,53 +929,24 @@ static unsigned long shrink_page_list(struct list_head *page_list,
- 			nr_congested++;
+diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
+index 97a92fa..8d470b7 100644
+--- a/include/linux/backing-dev-defs.h
++++ b/include/linux/backing-dev-defs.h
+@@ -118,6 +118,7 @@ struct bdi_writeback {
  
- 		/*
--		 * If a page at the tail of the LRU is under writeback, there
--		 * are three cases to consider.
--		 *
--		 * 1) If reclaim is encountering an excessive number of pages
--		 *    under writeback and this page is both under writeback and
--		 *    PageReclaim then it indicates that pages are being queued
--		 *    for IO but are being recycled through the LRU before the
--		 *    IO can complete. Waiting on the page itself risks an
--		 *    indefinite stall if it is impossible to writeback the
--		 *    page due to IO error or disconnected storage so instead
--		 *    note that the LRU is being scanned too quickly and the
--		 *    caller can stall after page list has been processed.
--		 *
--		 * 2) Global reclaim encounters a page, memcg encounters a
--		 *    page that is not marked for immediate reclaim or
--		 *    the caller does not have __GFP_IO. In this case mark
--		 *    the page for immediate reclaim and continue scanning.
--		 *
--		 *    __GFP_IO is checked  because a loop driver thread might
--		 *    enter reclaim, and deadlock if it waits on a page for
--		 *    which it is needed to do the write (loop masks off
--		 *    __GFP_IO|__GFP_FS for this reason); but more thought
--		 *    would probably show more reasons.
--		 *
--		 *    Don't require __GFP_FS, since we're not going into the
--		 *    FS, just waiting on its writeback completion. Worryingly,
--		 *    ext4 gfs2 and xfs allocate pages with
--		 *    grab_cache_page_write_begin(,,AOP_FLAG_NOFS), so testing
--		 *    may_enter_fs here is liable to OOM on them.
--		 *
--		 * 3) memcg encounters a page that is not already marked
--		 *    PageReclaim. memcg does not have any dirty pages
--		 *    throttling so we could easily OOM just because too many
--		 *    pages are in writeback and there is nothing else to
--		 *    reclaim. Wait for the writeback to complete.
-+		 * A page at the tail of the LRU is under writeback.  If
-+		 * reclaim is encountering an excessive number of pages
-+		 * under writeback and this page is both under writeback
-+		 * and PageReclaim then it indicates that pages are being
-+		 * queued for IO but are being recycled through the LRU
-+		 * before the IO can complete.  Waiting on the page itself
-+		 * risks an indefinite stall if it is impossible to
-+		 * writeback the page due to IO error or disconnected
-+		 * storage so instead note that the LRU is being scanned
-+		 * too quickly and the caller can stall after page list has
-+		 * been processed.
- 		 */
- 		if (PageWriteback(page)) {
--			/* Case 1 above */
- 			if (current_is_kswapd() &&
- 			    PageReclaim(page) &&
- 			    test_bit(ZONE_WRITEBACK, &zone->flags)) {
- 				nr_immediate++;
--				goto keep_locked;
--
--			/* Case 2 above */
--			} else if (global_reclaim(sc) ||
--			    !PageReclaim(page) || !(sc->gfp_mask & __GFP_IO)) {
-+			} else {
- 				/*
- 				 * This is slightly racy - end_page_writeback()
- 				 * might have just cleared PageReclaim, then
-@@ -989,13 +960,8 @@ static unsigned long shrink_page_list(struct list_head *page_list,
- 				 */
- 				SetPageReclaim(page);
- 				nr_writeback++;
--
--				goto keep_locked;
--
--			/* Case 3 above */
--			} else {
--				wait_on_page_writeback(page);
- 			}
-+			goto keep_locked;
- 		}
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 	struct percpu_ref refcnt;	/* used only for !root wb's */
++	struct fprop_local_percpu memcg_completions;
+ 	struct cgroup_subsys_state *memcg_css; /* the associated memcg */
+ 	struct cgroup_subsys_state *blkcg_css; /* and blkcg */
+ 	struct list_head memcg_node;	/* anchored at memcg->cgwb_list */
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 662a953..e3177be 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -389,8 +389,18 @@ enum {
+ };
  
- 		if (!force_reclaim)
-@@ -1423,9 +1389,6 @@ static int too_many_isolated(struct zone *zone, int file,
- 	if (current_is_kswapd())
- 		return 0;
+ #ifdef CONFIG_CGROUP_WRITEBACK
++
+ struct list_head *mem_cgroup_cgwb_list(struct mem_cgroup *memcg);
+-#endif
++struct wb_domain *mem_cgroup_wb_domain(struct bdi_writeback *wb);
++
++#else	/* CONFIG_CGROUP_WRITEBACK */
++
++static inline struct wb_domain *mem_cgroup_wb_domain(struct bdi_writeback *wb)
++{
++	return NULL;
++}
++
++#endif	/* CONFIG_CGROUP_WRITEBACK */
  
--	if (!global_reclaim(sc))
--		return 0;
--
- 	if (file) {
- 		inactive = zone_page_state(zone, NR_INACTIVE_FILE);
- 		isolated = zone_page_state(zone, NR_ISOLATED_FILE);
-@@ -1615,35 +1578,29 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
- 		set_bit(ZONE_WRITEBACK, &zone->flags);
+ struct sock;
+ #if defined(CONFIG_INET) && defined(CONFIG_MEMCG_KMEM)
+diff --git a/include/linux/writeback.h b/include/linux/writeback.h
+index fa6c3b4..e421625 100644
+--- a/include/linux/writeback.h
++++ b/include/linux/writeback.h
+@@ -167,6 +167,9 @@ static inline void laptop_sync_completion(void) { }
+ void throttle_vm_writeout(gfp_t gfp_mask);
+ bool zone_dirty_ok(struct zone *zone);
+ int wb_domain_init(struct wb_domain *dom, gfp_t gfp);
++#ifdef CONFIG_CGROUP_WRITEBACK
++void wb_domain_exit(struct wb_domain *dom);
++#endif
  
- 	/*
--	 * memcg will stall in page writeback so only consider forcibly
--	 * stalling for global reclaim
-+	 * Tag a zone as congested if all the dirty pages scanned were
-+	 * backed by a congested BDI and wait_iff_congested will stall.
- 	 */
--	if (global_reclaim(sc)) {
--		/*
--		 * Tag a zone as congested if all the dirty pages scanned were
--		 * backed by a congested BDI and wait_iff_congested will stall.
--		 */
--		if (nr_dirty && nr_dirty == nr_congested)
--			set_bit(ZONE_CONGESTED, &zone->flags);
-+	if (nr_dirty && nr_dirty == nr_congested)
-+		set_bit(ZONE_CONGESTED, &zone->flags);
+ extern struct wb_domain global_wb_domain;
  
--		/*
--		 * If dirty pages are scanned that are not queued for IO, it
--		 * implies that flushers are not keeping up. In this case, flag
--		 * the zone ZONE_DIRTY and kswapd will start writing pages from
--		 * reclaim context.
--		 */
--		if (nr_unqueued_dirty == nr_taken)
--			set_bit(ZONE_DIRTY, &zone->flags);
-+	/*
-+	 * If dirty pages are scanned that are not queued for IO, it
-+	 * implies that flushers are not keeping up. In this case, flag the
-+	 * zone ZONE_DIRTY and kswapd will start writing pages from reclaim
-+	 * context.
-+	 */
-+	if (nr_unqueued_dirty == nr_taken)
-+		set_bit(ZONE_DIRTY, &zone->flags);
+diff --git a/mm/backing-dev.c b/mm/backing-dev.c
+index 331e4d7..8828edf 100644
+--- a/mm/backing-dev.c
++++ b/mm/backing-dev.c
+@@ -483,6 +483,7 @@ static void cgwb_release_workfn(struct work_struct *work)
+ 	css_put(wb->blkcg_css);
+ 	wb_congested_put(wb->congested);
  
--		/*
--		 * If kswapd scans pages marked marked for immediate
--		 * reclaim and under writeback (nr_immediate), it implies
--		 * that pages are cycling through the LRU faster than
--		 * they are written so also forcibly stall.
--		 */
--		if (nr_immediate && current_may_throttle())
--			congestion_wait(BLK_RW_ASYNC, HZ/10);
--	}
-+	/*
-+	 * If kswapd scans pages marked marked for immediate reclaim and
-+	 * under writeback (nr_immediate), it implies that pages are
-+	 * cycling through the LRU faster than they are written so also
-+	 * forcibly stall.
-+	 */
-+	if (nr_immediate && current_may_throttle())
-+		congestion_wait(BLK_RW_ASYNC, HZ/10);
++	fprop_local_destroy_percpu(&wb->memcg_completions);
+ 	percpu_ref_exit(&wb->refcnt);
+ 	wb_exit(wb);
+ 	kfree_rcu(wb, rcu);
+@@ -549,9 +550,13 @@ static int cgwb_create(struct backing_dev_info *bdi,
+ 	if (ret)
+ 		goto err_wb_exit;
  
- 	/*
- 	 * Stall direct reclaim for IO completions if underlying BDIs or zone
++	ret = fprop_local_init_percpu(&wb->memcg_completions, gfp);
++	if (ret)
++		goto err_ref_exit;
++
+ 	wb->congested = wb_congested_get_create(bdi, blkcg_css->id, gfp);
+ 	if (!wb->congested)
+-		goto err_ref_exit;
++		goto err_fprop_exit;
+ 
+ 	wb->memcg_css = memcg_css;
+ 	wb->blkcg_css = blkcg_css;
+@@ -588,6 +593,8 @@ static int cgwb_create(struct backing_dev_info *bdi,
+ 
+ err_put_congested:
+ 	wb_congested_put(wb->congested);
++err_fprop_exit:
++	fprop_local_destroy_percpu(&wb->memcg_completions);
+ err_ref_exit:
+ 	percpu_ref_exit(&wb->refcnt);
+ err_wb_exit:
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index ab483e9..2a74cf3 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -344,6 +344,7 @@ struct mem_cgroup {
+ 
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 	struct list_head cgwb_list;
++	struct wb_domain cgwb_domain;
+ #endif
+ 
+ 	/* List of events which userspace want to receive */
+@@ -4085,6 +4086,37 @@ struct list_head *mem_cgroup_cgwb_list(struct mem_cgroup *memcg)
+ 	return &memcg->cgwb_list;
+ }
+ 
++static int memcg_wb_domain_init(struct mem_cgroup *memcg, gfp_t gfp)
++{
++	return wb_domain_init(&memcg->cgwb_domain, gfp);
++}
++
++static void memcg_wb_domain_exit(struct mem_cgroup *memcg)
++{
++	wb_domain_exit(&memcg->cgwb_domain);
++}
++
++struct wb_domain *mem_cgroup_wb_domain(struct bdi_writeback *wb)
++{
++	struct mem_cgroup *memcg = mem_cgroup_from_css(wb->memcg_css);
++
++	if (!memcg->css.parent)
++		return NULL;
++
++	return &memcg->cgwb_domain;
++}
++
++#else	/* CONFIG_CGROUP_WRITEBACK */
++
++static int memcg_wb_domain_init(struct mem_cgroup *memcg, gfp_t gfp)
++{
++	return 0;
++}
++
++static void memcg_wb_domain_exit(struct mem_cgroup *memcg)
++{
++}
++
+ #endif	/* CONFIG_CGROUP_WRITEBACK */
+ 
+ /*
+@@ -4471,9 +4503,15 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
+ 	memcg->stat = alloc_percpu(struct mem_cgroup_stat_cpu);
+ 	if (!memcg->stat)
+ 		goto out_free;
++
++	if (memcg_wb_domain_init(memcg, GFP_KERNEL))
++		goto out_free_stat;
++
+ 	spin_lock_init(&memcg->pcp_counter_lock);
+ 	return memcg;
+ 
++out_free_stat:
++	free_percpu(memcg->stat);
+ out_free:
+ 	kfree(memcg);
+ 	return NULL;
+@@ -4500,6 +4538,7 @@ static void __mem_cgroup_free(struct mem_cgroup *memcg)
+ 		free_mem_cgroup_per_zone_info(memcg, node);
+ 
+ 	free_percpu(memcg->stat);
++	memcg_wb_domain_exit(memcg);
+ 	kfree(memcg);
+ }
+ 
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 2626e6c..9ccd37e 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -171,6 +171,11 @@ static struct dirty_throttle_control *mdtc_gdtc(struct dirty_throttle_control *m
+ 	return mdtc->gdtc;
+ }
+ 
++static struct fprop_local_percpu *wb_memcg_completions(struct bdi_writeback *wb)
++{
++	return &wb->memcg_completions;
++}
++
+ static void wb_min_max_ratio(struct bdi_writeback *wb,
+ 			     unsigned long *minp, unsigned long *maxp)
+ {
+@@ -213,6 +218,11 @@ static struct dirty_throttle_control *mdtc_gdtc(struct dirty_throttle_control *m
+ 	return NULL;
+ }
+ 
++static struct fprop_local_percpu *wb_memcg_completions(struct bdi_writeback *wb)
++{
++	return NULL;
++}
++
+ static void wb_min_max_ratio(struct bdi_writeback *wb,
+ 			     unsigned long *minp, unsigned long *maxp)
+ {
+@@ -530,9 +540,16 @@ static void wb_domain_writeout_inc(struct wb_domain *dom,
+  */
+ static inline void __wb_writeout_inc(struct bdi_writeback *wb)
+ {
++	struct wb_domain *cgdom;
++
+ 	__inc_wb_stat(wb, WB_WRITTEN);
+ 	wb_domain_writeout_inc(&global_wb_domain, &wb->completions,
+ 			       wb->bdi->max_prop_frac);
++
++	cgdom = mem_cgroup_wb_domain(wb);
++	if (cgdom)
++		wb_domain_writeout_inc(cgdom, wb_memcg_completions(wb),
++				       wb->bdi->max_prop_frac);
+ }
+ 
+ void wb_writeout_inc(struct bdi_writeback *wb)
+@@ -583,6 +600,14 @@ int wb_domain_init(struct wb_domain *dom, gfp_t gfp)
+ 	return fprop_global_init(&dom->completions, gfp);
+ }
+ 
++#ifdef CONFIG_CGROUP_WRITEBACK
++void wb_domain_exit(struct wb_domain *dom)
++{
++	del_timer_sync(&dom->period_timer);
++	fprop_global_destroy(&dom->completions);
++}
++#endif
++
+ /*
+  * bdi_min_ratio keeps the sum of the minimum dirty shares of all
+  * registered backing devices, which, for obvious reasons, can not
 -- 
 2.1.0
