@@ -1,21 +1,21 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 42/48] writeback: implement wb_wait_for_single_work()
-Date: Mon, 23 Mar 2015 00:54:53 -0400
-Message-ID: <1427086499-15657-43-git-send-email-tj@kernel.org>
+Subject: [PATCH 20/48] writeback: add {CONFIG|BDI_CAP|FS}_CGROUP_WRITEBACK
+Date: Mon, 23 Mar 2015 00:54:31 -0400
+Message-ID: <1427086499-15657-21-git-send-email-tj@kernel.org>
 References: <1427086499-15657-1-git-send-email-tj@kernel.org>
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=VgE7mSgkiPWbYRfokHKLh/BufNrKPfv32sqVmtJd6PY=;
-        b=NC/I5yHlFqDjlYyj/IjYZUcFtVuqW/N8UVT+hCd0hTyAGkXxpHsumPOTFrGL9K8rzy
-         k28Jjj+b7/hmXiPAyWRFyHevhwY/769Gx4PUo+AdVrvKJk30z/FKqePNycW5GzeIZqi4
-         cQ3HVnlHIHM5tqh6kmMR1yolGkiZ5a+8XDIrHZUVjiEguBABTWJqoMx8mOwcEv5uMgK1
-         wb08e3E6b+GrjNqdM9suF3bq3TRh38YPF47Om0tP0Go1sPTub2qDwkaJ8ve+5e6zM2o9
-         OMc6Dkq1OXD1pvUlfZUQAHGIYxdlEi0OqK7l9HKJPlA9BvRN6FDbfCkDIkeCpCQolgFg
-         2G5Q==
+        bh=1f1YGdPahhjhSnRD2BRyS+vBGMpXKROLP8Oko3kThYg=;
+        b=GWnMEuSZ8a/oxN/lhLgSWkjudskMYz0LnJfI/bHfxUpi0R5/JdPWzevNFcA25SXUl5
+         XLijFoySiAlPHUGes4GStD9YLlvjjHm3PjLQzHqbHEB58ueEKZu88OwvWhRkFMsjhAH6
+         7/qzlUoRPYppHP19qS+7BackXVZ5FfswTt/0hPHIdD9vl2LOvwct3nJ6cMK2etVrzZTv
+         /EFEc4WDtW4XUCRnfasry6Mp5NVAFxG4L0scyG2N73+y9iAYKjHoiEXAzYVdkwVw7RwM
+         G6ZyxU7QjJKqygf6fOi9MijtNDJvWdKMwbmBcABtGelCfZQ9u52z3+DvykPiiqMqcz6B
+         fPaQ==
 In-Reply-To: <1427086499-15657-1-git-send-email-tj@kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,115 +23,124 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-For cgroup writeback, multiple wb_writeback_work items may need to be
-issuedto accomplish a single task.  The previous patch updated the
-waiting mechanism such that wb_wait_for_completion() can wait for
-multiple work items.
+cgroup writeback requires support from both bdi and filesystem sides.
+Add BDI_CAP_CGROUP_WRITEBACK and FS_CGROUP_WRITEBACK to indicate
+support and enable BDI_CAP_CGROUP_WRITEBACK on block based bdi's by
+default.  Also, define CONFIG_CGROUP_WRITEBACK which is enabled if
+both MEMCG and BLK_CGROUP are enabled.
 
-Issuing mulitple work items involves memory allocation which may fail.
-As most writeback operations can't fail or blocked on memory
-allocation, in such cases, we'll fall back to sequential issuing of an
-on-stack work item, which would need to be waited upon sequentially.
-
-This patch implements wb_wait_for_single_work() which waits for a
-single work item independently from wb_completion waiting so that such
-fallback mechanism can be used without getting tangled with the usual
-issuing / completion operation.
+inode_cgwb_enabled() which determines whether a given inode's both bdi
+and fs support cgroup writeback is added.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
 ---
- fs/fs-writeback.c | 47 +++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 45 insertions(+), 2 deletions(-)
+ block/blk-core.c            |  2 +-
+ include/linux/backing-dev.h | 32 +++++++++++++++++++++++++++++++-
+ include/linux/fs.h          |  1 +
+ init/Kconfig                |  5 +++++
+ 4 files changed, 38 insertions(+), 2 deletions(-)
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 944e53d..f565635 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -52,6 +52,8 @@ struct wb_writeback_work {
- 	unsigned int for_background:1;
- 	unsigned int for_sync:1;	/* sync(2) WB_SYNC_ALL writeback */
- 	unsigned int auto_free:1;	/* free on completion */
-+	unsigned int single_wait:1;
-+	unsigned int single_done:1;
- 	enum wb_reason reason;		/* why was writeback initiated? */
+diff --git a/block/blk-core.c b/block/blk-core.c
+index fa1314e..c44018a 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -606,7 +606,7 @@ struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id)
  
- 	struct list_head list;		/* pending work list */
-@@ -165,8 +167,11 @@ static void wb_queue_work(struct bdi_writeback *wb,
- 	trace_writeback_queue(wb->bdi, work);
+ 	q->backing_dev_info.ra_pages =
+ 			(VM_MAX_READAHEAD * 1024) / PAGE_CACHE_SIZE;
+-	q->backing_dev_info.capabilities = 0;
++	q->backing_dev_info.capabilities = BDI_CAP_CGROUP_WRITEBACK;
+ 	q->backing_dev_info.name = "block";
+ 	q->node = node_id;
  
- 	spin_lock_bh(&wb->work_lock);
--	if (!test_bit(WB_registered, &wb->state))
-+	if (!test_bit(WB_registered, &wb->state)) {
-+		if (work->single_wait)
-+			work->single_done = 1;
- 		goto out_unlock;
-+	}
- 	if (work->done)
- 		atomic_inc(&work->done->cnt);
- 	list_add_tail(&work->list, &wb->work_list);
-@@ -231,6 +236,32 @@ int mapping_congested(struct address_space *mapping,
- EXPORT_SYMBOL_GPL(mapping_congested);
- 
- /**
-+ * wb_wait_for_single_work - wait for completion of a single bdi_writeback_work
-+ * @bdi: bdi the work item was issued to
-+ * @work: work item to wait for
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index bfdaa18..6bb3123 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -134,12 +134,15 @@ int bdi_set_max_ratio(struct backing_dev_info *bdi, unsigned int max_ratio);
+  * BDI_CAP_NO_WRITEBACK:   Don't write pages back
+  * BDI_CAP_NO_ACCT_WB:     Don't automatically account writeback pages
+  * BDI_CAP_STRICTLIMIT:    Keep number of dirty pages below bdi threshold.
 + *
-+ * Wait for the completion of @work which was issued to one of @bdi's
-+ * bdi_writeback's.  The caller must have set @work->single_wait before
-+ * issuing it.  This wait operates independently fo
-+ * wb_wait_for_completion() and also disables automatic freeing of @work.
-+ */
-+static void wb_wait_for_single_work(struct backing_dev_info *bdi,
-+				    struct wb_writeback_work *work)
-+{
-+	if (WARN_ON_ONCE(!work->single_wait))
-+		return;
-+
-+	wait_event(bdi->wb_waitq, work->single_done);
-+
-+	/*
-+	 * Paired with smp_wmb() in wb_do_writeback() and ensures that all
-+	 * modifications to @work prior to assertion of ->single_done is
-+	 * visible to the caller once this function returns.
-+	 */
-+	smp_rmb();
-+}
++ * BDI_CAP_CGROUP_WRITEBACK: Supports cgroup-aware writeback.
+  */
+ #define BDI_CAP_NO_ACCT_DIRTY	0x00000001
+ #define BDI_CAP_NO_WRITEBACK	0x00000002
+ #define BDI_CAP_NO_ACCT_WB	0x00000004
+ #define BDI_CAP_STABLE_WRITES	0x00000008
+ #define BDI_CAP_STRICTLIMIT	0x00000010
++#define BDI_CAP_CGROUP_WRITEBACK 0x00000020
+ 
+ #define BDI_CAP_NO_ACCT_AND_WRITEBACK \
+ 	(BDI_CAP_NO_WRITEBACK | BDI_CAP_NO_ACCT_DIRTY | BDI_CAP_NO_ACCT_WB)
+@@ -229,4 +232,31 @@ static inline int bdi_sched_wait(void *word)
+ 	return 0;
+ }
+ 
+-#endif		/* _LINUX_BACKING_DEV_H */
++#ifdef CONFIG_CGROUP_WRITEBACK
 +
 +/**
-  * wb_split_bdi_pages - split nr_pages to write according to bandwidth
-  * @wb: target bdi_writeback to split @nr_pages to
-  * @nr_pages: number of pages to write for the whole bdi
-@@ -1169,14 +1200,26 @@ static long wb_do_writeback(struct bdi_writeback *wb)
- 	set_bit(WB_writeback_running, &wb->state);
- 	while ((work = get_next_work_item(wb)) != NULL) {
- 		struct wb_completion *done = work->done;
-+		bool need_wake_up = false;
- 
- 		trace_writeback_exec(wb->bdi, work);
- 
- 		wrote += wb_writeback(wb, work);
- 
--		if (work->auto_free)
-+		if (work->single_wait) {
-+			WARN_ON_ONCE(work->auto_free);
-+			/* paired w/ rmb in wb_wait_for_single_work() */
-+			smp_wmb();
-+			work->single_done = 1;
-+			need_wake_up = true;
-+		} else if (work->auto_free) {
- 			kfree(work);
-+		}
++ * inode_cgwb_enabled - test whether cgroup writeback is enabled on an inode
++ * @inode: inode of interest
++ *
++ * cgroup writeback requires support from both the bdi and filesystem.
++ * Test whether @inode has both.
++ */
++static inline bool inode_cgwb_enabled(struct inode *inode)
++{
++	struct backing_dev_info *bdi = inode_to_bdi(inode);
 +
- 		if (done && atomic_dec_and_test(&done->cnt))
-+			need_wake_up = true;
++	return bdi_cap_account_dirty(bdi) &&
++		(bdi->capabilities & BDI_CAP_CGROUP_WRITEBACK) &&
++		(inode->i_sb->s_type->fs_flags & FS_CGROUP_WRITEBACK);
++}
 +
-+		if (need_wake_up)
- 			wake_up_all(&wb->bdi->wb_waitq);
- 	}
++#else	/* CONFIG_CGROUP_WRITEBACK */
++
++static inline bool inode_cgwb_enabled(struct inode *inode)
++{
++	return false;
++}
++
++#endif	/* CONFIG_CGROUP_WRITEBACK */
++
++#endif	/* _LINUX_BACKING_DEV_H */
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index ccf4b64..bc72737 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1862,6 +1862,7 @@ struct file_system_type {
+ #define FS_HAS_SUBTYPE		4
+ #define FS_USERNS_MOUNT		8	/* Can be mounted by userns root */
+ #define FS_USERNS_DEV_MOUNT	16 /* A userns mount does not imply MNT_NODEV */
++#define FS_CGROUP_WRITEBACK	32	/* Supports cgroup-aware writeback */
+ #define FS_RENAME_DOES_D_MOVE	32768	/* FS will handle d_move() during rename() internally. */
+ 	struct dentry *(*mount) (struct file_system_type *, int,
+ 		       const char *, void *);
+diff --git a/init/Kconfig b/init/Kconfig
+index f5dbc6d..9f17798 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -1132,6 +1132,11 @@ config DEBUG_BLK_CGROUP
+ 	Enable some debugging help. Currently it exports additional stat
+ 	files in a cgroup which can be useful for debugging.
  
++config CGROUP_WRITEBACK
++	bool
++	depends on MEMCG && BLK_CGROUP
++	default y
++
+ endif # CGROUPS
+ 
+ config CHECKPOINT_RESTORE
 -- 
 2.1.0
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
