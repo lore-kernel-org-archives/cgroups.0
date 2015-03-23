@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 34/48] writeback: implement bdi_for_each_wb()
-Date: Mon, 23 Mar 2015 00:54:45 -0400
-Message-ID: <1427086499-15657-35-git-send-email-tj@kernel.org>
+Subject: [PATCH 42/48] writeback: implement wb_wait_for_single_work()
+Date: Mon, 23 Mar 2015 00:54:53 -0400
+Message-ID: <1427086499-15657-43-git-send-email-tj@kernel.org>
 References: <1427086499-15657-1-git-send-email-tj@kernel.org>
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=5AEIioeAwrwj0ODLPxOF+bNdaSMnFgrfKsJ/G0Xfmio=;
-        b=mJrcwSkCtIVP9Nu+dGCpEMhZD86YQU78+5PIjuH5+vm6taKgpJGLVOhKR3w8ud3S81
-         qbIq2WTBZTPeCaHSoboPlSlIaigPfIOkfT6QwKk368++gL2dH7vV57tmyi7SOqQFZtVk
-         +1focKgjsDPwAwBX7mic4RfVJPvU5pR2wYiMCUTepfvf1X8uFM6wrI5OVKM+TplpA5vT
-         UOG3IvIXxkC3awZb01Tkv2yWcTf4Wz2kRBgFkPUqHRo/8yCjdFWSYxB9L16M2lK0Yyyh
-         jEVfNObrXpaqi80zpGhqszmBq6J167PiBA1gl/EsA4aXIQgjG4DA8w3lP9vXsd4Nyl1J
-         Qd8g==
+        bh=VgE7mSgkiPWbYRfokHKLh/BufNrKPfv32sqVmtJd6PY=;
+        b=NC/I5yHlFqDjlYyj/IjYZUcFtVuqW/N8UVT+hCd0hTyAGkXxpHsumPOTFrGL9K8rzy
+         k28Jjj+b7/hmXiPAyWRFyHevhwY/769Gx4PUo+AdVrvKJk30z/FKqePNycW5GzeIZqi4
+         cQ3HVnlHIHM5tqh6kmMR1yolGkiZ5a+8XDIrHZUVjiEguBABTWJqoMx8mOwcEv5uMgK1
+         wb08e3E6b+GrjNqdM9suF3bq3TRh38YPF47Om0tP0Go1sPTub2qDwkaJ8ve+5e6zM2o9
+         OMc6Dkq1OXD1pvUlfZUQAHGIYxdlEi0OqK7l9HKJPlA9BvRN6FDbfCkDIkeCpCQolgFg
+         2G5Q==
 In-Reply-To: <1427086499-15657-1-git-send-email-tj@kernel.org>
 Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,97 +23,115 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-This will be used to implement bdi-wide operations which should be
-distributed across all its cgroup bdi_writebacks.
+For cgroup writeback, multiple wb_writeback_work items may need to be
+issuedto accomplish a single task.  The previous patch updated the
+waiting mechanism such that wb_wait_for_completion() can wait for
+multiple work items.
+
+Issuing mulitple work items involves memory allocation which may fail.
+As most writeback operations can't fail or blocked on memory
+allocation, in such cases, we'll fall back to sequential issuing of an
+on-stack work item, which would need to be waited upon sequentially.
+
+This patch implements wb_wait_for_single_work() which waits for a
+single work item independently from wb_completion waiting so that such
+fallback mechanism can be used without getting tangled with the usual
+issuing / completion operation.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
 ---
- include/linux/backing-dev.h | 63 +++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 63 insertions(+)
+ fs/fs-writeback.c | 47 +++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 45 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index 433b308..9dc4eea 100644
---- a/include/linux/backing-dev.h
-+++ b/include/linux/backing-dev.h
-@@ -384,6 +384,61 @@ static inline struct bdi_writeback *inode_to_wb(struct inode *inode)
- 	return inode->i_wb;
- }
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index 944e53d..f565635 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -52,6 +52,8 @@ struct wb_writeback_work {
+ 	unsigned int for_background:1;
+ 	unsigned int for_sync:1;	/* sync(2) WB_SYNC_ALL writeback */
+ 	unsigned int auto_free:1;	/* free on completion */
++	unsigned int single_wait:1;
++	unsigned int single_done:1;
+ 	enum wb_reason reason;		/* why was writeback initiated? */
  
-+struct wb_iter {
-+	int			start_blkcg_id;
-+	struct radix_tree_iter	tree_iter;
-+	void			**slot;
-+};
-+
-+static inline struct bdi_writeback *__wb_iter_next(struct wb_iter *iter,
-+						   struct backing_dev_info *bdi)
-+{
-+	struct radix_tree_iter *titer = &iter->tree_iter;
-+
-+	WARN_ON_ONCE(!rcu_read_lock_held());
-+
-+	if (iter->start_blkcg_id >= 0) {
-+		iter->slot = radix_tree_iter_init(titer, iter->start_blkcg_id);
-+		iter->start_blkcg_id = -1;
-+	} else {
-+		iter->slot = radix_tree_next_slot(iter->slot, titer, 0);
+ 	struct list_head list;		/* pending work list */
+@@ -165,8 +167,11 @@ static void wb_queue_work(struct bdi_writeback *wb,
+ 	trace_writeback_queue(wb->bdi, work);
+ 
+ 	spin_lock_bh(&wb->work_lock);
+-	if (!test_bit(WB_registered, &wb->state))
++	if (!test_bit(WB_registered, &wb->state)) {
++		if (work->single_wait)
++			work->single_done = 1;
+ 		goto out_unlock;
 +	}
-+
-+	if (!iter->slot)
-+		iter->slot = radix_tree_next_chunk(&bdi->cgwb_tree, titer, 0);
-+	if (iter->slot)
-+		return *iter->slot;
-+	return NULL;
-+}
-+
-+static inline struct bdi_writeback *__wb_iter_init(struct wb_iter *iter,
-+						   struct backing_dev_info *bdi,
-+						   int start_blkcg_id)
+ 	if (work->done)
+ 		atomic_inc(&work->done->cnt);
+ 	list_add_tail(&work->list, &wb->work_list);
+@@ -231,6 +236,32 @@ int mapping_congested(struct address_space *mapping,
+ EXPORT_SYMBOL_GPL(mapping_congested);
+ 
+ /**
++ * wb_wait_for_single_work - wait for completion of a single bdi_writeback_work
++ * @bdi: bdi the work item was issued to
++ * @work: work item to wait for
++ *
++ * Wait for the completion of @work which was issued to one of @bdi's
++ * bdi_writeback's.  The caller must have set @work->single_wait before
++ * issuing it.  This wait operates independently fo
++ * wb_wait_for_completion() and also disables automatic freeing of @work.
++ */
++static void wb_wait_for_single_work(struct backing_dev_info *bdi,
++				    struct wb_writeback_work *work)
 +{
-+	iter->start_blkcg_id = start_blkcg_id;
++	if (WARN_ON_ONCE(!work->single_wait))
++		return;
 +
-+	if (start_blkcg_id)
-+		return __wb_iter_next(iter, bdi);
-+	else
-+		return &bdi->wb;
++	wait_event(bdi->wb_waitq, work->single_done);
++
++	/*
++	 * Paired with smp_wmb() in wb_do_writeback() and ensures that all
++	 * modifications to @work prior to assertion of ->single_done is
++	 * visible to the caller once this function returns.
++	 */
++	smp_rmb();
 +}
 +
 +/**
-+ * bdi_for_each_wb - walk all wb's of a bdi in ascending blkcg ID order
-+ * @wb_cur: cursor struct bdi_writeback pointer
-+ * @bdi: bdi to walk wb's of
-+ * @iter: pointer to struct wb_iter to be used as iteration buffer
-+ * @start_blkcg_id: blkcg ID to start iteration from
-+ *
-+ * Iterate @wb_cur through the wb's (bdi_writeback's) of @bdi in ascending
-+ * blkcg ID order starting from @start_blkcg_id.  @iter is struct wb_iter
-+ * to be used as temp storage during iteration.  rcu_read_lock() must be
-+ * held throughout iteration.
-+ */
-+#define bdi_for_each_wb(wb_cur, bdi, iter, start_blkcg_id)		\
-+	for ((wb_cur) = __wb_iter_init(iter, bdi, start_blkcg_id);	\
-+	     (wb_cur); (wb_cur) = __wb_iter_next(iter, bdi))
-+
- #else	/* CONFIG_CGROUP_WRITEBACK */
+  * wb_split_bdi_pages - split nr_pages to write according to bandwidth
+  * @wb: target bdi_writeback to split @nr_pages to
+  * @nr_pages: number of pages to write for the whole bdi
+@@ -1169,14 +1200,26 @@ static long wb_do_writeback(struct bdi_writeback *wb)
+ 	set_bit(WB_writeback_running, &wb->state);
+ 	while ((work = get_next_work_item(wb)) != NULL) {
+ 		struct wb_completion *done = work->done;
++		bool need_wake_up = false;
  
- static inline bool inode_cgwb_enabled(struct inode *inode)
-@@ -446,6 +501,14 @@ static inline void wb_blkcg_offline(struct blkcg *blkcg)
- {
- }
+ 		trace_writeback_exec(wb->bdi, work);
  
-+struct wb_iter {
-+	int		next_id;
-+};
+ 		wrote += wb_writeback(wb, work);
+ 
+-		if (work->auto_free)
++		if (work->single_wait) {
++			WARN_ON_ONCE(work->auto_free);
++			/* paired w/ rmb in wb_wait_for_single_work() */
++			smp_wmb();
++			work->single_done = 1;
++			need_wake_up = true;
++		} else if (work->auto_free) {
+ 			kfree(work);
++		}
 +
-+#define bdi_for_each_wb(wb_cur, bdi, iter, start_blkcg_id)		\
-+	for ((iter)->next_id = (start_blkcg_id);			\
-+	     ({	(wb_cur) = !(iter)->next_id++ ? &(bdi)->wb : NULL; }); )
+ 		if (done && atomic_dec_and_test(&done->cnt))
++			need_wake_up = true;
 +
- static inline int mapping_congested(struct address_space *mapping,
- 				    struct task_struct *task, int cong_bits)
- {
++		if (need_wake_up)
+ 			wake_up_all(&wb->bdi->wb_waitq);
+ 	}
+ 
 -- 
 2.1.0
 
