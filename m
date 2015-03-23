@@ -1,62 +1,193 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 47/48] mpage: make __mpage_writepage() honor cgroup writeback
-Date: Mon, 23 Mar 2015 00:54:58 -0400
-Message-ID: <1427086499-15657-48-git-send-email-tj@kernel.org>
-References: <1427086499-15657-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 02/18] writeback: reorganize [__]wb_update_bandwidth()
+Date: Mon, 23 Mar 2015 01:07:31 -0400
+Message-ID: <1427087267-16592-3-git-send-email-tj@kernel.org>
+References: <1427087267-16592-1-git-send-email-tj@kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=qi6fTLlBmmMn0loeK4Kt5MDFabz2aiXEo7lrLCuuRu4=;
-        b=PYVRCCQMnRYhw8247xzkFIoi8AHyA2jdKakA9sHHob7Yq0/fCv82Dd4to7JWP6bv+C
-         IHhs9nLnM5P2wa0JRZZ9twBUAOkB/x7LxMkNdFUovfElrWyiGwcMeMm+AEusiDqnEmj5
-         y+JgC96Qt81l0h3KvflcXbNsfY3FUqBnvM+NVD7DnCBLOB78cjy0rGGTLCSDSgHxfN+W
-         EU3ryVFEYUl5KdX5Y7WXBIg3jH1whN9goiuPq56sPslk7nzd4QdR7Pv93doT+/HJdwfD
-         5RdE4Js5uWzqlcaQti+4rexktim+5i20W2DE93ZhKBvxYrB/uAIv2ESqv+Rl6x1pqYVl
-         N24A==
-In-Reply-To: <1427086499-15657-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=Ah2d6XJ7XmYm4VDSO8hqjRvC8nUAst/2csELuxzhNws=;
+        b=IqaA66fAe0yVa9BMKzT3MSbORcAuMV31+hhA0/foeDyKfcG5h+Wr0XksF2co+t7XBB
+         khH6bR/95FgJ8kVx/uYopAq/DLUqY8w+7GlQH2smrgzS1kuGbBWPAsXU9k4IZc4xoFHJ
+         SrQ1E1H8wnFnpQu0b3fLyMTh8Gu9H8Iy51eSXeTTN7a9GN7hWNPxFuPtU7C+xxE/jPbg
+         FFARI21BQciPLMrKHYRQ7rVt2CP7QnNVsXG0yoxNszShN0RA2BtA28YTJTIctxCq8jgy
+         3LCNe1lN1wZLUkGXs4eQgCzkbzxhA5Cj3j1O6l90krluSpk+nUyfqzrUPi7bOrcThBOb
+         PR+w==
+In-Reply-To: <1427087267-16592-1-git-send-email-tj@kernel.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-__mpage_writepage() is used to implement mpage_writepages() which in
-turn is used for ->writepages() of various filesystems.  All writeback
-logic is now updated to handle cgroup writeback and the block cgroup
-to issue IOs for is encoded in writeback_control and can be retrieved
-from the inode; however, __mpage_writepage() currently ignores the
-blkcg indicated by the inode and issues all bio's without explicit
-blkcg association.
+__wb_update_bandwidth() is called from two places -
+fs/fs-writeback.c::balance_dirty_pages() and
+mm/page-writeback.c::wb_writeback().  The latter updates only the
+write bandwidth while the former also deals with the dirty ratelimit.
+The two callsites are distinguished by whether @thresh parameter is
+zero or not, which is cryptic.  In addition, the two files define
+their own different versions of wb_update_bandwidth() on top of
+__wb_update_bandwidth(), which is confusing to say the least.  This
+patch cleans up [__]wb_update_bandwidth() in the following ways.
 
-This patch updates __mpage_writepage() so that the issued bio's are
-associated with inode_to_writeback_blkcg_css(inode).
+* __wb_update_bandwidth() now takes explicit @update_ratelimit
+  parameter to gate dirty ratelimit handling.
 
-v2: Updated for per-inode wb association.
+* mm/page-writeback.c::wb_update_bandwidth() is flattened into its
+  caller - balance_dirty_pages().
+
+* fs/fs-writeback.c::wb_update_bandwidth() is moved to
+  mm/page-writeback.c and __wb_update_bandwidth() is made static.
+
+* While at it, add a lockdep assertion to __wb_update_bandwidth().
+
+Except for the lockdep addition, this is pure reorganization and
+doesn't introduce any behavioral changes.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: Wu Fengguang <fengguang.wu@intel.com>
+Cc: Greg Thelen <gthelen@google.com>
 ---
- fs/mpage.c | 2 ++
- 1 file changed, 2 insertions(+)
+ fs/fs-writeback.c         | 10 ----------
+ include/linux/writeback.h |  9 +--------
+ mm/page-writeback.c       | 45 ++++++++++++++++++++++-----------------------
+ 3 files changed, 23 insertions(+), 41 deletions(-)
 
-diff --git a/fs/mpage.c b/fs/mpage.c
-index 3e79220..a3ccb0b 100644
---- a/fs/mpage.c
-+++ b/fs/mpage.c
-@@ -605,6 +605,8 @@ alloc_new:
- 				bio_get_nr_vecs(bdev), GFP_NOFS|__GFP_HIGH);
- 		if (bio == NULL)
- 			goto confused;
-+
-+		bio_associate_blkcg(bio, inode_to_wb_blkcg_css(inode));
- 	}
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index 890cff1..3d9b360 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -1079,16 +1079,6 @@ static bool over_bground_thresh(struct bdi_writeback *wb)
+ }
  
+ /*
+- * Called under wb->list_lock. If there are multiple wb per bdi,
+- * only the flusher working on the first wb should do it.
+- */
+-static void wb_update_bandwidth(struct bdi_writeback *wb,
+-				unsigned long start_time)
+-{
+-	__wb_update_bandwidth(wb, 0, 0, 0, 0, 0, start_time);
+-}
+-
+-/*
+  * Explicit flushing or periodic writeback of "old" data.
+  *
+  * Define "old": the first time one of an inode's pages is dirtied, we mark the
+diff --git a/include/linux/writeback.h b/include/linux/writeback.h
+index 75349bb..82e0e39 100644
+--- a/include/linux/writeback.h
++++ b/include/linux/writeback.h
+@@ -154,14 +154,7 @@ int dirty_writeback_centisecs_handler(struct ctl_table *, int,
+ void global_dirty_limits(unsigned long *pbackground, unsigned long *pdirty);
+ unsigned long wb_dirty_limit(struct bdi_writeback *wb, unsigned long dirty);
+ 
+-void __wb_update_bandwidth(struct bdi_writeback *wb,
+-			   unsigned long thresh,
+-			   unsigned long bg_thresh,
+-			   unsigned long dirty,
+-			   unsigned long bdi_thresh,
+-			   unsigned long bdi_dirty,
+-			   unsigned long start_time);
+-
++void wb_update_bandwidth(struct bdi_writeback *wb, unsigned long start_time);
+ void page_writeback_init(void);
+ void balance_dirty_pages_ratelimited(struct address_space *mapping);
+ 
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index fd441ea..d9ebabe 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -1160,19 +1160,22 @@ static void wb_update_dirty_ratelimit(struct bdi_writeback *wb,
+ 	trace_bdi_dirty_ratelimit(wb->bdi, dirty_rate, task_ratelimit);
+ }
+ 
+-void __wb_update_bandwidth(struct bdi_writeback *wb,
+-			   unsigned long thresh,
+-			   unsigned long bg_thresh,
+-			   unsigned long dirty,
+-			   unsigned long wb_thresh,
+-			   unsigned long wb_dirty,
+-			   unsigned long start_time)
++static void __wb_update_bandwidth(struct bdi_writeback *wb,
++				  unsigned long thresh,
++				  unsigned long bg_thresh,
++				  unsigned long dirty,
++				  unsigned long wb_thresh,
++				  unsigned long wb_dirty,
++				  unsigned long start_time,
++				  bool update_ratelimit)
+ {
+ 	unsigned long now = jiffies;
+ 	unsigned long elapsed = now - wb->bw_time_stamp;
+ 	unsigned long dirtied;
+ 	unsigned long written;
+ 
++	lockdep_assert_held(&wb->list_lock);
++
  	/*
+ 	 * rate-limit, only update once every 200ms.
+ 	 */
+@@ -1189,7 +1192,7 @@ void __wb_update_bandwidth(struct bdi_writeback *wb,
+ 	if (elapsed > HZ && time_before(wb->bw_time_stamp, start_time))
+ 		goto snapshot;
+ 
+-	if (thresh) {
++	if (update_ratelimit) {
+ 		global_update_bandwidth(thresh, dirty, now);
+ 		wb_update_dirty_ratelimit(wb, thresh, bg_thresh, dirty,
+ 					  wb_thresh, wb_dirty,
+@@ -1203,20 +1206,9 @@ snapshot:
+ 	wb->bw_time_stamp = now;
+ }
+ 
+-static void wb_update_bandwidth(struct bdi_writeback *wb,
+-				unsigned long thresh,
+-				unsigned long bg_thresh,
+-				unsigned long dirty,
+-				unsigned long wb_thresh,
+-				unsigned long wb_dirty,
+-				unsigned long start_time)
++void wb_update_bandwidth(struct bdi_writeback *wb, unsigned long start_time)
+ {
+-	if (time_is_after_eq_jiffies(wb->bw_time_stamp + BANDWIDTH_INTERVAL))
+-		return;
+-	spin_lock(&wb->list_lock);
+-	__wb_update_bandwidth(wb, thresh, bg_thresh, dirty,
+-			      wb_thresh, wb_dirty, start_time);
+-	spin_unlock(&wb->list_lock);
++	__wb_update_bandwidth(wb, 0, 0, 0, 0, 0, start_time, false);
+ }
+ 
+ /*
+@@ -1467,8 +1459,15 @@ static void balance_dirty_pages(struct address_space *mapping,
+ 		if (dirty_exceeded && !wb->dirty_exceeded)
+ 			wb->dirty_exceeded = 1;
+ 
+-		wb_update_bandwidth(wb, dirty_thresh, background_thresh,
+-				    nr_dirty, wb_thresh, wb_dirty, start_time);
++		if (time_is_before_jiffies(wb->bw_time_stamp +
++					   BANDWIDTH_INTERVAL)) {
++			spin_lock(&wb->list_lock);
++			__wb_update_bandwidth(wb, dirty_thresh,
++					      background_thresh, nr_dirty,
++					      wb_thresh, wb_dirty, start_time,
++					      true);
++			spin_unlock(&wb->list_lock);
++		}
+ 
+ 		dirty_ratelimit = wb->dirty_ratelimit;
+ 		pos_ratio = wb_position_ratio(wb, dirty_thresh,
 -- 
 2.1.0
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
