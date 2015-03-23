@@ -1,163 +1,169 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 43/48] writeback: restructure try_writeback_inodes_sb[_nr]()
-Date: Mon, 23 Mar 2015 00:54:54 -0400
-Message-ID: <1427086499-15657-44-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 35/48] writeback: remove bdi_start_writeback()
+Date: Mon, 23 Mar 2015 00:54:46 -0400
+Message-ID: <1427086499-15657-36-git-send-email-tj@kernel.org>
 References: <1427086499-15657-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=cAVJ8s2AEsHKjkGVB9xLkANmYSaHnRk+cBhnhd4KeFM=;
-        b=MNdvIxsFT6YxJ4uewdIyQ3Id0PPM0pAyThb5yTlG/fKzFEPZyNci2hS7EpWmYW6kCK
-         G4Oj1lOarRmgB1UmBWQ5gzS0SXLLux9zze+Vhi4JKPi4c4Jgy3EBIlpqPfFKcia995+I
-         LDJl4kgnjN0Jb1SPnrVvj2e8qi4/oekOWzKgfH5QKFZQRzbVCfBJVIYZ18gz9nXJcAhP
-         fMP0siSX44QBJ6lDdo8yFLOzABwDJf0ZMRhPVFMH5EveT7qWX2LW8ecCVox8JiCAvmQg
-         OSA5nG2hN6PgUpIXiE8YeaNcDpbW8F96HaJoI9NstVr+FTpHCYIc7zRlSQVtvdKAJ0+S
-         n7dQ==
-In-Reply-To: <1427086499-15657-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=QIGOwa4HbiRBzcJQonFAP4Y4bZSrn+xQQcdqZivNZDc=;
+        b=zTMph+IKIpF0M2L6o72LM+h6Gh4dVkHXECquSdreEjZg8uU/i+nCnt5KrXMEVG8+nV
+         HC3AdOJXNEA619rA6jJyypICllcw5ZFOYVAiJRFr8GPf3NirCZfgtWWI+Kjbeu3EE8Vi
+         3vNlYF+qR1xsjWoL0XV5iT/xlmg880y2a7PY2AY1AhbpbKz17z9h/z3hEjljS0sjxYsT
+         0tUjEYPpmyyKdW+X5lQAd4UfUnJGwqXy/XakcyatQqnb5XeFHWF1P0/Ln4/fZ9tYCWsM
+         xudSPQDHroh/PBgG0sLZifuMVCL+vJMT6DYZGBcf4lzPRqsb4mDSu3wdF8Inxnby9q7t
+         DRmw==
+In-Reply-To: <1427086499-15657-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: axboe@kernel.dk
+Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-try_writeback_inodes_sb_nr() wraps writeback_inodes_sb_nr() so that it
-handles s_umount locking and skips if writeback is already in
-progress.  The in progress test is performed on the root wb
-(bdi_writeback) which isn't sufficient for cgroup writeback support.
-The test must be done per-wb.
+bdi_start_writeback() is a thin wrapper on top of
+__wb_start_writeback() which is used only by laptop_mode_timer_fn().
+This patches removes bdi_start_writeback(), renames
+__wb_start_writeback() to wb_start_writeback() and makes
+laptop_mode_timer_fn() use it instead.
 
-To prepare for the change, this patch factors out
-__writeback_inodes_sb_nr() from writeback_inodes_sb_nr() and adds
-@skip_if_busy and moves the in progress test right before queueing the
-wb_writeback_work.  try_writeback_inodes_sb_nr() now just grabs
-s_umount and invokes __writeback_inodes_sb_nr() with asserted
-@skip_if_busy.  This way, later addition of multiple wb handling can
-skip only the wb's which already have writeback in progress.
+This doesn't cause any functional difference and will ease making
+laptop_mode_timer_fn() cgroup writeback aware.
 
-This swaps the order between in progress test and s_umount test which
-can flip the return value when writeback is in progress and s_umount
-is being held by someone else but this shouldn't cause any meaningful
-difference.  It's a fringe condition and the return value is an
-unsynchronized hint anyway.
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Jan Kara <jack@suse.cz>
 ---
- fs/fs-writeback.c         | 52 ++++++++++++++++++++++++++---------------------
- include/linux/writeback.h |  6 +++---
- 2 files changed, 32 insertions(+), 26 deletions(-)
+ fs/fs-writeback.c           | 68 +++++++++++++++++----------------------------
+ include/linux/backing-dev.h |  4 +--
+ mm/page-writeback.c         |  4 +--
+ 3 files changed, 29 insertions(+), 47 deletions(-)
 
 diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index f565635..be374ae 100644
+index 3ceacbb..c24d6fd 100644
 --- a/fs/fs-writeback.c
 +++ b/fs/fs-writeback.c
-@@ -1510,19 +1510,8 @@ static void wait_sb_inodes(struct super_block *sb)
- 	iput(old_inode);
+@@ -172,33 +172,6 @@ out_unlock:
+ 	spin_unlock_bh(&wb->work_lock);
  }
  
--/**
-- * writeback_inodes_sb_nr -	writeback dirty inodes from given super_block
-- * @sb: the superblock
-- * @nr: the number of pages to write
-- * @reason: reason why some writeback work initiated
-- *
-- * Start writeback on some inodes on this super_block. No guarantees are made
-- * on how many (if any) will be written, and this function does not wait
-- * for IO completion of submitted IO.
-- */
--void writeback_inodes_sb_nr(struct super_block *sb,
--			    unsigned long nr,
--			    enum wb_reason reason)
-+static void __writeback_inodes_sb_nr(struct super_block *sb, unsigned long nr,
-+				     enum wb_reason reason, bool skip_if_busy)
- {
- 	DEFINE_WB_COMPLETION_ONSTACK(done);
- 	struct wb_writeback_work work = {
-@@ -1538,9 +1527,30 @@ void writeback_inodes_sb_nr(struct super_block *sb,
- 	if (!bdi_has_dirty_io(bdi) || bdi == &noop_backing_dev_info)
- 		return;
- 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
-+
-+	if (skip_if_busy && writeback_in_progress(&bdi->wb))
-+		return;
-+
- 	wb_queue_work(&bdi->wb, &work);
- 	wb_wait_for_completion(bdi, &done);
- }
-+
-+/**
-+ * writeback_inodes_sb_nr -	writeback dirty inodes from given super_block
-+ * @sb: the superblock
-+ * @nr: the number of pages to write
-+ * @reason: reason why some writeback work initiated
-+ *
-+ * Start writeback on some inodes on this super_block. No guarantees are made
-+ * on how many (if any) will be written, and this function does not wait
-+ * for IO completion of submitted IO.
-+ */
-+void writeback_inodes_sb_nr(struct super_block *sb,
-+			    unsigned long nr,
-+			    enum wb_reason reason)
-+{
-+	__writeback_inodes_sb_nr(sb, nr, reason, false);
-+}
- EXPORT_SYMBOL(writeback_inodes_sb_nr);
+-static void __wb_start_writeback(struct bdi_writeback *wb, long nr_pages,
+-				 bool range_cyclic, enum wb_reason reason)
+-{
+-	struct wb_writeback_work *work;
+-
+-	if (!wb_has_dirty_io(wb))
+-		return;
+-
+-	/*
+-	 * This is WB_SYNC_NONE writeback, so if allocation fails just
+-	 * wakeup the thread for old dirty data writeback
+-	 */
+-	work = kzalloc(sizeof(*work), GFP_ATOMIC);
+-	if (!work) {
+-		trace_writeback_nowork(wb->bdi);
+-		wb_wakeup(wb);
+-		return;
+-	}
+-
+-	work->sync_mode	= WB_SYNC_NONE;
+-	work->nr_pages	= nr_pages;
+-	work->range_cyclic = range_cyclic;
+-	work->reason	= reason;
+-
+-	wb_queue_work(wb, work);
+-}
+-
+ #ifdef CONFIG_CGROUP_WRITEBACK
  
  /**
-@@ -1567,19 +1577,15 @@ EXPORT_SYMBOL(writeback_inodes_sb);
-  * Invoke writeback_inodes_sb_nr if no writeback is currently underway.
-  * Returns 1 if writeback was started, 0 if not.
-  */
--int try_to_writeback_inodes_sb_nr(struct super_block *sb,
--				  unsigned long nr,
--				  enum wb_reason reason)
-+bool try_to_writeback_inodes_sb_nr(struct super_block *sb, unsigned long nr,
-+				   enum wb_reason reason)
- {
--	if (writeback_in_progress(&sb->s_bdi->wb))
--		return 1;
--
- 	if (!down_read_trylock(&sb->s_umount))
--		return 0;
-+		return false;
+@@ -238,22 +211,31 @@ EXPORT_SYMBOL_GPL(mapping_congested);
  
--	writeback_inodes_sb_nr(sb, nr, reason);
-+	__writeback_inodes_sb_nr(sb, nr, reason, true);
- 	up_read(&sb->s_umount);
--	return 1;
-+	return true;
- }
- EXPORT_SYMBOL(try_to_writeback_inodes_sb_nr);
+ #endif	/* CONFIG_CGROUP_WRITEBACK */
  
-@@ -1591,7 +1597,7 @@ EXPORT_SYMBOL(try_to_writeback_inodes_sb_nr);
-  * Implement by try_to_writeback_inodes_sb_nr()
-  * Returns 1 if writeback was started, 0 if not.
-  */
--int try_to_writeback_inodes_sb(struct super_block *sb, enum wb_reason reason)
-+bool try_to_writeback_inodes_sb(struct super_block *sb, enum wb_reason reason)
+-/**
+- * bdi_start_writeback - start writeback
+- * @bdi: the backing device to write from
+- * @nr_pages: the number of pages to write
+- * @reason: reason why some writeback work was initiated
+- *
+- * Description:
+- *   This does WB_SYNC_NONE opportunistic writeback. The IO is only
+- *   started when this function returns, we make no guarantees on
+- *   completion. Caller need not hold sb s_umount semaphore.
+- *
+- */
+-void bdi_start_writeback(struct backing_dev_info *bdi, long nr_pages,
+-			enum wb_reason reason)
++void wb_start_writeback(struct bdi_writeback *wb, long nr_pages,
++			bool range_cyclic, enum wb_reason reason)
  {
- 	return try_to_writeback_inodes_sb_nr(sb, get_nr_dirty_pages(), reason);
+-	__wb_start_writeback(&bdi->wb, nr_pages, true, reason);
++	struct wb_writeback_work *work;
++
++	if (!wb_has_dirty_io(wb))
++		return;
++
++	/*
++	 * This is WB_SYNC_NONE writeback, so if allocation fails just
++	 * wakeup the thread for old dirty data writeback
++	 */
++	work = kzalloc(sizeof(*work), GFP_ATOMIC);
++	if (!work) {
++		trace_writeback_nowork(wb->bdi);
++		wb_wakeup(wb);
++		return;
++	}
++
++	work->sync_mode	= WB_SYNC_NONE;
++	work->nr_pages	= nr_pages;
++	work->range_cyclic = range_cyclic;
++	work->reason	= reason;
++
++	wb_queue_work(wb, work);
  }
-diff --git a/include/linux/writeback.h b/include/linux/writeback.h
-index 8e4485f..75349bb 100644
---- a/include/linux/writeback.h
-+++ b/include/linux/writeback.h
-@@ -93,9 +93,9 @@ struct bdi_writeback;
- void writeback_inodes_sb(struct super_block *, enum wb_reason reason);
- void writeback_inodes_sb_nr(struct super_block *, unsigned long nr,
- 							enum wb_reason reason);
--int try_to_writeback_inodes_sb(struct super_block *, enum wb_reason reason);
--int try_to_writeback_inodes_sb_nr(struct super_block *, unsigned long nr,
--				  enum wb_reason reason);
-+bool try_to_writeback_inodes_sb(struct super_block *, enum wb_reason reason);
-+bool try_to_writeback_inodes_sb_nr(struct super_block *, unsigned long nr,
-+				   enum wb_reason reason);
- void sync_inodes_sb(struct super_block *);
- void wakeup_flusher_threads(long nr_pages, enum wb_reason reason);
- void inode_wait_for_writeback(struct inode *inode);
+ 
+ /**
+@@ -1211,7 +1193,7 @@ void wakeup_flusher_threads(long nr_pages, enum wb_reason reason)
+ 
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(bdi, &bdi_list, bdi_list)
+-		__wb_start_writeback(&bdi->wb, nr_pages, false, reason);
++		wb_start_writeback(&bdi->wb, nr_pages, false, reason);
+ 	rcu_read_unlock();
+ }
+ 
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index 9dc4eea..81e39ff 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -25,8 +25,8 @@ int bdi_register(struct backing_dev_info *bdi, struct device *parent,
+ int bdi_register_dev(struct backing_dev_info *bdi, dev_t dev);
+ void bdi_unregister(struct backing_dev_info *bdi);
+ int __must_check bdi_setup_and_register(struct backing_dev_info *, char *);
+-void bdi_start_writeback(struct backing_dev_info *bdi, long nr_pages,
+-			enum wb_reason reason);
++void wb_start_writeback(struct bdi_writeback *wb, long nr_pages,
++			bool range_cyclic, enum wb_reason reason);
+ void bdi_start_background_writeback(struct backing_dev_info *bdi);
+ void wb_workfn(struct work_struct *work);
+ void wb_wakeup_delayed(struct bdi_writeback *wb);
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 349e32b..7c3a555 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -1729,8 +1729,8 @@ void laptop_mode_timer_fn(unsigned long data)
+ 	 * threshold
+ 	 */
+ 	if (bdi_has_dirty_io(&q->backing_dev_info))
+-		bdi_start_writeback(&q->backing_dev_info, nr_pages,
+-					WB_REASON_LAPTOP_TIMER);
++		wb_start_writeback(&q->backing_dev_info.wb, nr_pages, true,
++				   WB_REASON_LAPTOP_TIMER);
+ }
+ 
+ /*
 -- 
 2.1.0
