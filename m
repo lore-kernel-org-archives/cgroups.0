@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 01/18] memcg: make mem_cgroup_read_{stat|event}() iterate possible cpus instead of online
-Date: Mon, 23 Mar 2015 01:07:30 -0400
-Message-ID: <1427087267-16592-2-git-send-email-tj@kernel.org>
+Subject: [PATCH 03/18] writeback: implement wb_domain
+Date: Mon, 23 Mar 2015 01:07:32 -0400
+Message-ID: <1427087267-16592-4-git-send-email-tj@kernel.org>
 References: <1427087267-16592-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=lVRA6TykTQaQE2KVf/aPzmMg4ebQaZGqogHKMhcuXfA=;
-        b=WpJFoYaEMqTI/gsRWKGf9DsEFmaIzrheJpULJYhWcYEOCzreTrTDYvVj5OcbP95bPd
-         J0ViBQt9NS3EgHS729PpooefZ+DjzZdDr9wP30IsV8J/D55aYrXrHLhNfAkJL/BGQIMx
-         UlCZad7rzqYbuv1vQxv4nkeRKLOC7cs5ZVL3ZR+fXWQ5WTBbK6qBqebgYvXO6Qlc11kM
-         ZyaTYmlO/hjon75Nj/GiGPCK5r0d3VTEbXwb3lyi/CZPSql6ziDf7waT0ZChf1MzAWyK
-         twVMykkiiVdbn+qK3RtczHs1NO3noSYSHS60fRy+T3SEO8cGcYDUzZsCmp1/hsWP82G/
-         AQig==
+        bh=e1oUgzJQ3x9Ze578qEHo/9O7+cigqzk+uoYKtWl26Sk=;
+        b=H38MUR+ppnFBnToM9RhI2VyYRyQ3RAZ0FWtveHFARbLgUg52ZzsVgHUna3CQIm9P5k
+         RznA6cRdu1mq1xLtUULhW94xC+jdhgn/Md9l2U+rGAEIrUxOviubxmnbdTFyPaB6zLYJ
+         +PTshVG4TXvxnYqm54xUubTbMRsk4czOBRCIhBL8tCXcxww2Fk+feKlfRCbUowlpcRfP
+         c+1peh9rdnFX0xijT2kEolW6en+4U9+YtsA/KPoh+dtwpgfUskOtS2RzYokfRYevQQlq
+         oKblkm5cqvXJF9FcucHjNa3nosNoV5TEhzwQ+zTBU1PvO42JMYBXv4gf3NN+xg1gkN7N
+         CysA==
 In-Reply-To: <1427087267-16592-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,137 +23,247 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-cpu_possible_mask represents the CPUs which are actually possible
-during that boot instance.  For systems which don't support CPU
-hotplug, this will match cpu_online_mask exactly in most cases.  Even
-for systems which support CPU hotplug, the number of possible CPU
-slots is highly unlikely to diverge greatly from the number of online
-CPUs.  The only cases where the difference between possible and online
-caused problems were when the boot code failed to initialize the
-possible mask and left it fully set at NR_CPUS - 1.
+Dirtyable memory is distributed to a wb (bdi_writeback) according to
+the relative bandwidth the wb is writing out in the whole system.
+This distribution is global - each wb is measured against all other
+wb's and gets the proportinately sized portion of the memory in the
+whole system.
 
-As such, most per-cpu constructs allocate for all possible CPUs and
-often iterate over the possibles, which also has the benefit of
-avoiding the blocking CPU hotplug synchronization.
+For cgroup writeback, the amount of dirtyable memory is scoped by
+memcg and thus each wb would need to be measured and controlled in its
+memcg.  IOW, a wb will belong to two writeback domains - the global
+and memcg domains.
 
-memcg open codes per-cpu stat counting for mem_cgroup_read_stat() and
-mem_cgroup_read_events(), which iterates over online CPUs and handles
-CPU hotplug operations explicitly.  This complexity doesn't actually
-buy anything.  Switch to iterating over the possibles and drop the
-explicit CPU hotplug handling.
+Currently, what constitutes the global writeback domain are scattered
+across a number of global states.  This patch starts collecting them
+into struct wb_domain.
 
-Eventually, we want to convert memcg to use percpu_counter instead of
-its own custom implementation which also benefits from quick access
-w/o summing for cases where larger error margin is acceptable.
+* fprop_global which serves as the basis for proportional bandwidth
+  measurement and its period timer are moved into struct wb_domain.
 
-This will allow mem_cgroup_read_stat() to be called from non-sleepable
-contexts which will be used by cgroup writeback.
+* global_wb_domain hosts the states for the global domain.
+
+* While at it, flatten wb_writeout_fraction() into its callers.  This
+  thin wrapper doesn't provide any actual benefits while getting in
+  the way.
+
+This is pure reorganization and doesn't introduce any behavioral
+changes.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Jan Kara <jack@suse.cz>
+Cc: Wu Fengguang <fengguang.wu@intel.com>
+Cc: Greg Thelen <gthelen@google.com>
 ---
- mm/memcontrol.c | 51 ++-------------------------------------------------
- 1 file changed, 2 insertions(+), 49 deletions(-)
+ include/linux/writeback.h | 32 +++++++++++++++++++++
+ mm/page-writeback.c       | 72 ++++++++++++++++++-----------------------------
+ 2 files changed, 59 insertions(+), 45 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index a6fa6fe..ab483e9 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -323,11 +323,6 @@ struct mem_cgroup {
- 	 * percpu counter.
- 	 */
- 	struct mem_cgroup_stat_cpu __percpu *stat;
--	/*
--	 * used when a cpu is offlined or other synchronizations
--	 * See mem_cgroup_read_stat().
--	 */
--	struct mem_cgroup_stat_cpu nocpu_base;
- 	spinlock_t pcp_counter_lock;
+diff --git a/include/linux/writeback.h b/include/linux/writeback.h
+index 82e0e39..5af0a57e 100644
+--- a/include/linux/writeback.h
++++ b/include/linux/writeback.h
+@@ -7,6 +7,7 @@
+ #include <linux/sched.h>
+ #include <linux/workqueue.h>
+ #include <linux/fs.h>
++#include <linux/flex_proportions.h>
  
- #if defined(CONFIG_MEMCG_KMEM) && defined(CONFIG_INET)
-@@ -808,15 +803,8 @@ static long mem_cgroup_read_stat(struct mem_cgroup *memcg,
- 	long val = 0;
- 	int cpu;
+ DECLARE_PER_CPU(int, dirty_throttle_leaks);
  
--	get_online_cpus();
--	for_each_online_cpu(cpu)
-+	for_each_possible_cpu(cpu)
- 		val += per_cpu(memcg->stat->count[idx], cpu);
--#ifdef CONFIG_HOTPLUG_CPU
--	spin_lock(&memcg->pcp_counter_lock);
--	val += memcg->nocpu_base.count[idx];
--	spin_unlock(&memcg->pcp_counter_lock);
--#endif
--	put_online_cpus();
- 	return val;
- }
+@@ -87,6 +88,36 @@ struct writeback_control {
+ };
  
-@@ -826,15 +814,8 @@ static unsigned long mem_cgroup_read_events(struct mem_cgroup *memcg,
- 	unsigned long val = 0;
- 	int cpu;
+ /*
++ * A wb_domain represents a domain that wb's (bdi_writeback's) belong to
++ * and are measured against each other in.  There always is one global
++ * domain, global_wb_domain, that every wb in the system is a member of.
++ * This allows measuring the relative bandwidth of each wb to distribute
++ * dirtyable memory accordingly.
++ */
++struct wb_domain {
++	/*
++	 * Scale the writeback cache size proportional to the relative
++	 * writeout speed.
++	 *
++	 * We do this by keeping a floating proportion between BDIs, based
++	 * on page writeback completions [end_page_writeback()]. Those
++	 * devices that write out pages fastest will get the larger share,
++	 * while the slower will get a smaller share.
++	 *
++	 * We use page writeout completions because we are interested in
++	 * getting rid of dirty pages. Having them written out is the
++	 * primary goal.
++	 *
++	 * We introduce a concept of time, a period over which we measure
++	 * these events, because demand can/will vary over time. The length
++	 * of this period itself is measured in page writeback completions.
++	 */
++	struct fprop_global completions;
++	struct timer_list period_timer;	/* timer for aging of completions */
++	unsigned long period_time;
++};
++
++/*
+  * fs/fs-writeback.c
+  */	
+ struct bdi_writeback;
+@@ -120,6 +151,7 @@ static inline void laptop_sync_completion(void) { }
+ #endif
+ void throttle_vm_writeout(gfp_t gfp_mask);
+ bool zone_dirty_ok(struct zone *zone);
++int wb_domain_init(struct wb_domain *dom, gfp_t gfp);
  
--	get_online_cpus();
--	for_each_online_cpu(cpu)
-+	for_each_possible_cpu(cpu)
- 		val += per_cpu(memcg->stat->events[idx], cpu);
--#ifdef CONFIG_HOTPLUG_CPU
--	spin_lock(&memcg->pcp_counter_lock);
--	val += memcg->nocpu_base.events[idx];
--	spin_unlock(&memcg->pcp_counter_lock);
--#endif
--	put_online_cpus();
- 	return val;
- }
+ extern unsigned long global_dirty_limit;
  
-@@ -2182,37 +2163,12 @@ static void drain_all_stock(struct mem_cgroup *root_memcg)
- 	mutex_unlock(&percpu_charge_mutex);
- }
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index d9ebabe..3c6ccc7 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -124,29 +124,7 @@ EXPORT_SYMBOL(laptop_mode);
+ 
+ unsigned long global_dirty_limit;
  
 -/*
-- * This function drains percpu counter value from DEAD cpu and
-- * move it to local cpu. Note that this function can be preempted.
+- * Scale the writeback cache size proportional to the relative writeout speeds.
+- *
+- * We do this by keeping a floating proportion between BDIs, based on page
+- * writeback completions [end_page_writeback()]. Those devices that write out
+- * pages fastest will get the larger share, while the slower will get a smaller
+- * share.
+- *
+- * We use page writeout completions because we are interested in getting rid of
+- * dirty pages. Having them written out is the primary goal.
+- *
+- * We introduce a concept of time, a period over which we measure these events,
+- * because demand can/will vary over time. The length of this period itself is
+- * measured in page writeback completions.
+- *
 - */
--static void mem_cgroup_drain_pcp_counter(struct mem_cgroup *memcg, int cpu)
+-static struct fprop_global writeout_completions;
+-
+-static void writeout_period(unsigned long t);
+-/* Timer for aging of writeout_completions */
+-static struct timer_list writeout_period_timer =
+-		TIMER_DEFERRED_INITIALIZER(writeout_period, 0, 0);
+-static unsigned long writeout_period_time = 0;
++static struct wb_domain global_wb_domain;
+ 
+ /*
+  * Length of period for aging writeout fractions of bdis. This is an
+@@ -433,24 +411,26 @@ static unsigned long wp_next_time(unsigned long cur_time)
+ }
+ 
+ /*
+- * Increment the BDI's writeout completion count and the global writeout
++ * Increment the wb's writeout completion count and the global writeout
+  * completion count. Called from test_clear_page_writeback().
+  */
+ static inline void __wb_writeout_inc(struct bdi_writeback *wb)
+ {
++	struct wb_domain *dom = &global_wb_domain;
++
+ 	__inc_wb_stat(wb, WB_WRITTEN);
+-	__fprop_inc_percpu_max(&writeout_completions, &wb->completions,
++	__fprop_inc_percpu_max(&dom->completions, &wb->completions,
+ 			       wb->bdi->max_prop_frac);
+ 	/* First event after period switching was turned off? */
+-	if (!unlikely(writeout_period_time)) {
++	if (!unlikely(dom->period_time)) {
+ 		/*
+ 		 * We can race with other __bdi_writeout_inc calls here but
+ 		 * it does not cause any harm since the resulting time when
+ 		 * timer will fire and what is in writeout_period_time will be
+ 		 * roughly the same.
+ 		 */
+-		writeout_period_time = wp_next_time(jiffies);
+-		mod_timer(&writeout_period_timer, writeout_period_time);
++		dom->period_time = wp_next_time(jiffies);
++		mod_timer(&dom->period_timer, dom->period_time);
+ 	}
+ }
+ 
+@@ -465,37 +445,37 @@ void wb_writeout_inc(struct bdi_writeback *wb)
+ EXPORT_SYMBOL_GPL(wb_writeout_inc);
+ 
+ /*
+- * Obtain an accurate fraction of the BDI's portion.
+- */
+-static void wb_writeout_fraction(struct bdi_writeback *wb,
+-				 long *numerator, long *denominator)
 -{
--	int i;
--
--	spin_lock(&memcg->pcp_counter_lock);
--	for (i = 0; i < MEM_CGROUP_STAT_NSTATS; i++) {
--		long x = per_cpu(memcg->stat->count[i], cpu);
--
--		per_cpu(memcg->stat->count[i], cpu) = 0;
--		memcg->nocpu_base.count[i] += x;
--	}
--	for (i = 0; i < MEM_CGROUP_EVENTS_NSTATS; i++) {
--		unsigned long x = per_cpu(memcg->stat->events[i], cpu);
--
--		per_cpu(memcg->stat->events[i], cpu) = 0;
--		memcg->nocpu_base.events[i] += x;
--	}
--	spin_unlock(&memcg->pcp_counter_lock);
+-	fprop_fraction_percpu(&writeout_completions, &wb->completions,
+-				numerator, denominator);
 -}
 -
- static int memcg_cpu_hotplug_callback(struct notifier_block *nb,
- 					unsigned long action,
- 					void *hcpu)
+-/*
+  * On idle system, we can be called long after we scheduled because we use
+  * deferred timers so count with missed periods.
+  */
+ static void writeout_period(unsigned long t)
  {
- 	int cpu = (unsigned long)hcpu;
- 	struct memcg_stock_pcp *stock;
--	struct mem_cgroup *iter;
+-	int miss_periods = (jiffies - writeout_period_time) /
++	struct wb_domain *dom = (void *)t;
++	int miss_periods = (jiffies - dom->period_time) /
+ 						 VM_COMPLETIONS_PERIOD_LEN;
  
- 	if (action == CPU_ONLINE)
- 		return NOTIFY_OK;
-@@ -2220,9 +2176,6 @@ static int memcg_cpu_hotplug_callback(struct notifier_block *nb,
- 	if (action != CPU_DEAD && action != CPU_DEAD_FROZEN)
- 		return NOTIFY_OK;
+-	if (fprop_new_period(&writeout_completions, miss_periods + 1)) {
+-		writeout_period_time = wp_next_time(writeout_period_time +
++	if (fprop_new_period(&dom->completions, miss_periods + 1)) {
++		dom->period_time = wp_next_time(dom->period_time +
+ 				miss_periods * VM_COMPLETIONS_PERIOD_LEN);
+-		mod_timer(&writeout_period_timer, writeout_period_time);
++		mod_timer(&dom->period_timer, dom->period_time);
+ 	} else {
+ 		/*
+ 		 * Aging has zeroed all fractions. Stop wasting CPU on period
+ 		 * updates.
+ 		 */
+-		writeout_period_time = 0;
++		dom->period_time = 0;
+ 	}
+ }
  
--	for_each_mem_cgroup(iter)
--		mem_cgroup_drain_pcp_counter(iter, cpu);
--
- 	stock = &per_cpu(memcg_stock, cpu);
- 	drain_stock(stock);
- 	return NOTIFY_OK;
++int wb_domain_init(struct wb_domain *dom, gfp_t gfp)
++{
++	memset(dom, 0, sizeof(*dom));
++	init_timer_deferrable(&dom->period_timer);
++	dom->period_timer.function = writeout_period;
++	dom->period_timer.data = (unsigned long)dom;
++	return fprop_global_init(&dom->completions, gfp);
++}
++
+ /*
+  * bdi_min_ratio keeps the sum of the minimum dirty shares of all
+  * registered backing devices, which, for obvious reasons, can not
+@@ -579,6 +559,7 @@ static unsigned long hard_dirty_limit(unsigned long thresh)
+  */
+ unsigned long wb_dirty_limit(struct bdi_writeback *wb, unsigned long dirty)
+ {
++	struct wb_domain *dom = &global_wb_domain;
+ 	u64 wb_dirty;
+ 	long numerator, denominator;
+ 	unsigned long wb_min_ratio, wb_max_ratio;
+@@ -586,7 +567,8 @@ unsigned long wb_dirty_limit(struct bdi_writeback *wb, unsigned long dirty)
+ 	/*
+ 	 * Calculate this BDI's share of the dirty ratio.
+ 	 */
+-	wb_writeout_fraction(wb, &numerator, &denominator);
++	fprop_fraction_percpu(&dom->completions, &wb->completions,
++			      &numerator, &denominator);
+ 
+ 	wb_dirty = (dirty * (100 - bdi_min_ratio)) / 100;
+ 	wb_dirty *= numerator;
+@@ -1831,7 +1813,7 @@ void __init page_writeback_init(void)
+ 	writeback_set_ratelimit();
+ 	register_cpu_notifier(&ratelimit_nb);
+ 
+-	fprop_global_init(&writeout_completions, GFP_KERNEL);
++	BUG_ON(wb_domain_init(&global_wb_domain, GFP_KERNEL));
+ }
+ 
+ /**
 -- 
 2.1.0
 
