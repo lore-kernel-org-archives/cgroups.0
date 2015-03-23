@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 45/48] writeback: dirty inodes against their matching cgroup bdi_writeback's
-Date: Mon, 23 Mar 2015 00:54:56 -0400
-Message-ID: <1427086499-15657-46-git-send-email-tj@kernel.org>
+Subject: [PATCH 44/48] writeback: make writeback initiation functions handle multiple bdi_writeback's
+Date: Mon, 23 Mar 2015 00:54:55 -0400
+Message-ID: <1427086499-15657-45-git-send-email-tj@kernel.org>
 References: <1427086499-15657-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=1I5WODSgsTiufuzWClWw/QDIgOTx81ZAvA1Wn62JAhY=;
-        b=hEvBM26ua2evH1aUK4ALq3XBhz7vGMwoR29C4xM4A4A1f1ogSrxMyXEldWYZy9g97V
-         Ql7a0Im4nJuVEkycIqSfTTEOqyodcLX97MDjdbdVxAV/SnhChemweTRx3EzRSnyQQciX
-         ccM1m3oL8NUV3h9JK6Ize6DTUmscfB2PKplAim9J2JSEV0XMjVC8FMlXHQpti7ITer1x
-         ox7qCdzemhYa3sEsQ0M4g9lDeZHZmFZTaQY+SkeomzakDsq+LK2lgKjFiNpvOkS2OeS6
-         Ck6/2gk6iy3LbW7RrPuW4A3owMUVDzEYrnfaQoJ+n1rza6GGjEiNnZ9fjV+7V3MLWT12
-         cyzA==
+        bh=7L+cSCKCvQmA2eqOLxyQ84JXyFzuGTPm+LcHY1iGDAQ=;
+        b=AAkG8HAN6miROmS8PiziE27M7b2jtDUbtwsfah0fTXITaUJgHr+Vi/OyFsegOjN3Kv
+         VntHPs1ikydIBVG1BJfZBiC7oRs/yb1MBaZzhWubSybjBbrv1Wf6kFTpDslUgl7zlYaP
+         VJQXSQPrbG9QOMbITyBKpnQCwLD1l3VEEVKo/EDVIoWLPVJf0iFV23k6G7ZK/ifQGgp+
+         45IYCmo0UuBrNBQXFaNogJYF177NCcL71tr0pUkb6YA1MxcjOn7oFKJZAp0DU3hlvHzo
+         yWxTBuX54keS+7xI7CXvUiq3X/vLg7tf7HimhH8rGt5h5HicMBZAOWPDCij/w8DkGWid
+         9oyw==
 In-Reply-To: <1427086499-15657-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,80 +23,156 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-__mark_inode_dirty() always dirtied the inode against the root wb
-(bdi_writeback).  The previous patches added all the infrastructure
-necessary to attribute an inode against the wb of the dirtying cgroup.
+[try_]writeback_inodes_sb[_nr]() and sync_inodes_sb() currently only
+handle dirty inodes on the root wb (bdi_writeback) of the target bdi.
+This patch implements bdi_split_work_to_wbs() and use it to make these
+functions handle multiple wb's.
 
-This patch updates __mark_inode_dirty() so that it uses the wb
-associated with the inode instead of unconditionally using the root
-one.
+bdi_split_work_to_wbs() takes a base wb_writeback_work and create
+clones of it and issue them to the wb's of the target bdi.  The base
+work's nr_pages is distributed using wb_split_bdi_pages() -
+ie. according to each wb's write bandwidth's proportion in the bdi.
 
-Currently, none of the filesystems has FS_CGROUP_WRITEBACK and all
-pages will keep being dirtied against the root wb.
-
-v2: Updated for per-inode wb association.
+Cloning a bdi involves memory allocation which may fail.  In such
+cases, bdi_split_work_to_wbs() issues the base work directly and waits
+for its completion before proceeding to the next wb to guarantee
+forward progress and correctness under memory pressure.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
 ---
- fs/fs-writeback.c | 23 +++++++++++------------
- 1 file changed, 11 insertions(+), 12 deletions(-)
+ fs/fs-writeback.c | 96 ++++++++++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 91 insertions(+), 5 deletions(-)
 
 diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 57b2282..890cff1 100644
+index be374ae..57b2282 100644
 --- a/fs/fs-writeback.c
 +++ b/fs/fs-writeback.c
-@@ -1442,7 +1442,6 @@ static noinline void block_dump___mark_inode_dirty(struct inode *inode)
- void __mark_inode_dirty(struct inode *inode, int flags)
- {
- 	struct super_block *sb = inode->i_sb;
--	struct backing_dev_info *bdi = NULL;
- 	int dirtytime;
+@@ -289,6 +289,80 @@ static long wb_split_bdi_pages(struct bdi_writeback *wb, long nr_pages)
+ 		return DIV_ROUND_UP_ULL((u64)nr_pages * this_bw, tot_bw);
+ }
  
- 	trace_writeback_mark_inode_dirty(inode, flags);
-@@ -1512,21 +1511,21 @@ void __mark_inode_dirty(struct inode *inode, int flags)
- 		 * reposition it (that would break b_dirty time-ordering).
- 		 */
- 		if (!was_dirty) {
-+			struct bdi_writeback *wb = inode_to_wb(inode);
- 			bool wakeup_bdi = false;
--			bdi = inode_to_bdi(inode);
++/**
++ * wb_clone_and_queue_work - clone a wb_writeback_work and issue it to a wb
++ * @wb: target bdi_writeback
++ * @base_work: source wb_writeback_work
++ *
++ * Try to make a clone of @base_work and issue it to @wb.  If cloning
++ * succeeds, %true is returned; otherwise, @base_work is issued directly
++ * and %false is returned.  In the latter case, the caller is required to
++ * wait for @base_work's completion using wb_wait_for_single_work().
++ *
++ * A clone is auto-freed on completion.  @base_work never is.
++ */
++static bool wb_clone_and_queue_work(struct bdi_writeback *wb,
++				    struct wb_writeback_work *base_work)
++{
++	struct wb_writeback_work *work;
++
++	work = kmalloc(sizeof(*work), GFP_ATOMIC);
++	if (work) {
++		*work = *base_work;
++		work->auto_free = 1;
++		work->single_wait = 0;
++	} else {
++		work = base_work;
++		work->auto_free = 0;
++		work->single_wait = 1;
++	}
++	work->single_done = 0;
++	wb_queue_work(wb, work);
++	return work != base_work;
++}
++
++/**
++ * bdi_split_work_to_wbs - split a wb_writeback_work to all wb's of a bdi
++ * @bdi: target backing_dev_info
++ * @base_work: wb_writeback_work to issue
++ * @skip_if_busy: skip wb's which already have writeback in progress
++ *
++ * Split and issue @base_work to all wb's (bdi_writeback's) of @bdi which
++ * have dirty inodes.  If @base_work->nr_page isn't %LONG_MAX, it's
++ * distributed to the busy wbs according to each wb's proportion in the
++ * total active write bandwidth of @bdi.
++ */
++static void bdi_split_work_to_wbs(struct backing_dev_info *bdi,
++				  struct wb_writeback_work *base_work,
++				  bool skip_if_busy)
++{
++	long nr_pages = base_work->nr_pages;
++	int next_blkcg_id = 0;
++	struct bdi_writeback *wb;
++	struct wb_iter iter;
++
++	might_sleep();
++
++	if (!bdi_has_dirty_io(bdi))
++		return;
++restart:
++	rcu_read_lock();
++	bdi_for_each_wb(wb, bdi, &iter, next_blkcg_id) {
++		if (!wb_has_dirty_io(wb) ||
++		    (skip_if_busy && writeback_in_progress(wb)))
++			continue;
++
++		base_work->nr_pages = wb_split_bdi_pages(wb, nr_pages);
++		if (!wb_clone_and_queue_work(wb, base_work)) {
++			next_blkcg_id = wb->blkcg_css->id + 1;
++			rcu_read_unlock();
++			wb_wait_for_single_work(bdi, base_work);
++			goto restart;
++		}
++	}
++	rcu_read_unlock();
++}
++
+ #else	/* CONFIG_CGROUP_WRITEBACK */
  
- 			spin_unlock(&inode->i_lock);
--			spin_lock(&bdi->wb.list_lock);
-+			spin_lock(&wb->list_lock);
+ static long wb_split_bdi_pages(struct bdi_writeback *wb, long nr_pages)
+@@ -296,6 +370,21 @@ static long wb_split_bdi_pages(struct bdi_writeback *wb, long nr_pages)
+ 	return nr_pages;
+ }
  
--			WARN(bdi_cap_writeback_dirty(bdi) &&
--			     !test_bit(WB_registered, &bdi->wb.state),
--			     "bdi-%s not registered\n", bdi->name);
-+			WARN(bdi_cap_writeback_dirty(wb->bdi) &&
-+			     !test_bit(WB_registered, &wb->state),
-+			     "bdi-%s not registered\n", wb->bdi->name);
++static void bdi_split_work_to_wbs(struct backing_dev_info *bdi,
++				  struct wb_writeback_work *base_work,
++				  bool skip_if_busy)
++{
++	might_sleep();
++
++	if (bdi_has_dirty_io(bdi) &&
++	    (!skip_if_busy || !writeback_in_progress(&bdi->wb))) {
++		base_work->auto_free = 0;
++		base_work->single_wait = 0;
++		base_work->single_done = 0;
++		wb_queue_work(&bdi->wb, base_work);
++	}
++}
++
+ #endif	/* CONFIG_CGROUP_WRITEBACK */
  
- 			inode->dirtied_when = jiffies;
--			wakeup_bdi = inode_wb_list_move_locked(inode, &bdi->wb,
--					dirtytime ? &bdi->wb.b_dirty_time :
--						    &bdi->wb.b_dirty);
--			spin_unlock(&bdi->wb.list_lock);
-+			wakeup_bdi = inode_wb_list_move_locked(inode, wb,
-+					dirtytime ? &wb->b_dirty_time :
-+						    &wb->b_dirty);
-+			spin_unlock(&wb->list_lock);
- 			trace_writeback_dirty_inode_enqueue(inode);
+ void wb_start_writeback(struct bdi_writeback *wb, long nr_pages,
+@@ -1528,10 +1617,7 @@ static void __writeback_inodes_sb_nr(struct super_block *sb, unsigned long nr,
+ 		return;
+ 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
  
- 			/*
-@@ -1535,8 +1534,8 @@ void __mark_inode_dirty(struct inode *inode, int flags)
- 			 * to make sure background write-back happens
- 			 * later.
- 			 */
--			if (bdi_cap_writeback_dirty(bdi) && wakeup_bdi)
--				wb_wakeup_delayed(&bdi->wb);
-+			if (bdi_cap_writeback_dirty(wb->bdi) && wakeup_bdi)
-+				wb_wakeup_delayed(wb);
- 			return;
- 		}
- 	}
+-	if (skip_if_busy && writeback_in_progress(&bdi->wb))
+-		return;
+-
+-	wb_queue_work(&bdi->wb, &work);
++	bdi_split_work_to_wbs(sb->s_bdi, &work, skip_if_busy);
+ 	wb_wait_for_completion(bdi, &done);
+ }
+ 
+@@ -1629,7 +1715,7 @@ void sync_inodes_sb(struct super_block *sb)
+ 		return;
+ 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
+ 
+-	wb_queue_work(&bdi->wb, &work);
++	bdi_split_work_to_wbs(bdi, &work, false);
+ 	wb_wait_for_completion(bdi, &done);
+ 
+ 	wait_sb_inodes(sb);
 -- 
 2.1.0
 
