@@ -1,21 +1,21 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 19/48] bdi: separate out congested state into a separate struct
-Date: Mon, 23 Mar 2015 00:54:30 -0400
-Message-ID: <1427086499-15657-20-git-send-email-tj@kernel.org>
+Subject: [PATCH 34/48] writeback: implement bdi_for_each_wb()
+Date: Mon, 23 Mar 2015 00:54:45 -0400
+Message-ID: <1427086499-15657-35-git-send-email-tj@kernel.org>
 References: <1427086499-15657-1-git-send-email-tj@kernel.org>
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=uumLWApqEpiGEIwnT4vcimjNT6zW8I2yiY3F8cNw4tM=;
-        b=gBrdsC2MxndADRmI/5MJTMC9VgO+QvWHLlcSBtiaKPAbflLq7EUGdqX/alULr9ePEo
-         xzAKjU3xZG+lqqmWwZaP30U8pXmOPbpEGdf4UQ8S3z5qRrPHI1+209rlO9c0nKcZ/rKj
-         7kG1NsSMFdnBNZ+yYIPEdu6wedsimzBKOtlFXdB48g7VWktj9MCdWZDvVQdQX3NdrAOQ
-         bHjweBLLmj77tg+ots3b9NCB4fulYKJqpOcc1kx5cjlYQPT4O6NoEZ4cjXsbdvom0Lb5
-         fp0mlE8MZbX5pPuiiTsfpIR+YFJ765S+9Wvs6TT/4x66c8qIdfu3D24F+2w3asC3kksl
-         0M+g==
+        bh=5AEIioeAwrwj0ODLPxOF+bNdaSMnFgrfKsJ/G0Xfmio=;
+        b=mJrcwSkCtIVP9Nu+dGCpEMhZD86YQU78+5PIjuH5+vm6taKgpJGLVOhKR3w8ud3S81
+         qbIq2WTBZTPeCaHSoboPlSlIaigPfIOkfT6QwKk368++gL2dH7vV57tmyi7SOqQFZtVk
+         +1focKgjsDPwAwBX7mic4RfVJPvU5pR2wYiMCUTepfvf1X8uFM6wrI5OVKM+TplpA5vT
+         UOG3IvIXxkC3awZb01Tkv2yWcTf4Wz2kRBgFkPUqHRo/8yCjdFWSYxB9L16M2lK0Yyyh
+         jEVfNObrXpaqi80zpGhqszmBq6J167PiBA1gl/EsA4aXIQgjG4DA8w3lP9vXsd4Nyl1J
+         Qd8g==
 In-Reply-To: <1427086499-15657-1-git-send-email-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,123 +23,97 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-Currently, a wb's (bdi_writeback) congestion state is carried in its
-->state field; however, cgroup writeback support will require multiple
-wb's sharing the same congestion state.  This patch separates out
-congestion state into its own struct - struct bdi_writeback_congested.
-A new field wb field, wb_congested, points to its associated congested
-struct.  The default wb, bdi->wb, always points to bdi->wb_congested.
-
-While this patch adds a layer of indirection, it doesn't introduce any
-behavior changes.
+This will be used to implement bdi-wide operations which should be
+distributed across all its cgroup bdi_writebacks.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Jan Kara <jack@suse.cz>
 ---
- include/linux/backing-dev-defs.h | 14 ++++++++++++--
- include/linux/backing-dev.h      |  2 +-
- mm/backing-dev.c                 |  7 +++++--
- 3 files changed, 18 insertions(+), 5 deletions(-)
+ include/linux/backing-dev.h | 63 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 63 insertions(+)
 
-diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
-index aa18c4b..9e9eafa 100644
---- a/include/linux/backing-dev-defs.h
-+++ b/include/linux/backing-dev-defs.h
-@@ -16,12 +16,15 @@ struct dentry;
-  * Bits in bdi_writeback.state
-  */
- enum wb_state {
--	WB_async_congested,	/* The async (write) queue is getting full */
--	WB_sync_congested,	/* The sync queue is getting full */
- 	WB_registered,		/* bdi_register() was done */
- 	WB_writeback_running,	/* Writeback is in progress */
- };
- 
-+enum wb_congested_state {
-+	WB_async_congested,	/* The async (write) queue is getting full */
-+	WB_sync_congested,	/* The sync queue is getting full */
-+};
-+
- typedef int (congested_fn)(void *, int);
- 
- enum wb_stat_item {
-@@ -34,6 +37,10 @@ enum wb_stat_item {
- 
- #define WB_STAT_BATCH (8*(1+ilog2(nr_cpu_ids)))
- 
-+struct bdi_writeback_congested {
-+	unsigned long state;		/* WB_[a]sync_congested flags */
-+};
-+
- struct bdi_writeback {
- 	struct backing_dev_info *bdi;	/* our parent bdi */
- 
-@@ -48,6 +55,8 @@ struct bdi_writeback {
- 
- 	struct percpu_counter stat[NR_WB_STAT_ITEMS];
- 
-+	struct bdi_writeback_congested *congested;
-+
- 	unsigned long bw_time_stamp;	/* last time write bw is updated */
- 	unsigned long dirtied_stamp;
- 	unsigned long written_stamp;	/* pages written at bw_time_stamp */
-@@ -84,6 +93,7 @@ struct backing_dev_info {
- 	unsigned int max_ratio, max_prop_frac;
- 
- 	struct bdi_writeback wb;  /* default writeback info for this bdi */
-+	struct bdi_writeback_congested wb_congested;
- 
- 	struct device *dev;
- 
 diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index 7857820..bfdaa18 100644
+index 433b308..9dc4eea 100644
 --- a/include/linux/backing-dev.h
 +++ b/include/linux/backing-dev.h
-@@ -167,7 +167,7 @@ static inline int bdi_congested(struct backing_dev_info *bdi, int bdi_bits)
- {
- 	if (bdi->congested_fn)
- 		return bdi->congested_fn(bdi->congested_data, bdi_bits);
--	return (bdi->wb.state & bdi_bits);
-+	return (bdi->wb.congested->state & bdi_bits);
+@@ -384,6 +384,61 @@ static inline struct bdi_writeback *inode_to_wb(struct inode *inode)
+ 	return inode->i_wb;
  }
  
- static inline int bdi_read_congested(struct backing_dev_info *bdi)
-diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-index 805b287..5ec7658 100644
---- a/mm/backing-dev.c
-+++ b/mm/backing-dev.c
-@@ -383,6 +383,9 @@ int bdi_init(struct backing_dev_info *bdi)
- 	if (err)
- 		return err;
- 
-+	bdi->wb_congested.state = 0;
-+	bdi->wb.congested = &bdi->wb_congested;
++struct wb_iter {
++	int			start_blkcg_id;
++	struct radix_tree_iter	tree_iter;
++	void			**slot;
++};
 +
- 	return 0;
- }
- EXPORT_SYMBOL(bdi_init);
-@@ -504,7 +507,7 @@ void clear_bdi_congested(struct backing_dev_info *bdi, int sync)
- 	wait_queue_head_t *wqh = &congestion_wqh[sync];
++static inline struct bdi_writeback *__wb_iter_next(struct wb_iter *iter,
++						   struct backing_dev_info *bdi)
++{
++	struct radix_tree_iter *titer = &iter->tree_iter;
++
++	WARN_ON_ONCE(!rcu_read_lock_held());
++
++	if (iter->start_blkcg_id >= 0) {
++		iter->slot = radix_tree_iter_init(titer, iter->start_blkcg_id);
++		iter->start_blkcg_id = -1;
++	} else {
++		iter->slot = radix_tree_next_slot(iter->slot, titer, 0);
++	}
++
++	if (!iter->slot)
++		iter->slot = radix_tree_next_chunk(&bdi->cgwb_tree, titer, 0);
++	if (iter->slot)
++		return *iter->slot;
++	return NULL;
++}
++
++static inline struct bdi_writeback *__wb_iter_init(struct wb_iter *iter,
++						   struct backing_dev_info *bdi,
++						   int start_blkcg_id)
++{
++	iter->start_blkcg_id = start_blkcg_id;
++
++	if (start_blkcg_id)
++		return __wb_iter_next(iter, bdi);
++	else
++		return &bdi->wb;
++}
++
++/**
++ * bdi_for_each_wb - walk all wb's of a bdi in ascending blkcg ID order
++ * @wb_cur: cursor struct bdi_writeback pointer
++ * @bdi: bdi to walk wb's of
++ * @iter: pointer to struct wb_iter to be used as iteration buffer
++ * @start_blkcg_id: blkcg ID to start iteration from
++ *
++ * Iterate @wb_cur through the wb's (bdi_writeback's) of @bdi in ascending
++ * blkcg ID order starting from @start_blkcg_id.  @iter is struct wb_iter
++ * to be used as temp storage during iteration.  rcu_read_lock() must be
++ * held throughout iteration.
++ */
++#define bdi_for_each_wb(wb_cur, bdi, iter, start_blkcg_id)		\
++	for ((wb_cur) = __wb_iter_init(iter, bdi, start_blkcg_id);	\
++	     (wb_cur); (wb_cur) = __wb_iter_next(iter, bdi))
++
+ #else	/* CONFIG_CGROUP_WRITEBACK */
  
- 	bit = sync ? WB_sync_congested : WB_async_congested;
--	if (test_and_clear_bit(bit, &bdi->wb.state))
-+	if (test_and_clear_bit(bit, &bdi->wb.congested->state))
- 		atomic_dec(&nr_bdi_congested[sync]);
- 	smp_mb__after_atomic();
- 	if (waitqueue_active(wqh))
-@@ -517,7 +520,7 @@ void set_bdi_congested(struct backing_dev_info *bdi, int sync)
- 	enum wb_state bit;
- 
- 	bit = sync ? WB_sync_congested : WB_async_congested;
--	if (!test_and_set_bit(bit, &bdi->wb.state))
-+	if (!test_and_set_bit(bit, &bdi->wb.congested->state))
- 		atomic_inc(&nr_bdi_congested[sync]);
+ static inline bool inode_cgwb_enabled(struct inode *inode)
+@@ -446,6 +501,14 @@ static inline void wb_blkcg_offline(struct blkcg *blkcg)
+ {
  }
- EXPORT_SYMBOL(set_bdi_congested);
+ 
++struct wb_iter {
++	int		next_id;
++};
++
++#define bdi_for_each_wb(wb_cur, bdi, iter, start_blkcg_id)		\
++	for ((iter)->next_id = (start_blkcg_id);			\
++	     ({	(wb_cur) = !(iter)->next_id++ ? &(bdi)->wb : NULL; }); )
++
+ static inline int mapping_congested(struct address_space *mapping,
+ 				    struct task_struct *task, int cong_bits)
+ {
 -- 
 2.1.0
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
