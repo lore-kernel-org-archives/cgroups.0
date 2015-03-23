@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 7/8] writeback: add lockdep annotation to inode_to_wb()
-Date: Mon, 23 Mar 2015 01:25:43 -0400
-Message-ID: <1427088344-17542-8-git-send-email-tj@kernel.org>
+Subject: [PATCH 5/8] writeback: implement [locked_]inode_to_wb_and_lock_list()
+Date: Mon, 23 Mar 2015 01:25:41 -0400
+Message-ID: <1427088344-17542-6-git-send-email-tj@kernel.org>
 References: <1427088344-17542-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=oAA0vczux2BkSbmkopgYUpuZlLP5H4dmLZElsAg2HMA=;
-        b=jM6GJXK++xOfJP+gWYv6eCn2B7VZizi8QsKIa2qegmRuIOOR/qJghtwZCMOLh/pjEE
-         MWmHwAdFfqtfBSI25JfFdy/gULk2x04tYoIkij9wzGlG2wV7LAEbc4L11ccAYRRmOgJp
-         uHyQMBxqUJcDoPjOacgMoLTRbi4Wn52T778hn9ul9Iop6Jx6zVK3B0NeIjxt2qjrvGvX
-         T51q9jJ+DbBcjvG1u/A9oIj83/7UhWrgQxBn0CyraYUwCwePYHB2B8Ird21Y1I+iUCmM
-         5jbGu0aoU7UcWIY2MNRRgtKn0D6WGe7IhHZCrBfIN6uF3uJf6M1hKG29bjs5765WeQ68
-         HQOg==
+        bh=t7JPAltM30PxdaokAPkpj0z1sVnecHoslmdXNbM0L7k=;
+        b=pB8FLdmPyliXzgOQiT9qnYgmFJAnYifb8lXSiBsT5UOHwkZPC8KA5/6e3uPBpMbq1q
+         2LV9arPqcOT5jLm5lldJWlc3hdI4p5pdc0QONdSnNlOG3OBhWEyu/EXMQL2jbTySbCEp
+         bQeP2iwvT8ESfXozUKlqL3Eo1qXS77bSdmLTEBjpsZ1ktpJpOV9u3YDGkKgfKGVDlBjL
+         /QSuNHPAQ1O4vHd4NITHx0XbwfldtzxaKkb0HLRb4SbSK/g2viXSNA+mHZRTw1yKoYnl
+         dk8ZZrGsRLNienI9zoGGdhhqh9+u0Yv9LyU6pltqHfiOS940QuIBtYqsw7SD7F8LqQkD
+         iFnQ==
 In-Reply-To: <1427088344-17542-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,16 +23,21 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-With the previous two patches, all operations which acquire wb from
-inode are either under one of inode->i_lock, mapping->tree_lock or
-wb->list_lock, or protected by stat transaction, which will be
-depended upon by foreign inode wb switching.
+cgroup writeback currently assumes that inode to wb association
+doesn't change; however, with the planned foreign inode wb switching
+mechanism, the association will change dynamically.
 
-This patch adds lockdep assertion to inode_to_wb() so that usages
-outside the above list locks can be caught easily.
-inode_wb_stat_unlocked_begin() is an exception as it's usually
-protected by combination of !I_WB_SWITCH and rcu_read_lock().  It's
-updated to dereference inode->i_wb directly.
+When an inode needs to be put on one of the IO lists of its wb, the
+current code simply calls inode_to_wb() and locks the returned wb;
+however, with the planned wb switching, the association may change
+before locking the wb and may even get released.
+
+This patch implements [locked_]inode_to_wb_and_lock_list() which pins
+the associated wb while holding i_lock, releases it, acquires
+wb->list_lock and verifies that the association hasn't changed
+inbetween.  As the association will be protected by both locks among
+other things, this guarantees that the wb is the inode's associated wb
+until the list_lock is released.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
@@ -40,47 +45,124 @@ Cc: Jan Kara <jack@suse.cz>
 Cc: Wu Fengguang <fengguang.wu@intel.com>
 Cc: Greg Thelen <gthelen@google.com>
 ---
- include/linux/backing-dev.h | 17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+ fs/fs-writeback.c | 80 +++++++++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 75 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index 040be1a..b9937e5 100644
---- a/include/linux/backing-dev.h
-+++ b/include/linux/backing-dev.h
-@@ -326,10 +326,18 @@ wb_get_create_current(struct backing_dev_info *bdi, gfp_t gfp)
-  * inode_to_wb - determine the wb of an inode
-  * @inode: inode of interest
-  *
-- * Returns the wb @inode is currently associated with.
-+ * Returns the wb @inode is currently associated with.  The caller must be
-+ * holding either @inode->i_lock, @inode->i_mapping->tree_lock, or the
-+ * associated wb's list_lock.
-  */
- static inline struct bdi_writeback *inode_to_wb(struct inode *inode)
- {
-+#ifdef CONFIG_LOCKDEP
-+	WARN_ON_ONCE(debug_locks &&
-+		     (!lockdep_is_held(&inode->i_lock) &&
-+		      !lockdep_is_held(&inode->i_mapping->tree_lock) &&
-+		      !lockdep_is_held(&inode->i_wb->list_lock)));
-+#endif
- 	return inode->i_wb;
- }
- 
-@@ -360,7 +368,12 @@ inode_wb_stat_unlocked_begin(struct inode *inode, bool *lockedp)
- 
- 	if (unlikely(*lockedp))
- 		spin_lock_irq(&inode->i_mapping->tree_lock);
--	return inode_to_wb(inode);
-+
-+	/*
-+	 * Protected by either !I_WB_SWITCH + rcu_read_lock() or tree_lock.
-+	 * inode_to_wb() will bark.  Deref directly.
-+	 */
-+	return inode->i_wb;
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index 478d26e..e888c4b 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -246,6 +246,56 @@ void __inode_attach_wb(struct inode *inode, struct page *page)
  }
  
  /**
++ * locked_inode_to_wb_and_lock_list - determine a locked inode's wb and lock it
++ * @inode: inode of interest with i_lock held
++ *
++ * Returns @inode's wb with its list_lock held.  @inode->i_lock must be
++ * held on entry and is released on return.  The returned wb is guaranteed
++ * to stay @inode's associated wb until its list_lock is released.
++ */
++static struct bdi_writeback *
++locked_inode_to_wb_and_lock_list(struct inode *inode)
++	__releases(&inode->i_lock)
++	__acquires(&wb->list_lock)
++{
++	while (true) {
++		struct bdi_writeback *wb = inode_to_wb(inode);
++
++		/*
++		 * inode_to_wb() association is protected by both
++		 * @inode->i_lock and @wb->list_lock but list_lock nests
++		 * outside i_lock.  Drop i_lock and verify that the
++		 * association hasn't changed after acquiring list_lock.
++		 */
++		wb_get(wb);
++		spin_unlock(&inode->i_lock);
++		spin_lock(&wb->list_lock);
++		wb_put(wb);		/* not gonna deref it anymore */
++
++		if (likely(wb == inode_to_wb(inode)))
++			return wb;	/* @inode already has ref */
++
++		spin_unlock(&wb->list_lock);
++		cpu_relax();
++		spin_lock(&inode->i_lock);
++	}
++}
++
++/**
++ * inode_to_wb_and_lock_list - determine an inode's wb and lock it
++ * @inode: inode of interest
++ *
++ * Same as locked_inode_to_wb_and_lock_list() but @inode->i_lock isn't held
++ * on entry.
++ */
++static struct bdi_writeback *inode_to_wb_and_lock_list(struct inode *inode)
++	__acquires(&wb->list_lock)
++{
++	spin_lock(&inode->i_lock);
++	return locked_inode_to_wb_and_lock_list(inode);
++}
++
++/**
+  * wbc_attach_and_unlock_inode - associate wbc with target inode and unlock it
+  * @wbc: writeback_control of interest
+  * @inode: target inode
+@@ -591,6 +641,27 @@ restart:
+ 
+ #else	/* CONFIG_CGROUP_WRITEBACK */
+ 
++static struct bdi_writeback *
++locked_inode_to_wb_and_lock_list(struct inode *inode)
++	__releases(&inode->i_lock)
++	__acquires(&wb->list_lock)
++{
++	struct bdi_writeback *wb = inode_to_wb(inode);
++
++	spin_unlock(&inode->i_lock);
++	spin_lock(&wb->list_lock);
++	return wb;
++}
++
++static struct bdi_writeback *inode_to_wb_and_lock_list(struct inode *inode)
++	__acquires(&wb->list_lock)
++{
++	struct bdi_writeback *wb = inode_to_wb(inode);
++
++	spin_lock(&wb->list_lock);
++	return wb;
++}
++
+ static long wb_split_bdi_pages(struct bdi_writeback *wb, long nr_pages)
+ {
+ 	return nr_pages;
+@@ -666,9 +737,9 @@ void wb_start_background_writeback(struct bdi_writeback *wb)
+  */
+ void inode_wb_list_del(struct inode *inode)
+ {
+-	struct bdi_writeback *wb = inode_to_wb(inode);
++	struct bdi_writeback *wb;
+ 
+-	spin_lock(&wb->list_lock);
++	wb = inode_to_wb_and_lock_list(inode);
+ 	inode_wb_list_del_locked(inode, wb);
+ 	spin_unlock(&wb->list_lock);
+ }
+@@ -1713,11 +1784,10 @@ void __mark_inode_dirty(struct inode *inode, int flags)
+ 		 * reposition it (that would break b_dirty time-ordering).
+ 		 */
+ 		if (!was_dirty) {
+-			struct bdi_writeback *wb = inode_to_wb(inode);
++			struct bdi_writeback *wb;
+ 			bool wakeup_bdi = false;
+ 
+-			spin_unlock(&inode->i_lock);
+-			spin_lock(&wb->list_lock);
++			wb = locked_inode_to_wb_and_lock_list(inode);
+ 
+ 			WARN(bdi_cap_writeback_dirty(wb->bdi) &&
+ 			     !test_bit(WB_registered, &wb->state),
 -- 
 2.1.0
 
