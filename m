@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 32/48] writeback: don't issue wb_writeback_work if clean
-Date: Mon, 23 Mar 2015 00:54:43 -0400
-Message-ID: <1427086499-15657-33-git-send-email-tj@kernel.org>
+Subject: [PATCH 36/48] writeback: make laptop_mode_timer_fn() handle multiple bdi_writeback's
+Date: Mon, 23 Mar 2015 00:54:47 -0400
+Message-ID: <1427086499-15657-37-git-send-email-tj@kernel.org>
 References: <1427086499-15657-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=vEMfwI3kZNwq83ebgtyyn1rvhu39Qd7/IE2GuMIHurk=;
-        b=ARHUyYr6F9NNIod5AOO0lm599hUbpJoInL+NSMW9dYPnKxdoEZuYE40enxmNECXvKG
-         GqzkEmd5pNBrkmaGcBwg3WiNfJxjEsGWe1S4VPnFurTNyQvjUj12ZARH54VkHFA0ba5r
-         TXW+lAdCoNz8W4xm3LgmIMt96skicXfpikBoGpwmfBy6bWbI5bnjzGtD9XfJsHGG6rln
-         GX1/eamUWgUG2yo57EYglhIaVuSTNb+1vKpeHk4Xq9sYsYa6pYLkXSJN4RWbbfOKwhB/
-         /K9a9wRoMGaEePkDIFh6l/vUd/DLuBR+Vj04Gjs49/Oq/aRyoVG6KzMnyWxe5X7tOZn5
-         lsZg==
+        bh=pQqu2owq0roNLS6TopCwKs770U0QPgi+qeAm0ioDXbk=;
+        b=hvwdxmja5uq4ifj15p+waG19zGTdqQ6/auW5e9sHiy0mKMLXnq5t1Niza7pkLmp0ru
+         yU51dS41LXRHUd5jDxdbJt4rlfoBOhBckj7vpeZwGO5JJQDlLvIfM/i7EBcq+esMDT51
+         mAsjJHsIEQfkwaaOtPi/1ToUK4Kqmt/IF8rSFzqN6VH0mEauZo5W6gblcbTAI1V4sJbH
+         CuImEBdJxz+M4h3t5e9QeXiarSrKzlzgHnm/5OkaLeXHgsiS5kW5EWVR73KaFa7BmXia
+         ZQ/tCeBHFUQp+L1VieAMKt+HUCIjZ6VqRTF6/7+0dNhjzn0QxSfqQ+7nkmvQJ0rFa+B7
+         hvMw==
 In-Reply-To: <1427086499-15657-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,90 +23,49 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-There are several places in fs/fs-writeback.c which queues
-wb_writeback_work without checking whether the target wb
-(bdi_writeback) has dirty inodes or not.  The only thing
-wb_writeback_work does is writing back the dirty inodes for the target
-wb and queueing a work item for a clean wb is essentially noop.  There
-are some side effects such as bandwidth stats being updated and
-triggering tracepoints but these don't affect the operation in any
-meaningful way.
+For cgroup writeback support, all bdi-wide operations should be
+distributed to all its wb's (bdi_writeback's).
 
-This patch makes all writeback_inodes_sb_nr() and sync_inodes_sb()
-skip wb_queue_work() if the target bdi is clean.  Also, it moves
-dirtiness check from wakeup_flusher_threads() to
-__wb_start_writeback() so that all its callers benefit from the check.
-
-While the overhead incurred by scheduling a noop work isn't currently
-significant, the overhead may be higher with cgroup writeback support
-as we may end up issuing noop work items to a lot of clean wb's.
+This patch updates laptop_mode_timer_fn() so that it invokes
+wb_start_writeback() on all wb's rather than just the root one.  As
+the intent is writing out all dirty data, there's no reason to split
+the number of pages to write.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
 ---
- fs/fs-writeback.c | 18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
+ mm/page-writeback.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 7f44c02..3ceacbb 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -177,6 +177,9 @@ static void __wb_start_writeback(struct bdi_writeback *wb, long nr_pages,
- {
- 	struct wb_writeback_work *work;
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 7c3a555..fa37e73 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -1723,14 +1723,20 @@ void laptop_mode_timer_fn(unsigned long data)
+ 	struct request_queue *q = (struct request_queue *)data;
+ 	int nr_pages = global_page_state(NR_FILE_DIRTY) +
+ 		global_page_state(NR_UNSTABLE_NFS);
++	struct bdi_writeback *wb;
++	struct wb_iter iter;
  
-+	if (!wb_has_dirty_io(wb))
+ 	/*
+ 	 * We want to write everything out, not just down to the dirty
+ 	 * threshold
+ 	 */
+-	if (bdi_has_dirty_io(&q->backing_dev_info))
+-		wb_start_writeback(&q->backing_dev_info.wb, nr_pages, true,
+-				   WB_REASON_LAPTOP_TIMER);
++	if (!bdi_has_dirty_io(&q->backing_dev_info))
 +		return;
 +
- 	/*
- 	 * This is WB_SYNC_NONE writeback, so if allocation fails just
- 	 * wakeup the thread for old dirty data writeback
-@@ -1207,11 +1210,8 @@ void wakeup_flusher_threads(long nr_pages, enum wb_reason reason)
- 		nr_pages = get_nr_dirty_pages();
- 
- 	rcu_read_lock();
--	list_for_each_entry_rcu(bdi, &bdi_list, bdi_list) {
--		if (!bdi_has_dirty_io(bdi))
--			continue;
-+	list_for_each_entry_rcu(bdi, &bdi_list, bdi_list)
- 		__wb_start_writeback(&bdi->wb, nr_pages, false, reason);
--	}
- 	rcu_read_unlock();
++	bdi_for_each_wb(wb, &q->backing_dev_info, &iter, 0)
++		if (wb_has_dirty_io(wb))
++			wb_start_writeback(wb, nr_pages, true,
++					   WB_REASON_LAPTOP_TIMER);
  }
  
-@@ -1445,11 +1445,12 @@ void writeback_inodes_sb_nr(struct super_block *sb,
- 		.nr_pages		= nr,
- 		.reason			= reason,
- 	};
-+	struct backing_dev_info *bdi = sb->s_bdi;
- 
--	if (sb->s_bdi == &noop_backing_dev_info)
-+	if (!bdi_has_dirty_io(bdi) || bdi == &noop_backing_dev_info)
- 		return;
- 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
--	wb_queue_work(&sb->s_bdi->wb, &work);
-+	wb_queue_work(&bdi->wb, &work);
- 	wait_for_completion(&done);
- }
- EXPORT_SYMBOL(writeback_inodes_sb_nr);
-@@ -1527,13 +1528,14 @@ void sync_inodes_sb(struct super_block *sb)
- 		.reason		= WB_REASON_SYNC,
- 		.for_sync	= 1,
- 	};
-+	struct backing_dev_info *bdi = sb->s_bdi;
- 
- 	/* Nothing to do? */
--	if (sb->s_bdi == &noop_backing_dev_info)
-+	if (!bdi_has_dirty_io(bdi) || bdi == &noop_backing_dev_info)
- 		return;
- 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
- 
--	wb_queue_work(&sb->s_bdi->wb, &work);
-+	wb_queue_work(&bdi->wb, &work);
- 	wait_for_completion(&done);
- 
- 	wait_sb_inodes(sb);
+ /*
 -- 
 2.1.0
 
