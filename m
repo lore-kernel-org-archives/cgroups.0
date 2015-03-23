@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 08/48] blkcg: implement bio_associate_blkcg()
-Date: Mon, 23 Mar 2015 00:54:19 -0400
-Message-ID: <1427086499-15657-9-git-send-email-tj@kernel.org>
+Subject: [PATCH 07/48] blkcg: implement task_get_blkcg_css()
+Date: Mon, 23 Mar 2015 00:54:18 -0400
+Message-ID: <1427086499-15657-8-git-send-email-tj@kernel.org>
 References: <1427086499-15657-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=+DOS9EDFeydzccS3jbmDKoamxnq6YJmGgu6Upq3HCeo=;
-        b=ZoZfGfUAaVGAfOrDY9z2TwjQdEI4b0LPrGAMpe+GhYSjEGoxLFCjipCOF5Cd1X3JW2
-         0Kj/1zVizlEi5aedWWytIvSBO+SFF0k3Z1WODBrMdZGXCMC2moBdheFZ10iWkPIHSd0n
-         DlSzS344uGjC/M8GZcqPBIre5sP0qrwQ0zJhj0XRg6iZQ9Wtdg2cwKyjOixUoBOylZwC
-         YY0iW2I1TjueX/5aF96Cq1UhMVnqB7XCkp1XQmIdjRwvebipbg7nV0l/94y8hqKpKk7i
-         B8vDXQkvDBHEtalmy6QXf1ezTlWF4A0JUcabdkgXvb71aWC8UMFohjpBAqf1SbehltGj
-         lK3w==
+        bh=6QhiKnG6awNOOoUyM/l2PLv1fwkjCAIuOPIXvUwqjBQ=;
+        b=txlTzYWhgQ2rQfuMO4N4ZhR3fUre0G/uOibwyd2szu6WaZrZPeu1InQ0fIsl+Bss8c
+         PjIL/sSHshypWNcFGZDnZZ2evApD28mEb1dBif26CdJGdmhI0yAFcHeBvB6r8fikWTWt
+         SH8l4boBG/F+m4uESEkHSsXCdiOkSXyCpxGxFj58+yKDVSGmnvjdx/aaDD2X+Kpod1Ua
+         UXRn97aUqXxzuXHM+z20oInP6EBuEj6UUBjew8su3lN17/MgX/CcwyA5ewrczFNq0qlr
+         kL/3/89ULm057KrDB+oS6uFqWs38TvYhHdtu19jb1ZeY0bTM3ehUGtHbnqhXf8tcdnaN
+         j/wA==
 In-Reply-To: <1427086499-15657-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,83 +23,46 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-Currently, a bio can only be associated with the io_context and blkcg
-of %current using bio_associate_current().  This is too restrictive
-for cgroup writeback support.  Implement bio_associate_blkcg() which
-associates a bio with the specified blkcg.
-
-bio_associate_blkcg() leaves the io_context unassociated.
-bio_associate_current() is updated so that it considers a bio as
-already associated if it has a blkcg_css, instead of an io_context,
-associated with it.
+Implement a wrapper around task_get_css() to acquire the blkcg css for
+a given task.  The wrapper is necessary for cgroup writeback support
+as there will be places outside blkcg proper trying to acquire
+blkcg_css and blkio_cgrp_id will be undefined when !CONFIG_BLK_CGROUP.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Vivek Goyal <vgoyal@redhat.com>
 ---
- block/bio.c         | 24 +++++++++++++++++++++++-
- include/linux/bio.h |  3 +++
- 2 files changed, 26 insertions(+), 1 deletion(-)
+ include/linux/blk-cgroup.h | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/block/bio.c b/block/bio.c
-index 968683e..ab7517d 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -1971,6 +1971,28 @@ struct bio_set *bioset_create_nobvec(unsigned int pool_size, unsigned int front_
- EXPORT_SYMBOL(bioset_create_nobvec);
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index 65f0c17..4dc643f 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -195,6 +195,12 @@ static inline struct blkcg *bio_blkcg(struct bio *bio)
+ 	return task_blkcg(current);
+ }
  
- #ifdef CONFIG_BLK_CGROUP
-+
-+/**
-+ * bio_associate_blkcg - associate a bio with the specified blkcg
-+ * @bio: target bio
-+ * @blkcg_css: css of the blkcg to associate
-+ *
-+ * Associate @bio with the blkcg specified by @blkcg_css.  Block layer will
-+ * treat @bio as if it were issued by a task which belongs to the blkcg.
-+ *
-+ * This function takes an extra reference of @blkcg_css which will be put
-+ * when @bio is released.  The caller must own @bio and is responsible for
-+ * synchronizing calls to this function.
-+ */
-+int bio_associate_blkcg(struct bio *bio, struct cgroup_subsys_state *blkcg_css)
++static inline struct cgroup_subsys_state *
++task_get_blkcg_css(struct task_struct *task)
 +{
-+	if (unlikely(bio->bi_css))
-+		return -EBUSY;
-+	css_get(blkcg_css);
-+	bio->bi_css = blkcg_css;
-+	return 0;
++	return task_get_css(task, blkio_cgrp_id);
 +}
 +
  /**
-  * bio_associate_current - associate a bio with %current
-  * @bio: target bio
-@@ -1988,7 +2010,7 @@ int bio_associate_current(struct bio *bio)
- {
- 	struct io_context *ioc;
+  * blkcg_parent - get the parent of a blkcg
+  * @blkcg: blkcg of interest
+@@ -573,6 +579,12 @@ struct blkcg_policy {
  
--	if (bio->bi_ioc)
-+	if (bio->bi_css)
- 		return -EBUSY;
+ #define blkcg_root_css	((struct cgroup_subsys_state *)ERR_PTR(-EINVAL))
  
- 	ioc = current->io_context;
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index da3a127..cbc5d1d 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -469,9 +469,12 @@ extern void bvec_free(mempool_t *, struct bio_vec *, unsigned int);
- extern unsigned int bvec_nr_vecs(unsigned short idx);
++static inline struct cgroup_subsys_state *
++task_get_blkcg_css(struct task_struct *task)
++{
++	return NULL;
++}
++
+ #ifdef CONFIG_BLOCK
  
- #ifdef CONFIG_BLK_CGROUP
-+int bio_associate_blkcg(struct bio *bio, struct cgroup_subsys_state *blkcg_css);
- int bio_associate_current(struct bio *bio);
- void bio_disassociate_task(struct bio *bio);
- #else	/* CONFIG_BLK_CGROUP */
-+static inline int bio_associate_blkcg(struct bio *bio,
-+			struct cgroup_subsys_state *blkcg_css) { return 0; }
- static inline int bio_associate_current(struct bio *bio) { return -ENOENT; }
- static inline void bio_disassociate_task(struct bio *bio) { }
- #endif	/* CONFIG_BLK_CGROUP */
+ static inline struct blkcg_gq *blkg_lookup(struct blkcg *blkcg, void *key) { return NULL; }
 -- 
 2.1.0
 
