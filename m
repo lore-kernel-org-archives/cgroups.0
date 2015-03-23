@@ -1,170 +1,57 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 5/8] writeback: implement [locked_]inode_to_wb_and_lock_list()
-Date: Mon, 23 Mar 2015 01:25:41 -0400
-Message-ID: <1427088344-17542-6-git-send-email-tj@kernel.org>
-References: <1427088344-17542-1-git-send-email-tj@kernel.org>
+Subject: Re: [PATCH 18/18] mm: vmscan: remove memcg stalling on writeback
+ pages during direct reclaim
+Date: Mon, 23 Mar 2015 01:27:22 -0400
+Message-ID: <20150323052722.GB8991@htj.duckdns.org>
+References: <1427087267-16592-1-git-send-email-tj@kernel.org>
+ <1427087267-16592-19-git-send-email-tj@kernel.org>
+Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=t7JPAltM30PxdaokAPkpj0z1sVnecHoslmdXNbM0L7k=;
-        b=pB8FLdmPyliXzgOQiT9qnYgmFJAnYifb8lXSiBsT5UOHwkZPC8KA5/6e3uPBpMbq1q
-         2LV9arPqcOT5jLm5lldJWlc3hdI4p5pdc0QONdSnNlOG3OBhWEyu/EXMQL2jbTySbCEp
-         bQeP2iwvT8ESfXozUKlqL3Eo1qXS77bSdmLTEBjpsZ1ktpJpOV9u3YDGkKgfKGVDlBjL
-         /QSuNHPAQ1O4vHd4NITHx0XbwfldtzxaKkb0HLRb4SbSK/g2viXSNA+mHZRTw1yKoYnl
-         dk8ZZrGsRLNienI9zoGGdhhqh9+u0Yv9LyU6pltqHfiOS940QuIBtYqsw7SD7F8LqQkD
-         iFnQ==
-In-Reply-To: <1427088344-17542-1-git-send-email-tj@kernel.org>
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=0zOEk+WtE6DHxs7HM0d3EITbpJ84MWi6PFD6UAj7ZeA=;
+        b=ijQeYJWWGLYco8ESp7M/R4EJaEgUU5lSLpg81gujnAKNueqNXB51jGVqqKquAuubsc
+         xozc659n/rZYen+xs9IQnXQM2uZ15FoZB3aA4JFS51yZlySjELEkTfSI2+5SIkfeOY+K
+         1K8v74vsZFZNNr+6F1ujf0D3sK9msH75vSdIWLfnFRDYfbilEqWznWCFbQQG2RD9lXbA
+         ogdim+pezayClBdL9hgqIJleliQPrmGb07CV1PsEwQqTgH7GP3DVHFIDOLsGEIQ3/bwQ
+         pZ024PPOaYwLN1LtFPIdR/+cI1fNw0a2JRy26bgwu+DqbrcOJwNU+Ce756JFchPM8coH
+         6+5A==
+Content-Disposition: inline
+In-Reply-To: <1427087267-16592-19-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Vladimir Davydov <vdavydov@parallels.com>
 
-cgroup writeback currently assumes that inode to wb association
-doesn't change; however, with the planned foreign inode wb switching
-mechanism, the association will change dynamically.
+On Mon, Mar 23, 2015 at 01:07:47AM -0400, Tejun Heo wrote:
+> Because writeback wasn't cgroup aware before, the usual dirty
+> throttling mechanism in balance_dirty_pages() didn't work for
+> processes under memcg limit.  The writeback path didn't know how much
+> memory is available or how fast the dirty pages are being written out
+> for a given memcg and balance_dirty_pages() didn't have any measure of
+> IO back pressure for the memcg.
+> 
+> To work around the issue, memcg implemented an ad-hoc dirty throttling
+> mechanism in the direct reclaim path by stalling on pages under
+> writeback which are encountered during direct reclaim scan.  This is
+> rather ugly and crude - none of the configurability, fairness, or
+> bandwidth-proportional distribution of the normal path.
+> 
+> The previous patches implemented proper memcg aware dirty throttling
+> and the ad-hoc mechanism is no longer necessary.  Remove it.
 
-When an inode needs to be put on one of the IO lists of its wb, the
-current code simply calls inode_to_wb() and locks the returned wb;
-however, with the planned wb switching, the association may change
-before locking the wb and may even get released.
+Oops, just realized that this can't be removed, at least yet.
+!unified path still depends on it.  I'll update the patch to disable
+these checks only on the unified hierarchy.
 
-This patch implements [locked_]inode_to_wb_and_lock_list() which pins
-the associated wb while holding i_lock, releases it, acquires
-wb->list_lock and verifies that the association hasn't changed
-inbetween.  As the association will be protected by both locks among
-other things, this guarantees that the wb is the inode's associated wb
-until the list_lock is released.
+Thanks.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Jan Kara <jack@suse.cz>
-Cc: Wu Fengguang <fengguang.wu@intel.com>
-Cc: Greg Thelen <gthelen@google.com>
----
- fs/fs-writeback.c | 80 +++++++++++++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 75 insertions(+), 5 deletions(-)
-
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 478d26e..e888c4b 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -246,6 +246,56 @@ void __inode_attach_wb(struct inode *inode, struct page *page)
- }
- 
- /**
-+ * locked_inode_to_wb_and_lock_list - determine a locked inode's wb and lock it
-+ * @inode: inode of interest with i_lock held
-+ *
-+ * Returns @inode's wb with its list_lock held.  @inode->i_lock must be
-+ * held on entry and is released on return.  The returned wb is guaranteed
-+ * to stay @inode's associated wb until its list_lock is released.
-+ */
-+static struct bdi_writeback *
-+locked_inode_to_wb_and_lock_list(struct inode *inode)
-+	__releases(&inode->i_lock)
-+	__acquires(&wb->list_lock)
-+{
-+	while (true) {
-+		struct bdi_writeback *wb = inode_to_wb(inode);
-+
-+		/*
-+		 * inode_to_wb() association is protected by both
-+		 * @inode->i_lock and @wb->list_lock but list_lock nests
-+		 * outside i_lock.  Drop i_lock and verify that the
-+		 * association hasn't changed after acquiring list_lock.
-+		 */
-+		wb_get(wb);
-+		spin_unlock(&inode->i_lock);
-+		spin_lock(&wb->list_lock);
-+		wb_put(wb);		/* not gonna deref it anymore */
-+
-+		if (likely(wb == inode_to_wb(inode)))
-+			return wb;	/* @inode already has ref */
-+
-+		spin_unlock(&wb->list_lock);
-+		cpu_relax();
-+		spin_lock(&inode->i_lock);
-+	}
-+}
-+
-+/**
-+ * inode_to_wb_and_lock_list - determine an inode's wb and lock it
-+ * @inode: inode of interest
-+ *
-+ * Same as locked_inode_to_wb_and_lock_list() but @inode->i_lock isn't held
-+ * on entry.
-+ */
-+static struct bdi_writeback *inode_to_wb_and_lock_list(struct inode *inode)
-+	__acquires(&wb->list_lock)
-+{
-+	spin_lock(&inode->i_lock);
-+	return locked_inode_to_wb_and_lock_list(inode);
-+}
-+
-+/**
-  * wbc_attach_and_unlock_inode - associate wbc with target inode and unlock it
-  * @wbc: writeback_control of interest
-  * @inode: target inode
-@@ -591,6 +641,27 @@ restart:
- 
- #else	/* CONFIG_CGROUP_WRITEBACK */
- 
-+static struct bdi_writeback *
-+locked_inode_to_wb_and_lock_list(struct inode *inode)
-+	__releases(&inode->i_lock)
-+	__acquires(&wb->list_lock)
-+{
-+	struct bdi_writeback *wb = inode_to_wb(inode);
-+
-+	spin_unlock(&inode->i_lock);
-+	spin_lock(&wb->list_lock);
-+	return wb;
-+}
-+
-+static struct bdi_writeback *inode_to_wb_and_lock_list(struct inode *inode)
-+	__acquires(&wb->list_lock)
-+{
-+	struct bdi_writeback *wb = inode_to_wb(inode);
-+
-+	spin_lock(&wb->list_lock);
-+	return wb;
-+}
-+
- static long wb_split_bdi_pages(struct bdi_writeback *wb, long nr_pages)
- {
- 	return nr_pages;
-@@ -666,9 +737,9 @@ void wb_start_background_writeback(struct bdi_writeback *wb)
-  */
- void inode_wb_list_del(struct inode *inode)
- {
--	struct bdi_writeback *wb = inode_to_wb(inode);
-+	struct bdi_writeback *wb;
- 
--	spin_lock(&wb->list_lock);
-+	wb = inode_to_wb_and_lock_list(inode);
- 	inode_wb_list_del_locked(inode, wb);
- 	spin_unlock(&wb->list_lock);
- }
-@@ -1713,11 +1784,10 @@ void __mark_inode_dirty(struct inode *inode, int flags)
- 		 * reposition it (that would break b_dirty time-ordering).
- 		 */
- 		if (!was_dirty) {
--			struct bdi_writeback *wb = inode_to_wb(inode);
-+			struct bdi_writeback *wb;
- 			bool wakeup_bdi = false;
- 
--			spin_unlock(&inode->i_lock);
--			spin_lock(&wb->list_lock);
-+			wb = locked_inode_to_wb_and_lock_list(inode);
- 
- 			WARN(bdi_cap_writeback_dirty(wb->bdi) &&
- 			     !test_bit(WB_registered, &wb->state),
 -- 
-2.1.0
+tejun
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
