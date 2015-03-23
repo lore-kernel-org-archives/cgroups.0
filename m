@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 25/48] writeback: make congestion functions per bdi_writeback
-Date: Mon, 23 Mar 2015 00:54:36 -0400
-Message-ID: <1427086499-15657-26-git-send-email-tj@kernel.org>
+Subject: [PATCH 22/48] writeback, blkcg: associate each blkcg_gq with the corresponding bdi_writeback_congested
+Date: Mon, 23 Mar 2015 00:54:33 -0400
+Message-ID: <1427086499-15657-23-git-send-email-tj@kernel.org>
 References: <1427086499-15657-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=fwmzCecPhUbF6TBPBybbiB4WM0A70f/BFt+sVMNz6ig=;
-        b=DaZpbmQSeoCn0LCc3l5ipvEeBujAzRXPy8dsO22AqHtpuJeI9qxIvaNnBdVxaZST8f
-         BFEwIs3LPld/lXnXj3Bv95ijg1enSsGBBjke3qganqzLMpemeQ1Xm6+IgNFo4Nj95906
-         cVuV6yzuL13Esigoce+PaFeAD1uvC3iGXisstUKaVuVXgYOlFrQcnnOIsPcNEru13S3m
-         laaXKiYycZfS+LNlsDIiaiKq2MkojoBwyeXcY3NxjKqSiTJO7ARNPVrqTBTjG5q65nA0
-         EjcghkrYa9Wnyt02QOxgkssniWRan7eub3aUcHr3huE+3nCrIuozKG+J0PEW1kLk6Hr4
-         V5PA==
+        bh=EA5WoXgf+nQSd+fvkQrY9ppYhcVKwHlH1u27JsKW0uA=;
+        b=oTSMGqv0ynWNj/VIkIyJzqZIkhh1X8owawCLuUVB/sKHoDnrSEdxVQZZrFmzcGnKSI
+         v1+wC4tJ9coDEtggGzjdoFWI8sl8HqKmfUeKnB8HI+N23gmhOkFFWyWr8BcoRR9bCveH
+         m+db1T8A/IciAdapfZdLJGTisWQqo76BeAD/tqsP+iSilnKff085r82tAGWFPm3Q6JPx
+         2/YZRw4V6m+mmgG555rg09aZXFZpxcpzZNZMMxP7n3dVwK6/2Xs73EQuOPKzhFiJf9nc
+         gonlGOIOg1BQpqQY1wYj8+sqQGq8yRrNlqxGLVpzDRdXpeXmC+ob7loOrd6kkK7x5Wwj
+         Bx1A==
 In-Reply-To: <1427086499-15657-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,173 +23,105 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-Currently, all congestion functions take bdi (backing_dev_info) and
-always operate on the root wb (bdi->wb) and the congestion state from
-the block layer is propagated only for the root blkcg.  This patch
-introduces {set|clear}_wb_congested() and wb_congested() which take a
-bdi_writeback_congested and bdi_writeback respectively.  The bdi
-counteparts are now wrappers invoking the wb based functions on
-@bdi->wb.
+A blkg (blkcg_gq) can be congested and decongested independently from
+other blkgs on the same request_queue.  Accordingly, for cgroup
+writeback support, the congestion status at bdi (backing_dev_info)
+should be split and updated separately from matching blkg's.
 
-While converting clear_bdi_congested() to clear_wb_congested(), the
-local variable declaration order between @wqh and @bit is swapped for
-cosmetic reason.
+This patch prepares by adding blkg->wb_congested and associating a
+blkg with its matching per-blkcg bdi_writeback_congested on creation.
 
-This patch just adds the new wb based functions.  The following
-patches will apply them.
-
-v2: Updated for bdi_writeback_congested.
+v2: Updated to associate bdi_writeback_congested instead of
+    bdi_writeback.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
+Cc: Vivek Goyal <vgoyal@redhat.com>
 ---
- include/linux/backing-dev-defs.h | 14 +++++++++++--
- include/linux/backing-dev.h      | 45 +++++++++++++++++++++++-----------------
- mm/backing-dev.c                 | 22 ++++++++++----------
- 3 files changed, 49 insertions(+), 32 deletions(-)
+ block/blk-cgroup.c         | 17 +++++++++++++++--
+ include/linux/blk-cgroup.h |  6 ++++++
+ 2 files changed, 21 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
-index a1e9c40..eb38676 100644
---- a/include/linux/backing-dev-defs.h
-+++ b/include/linux/backing-dev-defs.h
-@@ -163,7 +163,17 @@ enum {
- 	BLK_RW_SYNC	= 1,
- };
- 
--void clear_bdi_congested(struct backing_dev_info *bdi, int sync);
--void set_bdi_congested(struct backing_dev_info *bdi, int sync);
-+void clear_wb_congested(struct bdi_writeback_congested *congested, int sync);
-+void set_wb_congested(struct bdi_writeback_congested *congested, int sync);
-+
-+static inline void clear_bdi_congested(struct backing_dev_info *bdi, int sync)
-+{
-+	clear_wb_congested(bdi->wb.congested, sync);
-+}
-+
-+static inline void set_bdi_congested(struct backing_dev_info *bdi, int sync)
-+{
-+	set_wb_congested(bdi->wb.congested, sync);
-+}
- 
- #endif	/* __LINUX_BACKING_DEV_DEFS_H */
-diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index 8ae59df..2c498a2 100644
---- a/include/linux/backing-dev.h
-+++ b/include/linux/backing-dev.h
-@@ -167,27 +167,13 @@ static inline struct backing_dev_info *inode_to_bdi(struct inode *inode)
- 	return sb->s_bdi;
- }
- 
--static inline int bdi_congested(struct backing_dev_info *bdi, int bdi_bits)
-+static inline int wb_congested(struct bdi_writeback *wb, int cong_bits)
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index d2b1cbf..8b6372b 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -182,6 +182,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+ 				    struct blkcg_gq *new_blkg)
  {
--	if (bdi->congested_fn)
--		return bdi->congested_fn(bdi->congested_data, bdi_bits);
--	return (bdi->wb.congested->state & bdi_bits);
--}
--
--static inline int bdi_read_congested(struct backing_dev_info *bdi)
--{
--	return bdi_congested(bdi, 1 << WB_sync_congested);
--}
--
--static inline int bdi_write_congested(struct backing_dev_info *bdi)
--{
--	return bdi_congested(bdi, 1 << WB_async_congested);
--}
-+	struct backing_dev_info *bdi = wb->bdi;
+ 	struct blkcg_gq *blkg;
++	struct bdi_writeback_congested *wb_congested;
+ 	int i, ret;
  
--static inline int bdi_rw_congested(struct backing_dev_info *bdi)
--{
--	return bdi_congested(bdi, (1 << WB_sync_congested) |
--				  (1 << WB_async_congested));
-+	if (bdi->congested_fn)
-+		return bdi->congested_fn(bdi->congested_data, cong_bits);
-+	return wb->congested->state & cong_bits;
+ 	WARN_ON_ONCE(!rcu_read_lock_held());
+@@ -193,22 +194,30 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+ 		goto err_free_blkg;
+ 	}
+ 
++	wb_congested = wb_congested_get_create(&q->backing_dev_info,
++					       blkcg->css.id, GFP_ATOMIC);
++	if (!wb_congested) {
++		ret = -ENOMEM;
++		goto err_put_css;
++	}
++
+ 	/* allocate */
+ 	if (!new_blkg) {
+ 		new_blkg = blkg_alloc(blkcg, q, GFP_ATOMIC);
+ 		if (unlikely(!new_blkg)) {
+ 			ret = -ENOMEM;
+-			goto err_put_css;
++			goto err_put_congested;
+ 		}
+ 	}
+ 	blkg = new_blkg;
++	blkg->wb_congested = wb_congested;
+ 
+ 	/* link parent */
+ 	if (blkcg_parent(blkcg)) {
+ 		blkg->parent = __blkg_lookup(blkcg_parent(blkcg), q, false);
+ 		if (WARN_ON_ONCE(!blkg->parent)) {
+ 			ret = -EINVAL;
+-			goto err_put_css;
++			goto err_put_congested;
+ 		}
+ 		blkg_get(blkg->parent);
+ 	}
+@@ -250,6 +259,8 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+ 	blkg_put(blkg);
+ 	return ERR_PTR(ret);
+ 
++err_put_congested:
++	wb_congested_put(wb_congested);
+ err_put_css:
+ 	css_put(&blkcg->css);
+ err_free_blkg:
+@@ -405,6 +416,8 @@ void __blkg_release_rcu(struct rcu_head *rcu_head)
+ 	if (blkg->parent)
+ 		blkg_put(blkg->parent);
+ 
++	wb_congested_put(blkg->wb_congested);
++
+ 	blkg_free(blkg);
  }
+ EXPORT_SYMBOL_GPL(__blkg_release_rcu);
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index 3033eb1..07a32b8 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -99,6 +99,12 @@ struct blkcg_gq {
+ 	struct hlist_node		blkcg_node;
+ 	struct blkcg			*blkcg;
  
- long congestion_wait(int sync, long timeout);
-@@ -454,4 +440,25 @@ static inline void wb_blkcg_offline(struct blkcg *blkcg)
- 
- #endif	/* CONFIG_CGROUP_WRITEBACK */
- 
-+static inline int bdi_congested(struct backing_dev_info *bdi, int cong_bits)
-+{
-+	return wb_congested(&bdi->wb, cong_bits);
-+}
++	/*
++	 * Each blkg gets congested separately and the congestion state is
++	 * propagated to the matching bdi_writeback_congested.
++	 */
++	struct bdi_writeback_congested	*wb_congested;
 +
-+static inline int bdi_read_congested(struct backing_dev_info *bdi)
-+{
-+	return bdi_congested(bdi, 1 << WB_sync_congested);
-+}
-+
-+static inline int bdi_write_congested(struct backing_dev_info *bdi)
-+{
-+	return bdi_congested(bdi, 1 << WB_async_congested);
-+}
-+
-+static inline int bdi_rw_congested(struct backing_dev_info *bdi)
-+{
-+	return bdi_congested(bdi, (1 << WB_sync_congested) |
-+				  (1 << WB_async_congested));
-+}
-+
- #endif	/* _LINUX_BACKING_DEV_H */
-diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-index 9d5a75e..7721e7a 100644
---- a/mm/backing-dev.c
-+++ b/mm/backing-dev.c
-@@ -897,31 +897,31 @@ static wait_queue_head_t congestion_wqh[2] = {
- 		__WAIT_QUEUE_HEAD_INITIALIZER(congestion_wqh[0]),
- 		__WAIT_QUEUE_HEAD_INITIALIZER(congestion_wqh[1])
- 	};
--static atomic_t nr_bdi_congested[2];
-+static atomic_t nr_wb_congested[2];
- 
--void clear_bdi_congested(struct backing_dev_info *bdi, int sync)
-+void clear_wb_congested(struct bdi_writeback_congested *congested, int sync)
- {
--	enum wb_state bit;
- 	wait_queue_head_t *wqh = &congestion_wqh[sync];
-+	enum wb_state bit;
- 
- 	bit = sync ? WB_sync_congested : WB_async_congested;
--	if (test_and_clear_bit(bit, &bdi->wb.congested->state))
--		atomic_dec(&nr_bdi_congested[sync]);
-+	if (test_and_clear_bit(bit, &congested->state))
-+		atomic_dec(&nr_wb_congested[sync]);
- 	smp_mb__after_atomic();
- 	if (waitqueue_active(wqh))
- 		wake_up(wqh);
- }
--EXPORT_SYMBOL(clear_bdi_congested);
-+EXPORT_SYMBOL(clear_wb_congested);
- 
--void set_bdi_congested(struct backing_dev_info *bdi, int sync)
-+void set_wb_congested(struct bdi_writeback_congested *congested, int sync)
- {
- 	enum wb_state bit;
- 
- 	bit = sync ? WB_sync_congested : WB_async_congested;
--	if (!test_and_set_bit(bit, &bdi->wb.congested->state))
--		atomic_inc(&nr_bdi_congested[sync]);
-+	if (!test_and_set_bit(bit, &congested->state))
-+		atomic_inc(&nr_wb_congested[sync]);
- }
--EXPORT_SYMBOL(set_bdi_congested);
-+EXPORT_SYMBOL(set_wb_congested);
- 
- /**
-  * congestion_wait - wait for a backing_dev to become uncongested
-@@ -980,7 +980,7 @@ long wait_iff_congested(struct zone *zone, int sync, long timeout)
- 	 * encountered in the current zone, yield if necessary instead
- 	 * of sleeping on the congestion queue
- 	 */
--	if (atomic_read(&nr_bdi_congested[sync]) == 0 ||
-+	if (atomic_read(&nr_wb_congested[sync]) == 0 ||
- 	    !test_bit(ZONE_CONGESTED, &zone->flags)) {
- 		cond_resched();
+ 	/* all non-root blkcg_gq's are guaranteed to have access to parent */
+ 	struct blkcg_gq			*parent;
  
 -- 
 2.1.0
