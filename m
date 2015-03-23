@@ -1,183 +1,62 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 44/48] writeback: make writeback initiation functions handle multiple bdi_writeback's
-Date: Mon, 23 Mar 2015 00:54:55 -0400
-Message-ID: <1427086499-15657-45-git-send-email-tj@kernel.org>
+Subject: [PATCH 47/48] mpage: make __mpage_writepage() honor cgroup writeback
+Date: Mon, 23 Mar 2015 00:54:58 -0400
+Message-ID: <1427086499-15657-48-git-send-email-tj@kernel.org>
 References: <1427086499-15657-1-git-send-email-tj@kernel.org>
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=7L+cSCKCvQmA2eqOLxyQ84JXyFzuGTPm+LcHY1iGDAQ=;
-        b=AAkG8HAN6miROmS8PiziE27M7b2jtDUbtwsfah0fTXITaUJgHr+Vi/OyFsegOjN3Kv
-         VntHPs1ikydIBVG1BJfZBiC7oRs/yb1MBaZzhWubSybjBbrv1Wf6kFTpDslUgl7zlYaP
-         VJQXSQPrbG9QOMbITyBKpnQCwLD1l3VEEVKo/EDVIoWLPVJf0iFV23k6G7ZK/ifQGgp+
-         45IYCmo0UuBrNBQXFaNogJYF177NCcL71tr0pUkb6YA1MxcjOn7oFKJZAp0DU3hlvHzo
-         yWxTBuX54keS+7xI7CXvUiq3X/vLg7tf7HimhH8rGt5h5HicMBZAOWPDCij/w8DkGWid
-         9oyw==
+        bh=qi6fTLlBmmMn0loeK4Kt5MDFabz2aiXEo7lrLCuuRu4=;
+        b=PYVRCCQMnRYhw8247xzkFIoi8AHyA2jdKakA9sHHob7Yq0/fCv82Dd4to7JWP6bv+C
+         IHhs9nLnM5P2wa0JRZZ9twBUAOkB/x7LxMkNdFUovfElrWyiGwcMeMm+AEusiDqnEmj5
+         y+JgC96Qt81l0h3KvflcXbNsfY3FUqBnvM+NVD7DnCBLOB78cjy0rGGTLCSDSgHxfN+W
+         EU3ryVFEYUl5KdX5Y7WXBIg3jH1whN9goiuPq56sPslk7nzd4QdR7Pv93doT+/HJdwfD
+         5RdE4Js5uWzqlcaQti+4rexktim+5i20W2DE93ZhKBvxYrB/uAIv2ESqv+Rl6x1pqYVl
+         N24A==
 In-Reply-To: <1427086499-15657-1-git-send-email-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>
 
-[try_]writeback_inodes_sb[_nr]() and sync_inodes_sb() currently only
-handle dirty inodes on the root wb (bdi_writeback) of the target bdi.
-This patch implements bdi_split_work_to_wbs() and use it to make these
-functions handle multiple wb's.
+__mpage_writepage() is used to implement mpage_writepages() which in
+turn is used for ->writepages() of various filesystems.  All writeback
+logic is now updated to handle cgroup writeback and the block cgroup
+to issue IOs for is encoded in writeback_control and can be retrieved
+from the inode; however, __mpage_writepage() currently ignores the
+blkcg indicated by the inode and issues all bio's without explicit
+blkcg association.
 
-bdi_split_work_to_wbs() takes a base wb_writeback_work and create
-clones of it and issue them to the wb's of the target bdi.  The base
-work's nr_pages is distributed using wb_split_bdi_pages() -
-ie. according to each wb's write bandwidth's proportion in the bdi.
+This patch updates __mpage_writepage() so that the issued bio's are
+associated with inode_to_writeback_blkcg_css(inode).
 
-Cloning a bdi involves memory allocation which may fail.  In such
-cases, bdi_split_work_to_wbs() issues the base work directly and waits
-for its completion before proceeding to the next wb to guarantee
-forward progress and correctness under memory pressure.
+v2: Updated for per-inode wb association.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>
 ---
- fs/fs-writeback.c | 96 ++++++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 91 insertions(+), 5 deletions(-)
+ fs/mpage.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index be374ae..57b2282 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -289,6 +289,80 @@ static long wb_split_bdi_pages(struct bdi_writeback *wb, long nr_pages)
- 		return DIV_ROUND_UP_ULL((u64)nr_pages * this_bw, tot_bw);
- }
- 
-+/**
-+ * wb_clone_and_queue_work - clone a wb_writeback_work and issue it to a wb
-+ * @wb: target bdi_writeback
-+ * @base_work: source wb_writeback_work
-+ *
-+ * Try to make a clone of @base_work and issue it to @wb.  If cloning
-+ * succeeds, %true is returned; otherwise, @base_work is issued directly
-+ * and %false is returned.  In the latter case, the caller is required to
-+ * wait for @base_work's completion using wb_wait_for_single_work().
-+ *
-+ * A clone is auto-freed on completion.  @base_work never is.
-+ */
-+static bool wb_clone_and_queue_work(struct bdi_writeback *wb,
-+				    struct wb_writeback_work *base_work)
-+{
-+	struct wb_writeback_work *work;
+diff --git a/fs/mpage.c b/fs/mpage.c
+index 3e79220..a3ccb0b 100644
+--- a/fs/mpage.c
++++ b/fs/mpage.c
+@@ -605,6 +605,8 @@ alloc_new:
+ 				bio_get_nr_vecs(bdev), GFP_NOFS|__GFP_HIGH);
+ 		if (bio == NULL)
+ 			goto confused;
 +
-+	work = kmalloc(sizeof(*work), GFP_ATOMIC);
-+	if (work) {
-+		*work = *base_work;
-+		work->auto_free = 1;
-+		work->single_wait = 0;
-+	} else {
-+		work = base_work;
-+		work->auto_free = 0;
-+		work->single_wait = 1;
-+	}
-+	work->single_done = 0;
-+	wb_queue_work(wb, work);
-+	return work != base_work;
-+}
-+
-+/**
-+ * bdi_split_work_to_wbs - split a wb_writeback_work to all wb's of a bdi
-+ * @bdi: target backing_dev_info
-+ * @base_work: wb_writeback_work to issue
-+ * @skip_if_busy: skip wb's which already have writeback in progress
-+ *
-+ * Split and issue @base_work to all wb's (bdi_writeback's) of @bdi which
-+ * have dirty inodes.  If @base_work->nr_page isn't %LONG_MAX, it's
-+ * distributed to the busy wbs according to each wb's proportion in the
-+ * total active write bandwidth of @bdi.
-+ */
-+static void bdi_split_work_to_wbs(struct backing_dev_info *bdi,
-+				  struct wb_writeback_work *base_work,
-+				  bool skip_if_busy)
-+{
-+	long nr_pages = base_work->nr_pages;
-+	int next_blkcg_id = 0;
-+	struct bdi_writeback *wb;
-+	struct wb_iter iter;
-+
-+	might_sleep();
-+
-+	if (!bdi_has_dirty_io(bdi))
-+		return;
-+restart:
-+	rcu_read_lock();
-+	bdi_for_each_wb(wb, bdi, &iter, next_blkcg_id) {
-+		if (!wb_has_dirty_io(wb) ||
-+		    (skip_if_busy && writeback_in_progress(wb)))
-+			continue;
-+
-+		base_work->nr_pages = wb_split_bdi_pages(wb, nr_pages);
-+		if (!wb_clone_and_queue_work(wb, base_work)) {
-+			next_blkcg_id = wb->blkcg_css->id + 1;
-+			rcu_read_unlock();
-+			wb_wait_for_single_work(bdi, base_work);
-+			goto restart;
-+		}
-+	}
-+	rcu_read_unlock();
-+}
-+
- #else	/* CONFIG_CGROUP_WRITEBACK */
++		bio_associate_blkcg(bio, inode_to_wb_blkcg_css(inode));
+ 	}
  
- static long wb_split_bdi_pages(struct bdi_writeback *wb, long nr_pages)
-@@ -296,6 +370,21 @@ static long wb_split_bdi_pages(struct bdi_writeback *wb, long nr_pages)
- 	return nr_pages;
- }
- 
-+static void bdi_split_work_to_wbs(struct backing_dev_info *bdi,
-+				  struct wb_writeback_work *base_work,
-+				  bool skip_if_busy)
-+{
-+	might_sleep();
-+
-+	if (bdi_has_dirty_io(bdi) &&
-+	    (!skip_if_busy || !writeback_in_progress(&bdi->wb))) {
-+		base_work->auto_free = 0;
-+		base_work->single_wait = 0;
-+		base_work->single_done = 0;
-+		wb_queue_work(&bdi->wb, base_work);
-+	}
-+}
-+
- #endif	/* CONFIG_CGROUP_WRITEBACK */
- 
- void wb_start_writeback(struct bdi_writeback *wb, long nr_pages,
-@@ -1528,10 +1617,7 @@ static void __writeback_inodes_sb_nr(struct super_block *sb, unsigned long nr,
- 		return;
- 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
- 
--	if (skip_if_busy && writeback_in_progress(&bdi->wb))
--		return;
--
--	wb_queue_work(&bdi->wb, &work);
-+	bdi_split_work_to_wbs(sb->s_bdi, &work, skip_if_busy);
- 	wb_wait_for_completion(bdi, &done);
- }
- 
-@@ -1629,7 +1715,7 @@ void sync_inodes_sb(struct super_block *sb)
- 		return;
- 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
- 
--	wb_queue_work(&bdi->wb, &work);
-+	bdi_split_work_to_wbs(bdi, &work, false);
- 	wb_wait_for_completion(bdi, &done);
- 
- 	wait_sb_inodes(sb);
+ 	/*
 -- 
 2.1.0
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
