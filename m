@@ -1,45 +1,55 @@
-From: Jason Low <jason.low2-VXdhtT5mjnY@public.gmane.org>
-Subject: Re: [PATCH] mm: Remove usages of ACCESS_ONCE
-Date: Tue, 24 Mar 2015 11:30:35 -0700
-Message-ID: <1427221835.2515.52.camel@j-VirtualBox>
-References: <1427150680.2515.36.camel@j-VirtualBox>
-	 <20150324103003.GC14241@dhcp22.suse.cz>
+From: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Subject: FWD: cgroups: pids v5 patchset review
+Date: Wed, 25 Mar 2015 07:31:47 +1100
+Message-ID: <CAOviyaihmVVSPBOfZ+VRiyyVw9R5vE1vQ2xyJ0kAHN-xCg5NSw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20150324103003.GC14241-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Aswin Chandramouleeswaran <aswin-VXdhtT5mjnY@public.gmane.org>, Christian Borntraeger <borntraeger-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Davidlohr Bueso <dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, jason.low2-VXdhtT5mjnY@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, 2015-03-24 at 11:30 +0100, Michal Hocko wrote:
-> On Mon 23-03-15 15:44:40, Jason Low wrote:
-> > Commit 38c5ce936a08 converted ACCESS_ONCE usage in gup_pmd_range() to
-> > READ_ONCE, since ACCESS_ONCE doesn't work reliably on non-scalar types.
-> > 
-> > This patch removes the rest of the usages of ACCESS_ONCE, and use
-> > READ_ONCE for the read accesses. This also makes things cleaner,
-> > instead of using separate/multiple sets of APIs.
-> > 
-> > Signed-off-by: Jason Low <jason.low2-VXdhtT5mjnY@public.gmane.org>
-> 
-> Makes sense to me. I would prefer a patch split into two parts. One which
-> changes potentially dangerous usage of ACCESS_ONCE and the cleanup. This
-> will make the life of those who backport patches into older kernels
-> easier a bit.
+The patchset (and all discussion) was not CC'd to the mailing list, so
+here's a quick summary of the main points:
 
-Okay, so have a patch 1 which fixes the following:
+Tejun:
+1. We should filter for_each_subsys using a bitmask (with a new helper
+macro), so that the needs_*_callbacks aren't an all-in or all-out
+thing for every subsystem.
+2. We need to cancel_fork if we fail in the middle of a set of
+can_forks that succeeded.
+3. We should only revert/reapply for subsystems whose association
+changed (and we should let the subsystem handle it).
+4. We need to pin the css_set ref to make sure that it isn't freed
+underneath us between can_fork, cancel_fork and post_fork.
+4i. However, we should *really* be passing around an opaque pointer
+(although I'm not sure how we should go about doing this).
+5. Move the initialisation code to css_alloc, and drop css_online.
+6. (RE: pids_try_charge failure) Revert up to and including the failed
+css in the revert path to make the code cleaner.
+7. Use PIDS_MAX* instead of PIDS_UNLIMITED* for the macro names.
+8. Use the maximum value of pid_t, not PID_MAX_LIMIT as the maximum
+value of the pids.max value.
 
-    pte_t pte = ACCESS_ONCE(*ptep);
-    pgd_t pgd = ACCESS_ONCE(*pgdp);
+Aleksa:
+1. (RE: 4i) Why don't we just pass around an opaque struct pointer
+that stores the css_set, and cgroups deals with bumping and dropping
+the refcount of the css_set snapshot? This seems like we'd be passing
+around the pids css *specifically* in the fork() path and passing it
+into the generic callback.
+2. (RE: 8) Where can I reference the maximum value of pid_t, should I
+do some macro magic to calculate it?
 
-and the rest of the changes in the cleanup patch 2?
+Tejun:
+1. (RE: 1) Different callbacks would have to be able to pass their own
+opaque token. I'm not quite sure how this should be done. A naive
+implementation would use an array of opaque pointers, but since not
+every subsystem uses them this isn't very efficient.
+2. (RE: 8) Just use INT_MAX for now.
+3. Please FWD this discussion to the mailing lists with a summary.
 
-> I won't insist though.
-> 
-> Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-
-Thanks,
-Jason
+--
+Aleksa Sarai (cyphar)
+www.cyphar.com
