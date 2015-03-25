@@ -1,56 +1,62 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH] mm: Remove usages of ACCESS_ONCE
-Date: Wed, 25 Mar 2015 08:51:23 +0100
-Message-ID: <20150325075123.GA22386@dhcp22.suse.cz>
-References: <1427150680.2515.36.camel@j-VirtualBox>
- <20150324103003.GC14241@dhcp22.suse.cz>
- <1427221835.2515.52.camel@j-VirtualBox>
+From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCHSET 1/3 v2 block/for-4.1/core] writeback: cgroup writeback
+ support
+Date: Wed, 25 Mar 2015 11:40:22 -0400
+Message-ID: <20150325154022.GC29728@redhat.com>
+References: <1427086499-15657-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1427221835.2515.52.camel@j-VirtualBox>
+In-Reply-To: <1427086499-15657-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jason Low <jason.low2-VXdhtT5mjnY@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Aswin Chandramouleeswaran <aswin-VXdhtT5mjnY@public.gmane.org>, Christian Borntraeger <borntraeger-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Davidlohr Bueso <dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org>, Rik van Riel <riel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-On Tue 24-03-15 11:30:35, Jason Low wrote:
-> On Tue, 2015-03-24 at 11:30 +0100, Michal Hocko wrote:
-> > On Mon 23-03-15 15:44:40, Jason Low wrote:
-> > > Commit 38c5ce936a08 converted ACCESS_ONCE usage in gup_pmd_range() to
-> > > READ_ONCE, since ACCESS_ONCE doesn't work reliably on non-scalar types.
-> > > 
-> > > This patch removes the rest of the usages of ACCESS_ONCE, and use
-> > > READ_ONCE for the read accesses. This also makes things cleaner,
-> > > instead of using separate/multiple sets of APIs.
-> > > 
-> > > Signed-off-by: Jason Low <jason.low2-VXdhtT5mjnY@public.gmane.org>
-> > 
-> > Makes sense to me. I would prefer a patch split into two parts. One which
-> > changes potentially dangerous usage of ACCESS_ONCE and the cleanup. This
-> > will make the life of those who backport patches into older kernels
-> > easier a bit.
+On Mon, Mar 23, 2015 at 12:54:11AM -0400, Tejun Heo wrote:
 > 
-> Okay, so have a patch 1 which fixes the following:
 > 
->     pte_t pte = ACCESS_ONCE(*ptep);
->     pgd_t pgd = ACCESS_ONCE(*pgdp);
+> How to test
+> -----------
 > 
-> and the rest of the changes in the cleanup patch 2?
-
-Thanks!
-
+> * Boot with kernel option "cgroup__DEVEL__legacy_files_on_dfl".
 > 
-> > I won't insist though.
-> > 
-> > Acked-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+> * umount /sys/fs/cgroup/memory
+>   umount /sys/fs/cgroup/blkio
+>   mkdir /sys/fs/cgroup/unified
+>   mount -t cgroup -o __DEVEL__sane_behavior cgroup /sys/fs/cgroup/unified
+>   echo +blkio > /sys/fs/cgroup/unified/cgroup.subtree_control
 > 
-> Thanks,
-> Jason
+> * Build the cgroup hierarchy (don't forget to enable blkio using
+>   subtree_control) and put processes in cgroups and run tests on ext2
+>   filesystems and blkio.throttle.* knobs.
 > 
 
--- 
-Michal Hocko
-SUSE Labs
+[..]
+> This patchset is on top of
+> 
+>   block/for-4.1/core bfd343aa1718 ("blk-mq: don't wait in blk_mq_queue_enter() if __GFP_WAIT isn't set")
+> + [1] [PATCH] writeback: fix possible underflow in write bandwidth calculation
+> 
+> and available in the following git branch.
+> 
+>  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-writeback-20150322
+> 
+
+Hi Tejun,
+
+Great Work. I tried to do some basic testing and it seems to work.
+
+I used "review-cgroup-writeback-switch-20150322" branch for my testing.
+
+I have 32G of RAM on my system and I setup a write bandwidth of 1MB/s
+on the disk and allowed a dd to run. That dd quickly consumed 5G of
+page cache before it reached to a steady state. Sounds like too much
+of cache consumption which will be drained at a speed of 1MB/s. Not
+sure if this is expected or bdi back-pressure is not being applied soon
+enough.
+
+Thanks
+Vivek
