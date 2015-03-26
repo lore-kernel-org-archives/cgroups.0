@@ -1,48 +1,53 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Aleksa Sarai <cyphar@cyphar.com>
 Subject: Re: [PATCH v6 2/3] cgroups: allow a cgroup subsystem to reject a fork
-Date: Thu, 26 Mar 2015 11:08:06 -0400
-Message-ID: <20150326150806.GB1953@htj.duckdns.org>
+Date: Fri, 27 Mar 2015 08:41:05 +1100
+Message-ID: <CAOviyah+5DFxYtUo1=LMdQLAte=YR1s4JYoH_DNZEfpoBUfSRw@mail.gmail.com>
 References: <1426307835-5893-1-git-send-email-cyphar@cyphar.com>
- <1426307835-5893-3-git-send-email-cyphar@cyphar.com>
- <20150316165335.GC8353@htj.duckdns.org>
- <CAOviyagGvm4z8eAWitR267U3br-60vVJ9A5MMtFENy9xt9zuLQ@mail.gmail.com>
+	<1426307835-5893-3-git-send-email-cyphar@cyphar.com>
+	<20150316165335.GC8353@htj.duckdns.org>
+	<CAOviyahTq1K6zBRfmXfepabiQ7xU8ZoNdq0jPd3nP4Q-0H1DDQ@mail.gmail.com>
+	<20150326150223.GA1953@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=hDGkkzFNK92Y0lCD2YEpX5/tTBCWNh8Tr1GuLYPjI+Y=;
-        b=wQeZR98JLqdAnnPpGnUtTbKxIHHA5qFoJVbAxSdwWqWJNvyxExvAh+PQScUzpC7Man
-         mivWnlwPrVUR2LHHkvNWj3ol/4B8utZ4KR00BDFqNDTlyfHDPWEAUxXyfzMG2q40u64m
-         x+xlPCNnx4jlpACOaJEv1L28umKX/hC7I9rbKyNf8Ql7Ag9r4s+9DJD/8l51iM29Hirt
-         TksNYRn2nKZmi7zR+V0NYe0eK257E5I2H5E37n5rf1RMtRkMO54i/vme4MgcUzUMPcM0
-         e7Vuvkx03Mk/vY14pbN0fv/eQb0g5zB9EtHpwtTj7/2nsZkfmncIFcWWkq+jrb6PreZI
-         A6GQ==
-Content-Disposition: inline
-In-Reply-To: <CAOviyagGvm4z8eAWitR267U3br-60vVJ9A5MMtFENy9xt9zuLQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150326150223.GA1953@htj.duckdns.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, richard-/L3Ra7n9ekc@public.gmane.org, =?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: lizefan@huawei.com, mingo@redhat.com, peterz@infradead.org, richard@nod.at, =?UTF-8?B?RnLDqWTDqXJpYyBXZWlzYmVja2Vy?= <fweisbec@gmail.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Sat, Mar 21, 2015 at 10:25:56PM +1100, Aleksa Sarai wrote:
-> > Also, what pins the cset between task_css_set() and get_css_set()?
-> > task_css_set() is protected by RCU and the above should have triggered
-> > RCU warning if the debug option is enabled.  Please always test with
-> > the debug options enabled, especially the lockdep and RCU ones.
-> 
-> Debug was enabled AFAIK and I didn't get anything in `dmesg`. I've fixed it
-> anyway.
+Hi,
 
-So, this is worrying.  If you have RCU debugging enabled, it should
-have triggered the warning.  If it hadn't, maybe there's something
-else protecting it and we don't need the extra rcu locking around it.
-Can you please investigate what's going on?
+>> callback if the association changes [we could call it something else if you
+>> like, since reapply_fork() is a pids-specific name -- what about switch_fork(),
+>> reassoc_fork(), re_fork() or something to show that it's a callback if the
+>> association changes?] (the subsystem can decide if they want to ignore it / if
+>> they don't want to touch it) and we deal with pinning / dropping the ref of the
+>> css_set for the current task inside the cgroup_* callbacks. That way, we don't
+>> start messing around with post-fork() callbacks that aren't related to the new
+>> conditional stuff.
+>
+> You can't pin css_set from inside cgroup callbacks.  It's a construct
+> which in general shouldn't be accessible outside cgroup core.
 
-Thanks.
+Yeah, sorry I meant css (you aren't pinning, but you're still saving under RCU
+and dealing with the association-related stuff inside post_fork).
 
--- 
-tejun
+
+>> I mean, if you want to have a random, completely unused and essentially
+>> vestigial argument to ss->fork() [if you don't use the new can_fork() callbacks
+>> (and actually care about storing private data)] then I can just write that. It
+>> just looks like a weird callback API imho.
+>
+> It's an opaque token from pre.  If a subsys doesn't have pre, it's
+> NULL.  I don't see anything weird about that, so let's please go that
+> way.
+
+Alright, if you think that's the best way. I still think it's weird, but I
+guess that's probably just down to personal taste.
+
+
+--
+Aleksa Sarai (cyphar)
+www.cyphar.com
