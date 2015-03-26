@@ -1,129 +1,68 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 9/8] writeback: disassociate inodes from dying bdi_writebacks
-Date: Wed, 25 Mar 2015 18:44:17 -0400
-Message-ID: <20150325224417.GV3880@htj.duckdns.org>
-References: <1427088344-17542-1-git-send-email-tj@kernel.org>
+From: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v6 2/3] cgroups: allow a cgroup subsystem to reject a fork
+Date: Fri, 27 Mar 2015 01:38:54 +1100
+Message-ID: <CAOviyahTq1K6zBRfmXfepabiQ7xU8ZoNdq0jPd3nP4Q-0H1DDQ@mail.gmail.com>
+References: <1426307835-5893-1-git-send-email-cyphar@cyphar.com>
+	<1426307835-5893-3-git-send-email-cyphar@cyphar.com>
+	<20150316165335.GC8353@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=87dwkn1qIT6PC3RR5iAmnRw0pttmB263TffLdKbQp2M=;
-        b=OZ5zdjNVj6K/7xuMObbkwcuZEhlGYvavzQ0pjqLz2g6vu4PzINCUrTbk+ya1zrfP1/
-         gYzUMxBad144bYs28T6I8lN+Z6eNfFKtsfeFUpkCqNpMjlX1HfkEbLRLdDMqm2pHHHbu
-         PhjcwkjPU6FZu1EwRskHJ5cnVCwkqDdJ8MXGM+FOWZQFgn7gYMCo6cs+S+a18uvdK92z
-         KN4uzD0Q6KMETqrXKklSob2uHy+rnccCJ5yD6qFfFzXf35ynANTkbVSq2Y/+Ac8QR34h
-         OlYPagm9QcjS/4vYDv+A//uHRee04JE1KrAyeH4Awr7Crp9X2yoTRYs/M/f4iIn1C+kV
-         nPcw==
-Content-Disposition: inline
-In-Reply-To: <1427088344-17542-1-git-send-email-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20150316165335.GC8353-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, richard-/L3Ra7n9ekc@public.gmane.org, =?UTF-8?B?RnLDqWTDqXJpYyBXZWlzYmVja2Vy?= <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From 0d041edd14110c98d829d0277a0c509405dd4947 Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj@kernel.org>
-Date: Wed, 25 Mar 2015 18:34:38 -0400
+Hi Tejun,
 
-For the purpose of foreign inode detection, wb's (bdi_writeback's) are
-identified by the associated memcg ID.  As we create a separate wb for
-each memcg, this is enough to identify the active wb's; however, when
-blkcg is enabled or disabled higher up in the hierarchy, the mapping
-between memcg and blkcg changes which in turn creates a new wb to
-service the new mapping.  The old wb is unlinked from index and
-released after all references are drained.  The foreign inode
-detection logic can't detect this condition because both the old and
-new wb's point to the same memcg and thus never decides to move inodes
-attached to the old wb to the new one.
+Here's a bit more of a follow-up on two of your points:
 
-This patch adds logic to initiate switching immediately in
-wbc_attach_and_unlock_inode() if the associated wb is dying.  We can
-make the usual foreign detection logic to distinguish the different
-wb's mapped to the memcg but the dying wb is never gonna be in active
-service again and there's no point in tracking the usage history and
-reaching the switch verdict after enough data points are collected.
-It's already known that the wb has to be switched.
+Since
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Jan Kara <jack@suse.cz>
-Cc: Wu Fengguang <fengguang.wu@intel.com>
-Cc: Greg Thelen <gthelen@google.com>
----
-The review git branch has been updated accordingly.
+> Do we really need a separate callback for this?  Can't we just add
+> @old_css param to ss->fork() which is NULL if it didn't change since
+> can_fork()?
 
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-switch-backpressure-20150322
+and
 
-Please use the git branch for testing.  I'll post v2 series once I get
-more feedback.
+> Did you explore the idea of passing an opaque pointer from can_fork to
+> post_fork?  If so, why did you choose this direction instead of that
+> one?
 
-Thanks.
+Are quite similar (they essentially both result in each other, since if you use
+void pointers for state you can't check if the association changed without
+doing completely separate accounting which wouldn't be used by the callbacks),
+I'll respond to both in the same go:
 
- fs/fs-writeback.c                |  7 +++++++
- include/linux/backing-dev-defs.h | 16 ++++++++++++++++
- 2 files changed, 23 insertions(+)
+The issue I can see with passing around an opaque pointer to fork() is that you
+have a random private (void **) argument that is completely useless if you
+don't use can_fork(). This is why I think we should call the reapply_fork()
+callback if the association changes [we could call it something else if you
+like, since reapply_fork() is a pids-specific name -- what about switch_fork(),
+reassoc_fork(), re_fork() or something to show that it's a callback if the
+association changes?] (the subsystem can decide if they want to ignore it / if
+they don't want to touch it) and we deal with pinning / dropping the ref of the
+css_set for the current task inside the cgroup_* callbacks. That way, we don't
+start messing around with post-fork() callbacks that aren't related to the new
+conditional stuff.
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 2636359d..3a1e6c3 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -512,6 +512,13 @@ void wbc_attach_and_unlock_inode(struct writeback_control *wbc,
- 
- 	wb_get(wbc->wb);
- 	spin_unlock(&inode->i_lock);
-+
-+	/*
-+	 * A dying wb indicates that the memcg-blkcg mapping has changed
-+	 * and a new wb is already serving the memcg.  Switch immediately.
-+	 */
-+	if (unlikely(wb_dying(wbc->wb)))
-+		inode_switch_wb(inode, wbc->wb_id);
- }
- 
- /**
-diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
-index e047b49..a48d90e 100644
---- a/include/linux/backing-dev-defs.h
-+++ b/include/linux/backing-dev-defs.h
-@@ -219,6 +219,17 @@ static inline void wb_put(struct bdi_writeback *wb)
- 		percpu_ref_put(&wb->refcnt);
- }
- 
-+/**
-+ * wb_dying - is a wb dying?
-+ * @wb: bdi_writeback of interest
-+ *
-+ * Returns whether @wb is unlinked and being drained.
-+ */
-+static inline bool wb_dying(struct bdi_writeback *wb)
-+{
-+	return percpu_ref_is_dying(&wb->refcnt);
-+}
-+
- #else	/* CONFIG_CGROUP_WRITEBACK */
- 
- static inline bool wb_tryget(struct bdi_writeback *wb)
-@@ -234,6 +245,11 @@ static inline void wb_put(struct bdi_writeback *wb)
- {
- }
- 
-+static inline bool wb_dying(struct bdi_writeback *wb)
-+{
-+	return false;
-+}
-+
- #endif	/* CONFIG_CGROUP_WRITEBACK */
- 
- #endif	/* __LINUX_BACKING_DEV_DEFS_H */
--- 
-2.1.0
+I mean, if you want to have a random, completely unused and essentially
+vestigial argument to ss->fork() [if you don't use the new can_fork() callbacks
+(and actually care about storing private data)] then I can just write that. It
+just looks like a weird callback API imho.
+
+In fact, it seems even more single purpose than just pinning the ref and
+dealing with it for the general case of an association switching (because now
+you have a single-purpose parameter to the general fork() call, as opposed to
+doing some ref pinning and accounting of the current css_set for (currently)
+only the pids subsystem in the cgroup core. Since we know  that pids will need
+to pin the ref, then we're not doing any extra work in  doing it for the
+general cgroup fork callback -- and we get to both separate "association
+changed" logic from "post fork" logic in the callbacks, as well as not blindly
+trusting the cgroup subsystem to properly deal with a changing association.
 
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Aleksa Sarai (cyphar)
+www.cyphar.com
