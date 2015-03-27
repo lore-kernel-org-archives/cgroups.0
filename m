@@ -1,59 +1,71 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 21/48] writeback: make backing_dev_info host
- cgroup-specific bdi_writebacks
-Date: Fri, 27 Mar 2015 17:41:54 -0400
-Message-ID: <20150327214154.GE638@htj.duckdns.org>
+Subject: Re: [PATCH 28/48] writeback: implement and use mapping_congested()
+Date: Fri, 27 Mar 2015 17:46:13 -0400
+Message-ID: <20150327214613.GF638@htj.duckdns.org>
 References: <1427086499-15657-1-git-send-email-tj@kernel.org>
- <1427086499-15657-22-git-send-email-tj@kernel.org>
- <20150327210612.GA23840@redhat.com>
+ <1427086499-15657-29-git-send-email-tj@kernel.org>
+ <20150327180626.GA19117@redhat.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=ft90k6WW96sCTYcUIviVIoYPAC/U4S6bD7QCGnXc6TY=;
-        b=JPCMTQozZZqnjcyrIdbp4od9aetM1ORjPEDTe6irVtN/FTjzoHkQDs+XTDFGqZJMag
-         wKItt8SnNO5HrVtW5YdaRINGVUMokC0gA8DJ5g+tch0oatIIKc4HyD/Va3B2Vx/eihv1
-         aJZkMu+wfe4wPiuMpNt1J77E9aNo1a4rUVbAYj+6E+noPYrk9MMszzc4LdGTrTO0bWvx
-         2frP8xWAu7jNBfUClPtlfXwPOegd2usx065Ff6jgvE7thO6NuenpJxkjJruhmMLJdhbB
-         Ep3iZsTAKyPsU71yva22g6VcvWa2Xt+Tkkk6+nsPnUNeNJXaOIX7oKdahNhdtAS85YnM
-         iOsg==
+        bh=JgzG8/U+vPk++npAZ3OvEPNFsRWRwdcsZPFxK4cQFJA=;
+        b=iPjNXimRtoeNPj4mImuV9w7QihorgpMrwKNqVkPQ52zKSWLtmopPv6eJnuUI6FGF1R
+         nZz2Dltbo2zG/BxKHKguPVwQb9UFSirtIXS9jtgrhb2KmWZoE29s+jYLNg1uMwKAcTDU
+         vC8aosIZXR+TsT6Y0S8zknyIloMjOu6I1P+Ei3k3SgngVPEpFkVCEWfrpXJl3HdnX0/I
+         FdMdH5XEywQqGRopxw6HAsBdOu08xqEOTTL5yXTZlDCucWbp6/OM1MgqyN8pm1DpW9tO
+         L0k1enPlngFJTBvBuGnRBcHtak7tQ/2rXR+ATWcxjdQCP507ukFVoQ/8bVN7732dvgc/
+         horQ==
 Content-Disposition: inline
-In-Reply-To: <20150327210612.GA23840@redhat.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20150327180626.GA19117@redhat.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Vivek Goyal <vgoyal@redhat.com>
 Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com
 
-Hello Vivek.
+Hello, Vivek.
 
-On Fri, Mar 27, 2015 at 05:06:13PM -0400, Vivek Goyal wrote:
-> I was curious to know that why do we need this "struct page *page" when
-> trying to attach a inode to a bdi_writeback. Is using current's cgroup
-> always not sufficient?
+On Fri, Mar 27, 2015 at 02:06:26PM -0400, Vivek Goyal wrote:
+...
+> > +int mapping_congested(struct address_space *mapping,
+> > +		      struct task_struct *task, int cong_bits)
+> > +{
+> > +	struct inode *inode = mapping->host;
+> > +	struct backing_dev_info *bdi = inode_to_bdi(inode);
+> > +	struct bdi_writeback *wb;
+> > +	int ret = 0;
+> > +
+> > +	if (!inode || !inode_cgwb_enabled(inode))
+> > +		return wb_congested(&bdi->wb, cong_bits);
+> > +
+> > +	rcu_read_lock();
+> > +	wb = wb_find_current(bdi);
+> 
+> I am wondering that why do we lookup bdi_writeback using blkcg of
+> task and why not use the bdi_writeback associated with inode?
+> 
+> IIUC, whole idea is to attach an inode to bdi_writeback (and
+> change it later if need be) and that writeback is used for
+> controlling IO to that inode. And blkcg associated with the
+> writeback will be put in bio which in turn will be used
+> by block layer.
+> 
+> IOW, blkcg of a bio gets decided by the bdi_writeback
+> attached to inode and current writer does not seem to
+> matter. So I am not sure why mapping_congested() should
+> take task's blkcg into consideration instead of just
+> taking bdi_writeback from inode and see if it is congested
+> or not.
 
-So, memcg's page ownership is first-use based and it never gets
-updated once set till the page is released which means that there can
-be corner cases where an inode is mostly faulted in by one cgroup and
-then constantly dirtied by another.  Because the ownership belongs to
-the initial cgroup which instantiated those pages, cgroup writeback
-ends up considering the pages as belonging to that initial cgroup and
-the foreign detection will trigger if it's being written by a
-different cgroup.  Hmmmm... this isn't a huge problem as once the
-foreign detection triggers, the problem will be corrected but still
-when the page is availalbe, I think it makes sense to attach to the
-page as that's what actually defines the ownership.
+Yeap, I agree that attributing to the inode's blkcg makes more sense.
+I need to think more about it but will prolly change it to use
+inode->i_wb instead.
 
 Thanks.
 
 -- 
 tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
