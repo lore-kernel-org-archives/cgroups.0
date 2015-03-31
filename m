@@ -1,71 +1,53 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 28/48] writeback: implement and use mapping_congested()
-Date: Fri, 27 Mar 2015 17:46:13 -0400
-Message-ID: <20150327214613.GF638@htj.duckdns.org>
+Subject: Re: [PATCHSET 1/3 v2 block/for-4.1/core] writeback: cgroup writeback
+ support
+Date: Tue, 31 Mar 2015 11:26:22 -0400
+Message-ID: <20150331152622.GD9974@htj.duckdns.org>
 References: <1427086499-15657-1-git-send-email-tj@kernel.org>
- <1427086499-15657-29-git-send-email-tj@kernel.org>
- <20150327180626.GA19117@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=JgzG8/U+vPk++npAZ3OvEPNFsRWRwdcsZPFxK4cQFJA=;
-        b=iPjNXimRtoeNPj4mImuV9w7QihorgpMrwKNqVkPQ52zKSWLtmopPv6eJnuUI6FGF1R
-         nZz2Dltbo2zG/BxKHKguPVwQb9UFSirtIXS9jtgrhb2KmWZoE29s+jYLNg1uMwKAcTDU
-         vC8aosIZXR+TsT6Y0S8zknyIloMjOu6I1P+Ei3k3SgngVPEpFkVCEWfrpXJl3HdnX0/I
-         FdMdH5XEywQqGRopxw6HAsBdOu08xqEOTTL5yXTZlDCucWbp6/OM1MgqyN8pm1DpW9tO
-         L0k1enPlngFJTBvBuGnRBcHtak7tQ/2rXR+ATWcxjdQCP507ukFVoQ/8bVN7732dvgc/
-         horQ==
+        bh=twCPchvoDI7o/EJqcn02C0doywfRSQ0ahxR5QWEhA0w=;
+        b=UT1rAt7W4Jz3jaVOAhJ+j6lq6kYbaSbpDxDkJ75nuwwNN2VyLcFoYX8iX0ry8IfhIJ
+         DRD4b3ujn4AzxtILsPPN4DQKZEu8qaTrjWWZfkfywO41+DEO2bGW6WWAXLTWT4B7uFke
+         N80dlMgORxg4WdT4H8vt8MEcGJvHLYPwofv69J4CFSzSjL1fGb2+AsLDCZu6NeVhKxTP
+         mMxfOrX5+1Q9qNoju0R1WzdFKmVIFjZcX4BwWT4gh6/LRvbebtG8tQ3OjGjO4/WAN7yn
+         cSBAB7wOY+hgr/kp2cyhs6oHHyu8XRm4lOV03IpcypeLs0cIF7EdIgjwaBfRczFccBce
+         8jCw==
 Content-Disposition: inline
-In-Reply-To: <20150327180626.GA19117@redhat.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
+In-Reply-To: <1427086499-15657-1-git-send-email-tj@kernel.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vivek Goyal <vgoyal@redhat.com>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com
+To: axboe@kernel.dk
+Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com
 
-Hello, Vivek.
+Hello, guys.
 
-On Fri, Mar 27, 2015 at 02:06:26PM -0400, Vivek Goyal wrote:
-...
-> > +int mapping_congested(struct address_space *mapping,
-> > +		      struct task_struct *task, int cong_bits)
-> > +{
-> > +	struct inode *inode = mapping->host;
-> > +	struct backing_dev_info *bdi = inode_to_bdi(inode);
-> > +	struct bdi_writeback *wb;
-> > +	int ret = 0;
-> > +
-> > +	if (!inode || !inode_cgwb_enabled(inode))
-> > +		return wb_congested(&bdi->wb, cong_bits);
-> > +
-> > +	rcu_read_lock();
-> > +	wb = wb_find_current(bdi);
-> 
-> I am wondering that why do we lookup bdi_writeback using blkcg of
-> task and why not use the bdi_writeback associated with inode?
-> 
-> IIUC, whole idea is to attach an inode to bdi_writeback (and
-> change it later if need be) and that writeback is used for
-> controlling IO to that inode. And blkcg associated with the
-> writeback will be put in bio which in turn will be used
-> by block layer.
-> 
-> IOW, blkcg of a bio gets decided by the bdi_writeback
-> attached to inode and current writer does not seem to
-> matter. So I am not sure why mapping_congested() should
-> take task's blkcg into consideration instead of just
-> taking bdi_writeback from inode and see if it is congested
-> or not.
+I updated all three patchsets to reflect the accumulated fixes and the
+mapping_congested() change pointed out by Vivek, which BTW is now
+inode_congested() - the whole function was a bit botched from
+conversion from the multi-wb dirtying support, should be fine now.
 
-Yeap, I agree that attributing to the inode's blkcg makes more sense.
-I need to think more about it but will prolly change it to use
-inode->i_wb instead.
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-writeback-20150331
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-writeback-backpressure-20150331
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-writeback-switch-20150331
+
+Jan, filesystem ppl, if you have any comments, please let me know;
+otherwise, I'll post the next version of the patchset in a couple
+days.
 
 Thanks.
 
 -- 
 tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
