@@ -1,55 +1,114 @@
-From: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v7 0/4] cgroups: add pids subsystem
-Date: Wed,  1 Apr 2015 13:31:26 +1100
-Message-ID: <1427855490-5280-1-git-send-email-cyphar@cyphar.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Aleksa Sarai <cyphar@cyphar.com>
+Subject: [PATCH v7 1/4] cgroups: use bitmask to filter for_each_subsys
+Date: Wed,  1 Apr 2015 13:31:27 +1100
+Message-ID: <1427855490-5280-2-git-send-email-cyphar@cyphar.com>
+References: <1427855490-5280-1-git-send-email-cyphar@cyphar.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1427855490-5280-1-git-send-email-cyphar@cyphar.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
-Cc: richard-/L3Ra7n9ekc@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+To: tj@kernel.org, lizefan@huawei.com, mingo@redhat.com, peterz@infradead.org
+Cc: richard@nod.at, fweisbec@gmail.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Aleksa Sarai <cyphar@cyphar.com>
 
-This is a futher revised version of the pids v6 patchset[1]. The main
-changes include:
+Add a new macro for_each_subsys_which that allows all enabled cgroup
+subsystems to be filtered by a bitmask, such that mask & (1 << ssid)
+determines if the subsystem is to be processed in the loop body (where
+ssid is the unique id of the subsystem).
 
-* Actually separate the subsystem callback bitmasks for use with
-  for_each_subsys_which(needs_*_callback, ...). Also switch from the
-  usage of explicit ss_mask checking with for_each_subsys() with
-  for_each_subsys_which().
+Signed-off-by: Aleksa Sarai <cyphar@cyphar.com>
+---
+ kernel/cgroup.c | 43 ++++++++++++++++++++++++++-----------------
+ 1 file changed, 26 insertions(+), 17 deletions(-)
 
-* Pass an opaque cgroup_fork_state structure between the
-  cgroup_{can,cancel,post}_fork hooks which stores the current
-  task_struct's css_set. The refcount bumping and dropping is handled
-  within cgroup_cfs_{get,put}() respectively. This is done so that
-  the internal implementation of cgroup_fork_state is not exposed to
-  copy_process(), while also allowing the caller to decide when they
-  want to snapshot the current css_set.
-
-* Fix a bug where migrating a task between cgroup hierachies would not
-  decrement pids.counter in the source hierarchy. This would cause
-  limits to be enforced prematurely due to residual charges on the pid
-  counter. This is done by adding a detach() callback that alerts a
-  subsystem to a task detaching from it.
-
-[1]: https://lkml.org/lkml/2015/3/14/2
-
-Aleksa Sarai (4):
-  cgroups: use bitmask to filter for_each_subsys
-  cgroups: replace explicit ss_mask checking with for_each_subsys_which
-  cgroups: allow a cgroup subsystem to reject a fork
-  cgroups: implement the PIDs subsystem
-
- include/linux/cgroup.h        |  42 +++++-
- include/linux/cgroup_subsys.h |   4 +
- init/Kconfig                  |  16 +++
- kernel/Makefile               |   1 +
- kernel/cgroup.c               | 244 ++++++++++++++++++++++++++-------
- kernel/cgroup_pids.c          | 310 ++++++++++++++++++++++++++++++++++++++++++
- kernel/fork.c                 |  38 +++++-
- 7 files changed, 596 insertions(+), 59 deletions(-)
- create mode 100644 kernel/cgroup_pids.c
-
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 29a7b2c..1d69a085 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -175,12 +175,14 @@ static DEFINE_IDR(cgroup_hierarchy_idr);
+  */
+ static u64 css_serial_nr_next = 1;
+ 
+-/* This flag indicates whether tasks in the fork and exit paths should
++/*
++ * These bitmask flags indicate whether tasks in the fork and exit paths should
+  * check for fork/exit handlers to call. This avoids us having to do
+  * extra work in the fork/exit path if none of the subsystems need to
+  * be called.
+  */
+-static int need_forkexit_callback __read_mostly;
++static int need_fork_callback __read_mostly;
++static int need_exit_callback __read_mostly;
+ 
+ static struct cftype cgroup_dfl_base_files[];
+ static struct cftype cgroup_legacy_base_files[];
+@@ -409,6 +411,19 @@ static int notify_on_release(const struct cgroup *cgrp)
+ 	for ((ssid) = 0; (ssid) < CGROUP_SUBSYS_COUNT &&		\
+ 	     (((ss) = cgroup_subsys[ssid]) || true); (ssid)++)
+ 
++/**
++ * for_each_subsys_which - filter for_each_subsys with a bitmask
++ * @ss_mask: the bitmask
++ * @ss: the iteration cursor
++ * @ssid: the index of @ss, CGROUP_SUBSYS_COUNT after reaching the end
++ *
++ * The block will only run for cases where the ssid-th bit (1 << ssid) of
++ * mask is set to 1.
++ */
++#define for_each_subsys_which(ss_mask, ss, ssid) \
++	for_each_subsys((ss), (ssid)) \
++		if ((ss_mask) & (1 << (ssid)))
++
+ /* iterate across the hierarchies */
+ #define for_each_root(root)						\
+ 	list_for_each_entry((root), &cgroup_roots, root_list)
+@@ -4932,7 +4947,8 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss, bool early)
+ 	 * init_css_set is in the subsystem's root cgroup. */
+ 	init_css_set.subsys[ss->id] = css;
+ 
+-	need_forkexit_callback |= ss->fork || ss->exit;
++	need_fork_callback |= (bool) ss->fork << ss->id;
++	need_exit_callback |= (bool) ss->exit << ss->id;
+ 
+ 	/* At system boot, before all subsystems have been
+ 	 * registered, no tasks have been forked, so we don't
+@@ -5239,11 +5255,8 @@ void cgroup_post_fork(struct task_struct *child)
+ 	 * css_set; otherwise, @child might change state between ->fork()
+ 	 * and addition to css_set.
+ 	 */
+-	if (need_forkexit_callback) {
+-		for_each_subsys(ss, i)
+-			if (ss->fork)
+-				ss->fork(child);
+-	}
++	for_each_subsys_which(need_fork_callback, ss, i)
++		ss->fork(child);
+ }
+ 
+ /**
+@@ -5287,16 +5300,12 @@ void cgroup_exit(struct task_struct *tsk)
+ 	cset = task_css_set(tsk);
+ 	RCU_INIT_POINTER(tsk->cgroups, &init_css_set);
+ 
+-	if (need_forkexit_callback) {
+-		/* see cgroup_post_fork() for details */
+-		for_each_subsys(ss, i) {
+-			if (ss->exit) {
+-				struct cgroup_subsys_state *old_css = cset->subsys[i];
+-				struct cgroup_subsys_state *css = task_css(tsk, i);
++	/* see cgroup_post_fork() for details */
++	for_each_subsys_which(need_exit_callback, ss, i) {
++		struct cgroup_subsys_state *old_css = cset->subsys[i];
++		struct cgroup_subsys_state *css = task_css(tsk, i);
+ 
+-				ss->exit(css, old_css, tsk);
+-			}
+-		}
++		ss->exit(css, old_css, tsk);
+ 	}
+ 
+ 	if (put_cset)
 -- 
 2.3.4
