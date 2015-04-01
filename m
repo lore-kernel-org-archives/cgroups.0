@@ -1,53 +1,55 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET 1/3 v2 block/for-4.1/core] writeback: cgroup writeback
- support
-Date: Tue, 31 Mar 2015 11:26:22 -0400
-Message-ID: <20150331152622.GD9974@htj.duckdns.org>
-References: <1427086499-15657-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=twCPchvoDI7o/EJqcn02C0doywfRSQ0ahxR5QWEhA0w=;
-        b=UT1rAt7W4Jz3jaVOAhJ+j6lq6kYbaSbpDxDkJ75nuwwNN2VyLcFoYX8iX0ry8IfhIJ
-         DRD4b3ujn4AzxtILsPPN4DQKZEu8qaTrjWWZfkfywO41+DEO2bGW6WWAXLTWT4B7uFke
-         N80dlMgORxg4WdT4H8vt8MEcGJvHLYPwofv69J4CFSzSjL1fGb2+AsLDCZu6NeVhKxTP
-         mMxfOrX5+1Q9qNoju0R1WzdFKmVIFjZcX4BwWT4gh6/LRvbebtG8tQ3OjGjO4/WAN7yn
-         cSBAB7wOY+hgr/kp2cyhs6oHHyu8XRm4lOV03IpcypeLs0cIF7EdIgjwaBfRczFccBce
-         8jCw==
-Content-Disposition: inline
-In-Reply-To: <1427086499-15657-1-git-send-email-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+From: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v7 0/4] cgroups: add pids subsystem
+Date: Wed,  1 Apr 2015 13:31:26 +1100
+Message-ID: <1427855490-5280-1-git-send-email-cyphar@cyphar.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
+Cc: richard-/L3Ra7n9ekc@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
 
-Hello, guys.
+This is a futher revised version of the pids v6 patchset[1]. The main
+changes include:
 
-I updated all three patchsets to reflect the accumulated fixes and the
-mapping_congested() change pointed out by Vivek, which BTW is now
-inode_congested() - the whole function was a bit botched from
-conversion from the multi-wb dirtying support, should be fine now.
+* Actually separate the subsystem callback bitmasks for use with
+  for_each_subsys_which(needs_*_callback, ...). Also switch from the
+  usage of explicit ss_mask checking with for_each_subsys() with
+  for_each_subsys_which().
 
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-writeback-20150331
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-writeback-backpressure-20150331
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-writeback-switch-20150331
+* Pass an opaque cgroup_fork_state structure between the
+  cgroup_{can,cancel,post}_fork hooks which stores the current
+  task_struct's css_set. The refcount bumping and dropping is handled
+  within cgroup_cfs_{get,put}() respectively. This is done so that
+  the internal implementation of cgroup_fork_state is not exposed to
+  copy_process(), while also allowing the caller to decide when they
+  want to snapshot the current css_set.
 
-Jan, filesystem ppl, if you have any comments, please let me know;
-otherwise, I'll post the next version of the patchset in a couple
-days.
+* Fix a bug where migrating a task between cgroup hierachies would not
+  decrement pids.counter in the source hierarchy. This would cause
+  limits to be enforced prematurely due to residual charges on the pid
+  counter. This is done by adding a detach() callback that alerts a
+  subsystem to a task detaching from it.
 
-Thanks.
+[1]: https://lkml.org/lkml/2015/3/14/2
+
+Aleksa Sarai (4):
+  cgroups: use bitmask to filter for_each_subsys
+  cgroups: replace explicit ss_mask checking with for_each_subsys_which
+  cgroups: allow a cgroup subsystem to reject a fork
+  cgroups: implement the PIDs subsystem
+
+ include/linux/cgroup.h        |  42 +++++-
+ include/linux/cgroup_subsys.h |   4 +
+ init/Kconfig                  |  16 +++
+ kernel/Makefile               |   1 +
+ kernel/cgroup.c               | 244 ++++++++++++++++++++++++++-------
+ kernel/cgroup_pids.c          | 310 ++++++++++++++++++++++++++++++++++++++++++
+ kernel/fork.c                 |  38 +++++-
+ 7 files changed, 596 insertions(+), 59 deletions(-)
+ create mode 100644 kernel/cgroup_pids.c
 
 -- 
-tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+2.3.4
