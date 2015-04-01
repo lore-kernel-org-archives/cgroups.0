@@ -1,41 +1,47 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v7 0/4] cgroups: add pids subsystem
-Date: Tue, 31 Mar 2015 22:40:55 -0400
-Message-ID: <20150401024055.GK9974@htj.duckdns.org>
-References: <1427855490-5280-1-git-send-email-cyphar@cyphar.com>
- <CAOviyahS_PsKxYzePEorpRYDq+0=Ttw+ZLkAH0r+eEuxy5uM+Q@mail.gmail.com>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=XmB7lF40z6gF77wyYhVZU4FsdJ7D+7sWu4zMQrJwaDs=;
-        b=s0gr0qoAfcNNRDcnB4PeCA4AZlHDJRhRSWfTiimFMYl5pCrDXoEkvuX1bLxzERluaN
-         yYGJvQbQsVhy8OWlfNA8Hqcta8clcGYIVUUn6N7ghmYhUjY6Lilb4aVQYq6d7tEglPD+
-         3UJ+LerxbIi0HWGAkYsDdGtmbEgh8kdiZ6BX32QkDXPhMDqGof4qByDFdV0IifMoY8LF
-         XLc1AQfYHnxcREowKhows6lil8ZPWZEBqzqFQ+X9eRjV5Ho91yvd6L3VBpVZngQ+4oM5
-         1wU8aO2xuGWlPyRDGpdovnOg86K7eYCvRgF1Ur1zGoDgJ9ZXBsAJWQcQha5wzOjkIe+6
-         nIhA==
-Content-Disposition: inline
-In-Reply-To: <CAOviyahS_PsKxYzePEorpRYDq+0=Ttw+ZLkAH0r+eEuxy5uM+Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Aleksa Sarai <cyphar@cyphar.com>
+Subject: [PATCH v8 0/4] cgroups: add pids subsystem
+Date: Wed,  1 Apr 2015 19:57:17 +1100
+Message-ID: <1427878641-5273-1-git-send-email-cyphar@cyphar.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, richard-/L3Ra7n9ekc@public.gmane.org, =?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: tj@kernel.org, lizefan@huawei.com, mingo@redhat.com, peterz@infradead.org
+Cc: richard@nod.at, fweisbec@gmail.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Aleksa Sarai <cyphar@cyphar.com>
 
-On Wed, Apr 01, 2015 at 01:36:06PM +1100, Aleksa Sarai wrote:
-> Hi Tejun,
-> 
-> I decided to send out this version of the patchset (that has the additional
-> callback, and passes around an opaque "fork state" inside the copy_process()
-> callback), because I personally prefer this version of the patchset (it's much
-> cleaner and doesn't mess around with the fork() callback for no good reason).
-> If you *really* want the other one, I can send it.
+This is an alternate version of the pids v7 patchset[1]. The main
+difference is that this version doesn't add a new callback for
+an association change during a fork -- it lets subsystems handle such
+cases by themselves by allowing for a private pointer to be passed
+around between the callbacks.
 
-Yes, please.
+* Pass a cgroup_fork_state structure between the
+  cgroup_{can,cancel,post}_fork hooks which stores the private opaque
+  pointer for each subsystem. This allows for subsystems to decide which
+  (if any) state to save in the can_fork callback to refer back to in
+  the post_fork callback.
+
+[1]: https://lkml.org/lkml/2015/3/31/1058
+
+Aleksa Sarai (4):
+  cgroups: use bitmask to filter for_each_subsys
+  cgroups: replace explicit ss_mask checking with for_each_subsys_which
+  cgroups: allow a cgroup subsystem to reject a fork
+  cgroups: implement the PIDs subsystem
+
+ include/linux/cgroup.h        |  35 +++-
+ include/linux/cgroup_subsys.h |   4 +
+ init/Kconfig                  |  16 ++
+ kernel/Makefile               |   1 +
+ kernel/cgroup.c               | 208 ++++++++++++++++++------
+ kernel/cgroup_freezer.c       |   2 +-
+ kernel/cgroup_pids.c          | 367 ++++++++++++++++++++++++++++++++++++++++++
+ kernel/fork.c                 |  31 +++-
+ kernel/sched/core.c           |   2 +-
+ 9 files changed, 608 insertions(+), 58 deletions(-)
+ create mode 100644 kernel/cgroup_pids.c
 
 -- 
-tejun
+2.3.4
