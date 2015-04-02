@@ -1,131 +1,69 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v8 3/4] cgroups: allow a cgroup subsystem to reject a fork
-Date: Wed, 1 Apr 2015 12:02:58 -0400
-Message-ID: <20150401160258.GP9974@htj.duckdns.org>
-References: <1427878641-5273-1-git-send-email-cyphar@cyphar.com>
- <1427878641-5273-4-git-send-email-cyphar@cyphar.com>
+From: Preeti U Murthy <preeti-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Subject: Re: [PATCH] cpusets: Make cpus_allowed and mems_allowed masks hotplug
+ invariant
+Date: Thu, 02 Apr 2015 12:26:32 +0530
+Message-ID: <551CE820.9090900@linux.vnet.ibm.com>
+References: <20141008070739.1170.33313.stgit@preeti.in.ibm.com> <20141008080706.GC10832@worktop.programming.kicks-ass.net> <543505EF.7070804@linux.vnet.ibm.com> <20141008101828.GG10832@worktop.programming.kicks-ass.net> <54364564.3090305@linux.vnet.ibm.com> <20141009130611.GA14387@htj.dyndns.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=RXlAJDHvfyOL+qdQfbPE9/aTfSI0lLF26CEvAqvV4x0=;
-        b=APTucbpoeRTJvXrhpLLeVwaIulE7vSRB9cBAKRcqtKqD5kqiEJNZ1uDYGaQ++0LFIi
-         243MHIMoicVEE/BPUFjEsmNEJWWrmtDT7CwJ9sUoklCD5WZ+k6dS2ExJKDvj+kbZkFuj
-         8JP4UGrai66W4zH1nrz3R+CIBL0BjdcvnFj3gwSVK29qOAQKwSuVSBAQZXODp9/EiJhe
-         myeUcJ2k71dfgwrfBGNMO8ujy095Jib3mlL40N+u7ksQyoKqPiFopiWXQVexmr3mvefD
-         gqQaOVourJttzsHg8K16Pvf2ObLvSCxhjx8Ee1eA5hII/vSRwXi4JTBps1fbhE9XaG/9
-         etkA==
-Content-Disposition: inline
-In-Reply-To: <1427878641-5273-4-git-send-email-cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20141009130611.GA14387-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, richard-/L3Ra7n9ekc@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, anton-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org, svaidy-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org, paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bharata-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org
 
-Hello, Aleksa.
+Hi Tejun, Peter,
 
-On Wed, Apr 01, 2015 at 07:57:20PM +1100, Aleksa Sarai wrote:
-> +struct cgroup_fork_state {
-> +	void *ss_state[CGROUP_SUBSYS_COUNT];
-> +};
+On 10/09/2014 06:36 PM, Tejun Heo wrote:
+> On Thu, Oct 09, 2014 at 01:50:52PM +0530, Preeti U Murthy wrote:
+>> However what remains to be answered is that the V2 of cgroup design -
+>> the default hierarchy, tracks hotplug operations for children cgroups as
+>> well. Tejun, Li, will not the concerns that Peter raised above hold for
+>> the default hierarchy as well?
+> 
+> I don't think the legacy one is a good design.  Kernel shouldn't lose
+> configurations in an irreversible way and the legacy one is also
+> making random cpuset flips by migrating tasks upwards anyway.  In
+> terms of hotunplug behavior, the legacy and unified ones behave the
+> same.  The only difference is that the configuration is independent of
+> the current state and the configured behavior is restored when the
+> cpus come back.  The other side is that the legacy hierarchy behavior
+> simply can't be allowed when the hierarchy is shared among multiple
+> controllers as in the unified hierarchy.  It affects all other
+> controllers attached to the hierarchy.
 
-Can we collect the subsystems which require pre/post fork callbacks to
-the front in group_subsys.h and do do CGROUP_SUBSYS_FORK_COUNT (or
-whatever) instead?  Then, we don't need all these subsys bitmasks
-either we can just test the index against that and be done with it.
+We have a use case currently, which needs this to be fixed one way or
+the other. While running in a virtualized setup, there may be a need to
+hotplug in resources to VMs at runtime. This includes CPUs and Memory.
+Due to the behavior of the legacy hierarchy, the new CPUs never get
+used. This is not even a scenario where we hot-unplugged CPUs and ask
+for it to be plugged back again. Its a case where the workloads running
+within a VM are in need of more resources than they began with.
 
-> +
-> +/**
-> + * cgroup_cfs_alloc - allocates an empty cgroup_fork_state
-> + */
-> +struct cgroup_fork_state *cgroup_cfs_alloc(void)
-> +{
-> +	struct cgroup_fork_state *cfs;
-> +
-> +	cfs = kzalloc(sizeof(struct cgroup_fork_state), GFP_KERNEL);
-> +	if (!cfs)
-> +		return ERR_PTR(-ENOMEM);
-> +
-> +	return cfs;
-> +}
+> 
+> That said, we can't change the behavior on the legacy one.  It's a
+> very userland visible behavior.  We simply can't change it, so
 
-Just make it a void * array and put it on stack.  Abstraction at this
-level doesn't serve any purpose.  No controller code is gonna see this
-anyway.
+By ensuring that the user configured cpusets are untouched, I don't see
+how we affect userspace adversely. The expectation usually is that the
+kernel keeps track of the user configurations. If anything we would be
+fixing an undesired behavior, wouldn't we?
 
-> +int cgroup_can_fork(struct task_struct *child, struct cgroup_fork_state *cfs)
-> +{
-> +	struct cgroup_subsys *ss;
-> +	int i, j, retval;
-> +
-> +	for_each_subsys_which(need_canfork_callback, ss, i) {
-> +		retval = ss->can_fork(child, &cfs->ss_state[i]);
-> +		if (retval)
-> +			goto out_revert;
-> +	}
-> +
-> +	return 0;
-> +
-> +out_revert:
-> +	for_each_subsys_which(need_cancelfork_callback, ss, j) {
-> +		if (j >= i)
-> +			break;
-> +		ss->cancel_fork(child, &cfs->ss_state[i]);
+> unfortunately you're stuck with it at least on the legacy hierarchy.
 
-cancel_fork() has no reason to update the opaque pointer.  No reason
-to pass pointer of it.
+Given that we are in much need for this to be fixed and that we cannot
+easily move to the default hierarchy, can you please take a look at this
+patch again?
 
-> +void cgroup_cancel_fork(struct task_struct *child, struct cgroup_fork_state *cfs)
-> +{
-> +	struct cgroup_subsys *ss;
-> +	int i;
-> +
-> +	for_each_subsys_which(need_cancelfork_callback, ss, i) {
-> +		void **state = NULL;
-> +
-> +		/*
-> +		 * Only if %ss has a can_fork() callback is %cfs->ss_state[i] meaningful
+It is understandable that there are good reasons why legacy hierarchy
+currently behaves this way or how we cannot drastically change its
+behavior, but there is no sane way in which userspace can get around
+this for the sake of genuine use cases such as the above.
 
-I don't think we do %var, do we?  % is used for macros and consts.
-
-> +		 * -- otherwise just pass a NULL.
-> +		 */
-> +		if (need_canfork_callback & (1 << i))
-> +			state = &cfs->ss_state[i];
-> +
-> +		ss->cancel_fork(child, &cfs->ss_state[i]);
-
-Ditto, just pass the pointer itself.
-
-> @@ -5241,8 +5346,18 @@ void cgroup_post_fork(struct task_struct *child)
->  	 * css_set; otherwise, @child might change state between ->fork()
->  	 * and addition to css_set.
->  	 */
-> -	for_each_subsys_which(need_fork_callback, ss, i)
-> -		ss->fork(child);
-> +	for_each_subsys_which(need_fork_callback, ss, i) {
-> +		void **state = NULL;
-> +
-> +		/*
-> +		 * Only if %ss has a can_fork() callback is %old_cfs->ss_state[i]
-> +		 * meaningful -- otherwise just pass a NULL.
-> +		 */
-
-Again, if you just passed the pointer, you wouldn't need the above.
-Just clear the array on init and pass in whatever value is in there.
-
-> +		if (need_canfork_callback & (1 << i))
-> +			state = &old_cfs->ss_state[i];
-> +
-> +		ss->fork(child, state);
-> +	}
->  }
-
-Thanks.
-
--- 
-tejun
+Regards
+Preeti U Murthy
+> 
+> Thanks.
+> 
