@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 10/49] memcg: implement mem_cgroup_css_from_page()
-Date: Mon,  6 Apr 2015 15:57:59 -0400
-Message-ID: <1428350318-8215-11-git-send-email-tj@kernel.org>
+Subject: [PATCH 08/49] blkcg: implement task_get_blkcg_css()
+Date: Mon,  6 Apr 2015 15:57:57 -0400
+Message-ID: <1428350318-8215-9-git-send-email-tj@kernel.org>
 References: <1428350318-8215-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=OLi+Jl8rAvTAmjC1jeZ+tLj5SIk308oHoDZJOBmgDYo=;
-        b=khaRkNN9o8PenLqAhS69OYztllXbBTunUk7UsBVrX3uUYT9ZQVY/IokMBPVYiHJ6gI
-         l7NdcMX6Rupm8Yjk86Orsm0PhHq+fl8CgEITiMgToYdqAt7CtsWdGLEAQjNHqbQ1Ac8E
-         i5DnESh0Co1ANtzjHjIVM/1cB9pKSQLKnmCCbFu+Rpje0//8nvm3QKxV/L2XA0XURGQv
-         yrL2bmLgNpeYcIIhBXOYoTNaaTGFkIo27M3cLetfT6vaqyRDOtK5pXD7te75bagfvl4U
-         pyXNeV75WBm/Ah3uq9TaGhsX77RO/Bc6aHwubEMyAOJFfdNoUjqkzulgfLuP4lPxfEef
-         6XVg==
+        bh=6QhiKnG6awNOOoUyM/l2PLv1fwkjCAIuOPIXvUwqjBQ=;
+        b=anJh4+ry/+nUW0QA2lD1hKjU6gqtb4QluOrzru3fTdgC72e89KeWzGBvnFBH91Bb70
+         /hmH6kb0mPR/eR3yWY7AuhcsD10X8fki4xhg30RE3kqPnj+Xu7KAb2YdxIJMFWrQk/db
+         l5SyWmmN8r5Jc0Zbgz+h4K/AE2XcF+Vf9WPHCeiSuTcnpBsGXMI7tgqWb6TsVJtB7Brc
+         AiA20HkVaGL7pz9OGAqU5HYp4mFAmOm0SlCnXdM79pyEgBNwUn//93/BGnHL6gU2zp/C
+         zZa0dXvJbBnGgWlt+2G4nIB2O//qh7tIn3F/WtPCuViTeps8Y1zealz4wCRrtvu6ik5U
+         abeQ==
 In-Reply-To: <1428350318-8215-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,55 +23,46 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-Implement mem_cgroup_css_from_page() which returns the
-cgroup_subsys_state of the memcg associated with a given page.  This
-will be used by cgroup writeback support.
+Implement a wrapper around task_get_css() to acquire the blkcg css for
+a given task.  The wrapper is necessary for cgroup writeback support
+as there will be places outside blkcg proper trying to acquire
+blkcg_css and blkio_cgrp_id will be undefined when !CONFIG_BLK_CGROUP.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
 ---
- include/linux/memcontrol.h |  1 +
- mm/memcontrol.c            | 14 ++++++++++++++
- 2 files changed, 15 insertions(+)
+ include/linux/blk-cgroup.h | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 294498f..637ef62 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -115,6 +115,7 @@ static inline bool mm_match_cgroup(struct mm_struct *mm,
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index 65f0c17..4dc643f 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -195,6 +195,12 @@ static inline struct blkcg *bio_blkcg(struct bio *bio)
+ 	return task_blkcg(current);
  }
  
- extern struct cgroup_subsys_state *mem_cgroup_css(struct mem_cgroup *memcg);
-+extern struct cgroup_subsys_state *mem_cgroup_css_from_page(struct page *page);
- 
- struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *,
- 				   struct mem_cgroup *,
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index fda7025..74241b3 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -591,6 +591,20 @@ struct cgroup_subsys_state *mem_cgroup_css(struct mem_cgroup *memcg)
- 	return &memcg->css;
- }
- 
-+/**
-+ * mem_cgroup_css_from_page - css of the memcg associated with a page
-+ * @page: page of interest
-+ *
-+ * This function is guaranteed to return a valid cgroup_subsys_state and
-+ * the returned css remains accessible until @page is released.
-+ */
-+struct cgroup_subsys_state *mem_cgroup_css_from_page(struct page *page)
++static inline struct cgroup_subsys_state *
++task_get_blkcg_css(struct task_struct *task)
 +{
-+	if (page->mem_cgroup)
-+		return &page->mem_cgroup->css;
-+	return &root_mem_cgroup->css;
++	return task_get_css(task, blkio_cgrp_id);
 +}
 +
- static struct mem_cgroup_per_zone *
- mem_cgroup_page_zoneinfo(struct mem_cgroup *memcg, struct page *page)
- {
+ /**
+  * blkcg_parent - get the parent of a blkcg
+  * @blkcg: blkcg of interest
+@@ -573,6 +579,12 @@ struct blkcg_policy {
+ 
+ #define blkcg_root_css	((struct cgroup_subsys_state *)ERR_PTR(-EINVAL))
+ 
++static inline struct cgroup_subsys_state *
++task_get_blkcg_css(struct task_struct *task)
++{
++	return NULL;
++}
++
+ #ifdef CONFIG_BLOCK
+ 
+ static inline struct blkcg_gq *blkg_lookup(struct blkcg *blkcg, void *key) { return NULL; }
 -- 
 2.1.0
 
