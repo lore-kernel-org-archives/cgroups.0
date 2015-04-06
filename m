@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 09/49] blkcg: implement bio_associate_blkcg()
-Date: Mon,  6 Apr 2015 15:57:58 -0400
-Message-ID: <1428350318-8215-10-git-send-email-tj@kernel.org>
+Subject: [PATCH 06/49] blkcg: add blkcg_root_css
+Date: Mon,  6 Apr 2015 15:57:55 -0400
+Message-ID: <1428350318-8215-7-git-send-email-tj@kernel.org>
 References: <1428350318-8215-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=+DOS9EDFeydzccS3jbmDKoamxnq6YJmGgu6Upq3HCeo=;
-        b=awlWvKrD8vBhtAXOp/IUKIkx0w8BrdgoHe8BOD4wBf6cJAKgOyKCj0P1JXTybPex0g
-         S5+cr1/Fz2B3QRrua27s6QO9heVcKV6eW2S1bBPZsYvN5IZwv1C/LpvUB1jcDh1n1Dba
-         pBWxueX9WkxON+o67//poSD39EeRTt6QHbOdhCpS1jxxTndPuzdvZE3AZFToC2iOyZzy
-         bjg5gTwOqKMwKADusj1noKQv+rkfkXK7yucBe4yHz9BTB06duD3Z30YQfpc1n05B4bYk
-         qv4Ohxrq4/Zr3bSIOjTl+ZAqGG0/fGgb05aQHLyZEtpuYrs+GEOwoOOUHYaYGeP8yh85
-         EeOA==
+        bh=fVoQtMeBQ+IEP+d2mTqKODJwqnCTzaZ/GZ4USZkSLeU=;
+        b=tvzEXvk8P8NNqhE//kr3ITekoFOSyd7tl/tkm/Zp5F8TjtrMQtn2DhkC9gLPekbFkx
+         ro+CHt/5fpW9tOkmPiEyak+Vcnrq/587WwqBrnRaA0EykBhiQjbejRtsEIrclGIM7jp3
+         cehaZVICU4qmS1w3fxdl0Kxa4MmUNRVFE2J6ZB8JXKEjQnN3CylYcCdtsEbcNpBmDG+H
+         t3oJnIKCiynZupjwCf/m0M3SzHW5Mb3XoZkE6vMjsgxWtCOaUTeckTd40FsPVJMWPe0M
+         HZ2lIiIH4MeJyG3lxMqeCDp54cBjCr16R9PMTojVPcDtNIyooayXCRRUIHUaNA4a4FMm
+         CgYA==
 In-Reply-To: <1428350318-8215-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,83 +23,55 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-Currently, a bio can only be associated with the io_context and blkcg
-of %current using bio_associate_current().  This is too restrictive
-for cgroup writeback support.  Implement bio_associate_blkcg() which
-associates a bio with the specified blkcg.
+Add global constant blkcg_root_css which points to &blkcg_root.css.
+This will be used by cgroup writeback support.  If blkcg is disabled,
+it's defined as ERR_PTR(-EINVAL).
 
-bio_associate_blkcg() leaves the io_context unassociated.
-bio_associate_current() is updated so that it considers a bio as
-already associated if it has a blkcg_css, instead of an io_context,
-associated with it.
+v2: The declarations moved to include/linux/blk-cgroup.h as suggested
+    by Vivek.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Vivek Goyal <vgoyal@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>
 ---
- block/bio.c         | 24 +++++++++++++++++++++++-
- include/linux/bio.h |  3 +++
- 2 files changed, 26 insertions(+), 1 deletion(-)
+ block/blk-cgroup.c         | 2 ++
+ include/linux/blk-cgroup.h | 3 +++
+ 2 files changed, 5 insertions(+)
 
-diff --git a/block/bio.c b/block/bio.c
-index 968683e..ab7517d 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -1971,6 +1971,28 @@ struct bio_set *bioset_create_nobvec(unsigned int pool_size, unsigned int front_
- EXPORT_SYMBOL(bioset_create_nobvec);
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 2a4f77f..54ec172 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -30,6 +30,8 @@ struct blkcg blkcg_root = { .cfq_weight = 2 * CFQ_WEIGHT_DEFAULT,
+ 			    .cfq_leaf_weight = 2 * CFQ_WEIGHT_DEFAULT, };
+ EXPORT_SYMBOL_GPL(blkcg_root);
  
- #ifdef CONFIG_BLK_CGROUP
++struct cgroup_subsys_state * const blkcg_root_css = &blkcg_root.css;
 +
-+/**
-+ * bio_associate_blkcg - associate a bio with the specified blkcg
-+ * @bio: target bio
-+ * @blkcg_css: css of the blkcg to associate
-+ *
-+ * Associate @bio with the blkcg specified by @blkcg_css.  Block layer will
-+ * treat @bio as if it were issued by a task which belongs to the blkcg.
-+ *
-+ * This function takes an extra reference of @blkcg_css which will be put
-+ * when @bio is released.  The caller must own @bio and is responsible for
-+ * synchronizing calls to this function.
-+ */
-+int bio_associate_blkcg(struct bio *bio, struct cgroup_subsys_state *blkcg_css)
-+{
-+	if (unlikely(bio->bi_css))
-+		return -EBUSY;
-+	css_get(blkcg_css);
-+	bio->bi_css = blkcg_css;
-+	return 0;
-+}
+ static struct blkcg_policy *blkcg_policy[BLKCG_MAX_POLS];
+ 
+ static bool blkcg_policy_enabled(struct request_queue *q,
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index 51f95b3..65f0c17 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -134,6 +134,7 @@ struct blkcg_policy {
+ };
+ 
+ extern struct blkcg blkcg_root;
++extern struct cgroup_subsys_state * const blkcg_root_css;
+ 
+ struct blkcg_gq *blkg_lookup(struct blkcg *blkcg, struct request_queue *q);
+ struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
+@@ -570,6 +571,8 @@ struct blkcg_gq {
+ struct blkcg_policy {
+ };
+ 
++#define blkcg_root_css	((struct cgroup_subsys_state *)ERR_PTR(-EINVAL))
 +
- /**
-  * bio_associate_current - associate a bio with %current
-  * @bio: target bio
-@@ -1988,7 +2010,7 @@ int bio_associate_current(struct bio *bio)
- {
- 	struct io_context *ioc;
+ #ifdef CONFIG_BLOCK
  
--	if (bio->bi_ioc)
-+	if (bio->bi_css)
- 		return -EBUSY;
- 
- 	ioc = current->io_context;
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index da3a127..cbc5d1d 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -469,9 +469,12 @@ extern void bvec_free(mempool_t *, struct bio_vec *, unsigned int);
- extern unsigned int bvec_nr_vecs(unsigned short idx);
- 
- #ifdef CONFIG_BLK_CGROUP
-+int bio_associate_blkcg(struct bio *bio, struct cgroup_subsys_state *blkcg_css);
- int bio_associate_current(struct bio *bio);
- void bio_disassociate_task(struct bio *bio);
- #else	/* CONFIG_BLK_CGROUP */
-+static inline int bio_associate_blkcg(struct bio *bio,
-+			struct cgroup_subsys_state *blkcg_css) { return 0; }
- static inline int bio_associate_current(struct bio *bio) { return -ENOENT; }
- static inline void bio_disassociate_task(struct bio *bio) { }
- #endif	/* CONFIG_BLK_CGROUP */
+ static inline struct blkcg_gq *blkg_lookup(struct blkcg *blkcg, void *key) { return NULL; }
 -- 
 2.1.0
 
