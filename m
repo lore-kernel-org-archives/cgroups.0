@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 24/49] writeback: attribute stats to the matching per-cgroup bdi_writeback
-Date: Mon,  6 Apr 2015 15:58:13 -0400
-Message-ID: <1428350318-8215-25-git-send-email-tj@kernel.org>
+Subject: [PATCH 26/49] writeback: make congestion functions per bdi_writeback
+Date: Mon,  6 Apr 2015 15:58:15 -0400
+Message-ID: <1428350318-8215-27-git-send-email-tj@kernel.org>
 References: <1428350318-8215-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=VcM6GVcgDVMUQSg0AYqbSGdyjNpSUr3SG3T/kr95KHw=;
-        b=Y3AOnQBqRqxN3LzKT7UgtsGtqEUlKPN5hU22ov5ottUcC60T4jLd8FLyqzwgis6cpN
-         w7LoeXzS+WyMfByuz2Gu4im3cEKDtF7rZ2F2LYWqiqIVdRPJXUp98b0F4Ob4L/NwLZHq
-         2s9iHkMyejvMep8EiC5BPI3XxEofc7oPqmdmKoHQ520bSKTR297t21GDK1TRxj/OqVsa
-         /Nffm93M2bs6nTgA4tN1a9E7qi+8hifK0cRVXTA3STMHXcET6j3TxRBLA8hb+Lsj3pKf
-         BfPUc9hcKTaSz4wdMOLObwzR2/wxq6EbSSpNEzmbWicEaV5lOY7nEQbm5fTUSxFW0uXF
-         523g==
+        bh=sTAEbUJVCZywnAJWIUgc8NFPiDwxcEDgkkfyd8m/uI4=;
+        b=iIFUWPZFYyUf/0sdoCr+WPLyLI+gRoHYNrMMOBts402uk7jRJ3bKJ9Qf/cBN4ViRF/
+         RcJbrGhey0WbzzExtvBtiXGv2HRvUTZCMd1U7AQqeDfCtkxBK/zsc/dRgM/r0p/pnoi/
+         TJSU1K5W62+yf7FqTvuh3N5gy9jd/rugA4A1wq4LLgkurTfyEVbCXNep9K9P4xeV4++a
+         aPPnNg9hDko5bx3zjXlMfmS7XJ5WPvcSh2jF5Xs/6rg3TPOhcGija/ci5YlmzQyU5uiz
+         SasjJTFgiMsZdi/yKj1s1Io7dZcWPxh8XW5sxZ45UR5D+CAm+H2Uqj+gcU+U4VStG76p
+         ax7g==
 In-Reply-To: <1428350318-8215-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,128 +23,174 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-Until now, all WB_* stats were accounted against the root wb
-(bdi_writeback), now that multiple wb (bdi_writeback) support is in
-place, let's attributes the stats to the respective per-cgroup wb's.
+Currently, all congestion functions take bdi (backing_dev_info) and
+always operate on the root wb (bdi->wb) and the congestion state from
+the block layer is propagated only for the root blkcg.  This patch
+introduces {set|clear}_wb_congested() and wb_congested() which take a
+bdi_writeback_congested and bdi_writeback respectively.  The bdi
+counteparts are now wrappers invoking the wb based functions on
+@bdi->wb.
 
-As no filesystem has FS_CGROUP_WRITEBACK yet, this doesn't lead to
-visible behavior differences.
+While converting clear_bdi_congested() to clear_wb_congested(), the
+local variable declaration order between @wqh and @bit is swapped for
+cosmetic reason.
 
-v2: Updated for per-inode wb association.
+This patch just adds the new wb based functions.  The following
+patches will apply them.
+
+v2: Updated for bdi_writeback_congested.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
 ---
- mm/filemap.c        |  2 +-
- mm/page-writeback.c | 22 ++++++++++++++--------
- mm/truncate.c       |  6 ++++--
- 3 files changed, 19 insertions(+), 11 deletions(-)
+ include/linux/backing-dev-defs.h | 14 +++++++++++--
+ include/linux/backing-dev.h      | 45 +++++++++++++++++++++++-----------------
+ mm/backing-dev.c                 | 22 ++++++++++----------
+ 3 files changed, 49 insertions(+), 32 deletions(-)
 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index a2b098b..64698fa 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -215,7 +215,7 @@ void __delete_from_page_cache(struct page *page, void *shadow,
- 	if (PageDirty(page) && mapping_cap_account_dirty(mapping)) {
- 		mem_cgroup_dec_page_stat(memcg, MEM_CGROUP_STAT_DIRTY);
- 		dec_zone_page_state(page, NR_FILE_DIRTY);
--		dec_wb_stat(&inode_to_bdi(mapping->host)->wb, WB_RECLAIMABLE);
-+		dec_wb_stat(inode_to_wb(mapping->host), WB_RECLAIMABLE);
- 	}
+diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
+index a1e9c40..eb38676 100644
+--- a/include/linux/backing-dev-defs.h
++++ b/include/linux/backing-dev-defs.h
+@@ -163,7 +163,17 @@ enum {
+ 	BLK_RW_SYNC	= 1,
+ };
+ 
+-void clear_bdi_congested(struct backing_dev_info *bdi, int sync);
+-void set_bdi_congested(struct backing_dev_info *bdi, int sync);
++void clear_wb_congested(struct bdi_writeback_congested *congested, int sync);
++void set_wb_congested(struct bdi_writeback_congested *congested, int sync);
++
++static inline void clear_bdi_congested(struct backing_dev_info *bdi, int sync)
++{
++	clear_wb_congested(bdi->wb.congested, sync);
++}
++
++static inline void set_bdi_congested(struct backing_dev_info *bdi, int sync)
++{
++	set_wb_congested(bdi->wb.congested, sync);
++}
+ 
+ #endif	/* __LINUX_BACKING_DEV_DEFS_H */
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index 8ae59df..2c498a2 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -167,27 +167,13 @@ static inline struct backing_dev_info *inode_to_bdi(struct inode *inode)
+ 	return sb->s_bdi;
  }
  
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 79c9026..3b6d058 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -2175,10 +2175,13 @@ EXPORT_SYMBOL(__set_page_dirty_nobuffers);
- void account_page_redirty(struct page *page)
+-static inline int bdi_congested(struct backing_dev_info *bdi, int bdi_bits)
++static inline int wb_congested(struct bdi_writeback *wb, int cong_bits)
  {
- 	struct address_space *mapping = page->mapping;
-+
- 	if (mapping && mapping_cap_account_dirty(mapping)) {
-+		struct bdi_writeback *wb = inode_to_wb(mapping->host);
-+
- 		current->nr_dirtied--;
- 		dec_zone_page_state(page, NR_DIRTIED);
--		dec_wb_stat(&inode_to_bdi(mapping->host)->wb, WB_DIRTIED);
-+		dec_wb_stat(wb, WB_DIRTIED);
- 	}
+-	if (bdi->congested_fn)
+-		return bdi->congested_fn(bdi->congested_data, bdi_bits);
+-	return (bdi->wb.congested->state & bdi_bits);
+-}
+-
+-static inline int bdi_read_congested(struct backing_dev_info *bdi)
+-{
+-	return bdi_congested(bdi, 1 << WB_sync_congested);
+-}
+-
+-static inline int bdi_write_congested(struct backing_dev_info *bdi)
+-{
+-	return bdi_congested(bdi, 1 << WB_async_congested);
+-}
++	struct backing_dev_info *bdi = wb->bdi;
+ 
+-static inline int bdi_rw_congested(struct backing_dev_info *bdi)
+-{
+-	return bdi_congested(bdi, (1 << WB_sync_congested) |
+-				  (1 << WB_async_congested));
++	if (bdi->congested_fn)
++		return bdi->congested_fn(bdi->congested_data, cong_bits);
++	return wb->congested->state & cong_bits;
  }
- EXPORT_SYMBOL(account_page_redirty);
-@@ -2324,8 +2327,7 @@ int clear_page_dirty_for_io(struct page *page)
- 		if (TestClearPageDirty(page)) {
- 			mem_cgroup_dec_page_stat(memcg, MEM_CGROUP_STAT_DIRTY);
- 			dec_zone_page_state(page, NR_FILE_DIRTY);
--			dec_wb_stat(&inode_to_bdi(mapping->host)->wb,
--				    WB_RECLAIMABLE);
-+			dec_wb_stat(inode_to_wb(mapping->host), WB_RECLAIMABLE);
- 			ret = 1;
- 		}
- 		mem_cgroup_end_page_stat(memcg);
-@@ -2343,7 +2345,8 @@ int test_clear_page_writeback(struct page *page)
  
- 	memcg = mem_cgroup_begin_page_stat(page);
- 	if (mapping) {
--		struct backing_dev_info *bdi = inode_to_bdi(mapping->host);
-+		struct inode *inode = mapping->host;
-+		struct backing_dev_info *bdi = inode_to_bdi(inode);
- 		unsigned long flags;
+ long congestion_wait(int sync, long timeout);
+@@ -454,4 +440,25 @@ static inline void wb_blkcg_offline(struct blkcg *blkcg)
  
- 		spin_lock_irqsave(&mapping->tree_lock, flags);
-@@ -2353,8 +2356,10 @@ int test_clear_page_writeback(struct page *page)
- 						page_index(page),
- 						PAGECACHE_TAG_WRITEBACK);
- 			if (bdi_cap_account_writeback(bdi)) {
--				__dec_wb_stat(&bdi->wb, WB_WRITEBACK);
--				__wb_writeout_inc(&bdi->wb);
-+				struct bdi_writeback *wb = inode_to_wb(inode);
+ #endif	/* CONFIG_CGROUP_WRITEBACK */
+ 
++static inline int bdi_congested(struct backing_dev_info *bdi, int cong_bits)
++{
++	return wb_congested(&bdi->wb, cong_bits);
++}
 +
-+				__dec_wb_stat(wb, WB_WRITEBACK);
-+				__wb_writeout_inc(wb);
- 			}
- 		}
- 		spin_unlock_irqrestore(&mapping->tree_lock, flags);
-@@ -2378,7 +2383,8 @@ int __test_set_page_writeback(struct page *page, bool keep_write)
- 
- 	memcg = mem_cgroup_begin_page_stat(page);
- 	if (mapping) {
--		struct backing_dev_info *bdi = inode_to_bdi(mapping->host);
-+		struct inode *inode = mapping->host;
-+		struct backing_dev_info *bdi = inode_to_bdi(inode);
- 		unsigned long flags;
- 
- 		spin_lock_irqsave(&mapping->tree_lock, flags);
-@@ -2388,7 +2394,7 @@ int __test_set_page_writeback(struct page *page, bool keep_write)
- 						page_index(page),
- 						PAGECACHE_TAG_WRITEBACK);
- 			if (bdi_cap_account_writeback(bdi))
--				__inc_wb_stat(&bdi->wb, WB_WRITEBACK);
-+				__inc_wb_stat(inode_to_wb(inode), WB_WRITEBACK);
- 		}
- 		if (!PageDirty(page))
- 			radix_tree_tag_clear(&mapping->page_tree,
-diff --git a/mm/truncate.c b/mm/truncate.c
-index df16f8c..fe2d769 100644
---- a/mm/truncate.c
-+++ b/mm/truncate.c
-@@ -113,11 +113,13 @@ void cancel_dirty_page(struct page *page, unsigned int account_size)
- 	memcg = mem_cgroup_begin_page_stat(page);
- 	if (TestClearPageDirty(page)) {
- 		struct address_space *mapping = page->mapping;
++static inline int bdi_read_congested(struct backing_dev_info *bdi)
++{
++	return bdi_congested(bdi, 1 << WB_sync_congested);
++}
 +
- 		if (mapping && mapping_cap_account_dirty(mapping)) {
-+			struct bdi_writeback *wb = inode_to_wb(mapping->host);
++static inline int bdi_write_congested(struct backing_dev_info *bdi)
++{
++	return bdi_congested(bdi, 1 << WB_async_congested);
++}
 +
- 			mem_cgroup_dec_page_stat(memcg, MEM_CGROUP_STAT_DIRTY);
- 			dec_zone_page_state(page, NR_FILE_DIRTY);
--			dec_wb_stat(&inode_to_bdi(mapping->host)->wb,
--				    WB_RECLAIMABLE);
-+			dec_wb_stat(wb, WB_RECLAIMABLE);
- 			if (account_size)
- 				task_io_account_cancelled_write(account_size);
- 		}
++static inline int bdi_rw_congested(struct backing_dev_info *bdi)
++{
++	return bdi_congested(bdi, (1 << WB_sync_congested) |
++				  (1 << WB_async_congested));
++}
++
+ #endif	/* _LINUX_BACKING_DEV_H */
+diff --git a/mm/backing-dev.c b/mm/backing-dev.c
+index 4c9386c..5029c4a 100644
+--- a/mm/backing-dev.c
++++ b/mm/backing-dev.c
+@@ -896,31 +896,31 @@ static wait_queue_head_t congestion_wqh[2] = {
+ 		__WAIT_QUEUE_HEAD_INITIALIZER(congestion_wqh[0]),
+ 		__WAIT_QUEUE_HEAD_INITIALIZER(congestion_wqh[1])
+ 	};
+-static atomic_t nr_bdi_congested[2];
++static atomic_t nr_wb_congested[2];
+ 
+-void clear_bdi_congested(struct backing_dev_info *bdi, int sync)
++void clear_wb_congested(struct bdi_writeback_congested *congested, int sync)
+ {
+-	enum wb_state bit;
+ 	wait_queue_head_t *wqh = &congestion_wqh[sync];
++	enum wb_state bit;
+ 
+ 	bit = sync ? WB_sync_congested : WB_async_congested;
+-	if (test_and_clear_bit(bit, &bdi->wb.congested->state))
+-		atomic_dec(&nr_bdi_congested[sync]);
++	if (test_and_clear_bit(bit, &congested->state))
++		atomic_dec(&nr_wb_congested[sync]);
+ 	smp_mb__after_atomic();
+ 	if (waitqueue_active(wqh))
+ 		wake_up(wqh);
+ }
+-EXPORT_SYMBOL(clear_bdi_congested);
++EXPORT_SYMBOL(clear_wb_congested);
+ 
+-void set_bdi_congested(struct backing_dev_info *bdi, int sync)
++void set_wb_congested(struct bdi_writeback_congested *congested, int sync)
+ {
+ 	enum wb_state bit;
+ 
+ 	bit = sync ? WB_sync_congested : WB_async_congested;
+-	if (!test_and_set_bit(bit, &bdi->wb.congested->state))
+-		atomic_inc(&nr_bdi_congested[sync]);
++	if (!test_and_set_bit(bit, &congested->state))
++		atomic_inc(&nr_wb_congested[sync]);
+ }
+-EXPORT_SYMBOL(set_bdi_congested);
++EXPORT_SYMBOL(set_wb_congested);
+ 
+ /**
+  * congestion_wait - wait for a backing_dev to become uncongested
+@@ -979,7 +979,7 @@ long wait_iff_congested(struct zone *zone, int sync, long timeout)
+ 	 * encountered in the current zone, yield if necessary instead
+ 	 * of sleeping on the congestion queue
+ 	 */
+-	if (atomic_read(&nr_bdi_congested[sync]) == 0 ||
++	if (atomic_read(&nr_wb_congested[sync]) == 0 ||
+ 	    !test_bit(ZONE_CONGESTED, &zone->flags)) {
+ 		cond_resched();
+ 
 -- 
 2.1.0
 
