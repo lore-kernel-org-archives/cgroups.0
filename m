@@ -1,46 +1,391 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET 2/3 v2 block/for-4.1/core] writeback: cgroup writeback
- backpressure propagation
-Date: Mon, 6 Apr 2015 16:07:34 -0400
-Message-ID: <20150406200734.GI10582@htj.duckdns.org>
-References: <1428350674-8303-1-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
+Subject: [PATCH 01/10] writeback: relocate wb[_try]_get(), wb_put(), inode_{attach|detach}_wb()
+Date: Mon,  6 Apr 2015 16:18:19 -0400
+Message-ID: <1428351508-8399-2-git-send-email-tj@kernel.org>
+References: <1428351508-8399-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=0V57KWCrNsSmzRlENfx5NKTctgIuDVBROFaql/KU8so=;
-        b=qaUZXiaPOGMAkVMx+9gSwJP3eqfdFAbX5sH8JdjyJimYa/QRkmE0RyT0+v3WlYjmiM
-         iPyi1Q0VjM05ZIeie/EoYELxuol/3Q67m//MywvnHysoUZeB1w7iYY2rvY6dwtLt4Qyh
-         c3WEs2HCW+nFdiRjrqhQXaMynwrbTR/3OfFKEWTpOWhvse/elgCX/czEU231NhsUCyUq
-         k6S0ShQ0Xqs/qzUq+P/7PrJy6nIisCzC5/+7NVP6sdBlw5KoOAadNpiLKt5KH3ChAGSB
-         mpKx0ChmY95BS4chqIm9HleWm5cpSzXNRkrL/4P1EthjN3fHVO6XU+/AsJ9Qri4/Tk2/
-         sPcA==
-Content-Disposition: inline
-In-Reply-To: <1428350674-8303-1-git-send-email-tj@kernel.org>
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=GvJFKK0gH0jl1Jy1EpzilapKyM+XGM4LjRxOFSRIj9g=;
+        b=KwCe+z2K+wHSkVHRWqdcimfQGjV2qMl5dLXBGGXmwartSoTXlBEfPIui/9KFxQZLfe
+         F4CbBH1UFJs9eXpND+S6yDXFxDzR7Rlf68ml9sn2/Be47GMPf0cuAl3fKZpo43FhxPbf
+         B/CtqcFP/yTuEMK0gDF1B3psOSTukN9WWODNPYueMzpzlWv1wHqHEROl+LvRpe1Nq9ZP
+         LfqomC3Gz+H51Qhm2X2u6RZUHX0tsRzPUNvt1V+/WhiSrb+5KnS8zhKHFRs3dHpSz9ZO
+         QDHEEa4TWFA0R90xvYzJmWndya+wNl/yEpRbK08l0lgPyVVbB02omjcltHIXuPBdGGP2
+         hkAw==
+In-Reply-To: <1428351508-8399-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com
+Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-On Mon, Apr 06, 2015 at 04:04:15PM -0400, Tejun Heo wrote:
-> [L] http://lkml.kernel.org/g/
-> [1] http://lkml.kernel.org/g/20150323041848.GA8991@htj.duckdns.org
-> [2] http://lkml.kernel.org/g/
+Currently, majority of cgroup writeback support including all the
+above functions are implemented in include/linux/backing-dev.h and
+mm/backing-dev.c; however, the portion closely related to writeback
+logic implemented in include/linux/writeback.h and mm/page-writeback.c
+will expand to support foreign writeback detection and correction.
 
-Oops, forgot to update the links.
+This patch moves wb[_try]_get() and wb_put() to
+include/linux/backing-dev-defs.h so that they can be used from
+writeback.h and inode_{attach|detach}_wb() to writeback.h and
+page-writeback.c.
 
-[L] http://lkml.kernel.org/g/1428350674-8303-1-git-send-email-tj@kernel.org
-[1] http://lkml.kernel.org/g/20150323041848.GA8991@htj.duckdns.org
-[2] http://lkml.kernel.org/g/1428350318-8215-1-git-send-email-tj@kernel.org
+This is pure reorganization and doesn't introduce any functional
+changes.
 
-Thanks.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Jan Kara <jack@suse.cz>
+Cc: Wu Fengguang <fengguang.wu@intel.com>
+Cc: Greg Thelen <gthelen@google.com>
+---
+ fs/fs-writeback.c                | 31 +++++++++++++++
+ include/linux/backing-dev-defs.h | 50 ++++++++++++++++++++++++
+ include/linux/backing-dev.h      | 82 ----------------------------------------
+ include/linux/writeback.h        | 46 ++++++++++++++++++++++
+ mm/backing-dev.c                 | 30 ---------------
+ 5 files changed, 127 insertions(+), 112 deletions(-)
 
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index 8c22da2..d4da5e47 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -27,6 +27,7 @@
+ #include <linux/backing-dev.h>
+ #include <linux/tracepoint.h>
+ #include <linux/device.h>
++#include <linux/memcontrol.h>
+ #include "internal.h"
+ 
+ /*
+@@ -200,6 +201,36 @@ static void wb_wait_for_completion(struct backing_dev_info *bdi,
+ 
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 
++void __inode_attach_wb(struct inode *inode, struct page *page)
++{
++	struct backing_dev_info *bdi = inode_to_bdi(inode);
++	struct bdi_writeback *wb = NULL;
++
++	if (inode_cgwb_enabled(inode)) {
++		struct cgroup_subsys_state *memcg_css;
++
++		if (page) {
++			memcg_css = mem_cgroup_css_from_page(page);
++			wb = wb_get_create(bdi, memcg_css, GFP_ATOMIC);
++		} else {
++			/* must pin memcg_css, see wb_get_create() */
++			memcg_css = task_get_css(current, memory_cgrp_id);
++			wb = wb_get_create(bdi, memcg_css, GFP_ATOMIC);
++			css_put(memcg_css);
++		}
++	}
++
++	if (!wb)
++		wb = &bdi->wb;
++
++	/*
++	 * There may be multiple instances of this function racing to
++	 * update the same inode.  Use cmpxchg() to tell the winner.
++	 */
++	if (unlikely(cmpxchg(&inode->i_wb, NULL, wb)))
++		wb_put(wb);
++}
++
+ /**
+  * inode_congested - test whether an inode is congested
+  * @inode: inode to test for congestion
+diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
+index 8d470b7..e047b49 100644
+--- a/include/linux/backing-dev-defs.h
++++ b/include/linux/backing-dev-defs.h
+@@ -186,4 +186,54 @@ static inline void set_bdi_congested(struct backing_dev_info *bdi, int sync)
+ 	set_wb_congested(bdi->wb.congested, sync);
+ }
+ 
++#ifdef CONFIG_CGROUP_WRITEBACK
++
++/**
++ * wb_tryget - try to increment a wb's refcount
++ * @wb: bdi_writeback to get
++ */
++static inline bool wb_tryget(struct bdi_writeback *wb)
++{
++	if (wb != &wb->bdi->wb)
++		return percpu_ref_tryget(&wb->refcnt);
++	return true;
++}
++
++/**
++ * wb_get - increment a wb's refcount
++ * @wb: bdi_writeback to get
++ */
++static inline void wb_get(struct bdi_writeback *wb)
++{
++	if (wb != &wb->bdi->wb)
++		percpu_ref_get(&wb->refcnt);
++}
++
++/**
++ * wb_put - decrement a wb's refcount
++ * @wb: bdi_writeback to put
++ */
++static inline void wb_put(struct bdi_writeback *wb)
++{
++	if (wb != &wb->bdi->wb)
++		percpu_ref_put(&wb->refcnt);
++}
++
++#else	/* CONFIG_CGROUP_WRITEBACK */
++
++static inline bool wb_tryget(struct bdi_writeback *wb)
++{
++	return true;
++}
++
++static inline void wb_get(struct bdi_writeback *wb)
++{
++}
++
++static inline void wb_put(struct bdi_writeback *wb)
++{
++}
++
++#endif	/* CONFIG_CGROUP_WRITEBACK */
++
+ #endif	/* __LINUX_BACKING_DEV_DEFS_H */
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index e9d7373..5c978a9 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -243,7 +243,6 @@ void wb_congested_put(struct bdi_writeback_congested *congested);
+ struct bdi_writeback *wb_get_create(struct backing_dev_info *bdi,
+ 				    struct cgroup_subsys_state *memcg_css,
+ 				    gfp_t gfp);
+-void __inode_attach_wb(struct inode *inode, struct page *page);
+ void wb_memcg_offline(struct mem_cgroup *memcg);
+ void wb_blkcg_offline(struct blkcg *blkcg);
+ int inode_congested(struct inode *inode, int cong_bits);
+@@ -265,37 +264,6 @@ static inline bool inode_cgwb_enabled(struct inode *inode)
+ }
+ 
+ /**
+- * wb_tryget - try to increment a wb's refcount
+- * @wb: bdi_writeback to get
+- */
+-static inline bool wb_tryget(struct bdi_writeback *wb)
+-{
+-	if (wb != &wb->bdi->wb)
+-		return percpu_ref_tryget(&wb->refcnt);
+-	return true;
+-}
+-
+-/**
+- * wb_get - increment a wb's refcount
+- * @wb: bdi_writeback to get
+- */
+-static inline void wb_get(struct bdi_writeback *wb)
+-{
+-	if (wb != &wb->bdi->wb)
+-		percpu_ref_get(&wb->refcnt);
+-}
+-
+-/**
+- * wb_put - decrement a wb's refcount
+- * @wb: bdi_writeback to put
+- */
+-static inline void wb_put(struct bdi_writeback *wb)
+-{
+-	if (wb != &wb->bdi->wb)
+-		percpu_ref_put(&wb->refcnt);
+-}
+-
+-/**
+  * wb_find_current - find wb for %current on a bdi
+  * @bdi: bdi of interest
+  *
+@@ -354,35 +322,6 @@ wb_get_create_current(struct backing_dev_info *bdi, gfp_t gfp)
+ }
+ 
+ /**
+- * inode_attach_wb - associate an inode with its wb
+- * @inode: inode of interest
+- * @page: page being dirtied (may be NULL)
+- *
+- * If @inode doesn't have its wb, associate it with the wb matching the
+- * memcg of @page or, if @page is NULL, %current.  May be called w/ or w/o
+- * @inode->i_lock.
+- */
+-static inline void inode_attach_wb(struct inode *inode, struct page *page)
+-{
+-	if (!inode->i_wb)
+-		__inode_attach_wb(inode, page);
+-}
+-
+-/**
+- * inode_detach_wb - disassociate an inode from its wb
+- * @inode: inode of interest
+- *
+- * @inode is being freed.  Detach from its wb.
+- */
+-static inline void inode_detach_wb(struct inode *inode)
+-{
+-	if (inode->i_wb) {
+-		wb_put(inode->i_wb);
+-		inode->i_wb = NULL;
+-	}
+-}
+-
+-/**
+  * inode_to_wb - determine the wb of an inode
+  * @inode: inode of interest
+  *
+@@ -471,19 +410,6 @@ static inline void wb_congested_put(struct bdi_writeback_congested *congested)
+ {
+ }
+ 
+-static inline bool wb_tryget(struct bdi_writeback *wb)
+-{
+-	return true;
+-}
+-
+-static inline void wb_get(struct bdi_writeback *wb)
+-{
+-}
+-
+-static inline void wb_put(struct bdi_writeback *wb)
+-{
+-}
+-
+ static inline struct bdi_writeback *wb_find_current(struct backing_dev_info *bdi)
+ {
+ 	return &bdi->wb;
+@@ -495,14 +421,6 @@ wb_get_create_current(struct backing_dev_info *bdi, gfp_t gfp)
+ 	return &bdi->wb;
+ }
+ 
+-static inline void inode_attach_wb(struct inode *inode, struct page *page)
+-{
+-}
+-
+-static inline void inode_detach_wb(struct inode *inode)
+-{
+-}
+-
+ static inline struct bdi_writeback *inode_to_wb(struct inode *inode)
+ {
+ 	return &inode_to_bdi(inode)->wb;
+diff --git a/include/linux/writeback.h b/include/linux/writeback.h
+index 5b86988..f836e55 100644
+--- a/include/linux/writeback.h
++++ b/include/linux/writeback.h
+@@ -8,6 +8,7 @@
+ #include <linux/workqueue.h>
+ #include <linux/fs.h>
+ #include <linux/flex_proportions.h>
++#include <linux/backing-dev-defs.h>
+ 
+ DECLARE_PER_CPU(int, dirty_throttle_leaks);
+ 
+@@ -173,6 +174,51 @@ static inline void wait_on_inode(struct inode *inode)
+ 	wait_on_bit(&inode->i_state, __I_NEW, TASK_UNINTERRUPTIBLE);
+ }
+ 
++#ifdef CONFIG_CGROUP_WRITEBACK
++
++void __inode_attach_wb(struct inode *inode, struct page *page);
++
++/**
++ * inode_attach_wb - associate an inode with its wb
++ * @inode: inode of interest
++ * @page: page being dirtied (may be NULL)
++ *
++ * If @inode doesn't have its wb, associate it with the wb matching the
++ * memcg of @page or, if @page is NULL, %current.  May be called w/ or w/o
++ * @inode->i_lock.
++ */
++static inline void inode_attach_wb(struct inode *inode, struct page *page)
++{
++	if (!inode->i_wb)
++		__inode_attach_wb(inode, page);
++}
++
++/**
++ * inode_detach_wb - disassociate an inode from its wb
++ * @inode: inode of interest
++ *
++ * @inode is being freed.  Detach from its wb.
++ */
++static inline void inode_detach_wb(struct inode *inode)
++{
++	if (inode->i_wb) {
++		wb_put(inode->i_wb);
++		inode->i_wb = NULL;
++	}
++}
++
++#else	/* CONFIG_CGROUP_WRITEBACK */
++
++static inline void inode_attach_wb(struct inode *inode, struct page *page)
++{
++}
++
++static inline void inode_detach_wb(struct inode *inode)
++{
++}
++
++#endif	/* CONFIG_CGROUP_WRITEBACK */
++
+ /*
+  * mm/page-writeback.c
+  */
+diff --git a/mm/backing-dev.c b/mm/backing-dev.c
+index 84ebf7c..887d72a8 100644
+--- a/mm/backing-dev.c
++++ b/mm/backing-dev.c
+@@ -660,36 +660,6 @@ struct bdi_writeback *wb_get_create(struct backing_dev_info *bdi,
+ 	return wb;
+ }
+ 
+-void __inode_attach_wb(struct inode *inode, struct page *page)
+-{
+-	struct backing_dev_info *bdi = inode_to_bdi(inode);
+-	struct bdi_writeback *wb = NULL;
+-
+-	if (inode_cgwb_enabled(inode)) {
+-		struct cgroup_subsys_state *memcg_css;
+-
+-		if (page) {
+-			memcg_css = mem_cgroup_css_from_page(page);
+-			wb = wb_get_create(bdi, memcg_css, GFP_ATOMIC);
+-		} else {
+-			/* must pin memcg_css, see wb_get_create() */
+-			memcg_css = task_get_css(current, memory_cgrp_id);
+-			wb = wb_get_create(bdi, memcg_css, GFP_ATOMIC);
+-			css_put(memcg_css);
+-		}
+-	}
+-
+-	if (!wb)
+-		wb = &bdi->wb;
+-
+-	/*
+-	 * There may be multiple instances of this function racing to
+-	 * update the same inode.  Use cmpxchg() to tell the winner.
+-	 */
+-	if (unlikely(cmpxchg(&inode->i_wb, NULL, wb)))
+-		wb_put(wb);
+-}
+-
+ static void cgwb_bdi_init(struct backing_dev_info *bdi)
+ {
+ 	bdi->wb.memcg_css = mem_cgroup_root_css;
 -- 
-tejun
+2.1.0
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
