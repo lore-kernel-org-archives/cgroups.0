@@ -1,21 +1,21 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 31/49] writeback: implement backing_dev_info->tot_write_bandwidth
-Date: Mon,  6 Apr 2015 15:58:20 -0400
-Message-ID: <1428350318-8215-32-git-send-email-tj@kernel.org>
+Subject: [PATCH 21/49] writeback: add {CONFIG|BDI_CAP|FS}_CGROUP_WRITEBACK
+Date: Mon,  6 Apr 2015 15:58:10 -0400
+Message-ID: <1428350318-8215-22-git-send-email-tj@kernel.org>
 References: <1428350318-8215-1-git-send-email-tj@kernel.org>
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=CLE4dXY/wJkts4PwzFjOsMnRcRufimjeECXc56TKAXc=;
-        b=Z96+JNnhkwM6fOjf9qyBZkWnaIF9JY7B7al9BZ4yGdXLtZ8BF/XzvP+Nr8E60nVlS5
-         IXOFVBxC6YnJrN4axZxDwNWttHhSE2yEiCK/waEl2YWWtVDIIfiC1DOvDT6VR/5YFbwu
-         j8bGFa9Zd1wqAc2IzNdiQlmgCSaR0TIKkKAWUiT3Tk4buO3pMv3VPEMx+LMtDVZBWVYd
-         SMVA3LqfaAOykwpFfdChSYJ9OLQpzvA7CMKiN84/16bpgqQ0Zzeaomm6Ds/X2eDbAF5l
-         XFsQarGCbdV89O91/FbBPP86zsPppwQFx7MaX3AU4itM9AiU+wVqFiHXtB5QvzC8FhWa
-         sQBQ==
+        bh=1f1YGdPahhjhSnRD2BRyS+vBGMpXKROLP8Oko3kThYg=;
+        b=XR71Ge5QYSjUsBb0/KkDofe0rQeN8ScsAB5Hc3aLheFyFdxd7/0Vf0r2i4rygJ64FO
+         8cUFVYCvpyCxNh5vDTpuaWHzeb8kkuGd6uxZ98YhJqUQMy/Q0sUi/HJzJFsrL36V0iie
+         bFRYlyEhaMEJDDhRK6bUbg8ZwMf1+nvWrciT3gwmP6A9FlqL+PEhHPjv5o3EUeVlDmeq
+         TGlwW/6+ejn4RDZycwE2flH6ZhR+HMv3PpupFS/GecRUjY6eRG0ZVcPZacNqYGYJeFOb
+         V/oAVjfJjqC3WfXXgo2nf7sjLr/QoH19EisnvCduGMf5HlMhplxlDMBFFqzfvUaD74N6
+         8Xpw==
 In-Reply-To: <1428350318-8215-1-git-send-email-tj@kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,78 +23,124 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-cgroup writeback support needs to keep track of the sum of
-avg_write_bandwidth of all wb's (bdi_writeback's) with dirty inodes to
-distribute write workload.  This patch adds bdi->tot_write_bandwidth
-and updates inode_wb_list_move_locked(), inode_wb_list_del_locked()
-and wb_update_write_bandwidth() to adjust it as wb's gain and lose
-dirty inodes and its avg_write_bandwidth gets updated.
+cgroup writeback requires support from both bdi and filesystem sides.
+Add BDI_CAP_CGROUP_WRITEBACK and FS_CGROUP_WRITEBACK to indicate
+support and enable BDI_CAP_CGROUP_WRITEBACK on block based bdi's by
+default.  Also, define CONFIG_CGROUP_WRITEBACK which is enabled if
+both MEMCG and BLK_CGROUP are enabled.
 
-As the update events are not synchronized with each other,
-bdi->tot_write_bandwidth is an atomic_long_t.
+inode_cgwb_enabled() which determines whether a given inode's both bdi
+and fs support cgroup writeback is added.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
 ---
- fs/fs-writeback.c                | 7 ++++++-
- include/linux/backing-dev-defs.h | 2 ++
- mm/page-writeback.c              | 3 +++
- 3 files changed, 11 insertions(+), 1 deletion(-)
+ block/blk-core.c            |  2 +-
+ include/linux/backing-dev.h | 32 +++++++++++++++++++++++++++++++-
+ include/linux/fs.h          |  1 +
+ init/Kconfig                |  5 +++++
+ 4 files changed, 38 insertions(+), 2 deletions(-)
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 29b4f8f..590c3ba 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -87,6 +87,8 @@ static bool wb_io_lists_populated(struct bdi_writeback *wb)
- 		return false;
- 	} else {
- 		set_bit(WB_has_dirty_io, &wb->state);
-+		atomic_long_add(wb->avg_write_bandwidth,
-+				&wb->bdi->tot_write_bandwidth);
- 		return true;
- 	}
- }
-@@ -94,8 +96,11 @@ static bool wb_io_lists_populated(struct bdi_writeback *wb)
- static void wb_io_lists_depopulated(struct bdi_writeback *wb)
- {
- 	if (wb_has_dirty_io(wb) && list_empty(&wb->b_dirty) &&
--	    list_empty(&wb->b_io) && list_empty(&wb->b_more_io))
-+	    list_empty(&wb->b_io) && list_empty(&wb->b_more_io)) {
- 		clear_bit(WB_has_dirty_io, &wb->state);
-+		atomic_long_sub(wb->avg_write_bandwidth,
-+				&wb->bdi->tot_write_bandwidth);
-+	}
+diff --git a/block/blk-core.c b/block/blk-core.c
+index fa1314e..c44018a 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -606,7 +606,7 @@ struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id)
+ 
+ 	q->backing_dev_info.ra_pages =
+ 			(VM_MAX_READAHEAD * 1024) / PAGE_CACHE_SIZE;
+-	q->backing_dev_info.capabilities = 0;
++	q->backing_dev_info.capabilities = BDI_CAP_CGROUP_WRITEBACK;
+ 	q->backing_dev_info.name = "block";
+ 	q->node = node_id;
+ 
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index bfdaa18..6bb3123 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -134,12 +134,15 @@ int bdi_set_max_ratio(struct backing_dev_info *bdi, unsigned int max_ratio);
+  * BDI_CAP_NO_WRITEBACK:   Don't write pages back
+  * BDI_CAP_NO_ACCT_WB:     Don't automatically account writeback pages
+  * BDI_CAP_STRICTLIMIT:    Keep number of dirty pages below bdi threshold.
++ *
++ * BDI_CAP_CGROUP_WRITEBACK: Supports cgroup-aware writeback.
+  */
+ #define BDI_CAP_NO_ACCT_DIRTY	0x00000001
+ #define BDI_CAP_NO_WRITEBACK	0x00000002
+ #define BDI_CAP_NO_ACCT_WB	0x00000004
+ #define BDI_CAP_STABLE_WRITES	0x00000008
+ #define BDI_CAP_STRICTLIMIT	0x00000010
++#define BDI_CAP_CGROUP_WRITEBACK 0x00000020
+ 
+ #define BDI_CAP_NO_ACCT_AND_WRITEBACK \
+ 	(BDI_CAP_NO_WRITEBACK | BDI_CAP_NO_ACCT_DIRTY | BDI_CAP_NO_ACCT_WB)
+@@ -229,4 +232,31 @@ static inline int bdi_sched_wait(void *word)
+ 	return 0;
  }
  
- /**
-diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
-index 7a94b78..d631a61 100644
---- a/include/linux/backing-dev-defs.h
-+++ b/include/linux/backing-dev-defs.h
-@@ -142,6 +142,8 @@ struct backing_dev_info {
- 	unsigned int min_ratio;
- 	unsigned int max_ratio, max_prop_frac;
- 
-+	atomic_long_t tot_write_bandwidth; /* sum of active avg_write_bw */
+-#endif		/* _LINUX_BACKING_DEV_H */
++#ifdef CONFIG_CGROUP_WRITEBACK
 +
- 	struct bdi_writeback wb;  /* the root writeback info for this bdi */
- 	struct bdi_writeback_congested wb_congested; /* its congested state */
- #ifdef CONFIG_CGROUP_WRITEBACK
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 0aa2ffe..26c72e4 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -881,6 +881,9 @@ static void wb_update_write_bandwidth(struct bdi_writeback *wb,
- 		avg += (old - avg) >> 3;
++/**
++ * inode_cgwb_enabled - test whether cgroup writeback is enabled on an inode
++ * @inode: inode of interest
++ *
++ * cgroup writeback requires support from both the bdi and filesystem.
++ * Test whether @inode has both.
++ */
++static inline bool inode_cgwb_enabled(struct inode *inode)
++{
++	struct backing_dev_info *bdi = inode_to_bdi(inode);
++
++	return bdi_cap_account_dirty(bdi) &&
++		(bdi->capabilities & BDI_CAP_CGROUP_WRITEBACK) &&
++		(inode->i_sb->s_type->fs_flags & FS_CGROUP_WRITEBACK);
++}
++
++#else	/* CONFIG_CGROUP_WRITEBACK */
++
++static inline bool inode_cgwb_enabled(struct inode *inode)
++{
++	return false;
++}
++
++#endif	/* CONFIG_CGROUP_WRITEBACK */
++
++#endif	/* _LINUX_BACKING_DEV_H */
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index ccf4b64..bc72737 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1862,6 +1862,7 @@ struct file_system_type {
+ #define FS_HAS_SUBTYPE		4
+ #define FS_USERNS_MOUNT		8	/* Can be mounted by userns root */
+ #define FS_USERNS_DEV_MOUNT	16 /* A userns mount does not imply MNT_NODEV */
++#define FS_CGROUP_WRITEBACK	32	/* Supports cgroup-aware writeback */
+ #define FS_RENAME_DOES_D_MOVE	32768	/* FS will handle d_move() during rename() internally. */
+ 	struct dentry *(*mount) (struct file_system_type *, int,
+ 		       const char *, void *);
+diff --git a/init/Kconfig b/init/Kconfig
+index f5dbc6d..9f17798 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -1132,6 +1132,11 @@ config DEBUG_BLK_CGROUP
+ 	Enable some debugging help. Currently it exports additional stat
+ 	files in a cgroup which can be useful for debugging.
  
- out:
-+	if (wb_has_dirty_io(wb))
-+		atomic_long_add(avg - wb->avg_write_bandwidth,
-+				&wb->bdi->tot_write_bandwidth);
- 	wb->write_bandwidth = bw;
- 	wb->avg_write_bandwidth = avg;
- }
++config CGROUP_WRITEBACK
++	bool
++	depends on MEMCG && BLK_CGROUP
++	default y
++
+ endif # CGROUPS
+ 
+ config CHECKPOINT_RESTORE
 -- 
 2.1.0
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
