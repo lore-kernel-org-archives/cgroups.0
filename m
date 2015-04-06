@@ -1,101 +1,116 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 46/49] writeback: dirty inodes against their matching cgroup bdi_writeback's
-Date: Mon,  6 Apr 2015 15:58:35 -0400
-Message-ID: <1428350318-8215-47-git-send-email-tj@kernel.org>
-References: <1428350318-8215-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET 2/3 v2 block/for-4.1/core] writeback: cgroup writeback backpressure propagation
+Date: Mon,  6 Apr 2015 16:04:15 -0400
+Message-ID: <1428350674-8303-1-git-send-email-tj@kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=a/gtImffkfSJWdkS3RIWvK7eD/Re6jYn7iClUgg4vpo=;
-        b=Oi+pvTENpHs2GoqOucRFbQL2jhXBzZd/UDHFAj9nqmBMB4hBH3PQCAox1yaaMLlwS9
-         EX7q9+hTjC4QTu3gYhuS4H27YmyA5Nhidamupd5founpPNAWVZOvWSHCLZmOwVr5gXjr
-         HGY+VYvtSgSWHEL70obCHya7dEj5HZ7V2Yz/2PAo3R8Fie9zWdRoyRqzxHiYuYvKVNvY
-         IyRnplPw+D0BgdBty1XUbyz2goih/vRQVzThCZA2hljXHXqheZUCODLLJ4oR9gYb3+ST
-         ljqYZqA2IwC2F5Ufskpf9NePjVpy/N2ejVn5cKhh8MDReAeocaRtstP3y4kxZHQh+8tB
-         /NnQ==
-In-Reply-To: <1428350318-8215-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=W2qf8s31QeZnD5jEdSQUYod+TGlmkWxBZYqeXTLaW3A=;
+        b=GNkDyQODlt29pOW5Ec/Sq+Je7G240ZXYUMaQc2InlLeG4pAVvnXCTYky12aiLDbhf1
+         veTPYDFSh1w1Xg0gRELbdIBXoVNnUYXF0uJrfEdawMEhyXADy7n7l4oxgm8dFnM92cwI
+         IWqwsfU/6uQaZNZNZdYSY5o6Yk+yNZcY6hAiIn7j/wS23VEEV2AtnOn4WtO1ELWLAP51
+         JOCpEDMEja03gLPzfCC5fKYsrL6aJjM+k3I4ftDht5ocD3FIffvmq+6CwwtT1/75JU7+
+         gqnTu2LO4nReM0J8yICAVEGzqRzk4rd0pMvrGL+1yZo8yVNR3sst07WDw16BWVd3/4xR
+         WPjg==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-__mark_inode_dirty() always dirtied the inode against the root wb
-(bdi_writeback).  The previous patches added all the infrastructure
-necessary to attribute an inode against the wb of the dirtying cgroup.
+Hello,
 
-This patch updates __mark_inode_dirty() so that it uses the wb
-associated with the inode instead of unconditionally using the root
-one.
+Changes from the last take[L] are
 
-Currently, none of the filesystems has FS_CGROUP_WRITEBACK and all
-pages will keep being dirtied against the root wb.
+* 0002-writeback-clean-up-wb_dirty_limit.patch added.
 
-v2: Updated for per-inode wb association.
+* 0008-writeback-make-__wb_calc_thresh-take-dirty_throttle_.patch was
+  scaling the wrong parameter leading to weird throttling behavior.
+  Fixed.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Jan Kara <jack@suse.cz>
----
- fs/fs-writeback.c | 23 +++++++++++------------
- 1 file changed, 11 insertions(+), 12 deletions(-)
+* 0019-mm-vmscan-disable-memcg-direct-reclaim-stalling-if-c.patch
+  updated so that vmscan behavior when !CONFIG_CGROUP_WRITEBACK isn't
+  affected.
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 9f42c14..2b9c82b 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -1432,7 +1432,6 @@ static noinline void block_dump___mark_inode_dirty(struct inode *inode)
- void __mark_inode_dirty(struct inode *inode, int flags)
- {
- 	struct super_block *sb = inode->i_sb;
--	struct backing_dev_info *bdi = NULL;
- 	int dirtytime;
- 
- 	trace_writeback_mark_inode_dirty(inode, flags);
-@@ -1502,21 +1501,21 @@ void __mark_inode_dirty(struct inode *inode, int flags)
- 		 * reposition it (that would break b_dirty time-ordering).
- 		 */
- 		if (!was_dirty) {
-+			struct bdi_writeback *wb = inode_to_wb(inode);
- 			bool wakeup_bdi = false;
--			bdi = inode_to_bdi(inode);
- 
- 			spin_unlock(&inode->i_lock);
--			spin_lock(&bdi->wb.list_lock);
-+			spin_lock(&wb->list_lock);
- 
--			WARN(bdi_cap_writeback_dirty(bdi) &&
--			     !test_bit(WB_registered, &bdi->wb.state),
--			     "bdi-%s not registered\n", bdi->name);
-+			WARN(bdi_cap_writeback_dirty(wb->bdi) &&
-+			     !test_bit(WB_registered, &wb->state),
-+			     "bdi-%s not registered\n", wb->bdi->name);
- 
- 			inode->dirtied_when = jiffies;
--			wakeup_bdi = inode_wb_list_move_locked(inode, &bdi->wb,
--					dirtytime ? &bdi->wb.b_dirty_time :
--						    &bdi->wb.b_dirty);
--			spin_unlock(&bdi->wb.list_lock);
-+			wakeup_bdi = inode_wb_list_move_locked(inode, wb,
-+					dirtytime ? &wb->b_dirty_time :
-+						    &wb->b_dirty);
-+			spin_unlock(&wb->list_lock);
- 			trace_writeback_dirty_inode_enqueue(inode);
- 
- 			/*
-@@ -1525,8 +1524,8 @@ void __mark_inode_dirty(struct inode *inode, int flags)
- 			 * to make sure background write-back happens
- 			 * later.
- 			 */
--			if (bdi_cap_writeback_dirty(bdi) && wakeup_bdi)
--				wb_wakeup_delayed(&bdi->wb);
-+			if (bdi_cap_writeback_dirty(wb->bdi) && wakeup_bdi)
-+				wb_wakeup_delayed(wb);
- 			return;
- 		}
- 	}
--- 
-2.1.0
+While the previous patchset[2] implemented cgroup writeback support,
+the IO back pressure propagation mechanism implemented in
+balance_dirty_pages() and its subroutines isn't yet aware of cgroup
+writeback.
+
+Processes belonging to a memcg may have access to only subset of total
+memory available in the system and not factoring this into dirty
+throttling rendered it completely ineffective for processes under
+memcg limits and memcg ended up building a separate ad-hoc degenerate
+mechanism directly into vmscan code to limit page dirtying.
+
+This patchset refactors the dirty throttling logic implemented in
+balance_dirty_pages() and its subroutines os that it can handle both
+global and memcg memory domains.  Dirty throttling mechanism is
+applied against both the global and memcg constraints and the more
+restricted of the two is used for actual throttling.
+
+This makes the dirty throttling mechanism operational for memcg
+domains including writeback-bandwidth-proportional dirty page
+distribution inside them.
+
+This patchset contains the following 19 patches.
+
+ 0001-memcg-make-mem_cgroup_read_-stat-event-iterate-possi.patch
+ 0002-writeback-clean-up-wb_dirty_limit.patch
+ 0003-writeback-reorganize-__-wb_update_bandwidth.patch
+ 0004-writeback-implement-wb_domain.patch
+ 0005-writeback-move-global_dirty_limit-into-wb_domain.patch
+ 0006-writeback-consolidate-dirty-throttle-parameters-into.patch
+ 0007-writeback-add-dirty_throttle_control-wb_bg_thresh.patch
+ 0008-writeback-make-__wb_calc_thresh-take-dirty_throttle_.patch
+ 0009-writeback-add-dirty_throttle_control-pos_ratio.patch
+ 0010-writeback-add-dirty_throttle_control-wb_completions.patch
+ 0011-writeback-add-dirty_throttle_control-dom.patch
+ 0012-writeback-make-__wb_writeout_inc-and-hard_dirty_limi.patch
+ 0013-writeback-separate-out-domain_dirty_limits.patch
+ 0014-writeback-move-over_bground_thresh-to-mm-page-writeb.patch
+ 0015-writeback-update-wb_over_bg_thresh-to-use-wb_domain-.patch
+ 0016-writeback-implement-memcg-wb_domain.patch
+ 0017-writeback-reset-wb_domain-dirty_limit-_tstmp-when-me.patch
+ 0018-writeback-implement-memcg-writeback-domain-based-thr.patch
+ 0019-mm-vmscan-disable-memcg-direct-reclaim-stalling-if-c.patch
+
+0001-0003 are prep patches.
+
+0004-0015 refactors dirty throttling logic so that it operates on
+wb_domain.
+
+0016-0019 implement memcg wb_domain.
+
+This patchset is on top of
+
+  block/for-4.1/core bfd343aa1718 ("blk-mq: don't wait in blk_mq_queue_enter() if __GFP_WAIT isn't set")
++ [1] [PATCH] writeback: fix possible underflow in write bandwidth calculation
++ [2] [PATCHSET 1/3 v3 block/for-4.1/core] writeback: cgroup writeback support
+
+and available in the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-writeback-backpressure-20150322
+
+diffstat follows.  Thanks.
+
+ fs/fs-writeback.c                |   32 -
+ include/linux/backing-dev-defs.h |    1 
+ include/linux/memcontrol.h       |   21 +
+ include/linux/writeback.h        |   82 +++-
+ include/trace/events/writeback.h |    7 
+ mm/backing-dev.c                 |    9 
+ mm/memcontrol.c                  |  145 +++++--
+ mm/page-writeback.c              |  722 +++++++++++++++++++++++++--------------
+ mm/vmscan.c                      |  109 +----
+ 9 files changed, 716 insertions(+), 412 deletions(-)
+
+--
+tejun
+
+[L] http://lkml.kernel.org/g/
+[1] http://lkml.kernel.org/g/20150323041848.GA8991-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org
+[2] http://lkml.kernel.org/g/
