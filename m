@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 37/49] writeback: make laptop_mode_timer_fn() handle multiple bdi_writeback's
-Date: Mon,  6 Apr 2015 15:58:26 -0400
-Message-ID: <1428350318-8215-38-git-send-email-tj@kernel.org>
+Subject: [PATCH 40/49] writeback: make wakeup_flusher_threads() handle multiple bdi_writeback's
+Date: Mon,  6 Apr 2015 15:58:29 -0400
+Message-ID: <1428350318-8215-41-git-send-email-tj@kernel.org>
 References: <1428350318-8215-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=qYhk27OrTp+x1R8R/yT1To/miL+FLFwzwaVOAY01/FA=;
-        b=JngsJBB6TwUnEgIXyI2jUpp42oONuTpW28mC97lfi0RKmN8iwKsCnj8ZvngtNRZliH
-         H4oHvCrhGTwRNugzzysKIuz7CfwKIkhKWUr47OsW2o98XjdoF5pxuOgw06bfma4XFYds
-         0HMmbJvGfozS276CtImR7+lnkKmTXLc1iekoyLjCrvujgAjkfaUwKSzT1dYYYxBpDKo0
-         gEa1if3tqEbodsCtnaVnkI9Jp3P9JvAnk2TckU5f+Y2w0yANPF2AulgbAAcZ7dC+UE5G
-         JjcyQisRe97uJ8lRf8BOyFJu/u/T8dN3C/F2mYk9q6i241OzLmUICeRWssbV6ZEkr0m6
-         idGw==
+        bh=wjyCt2CDixHqR7jaGnSQasboudfepfBiQD2ccpYF4YQ=;
+        b=kEW6k/V2N6yqrswTGUS+O6usGULRdyXVPSEmIjGcxbwCP2hsEtHr4kYPLls0ltUbZW
+         uJaegN+eni9pH/HEKPOsi4aMmspjcm6v0Pg2kbkmyLiXh8zs0c5X05vwl3IKX4WjEHa/
+         bJkAMAsyke7IVhOZ2/T0S8L2dk9saal6HMllgRzERLH3oq2aGEpcApr9LOiZRPGCl8DS
+         dcEpRH1ZUri5uR/4hMxS/+9XKg3zv17WM1j8xW91U21IFLxwWgJJ70OjZPRD5UZgCJJA
+         y+Qeit90KVw6AOKmJfIYzwxwO7wp08KYgsl4qDMQMI6/ePsmgeGiFHzz1H26bfk8a0hi
+         PYDw==
 In-Reply-To: <1428350318-8215-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,49 +23,85 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-For cgroup writeback support, all bdi-wide operations should be
-distributed to all its wb's (bdi_writeback's).
-
-This patch updates laptop_mode_timer_fn() so that it invokes
-wb_start_writeback() on all wb's rather than just the root one.  As
-the intent is writing out all dirty data, there's no reason to split
-the number of pages to write.
+wakeup_flusher_threads() currently only starts writeback on the root
+wb (bdi_writeback).  For cgroup writeback support, update the function
+to wake up all wbs and distribute the number of pages to write
+according to the proportion of each wb's write bandwidth, which is
+implemented in wb_split_bdi_pages().
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
 ---
- mm/page-writeback.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ fs/fs-writeback.c | 48 ++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 46 insertions(+), 2 deletions(-)
 
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 3b6d79a..5458762 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -1723,14 +1723,20 @@ void laptop_mode_timer_fn(unsigned long data)
- 	struct request_queue *q = (struct request_queue *)data;
- 	int nr_pages = global_page_state(NR_FILE_DIRTY) +
- 		global_page_state(NR_UNSTABLE_NFS);
-+	struct bdi_writeback *wb;
-+	struct wb_iter iter;
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index 643deab..d30bcd8 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -186,6 +186,41 @@ int inode_congested(struct inode *inode, int cong_bits)
+ }
+ EXPORT_SYMBOL_GPL(inode_congested);
  
- 	/*
- 	 * We want to write everything out, not just down to the dirty
- 	 * threshold
- 	 */
--	if (bdi_has_dirty_io(&q->backing_dev_info))
--		wb_start_writeback(&q->backing_dev_info.wb, nr_pages, true,
--				   WB_REASON_LAPTOP_TIMER);
-+	if (!bdi_has_dirty_io(&q->backing_dev_info))
-+		return;
++/**
++ * wb_split_bdi_pages - split nr_pages to write according to bandwidth
++ * @wb: target bdi_writeback to split @nr_pages to
++ * @nr_pages: number of pages to write for the whole bdi
++ *
++ * Split @wb's portion of @nr_pages according to @wb's write bandwidth in
++ * relation to the total write bandwidth of all wb's w/ dirty inodes on
++ * @wb->bdi.
++ */
++static long wb_split_bdi_pages(struct bdi_writeback *wb, long nr_pages)
++{
++	unsigned long this_bw = wb->avg_write_bandwidth;
++	unsigned long tot_bw = atomic_long_read(&wb->bdi->tot_write_bandwidth);
 +
-+	bdi_for_each_wb(wb, &q->backing_dev_info, &iter, 0)
-+		if (wb_has_dirty_io(wb))
-+			wb_start_writeback(wb, nr_pages, true,
-+					   WB_REASON_LAPTOP_TIMER);
++	if (nr_pages == LONG_MAX)
++		return LONG_MAX;
++
++	/*
++	 * This may be called on clean wb's and proportional distribution
++	 * may not make sense, just use the original @nr_pages in those
++	 * cases.  In general, we wanna err on the side of writing more.
++	 */
++	if (!tot_bw || this_bw >= tot_bw)
++		return nr_pages;
++	else
++		return DIV_ROUND_UP_ULL((u64)nr_pages * this_bw, tot_bw);
++}
++
++#else	/* CONFIG_CGROUP_WRITEBACK */
++
++static long wb_split_bdi_pages(struct bdi_writeback *wb, long nr_pages)
++{
++	return nr_pages;
++}
++
+ #endif	/* CONFIG_CGROUP_WRITEBACK */
+ 
+ void wb_start_writeback(struct bdi_writeback *wb, long nr_pages,
+@@ -1169,8 +1204,17 @@ void wakeup_flusher_threads(long nr_pages, enum wb_reason reason)
+ 		nr_pages = get_nr_dirty_pages();
+ 
+ 	rcu_read_lock();
+-	list_for_each_entry_rcu(bdi, &bdi_list, bdi_list)
+-		wb_start_writeback(&bdi->wb, nr_pages, false, reason);
++	list_for_each_entry_rcu(bdi, &bdi_list, bdi_list) {
++		struct bdi_writeback *wb;
++		struct wb_iter iter;
++
++		if (!bdi_has_dirty_io(bdi))
++			continue;
++
++		bdi_for_each_wb(wb, bdi, &iter, 0)
++			wb_start_writeback(wb, wb_split_bdi_pages(wb, nr_pages),
++					   false, reason);
++	}
+ 	rcu_read_unlock();
  }
  
- /*
 -- 
 2.1.0
 
