@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 07/19] writeback: add dirty_throttle_control->wb_bg_thresh
-Date: Mon,  6 Apr 2015 16:04:22 -0400
-Message-ID: <1428350674-8303-8-git-send-email-tj@kernel.org>
+Subject: [PATCH 10/19] writeback: add dirty_throttle_control->wb_completions
+Date: Mon,  6 Apr 2015 16:04:25 -0400
+Message-ID: <1428350674-8303-11-git-send-email-tj@kernel.org>
 References: <1428350674-8303-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=3fZeMt7C4y7rFWBM160YTA3kjyC8ZcmzOq8CYVqUdJs=;
-        b=KAtvn5VtKWHsh3Rs53d7TyAemTftfmpZL9MK9T83ivNSno55DXk2Lx4HpDKNQRGOoM
-         rxXWXDVZ92VwX8nD9S0P1SV/c4uz5sinNfSoKoHl8iKlkLiKwRBbThHW64FG9fHy9Z1K
-         8STkVZkP3RNq9Pt0l7+WDK4iNVBAxaQYceENTSgFgusITXIRqzZ7Vh6jf8kzDg8FzMHP
-         WxODyDhzMEdnSDIh+Z45+FB2dZTK8s906Y3LQkJ/Cr21URhMbGIv0s3x3aLuAZipLFqM
-         UKFPKNMSBKqa2bqWkHtsSXzkdnWjaTr0DfYo/y0RNJULEDlFU1w//H6YRNoRhkbBnK8X
-         Knaw==
+        bh=OfQazpMSvRcpnOKmHymncrvS4Tlzv3pZh5ll7JIF3yA=;
+        b=o6phAUJFWIRrilroegiVjVt97o1uUg0cAvD4MM4gF0gs4fDG+ED29F3oVbR9og/FP1
+         OwaDOSjfY4br/NkX4KAXxAppnRITXybeaGPM2nSBw26hYrMtDIOVBwTIFp186bLifnoF
+         d+8umf49H0O8H1juTX5wCa9fA/4yhX69IiLvu77PeoXiay6e7xtK9zINdEX7xDBjFa7z
+         ovQKcWIzpa8No2ZhSKw0Juhd9i0AIX8Gi0P3myhH85LgGlbLzJ0nq/RcxyHwLaR8kxZd
+         IfvZmBCGwMYxrys8icqB6CuaF5KWfaaxcZhZhHL/4VN6GKwiYOMgv4e6a8AACW3bQeE0
+         Q3AA==
 In-Reply-To: <1428350674-8303-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,26 +23,16 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-wb_bg_thresh is currently treated as a second-class citizen.  It's
-only used when BDI_CAP_STRICTLIMIT is set and balance_dirty_pages()
-doesn't calculate it unless the cap is set.  When the cap is set, the
-calculated value is not passed around but instead recalculated
-whenever it's used.
+wb->completions measures the wb's proportional write bandwidth in
+global_wb_domain and thus naturally tied to the wb_domain.  This patch
+adds dirty_throttle_control->wb_completions which is initialized to
+wb->completions by GDTC_INIT() and updates __wb_dirty_limits() to use
+it instead of dereferencing wb->completions directly.
 
-wb_position_ratio() calculates it by scaling wb_thresh proportional to
-bg_thresh / thresh.  wb_update_dirty_ratelimit() uses wb_dirty_limit()
-on bg_thresh, which should generally lead to a similar result as the
-proportional scaling but can also be way off in the presence of
-max/min_ratio settings.
+This will allow dirty_throttle_control to represent different
+wb_domains and the matching wb completions.
 
-Avoiding wb_bg_thresh calculation saves us one u64 multiplication and
-divsion when BDI_CAP_STRICTLIMIT is not set.  Given that
-balance_dirty_pages() is already ratelimited, this doesn't justify the
-incurred extra complexity.
-
-This patch adds wb_bg_thresh to dirty_throttle_control and makes
-wb_dirty_limits() always calculate it and updates the users to use the
-pre-calculated value.
+This patch doesn't introduce any behavioral changes.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
@@ -50,105 +40,40 @@ Cc: Jan Kara <jack@suse.cz>
 Cc: Wu Fengguang <fengguang.wu@intel.com>
 Cc: Greg Thelen <gthelen@google.com>
 ---
- mm/page-writeback.c | 27 +++++++++++----------------
- 1 file changed, 11 insertions(+), 16 deletions(-)
+ mm/page-writeback.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 77eaf56..0fe7e60 100644
+index 3450520..15771a6 100644
 --- a/mm/page-writeback.c
 +++ b/mm/page-writeback.c
-@@ -134,6 +134,7 @@ struct dirty_throttle_control {
+@@ -127,6 +127,7 @@ struct wb_domain global_wb_domain;
+ /* consolidated parameters for balance_dirty_pages() and its subroutines */
+ struct dirty_throttle_control {
+ 	struct bdi_writeback	*wb;
++	struct fprop_local_percpu *wb_completions;
  
- 	unsigned long		wb_dirty;	/* per-wb counterparts */
- 	unsigned long		wb_thresh;
-+	unsigned long		wb_bg_thresh;
+ 	unsigned long		dirty;		/* file_dirty + write + nfs */
+ 	unsigned long		thresh;		/* dirty threshold */
+@@ -139,7 +140,8 @@ struct dirty_throttle_control {
+ 	unsigned long		pos_ratio;
  };
  
- #define GDTC_INIT(__wb)		.wb = (__wb)
-@@ -761,7 +762,6 @@ static unsigned long wb_position_ratio(struct dirty_throttle_control *dtc)
- 	 */
- 	if (unlikely(wb->bdi->capabilities & BDI_CAP_STRICTLIMIT)) {
- 		long long wb_pos_ratio;
--		unsigned long wb_bg_thresh;
+-#define GDTC_INIT(__wb)		.wb = (__wb)
++#define GDTC_INIT(__wb)		.wb = (__wb),				\
++				.wb_completions = &(__wb)->completions
  
- 		if (dtc->wb_dirty < 8)
- 			return min_t(long long, pos_ratio * 2,
-@@ -770,9 +770,8 @@ static unsigned long wb_position_ratio(struct dirty_throttle_control *dtc)
- 		if (dtc->wb_dirty >= wb_thresh)
- 			return 0;
- 
--		wb_bg_thresh = div_u64((u64)wb_thresh * dtc->bg_thresh,
--				       dtc->thresh);
--		wb_setpoint = dirty_freerun_ceiling(wb_thresh, wb_bg_thresh);
-+		wb_setpoint = dirty_freerun_ceiling(wb_thresh,
-+						    dtc->wb_bg_thresh);
- 
- 		if (wb_setpoint == 0 || wb_setpoint == wb_thresh)
- 			return 0;
-@@ -1104,15 +1103,14 @@ static void wb_update_dirty_ratelimit(struct dirty_throttle_control *dtc,
- 	 *
- 	 * We rampup dirty_ratelimit forcibly if wb_dirty is low because
- 	 * it's possible that wb_thresh is close to zero due to inactivity
--	 * of backing device (see the implementation of wb_calc_thresh()).
-+	 * of backing device.
- 	 */
- 	if (unlikely(wb->bdi->capabilities & BDI_CAP_STRICTLIMIT)) {
- 		dirty = dtc->wb_dirty;
- 		if (dtc->wb_dirty < 8)
- 			setpoint = dtc->wb_dirty + 1;
- 		else
--			setpoint = (dtc->wb_thresh +
--				    wb_calc_thresh(wb, dtc->bg_thresh)) / 2;
-+			setpoint = (dtc->wb_thresh + dtc->wb_bg_thresh) / 2;
- 	}
- 
- 	if (dirty < setpoint) {
-@@ -1307,8 +1305,7 @@ static long wb_min_pause(struct bdi_writeback *wb,
- 	return pages >= DIRTY_POLL_THRESH ? 1 + t / 2 : t;
- }
- 
--static inline void wb_dirty_limits(struct dirty_throttle_control *dtc,
--				   unsigned long *wb_bg_thresh)
-+static inline void wb_dirty_limits(struct dirty_throttle_control *dtc)
- {
- 	struct bdi_writeback *wb = dtc->wb;
- 	unsigned long wb_reclaimable;
-@@ -1327,11 +1324,8 @@ static inline void wb_dirty_limits(struct dirty_throttle_control *dtc,
- 	 *   at some rate <= (write_bw / 2) for bringing down wb_dirty.
- 	 */
- 	dtc->wb_thresh = wb_calc_thresh(dtc->wb, dtc->thresh);
--
--	if (wb_bg_thresh)
--		*wb_bg_thresh = dtc->thresh ? div_u64((u64)dtc->wb_thresh *
--						      dtc->bg_thresh,
--						      dtc->thresh) : 0;
-+	dtc->wb_bg_thresh = dtc->thresh ?
-+		div_u64((u64)dtc->wb_thresh * dtc->bg_thresh, dtc->thresh) : 0;
- 
+ /*
+  * Length of period for aging writeout fractions of bdis. This is an
+@@ -590,7 +592,7 @@ static unsigned long __wb_calc_thresh(struct dirty_throttle_control *dtc)
  	/*
- 	 * In order to avoid the stacked BDI deadlock we need
-@@ -1396,10 +1390,11 @@ static void balance_dirty_pages(struct address_space *mapping,
- 		global_dirty_limits(&gdtc->bg_thresh, &gdtc->thresh);
+ 	 * Calculate this BDI's share of the thresh ratio.
+ 	 */
+-	fprop_fraction_percpu(&dom->completions, &dtc->wb->completions,
++	fprop_fraction_percpu(&dom->completions, dtc->wb_completions,
+ 			      &numerator, &denominator);
  
- 		if (unlikely(strictlimit)) {
--			wb_dirty_limits(gdtc, &bg_thresh);
-+			wb_dirty_limits(gdtc);
- 
- 			dirty = gdtc->wb_dirty;
- 			thresh = gdtc->wb_thresh;
-+			bg_thresh = gdtc->wb_bg_thresh;
- 		} else {
- 			dirty = gdtc->dirty;
- 			thresh = gdtc->thresh;
-@@ -1427,7 +1422,7 @@ static void balance_dirty_pages(struct address_space *mapping,
- 			wb_start_background_writeback(wb);
- 
- 		if (!strictlimit)
--			wb_dirty_limits(gdtc, NULL);
-+			wb_dirty_limits(gdtc);
- 
- 		dirty_exceeded = (gdtc->wb_dirty > gdtc->wb_thresh) &&
- 			((gdtc->dirty > gdtc->thresh) || strictlimit);
+ 	wb_thresh = (thresh * (100 - bdi_min_ratio)) / 100;
 -- 
 2.1.0
 
