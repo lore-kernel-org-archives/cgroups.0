@@ -1,55 +1,124 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 49/49] ext2: enable cgroup writeback support
-Date: Mon,  6 Apr 2015 15:58:38 -0400
-Message-ID: <1428350318-8215-50-git-send-email-tj@kernel.org>
+Subject: [PATCH 35/49] writeback: implement bdi_for_each_wb()
+Date: Mon,  6 Apr 2015 15:58:24 -0400
+Message-ID: <1428350318-8215-36-git-send-email-tj@kernel.org>
 References: <1428350318-8215-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Y4aYNQ1Buh7bgCEqFGm9JIWYwJ5CnKzv7xnmzB9pkTQ=;
-        b=WegkvGTmGkkOzK1um6VPBh3ZQDV5vbER4As3oz/rggndk53u5U674rIQfVicpwB1uL
-         XjTDajarI49larnT8CgdrdNpIIMtAVxq0F7ju77fvyYIiZW7X7ZyaXym8qQpDJZAYEO/
-         5rFnN6IhA/Y0rDln6eHwQPaZP3QNF2+PI37r7U9EUVNkEidUr8OuVZzkCMBMrQVh3ikS
-         fSOrxsg3H3wW72tnjGuzChGPPjHaV6/oU+J9QZn3ls7/2JaLAmVuHRByW+f087VB/ean
-         BRSptCk4ClACf84hILGJ2jnPrTi5CiGP3a6UQvf6xiwH98iHyHhLwhVGN4104yhHBm8P
-         JsRA==
+        bh=dPMjDBJe+kOMwkTjFuPpJC85iUJadxi8jYt+ILn+Njw=;
+        b=esJoXpjhwIVp2hrbiRhUqgsvDXwwewxt5a8NxxMYCZg3rwg0+Ra47umh1UBaVL5T5g
+         xJl6tnpD+7WRql9zsjRD34LmFM3M/o6+bD9mTDpZqsaQbeTTqZKO8b0kYALEjU3HXHCL
+         VkmfW/LVvxFBzqMR3Hz+Ke7qO7Y85c1aLqAy7DyN9Szh0h8MfvyJpaYYr0SJZ1h8eSbO
+         9HSnmlsOn5xAM6KukFPB28UTjwM47SeC9bLk1injA0flwp2yrJv+N5bQA7zHb3DAUZyf
+         joR9cbZy+3CVHR8pQRbpvHGbMj+tpdLbUclOHFaj2sD3at4SqJXgyRuRz3OCGsDOmm2g
+         W65Q==
 In-Reply-To: <1428350318-8215-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>, linux-ext4@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-Writeback now supports cgroup writeback and the generic writeback,
-buffer, libfs, and mpage helpers that ext2 uses are all updated to
-work with cgroup writeback.
-
-This patch enables cgroup writeback for ext2 by adding
-FS_CGROUP_WRITEBACK to its ->fs_flags.
+This will be used to implement bdi-wide operations which should be
+distributed across all its cgroup bdi_writebacks.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
-Cc: linux-ext4@vger.kernel.org
 ---
- fs/ext2/super.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/backing-dev.h | 63 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 63 insertions(+)
 
-diff --git a/fs/ext2/super.c b/fs/ext2/super.c
-index d0e746e..549219d 100644
---- a/fs/ext2/super.c
-+++ b/fs/ext2/super.c
-@@ -1543,7 +1543,7 @@ static struct file_system_type ext2_fs_type = {
- 	.name		= "ext2",
- 	.mount		= ext2_mount,
- 	.kill_sb	= kill_block_super,
--	.fs_flags	= FS_REQUIRES_DEV,
-+	.fs_flags	= FS_REQUIRES_DEV | FS_CGROUP_WRITEBACK,
- };
- MODULE_ALIAS_FS("ext2");
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index 0839e44..c797980 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -383,6 +383,61 @@ static inline struct bdi_writeback *inode_to_wb(struct inode *inode)
+ 	return inode->i_wb;
+ }
  
++struct wb_iter {
++	int			start_blkcg_id;
++	struct radix_tree_iter	tree_iter;
++	void			**slot;
++};
++
++static inline struct bdi_writeback *__wb_iter_next(struct wb_iter *iter,
++						   struct backing_dev_info *bdi)
++{
++	struct radix_tree_iter *titer = &iter->tree_iter;
++
++	WARN_ON_ONCE(!rcu_read_lock_held());
++
++	if (iter->start_blkcg_id >= 0) {
++		iter->slot = radix_tree_iter_init(titer, iter->start_blkcg_id);
++		iter->start_blkcg_id = -1;
++	} else {
++		iter->slot = radix_tree_next_slot(iter->slot, titer, 0);
++	}
++
++	if (!iter->slot)
++		iter->slot = radix_tree_next_chunk(&bdi->cgwb_tree, titer, 0);
++	if (iter->slot)
++		return *iter->slot;
++	return NULL;
++}
++
++static inline struct bdi_writeback *__wb_iter_init(struct wb_iter *iter,
++						   struct backing_dev_info *bdi,
++						   int start_blkcg_id)
++{
++	iter->start_blkcg_id = start_blkcg_id;
++
++	if (start_blkcg_id)
++		return __wb_iter_next(iter, bdi);
++	else
++		return &bdi->wb;
++}
++
++/**
++ * bdi_for_each_wb - walk all wb's of a bdi in ascending blkcg ID order
++ * @wb_cur: cursor struct bdi_writeback pointer
++ * @bdi: bdi to walk wb's of
++ * @iter: pointer to struct wb_iter to be used as iteration buffer
++ * @start_blkcg_id: blkcg ID to start iteration from
++ *
++ * Iterate @wb_cur through the wb's (bdi_writeback's) of @bdi in ascending
++ * blkcg ID order starting from @start_blkcg_id.  @iter is struct wb_iter
++ * to be used as temp storage during iteration.  rcu_read_lock() must be
++ * held throughout iteration.
++ */
++#define bdi_for_each_wb(wb_cur, bdi, iter, start_blkcg_id)		\
++	for ((wb_cur) = __wb_iter_init(iter, bdi, start_blkcg_id);	\
++	     (wb_cur); (wb_cur) = __wb_iter_next(iter, bdi))
++
+ #else	/* CONFIG_CGROUP_WRITEBACK */
+ 
+ static inline bool inode_cgwb_enabled(struct inode *inode)
+@@ -445,6 +500,14 @@ static inline void wb_blkcg_offline(struct blkcg *blkcg)
+ {
+ }
+ 
++struct wb_iter {
++	int		next_id;
++};
++
++#define bdi_for_each_wb(wb_cur, bdi, iter, start_blkcg_id)		\
++	for ((iter)->next_id = (start_blkcg_id);			\
++	     ({	(wb_cur) = !(iter)->next_id++ ? &(bdi)->wb : NULL; }); )
++
+ static inline int inode_congested(struct inode *inode, int cong_bits)
+ {
+ 	return wb_congested(&inode_to_bdi(inode)->wb, cong_bits);
 -- 
 2.1.0
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
