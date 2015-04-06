@@ -1,51 +1,58 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v8 3/4] cgroups: allow a cgroup subsystem to reject a fork
-Date: Mon, 6 Apr 2015 11:05:36 -0400
-Message-ID: <20150406150536.GA10582@htj.duckdns.org>
-References: <1427878641-5273-1-git-send-email-cyphar@cyphar.com>
- <1427878641-5273-4-git-send-email-cyphar@cyphar.com>
- <20150401160258.GP9974@htj.duckdns.org>
- <CAOviyai9dvCTGK=VUm0uDSo7XbmKk1BFDrRzL15ppAWf8YjG3w@mail.gmail.com>
+Subject: Re: [PATCH] cpusets: Make cpus_allowed and mems_allowed masks
+ hotplug invariant
+Date: Mon, 6 Apr 2015 13:47:35 -0400
+Message-ID: <20150406174735.GG10582@htj.duckdns.org>
+References: <20141008070739.1170.33313.stgit@preeti.in.ibm.com>
+ <20141008080706.GC10832@worktop.programming.kicks-ass.net>
+ <543505EF.7070804@linux.vnet.ibm.com>
+ <20141008101828.GG10832@worktop.programming.kicks-ass.net>
+ <54364564.3090305@linux.vnet.ibm.com>
+ <20141009130611.GA14387@htj.dyndns.org>
+ <551CE820.9090900@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=cSvlPapurUNwaGsyIeFT8uMq8UHzrcQZqS0NEdHtRR4=;
-        b=SjEHtyIfJKWLcepXT5aMGJ9GFRjapTIgrcSpfo+q4Ho0vuhRPb+KJtFkddXoEQ0jFx
-         HGlP6RwKkJTWxUpAChmXaCObGotVeeU67Ezxj8RANn1yaQAaPDv4ME5HnDYUlhbUKmzX
-         dkyC2ic/67CpHphQosq96/UoesK5rnz1nWdfk24hXKmuygmN7PI4OGW6yCb+wmJYsrmy
-         yZP3mIsKiMvXArHQILnLqYyBlnTQC0Uk2u28OnfH74yTBK6W1R+MHZ+3qDJPfIEIofjB
-         1MNvyobJTEyUv9o6oTaaj7cBFociHst9YZ7FUrYKVegJvDfJucGu5qri21HHHYRre0ga
-         l87Q==
+        bh=oI8ZmljZmrQjy9krxw9hO+bNvY89PZnZ+t3b+pDyuwU=;
+        b=AlxTE3Wb9dHmmZmadOFZWnrwV0Z5rNUF3LrpIT49/tZocD1RIuze8bGeivwdiu8NvC
+         xf89lv9GR7Lzx8qAwij0Bf/DXvvfoOZQCWo33h0CEpG0e2okb2gvKoQ7/sHUgatCX/pG
+         +CofrgE29aefg09lxSl8EnnfL6o84CPIxREfio3El0fJMfyeelqkz4Ab0L5vaG/f84S4
+         FXtxya5uWPdDSlFfTQ9YhyfGYYGVhfXHR7czOxkY67EUqaLQPpaeMGpOpXLQTd/Dgk5q
+         Hs9cpZYvh5UzUHc0EaLfeO9EKchVZPEO1OBfYxbetzif/I4U2I1RxnqndC58+yril2ZL
+         Rs5g==
 Content-Disposition: inline
-In-Reply-To: <CAOviyai9dvCTGK=VUm0uDSo7XbmKk1BFDrRzL15ppAWf8YjG3w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <551CE820.9090900-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, richard-/L3Ra7n9ekc@public.gmane.org, =?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Preeti U Murthy <preeti-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, anton-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org, svaidy-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org, paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bharata-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org
 
-Hello, Aleksa.
+Hello, Preeti.
 
-On Fri, Apr 03, 2015 at 10:42:27AM +1100, Aleksa Sarai wrote:
-> I tried doing this and the kernel would refuse to boot. I believe it has
-> something to do with the ordering of early_init subsystems, but I'm not
+On Thu, Apr 02, 2015 at 12:26:32PM +0530, Preeti U Murthy wrote:
+> By ensuring that the user configured cpusets are untouched, I don't see
+> how we affect userspace adversely. The expectation usually is that the
+> kernel keeps track of the user configurations. If anything we would be
+> fixing an undesired behavior, wouldn't we?
 
-Hmmm... yeah, failure in early_init can be tricky to debug.
+The problem is not really about which behavior is "righter" but rather
+it's fairly likely that there are users / tools out there expecting
+the current behavior and they wouldn't be too happy to see the
+behavior flipping underneath them.
 
-> entirely sure (this optimisation can be dealt with later [it's non-critical],
-> so IMO this should be done in a separate patchset [if at all]). Also, your
-> later comments would fix the subsys bitmask problem (we can just pass the
-> default %NULL), we don't even need to test the index.
-
-But we'd be adding quite a few loops in relatively hot paths.  I don't
-think it's a good idea to send the patches as-are because we can't
-debug and fix them properly, right?  If there are hard ordering
-dependencies, the range of subsystems which require fork/exit doesn't
-have to be at the beginning.
+One way forward would be implementing a knob in cpuset which makes it
+switch sbetween the old and new behaviors in the legacy hierarchy.
+It's yucky but doable if absoluately necessary, but what's the reason
+for you not being able to transition to the unified hierarchy (except
+for it being under the devel flag but I'm really taking that devel
+mask out in the next merge window)?  The default hierarchy can happily
+co-exist with legacy hierarchies so you can just move over the cpuset
+part to it if you need it.
 
 Thanks.
 
