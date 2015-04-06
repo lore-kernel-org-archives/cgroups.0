@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 39/49] writeback: make bdi_start_background_writeback() take bdi_writeback instead of backing_dev_info
-Date: Mon,  6 Apr 2015 15:58:28 -0400
-Message-ID: <1428350318-8215-40-git-send-email-tj@kernel.org>
+Subject: [PATCH 47/49] buffer, writeback: make __block_write_full_page() honor cgroup writeback
+Date: Mon,  6 Apr 2015 15:58:36 -0400
+Message-ID: <1428350318-8215-48-git-send-email-tj@kernel.org>
 References: <1428350318-8215-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=/oT7a/La9sS3bRGq5n6zQ//GgSBeN4QSC8HdNfyQptQ=;
-        b=zMvjextdH/cRI6Wwv/SeTJjWY4MRCO/HxTZy8RGz675UMt4N8vOjEBYS6zAKCxj/7j
-         eXPLQCM3EeSxoe/LbLm0zdi+DAaEjxvrbOLTYo/YVaHa3nE+PiRHZTPNdLxTX4bGFt2o
-         FzRMnOVsPOW2mmgpCVzgDjOE8RRhrGhT3rmWy/7t058ks9bHkfOQmvWAKSUjVYYrCgSp
-         wQZkB7qUi+4fRTM+BQtXGda0PGlsrB5/scIhL4WT1OrMvD18hJ0thDzVDSRCBGl1ZoJ7
-         ooMIx26+OPzk0phYV3iL0WQzBqX6iSmTWJ8T4AlEQZT3LECQUa18c+MzUXcwKEHNtwrj
-         BoDw==
+        bh=EGbSXKSZXTS1PiIoUgPL8HldVOzRX1M1al8BpFmRpz8=;
+        b=KNV/ll1EL2bZV/joQSQsoiZTc+b+13rhKAIr8UL2JWMNKLhP5XN7/Nj9IwCBkeBXIf
+         FtzysTog6B5k74p3/yLy9JBdb13DzdwJoii4qpN5SJa4n/Keuoa3rNEoMNZeLgXghY0w
+         2/lSK/i1CDHpgAupp8E1SgDoYjwSKCpvgkwapK/UT9NHbtiQC8IpqELcQd2JS81cUVb5
+         vMjJR5jvi+ypjXFq5F7wkAPO5a2fJIqAt/6+Hhr97DHUsTt8ailP+I9A0uPikAnTiWcO
+         JXFq/LAOXzQ581Hk27WTbkd6KS841x/n2G9RR6C9O7MsIa7fua5nPDoh5XyUAAUpsVo+
+         g60A==
 In-Reply-To: <1428350318-8215-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -21,91 +21,150 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-bdi_start_background_writeback() currently takes @bdi and kicks the
-root wb (bdi_writeback).  In preparation for cgroup writeback support,
-make it take wb instead.
+[__]block_write_full_page() is used to implement ->writepage in
+various filesystems.  All writeback logic is now updated to handle
+cgroup writeback and the block cgroup to issue IOs for is encoded in
+writeback_control and can be retrieved from the inode; however,
+[__]block_write_full_page() currently ignores the blkcg indicated by
+inode and issues all bio's without explicit blkcg association.
 
-This patch doesn't make any functional difference.
+This patch adds submit_bh_blkcg() which associates the bio with the
+specified blkio cgroup before issuing and uses it in
+__block_write_full_page() so that the issued bio's are associated with
+inode_to_wb_blkcg_css(inode).
+
+v2: Updated for per-inode wb association.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>
 ---
- fs/fs-writeback.c           | 12 ++++++------
- include/linux/backing-dev.h |  2 +-
- mm/page-writeback.c         |  4 ++--
- 3 files changed, 9 insertions(+), 9 deletions(-)
+ fs/buffer.c                 | 26 ++++++++++++++++++++------
+ include/linux/backing-dev.h | 12 ++++++++++++
+ 2 files changed, 32 insertions(+), 6 deletions(-)
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index ddb3178..643deab 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -216,23 +216,23 @@ void wb_start_writeback(struct bdi_writeback *wb, long nr_pages,
+diff --git a/fs/buffer.c b/fs/buffer.c
+index 4aa1dc2..f2d594c 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -30,6 +30,7 @@
+ #include <linux/quotaops.h>
+ #include <linux/highmem.h>
+ #include <linux/export.h>
++#include <linux/backing-dev.h>
+ #include <linux/writeback.h>
+ #include <linux/hash.h>
+ #include <linux/suspend.h>
+@@ -44,6 +45,9 @@
+ #include <trace/events/block.h>
+ 
+ static int fsync_buffers_list(spinlock_t *lock, struct list_head *list);
++static int submit_bh_blkcg(int rw, struct buffer_head *bh,
++			   unsigned long bio_flags,
++			   struct cgroup_subsys_state *blkcg_css);
+ 
+ #define BH_ENTRY(list) list_entry((list), struct buffer_head, b_assoc_buffers)
+ 
+@@ -1704,8 +1708,8 @@ static int __block_write_full_page(struct inode *inode, struct page *page,
+ 	struct buffer_head *bh, *head;
+ 	unsigned int blocksize, bbits;
+ 	int nr_underway = 0;
+-	int write_op = (wbc->sync_mode == WB_SYNC_ALL ?
+-			WRITE_SYNC : WRITE);
++	int write_op = (wbc->sync_mode == WB_SYNC_ALL ? WRITE_SYNC : WRITE);
++	struct cgroup_subsys_state *blkcg_css = inode_to_wb_blkcg_css(inode);
+ 
+ 	head = create_page_buffers(page, inode,
+ 					(1 << BH_Dirty)|(1 << BH_Uptodate));
+@@ -1794,7 +1798,7 @@ static int __block_write_full_page(struct inode *inode, struct page *page,
+ 	do {
+ 		struct buffer_head *next = bh->b_this_page;
+ 		if (buffer_async_write(bh)) {
+-			submit_bh(write_op, bh);
++			submit_bh_blkcg(write_op, bh, 0, blkcg_css);
+ 			nr_underway++;
+ 		}
+ 		bh = next;
+@@ -1848,7 +1852,7 @@ recover:
+ 		struct buffer_head *next = bh->b_this_page;
+ 		if (buffer_async_write(bh)) {
+ 			clear_buffer_dirty(bh);
+-			submit_bh(write_op, bh);
++			submit_bh_blkcg(write_op, bh, 0, blkcg_css);
+ 			nr_underway++;
+ 		}
+ 		bh = next;
+@@ -3017,7 +3021,9 @@ void guard_bio_eod(int rw, struct bio *bio)
+ 	}
  }
  
- /**
-- * bdi_start_background_writeback - start background writeback
-- * @bdi: the backing device to write from
-+ * wb_start_background_writeback - start background writeback
-+ * @wb: bdi_writback to write from
-  *
-  * Description:
-  *   This makes sure WB_SYNC_NONE background writeback happens. When
-- *   this function returns, it is only guaranteed that for given BDI
-+ *   this function returns, it is only guaranteed that for given wb
-  *   some IO is happening if we are over background dirty threshold.
-  *   Caller need not hold sb s_umount semaphore.
-  */
--void bdi_start_background_writeback(struct backing_dev_info *bdi)
-+void wb_start_background_writeback(struct bdi_writeback *wb)
+-int _submit_bh(int rw, struct buffer_head *bh, unsigned long bio_flags)
++static int submit_bh_blkcg(int rw, struct buffer_head *bh,
++			   unsigned long bio_flags,
++			   struct cgroup_subsys_state *blkcg_css)
  {
- 	/*
- 	 * We just wake up the flusher thread. It will perform background
- 	 * writeback as soon as there is no other work to do.
+ 	struct bio *bio;
+ 	int ret = 0;
+@@ -3040,6 +3046,9 @@ int _submit_bh(int rw, struct buffer_head *bh, unsigned long bio_flags)
  	 */
--	trace_writeback_wake_background(bdi);
--	wb_wakeup(&bdi->wb);
-+	trace_writeback_wake_background(wb->bdi);
-+	wb_wakeup(wb);
- }
+ 	bio = bio_alloc(GFP_NOIO, 1);
  
- /*
++	if (blkcg_css)
++		bio_associate_blkcg(bio, blkcg_css);
++
+ 	bio->bi_iter.bi_sector = bh->b_blocknr * (bh->b_size >> 9);
+ 	bio->bi_bdev = bh->b_bdev;
+ 	bio->bi_io_vec[0].bv_page = bh->b_page;
+@@ -3070,11 +3079,16 @@ int _submit_bh(int rw, struct buffer_head *bh, unsigned long bio_flags)
+ 	bio_put(bio);
+ 	return ret;
+ }
++
++int _submit_bh(int rw, struct buffer_head *bh, unsigned long bio_flags)
++{
++	return submit_bh_blkcg(rw, bh, bio_flags, NULL);
++}
+ EXPORT_SYMBOL_GPL(_submit_bh);
+ 
+ int submit_bh(int rw, struct buffer_head *bh)
+ {
+-	return _submit_bh(rw, bh, 0);
++	return submit_bh_blkcg(rw, bh, 0, NULL);
+ }
+ EXPORT_SYMBOL(submit_bh);
+ 
 diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index f04956c..9cc11e5 100644
+index 9cc11e5..e9d7373 100644
 --- a/include/linux/backing-dev.h
 +++ b/include/linux/backing-dev.h
-@@ -27,7 +27,7 @@ void bdi_unregister(struct backing_dev_info *bdi);
- int __must_check bdi_setup_and_register(struct backing_dev_info *, char *);
- void wb_start_writeback(struct bdi_writeback *wb, long nr_pages,
- 			bool range_cyclic, enum wb_reason reason);
--void bdi_start_background_writeback(struct backing_dev_info *bdi);
-+void wb_start_background_writeback(struct bdi_writeback *wb);
- void wb_workfn(struct work_struct *work);
- void wb_wakeup_delayed(struct bdi_writeback *wb);
- 
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 3a19641..1767658 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -1456,7 +1456,7 @@ static void balance_dirty_pages(struct address_space *mapping,
- 		}
- 
- 		if (unlikely(!writeback_in_progress(wb)))
--			bdi_start_background_writeback(bdi);
-+			wb_start_background_writeback(wb);
- 
- 		if (!strictlimit)
- 			wb_dirty_limits(wb, dirty_thresh, background_thresh,
-@@ -1588,7 +1588,7 @@ pause:
- 		return;
- 
- 	if (nr_reclaimable > background_thresh)
--		bdi_start_background_writeback(bdi);
-+		wb_start_background_writeback(wb);
+@@ -393,6 +393,12 @@ static inline struct bdi_writeback *inode_to_wb(struct inode *inode)
+ 	return inode->i_wb;
  }
  
- static DEFINE_PER_CPU(int, bdp_ratelimits);
++static inline struct cgroup_subsys_state *
++inode_to_wb_blkcg_css(struct inode *inode)
++{
++	return inode_to_wb(inode)->blkcg_css;
++}
++
+ struct wb_iter {
+ 	int			start_blkcg_id;
+ 	struct radix_tree_iter	tree_iter;
+@@ -510,6 +516,12 @@ static inline void wb_blkcg_offline(struct blkcg *blkcg)
+ {
+ }
+ 
++static inline struct cgroup_subsys_state *
++inode_to_wb_blkcg_css(struct inode *inode)
++{
++	return blkcg_root_css;
++}
++
+ struct wb_iter {
+ 	int		next_id;
+ };
 -- 
 2.1.0
