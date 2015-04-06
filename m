@@ -1,60 +1,269 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cpusets: Make cpus_allowed and mems_allowed masks
- hotplug invariant
-Date: Mon, 6 Apr 2015 13:47:35 -0400
-Message-ID: <20150406174735.GG10582@htj.duckdns.org>
-References: <20141008070739.1170.33313.stgit@preeti.in.ibm.com>
- <20141008080706.GC10832@worktop.programming.kicks-ass.net>
- <543505EF.7070804@linux.vnet.ibm.com>
- <20141008101828.GG10832@worktop.programming.kicks-ass.net>
- <54364564.3090305@linux.vnet.ibm.com>
- <20141009130611.GA14387@htj.dyndns.org>
- <551CE820.9090900@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCHSET 1/3 v3 block/for-4.1/core] writeback: cgroup writeback support
+Date: Mon,  6 Apr 2015 15:57:49 -0400
+Message-ID: <1428350318-8215-1-git-send-email-tj@kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=oI8ZmljZmrQjy9krxw9hO+bNvY89PZnZ+t3b+pDyuwU=;
-        b=AlxTE3Wb9dHmmZmadOFZWnrwV0Z5rNUF3LrpIT49/tZocD1RIuze8bGeivwdiu8NvC
-         xf89lv9GR7Lzx8qAwij0Bf/DXvvfoOZQCWo33h0CEpG0e2okb2gvKoQ7/sHUgatCX/pG
-         +CofrgE29aefg09lxSl8EnnfL6o84CPIxREfio3El0fJMfyeelqkz4Ab0L5vaG/f84S4
-         FXtxya5uWPdDSlFfTQ9YhyfGYYGVhfXHR7czOxkY67EUqaLQPpaeMGpOpXLQTd/Dgk5q
-         Hs9cpZYvh5UzUHc0EaLfeO9EKchVZPEO1OBfYxbetzif/I4U2I1RxnqndC58+yril2ZL
-         Rs5g==
-Content-Disposition: inline
-In-Reply-To: <551CE820.9090900-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=/FconT/UU416Q7HPgwL9jghXDyvfycakZ+AN4ILc4AE=;
+        b=fzWiXpjIqfw+PgkwK/WtxUymugcC0xeLyLVlA1izcEHec5Nd4eivotpPFCm2Ax25te
+         Ymg/PPr/e8i0LLcJFS9+NoHkDJJ+szfAg6rsXwORfa3KG9e/6k7mtFoi8Uu/N6Q4BpNk
+         zWXoAtCgPzYX3JnJH8zODES69kO4toM/qjTs+wFSvRCD9LaxryTlCnof53ygWqIVrr77
+         wpDVEmDmRzfCEUjgK4Y+NsajT/LBr2F6tvqUjQ4wx5yZsNBpxnHDhxdRNCFWr61m0d9t
+         sGcollYoiYl64J/l3Pn7AhA5JAfeXZr1KZkhdK7HNI9AEv7tfbcUPo1z23IwuOx63nRT
+         PHRA==
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Preeti U Murthy <preeti-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, anton-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org, svaidy-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org, paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bharata-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org
+To: axboe@kernel.dk
+Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com
 
-Hello, Preeti.
+Subject: [PATCHSET 1/3 v3 block/for-4.1/core] writeback: cgroup writeback support
 
-On Thu, Apr 02, 2015 at 12:26:32PM +0530, Preeti U Murthy wrote:
-> By ensuring that the user configured cpusets are untouched, I don't see
-> how we affect userspace adversely. The expectation usually is that the
-> kernel keeps track of the user configurations. If anything we would be
-> fixing an undesired behavior, wouldn't we?
+Hello,
 
-The problem is not really about which behavior is "righter" but rather
-it's fairly likely that there are users / tools out there expecting
-the current behavior and they wouldn't be too happy to see the
-behavior flipping underneath them.
+This is v3 of cgroup writeback support patchset.  Changes from the
+last take[L] are
 
-One way forward would be implementing a knob in cpuset which makes it
-switch sbetween the old and new behaviors in the legacy hierarchy.
-It's yucky but doable if absoluately necessary, but what's the reason
-for you not being able to transition to the unified hierarchy (except
-for it being under the devel flag but I'm really taking that devel
-mask out in the next merge window)?  The default hierarchy can happily
-co-exist with legacy hierarchies so you can just move over the cpuset
-part to it if you need it.
+* mapping_congested() is now inode_congested() and always operates on
+  the inode regardless of the current task.  This was broken in the
+  last take due to the logic carried over from multi-wb dirtying in
+  the first take.  Noticed by Vivek.
 
-Thanks.
+* Fengguang noticed crash from the split congestion code when there's
+  no blkcg policy active.  This is caused by blkcg pointlessly trying
+  to micro optimize the allocation of root blkcg_gq and has caused
+  similar bugs before.
+  0004-blkcg-always-create-the-blkcg_gq-for-the-root-blkcg.patch
+  added.
 
--- 
+* Some minor bug fixes and cosmetic updates.  Nothing too interesting.
+
+blkio cgroup (blkcg) is severely crippled in that it can only control
+read and direct write IOs.  blkcg can't tell which cgroup should be
+held responsible for a given writeback IO and charges all of them to
+the root cgroup - all normal write traffic ends up in the root cgroup.
+Although the problem has been identified years ago, mainly because it
+interacts with so many subsystems, it hasn't been solved yet.
+
+This patchset finally implements cgroup writeback support so that
+writeback of a page is attributed to the corresponding blkcg of the
+memcg that the page belongs to.
+
+Overall design
+--------------
+
+* This requires cooperation between memcg and blkcg.  Each inode is
+  assigned to the blkcg mapped to the memcg being dirtied.
+
+* struct bdi_writeback (wb) was always embedded in struct
+  backing_dev_info (bdi) and the distinction between the two wasn't
+  clear.  This patchset makes wb operate as an independent writeback
+  execution domain.  bdi->wb is still embedded and serves the root
+  cgroup but there can be other wb's for other cgroups.
+
+* Each wb is associated with memcg.  As memcg is implicitly enabled by
+  blkcg on the unified hierarchy, this gives a unique wb for each
+  memcg-blkcg combination.  When memcg-blkcg mapping changes, a new wb
+  is created and the existing wb is unlinked and drained.
+
+* An inode is associated with the matching wb when it gets dirtied for
+  the first time and written back by that wb.  A later patchset will
+  implement dynamic wb switching.
+
+* All writeback operations are made per-wb instead of per-bdi.
+  bdi-wide operations are split across all member wb's.  If some
+  finite amount needs to be distributed, be it number of pages to
+  writeback or bdi->min/max_ratio, it's distributed according to the
+  bandwidth proportion a wb has in the bdi.
+
+* cgroup writeback support adds one pointer to struct inode.
+
+
+Missing pieces
+--------------
+
+* It requires some cooperation from the filesystem and currently only
+  works with ext2.  The changes necessary on the filesystem side are
+  almost trivial.  I'll write up a documentation on it.
+
+* blk-throttle works but cfq-iosched isn't ready for writebacks coming
+  down with different cgroups.  cfq-iosched should be updated to have
+  a writeback ioc per cgroup and route writeback IOs through it.
+
+
+How to test
+-----------
+
+* Boot with kernel option "cgroup__DEVEL__legacy_files_on_dfl".
+
+* umount /sys/fs/cgroup/memory
+  umount /sys/fs/cgroup/blkio
+  mkdir /sys/fs/cgroup/unified
+  mount -t cgroup -o __DEVEL__sane_behavior cgroup /sys/fs/cgroup/unified
+  echo +blkio > /sys/fs/cgroup/unified/cgroup.subtree_control
+
+* Build the cgroup hierarchy (don't forget to enable blkio using
+  subtree_control) and put processes in cgroups and run tests on ext2
+  filesystems and blkio.throttle.* knobs.
+
+This patchset contains the following 48 patches.
+
+ 0001-memcg-add-per-cgroup-dirty-page-accounting.patch
+ 0002-blkcg-move-block-blk-cgroup.h-to-include-linux-blk-c.patch
+ 0003-update-CONFIG_BLK_CGROUP-dummies-in-include-linux-bl.patch
+ 0004-blkcg-always-create-the-blkcg_gq-for-the-root-blkcg.patch
+ 0005-memcg-add-mem_cgroup_root_css.patch
+ 0006-blkcg-add-blkcg_root_css.patch
+ 0007-cgroup-block-implement-task_get_css-and-use-it-in-bi.patch
+ 0008-blkcg-implement-task_get_blkcg_css.patch
+ 0009-blkcg-implement-bio_associate_blkcg.patch
+ 0010-memcg-implement-mem_cgroup_css_from_page.patch
+ 0011-writeback-move-backing_dev_info-state-into-bdi_write.patch
+ 0012-writeback-move-backing_dev_info-bdi_stat-into-bdi_wr.patch
+ 0013-writeback-move-bandwidth-related-fields-from-backing.patch
+ 0014-writeback-s-bdi-wb-in-mm-page-writeback.c.patch
+ 0015-writeback-move-backing_dev_info-wb_lock-and-worklist.patch
+ 0016-writeback-reorganize-mm-backing-dev.c.patch
+ 0017-writeback-separate-out-include-linux-backing-dev-def.patch
+ 0018-bdi-make-inode_to_bdi-inline.patch
+ 0019-writeback-add-gfp-to-wb_init.patch
+ 0020-bdi-separate-out-congested-state-into-a-separate-str.patch
+ 0021-writeback-add-CONFIG-BDI_CAP-FS-_CGROUP_WRITEBACK.patch
+ 0022-writeback-make-backing_dev_info-host-cgroup-specific.patch
+ 0023-writeback-blkcg-associate-each-blkcg_gq-with-the-cor.patch
+ 0024-writeback-attribute-stats-to-the-matching-per-cgroup.patch
+ 0025-writeback-let-balance_dirty_pages-work-on-the-matchi.patch
+ 0026-writeback-make-congestion-functions-per-bdi_writebac.patch
+ 0027-writeback-blkcg-restructure-blk_-set-clear-_queue_co.patch
+ 0028-writeback-blkcg-propagate-non-root-blkcg-congestion-.patch
+ 0029-writeback-implement-and-use-inode_congested.patch
+ 0030-writeback-implement-WB_has_dirty_io-wb_state-flag.patch
+ 0031-writeback-implement-backing_dev_info-tot_write_bandw.patch
+ 0032-writeback-make-bdi_has_dirty_io-take-multiple-bdi_wr.patch
+ 0033-writeback-don-t-issue-wb_writeback_work-if-clean.patch
+ 0034-writeback-make-bdi-min-max_ratio-handling-cgroup-wri.patch
+ 0035-writeback-implement-bdi_for_each_wb.patch
+ 0036-writeback-remove-bdi_start_writeback.patch
+ 0037-writeback-make-laptop_mode_timer_fn-handle-multiple-.patch
+ 0038-writeback-make-writeback_in_progress-take-bdi_writeb.patch
+ 0039-writeback-make-bdi_start_background_writeback-take-b.patch
+ 0040-writeback-make-wakeup_flusher_threads-handle-multipl.patch
+ 0041-writeback-add-wb_writeback_work-auto_free.patch
+ 0042-writeback-implement-bdi_wait_for_completion.patch
+ 0043-writeback-implement-wb_wait_for_single_work.patch
+ 0044-writeback-restructure-try_writeback_inodes_sb-_nr.patch
+ 0045-writeback-make-writeback-initiation-functions-handle.patch
+ 0046-writeback-dirty-inodes-against-their-matching-cgroup.patch
+ 0047-buffer-writeback-make-__block_write_full_page-honor-.patch
+ 0048-mpage-make-__mpage_writepage-honor-cgroup-writeback.patch
+ 0049-ext2-enable-cgroup-writeback-support.patch
+
+0001-0020 are preps.
+
+0021-0046 gradually convert writeback code so that wb (bdi_writeback)
+operates as an independent writeback domain instead of bdi
+(backing_dev_info), a single bdi can have multiple per-cgroup wb's
+working for it, and per-bdi operations are translated and distributed
+to all its member wb's.
+
+0047-0049 make lower layers to properly propagate the cgroup
+association from the writeback layer and enable cgroup writeback on
+ext2.
+
+This patchset is on top of
+
+  block/for-4.1/core bfd343aa1718 ("blk-mq: don't wait in blk_mq_queue_enter() if __GFP_WAIT isn't set")
++ [1] [PATCH] writeback: fix possible underflow in write bandwidth calculation
+
+and available in the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-writeback-20150406
+
+diffstat follows.  Thanks.
+
+ Documentation/cgroups/memory.txt |    1 
+ block/bio.c                      |   35 +-
+ block/blk-cgroup.c               |  124 +++----
+ block/blk-cgroup.h               |  603 -----------------------------------
+ block/blk-core.c                 |   70 ++--
+ block/blk-integrity.c            |    1 
+ block/blk-sysfs.c                |    3 
+ block/blk-throttle.c             |    2 
+ block/bounce.c                   |    1 
+ block/cfq-iosched.c              |    2 
+ block/elevator.c                 |    2 
+ block/genhd.c                    |    1 
+ drivers/block/drbd/drbd_int.h    |    1 
+ drivers/block/drbd/drbd_main.c   |   10 
+ drivers/block/pktcdvd.c          |    1 
+ drivers/char/raw.c               |    1 
+ drivers/md/bcache/request.c      |    1 
+ drivers/md/dm.c                  |    2 
+ drivers/md/dm.h                  |    1 
+ drivers/md/md.h                  |    1 
+ drivers/md/raid1.c               |    4 
+ drivers/md/raid10.c              |    2 
+ drivers/mtd/devices/block2mtd.c  |    1 
+ fs/block_dev.c                   |    9 
+ fs/buffer.c                      |   60 ++-
+ fs/ext2/super.c                  |    2 
+ fs/ext4/extents.c                |    1 
+ fs/ext4/mballoc.c                |    1 
+ fs/ext4/super.c                  |    1 
+ fs/f2fs/node.c                   |    4 
+ fs/f2fs/segment.h                |    3 
+ fs/fs-writeback.c                |  599 +++++++++++++++++++++++++----------
+ fs/fuse/file.c                   |   12 
+ fs/gfs2/super.c                  |    2 
+ fs/hfs/super.c                   |    1 
+ fs/hfsplus/super.c               |    1 
+ fs/inode.c                       |    1 
+ fs/mpage.c                       |    2 
+ fs/nfs/filelayout/filelayout.c   |    1 
+ fs/nfs/internal.h                |    2 
+ fs/nfs/write.c                   |    3 
+ fs/ocfs2/file.c                  |    1 
+ fs/reiserfs/super.c              |    1 
+ fs/ufs/super.c                   |    1 
+ fs/xfs/xfs_aops.c                |   12 
+ fs/xfs/xfs_file.c                |    1 
+ include/linux/backing-dev-defs.h |  188 +++++++++++
+ include/linux/backing-dev.h      |  567 ++++++++++++++++++++++++---------
+ include/linux/bio.h              |    3 
+ include/linux/blk-cgroup.h       |  631 ++++++++++++++++++++++++++++++++++++
+ include/linux/blkdev.h           |   21 -
+ include/linux/cgroup.h           |   25 +
+ include/linux/fs.h               |   13 
+ include/linux/memcontrol.h       |   10 
+ include/linux/mm.h               |    3 
+ include/linux/pagemap.h          |    3 
+ include/linux/writeback.h        |   25 -
+ include/trace/events/writeback.h |    8 
+ init/Kconfig                     |    5 
+ mm/backing-dev.c                 |  666 +++++++++++++++++++++++++++++++--------
+ mm/fadvise.c                     |    2 
+ mm/filemap.c                     |   32 +
+ mm/madvise.c                     |    1 
+ mm/memcontrol.c                  |   59 +++
+ mm/page-writeback.c              |  649 +++++++++++++++++++++-----------------
+ mm/readahead.c                   |    2 
+ mm/rmap.c                        |    2 
+ mm/truncate.c                    |   25 +
+ mm/vmscan.c                      |   28 -
+ 69 files changed, 3003 insertions(+), 1556 deletions(-)
+
+--
 tejun
+
+[L] http://lkml.kernel.org/g/1427086499-15657-1-git-send-email-tj@kernel.org
+[1] http://lkml.kernel.org/g/20150323041848.GA8991@htj.duckdns.org
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
