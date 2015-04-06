@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 10/10] writeback: disassociate inodes from dying bdi_writebacks
-Date: Mon,  6 Apr 2015 16:18:28 -0400
-Message-ID: <1428351508-8399-11-git-send-email-tj@kernel.org>
+Subject: [PATCH 08/10] writeback: add lockdep annotation to inode_to_wb()
+Date: Mon,  6 Apr 2015 16:18:26 -0400
+Message-ID: <1428351508-8399-9-git-send-email-tj@kernel.org>
 References: <1428351508-8399-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=a4zQjg0TDtMMTG/Rj2cfTLhHzZLG43EGQ6xMGqy//Dg=;
-        b=bWkyPxNKktP2+a8j9RIZdxQGS3TDUZGFLhddTDZ9Hrgy+XsKJT+y6bQPDyYJPoOlS7
-         4V4thmFcPRCKj0zusdp0nFV2yZlzFzn/YhG+/yn63V/wBUrW9hj+vFL334AUMlUTj4Ht
-         lliWu2YTE/VEtULRLNLdKbRUjKlB/IWFRwcfNz4KHzcPoi7NVMtvhv3FXYpGWxlrRTF4
-         nk+8hAWCeTNXKm/kR8bZ8wmZr3Wa+GuZXYKl8eEa1ewdORjGD3zvb7khGZT/mVHfI1gQ
-         lruT3jc1Mf+xMgA9BqDio6t5RSIijyY/Axk5I3rX0uNC/TxucomO/8ol+r0wE7CAAzR1
-         bzIQ==
+        bh=nPEMMknSvvFgqU/9A26F7mVPBeUkbCuppT6GLXfEfTw=;
+        b=x10GHlfuHfdt0gN2cKfFBQMAc6HNVTugDpcziUqFaSbQL7xJhb6Dnb4gL8n8/zm8dP
+         YXq503zPgDq21DSyKrU93TEd01kZ6m3BJ6YauddAd0XHucgC/ZPU3rl9Z71lmXRNc2Vv
+         //IlO/GsRCw9P8cxuoNS1CznshmksxxWq09do02o1IKs7Dy72uJdk+DdmvTBUjgUkYL3
+         NIEt54Ku19lOfRkwXjQC05RwcncHqaLeQF9wYcTuO/eL/Rap61ug1vuqGg+PvaR7oW8I
+         OmLlrI4kVTCr6OQAFzTzZIuFMuJENmjyzBqfQoiJ0oifd/kD03KzBs3+M97r8EWeFBbP
+         /vKQ==
 In-Reply-To: <1428351508-8399-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,24 +23,31 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-For the purpose of foreign inode detection, wb's (bdi_writeback's) are
-identified by the associated memcg ID.  As we create a separate wb for
-each memcg, this is enough to identify the active wb's; however, when
-blkcg is enabled or disabled higher up in the hierarchy, the mapping
-between memcg and blkcg changes which in turn creates a new wb to
-service the new mapping.  The old wb is unlinked from index and
-released after all references are drained.  The foreign inode
-detection logic can't detect this condition because both the old and
-new wb's point to the same memcg and thus never decides to move inodes
-attached to the old wb to the new one.
+With the previous three patches, all operations which acquire wb from
+inode are either under one of inode->i_lock, mapping->tree_lock or
+wb->list_lock or protected by unlocked_inode_to_wb transaction.  This
+will be depended upon by foreign inode wb switching.
 
-This patch adds logic to initiate switching immediately in
-wbc_attach_and_unlock_inode() if the associated wb is dying.  We can
-make the usual foreign detection logic to distinguish the different
-wb's mapped to the memcg but the dying wb is never gonna be in active
-service again and there's no point in tracking the usage history and
-reaching the switch verdict after enough data points are collected.
-It's already known that the wb has to be switched.
+This patch adds lockdep assertion to inode_to_wb() so that usages
+outside the above list locks can be caught easily.  There are three
+exceptions.
+
+* locked_inode_to_wb_and_lock_list() is holding wb->list_lock but the
+  wb may not be the inode's.  Ensuring that is the function's role
+  after all.  Updated to deref inode->i_wb directly.
+
+* inode_wb_stat_unlocked_begin() is usually protected by combination
+  of !I_WB_SWITCH and rcu_read_lock().  Updated to deref inode->i_wb
+  directly.
+
+* inode_congested() wants to test whether inode->i_wb is set before
+  starting the transaction.  Added inode_to_wb_is_valid() which tests
+  inode->i_wb directly.
+
+v3: inode_congested() conversion added.
+
+v2: locked_inode_to_wb_and_lock_list() was missing in the first
+    version.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
@@ -48,62 +55,98 @@ Cc: Jan Kara <jack@suse.cz>
 Cc: Wu Fengguang <fengguang.wu@intel.com>
 Cc: Greg Thelen <gthelen@google.com>
 ---
- fs/fs-writeback.c                |  7 +++++++
- include/linux/backing-dev-defs.h | 16 ++++++++++++++++
- 2 files changed, 23 insertions(+)
+ fs/fs-writeback.c           |  5 +++--
+ include/linux/backing-dev.h | 34 ++++++++++++++++++++++++++++++++--
+ 2 files changed, 35 insertions(+), 4 deletions(-)
 
 diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 74b7a99..6c9dae0 100644
+index ee65ff09..633d9d5 100644
 --- a/fs/fs-writeback.c
 +++ b/fs/fs-writeback.c
-@@ -512,6 +512,13 @@ void wbc_attach_and_unlock_inode(struct writeback_control *wbc,
+@@ -272,7 +272,8 @@ locked_inode_to_wb_and_lock_list(struct inode *inode)
+ 		spin_lock(&wb->list_lock);
+ 		wb_put(wb);		/* not gonna deref it anymore */
  
- 	wb_get(wbc->wb);
- 	spin_unlock(&inode->i_lock);
-+
-+	/*
-+	 * A dying wb indicates that the memcg-blkcg mapping has changed
-+	 * and a new wb is already serving the memcg.  Switch immediately.
-+	 */
-+	if (unlikely(wb_dying(wbc->wb)))
-+		inode_switch_wbs(inode, wbc->wb_id);
+-		if (likely(wb == inode_to_wb(inode)))
++		/* i_wb may have changed inbetween, can't use inode_to_wb() */
++		if (likely(wb == inode->i_wb))
+ 			return wb;	/* @inode already has ref */
+ 
+ 		spin_unlock(&wb->list_lock);
+@@ -600,7 +601,7 @@ int inode_congested(struct inode *inode, int cong_bits)
+ 	 * Once set, ->i_wb never becomes NULL while the inode is alive.
+ 	 * Start transaction iff ->i_wb is visible.
+ 	 */
+-	if (inode && inode_to_wb(inode)) {
++	if (inode && inode_to_wb_is_valid(inode)) {
+ 		struct bdi_writeback *wb;
+ 		bool locked, congested;
+ 
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index 73ffa32..dfce808 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -322,13 +322,33 @@ wb_get_create_current(struct backing_dev_info *bdi, gfp_t gfp)
  }
  
  /**
-diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
-index e047b49..a48d90e 100644
---- a/include/linux/backing-dev-defs.h
-+++ b/include/linux/backing-dev-defs.h
-@@ -219,6 +219,17 @@ static inline void wb_put(struct bdi_writeback *wb)
- 		percpu_ref_put(&wb->refcnt);
- }
- 
-+/**
-+ * wb_dying - is a wb dying?
-+ * @wb: bdi_writeback of interest
++ * inode_to_wb_is_valid - test whether an inode has a wb associated
++ * @inode: inode of interest
 + *
-+ * Returns whether @wb is unlinked and being drained.
++ * Returns %true if @inode has a wb associated.  May be called without any
++ * locking.
 + */
-+static inline bool wb_dying(struct bdi_writeback *wb)
++static inline bool inode_to_wb_is_valid(struct inode *inode)
 +{
-+	return percpu_ref_is_dying(&wb->refcnt);
++	return inode->i_wb;
 +}
 +
- #else	/* CONFIG_CGROUP_WRITEBACK */
- 
- static inline bool wb_tryget(struct bdi_writeback *wb)
-@@ -234,6 +245,11 @@ static inline void wb_put(struct bdi_writeback *wb)
++/**
+  * inode_to_wb - determine the wb of an inode
+  * @inode: inode of interest
+  *
+- * Returns the wb @inode is currently associated with.
++ * Returns the wb @inode is currently associated with.  The caller must be
++ * holding either @inode->i_lock, @inode->i_mapping->tree_lock, or the
++ * associated wb's list_lock.
+  */
+ static inline struct bdi_writeback *inode_to_wb(struct inode *inode)
  {
++#ifdef CONFIG_LOCKDEP
++	WARN_ON_ONCE(debug_locks &&
++		     (!lockdep_is_held(&inode->i_lock) &&
++		      !lockdep_is_held(&inode->i_mapping->tree_lock) &&
++		      !lockdep_is_held(&inode->i_wb->list_lock)));
++#endif
+ 	return inode->i_wb;
  }
  
-+static inline bool wb_dying(struct bdi_writeback *wb)
+@@ -360,7 +380,12 @@ unlocked_inode_to_wb_begin(struct inode *inode, bool *lockedp)
+ 
+ 	if (unlikely(*lockedp))
+ 		spin_lock_irq(&inode->i_mapping->tree_lock);
+-	return inode_to_wb(inode);
++
++	/*
++	 * Protected by either !I_WB_SWITCH + rcu_read_lock() or tree_lock.
++	 * inode_to_wb() will bark.  Deref directly.
++	 */
++	return inode->i_wb;
+ }
+ 
+ /**
+@@ -459,6 +484,11 @@ wb_get_create_current(struct backing_dev_info *bdi, gfp_t gfp)
+ 	return &bdi->wb;
+ }
+ 
++static inline bool inode_to_wb_is_valid(struct inode *inode)
 +{
-+	return false;
++	return true;
 +}
 +
- #endif	/* CONFIG_CGROUP_WRITEBACK */
- 
- #endif	/* __LINUX_BACKING_DEV_DEFS_H */
+ static inline struct bdi_writeback *inode_to_wb(struct inode *inode)
+ {
+ 	return &inode_to_bdi(inode)->wb;
 -- 
 2.1.0
 
