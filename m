@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 05/49] memcg: add mem_cgroup_root_css
-Date: Mon,  6 Apr 2015 15:57:54 -0400
-Message-ID: <1428350318-8215-6-git-send-email-tj@kernel.org>
+Subject: [PATCH 04/49] blkcg: always create the blkcg_gq for the root blkcg
+Date: Mon,  6 Apr 2015 15:57:53 -0400
+Message-ID: <1428350318-8215-5-git-send-email-tj@kernel.org>
 References: <1428350318-8215-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=bHqj6E7r4XRleyXuSZzlziLO3+6aJJq6uAl0SY9Xp04=;
-        b=pvLPHyioE+yVtLZZTWNxMaIFyLiu3+cvHGzAQtw/w/quIOeyh+ZvozJ1Ya1c2Dff65
-         /kP/2SOEm4P7CoKS3sTQa24WDP0bZhI8JV+IzfH1Y/x+XIniRX1RMzrqiw0UlXnFJp5n
-         zMulK80pUCvGolMjYBNSAkIpyzGBYVb5ehduHTSZNUBYTOEmJ1K1IZQJIKnMTDKKkppu
-         YUw0SVSUofGF6YpOlkpTHnmCs/2uge1gemSYLEOYNa6CMya4f2empPnbVmtRzKSJXKG0
-         aoPNRUa9YtOEgKwqZ/fqMlhUvSUynXrs8TlGFWJDp3A9XXtA8klqJpaDaEZNVKwe3Hcr
-         qZCA==
+        bh=xB1cZjUbKSnNvdaJvG7G84oThtGgEZJhn/Uny/40+ZQ=;
+        b=ywwrbvzjXIQMpaDX/ClHJ1TzlIVf93uexX8Tn/McJP3fvpa0OJr4pbwmybkbFrGfWO
+         1NImkT0pSZbn+NLPhMuP5/WLQM3zhHEOWSiC+MJEJeHTZvHXTH5qvSXKqnW7ndIsKhEP
+         jfYMYhmJFTvy7f03qPRCYPqItir2xYRG/Wn2WVH9zdP/hWSR9FLBAsMeCzDLzs5Uf+uS
+         jQSKdXmzY949KV4O3dnpr9I8MnqBn8Ay2Ph8ApKRyOh2yz7xGzTP970AQOIsYLpxPxdV
+         wYcEPgXPL/+IAgLluHAhi81IEqtPGnKNc9wDR+UZTSx5gWuoZhYDdGICzgrajBHchuou
+         6n1Q==
 In-Reply-To: <1428350318-8215-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,60 +23,177 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-Add global mem_cgroup_root_css which points to the root memcg css.
-This will be used by cgroup writeback support.  If memcg is disabled,
-it's defined as ERR_PTR(-EINVAL).
+Currently, blkcg does a minor optimization where the root blkcg is
+created when the first blkcg policy is activated on a queue and
+destroyed on the deactivation of the last.  On systems where blkcg is
+configured but not used, this saves one blkcg_gq struct per queue.  On
+systems where blkcg is actually used, there's no difference.  The only
+case where this can lead to any meaninful, albeit still minute, save
+in memory consumption is when all blkcg policies are deactivated after
+being widely used in the system, which is a hihgly unlikely scenario.
+
+The conditional existence of root blkcg_gq has already created several
+bugs in blkcg and became an issue once again for the new per-cgroup
+wb_congested mechanism for cgroup writeback support leading to a NULL
+dereference when no blkcg policy is active.  This is really not worth
+bothering with.  This patch makes blkcg always allocate and link the
+root blkcg_gq and release it only on queue destruction.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-aCc: Michal Hocko <mhocko@suse.cz>
+Reported-by: Fengguang Wu <fengguang.wu@intel.com>
 ---
- include/linux/memcontrol.h | 4 ++++
- mm/memcontrol.c            | 2 ++
- 2 files changed, 6 insertions(+)
+ block/blk-cgroup.c | 96 +++++++++++++++++++++++-------------------------------
+ 1 file changed, 41 insertions(+), 55 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 5fe6411..294498f 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -68,6 +68,8 @@ enum mem_cgroup_events_index {
- };
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index c3226ce..2a4f77f 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -235,13 +235,8 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+ 	blkg->online = true;
+ 	spin_unlock(&blkcg->lock);
  
- #ifdef CONFIG_MEMCG
-+extern struct cgroup_subsys_state *mem_cgroup_root_css;
+-	if (!ret) {
+-		if (blkcg == &blkcg_root) {
+-			q->root_blkg = blkg;
+-			q->root_rl.blkg = blkg;
+-		}
++	if (!ret)
+ 		return blkg;
+-	}
+ 
+ 	/* @blkg failed fully initialized, use the usual release path */
+ 	blkg_put(blkg);
+@@ -340,15 +335,6 @@ static void blkg_destroy(struct blkcg_gq *blkg)
+ 		rcu_assign_pointer(blkcg->blkg_hint, NULL);
+ 
+ 	/*
+-	 * If root blkg is destroyed.  Just clear the pointer since root_rl
+-	 * does not take reference on root blkg.
+-	 */
+-	if (blkcg == &blkcg_root) {
+-		blkg->q->root_blkg = NULL;
+-		blkg->q->root_rl.blkg = NULL;
+-	}
+-
+-	/*
+ 	 * Put the reference taken at the time of creation so that when all
+ 	 * queues are gone, group can be destroyed.
+ 	 */
+@@ -855,9 +841,45 @@ done:
+  */
+ int blkcg_init_queue(struct request_queue *q)
+ {
+-	might_sleep();
++	struct blkcg_gq *new_blkg, *blkg;
++	bool preloaded;
++	int ret;
 +
- void mem_cgroup_events(struct mem_cgroup *memcg,
- 		       enum mem_cgroup_events_index idx,
- 		       unsigned int nr);
-@@ -196,6 +198,8 @@ void mem_cgroup_split_huge_fixup(struct page *head);
- #else /* CONFIG_MEMCG */
- struct mem_cgroup;
- 
-+#define mem_cgroup_root_css ((struct cgroup_subsys_state *)ERR_PTR(-EINVAL))
++	new_blkg = blkg_alloc(&blkcg_root, q, GFP_KERNEL);
++	if (!new_blkg)
++		return -ENOMEM;
 +
- static inline void mem_cgroup_events(struct mem_cgroup *memcg,
- 				     enum mem_cgroup_events_index idx,
- 				     unsigned int nr)
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index cf25d1a..fda7025 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -71,6 +71,7 @@ EXPORT_SYMBOL(memory_cgrp_subsys);
++	preloaded = !radix_tree_preload(GFP_KERNEL);
  
- #define MEM_CGROUP_RECLAIM_RETRIES	5
- static struct mem_cgroup *root_mem_cgroup __read_mostly;
-+struct cgroup_subsys_state *mem_cgroup_root_css __read_mostly;
+-	return blk_throtl_init(q);
++	/*
++	 * Make sure the root blkg exists and count the existing blkgs.  As
++	 * @q is bypassing at this point, blkg_lookup_create() can't be
++	 * used.  Open code insertion.
++	 */
++	rcu_read_lock();
++	spin_lock_irq(q->queue_lock);
++	blkg = blkg_create(&blkcg_root, q, new_blkg);
++	spin_unlock_irq(q->queue_lock);
++	rcu_read_unlock();
++
++	if (preloaded)
++		radix_tree_preload_end();
++
++	if (IS_ERR(blkg)) {
++		kfree(new_blkg);
++		return PTR_ERR(blkg);
++	}
++
++	q->root_blkg = blkg;
++	q->root_rl.blkg = blkg;
++
++	ret = blk_throtl_init(q);
++	if (ret) {
++		spin_lock_irq(q->queue_lock);
++		blkg_destroy_all(q);
++		spin_unlock_irq(q->queue_lock);
++	}
++	return ret;
+ }
  
- /* Whether the swap controller is active */
- #ifdef CONFIG_MEMCG_SWAP
-@@ -4551,6 +4552,7 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
- 	/* root ? */
- 	if (parent_css == NULL) {
- 		root_mem_cgroup = memcg;
-+		mem_cgroup_root_css = &memcg->css;
- 		page_counter_init(&memcg->memory, NULL);
- 		memcg->high = PAGE_COUNTER_MAX;
- 		memcg->soft_limit = PAGE_COUNTER_MAX;
+ /**
+@@ -958,52 +980,20 @@ int blkcg_activate_policy(struct request_queue *q,
+ 			  const struct blkcg_policy *pol)
+ {
+ 	LIST_HEAD(pds);
+-	struct blkcg_gq *blkg, *new_blkg;
++	struct blkcg_gq *blkg;
+ 	struct blkg_policy_data *pd, *n;
+ 	int cnt = 0, ret;
+-	bool preloaded;
+ 
+ 	if (blkcg_policy_enabled(q, pol))
+ 		return 0;
+ 
+-	/* preallocations for root blkg */
+-	new_blkg = blkg_alloc(&blkcg_root, q, GFP_KERNEL);
+-	if (!new_blkg)
+-		return -ENOMEM;
+-
++	/* count and allocate policy_data for all existing blkgs */
+ 	blk_queue_bypass_start(q);
+-
+-	preloaded = !radix_tree_preload(GFP_KERNEL);
+-
+-	/*
+-	 * Make sure the root blkg exists and count the existing blkgs.  As
+-	 * @q is bypassing at this point, blkg_lookup_create() can't be
+-	 * used.  Open code it.
+-	 */
+ 	spin_lock_irq(q->queue_lock);
+-
+-	rcu_read_lock();
+-	blkg = __blkg_lookup(&blkcg_root, q, false);
+-	if (blkg)
+-		blkg_free(new_blkg);
+-	else
+-		blkg = blkg_create(&blkcg_root, q, new_blkg);
+-	rcu_read_unlock();
+-
+-	if (preloaded)
+-		radix_tree_preload_end();
+-
+-	if (IS_ERR(blkg)) {
+-		ret = PTR_ERR(blkg);
+-		goto out_unlock;
+-	}
+-
+ 	list_for_each_entry(blkg, &q->blkg_list, q_node)
+ 		cnt++;
+-
+ 	spin_unlock_irq(q->queue_lock);
+ 
+-	/* allocate policy_data for all existing blkgs */
+ 	while (cnt--) {
+ 		pd = kzalloc_node(pol->pd_size, GFP_KERNEL, q->node);
+ 		if (!pd) {
+@@ -1072,10 +1062,6 @@ void blkcg_deactivate_policy(struct request_queue *q,
+ 
+ 	__clear_bit(pol->plid, q->blkcg_pols);
+ 
+-	/* if no policy is left, no need for blkgs - shoot them down */
+-	if (bitmap_empty(q->blkcg_pols, BLKCG_MAX_POLS))
+-		blkg_destroy_all(q);
+-
+ 	list_for_each_entry(blkg, &q->blkg_list, q_node) {
+ 		/* grab blkcg lock too while removing @pd from @blkg */
+ 		spin_lock(&blkg->blkcg->lock);
 -- 
 2.1.0
 
