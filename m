@@ -1,21 +1,21 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 11/19] writeback: add dirty_throttle_control->dom
-Date: Mon,  6 Apr 2015 16:04:26 -0400
-Message-ID: <1428350674-8303-12-git-send-email-tj@kernel.org>
+Subject: [PATCH 17/19] writeback: reset wb_domain->dirty_limit[_tstmp] when memcg domain size changes
+Date: Mon,  6 Apr 2015 16:04:32 -0400
+Message-ID: <1428350674-8303-18-git-send-email-tj@kernel.org>
 References: <1428350674-8303-1-git-send-email-tj@kernel.org>
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=nIm8XkDxJTtwni0+49RcbA7aCeIR3y7/pvOK1s1hD9k=;
-        b=b6ODFw5lLm1INSZiuPnQndTyKvmH0umpKvIvUA0TslN3nGaurly0j+MI9BZTHzBeX6
-         sOM6gZXowJ9oIX2y42nKFp5IOqVP96HNLAXLwLD7v+osn6GtDGXVZRkU7oqZ2E/q90D3
-         khBh0N+Y6lS4skh3dqLBnbKGKUtPNBXyJ8QjVma/ZyD3U5Yt3CtH/4sltBMorpekZ03e
-         boU9n1+r1GAcBlyipb+i+aiMSFDJ4ebnjN+O6Rthtxt0v2mK8c9C2apijvSgrAz70Snz
-         NyOc0wPUlNkENv3mrNiXKw9INqBq0B0vH4ohxIbvcnXZhLtK6QavNsMKvyaZThb24eY6
-         RATA==
+        bh=HfjvutpOIZWvdcLX2Du74DY2/1afrMQq+D9QCBKSj68=;
+        b=hWT6fr9A+JABvJBpMu6xA1/7nS+fISAu6hLPdgolJ5t1LF+0QoknvNzSm07X0DF5pL
+         ueOzWBHdQMqpA7uKh1kxYuObrfoK88gObdagBpfMsSHO+tnC71xKVIHuH5jg3lY4tXxv
+         1m8pCQvFV0PzLYj0RblRql3RTzrcPNc4tgYL0tpX7hhuRJPHrRfX9yoH6WGu4htA6P1z
+         QRu8fgXvRxi1ub6c3Q5cXL6mDgxg34TtZHYysD4SvgyRx8x+2L8CR1U6H6PkD0M80Gis
+         Q1EiwHkNSxC+MD4N0aCyRIRajJvuZARhf0uhl+avUtfTJm3r8haLe4hUw+tz9yfqTyfk
+         arNA==
 In-Reply-To: <1428350674-8303-1-git-send-email-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,15 +23,16 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-Currently all dirty throttle operations use global_wb_domain; however,
-cgroup writeback support requires considering per-memcg wb_domain too.
-This patch adds dirty_throttle_control->dom and updates functions
-which are directly using globabl_wb_domain to use it instead.
+The amount of available memory to a memcg wb_domain can change as
+memcg configuration changes.  A domain's ->dirty_limit exists to
+smooth out sudden drops in dirty threshold; however, when a domain's
+size actually drops significantly, it hinders the dirty throttling
+from adjusting to the new configuration leading to unexpected
+behaviors including unnecessary OOM kills.
 
-As this makes global_update_bandwidth() a misnomer, the function is
-renamed to domain_update_bandwidth().
-
-This patch doesn't introduce any behavioral changes.
+This patch resolves the issue by adding wb_domain_size_changed() which
+resets ->dirty_limit[_tstmp] and making memcg call it on configuration
+changes.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
@@ -39,106 +40,91 @@ Cc: Jan Kara <jack@suse.cz>
 Cc: Wu Fengguang <fengguang.wu@intel.com>
 Cc: Greg Thelen <gthelen@google.com>
 ---
- mm/page-writeback.c | 30 ++++++++++++++++++++++++------
- 1 file changed, 24 insertions(+), 6 deletions(-)
+ include/linux/writeback.h | 20 ++++++++++++++++++++
+ mm/memcontrol.c           | 12 ++++++++++++
+ 2 files changed, 32 insertions(+)
 
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 15771a6..4024db1 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -126,6 +126,9 @@ struct wb_domain global_wb_domain;
- 
- /* consolidated parameters for balance_dirty_pages() and its subroutines */
- struct dirty_throttle_control {
-+#ifdef CONFIG_CGROUP_WRITEBACK
-+	struct wb_domain	*dom;
-+#endif
- 	struct bdi_writeback	*wb;
- 	struct fprop_local_percpu *wb_completions;
- 
-@@ -140,7 +143,7 @@ struct dirty_throttle_control {
- 	unsigned long		pos_ratio;
+diff --git a/include/linux/writeback.h b/include/linux/writeback.h
+index a9eb40f..5b86988 100644
+--- a/include/linux/writeback.h
++++ b/include/linux/writeback.h
+@@ -132,6 +132,26 @@ struct wb_domain {
+ 	unsigned long dirty_limit;
  };
  
--#define GDTC_INIT(__wb)		.wb = (__wb),				\
-+#define DTC_INIT_COMMON(__wb)	.wb = (__wb),				\
- 				.wb_completions = &(__wb)->completions
- 
++/**
++ * wb_domain_size_changed - memory available to a wb_domain has changed
++ * @dom: wb_domain of interest
++ *
++ * This function should be called when the amount of memory available to
++ * @dom has changed.  It resets @dom's dirty limit parameters to prevent
++ * the past values which don't match the current configuration from skewing
++ * dirty throttling.  Without this, when memory size of a wb_domain is
++ * greatly reduced, the dirty throttling logic may allow too many pages to
++ * be dirtied leading to consecutive unnecessary OOMs and may get stuck in
++ * that situation.
++ */
++static inline void wb_domain_size_changed(struct wb_domain *dom)
++{
++	spin_lock(&dom->lock);
++	dom->dirty_limit_tstamp = jiffies;
++	dom->dirty_limit = 0;
++	spin_unlock(&dom->lock);
++}
++
  /*
-@@ -152,6 +155,14 @@ struct dirty_throttle_control {
- 
- #ifdef CONFIG_CGROUP_WRITEBACK
- 
-+#define GDTC_INIT(__wb)		.dom = &global_wb_domain,		\
-+				DTC_INIT_COMMON(__wb)
-+
-+static struct wb_domain *dtc_dom(struct dirty_throttle_control *dtc)
-+{
-+	return dtc->dom;
-+}
-+
- static void wb_min_max_ratio(struct bdi_writeback *wb,
- 			     unsigned long *minp, unsigned long *maxp)
- {
-@@ -181,6 +192,13 @@ static void wb_min_max_ratio(struct bdi_writeback *wb,
- 
- #else	/* CONFIG_CGROUP_WRITEBACK */
- 
-+#define GDTC_INIT(__wb)		DTC_INIT_COMMON(__wb)
-+
-+static struct wb_domain *dtc_dom(struct dirty_throttle_control *dtc)
-+{
-+	return &global_wb_domain;
-+}
-+
- static void wb_min_max_ratio(struct bdi_writeback *wb,
- 			     unsigned long *minp, unsigned long *maxp)
- {
-@@ -583,7 +601,7 @@ static unsigned long hard_dirty_limit(unsigned long thresh)
-  */
- static unsigned long __wb_calc_thresh(struct dirty_throttle_control *dtc)
- {
--	struct wb_domain *dom = &global_wb_domain;
-+	struct wb_domain *dom = dtc_dom(dtc);
- 	unsigned long thresh = dtc->thresh;
- 	u64 wb_thresh;
- 	long numerator, denominator;
-@@ -952,7 +970,7 @@ out:
- 
- static void update_dirty_limit(struct dirty_throttle_control *dtc)
- {
--	struct wb_domain *dom = &global_wb_domain;
-+	struct wb_domain *dom = dtc_dom(dtc);
- 	unsigned long thresh = dtc->thresh;
- 	unsigned long limit = dom->dirty_limit;
- 
-@@ -979,10 +997,10 @@ update:
- 	dom->dirty_limit = limit;
+  * fs/fs-writeback.c
+  */	
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 2a74cf3..108acfc 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4096,6 +4096,11 @@ static void memcg_wb_domain_exit(struct mem_cgroup *memcg)
+ 	wb_domain_exit(&memcg->cgwb_domain);
  }
  
--static void global_update_bandwidth(struct dirty_throttle_control *dtc,
-+static void domain_update_bandwidth(struct dirty_throttle_control *dtc,
- 				    unsigned long now)
++static void memcg_wb_domain_size_changed(struct mem_cgroup *memcg)
++{
++	wb_domain_size_changed(&memcg->cgwb_domain);
++}
++
+ struct wb_domain *mem_cgroup_wb_domain(struct bdi_writeback *wb)
  {
--	struct wb_domain *dom = &global_wb_domain;
-+	struct wb_domain *dom = dtc_dom(dtc);
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(wb->memcg_css);
+@@ -4117,6 +4122,10 @@ static void memcg_wb_domain_exit(struct mem_cgroup *memcg)
+ {
+ }
  
- 	/*
- 	 * check locklessly first to optimize away locking for the most time
-@@ -1190,7 +1208,7 @@ static void __wb_update_bandwidth(struct dirty_throttle_control *dtc,
- 		goto snapshot;
++static void memcg_wb_domain_size_changed(struct mem_cgroup *memcg)
++{
++}
++
+ #endif	/* CONFIG_CGROUP_WRITEBACK */
  
- 	if (update_ratelimit) {
--		global_update_bandwidth(dtc, now);
-+		domain_update_bandwidth(dtc, now);
- 		wb_update_dirty_ratelimit(dtc, dirtied, elapsed);
- 	}
- 	wb_update_write_bandwidth(wb, elapsed, written);
+ /*
+@@ -4715,6 +4724,7 @@ static void mem_cgroup_css_reset(struct cgroup_subsys_state *css)
+ 	memcg->low = 0;
+ 	memcg->high = PAGE_COUNTER_MAX;
+ 	memcg->soft_limit = PAGE_COUNTER_MAX;
++	memcg_wb_domain_size_changed(memcg);
+ }
+ 
+ #ifdef CONFIG_MMU
+@@ -5347,6 +5357,7 @@ static ssize_t memory_high_write(struct kernfs_open_file *of,
+ 
+ 	memcg->high = high;
+ 
++	memcg_wb_domain_size_changed(memcg);
+ 	return nbytes;
+ }
+ 
+@@ -5379,6 +5390,7 @@ static ssize_t memory_max_write(struct kernfs_open_file *of,
+ 	if (err)
+ 		return err;
+ 
++	memcg_wb_domain_size_changed(memcg);
+ 	return nbytes;
+ }
+ 
 -- 
 2.1.0
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
