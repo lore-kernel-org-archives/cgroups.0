@@ -1,102 +1,100 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 25/49] writeback: let balance_dirty_pages() work on the matching cgroup bdi_writeback
-Date: Mon,  6 Apr 2015 15:58:14 -0400
-Message-ID: <1428350318-8215-26-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 31/49] writeback: implement backing_dev_info->tot_write_bandwidth
+Date: Mon,  6 Apr 2015 15:58:20 -0400
+Message-ID: <1428350318-8215-32-git-send-email-tj@kernel.org>
 References: <1428350318-8215-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=SnbvRvza836AVa4kLxJazLkEcd3PivqOOUSQhp2ibE0=;
-        b=HOEWdTFFZdBtD5yglgfOUSkVtdwsANotJcFOTnYu/huMgHXWQjUpYyP/Pks1e68gB+
-         SxZa7G+puxue7m8L3EnYbQ4dywqVjGyO63TuR0PSqZwWd+8qaT+ecWn76vN9LkFzaW6f
-         9GEXbvGl2C609pBUDgC8MpUeSQgJM3zkgiIUXktVpS1NU5axl+6Y3gcCj+RQm2iEwQMy
-         digd8JxnB9rV+wg3mLKlFz4uOER+3GcWq19s6NnTVTCOmg1/IkeKpxsyu4RDBF7ddqQe
-         R9ki2abANksyt7jbxcqrMN/mm+ePclpnJJBVmVcpDqMRBpYCMsGNhi7alDl+dzOKgxs8
-         dwHA==
-In-Reply-To: <1428350318-8215-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=CLE4dXY/wJkts4PwzFjOsMnRcRufimjeECXc56TKAXc=;
+        b=Z96+JNnhkwM6fOjf9qyBZkWnaIF9JY7B7al9BZ4yGdXLtZ8BF/XzvP+Nr8E60nVlS5
+         IXOFVBxC6YnJrN4axZxDwNWttHhSE2yEiCK/waEl2YWWtVDIIfiC1DOvDT6VR/5YFbwu
+         j8bGFa9Zd1wqAc2IzNdiQlmgCSaR0TIKkKAWUiT3Tk4buO3pMv3VPEMx+LMtDVZBWVYd
+         SMVA3LqfaAOykwpFfdChSYJ9OLQpzvA7CMKiN84/16bpgqQ0Zzeaomm6Ds/X2eDbAF5l
+         XFsQarGCbdV89O91/FbBPP86zsPppwQFx7MaX3AU4itM9AiU+wVqFiHXtB5QvzC8FhWa
+         sQBQ==
+In-Reply-To: <1428350318-8215-1-git-send-email-tj@kernel.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: axboe@kernel.dk
+Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
 
-Currently, balance_dirty_pages() always work on bdi->wb.  This patch
-updates it to work on the wb (bdi_writeback) matching memcg and blkcg
-of the current task as that's what the inode is being dirtied against.
+cgroup writeback support needs to keep track of the sum of
+avg_write_bandwidth of all wb's (bdi_writeback's) with dirty inodes to
+distribute write workload.  This patch adds bdi->tot_write_bandwidth
+and updates inode_wb_list_move_locked(), inode_wb_list_del_locked()
+and wb_update_write_bandwidth() to adjust it as wb's gain and lose
+dirty inodes and its avg_write_bandwidth gets updated.
 
-balance_dirty_pages_ratelimited() now pins the current wb and passes
-it to balance_dirty_pages().
+As the update events are not synchronized with each other,
+bdi->tot_write_bandwidth is an atomic_long_t.
 
-As no filesystem has FS_CGROUP_WRITEBACK yet, this doesn't lead to
-visible behavior differences.
-
-v2: Updated for per-inode wb association.
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Jan Kara <jack@suse.cz>
 ---
- mm/page-writeback.c | 18 +++++++++++++-----
- 1 file changed, 13 insertions(+), 5 deletions(-)
+ fs/fs-writeback.c                | 7 ++++++-
+ include/linux/backing-dev-defs.h | 2 ++
+ mm/page-writeback.c              | 3 +++
+ 3 files changed, 11 insertions(+), 1 deletion(-)
 
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index 29b4f8f..590c3ba 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -87,6 +87,8 @@ static bool wb_io_lists_populated(struct bdi_writeback *wb)
+ 		return false;
+ 	} else {
+ 		set_bit(WB_has_dirty_io, &wb->state);
++		atomic_long_add(wb->avg_write_bandwidth,
++				&wb->bdi->tot_write_bandwidth);
+ 		return true;
+ 	}
+ }
+@@ -94,8 +96,11 @@ static bool wb_io_lists_populated(struct bdi_writeback *wb)
+ static void wb_io_lists_depopulated(struct bdi_writeback *wb)
+ {
+ 	if (wb_has_dirty_io(wb) && list_empty(&wb->b_dirty) &&
+-	    list_empty(&wb->b_io) && list_empty(&wb->b_more_io))
++	    list_empty(&wb->b_io) && list_empty(&wb->b_more_io)) {
+ 		clear_bit(WB_has_dirty_io, &wb->state);
++		atomic_long_sub(wb->avg_write_bandwidth,
++				&wb->bdi->tot_write_bandwidth);
++	}
+ }
+ 
+ /**
+diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
+index 7a94b78..d631a61 100644
+--- a/include/linux/backing-dev-defs.h
++++ b/include/linux/backing-dev-defs.h
+@@ -142,6 +142,8 @@ struct backing_dev_info {
+ 	unsigned int min_ratio;
+ 	unsigned int max_ratio, max_prop_frac;
+ 
++	atomic_long_t tot_write_bandwidth; /* sum of active avg_write_bw */
++
+ 	struct bdi_writeback wb;  /* the root writeback info for this bdi */
+ 	struct bdi_writeback_congested wb_congested; /* its congested state */
+ #ifdef CONFIG_CGROUP_WRITEBACK
 diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 3b6d058..0aa2ffe 100644
+index 0aa2ffe..26c72e4 100644
 --- a/mm/page-writeback.c
 +++ b/mm/page-writeback.c
-@@ -1337,6 +1337,7 @@ static inline void wb_dirty_limits(struct bdi_writeback *wb,
-  * perform some writeout.
-  */
- static void balance_dirty_pages(struct address_space *mapping,
-+				struct bdi_writeback *wb,
- 				unsigned long pages_dirtied)
- {
- 	unsigned long nr_reclaimable;	/* = file_dirty + unstable_nfs */
-@@ -1352,8 +1353,7 @@ static void balance_dirty_pages(struct address_space *mapping,
- 	unsigned long task_ratelimit;
- 	unsigned long dirty_ratelimit;
- 	unsigned long pos_ratio;
--	struct backing_dev_info *bdi = inode_to_bdi(mapping->host);
--	struct bdi_writeback *wb = &bdi->wb;
-+	struct backing_dev_info *bdi = wb->bdi;
- 	bool strictlimit = bdi->capabilities & BDI_CAP_STRICTLIMIT;
- 	unsigned long start_time = jiffies;
+@@ -881,6 +881,9 @@ static void wb_update_write_bandwidth(struct bdi_writeback *wb,
+ 		avg += (old - avg) >> 3;
  
-@@ -1575,14 +1575,20 @@ DEFINE_PER_CPU(int, dirty_throttle_leaks) = 0;
-  */
- void balance_dirty_pages_ratelimited(struct address_space *mapping)
- {
--	struct backing_dev_info *bdi = inode_to_bdi(mapping->host);
--	struct bdi_writeback *wb = &bdi->wb;
-+	struct inode *inode = mapping->host;
-+	struct backing_dev_info *bdi = inode_to_bdi(inode);
-+	struct bdi_writeback *wb = NULL;
- 	int ratelimit;
- 	int *p;
- 
- 	if (!bdi_cap_account_dirty(bdi))
- 		return;
- 
-+	if (inode_cgwb_enabled(inode))
-+		wb = wb_get_create_current(bdi, GFP_KERNEL);
-+	if (!wb)
-+		wb = &bdi->wb;
-+
- 	ratelimit = current->nr_dirtied_pause;
- 	if (wb->dirty_exceeded)
- 		ratelimit = min(ratelimit, 32 >> (PAGE_SHIFT - 10));
-@@ -1616,7 +1622,9 @@ void balance_dirty_pages_ratelimited(struct address_space *mapping)
- 	preempt_enable();
- 
- 	if (unlikely(current->nr_dirtied >= ratelimit))
--		balance_dirty_pages(mapping, current->nr_dirtied);
-+		balance_dirty_pages(mapping, wb, current->nr_dirtied);
-+
-+	wb_put(wb);
+ out:
++	if (wb_has_dirty_io(wb))
++		atomic_long_add(avg - wb->avg_write_bandwidth,
++				&wb->bdi->tot_write_bandwidth);
+ 	wb->write_bandwidth = bw;
+ 	wb->avg_write_bandwidth = avg;
  }
- EXPORT_SYMBOL(balance_dirty_pages_ratelimited);
- 
 -- 
 2.1.0
+
