@@ -1,213 +1,62 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 42/49] writeback: implement bdi_wait_for_completion()
-Date: Mon,  6 Apr 2015 15:58:31 -0400
-Message-ID: <1428350318-8215-43-git-send-email-tj@kernel.org>
+Subject: [PATCH 48/49] mpage: make __mpage_writepage() honor cgroup writeback
+Date: Mon,  6 Apr 2015 15:58:37 -0400
+Message-ID: <1428350318-8215-49-git-send-email-tj@kernel.org>
 References: <1428350318-8215-1-git-send-email-tj@kernel.org>
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=00AtGASe3cw/jSVoyCNJabCMRtCL3mON45FInrU+Uxo=;
-        b=oGViEBak3KtGqdUqIE7a3HxLdcIr7wdE8VaBLDYLX4/sLL8F1qYIbl/cxAqGUA8hL9
-         MewoIaDKCtnIw+r2IMcX/+7KjptplV4ry/q4+aTl86jgwLxqd43NZqIU5CYEUSaGsWTO
-         MuBei57LXSvJBXsFaVDiL8h349Q+NT7O6UIJfoQlmGUUioPLZ/fYNRda+/8YcohSUqtL
-         OGCAzaQk6AiTj9ZLZ3vhabbPKAz/1lZcljyj44nyzKnofAu3orXVhyvW0DvdkYGMwvK+
-         8NwAlDqbARafS1P0IV8CTD7D/roJg4AwhHDsDwpjARttuFKLJk6smYlN785+HUTvnqBl
-         YO3A==
+        bh=qi6fTLlBmmMn0loeK4Kt5MDFabz2aiXEo7lrLCuuRu4=;
+        b=Dt8zo8n14Hgfob6THiewQCqQnNpMFEX/qteOuByRqcXkCz+Od038MWNbn9cJNNwK6v
+         FFIwQWv9O22AcIgPamQ2WO5qrQZJJNzbeDk5hhpx/qtcxSdhgxFhM6pXQ76b3okxN1p0
+         DiFYl4Wv1xXieLInitMIXgZ+zMu82kkrZktksD37sU/tvIyHtAAeDCSiiu/gXfAR7lvh
+         4PgUNtNMTA2KohA8tNgsne8Xy7vl/e0xmtRa+8PxmvPVda955sosE2hi6KIvfJgkQI+h
+         VyuZJAFfK5EqxgAHPNQLET1EUFDCNTLH+0d+DPQ1WPXFNJ9WNsHzt7j4DD3hDEcV/gsW
+         Q7MQ==
 In-Reply-To: <1428350318-8215-1-git-send-email-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>
 
-If the completion of a wb_writeback_work can be waited upon by setting
-its ->done to a struct completion and waiting on it; however, for
-cgroup writeback support, it's necessary to issue multiple work items
-to multiple bdi_writebacks and wait for the completion of all.
+__mpage_writepage() is used to implement mpage_writepages() which in
+turn is used for ->writepages() of various filesystems.  All writeback
+logic is now updated to handle cgroup writeback and the block cgroup
+to issue IOs for is encoded in writeback_control and can be retrieved
+from the inode; however, __mpage_writepage() currently ignores the
+blkcg indicated by the inode and issues all bio's without explicit
+blkcg association.
 
-This patch implements wb_completion which can wait for multiple work
-items and replaces the struct completion with it.  It can be defined
-using DEFINE_WB_COMPLETION_ONSTACK(), used for multiple work items and
-waited for by wb_wait_for_completion().
+This patch updates __mpage_writepage() so that the issued bio's are
+associated with inode_to_writeback_blkcg_css(inode).
 
-Nobody currently issues multiple work items and this patch doesn't
-introduce any behavior changes.
+v2: Updated for per-inode wb association.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>
 ---
- fs/fs-writeback.c                | 57 +++++++++++++++++++++++++++++++---------
- include/linux/backing-dev-defs.h |  2 ++
- mm/backing-dev.c                 |  1 +
- 3 files changed, 48 insertions(+), 12 deletions(-)
+ fs/mpage.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 306229a..faa9272 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -34,6 +34,10 @@
-  */
- #define MIN_WRITEBACK_PAGES	(4096UL >> (PAGE_CACHE_SHIFT - 10))
- 
-+struct wb_completion {
-+	atomic_t		cnt;
-+};
+diff --git a/fs/mpage.c b/fs/mpage.c
+index 3e79220..a3ccb0b 100644
+--- a/fs/mpage.c
++++ b/fs/mpage.c
+@@ -605,6 +605,8 @@ alloc_new:
+ 				bio_get_nr_vecs(bdev), GFP_NOFS|__GFP_HIGH);
+ 		if (bio == NULL)
+ 			goto confused;
 +
- /*
-  * Passed into wb_writeback(), essentially a subset of writeback_control
-  */
-@@ -51,9 +55,21 @@ struct wb_writeback_work {
- 	enum wb_reason reason;		/* why was writeback initiated? */
- 
- 	struct list_head list;		/* pending work list */
--	struct completion *done;	/* set if the caller waits */
-+	struct wb_completion *done;	/* set if the caller waits */
- };
- 
-+/*
-+ * If one wants to wait for one or more wb_writeback_works, each work's
-+ * ->done should be set to a wb_completion defined using the following
-+ * macro.  Once all work items are issued with wb_queue_work(), the caller
-+ * can wait for the completion of all using wb_wait_for_completion().  Work
-+ * items which are waited upon aren't freed automatically on completion.
-+ */
-+#define DEFINE_WB_COMPLETION_ONSTACK(cmpl)				\
-+	struct wb_completion cmpl = {					\
-+		.cnt		= ATOMIC_INIT(1),			\
-+	}
-+
- static inline struct inode *wb_inode(struct list_head *head)
- {
- 	return list_entry(head, struct inode, i_wb_list);
-@@ -149,17 +165,34 @@ static void wb_queue_work(struct bdi_writeback *wb,
- 	trace_writeback_queue(wb->bdi, work);
- 
- 	spin_lock_bh(&wb->work_lock);
--	if (!test_bit(WB_registered, &wb->state)) {
--		if (work->done)
--			complete(work->done);
-+	if (!test_bit(WB_registered, &wb->state))
- 		goto out_unlock;
--	}
-+	if (work->done)
-+		atomic_inc(&work->done->cnt);
- 	list_add_tail(&work->list, &wb->work_list);
- 	mod_delayed_work(bdi_wq, &wb->dwork, 0);
- out_unlock:
- 	spin_unlock_bh(&wb->work_lock);
- }
- 
-+/**
-+ * wb_wait_for_completion - wait for completion of bdi_writeback_works
-+ * @bdi: bdi work items were issued to
-+ * @done: target wb_completion
-+ *
-+ * Wait for one or more work items issued to @bdi with their ->done field
-+ * set to @done, which should have been defined with
-+ * DEFINE_WB_COMPLETION_ONSTACK().  This function returns after all such
-+ * work items are completed.  Work items which are waited upon aren't freed
-+ * automatically on completion.
-+ */
-+static void wb_wait_for_completion(struct backing_dev_info *bdi,
-+				   struct wb_completion *done)
-+{
-+	atomic_dec(&done->cnt);		/* put down the initial count */
-+	wait_event(bdi->wb_waitq, !atomic_read(&done->cnt));
-+}
-+
- #ifdef CONFIG_CGROUP_WRITEBACK
- 
- /**
-@@ -1125,7 +1158,7 @@ static long wb_do_writeback(struct bdi_writeback *wb)
- 
- 	set_bit(WB_writeback_running, &wb->state);
- 	while ((work = get_next_work_item(wb)) != NULL) {
--		struct completion *done = work->done;
-+		struct wb_completion *done = work->done;
- 
- 		trace_writeback_exec(wb->bdi, work);
- 
-@@ -1133,8 +1166,8 @@ static long wb_do_writeback(struct bdi_writeback *wb)
- 
- 		if (work->auto_free)
- 			kfree(work);
--		if (done)
--			complete(done);
-+		if (done && atomic_dec_and_test(&done->cnt))
-+			wake_up_all(&wb->bdi->wb_waitq);
++		bio_associate_blkcg(bio, inode_to_wb_blkcg_css(inode));
  	}
  
  	/*
-@@ -1438,7 +1471,7 @@ void writeback_inodes_sb_nr(struct super_block *sb,
- 			    unsigned long nr,
- 			    enum wb_reason reason)
- {
--	DECLARE_COMPLETION_ONSTACK(done);
-+	DEFINE_WB_COMPLETION_ONSTACK(done);
- 	struct wb_writeback_work work = {
- 		.sb			= sb,
- 		.sync_mode		= WB_SYNC_NONE,
-@@ -1453,7 +1486,7 @@ void writeback_inodes_sb_nr(struct super_block *sb,
- 		return;
- 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
- 	wb_queue_work(&bdi->wb, &work);
--	wait_for_completion(&done);
-+	wb_wait_for_completion(bdi, &done);
- }
- EXPORT_SYMBOL(writeback_inodes_sb_nr);
- 
-@@ -1520,7 +1553,7 @@ EXPORT_SYMBOL(try_to_writeback_inodes_sb);
-  */
- void sync_inodes_sb(struct super_block *sb)
- {
--	DECLARE_COMPLETION_ONSTACK(done);
-+	DEFINE_WB_COMPLETION_ONSTACK(done);
- 	struct wb_writeback_work work = {
- 		.sb		= sb,
- 		.sync_mode	= WB_SYNC_ALL,
-@@ -1538,7 +1571,7 @@ void sync_inodes_sb(struct super_block *sb)
- 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
- 
- 	wb_queue_work(&bdi->wb, &work);
--	wait_for_completion(&done);
-+	wb_wait_for_completion(bdi, &done);
- 
- 	wait_sb_inodes(sb);
- }
-diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
-index 8c857d7..97a92fa 100644
---- a/include/linux/backing-dev-defs.h
-+++ b/include/linux/backing-dev-defs.h
-@@ -155,6 +155,8 @@ struct backing_dev_info {
- 	struct rb_root cgwb_congested_tree; /* their congested states */
- 	atomic_t usage_cnt; /* counts both cgwbs and cgwb_contested's */
- #endif
-+	wait_queue_head_t wb_waitq;
-+
- 	struct device *dev;
- 
- 	struct timer_list laptop_mode_wb_timer;
-diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-index d2f16fc9..ad5608d 100644
---- a/mm/backing-dev.c
-+++ b/mm/backing-dev.c
-@@ -768,6 +768,7 @@ int bdi_init(struct backing_dev_info *bdi)
- 	bdi->max_ratio = 100;
- 	bdi->max_prop_frac = FPROP_FRAC_BASE;
- 	INIT_LIST_HEAD(&bdi->bdi_list);
-+	init_waitqueue_head(&bdi->wb_waitq);
- 
- 	err = wb_init(&bdi->wb, bdi, GFP_KERNEL);
- 	if (err)
 -- 
 2.1.0
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
