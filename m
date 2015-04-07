@@ -1,62 +1,71 @@
-From: Aleksa Sarai <cyphar@cyphar.com>
-Subject: Re: [PATCH v8 3/4] cgroups: allow a cgroup subsystem to reject a fork
-Date: Tue, 7 Apr 2015 23:47:02 +1000
-Message-ID: <CAOviyagYWk1VJW3upKsOS8rOiBQFTn752eJA_C2SkHnCh7EUrw@mail.gmail.com>
-References: <1427878641-5273-1-git-send-email-cyphar@cyphar.com>
-	<1427878641-5273-4-git-send-email-cyphar@cyphar.com>
-	<20150401160258.GP9974@htj.duckdns.org>
-	<CAOviyai9dvCTGK=VUm0uDSo7XbmKk1BFDrRzL15ppAWf8YjG3w@mail.gmail.com>
-	<20150406150536.GA10582@htj.duckdns.org>
+From: Vladimir Davydov <vdavydov@parallels.com>
+Subject: [PATCH -mm] slab: use cgroup ino for naming per memcg caches
+Date: Tue, 7 Apr 2015 16:53:18 +0300
+Message-ID: <1428414798-12932-1-git-send-email-vdavydov@parallels.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150406150536.GA10582@htj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: lizefan@huawei.com, mingo@redhat.com, peterz@infradead.org, richard@nod.at, =?UTF-8?B?RnLDqWTDqXJpYyBXZWlzYmVja2Vy?= <fweisbec@gmail.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Tejun,
+The name of a per memcg kmem cache consists of three parts: the global
+kmem cache name, the cgroup name, and the css id. The latter is used to
+guarantee cache name uniqueness.
 
->> I tried doing this and the kernel would refuse to boot. I believe it has
->> something to do with the ordering of early_init subsystems, but I'm not
->
-> Hmmm... yeah, failure in early_init can be tricky to debug.
+Since css ids are opaque to the userspace, in general it is impossible
+to find a cache's owner cgroup given its name: there might be several
+same-named cgroups with different parents so that their caches' names
+will only differ by css id. Looking up the owner cgroup by a cache name,
+however, could be useful for debugging. For instance, the cache name is
+dumped to dmesg on a slab allocation failure. Another example is
+/sys/kernel/slab, which exports some extra info/tunables for SLUB caches
+referring to them by name.
 
-Okay, I took another look and it isn't that there are hard ordering
-dependencies, it's because of how I wrote the tagging macro for cgroup_subsys.h
-that caused a NULL deref during the early_init. Whoops.
+This patch substitutes the css id with cgroup inode number, which, just
+like css id, is reserved until css free, so that the cache names are
+still guaranteed to be unique, but, in contrast to css id, it can be
+easily obtained from userspace.
 
->> entirely sure (this optimisation can be dealt with later [it's non-critical],
->> so IMO this should be done in a separate patchset [if at all]). Also, your
->> later comments would fix the subsys bitmask problem (we can just pass the
->> default %NULL), we don't even need to test the index.
->
-> [...] I don't
-> think it's a good idea to send the patches as-are because we can't
-> debug and fix them properly, right? [...]
+Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
+---
+ mm/slab_common.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-In what way are they hard to debug?
-
-> [...] If there are hard ordering
-> dependencies, the range of subsystems which require fork/exit doesn't
-> have to be at the beginning.
-
-I just spent a few hours trying to write it and it's just too dodgy to live.
-Either you have a solution that won't work with nested tags, and is generally
-just kind of bad or you have a solution that requires you to keep two separate
-enumerations in sync. And of course you need to offset the index you're looking
-stuff up in ss_state so that also looks bad.
-
-But that's all besides the point because, *even if* it I had a clean solution,
-it still wouldn't solve the fact that we are
-> [...] adding quite a few loops in relatively hot paths.
-You kind of _need_ to loop over all the subsystems in either case, the only
-difference between having an array of CGROUP_SUBSYS_COUNT pointers or
-CGROUP_PREFORK_COUNT is the few bytes of memory you've "saved" (at the expense
-of making the callback code essentially unreadable).
+diff --git a/mm/slab_common.c b/mm/slab_common.c
+index 999bb3424d44..e97bf3e04ed7 100644
+--- a/mm/slab_common.c
++++ b/mm/slab_common.c
+@@ -478,7 +478,7 @@ void memcg_create_kmem_cache(struct mem_cgroup *memcg,
+ 			     struct kmem_cache *root_cache)
+ {
+ 	static char memcg_name_buf[NAME_MAX + 1]; /* protected by slab_mutex */
+-	struct cgroup_subsys_state *css = mem_cgroup_css(memcg);
++	struct cgroup *cgroup;
+ 	struct memcg_cache_array *arr;
+ 	struct kmem_cache *s = NULL;
+ 	char *cache_name;
+@@ -508,9 +508,10 @@ void memcg_create_kmem_cache(struct mem_cgroup *memcg,
+ 	if (arr->entries[idx])
+ 		goto out_unlock;
+ 
+-	cgroup_name(css->cgroup, memcg_name_buf, sizeof(memcg_name_buf));
+-	cache_name = kasprintf(GFP_KERNEL, "%s(%d:%s)", root_cache->name,
+-			       css->id, memcg_name_buf);
++	cgroup = mem_cgroup_css(memcg)->cgroup;
++	cgroup_name(cgroup, memcg_name_buf, sizeof(memcg_name_buf));
++	cache_name = kasprintf(GFP_KERNEL, "%s(%lu:%s)", root_cache->name,
++			(unsigned long)cgroup_ino(cgroup), memcg_name_buf);
+ 	if (!cache_name)
+ 		goto out_unlock;
+ 
+-- 
+1.7.10.4
 
 --
-Aleksa Sarai (cyphar)
-www.cyphar.com
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
