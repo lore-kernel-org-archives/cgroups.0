@@ -1,157 +1,179 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 08/10] writeback: add lockdep annotation to inode_to_wb()
-Date: Mon,  6 Apr 2015 16:18:26 -0400
-Message-ID: <1428351508-8399-9-git-send-email-tj@kernel.org>
-References: <1428351508-8399-1-git-send-email-tj@kernel.org>
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=nPEMMknSvvFgqU/9A26F7mVPBeUkbCuppT6GLXfEfTw=;
-        b=x10GHlfuHfdt0gN2cKfFBQMAc6HNVTugDpcziUqFaSbQL7xJhb6Dnb4gL8n8/zm8dP
-         YXq503zPgDq21DSyKrU93TEd01kZ6m3BJ6YauddAd0XHucgC/ZPU3rl9Z71lmXRNc2Vv
-         //IlO/GsRCw9P8cxuoNS1CznshmksxxWq09do02o1IKs7Dy72uJdk+DdmvTBUjgUkYL3
-         NIEt54Ku19lOfRkwXjQC05RwcncHqaLeQF9wYcTuO/eL/Rap61ug1vuqGg+PvaR7oW8I
-         OmLlrI4kVTCr6OQAFzTzZIuFMuJENmjyzBqfQoiJ0oifd/kD03KzBs3+M97r8EWeFBbP
-         /vKQ==
-In-Reply-To: <1428351508-8399-1-git-send-email-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+From: Vladimir Davydov <vdavydov@parallels.com>
+Subject: [RFC v2 0/3] idle memory tracking
+Date: Tue, 7 Apr 2015 14:55:10 +0300
+Message-ID: <cover.1428401673.git.vdavydov@parallels.com>
+Mime-Version: 1.0
+Return-path: <linux-doc-owner@vger.kernel.org>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Tejun Heo <tj@kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Minchan Kim <minchan@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Michel Lespinasse <walken@google.com>, David Rientjes <rientjes@google.com>, Pavel Emelyanov <xemul@parallels.com>, Cyrill Gorcunov <gorcunov@openvz.org>, Jonathan Corbet <corbet@lwn.net>, linux-api@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-With the previous three patches, all operations which acquire wb from
-inode are either under one of inode->i_lock, mapping->tree_lock or
-wb->list_lock or protected by unlocked_inode_to_wb transaction.  This
-will be depended upon by foreign inode wb switching.
+Hi,
 
-This patch adds lockdep assertion to inode_to_wb() so that usages
-outside the above list locks can be caught easily.  There are three
-exceptions.
+This patch set introduces a new user API for tracking user memory pages
+that have not been used for a given period of time. The purpose of this
+is to provide the userspace with the means of tracking a workload's
+working set, i.e. the set of pages that are actively used by the
+workload. Knowing the working set size can be useful for partitioning
+the system more efficiently, e.g. by tuning memory cgroup limits
+appropriately, or for job placement within a compute cluster.
 
-* locked_inode_to_wb_and_lock_list() is holding wb->list_lock but the
-  wb may not be the inode's.  Ensuring that is the function's role
-  after all.  Updated to deref inode->i_wb directly.
+The API consists of the new read-write proc file, /proc/kpageidle. For
+each page this file contains a 64-bit number, which equals 1 if the page
+is idle or 0 otherwise. The file is indexed by PFN. To set or clear a
+page's Idle flag, one can write 1 or 0 respectively to this file at the
+offset corresponding to the page. It is only possible to modify the Idle
+flag for user pages (pages that are on an LRU list, to be more exact).
+For other page types, the input is silently ignored. Writing to this
+file beyond max PFN results in the ENXIO error.
 
-* inode_wb_stat_unlocked_begin() is usually protected by combination
-  of !I_WB_SWITCH and rcu_read_lock().  Updated to deref inode->i_wb
-  directly.
+A page's Idle flag is automatically cleared whenever the page is
+accessed (via a page table entry or using the read(2) system call).
+Thus by setting the Idle flag for pages of a particular workload, which
+can be found e.g. by reading /proc/PID/pagemap, waiting for some time to
+let the workload access its working set, and then reading the kpageidle
+file, one can estimate the amount of pages that are not used by the
+workload.
 
-* inode_congested() wants to test whether inode->i_wb is set before
-  starting the transaction.  Added inode_to_wb_is_valid() which tests
-  inode->i_wb directly.
+The reason to introduce the new API is that the current API provided by
+the kernel, /proc/PID/{clear_refs,smaps} and friends, has two serious
+drawbacks:
 
-v3: inode_congested() conversion added.
+ - it does not count unmapped file pages
+ - it affects the reclaimer logic
 
-v2: locked_inode_to_wb_and_lock_list() was missing in the first
-    version.
+The new API attempts to overcome them both. For more details on this,
+please see patch #3.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Jan Kara <jack@suse.cz>
-Cc: Wu Fengguang <fengguang.wu@intel.com>
-Cc: Greg Thelen <gthelen@google.com>
----
- fs/fs-writeback.c           |  5 +++--
- include/linux/backing-dev.h | 34 ++++++++++++++++++++++++++++++++--
- 2 files changed, 35 insertions(+), 4 deletions(-)
+Apart from /proc/kpageidle, another new proc file is introduced,
+/proc/kpagecgroup, which contains the inode number of the memory cgroup
+each page is charged to. This file is needed to help estimating the
+working set size per cgroup.
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index ee65ff09..633d9d5 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -272,7 +272,8 @@ locked_inode_to_wb_and_lock_list(struct inode *inode)
- 		spin_lock(&wb->list_lock);
- 		wb_put(wb);		/* not gonna deref it anymore */
- 
--		if (likely(wb == inode_to_wb(inode)))
-+		/* i_wb may have changed inbetween, can't use inode_to_wb() */
-+		if (likely(wb == inode->i_wb))
- 			return wb;	/* @inode already has ref */
- 
- 		spin_unlock(&wb->list_lock);
-@@ -600,7 +601,7 @@ int inode_congested(struct inode *inode, int cong_bits)
- 	 * Once set, ->i_wb never becomes NULL while the inode is alive.
- 	 * Start transaction iff ->i_wb is visible.
- 	 */
--	if (inode && inode_to_wb(inode)) {
-+	if (inode && inode_to_wb_is_valid(inode)) {
- 		struct bdi_writeback *wb;
- 		bool locked, congested;
- 
-diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index 73ffa32..dfce808 100644
---- a/include/linux/backing-dev.h
-+++ b/include/linux/backing-dev.h
-@@ -322,13 +322,33 @@ wb_get_create_current(struct backing_dev_info *bdi, gfp_t gfp)
- }
- 
- /**
-+ * inode_to_wb_is_valid - test whether an inode has a wb associated
-+ * @inode: inode of interest
-+ *
-+ * Returns %true if @inode has a wb associated.  May be called without any
-+ * locking.
-+ */
-+static inline bool inode_to_wb_is_valid(struct inode *inode)
-+{
-+	return inode->i_wb;
-+}
-+
-+/**
-  * inode_to_wb - determine the wb of an inode
-  * @inode: inode of interest
-  *
-- * Returns the wb @inode is currently associated with.
-+ * Returns the wb @inode is currently associated with.  The caller must be
-+ * holding either @inode->i_lock, @inode->i_mapping->tree_lock, or the
-+ * associated wb's list_lock.
-  */
- static inline struct bdi_writeback *inode_to_wb(struct inode *inode)
- {
-+#ifdef CONFIG_LOCKDEP
-+	WARN_ON_ONCE(debug_locks &&
-+		     (!lockdep_is_held(&inode->i_lock) &&
-+		      !lockdep_is_held(&inode->i_mapping->tree_lock) &&
-+		      !lockdep_is_held(&inode->i_wb->list_lock)));
-+#endif
- 	return inode->i_wb;
- }
- 
-@@ -360,7 +380,12 @@ unlocked_inode_to_wb_begin(struct inode *inode, bool *lockedp)
- 
- 	if (unlikely(*lockedp))
- 		spin_lock_irq(&inode->i_mapping->tree_lock);
--	return inode_to_wb(inode);
-+
-+	/*
-+	 * Protected by either !I_WB_SWITCH + rcu_read_lock() or tree_lock.
-+	 * inode_to_wb() will bark.  Deref directly.
-+	 */
-+	return inode->i_wb;
- }
- 
- /**
-@@ -459,6 +484,11 @@ wb_get_create_current(struct backing_dev_info *bdi, gfp_t gfp)
- 	return &bdi->wb;
- }
- 
-+static inline bool inode_to_wb_is_valid(struct inode *inode)
-+{
-+	return true;
-+}
-+
- static inline struct bdi_writeback *inode_to_wb(struct inode *inode)
- {
- 	return &inode_to_bdi(inode)->wb;
+An example of using this new API for estimating the number of idle pages
+in each memory cgroup is attached below.
+
+Changes in v2:
+
+ - The main difference from v1 is the API change. In v1 the user can
+   only set the idle flag for all pages at once, and for clearing the
+   Idle flag on pages accessed via page tables /proc/PID/clear_refs
+   should be used.
+   
+   The main drawback of the v1 approach, as noted by Minchan, is that on
+   big machines setting the idle flag for each pages can result in CPU
+   bursts, which would be especially frustrating if the user only wanted
+   to estimate the amount of idle pages for a particular process or VMA.
+   With the new API a more fine-grained approach is possible: one can
+   read a process's /proc/PID/pagemap and set/check the Idle flag only
+   for those pages of the process's address space he or she is
+   interested in.
+
+   Another good point about the v2 API is that it is possible to limit
+   /proc/kpage* scanning rate when the user wants to estimate the total
+   number of idle pages, which is unachievable with the v1 approach.
+
+ - Make /proc/kpagecgroup return the ino of the closest online ancestor
+   in case the cgroup a page is charged to is offline.
+
+ - Fix /proc/PID/clear_refs not clearing Young page flag.
+
+ - Rebase on top of v4.0-rc6-mmotm-2015-04-01-14-54
+
+v1 can be found at: https://lwn.net/Articles/637190/
+
+The patch set is organized as follows:
+
+ - patch 1 adds page_cgroup_ino() helper for the sake of
+   /proc/kpagecgroup
+
+ - patch 2 adds /proc/kpagecgroup, which reports cgroup ino each page is
+   charged to
+
+ - patch 3 implements the idle page tracking feature, including the
+   userspace API, /proc/kpageidle
+
+---- SCRIPT FOR COUNTING IDLE PAGES PER CGROUP ----
+#! /usr/bin/python
+#
+
+CGROUP_MOUNT = "/sys/fs/cgroup/memory"
+
+import os
+import stat
+import errno
+import struct
+
+def set_idle():
+    pgidle = open("/proc/kpageidle", "wb")
+    while True:
+        try:
+            pgidle.write(struct.pack("Q", 1))
+        except IOError as e:
+            if e.errno == errno.ENXIO: break
+            raise
+    pgidle.close()
+
+def count_idle():
+    pgflags = open("/proc/kpageflags", "rb")
+    pgcgroup = open("/proc/kpagecgroup", "rb")
+    pgidle = open("/proc/kpageidle", "rb")
+    nidle = {}
+    while True:
+        s = pgflags.read(8)
+        if len(s) != 8: break;
+        flags = struct.unpack('Q', s)[0]
+        cgino = struct.unpack('Q', pgcgroup.read(8))[0]
+        idle = struct.unpack('Q', pgidle.read(8))[0]
+        if not idle: continue
+        if (flags >> 18) & 1: continue # unevictable?
+        npages = 512 if (flags >> 22) & 1 else 1 # huge?
+        nidle[cgino] = nidle.get(cgino, 0) + npages
+    pgflags.close()
+    pgcgroup.close()
+    pgidle.close()
+    return nidle
+
+print "Setting the idle flag for each page..."
+set_idle()
+
+raw_input("Wait until the workload accesses its working set, then press Enter")
+
+print "Counting idle pages..."
+nidle = count_idle()
+
+for dir, subdirs, files in os.walk(CGROUP_MOUNT):
+    ino = os.stat(dir)[stat.ST_INO]
+    print dir + ": " + str(nidle.get(ino, 0))
+---- END SCRIPT ----
+
+Comments are more than welcome.
+
+Thanks,
+
+Vladimir Davydov (3):
+  memcg: add page_cgroup_ino helper
+  proc: add kpagecgroup file
+  proc: add kpageidle file
+
+ Documentation/vm/pagemap.txt |   21 ++++-
+ fs/proc/Kconfig              |    5 +-
+ fs/proc/page.c               |  202 ++++++++++++++++++++++++++++++++++++++++++
+ fs/proc/task_mmu.c           |    4 +-
+ include/linux/memcontrol.h   |    8 +-
+ include/linux/page-flags.h   |   12 +++
+ mm/Kconfig                   |   12 +++
+ mm/debug.c                   |    4 +
+ mm/hwpoison-inject.c         |    5 +-
+ mm/memcontrol.c              |   73 +++++++--------
+ mm/memory-failure.c          |   16 +---
+ mm/rmap.c                    |    7 ++
+ mm/swap.c                    |    2 +
+ 13 files changed, 307 insertions(+), 64 deletions(-)
+
 -- 
-2.1.0
+1.7.10.4
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
