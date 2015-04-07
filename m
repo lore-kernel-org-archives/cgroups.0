@@ -1,71 +1,53 @@
-From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: [PATCH -mm] slab: use cgroup ino for naming per memcg caches
-Date: Tue, 7 Apr 2015 16:53:18 +0300
-Message-ID: <1428414798-12932-1-git-send-email-vdavydov@parallels.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v8 3/4] cgroups: allow a cgroup subsystem to reject a fork
+Date: Tue, 7 Apr 2015 10:00:26 -0400
+Message-ID: <20150407140026.GK10582@htj.duckdns.org>
+References: <1427878641-5273-1-git-send-email-cyphar@cyphar.com>
+ <1427878641-5273-4-git-send-email-cyphar@cyphar.com>
+ <20150401160258.GP9974@htj.duckdns.org>
+ <CAOviyai9dvCTGK=VUm0uDSo7XbmKk1BFDrRzL15ppAWf8YjG3w@mail.gmail.com>
+ <20150406150536.GA10582@htj.duckdns.org>
+ <CAOviyagYWk1VJW3upKsOS8rOiBQFTn752eJA_C2SkHnCh7EUrw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=q93F8bMyMHE0M3mhxZJwsXqTWOy13HyqwDX2Z0ZhYMw=;
+        b=Xb077pH2GOQEXtxD775zdxDgWSgqj+8xhGQr8kPyxN+kVxDLvKuB5lIkWHW9vUlwM6
+         4zY+Frus2laj+7h5i6pYpowVnsi/XQ3EEpzzk0G+zUo8pXc8qNPCKCEnT+2YtkchNcRr
+         q4N5TYpGtpz+IBKtnLIgKftFSXAWXTiBvyKkt20qLjJC0LphKUl6Huk6gYd62h3Vsty+
+         RdE28QhSwXUNGjFQol/7lmz58H04nG29oqlbED8iaegJKLjQ0o3rngG+nPXLWD0VgMaF
+         ocNitmdvpw//ewevKGN5f7TcI27tebleTVgZyjwDoAy3ZorXtUtlFpAq4fJXToutIiJz
+         8VVQ==
+Content-Disposition: inline
+In-Reply-To: <CAOviyagYWk1VJW3upKsOS8rOiBQFTn752eJA_C2SkHnCh7EUrw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, richard-/L3Ra7n9ekc@public.gmane.org, =?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-The name of a per memcg kmem cache consists of three parts: the global
-kmem cache name, the cgroup name, and the css id. The latter is used to
-guarantee cache name uniqueness.
+On Tue, Apr 07, 2015 at 11:47:02PM +1000, Aleksa Sarai wrote:
+> > [...] I don't
+> > think it's a good idea to send the patches as-are because we can't
+> > debug and fix them properly, right? [...]
+> 
+> In what way are they hard to debug?
 
-Since css ids are opaque to the userspace, in general it is impossible
-to find a cache's owner cgroup given its name: there might be several
-same-named cgroups with different parents so that their caches' names
-will only differ by css id. Looking up the owner cgroup by a cache name,
-however, could be useful for debugging. For instance, the cache name is
-dumped to dmesg on a slab allocation failure. Another example is
-/sys/kernel/slab, which exports some extra info/tunables for SLUB caches
-referring to them by name.
+Some failures can happen before console init and figuring out what's
+going on can be tricky.
 
-This patch substitutes the css id with cgroup inode number, which, just
-like css id, is reserved until css free, so that the cache names are
-still guaranteed to be unique, but, in contrast to css id, it can be
-easily obtained from userspace.
+...
+> difference between having an array of CGROUP_SUBSYS_COUNT pointers or
+> CGROUP_PREFORK_COUNT is the few bytes of memory you've "saved" (at the expense
+> of making the callback code essentially unreadable).
 
-Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
----
- mm/slab_common.c |    9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+Hmmm?  Just define a marker macro so that the index can be extracted
+and loop over the indices and call the callbacks?  Why would this be
+any more complex than anything else?
 
-diff --git a/mm/slab_common.c b/mm/slab_common.c
-index 999bb3424d44..e97bf3e04ed7 100644
---- a/mm/slab_common.c
-+++ b/mm/slab_common.c
-@@ -478,7 +478,7 @@ void memcg_create_kmem_cache(struct mem_cgroup *memcg,
- 			     struct kmem_cache *root_cache)
- {
- 	static char memcg_name_buf[NAME_MAX + 1]; /* protected by slab_mutex */
--	struct cgroup_subsys_state *css = mem_cgroup_css(memcg);
-+	struct cgroup *cgroup;
- 	struct memcg_cache_array *arr;
- 	struct kmem_cache *s = NULL;
- 	char *cache_name;
-@@ -508,9 +508,10 @@ void memcg_create_kmem_cache(struct mem_cgroup *memcg,
- 	if (arr->entries[idx])
- 		goto out_unlock;
- 
--	cgroup_name(css->cgroup, memcg_name_buf, sizeof(memcg_name_buf));
--	cache_name = kasprintf(GFP_KERNEL, "%s(%d:%s)", root_cache->name,
--			       css->id, memcg_name_buf);
-+	cgroup = mem_cgroup_css(memcg)->cgroup;
-+	cgroup_name(cgroup, memcg_name_buf, sizeof(memcg_name_buf));
-+	cache_name = kasprintf(GFP_KERNEL, "%s(%lu:%s)", root_cache->name,
-+			(unsigned long)cgroup_ino(cgroup), memcg_name_buf);
- 	if (!cache_name)
- 		goto out_unlock;
- 
 -- 
-1.7.10.4
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
