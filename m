@@ -1,53 +1,89 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v8 3/4] cgroups: allow a cgroup subsystem to reject a fork
-Date: Tue, 7 Apr 2015 10:00:26 -0400
-Message-ID: <20150407140026.GK10582@htj.duckdns.org>
-References: <1427878641-5273-1-git-send-email-cyphar@cyphar.com>
- <1427878641-5273-4-git-send-email-cyphar@cyphar.com>
- <20150401160258.GP9974@htj.duckdns.org>
- <CAOviyai9dvCTGK=VUm0uDSo7XbmKk1BFDrRzL15ppAWf8YjG3w@mail.gmail.com>
- <20150406150536.GA10582@htj.duckdns.org>
- <CAOviyagYWk1VJW3upKsOS8rOiBQFTn752eJA_C2SkHnCh7EUrw@mail.gmail.com>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH] Documentation/memcg: update memcg/kmem status
+Date: Tue, 7 Apr 2015 17:13:58 +0200
+Message-ID: <20150407151358.GB8123@dhcp22.suse.cz>
+References: <1427898636-4505-1-git-send-email-vdavydov@parallels.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=q93F8bMyMHE0M3mhxZJwsXqTWOy13HyqwDX2Z0ZhYMw=;
-        b=Xb077pH2GOQEXtxD775zdxDgWSgqj+8xhGQr8kPyxN+kVxDLvKuB5lIkWHW9vUlwM6
-         4zY+Frus2laj+7h5i6pYpowVnsi/XQ3EEpzzk0G+zUo8pXc8qNPCKCEnT+2YtkchNcRr
-         q4N5TYpGtpz+IBKtnLIgKftFSXAWXTiBvyKkt20qLjJC0LphKUl6Huk6gYd62h3Vsty+
-         RdE28QhSwXUNGjFQol/7lmz58H04nG29oqlbED8iaegJKLjQ0o3rngG+nPXLWD0VgMaF
-         ocNitmdvpw//ewevKGN5f7TcI27tebleTVgZyjwDoAy3ZorXtUtlFpAq4fJXToutIiJz
-         8VVQ==
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <CAOviyagYWk1VJW3upKsOS8rOiBQFTn752eJA_C2SkHnCh7EUrw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1427898636-4505-1-git-send-email-vdavydov@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, richard-/L3Ra7n9ekc@public.gmane.org, =?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Vladimir Davydov <vdavydov@parallels.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>
 
-On Tue, Apr 07, 2015 at 11:47:02PM +1000, Aleksa Sarai wrote:
-> > [...] I don't
-> > think it's a good idea to send the patches as-are because we can't
-> > debug and fix them properly, right? [...]
+On Wed 01-04-15 17:30:36, Vladimir Davydov wrote:
+> Memcg/kmem reclaim support has been finally merged. Reflect this in the
+> documentation.
 > 
-> In what way are they hard to debug?
+> Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
 
-Some failures can happen before console init and figuring out what's
-going on can be tricky.
+Acked-by: Michal Hocko <mhocko@suse.cz>
 
-...
-> difference between having an array of CGROUP_SUBSYS_COUNT pointers or
-> CGROUP_PREFORK_COUNT is the few bytes of memory you've "saved" (at the expense
-> of making the callback code essentially unreadable).
-
-Hmmm?  Just define a marker macro so that the index can be extracted
-and loop over the indices and call the callbacks?  Why would this be
-any more complex than anything else?
+> ---
+>  Documentation/cgroups/memory.txt |    8 +++-----
+>  init/Kconfig                     |    6 ------
+>  2 files changed, 3 insertions(+), 11 deletions(-)
+> 
+> diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
+> index a22df3ad35ff..f456b4315e86 100644
+> --- a/Documentation/cgroups/memory.txt
+> +++ b/Documentation/cgroups/memory.txt
+> @@ -275,11 +275,6 @@ When oom event notifier is registered, event will be delivered.
+>  
+>  2.7 Kernel Memory Extension (CONFIG_MEMCG_KMEM)
+>  
+> -WARNING: Current implementation lacks reclaim support. That means allocation
+> -	 attempts will fail when close to the limit even if there are plenty of
+> -	 kmem available for reclaim. That makes this option unusable in real
+> -	 life so DO NOT SELECT IT unless for development purposes.
+> -
+>  With the Kernel memory extension, the Memory Controller is able to limit
+>  the amount of kernel memory used by the system. Kernel memory is fundamentally
+>  different than user memory, since it can't be swapped out, which makes it
+> @@ -345,6 +340,9 @@ set:
+>      In this case, the admin could set up K so that the sum of all groups is
+>      never greater than the total memory, and freely set U at the cost of his
+>      QoS.
+> +    WARNING: In the current implementation, memory reclaim will NOT be
+> +    triggered for a cgroup when it hits K while staying below U, which makes
+> +    this setup impractical.
+>  
+>      U != 0, K >= U:
+>      Since kmem charges will also be fed to the user counter and reclaim will be
+> diff --git a/init/Kconfig b/init/Kconfig
+> index 7766b500f679..caffca37ccb7 100644
+> --- a/init/Kconfig
+> +++ b/init/Kconfig
+> @@ -1059,12 +1059,6 @@ config MEMCG_KMEM
+>  	  the kmem extension can use it to guarantee that no group of processes
+>  	  will ever exhaust kernel resources alone.
+>  
+> -	  WARNING: Current implementation lacks reclaim support. That means
+> -	  allocation attempts will fail when close to the limit even if there
+> -	  are plenty of kmem available for reclaim. That makes this option
+> -	  unusable in real life so DO NOT SELECT IT unless for development
+> -	  purposes.
+> -
+>  config CGROUP_HUGETLB
+>  	bool "HugeTLB Resource Controller for Control Groups"
+>  	depends on HUGETLB_PAGE
+> -- 
+> 1.7.10.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 -- 
-tejun
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
