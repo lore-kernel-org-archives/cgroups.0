@@ -1,86 +1,69 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH] Documentation/memcg: update memcg/kmem status
-Date: Tue, 7 Apr 2015 17:13:58 +0200
-Message-ID: <20150407151358.GB8123@dhcp22.suse.cz>
-References: <1427898636-4505-1-git-send-email-vdavydov@parallels.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH -mm] slab: use cgroup ino for naming per memcg caches
+Date: Tue, 7 Apr 2015 13:38:19 -0700
+Message-ID: <20150407133819.993be7a53a3aa16311aba1f5@linux-foundation.org>
+References: <1428414798-12932-1-git-send-email-vdavydov@parallels.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <1427898636-4505-1-git-send-email-vdavydov@parallels.com>
+In-Reply-To: <1428414798-12932-1-git-send-email-vdavydov@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 To: Vladimir Davydov <vdavydov@parallels.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed 01-04-15 17:30:36, Vladimir Davydov wrote:
-> Memcg/kmem reclaim support has been finally merged. Reflect this in the
-> documentation.
+On Tue, 7 Apr 2015 16:53:18 +0300 Vladimir Davydov <vdavydov@parallels.com> wrote:
+
+> The name of a per memcg kmem cache consists of three parts: the global
+> kmem cache name, the cgroup name, and the css id. The latter is used to
+> guarantee cache name uniqueness.
 > 
-> Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
+> Since css ids are opaque to the userspace, in general it is impossible
+> to find a cache's owner cgroup given its name: there might be several
+> same-named cgroups with different parents so that their caches' names
+> will only differ by css id. Looking up the owner cgroup by a cache name,
+> however, could be useful for debugging. For instance, the cache name is
+> dumped to dmesg on a slab allocation failure. Another example is
+> /sys/kernel/slab, which exports some extra info/tunables for SLUB caches
 
-Acked-by: Michal Hocko <mhocko@suse.cz>
+/proc/sys/kernel/slab?
 
-> ---
->  Documentation/cgroups/memory.txt |    8 +++-----
->  init/Kconfig                     |    6 ------
->  2 files changed, 3 insertions(+), 11 deletions(-)
+> referring to them by name.
 > 
-> diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
-> index a22df3ad35ff..f456b4315e86 100644
-> --- a/Documentation/cgroups/memory.txt
-> +++ b/Documentation/cgroups/memory.txt
-> @@ -275,11 +275,6 @@ When oom event notifier is registered, event will be delivered.
->  
->  2.7 Kernel Memory Extension (CONFIG_MEMCG_KMEM)
->  
-> -WARNING: Current implementation lacks reclaim support. That means allocation
-> -	 attempts will fail when close to the limit even if there are plenty of
-> -	 kmem available for reclaim. That makes this option unusable in real
-> -	 life so DO NOT SELECT IT unless for development purposes.
-> -
->  With the Kernel memory extension, the Memory Controller is able to limit
->  the amount of kernel memory used by the system. Kernel memory is fundamentally
->  different than user memory, since it can't be swapped out, which makes it
-> @@ -345,6 +340,9 @@ set:
->      In this case, the admin could set up K so that the sum of all groups is
->      never greater than the total memory, and freely set U at the cost of his
->      QoS.
-> +    WARNING: In the current implementation, memory reclaim will NOT be
-> +    triggered for a cgroup when it hits K while staying below U, which makes
-> +    this setup impractical.
->  
->      U != 0, K >= U:
->      Since kmem charges will also be fed to the user counter and reclaim will be
-> diff --git a/init/Kconfig b/init/Kconfig
-> index 7766b500f679..caffca37ccb7 100644
-> --- a/init/Kconfig
-> +++ b/init/Kconfig
-> @@ -1059,12 +1059,6 @@ config MEMCG_KMEM
->  	  the kmem extension can use it to guarantee that no group of processes
->  	  will ever exhaust kernel resources alone.
->  
-> -	  WARNING: Current implementation lacks reclaim support. That means
-> -	  allocation attempts will fail when close to the limit even if there
-> -	  are plenty of kmem available for reclaim. That makes this option
-> -	  unusable in real life so DO NOT SELECT IT unless for development
-> -	  purposes.
-> -
->  config CGROUP_HUGETLB
->  	bool "HugeTLB Resource Controller for Control Groups"
->  	depends on HUGETLB_PAGE
-> -- 
-> 1.7.10.4
+> This patch substitutes the css id with cgroup inode number, which, just
+> like css id, is reserved until css free, so that the cache names are
+> still guaranteed to be unique, but, in contrast to css id, it can be
+> easily obtained from userspace.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> ...
+>
+> --- a/mm/slab_common.c
+> +++ b/mm/slab_common.c
+> @@ -478,7 +478,7 @@ void memcg_create_kmem_cache(struct mem_cgroup *memcg,
+>  			     struct kmem_cache *root_cache)
+>  {
+>  	static char memcg_name_buf[NAME_MAX + 1]; /* protected by slab_mutex */
+> -	struct cgroup_subsys_state *css = mem_cgroup_css(memcg);
+> +	struct cgroup *cgroup;
+>  	struct memcg_cache_array *arr;
+>  	struct kmem_cache *s = NULL;
+>  	char *cache_name;
+> @@ -508,9 +508,10 @@ void memcg_create_kmem_cache(struct mem_cgroup *memcg,
+>  	if (arr->entries[idx])
+>  		goto out_unlock;
+>  
+> -	cgroup_name(css->cgroup, memcg_name_buf, sizeof(memcg_name_buf));
+> -	cache_name = kasprintf(GFP_KERNEL, "%s(%d:%s)", root_cache->name,
+> -			       css->id, memcg_name_buf);
+> +	cgroup = mem_cgroup_css(memcg)->cgroup;
+> +	cgroup_name(cgroup, memcg_name_buf, sizeof(memcg_name_buf));
+> +	cache_name = kasprintf(GFP_KERNEL, "%s(%lu:%s)", root_cache->name,
+> +			(unsigned long)cgroup_ino(cgroup), memcg_name_buf);
+>  	if (!cache_name)
+>  		goto out_unlock;
 
--- 
-Michal Hocko
-SUSE Labs
+Is this interface documented anywhere?
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
