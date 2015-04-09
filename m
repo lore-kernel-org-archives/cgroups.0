@@ -1,39 +1,68 @@
-From: Christoph Lameter <cl@linux.com>
-Subject: Re: [PATCH -mm] slab: use cgroup ino for naming per memcg caches
-Date: Wed, 8 Apr 2015 13:24:26 -0500 (CDT)
-Message-ID: <alpine.DEB.2.11.1504081323390.20694@gentwo.org>
-References: <1428414798-12932-1-git-send-email-vdavydov@parallels.com> <20150407133819.993be7a53a3aa16311aba1f5@linux-foundation.org> <20150408095404.GC10286@esperanza> <alpine.DEB.2.11.1504080845200.13120@gentwo.org> <20150408181911.GA18199@esperanza>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150408181911.GA18199@esperanza>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=comcast.net;
-	s=q20140121; t=1428517468;
-	bh=/4QdF8nnxZaL4HUU8hvrNd9Tyar3Uz15/8pesE/y1jk=;
-	h=Received:Received:Received:Received:Date:From:To:Subject:
-	 Message-ID:Content-Type;
-	b=tgXS/KidYek/Xx+7iV6awRnz7oXk6tt6x7QzFqM8IchIsM5HFHExOAVe4qiZ1gkMX
-	 iU6rW4o4svgJ/lWF5Fl2iV1ERmCzaEhZiPS9jSLht8XbmCmQg8EnJsB4F4/UX2WO9Y
-	 1SzPL7n6/K/iZ1PogqpUwGl+SC4lz4x1IGv6x3eLxIevj4ucTwygDezhK/hK9N4PHE
-	 OA30SuzshEorty6VzRWjze52LRuYdfWBzTX4QPOGUnRxn5fLMJb2JQocvORZXTF9sm
-	 Zz4CXzOTpWCuI1XmcSsiZVBMHu8AZjR+uRAnO8wz+5sqLdALlIrAoiQf5WYty9TMdL
-	 cjy41XKSc8TbA==
-Sender: linux-kernel-owner@vger.kernel.org
+From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] cpusets: Make cpus_allowed and mems_allowed masks
+ hotplug invariant
+Date: Thu, 9 Apr 2015 16:13:49 -0500
+Message-ID: <20150409211349.GA28729@mail.hallyn.com>
+References: <20141008070739.1170.33313.stgit@preeti.in.ibm.com>
+ <20141008080706.GC10832@worktop.programming.kicks-ass.net>
+ <543505EF.7070804@linux.vnet.ibm.com>
+ <20141008101828.GG10832@worktop.programming.kicks-ass.net>
+ <54364564.3090305@linux.vnet.ibm.com>
+ <20141009130611.GA14387@htj.dyndns.org>
+ <551CE820.9090900@linux.vnet.ibm.com>
+ <20150406174735.GG10582@htj.duckdns.org>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20150406174735.GG10582-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov@parallels.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Preeti U Murthy <preeti-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, anton-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org, svaidy-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org, paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bharata-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org
 
-On Wed, 8 Apr 2015, Vladimir Davydov wrote:
+On Mon, Apr 06, 2015 at 01:47:35PM -0400, Tejun Heo wrote:
+> Hello, Preeti.
+> 
+> On Thu, Apr 02, 2015 at 12:26:32PM +0530, Preeti U Murthy wrote:
+> > By ensuring that the user configured cpusets are untouched, I don't see
+> > how we affect userspace adversely. The expectation usually is that the
+> > kernel keeps track of the user configurations. If anything we would be
+> > fixing an undesired behavior, wouldn't we?
+> 
+> The problem is not really about which behavior is "righter" but rather
+> it's fairly likely that there are users / tools out there expecting
+> the current behavior and they wouldn't be too happy to see the
+> behavior flipping underneath them.
+> 
+> One way forward would be implementing a knob in cpuset which makes it
+> switch sbetween the old and new behaviors in the legacy hierarchy.
+> It's yucky but doable if absoluately necessary, but what's the reason
+> for you not being able to transition to the unified hierarchy (except
 
-> Yeah, I think cache merging is a good argument for grouping memcg caches
-> under /sys/kernel/slab/<slab-name>/cgroup/. We cannot maintain symlinks
-> for merged memcg caches, because when a memcg cache is created we do not
-> have names of caches the new cache is merged with. If memcg caches were
-> listed under /sys/kernel/slab/ along with global ones, absence of the
-> symlinks would lead to confusion.
+If the userspace is entirely new then this should work.  The
+unified hierarchy's behavior is not backward-compatible so any old
+software which tried to create cgroups (libcgroup, lxc, etc) will
+not work with it (since it won't, for instance, know to fill in 
+the enabled controllers in every newly created cgroup).
 
-The point of the unique name creation is to not have to use the name given
-by the user for the slab. You can generate a unique identifier and use
-that as a target for the symlink.
+Preeti, can you confirm that you don't have any need to run any
+legacy programs which use cgroups?  Long as that's the case, new
+software can certainly be written to DTRT, and mounting just cpusets
+under unified hierarchy seems best.
 
+> for it being under the devel flag but I'm really taking that devel
+> mask out in the next merge window)?  The default hierarchy can happily
+> co-exist with legacy hierarchies so you can just move over the cpuset
+> part to it if you need it.
+> 
+> Thanks.
+> 
+> -- 
+> tejun
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
