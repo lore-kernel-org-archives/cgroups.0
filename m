@@ -1,119 +1,60 @@
-From: Aleksa Sarai <cyphar@cyphar.com>
-Subject: [PATCH v9 2/4] cgroups: replace explicit ss_mask checking with for_each_subsys_which
-Date: Sun, 12 Apr 2015 10:51:55 +1000
-Message-ID: <1428799917-15141-3-git-send-email-cyphar@cyphar.com>
-References: <1428799917-15141-1-git-send-email-cyphar@cyphar.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1428799917-15141-1-git-send-email-cyphar@cyphar.com>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH V2] cpuset: Add knob to make allowed masks hotplug
+ invariant on legacy hierarchy
+Date: Mon, 13 Apr 2015 09:01:17 +0200
+Message-ID: <20150413070117.GX24151@twins.programming.kicks-ass.net>
+References: <20150410141118.11284.36206.stgit@preeti.in.ibm.com>
+ <20150411083537.GR27490@worktop.programming.kicks-ass.net>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20150411083537.GR27490-IIpfhp3q70z/8w/KjCw3T+5/BudmfyzbbVWyRVo5IupeoWH0uzbU5w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj@kernel.org, lizefan@huawei.com, mingo@redhat.com, peterz@infradead.org
-Cc: richard@nod.at, fweisbec@gmail.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Aleksa Sarai <cyphar@cyphar.com>
+To: Preeti U Murthy <preeti-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, svaidy-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, nacc-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, anton-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org, bharata-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org
 
-Replace the explicit checking against ss_masks inside a for_each_subsys
-block with for_each_subsys_which(ss_mask, ...), to take advantage of the
-more readable macro.
+On Sat, Apr 11, 2015 at 10:35:37AM +0200, Peter Zijlstra wrote:
+> On Fri, Apr 10, 2015 at 07:41:52PM +0530, Preeti U Murthy wrote:
+> > The cpus_allowed and mems_allowed masks of a cpuset get overwritten
+> > after each hotplug operation on the legacy hierarchy of cgroups so as to
+> > remain in sync with the online mask. But there are use cases which
+> > expect user configured masks to remain unchanged.
+> > 
+> > For instance, when hotplugged out CPUs are brought back online, they
+> > remain idle with none of the existing tasks allowed to run on them since
+> > the cpus_allowed mask was overwritten to not include them when they were
+> > offlined.
+> > 
+> > We cannot change the legacy hierarchy design now to keep the allowed
+> > masks hotplug invariant since it is a user visible change. It was
+> > suggested instead to add a knob in the root cpuset directory which
+> > allows the user to specify if he wants the user configured masks to be
+> > hotplug invariant [1]. This knob will enforce the choice throughout the
+> > hierarchy. If the knob is set, the allowed maks will not be varied on
+> > hotplug. It is also to to be noted that this knob will appear in the
+> > root cgroup mounted on the legacy hierarchy alone since the default
+> > hierarchy does not overwrite the allowed masks anyway.
+> > 
+> > Having said this, there are fair reasons to argue that the kernel is not
+> > responsible for taking care of user configurations in the face of
+> > hotplug. But one of the consequences of the current legacy hierarchy
+> > design, is that CPUs are left out from being used at all on online
+> > operations. The reason for this is not very obvious at first and several
+> > users have raised the issue as a bug. Hence the patch was strongly
+> > called for.
+> > 
+> > Moreover the default hierarchy keeps the allowed masks hotplug invariant
+> > too. So the patch is not bringing about a fundamental change in the
+> > design of cgroups.
+> 
+> What you've not explained is why you can use this knob but not use the
+> other new mode?
 
-Signed-off-by: Aleksa Sarai <cyphar@cyphar.com>
----
- kernel/cgroup.c | 42 ++++++++++++++----------------------------
- 1 file changed, 14 insertions(+), 28 deletions(-)
+Urgh, it looks like the new mode is only available through the default
+hierarchy (whatever that is).
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 1d69a085..abd491f 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1099,9 +1099,8 @@ static unsigned int cgroup_calc_child_subsys_mask(struct cgroup *cgrp,
- 	while (true) {
- 		unsigned int new_ss_mask = cur_ss_mask;
- 
--		for_each_subsys(ss, ssid)
--			if (cur_ss_mask & (1 << ssid))
--				new_ss_mask |= ss->depends_on;
-+		for_each_subsys_which(cur_ss_mask, ss, ssid)
-+			new_ss_mask |= ss->depends_on;
- 
- 		/*
- 		 * Mask out subsystems which aren't available.  This can
-@@ -1238,10 +1237,7 @@ static int rebind_subsystems(struct cgroup_root *dst_root, unsigned int ss_mask)
- 
- 	lockdep_assert_held(&cgroup_mutex);
- 
--	for_each_subsys(ss, ssid) {
--		if (!(ss_mask & (1 << ssid)))
--			continue;
--
-+	for_each_subsys_which(ss_mask, ss, ssid) {
- 		/* if @ss has non-root csses attached to it, can't move */
- 		if (css_next_child(NULL, cgroup_css(&ss->root->cgrp, ss)))
- 			return -EBUSY;
-@@ -1278,18 +1274,14 @@ static int rebind_subsystems(struct cgroup_root *dst_root, unsigned int ss_mask)
- 	 * Nothing can fail from this point on.  Remove files for the
- 	 * removed subsystems and rebind each subsystem.
- 	 */
--	for_each_subsys(ss, ssid)
--		if (ss_mask & (1 << ssid))
--			cgroup_clear_dir(&ss->root->cgrp, 1 << ssid);
-+	for_each_subsys_which(ss_mask, ss, ssid)
-+		cgroup_clear_dir(&ss->root->cgrp, 1 << ssid);
- 
--	for_each_subsys(ss, ssid) {
-+	for_each_subsys_which(ss_mask, ss, ssid) {
- 		struct cgroup_root *src_root;
- 		struct cgroup_subsys_state *css;
- 		struct css_set *cset;
- 
--		if (!(ss_mask & (1 << ssid)))
--			continue;
--
- 		src_root = ss->root;
- 		css = cgroup_css(&src_root->cgrp, ss);
- 
-@@ -2563,13 +2555,11 @@ static void cgroup_print_ss_mask(struct seq_file *seq, unsigned int ss_mask)
- 	bool printed = false;
- 	int ssid;
- 
--	for_each_subsys(ss, ssid) {
--		if (ss_mask & (1 << ssid)) {
--			if (printed)
--				seq_putc(seq, ' ');
--			seq_printf(seq, "%s", ss->name);
--			printed = true;
--		}
-+	for_each_subsys_which(ss_mask, ss, ssid) {
-+		if (printed)
-+			seq_putc(seq, ' ');
-+		seq_printf(seq, "%s", ss->name);
-+		printed = true;
- 	}
- 	if (printed)
- 		seq_putc(seq, '\n');
-@@ -2719,9 +2709,8 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 	while ((tok = strsep(&buf, " "))) {
- 		if (tok[0] == '\0')
- 			continue;
--		for_each_subsys(ss, ssid) {
--			if (ss->disabled || strcmp(tok + 1, ss->name) ||
--			    ((1 << ss->id) & cgrp_dfl_root_inhibit_ss_mask))
-+		for_each_subsys_which(~cgrp_dfl_root_inhibit_ss_mask, ss, ssid) {
-+			if (ss->disabled || strcmp(tok + 1, ss->name))
- 				continue;
- 
- 			if (*tok == '+') {
-@@ -2808,10 +2797,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 	 * still around.  In such cases, wait till it's gone using
- 	 * offline_waitq.
- 	 */
--	for_each_subsys(ss, ssid) {
--		if (!(css_enable & (1 << ssid)))
--			continue;
--
-+	for_each_subsys_which(css_enable, ss, ssid) {
- 		cgroup_for_each_live_child(child, cgrp) {
- 			DEFINE_WAIT(wait);
- 
--- 
-2.3.5
+Would it not make sense to make that a mount option and limit the amount
+of semantic variants of cpusets?
