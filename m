@@ -1,18 +1,18 @@
-From: Preeti U Murthy <preeti@linux.vnet.ibm.com>
+From: Preeti U Murthy <preeti-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 Subject: Re: [PATCH V2] cpuset: Add knob to make allowed masks hotplug invariant
  on legacy hierarchy
-Date: Mon, 13 Apr 2015 13:55:39 +0530
-Message-ID: <552B7D83.2030509@linux.vnet.ibm.com>
+Date: Mon, 13 Apr 2015 17:46:37 +0530
+Message-ID: <552BB3A5.9060905@linux.vnet.ibm.com>
 References: <20150410141118.11284.36206.stgit@preeti.in.ibm.com> <20150411083537.GR27490@worktop.programming.kicks-ass.net> <20150413070117.GX24151@twins.programming.kicks-ass.net>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150413070117.GX24151@twins.programming.kicks-ass.net>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20150413070117.GX24151-ndre7Fmf5hadTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: tj@kernel.org, svaidy@linux.vnet.ibm.com, nacc@linux.vnet.ibm.com, rjw@rjwysocki.net, linux-kernel@vger.kernel.org, lizefan@huawei.com, anton@samba.org, bharata@linux.vnet.ibm.com, cgroups@vger.kernel.org, paulmck@linux.vnet.ibm.com, mingo@kernel.org, serge@hallyn.com
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: svaidy-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, nacc-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, anton-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org, bharata-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org
 
 On 04/13/2015 12:31 PM, Peter Zijlstra wrote:
 > On Sat, Apr 11, 2015 at 10:35:37AM +0200, Peter Zijlstra wrote:
@@ -57,12 +57,40 @@ On 04/13/2015 12:31 PM, Peter Zijlstra wrote:
 > 
 > Would it not make sense to make that a mount option and limit the amount
 > of semantic variants of cpusets?
+> 
 
-Makes sense. I will send out the next version that enforces the desired
-behavior through a mount option.
+I spent some time analyzing if this would be a better option than the
+sysfs knob and I think not for the following reasons:
 
-Thank you
+1. Mount options tend to be generic across the controllers of a cgroup.
+But use case addressed by this patch is specific to the cpuset controller.
+
+2. The behavior that this patch is trying to bring about is not a
+drastic one to call for a mount option equivalent to the __SANE_BEHAVIOR
+one that existed earlier. This option was used to switch the legacy
+design to the default one.
+
+However this patch is not *wholly* mimicking the default hierarchy
+behavior. The behavior when cpusets become empty is left untouched for
+instance. The patch borrows one of the behaviors from the default
+hierarchy only and hence just not justify the use of a mount flag.
+
+3. cpuset controller already has flags that allow a runtime change in
+the semantics of scheduling, memory allocation.
+Eg: CS_SCHED_LOAD_BALANCE, CS_SPREAD_PAGE. This page intends to bring
+about a runtime change in the semantics of maintaining the allowed cpus
+and mem masks in the face of hotplug. So adding a flag to take care of
+this looks better and the design falls in place.
+
+4. The worry was around possible race conditions when the user tries to
+change this sysfs knob during runtime after mounting a cgroup hierarchy.
+But the sites are protected by the cpuset_lock. Moreover all of the
+cpuset behavior enforced by its flags can be changed after mounting the
+cgroup. So cpuset controller already expects twiddling of these knobs at
+will by the user.
+
+So it doesn't look like a good option to change the sysfs knob in this
+patch to a mount flag.
 
 Regards
 Preeti U Murthy
-> 
