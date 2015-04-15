@@ -1,44 +1,56 @@
 From: Preeti U Murthy <preeti-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 Subject: Re: [PATCH V2] cpuset: Add knob to make allowed masks hotplug invariant
  on legacy hierarchy
-Date: Wed, 15 Apr 2015 16:42:34 +0530
-Message-ID: <552E47A2.2000909@linux.vnet.ibm.com>
-References: <20150410141118.11284.36206.stgit@preeti.in.ibm.com> <20150413145052.GC2596@htj.duckdns.org>
+Date: Wed, 15 Apr 2015 17:10:49 +0530
+Message-ID: <552E4E41.3030008@linux.vnet.ibm.com>
+References: <20150410141118.11284.36206.stgit@preeti.in.ibm.com> <20150411083537.GR27490@worktop.programming.kicks-ass.net> <20150413070117.GX24151@twins.programming.kicks-ass.net> <552BB3A5.9060905@linux.vnet.ibm.com> <20150413144311.GF5029@twins.programming.kicks-ass.net>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20150413145052.GC2596-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <20150413144311.GF5029-ndre7Fmf5hadTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: svaidy-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, nacc-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, anton-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org, bharata-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, svaidy-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, nacc-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, anton-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org, bharata-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org
 
-On 04/13/2015 08:20 PM, Tejun Heo wrote:
-> On Fri, Apr 10, 2015 at 07:41:52PM +0530, Preeti U Murthy wrote:
->> Moreover the default hierarchy keeps the allowed masks hotplug invariant
->> too. So the patch is not bringing about a fundamental change in the
->> design of cgroups.
+On 04/13/2015 08:13 PM, Peter Zijlstra wrote:
+> On Mon, Apr 13, 2015 at 05:46:37PM +0530, Preeti U Murthy wrote:
+>> On 04/13/2015 12:31 PM, Peter Zijlstra wrote:
 > 
-> This is gonna be a new behavior anyway and I don't follow why you just
-> can't use the default hierarchy (well, of course except for that it
-> isn't ready yet but no matter what we do this is gonna take another
-> devel cycle so what's the difference?).  It's not like the default
+>>> Would it not make sense to make that a mount option and limit the amount
+>>> of semantic variants of cpusets?
+>>
+>> I spent some time analyzing if this would be a better option than the
+>> sysfs knob and I think not for the following reasons:
+>>
+>> 1. Mount options tend to be generic across the controllers of a cgroup.
+>> But use case addressed by this patch is specific to the cpuset controller.
+> 
+> Surely we can get around that somehow.
+> 
+>> 2. The behavior that this patch is trying to bring about is not a
+>> drastic one to call for a mount option equivalent to the __SANE_BEHAVIOR
+>> one that existed earlier. This option was used to switch the legacy
+>> design to the default one.
+>>
+>> However this patch is not *wholly* mimicking the default hierarchy
+>> behavior. The behavior when cpusets become empty is left untouched for
+>> instance. The patch borrows one of the behaviors from the default
+>> hierarchy only and hence just not justify the use of a mount flag.
+> 
+> So the 'problem' I have is that you introduce a 3rd semantic for the
+> cpuset thing.
+> 
+> You also do not answer if you can live with the default hierarchy
+> behaviour, only that your patch mimicks a subset of it.
+> 
+> Why not all of it?
 
-Is it possible today to mount a specific controller on the default
-hierarchy ? Or will this capability be going in the next merge window ?
-I see that there are  no mount options except the __SANE__ one that the
-default hierarchy takes.
-
-We could mount the rest of the controllers in the legacy hierarchy while
-mounting the cpuset controller alone in the default hierarchy and see if
-this works fine.
+This was assuming that the existing software will break if we mimick the
+entire design given that we were informed that it does not work well
+with the default hierarchy. But I think now, that its worth finding out
+why if so and switch over to the new design, atleast for cpusets.
 
 Regards
 Preeti U Murthy
-
-> hierarchy requires invasive changes.  I'm not convinced this calls for
-> yet another operation mode.
-> 
-> Thanks.
-> 
