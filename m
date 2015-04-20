@@ -1,58 +1,61 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 13/49] writeback: move bandwidth related fields from
- backing_dev_info into bdi_writeback
-Date: Mon, 20 Apr 2015 14:01:20 -0400
-Message-ID: <20150420180120.GC4206@htj.duckdns.org>
+Subject: Re: [PATCH 15/49] writeback: move backing_dev_info->wb_lock and
+ ->worklist into bdi_writeback
+Date: Mon, 20 Apr 2015 14:17:07 -0400
+Message-ID: <20150420181707.GD4206@htj.duckdns.org>
 References: <1428350318-8215-1-git-send-email-tj@kernel.org>
- <1428350318-8215-14-git-send-email-tj@kernel.org>
- <20150420150950.GB17020@quack.suse.cz>
+ <1428350318-8215-16-git-send-email-tj@kernel.org>
+ <20150420153224.GD17020@quack.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=YO8lU6vsJHIeQS001CGDYibh3Id7t6t3WBhkJdeIt54=;
-        b=x6v1naIyARleMyQNNdxZrd4iD2PCoYNaDFi+kUW/EUolWnrGntYExAh2LFZtCYbKo+
-         dR73MBfg7CP1ktBrfQt1f4C7Bg2HPc+TU9/8Ku7VcvYpTtxoQ22oUrcd7Hj0r3uOEvh6
-         Fd2G3XwfTNgHsuzT3l+0GlOqxNIwDl58qQ5rK3SrvZAxV0a5YqykAu+vT0WmG7o+PuLr
-         wvRsoHV2/S6uKForJplu4cLjgVbG5/ImI5NwqAy7E38Clw1dl8fFdCzhx8FqLBHCqHCT
-         d43djButDVLfCLfKyJk4A5MEkf+MYMf1ZcDEeQLs9X+T/4iZJFT5G2PHQy74PklMau0H
-         wz4A==
+        bh=n0KIv5gZ0Hg1JVEKjyHV/9DP9GDt2aQ/qmx043a66ZA=;
+        b=Byat0CPrhpopV9c7mmAj5kgTpIdq69GfaWjHoPlhu704xSzTOhNrjG+/o6PXj5frhD
+         0sutsdemoNK/IVYwrInVJfaVB9ev8pQ74Te91Epj9aCnA28YaJaK6VaK8qwfkG0iavdk
+         4ALAm74N/LktGuYR5FyZgce259s8rlMGVRCxj8kA5GZIDDAts0b8reE2BzBKKUgGJYFu
+         MbSi8B45/CHbhSIG1sb6RZY05kCr+uNe9BQYTHd+YnHimy+5Ja4z1f9mZMd33qB6c3Uy
+         QmFIIri/PgBadoaO/pmJWSFmfo03MixX+oLS1z0fyAPY88t7fWPaVtzUf7qlfujsmMlU
+         cJOQ==
 Content-Disposition: inline
-In-Reply-To: <20150420150950.GB17020@quack.suse.cz>
+In-Reply-To: <20150420153224.GD17020@quack.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Jan Kara <jack@suse.cz>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Jaegeuk Kim <jaegeuk@kernel.org>, Steven Whitehouse <swhiteho@redhat.com>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com
 
-On Mon, Apr 20, 2015 at 05:09:50PM +0200, Jan Kara wrote:
-> On Mon 06-04-15 15:58:02, Tejun Heo wrote:
-> > Currently, a bdi (backing_dev_info) embeds single wb (bdi_writeback)
-> > and the role of the separation is unclear.  For cgroup support for
-> > writeback IOs, a bdi will be updated to host multiple wb's where each
-> > wb serves writeback IOs of a different cgroup on the bdi.  To achieve
-> > that, a wb should carry all states necessary for servicing writeback
-> > IOs for a cgroup independently.
-> > 
-> > This patch moves bandwidth related fields from backing_dev_info into
-> > bdi_writeback.
-> > 
-> > * The moved fields are: bw_time_stamp, dirtied_stamp, written_stamp,
-> >   write_bandwidth, avg_write_bandwidth, dirty_ratelimit,
-> >   balanced_dirty_ratelimit, completions and dirty_exceeded.
-> > 
-> > * writeback_chunk_size() and over_bgroup_thresh() now take @wb instead
-> >   of @bdi.
->  				^^^ over_bground_thresh()
-> 
-> Otherwise the patch looks good to me. You can add:
+Hello, Jan.
 
-Updated accordingly.
+On Mon, Apr 20, 2015 at 05:32:24PM +0200, Jan Kara wrote:
+> > @@ -454,9 +451,9 @@ EXPORT_SYMBOL(bdi_init);
+> >  
+> >  void bdi_destroy(struct backing_dev_info *bdi)
+> >  {
+> > -	bdi_wb_shutdown(bdi);
+> > -
+> > -	WARN_ON(!list_empty(&bdi->work_list));
+> > +	/* make sure nobody finds us on the bdi_list anymore */
+> > +	bdi_remove_from_list(bdi);
+> > +	wb_shutdown(&bdi->wb);
+> >  
+> >  	if (bdi->dev) {
+> >  		bdi_debug_unregister(bdi);
+>   But if someone ends up calling bdi_destroy() on unregistered bdi,
+> bdi_remove_from_list() will be corrupting memory, won't it? And if I
 
-> Reviewed-by: Jan Kara <jack@suse.cz>
+bdi_init() does INIT_LIST_HEAD() on it, so it should be fine, no?
+
+> remember right there were some corner cases where this really happened.
+> Previously we were careful and checked WB_registered. I guess we could
+> check for !list_empty(&bdi->bdi_list) and also reinit bdi_list in
+> bdi_remove_from_list() after synchronize_rcu_expedited().
+
+But we can't call bdi_destroy() more than once no matter what.  We'd
+be doing double frees.
 
 Thanks.
 
