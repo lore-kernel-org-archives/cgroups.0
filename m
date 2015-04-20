@@ -1,473 +1,86 @@
-From: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v10 4/4] cgroups: implement the PIDs subsystem
-Date: Sun, 19 Apr 2015 22:22:34 +1000
-Message-ID: <1429446154-10660-5-git-send-email-cyphar@cyphar.com>
-References: <1429446154-10660-1-git-send-email-cyphar@cyphar.com>
+From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH V2] cpuset: Add knob to make allowed masks hotplug invariant
+ on legacy hierarchy
+Date: Mon, 20 Apr 2015 11:28:09 +0800
+Message-ID: <55347249.1050301@huawei.com>
+References: <20150413070117.GX24151@twins.programming.kicks-ass.net> <552BB3A5.9060905@linux.vnet.ibm.com> <20150413144311.GF5029@twins.programming.kicks-ass.net> <552E4E41.3030008@linux.vnet.ibm.com> <20150415150302.GA25089@mail.hallyn.com> <20150415151926.GS23123@twins.programming.kicks-ass.net> <20150415153035.GA25390@mail.hallyn.com> <20150415154802.GB30337@htj.duckdns.org> <20150415161534.GA25776@mail.hallyn.com> <20150415161811.GD30337@htj.duckdns.org> <20150415163617.GA26177@mail.hallyn.com> <552FA3B4.6080905@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1429446154-10660-1-git-send-email-cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <552FA3B4.6080905-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
-Cc: richard-/L3Ra7n9ekc@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+To: Preeti U Murthy <preeti-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Cc: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, svaidy-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, nacc-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, anton-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org, bharata-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-Adds a new single-purpose PIDs subsystem to limit the number of
-tasks that can be forked inside a cgroup. Essentially this is an
-implementation of RLIMIT_NPROC that applies to a cgroup rather than a
-process tree.
+On 2015/4/16 19:57, Preeti U Murthy wrote:
+> On 04/15/2015 10:06 PM, Serge E. Hallyn wrote:
+>> On Wed, Apr 15, 2015 at 12:18:11PM -0400, Tejun Heo wrote:
+>>> On Wed, Apr 15, 2015 at 11:15:35AM -0500, Serge E. Hallyn wrote:
+>>>> The reason would be because it breaks "legacy" software.  So that
+>>>> would only matter if Preeti needs to run such software.
+>>>
+>>> Sure, I get that argument but this is changing how the contorller
+>>> behaves in a major way.
+>>
+>> It is.  My main counter to that would be that it is how cpusets
+>> should always have worked :)
+>>
+>>>   There are specifics which may make this
+>>> particular case more justifiable but overall the combination of
+>>> arguments is pretty weird.
+>>
+>> And becomes harder to reason about and review/maintain.  I agree
+>> there.
+>>
+>> From userspace, I suppose one approach (though note it is racy) to
+>> solving this would be to have udev rules which
+>>
+>> . On cpu unplug, record all cgroups which were using that cpu
+>> . on cpu plug, re-add the cpu to all recorded cgroups for that
+>> cpu (if any), as well as to any cgroups marked (in some /etc
+>> file) as using "all" or a percentage of all cpus.
+> 
+> Yes this is the best way to move forward. But the stacks in userspace
+> that manage cgroups need to each have such a daemon managing the cpusets
+> like is pointed above. It would have been fair to expect them to do this
+> except that this is one issue that userspace is expecting the kernel to
+> handle. The side effects of this behavior of the legacy hierarchy is
+> showing up in weird ways.
+> 
+> Another approach as Tejun pointed is to switch over to the unified
+> hierarchy. I can test this out (How do we mount specific controllers in
+> the unified hierarchy Tejun? It does not allow any mount options today),
 
-However, it should be noted that organisational operations (adding and
-removing tasks from a PIDs hierarchy) will *not* be prevented. Rather,
-the number of tasks in the hierarchy cannot exceed the limit through
-forking. This is due to the fact that, in the unified hierarchy, attach
-cannot fail (and it is not possible for a task to overcome its PIDs
-cgroup policy limit by attaching to a child cgroup).
+You just can't. All controllers are bound to unified hierarchy, except those
+already mounted in the old way. That said, in the unified hierarchy you're able
+to use cpuset only, so other controllers can still be mounted seperated.
 
-PIDs are fundamentally a global resource, and it is possible to reach
-PID exhaustion inside a cgroup without hitting any reasonable kmemcg
-policy. Once you've hit PID exhaustion, you're only in a marginally
-better state than OOM. This subsystem allows PID exhaustion inside a
-cgroup to be prevented.
+Here is an example:
 
-Signed-off-by: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
----
- include/linux/cgroup_subsys.h |   5 +
- init/Kconfig                  |  16 ++
- kernel/Makefile               |   1 +
- kernel/cgroup_pids.c          | 368 ++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 390 insertions(+)
- create mode 100644 kernel/cgroup_pids.c
+  # use blkio cgroup in legacy hierachy
+  mount -t cgroup -o blkio xxx old/
 
-diff --git a/include/linux/cgroup_subsys.h b/include/linux/cgroup_subsys.h
-index fdd3551..fc61bc6 100644
---- a/include/linux/cgroup_subsys.h
-+++ b/include/linux/cgroup_subsys.h
-@@ -61,6 +61,11 @@ SUBSYS(hugetlb)
-  * Subsystems that implement the can_fork() family of callbacks.
-  */
- SUBSYS_TAG(PREFORK_START)
-+
-+#if IS_ENABLED(CONFIG_CGROUP_PIDS)
-+SUBSYS(pids)
-+#endif
-+
- SUBSYS_TAG(PREFORK_END)
- 
- /*
-diff --git a/init/Kconfig b/init/Kconfig
-index f5dbc6d..1f135b7 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -952,6 +952,22 @@ config CGROUP_FREEZER
- 	  Provides a way to freeze and unfreeze all tasks in a
- 	  cgroup.
- 
-+config CGROUP_PIDS
-+	bool "PIDs cgroup subsystem"
-+	help
-+	  Provides enforcement of process number limits in the scope of a
-+	  cgroup. Any attempt to fork more processes than is allowed in the
-+	  cgroup will fail. PIDs are fundamentally a global resource because it
-+	  is fairly trivial to reach PID exhaustion before you reach even a
-+	  conservative kmemcg limit. As a result, it is possible to grind a
-+	  system to halt without being limited by other cgroup policies. The
-+	  PIDs cgroup subsystem is designed to stop this from happening.
-+
-+	  It should be noted that organisational operations (such as attaching
-+	  to a cgroup hierarchy will *not* be blocked by the PIDs subsystem),
-+	  since the PIDs limit only affects a process's ability to fork, not to
-+	  attach to a cgroup.
-+
- config CGROUP_DEVICE
- 	bool "Device controller for cgroups"
- 	help
-diff --git a/kernel/Makefile b/kernel/Makefile
-index 1408b33..e823592 100644
---- a/kernel/Makefile
-+++ b/kernel/Makefile
-@@ -53,6 +53,7 @@ obj-$(CONFIG_BACKTRACE_SELF_TEST) += backtracetest.o
- obj-$(CONFIG_COMPAT) += compat.o
- obj-$(CONFIG_CGROUPS) += cgroup.o
- obj-$(CONFIG_CGROUP_FREEZER) += cgroup_freezer.o
-+obj-$(CONFIG_CGROUP_PIDS) += cgroup_pids.o
- obj-$(CONFIG_CPUSETS) += cpuset.o
- obj-$(CONFIG_UTS_NS) += utsname.o
- obj-$(CONFIG_USER_NS) += user_namespace.o
-diff --git a/kernel/cgroup_pids.c b/kernel/cgroup_pids.c
-new file mode 100644
-index 0000000..c1c89f2
---- /dev/null
-+++ b/kernel/cgroup_pids.c
-@@ -0,0 +1,368 @@
-+/*
-+ * Process number limiting controller for cgroups.
-+ *
-+ * Used to allow a cgroup hierarchy to stop any new processes
-+ * from fork()ing after a certain limit is reached.
-+ *
-+ * Since it is trivial to hit the task limit without hitting
-+ * any kmemcg limits in place, PIDs are a fundamental resource.
-+ * As such, PID exhaustion must be preventable in the scope of
-+ * a cgroup hierarchy by allowing resource limiting of the
-+ * number of tasks in a cgroup.
-+ *
-+ * In order to use the `pids` controller, set the maximum number
-+ * of tasks in pids.max (this is not available in the root cgroup
-+ * for obvious reasons). The number of processes currently
-+ * in the cgroup is given by pids.current. Organisational operations
-+ * are not blocked by cgroup policies, so it is possible to have
-+ * pids.current > pids.max. However, fork()s will still not work.
-+ *
-+ * To set a cgroup to have no limit, set pids.max to "max". fork()
-+ * will return -EBUSY if forking would cause a cgroup policy to be
-+ * violated.
-+ *
-+ * pids.current tracks all child cgroup hierarchies, so
-+ * parent/pids.current is a superset of parent/child/pids.current.
-+ *
-+ * Copyright (C) 2015 Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-+ *
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/threads.h>
-+#include <linux/atomic.h>
-+#include <linux/cgroup.h>
-+#include <linux/slab.h>
-+
-+#define PIDS_MAX (PID_MAX_LIMIT + 1ULL)
-+#define PIDS_MAX_STR "max"
-+
-+struct pids_cgroup {
-+	struct cgroup_subsys_state	css;
-+
-+	/*
-+	 * Use 64-bit types so that we can safely represent "max" as
-+	 * (PID_MAX_LIMIT + 1).
-+	 */
-+	atomic64_t			counter;
-+	int64_t				limit;
-+};
-+
-+static struct pids_cgroup *css_pids(struct cgroup_subsys_state *css)
-+{
-+	return container_of(css, struct pids_cgroup, css);
-+}
-+
-+static struct pids_cgroup *parent_pids(struct pids_cgroup *pids)
-+{
-+	return css_pids(pids->css.parent);
-+}
-+
-+static struct cgroup_subsys_state *
-+pids_css_alloc(struct cgroup_subsys_state *parent)
-+{
-+	struct pids_cgroup *pids;
-+
-+	pids = kzalloc(sizeof(struct pids_cgroup), GFP_KERNEL);
-+	if (!pids)
-+		return ERR_PTR(-ENOMEM);
-+
-+	pids->limit = PIDS_MAX;
-+	atomic64_set(&pids->counter, 0);
-+	return &pids->css;
-+}
-+
-+static void pids_css_free(struct cgroup_subsys_state *css)
-+{
-+	kfree(css_pids(css));
-+}
-+
-+/**
-+ * pids_cancel - uncharge the local pid count
-+ * @pids: the pid cgroup state
-+ * @num: the number of pids to cancel
-+ *
-+ * This function will WARN if the pid count goes under 0,
-+ * because such a case is a bug in the pids controller proper.
-+ */
-+static void pids_cancel(struct pids_cgroup *pids, int num)
-+{
-+	/*
-+	 * A negative count (or overflow for that matter) is invalid,
-+	 * and indicates a bug in the pids controller proper.
-+	 */
-+	WARN_ON_ONCE(atomic64_add_negative(-num, &pids->counter));
-+}
-+
-+/**
-+ * pids_uncharge - hierarchically uncharge the pid count
-+ * @pids: the pid cgroup state
-+ * @num: the number of pids to uncharge
-+ */
-+static void pids_uncharge(struct pids_cgroup *pids, int num)
-+{
-+	struct pids_cgroup *p;
-+
-+	for (p = pids; p; p = parent_pids(p))
-+		pids_cancel(p, num);
-+}
-+
-+/**
-+ * pids_charge - hierarchically charge the pid count
-+ * @pids: the pid cgroup state
-+ * @num: the number of pids to charge
-+ *
-+ * This function does *not* follow the pid limit set. It cannot
-+ * fail and the new pid count may exceed the limit, because
-+ * organisational operations cannot fail in the unified hierarchy.
-+ */
-+static void pids_charge(struct pids_cgroup *pids, int num)
-+{
-+	struct pids_cgroup *p;
-+
-+	for (p = pids; p; p = parent_pids(p))
-+		atomic64_add(num, &p->counter);
-+}
-+
-+/**
-+ * pids_try_charge - hierarchically try to charge the pid count
-+ * @pids: the pid cgroup state
-+ * @num: the number of pids to charge
-+ *
-+ * This function follows the set limit. It will fail if the charge
-+ * would cause the new value to exceed the hierarchical limit.
-+ * Returns 0 if the charge succeded, otherwise -EAGAIN.
-+ */
-+static int pids_try_charge(struct pids_cgroup *pids, int num)
-+{
-+	struct pids_cgroup *p, *q;
-+
-+	for (p = pids; p; p = parent_pids(p)) {
-+		int64_t new = atomic64_add_return(num, &p->counter);
-+
-+		/*
-+		 * Since new is capped to the maximum number of pid_t, if
-+		 * p->limit is %PIDS_MAX then we know that this test will never
-+		 * fail.
-+		 */
-+		if (new > p->limit)
-+			goto revert;
-+	}
-+
-+	return 0;
-+
-+revert:
-+	for (q = pids; q != p; q = parent_pids(q))
-+		pids_cancel(q, num);
-+	pids_cancel(p, num);
-+
-+	return -EAGAIN;
-+}
-+
-+static int pids_can_attach(struct cgroup_subsys_state *css,
-+			   struct cgroup_taskset *tset)
-+{
-+	struct pids_cgroup *pids = css_pids(css);
-+	struct task_struct *task;
-+	int64_t num = 0;
-+
-+	cgroup_taskset_for_each(task, tset)
-+		num++;
-+
-+	/*
-+	 * Attaching to a cgroup is allowed to overcome the
-+	 * the PID limit, so that organisation operations aren't
-+	 * blocked by the `pids` cgroup controller.
-+	 */
-+	pids_charge(pids, num);
-+	return 0;
-+}
-+
-+static void pids_cancel_attach(struct cgroup_subsys_state *css,
-+			       struct cgroup_taskset *tset)
-+{
-+	struct pids_cgroup *pids = css_pids(css);
-+	struct task_struct *task;
-+	int64_t num = 0;
-+
-+	cgroup_taskset_for_each(task, tset)
-+		num++;
-+
-+	pids_uncharge(pids, num);
-+}
-+
-+static void pids_detach(struct cgroup_subsys_state *old_css,
-+			struct task_struct *task)
-+{
-+	struct pids_cgroup *old_pids = css_pids(old_css);
-+
-+	pids_uncharge(old_pids, 1);
-+}
-+
-+static int pids_can_fork(struct task_struct *task, void **private)
-+{
-+	struct cgroup_subsys_state *css;
-+	struct pids_cgroup *pids;
-+	int retval;
-+
-+	/*
-+	 * Use the "current" task_css for the pids subsystem as the tentative
-+	 * css. It is possible we will charge the wrong hierarchy, in which
-+	 * case we will forcefully revert/reapply the charge on the right
-+	 * hierarchy after it is committed to the task proper.
-+	 */
-+	rcu_read_lock();
-+	css = task_css(current, pids_cgrp_id);
-+	if (!css_tryget_online(css)) {
-+		retval = -EBUSY;
-+		goto err_rcu_unlock;
-+	}
-+	rcu_read_unlock();
-+	pids = css_pids(css);
-+
-+	retval = pids_try_charge(pids, 1);
-+	if (retval)
-+		goto err_css_put;
-+
-+	*private = css;
-+	return 0;
-+
-+err_rcu_unlock:
-+	rcu_read_unlock();
-+err_css_put:
-+	css_put(css);
-+	return retval;
-+}
-+
-+static void pids_cancel_fork(struct task_struct *task, void *private)
-+{
-+	struct cgroup_subsys_state *css = private;
-+	struct pids_cgroup *pids = css_pids(css);
-+
-+	pids_uncharge(pids, 1);
-+	css_put(css);
-+}
-+
-+static void pids_fork(struct task_struct *task, void *private)
-+{
-+	struct cgroup_subsys_state *css;
-+	struct cgroup_subsys_state *old_css = private;
-+	struct pids_cgroup *pids;
-+	struct pids_cgroup *old_pids = css_pids(old_css);
-+
-+	/*
-+	 * Get the current task css. Since the task has already been exposed to
-+	 * the system and had its cg_list updated, we know that we already have
-+	 * an implicit reference through task.
-+	 */
-+	rcu_read_lock();
-+	css = task_css(task, pids_cgrp_id);
-+	css_get(css);
-+	rcu_read_unlock();
-+
-+	pids = css_pids(css);
-+
-+	/*
-+	 * The association has changed, we have to revert and reapply the
-+	 * charge/uncharge on the wrong hierarchy to the current one. Since
-+	 * the association can only change due to an organisation event, its
-+	 * okay for us to ignore the limit in this case.
-+	 */
-+	if (pids != old_pids) {
-+		pids_uncharge(old_pids, 1);
-+		pids_charge(pids, 1);
-+	}
-+
-+	css_put(css);
-+	css_put(old_css);
-+}
-+
-+static void pids_exit(struct cgroup_subsys_state *css,
-+		      struct cgroup_subsys_state *old_css,
-+		      struct task_struct *task)
-+{
-+	struct pids_cgroup *pids = css_pids(old_css);
-+
-+	pids_uncharge(pids, 1);
-+}
-+
-+static ssize_t pids_max_write(struct kernfs_open_file *of, char *buf,
-+			      size_t nbytes, loff_t off)
-+{
-+	struct cgroup_subsys_state *css = of_css(of);
-+	struct pids_cgroup *pids = css_pids(css);
-+	int64_t limit;
-+	int err;
-+
-+	buf = strstrip(buf);
-+	if (!strcmp(buf, PIDS_MAX_STR)) {
-+		limit = PIDS_MAX;
-+		goto set_limit;
-+	}
-+
-+	err = kstrtoll(buf, 0, &limit);
-+	if (err)
-+		return err;
-+
-+	/* We use INT_MAX as the maximum value of pid_t. */
-+	if (limit < 0 || limit > INT_MAX)
-+		return -EINVAL;
-+
-+set_limit:
-+	/*
-+	 * Limit updates don't need to be mutex'd, since it isn't
-+	 * critical that any racing fork()s follow the new limit.
-+	 */
-+	pids->limit = limit;
-+	return nbytes;
-+}
-+
-+static int pids_max_show(struct seq_file *sf, void *v)
-+{
-+	struct cgroup_subsys_state *css = seq_css(sf);
-+	struct pids_cgroup *pids = css_pids(css);
-+	int64_t limit = pids->limit;
-+
-+	if (limit == PIDS_MAX)
-+		seq_printf(sf, "%s\n", PIDS_MAX_STR);
-+	else
-+		seq_printf(sf, "%lld\n", limit);
-+
-+	return 0;
-+}
-+
-+static s64 pids_current_read(struct cgroup_subsys_state *css,
-+			     struct cftype *cft)
-+{
-+	struct pids_cgroup *pids = css_pids(css);
-+
-+	return atomic64_read(&pids->counter);
-+}
-+
-+static struct cftype files[] = {
-+	{
-+		.name = "max",
-+		.write = pids_max_write,
-+		.seq_show = pids_max_show,
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+	},
-+	{
-+		.name = "current",
-+		.read_s64 = pids_current_read,
-+	},
-+	{ }	/* terminate */
-+};
-+
-+struct cgroup_subsys pids_cgrp_subsys = {
-+	.css_alloc	= pids_css_alloc,
-+	.css_free	= pids_css_free,
-+	.can_attach	= pids_can_attach,
-+	.cancel_attach	= pids_cancel_attach,
-+	.detach		= pids_detach,
-+	.can_fork	= pids_can_fork,
-+	.cancel_fork	= pids_cancel_fork,
-+	.fork		= pids_fork,
-+	.exit		= pids_exit,
-+	.legacy_cftypes	= files,
-+	.early_init	= 0,
-+};
--- 
-2.3.5
+  # now mount the unified hierarchy
+  mount -t cgroup -o __DEVEL__sane_behavior xxx unified/
+
+  # use cpuset only
+  mkdir unified/cpuset
+  echo +cpuset > cgroup.subtree_control 
+
+  # use memory cgroup in another legacy hierarchy
+  mount -t cgroup -o memory xxx old2/
+
+You may refer to Documentation/cgroups/unified-hierarchy.txt
+
+> but I don't think I can exhaustively test this out by myself across
+> distros. So I am not confident of this approach.
+> 
+> The last approach would be as Peter pointed, mimick the entire unified
+> hierarchy through a mount option, similar to the SANE_BEHAVIOR option
+> that was present earlier and was removed. Tejun ? Can we bring back that
+> mount option ?
+> 
+
+I don't think it's an option. We want users move to unified hierarchy.
