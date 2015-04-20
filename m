@@ -1,42 +1,66 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 12/49] writeback: move backing_dev_info->bdi_stat[] into
- bdi_writeback
-Date: Mon, 20 Apr 2015 13:56:26 -0400
-Message-ID: <20150420175626.GB4206@htj.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 13/49] writeback: move bandwidth related fields from
+ backing_dev_info into bdi_writeback
+Date: Mon, 20 Apr 2015 14:01:20 -0400
+Message-ID: <20150420180120.GC4206@htj.duckdns.org>
 References: <1428350318-8215-1-git-send-email-tj@kernel.org>
- <1428350318-8215-13-git-send-email-tj@kernel.org>
- <20150420150231.GA17020@quack.suse.cz>
+ <1428350318-8215-14-git-send-email-tj@kernel.org>
+ <20150420150950.GB17020@quack.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=LYVP/qKdX4kEnGMT/A2JAyaK59qlyjpwdMB6IqCORlw=;
-        b=rlHSsfXRZywMd+ctVcnX2XtmLUYgLjYA0i3u0NqqSchUwHRJVRxpRHeSBfFmLRlrl+
-         sR4eaN4NVS0NpS7YU02AEz0qt6tYf3CT9y9T/XqvCtUkjB+mlonsdiJO9A+Tfe6kwYEF
-         foGyhr2CR2ZvkcAm8FLC6E1uBBe1MP+eyr2gs19FL6Vnfo7ZB9ME1YM71COu0B2ib6PU
-         0AIqEJI4n6Pwn+Q07XQtiE5ubtEERftX+nZG4H9w0v4hW86QPT7PBTHFduSmY/MR727R
-         /R1TzN7C00WL29Qtu9zyULGTrgoNMlA6VTyBNb+qStl6T3y2OenUkoq8V1cI86kYDUeH
-         +nhQ==
+        bh=YO8lU6vsJHIeQS001CGDYibh3Id7t6t3WBhkJdeIt54=;
+        b=x6v1naIyARleMyQNNdxZrd4iD2PCoYNaDFi+kUW/EUolWnrGntYExAh2LFZtCYbKo+
+         dR73MBfg7CP1ktBrfQt1f4C7Bg2HPc+TU9/8Ku7VcvYpTtxoQ22oUrcd7Hj0r3uOEvh6
+         Fd2G3XwfTNgHsuzT3l+0GlOqxNIwDl58qQ5rK3SrvZAxV0a5YqykAu+vT0WmG7o+PuLr
+         wvRsoHV2/S6uKForJplu4cLjgVbG5/ImI5NwqAy7E38Clw1dl8fFdCzhx8FqLBHCqHCT
+         d43djButDVLfCLfKyJk4A5MEkf+MYMf1ZcDEeQLs9X+T/4iZJFT5G2PHQy74PklMau0H
+         wz4A==
 Content-Disposition: inline
-In-Reply-To: <20150420150231.GA17020-+0h/O2h83AeN3ZZ/Hiejyg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20150420150950.GB17020@quack.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Miklos Szeredi <miklos-sUDqSbJrdHQHWmgEVkV9KA@public.gmane.org>, Trond Myklebust <trond.myklebust-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org>
+To: Jan Kara <jack@suse.cz>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, Jaegeuk Kim <jaegeuk@kernel.org>, Steven Whitehouse <swhiteho@redhat.com>
 
-On Mon, Apr 20, 2015 at 05:02:31PM +0200, Jan Kara wrote:
->   Maybe bdi_wb_destroy() would be somewhat more descriptive than
-> bdi_wb_exit()? Otherwise the patch looks good to me. You can add:
-> Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+On Mon, Apr 20, 2015 at 05:09:50PM +0200, Jan Kara wrote:
+> On Mon 06-04-15 15:58:02, Tejun Heo wrote:
+> > Currently, a bdi (backing_dev_info) embeds single wb (bdi_writeback)
+> > and the role of the separation is unclear.  For cgroup support for
+> > writeback IOs, a bdi will be updated to host multiple wb's where each
+> > wb serves writeback IOs of a different cgroup on the bdi.  To achieve
+> > that, a wb should carry all states necessary for servicing writeback
+> > IOs for a cgroup independently.
+> > 
+> > This patch moves bandwidth related fields from backing_dev_info into
+> > bdi_writeback.
+> > 
+> > * The moved fields are: bw_time_stamp, dirtied_stamp, written_stamp,
+> >   write_bandwidth, avg_write_bandwidth, dirty_ratelimit,
+> >   balanced_dirty_ratelimit, completions and dirty_exceeded.
+> > 
+> > * writeback_chunk_size() and over_bgroup_thresh() now take @wb instead
+> >   of @bdi.
+>  				^^^ over_bground_thresh()
+> 
+> Otherwise the patch looks good to me. You can add:
 
-Hmmm... maybe, I don't know.  I feel weird matching up destroy with
-init instead of create.  Why is exit weird?
+Updated accordingly.
+
+> Reviewed-by: Jan Kara <jack@suse.cz>
 
 Thanks.
 
 -- 
 tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
