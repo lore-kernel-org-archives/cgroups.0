@@ -1,57 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 18/49] bdi: make inode_to_bdi() inline
-Date: Mon, 20 Apr 2015 14:21:53 -0400
-Message-ID: <20150420182153.GE4206@htj.duckdns.org>
+From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 12/49] writeback: move backing_dev_info->bdi_stat[] into
+ bdi_writeback
+Date: Tue, 21 Apr 2015 10:51:19 +0200
+Message-ID: <20150421085119.GA24278@quack.suse.cz>
 References: <1428350318-8215-1-git-send-email-tj@kernel.org>
- <1428350318-8215-19-git-send-email-tj@kernel.org>
- <20150420154050.GH17020@quack.suse.cz>
+ <1428350318-8215-13-git-send-email-tj@kernel.org>
+ <20150420150231.GA17020@quack.suse.cz>
+ <20150420175626.GB4206@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=NUJYPl8qQpa8CFQ1dngnUnqCAylfNvSta6ikkcc1O0g=;
-        b=wqqdnlp4U1aYt89Rrb+65hEOOtkHOR74FR9Sfij/KHSb7+U62tvc846s30MSmamKB8
-         HRKcnUODHrkgWNXZP/brhiCUCaIoIH0uzZZcaU1RC4lOWn2edyQUo9fieG8hhTbjHG6I
-         BV+AyHkF6N1x6f7n0dMmSHjHlNERwEiTPESQCfsPaADga9uZqJmmFrtbNf2PWT8Vs1IW
-         rML04vSbcoEYb+Hg0V5ZYm482i0/eSjSLIHJ3uXVJpzxp02WhnOkJNZJTM3q3gClw2LF
-         nkxHT+iXnlhTEQ5jru2oL1orh7XoZL2ZQBJSbF9Ql+WzvcCUyyOEvXnpO29CdmNw1z+r
-         /fdg==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20150420154050.GH17020@quack.suse.cz>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20150420175626.GB4206-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jan Kara <jack@suse.cz>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Miklos Szeredi <miklos-sUDqSbJrdHQHWmgEVkV9KA@public.gmane.org>, Trond Myklebust <trond.myklebust-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org>
 
-On Mon, Apr 20, 2015 at 05:40:50PM +0200, Jan Kara wrote:
-> > This patch makes inode_to_bdi() and sb_is_blkdev_sb() that the
-> > function calls inline.  blockdev_superblock and noop_backing_dev_info
-> > are EXPORT_GPL'd to allow the inline functions to be used from
-> > modules.
->   I somewhat hate making blockdev_superblock exported just for this. But
-> OK.
+On Mon 20-04-15 13:56:26, Tejun Heo wrote:
+> On Mon, Apr 20, 2015 at 05:02:31PM +0200, Jan Kara wrote:
+> >   Maybe bdi_wb_destroy() would be somewhat more descriptive than
+> > bdi_wb_exit()? Otherwise the patch looks good to me. You can add:
+> > Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+> 
+> Hmmm... maybe, I don't know.  I feel weird matching up destroy with
+> init instead of create.  Why is exit weird?
+  I can easily understand what "initializing writeback structure" means but
+"exiting writeback structure" doesn't really make sense to me. OTOH
+"destroying writeback structure" does make sense to me. That's the only
+reason.
 
-Hopefully people won't get creative with it.
-
-> > While at it, maske sb_is_blkdev_sb() return bool instead of int.
->                ^^^ make
-
-Updated.
-
->   Otherwise the patch looks good. You can add:
-> Reviewed-by: Jan Kara <jack@suse.cz>
-
-Thanks.
-
+								Honza
 -- 
-tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+SUSE Labs, CR
