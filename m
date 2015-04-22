@@ -1,49 +1,66 @@
-From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 12/49] writeback: move backing_dev_info->bdi_stat[] into
- bdi_writeback
-Date: Tue, 21 Apr 2015 17:05:59 +0200
-Message-ID: <20150421150559.GB32616@quack.suse.cz>
-References: <1428350318-8215-1-git-send-email-tj@kernel.org>
- <1428350318-8215-13-git-send-email-tj@kernel.org>
- <20150420150231.GA17020@quack.suse.cz>
- <20150420175626.GB4206@htj.duckdns.org>
- <20150421085119.GA24278@quack.suse.cz>
- <20150421150229.GA9455@htj.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v10 1/4] cgroups: use bitmask to filter for_each_subsys
+Date: Wed, 22 Apr 2015 11:25:51 -0400
+Message-ID: <20150422152551.GA10738@htj.duckdns.org>
+References: <1429446154-10660-1-git-send-email-cyphar@cyphar.com>
+ <1429446154-10660-2-git-send-email-cyphar@cyphar.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=ldZ9eZELHYiO/6lWNmNhbY54qvyK9TFBmY4tDlbQM/E=;
+        b=eSxH3F/XpmiCpB3nPkhgHJAzbwKPaCCiakOFk7hpd2ehEtP6b0RgODq8y5/UU9u6mb
+         HS/twmcecQelqQLvbWFmfI21MOMuZwgBmMjb2mVForEOMzuKmqPVHpHdghsDIsQKf+rz
+         SKhRzoFGT/lrOpcvsrv5NnqWGHbdpHo3WUj9LtBNVkLTmaV5CsAOGcqEn2m0AHeyQAd8
+         bc0KKut1FFDwSdTJuEGJWrc0LaDUzy3FeI0Rj1wuTbgP3wbPApzpG7qJe4hekxE9EpNS
+         tOi+Qtm9ZxR70Z3FoNHRCMGvgV+sqGtf/O67Wh44pl2Z80cx8FNIV7aHO/rGGw9ni1sm
+         6zmg==
 Content-Disposition: inline
-In-Reply-To: <20150421150229.GA9455-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1429446154-10660-2-git-send-email-cyphar@cyphar.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Miklos Szeredi <miklos-sUDqSbJrdHQHWmgEVkV9KA@public.gmane.org>, Trond Myklebust <trond.myklebust-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org>
+To: Aleksa Sarai <cyphar@cyphar.com>
+Cc: lizefan@huawei.com, mingo@redhat.com, peterz@infradead.org, richard@nod.at, fweisbec@gmail.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Tue 21-04-15 11:02:29, Tejun Heo wrote:
-> On Tue, Apr 21, 2015 at 10:51:19AM +0200, Jan Kara wrote:
-> >   I can easily understand what "initializing writeback structure" means but
-> > "exiting writeback structure" doesn't really make sense to me. OTOH
-> > "destroying writeback structure" does make sense to me. That's the only
-> > reason.
-> 
-> We have enough cases where "exit" is used that way starting with
-> module_exit() and all the accompanying __exit annotations and there
-> are quite a few others.  I think it's enough to establish "exit" as
-> the counterpart of "init" but I do agree that it felt a bit alien to
-> me at the beginning too.
-> 
-> In general, I've been sticking with create/destroy if the object
-> itself is being created or destroyed and init/exit if the object
-> itself stays put across init/exit which is the case here.  This isn't
-> quite universal but I think there exists enough of a pattern to make
-> it worthwhile to stick to it.  As such, I'd like to stick to the
-> current names if it isn't a big deal.
-  It's not a big deal, so feel free to keep your naming. It's not a
-function I'd stare at every day ;)
+Hello, Aleksa.
 
-								Honza
+On Sun, Apr 19, 2015 at 10:22:31PM +1000, Aleksa Sarai wrote:
+> -static int need_forkexit_callback __read_mostly;
+> +static int need_fork_callback __read_mostly;
+> +static int need_exit_callback __read_mostly;
+
+These are bitmasks now, right?  Let's make them unsigned int.
+
+>  static struct cftype cgroup_dfl_base_files[];
+> +#define for_each_subsys_which(ss_mask, ss, ssid) \
+> +	for_each_subsys((ss), (ssid)) \
+> +		if ((ss_mask) & (1 << (ssid)))
+
+Maybe using for_each_set_bit() is better?
+
+#define for_each_subsys_which(ss_mask, ss, ssid)		\
+	for_each_set_bit(ssid, &(ss_mask), CGROUP_SUBSYS_COUNT)	\
+		if ((ss) = group_subsys[ssid] && false)		\
+			;					\
+		else
+
+> @@ -4932,7 +4947,8 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss, bool early)
+>  	 * init_css_set is in the subsystem's root cgroup. */
+>  	init_css_set.subsys[ss->id] = css;
+>  
+> -	need_forkexit_callback |= ss->fork || ss->exit;
+> +	need_fork_callback |= (bool) ss->fork << ss->id;
+> +	need_exit_callback |= (bool) ss->exit << ss->id;
+                                    ^
+			  please drop the space here
+
+Other than the above minor points, looks good to me.
+
+Thanks for the persistence.
 
 -- 
-Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-SUSE Labs, CR
+tejun
