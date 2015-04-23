@@ -1,46 +1,40 @@
-From: Chen Hanxiao <chenhanxiao-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: [PATCH] cgroup: fix some comment typos
-Date: Thu, 23 Apr 2015 07:57:33 -0400
-Message-ID: <1429790253-4085-1-git-send-email-chenhanxiao@cn.fujitsu.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: fix some comment typos
+Date: Thu, 23 Apr 2015 11:10:56 -0400
+Message-ID: <20150423151056.GJ10738@htj.duckdns.org>
+References: <1429790253-4085-1-git-send-email-chenhanxiao@cn.fujitsu.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=fcDa4LQE6Z1h2+UFJKYG/WgVCvxfmE8BfRNDUJdktKA=;
+        b=bu+ji6L/aWNUTQnfNAucs4bsB+nF89ZDtS+3v1nwP5jXE6Z1kYDeTyo4G/E2U/z/Oe
+         z9PQc/px2CRW5ygWtBQcE3xXb1QmXskLiEH/zbwo4+0Hx2IJ2cvD6V9vJbvIQb+0eyHn
+         Vd7mUVCwlrbA1IxgJKBTHBOqBwCWab0IfPCB6sDOTDlBCHGk3Vxeto96iRq0PRWMxTiC
+         6zwvs3iLPGm67j0rlupQFIB+JUTPz3n/GkRV3nrEQy7mOHIwLL0WLA085dxcAARmdp25
+         tus2/u0B/erFo79lQdwOtFkYiq0Skbp9Yp2b638UdhvXO4IWR7BEu4OMKQN1U7XiH1ap
+         JLiw==
+Content-Disposition: inline
+In-Reply-To: <1429790253-4085-1-git-send-email-chenhanxiao-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Chen Hanxiao <chenhanxiao-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-s/effctive/effective
-s/hierarhcy/hierarchy
-s/shoulid/should
+On Thu, Apr 23, 2015 at 07:57:33AM -0400, Chen Hanxiao wrote:
+> s/effctive/effective
+> s/hierarhcy/hierarchy
+> s/shoulid/should
+> 
+> Signed-off-by: Chen Hanxiao <chenhanxiao-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 
-Signed-off-by: Chen Hanxiao <chenhanxiao-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
----
- kernel/cgroup.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Applied to cgroup/for-4.2.
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 469dd54..cfa27f9 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -261,7 +261,7 @@ static struct cgroup_subsys_state *cgroup_css(struct cgroup *cgrp,
-  * @cgrp: the cgroup of interest
-  * @ss: the subsystem of interest (%NULL returns @cgrp->self)
-  *
-- * Similar to cgroup_css() but returns the effctive css, which is defined
-+ * Similar to cgroup_css() but returns the effective css, which is defined
-  * as the matching css of the nearest ancestor including self which has @ss
-  * enabled.  If @ss is associated with the hierarchy @cgrp is on, this
-  * function is guaranteed to return non-NULL css.
-@@ -882,7 +882,7 @@ static void cgroup_exit_root_id(struct cgroup_root *root)
- static void cgroup_free_root(struct cgroup_root *root)
- {
- 	if (root) {
--		/* hierarhcy ID shoulid already have been released */
-+		/* hierarchy ID should already have been released */
- 		WARN_ON_ONCE(root->hierarchy_id);
- 
- 		idr_destroy(&root->cgroup_idr);
+Thanks.
+
 -- 
-2.1.0
+tejun
