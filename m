@@ -1,69 +1,55 @@
-From: Aleksa Sarai <cyphar@cyphar.com>
-Subject: Re: [PATCH v10 3/4] cgroups: allow a cgroup subsystem to reject a fork
-Date: Fri, 24 Apr 2015 23:59:31 +1000
-Message-ID: <CAOviyajrizKYCbSZZU0BzYeH_8A62_vq1zyzJ-z7=qBV+owWSg@mail.gmail.com>
-References: <1429446154-10660-1-git-send-email-cyphar@cyphar.com>
-	<1429446154-10660-4-git-send-email-cyphar@cyphar.com>
-	<20150422155445.GD10738@htj.duckdns.org>
+From: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v10 4/4] cgroups: implement the PIDs subsystem
+Date: Sat, 25 Apr 2015 00:07:34 +1000
+Message-ID: <CAOviyagQTu_ARVURBmtHtXGMugMsgSyZ2Es3ix8mQASCNkuPyA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150422155445.GD10738@htj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: lizefan@huawei.com, mingo@redhat.com, peterz@infradead.org, richard@nod.at, =?UTF-8?B?RnLDqWTDqXJpYyBXZWlzYmVja2Vy?= <fweisbec@gmail.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, richard-/L3Ra7n9ekc@public.gmane.org, =?UTF-8?B?RnLDqWTDqXJpYyBXZWlzYmVja2Vy?= <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hey,
-
->> +#define CGROUP_PREFORK_COUNT 0
->> +
->>  static inline int cgroup_init_early(void) { return 0; }
->>  static inline int cgroup_init(void) { return 0; }
->>  static inline void cgroup_fork(struct task_struct *p) {}
->> -static inline void cgroup_post_fork(struct task_struct *p) {}
->> +static inline int cgroup_can_fork(struct task_struct *p,
->> +                               void *s[CGROUP_PREFORK_COUNT])
->> +{
->> +     return 0;
->> +}
->
-> Style consistency?
-
-It's because it wraps. I can move it to be something like:
-
-static inline int cgroup_can_fork(struct task_struct *p,
-                               void *s[CGROUP_PREFORK_COUNT])
-                               { return 0; }
-
-If you like.
-
->> @@ -2078,6 +2084,18 @@ static void cgroup_task_migrate(struct cgroup *old_cgrp,
->>       list_move_tail(&tsk->cg_list, &new_cset->mg_tasks);
+>>> +     rcu_read_lock();
+>>> +     css = task_css(current, pids_cgrp_id);
+>>> +     if (!css_tryget_online(css)) {
+>>> +             retval = -EBUSY;
+>>> +             goto err_rcu_unlock;
+>>> +     }
+>>> +     rcu_read_unlock();
 >>
->>       /*
->> +      * We detach from the old_cset subsystems here. We must do this
->> +      * before we drop the refcount for old_cset, in order to make sure
->> +      * that nobody frees it underneath us.
->> +      */
->> +     for_each_e_css(css, i, old_cgrp) {
->> +             struct cgroup_subsys_state *old_css = old_cset->subsys[i];
->> +
->> +             if (old_css->ss->detach)
->> +                     old_css->ss->detach(old_css, tsk);
->> +     }
+>> Hmmm... so, the above is guaranteed to succeed in finite amount of
+>> time (the race window is actually very narrow) and it'd be silly to
+>> fail fork because a task was being moved across cgroups.
+>>
+>> I think it'd be a good idea to implement task_get_css() which loops
+>> and returns the current css for the requested subsystem with reference
+>> count bumped and it can use css_tryget() too.  Holding a ref doesn't
+>> prevent css from dying anyway, so it doesn't make any difference.
 >
-> I don't get this.  What can ->detach do that ->can_attach cannot?
+> Hmmm, okay. I'll work on this later.
 
-->detach signifies that a task is being migrated away from a cgroup.
-On second thought, we could just use task_css() on each task in the
-tset to figure out what the cgroup the task is being migrated away
-from is and just uncharge that inside ->can_attach.
+Would something like this suffice?
 
-On the same point, are all the tasks in a tset passed to ->can_attach
-guaranteed to have the same css? Or do I have to uncharge each one
-individually?
+struct cgroup_subsys_state *task_get_css(struct task_struct *task, int
+subsys_id) {
+        bool have_ref = false;
+        struct cgroup_subsys_state *css;
+
+        while(!have_ref) {
+                rcu_read_lock();
+                css = task_css(task, subsys_id);
+                have_ref = !css_tryget(css);
+                rcu_read_unlock();
+        }
+
+        return css;
+}
+
+Also, as a side note (in the same vein I guess), does a ref on a
+css_set give you an implicit ref on a css inside that css_set, or are
+those two orthogonal operations?
 
 --
 Aleksa Sarai (cyphar)
