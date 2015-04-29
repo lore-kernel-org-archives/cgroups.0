@@ -1,63 +1,42 @@
-From: Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Vladimir Davydov <vdavydov@parallels.com>
 Subject: Re: [PATCH v3 0/3] idle memory tracking
-Date: Wed, 29 Apr 2015 14:02:47 +0900
-Message-ID: <20150429050247.GB27051@blaptop>
+Date: Wed, 29 Apr 2015 10:58:53 +0300
+Message-ID: <20150429075853.GC1694@esperanza>
 References: <cover.1430217477.git.vdavydov@parallels.com>
+ <20150429035722.GA11486@blaptop>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=mSWu7uStLfHDSm/TcXXQKAUl1FaMIBRpnO+oCC6LGw0=;
-        b=eQE7lsMuTWG+nt748Dxm1Y+ShVdsmm1KctCSFm7VF9e+5d0NN+WwZ6Hf/bM4sid4kA
-         jQA8ByBwAOXGhrFF81d4oRYuG9pfIWNVTXHzkGBJqXMAXzzyDFFeOOPrhhzUswgdhRNP
-         keLHBC5UGxNwUF8kPh+e7hhIRkBPLb3bxBTJFHcdd4M9KoxCyK+dzJpAXEvfN2+US5D8
-         HJC+vHl0q6ZRFn1B5Ocy/bbb4UU3PLm/tzp88G9rVytQ6HETDnU2NcdVh7pWtmB8/plR
-         A9ihU02ZtpHdR2ncxJK03alNvfayj3hWl1dB5IhQ4BGB7/ArXw23t6J/eAuLcUMuUjgt
-         E3Og==
-Content-Disposition: inline
-In-Reply-To: <cover.1430217477.git.vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20150429035722.GA11486@blaptop>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Cyrill Gorcunov <gorcunov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Minchan Kim <minchan@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Michel Lespinasse <walken@google.com>, David Rientjes <rientjes@google.com>, Pavel Emelyanov <xemul@parallels.com>, Cyrill Gorcunov <gorcunov@openvz.org>, Jonathan Corbet <corbet@lwn.net>, linux-api@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Apr 28, 2015 at 03:24:39PM +0300, Vladimir Davydov wrote:
-> Hi,
-> 
-> This patch set introduces a new user API for tracking user memory pages
-> that have not been used for a given period of time. The purpose of this
-> is to provide the userspace with the means of tracking a workload's
-> working set, i.e. the set of pages that are actively used by the
-> workload. Knowing the working set size can be useful for partitioning
-> the system more efficiently, e.g. by tuning memory cgroup limits
-> appropriately, or for job placement within a compute cluster.
-> 
-> ---- USE CASES ----
-> 
-> The unified cgroup hierarchy has memory.low and memory.high knobs, which
-> are defined as the low and high boundaries for the workload working set
-> size. However, the working set size of a workload may be unknown or
-> change in time. With this patch set, one can periodically estimate the
-> amount of memory unused by each cgroup and tune their memory.low and
-> memory.high parameters accordingly, therefore optimizing the overall
-> memory utilization.
-> 
-> Another use case is balancing workloads within a compute cluster.
-> Knowing how much memory is not really used by a workload unit may help
-> take a more optimal decision when considering migrating the unit to
-> another node within the cluster.
+Hi Minchan,
 
-Another usecase I have a interest is working with per-process reclaim.
-https://lwn.net/Articles/545668/
-With idle tracking, we could reclaim idle pages only by smart user
-memory-manager.
+Thank you for taking a look at this patch set.
 
-Thanks.
+On Wed, Apr 29, 2015 at 12:57:22PM +0900, Minchan Kim wrote:
+> On Tue, Apr 28, 2015 at 03:24:39PM +0300, Vladimir Davydov wrote:
+> >  * /proc/kpageidle.  For each page this file contains a 64-bit number, which
+> >    equals 1 if the page is idle or 0 otherwise, indexed by PFN. A page is
+> 
+> Why do we need 64bit per page to indicate just idle or not?
 
--- 
-Kind regards,
-Minchan Kim
+I don't think we need this, actually. I made this file 64 bit per page
+only to conform to other /proc/kpage* files. Currently, I can't think of
+any potential use for residual 63 bits, so personally I'm fine with 1
+bit per page. If nobody comes with an idea about how > 1 bits could be
+used, I'll switch /proc/kpageidle to a bitmask in the next iteration.
+
+Thanks,
+Vladimir
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
