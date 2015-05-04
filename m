@@ -1,45 +1,154 @@
-From: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] sched: Relax a restriction in sched_rt_can_attach()
-Date: Mon, 04 May 2015 05:13:56 +0200
-Message-ID: <1430709236.3129.42.camel@gmail.com>
-References: <5546C34C.7050202@huawei.com>
+From: Minchan Kim <minchan@kernel.org>
+Subject: Re: [PATCH v3 3/3] proc: add kpageidle file
+Date: Mon, 4 May 2015 12:17:22 +0900
+Message-ID: <20150504031722.GA2768@blaptop>
+References: <cover.1430217477.git.vdavydov@parallels.com>
+ <4c24a6bf2c9711dd4dbb72a43a16eba6867527b7.1430217477.git.vdavydov@parallels.com>
+ <20150429043536.GB11486@blaptop>
+ <20150429091248.GD1694@esperanza>
+ <20150430082531.GD21771@blaptop>
+ <20150430145055.GB17640@esperanza>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :content-type:mime-version:content-transfer-encoding;
-        bh=dLcygHD0Sap1N27Xd01bDxsbE5srqvQZsYATI5XXqV4=;
-        b=0E67MQLEFmc8d27XITH2pJQu/qjlZW5Mpcyj2RY7ZRkYlQPy3/bfc5ZO/LoF9LqYKu
-         9vFQUYpHF/DqbuR1UtteD4axFPmnmSlU+w2IIZSokWTaruROUZsLUQHEbhSGrt2WLN/r
-         EsOAyu1/inbwgXA9HACxE0qVBGf7fwQHThdaPwqIpQkZqjz0DTnLS93y5ATAI/VJGTzz
-         w9E4GwuJ9FZ+FfQOWywyPziXOMQLFbhumrAL1bARZVuaXmI4jVgtw3n7OkmSLG9RyX1P
-         wSPqg0xPh3cpUn4d/gjMuY1K3lgSqNFzBRZSzR+7BZ0VeZ+v6wNWYtzbw1YQNoYh28RH
-         secg==
-In-Reply-To: <5546C34C.7050202-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=p2ZjtqPcVDxSzCoQAluf1zWlSVD/QDJrVaP4QqprTK0=;
+        b=LuAnqk5tuQKbfiLcQFDhv/oWcrX5gP0C6TL2eRscFZCTD51k4L78bI3aRMvy5LKC+5
+         0zJXIC4rjkXg6CzpU0njY8hFs5CegJZFozWgBxC6YZuCfEyqHsaKLE0sIhFD6Wql+9+0
+         p9akjvNtS+roA+sInHxaBVEjUQLUJFXq4dsHDsqC4LqlqAEH6sNBeN/foo9ko4zlFYlh
+         7aSYzSufhNcpLgPnlXwRstVXw9iQT7IjC1oSHMoig+Xs8xik/Y1VkWq7wZW3Yx7lQL89
+         1RNs1g1KECqVBuerbSv8f9QDYJ6hpeUAw6xdFrq3YN40AaJHQGz/5Oqfu0uL8w5tIato
+         g8qA==
+Content-Disposition: inline
+In-Reply-To: <20150430145055.GB17640@esperanza>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Vladimir Davydov <vdavydov@parallels.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Michel Lespinasse <walken@google.com>, David Rientjes <rientjes@google.com>, Pavel Emelyanov <xemul@parallels.com>, Cyrill Gorcunov <gorcunov@openvz.org>, Jonathan Corbet <corbet@lwn.net>, linux-api@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 2015-05-04 at 08:54 +0800, Zefan Li wrote:
-> It's allowed to promote a task from normal to realtime after it has been
-> attached to a non-root cgroup, but it will fail if the attaching happens
-> after it has become realtime. I don't see how this restriction is useful.
+On Thu, Apr 30, 2015 at 05:50:55PM +0300, Vladimir Davydov wrote:
+> On Thu, Apr 30, 2015 at 05:25:31PM +0900, Minchan Kim wrote:
+> > On Wed, Apr 29, 2015 at 12:12:48PM +0300, Vladimir Davydov wrote:
+> > > On Wed, Apr 29, 2015 at 01:35:36PM +0900, Minchan Kim wrote:
+> > > > On Tue, Apr 28, 2015 at 03:24:42PM +0300, Vladimir Davydov wrote:
+> > > > > +#ifdef CONFIG_IDLE_PAGE_TRACKING
+> > > > > +static struct page *kpageidle_get_page(unsigned long pfn)
+> > > > > +{
+> > > > > +	struct page *page;
+> > > > > +
+> > > > > +	if (!pfn_valid(pfn))
+> > > > > +		return NULL;
+> > > > > +	page = pfn_to_page(pfn);
+> > > > > +	/*
+> > > > > +	 * We are only interested in user memory pages, i.e. pages that are
+> > > > > +	 * allocated and on an LRU list.
+> > > > > +	 */
+> > > > > +	if (!page || page_count(page) == 0 || !PageLRU(page))
+> > > > > +		return NULL;
+> > > > > +	if (!get_page_unless_zero(page))
+> > > > > +		return NULL;
+> > > > > +	if (unlikely(!PageLRU(page))) {
+> > > > 
+> > > > What lock protect the check PageLRU?
+> > > > If it is racing ClearPageLRU, what happens?
+> > > 
+> > > If we hold a reference to a page and see that it's on an LRU list, it
+> > > will surely remain a user memory page at least until we release the
+> > > reference to it, so it must be safe to play with idle/young flags. If we
+> > 
+> > The problem is that you pass the page in rmap reverse logic(ie, page_referenced)
+> > once you judge it's LRU page so if it is false-positive, what happens?
+> > A question is SetPageLRU, PageLRU, ClearPageLRU keeps memory ordering?
+> > IOW, all of fields from struct page rmap can acccess should be set up completely
+> > before LRU checking. Otherwise, something will be broken.
+> 
+> So, basically you are concerned about the case when we encounter a
+> freshly allocated page, which has PG_lru bit set and it's going to
+> become anonymous, but it is still in the process of rmap initialization,
+> i.e. its ->mapping or ->mapcount may still be uninitialized, right?
+> 
+> AFAICS, page_referenced should handle such pages fine. Look, it only
+> needs ->index, ->mapping, and ->mapcount.
+> 
+> If ->mapping is unset, than it is NULL and rmap_walk_anon_lock ->
+> page_lock_anon_vma_read will return NULL so that rmap_walk will be a
+> no-op.
+> 
+> If ->index is not initialized, than at worst we will go to
+> anon_vma_interval_tree_foreach over a wrong interval, in which case we
+> will see that the page is actually not mapped in page_referenced_one ->
+> page_check_address and again do nothing.
+> 
+> If ->mapcount is not initialized it is -1, and page_lock_anon_vma_read
+> will return NULL, just as it does in case ->mapping = NULL.
+> 
+> For file pages, we always take PG_locked before checking ->mapping, so
+> it must be valid.
+> 
+> Thanks,
+> Vladimir
 
-In the CONFIG_RT_GROUP_SCHED case, promotion will fail is there is no
-bandwidth allocated.
 
-> We are moving toward unified hierarchy where all the cgroup controllers
-> are bound together, so it would make cgroups easier to use if we have less
-> restrictions on attaching tasks between cgroups.
+do_anonymous_page
+page_add_new_anon_rmap
+atomic_set(&page->_mapcount, 0);
+__page_set_anon_rmap
+   anon_vma = (void *) anon_vma + PAGE_MAPPING_ANON;
+   page->mapping = (struct address_space *) anon_vma;
+   page->index = linear_page_index(vma, address);
+lru_cache_add 
+  __pagevec_lru_add_fn
+  SetPageLRU(page);
 
-Forcing group scheduling overhead on users if they want cpuset or memory
-cgroup functionality would be far from wonderful.  Am I interpreting the
-implications of this unification/binding properly?
+During the procedure, there is no lock to prevent race. Then, at least,
+we need a write memory barrier to guarantee other fields set up before
+SetPageLRU. (Of course, PageLRU should have read-memory barrier to work
+well) But I can't find any barrier, either.
 
-(I hope not, surely the plan is not to utterly _destroy_ cgroup utility)
+IOW, any fields you said could be out of order store without any lock or
+memory barrier. You might argue atomic op is a barrier on x86 but it
+doesn't guarantee other arches work like that so we need explict momory
+barrier or lock.
 
-	-Mike
+Let's have a theoretical example.
+
+        CPU 0                                                                           CPU 1
+
+do_anonymous_page
+  __page_set_anon_rmap
+  /* out of order happened so SetPageLRU is done ahead */
+  SetPageLRU(page)
+  /* Compilr changed store operation like below */
+  page->mapping = (struct address_space *) anon_vma;
+  /* Big stall happens */
+                                                                /* idletacking judged it as LRU page so pass the page
+                                                                   in page_reference */
+                                                                page_refernced
+                                                                        page_rmapping return true because
+                                                                        page->mapping has some vaule but not complete
+                                                                        so it calls rmap_walk_file.
+                                                                        it's okay to pass non-completed anon page in rmap_walk_file?
+
+  page->mapping = (struct address_space *)
+        ((void *)page_mapping + PAGE_MAPPING_ANON);
+
+It's too theoretical so it might be hard to happen in real practice.
+My point is there is nothing to prevent explict race.
+Even if there is no problem with other lock, it's fragile.
+Do I miss something?
+
+I think general way to handle PageLRU are ahead isolation or zone->lru_lock.
+
+-- 
+Kind regards,
+Minchan Kim
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
