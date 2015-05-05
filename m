@@ -1,76 +1,89 @@
-From: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] sched: Relax a restriction in sched_rt_can_attach()
-Date: Tue, 05 May 2015 08:02:40 +0200
-Message-ID: <1430805760.3215.16.camel@gmail.com>
-References: <5546C34C.7050202@huawei.com>
-	 <1430709236.3129.42.camel@gmail.com> <5546F80B.3070802@huawei.com>
-	 <1430716247.3129.44.camel@gmail.com> <1430717964.3129.62.camel@gmail.com>
-	 <554737AE.5040402@huawei.com>
-	 <20150504123738.GZ21418@twins.programming.kicks-ass.net>
-	 <1430748582.3166.16.camel@gmail.com> <55483CF8.8030908@huawei.com>
+From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH 1/2] gfp: add __GFP_NOACCOUNT
+Date: Tue, 5 May 2015 12:45:42 +0300
+Message-ID: <fdf631b3fa95567a830ea4f3e19d0b3b2fc99662.1430819044.git.vdavydov@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :content-type:mime-version:content-transfer-encoding;
-        bh=0vbLoT+PWEdHYwUoozQDM3D7mcJS53n1+0uNy0eu4zU=;
-        b=mDmJx6qiSnHa4zuOeEMleRW2XnrxOIoomG+jLe1ySR0uhWs7g/wi7LQymT5QhYpqa6
-         Jaif6EUShahtirpEaKKRiv08sGGDfotZPS05bP5+KyTXi+ZP6rqFchRmy+c8ShhfOF7V
-         a16cLNoUbwo4HbOyOuH1O/yBr0gjo2qKAKymkBrI90Dbmub1jCbmYGqA2Byg81m9SObM
-         1SkZhIIkIFinuo7SSzo6FLkx/3zQgc12pRmYUP3Xq2NKn1Q1Lds4yn4fpjcT1f0Akh1s
-         PRYqUZyAdIF3JLQ9WHCnsIHM/dddmgcCB62VAwxSm64X5pxrJLH+XseljkaY8c3P2DcU
-         xmkw==
-In-Reply-To: <55483CF8.8030908-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, 2015-05-05 at 11:46 +0800, Zefan Li wrote:
-> On 2015/5/4 22:09, Mike Galbraith wrote:
-> > On Mon, 2015-05-04 at 14:37 +0200, Peter Zijlstra wrote:
-> >> On Mon, May 04, 2015 at 05:11:10PM +0800, Zefan Li wrote:
-> >>
-> >>> Some degree of flexibility is provided so that you may disable some controllers
-> >>> in a subtree. For example:
-> >>>
-> >>> root                  ---> child1
-> >>> (cpuset,memory,cpu)        (cpuset,memory)
-> >>>                       \
-> >>>                        \-> child2
-> >>>                            (cpu)
-> >>
-> >> Uhm, how does that work? Would a task their effective cgroup be the
-> >> first parent that has a controller enabled?
-> >>
-> >> In particular, in your example, if T were part of child1, would its cpu
-> >> controller be root?
-> 
-> correct.
-> 
-> > 
-> > That's what I'd hope for.  I wanted to try that cgroup.subtree_control
-> > gizmo to see for myself, but I don't have one, and probably won't get
-> > one until I introduce systemd to my axe (again, it's a slow learner).
-> > 
-> 
-> I'm testing in an environment without systemd.
+Not all kmem allocations should be accounted to memcg. The following
+patch gives an example when accounting of a certain type of allocations
+to memcg can effectively result in a memory leak. This patch adds the
+__GFP_NOACCOUNT flag which if passed to kmalloc and friends will force
+the allocation to go through the root cgroup. It will be used by the
+next patch.
 
-Lucky you.
+Note, since in case of kmemleak enabled each kmalloc implies yet another
+allocation from the kmemleak_object cache, we add __GFP_NOACCOUNT to
+gfp_kmemleak_mask.
 
-> You need to mount cgroup with a special option:
-> 
->   # mount -t cgroup -o __DEVEL__sane_behavior xxx /where
-> 
-> If a cgroup controller has already been mounted without this option,
-> you won't see it in the unified hierarchy, so firstly you need to
-> delete all cgroups in it and umount it.
+Signed-off-by: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+---
+ include/linux/gfp.h        |    2 ++
+ include/linux/memcontrol.h |    4 ++++
+ mm/kmemleak.c              |    3 ++-
+ 3 files changed, 8 insertions(+), 1 deletion(-)
 
-Yeah, I found the flag, and systemd is indeed in the way.  You already
-verified what subtree_control does, so I needn't squabble with the vile
-thing over cgroups possession... immediately anyway.
-
-	-Mike
+diff --git a/include/linux/gfp.h b/include/linux/gfp.h
+index 97a9373e61e8..37c422df2a0f 100644
+--- a/include/linux/gfp.h
++++ b/include/linux/gfp.h
+@@ -30,6 +30,7 @@ struct vm_area_struct;
+ #define ___GFP_HARDWALL		0x20000u
+ #define ___GFP_THISNODE		0x40000u
+ #define ___GFP_RECLAIMABLE	0x80000u
++#define ___GFP_NOACCOUNT	0x100000u
+ #define ___GFP_NOTRACK		0x200000u
+ #define ___GFP_NO_KSWAPD	0x400000u
+ #define ___GFP_OTHER_NODE	0x800000u
+@@ -87,6 +88,7 @@ struct vm_area_struct;
+ #define __GFP_HARDWALL   ((__force gfp_t)___GFP_HARDWALL) /* Enforce hardwall cpuset memory allocs */
+ #define __GFP_THISNODE	((__force gfp_t)___GFP_THISNODE)/* No fallback, no policies */
+ #define __GFP_RECLAIMABLE ((__force gfp_t)___GFP_RECLAIMABLE) /* Page is reclaimable */
++#define __GFP_NOACCOUNT	((__force gfp_t)___GFP_NOACCOUNT) /* Don't account to memcg */
+ #define __GFP_NOTRACK	((__force gfp_t)___GFP_NOTRACK)  /* Don't track with kmemcheck */
+ 
+ #define __GFP_NO_KSWAPD	((__force gfp_t)___GFP_NO_KSWAPD)
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 72dff5fb0d0c..6c8918114804 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -463,6 +463,8 @@ memcg_kmem_newpage_charge(gfp_t gfp, struct mem_cgroup **memcg, int order)
+ 	if (!memcg_kmem_enabled())
+ 		return true;
+ 
++	if (gfp & __GFP_NOACCOUNT)
++		return true;
+ 	/*
+ 	 * __GFP_NOFAIL allocations will move on even if charging is not
+ 	 * possible. Therefore we don't even try, and have this allocation
+@@ -522,6 +524,8 @@ memcg_kmem_get_cache(struct kmem_cache *cachep, gfp_t gfp)
+ {
+ 	if (!memcg_kmem_enabled())
+ 		return cachep;
++	if (gfp & __GFP_NOACCOUNT)
++		return cachep;
+ 	if (gfp & __GFP_NOFAIL)
+ 		return cachep;
+ 	if (in_interrupt() || (!current->mm) || (current->flags & PF_KTHREAD))
+diff --git a/mm/kmemleak.c b/mm/kmemleak.c
+index 5405aff5a590..f0fe4f2c1fa7 100644
+--- a/mm/kmemleak.c
++++ b/mm/kmemleak.c
+@@ -115,7 +115,8 @@
+ #define BYTES_PER_POINTER	sizeof(void *)
+ 
+ /* GFP bitmask for kmemleak internal allocations */
+-#define gfp_kmemleak_mask(gfp)	(((gfp) & (GFP_KERNEL | GFP_ATOMIC)) | \
++#define gfp_kmemleak_mask(gfp)	(((gfp) & (GFP_KERNEL | GFP_ATOMIC | \
++					   __GFP_NOACCOUNT)) | \
+ 				 __GFP_NORETRY | __GFP_NOMEMALLOC | \
+ 				 __GFP_NOWARN)
+ 
+-- 
+1.7.10.4
