@@ -1,7 +1,7 @@
-From: Peter Zijlstra <peterz@infradead.org>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH] sched: Relax a restriction in sched_rt_can_attach()
-Date: Tue, 5 May 2015 17:11:13 +0200
-Message-ID: <20150505151113.GP21418@twins.programming.kicks-ass.net>
+Date: Tue, 5 May 2015 10:18:38 -0400
+Message-ID: <20150505141838.GR1971@htj.duckdns.org>
 References: <5546C34C.7050202@huawei.com>
  <1430709236.3129.42.camel@gmail.com>
  <5546F80B.3070802@huawei.com>
@@ -9,109 +9,75 @@ References: <5546C34C.7050202@huawei.com>
  <1430717964.3129.62.camel@gmail.com>
  <554737AE.5040402@huawei.com>
  <20150504123738.GZ21418@twins.programming.kicks-ass.net>
- <20150505144104.GS1971@htj.duckdns.org>
+ <55483EF7.7070905@huawei.com>
+ <20150505141049.GN21418@twins.programming.kicks-ass.net>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=jde5xhsQmf9jJuuZF1NefwTktXrFTFu5vatj0uNfwac=;
+        b=SW0xn6kZHEEhatLvbrSC5i+9CkW/2+wTVIpdAJO+FlmLBrF/u+KPJPRuxGUmT1mNd1
+         Gbz8b3qpFMhqQcDltNp5AWwPs/snp/38xALdYzwcTys61kcy/89z3VyCYA+J26qFIlnO
+         NdVRdj89Qn8EqHB7s3ciNyuQcdw2hzwsefDp7Awm5RbzD8eHiE1YdXd2tlP6SiwrVUQy
+         FPPfK3fkXTQJpsXKvbCWuHnKWgYvx30fkS3+3J05ZlDK55YDgu6xZNQDEIjtYKu0EGfb
+         hn/Fk8y8PGJzzkSLh8RjDfwxcMfOlVoEL6CHNXcezM9CEj5NuigvdETt9x1sByO6eqcE
+         qD3A==
 Content-Disposition: inline
-In-Reply-To: <20150505144104.GS1971@htj.duckdns.org>
+In-Reply-To: <20150505141049.GN21418@twins.programming.kicks-ass.net>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
+To: Peter Zijlstra <peterz@infradead.org>
 Cc: Zefan Li <lizefan@huawei.com>, Mike Galbraith <umgwanakikbuti@gmail.com>, Ingo Molnar <mingo@kernel.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-On Tue, May 05, 2015 at 10:41:04AM -0400, Tejun Heo wrote:
-> Hello, Peter.
+Hello, Peter.
+
+On Tue, May 05, 2015 at 04:10:49PM +0200, Peter Zijlstra wrote:
+> Imagine:
 > 
-> On Mon, May 04, 2015 at 02:37:38PM +0200, Peter Zijlstra wrote:
-> > > I just realized we allow removing/adding controllers from/to cgroups
-> > > while there are tasks in them, which isn't safe unless we eliminate all
-> > > can_attach callbacks. We've done so for some cgroup subsystems, but
-> > > there are still a few of them...
-> > 
-> > You can't remove can_attach(), we must be able to disallow joining a
-> > cgroup.
-> > 
-> > If that results in you not being able to change the cgroup setup with
-> > tasks in, so be it -- that seems like a sane restriction anyhow.
+> 	  root
+> 	 /    \
+> 	A      B
+>        / \    / \
+>       a1 a2  b1 b2
 > 
-> This is really an interface policy issue.  For all other controllers,
-> it's almost trivial to let organizational operations (setting up
-> hierarchies, moving processes around) overrule controller
-> configurations.  The main benefit of doing this is that this decouples
-> organizational operations from resource control.  Users can depend on
-> the fact that allowed organizational operations won't fail due to
-> specific controller configuration issues.
-
-But but but... that doesn't make any damn sense! Why would you want to
-do something mad like that?
-
-To me the organization is very much part of the control structure. It
-cannot be an invariant. Treating it like that destroys the whole notion
-of a hierarchy.
-
-> This also works well with controllers accepting target configurations
-> regardless of the current state and enforcing rules to converge to the
-> configured state instead.
-
-I think we had a long discussion on that which we never finished. I'm
-not much for converging to a state. Either it can or it can not and you
-hard fail.
-
-With this soft lets just accept any old crap mentality you cannot
-provide guarantees.
-
-> e.g. if you set max memory lower than the
-> currently used, the config will be accepted and the controller will
-> keep trying to make the current state converge to the target state.
-> This is important as rejecting configuration can lead to chasing game
-> between configuration attempts and run-away resource consumption.
-
-This is an entirely different issue; albeit with its own pitfalls, what
-if you put the max too low and you run into a never ending reclaim loop?
-Attempting to attain the unattainable.
-
-> Now, RR slices are the special case here because it's inherently
-> different from every other resource cgroup is concerned with. 
-
-I don't think so, any controller which wants to carve up a fixed
-resource in non proportional ways is going to run into this.
-
-Its just that you don't want this, but that doesn't render it less
-useful.
-
-> It
-> simply doesn't fit into the same model that other resources follow.
-> There are several options we can try.
+> Now if they all have -1, I cannot set a bw on any except the leaf nodes
+> ([ab][12]). Because the sum of child bw must strictly be smaller or
+> equal to the parent bandwidth, and -1 if effective inf.
 > 
-> 1. Decouple RR slices from cpu controller.  This would be the best
->    route to follow.  RR slices need a hard allocator no matter what we
->    do.  There isn't much point in imposing hierarchical structure on
->    top of it.
+> Similarly, if A has bw enabled I cannot create a new child with -1.
+> Because above.
+> 
+> Now you can kludge around some of this, for example you can make the
+> default depend on the parent setting etc.. But that's horribly
+> inconsistent.
 
-The same is true of SCHED_DEADLINE, we hard divide a fixed amount. We've
-not currently exposed it to cgroups, but we want to eventually.
+I don't think we can kludge this.  For all other resources, we're
+defining the limits that can't be crossed so nesting them w/ -1 by
+default is fine.  RR slices are different it that we're really slicing
+up and guaranteeing a portion of something finite, so unlimited by
+default thing doesn't really work here.
 
-As to not having a hierarchy; you're the one destroying it by saying the
-organization should be decoupled from the controller.
+> So I really prefer not to go that way; if people use RR/FIFO they had
+> better bloody know what they're doing; which includes setting up the
+> system.
 
-And, no a hierarchy still makes perfect sense, think of containers, they
-might not even see the parent.
+The problem is that this is tied to the normal cpu controller.  Users
+who don't have any intention of mucking with RT scheduling end up
+being dragged into it.  Given the strict nature of RR slicing, I'm
+don't even think it's actually useful to make the slicing
+hierarchical.  From cgroup's POV, it'd be best if RR slicing can be
+detached.
 
-> 3. Take compromise in the other direction - add exceptions to
->    organizational operations but clearly limit the failure modes.  We
->    prolly want to structure code in a way to enforce this.
+> The whole RR/FIFO thing is so enormously broken (by definition; this
+> truly is unfixable) that you simply _cannot_ automate it.
 
-I'm for failure modes as you should well now by know ;-)
+Yeah, exactly.
 
-I really think you're moving in the wrong direction with the whole
-cgroup stuff if you just want to willy nilly allow everything.
+Thanks.
 
-Also, who's the one doing a PID controller which will hard fail fork?
-How are you going to do away with can_attach() there? Surely you need to
-dis-allow another task joining when its at its maximum number of allowed
-PIDs, the same condition you're going to fail fork().
-
-So no; hard failure is good and desired. It allows guarantees, which is
-a good and desired feature of control.
+-- 
+tejun
