@@ -1,52 +1,107 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v10 1/4] cgroups: use bitmask to filter for_each_subsys
-Date: Wed, 13 May 2015 09:50:00 -0400
-Message-ID: <20150513135000.GP11388@htj.duckdns.org>
-References: <1429446154-10660-1-git-send-email-cyphar@cyphar.com>
- <1429446154-10660-2-git-send-email-cyphar@cyphar.com>
- <20150422152551.GA10738@htj.duckdns.org>
- <20150422154212.GE3007@worktop.Skamania.guest>
- <20150422160258.GE10738@htj.duckdns.org>
- <CAOviyagvVTKjRp4wxyNo4Oke-w=Wbda+UyHAN-ih9yFX-8jqmw@mail.gmail.com>
- <20150426160909.GC1499@htj.duckdns.org>
- <CAOviyah2kjtaRBFRcd3cAb1DeYX11Ks_KVfwXPMXK5BENSqOiA@mail.gmail.com>
+From: Nikolay Borisov <kernel@kyup.com>
+Subject: Possible bug - LTP failure for memcg
+Date: Wed, 13 May 2015 18:29:13 +0300
+Message-ID: <55536DC9.90200@kyup.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=NFDSs8CjUOMsGoYP42zs6jl8wvWS/53nnysFH4HCYoQ=;
-        b=qGBMAIQBSeE0Bw05tQ8s+nJdcEMkRdUZrJVf85TxYi7ts2JymWK9CAFk7DaL4aHGJT
-         HTTgWLKe4YEBgF8sm/lLqx6kk91aVv8DE0FnnzsLDvPGwu8BY8k6xOXAtXvPa/YoOnAj
-         DGImk+ldF8DSayi5gFB6Evxwdo8qtU3rzjOGRld2Q3DqgQqmrB6Mqob6ZGkAjYxtHtSP
-         l+vIJDow+wijls4sYCeNVe7FcykVZIiT+AaX7g8a5IEfOrxLWf2tsJPf6bDNa++uo5oA
-         3Gav1ZM66gh+1v5+WCfALtF3qo670U4IAYy9cF6KMmNUw192fkK2jkxbLGq139yd4lG/
-         wXXA==
-Content-Disposition: inline
-In-Reply-To: <CAOviyah2kjtaRBFRcd3cAb1DeYX11Ks_KVfwXPMXK5BENSqOiA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, richard-/L3Ra7n9ekc@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, =?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+To: cgroups@vger.kernel.org
+Cc: hannes@cmpxchg.org, mhocko@suse.cz, linux-mm@kvack.org
 
-Hello, Aleksa.
+Hello,
 
-On Wed, May 13, 2015 at 03:44:51PM +1000, Aleksa Sarai wrote:
-> I think I'll just do casting and manually make new variables where
-> required. The above (and similar) doesn't work very well, generates
-> warnings like crazy and breaks stuff like:
->
->     if (...)
->         for_each_subsys_which(...)
+I'm running the ltp version 20150420 and stock kernel 4.0 and I've
+observed that the memcg_function test is failing. Here is a relevant
+snipped from the log:
 
-Ah, right, and we can't wrap the declaration in a new block.  I'm okay
-with converting ss_masks to unsigned longs if necessary.  Just do a
-wholesale conversion.
 
-Thanks.
+memcg_function_test   14  TFAIL  :  ltpapicmd.c:190: process 5827 is not
+killed
+/opt/ltp/testcases/bin/memcg_lib.sh: line 210:  5843 Killed
+     $TEST_PATH/memcg_process $2 -s $3
+memcg_function_test   15  TPASS  :  process 5843 is killed
+/opt/ltp/testcases/bin/memcg_lib.sh: line 210:  5859 Killed
+     $TEST_PATH/memcg_process $2 -s $3
+memcg_function_test   16  TPASS  :  process 5859 is killed
+/opt/ltp/testcases/bin/memcg_lib.sh: line 210:  5877 Killed
+     $TEST_PATH/memcg_process $2 -s $3
+memcg_function_test   17  TPASS  :  process 5877 is killed
+/opt/ltp/testcases/bin/memcg_lib.sh: line 210:  5894 Killed
+     $TEST_PATH/memcg_process $2 -s $3
+memcg_function_test   18  TPASS  :  process 5894 is killed
+/opt/ltp/testcases/bin/memcg_lib.sh: line 210:  5911 Killed
+     $TEST_PATH/memcg_process $2 -s $3
+memcg_function_test   19  TPASS  :  process 5911 is killed
+/opt/ltp/testcases/bin/memcg_lib.sh: line 210:  5927 Killed
+     $TEST_PATH/memcg_process $2 -s $3
+memcg_function_test   20  TPASS  :  process 5927 is killed
+/opt/ltp/testcases/bin/memcg_lib.sh: line 210:  5942 Killed
+     $TEST_PATH/memcg_process $2 -s $3
+memcg_function_test   21  TPASS  :  process 5942 is killed
+memcg_function_test   22  TFAIL  :  ltpapicmd.c:190: input=4095,
+limit_in_bytes=0
+memcg_function_test   23  TFAIL  :  ltpapicmd.c:190: input=4097,
+limit_in_bytes=4096
+memcg_function_test   24  TFAIL  :  ltpapicmd.c:190: input=1,
+limit_in_bytes=0
+memcg_function_test   25  TPASS  :  return value is 0
+memcg_function_test   26  TPASS  :  return value is 1
+memcg_function_test   27  TPASS  :  return value is 1
+memcg_function_test   28  TPASS  :  return value is 1
+memcg_function_test   29  TPASS  :  force memory succeeded
+memcg_function_test   30  TFAIL  :  ltpapicmd.c:190: force memory should
+fail
+memcg_function_test   31  TPASS  :  return value is 0
+memcg_function_test   32  TPASS  :  return value is 0
+memcg_function_test   33  TPASS  :  return value is 0
+memcg_function_test   34  TPASS  :  return value is 0
+memcg_function_test   35  TPASS  :  return value is 1
+Running /opt/ltp/testcases/bin/memcg_process --mmap-anon -s 4096
+Warming up for test: 36, pid: 6128
+Process is still here after warm up: 6128
+memcg_function_test   36  TPASS  :  rss=4096/4096
+memcg_function_test   36  TPASS  :  rss=0/0
+Running /opt/ltp/testcases/bin/memcg_process --mmap-anon -s 4096
+Warming up for test: 37, pid: 6155
+Process is still here after warm up: 6155
+memcg_function_test   37  TPASS  :  rss=4096/4096
+memcg_function_test   37  TPASS  :  rss=0/0
+Running /opt/ltp/testcases/bin/memcg_process --mmap-anon -s 4096
+Warming up for test: 38, pid: 6182
+Process is still here after warm up: 6182
+memcg_function_test   38  TPASS  :  rss=4096/4096
+memcg_function_test   38  TPASS  :  rss=0/0
+<<<execution_status>>>
+initiation_status="ok"
+duration=135 termination_type=exited termination_id=5 corefile=no
+cutime=8 cstime=15
+<<<test_end>>>
+INFO: ltp-pan reported some tests FAIL
+LTP Version: 20150420
 
--- 
-tejun
+According to the file at :
+https://github.com/linux-test-project/ltp/blob/master/testcases/kernel/controllers/memcg/functional/memcg_function_test.sh
+
+
+The failing test cases 14, 22, 23, 24 and 30 test respectively:
+
+14: Hogging memory like so: mmap(NULL, memsize, PROT_WRITE | PROT_READ,
+MAP_PRIVATE | MAP_ANONYMOUS | MAP_LOCKED, 0, 0);
+
+# Case 22 - 24: Test limit_in_bytes will be aligned to PAGESIZE - The
+output clearly indicates that the limits in bytes is not being page
+aligned? Is this desired behavior, in which case ltp is broken or is it
+a genuine bug?
+
+30: Again, it locks memory with mmap and then tries to see if
+force_empty would succeed. Expecting it to fail, but in this particular
+case it succeeds?
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
