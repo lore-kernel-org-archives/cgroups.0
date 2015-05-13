@@ -1,33 +1,35 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH cgroup/for-4.2 2/2] cgroup: reorganize include/linux/cgroup.h
-Date: Wed, 13 May 2015 15:39:07 -0400
-Message-ID: <20150513193907.GD11388@htj.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH v2 cgroup/for-4.2 2/2] cgroup: reorganize
+ include/linux/cgroup.h
+Date: Wed, 13 May 2015 16:24:16 -0400
+Message-ID: <20150513202416.GE11388@htj.duckdns.org>
 References: <20150513193840.GC11388@htj.duckdns.org>
+ <20150513193907.GD11388@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=DBqsWREjcHZvrnLvt3vLigQMD8Syu39FowUtJKqKubA=;
-        b=ESbEBbwQF4CowmiCNIfcHPHwuoIx9q6BKjDxXyTDKDLhlJ+LtPbVhQjQBpgj/awnlJ
-         R+kHGcQZHOaphtRmXht7ExGGd1wuS2SH7aL1HkQF/U7ybQoJM4xEM9+mrVMXaRCsoGoH
-         qeqQee5ONl9KYPiSiJXMXqEzeEpVNETNScnACas60COgG1ZhmnrmsRBItld4iTwHU0XC
-         zbi8Rx5f9rZrcHF+69SB27PMeZCX1OTa5HZ1eUoA0OGA+ooyW9t+udcVNnMgMpKiqj+K
-         NrQUUcsIztSUUsflo1B3mKpMflpt+8WABiMUfcG3DoA2qMB5A4JJ8PWOrwHdFsMfvPOi
-         j0Iw==
+        bh=VEh606ShuiYUWmhPntN7rcWfYXInG2hNfhv5ABXCe34=;
+        b=e3s96XMjoq3Ts27G6C1kgvfhAmCayqBT4lJyhSvuZAgNAjw2pR90OolRx491xUBBFr
+         R94aMmeI5c8NXNujCwQceS7ABFSe8HYQoQCHrRaXqYJmC18bpzY8L/X7LJK3/mdI4gdT
+         EDDzPLzT5MCrAw2ucOaScR9KEka9QVrYlnjb2o0fc3geLBZjdEqh+QqwrFa1rOk9NhIU
+         21Bztqwc1BjXU2VpCDSXjjN9thPuG+JdhxogiFaSYqRZ1zH6fg2bGktr5b3KwfKYHcxn
+         j7P7RaOLq6Yimya1CzWaV/FMhfLIS4h+Eu4zQIrUzi1icl5pGkf/ZTLC1dsOK4I+KJ3H
+         Ckzw==
 Content-Disposition: inline
-In-Reply-To: <20150513193840.GC11388-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20150513193907.GD11388@htj.duckdns.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Li Zefan <lizefan@huawei.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From e8e33da1469e11ef1a62c0e0d68fe50a4b3694a6 Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date: Wed, 13 May 2015 15:37:01 -0400
+From c4d440938b5e2015c70594fe6666a099c844f929 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj@kernel.org>
+Date: Wed, 13 May 2015 16:21:40 -0400
 
 Over time, cgroup.h grew organically and doesn't have much logical
 structure at this point.  Separation of cgroup-defs.h in the previous
@@ -35,34 +37,33 @@ patch gives us a good chance for reorganizing cgroup.h as changes to
 the header are likely to cause conflicts anyway.
 
 This patch reorganizes cgroup.h so that it has consistent logical
-grouping.  #ifdef CONFIG_CGROUPS is also moved upwards so that it
-doesn't end up including a bunch of headers when cgroups is disabled.
+grouping.
 
 This is pure reorganization.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+v2: Relocating #ifdef CONFIG_CGROUPS caused build failure when cgroup
+    is disabled.  Dropped.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- include/linux/cgroup.h | 556 ++++++++++++++++++++++++-------------------------
- 1 file changed, 273 insertions(+), 283 deletions(-)
+ include/linux/cgroup.h | 552 ++++++++++++++++++++++++-------------------------
+ 1 file changed, 271 insertions(+), 281 deletions(-)
 
 diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 96a2ecd..c049e7d 100644
+index 96a2ecd..82319fb 100644
 --- a/include/linux/cgroup.h
 +++ b/include/linux/cgroup.h
-@@ -8,6 +8,8 @@
-  *
-  */
+@@ -22,16 +22,189 @@
  
-+#ifdef CONFIG_CGROUPS
-+
- #include <linux/sched.h>
- #include <linux/cpumask.h>
- #include <linux/nodemask.h>
-@@ -20,18 +22,189 @@
+ #ifdef CONFIG_CGROUPS
  
- #include <linux/cgroup-defs.h>
- 
--#ifdef CONFIG_CGROUPS
+-extern int cgroup_init_early(void);
+-extern int cgroup_init(void);
+-extern void cgroup_fork(struct task_struct *p);
+-extern void cgroup_post_fork(struct task_struct *p);
+-extern void cgroup_exit(struct task_struct *p);
+-extern int cgroupstats_build(struct cgroupstats *stats,
+-				struct dentry *dentry);
 +/* a css_task_iter should be treated as an opaque object */
 +struct css_task_iter {
 +	struct cgroup_subsys		*ss;
@@ -233,14 +234,7 @@ index 96a2ecd..c049e7d 100644
 +#define css_for_each_descendant_post(pos, css)				\
 +	for ((pos) = css_next_descendant_post(NULL, (css)); (pos);	\
 +	     (pos) = css_next_descendant_post((pos), (css)))
- 
--extern int cgroup_init_early(void);
--extern int cgroup_init(void);
--extern void cgroup_fork(struct task_struct *p);
--extern void cgroup_post_fork(struct task_struct *p);
--extern void cgroup_exit(struct task_struct *p);
--extern int cgroupstats_build(struct cgroupstats *stats,
--				struct dentry *dentry);
++
 +/**
 + * cgroup_taskset_for_each - iterate cgroup_taskset
 + * @task: the loop cursor
@@ -606,8 +600,7 @@ index 96a2ecd..c049e7d 100644
 -struct cgroup_subsys_state *css_tryget_online_from_dir(struct dentry *dentry,
 -						       struct cgroup_subsys *ss);
 -
--#else /* !CONFIG_CGROUPS */
-+#else /* !CONFIG_CGROUPS */
+ #else /* !CONFIG_CGROUPS */
  
  struct cgroup_subsys_state;
  
