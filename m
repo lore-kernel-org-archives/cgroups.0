@@ -1,7 +1,7 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+From: Cyril Hrubis <chrubis-AlSwsSmVLrQ@public.gmane.org>
 Subject: Re: Possible bug - LTP failure for memcg
-Date: Thu, 14 May 2015 11:23:01 +0200
-Message-ID: <20150514092301.GB6799@dhcp22.suse.cz>
+Date: Thu, 14 May 2015 12:31:49 +0200
+Message-ID: <20150514103148.GA5066@rei.suse.de>
 References: <55536DC9.90200@kyup.com>
  <20150514092145.GA6799@dhcp22.suse.cz>
 Mime-Version: 1.0
@@ -12,56 +12,78 @@ Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Cyril Hrubis <chrubis-AlSwsSmVLrQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Nikolay Borisov <kernel-6AxghH7DbtA@public.gmane.org>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Nikolay Borisov <kernel-6AxghH7DbtA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Cyril, what about this to fix the rounding issue?
----
-From b83d740193490d78547197f47eee918732ed1f60 Mon Sep 17 00:00:00 2001
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Date: Thu, 14 May 2015 11:08:20 +0200
-Subject: [PATCH] controllers/memcg: Fix limit alignment expectations
+Hi!
+> > The failing test cases 14, 22, 23, 24 and 30 test respectively:
+> > 
+> > 14: Hogging memory like so: mmap(NULL, memsize, PROT_WRITE | PROT_READ,
+> > MAP_PRIVATE | MAP_ANONYMOUS | MAP_LOCKED, 0, 0);
+> 
+> MAP_LOCKED will not trigger the OOM killer as explained
+> http://marc.info/?l=linux-mm&m=142122902313315&w=2. So this is expected
+> and Cyril is working on fixing the test case.
 
-since 3e32cb2e0a12 ("mm: memcontrol: lockless page counters") kernel
-commit the limit_in_bytes is round down rather than up. This behavior
-change has been discussed during the review and it was considered a
-reasonable so fix the test accordingly.
+It's on my TODO, I should get to this i a few weeks. Till then just
+ignore the failure.
 
-While we are at it remove the test case 24 as it doesn't really test
-anything more than test case 22.
+> > # Case 22 - 24: Test limit_in_bytes will be aligned to PAGESIZE - The
+> > output clearly indicates that the limits in bytes is not being page
+> > aligned?
+> 
+> I can see
+> > memcg_function_test   22  TFAIL  :  ltpapicmd.c:190: input=4095,
+> > limit_in_bytes=0
+> > memcg_function_test   23  TFAIL  :  ltpapicmd.c:190: input=4097,
+> > limit_in_bytes=4096
+> > memcg_function_test   24  TFAIL  :  ltpapicmd.c:190: input=1,
+> > limit_in_bytes=0
+> 
+> So limit_in_bytes _is_ page aligned but we round down rather than up.
+> 
+> > Is this desired behavior, in which case ltp is broken or is it
+> > a genuine bug?
+> 
+> This behavior has changed by 3e32cb2e0a12 ("mm: memcontrol: lockless
+> page counters") introduced in 3.19. The change in rounding has been
+> pointed out during the review
+> http://marc.info/?l=linux-mm&m=141207518827336&w=2 but the conclusion
+> was that the original round up wasn't really much better
+> http://marc.info/?l=linux-mm&m=141226210316376&w=2 resp.
+> http://marc.info/?l=linux-mm&m=141234785111200&w=2
+> 
+> I will post fix for ltp in the reply
+> 
+> > 30: Again, it locks memory with mmap and then tries to see if
+> > force_empty would succeed. Expecting it to fail, but in this particular
+> > case it succeeds?
+> 
+> I am not sure I understand this testcase. It does:
+> 	TEST_PATH/memcg_process --mmap-anon -s $PAGESIZE
+> 	[...]
 
-Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
----
- .../kernel/controllers/memcg/functional/memcg_function_test.sh   | 9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
+Looking at the code, it does two more things here:
 
-diff --git a/testcases/kernel/controllers/memcg/functional/memcg_function_test.sh b/testcases/kernel/controllers/memcg/functional/memcg_function_test.sh
-index cfc75fa730df..e3baf9d032f6 100755
---- a/testcases/kernel/controllers/memcg/functional/memcg_function_test.sh
-+++ b/testcases/kernel/controllers/memcg/functional/memcg_function_test.sh
-@@ -158,17 +158,12 @@ testcase_21()
- # Case 22 - 24: Test limit_in_bytes will be aligned to PAGESIZE
- testcase_22()
- {
--	test_limit_in_bytes $((PAGESIZE-1)) $PAGESIZE 0
-+	test_limit_in_bytes $((PAGESIZE-1)) 0 0
- }
- 
- testcase_23()
- {
--	test_limit_in_bytes $((PAGESIZE+1)) $((PAGESIZE*2)) 0
--}
--
--testcase_24()
--{
--	test_limit_in_bytes 1 $PAGESIZE 0
-+	test_limit_in_bytes $((PAGESIZE+1)) $((PAGESIZE)) 0
- }
- 
- # Case 25 - 28: Test invaild memory.limit_in_bytes
+echo $pid > tasks
+kill -s USR1 $pid 2> /dev/null
+
+Sending SIGUSR1 to the memcg_process causes it to repeat the allocation
+that has been passed to it by the command line parameters.
+
+So my guess is that it expect the force_empty to fail if the process has
+allocated some memory after it has been moved to the current cgroup.
+
+The previous testcases does exactly this but moves the process to the
+parent with:
+
+echo $pid > ../tasks
+
+Before it tries the force_empty and expects it to succeed.
+
+Was this some old implementation limitation that has been lifted
+meanwhile?
+
 -- 
-2.1.4
-
--- 
-Michal Hocko
-SUSE Labs
+Cyril Hrubis
+chrubis-AlSwsSmVLrQ@public.gmane.org
