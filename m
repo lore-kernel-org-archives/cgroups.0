@@ -1,98 +1,63 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: Possible bug - LTP failure for memcg
-Date: Thu, 14 May 2015 16:49:49 +0200
-Message-ID: <20150514144949.GJ6799@dhcp22.suse.cz>
-References: <55536DC9.90200@kyup.com>
- <20150514092145.GA6799@dhcp22.suse.cz>
- <20150514103148.GA5066@rei.suse.de>
- <20150514115641.GE6799@dhcp22.suse.cz>
- <20150514120142.GG5066@rei.suse.de>
- <20150514121248.GG6799@dhcp22.suse.cz>
- <20150514123816.GC6993@rei>
- <20150514143039.GI6799@dhcp22.suse.cz>
- <20150514144420.GA12884@rei>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v10 3/4] cgroups: allow a cgroup subsystem to reject a
+ fork
+Date: Thu, 14 May 2015 11:08:28 -0400
+Message-ID: <20150514150828.GG11388@htj.duckdns.org>
+References: <1429446154-10660-1-git-send-email-cyphar@cyphar.com>
+ <1429446154-10660-4-git-send-email-cyphar@cyphar.com>
+ <20150422155445.GD10738@htj.duckdns.org>
+ <CAOviyajt2MSG_N6VOOXwAM8YZ0ReCvgXyyvaj2yPYK2dztv8EA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=RTkOj7Oo+bIwvoNbuRDhN6pv1B1ApaOahZMOB7tiNG0=;
+        b=Gd9BbmKQcqn7E3Nk+jeSiG8vs+oiQt+1ZsyQtLivk+RaJZrf8VZvz8sM84cI699l3n
+         heskJ1+pmTda/fsLUXk6AaKorNYBhex+Nbejvnn1eRZcFBNeFJr6uy6bHETvLpzxRhqW
+         WMPjb1/yPAvvCyB6To+O1mkegDfqaz+OlkLgoUfsw+lnmr3jJpE7Ky8NdBWhA7KvBX26
+         /17VzDHeQ9J65uDiP0H3KwGog1x+Xpw+Il7/OP+CnEivlvUKUerxpu+M/EAYUCEDw8Pz
+         TBAVT6n3CLubpgVdRRO3rv7rnUIEhEBvTgfkfmGCzaWHfcE70T0BMjrEanErTGJeDAvq
+         BmmQ==
 Content-Disposition: inline
-In-Reply-To: <20150514144420.GA12884@rei>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <CAOviyajt2MSG_N6VOOXwAM8YZ0ReCvgXyyvaj2yPYK2dztv8EA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Cyril Hrubis <chrubis-AlSwsSmVLrQ@public.gmane.org>
-Cc: Nikolay Borisov <kernel-6AxghH7DbtA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Aleksa Sarai <cyphar@cyphar.com>
+Cc: lizefan@huawei.com, mingo@redhat.com, Peter Zijlstra <peterz@infradead.org>, richard@nod.at, =?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Thu 14-05-15 16:44:20, Cyril Hrubis wrote:
-> Hi!
-> > Signed-off-by: Michal Hocko <miso-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Hello, Aleksa.
+
+On Thu, May 14, 2015 at 08:57:49PM +1000, Aleksa Sarai wrote:
+> >> +/* Ditto for the can_fork/cancel_fork/reapply_fork callbacks. */
+> >> +static int need_canfork_callback __read_mostly;
+> >> +static int need_cancelfork_callback __read_mostly;
+> >
+> > And given that the reason we have these masks is avoiding iteration in
+> > relatively hot paths.  Does cancelfork mask make sense?
 > 
->                                  ^
-> 			       forgotten git config user.email?
+> Do you still want me to remove it? I only added it because it made the
+> callback code more consistent for cancel_fork and can_fork.
 
-Dohh...
+This doesn't make much sense to me.  Why don't we have masks for other
+callbacks then?  This way, we're breaking the consistency regarding
+why the mask is used in the first place.
 
-> > ---
-> >  testcases/kernel/controllers/memcg/functional/memcg_function_test.sh | 4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/testcases/kernel/controllers/memcg/functional/memcg_function_test.sh b/testcases/kernel/controllers/memcg/functional/memcg_function_test.sh
-> > index cfc75fa730df..399c5614468a 100755
-> > --- a/testcases/kernel/controllers/memcg/functional/memcg_function_test.sh
-> > +++ b/testcases/kernel/controllers/memcg/functional/memcg_function_test.sh
-> > @@ -211,8 +211,8 @@ testcase_29()
-> >  	echo $pid > tasks
-> >  	kill -s USR1 $pid 2> /dev/null
-> >  	sleep 1
-> > -	echo $pid > ../tasks
+> > Maybe we want a helper callback which does
+> >
+> >         if (CGROUP_PREFORK_START <= ssid && ssid < CGROUP_PREFORK_END)
+> >                 return &ss_state[ssid - CGROUP_PREFORK_START];
+> >         return NULL;
 > 
-> This change breaks the testcase on older kernels:
+> What would be a nice name for it? I can't think of anything better
+> than __get_ss_private() and __get_ss_privatep().
 
-Yeah, my bad, I've started with this then changed it back but forgot to
-add it to the commit. Sorry about that. Hopefully the correct one:
----
-From 90a487d96fe09763b4517314797e2db32ce232b4 Mon Sep 17 00:00:00 2001
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Date: Thu, 14 May 2015 16:24:38 +0200
-Subject: [PATCH] controllers/memcg: fix force_empty
+Do we need the double underscores?  subsys_prefork_priv()?
 
-testcase_29 and testcase_30 are no longer testing anything because
-the kernel allows to use force_empty even for memcgs with active
-tasks since f61c42a7d911 ("memcg: remove tasks/children test from
-mem_cgroup_force_empty()) kernel commit.
-
-If we really want to test this functionality then just expect the
-success for regular mmap and expect the failure when the charged
-memory is mlocked.
-
-Signed-off-by: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
----
- testcases/kernel/controllers/memcg/functional/memcg_function_test.sh | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/testcases/kernel/controllers/memcg/functional/memcg_function_test.sh b/testcases/kernel/controllers/memcg/functional/memcg_function_test.sh
-index cfc75fa730df..f55593996b86 100755
---- a/testcases/kernel/controllers/memcg/functional/memcg_function_test.sh
-+++ b/testcases/kernel/controllers/memcg/functional/memcg_function_test.sh
-@@ -213,6 +213,7 @@ testcase_29()
- 	sleep 1
- 	echo $pid > ../tasks
- 
-+	# This expects that there is swap configured
- 	echo 1 > memory.force_empty
- 	if [ $? -eq 0 ]; then
- 		result $PASS "force memory succeeded"
-@@ -225,7 +226,7 @@ testcase_29()
- 
- testcase_30()
- {
--	$TEST_PATH/memcg_process --mmap-anon -s $PAGESIZE &
-+	$TEST_PATH/memcg_process --mmap-lock2 -s $PAGESIZE &
- 	pid=$!
- 	sleep 1
- 	echo $pid > tasks
--- 
-2.1.4
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
+tejun
