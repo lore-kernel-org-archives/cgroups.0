@@ -1,131 +1,170 @@
-From: Sergey Senozhatsky <sergey.senozhatsky.work-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 1/3] sched, cgroup: reorganize threadgroup locking
-Date: Thu, 14 May 2015 10:09:13 +0900
-Message-ID: <20150514010913.GA4441@swordfish>
-References: <1431549318-16756-1-git-send-email-tj@kernel.org>
- <1431549318-16756-2-git-send-email-tj@kernel.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: Possible bug - LTP failure for memcg
+Date: Thu, 14 May 2015 11:21:46 +0200
+Message-ID: <20150514092145.GA6799@dhcp22.suse.cz>
+References: <55536DC9.90200@kyup.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=2OnhefiMj46Zsd1yUCNwllwdMoBiv3z5xDMW4YONb0U=;
-        b=0t/IgA/kqF6r+YfenmWZ7HAAWT9/RVo1/xyQOCUgUw0QRlGw0+h9QMSuBL9L79DrUI
-         EORob/5JIRrRqjyLXsiT7k9DS8Z0atNDxVELZLkZGctgGnIeU1oiM6yAf/L9ffXy4eux
-         3eqTfLqprnL5oTmnJQr/TrLxL9Xl/GRrmKi+4r9ffF29nGAzOuip5G9I7p33VIwaPANV
-         nj2MYL+Y3LxqQOcBd+lc8fLrzN8VzSdC+7Qmc2wC8v+VYzGhAZcqllbi3KOy2Jsqg24l
-         50f1YGHgpok8TN8+7iW8baXbjbzS8QuM3AczOCG6X3Sln+Wl8CP34kzYqyI7BslP4hVA
-         fwxw==
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1431549318-16756-2-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <55536DC9.90200@kyup.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Nikolay Borisov <kernel@kyup.com>
+Cc: cgroups@vger.kernel.org, hannes@cmpxchg.org, linux-mm@kvack.org, Cyril Hrubis <chrubis@suse.cz>
 
-Hello,
-
-On (05/13/15 16:35), Tejun Heo wrote:
-[..]
-> -static inline void threadgroup_lock(struct task_struct *tsk)
-> +static inline void threadgroup_change_begin(struct task_struct *tsk)
->  {
-> -	down_write(&tsk->signal->group_rwsem);
-> +	might_sleep();
-
-I think cgroup_threadgroup_change_begin()->down_read() already does
-might_sleep() check.
-
-	-ss
-
-> +	cgroup_threadgroup_change_begin(tsk);
->  }
->  
->  /**
-> - * threadgroup_unlock - unlock threadgroup
-> - * @tsk: member task of the threadgroup to unlock
-> + * threadgroup_change_end - mark the end of changes to a threadgroup
-> + * @tsk: task causing the changes
->   *
-> - * Reverse threadgroup_lock().
-> + * See threadgroup_change_begin().
->   */
-> -static inline void threadgroup_unlock(struct task_struct *tsk)
-> +static inline void threadgroup_change_end(struct task_struct *tsk)
->  {
-> -	up_write(&tsk->signal->group_rwsem);
-> +	cgroup_threadgroup_change_end(tsk);
->  }
-> -#else
-> -static inline void threadgroup_change_begin(struct task_struct *tsk) {}
-> -static inline void threadgroup_change_end(struct task_struct *tsk) {}
-> -static inline void threadgroup_lock(struct task_struct *tsk) {}
-> -static inline void threadgroup_unlock(struct task_struct *tsk) {}
-> -#endif
->  
->  #ifndef __HAVE_THREAD_FUNCTIONS
->  
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index cfa27f9..9309452 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -848,6 +848,48 @@ static struct css_set *find_css_set(struct css_set *old_cset,
->  	return cset;
->  }
->  
-> +void cgroup_threadgroup_change_begin(struct task_struct *tsk)
-> +{
-> +	down_read(&tsk->signal->group_rwsem);
-> +}
-> +
-> +void cgroup_threadgroup_change_end(struct task_struct *tsk)
-> +{
-> +	up_read(&tsk->signal->group_rwsem);
-> +}
-> +
-> +/**
-> + * threadgroup_lock - lock threadgroup
-> + * @tsk: member task of the threadgroup to lock
-> + *
-> + * Lock the threadgroup @tsk belongs to.  No new task is allowed to enter
-> + * and member tasks aren't allowed to exit (as indicated by PF_EXITING) or
-> + * change ->group_leader/pid.  This is useful for cases where the threadgroup
-> + * needs to stay stable across blockable operations.
-> + *
-> + * fork and exit explicitly call threadgroup_change_{begin|end}() for
-> + * synchronization.  While held, no new task will be added to threadgroup
-> + * and no existing live task will have its PF_EXITING set.
-> + *
-> + * de_thread() does threadgroup_change_{begin|end}() when a non-leader
-> + * sub-thread becomes a new leader.
-> + */
-> +static void threadgroup_lock(struct task_struct *tsk)
-> +{
-> +	down_write(&tsk->signal->group_rwsem);
-> +}
-> +
-> +/**
-> + * threadgroup_unlock - unlock threadgroup
-> + * @tsk: member task of the threadgroup to unlock
-> + *
-> + * Reverse threadgroup_lock().
-> + */
-> +static inline void threadgroup_unlock(struct task_struct *tsk)
-> +{
-> +	up_write(&tsk->signal->group_rwsem);
-> +}
-> +
->  static struct cgroup_root *cgroup_root_from_kf(struct kernfs_root *kf_root)
->  {
->  	struct cgroup *root_cgrp = kf_root->kn->priv;
-> -- 
-> 2.1.0
+On Wed 13-05-15 18:29:13, Nikolay Borisov wrote:
+> Hello,
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I'm running the ltp version 20150420 and stock kernel 4.0 and I've
+> observed that the memcg_function test is failing. Here is a relevant
+> snipped from the log:
 > 
+> 
+> memcg_function_test   14  TFAIL  :  ltpapicmd.c:190: process 5827 is not
+> killed
+> /opt/ltp/testcases/bin/memcg_lib.sh: line 210:  5843 Killed
+>      $TEST_PATH/memcg_process $2 -s $3
+> memcg_function_test   15  TPASS  :  process 5843 is killed
+> /opt/ltp/testcases/bin/memcg_lib.sh: line 210:  5859 Killed
+>      $TEST_PATH/memcg_process $2 -s $3
+> memcg_function_test   16  TPASS  :  process 5859 is killed
+> /opt/ltp/testcases/bin/memcg_lib.sh: line 210:  5877 Killed
+>      $TEST_PATH/memcg_process $2 -s $3
+> memcg_function_test   17  TPASS  :  process 5877 is killed
+> /opt/ltp/testcases/bin/memcg_lib.sh: line 210:  5894 Killed
+>      $TEST_PATH/memcg_process $2 -s $3
+> memcg_function_test   18  TPASS  :  process 5894 is killed
+> /opt/ltp/testcases/bin/memcg_lib.sh: line 210:  5911 Killed
+>      $TEST_PATH/memcg_process $2 -s $3
+> memcg_function_test   19  TPASS  :  process 5911 is killed
+> /opt/ltp/testcases/bin/memcg_lib.sh: line 210:  5927 Killed
+>      $TEST_PATH/memcg_process $2 -s $3
+> memcg_function_test   20  TPASS  :  process 5927 is killed
+> /opt/ltp/testcases/bin/memcg_lib.sh: line 210:  5942 Killed
+>      $TEST_PATH/memcg_process $2 -s $3
+> memcg_function_test   21  TPASS  :  process 5942 is killed
+> memcg_function_test   22  TFAIL  :  ltpapicmd.c:190: input=4095,
+> limit_in_bytes=0
+> memcg_function_test   23  TFAIL  :  ltpapicmd.c:190: input=4097,
+> limit_in_bytes=4096
+> memcg_function_test   24  TFAIL  :  ltpapicmd.c:190: input=1,
+> limit_in_bytes=0
+> memcg_function_test   25  TPASS  :  return value is 0
+> memcg_function_test   26  TPASS  :  return value is 1
+> memcg_function_test   27  TPASS  :  return value is 1
+> memcg_function_test   28  TPASS  :  return value is 1
+> memcg_function_test   29  TPASS  :  force memory succeeded
+> memcg_function_test   30  TFAIL  :  ltpapicmd.c:190: force memory should
+> fail
+> memcg_function_test   31  TPASS  :  return value is 0
+> memcg_function_test   32  TPASS  :  return value is 0
+> memcg_function_test   33  TPASS  :  return value is 0
+> memcg_function_test   34  TPASS  :  return value is 0
+> memcg_function_test   35  TPASS  :  return value is 1
+> Running /opt/ltp/testcases/bin/memcg_process --mmap-anon -s 4096
+> Warming up for test: 36, pid: 6128
+> Process is still here after warm up: 6128
+> memcg_function_test   36  TPASS  :  rss=4096/4096
+> memcg_function_test   36  TPASS  :  rss=0/0
+> Running /opt/ltp/testcases/bin/memcg_process --mmap-anon -s 4096
+> Warming up for test: 37, pid: 6155
+> Process is still here after warm up: 6155
+> memcg_function_test   37  TPASS  :  rss=4096/4096
+> memcg_function_test   37  TPASS  :  rss=0/0
+> Running /opt/ltp/testcases/bin/memcg_process --mmap-anon -s 4096
+> Warming up for test: 38, pid: 6182
+> Process is still here after warm up: 6182
+> memcg_function_test   38  TPASS  :  rss=4096/4096
+> memcg_function_test   38  TPASS  :  rss=0/0
+> <<<execution_status>>>
+> initiation_status="ok"
+> duration=135 termination_type=exited termination_id=5 corefile=no
+> cutime=8 cstime=15
+> <<<test_end>>>
+> INFO: ltp-pan reported some tests FAIL
+> LTP Version: 20150420
+> 
+> According to the file at :
+> https://github.com/linux-test-project/ltp/blob/master/testcases/kernel/controllers/memcg/functional/memcg_function_test.sh
+> 
+> 
+> The failing test cases 14, 22, 23, 24 and 30 test respectively:
+> 
+> 14: Hogging memory like so: mmap(NULL, memsize, PROT_WRITE | PROT_READ,
+> MAP_PRIVATE | MAP_ANONYMOUS | MAP_LOCKED, 0, 0);
+
+MAP_LOCKED will not trigger the OOM killer as explained
+http://marc.info/?l=linux-mm&m=142122902313315&w=2. So this is expected
+and Cyril is working on fixing the test case.
+
+> # Case 22 - 24: Test limit_in_bytes will be aligned to PAGESIZE - The
+> output clearly indicates that the limits in bytes is not being page
+> aligned?
+
+I can see
+> memcg_function_test   22  TFAIL  :  ltpapicmd.c:190: input=4095,
+> limit_in_bytes=0
+> memcg_function_test   23  TFAIL  :  ltpapicmd.c:190: input=4097,
+> limit_in_bytes=4096
+> memcg_function_test   24  TFAIL  :  ltpapicmd.c:190: input=1,
+> limit_in_bytes=0
+
+So limit_in_bytes _is_ page aligned but we round down rather than up.
+
+> Is this desired behavior, in which case ltp is broken or is it
+> a genuine bug?
+
+This behavior has changed by 3e32cb2e0a12 ("mm: memcontrol: lockless
+page counters") introduced in 3.19. The change in rounding has been
+pointed out during the review
+http://marc.info/?l=linux-mm&m=141207518827336&w=2 but the conclusion
+was that the original round up wasn't really much better
+http://marc.info/?l=linux-mm&m=141226210316376&w=2 resp.
+http://marc.info/?l=linux-mm&m=141234785111200&w=2
+
+I will post fix for ltp in the reply
+
+> 30: Again, it locks memory with mmap and then tries to see if
+> force_empty would succeed. Expecting it to fail, but in this particular
+> case it succeeds?
+
+I am not sure I understand this testcase. It does:
+	TEST_PATH/memcg_process --mmap-anon -s $PAGESIZE
+	[...]
+        echo 1 > memory.force_empty 2> /dev/null
+        if [ $? -ne 0 ]; then
+                result $PASS "force memory failed as expected"
+        else    
+                result $FAIL "force memory should fail"
+        fi
+
+and that means:
+void mmap_anon()
+{               
+        static char *p; 
+        
+        if (!flag_allocated) {
+                p = mmap(NULL, memsize, PROT_WRITE | PROT_READ,
+                         MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+                if (p == MAP_FAILED)
+                        err(1, "mmap(anonymous) failed");
+                touch_memory(p, memsize);
+        } else {
+                if (munmap(p, memsize) == -1)
+                        err(1, "munmap(anonymous) failed");
+        }
+}
+
+so there is no mlock there. Why should the force reclaim fail then?
+
+-- 
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
