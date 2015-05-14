@@ -1,35 +1,44 @@
 From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 Subject: Re: Possible bug - LTP failure for memcg
-Date: Thu, 14 May 2015 14:09:26 +0200
-Message-ID: <20150514120926.GF6799@dhcp22.suse.cz>
+Date: Thu, 14 May 2015 14:12:48 +0200
+Message-ID: <20150514121248.GG6799@dhcp22.suse.cz>
 References: <55536DC9.90200@kyup.com>
+ <20150514092145.GA6799@dhcp22.suse.cz>
+ <20150514103148.GA5066@rei.suse.de>
+ <20150514115641.GE6799@dhcp22.suse.cz>
+ <20150514120142.GG5066@rei.suse.de>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <55536DC9.90200-6AxghH7DbtA@public.gmane.org>
+In-Reply-To: <20150514120142.GG5066-J5syqNJeCN4b1SvskN2V4Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Nikolay Borisov <kernel-6AxghH7DbtA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Cyril Hrubis <chrubis-AlSwsSmVLrQ@public.gmane.org>
+Cc: Nikolay Borisov <kernel-6AxghH7DbtA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Wed 13-05-15 18:29:13, Nikolay Borisov wrote:
-[...]
-> memcg_function_test   22  TFAIL  :  ltpapicmd.c:190: input=4095,
-> limit_in_bytes=0
-> memcg_function_test   23  TFAIL  :  ltpapicmd.c:190: input=4097,
-> limit_in_bytes=4096
-> memcg_function_test   24  TFAIL  :  ltpapicmd.c:190: input=1,
-> limit_in_bytes=0
+On Thu 14-05-15 14:01:42, Cyril Hrubis wrote:
+> Hi!
+> > > The previous testcases does exactly this but moves the process to the
+> > > parent with:
+> > > 
+> > > echo $pid > ../tasks
+> > > 
+> > > Before it tries the force_empty and expects it to succeed.
+> > > 
+> > > Was this some old implementation limitation that has been lifted
+> > > meanwhile?
+> > 
+> > OK, now I remember... f61c42a7d911 ("memcg: remove tasks/children test
+> > from mem_cgroup_force_empty()") which goes back to 3.16. So the test
+> > case is invalid.
+> 
+> Then please send a patch to remove the test.
 
-Before we go and fix these test cases. Do they make any sense at all?
-Why should anybody even care that the limit is in page units? I do not
-see anything like that mentioned in the documentation. Sure having
-the limit in page size units makes a lot of sense from the
-implementation POV but should userspace care? Would something break if
-we change internals and allow also !page_aligned values? I have hard
-time to imagine that.
+I think we can still fix both tescases and expect not to fail with
+regular mmap but fail it with unreclaimable memory (e.g. disallow
+swapout or use mlock).
 -- 
 Michal Hocko
 SUSE Labs
