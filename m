@@ -1,40 +1,31 @@
-From: Cyril Hrubis <chrubis-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: Possible bug - LTP failure for memcg
-Date: Thu, 14 May 2015 17:27:49 +0200
-Message-ID: <20150514152749.GF12884@rei>
-References: <55536DC9.90200@kyup.com>
- <20150514092145.GA6799@dhcp22.suse.cz>
- <20150514103148.GA5066@rei.suse.de>
- <20150514115641.GE6799@dhcp22.suse.cz>
- <20150514120142.GG5066@rei.suse.de>
- <20150514121248.GG6799@dhcp22.suse.cz>
- <20150514123816.GC6993@rei>
- <20150514143039.GI6799@dhcp22.suse.cz>
- <20150514144420.GA12884@rei>
- <20150514144949.GJ6799@dhcp22.suse.cz>
+From: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v10 4/4] cgroups: implement the PIDs subsystem
+Date: Sat, 16 May 2015 13:59:09 +1000
+Message-ID: <CAOviyaiJnxmiRPEGFutEXiV-D5XwJUhwRJ1w8P3Yn2QLGO9bbw@mail.gmail.com>
+References: <1429446154-10660-1-git-send-email-cyphar@cyphar.com>
+	<1429446154-10660-5-git-send-email-cyphar@cyphar.com>
+	<20150422162954.GF10738@htj.duckdns.org>
+	<CAOviyagHJhxD8E+CeEdy399ARPaNyyiSJSJjByK=5ALN5jxbJw@mail.gmail.com>
+	<20150424153657.GC24029@htj.duckdns.org>
+	<CAOviyah9yyXJG0eUeizpb5ZnzNUAKfxXGkXJw-5sNw7sQOAEuA@mail.gmail.com>
+	<20150513172906.GY11388@htj.duckdns.org>
+	<CAOviyaimfHD=Jg1+FEwyapwO=zdaL0bvq8YDA1Cnq90YbfGENQ@mail.gmail.com>
+	<20150513174707.GA11388@htj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20150514144949.GJ6799-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <20150513174707.GA11388-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Nikolay Borisov <kernel-6AxghH7DbtA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, richard-/L3Ra7n9ekc@public.gmane.org, =?UTF-8?B?RnLDqWTDqXJpYyBXZWlzYmVja2Vy?= <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi!
-> testcase_29 and testcase_30 are no longer testing anything because
-> the kernel allows to use force_empty even for memcgs with active
-> tasks since f61c42a7d911 ("memcg: remove tasks/children test from
-> mem_cgroup_force_empty()) kernel commit.
-> 
-> If we really want to test this functionality then just expect the
-> success for regular mmap and expect the failure when the charged
-> memory is mlocked.
+Hi Tejun,
 
-Applied, thanks.
+One question RE: defaults for .config. What is the kernel policy for
+deciding if a particular subsystem should be made enabled-by-default?
 
--- 
-Cyril Hrubis
-chrubis-AlSwsSmVLrQ@public.gmane.org
+--
+Aleksa Sarai (cyphar)
+www.cyphar.com
