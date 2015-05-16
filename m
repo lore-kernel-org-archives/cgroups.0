@@ -1,58 +1,104 @@
-From: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v11 5/7] cgroup: move enum cgroup_subsys_id definition
-Date: Sat, 16 May 2015 14:13:39 +1000
-Message-ID: <1431749621-30451-6-git-send-email-cyphar@cyphar.com>
+From: Aleksa Sarai <cyphar@cyphar.com>
+Subject: [PATCH v11 4/7] cgroup, block: implement task_get_css() and use it in bio_associate_current()
+Date: Sat, 16 May 2015 14:13:38 +1000
+Message-ID: <1431749621-30451-5-git-send-email-cyphar@cyphar.com>
 References: <1431749621-30451-1-git-send-email-cyphar@cyphar.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1431749621-30451-1-git-send-email-cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1431749621-30451-1-git-send-email-cyphar@cyphar.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
-Cc: richard-/L3Ra7n9ekc@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+To: tj@kernel.org, lizefan@huawei.com, mingo@redhat.com, peterz@infradead.org
+Cc: richard@nod.at, fweisbec@gmail.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Vivek Goyal <vgoyal@redhat.com>
 
-This patch is in preparation for the pids cgroup subsystem patchset.
+From: Tejun Heo <tj@kernel.org>
 
-Signed-off-by: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+bio_associate_current() currently open codes task_css() and
+css_tryget_online() to find and pin $current's blkcg css.  Abstract it
+into task_get_css() which is implemented from cgroup side.  As a task
+is always associated with an online css for every subsystem except
+while the css_set update is propagating, task_get_css() retries till
+css_tryget_online() succeeds.
+
+This is a cleanup and shouldn't lead to noticeable behavior changes.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Vivek Goyal <vgoyal@redhat.com>
 ---
- include/linux/cgroup.h | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ block/bio.c            | 11 +----------
+ include/linux/cgroup.h | 25 +++++++++++++++++++++++++
+ 2 files changed, 26 insertions(+), 10 deletions(-)
 
+diff --git a/block/bio.c b/block/bio.c
+index f66a4ea..968683e 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -1987,7 +1987,6 @@ EXPORT_SYMBOL(bioset_create_nobvec);
+ int bio_associate_current(struct bio *bio)
+ {
+ 	struct io_context *ioc;
+-	struct cgroup_subsys_state *css;
+ 
+ 	if (bio->bi_ioc)
+ 		return -EBUSY;
+@@ -1996,17 +1995,9 @@ int bio_associate_current(struct bio *bio)
+ 	if (!ioc)
+ 		return -ENOENT;
+ 
+-	/* acquire active ref on @ioc and associate */
+ 	get_io_context_active(ioc);
+ 	bio->bi_ioc = ioc;
+-
+-	/* associate blkcg if exists */
+-	rcu_read_lock();
+-	css = task_css(current, blkio_cgrp_id);
+-	if (css && css_tryget_online(css))
+-		bio->bi_css = css;
+-	rcu_read_unlock();
+-
++	bio->bi_css = task_get_css(current, blkio_cgrp_id);
+ 	return 0;
+ }
+ 
 diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index e7da0aa..35ba593 100644
+index b9cb94c..e7da0aa 100644
 --- a/include/linux/cgroup.h
 +++ b/include/linux/cgroup.h
-@@ -25,6 +25,14 @@
+@@ -774,6 +774,31 @@ static inline struct cgroup_subsys_state *task_css(struct task_struct *task,
+ }
  
- #ifdef CONFIG_CGROUPS
- 
-+/* define the enumeration of all cgroup subsystems */
-+#define SUBSYS(_x) _x ## _cgrp_id,
-+enum cgroup_subsys_id {
-+#include <linux/cgroup_subsys.h>
-+	CGROUP_SUBSYS_COUNT,
-+};
-+#undef SUBSYS
+ /**
++ * task_get_css - find and get the css for (task, subsys)
++ * @task: the target task
++ * @subsys_id: the target subsystem ID
++ *
++ * Find the css for the (@task, @subsys_id) combination, increment a
++ * reference on and return it.  This function is guaranteed to return a
++ * valid css.
++ */
++static inline struct cgroup_subsys_state *
++task_get_css(struct task_struct *task, int subsys_id)
++{
++	struct cgroup_subsys_state *css;
 +
- struct cgroup_root;
- struct cgroup_subsys;
- struct cgroup;
-@@ -40,14 +48,6 @@ extern int cgroupstats_build(struct cgroupstats *stats,
- extern int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
- 			    struct pid *pid, struct task_struct *tsk);
- 
--/* define the enumeration of all cgroup subsystems */
--#define SUBSYS(_x) _x ## _cgrp_id,
--enum cgroup_subsys_id {
--#include <linux/cgroup_subsys.h>
--	CGROUP_SUBSYS_COUNT,
--};
--#undef SUBSYS
--
- /*
-  * Per-subsystem/per-cgroup state maintained by the system.  This is the
-  * fundamental structural building block that controllers deal with.
++	rcu_read_lock();
++	while (true) {
++		css = task_css(task, subsys_id);
++		if (likely(css_tryget_online(css)))
++			break;
++		cpu_relax();
++	}
++	rcu_read_unlock();
++	return css;
++}
++
++/**
+  * task_css_is_root - test whether a task belongs to the root css
+  * @task: the target task
+  * @subsys_id: the target subsystem ID
 -- 
 2.4.1
