@@ -1,66 +1,46 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v12 7/8] cgroup: add a tset_get_css macro
-Date: Mon, 18 May 2015 17:34:23 -0400
-Message-ID: <20150518213423.GI24861@htj.duckdns.org>
+Subject: Re: [PATCH v12 4/8] cgroup, block: implement task_get_css() and use
+ it in bio_associate_current()
+Date: Mon, 18 May 2015 17:59:07 -0400
+Message-ID: <20150518215907.GJ24861@htj.duckdns.org>
 References: <1431960667-26593-1-git-send-email-cyphar@cyphar.com>
- <1431960667-26593-8-git-send-email-cyphar@cyphar.com>
+ <1431960667-26593-5-git-send-email-cyphar@cyphar.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=QzAKHcX7urRP9gGObkCfA/3JXgYiwiC/YQpotxsg4JA=;
-        b=LcRSAYcMzFlSNZwUNFYiiJ3ecrvgLkDwbyp4bT1P6DXuxs+/mjtG1tVV2aeBXCHY9+
-         sa35yuYNg0Irq0OI1vWA4NvIvlNE4MdQfrl4ia6zbVAd+wHSWCqsSo8+W4gY1Y9KkTot
-         Njj43AXDygPdm9+tgdKxaFmD9Wkhgl8AFfs11KILiLGhrzOhcghJPEcghulbjjT5RhNP
-         V/boinNnuisnVy6a6YOXgX4EKl8OgkcytiwPFGUGEHgHhSg+4Y7yffV4owJdENZQNsDx
-         ORmEsrdxSjCdLrbHI8hJrKuiVkAvWFEcHShLoQnjwqNzUQTK/+3SpOQyRl4HZVlgVF+U
-         eaKQ==
+        bh=v+HgF8+bpUdyddRrWrtcT7NO6ycxqhqzuFcZzKj5i1k=;
+        b=ikSlNKs4LazxlsmQvBm+zsT0jwA/eo9V8qCNHzvF8KqSWMBpj3KdHy+iOZlhpWHNlh
+         eLCuucPxMs//E2R+TdGKiIaOVyG40NnfBCSGjHlKQ7hllVyMyj+O5RZquGTOZ5ohZGyb
+         BlDavOZHFPww7+1Btnuu3HeIPRhIM6r28Zsw7dW4t8uqwLH7NIzHEv02sMK0jHnG1pGO
+         5gYh8sAfjp+tuotmlP3jyimJELVqUwg7SAp6P3F1hL4HyZ3YnHVS4YuxeJThLRp6NWFK
+         BI0e0h7wBBgSByapXW9QsNKUuOO5VCEQT+Suj94tJIVmoiA+Xjs5Ks32WC9fC9593pL/
+         dy3g==
 Content-Disposition: inline
-In-Reply-To: <1431960667-26593-8-git-send-email-cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1431960667-26593-5-git-send-email-cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, richard-/L3Ra7n9ekc@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, richard-/L3Ra7n9ekc@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Tue, May 19, 2015 at 12:51:06AM +1000, Aleksa Sarai wrote:
-> This adds a macro to get the css of a tset (using task_get_css()) by
-> just grabbing a ref to the first item in the tset (since there is a
-> guarantee that all tasks in a tset share a css).
+On Tue, May 19, 2015 at 12:51:03AM +1000, Aleksa Sarai wrote:
+> From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 > 
-> This is in preparation for implementing the pids cgroup subsystem.
+> bio_associate_current() currently open codes task_css() and
+> css_tryget_online() to find and pin $current's blkcg css.  Abstract it
+> into task_get_css() which is implemented from cgroup side.  As a task
+> is always associated with an online css for every subsystem except
+> while the css_set update is propagating, task_get_css() retries till
+> css_tryget_online() succeeds.
 > 
-> Signed-off-by: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-> ---
->  include/linux/cgroup.h | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
-> 
-> diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-> index 886a883..773846d 100644
-> --- a/include/linux/cgroup.h
-> +++ b/include/linux/cgroup.h
-> @@ -639,6 +639,18 @@ struct task_struct *cgroup_taskset_next(struct cgroup_taskset *tset);
->  	for ((task) = cgroup_taskset_first((tset)); (task);		\
->  	     (task) = cgroup_taskset_next((tset)))
->  
-> +/**
-> + * tset_get_css - obtain and get css for (tset, subsys_id)
-> + * @tset: target taskset
-> + * @subsys_id: target subsystem id
-> + *
-> + * Since all of the tasks in a taskset are guaranteed to have the same css, it's
-> + * safe to grab the ref of just the first task's css and treat it as though you
-> + * have a ref on the taskset's "collective" css.
-> + */
-> +#define tset_get_css(tset, subsys_id)					\
-> +	task_get_css(cgroup_taskset_first(tset), subsys_id)
+> This is a cleanup and shouldn't lead to noticeable behavior changes.
 
-They aren't tho.  It depends on the hierarchy configuration.  csses
-belonging to hierarchies which aren't the current migration target may
-differ.
+Applied 1-4 but skipped bio_associate_current() changes from this
+patch.  I'll route that part through a different patchset.
 
 Thanks.
 
