@@ -1,7 +1,7 @@
 From: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v12 3/8] cgroup: replace explicit ss_mask checking with for_each_subsys_which
-Date: Tue, 19 May 2015 00:51:02 +1000
-Message-ID: <1431960667-26593-4-git-send-email-cyphar@cyphar.com>
+Subject: [PATCH v12 4/8] cgroup, block: implement task_get_css() and use it in bio_associate_current()
+Date: Tue, 19 May 2015 00:51:03 +1000
+Message-ID: <1431960667-26593-5-git-send-email-cyphar@cyphar.com>
 References: <1431960667-26593-1-git-send-email-cyphar@cyphar.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1431960667-26593-1-git-send-email-cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
@@ -11,113 +11,94 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
-Cc: richard-/L3Ra7n9ekc@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Cc: richard-/L3Ra7n9ekc@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Replace the explicit checking against ss_masks inside a for_each_subsys
-block with for_each_subsys_which(..., ss_mask), to take advantage of the
-more readable macro.
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Signed-off-by: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+bio_associate_current() currently open codes task_css() and
+css_tryget_online() to find and pin $current's blkcg css.  Abstract it
+into task_get_css() which is implemented from cgroup side.  As a task
+is always associated with an online css for every subsystem except
+while the css_set update is propagating, task_get_css() retries till
+css_tryget_online() succeeds.
+
+This is a cleanup and shouldn't lead to noticeable behavior changes.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- kernel/cgroup.c | 44 ++++++++++++++++----------------------------
- 1 file changed, 16 insertions(+), 28 deletions(-)
+ block/bio.c            | 11 +----------
+ include/linux/cgroup.h | 25 +++++++++++++++++++++++++
+ 2 files changed, 26 insertions(+), 10 deletions(-)
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index d66fb20..a9dfdf3 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1101,9 +1101,8 @@ static unsigned long cgroup_calc_child_subsys_mask(struct cgroup *cgrp,
- 	while (true) {
- 		unsigned long new_ss_mask = cur_ss_mask;
+diff --git a/block/bio.c b/block/bio.c
+index f66a4ea..968683e 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -1987,7 +1987,6 @@ EXPORT_SYMBOL(bioset_create_nobvec);
+ int bio_associate_current(struct bio *bio)
+ {
+ 	struct io_context *ioc;
+-	struct cgroup_subsys_state *css;
  
--		for_each_subsys(ss, ssid)
--			if (cur_ss_mask & (1 << ssid))
--				new_ss_mask |= ss->depends_on;
-+		for_each_subsys_which(ss, ssid, &cur_ss_mask)
-+			new_ss_mask |= ss->depends_on;
+ 	if (bio->bi_ioc)
+ 		return -EBUSY;
+@@ -1996,17 +1995,9 @@ int bio_associate_current(struct bio *bio)
+ 	if (!ioc)
+ 		return -ENOENT;
  
- 		/*
- 		 * Mask out subsystems which aren't available.  This can
-@@ -1241,10 +1240,7 @@ static int rebind_subsystems(struct cgroup_root *dst_root,
- 
- 	lockdep_assert_held(&cgroup_mutex);
- 
--	for_each_subsys(ss, ssid) {
--		if (!(ss_mask & (1 << ssid)))
--			continue;
+-	/* acquire active ref on @ioc and associate */
+ 	get_io_context_active(ioc);
+ 	bio->bi_ioc = ioc;
 -
-+	for_each_subsys_which(ss, ssid, &ss_mask) {
- 		/* if @ss has non-root csses attached to it, can't move */
- 		if (css_next_child(NULL, cgroup_css(&ss->root->cgrp, ss)))
- 			return -EBUSY;
-@@ -1281,18 +1277,14 @@ static int rebind_subsystems(struct cgroup_root *dst_root,
- 	 * Nothing can fail from this point on.  Remove files for the
- 	 * removed subsystems and rebind each subsystem.
- 	 */
--	for_each_subsys(ss, ssid)
--		if (ss_mask & (1 << ssid))
--			cgroup_clear_dir(&ss->root->cgrp, 1 << ssid);
-+	for_each_subsys_which(ss, ssid, &ss_mask)
-+		cgroup_clear_dir(&ss->root->cgrp, 1 << ssid);
- 
--	for_each_subsys(ss, ssid) {
-+	for_each_subsys_which(ss, ssid, &ss_mask) {
- 		struct cgroup_root *src_root;
- 		struct cgroup_subsys_state *css;
- 		struct css_set *cset;
- 
--		if (!(ss_mask & (1 << ssid)))
--			continue;
+-	/* associate blkcg if exists */
+-	rcu_read_lock();
+-	css = task_css(current, blkio_cgrp_id);
+-	if (css && css_tryget_online(css))
+-		bio->bi_css = css;
+-	rcu_read_unlock();
 -
- 		src_root = ss->root;
- 		css = cgroup_css(&src_root->cgrp, ss);
++	bio->bi_css = task_get_css(current, blkio_cgrp_id);
+ 	return 0;
+ }
  
-@@ -2566,13 +2558,11 @@ static void cgroup_print_ss_mask(struct seq_file *seq, unsigned long ss_mask)
- 	bool printed = false;
- 	int ssid;
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index b9cb94c..e7da0aa 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -774,6 +774,31 @@ static inline struct cgroup_subsys_state *task_css(struct task_struct *task,
+ }
  
--	for_each_subsys(ss, ssid) {
--		if (ss_mask & (1 << ssid)) {
--			if (printed)
--				seq_putc(seq, ' ');
--			seq_printf(seq, "%s", ss->name);
--			printed = true;
--		}
-+	for_each_subsys_which(ss, ssid, &ss_mask) {
-+		if (printed)
-+			seq_putc(seq, ' ');
-+		seq_printf(seq, "%s", ss->name);
-+		printed = true;
- 	}
- 	if (printed)
- 		seq_putc(seq, '\n');
-@@ -2720,11 +2710,12 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 	 */
- 	buf = strstrip(buf);
- 	while ((tok = strsep(&buf, " "))) {
-+		unsigned long tmp_ss_mask = ~cgrp_dfl_root_inhibit_ss_mask;
+ /**
++ * task_get_css - find and get the css for (task, subsys)
++ * @task: the target task
++ * @subsys_id: the target subsystem ID
++ *
++ * Find the css for the (@task, @subsys_id) combination, increment a
++ * reference on and return it.  This function is guaranteed to return a
++ * valid css.
++ */
++static inline struct cgroup_subsys_state *
++task_get_css(struct task_struct *task, int subsys_id)
++{
++	struct cgroup_subsys_state *css;
 +
- 		if (tok[0] == '\0')
- 			continue;
--		for_each_subsys(ss, ssid) {
--			if (ss->disabled || strcmp(tok + 1, ss->name) ||
--			    ((1 << ss->id) & cgrp_dfl_root_inhibit_ss_mask))
-+		for_each_subsys_which(ss, ssid, &tmp_ss_mask) {
-+			if (ss->disabled || strcmp(tok + 1, ss->name))
- 				continue;
- 
- 			if (*tok == '+') {
-@@ -2811,10 +2802,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 	 * still around.  In such cases, wait till it's gone using
- 	 * offline_waitq.
- 	 */
--	for_each_subsys(ss, ssid) {
--		if (!(css_enable & (1 << ssid)))
--			continue;
--
-+	for_each_subsys_which(ss, ssid, &css_enable) {
- 		cgroup_for_each_live_child(child, cgrp) {
- 			DEFINE_WAIT(wait);
- 
++	rcu_read_lock();
++	while (true) {
++		css = task_css(task, subsys_id);
++		if (likely(css_tryget_online(css)))
++			break;
++		cpu_relax();
++	}
++	rcu_read_unlock();
++	return css;
++}
++
++/**
+  * task_css_is_root - test whether a task belongs to the root css
+  * @task: the target task
+  * @subsys_id: the target subsystem ID
 -- 
 2.4.1
