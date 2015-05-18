@@ -1,124 +1,36 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 7/7] cgroup: make cgroup_update_dfl_csses() migrate all target processes atomically
-Date: Mon, 18 May 2015 15:49:55 -0400
-Message-ID: <1431978595-12176-8-git-send-email-tj@kernel.org>
-References: <1431978595-12176-1-git-send-email-tj@kernel.org>
+Subject: Re: [PATCH v2 cgroup/for-4.2 2/2] cgroup: reorganize
+ include/linux/cgroup.h
+Date: Mon, 18 May 2015 15:52:57 -0400
+Message-ID: <20150518195257.GB24861@htj.duckdns.org>
+References: <20150513193840.GC11388@htj.duckdns.org>
+ <20150513193907.GD11388@htj.duckdns.org>
+ <20150513202416.GE11388@htj.duckdns.org>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=qzdZU6p5+SD/FAnCK/FCTy5AxnBm2USvhVqmIoZPwww=;
-        b=BET8TbVGlrAHJGd6E9xrQj2mSQUdvOdwtrP8A9GOCU/C+8aV94fOfxXA2eJc6ZtGHK
-         tUQAKwOFh4JCzMHo0vi2aYAhUKayPgNVbgqnsIr8iJElgVSZw2Li9bnSdhb7zXcO800C
-         wPy98/E7yIpc9AULps1UHX/WHL3zMADBXTjfZzmYH2sdJC/W/xRmmi9H5i2Ukzq0AM3j
-         BlWp0xputz9kBNPCH45I8fa3GrKhDfcJR8u4F/RUpdMkYrXZQQ1lCPF7ceDuMv8uMA67
-         mhQ4Dcs49UcBsdsFj2SVTXfEk8ylUk61VO61vtMO4pL8pfoNF5iLzPtML7injMJ8g5h2
-         49Yw==
-In-Reply-To: <1431978595-12176-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=TnRLMetXvVjrKxmjKDsM9h7i+360EoBRR3MnM0/c8l4=;
+        b=Axv6ImQ5jfZp+LGRhKjaCt3TajSoAKp7UuIYtgnGtQUksAU15gNfAFfnrDNecYig3M
+         21y3HQpRQJhGr8AM9oqur8NGEpnXYZttbXh1mIjrvRAG+rrzjKBrZdo6jORYkO8NXqr6
+         oR91Ko5xk190Vb821vyj2dWnFN6gVM1W2rHKEJrrmZRvl8+7WG3WT5tg4Ccc/6eTp4Ko
+         NYoPi/odQ72qNIfOIfrpOFsMDNMQO4D93V5jNtdhQOAA3dA1Pvjqwzpl/AcXCZQmBkL+
+         9lIP2ggiOozUppKricy1spRTVgHmHfgC1uAR+po31vJW2g/2poVV/CfRa97lD3JTU9Y1
+         J8ZA==
+Content-Disposition: inline
+In-Reply-To: <20150513202416.GE11388-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-cgroup_update_dfl_csses() is responsible for migrating processes when
-controllers are enabled or disabled on the default hierarchy.  As the
-css association changes for all the processes in the affected cgroups,
-this involves migrating multiple processes.
+Applied 1-2 to cgroup/for-4.2.
 
-Up until now, it was implemented by migrating process-by-process until
-the source css_sets are empty; however, this means that if a process
-fails to migrate after some succeed before it, the recovery is very
-tricky.  This was considered okay as subsystems weren't allowed to
-reject process migration on the default hierarchy; unfortunately,
-enforcing this policy turned out to be problematic for certain types
-of resources - realtime slices for now.
+Thanks.
 
-As such, the default hierarchy is gonna allow restricted failures
-during migration and to support that this patch makes
-cgroup_update_dfl_csses() migrate all target processes atomically
-rather than one-by-one.  The preceding patches made subsystems ready
-for multi-process migration and factored out taskset operations making
-this almost trivial.  All tasks of the target processes are put in the
-same taskset and the migration operations are performed once which
-either fails or succeeds for all.
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- kernel/cgroup.c | 44 ++++++++------------------------------------
- 1 file changed, 8 insertions(+), 36 deletions(-)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 1d86d17..978d741 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -2616,6 +2616,7 @@ static int cgroup_subtree_control_show(struct seq_file *seq, void *v)
- static int cgroup_update_dfl_csses(struct cgroup *cgrp)
- {
- 	LIST_HEAD(preloaded_csets);
-+	struct cgroup_taskset tset = CGROUP_TASKSET_INIT(tset);
- 	struct cgroup_subsys_state *css;
- 	struct css_set *src_cset;
- 	int ret;
-@@ -2644,50 +2645,21 @@ static int cgroup_update_dfl_csses(struct cgroup *cgrp)
- 	if (ret)
- 		goto out_finish;
- 
-+	down_write(&css_set_rwsem);
- 	list_for_each_entry(src_cset, &preloaded_csets, mg_preload_node) {
--		struct task_struct *last_task = NULL, *task;
-+		struct task_struct *task, *ntask;
- 
- 		/* src_csets precede dst_csets, break on the first dst_cset */
- 		if (!src_cset->mg_src_cgrp)
- 			break;
- 
--		/*
--		 * All tasks in src_cset need to be migrated to the
--		 * matching dst_cset.  Empty it process by process.  We
--		 * walk tasks but migrate processes.  The leader might even
--		 * belong to a different cset but such src_cset would also
--		 * be among the target src_csets because the default
--		 * hierarchy enforces per-process membership.
--		 */
--		while (true) {
--			down_read(&css_set_rwsem);
--			task = list_first_entry_or_null(&src_cset->tasks,
--						struct task_struct, cg_list);
--			if (task) {
--				task = task->group_leader;
--				WARN_ON_ONCE(!task_css_set(task)->mg_src_cgrp);
--				get_task_struct(task);
--			}
--			up_read(&css_set_rwsem);
--
--			if (!task)
--				break;
--
--			/* guard against possible infinite loop */
--			if (WARN(last_task == task,
--				 "cgroup: update_dfl_csses failed to make progress, aborting in inconsistent state\n"))
--				goto out_finish;
--			last_task = task;
--
--			ret = cgroup_migrate(task, true, src_cset->dfl_cgrp);
--
--			put_task_struct(task);
--
--			if (WARN(ret, "cgroup: failed to update controllers for the default hierarchy (%d), further operations may crash or hang\n", ret))
--				goto out_finish;
--		}
-+		/* all tasks in src_csets need to be migrated */
-+		list_for_each_entry_safe(task, ntask, &src_cset->tasks, cg_list)
-+			cgroup_taskset_add(task, &tset);
- 	}
-+	up_write(&css_set_rwsem);
- 
-+	ret = cgroup_taskset_migrate(&tset, cgrp);
- out_finish:
- 	cgroup_migrate_finish(&preloaded_csets);
- 	percpu_up_write(&cgroup_threadgroup_rwsem);
 -- 
-2.4.0
+tejun
