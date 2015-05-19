@@ -1,82 +1,65 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 2/3] sched, cgroup: replace signal_struct->group_rwsem
- with a global percpu_rwsem
-Date: Tue, 19 May 2015 17:16:59 +0200
-Message-ID: <20150519151659.GF3644@twins.programming.kicks-ass.net>
-References: <1431549318-16756-1-git-send-email-tj@kernel.org>
- <1431549318-16756-3-git-send-email-tj@kernel.org>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH] mm, memcg: Optionally disable memcg by default using
+ Kconfig
+Date: Tue, 19 May 2015 17:27:10 +0200
+Message-ID: <20150519152710.GK6203@dhcp22.suse.cz>
+References: <20150519104057.GC2462@suse.de>
+ <20150519141807.GA9788@cmpxchg.org>
+ <20150519145340.GI6203@dhcp22.suse.cz>
+ <20150519151302.GG2462@suse.de>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=0XFCfKCQ3D413YOVd6woWJ3H7TLUL2F5ffifKbg9tgc=;
+        b=qEsknwncTB2neI5Pa1o4gvx/w/isKiFpRUjJHeQYJvMh4d7z9u47fJDOWBxL84Sppx
+         eQRZO3LxozXp9DK0sjdZIykdk3mYJ5YA/30uR/7d2vgmdOnsReYbjoy1yA65LgN4NFmL
+         ADN6JOE8fAVbWpRJQFzLkbqT6OxsePOMA9aztZ5js+QyKwbf89AVM+MS73j5EAO9rRM6
+         /3WJHkOSjHBahBn4p750C/62OAlCzMWme1UhNvcXwNzgkK9Z0syhi75ThMEjfYHPBQVo
+         n70vBRhAXJfBrmvprd9fNISQwgtgQwmKzh8qKbS/0GkV4dPDvIfvFD0jrWed5mCngVhO
+         swVg==
 Content-Disposition: inline
-In-Reply-To: <1431549318-16756-3-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20150519151302.GG2462@suse.de>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: lizefan@huawei.com, cgroups@vger.kernel.org, mingo@redhat.com, linux-kernel@vger.kernel.org
+To: Mel Gorman <mgorman@suse.de>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org
 
-On Wed, May 13, 2015 at 04:35:17PM -0400, Tejun Heo wrote:
+On Tue 19-05-15 16:13:02, Mel Gorman wrote:
+[...]
+>                :ffffffff811c160f:       je     ffffffff811c1630 <mem_cgroup_try_charge+0x40>
+>                :ffffffff811c1611:       xor    %eax,%eax
+>                :ffffffff811c1613:       xor    %ebx,%ebx
+>      1 1.7e-05 :ffffffff811c1615:       mov    %rbx,(%r12)
+>      7 1.2e-04 :ffffffff811c1619:       add    $0x10,%rsp
+>   1211  0.0203 :ffffffff811c161d:       pop    %rbx
+>      5 8.4e-05 :ffffffff811c161e:       pop    %r12
+>      5 8.4e-05 :ffffffff811c1620:       pop    %r13
+>   1249  0.0210 :ffffffff811c1622:       pop    %r14
+>      7 1.2e-04 :ffffffff811c1624:       pop    %rbp
+>      5 8.4e-05 :ffffffff811c1625:       retq   
+>                :ffffffff811c1626:       nopw   %cs:0x0(%rax,%rax,1)
+>    295  0.0050 :ffffffff811c1630:       mov    (%rdi),%rax
+> 160703  2.6973 :ffffffff811c1633:       mov    %edx,%r13d
 
-.gitconfig:
+Huh, what? Even if this was off by one and the preceding instruction has
+consumed the time. This would be reading from page->flags but the page
+should be hot by the time we got here, no?
 
-[diff "default"]
-        xfuncname = "^[[:alpha:]$_].*[^:]$"
+> #### MEL: I was surprised to see this atrocity. It's a PageSwapCache check
+> #### /usr/src/linux-4.0-vanilla/./arch/x86/include/asm/bitops.h:311
+> #### /usr/src/linux-4.0-vanilla/include/linux/page-flags.h:261
+> #### /usr/src/linux-4.0-vanilla/mm/memcontrol.c:5473
+-- 
+Michal Hocko
+SUSE Labs
 
-Will avoid keying on labels like that and show us this is
-__cgroup_procs_write().
-
-> @@ -2480,7 +2442,7 @@ retry_find_task:
->  	get_task_struct(tsk);
->  	rcu_read_unlock();
->  
-> -	threadgroup_lock(tsk);
-> +	percpu_down_write(&cgroup_threadgroup_rwsem);
->  	if (threadgroup) {
->  		if (!thread_group_leader(tsk)) {
->  			/*
-> @@ -2490,7 +2452,7 @@ retry_find_task:
->  			 * try again; this is
->  			 * "double-double-toil-and-trouble-check locking".
->  			 */
-> -			threadgroup_unlock(tsk);
-> +			percpu_up_write(&cgroup_threadgroup_rwsem);
->  			put_task_struct(tsk);
->  			goto retry_find_task;
->  		}
-
-> @@ -2703,17 +2665,17 @@ static int cgroup_update_dfl_csses(struct cgroup *cgrp)
->  				goto out_finish;
->  			last_task = task;
->  
-> -			threadgroup_lock(task);
-> +			percpu_down_write(&cgroup_threadgroup_rwsem);
->  			/* raced against de_thread() from another thread? */
->  			if (!thread_group_leader(task)) {
-> -				threadgroup_unlock(task);
-> +				percpu_up_write(&cgroup_threadgroup_rwsem);
->  				put_task_struct(task);
->  				continue;
->  			}
->  
->  			ret = cgroup_migrate(src_cset->dfl_cgrp, task, true);
->  
-> -			threadgroup_unlock(task);
-> +			percpu_up_write(&cgroup_threadgroup_rwsem);
->  			put_task_struct(task);
->  
->  			if (WARN(ret, "cgroup: failed to update controllers for the default hierarchy (%d), further operations may crash or hang\n", ret))
-
-
-So my only worry with this patch-set is that these operations will be
-hugely expensive.
-
-Now it looks like the cgroup_update_dfl_csses() thing is very rare, its
-when you change which controllers are active in a given subtree under
-the uber-l337-super-comount design.
-
-The other one, __cgorup_procs_write() is every /procs, /tasks write to a
-cgroup, and that does worry me, this could be a somewhat common thing.
-
-The Changelog states task migration is a cold path, but is tens of
-miliseconds per task really no problem?
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
