@@ -1,71 +1,64 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/3] sched, cgroup: replace signal_struct->group_rwsem
- with a global percpu_rwsem
-Date: Tue, 19 May 2015 11:51:33 -0400
-Message-ID: <20150519155133.GM24861@htj.duckdns.org>
-References: <1431549318-16756-1-git-send-email-tj@kernel.org>
- <1431549318-16756-3-git-send-email-tj@kernel.org>
- <20150519151659.GF3644@twins.programming.kicks-ass.net>
+From: Mel Gorman <mgorman@suse.de>
+Subject: Re: [PATCH] mm, memcg: Optionally disable memcg by default using
+ Kconfig
+Date: Tue, 19 May 2015 17:04:04 +0100
+Message-ID: <20150519160404.GJ2462@suse.de>
+References: <20150519104057.GC2462@suse.de>
+ <20150519141807.GA9788@cmpxchg.org>
+ <20150519145340.GI6203@dhcp22.suse.cz>
+ <20150519151302.GG2462@suse.de>
+ <20150519152710.GK6203@dhcp22.suse.cz>
+ <20150519154119.GI2462@suse.de>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=GPAplxLn6+gXctrg4aKq7ibT2jOcGli3anXUORMHtvU=;
-        b=mWomeY3kCtCqjeNjabttYrFyMhO8UnlCJvO4j548/DY2j7EIlvF21RwKhfkaRHsn5f
-         Dli7JJqfnTokXnIaIwu5P/MZmNyPvfpOkZjHZ3xjwVVf2XYQ0CJE0w+JnyrILSG/ys0A
-         vDLgQAPRsmnU6peahafAUNHmWipngKvk1twMTVSrkkskvMX2JyOECLiQWLZx2JoCHYKY
-         TRSg6+nmoRoweVh1XKqKt22TqWY0/c143bqUGOYop6ThHfRXftYg9XiD71diVhOIl+WR
-         ARfRYNkZT1hThnPL9Bc2vRHKB/8GLqgrlonqnuWb7nSLX1HTR/AfgWUAy4k8UMFEPXK6
-         BZmA==
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20150519151659.GF3644-ndre7Fmf5hadTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20150519154119.GI2462@suse.de>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org
 
-Hello, Peter.
-
-On Tue, May 19, 2015 at 05:16:59PM +0200, Peter Zijlstra wrote:
-> .gitconfig:
+On Tue, May 19, 2015 at 04:41:19PM +0100, Mel Gorman wrote:
+> On Tue, May 19, 2015 at 05:27:10PM +0200, Michal Hocko wrote:
+> > On Tue 19-05-15 16:13:02, Mel Gorman wrote:
+> > [...]
+> > >                :ffffffff811c160f:       je     ffffffff811c1630 <mem_cgroup_try_charge+0x40>
+> > >                :ffffffff811c1611:       xor    %eax,%eax
+> > >                :ffffffff811c1613:       xor    %ebx,%ebx
+> > >      1 1.7e-05 :ffffffff811c1615:       mov    %rbx,(%r12)
+> > >      7 1.2e-04 :ffffffff811c1619:       add    $0x10,%rsp
+> > >   1211  0.0203 :ffffffff811c161d:       pop    %rbx
+> > >      5 8.4e-05 :ffffffff811c161e:       pop    %r12
+> > >      5 8.4e-05 :ffffffff811c1620:       pop    %r13
+> > >   1249  0.0210 :ffffffff811c1622:       pop    %r14
+> > >      7 1.2e-04 :ffffffff811c1624:       pop    %rbp
+> > >      5 8.4e-05 :ffffffff811c1625:       retq   
+> > >                :ffffffff811c1626:       nopw   %cs:0x0(%rax,%rax,1)
+> > >    295  0.0050 :ffffffff811c1630:       mov    (%rdi),%rax
+> > > 160703  2.6973 :ffffffff811c1633:       mov    %edx,%r13d
+> > 
+> > Huh, what? Even if this was off by one and the preceding instruction has
+> > consumed the time. This would be reading from page->flags but the page
+> > should be hot by the time we got here, no?
+> > 
 > 
-> [diff "default"]
->         xfuncname = "^[[:alpha:]$_].*[^:]$"
->
-> Will avoid keying on labels like that and show us this is
-> __cgroup_procs_write().
-
-Ah, nice trick.
-
-> So my only worry with this patch-set is that these operations will be
-> hugely expensive.
+> I would have expected so but it's not the first time I've seen cases where
+> examining the flags was a costly instruction. I suspect it's due to an
+> ordering issue or more likely, a frequent branch mispredict that is being
+> accounted for against this instruction.
 > 
-> Now it looks like the cgroup_update_dfl_csses() thing is very rare, its
-> when you change which controllers are active in a given subtree under
-> the uber-l337-super-comount design.
-> 
-> The other one, __cgorup_procs_write() is every /procs, /tasks write to a
-> cgroup, and that does worry me, this could be a somewhat common thing.
->
-> The Changelog states task migration is a cold path, but is tens of
-> miliseconds per task really no problem?
 
-The latency is bound by synchronize_sched_expedited().  Given the way
-cgroups are used in majority of setups (process migration happening
-only during service / session setups), I think this should be okay.
-
-I agree that something which is closer to lglock in characteristics
-would fit the workload better tho.  If this actually becomes a
-problem, we can come up with a different percpu locking scheme which
-puts a bit more overhead on the reader side to reduce the latency /
-overhead on the writer side which shouldn't be that difficult but
-let's see whether we need to get there at all.
-
-Thanks.
+Which is plausible as forward branches are statically predicted false but
+in this particular load that could be a close to a 100% mispredict.
 
 -- 
-tejun
+Mel Gorman
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
