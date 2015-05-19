@@ -1,97 +1,114 @@
-From: Ben Hutchings <ben@decadent.org.uk>
+From: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
 Subject: Re: [PATCH] mm, memcg: Optionally disable memcg by default using
  Kconfig
-Date: Tue, 19 May 2015 18:09:52 +0100
-Message-ID: <1432055392.12412.34.camel@decadent.org.uk>
+Date: Tue, 19 May 2015 20:32:36 +0100
+Message-ID: <20150519193236.GM2462@suse.de>
 References: <20150519104057.GC2462@suse.de>
-	 <20150519141807.GA9788@cmpxchg.org> <20150519144345.GF2462@suse.de>
-	 <20150519151541.GJ6203@dhcp22.suse.cz>
+ <20150519141807.GA9788@cmpxchg.org>
+ <20150519145340.GI6203@dhcp22.suse.cz>
+ <20150519151302.GG2462@suse.de>
+ <20150519152710.GK6203@dhcp22.suse.cz>
+ <20150519154119.GI2462@suse.de>
+ <20150519160404.GJ2462@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-jE7Fec7qAhbXZf0Hnv5Q"
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20150519151541.GJ6203@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20150519160404.GJ2462-l3A5Bk7waGM@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Mel Gorman <mgorman@suse.de>, Johannes Weiner <hannes@cmpxchg.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Debian kernel maintainers <debian-kernel@lists.debian.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
+On Tue, May 19, 2015 at 05:04:04PM +0100, Mel Gorman wrote:
+> On Tue, May 19, 2015 at 04:41:19PM +0100, Mel Gorman wrote:
+> > On Tue, May 19, 2015 at 05:27:10PM +0200, Michal Hocko wrote:
+> > > On Tue 19-05-15 16:13:02, Mel Gorman wrote:
+> > > [...]
+> > > >                :ffffffff811c160f:       je     ffffffff811c1630 <mem_cgroup_try_charge+0x40>
+> > > >                :ffffffff811c1611:       xor    %eax,%eax
+> > > >                :ffffffff811c1613:       xor    %ebx,%ebx
+> > > >      1 1.7e-05 :ffffffff811c1615:       mov    %rbx,(%r12)
+> > > >      7 1.2e-04 :ffffffff811c1619:       add    $0x10,%rsp
+> > > >   1211  0.0203 :ffffffff811c161d:       pop    %rbx
+> > > >      5 8.4e-05 :ffffffff811c161e:       pop    %r12
+> > > >      5 8.4e-05 :ffffffff811c1620:       pop    %r13
+> > > >   1249  0.0210 :ffffffff811c1622:       pop    %r14
+> > > >      7 1.2e-04 :ffffffff811c1624:       pop    %rbp
+> > > >      5 8.4e-05 :ffffffff811c1625:       retq   
+> > > >                :ffffffff811c1626:       nopw   %cs:0x0(%rax,%rax,1)
+> > > >    295  0.0050 :ffffffff811c1630:       mov    (%rdi),%rax
+> > > > 160703  2.6973 :ffffffff811c1633:       mov    %edx,%r13d
+> > > 
+> > > Huh, what? Even if this was off by one and the preceding instruction has
+> > > consumed the time. This would be reading from page->flags but the page
+> > > should be hot by the time we got here, no?
+> > > 
+> > 
+> > I would have expected so but it's not the first time I've seen cases where
+> > examining the flags was a costly instruction. I suspect it's due to an
+> > ordering issue or more likely, a frequent branch mispredict that is being
+> > accounted for against this instruction.
+> > 
+> 
+> Which is plausible as forward branches are statically predicted false but
+> in this particular load that could be a close to a 100% mispredict.
+> 
 
---=-jE7Fec7qAhbXZf0Hnv5Q
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Plausible but wrong. The responsible instruction was too far away so it
+looks more like an ordering issue where the PageSwapCache check must be
+ordered against the setting of page up to date. __SetPageUptodate is a
+barrier that is necessary before the PTE is established and visible but it
+does not have to be ordered against the memcg charging. In fact it makes
+sense to do it afterwards in case the charge fails and the page is never
+visible. Just adjusting that reduces the cost to
 
-On Tue, 2015-05-19 at 17:15 +0200, Michal Hocko wrote:
-> [Let's CC Ben here - the email thread has started here:
-> http://marc.info/?l=3Dlinux-mm&m=3D143203206402073&w=3D2 and it seems Deb=
-ian
-> is disabling memcg controller already so this might be of your interest]
->=20
-> On Tue 19-05-15 15:43:45, Mel Gorman wrote:
-> [...]
-> > After I wrote the patch, I spotted that Debian apparently already
-> > does something like this and by coincidence they matched the
-> > parameter name and values. See the memory controller instructions on
-> > https://wiki.debian.org/LXC#Prepare_the_host . So in this case at least
-> > upstream would match something that at least one distro in the field
-> > already uses.
->=20
-> I've read through
-> https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D534964 and it seems
-> that the primary motivation for the runtime disabling was the _memory_
-> overhead of the struct page_cgroup
-> (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D534964#152). This is
-> no longer the case since 1306a85aed3e ("mm: embed the memcg pointer
-> directly into struct page") merged in 3.19.
->=20
-> I can see some point in disabling the memcg due to runtime overhead.
+/usr/src/linux-4.0-chargefirst-v1r1/mm/memcontrol.c                  3.8547   228233
+  __mem_cgroup_count_vm_event                                                  1.172%    69393
+  mem_cgroup_page_lruvec                                                       0.464%    27456
+  mem_cgroup_commit_charge                                                     0.390%    23072
+  uncharge_list                                                                0.327%    19370
+  mem_cgroup_update_lru_size                                                   0.284%    16831
+  get_mem_cgroup_from_mm                                                       0.262%    15523
+  mem_cgroup_try_charge                                                        0.256%    15147
+  memcg_check_events                                                           0.222%    13120
+  mem_cgroup_charge_statistics.isra.22                                         0.194%    11470
+  commit_charge                                                                0.145%     8615
+  try_charge                                                                   0.139%     8236
 
-I was also concerned about runtime overhead.
+Big sinner there is updating per-cpu stats -- root cgroup stats I assume? To
+refresh, a complete disable looks like
 
-> There will always be some, albeit hard to notice. If an user really need
-> this to happen there is a command line option for that. The question is
-> who would do CONFIG_MEMCG && !MEMCG_DEFAULT_ENABLED.  Do you expect any
-> distributions go that way?
-> Ben, would you welcome such a change upstream or is there a reason to
-> change the Debian kernel runtime default now that the memory overhead is
-> mostly gone (for 3.19+ kernels of course)?
+/usr/src/linux-4.0-nomemcg-v1r1/mm/memcontrol.c                      0.4834    27511
+  mem_cgroup_page_lruvec                                                       0.161%     9172
+  mem_cgroup_update_lru_size                                                   0.154%     8794
+  mem_cgroup_try_charge                                                        0.126%     7194
+  mem_cgroup_commit_charge                                                     0.041%     2351
 
-I have been meaning to reevaluate this as I know the overhead has been
-reduced.  Given Mel's benchmark results, I favour keeping it disabled by
-default in Debian.  So I would welcome this change.
+Still, 6.64% down to 3.85% is better than a kick in the head. Unprofiled
+performance looks like
 
-Ben.
+pft faults
+                                       4.0.0                  4.0.0                 4.0.0
+                                     vanilla             nomemcg-v1        chargefirst-v1
+Hmean    faults/cpu-1 1443258.1051 (  0.00%) 1530574.6033 (  6.05%) 1487623.0037 (  3.07%)
+Hmean    faults/cpu-3 1340385.9270 (  0.00%) 1375156.5834 (  2.59%) 1351401.2578 (  0.82%)
+Hmean    faults/cpu-5  875599.0222 (  0.00%)  876217.9211 (  0.07%)  876122.6489 (  0.06%)
+Hmean    faults/cpu-7  601146.6726 (  0.00%)  599068.4360 ( -0.35%)  600944.9229 ( -0.03%)
+Hmean    faults/cpu-8  510728.2754 (  0.00%)  509887.9960 ( -0.16%)  510906.3818 (  0.03%)
+Hmean    faults/sec-1 1432084.7845 (  0.00%) 1518566.3541 (  6.04%) 1475994.2194 (  3.07%)
+Hmean    faults/sec-3 3943818.1437 (  0.00%) 4036918.0217 (  2.36%) 3973070.2159 (  0.74%)
+Hmean    faults/sec-5 3877573.5867 (  0.00%) 3922745.9207 (  1.16%) 3891705.1749 (  0.36%)
+Hmean    faults/sec-7 3991832.0418 (  0.00%) 3990670.8481 ( -0.03%) 3989110.4674 ( -0.07%)
+Hmean    faults/sec-8 3987189.8167 (  0.00%) 3978842.8107 ( -0.21%) 3981011.2936 ( -0.15%)
 
---=20
-Ben Hutchings
-I'm not a reverse psychological virus.  Please don't copy me into your sig.
+Very minor boost. The same reordering looks like it would also suit
+do_wp_page. I'll do that, retest, put some lipstick on the patches and
+post them tomorrow the day after. The reordering one probably makes sense
+anyway, the default disabling of memcg still has merit but maybe if that
+charging of the root group can be eliminated then it'd be pointless.
 
---=-jE7Fec7qAhbXZf0Hnv5Q
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUAVVtuZee/yOyVhhEJAQoIMRAAlIH39TrYgnVzaO/Uycqy23LZpvz4el4d
-bsjUl6cZM78rlDZJSgcvsHxValZw/0SosW8kvo+S0xzQQLGJGnAFsyoCdtD4k4cj
-bxYW3k2yxJAOlzq7yBu6xf2s/rMAn/msyPmjqS9lU+ilvOrsxr38odYJMWY8plF2
-MEJ2WTaDrspGDM/VeMQlJDw6nSzckJ7p12LodJbLre0souoxRjDzU+90fYJ5kd8a
-DLonrL+kL+HKxjY/jLtaQVTU8EAIRoxTPDSZaX5myTnxwOI6yLmFKg2N3kO7oB8C
-aY0pGWD6cjLSxdRwooVmk/Xenzwam1hHWc/12l6XOkaUs43/Xw096mYs9qv3Knhv
-UGNluf3Flbz+zMM7dg+UaK9jq1kPEWP/jqty4ICnRlKbSTTOtoTtLRKwAKL5bSj5
-CAye+w2m77ipEJ2NxNweEsTCCxaniOvqX+IyDiPzkVTlYChaIWQfsD9hsW2Zc7T5
-/2mia5f6iEeWjm/3R2MY697a1XXHj1rHAdVg5Yh0K3LE0nqNvnYZPN8pw0ab8ktz
-/PnVFA+ObAn+n+VBahoDdwdR/rwuXm3a5OnT32s0K9uJtOZRj+hrHkMlGVGX1II0
-XLi/rBtNn9om3bvs64TX62+8HdD9v3XveeOOcvQEOAuX2MnGjjTAzg9gO4QM0uvL
-ZUAZvHEOCRs=
-=ZIn5
------END PGP SIGNATURE-----
-
---=-jE7Fec7qAhbXZf0Hnv5Q--
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+Mel Gorman
+SUSE Labs
