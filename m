@@ -1,47 +1,34 @@
-From: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [PATCH 2/2] mm, memcg: Optionally disable memcg by default using
- Kconfig
-Date: Wed, 20 May 2015 17:44:19 +0100
-Message-ID: <20150520164419.GT2462@suse.de>
-References: <1432126245-10908-1-git-send-email-mgorman@suse.de>
- <1432126245-10908-3-git-send-email-mgorman@suse.de>
- <20150520162421.GB2874@cmpxchg.org>
+From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 3/7] memcg: immigrate charges only when a threadgroup
+	leader is moved
+Date: Wed, 20 May 2015 19:53:02 +0200
+Message-ID: <20150520175302.GA7287@redhat.com>
+References: <1431978595-12176-1-git-send-email-tj@kernel.org> <1431978595-12176-4-git-send-email-tj@kernel.org> <20150519121321.GB6203@dhcp22.suse.cz> <20150519212754.GO24861@htj.duckdns.org> <20150520131044.GA28678@dhcp22.suse.cz> <20150520132158.GB28678@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20150520162421.GB2874-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <20150520132158.GB28678-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux-CGroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Wed, May 20, 2015 at 12:24:21PM -0400, Johannes Weiner wrote:
-> > 
-> > Low thread counts get a small boost but it's within noise as memcg overhead
-> > does not dominate. It's not obvious at all at higher thread counts as other
-> > factors cause more problems. The overall breakdown of CPU usage looks like
-> > 
-> >                4.0.0       4.0.0
-> >         chargefirst-v2r1disable-v2r1
-> > User           41.81       41.45
-> > System        407.64      405.50
-> > Elapsed       128.17      127.06
-> 
-> This is a worst case microbenchmark doing nothing but anonymous page
-> faults (with THP disabled), and yet the performance difference is in
-> the noise.  I don't see why we should burden the user with making a
-> decision that doesn't matter in theory, let alone in practice.
-> 
-> We have CONFIG_MEMCG and cgroup_disable=memory, that should be plenty
-> for users that obsess about fluctuation in the noise.  There is no
-> reason to complicate the world further for everybody else.
+On 05/20, Michal Hocko wrote:
+>
+> So I assume the leader simply waits for its threads to finish and it
+> stays in the sibling list. __unhash_process seems like it does the final
+> cleanup and unlinks the leader from the lists. Which means that
+> mm_update_next_owner never sees !group_leader. Is that correct Oleg?
 
-FWIW, I agree and only included this patch because I said I would
-yesterday. After patch 1, there is almost no motivation to disable memcg
-at all let alone by default.
+Yes, yes, the group leader can't go away until the whole thread-group dies.
 
--- 
-Mel Gorman
-SUSE Labs
+But can't we kill mm->owner somehow? I mean, turn it into something else,
+ideally into "struct mem_cgroup *" although I doubt this is possible.
+
+It would be nice to kill mm_update_next_owner()/etc, this looks really
+ugly. We only need it for mem_cgroup_from_task(), and it would be much
+more clean to have mem_cgroup_from_mm(struct mm_struct *mm), imho.
+
+Oleg.
