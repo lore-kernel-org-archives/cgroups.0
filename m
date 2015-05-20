@@ -1,61 +1,34 @@
-From: Zefan Li <lizefan@huawei.com>
-Subject: Re: [PATCH 2/3] sched, cgroup: replace signal_struct->group_rwsem
- with a global percpu_rwsem
-Date: Wed, 20 May 2015 18:05:37 +0800
-Message-ID: <555C5C71.80200@huawei.com>
-References: <1431549318-16756-1-git-send-email-tj@kernel.org> <1431549318-16756-3-git-send-email-tj@kernel.org> <20150519151659.GF3644@twins.programming.kicks-ass.net> <20150519155133.GM24861@htj.duckdns.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150519155133.GM24861@htj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
+Subject: [PATCH 0/2] Reduce overhead of memcg when unused
+Date: Wed, 20 May 2015 13:50:43 +0100
+Message-ID: <1432126245-10908-1-git-send-email-mgorman@suse.de>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Peter Zijlstra <peterz@infradead.org>, cgroups@vger.kernel.org, mingo@redhat.com, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux-CGroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
 
-On 2015/5/19 23:51, Tejun Heo wrote:
-> Hello, Peter.
-> 
-> On Tue, May 19, 2015 at 05:16:59PM +0200, Peter Zijlstra wrote:
->> .gitconfig:
->>
->> [diff "default"]
->>         xfuncname = "^[[:alpha:]$_].*[^:]$"
->>
->> Will avoid keying on labels like that and show us this is
->> __cgroup_procs_write().
-> 
-> Ah, nice trick.
-> 
->> So my only worry with this patch-set is that these operations will be
->> hugely expensive.
->>
->> Now it looks like the cgroup_update_dfl_csses() thing is very rare, its
->> when you change which controllers are active in a given subtree under
->> the uber-l337-super-comount design.
->>
->> The other one, __cgorup_procs_write() is every /procs, /tasks write to a
->> cgroup, and that does worry me, this could be a somewhat common thing.
->>
->> The Changelog states task migration is a cold path, but is tens of
->> miliseconds per task really no problem?
-> 
-> The latency is bound by synchronize_sched_expedited().  Given the way
-> cgroups are used in majority of setups (process migration happening
-> only during service / session setups), I think this should be okay.
-> 
+These are two patches to reduce the overhead of memcg, particularly when
+it's not used. The first is a simple reordering of when a barrier is applied
+which memcg happens to get burned by.  I doubt it is controversial at all.
 
-Actually process migration can happen quite frequently, for example in
-Android phones, and that's why Google had an out-of-tree patch to remove
-the synchronize_rcu() in that path, which turned out to be buggy.
+The second optionally disables memcg by default. This should have
+been the default from the start and it matches what Debian already does
+today. The difficulty is that existing installations may break if the new
+kernel parameter is not applied so distributions need to be careful with
+upgrades. The difference it makes is marginal and only visible in profiles,
+not headline performance. It'd be understandable if memcg maintainers
+rejected it but I'll leave it up to them.
 
-> I agree that something which is closer to lglock in characteristics
-> would fit the workload better tho.  If this actually becomes a
-> problem, we can come up with a different percpu locking scheme which
-> puts a bit more overhead on the reader side to reduce the latency /
-> overhead on the writer side which shouldn't be that difficult but
-> let's see whether we need to get there at all.
-> 
-> Thanks.
-> 
+ Documentation/kernel-parameters.txt |  4 ++++
+ init/Kconfig                        | 15 +++++++++++++++
+ kernel/cgroup.c                     | 20 ++++++++++++++++----
+ mm/memcontrol.c                     |  3 +++
+ mm/memory.c                         | 10 ++++++----
+ 5 files changed, 44 insertions(+), 8 deletions(-)
+
+-- 
+2.3.5
