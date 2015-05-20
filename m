@@ -1,54 +1,40 @@
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: [PATCH 3/7] memcg: immigrate charges only when a threadgroup
- leader is moved
-Date: Wed, 20 May 2015 15:21:58 +0200
-Message-ID: <20150520132158.GB28678@dhcp22.suse.cz>
-References: <1431978595-12176-1-git-send-email-tj@kernel.org>
- <1431978595-12176-4-git-send-email-tj@kernel.org>
- <20150519121321.GB6203@dhcp22.suse.cz>
- <20150519212754.GO24861@htj.duckdns.org>
- <20150520131044.GA28678@dhcp22.suse.cz>
+From: Davidlohr Bueso <dave@stgolabs.net>
+Subject: Re: [PATCH 2/2] mm, memcg: Optionally disable memcg by default
+ using Kconfig
+Date: Wed, 20 May 2015 06:47:46 -0700
+Message-ID: <1432129666.15239.22.camel@stgolabs.net>
+References: <1432126245-10908-1-git-send-email-mgorman@suse.de>
+	 <1432126245-10908-3-git-send-email-mgorman@suse.de>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20150520131044.GA28678@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1432126245-10908-3-git-send-email-mgorman@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: lizefan@huawei.com, cgroups@vger.kernel.org, hannes@cmpxchg.org, linux-mm@kvack.org, Oleg Nesterov <oleg@redhat.com>
+To: Mel Gorman <mgorman@suse.de>
+Cc: Michal Hocko <mhocko@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Linux-CGroups <cgroups@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Wed 20-05-15 15:10:44, Michal Hocko wrote:
-[...]
-> But I am completely lost in the exit code paths. E.g. what happens
-> when the thread group leader exits and the other threads are still
-> alive? I would expect another thread would be chosen as a new leader and
-> siblings would be updated. But I cannot find that code. Maybe the
-> original leader just waits for all other threads to terminate and stay
-> in the linked lists.
+On Wed, 2015-05-20 at 13:50 +0100, Mel Gorman wrote:
+> +config MEMCG_DEFAULT_ENABLED
+> +	bool "Automatically enable memory resource controller"
+> +	default y
+> +	depends on MEMCG
+> +	help
+> +	  The memory controller has some overhead even if idle as resource
+> +	  usage must be tracked in case a group is created and a process
+> +	  migrated. As users may not be aware of this and the cgroup_disable=
+> +	  option, this config option controls whether it is enabled by
+> +	  default. It is assumed that someone that requires the controller
+> +	  can find the cgroup_enable= switch.
+> +
+> +	  Say N if unsure. This is default Y to preserve oldconfig and
+> +	  historical behaviour.
 
-I've tried a simple test where the main thread (group leader) calls
-pthread_exit after it creates another thread. The other thread continues
-to run and the leader is marked as Zombie:
-$ ./t &
-Main pid:2432 tid:2432
-Exiting main thread
-Secondary pid:2432 tid:2433......
+Out of curiosity, how do you expect distros to handle this? I mean, this
+is a pretty general functionality and customers won't want to be
+changing kernels (they may or may not use memcg). iow, will this ever be
+disabled?
 
-$ ps ax | grep 2432
- 2432 pts/3    Zl+    0:00 [t] <defunct>
-
-So I assume the leader simply waits for its threads to finish and it
-stays in the sibling list. __unhash_process seems like it does the final
-cleanup and unlinks the leader from the lists. Which means that
-mm_update_next_owner never sees !group_leader. Is that correct Oleg?
--- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks,
+Davidlohr
