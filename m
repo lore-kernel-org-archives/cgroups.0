@@ -1,7 +1,7 @@
 From: John Stultz <john.stultz@linaro.org>
-Subject: [RFC][PATCH 1/2] cgroup: Add generic cgroup subsystem permission checks
-Date: Wed, 20 May 2015 20:41:13 -0700
-Message-ID: <1432179674-19154-2-git-send-email-john.stultz@linaro.org>
+Subject: [RFC][PATCH 2/2] cgroup: Add a memcg and cpu cg allow_attach policy for Android
+Date: Wed, 20 May 2015 20:41:14 -0700
+Message-ID: <1432179674-19154-3-git-send-email-john.stultz@linaro.org>
 References: <1432179674-19154-1-git-send-email-john.stultz@linaro.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1432179674-19154-1-git-send-email-john.stultz@linaro.org>
@@ -11,19 +11,13 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: lkml <linux-kernel@vger.kernel.org>
-Cc: Colin Cross <ccross@android.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Jonathan Corbet <corbet@lwn.net>, cgroups@vger.kernel.org, Android Kernel Team <kernel-team@android.com>, Rom Lemarchand <romlem@android.com>, John Stultz <john.stultz@linaro.org>
+Cc: Rom Lemarchand <romlem@android.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Jonathan Corbet <corbet@lwn.net>, cgroups@vger.kernel.org, Android Kernel Team <kernel-team@android.com>, Colin Cross <ccross@android.com>, John Stultz <john.stultz@linaro.org>
 
-From: Colin Cross <ccross@android.com>
+From: Rom Lemarchand <romlem@android.com>
 
-Rather than using explicit euid == 0 checks when trying to move
-tasks into a cgroup, move permission checks into each specific
-cgroup subsystem. If a subsystem does not specify a 'allow_attach'
-handler, then we fall back to doing the checks the old way.
-
-This patch adds a 'allow_attach' handler instead of reusing the
-'can_attach' handler, since if the 'can_attach' handler was
-reused, a new cgroup that implements 'can_attach' but not the
-permission checks could end up with no permission checks at all.
+If CONFIG_CGROUP_NICE_ATTACH is enabled, this implements an
+allow_attach policy for Android, which allows any process with
+CAP_SYS_NICE to move tasks across mem and cpu cgroups.
 
 Cc: Tejun Heo <tj@kernel.org>
 Cc: Li Zefan <lizefan@huawei.com>
@@ -32,105 +26,135 @@ Cc: cgroups@vger.kernel.org
 Cc: Android Kernel Team <kernel-team@android.com>
 Cc: Rom Lemarchand <romlem@android.com>
 Cc: Colin Cross <ccross@android.com>
-Original-Author: San Mehat <san@google.com>
-Signed-off-by: Colin Cross <ccross@android.com>
-[jstultz: Rewording of commit message]
+Signed-off-by: Rom Lemarchand <romlem@android.com>
+[jstultz: Majorly reworked to make this policy function
+ configurable, also squished in cpu and mem cgroup enablement.]
 Signed-off-by: John Stultz <john.stultz@linaro.org>
 ---
- Documentation/cgroups/cgroups.txt |  9 +++++++++
- include/linux/cgroup.h            |  2 ++
- kernel/cgroup.c                   | 39 ++++++++++++++++++++++++++++++++++++---
- 3 files changed, 47 insertions(+), 3 deletions(-)
+ include/linux/cgroup.h      | 12 ++++++++++++
+ init/Kconfig                |  7 +++++++
+ kernel/Makefile             |  1 +
+ kernel/cgroup_nice_attach.c | 29 +++++++++++++++++++++++++++++
+ kernel/sched/core.c         |  3 +++
+ mm/memcontrol.c             |  3 +++
+ 6 files changed, 55 insertions(+)
+ create mode 100644 kernel/cgroup_nice_attach.c
 
-diff --git a/Documentation/cgroups/cgroups.txt b/Documentation/cgroups/cgroups.txt
-index f935fac..88af0f0 100644
---- a/Documentation/cgroups/cgroups.txt
-+++ b/Documentation/cgroups/cgroups.txt
-@@ -578,6 +578,15 @@ is completely unused; @cgrp->parent is still valid. (Note - can also
- be called for a newly-created cgroup if an error occurs after this
- subsystem's create() method has been called for the new cgroup).
- 
-+int allow_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
-+(cgroup_mutex held by caller)
-+
-+Called prior to moving a task into a cgroup; if the subsystem
-+returns an error, this will abort the attach operation.  Used
-+to extend the permission checks - if all subsystems in a cgroup
-+return 0, the attach will be allowed to proceed, even if the
-+default permission check (root or same user) fails.
-+
- int can_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
- (cgroup_mutex held by caller)
- 
 diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index b9cb94c..0ea785d 100644
+index 0ea785d..d584d31 100644
 --- a/include/linux/cgroup.h
 +++ b/include/linux/cgroup.h
-@@ -643,6 +643,8 @@ struct cgroup_subsys {
- 	void (*css_reset)(struct cgroup_subsys_state *css);
- 	void (*css_e_css_changed)(struct cgroup_subsys_state *css);
+@@ -943,6 +943,18 @@ struct cgroup_subsys_state *cgroup_get_e_css(struct cgroup *cgroup,
+ struct cgroup_subsys_state *css_tryget_online_from_dir(struct dentry *dentry,
+ 						       struct cgroup_subsys *ss);
  
-+	int (*allow_attach)(struct cgroup_subsys_state *css,
-+			    struct cgroup_taskset *tset);
- 	int (*can_attach)(struct cgroup_subsys_state *css,
- 			  struct cgroup_taskset *tset);
- 	void (*cancel_attach)(struct cgroup_subsys_state *css,
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 29a7b2c..57e0fd7 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -2376,6 +2376,25 @@ static int cgroup_attach_task(struct cgroup *dst_cgrp,
- 	return ret;
- }
- 
-+static int cgroup_allow_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
-+{
-+	struct cgroup_subsys_state *css;
-+	int i;
-+	int ret;
++#ifdef CONFIG_CGROUP_NICE_ATTACH
++/*
++ * Default Android check for whether the current process is allowed to move a
++ * task across cgroups, either because CAP_SYS_NICE is set or because the uid
++ * of the calling process is the same as the moved task or because we are
++ * running as root.
++ * Returns 0 if this is allowed, or -EACCES otherwise.
++ */
++int cgroup_nice_allow_attach(struct cgroup_subsys_state *css,
++				struct cgroup_taskset *tset);
++#endif
 +
-+	for_each_css(css, i, cgrp) {
-+		if (css->ss->allow_attach) {
-+			ret = css->ss->allow_attach(css, tset);
-+			if (ret)
-+				return ret;
-+		} else {
+ #else /* !CONFIG_CGROUPS */
+ 
+ struct cgroup_subsys_state;
+diff --git a/init/Kconfig b/init/Kconfig
+index f5dbc6d..0e66e44 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -1132,6 +1132,13 @@ config DEBUG_BLK_CGROUP
+ 	Enable some debugging help. Currently it exports additional stat
+ 	files in a cgroup which can be useful for debugging.
+ 
++config CGROUP_NICE_ATTACH
++	bool "Enabled Android-style loosening of perm checks for attachment"
++	default n
++	---help---
++	Allows non-root processes to add arbitrary processes to mem and cpu
++	cgroups if they have CAP_SYS_NICE set. This is useful for Android.
++
+ endif # CGROUPS
+ 
+ config CHECKPOINT_RESTORE
+diff --git a/kernel/Makefile b/kernel/Makefile
+index 1408b33..c81256b 100644
+--- a/kernel/Makefile
++++ b/kernel/Makefile
+@@ -52,6 +52,7 @@ obj-$(CONFIG_KEXEC) += kexec.o
+ obj-$(CONFIG_BACKTRACE_SELF_TEST) += backtracetest.o
+ obj-$(CONFIG_COMPAT) += compat.o
+ obj-$(CONFIG_CGROUPS) += cgroup.o
++obj-$(CONFIG_CGROUP_NICE_ATTACH) += cgroup_nice_attach.o
+ obj-$(CONFIG_CGROUP_FREEZER) += cgroup_freezer.o
+ obj-$(CONFIG_CPUSETS) += cpuset.o
+ obj-$(CONFIG_UTS_NS) += utsname.o
+diff --git a/kernel/cgroup_nice_attach.c b/kernel/cgroup_nice_attach.c
+new file mode 100644
+index 0000000..b94c68e
+--- /dev/null
++++ b/kernel/cgroup_nice_attach.c
+@@ -0,0 +1,29 @@
++#include <linux/cgroup.h>
++#include <linux/kernel.h>
++
++/*
++ * Default Android check for whether the current process is allowed to move a
++ * task across cgroups, either because CAP_SYS_NICE is set or because the uid
++ * of the calling process is the same as the moved task or because we are
++ * running as root.
++ */
++int cgroup_nice_allow_attach(struct cgroup_subsys_state *css,
++					struct cgroup_taskset *tset)
++{
++	const struct cred *cred = current_cred(), *tcred;
++	struct task_struct *task;
++
++	if (capable(CAP_SYS_NICE))
++		return 0;
++
++	cgroup_taskset_for_each(task, tset) {
++		tcred = __task_cred(task);
++
++		if (current != task && !uid_eq(cred->euid, tcred->uid) &&
++		    !uid_eq(cred->euid, tcred->suid))
 +			return -EACCES;
-+		}
 +	}
 +
 +	return 0;
 +}
 +
- /*
-  * Find the task_struct of the task to attach by vpid and pass it along to the
-  * function to attach either it or all tasks in its threadgroup. Will lock
-@@ -2414,9 +2433,23 @@ retry_find_task:
- 		if (!uid_eq(cred->euid, GLOBAL_ROOT_UID) &&
- 		    !uid_eq(cred->euid, tcred->uid) &&
- 		    !uid_eq(cred->euid, tcred->suid)) {
--			rcu_read_unlock();
--			ret = -EACCES;
--			goto out_unlock_cgroup;
-+			/*
-+			 * if the default permission check fails, give each
-+			 * cgroup a chance to extend the permission check
-+			 */
-+			struct cgroup_taskset tset = {
-+				.src_csets = LIST_HEAD_INIT(tset.src_csets),
-+				.dst_csets = LIST_HEAD_INIT(tset.dst_csets),
-+				.csets = &tset.src_csets,
-+			};
-+			struct css_set *cset;
-+			cset = task_css_set(tsk);
-+			list_add(&cset->mg_node, &tset.src_csets);
-+			ret = cgroup_allow_attach(cgrp, &tset);
-+			if (ret) {
-+				rcu_read_unlock();
-+				goto out_unlock_cgroup;
-+			}
- 		}
- 	} else
- 		tsk = current;
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 62671f5..51dc86f 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -8368,6 +8368,9 @@ struct cgroup_subsys cpu_cgrp_subsys = {
+ 	.fork		= cpu_cgroup_fork,
+ 	.can_attach	= cpu_cgroup_can_attach,
+ 	.attach		= cpu_cgroup_attach,
++#ifdef CONFIG_CGROUP_NICE_ATTACH
++	.allow_attach   = cgroup_nice_allow_attach,
++#endif
+ 	.exit		= cpu_cgroup_exit,
+ 	.legacy_cftypes	= cpu_files,
+ 	.early_init	= 1,
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index b34ef4a..6287697 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5387,6 +5387,9 @@ struct cgroup_subsys memory_cgrp_subsys = {
+ 	.can_attach = mem_cgroup_can_attach,
+ 	.cancel_attach = mem_cgroup_cancel_attach,
+ 	.attach = mem_cgroup_move_task,
++#ifdef CONFIG_CGROUP_NICE_ATTACH
++	.allow_attach = cgroup_nice_allow_attach,
++#endif
+ 	.bind = mem_cgroup_bind,
+ 	.dfl_cftypes = memory_files,
+ 	.legacy_cftypes = mem_cgroup_legacy_files,
 -- 
 1.9.1
