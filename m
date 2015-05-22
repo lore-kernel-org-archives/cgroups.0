@@ -1,55 +1,129 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 51/51] ext2: enable cgroup writeback support
-Date: Fri, 22 May 2015 17:14:05 -0400
-Message-ID: <1432329245-5844-52-git-send-email-tj@kernel.org>
+Subject: [PATCH 35/51] writeback: make bdi->min/max_ratio handling cgroup writeback aware
+Date: Fri, 22 May 2015 17:13:49 -0400
+Message-ID: <1432329245-5844-36-git-send-email-tj@kernel.org>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=UfsaxijxrcTsGo3cB/zVhnq+kkOtHzGVrqCz9DoSuUQ=;
-        b=jdvngrDoDllsTe0xt06rhck0Hrp4HXkMD0j93bNylsbEIb9PDUDZPPPJEyJSlLmdu3
-         ywabkEwgWpsvz51Fta8ipFi/3674jjEt1oQq9Hrsrx7PTqJxxK8/jkRlLStUzwDR8LcW
-         GnelWYfERb/f97vrrxk5fXnn8zud4+HQ7b6t61CRdI/EWJToiJ6dj8GJwwcP0Cqy73o3
-         IE2eX5KG28NbfrHExf8dWPDxV9cb16I8AaWhW5GGZwxa+x0IBK1e64/0R+mxpY6AhKjR
-         80bOdBlkUiOkSNhM3v3ar59U/NErIYpDKPw11ef1EiMWWfjDonGJbqYF4MWdXaWaE8yZ
-         e+gQ==
+        bh=asUA5/p1KIODQVqHXnCEFuqSjK6OFhSPlJFqCSRssng=;
+        b=Rqph6sp785qiHolPOlLfHH6NGnz70G14ecmA2qhkjZEUIodmU6uBjhf44Z+53+irUU
+         8yUxCePzMMJ4fJvYqjEs3MdLQ2QBRptbBS5n00uT2k+w28qfBFIux1ZMGsWu8d9rp5kq
+         C03yZuFsBVNYI9gEMLl3nIiq9AZtRiaOnAphZ25VcLs3X6sNRv01/AzptChsG2vGEut9
+         nZ+PA3ht/EfJ4D/weezcVD1Ksbob0dR87dAxogHj0U8z9cQ0dN3VP/gr/i4jC5ISNAvd
+         BaytDm3n8VDlBS4lURA7l4bSeJ//NhfjZypLnp69W5hXAoD7RORjjUvr8qIArmHKkPQv
+         8I7g==
 In-Reply-To: <1432329245-5844-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru, Tejun Heo <tj@kernel.org>, linux-ext4@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru, Tejun Heo <tj@kernel.org>
 
-Writeback now supports cgroup writeback and the generic writeback,
-buffer, libfs, and mpage helpers that ext2 uses are all updated to
-work with cgroup writeback.
+bdi->min/max_ratio are user-configurable per-bdi knobs which regulate
+dirty limit of each bdi.  For cgroup writeback, they need to be
+further distributed across wb's (bdi_writeback's) belonging to the
+configured bdi.
 
-This patch enables cgroup writeback for ext2 by adding
-FS_CGROUP_WRITEBACK to its ->fs_flags.
+This patch introduces wb_min_max_ratio() which distributes
+bdi->min/max_ratio according to a wb's proportion in the total active
+bandwidth of its bdi.
+
+v2: Update wb_min_max_ratio() to fix a bug where both min and max were
+    assigned the min value and avoid calculations when possible.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
-Cc: linux-ext4@vger.kernel.org
 ---
- fs/ext2/super.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ mm/page-writeback.c | 50 ++++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 46 insertions(+), 4 deletions(-)
 
-diff --git a/fs/ext2/super.c b/fs/ext2/super.c
-index d0e746e..549219d 100644
---- a/fs/ext2/super.c
-+++ b/fs/ext2/super.c
-@@ -1543,7 +1543,7 @@ static struct file_system_type ext2_fs_type = {
- 	.name		= "ext2",
- 	.mount		= ext2_mount,
- 	.kill_sb	= kill_block_super,
--	.fs_flags	= FS_REQUIRES_DEV,
-+	.fs_flags	= FS_REQUIRES_DEV | FS_CGROUP_WRITEBACK,
- };
- MODULE_ALIAS_FS("ext2");
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 99b8846..9b55f12 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -155,6 +155,46 @@ static unsigned long writeout_period_time = 0;
+  */
+ #define VM_COMPLETIONS_PERIOD_LEN (3*HZ)
  
++#ifdef CONFIG_CGROUP_WRITEBACK
++
++static void wb_min_max_ratio(struct bdi_writeback *wb,
++			     unsigned long *minp, unsigned long *maxp)
++{
++	unsigned long this_bw = wb->avg_write_bandwidth;
++	unsigned long tot_bw = atomic_long_read(&wb->bdi->tot_write_bandwidth);
++	unsigned long long min = wb->bdi->min_ratio;
++	unsigned long long max = wb->bdi->max_ratio;
++
++	/*
++	 * @wb may already be clean by the time control reaches here and
++	 * the total may not include its bw.
++	 */
++	if (this_bw < tot_bw) {
++		if (min) {
++			min *= this_bw;
++			do_div(min, tot_bw);
++		}
++		if (max < 100) {
++			max *= this_bw;
++			do_div(max, tot_bw);
++		}
++	}
++
++	*minp = min;
++	*maxp = max;
++}
++
++#else	/* CONFIG_CGROUP_WRITEBACK */
++
++static void wb_min_max_ratio(struct bdi_writeback *wb,
++			     unsigned long *minp, unsigned long *maxp)
++{
++	*minp = wb->bdi->min_ratio;
++	*maxp = wb->bdi->max_ratio;
++}
++
++#endif	/* CONFIG_CGROUP_WRITEBACK */
++
+ /*
+  * In a memory zone, there is a certain amount of pages we consider
+  * available for the page cache, which is essentially the number of
+@@ -539,9 +579,9 @@ static unsigned long hard_dirty_limit(unsigned long thresh)
+  */
+ unsigned long wb_dirty_limit(struct bdi_writeback *wb, unsigned long dirty)
+ {
+-	struct backing_dev_info *bdi = wb->bdi;
+ 	u64 wb_dirty;
+ 	long numerator, denominator;
++	unsigned long wb_min_ratio, wb_max_ratio;
+ 
+ 	/*
+ 	 * Calculate this BDI's share of the dirty ratio.
+@@ -552,9 +592,11 @@ unsigned long wb_dirty_limit(struct bdi_writeback *wb, unsigned long dirty)
+ 	wb_dirty *= numerator;
+ 	do_div(wb_dirty, denominator);
+ 
+-	wb_dirty += (dirty * bdi->min_ratio) / 100;
+-	if (wb_dirty > (dirty * bdi->max_ratio) / 100)
+-		wb_dirty = dirty * bdi->max_ratio / 100;
++	wb_min_max_ratio(wb, &wb_min_ratio, &wb_max_ratio);
++
++	wb_dirty += (dirty * wb_min_ratio) / 100;
++	if (wb_dirty > (dirty * wb_max_ratio) / 100)
++		wb_dirty = dirty * wb_max_ratio / 100;
+ 
+ 	return wb_dirty;
+ }
 -- 
 2.4.0
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
