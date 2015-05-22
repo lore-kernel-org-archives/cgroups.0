@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 47/51] writeback: make writeback initiation functions handle multiple bdi_writeback's
-Date: Fri, 22 May 2015 17:14:01 -0400
-Message-ID: <1432329245-5844-48-git-send-email-tj@kernel.org>
+Subject: [PATCH 40/51] writeback: make bdi_start_background_writeback() take bdi_writeback instead of backing_dev_info
+Date: Fri, 22 May 2015 17:13:54 -0400
+Message-ID: <1432329245-5844-41-git-send-email-tj@kernel.org>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Z5U5LbpZYFfZkUhFAc6Cge4zli4lDAiTzJJfIHGWcOM=;
-        b=tJFumbVDHmc2F6xJMJRd0oZ3iiz53dsZr3bPPBRn4LEy2MDDgMyZGm0u6q4CKj7Ahw
-         zg/RYSV0ytiMeUnouJ5vtP0wMo20mvplspM9CAV6tc5WadcmZdAeG4FQIo57t4ah9JVc
-         tTHBUOunhsIHe32Okup3I+wZ0dtTGIhf0tc1HhqXBBEUpDylLTcvUUhXdztuldr5wyNl
-         okjgPda6L4EqWKWYnvgTrE+I0DeyQjU0FFrLuO/1mfTc5HYsiQ+rM1wjY/hJ4yv2hHK4
-         DbNuDl4dx8kRq6WQKyPCEdhm2vC9QVbOZLE7LDjCAqVyMLVeZNjUi9Fw42mQI2XkqMzE
-         5y4w==
+        bh=Phtvk2fwBZxid6Z6bDI7vuFL8ip9FC5mIBvGP6+kDtY=;
+        b=COuZa0YuXRI2+7hbOosjYepILS2v3oC/cWtCbhiR9lAxpHjRJS4DzhHR0OKc2wIM/7
+         0Hm7ceCknqHyQSKJg5AAKI3AlE5x4XnH9iXwmI+e3PesUgkedPV43qu5sR70UELKu8Q4
+         HPwVhdWtYeEo3DP5aVBfr2ox+JQowk+wECMWu8FeppHGAYi/uoTBXCr3JXNibM1I5viI
+         BmCx+fW7rTo6dgvQ4CJSqGGwWyr54ldNpJKMBjsxqvsJ7VDrK8kAzZLjjN1niAsrAxC+
+         OFWoVc9y/OpByeScL30c7RGFaFl8Zz6uDt/ymzvpx5By2FEt1dM09Eb/RI52Snpwn6JC
+         IxHg==
 In-Reply-To: <1432329245-5844-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,155 +23,89 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru, Tejun Heo <tj@kernel.org>
 
-[try_]writeback_inodes_sb[_nr]() and sync_inodes_sb() currently only
-handle dirty inodes on the root wb (bdi_writeback) of the target bdi.
-This patch implements bdi_split_work_to_wbs() and use it to make these
-functions handle multiple wb's.
+bdi_start_background_writeback() currently takes @bdi and kicks the
+root wb (bdi_writeback).  In preparation for cgroup writeback support,
+make it take wb instead.
 
-bdi_split_work_to_wbs() takes a base wb_writeback_work and create
-clones of it and issue them to the wb's of the target bdi.  The base
-work's nr_pages is distributed using wb_split_bdi_pages() -
-ie. according to each wb's write bandwidth's proportion in the bdi.
-
-Cloning a bdi involves memory allocation which may fail.  In such
-cases, bdi_split_work_to_wbs() issues the base work directly and waits
-for its completion before proceeding to the next wb to guarantee
-forward progress and correctness under memory pressure.
+This patch doesn't make any functional difference.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
 ---
- fs/fs-writeback.c | 96 ++++++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 91 insertions(+), 5 deletions(-)
+ fs/fs-writeback.c           | 12 ++++++------
+ include/linux/backing-dev.h |  2 +-
+ mm/page-writeback.c         |  4 ++--
+ 3 files changed, 9 insertions(+), 9 deletions(-)
 
 diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 0039c58..59d76f6 100644
+index 45baf6c..92aaf64 100644
 --- a/fs/fs-writeback.c
 +++ b/fs/fs-writeback.c
-@@ -292,6 +292,80 @@ static long wb_split_bdi_pages(struct bdi_writeback *wb, long nr_pages)
- 		return DIV_ROUND_UP_ULL((u64)nr_pages * this_bw, tot_bw);
+@@ -228,23 +228,23 @@ void wb_start_writeback(struct bdi_writeback *wb, long nr_pages,
  }
  
-+/**
-+ * wb_clone_and_queue_work - clone a wb_writeback_work and issue it to a wb
-+ * @wb: target bdi_writeback
-+ * @base_work: source wb_writeback_work
-+ *
-+ * Try to make a clone of @base_work and issue it to @wb.  If cloning
-+ * succeeds, %true is returned; otherwise, @base_work is issued directly
-+ * and %false is returned.  In the latter case, the caller is required to
-+ * wait for @base_work's completion using wb_wait_for_single_work().
-+ *
-+ * A clone is auto-freed on completion.  @base_work never is.
-+ */
-+static bool wb_clone_and_queue_work(struct bdi_writeback *wb,
-+				    struct wb_writeback_work *base_work)
-+{
-+	struct wb_writeback_work *work;
-+
-+	work = kmalloc(sizeof(*work), GFP_ATOMIC);
-+	if (work) {
-+		*work = *base_work;
-+		work->auto_free = 1;
-+		work->single_wait = 0;
-+	} else {
-+		work = base_work;
-+		work->auto_free = 0;
-+		work->single_wait = 1;
-+	}
-+	work->single_done = 0;
-+	wb_queue_work(wb, work);
-+	return work != base_work;
-+}
-+
-+/**
-+ * bdi_split_work_to_wbs - split a wb_writeback_work to all wb's of a bdi
-+ * @bdi: target backing_dev_info
-+ * @base_work: wb_writeback_work to issue
-+ * @skip_if_busy: skip wb's which already have writeback in progress
-+ *
-+ * Split and issue @base_work to all wb's (bdi_writeback's) of @bdi which
-+ * have dirty inodes.  If @base_work->nr_page isn't %LONG_MAX, it's
-+ * distributed to the busy wbs according to each wb's proportion in the
-+ * total active write bandwidth of @bdi.
-+ */
-+static void bdi_split_work_to_wbs(struct backing_dev_info *bdi,
-+				  struct wb_writeback_work *base_work,
-+				  bool skip_if_busy)
-+{
-+	long nr_pages = base_work->nr_pages;
-+	int next_blkcg_id = 0;
-+	struct bdi_writeback *wb;
-+	struct wb_iter iter;
-+
-+	might_sleep();
-+
-+	if (!bdi_has_dirty_io(bdi))
-+		return;
-+restart:
-+	rcu_read_lock();
-+	bdi_for_each_wb(wb, bdi, &iter, next_blkcg_id) {
-+		if (!wb_has_dirty_io(wb) ||
-+		    (skip_if_busy && writeback_in_progress(wb)))
-+			continue;
-+
-+		base_work->nr_pages = wb_split_bdi_pages(wb, nr_pages);
-+		if (!wb_clone_and_queue_work(wb, base_work)) {
-+			next_blkcg_id = wb->blkcg_css->id + 1;
-+			rcu_read_unlock();
-+			wb_wait_for_single_work(bdi, base_work);
-+			goto restart;
-+		}
-+	}
-+	rcu_read_unlock();
-+}
-+
- #else	/* CONFIG_CGROUP_WRITEBACK */
- 
- static long wb_split_bdi_pages(struct bdi_writeback *wb, long nr_pages)
-@@ -299,6 +373,21 @@ static long wb_split_bdi_pages(struct bdi_writeback *wb, long nr_pages)
- 	return nr_pages;
+ /**
+- * bdi_start_background_writeback - start background writeback
+- * @bdi: the backing device to write from
++ * wb_start_background_writeback - start background writeback
++ * @wb: bdi_writback to write from
+  *
+  * Description:
+  *   This makes sure WB_SYNC_NONE background writeback happens. When
+- *   this function returns, it is only guaranteed that for given BDI
++ *   this function returns, it is only guaranteed that for given wb
+  *   some IO is happening if we are over background dirty threshold.
+  *   Caller need not hold sb s_umount semaphore.
+  */
+-void bdi_start_background_writeback(struct backing_dev_info *bdi)
++void wb_start_background_writeback(struct bdi_writeback *wb)
+ {
+ 	/*
+ 	 * We just wake up the flusher thread. It will perform background
+ 	 * writeback as soon as there is no other work to do.
+ 	 */
+-	trace_writeback_wake_background(bdi);
+-	wb_wakeup(&bdi->wb);
++	trace_writeback_wake_background(wb->bdi);
++	wb_wakeup(wb);
  }
  
-+static void bdi_split_work_to_wbs(struct backing_dev_info *bdi,
-+				  struct wb_writeback_work *base_work,
-+				  bool skip_if_busy)
-+{
-+	might_sleep();
-+
-+	if (bdi_has_dirty_io(bdi) &&
-+	    (!skip_if_busy || !writeback_in_progress(&bdi->wb))) {
-+		base_work->auto_free = 0;
-+		base_work->single_wait = 0;
-+		base_work->single_done = 0;
-+		wb_queue_work(&bdi->wb, base_work);
-+	}
-+}
-+
- #endif	/* CONFIG_CGROUP_WRITEBACK */
- 
+ /*
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index f04956c..9cc11e5 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -27,7 +27,7 @@ void bdi_unregister(struct backing_dev_info *bdi);
+ int __must_check bdi_setup_and_register(struct backing_dev_info *, char *);
  void wb_start_writeback(struct bdi_writeback *wb, long nr_pages,
-@@ -1599,10 +1688,7 @@ static void __writeback_inodes_sb_nr(struct super_block *sb, unsigned long nr,
- 		return;
- 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
+ 			bool range_cyclic, enum wb_reason reason);
+-void bdi_start_background_writeback(struct backing_dev_info *bdi);
++void wb_start_background_writeback(struct bdi_writeback *wb);
+ void wb_workfn(struct work_struct *work);
+ void wb_wakeup_delayed(struct bdi_writeback *wb);
  
--	if (skip_if_busy && writeback_in_progress(&bdi->wb))
--		return;
--
--	wb_queue_work(&bdi->wb, &work);
-+	bdi_split_work_to_wbs(sb->s_bdi, &work, skip_if_busy);
- 	wb_wait_for_completion(bdi, &done);
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index e3b5c1d..70cf98d 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -1456,7 +1456,7 @@ static void balance_dirty_pages(struct address_space *mapping,
+ 		}
+ 
+ 		if (unlikely(!writeback_in_progress(wb)))
+-			bdi_start_background_writeback(bdi);
++			wb_start_background_writeback(wb);
+ 
+ 		if (!strictlimit)
+ 			wb_dirty_limits(wb, dirty_thresh, background_thresh,
+@@ -1588,7 +1588,7 @@ static void balance_dirty_pages(struct address_space *mapping,
+ 		return;
+ 
+ 	if (nr_reclaimable > background_thresh)
+-		bdi_start_background_writeback(bdi);
++		wb_start_background_writeback(wb);
  }
  
-@@ -1700,7 +1786,7 @@ void sync_inodes_sb(struct super_block *sb)
- 		return;
- 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
- 
--	wb_queue_work(&bdi->wb, &work);
-+	bdi_split_work_to_wbs(bdi, &work, false);
- 	wb_wait_for_completion(bdi, &done);
- 
- 	wait_sb_inodes(sb);
+ static DEFINE_PER_CPU(int, bdp_ratelimits);
 -- 
 2.4.0
