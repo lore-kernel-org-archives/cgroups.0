@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 01/51] page_writeback: revive cancel_dirty_page() in a restricted form
-Date: Fri, 22 May 2015 17:13:15 -0400
-Message-ID: <1432329245-5844-2-git-send-email-tj@kernel.org>
+Subject: [PATCH 03/51] blkcg: move block/blk-cgroup.h to include/linux/blk-cgroup.h
+Date: Fri, 22 May 2015 17:13:17 -0400
+Message-ID: <1432329245-5844-4-git-send-email-tj@kernel.org>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=oHI+hB8ZERMHDe//q/qAvIr1JmNDwU2s7jOv3e2jkG8=;
-        b=X4xaeo8wIdkjmqeYVu5XUrr/srfHSFWDYs3Icgzrq4CCc2k8afBIOthNhpo5enem2+
-         CAXvYNs58Im3FwlPqdT6KYrpJVOxY1+Lo7a/HI977SkqBuWoIL2UiG84G4qUHZjx1Fgv
-         LxCMl1Z58rGjRDQ4WinPXG+T2ELlxx2Kp6SNdEBpQsHwaWxRZoSs9cT01sjVKeNwWTFr
-         OimT1qpn1o20Or38XuUpFfB2noj0bK63v7isBQCi7R8kOfGkdnSZ/dvwiz+fn8vfsEr8
-         CPINBHUbuNMZUhRM49vaPwHWZFh89dpyOSfSOUwf2DoaxvTbh4egEFhOns2WrminUWXY
-         CLyw==
+        bh=WPYLb5dMKaWjTjVheDl4OKKCPsG1Mpc2t9neZawcExs=;
+        b=Wqs19K55kLfoH/IlTJBiyT3ySLp4Dd/5/QXzPbFprrvzgn7e7WQ2+KJ4AZfGcwifrg
+         LM51sRzWhIVfSgI6F7La4vSX2riNtOrW8UPcCgnZRhqLty7kke1z0lJZoR/UzA66vzgF
+         DkJ4ZfTQgWb5ewpxbNelxDq/+8zj8kiENxt2xt0zyJ731KNpd5YD4Ceeey1W+ppQNO8d
+         yQRXBG5IX9ZaZZyqWogTBa3q2aZnbmvTiwYUu5dW3I7hL6e2PDqLrhkwPqGB4K9F7cOk
+         VnO5K3RbR+Movahdnt4UVotZTRs6nkQ4hByJYDa3X4R4N90gfBvCUYefgbIth9/T5AVT
+         dsvg==
 In-Reply-To: <1432329245-5844-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,146 +23,1333 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru, Tejun Heo <tj@kernel.org>
 
-cancel_dirty_page() had some issues and b9ea25152e56 ("page_writeback:
-clean up mess around cancel_dirty_page()") replaced it with
-account_page_cleaned() which makes the caller responsible for clearing
-the dirty bit; unfortunately, the planned changes for cgroup writeback
-support requires synchronization between dirty bit manipulation and
-stat updates.  While we can open-code such synchronization in each
-account_page_cleaned() callsite, that's gonna be unnecessarily awkward
-and verbose.
-
-This patch revives cancel_dirty_page() but in a more restricted form.
-All it does is TestClearPageDirty() followed by account_page_cleaned()
-invocation if the page was dirty.  This helper covers all
-account_page_cleaned() usages except for __delete_from_page_cache()
-which is a special case anyway and left alone.  As this leaves no
-module user for account_page_cleaned(), EXPORT_SYMBOL() is dropped
-from it.
-
-This patch just revives cancel_dirty_page() as a trivial wrapper to
-replace equivalent usages and doesn't introduce any functional
-changes.
+cgroup aware writeback support will require exposing some of blkcg
+details.  In preprataion, move block/blk-cgroup.h to
+include/linux/blk-cgroup.h.  This patch is pure file move.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Cc: Vivek Goyal <vgoyal@redhat.com>
 ---
- .../lustre/include/linux/lustre_patchless_compat.h |  4 +---
- fs/buffer.c                                        |  4 ++--
- include/linux/mm.h                                 |  1 +
- mm/page-writeback.c                                | 27 ++++++++++++++++------
- mm/truncate.c                                      |  4 +---
- 5 files changed, 25 insertions(+), 15 deletions(-)
+ block/blk-cgroup.c         |   2 +-
+ block/blk-cgroup.h         | 603 ---------------------------------------------
+ block/blk-core.c           |   2 +-
+ block/blk-sysfs.c          |   2 +-
+ block/blk-throttle.c       |   2 +-
+ block/cfq-iosched.c        |   2 +-
+ block/elevator.c           |   2 +-
+ include/linux/blk-cgroup.h | 603 +++++++++++++++++++++++++++++++++++++++++++++
+ 8 files changed, 609 insertions(+), 609 deletions(-)
+ delete mode 100644 block/blk-cgroup.h
+ create mode 100644 include/linux/blk-cgroup.h
 
-diff --git a/drivers/staging/lustre/lustre/include/linux/lustre_patchless_compat.h b/drivers/staging/lustre/lustre/include/linux/lustre_patchless_compat.h
-index d726058..1456278 100644
---- a/drivers/staging/lustre/lustre/include/linux/lustre_patchless_compat.h
-+++ b/drivers/staging/lustre/lustre/include/linux/lustre_patchless_compat.h
-@@ -55,9 +55,7 @@ truncate_complete_page(struct address_space *mapping, struct page *page)
- 	if (PagePrivate(page))
- 		page->mapping->a_ops->invalidatepage(page, 0, PAGE_CACHE_SIZE);
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 0ac817b..c3226ce 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -19,7 +19,7 @@
+ #include <linux/genhd.h>
+ #include <linux/delay.h>
+ #include <linux/atomic.h>
+-#include "blk-cgroup.h"
++#include <linux/blk-cgroup.h>
+ #include "blk.h"
  
--	if (TestClearPageDirty(page))
--		account_page_cleaned(page, mapping);
--
-+	cancel_dirty_page(page);
- 	ClearPageMappedToDisk(page);
- 	ll_delete_from_page_cache(page);
- }
-diff --git a/fs/buffer.c b/fs/buffer.c
-index efd85e0..e776bec 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -3233,8 +3233,8 @@ int try_to_free_buffers(struct page *page)
- 	 * to synchronise against __set_page_dirty_buffers and prevent the
- 	 * dirty bit from being lost.
- 	 */
--	if (ret && TestClearPageDirty(page))
--		account_page_cleaned(page, mapping);
-+	if (ret)
-+		cancel_dirty_page(page);
- 	spin_unlock(&mapping->private_lock);
- out:
- 	if (buffers_to_free) {
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 0755b9f..a83cf3a 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -1215,6 +1215,7 @@ void account_page_dirtied(struct page *page, struct address_space *mapping);
- void account_page_cleaned(struct page *page, struct address_space *mapping);
- int set_page_dirty(struct page *page);
- int set_page_dirty_lock(struct page *page);
-+void cancel_dirty_page(struct page *page);
- int clear_page_dirty_for_io(struct page *page);
- 
- int get_cmdline(struct task_struct *task, char *buffer, int buflen);
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 5daf556..227b867 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -2112,12 +2112,6 @@ EXPORT_SYMBOL(account_page_dirtied);
- 
- /*
-  * Helper function for deaccounting dirty page without writeback.
+ #define MAX_KEY_LEN 100
+diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+deleted file mode 100644
+index c567865..0000000
+--- a/block/blk-cgroup.h
++++ /dev/null
+@@ -1,603 +0,0 @@
+-#ifndef _BLK_CGROUP_H
+-#define _BLK_CGROUP_H
+-/*
+- * Common Block IO controller cgroup interface
 - *
-- * Doing this should *normally* only ever be done when a page
-- * is truncated, and is not actually mapped anywhere at all. However,
-- * fs/buffer.c does this when it notices that somebody has cleaned
-- * out all the buffers on a page without actually doing it through
-- * the VM. Can you say "ext3 is horribly ugly"? Thought you could.
-  */
- void account_page_cleaned(struct page *page, struct address_space *mapping)
- {
-@@ -2127,7 +2121,6 @@ void account_page_cleaned(struct page *page, struct address_space *mapping)
- 		task_io_account_cancelled_write(PAGE_CACHE_SIZE);
- 	}
- }
--EXPORT_SYMBOL(account_page_cleaned);
+- * Based on ideas and code from CFQ, CFS and BFQ:
+- * Copyright (C) 2003 Jens Axboe <axboe@kernel.dk>
+- *
+- * Copyright (C) 2008 Fabio Checconi <fabio@gandalf.sssup.it>
+- *		      Paolo Valente <paolo.valente@unimore.it>
+- *
+- * Copyright (C) 2009 Vivek Goyal <vgoyal@redhat.com>
+- * 	              Nauman Rafique <nauman@google.com>
+- */
+-
+-#include <linux/cgroup.h>
+-#include <linux/u64_stats_sync.h>
+-#include <linux/seq_file.h>
+-#include <linux/radix-tree.h>
+-#include <linux/blkdev.h>
+-#include <linux/atomic.h>
+-
+-/* Max limits for throttle policy */
+-#define THROTL_IOPS_MAX		UINT_MAX
+-
+-/* CFQ specific, out here for blkcg->cfq_weight */
+-#define CFQ_WEIGHT_MIN		10
+-#define CFQ_WEIGHT_MAX		1000
+-#define CFQ_WEIGHT_DEFAULT	500
+-
+-#ifdef CONFIG_BLK_CGROUP
+-
+-enum blkg_rwstat_type {
+-	BLKG_RWSTAT_READ,
+-	BLKG_RWSTAT_WRITE,
+-	BLKG_RWSTAT_SYNC,
+-	BLKG_RWSTAT_ASYNC,
+-
+-	BLKG_RWSTAT_NR,
+-	BLKG_RWSTAT_TOTAL = BLKG_RWSTAT_NR,
+-};
+-
+-struct blkcg_gq;
+-
+-struct blkcg {
+-	struct cgroup_subsys_state	css;
+-	spinlock_t			lock;
+-
+-	struct radix_tree_root		blkg_tree;
+-	struct blkcg_gq			*blkg_hint;
+-	struct hlist_head		blkg_list;
+-
+-	/* TODO: per-policy storage in blkcg */
+-	unsigned int			cfq_weight;	/* belongs to cfq */
+-	unsigned int			cfq_leaf_weight;
+-};
+-
+-struct blkg_stat {
+-	struct u64_stats_sync		syncp;
+-	uint64_t			cnt;
+-};
+-
+-struct blkg_rwstat {
+-	struct u64_stats_sync		syncp;
+-	uint64_t			cnt[BLKG_RWSTAT_NR];
+-};
+-
+-/*
+- * A blkcg_gq (blkg) is association between a block cgroup (blkcg) and a
+- * request_queue (q).  This is used by blkcg policies which need to track
+- * information per blkcg - q pair.
+- *
+- * There can be multiple active blkcg policies and each has its private
+- * data on each blkg, the size of which is determined by
+- * blkcg_policy->pd_size.  blkcg core allocates and frees such areas
+- * together with blkg and invokes pd_init/exit_fn() methods.
+- *
+- * Such private data must embed struct blkg_policy_data (pd) at the
+- * beginning and pd_size can't be smaller than pd.
+- */
+-struct blkg_policy_data {
+-	/* the blkg and policy id this per-policy data belongs to */
+-	struct blkcg_gq			*blkg;
+-	int				plid;
+-
+-	/* used during policy activation */
+-	struct list_head		alloc_node;
+-};
+-
+-/* association between a blk cgroup and a request queue */
+-struct blkcg_gq {
+-	/* Pointer to the associated request_queue */
+-	struct request_queue		*q;
+-	struct list_head		q_node;
+-	struct hlist_node		blkcg_node;
+-	struct blkcg			*blkcg;
+-
+-	/* all non-root blkcg_gq's are guaranteed to have access to parent */
+-	struct blkcg_gq			*parent;
+-
+-	/* request allocation list for this blkcg-q pair */
+-	struct request_list		rl;
+-
+-	/* reference count */
+-	atomic_t			refcnt;
+-
+-	/* is this blkg online? protected by both blkcg and q locks */
+-	bool				online;
+-
+-	struct blkg_policy_data		*pd[BLKCG_MAX_POLS];
+-
+-	struct rcu_head			rcu_head;
+-};
+-
+-typedef void (blkcg_pol_init_pd_fn)(struct blkcg_gq *blkg);
+-typedef void (blkcg_pol_online_pd_fn)(struct blkcg_gq *blkg);
+-typedef void (blkcg_pol_offline_pd_fn)(struct blkcg_gq *blkg);
+-typedef void (blkcg_pol_exit_pd_fn)(struct blkcg_gq *blkg);
+-typedef void (blkcg_pol_reset_pd_stats_fn)(struct blkcg_gq *blkg);
+-
+-struct blkcg_policy {
+-	int				plid;
+-	/* policy specific private data size */
+-	size_t				pd_size;
+-	/* cgroup files for the policy */
+-	struct cftype			*cftypes;
+-
+-	/* operations */
+-	blkcg_pol_init_pd_fn		*pd_init_fn;
+-	blkcg_pol_online_pd_fn		*pd_online_fn;
+-	blkcg_pol_offline_pd_fn		*pd_offline_fn;
+-	blkcg_pol_exit_pd_fn		*pd_exit_fn;
+-	blkcg_pol_reset_pd_stats_fn	*pd_reset_stats_fn;
+-};
+-
+-extern struct blkcg blkcg_root;
+-
+-struct blkcg_gq *blkg_lookup(struct blkcg *blkcg, struct request_queue *q);
+-struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
+-				    struct request_queue *q);
+-int blkcg_init_queue(struct request_queue *q);
+-void blkcg_drain_queue(struct request_queue *q);
+-void blkcg_exit_queue(struct request_queue *q);
+-
+-/* Blkio controller policy registration */
+-int blkcg_policy_register(struct blkcg_policy *pol);
+-void blkcg_policy_unregister(struct blkcg_policy *pol);
+-int blkcg_activate_policy(struct request_queue *q,
+-			  const struct blkcg_policy *pol);
+-void blkcg_deactivate_policy(struct request_queue *q,
+-			     const struct blkcg_policy *pol);
+-
+-void blkcg_print_blkgs(struct seq_file *sf, struct blkcg *blkcg,
+-		       u64 (*prfill)(struct seq_file *,
+-				     struct blkg_policy_data *, int),
+-		       const struct blkcg_policy *pol, int data,
+-		       bool show_total);
+-u64 __blkg_prfill_u64(struct seq_file *sf, struct blkg_policy_data *pd, u64 v);
+-u64 __blkg_prfill_rwstat(struct seq_file *sf, struct blkg_policy_data *pd,
+-			 const struct blkg_rwstat *rwstat);
+-u64 blkg_prfill_stat(struct seq_file *sf, struct blkg_policy_data *pd, int off);
+-u64 blkg_prfill_rwstat(struct seq_file *sf, struct blkg_policy_data *pd,
+-		       int off);
+-
+-u64 blkg_stat_recursive_sum(struct blkg_policy_data *pd, int off);
+-struct blkg_rwstat blkg_rwstat_recursive_sum(struct blkg_policy_data *pd,
+-					     int off);
+-
+-struct blkg_conf_ctx {
+-	struct gendisk			*disk;
+-	struct blkcg_gq			*blkg;
+-	u64				v;
+-};
+-
+-int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+-		   const char *input, struct blkg_conf_ctx *ctx);
+-void blkg_conf_finish(struct blkg_conf_ctx *ctx);
+-
+-
+-static inline struct blkcg *css_to_blkcg(struct cgroup_subsys_state *css)
+-{
+-	return css ? container_of(css, struct blkcg, css) : NULL;
+-}
+-
+-static inline struct blkcg *task_blkcg(struct task_struct *tsk)
+-{
+-	return css_to_blkcg(task_css(tsk, blkio_cgrp_id));
+-}
+-
+-static inline struct blkcg *bio_blkcg(struct bio *bio)
+-{
+-	if (bio && bio->bi_css)
+-		return css_to_blkcg(bio->bi_css);
+-	return task_blkcg(current);
+-}
+-
+-/**
+- * blkcg_parent - get the parent of a blkcg
+- * @blkcg: blkcg of interest
+- *
+- * Return the parent blkcg of @blkcg.  Can be called anytime.
+- */
+-static inline struct blkcg *blkcg_parent(struct blkcg *blkcg)
+-{
+-	return css_to_blkcg(blkcg->css.parent);
+-}
+-
+-/**
+- * blkg_to_pdata - get policy private data
+- * @blkg: blkg of interest
+- * @pol: policy of interest
+- *
+- * Return pointer to private data associated with the @blkg-@pol pair.
+- */
+-static inline struct blkg_policy_data *blkg_to_pd(struct blkcg_gq *blkg,
+-						  struct blkcg_policy *pol)
+-{
+-	return blkg ? blkg->pd[pol->plid] : NULL;
+-}
+-
+-/**
+- * pdata_to_blkg - get blkg associated with policy private data
+- * @pd: policy private data of interest
+- *
+- * @pd is policy private data.  Determine the blkg it's associated with.
+- */
+-static inline struct blkcg_gq *pd_to_blkg(struct blkg_policy_data *pd)
+-{
+-	return pd ? pd->blkg : NULL;
+-}
+-
+-/**
+- * blkg_path - format cgroup path of blkg
+- * @blkg: blkg of interest
+- * @buf: target buffer
+- * @buflen: target buffer length
+- *
+- * Format the path of the cgroup of @blkg into @buf.
+- */
+-static inline int blkg_path(struct blkcg_gq *blkg, char *buf, int buflen)
+-{
+-	char *p;
+-
+-	p = cgroup_path(blkg->blkcg->css.cgroup, buf, buflen);
+-	if (!p) {
+-		strncpy(buf, "<unavailable>", buflen);
+-		return -ENAMETOOLONG;
+-	}
+-
+-	memmove(buf, p, buf + buflen - p);
+-	return 0;
+-}
+-
+-/**
+- * blkg_get - get a blkg reference
+- * @blkg: blkg to get
+- *
+- * The caller should be holding an existing reference.
+- */
+-static inline void blkg_get(struct blkcg_gq *blkg)
+-{
+-	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
+-	atomic_inc(&blkg->refcnt);
+-}
+-
+-void __blkg_release_rcu(struct rcu_head *rcu);
+-
+-/**
+- * blkg_put - put a blkg reference
+- * @blkg: blkg to put
+- */
+-static inline void blkg_put(struct blkcg_gq *blkg)
+-{
+-	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
+-	if (atomic_dec_and_test(&blkg->refcnt))
+-		call_rcu(&blkg->rcu_head, __blkg_release_rcu);
+-}
+-
+-struct blkcg_gq *__blkg_lookup(struct blkcg *blkcg, struct request_queue *q,
+-			       bool update_hint);
+-
+-/**
+- * blkg_for_each_descendant_pre - pre-order walk of a blkg's descendants
+- * @d_blkg: loop cursor pointing to the current descendant
+- * @pos_css: used for iteration
+- * @p_blkg: target blkg to walk descendants of
+- *
+- * Walk @c_blkg through the descendants of @p_blkg.  Must be used with RCU
+- * read locked.  If called under either blkcg or queue lock, the iteration
+- * is guaranteed to include all and only online blkgs.  The caller may
+- * update @pos_css by calling css_rightmost_descendant() to skip subtree.
+- * @p_blkg is included in the iteration and the first node to be visited.
+- */
+-#define blkg_for_each_descendant_pre(d_blkg, pos_css, p_blkg)		\
+-	css_for_each_descendant_pre((pos_css), &(p_blkg)->blkcg->css)	\
+-		if (((d_blkg) = __blkg_lookup(css_to_blkcg(pos_css),	\
+-					      (p_blkg)->q, false)))
+-
+-/**
+- * blkg_for_each_descendant_post - post-order walk of a blkg's descendants
+- * @d_blkg: loop cursor pointing to the current descendant
+- * @pos_css: used for iteration
+- * @p_blkg: target blkg to walk descendants of
+- *
+- * Similar to blkg_for_each_descendant_pre() but performs post-order
+- * traversal instead.  Synchronization rules are the same.  @p_blkg is
+- * included in the iteration and the last node to be visited.
+- */
+-#define blkg_for_each_descendant_post(d_blkg, pos_css, p_blkg)		\
+-	css_for_each_descendant_post((pos_css), &(p_blkg)->blkcg->css)	\
+-		if (((d_blkg) = __blkg_lookup(css_to_blkcg(pos_css),	\
+-					      (p_blkg)->q, false)))
+-
+-/**
+- * blk_get_rl - get request_list to use
+- * @q: request_queue of interest
+- * @bio: bio which will be attached to the allocated request (may be %NULL)
+- *
+- * The caller wants to allocate a request from @q to use for @bio.  Find
+- * the request_list to use and obtain a reference on it.  Should be called
+- * under queue_lock.  This function is guaranteed to return non-%NULL
+- * request_list.
+- */
+-static inline struct request_list *blk_get_rl(struct request_queue *q,
+-					      struct bio *bio)
+-{
+-	struct blkcg *blkcg;
+-	struct blkcg_gq *blkg;
+-
+-	rcu_read_lock();
+-
+-	blkcg = bio_blkcg(bio);
+-
+-	/* bypass blkg lookup and use @q->root_rl directly for root */
+-	if (blkcg == &blkcg_root)
+-		goto root_rl;
+-
+-	/*
+-	 * Try to use blkg->rl.  blkg lookup may fail under memory pressure
+-	 * or if either the blkcg or queue is going away.  Fall back to
+-	 * root_rl in such cases.
+-	 */
+-	blkg = blkg_lookup_create(blkcg, q);
+-	if (unlikely(IS_ERR(blkg)))
+-		goto root_rl;
+-
+-	blkg_get(blkg);
+-	rcu_read_unlock();
+-	return &blkg->rl;
+-root_rl:
+-	rcu_read_unlock();
+-	return &q->root_rl;
+-}
+-
+-/**
+- * blk_put_rl - put request_list
+- * @rl: request_list to put
+- *
+- * Put the reference acquired by blk_get_rl().  Should be called under
+- * queue_lock.
+- */
+-static inline void blk_put_rl(struct request_list *rl)
+-{
+-	/* root_rl may not have blkg set */
+-	if (rl->blkg && rl->blkg->blkcg != &blkcg_root)
+-		blkg_put(rl->blkg);
+-}
+-
+-/**
+- * blk_rq_set_rl - associate a request with a request_list
+- * @rq: request of interest
+- * @rl: target request_list
+- *
+- * Associate @rq with @rl so that accounting and freeing can know the
+- * request_list @rq came from.
+- */
+-static inline void blk_rq_set_rl(struct request *rq, struct request_list *rl)
+-{
+-	rq->rl = rl;
+-}
+-
+-/**
+- * blk_rq_rl - return the request_list a request came from
+- * @rq: request of interest
+- *
+- * Return the request_list @rq is allocated from.
+- */
+-static inline struct request_list *blk_rq_rl(struct request *rq)
+-{
+-	return rq->rl;
+-}
+-
+-struct request_list *__blk_queue_next_rl(struct request_list *rl,
+-					 struct request_queue *q);
+-/**
+- * blk_queue_for_each_rl - iterate through all request_lists of a request_queue
+- *
+- * Should be used under queue_lock.
+- */
+-#define blk_queue_for_each_rl(rl, q)	\
+-	for ((rl) = &(q)->root_rl; (rl); (rl) = __blk_queue_next_rl((rl), (q)))
+-
+-static inline void blkg_stat_init(struct blkg_stat *stat)
+-{
+-	u64_stats_init(&stat->syncp);
+-}
+-
+-/**
+- * blkg_stat_add - add a value to a blkg_stat
+- * @stat: target blkg_stat
+- * @val: value to add
+- *
+- * Add @val to @stat.  The caller is responsible for synchronizing calls to
+- * this function.
+- */
+-static inline void blkg_stat_add(struct blkg_stat *stat, uint64_t val)
+-{
+-	u64_stats_update_begin(&stat->syncp);
+-	stat->cnt += val;
+-	u64_stats_update_end(&stat->syncp);
+-}
+-
+-/**
+- * blkg_stat_read - read the current value of a blkg_stat
+- * @stat: blkg_stat to read
+- *
+- * Read the current value of @stat.  This function can be called without
+- * synchroniztion and takes care of u64 atomicity.
+- */
+-static inline uint64_t blkg_stat_read(struct blkg_stat *stat)
+-{
+-	unsigned int start;
+-	uint64_t v;
+-
+-	do {
+-		start = u64_stats_fetch_begin_irq(&stat->syncp);
+-		v = stat->cnt;
+-	} while (u64_stats_fetch_retry_irq(&stat->syncp, start));
+-
+-	return v;
+-}
+-
+-/**
+- * blkg_stat_reset - reset a blkg_stat
+- * @stat: blkg_stat to reset
+- */
+-static inline void blkg_stat_reset(struct blkg_stat *stat)
+-{
+-	stat->cnt = 0;
+-}
+-
+-/**
+- * blkg_stat_merge - merge a blkg_stat into another
+- * @to: the destination blkg_stat
+- * @from: the source
+- *
+- * Add @from's count to @to.
+- */
+-static inline void blkg_stat_merge(struct blkg_stat *to, struct blkg_stat *from)
+-{
+-	blkg_stat_add(to, blkg_stat_read(from));
+-}
+-
+-static inline void blkg_rwstat_init(struct blkg_rwstat *rwstat)
+-{
+-	u64_stats_init(&rwstat->syncp);
+-}
+-
+-/**
+- * blkg_rwstat_add - add a value to a blkg_rwstat
+- * @rwstat: target blkg_rwstat
+- * @rw: mask of REQ_{WRITE|SYNC}
+- * @val: value to add
+- *
+- * Add @val to @rwstat.  The counters are chosen according to @rw.  The
+- * caller is responsible for synchronizing calls to this function.
+- */
+-static inline void blkg_rwstat_add(struct blkg_rwstat *rwstat,
+-				   int rw, uint64_t val)
+-{
+-	u64_stats_update_begin(&rwstat->syncp);
+-
+-	if (rw & REQ_WRITE)
+-		rwstat->cnt[BLKG_RWSTAT_WRITE] += val;
+-	else
+-		rwstat->cnt[BLKG_RWSTAT_READ] += val;
+-	if (rw & REQ_SYNC)
+-		rwstat->cnt[BLKG_RWSTAT_SYNC] += val;
+-	else
+-		rwstat->cnt[BLKG_RWSTAT_ASYNC] += val;
+-
+-	u64_stats_update_end(&rwstat->syncp);
+-}
+-
+-/**
+- * blkg_rwstat_read - read the current values of a blkg_rwstat
+- * @rwstat: blkg_rwstat to read
+- *
+- * Read the current snapshot of @rwstat and return it as the return value.
+- * This function can be called without synchronization and takes care of
+- * u64 atomicity.
+- */
+-static inline struct blkg_rwstat blkg_rwstat_read(struct blkg_rwstat *rwstat)
+-{
+-	unsigned int start;
+-	struct blkg_rwstat tmp;
+-
+-	do {
+-		start = u64_stats_fetch_begin_irq(&rwstat->syncp);
+-		tmp = *rwstat;
+-	} while (u64_stats_fetch_retry_irq(&rwstat->syncp, start));
+-
+-	return tmp;
+-}
+-
+-/**
+- * blkg_rwstat_total - read the total count of a blkg_rwstat
+- * @rwstat: blkg_rwstat to read
+- *
+- * Return the total count of @rwstat regardless of the IO direction.  This
+- * function can be called without synchronization and takes care of u64
+- * atomicity.
+- */
+-static inline uint64_t blkg_rwstat_total(struct blkg_rwstat *rwstat)
+-{
+-	struct blkg_rwstat tmp = blkg_rwstat_read(rwstat);
+-
+-	return tmp.cnt[BLKG_RWSTAT_READ] + tmp.cnt[BLKG_RWSTAT_WRITE];
+-}
+-
+-/**
+- * blkg_rwstat_reset - reset a blkg_rwstat
+- * @rwstat: blkg_rwstat to reset
+- */
+-static inline void blkg_rwstat_reset(struct blkg_rwstat *rwstat)
+-{
+-	memset(rwstat->cnt, 0, sizeof(rwstat->cnt));
+-}
+-
+-/**
+- * blkg_rwstat_merge - merge a blkg_rwstat into another
+- * @to: the destination blkg_rwstat
+- * @from: the source
+- *
+- * Add @from's counts to @to.
+- */
+-static inline void blkg_rwstat_merge(struct blkg_rwstat *to,
+-				     struct blkg_rwstat *from)
+-{
+-	struct blkg_rwstat v = blkg_rwstat_read(from);
+-	int i;
+-
+-	u64_stats_update_begin(&to->syncp);
+-	for (i = 0; i < BLKG_RWSTAT_NR; i++)
+-		to->cnt[i] += v.cnt[i];
+-	u64_stats_update_end(&to->syncp);
+-}
+-
+-#else	/* CONFIG_BLK_CGROUP */
+-
+-struct cgroup;
+-struct blkcg;
+-
+-struct blkg_policy_data {
+-};
+-
+-struct blkcg_gq {
+-};
+-
+-struct blkcg_policy {
+-};
+-
+-static inline struct blkcg_gq *blkg_lookup(struct blkcg *blkcg, void *key) { return NULL; }
+-static inline int blkcg_init_queue(struct request_queue *q) { return 0; }
+-static inline void blkcg_drain_queue(struct request_queue *q) { }
+-static inline void blkcg_exit_queue(struct request_queue *q) { }
+-static inline int blkcg_policy_register(struct blkcg_policy *pol) { return 0; }
+-static inline void blkcg_policy_unregister(struct blkcg_policy *pol) { }
+-static inline int blkcg_activate_policy(struct request_queue *q,
+-					const struct blkcg_policy *pol) { return 0; }
+-static inline void blkcg_deactivate_policy(struct request_queue *q,
+-					   const struct blkcg_policy *pol) { }
+-
+-static inline struct blkcg *bio_blkcg(struct bio *bio) { return NULL; }
+-
+-static inline struct blkg_policy_data *blkg_to_pd(struct blkcg_gq *blkg,
+-						  struct blkcg_policy *pol) { return NULL; }
+-static inline struct blkcg_gq *pd_to_blkg(struct blkg_policy_data *pd) { return NULL; }
+-static inline char *blkg_path(struct blkcg_gq *blkg) { return NULL; }
+-static inline void blkg_get(struct blkcg_gq *blkg) { }
+-static inline void blkg_put(struct blkcg_gq *blkg) { }
+-
+-static inline struct request_list *blk_get_rl(struct request_queue *q,
+-					      struct bio *bio) { return &q->root_rl; }
+-static inline void blk_put_rl(struct request_list *rl) { }
+-static inline void blk_rq_set_rl(struct request *rq, struct request_list *rl) { }
+-static inline struct request_list *blk_rq_rl(struct request *rq) { return &rq->q->root_rl; }
+-
+-#define blk_queue_for_each_rl(rl, q)	\
+-	for ((rl) = &(q)->root_rl; (rl); (rl) = NULL)
+-
+-#endif	/* CONFIG_BLK_CGROUP */
+-#endif	/* _BLK_CGROUP_H */
+diff --git a/block/blk-core.c b/block/blk-core.c
+index de474b5d..ed2427f 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -32,12 +32,12 @@
+ #include <linux/delay.h>
+ #include <linux/ratelimit.h>
+ #include <linux/pm_runtime.h>
++#include <linux/blk-cgroup.h>
+ 
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/block.h>
+ 
+ #include "blk.h"
+-#include "blk-cgroup.h"
+ #include "blk-mq.h"
+ 
+ EXPORT_TRACEPOINT_SYMBOL_GPL(block_bio_remap);
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index faaf36a..5677eb7 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -8,9 +8,9 @@
+ #include <linux/blkdev.h>
+ #include <linux/blktrace_api.h>
+ #include <linux/blk-mq.h>
++#include <linux/blk-cgroup.h>
+ 
+ #include "blk.h"
+-#include "blk-cgroup.h"
+ #include "blk-mq.h"
+ 
+ struct queue_sysfs_entry {
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 5b9c6d5..b231935 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -9,7 +9,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/bio.h>
+ #include <linux/blktrace_api.h>
+-#include "blk-cgroup.h"
++#include <linux/blk-cgroup.h>
+ #include "blk.h"
+ 
+ /* Max dispatch from a group in 1 round */
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index 5da8e6e..bc8f429 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -14,8 +14,8 @@
+ #include <linux/rbtree.h>
+ #include <linux/ioprio.h>
+ #include <linux/blktrace_api.h>
++#include <linux/blk-cgroup.h>
+ #include "blk.h"
+-#include "blk-cgroup.h"
  
  /*
-  * For address_spaces which do not use buffers.  Just tag the page as dirty in
-@@ -2266,6 +2259,26 @@ int set_page_dirty_lock(struct page *page)
- EXPORT_SYMBOL(set_page_dirty_lock);
+  * tunables
+diff --git a/block/elevator.c b/block/elevator.c
+index 59794d0..3bbb48f 100644
+--- a/block/elevator.c
++++ b/block/elevator.c
+@@ -35,11 +35,11 @@
+ #include <linux/hash.h>
+ #include <linux/uaccess.h>
+ #include <linux/pm_runtime.h>
++#include <linux/blk-cgroup.h>
  
- /*
-+ * This cancels just the dirty bit on the kernel page itself, it does NOT
-+ * actually remove dirty bits on any mmap's that may be around. It also
-+ * leaves the page tagged dirty, so any sync activity will still find it on
-+ * the dirty lists, and in particular, clear_page_dirty_for_io() will still
-+ * look at the dirty bits in the VM.
+ #include <trace/events/block.h>
+ 
+ #include "blk.h"
+-#include "blk-cgroup.h"
+ 
+ static DEFINE_SPINLOCK(elv_list_lock);
+ static LIST_HEAD(elv_list);
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+new file mode 100644
+index 0000000..c567865
+--- /dev/null
++++ b/include/linux/blk-cgroup.h
+@@ -0,0 +1,603 @@
++#ifndef _BLK_CGROUP_H
++#define _BLK_CGROUP_H
++/*
++ * Common Block IO controller cgroup interface
 + *
-+ * Doing this should *normally* only ever be done when a page is truncated,
-+ * and is not actually mapped anywhere at all. However, fs/buffer.c does
-+ * this when it notices that somebody has cleaned out all the buffers on a
-+ * page without actually doing it through the VM. Can you say "ext3 is
-+ * horribly ugly"? Thought you could.
++ * Based on ideas and code from CFQ, CFS and BFQ:
++ * Copyright (C) 2003 Jens Axboe <axboe@kernel.dk>
++ *
++ * Copyright (C) 2008 Fabio Checconi <fabio@gandalf.sssup.it>
++ *		      Paolo Valente <paolo.valente@unimore.it>
++ *
++ * Copyright (C) 2009 Vivek Goyal <vgoyal@redhat.com>
++ * 	              Nauman Rafique <nauman@google.com>
 + */
-+void cancel_dirty_page(struct page *page)
-+{
-+	if (TestClearPageDirty(page))
-+		account_page_cleaned(page, page_mapping(page));
-+}
-+EXPORT_SYMBOL(cancel_dirty_page);
++
++#include <linux/cgroup.h>
++#include <linux/u64_stats_sync.h>
++#include <linux/seq_file.h>
++#include <linux/radix-tree.h>
++#include <linux/blkdev.h>
++#include <linux/atomic.h>
++
++/* Max limits for throttle policy */
++#define THROTL_IOPS_MAX		UINT_MAX
++
++/* CFQ specific, out here for blkcg->cfq_weight */
++#define CFQ_WEIGHT_MIN		10
++#define CFQ_WEIGHT_MAX		1000
++#define CFQ_WEIGHT_DEFAULT	500
++
++#ifdef CONFIG_BLK_CGROUP
++
++enum blkg_rwstat_type {
++	BLKG_RWSTAT_READ,
++	BLKG_RWSTAT_WRITE,
++	BLKG_RWSTAT_SYNC,
++	BLKG_RWSTAT_ASYNC,
++
++	BLKG_RWSTAT_NR,
++	BLKG_RWSTAT_TOTAL = BLKG_RWSTAT_NR,
++};
++
++struct blkcg_gq;
++
++struct blkcg {
++	struct cgroup_subsys_state	css;
++	spinlock_t			lock;
++
++	struct radix_tree_root		blkg_tree;
++	struct blkcg_gq			*blkg_hint;
++	struct hlist_head		blkg_list;
++
++	/* TODO: per-policy storage in blkcg */
++	unsigned int			cfq_weight;	/* belongs to cfq */
++	unsigned int			cfq_leaf_weight;
++};
++
++struct blkg_stat {
++	struct u64_stats_sync		syncp;
++	uint64_t			cnt;
++};
++
++struct blkg_rwstat {
++	struct u64_stats_sync		syncp;
++	uint64_t			cnt[BLKG_RWSTAT_NR];
++};
 +
 +/*
-  * Clear a page's dirty flag, while caring for dirty memory accounting.
-  * Returns true if the page was previously dirty.
-  *
-diff --git a/mm/truncate.c b/mm/truncate.c
-index 66af903..0c36025 100644
---- a/mm/truncate.c
-+++ b/mm/truncate.c
-@@ -116,9 +116,7 @@ truncate_complete_page(struct address_space *mapping, struct page *page)
- 	 * the VM has canceled the dirty bit (eg ext3 journaling).
- 	 * Hence dirty accounting check is placed after invalidation.
- 	 */
--	if (TestClearPageDirty(page))
--		account_page_cleaned(page, mapping);
--
-+	cancel_dirty_page(page);
- 	ClearPageMappedToDisk(page);
- 	delete_from_page_cache(page);
- 	return 0;
++ * A blkcg_gq (blkg) is association between a block cgroup (blkcg) and a
++ * request_queue (q).  This is used by blkcg policies which need to track
++ * information per blkcg - q pair.
++ *
++ * There can be multiple active blkcg policies and each has its private
++ * data on each blkg, the size of which is determined by
++ * blkcg_policy->pd_size.  blkcg core allocates and frees such areas
++ * together with blkg and invokes pd_init/exit_fn() methods.
++ *
++ * Such private data must embed struct blkg_policy_data (pd) at the
++ * beginning and pd_size can't be smaller than pd.
++ */
++struct blkg_policy_data {
++	/* the blkg and policy id this per-policy data belongs to */
++	struct blkcg_gq			*blkg;
++	int				plid;
++
++	/* used during policy activation */
++	struct list_head		alloc_node;
++};
++
++/* association between a blk cgroup and a request queue */
++struct blkcg_gq {
++	/* Pointer to the associated request_queue */
++	struct request_queue		*q;
++	struct list_head		q_node;
++	struct hlist_node		blkcg_node;
++	struct blkcg			*blkcg;
++
++	/* all non-root blkcg_gq's are guaranteed to have access to parent */
++	struct blkcg_gq			*parent;
++
++	/* request allocation list for this blkcg-q pair */
++	struct request_list		rl;
++
++	/* reference count */
++	atomic_t			refcnt;
++
++	/* is this blkg online? protected by both blkcg and q locks */
++	bool				online;
++
++	struct blkg_policy_data		*pd[BLKCG_MAX_POLS];
++
++	struct rcu_head			rcu_head;
++};
++
++typedef void (blkcg_pol_init_pd_fn)(struct blkcg_gq *blkg);
++typedef void (blkcg_pol_online_pd_fn)(struct blkcg_gq *blkg);
++typedef void (blkcg_pol_offline_pd_fn)(struct blkcg_gq *blkg);
++typedef void (blkcg_pol_exit_pd_fn)(struct blkcg_gq *blkg);
++typedef void (blkcg_pol_reset_pd_stats_fn)(struct blkcg_gq *blkg);
++
++struct blkcg_policy {
++	int				plid;
++	/* policy specific private data size */
++	size_t				pd_size;
++	/* cgroup files for the policy */
++	struct cftype			*cftypes;
++
++	/* operations */
++	blkcg_pol_init_pd_fn		*pd_init_fn;
++	blkcg_pol_online_pd_fn		*pd_online_fn;
++	blkcg_pol_offline_pd_fn		*pd_offline_fn;
++	blkcg_pol_exit_pd_fn		*pd_exit_fn;
++	blkcg_pol_reset_pd_stats_fn	*pd_reset_stats_fn;
++};
++
++extern struct blkcg blkcg_root;
++
++struct blkcg_gq *blkg_lookup(struct blkcg *blkcg, struct request_queue *q);
++struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
++				    struct request_queue *q);
++int blkcg_init_queue(struct request_queue *q);
++void blkcg_drain_queue(struct request_queue *q);
++void blkcg_exit_queue(struct request_queue *q);
++
++/* Blkio controller policy registration */
++int blkcg_policy_register(struct blkcg_policy *pol);
++void blkcg_policy_unregister(struct blkcg_policy *pol);
++int blkcg_activate_policy(struct request_queue *q,
++			  const struct blkcg_policy *pol);
++void blkcg_deactivate_policy(struct request_queue *q,
++			     const struct blkcg_policy *pol);
++
++void blkcg_print_blkgs(struct seq_file *sf, struct blkcg *blkcg,
++		       u64 (*prfill)(struct seq_file *,
++				     struct blkg_policy_data *, int),
++		       const struct blkcg_policy *pol, int data,
++		       bool show_total);
++u64 __blkg_prfill_u64(struct seq_file *sf, struct blkg_policy_data *pd, u64 v);
++u64 __blkg_prfill_rwstat(struct seq_file *sf, struct blkg_policy_data *pd,
++			 const struct blkg_rwstat *rwstat);
++u64 blkg_prfill_stat(struct seq_file *sf, struct blkg_policy_data *pd, int off);
++u64 blkg_prfill_rwstat(struct seq_file *sf, struct blkg_policy_data *pd,
++		       int off);
++
++u64 blkg_stat_recursive_sum(struct blkg_policy_data *pd, int off);
++struct blkg_rwstat blkg_rwstat_recursive_sum(struct blkg_policy_data *pd,
++					     int off);
++
++struct blkg_conf_ctx {
++	struct gendisk			*disk;
++	struct blkcg_gq			*blkg;
++	u64				v;
++};
++
++int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
++		   const char *input, struct blkg_conf_ctx *ctx);
++void blkg_conf_finish(struct blkg_conf_ctx *ctx);
++
++
++static inline struct blkcg *css_to_blkcg(struct cgroup_subsys_state *css)
++{
++	return css ? container_of(css, struct blkcg, css) : NULL;
++}
++
++static inline struct blkcg *task_blkcg(struct task_struct *tsk)
++{
++	return css_to_blkcg(task_css(tsk, blkio_cgrp_id));
++}
++
++static inline struct blkcg *bio_blkcg(struct bio *bio)
++{
++	if (bio && bio->bi_css)
++		return css_to_blkcg(bio->bi_css);
++	return task_blkcg(current);
++}
++
++/**
++ * blkcg_parent - get the parent of a blkcg
++ * @blkcg: blkcg of interest
++ *
++ * Return the parent blkcg of @blkcg.  Can be called anytime.
++ */
++static inline struct blkcg *blkcg_parent(struct blkcg *blkcg)
++{
++	return css_to_blkcg(blkcg->css.parent);
++}
++
++/**
++ * blkg_to_pdata - get policy private data
++ * @blkg: blkg of interest
++ * @pol: policy of interest
++ *
++ * Return pointer to private data associated with the @blkg-@pol pair.
++ */
++static inline struct blkg_policy_data *blkg_to_pd(struct blkcg_gq *blkg,
++						  struct blkcg_policy *pol)
++{
++	return blkg ? blkg->pd[pol->plid] : NULL;
++}
++
++/**
++ * pdata_to_blkg - get blkg associated with policy private data
++ * @pd: policy private data of interest
++ *
++ * @pd is policy private data.  Determine the blkg it's associated with.
++ */
++static inline struct blkcg_gq *pd_to_blkg(struct blkg_policy_data *pd)
++{
++	return pd ? pd->blkg : NULL;
++}
++
++/**
++ * blkg_path - format cgroup path of blkg
++ * @blkg: blkg of interest
++ * @buf: target buffer
++ * @buflen: target buffer length
++ *
++ * Format the path of the cgroup of @blkg into @buf.
++ */
++static inline int blkg_path(struct blkcg_gq *blkg, char *buf, int buflen)
++{
++	char *p;
++
++	p = cgroup_path(blkg->blkcg->css.cgroup, buf, buflen);
++	if (!p) {
++		strncpy(buf, "<unavailable>", buflen);
++		return -ENAMETOOLONG;
++	}
++
++	memmove(buf, p, buf + buflen - p);
++	return 0;
++}
++
++/**
++ * blkg_get - get a blkg reference
++ * @blkg: blkg to get
++ *
++ * The caller should be holding an existing reference.
++ */
++static inline void blkg_get(struct blkcg_gq *blkg)
++{
++	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
++	atomic_inc(&blkg->refcnt);
++}
++
++void __blkg_release_rcu(struct rcu_head *rcu);
++
++/**
++ * blkg_put - put a blkg reference
++ * @blkg: blkg to put
++ */
++static inline void blkg_put(struct blkcg_gq *blkg)
++{
++	WARN_ON_ONCE(atomic_read(&blkg->refcnt) <= 0);
++	if (atomic_dec_and_test(&blkg->refcnt))
++		call_rcu(&blkg->rcu_head, __blkg_release_rcu);
++}
++
++struct blkcg_gq *__blkg_lookup(struct blkcg *blkcg, struct request_queue *q,
++			       bool update_hint);
++
++/**
++ * blkg_for_each_descendant_pre - pre-order walk of a blkg's descendants
++ * @d_blkg: loop cursor pointing to the current descendant
++ * @pos_css: used for iteration
++ * @p_blkg: target blkg to walk descendants of
++ *
++ * Walk @c_blkg through the descendants of @p_blkg.  Must be used with RCU
++ * read locked.  If called under either blkcg or queue lock, the iteration
++ * is guaranteed to include all and only online blkgs.  The caller may
++ * update @pos_css by calling css_rightmost_descendant() to skip subtree.
++ * @p_blkg is included in the iteration and the first node to be visited.
++ */
++#define blkg_for_each_descendant_pre(d_blkg, pos_css, p_blkg)		\
++	css_for_each_descendant_pre((pos_css), &(p_blkg)->blkcg->css)	\
++		if (((d_blkg) = __blkg_lookup(css_to_blkcg(pos_css),	\
++					      (p_blkg)->q, false)))
++
++/**
++ * blkg_for_each_descendant_post - post-order walk of a blkg's descendants
++ * @d_blkg: loop cursor pointing to the current descendant
++ * @pos_css: used for iteration
++ * @p_blkg: target blkg to walk descendants of
++ *
++ * Similar to blkg_for_each_descendant_pre() but performs post-order
++ * traversal instead.  Synchronization rules are the same.  @p_blkg is
++ * included in the iteration and the last node to be visited.
++ */
++#define blkg_for_each_descendant_post(d_blkg, pos_css, p_blkg)		\
++	css_for_each_descendant_post((pos_css), &(p_blkg)->blkcg->css)	\
++		if (((d_blkg) = __blkg_lookup(css_to_blkcg(pos_css),	\
++					      (p_blkg)->q, false)))
++
++/**
++ * blk_get_rl - get request_list to use
++ * @q: request_queue of interest
++ * @bio: bio which will be attached to the allocated request (may be %NULL)
++ *
++ * The caller wants to allocate a request from @q to use for @bio.  Find
++ * the request_list to use and obtain a reference on it.  Should be called
++ * under queue_lock.  This function is guaranteed to return non-%NULL
++ * request_list.
++ */
++static inline struct request_list *blk_get_rl(struct request_queue *q,
++					      struct bio *bio)
++{
++	struct blkcg *blkcg;
++	struct blkcg_gq *blkg;
++
++	rcu_read_lock();
++
++	blkcg = bio_blkcg(bio);
++
++	/* bypass blkg lookup and use @q->root_rl directly for root */
++	if (blkcg == &blkcg_root)
++		goto root_rl;
++
++	/*
++	 * Try to use blkg->rl.  blkg lookup may fail under memory pressure
++	 * or if either the blkcg or queue is going away.  Fall back to
++	 * root_rl in such cases.
++	 */
++	blkg = blkg_lookup_create(blkcg, q);
++	if (unlikely(IS_ERR(blkg)))
++		goto root_rl;
++
++	blkg_get(blkg);
++	rcu_read_unlock();
++	return &blkg->rl;
++root_rl:
++	rcu_read_unlock();
++	return &q->root_rl;
++}
++
++/**
++ * blk_put_rl - put request_list
++ * @rl: request_list to put
++ *
++ * Put the reference acquired by blk_get_rl().  Should be called under
++ * queue_lock.
++ */
++static inline void blk_put_rl(struct request_list *rl)
++{
++	/* root_rl may not have blkg set */
++	if (rl->blkg && rl->blkg->blkcg != &blkcg_root)
++		blkg_put(rl->blkg);
++}
++
++/**
++ * blk_rq_set_rl - associate a request with a request_list
++ * @rq: request of interest
++ * @rl: target request_list
++ *
++ * Associate @rq with @rl so that accounting and freeing can know the
++ * request_list @rq came from.
++ */
++static inline void blk_rq_set_rl(struct request *rq, struct request_list *rl)
++{
++	rq->rl = rl;
++}
++
++/**
++ * blk_rq_rl - return the request_list a request came from
++ * @rq: request of interest
++ *
++ * Return the request_list @rq is allocated from.
++ */
++static inline struct request_list *blk_rq_rl(struct request *rq)
++{
++	return rq->rl;
++}
++
++struct request_list *__blk_queue_next_rl(struct request_list *rl,
++					 struct request_queue *q);
++/**
++ * blk_queue_for_each_rl - iterate through all request_lists of a request_queue
++ *
++ * Should be used under queue_lock.
++ */
++#define blk_queue_for_each_rl(rl, q)	\
++	for ((rl) = &(q)->root_rl; (rl); (rl) = __blk_queue_next_rl((rl), (q)))
++
++static inline void blkg_stat_init(struct blkg_stat *stat)
++{
++	u64_stats_init(&stat->syncp);
++}
++
++/**
++ * blkg_stat_add - add a value to a blkg_stat
++ * @stat: target blkg_stat
++ * @val: value to add
++ *
++ * Add @val to @stat.  The caller is responsible for synchronizing calls to
++ * this function.
++ */
++static inline void blkg_stat_add(struct blkg_stat *stat, uint64_t val)
++{
++	u64_stats_update_begin(&stat->syncp);
++	stat->cnt += val;
++	u64_stats_update_end(&stat->syncp);
++}
++
++/**
++ * blkg_stat_read - read the current value of a blkg_stat
++ * @stat: blkg_stat to read
++ *
++ * Read the current value of @stat.  This function can be called without
++ * synchroniztion and takes care of u64 atomicity.
++ */
++static inline uint64_t blkg_stat_read(struct blkg_stat *stat)
++{
++	unsigned int start;
++	uint64_t v;
++
++	do {
++		start = u64_stats_fetch_begin_irq(&stat->syncp);
++		v = stat->cnt;
++	} while (u64_stats_fetch_retry_irq(&stat->syncp, start));
++
++	return v;
++}
++
++/**
++ * blkg_stat_reset - reset a blkg_stat
++ * @stat: blkg_stat to reset
++ */
++static inline void blkg_stat_reset(struct blkg_stat *stat)
++{
++	stat->cnt = 0;
++}
++
++/**
++ * blkg_stat_merge - merge a blkg_stat into another
++ * @to: the destination blkg_stat
++ * @from: the source
++ *
++ * Add @from's count to @to.
++ */
++static inline void blkg_stat_merge(struct blkg_stat *to, struct blkg_stat *from)
++{
++	blkg_stat_add(to, blkg_stat_read(from));
++}
++
++static inline void blkg_rwstat_init(struct blkg_rwstat *rwstat)
++{
++	u64_stats_init(&rwstat->syncp);
++}
++
++/**
++ * blkg_rwstat_add - add a value to a blkg_rwstat
++ * @rwstat: target blkg_rwstat
++ * @rw: mask of REQ_{WRITE|SYNC}
++ * @val: value to add
++ *
++ * Add @val to @rwstat.  The counters are chosen according to @rw.  The
++ * caller is responsible for synchronizing calls to this function.
++ */
++static inline void blkg_rwstat_add(struct blkg_rwstat *rwstat,
++				   int rw, uint64_t val)
++{
++	u64_stats_update_begin(&rwstat->syncp);
++
++	if (rw & REQ_WRITE)
++		rwstat->cnt[BLKG_RWSTAT_WRITE] += val;
++	else
++		rwstat->cnt[BLKG_RWSTAT_READ] += val;
++	if (rw & REQ_SYNC)
++		rwstat->cnt[BLKG_RWSTAT_SYNC] += val;
++	else
++		rwstat->cnt[BLKG_RWSTAT_ASYNC] += val;
++
++	u64_stats_update_end(&rwstat->syncp);
++}
++
++/**
++ * blkg_rwstat_read - read the current values of a blkg_rwstat
++ * @rwstat: blkg_rwstat to read
++ *
++ * Read the current snapshot of @rwstat and return it as the return value.
++ * This function can be called without synchronization and takes care of
++ * u64 atomicity.
++ */
++static inline struct blkg_rwstat blkg_rwstat_read(struct blkg_rwstat *rwstat)
++{
++	unsigned int start;
++	struct blkg_rwstat tmp;
++
++	do {
++		start = u64_stats_fetch_begin_irq(&rwstat->syncp);
++		tmp = *rwstat;
++	} while (u64_stats_fetch_retry_irq(&rwstat->syncp, start));
++
++	return tmp;
++}
++
++/**
++ * blkg_rwstat_total - read the total count of a blkg_rwstat
++ * @rwstat: blkg_rwstat to read
++ *
++ * Return the total count of @rwstat regardless of the IO direction.  This
++ * function can be called without synchronization and takes care of u64
++ * atomicity.
++ */
++static inline uint64_t blkg_rwstat_total(struct blkg_rwstat *rwstat)
++{
++	struct blkg_rwstat tmp = blkg_rwstat_read(rwstat);
++
++	return tmp.cnt[BLKG_RWSTAT_READ] + tmp.cnt[BLKG_RWSTAT_WRITE];
++}
++
++/**
++ * blkg_rwstat_reset - reset a blkg_rwstat
++ * @rwstat: blkg_rwstat to reset
++ */
++static inline void blkg_rwstat_reset(struct blkg_rwstat *rwstat)
++{
++	memset(rwstat->cnt, 0, sizeof(rwstat->cnt));
++}
++
++/**
++ * blkg_rwstat_merge - merge a blkg_rwstat into another
++ * @to: the destination blkg_rwstat
++ * @from: the source
++ *
++ * Add @from's counts to @to.
++ */
++static inline void blkg_rwstat_merge(struct blkg_rwstat *to,
++				     struct blkg_rwstat *from)
++{
++	struct blkg_rwstat v = blkg_rwstat_read(from);
++	int i;
++
++	u64_stats_update_begin(&to->syncp);
++	for (i = 0; i < BLKG_RWSTAT_NR; i++)
++		to->cnt[i] += v.cnt[i];
++	u64_stats_update_end(&to->syncp);
++}
++
++#else	/* CONFIG_BLK_CGROUP */
++
++struct cgroup;
++struct blkcg;
++
++struct blkg_policy_data {
++};
++
++struct blkcg_gq {
++};
++
++struct blkcg_policy {
++};
++
++static inline struct blkcg_gq *blkg_lookup(struct blkcg *blkcg, void *key) { return NULL; }
++static inline int blkcg_init_queue(struct request_queue *q) { return 0; }
++static inline void blkcg_drain_queue(struct request_queue *q) { }
++static inline void blkcg_exit_queue(struct request_queue *q) { }
++static inline int blkcg_policy_register(struct blkcg_policy *pol) { return 0; }
++static inline void blkcg_policy_unregister(struct blkcg_policy *pol) { }
++static inline int blkcg_activate_policy(struct request_queue *q,
++					const struct blkcg_policy *pol) { return 0; }
++static inline void blkcg_deactivate_policy(struct request_queue *q,
++					   const struct blkcg_policy *pol) { }
++
++static inline struct blkcg *bio_blkcg(struct bio *bio) { return NULL; }
++
++static inline struct blkg_policy_data *blkg_to_pd(struct blkcg_gq *blkg,
++						  struct blkcg_policy *pol) { return NULL; }
++static inline struct blkcg_gq *pd_to_blkg(struct blkg_policy_data *pd) { return NULL; }
++static inline char *blkg_path(struct blkcg_gq *blkg) { return NULL; }
++static inline void blkg_get(struct blkcg_gq *blkg) { }
++static inline void blkg_put(struct blkcg_gq *blkg) { }
++
++static inline struct request_list *blk_get_rl(struct request_queue *q,
++					      struct bio *bio) { return &q->root_rl; }
++static inline void blk_put_rl(struct request_list *rl) { }
++static inline void blk_rq_set_rl(struct request *rq, struct request_list *rl) { }
++static inline struct request_list *blk_rq_rl(struct request *rq) { return &rq->q->root_rl; }
++
++#define blk_queue_for_each_rl(rl, q)	\
++	for ((rl) = &(q)->root_rl; (rl); (rl) = NULL)
++
++#endif	/* CONFIG_BLK_CGROUP */
++#endif	/* _BLK_CGROUP_H */
 -- 
 2.4.0
 
