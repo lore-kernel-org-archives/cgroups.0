@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 02/19] writeback: clean up wb_dirty_limit()
-Date: Fri, 22 May 2015 18:23:19 -0400
-Message-ID: <1432333416-6221-3-git-send-email-tj@kernel.org>
+Subject: [PATCH 03/19] writeback: reorganize [__]wb_update_bandwidth()
+Date: Fri, 22 May 2015 18:23:20 -0400
+Message-ID: <1432333416-6221-4-git-send-email-tj@kernel.org>
 References: <1432333416-6221-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Wb74TeDCv3NJO0ugj6URs4G3xzrJH3ZMeFJ5uVwTvs4=;
-        b=kvtu1V1ypIvQgYIjE3ScsiJvRH5c4iYu00HeZa8JpvCIOH5Pcj5NjoEhX59SyLdb5e
-         8EpvkBfhyGdTtdr3bFbjbMRF3Lp1jsK1Ni7ro3LTgVC2+x3vCQn7hdK/ASocrV34tWpe
-         mYm0RGhmYGha5J2+Z/TGLo5Z6dpZGtpOhM9ue4594/OQmb33ZKdhA85yb9SmS7Cs9L2B
-         p1RD23DvXrLQ1YW3zD9gdhAXyL758mL7C+20AcWP66sj7ygXddmlC3VQ5GBIUZdD+LvK
-         w6Ukypcl5FA5Y+NUwxMvH0XykR/rXYUxhxUXciCryJaB7DhKaJbaLnCXu2aAWobAbvd8
-         QLag==
+        bh=Y5kDU5ft76UBFxgiM27EQMXMv5FVjZDAShjShPoYSQM=;
+        b=AO3YcB+pVQtG2vJuEh/UmgbpFU7GLX+iAO/WAf/ztfUQT3BRQa752DxbanA9Kfz3Hl
+         jBXI4A5kzh+phH4QJqXxxmukj2fMtIJZ2qvi7m79H0fOZCqN+BPdQAiQB8tSReYVAH9T
+         reCp8Tx/bZXxGWs+V35MwGsfFMdFhqA4Htwz4W30zZYTCrBZ0c2lEVi8Ym4DovS2sqqu
+         OozPgqhJuZPnOqaHJDSOdkYd8ZHFeTotGv6Gl99xPS9oBKr9rguYcBZFxu05WYt0Rsq6
+         3j+E0r7hzDH+p3LcsiYPb/lDIXPKdlSllQVjg/a17MTfpMuH2fNOcWPNZa8yFe/RO7kx
+         DBvw==
 In-Reply-To: <1432333416-6221-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,13 +23,29 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru, Tejun Heo <tj@kernel.org>
 
-The function name wb_dirty_limit(), its argument @dirty and the local
-variable @wb_dirty are mortally confusing given that the function
-calculates per-wb threshold value not dirty pages, especially given
-that @dirty and @wb_dirty are used elsewhere for dirty pages.
+__wb_update_bandwidth() is called from two places -
+fs/fs-writeback.c::balance_dirty_pages() and
+mm/page-writeback.c::wb_writeback().  The latter updates only the
+write bandwidth while the former also deals with the dirty ratelimit.
+The two callsites are distinguished by whether @thresh parameter is
+zero or not, which is cryptic.  In addition, the two files define
+their own different versions of wb_update_bandwidth() on top of
+__wb_update_bandwidth(), which is confusing to say the least.  This
+patch cleans up [__]wb_update_bandwidth() in the following ways.
 
-Let's rename the function to wb_calc_thresh() and wb_dirty to
-wb_thresh.
+* __wb_update_bandwidth() now takes explicit @update_ratelimit
+  parameter to gate dirty ratelimit handling.
+
+* mm/page-writeback.c::wb_update_bandwidth() is flattened into its
+  caller - balance_dirty_pages().
+
+* fs/fs-writeback.c::wb_update_bandwidth() is moved to
+  mm/page-writeback.c and __wb_update_bandwidth() is made static.
+
+* While at it, add a lockdep assertion to __wb_update_bandwidth().
+
+Except for the lockdep addition, this is pure reorganization and
+doesn't introduce any behavioral changes.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
@@ -37,157 +53,136 @@ Cc: Jan Kara <jack@suse.cz>
 Cc: Wu Fengguang <fengguang.wu@intel.com>
 Cc: Greg Thelen <gthelen@google.com>
 ---
- fs/fs-writeback.c         |  2 +-
- include/linux/writeback.h |  2 +-
- mm/backing-dev.c          |  6 +++---
- mm/page-writeback.c       | 30 +++++++++++++++---------------
- 4 files changed, 20 insertions(+), 20 deletions(-)
+ fs/fs-writeback.c         | 10 ----------
+ include/linux/writeback.h |  9 +--------
+ mm/page-writeback.c       | 45 ++++++++++++++++++++++-----------------------
+ 3 files changed, 23 insertions(+), 41 deletions(-)
 
 diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 881ea5d..b1b3b81 100644
+index b1b3b81..cd89484 100644
 --- a/fs/fs-writeback.c
 +++ b/fs/fs-writeback.c
-@@ -1081,7 +1081,7 @@ static bool over_bground_thresh(struct bdi_writeback *wb)
- 	    global_page_state(NR_UNSTABLE_NFS) > background_thresh)
- 		return true;
- 
--	if (wb_stat(wb, WB_RECLAIMABLE) > wb_dirty_limit(wb, background_thresh))
-+	if (wb_stat(wb, WB_RECLAIMABLE) > wb_calc_thresh(wb, background_thresh))
- 		return true;
- 
- 	return false;
-diff --git a/include/linux/writeback.h b/include/linux/writeback.h
-index 23af355..0435c85 100644
---- a/include/linux/writeback.h
-+++ b/include/linux/writeback.h
-@@ -155,7 +155,7 @@ int dirty_writeback_centisecs_handler(struct ctl_table *, int,
- 				      void __user *, size_t *, loff_t *);
- 
- void global_dirty_limits(unsigned long *pbackground, unsigned long *pdirty);
--unsigned long wb_dirty_limit(struct bdi_writeback *wb, unsigned long dirty);
-+unsigned long wb_calc_thresh(struct bdi_writeback *wb, unsigned long thresh);
- 
- void __wb_update_bandwidth(struct bdi_writeback *wb,
- 			   unsigned long thresh,
-diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-index ad5608d..9c8b7b5 100644
---- a/mm/backing-dev.c
-+++ b/mm/backing-dev.c
-@@ -49,7 +49,7 @@ static int bdi_debug_stats_show(struct seq_file *m, void *v)
- 	struct bdi_writeback *wb = &bdi->wb;
- 	unsigned long background_thresh;
- 	unsigned long dirty_thresh;
--	unsigned long bdi_thresh;
-+	unsigned long wb_thresh;
- 	unsigned long nr_dirty, nr_io, nr_more_io, nr_dirty_time;
- 	struct inode *inode;
- 
-@@ -67,7 +67,7 @@ static int bdi_debug_stats_show(struct seq_file *m, void *v)
- 	spin_unlock(&wb->list_lock);
- 
- 	global_dirty_limits(&background_thresh, &dirty_thresh);
--	bdi_thresh = wb_dirty_limit(wb, dirty_thresh);
-+	wb_thresh = wb_calc_thresh(wb, dirty_thresh);
- 
- #define K(x) ((x) << (PAGE_SHIFT - 10))
- 	seq_printf(m,
-@@ -87,7 +87,7 @@ static int bdi_debug_stats_show(struct seq_file *m, void *v)
- 		   "state:              %10lx\n",
- 		   (unsigned long) K(wb_stat(wb, WB_WRITEBACK)),
- 		   (unsigned long) K(wb_stat(wb, WB_RECLAIMABLE)),
--		   K(bdi_thresh),
-+		   K(wb_thresh),
- 		   K(dirty_thresh),
- 		   K(background_thresh),
- 		   (unsigned long) K(wb_stat(wb, WB_DIRTIED)),
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 70cf98d..c7745a7 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -556,7 +556,7 @@ static unsigned long hard_dirty_limit(unsigned long thresh)
- }
- 
- /**
-- * wb_dirty_limit - @wb's share of dirty throttling threshold
-+ * wb_calc_thresh - @wb's share of dirty throttling threshold
-  * @wb: bdi_writeback to query
-  * @dirty: global dirty limit in pages
-  *
-@@ -577,28 +577,28 @@ static unsigned long hard_dirty_limit(unsigned long thresh)
-  * The wb's share of dirty limit will be adapting to its throughput and
-  * bounded by the bdi->min_ratio and/or bdi->max_ratio parameters, if set.
-  */
--unsigned long wb_dirty_limit(struct bdi_writeback *wb, unsigned long dirty)
-+unsigned long wb_calc_thresh(struct bdi_writeback *wb, unsigned long thresh)
- {
--	u64 wb_dirty;
-+	u64 wb_thresh;
- 	long numerator, denominator;
- 	unsigned long wb_min_ratio, wb_max_ratio;
- 
- 	/*
--	 * Calculate this BDI's share of the dirty ratio.
-+	 * Calculate this BDI's share of the thresh ratio.
- 	 */
- 	wb_writeout_fraction(wb, &numerator, &denominator);
- 
--	wb_dirty = (dirty * (100 - bdi_min_ratio)) / 100;
--	wb_dirty *= numerator;
--	do_div(wb_dirty, denominator);
-+	wb_thresh = (thresh * (100 - bdi_min_ratio)) / 100;
-+	wb_thresh *= numerator;
-+	do_div(wb_thresh, denominator);
- 
- 	wb_min_max_ratio(wb, &wb_min_ratio, &wb_max_ratio);
- 
--	wb_dirty += (dirty * wb_min_ratio) / 100;
--	if (wb_dirty > (dirty * wb_max_ratio) / 100)
--		wb_dirty = dirty * wb_max_ratio / 100;
-+	wb_thresh += (thresh * wb_min_ratio) / 100;
-+	if (wb_thresh > (thresh * wb_max_ratio) / 100)
-+		wb_thresh = thresh * wb_max_ratio / 100;
- 
--	return wb_dirty;
-+	return wb_thresh;
+@@ -1088,16 +1088,6 @@ static bool over_bground_thresh(struct bdi_writeback *wb)
  }
  
  /*
-@@ -750,7 +750,7 @@ static unsigned long wb_position_ratio(struct bdi_writeback *wb,
- 	 * total amount of RAM is 16GB, bdi->max_ratio is equal to 1%, global
- 	 * limits are set by default to 10% and 20% (background and throttle).
- 	 * Then wb_thresh is 1% of 20% of 16GB. This amounts to ~8K pages.
--	 * wb_dirty_limit(wb, bg_thresh) is about ~4K pages. wb_setpoint is
-+	 * wb_calc_thresh(wb, bg_thresh) is about ~4K pages. wb_setpoint is
- 	 * about ~6K pages (as the average of background and throttle wb
- 	 * limits). The 3rd order polynomial will provide positive feedback if
- 	 * wb_dirty is under wb_setpoint and vice versa.
-@@ -1115,7 +1115,7 @@ static void wb_update_dirty_ratelimit(struct bdi_writeback *wb,
- 	 *
- 	 * We rampup dirty_ratelimit forcibly if wb_dirty is low because
- 	 * it's possible that wb_thresh is close to zero due to inactivity
--	 * of backing device (see the implementation of wb_dirty_limit()).
-+	 * of backing device (see the implementation of wb_calc_thresh()).
- 	 */
- 	if (unlikely(wb->bdi->capabilities & BDI_CAP_STRICTLIMIT)) {
- 		dirty = wb_dirty;
-@@ -1123,7 +1123,7 @@ static void wb_update_dirty_ratelimit(struct bdi_writeback *wb,
- 			setpoint = wb_dirty + 1;
- 		else
- 			setpoint = (wb_thresh +
--				    wb_dirty_limit(wb, bg_thresh)) / 2;
-+				    wb_calc_thresh(wb, bg_thresh)) / 2;
- 	}
+- * Called under wb->list_lock. If there are multiple wb per bdi,
+- * only the flusher working on the first wb should do it.
+- */
+-static void wb_update_bandwidth(struct bdi_writeback *wb,
+-				unsigned long start_time)
+-{
+-	__wb_update_bandwidth(wb, 0, 0, 0, 0, 0, start_time);
+-}
+-
+-/*
+  * Explicit flushing or periodic writeback of "old" data.
+  *
+  * Define "old": the first time one of an inode's pages is dirtied, we mark the
+diff --git a/include/linux/writeback.h b/include/linux/writeback.h
+index 0435c85..80adf3d 100644
+--- a/include/linux/writeback.h
++++ b/include/linux/writeback.h
+@@ -157,14 +157,7 @@ int dirty_writeback_centisecs_handler(struct ctl_table *, int,
+ void global_dirty_limits(unsigned long *pbackground, unsigned long *pdirty);
+ unsigned long wb_calc_thresh(struct bdi_writeback *wb, unsigned long thresh);
  
- 	if (dirty < setpoint) {
-@@ -1352,7 +1352,7 @@ static inline void wb_dirty_limits(struct bdi_writeback *wb,
- 	 *   wb_position_ratio() will let the dirtier task progress
- 	 *   at some rate <= (write_bw / 2) for bringing down wb_dirty.
- 	 */
--	*wb_thresh = wb_dirty_limit(wb, dirty_thresh);
-+	*wb_thresh = wb_calc_thresh(wb, dirty_thresh);
+-void __wb_update_bandwidth(struct bdi_writeback *wb,
+-			   unsigned long thresh,
+-			   unsigned long bg_thresh,
+-			   unsigned long dirty,
+-			   unsigned long bdi_thresh,
+-			   unsigned long bdi_dirty,
+-			   unsigned long start_time);
+-
++void wb_update_bandwidth(struct bdi_writeback *wb, unsigned long start_time);
+ void page_writeback_init(void);
+ void balance_dirty_pages_ratelimited(struct address_space *mapping);
  
- 	if (wb_bg_thresh)
- 		*wb_bg_thresh = dirty_thresh ? div_u64((u64)*wb_thresh *
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index c7745a7..bebdd41 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -1160,19 +1160,22 @@ static void wb_update_dirty_ratelimit(struct bdi_writeback *wb,
+ 	trace_bdi_dirty_ratelimit(wb->bdi, dirty_rate, task_ratelimit);
+ }
+ 
+-void __wb_update_bandwidth(struct bdi_writeback *wb,
+-			   unsigned long thresh,
+-			   unsigned long bg_thresh,
+-			   unsigned long dirty,
+-			   unsigned long wb_thresh,
+-			   unsigned long wb_dirty,
+-			   unsigned long start_time)
++static void __wb_update_bandwidth(struct bdi_writeback *wb,
++				  unsigned long thresh,
++				  unsigned long bg_thresh,
++				  unsigned long dirty,
++				  unsigned long wb_thresh,
++				  unsigned long wb_dirty,
++				  unsigned long start_time,
++				  bool update_ratelimit)
+ {
+ 	unsigned long now = jiffies;
+ 	unsigned long elapsed = now - wb->bw_time_stamp;
+ 	unsigned long dirtied;
+ 	unsigned long written;
+ 
++	lockdep_assert_held(&wb->list_lock);
++
+ 	/*
+ 	 * rate-limit, only update once every 200ms.
+ 	 */
+@@ -1189,7 +1192,7 @@ void __wb_update_bandwidth(struct bdi_writeback *wb,
+ 	if (elapsed > HZ && time_before(wb->bw_time_stamp, start_time))
+ 		goto snapshot;
+ 
+-	if (thresh) {
++	if (update_ratelimit) {
+ 		global_update_bandwidth(thresh, dirty, now);
+ 		wb_update_dirty_ratelimit(wb, thresh, bg_thresh, dirty,
+ 					  wb_thresh, wb_dirty,
+@@ -1203,20 +1206,9 @@ void __wb_update_bandwidth(struct bdi_writeback *wb,
+ 	wb->bw_time_stamp = now;
+ }
+ 
+-static void wb_update_bandwidth(struct bdi_writeback *wb,
+-				unsigned long thresh,
+-				unsigned long bg_thresh,
+-				unsigned long dirty,
+-				unsigned long wb_thresh,
+-				unsigned long wb_dirty,
+-				unsigned long start_time)
++void wb_update_bandwidth(struct bdi_writeback *wb, unsigned long start_time)
+ {
+-	if (time_is_after_eq_jiffies(wb->bw_time_stamp + BANDWIDTH_INTERVAL))
+-		return;
+-	spin_lock(&wb->list_lock);
+-	__wb_update_bandwidth(wb, thresh, bg_thresh, dirty,
+-			      wb_thresh, wb_dirty, start_time);
+-	spin_unlock(&wb->list_lock);
++	__wb_update_bandwidth(wb, 0, 0, 0, 0, 0, start_time, false);
+ }
+ 
+ /*
+@@ -1467,8 +1459,15 @@ static void balance_dirty_pages(struct address_space *mapping,
+ 		if (dirty_exceeded && !wb->dirty_exceeded)
+ 			wb->dirty_exceeded = 1;
+ 
+-		wb_update_bandwidth(wb, dirty_thresh, background_thresh,
+-				    nr_dirty, wb_thresh, wb_dirty, start_time);
++		if (time_is_before_jiffies(wb->bw_time_stamp +
++					   BANDWIDTH_INTERVAL)) {
++			spin_lock(&wb->list_lock);
++			__wb_update_bandwidth(wb, dirty_thresh,
++					      background_thresh, nr_dirty,
++					      wb_thresh, wb_dirty, start_time,
++					      true);
++			spin_unlock(&wb->list_lock);
++		}
+ 
+ 		dirty_ratelimit = wb->dirty_ratelimit;
+ 		pos_ratio = wb_position_ratio(wb, dirty_thresh,
 -- 
 2.4.0
 
