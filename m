@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 22/51] writeback: add {CONFIG|BDI_CAP|FS}_CGROUP_WRITEBACK
-Date: Fri, 22 May 2015 17:13:36 -0400
-Message-ID: <1432329245-5844-23-git-send-email-tj@kernel.org>
+Subject: [PATCH 26/51] writeback: let balance_dirty_pages() work on the matching cgroup bdi_writeback
+Date: Fri, 22 May 2015 17:13:40 -0400
+Message-ID: <1432329245-5844-27-git-send-email-tj@kernel.org>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=oZNG6b/2fSKTmgY/MZppGw7iO/8BpypN6WbboZZuKK8=;
-        b=cBFq+oJHZJio/YBY2tSIIl49gWWq+blI29HMLiH/vb88UCGEgC7bn68Ps1CPhTd6qs
-         DIVhbWUq8xTKFv9xV0fSEYwh92AsvKiCY6CUImJSue6h7uViGHBBCHOkMrBCbNtz2+43
-         3GRm3qxti08zOYEG4tX2lZ8SXnSiAfgse23ErBt9b8xvSjd0JvAuGTTViZodB+DFq6IX
-         BPUoByKZZ1lgaLWDfCGDCuPPChuO8QihYcieZBWBmtawAvGnfVSGZZya5aF7b/FboMm6
-         KjyY1trteE0BI+3mGTQmc8RZMhUr7IUdVGOZRKpf/YK5AC/BEd1jeTpVBhwacKIIAGXW
-         zPnQ==
+        bh=BopKjTVM5nTgzJ4jtMhN5rl3MfBrSYi8+zMxs45aCeo=;
+        b=qzJLftVJAPpcIinDetn0c5udqvlSa0nxcLBO+KFujfFIrZFuQXOAZsJWSvJrr64FeO
+         /lmaGSvJzIoefPtBYW1dxk0fQtk/bAQGxOHYOFdD9zOPrNBamocfRx4KzIUjVyJLQVs6
+         MeiJ1mXqIcP/ZSNePjYycSlxUR54BPu1Q6BXM/MlpMQfaf4I/ZLGHomxxjLxkWYom1U7
+         UiEbbvHjjm+q3J4Psd+wY7FR8Y+VWkt1WUfBEG4VVm+O1ncCh8gqbe8G8wTqyWB3Bzqn
+         8w/rXkjWesgEJubjwXnZUehPWUBT6vNo/ZSFL4MH2yiD1yTv+o3/pwYqxLKJKLR8m32P
+         S1wQ==
 In-Reply-To: <1432329245-5844-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,119 +23,81 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru, Tejun Heo <tj@kernel.org>
 
-cgroup writeback requires support from both bdi and filesystem sides.
-Add BDI_CAP_CGROUP_WRITEBACK and FS_CGROUP_WRITEBACK to indicate
-support and enable BDI_CAP_CGROUP_WRITEBACK on block based bdi's by
-default.  Also, define CONFIG_CGROUP_WRITEBACK which is enabled if
-both MEMCG and BLK_CGROUP are enabled.
+Currently, balance_dirty_pages() always work on bdi->wb.  This patch
+updates it to work on the wb (bdi_writeback) matching memcg and blkcg
+of the current task as that's what the inode is being dirtied against.
 
-inode_cgwb_enabled() which determines whether a given inode's both bdi
-and fs support cgroup writeback is added.
+balance_dirty_pages_ratelimited() now pins the current wb and passes
+it to balance_dirty_pages().
+
+As no filesystem has FS_CGROUP_WRITEBACK yet, this doesn't lead to
+visible behavior differences.
+
+v2: Updated for per-inode wb association.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
 ---
- block/blk-core.c            |  2 +-
- include/linux/backing-dev.h | 32 +++++++++++++++++++++++++++++++-
- include/linux/fs.h          |  1 +
- init/Kconfig                |  5 +++++
- 4 files changed, 38 insertions(+), 2 deletions(-)
+ mm/page-writeback.c | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index f46688f..e0f726f 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -620,7 +620,7 @@ struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id)
- 
- 	q->backing_dev_info.ra_pages =
- 			(VM_MAX_READAHEAD * 1024) / PAGE_CACHE_SIZE;
--	q->backing_dev_info.capabilities = 0;
-+	q->backing_dev_info.capabilities = BDI_CAP_CGROUP_WRITEBACK;
- 	q->backing_dev_info.name = "block";
- 	q->node = node_id;
- 
-diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index bfdaa18..6bb3123 100644
---- a/include/linux/backing-dev.h
-+++ b/include/linux/backing-dev.h
-@@ -134,12 +134,15 @@ int bdi_set_max_ratio(struct backing_dev_info *bdi, unsigned int max_ratio);
-  * BDI_CAP_NO_WRITEBACK:   Don't write pages back
-  * BDI_CAP_NO_ACCT_WB:     Don't automatically account writeback pages
-  * BDI_CAP_STRICTLIMIT:    Keep number of dirty pages below bdi threshold.
-+ *
-+ * BDI_CAP_CGROUP_WRITEBACK: Supports cgroup-aware writeback.
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 4d0a9da..e31dea9 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -1337,6 +1337,7 @@ static inline void wb_dirty_limits(struct bdi_writeback *wb,
+  * perform some writeout.
   */
- #define BDI_CAP_NO_ACCT_DIRTY	0x00000001
- #define BDI_CAP_NO_WRITEBACK	0x00000002
- #define BDI_CAP_NO_ACCT_WB	0x00000004
- #define BDI_CAP_STABLE_WRITES	0x00000008
- #define BDI_CAP_STRICTLIMIT	0x00000010
-+#define BDI_CAP_CGROUP_WRITEBACK 0x00000020
+ static void balance_dirty_pages(struct address_space *mapping,
++				struct bdi_writeback *wb,
+ 				unsigned long pages_dirtied)
+ {
+ 	unsigned long nr_reclaimable;	/* = file_dirty + unstable_nfs */
+@@ -1352,8 +1353,7 @@ static void balance_dirty_pages(struct address_space *mapping,
+ 	unsigned long task_ratelimit;
+ 	unsigned long dirty_ratelimit;
+ 	unsigned long pos_ratio;
+-	struct backing_dev_info *bdi = inode_to_bdi(mapping->host);
+-	struct bdi_writeback *wb = &bdi->wb;
++	struct backing_dev_info *bdi = wb->bdi;
+ 	bool strictlimit = bdi->capabilities & BDI_CAP_STRICTLIMIT;
+ 	unsigned long start_time = jiffies;
  
- #define BDI_CAP_NO_ACCT_AND_WRITEBACK \
- 	(BDI_CAP_NO_WRITEBACK | BDI_CAP_NO_ACCT_DIRTY | BDI_CAP_NO_ACCT_WB)
-@@ -229,4 +232,31 @@ static inline int bdi_sched_wait(void *word)
- 	return 0;
- }
- 
--#endif		/* _LINUX_BACKING_DEV_H */
-+#ifdef CONFIG_CGROUP_WRITEBACK
-+
-+/**
-+ * inode_cgwb_enabled - test whether cgroup writeback is enabled on an inode
-+ * @inode: inode of interest
-+ *
-+ * cgroup writeback requires support from both the bdi and filesystem.
-+ * Test whether @inode has both.
-+ */
-+static inline bool inode_cgwb_enabled(struct inode *inode)
-+{
+@@ -1575,14 +1575,20 @@ DEFINE_PER_CPU(int, dirty_throttle_leaks) = 0;
+  */
+ void balance_dirty_pages_ratelimited(struct address_space *mapping)
+ {
+-	struct backing_dev_info *bdi = inode_to_bdi(mapping->host);
+-	struct bdi_writeback *wb = &bdi->wb;
++	struct inode *inode = mapping->host;
 +	struct backing_dev_info *bdi = inode_to_bdi(inode);
-+
-+	return bdi_cap_account_dirty(bdi) &&
-+		(bdi->capabilities & BDI_CAP_CGROUP_WRITEBACK) &&
-+		(inode->i_sb->s_type->fs_flags & FS_CGROUP_WRITEBACK);
-+}
-+
-+#else	/* CONFIG_CGROUP_WRITEBACK */
-+
-+static inline bool inode_cgwb_enabled(struct inode *inode)
-+{
-+	return false;
-+}
-+
-+#endif	/* CONFIG_CGROUP_WRITEBACK */
-+
-+#endif	/* _LINUX_BACKING_DEV_H */
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index ce100b87..74e0ae0 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1897,6 +1897,7 @@ struct file_system_type {
- #define FS_HAS_SUBTYPE		4
- #define FS_USERNS_MOUNT		8	/* Can be mounted by userns root */
- #define FS_USERNS_DEV_MOUNT	16 /* A userns mount does not imply MNT_NODEV */
-+#define FS_CGROUP_WRITEBACK	32	/* Supports cgroup-aware writeback */
- #define FS_RENAME_DOES_D_MOVE	32768	/* FS will handle d_move() during rename() internally. */
- 	struct dentry *(*mount) (struct file_system_type *, int,
- 		       const char *, void *);
-diff --git a/init/Kconfig b/init/Kconfig
-index dc24dec..d4f7633 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -1141,6 +1141,11 @@ config DEBUG_BLK_CGROUP
- 	Enable some debugging help. Currently it exports additional stat
- 	files in a cgroup which can be useful for debugging.
++	struct bdi_writeback *wb = NULL;
+ 	int ratelimit;
+ 	int *p;
  
-+config CGROUP_WRITEBACK
-+	bool
-+	depends on MEMCG && BLK_CGROUP
-+	default y
-+
- endif # CGROUPS
+ 	if (!bdi_cap_account_dirty(bdi))
+ 		return;
  
- config CHECKPOINT_RESTORE
++	if (inode_cgwb_enabled(inode))
++		wb = wb_get_create_current(bdi, GFP_KERNEL);
++	if (!wb)
++		wb = &bdi->wb;
++
+ 	ratelimit = current->nr_dirtied_pause;
+ 	if (wb->dirty_exceeded)
+ 		ratelimit = min(ratelimit, 32 >> (PAGE_SHIFT - 10));
+@@ -1616,7 +1622,9 @@ void balance_dirty_pages_ratelimited(struct address_space *mapping)
+ 	preempt_enable();
+ 
+ 	if (unlikely(current->nr_dirtied >= ratelimit))
+-		balance_dirty_pages(mapping, current->nr_dirtied);
++		balance_dirty_pages(mapping, wb, current->nr_dirtied);
++
++	wb_put(wb);
+ }
+ EXPORT_SYMBOL(balance_dirty_pages_ratelimited);
+ 
 -- 
 2.4.0
 
