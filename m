@@ -1,21 +1,21 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 08/19] writeback: make __wb_calc_thresh() take dirty_throttle_control
-Date: Fri, 22 May 2015 18:23:25 -0400
-Message-ID: <1432333416-6221-9-git-send-email-tj@kernel.org>
+Subject: [PATCH 10/19] writeback: add dirty_throttle_control->wb_completions
+Date: Fri, 22 May 2015 18:23:27 -0400
+Message-ID: <1432333416-6221-11-git-send-email-tj@kernel.org>
 References: <1432333416-6221-1-git-send-email-tj@kernel.org>
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=XWQf/qKTDN8bu1k7m3zMigwVOzMUX7GyfVKXpHixVpA=;
-        b=nmvfwmWFCGim4Q5jjWjXp8xjWGk7UAGpSfT2U/jdQZ1DxrZODsLIsGhthdB7fGzuA4
-         Xs1mGhIialAuVwQ8quwgOrZlymxS6VF7UOAuDpuVVuirDzQKZFO4QHR/NQAU/363GTHy
-         bDNyoHRryE/mOes3Bv5CoU1AiCVs56bSGjIxZqmFXID18xmQ2+l5BrJRZP7dT05fxvSW
-         yIwr6l/OkSd1nOyAtMdeQwqmjLuAtD+9kxgw1HUuAxFNhokGx6wCzULz4sDj5Pa+14ds
-         JhudxVnf3rtj0jWjJVICG3Ld3Z/FDLEcV2f2vg3lfFdWhhXfQzmqtw+LTPMWXbvwdLy3
-         RyRA==
+        bh=8BTqx5CX5VGO7LIMqUMWk2soxVUZYbkff7FSGF7HSoc=;
+        b=gb1WlDv2MIt+BWd52PUIJUsIzGjVgv3FIWIgc/ezYnVadMi/IW4A4K5MWZEo/MADwB
+         QjNrJwPha4Mvst60xwgXBeqUQ9Ipf3mgVLmMpTqv5UvHtdiVXc6Z8OKlidmHPXMmBtnU
+         P29OZYiJ7m/BPIucRWpvjDLAJcBKZ88xlZm2YqBvw4hdv0lvFW0fxGAnH2JaNPsnoJz7
+         qdMEsxZCmL6Lm+3By2FMPGTUGJSky3HNcw9TBIC21SYcwcTQ5g4eGa3msBK4qMVy8Ll2
+         GVDFfghhD/yFPyN8gUFM95gPksBK3mlOeazvTbk6rguu5GicRtqo7W/XjcE8yyVLXyOr
+         7Gdg==
 In-Reply-To: <1432333416-6221-1-git-send-email-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,19 +23,16 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru, Tejun Heo <tj@kernel.org>
 
-wb_calc_thresh() calculates wb_thresh by scaling thresh according to
-the wb's portion in the system-wide write bandwidth.  cgroup writeback
-support would need to calculate wb_thresh against memcg domain too.
-This patch renames wb_calc_thresh() to __wb_calc_thresh() and makes it
-take dirty_throttle_control so that the function can later be updated
-to calculate against different domains according to
-dirty_throttle_control.
+wb->completions measures the wb's proportional write bandwidth in
+global_wb_domain and thus naturally tied to the wb_domain.  This patch
+adds dirty_throttle_control->wb_completions which is initialized to
+wb->completions by GDTC_INIT() and updates __wb_dirty_limits() to use
+it instead of dereferencing wb->completions directly.
 
-wb_calc_thresh() is now a thin wrapper around __wb_calc_thresh().
+This will allow dirty_throttle_control to represent different
+wb_domains and the matching wb completions.
 
-v2: The original version was incorrectly scaling dtc->dirty instead of
-    dtc->thresh.  This was due to the extremely confusing function and
-    variable names.  Added a rename patch and fixed this one.
+This patch doesn't introduce any behavioral changes.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
@@ -43,82 +40,39 @@ Cc: Jan Kara <jack@suse.cz>
 Cc: Wu Fengguang <fengguang.wu@intel.com>
 Cc: Greg Thelen <gthelen@google.com>
 ---
- mm/page-writeback.c | 21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
+ mm/page-writeback.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 3ec9223..2352c69 100644
+index fcebae7..5b439fc 100644
 --- a/mm/page-writeback.c
 +++ b/mm/page-writeback.c
-@@ -557,9 +557,8 @@ static unsigned long hard_dirty_limit(unsigned long thresh)
- }
+@@ -127,6 +127,7 @@ struct wb_domain global_wb_domain;
+ /* consolidated parameters for balance_dirty_pages() and its subroutines */
+ struct dirty_throttle_control {
+ 	struct bdi_writeback	*wb;
++	struct fprop_local_percpu *wb_completions;
  
- /**
-- * wb_calc_thresh - @wb's share of dirty throttling threshold
-- * @wb: bdi_writeback to query
-- * @dirty: global dirty limit in pages
-+ * __wb_calc_thresh - @wb's share of dirty throttling threshold
-+ * @dtc: dirty_throttle_context of interest
-  *
-  * Returns @wb's dirty limit in pages. The term "dirty" in the context of
-  * dirty balancing includes all PG_dirty, PG_writeback and NFS unstable pages.
-@@ -578,9 +577,10 @@ static unsigned long hard_dirty_limit(unsigned long thresh)
-  * The wb's share of dirty limit will be adapting to its throughput and
-  * bounded by the bdi->min_ratio and/or bdi->max_ratio parameters, if set.
-  */
--unsigned long wb_calc_thresh(struct bdi_writeback *wb, unsigned long thresh)
-+static unsigned long __wb_calc_thresh(struct dirty_throttle_control *dtc)
- {
- 	struct wb_domain *dom = &global_wb_domain;
-+	unsigned long thresh = dtc->thresh;
- 	u64 wb_thresh;
- 	long numerator, denominator;
- 	unsigned long wb_min_ratio, wb_max_ratio;
-@@ -588,14 +588,14 @@ unsigned long wb_calc_thresh(struct bdi_writeback *wb, unsigned long thresh)
+ 	unsigned long		dirty;		/* file_dirty + write + nfs */
+ 	unsigned long		thresh;		/* dirty threshold */
+@@ -139,7 +140,8 @@ struct dirty_throttle_control {
+ 	unsigned long		pos_ratio;
+ };
+ 
+-#define GDTC_INIT(__wb)		.wb = (__wb)
++#define GDTC_INIT(__wb)		.wb = (__wb),				\
++				.wb_completions = &(__wb)->completions
+ 
+ /*
+  * Length of period for aging writeout fractions of bdis. This is an
+@@ -590,7 +592,7 @@ static unsigned long __wb_calc_thresh(struct dirty_throttle_control *dtc)
  	/*
  	 * Calculate this BDI's share of the thresh ratio.
  	 */
--	fprop_fraction_percpu(&dom->completions, &wb->completions,
-+	fprop_fraction_percpu(&dom->completions, &dtc->wb->completions,
+-	fprop_fraction_percpu(&dom->completions, &dtc->wb->completions,
++	fprop_fraction_percpu(&dom->completions, dtc->wb_completions,
  			      &numerator, &denominator);
  
  	wb_thresh = (thresh * (100 - bdi_min_ratio)) / 100;
- 	wb_thresh *= numerator;
- 	do_div(wb_thresh, denominator);
- 
--	wb_min_max_ratio(wb, &wb_min_ratio, &wb_max_ratio);
-+	wb_min_max_ratio(dtc->wb, &wb_min_ratio, &wb_max_ratio);
- 
- 	wb_thresh += (thresh * wb_min_ratio) / 100;
- 	if (wb_thresh > (thresh * wb_max_ratio) / 100)
-@@ -604,6 +604,13 @@ unsigned long wb_calc_thresh(struct bdi_writeback *wb, unsigned long thresh)
- 	return wb_thresh;
- }
- 
-+unsigned long wb_calc_thresh(struct bdi_writeback *wb, unsigned long thresh)
-+{
-+	struct dirty_throttle_control gdtc = { GDTC_INIT(wb),
-+					       .thresh = thresh };
-+	return __wb_calc_thresh(&gdtc);
-+}
-+
- /*
-  *                           setpoint - dirty 3
-  *        f(dirty) := 1.0 + (----------------)
-@@ -1323,7 +1330,7 @@ static inline void wb_dirty_limits(struct dirty_throttle_control *dtc)
- 	 *   wb_position_ratio() will let the dirtier task progress
- 	 *   at some rate <= (write_bw / 2) for bringing down wb_dirty.
- 	 */
--	dtc->wb_thresh = wb_calc_thresh(dtc->wb, dtc->thresh);
-+	dtc->wb_thresh = __wb_calc_thresh(dtc);
- 	dtc->wb_bg_thresh = dtc->thresh ?
- 		div_u64((u64)dtc->wb_thresh * dtc->bg_thresh, dtc->thresh) : 0;
- 
 -- 
 2.4.0
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
