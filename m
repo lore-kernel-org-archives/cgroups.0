@@ -1,21 +1,21 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 26/51] writeback: let balance_dirty_pages() work on the matching cgroup bdi_writeback
-Date: Fri, 22 May 2015 17:13:40 -0400
-Message-ID: <1432329245-5844-27-git-send-email-tj@kernel.org>
+Subject: [PATCH 30/51] writeback: implement and use inode_congested()
+Date: Fri, 22 May 2015 17:13:44 -0400
+Message-ID: <1432329245-5844-31-git-send-email-tj@kernel.org>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=BopKjTVM5nTgzJ4jtMhN5rl3MfBrSYi8+zMxs45aCeo=;
-        b=qzJLftVJAPpcIinDetn0c5udqvlSa0nxcLBO+KFujfFIrZFuQXOAZsJWSvJrr64FeO
-         /lmaGSvJzIoefPtBYW1dxk0fQtk/bAQGxOHYOFdD9zOPrNBamocfRx4KzIUjVyJLQVs6
-         MeiJ1mXqIcP/ZSNePjYycSlxUR54BPu1Q6BXM/MlpMQfaf4I/ZLGHomxxjLxkWYom1U7
-         UiEbbvHjjm+q3J4Psd+wY7FR8Y+VWkt1WUfBEG4VVm+O1ncCh8gqbe8G8wTqyWB3Bzqn
-         8w/rXkjWesgEJubjwXnZUehPWUBT6vNo/ZSFL4MH2yiD1yTv+o3/pwYqxLKJKLR8m32P
-         S1wQ==
+        bh=ShmquG1I+O/SCgqV1DOhdDDqO07mr+7dfWyX5q1I9x4=;
+        b=jqZVnC1/ZF4pI55jYbj1Mov5SNeEXZaqKqqck7PkkQ5fP4EdhOjpI75EgbP2GKh84P
+         jAiyppDVvtLyzaMpkHl++5ciApS1Jg4iU72easB/6yArzVD+sLEo4l2YjrJ7xrKDCqBw
+         KFvRAFUXSakU4vhTmv5UOIyKg/FzS/k50OJwE8LZCAqFjAH5psEroI8ie4qoOnn6QlTP
+         ClaeFqVmUvTz+p6tEm+4dBNegWgEWZGcYEzacHDADPy4mbe3yjSU1h6bRtEVZdGSy875
+         Mm64PbfG0PfY29lVVHo9rrpRxUoNwXdhtv0LKSSDbvlvhQifneXwniPrfjELSvugLO/6
+         NfEA==
 In-Reply-To: <1432329245-5844-1-git-send-email-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,86 +23,185 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru, Tejun Heo <tj@kernel.org>
 
-Currently, balance_dirty_pages() always work on bdi->wb.  This patch
-updates it to work on the wb (bdi_writeback) matching memcg and blkcg
-of the current task as that's what the inode is being dirtied against.
+In several places, bdi_congested() and its wrappers are used to
+determine whether more IOs should be issued.  With cgroup writeback
+support, this question can't be answered solely based on the bdi
+(backing_dev_info).  It's dependent on whether the filesystem and bdi
+support cgroup writeback and the blkcg the inode is associated with.
 
-balance_dirty_pages_ratelimited() now pins the current wb and passes
-it to balance_dirty_pages().
+This patch implements inode_congested() and its wrappers which take
+@inode and determines the congestion state considering cgroup
+writeback.  The new functions replace bdi_*congested() calls in places
+where the query is about specific inode and task.
 
-As no filesystem has FS_CGROUP_WRITEBACK yet, this doesn't lead to
-visible behavior differences.
+There are several filesystem users which also fit this criteria but
+they should be updated when each filesystem implements cgroup
+writeback support.
 
-v2: Updated for per-inode wb association.
+v2: Now that a given inode is associated with only one wb, congestion
+    state can be determined independent from the asking task.  Drop
+    @task.  Spotted by Vivek.  Also, converted to take @inode instead
+    of @mapping and renamed to inode_congested().
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
+Cc: Vivek Goyal <vgoyal@redhat.com>
 ---
- mm/page-writeback.c | 18 +++++++++++++-----
- 1 file changed, 13 insertions(+), 5 deletions(-)
+ fs/fs-writeback.c           | 29 +++++++++++++++++++++++++++++
+ include/linux/backing-dev.h | 22 ++++++++++++++++++++++
+ mm/fadvise.c                |  2 +-
+ mm/readahead.c              |  2 +-
+ mm/vmscan.c                 | 11 +++++------
+ 5 files changed, 58 insertions(+), 8 deletions(-)
 
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 4d0a9da..e31dea9 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -1337,6 +1337,7 @@ static inline void wb_dirty_limits(struct bdi_writeback *wb,
-  * perform some writeout.
-  */
- static void balance_dirty_pages(struct address_space *mapping,
-+				struct bdi_writeback *wb,
- 				unsigned long pages_dirtied)
- {
- 	unsigned long nr_reclaimable;	/* = file_dirty + unstable_nfs */
-@@ -1352,8 +1353,7 @@ static void balance_dirty_pages(struct address_space *mapping,
- 	unsigned long task_ratelimit;
- 	unsigned long dirty_ratelimit;
- 	unsigned long pos_ratio;
--	struct backing_dev_info *bdi = inode_to_bdi(mapping->host);
--	struct bdi_writeback *wb = &bdi->wb;
-+	struct backing_dev_info *bdi = wb->bdi;
- 	bool strictlimit = bdi->capabilities & BDI_CAP_STRICTLIMIT;
- 	unsigned long start_time = jiffies;
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index 99a2440..7ec491b 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -142,6 +142,35 @@ static void __wb_start_writeback(struct bdi_writeback *wb, long nr_pages,
+ 	wb_queue_work(wb, work);
+ }
  
-@@ -1575,14 +1575,20 @@ DEFINE_PER_CPU(int, dirty_throttle_leaks) = 0;
-  */
- void balance_dirty_pages_ratelimited(struct address_space *mapping)
- {
--	struct backing_dev_info *bdi = inode_to_bdi(mapping->host);
--	struct bdi_writeback *wb = &bdi->wb;
-+	struct inode *inode = mapping->host;
-+	struct backing_dev_info *bdi = inode_to_bdi(inode);
-+	struct bdi_writeback *wb = NULL;
- 	int ratelimit;
- 	int *p;
++#ifdef CONFIG_CGROUP_WRITEBACK
++
++/**
++ * inode_congested - test whether an inode is congested
++ * @inode: inode to test for congestion
++ * @cong_bits: mask of WB_[a]sync_congested bits to test
++ *
++ * Tests whether @inode is congested.  @cong_bits is the mask of congestion
++ * bits to test and the return value is the mask of set bits.
++ *
++ * If cgroup writeback is enabled for @inode, the congestion state is
++ * determined by whether the cgwb (cgroup bdi_writeback) for the blkcg
++ * associated with @inode is congested; otherwise, the root wb's congestion
++ * state is used.
++ */
++int inode_congested(struct inode *inode, int cong_bits)
++{
++	if (inode) {
++		struct bdi_writeback *wb = inode_to_wb(inode);
++		if (wb)
++			return wb_congested(wb, cong_bits);
++	}
++
++	return wb_congested(&inode_to_bdi(inode)->wb, cong_bits);
++}
++EXPORT_SYMBOL_GPL(inode_congested);
++
++#endif	/* CONFIG_CGROUP_WRITEBACK */
++
+ /**
+  * bdi_start_writeback - start writeback
+  * @bdi: the backing device to write from
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index 2c498a2..6f08821 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -230,6 +230,7 @@ struct bdi_writeback *wb_get_create(struct backing_dev_info *bdi,
+ void __inode_attach_wb(struct inode *inode, struct page *page);
+ void wb_memcg_offline(struct mem_cgroup *memcg);
+ void wb_blkcg_offline(struct blkcg *blkcg);
++int inode_congested(struct inode *inode, int cong_bits);
  
- 	if (!bdi_cap_account_dirty(bdi))
+ /**
+  * inode_cgwb_enabled - test whether cgroup writeback is enabled on an inode
+@@ -438,8 +439,29 @@ static inline void wb_blkcg_offline(struct blkcg *blkcg)
+ {
+ }
+ 
++static inline int inode_congested(struct inode *inode, int cong_bits)
++{
++	return wb_congested(&inode_to_bdi(inode)->wb, cong_bits);
++}
++
+ #endif	/* CONFIG_CGROUP_WRITEBACK */
+ 
++static inline int inode_read_congested(struct inode *inode)
++{
++	return inode_congested(inode, 1 << WB_sync_congested);
++}
++
++static inline int inode_write_congested(struct inode *inode)
++{
++	return inode_congested(inode, 1 << WB_async_congested);
++}
++
++static inline int inode_rw_congested(struct inode *inode)
++{
++	return inode_congested(inode, (1 << WB_sync_congested) |
++				      (1 << WB_async_congested));
++}
++
+ static inline int bdi_congested(struct backing_dev_info *bdi, int cong_bits)
+ {
+ 	return wb_congested(&bdi->wb, cong_bits);
+diff --git a/mm/fadvise.c b/mm/fadvise.c
+index 4a3907c..b8a5bc6 100644
+--- a/mm/fadvise.c
++++ b/mm/fadvise.c
+@@ -115,7 +115,7 @@ SYSCALL_DEFINE4(fadvise64_64, int, fd, loff_t, offset, loff_t, len, int, advice)
+ 	case POSIX_FADV_NOREUSE:
+ 		break;
+ 	case POSIX_FADV_DONTNEED:
+-		if (!bdi_write_congested(bdi))
++		if (!inode_write_congested(mapping->host))
+ 			__filemap_fdatawrite_range(mapping, offset, endbyte,
+ 						   WB_SYNC_NONE);
+ 
+diff --git a/mm/readahead.c b/mm/readahead.c
+index 9356758..60cd846 100644
+--- a/mm/readahead.c
++++ b/mm/readahead.c
+@@ -541,7 +541,7 @@ page_cache_async_readahead(struct address_space *mapping,
+ 	/*
+ 	 * Defer asynchronous read-ahead on IO congestion.
+ 	 */
+-	if (bdi_read_congested(inode_to_bdi(mapping->host)))
++	if (inode_read_congested(mapping->host))
  		return;
  
-+	if (inode_cgwb_enabled(inode))
-+		wb = wb_get_create_current(bdi, GFP_KERNEL);
-+	if (!wb)
-+		wb = &bdi->wb;
-+
- 	ratelimit = current->nr_dirtied_pause;
- 	if (wb->dirty_exceeded)
- 		ratelimit = min(ratelimit, 32 >> (PAGE_SHIFT - 10));
-@@ -1616,7 +1622,9 @@ void balance_dirty_pages_ratelimited(struct address_space *mapping)
- 	preempt_enable();
- 
- 	if (unlikely(current->nr_dirtied >= ratelimit))
--		balance_dirty_pages(mapping, current->nr_dirtied);
-+		balance_dirty_pages(mapping, wb, current->nr_dirtied);
-+
-+	wb_put(wb);
+ 	/* do read-ahead */
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 7582f9f..f463398 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -452,14 +452,13 @@ static inline int is_page_cache_freeable(struct page *page)
+ 	return page_count(page) - page_has_private(page) == 2;
  }
- EXPORT_SYMBOL(balance_dirty_pages_ratelimited);
+ 
+-static int may_write_to_queue(struct backing_dev_info *bdi,
+-			      struct scan_control *sc)
++static int may_write_to_inode(struct inode *inode, struct scan_control *sc)
+ {
+ 	if (current->flags & PF_SWAPWRITE)
+ 		return 1;
+-	if (!bdi_write_congested(bdi))
++	if (!inode_write_congested(inode))
+ 		return 1;
+-	if (bdi == current->backing_dev_info)
++	if (inode_to_bdi(inode) == current->backing_dev_info)
+ 		return 1;
+ 	return 0;
+ }
+@@ -538,7 +537,7 @@ static pageout_t pageout(struct page *page, struct address_space *mapping,
+ 	}
+ 	if (mapping->a_ops->writepage == NULL)
+ 		return PAGE_ACTIVATE;
+-	if (!may_write_to_queue(inode_to_bdi(mapping->host), sc))
++	if (!may_write_to_inode(mapping->host, sc))
+ 		return PAGE_KEEP;
+ 
+ 	if (clear_page_dirty_for_io(page)) {
+@@ -924,7 +923,7 @@ static unsigned long shrink_page_list(struct list_head *page_list,
+ 		 */
+ 		mapping = page_mapping(page);
+ 		if (((dirty || writeback) && mapping &&
+-		     bdi_write_congested(inode_to_bdi(mapping->host))) ||
++		     inode_write_congested(mapping->host)) ||
+ 		    (writeback && PageReclaim(page)))
+ 			nr_congested++;
  
 -- 
 2.4.0
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
