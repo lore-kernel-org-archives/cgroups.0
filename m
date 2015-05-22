@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 08/51] cgroup, block: implement task_get_css() and use it in bio_associate_current()
-Date: Fri, 22 May 2015 17:13:22 -0400
-Message-ID: <1432329245-5844-9-git-send-email-tj@kernel.org>
+Subject: [PATCH 06/51] memcg: add mem_cgroup_root_css
+Date: Fri, 22 May 2015 17:13:20 -0400
+Message-ID: <1432329245-5844-7-git-send-email-tj@kernel.org>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Rg63kV+L/MEdWSnO/10Me/qXyAAPJc4C0N5KMUKef/w=;
-        b=XUcIPL4zCM3bLNv4wON0QRKf9ZZuKYl1bcVr7Kjrm7Y/kvTdU5AF7MEFIk1Jrrhsyc
-         t2kIVBju0gM1fJfXU4AtP9RDxYRiWSy/DI/SauGJhWqheI6+KmWcS6QAt6LQGaW+Co+h
-         2o6QMayhQT6Ihz13h7Opi3sg2t7gi6n52WdnQDeCWEjF30PQti6FhRng8t5HUDFp4Lmq
-         6Fc+6VB9X8Ik84+tLghlEAc9n+PSgFM16q26ODqnTDdgm4/UZYwQmaJ+urfsPM7F1559
-         RjQz63WAJ6s3Aspo2OzMRvX0lm7W1ZkwCHpaDbEm8pjgfUgrkSknAfyU2pu4Q0ZocRLP
-         6COw==
+        bh=Br3a07iQeVVaxJaSGiMIITDMkHEaEF4RjQZKEv1jdnc=;
+        b=jP+jXF28z5JPQQ4ajXnU5YNdaqyNn5762AtydyFxfHuhGkj8AATHN3ZakSBVSzV0ip
+         MHaDevkSC2EYr3qc+Q76qV+nxKwUWNsUvaoVUJh+JfIbYkSzvnhM9I1/6xm/r6H+tzNA
+         9iFoL9PZgiP3oXM/40u36Y3XNmmuxsuYOYHvL7fe++AABcKJiM7DH6OXD6mXngEW18dI
+         i5H0K1qqtqokps7/5oc9kq+J3zTcndyqh7+0XYO21PwsDIGB2QjTZlJEOL0C/PWE986o
+         g7zcJHtnuICKAXnBtrIEVp7uFZzt7JwvUct8FiidpedgFfg55+BMr01gPdqTk/Jh1BDw
+         HAEQ==
 In-Reply-To: <1432329245-5844-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,91 +23,60 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru, Tejun Heo <tj@kernel.org>
 
-bio_associate_current() currently open codes task_css() and
-css_tryget_online() to find and pin $current's blkcg css.  Abstract it
-into task_get_css() which is implemented from cgroup side.  As a task
-is always associated with an online css for every subsystem except
-while the css_set update is propagating, task_get_css() retries till
-css_tryget_online() succeeds.
-
-This is a cleanup and shouldn't lead to noticeable behavior changes.
+Add global mem_cgroup_root_css which points to the root memcg css.
+This will be used by cgroup writeback support.  If memcg is disabled,
+it's defined as ERR_PTR(-EINVAL).
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Vivek Goyal <vgoyal@redhat.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+aCc: Michal Hocko <mhocko@suse.cz>
 ---
- block/bio.c            | 11 +----------
- include/linux/cgroup.h | 25 +++++++++++++++++++++++++
- 2 files changed, 26 insertions(+), 10 deletions(-)
+ include/linux/memcontrol.h | 4 ++++
+ mm/memcontrol.c            | 2 ++
+ 2 files changed, 6 insertions(+)
 
-diff --git a/block/bio.c b/block/bio.c
-index c2ff8a8..cb7faac 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -2011,7 +2011,6 @@ EXPORT_SYMBOL(bioset_create_nobvec);
- int bio_associate_current(struct bio *bio)
- {
- 	struct io_context *ioc;
--	struct cgroup_subsys_state *css;
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 5fe6411..294498f 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -68,6 +68,8 @@ enum mem_cgroup_events_index {
+ };
  
- 	if (bio->bi_ioc)
- 		return -EBUSY;
-@@ -2020,17 +2019,9 @@ int bio_associate_current(struct bio *bio)
- 	if (!ioc)
- 		return -ENOENT;
- 
--	/* acquire active ref on @ioc and associate */
- 	get_io_context_active(ioc);
- 	bio->bi_ioc = ioc;
--
--	/* associate blkcg if exists */
--	rcu_read_lock();
--	css = task_css(current, blkio_cgrp_id);
--	if (css && css_tryget_online(css))
--		bio->bi_css = css;
--	rcu_read_unlock();
--
-+	bio->bi_css = task_get_css(current, blkio_cgrp_id);
- 	return 0;
- }
- 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index b9cb94c..e7da0aa 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -774,6 +774,31 @@ static inline struct cgroup_subsys_state *task_css(struct task_struct *task,
- }
- 
- /**
-+ * task_get_css - find and get the css for (task, subsys)
-+ * @task: the target task
-+ * @subsys_id: the target subsystem ID
-+ *
-+ * Find the css for the (@task, @subsys_id) combination, increment a
-+ * reference on and return it.  This function is guaranteed to return a
-+ * valid css.
-+ */
-+static inline struct cgroup_subsys_state *
-+task_get_css(struct task_struct *task, int subsys_id)
-+{
-+	struct cgroup_subsys_state *css;
+ #ifdef CONFIG_MEMCG
++extern struct cgroup_subsys_state *mem_cgroup_root_css;
 +
-+	rcu_read_lock();
-+	while (true) {
-+		css = task_css(task, subsys_id);
-+		if (likely(css_tryget_online(css)))
-+			break;
-+		cpu_relax();
-+	}
-+	rcu_read_unlock();
-+	return css;
-+}
+ void mem_cgroup_events(struct mem_cgroup *memcg,
+ 		       enum mem_cgroup_events_index idx,
+ 		       unsigned int nr);
+@@ -196,6 +198,8 @@ void mem_cgroup_split_huge_fixup(struct page *head);
+ #else /* CONFIG_MEMCG */
+ struct mem_cgroup;
+ 
++#define mem_cgroup_root_css ((struct cgroup_subsys_state *)ERR_PTR(-EINVAL))
 +
-+/**
-  * task_css_is_root - test whether a task belongs to the root css
-  * @task: the target task
-  * @subsys_id: the target subsystem ID
+ static inline void mem_cgroup_events(struct mem_cgroup *memcg,
+ 				     enum mem_cgroup_events_index idx,
+ 				     unsigned int nr)
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index c23c1a3..b22a92b 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -77,6 +77,7 @@ EXPORT_SYMBOL(memory_cgrp_subsys);
+ 
+ #define MEM_CGROUP_RECLAIM_RETRIES	5
+ static struct mem_cgroup *root_mem_cgroup __read_mostly;
++struct cgroup_subsys_state *mem_cgroup_root_css __read_mostly;
+ 
+ /* Whether the swap controller is active */
+ #ifdef CONFIG_MEMCG_SWAP
+@@ -4441,6 +4442,7 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+ 	/* root ? */
+ 	if (parent_css == NULL) {
+ 		root_mem_cgroup = memcg;
++		mem_cgroup_root_css = &memcg->css;
+ 		page_counter_init(&memcg->memory, NULL);
+ 		memcg->high = PAGE_COUNTER_MAX;
+ 		memcg->soft_limit = PAGE_COUNTER_MAX;
 -- 
 2.4.0
 
