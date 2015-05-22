@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 05/51] blkcg: always create the blkcg_gq for the root blkcg
-Date: Fri, 22 May 2015 17:13:19 -0400
-Message-ID: <1432329245-5844-6-git-send-email-tj@kernel.org>
+Subject: [PATCH 04/51] update !CONFIG_BLK_CGROUP dummies in include/linux/blk-cgroup.h
+Date: Fri, 22 May 2015 17:13:18 -0400
+Message-ID: <1432329245-5844-5-git-send-email-tj@kernel.org>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=ZuPHGaHDnSgwbZs/HwbmmTBCAcskJJfkdwTXnT+lgf0=;
-        b=lantxGTffWvu5hj2OT5GVz4Pb+xLVi6JaaC2iayqL+SEr86CFwXPU9HQokVeY4suDe
-         YIAn3HM1Jx10CFLaNR8c1bUO6gBMMC8Y8RzEcxybJssu6W3Owy1T8A1EPf/d8c737hX2
-         bDPZQW+PBw0Aman18nEXkqvP4i2zIruRs7kJw+q5gAAfCm8gvrLy5wI8pzfnQaAVQRJV
-         TYZrThHj72jVeCJzpx+yVj59YHEPMu6p4ux/kw7HwcK8NcTqWCed03AkgG4aF3toEGbj
-         YlV1zpxPm5kvCQThkOChBlj6rDqbgfvmNZp3v1hyZMvm+Arm1+KkmH0stwWZQvaJ7TSy
-         4qeg==
+        bh=q5TKnlxbui53Zuad7TvThS+6kGyCP3rE6u3412sAxDQ=;
+        b=kgXtNrAF3Y544M6uD/2zNsKQ94mQJBBj2gxVIwVd9J3aoL92d3VZg6jYwqQD59Y/Tu
+         0XVWxmhvk0DqEdrWAITwQmNpMKw5CllZcEQzghxcBxLTzlVK18WLdF9VAKXdUtYxG8BZ
+         JkdNiHDI5f96dOkG4GQSIo+gUICqp5wDTLTEV3XBlV6wICRgs2oG6ftVEi156qN/qGN0
+         Gt+aKbfue5xg/YKM1zLi3PeKsmOFJqyPfgMWqWXS8jUBQK9a8RW5IT3GYxzTQACTYE3p
+         cWCgbFmcdI+g/rOmjo616RgvioFiYcf84+0siYMuCAC/I7CcLVgh+s87Fo6GrluKio3I
+         zJbA==
 In-Reply-To: <1432329245-5844-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,177 +23,53 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru, Tejun Heo <tj@kernel.org>
 
-Currently, blkcg does a minor optimization where the root blkcg is
-created when the first blkcg policy is activated on a queue and
-destroyed on the deactivation of the last.  On systems where blkcg is
-configured but not used, this saves one blkcg_gq struct per queue.  On
-systems where blkcg is actually used, there's no difference.  The only
-case where this can lead to any meaninful, albeit still minute, save
-in memory consumption is when all blkcg policies are deactivated after
-being widely used in the system, which is a hihgly unlikely scenario.
+The header file will be used more widely with the pending cgroup
+writeback support and the current set of dummy declarations aren't
+enough to handle different config combinations.  Update as follows.
 
-The conditional existence of root blkcg_gq has already created several
-bugs in blkcg and became an issue once again for the new per-cgroup
-wb_congested mechanism for cgroup writeback support leading to a NULL
-dereference when no blkcg policy is active.  This is really not worth
-bothering with.  This patch makes blkcg always allocate and link the
-root blkcg_gq and release it only on queue destruction.
+* Drop the struct cgroup declaration.  None of the dummy defs need it.
+
+* Define blkcg as an empty struct instead of just declaring it.
+
+* Wrap dummy function defs in CONFIG_BLOCK.  Some functions use block
+  data types and none of them are to be used w/o block enabled.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Fengguang Wu <fengguang.wu@intel.com>
 ---
- block/blk-cgroup.c | 96 +++++++++++++++++++++++-------------------------------
- 1 file changed, 41 insertions(+), 55 deletions(-)
+ include/linux/blk-cgroup.h | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index c3226ce..2a4f77f 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -235,13 +235,8 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
- 	blkg->online = true;
- 	spin_unlock(&blkcg->lock);
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index c567865..51f95b3 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -558,8 +558,8 @@ static inline void blkg_rwstat_merge(struct blkg_rwstat *to,
  
--	if (!ret) {
--		if (blkcg == &blkcg_root) {
--			q->root_blkg = blkg;
--			q->root_rl.blkg = blkg;
--		}
-+	if (!ret)
- 		return blkg;
--	}
+ #else	/* CONFIG_BLK_CGROUP */
  
- 	/* @blkg failed fully initialized, use the usual release path */
- 	blkg_put(blkg);
-@@ -340,15 +335,6 @@ static void blkg_destroy(struct blkcg_gq *blkg)
- 		rcu_assign_pointer(blkcg->blkg_hint, NULL);
+-struct cgroup;
+-struct blkcg;
++struct blkcg {
++};
  
- 	/*
--	 * If root blkg is destroyed.  Just clear the pointer since root_rl
--	 * does not take reference on root blkg.
--	 */
--	if (blkcg == &blkcg_root) {
--		blkg->q->root_blkg = NULL;
--		blkg->q->root_rl.blkg = NULL;
--	}
--
--	/*
- 	 * Put the reference taken at the time of creation so that when all
- 	 * queues are gone, group can be destroyed.
- 	 */
-@@ -855,9 +841,45 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
-  */
- int blkcg_init_queue(struct request_queue *q)
- {
--	might_sleep();
-+	struct blkcg_gq *new_blkg, *blkg;
-+	bool preloaded;
-+	int ret;
+ struct blkg_policy_data {
+ };
+@@ -570,6 +570,8 @@ struct blkcg_gq {
+ struct blkcg_policy {
+ };
+ 
++#ifdef CONFIG_BLOCK
 +
-+	new_blkg = blkg_alloc(&blkcg_root, q, GFP_KERNEL);
-+	if (!new_blkg)
-+		return -ENOMEM;
-+
-+	preloaded = !radix_tree_preload(GFP_KERNEL);
+ static inline struct blkcg_gq *blkg_lookup(struct blkcg *blkcg, void *key) { return NULL; }
+ static inline int blkcg_init_queue(struct request_queue *q) { return 0; }
+ static inline void blkcg_drain_queue(struct request_queue *q) { }
+@@ -599,5 +601,6 @@ static inline struct request_list *blk_rq_rl(struct request *rq) { return &rq->q
+ #define blk_queue_for_each_rl(rl, q)	\
+ 	for ((rl) = &(q)->root_rl; (rl); (rl) = NULL)
  
--	return blk_throtl_init(q);
-+	/*
-+	 * Make sure the root blkg exists and count the existing blkgs.  As
-+	 * @q is bypassing at this point, blkg_lookup_create() can't be
-+	 * used.  Open code insertion.
-+	 */
-+	rcu_read_lock();
-+	spin_lock_irq(q->queue_lock);
-+	blkg = blkg_create(&blkcg_root, q, new_blkg);
-+	spin_unlock_irq(q->queue_lock);
-+	rcu_read_unlock();
-+
-+	if (preloaded)
-+		radix_tree_preload_end();
-+
-+	if (IS_ERR(blkg)) {
-+		kfree(new_blkg);
-+		return PTR_ERR(blkg);
-+	}
-+
-+	q->root_blkg = blkg;
-+	q->root_rl.blkg = blkg;
-+
-+	ret = blk_throtl_init(q);
-+	if (ret) {
-+		spin_lock_irq(q->queue_lock);
-+		blkg_destroy_all(q);
-+		spin_unlock_irq(q->queue_lock);
-+	}
-+	return ret;
- }
- 
- /**
-@@ -958,52 +980,20 @@ int blkcg_activate_policy(struct request_queue *q,
- 			  const struct blkcg_policy *pol)
- {
- 	LIST_HEAD(pds);
--	struct blkcg_gq *blkg, *new_blkg;
-+	struct blkcg_gq *blkg;
- 	struct blkg_policy_data *pd, *n;
- 	int cnt = 0, ret;
--	bool preloaded;
- 
- 	if (blkcg_policy_enabled(q, pol))
- 		return 0;
- 
--	/* preallocations for root blkg */
--	new_blkg = blkg_alloc(&blkcg_root, q, GFP_KERNEL);
--	if (!new_blkg)
--		return -ENOMEM;
--
-+	/* count and allocate policy_data for all existing blkgs */
- 	blk_queue_bypass_start(q);
--
--	preloaded = !radix_tree_preload(GFP_KERNEL);
--
--	/*
--	 * Make sure the root blkg exists and count the existing blkgs.  As
--	 * @q is bypassing at this point, blkg_lookup_create() can't be
--	 * used.  Open code it.
--	 */
- 	spin_lock_irq(q->queue_lock);
--
--	rcu_read_lock();
--	blkg = __blkg_lookup(&blkcg_root, q, false);
--	if (blkg)
--		blkg_free(new_blkg);
--	else
--		blkg = blkg_create(&blkcg_root, q, new_blkg);
--	rcu_read_unlock();
--
--	if (preloaded)
--		radix_tree_preload_end();
--
--	if (IS_ERR(blkg)) {
--		ret = PTR_ERR(blkg);
--		goto out_unlock;
--	}
--
- 	list_for_each_entry(blkg, &q->blkg_list, q_node)
- 		cnt++;
--
- 	spin_unlock_irq(q->queue_lock);
- 
--	/* allocate policy_data for all existing blkgs */
- 	while (cnt--) {
- 		pd = kzalloc_node(pol->pd_size, GFP_KERNEL, q->node);
- 		if (!pd) {
-@@ -1072,10 +1062,6 @@ void blkcg_deactivate_policy(struct request_queue *q,
- 
- 	__clear_bit(pol->plid, q->blkcg_pols);
- 
--	/* if no policy is left, no need for blkgs - shoot them down */
--	if (bitmap_empty(q->blkcg_pols, BLKCG_MAX_POLS))
--		blkg_destroy_all(q);
--
- 	list_for_each_entry(blkg, &q->blkg_list, q_node) {
- 		/* grab blkcg lock too while removing @pd from @blkg */
- 		spin_lock(&blkg->blkcg->lock);
++#endif	/* CONFIG_BLOCK */
+ #endif	/* CONFIG_BLK_CGROUP */
+ #endif	/* _BLK_CGROUP_H */
 -- 
 2.4.0
 
