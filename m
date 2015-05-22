@@ -1,166 +1,109 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 46/51] writeback: restructure try_writeback_inodes_sb[_nr]()
-Date: Fri, 22 May 2015 17:14:00 -0400
-Message-ID: <1432329245-5844-47-git-send-email-tj@kernel.org>
-References: <1432329245-5844-1-git-send-email-tj@kernel.org>
+Subject: [PATCHSET 2/3 v3 block/for-4.2/core] writeback: cgroup writeback backpressure propagation
+Date: Fri, 22 May 2015 18:23:17 -0400
+Message-ID: <1432333416-6221-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=j9vqgDDJXrmQlQOObXFmWTSDdboPG+mciyQCh+ESSIs=;
-        b=JHZmmgQ1Bas0/ZMyhpV9cd+DA8gEg9t+acJx54XCjW0tyvcK8uAfJ0913+ncTVqSNp
-         U+yfm9+7AZ+WxB/GJb/9Tsuxf8A8dQiOX8alzvG1CVcjdeX4PyYiasvg2oMasYe4IVCu
-         8PGavTLhnRC1p6sEbVHl8TniXJ8Tpa4S0Q5N+mzWq0VkXwReHzDjub414MrNaHFgJb1B
-         iOHFhBqY1tLEV4pIQ2AJ3ziURvUawVOUHJeRoeBlN88/9EZViVC2M6NHeMhMWdCJR/yl
-         lhT0/3mOVxe1XJwgEaETEf7vZl2f7MU+w2i9JbzvDsTCAikPo9PjxpGhiWQirfJbFja5
-         2qHg==
-In-Reply-To: <1432329245-5844-1-git-send-email-tj@kernel.org>
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=kEdyySS9+kSwzbiqCIf+V4GNq9SQejfUvekDQVgSnnY=;
+        b=EpE+KxaKOT1ZQq+SHya6oHxa2Ze0tZgprBJB2I3VX6WJ/NzfskoVl+aAfJ4XIhXXqG
+         YAXAuQ4sYtAbj0qGT9piX/MECm8Gj3cCknpRiNJDQFm5dG0Qpe07xRkclzKN5EYgoKKG
+         1HIGW1gfz8GWK6MX52tMK8IE9gvd9Qzw12t3oHbZGpIPpdAnJpFZFnrohFC72J+dsIah
+         yzsFNbT8ChndTntgZo4xNHvvR3tTLd8cMLbik0vJNeQuc32LKSWb1r8s7/XkeAM4nsS5
+         6Xrt+JjpuPPZLPix+QCRrWX6wPZtJoDRk0B4uIuM+/iJC02hHXIu1qKGLsKMgjiizhd3
+         Sn2g==
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru, Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru
 
-try_writeback_inodes_sb_nr() wraps writeback_inodes_sb_nr() so that it
-handles s_umount locking and skips if writeback is already in
-progress.  The in progress test is performed on the root wb
-(bdi_writeback) which isn't sufficient for cgroup writeback support.
-The test must be done per-wb.
+Hello,
 
-To prepare for the change, this patch factors out
-__writeback_inodes_sb_nr() from writeback_inodes_sb_nr() and adds
-@skip_if_busy and moves the in progress test right before queueing the
-wb_writeback_work.  try_writeback_inodes_sb_nr() now just grabs
-s_umount and invokes __writeback_inodes_sb_nr() with asserted
-@skip_if_busy.  This way, later addition of multiple wb handling can
-skip only the wb's which already have writeback in progress.
+Changes from the last take[L] are
 
-This swaps the order between in progress test and s_umount test which
-can flip the return value when writeback is in progress and s_umount
-is being held by someone else but this shouldn't cause any meaningful
-difference.  It's a fringe condition and the return value is an
-unsynchronized hint anyway.
+* Rebased on top of block/for-4.2/core.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Jan Kara <jack@suse.cz>
----
- fs/fs-writeback.c         | 52 ++++++++++++++++++++++++++---------------------
- include/linux/writeback.h |  6 +++---
- 2 files changed, 32 insertions(+), 26 deletions(-)
+While the previous patchset[1] implemented cgroup writeback support,
+the IO back pressure propagation mechanism implemented in
+balance_dirty_pages() and its subroutines isn't yet aware of cgroup
+writeback.
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 093b959..0039c58 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -1581,19 +1581,8 @@ static void wait_sb_inodes(struct super_block *sb)
- 	iput(old_inode);
- }
- 
--/**
-- * writeback_inodes_sb_nr -	writeback dirty inodes from given super_block
-- * @sb: the superblock
-- * @nr: the number of pages to write
-- * @reason: reason why some writeback work initiated
-- *
-- * Start writeback on some inodes on this super_block. No guarantees are made
-- * on how many (if any) will be written, and this function does not wait
-- * for IO completion of submitted IO.
-- */
--void writeback_inodes_sb_nr(struct super_block *sb,
--			    unsigned long nr,
--			    enum wb_reason reason)
-+static void __writeback_inodes_sb_nr(struct super_block *sb, unsigned long nr,
-+				     enum wb_reason reason, bool skip_if_busy)
- {
- 	DEFINE_WB_COMPLETION_ONSTACK(done);
- 	struct wb_writeback_work work = {
-@@ -1609,9 +1598,30 @@ void writeback_inodes_sb_nr(struct super_block *sb,
- 	if (!bdi_has_dirty_io(bdi) || bdi == &noop_backing_dev_info)
- 		return;
- 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
-+
-+	if (skip_if_busy && writeback_in_progress(&bdi->wb))
-+		return;
-+
- 	wb_queue_work(&bdi->wb, &work);
- 	wb_wait_for_completion(bdi, &done);
- }
-+
-+/**
-+ * writeback_inodes_sb_nr -	writeback dirty inodes from given super_block
-+ * @sb: the superblock
-+ * @nr: the number of pages to write
-+ * @reason: reason why some writeback work initiated
-+ *
-+ * Start writeback on some inodes on this super_block. No guarantees are made
-+ * on how many (if any) will be written, and this function does not wait
-+ * for IO completion of submitted IO.
-+ */
-+void writeback_inodes_sb_nr(struct super_block *sb,
-+			    unsigned long nr,
-+			    enum wb_reason reason)
-+{
-+	__writeback_inodes_sb_nr(sb, nr, reason, false);
-+}
- EXPORT_SYMBOL(writeback_inodes_sb_nr);
- 
- /**
-@@ -1638,19 +1648,15 @@ EXPORT_SYMBOL(writeback_inodes_sb);
-  * Invoke writeback_inodes_sb_nr if no writeback is currently underway.
-  * Returns 1 if writeback was started, 0 if not.
-  */
--int try_to_writeback_inodes_sb_nr(struct super_block *sb,
--				  unsigned long nr,
--				  enum wb_reason reason)
-+bool try_to_writeback_inodes_sb_nr(struct super_block *sb, unsigned long nr,
-+				   enum wb_reason reason)
- {
--	if (writeback_in_progress(&sb->s_bdi->wb))
--		return 1;
--
- 	if (!down_read_trylock(&sb->s_umount))
--		return 0;
-+		return false;
- 
--	writeback_inodes_sb_nr(sb, nr, reason);
-+	__writeback_inodes_sb_nr(sb, nr, reason, true);
- 	up_read(&sb->s_umount);
--	return 1;
-+	return true;
- }
- EXPORT_SYMBOL(try_to_writeback_inodes_sb_nr);
- 
-@@ -1662,7 +1668,7 @@ EXPORT_SYMBOL(try_to_writeback_inodes_sb_nr);
-  * Implement by try_to_writeback_inodes_sb_nr()
-  * Returns 1 if writeback was started, 0 if not.
-  */
--int try_to_writeback_inodes_sb(struct super_block *sb, enum wb_reason reason)
-+bool try_to_writeback_inodes_sb(struct super_block *sb, enum wb_reason reason)
- {
- 	return try_to_writeback_inodes_sb_nr(sb, get_nr_dirty_pages(), reason);
- }
-diff --git a/include/linux/writeback.h b/include/linux/writeback.h
-index a6b9db7..23af355 100644
---- a/include/linux/writeback.h
-+++ b/include/linux/writeback.h
-@@ -93,9 +93,9 @@ struct bdi_writeback;
- void writeback_inodes_sb(struct super_block *, enum wb_reason reason);
- void writeback_inodes_sb_nr(struct super_block *, unsigned long nr,
- 							enum wb_reason reason);
--int try_to_writeback_inodes_sb(struct super_block *, enum wb_reason reason);
--int try_to_writeback_inodes_sb_nr(struct super_block *, unsigned long nr,
--				  enum wb_reason reason);
-+bool try_to_writeback_inodes_sb(struct super_block *, enum wb_reason reason);
-+bool try_to_writeback_inodes_sb_nr(struct super_block *, unsigned long nr,
-+				   enum wb_reason reason);
- void sync_inodes_sb(struct super_block *);
- void wakeup_flusher_threads(long nr_pages, enum wb_reason reason);
- void inode_wait_for_writeback(struct inode *inode);
--- 
-2.4.0
+Processes belonging to a memcg may have access to only subset of total
+memory available in the system and not factoring this into dirty
+throttling rendered it completely ineffective for processes under
+memcg limits and memcg ended up building a separate ad-hoc degenerate
+mechanism directly into vmscan code to limit page dirtying.
+
+This patchset refactors the dirty throttling logic implemented in
+balance_dirty_pages() and its subroutines os that it can handle both
+global and memcg memory domains.  Dirty throttling mechanism is
+applied against both the global and memcg constraints and the more
+restricted of the two is used for actual throttling.
+
+This makes the dirty throttling mechanism operational for memcg
+domains including writeback-bandwidth-proportional dirty page
+distribution inside them.
+
+This patchset contains the following 19 patches.
+
+ 0001-memcg-make-mem_cgroup_read_-stat-event-iterate-possi.patch
+ 0002-writeback-clean-up-wb_dirty_limit.patch
+ 0003-writeback-reorganize-__-wb_update_bandwidth.patch
+ 0004-writeback-implement-wb_domain.patch
+ 0005-writeback-move-global_dirty_limit-into-wb_domain.patch
+ 0006-writeback-consolidate-dirty-throttle-parameters-into.patch
+ 0007-writeback-add-dirty_throttle_control-wb_bg_thresh.patch
+ 0008-writeback-make-__wb_calc_thresh-take-dirty_throttle_.patch
+ 0009-writeback-add-dirty_throttle_control-pos_ratio.patch
+ 0010-writeback-add-dirty_throttle_control-wb_completions.patch
+ 0011-writeback-add-dirty_throttle_control-dom.patch
+ 0012-writeback-make-__wb_writeout_inc-and-hard_dirty_limi.patch
+ 0013-writeback-separate-out-domain_dirty_limits.patch
+ 0014-writeback-move-over_bground_thresh-to-mm-page-writeb.patch
+ 0015-writeback-update-wb_over_bg_thresh-to-use-wb_domain-.patch
+ 0016-writeback-implement-memcg-wb_domain.patch
+ 0017-writeback-reset-wb_domain-dirty_limit-_tstmp-when-me.patch
+ 0018-writeback-implement-memcg-writeback-domain-based-thr.patch
+ 0019-mm-vmscan-disable-memcg-direct-reclaim-stalling-if-c.patch
+
+0001-0003 are prep patches.
+
+0004-0015 refactors dirty throttling logic so that it operates on
+wb_domain.
+
+0016-0019 implement memcg wb_domain.
+
+This patchset is on top of
+
+  block/for-4.2/core b04a5636a665 ("block: replace trylock with mutex_lock in blkdev_reread_part()")
++ [1] [PATCHSET 1/3 v4 block/for-4.2/core] writeback: cgroup writeback support
+
+and available in the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-writeback-backpressure-20150522
+
+diffstat follows.  Thanks.
+
+ fs/fs-writeback.c                |   32 -
+ include/linux/backing-dev-defs.h |    1 
+ include/linux/memcontrol.h       |   21 +
+ include/linux/writeback.h        |   84 +++-
+ include/trace/events/writeback.h |    7 
+ mm/backing-dev.c                 |   15 
+ mm/memcontrol.c                  |  145 +++++--
+ mm/page-writeback.c              |  744 +++++++++++++++++++++++++--------------
+ mm/vmscan.c                      |   51 ++
+ 9 files changed, 739 insertions(+), 361 deletions(-)
+
+--
+tejun
+
+[L] http://lkml.kernel.org/g/1428350674-8303-1-git-send-email-tj@kernel.org
+[1] http://lkml.kernel.org/g/1432329245-5844-1-git-send-email-tj@kernel.org
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
