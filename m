@@ -1,21 +1,21 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 24/51] writeback, blkcg: associate each blkcg_gq with the corresponding bdi_writeback_congested
-Date: Fri, 22 May 2015 17:13:38 -0400
-Message-ID: <1432329245-5844-25-git-send-email-tj@kernel.org>
+Subject: [PATCH 17/51] writeback: reorganize mm/backing-dev.c
+Date: Fri, 22 May 2015 17:13:31 -0400
+Message-ID: <1432329245-5844-18-git-send-email-tj@kernel.org>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=qoUyPemHrwjJ9nLuGlz3w2NE1Omj65T1FqXHvZyNDyU=;
-        b=R1/5fMqeraUTXtmo5uUIjFPuJa527CRTTaVKFTE1D7AmSUzw9XJHhn7bovmHejbXuA
-         NtiNz3dMFUDubZTNXDw1J1uxWGBphH8Ewp+RBufnf7IRf8FR8oO112opxND5z3LA4bJJ
-         lSaEXj/2d3j5AyhvLkZW8Y+Sik3dA9wSZWEHSYm7+o3pRdIShrep3NnaBDhQT8i6vBcm
-         D4TY2wJg7C+DHfe4RM0A8FM5+SMOEjdAj5ziHiaGeOw4jpRJ4sGe3YcYaqmqWi5IHV91
-         FCMVX2PZJTvz86wG2KSXgH6/lUs6uJctAT/UDLsIX2KUS26mYqyvNKzjz8Filb8ouSGe
-         GzUg==
+        bh=3S3WZzIYoji7mEnjfJk5b4mBT6Aqc7Pq+twNNPQg5Kg=;
+        b=aNf1/RtdaVIRY8N0fbGSsv0UdNOZQW/mAsOG1yELvmwdcWkj4lSU91O+8zoWQP7J66
+         FVkxx1X6jBdfj6dupYW6JCsYBgYFIGGiAPlcDqYOihhaFBJOW3Lf789xLvzwxKWWWMPs
+         fTJyE1/CG+EvsKLnHZ1EdPB65nt3jGq/SKdtz9BPhfrbtTVNooQw2AWb2+L45VEL55XB
+         UUbd9jGvotK2PscBmqvFokr/YloF8AJ2H9L7jxy+llHtvhkfGu44mshRx08h5IrbpQov
+         rv2r91HxhOcHK1+BxLJfmubYdzIbO1MJ66TzF5uALpCIfzvt5+jflzuMxfd0ooegN1qD
+         t+RQ==
 In-Reply-To: <1432329245-5844-1-git-send-email-tj@kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,106 +23,225 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru, Tejun Heo <tj@kernel.org>
 
-A blkg (blkcg_gq) can be congested and decongested independently from
-other blkgs on the same request_queue.  Accordingly, for cgroup
-writeback support, the congestion status at bdi (backing_dev_info)
-should be split and updated separately from matching blkg's.
+Move wb_shutdown(), bdi_register(), bdi_register_dev(),
+bdi_prune_sb(), bdi_remove_from_list() and bdi_unregister() so that
+init / exit functions are grouped together.  This will make updating
+init / exit paths for cgroup writeback support easier.
 
-This patch prepares by adding blkg->wb_congested and associating a
-blkg with its matching per-blkcg bdi_writeback_congested on creation.
-
-v2: Updated to associate bdi_writeback_congested instead of
-    bdi_writeback.
+This is pure source file reorganization.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Reviewed-by: Jan Kara <jack@suse.cz>
 Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Jan Kara <jack@suse.cz>
-Cc: Vivek Goyal <vgoyal@redhat.com>
+Cc: Wu Fengguang <fengguang.wu@intel.com>
 ---
- block/blk-cgroup.c         | 17 +++++++++++++++--
- include/linux/blk-cgroup.h |  6 ++++++
- 2 files changed, 21 insertions(+), 2 deletions(-)
+ mm/backing-dev.c | 174 +++++++++++++++++++++++++++----------------------------
+ 1 file changed, 87 insertions(+), 87 deletions(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 979cfdb..31610ae 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -182,6 +182,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
- 				    struct blkcg_gq *new_blkg)
- {
- 	struct blkcg_gq *blkg;
-+	struct bdi_writeback_congested *wb_congested;
- 	int i, ret;
- 
- 	WARN_ON_ONCE(!rcu_read_lock_held());
-@@ -193,22 +194,30 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
- 		goto err_free_blkg;
- 	}
- 
-+	wb_congested = wb_congested_get_create(&q->backing_dev_info,
-+					       blkcg->css.id, GFP_ATOMIC);
-+	if (!wb_congested) {
-+		ret = -ENOMEM;
-+		goto err_put_css;
-+	}
-+
- 	/* allocate */
- 	if (!new_blkg) {
- 		new_blkg = blkg_alloc(blkcg, q, GFP_ATOMIC);
- 		if (unlikely(!new_blkg)) {
- 			ret = -ENOMEM;
--			goto err_put_css;
-+			goto err_put_congested;
- 		}
- 	}
- 	blkg = new_blkg;
-+	blkg->wb_congested = wb_congested;
- 
- 	/* link parent */
- 	if (blkcg_parent(blkcg)) {
- 		blkg->parent = __blkg_lookup(blkcg_parent(blkcg), q, false);
- 		if (WARN_ON_ONCE(!blkg->parent)) {
- 			ret = -EINVAL;
--			goto err_put_css;
-+			goto err_put_congested;
- 		}
- 		blkg_get(blkg->parent);
- 	}
-@@ -245,6 +254,8 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
- 	blkg_put(blkg);
- 	return ERR_PTR(ret);
- 
-+err_put_congested:
-+	wb_congested_put(wb_congested);
- err_put_css:
- 	css_put(&blkcg->css);
- err_free_blkg:
-@@ -391,6 +402,8 @@ void __blkg_release_rcu(struct rcu_head *rcu_head)
- 	if (blkg->parent)
- 		blkg_put(blkg->parent);
- 
-+	wb_congested_put(blkg->wb_congested);
-+
- 	blkg_free(blkg);
+diff --git a/mm/backing-dev.c b/mm/backing-dev.c
+index 597f0ce..ff85ecb 100644
+--- a/mm/backing-dev.c
++++ b/mm/backing-dev.c
+@@ -286,93 +286,6 @@ void wb_wakeup_delayed(struct bdi_writeback *wb)
  }
- EXPORT_SYMBOL_GPL(__blkg_release_rcu);
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index 3033eb1..07a32b8 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -99,6 +99,12 @@ struct blkcg_gq {
- 	struct hlist_node		blkcg_node;
- 	struct blkcg			*blkcg;
  
-+	/*
-+	 * Each blkg gets congested separately and the congestion state is
-+	 * propagated to the matching bdi_writeback_congested.
-+	 */
-+	struct bdi_writeback_congested	*wb_congested;
+ /*
+- * Remove bdi from bdi_list, and ensure that it is no longer visible
+- */
+-static void bdi_remove_from_list(struct backing_dev_info *bdi)
+-{
+-	spin_lock_bh(&bdi_lock);
+-	list_del_rcu(&bdi->bdi_list);
+-	spin_unlock_bh(&bdi_lock);
+-
+-	synchronize_rcu_expedited();
+-}
+-
+-int bdi_register(struct backing_dev_info *bdi, struct device *parent,
+-		const char *fmt, ...)
+-{
+-	va_list args;
+-	struct device *dev;
+-
+-	if (bdi->dev)	/* The driver needs to use separate queues per device */
+-		return 0;
+-
+-	va_start(args, fmt);
+-	dev = device_create_vargs(bdi_class, parent, MKDEV(0, 0), bdi, fmt, args);
+-	va_end(args);
+-	if (IS_ERR(dev))
+-		return PTR_ERR(dev);
+-
+-	bdi->dev = dev;
+-
+-	bdi_debug_register(bdi, dev_name(dev));
+-	set_bit(WB_registered, &bdi->wb.state);
+-
+-	spin_lock_bh(&bdi_lock);
+-	list_add_tail_rcu(&bdi->bdi_list, &bdi_list);
+-	spin_unlock_bh(&bdi_lock);
+-
+-	trace_writeback_bdi_register(bdi);
+-	return 0;
+-}
+-EXPORT_SYMBOL(bdi_register);
+-
+-int bdi_register_dev(struct backing_dev_info *bdi, dev_t dev)
+-{
+-	return bdi_register(bdi, NULL, "%u:%u", MAJOR(dev), MINOR(dev));
+-}
+-EXPORT_SYMBOL(bdi_register_dev);
+-
+-/*
+- * Remove bdi from the global list and shutdown any threads we have running
+- */
+-static void wb_shutdown(struct bdi_writeback *wb)
+-{
+-	/* Make sure nobody queues further work */
+-	spin_lock_bh(&wb->work_lock);
+-	if (!test_and_clear_bit(WB_registered, &wb->state)) {
+-		spin_unlock_bh(&wb->work_lock);
+-		return;
+-	}
+-	spin_unlock_bh(&wb->work_lock);
+-
+-	/*
+-	 * Drain work list and shutdown the delayed_work.  !WB_registered
+-	 * tells wb_workfn() that @wb is dying and its work_list needs to
+-	 * be drained no matter what.
+-	 */
+-	mod_delayed_work(bdi_wq, &wb->dwork, 0);
+-	flush_delayed_work(&wb->dwork);
+-	WARN_ON(!list_empty(&wb->work_list));
+-}
+-
+-/*
+- * Called when the device behind @bdi has been removed or ejected.
+- *
+- * We can't really do much here except for reducing the dirty ratio at
+- * the moment.  In the future we should be able to set a flag so that
+- * the filesystem can handle errors at mark_inode_dirty time instead
+- * of only at writeback time.
+- */
+-void bdi_unregister(struct backing_dev_info *bdi)
+-{
+-	if (WARN_ON_ONCE(!bdi->dev))
+-		return;
+-
+-	bdi_set_min_ratio(bdi, 0);
+-}
+-EXPORT_SYMBOL(bdi_unregister);
+-
+-/*
+  * Initial write bandwidth: 100 MB/s
+  */
+ #define INIT_BW		(100 << (20 - PAGE_SHIFT))
+@@ -418,6 +331,29 @@ static int wb_init(struct bdi_writeback *wb, struct backing_dev_info *bdi)
+ 	return 0;
+ }
+ 
++/*
++ * Remove bdi from the global list and shutdown any threads we have running
++ */
++static void wb_shutdown(struct bdi_writeback *wb)
++{
++	/* Make sure nobody queues further work */
++	spin_lock_bh(&wb->work_lock);
++	if (!test_and_clear_bit(WB_registered, &wb->state)) {
++		spin_unlock_bh(&wb->work_lock);
++		return;
++	}
++	spin_unlock_bh(&wb->work_lock);
 +
- 	/* all non-root blkcg_gq's are guaranteed to have access to parent */
- 	struct blkcg_gq			*parent;
++	/*
++	 * Drain work list and shutdown the delayed_work.  !WB_registered
++	 * tells wb_workfn() that @wb is dying and its work_list needs to
++	 * be drained no matter what.
++	 */
++	mod_delayed_work(bdi_wq, &wb->dwork, 0);
++	flush_delayed_work(&wb->dwork);
++	WARN_ON(!list_empty(&wb->work_list));
++}
++
+ static void wb_exit(struct bdi_writeback *wb)
+ {
+ 	int i;
+@@ -449,6 +385,70 @@ int bdi_init(struct backing_dev_info *bdi)
+ }
+ EXPORT_SYMBOL(bdi_init);
  
++int bdi_register(struct backing_dev_info *bdi, struct device *parent,
++		const char *fmt, ...)
++{
++	va_list args;
++	struct device *dev;
++
++	if (bdi->dev)	/* The driver needs to use separate queues per device */
++		return 0;
++
++	va_start(args, fmt);
++	dev = device_create_vargs(bdi_class, parent, MKDEV(0, 0), bdi, fmt, args);
++	va_end(args);
++	if (IS_ERR(dev))
++		return PTR_ERR(dev);
++
++	bdi->dev = dev;
++
++	bdi_debug_register(bdi, dev_name(dev));
++	set_bit(WB_registered, &bdi->wb.state);
++
++	spin_lock_bh(&bdi_lock);
++	list_add_tail_rcu(&bdi->bdi_list, &bdi_list);
++	spin_unlock_bh(&bdi_lock);
++
++	trace_writeback_bdi_register(bdi);
++	return 0;
++}
++EXPORT_SYMBOL(bdi_register);
++
++int bdi_register_dev(struct backing_dev_info *bdi, dev_t dev)
++{
++	return bdi_register(bdi, NULL, "%u:%u", MAJOR(dev), MINOR(dev));
++}
++EXPORT_SYMBOL(bdi_register_dev);
++
++/*
++ * Remove bdi from bdi_list, and ensure that it is no longer visible
++ */
++static void bdi_remove_from_list(struct backing_dev_info *bdi)
++{
++	spin_lock_bh(&bdi_lock);
++	list_del_rcu(&bdi->bdi_list);
++	spin_unlock_bh(&bdi_lock);
++
++	synchronize_rcu_expedited();
++}
++
++/*
++ * Called when the device behind @bdi has been removed or ejected.
++ *
++ * We can't really do much here except for reducing the dirty ratio at
++ * the moment.  In the future we should be able to set a flag so that
++ * the filesystem can handle errors at mark_inode_dirty time instead
++ * of only at writeback time.
++ */
++void bdi_unregister(struct backing_dev_info *bdi)
++{
++	if (WARN_ON_ONCE(!bdi->dev))
++		return;
++
++	bdi_set_min_ratio(bdi, 0);
++}
++EXPORT_SYMBOL(bdi_unregister);
++
+ void bdi_destroy(struct backing_dev_info *bdi)
+ {
+ 	/* make sure nobody finds us on the bdi_list anymore */
 -- 
 2.4.0
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
