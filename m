@@ -1,21 +1,21 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 15/51] writeback: s/bdi/wb/ in mm/page-writeback.c
-Date: Fri, 22 May 2015 17:13:29 -0400
-Message-ID: <1432329245-5844-16-git-send-email-tj@kernel.org>
+Subject: [PATCH 19/51] bdi: make inode_to_bdi() inline
+Date: Fri, 22 May 2015 17:13:33 -0400
+Message-ID: <1432329245-5844-20-git-send-email-tj@kernel.org>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=5li3w8bsU4oIvedyKxell9bjMvw1/SNR5Udr0cMbX9U=;
-        b=wIBJY0gUrLZrdpfjORetJef3WB8EWSUHg8t8fDWxsMQP8MCjjKfTzV46aRogwk2jId
-         NhEAutIXY/Py91f9g/E9wvnK0cFn1EZBa1hrhOArpTRn0KnTpLurc1WnNWu5jcFkHcQg
-         8F+mZJPUpRQivlsSUXmdw7poYvhxEJWlp8ejDmEyKXlVQmgFF5j32eywGjH6x1+rBHJM
-         2tDgnk3zTeeVLnpLjblKU3lc8lKe26wjH/tA7gs3c6YDRkJZIrbhRYBUpS0L9mKS51il
-         hWAOTteaq4h+Z94WJIgfjvsQa7igeh1xo/WVwtC/gb3MSpedAf8SWOEZkCleysZASzd7
-         hlOA==
+        bh=VYhCeHHtoBHBb8H6+xL3ppkP7PcEyNO7mNck/oKSLbo=;
+        b=lTNKZdhF4nQYMf1niNfMY6ZpOi0p3q1Qj8R1IE6GETpydsXi88etoMnqOWC2ORO3cO
+         QtDKgSeluMVoaIiPnz6CH8ggdZ4Os33i5AeUsMpkBKw5HFjxd3cco6GtlYQ0+lq0pi57
+         C86czXoQ/B9JcrfRnD8C5ckiMWZ7s5GPhWescT8szz2KLJ0P4ed9PCTVwvIQo9OIabK1
+         zEzFl5mPR5+/AQI0sJXeHnTuO3fH4PBcRfw75vPd+T25TMkgsAEuS42mcsNEzsd9s3XX
+         6nufKTTyPfnbK6uevSKK6FsHi58qzwdgMvyQDEzJFSDNkjKzMxAAMBwP9Vom+owPUWbc
+         QCnA==
 In-Reply-To: <1432329245-5844-1-git-send-email-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,612 +23,154 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru, Tejun Heo <tj@kernel.org>
 
-Writeback operations will now be per wb (bdi_writeback) instead of
-bdi.  Replace the relevant bdi references in symbol names and comments
-with wb.  This patch is purely cosmetic and doesn't make any
-functional changes.
+Now that bdi definitions are moved to backing-dev-defs.h,
+backing-dev.h can include blkdev.h and inline inode_to_bdi() without
+worrying about introducing circular include dependency.  The function
+gets called from hot paths and fairly trivial.
+
+This patch makes inode_to_bdi() and sb_is_blkdev_sb() that the
+function calls inline.  blockdev_superblock and noop_backing_dev_info
+are EXPORT_GPL'd to allow the inline functions to be used from
+modules.
+
+While at it, make sb_is_blkdev_sb() return bool instead of int.
+
+v2: Fixed typo in description as suggested by Jan.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Cc: Wu Fengguang <fengguang.wu@intel.com>
-Cc: Jens Axboe <axboe@kernel.dk>
+Reviewed-by: Jens Axboe <axboe@kernel.dk>
+Cc: Christoph Hellwig <hch@infradead.org>
 ---
- mm/page-writeback.c | 270 ++++++++++++++++++++++++++--------------------------
- 1 file changed, 134 insertions(+), 136 deletions(-)
+ fs/block_dev.c              |  8 ++------
+ fs/fs-writeback.c           | 16 ----------------
+ include/linux/backing-dev.h | 18 ++++++++++++++++--
+ include/linux/fs.h          |  8 +++++++-
+ mm/backing-dev.c            |  1 +
+ 5 files changed, 26 insertions(+), 25 deletions(-)
 
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index cd39ee9..78ef551 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -595,7 +595,7 @@ static long long pos_ratio_polynom(unsigned long setpoint,
-  *
-  * (o) global/bdi setpoints
-  *
-- * We want the dirty pages be balanced around the global/bdi setpoints.
-+ * We want the dirty pages be balanced around the global/wb setpoints.
-  * When the number of dirty pages is higher/lower than the setpoint, the
-  * dirty position control ratio (and hence task dirty ratelimit) will be
-  * decreased/increased to bring the dirty pages back to the setpoint.
-@@ -605,8 +605,8 @@ static long long pos_ratio_polynom(unsigned long setpoint,
-  *     if (dirty < setpoint) scale up   pos_ratio
-  *     if (dirty > setpoint) scale down pos_ratio
-  *
-- *     if (bdi_dirty < bdi_setpoint) scale up   pos_ratio
-- *     if (bdi_dirty > bdi_setpoint) scale down pos_ratio
-+ *     if (wb_dirty < wb_setpoint) scale up   pos_ratio
-+ *     if (wb_dirty > wb_setpoint) scale down pos_ratio
-  *
-  *     task_ratelimit = dirty_ratelimit * pos_ratio >> RATELIMIT_CALC_SHIFT
-  *
-@@ -631,7 +631,7 @@ static long long pos_ratio_polynom(unsigned long setpoint,
-  *   0 +------------.------------------.----------------------*------------->
-  *           freerun^          setpoint^                 limit^   dirty pages
-  *
-- * (o) bdi control line
-+ * (o) wb control line
-  *
-  *     ^ pos_ratio
-  *     |
-@@ -657,27 +657,27 @@ static long long pos_ratio_polynom(unsigned long setpoint,
-  *     |                      .                           .
-  *     |                      .                             .
-  *   0 +----------------------.-------------------------------.------------->
-- *                bdi_setpoint^                    x_intercept^
-+ *                wb_setpoint^                    x_intercept^
-  *
-- * The bdi control line won't drop below pos_ratio=1/4, so that bdi_dirty can
-+ * The wb control line won't drop below pos_ratio=1/4, so that wb_dirty can
-  * be smoothly throttled down to normal if it starts high in situations like
-  * - start writing to a slow SD card and a fast disk at the same time. The SD
-- *   card's bdi_dirty may rush to many times higher than bdi_setpoint.
-- * - the bdi dirty thresh drops quickly due to change of JBOD workload
-+ *   card's wb_dirty may rush to many times higher than wb_setpoint.
-+ * - the wb dirty thresh drops quickly due to change of JBOD workload
-  */
- static unsigned long wb_position_ratio(struct bdi_writeback *wb,
- 				       unsigned long thresh,
- 				       unsigned long bg_thresh,
- 				       unsigned long dirty,
--				       unsigned long bdi_thresh,
--				       unsigned long bdi_dirty)
-+				       unsigned long wb_thresh,
-+				       unsigned long wb_dirty)
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index e545cbf..f04c873 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -547,7 +547,8 @@ static struct file_system_type bd_type = {
+ 	.kill_sb	= kill_anon_super,
+ };
+ 
+-static struct super_block *blockdev_superblock __read_mostly;
++struct super_block *blockdev_superblock __read_mostly;
++EXPORT_SYMBOL_GPL(blockdev_superblock);
+ 
+ void __init bdev_cache_init(void)
  {
- 	unsigned long write_bw = wb->avg_write_bandwidth;
- 	unsigned long freerun = dirty_freerun_ceiling(thresh, bg_thresh);
- 	unsigned long limit = hard_dirty_limit(thresh);
- 	unsigned long x_intercept;
- 	unsigned long setpoint;		/* dirty pages' target balance point */
--	unsigned long bdi_setpoint;
-+	unsigned long wb_setpoint;
- 	unsigned long span;
- 	long long pos_ratio;		/* for scaling up/down the rate limit */
- 	long x;
-@@ -696,146 +696,145 @@ static unsigned long wb_position_ratio(struct bdi_writeback *wb,
- 	/*
- 	 * The strictlimit feature is a tool preventing mistrusted filesystems
- 	 * from growing a large number of dirty pages before throttling. For
--	 * such filesystems balance_dirty_pages always checks bdi counters
--	 * against bdi limits. Even if global "nr_dirty" is under "freerun".
-+	 * such filesystems balance_dirty_pages always checks wb counters
-+	 * against wb limits. Even if global "nr_dirty" is under "freerun".
- 	 * This is especially important for fuse which sets bdi->max_ratio to
- 	 * 1% by default. Without strictlimit feature, fuse writeback may
- 	 * consume arbitrary amount of RAM because it is accounted in
- 	 * NR_WRITEBACK_TEMP which is not involved in calculating "nr_dirty".
- 	 *
- 	 * Here, in wb_position_ratio(), we calculate pos_ratio based on
--	 * two values: bdi_dirty and bdi_thresh. Let's consider an example:
-+	 * two values: wb_dirty and wb_thresh. Let's consider an example:
- 	 * total amount of RAM is 16GB, bdi->max_ratio is equal to 1%, global
- 	 * limits are set by default to 10% and 20% (background and throttle).
--	 * Then bdi_thresh is 1% of 20% of 16GB. This amounts to ~8K pages.
--	 * wb_dirty_limit(wb, bg_thresh) is about ~4K pages. bdi_setpoint is
--	 * about ~6K pages (as the average of background and throttle bdi
-+	 * Then wb_thresh is 1% of 20% of 16GB. This amounts to ~8K pages.
-+	 * wb_dirty_limit(wb, bg_thresh) is about ~4K pages. wb_setpoint is
-+	 * about ~6K pages (as the average of background and throttle wb
- 	 * limits). The 3rd order polynomial will provide positive feedback if
--	 * bdi_dirty is under bdi_setpoint and vice versa.
-+	 * wb_dirty is under wb_setpoint and vice versa.
- 	 *
- 	 * Note, that we cannot use global counters in these calculations
--	 * because we want to throttle process writing to a strictlimit BDI
-+	 * because we want to throttle process writing to a strictlimit wb
- 	 * much earlier than global "freerun" is reached (~23MB vs. ~2.3GB
- 	 * in the example above).
- 	 */
- 	if (unlikely(wb->bdi->capabilities & BDI_CAP_STRICTLIMIT)) {
--		long long bdi_pos_ratio;
--		unsigned long bdi_bg_thresh;
-+		long long wb_pos_ratio;
-+		unsigned long wb_bg_thresh;
- 
--		if (bdi_dirty < 8)
-+		if (wb_dirty < 8)
- 			return min_t(long long, pos_ratio * 2,
- 				     2 << RATELIMIT_CALC_SHIFT);
- 
--		if (bdi_dirty >= bdi_thresh)
-+		if (wb_dirty >= wb_thresh)
- 			return 0;
- 
--		bdi_bg_thresh = div_u64((u64)bdi_thresh * bg_thresh, thresh);
--		bdi_setpoint = dirty_freerun_ceiling(bdi_thresh,
--						     bdi_bg_thresh);
-+		wb_bg_thresh = div_u64((u64)wb_thresh * bg_thresh, thresh);
-+		wb_setpoint = dirty_freerun_ceiling(wb_thresh, wb_bg_thresh);
- 
--		if (bdi_setpoint == 0 || bdi_setpoint == bdi_thresh)
-+		if (wb_setpoint == 0 || wb_setpoint == wb_thresh)
- 			return 0;
- 
--		bdi_pos_ratio = pos_ratio_polynom(bdi_setpoint, bdi_dirty,
--						  bdi_thresh);
-+		wb_pos_ratio = pos_ratio_polynom(wb_setpoint, wb_dirty,
-+						 wb_thresh);
- 
- 		/*
--		 * Typically, for strictlimit case, bdi_setpoint << setpoint
--		 * and pos_ratio >> bdi_pos_ratio. In the other words global
-+		 * Typically, for strictlimit case, wb_setpoint << setpoint
-+		 * and pos_ratio >> wb_pos_ratio. In the other words global
- 		 * state ("dirty") is not limiting factor and we have to
--		 * make decision based on bdi counters. But there is an
-+		 * make decision based on wb counters. But there is an
- 		 * important case when global pos_ratio should get precedence:
- 		 * global limits are exceeded (e.g. due to activities on other
--		 * BDIs) while given strictlimit BDI is below limit.
-+		 * wb's) while given strictlimit wb is below limit.
- 		 *
--		 * "pos_ratio * bdi_pos_ratio" would work for the case above,
-+		 * "pos_ratio * wb_pos_ratio" would work for the case above,
- 		 * but it would look too non-natural for the case of all
--		 * activity in the system coming from a single strictlimit BDI
-+		 * activity in the system coming from a single strictlimit wb
- 		 * with bdi->max_ratio == 100%.
- 		 *
- 		 * Note that min() below somewhat changes the dynamics of the
- 		 * control system. Normally, pos_ratio value can be well over 3
--		 * (when globally we are at freerun and bdi is well below bdi
-+		 * (when globally we are at freerun and wb is well below wb
- 		 * setpoint). Now the maximum pos_ratio in the same situation
- 		 * is 2. We might want to tweak this if we observe the control
- 		 * system is too slow to adapt.
- 		 */
--		return min(pos_ratio, bdi_pos_ratio);
-+		return min(pos_ratio, wb_pos_ratio);
- 	}
- 
- 	/*
- 	 * We have computed basic pos_ratio above based on global situation. If
--	 * the bdi is over/under its share of dirty pages, we want to scale
-+	 * the wb is over/under its share of dirty pages, we want to scale
- 	 * pos_ratio further down/up. That is done by the following mechanism.
- 	 */
- 
- 	/*
--	 * bdi setpoint
-+	 * wb setpoint
- 	 *
--	 *        f(bdi_dirty) := 1.0 + k * (bdi_dirty - bdi_setpoint)
-+	 *        f(wb_dirty) := 1.0 + k * (wb_dirty - wb_setpoint)
- 	 *
--	 *                        x_intercept - bdi_dirty
-+	 *                        x_intercept - wb_dirty
- 	 *                     := --------------------------
--	 *                        x_intercept - bdi_setpoint
-+	 *                        x_intercept - wb_setpoint
- 	 *
--	 * The main bdi control line is a linear function that subjects to
-+	 * The main wb control line is a linear function that subjects to
- 	 *
--	 * (1) f(bdi_setpoint) = 1.0
--	 * (2) k = - 1 / (8 * write_bw)  (in single bdi case)
--	 *     or equally: x_intercept = bdi_setpoint + 8 * write_bw
-+	 * (1) f(wb_setpoint) = 1.0
-+	 * (2) k = - 1 / (8 * write_bw)  (in single wb case)
-+	 *     or equally: x_intercept = wb_setpoint + 8 * write_bw
- 	 *
--	 * For single bdi case, the dirty pages are observed to fluctuate
-+	 * For single wb case, the dirty pages are observed to fluctuate
- 	 * regularly within range
--	 *        [bdi_setpoint - write_bw/2, bdi_setpoint + write_bw/2]
-+	 *        [wb_setpoint - write_bw/2, wb_setpoint + write_bw/2]
- 	 * for various filesystems, where (2) can yield in a reasonable 12.5%
- 	 * fluctuation range for pos_ratio.
- 	 *
--	 * For JBOD case, bdi_thresh (not bdi_dirty!) could fluctuate up to its
-+	 * For JBOD case, wb_thresh (not wb_dirty!) could fluctuate up to its
- 	 * own size, so move the slope over accordingly and choose a slope that
--	 * yields 100% pos_ratio fluctuation on suddenly doubled bdi_thresh.
-+	 * yields 100% pos_ratio fluctuation on suddenly doubled wb_thresh.
- 	 */
--	if (unlikely(bdi_thresh > thresh))
--		bdi_thresh = thresh;
-+	if (unlikely(wb_thresh > thresh))
-+		wb_thresh = thresh;
- 	/*
--	 * It's very possible that bdi_thresh is close to 0 not because the
-+	 * It's very possible that wb_thresh is close to 0 not because the
- 	 * device is slow, but that it has remained inactive for long time.
- 	 * Honour such devices a reasonable good (hopefully IO efficient)
- 	 * threshold, so that the occasional writes won't be blocked and active
- 	 * writes can rampup the threshold quickly.
- 	 */
--	bdi_thresh = max(bdi_thresh, (limit - dirty) / 8);
-+	wb_thresh = max(wb_thresh, (limit - dirty) / 8);
- 	/*
--	 * scale global setpoint to bdi's:
--	 *	bdi_setpoint = setpoint * bdi_thresh / thresh
-+	 * scale global setpoint to wb's:
-+	 *	wb_setpoint = setpoint * wb_thresh / thresh
- 	 */
--	x = div_u64((u64)bdi_thresh << 16, thresh + 1);
--	bdi_setpoint = setpoint * (u64)x >> 16;
-+	x = div_u64((u64)wb_thresh << 16, thresh + 1);
-+	wb_setpoint = setpoint * (u64)x >> 16;
- 	/*
--	 * Use span=(8*write_bw) in single bdi case as indicated by
--	 * (thresh - bdi_thresh ~= 0) and transit to bdi_thresh in JBOD case.
-+	 * Use span=(8*write_bw) in single wb case as indicated by
-+	 * (thresh - wb_thresh ~= 0) and transit to wb_thresh in JBOD case.
- 	 *
--	 *        bdi_thresh                    thresh - bdi_thresh
--	 * span = ---------- * (8 * write_bw) + ------------------- * bdi_thresh
--	 *          thresh                            thresh
-+	 *        wb_thresh                    thresh - wb_thresh
-+	 * span = --------- * (8 * write_bw) + ------------------ * wb_thresh
-+	 *         thresh                           thresh
- 	 */
--	span = (thresh - bdi_thresh + 8 * write_bw) * (u64)x >> 16;
--	x_intercept = bdi_setpoint + span;
-+	span = (thresh - wb_thresh + 8 * write_bw) * (u64)x >> 16;
-+	x_intercept = wb_setpoint + span;
- 
--	if (bdi_dirty < x_intercept - span / 4) {
--		pos_ratio = div64_u64(pos_ratio * (x_intercept - bdi_dirty),
--				    x_intercept - bdi_setpoint + 1);
-+	if (wb_dirty < x_intercept - span / 4) {
-+		pos_ratio = div64_u64(pos_ratio * (x_intercept - wb_dirty),
-+				    x_intercept - wb_setpoint + 1);
- 	} else
- 		pos_ratio /= 4;
- 
- 	/*
--	 * bdi reserve area, safeguard against dirty pool underrun and disk idle
-+	 * wb reserve area, safeguard against dirty pool underrun and disk idle
- 	 * It may push the desired control point of global dirty pages higher
- 	 * than setpoint.
- 	 */
--	x_intercept = bdi_thresh / 2;
--	if (bdi_dirty < x_intercept) {
--		if (bdi_dirty > x_intercept / 8)
--			pos_ratio = div_u64(pos_ratio * x_intercept, bdi_dirty);
-+	x_intercept = wb_thresh / 2;
-+	if (wb_dirty < x_intercept) {
-+		if (wb_dirty > x_intercept / 8)
-+			pos_ratio = div_u64(pos_ratio * x_intercept, wb_dirty);
- 		else
- 			pos_ratio *= 8;
- 	}
-@@ -943,17 +942,17 @@ static void global_update_bandwidth(unsigned long thresh,
+@@ -688,11 +689,6 @@ static struct block_device *bd_acquire(struct inode *inode)
+ 	return bdev;
  }
  
- /*
-- * Maintain bdi->dirty_ratelimit, the base dirty throttle rate.
-+ * Maintain wb->dirty_ratelimit, the base dirty throttle rate.
-  *
-- * Normal bdi tasks will be curbed at or below it in long term.
-+ * Normal wb tasks will be curbed at or below it in long term.
-  * Obviously it should be around (write_bw / N) when there are N dd tasks.
-  */
- static void wb_update_dirty_ratelimit(struct bdi_writeback *wb,
- 				      unsigned long thresh,
- 				      unsigned long bg_thresh,
- 				      unsigned long dirty,
--				      unsigned long bdi_thresh,
--				      unsigned long bdi_dirty,
-+				      unsigned long wb_thresh,
-+				      unsigned long wb_dirty,
- 				      unsigned long dirtied,
- 				      unsigned long elapsed)
- {
-@@ -976,7 +975,7 @@ static void wb_update_dirty_ratelimit(struct bdi_writeback *wb,
- 	dirty_rate = (dirtied - wb->dirtied_stamp) * HZ / elapsed;
+-int sb_is_blkdev_sb(struct super_block *sb)
+-{
+-	return sb == blockdev_superblock;
+-}
+-
+ /* Call when you free inode */
  
- 	pos_ratio = wb_position_ratio(wb, thresh, bg_thresh, dirty,
--				      bdi_thresh, bdi_dirty);
-+				      wb_thresh, wb_dirty);
- 	/*
- 	 * task_ratelimit reflects each dd's dirty rate for the past 200ms.
- 	 */
-@@ -986,7 +985,7 @@ static void wb_update_dirty_ratelimit(struct bdi_writeback *wb,
- 
- 	/*
- 	 * A linear estimation of the "balanced" throttle rate. The theory is,
--	 * if there are N dd tasks, each throttled at task_ratelimit, the bdi's
-+	 * if there are N dd tasks, each throttled at task_ratelimit, the wb's
- 	 * dirty_rate will be measured to be (N * task_ratelimit). So the below
- 	 * formula will yield the balanced rate limit (write_bw / N).
- 	 *
-@@ -1025,7 +1024,7 @@ static void wb_update_dirty_ratelimit(struct bdi_writeback *wb,
- 	/*
- 	 * We could safely do this and return immediately:
- 	 *
--	 *	bdi->dirty_ratelimit = balanced_dirty_ratelimit;
-+	 *	wb->dirty_ratelimit = balanced_dirty_ratelimit;
- 	 *
- 	 * However to get a more stable dirty_ratelimit, the below elaborated
- 	 * code makes use of task_ratelimit to filter out singular points and
-@@ -1059,22 +1058,22 @@ static void wb_update_dirty_ratelimit(struct bdi_writeback *wb,
- 	step = 0;
- 
- 	/*
--	 * For strictlimit case, calculations above were based on bdi counters
-+	 * For strictlimit case, calculations above were based on wb counters
- 	 * and limits (starting from pos_ratio = wb_position_ratio() and up to
- 	 * balanced_dirty_ratelimit = task_ratelimit * write_bw / dirty_rate).
--	 * Hence, to calculate "step" properly, we have to use bdi_dirty as
--	 * "dirty" and bdi_setpoint as "setpoint".
-+	 * Hence, to calculate "step" properly, we have to use wb_dirty as
-+	 * "dirty" and wb_setpoint as "setpoint".
- 	 *
--	 * We rampup dirty_ratelimit forcibly if bdi_dirty is low because
--	 * it's possible that bdi_thresh is close to zero due to inactivity
-+	 * We rampup dirty_ratelimit forcibly if wb_dirty is low because
-+	 * it's possible that wb_thresh is close to zero due to inactivity
- 	 * of backing device (see the implementation of wb_dirty_limit()).
- 	 */
- 	if (unlikely(wb->bdi->capabilities & BDI_CAP_STRICTLIMIT)) {
--		dirty = bdi_dirty;
--		if (bdi_dirty < 8)
--			setpoint = bdi_dirty + 1;
-+		dirty = wb_dirty;
-+		if (wb_dirty < 8)
-+			setpoint = wb_dirty + 1;
- 		else
--			setpoint = (bdi_thresh +
-+			setpoint = (wb_thresh +
- 				    wb_dirty_limit(wb, bg_thresh)) / 2;
- 	}
- 
-@@ -1116,8 +1115,8 @@ void __wb_update_bandwidth(struct bdi_writeback *wb,
- 			   unsigned long thresh,
- 			   unsigned long bg_thresh,
- 			   unsigned long dirty,
--			   unsigned long bdi_thresh,
--			   unsigned long bdi_dirty,
-+			   unsigned long wb_thresh,
-+			   unsigned long wb_dirty,
- 			   unsigned long start_time)
- {
- 	unsigned long now = jiffies;
-@@ -1144,7 +1143,7 @@ void __wb_update_bandwidth(struct bdi_writeback *wb,
- 	if (thresh) {
- 		global_update_bandwidth(thresh, dirty, now);
- 		wb_update_dirty_ratelimit(wb, thresh, bg_thresh, dirty,
--					  bdi_thresh, bdi_dirty,
-+					  wb_thresh, wb_dirty,
- 					  dirtied, elapsed);
- 	}
- 	wb_update_write_bandwidth(wb, elapsed, written);
-@@ -1159,15 +1158,15 @@ static void wb_update_bandwidth(struct bdi_writeback *wb,
- 				unsigned long thresh,
- 				unsigned long bg_thresh,
- 				unsigned long dirty,
--				unsigned long bdi_thresh,
--				unsigned long bdi_dirty,
-+				unsigned long wb_thresh,
-+				unsigned long wb_dirty,
- 				unsigned long start_time)
- {
- 	if (time_is_after_eq_jiffies(wb->bw_time_stamp + BANDWIDTH_INTERVAL))
- 		return;
- 	spin_lock(&wb->list_lock);
- 	__wb_update_bandwidth(wb, thresh, bg_thresh, dirty,
--			      bdi_thresh, bdi_dirty, start_time);
-+			      wb_thresh, wb_dirty, start_time);
- 	spin_unlock(&wb->list_lock);
+ void bd_forget(struct inode *inode)
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index a69d2e1..34d1cb8 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -78,22 +78,6 @@ int writeback_in_progress(struct backing_dev_info *bdi)
  }
+ EXPORT_SYMBOL(writeback_in_progress);
  
-@@ -1189,7 +1188,7 @@ static unsigned long dirty_poll_interval(unsigned long dirty,
- }
- 
- static unsigned long wb_max_pause(struct bdi_writeback *wb,
--				      unsigned long bdi_dirty)
-+				  unsigned long wb_dirty)
+-struct backing_dev_info *inode_to_bdi(struct inode *inode)
+-{
+-	struct super_block *sb;
+-
+-	if (!inode)
+-		return &noop_backing_dev_info;
+-
+-	sb = inode->i_sb;
+-#ifdef CONFIG_BLOCK
+-	if (sb_is_blkdev_sb(sb))
+-		return blk_get_backing_dev_info(I_BDEV(inode));
+-#endif
+-	return sb->s_bdi;
+-}
+-EXPORT_SYMBOL_GPL(inode_to_bdi);
+-
+ static inline struct inode *wb_inode(struct list_head *head)
  {
- 	unsigned long bw = wb->avg_write_bandwidth;
- 	unsigned long t;
-@@ -1201,7 +1200,7 @@ static unsigned long wb_max_pause(struct bdi_writeback *wb,
- 	 *
- 	 * 8 serves as the safety ratio.
- 	 */
--	t = bdi_dirty / (1 + bw / roundup_pow_of_two(1 + HZ / 8));
-+	t = wb_dirty / (1 + bw / roundup_pow_of_two(1 + HZ / 8));
- 	t++;
+ 	return list_entry(head, struct inode, i_wb_list);
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index 5e39f7a..7857820 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -11,11 +11,10 @@
+ #include <linux/kernel.h>
+ #include <linux/fs.h>
+ #include <linux/sched.h>
++#include <linux/blkdev.h>
+ #include <linux/writeback.h>
+ #include <linux/backing-dev-defs.h>
  
- 	return min_t(unsigned long, t, MAX_PAUSE);
-@@ -1285,31 +1284,31 @@ static long wb_min_pause(struct bdi_writeback *wb,
- static inline void wb_dirty_limits(struct bdi_writeback *wb,
- 				   unsigned long dirty_thresh,
- 				   unsigned long background_thresh,
--				   unsigned long *bdi_dirty,
--				   unsigned long *bdi_thresh,
--				   unsigned long *bdi_bg_thresh)
-+				   unsigned long *wb_dirty,
-+				   unsigned long *wb_thresh,
-+				   unsigned long *wb_bg_thresh)
+-struct backing_dev_info *inode_to_bdi(struct inode *inode);
+-
+ int __must_check bdi_init(struct backing_dev_info *bdi);
+ void bdi_destroy(struct backing_dev_info *bdi);
+ 
+@@ -149,6 +148,21 @@ extern struct backing_dev_info noop_backing_dev_info;
+ 
+ int writeback_in_progress(struct backing_dev_info *bdi);
+ 
++static inline struct backing_dev_info *inode_to_bdi(struct inode *inode)
++{
++	struct super_block *sb;
++
++	if (!inode)
++		return &noop_backing_dev_info;
++
++	sb = inode->i_sb;
++#ifdef CONFIG_BLOCK
++	if (sb_is_blkdev_sb(sb))
++		return blk_get_backing_dev_info(I_BDEV(inode));
++#endif
++	return sb->s_bdi;
++}
++
+ static inline int bdi_congested(struct backing_dev_info *bdi, int bdi_bits)
  {
- 	unsigned long wb_reclaimable;
+ 	if (bdi->congested_fn)
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 1ef6390..ce100b87 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2240,7 +2240,13 @@ extern struct super_block *freeze_bdev(struct block_device *);
+ extern void emergency_thaw_all(void);
+ extern int thaw_bdev(struct block_device *bdev, struct super_block *sb);
+ extern int fsync_bdev(struct block_device *);
+-extern int sb_is_blkdev_sb(struct super_block *sb);
++
++extern struct super_block *blockdev_superblock;
++
++static inline bool sb_is_blkdev_sb(struct super_block *sb)
++{
++	return sb == blockdev_superblock;
++}
+ #else
+ static inline void bd_forget(struct inode *inode) {}
+ static inline int sync_blockdev(struct block_device *bdev) { return 0; }
+diff --git a/mm/backing-dev.c b/mm/backing-dev.c
+index ff85ecb..b0707d1 100644
+--- a/mm/backing-dev.c
++++ b/mm/backing-dev.c
+@@ -18,6 +18,7 @@ struct backing_dev_info noop_backing_dev_info = {
+ 	.name		= "noop",
+ 	.capabilities	= BDI_CAP_NO_ACCT_AND_WRITEBACK,
+ };
++EXPORT_SYMBOL_GPL(noop_backing_dev_info);
  
- 	/*
--	 * bdi_thresh is not treated as some limiting factor as
-+	 * wb_thresh is not treated as some limiting factor as
- 	 * dirty_thresh, due to reasons
--	 * - in JBOD setup, bdi_thresh can fluctuate a lot
-+	 * - in JBOD setup, wb_thresh can fluctuate a lot
- 	 * - in a system with HDD and USB key, the USB key may somehow
--	 *   go into state (bdi_dirty >> bdi_thresh) either because
--	 *   bdi_dirty starts high, or because bdi_thresh drops low.
-+	 *   go into state (wb_dirty >> wb_thresh) either because
-+	 *   wb_dirty starts high, or because wb_thresh drops low.
- 	 *   In this case we don't want to hard throttle the USB key
--	 *   dirtiers for 100 seconds until bdi_dirty drops under
--	 *   bdi_thresh. Instead the auxiliary bdi control line in
-+	 *   dirtiers for 100 seconds until wb_dirty drops under
-+	 *   wb_thresh. Instead the auxiliary wb control line in
- 	 *   wb_position_ratio() will let the dirtier task progress
--	 *   at some rate <= (write_bw / 2) for bringing down bdi_dirty.
-+	 *   at some rate <= (write_bw / 2) for bringing down wb_dirty.
- 	 */
--	*bdi_thresh = wb_dirty_limit(wb, dirty_thresh);
-+	*wb_thresh = wb_dirty_limit(wb, dirty_thresh);
+ static struct class *bdi_class;
  
--	if (bdi_bg_thresh)
--		*bdi_bg_thresh = dirty_thresh ? div_u64((u64)*bdi_thresh *
--							background_thresh,
--							dirty_thresh) : 0;
-+	if (wb_bg_thresh)
-+		*wb_bg_thresh = dirty_thresh ? div_u64((u64)*wb_thresh *
-+						       background_thresh,
-+						       dirty_thresh) : 0;
- 
- 	/*
- 	 * In order to avoid the stacked BDI deadlock we need
-@@ -1321,12 +1320,12 @@ static inline void wb_dirty_limits(struct bdi_writeback *wb,
- 	 * actually dirty; with m+n sitting in the percpu
- 	 * deltas.
- 	 */
--	if (*bdi_thresh < 2 * wb_stat_error(wb)) {
-+	if (*wb_thresh < 2 * wb_stat_error(wb)) {
- 		wb_reclaimable = wb_stat_sum(wb, WB_RECLAIMABLE);
--		*bdi_dirty = wb_reclaimable + wb_stat_sum(wb, WB_WRITEBACK);
-+		*wb_dirty = wb_reclaimable + wb_stat_sum(wb, WB_WRITEBACK);
- 	} else {
- 		wb_reclaimable = wb_stat(wb, WB_RECLAIMABLE);
--		*bdi_dirty = wb_reclaimable + wb_stat(wb, WB_WRITEBACK);
-+		*wb_dirty = wb_reclaimable + wb_stat(wb, WB_WRITEBACK);
- 	}
- }
- 
-@@ -1360,9 +1359,9 @@ static void balance_dirty_pages(struct address_space *mapping,
- 
- 	for (;;) {
- 		unsigned long now = jiffies;
--		unsigned long uninitialized_var(bdi_thresh);
-+		unsigned long uninitialized_var(wb_thresh);
- 		unsigned long thresh;
--		unsigned long uninitialized_var(bdi_dirty);
-+		unsigned long uninitialized_var(wb_dirty);
- 		unsigned long dirty;
- 		unsigned long bg_thresh;
- 
-@@ -1380,10 +1379,10 @@ static void balance_dirty_pages(struct address_space *mapping,
- 
- 		if (unlikely(strictlimit)) {
- 			wb_dirty_limits(wb, dirty_thresh, background_thresh,
--					&bdi_dirty, &bdi_thresh, &bg_thresh);
-+					&wb_dirty, &wb_thresh, &bg_thresh);
- 
--			dirty = bdi_dirty;
--			thresh = bdi_thresh;
-+			dirty = wb_dirty;
-+			thresh = wb_thresh;
- 		} else {
- 			dirty = nr_dirty;
- 			thresh = dirty_thresh;
-@@ -1393,10 +1392,10 @@ static void balance_dirty_pages(struct address_space *mapping,
- 		/*
- 		 * Throttle it only when the background writeback cannot
- 		 * catch-up. This avoids (excessively) small writeouts
--		 * when the bdi limits are ramping up in case of !strictlimit.
-+		 * when the wb limits are ramping up in case of !strictlimit.
- 		 *
--		 * In strictlimit case make decision based on the bdi counters
--		 * and limits. Small writeouts when the bdi limits are ramping
-+		 * In strictlimit case make decision based on the wb counters
-+		 * and limits. Small writeouts when the wb limits are ramping
- 		 * up are the price we consciously pay for strictlimit-ing.
- 		 */
- 		if (dirty <= dirty_freerun_ceiling(thresh, bg_thresh)) {
-@@ -1412,24 +1411,23 @@ static void balance_dirty_pages(struct address_space *mapping,
- 
- 		if (!strictlimit)
- 			wb_dirty_limits(wb, dirty_thresh, background_thresh,
--					&bdi_dirty, &bdi_thresh, NULL);
-+					&wb_dirty, &wb_thresh, NULL);
- 
--		dirty_exceeded = (bdi_dirty > bdi_thresh) &&
-+		dirty_exceeded = (wb_dirty > wb_thresh) &&
- 				 ((nr_dirty > dirty_thresh) || strictlimit);
- 		if (dirty_exceeded && !wb->dirty_exceeded)
- 			wb->dirty_exceeded = 1;
- 
- 		wb_update_bandwidth(wb, dirty_thresh, background_thresh,
--				    nr_dirty, bdi_thresh, bdi_dirty,
--				    start_time);
-+				    nr_dirty, wb_thresh, wb_dirty, start_time);
- 
- 		dirty_ratelimit = wb->dirty_ratelimit;
- 		pos_ratio = wb_position_ratio(wb, dirty_thresh,
- 					      background_thresh, nr_dirty,
--					      bdi_thresh, bdi_dirty);
-+					      wb_thresh, wb_dirty);
- 		task_ratelimit = ((u64)dirty_ratelimit * pos_ratio) >>
- 							RATELIMIT_CALC_SHIFT;
--		max_pause = wb_max_pause(wb, bdi_dirty);
-+		max_pause = wb_max_pause(wb, wb_dirty);
- 		min_pause = wb_min_pause(wb, max_pause,
- 					 task_ratelimit, dirty_ratelimit,
- 					 &nr_dirtied_pause);
-@@ -1455,8 +1453,8 @@ static void balance_dirty_pages(struct address_space *mapping,
- 						  dirty_thresh,
- 						  background_thresh,
- 						  nr_dirty,
--						  bdi_thresh,
--						  bdi_dirty,
-+						  wb_thresh,
-+						  wb_dirty,
- 						  dirty_ratelimit,
- 						  task_ratelimit,
- 						  pages_dirtied,
-@@ -1484,8 +1482,8 @@ static void balance_dirty_pages(struct address_space *mapping,
- 					  dirty_thresh,
- 					  background_thresh,
- 					  nr_dirty,
--					  bdi_thresh,
--					  bdi_dirty,
-+					  wb_thresh,
-+					  wb_dirty,
- 					  dirty_ratelimit,
- 					  task_ratelimit,
- 					  pages_dirtied,
-@@ -1508,15 +1506,15 @@ static void balance_dirty_pages(struct address_space *mapping,
- 
- 		/*
- 		 * In the case of an unresponding NFS server and the NFS dirty
--		 * pages exceeds dirty_thresh, give the other good bdi's a pipe
-+		 * pages exceeds dirty_thresh, give the other good wb's a pipe
- 		 * to go through, so that tasks on them still remain responsive.
- 		 *
- 		 * In theory 1 page is enough to keep the comsumer-producer
- 		 * pipe going: the flusher cleans 1 page => the task dirties 1
--		 * more page. However bdi_dirty has accounting errors.  So use
-+		 * more page. However wb_dirty has accounting errors.  So use
- 		 * the larger and more IO friendly wb_stat_error.
- 		 */
--		if (bdi_dirty <= wb_stat_error(wb))
-+		if (wb_dirty <= wb_stat_error(wb))
- 			break;
- 
- 		if (fatal_signal_pending(current))
 -- 
 2.4.0
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
