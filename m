@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 35/51] writeback: make bdi->min/max_ratio handling cgroup writeback aware
-Date: Fri, 22 May 2015 17:13:49 -0400
-Message-ID: <1432329245-5844-36-git-send-email-tj@kernel.org>
+Subject: [PATCH 37/51] writeback: remove bdi_start_writeback()
+Date: Fri, 22 May 2015 17:13:51 -0400
+Message-ID: <1432329245-5844-38-git-send-email-tj@kernel.org>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=asUA5/p1KIODQVqHXnCEFuqSjK6OFhSPlJFqCSRssng=;
-        b=Rqph6sp785qiHolPOlLfHH6NGnz70G14ecmA2qhkjZEUIodmU6uBjhf44Z+53+irUU
-         8yUxCePzMMJ4fJvYqjEs3MdLQ2QBRptbBS5n00uT2k+w28qfBFIux1ZMGsWu8d9rp5kq
-         C03yZuFsBVNYI9gEMLl3nIiq9AZtRiaOnAphZ25VcLs3X6sNRv01/AzptChsG2vGEut9
-         nZ+PA3ht/EfJ4D/weezcVD1Ksbob0dR87dAxogHj0U8z9cQ0dN3VP/gr/i4jC5ISNAvd
-         BaytDm3n8VDlBS4lURA7l4bSeJ//NhfjZypLnp69W5hXAoD7RORjjUvr8qIArmHKkPQv
-         8I7g==
+        bh=BNsENFYW2LbUjUM5C/Kk1SRZ9TfjTBRvdethT1IVIBs=;
+        b=GFV2cRCWAj5kuBc/PafdXuDMo1KmuEVaPHH5/D0H6Xov9sQhPWP8cvcdVgB4C/vgA1
+         perSCO+yjGZ1k/5/NLwcM5lxgyhw7d8kwLwiMCejiR34fCpPAps6Zay1AuywbQr9687j
+         McApsA+Wi9K532zTML2UN8foKDacCHNClwM0Le/3THsWvVC7c+hcEks7QsnaL+vunQzL
+         XzAE/5q0hEZf+cZRMj9MvXcAfVBtAz+8BKKJjKNgBxYj9QDjEm4PaxPkzVnNh7MxEIR1
+         5MIgEjpJ4EdsW/9ph202Rau9iVoMYKfnpXWqUjnN9hLyxsUK9V9oLSr2TyR1oOlYD+t7
+         HGxA==
 In-Reply-To: <1432329245-5844-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,102 +23,148 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru, Tejun Heo <tj@kernel.org>
 
-bdi->min/max_ratio are user-configurable per-bdi knobs which regulate
-dirty limit of each bdi.  For cgroup writeback, they need to be
-further distributed across wb's (bdi_writeback's) belonging to the
-configured bdi.
+bdi_start_writeback() is a thin wrapper on top of
+__wb_start_writeback() which is used only by laptop_mode_timer_fn().
+This patches removes bdi_start_writeback(), renames
+__wb_start_writeback() to wb_start_writeback() and makes
+laptop_mode_timer_fn() use it instead.
 
-This patch introduces wb_min_max_ratio() which distributes
-bdi->min/max_ratio according to a wb's proportion in the total active
-bandwidth of its bdi.
-
-v2: Update wb_min_max_ratio() to fix a bug where both min and max were
-    assigned the min value and avoid calculations when possible.
+This doesn't cause any functional difference and will ease making
+laptop_mode_timer_fn() cgroup writeback aware.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
 ---
- mm/page-writeback.c | 50 ++++++++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 46 insertions(+), 4 deletions(-)
+ fs/fs-writeback.c           | 68 +++++++++++++++++----------------------------
+ include/linux/backing-dev.h |  4 +--
+ mm/page-writeback.c         |  4 +--
+ 3 files changed, 29 insertions(+), 47 deletions(-)
 
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 99b8846..9b55f12 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -155,6 +155,46 @@ static unsigned long writeout_period_time = 0;
-  */
- #define VM_COMPLETIONS_PERIOD_LEN (3*HZ)
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index 921a9e4..79f11af 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -184,33 +184,6 @@ static void wb_queue_work(struct bdi_writeback *wb,
+ 	spin_unlock_bh(&wb->work_lock);
+ }
  
-+#ifdef CONFIG_CGROUP_WRITEBACK
+-static void __wb_start_writeback(struct bdi_writeback *wb, long nr_pages,
+-				 bool range_cyclic, enum wb_reason reason)
+-{
+-	struct wb_writeback_work *work;
+-
+-	if (!wb_has_dirty_io(wb))
+-		return;
+-
+-	/*
+-	 * This is WB_SYNC_NONE writeback, so if allocation fails just
+-	 * wakeup the thread for old dirty data writeback
+-	 */
+-	work = kzalloc(sizeof(*work), GFP_ATOMIC);
+-	if (!work) {
+-		trace_writeback_nowork(wb->bdi);
+-		wb_wakeup(wb);
+-		return;
+-	}
+-
+-	work->sync_mode	= WB_SYNC_NONE;
+-	work->nr_pages	= nr_pages;
+-	work->range_cyclic = range_cyclic;
+-	work->reason	= reason;
+-
+-	wb_queue_work(wb, work);
+-}
+-
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 
+ /**
+@@ -240,22 +213,31 @@ EXPORT_SYMBOL_GPL(inode_congested);
+ 
+ #endif	/* CONFIG_CGROUP_WRITEBACK */
+ 
+-/**
+- * bdi_start_writeback - start writeback
+- * @bdi: the backing device to write from
+- * @nr_pages: the number of pages to write
+- * @reason: reason why some writeback work was initiated
+- *
+- * Description:
+- *   This does WB_SYNC_NONE opportunistic writeback. The IO is only
+- *   started when this function returns, we make no guarantees on
+- *   completion. Caller need not hold sb s_umount semaphore.
+- *
+- */
+-void bdi_start_writeback(struct backing_dev_info *bdi, long nr_pages,
+-			enum wb_reason reason)
++void wb_start_writeback(struct bdi_writeback *wb, long nr_pages,
++			bool range_cyclic, enum wb_reason reason)
+ {
+-	__wb_start_writeback(&bdi->wb, nr_pages, true, reason);
++	struct wb_writeback_work *work;
 +
-+static void wb_min_max_ratio(struct bdi_writeback *wb,
-+			     unsigned long *minp, unsigned long *maxp)
-+{
-+	unsigned long this_bw = wb->avg_write_bandwidth;
-+	unsigned long tot_bw = atomic_long_read(&wb->bdi->tot_write_bandwidth);
-+	unsigned long long min = wb->bdi->min_ratio;
-+	unsigned long long max = wb->bdi->max_ratio;
++	if (!wb_has_dirty_io(wb))
++		return;
 +
 +	/*
-+	 * @wb may already be clean by the time control reaches here and
-+	 * the total may not include its bw.
++	 * This is WB_SYNC_NONE writeback, so if allocation fails just
++	 * wakeup the thread for old dirty data writeback
 +	 */
-+	if (this_bw < tot_bw) {
-+		if (min) {
-+			min *= this_bw;
-+			do_div(min, tot_bw);
-+		}
-+		if (max < 100) {
-+			max *= this_bw;
-+			do_div(max, tot_bw);
-+		}
++	work = kzalloc(sizeof(*work), GFP_ATOMIC);
++	if (!work) {
++		trace_writeback_nowork(wb->bdi);
++		wb_wakeup(wb);
++		return;
 +	}
 +
-+	*minp = min;
-+	*maxp = max;
-+}
++	work->sync_mode	= WB_SYNC_NONE;
++	work->nr_pages	= nr_pages;
++	work->range_cyclic = range_cyclic;
++	work->reason	= reason;
 +
-+#else	/* CONFIG_CGROUP_WRITEBACK */
-+
-+static void wb_min_max_ratio(struct bdi_writeback *wb,
-+			     unsigned long *minp, unsigned long *maxp)
-+{
-+	*minp = wb->bdi->min_ratio;
-+	*maxp = wb->bdi->max_ratio;
-+}
-+
-+#endif	/* CONFIG_CGROUP_WRITEBACK */
-+
- /*
-  * In a memory zone, there is a certain amount of pages we consider
-  * available for the page cache, which is essentially the number of
-@@ -539,9 +579,9 @@ static unsigned long hard_dirty_limit(unsigned long thresh)
-  */
- unsigned long wb_dirty_limit(struct bdi_writeback *wb, unsigned long dirty)
- {
--	struct backing_dev_info *bdi = wb->bdi;
- 	u64 wb_dirty;
- 	long numerator, denominator;
-+	unsigned long wb_min_ratio, wb_max_ratio;
- 
- 	/*
- 	 * Calculate this BDI's share of the dirty ratio.
-@@ -552,9 +592,11 @@ unsigned long wb_dirty_limit(struct bdi_writeback *wb, unsigned long dirty)
- 	wb_dirty *= numerator;
- 	do_div(wb_dirty, denominator);
- 
--	wb_dirty += (dirty * bdi->min_ratio) / 100;
--	if (wb_dirty > (dirty * bdi->max_ratio) / 100)
--		wb_dirty = dirty * bdi->max_ratio / 100;
-+	wb_min_max_ratio(wb, &wb_min_ratio, &wb_max_ratio);
-+
-+	wb_dirty += (dirty * wb_min_ratio) / 100;
-+	if (wb_dirty > (dirty * wb_max_ratio) / 100)
-+		wb_dirty = dirty * wb_max_ratio / 100;
- 
- 	return wb_dirty;
++	wb_queue_work(wb, work);
  }
+ 
+ /**
+@@ -1219,7 +1201,7 @@ void wakeup_flusher_threads(long nr_pages, enum wb_reason reason)
+ 
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(bdi, &bdi_list, bdi_list)
+-		__wb_start_writeback(&bdi->wb, nr_pages, false, reason);
++		wb_start_writeback(&bdi->wb, nr_pages, false, reason);
+ 	rcu_read_unlock();
+ }
+ 
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index c797980..0ff40c2 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -25,8 +25,8 @@ int bdi_register(struct backing_dev_info *bdi, struct device *parent,
+ int bdi_register_dev(struct backing_dev_info *bdi, dev_t dev);
+ void bdi_unregister(struct backing_dev_info *bdi);
+ int __must_check bdi_setup_and_register(struct backing_dev_info *, char *);
+-void bdi_start_writeback(struct backing_dev_info *bdi, long nr_pages,
+-			enum wb_reason reason);
++void wb_start_writeback(struct bdi_writeback *wb, long nr_pages,
++			bool range_cyclic, enum wb_reason reason);
+ void bdi_start_background_writeback(struct backing_dev_info *bdi);
+ void wb_workfn(struct work_struct *work);
+ void wb_wakeup_delayed(struct bdi_writeback *wb);
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 9b55f12..6301af2 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -1729,8 +1729,8 @@ void laptop_mode_timer_fn(unsigned long data)
+ 	 * threshold
+ 	 */
+ 	if (bdi_has_dirty_io(&q->backing_dev_info))
+-		bdi_start_writeback(&q->backing_dev_info, nr_pages,
+-					WB_REASON_LAPTOP_TIMER);
++		wb_start_writeback(&q->backing_dev_info.wb, nr_pages, true,
++				   WB_REASON_LAPTOP_TIMER);
+ }
+ 
+ /*
 -- 
 2.4.0
 
