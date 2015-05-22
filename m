@@ -1,76 +1,62 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 38/51] writeback: make laptop_mode_timer_fn() handle multiple bdi_writeback's
-Date: Fri, 22 May 2015 17:13:52 -0400
-Message-ID: <1432329245-5844-39-git-send-email-tj@kernel.org>
+Subject: [PATCH 50/51] mpage: make __mpage_writepage() honor cgroup writeback
+Date: Fri, 22 May 2015 17:14:04 -0400
+Message-ID: <1432329245-5844-51-git-send-email-tj@kernel.org>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=OvArfS/8m6Ejf0GPVIZ+eAtFls6p+JMWA1/pUW9u7TY=;
-        b=xtx1PKdehUAp+Rszs5B/PldmOLFLGlw5NeLIpz0YrJE5WblUBtanU7FOVkBuF0zn0v
-         uTOXehmbw/T7fRIOEJ3DlfvlgVt8tNZv4H0eWpR/MLSsvtwqq9H/380ZA4df9+V9G8lG
-         wxcroLTHYuATZAnuUZVe6SU/XlFUop228VDN3pfDdlIFuWVJ2acRu6Obv3BZrrFPK0sA
-         EfXBJpVKkNcMK2fjgedhFryGc218dhK0ro6eeQUvqxFcOwBdBbWBf3jsplYeCL55YWB+
-         Dqap/n8vfqgn2W+10tmNHUhKgzxULjmt8+MiAVg3KmryyNZaCLnXzyTKMvoSH6YsX5sB
-         AoIA==
+        bh=uRsaEDP9nmh455/F+sCDNCaI6EnJuSqTsUGMBkr/ioY=;
+        b=XkPxix89Yvez4JxzILedkMO9NU975D072l3ouggjhTs+smm5IciyI36ps321b1fglm
+         MSV2XR4CoKzQwUqli/JxPIiStFyUFPSWcBUKj+D2F5i/1hpWfyBl4rVCWMAJ5y5y6cDk
+         3EIq+gU7bHvpy1b5nhbzCC1LdDHyMTZp0EcY2RlF2H12W94GV9X6Ehj9wUS+FvRhFHFI
+         pd4oAllK9350h7Eh4F+ANDn7YSlRoKARiStTW6GYjskFlpeyN8GYa2IeLm1GYIQKCt6L
+         WpHuwZHIFdZ3nnfgRCUnp3mq9NPk/DNXj+v+7mkHk6i7TiNdZwv1P/baHP+sDRibr2vW
+         j94g==
 In-Reply-To: <1432329245-5844-1-git-send-email-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru, Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>
 
-For cgroup writeback support, all bdi-wide operations should be
-distributed to all its wb's (bdi_writeback's).
+__mpage_writepage() is used to implement mpage_writepages() which in
+turn is used for ->writepages() of various filesystems.  All writeback
+logic is now updated to handle cgroup writeback and the block cgroup
+to issue IOs for is encoded in writeback_control and can be retrieved
+from the inode; however, __mpage_writepage() currently ignores the
+blkcg indicated by the inode and issues all bio's without explicit
+blkcg association.
 
-This patch updates laptop_mode_timer_fn() so that it invokes
-wb_start_writeback() on all wb's rather than just the root one.  As
-the intent is writing out all dirty data, there's no reason to split
-the number of pages to write.
+This patch updates __mpage_writepage() so that the issued bio's are
+associated with inode_to_writeback_blkcg_css(inode).
+
+v2: Updated for per-inode wb association.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>
 ---
- mm/page-writeback.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ fs/mpage.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 6301af2..682e3a6 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -1723,14 +1723,20 @@ void laptop_mode_timer_fn(unsigned long data)
- 	struct request_queue *q = (struct request_queue *)data;
- 	int nr_pages = global_page_state(NR_FILE_DIRTY) +
- 		global_page_state(NR_UNSTABLE_NFS);
-+	struct bdi_writeback *wb;
-+	struct wb_iter iter;
+diff --git a/fs/mpage.c b/fs/mpage.c
+index 3e79220..a3ccb0b 100644
+--- a/fs/mpage.c
++++ b/fs/mpage.c
+@@ -605,6 +605,8 @@ static int __mpage_writepage(struct page *page, struct writeback_control *wbc,
+ 				bio_get_nr_vecs(bdev), GFP_NOFS|__GFP_HIGH);
+ 		if (bio == NULL)
+ 			goto confused;
++
++		bio_associate_blkcg(bio, inode_to_wb_blkcg_css(inode));
+ 	}
  
  	/*
- 	 * We want to write everything out, not just down to the dirty
- 	 * threshold
- 	 */
--	if (bdi_has_dirty_io(&q->backing_dev_info))
--		wb_start_writeback(&q->backing_dev_info.wb, nr_pages, true,
--				   WB_REASON_LAPTOP_TIMER);
-+	if (!bdi_has_dirty_io(&q->backing_dev_info))
-+		return;
-+
-+	bdi_for_each_wb(wb, &q->backing_dev_info, &iter, 0)
-+		if (wb_has_dirty_io(wb))
-+			wb_start_writeback(wb, nr_pages, true,
-+					   WB_REASON_LAPTOP_TIMER);
- }
- 
- /*
 -- 
 2.4.0
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
