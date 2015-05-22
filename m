@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 42/51] writeback: make wakeup_dirtytime_writeback() handle multiple bdi_writeback's
-Date: Fri, 22 May 2015 17:13:56 -0400
-Message-ID: <1432329245-5844-43-git-send-email-tj@kernel.org>
+Subject: [PATCH 43/51] writeback: add wb_writeback_work->auto_free
+Date: Fri, 22 May 2015 17:13:57 -0400
+Message-ID: <1432329245-5844-44-git-send-email-tj@kernel.org>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=F/UbTBuOqKu4IZO4Zo2en7kEpp3tlpJuMim1YI45vgA=;
-        b=GbbkPujf8J5EP+PAOZ2I9ZT3vkgfvlRKzMN+YeLdgtCzdNlCg1Wgh6kTNcTZZCH2Cq
-         wPPQ/vK/6jCugxPM1lKcZA9Ow/wA0J2SQ6g2qHr+S0rhpBLd92NuVXXt+Fbfw/rOAK57
-         CXFEaLHrnMfrIxWn87z/go4s0RVcKmebMxxTUvorTGrDtxdYvzROHdfqKuzYYcCNOX2X
-         z7li70wx5v01ObKtFvyvRvZkdYCBGMDrW75y79pZp/7P4zlxUovR8zjTMrZc19S3N0Hn
-         z0HT2fR63dopIVVAZgkEDbCJb/a/oMrLchislkUocCuN+uOnkUqeledoDgxvjG5z4UYB
-         kExw==
+        bh=/I4BM7K2yCvh4PQKJZoNNiMUNuZ7Alp/mu1Nj/jeuCE=;
+        b=GcGWrfccZ0C2b1WUV6Rz4VTlM12zxpxChbY4tuBRpIBfr5Q6OfCC2Uj3F2aWlifIan
+         Z2bRUdJsGMXY5rlRkPXTu87MUk0cEZJJ3SxHEJ777J2PfEL2wRY2p3VfuoxYvp6SSTFB
+         KaCYB+3piacg1jeJLNtqma0tVyS6yGDeJwfdd8W5GMkrTjHbzp4EiicggitB6d3wDOzl
+         RFaWjPBGLFUO01NwGTkVNvNqNqpptiUnyeqmz2nN/9uklJKb0oL55PmfvRkS/1Z4xnbR
+         pl55tuPmz9lmljw7fDx7HCRhhL7+KmE+8AD6zjCRA7C0OqJI6boeiwvgWP7NvjvVkNi/
+         Znqw==
 In-Reply-To: <1432329245-5844-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -21,40 +21,65 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru, Tejun Heo <tj@kernel.org>, Theodore Ts'o <tytso@mit.edu>
+Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru, Tejun Heo <tj@kernel.org>
 
-wakeup_dirtytime_writeback() currently only starts writeback on the
-root wb (bdi_writeback).  For cgroup writeback support, update the
-function to check all wbs.
+Currently, a wb_writeback_work is freed automatically on completion if
+it doesn't have ->done set.  Add wb_writeback_work->auto_free to make
+the switch explicit.  This will help cgroup writeback support where
+waiting for completion and whether to free automatically don't
+necessarily move together.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Jan Kara <jack@suse.cz>
-Cc: Theodore Ts'o <tytso@mit.edu>
 ---
- fs/fs-writeback.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ fs/fs-writeback.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
 diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 508e10c..8ae212e 100644
+index 8ae212e..22f1def 100644
 --- a/fs/fs-writeback.c
 +++ b/fs/fs-writeback.c
-@@ -1260,9 +1260,12 @@ static void wakeup_dirtytime_writeback(struct work_struct *w)
+@@ -47,6 +47,7 @@ struct wb_writeback_work {
+ 	unsigned int range_cyclic:1;
+ 	unsigned int for_background:1;
+ 	unsigned int for_sync:1;	/* sync(2) WB_SYNC_ALL writeback */
++	unsigned int auto_free:1;	/* free on completion */
+ 	enum wb_reason reason;		/* why was writeback initiated? */
  
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(bdi, &bdi_list, bdi_list) {
--		if (list_empty(&bdi->wb.b_dirty_time))
--			continue;
--		wb_wakeup(&bdi->wb);
-+		struct bdi_writeback *wb;
-+		struct wb_iter iter;
-+
-+		bdi_for_each_wb(wb, bdi, &iter, 0)
-+			if (!list_empty(&bdi->wb.b_dirty_time))
-+				wb_wakeup(&bdi->wb);
+ 	struct list_head list;		/* pending work list */
+@@ -258,6 +259,7 @@ void wb_start_writeback(struct bdi_writeback *wb, long nr_pages,
+ 	work->nr_pages	= nr_pages;
+ 	work->range_cyclic = range_cyclic;
+ 	work->reason	= reason;
++	work->auto_free	= 1;
+ 
+ 	wb_queue_work(wb, work);
+ }
+@@ -1141,19 +1143,16 @@ static long wb_do_writeback(struct bdi_writeback *wb)
+ 
+ 	set_bit(WB_writeback_running, &wb->state);
+ 	while ((work = get_next_work_item(wb)) != NULL) {
++		struct completion *done = work->done;
+ 
+ 		trace_writeback_exec(wb->bdi, work);
+ 
+ 		wrote += wb_writeback(wb, work);
+ 
+-		/*
+-		 * Notify the caller of completion if this is a synchronous
+-		 * work item, otherwise just free it.
+-		 */
+-		if (work->done)
+-			complete(work->done);
+-		else
++		if (work->auto_free)
+ 			kfree(work);
++		if (done)
++			complete(done);
  	}
- 	rcu_read_unlock();
- 	schedule_delayed_work(&dirtytime_work, dirtytime_expire_interval * HZ);
+ 
+ 	/*
 -- 
 2.4.0
 
