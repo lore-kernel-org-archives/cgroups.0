@@ -1,77 +1,57 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: add explicit cast and comment for return type
- conversion
-Date: Sun, 24 May 2015 16:35:28 -0400
-Message-ID: <20150524203528.GB7099@htj.duckdns.org>
-References: <1432472872-3578-1-git-send-email-hofrat@osadl.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 11/51] memcg: implement mem_cgroup_css_from_page()
+Date: Sun, 24 May 2015 17:24:40 -0400
+Message-ID: <20150524212440.GD7099@htj.duckdns.org>
+References: <1432329245-5844-1-git-send-email-tj@kernel.org>
+ <1432329245-5844-12-git-send-email-tj@kernel.org>
+ <20150522232831.GB6485@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=6YBkdT24bPxDWONh93YlvSE3F0K6x8peDEwOAVKi9x8=;
-        b=OB5m7uJgIg56hTGqjvTkQUqwen1zfIm0S1X1kwg4EO+pEPZBhQ4+bYZjKFwpJWMjd7
-         Fsx3L3kaSsnd8AeXUcQmJNfh7SKzcoNxrfnj5SV+Fzvy0oumWMG5JVSZB8yw4Pvjqs/N
-         CmskU1bEv1j+LzZWzbsVhO/LAXLZ8KLOpj372DaRsjEVincDKYYrM3cmZPlF3/KnptqB
-         xnwIjyWemktNvo/nklwErbfk6D3wf/3wSldNYP4lGMUwQq4OGkjDW3wyCf3+innuWDk8
-         hvO7VhorB9/SQNsHfNbIGs1IGkC8rog7+QuZ4r/QCVnk/8X9yqXSfryuvVcT+74zKImU
-         IQMA==
+        bh=TjyLHjaAfRWW8BpzjmO4RXdtsD5opO3j1k6kXUGFOv4=;
+        b=Jt8nYhFnMpO4sK4S2D9zVcvb58Ptja6YSRPtw2NzVzd10qUyIStixjxHJAEVxSeNqV
+         jgcs3gI3UmyrdcJjcTExFwMxDf2yzgSqyiWyLojegov4u3K9338nnNpyx1lPGRG8S9pl
+         a26vBPTXSjTFddd5T367VCM5MUUdRat2+Zs49kySWzyY9oHHQf+iFW0q9Mvc4nSPyY8I
+         v/vxWBd/wxwFxk9WuDpMnY94nCPO4l97/F1YtitJksYLo+291FzjBFqQ4yvYsOWexqA6
+         Qu+EUoXsEXWcOZ4qLirSMw1T4aeV16WjagthL/v81whH9+sAV46qrlYeR9aRdL/zWXjD
+         JwPw==
 Content-Disposition: inline
-In-Reply-To: <1432472872-3578-1-git-send-email-hofrat-Q945KHDl0DbYtjvyW6yDsg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20150522232831.GB6485@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Nicholas Mc Guire <hofrat-Q945KHDl0DbYtjvyW6yDsg@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru
 
 Hello,
 
-On Sun, May 24, 2015 at 03:07:52PM +0200, Nicholas Mc Guire wrote:
-> Type-checking coccinelle spatches are being used to locate type mismatches
-> between function signatures and return values in this case this produced:
-> ./kernel/cgroup.c:2525 WARNING: return of wrong type
-> 	ssize_t != size_t, 
+On Fri, May 22, 2015 at 07:28:31PM -0400, Johannes Weiner wrote:
+> replace_page_cache() can clear page->mem_cgroup even when the page
+> still has references, so unfortunately you must hold the page lock
+> when calling this function.
 > 
-> Returning unsigned types converted to a signed type can be problematic
-> but in this case the size_t is <= PATH_MAX which is less than ulong/2 so
-> the conversion is safe - to make static code checking happy this is 
-> resolved by an explicit cast and appropriate comment.
-> 
-> Patch was compile tested with x86_64_defconfig (implies CONFIG_CGROUPS=y)
-> 
-> Patch is against 4.1-rc4 (localversion-next is -next-20150522)
-> 
-> Signed-off-by: Nicholas Mc Guire <hofrat-Q945KHDl0DbYtjvyW6yDsg@public.gmane.org>
-> ---
-> 
-> Not sure if "cleanups" like this are acceptable - in this case I did not
-> find any better way to make static code checkers happy though.
-> 
->  kernel/cgroup.c |    6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index b91177f..04de621 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -2523,7 +2523,11 @@ static ssize_t cgroup_release_agent_write(struct kernfs_open_file *of,
->  		sizeof(cgrp->root->release_agent_path));
->  	spin_unlock(&release_agent_path_lock);
->  	cgroup_kn_unlock(of->kn);
-> -	return nbytes;
-> +
-> +	/* the path of the release notifier is <= PATH_MAX
-> +	 * so "downsizing" to signed long is safe here
-> +	 */
-> +	return (ssize_t)nbytes;
+> I haven't checked how you use this - chances are you always have the
+> page locked anyways - but it probably needs a comment.
 
-idk, does this actually help anything?  This isn't different from any
-other implicit type casts.  Are we gonna convert all downward implicit
-casts to be explicit?
+Hmmm... as replace_page_cache_page() is used only by fuse and fuse's
+bdi doesn't go through the usual writeback accounting which is
+necessary for cgroup writeback support anyway, so I don't think this
+presents an actual problem.  I'll add a warning in
+replace_page_cache_page() which triggers when it's used on a bdi which
+has cgroup writeback enabled and add comments explaining what's going
+on.
 
 Thanks.
 
 -- 
 tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
