@@ -1,38 +1,46 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 11/51] memcg: implement mem_cgroup_css_from_page()
-Date: Fri, 22 May 2015 19:28:31 -0400
-Message-ID: <20150522232831.GB6485@cmpxchg.org>
-References: <1432329245-5844-1-git-send-email-tj@kernel.org>
- <1432329245-5844-12-git-send-email-tj@kernel.org>
+From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 2/3] sched, cgroup: replace signal_struct->group_rwsem
+ with a global percpu_rwsem
+Date: Sun, 24 May 2015 10:35:48 +0800
+Message-ID: <55613904.7060502@huawei.com>
+References: <1431549318-16756-1-git-send-email-tj@kernel.org> <1431549318-16756-3-git-send-email-tj@kernel.org> <20150519151659.GF3644@twins.programming.kicks-ass.net> <20150519155133.GM24861@htj.duckdns.org> <555C5C71.80200@huawei.com> <20150521203943.GS24861@htj.duckdns.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1432329245-5844-12-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <20150521203943.GS24861-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, May 22, 2015 at 05:13:25PM -0400, Tejun Heo wrote:
-> +/**
-> + * mem_cgroup_css_from_page - css of the memcg associated with a page
-> + * @page: page of interest
-> + *
-> + * This function is guaranteed to return a valid cgroup_subsys_state and
-> + * the returned css remains accessible until @page is released.
-> + */
-> +struct cgroup_subsys_state *mem_cgroup_css_from_page(struct page *page)
-> +{
-> +	if (page->mem_cgroup)
-> +		return &page->mem_cgroup->css;
-> +	return &root_mem_cgroup->css;
-> +}
+On 2015/5/22 4:39, Tejun Heo wrote:
+> Hello, Li.
+> 
+> On Wed, May 20, 2015 at 06:05:37PM +0800, Zefan Li wrote:
+>>> The latency is bound by synchronize_sched_expedited().  Given the way
+>>> cgroups are used in majority of setups (process migration happening
+>>> only during service / session setups), I think this should be okay.
+>>
+>> Actually process migration can happen quite frequently, for example in
+>> Android phones, and that's why Google had an out-of-tree patch to remove
+>> the synchronize_rcu() in that path, which turned out to be buggy.
+> 
+> It's still not a very frequent operation tho.  We're talking about
+> users switching fore/background jobs here and the expedited
+> synchronization w/ preemption enabled doesn't take much time.  In
+> addition, as it currently stands, android is doing memory charge
+> immigration on each fore/background switches.  I'm pretty doubtful
+> this would make any difference.
+> 
 
-replace_page_cache() can clear page->mem_cgroup even when the page
-still has references, so unfortunately you must hold the page lock
-when calling this function.
+I did some testing with my laptop.
 
-I haven't checked how you use this - chances are you always have the
-page locked anyways - but it probably needs a comment.
+Moving a task between 2 cgroups for 10W times with one or two threads:
+
+                  1T        2T
+orig              3.36s     3.65s
+orig+tj           3.55s     6.31s
+orig+sync_rcu     16.69s    28.47s    (only 1000 times)
+
+The overhead looks acceptable.
