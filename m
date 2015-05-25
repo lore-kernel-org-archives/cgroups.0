@@ -1,46 +1,50 @@
-From: Nicholas Mc Guire <der.herr-kA1LtwSENNE@public.gmane.org>
-Subject: Re: [PATCH] cgroup: add explicit cast and comment for return type
-	conversion
-Date: Mon, 25 May 2015 13:50:47 +0200
-Message-ID: <20150525115047.GA7413@opentech.at>
-References: <1432472872-3578-1-git-send-email-hofrat@osadl.org> <20150524203528.GB7099@htj.duckdns.org> <20150525055742.GE1397@opentech.at> <20150525114045.GA526@htj.duckdns.org>
+From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 3/7] memcg: immigrate charges only when a threadgroup
+ leader is moved
+Date: Mon, 25 May 2015 18:06:26 +0200
+Message-ID: <20150525160626.GC19389@dhcp22.suse.cz>
+References: <20150519212754.GO24861@htj.duckdns.org>
+ <20150520131044.GA28678@dhcp22.suse.cz>
+ <20150520132158.GB28678@dhcp22.suse.cz>
+ <20150520175302.GA7287@redhat.com>
+ <20150520202221.GD14256@dhcp22.suse.cz>
+ <20150521192716.GA21304@redhat.com>
+ <20150522093639.GE5109@dhcp22.suse.cz>
+ <20150522162900.GA8955@redhat.com>
+ <20150522165734.GH5109@dhcp22.suse.cz>
+ <20150522183042.GF26770@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20150525114045.GA526-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <20150522183042.GF26770-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Nicholas Mc Guire <hofrat-Q945KHDl0DbYtjvyW6yDsg@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Mon, 25 May 2015, Tejun Heo wrote:
-
-> Hello, Nicholas.
+On Fri 22-05-15 20:30:42, Oleg Nesterov wrote:
+> On 05/22, Michal Hocko wrote:
+> >
+> > On Fri 22-05-15 18:29:00, Oleg Nesterov wrote:
+> > >
+> > > In the likely case (if CLONE_VM without CLONE_THREAD was not used) the
+> > > last for_each_process() in mm_update_next_owner() will find another thread
+> > > from the same group.
+> >
+> > My understanding was that for_each_process will iterate only over
+> > processes (represented by the thread group leaders).
 > 
-> On Mon, May 25, 2015 at 07:57:42AM +0200, Nicholas Mc Guire wrote:
-> > nop not downward but signed/unsigned  if it were down it would not be
-> > a problem but signed/unsigned can be - for those cases where it can't
-> > be fixed up by changing the declarations or return variable types 
-> > explicit cast might make sense - as noted in the patch Im not sure either
-> > if this form of cleanups is helpful. 
-> > 
-> > In the kernel core there are about 400 signed/unsigned implicit 
-> > conversions (about 3k in the entire kernel) which is what Im trying to 
-> > remove or if that is not possible in a resonable way mark as false positive.
-> 
-> I still don't get it.  What does this buy us actually?  If we continue
-> to do this, people would just learn to add explicit cast when doing
-> sign conversions.  We just converge to a different behavior without
-> actually gaining any protection.  What's the benefit of doing this?
->
-that would be no benefit of course - the goal is not to simply put casts
-in but to use casts as last resort if type cleanups are not doable or if
-the type missmatch is intended - the cast then should document that it
-is intentional and comments explain why it is justified. If that were the
-result of type cleanup I think it would benefit the kernel code as I 
-suspect that quite a few of the type missmatches simply happened.
+> Yes. But note the inner for_each_thread() loop. And note that we
+> we need this loop exactly because the leader can be zombie.
 
-thx!
-hofrat
+I was too vague, sorry about that. What I meant was that
+for_each_process would pick up a group leader and the inner
+for_each_thread will return it as the first element in the list. As the
+leader waits for other threads then it should stay on the thread_node
+list as well. But I might be easily wrong here because the whole thing
+is really quite confusing to be honest.
+-- 
+Michal Hocko
+SUSE Labs
