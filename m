@@ -1,58 +1,61 @@
-From: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 3/7] memcg: immigrate charges only when a threadgroup
-	leader is moved
-Date: Mon, 25 May 2015 19:06:01 +0200
-Message-ID: <20150525170601.GA438@redhat.com>
-References: <20150520131044.GA28678@dhcp22.suse.cz> <20150520132158.GB28678@dhcp22.suse.cz> <20150520175302.GA7287@redhat.com> <20150520202221.GD14256@dhcp22.suse.cz> <20150521192716.GA21304@redhat.com> <20150522093639.GE5109@dhcp22.suse.cz> <20150522162900.GA8955@redhat.com> <20150522165734.GH5109@dhcp22.suse.cz> <20150522183042.GF26770@redhat.com> <20150525160626.GC19389@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: add explicit cast and comment for return type
+ conversion
+Date: Mon, 25 May 2015 20:05:38 -0400
+Message-ID: <20150526000538.GH7099@htj.duckdns.org>
+References: <1432472872-3578-1-git-send-email-hofrat@osadl.org>
+ <20150524203528.GB7099@htj.duckdns.org>
+ <20150525055742.GE1397@opentech.at>
+ <20150525114045.GA526@htj.duckdns.org>
+ <20150525115047.GA7413@opentech.at>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=CSEkXJaK3nm/5UBjW4+SaTfMV2kkLb6E3zDQUsAS2gM=;
+        b=v2IOahhoZL6YTe+6d3NnSNR0+JwIaDlXSeYrfgVGF20fwyO1KrPO4oX+al9wGAkCu+
+         E+f+JO6pgLbK7R9LEucnyGNrh/SFyKD3Fpew7Wc1Afdmgg6CIA7W7uBzKgkd9Sdm7+RK
+         3ThE4j4UTUpoXfUMNaXntUFom3rPV/Ot31Tifh3E8ZObgwRj24q2NG0MMaMpoQIzu0KI
+         5+ibpwus9NAL10SNyeO+OcCLnCXn2C5PaWxpqY1Vl3n/0ve7zFWcZghTztMtobeFVmfb
+         c1k5oJq/Sg3LBjW9FTd4e6JA4lP4txIT4XwGTZJ0DYet4VGLPl2ZlR8Oh8iA1t0Yx8f0
+         erzg==
 Content-Disposition: inline
-In-Reply-To: <20150525160626.GC19389-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <20150525115047.GA7413-AxMHDufBahDk7+2FdBfRIA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Nicholas Mc Guire <der.herr-kA1LtwSENNE@public.gmane.org>
+Cc: Nicholas Mc Guire <hofrat-Q945KHDl0DbYtjvyW6yDsg@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 05/25, Michal Hocko wrote:
->
-> On Fri 22-05-15 20:30:42, Oleg Nesterov wrote:
-> > On 05/22, Michal Hocko wrote:
-> > >
-> > > On Fri 22-05-15 18:29:00, Oleg Nesterov wrote:
-> > > >
-> > > > In the likely case (if CLONE_VM without CLONE_THREAD was not used) the
-> > > > last for_each_process() in mm_update_next_owner() will find another thread
-> > > > from the same group.
-> > >
-> > > My understanding was that for_each_process will iterate only over
-> > > processes (represented by the thread group leaders).
-> >
-> > Yes. But note the inner for_each_thread() loop. And note that we
-> > we need this loop exactly because the leader can be zombie.
->
-> I was too vague, sorry about that.
+Hello, Nicholas.
 
-Looks like, we confused each other somehow ;) Not sure I understand your
-concerns...
+On Mon, May 25, 2015 at 01:50:47PM +0200, Nicholas Mc Guire wrote:
+> that would be no benefit of course - the goal is not to simply put casts
+> in but to use casts as last resort if type cleanups are not doable or if
+> the type missmatch is intended - the cast then should document that it
+> is intentional and comments explain why it is justified. If that were the
+> result of type cleanup I think it would benefit the kernel code as I 
+> suspect that quite a few of the type missmatches simply happened.
 
-But,
+I'm having a bit of hard time agreeing with the utility of this.  If
+you can fix up the variable type to go away, sure, but adding
+unnecessary explicit cast and comment for something this trivial?  I'm
+not sure.  I mean, C is not a language which can propagate param
+constraints to the return types.  e.g. strnlen() will happily return
+size_t even when the maximum length is e.g. int.  We simply aren't
+writing in a language where these things are easily distinguished and
+I'm not sure shoehorning explicit constraints all over the source code
+brings enough benefit to justify the added noise.
 
-> What I meant was that
-> for_each_process would pick up a group leader
+If you can identify actual problem cases, awesome.  If some can easily
+be removed by tweaking types to match the actual usage, great too, but
+let's please not do this explicit version of implicit casts and
+pointless comments.
 
-Yes. In the case above it will find the caller (current) too,
+Thanks.
 
-> and the inner
-> for_each_thread will return it as the first element in the list.
-
-Yes, and this will be "current" task. But current->mm == NULL, so
-for_each_thread() will continue and find another thread which becomes
-the new mm->owner.
-
-Just in case, note the BUG_ON(c == p). I think that BUG_ON(p->mm) at
-the start will look much better. This is what mm_update_next_owner()
-actually assumes.
-
-Oleg.
+-- 
+tejun
