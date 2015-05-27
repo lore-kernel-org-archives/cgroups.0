@@ -1,106 +1,53 @@
-From: Dimitri John Ledkov <dimitri.j.ledkov-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 1/2] connector: add cgroup release event report to proc connector
-Date: Wed, 27 May 2015 13:37:14 +0100
-Message-ID: <CAK7xexkFm_BZ9sdB3VAZ-WGiikBeAQfaimXjggEtac+M2diV-g@mail.gmail.com>
-References: <1432678051-4372-1-git-send-email-dimitri.j.ledkov@intel.com> <5565A8F9.8040601@huawei.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH 11/51] memcg: implement mem_cgroup_css_from_page()
+Date: Wed, 27 May 2015 08:58:42 -0400
+Message-ID: <20150527125842.GA19856@cmpxchg.org>
+References: <1432329245-5844-1-git-send-email-tj@kernel.org>
+ <1432329245-5844-12-git-send-email-tj@kernel.org>
+ <20150522232831.GB6485@cmpxchg.org>
+ <20150524212440.GD7099@htj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5565A8F9.8040601-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20150524212440.GD7099-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org
 
-On 27 May 2015 at 12:22, Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
-> On 2015/5/27 6:07, Dimitri John Ledkov wrote:
->> Add a kernel API to send a proc connector notification that a cgroup
->> has become empty. A userspace daemon can then act upon such
->> information, and usually clean-up and remove such a group as it's no
->> longer needed.
->>
->> Currently there are two other ways (one for current & one for unified
->> cgroups) to receive such notifications, but they either involve
->> spawning userspace helper or monitoring a lot of files. This is a
->> firehose of all such events instead from a single place.
->>
->> In the current cgroups structure the way to get notifications is by
->> enabling `release_agent' and setting `notify_on_release' for a given
->> cgroup hierarchy. This will then spawn userspace helper with removed
->> cgroup as an argument. It has been acknowledged that this is
->> expensive, especially in the exit-heavy workloads. In userspace this
->> is currently used by systemd and CGmanager that I know of, both of
->> agents establish connection to the long running daemon and pass the
->> message to it. As a courtesy to other processes, such an event is
->> sometimes forwarded further on, e.g. systemd forwards it to the system
->> DBus.
->>
->> In the future/unified cgroups structure support for `release_agent' is
->> removed, without a direct replacement. However, there is a new
->> `cgroup.populated' file exposed that recursively reports if there are
->> any tasks in a given cgroup hierarchy. It's a very good flag to
->> quickly/lazily scan for empty things, however one would need to
->> establish inotify watch on each and every cgroup.populated file at
->> cgroup setup time (ideally before any pids enter said cgroup). Thus
->> again anybody else, but the original creator of a given cgroup, has a
->> chance to reliably monitor cgroup becoming empty (since there is no
->> reliable recursive inotify watch).
->>
->> Hence, the addition to the proc connector firehose. Multiple things,
->> albeit with a CAP_NET_ADMIN in the init pid/user namespace), could
->> connect and monitor cgroups release notifications. In a way, this
->> repeats udev history, at first it was a userspace helper, which later
->> became a netlink socket. And I hope, that proc connector is a
->> naturally good fit for this notification type.
->>
->> For precisely when cgroups should emit this event, see next patch
->> against kernel/cgroup.c.
->>
->
-> We really don't want yet another way for cgroup notification.
->
+On Sun, May 24, 2015 at 05:24:40PM -0400, Tejun Heo wrote:
+> Hello,
+> 
+> On Fri, May 22, 2015 at 07:28:31PM -0400, Johannes Weiner wrote:
+> > replace_page_cache() can clear page->mem_cgroup even when the page
+> > still has references, so unfortunately you must hold the page lock
+> > when calling this function.
+> > 
+> > I haven't checked how you use this - chances are you always have the
+> > page locked anyways - but it probably needs a comment.
+> 
+> Hmmm... as replace_page_cache_page() is used only by fuse and fuse's
+> bdi doesn't go through the usual writeback accounting which is
+> necessary for cgroup writeback support anyway, so I don't think this
+> presents an actual problem.  I'll add a warning in
+> replace_page_cache_page() which triggers when it's used on a bdi which
+> has cgroup writeback enabled and add comments explaining what's going
+> on.
 
-we do have multiple information sources for similar events in other
-places... e.g. fork events can be tracked with ptrace and with
-proc-connector, ditto other things.
+Okay, so that's no problem then as long as it's documented.
 
-> Systemd is happy with this cgroup.populated interface. Do you have any
-> real use case in mind that can't be satisfied with inotify watch?
->
+In the long term, it would probably still be a good idea to restore
+the invariant that page->mem_cgroup never changes on live pages.  For
+the old interface that ship has sailed as live pages can move around
+different cgroups; in unified hierarchy, however, we currently only
+move charges when migrating pages between page frames.  That can be
+switched to duplicating the charge instead and leaving the old page
+alone until the final put - which is expected to occur soon after.
 
-cgroup.populated is not implemented in systemd and would require a lot
-of inotify watches. Also it's only set on the unified structure and
-not exposed on the current one.
-
-Also it will not allow anybody else to establish notify watch in a
-timely manner. Thus anyone external to the cgroups creator will not be
-able to monitor cgroup.populated at the right time. With
-proc_connector I was thinking processes entering cgroups would be
-useful events as well, but I don't have a use-case for them yet thus
-I'm not sure how the event should look like.
-
-Would cgroup.populated be exposed on the legacy cgroup hierchy? At the
-moment I see about ~20ms of my ~200ms boot wasted on spawning the
-cgroups agent and I would like to get rid of that as soon as possible.
-This patch solves it for me. ( i have a matching one to connect to
-proc connector and then feed notifications to systemd via systemd's
-private api end-point )
-
-Exposing cgroup.populated irrespective of the cgroup mount options
-would be great, but would result in many watches being established
-awaiting for a once in a lifecycle condition of a cgroup. Imho this is
-wasteful, but nonetheless will be much better than spawning the agent.
-
-Would a patch that exposes cgroup.populated on legacy cgroup structure
-be accepted? It is forward-compatible afterall... or no?
-
--- 
-Regards,
-
-Dimitri.
-Pura Vida!
-
-https://clearlinux.org
-Open Source Technology Center
-Intel Corporation (UK) Ltd. - Co. Reg. #1134945 - Pipers Way, Swindon SN3 1RJ.
+Accounting the same page twice for a short period during migration
+should be an acceptable trade-off when considering how much simpler it
+makes the synchronization rules.  We only have to make sure to clearly
+mark interfaces and functions that are only safe for use with unified
+hierarchy code.
