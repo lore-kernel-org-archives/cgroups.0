@@ -1,51 +1,112 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 11/51] memcg: implement mem_cgroup_css_from_page()
-Date: Wed, 27 May 2015 13:48:17 -0400
-Message-ID: <20150527174817.GP7099@htj.duckdns.org>
+Subject: [PATCH v3 11/51] memcg: implement mem_cgroup_css_from_page()
+Date: Wed, 27 May 2015 13:57:26 -0400
+Message-ID: <20150527175726.GQ7099@htj.duckdns.org>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
  <1432329245-5844-12-git-send-email-tj@kernel.org>
- <20150527161344.GO7099@htj.duckdns.org>
- <20150527170955.GA25324@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=aW+h3BSBjSbsACHwogmNwxmyQhamiq47puj9Q0q06Tg=;
-        b=wQyR88k2oQ8dDhp4YhJ8O3hJCNR0EfzbpiJChZVthBg9bjPhFAtdBLonjpsxoYHXOU
-         tuMihzMwZyk/VNS6S3F5m/3lceYXbYtzyxC33vrH8SxxeucRWYR0Ph8OEI/Ju4AkcoPy
-         HKEY7GgHjSFUQPxK43GJ1km0h9qb/sdNMHS369R+bQEn7VV5DPolEMyENAlmsLeh/qN3
-         scBbyemLMse8Du+ltZoGrHbzx363Ixk4VJlLfdzA9F28PETJSRp/iM1BN4zU82s/f46l
-         xIAsbkwOA7NzvUXK8Ga5uNI6ie9+jUf/tlXugwU2IiNqWGmTNq+ZD455ReK48CApHav2
-         uoUQ==
+        bh=SR2ivuIUoCsyHxF/WeOX4NWFsEr44Bv61XGOJxODm+c=;
+        b=cD2zIAvuo5qJAvUrc1FOM6qH2dhPV3N8dYxKSMp3CqSsN7+vuq/A7W+ozltV1VZE7M
+         +dq8lFBE1ov1LYcEmvzFL3AcZ7tyDtwe/uZ7Gl/2TyYsvagOdXwPRTHjR1ydzFELmhhK
+         ziKy2pCVcTLKoAj0/iiGFmWWpZSlmqfFOXSjMCGagWz/6FhLK9GF9SPUv2o7uF1Hlu6a
+         aockfNV2mHrppOs4A9zMisC9919zHpSE4iOujcm2BzSIZIy8v7fL7u8oUNZRW2LfMWdd
+         FHblNszYlI3FZ79Hv/xcu2malgzPJNEdbGmTUVb+BJIxpx4M7XT/GKm1e0vkHP49XAHU
+         KiCg==
 Content-Disposition: inline
-In-Reply-To: <20150527170955.GA25324-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <1432329245-5844-12-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org
 
-Hello,
+From b8077b30ce147052a9e55632d80a3c22241a64be Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Wed, 27 May 2015 13:54:22 -0400
 
-On Wed, May 27, 2015 at 01:09:55PM -0400, Johannes Weiner wrote:
-> Regular page migration uses mem_cgroup_migrate() as well, but it's not
-> a problem as it ensures that the old page doesn't have any outstanding
-> references at that point.
+Implement mem_cgroup_css_from_page() which returns the
+cgroup_subsys_state of the memcg associated with a given page.  This
+will be used by cgroup writeback support.
 
-Ooh, I see.
+This function assumes that page->mem_cgroup association doesn't change
+until the page is released, which is true on the default hierarchy as
+long as replace_page_cache_page() is not used.  As the only user of
+replace_page_cache_page() is FUSE which won't support cgroup writeback
+for the time being, this works for now, and replace_page_cache_page()
+will soon be updated so that the invariant actually holds.
 
-> It's only replace_page_cache_page() that calls mem_cgroup_migrate() on
-> a live page breaking mem_cgroup_css_from_page().
-> 
-> So the page looks fine, I'd just update the culprit function in the
-> changelog and kerneldoc.
+v3: s/mem_cgroup_migrate()/mem_cgroup_css_from_page()/
 
-Alright, will update the comment and description.
+v2: Trigger WARN if the function is used on the traditional
+    hierarchies and add comment about the assumed invariant.
 
-Thanks.
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+---
+ include/linux/memcontrol.h |  1 +
+ mm/memcontrol.c            | 31 +++++++++++++++++++++++++++++++
+ 2 files changed, 32 insertions(+)
 
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 294498f..637ef62 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -115,6 +115,7 @@ static inline bool mm_match_cgroup(struct mm_struct *mm,
+ }
+ 
+ extern struct cgroup_subsys_state *mem_cgroup_css(struct mem_cgroup *memcg);
++extern struct cgroup_subsys_state *mem_cgroup_css_from_page(struct page *page);
+ 
+ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *,
+ 				   struct mem_cgroup *,
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index b22a92b..c856cec 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -598,6 +598,37 @@ struct cgroup_subsys_state *mem_cgroup_css(struct mem_cgroup *memcg)
+ 	return &memcg->css;
+ }
+ 
++/**
++ * mem_cgroup_css_from_page - css of the memcg associated with a page
++ * @page: page of interest
++ *
++ * This function is guaranteed to return a valid cgroup_subsys_state and
++ * the returned css remains associated with @page until it is released.
++ *
++ * This can only be used on the default hierarchy as @page's memcg
++ * association may change on the traditional hierarchies.  Use
++ * try_get_mem_cgroup_from_page() instead on the traditional hierarchies.
++ *
++ * XXX: The above comment isn't true yet as replace_page_cache_page() can
++ *      modify the association before @page is released even on the default
++ *      hierarchy; however, the current and planned usages don't mix the
++ *      the two functions and replace_page_cache_page() will soon be
++ *      updated to make the invariant actually true.
++ */
++struct cgroup_subsys_state *mem_cgroup_css_from_page(struct page *page)
++{
++	struct cgroup_subsys_state *css;
++
++	if (page->mem_cgroup)
++		css = &page->mem_cgroup->css;
++	else
++		css = &root_mem_cgroup->css;
++
++	WARN_ON_ONCE(!cgroup_on_dfl(css->cgroup));
++
++	return css;
++}
++
+ static struct mem_cgroup_per_zone *
+ mem_cgroup_page_zoneinfo(struct mem_cgroup *memcg, struct page *page)
+ {
 -- 
-tejun
+2.4.0
