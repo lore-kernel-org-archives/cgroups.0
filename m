@@ -1,62 +1,42 @@
-From: Dimitri John Ledkov <dimitri.j.ledkov-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH 2/2] cgroup: report cgroup release event to proc connector
-Date: Tue, 26 May 2015 23:07:31 +0100
-Message-ID: <1432678051-4372-2-git-send-email-dimitri.j.ledkov@intel.com>
-References: <1432678051-4372-1-git-send-email-dimitri.j.ledkov@intel.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHSET] cgroup, sched: restructure threadgroup locking and
+ replace it with a percpu_rwsem
+Date: Tue, 26 May 2015 20:34:07 -0400
+Message-ID: <20150527003407.GM7099@htj.duckdns.org>
+References: <1431549318-16756-1-git-send-email-tj@kernel.org>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1432678051-4372-1-git-send-email-dimitri.j.ledkov-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=l5DtLZSRqpYsGebRQsRbvt6K04fuxVySt/RHXWUs8Fw=;
+        b=G+TpKzXFPzhiCIDEvtoFzq7QSzoe4H5l1QcMWlTtIT34Ft7rdwqThpf129AplhlQeL
+         8mvDMz46vZn2y7cq5SRBYAGiPJIRQqqKZYc2lRZeVZrp+pZLwkZk1GnATpNm9pJAj729
+         q7UIYsQrrIK9vh2wc0fuLc+Tkx9+j7vXwreOn3ShmB76pOFFhSP2F0klbINp1kgao3Fa
+         sPvxuyx6wa3qCYgH68yfliyEg0xILTB0lAOgD8ZM3ETTbv8GHq0zLIX8+x/Q67ABe9Sq
+         LdJAdS0aFMtq77aflMDyXjKKQztMFIy8dPLkZzpM0RCpAMikwFuDRTFNwsB975aF4w2Q
+         XCAA==
+Content-Disposition: inline
+In-Reply-To: <1431549318-16756-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-This adds a call to proc_cgrelease_connector at check_for_release
-time. It is done when cgroup becomes dead, regardless of the
-notify_on_release status.
+On Wed, May 13, 2015 at 04:35:15PM -0400, Tejun Heo wrote:
+> threadgroup locking was added because cgroup needs threadgroups to
+> stay stable across attach operations.  It was implemented as a
+> per-signal_struct generic locking mechanism so that other users which
+> require threadgroups stable across blocking operations can use it too;
+> however, it hasn't grown any other use cases and still conditionalized
+> on CONFIG_CGROUPS.
 
-This is thus compatible with both current & unified cgroups hierarchy,
-and the decision which cgroups to emit events for is offloaded to the
-proc connector API.
+Applying to cgroups/for-4.2.
 
-Specifically, if there are no listeners, no events are emitted. If
-only certain events are desired, the userspace proc connector listener
-can filter them in the userspace or install a BPF on the socket to
-ignore things it doesn't care about.
+Thanks.
 
-Signed-off-by: Dimitri John Ledkov <dimitri.j.ledkov-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
----
- kernel/cgroup.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
-
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 469dd54..c52e584 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -57,6 +57,7 @@
- #include <linux/vmalloc.h> /* TODO: replace with more sophisticated array */
- #include <linux/kthread.h>
- #include <linux/delay.h>
-+#include <linux/cn_proc.h>
- 
- #include <linux/atomic.h>
- 
-@@ -5307,9 +5308,12 @@ void cgroup_exit(struct task_struct *tsk)
- 
- static void check_for_release(struct cgroup *cgrp)
- {
--	if (notify_on_release(cgrp) && !cgroup_has_tasks(cgrp) &&
--	    !css_has_online_children(&cgrp->self) && !cgroup_is_dead(cgrp))
--		schedule_work(&cgrp->release_agent_work);
-+	if (!cgroup_has_tasks(cgrp) &&
-+	    !css_has_online_children(&cgrp->self) && !cgroup_is_dead(cgrp)) {
-+		proc_cgrelease_connector(cgrp);
-+		if (notify_on_release(cgrp))
-+			schedule_work(&cgrp->release_agent_work);
-+	}
- }
- 
- /*
 -- 
-2.1.4
+tejun
