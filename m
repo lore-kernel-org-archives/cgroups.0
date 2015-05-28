@@ -1,149 +1,172 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH v4 11/51] memcg: implement mem_cgroup_css_from_page()
-Date: Wed, 27 May 2015 20:00:02 -0400
-Message-ID: <20150528000002.GT7099@htj.duckdns.org>
-References: <1432329245-5844-1-git-send-email-tj@kernel.org>
- <1432329245-5844-12-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v5 7/9] writeback: add lockdep annotation to inode_to_wb()
+Date: Wed, 27 May 2015 20:03:09 -0400
+Message-ID: <20150528000309.GU7099@htj.duckdns.org>
+References: <1432334183-6324-1-git-send-email-tj@kernel.org>
+ <1432334183-6324-8-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=8yYZ91jAaKSuIcB2ZBTuvFGqCqsjtSeDK90ismeVuz4=;
-        b=ZpTlR8K9WytVsLld2I8Xx960pFEhv5VfzjMlh268CKDqkcxmevyGo3OwC3qDR7fsB7
-         4XgTKSSM5K8gkfCPXjXpFxtDS55ovjHXNuyaaxldjD/bmTRzfpng22HaRMVlU0mv+wLb
-         0QVavRt3nNDEVXPLEdYLyttXRzsohnYIrNqAIoW9kKtiiuVjAqMyYtNzBqYS98zQM3Me
-         7Op6PUiyATvCSyiM/kcuynp4zaww1lrN2r8t3bKkNy+qJF67xFhdnkSznM3IxzPPnzJ7
-         4pZ+qymv7dBBKHv4yLh5k4eTAIiIDPQ3UXqzUT332bV21/XZGreF/YaCVeRcsbgxATRR
-         2Plw==
+        bh=r+UxFSG6gYUSiaFDVUr+wHT12imZvJGQZ1botsi3tzQ=;
+        b=HAJKRJy8en2WGfqxcheZzhrFeM8tFzfF90MoHT4QjHtcZNXFhrssntKdYdP7euu0xv
+         psul5XEMfxVBTJXTBzO9cg+X8T0SSEbaJc2UtnkDsqC8o7b89HlLt2/5KgE0vTixUYrb
+         r71AfwbbDMe5G+fZkPoZLcgFk64zAytJgYYOjAcAMDRgMkG8Iys0kunR91pnU877pYVJ
+         VqoiwSmYPcMtE+t3ULjnRLo0yEZT6oZyRx8fjFtjoYc3axraaSRNvrM96q45l2wybrCN
+         LwPrjkMFkluPUkh98qC9D3hXtp616knG2G7YeYWXwyMHeajU9NI3xaq7cfOl0id+JotA
+         GIjQ==
 Content-Disposition: inline
-In-Reply-To: <1432329245-5844-12-git-send-email-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1432334183-6324-8-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org
 
-From 7cdfc9bd2cafd3f87f9e771fef25630a81c65886 Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj@kernel.org>
-Date: Wed, 27 May 2015 19:53:39 -0400
+From d3559e62138f39402ca05f3906551b3cb610edad Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Wed, 27 May 2015 19:53:49 -0400
 
-Implement mem_cgroup_css_from_page() which returns the
-cgroup_subsys_state of the memcg associated with a given page on the
-default hierarchy.  This will be used by cgroup writeback support.
+With the previous three patches, all operations which acquire wb from
+inode are either under one of inode->i_lock, mapping->tree_lock or
+wb->list_lock or protected by unlocked_inode_to_wb transaction.  This
+will be depended upon by foreign inode wb switching.
 
-This function assumes that page->mem_cgroup association doesn't change
-until the page is released, which is true on the default hierarchy as
-long as replace_page_cache_page() is not used.  As the only user of
-replace_page_cache_page() is FUSE which won't support cgroup writeback
-for the time being, this works for now, and replace_page_cache_page()
-will soon be updated so that the invariant actually holds.
+This patch adds lockdep assertion to inode_to_wb() so that usages
+outside the above list locks can be caught easily.  There are three
+exceptions.
 
-Note that the RCU protected page->mem_cgroup access is consistent with
-other usages across memcg but ultimately incorrect.  These unlocked
-accesses are missing required barriers.  page->mem_cgroup should be
-made an RCU pointer and updated and accessed using RCU operations.
+* locked_inode_to_wb_and_lock_list() is holding wb->list_lock but the
+  wb may not be the inode's.  Ensuring that is the function's role
+  after all.  Updated to deref inode->i_wb directly.
 
-v4: Instead of triggering WARN, return the root css on the traditional
-    hierarchies.  This makes the function a lot easier to deal with
-    especially as there's no light way to synchronize against
-    hierarchy rebinding.
+* inode_wb_stat_unlocked_begin() is usually protected by combination
+  of !I_WB_SWITCH and rcu_read_lock().  Updated to deref inode->i_wb
+  directly.
 
-v3: s/mem_cgroup_migrate()/mem_cgroup_css_from_page()/
+* inode_congested() wants to test whether inode->i_wb is set before
+  starting the transaction.  Added inode_to_wb_is_valid() which tests
+  inode->i_wb directly.
 
-v2: Trigger WARN if the function is used on the traditional
-    hierarchies and add comment about the assumed invariant.
+v5: might_lock() removed.  It annotates that the lock is grabbed w/
+    irq enabled which isn't the case and triggering lockdep warning
+    spuriously.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
+v4: might_lock() added to unlocked_inode_to_wb_begin().
+
+v3: inode_congested() conversion added.
+
+v2: locked_inode_to_wb_and_lock_list() was missing in the first
+    version.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Cc: Wu Fengguang <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
-Hello,
+Hello, Jens.
 
-Heh, this is turning out to be more tricker than I expected.  Because
-memcg may be moved between traditional and default hierarchies and
-there's no cheap way to synchronize against such rebinding, we can't
-simply require the caller to not use this function if memcg is not
-associated with the default hierarchy.  Instead, the function now
-returns root css if the associated css is not on the default
-hierarchy.
-
-While working on this, I noticed that some read accesses to
-page->mem_cgroup is RCU protected but the accesses themselves aren't
-RCU.  This patch follows the same pattern but this is broken.  These
-are missing the requisite barriers.  We'll need to make
-page->mem_cgroup an RCU pointer and use rcu accessors to deref it when
-accessing locklessly.
+might_lock() added on v4 had to be removed as it triggers locking
+context warning spuriously.  All the git trees have been updated
+accordingly.  All the posted updates are quite peripheral.
 
 Thanks.
 
- include/linux/memcontrol.h |  1 +
- mm/memcontrol.c            | 33 +++++++++++++++++++++++++++++++++
- 2 files changed, 34 insertions(+)
+ fs/fs-writeback.c           |  5 +++--
+ include/linux/backing-dev.h | 34 ++++++++++++++++++++++++++++++++--
+ 2 files changed, 35 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 294498f..637ef62 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -115,6 +115,7 @@ static inline bool mm_match_cgroup(struct mm_struct *mm,
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index eb94b00..e468073 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -285,7 +285,8 @@ locked_inode_to_wb_and_lock_list(struct inode *inode)
+ 		spin_lock(&wb->list_lock);
+ 		wb_put(wb);		/* not gonna deref it anymore */
+ 
+-		if (likely(wb == inode_to_wb(inode)))
++		/* i_wb may have changed inbetween, can't use inode_to_wb() */
++		if (likely(wb == inode->i_wb))
+ 			return wb;	/* @inode already has ref */
+ 
+ 		spin_unlock(&wb->list_lock);
+@@ -613,7 +614,7 @@ int inode_congested(struct inode *inode, int cong_bits)
+ 	 * Once set, ->i_wb never becomes NULL while the inode is alive.
+ 	 * Start transaction iff ->i_wb is visible.
+ 	 */
+-	if (inode && inode_to_wb(inode)) {
++	if (inode && inode_to_wb_is_valid(inode)) {
+ 		struct bdi_writeback *wb;
+ 		bool locked, congested;
+ 
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index 73ffa32..dfce808 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -322,13 +322,33 @@ wb_get_create_current(struct backing_dev_info *bdi, gfp_t gfp)
  }
  
- extern struct cgroup_subsys_state *mem_cgroup_css(struct mem_cgroup *memcg);
-+extern struct cgroup_subsys_state *mem_cgroup_css_from_page(struct page *page);
- 
- struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *,
- 				   struct mem_cgroup *,
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b22a92b..5c270a0 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -598,6 +598,39 @@ struct cgroup_subsys_state *mem_cgroup_css(struct mem_cgroup *memcg)
- 	return &memcg->css;
- }
- 
-+/**
-+ * mem_cgroup_css_from_page - css of the memcg associated with a page
-+ * @page: page of interest
+ /**
++ * inode_to_wb_is_valid - test whether an inode has a wb associated
++ * @inode: inode of interest
 + *
-+ * If memcg is bound to the default hierarchy, css of the memcg associated
-+ * with @page is returned.  The returned css remains associated with @page
-+ * until it is released.
-+ *
-+ * If memcg is bound to a traditional hierarchy, the css of root_mem_cgroup
-+ * is returned.
-+ *
-+ * XXX: The above description of behavior on the default hierarchy isn't
-+ * strictly true yet as replace_page_cache_page() can modify the
-+ * association before @page is released even on the default hierarchy;
-+ * however, the current and planned usages don't mix the the two functions
-+ * and replace_page_cache_page() will soon be updated to make the invariant
-+ * actually true.
++ * Returns %true if @inode has a wb associated.  May be called without any
++ * locking.
 + */
-+struct cgroup_subsys_state *mem_cgroup_css_from_page(struct page *page)
++static inline bool inode_to_wb_is_valid(struct inode *inode)
 +{
-+	struct mem_cgroup *memcg;
-+
-+	rcu_read_lock();
-+
-+	memcg = page->mem_cgroup;
-+
-+	if (!memcg || !cgroup_on_dfl(memcg->css.cgroup))
-+		memcg = root_mem_cgroup;
-+
-+	rcu_read_unlock();
-+	return &memcg->css;
++	return inode->i_wb;
 +}
 +
- static struct mem_cgroup_per_zone *
- mem_cgroup_page_zoneinfo(struct mem_cgroup *memcg, struct page *page)
++/**
+  * inode_to_wb - determine the wb of an inode
+  * @inode: inode of interest
+  *
+- * Returns the wb @inode is currently associated with.
++ * Returns the wb @inode is currently associated with.  The caller must be
++ * holding either @inode->i_lock, @inode->i_mapping->tree_lock, or the
++ * associated wb's list_lock.
+  */
+ static inline struct bdi_writeback *inode_to_wb(struct inode *inode)
  {
++#ifdef CONFIG_LOCKDEP
++	WARN_ON_ONCE(debug_locks &&
++		     (!lockdep_is_held(&inode->i_lock) &&
++		      !lockdep_is_held(&inode->i_mapping->tree_lock) &&
++		      !lockdep_is_held(&inode->i_wb->list_lock)));
++#endif
+ 	return inode->i_wb;
+ }
+ 
+@@ -360,7 +380,12 @@ unlocked_inode_to_wb_begin(struct inode *inode, bool *lockedp)
+ 
+ 	if (unlikely(*lockedp))
+ 		spin_lock_irq(&inode->i_mapping->tree_lock);
+-	return inode_to_wb(inode);
++
++	/*
++	 * Protected by either !I_WB_SWITCH + rcu_read_lock() or tree_lock.
++	 * inode_to_wb() will bark.  Deref directly.
++	 */
++	return inode->i_wb;
+ }
+ 
+ /**
+@@ -459,6 +484,11 @@ wb_get_create_current(struct backing_dev_info *bdi, gfp_t gfp)
+ 	return &bdi->wb;
+ }
+ 
++static inline bool inode_to_wb_is_valid(struct inode *inode)
++{
++	return true;
++}
++
+ static inline struct bdi_writeback *inode_to_wb(struct inode *inode)
+ {
+ 	return &inode_to_bdi(inode)->wb;
 -- 
 2.4.0
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
