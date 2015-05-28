@@ -1,53 +1,47 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v12 8/8] cgroup: implement the PIDs subsystem
-Date: Thu, 28 May 2015 16:40:51 -0400
-Message-ID: <20150528204051.GB27479@htj.duckdns.org>
+Subject: Re: [PATCH v12 5/8] cgroup: move enum cgroup_subsys_id definition
+Date: Thu, 28 May 2015 16:44:43 -0400
+Message-ID: <20150528204443.GC27479@htj.duckdns.org>
 References: <1431960667-26593-1-git-send-email-cyphar@cyphar.com>
- <1431960667-26593-9-git-send-email-cyphar@cyphar.com>
- <20150519080055.GA3644@twins.programming.kicks-ass.net>
- <CAOviyaij2bays4aYQ_5HcopcBOfj4M_gKE7oQ_FsV38skK6vWA@mail.gmail.com>
- <alpine.DEB.2.11.1505191508530.4225@nanos>
+ <1431960667-26593-6-git-send-email-cyphar@cyphar.com>
+ <20150518215944.GK24861@htj.duckdns.org>
+ <CAOviyag9Vu=MJcgc7zinXfabyuz2DsOReTUyd-XXd6X8+6CKng@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=sdtOi9nP1XIA0BJ6Eqw4qe6cT/MIcuXcoS02XUkWuGc=;
-        b=r6W7WHUpU7qM5rT9HaNLpgBEAUA1+TDxeHQytoytrsoV/V6tXcVkKCTiwaFRUzpA/S
-         3otsyNR/GYFp7JShdwEdrNEWjh3JnyyvZgygHEGs68ffuEr7aV7zNytHM1vr/E1JLPfG
-         RUtWd8SF7zaLBo9GFTWJWmLJeFLrHMD53P5PsOwzArE1dy5xHv52qsk1907zWvY2E8HS
-         g9l5Q7tocxNONri+RqqNdmFMr6YgW58Nq9JVwblrjTzfrD9oWJV/IgXxQs7nPFBTBygb
-         kfHoYM3T3h6ixMH3fXBniznIPqC3VLaU5czL1TlMZX66ycPDZ+FRjujsVrjdbxqAQ87x
-         9f/w==
+        bh=Q+csJ6/L0daXGvnAxyoJXGJWyedfyPIBYu+tOifuNqA=;
+        b=y+jXjvK3TqfeZ+z58xpWhQBp6AjvfHxnyKeMVrFAWxnZiwpsn6LNtBvbZ8Jgd4+oMI
+         UPM7U10cayUe3zaPybGYn0YESI/3Nc0j2v4B3k102puQQgo8Xx3sP2G92IMwVjnvNmAb
+         kyMy0BY359u3PesNobXPuK9XsESCjc/D0Y2UdQ4pUoEQDXpznGdXtrrEGZ4Kknf5YDBu
+         2wTj4IP5znkywF14qdzlvMSdV+g0SvI/BX7PBB9lYyyDrHWOCuLoZC4ehVsUn7vxmoBU
+         ox/fyxFRx6lFZBnH+rdktMpNJUzlGXtaQ7NbxnPH3T0T7MF4VJHWhhOVQCqnz0tF271e
+         fcBA==
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.11.1505191508530.4225@nanos>
+In-Reply-To: <CAOviyag9Vu=MJcgc7zinXfabyuz2DsOReTUyd-XXd6X8+6CKng-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Cc: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, richard-/L3Ra7n9ekc@public.gmane.org, =?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, richard-/L3Ra7n9ekc@public.gmane.org, =?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Thomas.
-
-On Tue, May 19, 2015 at 03:11:34PM +0200, Thomas Gleixner wrote:
-> That's complete and utter nonsense. What has the parent limit to do
-> with the overflow of the child limit?
+On Tue, May 19, 2015 at 11:25:41AM +1000, Aleksa Sarai wrote:
+> Hi Tejun,
 > 
-> parent:	 limit 100   usecnt 80
-> child:	 limit 10    usecnt 10
+> >> This is in preparation for implementing the pids cgroup subsystem. It is
+> >> not a functional change and should not change any behavior.
+> >>
+> >> Signed-off-by: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+> >
+> > I did a big reorg of cgroup.h and split of cgroup-defs.h from it and
+> > this patch doesn't seem necessary anymore.
 > 
-> So moving anything into child is violating the constraints and has to
-> be refused. Anything else is just dirty hackery.
+> Is it in your tree?
 
-And the one who's moving the process there might as well raise the
-limit in the child all the same.  It doesn't make any difference
-without delegation and with delegation we need to restrict migration
-at the exactly same junctions.  We can't delegate otherwise.  And the
-resource limit for the delegated subtree is enforced from its parent
-which delegatee can't escape how it changes the configuration or moves
-processes around.
+Yeap, in for-4.2 branch.
 
 Thanks.
 
