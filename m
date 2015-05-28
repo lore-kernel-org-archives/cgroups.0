@@ -1,172 +1,117 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v5 7/9] writeback: add lockdep annotation to inode_to_wb()
-Date: Wed, 27 May 2015 20:03:09 -0400
-Message-ID: <20150528000309.GU7099@htj.duckdns.org>
-References: <1432334183-6324-1-git-send-email-tj@kernel.org>
- <1432334183-6324-8-git-send-email-tj@kernel.org>
+From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/2] connector: add cgroup release event report to proc
+ connector
+Date: Thu, 28 May 2015 11:30:49 +0800
+Message-ID: <55668BE9.1090100@huawei.com>
+References: <1432678051-4372-1-git-send-email-dimitri.j.ledkov@intel.com> <5565A8F9.8040601@huawei.com> <CAK7xexkFm_BZ9sdB3VAZ-WGiikBeAQfaimXjggEtac+M2diV-g@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=r+UxFSG6gYUSiaFDVUr+wHT12imZvJGQZ1botsi3tzQ=;
-        b=HAJKRJy8en2WGfqxcheZzhrFeM8tFzfF90MoHT4QjHtcZNXFhrssntKdYdP7euu0xv
-         psul5XEMfxVBTJXTBzO9cg+X8T0SSEbaJc2UtnkDsqC8o7b89HlLt2/5KgE0vTixUYrb
-         r71AfwbbDMe5G+fZkPoZLcgFk64zAytJgYYOjAcAMDRgMkG8Iys0kunR91pnU877pYVJ
-         VqoiwSmYPcMtE+t3ULjnRLo0yEZT6oZyRx8fjFtjoYc3axraaSRNvrM96q45l2wybrCN
-         LwPrjkMFkluPUkh98qC9D3hXtp616knG2G7YeYWXwyMHeajU9NI3xaq7cfOl0id+JotA
-         GIjQ==
-Content-Disposition: inline
-In-Reply-To: <1432334183-6324-8-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <CAK7xexkFm_BZ9sdB3VAZ-WGiikBeAQfaimXjggEtac+M2diV-g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org
+To: Dimitri John Ledkov <dimitri.j.ledkov-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From d3559e62138f39402ca05f3906551b3cb610edad Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date: Wed, 27 May 2015 19:53:49 -0400
+On 2015/5/27 20:37, Dimitri John Ledkov wrote:
+> On 27 May 2015 at 12:22, Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
+>> On 2015/5/27 6:07, Dimitri John Ledkov wrote:
+>>> Add a kernel API to send a proc connector notification that a cgroup
+>>> has become empty. A userspace daemon can then act upon such
+>>> information, and usually clean-up and remove such a group as it's no
+>>> longer needed.
+>>>
+>>> Currently there are two other ways (one for current & one for unified
+>>> cgroups) to receive such notifications, but they either involve
+>>> spawning userspace helper or monitoring a lot of files. This is a
+>>> firehose of all such events instead from a single place.
+>>>
+>>> In the current cgroups structure the way to get notifications is by
+>>> enabling `release_agent' and setting `notify_on_release' for a given
+>>> cgroup hierarchy. This will then spawn userspace helper with removed
+>>> cgroup as an argument. It has been acknowledged that this is
+>>> expensive, especially in the exit-heavy workloads. In userspace this
+>>> is currently used by systemd and CGmanager that I know of, both of
+>>> agents establish connection to the long running daemon and pass the
+>>> message to it. As a courtesy to other processes, such an event is
+>>> sometimes forwarded further on, e.g. systemd forwards it to the system
+>>> DBus.
+>>>
+>>> In the future/unified cgroups structure support for `release_agent' is
+>>> removed, without a direct replacement. However, there is a new
+>>> `cgroup.populated' file exposed that recursively reports if there are
+>>> any tasks in a given cgroup hierarchy. It's a very good flag to
+>>> quickly/lazily scan for empty things, however one would need to
+>>> establish inotify watch on each and every cgroup.populated file at
+>>> cgroup setup time (ideally before any pids enter said cgroup). Thus
+>>> again anybody else, but the original creator of a given cgroup, has a
+>>> chance to reliably monitor cgroup becoming empty (since there is no
+>>> reliable recursive inotify watch).
+>>>
+>>> Hence, the addition to the proc connector firehose. Multiple things,
+>>> albeit with a CAP_NET_ADMIN in the init pid/user namespace), could
+>>> connect and monitor cgroups release notifications. In a way, this
+>>> repeats udev history, at first it was a userspace helper, which later
+>>> became a netlink socket. And I hope, that proc connector is a
+>>> naturally good fit for this notification type.
+>>>
+>>> For precisely when cgroups should emit this event, see next patch
+>>> against kernel/cgroup.c.
+>>>
+>>
+>> We really don't want yet another way for cgroup notification.
+>>
+> 
+> we do have multiple information sources for similar events in other
+> places... e.g. fork events can be tracked with ptrace and with
+> proc-connector, ditto other things.
+> 
+>> Systemd is happy with this cgroup.populated interface. Do you have any
+>> real use case in mind that can't be satisfied with inotify watch?
+>>
+> 
+> cgroup.populated is not implemented in systemd and would require a lot
+> of inotify watches.
 
-With the previous three patches, all operations which acquire wb from
-inode are either under one of inode->i_lock, mapping->tree_lock or
-wb->list_lock or protected by unlocked_inode_to_wb transaction.  This
-will be depended upon by foreign inode wb switching.
+I believe systemd will use cgroup.populated, though I don't know its
+roadmap. Maybe it's waiting for the kernel to remove the experimental
+flag of unified hierarchy.
 
-This patch adds lockdep assertion to inode_to_wb() so that usages
-outside the above list locks can be caught easily.  There are three
-exceptions.
+> Also it's only set on the unified structure and
+> not exposed on the current one.
+> 
+> Also it will not allow anybody else to establish notify watch in a
+> timely manner. Thus anyone external to the cgroups creator will not be
+> able to monitor cgroup.populated at the right time.
 
-* locked_inode_to_wb_and_lock_list() is holding wb->list_lock but the
-  wb may not be the inode's.  Ensuring that is the function's role
-  after all.  Updated to deref inode->i_wb directly.
+I guess this isn't a problem, as you can watch the IN_CREATE event, and
+then you'll get notified when a cgroup is created.
 
-* inode_wb_stat_unlocked_begin() is usually protected by combination
-  of !I_WB_SWITCH and rcu_read_lock().  Updated to deref inode->i_wb
-  directly.
+> With
+> proc_connector I was thinking processes entering cgroups would be
+> useful events as well, but I don't have a use-case for them yet thus
+> I'm not sure how the event should look like.
+> 
+> Would cgroup.populated be exposed on the legacy cgroup hierchy? At the
+> moment I see about ~20ms of my ~200ms boot wasted on spawning the
+> cgroups agent and I would like to get rid of that as soon as possible.
+> This patch solves it for me. ( i have a matching one to connect to
+> proc connector and then feed notifications to systemd via systemd's
+> private api end-point )
+> 
+> Exposing cgroup.populated irrespective of the cgroup mount options
+> would be great, but would result in many watches being established
+> awaiting for a once in a lifecycle condition of a cgroup. Imho this is
+> wasteful, but nonetheless will be much better than spawning the agent.
+> 
 
-* inode_congested() wants to test whether inode->i_wb is set before
-  starting the transaction.  Added inode_to_wb_is_valid() which tests
-  inode->i_wb directly.
+Each inotify watch will consume a little memory, which should be
+acceptable.
 
-v5: might_lock() removed.  It annotates that the lock is grabbed w/
-    irq enabled which isn't the case and triggering lockdep warning
-    spuriously.
+> Would a patch that exposes cgroup.populated on legacy cgroup structure
+> be accepted? It is forward-compatible afterall... or no?
+> 
 
-v4: might_lock() added to unlocked_inode_to_wb_begin().
-
-v3: inode_congested() conversion added.
-
-v2: locked_inode_to_wb_and_lock_list() was missing in the first
-    version.
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Cc: Wu Fengguang <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
-Hello, Jens.
-
-might_lock() added on v4 had to be removed as it triggers locking
-context warning spuriously.  All the git trees have been updated
-accordingly.  All the posted updates are quite peripheral.
-
-Thanks.
-
- fs/fs-writeback.c           |  5 +++--
- include/linux/backing-dev.h | 34 ++++++++++++++++++++++++++++++++--
- 2 files changed, 35 insertions(+), 4 deletions(-)
-
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index eb94b00..e468073 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -285,7 +285,8 @@ locked_inode_to_wb_and_lock_list(struct inode *inode)
- 		spin_lock(&wb->list_lock);
- 		wb_put(wb);		/* not gonna deref it anymore */
- 
--		if (likely(wb == inode_to_wb(inode)))
-+		/* i_wb may have changed inbetween, can't use inode_to_wb() */
-+		if (likely(wb == inode->i_wb))
- 			return wb;	/* @inode already has ref */
- 
- 		spin_unlock(&wb->list_lock);
-@@ -613,7 +614,7 @@ int inode_congested(struct inode *inode, int cong_bits)
- 	 * Once set, ->i_wb never becomes NULL while the inode is alive.
- 	 * Start transaction iff ->i_wb is visible.
- 	 */
--	if (inode && inode_to_wb(inode)) {
-+	if (inode && inode_to_wb_is_valid(inode)) {
- 		struct bdi_writeback *wb;
- 		bool locked, congested;
- 
-diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index 73ffa32..dfce808 100644
---- a/include/linux/backing-dev.h
-+++ b/include/linux/backing-dev.h
-@@ -322,13 +322,33 @@ wb_get_create_current(struct backing_dev_info *bdi, gfp_t gfp)
- }
- 
- /**
-+ * inode_to_wb_is_valid - test whether an inode has a wb associated
-+ * @inode: inode of interest
-+ *
-+ * Returns %true if @inode has a wb associated.  May be called without any
-+ * locking.
-+ */
-+static inline bool inode_to_wb_is_valid(struct inode *inode)
-+{
-+	return inode->i_wb;
-+}
-+
-+/**
-  * inode_to_wb - determine the wb of an inode
-  * @inode: inode of interest
-  *
-- * Returns the wb @inode is currently associated with.
-+ * Returns the wb @inode is currently associated with.  The caller must be
-+ * holding either @inode->i_lock, @inode->i_mapping->tree_lock, or the
-+ * associated wb's list_lock.
-  */
- static inline struct bdi_writeback *inode_to_wb(struct inode *inode)
- {
-+#ifdef CONFIG_LOCKDEP
-+	WARN_ON_ONCE(debug_locks &&
-+		     (!lockdep_is_held(&inode->i_lock) &&
-+		      !lockdep_is_held(&inode->i_mapping->tree_lock) &&
-+		      !lockdep_is_held(&inode->i_wb->list_lock)));
-+#endif
- 	return inode->i_wb;
- }
- 
-@@ -360,7 +380,12 @@ unlocked_inode_to_wb_begin(struct inode *inode, bool *lockedp)
- 
- 	if (unlikely(*lockedp))
- 		spin_lock_irq(&inode->i_mapping->tree_lock);
--	return inode_to_wb(inode);
-+
-+	/*
-+	 * Protected by either !I_WB_SWITCH + rcu_read_lock() or tree_lock.
-+	 * inode_to_wb() will bark.  Deref directly.
-+	 */
-+	return inode->i_wb;
- }
- 
- /**
-@@ -459,6 +484,11 @@ wb_get_create_current(struct backing_dev_info *bdi, gfp_t gfp)
- 	return &bdi->wb;
- }
- 
-+static inline bool inode_to_wb_is_valid(struct inode *inode)
-+{
-+	return true;
-+}
-+
- static inline struct bdi_writeback *inode_to_wb(struct inode *inode)
- {
- 	return &inode_to_bdi(inode)->wb;
--- 
-2.4.0
+I'm afraid no...All new features are done in unified hiearchy, and we've
+been restraining from adding them to the legacy hierarchy.
