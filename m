@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 9/9] writeback: disassociate inodes from dying bdi_writebacks
-Date: Thu, 28 May 2015 14:50:57 -0400
-Message-ID: <1432839057-17609-10-git-send-email-tj@kernel.org>
+Subject: [PATCH 6/9] writeback: use unlocked_inode_to_wb transaction in inode_congested()
+Date: Thu, 28 May 2015 14:50:54 -0400
+Message-ID: <1432839057-17609-7-git-send-email-tj@kernel.org>
 References: <1432839057-17609-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=9CAQ0+iJ/60/UwtB/uxa9Sx0J0lVH6dlyVopty61dyA=;
-        b=yY2ocb+P/z6BuH3ldY9NcXC92n7oOhSYMdKKvWUpwP4gIBScwhEbGnNtxOdR2IHgAD
-         bcQwkNC52QN0QT9NuTkdoelfchMtm7hkkOtRBlOeL7NWs7r6gDRniQCFQoacDDduAAkh
-         83xLF899eElSH8d8hOAtkVTiYx8gOkBsoClNnCM+zZ5g9rhETthmUVClmPYrTmK04O6l
-         d51kDjbt6JqrZbdgjlSIP7C9uleh4pYKjRmwS/1X4muohZLn6dq0gp4Jb78Goe/t7KvQ
-         k3/6VfUOS3cDAwooJ2RJX13BOj2Lh8bKm46KlujeT2DeRuUbAqObUxX/W8FkJ8w+yjj5
-         nl/g==
+        bh=1dv5tN71KsD9PWzEzEZwh7Cz84Ek4GckMx5ugVLDoU8=;
+        b=tKgP+kq76LqCi+O/ej/bECjwz4A1+cczdaGwMBpPbRelWpsFuMYC0iH9Ol/25WXBCU
+         ujGQlr9r8i2+7NOo5se4NefCG7Xmh4uqX4ea9V3QGZygcMqWfo2E1MRdlNzgeJy8PX+U
+         Ph6Q98lf8mAMnsF+jrfM0M7tUqSPPgawsDMlm7O8Kz6inQPUqnngBMouUoM/S3vKPTUl
+         DtQdYA2pzQjeYt1cjFESzoQRZPWxfbtdXK+0WbCDifq/RsI2Fhxdj16jhZgaLZNSMmHM
+         zugJeVsFL2l/oVQdv6qJpdY69tkHL11SlArITA7zfqSc6m+X3gM5Zy36FUjFUcqKpqMf
+         /Kdg==
 In-Reply-To: <1432839057-17609-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,24 +23,15 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru, Tejun Heo <tj@kernel.org>
 
-For the purpose of foreign inode detection, wb's (bdi_writeback's) are
-identified by the associated memcg ID.  As we create a separate wb for
-each memcg, this is enough to identify the active wb's; however, when
-blkcg is enabled or disabled higher up in the hierarchy, the mapping
-between memcg and blkcg changes which in turn creates a new wb to
-service the new mapping.  The old wb is unlinked from index and
-released after all references are drained.  The foreign inode
-detection logic can't detect this condition because both the old and
-new wb's point to the same memcg and thus never decides to move inodes
-attached to the old wb to the new one.
+Similar to wb stat updates, inode_congested() accesses the associated
+wb of an inode locklessly, which will break with foreign inode wb
+switching.  This path updates inode_congested() to use unlocked inode
+wb access transaction introduced by the previous patch.
 
-This patch adds logic to initiate switching immediately in
-wbc_attach_and_unlock_inode() if the associated wb is dying.  We can
-make the usual foreign detection logic to distinguish the different
-wb's mapped to the memcg but the dying wb is never gonna be in active
-service again and there's no point in tracking the usage history and
-reaching the switch verdict after enough data points are collected.
-It's already known that the wb has to be switched.
+Combined with the previous two patches, this makes all wb list and
+access operations to be protected by either of inode->i_lock,
+wb->list_lock, or mapping->tree_lock while wb switching is in
+progress.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>
@@ -48,62 +39,36 @@ Cc: Jan Kara <jack@suse.cz>
 Cc: Wu Fengguang <fengguang.wu@intel.com>
 Cc: Greg Thelen <gthelen@google.com>
 ---
- fs/fs-writeback.c                |  7 +++++++
- include/linux/backing-dev-defs.h | 16 ++++++++++++++++
- 2 files changed, 23 insertions(+)
+ fs/fs-writeback.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
 diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 5eeb24a..f60de54 100644
+index 08f5496..25458fa 100644
 --- a/fs/fs-writeback.c
 +++ b/fs/fs-writeback.c
-@@ -525,6 +525,13 @@ void wbc_attach_and_unlock_inode(struct writeback_control *wbc,
- 
- 	wb_get(wbc->wb);
- 	spin_unlock(&inode->i_lock);
-+
-+	/*
-+	 * A dying wb indicates that the memcg-blkcg mapping has changed
-+	 * and a new wb is already serving the memcg.  Switch immediately.
-+	 */
-+	if (unlikely(wb_dying(wbc->wb)))
-+		inode_switch_wbs(inode, wbc->wb_id);
- }
- 
- /**
-diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
-index e047b49..a48d90e 100644
---- a/include/linux/backing-dev-defs.h
-+++ b/include/linux/backing-dev-defs.h
-@@ -219,6 +219,17 @@ static inline void wb_put(struct bdi_writeback *wb)
- 		percpu_ref_put(&wb->refcnt);
- }
- 
-+/**
-+ * wb_dying - is a wb dying?
-+ * @wb: bdi_writeback of interest
-+ *
-+ * Returns whether @wb is unlinked and being drained.
-+ */
-+static inline bool wb_dying(struct bdi_writeback *wb)
-+{
-+	return percpu_ref_is_dying(&wb->refcnt);
-+}
-+
- #else	/* CONFIG_CGROUP_WRITEBACK */
- 
- static inline bool wb_tryget(struct bdi_writeback *wb)
-@@ -234,6 +245,11 @@ static inline void wb_put(struct bdi_writeback *wb)
+@@ -618,10 +618,18 @@ void wbc_account_io(struct writeback_control *wbc, struct page *page,
+  */
+ int inode_congested(struct inode *inode, int cong_bits)
  {
- }
- 
-+static inline bool wb_dying(struct bdi_writeback *wb)
-+{
-+	return false;
-+}
+-	if (inode) {
+-		struct bdi_writeback *wb = inode_to_wb(inode);
+-		if (wb)
+-			return wb_congested(wb, cong_bits);
++	/*
++	 * Once set, ->i_wb never becomes NULL while the inode is alive.
++	 * Start transaction iff ->i_wb is visible.
++	 */
++	if (inode && inode_to_wb(inode)) {
++		struct bdi_writeback *wb;
++		bool locked, congested;
 +
- #endif	/* CONFIG_CGROUP_WRITEBACK */
++		wb = unlocked_inode_to_wb_begin(inode, &locked);
++		congested = wb_congested(wb, cong_bits);
++		unlocked_inode_to_wb_end(inode, locked);
++		return congested;
+ 	}
  
- #endif	/* __LINUX_BACKING_DEV_DEFS_H */
+ 	return wb_congested(&inode_to_bdi(inode)->wb, cong_bits);
 -- 
 2.4.0
 
