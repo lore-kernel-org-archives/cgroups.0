@@ -1,47 +1,52 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v12 4/8] cgroup, block: implement task_get_css() and use
- it in bio_associate_current()
-Date: Thu, 28 May 2015 16:47:39 -0400
-Message-ID: <20150528204739.GD27479@htj.duckdns.org>
-References: <1431960667-26593-1-git-send-email-cyphar@cyphar.com>
- <1431960667-26593-5-git-send-email-cyphar@cyphar.com>
- <20150518215907.GJ24861@htj.duckdns.org>
- <CAOviyagxp32_kr30+O2ATFarvyjuASBy0j9xuXORkwrXahZ79g@mail.gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] cgroup: add seq_file forward declaration for struct cftype
+Date: Fri, 29 May 2015 10:52:59 +0200
+Message-ID: <8289624.GnpfIU6Era@wuerfel>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=5I66aGQf48pQCWJlgOS3Lpcifi1aIk1463bLpIXWv1c=;
-        b=uw5Fd5beLPoyusZl7gine/M6PIG8ahRYPfkEzNCkuqvmGY5tKjEfCgSzwnSzTV4c9E
-         uoqaltYmnKBaIC8Jxv92EM5bKG6Rh8tkvinRDXL0YOC90rpb7KVmBd4qDYalFkGST0V0
-         EMQINvxrU2yZvnI+htvQwr3PkcX9e0+DLOenix70O6/lq7RSdKRjG2Nadei3O+O8eXUy
-         pV5+s787JIol0rqyi5+PsB95Wmxbw7rv5WVtc6l+Qknem+604EA9kQF00fBgHmsl50CK
-         xY+1kC9E9+A0pU3bxkxu+vc5REwQlWeubo03ZoMOnsOKZbsw6mtyhT3cUd7c5LXLb4u/
-         Spuw==
-Content-Disposition: inline
-In-Reply-To: <CAOviyagxp32_kr30+O2ATFarvyjuASBy0j9xuXORkwrXahZ79g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, richard-/L3Ra7n9ekc@public.gmane.org, =?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>, 
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>, 
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
-On Tue, May 19, 2015 at 01:05:01PM +1000, Aleksa Sarai wrote:
-> Hi Tejun,
-> 
-> > Applied 1-4 but skipped bio_associate_current() changes from this
-> > patch.  I'll route that part through a different patchset.
-> 
-> Do you want the updated versions of 6-8 of the patchset to be based on
-> your tree's for-next?
+Recent header file changes for cgroup caused lots of warnings
+about a missing struct seq_file form declaration for every
+inclusion of include/linux/cgroup-defs.h.
 
-Can you please base changes on cgroups/for-4.2?  New features usually
-should be based on cgroups branch headed for the next merge window.
+As some files are built with -Werror, this leads to build
+failure like:
 
-Thanks.
+                 from /git/arm-soc/drivers/gpu/drm/tilcdc/tilcdc_crtc.c:18:
+/git/arm-soc/include/linux/cgroup-defs.h:354:25: error: 'struct seq_file' declared inside parameter list [-Werror]
+cc1: all warnings being treated as errors
+make[6]: *** [drivers/gpu/drm/tilcdc/tilcdc_crtc.o] Error 1
 
--- 
-tejun
+This patch adds the declaration, which resolves both the
+warnings and the drm failure.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: b4a04ab7a37b ("cgroup: separate out include/linux/cgroup-defs.h")
+
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index 7d83d7f73420..ab9dd741ab99 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -302,6 +302,8 @@ struct cgroup_root {
+ 	char name[MAX_CGROUP_ROOT_NAMELEN];
+ };
+ 
++struct seq_file;
++
+ /*
+  * struct cftype: handler definitions for cgroup control files
+  *
