@@ -1,134 +1,94 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH RFC] memcg: close the race window between OOM detection
- and killing
-Date: Thu, 4 Jun 2015 04:36:39 +0900
-Message-ID: <20150603193639.GH20091@mtj.duckdns.org>
-References: <20150603031544.GC7579@mtj.duckdns.org>
- <20150603144414.GG16201@dhcp22.suse.cz>
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: [PATCH v2 -mm 1/2] memcg: remove unused mem_cgroup->oom_wakeups
+Date: Wed, 3 Jun 2015 22:31:48 +0200
+Message-ID: <20150603203148.GA5386@dhcp22.suse.cz>
+References: <20150603023824.GA7579@mtj.duckdns.org>
+ <20150603151953.GF20091@mtj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=JBZP4yM6VKFIVKOncdH5SE2NhgMegmiTFhThSPa267A=;
-        b=VL5TgXBz7BQfWQcYTv93ICNNaA/ZTg26iq5UfLvjdiN57ta/X22PR7Lavx1YZyVuPd
-         6/3fPu9yRGOqMnXTk7Nw3im2yVv+yqUkKQ72F/KTGQrhXs3ihX6f5dz8gwcOZxmn3ayw
-         jxYoAW5iHtbiQB2sHliiOb8dW102bgFhoxgAxw7LE9XqRl7K4PRzKHjI2pp+z0hdzpCH
-         aJxQ9DMmFrDJYT9xjj3Apf+xWhmiHxDNoKe32PBDLaDXXpT8MZQMXtx4owyZhg0GAnv6
-         mc7mbzkfceSRZUY8SQYQvQg57F3A3vacdH5tOh8UqD0W3Tn9/LPRYCcZyzgbVxxknkhK
-         /Z5Q==
+        bh=M+q1IJ8C3DzcNJ+nlPm+bJXqw4yrKubG8LvfEEunQ6g=;
+        b=oqVyG83R5K+KN47lpe9BxuTlJe/A09xdLgyIfU1KAWlsbYdiws5BCeKczQaHnpWtor
+         Kybt15udVANn9Fw3wlI90QQj2MQ9IgDPObjKR62zdOhs4rfKSK/aWerHgD+t32zW7xnr
+         ewIvC1d8+3fSfJZ6HeaDpcAJFhAj+uFDEV6PRxnA634irm2SLxfc6LfOimeb+xdIbd/r
+         L1gXQu+qbM75nQB7i8OrjW6V3YTmqtAuwnZSyF8ipf5Wr2m/zVQwzihH5crC+k33aFnr
+         tmS9qnEJfeSyqapJTrYdOLxS2Qqi6Vv+5ADLa8/Nju7pGdpZC6VnGHIoWiUplbISd72p
+         XC+w==
 Content-Disposition: inline
-In-Reply-To: <20150603144414.GG16201-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20150603151953.GF20091@mtj.duckdns.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>
 
-Hey, Michal.
-
-On Wed, Jun 03, 2015 at 04:44:14PM +0200, Michal Hocko wrote:
-> The race does exist in the global case as well AFAICS.
-> __alloc_pages_may_oom
->   mutex_trylock
->   get_page_from_freelist # fails
->   <preempted>				exit_mm # releases some memory
->   out_of_memory
->   					  exit_oom_victim
->     # No TIF_MEMDIE task so kill a new
-
-Hmmm?  In -mm, if __alloc_page_may_oom() fails trylock, it never calls
-out_of_memory().
-
-> The race window might be smaller but it is possible in principle.
-> Why does it make sense to treat those two in a different way?
-
-The main difference here is that the alloc path does the whole thing
-synchrnously and thus the OOM detection and killing can be put in the
-same critical section which isn't the case for the memcg OOM handling.
-
-> > The only reason memcg OOM killer behaves asynchronously (unwinding
-> > stack and then handling) is memcg userland OOM handling, which may end
-> > up blocking for userland actions while still holding whatever locks
-> > that it was holding at the time it was invoking try_charge() leading
-> > to a deadlock.
+On Thu 04-06-15 00:19:53, Tejun Heo wrote:
+> Since 4942642080ea ("mm: memcg: handle non-error OOM situations more
+> gracefully"), nobody uses mem_cgroup->oom_wakeups.  Remove it.
 > 
-> This is not the only reason. In-kernel memcg oom handling needs it
-> as well. See 3812c8c8f395 ("mm: memcg: do not trap chargers with
-> full callstack on OOM"). In fact it was the in-kernel case which has
-> triggered this change. We simply cannot wait for oom with the stack and
-> all the state the charge is called from.
-
-Why should this be any different from OOM handling from page allocator
-tho?  That can end up in the exact same situation and currently it
-won't be able to get out of such situation - the OOM victim would be
-stuck with OOM_SCAN_ABORT and all subsequent OOM invocations wouldn't
-do anything due to OOM_SCAN_ABORT.
-
-The solution here seems to be timing out on those waits.  ie. pick an
-OOM victim, kill it, wait for it to exit for enough seconds.  If the
-victim doesn't exit, ignore it and repeat the process, which is
-guaranteed to make progress no matter what and appliable for both
-allocator and memcg OOM handling.
-
-> > IOW, it'd be cleaner to do everything synchronously while holding
-> > oom_lock with timeout to get out of rare deadlocks.
+> While at it, also fold memcg_wakeup_oom() into memcg_oom_recover()
+> which is its only user.  This cleanup was suggested by Michal.
 > 
-> Deadlocks are quite real and we really have to unwind and handle with a
-> clean stack.
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Michal Hocko <mhocko@suse.cz>
 
-Yeah, they're real but we can deal with them in a more consistent way
-using timeouts.
+Acked-by: Michal Hocko <mhocko@suse.cz>
 
-> > Memcg OOM killings are done at the end of page fault apart from OOM
-> > detection.  This allows the following race condition.
-> > 
-> > 	Task A				Task B
-> > 
-> > 	OOM detection
-> > 					OOM detection
-> > 	OOM kill
-> > 	victim exits
-> > 					OOM kill
-> > 
-> > Task B has no way of knowing that another task has already killed an
-> > OOM victim which proceeded to exit and release memory and will
-> > unnecessarily pick another victim.  In highly contended cases, this
-> > can lead to multiple unnecessary chained killings.
+Thanks!
+
+> ---
+> Patch updated.  I dropped the comment as it's kinda obvious from the
+> context and the use of __wake_up().
 > 
-> Yes I can see this might happen. I haven't seen this in the real life
-> but I guess such a load can be constructed. The question is whether this
-> is serious enough to make the code more complicated.
-
-Yeah, I do have bug report and dmesg where multiple processes are
-being killed (each one pretty large) when one should have been enough.
-
-...
-> > +void mem_cgroup_exit_oom_victim(void)
-> > +{
-> > +	struct mem_cgroup *memcg;
-> > +
-> > +	lockdep_assert_held(&oom_lock);
-> > +
-> > +	rcu_read_lock();
-> > +	memcg = mem_cgroup_from_task(current);
+> Thanks.
 > 
-> The OOM might have happened in a parent memcg and the OOM victim might
-> be a sibling or where ever in the hierarchy under oom memcg.
-> So you have to use the OOM memcg to track the counter otherwise the
-> tasks from other memcgs in the hierarchy racing with the oom victim
-> would miss it anyway. You can store the target memcg into the victim
-> when killing it.
-
-In those cases there actually are more than one domains OOMing, but
-yeah the count prolly should propagate all the way to the root.
-Gees... I dislike this approach even more.  Grabbng the oom lock and
-doing everything synchronously with timeout will be far simpler and
-easier to follow.
-
-Thanks.
+>  mm/memcontrol.c |   10 +---------
+>  1 file changed, 1 insertion(+), 9 deletions(-)
+> 
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -287,7 +287,6 @@ struct mem_cgroup {
+>  
+>  	bool		oom_lock;
+>  	atomic_t	under_oom;
+> -	atomic_t	oom_wakeups;
+>  
+>  	int	swappiness;
+>  	/* OOM-Killer disable */
+> @@ -1850,17 +1849,10 @@ static int memcg_oom_wake_function(wait_
+>  	return autoremove_wake_function(wait, mode, sync, arg);
+>  }
+>  
+> -static void memcg_wakeup_oom(struct mem_cgroup *memcg)
+> -{
+> -	atomic_inc(&memcg->oom_wakeups);
+> -	/* for filtering, pass "memcg" as argument. */
+> -	__wake_up(&memcg_oom_waitq, TASK_NORMAL, 0, memcg);
+> -}
+> -
+>  static void memcg_oom_recover(struct mem_cgroup *memcg)
+>  {
+>  	if (memcg && atomic_read(&memcg->under_oom))
+> -		memcg_wakeup_oom(memcg);
+> +		__wake_up(&memcg_oom_waitq, TASK_NORMAL, 0, memcg);
+>  }
+>  
+>  static void mem_cgroup_oom(struct mem_cgroup *memcg, gfp_t mask, int order)
+> --
+> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 -- 
-tejun
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
