@@ -1,80 +1,95 @@
-From: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH RFC] memcg: close the race window between OOM detection
- and killing
-Date: Fri, 5 Jun 2015 17:21:35 +0200
-Message-ID: <20150605152135.GE26113@dhcp22.suse.cz>
-References: <20150603031544.GC7579@mtj.duckdns.org>
- <20150603144414.GG16201@dhcp22.suse.cz>
- <20150603193639.GH20091@mtj.duckdns.org>
- <20150604093031.GB4806@dhcp22.suse.cz>
- <20150604192936.GR20091@mtj.duckdns.org>
- <20150605143534.GD26113@dhcp22.suse.cz>
- <20150605145759.GA5946@mtj.duckdns.org>
+From: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v11 7/7] cgroup: implement the PIDs subsystem
+Date: Sat, 6 Jun 2015 05:57:29 +1000
+Message-ID: <CAOviyaji+nEt53PSnyyX_LnWw5FE2p9AbdZrYz6eH2xcWuZCNw@mail.gmail.com>
+References: <1431749621-30451-1-git-send-email-cyphar@cyphar.com>
+	<1431749621-30451-8-git-send-email-cyphar@cyphar.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20150605145759.GA5946-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <1431749621-30451-8-git-send-email-cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, richard-/L3Ra7n9ekc@public.gmane.org, =?UTF-8?B?RnLDqWTDqXJpYyBXZWlzYmVja2Vy?= <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
 
-On Fri 05-06-15 23:57:59, Tejun Heo wrote:
-> Hello, Michal.
-> 
-> On Fri, Jun 05, 2015 at 04:35:34PM +0200, Michal Hocko wrote:
-> > > That doesn't matter because the detection and TIF_MEMDIE assertion are
-> > > atomic w.r.t. oom_lock and TIF_MEMDIE essentially extends the locking
-> > > by preventing further OOM kills.  Am I missing something?
-> > 
-> > This is true but TIF_MEMDIE releasing is not atomic wrt. the allocation
-> > path. So the oom victim could have released memory and dropped
-> 
-> This is splitting hairs.  In vast majority of problem cases, if
-> anything is gonna be locked up, it's gonna be locked up before
-> releasing memory it's holding.  Yet again, this is a blunt instrument
-> to unwedge the system.  It's difficult to see the point of aiming that
-> level of granularity.
+Hello Tejun,
 
-I was just pointing out that the OOM killer is inherently racy even for
-the global case. Not sure we are talking about the same thing here.
+Is it safe for us to task_get_css() every task in the tset in
+->can_attach() and then put_css() in ->attach() and ->cancel_attach()?
+In other words: if we have a ref to a task's css, are we guaranteed
+that the task_css() will return the same thing every time? Here's what
+I'm currently doing:
 
-> 
-> > TIF_MEMDIE but the allocation path hasn't noticed that because it's passed
-> >         /*
-> >          * Go through the zonelist yet one more time, keep very high watermark
-> >          * here, this is only to catch a parallel oom killing, we must fail if
-> >          * we're still under heavy pressure.
-> >          */
-> >         page = get_page_from_freelist(gfp_mask | __GFP_HARDWALL, order,
-> >                                         ALLOC_WMARK_HIGH|ALLOC_CPUSET, ac);
-> > 
-> > and goes on to kill another task because there is no TIF_MEMDIE
-> > anymore.
-> 
-> Why would this be an issue if we disallow parallel killing?
+static int pids_can_attach(struct cgroup_subsys_state *css,
+                           struct cgroup_taskset *tset)
+{
+        struct pids_cgroup *pids = css_pids(css);
+        struct task_struct *task, *fail_task;
+        int err;
 
-I am confused. The whole thread has started by fixing a race in memcg
-and I was asking about the global case which is racy currently as well.
+        cgroup_taskset_for_each(task, tset) {
+                struct cgroup_subsys_state *old_css;
+                struct pids_cgroup *old_pids;
 
-> > > Deadlocks from infallible allocations getting interlocked are
-> > > different.  OOM killer can't really get around that by itself but I'm
-> > > not talking about those deadlocks but at the same time they're a lot
-> > > less likely.  It's about OOM victim trapped in a deadlock failing to
-> > > release memory because someone else is waiting for that memory to be
-> > > released while blocking the victim. 
-> > 
-> > I thought those would be in the allocator context - which was the
-> > example I've provided. What kind of context do you have in mind?
-> 
-> Yeah, sure, they'd be in the allocator context holding other resources
-> which are being waited upon.  The first case was deadlock based on
-> purely memory starvation where NOFAIL allocations interlock with each
-> other w/o involving other resources.
+                old_css = task_get_css(task, pids_cgrp_id);
+                old_pids = css_pids(old_css);
 
-OK, I guess we were just talking past each other.
--- 
-Michal Hocko
-SUSE Labs
+                err = pids_try_charge(pids, 1);
+                if (err)
+                        goto out_fail;
+
+                pids_uncharge(old_pids, 1);
+                continue;
+
+out_fail:
+                fail_task = task;
+                goto err_revert;
+        }
+
+        return 0;
+
+err_revert:
+        cgroup_taskset_for_each(task, tset) {
+                css_put(task_css(task, pids_cgrp_id));
+                if (task == fail_task)
+                        break;
+                pids_uncharge(pids, 1);
+        }
+
+        return err;
+}
+
+static void pids_cancel_attach(struct cgroup_subsys_state *css,
+                               struct cgroup_taskset *tset)
+{
+        struct pids_cgroup *pids = css_pids(css);
+        struct task_struct *task;
+
+        cgroup_taskset_for_each(task, tset) {
+                struct cgroup_subsys_state *old_css;
+                struct pids_cgroup *old_pids;
+
+                old_css = task_css(task, pids_cgrp_id);
+                old_pids = css_pids(old_css);
+
+                pids_charge(old_pids, 1);
+                pids_uncharge(pids, 1);
+                css_put(old_css);
+        }
+}
+
+static void pids_attach(struct cgroup_subsys_state *css,
+                        struct cgroup_taskset *tset)
+{
+        struct task_struct *task;
+
+        cgroup_taskset_for_each(task, tset)
+                css_put(task_css(task, pids_cgrp_id));
+}
+
+
+--
+Aleksa Sarai (cyphar)
+www.cyphar.com
