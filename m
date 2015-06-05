@@ -1,35 +1,60 @@
-From: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC][PATCH 0/2] Android style loosening of cgroup attach permissions
-Date: Fri, 5 Jun 2015 14:33:00 -0700
-Message-ID: <CALAqxLUXV5OaY2Ca15FckBRvVN-XKbZm00kQ7OWr5qFdc0BdsA@mail.gmail.com>
-References: <1432179674-19154-1-git-send-email-john.stultz@linaro.org>
-	<CALAqxLUXVaf0vzS=Hx+vZK5VqJoWHQ4iA8jG6+sWmiU6O3wbKw@mail.gmail.com>
-	<20150603055057.GE20091@mtj.duckdns.org>
-	<CALAqxLWkXTgKzq68H6TvPc6Wgbn5_jwVoW5Q9onnHnvQ0bTNiA@mail.gmail.com>
-	<20150604183658.GA5682@cmpxchg.org>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20150604183658.GA5682-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Aleksa Sarai <cyphar@cyphar.com>
+Subject: [PATCH v13 0/5] cgroup: add PIDs subsystem
+Date: Sat,  6 Jun 2015 09:42:11 +1000
+Message-ID: <1433547736-11707-1-git-send-email-cyphar@cyphar.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Android Kernel Team <kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Rom Lemarchand <romlem-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Colin Cross <ccross-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>
+To: tj@kernel.org, lizefan@huawei.com, mingo@redhat.com, peterz@infradead.org
+Cc: richard@nod.at, fweisbec@gmail.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Aleksa Sarai <cyphar@cyphar.com>
 
-On Thu, Jun 4, 2015 at 11:36 AM, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> On Thu, Jun 04, 2015 at 10:11:17AM -0700, John Stultz wrote:
->> On Tue, Jun 2, 2015 at 10:50 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->> > memcg usage came up a while ago and there wasn't anything major which
->> > can't be achieved (usually better) by following more standard cgroup
->> > usage - changing knobs rather than moving tasks around.
->>
->> Do you have a pointer to that discussion or maybe even just a sense of
->> who was involved so I can trawl the list and better understand it?
->
-> I wrote a lengthy explanation of why moving tasks between cgroups is
-> problematic from a memcg view: https://lkml.org/lkml/2014/12/19/358
+This is a small update to v12 of the pids patchset[1] (most of which was
+merged into Tejun's tree, but was later reverted due to some bogus GCC
+warnings). The main changes are:
 
-And many thanks for the discussion pointer here! Its very enlightening!
-thanks
--john
+* Fix up include/linux/cgroup.h changes to take into account Tejun's
+  refactoring of cgroup.h into cgroup-defs.h.
+
+* Move ->can_attach() and ->cancel_attach() charge/revert into
+  ->attach(), since we can't fail and it's simpler to just charge there.
+
+* Remove tset_get_css(), because the premise of its existence is flawed
+  and switch ->attach() code to just task_get_css() itself.
+
+* Remove a patch that was rendered uneccesary by the cgroup.h refactor.
+
+* Fix up the for_each_subsys_which patchset so that it doesn't trigger
+  a GCC warning when CGROUP_SUBSYS_COUNT = 0, but cgroups are enabled.
+  The warning is bogus anyway, since the whole block becomes a noop in
+  that case.
+
+[1]: https://lkml.org/lkml/2015/5/18/439
+
+Aleksa Sarai (4):
+  cgroup: use bitmask to filter for_each_subsys
+  cgroup: replace explicit ss_mask checking with for_each_subsys_which
+  cgroup: allow a cgroup subsystem to reject a fork
+  cgroup: implement the PIDs subsystem
+
+Tejun Heo (1):
+  cgroup, block: implement task_get_css()
+
+ CREDITS                       |   5 +
+ include/linux/cgroup-defs.h   |  12 +-
+ include/linux/cgroup.h        |  41 ++++-
+ include/linux/cgroup_subsys.h |  28 ++++
+ init/Kconfig                  |  16 ++
+ kernel/Makefile               |   1 +
+ kernel/cgroup.c               | 171 +++++++++++++------
+ kernel/cgroup_freezer.c       |   2 +-
+ kernel/cgroup_pids.c          | 377 ++++++++++++++++++++++++++++++++++++++++++
+ kernel/fork.c                 |  17 +-
+ kernel/sched/core.c           |   2 +-
+ 11 files changed, 616 insertions(+), 56 deletions(-)
+ create mode 100644 kernel/cgroup_pids.c
+
+-- 
+2.4.2
