@@ -1,7 +1,7 @@
 From: John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 Subject: Re: [RFC][PATCH 0/2] Android style loosening of cgroup attach permissions
-Date: Fri, 5 Jun 2015 14:28:54 -0700
-Message-ID: <CALAqxLUDX94EqG1w+CfCXAgMq6-BfnyRev4pLBfxOagrfh42wQ@mail.gmail.com>
+Date: Fri, 5 Jun 2015 14:33:00 -0700
+Message-ID: <CALAqxLUXV5OaY2Ca15FckBRvVN-XKbZm00kQ7OWr5qFdc0BdsA@mail.gmail.com>
 References: <1432179674-19154-1-git-send-email-john.stultz@linaro.org>
 	<CALAqxLUXVaf0vzS=Hx+vZK5VqJoWHQ4iA8jG6+sWmiU6O3wbKw@mail.gmail.com>
 	<20150603055057.GE20091@mtj.duckdns.org>
@@ -29,31 +29,7 @@ On Thu, Jun 4, 2015 at 11:36 AM, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@
 >
 > I wrote a lengthy explanation of why moving tasks between cgroups is
 > problematic from a memcg view: https://lkml.org/lkml/2014/12/19/358
->
-> Rather than creating super-cgroups as configuration domains and using
-> migration as a reconfiguration mechanism, it's much better to group
-> tasks per app and reconfigure the groups themselves using specific
-> presets for classes of apps, like foreground, background, audio.
 
-Hmm. So I've not heard from the Android guys on the viability of this,
-but one downside to this approach seems like that for cpu-scheduling
-at least, using a per-task allocation would make it harder to bound
-"background" cpu processing as a whole, no?
-
-For example, In order to keep all background tasks to less then 20% of
-the cputime, you'd have to set each process to get .2/nr_tasks (which
-you'd have to recalculate & re-assign every time a new task is
-launched). But that would end up being wasteful since each task gets
-limited by that amount and cannot make use of cputime not used by
-other background tasks.
-
-Or am I misunderstanding the suggestion? Or is your concern just
-limited to the memcg and this sort of cgroup migration ok for
-scheduling?
-
-And I guess, if its ok for scheduling, is it reasonable to consider
-the proposed patch to allow "privileged" but non-root tasks to migrate
-processes between cgroups?
-
+And many thanks for the discussion pointer here! Its very enlightening!
 thanks
 -john
