@@ -1,139 +1,123 @@
-From: Aleksa Sarai <cyphar@cyphar.com>
-Subject: [PATCH v13 1/5] cgroup: use bitmask to filter for_each_subsys
-Date: Sat,  6 Jun 2015 10:02:14 +1000
-Message-ID: <1433548938-32560-1-git-send-email-cyphar@cyphar.com>
+From: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v13 2/5] cgroup: replace explicit ss_mask checking with for_each_subsys_which
+Date: Sat,  6 Jun 2015 10:02:15 +1000
+Message-ID: <1433548938-32560-2-git-send-email-cyphar@cyphar.com>
 References: <1433547736-11707-1-git-send-email-cyphar@cyphar.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1433547736-11707-1-git-send-email-cyphar@cyphar.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1433547736-11707-1-git-send-email-cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj@kernel.org, lizefan@huawei.com, mingo@redhat.com, peterz@infradead.org
-Cc: richard@nod.at, fweisbec@gmail.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Aleksa Sarai <cyphar@cyphar.com>
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
+Cc: richard-/L3Ra7n9ekc@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
 
-Add a new macro for_each_subsys_which that allows all enabled cgroup
-subsystems to be filtered by a bitmask, such that mask & (1 << ssid)
-determines if the subsystem is to be processed in the loop body (where
-ssid is the unique id of the subsystem).
+Replace the explicit checking against ss_masks inside a for_each_subsys
+block with for_each_subsys_which(..., ss_mask), to take advantage of the
+more readable (and more efficient) macro.
 
-Also replace the need_forkexit_callback with two separate bitmasks for
-each callback to make (ss->{fork,exit}) checks unnecessary.
-
-Signed-off-by: Aleksa Sarai <cyphar@cyphar.com>
+Signed-off-by: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/cgroup-defs.h |  2 ++
- kernel/cgroup.c             | 54 ++++++++++++++++++++++++++++-----------------
- 2 files changed, 36 insertions(+), 20 deletions(-)
+ kernel/cgroup.c | 44 ++++++++++++++++----------------------------
+ 1 file changed, 16 insertions(+), 28 deletions(-)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 26d1cea..c5588c4 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -490,6 +490,8 @@ static inline void cgroup_threadgroup_change_end(struct task_struct *tsk)
- 
- #else	/* CONFIG_CGROUPS */
- 
-+#define CGROUP_SUBSYS_COUNT 0
-+
- static inline void cgroup_threadgroup_change_begin(struct task_struct *tsk) {}
- static inline void cgroup_threadgroup_change_end(struct task_struct *tsk) {}
- 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 0fd5227..5734717 100644
+index 5734717..c5400d20 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -178,12 +178,13 @@ static DEFINE_IDR(cgroup_hierarchy_idr);
-  */
- static u64 css_serial_nr_next = 1;
+@@ -1107,9 +1107,8 @@ static unsigned long cgroup_calc_child_subsys_mask(struct cgroup *cgrp,
+ 	while (true) {
+ 		unsigned long new_ss_mask = cur_ss_mask;
  
--/* This flag indicates whether tasks in the fork and exit paths should
-- * check for fork/exit handlers to call. This avoids us having to do
-- * extra work in the fork/exit path if none of the subsystems need to
-- * be called.
-+/*
-+ * These bitmask flags indicate whether tasks in the fork and exit paths have
-+ * fork/exit handlers to call. This avoids us having to do extra work in the
-+ * fork/exit path to check which subsystems have fork/exit callbacks.
-  */
--static int need_forkexit_callback __read_mostly;
-+static unsigned long have_fork_callback __read_mostly;
-+static unsigned long have_exit_callback __read_mostly;
+-		for_each_subsys(ss, ssid)
+-			if (cur_ss_mask & (1 << ssid))
+-				new_ss_mask |= ss->depends_on;
++		for_each_subsys_which(ss, ssid, &cur_ss_mask)
++			new_ss_mask |= ss->depends_on;
  
- static struct cftype cgroup_dfl_base_files[];
- static struct cftype cgroup_legacy_base_files[];
-@@ -412,6 +413,25 @@ static int notify_on_release(const struct cgroup *cgrp)
- 	for ((ssid) = 0; (ssid) < CGROUP_SUBSYS_COUNT &&		\
- 	     (((ss) = cgroup_subsys[ssid]) || true); (ssid)++)
+ 		/*
+ 		 * Mask out subsystems which aren't available.  This can
+@@ -1247,10 +1246,7 @@ static int rebind_subsystems(struct cgroup_root *dst_root,
  
-+
-+/**
-+ * for_each_subsys_which - filter for_each_subsys with a bitmask
-+ * @ss: the iteration cursor
-+ * @ssid: the index of @ss, CGROUP_SUBSYS_COUNT after reaching the end
-+ * @ss_maskp: a pointer to the bitmask
-+ *
-+ * The block will only run for cases where the ssid-th bit (1 << ssid) of
-+ * mask is set to 1.
-+ */
-+#define for_each_subsys_which(ss, ssid, ss_maskp)			\
-+	if (!CGROUP_SUBSYS_COUNT)					\
-+		;							\
-+	else								\
-+		for_each_set_bit(ssid, ss_maskp, CGROUP_SUBSYS_COUNT)	\
-+			if (((ss) = cgroup_subsys[ssid]) && false)	\
-+				break;					\
-+			else
-+
- /* iterate across the hierarchies */
- #define for_each_root(root)						\
- 	list_for_each_entry((root), &cgroup_roots, root_list)
-@@ -4914,7 +4934,8 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss, bool early)
- 	 * init_css_set is in the subsystem's root cgroup. */
- 	init_css_set.subsys[ss->id] = css;
+ 	lockdep_assert_held(&cgroup_mutex);
  
--	need_forkexit_callback |= ss->fork || ss->exit;
-+	have_fork_callback |= (bool)ss->fork << ss->id;
-+	have_exit_callback |= (bool)ss->exit << ss->id;
- 
- 	/* At system boot, before all subsystems have been
- 	 * registered, no tasks have been forked, so we don't
-@@ -5225,11 +5246,8 @@ void cgroup_post_fork(struct task_struct *child)
- 	 * css_set; otherwise, @child might change state between ->fork()
- 	 * and addition to css_set.
+-	for_each_subsys(ss, ssid) {
+-		if (!(ss_mask & (1 << ssid)))
+-			continue;
+-
++	for_each_subsys_which(ss, ssid, &ss_mask) {
+ 		/* if @ss has non-root csses attached to it, can't move */
+ 		if (css_next_child(NULL, cgroup_css(&ss->root->cgrp, ss)))
+ 			return -EBUSY;
+@@ -1287,18 +1283,14 @@ static int rebind_subsystems(struct cgroup_root *dst_root,
+ 	 * Nothing can fail from this point on.  Remove files for the
+ 	 * removed subsystems and rebind each subsystem.
  	 */
--	if (need_forkexit_callback) {
--		for_each_subsys(ss, i)
--			if (ss->fork)
--				ss->fork(child);
--	}
-+	for_each_subsys_which(ss, i, &have_fork_callback)
-+		ss->fork(child);
- }
+-	for_each_subsys(ss, ssid)
+-		if (ss_mask & (1 << ssid))
+-			cgroup_clear_dir(&ss->root->cgrp, 1 << ssid);
++	for_each_subsys_which(ss, ssid, &ss_mask)
++		cgroup_clear_dir(&ss->root->cgrp, 1 << ssid);
  
- /**
-@@ -5273,16 +5291,12 @@ void cgroup_exit(struct task_struct *tsk)
- 	cset = task_css_set(tsk);
- 	RCU_INIT_POINTER(tsk->cgroups, &init_css_set);
+-	for_each_subsys(ss, ssid) {
++	for_each_subsys_which(ss, ssid, &ss_mask) {
+ 		struct cgroup_root *src_root;
+ 		struct cgroup_subsys_state *css;
+ 		struct css_set *cset;
  
--	if (need_forkexit_callback) {
--		/* see cgroup_post_fork() for details */
--		for_each_subsys(ss, i) {
--			if (ss->exit) {
--				struct cgroup_subsys_state *old_css = cset->subsys[i];
--				struct cgroup_subsys_state *css = task_css(tsk, i);
-+	/* see cgroup_post_fork() for details */
-+	for_each_subsys_which(ss, i, &have_exit_callback) {
-+		struct cgroup_subsys_state *old_css = cset->subsys[i];
-+		struct cgroup_subsys_state *css = task_css(tsk, i);
+-		if (!(ss_mask & (1 << ssid)))
+-			continue;
+-
+ 		src_root = ss->root;
+ 		css = cgroup_css(&src_root->cgrp, ss);
  
--				ss->exit(css, old_css, tsk);
--			}
+@@ -2557,13 +2549,11 @@ static void cgroup_print_ss_mask(struct seq_file *seq, unsigned long ss_mask)
+ 	bool printed = false;
+ 	int ssid;
+ 
+-	for_each_subsys(ss, ssid) {
+-		if (ss_mask & (1 << ssid)) {
+-			if (printed)
+-				seq_putc(seq, ' ');
+-			seq_printf(seq, "%s", ss->name);
+-			printed = true;
 -		}
-+		ss->exit(css, old_css, tsk);
++	for_each_subsys_which(ss, ssid, &ss_mask) {
++		if (printed)
++			seq_putc(seq, ' ');
++		seq_printf(seq, "%s", ss->name);
++		printed = true;
  	}
+ 	if (printed)
+ 		seq_putc(seq, '\n');
+@@ -2705,11 +2695,12 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 	 */
+ 	buf = strstrip(buf);
+ 	while ((tok = strsep(&buf, " "))) {
++		unsigned long tmp_ss_mask = ~cgrp_dfl_root_inhibit_ss_mask;
++
+ 		if (tok[0] == '\0')
+ 			continue;
+-		for_each_subsys(ss, ssid) {
+-			if (ss->disabled || strcmp(tok + 1, ss->name) ||
+-			    ((1 << ss->id) & cgrp_dfl_root_inhibit_ss_mask))
++		for_each_subsys_which(ss, ssid, &tmp_ss_mask) {
++			if (ss->disabled || strcmp(tok + 1, ss->name))
+ 				continue;
  
- 	if (put_cset)
+ 			if (*tok == '+') {
+@@ -2796,10 +2787,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 	 * still around.  In such cases, wait till it's gone using
+ 	 * offline_waitq.
+ 	 */
+-	for_each_subsys(ss, ssid) {
+-		if (!(css_enable & (1 << ssid)))
+-			continue;
+-
++	for_each_subsys_which(ss, ssid, &css_enable) {
+ 		cgroup_for_each_live_child(child, cgrp) {
+ 			DEFINE_WAIT(wait);
+ 
 -- 
 2.4.2
