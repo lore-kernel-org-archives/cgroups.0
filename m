@@ -1,66 +1,61 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH block/for-4.2-writeback] v9fs: fix error handling in v9fs_session_init()
-Date: Mon, 08 Jun 2015 09:10:25 -0600
-Message-ID: <5575B061.6060603@kernel.dk>
-References: <1432329245-5844-1-git-send-email-tj@kernel.org> <1432329245-5844-17-git-send-email-tj@kernel.org> <55739536.5040509@oracle.com> <20150608055731.GD21465@mtj.duckdns.org>
+From: Jeff Moyer <jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/8] cfq-iosched: simplify control flow in cfq_get_queue()
+Date: Mon, 08 Jun 2015 14:36:52 -0400
+Message-ID: <x49vbeyhwsb.fsf@segfault.boston.devel.redhat.com>
+References: <1433753973-23684-1-git-send-email-tj@kernel.org>
+	<1433753973-23684-2-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20150608055731.GD21465@mtj.duckdns.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1433753973-23684-2-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> (Tejun Heo's
+	message of "Mon, 8 Jun 2015 17:59:26 +0900")
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj@kernel.org>, Sasha Levin <sasha.levin@oracle.com>, Eric Van Hensbergen <ericvh@gmail.com>, Ron Minnich <rminnich@sandia.gov>, Latchesar Ionkov <lucho@ionkov.net>, v9fs-developer@lists.sourceforge.net
-Cc: linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On 06/07/2015 11:57 PM, Tejun Heo wrote:
-> On failure, v9fs_session_init() returns with the v9fs_session_info
-> struct partially initialized and expects the caller to invoke
-> v9fs_session_close() to clean it up; however, it doesn't track whether
-> the bdi is initialized or not and curiously invokes bdi_destroy() in
-> both vfs_session_init() failure path too.
->
-> A. If v9fs_session_init() fails before the bdi is initialized, the
->     follow-up v9fs_session_close() will invoke bdi_destroy() on an
->     uninitialized bdi.
->
-> B. If v9fs_session_init() fails after the bdi is initialized,
->     bdi_destroy() will be called twice on the same bdi - once in the
->     failure path of v9fs_session_init() and then by
->     v9fs_session_close().
->
-> A is broken no matter what.  B used to be okay because bdi_destroy()
-> allowed being invoked multiple times on the same bdi, which BTW was
-> broken in its own way - if bdi_destroy() was invoked on an initialiezd
-> but !registered bdi, it'd fail to free percpu counters.  Since
-> f0054bb1e1f3 ("writeback: move backing_dev_info->wb_lock and
-> ->worklist into bdi_writeback"), this no longer work - bdi_destroy()
-> on an initialized but not registered bdi works correctly but multiple
-> invocations of bdi_destroy() is no longer allowed.
->
-> The obvious culprit here is v9fs_session_init()'s odd and broken error
-> behavior.  It should simply clean up after itself on failures.  This
-> patch makes the following updates to v9fs_session_init().
->
-> * @rc -> @retval error return propagation removed.  It didn't serve
->    any purpose.  Just use @rc.
->
-> * Move addition to v9fs_sessionlist to the end of the function so that
->    incomplete sessions are not put on the list or iterated and error
->    path doesn't have to worry about it.
->
-> * Update error handling so that it cleans up after itself.
->
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Reported-by: Sasha Levin <sasha.levin@oracle.com>
+Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> writes:
 
-Added to for-4.2/writeback, thanks.
+> cfq_get_queue()'s control flow looks like the following.
+>
+> 	async_cfqq = NULL;
+> 	cfqq = NULL;
+>
+> 	if (!is_sync) {
+> 		...
+> 		async_cfqq = ...;
+> 		cfqq = *async_cfqq;
+> 	}
+>
+> 	if (!cfqq)
+> 		cfqq = ...;
+>
+> 	if (!is_sync && !(*async_cfqq))
+> 		...;
+>
+> The only thing the local variable init, the second if, and the
+> async_cfqq test in the third if achieves is to skip cfqq creation and
+> installation if *async_cfqq was already non-NULL.  This is needlessly
+> complicated with different tests examining the same condition.
+> Simplify it to the following.
+>
+> 	if (!is_sync) {
+> 		...
+> 		async_cfqq = ...;
+> 		cfqq = *async_cfqq;
+> 		if (cfqq)
+> 			goto out;
+> 	}
+>
+> 	cfqq = ...;
+>
+> 	if (!is_sync)
+> 		...;
+>  out:
+>
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: Arianna Avanzini <avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
--- 
-Jens Axboe
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Acked-by: Jeff Moyer <jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
