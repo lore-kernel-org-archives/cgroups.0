@@ -1,110 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 6/8] cfq-iosched: move cfq_group determination from cfq_find_alloc_queue() to cfq_get_queue()
-Date: Mon,  8 Jun 2015 17:59:31 +0900
-Message-ID: <1433753973-23684-7-git-send-email-tj@kernel.org>
-References: <1433753973-23684-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v13 2/5] cgroup: replace explicit ss_mask checking with
+ for_each_subsys_which
+Date: Mon, 8 Jun 2015 18:21:07 +0900
+Message-ID: <20150608092107.GH21465@mtj.duckdns.org>
+References: <1433547736-11707-1-git-send-email-cyphar@cyphar.com>
+ <1433548938-32560-2-git-send-email-cyphar@cyphar.com>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=WS0IrpBi3zT+rfJGPLeSKQeyz0MN+ipigheaNJkQeU4=;
-        b=QNcvrIW0v7Th12S99Z7g3bM62N7DJikppnFjp7YkCToekyb7HCRkJVhf+d098/Ap41
-         Fws9ITQKwLGFILmJ+qEwmNdjE+6Ep+FCdglWL3ICcG38EghT/3y371xII+IFtGywkAew
-         5e4jn2yO03S1yzUBEbUok2Is29K6yg38q6BHPj91ofwygZd3NF2eqanO+Xs93Mmf2tuh
-         ydYp/HA117v5QKIrjfo0OJKZjDD4i4Y8yi+/nvyhXNnuvttR+2KOvUspoQKLuqCyvozq
-         04x0NMdpOfc0MyHF/eTuuEn+RaLV04BL1cLy99CwWtJb798m7GcVEB5fCQO0VwmvImkz
-         yvvA==
-In-Reply-To: <1433753973-23684-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=GoLn2SRsx5wokMI9baDSUUB3BYGHkzjauAhVpy677mA=;
+        b=lXThfE3C9Ch+tNsMJpwCTE4ypgvNNV+hMciO3i8/PJtOZ/qveu5yuqsyZkSThb+AGl
+         a9Hyr/ZJ9KvyDIAiSnFNvyIER1NnlVwbOmYCwdXT4x2NbmjenzrsM2/MXs2tncPJA50f
+         ZVzoBV0Sd5HW3AuDxASFcy4i9pAHsF5oM8piHaiIFiumAHkBKl0VLhD+JZwZNc09Dlbh
+         0IFHATpTRCuM53zf+OSskOzgzrSlZSMxuRNShjZe3BuGu5V5eKDxi6iinLhB0DAsVTni
+         pQUqZhqPY/svXDvQFH6zGueOuxgOZpmHBP59MtIZ3sM3LFsr/8tBLwM18TM5gTcNDEyo
+         zxmw==
+Content-Disposition: inline
+In-Reply-To: <1433548938-32560-2-git-send-email-cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, vgoyal@redhat.com, avanzini.arianna@gmail.com, Tejun Heo <tj@kernel.org>
+To: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, richard-/L3Ra7n9ekc@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-This is necessary for making async cfq_cgroups per-cfq_group instead
-of per-cfq_data.  While this change makes cfq_get_queue() perform RCU
-locking and look up cfq_group even when it reuses async queue, the
-extra overhead is extremely unlikely to be noticeable given that this
-is already sitting behind cic->cfqq[] cache and the overall cost of
-cfq operation.
+On Sat, Jun 06, 2015 at 10:02:15AM +1000, Aleksa Sarai wrote:
+> Replace the explicit checking against ss_masks inside a for_each_subsys
+> block with for_each_subsys_which(..., ss_mask), to take advantage of the
+> more readable (and more efficient) macro.
+> 
+> Signed-off-by: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Vivek Goyal <vgoyal@redhat.com>
-Cc: Arianna Avanzini <avanzini.arianna@gmail.com>
----
- block/cfq-iosched.c | 28 ++++++++++++----------------
- 1 file changed, 12 insertions(+), 16 deletions(-)
+Applied 1-2 to cgroup/for-4.2.
 
-diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index b8e83cd..a775128 100644
---- a/block/cfq-iosched.c
-+++ b/block/cfq-iosched.c
-@@ -3573,21 +3573,10 @@ static inline void check_blkcg_changed(struct cfq_io_cq *cic, struct bio *bio) {
- #endif  /* CONFIG_CFQ_GROUP_IOSCHED */
- 
- static struct cfq_queue *
--cfq_find_alloc_queue(struct cfq_data *cfqd, bool is_sync, struct cfq_io_cq *cic,
--		     struct bio *bio)
-+cfq_find_alloc_queue(struct cfq_data *cfqd, struct cfq_group *cfqg, bool is_sync,
-+		     struct cfq_io_cq *cic, struct bio *bio)
- {
--	struct blkcg *blkcg;
- 	struct cfq_queue *cfqq;
--	struct cfq_group *cfqg;
--
--	rcu_read_lock();
--
--	blkcg = bio_blkcg(bio);
--	cfqg = cfq_lookup_create_cfqg(cfqd, blkcg);
--	if (!cfqg) {
--		cfqq = &cfqd->oom_cfqq;
--		goto out;
--	}
- 
- 	cfqq = cic_to_cfqq(cic, is_sync);
- 
-@@ -3607,8 +3596,6 @@ cfq_find_alloc_queue(struct cfq_data *cfqd, bool is_sync, struct cfq_io_cq *cic,
- 		} else
- 			cfqq = &cfqd->oom_cfqq;
- 	}
--out:
--	rcu_read_unlock();
- 	return cfqq;
- }
- 
-@@ -3638,6 +3625,14 @@ cfq_get_queue(struct cfq_data *cfqd, bool is_sync, struct cfq_io_cq *cic,
- 	int ioprio = IOPRIO_PRIO_DATA(cic->ioprio);
- 	struct cfq_queue **async_cfqq;
- 	struct cfq_queue *cfqq;
-+	struct cfq_group *cfqg;
-+
-+	rcu_read_lock();
-+	cfqg = cfq_lookup_create_cfqg(cfqd, bio_blkcg(bio));
-+	if (!cfqg) {
-+		cfqq = &cfqd->oom_cfqq;
-+		goto out;
-+	}
- 
- 	if (!is_sync) {
- 		if (!ioprio_valid(cic->ioprio)) {
-@@ -3651,7 +3646,7 @@ cfq_get_queue(struct cfq_data *cfqd, bool is_sync, struct cfq_io_cq *cic,
- 			goto out;
- 	}
- 
--	cfqq = cfq_find_alloc_queue(cfqd, is_sync, cic, bio);
-+	cfqq = cfq_find_alloc_queue(cfqd, cfqg, is_sync, cic, bio);
- 
- 	/*
- 	 * pin the queue now that it's allocated, scheduler exit will prune it
-@@ -3662,6 +3657,7 @@ cfq_get_queue(struct cfq_data *cfqd, bool is_sync, struct cfq_io_cq *cic,
- 	}
- out:
- 	cfqq->ref++;
-+	rcu_read_unlock();
- 	return cfqq;
- }
- 
+Thanks.
+
 -- 
-2.4.2
+tejun
