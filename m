@@ -1,12 +1,14 @@
 From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCHSET block/for-4.2/writeback] block, cgroup: make cfq charge async IOs to the appropriate blkcgs
-Date: Mon, 08 Jun 2015 15:49:56 -0400
-Message-ID: <x491thmhtej.fsf@segfault.boston.devel.redhat.com>
+Subject: Re: [PATCH 5/8] cfq-iosched: remove @gfp_mask from cfq_find_alloc_queue()
+Date: Mon, 08 Jun 2015 16:27:10 -0400
+Message-ID: <x49sia2gd41.fsf@segfault.boston.devel.redhat.com>
 References: <1433753973-23684-1-git-send-email-tj@kernel.org>
+	<1433753973-23684-6-git-send-email-tj@kernel.org>
+	<x498ubuhulf.fsf@segfault.boston.devel.redhat.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1433753973-23684-1-git-send-email-tj@kernel.org> (Tejun Heo's
-	message of "Mon, 8 Jun 2015 17:59:25 +0900")
+In-Reply-To: <x498ubuhulf.fsf@segfault.boston.devel.redhat.com> (Jeff Moyer's
+	message of "Mon, 08 Jun 2015 15:24:12 -0400")
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -14,39 +16,33 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>
 Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, vgoyal@redhat.com, avanzini.arianna@gmail.com
 
-Tejun Heo <tj@kernel.org> writes:
+Jeff Moyer <jmoyer@redhat.com> writes:
 
-> Hello,
+> Tejun Heo <tj@kernel.org> writes:
 >
-> cfq has always charged all async IOs to the root cgroup.  It didn't
-> have much choice as writeback didn't know about cgroups and there was
-> no way to tell who to blame for a given writeback IO.  writeback
-> finally grew support for cgroups and now tags each writeback IO with
-> the appropriate cgroup to charge it against.
+>> Even when allocations fail, cfq_find_alloc_queue() always returns a
+>> valid cfq_queue by falling back to the oom cfq_queue.  As such, there
+>> isn't much point in taking @gfp_mask and trying "harder" if __GFP_WAIT
+>> is set.  GFP_ATOMIC allocations don't fail often and even when they do
+>> the degraded behavior is acceptable and temporary.
+>>
+>> After all, the only reason get_request(), which ultimately determines
+>> the gfp_mask, cares about __GFP_WAIT is to guarantee request
+>> allocation, assuming IO forward progress, for callers which are
+>> willing to wait.  There's no reason for cfq_find_alloc_queue() to
+>> behave differently on __GFP_WAIT when it already has a fallback
+>> mechanism.
+>>
+>> Remove @gfp_mask from cfq_find_alloc_queue() and propagate the changes
+>> to its callers.  This simplifies the function quite a bit and will
+>> help making async queues per-cfq_group.
 >
-> This patchset updates cfq so that it follows the blkcg each bio is
-> tagged with.  Async cfq_queues are now shared across cfq_group, which
-> is per-cgroup, instead of per-request_queue cfq_data.  This makes all
-> IOs follow the weight based IO resource distribution implemented by
-> cfq.
->
-> This patchset contains the following 8 patches.
->
->  0001-cfq-iosched-simplify-control-flow-in-cfq_get_queue.patch
->  0002-cfq-iosched-fix-async-oom-queue-handling.patch
->  0003-cfq-iosched-fix-oom-cfq_queue-ref-leak-in-cfq_set_re.patch
->  0004-cfq-iosched-minor-cleanups.patch
->  0005-cfq-iosched-remove-gfp_mask-from-cfq_find_alloc_queu.patch
->  0006-cfq-iosched-move-cfq_group-determination-from-cfq_fi.patch
->  0007-cfq-iosched-fold-cfq_find_alloc_queue-into-cfq_get_q.patch
->  0008-cfq-iosched-charge-async-IOs-to-the-appropriate-blkc.patch
+> Sorry, I disagree with this patch.  You've changed it so that all cfqq
+> allocations are GFP_ATOMIC, and most, if not all of them simply don't
+> need to be.
 
-Hi, Tejun,
+It occurs to me that replacing GFP_ATOMIC with GFP_NOWAIT in your patch
+would address my concerns, and patches 6-8 would apply almost as-is.
+What do you think about that?
 
-Assuming you're ok with dropping patch 5, I'll review patches 6-8 once
-they've been reworked to account for that.  I took a look at them, and
-they look OK to me.  But, if they are going to change, I'd rather wait
-to ack the final versions.
-
-Cheers,
-Jeff
+-Jeff
