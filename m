@@ -1,66 +1,111 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCHSET block/for-4.2/writeback] block, cgroup: make cfq charge async IOs to the appropriate blkcgs
-Date: Mon,  8 Jun 2015 17:59:25 +0900
-Message-ID: <1433753973-23684-1-git-send-email-tj@kernel.org>
+Subject: [PATCH 1/8] cfq-iosched: simplify control flow in cfq_get_queue()
+Date: Mon,  8 Jun 2015 17:59:26 +0900
+Message-ID: <1433753973-23684-2-git-send-email-tj@kernel.org>
+References: <1433753973-23684-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id;
-        bh=X4fiMaIfN/KwyHW/NxBOyTjRTEzjegdqJ4663w/BERU=;
-        b=RKM93WTCE/AeC5T5f8z2LF8Y9j7jiZC6VdPomrYSocw5VS/WyBHrqvDkswnEcg0Hka
-         vU4mo76bMK3EYSglIczvhxFMfX+IaH5d5JHRb9FL0+EFYq8w+vVvXM6UK2ySj5c9JzAi
-         Dc1bJoTXBvQr82JG3Z8+pdvx/EV3mOOgZLnT88f2npkd58E5I+YRNE+feE8AfKD/yqy+
-         lIAvQuz/qce8+LHWcu9d7t1jXSRujn1+Oj7BFaKC5CtQYYzdTjx242JmaAJxqTQFR6mD
-         J6qarxcSOsJtXlWr6zpYAOXlrahwsn5VkWYb42WNIuNnhAu02PsL7E8jeSSF9MuJ6Hy0
-         bThA==
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=8GzFgzGaJlXIbo4Aiuvz+bN7VJ8istvOTGlFfyTDdJw=;
+        b=wGSxsBq7HhTeowSmzy98pJRX/9EPKGDox5s6stme3a3oaQKlaIj/IUivOpaALcNq64
+         JS22fmqcZ1lrull97NbFo/KK6dy1QhntBPN/7Sj0n5PA9mQYzSN1qlMH243asPuhy9Zm
+         NmWgPmG3+GYf9/SXhu/w4ApNCM01qTHpjf0KeDRtRHfLXdChBw7j9FyJqNnJ6kd97xdO
+         qZNgDusNTyOA3ipTpa6MMn09ZE5mgENw+su1gdt43l3R4v9ffHZX5TT6oWUvIEX0s6MM
+         L2RK931B6w1jXF7dXvxeWZdutD7Py4zUHEmwKG23K30uiTTc1U2Cg7SSBwu4eYSQQBub
+         a0oQ==
+In-Reply-To: <1433753973-23684-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Hello,
+cfq_get_queue()'s control flow looks like the following.
 
-cfq has always charged all async IOs to the root cgroup.  It didn't
-have much choice as writeback didn't know about cgroups and there was
-no way to tell who to blame for a given writeback IO.  writeback
-finally grew support for cgroups and now tags each writeback IO with
-the appropriate cgroup to charge it against.
+	async_cfqq = NULL;
+	cfqq = NULL;
 
-This patchset updates cfq so that it follows the blkcg each bio is
-tagged with.  Async cfq_queues are now shared across cfq_group, which
-is per-cgroup, instead of per-request_queue cfq_data.  This makes all
-IOs follow the weight based IO resource distribution implemented by
-cfq.
+	if (!is_sync) {
+		...
+		async_cfqq = ...;
+		cfqq = *async_cfqq;
+	}
 
-This patchset contains the following 8 patches.
+	if (!cfqq)
+		cfqq = ...;
 
- 0001-cfq-iosched-simplify-control-flow-in-cfq_get_queue.patch
- 0002-cfq-iosched-fix-async-oom-queue-handling.patch
- 0003-cfq-iosched-fix-oom-cfq_queue-ref-leak-in-cfq_set_re.patch
- 0004-cfq-iosched-minor-cleanups.patch
- 0005-cfq-iosched-remove-gfp_mask-from-cfq_find_alloc_queu.patch
- 0006-cfq-iosched-move-cfq_group-determination-from-cfq_fi.patch
- 0007-cfq-iosched-fold-cfq_find_alloc_queue-into-cfq_get_q.patch
- 0008-cfq-iosched-charge-async-IOs-to-the-appropriate-blkc.patch
+	if (!is_sync && !(*async_cfqq))
+		...;
 
-0001-0003 are a prep and two fix patches on top.  The bugs fixed by
-these patches are very unlikely to cause problems in actual usage, so
-the patches aren't tagged w/ -stable.
+The only thing the local variable init, the second if, and the
+async_cfqq test in the third if achieves is to skip cfqq creation and
+installation if *async_cfqq was already non-NULL.  This is needlessly
+complicated with different tests examining the same condition.
+Simplify it to the following.
 
-0004-0007 are prep patches.
+	if (!is_sync) {
+		...
+		async_cfqq = ...;
+		cfqq = *async_cfqq;
+		if (cfqq)
+			goto out;
+	}
 
-0008 makes cfq cgroup-writeback ready.
+	cfqq = ...;
 
-This patchset is on top of block/for-4.2/writeback 5857cd637bc0 ("bdi:
-fix wrong error return value in cgwb_create()").
+	if (!is_sync)
+		...;
+ out:
 
-Thanks, diffstat follows.
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Arianna Avanzini <avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ block/cfq-iosched.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
- block/cfq-iosched.c |  220 ++++++++++++++++++++--------------------------------
- 1 file changed, 85 insertions(+), 135 deletions(-)
-
---
-tejun
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index bc8f429..2814bb7 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -3663,8 +3663,8 @@ cfq_get_queue(struct cfq_data *cfqd, bool is_sync, struct cfq_io_cq *cic,
+ {
+ 	int ioprio_class = IOPRIO_PRIO_CLASS(cic->ioprio);
+ 	int ioprio = IOPRIO_PRIO_DATA(cic->ioprio);
+-	struct cfq_queue **async_cfqq = NULL;
+-	struct cfq_queue *cfqq = NULL;
++	struct cfq_queue **async_cfqq;
++	struct cfq_queue *cfqq;
+ 
+ 	if (!is_sync) {
+ 		if (!ioprio_valid(cic->ioprio)) {
+@@ -3674,19 +3674,20 @@ cfq_get_queue(struct cfq_data *cfqd, bool is_sync, struct cfq_io_cq *cic,
+ 		}
+ 		async_cfqq = cfq_async_queue_prio(cfqd, ioprio_class, ioprio);
+ 		cfqq = *async_cfqq;
++		if (cfqq)
++			goto out;
+ 	}
+ 
+-	if (!cfqq)
+-		cfqq = cfq_find_alloc_queue(cfqd, is_sync, cic, bio, gfp_mask);
++	cfqq = cfq_find_alloc_queue(cfqd, is_sync, cic, bio, gfp_mask);
+ 
+ 	/*
+ 	 * pin the queue now that it's allocated, scheduler exit will prune it
+ 	 */
+-	if (!is_sync && !(*async_cfqq)) {
++	if (!is_sync) {
+ 		cfqq->ref++;
+ 		*async_cfqq = cfqq;
+ 	}
+-
++out:
+ 	cfqq->ref++;
+ 	return cfqq;
+ }
+-- 
+2.4.2
