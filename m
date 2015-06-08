@@ -1,13 +1,13 @@
 From: Jeff Moyer <jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/8] cfq-iosched: simplify control flow in cfq_get_queue()
-Date: Mon, 08 Jun 2015 14:36:52 -0400
-Message-ID: <x49vbeyhwsb.fsf@segfault.boston.devel.redhat.com>
+Subject: Re: [PATCH 2/8] cfq-iosched: fix async oom queue handling
+Date: Mon, 08 Jun 2015 14:42:41 -0400
+Message-ID: <x49r3pmhwim.fsf@segfault.boston.devel.redhat.com>
 References: <1433753973-23684-1-git-send-email-tj@kernel.org>
-	<1433753973-23684-2-git-send-email-tj@kernel.org>
+	<1433753973-23684-3-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1433753973-23684-2-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> (Tejun Heo's
-	message of "Mon, 8 Jun 2015 17:59:26 +0900")
+In-Reply-To: <1433753973-23684-3-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> (Tejun Heo's
+	message of "Mon, 8 Jun 2015 17:59:27 +0900")
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -17,45 +17,20 @@ Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2r
 
 Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> writes:
 
-> cfq_get_queue()'s control flow looks like the following.
+> Async cfqq's (cfq_queue's) are shared across cfq_data.  When
+> cfq_get_queue() obtains a new queue from cfq_find_alloc_queue(), it
+> stashes the pointer in cfq_data and reuses it from then on; however,
+> the function doesn't consider that cfq_find_alloc_queue() may return
+> the oom_cfqq under memory pressure and installs the returned queue
+> unconditionally.
 >
-> 	async_cfqq = NULL;
-> 	cfqq = NULL;
+> If the oom_cfqq is installed as an async cfqq, cfq_set_request() will
+> continue calling cfq_get_queue() hoping to replace it with a proper
+> queue; however, cfq_get_queue() will keep returning the cached queue
+> for the slot - the oom_cfqq.
 >
-> 	if (!is_sync) {
-> 		...
-> 		async_cfqq = ...;
-> 		cfqq = *async_cfqq;
-> 	}
->
-> 	if (!cfqq)
-> 		cfqq = ...;
->
-> 	if (!is_sync && !(*async_cfqq))
-> 		...;
->
-> The only thing the local variable init, the second if, and the
-> async_cfqq test in the third if achieves is to skip cfqq creation and
-> installation if *async_cfqq was already non-NULL.  This is needlessly
-> complicated with different tests examining the same condition.
-> Simplify it to the following.
->
-> 	if (!is_sync) {
-> 		...
-> 		async_cfqq = ...;
-> 		cfqq = *async_cfqq;
-> 		if (cfqq)
-> 			goto out;
-> 	}
->
-> 	cfqq = ...;
->
-> 	if (!is_sync)
-> 		...;
->  out:
->
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: Arianna Avanzini <avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Fix it by skipping caching if the queue is the oom one.
 
-Acked-by: Jeff Moyer <jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Good catch.
+
+Reviewed-by: Jeff Moyer <jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
