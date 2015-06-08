@@ -1,61 +1,66 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 2/8] cfq-iosched: fix async oom queue handling
-Date: Mon,  8 Jun 2015 17:59:27 +0900
-Message-ID: <1433753973-23684-3-git-send-email-tj@kernel.org>
-References: <1433753973-23684-1-git-send-email-tj@kernel.org>
+Subject: [PATCHSET block/for-4.2/writeback] block, cgroup: make cfq charge async IOs to the appropriate blkcgs
+Date: Mon,  8 Jun 2015 17:59:25 +0900
+Message-ID: <1433753973-23684-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=1tfbcHMmfxw6nNNfYLYVLmq7fkFTwuO98QnI8Gw2dkk=;
-        b=aPJNsShl90dlSDpCgCgkZ29u7xFOCkf0GYOWGYTsrncU0Qs84JYKWF8d8YjzvoGUkE
-         B+oNaBOIxpGyOtU4Wwp6y/BKzsRkwqfsjAj8S1q8aV9PCerdAZ3sHmjNuLSRFG7D75JU
-         znL9cNtoEg2YZGBhTwg/c44l5SGvlcNjdkUmL53Cv1Rbfrn7aSTwMugUYh4e/4MP7PXy
-         aMuUFid8ztFX+Wo+oazyXQuTeySnWYxO7VkaZqAOof5o2YMq6DXMcR+THBLSZa6d+Jf5
-         5x/bcF7rebn4OdgRiTYueZKt1oW2V0S9ym7yytqRdFYi7kzAGmOc9MhTg9vUaVCvihX7
-         QLnw==
-In-Reply-To: <1433753973-23684-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=X4fiMaIfN/KwyHW/NxBOyTjRTEzjegdqJ4663w/BERU=;
+        b=RKM93WTCE/AeC5T5f8z2LF8Y9j7jiZC6VdPomrYSocw5VS/WyBHrqvDkswnEcg0Hka
+         vU4mo76bMK3EYSglIczvhxFMfX+IaH5d5JHRb9FL0+EFYq8w+vVvXM6UK2ySj5c9JzAi
+         Dc1bJoTXBvQr82JG3Z8+pdvx/EV3mOOgZLnT88f2npkd58E5I+YRNE+feE8AfKD/yqy+
+         lIAvQuz/qce8+LHWcu9d7t1jXSRujn1+Oj7BFaKC5CtQYYzdTjx242JmaAJxqTQFR6mD
+         J6qarxcSOsJtXlWr6zpYAOXlrahwsn5VkWYb42WNIuNnhAu02PsL7E8jeSSF9MuJ6Hy0
+         bThA==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-Async cfqq's (cfq_queue's) are shared across cfq_data.  When
-cfq_get_queue() obtains a new queue from cfq_find_alloc_queue(), it
-stashes the pointer in cfq_data and reuses it from then on; however,
-the function doesn't consider that cfq_find_alloc_queue() may return
-the oom_cfqq under memory pressure and installs the returned queue
-unconditionally.
+Hello,
 
-If the oom_cfqq is installed as an async cfqq, cfq_set_request() will
-continue calling cfq_get_queue() hoping to replace it with a proper
-queue; however, cfq_get_queue() will keep returning the cached queue
-for the slot - the oom_cfqq.
+cfq has always charged all async IOs to the root cgroup.  It didn't
+have much choice as writeback didn't know about cgroups and there was
+no way to tell who to blame for a given writeback IO.  writeback
+finally grew support for cgroups and now tags each writeback IO with
+the appropriate cgroup to charge it against.
 
-Fix it by skipping caching if the queue is the oom one.
+This patchset updates cfq so that it follows the blkcg each bio is
+tagged with.  Async cfq_queues are now shared across cfq_group, which
+is per-cgroup, instead of per-request_queue cfq_data.  This makes all
+IOs follow the weight based IO resource distribution implemented by
+cfq.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Arianna Avanzini <avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
----
- block/cfq-iosched.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This patchset contains the following 8 patches.
 
-diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index 2814bb7..c7b33aa 100644
---- a/block/cfq-iosched.c
-+++ b/block/cfq-iosched.c
-@@ -3683,7 +3683,7 @@ cfq_get_queue(struct cfq_data *cfqd, bool is_sync, struct cfq_io_cq *cic,
- 	/*
- 	 * pin the queue now that it's allocated, scheduler exit will prune it
- 	 */
--	if (!is_sync) {
-+	if (!is_sync && cfqq != &cfqd->oom_cfqq) {
- 		cfqq->ref++;
- 		*async_cfqq = cfqq;
- 	}
--- 
-2.4.2
+ 0001-cfq-iosched-simplify-control-flow-in-cfq_get_queue.patch
+ 0002-cfq-iosched-fix-async-oom-queue-handling.patch
+ 0003-cfq-iosched-fix-oom-cfq_queue-ref-leak-in-cfq_set_re.patch
+ 0004-cfq-iosched-minor-cleanups.patch
+ 0005-cfq-iosched-remove-gfp_mask-from-cfq_find_alloc_queu.patch
+ 0006-cfq-iosched-move-cfq_group-determination-from-cfq_fi.patch
+ 0007-cfq-iosched-fold-cfq_find_alloc_queue-into-cfq_get_q.patch
+ 0008-cfq-iosched-charge-async-IOs-to-the-appropriate-blkc.patch
+
+0001-0003 are a prep and two fix patches on top.  The bugs fixed by
+these patches are very unlikely to cause problems in actual usage, so
+the patches aren't tagged w/ -stable.
+
+0004-0007 are prep patches.
+
+0008 makes cfq cgroup-writeback ready.
+
+This patchset is on top of block/for-4.2/writeback 5857cd637bc0 ("bdi:
+fix wrong error return value in cgwb_create()").
+
+Thanks, diffstat follows.
+
+ block/cfq-iosched.c |  220 ++++++++++++++++++++--------------------------------
+ 1 file changed, 85 insertions(+), 135 deletions(-)
+
+--
+tejun
