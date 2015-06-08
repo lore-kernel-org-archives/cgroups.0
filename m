@@ -1,40 +1,45 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v13 2/5] cgroup: replace explicit ss_mask checking with
- for_each_subsys_which
-Date: Mon, 8 Jun 2015 18:21:07 +0900
-Message-ID: <20150608092107.GH21465@mtj.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v13 3/5] cgroup, block: implement task_get_css()
+Date: Mon, 8 Jun 2015 18:22:02 +0900
+Message-ID: <20150608092202.GI21465@mtj.duckdns.org>
 References: <1433547736-11707-1-git-send-email-cyphar@cyphar.com>
- <1433548938-32560-2-git-send-email-cyphar@cyphar.com>
+ <1433548938-32560-3-git-send-email-cyphar@cyphar.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=GoLn2SRsx5wokMI9baDSUUB3BYGHkzjauAhVpy677mA=;
-        b=lXThfE3C9Ch+tNsMJpwCTE4ypgvNNV+hMciO3i8/PJtOZ/qveu5yuqsyZkSThb+AGl
-         a9Hyr/ZJ9KvyDIAiSnFNvyIER1NnlVwbOmYCwdXT4x2NbmjenzrsM2/MXs2tncPJA50f
-         ZVzoBV0Sd5HW3AuDxASFcy4i9pAHsF5oM8piHaiIFiumAHkBKl0VLhD+JZwZNc09Dlbh
-         0IFHATpTRCuM53zf+OSskOzgzrSlZSMxuRNShjZe3BuGu5V5eKDxi6iinLhB0DAsVTni
-         pQUqZhqPY/svXDvQFH6zGueOuxgOZpmHBP59MtIZ3sM3LFsr/8tBLwM18TM5gTcNDEyo
-         zxmw==
+        bh=7QyTF81feJcUN3wnK/GMvgGEAjhWOLy8uOtKhgksy74=;
+        b=srJPd1O6+xKuJH9Ssv6B5z6lM3/nlSJihf2v+VSqIUnJvENaSCn76k+uMdnQnfF4wl
+         E3iZf9DYggKu8M28Pq0c539bPWHQVuGsIyO+1X73lLSzDCggcVzQZ9yneXR/mpGsvz+B
+         EkIbS8rIpbfQksuO23GZqZVBavc6RQ7Wg4r2ZXDjRQHIa7OyEImgJ5WxMnKNluSo72OC
+         dGqVMV8eWKcm7lFLKsePsbtrWJAq0sxva3UbtGxilQr6vK3hO1KVfa2rlAmcJhkY9Wiy
+         vpXJwfx8//Yf0D/sInjFYL5xImt6ePBCHRfXZW6c2rQd/LiXvR5HLN1bJGpBEgGL+KNg
+         kf7A==
 Content-Disposition: inline
-In-Reply-To: <1433548938-32560-2-git-send-email-cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1433548938-32560-3-git-send-email-cyphar@cyphar.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, richard-/L3Ra7n9ekc@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Aleksa Sarai <cyphar@cyphar.com>
+Cc: lizefan@huawei.com, mingo@redhat.com, peterz@infradead.org, richard@nod.at, fweisbec@gmail.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Sat, Jun 06, 2015 at 10:02:15AM +1000, Aleksa Sarai wrote:
-> Replace the explicit checking against ss_masks inside a for_each_subsys
-> block with for_each_subsys_which(..., ss_mask), to take advantage of the
-> more readable (and more efficient) macro.
+On Sat, Jun 06, 2015 at 10:02:16AM +1000, Aleksa Sarai wrote:
+> From: Tejun Heo <tj@kernel.org>
 > 
-> Signed-off-by: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+> Implement task_get_css() which find and pins the css for the specified
+> task and subsys.  As a task is always associated with an online css
+> for every subsystem except while the css_set update is propagating,
+> task_get_css() retries till css_tryget_online() succeeds.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Li Zefan <lizefan@huawei.com>
 
-Applied 1-2 to cgroup/for-4.2.
+Another form of this patch was already in block/for-4.2/writeback.  I
+cherry picked that commit into cgroup/for-4.2 to avoid pulling the
+whole thing into cgroup tree.
 
 Thanks.
 
