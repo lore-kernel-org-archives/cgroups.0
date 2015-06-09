@@ -1,13 +1,14 @@
 From: Jeff Moyer <jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 8/8] cfq-iosched: charge async IOs to the appropriate blkcg's instead of the root
-Date: Tue, 09 Jun 2015 11:03:15 -0400
-Message-ID: <x49pp54sz4c.fsf@segfault.boston.devel.redhat.com>
+Subject: Re: [PATCHSET block/for-4.2/writeback] block, cgroup: make cfq charge async IOs to the appropriate blkcgs
+Date: Tue, 09 Jun 2015 11:05:46 -0400
+Message-ID: <x49lhfssz05.fsf@segfault.boston.devel.redhat.com>
 References: <1433753973-23684-1-git-send-email-tj@kernel.org>
-	<1433753973-23684-9-git-send-email-tj@kernel.org>
+	<x491thmhtej.fsf@segfault.boston.devel.redhat.com>
+	<20150609030327.GL21465@mtj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1433753973-23684-9-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> (Tejun Heo's
-	message of "Mon, 8 Jun 2015 17:59:33 +0900")
+In-Reply-To: <20150609030327.GL21465-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org> (Tejun Heo's message of
+	"Tue, 9 Jun 2015 12:03:27 +0900")
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -17,33 +18,25 @@ Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2r
 
 Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> writes:
 
-> Up until now, all async IOs were queued to async queues which are
-> shared across the whole request_queue, which means that blkcg resource
-> control is completely void on async IOs including all writeback IOs.
-> It was done this way because writeback didn't support writeback and
-> there was no way of telling which writeback IO belonged to which
-> cgroup; however, writeback recently became cgroup aware and writeback
-> bio's are sent down properly tagged with the blkcg's to charge them
-> against.
+> Hey, Jeff.
 >
-> This patch makes async cfq_queues per-cfq_cgroup instead of
-> per-cfq_data so that each async IO is charged to the blkcg that it was
-> tagged for instead of unconditionally attributing it to root.
+> On Mon, Jun 08, 2015 at 03:49:56PM -0400, Jeff Moyer wrote:
+>> Assuming you're ok with dropping patch 5, I'll review patches 6-8 once
 >
-> * cfq_data->async_cfqq and ->async_idle_cfqq are moved to cfq_group
->   and alloc / destroy paths are updated accordingly.
+> I'll update it to use GPF_NOWAIT.  Can't drop it easily as that would
+> complicate group lookup more complicated w/ pinning and all.
 >
-> * cfq_link_cfqq_cfqg() no longer overrides @cfqg to root for async
->   queues.
+>> they've been reworked to account for that.  I took a look at them, and
+>> they look OK to me.  But, if they are going to change, I'd rather wait
+>> to ack the final versions.
 >
-> * check_blkcg_changed() now also invalidates async queues as they no
->   longer stay the same across cgroups.
->
-> After this patch, cfq's proportional IO control through blkio.weight
-> works correctly when cgroup writeback is in use.
->
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: Arianna Avanzini <avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Hmm... the changes will be simple s/GFP_ATOMIC/GFP_NOWAIT.  Shouldn't
+> affect reviewing, I think.
 
-Reviewed-by: Jeff Moyer <jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Yeah, I sent this email before realizing that GFP_NOWAIT would work out.
+I've reviewed the rest of the series.  Looks good to me!  You did a nice
+job splitting things up into easily reviewable pieces, so thanks for
+that.
+
+Cheers,
+Jeff
