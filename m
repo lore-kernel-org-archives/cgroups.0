@@ -1,73 +1,119 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 8/8] cfq-iosched: charge async IOs to the appropriate
- blkcg's instead of the root
-Date: Tue, 9 Jun 2015 12:11:34 +0900
-Message-ID: <20150609031134.GM21465@mtj.duckdns.org>
+Subject: [PATCH 4.5/8] blkcg, cfq-iosched: use GFP_NOWAIT instead of
+ GFP_ATOMIC for non-critical allocations
+Date: Tue, 9 Jun 2015 13:21:31 +0900
+Message-ID: <20150609042131.GN21465@mtj.duckdns.org>
 References: <1433753973-23684-1-git-send-email-tj@kernel.org>
- <1433753973-23684-9-git-send-email-tj@kernel.org>
- <20150608222904.GB20918@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=afZqTqc5LmueszXSscU6PCDVtPP3Dkxxu0tuj48ivdc=;
-        b=HUR6K+sOc7LXe9REu9ZyslH9iuJ1NYhjPY01OR7tqujoIUanBKh+h9J777krXn1i4H
-         MfUpKwQXlNebqfoecaraWUyQRPDvSyHhIZv7QWLThWB+87TcoRLNJdPQ76zjsYq4QKd8
-         AqAgAoG6tKYBUSczwLyklOz+5eQ5BoIrv+R053UMmpr1/iKC+T4aFzkb+zaIP5Sq+6hp
-         nnPd2xObidy6c4DiIJKYiTpsRvlLnfkxGmCYotMtN8Xk1uWw8Dv2hEjE6UlXxuJ8Ehfy
-         9+BCURYTtW3qEseNPzwzbkkhPar+NJE4fJRUyh9pkzOD7siJrgCufvbM+doMXaC6TE5v
-         GJ9A==
+        bh=2IleTfsGt6IxHCBEZ7f173cQTOJ4S866cZAx0qgQmXk=;
+        b=sz1GFDrP/13J6RBYv/B97GjWutSwOqDlTkgGTU8LsZo06nU3HqpPaqLJ+hn+GE4OgV
+         Zklt2WgNKkasP3myLyHhgbaATUDwCfSmXKI2s0198Qn5w48CeOWgwUMWDK+sdBZPl358
+         mDHYeMFxsqBiDRplEI3nzByAoRwBhxdoNfNLEI68+BlxxGyb6nH3oD8jT8Nn/nPgtr3a
+         /hLqoIvHv0zItNVCXjXoTBp75Q1bE5Q2//UXTtfXPtN248FbFdJS8NAJoZv4H63kTB5m
+         os62FRTQvWUN95adUwwSrihcDm28xKsL/EPcRGw5MAdw7GP/sacMAc4Tn6fO9wnUyVji
+         N+iQ==
 Content-Disposition: inline
-In-Reply-To: <20150608222904.GB20918-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1433753973-23684-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, device-mapper development <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-Hey, Vivek.
+From b848495d2c987e960d1f7794966d82c05fcefc6d Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Tue, 9 Jun 2015 13:19:40 +0900
 
-On Mon, Jun 08, 2015 at 06:29:04PM -0400, Vivek Goyal wrote:
-...
-> But above is not true for buffered writes, we will not associate io
-> context. Instead only cgroup information will be sent down and io
-> context of submitter will be used. 
-> 
-> So any thread which is forced to submit buffered write for some other
-> cgroup, will have its sync queue also reset (Because CFQ will think
+blkcg performs several allocations to track IOs per cgroup and enforce
+resource control.  Most of these allocations are performed lazily on
+demand in the IO path and thus can't involve reclaim path.  Currently,
+these allocations use GFP_ATOMIC; however, blkcg can gracefully deal
+with occassional failures of these allocations by punting IOs to the
+root cgroup and there's no reason to reach into the emergency reserve.
 
-Yeah, it'll usually be the writeback work items.
+This patch replaces GFP_ATOMIC with GFP_NOWAIT for the following
+allocations.
 
-> that cgroup of submitter has changed). Not sure how often it will happen,
-> but if it happens frequenty, this might show up in profiles. I had
+* bdi_writeback_congested and blkcg_gq allocations in blkg_create().
 
-They're unlikely to have sync queues associated with them to begin
-with and even when the context gets reset each iteration should be big
-enough to drown this sort of overhead.  Writeback operates in a fairly
-sizable chunks.
+* radix tree node allocations for blkcg->blkg_tree.
 
-> mentioned this in the past and IIUC you said we will have to carry
-> writeback information all the way into lower layers. May be that's
-> an optimzation for later. So nothing new here, just trying to understand
-> the current situation.
+* cfq_queue allocation on ioprio changes.
 
-I'm actually kinda doubtful about caching async queues on cic at all.
-We already perform most of operations necessary to lookup the async
-queue for check_blkcg_changed().  We might as well just look up and
-pin each time.
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Suggested-by: Jeff Moyer <jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Suggested-by: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+Hello,
 
-> Also I am wondring if this cgroup and io context information is carried
-> through dm layer or not. I guess it might be a separate discussion. It
-> has come for discussion internally in the past. So this might be a good
-> time to get attention of dm developers on these upcoming changes. (CC dm-devel).
-
-Hmmm... it depends on what dm does with the bio.  It can surely
-propagate the cgroup information through sub bios.
+git branch updated accordingly.  A couple of later patches need to be
+updated but the changes are trivial.  I'll repost the patchset once
+review is done.
 
 Thanks.
 
+ block/blk-cgroup.c  | 8 ++++----
+ block/cfq-iosched.c | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 31610ae..1fddbbd 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -175,7 +175,7 @@ EXPORT_SYMBOL_GPL(blkg_lookup);
+ 
+ /*
+  * If @new_blkg is %NULL, this function tries to allocate a new one as
+- * necessary using %GFP_ATOMIC.  @new_blkg is always consumed on return.
++ * necessary using %GFP_NOWAIT.  @new_blkg is always consumed on return.
+  */
+ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+ 				    struct request_queue *q,
+@@ -195,7 +195,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+ 	}
+ 
+ 	wb_congested = wb_congested_get_create(&q->backing_dev_info,
+-					       blkcg->css.id, GFP_ATOMIC);
++					       blkcg->css.id, GFP_NOWAIT);
+ 	if (!wb_congested) {
+ 		ret = -ENOMEM;
+ 		goto err_put_css;
+@@ -203,7 +203,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+ 
+ 	/* allocate */
+ 	if (!new_blkg) {
+-		new_blkg = blkg_alloc(blkcg, q, GFP_ATOMIC);
++		new_blkg = blkg_alloc(blkcg, q, GFP_NOWAIT);
+ 		if (unlikely(!new_blkg)) {
+ 			ret = -ENOMEM;
+ 			goto err_put_congested;
+@@ -841,7 +841,7 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
+ 	blkcg->cfq_leaf_weight = CFQ_WEIGHT_DEFAULT;
+ done:
+ 	spin_lock_init(&blkcg->lock);
+-	INIT_RADIX_TREE(&blkcg->blkg_tree, GFP_ATOMIC);
++	INIT_RADIX_TREE(&blkcg->blkg_tree, GFP_NOWAIT);
+ 	INIT_HLIST_HEAD(&blkcg->blkg_list);
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 	INIT_LIST_HEAD(&blkcg->cgwb_list);
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index 90d5a87..97863ce 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -3507,7 +3507,7 @@ static void check_ioprio_changed(struct cfq_io_cq *cic, struct bio *bio)
+ 	cfqq = cic_to_cfqq(cic, false);
+ 	if (cfqq) {
+ 		cfq_put_queue(cfqq);
+-		cfqq = cfq_get_queue(cfqd, BLK_RW_ASYNC, cic, bio, GFP_ATOMIC);
++		cfqq = cfq_get_queue(cfqd, BLK_RW_ASYNC, cic, bio, GFP_NOWAIT);
+ 		cic_set_cfqq(cic, cfqq, false);
+ 	}
+ 
 -- 
-tejun
+2.4.2
