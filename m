@@ -1,24 +1,24 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v13 4/5] cgroup: allow a cgroup subsystem to reject a fork
-Date: Tue, 9 Jun 2015 13:41:33 +0900
-Message-ID: <20150609044133.GQ21465@mtj.duckdns.org>
+Subject: Re: [PATCH v13 5/5] cgroup: implement the PIDs subsystem
+Date: Tue, 9 Jun 2015 13:56:32 +0900
+Message-ID: <20150609045632.GR21465@mtj.duckdns.org>
 References: <1433547736-11707-1-git-send-email-cyphar@cyphar.com>
- <1433548938-32560-4-git-send-email-cyphar@cyphar.com>
+ <1433548938-32560-5-git-send-email-cyphar@cyphar.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=M3VCbGg+dQgj/agr30VaBUaxDEjFC4I7FrjSnNfut/E=;
-        b=uOFE+suyif/1paLob/tFxbVIytmco7gLKId03h23+B6akFV8jBIAQ7WUvXvSntlEbi
-         JYJa2TxvrdIcwNrvh7Go/tMChh2jU61cgasE/+Sg6TmJVE1nNiH5IaHZNOkibxqAu7DD
-         sP0N4Nuj8SDjO7zWRqLgS2B2QB9Rsz9t8OrWJvhrMAWcG0Q2kyQCU2NK7At75Zp09pp0
-         cwgDt8XXIZp3UgFlfNS2jqDTCO6GCmQoxZU70j64/QE7ircY4iHMU/86U+TTvVGhLk0K
-         e0ddxyxxS2XasiHGP+q87hi/P5lzSwEahc8f/aPjWffGnhS9QnydwONU1trzqxUU/ET2
-         nZEw==
+        bh=PsHPA6S2j9rsHwm9TZxLvhu6zLX8gOgBM/vw3OyeseM=;
+        b=krz7FvpVTS2yPUBz6oJ1BAb2NKe2nI+Jp4bOMG/gk63sKKbUDflhNxdQ4OW11ReMwy
+         AGwlcWTJs3jnUa0STBFQYlRa//Tl58FVIisjSd3+wp9AxqFFekCUUcoUeG4s2XrqW1PG
+         eCXvA0tucEs4DBBdFOOPKBiBzhCMQBK6K7/y5GispokysKH/461WSPJBiVbLd0gkS+TP
+         99qpMrHXpbOo/VcHBAWVycNqmFU1tUSunxBoMBKU3cBNiNUHn+CZ0Zj+DN226TqL+Q2g
+         ZyxWhfaH+6yO9Hgg5I/1TpJvacMo/GrizG9lKqNSfpWhI42xowrkgPNvIc3aS2NC+th9
+         NJ/w==
 Content-Disposition: inline
-In-Reply-To: <1433548938-32560-4-git-send-email-cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1433548938-32560-5-git-send-email-cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -28,85 +28,44 @@ Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+Alf
 
 Hello, Aleksa.
 
-Looks pretty good to me in general.  Some minor comments below.
-
-On Sat, Jun 06, 2015 at 10:02:17AM +1000, Aleksa Sarai wrote:
-
-> diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-> index a593e29..17d0046 100644
-> --- a/include/linux/cgroup.h
-> +++ b/include/linux/cgroup.h
-> @@ -62,9 +62,15 @@ int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
->                      struct pid *pid, struct task_struct *tsk);
-
->  void cgroup_fork(struct task_struct *p);
-> -void cgroup_post_fork(struct task_struct *p);
-> +extern int cgroup_can_fork(struct task_struct *p,
-> +                          void *ss_priv[CGROUP_CANFORK_COUNT]);
-> +extern void cgroup_cancel_fork(struct task_struct *p,
-> +                              void *ss_priv[CGROUP_CANFORK_COUNT]);
-> +extern void cgroup_post_fork(struct task_struct *p,
-> +                            void *old_ss_priv[CGROUP_CANFORK_COUNT]);
->  void cgroup_exit(struct task_struct *p);
-> 
-> +
-
-Is this blank line intentional?
-
->  int cgroup_init_early(void);
->  int cgroup_init(void);
+On Sat, Jun 06, 2015 at 10:02:18AM +1000, Aleksa Sarai wrote:
 ...
-> @@ -4924,6 +4927,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss, bool early)
->  
->  	have_fork_callback |= (bool)ss->fork << ss->id;
->  	have_exit_callback |= (bool)ss->exit << ss->id;
-> +	have_canfork_callback |= (bool)ss->can_fork << ss->id;
+> +/*
+> + * Lockless hierarchical accounting (with enforceable limits) derived from
+> + * mm/page_counter.c. Original copyright notice from page_counter code:
+> + *
+> + * -------------------------------------------------
+> + * Lockless hierarchical page accounting & limiting
+> + * Copyright (C) 2014 Red Hat, Inc., Johannes Weiner
+> + * -------------------------------------------------
+> + */
 
-Hmmm.... do we still need this mask?  We're already restricting
-iteration pretty heavily.  I'd even suggest dropping both
-have_fork_callback and have_exit_callback too and just put them inside
-CGROUP_FORK_EXIT_START / STOP although that doesn't belong in this
-patchset.
+I don't think we need the above copyright notice.
 
 ...
-> +static void *subsys_canfork_priv(void *ss_priv[CGROUP_CANFORK_COUNT], int i)
-> +{
-> +	void **private;
-> +	if ((private = subsys_canfork_priv_p(ss_priv, i)) != NULL)
-> +		return *private;
-> +	return NULL;
-> +}
+> +struct cgroup_subsys pids_cgrp_subsys = {
+> +	.css_alloc	= pids_css_alloc,
+> +	.css_free	= pids_css_free,
+> +	.attach		= pids_attach,
+> +	.can_attach 	= pids_can_attach,
+> +	.cancel_attach 	= pids_cancel_attach,
+> +	.can_fork	= pids_can_fork,
+> +	.cancel_fork	= pids_cancel_fork,
+> +	.fork		= pids_fork,
+> +	.exit		= pids_exit,
+> +	.legacy_cftypes	= files,
 
-	void **private = subsys_canfork...;
+Please also init dfl_cftypes the same way too.  Also, can you please
+rename files to pids_files?
 
-	if (private)
-		return *private;
-	return NULL;
+> +	.early_init	= 0,
 
-or even just
+And the above can be dropped.
 
-	return private ? *private : NULL;
-
-We conventionally don't put assignments in if conditionals.
-
-> +void cgroup_cancel_fork(struct task_struct *child,
-> +			void *ss_priv[CGROUP_CANFORK_COUNT])
-> +{
-> +	struct cgroup_subsys *ss;
-> +	int i;
-> +
-> +	for_each_subsys(ss, i)
-> +		if(ss->cancel_fork)
-                  ^
-		  space
-
-> +			ss->cancel_fork(child, subsys_canfork_priv(ss_priv, i));
-> +}
-> +
-> +/**
->   * cgroup_post_fork - called on a new task after adding it to the task list
->   * @child: the task in question
->   *
+Other than the above minor points, everything looks good to me but I
+think we're a bit too close to the merge window to put this in now.
+Once you update patch 4 and 5 according to the review, I'll apply them
+after the next rc1 drops.
 
 Thanks.
 
