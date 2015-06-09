@@ -1,13 +1,13 @@
 From: Jeff Moyer <jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 7/8] cfq-iosched: fold cfq_find_alloc_queue() into cfq_get_queue()
-Date: Tue, 09 Jun 2015 10:40:02 -0400
-Message-ID: <x49twuhrlml.fsf@segfault.boston.devel.redhat.com>
+Subject: Re: [PATCH 8/8] cfq-iosched: charge async IOs to the appropriate blkcg's instead of the root
+Date: Tue, 09 Jun 2015 11:03:15 -0400
+Message-ID: <x49pp54sz4c.fsf@segfault.boston.devel.redhat.com>
 References: <1433753973-23684-1-git-send-email-tj@kernel.org>
-	<1433753973-23684-8-git-send-email-tj@kernel.org>
+	<1433753973-23684-9-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1433753973-23684-8-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> (Tejun Heo's
-	message of "Mon, 8 Jun 2015 17:59:32 +0900")
+In-Reply-To: <1433753973-23684-9-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> (Tejun Heo's
+	message of "Mon, 8 Jun 2015 17:59:33 +0900")
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -17,49 +17,33 @@ Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2r
 
 Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> writes:
 
-> cfq_find_alloc_queue() checks whether a queue actually needs to be
-> allocated, which is unnecessary as its sole caller, cfq_get_queue(),
-> only calls it if so.  Also, the oom queue fallback logic is scattered
-> between cfq_get_queue() and cfq_find_alloc_queue().  There really
-> isn't much going on in the latter and things can be made simpler by
-> folding it into cfq_get_queue().
+> Up until now, all async IOs were queued to async queues which are
+> shared across the whole request_queue, which means that blkcg resource
+> control is completely void on async IOs including all writeback IOs.
+> It was done this way because writeback didn't support writeback and
+> there was no way of telling which writeback IO belonged to which
+> cgroup; however, writeback recently became cgroup aware and writeback
+> bio's are sent down properly tagged with the blkcg's to charge them
+> against.
 >
-> This patch collapses cfq_find_alloc_queue() into cfq_get_queue().  The
-> change is fairly straight-forward with one exception - async_cfqq is
-> now initialized to NULL and the "!is_sync" test in the last if
-> conditional is replaced with "async_cfqq" test.  This is because gcc
-> (5.1.1) gets confused for some reason and warns that async_cfqq may be
-> used uninitialized otherwise.  Oh well, the code isn't necessarily
-> worse this way.
+> This patch makes async cfq_queues per-cfq_cgroup instead of
+> per-cfq_data so that each async IO is charged to the blkcg that it was
+> tagged for instead of unconditionally attributing it to root.
 >
-> This patch doesn't cause any functional difference.
-
-The resulting code (introduced by the last patch, I know) is not ideal:
-
-        rcu_read_lock();
-        cfqg = cfq_lookup_create_cfqg(cfqd, bio_blkcg(bio));
-        if (!cfqg) {
-                cfqq = &cfqd->oom_cfqq;
-                goto out;
-        }
-
-        if (!is_sync) {
-                if (!ioprio_valid(cic->ioprio)) {
-                        struct task_struct *tsk = current;
-                        ioprio = task_nice_ioprio(tsk);
-                        ioprio_class = task_nice_ioclass(tsk);
-                }
-                async_cfqq = cfq_async_queue_prio(cfqd, ioprio_class,
-                ioprio);
-                cfqq = *async_cfqq;
-                if (cfqq)
-                        goto out;
-        }
-
-As you mentioned, we don't need to lookup the cfqg for the async queue.
-What's more is we could fallback to the oom_cfqq even if we had an
-existing async cfqq.  I'm guessing you structured the code this way to
-make the error path cleaner.  I don't think it's a big deal, as it
-should be a rare occurrence, so...
+> * cfq_data->async_cfqq and ->async_idle_cfqq are moved to cfq_group
+>   and alloc / destroy paths are updated accordingly.
+>
+> * cfq_link_cfqq_cfqg() no longer overrides @cfqg to root for async
+>   queues.
+>
+> * check_blkcg_changed() now also invalidates async queues as they no
+>   longer stay the same across cgroups.
+>
+> After this patch, cfq's proportional IO control through blkio.weight
+> works correctly when cgroup writeback is in use.
+>
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: Arianna Avanzini <avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
 Reviewed-by: Jeff Moyer <jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
