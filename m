@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/2] ext4: implement cgroup writeback support
-Date: Fri, 12 Jun 2015 17:02:23 -0500
-Message-ID: <1434146543-26358-3-git-send-email-tj@kernel.org>
+Subject: [PATCH 1/2] ext4: replace ext4_io_submit->io_op with ->io_wbc
+Date: Fri, 12 Jun 2015 17:02:22 -0500
+Message-ID: <1434146543-26358-2-git-send-email-tj@kernel.org>
 References: <1434146543-26358-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=BQcVDlPU9nXAlYRA8jRLTIMzaqKP8m+t9gGihd77xgc=;
-        b=IeB9O5JUDJ/D1ny0QgeHSG4Pv5gtPSDOlsUtr+3uHUxh/GEQO0VrC7J9rPiLQ7+0Gk
-         ftx5n8sJbdz62QFbnzjkt2ADFYiqTtnNYcTQII+zTbURhNFLcn0C7SWkDTUzLDdQevBm
-         U3h6iPsudaD8vEkfaqI8sWFot9grgPms8kCg2aadcPzwt88JTBLucA2g/Q/RO8Rr9umk
-         kmDtP8oBq4PnHByJ7btQ/8mbTn2mGxENIxYCKw9RlVTNvhf9K5ItSj3VX6YbHcgxnTYi
-         cguB8LuqhDCCAElhwDtZtQ7RckvmB8KuobkGja+4QpQRz0YvSw9ip2OYzwSVbpgIc1Su
-         soWg==
+        bh=GKTNB6N3AkC35pgCR7F54HdLVaqh6vKhQXTjdeIwujk=;
+        b=RIz1gt4cgoQc+cd+CDx3hMc+0QjgchrM7mlgLsKGmE8kmdGkLGX4ptZZW8K61GOqcW
+         21AGEfpEeqN/vctNgCEqcpSLiUvbQtXsVVX/4eif191LwFAN5VpdE+kPEPt21WIp0T4x
+         PJtpQzaBx+IMSVRmzmBNUm98jycLul8o3gc8S4Imsx3AZDMyAUk3NKYd3W96vOTPJg7H
+         I6zd7Xo1108ogirRoM9Ik1C656hf3+MpKD5PxT5XXzwYs/0FZ9URiaaIJBQxq77fu/fO
+         LPhb7puKCFivHvMoxg4j/usZKyptsGwzAF8qirWp7WrRS/qafqI5ealCO7JM9aa7L7w5
+         Cllg==
 In-Reply-To: <1434146543-26358-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,63 +23,61 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, lizefan@huawei.com, cgroups@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-For ordered and writeback data modes, all data IOs go through
-ext4_io_submit.  This patch adds cgroup writeback support by invoking
-wbc_init_bio() from io_submit_init_bio() and wbc_account_io() in
-io_submit_add_bh().  Journal data which is written by jbd2 worker is
-left alone by this patch and will always be written out from the root
-cgroup.
+ext4_io_submit_init() takes the pointer to writeback_control to test
+its sync_mode and determine between WRITE and WRITE_SYNC and records
+the result in ->io_op.  This patch makes it record the pointer
+directly and moves the test to ext4_io_submit().
 
-ext4_fill_super() is updated to set MS_CGROUPWB when data mode is
-either ordered or writeback.  In journaled data mode, most IOs become
-synchronous through the journal and enabling cgroup writeback support
-doesn't make much sense or difference.  Journaled data mode is left
-alone.
-
-Lightly tested with sequential data write workload.  Behaves as
-expected.
+This doesn't cause any noticeable differences now but having
+writeback_control available throughout IO submission path will be
+depended upon by the planned cgroup writeback support.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: "Theodore Ts'o" <tytso@mit.edu>
 Cc: Andreas Dilger <adilger.kernel@dilger.ca>
 Cc: linux-ext4@vger.kernel.org
 ---
- fs/ext4/page-io.c | 2 ++
- fs/ext4/super.c   | 2 ++
- 2 files changed, 4 insertions(+)
+ fs/ext4/ext4.h    | 2 +-
+ fs/ext4/page-io.c | 6 ++++--
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
+diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
+index 009a059..74a4923 100644
+--- a/fs/ext4/ext4.h
++++ b/fs/ext4/ext4.h
+@@ -191,7 +191,7 @@ typedef struct ext4_io_end {
+ } ext4_io_end_t;
+ 
+ struct ext4_io_submit {
+-	int			io_op;
++	struct writeback_control *io_wbc;
+ 	struct bio		*io_bio;
+ 	ext4_io_end_t		*io_end;
+ 	sector_t		io_next_block;
 diff --git a/fs/ext4/page-io.c b/fs/ext4/page-io.c
-index 3f80cb2..c56ba7b 100644
+index c5d81e8..3f80cb2 100644
 --- a/fs/ext4/page-io.c
 +++ b/fs/ext4/page-io.c
-@@ -383,6 +383,7 @@ static int io_submit_init_bio(struct ext4_io_submit *io,
- 	bio = bio_alloc(GFP_NOIO, min(nvecs, BIO_MAX_PAGES));
- 	if (!bio)
- 		return -ENOMEM;
-+	wbc_init_bio(io->io_wbc, bio);
- 	bio->bi_iter.bi_sector = bh->b_blocknr * (bh->b_size >> 9);
- 	bio->bi_bdev = bh->b_bdev;
- 	bio->bi_end_io = ext4_end_bio;
-@@ -411,6 +412,7 @@ static int io_submit_add_bh(struct ext4_io_submit *io,
- 	ret = bio_add_page(io->io_bio, page, bh->b_size, bh_offset(bh));
- 	if (ret != bh->b_size)
- 		goto submit_and_retry;
-+	wbc_account_io(io->io_wbc, page, bh->b_size);
- 	io->io_next_block++;
- 	return 0;
- }
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index 56b8bb7..a9a3de3 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -3623,6 +3623,8 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
- 		}
- 		if (test_opt(sb, DELALLOC))
- 			clear_opt(sb, DELALLOC);
-+	} else {
-+		sb->s_flags |= MS_CGROUPWB;
- 	}
+@@ -357,8 +357,10 @@ void ext4_io_submit(struct ext4_io_submit *io)
+ 	struct bio *bio = io->io_bio;
  
- 	sb->s_flags = (sb->s_flags & ~MS_POSIXACL) |
+ 	if (bio) {
++		int io_op = io->io_wbc->sync_mode == WB_SYNC_ALL ?
++			    WRITE_SYNC : WRITE;
+ 		bio_get(io->io_bio);
+-		submit_bio(io->io_op, io->io_bio);
++		submit_bio(io_op, io->io_bio);
+ 		bio_put(io->io_bio);
+ 	}
+ 	io->io_bio = NULL;
+@@ -367,7 +369,7 @@ void ext4_io_submit(struct ext4_io_submit *io)
+ void ext4_io_submit_init(struct ext4_io_submit *io,
+ 			 struct writeback_control *wbc)
+ {
+-	io->io_op = (wbc->sync_mode == WB_SYNC_ALL ?  WRITE_SYNC : WRITE);
++	io->io_wbc = wbc;
+ 	io->io_bio = NULL;
+ 	io->io_end = NULL;
+ }
 -- 
 2.4.2
