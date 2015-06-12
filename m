@@ -1,139 +1,61 @@
-From: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cgroup: add documentation for the PIDs controller
-Date: Sat, 13 Jun 2015 03:21:58 +1000
-Message-ID: <1434129718-8823-1-git-send-email-cyphar@cyphar.com>
-References: <CAOviyagqdXEk=_4u0ijc2AJ-dkAEYYWVbjH_gy2TACmHAnhOOA@mail.gmail.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAOviyagqdXEk=_4u0ijc2AJ-dkAEYYWVbjH_gy2TACmHAnhOOA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCHSET block/for-4.2/writeback] cgroup, writeback: misc updates for cgroup writeback support
+Date: Fri, 12 Jun 2015 16:57:31 -0500
+Message-ID: <1434146254-26220-1-git-send-email-tj@kernel.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=AtuBhSL+dzpjYDnifZkvASBTrgfoHT4roe9hDVo3NE0=;
+        b=mk7i0x9Q/yo6/zwjfyyGZIONPz3mEfQ5a8eecRiwR9FXYA+6W3NbmTRsxizkcS5YU/
+         vr0BZQ/m6X/v3l42yNf7l/gi6dOcZjbv8UYwHHsuDCNW1tb673xgXARlwmapUZymBp3F
+         d5UCQS69Ac4POmlagcP1caUsJjifLfkMDZflgaa92zF6zjpRjFJi/8HLV/ob05Nm3oYK
+         H04oyrv3rqN1YyFWl/ATErztFa3ancX1cr9JUdjqZnnltuNTm84jO7QVQdRTdF95iTsu
+         +FhIgAKRs7UMRBSuA8aGUiea9SUAQbdOEXvsk7xVf88lJlLcZdvp/0n07/aeOkSSUm0/
+         5J0g==
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
-Cc: richard-/L3Ra7n9ekc@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+To: axboe@kernel.dk
+Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, lizefan@huawei.com, cgroups@vger.kernel.org
 
-The attached patch adds documentation concerning the PIDs controller.
-This should be applied alongside the rest of this patchset[1].
+Hello,
 
-[1]: https://lkml.org/lkml/2015/6/9/320
+This patchset contains the following assorted updates for the cgroup
+writeback support.
 
-8<-----------------------------------------------------------------------------
+ 0001-writeback-do-foreign-inode-detection-iff-cgroup-writ.patch
+ 0002-vfs-writeback-replace-FS_CGROUP_WRITEBACK-with-MS_CG.patch
+ 0003-writeback-blkio-add-documentation-for-cgroup-writeba.patch
 
-Add documentation derived from kernel/cgroup_pids.c to the relevant
-Documentation/ directory, along with a few examples of how to use the
-PIDs controller as well an explanation of its peculiarities.
+0001 fixes a bug where clear FS_CGROUP_WRITEBACK flag didn't fully
+disable cgroup writeback support if the filesystem code uses
+wbc_init_bio() and wbc_account_io().
 
-Signed-off-by: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
----
- Documentation/cgroups/00-INDEX |  2 +
- Documentation/cgroups/pids.txt | 85 ++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 87 insertions(+)
- create mode 100644 Documentation/cgroups/pids.txt
+0002 replaces FS_CGROUP_WRITEBACK with MS_CGROUPWB so that cgroup
+writeback support can be enabled / disabled per superblock rather than
+filesystem type.
 
-diff --git a/Documentation/cgroups/00-INDEX b/Documentation/cgroups/00-INDEX
-index 96ce071..3f5a40f 100644
---- a/Documentation/cgroups/00-INDEX
-+++ b/Documentation/cgroups/00-INDEX
-@@ -22,6 +22,8 @@ net_cls.txt
- 	- Network classifier cgroups details and usages.
- net_prio.txt
- 	- Network priority cgroups details and usages.
-+pids.txt
-+	- Process number cgroups details and usages.
- resource_counter.txt
- 	- Resource Counter API.
- unified-hierarchy.txt
-diff --git a/Documentation/cgroups/pids.txt b/Documentation/cgroups/pids.txt
-new file mode 100644
-index 0000000..1a078b5
---- /dev/null
-+++ b/Documentation/cgroups/pids.txt
-@@ -0,0 +1,85 @@
-+						   Process Number Controller
-+						   =========================
-+
-+Abstract
-+--------
-+
-+The process number controller is used to allow a cgroup hierarchy to stop any
-+new tasks from being fork()'d or clone()'d after a certain limit is reached.
-+
-+Since it is trivial to hit the task limit without hitting any kmemcg limits in
-+place, PIDs are a fundamental resource. As such, PID exhaustion must be
-+preventable in the scope of a cgroup hierarchy by allowing resource limiting of
-+the number of tasks in a cgroup.
-+
-+Usage
-+-----
-+
-+In order to use the `pids` controller, set the maximum number of tasks in
-+pids.max (this is not available in the root cgroup for obvious reasons). The
-+number of processes currently in the cgroup is given by pids.current.
-+
-+Organisational operations are not blocked by cgroup policies, so it is possible
-+to have pids.current > pids.max. This can be done by either setting the limit to
-+be smaller than pids.current, or attaching enough processes to the cgroup such
-+that pids.current > pids.max. However, it is not possible to violate a cgroup
-+policy through fork() or clone(). fork() and clone() will return -EAGAIN if the
-+creation of a new process would cause a cgroup policy to be violated.
-+
-+To set a cgroup to have no limit, set pids.max to "max". This is the default for
-+all new cgroups (N.B. that PID limits are hierarchical, so the most stringent
-+limit in the hierarchy is followed).
-+
-+pids.current tracks all child cgroup hierarchies, so parent/pids.current is a
-+superset of parent/child/pids.current.
-+
-+Example
-+-------
-+
-+First, we mount the pids controller:
-+# mkdir -p /sys/fs/cgroup/pids
-+# mount -t cgroup -o pids none /sys/fs/cgroup/pids
-+
-+Then we create a hierarchy, set limits and attach processes to it:
-+# mkdir -p /sys/fs/cgroup/pids/parent/child
-+# echo 2 > /sys/fs/cgroup/pids/parent/pids.max
-+# echo $$ > /sys/fs/cgroup/pids/parent/cgroup.procs
-+# cat /sys/fs/cgroup/pids/parent/pids.current
-+2
-+#
-+
-+It should be noted that attempts to overcome the set limit (2 in this case) will
-+fail:
-+
-+# cat /sys/fs/cgroup/pids/parent/pids.current
-+2
-+# ( /bin/echo "Here's some processes for you." | cat )
-+sh: fork: Resource temporary unavailable
-+#
-+
-+Even if we migrate to a child cgroup (which doesn't have a set limit), we will
-+not be able to overcome the most stringent limit in the hierarchy (in this case,
-+parent's):
-+
-+# echo $$ > /sys/fs/cgroup/pids/parent/child/cgroup.procs
-+# cat /sys/fs/cgroup/pids/parent/pids.current
-+2
-+# cat /sys/fs/cgroup/pids/parent/child/pids.current
-+2
-+# cat /sys/fs/cgroup/pids/parent/child/pids.max
-+max
-+# ( /bin/echo "Here's some processes for you." | cat )
-+sh: fork: Resource temporary unavailable
-+#
-+
-+We can set a limit that is smaller than pids.current, which will stop any new
-+processes from being forked at all (note that the shell itself counts towards
-+pids.current):
-+
-+# echo 1 > /sys/fs/cgroup/pids/parent/pids.max
-+# /bin/echo "We can't even spawn a single process now."
-+sh: fork: Resource temporary unavailable
-+# echo 0 > /sys/fs/cgroup/pids/parent/pids.max
-+# /bin/echo "We can't even spawn a single process now."
-+sh: fork: Resource temporary unavailable
-+#
--- 
-2.4.2
+0003 updates blkio documentation with information on cgroup writeback
+support.
+
+This patchset is on top of block/for-4.2/writeback and available in
+the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-writeback-updates
+
+diffstat follows.  Thanks.
+
+ Documentation/cgroups/blkio-controller.txt |   83 +++++++++++++++++++++++++++--
+ fs/ext2/super.c                            |    4 -
+ fs/fs-writeback.c                          |   16 ++++-
+ fs/namespace.c                             |    2 
+ include/linux/backing-dev.h                |    2 
+ include/linux/fs.h                         |    1 
+ include/uapi/linux/fs.h                    |    1 
+ 7 files changed, 96 insertions(+), 13 deletions(-)
+
+--
+tejun
