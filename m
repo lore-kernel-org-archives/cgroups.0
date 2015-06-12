@@ -1,45 +1,80 @@
-From: Evgeniy Polyakov <zbr-i6C2adt8DTjR7s880joybQ@public.gmane.org>
-Subject: Re: [PATCH 1/2] connector: add cgroup release event report to proc connector
-Date: Thu, 11 Jun 2015 18:28:59 +0300
-Message-ID: <1059221434036539@web13o.yandex.ru>
-References: <1432678051-4372-1-git-send-email-dimitri.j.ledkov@intel.com>
-	 <5565A8F9.8040601@huawei.com> <CAK7xexkFm_BZ9sdB3VAZ-WGiikBeAQfaimXjggEtac+M2diV-g@mail.gmail.com>
-	 <55668BE9.1090100@huawei.com> <CAK7xexmATyoUsOb5cgHF-Pz91ihQHm47sJoXmi15fk87yBJjNw@mail.gmail.com>
+From: Vladimir Davydov <vdavydov@parallels.com>
+Subject: [PATCH -mm v6 1/6] memcg: add page_cgroup_ino helper
+Date: Fri, 12 Jun 2015 12:52:21 +0300
+Message-ID: <d582e15ceeb2097fde2796e091e507f5a2bb19f0.1434102076.git.vdavydov@parallels.com>
+References: <cover.1434102076.git.vdavydov@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ioremap.net; s=mail;
-	t=1434036540; bh=I7CnDPXDt3wvfRZ/rezAT648kAv+yoXhZMC49R1u9XA=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=IhgfOR8LjCcJszZ+HL/7haAnnfOi7+aCpKqteDxF8aFFRC/zvah0BL6xEHyUr/eGV
-	 ATewImUg4wm6b+w1I3IPleUgnsYUFEwLa3NhuiQ+VYhW6HxPs867JAZ+edeHswVGvJ
-	 VoP9GY/KGqh0tqjupqmRELHn0ZcK0OybKkHfdYFk=
-In-Reply-To: <CAK7xexmATyoUsOb5cgHF-Pz91ihQHm47sJoXmi15fk87yBJjNw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <cover.1434102076.git.vdavydov@parallels.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Dimitri John Ledkov <dimitri.j.ledkov-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Minchan Kim <minchan@kernel.org>, Raghavendra K T <raghavendra.kt@linux.vnet.ibm.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Michel Lespinasse <walken@google.com>, David Rientjes <rientjes@google.com>, Pavel Emelyanov <xemul@parallels.com>, Cyrill Gorcunov <gorcunov@openvz.org>, Jonathan Corbet <corbet@lwn.net>, linux-api@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi
+This function returns the inode number of the closest online ancestor of
+the memory cgroup a page is charged to. It is required for exporting
+information about which page is charged to which cgroup to userspace,
+which will be introduced by a following patch.
 
-28.05.2015, 11:54, "Dimitri John Ledkov" <dimitri.j.ledkov-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>:
+Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
+---
+ include/linux/memcontrol.h |  1 +
+ mm/memcontrol.c            | 23 +++++++++++++++++++++++
+ 2 files changed, 24 insertions(+)
 
-> What you are saying is that we have inefficient notification mechanism
-> that hammers everyone's boot time significantly, and no current path
-> to resolve it. What can I do get us efficient cgroup release
-> notifications soon?
-> This patch-set is a no-op if one doesn't subscribe from the userspace
-> and has no other side effects that I can trivially see and is very
-> similar in-spirit to other notifications that proc-connector
-> generates. E.g. /proc/pid/comm is exposed as a file, yet there is proc
-> connector notification as well about comm name changes. Maybe Evgeniy
-> can chip in, if such a notification would be beneficial to
-> proc-connector.
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 73b02b0a8f60..50069abebc3c 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -116,6 +116,7 @@ static inline bool mm_match_cgroup(struct mm_struct *mm,
+ 
+ extern struct cgroup_subsys_state *mem_cgroup_css(struct mem_cgroup *memcg);
+ extern struct cgroup_subsys_state *mem_cgroup_css_from_page(struct page *page);
++extern unsigned long page_cgroup_ino(struct page *page);
+ 
+ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *,
+ 				   struct mem_cgroup *,
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index acb93c554f6e..894dc2169979 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -631,6 +631,29 @@ struct cgroup_subsys_state *mem_cgroup_css_from_page(struct page *page)
+ 	return &memcg->css;
+ }
+ 
++/**
++ * page_cgroup_ino - return inode number of the memcg a page is charged to
++ * @page: the page
++ *
++ * Look up the closest online ancestor of the memory cgroup @page is charged to
++ * and return its inode number or 0 if @page is not charged to any cgroup. It
++ * is safe to call this function without holding a reference to @page.
++ */
++unsigned long page_cgroup_ino(struct page *page)
++{
++	struct mem_cgroup *memcg;
++	unsigned long ino = 0;
++
++	rcu_read_lock();
++	memcg = READ_ONCE(page->mem_cgroup);
++	while (memcg && !(memcg->css.flags & CSS_ONLINE))
++		memcg = parent_mem_cgroup(memcg);
++	if (memcg)
++		ino = cgroup_ino(memcg->css.cgroup);
++	rcu_read_unlock();
++	return ino;
++}
++
+ static struct mem_cgroup_per_zone *
+ mem_cgroup_page_zoneinfo(struct mem_cgroup *memcg, struct page *page)
+ {
+-- 
+2.1.4
 
-I understand your need in a new notifications related to cgroups,
-although I would rather put it into separate module than proc connector - 
-I'm pretty sure there will be quite alot of extensions in this module in the future.
-
-But if you do want to extend proc connector module, I'm ok with it, but it should
-go via its maintainer.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
