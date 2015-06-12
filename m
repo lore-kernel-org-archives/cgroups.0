@@ -1,61 +1,79 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCHSET block/for-4.2/writeback] cgroup, writeback: misc updates for cgroup writeback support
-Date: Fri, 12 Jun 2015 16:57:31 -0500
-Message-ID: <1434146254-26220-1-git-send-email-tj@kernel.org>
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Subject: [PATCH 1/3] writeback: do foreign inode detection iff cgroup writeback is enabled
+Date: Fri, 12 Jun 2015 16:57:32 -0500
+Message-ID: <1434146254-26220-2-git-send-email-tj@kernel.org>
+References: <1434146254-26220-1-git-send-email-tj@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id;
-        bh=AtuBhSL+dzpjYDnifZkvASBTrgfoHT4roe9hDVo3NE0=;
-        b=mk7i0x9Q/yo6/zwjfyyGZIONPz3mEfQ5a8eecRiwR9FXYA+6W3NbmTRsxizkcS5YU/
-         vr0BZQ/m6X/v3l42yNf7l/gi6dOcZjbv8UYwHHsuDCNW1tb673xgXARlwmapUZymBp3F
-         d5UCQS69Ac4POmlagcP1caUsJjifLfkMDZflgaa92zF6zjpRjFJi/8HLV/ob05Nm3oYK
-         H04oyrv3rqN1YyFWl/ATErztFa3ancX1cr9JUdjqZnnltuNTm84jO7QVQdRTdF95iTsu
-         +FhIgAKRs7UMRBSuA8aGUiea9SUAQbdOEXvsk7xVf88lJlLcZdvp/0n07/aeOkSSUm0/
-         5J0g==
-Sender: linux-fsdevel-owner@vger.kernel.org
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=R0PqU2KXYQcvC9RsMEhElFhhk//9SCNNYPG+NKktn+8=;
+        b=ge1VNQV4UrU//Jr+UJqGYOyjE5Li1M4alJwXYNG/IAQ92iI83SP1wBp5/je3yYcht4
+         npqT2mYM8dHZbYhnrIKSPJmhP/rEpqwUanqVLcBK1j3a6zpEWFO3ekqUu24zsry66OAx
+         2QEn9I/C25hfRXo+1Et2l2DKCvHBXVo/BXZS4fljw55HBaGFGoX3zRESavQb1c72CRkx
+         iA5VT384cvq4yzi3zsZ9SkwiO/vAjx6/TWCe0Pnxgw/wlsVpHE8PMieoDGFhr2RPfZ19
+         iN1eSCzTTNczDdC0vWVobx1AAfQFlUeBF+yRi+uygA1OTLPcof/Igwp2ArkDxS+t/uEq
+         PZ0w==
+In-Reply-To: <1434146254-26220-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, lizefan@huawei.com, cgroups@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, lizefan@huawei.com, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-Hello,
+Currently, even when a filesystem doesn't set the FS_CGROUP_WRITEBACK
+flag, if the filesystem uses wbc_init_bio() and wbc_account_io(), the
+foreign inode detection and migration logic still ends up activating
+cgroup writeback which is unexpected.  This patch ensures that the
+foreign inode detection logic stays disabled when inode_cgwb_enabled()
+is false by not associating writeback_control's with bdi_writeback's.
 
-This patchset contains the following assorted updates for the cgroup
-writeback support.
+This also avoids unnecessary operations in wbc_init_bio(),
+wbc_account_io() and wbc_detach_inode() for filesystems which don't
+support cgroup writeback.
 
- 0001-writeback-do-foreign-inode-detection-iff-cgroup-writ.patch
- 0002-vfs-writeback-replace-FS_CGROUP_WRITEBACK-with-MS_CG.patch
- 0003-writeback-blkio-add-documentation-for-cgroup-writeba.patch
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ fs/fs-writeback.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
-0001 fixes a bug where clear FS_CGROUP_WRITEBACK flag didn't fully
-disable cgroup writeback support if the filesystem code uses
-wbc_init_bio() and wbc_account_io().
-
-0002 replaces FS_CGROUP_WRITEBACK with MS_CGROUPWB so that cgroup
-writeback support can be enabled / disabled per superblock rather than
-filesystem type.
-
-0003 updates blkio documentation with information on cgroup writeback
-support.
-
-This patchset is on top of block/for-4.2/writeback and available in
-the following git branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-writeback-updates
-
-diffstat follows.  Thanks.
-
- Documentation/cgroups/blkio-controller.txt |   83 +++++++++++++++++++++++++++--
- fs/ext2/super.c                            |    4 -
- fs/fs-writeback.c                          |   16 ++++-
- fs/namespace.c                             |    2 
- include/linux/backing-dev.h                |    2 
- include/linux/fs.h                         |    1 
- include/uapi/linux/fs.h                    |    1 
- 7 files changed, 96 insertions(+), 13 deletions(-)
-
---
-tejun
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index f60de54..f0520bc 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -513,6 +513,11 @@ static void inode_switch_wbs(struct inode *inode, int new_wb_id)
+ void wbc_attach_and_unlock_inode(struct writeback_control *wbc,
+ 				 struct inode *inode)
+ {
++	if (!inode_cgwb_enabled(inode)) {
++		spin_unlock(&inode->i_lock);
++		return;
++	}
++
+ 	wbc->wb = inode_to_wb(inode);
+ 	wbc->inode = inode;
+ 
+@@ -575,11 +580,16 @@ void wbc_detach_inode(struct writeback_control *wbc)
+ {
+ 	struct bdi_writeback *wb = wbc->wb;
+ 	struct inode *inode = wbc->inode;
+-	u16 history = inode->i_wb_frn_history;
+-	unsigned long avg_time = inode->i_wb_frn_avg_time;
+-	unsigned long max_bytes, max_time;
++	unsigned long avg_time, max_bytes, max_time;
++	u16 history;
+ 	int max_id;
+ 
++	if (!wb)
++		return;
++
++	history = inode->i_wb_frn_history;
++	avg_time = inode->i_wb_frn_avg_time;
++
+ 	/* pick the winner of this round */
+ 	if (wbc->wb_bytes >= wbc->wb_lcand_bytes &&
+ 	    wbc->wb_bytes >= wbc->wb_tcand_bytes) {
+-- 
+2.4.2
