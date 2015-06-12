@@ -1,90 +1,139 @@
-From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: [PATCH -mm v6 6/6] proc: export idle flag via kpageflags
-Date: Fri, 12 Jun 2015 12:52:26 +0300
-Message-ID: <eadeb8b428449b0f14b62c331ee2ac22a1982ccb.1434102076.git.vdavydov@parallels.com>
-References: <cover.1434102076.git.vdavydov@parallels.com>
-Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <cover.1434102076.git.vdavydov@parallels.com>
-Sender: owner-linux-mm@kvack.org
+From: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] cgroup: add documentation for the PIDs controller
+Date: Sat, 13 Jun 2015 03:21:58 +1000
+Message-ID: <1434129718-8823-1-git-send-email-cyphar@cyphar.com>
+References: <CAOviyagqdXEk=_4u0ijc2AJ-dkAEYYWVbjH_gy2TACmHAnhOOA@mail.gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAOviyagqdXEk=_4u0ijc2AJ-dkAEYYWVbjH_gy2TACmHAnhOOA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Minchan Kim <minchan@kernel.org>, Raghavendra K T <raghavendra.kt@linux.vnet.ibm.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Michel Lespinasse <walken@google.com>, David Rientjes <rientjes@google.com>, Pavel Emelyanov <xemul@parallels.com>, Cyrill Gorcunov <gorcunov@openvz.org>, Jonathan Corbet <corbet@lwn.net>, linux-api@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
+Cc: richard-/L3Ra7n9ekc@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
 
-As noted by Minchan, a benefit of reading idle flag from
-/proc/kpageflags is that one can easily filter dirty and/or unevictable
-pages while estimating the size of unused memory.
+The attached patch adds documentation concerning the PIDs controller.
+This should be applied alongside the rest of this patchset[1].
 
-Note that idle flag read from /proc/kpageflags may be stale in case the
-page was accessed via a PTE, because it would be too costly to iterate
-over all page mappings on each /proc/kpageflags read to provide an
-up-to-date value. To make sure the flag is up-to-date one has to read
-/proc/kpageidle first.
+[1]: https://lkml.org/lkml/2015/6/9/320
 
-Signed-off-by: Vladimir Davydov <vdavydov@parallels.com>
+8<-----------------------------------------------------------------------------
+
+Add documentation derived from kernel/cgroup_pids.c to the relevant
+Documentation/ directory, along with a few examples of how to use the
+PIDs controller as well an explanation of its peculiarities.
+
+Signed-off-by: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
 ---
- Documentation/vm/pagemap.txt           | 6 ++++++
- fs/proc/page.c                         | 3 +++
- include/uapi/linux/kernel-page-flags.h | 1 +
- 3 files changed, 10 insertions(+)
+ Documentation/cgroups/00-INDEX |  2 +
+ Documentation/cgroups/pids.txt | 85 ++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 87 insertions(+)
+ create mode 100644 Documentation/cgroups/pids.txt
 
-diff --git a/Documentation/vm/pagemap.txt b/Documentation/vm/pagemap.txt
-index c9266340852c..5896b7d7fd74 100644
---- a/Documentation/vm/pagemap.txt
-+++ b/Documentation/vm/pagemap.txt
-@@ -64,6 +64,7 @@ There are five components to pagemap:
-     22. THP
-     23. BALLOON
-     24. ZERO_PAGE
-+    25. IDLE
- 
-  * /proc/kpagecgroup.  This file contains a 64-bit inode number of the
-    memory cgroup each page is charged to, indexed by PFN. Only available when
-@@ -124,6 +125,11 @@ Short descriptions to the page flags:
- 24. ZERO_PAGE
-     zero page for pfn_zero or huge_zero page
- 
-+25. IDLE
-+    page has not been accessed since it was marked idle (see /proc/kpageidle)
-+    Note that this flag may be stale in case the page was accessed via a PTE.
-+    To make sure the flag is up-to-date one has to read /proc/kpageidle first.
+diff --git a/Documentation/cgroups/00-INDEX b/Documentation/cgroups/00-INDEX
+index 96ce071..3f5a40f 100644
+--- a/Documentation/cgroups/00-INDEX
++++ b/Documentation/cgroups/00-INDEX
+@@ -22,6 +22,8 @@ net_cls.txt
+ 	- Network classifier cgroups details and usages.
+ net_prio.txt
+ 	- Network priority cgroups details and usages.
++pids.txt
++	- Process number cgroups details and usages.
+ resource_counter.txt
+ 	- Resource Counter API.
+ unified-hierarchy.txt
+diff --git a/Documentation/cgroups/pids.txt b/Documentation/cgroups/pids.txt
+new file mode 100644
+index 0000000..1a078b5
+--- /dev/null
++++ b/Documentation/cgroups/pids.txt
+@@ -0,0 +1,85 @@
++						   Process Number Controller
++						   =========================
 +
-     [IO related page flags]
-  1. ERROR     IO error occurred
-  3. UPTODATE  page has up-to-date data
-diff --git a/fs/proc/page.c b/fs/proc/page.c
-index 1e342270b9c0..ec6d1cd65698 100644
---- a/fs/proc/page.c
-+++ b/fs/proc/page.c
-@@ -148,6 +148,9 @@ u64 stable_page_flags(struct page *page)
- 	if (PageBalloon(page))
- 		u |= 1 << KPF_BALLOON;
- 
-+	if (page_is_idle(page))
-+		u |= 1 << KPF_IDLE;
++Abstract
++--------
 +
- 	u |= kpf_copy_bit(k, KPF_LOCKED,	PG_locked);
- 
- 	u |= kpf_copy_bit(k, KPF_SLAB,		PG_slab);
-diff --git a/include/uapi/linux/kernel-page-flags.h b/include/uapi/linux/kernel-page-flags.h
-index a6c4962e5d46..5da5f8751ce7 100644
---- a/include/uapi/linux/kernel-page-flags.h
-+++ b/include/uapi/linux/kernel-page-flags.h
-@@ -33,6 +33,7 @@
- #define KPF_THP			22
- #define KPF_BALLOON		23
- #define KPF_ZERO_PAGE		24
-+#define KPF_IDLE		25
- 
- 
- #endif /* _UAPILINUX_KERNEL_PAGE_FLAGS_H */
++The process number controller is used to allow a cgroup hierarchy to stop any
++new tasks from being fork()'d or clone()'d after a certain limit is reached.
++
++Since it is trivial to hit the task limit without hitting any kmemcg limits in
++place, PIDs are a fundamental resource. As such, PID exhaustion must be
++preventable in the scope of a cgroup hierarchy by allowing resource limiting of
++the number of tasks in a cgroup.
++
++Usage
++-----
++
++In order to use the `pids` controller, set the maximum number of tasks in
++pids.max (this is not available in the root cgroup for obvious reasons). The
++number of processes currently in the cgroup is given by pids.current.
++
++Organisational operations are not blocked by cgroup policies, so it is possible
++to have pids.current > pids.max. This can be done by either setting the limit to
++be smaller than pids.current, or attaching enough processes to the cgroup such
++that pids.current > pids.max. However, it is not possible to violate a cgroup
++policy through fork() or clone(). fork() and clone() will return -EAGAIN if the
++creation of a new process would cause a cgroup policy to be violated.
++
++To set a cgroup to have no limit, set pids.max to "max". This is the default for
++all new cgroups (N.B. that PID limits are hierarchical, so the most stringent
++limit in the hierarchy is followed).
++
++pids.current tracks all child cgroup hierarchies, so parent/pids.current is a
++superset of parent/child/pids.current.
++
++Example
++-------
++
++First, we mount the pids controller:
++# mkdir -p /sys/fs/cgroup/pids
++# mount -t cgroup -o pids none /sys/fs/cgroup/pids
++
++Then we create a hierarchy, set limits and attach processes to it:
++# mkdir -p /sys/fs/cgroup/pids/parent/child
++# echo 2 > /sys/fs/cgroup/pids/parent/pids.max
++# echo $$ > /sys/fs/cgroup/pids/parent/cgroup.procs
++# cat /sys/fs/cgroup/pids/parent/pids.current
++2
++#
++
++It should be noted that attempts to overcome the set limit (2 in this case) will
++fail:
++
++# cat /sys/fs/cgroup/pids/parent/pids.current
++2
++# ( /bin/echo "Here's some processes for you." | cat )
++sh: fork: Resource temporary unavailable
++#
++
++Even if we migrate to a child cgroup (which doesn't have a set limit), we will
++not be able to overcome the most stringent limit in the hierarchy (in this case,
++parent's):
++
++# echo $$ > /sys/fs/cgroup/pids/parent/child/cgroup.procs
++# cat /sys/fs/cgroup/pids/parent/pids.current
++2
++# cat /sys/fs/cgroup/pids/parent/child/pids.current
++2
++# cat /sys/fs/cgroup/pids/parent/child/pids.max
++max
++# ( /bin/echo "Here's some processes for you." | cat )
++sh: fork: Resource temporary unavailable
++#
++
++We can set a limit that is smaller than pids.current, which will stop any new
++processes from being forked at all (note that the shell itself counts towards
++pids.current):
++
++# echo 1 > /sys/fs/cgroup/pids/parent/pids.max
++# /bin/echo "We can't even spawn a single process now."
++sh: fork: Resource temporary unavailable
++# echo 0 > /sys/fs/cgroup/pids/parent/pids.max
++# /bin/echo "We can't even spawn a single process now."
++sh: fork: Resource temporary unavailable
++#
 -- 
-2.1.4
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+2.4.2
