@@ -1,56 +1,43 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/3] vfs, writeback: replace FS_CGROUP_WRITEBACK with
- MS_CGROUPWB
-Date: Sun, 14 Jun 2015 00:42:36 -0500
-Message-ID: <20150614054236.GA9662@mtj.duckdns.org>
-References: <1434146254-26220-1-git-send-email-tj@kernel.org>
- <1434146254-26220-3-git-send-email-tj@kernel.org>
- <20150613161608.GA29414@infradead.org>
+From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-4.2] MAINTAINERS: add a cgroup core co-maintainer
+Date: Mon, 15 Jun 2015 09:17:29 +0800
+Message-ID: <557E27A9.9090502@huawei.com>
+References: <20150612221523.GA26854@mtj.duckdns.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=dWAhbuZIbugCOWrhkCBozQz3g6UMDLgPu4zJpxCLK70=;
-        b=ZivQn2PL/ChTbKuwHJEbMgswVlXRi2vrKzEyDJVX428wA80WwKE/MMB9VEPVZoUCC/
-         tDe0M0dCmSCwhT0PkLuMF1BBpXh942MF5YsOqKgYPyBocUby+IL5NNBlcCgebRnRUndJ
-         EQC/PvOArtpAcD82seOwvSn9y6gyhp95oQ+1AUjR8yPxzMjbVCPLiPTyuW2FkUx30yIQ
-         QLC8aTsEceqYp15pTDiIbSX5J9krgrbAd426YxEubUBqoA+X/IZkpOCVxFLpL8qorpPU
-         2RPoah0KwznsCJxMR7Z/S3HVutiuoAIB73avecJ8fXJ74Nixe3Iv733NUcZtHrqL0FJ1
-         pCyg==
-Content-Disposition: inline
-In-Reply-To: <20150613161608.GA29414-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+In-Reply-To: <20150612221523.GA26854-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Christoph.
-
-On Sat, Jun 13, 2015 at 09:16:08AM -0700, Christoph Hellwig wrote:
-> On Fri, Jun 12, 2015 at 04:57:33PM -0500, Tejun Heo wrote:
-> > FS_CGROUP_WRITEBACK indicates whether a file_system_type supports
-> > cgroup writeback; however, different super_blocks of the same
-> > file_system_type may or may not support cgroup writeback depending on
-> > filesystem options.  This patch replaces FS_CGROUP_WRITEBACK with a
-> > kernel-internal super_block->s_flags MS_CGROUPWB.  The concatenated
-> > and abbreviated name is for consistency with other MS_* flags.
+On 2015/6/13 6:15, Tejun Heo wrote:
+> Add Johannes Weiner as a co-maintainer of cgroup core.  Johannes has
+> been heavily involved with the design of the v2 interface and is
+> familiar with design and implementation of cgroup core.
 > 
-> Nak.  As the uapi part makes it obvious the MS_ namespace is part
-> of the userspace ABI.  Please add a new in-kernel flags field instead.
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-Are MS_ACTIVE and MS_BORN part of userpace ABI?  They seem pretty
-internal.  I don't mind introducing a new internal flag field but it's
-weird to put this single flag there with other internal flags in
-->s_flags.
+acked
 
-Assuming we add a new field, how do sb->s_iflags and SB_I_XXX sound?
-Any better suggestions?
-
-Thanks.
-
--- 
-tejun
+> ---
+>  MAINTAINERS |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index ea00017..1d39599 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -2695,6 +2695,7 @@ F:	drivers/connector/
+>  CONTROL GROUP (CGROUP)
+>  M:	Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+>  M:	Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> +M:	Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+>  L:	cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+>  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git
+>  S:	Maintained
+> 
