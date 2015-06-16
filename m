@@ -1,120 +1,79 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 2/3] vfs, writeback: replace FS_CGROUP_WRITEBACK with SB_I_CGROUPWB
-Date: Tue, 16 Jun 2015 18:48:31 -0400
-Message-ID: <1434494912-31043-3-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 1/3] writeback: do foreign inode detection iff cgroup writeback is enabled
+Date: Tue, 16 Jun 2015 18:48:30 -0400
+Message-ID: <1434494912-31043-2-git-send-email-tj@kernel.org>
 References: <1434494912-31043-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=oqpnrYmqtIghcpfQPTfyFy/JunNNvoNr8pwKYrd31WE=;
-        b=bdXuNXOTErFNzGOOZW3X9MviHoFCzQVI6ahdKuYj3td9irrklJHod/D5KdolJYndAD
-         Q2U3nPs8IAXd/e6Kz0MR9vO9QME8GJKj3gJP/iZCYsW6W+dPhKKmdZLeR6kGKqAcAHTE
-         fNT/o7EM9t0AV3QVs6zV63txKWhWatKfi/9v2JHAdg666SZ9MolI77tCGOBPhNGfhyF4
-         cZfezZ31G8G/ixu+Jl25U0sWs+hFJNsI/75j7XYmMbxZFIZ/riHdHUxZtXxSfo6om6xB
-         PZuflVBONLDUxYhn9QGWuoMP6mmdJlR3loMowO9vmi16X390wHXs6PdsxszI1sOL0xMO
-         hh9Q==
-In-Reply-To: <1434494912-31043-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=2GDnTZZMTOY6vH5P6yU21xs/CpYd8e7pAGwyKxH0ZSM=;
+        b=wbnT3Y9AECVt2EyrNtB/PYbsqYQo7s+dxnq1aMkOihaDYWDoLnfp6dci0XJHVr3bXW
+         cPx3X4dric/Hy9ssTeZEGCbjlFmLjc3D+oaWBkSb7hfC5dPx09HyHynVQ3f0+iWHh9Jo
+         kATaETWL2Tjeq5LrHH8RtoDBIqUg03CzDtfnJWE5dVGQiaCbqXnSDiq6gECl2GfR4xS0
+         B3wzl2Rz+IMKCaJ+uPNbR/LqKiKo4zk/CT9icha++3y1TQJTodqVLXXbWOerPQnDFbU4
+         BVt9+MOHR7WFMZ5PJ8ihZNgi7jddGeTWX0BC8Hs7RsoVHqgotkPR0UTvx4AWHejJextw
+         0UQw==
+In-Reply-To: <1434494912-31043-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: axboe@kernel.dk
+Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, lizefan@huawei.com, cgroups@vger.kernel.org, hannes@cmpxchg.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
 
-FS_CGROUP_WRITEBACK indicates whether a file_system_type supports
-cgroup writeback; however, different super_blocks of the same
-file_system_type may or may not support cgroup writeback depending on
-filesystem options.  This patch replaces FS_CGROUP_WRITEBACK with a
-per-super_block flag.
+Currently, even when a filesystem doesn't set the FS_CGROUP_WRITEBACK
+flag, if the filesystem uses wbc_init_bio() and wbc_account_io(), the
+foreign inode detection and migration logic still ends up activating
+cgroup writeback which is unexpected.  This patch ensures that the
+foreign inode detection logic stays disabled when inode_cgwb_enabled()
+is false by not associating writeback_control's with bdi_writeback's.
 
-super_block->s_flags carries some internal flags in the high bits but
-it's exposd to userland through uapi header and running out of space
-anyway.  This patch adds a new field super_block->s_iflags to carry
-kernel-internal flags.  It is currently only used by the new
-SB_I_CGROUPWB flag whose concatenated and abbreviated name is for
-consistency with other super_block flags.
+This also avoids unnecessary operations in wbc_init_bio(),
+wbc_account_io() and wbc_detach_inode() for filesystems which don't
+support cgroup writeback.
 
-ext2_fill_super() is updated to set SB_I_CGROUPWB.
-
-v2: Added super_block->s_iflags instead of stealing another high bit
-    from sb->s_flags as suggested by Christoph and Jan.
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
-Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Cc: linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- fs/ext2/super.c             | 3 ++-
- include/linux/backing-dev.h | 2 +-
- include/linux/fs.h          | 4 +++-
- 3 files changed, 6 insertions(+), 3 deletions(-)
+ fs/fs-writeback.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
-diff --git a/fs/ext2/super.c b/fs/ext2/super.c
-index 549219d..900e19c 100644
---- a/fs/ext2/super.c
-+++ b/fs/ext2/super.c
-@@ -882,6 +882,7 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
- 	sb->s_flags = (sb->s_flags & ~MS_POSIXACL) |
- 		((EXT2_SB(sb)->s_mount_opt & EXT2_MOUNT_POSIX_ACL) ?
- 		 MS_POSIXACL : 0);
-+	sb->s_iflags |= SB_I_CGROUPWB;
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index f60de54..f0520bc 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -513,6 +513,11 @@ static void inode_switch_wbs(struct inode *inode, int new_wb_id)
+ void wbc_attach_and_unlock_inode(struct writeback_control *wbc,
+ 				 struct inode *inode)
+ {
++	if (!inode_cgwb_enabled(inode)) {
++		spin_unlock(&inode->i_lock);
++		return;
++	}
++
+ 	wbc->wb = inode_to_wb(inode);
+ 	wbc->inode = inode;
  
- 	if (le32_to_cpu(es->s_rev_level) == EXT2_GOOD_OLD_REV &&
- 	    (EXT2_HAS_COMPAT_FEATURE(sb, ~0U) ||
-@@ -1543,7 +1544,7 @@ static struct file_system_type ext2_fs_type = {
- 	.name		= "ext2",
- 	.mount		= ext2_mount,
- 	.kill_sb	= kill_block_super,
--	.fs_flags	= FS_REQUIRES_DEV | FS_CGROUP_WRITEBACK,
-+	.fs_flags	= FS_REQUIRES_DEV,
- };
- MODULE_ALIAS_FS("ext2");
+@@ -575,11 +580,16 @@ void wbc_detach_inode(struct writeback_control *wbc)
+ {
+ 	struct bdi_writeback *wb = wbc->wb;
+ 	struct inode *inode = wbc->inode;
+-	u16 history = inode->i_wb_frn_history;
+-	unsigned long avg_time = inode->i_wb_frn_avg_time;
+-	unsigned long max_bytes, max_time;
++	unsigned long avg_time, max_bytes, max_time;
++	u16 history;
+ 	int max_id;
  
-diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index dfce808..a13181a 100644
---- a/include/linux/backing-dev.h
-+++ b/include/linux/backing-dev.h
-@@ -260,7 +260,7 @@ static inline bool inode_cgwb_enabled(struct inode *inode)
- 
- 	return bdi_cap_account_dirty(bdi) &&
- 		(bdi->capabilities & BDI_CAP_CGROUP_WRITEBACK) &&
--		(inode->i_sb->s_type->fs_flags & FS_CGROUP_WRITEBACK);
-+		(inode->i_sb->s_iflags & SB_I_CGROUPWB);
- }
- 
- /**
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index b5e1dcf..2c5e33a 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1241,6 +1241,8 @@ struct mm_struct;
- #define UMOUNT_NOFOLLOW	0x00000008	/* Don't follow symlink on umount */
- #define UMOUNT_UNUSED	0x80000000	/* Flag guaranteed to be unused */
- 
-+/* sb->s_iflags */
-+#define SB_I_CGROUPWB	0x00000001	/* cgroup-aware writeback enabled */
- 
- /* Possible states of 'frozen' field */
- enum {
-@@ -1279,6 +1281,7 @@ struct super_block {
- 	const struct quotactl_ops	*s_qcop;
- 	const struct export_operations *s_export_op;
- 	unsigned long		s_flags;
-+	unsigned long		s_iflags;	/* internal SB_I_* flags */
- 	unsigned long		s_magic;
- 	struct dentry		*s_root;
- 	struct rw_semaphore	s_umount;
-@@ -1912,7 +1915,6 @@ struct file_system_type {
- #define FS_HAS_SUBTYPE		4
- #define FS_USERNS_MOUNT		8	/* Can be mounted by userns root */
- #define FS_USERNS_DEV_MOUNT	16 /* A userns mount does not imply MNT_NODEV */
--#define FS_CGROUP_WRITEBACK	32	/* Supports cgroup-aware writeback */
- #define FS_RENAME_DOES_D_MOVE	32768	/* FS will handle d_move() during rename() internally. */
- 	struct dentry *(*mount) (struct file_system_type *, int,
- 		       const char *, void *);
++	if (!wb)
++		return;
++
++	history = inode->i_wb_frn_history;
++	avg_time = inode->i_wb_frn_avg_time;
++
+ 	/* pick the winner of this round */
+ 	if (wbc->wb_bytes >= wbc->wb_lcand_bytes &&
+ 	    wbc->wb_bytes >= wbc->wb_tcand_bytes) {
 -- 
 2.4.3
