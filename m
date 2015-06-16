@@ -1,79 +1,61 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 1/3] writeback: do foreign inode detection iff cgroup writeback is enabled
-Date: Tue, 16 Jun 2015 18:48:30 -0400
-Message-ID: <1434494912-31043-2-git-send-email-tj@kernel.org>
-References: <1434494912-31043-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET v2 block/for-4.2/writeback] ext4: implement cgroup writeback support
+Date: Tue, 16 Jun 2015 18:53:11 -0400
+Message-ID: <1434495193-31182-1-git-send-email-tj@kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=2GDnTZZMTOY6vH5P6yU21xs/CpYd8e7pAGwyKxH0ZSM=;
-        b=wbnT3Y9AECVt2EyrNtB/PYbsqYQo7s+dxnq1aMkOihaDYWDoLnfp6dci0XJHVr3bXW
-         cPx3X4dric/Hy9ssTeZEGCbjlFmLjc3D+oaWBkSb7hfC5dPx09HyHynVQ3f0+iWHh9Jo
-         kATaETWL2Tjeq5LrHH8RtoDBIqUg03CzDtfnJWE5dVGQiaCbqXnSDiq6gECl2GfR4xS0
-         B3wzl2Rz+IMKCaJ+uPNbR/LqKiKo4zk/CT9icha++3y1TQJTodqVLXXbWOerPQnDFbU4
-         BVt9+MOHR7WFMZ5PJ8ihZNgi7jddGeTWX0BC8Hs7RsoVHqgotkPR0UTvx4AWHejJextw
-         0UQw==
-In-Reply-To: <1434494912-31043-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=hLg1ywe6KwcCMdarllu7DO4A3a14FLTzA8NTQnZliQE=;
+        b=IttR3/XhqnuWNMFEeJWngil17ApW6C20f3zKhWrs+0QPmJWFWJ0w08CQrNdprHlsB8
+         YOkhwgr3/3zOLA1j0iqMDAu5n7LGCxKGjecNJ1YMAQWx2E3vdUuEx5flHwNAVENrFRgD
+         18AT1qezxzUG0fZfCE/qdGbneRV6+a358566oTQkVciJzWjNLdw0OszxycNlTeA46Jgh
+         vA5iSloe6iF6MkIu/xkeRVZFAqG1xvOvRg/LGWTndrJywV2g8iRLZ/pZew5cjWe2EYtM
+         vcZmjWRdI4xAQc1xiLpVJqJgX73JZexVb2fs4+YWaeK+GINF0eLFfqsapUFiqk9xEWbW
+         zjKg==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, lizefan@huawei.com, cgroups@vger.kernel.org, hannes@cmpxchg.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, tytso-3s7WtUTddSA@public.gmane.org, adilger.kernel-m1MBpc4rdrD3fQ9qLvQP4Q@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Currently, even when a filesystem doesn't set the FS_CGROUP_WRITEBACK
-flag, if the filesystem uses wbc_init_bio() and wbc_account_io(), the
-foreign inode detection and migration logic still ends up activating
-cgroup writeback which is unexpected.  This patch ensures that the
-foreign inode detection logic stays disabled when inode_cgwb_enabled()
-is false by not associating writeback_control's with bdi_writeback's.
+Hello,
 
-This also avoids unnecessary operations in wbc_init_bio(),
-wbc_account_io() and wbc_detach_inode() for filesystems which don't
-support cgroup writeback.
+This is v2.  The only change from the last take[L] is
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- fs/fs-writeback.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+* Updated to reflect the earlier MS_CGROUPWB -> SB_I_CGROUPWB change.
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index f60de54..f0520bc 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -513,6 +513,11 @@ static void inode_switch_wbs(struct inode *inode, int new_wb_id)
- void wbc_attach_and_unlock_inode(struct writeback_control *wbc,
- 				 struct inode *inode)
- {
-+	if (!inode_cgwb_enabled(inode)) {
-+		spin_unlock(&inode->i_lock);
-+		return;
-+	}
-+
- 	wbc->wb = inode_to_wb(inode);
- 	wbc->inode = inode;
- 
-@@ -575,11 +580,16 @@ void wbc_detach_inode(struct writeback_control *wbc)
- {
- 	struct bdi_writeback *wb = wbc->wb;
- 	struct inode *inode = wbc->inode;
--	u16 history = inode->i_wb_frn_history;
--	unsigned long avg_time = inode->i_wb_frn_avg_time;
--	unsigned long max_bytes, max_time;
-+	unsigned long avg_time, max_bytes, max_time;
-+	u16 history;
- 	int max_id;
- 
-+	if (!wb)
-+		return;
-+
-+	history = inode->i_wb_frn_history;
-+	avg_time = inode->i_wb_frn_avg_time;
-+
- 	/* pick the winner of this round */
- 	if (wbc->wb_bytes >= wbc->wb_lcand_bytes &&
- 	    wbc->wb_bytes >= wbc->wb_tcand_bytes) {
--- 
-2.4.3
+This patchset implements cgroup writeback support for ext4, which is
+enabled for writeback and ordered data modes.  This patchset contains
+the following two patches.
+
+ 0001-ext4-replace-ext4_io_submit-io_op-with-io_wbc.patch
+ 0002-ext4-implement-cgroup-writeback-support.patch
+
+0001 is a prep patch which replaces io_submit->io_op w/ ->io_wbc.
+0002 implements cgroup writeback support.
+
+This patchset is on top of
+
+ [1] block/for-4.2/writeback
++[2] [PATCHSET] cgroup, writeback: misc updates for cgroup writeback support
+
+and available on in the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-writeback-ext4
+
+diffstat follows.  Thanks.
+
+ fs/ext4/ext4.h    |    2 +-
+ fs/ext4/page-io.c |    8 ++++++--
+ fs/ext4/super.c   |    2 ++
+ 3 files changed, 9 insertions(+), 3 deletions(-)
+
+--
+tejun
+
+[L] http://lkml.kernel.org/g/1434146543-26358-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+[1] git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-4.2/writeback
+[2] http://lkml.kernel.org/g/1434494912-31043-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
