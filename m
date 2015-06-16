@@ -1,19 +1,19 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 3/4] cgroup: require write perm on common ancestor when moving processes on the default hierarchy
-Date: Tue, 16 Jun 2015 15:10:16 -0400
-Message-ID: <1434481817-32001-4-git-send-email-tj@kernel.org>
+Subject: [PATCH 4/4] cgroup: add delegation section to unified hierarchy documentation
+Date: Tue, 16 Jun 2015 15:10:17 -0400
+Message-ID: <1434481817-32001-5-git-send-email-tj@kernel.org>
 References: <1434481817-32001-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=fhYulkN4TjnswEs8fu2KY9GrrC/ngHNImTvI27H7Ke0=;
-        b=nOEtY1hLntFi4+414mmIXCNHV27gwUSb53i+Cjng5tUBZke+GiRrPfFvyXODTblvBc
-         eVaNU1EOQyG1+uD4k7jIf8MpkjeuWn10ca9veUJX/3nMZGfMtzrp877cTAuyg1NvmFGi
-         8VIevv8i3VNlgipWZX+Gz7ePRVOOHQv67zAnk4EpXRVXmR5142Jr5jVWwCwxq1/QKTlH
-         2j7p4APVmbeTsKXfNc5KM8zvnAa6x9KNV8S/e0cKMDNk61RrZmcQFJ2OAm39kqH/UWsT
-         aLd75R8y1hA4KrsUOfnvynwjUxxM+9eNGQ7yC2UuKjGWTd4UFLNRxw+5SSeXQ5kzk3au
-         unuA==
+        bh=5I7EswmSMUvhZpAFp4bhuAk3fUnirLw7vjJHf39Oo1k=;
+        b=Msjy09NRgF8Wlbav5CaWT1uq1aOU5MhXZ0dC/lvSZ8l8sHJ1ffWfI0xegN91BgHxTq
+         xBZZlSb8x8/ijSllMl1x+RK4jPz6y0yDz/HaDZRnZNtCizlC7nkyDXxkg1GjCFrge5Jm
+         fEm+drTT/7IjbzeJ2jWRxBB0tmkhTNZjwDBzfcIz0sKQnrvxwt09hQoHbdXC4XxWkqGA
+         dViBw770/gexMbR8gf0owyMdF8ikDATe8OkGVlOrRy5G2cJLonOOOGr4MX0Kr9nkHxEB
+         GqTm4ZRBJ8/wyLnRWOYLd19Cui6ED7pKm5jrkluGEW+VXmm3yN1AhAbrkEDBgS6kSa+W
+         EIzA==
 In-Reply-To: <1434481817-32001-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,121 +23,165 @@ Content-Transfer-Encoding: 7bit
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On traditional hierarchies, if a task has write access to "tasks" or
-"cgroup.procs" file of a cgroup and its euid agrees with the target,
-it can move the target to the cgroup; however, consider the following
-scenario.  The owner of each cgroup is in the parentheses.
-
- R (root) - 0 (root) - 00 (user1) - 000 (user1)
-          |                       \ 001 (user1)
-          \ 1 (root) - 10 (user1)
-
-The subtrees of 00 and 10 are delegated to user1; however, while both
-subtrees may belong to the same user, it is clear that the two
-subtrees are to be isolated - they're under completely separate
-resource limits imposed by 0 and 1, respectively.  Note that 0 and 1
-aren't strictly necessary but added to ease illustrating the issue.
-
-If user1 is allowed to move processes between the two subtrees, the
-intention of the hierarchy - keeping a given group of processes under
-a subtree with certain resource restrictions while delegating
-management of the subtree - can be circumvented by user1.
-
-This happens because migration permission check doesn't consider the
-hierarchical nature of cgroups.  To fix the issue, this patch adds an
-extra permission requirement when userland tries to migrate a process
-in the default hierarchy - the issuing task must have write access to
-the common ancestor of "cgroup.procs" file of the ancestor in addition
-to the destination's.
-
-Conceptually, the issuer must be able to move the target process from
-the source cgroup to the common ancestor of source and destination
-cgroups and then to the destination.  As long as delegation is done in
-a proper top-down way, this guarantees that a delegatee can't smuggle
-processes across disjoint delegation domains.
-
-The next patch will add documentation on the delegation model on the
-default hierarchy.
-
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- include/linux/cgroup-defs.h |  1 +
- kernel/cgroup.c             | 30 +++++++++++++++++++++++++++---
- 2 files changed, 28 insertions(+), 3 deletions(-)
+ Documentation/cgroups/unified-hierarchy.txt | 102 +++++++++++++++++++++++-----
+ 1 file changed, 84 insertions(+), 18 deletions(-)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index c5588c4..93755a6 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -220,6 +220,7 @@ struct cgroup {
- 	int populated_cnt;
+diff --git a/Documentation/cgroups/unified-hierarchy.txt b/Documentation/cgroups/unified-hierarchy.txt
+index eb102fb..fef5f5d 100644
+--- a/Documentation/cgroups/unified-hierarchy.txt
++++ b/Documentation/cgroups/unified-hierarchy.txt
+@@ -17,15 +17,18 @@ CONTENTS
+ 3. Structural Constraints
+   3-1. Top-down
+   3-2. No internal tasks
+-4. Other Changes
+-  4-1. [Un]populated Notification
+-  4-2. Other Core Changes
+-  4-3. Per-Controller Changes
+-    4-3-1. blkio
+-    4-3-2. cpuset
+-    4-3-3. memory
+-5. Planned Changes
+-  5-1. CAP for resource control
++4. Delegation
++  4-1. Model of delegation
++  4-2. Common ancestor rule
++5. Other Changes
++  5-1. [Un]populated Notification
++  5-2. Other Core Changes
++  5-3. Per-Controller Changes
++    5-3-1. blkio
++    5-3-2. cpuset
++    5-3-3. memory
++6. Planned Changes
++  6-1. CAP for resource control
  
- 	struct kernfs_node *kn;		/* cgroup kernfs entry */
-+	struct kernfs_node *procs_kn;	/* kn for "cgroup.procs" */
- 	struct kernfs_node *populated_kn; /* kn for "cgroup.subtree_populated" */
  
- 	/*
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 4504d64..d3ca3fe 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -2392,7 +2392,9 @@ static int cgroup_attach_task(struct cgroup *dst_cgrp,
- 	return ret;
- }
+ 1. Background
+@@ -245,9 +248,72 @@ cgroup must create children and transfer all its tasks to the children
+ before enabling controllers in its "cgroup.subtree_control" file.
  
--static int cgroup_procs_write_permission(struct task_struct *task)
-+static int cgroup_procs_write_permission(struct task_struct *task,
-+					 struct cgroup *dst_cgrp,
-+					 struct kernfs_open_file *of)
- {
- 	const struct cred *cred = current_cred();
- 	const struct cred *tcred = get_task_cred(task);
-@@ -2407,6 +2409,26 @@ static int cgroup_procs_write_permission(struct task_struct *task)
- 	    !uid_eq(cred->euid, tcred->suid))
- 		ret = -EACCES;
  
-+	if (cgroup_on_dfl(dst_cgrp)) {
-+		struct super_block *sb = of->file->f_path.dentry->d_sb;
-+		struct cgroup *cgrp;
-+		struct inode *inode;
+-4. Other Changes
++4. Delegation
+ 
+-4-1. [Un]populated Notification
++4-1. Model of delegation
 +
-+		down_read(&css_set_rwsem);
-+		cgrp = task_cgroup_from_root(task, &cgrp_dfl_root);
-+		up_read(&css_set_rwsem);
++A cgroup can be delegated to a less privileged user by granting write
++access of the directory and its "cgroup.procs" file to the user.  Note
++that the resource control knobs in a given directory concern the
++resources of the parent and thus must not be delegated along with the
++directory.
 +
-+		while (!cgroup_is_descendant(dst_cgrp, cgrp))
-+			cgrp = cgroup_parent(cgrp);
++Once delegated, the user can build sub-hierarchy under the directory,
++organize processes as it sees fit and further distribute the resources
++it got from the parent.  The limits and other settings of all resource
++controllers are hierarchical and regardless of what happens in the
++delegated sub-hierarchy, nothing can escape the resource restrictions
++imposed by the parent.
 +
-+		ret = -ENOMEM;
-+		inode = kernfs_get_inode(sb, cgrp->procs_kn);
-+		if (inode) {
-+			ret = inode_permission(inode, MAY_WRITE);
-+			iput(inode);
-+		}
-+	}
++Currently, cgroup doesn't impose any restrictions on the number of
++cgroups in or nesting depth of a delegated sub-hierarchy; however,
++this may in the future be limited explicitly.
 +
- 	put_cred(tcred);
- 	return ret;
- }
-@@ -2459,7 +2481,7 @@ static ssize_t __cgroup_procs_write(struct kernfs_open_file *of, char *buf,
- 	get_task_struct(tsk);
- 	rcu_read_unlock();
++
++4-2. Common ancestor rule
++
++Let's say cgroups C0 and C1 have been delegated to user U0 who created
++C00, C01 under C0 and C10 under C1 as follows.
++
++ ~~~~~~~~~~~~~ - C0 - C00
++ ~ cgroup    ~      \ C01
++ ~ hierarchy ~
++ ~~~~~~~~~~~~~ - C1 - C10
++
++C0 and C1 are separate entities in terms of resource distribution
++regardless of their relative positions in the hierarchy.  The
++resources the processes under C0 are entitled to are controlled by
++C0's ancestors and may be completely different from C1.  It's clear
++that the intention of delegating C0 to U0 is allowing U0 to organize
++the processes under C0 and further control the distribution of C0's
++resources.
++
++On traditional hierarchies, if a task has write access to "tasks" or
++"cgroup.procs" file of a cgroup and its uid agrees with the target, it
++can move the target to the cgroup.  In the above example, U0 will not
++only be able to move processes in each sub-hierarchy but also across
++the two sub-hierarchies, effectively allowing it to violate the
++organizational and resource restrictions implied by the hierarchical
++structure above C0 and C1.
++
++On the unified hierarchy, to write to a "cgroup.procs" file, in
++addition to the usual write permission to the file and uid match, the
++writer must also have write acess to the "cgroup.procs" file of the
++common ancestor of the source and destination cgroups.  This prevents
++delegatees from smuggling processes across disjoint sub-hierarchies.
++
++For example, in the above scenario, let's say U0 wants to write the
++pid of a process which has a matching uid and is currently in C10 into
++"C00/cgroup.procs".  U0 obviously has write access to the file and
++migration permission on the process; however, the common ancestor of
++the source cgroup C10 and the destination cgroup C00 is above the
++points of delegation and U0 would not have write access to its
++"cgroup.procs" and thus be denied with -EACCES.
++
++
++5. Other Changes
++
++5-1. [Un]populated Notification
  
--	ret = cgroup_procs_write_permission(tsk);
-+	ret = cgroup_procs_write_permission(tsk, cgrp, of);
- 	if (!ret)
- 		ret = cgroup_attach_task(cgrp, tsk, threadgroup);
+ cgroup users often need a way to determine when a cgroup's
+ subhierarchy becomes empty so that it can be cleaned up.  cgroup
+@@ -289,7 +355,7 @@ supported and the interface files "release_agent" and
+ "notify_on_release" do not exist.
  
-@@ -3087,7 +3109,9 @@ static int cgroup_add_file(struct cgroup *cgrp, struct cftype *cft)
- 		return ret;
- 	}
  
--	if (cft->seq_show == cgroup_populated_show)
-+	if (cft->write == cgroup_procs_write)
-+		cgrp->procs_kn = kn;
-+	else if (cft->seq_show == cgroup_populated_show)
- 		cgrp->populated_kn = kn;
- 	return 0;
- }
+-4-2. Other Core Changes
++5-2. Other Core Changes
+ 
+ - None of the mount options is allowed.
+ 
+@@ -306,14 +372,14 @@ supported and the interface files "release_agent" and
+ - The "cgroup.clone_children" file is removed.
+ 
+ 
+-4-3. Per-Controller Changes
++5-3. Per-Controller Changes
+ 
+-4-3-1. blkio
++5-3-1. blkio
+ 
+ - blk-throttle becomes properly hierarchical.
+ 
+ 
+-4-3-2. cpuset
++5-3-2. cpuset
+ 
+ - Tasks are kept in empty cpusets after hotplug and take on the masks
+   of the nearest non-empty ancestor, instead of being moved to it.
+@@ -322,7 +388,7 @@ supported and the interface files "release_agent" and
+   masks of the nearest non-empty ancestor.
+ 
+ 
+-4-3-3. memory
++5-3-3. memory
+ 
+ - use_hierarchy is on by default and the cgroup file for the flag is
+   not created.
+@@ -407,9 +473,9 @@ supported and the interface files "release_agent" and
+   memory.low, memory.high, and memory.max will use the string "max" to
+   indicate and set the highest possible value.
+ 
+-5. Planned Changes
++6. Planned Changes
+ 
+-5-1. CAP for resource control
++6-1. CAP for resource control
+ 
+ Unified hierarchy will require one of the capabilities(7), which is
+ yet to be decided, for all resource control related knobs.  Process
 -- 
 2.4.3
