@@ -1,57 +1,64 @@
-From: Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>
-Subject: Re: [PATCH 3/3] writeback, blkio: add documentation for cgroup
- writeback support
-Date: Mon, 15 Jun 2015 19:35:19 -0400
-Message-ID: <20150615233519.GB30059@thunk.org>
-References: <1434146254-26220-1-git-send-email-tj@kernel.org>
- <1434146254-26220-4-git-send-email-tj@kernel.org>
- <20150615172823.GA5783@redhat.com>
- <20150615182345.GB18517@mtj.duckdns.org>
-Mime-Version: 1.0
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET cgroup/for-4.2] cgroup: require write perm on common ancestor for migration
+Date: Tue, 16 Jun 2015 15:10:13 -0400
+Message-ID: <1434481817-32001-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=thunk.org; s=ef5046eb;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=4fPmbttVS111I7Tph9Dh6MUzU7mYct6r33isZewDDJE=;
-	b=O2U4rBZ7SR+vtIArWodXzjp6kkNj/LjcjjPCS1SrXeW2Wh9DvuRZxJNCuY5dcp7w5Ef20g8Ad5H5hrHOo+1zecSASmYWAHCtDEEC6umlXZKJ8V7OjwWYAsHRk2J0aGbbKD1rP6o3gt0ObioMnpLrLzt2NLAioYI10SyjqGDVPXo=;
-Content-Disposition: inline
-In-Reply-To: <20150615182345.GB18517-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=WHNNciilFwOqm6GRACSPpD/RwDnhV9gkH3GCjIk799A=;
+        b=ui/YIw/AdBILTihqMqWUx0tG+rnXmvdasnyDWrh7DTUCjWx2hGpbTmSUknomKdrB9Z
+         OktR9yaMhJG4MLqntTqdpoBp75yV91huIlCuUAwNx884M3gt0NoGDwQnPn4RTiLC40dp
+         NjpN9vff9D0YfkYrlPWD/rPw9JvP4YdSYf8Zuv68LS18VCO3lwL/XYfLY9MkA/MFr6IN
+         RpFKD5HrYtuHe4YFR6VR91pV/+9retBJq8yC9hJFrGMWA0VxwYsQZ+DyWV/WVp+2dQwn
+         NNUtq6I2BwqT9jDi+AOJAYGrYTC6prhY++q/jl+Wctx80YLt8dZ5Mz1bjeQaB4lEV1aF
+         B/vg==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Mon, Jun 15, 2015 at 02:23:45PM -0400, Tejun Heo wrote:
-> 
-> On ext2, there's nothing interlocking each other.  My understanding of
-> ext4 is pretty limited but as long as the journal head doesn't
-> overwrap and gets bloked on the slow one, it should be fine, so for
-> most use cases, this shouldn't be a problem.
+Hello,
 
-The writes to the journal in ext3/ext4 are done from the jbd/jbd2
-kernel thread.  So writes to the journal shouldn't be a problem.  In
-data=ordered mode inodes that have blocks that were allocated during
-the current transaction do have to have their data blocks written out,
-and this is done by the jbd/jbd2 thread using filemap_fdatawait().
+On traditional hierarchies, if a task has write access to "tasks" or
+"cgroup.procs" file of a cgroup and its euid agrees with the target,
+it can move the target to the cgroup; however, this allows a delegatee
+to smuggle processes across disjoint sub-hierarchies violating the
+organizational structure and resource restrictions imposed from higher
+up.
 
-If this gets throttled because blocks were originally dirtied by some
-cgroup that didn't have much disk time quota, then all file system
-activities will get stalled out until the ordered mode writeback
-completes, which means if there are any high priority cgroups trying
-to execute any system call that mutates file system state will block
-until the commit has gotten past the initial setup stage, and so other
-system activity could sputter to a halt --- at which point the commit
-will be allowed to compete, and then all of the calls to
-ext4_journal_start() will unblock, and the system will come back to
-life.  :-)
+To prevent these breaches, this patchset makes unified hierarchy
+require write access to cgroup.procs of the common ancestor of the
+source and destination cgroups.  It also adds documentation on how
+delegation of sub-hierarchies should be done on unified hierarchy.
 
-Because ext3 doesn't have delayed allocation, it will orders of
-magnitude more data=ordered block flushing, so this problem will be
-far worse with ext3 compared to ext4.
+This patchset contains the following four patches.
 
-So if there is some way we can signal to any cgroup that that might be
-throttling writeback or disk I/O that the jbd/jbd2 process should be
-considered privileged, that would be a good since it would allow us to
-avoid a potential priority inversion problem. 
+ 0001-kernfs-make-kernfs_get_inode-public.patch
+ 0002-cgroup-separate-out-cgroup_procs_write_permission-fr.patch
+ 0003-cgroup-require-write-perm-on-common-ancestor-when-mo.patch
+ 0004-cgroup-add-delegation-section-to-unified-hierarchy-d.patch
 
-						- Ted
+0001-0002 are prep patches.  0003 implements the common ancestor rule
+and 0004 documents delegation on unified hierarchy.
+
+This patchset is on top of cgroup/for-4.2 4d205676c102 ("MAINTAINERS:
+add a cgroup core co-maintainer") and available in the following git
+branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-delegation
+
+diffstat follows.  Thanks.
+
+ Documentation/cgroups/unified-hierarchy.txt |  102 +++++++++++++++++++++++-----
+ fs/kernfs/kernfs-internal.h                 |    1 
+ include/linux/cgroup-defs.h                 |    1 
+ include/linux/kernfs.h                      |    5 +
+ kernel/cgroup.c                             |   64 +++++++++++++----
+ 5 files changed, 139 insertions(+), 34 deletions(-)
+
+--
+tejun
