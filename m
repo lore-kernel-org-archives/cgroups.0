@@ -1,64 +1,84 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCHSET cgroup/for-4.2] cgroup: require write perm on common ancestor for migration
-Date: Tue, 16 Jun 2015 15:10:13 -0400
-Message-ID: <1434481817-32001-1-git-send-email-tj@kernel.org>
+Subject: [PATCH 1/4] kernfs: make kernfs_get_inode() public
+Date: Tue, 16 Jun 2015 15:10:14 -0400
+Message-ID: <1434481817-32001-2-git-send-email-tj@kernel.org>
+References: <1434481817-32001-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id;
-        bh=WHNNciilFwOqm6GRACSPpD/RwDnhV9gkH3GCjIk799A=;
-        b=ui/YIw/AdBILTihqMqWUx0tG+rnXmvdasnyDWrh7DTUCjWx2hGpbTmSUknomKdrB9Z
-         OktR9yaMhJG4MLqntTqdpoBp75yV91huIlCuUAwNx884M3gt0NoGDwQnPn4RTiLC40dp
-         NjpN9vff9D0YfkYrlPWD/rPw9JvP4YdSYf8Zuv68LS18VCO3lwL/XYfLY9MkA/MFr6IN
-         RpFKD5HrYtuHe4YFR6VR91pV/+9retBJq8yC9hJFrGMWA0VxwYsQZ+DyWV/WVp+2dQwn
-         NNUtq6I2BwqT9jDi+AOJAYGrYTC6prhY++q/jl+Wctx80YLt8dZ5Mz1bjeQaB4lEV1aF
-         B/vg==
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=6RBc3zzE/VrINnLTvVgpsxFaMbAIviach6pHoFme6Zw=;
+        b=MHTMrWg9whGPb7iqSrZGSGJkJxHGVl6Ck9noi1/yl4ldyBo6dX1sL6JBYtE5e3h5HT
+         IW5mVsEB+R73tfK4aTCxbgXJQ2L7bdg4U/03oe6w/BVjGvTN3rFEScxHemunplOnp1Yn
+         aMvxqLD8nrjlSOju2wYYO6CRqHRNm0qUyRmaSmlOKHSUoHnWwfpuW5i13cksLz+w7mWy
+         Q0IhbUm+UMpCQfTI1ylKjNHPAzrMffVMszG+TK/83CciGi6jRASf4oUCrnWHT1ffMfO5
+         ooMvaoIa5I4bN+6MV0RX7r1jFwxn/lP3yEGygr3soUPyJKve0ovc/OrTp3eDH4ES5afg
+         B3qg==
+In-Reply-To: <1434481817-32001-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
 
-Hello,
+Move kernfs_get_inode() prototype from fs/kernfs/kernfs-internal.h to
+include/linux/kernfs.h.  It obtains the matching inode for a
+kernfs_node.
 
-On traditional hierarchies, if a task has write access to "tasks" or
-"cgroup.procs" file of a cgroup and its euid agrees with the target,
-it can move the target to the cgroup; however, this allows a delegatee
-to smuggle processes across disjoint sub-hierarchies violating the
-organizational structure and resource restrictions imposed from higher
-up.
+It will be used by cgroup for inode based permission checks for now
+but is generally useful.
 
-To prevent these breaches, this patchset makes unified hierarchy
-require write access to cgroup.procs of the common ancestor of the
-source and destination cgroups.  It also adds documentation on how
-delegation of sub-hierarchies should be done on unified hierarchy.
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+---
+Hello, Greg.
 
-This patchset contains the following four patches.
+Given that cgroup will be the first and only, for now, user, I think
+it'd be the eaiest to route this with the related cgroup patches
+through the cgroup tree.  What do you think?
 
- 0001-kernfs-make-kernfs_get_inode-public.patch
- 0002-cgroup-separate-out-cgroup_procs_write_permission-fr.patch
- 0003-cgroup-require-write-perm-on-common-ancestor-when-mo.patch
- 0004-cgroup-add-delegation-section-to-unified-hierarchy-d.patch
+Thanks.
 
-0001-0002 are prep patches.  0003 implements the common ancestor rule
-and 0004 documents delegation on unified hierarchy.
+ fs/kernfs/kernfs-internal.h | 1 -
+ include/linux/kernfs.h      | 5 +++++
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
-This patchset is on top of cgroup/for-4.2 4d205676c102 ("MAINTAINERS:
-add a cgroup core co-maintainer") and available in the following git
-branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgroup-delegation
-
-diffstat follows.  Thanks.
-
- Documentation/cgroups/unified-hierarchy.txt |  102 +++++++++++++++++++++++-----
- fs/kernfs/kernfs-internal.h                 |    1 
- include/linux/cgroup-defs.h                 |    1 
- include/linux/kernfs.h                      |    5 +
- kernel/cgroup.c                             |   64 +++++++++++++----
- 5 files changed, 139 insertions(+), 34 deletions(-)
-
---
-tejun
+diff --git a/fs/kernfs/kernfs-internal.h b/fs/kernfs/kernfs-internal.h
+index af9fa74..6762bfb 100644
+--- a/fs/kernfs/kernfs-internal.h
++++ b/fs/kernfs/kernfs-internal.h
+@@ -76,7 +76,6 @@ extern struct kmem_cache *kernfs_node_cache;
+ /*
+  * inode.c
+  */
+-struct inode *kernfs_get_inode(struct super_block *sb, struct kernfs_node *kn);
+ void kernfs_evict_inode(struct inode *inode);
+ int kernfs_iop_permission(struct inode *inode, int mask);
+ int kernfs_iop_setattr(struct dentry *dentry, struct iattr *iattr);
+diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
+index 71ecdab..e6b2f7d 100644
+--- a/include/linux/kernfs.h
++++ b/include/linux/kernfs.h
+@@ -277,6 +277,7 @@ void kernfs_put(struct kernfs_node *kn);
+ 
+ struct kernfs_node *kernfs_node_from_dentry(struct dentry *dentry);
+ struct kernfs_root *kernfs_root_from_sb(struct super_block *sb);
++struct inode *kernfs_get_inode(struct super_block *sb, struct kernfs_node *kn);
+ 
+ struct kernfs_root *kernfs_create_root(struct kernfs_syscall_ops *scops,
+ 				       unsigned int flags, void *priv);
+@@ -352,6 +353,10 @@ static inline struct kernfs_node *kernfs_node_from_dentry(struct dentry *dentry)
+ static inline struct kernfs_root *kernfs_root_from_sb(struct super_block *sb)
+ { return NULL; }
+ 
++static inline struct inode *
++kernfs_get_inode(struct super_block *sb, struct kernfs_node *kn)
++{ return NULL; }
++
+ static inline struct kernfs_root *
+ kernfs_create_root(struct kernfs_syscall_ops *scops, unsigned int flags,
+ 		   void *priv)
+-- 
+2.4.3
