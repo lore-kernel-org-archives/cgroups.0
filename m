@@ -1,112 +1,50 @@
-From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: How we use cgroups in rkt
-Date: Wed, 17 Jun 2015 20:30:24 +0000
-Message-ID: <20150617203024.GI10949@ubuntumail>
-References: <55815556.4030304@endocode.com>
+From: Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>
+Subject: Re: [PATCH 3/3] writeback, blkio: add documentation for cgroup
+ writeback support
+Date: Wed, 17 Jun 2015 17:48:52 -0400
+Message-ID: <20150617214852.GE4076@thunk.org>
+References: <1434146254-26220-1-git-send-email-tj@kernel.org>
+ <1434146254-26220-4-git-send-email-tj@kernel.org>
+ <20150615172823.GA5783@redhat.com>
+ <20150615182345.GB18517@mtj.duckdns.org>
+ <20150615233519.GB30059@thunk.org>
+ <20150616215436.GE22637@mtj.duckdns.org>
+ <20150617031540.GB4076@thunk.org>
+ <20150617185237.GL22637@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=thunk.org; s=ef5046eb;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=jTM+MS4JUXSnXklQHEqPzhxamesENTecK5xDscvL0sE=;
+	b=JhAivyilqnYYcvXyKo4EP9/3e3QEHd0hF/ojvQ1CKt6YDCE9xPPMBj1flXc9z83M6Ee+8dlAcdgZmHYFuDSGCpAKhjTQm9WJni2w8Wu9Pphrd8EFwAhMRsE4szNS2zHufMb9I4rOxAwDXXC8/jCt0NjDoXgYChWu1IhPgKM4cos=;
 Content-Disposition: inline
-In-Reply-To: <55815556.4030304-973cpzSjLbNWk0Htik3J/w@public.gmane.org>
+In-Reply-To: <20150617185237.GL22637-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Iago =?iso-8859-1?Q?L=F3pez?= Galeiras <iago-973cpzSjLbNWk0Htik3J/w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Quoting Iago L=C3=B3pez Galeiras (iago-973cpzSjLbNWk0Htik3J/w@public.gmane.org):
-> Hi everyone,
->=20
-> We are working on rkt[1] and we want to ask for feedback about the wa=
-y we use
-> cgroups to implement isolation in containers. rkt uses systemd-nspawn=
- internally
-> so I guess the best way to start is explaining how this is handled in
-> systemd-nspawn.
->=20
-> The approach taken by nspawn is mounting the cgroup controllers read-=
-only inside
-> the container except the part that corresponds to it inside the syste=
-md
-> controller. It is done this way because allowing the container to mod=
-ify the
-> other controllers is considered unsafe[2].
->=20
-> This is how bind mounts look like:
->=20
-> /sys/fs/cgroup/devices RO
-> [...]
-> /sys/fs/cgroup/memory RO
-> /sys/fs/cgroup/systemd RO
-> /sys/fs/cgroup/systemd/machine.slice/machine-a.scope RW
->=20
-> In rkt we have a concept called pod[3] which is a list of apps that r=
-un inside a
-> container, each running in its own chroot. To implement this concept,=
- we start a
-> systemd-nspawn container with a minimal systemd installation that sta=
-rts each
-> app as a service.
->=20
-> We want to be able to apply different restrictions to each app of a p=
-od using
-> cgroups and the straightforward way we thought was delegating to syst=
-emd inside
-> the container. Initially, this didn't work because, as mentioned earl=
-ier, the
-> cgroup controllers are mounted read-only.
->=20
-> The way we solved this problem was mounting the cgroup hierarchy (wit=
-h the
-> directories expected by systemd) outside the container. The differenc=
-e with
-> systemd-nspawn=E2=80=99s approach is that we don=E2=80=99t mount ever=
-ything read-only; instead,
-> we leave the knobs we need in each of the application=E2=80=99s subcg=
-roups read-write.
->=20
-> For example, if we want to restrict the memory usage of an applicatio=
-n we leave
-> /sys/fs/cgroup/memory/machine/machine.slice/machine-rkt-xxxxx/system.=
-slice/sha512-xxxx/{memory.limit_in_bytes,cgroup.procs}
+On Wed, Jun 17, 2015 at 02:52:37PM -0400, Tejun Heo wrote:
+> 
+> Hmmm... so, overriding things *before* an bio is issued shouldn't be
+> too difficult and as long as this sort of operations aren't prevalent
+> we might be able to get away with just charging them against root.
+> Especially if it's to avoid getting blocked on the journal which we
+> already consider a shared overhead which is charged to root.  If this
+> becomes large enough to require exacting charges, it'll be more
+> complex but still way better than trying to raise priority on a bio
+> which is already issued, which is likely to be excruciatingly painful
+> if possible at all.
 
-Who exactly does the writing to those files?  Do the applications want =
-to
-change them, or only rkt itself?  If rkt, then it seems like you should=
- be
-able to use a systemd api to update the values (over dbus), right?
-systemctl set-property machine-a-scope MemoryLimit=3D1G or something.
+Yeah, just charging the overhead to root seems good enough.
 
-Now I'm pretty sure that systemd doesn't yet support being able to do
-this from inside the container in a delegated way.  That was cgmanager'=
-s
-reason for being, and I'm interested in working on a proper API for tha=
-t
-for systemd.
+I could imagine charging it to whatever cgroup the jbd/jbd2 thread
+belongs to, which in turn would be the cgroup of the process that
+mounted the file system.  The only problem with that is that if a
+low-priority process is allowed to mount a file system, and it gets
+traversed by a high priority process, the high priority process will
+get impacted.  So maybe it's better to just say that it always get
+charged to the root cgroup.
 
-> read-write so systemd inside the container can set the appropriate re=
-strictions
-> but the rest of /sys/fs/cgroup/memory/ is still read-only.
->=20
-> We know this doesn=E2=80=99t provide perfect isolation but we assume =
-non-malicious
-> applications. We also know we=E2=80=99ll have to rework this when sys=
-temd starts using
-> the unified hierarchy.
->=20
-> What do you think about our approach?
->=20
-> Cheers.
->=20
-> [1]: https://github.com/coreos/rkt
-> [2]: http://lists.freedesktop.org/archives/systemd-devel/2015-April/0=
-31191.html
-> [3]: https://github.com/appc/spec/blob/master/spec/pods.md
->=20
-> --=20
->=20
-> Iago L=C3=B3pez Galeiras
-> _______________________________________________
-> Containers mailing list
-> Containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-> https://lists.linuxfoundation.org/mailman/listinfo/containers
+					- Ted
