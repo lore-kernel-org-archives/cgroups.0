@@ -1,65 +1,61 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 06/51] memcg: add mem_cgroup_root_css
-Date: Wed, 17 Jun 2015 14:25:00 -0400
-Message-ID: <20150617182500.GI22637@mtj.duckdns.org>
-References: <1432329245-5844-1-git-send-email-tj@kernel.org>
- <1432329245-5844-7-git-send-email-tj@kernel.org>
- <20150617145642.GI25056@dhcp22.suse.cz>
+Subject: Re: [PATCHSET v2 block/for-4.2/writeback] cgroup, writeback: misc
+ updates for cgroup writeback support
+Date: Wed, 17 Jun 2015 14:31:03 -0400
+Message-ID: <20150617183103.GK22637@mtj.duckdns.org>
+References: <1434494912-31043-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=sdGqp/FfDeO4ZOBLz/QiKA3k90RouSvpSINa+kbEieo=;
-        b=Hb5n9iQZWQSTIpVTSLreZx9IucuEl787XLsaqW1DhmRum8ejxwbTbdxU586hR0h6a0
-         AAOVj96paGc4O/u60yj+BC2BXen9tJwnWUIb+PCbKE6LlY4LzStQVroQX+UFCXr2GkO7
-         ovtnOj9Qa03FQ5DupglpfN/PFlRqinwOrtO66CTKJH5V7+AMDZa4hqr8RIBrEQe8gVwl
-         2aRc2mhxo2NNj8NCWEiiL1lsYwL4uxg7bX6EgREilt1Zuk5ACZwP411XplsViXHMO9FU
-         AfUjvQ6v5zZj+ydqpAZmWe43nVLvtJqJdw7zZ4smkV7W947p66SuWrWPCK2/KH1dEPQy
-         K3JA==
+        bh=s0RjFwOKZlM/Wrtbsr6RI9PExXXdfsKTfV5QsGb17E8=;
+        b=kFnYu+Su8Ue6cJiPbgIrYbGq8fdcSJbEW3idjCSF6EYxrVy5H19RmEuz5JiLUT6w5D
+         AD1c/zSa/4idtcBUvpS0ndkWqG/NGo2B1DoPv7gT98TW0TSOoMgN88rChOJ/KhIwQI5y
+         SxGrqNe2/bLrkrdzlWhz5hncAsFeRvSNXkT9EvxlpOrZXhURkUAkH1MbM8opfS5hj2bU
+         i1iOgx32HYJZpWms9og8mHPPwLW9sYbKQ0Y2LlD8lgxvUgumJ6CCnOhp2ItryUI7meNP
+         PJTuJcgmcVzfTpNbzZRwXvkuH6BiGwwQqRfHTfCFfY+WpCVlyzsCIdF0S+V2PNP9BMXZ
+         CclA==
 Content-Disposition: inline
-In-Reply-To: <20150617145642.GI25056-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <1434494912-31043-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Hey, Michal.
-
-On Wed, Jun 17, 2015 at 04:56:42PM +0200, Michal Hocko wrote:
-> On Fri 22-05-15 17:13:20, Tejun Heo wrote:
-> > Add global mem_cgroup_root_css which points to the root memcg css.
+On Tue, Jun 16, 2015 at 06:48:29PM -0400, Tejun Heo wrote:
+> Hello,
 > 
-> Is there any reason to using css rather than mem_cgroup other than the
-> structure is not visible outside of memcontrol.c? Because I have a
-> patchset which exports it. It is not merged yet so a move to mem_cgroup
-> could be done later. I am just interested whether there is a stronger
-> reason.
-
-It doesn't really matter either way but I think it makes a bit more
-sense to use css as the common type when external code interacts with
-cgroup controllers.  e.g. cgroup writeback interacts with both memcg
-and blkcg and in most cases it doesn't know or care about their
-internal states.  Most of what it wants is tracking them and doing
-some common css operations (refcnting, printing and so on) on them.
-
-> > This will be used by cgroup writeback support.  If memcg is disabled,
-> > it's defined as ERR_PTR(-EINVAL).
+> This is v2.  The only change from the last take[L] is
 > 
-> Hmm. Why EINVAL? I can see only mm/backing-dev.c (in
-> review-cgroup-writeback-switch-20150528 branch) which uses it and that
-> shouldn't even try to compile if !CONFIG_MEMCG no? Otherwise we would
-> simply blow up.
+> * super_block->s_iflags added and MS_CGROUPWB replaced with
+>   SB_I_CGROUPWB as suggested by Christoph and Jan.
+> 
+> This patchset contains the following assorted updates for the cgroup
+> writeback support.
+> 
+>  0001-writeback-do-foreign-inode-detection-iff-cgroup-writ.patch
+>  0002-vfs-writeback-replace-FS_CGROUP_WRITEBACK-with-SB_I_.patch
+>  0003-writeback-blkio-add-documentation-for-cgroup-writeba.patch
+> 
+> 0001 fixes a bug where clear FS_CGROUP_WRITEBACK flag didn't fully
+> disable cgroup writeback support if the filesystem code uses
+> wbc_init_bio() and wbc_account_io().
+> 
+> 0002 replaces FS_CGROUP_WRITEBACK with SB_I_CGROUPWB so that cgroup
+> writeback support can be enabled / disabled per superblock rather than
+> filesystem type.
+> 
+> 0003 updates blkio documentation with information on cgroup writeback
+> support.
 
-Hmm... the code maybe has changed inbetween but there was something
-which depended on the root css being defined when
-!CONFIG_CGROUP_WRITEBACK or maybe it was on blkcg_root_css and memcg
-side was added for consistency.  An ERR_PTR value is non-zero, which
-is an invariant which is often depended upon, while guaranteeing oops
-when deref'd.
+Jens, this is late in the merge window but these three patches are low
+risk and would be nice to make available for -rc1 so that future
+filesystem cgroup writeback support doesn't have to pull in cgroup
+branch.  What do you think?
 
 Thanks.
 
