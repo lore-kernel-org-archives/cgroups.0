@@ -1,50 +1,55 @@
-From: Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>
-Subject: Re: [PATCH 3/3] writeback, blkio: add documentation for cgroup
- writeback support
-Date: Wed, 17 Jun 2015 17:48:52 -0400
-Message-ID: <20150617214852.GE4076@thunk.org>
-References: <1434146254-26220-1-git-send-email-tj@kernel.org>
- <1434146254-26220-4-git-send-email-tj@kernel.org>
- <20150615172823.GA5783@redhat.com>
- <20150615182345.GB18517@mtj.duckdns.org>
- <20150615233519.GB30059@thunk.org>
- <20150616215436.GE22637@mtj.duckdns.org>
- <20150617031540.GB4076@thunk.org>
- <20150617185237.GL22637@mtj.duckdns.org>
+From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 3/4] cgroup: require write perm on common ancestor when
+ moving processes on the default hierarchy
+Date: Thu, 18 Jun 2015 11:14:38 +0800
+Message-ID: <5582379E.1050508@huawei.com>
+References: <1434481817-32001-1-git-send-email-tj@kernel.org> <1434481817-32001-4-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=thunk.org; s=ef5046eb;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=jTM+MS4JUXSnXklQHEqPzhxamesENTecK5xDscvL0sE=;
-	b=JhAivyilqnYYcvXyKo4EP9/3e3QEHd0hF/ojvQ1CKt6YDCE9xPPMBj1flXc9z83M6Ee+8dlAcdgZmHYFuDSGCpAKhjTQm9WJni2w8Wu9Pphrd8EFwAhMRsE4szNS2zHufMb9I4rOxAwDXXC8/jCt0NjDoXgYChWu1IhPgKM4cos=;
-Content-Disposition: inline
-In-Reply-To: <20150617185237.GL22637-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <1434481817-32001-4-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Wed, Jun 17, 2015 at 02:52:37PM -0400, Tejun Heo wrote:
-> 
-> Hmmm... so, overriding things *before* an bio is issued shouldn't be
-> too difficult and as long as this sort of operations aren't prevalent
-> we might be able to get away with just charging them against root.
-> Especially if it's to avoid getting blocked on the journal which we
-> already consider a shared overhead which is charged to root.  If this
-> becomes large enough to require exacting charges, it'll be more
-> complex but still way better than trying to raise priority on a bio
-> which is already issued, which is likely to be excruciatingly painful
-> if possible at all.
+Hi Tejun,
 
-Yeah, just charging the overhead to root seems good enough.
+> -static int cgroup_procs_write_permission(struct task_struct *task)
+> +static int cgroup_procs_write_permission(struct task_struct *task,
+> +					 struct cgroup *dst_cgrp,
+> +					 struct kernfs_open_file *of)
+>  {
+>  	const struct cred *cred = current_cred();
+>  	const struct cred *tcred = get_task_cred(task);
+> @@ -2407,6 +2409,26 @@ static int cgroup_procs_write_permission(struct task_struct *task)
+>  	    !uid_eq(cred->euid, tcred->suid))
+>  		ret = -EACCES;
+>  
+> +	if (cgroup_on_dfl(dst_cgrp)) {
 
-I could imagine charging it to whatever cgroup the jbd/jbd2 thread
-belongs to, which in turn would be the cgroup of the process that
-mounted the file system.  The only problem with that is that if a
-low-priority process is allowed to mount a file system, and it gets
-traversed by a high priority process, the high priority process will
-get impacted.  So maybe it's better to just say that it always get
-charged to the root cgroup.
+if (!ret && cgroup_on_dfl(dst_cgrp))
 
-					- Ted
+> +		struct super_block *sb = of->file->f_path.dentry->d_sb;
+> +		struct cgroup *cgrp;
+> +		struct inode *inode;
+> +
+> +		down_read(&css_set_rwsem);
+> +		cgrp = task_cgroup_from_root(task, &cgrp_dfl_root);
+> +		up_read(&css_set_rwsem);
+> +
+> +		while (!cgroup_is_descendant(dst_cgrp, cgrp))
+> +			cgrp = cgroup_parent(cgrp);
+> +
+> +		ret = -ENOMEM;
+> +		inode = kernfs_get_inode(sb, cgrp->procs_kn);
+> +		if (inode) {
+> +			ret = inode_permission(inode, MAY_WRITE);
+> +			iput(inode);
+> +		}
+> +	}
+> +
+>  	put_cred(tcred);
+>  	return ret;
+>  }
