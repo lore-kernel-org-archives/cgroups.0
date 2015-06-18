@@ -1,59 +1,39 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 06/51] memcg: add mem_cgroup_root_css
-Date: Thu, 18 Jun 2015 13:49:30 -0400
-Message-ID: <20150618174930.GA12934@mtj.duckdns.org>
-References: <1432329245-5844-1-git-send-email-tj@kernel.org>
- <1432329245-5844-7-git-send-email-tj@kernel.org>
- <20150617145642.GI25056@dhcp22.suse.cz>
- <20150617182500.GI22637@mtj.duckdns.org>
- <20150618111227.GA5858@dhcp22.suse.cz>
+Subject: Re: [PATCH] cgroup: add documentation for the PIDs controller
+Date: Thu, 18 Jun 2015 13:50:00 -0400
+Message-ID: <20150618175000.GB12934@mtj.duckdns.org>
+References: <1434604276-10990-1-git-send-email-cyphar@cyphar.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=KJ63fnuoGLacMQiXJx2ehTai5RImBG5dBljH6wbD4OQ=;
-        b=li1pvDVhRpZbHQj774wB3mzG0Uf1lNpntwqBxzFLngxj3YwknHR5rHEMMMz5jWKKqE
-         sBVzit6rvOdQqDjMMYhRkO9aptgAI8cplj8omRzgTrjp8EMhcVO2jTTqk0XruPq+CFeX
-         rIdMO62Tpa709rtTTSkbP3hjpBrP6vrrMUzNFCbsX7t+iz+nuiv/M8lTB/J1BuhBOlz9
-         NRslEVixwQmwKsjDKv2kkCRe3SVZKVEucJoi4tc23rfUvd/fh9NtlS2GkjT1HcH75P+W
-         r94TJOO8wL0PD+zoF+k9V+WDNkIXDtmz9JfJSS/C0E/U5XjDpXXKzd6NlaulPVluMx/x
-         +Ivw==
+        bh=FRsDG1Kdjr6qwhTpDhGAyTf45/sKz9syz56j8nJ7Ass=;
+        b=0TONXyH8zMzwKjkBBpe1sG+v/sogYJ5Rbigb2Hvik1Wlp/dRxJJnV20PT4GLTm9CyA
+         T0/k8unOfPJUImBIHrlWLqQoC1jNxVRMDYVKiL/AIfooPPvfG+W9K0yHVANOkweG4l57
+         zAdetgFCjZ7byVcETTlJRdVjCNZlERKb7ZQf28/0EZS+qEgkOvk6Nc2fh402qc1XKbhd
+         BWGDhGQOnU8O0F1jdEgUJ6fUpW0j961V+V8MX3MhEP8McBfskK7Qt6mYBVhtkTaQic57
+         NZQzGEY68y6zqN6fwvYl38Epyct7/DT1/9yZ6yO7L6e83owyA8tzjbBXv1XRfhSR3iOv
+         JzkA==
 Content-Disposition: inline
-In-Reply-To: <20150618111227.GA5858@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1434604276-10990-1-git-send-email-cyphar@cyphar.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.cz>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru
+To: Aleksa Sarai <cyphar@cyphar.com>
+Cc: lizefan@huawei.com, corbet@lwn.net, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
 
-Hello, Michal.
+On Thu, Jun 18, 2015 at 03:11:16PM +1000, Aleksa Sarai wrote:
+> The attached patch adds documentation concerning the PIDs controller.
+> This should be applied alongside the rest of this patchset[1] (I'm not
+> entirely sure what the kernel policy is for new patches that should be
+> appended to an existing patchset).
 
-On Thu, Jun 18, 2015 at 01:12:27PM +0200, Michal Hocko wrote:
-...
-> I see and yes, it makes some sense. I just think we can get rid of the
-> accessor functions when the struct mem_cgroup is visible and the code
-> can simply do &{page->}mem_cgroup->css.
-
-As long as the accessors are inline, I think it should be fine.
-
-> I have tried to compile with !CONFIG_MEMCG and !CONFIG_CGROUP_WRITEBACK
-> without mem_cgroup_root_css defined for this configuration and
-> mm/backing-dev.c compiles just fine. So maybe we should get rid of it
-> rather than have a potentially tricky code?
-
-Yeah, please feel free to queue a patch to remove it if doesn't break
-anything.
+I'll apply it together later.
 
 Thanks.
 
 -- 
 tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
