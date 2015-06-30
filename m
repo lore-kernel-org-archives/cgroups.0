@@ -1,154 +1,152 @@
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 22/51] writeback: add {CONFIG|BDI_CAP|FS}_CGROUP_WRITEBACK
-Date: Tue, 30 Jun 2015 11:37:51 +0200
-Message-ID: <20150630093751.GH7252@quack.suse.cz>
+Subject: Re: [PATCH 23/51] writeback: make backing_dev_info host
+ cgroup-specific bdi_writebacks
+Date: Tue, 30 Jun 2015 12:14:52 +0200
+Message-ID: <20150630101452.GI7252@quack.suse.cz>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
- <1432329245-5844-23-git-send-email-tj@kernel.org>
+ <1432329245-5844-24-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1432329245-5844-23-git-send-email-tj@kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
+In-Reply-To: <1432329245-5844-24-git-send-email-tj@kernel.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru, Dan Carpenter <dan.carpenter@oracle.com>
 
-On Fri 22-05-15 17:13:36, Tejun Heo wrote:
-> cgroup writeback requires support from both bdi and filesystem sides.
-> Add BDI_CAP_CGROUP_WRITEBACK and FS_CGROUP_WRITEBACK to indicate
-> support and enable BDI_CAP_CGROUP_WRITEBACK on block based bdi's by
-> default.  Also, define CONFIG_CGROUP_WRITEBACK which is enabled if
-> both MEMCG and BLK_CGROUP are enabled.
+On Fri 22-05-15 17:13:37, Tejun Heo wrote:
+> For the planned cgroup writeback support, on each bdi
+> (backing_dev_info), each memcg will be served by a separate wb
+> (bdi_writeback).  This patch updates bdi so that a bdi can host
+> multiple wbs (bdi_writebacks).
 > 
-> inode_cgwb_enabled() which determines whether a given inode's both bdi
-> and fs support cgroup writeback is added.
+> On the default hierarchy, blkcg implicitly enables memcg.  This allows
+> using memcg's page ownership for attributing writeback IOs, and every
+> memcg - blkcg combination can be served by its own wb by assigning a
+> dedicated wb to each memcg.  This means that there may be multiple
+> wb's of a bdi mapped to the same blkcg.  As congested state is per
+> blkcg - bdi combination, those wb's should share the same congested
+> state.  This is achieved by tracking congested state via
+> bdi_writeback_congested structs which are keyed by blkcg.
 > 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Jens Axboe <axboe@kernel.dk>
-> Cc: Jan Kara <jack@suse.cz>
+> bdi->wb remains unchanged and will keep serving the root cgroup.
+> cgwb's (cgroup wb's) for non-root cgroups are created on-demand or
+> looked up while dirtying an inode according to the memcg of the page
+> being dirtied or current task.  Each cgwb is indexed on bdi->cgwb_tree
+> by its memcg id.  Once an inode is associated with its wb, it can be
+> retrieved using inode_to_wb().
+> 
+> Currently, none of the filesystems has FS_CGROUP_WRITEBACK and all
+> pages will keep being associated with bdi->wb.
+> 
+> v3: inode_attach_wb() in account_page_dirtied() moved inside
+>     mapping_cap_account_dirty() block where it's known to be !NULL.
+>     Also, an unnecessary NULL check before kfree() removed.  Both
+>     detected by the kbuild bot.
+> 
+> v2: Updated so that wb association is per inode and wb is per memcg
+>     rather than blkcg.
 
-Hum, you later changed this to use a per-sb flag instead of a per-fs-type
-flag, right? We could do it as well here but OK.
+It may be a good place to explain in this changelog (and add that
+explanation to a comment before the definition of struct bdi_writeback) why
+are the writeback structures per memcg and not per coarser blkcg. I was
+pondering about it for a while before I realized that amount of avaliable
+memory and thus dirty limits are a memcg property so we have to be able to
+writeback only a specific memcg. It would be nice if one didn't have to
+figure this out on his own (although it's kind of obvious once you realize
+that ;).
 
-One more question - what does prevent us from supporting CGROUP_WRITEBACK
-for all bdis capable of writeback? I guess the reason is that currently
-blkcgs are bound to request_queue and we have to have blkcg(s) for
-CGROUP_WRITEBACK to work, am I right? But in principle tracking writeback
-state and doing writeback per memcg doesn't seem to be bound to any device
-properties so we could do that right?
-
-Anyway, this patch looks good. You can add:
+Other than that the patch looks good so you can add:
 
 Reviewed-by: Jan Kara <jack@suse.com>
 
-								Honza
-
-> ---
->  block/blk-core.c            |  2 +-
->  include/linux/backing-dev.h | 32 +++++++++++++++++++++++++++++++-
->  include/linux/fs.h          |  1 +
->  init/Kconfig                |  5 +++++
->  4 files changed, 38 insertions(+), 2 deletions(-)
-> 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index f46688f..e0f726f 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -620,7 +620,7 @@ struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id)
->  
->  	q->backing_dev_info.ra_pages =
->  			(VM_MAX_READAHEAD * 1024) / PAGE_CACHE_SIZE;
-> -	q->backing_dev_info.capabilities = 0;
-> +	q->backing_dev_info.capabilities = BDI_CAP_CGROUP_WRITEBACK;
->  	q->backing_dev_info.name = "block";
->  	q->node = node_id;
->  
-> diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-> index bfdaa18..6bb3123 100644
-> --- a/include/linux/backing-dev.h
-> +++ b/include/linux/backing-dev.h
-> @@ -134,12 +134,15 @@ int bdi_set_max_ratio(struct backing_dev_info *bdi, unsigned int max_ratio);
->   * BDI_CAP_NO_WRITEBACK:   Don't write pages back
->   * BDI_CAP_NO_ACCT_WB:     Don't automatically account writeback pages
->   * BDI_CAP_STRICTLIMIT:    Keep number of dirty pages below bdi threshold.
+A few nits below.
+ 
+> +/**
+> + * wb_find_current - find wb for %current on a bdi
+> + * @bdi: bdi of interest
 > + *
-> + * BDI_CAP_CGROUP_WRITEBACK: Supports cgroup-aware writeback.
->   */
->  #define BDI_CAP_NO_ACCT_DIRTY	0x00000001
->  #define BDI_CAP_NO_WRITEBACK	0x00000002
->  #define BDI_CAP_NO_ACCT_WB	0x00000004
->  #define BDI_CAP_STABLE_WRITES	0x00000008
->  #define BDI_CAP_STRICTLIMIT	0x00000010
-> +#define BDI_CAP_CGROUP_WRITEBACK 0x00000020
->  
->  #define BDI_CAP_NO_ACCT_AND_WRITEBACK \
->  	(BDI_CAP_NO_WRITEBACK | BDI_CAP_NO_ACCT_DIRTY | BDI_CAP_NO_ACCT_WB)
-> @@ -229,4 +232,31 @@ static inline int bdi_sched_wait(void *word)
->  	return 0;
->  }
->  
-> -#endif		/* _LINUX_BACKING_DEV_H */
+> + * Find the wb of @bdi which matches both the memcg and blkcg of %current.
+> + * Must be called under rcu_read_lock() which protects the returend wb.
+								^^ returned
+
+> + * NULL if not found.
+> + */
+> +static inline struct bdi_writeback *wb_find_current(struct backing_dev_info *bdi)
+> +{
+> +	struct cgroup_subsys_state *memcg_css;
+> +	struct bdi_writeback *wb;
+> +
+> +	memcg_css = task_css(current, memory_cgrp_id);
+> +	if (!memcg_css->parent)
+> +		return &bdi->wb;
+> +
+> +	wb = radix_tree_lookup(&bdi->cgwb_tree, memcg_css->id);
+> +
+> +	/*
+> +	 * %current's blkcg equals the effective blkcg of its memcg.  No
+> +	 * need to use the relatively expensive cgroup_get_e_css().
+> +	 */
+> +	if (likely(wb && wb->blkcg_css == task_css(current, blkio_cgrp_id)))
+> +		return wb;
+
+This won't hit only in case where memcg moves to a different blkcg?
+Just want to make sure I understand things right...
+
+...
+> +/**
+> + * wb_congested_put - put a wb_congested
+> + * @congested: wb_congested to put
+> + *
+> + * Put @congested and destroy it if the refcnt reaches zero.
+> + */
+> +void wb_congested_put(struct bdi_writeback_congested *congested)
+> +{
+> +	struct backing_dev_info *bdi = congested->bdi;
+> +	unsigned long flags;
+> +
+> +	if (congested->blkcg_id == 1)
+> +		return;
+> +
+> +	local_irq_save(flags);
+> +	if (!atomic_dec_and_lock(&congested->refcnt, &cgwb_lock)) {
+> +		local_irq_restore(flags);
+> +		return;
+> +	}
+> +
+> +	rb_erase(&congested->rb_node, &congested->bdi->cgwb_congested_tree);
+> +	spin_unlock_irqrestore(&cgwb_lock, flags);
+> +	kfree(congested);
+> +
+> +	if (atomic_dec_and_test(&bdi->usage_cnt))
+> +		wake_up_all(&cgwb_release_wait);
+
+Maybe we could have a small wrapper for dropping bdi->usage_cnt? If someone
+forgets to wake up cgwb_release_wait after dropping the ref count, it will be
+somewhat difficult to chase down that call site...
+
+...
 > +#ifdef CONFIG_CGROUP_WRITEBACK
 > +
-> +/**
-> + * inode_cgwb_enabled - test whether cgroup writeback is enabled on an inode
-> + * @inode: inode of interest
-> + *
-> + * cgroup writeback requires support from both the bdi and filesystem.
-> + * Test whether @inode has both.
-> + */
-> +static inline bool inode_cgwb_enabled(struct inode *inode)
+> +struct list_head *mem_cgroup_cgwb_list(struct mem_cgroup *memcg)
 > +{
-> +	struct backing_dev_info *bdi = inode_to_bdi(inode);
-> +
-> +	return bdi_cap_account_dirty(bdi) &&
-> +		(bdi->capabilities & BDI_CAP_CGROUP_WRITEBACK) &&
-> +		(inode->i_sb->s_type->fs_flags & FS_CGROUP_WRITEBACK);
-> +}
-> +
-> +#else	/* CONFIG_CGROUP_WRITEBACK */
-> +
-> +static inline bool inode_cgwb_enabled(struct inode *inode)
-> +{
-> +	return false;
+> +	return &memcg->cgwb_list;
 > +}
 > +
 > +#endif	/* CONFIG_CGROUP_WRITEBACK */
 > +
-> +#endif	/* _LINUX_BACKING_DEV_H */
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index ce100b87..74e0ae0 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -1897,6 +1897,7 @@ struct file_system_type {
->  #define FS_HAS_SUBTYPE		4
->  #define FS_USERNS_MOUNT		8	/* Can be mounted by userns root */
->  #define FS_USERNS_DEV_MOUNT	16 /* A userns mount does not imply MNT_NODEV */
-> +#define FS_CGROUP_WRITEBACK	32	/* Supports cgroup-aware writeback */
->  #define FS_RENAME_DOES_D_MOVE	32768	/* FS will handle d_move() during rename() internally. */
->  	struct dentry *(*mount) (struct file_system_type *, int,
->  		       const char *, void *);
-> diff --git a/init/Kconfig b/init/Kconfig
-> index dc24dec..d4f7633 100644
-> --- a/init/Kconfig
-> +++ b/init/Kconfig
-> @@ -1141,6 +1141,11 @@ config DEBUG_BLK_CGROUP
->  	Enable some debugging help. Currently it exports additional stat
->  	files in a cgroup which can be useful for debugging.
->  
-> +config CGROUP_WRITEBACK
-> +	bool
-> +	depends on MEMCG && BLK_CGROUP
-> +	default y
-> +
->  endif # CGROUPS
->  
->  config CHECKPOINT_RESTORE
-> -- 
-> 2.4.0
-> 
+
+What is the reason for this wrapper? It doesn't seem particularly useful...
+
+								Honza
 -- 
 Jan Kara <jack@suse.cz>
 SUSE Labs, CR
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
