@@ -1,128 +1,83 @@
-From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 25/51] writeback: attribute stats to the matching
- per-cgroup bdi_writeback
-Date: Tue, 30 Jun 2015 16:17:42 +0200
-Message-ID: <20150630141742.GK7252@quack.suse.cz>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 26/51] writeback: let balance_dirty_pages() work on the
+ matching cgroup bdi_writeback
+Date: Tue, 30 Jun 2015 16:31:00 +0200
+Message-ID: <20150630143100.GL7252@quack.suse.cz>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
- <1432329245-5844-26-git-send-email-tj@kernel.org>
+ <1432329245-5844-27-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1432329245-5844-26-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1432329245-5844-27-git-send-email-tj@kernel.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru
 
-On Fri 22-05-15 17:13:39, Tejun Heo wrote:
-> Until now, all WB_* stats were accounted against the root wb
-> (bdi_writeback), now that multiple wb (bdi_writeback) support is in
-> place, let's attributes the stats to the respective per-cgroup wb's.
+On Fri 22-05-15 17:13:40, Tejun Heo wrote:
+> Currently, balance_dirty_pages() always work on bdi->wb.  This patch
+> updates it to work on the wb (bdi_writeback) matching memcg and blkcg
+> of the current task as that's what the inode is being dirtied against.
+> 
+> balance_dirty_pages_ratelimited() now pins the current wb and passes
+> it to balance_dirty_pages().
 > 
 > As no filesystem has FS_CGROUP_WRITEBACK yet, this doesn't lead to
 > visible behavior differences.
-> 
-> v2: Updated for per-inode wb association.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-> Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+...
+>  void balance_dirty_pages_ratelimited(struct address_space *mapping)
+>  {
+> -	struct backing_dev_info *bdi = inode_to_bdi(mapping->host);
+> -	struct bdi_writeback *wb = &bdi->wb;
+> +	struct inode *inode = mapping->host;
+> +	struct backing_dev_info *bdi = inode_to_bdi(inode);
+> +	struct bdi_writeback *wb = NULL;
+>  	int ratelimit;
+>  	int *p;
+>  
+>  	if (!bdi_cap_account_dirty(bdi))
+>  		return;
+>  
+> +	if (inode_cgwb_enabled(inode))
+> +		wb = wb_get_create_current(bdi, GFP_KERNEL);
+> +	if (!wb)
+> +		wb = &bdi->wb;
+> +
 
-Looks good. You can add:
-
-Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+So this effectively adds a radix tree lookup (of wb belonging to memcg) for
+every set_page_dirty() call. That seems relatively costly to me. And all
+that just to check wb->dirty_exceeded. Cannot we just use inode_to_wb()
+instead? I understand results may be different if multiple memcgs share an
+inode and that's the reason why you use wb_get_create_current(), right?
+But for dirty_exceeded check it may be good enough?
 
 								Honza
 
-> ---
->  mm/page-writeback.c | 24 +++++++++++++++---------
->  1 file changed, 15 insertions(+), 9 deletions(-)
-> 
-> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-> index 9b95cf8..4d0a9da 100644
-> --- a/mm/page-writeback.c
-> +++ b/mm/page-writeback.c
-> @@ -2130,7 +2130,7 @@ void account_page_cleaned(struct page *page, struct address_space *mapping,
->  	if (mapping_cap_account_dirty(mapping)) {
->  		mem_cgroup_dec_page_stat(memcg, MEM_CGROUP_STAT_DIRTY);
->  		dec_zone_page_state(page, NR_FILE_DIRTY);
-> -		dec_wb_stat(&inode_to_bdi(mapping->host)->wb, WB_RECLAIMABLE);
-> +		dec_wb_stat(inode_to_wb(mapping->host), WB_RECLAIMABLE);
->  		task_io_account_cancelled_write(PAGE_CACHE_SIZE);
->  	}
+>  	ratelimit = current->nr_dirtied_pause;
+>  	if (wb->dirty_exceeded)
+>  		ratelimit = min(ratelimit, 32 >> (PAGE_SHIFT - 10));
+> @@ -1616,7 +1622,9 @@ void balance_dirty_pages_ratelimited(struct address_space *mapping)
+>  	preempt_enable();
+>  
+>  	if (unlikely(current->nr_dirtied >= ratelimit))
+> -		balance_dirty_pages(mapping, current->nr_dirtied);
+> +		balance_dirty_pages(mapping, wb, current->nr_dirtied);
+> +
+> +	wb_put(wb);
 >  }
-> @@ -2191,10 +2191,13 @@ EXPORT_SYMBOL(__set_page_dirty_nobuffers);
->  void account_page_redirty(struct page *page)
->  {
->  	struct address_space *mapping = page->mapping;
-> +
->  	if (mapping && mapping_cap_account_dirty(mapping)) {
-> +		struct bdi_writeback *wb = inode_to_wb(mapping->host);
-> +
->  		current->nr_dirtied--;
->  		dec_zone_page_state(page, NR_DIRTIED);
-> -		dec_wb_stat(&inode_to_bdi(mapping->host)->wb, WB_DIRTIED);
-> +		dec_wb_stat(wb, WB_DIRTIED);
->  	}
->  }
->  EXPORT_SYMBOL(account_page_redirty);
-> @@ -2373,8 +2376,7 @@ int clear_page_dirty_for_io(struct page *page)
->  		if (TestClearPageDirty(page)) {
->  			mem_cgroup_dec_page_stat(memcg, MEM_CGROUP_STAT_DIRTY);
->  			dec_zone_page_state(page, NR_FILE_DIRTY);
-> -			dec_wb_stat(&inode_to_bdi(mapping->host)->wb,
-> -				    WB_RECLAIMABLE);
-> +			dec_wb_stat(inode_to_wb(mapping->host), WB_RECLAIMABLE);
->  			ret = 1;
->  		}
->  		mem_cgroup_end_page_stat(memcg);
-> @@ -2392,7 +2394,8 @@ int test_clear_page_writeback(struct page *page)
+>  EXPORT_SYMBOL(balance_dirty_pages_ratelimited);
 >  
->  	memcg = mem_cgroup_begin_page_stat(page);
->  	if (mapping) {
-> -		struct backing_dev_info *bdi = inode_to_bdi(mapping->host);
-> +		struct inode *inode = mapping->host;
-> +		struct backing_dev_info *bdi = inode_to_bdi(inode);
->  		unsigned long flags;
->  
->  		spin_lock_irqsave(&mapping->tree_lock, flags);
-> @@ -2402,8 +2405,10 @@ int test_clear_page_writeback(struct page *page)
->  						page_index(page),
->  						PAGECACHE_TAG_WRITEBACK);
->  			if (bdi_cap_account_writeback(bdi)) {
-> -				__dec_wb_stat(&bdi->wb, WB_WRITEBACK);
-> -				__wb_writeout_inc(&bdi->wb);
-> +				struct bdi_writeback *wb = inode_to_wb(inode);
-> +
-> +				__dec_wb_stat(wb, WB_WRITEBACK);
-> +				__wb_writeout_inc(wb);
->  			}
->  		}
->  		spin_unlock_irqrestore(&mapping->tree_lock, flags);
-> @@ -2427,7 +2432,8 @@ int __test_set_page_writeback(struct page *page, bool keep_write)
->  
->  	memcg = mem_cgroup_begin_page_stat(page);
->  	if (mapping) {
-> -		struct backing_dev_info *bdi = inode_to_bdi(mapping->host);
-> +		struct inode *inode = mapping->host;
-> +		struct backing_dev_info *bdi = inode_to_bdi(inode);
->  		unsigned long flags;
->  
->  		spin_lock_irqsave(&mapping->tree_lock, flags);
-> @@ -2437,7 +2443,7 @@ int __test_set_page_writeback(struct page *page, bool keep_write)
->  						page_index(page),
->  						PAGECACHE_TAG_WRITEBACK);
->  			if (bdi_cap_account_writeback(bdi))
-> -				__inc_wb_stat(&bdi->wb, WB_WRITEBACK);
-> +				__inc_wb_stat(inode_to_wb(inode), WB_WRITEBACK);
->  		}
->  		if (!PageDirty(page))
->  			radix_tree_tag_clear(&mapping->page_tree,
 > -- 
 > 2.4.0
 > 
 -- 
-Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Jan Kara <jack@suse.cz>
 SUSE Labs, CR
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
