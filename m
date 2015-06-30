@@ -1,94 +1,88 @@
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 29/51] writeback, blkcg: propagate non-root blkcg
- congestion state
-Date: Tue, 30 Jun 2015 17:03:24 +0200
-Message-ID: <20150630150324.GO7252@quack.suse.cz>
+Subject: Re: [PATCH 30/51] writeback: implement and use inode_congested()
+Date: Tue, 30 Jun 2015 17:21:05 +0200
+Message-ID: <20150630152105.GP7252@quack.suse.cz>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
- <1432329245-5844-30-git-send-email-tj@kernel.org>
+ <1432329245-5844-31-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1432329245-5844-30-git-send-email-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1432329245-5844-31-git-send-email-tj@kernel.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>
 Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru
 
-On Fri 22-05-15 17:13:43, Tejun Heo wrote:
-> Now that bdi layer can handle per-blkcg bdi_writeback_congested state,
-> blk_{set|clear}_congested() can propagate non-root blkcg congestion
-> state to them.
+On Fri 22-05-15 17:13:44, Tejun Heo wrote:
+> In several places, bdi_congested() and its wrappers are used to
+> determine whether more IOs should be issued.  With cgroup writeback
+> support, this question can't be answered solely based on the bdi
+> (backing_dev_info).  It's dependent on whether the filesystem and bdi
+> support cgroup writeback and the blkcg the inode is associated with.
 > 
-> This can be easily achieved by disabling the root_rl tests in
-> blk_{set|clear}_congested().  Note that we still need those tests when
-> !CONFIG_CGROUP_WRITEBACK as otherwise we'll end up flipping root blkcg
-> wb's congestion state for events happening on other blkcgs.
+> This patch implements inode_congested() and its wrappers which take
+> @inode and determines the congestion state considering cgroup
+> writeback.  The new functions replace bdi_*congested() calls in places
+> where the query is about specific inode and task.
 > 
-> v2: Updated for bdi_writeback_congested.
-
-Looks good. You can add:
-
-Reviewed-by: Jan Kara <jack@suse.com>
-
-								Honza
-
+> There are several filesystem users which also fit this criteria but
+> they should be updated when each filesystem implements cgroup
+> writeback support.
+> 
+> v2: Now that a given inode is associated with only one wb, congestion
+>     state can be determined independent from the asking task.  Drop
+>     @task.  Spotted by Vivek.  Also, converted to take @inode instead
+>     of @mapping and renamed to inode_congested().
 > 
 > Signed-off-by: Tejun Heo <tj@kernel.org>
 > Cc: Jens Axboe <axboe@kernel.dk>
 > Cc: Jan Kara <jack@suse.cz>
 > Cc: Vivek Goyal <vgoyal@redhat.com>
 > ---
->  block/blk-core.c | 15 +++++++++------
->  1 file changed, 9 insertions(+), 6 deletions(-)
+>  fs/fs-writeback.c           | 29 +++++++++++++++++++++++++++++
+>  include/linux/backing-dev.h | 22 ++++++++++++++++++++++
+>  mm/fadvise.c                |  2 +-
+>  mm/readahead.c              |  2 +-
+>  mm/vmscan.c                 | 11 +++++------
+>  5 files changed, 58 insertions(+), 8 deletions(-)
 > 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index b457c4f..cf6974e 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -65,23 +65,26 @@ static struct workqueue_struct *kblockd_workqueue;
->  
->  static void blk_clear_congested(struct request_list *rl, int sync)
->  {
-> -	if (rl != &rl->q->root_rl)
-> -		return;
->  #ifdef CONFIG_CGROUP_WRITEBACK
->  	clear_wb_congested(rl->blkg->wb_congested, sync);
->  #else
-> -	clear_wb_congested(rl->q->backing_dev_info.wb.congested, sync);
-> +	/*
-> +	 * If !CGROUP_WRITEBACK, all blkg's map to bdi->wb and we shouldn't
-> +	 * flip its congestion state for events on other blkcgs.
-> +	 */
-> +	if (rl == &rl->q->root_rl)
-> +		clear_wb_congested(rl->q->backing_dev_info.wb.congested, sync);
->  #endif
+> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+> index 99a2440..7ec491b 100644
+> --- a/fs/fs-writeback.c
+> +++ b/fs/fs-writeback.c
+> @@ -142,6 +142,35 @@ static void __wb_start_writeback(struct bdi_writeback *wb, long nr_pages,
+>  	wb_queue_work(wb, work);
 >  }
 >  
->  static void blk_set_congested(struct request_list *rl, int sync)
->  {
-> -	if (rl != &rl->q->root_rl)
-> -		return;
->  #ifdef CONFIG_CGROUP_WRITEBACK
->  	set_wb_congested(rl->blkg->wb_congested, sync);
->  #else
-> -	set_wb_congested(rl->q->backing_dev_info.wb.congested, sync);
-> +	/* see blk_clear_congested() */
-> +	if (rl == &rl->q->root_rl)
-> +		set_wb_congested(rl->q->backing_dev_info.wb.congested, sync);
->  #endif
->  }
->  
-> -- 
-> 2.4.0
-> 
+> +#ifdef CONFIG_CGROUP_WRITEBACK
+> +
+> +/**
+> + * inode_congested - test whether an inode is congested
+> + * @inode: inode to test for congestion
+> + * @cong_bits: mask of WB_[a]sync_congested bits to test
+> + *
+> + * Tests whether @inode is congested.  @cong_bits is the mask of congestion
+> + * bits to test and the return value is the mask of set bits.
+> + *
+> + * If cgroup writeback is enabled for @inode, the congestion state is
+> + * determined by whether the cgwb (cgroup bdi_writeback) for the blkcg
+> + * associated with @inode is congested; otherwise, the root wb's congestion
+> + * state is used.
+> + */
+> +int inode_congested(struct inode *inode, int cong_bits)
+> +{
+> +	if (inode) {
+
+Hum, is there any point in supporting NULL inode with inode_congested()?
+That would look more like a programming bug than anything... Otherwise the
+patch looks good to me so you can add:
+
+Reviewed-by: Jan Kara <jack@suse.com>
+
+								Honza
+
 -- 
 Jan Kara <jack@suse.cz>
 SUSE Labs, CR
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
