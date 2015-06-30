@@ -1,152 +1,128 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 23/51] writeback: make backing_dev_info host
- cgroup-specific bdi_writebacks
-Date: Tue, 30 Jun 2015 12:14:52 +0200
-Message-ID: <20150630101452.GI7252@quack.suse.cz>
+From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 25/51] writeback: attribute stats to the matching
+ per-cgroup bdi_writeback
+Date: Tue, 30 Jun 2015 16:17:42 +0200
+Message-ID: <20150630141742.GK7252@quack.suse.cz>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
- <1432329245-5844-24-git-send-email-tj@kernel.org>
+ <1432329245-5844-26-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1432329245-5844-24-git-send-email-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1432329245-5844-26-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru, Dan Carpenter <dan.carpenter@oracle.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org
 
-On Fri 22-05-15 17:13:37, Tejun Heo wrote:
-> For the planned cgroup writeback support, on each bdi
-> (backing_dev_info), each memcg will be served by a separate wb
-> (bdi_writeback).  This patch updates bdi so that a bdi can host
-> multiple wbs (bdi_writebacks).
+On Fri 22-05-15 17:13:39, Tejun Heo wrote:
+> Until now, all WB_* stats were accounted against the root wb
+> (bdi_writeback), now that multiple wb (bdi_writeback) support is in
+> place, let's attributes the stats to the respective per-cgroup wb's.
 > 
-> On the default hierarchy, blkcg implicitly enables memcg.  This allows
-> using memcg's page ownership for attributing writeback IOs, and every
-> memcg - blkcg combination can be served by its own wb by assigning a
-> dedicated wb to each memcg.  This means that there may be multiple
-> wb's of a bdi mapped to the same blkcg.  As congested state is per
-> blkcg - bdi combination, those wb's should share the same congested
-> state.  This is achieved by tracking congested state via
-> bdi_writeback_congested structs which are keyed by blkcg.
+> As no filesystem has FS_CGROUP_WRITEBACK yet, this doesn't lead to
+> visible behavior differences.
 > 
-> bdi->wb remains unchanged and will keep serving the root cgroup.
-> cgwb's (cgroup wb's) for non-root cgroups are created on-demand or
-> looked up while dirtying an inode according to the memcg of the page
-> being dirtied or current task.  Each cgwb is indexed on bdi->cgwb_tree
-> by its memcg id.  Once an inode is associated with its wb, it can be
-> retrieved using inode_to_wb().
+> v2: Updated for per-inode wb association.
 > 
-> Currently, none of the filesystems has FS_CGROUP_WRITEBACK and all
-> pages will keep being associated with bdi->wb.
-> 
-> v3: inode_attach_wb() in account_page_dirtied() moved inside
->     mapping_cap_account_dirty() block where it's known to be !NULL.
->     Also, an unnecessary NULL check before kfree() removed.  Both
->     detected by the kbuild bot.
-> 
-> v2: Updated so that wb association is per inode and wb is per memcg
->     rather than blkcg.
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+> Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
 
-It may be a good place to explain in this changelog (and add that
-explanation to a comment before the definition of struct bdi_writeback) why
-are the writeback structures per memcg and not per coarser blkcg. I was
-pondering about it for a while before I realized that amount of avaliable
-memory and thus dirty limits are a memcg property so we have to be able to
-writeback only a specific memcg. It would be nice if one didn't have to
-figure this out on his own (although it's kind of obvious once you realize
-that ;).
+Looks good. You can add:
 
-Other than that the patch looks good so you can add:
-
-Reviewed-by: Jan Kara <jack@suse.com>
-
-A few nits below.
- 
-> +/**
-> + * wb_find_current - find wb for %current on a bdi
-> + * @bdi: bdi of interest
-> + *
-> + * Find the wb of @bdi which matches both the memcg and blkcg of %current.
-> + * Must be called under rcu_read_lock() which protects the returend wb.
-								^^ returned
-
-> + * NULL if not found.
-> + */
-> +static inline struct bdi_writeback *wb_find_current(struct backing_dev_info *bdi)
-> +{
-> +	struct cgroup_subsys_state *memcg_css;
-> +	struct bdi_writeback *wb;
-> +
-> +	memcg_css = task_css(current, memory_cgrp_id);
-> +	if (!memcg_css->parent)
-> +		return &bdi->wb;
-> +
-> +	wb = radix_tree_lookup(&bdi->cgwb_tree, memcg_css->id);
-> +
-> +	/*
-> +	 * %current's blkcg equals the effective blkcg of its memcg.  No
-> +	 * need to use the relatively expensive cgroup_get_e_css().
-> +	 */
-> +	if (likely(wb && wb->blkcg_css == task_css(current, blkio_cgrp_id)))
-> +		return wb;
-
-This won't hit only in case where memcg moves to a different blkcg?
-Just want to make sure I understand things right...
-
-...
-> +/**
-> + * wb_congested_put - put a wb_congested
-> + * @congested: wb_congested to put
-> + *
-> + * Put @congested and destroy it if the refcnt reaches zero.
-> + */
-> +void wb_congested_put(struct bdi_writeback_congested *congested)
-> +{
-> +	struct backing_dev_info *bdi = congested->bdi;
-> +	unsigned long flags;
-> +
-> +	if (congested->blkcg_id == 1)
-> +		return;
-> +
-> +	local_irq_save(flags);
-> +	if (!atomic_dec_and_lock(&congested->refcnt, &cgwb_lock)) {
-> +		local_irq_restore(flags);
-> +		return;
-> +	}
-> +
-> +	rb_erase(&congested->rb_node, &congested->bdi->cgwb_congested_tree);
-> +	spin_unlock_irqrestore(&cgwb_lock, flags);
-> +	kfree(congested);
-> +
-> +	if (atomic_dec_and_test(&bdi->usage_cnt))
-> +		wake_up_all(&cgwb_release_wait);
-
-Maybe we could have a small wrapper for dropping bdi->usage_cnt? If someone
-forgets to wake up cgwb_release_wait after dropping the ref count, it will be
-somewhat difficult to chase down that call site...
-
-...
-> +#ifdef CONFIG_CGROUP_WRITEBACK
-> +
-> +struct list_head *mem_cgroup_cgwb_list(struct mem_cgroup *memcg)
-> +{
-> +	return &memcg->cgwb_list;
-> +}
-> +
-> +#endif	/* CONFIG_CGROUP_WRITEBACK */
-> +
-
-What is the reason for this wrapper? It doesn't seem particularly useful...
+Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
 
 								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> ---
+>  mm/page-writeback.c | 24 +++++++++++++++---------
+>  1 file changed, 15 insertions(+), 9 deletions(-)
+> 
+> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+> index 9b95cf8..4d0a9da 100644
+> --- a/mm/page-writeback.c
+> +++ b/mm/page-writeback.c
+> @@ -2130,7 +2130,7 @@ void account_page_cleaned(struct page *page, struct address_space *mapping,
+>  	if (mapping_cap_account_dirty(mapping)) {
+>  		mem_cgroup_dec_page_stat(memcg, MEM_CGROUP_STAT_DIRTY);
+>  		dec_zone_page_state(page, NR_FILE_DIRTY);
+> -		dec_wb_stat(&inode_to_bdi(mapping->host)->wb, WB_RECLAIMABLE);
+> +		dec_wb_stat(inode_to_wb(mapping->host), WB_RECLAIMABLE);
+>  		task_io_account_cancelled_write(PAGE_CACHE_SIZE);
+>  	}
+>  }
+> @@ -2191,10 +2191,13 @@ EXPORT_SYMBOL(__set_page_dirty_nobuffers);
+>  void account_page_redirty(struct page *page)
+>  {
+>  	struct address_space *mapping = page->mapping;
+> +
+>  	if (mapping && mapping_cap_account_dirty(mapping)) {
+> +		struct bdi_writeback *wb = inode_to_wb(mapping->host);
+> +
+>  		current->nr_dirtied--;
+>  		dec_zone_page_state(page, NR_DIRTIED);
+> -		dec_wb_stat(&inode_to_bdi(mapping->host)->wb, WB_DIRTIED);
+> +		dec_wb_stat(wb, WB_DIRTIED);
+>  	}
+>  }
+>  EXPORT_SYMBOL(account_page_redirty);
+> @@ -2373,8 +2376,7 @@ int clear_page_dirty_for_io(struct page *page)
+>  		if (TestClearPageDirty(page)) {
+>  			mem_cgroup_dec_page_stat(memcg, MEM_CGROUP_STAT_DIRTY);
+>  			dec_zone_page_state(page, NR_FILE_DIRTY);
+> -			dec_wb_stat(&inode_to_bdi(mapping->host)->wb,
+> -				    WB_RECLAIMABLE);
+> +			dec_wb_stat(inode_to_wb(mapping->host), WB_RECLAIMABLE);
+>  			ret = 1;
+>  		}
+>  		mem_cgroup_end_page_stat(memcg);
+> @@ -2392,7 +2394,8 @@ int test_clear_page_writeback(struct page *page)
+>  
+>  	memcg = mem_cgroup_begin_page_stat(page);
+>  	if (mapping) {
+> -		struct backing_dev_info *bdi = inode_to_bdi(mapping->host);
+> +		struct inode *inode = mapping->host;
+> +		struct backing_dev_info *bdi = inode_to_bdi(inode);
+>  		unsigned long flags;
+>  
+>  		spin_lock_irqsave(&mapping->tree_lock, flags);
+> @@ -2402,8 +2405,10 @@ int test_clear_page_writeback(struct page *page)
+>  						page_index(page),
+>  						PAGECACHE_TAG_WRITEBACK);
+>  			if (bdi_cap_account_writeback(bdi)) {
+> -				__dec_wb_stat(&bdi->wb, WB_WRITEBACK);
+> -				__wb_writeout_inc(&bdi->wb);
+> +				struct bdi_writeback *wb = inode_to_wb(inode);
+> +
+> +				__dec_wb_stat(wb, WB_WRITEBACK);
+> +				__wb_writeout_inc(wb);
+>  			}
+>  		}
+>  		spin_unlock_irqrestore(&mapping->tree_lock, flags);
+> @@ -2427,7 +2432,8 @@ int __test_set_page_writeback(struct page *page, bool keep_write)
+>  
+>  	memcg = mem_cgroup_begin_page_stat(page);
+>  	if (mapping) {
+> -		struct backing_dev_info *bdi = inode_to_bdi(mapping->host);
+> +		struct inode *inode = mapping->host;
+> +		struct backing_dev_info *bdi = inode_to_bdi(inode);
+>  		unsigned long flags;
+>  
+>  		spin_lock_irqsave(&mapping->tree_lock, flags);
+> @@ -2437,7 +2443,7 @@ int __test_set_page_writeback(struct page *page, bool keep_write)
+>  						page_index(page),
+>  						PAGECACHE_TAG_WRITEBACK);
+>  			if (bdi_cap_account_writeback(bdi))
+> -				__inc_wb_stat(&bdi->wb, WB_WRITEBACK);
+> +				__inc_wb_stat(inode_to_wb(inode), WB_WRITEBACK);
+>  		}
+>  		if (!PageDirty(page))
+>  			radix_tree_tag_clear(&mapping->page_tree,
+> -- 
+> 2.4.0
+> 
+-- 
+Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+SUSE Labs, CR
