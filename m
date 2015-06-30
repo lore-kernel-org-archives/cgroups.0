@@ -1,150 +1,154 @@
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 21/51] bdi: separate out congested state into a separate
- struct
-Date: Tue, 30 Jun 2015 11:21:27 +0200
-Message-ID: <20150630092127.GG7252@quack.suse.cz>
+Subject: Re: [PATCH 22/51] writeback: add {CONFIG|BDI_CAP|FS}_CGROUP_WRITEBACK
+Date: Tue, 30 Jun 2015 11:37:51 +0200
+Message-ID: <20150630093751.GH7252@quack.suse.cz>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
- <1432329245-5844-22-git-send-email-tj@kernel.org>
+ <1432329245-5844-23-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1432329245-5844-22-git-send-email-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1432329245-5844-23-git-send-email-tj@kernel.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>
 Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru
 
-On Fri 22-05-15 17:13:35, Tejun Heo wrote:
-> Currently, a wb's (bdi_writeback) congestion state is carried in its
-> ->state field; however, cgroup writeback support will require multiple
-> wb's sharing the same congestion state.  This patch separates out
-> congestion state into its own struct - struct bdi_writeback_congested.
-> A new field wb field, wb_congested, points to its associated congested
-> struct.  The default wb, bdi->wb, always points to bdi->wb_congested.
+On Fri 22-05-15 17:13:36, Tejun Heo wrote:
+> cgroup writeback requires support from both bdi and filesystem sides.
+> Add BDI_CAP_CGROUP_WRITEBACK and FS_CGROUP_WRITEBACK to indicate
+> support and enable BDI_CAP_CGROUP_WRITEBACK on block based bdi's by
+> default.  Also, define CONFIG_CGROUP_WRITEBACK which is enabled if
+> both MEMCG and BLK_CGROUP are enabled.
 > 
-> While this patch adds a layer of indirection, it doesn't introduce any
-> behavior changes.
+> inode_cgwb_enabled() which determines whether a given inode's both bdi
+> and fs support cgroup writeback is added.
 > 
 > Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Jens Axboe <axboe@kernel.dk>
+> Cc: Jan Kara <jack@suse.cz>
 
-Looks good. You can add:
+Hum, you later changed this to use a per-sb flag instead of a per-fs-type
+flag, right? We could do it as well here but OK.
+
+One more question - what does prevent us from supporting CGROUP_WRITEBACK
+for all bdis capable of writeback? I guess the reason is that currently
+blkcgs are bound to request_queue and we have to have blkcg(s) for
+CGROUP_WRITEBACK to work, am I right? But in principle tracking writeback
+state and doing writeback per memcg doesn't seem to be bound to any device
+properties so we could do that right?
+
+Anyway, this patch looks good. You can add:
 
 Reviewed-by: Jan Kara <jack@suse.com>
 
 								Honza
 
 > ---
->  include/linux/backing-dev-defs.h | 14 ++++++++++++--
->  include/linux/backing-dev.h      |  2 +-
->  mm/backing-dev.c                 |  7 +++++--
->  3 files changed, 18 insertions(+), 5 deletions(-)
+>  block/blk-core.c            |  2 +-
+>  include/linux/backing-dev.h | 32 +++++++++++++++++++++++++++++++-
+>  include/linux/fs.h          |  1 +
+>  init/Kconfig                |  5 +++++
+>  4 files changed, 38 insertions(+), 2 deletions(-)
 > 
-> diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
-> index aa18c4b..9e9eafa 100644
-> --- a/include/linux/backing-dev-defs.h
-> +++ b/include/linux/backing-dev-defs.h
-> @@ -16,12 +16,15 @@ struct dentry;
->   * Bits in bdi_writeback.state
->   */
->  enum wb_state {
-> -	WB_async_congested,	/* The async (write) queue is getting full */
-> -	WB_sync_congested,	/* The sync queue is getting full */
->  	WB_registered,		/* bdi_register() was done */
->  	WB_writeback_running,	/* Writeback is in progress */
->  };
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index f46688f..e0f726f 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -620,7 +620,7 @@ struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id)
 >  
-> +enum wb_congested_state {
-> +	WB_async_congested,	/* The async (write) queue is getting full */
-> +	WB_sync_congested,	/* The sync queue is getting full */
-> +};
-> +
->  typedef int (congested_fn)(void *, int);
->  
->  enum wb_stat_item {
-> @@ -34,6 +37,10 @@ enum wb_stat_item {
->  
->  #define WB_STAT_BATCH (8*(1+ilog2(nr_cpu_ids)))
->  
-> +struct bdi_writeback_congested {
-> +	unsigned long state;		/* WB_[a]sync_congested flags */
-> +};
-> +
->  struct bdi_writeback {
->  	struct backing_dev_info *bdi;	/* our parent bdi */
->  
-> @@ -48,6 +55,8 @@ struct bdi_writeback {
->  
->  	struct percpu_counter stat[NR_WB_STAT_ITEMS];
->  
-> +	struct bdi_writeback_congested *congested;
-> +
->  	unsigned long bw_time_stamp;	/* last time write bw is updated */
->  	unsigned long dirtied_stamp;
->  	unsigned long written_stamp;	/* pages written at bw_time_stamp */
-> @@ -84,6 +93,7 @@ struct backing_dev_info {
->  	unsigned int max_ratio, max_prop_frac;
->  
->  	struct bdi_writeback wb;  /* default writeback info for this bdi */
-> +	struct bdi_writeback_congested wb_congested;
->  
->  	struct device *dev;
+>  	q->backing_dev_info.ra_pages =
+>  			(VM_MAX_READAHEAD * 1024) / PAGE_CACHE_SIZE;
+> -	q->backing_dev_info.capabilities = 0;
+> +	q->backing_dev_info.capabilities = BDI_CAP_CGROUP_WRITEBACK;
+>  	q->backing_dev_info.name = "block";
+>  	q->node = node_id;
 >  
 > diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-> index 7857820..bfdaa18 100644
+> index bfdaa18..6bb3123 100644
 > --- a/include/linux/backing-dev.h
 > +++ b/include/linux/backing-dev.h
-> @@ -167,7 +167,7 @@ static inline int bdi_congested(struct backing_dev_info *bdi, int bdi_bits)
->  {
->  	if (bdi->congested_fn)
->  		return bdi->congested_fn(bdi->congested_data, bdi_bits);
-> -	return (bdi->wb.state & bdi_bits);
-> +	return (bdi->wb.congested->state & bdi_bits);
->  }
+> @@ -134,12 +134,15 @@ int bdi_set_max_ratio(struct backing_dev_info *bdi, unsigned int max_ratio);
+>   * BDI_CAP_NO_WRITEBACK:   Don't write pages back
+>   * BDI_CAP_NO_ACCT_WB:     Don't automatically account writeback pages
+>   * BDI_CAP_STRICTLIMIT:    Keep number of dirty pages below bdi threshold.
+> + *
+> + * BDI_CAP_CGROUP_WRITEBACK: Supports cgroup-aware writeback.
+>   */
+>  #define BDI_CAP_NO_ACCT_DIRTY	0x00000001
+>  #define BDI_CAP_NO_WRITEBACK	0x00000002
+>  #define BDI_CAP_NO_ACCT_WB	0x00000004
+>  #define BDI_CAP_STABLE_WRITES	0x00000008
+>  #define BDI_CAP_STRICTLIMIT	0x00000010
+> +#define BDI_CAP_CGROUP_WRITEBACK 0x00000020
 >  
->  static inline int bdi_read_congested(struct backing_dev_info *bdi)
-> diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-> index 805b287..5ec7658 100644
-> --- a/mm/backing-dev.c
-> +++ b/mm/backing-dev.c
-> @@ -383,6 +383,9 @@ int bdi_init(struct backing_dev_info *bdi)
->  	if (err)
->  		return err;
->  
-> +	bdi->wb_congested.state = 0;
-> +	bdi->wb.congested = &bdi->wb_congested;
-> +
+>  #define BDI_CAP_NO_ACCT_AND_WRITEBACK \
+>  	(BDI_CAP_NO_WRITEBACK | BDI_CAP_NO_ACCT_DIRTY | BDI_CAP_NO_ACCT_WB)
+> @@ -229,4 +232,31 @@ static inline int bdi_sched_wait(void *word)
 >  	return 0;
 >  }
->  EXPORT_SYMBOL(bdi_init);
-> @@ -504,7 +507,7 @@ void clear_bdi_congested(struct backing_dev_info *bdi, int sync)
->  	wait_queue_head_t *wqh = &congestion_wqh[sync];
 >  
->  	bit = sync ? WB_sync_congested : WB_async_congested;
-> -	if (test_and_clear_bit(bit, &bdi->wb.state))
-> +	if (test_and_clear_bit(bit, &bdi->wb.congested->state))
->  		atomic_dec(&nr_bdi_congested[sync]);
->  	smp_mb__after_atomic();
->  	if (waitqueue_active(wqh))
-> @@ -517,7 +520,7 @@ void set_bdi_congested(struct backing_dev_info *bdi, int sync)
->  	enum wb_state bit;
+> -#endif		/* _LINUX_BACKING_DEV_H */
+> +#ifdef CONFIG_CGROUP_WRITEBACK
+> +
+> +/**
+> + * inode_cgwb_enabled - test whether cgroup writeback is enabled on an inode
+> + * @inode: inode of interest
+> + *
+> + * cgroup writeback requires support from both the bdi and filesystem.
+> + * Test whether @inode has both.
+> + */
+> +static inline bool inode_cgwb_enabled(struct inode *inode)
+> +{
+> +	struct backing_dev_info *bdi = inode_to_bdi(inode);
+> +
+> +	return bdi_cap_account_dirty(bdi) &&
+> +		(bdi->capabilities & BDI_CAP_CGROUP_WRITEBACK) &&
+> +		(inode->i_sb->s_type->fs_flags & FS_CGROUP_WRITEBACK);
+> +}
+> +
+> +#else	/* CONFIG_CGROUP_WRITEBACK */
+> +
+> +static inline bool inode_cgwb_enabled(struct inode *inode)
+> +{
+> +	return false;
+> +}
+> +
+> +#endif	/* CONFIG_CGROUP_WRITEBACK */
+> +
+> +#endif	/* _LINUX_BACKING_DEV_H */
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index ce100b87..74e0ae0 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -1897,6 +1897,7 @@ struct file_system_type {
+>  #define FS_HAS_SUBTYPE		4
+>  #define FS_USERNS_MOUNT		8	/* Can be mounted by userns root */
+>  #define FS_USERNS_DEV_MOUNT	16 /* A userns mount does not imply MNT_NODEV */
+> +#define FS_CGROUP_WRITEBACK	32	/* Supports cgroup-aware writeback */
+>  #define FS_RENAME_DOES_D_MOVE	32768	/* FS will handle d_move() during rename() internally. */
+>  	struct dentry *(*mount) (struct file_system_type *, int,
+>  		       const char *, void *);
+> diff --git a/init/Kconfig b/init/Kconfig
+> index dc24dec..d4f7633 100644
+> --- a/init/Kconfig
+> +++ b/init/Kconfig
+> @@ -1141,6 +1141,11 @@ config DEBUG_BLK_CGROUP
+>  	Enable some debugging help. Currently it exports additional stat
+>  	files in a cgroup which can be useful for debugging.
 >  
->  	bit = sync ? WB_sync_congested : WB_async_congested;
-> -	if (!test_and_set_bit(bit, &bdi->wb.state))
-> +	if (!test_and_set_bit(bit, &bdi->wb.congested->state))
->  		atomic_inc(&nr_bdi_congested[sync]);
->  }
->  EXPORT_SYMBOL(set_bdi_congested);
+> +config CGROUP_WRITEBACK
+> +	bool
+> +	depends on MEMCG && BLK_CGROUP
+> +	default y
+> +
+>  endif # CGROUPS
+>  
+>  config CHECKPOINT_RESTORE
 > -- 
 > 2.4.0
 > 
 -- 
 Jan Kara <jack@suse.cz>
 SUSE Labs, CR
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
