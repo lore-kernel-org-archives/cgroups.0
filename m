@@ -1,144 +1,115 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 45/51] writeback: implement wb_wait_for_single_work()
-Date: Wed, 1 Jul 2015 21:07:35 +0200
-Message-ID: <20150701190735.GI7252@quack.suse.cz>
+From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 48/51] writeback: dirty inodes against their matching
+ cgroup bdi_writeback's
+Date: Wed, 1 Jul 2015 21:16:46 +0200
+Message-ID: <20150701191646.GJ7252@quack.suse.cz>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
- <1432329245-5844-46-git-send-email-tj@kernel.org>
+ <1432329245-5844-49-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1432329245-5844-46-git-send-email-tj@kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
+In-Reply-To: <1432329245-5844-49-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, jack@suse.cz, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org
 
-On Fri 22-05-15 17:13:59, Tejun Heo wrote:
-> For cgroup writeback, multiple wb_writeback_work items may need to be
-> issuedto accomplish a single task.  The previous patch updated the
-> waiting mechanism such that wb_wait_for_completion() can wait for
-> multiple work items.
+On Fri 22-05-15 17:14:02, Tejun Heo wrote:
+> __mark_inode_dirty() always dirtied the inode against the root wb
+> (bdi_writeback).  The previous patches added all the infrastructure
+> necessary to attribute an inode against the wb of the dirtying cgroup.
 > 
-> Issuing mulitple work items involves memory allocation which may fail.
-> As most writeback operations can't fail or blocked on memory
-> allocation, in such cases, we'll fall back to sequential issuing of an
-> on-stack work item, which would need to be waited upon sequentially.
+> This patch updates __mark_inode_dirty() so that it uses the wb
+> associated with the inode instead of unconditionally using the root
+> one.
 > 
-> This patch implements wb_wait_for_single_work() which waits for a
-> single work item independently from wb_completion waiting so that such
-> fallback mechanism can be used without getting tangled with the usual
-> issuing / completion operation.
+> Currently, none of the filesystems has FS_CGROUP_WRITEBACK and all
+> pages will keep being dirtied against the root wb.
+> 
+> v2: Updated for per-inode wb association.
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+> Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
 
-I don't understand, why is the special handling with single_wait,
-single_done necessary. When we fail to allocate work and thus use the
-base_work for submission, we can still use the standard completion mechanism
-to wait for work to finish, can't we?
+Looks good. You can add:
 
-BTW: Again it would be easier for me to review this if the implementation
-of this function was in one patch with the use of it so that one can see
-how it gets used...
+Reviewed-by: Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
 
 								Honza
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Jens Axboe <axboe@kernel.dk>
-> Cc: Jan Kara <jack@suse.cz>
+
 > ---
->  fs/fs-writeback.c | 47 +++++++++++++++++++++++++++++++++++++++++++++--
->  1 file changed, 45 insertions(+), 2 deletions(-)
+>  fs/fs-writeback.c | 23 +++++++++++------------
+>  1 file changed, 11 insertions(+), 12 deletions(-)
 > 
 > diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-> index d7d4a1b..093b959 100644
+> index 59d76f6..881ea5d 100644
 > --- a/fs/fs-writeback.c
 > +++ b/fs/fs-writeback.c
-> @@ -52,6 +52,8 @@ struct wb_writeback_work {
->  	unsigned int for_background:1;
->  	unsigned int for_sync:1;	/* sync(2) WB_SYNC_ALL writeback */
->  	unsigned int auto_free:1;	/* free on completion */
-> +	unsigned int single_wait:1;
-> +	unsigned int single_done:1;
->  	enum wb_reason reason;		/* why was writeback initiated? */
+> @@ -1504,7 +1504,6 @@ static noinline void block_dump___mark_inode_dirty(struct inode *inode)
+>  void __mark_inode_dirty(struct inode *inode, int flags)
+>  {
+>  	struct super_block *sb = inode->i_sb;
+> -	struct backing_dev_info *bdi = NULL;
+>  	int dirtytime;
 >  
->  	struct list_head list;		/* pending work list */
-> @@ -178,8 +180,11 @@ static void wb_queue_work(struct bdi_writeback *wb,
->  	trace_writeback_queue(wb->bdi, work);
+>  	trace_writeback_mark_inode_dirty(inode, flags);
+> @@ -1574,30 +1573,30 @@ void __mark_inode_dirty(struct inode *inode, int flags)
+>  		 * reposition it (that would break b_dirty time-ordering).
+>  		 */
+>  		if (!was_dirty) {
+> +			struct bdi_writeback *wb = inode_to_wb(inode);
+>  			struct list_head *dirty_list;
+>  			bool wakeup_bdi = false;
+> -			bdi = inode_to_bdi(inode);
 >  
->  	spin_lock_bh(&wb->work_lock);
-> -	if (!test_bit(WB_registered, &wb->state))
-> +	if (!test_bit(WB_registered, &wb->state)) {
-> +		if (work->single_wait)
-> +			work->single_done = 1;
->  		goto out_unlock;
-> +	}
->  	if (work->done)
->  		atomic_inc(&work->done->cnt);
->  	list_add_tail(&work->list, &wb->work_list);
-> @@ -234,6 +239,32 @@ int inode_congested(struct inode *inode, int cong_bits)
->  EXPORT_SYMBOL_GPL(inode_congested);
+>  			spin_unlock(&inode->i_lock);
+> -			spin_lock(&bdi->wb.list_lock);
+> +			spin_lock(&wb->list_lock);
 >  
->  /**
-> + * wb_wait_for_single_work - wait for completion of a single bdi_writeback_work
-> + * @bdi: bdi the work item was issued to
-> + * @work: work item to wait for
-> + *
-> + * Wait for the completion of @work which was issued to one of @bdi's
-> + * bdi_writeback's.  The caller must have set @work->single_wait before
-> + * issuing it.  This wait operates independently fo
-> + * wb_wait_for_completion() and also disables automatic freeing of @work.
-> + */
-> +static void wb_wait_for_single_work(struct backing_dev_info *bdi,
-> +				    struct wb_writeback_work *work)
-> +{
-> +	if (WARN_ON_ONCE(!work->single_wait))
-> +		return;
-> +
-> +	wait_event(bdi->wb_waitq, work->single_done);
-> +
-> +	/*
-> +	 * Paired with smp_wmb() in wb_do_writeback() and ensures that all
-> +	 * modifications to @work prior to assertion of ->single_done is
-> +	 * visible to the caller once this function returns.
-> +	 */
-> +	smp_rmb();
-> +}
-> +
-> +/**
->   * wb_split_bdi_pages - split nr_pages to write according to bandwidth
->   * @wb: target bdi_writeback to split @nr_pages to
->   * @nr_pages: number of pages to write for the whole bdi
-> @@ -1178,14 +1209,26 @@ static long wb_do_writeback(struct bdi_writeback *wb)
->  	set_bit(WB_writeback_running, &wb->state);
->  	while ((work = get_next_work_item(wb)) != NULL) {
->  		struct wb_completion *done = work->done;
-> +		bool need_wake_up = false;
+> -			WARN(bdi_cap_writeback_dirty(bdi) &&
+> -			     !test_bit(WB_registered, &bdi->wb.state),
+> -			     "bdi-%s not registered\n", bdi->name);
+> +			WARN(bdi_cap_writeback_dirty(wb->bdi) &&
+> +			     !test_bit(WB_registered, &wb->state),
+> +			     "bdi-%s not registered\n", wb->bdi->name);
 >  
->  		trace_writeback_exec(wb->bdi, work);
+>  			inode->dirtied_when = jiffies;
+>  			if (dirtytime)
+>  				inode->dirtied_time_when = jiffies;
 >  
->  		wrote += wb_writeback(wb, work);
+>  			if (inode->i_state & (I_DIRTY_INODE | I_DIRTY_PAGES))
+> -				dirty_list = &bdi->wb.b_dirty;
+> +				dirty_list = &wb->b_dirty;
+>  			else
+> -				dirty_list = &bdi->wb.b_dirty_time;
+> +				dirty_list = &wb->b_dirty_time;
 >  
-> -		if (work->auto_free)
-> +		if (work->single_wait) {
-> +			WARN_ON_ONCE(work->auto_free);
-> +			/* paired w/ rmb in wb_wait_for_single_work() */
-> +			smp_wmb();
-> +			work->single_done = 1;
-> +			need_wake_up = true;
-> +		} else if (work->auto_free) {
->  			kfree(work);
-> +		}
-> +
->  		if (done && atomic_dec_and_test(&done->cnt))
-> +			need_wake_up = true;
-> +
-> +		if (need_wake_up)
->  			wake_up_all(&wb->bdi->wb_waitq);
+> -			wakeup_bdi = inode_wb_list_move_locked(inode, &bdi->wb,
+> +			wakeup_bdi = inode_wb_list_move_locked(inode, wb,
+>  							       dirty_list);
+>  
+> -			spin_unlock(&bdi->wb.list_lock);
+> +			spin_unlock(&wb->list_lock);
+>  			trace_writeback_dirty_inode_enqueue(inode);
+>  
+>  			/*
+> @@ -1606,8 +1605,8 @@ void __mark_inode_dirty(struct inode *inode, int flags)
+>  			 * to make sure background write-back happens
+>  			 * later.
+>  			 */
+> -			if (bdi_cap_writeback_dirty(bdi) && wakeup_bdi)
+> -				wb_wakeup_delayed(&bdi->wb);
+> +			if (bdi_cap_writeback_dirty(wb->bdi) && wakeup_bdi)
+> +				wb_wakeup_delayed(wb);
+>  			return;
+>  		}
 >  	}
->  
 > -- 
 > 2.4.0
 > 
 -- 
-Jan Kara <jack@suse.cz>
+Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
 SUSE Labs, CR
