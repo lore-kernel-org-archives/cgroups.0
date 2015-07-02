@@ -1,25 +1,26 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 36/51] writeback: implement bdi_for_each_wb()
-Date: Wed, 1 Jul 2015 22:22:26 -0400
-Message-ID: <20150702022226.GH26440@mtj.duckdns.org>
+Subject: Re: [PATCH 39/51] writeback: make writeback_in_progress() take
+ bdi_writeback instead of backing_dev_info
+Date: Wed, 1 Jul 2015 22:28:43 -0400
+Message-ID: <20150702022843.GI26440@mtj.duckdns.org>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
- <1432329245-5844-37-git-send-email-tj@kernel.org>
- <20150701072757.GW7252@quack.suse.cz>
+ <1432329245-5844-40-git-send-email-tj@kernel.org>
+ <20150701074708.GZ7252@quack.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=rlET6wIqtmhuEdRPrN5HRDn9vv9DhF+pCT9K4J+gkn0=;
-        b=s89ER3JRv9LE4r2VaJGk3bt1MNlLdzmIq8Po19pxdxGaTG+pfnB9T6KMDZ6dmTNe1r
-         KneIy3kk6EfcuQbOiZyRG8UnQTQGzO7Dau2IhsebHhaA/JoJBugvZQjQj6EoRudUVQHO
-         PIxt3M23rLTjkSaQD3ZyQrJw65SWkekiFvP75xmihsS0IyUrz+Aed2ktBAkOjphzwz8a
-         7laPqBQsD6huvltxhuzdNmFziGObNJBWzBminy7kmvSgLRmMXlAaTiMvr+37eVFLht6K
-         frqlbD2yZDz/N/kOmxs1Bz+3WBKESc5PL8hqy1VoKZUwsaLgPnC4ot5xynJRB4bImQot
-         BUIA==
+        bh=RmbP1cmZEUpmDlXbgPt0NcEJbzRR28C17wvWjdxSH7g=;
+        b=gEptTDoeY8XQeOiS3kD+k/6VHf6dn7vwMdD0MKzD1Q+SEhi6fm6Nt4Pxozem+78HDC
+         KY5DQzjDkOqyquF58O/NEU6AkEkt44z7oeD6O+WACMCk/ZHTtJszPWJjP2T+A+acpL23
+         wKPUkqNJe5GDZI7lZiL0u9PJyy/8oB80hCEyYqR8Vilb8U/dRNpVJCI4cZx1/RO6nS7L
+         hcCtwlNpadyMfKu1MdVaf8yreHUOGXNovrtpsosZ7EFPo6B566SL5IZDdqJxy9tRcCF9
+         /DaETnJKVW/YSXXbXEF9HhqI9nSmYRQ97V2XkyejfkowgSLSPnOvzoWZMnaWHWixB6pw
+         H4ow==
 Content-Disposition: inline
-In-Reply-To: <20150701072757.GW7252@quack.suse.cz>
+In-Reply-To: <20150701074708.GZ7252@quack.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -27,22 +28,26 @@ Content-Transfer-Encoding: 7bit
 To: Jan Kara <jack@suse.cz>
 Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru
 
-On Wed, Jul 01, 2015 at 09:27:57AM +0200, Jan Kara wrote:
-> > +#define bdi_for_each_wb(wb_cur, bdi, iter, start_blkcg_id)		\
-> > +	for ((iter)->next_id = (start_blkcg_id);			\
-> > +	     ({	(wb_cur) = !(iter)->next_id++ ? &(bdi)->wb : NULL; }); )
-> > +
-> 
-> This looks quite confusing. Won't it be easier to understand as:
-> 
-> struct wb_iter {
-> } __attribute__ ((unused));
-> 
-> #define bdi_for_each_wb(wb_cur, bdi, iter, start_blkcg_id) \
->   if (((wb_cur) = (!start_blkcg_id ? &(bdi)->wb : NULL)))
+Hello, Jan.
 
-But then break or continue wouldn't work as expected.  It can get
-really confusing when it's wrapped by an outer loop.
+On Wed, Jul 01, 2015 at 09:47:08AM +0200, Jan Kara wrote:
+> BTW: It would have been easier for me to review this if e.g. a move from
+> bdi to wb parameter was split among less patches. The intermediate state
+> where some functions call partly bdi and party wb functions is strange and
+> it always makes me go search in the series whether the other part of the
+> function gets converted and whether they play well together...
+
+Similar argument.  When reviewing big picture transitions, it *could*
+be easier to have larger lumps but I believe that's not necessarily
+because reviewing itself becomes easier but more because it becomes
+easier to skip what's uninteresting like actually verifying each
+change.  Another aspect is that some of the changes are spread out.
+When each patch modifies one part, it's clear that all changes in the
+patch belong to that specific part; however, in larger lumps, there
+usually are a number of stragglers across the changes and associating
+them with other parts aren't necessarily trivial.  This happens with
+patch descrption too.  It becomes easier to slip in, intentionally or
+by mistake, unrelated changes without explaining what's going on.
 
 Thanks.
 
