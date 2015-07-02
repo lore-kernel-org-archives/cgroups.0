@@ -1,26 +1,26 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 26/51] writeback: let balance_dirty_pages() work on the
- matching cgroup bdi_writeback
-Date: Wed, 1 Jul 2015 21:26:51 -0400
-Message-ID: <20150702012651.GD26440@mtj.duckdns.org>
+Subject: Re: [PATCH 28/51] writeback, blkcg: restructure
+ blk_{set|clear}_queue_congested()
+Date: Wed, 1 Jul 2015 21:38:15 -0400
+Message-ID: <20150702013815.GE26440@mtj.duckdns.org>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
- <1432329245-5844-27-git-send-email-tj@kernel.org>
- <20150630143100.GL7252@quack.suse.cz>
+ <1432329245-5844-29-git-send-email-tj@kernel.org>
+ <20150630150254.GN7252@quack.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=JNKWRZHCvjrvCd5H2yyAY40q8xVnww62ZK2fLGfyO7s=;
-        b=wOK5CYKcl117MWpFDi9AitXG5g9z5uBAPv1Bj49aO6on/cMfWiiaqMWBzJyJPLCjS3
-         nrc+6AqcbgrBk1jg0cUVjTSTKcNhV6f2Xh1OFxt+1qqaUxw0FdXzJv5f52V6mrMR2LbN
-         OLVIfpfOh+XBjd9xdanl8e4I+Ux38QoWys6MiIZCJ7V1NTN3FQ3KUBH4IjSHCkouOC7g
-         Kza/KvfhMoRKVPhjPGvPt3KYGwaszilUC6CBTut2ewebWIV+hcpJxIi5rxPIsVKsiqxG
-         JZyy+IEcxeTry7if8GENrTHrV57do/rBsZIsz90gMjjrAbwyYDX24bD+wkw2oDUtl2eh
-         UNgQ==
+        bh=Opvd5hQEUtR5BpHhJ/1S79O1ZXB7UBxOP+xxvCjfHec=;
+        b=RhEWaem2Yh/QK/sJa1qz0SYrHdaPrMndsSHyPt6+9kEYwNU4wV1Zwv4p3dthFV7sT5
+         CG1nvQRQI9qzKRZACH2Zy7ihzEJm2eTn0o9nrVdPWd74alWg3Rq5+UZny9iN0AOm1BG/
+         /y3Y0yKtHT5ER4wfVALspGpz1gM0t71MPRblhmO5iIYzM1iLqM856rIadYhbdm2KQB6y
+         PwzvqC08pw/zSAzcEEEgjXjx38lyqNl+y3yEkqHkYH47ClXtQu1cSEUzjXHaNK98J6qH
+         JYeelYjyni4PgvUeAhrtr23ZONttNuGXjcGK/y8Z+B420qJtKN/O2vc4WWGWJGtMSuyT
+         fyIA==
 Content-Disposition: inline
-In-Reply-To: <20150630143100.GL7252@quack.suse.cz>
+In-Reply-To: <20150630150254.GN7252@quack.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -30,28 +30,35 @@ Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, hch@infradead.org, hannes@cmp
 
 Hello, Jan.
 
-On Tue, Jun 30, 2015 at 04:31:00PM +0200, Jan Kara wrote:
-...
-> > +	if (inode_cgwb_enabled(inode))
-> > +		wb = wb_get_create_current(bdi, GFP_KERNEL);
-> > +	if (!wb)
-> > +		wb = &bdi->wb;
-> > +
-> 
-> So this effectively adds a radix tree lookup (of wb belonging to memcg) for
-> every set_page_dirty() call. That seems relatively costly to me. And all
+On Tue, Jun 30, 2015 at 05:02:54PM +0200, Jan Kara wrote:
+> BTW, I'd prefer if this was merged with the following patch. I was
+> wondering for a while about the condition at the beginning of
+> blk_clear_congested() only to learn it gets modified to the one I'd expect
+> in the following patch :)
 
-Hmmm... idk, radix tree lookups should be cheap especially when
-shallow and set_page_dirty().  It's a glorified array indexing.  If
-not, we should really be improving radix tree implementation.  That
-said,
+The patches are already merged, it's a bit too late to discuss but I
+usually try to keep each step quite granular.  e.g. I try hard to
+avoid combining code relocation / restructuring with actual functional
+changes so that the code change A -> B -> C where B is functionally
+identical to A and C is different from B only where the actual
+functional changes occur.
 
-> that just to check wb->dirty_exceeded. Cannot we just use inode_to_wb()
-> instead? I understand results may be different if multiple memcgs share an
-> inode and that's the reason why you use wb_get_create_current(), right?
-> But for dirty_exceeded check it may be good enough?
+I think your argument is that as C is the final form, introducing B is
+actually harder for reviewing.  I have to disagree with that pretty
+strongly.  When you only think about the functional transformations A
+-> C might seem easier but given that we also want to verify the
+changes - both during development and review - it's far more
+beneficial to go through the intermediate stage as that isolates
+functional changes from mere code transformation.
 
-Yeah, that probably should work.  I'll think more about it.
+Another thing to consider is that there's a difference when one is
+reviewing a patch series as a whole tracking the development of big
+picture and later when somebody tries to debug or bisect a bug the
+patchset introduces.  At that point, the general larger flow isn't
+really in the picture and combining structural and functional changes
+may make understanding what's going on significantly harder in
+addition to making such errors more likely and less detectable in the
+first place.
 
 Thanks.
 
