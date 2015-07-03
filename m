@@ -1,70 +1,72 @@
-From: Jan Kara <jack@suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH 41/51] writeback: make wakeup_flusher_threads() handle
  multiple bdi_writeback's
-Date: Fri, 3 Jul 2015 15:02:13 +0200
-Message-ID: <20150703130213.GM23329@quack.suse.cz>
+Date: Fri, 3 Jul 2015 12:33:09 -0400
+Message-ID: <20150703163309.GC5273@mtj.duckdns.org>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
  <1432329245-5844-42-git-send-email-tj@kernel.org>
  <20150701081528.GB7252@quack.suse.cz>
  <20150702023706.GK26440@mtj.duckdns.org>
+ <20150703130213.GM23329@quack.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=dcjeVPRahf2G0Avc8AmkgL0qIngK4GsV+cAVr8FUNSQ=;
+        b=EBwkZkcIIe+SN+4NtFeiPP5GiQFvPrtCVuZvmg4SXJjJiT4tMHp6j3D1vTwzq7A4AK
+         3KC3zXXYKvJiA4cZqQ/YasNUhzWl8kSU1xZRNpjGewxVEWGMsOUtKrvIKwX3KuVX4HUI
+         2UWmAOKLD1Pbu47whgaFZMm5fFA60k4lmcInrQz8cVErdSBL6E14IKD87uFnX2Nxn0vz
+         R8awa7k/N7Mah04iSV3YuDfO6LDzr6wnXgY04dUvwoIity7aU+VF9mEf1qkMOtQEXX7L
+         7OcbSBj2d9nqVoVcZfRMFMxSRk2NzPcHI9knkppZwDHujn+2b8Bi2/tSqpWjow3o9Q2Q
+         jhBA==
 Content-Disposition: inline
-In-Reply-To: <20150702023706.GK26440@mtj.duckdns.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
+In-Reply-To: <20150703130213.GM23329-+0h/O2h83AeN3ZZ/Hiejyg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, axboe@kernel.dk, linux-kernel@vger.kernel.org, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru
+To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org
 
-On Wed 01-07-15 22:37:06, Tejun Heo wrote:
-> Hello,
+Hello,
+
+On Fri, Jul 03, 2015 at 03:02:13PM +0200, Jan Kara wrote:
+...
+> OK, I agree with your device vs logical construct argument. However when
+> splitting pages based on avg throughput each cgroup generates, we know
+> nothing about actual amount of dirty pages in each cgroup so we may end up
+> writing much fewer pages than we originally wanted since a cgroup which was
+> assigned a big chunk needn't have many pages available. So your algorithm
+> is basically bound to undershoot the requested number of pages in some
+> cases...
+
+Sure, but the nr_to_write has never been a strict thing except when
+we're writing out everything.  We don't overshoot them but writing out
+less than requested is not unusual.  Also, note that write bandwidth
+is the primary measure that we base the distribution of dirty pages
+on.  Sure, there can be cases where the two deviate but this is the
+better measure to use than, say, number of currently dirty pages.
+
+> Another concern is that if we have two cgroups with same amount of dirty
+> pages but cgroup A has them randomly scattered (and thus have much lower
+> bandwidth) and cgroup B has them in a sequential fashion (thus with higher
+> bandwidth), you end up cleaning (and subsequently reclaiming) more from
+> cgroup B. That may be good for immediate memory pressure but could be
+> considered unfair by the cgroup owner.
 > 
-> On Wed, Jul 01, 2015 at 10:15:28AM +0200, Jan Kara wrote:
-> > I was looking at who uses wakeup_flusher_threads(). There are two usecases:
-> > 
-> > 1) sync() - we want to writeback everything
-> > 2) We want to relieve memory pressure by cleaning and subsequently
-> >    reclaiming pages.
-> > 
-> > Neither of these cares about number of pages too much if you write enough.
-> 
-> What's enough tho?  Saying "yeah let's try about 1000 pages" is one
-> thing and "let's try about 1000 pages on each of 100 cgroups" is a
-> quite different operation.  Given the nature of "let's try to write
-> some", I'd venture to say that writing somewhat less is an a lot
-> better behavior than possibly trying to write out possibly huge amount
-> given that the amount of fluctuation such behaviors may cause
-> system-wide and how non-obvious the reasons for such fluctuations
-> would be.
-> 
-> > So similarly as we don't split the passed nr_pages argument among bdis, I
-> 
-> bdi's are bound by actual hardware.  wb's aren't.  This is a purely
-> logical construct and there can be a lot of them.  Again, trying to
-> write 1024 pages on each of 100 devices and trying to write 1024 * 100
-> pages to single device are quite different.
+> Maybe it would be better to split number of pages to write based on
+> fraction of dirty pages each cgroup has in the bdi?
 
-OK, I agree with your device vs logical construct argument. However when
-splitting pages based on avg throughput each cgroup generates, we know
-nothing about actual amount of dirty pages in each cgroup so we may end up
-writing much fewer pages than we originally wanted since a cgroup which was
-assigned a big chunk needn't have many pages available. So your algorithm
-is basically bound to undershoot the requested number of pages in some
-cases...
+The dirty pages are already distributed according to write bandwidth.
+Write bandwidth is the de-facto currency of dirty page distribution.
+If it can be shown that some other measure is better for this purpose,
+sure, but I don't see why we'd deviate just based on a vague feeling
+that something else might be better and given how these mechanisms are
+used I don't think going either way would matter a bit.
 
-Another concern is that if we have two cgroups with same amount of dirty
-pages but cgroup A has them randomly scattered (and thus have much lower
-bandwidth) and cgroup B has them in a sequential fashion (thus with higher
-bandwidth), you end up cleaning (and subsequently reclaiming) more from
-cgroup B. That may be good for immediate memory pressure but could be
-considered unfair by the cgroup owner.
+Thanks.
 
-Maybe it would be better to split number of pages to write based on
-fraction of dirty pages each cgroup has in the bdi?
-
-								Honza
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+tejun
