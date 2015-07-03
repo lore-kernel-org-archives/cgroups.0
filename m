@@ -1,57 +1,243 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 22/51] writeback: add {CONFIG|BDI_CAP|FS}_CGROUP_WRITEBACK
-Date: Fri, 3 Jul 2015 13:14:19 -0400
-Message-ID: <20150703171419.GG5273@mtj.duckdns.org>
+Subject: [PATCH block/for-4.3] writeback: remove
+ wb_writeback_work->single_wait/done
+Date: Fri, 3 Jul 2015 18:12:23 -0400
+Message-ID: <20150703221223.GH5273@mtj.duckdns.org>
 References: <1432329245-5844-1-git-send-email-tj@kernel.org>
- <1432329245-5844-23-git-send-email-tj@kernel.org>
- <20150630093751.GH7252@quack.suse.cz>
- <20150702011056.GC26440@mtj.duckdns.org>
- <20150703104957.GH23329@quack.suse.cz>
+ <1432329245-5844-46-git-send-email-tj@kernel.org>
+ <20150701190735.GI7252@quack.suse.cz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=t0HYFrn+Odauljnzxr2pyF1GwnTb7BNH5hpQrg96m+w=;
-        b=oXMGb9a37erVN1tHsb5Ln+aLOZk5AWgjgIp4D5BPCm4UQlkBJOgJVLLL174ZAN0pLD
-         vcFOoy2klZGom5DYiRpxZ3Ds8WYPxe9NYrssIRpHurY8xIZ7JcaeOpEmJf0yv86oVEJs
-         xskU+02iOxUY21zErhBc2cqu4htQ1o2pDxurKwTLJqgGsq85eG1EvC/HRzF2iXeWHDQc
-         c/a+8hHke3I4QADoCwsLRy574ifc9nkfoo/rY5VH9ao5dDp7mVWMmEdIVUY5X/9nP2Ho
-         57y9uskfPcttb4xnYGchQYOdDkJ3qsBGSI3Sy928gGJvof34/JCRfQr+2er573gd4sMv
-         ySng==
+        bh=WCDwftoUmM+PDqtYiycIpINSF0WMZkZ03brTr0pMK1w=;
+        b=yp1zDh34nUgiSWLCi7C/EUUvM2zHQgv9i2Hc+Yw3jCPzfNO43tgPU/PSo93uWveFMJ
+         yykCPv/mJPulUb1rbWnoI3mUwLx8bSgsBrw8ItohARNpNKBBdhJDk9HTQVILhv+Yy7p3
+         jgbJUAHdaqwqhd7FEi8B2XPFFvVAi0wrXPqsd35jIyftzjU+sqIJ6vUj1aQ+3eOR23+e
+         lN+R88sdu5++3XLEo8zJBkyvdh4RXO9zFKkmdFwQcgpSFDfZDXWsP9UHBnT2fMRZ3xjX
+         6j79ebwk+bdJ93iSUzpC2EcvKiUIFMXAsdFy+AByDpLP2wMn+zG+cx09eRKOzG0cWRuZ
+         5V+Q==
 Content-Disposition: inline
-In-Reply-To: <20150703104957.GH23329@quack.suse.cz>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20150701190735.GI7252@quack.suse.cz>
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Jan Kara <jack@suse.cz>
 Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru
 
-Hello,
+Hello, Jan.
 
-On Fri, Jul 03, 2015 at 12:49:57PM +0200, Jan Kara wrote:
-> Well, unless there is some specific mapping for the device, we could just
-> fall back to attributing everything to the root cgroup. We would still
-> account dirty pages in memcg, throttle writers in memcg when there are too
-> many dirty pages, issue writeback for inodes in memcg with enough dirty
-> pages etc. Just all IO from different memcgs would be equal so no
-> separation would be there. But it would still seem better that just
-> ignoring the split of dirty pages among memcgs as we do now... Thoughts?
+So, something like the following.  It depends on other changes so
+won't apply as-is.  I'll repost it as part of a patchset once -rc1
+drops.
 
-Sure, if you mark a bdi as capable of supporing cgroup writeback
-without enforcing any IO isolation, the above would be what's
-happening.  I'm not convinced this would be something actually useful
-tho.  Sure, it changes the behavior but is still gonna be a crapshoot.
+Thanks!
 
-Thanks.
+------ 8< ------
+wb_writeback_work->single_wait/done are used for the wait mechanism
+for synchronous wb_work (wb_writeback_work) items which are issued
+when bdi_split_work_to_wbs() fails to allocate memory for asynchronous
+wb_work items; however, there's no reason to use a separate wait
+mechanism for this.  bdi_split_work_to_wbs() can simply use on-stack
+fallback wb_work item and separate wb_completion to wait for it.
 
--- 
-tejun
+This patch removes wb_work->single_wait/done and the related code and
+make bdi_split_work_to_wbs() use on-stack fallback wb_work and
+wb_completion instead.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Suggested-by: Jan Kara <jack@suse.cz>
+---
+ fs/fs-writeback.c |  116 +++++++++++++-----------------------------------------
+ 1 file changed, 30 insertions(+), 86 deletions(-)
+
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -53,8 +53,6 @@ struct wb_writeback_work {
+ 	unsigned int for_background:1;
+ 	unsigned int for_sync:1;	/* sync(2) WB_SYNC_ALL writeback */
+ 	unsigned int auto_free:1;	/* free on completion */
+-	unsigned int single_wait:1;
+-	unsigned int single_done:1;
+ 	enum wb_reason reason;		/* why was writeback initiated? */
+ 
+ 	struct list_head list;		/* pending work list */
+@@ -181,11 +179,8 @@ static void wb_queue_work(struct bdi_wri
+ 	trace_writeback_queue(wb->bdi, work);
+ 
+ 	spin_lock_bh(&wb->work_lock);
+-	if (!test_bit(WB_registered, &wb->state)) {
+-		if (work->single_wait)
+-			work->single_done = 1;
++	if (!test_bit(WB_registered, &wb->state))
+ 		goto out_unlock;
+-	}
+ 	if (work->done)
+ 		atomic_inc(&work->done->cnt);
+ 	list_add_tail(&work->list, &wb->work_list);
+@@ -737,32 +732,6 @@ int inode_congested(struct inode *inode,
+ EXPORT_SYMBOL_GPL(inode_congested);
+ 
+ /**
+- * wb_wait_for_single_work - wait for completion of a single bdi_writeback_work
+- * @bdi: bdi the work item was issued to
+- * @work: work item to wait for
+- *
+- * Wait for the completion of @work which was issued to one of @bdi's
+- * bdi_writeback's.  The caller must have set @work->single_wait before
+- * issuing it.  This wait operates independently fo
+- * wb_wait_for_completion() and also disables automatic freeing of @work.
+- */
+-static void wb_wait_for_single_work(struct backing_dev_info *bdi,
+-				    struct wb_writeback_work *work)
+-{
+-	if (WARN_ON_ONCE(!work->single_wait))
+-		return;
+-
+-	wait_event(bdi->wb_waitq, work->single_done);
+-
+-	/*
+-	 * Paired with smp_wmb() in wb_do_writeback() and ensures that all
+-	 * modifications to @work prior to assertion of ->single_done is
+-	 * visible to the caller once this function returns.
+-	 */
+-	smp_rmb();
+-}
+-
+-/**
+  * wb_split_bdi_pages - split nr_pages to write according to bandwidth
+  * @wb: target bdi_writeback to split @nr_pages to
+  * @nr_pages: number of pages to write for the whole bdi
+@@ -791,38 +760,6 @@ static long wb_split_bdi_pages(struct bd
+ }
+ 
+ /**
+- * wb_clone_and_queue_work - clone a wb_writeback_work and issue it to a wb
+- * @wb: target bdi_writeback
+- * @base_work: source wb_writeback_work
+- *
+- * Try to make a clone of @base_work and issue it to @wb.  If cloning
+- * succeeds, %true is returned; otherwise, @base_work is issued directly
+- * and %false is returned.  In the latter case, the caller is required to
+- * wait for @base_work's completion using wb_wait_for_single_work().
+- *
+- * A clone is auto-freed on completion.  @base_work never is.
+- */
+-static bool wb_clone_and_queue_work(struct bdi_writeback *wb,
+-				    struct wb_writeback_work *base_work)
+-{
+-	struct wb_writeback_work *work;
+-
+-	work = kmalloc(sizeof(*work), GFP_ATOMIC);
+-	if (work) {
+-		*work = *base_work;
+-		work->auto_free = 1;
+-		work->single_wait = 0;
+-	} else {
+-		work = base_work;
+-		work->auto_free = 0;
+-		work->single_wait = 1;
+-	}
+-	work->single_done = 0;
+-	wb_queue_work(wb, work);
+-	return work != base_work;
+-}
+-
+-/**
+  * bdi_split_work_to_wbs - split a wb_writeback_work to all wb's of a bdi
+  * @bdi: target backing_dev_info
+  * @base_work: wb_writeback_work to issue
+@@ -837,7 +774,6 @@ static void bdi_split_work_to_wbs(struct
+ 				  struct wb_writeback_work *base_work,
+ 				  bool skip_if_busy)
+ {
+-	long nr_pages = base_work->nr_pages;
+ 	int next_memcg_id = 0;
+ 	struct bdi_writeback *wb;
+ 	struct wb_iter iter;
+@@ -849,17 +785,39 @@ static void bdi_split_work_to_wbs(struct
+ restart:
+ 	rcu_read_lock();
+ 	bdi_for_each_wb(wb, bdi, &iter, next_memcg_id) {
++		DEFINE_WB_COMPLETION_ONSTACK(fallback_work_done);
++		struct wb_writeback_work fallback_work;
++		struct wb_writeback_work *work;
++		long nr_pages;
++
+ 		if (!wb_has_dirty_io(wb) ||
+ 		    (skip_if_busy && writeback_in_progress(wb)))
+ 			continue;
+ 
+-		base_work->nr_pages = wb_split_bdi_pages(wb, nr_pages);
+-		if (!wb_clone_and_queue_work(wb, base_work)) {
+-			next_memcg_id = wb->memcg_css->id + 1;
+-			rcu_read_unlock();
+-			wb_wait_for_single_work(bdi, base_work);
+-			goto restart;
++		nr_pages = wb_split_bdi_pages(wb, base_work->nr_pages);
++
++		work = kmalloc(sizeof(*work), GFP_ATOMIC);
++		if (work) {
++			*work = *base_work;
++			work->nr_pages = nr_pages;
++			work->auto_free = 1;
++			wb_queue_work(wb, work);
++			continue;
+ 		}
++
++		/* alloc failed, execute synchronously using on-stack fallback */
++		work = &fallback_work;
++		*work = *base_work;
++		work->nr_pages = nr_pages;
++		work->auto_free = 0;
++		work->done = &fallback_work_done;
++
++		wb_queue_work(wb, work);
++
++		next_memcg_id = wb->memcg_css->id + 1;
++		rcu_read_unlock();
++		wb_wait_for_completion(bdi, &fallback_work_done);
++		goto restart;
+ 	}
+ 	rcu_read_unlock();
+ }
+@@ -901,8 +859,6 @@ static void bdi_split_work_to_wbs(struct
+ 	if (bdi_has_dirty_io(bdi) &&
+ 	    (!skip_if_busy || !writeback_in_progress(&bdi->wb))) {
+ 		base_work->auto_free = 0;
+-		base_work->single_wait = 0;
+-		base_work->single_done = 0;
+ 		wb_queue_work(&bdi->wb, base_work);
+ 	}
+ }
+@@ -1793,26 +1749,14 @@ static long wb_do_writeback(struct bdi_w
+ 	set_bit(WB_writeback_running, &wb->state);
+ 	while ((work = get_next_work_item(wb)) != NULL) {
+ 		struct wb_completion *done = work->done;
+-		bool need_wake_up = false;
+ 
+ 		trace_writeback_exec(wb->bdi, work);
+ 
+ 		wrote += wb_writeback(wb, work);
+ 
+-		if (work->single_wait) {
+-			WARN_ON_ONCE(work->auto_free);
+-			/* paired w/ rmb in wb_wait_for_single_work() */
+-			smp_wmb();
+-			work->single_done = 1;
+-			need_wake_up = true;
+-		} else if (work->auto_free) {
++		if (work->auto_free)
+ 			kfree(work);
+-		}
+-
+ 		if (done && atomic_dec_and_test(&done->cnt))
+-			need_wake_up = true;
+-
+-		if (need_wake_up)
+ 			wake_up_all(&wb->bdi->wb_waitq);
+ 	}
+ 
