@@ -1,62 +1,80 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/9] cfq-iosched: fix async oom queue handling
-Date: Tue,  7 Jul 2015 11:35:54 -0400
-Message-ID: <1436283361-3889-3-git-send-email-tj@kernel.org>
-References: <1436283361-3889-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCHSET v2 block/for-4.3] block, cgroup: make cfq charge async IOs to the appropriate blkcgs
+Date: Tue,  7 Jul 2015 11:35:52 -0400
+Message-ID: <1436283361-3889-1-git-send-email-tj@kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=VwpWvZ/o3tBG4uT6u+wgVQMlgwZ53NWqSMUD2+Gv5Z8=;
-        b=DtqGNoZrD/IDsDh6/yciH5fwdJ9q3b7FaDXFEkl/FIxEB+yY0+LVJSZ38taPrm2hUA
-         3AdejgOTN7fnHMdrabW7XdDh8dVzm18j054KbCbNHVbDclZZOdtwYBaPeqZeDTOcnPTP
-         3+RE4Vi9vdSTtyO0PvB9rqD1S67UIZEO92yokJ6r6OIwS3U441uP1VHsITbb0oYh7my3
-         +P1PZ9CpeBF/U/85t4P8MYYVBNNpomhrq1sRK8UwAALmWxj4oLhdVOInSrKtcZYNRZzs
-         /n3KcLp/4XuDKFS6ZEOpdqkWFyyXyrINglmD/UdJomDgycI6RYDztFwr6x5hGbqibvAB
-         444g==
-In-Reply-To: <1436283361-3889-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=66PaIdWH3xjdXATxMcXXlVja4CLNbE6EH8/xKiR2v7U=;
+        b=o5hf+5dI55bPJCRzLnYoGo/JHZFkSHmm/Kx++wqY9IR0cBgjtHh9kSN+LL1b6JmrTy
+         vkl9VZiZatWWu2EAeZhBzf4Ejf3GBBXj5E4XXFR7H25g9D4aKdlYGPX8yrBJoirr8znF
+         ZycuuSLhZuejXO/k1TF0Npcqx6p2ZcBpSWVNS1OLW6THi+LXgIyJF57omoEHpDLstHR0
+         As8Uj8JT6mhaalNwodAIvvGrEB2ta6H1yAXtTgnudQ2s9luL/advUbzY9zxGlZ5IDbq6
+         xwt83J/2qmSN8vJ3pi3fyw3mawPngtMXjT3SWM0y4rJGfd4IMm33HhxPabJo0qlvsRCx
+         0YWg==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk
-Cc: jack@suse.cz, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com, vgoyal@redhat.com, Tejun Heo <tj@kernel.org>, Arianna Avanzini <avanzini.arianna@gmail.com>
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: jack-AlSwsSmVLrQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-Async cfqq's (cfq_queue's) are shared across cfq_data.  When
-cfq_get_queue() obtains a new queue from cfq_find_alloc_queue(), it
-stashes the pointer in cfq_data and reuses it from then on; however,
-the function doesn't consider that cfq_find_alloc_queue() may return
-the oom_cfqq under memory pressure and installs the returned queue
-unconditionally.
+Hello,
 
-If the oom_cfqq is installed as an async cfqq, cfq_set_request() will
-continue calling cfq_get_queue() hoping to replace it with a proper
-queue; however, cfq_get_queue() will keep returning the cached queue
-for the slot - the oom_cfqq.
+This is v2 of cfq cgroup writeback patchset.  Changes from the last
+take[L] are
 
-Fix it by skipping caching if the queue is the oom one.
+* Switched from GFP_ATOMIC to GFP_NOWAIT as suggested by Jeff.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Acked-by: Jeff Moyer <jmoyer@redhat.com>
-Cc: Vivek Goyal <vgoyal@redhat.com>
-Cc: Arianna Avanzini <avanzini.arianna@gmail.com>
----
- block/cfq-iosched.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+* Other misc review points addressed, acks added and rebased.
 
-diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index e91093d..baf0b70 100644
---- a/block/cfq-iosched.c
-+++ b/block/cfq-iosched.c
-@@ -3751,7 +3751,7 @@ cfq_get_queue(struct cfq_data *cfqd, bool is_sync, struct cfq_io_cq *cic,
- 	/*
- 	 * pin the queue now that it's allocated, scheduler exit will prune it
- 	 */
--	if (!is_sync) {
-+	if (!is_sync && cfqq != &cfqd->oom_cfqq) {
- 		cfqq->ref++;
- 		*async_cfqq = cfqq;
- 	}
--- 
-2.4.3
+cfq has always charged all async IOs to the root cgroup.  It didn't
+have much choice as writeback didn't know about cgroups and there was
+no way to tell who to blame for a given writeback IO.  writeback
+finally grew support for cgroups and now tags each writeback IO with
+the appropriate cgroup to charge it against.
+
+This patchset updates cfq so that it follows the blkcg each bio is
+tagged with.  Async cfq_queues are now shared across cfq_group, which
+is per-cgroup, instead of per-request_queue cfq_data.  This makes all
+IOs follow the weight based IO resource distribution implemented by
+cfq.
+
+This patchset contains the following 8 patches.
+
+ 0001-cfq-iosched-simplify-control-flow-in-cfq_get_queue.patch
+ 0002-cfq-iosched-fix-async-oom-queue-handling.patch
+ 0003-cfq-iosched-fix-oom-cfq_queue-ref-leak-in-cfq_set_re.patch
+ 0004-cfq-iosched-minor-cleanups.patch
+ 0005-blkcg-cfq-iosched-use-GFP_NOWAIT-instead-of-GFP_ATOM.patch
+ 0006-cfq-iosched-remove-gfp_mask-from-cfq_find_alloc_queu.patch
+ 0007-cfq-iosched-move-cfq_group-determination-from-cfq_fi.patch
+ 0008-cfq-iosched-fold-cfq_find_alloc_queue-into-cfq_get_q.patch
+ 0009-cfq-iosched-charge-async-IOs-to-the-appropriate-blkc.patch
+
+0001-0003 are a prep and two fix patches on top.  The bugs fixed by
+these patches are very unlikely to cause problems in actual usage, so
+the patches aren't tagged w/ -stable.
+
+0004-0008 are prep patches.
+
+0009 makes cfq cgroup-writeback ready.
+
+This patchset is on top of
+
+  d770e558e219 ("Linux 4.2-rc1")
++ [1] [PATCHSET block/for-4.3] writeback: cgroup writeback updates
+
+diffstat follows, thanks.
+
+ block/blk-cgroup.c  |    8 -
+ block/cfq-iosched.c |  220 ++++++++++++++++++++--------------------------------
+ 2 files changed, 89 insertions(+), 139 deletions(-)
+
+--
+tejun
+
+[L] http://lkml.kernel.org/g/1433753973-23684-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+[1] http://lkml.kernel.org/g/1436281823-1947-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
