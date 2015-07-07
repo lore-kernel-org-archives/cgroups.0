@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 3/9] cfq-iosched: fix oom cfq_queue ref leak in cfq_set_request()
-Date: Tue,  7 Jul 2015 11:35:55 -0400
-Message-ID: <1436283361-3889-4-git-send-email-tj@kernel.org>
+Subject: [PATCH 2/9] cfq-iosched: fix async oom queue handling
+Date: Tue,  7 Jul 2015 11:35:54 -0400
+Message-ID: <1436283361-3889-3-git-send-email-tj@kernel.org>
 References: <1436283361-3889-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=aBRutXkLY0cEIN0fDiZ3wzVD5+L44RBs9R/T/py2pnA=;
-        b=unwvGI9/2mMJTjmd3fE0cecti7rMtIDePDxbzq/TC5XMGnQRAE1NHuACIJlTeSgl/z
-         SqNgy5l2Ngw8aqk3uKR30afxv8B0VZzzUoxA4+mCAhCAF1fLnySrNUcbAdbZTjp5p+jE
-         nhjaEIFvm7M/O2ZbVOZm3Q9XL3J/+H9GgY+0dIhcP+J1EDHiVthjIFBVr8ujC24McdwP
-         6PjxuUAgl51lj8hbZ9Zy93V/HaRb0Bc+/mZtmG4iuhKoGJCXO7kmBhNElq/8JOWRxdk0
-         iS5vcM5WK+Bftr/muX2xa4qgZxfZzcLSK4E8oqlQ7k52gYEwnxXiYD5PVk0XutuWWwiz
-         qQkg==
+        bh=VwpWvZ/o3tBG4uT6u+wgVQMlgwZ53NWqSMUD2+Gv5Z8=;
+        b=DtqGNoZrD/IDsDh6/yciH5fwdJ9q3b7FaDXFEkl/FIxEB+yY0+LVJSZ38taPrm2hUA
+         3AdejgOTN7fnHMdrabW7XdDh8dVzm18j054KbCbNHVbDclZZOdtwYBaPeqZeDTOcnPTP
+         3+RE4Vi9vdSTtyO0PvB9rqD1S67UIZEO92yokJ6r6OIwS3U441uP1VHsITbb0oYh7my3
+         +P1PZ9CpeBF/U/85t4P8MYYVBNNpomhrq1sRK8UwAALmWxj4oLhdVOInSrKtcZYNRZzs
+         /n3KcLp/4XuDKFS6ZEOpdqkWFyyXyrINglmD/UdJomDgycI6RYDztFwr6x5hGbqibvAB
+         444g==
 In-Reply-To: <1436283361-3889-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,35 +23,40 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: jack@suse.cz, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com, vgoyal@redhat.com, Tejun Heo <tj@kernel.org>, Arianna Avanzini <avanzini.arianna@gmail.com>
 
-If the cfq_queue cached in cfq_io_cq is the oom one, cfq_set_request()
-replaces it by invoking cfq_get_queue() again without putting the oom
-queue leaking the reference it was holding.  While oom queues are not
-released through reference counting, they're still reference counted
-and this can theoretically lead to the reference count overflowing and
-incorrectly invoke the usual release path on it.
+Async cfqq's (cfq_queue's) are shared across cfq_data.  When
+cfq_get_queue() obtains a new queue from cfq_find_alloc_queue(), it
+stashes the pointer in cfq_data and reuses it from then on; however,
+the function doesn't consider that cfq_find_alloc_queue() may return
+the oom_cfqq under memory pressure and installs the returned queue
+unconditionally.
 
-Fix it by making cfq_set_request() put the ref it was holding.
+If the oom_cfqq is installed as an async cfqq, cfq_set_request() will
+continue calling cfq_get_queue() hoping to replace it with a proper
+queue; however, cfq_get_queue() will keep returning the cached queue
+for the slot - the oom_cfqq.
+
+Fix it by skipping caching if the queue is the oom one.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Acked-by: Jeff Moyer <jmoyer@redhat.com>
 Cc: Vivek Goyal <vgoyal@redhat.com>
 Cc: Arianna Avanzini <avanzini.arianna@gmail.com>
 ---
- block/cfq-iosched.c | 2 ++
- 1 file changed, 2 insertions(+)
+ block/cfq-iosched.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index baf0b70..8acfb7a 100644
+index e91093d..baf0b70 100644
 --- a/block/cfq-iosched.c
 +++ b/block/cfq-iosched.c
-@@ -4299,6 +4299,8 @@ cfq_set_request(struct request_queue *q, struct request *rq, struct bio *bio,
- new_queue:
- 	cfqq = cic_to_cfqq(cic, is_sync);
- 	if (!cfqq || cfqq == &cfqd->oom_cfqq) {
-+		if (cfqq)
-+			cfq_put_queue(cfqq);
- 		cfqq = cfq_get_queue(cfqd, is_sync, cic, bio, gfp_mask);
- 		cic_set_cfqq(cic, cfqq, is_sync);
- 	} else {
+@@ -3751,7 +3751,7 @@ cfq_get_queue(struct cfq_data *cfqd, bool is_sync, struct cfq_io_cq *cic,
+ 	/*
+ 	 * pin the queue now that it's allocated, scheduler exit will prune it
+ 	 */
+-	if (!is_sync) {
++	if (!is_sync && cfqq != &cfqd->oom_cfqq) {
+ 		cfqq->ref++;
+ 		*async_cfqq = cfqq;
+ 	}
 -- 
 2.4.3
