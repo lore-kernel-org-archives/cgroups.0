@@ -1,52 +1,46 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 3/7] blkcg: make blkcg_activate_policy() allow NULL ->pd_init_fn
-Date: Tue,  7 Jul 2015 11:51:29 -0400
-Message-ID: <1436284293-4666-4-git-send-email-tj@kernel.org>
+Subject: Re: [PATCHSET v2 block/for-4.3] blkcg: blkcg_policy methods cleanup
+Date: Tue, 7 Jul 2015 16:00:47 -0400
+Message-ID: <20150707200047.GC23362@mtj.duckdns.org>
 References: <1436284293-4666-1-git-send-email-tj@kernel.org>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Qxeo6Uo/6X/o6y+iPaMp9TnqTOBcnJh/BJiVvcN902c=;
-        b=uZZ6sa5yzo4jXxeBKejp43ne3GcwnHknQ+fko2KYFwLbICtx5Dk4lONdYD4qjOT5E5
-         K/e/5ZQ+USmnhRh2RuTQNWDFM7Y2eWzdgbCl/vwjpoO1AZHfXK6HmWgW3ix9/SsJY747
-         4m4VAFK4OLeeY3jHT3nkA7Y+ggHko6+Xo7BSGu26kNWmFLDOYvhsV095sxe+EjJuHAaN
-         v3bJrV74u0Bqe3iZk1E+NV0GMSdRQAOnDijl7WogsP/zMLqTgMJgAYOzwnSZZc6Hf6+r
-         gHQUZFM/GKNuwpeth/aVOVUQXct/sqiR9BXq1Vw/48a8JkYmREkfq48sNDsKc9V/U4I6
-         eILQ==
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=QUJqUxUS/Fe7zC0nmwEdjsaqSVkoyYbF/TcC1UObxvw=;
+        b=p/nLLQB2F3Y2KRmeB5CNw0sAtDqPYg42z4De0Wg8vvuLsGRfUVV331c02MaZ/NUVod
+         1MP3N+ixQxhvkEI5FEGEB+hhDGhb5kqwT9R5OQPXGB1/IRLxM+NCC/daHtBTd3asEA+H
+         hobr6YCSnUpy/BRFGe7qcgy+BvoE8JfHG0f+bhaGq6rb96JYl6TZ3G4SQqo7KlHGUza4
+         1UTYfmLb1KhWhG9kgPFzGVtKQYM/8JDaMIGnAP97t62cW98/j5+N16bu0HKXIiVElWEK
+         CX/LeXx/0fWuFXfv0IYZxxdk77zLsC3rSEtkeUtm4oIY3KB/UHCSARywld+VIpQ6Wnf5
+         0kww==
+Content-Disposition: inline
 In-Reply-To: <1436284293-4666-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: jack-AlSwsSmVLrQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: jack-AlSwsSmVLrQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-blkg_create() allows NULL ->pd_init_fn() but blkcg_activate_policy()
-doesn't.  As both in-kernel policies implement ->pd_init_fn, it
-currently doesn't break anything.  Update blkcg_activate_policy() so
-that its behavior is consistent with blkg_create().
+On Tue, Jul 07, 2015 at 11:51:26AM -0400, Tejun Heo wrote:
+> This is v2 of blkcg_policy methods cleanup patchset.  Changes from the
+> last take [L] are
+> 
+> * Rebased on top of v4.2-rc1 and other pending patches.  v4.2-rc1
+>   added a patch to add per-blkcg policy data which is allocated by
+>   blkcg core as per-blkcg_gq policy data was before this patchset
+>   making the two inconsistent.  I'll follow up with per-blkcg policy
+>   data update.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- block/blk-cgroup.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+While updating per-blkcg policy data handling, I discovered a couple
+bugs in policy data handling which should be backported through
+-stable.  I'll put those earlier in the series and repost this
+patchset.  Please ignore this one for now.
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 73209a8..e16d1dc 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -1112,7 +1112,8 @@ int blkcg_activate_policy(struct request_queue *q,
- 		blkg->pd[pol->plid] = pd;
- 		pd->blkg = blkg;
- 		pd->plid = pol->plid;
--		pol->pd_init_fn(blkg);
-+		if (pol->pd_init_fn)
-+			pol->pd_init_fn(blkg);
- 
- 		spin_unlock(&blkg->blkcg->lock);
- 	}
+Thanks.
+
 -- 
-2.4.3
+tejun
