@@ -1,80 +1,51 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCHSET v2 block/for-4.3] block, cgroup: make cfq charge async IOs to the appropriate blkcgs
-Date: Tue,  7 Jul 2015 11:35:52 -0400
-Message-ID: <1436283361-3889-1-git-send-email-tj@kernel.org>
+Subject: [PATCH 1/7] blkcg: remove unnecessary request_list->blkg NULL test in blk_put_rl()
+Date: Tue,  7 Jul 2015 11:51:27 -0400
+Message-ID: <1436284293-4666-2-git-send-email-tj@kernel.org>
+References: <1436284293-4666-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id;
-        bh=66PaIdWH3xjdXATxMcXXlVja4CLNbE6EH8/xKiR2v7U=;
-        b=o5hf+5dI55bPJCRzLnYoGo/JHZFkSHmm/Kx++wqY9IR0cBgjtHh9kSN+LL1b6JmrTy
-         vkl9VZiZatWWu2EAeZhBzf4Ejf3GBBXj5E4XXFR7H25g9D4aKdlYGPX8yrBJoirr8znF
-         ZycuuSLhZuejXO/k1TF0Npcqx6p2ZcBpSWVNS1OLW6THi+LXgIyJF57omoEHpDLstHR0
-         As8Uj8JT6mhaalNwodAIvvGrEB2ta6H1yAXtTgnudQ2s9luL/advUbzY9zxGlZ5IDbq6
-         xwt83J/2qmSN8vJ3pi3fyw3mawPngtMXjT3SWM0y4rJGfd4IMm33HhxPabJo0qlvsRCx
-         0YWg==
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=S+VHoy+GdIM0wa0hBMUNnoO0G+JVbTGGBdwR8o8OKZg=;
+        b=orxqQfVVATL0D1w2dqf9+kvc6JStfJxK3+LAgMHVUyhjhPROFCyz6WAlaHQENwZOyS
+         bRy3tiXt8Ik8eKKG7M/BPC0g8GPocDhajwpsN+EtIcd53qJG0SRy7F+fboQxUpOffNRZ
+         3RAggoeHO0B7qJAQZs7a/d/jEFUIAWt60mKFp9CEDDL9Qi6BUiezzIZh0eJPnqhnC3Sx
+         DVieLPn2L1vMmZD0jX1eO/bOsPnZCLIcMkyzXcJH0VQbKmHdz9HRo2R6I/kJGD5sHE2P
+         9Z5TBThVTpnWusjKvDELnEVhKYPb1NouBrmc51d+Usbeip+CQ9kvP9DwP/2VIzZFX/r0
+         UbJA==
+In-Reply-To: <1436284293-4666-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: jack-AlSwsSmVLrQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: jack-AlSwsSmVLrQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Hello,
+Since ec13b1d6f0a0 ("blkcg: always create the blkcg_gq for the root
+blkcg"), a request_list always has its blkg associated.  Drop
+unnecessary rl->blkg NULL test from blk_put_rl().
 
-This is v2 of cfq cgroup writeback patchset.  Changes from the last
-take[L] are
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ include/linux/blk-cgroup.h | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-* Switched from GFP_ATOMIC to GFP_NOWAIT as suggested by Jeff.
-
-* Other misc review points addressed, acks added and rebased.
-
-cfq has always charged all async IOs to the root cgroup.  It didn't
-have much choice as writeback didn't know about cgroups and there was
-no way to tell who to blame for a given writeback IO.  writeback
-finally grew support for cgroups and now tags each writeback IO with
-the appropriate cgroup to charge it against.
-
-This patchset updates cfq so that it follows the blkcg each bio is
-tagged with.  Async cfq_queues are now shared across cfq_group, which
-is per-cgroup, instead of per-request_queue cfq_data.  This makes all
-IOs follow the weight based IO resource distribution implemented by
-cfq.
-
-This patchset contains the following 8 patches.
-
- 0001-cfq-iosched-simplify-control-flow-in-cfq_get_queue.patch
- 0002-cfq-iosched-fix-async-oom-queue-handling.patch
- 0003-cfq-iosched-fix-oom-cfq_queue-ref-leak-in-cfq_set_re.patch
- 0004-cfq-iosched-minor-cleanups.patch
- 0005-blkcg-cfq-iosched-use-GFP_NOWAIT-instead-of-GFP_ATOM.patch
- 0006-cfq-iosched-remove-gfp_mask-from-cfq_find_alloc_queu.patch
- 0007-cfq-iosched-move-cfq_group-determination-from-cfq_fi.patch
- 0008-cfq-iosched-fold-cfq_find_alloc_queue-into-cfq_get_q.patch
- 0009-cfq-iosched-charge-async-IOs-to-the-appropriate-blkc.patch
-
-0001-0003 are a prep and two fix patches on top.  The bugs fixed by
-these patches are very unlikely to cause problems in actual usage, so
-the patches aren't tagged w/ -stable.
-
-0004-0008 are prep patches.
-
-0009 makes cfq cgroup-writeback ready.
-
-This patchset is on top of
-
-  d770e558e219 ("Linux 4.2-rc1")
-+ [1] [PATCHSET block/for-4.3] writeback: cgroup writeback updates
-
-diffstat follows, thanks.
-
- block/blk-cgroup.c  |    8 -
- block/cfq-iosched.c |  220 ++++++++++++++++++++--------------------------------
- 2 files changed, 89 insertions(+), 139 deletions(-)
-
---
-tejun
-
-[L] http://lkml.kernel.org/g/1433753973-23684-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-[1] http://lkml.kernel.org/g/1436281823-1947-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index 58cfab8..2e41f8c 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -399,8 +399,7 @@ static inline struct request_list *blk_get_rl(struct request_queue *q,
+  */
+ static inline void blk_put_rl(struct request_list *rl)
+ {
+-	/* root_rl may not have blkg set */
+-	if (rl->blkg && rl->blkg->blkcg != &blkcg_root)
++	if (rl->blkg->blkcg != &blkcg_root)
+ 		blkg_put(rl->blkg);
+ }
+ 
+-- 
+2.4.3
