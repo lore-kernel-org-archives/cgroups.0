@@ -1,260 +1,217 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 4/7] blkcg: replace blkcg_policy->pd_size with ->pd_alloc/free_fn() methods
-Date: Tue,  7 Jul 2015 11:51:30 -0400
-Message-ID: <1436284293-4666-5-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 7/7] blkcg: make blkcg_policy methods take a pointer to blkcg_policy_data
+Date: Tue,  7 Jul 2015 11:51:33 -0400
+Message-ID: <1436284293-4666-8-git-send-email-tj@kernel.org>
 References: <1436284293-4666-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=xdrRadQYPBxbe6b+OlqHKBsFkH06OPGQhcDmR7uJo/g=;
-        b=rezuPILlBgIN1eMhg1OVn9cSu/4S77gUT8s9J9U6PfGuR9c3ACrpaHiayqsepuQVmt
-         Vhr0Cw+93Vvb9qiIXlRqwLj0jmpMWUn21gN64An+bxOs87MKarn1s8UgrXplLkhuYADw
-         1vYM/89weYAQ4J8sVLbRujimKg/35IIUjNs17yNudPdi76dtKaYdZS8qndoAgBLQFcqC
-         Ple1vVtoapBVfzQfuOTT3qNHgH+es4AiCxeyTKkySrxYTltxUk2e7sMYXhf0IsNhGbn1
-         TjV+VIzhKlQpliwPp8CcPIFHRWs6Nsp00JLPnqiAjcunGocSO/CgFXVf2PH9KVqtoBVI
-         hvZw==
-In-Reply-To: <1436284293-4666-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=byn3xxUXXhzo2SW5wFGnBIth1qrMs3DAz1uGWGcKl6Q=;
+        b=Vk8AuNrH2w2+vl8Xv4Svs/Zs6uQSDAPKDFkaEJT3cuCNTfEs7TKS4gecB7gsMO8j0n
+         bbwpA+dMi5eGyBHTXT5r41Udz8XSAT7PHQYbC3T8MRCoumTUXAdN94BZa66n/Yj4ylRY
+         QMU4wGjU3oFU9geHRDWiMnZbvxH75ySIUj6KgCadMRvQKXK1raVA8Yc2WA91e/7Pbxrh
+         F3Ua3T9gI/ke5qtiSFKYa52QXY5+zugWTdB0hTPZRqzuXCTfl/0a+JP94TglMYCEyPyF
+         yRluSHrlNk/nwTJSOLa4KOQNrCdUUuXg/2ZDphAd80i79j3Xoj78Z96+A0RlS3gdI92E
+         rtyg==
+In-Reply-To: <1436284293-4666-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk
-Cc: jack@suse.cz, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com, vgoyal@redhat.com, avanzini.arianna@gmail.com, Tejun Heo <tj@kernel.org>
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: jack-AlSwsSmVLrQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-A blkg (blkcg_gq) represents the relationship between a cgroup and
-request_queue.  Each active policy has a pd (blkg_policy_data) on each
-blkg.  The pd's were allocated by blkcg core and each policy could
-request to allocate extra space at the end by setting
-blkcg_policy->pd_size larger than the size of pd.
+The newly added ->pd_alloc_fn() and ->pd_free_fn() deal with pd
+(blkg_policy_data) while the older ones use blkg (blkcg_gq).  As using
+blkg doesn't make sense for ->pd_alloc_fn() and after allocation pd
+can always be mapped to blkg and given that these are policy-specific
+methods, it makes sense to converge on pd.
 
-This is a bit unusual but was done this way mostly to simplify error
-handling and all the existing use cases could be handled this way;
-however, this is becoming too restrictive now that percpu memory can
-be allocated without blocking.
+This patch makes all methods deal with pd instead of blkg.  Most
+conversions are trivial.  In blk-cgroup.c, a couple method invocation
+sites now test whether pd exists instead of policy state for
+consistency.  This shouldn't cause any behavioral differences.
 
-This introduces two new mandatory blkcg_policy methods - pd_alloc_fn()
-and pd_free_fn() - which are used to allocate and release pd for a
-given policy.  As pd allocation is now done from policy side, it can
-simply allocate a larger area which embeds pd at the beginning.  This
-change makes ->pd_size pointless.  Removed.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Vivek Goyal <vgoyal@redhat.com>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- block/blk-cgroup.c         | 19 ++++++++++---------
- block/blk-throttle.c       | 13 ++++++++++++-
- block/cfq-iosched.c        | 13 ++++++++++++-
- include/linux/blk-cgroup.h | 18 +++++++++---------
- 4 files changed, 43 insertions(+), 20 deletions(-)
+ block/blk-cgroup.c         | 18 ++++++++----------
+ block/blk-throttle.c       | 13 +++++++------
+ block/cfq-iosched.c        | 14 +++++++-------
+ include/linux/blk-cgroup.h |  8 ++++----
+ 4 files changed, 26 insertions(+), 27 deletions(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index e16d1dc..0bf76e7 100644
+index 9180735..92c2a96 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -58,7 +58,8 @@ static void blkg_free(struct blkcg_gq *blkg)
- 		return;
+@@ -232,7 +232,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+ 		struct blkcg_policy *pol = blkcg_policy[i];
  
- 	for (i = 0; i < BLKCG_MAX_POLS; i++)
--		kfree(blkg->pd[i]);
-+		if (blkg->pd[i])
-+			blkcg_policy[i]->pd_free_fn(blkg->pd[i]);
+ 		if (blkg->pd[i] && pol->pd_init_fn)
+-			pol->pd_init_fn(blkg);
++			pol->pd_init_fn(blkg->pd[i]);
+ 	}
  
- 	if (blkg->blkcg != &blkcg_root)
- 		blk_exit_rl(&blkg->rl);
-@@ -104,7 +105,7 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
- 			continue;
+ 	/* insert */
+@@ -246,7 +246,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+ 			struct blkcg_policy *pol = blkcg_policy[i];
  
- 		/* alloc per-policy data and attach it to blkg */
--		pd = kzalloc_node(pol->pd_size, gfp_mask, q->node);
-+		pd = pol->pd_alloc_fn(gfp_mask, q->node);
- 		if (!pd)
- 			goto err_free;
+ 			if (blkg->pd[i] && pol->pd_online_fn)
+-				pol->pd_online_fn(blkg);
++				pol->pd_online_fn(blkg->pd[i]);
+ 		}
+ 	}
+ 	blkg->online = true;
+@@ -337,7 +337,7 @@ static void blkg_destroy(struct blkcg_gq *blkg)
+ 		struct blkcg_policy *pol = blkcg_policy[i];
  
-@@ -1059,7 +1060,7 @@ int blkcg_activate_policy(struct request_queue *q,
- 	 * for all existing blkgs.
- 	 */
- 	while (cnt--) {
--		pd = kzalloc_node(pol->pd_size, GFP_KERNEL, q->node);
-+		pd = pol->pd_alloc_fn(GFP_KERNEL, q->node);
- 		if (!pd) {
- 			ret = -ENOMEM;
- 			goto out_free;
-@@ -1125,7 +1126,7 @@ int blkcg_activate_policy(struct request_queue *q,
- out_free:
- 	blk_queue_bypass_end(q);
- 	list_for_each_entry_safe(pd, nd, &pds, alloc_node)
--		kfree(pd);
-+		pol->pd_free_fn(pd);
- 	list_for_each_entry_safe(cpd, cnd, &cpds, alloc_node)
- 		kfree(cpd);
- 	return ret;
-@@ -1162,8 +1163,11 @@ void blkcg_deactivate_policy(struct request_queue *q,
- 		if (pol->pd_exit_fn)
- 			pol->pd_exit_fn(blkg);
+ 		if (blkg->pd[i] && pol->pd_offline_fn)
+-			pol->pd_offline_fn(blkg);
++			pol->pd_offline_fn(blkg->pd[i]);
+ 	}
+ 	blkg->online = false;
  
--		kfree(blkg->pd[pol->plid]);
--		blkg->pd[pol->plid] = NULL;
-+		if (blkg->pd[pol->plid]) {
-+			pol->pd_free_fn(blkg->pd[pol->plid]);
-+			blkg->pd[pol->plid] = NULL;
-+		}
-+
- 		kfree(blkg->blkcg->pd[pol->plid]);
- 		blkg->blkcg->pd[pol->plid] = NULL;
+@@ -471,9 +471,8 @@ static int blkcg_reset_stats(struct cgroup_subsys_state *css,
+ 		for (i = 0; i < BLKCG_MAX_POLS; i++) {
+ 			struct blkcg_policy *pol = blkcg_policy[i];
  
-@@ -1186,9 +1190,6 @@ int blkcg_policy_register(struct blkcg_policy *pol)
- {
- 	int i, ret;
+-			if (blkcg_policy_enabled(blkg->q, pol) &&
+-			    pol->pd_reset_stats_fn)
+-				pol->pd_reset_stats_fn(blkg);
++			if (blkg->pd[i] && pol->pd_reset_stats_fn)
++				pol->pd_reset_stats_fn(blkg->pd[i]);
+ 		}
+ 	}
  
--	if (WARN_ON(pol->pd_size < sizeof(struct blkg_policy_data)))
--		return -EINVAL;
+@@ -1105,7 +1104,7 @@ int blkcg_activate_policy(struct request_queue *q,
+ 		pd->blkg = blkg;
+ 		pd->plid = pol->plid;
+ 		if (pol->pd_init_fn)
+-			pol->pd_init_fn(blkg);
++			pol->pd_init_fn(pd);
+ 
+ 		spin_unlock(&blkg->blkcg->lock);
+ 	}
+@@ -1149,10 +1148,9 @@ void blkcg_deactivate_policy(struct request_queue *q,
+ 		/* grab blkcg lock too while removing @pd from @blkg */
+ 		spin_lock(&blkg->blkcg->lock);
+ 
+-		if (pol->pd_offline_fn)
+-			pol->pd_offline_fn(blkg);
 -
- 	mutex_lock(&blkcg_pol_mutex);
- 
- 	/* find an empty slot */
+ 		if (blkg->pd[pol->plid]) {
++			if (pol->pd_offline_fn)
++				pol->pd_offline_fn(blkg->pd[pol->plid]);
+ 			pol->pd_free_fn(blkg->pd[pol->plid]);
+ 			blkg->pd[pol->plid] = NULL;
+ 		}
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index b231935..f1dd691 100644
+index c3a235b..c2c7547 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -403,6 +403,11 @@ static void throtl_service_queue_exit(struct throtl_service_queue *sq)
- 	del_timer_sync(&sq->pending_timer);
+@@ -377,9 +377,10 @@ static struct blkg_policy_data *throtl_pd_alloc(gfp_t gfp, int node)
+ 	return &tg->pd;
  }
  
-+static struct blkg_policy_data *throtl_pd_alloc(gfp_t gfp, int node)
-+{
-+	return kzalloc_node(sizeof(struct throtl_grp), gfp, node);
-+}
-+
- static void throtl_pd_init(struct blkcg_gq *blkg)
+-static void throtl_pd_init(struct blkcg_gq *blkg)
++static void throtl_pd_init(struct blkg_policy_data *pd)
  {
- 	struct throtl_grp *tg = blkg_to_tg(blkg);
-@@ -493,6 +498,11 @@ static void throtl_pd_exit(struct blkcg_gq *blkg)
- 	throtl_service_queue_exit(&tg->service_queue);
+-	struct throtl_grp *tg = blkg_to_tg(blkg);
++	struct throtl_grp *tg = pd_to_tg(pd);
++	struct blkcg_gq *blkg = tg_to_blkg(tg);
+ 	struct throtl_data *td = blkg->q->td;
+ 	struct throtl_service_queue *sq = &tg->service_queue;
+ 
+@@ -417,13 +418,13 @@ static void tg_update_has_rules(struct throtl_grp *tg)
+ 				    (tg->bps[rw] != -1 || tg->iops[rw] != -1);
  }
  
-+static void throtl_pd_free(struct blkg_policy_data *pd)
-+{
-+	kfree(pd);
-+}
-+
- static void throtl_pd_reset_stats(struct blkcg_gq *blkg)
+-static void throtl_pd_online(struct blkcg_gq *blkg)
++static void throtl_pd_online(struct blkg_policy_data *pd)
  {
- 	struct throtl_grp *tg = blkg_to_tg(blkg);
-@@ -1468,12 +1478,13 @@ static void throtl_shutdown_wq(struct request_queue *q)
+ 	/*
+ 	 * We don't want new groups to escape the limits of its ancestors.
+ 	 * Update has_rules[] after a new group is brought online.
+ 	 */
+-	tg_update_has_rules(blkg_to_tg(blkg));
++	tg_update_has_rules(pd_to_tg(pd));
  }
  
- static struct blkcg_policy blkcg_policy_throtl = {
--	.pd_size		= sizeof(struct throtl_grp),
- 	.cftypes		= throtl_files,
+ static void throtl_pd_free(struct blkg_policy_data *pd)
+@@ -435,9 +436,9 @@ static void throtl_pd_free(struct blkg_policy_data *pd)
+ 	kfree(tg);
+ }
  
-+	.pd_alloc_fn		= throtl_pd_alloc,
- 	.pd_init_fn		= throtl_pd_init,
- 	.pd_online_fn		= throtl_pd_online,
- 	.pd_exit_fn		= throtl_pd_exit,
-+	.pd_free_fn		= throtl_pd_free,
- 	.pd_reset_stats_fn	= throtl_pd_reset_stats,
- };
+-static void throtl_pd_reset_stats(struct blkcg_gq *blkg)
++static void throtl_pd_reset_stats(struct blkg_policy_data *pd)
+ {
+-	struct throtl_grp *tg = blkg_to_tg(blkg);
++	struct throtl_grp *tg = pd_to_tg(pd);
+ 	int cpu;
  
+ 	for_each_possible_cpu(cpu) {
 diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index 9c9ec7c..69ce288 100644
+index 4b795c7..95e6b0c 100644
 --- a/block/cfq-iosched.c
 +++ b/block/cfq-iosched.c
-@@ -1582,6 +1582,11 @@ static void cfq_cpd_init(const struct blkcg *blkcg)
- 	}
+@@ -1597,18 +1597,18 @@ static struct blkg_policy_data *cfq_pd_alloc(gfp_t gfp, int node)
+ 	return &cfqg->pd;
  }
  
-+static struct blkg_policy_data *cfq_pd_alloc(gfp_t gfp, int node)
-+{
-+	return kzalloc_node(sizeof(struct cfq_group), gfp, node);
-+}
-+
- static void cfq_pd_init(struct blkcg_gq *blkg)
+-static void cfq_pd_init(struct blkcg_gq *blkg)
++static void cfq_pd_init(struct blkg_policy_data *pd)
  {
- 	struct cfq_group *cfqg = blkg_to_cfqg(blkg);
-@@ -1618,6 +1623,11 @@ static void cfq_pd_offline(struct blkcg_gq *blkg)
- 	cfqg_stats_xfer_dead(cfqg);
+-	struct cfq_group *cfqg = blkg_to_cfqg(blkg);
+-	struct cfq_group_data *cgd = blkcg_to_cfqgd(blkg->blkcg);
++	struct cfq_group *cfqg = pd_to_cfqg(pd);
++	struct cfq_group_data *cgd = blkcg_to_cfqgd(pd->blkg->blkcg);
+ 
+ 	cfqg->weight = cgd->weight;
+ 	cfqg->leaf_weight = cgd->leaf_weight;
  }
  
-+static void cfq_pd_free(struct blkg_policy_data *pd)
-+{
-+	return kfree(pd);
-+}
-+
- /* offset delta from cfqg->stats to cfqg->dead_stats */
- static const int dead_stats_off_delta = offsetof(struct cfq_group, dead_stats) -
- 					offsetof(struct cfq_group, stats);
-@@ -4633,13 +4643,14 @@ static struct elevator_type iosched_cfq = {
+-static void cfq_pd_offline(struct blkcg_gq *blkg)
++static void cfq_pd_offline(struct blkg_policy_data *pd)
+ {
+-	struct cfq_group *cfqg = blkg_to_cfqg(blkg);
++	struct cfq_group *cfqg = pd_to_cfqg(pd);
+ 	int i;
  
- #ifdef CONFIG_CFQ_GROUP_IOSCHED
- static struct blkcg_policy blkcg_policy_cfq = {
--	.pd_size		= sizeof(struct cfq_group),
- 	.cpd_size		= sizeof(struct cfq_group_data),
- 	.cftypes		= cfq_blkcg_files,
+ 	for (i = 0; i < IOPRIO_BE_NR; i++) {
+@@ -1661,9 +1661,9 @@ static struct blkg_rwstat cfqg_rwstat_pd_recursive_sum(struct blkg_policy_data *
+ 	return a;
+ }
  
- 	.cpd_init_fn		= cfq_cpd_init,
-+	.pd_alloc_fn		= cfq_pd_alloc,
- 	.pd_init_fn		= cfq_pd_init,
- 	.pd_offline_fn		= cfq_pd_offline,
-+	.pd_free_fn		= cfq_pd_free,
- 	.pd_reset_stats_fn	= cfq_pd_reset_stats,
- };
- #endif
+-static void cfq_pd_reset_stats(struct blkcg_gq *blkg)
++static void cfq_pd_reset_stats(struct blkg_policy_data *pd)
+ {
+-	struct cfq_group *cfqg = blkg_to_cfqg(blkg);
++	struct cfq_group *cfqg = pd_to_cfqg(pd);
+ 
+ 	cfqg_stats_reset(&cfqg->stats);
+ 	cfqg_stats_reset(&cfqg->dead_stats);
 diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index 2e41f8c..a4d0998 100644
+index 06c0297..2db2c62 100644
 --- a/include/linux/blk-cgroup.h
 +++ b/include/linux/blk-cgroup.h
-@@ -67,13 +67,11 @@ struct blkg_rwstat {
-  * request_queue (q).  This is used by blkcg policies which need to track
-  * information per blkcg - q pair.
-  *
-- * There can be multiple active blkcg policies and each has its private
-- * data on each blkg, the size of which is determined by
-- * blkcg_policy->pd_size.  blkcg core allocates and frees such areas
-- * together with blkg and invokes pd_init/exit_fn() methods.
-- *
-- * Such private data must embed struct blkg_policy_data (pd) at the
-- * beginning and pd_size can't be smaller than pd.
-+ * There can be multiple active blkcg policies and each blkg:policy pair is
-+ * represented by a blkg_policy_data which is allocated and freed by each
-+ * policy's pd_alloc/free_fn() methods.  A policy can allocate private data
-+ * area by allocating larger data structure which embeds blkg_policy_data
-+ * at the beginning.
-  */
- struct blkg_policy_data {
- 	/* the blkg and policy id this per-policy data belongs to */
-@@ -134,16 +132,16 @@ struct blkcg_gq {
- };
+@@ -133,11 +133,11 @@ struct blkcg_gq {
  
  typedef void (blkcg_pol_init_cpd_fn)(const struct blkcg *blkcg);
-+typedef struct blkg_policy_data *(blkcg_pol_alloc_pd_fn)(gfp_t gfp, int node);
- typedef void (blkcg_pol_init_pd_fn)(struct blkcg_gq *blkg);
- typedef void (blkcg_pol_online_pd_fn)(struct blkcg_gq *blkg);
- typedef void (blkcg_pol_offline_pd_fn)(struct blkcg_gq *blkg);
- typedef void (blkcg_pol_exit_pd_fn)(struct blkcg_gq *blkg);
-+typedef void (blkcg_pol_free_pd_fn)(struct blkg_policy_data *pd);
- typedef void (blkcg_pol_reset_pd_stats_fn)(struct blkcg_gq *blkg);
+ typedef struct blkg_policy_data *(blkcg_pol_alloc_pd_fn)(gfp_t gfp, int node);
+-typedef void (blkcg_pol_init_pd_fn)(struct blkcg_gq *blkg);
+-typedef void (blkcg_pol_online_pd_fn)(struct blkcg_gq *blkg);
+-typedef void (blkcg_pol_offline_pd_fn)(struct blkcg_gq *blkg);
++typedef void (blkcg_pol_init_pd_fn)(struct blkg_policy_data *pd);
++typedef void (blkcg_pol_online_pd_fn)(struct blkg_policy_data *pd);
++typedef void (blkcg_pol_offline_pd_fn)(struct blkg_policy_data *pd);
+ typedef void (blkcg_pol_free_pd_fn)(struct blkg_policy_data *pd);
+-typedef void (blkcg_pol_reset_pd_stats_fn)(struct blkcg_gq *blkg);
++typedef void (blkcg_pol_reset_pd_stats_fn)(struct blkg_policy_data *pd);
  
  struct blkcg_policy {
  	int				plid;
--	/* policy specific private data size */
--	size_t				pd_size;
- 	/* policy specific per-blkcg data size */
- 	size_t				cpd_size;
- 	/* cgroup files for the policy */
-@@ -151,10 +149,12 @@ struct blkcg_policy {
- 
- 	/* operations */
- 	blkcg_pol_init_cpd_fn		*cpd_init_fn;
-+	blkcg_pol_alloc_pd_fn		*pd_alloc_fn;
- 	blkcg_pol_init_pd_fn		*pd_init_fn;
- 	blkcg_pol_online_pd_fn		*pd_online_fn;
- 	blkcg_pol_offline_pd_fn		*pd_offline_fn;
- 	blkcg_pol_exit_pd_fn		*pd_exit_fn;
-+	blkcg_pol_free_pd_fn		*pd_free_fn;
- 	blkcg_pol_reset_pd_stats_fn	*pd_reset_stats_fn;
- };
- 
 -- 
 2.4.3
