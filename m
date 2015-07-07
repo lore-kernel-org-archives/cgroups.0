@@ -1,32 +1,27 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH block/for-4.3] writeback: update writeback tracepoints to
- report cgroup
-Date: Mon, 6 Jul 2015 15:36:42 -0400
-Message-ID: <20150706193642.GA23362@mtj.duckdns.org>
-References: <1432329245-5844-1-git-send-email-tj@kernel.org>
- <1432329245-5844-41-git-send-email-tj@kernel.org>
- <20150701075009.GA7252@quack.suse.cz>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 5/5] writeback: update writeback tracepoints to report cgroup
+Date: Tue,  7 Jul 2015 11:10:23 -0400
+Message-ID: <1436281823-1947-6-git-send-email-tj@kernel.org>
+References: <1436281823-1947-1-git-send-email-tj@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=QGL0bfyZRTCeFbrxgCyVBNnZ15tr94TllPNXlFqsKxg=;
-        b=zybIfTokfWYizszJjXjNjbSLseDQ9EB0XbDdiKJtOnpHC0CyOJryo6lmKkNWdhO8FV
-         kFKRrakJSyOFQx/5/46/J+3n3kdOCr/mqiz+bKlqfkdl7Ti0TeBK9re3mpaoho+AJPco
-         qLVmorvkGEQmxcC3ucaGqfAedmAJOjc6+GCIoyoBrNEfqipzJp1gUejvRpK+02OjUYMB
-         NwkmrTkt4/asfwQIe4cnbTwiGFa33z/U3+Yvm3NoHdFr/DlVwPB7suwn+X5Ri5qAjt0E
-         lG0ASlZh2IMgavaomABL0eDtP866JkTuCiUGAKelnRNKu1zWfl+iVdIyZ4/fdqDXHAue
-         nhag==
-Content-Disposition: inline
-In-Reply-To: <20150701075009.GA7252-+0h/O2h83AeN3ZZ/Hiejyg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=Yzy8DSGDXpS3QrKY+e3YGz6yfVlpxpwo0TwWVR2VnT0=;
+        b=XCqva88AqoKwJHzlXHilqMPA0OtllbIaFzt5ZcD1CbynGvCYedRJu4rG8jxBjc0n5W
+         7jt3JEPOGHT2B4ep5mmospkTHV6E15EGmpM16/ZXxwDHFSpGtXpsXGTzhYWKVJpvXsYG
+         FDaCbZGBS+ZjUxZzupjjkxZ7zeLepzvXKbHOPz8QHBSQIATvHVidTVAMqB5IpuGwl9up
+         exIafj4N/2vZy0uuKf2FzbfkCUCJehWmiIOjKPjU0a1/3xU7foFf4zGABIadY8vkrWKZ
+         j4+z5I7S/QARwLYWYJQQObaqLynumIFKdqSoA7hjY2j8LEGRAbn0HZwC2QmkbmNtvU1c
+         Qwnw==
+In-Reply-To: <1436281823-1947-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org
+To: axboe@kernel.dk
+Cc: jack@suse.cz, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
 
 The following tracepoints are updated to report the cgroup used during
 cgroup writeback.
@@ -50,24 +45,19 @@ Note that writeback_bdi_register is separated out from writeback_class
 as reporting cgroup doesn't make sense to it.  Tracepoints which take
 bdi are updated to take bdi_writeback instead.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Jan Kara <jack@suse.cz>
 ---
-Hello,
-
-Will soon post this as part of a patch series of cgroup writeback
-updates.
-
-Thanks.
-
- fs/fs-writeback.c                |   14 +--
- include/trace/events/writeback.h |  180 ++++++++++++++++++++++++++++++---------
- mm/page-writeback.c              |    6 -
+ fs/fs-writeback.c                |  14 +--
+ include/trace/events/writeback.h | 180 ++++++++++++++++++++++++++++++---------
+ mm/page-writeback.c              |   6 +-
  3 files changed, 151 insertions(+), 49 deletions(-)
 
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index b5022c3..3fa5aa3 100644
 --- a/fs/fs-writeback.c
 +++ b/fs/fs-writeback.c
-@@ -176,7 +176,7 @@ static void wb_wakeup(struct bdi_writeba
+@@ -176,7 +176,7 @@ static void wb_wakeup(struct bdi_writeback *wb)
  static void wb_queue_work(struct bdi_writeback *wb,
  			  struct wb_writeback_work *work)
  {
@@ -76,7 +66,7 @@ Thanks.
  
  	spin_lock_bh(&wb->work_lock);
  	if (!test_bit(WB_registered, &wb->state))
-@@ -882,7 +882,7 @@ void wb_start_writeback(struct bdi_write
+@@ -882,7 +882,7 @@ void wb_start_writeback(struct bdi_writeback *wb, long nr_pages,
  	 */
  	work = kzalloc(sizeof(*work), GFP_ATOMIC);
  	if (!work) {
@@ -85,7 +75,7 @@ Thanks.
  		wb_wakeup(wb);
  		return;
  	}
-@@ -912,7 +912,7 @@ void wb_start_background_writeback(struc
+@@ -912,7 +912,7 @@ void wb_start_background_writeback(struct bdi_writeback *wb)
  	 * We just wake up the flusher thread. It will perform background
  	 * writeback as soon as there is no other work to do.
  	 */
@@ -94,7 +84,7 @@ Thanks.
  	wb_wakeup(wb);
  }
  
-@@ -1615,14 +1615,14 @@ static long wb_writeback(struct bdi_writ
+@@ -1615,14 +1615,14 @@ static long wb_writeback(struct bdi_writeback *wb,
  		} else if (work->for_background)
  			oldest_jif = jiffies;
  
@@ -111,7 +101,7 @@ Thanks.
  
  		wb_update_bandwidth(wb, wb_start);
  
-@@ -1647,7 +1647,7 @@ static long wb_writeback(struct bdi_writ
+@@ -1647,7 +1647,7 @@ static long wb_writeback(struct bdi_writeback *wb,
  		 * we'll just busyloop.
  		 */
  		if (!list_empty(&wb->b_more_io))  {
@@ -120,7 +110,7 @@ Thanks.
  			inode = wb_inode(wb->b_more_io.prev);
  			spin_lock(&inode->i_lock);
  			spin_unlock(&wb->list_lock);
-@@ -1753,7 +1753,7 @@ static long wb_do_writeback(struct bdi_w
+@@ -1753,7 +1753,7 @@ static long wb_do_writeback(struct bdi_writeback *wb)
  	while ((work = get_next_work_item(wb)) != NULL) {
  		struct wb_completion *done = work->done;
  
@@ -129,9 +119,11 @@ Thanks.
  
  		wrote += wb_writeback(wb, work);
  
+diff --git a/include/trace/events/writeback.h b/include/trace/events/writeback.h
+index a7aa607..fff846b 100644
 --- a/include/trace/events/writeback.h
 +++ b/include/trace/events/writeback.h
-@@ -131,6 +131,66 @@ DEFINE_EVENT(writeback_dirty_inode_templ
+@@ -131,6 +131,66 @@ DEFINE_EVENT(writeback_dirty_inode_template, writeback_dirty_inode,
  	TP_ARGS(inode, flags)
  );
  
@@ -198,7 +190,7 @@ Thanks.
  DECLARE_EVENT_CLASS(writeback_write_inode_template,
  
  	TP_PROTO(struct inode *inode, struct writeback_control *wbc),
-@@ -141,6 +201,7 @@ DECLARE_EVENT_CLASS(writeback_write_inod
+@@ -141,6 +201,7 @@ DECLARE_EVENT_CLASS(writeback_write_inode_template,
  		__array(char, name, 32)
  		__field(unsigned long, ino)
  		__field(int, sync_mode)
@@ -206,7 +198,7 @@ Thanks.
  	),
  
  	TP_fast_assign(
-@@ -148,12 +209,14 @@ DECLARE_EVENT_CLASS(writeback_write_inod
+@@ -148,12 +209,14 @@ DECLARE_EVENT_CLASS(writeback_write_inode_template,
  			dev_name(inode_to_bdi(inode)->dev), 32);
  		__entry->ino		= inode->i_ino;
  		__entry->sync_mode	= wbc->sync_mode;
@@ -223,7 +215,7 @@ Thanks.
  	)
  );
  
-@@ -172,8 +235,8 @@ DEFINE_EVENT(writeback_write_inode_templ
+@@ -172,8 +235,8 @@ DEFINE_EVENT(writeback_write_inode_template, writeback_write_inode,
  );
  
  DECLARE_EVENT_CLASS(writeback_work_class,
@@ -234,7 +226,7 @@ Thanks.
  	TP_STRUCT__entry(
  		__array(char, name, 32)
  		__field(long, nr_pages)
-@@ -183,10 +246,11 @@ DECLARE_EVENT_CLASS(writeback_work_class
+@@ -183,10 +246,11 @@ DECLARE_EVENT_CLASS(writeback_work_class,
  		__field(int, range_cyclic)
  		__field(int, for_background)
  		__field(int, reason)
@@ -247,7 +239,7 @@ Thanks.
  		__entry->nr_pages = work->nr_pages;
  		__entry->sb_dev = work->sb ? work->sb->s_dev : 0;
  		__entry->sync_mode = work->sync_mode;
-@@ -194,9 +258,10 @@ DECLARE_EVENT_CLASS(writeback_work_class
+@@ -194,9 +258,10 @@ DECLARE_EVENT_CLASS(writeback_work_class,
  		__entry->range_cyclic = work->range_cyclic;
  		__entry->for_background	= work->for_background;
  		__entry->reason = work->reason;
@@ -259,7 +251,7 @@ Thanks.
  		  __entry->name,
  		  MAJOR(__entry->sb_dev), MINOR(__entry->sb_dev),
  		  __entry->nr_pages,
-@@ -204,13 +269,14 @@ DECLARE_EVENT_CLASS(writeback_work_class
+@@ -204,13 +269,14 @@ DECLARE_EVENT_CLASS(writeback_work_class,
  		  __entry->for_kupdate,
  		  __entry->range_cyclic,
  		  __entry->for_background,
@@ -527,7 +519,7 @@ Thanks.
  	)
  );
  
-@@ -585,6 +684,7 @@ DECLARE_EVENT_CLASS(writeback_single_ino
+@@ -585,6 +684,7 @@ DECLARE_EVENT_CLASS(writeback_single_inode_template,
  		__field(unsigned long, writeback_index)
  		__field(long, nr_to_write)
  		__field(unsigned long, wrote)
@@ -535,7 +527,7 @@ Thanks.
  	),
  
  	TP_fast_assign(
-@@ -596,10 +696,11 @@ DECLARE_EVENT_CLASS(writeback_single_ino
+@@ -596,10 +696,11 @@ DECLARE_EVENT_CLASS(writeback_single_inode_template,
  		__entry->writeback_index = inode->i_mapping->writeback_index;
  		__entry->nr_to_write	= nr_to_write;
  		__entry->wrote		= nr_to_write - wbc->nr_to_write;
@@ -548,7 +540,7 @@ Thanks.
  		  __entry->name,
  		  __entry->ino,
  		  show_inode_state(__entry->state),
-@@ -607,7 +708,8 @@ DECLARE_EVENT_CLASS(writeback_single_ino
+@@ -607,7 +708,8 @@ DECLARE_EVENT_CLASS(writeback_single_inode_template,
  		  (jiffies - __entry->dirtied_when) / HZ,
  		  __entry->writeback_index,
  		  __entry->nr_to_write,
@@ -558,9 +550,11 @@ Thanks.
  	)
  );
  
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 22cddd3..802beeb 100644
 --- a/mm/page-writeback.c
 +++ b/mm/page-writeback.c
-@@ -1289,7 +1289,7 @@ static void wb_update_dirty_ratelimit(st
+@@ -1289,7 +1289,7 @@ static void wb_update_dirty_ratelimit(struct dirty_throttle_control *dtc,
  	wb->dirty_ratelimit = max(dirty_ratelimit, 1UL);
  	wb->balanced_dirty_ratelimit = balanced_dirty_ratelimit;
  
@@ -569,7 +563,7 @@ Thanks.
  }
  
  static void __wb_update_bandwidth(struct dirty_throttle_control *gdtc,
-@@ -1683,7 +1683,7 @@ static void balance_dirty_pages(struct a
+@@ -1683,7 +1683,7 @@ static void balance_dirty_pages(struct address_space *mapping,
  		 * do a reset, as it may be a light dirtier.
  		 */
  		if (pause < min_pause) {
@@ -578,7 +572,7 @@ Thanks.
  						  sdtc->thresh,
  						  sdtc->bg_thresh,
  						  sdtc->dirty,
-@@ -1712,7 +1712,7 @@ static void balance_dirty_pages(struct a
+@@ -1712,7 +1712,7 @@ static void balance_dirty_pages(struct address_space *mapping,
  		}
  
  pause:
@@ -587,3 +581,5 @@ Thanks.
  					  sdtc->thresh,
  					  sdtc->bg_thresh,
  					  sdtc->dirty,
+-- 
+2.4.3
