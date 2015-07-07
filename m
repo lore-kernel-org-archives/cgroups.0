@@ -1,19 +1,19 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 1/9] cfq-iosched: simplify control flow in cfq_get_queue()
-Date: Tue,  7 Jul 2015 11:35:53 -0400
-Message-ID: <1436283361-3889-2-git-send-email-tj@kernel.org>
+Subject: [PATCH 4/9] cfq-iosched: minor cleanups
+Date: Tue,  7 Jul 2015 11:35:56 -0400
+Message-ID: <1436283361-3889-5-git-send-email-tj@kernel.org>
 References: <1436283361-3889-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=QuxrYPag2EB9UZ8SVqfcutfxr00RR77M7xHeJQKcIO0=;
-        b=FtTMoKigjJOGeVdZfhziHvCbINV0HCPhoc8X5WwJEgCZDKN2h1k2XW5+TmZMOxQnB4
-         2H+rK7ya0/9c88x+PC1d6yHY64TQL/ceZPQZalU+grNAsREH2ufsNF+kNSzZpwb6S+0V
-         Wu5YhVDoPvVPWBX/qei3DgtiQWNbufxtfx332Yw/cvTVmQk1qan4YfCfbc+vKnBnIUkr
-         Waz+rXbOfwqybhYJy92ocix6afR9SgTOM6KC9pdBMA4MRG1M9sm+S32IJZeEYLcs2bDa
-         tuKcabLGf++fRk5bGgI+kBkfKxnEQb1fjjhGVvMvfhdf/pmi/YpeAeGg0LeZHuscVsoa
-         AxXQ==
+        bh=KXitS1RJJsWQt9ZeFzawaTeyS6fq7PNCXSPLCmXunLw=;
+        b=Xx+ARt4Fz9rRRpInh84SVj1RPBCk+Ln+tt8syknNavLXps24hnLFV5jtaZO8xstJH/
+         sTIQ/kxnOFcEZW8k2qb9a1idmn2piiAA6EGBYezuep7aIBRsDKptkFL4m3FrKXAWQCp5
+         zCc1Cpa7aGBjTiwe2yIAD8XRgWyA2Z9ZaZyAOeUHurYxrVP8Hi47xFZTCVWjIUNeORyX
+         CllMAHi0glHSalbvCO6IzgXq4lsKPmqGj0KiX1qRIPrNZV6BnX+7YSzCKJ9/duuML3+K
+         EqFE4gs9sjxT1em1n+Ti0mvRCQGAmRL4MNC1hBYpa14rg/6AqVbC7Edm5xYT0gteEsH8
+         iEVA==
 In-Reply-To: <1436283361-3889-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,90 +23,70 @@ Content-Transfer-Encoding: 7bit
 To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
 Cc: jack-AlSwsSmVLrQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Arianna Avanzini <avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-cfq_get_queue()'s control flow looks like the following.
+* Some were accessing cic->cfqq[] directly.  Always use cic_to_cfqq()
+  and cic_set_cfqq().
 
-	async_cfqq = NULL;
-	cfqq = NULL;
+* check_ioprio_changed() doesn't need to verify cfq_get_queue()'s
+  return for NULL.  It's always non-NULL.  Simplify accordingly.
 
-	if (!is_sync) {
-		...
-		async_cfqq = ...;
-		cfqq = *async_cfqq;
-	}
-
-	if (!cfqq)
-		cfqq = ...;
-
-	if (!is_sync && !(*async_cfqq))
-		...;
-
-The only thing the local variable init, the second if, and the
-async_cfqq test in the third if achieves is to skip cfqq creation and
-installation if *async_cfqq was already non-NULL.  This is needlessly
-complicated with different tests examining the same condition.
-Simplify it to the following.
-
-	if (!is_sync) {
-		...
-		async_cfqq = ...;
-		cfqq = *async_cfqq;
-		if (cfqq)
-			goto out;
-	}
-
-	cfqq = ...;
-
-	if (!is_sync)
-		...;
- out:
+This patch doesn't cause any functional changes.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Acked-by: Jeff Moyer <jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Cc: Arianna Avanzini <avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- block/cfq-iosched.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ block/cfq-iosched.c | 26 +++++++++++---------------
+ 1 file changed, 11 insertions(+), 15 deletions(-)
 
 diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index c62bb2e..e91093d 100644
+index 8acfb7a..bf6f49c 100644
 --- a/block/cfq-iosched.c
 +++ b/block/cfq-iosched.c
-@@ -3731,8 +3731,8 @@ cfq_get_queue(struct cfq_data *cfqd, bool is_sync, struct cfq_io_cq *cic,
- {
- 	int ioprio_class = IOPRIO_PRIO_CLASS(cic->ioprio);
- 	int ioprio = IOPRIO_PRIO_DATA(cic->ioprio);
--	struct cfq_queue **async_cfqq = NULL;
--	struct cfq_queue *cfqq = NULL;
-+	struct cfq_queue **async_cfqq;
-+	struct cfq_queue *cfqq;
+@@ -3506,14 +3506,14 @@ static void cfq_exit_icq(struct io_cq *icq)
+ 	struct cfq_io_cq *cic = icq_to_cic(icq);
+ 	struct cfq_data *cfqd = cic_to_cfqd(cic);
  
- 	if (!is_sync) {
- 		if (!ioprio_valid(cic->ioprio)) {
-@@ -3742,19 +3742,20 @@ cfq_get_queue(struct cfq_data *cfqd, bool is_sync, struct cfq_io_cq *cic,
- 		}
- 		async_cfqq = cfq_async_queue_prio(cfqd, ioprio_class, ioprio);
- 		cfqq = *async_cfqq;
-+		if (cfqq)
-+			goto out;
+-	if (cic->cfqq[BLK_RW_ASYNC]) {
+-		cfq_exit_cfqq(cfqd, cic->cfqq[BLK_RW_ASYNC]);
+-		cic->cfqq[BLK_RW_ASYNC] = NULL;
++	if (cic_to_cfqq(cic, false)) {
++		cfq_exit_cfqq(cfqd, cic_to_cfqq(cic, false));
++		cic_set_cfqq(cic, NULL, false);
  	}
  
--	if (!cfqq)
--		cfqq = cfq_find_alloc_queue(cfqd, is_sync, cic, bio, gfp_mask);
-+	cfqq = cfq_find_alloc_queue(cfqd, is_sync, cic, bio, gfp_mask);
- 
- 	/*
- 	 * pin the queue now that it's allocated, scheduler exit will prune it
- 	 */
--	if (!is_sync && !(*async_cfqq)) {
-+	if (!is_sync) {
- 		cfqq->ref++;
- 		*async_cfqq = cfqq;
+-	if (cic->cfqq[BLK_RW_SYNC]) {
+-		cfq_exit_cfqq(cfqd, cic->cfqq[BLK_RW_SYNC]);
+-		cic->cfqq[BLK_RW_SYNC] = NULL;
++	if (cic_to_cfqq(cic, true)) {
++		cfq_exit_cfqq(cfqd, cic_to_cfqq(cic, true));
++		cic_set_cfqq(cic, NULL, true);
  	}
--
-+out:
- 	cfqq->ref++;
- 	return cfqq;
  }
+ 
+@@ -3572,18 +3572,14 @@ static void check_ioprio_changed(struct cfq_io_cq *cic, struct bio *bio)
+ 	if (unlikely(!cfqd) || likely(cic->ioprio == ioprio))
+ 		return;
+ 
+-	cfqq = cic->cfqq[BLK_RW_ASYNC];
++	cfqq = cic_to_cfqq(cic, false);
+ 	if (cfqq) {
+-		struct cfq_queue *new_cfqq;
+-		new_cfqq = cfq_get_queue(cfqd, BLK_RW_ASYNC, cic, bio,
+-					 GFP_ATOMIC);
+-		if (new_cfqq) {
+-			cic->cfqq[BLK_RW_ASYNC] = new_cfqq;
+-			cfq_put_queue(cfqq);
+-		}
++		cfq_put_queue(cfqq);
++		cfqq = cfq_get_queue(cfqd, BLK_RW_ASYNC, cic, bio, GFP_ATOMIC);
++		cic_set_cfqq(cic, cfqq, false);
+ 	}
+ 
+-	cfqq = cic->cfqq[BLK_RW_SYNC];
++	cfqq = cic_to_cfqq(cic, true);
+ 	if (cfqq)
+ 		cfq_mark_cfqq_prio_changed(cfqq);
+ 
 -- 
 2.4.3
