@@ -1,240 +1,104 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 9/9] cfq-iosched: charge async IOs to the appropriate blkcg's instead of the root
-Date: Tue,  7 Jul 2015 11:36:01 -0400
-Message-ID: <1436283361-3889-10-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 5/9] blkcg, cfq-iosched: use GFP_NOWAIT instead of GFP_ATOMIC for non-critical allocations
+Date: Tue,  7 Jul 2015 11:35:57 -0400
+Message-ID: <1436283361-3889-6-git-send-email-tj@kernel.org>
 References: <1436283361-3889-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Wt5FJB9Y0j4Sy7NIlWWfjRsmqclC/1tkOmpjzgnpFjY=;
-        b=YWjSfhCiXIClOpVXS7ghdp87kJhj+LqmXWiqL55PRaYrnUIAxNHRlYngsTzVOE5iuR
-         wghcruQx1HzHMlPDqEFLalQilUwMeohQuk+PsBekb3zMhfjDhfyOuxVLlkFbcxqz+KZ2
-         HtWABWW5dphkmLCRZro+/CT4q0lMkNUMzTU/QWyQS8md0xTnuFHxVEzurvRgLWhFIlth
-         Q7mwi/7c6a0WWHIF2kdiQ7QynrTNtkbwUWBccf0wULeNtlaO4ty2zQoWkDAWjL/YJjaV
-         jW09gnqBYV56y8mFZ3KSFVzisf6QPI2fZyU/rc9S91NR30v3kumhPr/pIrlvmRgqKPgb
-         Frgg==
-In-Reply-To: <1436283361-3889-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=DFDk9Mo+OqY16KROFeMxduWqkEEO1NlO1sCtPgEqRlA=;
+        b=hQNc6RRjUneym/tG3D5Fai7dj04S/tVYBAxnRoqFAfzKCdKadPT8zZZUiUmyS1aJuQ
+         dw+6gsbFz8/Z0mdsdYAohWAThTJajRXZBtVJ5nBmeURsV3pemzz0cA39rZTUsXVDLbwy
+         NgaUexrJoXWOZE55Wy2PNNaQCWzZ0U2jHT5EZy/vA0B1m6xjWG++4FntQcPQ9tesU8YG
+         0FSY3+ICssNHl2Vf+G6xfiRpZI05yEASG/cw6fffgSn0HyPHg0NEGyBYiHv2SFneLR2D
+         hpZQ5NhIn7+7PAAUWvZOvtkfIXXGyVokQiuFakTSOS3Nl/nxhJ7knfd5AxpMh5/O02FI
+         hJXA==
+In-Reply-To: <1436283361-3889-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: jack-AlSwsSmVLrQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Arianna Avanzini <avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: axboe@kernel.dk
+Cc: jack@suse.cz, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com, vgoyal@redhat.com, Tejun Heo <tj@kernel.org>
 
-Up until now, all async IOs were queued to async queues which are
-shared across the whole request_queue, which means that blkcg resource
-control is completely void on async IOs including all writeback IOs.
-It was done this way because writeback didn't support writeback and
-there was no way of telling which writeback IO belonged to which
-cgroup; however, writeback recently became cgroup aware and writeback
-bio's are sent down properly tagged with the blkcg's to charge them
-against.
+blkcg performs several allocations to track IOs per cgroup and enforce
+resource control.  Most of these allocations are performed lazily on
+demand in the IO path and thus can't involve reclaim path.  Currently,
+these allocations use GFP_ATOMIC; however, blkcg can gracefully deal
+with occassional failures of these allocations by punting IOs to the
+root cgroup and there's no reason to reach into the emergency reserve.
 
-This patch makes async cfq_queues per-cfq_cgroup instead of
-per-cfq_data so that each async IO is charged to the blkcg that it was
-tagged for instead of unconditionally attributing it to root.
+This patch replaces GFP_ATOMIC with GFP_NOWAIT for the following
+allocations.
 
-* cfq_data->async_cfqq and ->async_idle_cfqq are moved to cfq_group
-  and alloc / destroy paths are updated accordingly.
+* bdi_writeback_congested and blkcg_gq allocations in blkg_create().
 
-* cfq_link_cfqq_cfqg() no longer overrides @cfqg to root for async
-  queues.
+* radix tree node allocations for blkcg->blkg_tree.
 
-* check_blkcg_changed() now also invalidates async queues as they no
-  longer stay the same across cgroups.
+* cfq_queue allocation on ioprio changes.
 
-After this patch, cfq's proportional IO control through blkio.weight
-works correctly when cgroup writeback is in use.
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Reviewed-by: Jeff Moyer <jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Arianna Avanzini <avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Suggested-and-Reviewed-by: Jeff Moyer <jmoyer@redhat.com>
+Suggested-by: Vivek Goyal <vgoyal@redhat.com>
 ---
- block/cfq-iosched.c | 85 ++++++++++++++++++++++++++---------------------------
- 1 file changed, 42 insertions(+), 43 deletions(-)
+ block/blk-cgroup.c  | 8 ++++----
+ block/cfq-iosched.c | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 9f97da5..dacd95d 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -178,7 +178,7 @@ EXPORT_SYMBOL_GPL(blkg_lookup);
+ 
+ /*
+  * If @new_blkg is %NULL, this function tries to allocate a new one as
+- * necessary using %GFP_ATOMIC.  @new_blkg is always consumed on return.
++ * necessary using %GFP_NOWAIT.  @new_blkg is always consumed on return.
+  */
+ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+ 				    struct request_queue *q,
+@@ -198,7 +198,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+ 	}
+ 
+ 	wb_congested = wb_congested_get_create(&q->backing_dev_info,
+-					       blkcg->css.id, GFP_ATOMIC);
++					       blkcg->css.id, GFP_NOWAIT);
+ 	if (!wb_congested) {
+ 		ret = -ENOMEM;
+ 		goto err_put_css;
+@@ -206,7 +206,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+ 
+ 	/* allocate */
+ 	if (!new_blkg) {
+-		new_blkg = blkg_alloc(blkcg, q, GFP_ATOMIC);
++		new_blkg = blkg_alloc(blkcg, q, GFP_NOWAIT);
+ 		if (unlikely(!new_blkg)) {
+ 			ret = -ENOMEM;
+ 			goto err_put_congested;
+@@ -870,7 +870,7 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
+ 
+ done:
+ 	spin_lock_init(&blkcg->lock);
+-	INIT_RADIX_TREE(&blkcg->blkg_tree, GFP_ATOMIC);
++	INIT_RADIX_TREE(&blkcg->blkg_tree, GFP_NOWAIT);
+ 	INIT_HLIST_HEAD(&blkcg->blkg_list);
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 	INIT_LIST_HEAD(&blkcg->cgwb_list);
 diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index fa2a2f7..9c9ec7c 100644
+index bf6f49c..5f11929 100644
 --- a/block/cfq-iosched.c
 +++ b/block/cfq-iosched.c
-@@ -305,6 +305,11 @@ struct cfq_group {
- 	struct cfq_ttime ttime;
- 	struct cfqg_stats stats;	/* stats for this cfqg */
- 	struct cfqg_stats dead_stats;	/* stats pushed from dead children */
-+
-+	/* async queue for each priority case */
-+	struct cfq_queue *async_cfqq[2][IOPRIO_BE_NR];
-+	struct cfq_queue *async_idle_cfqq;
-+
- };
- 
- struct cfq_io_cq {
-@@ -370,12 +375,6 @@ struct cfq_data {
- 	struct cfq_queue *active_queue;
- 	struct cfq_io_cq *active_cic;
- 
--	/*
--	 * async queue for each priority case
--	 */
--	struct cfq_queue *async_cfqq[2][IOPRIO_BE_NR];
--	struct cfq_queue *async_idle_cfqq;
--
- 	sector_t last_position;
- 
- 	/*
-@@ -401,6 +400,7 @@ struct cfq_data {
- };
- 
- static struct cfq_group *cfq_get_next_cfqg(struct cfq_data *cfqd);
-+static void cfq_put_queue(struct cfq_queue *cfqq);
- 
- static struct cfq_rb_root *st_for(struct cfq_group *cfqg,
- 					    enum wl_class_t class,
-@@ -1596,13 +1596,26 @@ static void cfq_pd_init(struct blkcg_gq *blkg)
- 
- static void cfq_pd_offline(struct blkcg_gq *blkg)
- {
-+	struct cfq_group *cfqg = blkg_to_cfqg(blkg);
-+	int i;
-+
-+	for (i = 0; i < IOPRIO_BE_NR; i++) {
-+		if (cfqg->async_cfqq[0][i])
-+			cfq_put_queue(cfqg->async_cfqq[0][i]);
-+		if (cfqg->async_cfqq[1][i])
-+			cfq_put_queue(cfqg->async_cfqq[1][i]);
-+	}
-+
-+	if (cfqg->async_idle_cfqq)
-+		cfq_put_queue(cfqg->async_idle_cfqq);
-+
- 	/*
- 	 * @blkg is going offline and will be ignored by
- 	 * blkg_[rw]stat_recursive_sum().  Transfer stats to the parent so
- 	 * that they don't get lost.  If IOs complete after this point, the
- 	 * stats for them will be lost.  Oh well...
- 	 */
--	cfqg_stats_xfer_dead(blkg_to_cfqg(blkg));
-+	cfqg_stats_xfer_dead(cfqg);
- }
- 
- /* offset delta from cfqg->stats to cfqg->dead_stats */
-@@ -1665,10 +1678,6 @@ static struct cfq_group *cfq_lookup_create_cfqg(struct cfq_data *cfqd,
- 
- static void cfq_link_cfqq_cfqg(struct cfq_queue *cfqq, struct cfq_group *cfqg)
- {
--	/* Currently, all async queues are mapped to root group */
--	if (!cfq_cfqq_sync(cfqq))
--		cfqg = cfqq->cfqd->root_group;
--
- 	cfqq->cfqg = cfqg;
- 	/* cfqq reference on cfqg */
- 	cfqg_get(cfqg);
-@@ -3609,7 +3618,7 @@ static void cfq_init_cfqq(struct cfq_data *cfqd, struct cfq_queue *cfqq,
- static void check_blkcg_changed(struct cfq_io_cq *cic, struct bio *bio)
- {
- 	struct cfq_data *cfqd = cic_to_cfqd(cic);
--	struct cfq_queue *sync_cfqq;
-+	struct cfq_queue *cfqq;
- 	uint64_t serial_nr;
- 
- 	rcu_read_lock();
-@@ -3623,15 +3632,22 @@ static void check_blkcg_changed(struct cfq_io_cq *cic, struct bio *bio)
- 	if (unlikely(!cfqd) || likely(cic->blkcg_serial_nr == serial_nr))
- 		return;
- 
--	sync_cfqq = cic_to_cfqq(cic, 1);
--	if (sync_cfqq) {
--		/*
--		 * Drop reference to sync queue. A new sync queue will be
--		 * assigned in new group upon arrival of a fresh request.
--		 */
--		cfq_log_cfqq(cfqd, sync_cfqq, "changed cgroup");
--		cic_set_cfqq(cic, NULL, 1);
--		cfq_put_queue(sync_cfqq);
-+	/*
-+	 * Drop reference to queues.  New queues will be assigned in new
-+	 * group upon arrival of fresh requests.
-+	 */
-+	cfqq = cic_to_cfqq(cic, false);
-+	if (cfqq) {
-+		cfq_log_cfqq(cfqd, cfqq, "changed cgroup");
-+		cic_set_cfqq(cic, NULL, false);
-+		cfq_put_queue(cfqq);
-+	}
-+
-+	cfqq = cic_to_cfqq(cic, true);
-+	if (cfqq) {
-+		cfq_log_cfqq(cfqd, cfqq, "changed cgroup");
-+		cic_set_cfqq(cic, NULL, true);
-+		cfq_put_queue(cfqq);
+@@ -3575,7 +3575,7 @@ static void check_ioprio_changed(struct cfq_io_cq *cic, struct bio *bio)
+ 	cfqq = cic_to_cfqq(cic, false);
+ 	if (cfqq) {
+ 		cfq_put_queue(cfqq);
+-		cfqq = cfq_get_queue(cfqd, BLK_RW_ASYNC, cic, bio, GFP_ATOMIC);
++		cfqq = cfq_get_queue(cfqd, BLK_RW_ASYNC, cic, bio, GFP_NOWAIT);
+ 		cic_set_cfqq(cic, cfqq, false);
  	}
  
- 	cic->blkcg_serial_nr = serial_nr;
-@@ -3641,18 +3657,18 @@ static inline void check_blkcg_changed(struct cfq_io_cq *cic, struct bio *bio) {
- #endif  /* CONFIG_CFQ_GROUP_IOSCHED */
- 
- static struct cfq_queue **
--cfq_async_queue_prio(struct cfq_data *cfqd, int ioprio_class, int ioprio)
-+cfq_async_queue_prio(struct cfq_group *cfqg, int ioprio_class, int ioprio)
- {
- 	switch (ioprio_class) {
- 	case IOPRIO_CLASS_RT:
--		return &cfqd->async_cfqq[0][ioprio];
-+		return &cfqg->async_cfqq[0][ioprio];
- 	case IOPRIO_CLASS_NONE:
- 		ioprio = IOPRIO_NORM;
- 		/* fall through */
- 	case IOPRIO_CLASS_BE:
--		return &cfqd->async_cfqq[1][ioprio];
-+		return &cfqg->async_cfqq[1][ioprio];
- 	case IOPRIO_CLASS_IDLE:
--		return &cfqd->async_idle_cfqq;
-+		return &cfqg->async_idle_cfqq;
- 	default:
- 		BUG();
- 	}
-@@ -3681,7 +3697,7 @@ cfq_get_queue(struct cfq_data *cfqd, bool is_sync, struct cfq_io_cq *cic,
- 			ioprio = task_nice_ioprio(tsk);
- 			ioprio_class = task_nice_ioclass(tsk);
- 		}
--		async_cfqq = cfq_async_queue_prio(cfqd, ioprio_class, ioprio);
-+		async_cfqq = cfq_async_queue_prio(cfqg, ioprio_class, ioprio);
- 		cfqq = *async_cfqq;
- 		if (cfqq)
- 			goto out;
-@@ -4355,21 +4371,6 @@ static void cfq_shutdown_timer_wq(struct cfq_data *cfqd)
- 	cancel_work_sync(&cfqd->unplug_work);
- }
- 
--static void cfq_put_async_queues(struct cfq_data *cfqd)
--{
--	int i;
--
--	for (i = 0; i < IOPRIO_BE_NR; i++) {
--		if (cfqd->async_cfqq[0][i])
--			cfq_put_queue(cfqd->async_cfqq[0][i]);
--		if (cfqd->async_cfqq[1][i])
--			cfq_put_queue(cfqd->async_cfqq[1][i]);
--	}
--
--	if (cfqd->async_idle_cfqq)
--		cfq_put_queue(cfqd->async_idle_cfqq);
--}
--
- static void cfq_exit_queue(struct elevator_queue *e)
- {
- 	struct cfq_data *cfqd = e->elevator_data;
-@@ -4382,8 +4383,6 @@ static void cfq_exit_queue(struct elevator_queue *e)
- 	if (cfqd->active_queue)
- 		__cfq_slice_expired(cfqd, cfqd->active_queue, 0);
- 
--	cfq_put_async_queues(cfqd);
--
- 	spin_unlock_irq(q->queue_lock);
- 
- 	cfq_shutdown_timer_wq(cfqd);
 -- 
 2.4.3
