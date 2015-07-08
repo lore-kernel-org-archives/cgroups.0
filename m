@@ -1,247 +1,304 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH block/for-4.3] writeback: remove
- wb_writeback_work->single_wait/done
-Date: Wed, 8 Jul 2015 10:24:53 +0200
-Message-ID: <20150708082453.GC725@quack.suse.cz>
-References: <1432329245-5844-1-git-send-email-tj@kernel.org>
- <1432329245-5844-46-git-send-email-tj@kernel.org>
- <20150701190735.GI7252@quack.suse.cz>
- <20150703221223.GH5273@mtj.duckdns.org>
+From: Vladimir Davydov <vdavydov@parallels.com>
+Subject: Re: [PATCH -mm v6 0/6] idle memory tracking
+Date: Wed, 8 Jul 2015 20:47:42 +0300
+Message-ID: <20150708174742.GI2436@esperanza>
+References: <cover.1434102076.git.vdavydov@parallels.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20150703221223.GH5273@mtj.duckdns.org>
+In-Reply-To: <cover.1434102076.git.vdavydov@parallels.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, axboe@kernel.dk, linux-kernel@vger.kernel.org, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Minchan Kim <minchan@kernel.org>, Raghavendra K T <raghavendra.kt@linux.vnet.ibm.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Michel Lespinasse <walken@google.com>, David Rientjes <rientjes@google.com>, Pavel Emelyanov <xemul@parallels.com>, Cyrill Gorcunov <gorcunov@openvz.org>, Jonathan Corbet <corbet@lwn.net>, linux-api@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri 03-07-15 18:12:23, Tejun Heo wrote:
-> Hello, Jan.
-> 
-> So, something like the following.  It depends on other changes so
-> won't apply as-is.  I'll repost it as part of a patchset once -rc1
-> drops.
-> 
-> Thanks!
-> 
-> ------ 8< ------
-> wb_writeback_work->single_wait/done are used for the wait mechanism
-> for synchronous wb_work (wb_writeback_work) items which are issued
-> when bdi_split_work_to_wbs() fails to allocate memory for asynchronous
-> wb_work items; however, there's no reason to use a separate wait
-> mechanism for this.  bdi_split_work_to_wbs() can simply use on-stack
-> fallback wb_work item and separate wb_completion to wait for it.
-> 
-> This patch removes wb_work->single_wait/done and the related code and
-> make bdi_split_work_to_wbs() use on-stack fallback wb_work and
-> wb_completion instead.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Suggested-by: Jan Kara <jack@suse.cz>
+Hi,
 
-Thanks! The patch looks good. You can add:
+Any comments, thoughts, proposals regarding this patch? Any chance for
+it to get merged?
 
-Reviewed-by: Jan Kara <jack@suse.com>
+Thanks,
+Vladimir
 
-								Honza
-
-> ---
->  fs/fs-writeback.c |  116 +++++++++++++-----------------------------------------
->  1 file changed, 30 insertions(+), 86 deletions(-)
+On Fri, Jun 12, 2015 at 12:52:20PM +0300, Vladimir Davydov wrote:
+> Hi,
 > 
-> --- a/fs/fs-writeback.c
-> +++ b/fs/fs-writeback.c
-> @@ -53,8 +53,6 @@ struct wb_writeback_work {
->  	unsigned int for_background:1;
->  	unsigned int for_sync:1;	/* sync(2) WB_SYNC_ALL writeback */
->  	unsigned int auto_free:1;	/* free on completion */
-> -	unsigned int single_wait:1;
-> -	unsigned int single_done:1;
->  	enum wb_reason reason;		/* why was writeback initiated? */
->  
->  	struct list_head list;		/* pending work list */
-> @@ -181,11 +179,8 @@ static void wb_queue_work(struct bdi_wri
->  	trace_writeback_queue(wb->bdi, work);
->  
->  	spin_lock_bh(&wb->work_lock);
-> -	if (!test_bit(WB_registered, &wb->state)) {
-> -		if (work->single_wait)
-> -			work->single_done = 1;
-> +	if (!test_bit(WB_registered, &wb->state))
->  		goto out_unlock;
-> -	}
->  	if (work->done)
->  		atomic_inc(&work->done->cnt);
->  	list_add_tail(&work->list, &wb->work_list);
-> @@ -737,32 +732,6 @@ int inode_congested(struct inode *inode,
->  EXPORT_SYMBOL_GPL(inode_congested);
->  
->  /**
-> - * wb_wait_for_single_work - wait for completion of a single bdi_writeback_work
-> - * @bdi: bdi the work item was issued to
-> - * @work: work item to wait for
-> - *
-> - * Wait for the completion of @work which was issued to one of @bdi's
-> - * bdi_writeback's.  The caller must have set @work->single_wait before
-> - * issuing it.  This wait operates independently fo
-> - * wb_wait_for_completion() and also disables automatic freeing of @work.
-> - */
-> -static void wb_wait_for_single_work(struct backing_dev_info *bdi,
-> -				    struct wb_writeback_work *work)
-> -{
-> -	if (WARN_ON_ONCE(!work->single_wait))
-> -		return;
-> -
-> -	wait_event(bdi->wb_waitq, work->single_done);
-> -
-> -	/*
-> -	 * Paired with smp_wmb() in wb_do_writeback() and ensures that all
-> -	 * modifications to @work prior to assertion of ->single_done is
-> -	 * visible to the caller once this function returns.
-> -	 */
-> -	smp_rmb();
-> -}
-> -
-> -/**
->   * wb_split_bdi_pages - split nr_pages to write according to bandwidth
->   * @wb: target bdi_writeback to split @nr_pages to
->   * @nr_pages: number of pages to write for the whole bdi
-> @@ -791,38 +760,6 @@ static long wb_split_bdi_pages(struct bd
->  }
->  
->  /**
-> - * wb_clone_and_queue_work - clone a wb_writeback_work and issue it to a wb
-> - * @wb: target bdi_writeback
-> - * @base_work: source wb_writeback_work
-> - *
-> - * Try to make a clone of @base_work and issue it to @wb.  If cloning
-> - * succeeds, %true is returned; otherwise, @base_work is issued directly
-> - * and %false is returned.  In the latter case, the caller is required to
-> - * wait for @base_work's completion using wb_wait_for_single_work().
-> - *
-> - * A clone is auto-freed on completion.  @base_work never is.
-> - */
-> -static bool wb_clone_and_queue_work(struct bdi_writeback *wb,
-> -				    struct wb_writeback_work *base_work)
-> -{
-> -	struct wb_writeback_work *work;
-> -
-> -	work = kmalloc(sizeof(*work), GFP_ATOMIC);
-> -	if (work) {
-> -		*work = *base_work;
-> -		work->auto_free = 1;
-> -		work->single_wait = 0;
-> -	} else {
-> -		work = base_work;
-> -		work->auto_free = 0;
-> -		work->single_wait = 1;
-> -	}
-> -	work->single_done = 0;
-> -	wb_queue_work(wb, work);
-> -	return work != base_work;
-> -}
-> -
-> -/**
->   * bdi_split_work_to_wbs - split a wb_writeback_work to all wb's of a bdi
->   * @bdi: target backing_dev_info
->   * @base_work: wb_writeback_work to issue
-> @@ -837,7 +774,6 @@ static void bdi_split_work_to_wbs(struct
->  				  struct wb_writeback_work *base_work,
->  				  bool skip_if_busy)
->  {
-> -	long nr_pages = base_work->nr_pages;
->  	int next_memcg_id = 0;
->  	struct bdi_writeback *wb;
->  	struct wb_iter iter;
-> @@ -849,17 +785,39 @@ static void bdi_split_work_to_wbs(struct
->  restart:
->  	rcu_read_lock();
->  	bdi_for_each_wb(wb, bdi, &iter, next_memcg_id) {
-> +		DEFINE_WB_COMPLETION_ONSTACK(fallback_work_done);
-> +		struct wb_writeback_work fallback_work;
-> +		struct wb_writeback_work *work;
-> +		long nr_pages;
-> +
->  		if (!wb_has_dirty_io(wb) ||
->  		    (skip_if_busy && writeback_in_progress(wb)))
->  			continue;
->  
-> -		base_work->nr_pages = wb_split_bdi_pages(wb, nr_pages);
-> -		if (!wb_clone_and_queue_work(wb, base_work)) {
-> -			next_memcg_id = wb->memcg_css->id + 1;
-> -			rcu_read_unlock();
-> -			wb_wait_for_single_work(bdi, base_work);
-> -			goto restart;
-> +		nr_pages = wb_split_bdi_pages(wb, base_work->nr_pages);
-> +
-> +		work = kmalloc(sizeof(*work), GFP_ATOMIC);
-> +		if (work) {
-> +			*work = *base_work;
-> +			work->nr_pages = nr_pages;
-> +			work->auto_free = 1;
-> +			wb_queue_work(wb, work);
-> +			continue;
->  		}
-> +
-> +		/* alloc failed, execute synchronously using on-stack fallback */
-> +		work = &fallback_work;
-> +		*work = *base_work;
-> +		work->nr_pages = nr_pages;
-> +		work->auto_free = 0;
-> +		work->done = &fallback_work_done;
-> +
-> +		wb_queue_work(wb, work);
-> +
-> +		next_memcg_id = wb->memcg_css->id + 1;
-> +		rcu_read_unlock();
-> +		wb_wait_for_completion(bdi, &fallback_work_done);
-> +		goto restart;
->  	}
->  	rcu_read_unlock();
->  }
-> @@ -901,8 +859,6 @@ static void bdi_split_work_to_wbs(struct
->  	if (bdi_has_dirty_io(bdi) &&
->  	    (!skip_if_busy || !writeback_in_progress(&bdi->wb))) {
->  		base_work->auto_free = 0;
-> -		base_work->single_wait = 0;
-> -		base_work->single_done = 0;
->  		wb_queue_work(&bdi->wb, base_work);
->  	}
->  }
-> @@ -1793,26 +1749,14 @@ static long wb_do_writeback(struct bdi_w
->  	set_bit(WB_writeback_running, &wb->state);
->  	while ((work = get_next_work_item(wb)) != NULL) {
->  		struct wb_completion *done = work->done;
-> -		bool need_wake_up = false;
->  
->  		trace_writeback_exec(wb->bdi, work);
->  
->  		wrote += wb_writeback(wb, work);
->  
-> -		if (work->single_wait) {
-> -			WARN_ON_ONCE(work->auto_free);
-> -			/* paired w/ rmb in wb_wait_for_single_work() */
-> -			smp_wmb();
-> -			work->single_done = 1;
-> -			need_wake_up = true;
-> -		} else if (work->auto_free) {
-> +		if (work->auto_free)
->  			kfree(work);
-> -		}
-> -
->  		if (done && atomic_dec_and_test(&done->cnt))
-> -			need_wake_up = true;
-> -
-> -		if (need_wake_up)
->  			wake_up_all(&wb->bdi->wb_waitq);
->  	}
->  
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+> This patch set introduces a new user API for tracking user memory pages
+> that have not been used for a given period of time. The purpose of this
+> is to provide the userspace with the means of tracking a workload's
+> working set, i.e. the set of pages that are actively used by the
+> workload. Knowing the working set size can be useful for partitioning
+> the system more efficiently, e.g. by tuning memory cgroup limits
+> appropriately, or for job placement within a compute cluster.
+> 
+> ---- USE CASES ----
+> 
+> The unified cgroup hierarchy has memory.low and memory.high knobs, which
+> are defined as the low and high boundaries for the workload working set
+> size. However, the working set size of a workload may be unknown or
+> change in time. With this patch set, one can periodically estimate the
+> amount of memory unused by each cgroup and tune their memory.low and
+> memory.high parameters accordingly, therefore optimizing the overall
+> memory utilization.
+> 
+> Another use case is balancing workloads within a compute cluster.
+> Knowing how much memory is not really used by a workload unit may help
+> take a more optimal decision when considering migrating the unit to
+> another node within the cluster.
+> 
+> Also, as noted by Minchan, this would be useful for per-process reclaim
+> (https://lwn.net/Articles/545668/). With idle tracking, we could reclaim idle
+> pages only by smart user memory manager.
+> 
+> ---- USER API ----
+> 
+> The user API consists of two new proc files:
+> 
+>  * /proc/kpageidle.  This file implements a bitmap where each bit corresponds
+>    to a page, indexed by PFN. When the bit is set, the corresponding page is
+>    idle. A page is considered idle if it has not been accessed since it was
+>    marked idle. To mark a page idle one should set the bit corresponding to the
+>    page by writing to the file. A value written to the file is OR-ed with the
+>    current bitmap value. Only user memory pages can be marked idle, for other
+>    page types input is silently ignored. Writing to this file beyond max PFN
+>    results in the ENXIO error. Only available when CONFIG_IDLE_PAGE_TRACKING is
+>    set.
+> 
+>    This file can be used to estimate the amount of pages that are not
+>    used by a particular workload as follows:
+> 
+>    1. mark all pages of interest idle by setting corresponding bits in the
+>       /proc/kpageidle bitmap
+>    2. wait until the workload accesses its working set
+>    3. read /proc/kpageidle and count the number of bits set
+> 
+>  * /proc/kpagecgroup.  This file contains a 64-bit inode number of the
+>    memory cgroup each page is charged to, indexed by PFN. Only available when
+>    CONFIG_MEMCG is set.
+> 
+>    This file can be used to find all pages (including unmapped file
+>    pages) accounted to a particular cgroup. Using /proc/kpageidle, one
+>    can then estimate the cgroup working set size.
+> 
+> For an example of using these files for estimating the amount of unused
+> memory pages per each memory cgroup, please see the script attached
+> below.
+> 
+> ---- REASONING ----
+> 
+> The reason to introduce the new user API instead of using
+> /proc/PID/{clear_refs,smaps} is that the latter has two serious
+> drawbacks:
+> 
+>  - it does not count unmapped file pages
+>  - it affects the reclaimer logic
+> 
+> The new API attempts to overcome them both. For more details on how it
+> is achieved, please see the comment to patch 5.
+> 
+> ---- CHANGE LOG ----
+> 
+> Changes in v6:
+> 
+>  - Split the patch introducing page_cgroup_ino helper to ease review.
+>  - Rebase on top of v4.1-rc7-mmotm-2015-06-09-16-55
+> 
+> Changes in v5:
+> 
+>  - Fix possible race between kpageidle_clear_pte_refs() and
+>    __page_set_anon_rmap() by checking that a page is on an LRU list
+>    under zone->lru_lock (Minchan).
+>  - Export idle flag via /proc/kpageflags (Minchan).
+>  - Rebase on top of 4.1-rc3.
+> 
+> Changes in v4:
+> 
+> This iteration primarily addresses Minchan's comments to v3:
+> 
+>  - Implement /proc/kpageidle as a bitmap instead of using u64 per each page,
+>    because there does not seem to be any future uses for the other 63 bits.
+>  - Do not double-increase pra->referenced in page_referenced_one() if the page
+>    was young and referenced recently.
+>  - Remove the pointless (page_count == 0) check from kpageidle_get_page().
+>  - Rename kpageidle_clear_refs() to kpageidle_clear_pte_refs().
+>  - Improve comments to kpageidle-related functions.
+>  - Rebase on top of 4.1-rc2.
+> 
+> Note it does not address Minchan's concern of possible __page_set_anon_rmap vs
+> page_referenced race (see https://lkml.org/lkml/2015/5/3/220) since it is still
+> unclear if this race can really happen (see https://lkml.org/lkml/2015/5/4/160)
+> 
+> Changes in v3:
+> 
+>  - Enable CONFIG_IDLE_PAGE_TRACKING for 32 bit. Since this feature
+>    requires two extra page flags and there is no space for them on 32
+>    bit, page ext is used (thanks to Minchan Kim).
+>  - Minor code cleanups and comments improved.
+>  - Rebase on top of 4.1-rc1.
+> 
+> Changes in v2:
+> 
+>  - The main difference from v1 is the API change. In v1 the user can
+>    only set the idle flag for all pages at once, and for clearing the
+>    Idle flag on pages accessed via page tables /proc/PID/clear_refs
+>    should be used.
+>    The main drawback of the v1 approach, as noted by Minchan, is that on
+>    big machines setting the idle flag for each pages can result in CPU
+>    bursts, which would be especially frustrating if the user only wanted
+>    to estimate the amount of idle pages for a particular process or VMA.
+>    With the new API a more fine-grained approach is possible: one can
+>    read a process's /proc/PID/pagemap and set/check the Idle flag only
+>    for those pages of the process's address space he or she is
+>    interested in.
+>    Another good point about the v2 API is that it is possible to limit
+>    /proc/kpage* scanning rate when the user wants to estimate the total
+>    number of idle pages, which is unachievable with the v1 approach.
+>  - Make /proc/kpagecgroup return the ino of the closest online ancestor
+>    in case the cgroup a page is charged to is offline.
+>  - Fix /proc/PID/clear_refs not clearing Young page flag.
+>  - Rebase on top of v4.0-rc6-mmotm-2015-04-01-14-54
+> 
+> v4: https://lkml.org/lkml/2015/5/7/580
+> v3: https://lkml.org/lkml/2015/4/28/224
+> v2: https://lkml.org/lkml/2015/4/7/260
+> v1: https://lkml.org/lkml/2015/3/18/794
+> 
+> ---- PATCH SET STRUCTURE ----
+> 
+> The patch set is organized as follows:
+> 
+>  - patch 1 adds page_cgroup_ino() helper for the sake of
+>    /proc/kpagecgroup and patches 2-3 do related cleanup
+>  - patch 4 adds /proc/kpagecgroup, which reports cgroup ino each page is
+>    charged to
+>  - patch 5 implements the idle page tracking feature, including the
+>    userspace API, /proc/kpageidle
+>  - patch 6 exports idle flag via /proc/kpageflags
+> 
+> ---- SIMILAR WORKS ----
+> 
+> Originally, the patch for tracking idle memory was proposed back in 2011
+> by Michel Lespinasse (see http://lwn.net/Articles/459269/). The main
+> difference between Michel's patch and this one is that Michel
+> implemented a kernel space daemon for estimating idle memory size per
+> cgroup while this patch only provides the userspace with the minimal API
+> for doing the job, leaving the rest up to the userspace. However, they
+> both share the same idea of Idle/Young page flags to avoid affecting the
+> reclaimer logic.
+> 
+> ---- SCRIPT FOR COUNTING IDLE PAGES PER CGROUP ----
+> #! /usr/bin/python
+> #
+> 
+> import os
+> import stat
+> import errno
+> import struct
+> 
+> CGROUP_MOUNT = "/sys/fs/cgroup/memory"
+> BUFSIZE = 8 * 1024  # must be multiple of 8
+> 
+> 
+> def set_idle():
+>     f = open("/proc/kpageidle", "wb", BUFSIZE)
+>     while True:
+>         try:
+>             f.write(struct.pack("Q", pow(2, 64) - 1))
+>         except IOError as err:
+>             if err.errno == errno.ENXIO:
+>                 break
+>             raise
+>     f.close()
+> 
+> 
+> def count_idle():
+>     f_flags = open("/proc/kpageflags", "rb", BUFSIZE)
+>     f_cgroup = open("/proc/kpagecgroup", "rb", BUFSIZE)
+>     f_idle = open("/proc/kpageidle", "rb", BUFSIZE)
+> 
+>     pfn = 0
+>     nr_idle = {}
+>     while True:
+>         s = f_flags.read(8)
+>         if not s:
+>             break
+> 
+>         flags, = struct.unpack('Q', s)
+>         cgino, = struct.unpack('Q', f_cgroup.read(8))
+> 
+>         bit = pfn % 64
+>         if not bit:
+>             idle_bitmap, = struct.unpack('Q', f_idle.read(8))
+> 
+>         idle = idle_bitmap >> bit & 1
+>         pfn += 1
+> 
+>         unevictable = flags >> 18 & 1
+>         huge = flags >> 22 & 1
+> 
+>         if idle and not unevictable:
+>             nr_idle[cgino] = nr_idle.get(cgino, 0) + (512 if huge else 1)
+> 
+>     f_flags.close()
+>     f_cgroup.close()
+>     f_idle.close()
+>     return nr_idle
+> 
+> 
+> print "Setting the idle flag for each page..."
+> set_idle()
+> 
+> raw_input("Wait until the workload accesses its working set, then press Enter")
+> 
+> print "Counting idle pages..."
+> nr_idle = count_idle()
+> 
+> for dir, subdirs, files in os.walk(CGROUP_MOUNT):
+>     ino = os.stat(dir)[stat.ST_INO]
+>     print dir + ": " + str(nr_idle.get(ino, 0) * 4) + " KB"
+> ---- END SCRIPT ----
+> 
+> Comments are more than welcome.
+> 
+> Thanks,
+> 
+> Vladimir Davydov (6):
+>   memcg: add page_cgroup_ino helper
+>   hwpoison: use page_cgroup_ino for filtering by memcg
+>   memcg: zap try_get_mem_cgroup_from_page
+>   proc: add kpagecgroup file
+>   proc: add kpageidle file
+>   proc: export idle flag via kpageflags
+> 
+>  Documentation/vm/pagemap.txt           |  22 +++-
+>  fs/proc/page.c                         | 234 +++++++++++++++++++++++++++++++++
+>  fs/proc/task_mmu.c                     |   4 +-
+>  include/linux/memcontrol.h             |   7 +-
+>  include/linux/mm.h                     |  88 +++++++++++++
+>  include/linux/page-flags.h             |   9 ++
+>  include/linux/page_ext.h               |   4 +
+>  include/uapi/linux/kernel-page-flags.h |   1 +
+>  mm/Kconfig                             |  12 ++
+>  mm/debug.c                             |   4 +
+>  mm/hwpoison-inject.c                   |   5 +-
+>  mm/memcontrol.c                        |  71 +++++-----
+>  mm/memory-failure.c                    |  16 +--
+>  mm/page_ext.c                          |   3 +
+>  mm/rmap.c                              |   8 ++
+>  mm/swap.c                              |   2 +
+>  16 files changed, 428 insertions(+), 62 deletions(-)
+> 
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo@kvack.org.  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> 
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
