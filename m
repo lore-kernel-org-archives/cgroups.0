@@ -1,31 +1,67 @@
-From: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Subject: Re: [PATCH 4/5] kernfs: implement kernfs_path_len()
-Date: Tue, 7 Jul 2015 15:39:25 -0700
-Message-ID: <20150707223925.GA30851@kroah.com>
-References: <1436281823-1947-1-git-send-email-tj@kernel.org>
- <1436281823-1947-5-git-send-email-tj@kernel.org>
- <20150707151218.GB23362@mtj.duckdns.org>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH block/for-4.3] writeback: explain why @inode is allowed
+ to be NULL for inode_congested()
+Date: Wed, 8 Jul 2015 10:12:49 +0200
+Message-ID: <20150708081248.GA725@quack.suse.cz>
+References: <1432329245-5844-1-git-send-email-tj@kernel.org>
+ <1432329245-5844-31-git-send-email-tj@kernel.org>
+ <20150630152105.GP7252@quack.suse.cz>
+ <20150702014634.GF26440@mtj.duckdns.org>
+ <20150703121721.GJ23329@quack.suse.cz>
+ <20150704151200.GA13251@mtj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20150707151218.GB23362-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20150704151200.GA13251@mtj.duckdns.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, axboe@kernel.dk, linux-kernel@vger.kernel.org, hch@infradead.org, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, vgoyal@redhat.com, lizefan@huawei.com, cgroups@vger.kernel.org, linux-mm@kvack.org, mhocko@suse.cz, clm@fb.com, fengguang.wu@intel.com, david@fromorbit.com, gthelen@google.com, khlebnikov@yandex-team.ru
 
-On Tue, Jul 07, 2015 at 11:12:18AM -0400, Tejun Heo wrote:
-> On Tue, Jul 07, 2015 at 11:10:22AM -0400, Tejun Heo wrote:
-> > Add a function to determine the path length of a kernfs node.  This
-> > for now will be used by writeback tracepoint updates.
-> > 
-> > Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> > Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+On Sat 04-07-15 11:12:00, Tejun Heo wrote:
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Suggested-by: Jan Kara <jack@suse.cz>
+> ---
+> Hello,
 > 
-> Greg, would it be okay to route this together with writeback changes?
+> So, something like this.  I'll resend this patch as part of a patch
+> series once -rc1 drops.
+  Looks good. Thanks!
 
-No objection from me at all:
+								Honza
 
-Acked-by: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+>  fs/fs-writeback.c |    5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> --- a/fs/fs-writeback.c
+> +++ b/fs/fs-writeback.c
+> @@ -700,7 +700,7 @@ void wbc_account_io(struct writeback_con
+>  
+>  /**
+>   * inode_congested - test whether an inode is congested
+> - * @inode: inode to test for congestion
+> + * @inode: inode to test for congestion (may be NULL)
+>   * @cong_bits: mask of WB_[a]sync_congested bits to test
+>   *
+>   * Tests whether @inode is congested.  @cong_bits is the mask of congestion
+> @@ -710,6 +710,9 @@ void wbc_account_io(struct writeback_con
+>   * determined by whether the cgwb (cgroup bdi_writeback) for the blkcg
+>   * associated with @inode is congested; otherwise, the root wb's congestion
+>   * state is used.
+> + *
+> + * @inode is allowed to be NULL as this function is often called on
+> + * mapping->host which is NULL for the swapper space.
+>   */
+>  int inode_congested(struct inode *inode, int cong_bits)
+>  {
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
