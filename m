@@ -1,11 +1,11 @@
 From: Bandan Das <bsd@redhat.com>
-Subject: [RFC PATCH 1/4] vhost: Introduce a universal thread to serve all users
-Date: Mon, 13 Jul 2015 00:07:32 -0400
-Message-ID: <1436760455-5686-2-git-send-email-bsd@redhat.com>
+Subject: [RFC PATCH 2/4] vhost: Limit the number of devices served by a single worker thread
+Date: Mon, 13 Jul 2015 00:07:33 -0400
+Message-ID: <1436760455-5686-3-git-send-email-bsd@redhat.com>
 References: <1436760455-5686-1-git-send-email-bsd@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <kvm-owner@vger.kernel.org>
 In-Reply-To: <1436760455-5686-1-git-send-email-bsd@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: kvm-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -13,454 +13,318 @@ Content-Transfer-Encoding: 7bit
 To: kvm@vger.kernel.org
 Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org, mst@redhat.com, Eyal Moscovici <EYALMO@il.ibm.com>, Razya Ladelsky <RAZYA@il.ibm.com>, cgroups@vger.kernel.org, jasowang@redhat.com
 
-vhost threads are per-device, but in most cases a single thread
-is enough. This change creates a single thread that is used to
-serve all guests.
+When the number of devices increase, the universal thread model
+(introduced in the preceding patch) may end up being the bottleneck.
+Moreover, a single worker thread also forces us to change cgroups
+based on the device we are serving.
 
-However, this complicates cgroups associations. The current policy
-is to attach the per-device thread to all cgroups of the parent process
-that the device is associated it. This is no longer possible if we
-have a single thread. So, we end up moving the thread around to
-cgroups of whichever device that needs servicing. This is a very
-inefficient protocol but seems to be the only way to integrate
-cgroups support.
+We introduce a worker pool struct that starts with one worker
+thread and we keep adding more threads when the numbers of devs
+reaches a certain threshold. The default value is set at 7 but is
+not based on any empirical data. The value can also be changed by
+the user with the devs_per_worker module parameter.
+
+Note that this patch doesn't change how cgroups work. We still
+keep moving around the worker thread to the cgroups of the
+device we are serving at the moment.
 
 Signed-off-by: Razya Ladelsky <razya@il.ibm.com>
 Signed-off-by: Bandan Das <bsd@redhat.com>
 ---
- drivers/vhost/scsi.c  |  15 +++--
- drivers/vhost/vhost.c | 150 ++++++++++++++++++++++++--------------------------
- drivers/vhost/vhost.h |  19 +++++--
- 3 files changed, 97 insertions(+), 87 deletions(-)
+ drivers/vhost/net.c   |   6 +--
+ drivers/vhost/scsi.c  |   3 +-
+ drivers/vhost/vhost.c | 135 +++++++++++++++++++++++++++++++++++++++++---------
+ drivers/vhost/vhost.h |  13 ++++-
+ 4 files changed, 128 insertions(+), 29 deletions(-)
 
+diff --git a/drivers/vhost/net.c b/drivers/vhost/net.c
+index 7d137a4..7bfa019 100644
+--- a/drivers/vhost/net.c
++++ b/drivers/vhost/net.c
+@@ -705,7 +705,8 @@ static int vhost_net_open(struct inode *inode, struct file *f)
+ 		n->vqs[i].vhost_hlen = 0;
+ 		n->vqs[i].sock_hlen = 0;
+ 	}
+-	vhost_dev_init(dev, vqs, VHOST_NET_VQ_MAX);
++	if (vhost_dev_init(dev, vqs, VHOST_NET_VQ_MAX))
++		return dev->err;
+ 
+ 	vhost_poll_init(n->poll + VHOST_NET_VQ_TX, handle_tx_net, POLLOUT, dev);
+ 	vhost_poll_init(n->poll + VHOST_NET_VQ_RX, handle_rx_net, POLLIN, dev);
+@@ -801,9 +802,6 @@ static int vhost_net_release(struct inode *inode, struct file *f)
+ 		sockfd_put(rx_sock);
+ 	/* Make sure no callbacks are outstanding */
+ 	synchronize_rcu_bh();
+-	/* We do an extra flush before freeing memory,
+-	 * since jobs can re-queue themselves. */
+-	vhost_net_flush(n);
+ 	kfree(n->dev.vqs);
+ 	kvfree(n);
+ 	return 0;
 diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index ea32b38..6c42936 100644
+index 6c42936..97de2db 100644
 --- a/drivers/vhost/scsi.c
 +++ b/drivers/vhost/scsi.c
-@@ -535,7 +535,7 @@ static void vhost_scsi_complete_cmd(struct vhost_scsi_cmd *cmd)
- 
- 	llist_add(&cmd->tvc_completion_list, &vs->vs_completion_list);
- 
--	vhost_work_queue(&vs->dev, &vs->vs_completion_work);
-+	vhost_work_queue(vs->dev.worker, &vs->vs_completion_work);
- }
- 
- static int vhost_scsi_queue_data_in(struct se_cmd *se_cmd)
-@@ -1282,7 +1282,7 @@ vhost_scsi_send_evt(struct vhost_scsi *vs,
+@@ -1601,7 +1601,8 @@ static int vhost_scsi_open(struct inode *inode, struct file *f)
+ 		vqs[i] = &vs->vqs[i].vq;
+ 		vs->vqs[i].vq.handle_kick = vhost_scsi_handle_kick;
  	}
+-	vhost_dev_init(&vs->dev, vqs, VHOST_SCSI_MAX_VQ);
++	if (vhost_dev_init(&vs->dev, vqs, VHOST_SCSI_MAX_VQ))
++		return vs->dev.err;
  
- 	llist_add(&evt->list, &vs->vs_event_list);
--	vhost_work_queue(&vs->dev, &vs->vs_event_work);
-+	vhost_work_queue(vs->dev.worker, &vs->vs_event_work);
- }
+ 	vhost_scsi_init_inflight(vs, NULL);
  
- static void vhost_scsi_evt_handle_kick(struct vhost_work *work)
-@@ -1335,8 +1335,8 @@ static void vhost_scsi_flush(struct vhost_scsi *vs)
- 	/* Flush both the vhost poll and vhost work */
- 	for (i = 0; i < VHOST_SCSI_MAX_VQ; i++)
- 		vhost_scsi_flush_vq(vs, i);
--	vhost_work_flush(&vs->dev, &vs->vs_completion_work);
--	vhost_work_flush(&vs->dev, &vs->vs_event_work);
-+	vhost_work_flush(vs->dev.worker, &vs->vs_completion_work);
-+	vhost_work_flush(vs->dev.worker, &vs->vs_event_work);
- 
- 	/* Wait for all reqs issued before the flush to be finished */
- 	for (i = 0; i < VHOST_SCSI_MAX_VQ; i++)
-@@ -1584,8 +1584,11 @@ static int vhost_scsi_open(struct inode *inode, struct file *f)
- 	if (!vqs)
- 		goto err_vqs;
- 
--	vhost_work_init(&vs->vs_completion_work, vhost_scsi_complete_cmd_work);
--	vhost_work_init(&vs->vs_event_work, vhost_scsi_evt_work);
-+	vhost_work_init(&vs->dev, &vs->vs_completion_work,
-+			vhost_scsi_complete_cmd_work);
-+
-+	vhost_work_init(&vs->dev, &vs->vs_event_work,
-+			vhost_scsi_evt_work);
- 
- 	vs->vs_events_nr = 0;
- 	vs->vs_events_missed = false;
 diff --git a/drivers/vhost/vhost.c b/drivers/vhost/vhost.c
-index 2ee2826..951c96b 100644
+index 951c96b..6a5d4c0 100644
 --- a/drivers/vhost/vhost.c
 +++ b/drivers/vhost/vhost.c
-@@ -11,6 +11,8 @@
-  * Generic code for virtio server in host kernel.
-  */
- 
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
- #include <linux/eventfd.h>
- #include <linux/vhost.h>
- #include <linux/uio.h>
-@@ -28,6 +30,9 @@
+@@ -27,11 +27,19 @@
+ #include <linux/kthread.h>
+ #include <linux/cgroup.h>
+ #include <linux/module.h>
++#include <linux/moduleparam.h>
  
  #include "vhost.h"
  
-+/* Just one worker thread to service all devices */
-+static struct vhost_worker *worker;
+-/* Just one worker thread to service all devices */
+-static struct vhost_worker *worker;
++static int __read_mostly devs_per_worker = 7;
++module_param(devs_per_worker, int, S_IRUGO);
++MODULE_PARM_DESC(devs_per_worker, "Setup the number of devices being served by a worker thread");
 +
++/* Only used to give a unique id to a vhost thread at the moment */
++static unsigned int total_vhost_workers;
++
++/* Pool of vhost threads */
++static struct vhost_pool *vhost_pool;
+ 
  enum {
  	VHOST_MEMORY_MAX_NREGIONS = 64,
- 	VHOST_MEMORY_F_LOG = 0x1,
-@@ -58,13 +63,15 @@ static int vhost_poll_wakeup(wait_queue_t *wait, unsigned mode, int sync,
+@@ -270,6 +278,63 @@ static int vhost_worker(void *data)
  	return 0;
  }
  
--void vhost_work_init(struct vhost_work *work, vhost_work_fn_t fn)
-+void vhost_work_init(struct vhost_dev *dev,
-+		     struct vhost_work *work, vhost_work_fn_t fn)
- {
- 	INIT_LIST_HEAD(&work->node);
- 	work->fn = fn;
- 	init_waitqueue_head(&work->done);
- 	work->flushing = 0;
- 	work->queue_seq = work->done_seq = 0;
-+	work->dev = dev;
- }
- EXPORT_SYMBOL_GPL(vhost_work_init);
- 
-@@ -78,7 +85,7 @@ void vhost_poll_init(struct vhost_poll *poll, vhost_work_fn_t fn,
- 	poll->dev = dev;
- 	poll->wqh = NULL;
- 
--	vhost_work_init(&poll->work, fn);
-+	vhost_work_init(dev, &poll->work, fn);
- }
- EXPORT_SYMBOL_GPL(vhost_poll_init);
- 
-@@ -116,30 +123,30 @@ void vhost_poll_stop(struct vhost_poll *poll)
- }
- EXPORT_SYMBOL_GPL(vhost_poll_stop);
- 
--static bool vhost_work_seq_done(struct vhost_dev *dev, struct vhost_work *work,
--				unsigned seq)
-+static bool vhost_work_seq_done(struct vhost_worker *worker,
-+				struct vhost_work *work, unsigned seq)
- {
- 	int left;
- 
--	spin_lock_irq(&dev->work_lock);
-+	spin_lock_irq(&worker->work_lock);
- 	left = seq - work->done_seq;
--	spin_unlock_irq(&dev->work_lock);
-+	spin_unlock_irq(&worker->work_lock);
- 	return left <= 0;
- }
- 
--void vhost_work_flush(struct vhost_dev *dev, struct vhost_work *work)
-+void vhost_work_flush(struct vhost_worker *worker, struct vhost_work *work)
- {
- 	unsigned seq;
- 	int flushing;
- 
--	spin_lock_irq(&dev->work_lock);
-+	spin_lock_irq(&worker->work_lock);
- 	seq = work->queue_seq;
- 	work->flushing++;
--	spin_unlock_irq(&dev->work_lock);
--	wait_event(work->done, vhost_work_seq_done(dev, work, seq));
--	spin_lock_irq(&dev->work_lock);
-+	spin_unlock_irq(&worker->work_lock);
-+	wait_event(work->done, vhost_work_seq_done(worker, work, seq));
-+	spin_lock_irq(&worker->work_lock);
- 	flushing = --work->flushing;
--	spin_unlock_irq(&dev->work_lock);
-+	spin_unlock_irq(&worker->work_lock);
- 	BUG_ON(flushing < 0);
- }
- EXPORT_SYMBOL_GPL(vhost_work_flush);
-@@ -148,29 +155,30 @@ EXPORT_SYMBOL_GPL(vhost_work_flush);
-  * locks that are also used by the callback. */
- void vhost_poll_flush(struct vhost_poll *poll)
- {
--	vhost_work_flush(poll->dev, &poll->work);
-+	vhost_work_flush(poll->dev->worker, &poll->work);
- }
- EXPORT_SYMBOL_GPL(vhost_poll_flush);
- 
--void vhost_work_queue(struct vhost_dev *dev, struct vhost_work *work)
-+void vhost_work_queue(struct vhost_worker *worker,
-+		      struct vhost_work *work)
- {
- 	unsigned long flags;
- 
--	spin_lock_irqsave(&dev->work_lock, flags);
-+	spin_lock_irqsave(&worker->work_lock, flags);
- 	if (list_empty(&work->node)) {
--		list_add_tail(&work->node, &dev->work_list);
-+		list_add_tail(&work->node, &worker->work_list);
- 		work->queue_seq++;
--		spin_unlock_irqrestore(&dev->work_lock, flags);
--		wake_up_process(dev->worker);
-+		spin_unlock_irqrestore(&worker->work_lock, flags);
-+		wake_up_process(worker->thread);
- 	} else {
--		spin_unlock_irqrestore(&dev->work_lock, flags);
-+		spin_unlock_irqrestore(&worker->work_lock, flags);
- 	}
- }
- EXPORT_SYMBOL_GPL(vhost_work_queue);
- 
- void vhost_poll_queue(struct vhost_poll *poll)
- {
--	vhost_work_queue(poll->dev, &poll->work);
-+	vhost_work_queue(poll->dev->worker, &poll->work);
- }
- EXPORT_SYMBOL_GPL(vhost_poll_queue);
- 
-@@ -203,19 +211,18 @@ static void vhost_vq_reset(struct vhost_dev *dev,
- 
- static int vhost_worker(void *data)
- {
--	struct vhost_dev *dev = data;
-+	struct vhost_worker *worker = data;
- 	struct vhost_work *work = NULL;
- 	unsigned uninitialized_var(seq);
- 	mm_segment_t oldfs = get_fs();
- 
- 	set_fs(USER_DS);
--	use_mm(dev->mm);
- 
- 	for (;;) {
- 		/* mb paired w/ kthread_stop */
- 		set_current_state(TASK_INTERRUPTIBLE);
- 
--		spin_lock_irq(&dev->work_lock);
-+		spin_lock_irq(&worker->work_lock);
- 		if (work) {
- 			work->done_seq = seq;
- 			if (work->flushing)
-@@ -223,21 +230,35 @@ static int vhost_worker(void *data)
- 		}
- 
- 		if (kthread_should_stop()) {
--			spin_unlock_irq(&dev->work_lock);
-+			spin_unlock_irq(&worker->work_lock);
- 			__set_current_state(TASK_RUNNING);
- 			break;
- 		}
--		if (!list_empty(&dev->work_list)) {
--			work = list_first_entry(&dev->work_list,
-+		if (!list_empty(&worker->work_list)) {
-+			work = list_first_entry(&worker->work_list,
- 						struct vhost_work, node);
- 			list_del_init(&work->node);
- 			seq = work->queue_seq;
- 		} else
- 			work = NULL;
--		spin_unlock_irq(&dev->work_lock);
-+		spin_unlock_irq(&worker->work_lock);
- 
- 		if (work) {
-+			struct vhost_dev *dev = work->dev;
++static void vhost_create_worker(struct vhost_dev *dev)
++{
++	struct vhost_worker *worker;
++	struct vhost_pool *pool = vhost_pool;
 +
- 			__set_current_state(TASK_RUNNING);
++	worker = kzalloc(sizeof(*worker), GFP_KERNEL);
++	if (!worker) {
++		dev->err = -ENOMEM;
++		return;
++	}
 +
-+			if (current->mm != dev->mm) {
-+				unuse_mm(current->mm);
-+				use_mm(dev->mm);
-+			}
++	worker->thread = kthread_create(vhost_worker,
++					worker,
++					"vhost-%d",
++					total_vhost_workers);
++	if (IS_ERR(worker->thread)) {
++		dev->err = PTR_ERR(worker->thread);
++		goto therror;
++	}
 +
-+			/* TODO: Consider a more elegant solution */
-+			if (worker->owner != dev->owner) {
-+				/* Should check for return value */
-+				cgroup_attach_task_all(dev->owner, current);
-+				worker->owner = dev->owner;
-+			}
- 			work->fn(work);
- 			if (need_resched())
- 				schedule();
-@@ -245,7 +266,6 @@ static int vhost_worker(void *data)
- 			schedule();
- 
- 	}
--	unuse_mm(dev->mm);
- 	set_fs(oldfs);
- 	return 0;
++	spin_lock_init(&worker->work_lock);
++	INIT_LIST_HEAD(&worker->work_list);
++	list_add(&worker->node, &pool->workers);
++	worker->owner = NULL;
++	worker->num_devices++;
++	total_vhost_workers++;
++	dev->worker = worker;
++	dev->worker_assigned = true;
++	return;
++
++therror:
++	if (worker->thread)
++		kthread_stop(worker->thread);
++	kfree(worker);
++}
++
++static int vhost_dev_assign_worker(struct vhost_dev *dev)
++{
++	struct vhost_worker *worker;
++
++	mutex_lock(&vhost_pool->pool_lock);
++	list_for_each_entry(worker, &vhost_pool->workers, node) {
++		if (worker->num_devices < devs_per_worker) {
++			dev->worker = worker;
++			dev->worker_assigned = true;
++			worker->num_devices++;
++			break;
++		}
++	}
++	if (!dev->worker_assigned)
++		/* create a new worker */
++		vhost_create_worker(dev);
++	mutex_unlock(&vhost_pool->pool_lock);
++
++	return dev->err;
++}
++
+ static void vhost_vq_free_iovecs(struct vhost_virtqueue *vq)
+ {
+ 	kfree(vq->indirect);
+@@ -311,7 +376,7 @@ static void vhost_dev_free_iovecs(struct vhost_dev *dev)
+ 		vhost_vq_free_iovecs(dev->vqs[i]);
  }
-@@ -304,9 +324,8 @@ void vhost_dev_init(struct vhost_dev *dev,
+ 
+-void vhost_dev_init(struct vhost_dev *dev,
++int vhost_dev_init(struct vhost_dev *dev,
+ 		    struct vhost_virtqueue **vqs, int nvqs)
+ {
+ 	struct vhost_virtqueue *vq;
+@@ -324,9 +389,14 @@ void vhost_dev_init(struct vhost_dev *dev,
  	dev->log_file = NULL;
  	dev->memory = NULL;
  	dev->mm = NULL;
--	spin_lock_init(&dev->work_lock);
--	INIT_LIST_HEAD(&dev->work_list);
--	dev->worker = NULL;
-+	dev->worker = worker;
-+	dev->owner = current;
+-	dev->worker = worker;
++	dev->worker = NULL;
++	dev->err = 0;
++	dev->worker_assigned = false;
+ 	dev->owner = current;
  
++	if (vhost_dev_assign_worker(dev))
++		goto done;
++
  	for (i = 0; i < dev->nvqs; ++i) {
  		vq = dev->vqs[i];
-@@ -331,31 +350,6 @@ long vhost_dev_check_owner(struct vhost_dev *dev)
+ 		vq->log = NULL;
+@@ -339,6 +409,9 @@ void vhost_dev_init(struct vhost_dev *dev,
+ 			vhost_poll_init(&vq->poll, vq->handle_kick,
+ 					POLLIN, dev);
+ 	}
++
++done:
++	return dev->err;
  }
- EXPORT_SYMBOL_GPL(vhost_dev_check_owner);
+ EXPORT_SYMBOL_GPL(vhost_dev_init);
  
--struct vhost_attach_cgroups_struct {
--	struct vhost_work work;
--	struct task_struct *owner;
--	int ret;
--};
--
--static void vhost_attach_cgroups_work(struct vhost_work *work)
--{
--	struct vhost_attach_cgroups_struct *s;
--
--	s = container_of(work, struct vhost_attach_cgroups_struct, work);
--	s->ret = cgroup_attach_task_all(s->owner, current);
--}
--
--static int vhost_attach_cgroups(struct vhost_dev *dev)
--{
--	struct vhost_attach_cgroups_struct attach;
--
--	attach.owner = current;
--	vhost_work_init(&attach.work, vhost_attach_cgroups_work);
--	vhost_work_queue(dev, &attach.work);
--	vhost_work_flush(dev, &attach.work);
--	return attach.ret;
--}
--
- /* Caller should have device mutex */
- bool vhost_dev_has_owner(struct vhost_dev *dev)
- {
-@@ -366,7 +360,6 @@ EXPORT_SYMBOL_GPL(vhost_dev_has_owner);
- /* Caller should have device mutex */
- long vhost_dev_set_owner(struct vhost_dev *dev)
- {
--	struct task_struct *worker;
- 	int err;
- 
- 	/* Is there an owner already? */
-@@ -377,28 +370,15 @@ long vhost_dev_set_owner(struct vhost_dev *dev)
+@@ -370,7 +443,6 @@ long vhost_dev_set_owner(struct vhost_dev *dev)
  
  	/* No owner, become one */
  	dev->mm = get_task_mm(current);
--	worker = kthread_create(vhost_worker, dev, "vhost-%d", current->pid);
--	if (IS_ERR(worker)) {
--		err = PTR_ERR(worker);
--		goto err_worker;
--	}
--
- 	dev->worker = worker;
--	wake_up_process(worker);	/* avoid contributing to loadavg */
--
--	err = vhost_attach_cgroups(dev);
--	if (err)
--		goto err_cgroup;
+-	dev->worker = worker;
  
  	err = vhost_dev_alloc_iovecs(dev);
  	if (err)
--		goto err_cgroup;
-+		goto err_alloc;
+@@ -424,6 +496,24 @@ void vhost_dev_stop(struct vhost_dev *dev)
+ }
+ EXPORT_SYMBOL_GPL(vhost_dev_stop);
  
- 	return 0;
--err_cgroup:
--	kthread_stop(worker);
-+err_alloc:
- 	dev->worker = NULL;
--err_worker:
- 	if (dev->mm)
- 		mmput(dev->mm);
- 	dev->mm = NULL;
-@@ -472,11 +452,6 @@ void vhost_dev_cleanup(struct vhost_dev *dev, bool locked)
++static void vhost_deassign_worker(struct vhost_dev *dev)
++{
++	if (dev->worker) {
++		mutex_lock(&vhost_pool->pool_lock);
++		WARN_ON(dev->worker->num_devices <= 0);
++		if (!--dev->worker->num_devices) {
++			WARN_ON(!list_empty(&dev->worker->work_list));
++			list_del(&dev->worker->node);
++			kthread_stop(dev->worker->thread);
++			dev->worker->thread = NULL;
++			kfree(dev->worker);
++		}
++		mutex_unlock(&vhost_pool->pool_lock);
++	}
++
++	dev->worker = NULL;
++}
++
+ /* Caller should have device mutex if and only if locked is set */
+ void vhost_dev_cleanup(struct vhost_dev *dev, bool locked)
+ {
+@@ -452,6 +542,7 @@ void vhost_dev_cleanup(struct vhost_dev *dev, bool locked)
  	/* No one will access memory at this point */
  	kfree(dev->memory);
  	dev->memory = NULL;
--	WARN_ON(!list_empty(&dev->work_list));
--	if (dev->worker) {
--		kthread_stop(dev->worker);
--		dev->worker = NULL;
--	}
++	vhost_deassign_worker(dev);
  	if (dev->mm)
  		mmput(dev->mm);
  	dev->mm = NULL;
-@@ -1567,11 +1542,32 @@ EXPORT_SYMBOL_GPL(vhost_disable_notify);
+@@ -1542,31 +1633,29 @@ EXPORT_SYMBOL_GPL(vhost_disable_notify);
  
  static int __init vhost_init(void)
  {
-+	struct vhost_worker *w =
-+		kzalloc(sizeof(*w), GFP_KERNEL);
-+	if (!w)
-+		return -ENOMEM;
-+
-+	w->thread = kthread_create(vhost_worker,
-+				   w, "vhost-worker");
-+	if (IS_ERR(w->thread))
-+		return PTR_ERR(w->thread);
-+
-+	worker = w;
-+	spin_lock_init(&worker->work_lock);
-+	INIT_LIST_HEAD(&worker->work_list);
-+	wake_up_process(worker->thread);
-+	pr_info("Created universal thread to service requests\n");
-+
+-	struct vhost_worker *w =
+-		kzalloc(sizeof(*w), GFP_KERNEL);
+-	if (!w)
++	struct vhost_pool *pool =
++		kzalloc(sizeof(*pool), GFP_KERNEL);
++	if (!pool)
+ 		return -ENOMEM;
+-
+-	w->thread = kthread_create(vhost_worker,
+-				   w, "vhost-worker");
+-	if (IS_ERR(w->thread))
+-		return PTR_ERR(w->thread);
+-
+-	worker = w;
+-	spin_lock_init(&worker->work_lock);
+-	INIT_LIST_HEAD(&worker->work_list);
+-	wake_up_process(worker->thread);
+-	pr_info("Created universal thread to service requests\n");
++	mutex_init(&pool->pool_lock);
++	INIT_LIST_HEAD(&pool->workers);
++	vhost_pool = pool;
+ 
  	return 0;
  }
  
  static void __exit vhost_exit(void)
  {
-+	if (worker) {
-+		kthread_stop(worker->thread);
-+		WARN_ON(!list_empty(&worker->work_list));
-+		kfree(worker);
-+	}
+-	if (worker) {
+-		kthread_stop(worker->thread);
+-		WARN_ON(!list_empty(&worker->work_list));
+-		kfree(worker);
++	struct vhost_worker *worker;
++
++	if (vhost_pool) {
++		list_for_each_entry(worker, &vhost_pool->workers, node) {
++			kthread_stop(worker->thread);
++			WARN_ON(!list_empty(&worker->work_list));
++			list_del(&worker->node);
++			kfree(worker);
++		}
++		kfree(vhost_pool);
+ 	}
  }
  
- module_init(vhost_init);
 diff --git a/drivers/vhost/vhost.h b/drivers/vhost/vhost.h
-index 8c1c792..2f204ce 100644
+index 2f204ce..a45193b 100644
 --- a/drivers/vhost/vhost.h
 +++ b/drivers/vhost/vhost.h
-@@ -22,6 +22,7 @@ struct vhost_work {
- 	int			  flushing;
- 	unsigned		  queue_seq;
- 	unsigned		  done_seq;
-+	struct vhost_dev          *dev;
+@@ -120,19 +120,30 @@ struct vhost_dev {
+ 	struct vhost_worker *worker;
+ 	/* for cgroup support */
+ 	struct task_struct *owner;
++	bool worker_assigned;
++	int err;
  };
  
- /* Poll a file (eventfd or socket) */
-@@ -35,8 +36,8 @@ struct vhost_poll {
- 	struct vhost_dev	 *dev;
- };
- 
--void vhost_work_init(struct vhost_work *work, vhost_work_fn_t fn);
--void vhost_work_queue(struct vhost_dev *dev, struct vhost_work *work);
-+void vhost_work_init(struct vhost_dev *dev,
-+		     struct vhost_work *work, vhost_work_fn_t fn);
- 
- void vhost_poll_init(struct vhost_poll *poll, vhost_work_fn_t fn,
- 		     unsigned long mask, struct vhost_dev *dev);
-@@ -44,7 +45,6 @@ int vhost_poll_start(struct vhost_poll *poll, struct file *file);
- void vhost_poll_stop(struct vhost_poll *poll);
- void vhost_poll_flush(struct vhost_poll *poll);
- void vhost_poll_queue(struct vhost_poll *poll);
--void vhost_work_flush(struct vhost_dev *dev, struct vhost_work *work);
- long vhost_vring_ioctl(struct vhost_dev *d, int ioctl, void __user *argp);
- 
- struct vhost_log {
-@@ -116,11 +116,22 @@ struct vhost_dev {
- 	int nvqs;
- 	struct file *log_file;
- 	struct eventfd_ctx *log_ctx;
-+	/* vhost shared worker */
-+	struct vhost_worker *worker;
-+	/* for cgroup support */
-+	struct task_struct *owner;
+ struct vhost_worker {
+ 	spinlock_t work_lock;
++	unsigned id;
+ 	struct list_head work_list;
+ 	struct task_struct *thread;
+ 	struct task_struct *owner;
++	int num_devices;
++	struct list_head node;
 +};
 +
-+struct vhost_worker {
- 	spinlock_t work_lock;
- 	struct list_head work_list;
--	struct task_struct *worker;
-+	struct task_struct *thread;
-+	struct task_struct *owner;
++struct vhost_pool {
++	struct work_struct work;
++	struct mutex pool_lock;
++	struct list_head workers;
  };
  
-+void vhost_work_queue(struct vhost_worker *worker,
-+		      struct vhost_work *work);
-+void vhost_work_flush(struct vhost_worker *worker, struct vhost_work *work);
- void vhost_dev_init(struct vhost_dev *, struct vhost_virtqueue **vqs, int nvqs);
+ void vhost_work_queue(struct vhost_worker *worker,
+ 		      struct vhost_work *work);
+ void vhost_work_flush(struct vhost_worker *worker, struct vhost_work *work);
+-void vhost_dev_init(struct vhost_dev *, struct vhost_virtqueue **vqs, int nvqs);
++int vhost_dev_init(struct vhost_dev *, struct vhost_virtqueue **vqs, int nvqs);
  long vhost_dev_set_owner(struct vhost_dev *dev);
  bool vhost_dev_has_owner(struct vhost_dev *dev);
+ long vhost_dev_check_owner(struct vhost_dev *);
 -- 
 2.4.3
+
