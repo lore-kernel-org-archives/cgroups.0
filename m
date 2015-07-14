@@ -1,129 +1,58 @@
-From: Andres Lagar-Cavilla <andreslc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH -mm v7 5/6] proc: add kpageidle file
-Date: Tue, 14 Jul 2015 13:27:22 -0700
-Message-ID: <CAJu=L59r4ohz+cUmhUAzdvXs=Qf+xEkWUcqtyn-yRLHRuKXoCA@mail.gmail.com>
-References: <cover.1436623799.git.vdavydov@parallels.com>
-	<25f235220bef9d799f48a060d7638a5de31fc994.1436623799.git.vdavydov@parallels.com>
-	<CAJu=L59+7d_16zXZAFfJkr5HSwHsfYXi9EBu_9Sx1tAcJv2LOA@mail.gmail.com>
-	<20150714110527.GA1015@esperanza>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v14 4/4] cgroup: implement the PIDs subsystem
+Date: Tue, 14 Jul 2015 17:31:48 -0400
+Message-ID: <20150714213148.GD2273@mtj.duckdns.org>
+References: <1433849530-22845-1-git-send-email-cyphar@cyphar.com>
+ <1433849530-22845-5-git-send-email-cyphar@cyphar.com>
+ <20150610045304.GJ11955@mtj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=jE+SdBg3C/AzTgK1hKmxveEtlD7BKzA725mwnDRNX9g=;
-        b=Fu5HqkVntCXpCVK8OOFBOss34ILsHmeijQbwJW49cU0ghjSciam3kPTcV1XHOPcSG2
-         5GSxNS8Pj4KH9ZPrqr3/3CKBcYV2X1YJXs9C3PX4ShT8FCSgSxe4YAAkH+1KLbJJ5gKq
-         NIpZ+IoFw8iUI2J5oWtQ2OFHyuEPpjzEsQUFUqkglizoSsfYSoF4NTmMWEdfTybMcUYZ
-         pVNgeC/FN7R0LO6O1Bs7yi+brRF0vAz2xOXkmNM41DvapMwZMmFp7zaOSZYEJpnvaVNJ
-         idHCyr2X039R1sxv0bMBh5JPQJMFk9XmZQWGYiVMIkP7KK8/DNgPDzLvyK90KT+f2sO9
-         KBSw==
-In-Reply-To: <20150714110527.GA1015@esperanza>
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=N2U6XGD7OLU1oN+ubAsHZE+GJY0j3MvKFEr+p3RyvvE=;
+        b=YHqWsQFwfWActMaTP1tWR4QFKjTPDTdNJkRNXTGjYGbqr9MibKunEMVTrO2+MPcmDl
+         ccugsjDZIpoNhnJsIMJwIaabV8MpQiaQbVDlIFsmVaznTiOc5ijHVBS+5UEQFlEZ8jkc
+         mZY9V5XeLbTgDIVsvOGnsfxE1rXtX12pjoaJmuCN4jMyVn0Lz2I9NCK+rscZ24cQWfwU
+         US6rZiDMkAx1NzP4VAczg24oU5MtvUfFEvSE13X+5C4BnVCVN7BvUwkhptC9iPPtyMRq
+         6+Gvy6Oc3tR/K4T/bcISbmDA+0y0W5TRyperKcpCdc//DRSXZfWOd6HLQl1JTBIZvn4t
+         tUNw==
+Content-Disposition: inline
+In-Reply-To: <20150610045304.GJ11955-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Raghavendra K T <raghavendra.kt-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Cyrill Gorcunov <gorcunov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, richard-/L3Ra7n9ekc@public.gmane.org, fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Jul 14, 2015 at 4:05 AM, Vladimir Davydov
-<vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
-> On Mon, Jul 13, 2015 at 12:02:57PM -0700, Andres Lagar-Cavilla wrote:
->> On Sat, Jul 11, 2015 at 7:48 AM, Vladimir Davydov
->> <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
-> [...]
->> > +static struct page *kpageidle_get_page(unsigned long pfn)
->> > +{
->> > +       struct page *page;
->> > +       struct zone *zone;
->> > +
->> > +       if (!pfn_valid(pfn))
->> > +               return NULL;
->> > +
->> > +       page = pfn_to_page(pfn);
->> > +       if (!page || PageTail(page) || !PageLRU(page) ||
->> > +           !get_page_unless_zero(page))
->>
->> get_page_unless_zero does not succeed for Tail pages.
->
-> True. So we don't seem to need the PageTail checks here at all, because
-> if kpageidle_get_page succeeds, the page must be a head, so that we
-> won't dive into expensive rmap_walk for tail pages. Will remove it then.
->
->>
->> > +               return NULL;
->> > +
->> > +       if (unlikely(PageTail(page))) {
->> > +               put_page(page);
->> > +               return NULL;
->> > +       }
->> > +
->> > +       zone = page_zone(page);
->> > +       spin_lock_irq(&zone->lru_lock);
->> > +       if (unlikely(!PageLRU(page))) {
->> > +               put_page(page);
->> > +               page = NULL;
->> > +       }
->> > +       spin_unlock_irq(&zone->lru_lock);
->> > +       return page;
->> > +}
->> > +
->> > +static int kpageidle_clear_pte_refs_one(struct page *page,
->> > +                                       struct vm_area_struct *vma,
->> > +                                       unsigned long addr, void *arg)
->> > +{
->> > +       struct mm_struct *mm = vma->vm_mm;
->> > +       spinlock_t *ptl;
->> > +       pmd_t *pmd;
->> > +       pte_t *pte;
->> > +       bool referenced = false;
->> > +
->> > +       if (unlikely(PageTransHuge(page))) {
->>
->> VM_BUG_ON(!PageHead)?
->
-> Don't think it's necessary, because PageTransHuge already does this sort
-> of check:
->
-> : static inline int PageTransHuge(struct page *page)
-> : {
-> :       VM_BUG_ON_PAGE(PageTail(page), page);
-> :       return PageHead(page);
-> : }
->
->>
->> > +               pmd = page_check_address_pmd(page, mm, addr,
->> > +                                            PAGE_CHECK_ADDRESS_PMD_FLAG, &ptl);
->> > +               if (pmd) {
->> > +                       referenced = pmdp_test_and_clear_young(vma, addr, pmd);
->>
->> For any workload using MMU notifiers, this will lose significant
->> information by not querying the secondary PTE. The most
->> straightforward case is KVM. Once mappings are setup, all access
->> activity is recorded through shadow PTEs. This interface will say
->> "idle" even though the VM is blasting memory.
->
-> Hmm, interesting. It seems we have to introduce
-> mmu_notifier_ops.clear_young then, which, in contrast to
-> clear_flush_young, won't flush TLB. Looking back at your comment to v6,
-> now I see that you already mentioned it, but I missed your point :-(
-> OK, will do it in the next iteration.
+On Wed, Jun 10, 2015 at 01:53:04PM +0900, Tejun Heo wrote:
+> On Tue, Jun 09, 2015 at 09:32:10PM +1000, Aleksa Sarai wrote:
+> > Adds a new single-purpose PIDs subsystem to limit the number of
+> > tasks that can be forked inside a cgroup. Essentially this is an
+> > implementation of RLIMIT_NPROC that applies to a cgroup rather than a
+> > process tree.
+> > 
+> > However, it should be noted that organisational operations (adding and
+> > removing tasks from a PIDs hierarchy) will *not* be prevented. Rather,
+> > the number of tasks in the hierarchy cannot exceed the limit through
+> > forking. This is due to the fact that, in the unified hierarchy, attach
+> > cannot fail (and it is not possible for a task to overcome its PIDs
+> > cgroup policy limit by attaching to a child cgroup -- even if migrating
+> > mid-fork it must be able to fork in the parent first).
+> > 
+> > PIDs are fundamentally a global resource, and it is possible to reach
+> > PID exhaustion inside a cgroup without hitting any reasonable kmemcg
+> > policy. Once you've hit PID exhaustion, you're only in a marginally
+> > better state than OOM. This subsystem allows PID exhaustion inside a
+> > cgroup to be prevented.
+> 
+> Patches 3-4 look good to me.  Will apply once v4.3 dev window opens.
 
-There's clearly value in fixing things for KVM, but I don't have
-knowledge of the other MMU notifiers. I like clear_young, maybe other
-mmu notifiers will turn this into a no-op().
+Applied 3-4 to cgroup/for-4.3.
 
-mmmmhh. What about TLB flushing in the mmu notifier? I guess that can
-be internal to each implementation.
-
-Andres
->
-> Thanks a lot for the review!
->
-> Vladimir
-
-
+Thanks.
 
 -- 
-Andres Lagar-Cavilla | Google Kernel Team | andreslc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+tejun
