@@ -1,58 +1,37 @@
-From: Nikolay Borisov <n.borisov-/eCPMmvKun9pLGFMi4vTTA@public.gmane.org>
-Subject: Re: Access rules for current->memcg
-Date: Fri, 17 Jul 2015 00:21:51 +0300
-Message-ID: <CAJFSNy6sLX82+3ZW_COr__pDTd9aSGgL1bjryMKKcVPhEN0F9g@mail.gmail.com>
-References: <55A7B2D0.1030506@siteground.com>
-	<20150716145902.GA10758@dhcp22.suse.cz>
-	<55A7C9B4.3010907@siteground.com>
-	<20150716152239.GA22529@dhcp22.suse.cz>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCHSET v2 block/for-4.2/writeback] ext4: implement cgroup
+ writeback support
+Date: Fri, 17 Jul 2015 09:21:59 +1000
+Message-ID: <20150716232159.GN7943@dastard>
+References: <1434495193-31182-1-git-send-email-tj@kernel.org>
+ <20150712180520.GE18734@mtj.duckdns.org>
+ <20150716194058.GZ15934@mtj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20150716152239.GA22529-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20150716194058.GZ15934@mtj.duckdns.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: tytso@mit.edu, adilger.kernel@dilger.ca, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, lizefan@huawei.com, cgroups@vger.kernel.org, hannes@cmpxchg.org, kernel-team@fb.com, linux-ext4@vger.kernel.org, axboe@kernel.dk
 
-On Thu, Jul 16, 2015 at 6:22 PM, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> On Thu 16-07-15 18:11:48, Nikolay Borisov wrote:
->>
->>
->> On 07/16/2015 05:59 PM, Michal Hocko wrote:
->> > On Thu 16-07-15 16:34:08, Nikolay Borisov wrote:
->> >> Hello,
->> >>
->> >> I'd like to ask what are the locking rules when using
->> >> mem_cgroup_from_task(current)? Currently I'm doing this under
->> >> rcu_read_lock which I believe is sufficient. However, I've seen patches
->> >> where reference is obtained via mem_cgroup_from_task and then
->> >> css_tryget_online is used on the resulting cgroup?
->> >
->> > RCU will guarantee that the memcg will not go away. The rest depends on
->> > what you want to do with it. If you want to use it outside of RCU you
->> > have to take a reference. And then it depends what the memcg is used
->> > for - some operations can be done also on the offline memcg.
->> >
->> > Btw. mem_cgroup_from_task is not the proper interface for you. You
->> > really want to do
->> > memcg = get_mem_cgroup_from_mm(current->mm)
->> > [...]
->> > css_put(&memcg)
->>
->> Unfortunately this function is static, do you think there might be any
->> value of a patch that exposes it upstream?
->
-> Ohh, you are right! I thought I made it visible with my recent changes
-> but nope. There are no external users currently.
->
-> Could you tell us more why it would be useful for you?
+On Thu, Jul 16, 2015 at 03:40:58PM -0400, Tejun Heo wrote:
+> On Sun, Jul 12, 2015 at 02:05:20PM -0400, Tejun Heo wrote:
+> > Ted, these two patches apply cleanly on top of the current mainline
+> > and thus can be routed either through ext4 or block tree.  What do you
+> > think?
+> 
+> ping?
 
-In my particular use case I have to query the memcg's various counters to expose
-them to the user in a different way than via the cgroup files
-(memory.limit_in_bytes etc).
+Tejun, is this all that needs to be done to support cgroup aware
+writeback in a filesystem (i.e. wbc_init_bio, wbc_account_io in the
+writepage path, superblock flag)?
 
-> --
-> Michal Hocko
-> SUSE Labs
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
