@@ -1,47 +1,36 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH -mm v8 5/7] mmu-notifier: add clear_young callback
-Date: Thu, 16 Jul 2015 13:35:02 +0200
-Message-ID: <55A796E6.3090603@redhat.com>
-References: <cover.1436967694.git.vdavydov@parallels.com>
- <82693bd5b5dbf4e65657fa22288942650aa04a0a.1436967694.git.vdavydov@parallels.com>
- <CAJu=L58yzBr8+XaV90x+S60YnJzd7Yr2fDEgaQ0bcCKpwzSAhw@mail.gmail.com>
+From: Nikolay Borisov <n.borisov-/eCPMmvKun9pLGFMi4vTTA@public.gmane.org>
+Subject: Access rules for current->memcg
+Date: Thu, 16 Jul 2015 16:34:08 +0300
+Message-ID: <55A7B2D0.1030506@siteground.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <CAJu=L58yzBr8+XaV90x+S60YnJzd7Yr2fDEgaQ0bcCKpwzSAhw@mail.gmail.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andres Lagar-Cavilla <andreslc@google.com>, Vladimir Davydov <vdavydov@parallels.com>, kvm@vger.kernel.org, Eric Northup <digitaleric@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Minchan Kim <minchan@kernel.org>, Raghavendra K T <raghavendra.kt@linux.vnet.ibm.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Michel Lespinasse <walken@google.com>, David Rientjes <rientjes@google.com>, Pavel Emelyanov <xemul@parallels.com>, Cyrill Gorcunov <gorcunov@openvz.org>, Jonathan Corbet <corbet@lwn.net>, linux-api@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: 
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
+Hello,
 
+I'd like to ask what are the locking rules when using
+mem_cgroup_from_task(current)? Currently I'm doing this under
+rcu_read_lock which I believe is sufficient. However, I've seen patches
+where reference is obtained via mem_cgroup_from_task and then
+css_tryget_online is used on the resulting cgroup?
 
-On 15/07/2015 21:16, Andres Lagar-Cavilla wrote:
->> > +static int kvm_mmu_notifier_clear_young(struct mmu_notifier *mn,
->> > +                                       struct mm_struct *mm,
->> > +                                       unsigned long start,
->> > +                                       unsigned long end)
->> > +{
->> > +       struct kvm *kvm = mmu_notifier_to_kvm(mn);
->> > +       int young, idx;
-> For reclaim, the clear_flush_young notifier may blow up the secondary
-> pte to estimate the access pattern, depending on hardware support (EPT
-> access bits available in Haswell onwards, not sure about AMD, PPC,
-> etc).
+Looking at the context of css_tryget_online it seems it will only
+succeed if the cgroup isn't being terminated (cgroup_destroy_locked
+isn't being invoked). Judging from this then if a css_tryget_online
+succeeds this means the caller can be sure they are working with a live
+cgroup, however, what happens if the process of acuiqring a reference on
+css is skipped AND the caller is under RCU read lock? They are
+guaranteed to succeed, but after the rcu read lock is released the
+cgroup might go away ?
 
-It seems like this problem is limited to pre-Haswell EPT.
+Essentially my use case is to obtain a reference to a memcg for the
+current process and query some counter values IOW - just reading from
+the memcg. Do I need to acquire a CSS reference in this case?
 
-I'm okay with the patch.  If we find problems later we can always add a
-parameter to kvm_age_hva so that it effectively doesn't do anything on
-clear_young.
-
-Acked-by: Paolo Bonzini <pbonzini@redhat.com>
-
-Paolo
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Regards,
+Nikolay
