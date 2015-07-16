@@ -1,40 +1,58 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET v2 block/for-4.2/writeback] ext4: implement cgroup
- writeback support
-Date: Thu, 16 Jul 2015 15:40:58 -0400
-Message-ID: <20150716194058.GZ15934@mtj.duckdns.org>
-References: <1434495193-31182-1-git-send-email-tj@kernel.org>
- <20150712180520.GE18734@mtj.duckdns.org>
+From: Nikolay Borisov <n.borisov-/eCPMmvKun9pLGFMi4vTTA@public.gmane.org>
+Subject: Re: Access rules for current->memcg
+Date: Fri, 17 Jul 2015 00:21:51 +0300
+Message-ID: <CAJFSNy6sLX82+3ZW_COr__pDTd9aSGgL1bjryMKKcVPhEN0F9g@mail.gmail.com>
+References: <55A7B2D0.1030506@siteground.com>
+	<20150716145902.GA10758@dhcp22.suse.cz>
+	<55A7C9B4.3010907@siteground.com>
+	<20150716152239.GA22529@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=q/o02peLI3a9NmfXmGQil37yX/+6sBmf6ikL+9R+mW0=;
-        b=h1s4f1zehZDFIbYA9LNCMB1Isu/d8Vqu5j3gZtAiOPKNlYmIuRSQnV9dkHNb0jKy8M
-         +zxyAGfRnUNsoZsaHnLQWmH7VmTJU/mIXDGKGZ1qCRhyHHUzIJ922hVc2mOVZHF+a6j+
-         8jg6SiMtpZX0daa3Yjv2nDisUHBlWjUgQnrKjcXBZEQIt0t9s7CuP1cAdsPXUJUQTh8S
-         TdrmIuyV/I+KqO7BuRFljtyAb+QfCpDHQAWNHTwebmVngmYvFqGcPjHwr1iLnRkWPvwk
-         2K7Jf3g/tWFsP9XjgG/pcSeYw19txsSm+o7W8JEDhBBy6d/aCVuWM7pmFGE/HQiibzoh
-         l30Q==
-Content-Disposition: inline
-In-Reply-To: <20150712180520.GE18734-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <20150716152239.GA22529-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tytso-3s7WtUTddSA@public.gmane.org, adilger.kernel-m1MBpc4rdrD3fQ9qLvQP4Q@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sun, Jul 12, 2015 at 02:05:20PM -0400, Tejun Heo wrote:
-> Ted, these two patches apply cleanly on top of the current mainline
-> and thus can be routed either through ext4 or block tree.  What do you
-> think?
+On Thu, Jul 16, 2015 at 6:22 PM, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> On Thu 16-07-15 18:11:48, Nikolay Borisov wrote:
+>>
+>>
+>> On 07/16/2015 05:59 PM, Michal Hocko wrote:
+>> > On Thu 16-07-15 16:34:08, Nikolay Borisov wrote:
+>> >> Hello,
+>> >>
+>> >> I'd like to ask what are the locking rules when using
+>> >> mem_cgroup_from_task(current)? Currently I'm doing this under
+>> >> rcu_read_lock which I believe is sufficient. However, I've seen patches
+>> >> where reference is obtained via mem_cgroup_from_task and then
+>> >> css_tryget_online is used on the resulting cgroup?
+>> >
+>> > RCU will guarantee that the memcg will not go away. The rest depends on
+>> > what you want to do with it. If you want to use it outside of RCU you
+>> > have to take a reference. And then it depends what the memcg is used
+>> > for - some operations can be done also on the offline memcg.
+>> >
+>> > Btw. mem_cgroup_from_task is not the proper interface for you. You
+>> > really want to do
+>> > memcg = get_mem_cgroup_from_mm(current->mm)
+>> > [...]
+>> > css_put(&memcg)
+>>
+>> Unfortunately this function is static, do you think there might be any
+>> value of a patch that exposes it upstream?
+>
+> Ohh, you are right! I thought I made it visible with my recent changes
+> but nope. There are no external users currently.
+>
+> Could you tell us more why it would be useful for you?
 
-ping?
+In my particular use case I have to query the memcg's various counters to expose
+them to the user in a different way than via the cgroup files
+(memory.limit_in_bytes etc).
 
-Thanks.
-
--- 
-tejun
+> --
+> Michal Hocko
+> SUSE Labs
