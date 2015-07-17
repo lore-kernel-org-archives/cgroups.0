@@ -1,40 +1,62 @@
-From: Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>
-Subject: Re: [PATCHSET v2 block/for-4.2/writeback] ext4: implement cgroup
- writeback support
-Date: Thu, 16 Jul 2015 21:37:31 -0400
-Message-ID: <20150717013731.GF22531@thunk.org>
-References: <1434495193-31182-1-git-send-email-tj@kernel.org>
- <20150712180520.GE18734@mtj.duckdns.org>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: Access rules for current->memcg
+Date: Fri, 17 Jul 2015 09:13:39 +0200
+Message-ID: <20150717071339.GA24787@dhcp22.suse.cz>
+References: <55A7B2D0.1030506@siteground.com>
+ <20150716145902.GA10758@dhcp22.suse.cz>
+ <55A7C9B4.3010907@siteground.com>
+ <20150716152239.GA22529@dhcp22.suse.cz>
+ <CAJFSNy6sLX82+3ZW_COr__pDTd9aSGgL1bjryMKKcVPhEN0F9g@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=thunk.org; s=ef5046eb;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=cfd7CAG893n80/whbXW/xnMYQ770nH5TloC/Uo6xi1Y=;
-	b=gqPfl4yydjo/uEQQ08uKqvMPZPRLGDKmMDrIduVwwogmBdZ8r4vQz/nzIjf4TX8hDXMgOwyw59gV725xHHW7IQC6n5LTy7UQWXjRSPFi2lT+FvIhfmpINakx5wRR+OpAuDNW19fmvijOhMcOPF2DNciZOFsHKWbA30KhVA5P/yE=;
 Content-Disposition: inline
-In-Reply-To: <20150712180520.GE18734-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <CAJFSNy6sLX82+3ZW_COr__pDTd9aSGgL1bjryMKKcVPhEN0F9g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, adilger.kernel-m1MBpc4rdrD3fQ9qLvQP4Q@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Nikolay Borisov <n.borisov-/eCPMmvKun9pLGFMi4vTTA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sun, Jul 12, 2015 at 02:05:20PM -0400, Tejun Heo wrote:
-> Hello,
+On Fri 17-07-15 00:21:51, Nikolay Borisov wrote:
+> On Thu, Jul 16, 2015 at 6:22 PM, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> > On Thu 16-07-15 18:11:48, Nikolay Borisov wrote:
+> >>
+> >>
+> >> On 07/16/2015 05:59 PM, Michal Hocko wrote:
+> >> > On Thu 16-07-15 16:34:08, Nikolay Borisov wrote:
+> >> >> Hello,
+> >> >>
+> >> >> I'd like to ask what are the locking rules when using
+> >> >> mem_cgroup_from_task(current)? Currently I'm doing this under
+> >> >> rcu_read_lock which I believe is sufficient. However, I've seen patches
+> >> >> where reference is obtained via mem_cgroup_from_task and then
+> >> >> css_tryget_online is used on the resulting cgroup?
+> >> >
+> >> > RCU will guarantee that the memcg will not go away. The rest depends on
+> >> > what you want to do with it. If you want to use it outside of RCU you
+> >> > have to take a reference. And then it depends what the memcg is used
+> >> > for - some operations can be done also on the offline memcg.
+> >> >
+> >> > Btw. mem_cgroup_from_task is not the proper interface for you. You
+> >> > really want to do
+> >> > memcg = get_mem_cgroup_from_mm(current->mm)
+> >> > [...]
+> >> > css_put(&memcg)
+> >>
+> >> Unfortunately this function is static, do you think there might be any
+> >> value of a patch that exposes it upstream?
+> >
+> > Ohh, you are right! I thought I made it visible with my recent changes
+> > but nope. There are no external users currently.
+> >
+> > Could you tell us more why it would be useful for you?
 > 
-> On Tue, Jun 16, 2015 at 06:53:11PM -0400, Tejun Heo wrote:
-> > This is v2.  The only change from the last take[L] is
-> > 
-> > * Updated to reflect the earlier MS_CGROUPWB -> SB_I_CGROUPWB change.
-> > 
-> > This patchset implements cgroup writeback support for ext4, which is
-> > enabled for writeback and ordered data modes.  This patchset contains
-> > the following two patches.
-> 
-> Ted, these two patches apply cleanly on top of the current mainline
-> and thus can be routed either through ext4 or block tree.  What do you
-> think?
+> In my particular use case I have to query the memcg's various counters to expose
+> them to the user in a different way than via the cgroup files
+> (memory.limit_in_bytes etc).
 
-I'll take them through the ext4 tree.
-
-						- Ted
+Why is the regular interface not sufficient?
+-- 
+Michal Hocko
+SUSE Labs
