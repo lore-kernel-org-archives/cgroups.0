@@ -1,74 +1,73 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: Access rules for current->memcg
-Date: Tue, 21 Jul 2015 09:48:34 +0200
-Message-ID: <20150721074834.GF11967@dhcp22.suse.cz>
-References: <55A7B2D0.1030506@siteground.com>
- <20150716145902.GA10758@dhcp22.suse.cz>
- <55A7C9B4.3010907@siteground.com>
- <20150716152239.GA22529@dhcp22.suse.cz>
- <CAJFSNy6sLX82+3ZW_COr__pDTd9aSGgL1bjryMKKcVPhEN0F9g@mail.gmail.com>
- <20150717071339.GA24787@dhcp22.suse.cz>
- <55A8ABC9.7090701@siteground.com>
- <20150720111707.GE1211@dhcp22.suse.cz>
- <55ACD9F8.2040802@siteground.com>
+From: Vladimir Davydov <vdavydov@parallels.com>
+Subject: Re: [PATCH -mm v9 5/8] mmu-notifier: add clear_young callback
+Date: Tue, 21 Jul 2015 11:51:08 +0300
+Message-ID: <20150721085108.GA18673@esperanza>
+References: <cover.1437303956.git.vdavydov@parallels.com>
+ <e4ab6e8be3f9f94fe9814219c4a9a19c375a5835.1437303956.git.vdavydov@parallels.com>
+ <CAJu=L5_q=xWfANDBX2-Z3=uudof+ifKS56zEtAR372VqDWOj2Q@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <55ACD9F8.2040802-/eCPMmvKun9pLGFMi4vTTA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <CAJu=L5_q=xWfANDBX2-Z3=uudof+ifKS56zEtAR372VqDWOj2Q@mail.gmail.com>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Nikolay Borisov <n.borisov-/eCPMmvKun9pLGFMi4vTTA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andres Lagar-Cavilla <andreslc@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Minchan Kim <minchan@kernel.org>, Raghavendra K T <raghavendra.kt@linux.vnet.ibm.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Greg
+ Thelen <gthelen@google.com>, Michel Lespinasse <walken@google.com>, David
+ Rientjes <rientjes@google.com>, Pavel Emelyanov <xemul@parallels.com>, Cyrill Gorcunov <gorcunov@openvz.org>, Jonathan Corbet <corbet@lwn.net>, linux-api@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon 20-07-15 14:22:32, Nikolay Borisov wrote:
-> 
-> 
-> On 07/20/2015 02:17 PM, Michal Hocko wrote:
-> > On Fri 17-07-15 10:16:25, Nikolay Borisov wrote:
-> >>
-> >>
-> >> On 07/17/2015 10:13 AM, Michal Hocko wrote:
-> >>> On Fri 17-07-15 00:21:51, Nikolay Borisov wrote:
-> > [...]
-> >>>> In my particular use case I have to query the memcg's various counters to expose
-> >>>> them to the user in a different way than via the cgroup files
-> >>>> (memory.limit_in_bytes etc).
-> >>>
-> >>> Why is the regular interface not sufficient?
-> >>
-> >> In my particular case I'm interested in playing with the contents of
-> >> /proc/meminfo, so that processes running inside a cgroup only see the
-> >> the system as defined by the memcg restrictions
-> > 
-> > I assume that this is an attempt to containerize /proc/meminfo. I am not
-> > sure this is a great idea. There are counters which do not have memcg
-> > specific counterpart or such a counterpart would be missleading (e.g.
-> > slab, swap statistics).
-> 
-> Why would swap be misleading?
+On Mon, Jul 20, 2015 at 11:34:21AM -0700, Andres Lagar-Cavilla wrote:
+> On Sun, Jul 19, 2015 at 5:31 AM, Vladimir Davydov <vdavydov@parallels.com>
+[...]
+> > +static int kvm_mmu_notifier_clear_young(struct mmu_notifier *mn,
+> > +                                       struct mm_struct *mm,
+> > +                                       unsigned long start,
+> > +                                       unsigned long end)
+> > +{
+> > +       struct kvm *kvm = mmu_notifier_to_kvm(mn);
+> > +       int young, idx;
+> > +
+> >
+> If you need to cut out another version please add comments as to the two
+> issues raised:
+> - This doesn't proactively flush TLBs -- not obvious if it should.
+> - This adversely affects performance in Pre_haswell Intel EPT.
 
-Because the swap space is inherently a shared resource.
+Oops, I stopped reading your e-mail in reply to the previous version of
+this patch as soon as I saw the Reviewed-by tag, so I missed your
+request for the comment, sorry about that.
 
-> What about memsw.limit_in_bytes - memory.limit_in_bytes for the total swap
+Here it goes (incremental):
+---
+diff --git a/virt/kvm/kvm_main.c b/virt/kvm/kvm_main.c
+index ff4173ce6924..e69a5cb99571 100644
+--- a/virt/kvm/kvm_main.c
++++ b/virt/kvm/kvm_main.c
+@@ -397,6 +397,19 @@ static int kvm_mmu_notifier_clear_young(struct mmu_notifier *mn,
+ 
+ 	idx = srcu_read_lock(&kvm->srcu);
+ 	spin_lock(&kvm->mmu_lock);
++	/*
++	 * Even though we do not flush TLB, this will still adversely
++	 * affect performance on pre-Haswell Intel EPT, where there is
++	 * no EPT Access Bit to clear so that we have to tear down EPT
++	 * tables instead. If we find this unacceptable, we can always
++	 * add a parameter to kvm_age_hva so that it effectively doesn't
++	 * do anything on clear_young.
++	 *
++	 * Also note that currently we never issue secondary TLB flushes
++	 * from clear_young, leaving this job up to the regular system
++	 * cadence. If we find this inaccurate, we might come up with a
++	 * more sophisticated heuristic later.
++	 */
+ 	young = kvm_age_hva(kvm, start, end);
+ 	spin_unlock(&kvm->mmu_lock);
+ 	srcu_read_unlock(&kvm->srcu, idx);
 
-No this is not how the swap extension works. memsw counter covers
-usage+swap. You can have up to memsw.limit_in_bytes swapped out. So
-you would have to do min(memsw.limit_in_bytes, TotalSwap) but even then
-it wouldn't tell you much because that would be the case for other
-memory cgroups as well. I would be quite hard to distribute the
-TotalSwap for all the cgroups.
-
-> and calculating the swap usage
-> based on memory.memsw.max_usage_in_bytes - memory.usage_in_bytes ?
-
-This doesn't make much sense to me. Swap usage per memcg is exported by
-memory.stat file. But this is not what you want to export. meminfo
-exports SwapFree which would tell you how much memory could be swapped
-out before the anonymous memory is not reclaimable anymore. This is
-impossible to find out in general - especially when the system is
-allowed to be overcommit.
--- 
-Michal Hocko
-SUSE Labs
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
