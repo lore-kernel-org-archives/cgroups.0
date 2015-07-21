@@ -1,7 +1,7 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: Access rules for current->memcg
-Date: Tue, 21 Jul 2015 05:24:11 -0400
-Message-ID: <20150721092411.GA12570@cmpxchg.org>
+Date: Tue, 21 Jul 2015 11:48:32 +0200
+Message-ID: <20150721094832.GI11967@dhcp22.suse.cz>
 References: <20150716145902.GA10758@dhcp22.suse.cz>
  <55A7C9B4.3010907@siteground.com>
  <20150716152239.GA22529@dhcp22.suse.cz>
@@ -21,11 +21,41 @@ List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Nikolay Borisov <n.borisov-/eCPMmvKun9pLGFMi4vTTA@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Jul 21, 2015 at 12:08:40PM +0300, Nikolay Borisov wrote:
+On Tue 21-07-15 12:08:40, Nikolay Borisov wrote:
+> 
+> 
 > On 07/21/2015 10:48 AM, Michal Hocko wrote:
 > > On Mon 20-07-15 14:22:32, Nikolay Borisov wrote:
+> >>
+> >>
+> >> On 07/20/2015 02:17 PM, Michal Hocko wrote:
+> >>> On Fri 17-07-15 10:16:25, Nikolay Borisov wrote:
+> >>>>
+> >>>>
+> >>>> On 07/17/2015 10:13 AM, Michal Hocko wrote:
+> >>>>> On Fri 17-07-15 00:21:51, Nikolay Borisov wrote:
+> >>> [...]
+> >>>>>> In my particular use case I have to query the memcg's various counters to expose
+> >>>>>> them to the user in a different way than via the cgroup files
+> >>>>>> (memory.limit_in_bytes etc).
+> >>>>>
+> >>>>> Why is the regular interface not sufficient?
+> >>>>
+> >>>> In my particular case I'm interested in playing with the contents of
+> >>>> /proc/meminfo, so that processes running inside a cgroup only see the
+> >>>> the system as defined by the memcg restrictions
+> >>>
+> >>> I assume that this is an attempt to containerize /proc/meminfo. I am not
+> >>> sure this is a great idea. There are counters which do not have memcg
+> >>> specific counterpart or such a counterpart would be missleading (e.g.
+> >>> slab, swap statistics).
+> >>
+> >> Why would swap be misleading?
+> > 
+> > Because the swap space is inherently a shared resource.
+> > 
 > >> What about memsw.limit_in_bytes - memory.limit_in_bytes for the total swap
 > > 
 > > No this is not how the swap extension works. memsw counter covers
@@ -45,7 +75,42 @@ On Tue, Jul 21, 2015 at 12:08:40PM +0300, Nikolay Borisov wrote:
 > memory.limit_in_bytes in a memory pressure situation) you effectively
 > have memsw.limit_in_bytes - memory.limit_in_bytes, no?
 
-No, the cgroup can also swap due to global/parental memory pressure,
-not just due to memory.limit_in_bytes.  In that case, it can get its
-pages swapped out until it reaches memsw.limit_in_bytes, with memory
-consumption well below memory.limit or even 0.
+No. Your memory might get swapped out even before you hit the hard
+limit if there is an external memory pressure. This would be either
+a global memory pressure or a hard limit triggered up in the hierarchy.
+
+Take the most trivial situation when memsw and hard limits are equal. You
+would have a 0 swap space which is not the case obviously.
+
+Please have a look at Documentation/cgroups/memory.txt and '2.4 Swap
+Extension (CONFIG_MEMCG_SWAP)' for more information.
+
+> > you would have to do min(memsw.limit_in_bytes, TotalSwap) but even then
+> > it wouldn't tell you much because that would be the case for other
+> > memory cgroups as well. I would be quite hard to distribute the
+> > TotalSwap for all the cgroups.
+> > 
+> >> and calculating the swap usage
+> >> based on memory.memsw.max_usage_in_bytes - memory.usage_in_bytes ?
+> > 
+> > This doesn't make much sense to me. Swap usage per memcg is exported by
+> > memory.stat file. But this is not what you want to export. meminfo
+> > exports SwapFree which would tell you how much memory could be swapped
+> > out before the anonymous memory is not reclaimable anymore. This is
+> > impossible to find out in general - especially when the system is
+> > allowed to be overcommit.
+> 
+> I looked more carefully into the code and saw that the page_counters
+> (which back memory/memsw.limit/usage_in_bytes) are charged during the
+> try_charge whereas the per-cpu statistics (which back the info in
+> memory.stats) are updated after committing the charge. I assume in the
+> case where charges are not canceled the data in memory.stats and
+> memory.memsw.max_usage_in_bytes - memory.usage_in_bytes should be identical?
+
+I am not sure what you mean here. max_usage_in_bytes is a historical
+value which was the maximum charge used at some point in time.
+usage_in_bytes is always the _current_ value of the charge counter.
+max_usage_in_bytes-usage_in_bytes doesn't tell you much really.
+-- 
+Michal Hocko
+SUSE Labs
