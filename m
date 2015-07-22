@@ -1,84 +1,104 @@
-From: Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
-Subject: [PATCH v2] cgroup: net_cls: fix false-positive "suspicious RCU
- usage"
-Date: Wed, 22 Jul 2015 12:23:20 +0300
-Message-ID: <20150722092320.30663.86742.stgit@buzz>
-References: <20150721164629.18385.14538.stgit@buzz>
+From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH -mm v9 2/8] hwpoison: use page_cgroup_ino for filtering
+ by memcg
+Date: Wed, 22 Jul 2015 12:45:04 +0300
+Message-ID: <20150722094504.GI23374@esperanza>
+References: <cover.1437303956.git.vdavydov@parallels.com>
+ <94215634d13582d2a1453686d6cc6b1a59b07d2a.1437303956.git.vdavydov@parallels.com>
+ <20150721163412.1b44e77f5ac3b742734d1ce6@linux-foundation.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
-	t=1437557001; bh=vKLGS77b5lYVlB8mkO/f6J0GkqtN2SPANXN79qMQ0Gw=;
-	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
-	 User-Agent:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	b=NX6BnrotwOVYuGOBQ/qFATcFXb90P0PjP3AJuFGMAMILw1ZtrnecprG1Vk7k1cKGl
-	 M4+iDwSzGqUTSUeafdDwAzGl7i9MtHH74lnwt0QIYm93DHBheYXmZDQwYzzsw2Yt9N
-	 ZONmeMrvNwpQV8mkLkyle9+KKc/CrMOUKgcAw0S8=
-In-Reply-To: <20150721164629.18385.14538.stgit@buzz>
+Content-Disposition: inline
+In-Reply-To: <20150721163412.1b44e77f5ac3b742734d1ce6-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Andres Lagar-Cavilla <andreslc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Raghavendra K T <raghavendra.kt-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Cyrill Gorcunov <gorcunov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-In dev_queue_xmit() net_cls protected with rcu-bh.
+On Tue, Jul 21, 2015 at 04:34:12PM -0700, Andrew Morton wrote:
+> On Sun, 19 Jul 2015 15:31:11 +0300 Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org> wrote:
+> 
+> > Hwpoison allows to filter pages by memory cgroup ino. Currently, it
+> > calls try_get_mem_cgroup_from_page to obtain the cgroup from a page and
+> > then its ino using cgroup_ino, but now we have an apter method for that,
+> > page_cgroup_ino, so use it instead.
+> 
+> I assume "an apter" was supposed to be "a helper"?
 
-[  270.730026] ===============================
-[  270.730029] [ INFO: suspicious RCU usage. ]
-[  270.730033] 4.2.0-rc3+ #2 Not tainted
-[  270.730036] -------------------------------
-[  270.730040] include/linux/cgroup.h:353 suspicious rcu_dereference_check() usage!
-[  270.730041] other info that might help us debug this:
-[  270.730043] rcu_scheduler_active = 1, debug_locks = 1
-[  270.730045] 2 locks held by dhclient/748:
-[  270.730046]  #0:  (rcu_read_lock_bh){......}, at: [<ffffffff81682b70>] __dev_queue_xmit+0x50/0x960
-[  270.730085]  #1:  (&qdisc_tx_lock){+.....}, at: [<ffffffff81682d60>] __dev_queue_xmit+0x240/0x960
-[  270.730090] stack backtrace:
-[  270.730096] CPU: 0 PID: 748 Comm: dhclient Not tainted 4.2.0-rc3+ #2
-[  270.730098] Hardware name: OpenStack Foundation OpenStack Nova, BIOS Bochs 01/01/2011
-[  270.730100]  0000000000000001 ffff8800bafeba58 ffffffff817ad487 0000000000000007
-[  270.730103]  ffff880232a0a780 ffff8800bafeba88 ffffffff810ca4f2 ffff88022fb23e00
-[  270.730105]  ffff880232a0a780 ffff8800bafebb68 ffff8800bafebb68 ffff8800bafebaa8
-[  270.730108] Call Trace:
-[  270.730121]  [<ffffffff817ad487>] dump_stack+0x4c/0x65
-[  270.730148]  [<ffffffff810ca4f2>] lockdep_rcu_suspicious+0xe2/0x120
-[  270.730153]  [<ffffffff816a62d2>] task_cls_state+0x92/0xa0
-[  270.730158]  [<ffffffffa00b534f>] cls_cgroup_classify+0x4f/0x120 [cls_cgroup]
-[  270.730164]  [<ffffffff816aac74>] tc_classify_compat+0x74/0xc0
-[  270.730166]  [<ffffffff816ab573>] tc_classify+0x33/0x90
-[  270.730170]  [<ffffffffa00bcb0a>] htb_enqueue+0xaa/0x4a0 [sch_htb]
-[  270.730172]  [<ffffffff81682e26>] __dev_queue_xmit+0x306/0x960
-[  270.730174]  [<ffffffff81682b70>] ? __dev_queue_xmit+0x50/0x960
-[  270.730176]  [<ffffffff816834a3>] dev_queue_xmit_sk+0x13/0x20
-[  270.730185]  [<ffffffff81787770>] dev_queue_xmit+0x10/0x20
-[  270.730187]  [<ffffffff8178b91c>] packet_snd.isra.62+0x54c/0x760
-[  270.730190]  [<ffffffff8178be25>] packet_sendmsg+0x2f5/0x3f0
-[  270.730203]  [<ffffffff81665245>] ? sock_def_readable+0x5/0x190
-[  270.730210]  [<ffffffff817b64bb>] ? _raw_spin_unlock+0x2b/0x40
-[  270.730216]  [<ffffffff8173bcbc>] ? unix_dgram_sendmsg+0x5cc/0x640
-[  270.730219]  [<ffffffff8165f367>] sock_sendmsg+0x47/0x50
-[  270.730221]  [<ffffffff8165f42f>] sock_write_iter+0x7f/0xd0
-[  270.730232]  [<ffffffff811fd4c7>] __vfs_write+0xa7/0xf0
-[  270.730234]  [<ffffffff811fe5b8>] vfs_write+0xb8/0x190
-[  270.730236]  [<ffffffff811fe8c2>] SyS_write+0x52/0xb0
-[  270.730239]  [<ffffffff817b6bae>] entry_SYSCALL_64_fastpath+0x12/0x76
+Yes, sounds better :-)
 
-Signed-off-by: Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
+> 
+> > --- a/mm/hwpoison-inject.c
+> > +++ b/mm/hwpoison-inject.c
+> > @@ -45,12 +45,9 @@ static int hwpoison_inject(void *data, u64 val)
+> >  	/*
+> >  	 * do a racy check with elevated page count, to make sure PG_hwpoison
+> >  	 * will only be set for the targeted owner (or on a free page).
+> > -	 * We temporarily take page lock for try_get_mem_cgroup_from_page().
+> >  	 * memory_failure() will redo the check reliably inside page lock.
+> >  	 */
+> > -	lock_page(hpage);
+> >  	err = hwpoison_filter(hpage);
+> > -	unlock_page(hpage);
+> >  	if (err)
+> >  		goto put_out;
+> >  
+> > @@ -126,7 +123,7 @@ static int pfn_inject_init(void)
+> >  	if (!dentry)
+> >  		goto fail;
+> >  
+> > -#ifdef CONFIG_MEMCG_SWAP
+> > +#ifdef CONFIG_MEMCG
+> >  	dentry = debugfs_create_u64("corrupt-filter-memcg", 0600,
+> >  				    hwpoison_dir, &hwpoison_filter_memcg);
+> >  	if (!dentry)
+> 
+> Confused.  We're changing the conditions under which this debugfs file
+> is created.  Is this a typo or some unchangelogged thing or what?
+
+This is an unchangelogged cleanup. In fact, there had been a comment
+regarding it before v6, but then it got lost. Sorry about that. The
+commit message should look like this:
+
+"""
+Hwpoison allows to filter pages by memory cgroup ino. Currently, it
+calls try_get_mem_cgroup_from_page to obtain the cgroup from a page and
+then its ino using cgroup_ino, but now we have a helper method for that,
+page_cgroup_ino, so use it instead.
+
+This patch also loosens the hwpoison memcg filter dependency rules - it
+makes it depend on CONFIG_MEMCG instead of CONFIG_MEMCG_SWAP, because
+hwpoison memcg filter does not require anything (nor it used to) from
+CONFIG_MEMCG_SWAP side.
+"""
+
+Or we can simply revert this cleanups if you don't like it:
 ---
- net/core/netclassid_cgroup.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/net/core/netclassid_cgroup.c b/net/core/netclassid_cgroup.c
-index 1f2a126f4ffa..6441f47b1a8f 100644
---- a/net/core/netclassid_cgroup.c
-+++ b/net/core/netclassid_cgroup.c
-@@ -23,7 +23,8 @@ static inline struct cgroup_cls_state *css_cls_state(struct cgroup_subsys_state
+diff --git a/mm/hwpoison-inject.c b/mm/hwpoison-inject.c
+index 5015679014c1..1cd105ee5a7b 100644
+--- a/mm/hwpoison-inject.c
++++ b/mm/hwpoison-inject.c
+@@ -123,7 +123,7 @@ static int pfn_inject_init(void)
+ 	if (!dentry)
+ 		goto fail;
  
- struct cgroup_cls_state *task_cls_state(struct task_struct *p)
- {
--	return css_cls_state(task_css(p, net_cls_cgrp_id));
-+	return css_cls_state(task_css_check(p, net_cls_cgrp_id,
-+					    rcu_read_lock_bh_held()));
- }
- EXPORT_SYMBOL_GPL(task_cls_state);
- 
+-#ifdef CONFIG_MEMCG
++#ifdef CONFIG_MEMCG_SWAP
+ 	dentry = debugfs_create_u64("corrupt-filter-memcg", 0600,
+ 				    hwpoison_dir, &hwpoison_filter_memcg);
+ 	if (!dentry)
+diff --git a/mm/memory-failure.c b/mm/memory-failure.c
+index 97005396a507..5ea7d8c760fa 100644
+--- a/mm/memory-failure.c
++++ b/mm/memory-failure.c
+@@ -130,7 +130,7 @@ static int hwpoison_filter_flags(struct page *p)
+  * can only guarantee that the page either belongs to the memcg tasks, or is
+  * a freed page.
+  */
+-#ifdef CONFIG_MEMCG
++#ifdef CONFIG_MEMCG_SWAP
+ u64 hwpoison_filter_memcg;
+ EXPORT_SYMBOL_GPL(hwpoison_filter_memcg);
+ static int hwpoison_filter_task(struct page *p)
