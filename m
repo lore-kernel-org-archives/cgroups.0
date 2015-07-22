@@ -1,104 +1,84 @@
-From: Vladimir Davydov <vdavydov@parallels.com>
-Subject: Re: [PATCH -mm v9 1/8] memcg: add page_cgroup_ino helper
-Date: Wed, 22 Jul 2015 12:21:07 +0300
-Message-ID: <20150722092107.GH23374@esperanza>
-References: <cover.1437303956.git.vdavydov@parallels.com>
- <aa0190b76489260b4d1b65cdfa65221f4e6390f5.1437303956.git.vdavydov@parallels.com>
- <20150721163407.4e198dfcf61eebbbc49731c2@linux-foundation.org>
+From: Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
+Subject: [PATCH v2] cgroup: net_cls: fix false-positive "suspicious RCU
+ usage"
+Date: Wed, 22 Jul 2015 12:23:20 +0300
+Message-ID: <20150722092320.30663.86742.stgit@buzz>
+References: <20150721164629.18385.14538.stgit@buzz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-doc-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150721163407.4e198dfcf61eebbbc49731c2@linux-foundation.org>
-Sender: linux-doc-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Andres Lagar-Cavilla <andreslc@google.com>, Minchan Kim <minchan@kernel.org>, Raghavendra K T <raghavendra.kt@linux.vnet.ibm.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Greg Thelen <gthelen@google.com>, Michel Lespinasse <walken@google.com>, David Rientjes <rientjes@google.com>, Pavel Emelyanov <xemul@parallels.com>, Cyrill Gorcunov <gorcunov@openvz.org>, Jonathan Corbet <corbet@lwn.net>, linux-api@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
+	t=1437557001; bh=vKLGS77b5lYVlB8mkO/f6J0GkqtN2SPANXN79qMQ0Gw=;
+	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
+	 User-Agent:MIME-Version:Content-Type:Content-Transfer-Encoding;
+	b=NX6BnrotwOVYuGOBQ/qFATcFXb90P0PjP3AJuFGMAMILw1ZtrnecprG1Vk7k1cKGl
+	 M4+iDwSzGqUTSUeafdDwAzGl7i9MtHH74lnwt0QIYm93DHBheYXmZDQwYzzsw2Yt9N
+	 ZONmeMrvNwpQV8mkLkyle9+KKc/CrMOUKgcAw0S8=
+In-Reply-To: <20150721164629.18385.14538.stgit@buzz>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Jul 21, 2015 at 04:34:07PM -0700, Andrew Morton wrote:
-> On Sun, 19 Jul 2015 15:31:10 +0300 Vladimir Davydov <vdavydov@parallels.com> wrote:
-> 
-> > This function returns the inode number of the closest online ancestor of
-> > the memory cgroup a page is charged to. It is required for exporting
-> > information about which page is charged to which cgroup to userspace,
-> > which will be introduced by a following patch.
-> > 
-> > ...
-> >
-> 
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -441,6 +441,29 @@ struct cgroup_subsys_state *mem_cgroup_css_from_page(struct page *page)
-> >  	return &memcg->css;
-> >  }
-> >  
-> > +/**
-> > + * page_cgroup_ino - return inode number of the memcg a page is charged to
-> > + * @page: the page
-> > + *
-> > + * Look up the closest online ancestor of the memory cgroup @page is charged to
-> > + * and return its inode number or 0 if @page is not charged to any cgroup. It
-> > + * is safe to call this function without holding a reference to @page.
-> > + */
-> > +unsigned long page_cgroup_ino(struct page *page)
-> 
-> Shouldn't it return an ino_t?
+In dev_queue_xmit() net_cls protected with rcu-bh.
 
-Yep, thanks.
+[  270.730026] ===============================
+[  270.730029] [ INFO: suspicious RCU usage. ]
+[  270.730033] 4.2.0-rc3+ #2 Not tainted
+[  270.730036] -------------------------------
+[  270.730040] include/linux/cgroup.h:353 suspicious rcu_dereference_check() usage!
+[  270.730041] other info that might help us debug this:
+[  270.730043] rcu_scheduler_active = 1, debug_locks = 1
+[  270.730045] 2 locks held by dhclient/748:
+[  270.730046]  #0:  (rcu_read_lock_bh){......}, at: [<ffffffff81682b70>] __dev_queue_xmit+0x50/0x960
+[  270.730085]  #1:  (&qdisc_tx_lock){+.....}, at: [<ffffffff81682d60>] __dev_queue_xmit+0x240/0x960
+[  270.730090] stack backtrace:
+[  270.730096] CPU: 0 PID: 748 Comm: dhclient Not tainted 4.2.0-rc3+ #2
+[  270.730098] Hardware name: OpenStack Foundation OpenStack Nova, BIOS Bochs 01/01/2011
+[  270.730100]  0000000000000001 ffff8800bafeba58 ffffffff817ad487 0000000000000007
+[  270.730103]  ffff880232a0a780 ffff8800bafeba88 ffffffff810ca4f2 ffff88022fb23e00
+[  270.730105]  ffff880232a0a780 ffff8800bafebb68 ffff8800bafebb68 ffff8800bafebaa8
+[  270.730108] Call Trace:
+[  270.730121]  [<ffffffff817ad487>] dump_stack+0x4c/0x65
+[  270.730148]  [<ffffffff810ca4f2>] lockdep_rcu_suspicious+0xe2/0x120
+[  270.730153]  [<ffffffff816a62d2>] task_cls_state+0x92/0xa0
+[  270.730158]  [<ffffffffa00b534f>] cls_cgroup_classify+0x4f/0x120 [cls_cgroup]
+[  270.730164]  [<ffffffff816aac74>] tc_classify_compat+0x74/0xc0
+[  270.730166]  [<ffffffff816ab573>] tc_classify+0x33/0x90
+[  270.730170]  [<ffffffffa00bcb0a>] htb_enqueue+0xaa/0x4a0 [sch_htb]
+[  270.730172]  [<ffffffff81682e26>] __dev_queue_xmit+0x306/0x960
+[  270.730174]  [<ffffffff81682b70>] ? __dev_queue_xmit+0x50/0x960
+[  270.730176]  [<ffffffff816834a3>] dev_queue_xmit_sk+0x13/0x20
+[  270.730185]  [<ffffffff81787770>] dev_queue_xmit+0x10/0x20
+[  270.730187]  [<ffffffff8178b91c>] packet_snd.isra.62+0x54c/0x760
+[  270.730190]  [<ffffffff8178be25>] packet_sendmsg+0x2f5/0x3f0
+[  270.730203]  [<ffffffff81665245>] ? sock_def_readable+0x5/0x190
+[  270.730210]  [<ffffffff817b64bb>] ? _raw_spin_unlock+0x2b/0x40
+[  270.730216]  [<ffffffff8173bcbc>] ? unix_dgram_sendmsg+0x5cc/0x640
+[  270.730219]  [<ffffffff8165f367>] sock_sendmsg+0x47/0x50
+[  270.730221]  [<ffffffff8165f42f>] sock_write_iter+0x7f/0xd0
+[  270.730232]  [<ffffffff811fd4c7>] __vfs_write+0xa7/0xf0
+[  270.730234]  [<ffffffff811fe5b8>] vfs_write+0xb8/0x190
+[  270.730236]  [<ffffffff811fe8c2>] SyS_write+0x52/0xb0
+[  270.730239]  [<ffffffff817b6bae>] entry_SYSCALL_64_fastpath+0x12/0x76
 
-> 
-> > +{
-> > +	struct mem_cgroup *memcg;
-> > +	unsigned long ino = 0;
-> > +
-> > +	rcu_read_lock();
-> > +	memcg = READ_ONCE(page->mem_cgroup);
-> > +	while (memcg && !(memcg->css.flags & CSS_ONLINE))
-> > +		memcg = parent_mem_cgroup(memcg);
-> > +	if (memcg)
-> > +		ino = cgroup_ino(memcg->css.cgroup);
-> > +	rcu_read_unlock();
-> > +	return ino;
-> > +}
-> 
-> The function is racy, isn't it?  There's nothing to prevent this inode
-> from getting torn down and potentially reallocated one nanosecond after
-> page_cgroup_ino() returns?  If so, it is only safely usable by things
-> which don't care (such as procfs interfaces) and this should be
-> documented in some fashion.
-
-Agree. Here goes the incremental patch:
+Signed-off-by: Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
 ---
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index d644aadfdd0d..ad800e62cb7a 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -343,7 +343,7 @@ static inline bool mm_match_cgroup(struct mm_struct *mm,
+ net/core/netclassid_cgroup.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/net/core/netclassid_cgroup.c b/net/core/netclassid_cgroup.c
+index 1f2a126f4ffa..6441f47b1a8f 100644
+--- a/net/core/netclassid_cgroup.c
++++ b/net/core/netclassid_cgroup.c
+@@ -23,7 +23,8 @@ static inline struct cgroup_cls_state *css_cls_state(struct cgroup_subsys_state
+ 
+ struct cgroup_cls_state *task_cls_state(struct task_struct *p)
+ {
+-	return css_cls_state(task_css(p, net_cls_cgrp_id));
++	return css_cls_state(task_css_check(p, net_cls_cgrp_id,
++					    rcu_read_lock_bh_held()));
  }
+ EXPORT_SYMBOL_GPL(task_cls_state);
  
- struct cgroup_subsys_state *mem_cgroup_css_from_page(struct page *page);
--unsigned long page_cgroup_ino(struct page *page);
-+ino_t page_cgroup_ino(struct page *page);
- 
- static inline bool mem_cgroup_disabled(void)
- {
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b9c76a0906f9..bd30638c2a95 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -448,8 +448,13 @@ struct cgroup_subsys_state *mem_cgroup_css_from_page(struct page *page)
-  * Look up the closest online ancestor of the memory cgroup @page is charged to
-  * and return its inode number or 0 if @page is not charged to any cgroup. It
-  * is safe to call this function without holding a reference to @page.
-+ *
-+ * Note, this function is inherently racy, because there is nothing to prevent
-+ * the cgroup inode from getting torn down and potentially reallocated a moment
-+ * after page_cgroup_ino() returns, so it only should be used by callers that
-+ * do not care (such as procfs interfaces).
-  */
--unsigned long page_cgroup_ino(struct page *page)
-+ino_t page_cgroup_ino(struct page *page)
- {
- 	struct mem_cgroup *memcg;
- 	unsigned long ino = 0;
