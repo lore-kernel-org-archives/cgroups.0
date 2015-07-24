@@ -1,142 +1,147 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 02/10] cgroup: introduce cgroup_subsys->legacy_name
-Date: Fri, 24 Jul 2015 14:43:46 -0400
-Message-ID: <1437763434-28699-3-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 06/10] blkcg: mark existing cftypes as legacy
+Date: Fri, 24 Jul 2015 14:43:50 -0400
+Message-ID: <1437763434-28699-7-git-send-email-tj@kernel.org>
 References: <1437763434-28699-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=3uQTdS4/+JUQWFlguyKgdEFsMM1QKDI4fSYt4qI63J4=;
-        b=ieEC3dQPZ5krkJ1Vn8jdAYO8U7BFPkQdREaWAflYHuIXISIe8o6xnkSYkqYbktKYzE
-         fnOMEcNJxKn6D91NtdtyjzTg4AtvrO/EIUZx5WDDUimOJfIDiV/6/wVZWYpJePgJHLGx
-         mBcgO3djyVA4WpbKyPRUgjHGIUiY9OrR9dlPjnh5UVjlGSIrYNQq834sGDslYCKDzsrP
-         ktN4fZueBO3W7WfuyGF6NiwP0b1Z+GgvlmxNOJ4PahAIghojRDjkF0gRYEhWpGatujVu
-         QMrDMGr60uw+/iP11h2VVtrON609LK0UDx7R0p98ql666OEorbdRm7eeHRiDia2tH/wN
-         QGMw==
-In-Reply-To: <1437763434-28699-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=Kgo2W//SVwzhwFhwylY6olsCpfU4mhXFfmLfkhvof9k=;
+        b=ReWNSJRSNGI7N0HgMQt9WCQAc4qmwgqj++az1D846xF0cKqE7U2jJz9JuCRG/ORtjZ
+         J/T+34SYFo2EDnGL3AcMd6vwxW4TnnOm+v6xi4K+3EX60YtzkwAewdEXxP2qMMQ6l19A
+         OC7z9VfL3h7YuhYCXLBX9jgphWn0xkTFspI5R24ZItpfHrtUfa55lbmQklI6I0ZtWEvV
+         rYOu2Vk65EkTlirg0/30V9MgiHXtlbX/BuvpVAIc930uPy75gXS0ev3MNQlYxu5bxsCK
+         LvT2oYG2QNGHBfRAkJhSdAAAQLcocaE+LDDfo+vyrx47R/uPsxUrNWb2JDzsCxiIpFqn
+         u+qA==
+In-Reply-To: <1437763434-28699-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk
-Cc: vgoyal@redhat.com, linux-kernel@vger.kernel.org, avanzini.arianna@gmail.com, kernel-team@fb.com, hannes@cmpxchg.org, lizefan@huawei.com, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-This allows cgroup subsystems to use a different name on the unified
-hierarchy.  cgroup_subsys->name is used on the unified hierarchy,
-->legacy_name elsewhere.  If ->legacy_name is not explicitly set, it's
-automatically set to ->name and the userland visible behavior remains
-unchanged.
+blkcg is about to grow interface for the unified hierarchy.  Add
+legacy to existing cftypes.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: cgroups@vger.kernel.org
+* blkcg_policy->cftypes -> blkcg_policy->legacy_cftypes
+* blk-cgroup.c:blkcg_files -> blkcg_legacy_files
+* cfq-iosched.c:cfq_blkcg_files -> cfq_blkcg_legacy_files
+* blk-throttle.c:throtl_files -> throtl_legacy_files
+
+Pure renames.  No functional change.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- include/linux/cgroup-defs.h |  3 +++
- kernel/cgroup.c             | 30 +++++++++++++++++++-----------
- 2 files changed, 22 insertions(+), 11 deletions(-)
+ block/blk-cgroup.c         | 12 ++++++------
+ block/blk-throttle.c       |  4 ++--
+ block/cfq-iosched.c        |  4 ++--
+ include/linux/blk-cgroup.h |  2 +-
+ 4 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 8f5770a..7d0bb53 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -434,6 +434,9 @@ struct cgroup_subsys {
- 	int id;
- 	const char *name;
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index c2fb867..db7b3cc 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -847,7 +847,7 @@ void blkg_conf_finish(struct blkg_conf_ctx *ctx)
+ }
+ EXPORT_SYMBOL_GPL(blkg_conf_finish);
  
-+	/* optional, initialized automatically during boot if not set */
-+	const char *legacy_name;
-+
- 	/* link to parent, protected by cgroup_lock() */
- 	struct cgroup_root *root;
+-struct cftype blkcg_files[] = {
++struct cftype blkcg_legacy_files[] = {
+ 	{
+ 		.name = "reset_stats",
+ 		.write_u64 = blkcg_reset_stats,
+@@ -1093,7 +1093,7 @@ struct cgroup_subsys io_cgrp_subsys = {
+ 	.css_offline = blkcg_css_offline,
+ 	.css_free = blkcg_css_free,
+ 	.can_attach = blkcg_can_attach,
+-	.legacy_cftypes = blkcg_files,
++	.legacy_cftypes = blkcg_legacy_files,
+ 	.legacy_name = "blkio",
+ #ifdef CONFIG_MEMCG
+ 	/*
+@@ -1264,9 +1264,9 @@ int blkcg_policy_register(struct blkcg_policy *pol)
+ 	mutex_unlock(&blkcg_pol_mutex);
  
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 6c85e6d..0da2efa 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -1027,10 +1027,13 @@ static const struct file_operations proc_cgroupstats_operations;
- static char *cgroup_file_name(struct cgroup *cgrp, const struct cftype *cft,
- 			      char *buf)
- {
-+	struct cgroup_subsys *ss = cft->ss;
-+
- 	if (cft->ss && !(cft->flags & CFTYPE_NO_PREFIX) &&
- 	    !(cgrp->root->flags & CGRP_ROOT_NOPREFIX))
- 		snprintf(buf, CGROUP_FILE_NAME_MAX, "%s.%s",
--			 cft->ss->name, cft->name);
-+			 cgroup_on_dfl(cgrp) ? ss->name : ss->legacy_name,
-+			 cft->name);
- 	else
- 		strncpy(buf, cft->name, CGROUP_FILE_NAME_MAX);
- 	return buf;
-@@ -1335,7 +1338,7 @@ static int cgroup_show_options(struct seq_file *seq,
- 	if (root != &cgrp_dfl_root)
- 		for_each_subsys(ss, ssid)
- 			if (root->subsys_mask & (1 << ssid))
--				seq_printf(seq, ",%s", ss->name);
-+				seq_printf(seq, ",%s", ss->legacy_name);
- 	if (root->flags & CGRP_ROOT_NOPREFIX)
- 		seq_puts(seq, ",noprefix");
- 	if (root->flags & CGRP_ROOT_XATTR)
-@@ -1448,7 +1451,8 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
- 		}
+ 	/* everything is in place, add intf files for the new policy */
+-	if (pol->cftypes)
++	if (pol->legacy_cftypes)
+ 		WARN_ON(cgroup_add_legacy_cftypes(&io_cgrp_subsys,
+-						  pol->cftypes));
++						  pol->legacy_cftypes));
+ 	mutex_unlock(&blkcg_pol_register_mutex);
+ 	return 0;
  
- 		for_each_subsys(ss, i) {
--			if (strcmp(token, ss->name))
-+			if (strcmp(token, ss->name) &&
-+			    strcmp(token, ss->legacy_name))
- 				continue;
- 			if (ss->disabled)
- 				continue;
-@@ -4994,6 +4998,8 @@ int __init cgroup_init_early(void)
+@@ -1303,8 +1303,8 @@ void blkcg_policy_unregister(struct blkcg_policy *pol)
+ 		goto out_unlock;
  
- 		ss->id = i;
- 		ss->name = cgroup_subsys_name[i];
-+		if (!ss->legacy_name)
-+			ss->legacy_name = cgroup_subsys_name[i];
+ 	/* kill the intf files first */
+-	if (pol->cftypes)
+-		cgroup_rm_cftypes(pol->cftypes);
++	if (pol->legacy_cftypes)
++		cgroup_rm_cftypes(pol->legacy_cftypes);
  
- 		if (ss->early_init)
- 			cgroup_init_subsys(ss, true);
-@@ -5141,7 +5147,7 @@ int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
- 			for_each_subsys(ss, ssid)
- 				if (root->subsys_mask & (1 << ssid))
- 					seq_printf(m, "%s%s", count++ ? "," : "",
--						   ss->name);
-+						   ss->legacy_name);
- 		if (strlen(root->name))
- 			seq_printf(m, "%sname=%s", count ? "," : "",
- 				   root->name);
-@@ -5181,7 +5187,7 @@ static int proc_cgroupstats_show(struct seq_file *m, void *v)
+ 	/* remove cpds and unregister */
+ 	mutex_lock(&blkcg_pol_mutex);
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index bd3e4b2..8b4f6b8 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -1217,7 +1217,7 @@ static ssize_t tg_set_conf_uint(struct kernfs_open_file *of,
+ 	return tg_set_conf(of, buf, nbytes, off, false);
+ }
  
- 	for_each_subsys(ss, i)
- 		seq_printf(m, "%s\t%d\t%d\t%d\n",
--			   ss->name, ss->root->hierarchy_id,
-+			   ss->legacy_name, ss->root->hierarchy_id,
- 			   atomic_read(&ss->root->nr_cgrps), !ss->disabled);
+-static struct cftype throtl_files[] = {
++static struct cftype throtl_legacy_files[] = {
+ 	{
+ 		.name = "throttle.read_bps_device",
+ 		.private = offsetof(struct throtl_grp, bps[READ]),
+@@ -1263,7 +1263,7 @@ static void throtl_shutdown_wq(struct request_queue *q)
+ }
  
- 	mutex_unlock(&cgroup_mutex);
-@@ -5403,12 +5409,14 @@ static int __init cgroup_disable(char *str)
- 			continue;
+ static struct blkcg_policy blkcg_policy_throtl = {
+-	.cftypes		= throtl_files,
++	.legacy_cftypes		= throtl_legacy_files,
  
- 		for_each_subsys(ss, i) {
--			if (!strcmp(token, ss->name)) {
--				ss->disabled = 1;
--				printk(KERN_INFO "Disabling %s control group"
--					" subsystem\n", ss->name);
--				break;
--			}
-+			if (strcmp(token, ss->name) &&
-+			    strcmp(token, ss->legacy_name))
-+				continue;
-+
-+			ss->disabled = 1;
-+			printk(KERN_INFO "Disabling %s control group subsystem\n",
-+			       ss->name);
-+			break;
- 		}
- 	}
- 	return 1;
+ 	.pd_alloc_fn		= throtl_pd_alloc,
+ 	.pd_init_fn		= throtl_pd_init,
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index 38277e3..baa8459 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -1944,7 +1944,7 @@ static int cfqg_print_avg_queue_size(struct seq_file *sf, void *v)
+ }
+ #endif	/* CONFIG_DEBUG_BLK_CGROUP */
+ 
+-static struct cftype cfq_blkcg_files[] = {
++static struct cftype cfq_blkcg_legacy_files[] = {
+ 	/* on root, weight is mapped to leaf_weight */
+ 	{
+ 		.name = "weight_device",
+@@ -4654,7 +4654,7 @@ static struct elevator_type iosched_cfq = {
+ 
+ #ifdef CONFIG_CFQ_GROUP_IOSCHED
+ static struct blkcg_policy blkcg_policy_cfq = {
+-	.cftypes		= cfq_blkcg_files,
++	.legacy_cftypes		= cfq_blkcg_legacy_files,
+ 
+ 	.cpd_alloc_fn		= cfq_cpd_alloc,
+ 	.cpd_init_fn		= cfq_cpd_init,
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index db89acd..6e016e6 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -148,7 +148,7 @@ typedef void (blkcg_pol_reset_pd_stats_fn)(struct blkg_policy_data *pd);
+ struct blkcg_policy {
+ 	int				plid;
+ 	/* cgroup files for the policy */
+-	struct cftype			*cftypes;
++	struct cftype			*legacy_cftypes;
+ 
+ 	/* operations */
+ 	blkcg_pol_alloc_cpd_fn		*cpd_alloc_fn;
 -- 
 2.4.3
