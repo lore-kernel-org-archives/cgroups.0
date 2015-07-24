@@ -1,147 +1,457 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 06/10] blkcg: mark existing cftypes as legacy
-Date: Fri, 24 Jul 2015 14:43:50 -0400
-Message-ID: <1437763434-28699-7-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 10/10] blkcg: implement interface for the unified hierarchy
+Date: Fri, 24 Jul 2015 14:43:54 -0400
+Message-ID: <1437763434-28699-11-git-send-email-tj@kernel.org>
 References: <1437763434-28699-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Kgo2W//SVwzhwFhwylY6olsCpfU4mhXFfmLfkhvof9k=;
-        b=ReWNSJRSNGI7N0HgMQt9WCQAc4qmwgqj++az1D846xF0cKqE7U2jJz9JuCRG/ORtjZ
-         J/T+34SYFo2EDnGL3AcMd6vwxW4TnnOm+v6xi4K+3EX60YtzkwAewdEXxP2qMMQ6l19A
-         OC7z9VfL3h7YuhYCXLBX9jgphWn0xkTFspI5R24ZItpfHrtUfa55lbmQklI6I0ZtWEvV
-         rYOu2Vk65EkTlirg0/30V9MgiHXtlbX/BuvpVAIc930uPy75gXS0ev3MNQlYxu5bxsCK
-         LvT2oYG2QNGHBfRAkJhSdAAAQLcocaE+LDDfo+vyrx47R/uPsxUrNWb2JDzsCxiIpFqn
-         u+qA==
-In-Reply-To: <1437763434-28699-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=gRlFLJwikohWGSf2iG6K2pn+XR9HvCZVW8qcTAkUB00=;
+        b=0c3XDqJ7c7aGKaY2yCOBHcGgq3umWectpiycrVGuSV0YcaHcPmbjfGXZJYQJXKpiLc
+         2fV6Je+Go9gfMDMlPI89PLVGnGbDvNNNhfTbGDHiBePI0aqkfBOliTXK0H1FpYOAXNvc
+         Z7RQB5GiqiFihtYcoOar5CxOwJxGM9fKqBe/C8Go5ETqzMQr3BUmSmt7uqXthaqbOkUZ
+         nCVbluAeCGZ8ozoTIgB5fc9y9Nbr8VoWEh2Rjh+z/IrQaDdZxCEiP7w4XUinbv3oZixl
+         zjXgP+ZOurZdEnZq3xXIbZ+aw7O1md9WS09/6LFcPJ6aVXLRMGAcJgTvySbx3lPgoIsI
+         kYxg==
+In-Reply-To: <1437763434-28699-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: axboe@kernel.dk
+Cc: vgoyal@redhat.com, linux-kernel@vger.kernel.org, avanzini.arianna@gmail.com, kernel-team@fb.com, hannes@cmpxchg.org, lizefan@huawei.com, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-blkcg is about to grow interface for the unified hierarchy.  Add
-legacy to existing cftypes.
+blkcg interface grew to be the biggest of all controllers and
+unfortunately most inconsistent too.  The interface files are
+inconsistent with a number of cloes duplicates.  Some files have
+recursive variants while others don't.  There's distinction between
+normal and leaf weights which isn't intuitive and there are a lot of
+stat knobs which don't make much sense outside of debugging and expose
+too much implementation details to userland.
 
-* blkcg_policy->cftypes -> blkcg_policy->legacy_cftypes
-* blk-cgroup.c:blkcg_files -> blkcg_legacy_files
-* cfq-iosched.c:cfq_blkcg_files -> cfq_blkcg_legacy_files
-* blk-throttle.c:throtl_files -> throtl_legacy_files
+In the unified hierarchy, everything is always hierarchical and
+internal nodes can't have tasks rendering the two structural issues
+twisting the current interface.  The interface has to be updated in a
+significant anyway and this is a good chance to revamp it as a whole.
+This patch implements blkcg interface for the unified hierarchy.
 
-Pure renames.  No functional change.
+* (from a previous patch) blkcg is identified by "io" instead of
+  "blkio" on the unified hierarchy.  Given that the whole interface is
+  updated anyway, the rename shouldn't carry noticeable conversion
+  overhead.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+* The original interface consisted of 27 files is replaced with the
+  following three files.
+
+  blkio.stat	: per-blkcg stats
+  blkio.weight	: per-cgroup and per-cgroup-queue weight settings
+  blkio.max	: per-cgroup-queue bps and iops max limits
+
+Documentation/cgroups/unified-hierarchy.txt updated accordingly.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-cgroup.c         | 12 ++++++------
- block/blk-throttle.c       |  4 ++--
- block/cfq-iosched.c        |  4 ++--
- include/linux/blk-cgroup.h |  2 +-
- 4 files changed, 11 insertions(+), 11 deletions(-)
+ Documentation/cgroups/unified-hierarchy.txt |  57 +++++++++++++-
+ block/blk-cgroup.c                          |  51 +++++++++++++
+ block/blk-throttle.c                        | 112 ++++++++++++++++++++++++++++
+ block/cfq-iosched.c                         |  61 +++++++++++++--
+ include/linux/blk-cgroup.h                  |   1 +
+ 5 files changed, 275 insertions(+), 7 deletions(-)
 
+diff --git a/Documentation/cgroups/unified-hierarchy.txt b/Documentation/cgroups/unified-hierarchy.txt
+index 86847a7..4e23d4c 100644
+--- a/Documentation/cgroups/unified-hierarchy.txt
++++ b/Documentation/cgroups/unified-hierarchy.txt
+@@ -374,9 +374,62 @@ supported and the interface files "release_agent" and
+ 
+ 5-3. Per-Controller Changes
+ 
+-5-3-1. blkio
++5-3-1. io
+ 
+-- blk-throttle becomes properly hierarchical.
++- blkio is renamed to io.  The interface is overhauled anyway.  The
++  new name is more in line with the other two major controllers, cpu
++  and memory, and better suited given that it may be used for cgroup
++  writeback without involving block layer.
++
++- Everything including stat is always hierarchical making separate
++  recursive stat files pointless and, as no internal node can have
++  tasks, leaf weights are meaningless.  The operation model is
++  simplified and the interface is overhauled accordingly.
++
++  io.stat
++
++	The stat file.  The reported stats are from the point where
++	bio's are issued to request_queue.  The stats are counted
++	independent of which policies are enabled.  Each line in the
++	file follows the following format.  More fields may later be
++	added at the end.
++
++	  $MAJ:$MIN rbytes=$RBYTES wbytes=$WBYTES rios=$RIOS wrios=$WIOS
++
++  io.weight
++
++	The weight setting, currently only available and effective if
++	cfq-iosched is in use for the target device.  The weight is
++	between 10 and 1000 and defaults to 500.  The first line
++	always contains the default weight in the following format to
++	use when per-device setting is missing.
++
++	  default $WEIGHT
++
++	Subsequent lines list per-device weights of the following
++	format.
++
++	  $MAJ:$MIN $WEIGHT
++
++	Writing "$WEIGHT" or "default $WEIGHT" changes the default
++	setting.  Writing "$MAJ:$MIN $WEIGHT" sets per-device weight
++	while "$MAJ:$MIN default" clears it.
++
++	This file is available only on non-root cgroups.
++
++  io.max
++
++	The maximum bandwidth and/or iops setting, only available if
++	blk-throttle is enabled.  The file is of the following format.
++
++	  $MAJ:$MIN rbps=$RBPS wbps=$WBPS riops=$RIOPS wiops=$WIOPS
++
++	${R|W}BPS are read/write bytes per second and ${R|W}IOPS are
++	read/write IOs per second.  "max" indicates no limit.  Writing
++	to the file follows the same format but the individual
++	settings may be ommitted or specified in any order.
++
++	This file is available only on non-root cgroups.
+ 
+ 
+ 5-3-2. cpuset
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index c2fb867..db7b3cc 100644
+index b9d511b..b97a075 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -847,7 +847,7 @@ void blkg_conf_finish(struct blkg_conf_ctx *ctx)
+@@ -854,6 +854,53 @@ void blkg_conf_finish(struct blkg_conf_ctx *ctx)
  }
  EXPORT_SYMBOL_GPL(blkg_conf_finish);
  
--struct cftype blkcg_files[] = {
-+struct cftype blkcg_legacy_files[] = {
++static int blkcg_print_stat(struct seq_file *sf, void *v)
++{
++	struct blkcg *blkcg = css_to_blkcg(seq_css(sf));
++	struct blkcg_gq *blkg;
++
++	rcu_read_lock();
++
++	hlist_for_each_entry_rcu(blkg, &blkcg->blkg_list, blkcg_node) {
++		const char *dname;
++		struct blkg_rwstat rwstat;
++		u64 rbytes, wbytes, rios, wios;
++
++		dname = blkg_dev_name(blkg);
++		if (!dname)
++			continue;
++
++		spin_lock_irq(blkg->q->queue_lock);
++
++		rwstat = blkg_rwstat_recursive_sum(blkg, NULL,
++					offsetof(struct blkcg_gq, stat_bytes));
++		rbytes = atomic64_read(&rwstat.aux_cnt[BLKG_RWSTAT_READ]);
++		wbytes = atomic64_read(&rwstat.aux_cnt[BLKG_RWSTAT_WRITE]);
++
++		rwstat = blkg_rwstat_recursive_sum(blkg, NULL,
++					offsetof(struct blkcg_gq, stat_ios));
++		rios = atomic64_read(&rwstat.aux_cnt[BLKG_RWSTAT_READ]);
++		wios = atomic64_read(&rwstat.aux_cnt[BLKG_RWSTAT_WRITE]);
++
++		spin_unlock_irq(blkg->q->queue_lock);
++
++		if (rbytes || wbytes || rios || wios)
++			seq_printf(sf, "%s rbytes=%llu wbytes=%llu rios=%llu wios=%llu\n",
++				   dname, rbytes, wbytes, rios, wios);
++	}
++
++	rcu_read_unlock();
++	return 0;
++}
++
++struct cftype blkcg_files[] = {
++	{
++		.name = "stat",
++		.seq_show = blkcg_print_stat,
++	},
++	{ }	/* terminate */
++};
++
+ struct cftype blkcg_legacy_files[] = {
  	{
  		.name = "reset_stats",
- 		.write_u64 = blkcg_reset_stats,
-@@ -1093,7 +1093,7 @@ struct cgroup_subsys io_cgrp_subsys = {
+@@ -1100,6 +1147,7 @@ struct cgroup_subsys io_cgrp_subsys = {
  	.css_offline = blkcg_css_offline,
  	.css_free = blkcg_css_free,
  	.can_attach = blkcg_can_attach,
--	.legacy_cftypes = blkcg_files,
-+	.legacy_cftypes = blkcg_legacy_files,
++	.dfl_cftypes = blkcg_files,
+ 	.legacy_cftypes = blkcg_legacy_files,
  	.legacy_name = "blkio",
  #ifdef CONFIG_MEMCG
- 	/*
-@@ -1264,9 +1264,9 @@ int blkcg_policy_register(struct blkcg_policy *pol)
+@@ -1271,6 +1319,9 @@ int blkcg_policy_register(struct blkcg_policy *pol)
  	mutex_unlock(&blkcg_pol_mutex);
  
  	/* everything is in place, add intf files for the new policy */
--	if (pol->cftypes)
-+	if (pol->legacy_cftypes)
++	if (pol->dfl_cftypes)
++		WARN_ON(cgroup_add_dfl_cftypes(&io_cgrp_subsys,
++					       pol->dfl_cftypes));
+ 	if (pol->legacy_cftypes)
  		WARN_ON(cgroup_add_legacy_cftypes(&io_cgrp_subsys,
--						  pol->cftypes));
-+						  pol->legacy_cftypes));
- 	mutex_unlock(&blkcg_pol_register_mutex);
- 	return 0;
- 
-@@ -1303,8 +1303,8 @@ void blkcg_policy_unregister(struct blkcg_policy *pol)
- 		goto out_unlock;
- 
- 	/* kill the intf files first */
--	if (pol->cftypes)
--		cgroup_rm_cftypes(pol->cftypes);
-+	if (pol->legacy_cftypes)
-+		cgroup_rm_cftypes(pol->legacy_cftypes);
- 
- 	/* remove cpds and unregister */
- 	mutex_lock(&blkcg_pol_mutex);
+ 						  pol->legacy_cftypes));
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index bd3e4b2..8b4f6b8 100644
+index a8bb2fd..c75a263 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -1217,7 +1217,7 @@ static ssize_t tg_set_conf_uint(struct kernfs_open_file *of,
- 	return tg_set_conf(of, buf, nbytes, off, false);
- }
+@@ -1265,6 +1265,117 @@ static struct cftype throtl_legacy_files[] = {
+ 	{ }	/* terminate */
+ };
  
--static struct cftype throtl_files[] = {
-+static struct cftype throtl_legacy_files[] = {
- 	{
- 		.name = "throttle.read_bps_device",
- 		.private = offsetof(struct throtl_grp, bps[READ]),
-@@ -1263,7 +1263,7 @@ static void throtl_shutdown_wq(struct request_queue *q)
++static u64 tg_prfill_max(struct seq_file *sf, struct blkg_policy_data *pd,
++			 int off)
++{
++	struct throtl_grp *tg = pd_to_tg(pd);
++	const char *dname = blkg_dev_name(pd->blkg);
++	char bufs[4][21] = { "max", "max", "max", "max" };
++
++	if (!dname)
++		return 0;
++	if (tg->bps[READ] == -1 && tg->bps[WRITE] == -1 &&
++	    tg->iops[READ] == -1 && tg->iops[WRITE] == -1)
++		return 0;
++
++	if (tg->bps[READ] != -1)
++		snprintf(bufs[0], sizeof(bufs[0]), "%llu", tg->bps[READ]);
++	if (tg->bps[WRITE] != -1)
++		snprintf(bufs[1], sizeof(bufs[1]), "%llu", tg->bps[WRITE]);
++	if (tg->iops[READ] != -1)
++		snprintf(bufs[2], sizeof(bufs[2]), "%u", tg->iops[READ]);
++	if (tg->iops[WRITE] != -1)
++		snprintf(bufs[3], sizeof(bufs[3]), "%u", tg->iops[WRITE]);
++
++	seq_printf(sf, "%s rbps=%s wbps=%s riops=%s wiops=%s\n",
++		   dname, bufs[0], bufs[1], bufs[2], bufs[3]);
++	return 0;
++}
++
++static int tg_print_max(struct seq_file *sf, void *v)
++{
++	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)), tg_prfill_max,
++			  &blkcg_policy_throtl, seq_cft(sf)->private, false);
++	return 0;
++}
++
++static ssize_t tg_set_max(struct kernfs_open_file *of,
++			  char *buf, size_t nbytes, loff_t off)
++{
++	struct blkcg *blkcg = css_to_blkcg(of_css(of));
++	struct blkg_conf_ctx ctx;
++	struct throtl_grp *tg;
++	u64 v[4];
++	int ret;
++
++	ret = blkg_conf_prep(blkcg, &blkcg_policy_throtl, buf, &ctx);
++	if (ret)
++		return ret;
++
++	tg = blkg_to_tg(ctx.blkg);
++
++	v[0] = tg->bps[READ];
++	v[1] = tg->bps[WRITE];
++	v[2] = tg->iops[READ];
++	v[3] = tg->iops[WRITE];
++
++	while (true) {
++		char tok[27];	/* wiops=18446744073709551616 */
++		char *p;
++		u64 val = -1;
++		int len;
++
++		if (sscanf(ctx.body, "%26s%n", tok, &len) != 1)
++			break;
++		if (tok[0] == '\0')
++			break;
++		ctx.body += len;
++
++		ret = -EINVAL;
++		p = tok;
++		strsep(&p, "=");
++		if (!p || (sscanf(p, "%llu", &val) != 1 && strcmp(p, "max")))
++			goto out_finish;
++
++		ret = -ERANGE;
++		if (!val)
++			goto out_finish;
++
++		ret = -EINVAL;
++		if (!strcmp(tok, "rbps"))
++			v[0] = val;
++		else if (!strcmp(tok, "wbps"))
++			v[1] = val;
++		else if (!strcmp(tok, "riops"))
++			v[2] = min_t(u64, val, UINT_MAX);
++		else if (!strcmp(tok, "wiops"))
++			v[3] = min_t(u64, val, UINT_MAX);
++		else
++			goto out_finish;
++	}
++
++	tg->bps[READ] = v[0];
++	tg->bps[WRITE] = v[1];
++	tg->iops[READ] = v[2];
++	tg->iops[WRITE] = v[3];
++
++	tg_conf_updated(tg);
++	ret = 0;
++out_finish:
++	blkg_conf_finish(&ctx);
++	return ret ?: nbytes;
++}
++
++static struct cftype throtl_files[] = {
++	{
++		.name = "max",
++		.flags = CFTYPE_NOT_ON_ROOT,
++		.seq_show = tg_print_max,
++		.write = tg_set_max,
++	},
++	{ }	/* terminate */
++};
++
+ static void throtl_shutdown_wq(struct request_queue *q)
+ {
+ 	struct throtl_data *td = q->td;
+@@ -1273,6 +1384,7 @@ static void throtl_shutdown_wq(struct request_queue *q)
  }
  
  static struct blkcg_policy blkcg_policy_throtl = {
--	.cftypes		= throtl_files,
-+	.legacy_cftypes		= throtl_legacy_files,
++	.dfl_cftypes		= throtl_files,
+ 	.legacy_cftypes		= throtl_legacy_files,
  
  	.pd_alloc_fn		= throtl_pd_alloc,
- 	.pd_init_fn		= throtl_pd_init,
 diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index 38277e3..baa8459 100644
+index 7a72301..97da571 100644
 --- a/block/cfq-iosched.c
 +++ b/block/cfq-iosched.c
-@@ -1944,7 +1944,7 @@ static int cfqg_print_avg_queue_size(struct seq_file *sf, void *v)
- }
- #endif	/* CONFIG_DEBUG_BLK_CGROUP */
+@@ -1740,7 +1740,7 @@ static int cfq_print_leaf_weight(struct seq_file *sf, void *v)
  
--static struct cftype cfq_blkcg_files[] = {
-+static struct cftype cfq_blkcg_legacy_files[] = {
- 	/* on root, weight is mapped to leaf_weight */
- 	{
- 		.name = "weight_device",
-@@ -4654,7 +4654,7 @@ static struct elevator_type iosched_cfq = {
+ static ssize_t __cfqg_set_weight_device(struct kernfs_open_file *of,
+ 					char *buf, size_t nbytes, loff_t off,
+-					bool is_leaf_weight)
++					bool on_dfl, bool is_leaf_weight)
+ {
+ 	struct blkcg *blkcg = css_to_blkcg(of_css(of));
+ 	struct blkg_conf_ctx ctx;
+@@ -1753,9 +1753,17 @@ static ssize_t __cfqg_set_weight_device(struct kernfs_open_file *of,
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = -EINVAL;
+-	if (sscanf(ctx.body, "%llu", &v) != 1)
++	if (sscanf(ctx.body, "%llu", &v) == 1) {
++		/* require "default" on dfl */
++		ret = -ERANGE;
++		if (!v && on_dfl)
++			goto out_finish;
++	} else if (!strcmp(strim(ctx.body), "default")) {
++		v = 0;
++	} else {
++		ret = -EINVAL;
+ 		goto out_finish;
++	}
+ 
+ 	cfqg = blkg_to_cfqg(ctx.blkg);
+ 	cfqgd = blkcg_to_cfqgd(blkcg);
+@@ -1779,13 +1787,13 @@ static ssize_t __cfqg_set_weight_device(struct kernfs_open_file *of,
+ static ssize_t cfqg_set_weight_device(struct kernfs_open_file *of,
+ 				      char *buf, size_t nbytes, loff_t off)
+ {
+-	return __cfqg_set_weight_device(of, buf, nbytes, off, false);
++	return __cfqg_set_weight_device(of, buf, nbytes, off, false, false);
+ }
+ 
+ static ssize_t cfqg_set_leaf_weight_device(struct kernfs_open_file *of,
+ 					   char *buf, size_t nbytes, loff_t off)
+ {
+-	return __cfqg_set_weight_device(of, buf, nbytes, off, true);
++	return __cfqg_set_weight_device(of, buf, nbytes, off, false, true);
+ }
+ 
+ static int __cfq_set_weight(struct cgroup_subsys_state *css, u64 val,
+@@ -2103,6 +2111,48 @@ static struct cftype cfq_blkcg_legacy_files[] = {
+ #endif	/* CONFIG_DEBUG_BLK_CGROUP */
+ 	{ }	/* terminate */
+ };
++
++static int cfq_print_weight_on_dfl(struct seq_file *sf, void *v)
++{
++	struct blkcg *blkcg = css_to_blkcg(seq_css(sf));
++	struct cfq_group_data *cgd = blkcg_to_cfqgd(blkcg);
++
++	seq_printf(sf, "default %u\n", cgd->weight);
++	blkcg_print_blkgs(sf, blkcg, cfqg_prfill_weight_device,
++			  &blkcg_policy_cfq, 0, false);
++	return 0;
++}
++
++static ssize_t cfq_set_weight_on_dfl(struct kernfs_open_file *of,
++				     char *buf, size_t nbytes, loff_t off)
++{
++	char *endp;
++	int ret;
++	u64 v;
++
++	buf = strim(buf);
++
++	/* "WEIGHT" or "default WEIGHT" sets the default weight */
++	v = simple_strtoull(buf, &endp, 0);
++	if (*endp == '\0' || sscanf(buf, "default %llu", &v) == 1) {
++		ret = __cfq_set_weight(of_css(of), v, false);
++		return ret ?: nbytes;
++	}
++
++	/* "MAJ:MIN WEIGHT" */
++	return __cfqg_set_weight_device(of, buf, nbytes, off, true, false);
++}
++
++static struct cftype cfq_blkcg_files[] = {
++	{
++		.name = "weight",
++		.flags = CFTYPE_NOT_ON_ROOT,
++		.seq_show = cfq_print_weight_on_dfl,
++		.write = cfq_set_weight_on_dfl,
++	},
++	{ }	/* terminate */
++};
++
+ #else /* GROUP_IOSCHED */
+ static struct cfq_group *cfq_lookup_cfqg(struct cfq_data *cfqd,
+ 					 struct blkcg *blkcg)
+@@ -4659,6 +4709,7 @@ static struct elevator_type iosched_cfq = {
  
  #ifdef CONFIG_CFQ_GROUP_IOSCHED
  static struct blkcg_policy blkcg_policy_cfq = {
--	.cftypes		= cfq_blkcg_files,
-+	.legacy_cftypes		= cfq_blkcg_legacy_files,
++	.dfl_cftypes		= cfq_blkcg_files,
+ 	.legacy_cftypes		= cfq_blkcg_legacy_files,
  
  	.cpd_alloc_fn		= cfq_cpd_alloc,
- 	.cpd_init_fn		= cfq_cpd_init,
 diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index db89acd..6e016e6 100644
+index b270aef..9a7c4bd 100644
 --- a/include/linux/blk-cgroup.h
 +++ b/include/linux/blk-cgroup.h
-@@ -148,7 +148,7 @@ typedef void (blkcg_pol_reset_pd_stats_fn)(struct blkg_policy_data *pd);
+@@ -148,6 +148,7 @@ typedef void (blkcg_pol_reset_pd_stats_fn)(struct blkg_policy_data *pd);
  struct blkcg_policy {
  	int				plid;
  	/* cgroup files for the policy */
--	struct cftype			*cftypes;
-+	struct cftype			*legacy_cftypes;
++	struct cftype			*dfl_cftypes;
+ 	struct cftype			*legacy_cftypes;
  
  	/* operations */
- 	blkcg_pol_alloc_cpd_fn		*cpd_alloc_fn;
 -- 
 2.4.3
