@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 09/10] blkcg: misc preparations for unified hierarchy interface
-Date: Fri, 24 Jul 2015 14:43:53 -0400
-Message-ID: <1437763434-28699-10-git-send-email-tj@kernel.org>
+Subject: [PATCH 08/10] blkcg: separate out tg_conf_updated() from tg_set_conf()
+Date: Fri, 24 Jul 2015 14:43:52 -0400
+Message-ID: <1437763434-28699-9-git-send-email-tj@kernel.org>
 References: <1437763434-28699-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=vWFvWuIJAOqVRKOTl0wvlb90k6CnL+8HYx+2md8SQ+E=;
-        b=XNPgOHq2EDVZO3eWQnIG8B9UCtxIAnojc7o6WN3sEy9Os0Y/pbNbwERoA+0dsI654R
-         4mtvw1QfburGPcn+uqcLkbuIIxvomWo4pkOAeJRH/iwpQ5YmFokByNbhwGjYVWMzJ0uS
-         /aIjKtzMVytngbE5WS439G5LMNtgYljlIHw2hNILfmuSfIT0fryhMFyXnXOSQNuIhIcZ
-         s624uLNZHpLZGkhKusOTnqwhrZGYX2VnrnbJ0EznyJx00gEo1hjZxjygwRHtrA589qYp
-         myqelV725EX3vxtQSLctR/3El3SD/3QYy33sYQqHq1iWzNrtlCqF/x6wKwriMebv9fa1
-         4v6g==
+        bh=k9SSG2KN0yb9UVo8a+LY7y+qydxZX/MR0Yk83+LOpnk=;
+        b=bcAcJoEDYfeHkfeAZeZRFFa78ImQGJxC7x0ODdYiCLnbHHGUlOUl005zkTnf1CM4gg
+         Txb6mbUA2ZreEFbK/BuMmsdOpLolKsS91cHi+jd5d/aags3e45ymVHPLPHZMTBzRb3Vz
+         sBIIDQNh4gI8YQAGIoZs/Jn/nlu2H1wK66cAVOPj0z5Uyvo4yHo+DPLJXtWqOsku8KKS
+         GrV8FdBNRDFkdvzwPHrlfJQXeTLgy/Wu2fOjAdGONPQ2dsRaa7i+ZlgYmOtXaiuf/fG8
+         KeoYrznOd0/oCKmmbUXTABqb6CmLcw0s4IZ8TKVPSgp7iA6am8SD/6xQmaRzObWWNx8/
+         c10A==
 In-Reply-To: <1437763434-28699-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,79 +23,103 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: vgoyal@redhat.com, linux-kernel@vger.kernel.org, avanzini.arianna@gmail.com, kernel-team@fb.com, hannes@cmpxchg.org, lizefan@huawei.com, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-* Export blkg_dev_name()
-
-* Drop unnecessary @cft from __cfq_set_weight().
+tg_set_conf() is largely consisted of parsing and setting the new
+config and the follow-up application and propagation.  This patch
+separates out the latter part into tg_conf_updated().  This will be
+used to implement interface for the unified hierarchy.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-cgroup.c         | 3 ++-
- block/cfq-iosched.c        | 8 ++++----
- include/linux/blk-cgroup.h | 1 +
- 3 files changed, 7 insertions(+), 5 deletions(-)
+ block/blk-throttle.c | 60 ++++++++++++++++++++++++++++------------------------
+ 1 file changed, 32 insertions(+), 28 deletions(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 2ea3a2a..b9d511b 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -462,13 +462,14 @@ static int blkcg_reset_stats(struct cgroup_subsys_state *css,
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 0e17c8f..a8bb2fd 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -1144,35 +1144,11 @@ static int tg_print_conf_uint(struct seq_file *sf, void *v)
  	return 0;
  }
  
--static const char *blkg_dev_name(struct blkcg_gq *blkg)
-+const char *blkg_dev_name(struct blkcg_gq *blkg)
+-static ssize_t tg_set_conf(struct kernfs_open_file *of,
+-			   char *buf, size_t nbytes, loff_t off, bool is_u64)
++static void tg_conf_updated(struct throtl_grp *tg)
  {
- 	/* some drivers (floppy) instantiate a queue w/o disk registered */
- 	if (blkg->q->backing_dev_info.dev)
- 		return dev_name(blkg->q->backing_dev_info.dev);
- 	return NULL;
- }
-+EXPORT_SYMBOL_GPL(blkg_dev_name);
+-	struct blkcg *blkcg = css_to_blkcg(of_css(of));
+-	struct blkg_conf_ctx ctx;
+-	struct throtl_grp *tg;
+-	struct throtl_service_queue *sq;
+-	struct blkcg_gq *blkg;
++	struct throtl_service_queue *sq = &tg->service_queue;
+ 	struct cgroup_subsys_state *pos_css;
+-	int ret;
+-	u64 v;
+-
+-	ret = blkg_conf_prep(blkcg, &blkcg_policy_throtl, buf, &ctx);
+-	if (ret)
+-		return ret;
+-
+-	ret = -EINVAL;
+-	if (sscanf(ctx.body, "%llu", &v) != 1)
+-		goto out_finish;
+-	if (!v)
+-		v = -1;
+-
+-	tg = blkg_to_tg(ctx.blkg);
+-	sq = &tg->service_queue;
+-
+-	if (is_u64)
+-		*(u64 *)((void *)tg + of_cft(of)->private) = v;
+-	else
+-		*(unsigned int *)((void *)tg + of_cft(of)->private) = v;
++	struct blkcg_gq *blkg;
  
- /**
-  * blkcg_print_blkgs - helper for printing per-blkg data
-diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index ea88d89..7a72301 100644
---- a/block/cfq-iosched.c
-+++ b/block/cfq-iosched.c
-@@ -1788,8 +1788,8 @@ static ssize_t cfqg_set_leaf_weight_device(struct kernfs_open_file *of,
- 	return __cfqg_set_weight_device(of, buf, nbytes, off, true);
- }
+ 	throtl_log(&tg->service_queue,
+ 		   "limit change rbps=%llu wbps=%llu riops=%u wiops=%u",
+@@ -1186,7 +1162,7 @@ static ssize_t tg_set_conf(struct kernfs_open_file *of,
+ 	 * restrictions in the whole hierarchy and allows them to bypass
+ 	 * blk-throttle.
+ 	 */
+-	blkg_for_each_descendant_pre(blkg, pos_css, ctx.blkg)
++	blkg_for_each_descendant_pre(blkg, pos_css, tg_to_blkg(tg))
+ 		tg_update_has_rules(blkg_to_tg(blkg));
  
--static int __cfq_set_weight(struct cgroup_subsys_state *css, struct cftype *cft,
--			    u64 val, bool is_leaf_weight)
-+static int __cfq_set_weight(struct cgroup_subsys_state *css, u64 val,
-+			    bool is_leaf_weight)
- {
- 	struct blkcg *blkcg = css_to_blkcg(css);
- 	struct blkcg_gq *blkg;
-@@ -1834,13 +1834,13 @@ static int __cfq_set_weight(struct cgroup_subsys_state *css, struct cftype *cft,
- static int cfq_set_weight(struct cgroup_subsys_state *css, struct cftype *cft,
- 			  u64 val)
- {
--	return __cfq_set_weight(css, cft, val, false);
-+	return __cfq_set_weight(css, val, false);
- }
+ 	/*
+@@ -1204,7 +1180,35 @@ static ssize_t tg_set_conf(struct kernfs_open_file *of,
+ 		tg_update_disptime(tg);
+ 		throtl_schedule_next_dispatch(sq->parent_sq, true);
+ 	}
++}
++
++static ssize_t tg_set_conf(struct kernfs_open_file *of,
++			   char *buf, size_t nbytes, loff_t off, bool is_u64)
++{
++	struct blkcg *blkcg = css_to_blkcg(of_css(of));
++	struct blkg_conf_ctx ctx;
++	struct throtl_grp *tg;
++	int ret;
++	u64 v;
++
++	ret = blkg_conf_prep(blkcg, &blkcg_policy_throtl, buf, &ctx);
++	if (ret)
++		return ret;
++
++	ret = -EINVAL;
++	if (sscanf(ctx.body, "%llu", &v) != 1)
++		goto out_finish;
++	if (!v)
++		v = -1;
++
++	tg = blkg_to_tg(ctx.blkg);
++
++	if (is_u64)
++		*(u64 *)((void *)tg + of_cft(of)->private) = v;
++	else
++		*(unsigned int *)((void *)tg + of_cft(of)->private) = v;
  
- static int cfq_set_leaf_weight(struct cgroup_subsys_state *css,
- 			       struct cftype *cft, u64 val)
- {
--	return __cfq_set_weight(css, cft, val, true);
-+	return __cfq_set_weight(css, val, true);
- }
- 
- static int cfqg_print_stat(struct seq_file *sf, void *v)
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index 85a4d98..b270aef 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -182,6 +182,7 @@ int blkcg_activate_policy(struct request_queue *q,
- void blkcg_deactivate_policy(struct request_queue *q,
- 			     const struct blkcg_policy *pol);
- 
-+const char *blkg_dev_name(struct blkcg_gq *blkg);
- void blkcg_print_blkgs(struct seq_file *sf, struct blkcg *blkcg,
- 		       u64 (*prfill)(struct seq_file *,
- 				     struct blkg_policy_data *, int),
++	tg_conf_updated(tg);
+ 	ret = 0;
+ out_finish:
+ 	blkg_conf_finish(&ctx);
 -- 
 2.4.3
