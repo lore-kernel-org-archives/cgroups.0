@@ -1,51 +1,119 @@
 From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [RFC PATCH 0/4] Shared vhost design
-Date: Tue, 28 Jul 2015 00:07:19 +0300
-Message-ID: <20150728000221-mutt-send-email-mst@redhat.com>
+Subject: Re: [RFC PATCH 4/4] vhost: Add cgroup-aware creation of worker
+ threads
+Date: Tue, 28 Jul 2015 00:12:16 +0300
+Message-ID: <20150728000758-mutt-send-email-mst@redhat.com>
 References: <1436760455-5686-1-git-send-email-bsd@redhat.com>
- <OF451FED84.3040AFD2-ONC2257E8C.0043F908-C2257E8C.00446592@il.ibm.com>
- <jpgmvyh9ybg.fsf@linux.bootlegged.copy>
+ <1436760455-5686-5-git-send-email-bsd@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <kvm-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <jpgmvyh9ybg.fsf@linux.bootlegged.copy>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1436760455-5686-5-git-send-email-bsd@redhat.com>
+Sender: kvm-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Bandan Das <bsd@redhat.com>
-Cc: Eyal Moscovici <EYALMO@il.ibm.com>, cgroups@vger.kernel.org, jasowang@redhat.com, kvm@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, Razya Ladelsky <RAZYA@il.ibm.com>
+Cc: kvm@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Eyal Moscovici <EYALMO@il.ibm.com>, Razya Ladelsky <RAZYA@il.ibm.com>, cgroups@vger.kernel.org, jasowang@redhat.com, Tejun Heo <tj@kernel.org>
 
-On Mon, Jul 27, 2015 at 03:48:19PM -0400, Bandan Das wrote:
-> Eyal Moscovici <EYALMO@il.ibm.com> writes:
+On Mon, Jul 13, 2015 at 12:07:35AM -0400, Bandan Das wrote:
+> With the help of the cgroup function to compare groups introduced
+> in the previous patch, this changes worker creation policy.
+> If the new device belongs to different cgroups than any of the
+> devices we are currently serving, we end up creating a new worker
+> thread even if we haven't reached the devs_per_worker threshold
 > 
-> > Hi, 
-> >
-> > The test showed the same relative numbers as we got in our internal 
-> > testing. I was wondering about the configuration in regards to NUMA. From
-> Thanks for confirming.
-> 
-> > our testing we saw that if the VMs are spread across 2 NUMA nodes then 
-> > having a shared vhost thread per node performs better then having the two 
-> > threads in the same core.
-> 
-> IIUC, this is similar to my test setup and observations i.e 
-> > 14*                                               1173.8  1216.9
-> 
-> In this case, there's a shared vhost thread on CPU 14 for numa node 0
-> and another on CPU 15 for numa node 1. Guests running on CPUs 0,2,4,6,8,10,12
-> are serviced by vhost-0 that runs on CPU 14 and guests running on CPUs 1,3,5,7,9,11,13
-> get serviced by vhost-1 (Numa node 1). I tried some other configurations but
-> this configuration gave me the best results.
-> 
-> 
-> Eyal, I think it makes sense to add polling on top of these patches and
-> get numbers for them too. Thoughts ?
-> 
-> Bandan
+> Signed-off-by: Bandan Das <bsd@redhat.com>
 
-So simple polling by vhost is kind of ok for some guests, but I think to
-really make it work for a reasonably wide selection of guests/workloads
-you need to combine it with 1. polling the NIC - it makes no sense to me
-to only poll one side of the equation; and probably 2. - polling in
-guest.
+Would it make sense to integrate this in the work-queue mechanism somehow?
+Just a thought - correctly accounting kernel's work
+on behalf of specific userspace groups might have value generally.
+Or is the usecase too special?
+Cc Tejun for comments.
+
+> ---
+>  drivers/vhost/vhost.c | 47 +++++++++++++++++++++++++++++++++++++++--------
+>  1 file changed, 39 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/vhost/vhost.c b/drivers/vhost/vhost.c
+> index 6a5d4c0..dc0fa37 100644
+> --- a/drivers/vhost/vhost.c
+> +++ b/drivers/vhost/vhost.c
+> @@ -261,12 +261,6 @@ static int vhost_worker(void *data)
+>  				use_mm(dev->mm);
+>  			}
+>  
+> -			/* TODO: Consider a more elegant solution */
+> -			if (worker->owner != dev->owner) {
+> -				/* Should check for return value */
+> -				cgroup_attach_task_all(dev->owner, current);
+> -				worker->owner = dev->owner;
+> -			}
+>  			work->fn(work);
+>  			if (need_resched())
+>  				schedule();
+> @@ -278,6 +272,36 @@ static int vhost_worker(void *data)
+>  	return 0;
+>  }
+>  
+> +struct vhost_attach_cgroups_struct {
+> +	struct vhost_work work;
+> +	struct task_struct *owner;
+> +	int ret;
+> +};
+> +
+> +static void vhost_attach_cgroups_work(struct vhost_work *work)
+> +{
+> +	struct vhost_attach_cgroups_struct *s;
+> +
+> +	s = container_of(work, struct vhost_attach_cgroups_struct, work);
+> +	s->ret = cgroup_attach_task_all(s->owner, current);
+> +}
+> +
+> +static void vhost_attach_cgroups(struct vhost_dev *dev,
+> +				struct vhost_worker *worker)
+> +{
+> +	struct vhost_attach_cgroups_struct attach;
+> +
+> +	attach.owner = dev->owner;
+> +	vhost_work_init(dev, &attach.work, vhost_attach_cgroups_work);
+> +	vhost_work_queue(worker, &attach.work);
+> +	vhost_work_flush(worker, &attach.work);
+> +
+> +	if (!attach.ret)
+> +		worker->owner = dev->owner;
+> +
+> +	dev->err = attach.ret;
+> +}
+> +
+>  static void vhost_create_worker(struct vhost_dev *dev)
+>  {
+>  	struct vhost_worker *worker;
+> @@ -300,8 +324,14 @@ static void vhost_create_worker(struct vhost_dev *dev)
+>  
+>  	spin_lock_init(&worker->work_lock);
+>  	INIT_LIST_HEAD(&worker->work_list);
+> +
+> +	/* attach to the cgroups of the process that created us */
+> +	vhost_attach_cgroups(dev, worker);
+> +	if (dev->err)
+> +		goto therror;
+> +	worker->owner = dev->owner;
+> +
+>  	list_add(&worker->node, &pool->workers);
+> -	worker->owner = NULL;
+>  	worker->num_devices++;
+>  	total_vhost_workers++;
+>  	dev->worker = worker;
+> @@ -320,7 +350,8 @@ static int vhost_dev_assign_worker(struct vhost_dev *dev)
+>  
+>  	mutex_lock(&vhost_pool->pool_lock);
+>  	list_for_each_entry(worker, &vhost_pool->workers, node) {
+> -		if (worker->num_devices < devs_per_worker) {
+> +		if (worker->num_devices < devs_per_worker &&
+> +		    (!cgroup_match_groups(dev->owner, worker->owner))) {
+>  			dev->worker = worker;
+>  			dev->worker_assigned = true;
+>  			worker->num_devices++;
+> -- 
+> 2.4.3
