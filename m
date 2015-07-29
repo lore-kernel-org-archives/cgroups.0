@@ -1,63 +1,111 @@
-From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH -mm v9 0/8] idle memory tracking
-Date: Wed, 29 Jul 2015 18:36:40 +0300
-Message-ID: <20150729153640.GX8100@esperanza>
+Date: Wed, 29 Jul 2015 17:47:18 +0200
+Message-ID: <20150729154718.GN15801@dhcp22.suse.cz>
 References: <cover.1437303956.git.vdavydov@parallels.com>
  <20150729123629.GI15801@dhcp22.suse.cz>
  <20150729135907.GT8100@esperanza>
- <CANN689HJX2ZL891uOd8TW9ct4PNH9d5odQZm86WMxkpkCWhA-w@mail.gmail.com>
- <20150729144539.GU8100@esperanza>
- <20150729150855.GM15801@dhcp22.suse.cz>
+ <20150729142618.GJ15801@dhcp22.suse.cz>
+ <20150729152817.GV8100@esperanza>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20150729150855.GM15801-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20150729152817.GV8100@esperanza>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Andres Lagar-Cavilla <andreslc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Raghavendra K T <raghavendra.kt-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Cyrill Gorcunov <gorcunov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Andres Lagar-Cavilla <andreslc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Raghavendra K T <raghavendra.kt-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michel Lespinasse <walken-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pavel Emelyanov <xemul-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Cyrill Gorcunov <gorcunov-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Jul 29, 2015 at 05:08:55PM +0200, Michal Hocko wrote:
-> On Wed 29-07-15 17:45:39, Vladimir Davydov wrote:
-> > On Wed, Jul 29, 2015 at 07:12:13AM -0700, Michel Lespinasse wrote:
-> > > On Wed, Jul 29, 2015 at 6:59 AM, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> > > wrote:
-> > > >> I guess the primary reason to rely on the pfn rather than the LRU walk,
-> > > >> which would be more targeted (especially for memcg cases), is that we
-> > > >> cannot hold lru lock for the whole LRU walk and we cannot continue
-> > > >> walking after the lock is dropped. Maybe we can try to address that
-> > > >> instead? I do not think this is easy to achieve but have you considered
-> > > >> that as an option?
-> > > >
-> > > > Yes, I have, and I've come to a conclusion it's not doable, because LRU
-> > > > lists can be constantly rotating at an arbitrary rate. If you have an
-> > > > idea in mind how this could be done, please share.
-> > > >
-> > > > Speaking of LRU-vs-PFN walk, iterating over PFNs has its own advantages:
-> > > >  - You can distribute a walk in time to avoid CPU bursts.
-> > > >  - You are free to parallelize the scanner as you wish to decrease the
-> > > >    scan time.
+On Wed 29-07-15 18:28:17, Vladimir Davydov wrote:
+> On Wed, Jul 29, 2015 at 04:26:19PM +0200, Michal Hocko wrote:
+> > On Wed 29-07-15 16:59:07, Vladimir Davydov wrote:
+> > > On Wed, Jul 29, 2015 at 02:36:30PM +0200, Michal Hocko wrote:
+> > > > On Sun 19-07-15 15:31:09, Vladimir Davydov wrote:
+> > > > [...]
+> > > > > ---- USER API ----
+> > > > > 
+> > > > > The user API consists of two new proc files:
+> > > > 
+> > > > I was thinking about this for a while. I dislike the interface.  It is
+> > > > quite awkward to use - e.g. you have to read the full memory to check a
+> > > > single memcg idleness. This might turn out being a problem especially on
+> > > > large machines.
 > > > 
-> > > There is a third way: one could go through every MM in the system and scan
-> > > their page tables. Doing things that way turns out to be generally faster
-> > > than scanning by physical address, because you don't have to go through
-> > > RMAP for every page. But, you end up needing to take the mmap_sem lock of
-> > > every MM (in turn) while scanning them, and that degrades quickly under
-> > > memory load, which is exactly when you most need this feature. So, scan by
-> > > address is still what we use here.
+> > > Yes, with this API estimating the wss of a single memory cgroup will
+> > > cost almost as much as doing this for the whole system.
+> > > 
+> > > Come to think of it, does anyone really need to estimate idleness of one
+> > > particular cgroup?
 > > 
-> > Page table scan approach has the inherent problem - it ignores unmapped
-> > page cache. If a workload does a lot of read/write or map-access-unmap
-> > operations, we won't be able to even roughly estimate its wss.
+> > It is certainly interesting for setting the low limit.
 > 
-> That page cache is trivially reclaimable if it is clean. If it needs
-> writeback then it is non-idle only until the next writeback. So why does
-> it matter for the estimation?
+> Yes, but IMO there is no point in setting the low limit for one
+> particular cgroup w/o considering what's going on with the rest of the
+> system.
 
-Because it might be a part of a workload's working set, in which case
-evicting it will make the workload lag.
+If you use the low limit for isolating an important load then you do not
+have to care about the others that much. All you care about is to set
+the reasonable protection level and let others to compete for the rest.
 
-Thanks,
-Vladimir
+[...]
+> > > > I would assume that most users are interested only in a single number
+> > > > which tells the idleness of the system/memcg.
+> > > 
+> > > Yes, that's what I need it for - estimating containers' wss for setting
+> > > their limits accordingly.
+> > 
+> > So why don't we export the single per memcg and global knobs then?
+> > This would have few advantages. First of all it would be much easier to
+> > use, you wouldn't have to export memcg ids and finally the implementation
+> > could be changed without any user visible changes (e.g. lru vs. pfn walks),
+> > potential caching and who knows what. In other words. Michel had a
+> > single number interface AFAIR, what was the primary reason to move away
+> > from that API?
+> 
+> Because there is too much to be taken care of in the kernel with such an
+> approach and chances are high that it won't satisfy everyone. What
+> should the scan period be equal too?
+
+No, just gather the data on the read request and let the userspace
+to decide when/how often etc. If we are clever enough we can cache
+the numbers and prevent from the walk. Write to the file and do the
+mark_idle stuff.
+
+> Knob. How many kthreads do we want?
+> Knob. I want to keep history for last N intervals (this was a part of
+> Michel's implementation), what should N be equal to? Knob.
+
+This all relates to the kernel thread implementation which I wasn't
+suggesting. I was referring to Michel's work which might induce that.
+I was merely referring to a single number output. Sorry about the
+confusion.
+
+> I want to be
+> able to choose between an instant scan and a scan distributed in time.
+> Knob. I want to see stats for anon/locked/file/dirty memory separately,
+
+Why is this useful for the memcg limits setting or the wss estimation? I
+can imagine that a further drop down numbers might be interesting
+from the debugging POV but I fail to see what kind of decisions from
+userspace you would do based on them.
+
+[...]
+> > Yes this is really tricky with the current LRU implementation. I
+> > was playing with some ideas (do some checkpoints on the way) but
+> > none of them was really working out on a busy systems. But the LRU
+> > implementation might change in the future.
+> 
+> It might. Then we could come up with a new /proc or /sys file which
+> would do the same as /proc/kpageidle, but on per LRU^w whatever-it-is
+> basis, and give people a choice which one to use.
+
+This just leads to proc files count explosion we are seeing
+already... Proc ended up in dump ground for different things which
+didn't fit elsewhere and I am not very much happy about it to be honest.
+
+[...]
+-- 
+Michal Hocko
+SUSE Labs
