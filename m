@@ -1,28 +1,43 @@
-From: Zefan Li <lizefan@huawei.com>
-Subject: Re: [PATCH 02/10] cgroup: introduce cgroup_subsys->legacy_name
-Date: Wed, 29 Jul 2015 09:18:20 +0800
-Message-ID: <55B829DC.3010107@huawei.com>
-References: <1437763434-28699-1-git-send-email-tj@kernel.org> <1437763434-28699-3-git-send-email-tj@kernel.org>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH -mm v9 0/8] idle memory tracking
+Date: Wed, 29 Jul 2015 14:36:30 +0200
+Message-ID: <20150729123629.GI15801@dhcp22.suse.cz>
+References: <cover.1437303956.git.vdavydov@parallels.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1437763434-28699-3-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-doc-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <cover.1437303956.git.vdavydov@parallels.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: axboe@kernel.dk, vgoyal@redhat.com, linux-kernel@vger.kernel.org, avanzini.arianna@gmail.com, kernel-team@fb.com, hannes@cmpxchg.org, cgroups@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Vladimir Davydov <vdavydov@parallels.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Andres Lagar-Cavilla <andreslc@google.com>, Minchan Kim <minchan@kernel.org>, Raghavendra K T <raghavendra.kt@linux.vnet.ibm.com>, Johannes Weiner <hannes@cmpxchg.org>, Greg Thelen <gthelen@google.com>, Michel Lespinasse <walken@google.com>, David Rientjes <rientjes@google.com>, Pavel Emelyanov <xemul@parallels.com>, Cyrill Gorcunov <gorcunov@openvz.org>, Jonathan Corbet <corbet@lwn.net>, linux-api@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 2015/7/25 2:43, Tejun Heo wrote:
-> This allows cgroup subsystems to use a different name on the unified
-> hierarchy.  cgroup_subsys->name is used on the unified hierarchy,
-> ->legacy_name elsewhere.  If ->legacy_name is not explicitly set, it's
-> automatically set to ->name and the userland visible behavior remains
-> unchanged.
+On Sun 19-07-15 15:31:09, Vladimir Davydov wrote:
+[...]
+> ---- USER API ----
 > 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Li Zefan <lizefan@huawei.com>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: cgroups@vger.kernel.org
+> The user API consists of two new proc files:
 
-Acked
+I was thinking about this for a while. I dislike the interface.  It is
+quite awkward to use - e.g. you have to read the full memory to check a
+single memcg idleness. This might turn out being a problem especially on
+large machines. It also provides a very low level information (per-pfn
+idleness) which is inherently racy. Does anybody really require this
+level of detail?
+
+I would assume that most users are interested only in a single number
+which tells the idleness of the system/memcg. Well, you have mentioned
+a per-process reclaim but I am quite skeptical about this.
+
+I guess the primary reason to rely on the pfn rather than the LRU walk,
+which would be more targeted (especially for memcg cases), is that we
+cannot hold lru lock for the whole LRU walk and we cannot continue
+walking after the lock is dropped. Maybe we can try to address that
+instead? I do not think this is easy to achieve but have you considered
+that as an option?
+
+-- 
+Michal Hocko
+SUSE Labs
