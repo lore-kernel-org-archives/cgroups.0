@@ -1,40 +1,64 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: fix idr_preload usage
-Date: Mon, 3 Aug 2015 10:48:18 -0400
-Message-ID: <20150803144818.GD32599@mtj.duckdns.org>
-References: <1438605146-23962-1-git-send-email-vdavydov@parallels.com>
-Mime-Version: 1.0
+Subject: [PATCHSET sched,cgroup] sched: Implement interface for cgroup unified hierarchy
+Date: Mon,  3 Aug 2015 18:40:47 -0400
+Message-ID: <1438641650-14591-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=jXUEu98PXfeFAEPaLy47s+S9Mid/C/KYBdObupVmwGM=;
-        b=DC1OizWzz/LogFyhY8v6pG3JxYvp8dZ8qVqFpeAFPnJVqLWbnfpl7RqrPijyP+msXD
-         T1pPCzhaV7FuzKMBTuIRTYRGfVU/xykCDQ3Dmnfsvp3mUYZctQhavrVryJpFb6YqJcBO
-         i781Ri+99biOqE9TI2sXkKK/g71Pc+6TPqOcP9wHldydSfnn8bz3XEHe2uKBIKOhXEOH
-         LQTVb7AVMIJNqHVYt2bDw+ddaEXD1miPaAei4qzmOYIGIWkGM1pMkbO6t+0KysscZWJB
-         DOTGrbJwnk3yduT2XINPs4CR1eQx3Q0uBjhd5k1PI3/kfqXP2meBZsX/FlUlYYX5gxtO
-         e34w==
-Content-Disposition: inline
-In-Reply-To: <1438605146-23962-1-git-send-email-vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=edTvliMvWvZQieuDxAyK//Zt2/Hcxg2ofLFoND9/KmI=;
+        b=jQZFH5rv5tfEux3sC+NTq4Dkw7h0cIYjCGlHPlWzd47xWBGP6bFfyNCWLuneJskWLb
+         t00ndqHXzRoqJLI4fqhk45hnF4eg97dEsLnDcTi/WTiNib0VWCNmoivQ8dvE4APQ9Z8o
+         fB26hoVb8HR6gWAKfzrxOLwr2gcd+Bh01Cn189IPSTkdAko6V2cdjKX6f8zffpGDoBN+
+         ewg0d2U860zfnDjn+tfdJlxedl78qSBrvvRDrhaqXWye7fb58/pHoS89AkGlMw4z2aNP
+         Jh6ap6TTR7T8Ao1jBdsjJvJpA0PwqM6c6+sVhR76s5Q81nAKj1lqG3bYGndoebGSSEBV
+         Caag==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Aug 03, 2015 at 03:32:26PM +0300, Vladimir Davydov wrote:
-> It does not make much sense to call idr_preload with the same gfp mask
-> as the following idr_alloc, but this is what we do in cgroup_idr_alloc.
-> This patch fixes the idr_preload usage by making cgroup_idr_alloc call
-> idr_alloc w/o __GFP_WAIT. Since it is now safe to call cgroup_idr_alloc
-> with GFP_KERNEL, the patch also fixes all its callers appropriately.
+Hello,
 
-Applied to cgroup/for-4.3.
+This patchset implements cpu controller's interface for unified
+hierarchy.  While cpu controller didn't have structural issues that
+memcg and blkcg had, there still are minor issues such as cpuacct and
+use of different time units and its interface can be made consistent
+with other controllers so that cgroup as a whole presents uniform ways
+to achieve similar things with different resources.
 
-Thanks.
+This patchset contains the following three patches.
 
--- 
+ 0001-cgroup-define-controller-file-conventions.patch
+ 0002-sched-Misc-preps-for-cgroup-unified-hierarchy-interf.patch
+ 0003-sched-Implement-interface-for-cgroup-unified-hierarc.patch
+
+The "Controller file conventions" section in
+Documentation/cgroups/unified-hierarchy.txt which is added by the
+first patch codifies the syntax and semantics for controller knobs and
+the next two patches implement the new interface for the cpu
+controller.
+
+The first patch is needed by blkcg too, so once the changes get acked
+I'll set up a branch containing the patch so that it can be pulled
+from both sched and blkcg.
+
+This patchset is on top of v4.2-rc1 and also available in the
+following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-sched-unified-intf
+
+diffstat follows, thanks.
+
+ Documentation/cgroups/unified-hierarchy.txt |  128 +++++++++++++++++++-
+ include/linux/cgroup.h                      |    9 +
+ kernel/sched/core.c                         |  173 +++++++++++++++++++++++++++-
+ kernel/sched/cpuacct.c                      |   57 ++++++---
+ kernel/sched/cpuacct.h                      |    5 
+ 5 files changed, 342 insertions(+), 30 deletions(-)
+
+--
 tejun
