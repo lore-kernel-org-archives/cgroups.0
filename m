@@ -1,50 +1,66 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 1/4] cgroup: export cgrp_dfl_root
-Date: Sun,  2 Aug 2015 16:23:41 -0400
-Message-ID: <1438547024-23497-2-git-send-email-tj@kernel.org>
-References: <1438547024-23497-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=/2cfPRubWtP6LcmNdZAC+VwmD5Cr1kYJ175jOV/6qkg=;
-        b=tof0OFkkV3FEhAr+/vasF3LTBOb/m1Sywunx2PBalebhnb3s7Dgvg12hVSgV41zo2L
-         NrGy+7rBLzenk0OT9Ac4wF3z97hxL7c9a+LRySjlmFyW9cbPcDku05lRNFe8rfAGGicR
-         qGjY7MYILlYWwOOBvBwR8hv+s+ibN+HRGpqCZcIA/vj+6BS2+iI5qN564jywfL/ZgK6G
-         exDyVO+Bnv2bXJlNFPcLFvcFR1DneMPzgSYvaNv/sDgKPr7r8L9vv9z1x4vtV35vUQRC
-         Et+np3x1KUU92JnQL3Citvd46//dJahb+b03wSLPn/TxtEYMePQSXiabUiHd2szWsNiY
-         Gc3Q==
-In-Reply-To: <1438547024-23497-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: [PATCH] cgroup: fix idr_preload usage
+Date: Mon, 3 Aug 2015 15:32:26 +0300
+Message-ID: <1438605146-23962-1-git-send-email-vdavydov@parallels.com>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk, hannes@cmpxchg.org, lizefan@huawei.com
-Cc: linux-kernel@vger.kernel.org, vgoyal@redhat.com, avanzini.arianna@gmail.com, cgroups@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-While cgroup subsystems can't be modules, blkcg supports dynamically
-loadable policies which interact with cgroup core.  Export
-cgrp_dfl_root so that cgroup_on_dfl() can be used in those modules.
+It does not make much sense to call idr_preload with the same gfp mask
+as the following idr_alloc, but this is what we do in cgroup_idr_alloc.
+This patch fixes the idr_preload usage by making cgroup_idr_alloc call
+idr_alloc w/o __GFP_WAIT. Since it is now safe to call cgroup_idr_alloc
+with GFP_KERNEL, the patch also fixes all its callers appropriately.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
+Signed-off-by: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
 ---
- kernel/cgroup.c | 1 +
- 1 file changed, 1 insertion(+)
+ kernel/cgroup.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 1276569..9c8eb17 100644
+index 75c5110d09c2..2a33fdc855dc 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -145,6 +145,7 @@ static const char *cgroup_subsys_name[] = {
-  * part of that cgroup.
-  */
- struct cgroup_root cgrp_dfl_root;
-+EXPORT_SYMBOL_GPL(cgrp_dfl_root);
+@@ -210,7 +210,7 @@ static int cgroup_idr_alloc(struct idr *idr, void *ptr, int start, int end,
  
- /*
-  * The default hierarchy always exists but is hidden until mounted for the
+ 	idr_preload(gfp_mask);
+ 	spin_lock_bh(&cgroup_idr_lock);
+-	ret = idr_alloc(idr, ptr, start, end, gfp_mask);
++	ret = idr_alloc(idr, ptr, start, end, gfp_mask & ~__GFP_WAIT);
+ 	spin_unlock_bh(&cgroup_idr_lock);
+ 	idr_preload_end();
+ 	return ret;
+@@ -1669,7 +1669,7 @@ static int cgroup_setup_root(struct cgroup_root *root, unsigned long ss_mask)
+ 
+ 	lockdep_assert_held(&cgroup_mutex);
+ 
+-	ret = cgroup_idr_alloc(&root->cgroup_idr, root_cgrp, 1, 2, GFP_NOWAIT);
++	ret = cgroup_idr_alloc(&root->cgroup_idr, root_cgrp, 1, 2, GFP_KERNEL);
+ 	if (ret < 0)
+ 		goto out;
+ 	root_cgrp->id = ret;
+@@ -4582,7 +4582,7 @@ static int create_css(struct cgroup *cgrp, struct cgroup_subsys *ss,
+ 	if (err)
+ 		goto err_free_css;
+ 
+-	err = cgroup_idr_alloc(&ss->css_idr, NULL, 2, 0, GFP_NOWAIT);
++	err = cgroup_idr_alloc(&ss->css_idr, NULL, 2, 0, GFP_KERNEL);
+ 	if (err < 0)
+ 		goto err_free_percpu_ref;
+ 	css->id = err;
+@@ -4659,7 +4659,7 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
+ 	 * Temporarily set the pointer to NULL, so idr_find() won't return
+ 	 * a half-baked cgroup.
+ 	 */
+-	cgrp->id = cgroup_idr_alloc(&root->cgroup_idr, NULL, 2, 0, GFP_NOWAIT);
++	cgrp->id = cgroup_idr_alloc(&root->cgroup_idr, NULL, 2, 0, GFP_KERNEL);
+ 	if (cgrp->id < 0) {
+ 		ret = -ENOMEM;
+ 		goto out_cancel_ref;
 -- 
-2.4.3
+2.1.4
