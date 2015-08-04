@@ -1,24 +1,46 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+From: Peter Zijlstra <peterz@infradead.org>
 Subject: Re: [PATCH 1/3] cgroup: define controller file conventions
-Date: Tue, 4 Aug 2015 10:42:57 +0200
-Message-ID: <20150804084257.GJ25159@twins.programming.kicks-ass.net>
+Date: Tue, 4 Aug 2015 10:48:55 +0200
+Message-ID: <20150804084855.GK25159@twins.programming.kicks-ass.net>
 References: <1438641689-14655-1-git-send-email-tj@kernel.org>
  <1438641689-14655-2-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1438641689-14655-2-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1438641689-14655-2-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: mingo@redhat.com, hannes@cmpxchg.org, lizefan@huawei.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
 On Mon, Aug 03, 2015 at 06:41:27PM -0400, Tejun Heo wrote:
-> +- If a controller implements an absolute resource limit, the control
-> +  knob should be named "max".  The special token "max" should be used
-> +  to represent no limit for both reading and writing.
+> 
+> This patch defines CGROUP_WEIGHT_MIN/DFL/MAX to be used on all weight
+> based control knobs and documents the conventions that controllers
+> should follow on the unified hierarchy.  Except for io.weight knob,
+> all existing unified hierarchy knobs are already compliant.  A
+> follow-up patch will update io.weight.
 
-So what do you do with minimal resource guarantees? That's still an
-absolute resource limit and 'max' is obviously the wrong name.
+> +- If a controller implements ratio based resource distribution, the
+> +  control knob should be named "weight" and have the range [1, 10000]
+> +  and 100 should be the default value.  The values are chosen to allow
+> +  enough and symmetric bias in both directions while keeping it
+> +  intuitive (the default is 100%).
+
+Aside from 100% being a sane 'default', what it actually is is a unit.
+100% == 1.
+
+So I would suggest naming the thing CGROUP_WEIGHT_UNIT := 100,
+
+> +/*
+> + * All weight knobs on the default hierarhcy should use the following min,
+> + * default and max values.  The default value is the logarithmic center of
+> + * MIN and MAX and allows 100x to be expressed in both directions.
+> + */
+> +#define CGROUP_WEIGHT_MIN		1
+> +#define CGROUP_WEIGHT_DFL		100
+> +#define CGROUP_WEIGHT_MAX		10000
+
+That said, I'm not entirely keen on having to change this.
