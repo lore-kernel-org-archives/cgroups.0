@@ -1,24 +1,25 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v2 1/3] cgroup: define controller file conventions
-Date: Tue, 4 Aug 2015 15:31:01 -0400
-Message-ID: <20150804193101.GI17598@mtj.duckdns.org>
+Subject: [PATCH v2 3/3] sched: Implement interface for cgroup unified
+ hierarchy
+Date: Tue, 4 Aug 2015 15:32:40 -0400
+Message-ID: <20150804193240.GJ17598@mtj.duckdns.org>
 References: <1438641689-14655-1-git-send-email-tj@kernel.org>
- <1438641689-14655-2-git-send-email-tj@kernel.org>
+ <1438641689-14655-4-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=eSJw849rVbVYMboHR9H1jpI/XNXIdVYXW6uv+T6CbXM=;
-        b=ujlyRq7nuBCPU9Uwncnbp9BOlXkAhKwTCp+tWjAP7NIS3NDxkFZt942DT4XgompHZm
-         7qcK8ZZndD1mPJYAvaA/rYNKBq+P9bDqB/RXoeIBc7seELmXg6yNUX/ihUZD5D6pQ3R1
-         q8WFNg/nyTde+7RfblM/FEpBNcKrvtB1Fc4i5qdxNokY0GzkiYmgjHkqt27UhrT0Hxtl
-         kER05/eJ3498Ryz2VdAWiqfFy/vzktEMiyglPr55rqONphWS1X+sybbHVgyE8JyH7txB
-         CEqcPxbaml3cpqu7HGO0rxe9v3J4FyPhEOhqeB8Rj94xV/c1sMfiJIfbZBIW9Z1rwBZP
-         Dmqw==
+        bh=X/KBTlmR1Xt2iObxzlIQoDigFJsOdOlMDsb6pG/0NnQ=;
+        b=WfF3GZ4p5zpx57h5TOg+3+bHsWr0cXbadFOa+QGVBdkUGX7bFMKSxfBjq1nFHi9HHD
+         PPm7k4qHz+OW9SK2DtZVEivf7e3ojeZjO0leh3ZuSXmTPE8I5e/0X7vjLoC/rVmebFqQ
+         4n746OGoRPet7+b0QAJsV0MmzCMAvtQBDKAy2GMxlCP1jDfiDe547+bFlwUZ9J5jTxv9
+         WlWhqszZDo+4XGkHl2xZv1HnUV2b0UdB3/HZw1yYHGyDSLlzfXiIXSV8bnbTX7p7R8kH
+         xHNSUlVPWeunnJKQ2jprwlTXHVPDUrvrYJvuxO9aWB4vbVGKPTeosr0Uj80HXqiTt/n5
+         1Exg==
 Content-Disposition: inline
-In-Reply-To: <1438641689-14655-2-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <1438641689-14655-4-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -26,177 +27,375 @@ Content-Transfer-Encoding: 7bit
 To: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
 Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-From 6abc8ca19df0078de17dc38340db3002ed489ce7 Mon Sep 17 00:00:00 2001
+From f85c07ea11a52068c45cdd5f5528ed7c842c833a Mon Sep 17 00:00:00 2001
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date: Tue, 4 Aug 2015 15:20:55 -0400
+Date: Tue, 4 Aug 2015 15:24:08 -0400
 
-Traditionally, each cgroup controller implemented whatever interface
-it wanted leading to interfaces which are widely inconsistent.
-Examining the requirements of the controllers readily yield that there
-are only a few control schemes shared among all.
+While the cpu controller doesn't have any functional problems, there
+are a couple interface issues which can be addressed in the v2
+interface.
 
-Two major controllers already had to implement new interface for the
-unified hierarchy due to significant structural changes.  Let's take
-the chance to establish common conventions throughout all controllers.
+* cpuacct being a separate controller.  This separation is artificial
+  and rather pointless as demonstrated by most use cases co-mounting
+  the two controllers.  It also forces certain information to be
+  accounted twice.
 
-This patch defines CGROUP_WEIGHT_MIN/DFL/MAX to be used on all weight
-based control knobs and documents the conventions that controllers
-should follow on the unified hierarchy.  Except for io.weight knob,
-all existing unified hierarchy knobs are already compliant.  A
-follow-up patch will update io.weight.
+* Use of different time units.  Writable control knobs use
+  microseconds, some stat fields use nanoseconds while other cpuacct
+  stat fields use centiseconds.
 
-v2: Added descriptions of min, low and high knobs.
+* Control knobs which can't be used in the root cgroup still show up
+  in the root.
+
+* Control knob names and semantics aren't consistent with other
+  controllers.
+
+This patchset implements cpu controller's interface on the unified
+hierarchy which adheres to the controller file conventions described
+in Documentation/cgroups/unified-hierarchy.txt.  Overall, the
+following changes are made.
+
+* cpuacct is implictly enabled and disabled by cpu and its information
+  is reported through "cpu.stat" which now uses microseconds for all
+  time durations.  All time duration fields now have "_usec" appended
+  to them for clarity.  While this doesn't solve the double accounting
+  immediately, once majority of users switch to v2, cpu can directly
+  account and report the relevant stats and cpuacct can be disabled on
+  the unified hierarchy.
+
+  Note that cpuacct.usage_percpu is currently not included in
+  "cpu.stat".  If this information is actually called for, it can be
+  added later.
+
+* "cpu.shares" is replaced with "cpu.weight" and operates on the
+  standard scale defined by CGROUP_WEIGHT_MIN/DFL/MAX (1, 100, 10000).
+  The weight is scaled to scheduler weight so that 100 maps to 1024
+  and the ratio relationship is preserved - if weight is W and its
+  scaled value is S, W / 100 == S / 1024.  While the mapped range is a
+  bit smaller than the orignal scheduler weight range, the dead zones
+  on both sides are relatively small and covers wider range than the
+  nice value mappings.  This file doesn't make sense in the root
+  cgroup and isn't create on root.
+
+* "cpu.cfs_quota_us" and "cpu.cfs_period_us" are replaced by "cpu.max"
+  which contains both quota and period.
+
+* "cpu.rt_runtime_us" and "cpu.rt_period_us" are replaced by
+  "cpu.rt.max" which contains both runtime and period.
+
+v2: cpu_stats_show() was incorrectly using CONFIG_FAIR_GROUP_SCHED for
+    CFS bandwidth stats and also using raw division for u64.  Use
+    CONFIG_CFS_BANDWITH and do_div() instead.
+
+    The semantics of "cpu.rt.max" is not fully decided yet.  Dropped
+    for now.
 
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 ---
 Hello,
 
-Added low/high descriptions and applied to the following git branch.
+Fixed build issues for certain configs and removed cpu.rt.max for now.
+The git branch has been updated accordingly.
 
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.3-unified-base
-
-The branch currently only contains this patch and will stay stable so
-that it can be pulled from.  I kept the base weight as DFL for now.
-If we decide to change it, I'll apply the change on top.
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-sched-unified-intf
 
 Thanks.
 
- Documentation/cgroups/unified-hierarchy.txt | 80 ++++++++++++++++++++++++++---
- include/linux/cgroup.h                      |  9 ++++
- 2 files changed, 81 insertions(+), 8 deletions(-)
+ Documentation/cgroups/unified-hierarchy.txt |  53 +++++++++++
+ kernel/sched/core.c                         | 140 ++++++++++++++++++++++++++++
+ kernel/sched/cpuacct.c                      |  24 +++++
+ kernel/sched/cpuacct.h                      |   5 +
+ 4 files changed, 222 insertions(+)
 
 diff --git a/Documentation/cgroups/unified-hierarchy.txt b/Documentation/cgroups/unified-hierarchy.txt
-index 86847a7..1ee9caf 100644
+index 1ee9caf..09b4a4e 100644
 --- a/Documentation/cgroups/unified-hierarchy.txt
 +++ b/Documentation/cgroups/unified-hierarchy.txt
-@@ -23,10 +23,13 @@ CONTENTS
- 5. Other Changes
-   5-1. [Un]populated Notification
-   5-2. Other Core Changes
--  5-3. Per-Controller Changes
--    5-3-1. blkio
--    5-3-2. cpuset
--    5-3-3. memory
-+  5-3. Controller File Conventions
-+    5-3-1. Format
-+    5-3-2. Control Knobs
-+  5-4. Per-Controller Changes
-+    5-4-1. blkio
-+    5-4-2. cpuset
-+    5-4-3. memory
+@@ -30,6 +30,7 @@ CONTENTS
+     5-4-1. blkio
+     5-4-2. cpuset
+     5-4-3. memory
++    5-4-4. cpu, cpuacct
  6. Planned Changes
    6-1. CAP for resource control
  
-@@ -372,14 +375,75 @@ supported and the interface files "release_agent" and
- - The "cgroup.clone_children" file is removed.
+@@ -537,6 +538,58 @@ may be specified in any order and not all pairs have to be specified.
+   memory.low, memory.high, and memory.max will use the string "max" to
+   indicate and set the highest possible value.
  
++5-4-4. cpu, cpuacct
++
++- cpuacct is no longer an independent controller.  It's implicitly
++  enabled by cpu and its information is reported in cpu.stat.
++
++- All time durations, including all stats, are now in microseconds.
++
++- The interface is updated as follows.
++
++  cpu.stat
++
++	Currently reports the following six stats.  All time stats are
++	in microseconds.
++
++	  usage_usec
++	  user_usec
++	  system_usec
++	  nr_periods
++	  nr_throttled
++	  throttled_usec
++
++  cpu.weight
++
++	The weight setting.  The weight is between 1 and 10000 and
++	defaults to 100.
++
++	This file is available only on non-root cgroups.
++
++  cpu.max
++
++	The maximum bandwidth setting.  It's in the following format.
++
++	  $MAX $PERIOD
++
++	which indicates that the group may consume upto $MAX in each
++	$PERIOD duration.  "max" for $MAX indicates no limit.  If only
++	one number is written, $MAX is updated.
++
++	This file is available only on non-root cgroups.
++
++  cpu.rt.max
++
++	The maximum realtime runtime setting.  It's in the following
++	format.
++
++	  $MAX $PERIOD
++
++	which indicates that the group may consume upto $MAX in each
++	$PERIOD duration.  If only one number is written, $MAX is
++	updated.
++
++
+ 6. Planned Changes
  
--5-3. Per-Controller Changes
-+5-3. Controller File Conventions
+ 6-1. CAP for resource control
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 6137037..1e72cdd 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -8438,6 +8438,138 @@ static struct cftype cpu_legacy_files[] = {
+ 	{ }	/* terminate */
+ };
  
--5-3-1. blkio
-+5-3-1. Format
++static int cpu_stats_show(struct seq_file *sf, void *v)
++{
++	cpuacct_cpu_stats_show(sf);
 +
-+In general, all controller files should be in one of the following
-+formats whenever possible.
++#ifdef CONFIG_CFS_BANDWIDTH
++	{
++		struct task_group *tg = css_tg(seq_css(sf));
++		struct cfs_bandwidth *cfs_b = &tg->cfs_bandwidth;
++		u64 throttled_usec;
 +
-+- Values only files
++		throttled_usec = cfs_b->throttled_time;
++		do_div(throttled_usec, NSEC_PER_USEC);
 +
-+  VAL0 VAL1...\n
++		seq_printf(sf, "nr_periods %d\n"
++			   "nr_throttled %d\n"
++			   "throttled_usec %llu\n",
++			   cfs_b->nr_periods, cfs_b->nr_throttled,
++			   throttled_usec);
++	}
++#endif
++	return 0;
++}
 +
-+- Flat keyed files
++#ifdef CONFIG_FAIR_GROUP_SCHED
++static u64 cpu_weight_read_u64(struct cgroup_subsys_state *css,
++			       struct cftype *cft)
++{
++	struct task_group *tg = css_tg(css);
++	u64 weight = scale_load_down(tg->shares);
 +
-+  KEY0 VAL0\n
-+  KEY1 VAL1\n
-+  ...
++	return DIV_ROUND_CLOSEST_ULL(weight * CGROUP_WEIGHT_DFL, 1024);
++}
 +
-+- Nested keyed files
++static int cpu_weight_write_u64(struct cgroup_subsys_state *css,
++				struct cftype *cftype, u64 weight)
++{
++	/*
++	 * cgroup weight knobs should use the common MIN, DFL and MAX
++	 * values which are 1, 100 and 10000 respectively.  While it loses
++	 * a bit of range on both ends, it maps pretty well onto the shares
++	 * value used by scheduler and the round-trip conversions preserve
++	 * the original value over the entire range.
++	 */
++	if (weight < CGROUP_WEIGHT_MIN || weight > CGROUP_WEIGHT_MAX)
++		return -ERANGE;
 +
-+  KEY0 SUB_KEY0=VAL00 SUB_KEY1=VAL01...
-+  KEY1 SUB_KEY0=VAL10 SUB_KEY1=VAL11...
-+  ...
++	weight = DIV_ROUND_CLOSEST_ULL(weight * 1024, CGROUP_WEIGHT_DFL);
 +
-+For a writeable file, the format for writing should generally match
-+reading; however, controllers may allow omitting later fields or
-+implement restricted shortcuts for most common use cases.
++	return sched_group_set_shares(css_tg(css), scale_load(weight));
++}
++#endif
 +
-+For both flat and nested keyed files, only the values for a single key
-+can be written at a time.  For nested keyed files, the sub key pairs
-+may be specified in any order and not all pairs have to be specified.
++static void __maybe_unused cpu_period_quota_print(struct seq_file *sf,
++						  long period, long quota)
++{
++	if (quota < 0)
++		seq_puts(sf, "max");
++	else
++		seq_printf(sf, "%ld", quota);
 +
++	seq_printf(sf, " %ld\n", period);
++}
 +
-+5-3-2. Control Knobs
++/* caller should put the current value in *@periodp before calling */
++static int __maybe_unused cpu_period_quota_parse(char *buf,
++						 u64 *periodp, u64 *quotap)
++{
++	char tok[21];	/* U64_MAX */
 +
-+- Settings for a single feature should generally be implemented in a
-+  single file.
++	if (!sscanf(buf, "%s %llu", tok, periodp))
++		return -EINVAL;
 +
-+- In general, the root cgroup should be exempt from resource control
-+  and thus shouldn't have resource control knobs.
++	*periodp *= NSEC_PER_USEC;
 +
-+- If a controller implements ratio based resource distribution, the
-+  control knob should be named "weight" and have the range [1, 10000]
-+  and 100 should be the default value.  The values are chosen to allow
-+  enough and symmetric bias in both directions while keeping it
-+  intuitive (the default is 100%).
++	if (sscanf(tok, "%llu", quotap))
++		*quotap *= NSEC_PER_USEC;
++	else if (!strcmp(tok, "max"))
++		*quotap = RUNTIME_INF;
++	else
++		return -EINVAL;
 +
-+- If a controller implements an absolute resource guarantee and/or
-+  limit, the control knobs should be named "min" and "max"
-+  respectively.  If a controller implements best effort resource
-+  gurantee and/or limit, the control knobs should be named "low" and
-+  "high" respectively.
++	return 0;
++}
 +
-+  In the above four control files, the special token "max" should be
-+  used to represent upward infinity for both reading and writing.
++#ifdef CONFIG_CFS_BANDWIDTH
++static int cpu_max_show(struct seq_file *sf, void *v)
++{
++	struct task_group *tg = css_tg(seq_css(sf));
 +
-+- If a setting has configurable default value and specific overrides,
-+  the default settings should be keyed with "default" and appear as
-+  the first entry in the file.  Specific entries can use "default" as
-+  its value to indicate inheritance of the default value.
++	cpu_period_quota_print(sf, tg_get_cfs_period(tg), tg_get_cfs_quota(tg));
++	return 0;
++}
 +
++static ssize_t cpu_max_write(struct kernfs_open_file *of,
++			     char *buf, size_t nbytes, loff_t off)
++{
++	struct task_group *tg = css_tg(of_css(of));
++	u64 period = tg_get_cfs_period(tg);
++	u64 quota;
++	int ret;
 +
-+5-4. Per-Controller Changes
++	ret = cpu_period_quota_parse(buf, &period, &quota);
++	if (!ret)
++		ret = tg_set_cfs_bandwidth(tg, period, quota);
++	return ret ?: nbytes;
++}
++#endif
 +
-+5-4-1. blkio
++static struct cftype cpu_files[] = {
++	{
++		.name = "stat",
++		.seq_show = cpu_stats_show,
++	},
++#ifdef CONFIG_FAIR_GROUP_SCHED
++	{
++		.name = "weight",
++		.flags = CFTYPE_NOT_ON_ROOT,
++		.read_u64 = cpu_weight_read_u64,
++		.write_u64 = cpu_weight_write_u64,
++	},
++#endif
++#ifdef CONFIG_CFS_BANDWIDTH
++	{
++		.name = "max",
++		.flags = CFTYPE_NOT_ON_ROOT,
++		.seq_show = cpu_max_show,
++		.write = cpu_max_write,
++	},
++#endif
++	{ }	/* terminate */
++};
++
+ struct cgroup_subsys cpu_cgrp_subsys = {
+ 	.css_alloc	= cpu_cgroup_css_alloc,
+ 	.css_free	= cpu_cgroup_css_free,
+@@ -8448,7 +8580,15 @@ struct cgroup_subsys cpu_cgrp_subsys = {
+ 	.attach		= cpu_cgroup_attach,
+ 	.exit		= cpu_cgroup_exit,
+ 	.legacy_cftypes	= cpu_legacy_files,
++	.dfl_cftypes	= cpu_files,
+ 	.early_init	= 1,
++#ifdef CONFIG_CGROUP_CPUACCT
++	/*
++	 * cpuacct is enabled together with cpu on the unified hierarchy
++	 * and its stats are reported through "cpu.stat".
++	 */
++	.depends_on	= 1 << cpuacct_cgrp_id,
++#endif
+ };
  
- - blk-throttle becomes properly hierarchical.
+ #endif	/* CONFIG_CGROUP_SCHED */
+diff --git a/kernel/sched/cpuacct.c b/kernel/sched/cpuacct.c
+index 42b2dd5..b4d32a6 100644
+--- a/kernel/sched/cpuacct.c
++++ b/kernel/sched/cpuacct.c
+@@ -224,6 +224,30 @@ static struct cftype files[] = {
+ 	{ }	/* terminate */
+ };
  
- 
--5-3-2. cpuset
-+5-4-2. cpuset
- 
- - Tasks are kept in empty cpusets after hotplug and take on the masks
-   of the nearest non-empty ancestor, instead of being moved to it.
-@@ -388,7 +452,7 @@ supported and the interface files "release_agent" and
-   masks of the nearest non-empty ancestor.
- 
- 
--5-3-3. memory
-+5-4-3. memory
- 
- - use_hierarchy is on by default and the cgroup file for the flag is
-   not created.
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index a593e29..c6bf9d3 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -22,6 +22,15 @@
- 
- #ifdef CONFIG_CGROUPS
- 
-+/*
-+ * All weight knobs on the default hierarhcy should use the following min,
-+ * default and max values.  The default value is the logarithmic center of
-+ * MIN and MAX and allows 100x to be expressed in both directions.
-+ */
-+#define CGROUP_WEIGHT_MIN		1
-+#define CGROUP_WEIGHT_DFL		100
-+#define CGROUP_WEIGHT_MAX		10000
++/* used to print cpuacct stats in cpu.stat on the unified hierarchy */
++void cpuacct_cpu_stats_show(struct seq_file *sf)
++{
++	struct cgroup_subsys_state *css;
++	u64 usage, user, sys;
 +
- /* a css_task_iter should be treated as an opaque object */
- struct css_task_iter {
- 	struct cgroup_subsys		*ss;
++	css = cgroup_get_e_css(seq_css(sf)->cgroup, &cpuacct_cgrp_subsys);
++
++	usage = cpuusage_read(css, seq_cft(sf));
++	cpuacct_stats_read(css_ca(css), &user, &sys);
++
++	user *= TICK_NSEC;
++	sys *= TICK_NSEC;
++	do_div(usage, NSEC_PER_USEC);
++	do_div(user, NSEC_PER_USEC);
++	do_div(sys, NSEC_PER_USEC);
++
++	seq_printf(sf, "usage_usec %llu\n"
++		   "user_usec %llu\n"
++		   "system_usec %llu\n", usage, user, sys);
++
++	css_put(css);
++}
++
+ /*
+  * charge this task's execution time to its accounting group.
+  *
+diff --git a/kernel/sched/cpuacct.h b/kernel/sched/cpuacct.h
+index ed60562..44eace9 100644
+--- a/kernel/sched/cpuacct.h
++++ b/kernel/sched/cpuacct.h
+@@ -2,6 +2,7 @@
+ 
+ extern void cpuacct_charge(struct task_struct *tsk, u64 cputime);
+ extern void cpuacct_account_field(struct task_struct *p, int index, u64 val);
++extern void cpuacct_cpu_stats_show(struct seq_file *sf);
+ 
+ #else
+ 
+@@ -14,4 +15,8 @@ cpuacct_account_field(struct task_struct *p, int index, u64 val)
+ {
+ }
+ 
++static inline void cpuacct_cpu_stats_show(struct seq_file *sf)
++{
++}
++
+ #endif
 -- 
 2.4.3
