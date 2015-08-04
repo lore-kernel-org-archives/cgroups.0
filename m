@@ -1,106 +1,202 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 3/3] sched: Implement interface for cgroup unified
- hierarchy
-Date: Tue, 4 Aug 2015 11:10:17 -0400
-Message-ID: <20150804151017.GD17598@mtj.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v2 1/3] cgroup: define controller file conventions
+Date: Tue, 4 Aug 2015 15:31:01 -0400
+Message-ID: <20150804193101.GI17598@mtj.duckdns.org>
 References: <1438641689-14655-1-git-send-email-tj@kernel.org>
- <1438641689-14655-4-git-send-email-tj@kernel.org>
- <20150804090711.GL25159@twins.programming.kicks-ass.net>
+ <1438641689-14655-2-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=PQ9o2tRWCXswfbsb885m7/1I8XhvpxGf/wHPhrPTCEo=;
-        b=UBLJH+uxrYbebs4CgZ3KEwWo9DrESNWwdwKV/EBK78K+K25PdglyP8LKVT/Df7txp6
-         b1yDgJmNL5BkOUgcblTOg5VQBGnTgf5BAsYlet/InrkGOPslP6xpNcDQP+zuRcm3VwRS
-         8Xx+1uELEeZLoyXEU48dCI8nRuTtvIApt/NSJ/COshGlPmH9aDEB7ozF0gPq6N4obbLM
-         MQwezRXORj1yRKfH9FwKyGo0euC4m2P12mHb8jViWk0FPCnIsVbUMz77eyz7zFCcsIxy
-         G4rE8gu5xRzNNHp9wQxy+7wPiRbYpqqOUkIX6vW3pZ2+U5Itz5k6PtnVDmRzbWeXLUTz
-         MVBQ==
+        bh=eSJw849rVbVYMboHR9H1jpI/XNXIdVYXW6uv+T6CbXM=;
+        b=ujlyRq7nuBCPU9Uwncnbp9BOlXkAhKwTCp+tWjAP7NIS3NDxkFZt942DT4XgompHZm
+         7qcK8ZZndD1mPJYAvaA/rYNKBq+P9bDqB/RXoeIBc7seELmXg6yNUX/ihUZD5D6pQ3R1
+         q8WFNg/nyTde+7RfblM/FEpBNcKrvtB1Fc4i5qdxNokY0GzkiYmgjHkqt27UhrT0Hxtl
+         kER05/eJ3498Ryz2VdAWiqfFy/vzktEMiyglPr55rqONphWS1X+sybbHVgyE8JyH7txB
+         CEqcPxbaml3cpqu7HGO0rxe9v3J4FyPhEOhqeB8Rj94xV/c1sMfiJIfbZBIW9Z1rwBZP
+         Dmqw==
 Content-Disposition: inline
-In-Reply-To: <20150804090711.GL25159@twins.programming.kicks-ass.net>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1438641689-14655-2-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: mingo@redhat.com, hannes@cmpxchg.org, lizefan@huawei.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Hello, Peter.
+From 6abc8ca19df0078de17dc38340db3002ed489ce7 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Tue, 4 Aug 2015 15:20:55 -0400
 
-On Tue, Aug 04, 2015 at 11:07:11AM +0200, Peter Zijlstra wrote:
-> What about the unified hierarchy stuff cannot deal with per-task
-> controllers?
-> 
-> _That_ was the biggest problem from what I can remember, and I see no
-> proposed resolution for that here.
+Traditionally, each cgroup controller implemented whatever interface
+it wanted leading to interfaces which are widely inconsistent.
+Examining the requirements of the controllers readily yield that there
+are only a few control schemes shared among all.
 
-I've been thinking about it and I'm now convinced that cgroups just is
-the wrong interface to require each application to be programming
-against.  I wrote this in the CAT thread too but cgroups may be an
-okay management / administration interface but is a horrible
-programming interface to be used by individual applications.
+Two major controllers already had to implement new interface for the
+unified hierarchy due to significant structural changes.  Let's take
+the chance to establish common conventions throughout all controllers.
 
-For things which don't require hierarchy, the obvious thing to do is
-implementing a usual syscall-like interface be it a separate syscall,
-an prctl command, an ioctl or whatever.  For things which require
-building a hierarchy of member threads, the right thing to do is
-making it a part of the usual process hierarchy - this is *the*
-hierarchy that applications are familiar with and have the facilities
-to deal with, so we can, for example, add a clone or unshare flag
-which puts the calling threads in a new child group and then let that
-use the fore-mentioned syscall-like interface to configure whatever it
-wants to configure.  In the long term, this is *way* better than
-letting individual applications fumble with cgroup hierarchy
-delegation and pseudo filesystem access.
+This patch defines CGROUP_WEIGHT_MIN/DFL/MAX to be used on all weight
+based control knobs and documents the conventions that controllers
+should follow on the unified hierarchy.  Except for io.weight knob,
+all existing unified hierarchy knobs are already compliant.  A
+follow-up patch will update io.weight.
 
-If hierarchical weight and/or bandwidth limiting for thread hierarchy
-is absolutely necessary, doing this shouldn't be too difficult and I
-suspect it wouldn't be all that different from autogroup.
+v2: Added descriptions of min, low and high knobs.
 
-> > * cpuacct is implictly enabled and disabled by cpu and its information
-> >   is reported through "cpu.stat" which now uses microseconds for all
-> >   time durations.  All time duration fields now have "_usec" appended
-> >   to them for clarity.  While this doesn't solve the double accounting
-> >   immediately, once majority of users switch to v2, cpu can directly
-> >   account and report the relevant stats and cpuacct can be disabled on
-> >   the unified hierarchy.
-> > 
-> >   Note that cpuacct.usage_percpu is currently not included in
-> >   "cpu.stat".  If this information is actually called for, it can be
-> >   added later.
-> 
-> Since you're rev'ing the interface, can't we simply kill the old cpuacct
-> and implement the missing pieces in cpu directly ?
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+---
+Hello,
 
-Yeah, that's the plan.  For the transitional period however, we'd have
-a lot more usages where cpuacct is mounted in a legacy hierarchy so I
-didn't want to incur the overhead of duplicate accounting for those
-cases and the dependency mechanism is already there making it trivial.
+Added low/high descriptions and applied to the following git branch.
 
-> > * "cpu.cfs_quota_us" and "cpu.cfs_period_us" are replaced by "cpu.max"
-> >   which contains both quota and period.
-> 
-> This is indeed a maximum limit, however
-> 
-> > * "cpu.rt_runtime_us" and "cpu.rt_period_us" are replaced by
-> >   "cpu.rt.max" which contains both runtime and period.
-> 
-> the RT thing is conceptually more of a minimum guarantee, than a
-> maximum, even though the current implementation is both, there are plans
-> to allow (controlled) relaxation of the maximum part.
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.3-unified-base
 
-Ah, I see.  Yeah, then it should be cpu.rt.min.  I'll just remove the
-file until the relaxation part is determined.
-
-> Also, if you're going to rev the interface, there's more changes we
-> should make. I'll have to go dig them out.
-
-Great, please let me know what you have on mind.
+The branch currently only contains this patch and will stay stable so
+that it can be pulled from.  I kept the base weight as DFL for now.
+If we decide to change it, I'll apply the change on top.
 
 Thanks.
 
+ Documentation/cgroups/unified-hierarchy.txt | 80 ++++++++++++++++++++++++++---
+ include/linux/cgroup.h                      |  9 ++++
+ 2 files changed, 81 insertions(+), 8 deletions(-)
+
+diff --git a/Documentation/cgroups/unified-hierarchy.txt b/Documentation/cgroups/unified-hierarchy.txt
+index 86847a7..1ee9caf 100644
+--- a/Documentation/cgroups/unified-hierarchy.txt
++++ b/Documentation/cgroups/unified-hierarchy.txt
+@@ -23,10 +23,13 @@ CONTENTS
+ 5. Other Changes
+   5-1. [Un]populated Notification
+   5-2. Other Core Changes
+-  5-3. Per-Controller Changes
+-    5-3-1. blkio
+-    5-3-2. cpuset
+-    5-3-3. memory
++  5-3. Controller File Conventions
++    5-3-1. Format
++    5-3-2. Control Knobs
++  5-4. Per-Controller Changes
++    5-4-1. blkio
++    5-4-2. cpuset
++    5-4-3. memory
+ 6. Planned Changes
+   6-1. CAP for resource control
+ 
+@@ -372,14 +375,75 @@ supported and the interface files "release_agent" and
+ - The "cgroup.clone_children" file is removed.
+ 
+ 
+-5-3. Per-Controller Changes
++5-3. Controller File Conventions
+ 
+-5-3-1. blkio
++5-3-1. Format
++
++In general, all controller files should be in one of the following
++formats whenever possible.
++
++- Values only files
++
++  VAL0 VAL1...\n
++
++- Flat keyed files
++
++  KEY0 VAL0\n
++  KEY1 VAL1\n
++  ...
++
++- Nested keyed files
++
++  KEY0 SUB_KEY0=VAL00 SUB_KEY1=VAL01...
++  KEY1 SUB_KEY0=VAL10 SUB_KEY1=VAL11...
++  ...
++
++For a writeable file, the format for writing should generally match
++reading; however, controllers may allow omitting later fields or
++implement restricted shortcuts for most common use cases.
++
++For both flat and nested keyed files, only the values for a single key
++can be written at a time.  For nested keyed files, the sub key pairs
++may be specified in any order and not all pairs have to be specified.
++
++
++5-3-2. Control Knobs
++
++- Settings for a single feature should generally be implemented in a
++  single file.
++
++- In general, the root cgroup should be exempt from resource control
++  and thus shouldn't have resource control knobs.
++
++- If a controller implements ratio based resource distribution, the
++  control knob should be named "weight" and have the range [1, 10000]
++  and 100 should be the default value.  The values are chosen to allow
++  enough and symmetric bias in both directions while keeping it
++  intuitive (the default is 100%).
++
++- If a controller implements an absolute resource guarantee and/or
++  limit, the control knobs should be named "min" and "max"
++  respectively.  If a controller implements best effort resource
++  gurantee and/or limit, the control knobs should be named "low" and
++  "high" respectively.
++
++  In the above four control files, the special token "max" should be
++  used to represent upward infinity for both reading and writing.
++
++- If a setting has configurable default value and specific overrides,
++  the default settings should be keyed with "default" and appear as
++  the first entry in the file.  Specific entries can use "default" as
++  its value to indicate inheritance of the default value.
++
++
++5-4. Per-Controller Changes
++
++5-4-1. blkio
+ 
+ - blk-throttle becomes properly hierarchical.
+ 
+ 
+-5-3-2. cpuset
++5-4-2. cpuset
+ 
+ - Tasks are kept in empty cpusets after hotplug and take on the masks
+   of the nearest non-empty ancestor, instead of being moved to it.
+@@ -388,7 +452,7 @@ supported and the interface files "release_agent" and
+   masks of the nearest non-empty ancestor.
+ 
+ 
+-5-3-3. memory
++5-4-3. memory
+ 
+ - use_hierarchy is on by default and the cgroup file for the flag is
+   not created.
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index a593e29..c6bf9d3 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -22,6 +22,15 @@
+ 
+ #ifdef CONFIG_CGROUPS
+ 
++/*
++ * All weight knobs on the default hierarhcy should use the following min,
++ * default and max values.  The default value is the logarithmic center of
++ * MIN and MAX and allows 100x to be expressed in both directions.
++ */
++#define CGROUP_WEIGHT_MIN		1
++#define CGROUP_WEIGHT_DFL		100
++#define CGROUP_WEIGHT_MAX		10000
++
+ /* a css_task_iter should be treated as an opaque object */
+ struct css_task_iter {
+ 	struct cgroup_subsys		*ss;
 -- 
-tejun
+2.4.3
