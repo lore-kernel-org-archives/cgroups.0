@@ -1,173 +1,43 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH cgroup/for-4.3 3/3] cgroup: replace __DEVEL__sane_behavior
- with cgroup2 fs type
-Date: Wed, 5 Aug 2015 13:21:08 -0400
-Message-ID: <20150805172108.GQ17598@mtj.duckdns.org>
-References: <20150805172012.GO17598@mtj.duckdns.org>
- <20150805172043.GP17598@mtj.duckdns.org>
+Subject: Re: [PATCH 1/4] cgroup: export cgrp_dfl_root
+Date: Wed, 5 Aug 2015 16:23:29 -0400
+Message-ID: <20150805202329.GR17598@mtj.duckdns.org>
+References: <1438547024-23497-1-git-send-email-tj@kernel.org>
+ <1438547024-23497-2-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=HTuvele38XgYBfbR2OmC+RyjzOK3zHQW4cdpzPaOcu8=;
-        b=lQ/3LIacSIqdM5yQ24SqUl4eE4Va7CFpZI0B+0JcsT/ujNmCsig80OmsSw6AvP6qvk
-         DTJOVL8JLpUAiVTHTQ9drRpG+ybwYx7hjLHTGwzPZ4G98NzAq4P+dgRxu6D0Y/+6JgM0
-         PhPNHHbPRMXQdF4Vb1Zuefs51BTdC6qzLLhARaqBI6OEsSXIwa/T9X62pae3SUY3o6ZE
-         PgJOxorJi2v5Iu54RMGMcbD2DW5/O6vmJ7f8V+Rd5ByHWuAQyQ4ZH/9wFZKk524IfeJR
-         hGqCEon9RJiRQaDkg7JIIjN+fhO5uxhYTcv8MXBPxyvL024EKDFAfaX4Dx5jHSxQoaru
-         9myQ==
+        bh=iuyINIC7O3SXJMJeywu4bGyeLcCQ7iAYJBYuXHHE2HM=;
+        b=gacq8Tl/Wqdnabi6wjDsXXJ8+sY3g7C5wAiXpL3YvS7uRK8zg6qh/NbXvJnQ6CLFv2
+         icWzZw7ECfx5e9+v9bbh3FpUbtPN6bahmqW+/IdxRPp+WE0rSwVRcanynmomlAQQI152
+         poctyBzZbta9qiRySGptIJGHMRMzcYKR3iFxttbcJUmuiEL2nkdG8+2FNz8mD4sIgWEH
+         i+DjA1/a9y8z1ODY3QQbF4RZWkeWFUhaNGkzAzrNn9a23z4pyY3GOgiz5+X1NXVXXFVn
+         yJLXfDm3TeSx3gyfnC45xPm9nSepoxB/oJwHbJMqf+1ImJKG0dlZYAyiqL0J09cqxXbu
+         KvKA==
 Content-Disposition: inline
-In-Reply-To: <20150805172043.GP17598-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <1438547024-23497-2-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-With major controllers - cpu, memory and io - shaping up for the
-unified hierarchy, cgroup2 is about ready to be, gradually, released
-into the wild.  Replace __DEVEL__sane_behavior flag which was used to
-select the unified hierarchy with a separate filesystem type "cgroup2"
-so that unified hierarchy can be mounted as follows.
+On Sun, Aug 02, 2015 at 04:23:41PM -0400, Tejun Heo wrote:
+> While cgroup subsystems can't be modules, blkcg supports dynamically
+> loadable policies which interact with cgroup core.  Export
+> cgrp_dfl_root so that cgroup_on_dfl() can be used in those modules.
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-  mount -t cgroup2 none $MOUNT_POINT
+Applied to cgroup/for-4.3-unified-base
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
----
- Documentation/cgroups/unified-hierarchy.txt |    6 +--
- include/linux/cgroup-defs.h                 |    1 
- kernel/cgroup.c                             |   43 +++++++++++++---------------
- 3 files changed, 22 insertions(+), 28 deletions(-)
+Thanks.
 
---- a/Documentation/cgroups/unified-hierarchy.txt
-+++ b/Documentation/cgroups/unified-hierarchy.txt
-@@ -94,11 +94,9 @@ the process.
- 
- 2-1. Mounting
- 
--Currently, unified hierarchy can be mounted with the following mount
--command.  Note that this is still under development and scheduled to
--change soon.
-+Unified hierarchy can be mounted with the following mount command.
- 
-- mount -t cgroup -o __DEVEL__sane_behavior cgroup $MOUNT_POINT
-+ mount -t cgroup2 none $MOUNT_POINT
- 
- All controllers which support the unified hierarchy and are not bound
- to other hierarchies are automatically bound to unified hierarchy and
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -66,7 +66,6 @@ enum {
- 
- /* cgroup_root->flags */
- enum {
--	CGRP_ROOT_SANE_BEHAVIOR	= (1 << 0), /* __DEVEL__sane_behavior specified */
- 	CGRP_ROOT_NOPREFIX	= (1 << 1), /* mounted subsystems have no named prefix */
- 	CGRP_ROOT_XATTR		= (1 << 2), /* supports extended attributes */
- };
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -183,6 +183,7 @@ static unsigned long have_exit_callback
- /* Ditto for the can_fork callback. */
- static unsigned long have_canfork_callback __read_mostly;
- 
-+static struct file_system_type cgroup2_fs_type;
- static struct cftype cgroup_dfl_base_files[];
- static struct cftype cgroup_legacy_base_files[];
- 
-@@ -1391,10 +1392,6 @@ static int parse_cgroupfs_options(char *
- 			all_ss = true;
- 			continue;
- 		}
--		if (!strcmp(token, "__DEVEL__sane_behavior")) {
--			opts->flags |= CGRP_ROOT_SANE_BEHAVIOR;
--			continue;
--		}
- 		if (!strcmp(token, "noprefix")) {
- 			opts->flags |= CGRP_ROOT_NOPREFIX;
- 			continue;
-@@ -1461,15 +1458,6 @@ static int parse_cgroupfs_options(char *
- 			return -ENOENT;
- 	}
- 
--	if (opts->flags & CGRP_ROOT_SANE_BEHAVIOR) {
--		pr_warn("sane_behavior: this is still under development and its behaviors will change, proceed at your own risk\n");
--		if (nr_opts != 1) {
--			pr_err("sane_behavior: no other mount options allowed\n");
--			return -EINVAL;
--		}
--		return 0;
--	}
--
- 	/*
- 	 * If the 'all' option was specified select all the subsystems,
- 	 * otherwise if 'none', 'name=' and a subsystem name options were
-@@ -1765,6 +1753,17 @@ static struct dentry *cgroup_mount(struc
- 	if (!use_task_css_set_links)
- 		cgroup_enable_task_cg_lists();
- 
-+	if (fs_type == &cgroup2_fs_type) {
-+		if (data) {
-+			pr_err("cgroup2: unknown option \"%s\"\n", (char *)data);
-+			return ERR_PTR(-EINVAL);
-+		}
-+		cgrp_dfl_root_visible = true;
-+		root = &cgrp_dfl_root;
-+		cgroup_get(&root->cgrp);
-+		goto out_mount;
-+	}
-+
- 	mutex_lock(&cgroup_mutex);
- 
- 	/* First find the desired set of subsystems */
-@@ -1772,15 +1771,6 @@ static struct dentry *cgroup_mount(struc
- 	if (ret)
- 		goto out_unlock;
- 
--	/* look for a matching existing root */
--	if (opts.flags & CGRP_ROOT_SANE_BEHAVIOR) {
--		cgrp_dfl_root_visible = true;
--		root = &cgrp_dfl_root;
--		cgroup_get(&root->cgrp);
--		ret = 0;
--		goto out_unlock;
--	}
--
- 	/*
- 	 * Destruction of cgroup root is asynchronous, so subsystems may
- 	 * still be dying after the previous unmount.  Let's drain the
-@@ -1891,7 +1881,7 @@ out_free:
- 
- 	if (ret)
- 		return ERR_PTR(ret);
--
-+out_mount:
- 	dentry = kernfs_mount(fs_type, flags, root->kf_root,
- 				CGROUP_SUPER_MAGIC, &new_sb);
- 	if (IS_ERR(dentry) || !new_sb)
-@@ -1936,6 +1926,12 @@ static struct file_system_type cgroup_fs
- 	.kill_sb = cgroup_kill_sb,
- };
- 
-+static struct file_system_type cgroup2_fs_type = {
-+	.name = "cgroup2",
-+	.mount = cgroup_mount,
-+	.kill_sb = cgroup_kill_sb,
-+};
-+
- /**
-  * task_cgroup_path - cgroup path of a task in the first cgroup hierarchy
-  * @task: target task
-@@ -5056,6 +5052,7 @@ int __init cgroup_init(void)
- 
- 	WARN_ON(sysfs_create_mount_point(fs_kobj, "cgroup"));
- 	WARN_ON(register_filesystem(&cgroup_fs_type));
-+	WARN_ON(register_filesystem(&cgroup2_fs_type));
- 	WARN_ON(!proc_create("cgroups", 0, NULL, &proc_cgroupstats_operations));
- 
- 	return 0;
+-- 
+tejun
