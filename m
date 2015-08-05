@@ -1,53 +1,25 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH v2 1/3] cgroup: define controller file conventions
-Date: Wed, 5 Aug 2015 09:47:58 +0200
-Message-ID: <20150805074758.GA11182@dhcp22.suse.cz>
-References: <1438641689-14655-1-git-send-email-tj@kernel.org>
- <1438641689-14655-2-git-send-email-tj@kernel.org>
- <20150804193101.GI17598@mtj.duckdns.org>
- <55C15B4C.9080202@jp.fujitsu.com>
+From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/4] cgroup: export cgrp_dfl_root
+Date: Wed, 5 Aug 2015 16:18:53 +0800
+Message-ID: <55C1C6ED.3010604@huawei.com>
+References: <1438547024-23497-1-git-send-email-tj@kernel.org> <1438547024-23497-2-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <55C15B4C.9080202@jp.fujitsu.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1438547024-23497-2-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Tejun Heo <tj@kernel.org>, mingo@redhat.com, peterz@infradead.org, hannes@cmpxchg.org, lizefan@huawei.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Wed 05-08-15 09:39:40, KAMEZAWA Hiroyuki wrote:
-[...]
-> so, for memory controller, we'll have
+On 2015/8/3 4:23, Tejun Heo wrote:
+> While cgroup subsystems can't be modules, blkcg supports dynamically
+> loadable policies which interact with cgroup core.  Export
+> cgrp_dfl_root so that cgroup_on_dfl() can be used in those modules.
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-We currently have only current, low, high, max and events currently.
-All other knobs are either deprecated or waiting for a usecase to emerge
-before they get added.
-
-> (in alphabet order)
-> memory.failcnt
-> memory.force_empty  (<= should this be removed ?)
-> memory.kmem.failcnt
-> memory.kmem.max
-> memory.kmem.max_usage
-> memory.kmem.slabinfo
-> memory.kmem.tcp.failcnt
-> memory.kmem.tcp.max
-> memory.kmem.tcp.max_usage
-> memory.kmem.tcp.usage
-> memory.kmem.usage
-> memory.max
-> memory.max_usage
-> memory.move_charge_at_immigrate
-> memory.numa_stat
-> memory.oom_control
-> memory.pressure_level
-> memory.high
-> memory.swapiness
-> memory.usage
-> memory.use_hierarchy (<= removed)
-
--- 
-Michal Hocko
-SUSE Labs
+acked
