@@ -1,69 +1,87 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cpuset: use trialcs->mems_allowed as a temp variable
-Date: Mon, 10 Aug 2015 11:19:46 -0400
-Message-ID: <20150810151946.GA23408@mtj.duckdns.org>
-References: <1438870865-25468-1-git-send-email-alban@endocode.com>
+From: Bandan Das <bsd@redhat.com>
+Subject: Re: [RFC PATCH 0/4] Shared vhost design
+Date: Mon, 10 Aug 2015 16:00:21 -0400
+Message-ID: <jpgtws6rk16.fsf@linux.bootlegged.copy>
+References: <1436760455-5686-1-git-send-email-bsd@redhat.com>
+	<20150727235818-mutt-send-email-mst@redhat.com>
+	<jpgoaihs7lt.fsf@linux.bootlegged.copy>
+	<20150809154357-mutt-send-email-mst@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:content-transfer-encoding
-         :in-reply-to:user-agent;
-        bh=DdPRlIINZbzwuYzhnOLYMhrvyQdl08U6oc0OiXy85Fw=;
-        b=eTpAd338gXHQx1dYX8ETgfBggLtusQDAokGP/YMJGPyFG8OP3h8bLIDdMcc8nv3pKD
-         Jeg2KQzmaDEHnZP9/V6xeBJMrvdAkcII2Q8dbi1FbHGAq5UI5HXHqS2mFghRZeBSk7/t
-         n9DjSJ2FqTNoodkeYffj/ooUP22pZGbC+AxHZCZFYi73UsK9ncmzljIm9TEjphX89lu3
-         53Zq541Acy6qFZk/7buhrHkxBGTBH81MRroxS4xDjsszbOklBrffMB9z0SzHljwIRNCb
-         5hni9ICUoHeRPsZmzx5l1KzP+k9fw1G95u9kinfPXwzlOru6uoMmvGU5vK1nlKlQjcmJ
-         T+tg==
-Content-Disposition: inline
-In-Reply-To: <1438870865-25468-1-git-send-email-alban-973cpzSjLbNWk0Htik3J/w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20150809154357-mutt-send-email-mst@redhat.com> (Michael
+	S. Tsirkin's message of "Sun, 9 Aug 2015 15:45:47 +0300")
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Alban Crequy <alban.crequy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Alban Crequy <alban-973cpzSjLbNWk0Htik3J/w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Iago Lopez Galeiras <iago-973cpzSjLbNWk0Htik3J/w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: kvm@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Eyal Moscovici <EYALMO@il.ibm.com>, Razya Ladelsky <RAZYA@il.ibm.com>, cgroups@vger.kernel.org, jasowang@redhat.com
 
-On Thu, Aug 06, 2015 at 04:21:05PM +0200, Alban Crequy wrote:
-> The comment says it's using trialcs->mems_allowed as a temp variable =
-but
-> it didn't match the code. Change the code to match the comment.
->=20
-> This fixes an issue when writing in cpuset.mems when a sub-directory
-> exists: we need to write several times for the information to persist=
-:
->=20
-> | root@alban:/sys/fs/cgroup/cpuset# mkdir footest9
-> | root@alban:/sys/fs/cgroup/cpuset# cd footest9
-> | root@alban:/sys/fs/cgroup/cpuset/footest9# mkdir aa
-> | root@alban:/sys/fs/cgroup/cpuset/footest9# cat cpuset.mems
-> |
-> | root@alban:/sys/fs/cgroup/cpuset/footest9# echo 0 > cpuset.mems
-> | root@alban:/sys/fs/cgroup/cpuset/footest9# cat cpuset.mems
-> |
-> | root@alban:/sys/fs/cgroup/cpuset/footest9# echo 0 > cpuset.mems
-> | root@alban:/sys/fs/cgroup/cpuset/footest9# cat cpuset.mems
-> | 0
-> | root@alban:/sys/fs/cgroup/cpuset/footest9# cat aa/cpuset.mems
-> |
-> | root@alban:/sys/fs/cgroup/cpuset/footest9# echo 0 > aa/cpuset.mems
-> | root@alban:/sys/fs/cgroup/cpuset/footest9# cat aa/cpuset.mems
-> | 0
-> | root@alban:/sys/fs/cgroup/cpuset/footest9#
->=20
-> This should help to fix the following issue in Docker:
-> https://github.com/opencontainers/runc/issues/133
-> In some conditions, a Docker container needs to be started twice in
-> order to work.
->=20
-> Signed-off-by: Alban Crequy <alban-973cpzSjLbNWk0Htik3J/w@public.gmane.org>
-> Tested-by: Iago L=F3pez Galeiras <iago-973cpzSjLbNWk0Htik3J/w@public.gmane.org>
+"Michael S. Tsirkin" <mst@redhat.com> writes:
 
-Applied to cgroup/for-4.2-fixes w/ stable cc'd.
+> On Sat, Aug 08, 2015 at 07:06:38PM -0400, Bandan Das wrote:
+>> Hi Michael,
+...
+>>
+>> > - does the design address the issue of VM 1 being blocked
+>> >   (e.g. because it hits swap) and blocking VM 2?
+>> Good question. I haven't thought of this yet. But IIUC,
+>> the worker thread will complete VM1's job and then move on to
+>> executing VM2's scheduled work.
+>> It doesn't matter if VM1 is
+>> blocked currently. I think it would be a problem though if/when
+>> polling is introduced.
+>
+> Sorry, I wasn't clear. If VM1's memory is in swap, attempts to
+> access it might block the service thread, so it won't
+> complete VM2's job.
 
-Thanks.
+Ah ok, I understand now. I am pretty sure the current RFC doesn't
+take care of this :) I will add this to my todo list for v2.
 
---=20
-tejun
+Bandan
+
+>
+>
+>> 
+>> >> 
+>> >> #* Last run with the vCPU and I/O thread(s) pinned, no CPU/memory limit imposed.
+>> >> #  I/O thread runs on CPU 14 or 15 depending on which guest it's serving
+>> >> 
+>> >> There's a simple graph at
+>> >> http://people.redhat.com/~bdas/elvis/data/results.png
+>> >> that shows how task affinity results in a jump and even without it,
+>> >> as the number of guests increase, the shared vhost design performs
+>> >> slightly better.
+>> >> 
+>> >> Observations:
+>> >> 1. In terms of "stock" performance, the results are comparable.
+>> >> 2. However, with a tuned setup, even without polling, we see an improvement
+>> >> with the new design.
+>> >> 3. Making the new design simulate old behavior would be a matter of setting
+>> >> the number of guests per vhost threads to 1.
+>> >> 4. Maybe, setting a per guest limit on the work being done by a specific vhost
+>> >> thread is needed for it to be fair.
+>> >> 5. cgroup associations needs to be figured out. I just slightly hacked the
+>> >> current cgroup association mechanism to work with the new model. Ccing cgroups
+>> >> for input/comments.
+>> >> 
+>> >> Many thanks to Razya Ladelsky and Eyal Moscovici, IBM for the initial
+>> >> patches, the helpful testing suggestions and discussions.
+>> >> 
+>> >> Bandan Das (4):
+>> >>   vhost: Introduce a universal thread to serve all users
+>> >>   vhost: Limit the number of devices served by a single worker thread
+>> >>   cgroup: Introduce a function to compare cgroups
+>> >>   vhost: Add cgroup-aware creation of worker threads
+>> >> 
+>> >>  drivers/vhost/net.c    |   6 +-
+>> >>  drivers/vhost/scsi.c   |  18 ++--
+>> >>  drivers/vhost/vhost.c  | 272 +++++++++++++++++++++++++++++++++++--------------
+>> >>  drivers/vhost/vhost.h  |  32 +++++-
+>> >>  include/linux/cgroup.h |   1 +
+>> >>  kernel/cgroup.c        |  40 ++++++++
+>> >>  6 files changed, 275 insertions(+), 94 deletions(-)
+>> >> 
+>> >> -- 
+>> >> 2.4.3
