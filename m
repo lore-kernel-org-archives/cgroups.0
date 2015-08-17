@@ -1,46 +1,65 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 8/8] memcg: generate file modified notifications on
- "memory.events"
-Date: Mon, 17 Aug 2015 16:30:57 +0200
-Message-ID: <20150817143056.GE10894@dhcp22.suse.cz>
-References: <1439315889-3492-1-git-send-email-tj@kernel.org>
- <1439315889-3492-9-git-send-email-tj@kernel.org>
- <20150811180236.GE23408@mtj.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL] cgroup fixes for v4.2-rc7
+Date: Mon, 17 Aug 2015 15:42:04 -0400
+Message-ID: <20150817194204.GA21075@mtj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=N0C+E4Sa/y8AFvcv5b32lQWm4shkmyAI+NQSN2c3OMw=;
+        b=hxIrXKN8kjuPthW71/wuaqbnYsNWEn/P3gl4KnyRjVCN5N8s4iYlef9ExMyQQLeJdJ
+         JsyiJebRlVakUaDihQlIU+8X4qTSPiaLPdwNx70U6OM6tY5xJkvLfNorsm5hFO/+27/X
+         YKEPI21Q0XE7RCtEP4W+Yyua5kGlmRlEwvodwiGPSpkDfrHmmUE89LPL3GIxYxEtiRrp
+         kI3s4jjds1Z4nbJZyonp51UuR9tm4EQoLu7rBpnUNocVWFueg2IK7A2zqE7s2579g2Pp
+         6k0p8B2vr1SGm+zbbuhsKtpDyR9Wf+YGLcprJ7gGxIjkcxHrEbFfRWIk51A6oE15Mf3H
+         Poxw==
 Content-Disposition: inline
-In-Reply-To: <20150811180236.GE23408-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-[Ups this was hanging in to-be-posted since last week - sorry about that]
+Hello, Linus.
 
-On Tue 11-08-15 14:02:36, Tejun Heo wrote:
-> On Tue, Aug 11, 2015 at 01:58:09PM -0400, Tejun Heo wrote:
-> > cgroup core only recently grew generic notification support.  Wire up
-> > "memory.events" so that it triggers a file modified event whenever its
-> > content changes.
-> > 
-> > Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> > Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> > Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> > Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+This pull request contains the fix for a subtle bug introduced back
+during 3.17 cycle which interferes with setting configurations under
+specific conditions.
 
-I cannot say I would be fond of the offset logic but whatever suits the
-cgroup core...
+Thanks.
 
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+The following changes since commit d770e558e21961ad6cfdf0ff7df0eb5d7d4f0754:
 
-> So, this won't apply to the current -mm.  Once the earlier part of the
-> series gets applied to cgroup/for-4.3, I'll refresh this patch on top
-> of -mm.
+  Linux 4.2-rc1 (2015-07-05 11:01:52 -0700)
 
-I think you can route it via the same tree.
+are available in the git repository at:
 
--- 
-Michal Hocko
-SUSE Labs
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.2-fixes
+
+for you to fetch changes up to 24ee3cf89bef04e8bc23788aca4e029a3f0f06d9:
+
+  cpuset: use trialcs->mems_allowed as a temp variable (2015-08-10 11:18:41 -0400)
+
+----------------------------------------------------------------
+Alban Crequy (1):
+      cpuset: use trialcs->mems_allowed as a temp variable
+
+ kernel/cpuset.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index ee14e3a..f0acff0 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -1223,7 +1223,7 @@ static int update_nodemask(struct cpuset *cs, struct cpuset *trialcs,
+ 	spin_unlock_irq(&callback_lock);
+ 
+ 	/* use trialcs->mems_allowed as a temp variable */
+-	update_nodemasks_hier(cs, &cs->mems_allowed);
++	update_nodemasks_hier(cs, &trialcs->mems_allowed);
+ done:
+ 	return retval;
+ }
