@@ -1,46 +1,46 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [PATCH v2 1/3] cgroup: define controller file conventions
-Date: Mon, 17 Aug 2015 23:34:26 +0200
-Message-ID: <20150817213426.GB29138@cmpxchg.org>
+Date: Tue, 18 Aug 2015 00:04:48 +0200
+Message-ID: <20150817220448.GC29138@cmpxchg.org>
 References: <1438641689-14655-1-git-send-email-tj@kernel.org>
  <1438641689-14655-2-git-send-email-tj@kernel.org>
  <20150804193101.GI17598@mtj.duckdns.org>
+ <55C15B4C.9080202@jp.fujitsu.com>
+ <20150805074758.GA11182@dhcp22.suse.cz>
+ <55C2C6B0.3080203@jp.fujitsu.com>
+ <20150807181722.GA24877@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20150804193101.GI17598-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20150807181722.GA24877@dhcp22.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>, Tejun Heo <tj@kernel.org>, mingo@redhat.com, peterz@infradead.org, lizefan@huawei.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Tue, Aug 04, 2015 at 03:31:01PM -0400, Tejun Heo wrote:
-> From 6abc8ca19df0078de17dc38340db3002ed489ce7 Mon Sep 17 00:00:00 2001
-> From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Date: Tue, 4 Aug 2015 15:20:55 -0400
+On Fri, Aug 07, 2015 at 08:17:23PM +0200, Michal Hocko wrote:
+> On Thu 06-08-15 11:30:08, KAMEZAWA Hiroyuki wrote:
+> >  - *.oom_control      - for surviving/notifiyng out of memory
+> >                         memcg's oom can be recovered if limit goes up rather than kill.
 > 
-> Traditionally, each cgroup controller implemented whatever interface
-> it wanted leading to interfaces which are widely inconsistent.
-> Examining the requirements of the controllers readily yield that there
-> are only a few control schemes shared among all.
-> 
-> Two major controllers already had to implement new interface for the
-> unified hierarchy due to significant structural changes.  Let's take
-> the chance to establish common conventions throughout all controllers.
-> 
-> This patch defines CGROUP_WEIGHT_MIN/DFL/MAX to be used on all weight
-> based control knobs and documents the conventions that controllers
-> should follow on the unified hierarchy.  Except for io.weight knob,
-> all existing unified hierarchy knobs are already compliant.  A
-> follow-up patch will update io.weight.
-> 
-> v2: Added descriptions of min, low and high knobs.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+> I think it is very much useful - when used wisely. I have seen many
+> calls for user defined OOM policies but then we have seen those that are
+> more creative like having the policy maker live in the same memcg which
+> requires some hacks to prevent from self-deadlocks.
+> So overall this is very attractive but we might need to think about a
+> better interface. BPF sounds like a potential way to go. I feel the
+> memcg and the global approaches should be consistent as much as possible
+> wrt. API.
 
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+I'm not sure I still see a usecase for this.
+
+The whole idea behind memory.high is to give the user the chance to
+monitor the group's health and then act upon that. You can freeze the
+group if you must, gather information, kill tasks. This is the way to
+implement a custom OOM policy.
+
+memory.max on the other hand tells the *kernel* when to OOM, with all
+the implications that a kernel OOM has. Don't configure that when you
+don't want your tasks killed.
