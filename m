@@ -1,43 +1,46 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCHSET cgroup/for-4.3] cgroup,memcg: generalize event
- handling and enable notifications on "memory.events"
-Date: Mon, 17 Aug 2015 17:32:09 -0400
-Message-ID: <20150817213209.GM21075@mtj.duckdns.org>
-References: <1439315889-3492-1-git-send-email-tj@kernel.org>
- <20150817212920.GA29138@cmpxchg.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH v2 1/3] cgroup: define controller file conventions
+Date: Mon, 17 Aug 2015 23:34:26 +0200
+Message-ID: <20150817213426.GB29138@cmpxchg.org>
+References: <1438641689-14655-1-git-send-email-tj@kernel.org>
+ <1438641689-14655-2-git-send-email-tj@kernel.org>
+ <20150804193101.GI17598@mtj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=GxGU8uZK+nViRkg+2pe5XhKXh+nnb9rgW2CV08iVfnw=;
-        b=I8I15/HsSSKBRjWYUF8mCN7rV6K/hcTm6z9KyKlZ5iFE7u1dpNp6Ivqda1pdot5LXQ
-         rzgvXQIKWkxcmPszRIdatXBSnQczW/CtTvfLbQ+oD+tqf6Fcrm51HCeIQxb1389h1wt4
-         IglLNJhZFM4P+MDULpca6Pih3RKbjo7cYuDz/u3gozJ1JOzn3xpE8Uw3JLJzMcKO+Ja7
-         fedAj+zKDTHw6PWTZrJAaNdvQr5KWSqO8BnixB0aiCx9LH2fS+UDXpQlGOPkXVR+C7To
-         fSiwfsGEFXOTT3JWvY0Vj+2BgDOAQnTqo2IWhjkk66nKP1MI98PbN+109JAsvHidvBhQ
-         VZOw==
 Content-Disposition: inline
-In-Reply-To: <20150817212920.GA29138-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <20150804193101.GI17598-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Hello,
+On Tue, Aug 04, 2015 at 03:31:01PM -0400, Tejun Heo wrote:
+> From 6abc8ca19df0078de17dc38340db3002ed489ce7 Mon Sep 17 00:00:00 2001
+> From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Date: Tue, 4 Aug 2015 15:20:55 -0400
+> 
+> Traditionally, each cgroup controller implemented whatever interface
+> it wanted leading to interfaces which are widely inconsistent.
+> Examining the requirements of the controllers readily yield that there
+> are only a few control schemes shared among all.
+> 
+> Two major controllers already had to implement new interface for the
+> unified hierarchy due to significant structural changes.  Let's take
+> the chance to establish common conventions throughout all controllers.
+> 
+> This patch defines CGROUP_WEIGHT_MIN/DFL/MAX to be used on all weight
+> based control knobs and documents the conventions that controllers
+> should follow on the unified hierarchy.  Except for io.weight knob,
+> all existing unified hierarchy knobs are already compliant.  A
+> follow-up patch will update io.weight.
+> 
+> v2: Added descriptions of min, low and high knobs.
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-On Mon, Aug 17, 2015 at 11:29:20PM +0200, Johannes Weiner wrote:
-> Out of curiosity, do you envision additional entries for cgroup.events
-> in the near future?
-
-I don't have anything specific I can think of right now.  I primarily
-want to establish interface convention regarding low-frequency event
-delivery and memory.events's seemed simple and extensible.
-
-Thanks.
-
--- 
-tejun
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
