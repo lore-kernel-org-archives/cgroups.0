@@ -1,50 +1,47 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 01/10] cgroup: don't print subsystems for the default
- hierarchy
-Date: Tue, 18 Aug 2015 14:01:24 -0700
-Message-ID: <20150818210124.GD15739@mtj.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 02/10] cgroup: introduce cgroup_subsys->legacy_name
+Date: Tue, 18 Aug 2015 14:01:45 -0700
+Message-ID: <20150818210145.GE15739@mtj.duckdns.org>
 References: <1437763434-28699-1-git-send-email-tj@kernel.org>
- <1437763434-28699-2-git-send-email-tj@kernel.org>
+ <1437763434-28699-3-git-send-email-tj@kernel.org>
+ <20150728175647.GH5322@mtj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=fGRTr0oQc7tRFWN/nT2Dxhh6P7IdMeyE5N+1kFi65bA=;
-        b=xbYqY38/76O+dLP0cQ34VAXgJIp36yyc+caujIt8jH7EeAgZWHsdZnAa3pFTCHnAc7
-         XZ0xz4ilgs0JuS94g71YyyvPBDRTEiyfIUtV9A1MVPW0d0xBvOTVQxTNZpCZ6VQ26jnD
-         pSjhl06w6LpiK8nAvu3mFawCmy2ydK4k+5pjt72KIN/nskX/cXthPEfYk8fzsB/nenPG
-         VhBfw6ph5eur34BdxQMl7zh8Cf4/2/I4Pv+rY4NobBksICXCKyRqjR859VtRSSvlhFGj
-         HSldqH90tukSnieFlBJXZifRYbpOx7HiMyhJdX+E/fMJj5ehsRMrybptMyCD03b5Blo1
-         mzkg==
+        bh=dzfOE7VVydomirB67YPGK8RYPx2Ro7aE/voRemkh/88=;
+        b=h+qpP69FZCvMer4g/9aq8OfqUrkrGrbKWUnNUCTLronPHAfgDMT1wSpkjrPdn/z4/j
+         +PUpcdfwpuEPnXiJNX+/Rf/1oHyuQsfC39FpJUoJtTcvuYICbkYDFBqHfyfsqM7KtOla
+         PajHZFFUGNaym74CbXsD8gvmt3VsRfYCbM9+0fcb1lG/KNUciEZX3JJCvcgEXr7o4o7d
+         GREVskTACfAN2yAPDJ2xSgNeMJW/aUoLgFrwgTX++QktXnwonMY5/SHS8Oio1yQZjjsF
+         ZUj6iUAxhOwDZ4xrPQq2bW2ryx1loPnsQZVtq8P8UGJw/4GMoJW3+reTD3icoTVWe5mi
+         tTiw==
 Content-Disposition: inline
-In-Reply-To: <1437763434-28699-2-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20150728175647.GH5322@mtj.duckdns.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: axboe@kernel.dk
+Cc: vgoyal@redhat.com, linux-kernel@vger.kernel.org, avanzini.arianna@gmail.com, kernel-team@fb.com, hannes@cmpxchg.org, lizefan@huawei.com, cgroups@vger.kernel.org
 
-On Fri, Jul 24, 2015 at 02:43:45PM -0400, Tejun Heo wrote:
-> It doesn't make sense to print subsystems on mount option or
-> /proc/PID/cgroup for the default hierarchy.
+On Tue, Jul 28, 2015 at 01:56:47PM -0400, Tejun Heo wrote:
+> This allows cgroup subsystems to use a different name on the unified
+> hierarchy.  cgroup_subsys->name is used on the unified hierarchy,
+> ->legacy_name elsewhere.  If ->legacy_name is not explicitly set, it's
+> automatically set to ->name and the userland visible behavior remains
+> unchanged.
 > 
-> * cgroup.controllers file at the root of the default hierarchy lists
->   the currently attached controllers.
+> v2: Make parse_cgroupfs_options() only consider ->legacy_name as mount
+>     options are used only on legacy hierarchies.  Suggested by Li
+>     Zefan.
 > 
-> * The default hierarchy is catch-all for unmounted subsystems.
-> 
-> * The default hierarchy doesn't accept any mount options.
-> 
-> Suppress subsystem printing on mount options and /proc/PID/cgroup for
-> the default hierarchy.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Li Zefan <lizefan@huawei.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: cgroups@vger.kernel.org
 
 Applied to cgroup/for-4.3-unified-base.
 
