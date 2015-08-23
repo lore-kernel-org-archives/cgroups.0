@@ -1,69 +1,75 @@
-From: Aleksa Sarai <cyphar@cyphar.com>
-Subject: [PATCH 2/2] cgroup: pids: fix invalid get/put usage
-Date: Sun, 23 Aug 2015 23:10:32 +1000
-Message-ID: <1440335432-4202-3-git-send-email-cyphar@cyphar.com>
+From: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 1/2] cgroup: get a ref to source csses when migrating
+Date: Sun, 23 Aug 2015 23:10:31 +1000
+Message-ID: <1440335432-4202-2-git-send-email-cyphar@cyphar.com>
 References: <CAOviyag1ZOgjtNWmnpfMm=fDgkhDn9UGKoJXy6HLWQMGb-tQAg@mail.gmail.com>
  <1440335432-4202-1-git-send-email-cyphar@cyphar.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1440335432-4202-1-git-send-email-cyphar@cyphar.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1440335432-4202-1-git-send-email-cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj@kernel.org
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Aleksa Sarai <cyphar@cyphar.com>
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
 
-Fix incorrect usage of css_get and css_put to put a different css in
-pids_{cancel_,}attach() than the one grabbed in pids_can_attach(). This
-could lead to quite serious memory leakage (and unsafe operations on the
-putted css).
+Grab a ref to each source css being migrated from, otherwise it's
+possible for the refcount to reach zero between ->can_attach() and
+->cancel_attach(). This means that operations on the task's old css
+(such as container_of(...)) become unsafe, as we may be operating on a
+different css.
 
-Signed-off-by: Aleksa Sarai <cyphar@cyphar.com>
+Signed-off-by: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
 ---
- kernel/cgroup_pids.c | 13 +------------
- 1 file changed, 1 insertion(+), 12 deletions(-)
+ kernel/cgroup.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
 
-diff --git a/kernel/cgroup_pids.c b/kernel/cgroup_pids.c
-index d75488824ae2..f116ca77a658 100644
---- a/kernel/cgroup_pids.c
-+++ b/kernel/cgroup_pids.c
-@@ -177,7 +177,7 @@ static int pids_can_attach(struct cgroup_subsys_state *css,
- 		 * we either fail and hit ->cancel_attach() or succeed and hit
- 		 * ->attach().
- 		 */
--		old_css = task_get_css(task, pids_cgrp_id);
-+		old_css = task_css(task, pids_cgrp_id);
- 		old_pids = css_pids(old_css);
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 4ec1b7ee5de8..6cbfbe36284d 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -2305,6 +2305,17 @@ static int cgroup_migrate(struct cgroup *cgrp, struct task_struct *leader,
+ 	if (list_empty(&tset.src_csets))
+ 		return 0;
  
- 		pids_charge(pids, 1);
-@@ -202,19 +202,9 @@ static void pids_cancel_attach(struct cgroup_subsys_state *css,
++	/*
++	 * Fetch a ref of each css, so that the old task's css doesn't get reaped
++	 * between ->can_attach() and ->cancel_attach().
++	 */
++	down_read(&css_set_rwsem);
++	list_for_each_entry(cset, &tset.src_csets, mg_node) {
++		for_each_e_css(css, i, cgrp)
++			css_get(cset->subsys[i]);
++	}
++	up_read(&css_set_rwsem);
++
+ 	/* check that we can legitimately attach to the cgroup */
+ 	for_each_e_css(css, i, cgrp) {
+ 		if (css->ss->can_attach) {
+@@ -2341,7 +2352,7 @@ static int cgroup_migrate(struct cgroup *cgrp, struct task_struct *leader,
+ 			css->ss->attach(css, &tset);
  
- 		pids_charge(old_pids, 1);
- 		pids_uncharge(pids, 1);
--		css_put(old_css);
+ 	ret = 0;
+-	goto out_release_tset;
++	goto out_deref_src;
+ 
+ out_cancel_attach:
+ 	for_each_e_css(css, i, cgrp) {
+@@ -2350,7 +2361,13 @@ out_cancel_attach:
+ 		if (css->ss->cancel_attach)
+ 			css->ss->cancel_attach(css, &tset);
  	}
- }
- 
--static void pids_attach(struct cgroup_subsys_state *css,
--			struct cgroup_taskset *tset)
--{
--	struct task_struct *task;
--
--	cgroup_taskset_for_each(task, tset)
--		css_put(task_css(task, pids_cgrp_id));
--}
--
- static int pids_can_fork(struct task_struct *task, void **priv_p)
- {
- 	struct cgroup_subsys_state *css;
-@@ -354,7 +344,6 @@ static struct cftype pids_files[] = {
- struct cgroup_subsys pids_cgrp_subsys = {
- 	.css_alloc	= pids_css_alloc,
- 	.css_free	= pids_css_free,
--	.attach		= pids_attach,
- 	.can_attach 	= pids_can_attach,
- 	.cancel_attach 	= pids_cancel_attach,
- 	.can_fork	= pids_can_fork,
+-out_release_tset:
++out_deref_src:
++	down_read(&css_set_rwsem);
++	list_for_each_entry(cset, &tset.src_csets, mg_node) {
++		for_each_e_css(css, i, cgrp)
++			css_put(cset->subsys[i]);
++	}
++	up_read(&css_set_rwsem);
+ 	down_write(&css_set_rwsem);
+ 	list_splice_init(&tset.dst_csets, &tset.src_csets);
+ 	list_for_each_entry_safe(cset, tmp_cset, &tset.src_csets, mg_node) {
 -- 
 2.5.0
