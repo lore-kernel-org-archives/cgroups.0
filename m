@@ -1,795 +1,148 @@
-From: Dmitry Kurbatov <dk-PUtEO5/C7cqHXe+LvDLADg@public.gmane.org>
-Subject: [PATCH] cgroup: add network limits subsystem
-Date: Mon, 24 Aug 2015 15:06:27 +0300
-Message-ID: <CAAN1KCEKLj1YM37QO7xKCq1K7vTqWMKKL+T+W2n1hOo1rAbM9g@mail.gmail.com>
+From: Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 3/3] sched: Implement interface for cgroup unified
+ hierarchy
+Date: Mon, 24 Aug 2015 11:47:02 -0400
+Message-ID: <55DB3C76.5010009@gmail.com>
+References: <1438641689-14655-1-git-send-email-tj@kernel.org>
+ <1438641689-14655-4-git-send-email-tj@kernel.org>
+ <20150804090711.GL25159@twins.programming.kicks-ass.net>
+ <20150804151017.GD17598@mtj.duckdns.org>
+ <20150805091036.GT25159@twins.programming.kicks-ass.net>
+ <20150805143132.GK17598@mtj.duckdns.org>
+ <CAPM31RJTf0v=2v90kN6-HM9xUGab_k++upO0Ym=irmfO9+BbFw@mail.gmail.com>
+ <CAPM31R+5=4bGQo++PrYoFuS86_7JqhhQ0OtPvCYooAzJsvhb=w@mail.gmail.com>
+ <20150818203117.GC15739@mtj.duckdns.org>
+ <CAPM31RJNy3jgG=DYe6GO=wyL4BPPxwUm1f2S6YXacQmo7viFZA@mail.gmail.com>
+ <20150822182916.GE20768@mtj.duckdns.org>
 Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-512; boundary="------------ms020402090409010007050801"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=subject:to:references:cc:from:message-id
+         :disposition-notification-to:date:user-agent:mime-version
+         :in-reply-to:content-type;
+        bh=rw9gNssYft/wY1xDr766/ECcnUjbJNSB5vlVqhNdxEg=;
+        b=INxAzcU79i4Zpwl75UPlSehGs3IOvErFlcJwmv00bd92DnOtFNg2BrMfmy8ZsYlflH
+         TaS/PjDL7rT05WpEMnqUHMjASmwL2zelBsGUGtcslrVtPLY/1GIYzsK1PJstNc4Zr7Y3
+         zoJuBn+N6KuQGahnyhePYqD3db1hFHoQeGM7wLHqYlrF3z2vpEH41Mgi3UvEW9Bvbwua
+         9grXOBAJq23dtkERHfsAV90eCGHPapo6e0v8LTSPA7TcgGzWxX2A2uKNhjBH54wgApJc
+         Vg31MXxZj1bOGvY1Y5ihHHFhWYzDyqccFWJtlRNqopwhi9V7Kusu6jCYhAEJBNYt7DwK
+         mRhw==
+In-Reply-To: <20150822182916.GE20768-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-team <kernel-team-b10kYP2dOMg@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-Hi All.
+This is a cryptographically signed message in MIME format.
 
-I've posted this message to LKML but have no answer. It's a second try.
+--------------ms020402090409010007050801
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-I've written a new cgroup subsystem named network resource
-limits(net_lim). It allows to limit a few network resources like
-binding ipv4 ports and binding ipv4 addresses. Also it allows to
-redefine ephemeral ports range and define default ipv4 address for
-binding when INADDR_ANY(0.0.0.0) is used. For a specific control
-group, of course.
+On 2015-08-22 14:29, Tejun Heo wrote:
+> Hello, Paul.
+>
+> On Fri, Aug 21, 2015 at 12:26:30PM -0700, Paul Turner wrote:
+> ...
+>> A very concrete example of the above is a virtual machine in which you=
 
-These new capabilities can be used for shared hosting, when you can't
-use network namespaces because of high network load and NAT overhead.
-This patch provides a lightweight approach that allows to share one
-ports/address space to many users or containers and account traffic
-via tc or iptables using user's port ranges in rules. net_lim allows
-to avoid creating network namespace and additional interface in it,
-adding one more ip address and setting up routing for this purposes.
+>> want to guarantee scheduling for the vCPU threads which must schedule
+>> beside many hypervisor support threads.   A hierarchy is the only way
+>> to fix the ratio at which these compete.
+>
+> Just to learn more, what sort of hypervisor support threads are we
+> talking about?  They would have to consume considerable amount of cpu
+> cycles for problems like this to be relevant and be dynamic in numbers
+> in a way which letting them competing against vcpus makes sense.  Do
+> IO helpers meet these criteria?
+>
+Depending on the configuration, yes they can.  VirtualBox has some=20
+rather CPU intensive threads that aren't vCPU threads (their emulated=20
+APIC thread immediately comes to mind), and so does QEMU depending on=20
+the emulated hardware configuration (it gets more noticeable when the=20
+disk images are stored on a SAN and served through iSCSI, NBD, FCoE, or=20
+ATAoE, which is pretty typical usage for large virtualization=20
+deployments).  I've seen cases first hand where the vCPU's can make no=20
+reasonable progress because they are constantly getting crowded out by=20
+other threads.
 
-Let's demonstrate an example of using this subsystem:
+The use of the term 'hypervisor support threads' for this is probably=20
+not the best way of describing the contention, as it's almost always a=20
+full system virtualization issue, and the contending threads are usually =
 
-For example, we need to limit binding ports/address for a specific
-user and set him new ephemeral port range for outgoing connections and
-bindings to zero port:
+storage back-end access threads.
 
-1. Set new common ports range(2000-2100 + 30000) and ephemeral ports
-range(60000-61000):
-
-echo "2000-2100,30000,60000-61000" > net_lim.ipv4.ports
-Here we limit binding to common and ephemeral ports. When program will
-try to bind to port in listed ports/range it will succeed, or gain
-EACCESS otherwise.
-
-Please note that the latest ports range will be provided for ephemeral
-ports range (60000-61000). This port range also allowed for binding
-for this control group via direct bind() and via bind to zero port.
-
-Also you can read new ephemeral ports range via specigic parameter:
-
-cat net_lim.ipv4.ip_locat_port_range
-60000-61000
-
-2. Set list of ip addresses allowed for binding:
-
-echo "1.1.1.1,2.2.2.2,127.0.0.1" > net_lim.ipv4.addrs
-Here we limit binding to set of addresses 1.1.1.1,2.2.2.2 and
-127.0.0.1. When program in this control group will bind to one of this
-address, it will be ok, or gain EACCESS otherwise.
-
-Please note that the first ip address (1.1.1.1) will be used as
-default address - it will be substituted instead of
-INADDR_ANY(0.0.0.0) while bind().
-
-Also you can read current default address value via specific parameter:
-
-cat net_lim.ipv4.default_address
-1.1.1.1
-
-That's all, folks (c)
-
-But there is a few notes:
-
-1. By-default all net_lim values are empty. This means that no limits
-will be applied to control group (i.e. default system behavior).
-2. You can limit ports in range 1-65535. Port 0 (zero) can't be forbidden.
-
-Now, I have a few questions to you:
-
-1. Shoud I add checking limits in parent control group (hierarchical checking)?
-2. Whether net_lim is necessary in the kernel? ;)
+I would argue that there are better ways to deal properly with this=20
+(Isolate the non vCPU threads on separate physical CPU's from the=20
+hardware emulation threads), but such methods require large systems to=20
+be practical at any scale, and many people don't have the budget for=20
+such large systems, and this way of doing things is much more flexible=20
+for small scale use cases (for example, someone running one or two VM's=20
+on a laptop under QEMU or VirtualBox).
 
 
-========= patch below =========
-From: Dmitry Kurbatov <dk-70MgRk2y9vQ@public.gmane.org>
-Date: Thu, 13 Aug 2015 12:07:24 +0300
-Subject: [PATCH] cgroup: add network limits subsystem
+--------------ms020402090409010007050801
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Signed-off-by: Dmitry Kurbatov <dk-70MgRk2y9vQ@public.gmane.org>
-
----
- include/linux/cgroup_subsys.h   |   4 +
- include/linux/net_lim_cgroup.h  |  39 ++++
- init/Kconfig                    |   5 +
- kernel/Makefile                 |   1 +
- kernel/net_lim_cgroup.c         | 501 ++++++++++++++++++++++++++++++++++++++++
- net/ipv4/af_inet.c              |  19 +-
- net/ipv4/inet_connection_sock.c |   8 +
- 7 files changed, 576 insertions(+), 1 deletion(-)
- create mode 100644 include/linux/net_lim_cgroup.h
- create mode 100644 kernel/net_lim_cgroup.c
-
-diff --git a/include/linux/cgroup_subsys.h b/include/linux/cgroup_subsys.h
-index e4a96fb..51e7c73 100644
---- a/include/linux/cgroup_subsys.h
-+++ b/include/linux/cgroup_subsys.h
-@@ -47,6 +47,10 @@ SUBSYS(net_prio)
- SUBSYS(hugetlb)
- #endif
-
-+#if IS_ENABLED(CONFIG_CGROUP_NET_LIM)
-+SUBSYS(net_lim)
-+#endif
-+
- /*
-  * The following subsystems are not supported on the default hierarchy.
-  */
-diff --git a/include/linux/net_lim_cgroup.h b/include/linux/net_lim_cgroup.h
-new file mode 100644
-index 0000000..eef999b
---- /dev/null
-+++ b/include/linux/net_lim_cgroup.h
-@@ -0,0 +1,39 @@
-+#ifndef _NET_LIM_CGROUP_H
-+#define _NET_LIM_CGROUP_H
-+
-+#include <linux/kernel.h>
-+#include <linux/threads.h>
-+#include <linux/atomic.h>
-+#include <linux/cgroup.h>
-+#include <linux/slab.h>
-+#include <linux/in.h>
-+#include <linux/inet.h>
-+#include <linux/rwlock_types.h>
-+
-+struct net_lim_range_item {
-+   unsigned int start, end;
-+   struct list_head list;
-+};
-+
-+struct net_lim_addr_item {
-+   u32 addr;
-+   struct list_head list;
-+};
-+
-+struct net_lim_cgroup {
-+   struct cgroup_subsys_state css;
-+
-+   /* inet_bind() available ports range */
-+   struct list_head port_ranges;
-+
-+   /* inet_bind() available address range */
-+   struct list_head addrs;
-+};
-+
-+struct net_lim_cgroup *css_net_lim(struct cgroup_subsys_state *css);
-+int net_lim_port_allowed(struct task_struct *tsk, unsigned int port);
-+int net_lim_addr_allowed(struct task_struct *tsk, u32 addr);
-+void net_lim_get_local_port_range(struct task_struct *tsk, int *low,
-int *high);
-+u32 net_lim_get_default_address(struct task_struct *tsk);
-+
-+#endif
-diff --git a/init/Kconfig b/init/Kconfig
-index af09b4f..f94a361 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -949,6 +949,11 @@ config CGROUP_DEBUG
-
-      Say N if unsure.
-
-+config CGROUP_NET_LIM
-+   bool "Network limits cgroup subsystem"
-+   help
-+     Provides custom network limits from cgroups
-+
- config CGROUP_FREEZER
-    bool "Freezer cgroup subsystem"
-    help
-diff --git a/kernel/Makefile b/kernel/Makefile
-index 43c4c92..37a4e30 100644
---- a/kernel/Makefile
-+++ b/kernel/Makefile
-@@ -56,6 +56,7 @@ obj-$(CONFIG_COMPAT) += compat.o
- obj-$(CONFIG_CGROUPS) += cgroup.o
- obj-$(CONFIG_CGROUP_FREEZER) += cgroup_freezer.o
- obj-$(CONFIG_CPUSETS) += cpuset.o
-+obj-$(CONFIG_CGROUP_NET_LIM) += net_lim_cgroup.o
- obj-$(CONFIG_UTS_NS) += utsname.o
- obj-$(CONFIG_USER_NS) += user_namespace.o
- obj-$(CONFIG_PID_NS) += pid_namespace.o
-diff --git a/kernel/net_lim_cgroup.c b/kernel/net_lim_cgroup.c
-new file mode 100644
-index 0000000..123cf40
---- /dev/null
-+++ b/kernel/net_lim_cgroup.c
-@@ -0,0 +1,501 @@
-+#include <linux/kernel.h>
-+#include <linux/threads.h>
-+#include <linux/atomic.h>
-+#include <linux/cgroup.h>
-+#include <linux/slab.h>
-+#include <linux/net_lim_cgroup.h>
-+#include <linux/string.h>
-+
-+#define RANGE_MAX_LEN 12
-+#define IP_ADDRESS_MAX_LEN 16
-+#define NIPQUAD(addr) \
-+    ((unsigned char *)&addr)[0], \
-+    ((unsigned char *)&addr)[1], \
-+    ((unsigned char *)&addr)[2], \
-+    ((unsigned char *)&addr)[3]
-+
-+static DEFINE_RWLOCK(net_lim_croup_rwlock);
-+
-+struct net_lim_cgroup *css_net_lim(struct cgroup_subsys_state *css)
-+{
-+   return container_of(css, struct net_lim_cgroup, css);
-+}
-+
-+/*
-+ * Clean list @list_ranges and deallocate all items.
-+ */
-+static void net_lim_range_clean(struct list_head *list_ranges)
-+{
-+   struct net_lim_range_item *walk, *tmp;
-+
-+   list_for_each_entry_safe(walk, tmp, list_ranges, list) {
-+       list_del(&walk->list);
-+       kfree(walk);
-+   }
-+}
-+
-+/*
-+ * Clean list @list_addrs and deallocate all items.
-+ */
-+static void net_lim_addrs_clean(struct list_head *list_addrs)
-+{
-+   struct net_lim_addr_item *walk, *tmp;
-+
-+   list_for_each_entry_safe(walk, tmp, list_addrs, list) {
-+       list_del(&walk->list);
-+       kfree(walk);
-+   }
-+}
-+
-+/*
-+ * Allocate new net_lim subsystem node.
-+ */
-+static struct cgroup_subsys_state *
-+net_lim_css_alloc(struct cgroup_subsys_state *parent)
-+{
-+   struct net_lim_cgroup *net_lim;
-+
-+   net_lim = kzalloc(sizeof(struct net_lim_cgroup), GFP_KERNEL);
-+   if (!net_lim)
-+       return ERR_PTR(-ENOMEM);
-+
-+   /* initialize ports ranges. */
-+   INIT_LIST_HEAD(&net_lim->port_ranges);
-+
-+   /* initialize addrs ranges. */
-+   INIT_LIST_HEAD(&net_lim->addrs);
-+
-+   return &net_lim->css;
-+}
-+
-+/*
-+ * Deallocate memory of items in net_lim lists.
-+ */
-+static void net_lim_ranges_clean(struct net_lim_cgroup *net_lim)
-+{
-+   net_lim_range_clean(&net_lim->port_ranges);
-+   net_lim_addrs_clean(&net_lim->addrs);
-+}
-+
-+/*
-+ * Free net_lim node.
-+ */
-+static void net_lim_css_free(struct cgroup_subsys_state *css)
-+{
-+   struct net_lim_cgroup *net_lim = css_net_lim(css);
-+
-+   net_lim_ranges_clean(net_lim);
-+   kfree(net_lim);
-+}
-+
-+/*
-+ * Validate and extract port range string.
-+ */
-+static int extract_port_range(char *str, unsigned int *start,
-unsigned int *end)
-+{
-+   char *tmp = str;
-+
-+   if (strlen(str) > RANGE_MAX_LEN-1)
-+       return -ERANGE;
-+
-+   if (strchr(tmp, '-') == NULL) {
-+       if (kstrtoint(str, 0, (int *)start))
-+           return -EINVAL;
-+       *end = *start;
-+   } else {
-+       tmp = strsep(&str, "-");
-+
-+       if ((*tmp == '\0') ||
-+                       (str == NULL) ||
-+                       (*str == '\0'))
-+           return -EINVAL;
-+
-+       if (kstrtoint(tmp, 0, (int *)start))
-+           return -EINVAL;
-+       if (kstrtoint(str, 0, (int *)end))
-+           return -EINVAL;
-+   }
-+
-+   if ((*end < *start) ||
-+                   (*start < 1) ||
-+                   (*start > 65535) ||
-+                   (*end < 1) ||
-+                   (*end > 65535))
-+       return -ERANGE;
-+
-+   return 0;
-+}
-+
-+/*
-+* Validate and extract ip address from string.
-+*/
-+int extract_address(char *str, u32 *addr)
-+{
-+   const char *end;
-+
-+   if (strlen(str) > IP_ADDRESS_MAX_LEN-1)
-+       return -EINVAL;
-+
-+   if (in4_pton(str, -1, (u8 *)addr, -1, &end) && !*end)
-+       return 0;
-+
-+   return -EINVAL;
-+}
-+
-+/*
-+* Aloccate memory and add low-high range to list.
-+*/
-+static int list_add_range(struct list_head *list_ranges, unsigned int low,
-+                                       unsigned int high)
-+{
-+   struct net_lim_range_item *range;
-+
-+   range = kmalloc(sizeof(*range), GFP_KERNEL);
-+   if (!range)
-+       return -ENOMEM;
-+
-+   range->start = low;
-+   range->end = high;
-+   list_add_tail(&range->list, list_ranges);
-+   return 0;
-+}
-+
-+/*
-+* Aloccate memory and add address to list.
-+*/
-+static int list_add_address(struct list_head *list_addrs, u32 addr)
-+{
-+   struct net_lim_addr_item *addr_item;
-+
-+   addr_item = kmalloc(sizeof(*addr_item), GFP_KERNEL);
-+   if (!addr_item)
-+       return -ENOMEM;
-+
-+   addr_item->addr = addr;
-+   list_add_tail(&addr_item->list, list_addrs);
-+   return 0;
-+}
-+
-+/*
-+* Parse string of ports and ranges.
-+*/
-+static int parse_ports_list(char *buf, struct list_head *list_ranges)
-+{
-+   char *str;
-+   u32 low, high;
-+   int ret = 0;
-+
-+   while ((str = strsep(&buf, ","))) {
-+       /* Extract port or region. */
-+       if ((ret = extract_port_range(str, &low, &high)))
-+           return ret;
-+
-+       if ((ret = list_add_range(list_ranges, low, high)))
-+           return ret;
-+   }
-+
-+   return ret;
-+}
-+
-+/*
-+* Parse string of addrs.
-+*/
-+static int parse_addrs_list(char *buf, struct list_head *list_addrs)
-+{
-+   char *str;
-+   u32 addr;
-+   int ret = 0;
-+   while ((str = strsep(&buf, ","))) {
-+       /* Extract ip address from @str. */
-+       if ((ret = extract_address(str, &addr)))
-+           return ret;
-+
-+       if ((ret = list_add_address(list_addrs, addr)))
-+           return ret;
-+   }
-+   return ret;
-+}
-+
-+/*
-+* Write list of allowed ports.
-+*/
-+static ssize_t net_lim_cgroup_ports_write(struct kernfs_open_file *of,
-+                                       char *buf, size_t nbytes, loff_t off)
-+{
-+   int retval = 0;
-+   char *buffer = strstrip(buf);
-+   struct net_lim_cgroup *net_lim = css_net_lim(of_css(of));
-+   LIST_HEAD(list_ranges);
-+
-+   if (css_has_online_children(&net_lim->css))
-+       return -EINVAL;
-+
-+   /* Don't apply cgroup port values. */
-+   if (*buffer == '\0') {
-+       net_lim_range_clean(&net_lim->port_ranges);
-+       return nbytes;
-+   }
-+
-+   if ((retval = parse_ports_list(buffer, &list_ranges))) {
-+       net_lim_range_clean(&list_ranges);
-+       return retval;
-+   }
-+
-+   /* Here we have valid list of port ranges. Clear existed list and
-+   * replace with new one. */
-+   write_lock(&net_lim_croup_rwlock);
-+   net_lim_range_clean(&net_lim->port_ranges);
-+   list_splice(&list_ranges, &net_lim->port_ranges);
-+   write_unlock(&net_lim_croup_rwlock);
-+   return nbytes;
-+}
-+
-+/*
-+* Show list of allowed ports.
-+*/
-+static int net_lim_cgroup_ports_seq_show(struct seq_file *seq, void *v)
-+{
-+   struct net_lim_range_item *walk;
-+   struct cgroup_subsys_state *css = seq_css(seq);
-+   struct net_lim_cgroup *net_lim = css_net_lim(css);
-+   int comma = 0;
-+
-+   read_lock(&net_lim_croup_rwlock);
-+   list_for_each_entry(walk, &net_lim->port_ranges, list) {
-+       if (comma++)
-+           seq_printf(seq, ",");
-+       if (walk->start == walk->end) {
-+           seq_printf(seq, "%d", walk->start);
-+       } else {
-+           seq_printf(seq, "%d-%d", walk->start, walk->end);
-+       }
-+   }
-+   read_unlock(&net_lim_croup_rwlock);
-+   if (comma)
-+       seq_printf(seq, "\n");
-+   return 0;
-+}
-+
-+/*
-+* Show current local_port_range value.
-+*/
-+static int net_lim_cgroup_local_port_range_seq_show(struct seq_file *seq,
-+                                                               void *v)
-+{
-+   struct net_lim_cgroup *net_lim = css_net_lim(seq_css(seq));
-+   struct net_lim_range_item *range;
-+
-+   read_lock(&net_lim_croup_rwlock);
-+   if (list_empty(&net_lim->port_ranges))
-+       goto _unlock;
-+
-+   range = list_last_entry(&net_lim->port_ranges,
-+                           struct net_lim_range_item, list);
-+
-+   seq_printf(seq, "%d-%d\n", range->start, range->end);
-+
-+_unlock:
-+   read_unlock(&net_lim_croup_rwlock);
-+   return 0;
-+}
-+
-+/*
-+* Write list of allowed addrs.
-+*/
-+static ssize_t net_lim_cgroup_addrs_write(struct kernfs_open_file *of,
-+                                       char *buf, size_t nbytes, loff_t off)
-+{
-+   int retval = 0;
-+   char *buffer = strstrip(buf);
-+   struct net_lim_cgroup *net_lim = css_net_lim(of_css(of));
-+   LIST_HEAD(list_addrs);
-+
-+   if (css_has_online_children(&net_lim->css))
-+       return -EINVAL;
-+
-+   /* Don't apply cgroup values to limit bind() addresses. */
-+   if (*buffer == '\0') {
-+       net_lim_addrs_clean(&net_lim->addrs);
-+       // net_lim_list_clean(&net_lim->addrs, walk, tmp);
-+       return nbytes;
-+   }
-+
-+   if ((retval = parse_addrs_list(buffer, &list_addrs))) {
-+       net_lim_addrs_clean(&list_addrs);
-+       return retval;
-+   }
-+
-+   /* Here we have valid list of addrs. Clear existed list and
-+   * replace with new one. */
-+   write_lock(&net_lim_croup_rwlock);
-+   net_lim_addrs_clean(&net_lim->addrs);
-+   list_splice(&list_addrs, &net_lim->addrs);
-+   write_unlock(&net_lim_croup_rwlock);
-+   return nbytes;
-+}
-+
-+/*
-+* Show list of allowed addrs.
-+*/
-+static int net_lim_cgroup_addrs_seq_show(struct seq_file *seq, void *v)
-+{
-+   struct net_lim_addr_item *walk;
-+   struct net_lim_cgroup *net_lim = css_net_lim(seq_css(seq));
-+   int wrote = 0;
-+
-+   read_lock(&net_lim_croup_rwlock);
-+   list_for_each_entry(walk, &net_lim->addrs, list) {
-+       if (wrote++)
-+           seq_printf(seq, ",");
-+       seq_printf(seq, "%d.%d.%d.%d", NIPQUAD(walk->addr));
-+   }
-+   if (wrote)
-+       seq_printf(seq, "\n");
-+   read_unlock(&net_lim_croup_rwlock);
-+   return 0;
-+}
-+
-+/*
-+* Show current default_address value.
-+*/
-+static int net_lim_cgroup_default_address_seq_show(struct seq_file *seq,
-+                                                               void *v)
-+{
-+   struct net_lim_cgroup *net_lim = css_net_lim(seq_css(seq));
-+   struct net_lim_addr_item *addr_item = NULL;
-+
-+   read_lock(&net_lim_croup_rwlock);
-+   if (list_empty(&net_lim->addrs))
-+       goto _unlock;
-+
-+   addr_item = list_first_entry(&net_lim->addrs, struct
-net_lim_addr_item, list);
-+   seq_printf(seq, "%d.%d.%d.%d\n", NIPQUAD(addr_item->addr));
-+
-+_unlock:
-+   read_unlock(&net_lim_croup_rwlock);
-+   return 0;
-+}
-+
-+
-+static struct cftype net_lim_files[] = {
-+   {
-+       .name = "ipv4.ports",
-+       .write = net_lim_cgroup_ports_write,
-+       .seq_show = net_lim_cgroup_ports_seq_show,
-+   },
-+   {
-+       .name = "ipv4.ip_local_port_range",
-+       .seq_show = net_lim_cgroup_local_port_range_seq_show,
-+   },
-+   {
-+       .name = "ipv4.addrs",
-+       .write = net_lim_cgroup_addrs_write,
-+       .seq_show = net_lim_cgroup_addrs_seq_show,
-+   },
-+   {
-+       .name = "ipv4.default_address",
-+       .seq_show = net_lim_cgroup_default_address_seq_show,
-+   },
-+   { } /* terminate */
-+};
-+
-+struct cgroup_subsys net_lim_cgrp_subsys = {
-+   .css_alloc  = net_lim_css_alloc,
-+   .css_free   = net_lim_css_free,
-+   .legacy_cftypes = net_lim_files,
-+   .dfl_cftypes    = net_lim_files,
-+};
-+
-+int net_lim_port_allowed(struct task_struct *tsk, unsigned int port)
-+{
-+   struct net_lim_cgroup *net_lim =
-+           css_net_lim(tsk->cgroups->subsys[net_lim_cgrp_id]);
-+   struct net_lim_range_item *walk;
-+   int found = 0;
-+
-+   read_lock(&net_lim_croup_rwlock);
-+   /* Don't apply cgroup rules if list is empty. */
-+   if (list_empty(&net_lim->port_ranges)) {
-+       found++;
-+       goto _unlock;
-+   }
-+   /* Check in list of ranges for allowed port. */
-+   list_for_each_entry(walk, &net_lim->port_ranges, list) {
-+       if ((walk->start <= port) && (port <= walk->end)) {
-+               found++;
-+               goto _unlock;
-+       }
-+   }
-+_unlock:
-+   read_unlock(&net_lim_croup_rwlock);
-+   return found;
-+}
-+
-+int net_lim_addr_allowed(struct task_struct *tsk, u32 addr)
-+{
-+   struct net_lim_cgroup *net_lim =
-+           css_net_lim(tsk->cgroups->subsys[net_lim_cgrp_id]);
-+   struct net_lim_addr_item *walk;
-+   int found = 0;
-+
-+   read_lock(&net_lim_croup_rwlock);
-+   /* Don't apply cgroup rules if list is empty. */
-+   if (list_empty(&net_lim->addrs)) {
-+       found++;
-+       goto _unlock;
-+   }
-+   /* Check in list of addrs for allowed addr. */
-+   list_for_each_entry(walk, &net_lim->addrs, list) {
-+       if (walk->addr == addr) {
-+           found++;
-+               goto _unlock;
-+       }
-+   }
-+_unlock:
-+   read_unlock(&net_lim_croup_rwlock);
-+   return found;
-+}
-+
-+void net_lim_get_local_port_range(struct task_struct *tsk, int *low, int *high)
-+{
-+   struct net_lim_cgroup *net_lim =
-+           css_net_lim(tsk->cgroups->subsys[net_lim_cgrp_id]);
-+   struct net_lim_range_item *range;
-+
-+   read_lock(&net_lim_croup_rwlock);
-+   if (list_empty(&net_lim->port_ranges))
-+       goto _unlock;
-+
-+   /* Use net_lim range values if list of allowed ports is not empty. */
-+   range = list_last_entry(&net_lim->port_ranges,
-+                           struct net_lim_range_item, list);
-+
-+   *low = range->start;
-+   *high = range->end;
-+
-+_unlock:
-+   read_unlock(&net_lim_croup_rwlock);
-+}
-+
-+u32 net_lim_get_default_address(struct task_struct *tsk)
-+{
-+   struct net_lim_cgroup *net_lim =
-+           css_net_lim(tsk->cgroups->subsys[net_lim_cgrp_id]);
-+   u32 addr;
-+   struct net_lim_addr_item *addr_item;
-+
-+
-+   read_lock(&net_lim_croup_rwlock);
-+   if (list_empty(&net_lim->addrs)) {
-+       addr = 0;
-+       goto _unlock;
-+   }
-+
-+   /* Use net_lim range values if list of allowed ports is not empty. */
-+   addr_item = list_first_entry(&net_lim->addrs, struct net_lim_addr_item,
-+                                                   list);
-+   addr = addr_item->addr;
-+_unlock:
-+   read_unlock(&net_lim_croup_rwlock);
-+   return addr;
-+}
-diff --git a/net/ipv4/af_inet.c b/net/ipv4/af_inet.c
-index 9532ee8..e10ff09 100644
---- a/net/ipv4/af_inet.c
-+++ b/net/ipv4/af_inet.c
-@@ -119,6 +119,9 @@
- #include <linux/mroute.h>
- #endif
-
-+#ifdef CONFIG_CGROUP_NET_LIM
-+#include <linux/net_lim_cgroup.h>
-+#endif
-
- /* The inetsw table contains everything that inet_create needs to
-  * build a new socket.
-@@ -427,7 +430,12 @@ int inet_bind(struct socket *sock, struct
-sockaddr *uaddr, int addr_len)
-    unsigned short snum;
-    int chk_addr_ret;
-    int err;
-+#ifdef CONFIG_CGROUP_NET_LIM
-+   u32 def_addr = net_lim_get_default_address(get_current());
-
-+   if (def_addr != 0 && addr->sin_addr.s_addr == htonl(INADDR_ANY))
-+       addr->sin_addr.s_addr = def_addr;
-+#endif
-    /* If the socket has its own bind function then use it. (RAW) */
-    if (sk->sk_prot->bind) {
-        err = sk->sk_prot->bind(sk, uaddr, addr_len);
-@@ -467,6 +475,16 @@ int inet_bind(struct socket *sock, struct
-sockaddr *uaddr, int addr_len)
-
-    snum = ntohs(addr->sin_port);
-    err = -EACCES;
-+#ifdef CONFIG_CGROUP_NET_LIM
-+   // if (snum == 0 && !net_lim_zero_port_allowed(get_current()))
-+   //  goto out;
-+
-+   if (snum !=0 && !net_lim_port_allowed(get_current(), snum))
-+       goto out;
-+
-+   if (!net_lim_addr_allowed(get_current(), addr->sin_addr.s_addr))
-+       goto out;
-+#endif
-    if (snum && snum < PROT_SOCK &&
-        !ns_capable(net->user_ns, CAP_NET_BIND_SERVICE))
-        goto out;
-@@ -1834,4 +1852,3 @@ static int __init ipv4_proc_init(void)
- #endif /* CONFIG_PROC_FS */
-
- MODULE_ALIAS_NETPROTO(PF_INET);
--
-diff --git a/net/ipv4/inet_connection_sock.c b/net/ipv4/inet_connection_sock.c
-index 60021d0..bb614d7 100644
---- a/net/ipv4/inet_connection_sock.c
-+++ b/net/ipv4/inet_connection_sock.c
-@@ -6,6 +6,7 @@
-  *     Support for INET connection oriented protocols.
-  *
-  * Authors:    See the TCP sources
-+ * TODO: ret
-  *
-  *     This program is free software; you can redistribute it and/or
-  *     modify it under the terms of the GNU General Public License
-@@ -24,6 +25,9 @@
- #include <net/tcp_states.h>
- #include <net/xfrm.h>
- #include <net/tcp.h>
-+#ifdef CONFIG_CGROUP_NET_LIM
-+#include <linux/net_lim_cgroup.h>
-+#endif
-
- #ifdef INET_CSK_DEBUG
- const char inet_csk_timer_bug_msg[] = "inet_csk BUG: unknown timer value\n";
-@@ -40,6 +44,10 @@ void inet_get_local_port_range(struct net *net, int
-*low, int *high)
-        *low = net->ipv4.ip_local_ports.range[0];
-        *high = net->ipv4.ip_local_ports.range[1];
-    } while (read_seqretry(&net->ipv4.ip_local_ports.lock, seq));
-+#ifdef CONFIG_CGROUP_NET_LIM
-+   net_lim_get_local_port_range(get_current(), low, high);
-+#endif
-+
- }
- EXPORT_SYMBOL(inet_get_local_port_range);
---
-2.1.0
-
-
----
-WBR,
-Dmitry
+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
+cnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5MSEwHwYJKoZIhvcN
+AQkBFhJzdXBwb3J0QGNhY2VydC5vcmcCAxBuVTANBglghkgBZQMEAgMFAKCCAiEwGAYJKoZI
+hvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMTUwODI0MTU0NzAyWjBPBgkq
+hkiG9w0BCQQxQgRAB8ppBwNqD55wrvs+F1aV23SQsVtz2beZ0iD5dT55zrMzixSdqjmFDl4h
+G58M2rMKrVpjSC2xZiHrWA4KffRiBjBsBgkqhkiG9w0BCQ8xXzBdMAsGCWCGSAFlAwQBKjAL
+BglghkgBZQMEAQIwCgYIKoZIhvcNAwcwDgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMCAgFA
+MAcGBSsOAwIHMA0GCCqGSIb3DQMCAgEoMIGRBgkrBgEEAYI3EAQxgYMwgYAweTEQMA4GA1UE
+ChMHUm9vdCBDQTEeMBwGA1UECxMVaHR0cDovL3d3dy5jYWNlcnQub3JnMSIwIAYDVQQDExlD
+QSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5MSEwHwYJKoZIhvcNAQkBFhJzdXBwb3J0QGNhY2Vy
+dC5vcmcCAxBuVTCBkwYLKoZIhvcNAQkQAgsxgYOggYAweTEQMA4GA1UEChMHUm9vdCBDQTEe
+MBwGA1UECxMVaHR0cDovL3d3dy5jYWNlcnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0IFNpZ25p
+bmcgQXV0aG9yaXR5MSEwHwYJKoZIhvcNAQkBFhJzdXBwb3J0QGNhY2VydC5vcmcCAxBuVTAN
+BgkqhkiG9w0BAQEFAASCAgBSzT2svp/Sm0G21sUU7Ioezq/y4k3hGZxRnLspiLgeFKo01pLv
+cZTDGzljkpsMovdmsachHdMGsFhXhSE30X9x/vbbNYLiSyG015Cg8PdC5Ze3qr1sM1PgySDC
+KKl88z2PjHHr2s6ccTfSewEpsxbNu8GyeXLrUzT5LlS2Q25ZHMHHnUFGC5wwiyDsJP6zfpDj
+iW0Jza69UlI92gF+7nAWNBrhkqqbnrttSyU2Ucu5gOL9oXmeZATFKmMiE5OnzBjyHZ9lWCBK
+YUJfKp6U7EHpE3ir9SJy1nFFZojyvA8XPZVZbETGBs3KnmtU+8xGJpRfo6NRRIWuEWQOl3Ke
+UH5qq2el06oHLpdWa4gEqr0hrLTXuMYziz+zwalbgDE+s8OPAmi2gfGqN48OWFMtQNT+tXfa
+9/QnyxTfZVz75jd9uhHsHWCk6dne4/3g6q9d0A8GiLUqWAlr4hC/0DA7EDTmgOvIfM+4UI9a
+Y5ZbM/uqVqhEFrC+SM7iSomnEM7ZGo7hE9k3jDCfGQW4uHICJmcHbZk1xS3aKe6J5NY7zjW/
+cAs5Yxw+LKNT5s92dwFL5J+mYdkryJkzytAUuJT0wtdfTeXJKVTuyL+v34Ry1okL8rpmFmvp
+XKaTdPzzxdbQK42neqWRA9l1qEgtPVh19g+R5utyIKqYXaO9BsA6MOxA7gAAAAAAAA==
+--------------ms020402090409010007050801--
