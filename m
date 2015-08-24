@@ -1,227 +1,82 @@
-From: Paul Turner <pjt@google.com>
+From: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH 3/3] sched: Implement interface for cgroup unified hierarchy
-Date: Mon, 24 Aug 2015 13:52:01 -0700
-Message-ID: <CAPM31RKPUzuiwVs3rs=4M1Kt=+c9WX8o84r-iO4semfznvYmHw@mail.gmail.com>
-References: <1438641689-14655-1-git-send-email-tj@kernel.org>
- <1438641689-14655-4-git-send-email-tj@kernel.org> <20150804090711.GL25159@twins.programming.kicks-ass.net>
+Date: Mon, 24 Aug 2015 13:54:08 -0700
+Message-ID: <CAPM31RJi07qs42YsH=4JQSbZ+J-zCLv8e7yELb3tF_qAZmLqRA@mail.gmail.com>
+References: <20150804090711.GL25159@twins.programming.kicks-ass.net>
  <20150804151017.GD17598@mtj.duckdns.org> <20150805091036.GT25159@twins.programming.kicks-ass.net>
  <20150805143132.GK17598@mtj.duckdns.org> <CAPM31RJTf0v=2v90kN6-HM9xUGab_k++upO0Ym=irmfO9+BbFw@mail.gmail.com>
  <CAPM31R+5=4bGQo++PrYoFuS86_7JqhhQ0OtPvCYooAzJsvhb=w@mail.gmail.com>
  <20150818203117.GC15739@mtj.duckdns.org> <CAPM31RJNy3jgG=DYe6GO=wyL4BPPxwUm1f2S6YXacQmo7viFZA@mail.gmail.com>
- <20150822182916.GE20768@mtj.duckdns.org>
+ <20150822182916.GE20768@mtj.duckdns.org> <55DB3C76.5010009@gmail.com> <20150824170427.GA27262@mtj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20120113;
         h=mime-version:in-reply-to:references:from:date:message-id:subject:to
          :cc:content-type;
-        bh=BfkvzLplkD9Z26HlvjP4HxrNbSw+veSFgV3eho++UP8=;
-        b=DlhDEC9I05a5gcxRjxs4iXyVNYEKjYb3nMBaaRz+CFegN7m7oxTTGl+xuy2u4ZyZx1
-         paddeNwcaCfiMKEGOb9gBPrrDLD7cZtaQRC/O/GtlQKgO3tj/dCMKie0U+06A30/hpNE
-         EJsnMMbyqrweSCXj+aX71UgNMweNvUNbm6porT+Sz6aqaKV7qM+uJqOu6airZn12O+IN
-         32eUxbKnG6jrli1CCXFqNnPCyvICIKeYyILpFG6O5jEjPpHRJuwwzH17yKR9tt7BGBVw
-         F/6CspyszW0eyKGwyFsCHTshaMvHVP3e+ykrpquAqWmOI2LnR6bQfLrS1ki/Z74QaiJB
-         y3ww==
-In-Reply-To: <20150822182916.GE20768@mtj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=zB+TIFinCFTpm0dE+eE9rJkjwX5rZjJnxYLmvdoc0xM=;
+        b=YYKX1Dw0cm0waOePqC76GLa6bgEuP5Qxc3k1AwCV7SmrTqo6w+xC1tg78F7yGh4Qpx
+         aMvNQW2g9APxZouXwfO7iHVn1D6RJCQLTBKaBJrWrdVDrXLAF474kLv2QsK/XWIdJYcW
+         GDd40UK4s3m2oNq0xGggtgLQwaMP+CG+P7S8/7CtFShi7HHNKdVdQl3+8rctPVCahUP1
+         feJs5Y2lH5HglRHBayttuEAzbXG62gZBsjdWuF37lJu7tnQ3u4YZdMPEhfaMJfTXazID
+         LdK75UpzUjKzl16pvKMZTQEHJ8+CArhBmeZQSgsD9FB+XElJDkkrZos+fhuXz8tn0Tc5
+         +vRw==
+In-Reply-To: <20150824170427.GA27262-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, lizefan@huawei.com, cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, kernel-team <kernel-team@fb.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-team <kernel-team-b10kYP2dOMg@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Sat, Aug 22, 2015 at 11:29 AM, Tejun Heo <tj@kernel.org> wrote:
-> Hello, Paul.
+On Mon, Aug 24, 2015 at 10:04 AM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> Hello, Austin.
 >
-> On Fri, Aug 21, 2015 at 12:26:30PM -0700, Paul Turner wrote:
-> ...
->> A very concrete example of the above is a virtual machine in which you
->> want to guarantee scheduling for the vCPU threads which must schedule
->> beside many hypervisor support threads.   A hierarchy is the only way
->> to fix the ratio at which these compete.
->
-> Just to learn more, what sort of hypervisor support threads are we
-> talking about?  They would have to consume considerable amount of cpu
-> cycles for problems like this to be relevant and be dynamic in numbers
-> in a way which letting them competing against vcpus makes sense.  Do
-> IO helpers meet these criteria?
-
-I'm not sure what you mean by an IO helper.  By support threads I mean
-any threads that are used in the hypervisor implementation that are
-not hosting a vCPU.
-
->
->> An example that's not the cpu controller is that we use cpusets to
->> expose to applications their "shared" and "private" cores.  (These
->> sets are dynamic based on what is coscheduled on a given machine.)
->
-> Can you please go into more details with these?
-
-We typically share our machines between many jobs, these jobs can have
-cores that are "private" (and not shared with other jobs) and cores
-that are "shared" (general purpose cores accessible to all jobs on the
-same machine).
-
-The pool of cpus in the "shared" pool is dynamic as jobs entering and
-leaving the machine take or release their associated "private" cores.
-
-By creating the appropriate sub-containers within the cpuset group we
-allow jobs to pin specific threads to run on their (typically) private
-cores.  This also allows the management daemons additional flexibility
-as it's possible to update which cores we place as private, without
-synchronization with the application.  Note that sched_setaffinity()
-is a non-starter here.
-
->
->> > Why would you assume that threads of a process wouldn't want to
->> > configure it ever?  How is this different from CPU affinity?
->>
->> In general cache and CPU behave differently.  Generally for it to make
->> sense between threads in a process they would have to have wholly
->> disjoint memory, at which point the only sane long-term implementation
->> is separate processes and the management moves up a level anyway.
->>
->> That said, there are surely cases in which it might be convenient to
->> use at a per-thread level to correct a specific performance anomaly.
->> But at that point, you have certainly reached the level of hammer that
->> you can coordinate with an external daemon if necessary.
->
-> So, I'm not super familiar with all the use cases but the whole cache
-> allocation thing is almost by nature a specific niche thing and I feel
-> pretty reluctant to blow off per-thread usages as too niche to worry
-> about.
-
-Let me try to restate:
-  I think that we can specify the usage is specifically niche that it
-will *typically* be used by higher level management daemons which
-prefer a more technical and specific interface.  This does not
-preclude use by threads, it just makes it less convenient; I think
-that we should be optimizing for flexibility over ease-of-use for a
-very small number of cases here.
-
->
->> > I don't follow what you're trying to way with the above paragraph.
->> > Are you still talking about CAT?  If so, that use case isn't the only
->> > one.  I'm pretty sure there are people who would want to configure
->> > cache allocation at thread level.
->>
->> I'm not agreeing with you that "in cgroups" means "must be usable by
->> applications within that hierarchy".  A cgroup subsystem used as a
->> partitioning API only by system management daemons is entirely
->> reasonable.  CAT is a reasonable example of this.
->
-> I see.  The same argument.  I don't think CAT just being system
-> management thing makes sense.
->
->> > So, this is a trade-off we're consciously making.  If there are
->> > common-enough use cases which require jumping across different cgroup
->> > domains, we'll try to figure out a way to accomodate those but by
->> > default migration is a very cold and expensive path.
->>
->> The core here was the need for allowing sub-process migration.  I'm
->> not sure I follow the performance trade-off argument; haven't we
->> historically seen the opposite?  That migration has been a slow-path
->> without optimizations and people pushing to make it faster?  This
->> seems a hard generalization to make for something that's inherently
->> tied to a particular controller.
->
-> It isn't something tied to a particular controller.  Some controllers
-> may get impacted less by than others but there's an inherent
-> connection between how dynamic an association is and how expensive the
-> locking around it needs to be and we need to set up basic behavior and
-> usage conventions so that different controllers are designed and
-> implemented assuming similar usage patterns; otherwise, we end up with
-> the chaotic shit show that we have had where everything behaves
-> differently and nobody knows what's the right way to do things and we
-> end up locked into weird requirements which some controller induced
-> for no good reason but cause significant pain on use cases which
-> actually matter.
->
->> I don't care if we try turning that dial back to assume it's a cold
->> path once more, only that it's supported.
->
-> It has always been a cold path and I'm not saying this is gonna be
-> noticeably worse in the future but usages like bouncing threads on
-> request-by-request basis are and will be clearly worse than bouncing
-> to threads which are already in the target domain.
->
->> >> > A forwarding /proc/thread_self/cgroup accessor, or similar, would be another
->> >> > way to address some of these issues.
+> On Mon, Aug 24, 2015 at 11:47:02AM -0400, Austin S Hemmelgarn wrote:
+>> >Just to learn more, what sort of hypervisor support threads are we
+>> >talking about?  They would have to consume considerable amount of cpu
+>> >cycles for problems like this to be relevant and be dynamic in numbers
+>> >in a way which letting them competing against vcpus makes sense.  Do
+>> >IO helpers meet these criteria?
 >> >
->> > That sounds horrible to me.  What if the process wants to do RMW a
->> > config?
+>> Depending on the configuration, yes they can.  VirtualBox has some rather
+>> CPU intensive threads that aren't vCPU threads (their emulated APIC thread
+>> immediately comes to mind), and so does QEMU depending on the emulated
+>
+> And the number of those threads fluctuate widely and dynamically?
+>
+>> hardware configuration (it gets more noticeable when the disk images are
+>> stored on a SAN and served through iSCSI, NBD, FCoE, or ATAoE, which is
+>> pretty typical usage for large virtualization deployments).  I've seen cases
+>> first hand where the vCPU's can make no reasonable progress because they are
+>> constantly getting crowded out by other threads.
+>
+> That alone doesn't require hierarchical resource distribution tho.
+> Setting nice levels reasonably is likely to alleviate most of the
+> problem.
+
+Nice is not sufficient here.  There could be arbitrarily many threads
+within the hypervisor that are not actually hosting guest CPU threads.
+The only way to have this competition occur at a reasonably fixed
+ratio is a sub-hierarchy.
+
+>
+>> The use of the term 'hypervisor support threads' for this is probably not
+>> the best way of describing the contention, as it's almost always a full
+>> system virtualization issue, and the contending threads are usually storage
+>> back-end access threads.
 >>
->> Locking within a process is easy.
+>> I would argue that there are better ways to deal properly with this (Isolate
+>> the non vCPU threads on separate physical CPU's from the hardware emulation
+>> threads), but such methods require large systems to be practical at any
+>> scale, and many people don't have the budget for such large systems, and
+>> this way of doing things is much more flexible for small scale use cases
+>> (for example, someone running one or two VM's on a laptop under QEMU or
+>> VirtualBox).
 >
-> It's not contained in the process at all.  What if an external entity
-> decides to migrate the process into another cgroup inbetween?
+> I don't know.  "Someone running one or two VM's on a laptop under
+> QEMU" doesn't really sound like the use case which absolutely requires
+> hierarchical cpu cycle distribution.
 >
 
-If we have 'atomic' moves and a way to access our sub-containers from
-the process in a consistent fashion (e.g. relative paths) then this is
-not an issue.
-
->> > What if the permissions are different after an intervening
->> > migration?
->>
->> This is a side-effect of migration not being properly supported.
->>
->> > What if the sub-hierarchy no longer exists or has been
->> > replaced by a hierarchy with the same topology but actualy is a
->> > different one?
->>
->> The easy answer is that:  Only a process should be managing its
->> sub-hierarchy.  That's the nice thing about hierarchies.
->
-> cgroupfs is a horrible place to implement that part of interface.  It
-> doesn't make any sense to combine those two into the same hierarchy.
-> You're agreeing to the identified problem but somehow still suggesting
-> doing what we've been doing when the root cause of the said problem is
-> conflating and interlocking these two separate things.
-
-I am not endorsing the world we are in today, only describing how it
-can be somewhat sanely managed.  Some of these lessons could be
-formalized in imagining the world of tomorrow.  E.g. the sub-process
-mounts could appear within some (non-movable) alternate file-system
-path.
-
->
->> The harder answer is:  How do we handle non-fungible resources such as
->> CPU assignments within a hierarchy?  This is a big part of why I make
->> arguments for certain partitions being management-software only above.
->> This is imperfect, but better then where we stand today.
->
-> I'm not following.  Why is that different?
-
-This is generally any time a change in the external-to-application's
-cgroup-parent requires changes in the sub-hierarchy.  This is most
-visible with a resource such as a cpu which is uniquely identified,
-but similarly applies to any limits.
-
->
->> > Let's build an API which actually looks and behaves like an API which
->> > is properly isolated from what external agents may do to the process.
->> > I can't see how that would be "back to where we are today".  All of
->> > those are pretty critical attributes for a public kernel API and
->> > utterly broken right now.
->>
->> Sure, but I don't think you can throw out per-thread control for all
->> controllers to enable this.  Which makes everything else harder.  A
->> intermediary step in unification might be that we move from N mounts
->> to 2.  Those that can be managed at the process level, and those that
->> can't.  It's a compromise, but may allow cleaner abstractions for the
->> former case.
->
-> The transition can already be gradual.  Why would you add yet another
-> transition step?
-
-Because what's being proposed today does not offer any replacement for
-the sub-process control that we depend on today?  Why would we embark
-on merging the new interface before these details are sufficiently
-resolved?
-
->
-> Thanks.
->
-> --
-> tejun
+We run more than 'one or two' VMs using this configuration.  :)
