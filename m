@@ -1,66 +1,49 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH 3/3] sched: Implement interface for cgroup unified
- hierarchy
-Date: Tue, 25 Aug 2015 12:00:54 +0200
-Message-ID: <20150825100054.GN16853@twins.programming.kicks-ass.net>
-References: <CAPM31RJi07qs42YsH=4JQSbZ+J-zCLv8e7yELb3tF_qAZmLqRA@mail.gmail.com>
- <20150824210223.GH28944@mtj.duckdns.org>
- <CAPM31R+i7BD8x9h_6wZVTa0zCB7XP0SGL5dSA-n6h9PTeAEhug@mail.gmail.com>
- <20150824211707.GJ28944@mtj.duckdns.org>
- <CAPM31R+vt1oAPCB-q6570RqZtJVBu5MH=gcQD2m9mjauStV7MA@mail.gmail.com>
- <20150824214000.GL28944@mtj.duckdns.org>
- <CAPM31R+Mnk=AL6h05eMMQvPEEfnjkB3iGb+oZj28jAQ9-ajOxA@mail.gmail.com>
- <20150824224936.GO28944@mtj.duckdns.org>
- <CAPM31RKr5K0F6b70wJronTcvXRLBYRuOvH+aFeDTVeZiDVZz=Q@mail.gmail.com>
- <20150825092441.GA24131@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/2] cgroup: get a ref to source csses when migrating
+Date: Tue, 25 Aug 2015 14:14:45 -0400
+Message-ID: <20150825181445.GB26785@mtj.duckdns.org>
+References: <CAOviyag1ZOgjtNWmnpfMm=fDgkhDn9UGKoJXy6HLWQMGb-tQAg@mail.gmail.com>
+ <1440335432-4202-1-git-send-email-cyphar@cyphar.com>
+ <1440335432-4202-2-git-send-email-cyphar@cyphar.com>
+ <20150824184507.GB28944@mtj.duckdns.org>
+ <CAOviyagYytw2t20c4a-GaFJDRArtF67CHFPN127CRpnzr0Y9kA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=OrsmBEuYuL68X1EFM9TwlEtU4rsKAtpGWbGJvC1C9+E=;
+        b=traZ3pdFkjng8Cz0oR14EyyroL1e9z5A4Gz9CmSrEs88HfTfwXzNdzq2lZCrXn5uGi
+         0QFMLO2ge6ngIyQkvJcPdZ6Skg619H2uasiA0q0Z/jLjQB6yxHMG5h9sNNcgPZr8OHDk
+         N91c109i5g/BMa0eKJd05pP9ffppf1o2IUkLUXdcdnES6uYlbon69qaHtMuDkMMyglR/
+         sA9ThaML9LZ335WsWIq31LsMRCvIYH7nmkK7Zfl1y9ONYqzcrVdF+HREnVhEPxdHVWAH
+         mG8NInFtjvEgEWJK5ufjqua6JY0yoHcqCTN6HaNADjC6k/MdDZK8vg3suP7snq866UQ/
+         mEjQ==
 Content-Disposition: inline
-In-Reply-To: <20150825092441.GA24131-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <CAOviyagYytw2t20c4a-GaFJDRArtF67CHFPN127CRpnzr0Y9kA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-team <kernel-team-b10kYP2dOMg@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: Aleksa Sarai <cyphar@cyphar.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Tue, Aug 25, 2015 at 11:24:42AM +0200, Ingo Molnar wrote:
+Hello, Aleksa.
+
+On Tue, Aug 25, 2015 at 12:00:54PM +1000, Aleksa Sarai wrote:
+> You also mentioned that depending on the css_set's ref being bumped to
+> protect the contained csses is "sort of implementation detail.  It can
+> be implemented in different ways." Which made me think that depending
+> on that is not a good idea.
 > 
-> * Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> 
-> > > Anyways, a point here is that threads of the same process competing
-> > > isn't a new problem.  There are many ways to make those threads play
-> > > nice as the application itself often has to be involved anyway,
-> > > especially for something like qemu which is heavily involved in
-> > > provisioning resources.
-> > 
-> > It's certainly not a new problem, but it's a real one, and it's
-> > _hard_.  You're proposing removing the best known solution.
-> 
-> Also, just to make sure this is resolved properly, I'm NAK-ing the current 
-> scheduler bits in this series:
-> 
->   NAKed-by: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> 
-> until all of pjt's API design concerns are resolved. This is conceptual, it is not 
-> a 'we can fix it later' detail.
-> 
-> Tejun, please keep me Cc:-ed to future versions of this series so that I can lift 
-> the NAK if things get resolved.
+> But if it's safe to depend on the cgroup_migrate_add_src() pinning the
+> ref on the css_set, I'll drop this patch and fix up the other one
+> accordingly.
 
-You can add:
+Yeah, let's go w/o the explicit refcnting.
 
-NAKed-by: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Thanks.
 
-to that.
-
-There have been at least 3 different groups of people:
-
- - Mike, representing Suse customers
- - Kamezawa-san, representing Fujitsu customers
- - Paul, representing Google
-
-that claim per-thread control groups are in use and important.
-
-Any replacement _must_ provide for this use case up front; its not
-something that can be cobbled on later.
+-- 
+tejun
