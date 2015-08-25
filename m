@@ -1,10 +1,9 @@
-From: Ingo Molnar <mingo@kernel.org>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 Subject: Re: [PATCH 3/3] sched: Implement interface for cgroup unified
  hierarchy
-Date: Tue, 25 Aug 2015 11:24:42 +0200
-Message-ID: <20150825092441.GA24131@gmail.com>
-References: <20150824170427.GA27262@mtj.duckdns.org>
- <CAPM31RJi07qs42YsH=4JQSbZ+J-zCLv8e7yELb3tF_qAZmLqRA@mail.gmail.com>
+Date: Tue, 25 Aug 2015 12:00:54 +0200
+Message-ID: <20150825100054.GN16853@twins.programming.kicks-ass.net>
+References: <CAPM31RJi07qs42YsH=4JQSbZ+J-zCLv8e7yELb3tF_qAZmLqRA@mail.gmail.com>
  <20150824210223.GH28944@mtj.duckdns.org>
  <CAPM31R+i7BD8x9h_6wZVTa0zCB7XP0SGL5dSA-n6h9PTeAEhug@mail.gmail.com>
  <20150824211707.GJ28944@mtj.duckdns.org>
@@ -13,51 +12,55 @@ References: <20150824170427.GA27262@mtj.duckdns.org>
  <CAPM31R+Mnk=AL6h05eMMQvPEEfnjkB3iGb+oZj28jAQ9-ajOxA@mail.gmail.com>
  <20150824224936.GO28944@mtj.duckdns.org>
  <CAPM31RKr5K0F6b70wJronTcvXRLBYRuOvH+aFeDTVeZiDVZz=Q@mail.gmail.com>
+ <20150825092441.GA24131@gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=xEc4AUG48/wUJleRpsPHmodGjBL1bxDLQJTCcsUv+SM=;
-        b=eICgsBJtT2+rOHn1zgpD/D1neJW1iIWTYt6uHxk8dB/UR4i3qEYGFT6jRu0p1PpX7c
-         lirm8h1CzgKmUJ0xK5oO60Vw5E0CGqykewtnAjy1/VLEdY3MarB1ZR0RDXZKYFRr71fD
-         cO8dkJXE+mrW0kyflq4hur6GMS1ANkPxb136GgO2Mob2ottgTJxIhBlrBkO7riT9CAg7
-         iMRrSoJdBf1Z3MNYE2xsuidtptkeAzoHlLT1FXJmc7rxDs/jZg9sfI5f0CeYaQOW3COA
-         oyMPXxQ2OGJoI7FHs89y1dQuK6gPfVNOMEdAie1t/oTbK2bxT2Lb9b4KbNPTmU9QPMSr
-         mGgg==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <CAPM31RKr5K0F6b70wJronTcvXRLBYRuOvH+aFeDTVeZiDVZz=Q@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20150825092441.GA24131-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Paul Turner <pjt@google.com>, Tejun Heo <tj@kernel.org>
-Cc: Tejun Heo <tj@kernel.org>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, lizefan@huawei.com, cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, kernel-team <kernel-team@fb.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-team <kernel-team-b10kYP2dOMg@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-
-* Paul Turner <pjt@google.com> wrote:
-
-> > Anyways, a point here is that threads of the same process competing
-> > isn't a new problem.  There are many ways to make those threads play
-> > nice as the application itself often has to be involved anyway,
-> > especially for something like qemu which is heavily involved in
-> > provisioning resources.
+On Tue, Aug 25, 2015 at 11:24:42AM +0200, Ingo Molnar wrote:
 > 
-> It's certainly not a new problem, but it's a real one, and it's
-> _hard_.  You're proposing removing the best known solution.
+> * Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> 
+> > > Anyways, a point here is that threads of the same process competing
+> > > isn't a new problem.  There are many ways to make those threads play
+> > > nice as the application itself often has to be involved anyway,
+> > > especially for something like qemu which is heavily involved in
+> > > provisioning resources.
+> > 
+> > It's certainly not a new problem, but it's a real one, and it's
+> > _hard_.  You're proposing removing the best known solution.
+> 
+> Also, just to make sure this is resolved properly, I'm NAK-ing the current 
+> scheduler bits in this series:
+> 
+>   NAKed-by: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> 
+> until all of pjt's API design concerns are resolved. This is conceptual, it is not 
+> a 'we can fix it later' detail.
+> 
+> Tejun, please keep me Cc:-ed to future versions of this series so that I can lift 
+> the NAK if things get resolved.
 
-Also, just to make sure this is resolved properly, I'm NAK-ing the current 
-scheduler bits in this series:
+You can add:
 
-  NAKed-by: Ingo Molnar <mingo@kernel.org>
+NAKed-by: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-until all of pjt's API design concerns are resolved. This is conceptual, it is not 
-a 'we can fix it later' detail.
+to that.
 
-Tejun, please keep me Cc:-ed to future versions of this series so that I can lift 
-the NAK if things get resolved.
+There have been at least 3 different groups of people:
 
-Thanks,
+ - Mike, representing Suse customers
+ - Kamezawa-san, representing Fujitsu customers
+ - Paul, representing Google
 
-	Ingo
+that claim per-thread control groups are in use and important.
+
+Any replacement _must_ provide for this use case up front; its not
+something that can be cobbled on later.
