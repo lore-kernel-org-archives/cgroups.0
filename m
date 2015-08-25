@@ -1,73 +1,63 @@
-From: Aleksa Sarai <cyphar@cyphar.com>
-Subject: [PATCH v2] cgroup: pids: fix invalid get/put usage
-Date: Tue, 25 Aug 2015 12:50:44 +1000
-Message-ID: <1440471044-10154-1-git-send-email-cyphar@cyphar.com>
+From: Ingo Molnar <mingo@kernel.org>
+Subject: Re: [PATCH 3/3] sched: Implement interface for cgroup unified
+ hierarchy
+Date: Tue, 25 Aug 2015 11:24:42 +0200
+Message-ID: <20150825092441.GA24131@gmail.com>
+References: <20150824170427.GA27262@mtj.duckdns.org>
+ <CAPM31RJi07qs42YsH=4JQSbZ+J-zCLv8e7yELb3tF_qAZmLqRA@mail.gmail.com>
+ <20150824210223.GH28944@mtj.duckdns.org>
+ <CAPM31R+i7BD8x9h_6wZVTa0zCB7XP0SGL5dSA-n6h9PTeAEhug@mail.gmail.com>
+ <20150824211707.GJ28944@mtj.duckdns.org>
+ <CAPM31R+vt1oAPCB-q6570RqZtJVBu5MH=gcQD2m9mjauStV7MA@mail.gmail.com>
+ <20150824214000.GL28944@mtj.duckdns.org>
+ <CAPM31R+Mnk=AL6h05eMMQvPEEfnjkB3iGb+oZj28jAQ9-ajOxA@mail.gmail.com>
+ <20150824224936.GO28944@mtj.duckdns.org>
+ <CAPM31RKr5K0F6b70wJronTcvXRLBYRuOvH+aFeDTVeZiDVZz=Q@mail.gmail.com>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=xEc4AUG48/wUJleRpsPHmodGjBL1bxDLQJTCcsUv+SM=;
+        b=eICgsBJtT2+rOHn1zgpD/D1neJW1iIWTYt6uHxk8dB/UR4i3qEYGFT6jRu0p1PpX7c
+         lirm8h1CzgKmUJ0xK5oO60Vw5E0CGqykewtnAjy1/VLEdY3MarB1ZR0RDXZKYFRr71fD
+         cO8dkJXE+mrW0kyflq4hur6GMS1ANkPxb136GgO2Mob2ottgTJxIhBlrBkO7riT9CAg7
+         iMRrSoJdBf1Z3MNYE2xsuidtptkeAzoHlLT1FXJmc7rxDs/jZg9sfI5f0CeYaQOW3COA
+         oyMPXxQ2OGJoI7FHs89y1dQuK6gPfVNOMEdAie1t/oTbK2bxT2Lb9b4KbNPTmU9QPMSr
+         mGgg==
+Content-Disposition: inline
+In-Reply-To: <CAPM31RKr5K0F6b70wJronTcvXRLBYRuOvH+aFeDTVeZiDVZz=Q@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj@kernel.org
-Cc: n.borisov@siteground.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Aleksa Sarai <cyphar@cyphar.com>
+To: Paul Turner <pjt@google.com>, Tejun Heo <tj@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, lizefan@huawei.com, cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, kernel-team <kernel-team@fb.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
 
-Fix incorrect usage of css_get and css_put to put a different css in
-pids_{cancel_,}attach() than the one grabbed in pids_can_attach(). This
-could lead to quite serious memory leakage (and unsafe operations on the
-putted css).
 
-Signed-off-by: Aleksa Sarai <cyphar@cyphar.com>
----
- kernel/cgroup_pids.c | 19 ++++---------------
- 1 file changed, 4 insertions(+), 15 deletions(-)
+* Paul Turner <pjt@google.com> wrote:
 
-diff --git a/kernel/cgroup_pids.c b/kernel/cgroup_pids.c
-index d75488824ae2..056564f8dd85 100644
---- a/kernel/cgroup_pids.c
-+++ b/kernel/cgroup_pids.c
-@@ -173,11 +173,11 @@ static int pids_can_attach(struct cgroup_subsys_state *css,
- 		struct pids_cgroup *old_pids;
- 
- 		/*
--		 * Grab a ref to each task's css. We don't drop the ref until
--		 * we either fail and hit ->cancel_attach() or succeed and hit
--		 * ->attach().
-+		 * We don't need to grab a ref between here and cancel_attach()
-+		 * because cgroup_migrate_prepare_src() protects the task's css
-+		 * from being freed before the migration completed or failed.
- 		 */
--		old_css = task_get_css(task, pids_cgrp_id);
-+		old_css = task_css(task, pids_cgrp_id);
- 		old_pids = css_pids(old_css);
- 
- 		pids_charge(pids, 1);
-@@ -202,19 +202,9 @@ static void pids_cancel_attach(struct cgroup_subsys_state *css,
- 
- 		pids_charge(old_pids, 1);
- 		pids_uncharge(pids, 1);
--		css_put(old_css);
- 	}
- }
- 
--static void pids_attach(struct cgroup_subsys_state *css,
--			struct cgroup_taskset *tset)
--{
--	struct task_struct *task;
--
--	cgroup_taskset_for_each(task, tset)
--		css_put(task_css(task, pids_cgrp_id));
--}
--
- static int pids_can_fork(struct task_struct *task, void **priv_p)
- {
- 	struct cgroup_subsys_state *css;
-@@ -354,7 +344,6 @@ static struct cftype pids_files[] = {
- struct cgroup_subsys pids_cgrp_subsys = {
- 	.css_alloc	= pids_css_alloc,
- 	.css_free	= pids_css_free,
--	.attach		= pids_attach,
- 	.can_attach 	= pids_can_attach,
- 	.cancel_attach 	= pids_cancel_attach,
- 	.can_fork	= pids_can_fork,
--- 
-2.5.0
+> > Anyways, a point here is that threads of the same process competing
+> > isn't a new problem.  There are many ways to make those threads play
+> > nice as the application itself often has to be involved anyway,
+> > especially for something like qemu which is heavily involved in
+> > provisioning resources.
+> 
+> It's certainly not a new problem, but it's a real one, and it's
+> _hard_.  You're proposing removing the best known solution.
+
+Also, just to make sure this is resolved properly, I'm NAK-ing the current 
+scheduler bits in this series:
+
+  NAKed-by: Ingo Molnar <mingo@kernel.org>
+
+until all of pjt's API design concerns are resolved. This is conceptual, it is not 
+a 'we can fix it later' detail.
+
+Tejun, please keep me Cc:-ed to future versions of this series so that I can lift 
+the NAK if things get resolved.
+
+Thanks,
+
+	Ingo
