@@ -1,45 +1,49 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
 Subject: Re: legacy mode
-Date: Thu, 27 Aug 2015 16:27:22 -0400
-Message-ID: <20150827202722.GH26785@mtj.duckdns.org>
+Date: Thu, 27 Aug 2015 15:45:00 -0500
+Message-ID: <20150827204500.GA4447@mail.hallyn.com>
 References: <20150827202137.GA4221@mail.hallyn.com>
+ <20150827202722.GH26785@mtj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=jmJ5/apcEwdXLz5cfZljVDKCHJLVFht8cUtcoFAOM9g=;
-        b=Ri9B7KszUk9ZGO3S8ZXMfCu3/Vj7DjJnh5Ye5RElnSWEJp4IIZ+/KDDb2cjcfBRoMw
-         wkzJUdZpkd4pPVCejiUVctZMg/CV24MyIpRfuwk6yFSehPTnMGG6bvoiLe0230miOArW
-         50GoydGuK959FI27gQk0DMLFfMAhXXq/sXrV6+zb0ckDgDs5/Pm1BFDqKru+RuTzNeWA
-         a50qmtDBV4yutzAHxqrG08CqeX9er0szGqdx2FfG2F1b9peESre2pE8A6bap4fGeAQy0
-         QOZJdlrBDVE+l85g1LQ92gVxa2zwCNGS3zpbdqtjGXOv3Ai6x/5aHZhpKg6+9dKU0Qyo
-         a1HQ==
 Content-Disposition: inline
-In-Reply-To: <20150827202137.GA4221-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
+In-Reply-To: <20150827202722.GH26785-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+On Thu, Aug 27, 2015 at 04:27:22PM -0400, Tejun Heo wrote:
+> Hello,
+> 
+> On Thu, Aug 27, 2015 at 03:21:37PM -0500, Serge E. Hallyn wrote:
+> > The problem this would solve is running older userspace (i.e. libvirt in
+> > a container running an older distro) on a newer kernel which has unified
+> > hierarchy mounted.
+> 
+> But the leaf restriction isn't the only change.  The interface files
 
-On Thu, Aug 27, 2015 at 03:21:37PM -0500, Serge E. Hallyn wrote:
-> The problem this would solve is running older userspace (i.e. libvirt in
-> a container running an older distro) on a newer kernel which has unified
-> hierarchy mounted.
+That was an example.  It would also have to automatically enable
+controllers in child cgroups, and I'm not sure what to do about
+the tasks file.
 
-But the leaf restriction isn't the only change.  The interface files
-are different too and for some controllers the basic operation model
-is different, so I don't see how just adding .leaf would do much good.
+> are different too and for some controllers the basic operation model
+> is different, so I don't see how just adding .leaf would do much good.
 
-If the legacy userspace doesn't do any resource control, the leaf rule
-restriction doesn't apply anyway, so nothing to worry about.
+Yeah and some of these may be a problem, but the problems I outlined
+above are the ones which are *really* breaking old userspace.
 
-Thanks.
+Keeping in mind what I've seen most people use for containers, what I've
+seen in the Documentation/cgroups/unified.txt file shouldn't be too terrible.
+My last test was on 3.19.0-18-generic and I assume it gets worse, and
+we'll need to proxy attempts at memory limit setting, for instance.
 
--- 
-tejun
+> If the legacy userspace doesn't do any resource control, the leaf rule
+> restriction doesn't apply anyway, so nothing to worry about.
+
+My main use case is nested lxc, presumably with systemd inside some of
+the nested containers, so this would definately be an issue.
+
+-serge
