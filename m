@@ -1,41 +1,45 @@
-From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Subject: legacy mode
-Date: Thu, 27 Aug 2015 15:21:37 -0500
-Message-ID: <20150827202137.GA4221@mail.hallyn.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: legacy mode
+Date: Thu, 27 Aug 2015 16:27:22 -0400
+Message-ID: <20150827202722.GH26785@mtj.duckdns.org>
+References: <20150827202137.GA4221@mail.hallyn.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=jmJ5/apcEwdXLz5cfZljVDKCHJLVFht8cUtcoFAOM9g=;
+        b=Ri9B7KszUk9ZGO3S8ZXMfCu3/Vj7DjJnh5Ye5RElnSWEJp4IIZ+/KDDb2cjcfBRoMw
+         wkzJUdZpkd4pPVCejiUVctZMg/CV24MyIpRfuwk6yFSehPTnMGG6bvoiLe0230miOArW
+         50GoydGuK959FI27gQk0DMLFfMAhXXq/sXrV6+zb0ckDgDs5/Pm1BFDqKru+RuTzNeWA
+         a50qmtDBV4yutzAHxqrG08CqeX9er0szGqdx2FfG2F1b9peESre2pE8A6bap4fGeAQy0
+         QOZJdlrBDVE+l85g1LQ92gVxa2zwCNGS3zpbdqtjGXOv3Ai6x/5aHZhpKg6+9dKU0Qyo
+         a1HQ==
 Content-Disposition: inline
+In-Reply-To: <20150827202137.GA4221-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi,
+Hello,
 
-after the unified cgroup overview at the containers mini-summit last week,
-I mentioned the idea of supporting backward-compatible cgroupfs mounts in
-the unified hierarchy.
+On Thu, Aug 27, 2015 at 03:21:37PM -0500, Serge E. Hallyn wrote:
+> The problem this would solve is running older userspace (i.e. libvirt in
+> a container running an older distro) on a newer kernel which has unified
+> hierarchy mounted.
 
-The problem this would solve is running older userspace (i.e. libvirt in
-a container running an older distro) on a newer kernel which has unified
-hierarchy mounted.
+But the leaf restriction isn't the only change.  The interface files
+are different too and for some controllers the basic operation model
+is different, so I don't see how just adding .leaf would do much good.
 
-I was thinking this could do the same tricks I'm doing in cgmanager to
-support the existing cgmanager API with the unified hierarchy:  i.e. create
-a leaf node for every cgroup, and redirect any tasks written to the
-cgroup.procs file for $cgroup to $cgroup/.leaf.  I realize there will
-likely be other changes, but keeping in mind that new unified-only features
-aren't relevant for legacy support, maybe this sort of approach wouldn't
-be as bad as I originally thought it would be.  Not supporting release-agent
-is also a non-issue imo.
+If the legacy userspace doesn't do any resource control, the leaf rule
+restriction doesn't apply anyway, so nothing to worry about.
 
-The combination of cgroup namespaces, a "legacy-mount" mode, and fully
-proper hierarchical support leading to full safe delegation, would
-allow cgmanager and lxcfs to be killed with extreme privilege - WIN!
+Thanks.
 
-So is anyone interested on working on a legacy mount option?  What other
-issues need to be considered there?
-
-thanks,
--serge
+-- 
+tejun
