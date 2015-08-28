@@ -1,51 +1,162 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 3/4] memcg: punt high overage reclaim to
- return-to-userland path
-Date: Fri, 28 Aug 2015 17:14:23 -0400
-Message-ID: <20150828211423.GC11089@htj.dyndns.org>
-References: <1440775530-18630-1-git-send-email-tj@kernel.org>
- <1440775530-18630-4-git-send-email-tj@kernel.org>
- <20150828171322.GC21463@dhcp22.suse.cz>
- <20150828204554.GM9610@esperanza>
- <20150828205301.GB11089@htj.dyndns.org>
- <20150828210704.GN9610@esperanza>
+Subject: [PATCH 1/2] memcg: flatten task_struct->memcg_oom
+Date: Fri, 28 Aug 2015 18:01:58 -0400
+Message-ID: <20150828220158.GD11089@htj.dyndns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=NbZ9X//8lgtxdCKr+mkIf55KJTnszyKHT/RNxbFBuas=;
-        b=nIgivnxVrJkLU7d68S5FU7RWSrrgP8rcgMtGtK3nK12fyt1ZAtSh0x/MNQy/JUa7tQ
-         VD03kM+O06NKovd6saudLDkNsc4pNV+eLdeAlNPVNFAbgGxR4KHM3s6ALQrOu184+zd2
-         M7iD/jRy95wRIcshf1y6s/Xe5D6H5Os0gIQpnKOKXqmreEDdnX0BOdyT4l+ig7Ql/njx
-         cxnOugyeD8ZJFHQK7di/Pfv5Orj2U/q4ZRVqmnu93aUfwAwppBRXFOOMKgHNdaVvsR0t
-         Grqf3I9Mlnobt6Mgok+xzw75SQb1BTJbkkdCF1acKIjQ7G2dBkodoVAFnPeD6983dQo5
-         JFDg==
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=qWX4TqYglFvnjjT5eM+qB7+/NWyz/JIp5MJvmVIRIc8=;
+        b=nw8loSGgg2YJwQWj6VpdWyM3D8wBNAlJuIINGel9fDGYLOQaej/4gq321f5Ztd8Al0
+         36V081c5brVXbtVm9nvvXJT+0cttbAr4KJc/HNWFxk1TMBtfeGQEjEKUmRRYO+ICvLdL
+         aT+Tde5aOCv/ogDpq+pWYL+lv++Jzuzkh3oN8JNkhwi4d04x+XDOeHMlxv0EevtKc5Uh
+         DUFxphsLXVP8iFS37459QYfU+V32UVw+qw67q8b9N6eJCsRjqX4dg/WHIrQpgWcss296
+         zViW7ecvZ3/QDqZZuO5bAh86c6TFOOz0xDE1MUnnQ/FyEGT+1ZqU/MWy2Bk6kd7/w8Ux
+         0pRw==
 Content-Disposition: inline
-In-Reply-To: <20150828210704.GN9610@esperanza>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Hey,
+task_struct->memcg_oom is a sub-struct containing fields which are
+used for async memcg oom handling.  Most task_struct fields aren't
+packaged this way and it can lead to unnecessary alignment paddings.
+This patch flattens it.
 
-On Sat, Aug 29, 2015 at 12:07:04AM +0300, Vladimir Davydov wrote:
-> We should probably think about introducing some kind of watermarks that
-> would trigger memcg reclaim, asynchronous or direct, on exceeding
-> them.
+* task.memcg_oom.memcg          -> task.memcg_in_oom
+* task.memcg_oom.gfp_mask	-> task.memcg_oom_gfp_mask
+* task.memcg_oom.order          -> task.memcg_oom_order
+* task.memcg_oom.may_oom        -> task.memcg_may_oom
 
-Yeah, for max + kmemcg case, we eventually should do something similar
-to the global case where we try to kick off async reclaim before we
-hit the hard wall.  Ultimately, I think punting reclaims to workqueue
-or return-path is a good idea anyway, so maybe it can be all part of
-the same mechanism.  Given that the high limit is the primary control
-mechanism on the default hierarchy, it should be fine for now.
+In addition, task.memcg_may_oom is relocated to where other bitfields
+are which reduces the size of task_struct.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+Hello,
+
+These two patches are what survived from the following patchset.
+
+ http://lkml.kernel.org/g/1440775530-18630-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
 Thanks.
 
--- 
-tejun
+ include/linux/memcontrol.h |   10 +++++-----
+ include/linux/sched.h      |   13 ++++++-------
+ mm/memcontrol.c            |   16 ++++++++--------
+ 3 files changed, 19 insertions(+), 20 deletions(-)
+
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -407,19 +407,19 @@ void mem_cgroup_print_oom_info(struct me
+ 
+ static inline void mem_cgroup_oom_enable(void)
+ {
+-	WARN_ON(current->memcg_oom.may_oom);
+-	current->memcg_oom.may_oom = 1;
++	WARN_ON(current->memcg_may_oom);
++	current->memcg_may_oom = 1;
+ }
+ 
+ static inline void mem_cgroup_oom_disable(void)
+ {
+-	WARN_ON(!current->memcg_oom.may_oom);
+-	current->memcg_oom.may_oom = 0;
++	WARN_ON(!current->memcg_may_oom);
++	current->memcg_may_oom = 0;
+ }
+ 
+ static inline bool task_in_memcg_oom(struct task_struct *p)
+ {
+-	return p->memcg_oom.memcg;
++	return p->memcg_in_oom;
+ }
+ 
+ bool mem_cgroup_oom_synchronize(bool wait);
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1451,7 +1451,9 @@ struct task_struct {
+ 	unsigned sched_reset_on_fork:1;
+ 	unsigned sched_contributes_to_load:1;
+ 	unsigned sched_migrated:1;
+-
++#ifdef CONFIG_MEMCG
++	unsigned memcg_may_oom:1;
++#endif
+ #ifdef CONFIG_MEMCG_KMEM
+ 	unsigned memcg_kmem_skip_account:1;
+ #endif
+@@ -1782,12 +1784,9 @@ struct task_struct {
+ 	unsigned long trace_recursion;
+ #endif /* CONFIG_TRACING */
+ #ifdef CONFIG_MEMCG
+-	struct memcg_oom_info {
+-		struct mem_cgroup *memcg;
+-		gfp_t gfp_mask;
+-		int order;
+-		unsigned int may_oom:1;
+-	} memcg_oom;
++	struct mem_cgroup *memcg_in_oom;
++	gfp_t memcg_oom_gfp_mask;
++	int memcg_oom_order;
+ #endif
+ #ifdef CONFIG_UPROBES
+ 	struct uprobe_task *utask;
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1652,7 +1652,7 @@ static void memcg_oom_recover(struct mem
+ 
+ static void mem_cgroup_oom(struct mem_cgroup *memcg, gfp_t mask, int order)
+ {
+-	if (!current->memcg_oom.may_oom)
++	if (!current->memcg_may_oom)
+ 		return;
+ 	/*
+ 	 * We are in the middle of the charge context here, so we
+@@ -1669,9 +1669,9 @@ static void mem_cgroup_oom(struct mem_cg
+ 	 * and when we know whether the fault was overall successful.
+ 	 */
+ 	css_get(&memcg->css);
+-	current->memcg_oom.memcg = memcg;
+-	current->memcg_oom.gfp_mask = mask;
+-	current->memcg_oom.order = order;
++	current->memcg_in_oom = memcg;
++	current->memcg_oom_gfp_mask = mask;
++	current->memcg_oom_order = order;
+ }
+ 
+ /**
+@@ -1693,7 +1693,7 @@ static void mem_cgroup_oom(struct mem_cg
+  */
+ bool mem_cgroup_oom_synchronize(bool handle)
+ {
+-	struct mem_cgroup *memcg = current->memcg_oom.memcg;
++	struct mem_cgroup *memcg = current->memcg_in_oom;
+ 	struct oom_wait_info owait;
+ 	bool locked;
+ 
+@@ -1721,8 +1721,8 @@ bool mem_cgroup_oom_synchronize(bool han
+ 	if (locked && !memcg->oom_kill_disable) {
+ 		mem_cgroup_unmark_under_oom(memcg);
+ 		finish_wait(&memcg_oom_waitq, &owait.wait);
+-		mem_cgroup_out_of_memory(memcg, current->memcg_oom.gfp_mask,
+-					 current->memcg_oom.order);
++		mem_cgroup_out_of_memory(memcg, current->memcg_oom_gfp_mask,
++					 current->memcg_oom_order);
+ 	} else {
+ 		schedule();
+ 		mem_cgroup_unmark_under_oom(memcg);
+@@ -1739,7 +1739,7 @@ bool mem_cgroup_oom_synchronize(bool han
+ 		memcg_oom_recover(memcg);
+ 	}
+ cleanup:
+-	current->memcg_oom.memcg = NULL;
++	current->memcg_in_oom = NULL;
+ 	css_put(&memcg->css);
+ 	return true;
+ }
