@@ -1,35 +1,42 @@
-From: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Subject: Re: legacy mode
-Date: Thu, 27 Aug 2015 16:23:26 -0500
-Message-ID: <20150827212326.GA5019@mail.hallyn.com>
-References: <20150827202137.GA4221@mail.hallyn.com>
- <20150827202722.GH26785@mtj.duckdns.org>
- <20150827204500.GA4447@mail.hallyn.com>
- <20150827204825.GI26785@mtj.duckdns.org>
+From: Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
+Subject: [rfc] Binding files to data-only memory cgroups
+Date: Fri, 28 Aug 2015 17:25:55 +0300
+Message-ID: <55E06F73.2070808@yandex-team.ru>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20150827204825.GI26785-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
+	t=1440771956; bh=pnptCQTRDRmSmciXDcf79/P4txEW9FExN4+6ywp1Xz0=;
+	h=X-Mozilla-News-Host:To:From:Subject:Cc:Message-ID:Date:User-Agent:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding;
+	b=cxyKE1DL5Df/9ieCAyCrmb5G5lg7zBbXs1S4MiLZth7P3nPPedY0xdzygcaVOpU7r
+	 0TLZ8G1yaUUvUyOR3klkinMVH+v1/+hfGEBRslqMStERm7XXcC4LBR6VTOAZbnbbMs
+	 H6TU6NeLCH/rbzvd59FEN9JTDwzgzRFHW/xH9tBg=
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Thu, Aug 27, 2015 at 04:48:25PM -0400, Tejun Heo wrote:
-> Hello, Serge.
-> 
-> On Thu, Aug 27, 2015 at 03:45:00PM -0500, Serge E. Hallyn wrote:
-> > > If the legacy userspace doesn't do any resource control, the leaf rule
-> > > restriction doesn't apply anyway, so nothing to worry about.
-> > 
-> > My main use case is nested lxc, presumably with systemd inside some of
-> > the nested containers, so this would definately be an issue.
-> 
-> W/o controllers in the nested environment, it should be fine.  W/
-> controllers, I don't think this is going to fly.  I don't think trying
-> to bridge the two versions is a healthy direction in the long term.
+Seems like subj could provide a very flexible approach for managing
+memory in complicated scenarios. Depending on memory limits it could
+work as mlock (with lock-on-fault semantics). Binding files to cgroup
+with small memory limit gives long-awaited FADV_NOREUSE semantics.
+Even without limits this gives valuable information about memory usage
+by page-cache for particular set of files.
 
-That's unfortunate as it suggests that lxcfs is the only way around
-this problem :(
+For example, our database keeps data in several files with completely
+different access patterns: some of them should be cached and locked in
+memory (but not completely), some shouldn't be cached because cache-hit
+is almost impossible and so on. fadvise and mlock provides some
+tuning but they are very limited.
+
+Interface could be done as a single fadvise(fd, FADV_WILLOWN) which
+binds inode to current memory cgroup (fails if already binded) and
+migrates all present cache. All further allocations in this inode
+will be charged to that cgroup. In userspace this will be used by
+tiny tool which lives in target cgroup and holds all binded files,
+so state will be persistent but without keeping anything in fs.
+
+So, what do you think?
+Is there any plans to alter always-charge-to-current logic?
