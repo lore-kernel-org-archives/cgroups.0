@@ -1,118 +1,52 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 2/2] memcg: always enable kmemcg on the default hierarchy
-Date: Fri, 28 Aug 2015 18:02:37 -0400
-Message-ID: <20150828220237.GE11089@htj.dyndns.org>
-References: <20150828220158.GD11089@htj.dyndns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 3/4] memcg: punt high overage reclaim to
+ return-to-userland path
+Date: Fri, 28 Aug 2015 18:06:32 -0400
+Message-ID: <20150828220632.GF11089@htj.dyndns.org>
+References: <1440775530-18630-1-git-send-email-tj@kernel.org>
+ <1440775530-18630-4-git-send-email-tj@kernel.org>
+ <20150828163611.GI9610@esperanza>
+ <20150828164819.GL26785@mtj.duckdns.org>
+ <20150828203231.GL9610@esperanza>
+ <20150828204432.GA11089@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=TPVl6iWcM8pFNtFLQkMXl9LfSabawwMrrU3MrKXkus8=;
-        b=vE4MHW5Fzao5b2boJ8l0YimLGN9634YoqI55AkGRbiHhlOHtgTXJtBa1MREwe9yyqT
-         /O0iptgZFHfE3zCr7oIa3TeET9u6nukol4hzoH1Mmj80q8sfAhL9LCiAij2RqGNnBjJZ
-         7xlym9SQlKjhDjkbLRT3tjvQM89MWcxWU/pNSl9zq2vTSTFs1qWQpO2lNjimnXSz7CQJ
-         zHZ6iJFyXpEM7LbrIPIuAslMqbp4232nU6rtqsuIhfF9OVz3FWSEu6B8k+We7dyhJihX
-         TcFGC/6lCcrcMTRq9tz4vgzbHtrTD2rMRSfNMFC0pMhhlN1SS6bgB19yJceBtsIFL+Ts
-         dc9g==
+        bh=kTMhZsylcSzFOnPkeWNmWY9UjSty48ruLCFfm/eoSb4=;
+        b=lTACgLMBvx2uY+CWEd//HTLgP4OMGJHbuR5jakQftGnYCfwyxQxgMI3bsNKcLcWO1S
+         m7yFcTLc+HnYy2eGV/FcCgEEIXRjV/UGoQAfysYhqxI7r09MEIIv3DyWysaCdHfiCZ/L
+         yIBAq+C4nt4ugDB7tyMvqRPo82e847eLVsNt3+5ycepZeylJDukr8BzUEn4Tu9iGJMGL
+         JI5kXcffvHCk/FjvPfiy10X3Mckl9rnCxdpCH/my9fhvBDWHDkEFDv1w0nkM27qcopmo
+         8wcEqCcQZVmTnz1HV+ALL5S6ng2Bjs5INNJ+ABmLQBqjFdUsfXRjlJeBweHFTW9cLuXb
+         N5ZQ==
 Content-Disposition: inline
-In-Reply-To: <20150828220158.GD11089-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20150828204432.GA11089@htj.dyndns.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Vladimir Davydov <vdavydov@parallels.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, hannes@cmpxchg.org, mhocko@kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Christoph Lameter <cl@linux.com>, David Rientjes <rientjes@google.com>
 
-On the default hierarchy, all memory consumption will be accounted
-together and controlled by the same set of limits.  Enable kmemcg on
-the default hierarchy by default.  Boot parameter "disable_kmemcg" can
-be specified to turn it off.
+On Fri, Aug 28, 2015 at 04:44:32PM -0400, Tejun Heo wrote:
+> Ah, cool, so it was a bug from slub.  Punting to return path still has
+> some niceties but if we can't consistently get rid of stack
+> consumption it's not that attractive.  Let's revisit it later together
+> with hard limit reclaim.
 
-v2: - v1 triggered oops on nested cgroup creations.  Moved enabling
-      mechanism to memcg_propagate_kmem().
-    - Bypass busy test on kmem activation as it's unnecessary and gets
-      confused by controller being enabled on a cgroup which already
-      has processes.
-    - "disable_kmemcg" boot param added.
+So, I can't check right now but I'm pretty sure I was using SLAB on my
+test config, so this issue may exist there too.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- mm/memcontrol.c |   43 ++++++++++++++++++++++++++++++-------------
- 1 file changed, 30 insertions(+), 13 deletions(-)
+Thanks.
 
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -346,6 +346,17 @@ EXPORT_SYMBOL(tcp_proto_cgroup);
- #endif
- 
- #ifdef CONFIG_MEMCG_KMEM
-+
-+static bool kmemcg_disabled;
-+
-+static int __init disable_kmemcg(char *s)
-+{
-+	kmemcg_disabled = true;
-+	pr_info("memcg: kernel memory support disabled on cgroup2");
-+	return 0;
-+}
-+__setup("disable_kmemcg", disable_kmemcg);
-+
- /*
-  * This will be the memcg's index in each cache's ->memcg_params.memcg_caches.
-  * The main reason for not using cgroup id for this:
-@@ -2908,9 +2919,9 @@ static int memcg_activate_kmem(struct me
- 	BUG_ON(memcg->kmem_acct_active);
- 
- 	/*
--	 * For simplicity, we won't allow this to be disabled.  It also can't
--	 * be changed if the cgroup has children already, or if tasks had
--	 * already joined.
-+	 * On traditional hierarchies, for simplicity, we won't allow this
-+	 * to be disabled.  It also can't be changed if the cgroup has
-+	 * children already, or if tasks had already joined.
- 	 *
- 	 * If tasks join before we set the limit, a person looking at
- 	 * kmem.usage_in_bytes will have no way to determine when it took
-@@ -2919,13 +2930,15 @@ static int memcg_activate_kmem(struct me
- 	 * After it first became limited, changes in the value of the limit are
- 	 * of course permitted.
- 	 */
--	mutex_lock(&memcg_create_mutex);
--	if (cgroup_has_tasks(memcg->css.cgroup) ||
--	    (memcg->use_hierarchy && memcg_has_children(memcg)))
--		err = -EBUSY;
--	mutex_unlock(&memcg_create_mutex);
--	if (err)
--		goto out;
-+	if (!cgroup_on_dfl(memcg->css.cgroup)) {
-+		mutex_lock(&memcg_create_mutex);
-+		if (cgroup_has_tasks(memcg->css.cgroup) ||
-+		    (memcg->use_hierarchy && memcg_has_children(memcg)))
-+			err = -EBUSY;
-+		mutex_unlock(&memcg_create_mutex);
-+		if (err)
-+			goto out;
-+	}
- 
- 	memcg_id = memcg_alloc_cache_id();
- 	if (memcg_id < 0) {
-@@ -2978,10 +2991,14 @@ static int memcg_propagate_kmem(struct m
- 
- 	mutex_lock(&memcg_limit_mutex);
- 	/*
--	 * If the parent cgroup is not kmem-active now, it cannot be activated
--	 * after this point, because it has at least one child already.
-+	 * On the default hierarchy, automatically enable kmemcg unless
-+	 * explicitly disabled by the boot param.  On traditional
-+	 * hierarchies, inherit from the parent.  If the parent cgroup is
-+	 * not kmem-active now, it cannot be activated after this point,
-+	 * because it has at least one child already.
- 	 */
--	if (memcg_kmem_is_active(parent))
-+	if ((!kmemcg_disabled && cgroup_on_dfl(memcg->css.cgroup)) ||
-+	    memcg_kmem_is_active(parent))
- 		ret = memcg_activate_kmem(memcg, PAGE_COUNTER_MAX);
- 	mutex_unlock(&memcg_limit_mutex);
- 	return ret;
+-- 
+tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
