@@ -1,26 +1,25 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 3/4] memcg: punt high overage reclaim to
- return-to-userland path
-Date: Fri, 28 Aug 2015 13:56:28 -0400
-Message-ID: <20150828175628.GO26785@mtj.duckdns.org>
+Subject: Re: [PATCH 1/4] memcg: fix over-high reclaim amount
+Date: Fri, 28 Aug 2015 14:32:09 -0400
+Message-ID: <20150828183209.GA9423@mtj.duckdns.org>
 References: <1440775530-18630-1-git-send-email-tj@kernel.org>
- <1440775530-18630-4-git-send-email-tj@kernel.org>
- <20150828171322.GC21463@dhcp22.suse.cz>
+ <1440775530-18630-2-git-send-email-tj@kernel.org>
+ <20150828170612.GA21463@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=W0//RzacUeH69PxboVUaYNZ1AhomatCQcs/Jp59pXeA=;
-        b=umT09jmC2xMMhYiKAxyLDHj8/uuGJkXU5g/9ud1jd9tD0hH8WlFPJNWg7/kOF8TIfr
-         CeYb8pirbE8LB0Ia6Dvo+tGAc2kLcyItZK2WRIQMaqI0WeeZ3iHrX7wxgmeJd5ND6I2+
-         zs+lYVPTChK+vrQwPnbmB/+BrposWgd6N13aOBn7pKM9NlbXbFlv+Kjg7+83dyM2ZJ9b
-         xTOnpvmwRTb69HlM/iaQ5Op1ucwv2PSvGiz+x/uURgIJrqmTsxKQmzTwG4kASs63t9Yq
-         1dVfAuN715yrYLz1OTvhuxmiyOTbECdsSLkv8/bV7IO9wdCnVZUgkylgunKvKOKc14LM
-         5/0Q==
+        bh=Rfr6r7wrEojRd89Wocb95qOedw5nS+Egz4iGyzqllks=;
+        b=Pc8Dm6UBZE3hetWRrsCL4KFvJuvgtSMIXaC8/JGoncny2sRaXnaJQ9tP3umd9zs+7e
+         KdYHihzNwLFJvWYBnoa57WmlFXjiihRAJCrKODAlR+bfUKQ+yJYWDdndfCUNN/hoYk56
+         eQUNGOnMfqihUaadjrCB7ShLivseahY4sjDlLiOg0zvFnvXiS85RWdwYMEEGhoan7dar
+         lWlhUjv/7Ujj1PYecCS3oaxOwWBWwp1TW/w3XZrbyVQz8+/VOdxnn3MHa99wIuV1phWY
+         hsz1c7+Nqy/ne7oBIllwJbYMc5/HM7XMw/57sE/3EldqgPyXHPBVILtPACgpsqq7UjPB
+         kshw==
 Content-Disposition: inline
-In-Reply-To: <20150828171322.GC21463-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <20150828170612.GA21463-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -30,29 +29,18 @@ Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mH
 
 Hello,
 
-On Fri, Aug 28, 2015 at 07:13:22PM +0200, Michal Hocko wrote:
-> On Fri 28-08-15 11:25:29, Tejun Heo wrote:
-> > Currently, try_charge() tries to reclaim memory directly when the high
-> > limit is breached; however, this has a couple issues.
-> > 
-> > * try_charge() can be invoked from any in-kernel allocation site and
-> >   reclaim path may use considerable amount of stack.  This can lead to
-> >   stack overflows which are extremely difficult to reproduce.
+On Fri, Aug 28, 2015 at 07:06:13PM +0200, Michal Hocko wrote:
+> I do not think this a better behavior. If you have parallel charges to
+> the same memcg then you can easilly over-reclaim  because everybody
+> will reclaim the maximum rather than its contribution.
 > 
-> This is true but I haven't seen any reports for the stack overflow for
-> quite some time.
+> Sure we can fail to reclaim the target and slowly grow over high limit
+> but that is to be expected. This is not the max limit which cannot be
+> breached and external memory pressure/reclaim is there to mitigate that.
 
-So, this didn't really fix it but xfs had to punt things to workqueues
-to avoid stack overflows and IIRC it involved direct reclaim.  Maybe
-it's too late but it probably is a good idea to punt this from the
-source.
-
-> I would just argue that this implementation has the same issue as the
-> other patch in the series which performs high-usage reclaim. I think
-> that each task should reclaim only its contribution which is trivial
-> to account.
-
-Hmm... I'll respond there.
+Ah, I see, yeah, over-reclaim can happen.  How about just wrapping the
+over-high reclaim with a per-memcg mutex?  Do we gain anything by
+putting multiple tasks into the reclaim path?
 
 Thanks.
 
