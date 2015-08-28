@@ -1,74 +1,70 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 4/4] memcg: always enable kmemcg on the default hierarchy
-Date: Fri, 28 Aug 2015 12:56:04 -0400
-Message-ID: <20150828165604.GM26785@mtj.duckdns.org>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 1/4] memcg: fix over-high reclaim amount
+Date: Fri, 28 Aug 2015 19:06:13 +0200
+Message-ID: <20150828170612.GA21463@dhcp22.suse.cz>
 References: <1440775530-18630-1-git-send-email-tj@kernel.org>
- <1440775530-18630-5-git-send-email-tj@kernel.org>
- <20150828164918.GJ9610@esperanza>
+ <1440775530-18630-2-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=5AmY7HU3nwZqwACW0F2X6KUbf3klj+HSwbmZkBZ3mO0=;
-        b=f4tZv9IXKz8/ZY/KvFQTVKb3LrnvMT6VXNkZaagLcCzvf032EaZh3MPxJEcJENIJfZ
-         mFYzUFG3z9eTn2oLgdU5otuCzZEpIWMyG5Xwio2cWqr5OY0z6cAg2DQsN2JDHAzPrjG8
-         GW2Np6R7Aqeuug23VkVcRQlEz5imsxv2GpURuHbRnVcPDdpENEPNmF4rgsHJpYs2xLhs
-         vOCJaJC7kuIs93q1Fvjbi0vq0UfZW0ZPIdayXn/kimFi0S51s4lCbQ80nAqSX5j8nrXn
-         W3X25yJhfV0vWzA1I9Puu5WS+QVt903lub+yzj5GZNxRZ9J2sGvOwN/pS2WxFeS9xkFB
-         6iKg==
 Content-Disposition: inline
-In-Reply-To: <20150828164918.GJ9610@esperanza>
+In-Reply-To: <1440775530-18630-2-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov@parallels.com>
-Cc: hannes@cmpxchg.org, mhocko@kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+To: Tejun Heo <tj@kernel.org>
+Cc: hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-mm@kvack.org, vdavydov@parallels.com, kernel-team@fb.com
 
-Hello,
-
-On Fri, Aug 28, 2015 at 07:49:18PM +0300, Vladimir Davydov wrote:
-> On Fri, Aug 28, 2015 at 11:25:30AM -0400, Tejun Heo wrote:
-> > On the default hierarchy, all memory consumption will be accounted
-> > together and controlled by the same set of limits.  Always enable
-> > kmemcg on the default hierarchy.
+On Fri 28-08-15 11:25:27, Tejun Heo wrote:
+> When memory usage is over the high limit, try_charge() performs direct
+> reclaim; however, it uses the current charging amount @nr_pages as the
+> reclamation target which is incorrect as we want to reclaim down to
+> the high limit.  In practice, this doesn't matter all that much
+> because the minimum target pages that try_to_free_mem_cgroup_pages()
+> uses is SWAP_CLUSTER_MAX which is rather large.
 > 
-> IMO we should introduce a boot time knob for disabling it, because kmem
-> accounting is still not perfect, besides some users might prefer to go
-> w/o it for performance reasons.
+> Fix it by setting the target number of pages to the difference between
+> the current usage and the high limit.
 
-Yeah, fair enough.
+I do not think this a better behavior. If you have parallel charges to
+the same memcg then you can easilly over-reclaim  because everybody
+will reclaim the maximum rather than its contribution.
 
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index c94b686..8a5dd01 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -4362,6 +4362,13 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
-> >  	if (ret)
-> >  		return ret;
-> >  
-> > +	/* kmem is always accounted together on the default hierarchy */
-> > +	if (cgroup_on_dfl(css->cgroup)) {
-> > +		ret = memcg_activate_kmem(memcg, PAGE_COUNTER_MAX);
-> > +		if (ret)
-> > +			return ret;
-> > +	}
-> > +
+Sure we can fail to reclaim the target and slowly grow over high limit
+but that is to be expected. This is not the max limit which cannot be
+breached and external memory pressure/reclaim is there to mitigate that.
+
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> ---
+>  mm/memcontrol.c | 7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
 > 
-> This is a wrong place for this. The kernel will panic on an attempt to
-> create a sub memcg, because memcg_init_kmem already enables kmem
-> accounting in this case. I guess we should add this hunk to
-> memcg_propagate_kmem instead.
-
-Yeap, bypassing "parent is active" test in memcg_propagate_kmem()
-seems like the right thing to do.
-
-Thanks.
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index aacc767..18ecf75 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2078,10 +2078,13 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	 * make the charging task trim their excess contribution.
+>  	 */
+>  	do {
+> -		if (page_counter_read(&memcg->memory) <= memcg->high)
+> +		unsigned long usage = page_counter_read(&memcg->memory);
+> +		unsigned long high = ACCESS_ONCE(memcg->high);
+> +
+> +		if (usage <= high)
+>  			continue;
+>  		mem_cgroup_events(memcg, MEMCG_HIGH, 1);
+> -		try_to_free_mem_cgroup_pages(memcg, nr_pages, gfp_mask, true);
+> +		try_to_free_mem_cgroup_pages(memcg, high - usage, gfp_mask, true);
+>  	} while ((memcg = parent_mem_cgroup(memcg)));
+>  done:
+>  	return ret;
+> -- 
+> 2.4.3
 
 -- 
-tejun
+Michal Hocko
+SUSE Labs
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
