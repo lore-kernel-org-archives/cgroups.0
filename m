@@ -1,38 +1,56 @@
-From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
-Subject: Re: legacy mode
-Date: Mon, 31 Aug 2015 17:36:40 -0500
-Message-ID: <87h9nf5blz.fsf@x220.int.ebiederm.org>
-References: <20150827202137.GA4221@mail.hallyn.com>
-	<20150827202722.GH26785@mtj.duckdns.org>
-	<20150827204500.GA4447@mail.hallyn.com>
-	<20150827204825.GI26785@mtj.duckdns.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 2/2] memcg: always enable kmemcg on the default
+ hierarchy
+Date: Mon, 31 Aug 2015 15:54:23 -0700
+Message-ID: <20150831155423.41fd128501c0e75ab1981a65@linux-foundation.org>
+References: <20150828220158.GD11089@htj.dyndns.org>
+	<20150828220237.GE11089@htj.dyndns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20150827204825.GI26785-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org> (Tejun Heo's message of
-	"Thu, 27 Aug 2015 16:48:25 -0400")
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20150828220237.GE11089@htj.dyndns.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: hannes@cmpxchg.org, mhocko@kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, vdavydov@parallels.com, kernel-team@fb.com
 
-Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> writes:
+On Fri, 28 Aug 2015 18:02:37 -0400 Tejun Heo <tj@kernel.org> wrote:
 
-> Hello, Serge.
+> On the default hierarchy, all memory consumption will be accounted
+> together and controlled by the same set of limits.  Enable kmemcg on
+> the default hierarchy by default.  Boot parameter "disable_kmemcg" can
+> be specified to turn it off.
+> 
+> ...
 >
-> On Thu, Aug 27, 2015 at 03:45:00PM -0500, Serge E. Hallyn wrote:
->> > If the legacy userspace doesn't do any resource control, the leaf rule
->> > restriction doesn't apply anyway, so nothing to worry about.
->> 
->> My main use case is nested lxc, presumably with systemd inside some of
->> the nested containers, so this would definately be an issue.
->
-> W/o controllers in the nested environment, it should be fine.  W/
-> controllers, I don't think this is going to fly.  I don't think trying
-> to bridge the two versions is a healthy direction in the long term.
+>  mm/memcontrol.c |   43 ++++++++++++++++++++++++++++++-------------
+>  1 file changed, 30 insertions(+), 13 deletions(-)
 
-Which strongly suggests that the unified hierarchy will never be
-deployable as it breaks too much userspace.
+Some documentation updates will be needed?
+ 
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -346,6 +346,17 @@ EXPORT_SYMBOL(tcp_proto_cgroup);
+>  #endif
+>  
+>  #ifdef CONFIG_MEMCG_KMEM
+> +
+> +static bool kmemcg_disabled;
+> +
+> +static int __init disable_kmemcg(char *s)
+> +{
+> +	kmemcg_disabled = true;
+> +	pr_info("memcg: kernel memory support disabled on cgroup2");
 
-Eric
+typo?
+
+> +	return 0;
+> +}
+> +__setup("disable_kmemcg", disable_kmemcg);
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
