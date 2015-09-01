@@ -1,165 +1,77 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/2] memcg: flatten task_struct->memcg_oom
-Date: Tue, 1 Sep 2015 17:25:19 +0200
-Message-ID: <20150901152519.GG8810@dhcp22.suse.cz>
-References: <20150828220158.GD11089@htj.dyndns.org>
+From: Josh Boyer <jwboyer-rxtnV0ftBwyoClj4AeEUq9i2O/JbrIOy@public.gmane.org>
+Subject: Security/cgroup suspicious RCU usage with v4.2-2744-g65a99597f044
+Date: Tue, 1 Sep 2015 12:21:49 -0400
+Message-ID: <CA+5PVA7aWSiVD3UtpxWJ-PL0HZ2ufjPz_ZKC21ZHai_h6jYajA@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20150828220158.GD11089-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:sender:date:message-id:subject:from:to:cc:content-type;
+        bh=/xpwKxqLzxbrk7fTS3J6GSHgYUd7zYYrnJgjGaMozHs=;
+        b=nQfYNTaiq0FAQZEbAZMLq0zE34XUtCFQuZYYCHjViJ8H9zUEdv+c3cpWqyRjPHbeNV
+         ick6EBHNi8J7hl8os7hD+9che9KNJE4vwALVy4kiYAMnX2+HO4ctavCJ1Ft281ARIpp7
+         udFwZ2+IGmNf9gU+MzpVdL1I5O+Q991iI1qpfnnU1du5oXYW8GcihO2zQ8kwQsxWuo5c
+         LRkEzw1nbPLiYWxj8drBCNzCyVT53nj0wnBJ/p2ZPAt2F6k0crPLvbvQt5ZBpyRggPxp
+         TohvaP3P6DwIBaBoZO1YIAAP+5FJz6cVZ3eStjTexZ7WxX+olKAuR2skdQp34du+nH9n
+         P22w==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: James Morris <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-security-module <linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Linux-Kernel@Vger. Kernel. Org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri 28-08-15 18:01:58, Tejun Heo wrote:
-> task_struct->memcg_oom is a sub-struct containing fields which are
-> used for async memcg oom handling.  Most task_struct fields aren't
-> packaged this way and it can lead to unnecessary alignment paddings.
-> This patch flattens it.
-> 
-> * task.memcg_oom.memcg          -> task.memcg_in_oom
-> * task.memcg_oom.gfp_mask	-> task.memcg_oom_gfp_mask
-> * task.memcg_oom.order          -> task.memcg_oom_order
-> * task.memcg_oom.may_oom        -> task.memcg_may_oom
-> 
-> In addition, task.memcg_may_oom is relocated to where other bitfields
-> are which reduces the size of task_struct.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Hi All,
 
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+All of my test machines hit the backtrace below with Linus' tree as of
+this morning.  Any ideas?
 
-> ---
-> Hello,
-> 
-> These two patches are what survived from the following patchset.
-> 
->  http://lkml.kernel.org/g/1440775530-18630-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-> 
-> Thanks.
-> 
->  include/linux/memcontrol.h |   10 +++++-----
->  include/linux/sched.h      |   13 ++++++-------
->  mm/memcontrol.c            |   16 ++++++++--------
->  3 files changed, 19 insertions(+), 20 deletions(-)
-> 
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -407,19 +407,19 @@ void mem_cgroup_print_oom_info(struct me
->  
->  static inline void mem_cgroup_oom_enable(void)
->  {
-> -	WARN_ON(current->memcg_oom.may_oom);
-> -	current->memcg_oom.may_oom = 1;
-> +	WARN_ON(current->memcg_may_oom);
-> +	current->memcg_may_oom = 1;
->  }
->  
->  static inline void mem_cgroup_oom_disable(void)
->  {
-> -	WARN_ON(!current->memcg_oom.may_oom);
-> -	current->memcg_oom.may_oom = 0;
-> +	WARN_ON(!current->memcg_may_oom);
-> +	current->memcg_may_oom = 0;
->  }
->  
->  static inline bool task_in_memcg_oom(struct task_struct *p)
->  {
-> -	return p->memcg_oom.memcg;
-> +	return p->memcg_in_oom;
->  }
->  
->  bool mem_cgroup_oom_synchronize(bool wait);
-> --- a/include/linux/sched.h
-> +++ b/include/linux/sched.h
-> @@ -1451,7 +1451,9 @@ struct task_struct {
->  	unsigned sched_reset_on_fork:1;
->  	unsigned sched_contributes_to_load:1;
->  	unsigned sched_migrated:1;
-> -
-> +#ifdef CONFIG_MEMCG
-> +	unsigned memcg_may_oom:1;
-> +#endif
->  #ifdef CONFIG_MEMCG_KMEM
->  	unsigned memcg_kmem_skip_account:1;
->  #endif
-> @@ -1782,12 +1784,9 @@ struct task_struct {
->  	unsigned long trace_recursion;
->  #endif /* CONFIG_TRACING */
->  #ifdef CONFIG_MEMCG
-> -	struct memcg_oom_info {
-> -		struct mem_cgroup *memcg;
-> -		gfp_t gfp_mask;
-> -		int order;
-> -		unsigned int may_oom:1;
-> -	} memcg_oom;
-> +	struct mem_cgroup *memcg_in_oom;
-> +	gfp_t memcg_oom_gfp_mask;
-> +	int memcg_oom_order;
->  #endif
->  #ifdef CONFIG_UPROBES
->  	struct uprobe_task *utask;
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1652,7 +1652,7 @@ static void memcg_oom_recover(struct mem
->  
->  static void mem_cgroup_oom(struct mem_cgroup *memcg, gfp_t mask, int order)
->  {
-> -	if (!current->memcg_oom.may_oom)
-> +	if (!current->memcg_may_oom)
->  		return;
->  	/*
->  	 * We are in the middle of the charge context here, so we
-> @@ -1669,9 +1669,9 @@ static void mem_cgroup_oom(struct mem_cg
->  	 * and when we know whether the fault was overall successful.
->  	 */
->  	css_get(&memcg->css);
-> -	current->memcg_oom.memcg = memcg;
-> -	current->memcg_oom.gfp_mask = mask;
-> -	current->memcg_oom.order = order;
-> +	current->memcg_in_oom = memcg;
-> +	current->memcg_oom_gfp_mask = mask;
-> +	current->memcg_oom_order = order;
->  }
->  
->  /**
-> @@ -1693,7 +1693,7 @@ static void mem_cgroup_oom(struct mem_cg
->   */
->  bool mem_cgroup_oom_synchronize(bool handle)
->  {
-> -	struct mem_cgroup *memcg = current->memcg_oom.memcg;
-> +	struct mem_cgroup *memcg = current->memcg_in_oom;
->  	struct oom_wait_info owait;
->  	bool locked;
->  
-> @@ -1721,8 +1721,8 @@ bool mem_cgroup_oom_synchronize(bool han
->  	if (locked && !memcg->oom_kill_disable) {
->  		mem_cgroup_unmark_under_oom(memcg);
->  		finish_wait(&memcg_oom_waitq, &owait.wait);
-> -		mem_cgroup_out_of_memory(memcg, current->memcg_oom.gfp_mask,
-> -					 current->memcg_oom.order);
-> +		mem_cgroup_out_of_memory(memcg, current->memcg_oom_gfp_mask,
-> +					 current->memcg_oom_order);
->  	} else {
->  		schedule();
->  		mem_cgroup_unmark_under_oom(memcg);
-> @@ -1739,7 +1739,7 @@ bool mem_cgroup_oom_synchronize(bool han
->  		memcg_oom_recover(memcg);
->  	}
->  cleanup:
-> -	current->memcg_oom.memcg = NULL;
-> +	current->memcg_in_oom = NULL;
->  	css_put(&memcg->css);
->  	return true;
->  }
-> --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+josh
 
--- 
-Michal Hocko
-SUSE Labs
+
+[  +0.160966] ===============================
+[  +0.000001] [ INFO: suspicious RCU usage. ]
+[  +0.000002] 4.3.0-0.rc0.git1.1.fc24.x86_64 #1 Not tainted
+[  +0.000001] -------------------------------
+[  +0.000002] security/device_cgroup.c:405 device_cgroup:verify_new_ex
+called without proper synchronization!
+[  +0.000000]
+              other info that might help us debug this:
+
+[  +0.000001]
+              rcu_scheduler_active = 1, debug_locks = 0
+[  +0.000002] 4 locks held by systemd/1:
+[  +0.000010]  #0:  (sb_writers#6){.+.+.+}, at: [<ffffffff81267f87>]
+vfs_write+0x187/0x1a0
+[  +0.000006]  #1:  (&of->mutex){+.+.+.}, at: [<ffffffff812f3996>]
+kernfs_fop_write+0x66/0x190
+[  +0.000005]  #2:  (s_active#61){++++.+}, at: [<ffffffff812f399e>]
+kernfs_fop_write+0x6e/0x190
+[  +0.000007]  #3:  (devcgroup_mutex){+.+...}, at:
+[<ffffffff813ada3c>] devcgroup_access_write+0x3c/0x6e0
+[  +0.000000]
+              stack backtrace:
+[  +0.000003] CPU: 3 PID: 1 Comm: systemd Not tainted
+4.3.0-0.rc0.git1.1.fc24.x86_64 #1
+[  +0.000001] Hardware name:                  /D34010WYK, BIOS
+WYLPT10H.86A.0026.2014.0514.1714 05/14/2014
+[  +0.000004]  0000000000000000 000000006dc9945a ffff88040ce73c68
+ffffffff8184e49c
+[  +0.000003]  0000000000000000 ffff88040cdd4000 ffff88040ce73c98
+ffffffff81101437
+[  +0.000003]  ffff880408646d00 ffff88040ce73d00 0000000000000002
+0000000000000001
+[  +0.000001] Call Trace:
+[  +0.000006]  [<ffffffff8184e49c>] dump_stack+0x4c/0x65
+[  +0.000004]  [<ffffffff81101437>] lockdep_rcu_suspicious+0xd7/0x110
+[  +0.000004]  [<ffffffff813ad6e8>] verify_new_ex+0xd8/0xe0
+[  +0.000003]  [<ffffffff813addaf>] devcgroup_access_write+0x3af/0x6e0
+[  +0.000005]  [<ffffffff81023999>] ? sched_clock+0x9/0x10
+[  +0.000004]  [<ffffffff811599e4>] cgroup_file_write+0x44/0x1e0
+[  +0.000003]  [<ffffffff812f3a71>] kernfs_fop_write+0x141/0x190
+[  +0.000002]  [<ffffffff81267497>] __vfs_write+0x37/0x100
+[  +0.000002]  [<ffffffff81267f87>] ? vfs_write+0x187/0x1a0
+[  +0.000004]  [<ffffffff8138929d>] ? security_file_permission+0x3d/0xc0
+[  +0.000002]  [<ffffffff81267ea9>] vfs_write+0xa9/0x1a0
+[  +0.000003]  [<ffffffff81268bc8>] SyS_write+0x58/0xd0
+[  +0.000004]  [<ffffffff818580ee>] entry_SYSCALL_64_fastpath+0x12/0x76
