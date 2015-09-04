@@ -1,94 +1,86 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 4/4] memcg: always enable kmemcg on the default hierarchy
-Date: Fri, 4 Sep 2015 12:18:45 -0400
-Message-ID: <20150904161845.GB25329@mtj.duckdns.org>
-References: <1440775530-18630-1-git-send-email-tj@kernel.org>
- <1440775530-18630-5-git-send-email-tj@kernel.org>
- <20150828164918.GJ9610@esperanza>
- <20150828171438.GD21463@dhcp22.suse.cz>
- <20150828174140.GN26785@mtj.duckdns.org>
- <20150901124459.GC8810@dhcp22.suse.cz>
- <20150901185157.GD18956@htj.dyndns.org>
- <20150904133038.GC8220@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: __blkg_lookup oops with 4.2-rcX
+Date: Fri, 4 Sep 2015 13:13:02 -0400
+Message-ID: <20150904171302.GE25329@mtj.duckdns.org>
+References: <CA+5PVA5rzQ0s4723n5rHBcxQa9t0cW8BPPBekr_9aMRoWt2aYg@mail.gmail.com>
+ <20150902145307.GG22326@mtj.duckdns.org>
+ <20150902153255.GH22326@mtj.duckdns.org>
+ <20150904104602.GN29283@redhat.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=5ioJntjPQssZn26i8ZlfWrNuMD7+eL6WzbuHgjSAn6I=;
-        b=EXndCaaXv01xKMovn8qKF3Kru18M4+2GTRdRORFA3p6wDKPOqlYQNFF7/++F1Whygh
-         uJXB2lhN0+uiaDfTbkKgRdBBtO5DMvTho2Bkjamnko4A4j88iYtd+A3w7FyXHprIb154
-         B7ZRY2EKumpcz11L1hkvVTwu9P3gdSi0+8LO1PXn5XNLDUgh5uJxn4CGwlIFU6/dD9QL
-         wMJnI5WmgK/Cw6OOW2/YFKQUlDDZUheB2rlyaP7QGPzFcTZz4x7veKMOZed4okG5oEFx
-         Z8WwkNm8q296jpycjN+I4pV1FafWVhkoSI1aQdlGq77RLDn+ZFHLZ7kIyeSKkKsAmzuO
-         cQCA==
+        bh=q7ABA2Nz2lmN2Rm7OW3t8lnLMeoQ6dWu9FtE35RLCjk=;
+        b=jjFeiQ2Clm86lagZZT9bvHfUOpJPKQDD9LsWs6+yUe7YNJ4Hm8EbKyxKdeLphixzTS
+         ZrpidSf2yhK9f5kt8Q3bZVJHYcE/lmzghUIKgjhhiYa58fd8SeFTaK6cky47M3i+oQQx
+         QQGyl2X8Evt6HefxT/MLh/21L0HkVjviB6BX+u3qpYcc5kUMlvhgLxufXjwm9IMASlT/
+         vQgeERqo9lq8NUWH4lCy5ZcozRX20T5t53S/47rORhRUAV+I0V5L3vcwm9syK0WFjrVk
+         lv839Vrcd6hZ1XfrWOUvAWfifg734/ZK/TRNrraEmQh/qEktLnPKPGwKWoplt59JW8MR
+         C/7g==
 Content-Disposition: inline
-In-Reply-To: <20150904133038.GC8220@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20150904104602.GN29283-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Vladimir Davydov <vdavydov@parallels.com>, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+To: "Richard W.M. Jones" <rjones-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Josh Boyer <jwboyer-rxtnV0ftBwyoClj4AeEUq9i2O/JbrIOy@public.gmane.org>, Jeff Moyer <jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, msnitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Linux-Kernel@Vger. Kernel. Org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello, Michal.
+Hello,
 
-On Fri, Sep 04, 2015 at 03:30:38PM +0200, Michal Hocko wrote:
-> The overhead was around 4% for the basic kbuild test without ever
-> triggering the [k]memcg limit last time I checked. This was quite some
-> time ago and things might have changed since then. Even when this got
-> better there will still be _some_ overhead because we have to track that
-> memory and that is not free.
+On Fri, Sep 04, 2015 at 11:46:02AM +0100, Richard W.M. Jones wrote:
+> $ addr2line -e /usr/lib/debug/lib/modules/4.2.0-0.rc3.git4.1.fc24.x86_64/vmlinux ffffffff814107a0
+> /usr/src/debug/kernel-4.1.fc24/linux-4.2.0-0.rc3.git4.1.fc24.x86_64/block/blk-throttle.c:1642
+> 
+>    1636         /*
+>    1637          * Drain each tg while doing post-order walk on the blkg tree, s   1637 o
+>    1638          * that all bios are propagated to td->service_queue.  It'd be
+>    1639          * better to walk service_queue tree directly but blkg walk is
+>    1640          * easier.
+>    1641          */
+>    1642         blkg_for_each_descendant_post(blkg, pos_css, td->queue->root_blkg)
+>    1643                 tg_drain_bios(&blkg_to_tg(blkg)->service_queue);
+>    1644 
+> 
+> Rich.
+> 
+> [    6.784689] BUG: unable to handle kernel NULL pointer dereference at 0000000000000bb8
+> [    6.787605] IP: [<ffffffff814107a0>] blk_throtl_drain+0x80/0x220
 
-So, I just ran small scale tests and I don't see any meaningful
-difference between kmemcg disabled and enabled for kbuild workload
-(limit is never reached in both cases, memory is reclaimed from global
-pressure).  The difference in kernel time usage.  I'm sure there's
-*some* overhead buried in the noise but given the current
-implementation, I can't see how enabling kmem would lead to 4%
-overhead in kbuild tests.  It isn't that kernel intensive to begin
-with.
-
-> The question really is whether kmem accounting is so generally useful
-> that the overhead is acceptable and it is should be enabled by
-> default. From my POV it is a useful mitigation of untrusted users but
-> many loads simply do not care because they only care about a certain
-> level of isolation.
-
-I don't think that's the right way to approach the problem.  Given
-that the cost isn't prohibitive, no user only care about a certain
-level of isolation willingly.  Distributing memory is what it's all
-about after all and memory is memory, user or kernel.  We have kmem
-on/off situation for historical reasons and because the early
-implementation wasn't good enough to be enabled by default.  I get
-that there can be special cases, temporary or otherwise, where
-disabling kmem is desirable but that gotta be the exception, not the
-norm.
-
-> I might be wrong here of course but if the default should be switched it
-> would deserve a better justification with some numbers so that people
-> can see the possible drawbacks.
->
-> I agree that the per-cgroup knob is better than the global one. We
-> should also find consensus whether the legacy semantic of k < u limit
-> should be preserved. It made sense to me at the time it was introduced
-> but I recall that Vladimir found it not really helpful when we discussed
-> that at LSF. I found it interesting e.g. for the rough task count
-> limiting use case which people were asking for.
-
-Let's please not hinge major design decisions on short-sighted hacks
-and overhead considerations.  If task count is an actual resource
-which needs to be regulated separatley, we should add a proper
-controller for it and we did.
+The only struct which is large enough for 0xbb8 offset is
+request_queue.  Hmm.... can you please try the brute force debug patch
+below and report the kernel log after the crash?
 
 Thanks.
 
--- 
-tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index b231935..09426e4 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -1639,8 +1639,22 @@ void blk_throtl_drain(struct request_queue *q)
+ 	 * better to walk service_queue tree directly but blkg walk is
+ 	 * easier.
+ 	 */
+-	blkg_for_each_descendant_post(blkg, pos_css, td->queue->root_blkg)
+-		tg_drain_bios(&blkg_to_tg(blkg)->service_queue);
++	printk("XXX blk_throtl_drain: td=%p ->queue=%p ->root_blkg=%p ->q/blkcg=%p/%p\n",
++	       td, td ? td->queue : NULL,
++	       (td && td->queue) ? td->queue->root_blkg : NULL,
++	       (td && td->queue && td->queue->root_blkg) ? td->queue->root_blkg->q : NULL,
++	       (td && td->queue && td->queue->root_blkg) ? td->queue->root_blkg->blkcg : NULL);
++
++	css_for_each_descendant_pre(pos_css, &td->queue->root_blkg->blkcg->css) {
++		printk("XXX pos_css=%p ", pos_css);
++		pr_cont_cgroup_path(pos_css->cgroup);
++		if ((blkg = __blkg_lookup(css_to_blkcg(pos_css),
++					  td->queue->root_blkg->q, false))) {
++			pr_cont(" blkg=%p", blkg);
++			tg_drain_bios(&blkg_to_tg(blkg)->service_queue);
++		}
++		pr_cont("\n");
++	}
+ 
+ 	/* finally, transfer bios from top-level tg's into the td */
+ 	tg_drain_bios(&td->service_queue);
