@@ -1,74 +1,61 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 4/4] memcg: always enable kmemcg on the default hierarchy
-Date: Mon, 7 Sep 2015 13:03:15 +0200
-Message-ID: <20150907110315.GF6022@dhcp22.suse.cz>
-References: <1440775530-18630-5-git-send-email-tj@kernel.org>
- <20150828164918.GJ9610@esperanza>
- <20150828171438.GD21463@dhcp22.suse.cz>
- <20150828174140.GN26785@mtj.duckdns.org>
- <20150901124459.GC8810@dhcp22.suse.cz>
- <20150901185157.GD18956@htj.dyndns.org>
- <20150904133038.GC8220@dhcp22.suse.cz>
- <20150904153810.GD13699@esperanza>
- <20150907093905.GD6022@dhcp22.suse.cz>
- <20150907100110.GA31800@esperanza>
+From: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Subject: Re: [PATCH v2 3/2] memcg: punt high overage reclaim to
+ return-to-userland path
+Date: Mon, 7 Sep 2015 14:38:22 +0300
+Message-ID: <20150907113822.GB31800@esperanza>
+References: <20150828220158.GD11089@htj.dyndns.org>
+ <20150828220237.GE11089@htj.dyndns.org>
+ <20150904210011.GH25329@mtj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20150907100110.GA31800@esperanza>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20150904210011.GH25329-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov@parallels.com>
-Cc: Tejun Heo <tj@kernel.org>, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Mon 07-09-15 13:01:10, Vladimir Davydov wrote:
-> On Mon, Sep 07, 2015 at 11:39:06AM +0200, Michal Hocko wrote:
-> ...
-> > > > I might be wrong here of course but if the default should be switched it
-> > > > would deserve a better justification with some numbers so that people
-> > > > can see the possible drawbacks.
-> > > 
-> > > Personally, I'd prefer to have it switched on by default, because it
-> > > would force people test it and report bugs and performance degradation.
-> > > If one finds it really crappy, he/she should be able to disable it.
-> > 
-> > I do not think this is the way of introducing new functionality. You do
-> > not want to force users to debug your code and go let it disable if it
-> > is too crappy.
+On Fri, Sep 04, 2015 at 05:00:11PM -0400, Tejun Heo wrote:
+> Currently, try_charge() tries to reclaim memory synchronously when the
+> high limit is breached; however, if the allocation doesn't have
+> __GFP_WAIT, synchronous reclaim is skipped.  If a process performs
+> only speculative allocations, it can blow way past the high limit.
+> This is actually easily reproducible by simply doing "find /".
+> slab/slub allocator tries speculative allocations first, so as long as
+> there's memory which can be consumed without blocking, it can keep
+> allocating memory regardless of the high limit.
 > 
-> One must first enable CONFIG_KMEM, which is off by default.
-
-Yes, but let's be realistic here. People tend to use distribution
-kernels and so the config option will have to be enabled.
- 
-> Anyway, we aren't talking about enabling it by default in the legacy
-> hierarchy, only in the unified hierarchy, which must be explicitly
-> enabled by passing __DEVEL__save_behavior. I think that's enough.
-
-But once it is set like that in default then it will stay even when the
-__DEVEL__ part is dropped. 
- 
-> > > > I agree that the per-cgroup knob is better than the global one. We
-> > > 
-> > > Not that sure :-/
-> > 
-> > Why?
+> This patch makes try_charge() always punt the over-high reclaim to the
+> return-to-userland path.  If try_charge() detects that high limit is
+> breached, it adds the overage to current->memcg_nr_pages_over_high and
+> schedules execution of mem_cgroup_handle_over_high() which performs
+> synchronous reclaim from the return-to-userland path.
 > 
-> I'm not sure there is use cases which need having kmem acct enabled in
-> one cgroup and disabled in another.
+> As long as kernel doesn't have a run-away allocation spree, this
+> should provide enough protection while making kmemcg behave more
+> consistently.
 
-What would be the downside though? It is true that all the static keys
-will be enabled in these configurations so even the non-enabled path
-would pay some overhead but that should be still close to unmeasurable
-(I haven't measured that so I might be wrong here).
--- 
-Michal Hocko
-SUSE Labs
+Another good thing about such an approach is that it copes with prio
+inversion. Currently, a task with small memory.high might issue
+memory.high reclaim on kmem charge with a bunch of various locks held.
+If a task with a big value of memory.high needs any of these locks,
+it'll have to wait until the low prio task finishes reclaim and releases
+the locks. By handing over reclaim to task_work whenever possible we
+might avoid this issue and improve overall performance.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> 
+> v2: - Switched to reclaiming only the overage caused by current rather
+>       than the difference between usage and high as suggested by
+>       Michal.
+>     - Don't record the memcg which went over high limit.  This makes
+>       exit path handling unnecessary.  Dropped.
+>     - Drop mentions of avoiding high stack usage from description as
+>       suggested by Vladimir.  max limit still triggers direct reclaim.
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+
+Reviewed-by: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
