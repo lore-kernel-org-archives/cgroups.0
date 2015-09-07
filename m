@@ -1,120 +1,119 @@
 From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 3/2] memcg: punt high overage reclaim to
- return-to-userland path
-Date: Mon, 7 Sep 2015 11:23:46 +0200
-Message-ID: <20150907092346.GC6022@dhcp22.suse.cz>
-References: <20150828220158.GD11089@htj.dyndns.org>
- <20150828220237.GE11089@htj.dyndns.org>
- <20150904210011.GH25329@mtj.duckdns.org>
+Subject: Re: [PATCH 4/4] memcg: always enable kmemcg on the default hierarchy
+Date: Mon, 7 Sep 2015 11:39:06 +0200
+Message-ID: <20150907093905.GD6022@dhcp22.suse.cz>
+References: <1440775530-18630-1-git-send-email-tj@kernel.org>
+ <1440775530-18630-5-git-send-email-tj@kernel.org>
+ <20150828164918.GJ9610@esperanza>
+ <20150828171438.GD21463@dhcp22.suse.cz>
+ <20150828174140.GN26785@mtj.duckdns.org>
+ <20150901124459.GC8810@dhcp22.suse.cz>
+ <20150901185157.GD18956@htj.dyndns.org>
+ <20150904133038.GC8220@dhcp22.suse.cz>
+ <20150904153810.GD13699@esperanza>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20150904210011.GH25329-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <20150904153810.GD13699@esperanza>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Fri 04-09-15 17:00:11, Tejun Heo wrote:
-> Currently, try_charge() tries to reclaim memory synchronously when the
-> high limit is breached; however, if the allocation doesn't have
-> __GFP_WAIT, synchronous reclaim is skipped.  If a process performs
-> only speculative allocations, it can blow way past the high limit.
-> This is actually easily reproducible by simply doing "find /".
-> slab/slub allocator tries speculative allocations first, so as long as
-> there's memory which can be consumed without blocking, it can keep
-> allocating memory regardless of the high limit.
+On Fri 04-09-15 18:38:10, Vladimir Davydov wrote:
+> On Fri, Sep 04, 2015 at 03:30:38PM +0200, Michal Hocko wrote:
+> > On Tue 01-09-15 14:51:57, Tejun Heo wrote:
+> > > Hello,
+> > > 
+> > > On Tue, Sep 01, 2015 at 02:44:59PM +0200, Michal Hocko wrote:
+> > > > The runtime overhead is not negligible and I do not see why everybody
+> > > > should be paying that price by default. I can definitely see the reason why
+> > > > somebody would want to enable the kmem accounting but many users will
+> > > > probably never care because the kernel footprint would be in the noise
+> > > > wrt. user memory.
+> > > 
+> > > We said the same thing about hierarchy support.  Sure, it's not the
+> > > same but I think it's wiser to keep the architectural decisions at a
+> > > higher level.  I don't think kmem overhead is that high but if this
+> > > actually is a problem we'd need a per-cgroup knob anyway.
+> > 
+> > The overhead was around 4% for the basic kbuild test without ever
+> > triggering the [k]memcg limit last time I checked. This was quite some
+> > time ago and things might have changed since then. Even when this got
+> > better there will still be _some_ overhead because we have to track that
+> > memory and that is not free.
 > 
-> This patch makes try_charge() always punt the over-high reclaim to the
-> return-to-userland path.  If try_charge() detects that high limit is
-> breached, it adds the overage to current->memcg_nr_pages_over_high and
-> schedules execution of mem_cgroup_handle_over_high() which performs
-> synchronous reclaim from the return-to-userland path.
+> Just like there is some overhead if a process is placed in memcg w/o
+> kmem accounting enabled.
 
-This also means that a killed task will not reclaim before it dies. This
-shouldn't be a big deal, though, because the task should uncharge its
-memory which will most likely belong to the memcg. More on that below.
+Sure I am not questioning that.
 
-> As long as kernel doesn't have a run-away allocation spree, this
-> should provide enough protection while making kmemcg behave more
-> consistently.
-
-I would also point out that this approach allows for a better reclaim
-opportunities for GFP_NOFS charges which are quite common with kmem
-enabled.
-
-> v2: - Switched to reclaiming only the overage caused by current rather
->       than the difference between usage and high as suggested by
->       Michal.
->     - Don't record the memcg which went over high limit.  This makes
->       exit path handling unnecessary.  Dropped.
-
-Hmm, this allows to leave a memcg in a high limit excess. I guess
-you are right that this is not that likely to lose sleep over
-it. Nevertheless, a nasty user could move away from within signal
-handler context which runs before. This looks like a potential runaway
-but the migration outside of the restricted hierarchy is a problem in
-itself so I wouldn't consider this a problem.
-
->     - Drop mentions of avoiding high stack usage from description as
->       suggested by Vladimir.  max limit still triggers direct reclaim.
+> > The question really is whether kmem accounting is so generally useful
+> > that the overhead is acceptable and it is should be enabled by
+> > default. From my POV it is a useful mitigation of untrusted users but
+> > many loads simply do not care because they only care about a certain
+> > level of isolation.
 > 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> FWIW, I've seen a useful workload that generated tons of negative
+> dentries for some reason (if my memory doesn't fail, it was nginx web
+> server). If one starts such a workload inside a container w/o kmem
+> accounting, it might evict useful data from other containers. So, even
+> if a container is trusted, it might be still worth having kmem
+> accounting enabled.
 
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+OK, then this is a clear usecase for using kmem mem. I was merely
+pointing out that many others will not care about kmem. Is it majority?
+I dunno. But I haven't heard any convincing argument that those that
+need kmem would form a majority either.
 
-> +/*
-> + * Scheduled by try_charge() to be executed from the userland return path
-> + * and reclaims memory over the high limit.
-> + */
-> +void mem_cgroup_handle_over_high(void)
-> +{
-> +	unsigned int nr_pages = current->memcg_nr_pages_over_high;
-> +	struct mem_cgroup *memcg, *pos;
-> +
-> +	if (likely(!nr_pages))
-> +		return;
+> > I might be wrong here of course but if the default should be switched it
+> > would deserve a better justification with some numbers so that people
+> > can see the possible drawbacks.
+> 
+> Personally, I'd prefer to have it switched on by default, because it
+> would force people test it and report bugs and performance degradation.
+> If one finds it really crappy, he/she should be able to disable it.
 
-This is hooking into a hot path so I guess it would be better to make
-this part inline and the rest can go via function call.
+I do not think this is the way of introducing new functionality. You do
+not want to force users to debug your code and go let it disable if it
+is too crappy.
 
-> +
-> +	pos = memcg = get_mem_cgroup_from_mm(current->mm);
-> +
-> +	do {
-> +		if (page_counter_read(&pos->memory) <= pos->high)
-> +			continue;
-> +		mem_cgroup_events(pos, MEMCG_HIGH, 1);
+> > I agree that the per-cgroup knob is better than the global one. We
+> 
+> Not that sure :-/
 
-I was thinking about when to emit the event when I realized we haven't
-specified the semantic anywhere. It sounds more logical to emit the
-event when the limit is breached rather than when we reclaim for it.  On
-the other hand we have been doing it only for reclaim and GFP_NOWAIT
-where not accounted. So this mimics the previous behavior. Same for the
-max limit when we skip the charge. So I guess this is OK as well.
+Why?
 
+> > should also find consensus whether the legacy semantic of k < u limit
+> > should be preserved. It made sense to me at the time it was introduced
+> > but I recall that Vladimir found it not really helpful when we discussed
+> > that at LSF. I found it interesting e.g. for the rough task count
+> > limiting use case which people were asking for.
+> 
+> There is the pids cgroup, which suits this purpose much better.
 
-> +		try_to_free_mem_cgroup_pages(pos, nr_pages, GFP_KERNEL, true);
-> +	} while ((pos = parent_mem_cgroup(pos)));
-> +
-> +	css_put(&memcg->css);
-> +	current->memcg_nr_pages_over_high = 0;
-> +}
-> +
->  static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
->  		      unsigned int nr_pages)
->  {
-> @@ -2082,17 +2108,22 @@ done_restock:
+I am not familiar with this controller. I am not following cgroup
+mailing list too closely but I vaguely remember somebody proposing this
+controller but I am not sure what is the current status. The last time
+this has been discussed there was a general pushback to use kmem
+accounting for process count restriction.
 
-JFYI you can get rid of labels in the patch format by
-[diff "default"]
-        xfuncname = "^[[:alpha:]$_].*[^:]$"
+> K < U adds a lot of complexity to reclaim, while it's not clear whether
+> we really need it. For instance, when you hit K you should reclaim kmem
+> only, but there is kmem that is pinned by umem, e.g. radix tree nodes or
+> buffer heads. What should we do with them? Reclaim umem on hitting kmem
+> limit? IMO ugly.
 
-I found it really nice and easier to read.
+kmem as a hard limit could simply reclaim slab objects and fail if it
+doesn't succeed. Sure many objects might be pinned by other resources
+which are not reclaimable but that is possible with the global case as
+well.
+I can see your argument that the configuration might be quite tricky,
+though. If there is a general consensus that kernel memory bound to
+resources which need to be controllable will get its own way of
+controlling then a separate K limit would indeed be not needed.
 -- 
 Michal Hocko
 SUSE Labs
