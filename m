@@ -1,100 +1,120 @@
-From: "Richard W.M. Jones" <rjones@redhat.com>
-Subject: Re: [PATCH block/for-linus] block: blkg_destroy_all() should clear
- q->root_blkg and ->root_rl.blkg
-Date: Sun, 6 Sep 2015 09:30:20 +0100
-Message-ID: <20150906083020.GR29283@redhat.com>
-References: <CA+5PVA5rzQ0s4723n5rHBcxQa9t0cW8BPPBekr_9aMRoWt2aYg@mail.gmail.com>
- <20150902145307.GG22326@mtj.duckdns.org>
- <20150902153255.GH22326@mtj.duckdns.org>
- <20150904104602.GN29283@redhat.com>
- <20150904171302.GE25329@mtj.duckdns.org>
- <20150904204244.GQ29283@redhat.com>
- <20150905153439.GA18461@redhat.com>
- <20150905154840.GA19460@redhat.com>
- <20150905183801.GA8231@mtj.duckdns.org>
- <20150905194736.GB8231@mtj.duckdns.org>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2 3/2] memcg: punt high overage reclaim to
+ return-to-userland path
+Date: Mon, 7 Sep 2015 11:23:46 +0200
+Message-ID: <20150907092346.GC6022@dhcp22.suse.cz>
+References: <20150828220158.GD11089@htj.dyndns.org>
+ <20150828220237.GE11089@htj.dyndns.org>
+ <20150904210011.GH25329@mtj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20150905194736.GB8231@mtj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20150904210011.GH25329-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Josh Boyer <jwboyer@fedoraproject.org>, Jeff Moyer <jmoyer@redhat.com>, msnitzer@redhat.com, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Sat, Sep 05, 2015 at 03:47:36PM -0400, Tejun Heo wrote:
-> While making the root blkg unconditional, ec13b1d6f0a0 ("blkcg: always
-> create the blkcg_gq for the root blkcg") removed the part which clears
-> q->root_blkg and ->root_rl.blkg during q exit.  This leaves the two
-> pointers dangling after blkg_destroy_all().  blk-throttle exit path
-> performs blkg traversals and dereferences ->root_blkg and can lead to
-> the following oops.
+On Fri 04-09-15 17:00:11, Tejun Heo wrote:
+> Currently, try_charge() tries to reclaim memory synchronously when the
+> high limit is breached; however, if the allocation doesn't have
+> __GFP_WAIT, synchronous reclaim is skipped.  If a process performs
+> only speculative allocations, it can blow way past the high limit.
+> This is actually easily reproducible by simply doing "find /".
+> slab/slub allocator tries speculative allocations first, so as long as
+> there's memory which can be consumed without blocking, it can keep
+> allocating memory regardless of the high limit.
 > 
->  BUG: unable to handle kernel NULL pointer dereference at 0000000000000558
->  IP: [<ffffffff81389746>] __blkg_lookup+0x26/0x70
->  ...
->  task: ffff88001b4e2580 ti: ffff88001ac0c000 task.ti: ffff88001ac0c000
->  RIP: 0010:[<ffffffff81389746>]  [<ffffffff81389746>] __blkg_lookup+0x26/0x70
->  ...
->  Call Trace:
->   [<ffffffff8138d14a>] blk_throtl_drain+0x5a/0x110
->   [<ffffffff8138a108>] blkcg_drain_queue+0x18/0x20
->   [<ffffffff81369a70>] __blk_drain_queue+0xc0/0x170
->   [<ffffffff8136a101>] blk_queue_bypass_start+0x61/0x80
->   [<ffffffff81388c59>] blkcg_deactivate_policy+0x39/0x100
->   [<ffffffff8138d328>] blk_throtl_exit+0x38/0x50
->   [<ffffffff8138a14e>] blkcg_exit_queue+0x3e/0x50
->   [<ffffffff8137016e>] blk_release_queue+0x1e/0xc0
->  ...
-> 
-> While the bug is a straigh-forward use-after-free bug, it is tricky to
-> reproduce because blkg release is RCU protected and the rest of exit
-> path usually finishes before RCU grace period.
-> 
-> This patch fixes the bug by updating blkg_destro_all() to clear
-> q->root_blkg and ->root_rl.blkg.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Reported-by: "Richard W.M. Jones" <rjones@redhat.com>
-> Reported-by: Josh Boyer <jwboyer@fedoraproject.org>
-> Link: http://lkml.kernel.org/g/CA+5PVA5rzQ0s4723n5rHBcxQa9t0cW8BPPBekr_9aMRoWt2aYg@mail.gmail.com
-> Fixes: ec13b1d6f0a0 ("blkcg: always create the blkcg_gq for the root blkcg")
-> Cc: stable@vger.kernel.org # v4.2+
-> ---
-> Hello,
-> 
-> Richard, can you please verify that this patch fixes the bug?
+> This patch makes try_charge() always punt the over-high reclaim to the
+> return-to-userland path.  If try_charge() detects that high limit is
+> breached, it adds the overage to current->memcg_nr_pages_over_high and
+> schedules execution of mem_cgroup_handle_over_high() which performs
+> synchronous reclaim from the return-to-userland path.
 
-This patch managed 477 iterations before dying from an unrelated
-reason in the test harness.  This is much better than before, so the
-patch looks good to me.
+This also means that a killed task will not reclaim before it dies. This
+shouldn't be a big deal, though, because the task should uncharge its
+memory which will most likely belong to the memcg. More on that below.
 
-Rich.
+> As long as kernel doesn't have a run-away allocation spree, this
+> should provide enough protection while making kmemcg behave more
+> consistently.
 
-> Thanks a lot!
+I would also point out that this approach allows for a better reclaim
+opportunities for GFP_NOFS charges which are quite common with kmem
+enabled.
+
+> v2: - Switched to reclaiming only the overage caused by current rather
+>       than the difference between usage and high as suggested by
+>       Michal.
+>     - Don't record the memcg which went over high limit.  This makes
+>       exit path handling unnecessary.  Dropped.
+
+Hmm, this allows to leave a memcg in a high limit excess. I guess
+you are right that this is not that likely to lose sleep over
+it. Nevertheless, a nasty user could move away from within signal
+handler context which runs before. This looks like a potential runaway
+but the migration outside of the restricted hierarchy is a problem in
+itself so I wouldn't consider this a problem.
+
+>     - Drop mentions of avoiding high stack usage from description as
+>       suggested by Vladimir.  max limit still triggers direct reclaim.
 > 
->  block/blk-cgroup.c |    3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-> index d6283b3..9cc48d1d 100644
-> --- a/block/blk-cgroup.c
-> +++ b/block/blk-cgroup.c
-> @@ -387,6 +387,9 @@ static void blkg_destroy_all(struct request_queue *q)
->  		blkg_destroy(blkg);
->  		spin_unlock(&blkcg->lock);
->  	}
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+
+> +/*
+> + * Scheduled by try_charge() to be executed from the userland return path
+> + * and reclaims memory over the high limit.
+> + */
+> +void mem_cgroup_handle_over_high(void)
+> +{
+> +	unsigned int nr_pages = current->memcg_nr_pages_over_high;
+> +	struct mem_cgroup *memcg, *pos;
 > +
-> +	q->root_blkg = NULL;
-> +	q->root_rl.blkg = NULL;
->  }
->  
->  /*
+> +	if (likely(!nr_pages))
+> +		return;
 
+This is hooking into a hot path so I guess it would be better to make
+this part inline and the rest can go via function call.
+
+> +
+> +	pos = memcg = get_mem_cgroup_from_mm(current->mm);
+> +
+> +	do {
+> +		if (page_counter_read(&pos->memory) <= pos->high)
+> +			continue;
+> +		mem_cgroup_events(pos, MEMCG_HIGH, 1);
+
+I was thinking about when to emit the event when I realized we haven't
+specified the semantic anywhere. It sounds more logical to emit the
+event when the limit is breached rather than when we reclaim for it.  On
+the other hand we have been doing it only for reclaim and GFP_NOWAIT
+where not accounted. So this mimics the previous behavior. Same for the
+max limit when we skip the charge. So I guess this is OK as well.
+
+
+> +		try_to_free_mem_cgroup_pages(pos, nr_pages, GFP_KERNEL, true);
+> +	} while ((pos = parent_mem_cgroup(pos)));
+> +
+> +	css_put(&memcg->css);
+> +	current->memcg_nr_pages_over_high = 0;
+> +}
+> +
+>  static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  		      unsigned int nr_pages)
+>  {
+> @@ -2082,17 +2108,22 @@ done_restock:
+
+JFYI you can get rid of labels in the patch format by
+[diff "default"]
+        xfuncname = "^[[:alpha:]$_].*[^:]$"
+
+I found it really nice and easier to read.
 -- 
-Richard Jones, Virtualization Group, Red Hat http://people.redhat.com/~rjones
-Read my programming and virtualization blog: http://rwmj.wordpress.com
-libguestfs lets you edit virtual machines.  Supports shell scripting,
-bindings from many languages.  http://libguestfs.org
+Michal Hocko
+SUSE Labs
