@@ -1,52 +1,43 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 3/2] memcg: punt high overage reclaim to
- return-to-userland path
-Date: Tue, 8 Sep 2015 13:00:51 -0400
-Message-ID: <20150908170051.GH13749@mtj.duckdns.org>
-References: <20150828220158.GD11089@htj.dyndns.org>
- <20150828220237.GE11089@htj.dyndns.org>
- <20150904210011.GH25329@mtj.duckdns.org>
- <20150907113822.GB31800@esperanza>
+From: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Subject: [PATCH] cgroup: fix seq_show_option merge with legacy_name
+Date: Tue, 8 Sep 2015 11:30:43 -0700
+Message-ID: <20150908183043.GA23974@www.outflux.net>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=w2fMBw0C6q4oRd0pDclVxf5PdyHcB7bM8r0chWb/M+0=;
-        b=ixuaTSeEZHPT51zVUifH6wCtZ520qx8baj0izKbBe5hbPVHs8e6BALk1wOv2FzVvj4
-         F8N+MxlIefzQfRtLMZfmccMmh+g9bXlkPjP3aS4M6wx2rTI1Bkqh678GgaSOyQWAm17k
-         Gt/kMvtS3eGpXsbALA+hLidY6kIuTBWt393JMmnKeAyBVAzhxaJ/iq3wRtUFvxfJwXjb
-         jZ1Fwa2ipV1vYnD5rx/vCf58TArSPAf1Po85Ji5UOUEjJDcj1BSlVDHJPa4tIa84lRvR
-         P88LjNscUKX0THvs8u8J9QtC4g2GxCF/bfTtbI4weSbivxQYk3Q7YHaHKpPN6ZFaeAWG
-         F0YA==
 Content-Disposition: inline
-In-Reply-To: <20150907113822.GB31800@esperanza>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Vladimir.
+When seq_show_option (068acf2ee776) was merged, it did not correctly
+collide with cgroup's addition of legacy_name (3e1d2eed39d8) changes. This
+fixes the reported name.
 
-On Mon, Sep 07, 2015 at 02:38:22PM +0300, Vladimir Davydov wrote:
-> > As long as kernel doesn't have a run-away allocation spree, this
-> > should provide enough protection while making kmemcg behave more
-> > consistently.
-> 
-> Another good thing about such an approach is that it copes with prio
-> inversion. Currently, a task with small memory.high might issue
-> memory.high reclaim on kmem charge with a bunch of various locks held.
-> If a task with a big value of memory.high needs any of these locks,
-> it'll have to wait until the low prio task finishes reclaim and releases
-> the locks. By handing over reclaim to task_work whenever possible we
-> might avoid this issue and improve overall performance.
+Signed-off-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+---
+ kernel/cgroup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Indeed, will update the patch accordingly.
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index a8538e443784..2cf0f79f1fc9 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -1342,7 +1342,7 @@ static int cgroup_show_options(struct seq_file *seq,
+ 	if (root != &cgrp_dfl_root)
+ 		for_each_subsys(ss, ssid)
+ 			if (root->subsys_mask & (1 << ssid))
+-				seq_show_option(seq, ss->name, NULL);
++				seq_show_option(seq, ss->legacy_name, NULL);
+ 	if (root->flags & CGRP_ROOT_NOPREFIX)
+ 		seq_puts(seq, ",noprefix");
+ 	if (root->flags & CGRP_ROOT_XATTR)
+-- 
+1.9.1
 
-Thanks.
 
 -- 
-tejun
+Kees Cook
+Chrome OS Security
