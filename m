@@ -1,48 +1,101 @@
-From: Parav Pandit <pandit.parav@gmail.com>
-Subject: Re: [PATCH 6/7] devcg: Added support to use RDMA device cgroup.
-Date: Tue, 8 Sep 2015 15:52:15 +0530
-Message-ID: <CAG53R5UC-xPn85ogcjS0WdNiyHxTJ_sJb-xFV9nc2ma_-wjtcg@mail.gmail.com>
+From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 5/7] devcg: device cgroup's extension for RDMA resource.
+Date: Tue, 8 Sep 2015 16:20:17 +0530
+Message-ID: <CAG53R5VkCQGE9Ufb2JJO0Ksic_nNMJzVRF4wTrATUrnh1C0taA@mail.gmail.com>
 References: <1441658303-18081-1-git-send-email-pandit.parav@gmail.com>
-	<1441658303-18081-7-git-send-email-pandit.parav@gmail.com>
-	<55EE9EE2.3060804@mellanox.com>
+	<1441658303-18081-6-git-send-email-pandit.parav@gmail.com>
+	<55EE9DF5.7030401@mellanox.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=mime-version:in-reply-to:references:date:message-id:subject:from:to
          :cc:content-type;
-        bh=DWkJmFMEDKLigV5moM2T9FGb/UQCaBxhs/aQe0JzYho=;
-        b=Gr8Q55GimXmyZXxHH49Xt6CdcIqMBo/j2yfZjBrtVtwphtFiRHhaDrzLVHWYQ8ffAP
-         puWS+ZdoNNHNBnUYWesQqaXmP8UeBvMrctT+QLAqZxnhL6P3FURU/vmhln8guNoC7hX2
-         jbm3is8Y16tqZYkH0d/La7CdLqa7ebTXhizAZEkKT+jI2r5McDb2gl5NZHoM5MSUSn7k
-         APYXQQrAsE8MU70yIcF7vtZnywz8hKV9R/+cnTwGqBCGqBNaQCHMmb3a6a3uyT1OEFEn
-         UT4G0tKRZ4yI6siHHTa0UD0wsu9euDXf1hBnNkesONjO6JDlmICWgtSsNEdK/mK1DevW
-         xpfQ==
-In-Reply-To: <55EE9EE2.3060804@mellanox.com>
-Sender: linux-doc-owner@vger.kernel.org
+        bh=x4k6qbRslzK3CXVenca7st9+HFf1bq5pIQuLB9e2Ny0=;
+        b=r/fVhO0POmE+cAjiz7Rwnb/6ApKhu0OVV3aOuEfY4peL2f111wgFDx/gCJh90nP/85
+         Yy0DxudsRc7+GvHZwuTBrF/0ixTTQz3XGn8EDJFI97eLwXdwdNX/S+U42hwfCz0DmSfC
+         fL4S+KhU8QJa1BFaxXhvnjagdyz5PilJJeToWc+AAWfrZTLbnUYl6DIESnBDy25gadc5
+         nkFbKvHx7UsE/BQhYPjsWG5vHyZuXCN2COpmCCcQ9QXdzRO+WDCNvpkvDms4c/XDbosJ
+         u4ZKhxqYHW0dZosUzAgYjM3OUoi1pJRziO8yxyrjPDd92B4asxsv5eUIFO1oN33cCn5F
+         /skw==
+In-Reply-To: <55EE9DF5.7030401-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Haggai Eran <haggaie@mellanox.com>
-Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Doug Ledford <dledford@redhat.com>, Jonathan Corbet <corbet@lwn.net>, james.l.morris@oracle.com, serge@hallyn.com, Or Gerlitz <ogerlitz@mellanox.com>, Matan Barak <matanb@mellanox.com>, raindel@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
+To: Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Sep 8, 2015 at 2:10 PM, Haggai Eran <haggaie@mellanox.com> wrote:
+On Tue, Sep 8, 2015 at 2:06 PM, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org> wrote:
 > On 07/09/2015 23:38, Parav Pandit wrote:
->> +static void init_ucontext_lists(struct ib_ucontext *ucontext)
+>> +void devcgroup_rdma_uncharge_resource(struct ib_ucontext *ucontext,
+>> +                                   enum devcgroup_rdma_rt type, int num)
 >> +{
->> +     INIT_LIST_HEAD(&ucontext->pd_list);
->> +     INIT_LIST_HEAD(&ucontext->mr_list);
->> +     INIT_LIST_HEAD(&ucontext->mw_list);
->> +     INIT_LIST_HEAD(&ucontext->cq_list);
->> +     INIT_LIST_HEAD(&ucontext->qp_list);
->> +     INIT_LIST_HEAD(&ucontext->srq_list);
->> +     INIT_LIST_HEAD(&ucontext->ah_list);
->> +     INIT_LIST_HEAD(&ucontext->xrcd_list);
->> +     INIT_LIST_HEAD(&ucontext->rule_list);
->> +}
+>> +     struct dev_cgroup *dev_cg, *p;
+>> +     struct task_struct *ctx_task;
+>> +
+>> +     if (!num)
+>> +             return;
+>> +
+>> +     /* get cgroup of ib_ucontext it belong to, to uncharge
+>> +      * so that when its called from any worker tasks or any
+>> +      * other tasks to which this resource doesn't belong to,
+>> +      * it can be uncharged correctly.
+>> +      */
+>> +     if (ucontext)
+>> +             ctx_task = get_pid_task(ucontext->tgid, PIDTYPE_PID);
+>> +     else
+>> +             ctx_task = current;
+> So what happens if a process creates a ucontext, forks, and then the
+> child creates and destroys a CQ? If I understand correctly, created
+> resources are always charged to the current process (the child), but
+> when it is destroyed the owner of the ucontext (the parent) will be
+> uncharged.
 >
-> I don't see how this change is related to the patch.
+> Since ucontexts are not meant to be used by multiple processes, I think
+> it would be okay to always charge the owner process (the one that
+> created the ucontext).
 
-Its not but code which I added makes this function to grow longer, so
-to keep it to same readability level, I did the cleanup.
-May be I can send separate patch for cleanup?
+I need to think about it. I would like to avoid keep per task resource
+counters for two reasons.
+For a while I thought that native fork() doesn't take care to share
+the RDMA resources and all CQ, QP dmaable memory from PID namespace
+perspective.
+
+1. Because, it could well happen that process and its child process is
+created in PID namespace_A, after which child is migrated to new PID
+namespace_B.
+after which parent from the namespace_A is terminated. I am not sure
+how the ucontext ownership changes from parent to child process at
+that point today.
+I prefer to keep this complexity out if at all it exists as process
+migration across namespaces is not a frequent event for which to
+optimize the code for.
+
+2. by having per task counter (as cost of memory some memory) allows
+to avoid using atomic during charge(), uncharge().
+
+The intent is to have per task (process and thread) to have their
+resource counter instance, but I can see that its broken where its
+charging parent process as of now without atomics.
+As you said its ok to always charge the owner process, I have to relax
+2nd requirement and fallback to use atomics for charge(), uncharge()
+or I have to get rid of ucontext from the uncharge() API which is
+difficult due to fput() being in worker thread context.
+
+>
+>> +     dev_cg = task_devcgroup(ctx_task);
+>> +
+>> +     spin_lock(&ctx_task->rdma_res_counter->lock);
+>> +     ctx_task->rdma_res_counter->usage[type] -= num;
+>> +
+>> +     for (p = dev_cg; p; p = parent_devcgroup(p))
+>> +             uncharge_resource(p, type, num);
+>> +
+>> +     spin_unlock(&ctx_task->rdma_res_counter->lock);
+>> +
+>> +     if (type == DEVCG_RDMA_RES_TYPE_UCTX)
+>> +             rdma_free_res_counter(ctx_task);
+>> +}
+>> +EXPORT_SYMBOL(devcgroup_rdma_uncharge_resource);
+>
