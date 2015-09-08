@@ -1,156 +1,45 @@
-From: Haggai Eran <haggaie@mellanox.com>
-Subject: Re: [PATCH 5/7] devcg: device cgroup's extension for RDMA resource.
-Date: Tue, 8 Sep 2015 11:22:56 +0300
-Message-ID: <55EE9AE0.5030508@mellanox.com>
+From: Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Subject: Re: [PATCH 4/7] devcg: Added rdma resource tracker object per task
+Date: Tue, 8 Sep 2015 11:24:56 +0300
+Message-ID: <55EE9B58.70908@mellanox.com>
 References: <1441658303-18081-1-git-send-email-pandit.parav@gmail.com>
- <1441658303-18081-6-git-send-email-pandit.parav@gmail.com>
+ <1441658303-18081-5-git-send-email-pandit.parav@gmail.com>
+ <55EE76C7.1000804@mellanox.com>
+ <CAG53R5VwLnDUjpOwaD_gZMkRBjyT1Wg_sSPw2gAg9oJkqdn3dQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <1441658303-18081-6-git-send-email-pandit.parav@gmail.com>
-Sender: linux-doc-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAG53R5VwLnDUjpOwaD_gZMkRBjyT1Wg_sSPw2gAg9oJkqdn3dQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Parav Pandit <pandit.parav@gmail.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, dledford@redhat.com
-Cc: corbet@lwn.net, james.l.morris@oracle.com, serge@hallyn.com, ogerlitz@mellanox.com, matanb@mellanox.com, raindel@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
+To: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 07/09/2015 23:38, Parav Pandit wrote:
-> +/* RDMA resources from device cgroup perspective */
-> +enum devcgroup_rdma_rt {
-> +	DEVCG_RDMA_RES_TYPE_UCTX,
-> +	DEVCG_RDMA_RES_TYPE_CQ,
-> +	DEVCG_RDMA_RES_TYPE_PD,
-> +	DEVCG_RDMA_RES_TYPE_AH,
-> +	DEVCG_RDMA_RES_TYPE_MR,
-> +	DEVCG_RDMA_RES_TYPE_MW,
-I didn't see memory windows in dev_cgroup_files in patch 3. Is it used?
-> +	DEVCG_RDMA_RES_TYPE_SRQ,
-> +	DEVCG_RDMA_RES_TYPE_QP,
-> +	DEVCG_RDMA_RES_TYPE_FLOW,
-> +	DEVCG_RDMA_RES_TYPE_MAX,
-> +};
+On 08/09/2015 10:04, Parav Pandit wrote:
+> On Tue, Sep 8, 2015 at 11:18 AM, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org> wrote:
+>> On 07/09/2015 23:38, Parav Pandit wrote:
+>>> @@ -2676,7 +2686,7 @@ static inline int thread_group_empty(struct task_struct *p)
+>>>   * Protects ->fs, ->files, ->mm, ->group_info, ->comm, keyring
+>>>   * subscriptions and synchronises with wait4().  Also used in procfs.  Also
+>>>   * pins the final release of task.io_context.  Also protects ->cpuset and
+>>> - * ->cgroup.subsys[]. And ->vfork_done.
+>>> + * ->cgroup.subsys[]. Also projtects ->vfork_done and ->rdma_res_counter.
+>> s/projtects/protects/
+>>>   *
+>>>   * Nests both inside and outside of read_lock(&tasklist_lock).
+>>>   * It must not be nested with write_lock_irq(&tasklist_lock),
+>>
+> 
+> Hi Haggai Eran,
+> Did you miss to put comments or I missed something?
 
-> +struct devcgroup_rdma_tracker {
-> +	int limit;
-> +	atomic_t usage;
-> +	int failcnt;
-> +};
-Have you considered using struct res_counter?
+Yes, I wrote "s/projtects/protects/" to tell you that you have a typo in
+your comment. You should change the word "projtects" to "protects".
 
-> + * RDMA resource limits are hierarchical, so the highest configured limit of
-> + * the hierarchy is enforced. Allowing resource limit configuration to default
-> + * cgroup allows fair share to kernel space ULPs as well.
-In what way is the highest configured limit of the hierarchy enforced? I
-would expect all the limits along the hierarchy to be enforced.
-
-> +int devcgroup_rdma_get_max_resource(struct seq_file *sf, void *v)
-> +{
-> +	struct dev_cgroup *dev_cg = css_to_devcgroup(seq_css(sf));
-> +	int type = seq_cft(sf)->private;
-> +	u32 usage;
-> +
-> +	if (dev_cg->rdma.tracker[type].limit ==	DEVCG_RDMA_MAX_RESOURCES) {
-> +		seq_printf(sf, "%s\n", DEVCG_RDMA_MAX_RESOURCE_STR);
-> +	} else {
-> +		usage = dev_cg->rdma.tracker[type].limit;
-If this is the resource limit, don't name it 'usage'.
-
-> +		seq_printf(sf, "%u\n", usage);
-> +	}
-> +	return 0;
-> +}
-
-> +int devcgroup_rdma_get_max_resource(struct seq_file *sf, void *v)
-> +{
-> +	struct dev_cgroup *dev_cg = css_to_devcgroup(seq_css(sf));
-> +	int type = seq_cft(sf)->private;
-> +	u32 usage;
-> +
-> +	if (dev_cg->rdma.tracker[type].limit ==	DEVCG_RDMA_MAX_RESOURCES) {
-> +		seq_printf(sf, "%s\n", DEVCG_RDMA_MAX_RESOURCE_STR);
-I'm not sure hiding the actual number is good, especially in the
-show_usage case.
-
-> +	} else {
-> +		usage = dev_cg->rdma.tracker[type].limit;
-> +		seq_printf(sf, "%u\n", usage);
-> +	}
-> +	return 0;
-> +}
-
-> +void devcgroup_rdma_uncharge_resource(struct ib_ucontext *ucontext,
-> +				      enum devcgroup_rdma_rt type, int num)
-> +{
-> +	struct dev_cgroup *dev_cg, *p;
-> +	struct task_struct *ctx_task;
-> +
-> +	if (!num)
-> +		return;
-> +
-> +	/* get cgroup of ib_ucontext it belong to, to uncharge
-> +	 * so that when its called from any worker tasks or any
-> +	 * other tasks to which this resource doesn't belong to,
-> +	 * it can be uncharged correctly.
-> +	 */
-> +	if (ucontext)
-> +		ctx_task = get_pid_task(ucontext->tgid, PIDTYPE_PID);
-> +	else
-> +		ctx_task = current;
-> +	dev_cg = task_devcgroup(ctx_task);
-> +
-> +	spin_lock(&ctx_task->rdma_res_counter->lock);
-Don't you need an rcu read lock and rcu_dereference to access
-rdma_res_counter?
-
-> +	ctx_task->rdma_res_counter->usage[type] -= num;
-> +
-> +	for (p = dev_cg; p; p = parent_devcgroup(p))
-> +		uncharge_resource(p, type, num);
-> +
-> +	spin_unlock(&ctx_task->rdma_res_counter->lock);
-> +
-> +	if (type == DEVCG_RDMA_RES_TYPE_UCTX)
-> +		rdma_free_res_counter(ctx_task);
-> +}
-> +EXPORT_SYMBOL(devcgroup_rdma_uncharge_resource);
-
-> +int devcgroup_rdma_try_charge_resource(enum devcgroup_rdma_rt type, int num)
-> +{
-> +	struct dev_cgroup *dev_cg = task_devcgroup(current);
-> +	struct task_rdma_res_counter *res_cnt = current->rdma_res_counter;
-> +	int status;
-> +
-> +	if (!res_cnt) {
-> +		res_cnt = kzalloc(sizeof(*res_cnt), GFP_KERNEL);
-> +		if (!res_cnt)
-> +			return -ENOMEM;
-> +
-> +		spin_lock_init(&res_cnt->lock);
-> +		rcu_assign_pointer(current->rdma_res_counter, res_cnt);
-Don't you need the task lock to update rdma_res_counter here?
-
-> +	}
-> +
-> +	/* synchronize with migration task by taking lock, to avoid
-> +	 * race condition of performing cgroup resource migration
-> +	 * in non atomic way with this task, which can leads to leaked
-> +	 * resources in older cgroup.
-> +	 */
-> +	spin_lock(&res_cnt->lock);
-> +	status = try_charge_resource(dev_cg, type, num);
-> +	if (status)
-> +		goto busy;
-> +
-> +	/* single task updating its rdma resource usage, so atomic is
-> +	 * not required.
-> +	 */
-> +	current->rdma_res_counter->usage[type] += num;
-> +
-> +busy:
-> +	spin_unlock(&res_cnt->lock);
-> +	return status;
-> +}
-> +EXPORT_SYMBOL(devcgroup_rdma_try_charge_resource);
-
-Regards,
 Haggai
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
