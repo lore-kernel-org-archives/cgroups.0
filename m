@@ -1,48 +1,42 @@
-From: Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH 0/7] devcg: device cgroup extension for rdma resource
-Date: Tue, 8 Sep 2015 15:45:50 +0300
-Message-ID: <55EED87E.3000408@mellanox.com>
+From: Haggai Eran <haggaie@mellanox.com>
+Subject: Re: [PATCH 6/7] devcg: Added support to use RDMA device cgroup.
+Date: Tue, 8 Sep 2015 16:40:40 +0300
+Message-ID: <55EEE558.4060300@mellanox.com>
 References: <1441658303-18081-1-git-send-email-pandit.parav@gmail.com>
+ <1441658303-18081-7-git-send-email-pandit.parav@gmail.com>
+ <55EE9EE2.3060804@mellanox.com>
+ <CAG53R5UC-xPn85ogcjS0WdNiyHxTJ_sJb-xFV9nc2ma_-wjtcg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1441658303-18081-1-git-send-email-pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-doc-owner@vger.kernel.org>
+In-Reply-To: <CAG53R5UC-xPn85ogcjS0WdNiyHxTJ_sJb-xFV9nc2ma_-wjtcg@mail.gmail.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: corbet-T1hC0tSOHrs@public.gmane.org, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Parav Pandit <pandit.parav@gmail.com>
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Doug Ledford <dledford@redhat.com>, Jonathan Corbet <corbet@lwn.net>, james.l.morris@oracle.com, serge@hallyn.com, Or Gerlitz <ogerlitz@mellanox.com>, Matan Barak <matanb@mellanox.com>, raindel@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
 
-On 07/09/2015 23:38, Parav Pandit wrote:
-> Currently user space applications can easily take away all the rdma
-> device specific resources such as AH, CQ, QP, MR etc. Due to which other
-> applications in other cgroup or kernel space ULPs may not even get chance
-> to allocate any rdma resources.
+On 08/09/2015 13:22, Parav Pandit wrote:
+> On Tue, Sep 8, 2015 at 2:10 PM, Haggai Eran <haggaie@mellanox.com> wrote:
+>> On 07/09/2015 23:38, Parav Pandit wrote:
+>>> +static void init_ucontext_lists(struct ib_ucontext *ucontext)
+>>> +{
+>>> +     INIT_LIST_HEAD(&ucontext->pd_list);
+>>> +     INIT_LIST_HEAD(&ucontext->mr_list);
+>>> +     INIT_LIST_HEAD(&ucontext->mw_list);
+>>> +     INIT_LIST_HEAD(&ucontext->cq_list);
+>>> +     INIT_LIST_HEAD(&ucontext->qp_list);
+>>> +     INIT_LIST_HEAD(&ucontext->srq_list);
+>>> +     INIT_LIST_HEAD(&ucontext->ah_list);
+>>> +     INIT_LIST_HEAD(&ucontext->xrcd_list);
+>>> +     INIT_LIST_HEAD(&ucontext->rule_list);
+>>> +}
+>>
+>> I don't see how this change is related to the patch.
 > 
-> This patch-set allows limiting rdma resources to set of processes.
-> It extend device cgroup controller for limiting rdma device limits.
-I don't think extending the device cgroup is the right place for these
-limits. It is currently a very generic controller and adding various
-RDMA resources to it looks out of place. Why not create a new controller
-for rdma?
+> Its not but code which I added makes this function to grow longer, so
+> to keep it to same readability level, I did the cleanup.
+> May be I can send separate patch for cleanup?
 
-Another thing I noticed is that all limits in this cgroup are global,
-while the resources they control are hardware device specific.
-I think it would be better if the cgroup controlled the limits of each
-device separately.
+Sounds good to me.
 
-> With this patch, user verbs module queries rdma device cgroup controller
-> to query process's limit to consume such resource. It uncharge resource 
-> counter after resource is being freed.
-This is another reason why per-device limits would be better. Since
-limits are reflected to user-space when querying a specific device, it
-will show the same maximum limit on every device opened. If the user
-opens 3 devices they might expect to be able to open 3 times the number
-of the resources they actually can.
-
-Regards,
-Haggai
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
