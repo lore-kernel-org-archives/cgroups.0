@@ -1,129 +1,109 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 4/4] memcg: always enable kmemcg on the default hierarchy
-Date: Tue, 8 Sep 2015 14:50:48 -0400
-Message-ID: <20150908185048.GK13749@mtj.duckdns.org>
-References: <1440775530-18630-1-git-send-email-tj@kernel.org>
- <1440775530-18630-5-git-send-email-tj@kernel.org>
- <20150828164918.GJ9610@esperanza>
- <20150828171438.GD21463@dhcp22.suse.cz>
- <20150828174140.GN26785@mtj.duckdns.org>
- <20150901124459.GC8810@dhcp22.suse.cz>
- <20150901185157.GD18956@htj.dyndns.org>
- <20150904133038.GC8220@dhcp22.suse.cz>
- <20150904161845.GB25329@mtj.duckdns.org>
- <20150907105437.GE6022@dhcp22.suse.cz>
+From: Parav Pandit <pandit.parav@gmail.com>
+Subject: Re: [PATCH 0/7] devcg: device cgroup extension for rdma resource
+Date: Wed, 9 Sep 2015 09:27:40 +0530
+Message-ID: <CAG53R5VnYJ9+VEKtbnFO1HntSp=O=ZGiknucbQ-QLuEk_UP44w@mail.gmail.com>
+References: <1441658303-18081-1-git-send-email-pandit.parav@gmail.com>
+	<20150908152340.GA13749@mtj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=NzASwrXWz6MRmoRDHcnZkDnmy1BmkbfmU35EbgqMDkk=;
-        b=K1y1GQGE+TWJ5NtKHr2y6/2SENuXUROH1aIBAExbULx2mKvJ1o6RMyOGsPQBoLT5st
-         z1o5e57zcbywO9c+7B10GFOzkomz3XsWLGUQyN8whaPiMTEuTHocNVhqOmfIuyRqcdif
-         WfVaBsGvDt/VHbtUHS8sA2bBd7Y4rXz8vlOX8cd1Dqh4b3KD5qUH2CgedHsb145hlyIl
-         c/yIt0qceCKbe94f6vhGA8kvHTKcC5AGt2GDQnYlHAXv+nZPHLEDaXFZ9Dt0uRkcNXZ0
-         OPsw87LKc3h1jB/3qdj+c0Jt2EwyBwhVrCGvgGDtpt3a1l5G28fC3/F6BFJ7/GfPMubL
-         V9Kg==
-Content-Disposition: inline
-In-Reply-To: <20150907105437.GE6022@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=03RnCk7On5Eq8sN4Ah/osIffFvrXagMOThJv7NL3OXk=;
+        b=AwauOU+RmFeTMEurx2hgnIN1y9Ps6Rp6kUfpty854sRrg+sMZL2HbqVzxBhSdHrWtn
+         1zelJOG/pSg5p0r70xpGfD3K8+frD412OL3Pdg9MuiTasrJg72Vs01eDIR9C1hoXul2v
+         ex0jXeBCFu6rItchGi83EkXM3QB2u8U/yl8uzyDxjy81MxUyVzXkviOkUyFLmE6QMfjR
+         EpMvAl61cp18GQrYXjefFZQ571R/yS2w/ksDTqLc9Rj/HF4Gv4+gmd92QnNU1ANfjY3h
+         EtTC4n0ImYfe9yUwM2vhNrnqHlvjZ5RPz9DRPMuekW9EoZmqCEOg8oWJaTthUYGAy2sc
+         PxiQ==
+In-Reply-To: <20150908152340.GA13749@mtj.duckdns.org>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Vladimir Davydov <vdavydov@parallels.com>, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+To: Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Doug Ledford <dledford@redhat.com>, Jonathan Corbet <corbet@lwn.net>, james.l.morris@oracle.com, serge@hallyn.com, Haggai Eran <haggaie@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>, Matan Barak <matanb@mellanox.com>, raindel@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
 
-Hello, Michal.
+On Tue, Sep 8, 2015 at 8:53 PM, Tejun Heo <tj@kernel.org> wrote:
+> Hello, Parav.
+>
+> On Tue, Sep 08, 2015 at 02:08:16AM +0530, Parav Pandit wrote:
+>> Currently user space applications can easily take away all the rdma
+>> device specific resources such as AH, CQ, QP, MR etc. Due to which other
+>> applications in other cgroup or kernel space ULPs may not even get chance
+>> to allocate any rdma resources.
+>
+> Is there something simple I can read up on what each resource is?
+> What's the usual access control mechanism?
+>
+Hi Tejun,
+This is one old white paper, but most of the reasoning still holds true on RDMA.
+http://h10032.www1.hp.com/ctg/Manual/c00257031.pdf
 
-On Mon, Sep 07, 2015 at 12:54:37PM +0200, Michal Hocko wrote:
-> OK, I've quickly rerun my test on 32CPU machine with 64G of RAM
-> Elapsed
-> logs.kmem: min: 68.10 max: 69.27 avg: 68.53 std: 0.53 runs: 3
-> logs.no.kmem: min: 64.08 [94.1%] max: 68.42 [98.8%] avg: 66.22 [96.6%] std: 1.77 runs: 3
-> User
-> logs.kmem: min: 867.68 max: 872.88 avg: 869.49 std: 2.40 runs: 3
-> logs.no.kmem: min: 865.99 [99.8%] max: 884.94 [101.4%] avg: 874.08 [100.5%] std: 7.98 runs: 3
-> System
-> logs.kmem: min: 78.50 max: 78.85 avg: 78.63 std: 0.16 runs: 3
-> logs.no.kmem: min: 75.36 [96.0%] max: 80.50 [102.1%] avg: 77.91 [99.1%] std: 2.10 runs: 3
-> 
-> The elapsed time is still ~3% worse in average while user and system are
-> in noise. I haven't checked where he overhead is coming from.
+More notes on RDMA resources and summary:
+RDMA allows data transport from one system to other system where RDMA
+device implements OSI layers 4 to 1 typically in hardware, drivers.
+RDMA device provides data path semantics to perform data transfer in
+zero copy manner from one to other host, very similar to local dma
+controller.
+It also allows data transfer operation from user space application of
+one to other system.
+In order to do so, all the resources are created using trusted kernel
+space which also provides isolation among applications.
+These resources include are-  QP (queue pair) to transfer data, CQ
+(Completion queue) to indicate completion of data transfer operation,
+MR (memory region) to represent user application memory as source or
+destination for data transfer.
+Common resources are QP, SRQ (shared received queue), CQ, MR, AH
+(Address handle), FLOW, PD (protection domain), user context etc.
 
-Does the cgroup have memory limit configured?  Unless there are
-measurement errors, the only way it'd take noticeably longer w/o
-incurring more CPU time is spending time blocked on reclaim and
-enabling kmem of course adds to memory pressure, which is the intended
-behavior.
+>> This patch-set allows limiting rdma resources to set of processes.
+>> It extend device cgroup controller for limiting rdma device limits.
+>
+> I don't think this belongs to devcg.  If these make sense as a set of
+> resources to be controlled via cgroup, the right way prolly would be a
+> separate controller.
+>
 
-> > I don't think that's the right way to approach the problem.  Given
-> > that the cost isn't prohibitive, no user only care about a certain
-> > level of isolation willingly.
-> 
-> I haven't said it is prohibitive. It is simply non-zero and there is
-> always cost/benefit that should be considered.
+In past there has been similar comment to have dedicated cgroup
+controller for RDMA instead of merging with device cgroup.
+I am ok with both the approach, however I prefer to utilize device
+controller instead of spinning of new controller for new devices
+category.
+I anticipate more such need would arise and for new device category,
+it might not be worth to have new cgroup controller.
+RapidIO though very less popular and upcoming PCIe are on horizon to
+offer similar benefits as that of RDMA and in future having one
+controller for each of them again would not be right approach.
 
-We do want to hunt down that 3% but locking into interface is an a lot
-larger and longer-term commitment.  The cost sure is non-zero but I'd
-be surprised if we can't get that down to something generally
-acceptable over time given that the domain switching is a relatively
-low-frequency event (scheduling) and it's an area where we can
-actively make space to speed trade-off.
+I certainly seek your and others inputs in this email thread here whether
+(a) to continue to extend device cgroup (which support character,
+block devices white list) and now RDMA devices
+or
+(b) to spin of new controller, if so what are the compelling reasons
+that it can provide compare to extension.
 
-> > Distributing memory is what it's all about after all and memory is
-> > memory, user or kernel.
-> 
-> True except that kmem accounting doesn't cover the whole kernel memory
-> usage. It is an opt-in mechanism for a _better_ isolation. And the
-> question really is whether that better isolation is needed/requested by
-> default.
+Current scope of the patch is limited to RDMA resources as first
+patch, but for fact I am sure that there are more functionality in
+pipe to support via this cgroup by me and others.
+So keeping atleast these two aspects in mind, I need input on
+direction of dedicated controller or new one.
 
-It isn't perfect but kmem and socket buffers do cover most of kernel
-memory usage that is accountable to userland.  It isn't just a matter
-of better or worse.  The goal of cgroup is providing a "reasonable"
-isolation.  Sure, we can decide to ignore some but that should be
-because the extra accuracy there doesn't matter in the scheme of
-things and thus paying the overhead is pointless; however, users
-shouldn't need to worry about the different levels of ambiguous
-accuracies which can't even be quantified, at least not by default.
+In future, I anticipate that we might have sub directory to device
+cgroup for individual device class to control.
+such as,
+<sys/fs/cgroup/devices/
+     /char
+     /block
+     /rdma
+     /pcie
+     /child_cgroup..1..N
+Each controllers cgroup access files would remain within their own
+scope. We are not there yet from base infrastructure but something to
+be done as it matures and users start using it.
 
-Let's please not get lost in perfectionism.  Sure, it can't be perfect
-but that doesn't mean an attainable and clear goal doesn't exist here.
-
-> > We have kmem
-> > on/off situation for historical reasons and because the early
-> > implementation wasn't good enough to be enabled by default.  I get
-> > that there can be special cases, temporary or otherwise, where
-> > disabling kmem is desirable but that gotta be the exception, not the
-> > norm.
-> 
-> The default should be the cheapest one IMHO. And our overhead is really
-
-That is a way too simplistic and greedy decision criterion.  I don't
-think we want to make interface decisions on that.  Overhead
-considerations definitely dictate what we can and can't do and that's
-why I said that the cost wasn't prohibitive but there are a whole lot
-of other things to consider too including where we wanna be
-eventually years down the road.
-
-> close to 0 if no memcg accounting is enabled thanks to Johannes'
-> page_counters. Then we have a lightweight form of accounting (only user
-> memory) which is nicely defined. And then we have an additional opt-in
-> for a better isolation which involves some kernel memory as well. Why
-> should we conflate the last two? I mean, if somebody wants an additional
-> protection then sure, enable kmem and pay an additional overhead but why
-> to force this on everybody who wants to use memcg?
-
-Because it betrays the basic goal of reasonable resource isolation.
-
-Thanks.
-
--- 
-tejun
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> Thanks.
+>
+> --
+> tejun
