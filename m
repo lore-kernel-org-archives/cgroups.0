@@ -1,89 +1,56 @@
-From: Tejun Heo <tj@kernel.org>
+From: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
 Subject: Re: [PATCH 0/7] devcg: device cgroup extension for rdma resource
-Date: Fri, 11 Sep 2015 15:25:17 -0400
-Message-ID: <20150911192517.GU8114@mtj.duckdns.org>
-References: <20150910164946.GH8114@mtj.duckdns.org>
+Date: Fri, 11 Sep 2015 13:43:11 -0600
+Message-ID: <20150911194311.GA18755@obsidianresearch.com>
+References: <20150908152340.GA13749@mtj.duckdns.org>
+ <CAG53R5VnYJ9+VEKtbnFO1HntSp=O=ZGiknucbQ-QLuEk_UP44w@mail.gmail.com>
+ <20150910164946.GH8114@mtj.duckdns.org>
  <CAG53R5XyfQxrA+FUKFaZi7ZBhSz-SW6eGkGUZpdo6hUTBkAO-g@mail.gmail.com>
  <20150910202210.GL8114@mtj.duckdns.org>
  <CAG53R5WtuPA=J_GYPzNTAKbjB1r0K90qhXEDxLNf7vxYyxgrKA@mail.gmail.com>
  <20150911040413.GA18850@htj.duckdns.org>
  <55F25781.20308@redhat.com>
  <20150911145213.GQ8114@mtj.duckdns.org>
- <CAG53R5X5z-H15f1FzCFFqao=taYeHyJnXAZT2mPzAHYOkyq-_Q@mail.gmail.com>
- <20150911163449.GS8114@mtj.duckdns.org>
- <CAG53R5WTK8qWrL+CPJKuKHAsR31_E18rbny1PEfLQLqU5A9hEA@mail.gmail.com>
+ <1828884A29C6694DAF28B7E6B8A82373A903A586@ORSMSX109.amr.corp.intel.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=C9c0VnhkJdCFcGj4WeEPuvhHS4bHkeDYiaQAx4NZlGg=;
-        b=UuDVqYuP7bF9409DN4o2E/VpTv/WbMoMBkQ9bMrNhByuzpdoz5JYnIeYfeUNN5VpQN
-         oiU7H/YXbr6LPk2NSi23lM/0ZdCdZzhQQ/4EeEjKn4xLsYWbI354nvxJ2agqpRXnuEIO
-         GK0uALJvtQm//Agd+dUyUHBRgrf2Y9skT9dTM95rXcN7x4PAIT6p4bT+EQ1Hx82ZXiaJ
-         eRWcyj/terTl2Kq/BSAlT/+3PJnyfQ4UKvMmoB0+VWEovghpsSH37rkmEsrjqr5tHnFP
-         u3UrIIyNm7pPCZAPV3Clc+zrntIUxrLP5M9k3jQKJvLdt1yIi+IPpZA4avE4EWK2BZQR
-         vAvg==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=obsidianresearch.com; s=rsa1;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=nD8A2Ax80WlQH3JFbdHLJn6PEpqoKY7+AC5H4c2oi6A=;
+	b=5kCiS5toPmV/IYVUuODtw7sNINnbKLtRnNOdkqNnAeHiNMwuhftbkyf8NeHB5sfbFyKgMLYDS/AUWZiOkxmcqfXjGyGI915dr9WyFcIoexYWYO/0rdR/CZcc/6ROiWEwhcZb+snfLC/vRty6vsX2GJilS/2/gQnzwMZ9hFojirE=;
 Content-Disposition: inline
-In-Reply-To: <CAG53R5WTK8qWrL+CPJKuKHAsR31_E18rbny1PEfLQLqU5A9hEA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1828884A29C6694DAF28B7E6B8A82373A903A586-P5GAC/sN6hkd3b2yrw5b5LfspsVTdybXVpNB7YpNyf8@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Parav Pandit <pandit.parav@gmail.com>
-Cc: Doug Ledford <dledford@redhat.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, james.l.morris@oracle.com, serge@hallyn.com, Haggai Eran <haggaie@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>, Matan Barak <matanb@mellanox.com>, raindel@mellanox.com, akpm@linux-foundation.org, linux-security-module@vger.kernel.org
+To: "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org" <raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello, Parav.
+On Fri, Sep 11, 2015 at 07:22:56PM +0000, Hefty, Sean wrote:
+ 
+> Trying to limit the number of QPs that an app can allocate,
+> therefore, just limits how much of the address space an app can use.
+> There's no clear link between QP limits and HW resource limits,
+> unless you assume a very specific underlying implementation.
 
-On Fri, Sep 11, 2015 at 10:09:48PM +0530, Parav Pandit wrote:
-> > If you're planning on following what the existing memcg did in this
-> > area, it's unlikely to go well.  Would you mind sharing what you have
-> > on mind in the long term?  Where do you see this going?
->
-> At least current thoughts are: central entity authority monitors fail
-> count and new threashold count.
-> Fail count - as similar to other indicates how many time resource
-> failure occured
-> threshold count - indicates upto what this resource has gone upto in
-> usage. (application might not be able to poll on thousands of such
-> resources entries).
-> So based on fail count and threshold count, it can tune it further.
+Isn't that the point though? We have several vendors with hardware
+that does impose hard limits on specific resources. There is no way to
+avoid that, and ultimately, those exact HW resources need to be
+limited.
 
-So, regardless of the specific resource in question, implementing
-adaptive resource distribution requires more than simple thresholds
-and failcnts.  The very minimum would be a way to exert reclaim
-pressure and then a way to measure how much lack of a given resource
-is affecting the workload.  Maybe it can adaptively lower the limits
-and then watch how often allocation fails but that's highly unlikely
-to be an effective measure as it can't do anything to hoarders and the
-frequency of allocation failure doesn't necessarily correlate with the
-amount of impact the workload is getting (it's not a measure of
-usage).
+If we want to talk about abstraction, then I'd suggest something very
+general and simple - two limits:
+ '% of the RDMA hardware resource pool' (per device or per ep?)
+ 'bytes of kernel memory for RDMA structures' (all devices)
 
-This is what I'm awry about.  The kernel-userland interface here is
-cut pretty low in the stack leaving most of arbitration and management
-logic in the userland, which seems to be what people wanted and that's
-fine, but then you're trying to implement an intelligent resource
-control layer which straddles across kernel and userland with those
-low level primitives which inevitably would increase the required
-interface surface as nobody has enough information.
+That comfortably covers all the various kinds of hardware we support
+in a reasonable fashion.
 
-Just to illustrate the point, please think of the alsa interface.  We
-expose hardware capabilities pretty much as-is leaving management and
-multiplexing to userland and there's nothing wrong with it.  It fits
-better that way; however, we don't then go try to implement cgroup
-controller for PCM channels.  To do any high-level resource
-management, you gotta do it where the said resource is actually
-managed and arbitrated.
+Unless there really is a reason why we need to constrain exactly
+and precisely PD/QP/MR/AH (I can't think of one off hand)
 
-What's the allocation frequency you're expecting?  It might be better
-to just let allocations themselves go through the agent that you're
-planning.  You sure can use cgroup membership to identify who's asking
-tho.  Given how the whole thing is architectured, I'd suggest thinking
-more about how the whole thing should turn out eventually.
+The 'RDMA hardware resource pool' is a vendor-driver-device specific
+thing, with no generic definition beyond something that doesn't fit in
+the other limit.
 
-Thanks.
-
--- 
-tejun
+Jason
