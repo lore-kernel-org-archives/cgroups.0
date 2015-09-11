@@ -1,58 +1,115 @@
-From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 0/7] devcg: device cgroup extension for rdma resource
-Date: Fri, 11 Sep 2015 22:17:42 +0530
-Message-ID: <CAG53R5X5o8hJX1VJ00j5Bxuaps3FGCPNss4ey-07Dq+XP8xoBg@mail.gmail.com>
-References: <1441658303-18081-1-git-send-email-pandit.parav@gmail.com>
-	<20150908152340.GA13749@mtj.duckdns.org>
-	<CAG53R5VnYJ9+VEKtbnFO1HntSp=O=ZGiknucbQ-QLuEk_UP44w@mail.gmail.com>
-	<20150910164946.GH8114@mtj.duckdns.org>
-	<CAG53R5XyfQxrA+FUKFaZi7ZBhSz-SW6eGkGUZpdo6hUTBkAO-g@mail.gmail.com>
-	<20150910202210.GL8114@mtj.duckdns.org>
-	<CAG53R5WtuPA=J_GYPzNTAKbjB1r0K90qhXEDxLNf7vxYyxgrKA@mail.gmail.com>
-	<20150911040413.GA18850@htj.duckdns.org>
-	<55F25781.20308@redhat.com>
-	<20150911145213.GQ8114@mtj.duckdns.org>
-Mime-Version: 1.0
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 1/5] cpuset: migrate memory only for threadgroup leaders
+Date: Fri, 11 Sep 2015 15:00:18 -0400
+Message-ID: <1441998022-12953-2-git-send-email-tj@kernel.org>
+References: <1441998022-12953-1-git-send-email-tj@kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=6srOrQ3g34cPvinJmQ10jfiVtHR9M3HN1FuQYvq3FeY=;
-        b=yCpDP5yIClY3Vx8kwU0lEl8EE2qInpscll3wp4R88iWIyb1rilJpTHxXK5Qy4h13Vs
-         +P5ZCtDvrMgJXp3QF8GX8rMsS9qn/QyLa5K+v148Fv8oMXZYhiGZRXBSwYdGI1e7Xuao
-         V+xpj3Le+e0gu3xShwjloXJM2PEu2M6IUVz+MYPJi/2RwFnby/FdRviIlDeaOJBrppLe
-         8R35Sub2YdZL2rG9POM+F+1oTUX6xVoE1nJl4wyEaIztNQC+n9fwum41rWHi40E+5nHT
-         xy5pMIIPPDtgAljItjbtTCX7OD/qKtQydJAdURJUZLZLdCvCy8DONTRpsrW74F92AUTK
-         Fivg==
-In-Reply-To: <20150911145213.GQ8114-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=dlhOC0Hy577+u3ptZJGPDwmEAcjEWCuK8Ua8vt0QHNw=;
+        b=W9YJEMh3dqQMOu7R2kDq+NIfJbYYWElzReA9uuBZWS3+nd4vKdbkEkhORFDV7QGhLx
+         JkGInhaRyqjQdgU6L7JSEgNfBHho3kNVbTaEcpdhBTyigSwZOAyqQTdQIWavYsEuA89n
+         wYjqRTF1j4Q8BFk6qOZGYNCbeAY0tE3pYDgnUlAKYMNTU9EzdTh/bnQPMuJHZWEmCUg0
+         dtfBUs8oU4mjI9/+Yr7k+lkI0rQli0XUiWMY/VcLH3CzRlBsXdQiyHR4BL3u2qgllzhY
+         SD7iDM9EEEuGsZD62Zf8T3fYJPmGNC5nheeAsgCBsjtA4I8YxnQd5nDDadRj05c99P0I
+         iaig==
+In-Reply-To: <1441998022-12953-1-git-send-email-tj@kernel.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: lizefan@huawei.com
+Cc: cgroups@vger.kernel.org, hannes@cmpxchg.org, mhocko@suse.cz, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-> cpuset is a special case but think of cpu, memory or io controllers.
-> Their resource distribution schemes are a lot more developed than
-> what's proposed in this patchset and that's a necessity because nobody
-> wants to cripple their machines for resource control.
+If memory_migrate flag is set, cpuset migrates memory according to the
+destnation css's nodemask.  The current implementation migrates memory
+whenever any thread of a process is migrated making the behavior
+somewhat arbitrary.  Let's tie memory operations to the threadgroup
+leader so that memory is migrated only when the leader is migrated.
 
-IO controller and applications are mature in nature.
-When IO controller throttles the IO, applications are pretty mature
-where if IO takes longer to complete, there is possibly almost no way
-to cancel the system call or rather application might not want to
-cancel the IO at least the non asynchronous one.
-So application just notice lower performance than throttled way.
-Its really not possible at RDMA level with RDMA resource to hold up
-resource creation call for longer time, because reusing existing
-resource with failed status can likely to give better performance.
-As Doug explained in his example, many RDMA resources as its been used
-by applications are relatively long lived. So holding ups resource
-creation while its taken by other process will certainly will look bad
-on application performance front compare to returning failure and
-reusing existing one once its available or once new one is available.
+While this is a behavior change, given the inherent fuziness, this
+change is not too likely to be noticed and allows us to clearly define
+who owns the memory (always the leader) and helps the planned atomic
+multi-process migration.
+
+Note that we're currently migrating memory in migration path proper
+while holding all the locks.  In the long term, this should be moved
+out to an async work item.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Acked-by: Zefan Li <lizefan@huawei.com>
+---
+ kernel/cpuset.c | 40 ++++++++++++++++++++++------------------
+ 1 file changed, 22 insertions(+), 18 deletions(-)
+
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index f0acff0..09393f6 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -1484,7 +1484,6 @@ static void cpuset_attach(struct cgroup_subsys_state *css,
+ {
+ 	/* static buf protected by cpuset_mutex */
+ 	static nodemask_t cpuset_attach_nodemask_to;
+-	struct mm_struct *mm;
+ 	struct task_struct *task;
+ 	struct task_struct *leader = cgroup_taskset_first(tset);
+ 	struct cpuset *cs = css_cs(css);
+@@ -1512,26 +1511,31 @@ static void cpuset_attach(struct cgroup_subsys_state *css,
+ 	}
+ 
+ 	/*
+-	 * Change mm, possibly for multiple threads in a threadgroup. This is
+-	 * expensive and may sleep.
++	 * Change mm, possibly for multiple threads in a threadgroup. This
++	 * is expensive and may sleep and should be moved outside migration
++	 * path proper.
+ 	 */
+ 	cpuset_attach_nodemask_to = cs->effective_mems;
+-	mm = get_task_mm(leader);
+-	if (mm) {
+-		mpol_rebind_mm(mm, &cpuset_attach_nodemask_to);
+-
+-		/*
+-		 * old_mems_allowed is the same with mems_allowed here, except
+-		 * if this task is being moved automatically due to hotplug.
+-		 * In that case @mems_allowed has been updated and is empty,
+-		 * so @old_mems_allowed is the right nodesets that we migrate
+-		 * mm from.
+-		 */
+-		if (is_memory_migrate(cs)) {
+-			cpuset_migrate_mm(mm, &oldcs->old_mems_allowed,
+-					  &cpuset_attach_nodemask_to);
++	if (thread_group_leader(leader)) {
++		struct mm_struct *mm = get_task_mm(leader);
++
++		if (mm) {
++			mpol_rebind_mm(mm, &cpuset_attach_nodemask_to);
++
++			/*
++			 * old_mems_allowed is the same with mems_allowed
++			 * here, except if this task is being moved
++			 * automatically due to hotplug.  In that case
++			 * @mems_allowed has been updated and is empty, so
++			 * @old_mems_allowed is the right nodesets that we
++			 * migrate mm from.
++			 */
++			if (is_memory_migrate(cs)) {
++				cpuset_migrate_mm(mm, &oldcs->old_mems_allowed,
++						  &cpuset_attach_nodemask_to);
++			}
++			mmput(mm);
+ 		}
+-		mmput(mm);
+ 	}
+ 
+ 	cs->old_mems_allowed = cpuset_attach_nodemask_to;
+-- 
+2.4.3
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
