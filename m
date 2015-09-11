@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/5] cgroup, memcg, cpuset: implement cgroup_taskset_for_each_leader()
-Date: Fri, 11 Sep 2015 15:00:19 -0400
-Message-ID: <1441998022-12953-3-git-send-email-tj@kernel.org>
+Subject: [PATCH 5/5] cgroup: make cgroup_update_dfl_csses() migrate all target processes atomically
+Date: Fri, 11 Sep 2015 15:00:22 -0400
+Message-ID: <1441998022-12953-6-git-send-email-tj@kernel.org>
 References: <1441998022-12953-1-git-send-email-tj@kernel.org>
 Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=N9tDbo4t3a36c+1AGO3gTOqySWOJMP42QlAIxHnh05E=;
-        b=t092NvoSB1zjgjV16YsGlDrYN10InwoLMSYraUiy4VUI3aKwZzwxvQcX231mYjGkhX
-         LuGMsPNVzf9GRW12vITUydDFjIxvy3OcozNC+Avg14k98N/+HdRqk23hUpeCt5QDkw3D
-         3k/h5Gd4mcBe2iK9ryRQoDxErggdZFUoByj38j2S5JtzcwaAh44RIWKCGO1VaHVl4Ok1
-         kXW+8T6iIqSbgMMAIKinrJLLnDrb8Qng9Eqk0V9ftRD8OwMILoP3E4xHZ6w+Qqev6ouO
-         HmCPlRZqtkf3wJnAnFM47Rgr0l3YQPvKmmteOJMNVIxSOXKyP0Qhi/4fcUk2UcfFYnQF
-         LsSA==
+        bh=fRCKgeefb8Vz8gxNXsjgcEF7QNWnlqt9rt7HxG36vTw=;
+        b=eNANdpxyq9Zri/HyGlA86jfanh40ld1h/PD5N6ZUebHOOpXZayCnE5Nusgrwz9h8bO
+         RTlzkQ2f9Ib4D5cUP/RRmAkSe1ZA3u1hwPhfadBiafAoS74TeRYgEGmn8em4Ug3+td6S
+         wF2F1MEQEicDLAVO19rAqWSgb3Rw/7K+1VYgDWcMC1xOBEXz43jt4t1TUfM+dPqNmBYG
+         WxHo0YXbXnpFL0OX2uuPijQ4Ohdtgdq/r0HpkfEofCgnPbWcgJw9Qp8vD74us+vwJ/a0
+         bUpVn9RH3RDJcHzHJ7EJpkZxlJ0wi21EKLINV6KEf3P1jkfs9OCYmpsQef5pmBkqn2u4
+         117A==
 In-Reply-To: <1441998022-12953-1-git-send-email-tj@kernel.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,165 +23,104 @@ Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com
 Cc: cgroups@vger.kernel.org, hannes@cmpxchg.org, mhocko@suse.cz, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-It wasn't explicitly documented but, when a process is being migrated,
-cpuset and memcg depend on cgroup_taskset_first() returning the
-threadgroup leader; however, this approach is somewhat ghetto and
-would no longer work for the planned multi-process migration.
+cgroup_update_dfl_csses() is responsible for migrating processes when
+controllers are enabled or disabled on the default hierarchy.  As the
+css association changes for all the processes in the affected cgroups,
+this involves migrating multiple processes.
 
-This patch introduces explicit cgroup_taskset_for_each_leader() which
-iterates over only the threadgroup leaders and replaces
-cgroup_taskset_first() usages for accessing the leader with it.
+Up until now, it was implemented by migrating process-by-process until
+the source css_sets are empty; however, this means that if a process
+fails to migrate after some succeed before it, the recovery is very
+tricky.  This was considered okay as subsystems weren't allowed to
+reject process migration on the default hierarchy; unfortunately,
+enforcing this policy turned out to be problematic for certain types
+of resources - realtime slices for now.
 
-This prepares both memcg and cpuset for multi-process migration.  This
-patch also updates the documentation for cgroup_taskset_for_each() to
-clarify the iteration rules and removes comments mentioning task
-ordering in tasksets.
-
-v2: A previous patch which added threadgroup leader test was dropped.
-    Patch updated accordingly.
+As such, the default hierarchy is gonna allow restricted failures
+during migration and to support that this patch makes
+cgroup_update_dfl_csses() migrate all target processes atomically
+rather than one-by-one.  The preceding patches made subsystems ready
+for multi-process migration and factored out taskset operations making
+this almost trivial.  All tasks of the target processes are put in the
+same taskset and the migration operations are performed once which
+either fails or succeeds for all.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Acked-by: Zefan Li <lizefan@huawei.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@suse.cz>
 ---
- include/linux/cgroup.h | 22 ++++++++++++++++++++++
- kernel/cgroup.c        | 11 -----------
- kernel/cpuset.c        |  9 ++++-----
- mm/memcontrol.c        | 17 +++++++++++++++--
- 4 files changed, 41 insertions(+), 18 deletions(-)
+ kernel/cgroup.c | 44 ++++++++------------------------------------
+ 1 file changed, 8 insertions(+), 36 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index eb7ca55..916a1e0 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -211,11 +211,33 @@ void css_task_iter_end(struct css_task_iter *it);
-  * cgroup_taskset_for_each - iterate cgroup_taskset
-  * @task: the loop cursor
-  * @tset: taskset to iterate
-+ *
-+ * @tset may contain multiple tasks and they may belong to multiple
-+ * processes.  When there are multiple tasks in @tset, if a task of a
-+ * process is in @tset, all tasks of the process are in @tset.  Also, all
-+ * are guaranteed to share the same source and destination csses.
-+ *
-+ * Iteration is not in any specific order.
-  */
- #define cgroup_taskset_for_each(task, tset)				\
- 	for ((task) = cgroup_taskset_first((tset)); (task);		\
- 	     (task) = cgroup_taskset_next((tset)))
- 
-+/**
-+ * cgroup_taskset_for_each_leader - iterate group leaders in a cgroup_taskset
-+ * @leader: the loop cursor
-+ * @tset: takset to iterate
-+ *
-+ * Iterate threadgroup leaders of @tset.  For single-task migrations, @tset
-+ * may not contain any.
-+ */
-+#define cgroup_taskset_for_each_leader(leader, tset)			\
-+	for ((leader) = cgroup_taskset_first((tset)); (leader);		\
-+	     (leader) = cgroup_taskset_next((tset)))			\
-+		if ((leader) != (leader)->group_leader)			\
-+			;						\
-+		else
-+
- /*
-  * Inline functions.
-  */
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 2cf0f79..0b732dd 100644
+index fa63b92..cb07a2c 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -2083,13 +2083,6 @@ static void cgroup_task_migrate(struct cgroup *old_cgrp,
+@@ -2665,6 +2665,7 @@ static int cgroup_subtree_control_show(struct seq_file *seq, void *v)
+ static int cgroup_update_dfl_csses(struct cgroup *cgrp)
+ {
+ 	LIST_HEAD(preloaded_csets);
++	struct cgroup_taskset tset = CGROUP_TASKSET_INIT(tset);
+ 	struct cgroup_subsys_state *css;
+ 	struct css_set *src_cset;
+ 	int ret;
+@@ -2693,50 +2694,21 @@ static int cgroup_update_dfl_csses(struct cgroup *cgrp)
+ 	if (ret)
+ 		goto out_finish;
  
- 	get_css_set(new_cset);
- 	rcu_assign_pointer(tsk->cgroups, new_cset);
--
--	/*
--	 * Use move_tail so that cgroup_taskset_first() still returns the
--	 * leader after migration.  This works because cgroup_migrate()
--	 * ensures that the dst_cset of the leader is the first on the
--	 * tset's dst_csets list.
--	 */
- 	list_move_tail(&tsk->cg_list, &new_cset->mg_tasks);
++	down_write(&css_set_rwsem);
+ 	list_for_each_entry(src_cset, &preloaded_csets, mg_preload_node) {
+-		struct task_struct *last_task = NULL, *task;
++		struct task_struct *task, *ntask;
  
- 	/*
-@@ -2285,10 +2278,6 @@ static int cgroup_migrate(struct cgroup *cgrp, struct task_struct *leader,
- 		if (!cset->mg_src_cgrp)
- 			goto next;
+ 		/* src_csets precede dst_csets, break on the first dst_cset */
+ 		if (!src_cset->mg_src_cgrp)
+ 			break;
  
 -		/*
--		 * cgroup_taskset_first() must always return the leader.
--		 * Take care to avoid disturbing the ordering.
+-		 * All tasks in src_cset need to be migrated to the
+-		 * matching dst_cset.  Empty it process by process.  We
+-		 * walk tasks but migrate processes.  The leader might even
+-		 * belong to a different cset but such src_cset would also
+-		 * be among the target src_csets because the default
+-		 * hierarchy enforces per-process membership.
 -		 */
- 		list_move_tail(&task->cg_list, &cset->mg_tasks);
- 		if (list_empty(&cset->mg_node))
- 			list_add_tail(&cset->mg_node, &tset.src_csets);
-diff --git a/kernel/cpuset.c b/kernel/cpuset.c
-index 09393f6..e7afde6 100644
---- a/kernel/cpuset.c
-+++ b/kernel/cpuset.c
-@@ -1485,7 +1485,7 @@ static void cpuset_attach(struct cgroup_subsys_state *css,
- 	/* static buf protected by cpuset_mutex */
- 	static nodemask_t cpuset_attach_nodemask_to;
- 	struct task_struct *task;
--	struct task_struct *leader = cgroup_taskset_first(tset);
-+	struct task_struct *leader;
- 	struct cpuset *cs = css_cs(css);
- 	struct cpuset *oldcs = cpuset_attach_old_cs;
- 
-@@ -1511,12 +1511,11 @@ static void cpuset_attach(struct cgroup_subsys_state *css,
+-		while (true) {
+-			down_read(&css_set_rwsem);
+-			task = list_first_entry_or_null(&src_cset->tasks,
+-						struct task_struct, cg_list);
+-			if (task) {
+-				task = task->group_leader;
+-				WARN_ON_ONCE(!task_css_set(task)->mg_src_cgrp);
+-				get_task_struct(task);
+-			}
+-			up_read(&css_set_rwsem);
+-
+-			if (!task)
+-				break;
+-
+-			/* guard against possible infinite loop */
+-			if (WARN(last_task == task,
+-				 "cgroup: update_dfl_csses failed to make progress, aborting in inconsistent state\n"))
+-				goto out_finish;
+-			last_task = task;
+-
+-			ret = cgroup_migrate(task, true, src_cset->dfl_cgrp);
+-
+-			put_task_struct(task);
+-
+-			if (WARN(ret, "cgroup: failed to update controllers for the default hierarchy (%d), further operations may crash or hang\n", ret))
+-				goto out_finish;
+-		}
++		/* all tasks in src_csets need to be migrated */
++		list_for_each_entry_safe(task, ntask, &src_cset->tasks, cg_list)
++			cgroup_taskset_add(task, &tset);
  	}
++	up_write(&css_set_rwsem);
  
- 	/*
--	 * Change mm, possibly for multiple threads in a threadgroup. This
--	 * is expensive and may sleep and should be moved outside migration
--	 * path proper.
-+	 * Change mm for all threadgroup leaders. This is expensive and may
-+	 * sleep and should be moved outside migration path proper.
- 	 */
- 	cpuset_attach_nodemask_to = cs->effective_mems;
--	if (thread_group_leader(leader)) {
-+	cgroup_taskset_for_each_leader(leader, tset) {
- 		struct mm_struct *mm = get_task_mm(leader);
- 
- 		if (mm) {
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 6ddaeba..32b6bfd 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4829,7 +4829,7 @@ static int mem_cgroup_can_attach(struct cgroup_subsys_state *css,
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
- 	struct mem_cgroup *from;
--	struct task_struct *p;
-+	struct task_struct *leader, *p;
- 	struct mm_struct *mm;
- 	unsigned long move_flags;
- 	int ret = 0;
-@@ -4843,7 +4843,20 @@ static int mem_cgroup_can_attach(struct cgroup_subsys_state *css,
- 	if (!move_flags)
- 		return 0;
- 
--	p = cgroup_taskset_first(tset);
-+	/*
-+	 * Multi-process migrations only happen on the default hierarchy
-+	 * where charge immigration is not used.  Perform charge
-+	 * immigration if @tset contains a leader and whine if there are
-+	 * multiple.
-+	 */
-+	p = NULL;
-+	cgroup_taskset_for_each_leader(leader, tset) {
-+		WARN_ON_ONCE(p);
-+		p = leader;
-+	}
-+	if (!p)
-+		return 0;
-+
- 	from = mem_cgroup_from_task(p);
- 
- 	VM_BUG_ON(from == memcg);
++	ret = cgroup_taskset_migrate(&tset, cgrp);
+ out_finish:
+ 	cgroup_migrate_finish(&preloaded_csets);
+ 	percpu_up_write(&cgroup_threadgroup_rwsem);
 -- 
 2.4.3
 
