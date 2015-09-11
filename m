@@ -1,301 +1,66 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 4/5] cgroup: separate out taskset operations from cgroup_migrate()
-Date: Fri, 11 Sep 2015 15:00:21 -0400
-Message-ID: <1441998022-12953-5-git-send-email-tj@kernel.org>
-References: <1441998022-12953-1-git-send-email-tj@kernel.org>
-Return-path: <owner-linux-mm@kvack.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 0/7] devcg: device cgroup extension for rdma resource
+Date: Fri, 11 Sep 2015 15:05:34 -0400
+Message-ID: <20150911190534.GT8114@mtj.duckdns.org>
+References: <20150908152340.GA13749@mtj.duckdns.org>
+ <CAG53R5VnYJ9+VEKtbnFO1HntSp=O=ZGiknucbQ-QLuEk_UP44w@mail.gmail.com>
+ <20150910164946.GH8114@mtj.duckdns.org>
+ <CAG53R5XyfQxrA+FUKFaZi7ZBhSz-SW6eGkGUZpdo6hUTBkAO-g@mail.gmail.com>
+ <20150910202210.GL8114@mtj.duckdns.org>
+ <CAG53R5WtuPA=J_GYPzNTAKbjB1r0K90qhXEDxLNf7vxYyxgrKA@mail.gmail.com>
+ <20150911040413.GA18850@htj.duckdns.org>
+ <55F25781.20308@redhat.com>
+ <20150911145213.GQ8114@mtj.duckdns.org>
+ <CAG53R5X5o8hJX1VJ00j5Bxuaps3FGCPNss4ey-07Dq+XP8xoBg@mail.gmail.com>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Ixfyry+ZiHSvFMYGiDkURT6UX+5WjxXRNc5qwgwPP+w=;
-        b=Psz95xo3kOyUFcS6NJ3y1m37P6jSARdzCKdy5EKlcgfEzh9959KnePK/Z1ASB3y0rM
-         kt4cTTK160+hzQTKu2Te09bH1xSM1gYf9pECA1rswBHoad68HQYjcg9+SIVaWFAWE+ug
-         Hyj0DrnIXzqY3pEzg1W9LNWldKs9hKK+suTIjCDn5pXBSedOb5SBxjJUrd9ppNTsZhjf
-         F5iCsBoy+Wpxul4y3aoT8bHnVAFdar7gdGIDelSrphVcf03+hSgFWh0UGvz2pXys30fH
-         ngjGeNZr7r1JJxwy8hDWVoJirGZs14MqSCQyzMqIex1yqRTOJwuasx14nCj2we85R1ZX
-         t0XA==
-In-Reply-To: <1441998022-12953-1-git-send-email-tj@kernel.org>
-Sender: owner-linux-mm@kvack.org
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=Zin/vS1cfseuKV8Y5yGC3eLzNmdFb1pEvwhwAKbf2O8=;
+        b=vR3NhwZis/gr3RqfzKcCml16NHtop+o8Xh8I7/IuGiP/hnJ74gHGn55z1ZvgkwB3VI
+         ypKggAadaFgpwIt9w6FDq1yamBKnjiECyTCzpRLeMkrxQgnsv2IVcv9s0nKZ1MAPm06e
+         GjGDAThv+V0rllLjDC8FrhcW54gqRl0odwTQ1vU362/I64vqqsC6fn4inEEkXAuRUdDs
+         xiBBdZsEknpkGg4/07emY7dcATBqzJMf/h3QlhBnvWOzCfdub0nou2PpZQnLSDja+6I4
+         5btP+ZHI3q8m/5X1zTmXH8FaoAWcI4n2TExXiNQMeBDBLNfzjbxlY/0ZVQQidH3RyPRA
+         2xxg==
+Content-Disposition: inline
+In-Reply-To: <CAG53R5X5o8hJX1VJ00j5Bxuaps3FGCPNss4ey-07Dq+XP8xoBg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com
-Cc: cgroups@vger.kernel.org, hannes@cmpxchg.org, mhocko@suse.cz, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
+To: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Currently, cgroup_migreate() implements large part of the migration
-logic inline including building the target taskset and actually
-migrating them.  This patch separates out the following taskset
-operations.
+Hello, Parav.
 
- CGROUP_TASKSET_INIT()		: taskset initializer
- cgroup_taskset_add()		: add a task to a taskset
- cgroup_taskset_migrate()	: migrate a taskset to the destination cgroup
+On Fri, Sep 11, 2015 at 10:17:42PM +0530, Parav Pandit wrote:
+> IO controller and applications are mature in nature.
+> When IO controller throttles the IO, applications are pretty mature
+> where if IO takes longer to complete, there is possibly almost no way
+> to cancel the system call or rather application might not want to
+> cancel the IO at least the non asynchronous one.
 
-This will be used to implement atomic multi-process migration in
-cgroup_update_dfl_csses().  This is pure reorganization which doesn't
-introduce any functional changes.
+I was more talking about the fact that they allow resources to be
+consumed when they aren't contended.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Acked-by: Zefan Li <lizefan@huawei.com>
----
- kernel/cgroup.c | 211 +++++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 125 insertions(+), 86 deletions(-)
+> So application just notice lower performance than throttled way.
+> Its really not possible at RDMA level with RDMA resource to hold up
+> resource creation call for longer time, because reusing existing
+> resource with failed status can likely to give better performance.
+> As Doug explained in his example, many RDMA resources as its been used
+> by applications are relatively long lived. So holding ups resource
+> creation while its taken by other process will certainly will look bad
+> on application performance front compare to returning failure and
+> reusing existing one once its available or once new one is available.
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 1f0c189..fa63b92 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -2010,6 +2010,49 @@ struct cgroup_taskset {
- 	struct task_struct	*cur_task;
- };
- 
-+#define CGROUP_TASKSET_INIT(tset)	(struct cgroup_taskset){	\
-+	.src_csets		= LIST_HEAD_INIT(tset.src_csets),	\
-+	.dst_csets		= LIST_HEAD_INIT(tset.dst_csets),	\
-+	.csets			= &tset.src_csets,			\
-+}
-+
-+/**
-+ * cgroup_taskset_add - try to add a migration target task to a taskset
-+ * @task: target task
-+ * @tset: target taskset
-+ *
-+ * Add @task, which is a migration target, to @tset.  This function becomes
-+ * noop if @task doesn't need to be migrated.  @task's css_set should have
-+ * been added as a migration source and @task->cg_list will be moved from
-+ * the css_set's tasks list to mg_tasks one.
-+ */
-+static void cgroup_taskset_add(struct task_struct *task,
-+			       struct cgroup_taskset *tset)
-+{
-+	struct css_set *cset;
-+
-+	lockdep_assert_held(&css_set_rwsem);
-+
-+	/* @task either already exited or can't exit until the end */
-+	if (task->flags & PF_EXITING)
-+		return;
-+
-+	/* leave @task alone if post_fork() hasn't linked it yet */
-+	if (list_empty(&task->cg_list))
-+		return;
-+
-+	cset = task_css_set(task);
-+	if (!cset->mg_src_cgrp)
-+		return;
-+
-+	list_move_tail(&task->cg_list, &cset->mg_tasks);
-+	if (list_empty(&cset->mg_node))
-+		list_add_tail(&cset->mg_node, &tset->src_csets);
-+	if (list_empty(&cset->mg_dst_cset->mg_node))
-+		list_move_tail(&cset->mg_dst_cset->mg_node,
-+			       &tset->dst_csets);
-+}
-+
- /**
-  * cgroup_taskset_first - reset taskset and return the first task
-  * @tset: taskset of interest
-@@ -2094,6 +2137,84 @@ static void cgroup_task_migrate(struct cgroup *old_cgrp,
- }
- 
- /**
-+ * cgroup_taskset_migrate - migrate a taskset to a cgroup
-+ * @tset: taget taskset
-+ * @dst_cgrp: destination cgroup
-+ *
-+ * Migrate tasks in @tset to @dst_cgrp.  This function fails iff one of the
-+ * ->can_attach callbacks fails and guarantees that either all or none of
-+ * the tasks in @tset are migrated.  @tset is consumed regardless of
-+ * success.
-+ */
-+static int cgroup_taskset_migrate(struct cgroup_taskset *tset,
-+				  struct cgroup *dst_cgrp)
-+{
-+	struct cgroup_subsys_state *css, *failed_css = NULL;
-+	struct task_struct *task, *tmp_task;
-+	struct css_set *cset, *tmp_cset;
-+	int i, ret;
-+
-+	/* methods shouldn't be called if no task is actually migrating */
-+	if (list_empty(&tset->src_csets))
-+		return 0;
-+
-+	/* check that we can legitimately attach to the cgroup */
-+	for_each_e_css(css, i, dst_cgrp) {
-+		if (css->ss->can_attach) {
-+			ret = css->ss->can_attach(css, tset);
-+			if (ret) {
-+				failed_css = css;
-+				goto out_cancel_attach;
-+			}
-+		}
-+	}
-+
-+	/*
-+	 * Now that we're guaranteed success, proceed to move all tasks to
-+	 * the new cgroup.  There are no failure cases after here, so this
-+	 * is the commit point.
-+	 */
-+	down_write(&css_set_rwsem);
-+	list_for_each_entry(cset, &tset->src_csets, mg_node) {
-+		list_for_each_entry_safe(task, tmp_task, &cset->mg_tasks, cg_list)
-+			cgroup_task_migrate(cset->mg_src_cgrp, task,
-+					    cset->mg_dst_cset);
-+	}
-+	up_write(&css_set_rwsem);
-+
-+	/*
-+	 * Migration is committed, all target tasks are now on dst_csets.
-+	 * Nothing is sensitive to fork() after this point.  Notify
-+	 * controllers that migration is complete.
-+	 */
-+	tset->csets = &tset->dst_csets;
-+
-+	for_each_e_css(css, i, dst_cgrp)
-+		if (css->ss->attach)
-+			css->ss->attach(css, tset);
-+
-+	ret = 0;
-+	goto out_release_tset;
-+
-+out_cancel_attach:
-+	for_each_e_css(css, i, dst_cgrp) {
-+		if (css == failed_css)
-+			break;
-+		if (css->ss->cancel_attach)
-+			css->ss->cancel_attach(css, tset);
-+	}
-+out_release_tset:
-+	down_write(&css_set_rwsem);
-+	list_splice_init(&tset->dst_csets, &tset->src_csets);
-+	list_for_each_entry_safe(cset, tmp_cset, &tset->src_csets, mg_node) {
-+		list_splice_tail_init(&cset->mg_tasks, &cset->tasks);
-+		list_del_init(&cset->mg_node);
-+	}
-+	up_write(&css_set_rwsem);
-+	return ret;
-+}
-+
-+/**
-  * cgroup_migrate_finish - cleanup after attach
-  * @preloaded_csets: list of preloaded css_sets
-  *
-@@ -2247,15 +2368,8 @@ static int cgroup_migrate_prepare_dst(struct cgroup *dst_cgrp,
- static int cgroup_migrate(struct task_struct *leader, bool threadgroup,
- 			  struct cgroup *cgrp)
- {
--	struct cgroup_taskset tset = {
--		.src_csets	= LIST_HEAD_INIT(tset.src_csets),
--		.dst_csets	= LIST_HEAD_INIT(tset.dst_csets),
--		.csets		= &tset.src_csets,
--	};
--	struct cgroup_subsys_state *css, *failed_css = NULL;
--	struct css_set *cset, *tmp_cset;
--	struct task_struct *task, *tmp_task;
--	int i, ret;
-+	struct cgroup_taskset tset = CGROUP_TASKSET_INIT(tset);
-+	struct task_struct *task;
- 
- 	/*
- 	 * Prevent freeing of tasks while we take a snapshot. Tasks that are
-@@ -2266,89 +2380,14 @@ static int cgroup_migrate(struct task_struct *leader, bool threadgroup,
- 	rcu_read_lock();
- 	task = leader;
- 	do {
--		/* @task either already exited or can't exit until the end */
--		if (task->flags & PF_EXITING)
--			goto next;
--
--		/* leave @task alone if post_fork() hasn't linked it yet */
--		if (list_empty(&task->cg_list))
--			goto next;
--
--		cset = task_css_set(task);
--		if (!cset->mg_src_cgrp)
--			goto next;
--
--		list_move_tail(&task->cg_list, &cset->mg_tasks);
--		if (list_empty(&cset->mg_node))
--			list_add_tail(&cset->mg_node, &tset.src_csets);
--		if (list_empty(&cset->mg_dst_cset->mg_node))
--			list_move_tail(&cset->mg_dst_cset->mg_node,
--				       &tset.dst_csets);
--	next:
-+		cgroup_taskset_add(task, &tset);
- 		if (!threadgroup)
- 			break;
- 	} while_each_thread(leader, task);
- 	rcu_read_unlock();
- 	up_write(&css_set_rwsem);
- 
--	/* methods shouldn't be called if no task is actually migrating */
--	if (list_empty(&tset.src_csets))
--		return 0;
--
--	/* check that we can legitimately attach to the cgroup */
--	for_each_e_css(css, i, cgrp) {
--		if (css->ss->can_attach) {
--			ret = css->ss->can_attach(css, &tset);
--			if (ret) {
--				failed_css = css;
--				goto out_cancel_attach;
--			}
--		}
--	}
--
--	/*
--	 * Now that we're guaranteed success, proceed to move all tasks to
--	 * the new cgroup.  There are no failure cases after here, so this
--	 * is the commit point.
--	 */
--	down_write(&css_set_rwsem);
--	list_for_each_entry(cset, &tset.src_csets, mg_node) {
--		list_for_each_entry_safe(task, tmp_task, &cset->mg_tasks, cg_list)
--			cgroup_task_migrate(cset->mg_src_cgrp, task,
--					    cset->mg_dst_cset);
--	}
--	up_write(&css_set_rwsem);
--
--	/*
--	 * Migration is committed, all target tasks are now on dst_csets.
--	 * Nothing is sensitive to fork() after this point.  Notify
--	 * controllers that migration is complete.
--	 */
--	tset.csets = &tset.dst_csets;
--
--	for_each_e_css(css, i, cgrp)
--		if (css->ss->attach)
--			css->ss->attach(css, &tset);
--
--	ret = 0;
--	goto out_release_tset;
--
--out_cancel_attach:
--	for_each_e_css(css, i, cgrp) {
--		if (css == failed_css)
--			break;
--		if (css->ss->cancel_attach)
--			css->ss->cancel_attach(css, &tset);
--	}
--out_release_tset:
--	down_write(&css_set_rwsem);
--	list_splice_init(&tset.dst_csets, &tset.src_csets);
--	list_for_each_entry_safe(cset, tmp_cset, &tset.src_csets, mg_node) {
--		list_splice_tail_init(&cset->mg_tasks, &cset->tasks);
--		list_del_init(&cset->mg_node);
--	}
--	up_write(&css_set_rwsem);
--	return ret;
-+	return cgroup_taskset_migrate(&tset, cgrp);
- }
- 
- /**
+I'm not really sold on the idea that this can be used to implement
+performance based resource distribution.  I'll write more about that
+on the other subthread.
+
+Thanks.
+
 -- 
-2.4.3
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+tejun
