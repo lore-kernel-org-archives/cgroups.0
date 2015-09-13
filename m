@@ -1,122 +1,209 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 1/3] memcg: collect kmem bypass conditions into
- __memcg_kmem_bypass()
-Date: Sun, 13 Sep 2015 16:14:16 -0400
-Message-ID: <20150913201416.GC25369@htj.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 2/3] memcg: ratify and consolidate over-charge handling
+Date: Sun, 13 Sep 2015 16:14:42 -0400
+Message-ID: <20150913201442.GD25369@htj.duckdns.org>
+References: <20150913201416.GC25369@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-         :content-disposition:user-agent;
-        bh=7XzzX1G+JGh4afzndGvSVQ8dz4Q8Ix68I/tqonQ+Yrk=;
-        b=Xo3fpmJAglKKHZmf3cmifHHVYjfayQYQEqYMr21K7PvuOimdXS5XozhimvyXFVoUe/
-         2vG2dZ8pexuB8837ll2Rn74A3g2qPFQDXfJqbz6y0Og0abz4FxrwkBhGW1JBJn35TQfB
-         qYebnsHoavk62JufB76WJpvmvZ3/prlCfEdxsc8qCl39/KIQhvJJmW1TEMw2L2vQkX8g
-         zjgfnfj2hP6QGXDEbQrAvJ78IJyxaZaJeFf+HU52bcuMkSlQ6eSM40W4Y7SUsV68zgfA
-         UsD7NCqv/woyDwpCbPjdJOYyaqoWWsG5/A/GIZSnhskmkWB+93kH5igZcFm0+55BXtUH
-         Srpw==
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=kfjwK2EffMRCAiYx9Qd3JxQ99V1NKP9cxw0qzVxFQWY=;
+        b=mQ4IBngldl1fwUIcMnh1jvfgksQucPVr+xCKsAsDofO0NMp1H8ZbOfVhGTgGIcyy/3
+         qrTzZsenoEOKrfmo8KudFgm77Tc8f+2CGd6n/VZERkKpJIBsR8gDIGn1TbaYZjiMErsR
+         gKybqMVad44qIiT0FRUfssjnwPyruRI2rECa9yWg9J9U9XZyLEeCzWt1QMLoXYfQeGJK
+         UkFBxwKHf6hKla/VLm/L92GSoggXgD39Vu4ZzV4Di/rXcYN6evlf1mvJrz0cVOUVpm97
+         FRtVXbDy08YNmlRKJ9ZpVxod58glC4PcUT5QarLdyfq/rwzJZdznlfQMskcXh4iYqpDy
+         uoww==
 Content-Disposition: inline
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20150913201416.GC25369-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@kernel.org
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, vdavydov@parallels.com, kernel-team@fb.com
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-memcg_kmem_newpage_charge() and memcg_kmem_get_cache() are testing the
-same series of conditions to decide whether to bypass kmem accounting.
-Collect the tests into __memcg_kmem_bypass().
+try_charge() is the main charging logic of memcg.  When it hits the
+limit but either can't fail the allocation due to __GFP_NOFAIL or the
+task is likely to free memory very soon, being OOM killed, has SIGKILL
+pending or exiting, it "bypasses" the charge to the root memcg and
+returns -EINTR.  While this is one approach which can be taken for
+these situations, it has several issues.
 
-This is pure refactoring.
+* It unnecessarily lies about the reality.  The number itself doesn't
+  go over the limit but the actual usage does.  memcg is either forced
+  to or actively chooses to go over the limit because that is the
+  right behavior under the circumstances, which is completely fine,
+  but, if at all avoidable, it shouldn't be misrepresenting what's
+  happening by sneaking the charges into the root memcg.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
+* Despite trying, we already do over-charge.  kmemcg can't deal with
+  switching over to the root memcg by the point try_charge() returns
+  -EINTR, so it open-codes over-charing.
+
+* It complicates the callers.  Each try_charge() user has to handle
+  the weird -EINTR exception.  memcg_charge_kmem() does the manual
+  over-charging.  mem_cgroup_do_precharge() performs unnecessary
+  uncharging of root memcg, which BTW is inconsistent with what
+  memcg_charge_kmem() does.  mem_cgroup_try_charge() needs to switch
+  the returned cgroup to the root one.
+
+The reality is that in memcg there are cases where we are forced
+and/or willing to go over the limit.  Each such case needs to be
+scrutinized and justified but there definitely are situations where
+that is the right thing to do.  We alredy do this but with a
+superficial and inconsistent disguise which leads to unnecessary
+complications.
+
+This patch updates try_charge() so that it over-charges and returns 0
+when deemed necessary.  -EINTR return is removed along with all
+special case handling in the callers.
+
+While at it, remove the local variable @ret, which was initialized to
+zero and never changed, along with done: label which just returned the
+always zero @ret.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
-Hello,
+ mm/memcontrol.c |   69 ++++++++++++++++----------------------------------------
+ 1 file changed, 20 insertions(+), 49 deletions(-)
 
-These three patches are on top of mmotm as of Sep 13th and the two
-patches from the following thread.
-
- http://lkml.kernel.org/g/20150913185940.GA25369@htj.duckdns.org
-
-Thanks.
-
- include/linux/memcontrol.h |   46 +++++++++++++++++++++------------------------
- 1 file changed, 22 insertions(+), 24 deletions(-)
-
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -776,20 +776,7 @@ int memcg_charge_kmem(struct mem_cgroup
- 		      unsigned long nr_pages);
- void memcg_uncharge_kmem(struct mem_cgroup *memcg, unsigned long nr_pages);
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1999,13 +1999,12 @@ static int try_charge(struct mem_cgroup
+ 	unsigned long nr_reclaimed;
+ 	bool may_swap = true;
+ 	bool drained = false;
+-	int ret = 0;
  
--/**
-- * memcg_kmem_newpage_charge: verify if a new kmem allocation is allowed.
-- * @gfp: the gfp allocation flags.
-- * @memcg: a pointer to the memcg this was charged against.
-- * @order: allocation order.
-- *
-- * returns true if the memcg where the current task belongs can hold this
-- * allocation.
-- *
-- * We return true automatically if this allocation is not to be accounted to
-- * any memcg.
-- */
--static inline bool
--memcg_kmem_newpage_charge(gfp_t gfp, struct mem_cgroup **memcg, int order)
-+static inline bool __memcg_kmem_bypass(gfp_t gfp)
- {
- 	if (!memcg_kmem_enabled())
- 		return true;
-@@ -811,6 +798,26 @@ memcg_kmem_newpage_charge(gfp_t gfp, str
- 	if (unlikely(fatal_signal_pending(current)))
- 		return true;
+ 	if (mem_cgroup_is_root(memcg))
+-		goto done;
++		return 0;
+ retry:
+ 	if (consume_stock(memcg, nr_pages))
+-		goto done;
++		return 0;
  
-+	return false;
-+}
+ 	if (!do_swap_account ||
+ 	    !page_counter_try_charge(&memcg->memsw, batch, &counter)) {
+@@ -2033,7 +2032,7 @@ retry:
+ 	if (unlikely(test_thread_flag(TIF_MEMDIE) ||
+ 		     fatal_signal_pending(current) ||
+ 		     current->flags & PF_EXITING))
+-		goto bypass;
++		goto force;
+ 
+ 	if (unlikely(task_in_memcg_oom(current)))
+ 		goto nomem;
+@@ -2079,10 +2078,10 @@ retry:
+ 		goto retry;
+ 
+ 	if (gfp_mask & __GFP_NOFAIL)
+-		goto bypass;
++		goto force;
+ 
+ 	if (fatal_signal_pending(current))
+-		goto bypass;
++		goto force;
+ 
+ 	mem_cgroup_events(mem_over_limit, MEMCG_OOM, 1);
+ 
+@@ -2090,8 +2089,18 @@ retry:
+ nomem:
+ 	if (!(gfp_mask & __GFP_NOFAIL))
+ 		return -ENOMEM;
+-bypass:
+-	return -EINTR;
++force:
++	/*
++	 * The allocation either can't fail or will lead to more memory
++	 * being freed very soon.  Allow memory usage go over the limit
++	 * temporarily by force charging it.
++	 */
++	page_counter_charge(&memcg->memory, nr_pages);
++	if (do_swap_account)
++		page_counter_charge(&memcg->memsw, nr_pages);
++	css_get_many(&memcg->css, nr_pages);
 +
-+/**
-+ * memcg_kmem_newpage_charge: verify if a new kmem allocation is allowed.
-+ * @gfp: the gfp allocation flags.
-+ * @memcg: a pointer to the memcg this was charged against.
-+ * @order: allocation order.
-+ *
-+ * returns true if the memcg where the current task belongs can hold this
-+ * allocation.
-+ *
-+ * We return true automatically if this allocation is not to be accounted to
-+ * any memcg.
-+ */
-+static inline bool
-+memcg_kmem_newpage_charge(gfp_t gfp, struct mem_cgroup **memcg, int order)
-+{
-+	if (__memcg_kmem_bypass(gfp))
-+		return true;
- 	return __memcg_kmem_newpage_charge(gfp, memcg, order);
++	return 0;
+ 
+ done_restock:
+ 	css_get_many(&memcg->css, batch);
+@@ -2114,8 +2123,8 @@ done_restock:
+ 			break;
+ 		}
+ 	} while ((memcg = parent_mem_cgroup(memcg)));
+-done:
+-	return ret;
++
++	return 0;
  }
  
-@@ -853,17 +860,8 @@ memcg_kmem_commit_charge(struct page *pa
- static __always_inline struct kmem_cache *
- memcg_kmem_get_cache(struct kmem_cache *cachep, gfp_t gfp)
- {
--	if (!memcg_kmem_enabled())
--		return cachep;
--	if (gfp & __GFP_NOACCOUNT)
--		return cachep;
--	if (gfp & __GFP_NOFAIL)
-+	if (__memcg_kmem_bypass(gfp))
- 		return cachep;
--	if (in_interrupt() || (!current->mm) || (current->flags & PF_KTHREAD))
--		return cachep;
--	if (unlikely(fatal_signal_pending(current)))
--		return cachep;
+ static void cancel_charge(struct mem_cgroup *memcg, unsigned int nr_pages)
+@@ -2207,28 +2216,7 @@ int memcg_charge_kmem(struct mem_cgroup
+ 		return ret;
+ 
+ 	ret = try_charge(memcg, gfp, nr_pages);
+-	if (ret == -EINTR)  {
+-		/*
+-		 * try_charge() chose to bypass to root due to OOM kill or
+-		 * fatal signal.  Since our only options are to either fail
+-		 * the allocation or charge it to this cgroup, do it as a
+-		 * temporary condition. But we can't fail. From a kmem/slab
+-		 * perspective, the cache has already been selected, by
+-		 * mem_cgroup_kmem_get_cache(), so it is too late to change
+-		 * our minds.
+-		 *
+-		 * This condition will only trigger if the task entered
+-		 * memcg_charge_kmem in a sane state, but was OOM-killed
+-		 * during try_charge() above. Tasks that were already dying
+-		 * when the allocation triggers should have been already
+-		 * directed to the root cgroup in memcontrol.h
+-		 */
+-		page_counter_charge(&memcg->memory, nr_pages);
+-		if (do_swap_account)
+-			page_counter_charge(&memcg->memsw, nr_pages);
+-		css_get_many(&memcg->css, nr_pages);
+-		ret = 0;
+-	} else if (ret)
++	if (ret)
+ 		page_counter_uncharge(&memcg->kmem, nr_pages);
+ 
+ 	return ret;
+@@ -4433,22 +4421,10 @@ static int mem_cgroup_do_precharge(unsig
+ 		mc.precharge += count;
+ 		return ret;
+ 	}
+-	if (ret == -EINTR) {
+-		cancel_charge(root_mem_cgroup, count);
+-		return ret;
+-	}
+ 
+ 	/* Try charges one by one with reclaim */
+ 	while (count--) {
+ 		ret = try_charge(mc.to, GFP_KERNEL & ~__GFP_NORETRY, 1);
+-		/*
+-		 * In case of failure, any residual charges against
+-		 * mc.to will be dropped by mem_cgroup_clear_mc()
+-		 * later on.  However, cancel any charges that are
+-		 * bypassed to root right away or they'll be lost.
+-		 */
+-		if (ret == -EINTR)
+-			cancel_charge(root_mem_cgroup, 1);
+ 		if (ret)
+ 			return ret;
+ 		mc.precharge++;
+@@ -5353,11 +5329,6 @@ int mem_cgroup_try_charge(struct page *p
+ 	ret = try_charge(memcg, gfp_mask, nr_pages);
+ 
+ 	css_put(&memcg->css);
 -
- 	return __memcg_kmem_get_cache(cachep);
- }
- 
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-	if (ret == -EINTR) {
+-		memcg = root_mem_cgroup;
+-		ret = 0;
+-	}
+ out:
+ 	*memcgp = memcg;
+ 	return ret;
