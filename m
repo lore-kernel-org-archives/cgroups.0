@@ -1,181 +1,245 @@
-From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 0/7] devcg: device cgroup extension for rdma resource
-Date: Tue, 15 Sep 2015 00:24:41 +0530
-Message-ID: <CAG53R5XHTv-o+pGHdw+hGgtv4N3ZkH0WTs6o_W3zK_6jAnVsNA@mail.gmail.com>
-References: <CAG53R5XyfQxrA+FUKFaZi7ZBhSz-SW6eGkGUZpdo6hUTBkAO-g@mail.gmail.com>
-	<20150910202210.GL8114@mtj.duckdns.org>
-	<CAG53R5WtuPA=J_GYPzNTAKbjB1r0K90qhXEDxLNf7vxYyxgrKA@mail.gmail.com>
-	<20150911040413.GA18850@htj.duckdns.org>
-	<55F25781.20308@redhat.com>
-	<20150911145213.GQ8114@mtj.duckdns.org>
-	<1828884A29C6694DAF28B7E6B8A82373A903A586@ORSMSX109.amr.corp.intel.com>
-	<20150911194311.GA18755@obsidianresearch.com>
-	<1828884A29C6694DAF28B7E6B8A82373A903A5DB@ORSMSX109.amr.corp.intel.com>
-	<CAG53R5XsMwnLK7L4q1mQx3_wEJNv1qthOr5TsX0o43kRWaiWrg@mail.gmail.com>
-	<20150914172832.GA21652@obsidianresearch.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 2/3] memcg: ratify and consolidate over-charge handling
+Date: Mon, 14 Sep 2015 21:32:25 +0200
+Message-ID: <20150914193225.GA26273@dhcp22.suse.cz>
+References: <20150913201416.GC25369@htj.duckdns.org>
+ <20150913201442.GD25369@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=qLt0pufYPXU8SQLpOr43jJvYP50YAc6SZEQpkR1vA7A=;
-        b=altGKITBgLMMyYa+tGQqj5Ji+JTvctl8hpcyNG+kvwzcjoiw3yLK2zMOr1SPUApmiO
-         BuS77YMYAe6vYj5fzWuAj7CJ+GdULM3y/fC/o/KrZh0at5RNGN+92eESl5AZc3xNvEeN
-         es+AGPuSLrtSEAl09fwN8OL0Ops12G8mufELW/ny/odE9ZO8K94x1qmjI9bYA6HbjIfO
-         h1hF6IXdl58LnzROoJ6DNx725fapgNHzo+rZb4CU7wHooz/fIpJIwnYawhRoWmPxMsXX
-         /mCgRx9+K3ACtbPnOv0Fx11orhlzqyEPv8tk4O6lKRtOGJmKc84K7G35tYBI9u0eXfI9
-         /1hg==
-In-Reply-To: <20150914172832.GA21652-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20150913201442.GD25369@htj.duckdns.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
-Cc: "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org" <raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: akpm@linux-foundation.org, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-mm@kvack.org, vdavydov@parallels.com, kernel-team@fb.com
 
-On Mon, Sep 14, 2015 at 10:58 PM, Jason Gunthorpe
-<jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org> wrote:
-> On Mon, Sep 14, 2015 at 04:39:33PM +0530, Parav Pandit wrote:
+On Sun 13-09-15 16:14:42, Tejun Heo wrote:
+> try_charge() is the main charging logic of memcg.  When it hits the
+> limit but either can't fail the allocation due to __GFP_NOFAIL or the
+> task is likely to free memory very soon, being OOM killed, has SIGKILL
+> pending or exiting, it "bypasses" the charge to the root memcg and
+> returns -EINTR.  While this is one approach which can be taken for
+> these situations, it has several issues.
+> 
+> * It unnecessarily lies about the reality.  The number itself doesn't
+>   go over the limit but the actual usage does.  memcg is either forced
+>   to or actively chooses to go over the limit because that is the
+>   right behavior under the circumstances, which is completely fine,
+>   but, if at all avoidable, it shouldn't be misrepresenting what's
+>   happening by sneaking the charges into the root memcg.
+> 
+> * Despite trying, we already do over-charge.  kmemcg can't deal with
+>   switching over to the root memcg by the point try_charge() returns
+>   -EINTR, so it open-codes over-charing.
+> 
+> * It complicates the callers.  Each try_charge() user has to handle
+>   the weird -EINTR exception.  memcg_charge_kmem() does the manual
+>   over-charging.  mem_cgroup_do_precharge() performs unnecessary
+>   uncharging of root memcg, which BTW is inconsistent with what
+>   memcg_charge_kmem() does. 
+
+This is a left over from ce00a967377b ("mm: memcontrol: revert use of
+root_mem_cgroup res_counter")
+
+>   mem_cgroup_try_charge() needs to switch
+>   the returned cgroup to the root one.
+> 
+> The reality is that in memcg there are cases where we are forced
+> and/or willing to go over the limit.  Each such case needs to be
+> scrutinized and justified but there definitely are situations where
+> that is the right thing to do.  We alredy do this but with a
+> superficial and inconsistent disguise which leads to unnecessary
+> complications.
 >
->> 1. How does the % of resource, is different than absolute number? With
->> rest of the cgroups systems we define absolute number at most places
->> to my knowledge.
->
-> There isn't really much choice if the abstraction is a bundle of all
-> resources. You can't use an absolute number unless every possible
-> hardware limited resource is defined, which doesn't seem smart to me
-> either.
+> This patch updates try_charge() so that it over-charges and returns 0
+> when deemed necessary.  -EINTR return is removed along with all
+> special case handling in the callers.
 
-Absolute number of percentage is representation for a given property.
-That property needs definition. Isn't it?
-How do we say that "Some undefined" resource you give certain amount,
-which user doesn't know about what to administer, or configure.
-It has to be quantifiable entity.
+OK the code is easier in the end, although I would argue that try_charge
+could return ENOMEM for GFP_NOWAIT instead of overcharging (this would
+e.g. allow precharge to bail out earlier). Something for a separate patch I
+guess.
 
-It is not abstract enough, and doesn't match our universe of
-> hardware very well.
->
-Why does the user need to know the actual hardware resource limits or
-define hardware based resource.
+Anyway I still do not like usage > max/hard limit presented to userspace
+because it looks like a clear breaking of max/hard limit semantic. I
+realize that we cannot solve the underlying problem easily or it might
+be unfeasible but we should consider how to present this state to the
+userspace.
+We have basically 2 options AFAICS. We can either document that a
+_temporal_ breach of the max/hard limit is allowed or we can hide this
+fact and always present max(current,max).
+The first one might be better for an easier debugging and it is also
+more honest about the current state but the definition of the hard limit
+is a bit weird. It also exposes implementation details to the userspace.
+The other choice is clearly lying but users shouldn't care about the
+implementation details and if the state is really temporal then the
+userspace shouldn't even notice. There is also a risk that somebody is
+already depending on current < max which happened to work without kmem
+until now.
 
-RDMA verbs is the abstraction point.
-We could well define
-(a) how many number of RDMA connections are allowed instead of QP, or CQ or AH.
-(b) how many data transfer buffers to use.
+This is something to be solved in a separate patch I guess but we
+should think about that. I am not entirely clear on that myself but I am
+more inclined to the first option and simply document the potential
+corner case and temporal breach.
 
-The fact is we have so many mid layers, which uses these resources
-differently, above abstraction does not fit the bill.
-But we know the mid layers how they operate, and how they use the RDMA
-resource keeping.
-So if we deploy MPI application for given cluster of container, we can
-accurately configure the RDMA resource, isn't it?
+> While at it, remove the local variable @ret, which was initialized to
+> zero and never changed, along with done: label which just returned the
+> always zero @ret.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
 
-Another example would be, if we don't want only 50% resources to be
-given to all containers and rest 50% to kernel consumers such as NFS,
-all containers can reside in single rdma cgroup limited to given
-limits.
+Acked-by: Michal Hocko <mhocko@suse.com>
 
+> ---
+>  mm/memcontrol.c |   69 ++++++++++++++++----------------------------------------
+>  1 file changed, 20 insertions(+), 49 deletions(-)
+> 
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -1999,13 +1999,12 @@ static int try_charge(struct mem_cgroup
+>  	unsigned long nr_reclaimed;
+>  	bool may_swap = true;
+>  	bool drained = false;
+> -	int ret = 0;
+>  
+>  	if (mem_cgroup_is_root(memcg))
+> -		goto done;
+> +		return 0;
+>  retry:
+>  	if (consume_stock(memcg, nr_pages))
+> -		goto done;
+> +		return 0;
+>  
+>  	if (!do_swap_account ||
+>  	    !page_counter_try_charge(&memcg->memsw, batch, &counter)) {
+> @@ -2033,7 +2032,7 @@ retry:
+>  	if (unlikely(test_thread_flag(TIF_MEMDIE) ||
+>  		     fatal_signal_pending(current) ||
+>  		     current->flags & PF_EXITING))
+> -		goto bypass;
+> +		goto force;
+>  
+>  	if (unlikely(task_in_memcg_oom(current)))
+>  		goto nomem;
+> @@ -2079,10 +2078,10 @@ retry:
+>  		goto retry;
+>  
+>  	if (gfp_mask & __GFP_NOFAIL)
+> -		goto bypass;
+> +		goto force;
+>  
+>  	if (fatal_signal_pending(current))
+> -		goto bypass;
+> +		goto force;
+>  
+>  	mem_cgroup_events(mem_over_limit, MEMCG_OOM, 1);
+>  
+> @@ -2090,8 +2089,18 @@ retry:
+>  nomem:
+>  	if (!(gfp_mask & __GFP_NOFAIL))
+>  		return -ENOMEM;
+> -bypass:
+> -	return -EINTR;
+> +force:
+> +	/*
+> +	 * The allocation either can't fail or will lead to more memory
+> +	 * being freed very soon.  Allow memory usage go over the limit
+> +	 * temporarily by force charging it.
+> +	 */
+> +	page_counter_charge(&memcg->memory, nr_pages);
+> +	if (do_swap_account)
+> +		page_counter_charge(&memcg->memsw, nr_pages);
+> +	css_get_many(&memcg->css, nr_pages);
+> +
+> +	return 0;
+>  
+>  done_restock:
+>  	css_get_many(&memcg->css, batch);
+> @@ -2114,8 +2123,8 @@ done_restock:
+>  			break;
+>  		}
+>  	} while ((memcg = parent_mem_cgroup(memcg)));
+> -done:
+> -	return ret;
+> +
+> +	return 0;
+>  }
+>  
+>  static void cancel_charge(struct mem_cgroup *memcg, unsigned int nr_pages)
+> @@ -2207,28 +2216,7 @@ int memcg_charge_kmem(struct mem_cgroup
+>  		return ret;
+>  
+>  	ret = try_charge(memcg, gfp, nr_pages);
+> -	if (ret == -EINTR)  {
+> -		/*
+> -		 * try_charge() chose to bypass to root due to OOM kill or
+> -		 * fatal signal.  Since our only options are to either fail
+> -		 * the allocation or charge it to this cgroup, do it as a
+> -		 * temporary condition. But we can't fail. From a kmem/slab
+> -		 * perspective, the cache has already been selected, by
+> -		 * mem_cgroup_kmem_get_cache(), so it is too late to change
+> -		 * our minds.
+> -		 *
+> -		 * This condition will only trigger if the task entered
+> -		 * memcg_charge_kmem in a sane state, but was OOM-killed
+> -		 * during try_charge() above. Tasks that were already dying
+> -		 * when the allocation triggers should have been already
+> -		 * directed to the root cgroup in memcontrol.h
+> -		 */
+> -		page_counter_charge(&memcg->memory, nr_pages);
+> -		if (do_swap_account)
+> -			page_counter_charge(&memcg->memsw, nr_pages);
+> -		css_get_many(&memcg->css, nr_pages);
+> -		ret = 0;
+> -	} else if (ret)
+> +	if (ret)
+>  		page_counter_uncharge(&memcg->kmem, nr_pages);
+>  
+>  	return ret;
+> @@ -4433,22 +4421,10 @@ static int mem_cgroup_do_precharge(unsig
+>  		mc.precharge += count;
+>  		return ret;
+>  	}
+> -	if (ret == -EINTR) {
+> -		cancel_charge(root_mem_cgroup, count);
+> -		return ret;
+> -	}
+>  
+>  	/* Try charges one by one with reclaim */
+>  	while (count--) {
+>  		ret = try_charge(mc.to, GFP_KERNEL & ~__GFP_NORETRY, 1);
+> -		/*
+> -		 * In case of failure, any residual charges against
+> -		 * mc.to will be dropped by mem_cgroup_clear_mc()
+> -		 * later on.  However, cancel any charges that are
+> -		 * bypassed to root right away or they'll be lost.
+> -		 */
+> -		if (ret == -EINTR)
+> -			cancel_charge(root_mem_cgroup, 1);
+>  		if (ret)
+>  			return ret;
+>  		mc.precharge++;
+> @@ -5353,11 +5329,6 @@ int mem_cgroup_try_charge(struct page *p
+>  	ret = try_charge(memcg, gfp_mask, nr_pages);
+>  
+>  	css_put(&memcg->css);
+> -
+> -	if (ret == -EINTR) {
+> -		memcg = root_mem_cgroup;
+> -		ret = 0;
+> -	}
+>  out:
+>  	*memcgp = memcg;
+>  	return ret;
 
->> 2. bytes of  kernel memory for RDMA structures
->> One QP of one vendor might consume X bytes and other Y bytes. How does
->> the application knows how much memory to give.
->
-> I don't see this distinction being useful at such a fine granularity
-> where the control side needs to distinguish between 1 and 2 QPs.
->
-> The majority use for control groups has been along with containers to
-> prevent a container for exhausting resources in a way that impacts
-> another.
->
-Right. Thats the intention.
+-- 
+Michal Hocko
+SUSE Labs
 
-> In that use model limiting each container to N MB of kernel memory
-> makes it straightforward to reason about resource exhaustion in a
-> multi-tennant environment. We have other controllers that do this,
-> just more indirectly (ie limiting the number of inotifies, or the
-> number of fds indirectly cap kernel memory consumption)
->
-> ie Presumably some fairly small limitation like 10MB is enough for
-> most non-MPI jobs.
-
-Container application always write a simple for loop code to take away
-majority of QP with 10MB limit.
->
->> Application doing 100 QP allocation, still within limit of memory of
->> cgroup leaves other applications without any QP.
->
-> No, if the HW has a fixed QP pool then it would hit #1 above. Both are
-> active at once. For example you'd say a container cannot use more than
-> 10% of the device's hardware resources, or more than 10MB of kernel
-> memory.
->
-Right. we need to define this resource pool, right?
-Why it cannot be verbs abstraction?
-How many resources are really used to implement verb layer in reality
-is left to hardware vendor
-Abstract pool just added confusion instead of clarity.
-
-Imagine instead of tcp_bytes or kmem bytes, its "some memory
-resource", how would someone debug/tune a system with abstract knobs?
-
-> If on an mlx card, you probably hit the 10% of QP resources first. If
-> on an qib card there is no HW QP pool (well, almost, QPNs are always
-> limited), so you'd hit the memory limit instead.
->
-> In either case, we don't want to see a container able to exhaust
-> either all of kernel memory or all of the HW resources to deny other
-> containers.
->
-> If you have a non-container use case in mind I'd be curious to hear
-> it..
-
-Container is the prime case. Additionally equally prime case of non
-container use case.
-Today, application can take up all the resource being first class
-citizan, and NFS mount will fail.
-So without container also we should be able to restrict resources to
-user mode app.
-
-
->
->> I don't see a point of memory footprint based scheme, as memory limits
->> are well addressed by more smarter memory controller anyway.
->
-> I don't thing #1 is controlled but another controller. This is long
-> lived kernel-side memory allocations to support RDMA resource
-> allocation - we certainly have nothing in the rdma layer that is
-> tracking this stuff.
->
-Some drivers performs mmap() of kernel memory to user space, some
-drivers does user space page allocation and maps to device.
-Putting or tracking all those is just so intrusive changes spreading
-down the vendor drivers or ib layer which may not be right way to
-track.
-Memory allocation tracking I believe should be left to memcg.
-
-
->> If the hardware vendor defines the resource pool without saying its
->> resource QP or MR, how would actually management/control point can
->> decide what should be controlled to what limit?
->
-> In the kernel each HW driver has to be involved to declare what it's
-> hardware resource limits are.
->
-> In user space, it is just a simple limiter knob to prevent resource
-> exhaustion.
->
-> UAPI wise, nobdy has to care if the limit is actually # of QPs or
-> something else.
->
-
-If we dont care about resource, we cannot tune or limit it. number of
-MRs used by MPI vs rsocket vs accelio is way different.
-
-
-
-> Jason
 --
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
