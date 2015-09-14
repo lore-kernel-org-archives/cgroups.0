@@ -1,221 +1,110 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH v2 2/3] memcg: ratify and consolidate over-charge handling
-Date: Mon, 14 Sep 2015 16:07:32 -0400
-Message-ID: <20150914200732.GG25369@htj.duckdns.org>
-References: <20150913201416.GC25369@htj.duckdns.org>
- <20150913201442.GD25369@htj.duckdns.org>
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH 0/7] devcg: device cgroup extension for rdma resource
+Date: Mon, 14 Sep 2015 14:18:40 -0600
+Message-ID: <20150914201840.GA8764@obsidianresearch.com>
+References: <CAG53R5WtuPA=J_GYPzNTAKbjB1r0K90qhXEDxLNf7vxYyxgrKA@mail.gmail.com>
+ <20150911040413.GA18850@htj.duckdns.org>
+ <55F25781.20308@redhat.com>
+ <20150911145213.GQ8114@mtj.duckdns.org>
+ <1828884A29C6694DAF28B7E6B8A82373A903A586@ORSMSX109.amr.corp.intel.com>
+ <20150911194311.GA18755@obsidianresearch.com>
+ <1828884A29C6694DAF28B7E6B8A82373A903A5DB@ORSMSX109.amr.corp.intel.com>
+ <CAG53R5XsMwnLK7L4q1mQx3_wEJNv1qthOr5TsX0o43kRWaiWrg@mail.gmail.com>
+ <20150914172832.GA21652@obsidianresearch.com>
+ <CAG53R5XHTv-o+pGHdw+hGgtv4N3ZkH0WTs6o_W3zK_6jAnVsNA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=P4rY/dSHsESgYiK9CBKcYWg3lw+J/Fz26X7FD7BC6EI=;
-        b=Si3rIAD8Ewlz0ymu6Tlvy94tW+rMi0ERcHQyVTtoTudv2PxmhKLVE1XQvJMFI8Uthk
-         VkAeUGum2zi8dRMIT1GxKFK487Q8D5M223erz/HhW9bjd/uf85tUknOSxD15gC0fvKY6
-         E5mT+8MJgKU1gqCU4ouPH8GoD5lZnxCPlAiRxuST2FHDa3Fp8TyMyV9fIYD0ssmXUEz6
-         xtvM5+4t5k+Zkeuu/pWGRsGxaY5IRgC/meM9KgHO+eyohKMTZlQeWBO2lXIhlztHi63q
-         LQwypWTaqNmhIqoCqfP1GhyLE3w+08i3gsMA6AMzX8GqlIiOpJ+v+4JYFXPfugaP+TiF
-         k01g==
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=obsidianresearch.com; s=rsa1;
+	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=PtDQnyVLOvQD9HKSiPjDhCKZu8/phCmNMx2BbWLDy4g=;
+	b=QzZFevX20GYbOjpAl1hLx9ibAkzkCW1uTtWj9N9FvehphRqK2WPipZX17EDmRkShmzY1u4SrlQXdpn176gjovSTjVHeKXFm478JZ028vNfPUQTogjOR+m1I3D98LQFxkVtXl7grhvW1/d2uwm+8T2gWyfhClKL0xIAZQyl5jgKk=;
 Content-Disposition: inline
-In-Reply-To: <20150913201442.GD25369@htj.duckdns.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <CAG53R5XHTv-o+pGHdw+hGgtv4N3ZkH0WTs6o_W3zK_6jAnVsNA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@kernel.org
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, vdavydov@parallels.com, kernel-team@fb.com
+To: Parav Pandit <pandit.parav@gmail.com>
+Cc: "Hefty, Sean" <sean.hefty@intel.com>, Tejun Heo <tj@kernel.org>, Doug Ledford <dledford@redhat.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "lizefan@huawei.com" <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, "james.l.morris@oracle.com" <james.l.morris@oracle.com>, "serge@hallyn.com" <serge@hallyn.com>, Haggai Eran <haggaie@mellanox.com>, Or Gerlitz <ogerlitz@mellanox.com>, Matan Barak <matanb@mellanox.com>, "raindel@mellanox.com" <raindel@mellanox.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-security-module@vger.kernel.org" <linux-security-module@vger.kernel.org>
 
-try_charge() is the main charging logic of memcg.  When it hits the
-limit but either can't fail the allocation due to __GFP_NOFAIL or the
-task is likely to free memory very soon, being OOM killed, has SIGKILL
-pending or exiting, it "bypasses" the charge to the root memcg and
-returns -EINTR.  While this is one approach which can be taken for
-these situations, it has several issues.
+On Tue, Sep 15, 2015 at 12:24:41AM +0530, Parav Pandit wrote:
+> On Mon, Sep 14, 2015 at 10:58 PM, Jason Gunthorpe
+> <jgunthorpe@obsidianresearch.com> wrote:
+> > On Mon, Sep 14, 2015 at 04:39:33PM +0530, Parav Pandit wrote:
+> >
+> >> 1. How does the % of resource, is different than absolute number? With
+> >> rest of the cgroups systems we define absolute number at most places
+> >> to my knowledge.
+> >
+> > There isn't really much choice if the abstraction is a bundle of all
+> > resources. You can't use an absolute number unless every possible
+> > hardware limited resource is defined, which doesn't seem smart to me
+> > either.
+> 
+> Absolute number of percentage is representation for a given property.
+> That property needs definition. Isn't it?
+> How do we say that "Some undefined" resource you give certain amount,
+> which user doesn't know about what to administer, or configure.
+> It has to be quantifiable entity.
 
-* It unnecessarily lies about the reality.  The number itself doesn't
-  go over the limit but the actual usage does.  memcg is either forced
-  to or actively chooses to go over the limit because that is the
-  right behavior under the circumstances, which is completely fine,
-  but, if at all avoidable, it shouldn't be misrepresenting what's
-  happening by sneaking the charges into the root memcg.
+Each vendor can quantify exactly what HW resources their
+implementation has and how the above limit impacts their card. There
+will be many variations, and IIRC, some vendors have resource pools
+not directly related to the standard PD/QP/MR/CQ/AH verbs resources.
 
-* Despite trying, we already do over-charge.  kmemcg can't deal with
-  switching over to the root memcg by the point try_charge() returns
-  -EINTR, so it open-codes over-charing.
+> > It is not abstract enough, and doesn't match our universe of
+> > hardware very well.
 
-* It complicates the callers.  Each try_charge() user has to handle
-  the weird -EINTR exception.  memcg_charge_kmem() does the manual
-  over-charging.  mem_cgroup_do_precharge() performs unnecessary
-  uncharging of root memcg, which BTW is inconsistent with what
-  memcg_charge_kmem() does but not broken as [un]charging are noops on
-  root memcg.  mem_cgroup_try_charge() needs to switch the returned
-  cgroup to the root one.
+> Why does the user need to know the actual hardware resource limits or
+> define hardware based resource.
 
-The reality is that in memcg there are cases where we are forced
-and/or willing to go over the limit.  Each such case needs to be
-scrutinized and justified but there definitely are situations where
-that is the right thing to do.  We alredy do this but with a
-superficial and inconsistent disguise which leads to unnecessary
-complications.
+Because actual hardware resources *ARE* the limit. We cannot abstract
+it away. The hardware/driver has real, fixed, immutable limits. No API
+abstraction can possibly change that.
 
-This patch updates try_charge() so that it over-charges and returns 0
-when deemed necessary.  -EINTR return is removed along with all
-special case handling in the callers.
+The limits are such there *IS NO* API boundary that can bundle them
+into something simpler. There will always be apps that require wildly
+different ratios of the basic verbs resources (PD/QP/CQ/AH/MR)
 
-While at it, remove the local variable @ret, which was initialized to
-zero and never changed, along with done: label which just returned the
-always zero @ret.
+Either we control each and every vendor's limited resource directly
+(which is where you started), or we just roll them up into a 'all
+resource' bundle and control them indirectly. There just isn't a
+mythical third 'better API' choice with the hardware we have today.
 
-v2: Minor update to patch description as per Vladimir.
+> (a) how many number of RDMA connections are allowed instead of QP, or CQ or AH.
+> (b) how many data transfer buffers to use.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reviewed-by: Vladimir Davydov <vdavydov@parallels.com>
-Acked-by: Michal Hocko <mhocko@suse.com>
----
- mm/memcontrol.c |   69 ++++++++++++++++----------------------------------------
- 1 file changed, 20 insertions(+), 49 deletions(-)
+None of that accurately reflects what the real HW limits actually are.
 
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1999,13 +1999,12 @@ static int try_charge(struct mem_cgroup
- 	unsigned long nr_reclaimed;
- 	bool may_swap = true;
- 	bool drained = false;
--	int ret = 0;
- 
- 	if (mem_cgroup_is_root(memcg))
--		goto done;
-+		return 0;
- retry:
- 	if (consume_stock(memcg, nr_pages))
--		goto done;
-+		return 0;
- 
- 	if (!do_swap_account ||
- 	    !page_counter_try_charge(&memcg->memsw, batch, &counter)) {
-@@ -2033,7 +2032,7 @@ retry:
- 	if (unlikely(test_thread_flag(TIF_MEMDIE) ||
- 		     fatal_signal_pending(current) ||
- 		     current->flags & PF_EXITING))
--		goto bypass;
-+		goto force;
- 
- 	if (unlikely(task_in_memcg_oom(current)))
- 		goto nomem;
-@@ -2079,10 +2078,10 @@ retry:
- 		goto retry;
- 
- 	if (gfp_mask & __GFP_NOFAIL)
--		goto bypass;
-+		goto force;
- 
- 	if (fatal_signal_pending(current))
--		goto bypass;
-+		goto force;
- 
- 	mem_cgroup_events(mem_over_limit, MEMCG_OOM, 1);
- 
-@@ -2090,8 +2089,18 @@ retry:
- nomem:
- 	if (!(gfp_mask & __GFP_NOFAIL))
- 		return -ENOMEM;
--bypass:
--	return -EINTR;
-+force:
-+	/*
-+	 * The allocation either can't fail or will lead to more memory
-+	 * being freed very soon.  Allow memory usage go over the limit
-+	 * temporarily by force charging it.
-+	 */
-+	page_counter_charge(&memcg->memory, nr_pages);
-+	if (do_swap_account)
-+		page_counter_charge(&memcg->memsw, nr_pages);
-+	css_get_many(&memcg->css, nr_pages);
-+
-+	return 0;
- 
- done_restock:
- 	css_get_many(&memcg->css, batch);
-@@ -2114,8 +2123,8 @@ done_restock:
- 			break;
- 		}
- 	} while ((memcg = parent_mem_cgroup(memcg)));
--done:
--	return ret;
-+
-+	return 0;
- }
- 
- static void cancel_charge(struct mem_cgroup *memcg, unsigned int nr_pages)
-@@ -2207,28 +2216,7 @@ int memcg_charge_kmem(struct mem_cgroup
- 		return ret;
- 
- 	ret = try_charge(memcg, gfp, nr_pages);
--	if (ret == -EINTR)  {
--		/*
--		 * try_charge() chose to bypass to root due to OOM kill or
--		 * fatal signal.  Since our only options are to either fail
--		 * the allocation or charge it to this cgroup, do it as a
--		 * temporary condition. But we can't fail. From a kmem/slab
--		 * perspective, the cache has already been selected, by
--		 * mem_cgroup_kmem_get_cache(), so it is too late to change
--		 * our minds.
--		 *
--		 * This condition will only trigger if the task entered
--		 * memcg_charge_kmem in a sane state, but was OOM-killed
--		 * during try_charge() above. Tasks that were already dying
--		 * when the allocation triggers should have been already
--		 * directed to the root cgroup in memcontrol.h
--		 */
--		page_counter_charge(&memcg->memory, nr_pages);
--		if (do_swap_account)
--			page_counter_charge(&memcg->memsw, nr_pages);
--		css_get_many(&memcg->css, nr_pages);
--		ret = 0;
--	} else if (ret)
-+	if (ret)
- 		page_counter_uncharge(&memcg->kmem, nr_pages);
- 
- 	return ret;
-@@ -4433,22 +4421,10 @@ static int mem_cgroup_do_precharge(unsig
- 		mc.precharge += count;
- 		return ret;
- 	}
--	if (ret == -EINTR) {
--		cancel_charge(root_mem_cgroup, count);
--		return ret;
--	}
- 
- 	/* Try charges one by one with reclaim */
- 	while (count--) {
- 		ret = try_charge(mc.to, GFP_KERNEL & ~__GFP_NORETRY, 1);
--		/*
--		 * In case of failure, any residual charges against
--		 * mc.to will be dropped by mem_cgroup_clear_mc()
--		 * later on.  However, cancel any charges that are
--		 * bypassed to root right away or they'll be lost.
--		 */
--		if (ret == -EINTR)
--			cancel_charge(root_mem_cgroup, 1);
- 		if (ret)
- 			return ret;
- 		mc.precharge++;
-@@ -5353,11 +5329,6 @@ int mem_cgroup_try_charge(struct page *p
- 	ret = try_charge(memcg, gfp_mask, nr_pages);
- 
- 	css_put(&memcg->css);
--
--	if (ret == -EINTR) {
--		memcg = root_mem_cgroup;
--		ret = 0;
--	}
- out:
- 	*memcgp = memcg;
- 	return ret;
+> > ie Presumably some fairly small limitation like 10MB is enough for
+> > most non-MPI jobs.
+> 
+> Container application always write a simple for loop code to take away
+> majority of QP with 10MB limit.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+No, the HW and kmem limits must work together, the HW limit would
+prevent exhaustion outside the container.
+
+> Imagine instead of tcp_bytes or kmem bytes, its "some memory
+> resource", how would someone debug/tune a system with abstract knobs?
+
+Well, we have the memcg controller that does track kmem. The subsystem
+specific kmem limit is to force fair sharing of the limited kmem
+resource within the overall memcg limit.
+
+They are complementary.
+
+A fictional rdma_kmem and tcp_kmem would serve very similar purposes.
+
+> > UAPI wise, nobdy has to care if the limit is actually # of QPs or
+> > something else.
+
+> If we dont care about resource, we cannot tune or limit it. number of
+> MRs used by MPI vs rsocket vs accelio is way different.
+
+So? I don't think it is really important to have an exact, precise,
+limit. The HW pools are pretty big, unless you plan to run tens of
+thousands of containers eacg with tiny RDMA limits, it is fine to talk
+in broader terms (ie 10% of all HW limited resource) which is totally
+adaquate to hard-prevent run away or exhaustion scenarios.
+
+Jason
