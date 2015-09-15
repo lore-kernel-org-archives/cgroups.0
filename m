@@ -1,50 +1,67 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v3 2/2] memcg: punt high overage reclaim to
- return-to-userland path
-Date: Tue, 15 Sep 2015 18:12:18 +0200
-Message-ID: <20150915161218.GA12032@cmpxchg.org>
-References: <20150913185940.GA25369@htj.duckdns.org>
- <20150913190008.GB25369@htj.duckdns.org>
- <20150915074724.GE2858@cmpxchg.org>
- <20150915155355.GH2905@mtj.duckdns.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH v2 2/3] memcg: ratify and consolidate over-charge handling
+Date: Tue, 15 Sep 2015 18:18:26 +0200
+Message-ID: <20150915161826.GB12032@cmpxchg.org>
+References: <20150913201416.GC25369@htj.duckdns.org>
+ <20150913201442.GD25369@htj.duckdns.org>
+ <20150914200732.GG25369@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20150915155355.GH2905@mtj.duckdns.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20150914200732.GG25369-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: akpm@linux-foundation.org, mhocko@kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, vdavydov@parallels.com, kernel-team@fb.com
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Tue, Sep 15, 2015 at 11:53:55AM -0400, Tejun Heo wrote:
-> Hello, Johannes.
+On Mon, Sep 14, 2015 at 04:07:32PM -0400, Tejun Heo wrote:
+> try_charge() is the main charging logic of memcg.  When it hits the
+> limit but either can't fail the allocation due to __GFP_NOFAIL or the
+> task is likely to free memory very soon, being OOM killed, has SIGKILL
+> pending or exiting, it "bypasses" the charge to the root memcg and
+> returns -EINTR.  While this is one approach which can be taken for
+> these situations, it has several issues.
 > 
-> On Tue, Sep 15, 2015 at 09:47:24AM +0200, Johannes Weiner wrote:
-> > Why can't we simply fail NOWAIT allocations when the high limit is
-> > breached? We do the same for the max limit.
+> * It unnecessarily lies about the reality.  The number itself doesn't
+>   go over the limit but the actual usage does.  memcg is either forced
+>   to or actively chooses to go over the limit because that is the
+>   right behavior under the circumstances, which is completely fine,
+>   but, if at all avoidable, it shouldn't be misrepresenting what's
+>   happening by sneaking the charges into the root memcg.
 > 
-> Because that can lead to continued systematic failures of NOWAIT
-> allocations.  For that to work, we'll have to add async reclaimaing.
+> * Despite trying, we already do over-charge.  kmemcg can't deal with
+>   switching over to the root memcg by the point try_charge() returns
+>   -EINTR, so it open-codes over-charing.
 > 
-> > As I see it, NOWAIT allocations are speculative attempts on available
-> > memory. We should be able to just fail them and have somebody that is
-> > allowed to reclaim try again, just like with the max limit.
+> * It complicates the callers.  Each try_charge() user has to handle
+>   the weird -EINTR exception.  memcg_charge_kmem() does the manual
+>   over-charging.  mem_cgroup_do_precharge() performs unnecessary
+>   uncharging of root memcg, which BTW is inconsistent with what
+>   memcg_charge_kmem() does but not broken as [un]charging are noops on
+>   root memcg.  mem_cgroup_try_charge() needs to switch the returned
+>   cgroup to the root one.
 > 
-> Yes, but the assumption is that even back-to-back NOWAIT allocations
-> won't continue to fail indefinitely.
+> The reality is that in memcg there are cases where we are forced
+> and/or willing to go over the limit.  Each such case needs to be
+> scrutinized and justified but there definitely are situations where
+> that is the right thing to do.  We alredy do this but with a
+> superficial and inconsistent disguise which leads to unnecessary
+> complications.
+> 
+> This patch updates try_charge() so that it over-charges and returns 0
+> when deemed necessary.  -EINTR return is removed along with all
+> special case handling in the callers.
+> 
+> While at it, remove the local variable @ret, which was initialized to
+> zero and never changed, along with done: label which just returned the
+> always zero @ret.
+> 
+> v2: Minor update to patch description as per Vladimir.
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Reviewed-by: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
+> Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 
-But they have been failing indefinitely forever once you hit the hard
-limit in the past. There was never an async reclaim provision there.
-
-I can definitely see that the unconstrained high limit breaching needs
-to be fixed one way or another, I just don't quite understand why you
-chose to go for new semantics. Is there a new or a specific usecase
-you had in mind when you chose deferred reclaim over simply failing?
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
