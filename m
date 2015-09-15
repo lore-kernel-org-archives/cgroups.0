@@ -1,67 +1,54 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v2 2/3] memcg: ratify and consolidate over-charge handling
-Date: Tue, 15 Sep 2015 18:18:26 +0200
-Message-ID: <20150915161826.GB12032@cmpxchg.org>
-References: <20150913201416.GC25369@htj.duckdns.org>
- <20150913201442.GD25369@htj.duckdns.org>
- <20150914200732.GG25369@htj.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3 2/2] memcg: punt high overage reclaim to
+ return-to-userland path
+Date: Tue, 15 Sep 2015 12:22:53 -0400
+Message-ID: <20150915162253.GI2905@mtj.duckdns.org>
+References: <20150913185940.GA25369@htj.duckdns.org>
+ <20150913190008.GB25369@htj.duckdns.org>
+ <20150915074724.GE2858@cmpxchg.org>
+ <20150915155355.GH2905@mtj.duckdns.org>
+ <20150915161218.GA12032@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=IZ1ymuIb6BmiWspnEXwkum4NcNvAOzfeTvXxQn7HOuw=;
+        b=KObOdpf2e3FjqfjNQMI7wXEqWjzZ3GUzdyhkt7++uotqCLuN+DZ2JB+Z+VLv1M4p8Z
+         q9skuw4/hlrFp/3WprQJr+t5TfWUktzpNKj26Qk3WT9ZAsPTsk5M+3NMpC80ujOmU9bL
+         4N71uNrnj+XAa1zKCY1pgNRMu00q6Hmv7F4/V64Y28707gBWaBSBzrK29y3KARD4wtTh
+         Adt7hvBy4iZor5qji5R28jC2GMs/JwSZkQWpl3+OMI4fcO/adVxlIpQWmHaCh8JW8BTS
+         qTJZZllKVrojRM1MaUQrLBE+g5P/tbF/TeW+7x4BiCS4ob0XW6qj5m/h50N1ImqEeUoP
+         dqHQ==
 Content-Disposition: inline
-In-Reply-To: <20150914200732.GG25369-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <20150915161218.GA12032-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Mon, Sep 14, 2015 at 04:07:32PM -0400, Tejun Heo wrote:
-> try_charge() is the main charging logic of memcg.  When it hits the
-> limit but either can't fail the allocation due to __GFP_NOFAIL or the
-> task is likely to free memory very soon, being OOM killed, has SIGKILL
-> pending or exiting, it "bypasses" the charge to the root memcg and
-> returns -EINTR.  While this is one approach which can be taken for
-> these situations, it has several issues.
-> 
-> * It unnecessarily lies about the reality.  The number itself doesn't
->   go over the limit but the actual usage does.  memcg is either forced
->   to or actively chooses to go over the limit because that is the
->   right behavior under the circumstances, which is completely fine,
->   but, if at all avoidable, it shouldn't be misrepresenting what's
->   happening by sneaking the charges into the root memcg.
-> 
-> * Despite trying, we already do over-charge.  kmemcg can't deal with
->   switching over to the root memcg by the point try_charge() returns
->   -EINTR, so it open-codes over-charing.
-> 
-> * It complicates the callers.  Each try_charge() user has to handle
->   the weird -EINTR exception.  memcg_charge_kmem() does the manual
->   over-charging.  mem_cgroup_do_precharge() performs unnecessary
->   uncharging of root memcg, which BTW is inconsistent with what
->   memcg_charge_kmem() does but not broken as [un]charging are noops on
->   root memcg.  mem_cgroup_try_charge() needs to switch the returned
->   cgroup to the root one.
-> 
-> The reality is that in memcg there are cases where we are forced
-> and/or willing to go over the limit.  Each such case needs to be
-> scrutinized and justified but there definitely are situations where
-> that is the right thing to do.  We alredy do this but with a
-> superficial and inconsistent disguise which leads to unnecessary
-> complications.
-> 
-> This patch updates try_charge() so that it over-charges and returns 0
-> when deemed necessary.  -EINTR return is removed along with all
-> special case handling in the callers.
-> 
-> While at it, remove the local variable @ret, which was initialized to
-> zero and never changed, along with done: label which just returned the
-> always zero @ret.
-> 
-> v2: Minor update to patch description as per Vladimir.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Reviewed-by: Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>
-> Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Hello,
 
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+On Tue, Sep 15, 2015 at 06:12:18PM +0200, Johannes Weiner wrote:
+> But they have been failing indefinitely forever once you hit the hard
+> limit in the past. There was never an async reclaim provision there.
+>
+> I can definitely see that the unconstrained high limit breaching needs
+> to be fixed one way or another, I just don't quite understand why you
+> chose to go for new semantics. Is there a new or a specific usecase
+> you had in mind when you chose deferred reclaim over simply failing?
+
+Hmmm... so if we just fail, it breaks the assumptions that slab/slub
+is making and while they might not fail outright would behave in an
+undesirable way.  It's just that we didn't notice that before with
+limit_on_bytes and at least on the v2 interface the distinction
+between high and max makes the problem easy to deal with from high
+enforcement.
+
+Thanks.
+
+-- 
+tejun
