@@ -1,62 +1,87 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] mm: memcontrol: fix order calculation in try_charge()
-Date: Tue, 15 Sep 2015 15:56:23 +0200
-Message-ID: <20150915135623.GA26649@dhcp22.suse.cz>
-References: <1442318757-7141-1-git-send-email-jmarchan@redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 2/3] memcg: ratify and consolidate over-charge handling
+Date: Tue, 15 Sep 2015 11:50:02 -0400
+Message-ID: <20150915155002.GF2905@mtj.duckdns.org>
+References: <20150913201416.GC25369@htj.duckdns.org>
+ <20150913201442.GD25369@htj.duckdns.org>
+ <20150914193225.GA26273@dhcp22.suse.cz>
+ <20150914195608.GF25369@htj.duckdns.org>
+ <20150915080110.GA14532@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=rLl4g514Bt5NQqHeOkqKHZKhH6VvtqKP9l5y2Trmj6o=;
+        b=mEX2/QhKjUP9NXCab78I41drbAyHJ/hlM2kwT6UgG+3j1BtUB/wHPDxlBdpUwBo6My
+         9+UcitnIttzL67MVmn+OOwrHqKSAYKEDPzsvqNOqd9yPvgh+RLQRjKc4zOFwss1xPYfY
+         La43KPUHMrrUO/gBYyDUXbpMCjQxWrdguH3WhgRrD+Y6Y8DJ/JWyGEz6R0fePGbAmqhK
+         cfdS+duWwD7LiOXT8ud2oTLm4fYOcliU9QFr/NmVMK9oFuyJkGbg79NvJ2BS99+CKh/x
+         Cm6IpoweDhToVi5SzMqVJaSk7NuAjbroj4l9snoLbGrCtKZ/T6xCZvmf5mCGLlhkS/q5
+         ftvg==
 Content-Disposition: inline
-In-Reply-To: <1442318757-7141-1-git-send-email-jmarchan@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20150915080110.GA14532@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jerome Marchand <jmarchan@redhat.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: akpm@linux-foundation.org, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-mm@kvack.org, vdavydov@parallels.com, kernel-team@fb.com
 
-On Tue 15-09-15 14:05:57, Jerome Marchand wrote:
-> Since commit <6539cc05386> (mm: memcontrol: fold mem_cgroup_do_charge()),
-> the order to pass to mem_cgroup_oom() is calculated by passing the number
-> of pages to get_order() instead of the expected  size in bytes. AFAICT,
-> it only affects the value displayed in the oom warning message.
-> This patch fix this.
+Hello, Michal.
 
-We haven't noticed that just because the OOM is enabled only for page
-faults of order-0 (single page) and get_order work just fine. Thanks for
-noticing this. If we ever start triggering OOM on different orders this
-would be broken.
- 
-> Signed-off-by: Jerome Marchand <jmarchan@redhat.com>
-
-Acked-by: Michal Hocko <mhocko@suse.com>
-
-Btw. a quick git grep shows that at least gart_iommu_init is using
-number of pages as well. I haven't checked it does that intentionally,
-though.
-
-Thanks!
-
-> ---
->  mm/memcontrol.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+On Tue, Sep 15, 2015 at 10:01:10AM +0200, Michal Hocko wrote:
+> > > OK the code is easier in the end, although I would argue that try_charge
+> > > could return ENOMEM for GFP_NOWAIT instead of overcharging (this would
+> > > e.g. allow precharge to bail out earlier). Something for a separate patch I
+> > > guess.
+> > 
+> > Hmm... GFP_NOWAIT is failed unless it also has __GFP_NOFAIL.
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 1742a2d..91bf094 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2032,7 +2032,8 @@ retry:
->  
->  	mem_cgroup_events(mem_over_limit, MEMCG_OOM, 1);
->  
-> -	mem_cgroup_oom(mem_over_limit, gfp_mask, get_order(nr_pages));
-> +	mem_cgroup_oom(mem_over_limit, gfp_mask,
-> +		       get_order(nr_pages * PAGE_SIZE));
->  nomem:
->  	if (!(gfp_mask & __GFP_NOFAIL))
->  		return -ENOMEM;
-> -- 
-> 1.9.3
+> Yes I wasn't clear, sorry, it fails but TIF_MEMDIE or killed/exiting
+> context would still overcharge GFP_NOWAIT requests rather than failing
+> them. Something for a separate patch though.
+
+Ah, I see.  I'm not sure that'd matter one way or the other tho.
+
+> > I don't even think this is an implementation detail.
+> 
+> I really think this is an implementation detail because we can force
+> the implementation to never overcharge. Just retry indefinitely for
+
+But we actively choose not to and I think that's an architectural
+decision.
+
+> I am not sure I understand here. High and max are basically resembling
+> watermarks for the global case. Sure max/high can be set independently
+> which is not the case for the global case which calculates them from
+> min_free_kbytes but why would that matter and make them different?
+
+Yes, there are similarities but if we really wanted to emulate global
+case, we'd just have the hardlimit and then have async reclaim to keep
+certain level of reserves and so on.
+
+I don't think it'd be meaningful to try to follow the limit strictly
+under all circumstances.  It's not like we can track all memory
+consumption to begin with.  There always is common consumption which
+can't clearly be distributed to specific cgroups which makes literal
+strictness rather pointless.  Also, I'm pretty sure there will always
+be enough cases where it is saner to temporarily breach the limit in
+small scale just because exhaustion of memory inside a cgroup doesn't
+mean global exhaustion and that's an inherent characteristic of what
+memcg does.
+
+Anyways, I don't think this difference in viewpoints matters that
+much.
+
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
+tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
