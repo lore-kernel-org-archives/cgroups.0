@@ -1,50 +1,40 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 2/2] memcg: always enable kmemcg on the default hierarchy
-Date: Tue, 15 Sep 2015 11:20:25 +0200
-Message-ID: <20150915092025.GA6812@cmpxchg.org>
-References: <20150828220158.GD11089@htj.dyndns.org>
- <20150828220237.GE11089@htj.dyndns.org>
-Mime-Version: 1.0
+From: "Jerome Marchand" <jmarchan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] mm: memcontrol: fix order calculation in try_charge()
+Date: Tue, 15 Sep 2015 14:05:57 +0200
+Message-ID: <1442318757-7141-1-git-send-email-jmarchan@redhat.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20150828220237.GE11089-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Aug 28, 2015 at 06:02:37PM -0400, Tejun Heo wrote:
-> On the default hierarchy, all memory consumption will be accounted
-> together and controlled by the same set of limits.  Enable kmemcg on
-> the default hierarchy by default.  Boot parameter "disable_kmemcg" can
-> be specified to turn it off.
-> 
-> v2: - v1 triggered oops on nested cgroup creations.  Moved enabling
->       mechanism to memcg_propagate_kmem().
->     - Bypass busy test on kmem activation as it's unnecessary and gets
->       confused by controller being enabled on a cgroup which already
->       has processes.
->     - "disable_kmemcg" boot param added.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Since commit <6539cc05386> (mm: memcontrol: fold mem_cgroup_do_charge()),
+the order to pass to mem_cgroup_oom() is calculated by passing the number
+of pages to get_order() instead of the expected  size in bytes. AFAICT,
+it only affects the value displayed in the oom warning message.
+This patch fix this.
 
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Signed-off-by: Jerome Marchand <jmarchan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-The old distinction between kernel and user memory really doesn't make
-sense and should not be maintained. The dentry and inode caches are a
-significant share of overall memory consumed in common workloads, and
-that is memory unambiguously coupled to userspace activity. I'd go as
-far as removing CONFIG_MEMCG_KMEM altogether because it strikes me as
-a completely unreasonable choice to give to the user (outside of maybe
-CONFIG_EXPERT).
-
-What CONFIG_MEMCG should really capture is all memory that can grow
-significantly in size and can be associated directly with userspace
-behavior. If there are types of memory that turn out to be very costly
-to account and track, we can still go back and conceive an interface
-that lets the user select the types of memory he doesn't need tracked.
-
-But the KMEMCG differentation is an arbitrary, and mostly historical
-distinction that we shouldn't continue to present to users.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 1742a2d..91bf094 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2032,7 +2032,8 @@ retry:
+ 
+ 	mem_cgroup_events(mem_over_limit, MEMCG_OOM, 1);
+ 
+-	mem_cgroup_oom(mem_over_limit, gfp_mask, get_order(nr_pages));
++	mem_cgroup_oom(mem_over_limit, gfp_mask,
++		       get_order(nr_pages * PAGE_SIZE));
+ nomem:
+ 	if (!(gfp_mask & __GFP_NOFAIL))
+ 		return -ENOMEM;
+-- 
+1.9.3
