@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/4] cgroup: implement static_key based cgroup_subsys_enabled() and cgroup_subsys_on_dfl()
-Date: Tue, 15 Sep 2015 21:51:23 -0400
-Message-ID: <1442368285-16306-3-git-send-email-tj@kernel.org>
+Subject: [PATCH 3/4] cgroup: replace cgroup_subsys->disabled tests with cgroup_subsys_enabled()
+Date: Tue, 15 Sep 2015 21:51:24 -0400
+Message-ID: <1442368285-16306-4-git-send-email-tj@kernel.org>
 References: <1442368285-16306-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=H+Silj4uXGq50R4mUDjfrx2Fi3nzBdXthaAxaIh9RrY=;
-        b=CY0pbF5SrI27SkM/IHNMZnXdrmgOpp6nCsaR8tBwamv7koNeQMIYT11WZaj5ry3xdm
-         CTq4csqbr8VtilEz7PWaxQ+sLrHeqeGvk04sVG508hyPLbxSa4DKuGnW9/LU/+xSPJFR
-         4tJNFhvyyD4n37yWEidPAALQ7ENOQ/rpcMS/TEmYFTZNmICBHQmYRuXBXz1wYeyoWPjo
-         WCRjmF/5zYJ7RUUL23Hfu35JY7EspWGTlggAZDCYIyR+1w6PBeqCYi6nN9nT43TcW7TC
-         XWb1++Gfmx928HOC+BO9970b3zTaRoGcmhc57DO+2cav+MmHsGkR1IpKPR8ftqYbX04M
-         A1Uw==
+        bh=YqCGltnOhX1faVxxfMO9JKRjY6xH4XElOLj4j/ntkts=;
+        b=gV01OW6gR/naj4gNZ7DGgQA2hqAe+bCvwAhheNiFb8U1AROqQLs9lnqyA8iBhSgY6G
+         zIfl3btl2Doe+Nv4B013nTA2ZU4VPcfQuS5WocxI61QIhrVvX9nRzoVe3I8ei4LYWZzR
+         Evx7Hlt0J/uHl6z5/tFb4bQMcnfAVStFFE5HGpqIsvBPI8fNN1FzwOpDOX5oq35mIuL4
+         Y7gxYDatoH6XCmVhCkRcr8oJOL4kIZfHbM6dUL9Zw3vfej2NWzz4NtlhQPYA24ZFBj0B
+         KYaJ0xbw3lljPjUOfk0XgdOjZ+EhK3UmBKX/gMlxFjYBBt50cLFM4UCoz1cNDaRSdcdR
+         GX5g==
 In-Reply-To: <1442368285-16306-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -21,114 +21,157 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com, hannes@cmpxchg.org
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@kernel.org>
 
-Whether a subsys is enabled and attached to the default hierarchy
-seldom changes and may be tested in the hot paths.  This patch
-implements static_key based cgroup_subsys_enabled() and
-cgroup_subsys_on_dfl() tests.
+Replace cgroup_subsys->disabled tests in controllers with
+cgroup_subsys_enabled().  cgroup_subsys_enabled() requires literal
+subsys name as its parameter and thus can't be used for cgroup core
+which iterates through controllers.  For cgroup core, introduce and
+use cgroup_ssid_enabled() which uses slower static_key_enabled() test
+and can be indexed by subsys ID.
 
-The following patches will update the users and remove duplicate
-mechanisms.
+This leaves cgroup_subsys->disabled unused.  Removed.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@kernel.org>
 ---
- include/linux/cgroup.h | 21 +++++++++++++++++++++
- kernel/cgroup.c        | 27 ++++++++++++++++++++++++++-
- 2 files changed, 47 insertions(+), 1 deletion(-)
+ include/linux/cgroup-defs.h    |  1 -
+ include/linux/hugetlb_cgroup.h |  4 +---
+ include/linux/memcontrol.h     |  4 +---
+ kernel/cgroup.c                | 28 +++++++++++++++++++++-------
+ 4 files changed, 23 insertions(+), 14 deletions(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index eb7ca55..c3a9f1e 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -17,6 +17,7 @@
- #include <linux/fs.h>
- #include <linux/seq_file.h>
- #include <linux/kernfs.h>
-+#include <linux/jump_label.h>
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index 4d8fcf2..c5d41c3 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -419,7 +419,6 @@ struct cgroup_subsys {
+ 		     struct task_struct *task);
+ 	void (*bind)(struct cgroup_subsys_state *root_css);
  
- #include <linux/cgroup-defs.h>
+-	int disabled;
+ 	int early_init;
  
-@@ -50,6 +51,26 @@ extern struct css_set init_css_set;
- #include <linux/cgroup_subsys.h>
- #undef SUBSYS
+ 	/*
+diff --git a/include/linux/hugetlb_cgroup.h b/include/linux/hugetlb_cgroup.h
+index bcc853e..7edd305 100644
+--- a/include/linux/hugetlb_cgroup.h
++++ b/include/linux/hugetlb_cgroup.h
+@@ -48,9 +48,7 @@ int set_hugetlb_cgroup(struct page *page, struct hugetlb_cgroup *h_cg)
  
-+#define SUBSYS(_x)								\
-+	extern struct static_key_true _x ## _cgrp_subsys_enabled_key;		\
-+	extern struct static_key_true _x ## _cgrp_subsys_on_dfl_key;
-+#include <linux/cgroup_subsys.h>
-+#undef SUBSYS
-+
-+/**
-+ * cgroup_subsys_enabled - fast test on whether a subsys is enabled
-+ * @ss: subsystem in question
-+ */
-+#define cgroup_subsys_enabled(ss)						\
-+	static_branch_likely(&ss ## _enabled_key)
-+
-+/**
-+ * cgroup_subsys_on_dfl - fast test on whether a subsys is on default hierarchy
-+ * @ss: subsystem in question
-+ */
-+#define cgroup_subsys_on_dfl(ss)						\
-+	static_branch_likely(&ss ## _on_dfl_key)
-+
- bool css_has_online_children(struct cgroup_subsys_state *css);
- struct cgroup_subsys_state *css_from_id(int id, struct cgroup_subsys *ss);
- struct cgroup_subsys_state *cgroup_get_e_css(struct cgroup *cgroup,
+ static inline bool hugetlb_cgroup_disabled(void)
+ {
+-	if (hugetlb_cgrp_subsys.disabled)
+-		return true;
+-	return false;
++	return !cgroup_subsys_enabled(hugetlb_cgrp_subsys);
+ }
+ 
+ extern int hugetlb_cgroup_charge_cgroup(int idx, unsigned long nr_pages,
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index ad800e6..9aa7820 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -347,9 +347,7 @@ ino_t page_cgroup_ino(struct page *page);
+ 
+ static inline bool mem_cgroup_disabled(void)
+ {
+-	if (memory_cgrp_subsys.disabled)
+-		return true;
+-	return false;
++	return !cgroup_subsys_enabled(memory_cgrp_subsys);
+ }
+ 
+ /*
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 2cf0f79..3619389 100644
+index 3619389..5703ba7 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -139,6 +139,27 @@ static const char *cgroup_subsys_name[] = {
- };
- #undef SUBSYS
+@@ -224,6 +224,19 @@ static void kill_css(struct cgroup_subsys_state *css);
+ static int cgroup_addrm_files(struct cgroup *cgrp, struct cftype cfts[],
+ 			      bool is_add);
  
-+/* array of static_keys for cgroup_subsys_enabled() and cgroup_subsys_on_dfl() */
-+#define SUBSYS(_x)								\
-+	DEFINE_STATIC_KEY_TRUE(_x ## _cgrp_subsys_enabled_key);			\
-+	DEFINE_STATIC_KEY_TRUE(_x ## _cgrp_subsys_on_dfl_key);			\
-+	EXPORT_SYMBOL_GPL(_x ## _cgrp_subsys_enabled_key);			\
-+	EXPORT_SYMBOL_GPL(_x ## _cgrp_subsys_on_dfl_key);
-+#include <linux/cgroup_subsys.h>
-+#undef SUBSYS
++/**
++ * cgroup_ssid_enabled - cgroup subsys enabled test by subsys ID
++ * @ssid: subsys ID of interest
++ *
++ * cgroup_subsys_enabled() can only be used with literal subsys names which
++ * is fine for individual subsystems but unsuitable for cgroup core.  This
++ * is slower static_key_enabled() based test indexed by @ssid.
++ */
++static bool cgroup_ssid_enabled(int ssid)
++{
++	return static_key_enabled(cgroup_subsys_enabled_key[ssid]);
++}
 +
-+#define SUBSYS(_x) [_x ## _cgrp_id] = &_x ## _cgrp_subsys_enabled_key,
-+static struct static_key_true *cgroup_subsys_enabled_key[] = {
-+#include <linux/cgroup_subsys.h>
-+};
-+#undef SUBSYS
-+
-+#define SUBSYS(_x) [_x ## _cgrp_id] = &_x ## _cgrp_subsys_on_dfl_key,
-+static struct static_key_true *cgroup_subsys_on_dfl_key[] = {
-+#include <linux/cgroup_subsys.h>
-+};
-+#undef SUBSYS
-+
- /*
-  * The default hierarchy, reserved for the subsystems that are otherwise
-  * unattached - it never has more than a single cgroup, and all tasks are
-@@ -1319,9 +1340,12 @@ static int rebind_subsystems(struct cgroup_root *dst_root,
- 
- 		/* default hierarchy doesn't enable controllers by default */
- 		dst_root->subsys_mask |= 1 << ssid;
--		if (dst_root != &cgrp_dfl_root) {
-+		if (dst_root == &cgrp_dfl_root) {
-+			static_branch_enable(cgroup_subsys_on_dfl_key[ssid]);
-+		} else {
- 			dst_root->cgrp.subtree_control |= 1 << ssid;
- 			cgroup_refresh_child_subsys_mask(&dst_root->cgrp);
-+			static_branch_disable(cgroup_subsys_on_dfl_key[ssid]);
- 		}
- 
- 		if (ss->bind)
-@@ -5483,6 +5507,7 @@ static int __init cgroup_disable(char *str)
- 			    strcmp(token, ss->legacy_name))
+ /* IDR wrappers which synchronize using cgroup_idr_lock */
+ static int cgroup_idr_alloc(struct idr *idr, void *ptr, int start, int end,
+ 			    gfp_t gfp_mask)
+@@ -1482,7 +1495,7 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
+ 		for_each_subsys(ss, i) {
+ 			if (strcmp(token, ss->legacy_name))
+ 				continue;
+-			if (ss->disabled)
++			if (!cgroup_ssid_enabled(i))
  				continue;
  
-+			static_branch_disable(cgroup_subsys_enabled_key[i]);
- 			ss->disabled = 1;
+ 			/* Mutually exclusive option 'all' + subsystem name */
+@@ -1513,7 +1526,7 @@ static int parse_cgroupfs_options(char *data, struct cgroup_sb_opts *opts)
+ 	 */
+ 	if (all_ss || (!one_ss && !opts->none && !opts->name))
+ 		for_each_subsys(ss, i)
+-			if (!ss->disabled)
++			if (cgroup_ssid_enabled(i))
+ 				opts->subsys_mask |= (1 << i);
+ 
+ 	/*
+@@ -2762,7 +2775,8 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 		if (tok[0] == '\0')
+ 			continue;
+ 		for_each_subsys_which(ss, ssid, &tmp_ss_mask) {
+-			if (ss->disabled || strcmp(tok + 1, ss->name))
++			if (!cgroup_ssid_enabled(ssid) ||
++			    strcmp(tok + 1, ss->name))
+ 				continue;
+ 
+ 			if (*tok == '+') {
+@@ -3320,7 +3334,7 @@ static int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
+ {
+ 	int ret;
+ 
+-	if (ss->disabled)
++	if (!cgroup_ssid_enabled(ss->id))
+ 		return 0;
+ 
+ 	if (!cfts || cfts[0].name[0] == '\0')
+@@ -5082,7 +5096,7 @@ int __init cgroup_init(void)
+ 		 * disabled flag and cftype registration needs kmalloc,
+ 		 * both of which aren't available during early_init.
+ 		 */
+-		if (ss->disabled)
++		if (!cgroup_ssid_enabled(ssid))
+ 			continue;
+ 
+ 		cgrp_dfl_root.subsys_mask |= 1 << ss->id;
+@@ -5217,7 +5231,8 @@ static int proc_cgroupstats_show(struct seq_file *m, void *v)
+ 	for_each_subsys(ss, i)
+ 		seq_printf(m, "%s\t%d\t%d\t%d\n",
+ 			   ss->legacy_name, ss->root->hierarchy_id,
+-			   atomic_read(&ss->root->nr_cgrps), !ss->disabled);
++			   atomic_read(&ss->root->nr_cgrps),
++			   cgroup_ssid_enabled(i));
+ 
+ 	mutex_unlock(&cgroup_mutex);
+ 	return 0;
+@@ -5508,7 +5523,6 @@ static int __init cgroup_disable(char *str)
+ 				continue;
+ 
+ 			static_branch_disable(cgroup_subsys_enabled_key[i]);
+-			ss->disabled = 1;
  			printk(KERN_INFO "Disabling %s control group subsystem\n",
  			       ss->name);
+ 			break;
 -- 
 2.4.3
