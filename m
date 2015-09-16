@@ -1,60 +1,134 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCHSET] cgroup: use static_keys for subsystem enabled and on_dfl tests
-Date: Tue, 15 Sep 2015 21:51:21 -0400
-Message-ID: <1442368285-16306-1-git-send-email-tj@kernel.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 2/4] cgroup: implement static_key based cgroup_subsys_enabled() and cgroup_subsys_on_dfl()
+Date: Tue, 15 Sep 2015 21:51:23 -0400
+Message-ID: <1442368285-16306-3-git-send-email-tj@kernel.org>
+References: <1442368285-16306-1-git-send-email-tj@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id;
-        bh=fV/Bn/CHAeD27pp0tDe+PfVoYldlRfqc5dhR4KIeOJ0=;
-        b=qMXOZza0GCOpusPHSaoJbKl68oOO1oO+YUa9Y2K+N/UhbbdaHeAuCYYAbD75nbxWUi
-         YpfFvqfKAMdpOL7MkAF7Sa0pUkicQw1MshTP1ToovBgmZbgLADthhgOcP+UdgzAmvXe/
-         XkLZjcC7sDFcmJ4RUQoOstqlvpJkJQmZgjxvQk+2k1mkpuroAd7xRa1T+gpGNuuxSrf5
-         RxXYkQ59iuMQzcWjmW2F0hDgidDlV/Q1a5MawbBM5Qe1QISx3qGKjPi1MRKsXwfcoFDc
-         aq76RtKaBOX5377ZKlyRLD2kR5Cp029gwXkT0Zsc7XBb3gi7RDskUZ9oShT61Tucymnr
-         oWSQ==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=H+Silj4uXGq50R4mUDjfrx2Fi3nzBdXthaAxaIh9RrY=;
+        b=CY0pbF5SrI27SkM/IHNMZnXdrmgOpp6nCsaR8tBwamv7koNeQMIYT11WZaj5ry3xdm
+         CTq4csqbr8VtilEz7PWaxQ+sLrHeqeGvk04sVG508hyPLbxSa4DKuGnW9/LU/+xSPJFR
+         4tJNFhvyyD4n37yWEidPAALQ7ENOQ/rpcMS/TEmYFTZNmICBHQmYRuXBXz1wYeyoWPjo
+         WCRjmF/5zYJ7RUUL23Hfu35JY7EspWGTlggAZDCYIyR+1w6PBeqCYi6nN9nT43TcW7TC
+         XWb1++Gfmx928HOC+BO9970b3zTaRoGcmhc57DO+2cav+MmHsGkR1IpKPR8ftqYbX04M
+         A1Uw==
+In-Reply-To: <1442368285-16306-1-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: lizefan@huawei.com, hannes@cmpxchg.org
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
 
-cgroup_subsys->disabled and cgroup_on_dfl() tests are likely to be
-used in hot paths and seldom change.  The former is set once during
-boot and the latter only when a controller is migrated between the
-default hierarchy and traditional ones.
+Whether a subsys is enabled and attached to the default hierarchy
+seldom changes and may be tested in the hot paths.  This patch
+implements static_key based cgroup_subsys_enabled() and
+cgroup_subsys_on_dfl() tests.
 
-This patchset makes these tests static_key based and contains the
-following four patches.
+The following patches will update the users and remove duplicate
+mechanisms.
 
- 0001-jump_label-make-static_key_enabled-work-on-static_ke.patch
- 0002-cgroup-implement-static_key-based-cgroup_subsys_enab.patch
- 0003-cgroup-replace-cgroup_subsys-disabled-tests-with-cgr.patch
- 0004-cgroup-replace-cgroup_on_dfl-tests-in-controllers-wi.patch
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ include/linux/cgroup.h | 21 +++++++++++++++++++++
+ kernel/cgroup.c        | 27 ++++++++++++++++++++++++++-
+ 2 files changed, 47 insertions(+), 1 deletion(-)
 
-0001 is a prep patch in jump_label.  0002 adds the needed static_keys.
-0003-0004 convert the existing usages and drop the old tests.
-
-This patchset is on top of v4.3-rc1 and is availalbe in the following
-git branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-jump-labels
-
-diffstat follows.  Thanks.
-
- block/blk-throttle.c           |    2 
- block/cfq-iosched.c            |    4 -
- include/linux/cgroup-defs.h    |    1 
- include/linux/cgroup.h         |   79 +++++++---------------------
- include/linux/hugetlb_cgroup.h |    4 -
- include/linux/jump_label.h     |   18 +++---
- include/linux/memcontrol.h     |    4 -
- kernel/cgroup.c                |  113 ++++++++++++++++++++++++++++++++++++++---
- kernel/cpuset.c                |   23 ++++----
- mm/memcontrol.c                |    4 -
- 10 files changed, 157 insertions(+), 95 deletions(-)
-
---
-tejun
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index eb7ca55..c3a9f1e 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -17,6 +17,7 @@
+ #include <linux/fs.h>
+ #include <linux/seq_file.h>
+ #include <linux/kernfs.h>
++#include <linux/jump_label.h>
+ 
+ #include <linux/cgroup-defs.h>
+ 
+@@ -50,6 +51,26 @@ extern struct css_set init_css_set;
+ #include <linux/cgroup_subsys.h>
+ #undef SUBSYS
+ 
++#define SUBSYS(_x)								\
++	extern struct static_key_true _x ## _cgrp_subsys_enabled_key;		\
++	extern struct static_key_true _x ## _cgrp_subsys_on_dfl_key;
++#include <linux/cgroup_subsys.h>
++#undef SUBSYS
++
++/**
++ * cgroup_subsys_enabled - fast test on whether a subsys is enabled
++ * @ss: subsystem in question
++ */
++#define cgroup_subsys_enabled(ss)						\
++	static_branch_likely(&ss ## _enabled_key)
++
++/**
++ * cgroup_subsys_on_dfl - fast test on whether a subsys is on default hierarchy
++ * @ss: subsystem in question
++ */
++#define cgroup_subsys_on_dfl(ss)						\
++	static_branch_likely(&ss ## _on_dfl_key)
++
+ bool css_has_online_children(struct cgroup_subsys_state *css);
+ struct cgroup_subsys_state *css_from_id(int id, struct cgroup_subsys *ss);
+ struct cgroup_subsys_state *cgroup_get_e_css(struct cgroup *cgroup,
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 2cf0f79..3619389 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -139,6 +139,27 @@ static const char *cgroup_subsys_name[] = {
+ };
+ #undef SUBSYS
+ 
++/* array of static_keys for cgroup_subsys_enabled() and cgroup_subsys_on_dfl() */
++#define SUBSYS(_x)								\
++	DEFINE_STATIC_KEY_TRUE(_x ## _cgrp_subsys_enabled_key);			\
++	DEFINE_STATIC_KEY_TRUE(_x ## _cgrp_subsys_on_dfl_key);			\
++	EXPORT_SYMBOL_GPL(_x ## _cgrp_subsys_enabled_key);			\
++	EXPORT_SYMBOL_GPL(_x ## _cgrp_subsys_on_dfl_key);
++#include <linux/cgroup_subsys.h>
++#undef SUBSYS
++
++#define SUBSYS(_x) [_x ## _cgrp_id] = &_x ## _cgrp_subsys_enabled_key,
++static struct static_key_true *cgroup_subsys_enabled_key[] = {
++#include <linux/cgroup_subsys.h>
++};
++#undef SUBSYS
++
++#define SUBSYS(_x) [_x ## _cgrp_id] = &_x ## _cgrp_subsys_on_dfl_key,
++static struct static_key_true *cgroup_subsys_on_dfl_key[] = {
++#include <linux/cgroup_subsys.h>
++};
++#undef SUBSYS
++
+ /*
+  * The default hierarchy, reserved for the subsystems that are otherwise
+  * unattached - it never has more than a single cgroup, and all tasks are
+@@ -1319,9 +1340,12 @@ static int rebind_subsystems(struct cgroup_root *dst_root,
+ 
+ 		/* default hierarchy doesn't enable controllers by default */
+ 		dst_root->subsys_mask |= 1 << ssid;
+-		if (dst_root != &cgrp_dfl_root) {
++		if (dst_root == &cgrp_dfl_root) {
++			static_branch_enable(cgroup_subsys_on_dfl_key[ssid]);
++		} else {
+ 			dst_root->cgrp.subtree_control |= 1 << ssid;
+ 			cgroup_refresh_child_subsys_mask(&dst_root->cgrp);
++			static_branch_disable(cgroup_subsys_on_dfl_key[ssid]);
+ 		}
+ 
+ 		if (ss->bind)
+@@ -5483,6 +5507,7 @@ static int __init cgroup_disable(char *str)
+ 			    strcmp(token, ss->legacy_name))
+ 				continue;
+ 
++			static_branch_disable(cgroup_subsys_enabled_key[i]);
+ 			ss->disabled = 1;
+ 			printk(KERN_INFO "Disabling %s control group subsystem\n",
+ 			       ss->name);
+-- 
+2.4.3
