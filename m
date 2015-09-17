@@ -1,43 +1,43 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH 3/3] sched: Implement interface for cgroup unified
  hierarchy
-Date: Thu, 17 Sep 2015 17:53:32 +0200
-Message-ID: <20150917155332.GP3816@twins.programming.kicks-ass.net>
-References: <20150824213600.GK28944@mtj.duckdns.org>
+Date: Thu, 17 Sep 2015 19:29:15 -0400
+Message-ID: <20150917232915.GA14058@htj.duckdns.org>
+References: <CAPM31RJNy3jgG=DYe6GO=wyL4BPPxwUm1f2S6YXacQmo7viFZA@mail.gmail.com>
+ <20150822182916.GE20768@mtj.duckdns.org>
+ <CAPM31RKPUzuiwVs3rs=4M1Kt=+c9WX8o84r-iO4semfznvYmHw@mail.gmail.com>
+ <20150824213600.GK28944@mtj.duckdns.org>
  <CAPM31RKCO-yxtVf+iUs8FOqk6uGSyixEXtx9zSzxQ1uOGtkDqQ@mail.gmail.com>
  <20150824221935.GN28944@mtj.duckdns.org>
  <CAPM31RK08pC3g9qx+TEw6PQvtHk8idKE3OALQN8cFr_QOuT3FA@mail.gmail.com>
  <20150825210234.GE26785@mtj.duckdns.org>
  <CAPM31RJvrPL7S37=yhxMA5OGUFNUfPurTZ21nfH6eFRb15ZGtw@mail.gmail.com>
  <20150912144007.GA8942@htj.duckdns.org>
- <20150917143527.GJ3604@twins.programming.kicks-ass.net>
- <20150917151049.GB11639@twins.programming.kicks-ass.net>
- <20150917155245.GF7205@mtj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=/Dk67HUUFJ5lJLq6G2cybSMVNfZ6mVGaBshKrL0rc5M=;
+        b=hr6nptTedqF3gyvvg/fpkCMyzxGNIy8qlXpNUi4K8TrGxISuujSdxntKxsJ4BXRfHR
+         5jX0Ld0uEmT7ylioWqLpBaOah4V7GJzU3Na1Dqgd6F263paxT/zhIAD/tcWnPc7ughII
+         3Mgg0Q1SALPFTo2FB/MkE6cdFYgkS8PR1aVhiDZwUlEnNwyl/68DuIobOk5CJLhy00zT
+         I4GpJ+c0d6rs9rR8TK0qkGgyO3S5K2eI3i+XBSz2lC28d/Usp9lLxxqhnOXL4mrNpyRQ
+         vPu1b7wHGxDhtYasVWqpGNjYjzNeY1h6gVqasLgXRAvJzy921hKp1JC4i+o1Wdg0fSd3
+         dL8w==
 Content-Disposition: inline
-In-Reply-To: <20150917155245.GF7205-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <20150912144007.GA8942-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-team <kernel-team-b10kYP2dOMg@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-team <kernel-team-b10kYP2dOMg@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Thu, Sep 17, 2015 at 11:52:45AM -0400, Tejun Heo wrote:
-> Hello,
-> 
-> On Thu, Sep 17, 2015 at 05:10:49PM +0200, Peter Zijlstra wrote:
-> > Subject: sched: Refuse to unplug a CPU if this will violate user task affinity
-> > 
-> > Its bad policy to allow unplugging a CPU for which a user set explicit
-> > affinity, either strictly on this CPU or in case this was the last
-> > online CPU in its mask.
-> > 
-> > Either would end up forcing the thread on a random other CPU, violating
-> > the sys_sched_setaffinity() constraint.
-> 
-> Shouldn't this at least handle suspend differently?  Otherwise any
-> userland task would be able to block suspend.
+Paul?
 
-It does, it will allow suspend.
+Thanks.
+
+-- 
+tejun
