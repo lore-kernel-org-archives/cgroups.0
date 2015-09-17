@@ -1,36 +1,77 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH 1/4] jump_label: make static_key_enabled() work on
- static_key_true/false types too
-Date: Thu, 17 Sep 2015 10:59:57 +0200
-Message-ID: <20150917085957.GI3816@twins.programming.kicks-ass.net>
-References: <1442368285-16306-1-git-send-email-tj@kernel.org>
- <1442368285-16306-2-git-send-email-tj@kernel.org>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH] mm: memcontrol: fix order calculation in try_charge()
+Date: Thu, 17 Sep 2015 15:04:27 +0200
+Message-ID: <20150917130427.GA25740@dhcp22.suse.cz>
+References: <1442318757-7141-1-git-send-email-jmarchan@redhat.com>
+ <20150915135623.GA26649@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1442368285-16306-2-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20150915135623.GA26649@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: Jerome Marchand <jmarchan@redhat.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-On Tue, Sep 15, 2015 at 09:51:22PM -0400, Tejun Heo wrote:
-> static_key_enabled() can be used on struct static_key but not on its
-> wrapper types static_key_true and static_key_false.  The function is
-> useful for debugging and management of static keys.  Update it so that
-> it can be used for the wrapper types too.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-> ---
-> Hello,
-> 
-> If this patch is acceptable, please let me know how it should be
-> routed.
-> 
+[CC Andrew - the patch was posted here
+http://lkml.kernel.org/r/1442318757-7141-1-git-send-email-jmarchan%40redhat.com]
 
-Yeah, no problem with this, I'm assuming there's dependencies in the
-patches you didn't send me? 
+On Tue 15-09-15 15:56:23, Michal Hocko wrote:
+> On Tue 15-09-15 14:05:57, Jerome Marchand wrote:
+> > Since commit <6539cc05386> (mm: memcontrol: fold mem_cgroup_do_charge()),
+> > the order to pass to mem_cgroup_oom() is calculated by passing the number
+> > of pages to get_order() instead of the expected  size in bytes. AFAICT,
+> > it only affects the value displayed in the oom warning message.
+> > This patch fix this.
+> 
+> We haven't noticed that just because the OOM is enabled only for page
+> faults of order-0 (single page) and get_order work just fine. Thanks for
+> noticing this. If we ever start triggering OOM on different orders this
+> would be broken.
+>  
+> > Signed-off-by: Jerome Marchand <jmarchan@redhat.com>
+> 
+> Acked-by: Michal Hocko <mhocko@suse.com>
+> 
+> Btw. a quick git grep shows that at least gart_iommu_init is using
+> number of pages as well. I haven't checked it does that intentionally,
+> though.
+> 
+> Thanks!
+> 
+> > ---
+> >  mm/memcontrol.c | 3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index 1742a2d..91bf094 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -2032,7 +2032,8 @@ retry:
+> >  
+> >  	mem_cgroup_events(mem_over_limit, MEMCG_OOM, 1);
+> >  
+> > -	mem_cgroup_oom(mem_over_limit, gfp_mask, get_order(nr_pages));
+> > +	mem_cgroup_oom(mem_over_limit, gfp_mask,
+> > +		       get_order(nr_pages * PAGE_SIZE));
+> >  nomem:
+> >  	if (!(gfp_mask & __GFP_NOFAIL))
+> >  		return -ENOMEM;
+> > -- 
+> > 1.9.3
+> 
+> -- 
+> Michal Hocko
+> SUSE Labs
+
+-- 
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
