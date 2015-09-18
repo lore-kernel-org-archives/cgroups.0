@@ -1,40 +1,44 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET] cgroup: use static_keys for subsystem enabled and
- on_dfl tests
-Date: Fri, 18 Sep 2015 11:55:51 -0400
-Message-ID: <20150918155551.GB4065@mtj.duckdns.org>
-References: <1442368285-16306-1-git-send-email-tj@kernel.org>
+Subject: Re: [PATCH 2/5] cgroup, memcg, cpuset: implement
+ cgroup_taskset_for_each_leader()
+Date: Fri, 18 Sep 2015 12:04:17 -0400
+Message-ID: <20150918160417.GD4065@mtj.duckdns.org>
+References: <1441998022-12953-1-git-send-email-tj@kernel.org>
+ <1441998022-12953-3-git-send-email-tj@kernel.org>
+ <20150914204907.GI25369@htj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=Umu7z5SXoWm/Sg6WqY2wl17yRZjRdW4ErdpC/jCKcNw=;
-        b=g+SCUqqVUXPemraMktkPsrU0vwaPuZOgazg2MsMRqPMhTstngaMfuFg3lwQ5mNUODg
-         /3KEwm9Rb2oTBKB3jCeqVnDD3mH34G8NSJalW8tmaYTsnmLxlI/WSTazUAwlmZVNJ4KY
-         EBDck5uh88EFd00zDp5Ae23XkvRCHcQ5Xo8QK3DGR7UMRQjbC/yq+srocbkjr+hJv6GV
-         +IKrCJ7HstZFFuUvUl0nzzskv5AlmAdIcdA/+Izykt15/wnQcQ+6xuJ6G4MBpTLgV3b6
-         3BBzDuo0ONPcw4w8M0skopjW39S0KdXYrD9tkOC0g7rB8IAQi/uDe5M6LlsE/pziC8S2
-         HYYA==
+        bh=hidz/mFRRjxwZ1bJm4hTwtKon4Zdlz/MBWZ0Md0tUb0=;
+        b=gD8ixgANq2G/XnpnJsQ6MSvD+rOfyuy7O6X1tfayabMZwu0uaSRUig89LsC84LAy1U
+         xK1HihWKSBA/REAeeMv9Pv/Ps3kF1lZV5NiYbMMecWkS7YfUKXZppvXI0Utuc5angXJR
+         oYXvlGvRVX6YkwGC7iyEN2GX5SZKkYwL9PmJE0Gby/5HqDyP8G1B0iK8br47VLF0Dud5
+         FJMh653Lb7DkMfj3rtPlfZmz7jl9Bzm2xGAfCaPYsdQzp3NJYgUnkZFtFJRV22n7FCa5
+         FCdFsIjT95WNjFFQ1MWjM9Ihz6gRGDpG2Dho7COKNaS5/pSgJkpLTf2C3o9BjL4WL7X9
+         fv5w==
 Content-Disposition: inline
-In-Reply-To: <1442368285-16306-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20150914204907.GI25369@htj.duckdns.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan@huawei.com, hannes@cmpxchg.org
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: lizefan@huawei.com
+Cc: cgroups@vger.kernel.org, hannes@cmpxchg.org, mhocko@suse.cz, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Tue, Sep 15, 2015 at 09:51:21PM -0400, Tejun Heo wrote:
-> cgroup_subsys->disabled and cgroup_on_dfl() tests are likely to be
-> used in hot paths and seldom change.  The former is set once during
-> boot and the latter only when a controller is migrated between the
-> default hierarchy and traditional ones.
+On Mon, Sep 14, 2015 at 04:49:07PM -0400, Tejun Heo wrote:
+> Michal, if you're okay with this patch, I'll apply the patchset in
+> cgroup/for-4.4.
 
-Applying to cgroup/for-4.4.
-
-Thanks.
+Michal?
 
 -- 
 tejun
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
