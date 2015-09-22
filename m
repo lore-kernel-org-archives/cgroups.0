@@ -1,138 +1,34 @@
-From: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] memcg: make mem_cgroup_read_stat() unsigned
-Date: Tue, 22 Sep 2015 15:16:32 -0700
-Message-ID: <1442960192-83405-1-git-send-email-gthelen@google.com>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH] memcg: make mem_cgroup_read_stat() unsigned
+Date: Tue, 22 Sep 2015 15:24:23 -0700
+Message-ID: <20150922152423.5751d932aebfe12cdd40a618@linux-foundation.org>
+References: <1442960192-83405-1-git-send-email-gthelen@google.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=from:to:cc:subject:date:message-id;
-        bh=F35BEPUk9ApJ72yaxgAeslu4nHjdaS3GS8+efaCm2zg=;
-        b=QhwR9J93sokRcMp7bwr9DuYU1Bg/slCzK6E120eElgmBHChPW4b8K4YIteXu4Hgs3m
-         9doAX7pGaxiIWVw6HiJfJzhR5RIP6MRl7oEEIF/6kwo5k++DcseGZtue+/4FkFxy1kkl
-         aTkC8n2yVM1Oo2jhk+lyBmAfnBz53gMQXTGDsKDPkyPOtZIjpUfbYls65gjeLSIB+dEJ
-         yzFKUtDuZZ1h2qaxntTii+0goF/TFFlYmmSpP+xIX3Wnx7sfPwySA0CFJV2CeTdvlE1b
-         mI5SCJ718NJciAKxcCd1ynkPkZsxdVi4d3Od4uppGuZQhKMug5ye4w/TCq6V5NA2Hrdm
-         EZ7A==
+In-Reply-To: <1442960192-83405-1-git-send-email-gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-mem_cgroup_read_stat() returns a page count by summing per cpu page
-counters.  The summing is racy wrt. updates, so a transient negative sum
-is possible.  Callers don't want negative values:
-- mem_cgroup_wb_stats() doesn't want negative nr_dirty or nr_writeback.
-- oom reports and memory.stat shouldn't show confusing negative usage.
-- tree_usage() already avoids negatives.
+On Tue, 22 Sep 2015 15:16:32 -0700 Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
 
-Avoid returning negative page counts from mem_cgroup_read_stat() and
-convert it to unsigned.
+> mem_cgroup_read_stat() returns a page count by summing per cpu page
+> counters.  The summing is racy wrt. updates, so a transient negative sum
+> is possible.  Callers don't want negative values:
+> - mem_cgroup_wb_stats() doesn't want negative nr_dirty or nr_writeback.
+> - oom reports and memory.stat shouldn't show confusing negative usage.
+> - tree_usage() already avoids negatives.
+> 
+> Avoid returning negative page counts from mem_cgroup_read_stat() and
+> convert it to unsigned.
 
-Signed-off-by: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
- mm/memcontrol.c | 30 ++++++++++++++++++------------
- 1 file changed, 18 insertions(+), 12 deletions(-)
+Someone please remind me why this code doesn't use the existing
+percpu_counter library which solved this problem years ago.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 6ddaeba34e09..2633e9be4a99 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -644,12 +644,14 @@ mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_zone *mctz)
- }
- 
- /*
-+ * Return page count for single (non recursive) @memcg.
-+ *
-  * Implementation Note: reading percpu statistics for memcg.
-  *
-  * Both of vmstat[] and percpu_counter has threshold and do periodic
-  * synchronization to implement "quick" read. There are trade-off between
-  * reading cost and precision of value. Then, we may have a chance to implement
-- * a periodic synchronizion of counter in memcg's counter.
-+ * a periodic synchronization of counter in memcg's counter.
-  *
-  * But this _read() function is used for user interface now. The user accounts
-  * memory usage by memory cgroup and he _always_ requires exact value because
-@@ -659,17 +661,24 @@ mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_zone *mctz)
-  *
-  * If there are kernel internal actions which can make use of some not-exact
-  * value, and reading all cpu value can be performance bottleneck in some
-- * common workload, threashold and synchonization as vmstat[] should be
-+ * common workload, threashold and synchronization as vmstat[] should be
-  * implemented.
-  */
--static long mem_cgroup_read_stat(struct mem_cgroup *memcg,
--				 enum mem_cgroup_stat_index idx)
-+static unsigned long
-+mem_cgroup_read_stat(struct mem_cgroup *memcg, enum mem_cgroup_stat_index idx)
- {
- 	long val = 0;
- 	int cpu;
- 
-+	/* Per-cpu values can be negative, use a signed accumulator */
- 	for_each_possible_cpu(cpu)
- 		val += per_cpu(memcg->stat->count[idx], cpu);
-+	/*
-+	 * Summing races with updates, so val may be negative.  Avoid exposing
-+	 * transient negative values.
-+	 */
-+	if (val < 0)
-+		val = 0;
- 	return val;
- }
- 
-@@ -1254,7 +1263,7 @@ void mem_cgroup_print_oom_info(struct mem_cgroup *memcg, struct task_struct *p)
- 		for (i = 0; i < MEM_CGROUP_STAT_NSTATS; i++) {
- 			if (i == MEM_CGROUP_STAT_SWAP && !do_swap_account)
- 				continue;
--			pr_cont(" %s:%ldKB", mem_cgroup_stat_names[i],
-+			pr_cont(" %s:%luKB", mem_cgroup_stat_names[i],
- 				K(mem_cgroup_read_stat(iter, i)));
- 		}
- 
-@@ -2819,14 +2828,11 @@ static unsigned long tree_stat(struct mem_cgroup *memcg,
- 			       enum mem_cgroup_stat_index idx)
- {
- 	struct mem_cgroup *iter;
--	long val = 0;
-+	unsigned long val = 0;
- 
--	/* Per-cpu values can be negative, use a signed accumulator */
- 	for_each_mem_cgroup_tree(iter, memcg)
- 		val += mem_cgroup_read_stat(iter, idx);
- 
--	if (val < 0) /* race ? */
--		val = 0;
- 	return val;
- }
- 
-@@ -3169,7 +3175,7 @@ static int memcg_stat_show(struct seq_file *m, void *v)
- 	for (i = 0; i < MEM_CGROUP_STAT_NSTATS; i++) {
- 		if (i == MEM_CGROUP_STAT_SWAP && !do_swap_account)
- 			continue;
--		seq_printf(m, "%s %ld\n", mem_cgroup_stat_names[i],
-+		seq_printf(m, "%s %lu\n", mem_cgroup_stat_names[i],
- 			   mem_cgroup_read_stat(memcg, i) * PAGE_SIZE);
- 	}
- 
-@@ -3194,13 +3200,13 @@ static int memcg_stat_show(struct seq_file *m, void *v)
- 			   (u64)memsw * PAGE_SIZE);
- 
- 	for (i = 0; i < MEM_CGROUP_STAT_NSTATS; i++) {
--		long long val = 0;
-+		unsigned long long val = 0;
- 
- 		if (i == MEM_CGROUP_STAT_SWAP && !do_swap_account)
- 			continue;
- 		for_each_mem_cgroup_tree(mi, memcg)
- 			val += mem_cgroup_read_stat(mi, i) * PAGE_SIZE;
--		seq_printf(m, "total_%s %lld\n", mem_cgroup_stat_names[i], val);
-+		seq_printf(m, "total_%s %llu\n", mem_cgroup_stat_names[i], val);
- 	}
- 
- 	for (i = 0; i < MEM_CGROUP_EVENTS_NSTATS; i++) {
--- 
-2.6.0.rc0.131.gf624c3d
+>  	for_each_possible_cpu(cpu)
+
+and which doesn't iterate across offlined CPUs.
+
