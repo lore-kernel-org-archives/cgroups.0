@@ -1,67 +1,182 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup fixes for v4.3-rc2
-Date: Mon, 21 Sep 2015 17:59:08 -0400
-Message-ID: <20150921215908.GJ13263@mtj.duckdns.org>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: 4.3-rc1 dirty page count underflow (cgroup-related?)
+Date: Tue, 22 Sep 2015 11:03:11 +0200
+Message-ID: <20150922090311.GB25888@dhcp22.suse.cz>
+References: <55FC24C2.8020501@intel.com>
+ <xr93pp1cmc0t.fsf@gthelen.mtv.corp.google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-         :content-disposition:user-agent;
-        bh=ILCxK7OBgUSHc/GxhiAORxVzr0uhvbu1mECebFp2Nns=;
-        b=ttC4Bi8F88RpfY+fwY6iM65kFZifr4njEyV+P1oNcGmTI+2v5In4sULPuodcEgNG5x
-         Z2UgnfGVhJ4Wegul1JlFZ8dR2DLgNB0gMd86giP09XKdqGZM5P+f9AhmnO5aruzHuPYA
-         aXNIAuUcTz0BM/tVPWWNTifNoeqbX8ICaHZXW/uHh0m7Cf7Z8k8S7H7vSMxi485kcV5E
-         z/vfma0l2UaY/aiEg9dFkmIdQw7sAeYBJkha9V4ZoditZHyE9vfoX9tVUoRV9twUWR54
-         SF30bwowxIS497sV3v+s8TwIzNv6yj13wXdkxOZXWLgIYKtazsPdY3hiyuy5IUCFkeqH
-         XS9Q==
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <xr93pp1cmc0t.fsf@gthelen.mtv.corp.google.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Greg Thelen <gthelen@google.com>
+Cc: Dave Hansen <dave.hansen@intel.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@fb.com>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <linux-mm@kvack.org>, open list <linux-kernel@vger.kernel.org>
 
-Hello, Linus.
+[I am sorry I didn't get to this earlier because I was at an internal
+conference last week]
 
-The threadgroup locking changes which went in during 4.2 devel cycle
-added write locking of a percpu_rwsem in cgroup task migration path;
-unfortunately, that involved expedited rcu syncing which turned out to
-be too slow and heavy for certain workloads.  The patchset which is
-dependent on this one didn't get committed during that devel cycle, so
-these two patches can be reverted safely.
+On Mon 21-09-15 01:06:58, Greg Thelen wrote:
+[...]
+> >From f5c39c2e8471c10fe0464ca7b6e6f743ce6920a6 Mon Sep 17 00:00:00 2001
+> From: Greg Thelen <gthelen@google.com>
+> Date: Sat, 19 Sep 2015 16:21:18 -0700
+> Subject: [PATCH] memcg: fix dirty page migration
+> 
+> The problem starts with a file backed dirty page which is charged to a
+> memcg.  Then page migration is used to move oldpage to newpage.
+> Migration:
+> - copies the oldpage's data to newpage
+> - clears oldpage.PG_dirty
+> - sets newpage.PG_dirty
+> - uncharges oldpage from memcg
+> - charges newpage to memcg
+> 
+> Clearing oldpage.PG_dirty decrements the charged memcg's dirty page
+> count.  However, because newpage is not yet charged, setting
+> newpage.PG_dirty does not increment the memcg's dirty page count.  After
+> migration completes newpage.PG_dirty is eventually cleared, often in
+> account_page_cleaned().  At this time newpage is charged to a memcg so
+> the memcg's dirty page count is decremented which causes underflow
+> because the count was not previously incremented by migration.  This
+> underflow causes balance_dirty_pages() to see a very large unsigned
+> number of dirty memcg pages which leads to aggressive throttling of
+> buffered writes by processes in non root memcg.
 
-Oleg reworked percpu_rwsem for 4.4 so that the writer path is a lot
-lighter.  The reported issue goes away with Oleg's reworked
-percpu_rwsem and I'll reapply these patches on the for-4.4 branch so
-that they can land together with Oleg's changes.
+Very well spotted!
 
-Thanks.
+> This issue:
+> - can harm performance of non root memcg buffered writes.
+> - can report too small (even negative) values in
+>   memory.stat[(total_)dirty] counters of all memcg, including the root.
+> 
+> To avoid polluting migrate.c with #ifdef CONFIG_MEMCG checks, introduce
+> page_memcg() and set_page_memcg() helpers.
+> 
+> Test:
+>     0) setup and enter limited memcg
+>     mkdir /sys/fs/cgroup/test
+>     echo 1G > /sys/fs/cgroup/test/memory.limit_in_bytes
+>     echo $$ > /sys/fs/cgroup/test/cgroup.procs
+> 
+>     1) buffered writes baseline
+>     dd if=/dev/zero of=/data/tmp/foo bs=1M count=1k
+>     sync
+>     grep ^dirty /sys/fs/cgroup/test/memory.stat
+> 
+>     2) buffered writes with compaction antagonist to induce migration
+>     yes 1 > /proc/sys/vm/compact_memory &
+>     rm -rf /data/tmp/foo
+>     dd if=/dev/zero of=/data/tmp/foo bs=1M count=1k
+>     kill %
+>     sync
+>     grep ^dirty /sys/fs/cgroup/test/memory.stat
+> 
+>     3) buffered writes without antagonist, should match baseline
+>     rm -rf /data/tmp/foo
+>     dd if=/dev/zero of=/data/tmp/foo bs=1M count=1k
+>     sync
+>     grep ^dirty /sys/fs/cgroup/test/memory.stat
+> 
+>                        (speed, dirty residue)
+>              unpatched                       patched
+>     1) 841 MB/s 0 dirty pages          886 MB/s 0 dirty pages
+>     2) 611 MB/s -33427456 dirty pages  793 MB/s 0 dirty pages
+>     3) 114 MB/s -33427456 dirty pages  891 MB/s 0 dirty pages
+> 
+>     Notice that unpatched baseline performance (1) fell after
+>     migration (3): 841 -> 114 MB/s.  In the patched kernel, post
+>     migration performance matches baseline.
+> 
+> Fixes: c4843a7593a9 ("memcg: add per cgroup dirty page accounting")
+> Cc: <stable@vger.kernel.org> # 4.2+
+> Reported-by: Dave Hansen <dave.hansen@intel.com>
+> Signed-off-by: Greg Thelen <gthelen@google.com>
 
-The following changes since commit 6ff33f3902c3b1c5d0db6b1e2c70b6d76fba357f:
+Acked-by: Michal Hocko <mhocko@suse.com>
 
-  Linux 4.3-rc1 (2015-09-12 16:35:56 -0700)
+Thanks!
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.3-fixes
-
-for you to fetch changes up to 0c986253b939cc14c69d4adbe2b4121bdf4aa220:
-
-  Revert "sched, cgroup: replace signal_struct->group_rwsem with a global percpu_rwsem" (2015-09-16 11:51:12 -0400)
-
-----------------------------------------------------------------
-Tejun Heo (2):
-      Revert "cgroup: simplify threadgroup locking"
-      Revert "sched, cgroup: replace signal_struct->group_rwsem with a global percpu_rwsem"
-
- include/linux/cgroup-defs.h |  27 +----------
- include/linux/init_task.h   |   8 ++++
- include/linux/sched.h       |  12 +++++
- kernel/cgroup.c             | 110 +++++++++++++++++++++++++++++++++-----------
- kernel/fork.c               |   4 ++
- 5 files changed, 110 insertions(+), 51 deletions(-)
+> ---
+>  include/linux/mm.h | 21 +++++++++++++++++++++
+>  mm/migrate.c       | 12 +++++++++++-
+>  2 files changed, 32 insertions(+), 1 deletion(-)
+> 
+> diff --git a/include/linux/mm.h b/include/linux/mm.h
+> index 91c08f6f0dc9..80001de019ba 100644
+> --- a/include/linux/mm.h
+> +++ b/include/linux/mm.h
+> @@ -905,6 +905,27 @@ static inline void set_page_links(struct page *page, enum zone_type zone,
+>  #endif
+>  }
+>  
+> +#ifdef CONFIG_MEMCG
+> +static inline struct mem_cgroup *page_memcg(struct page *page)
+> +{
+> +	return page->mem_cgroup;
+> +}
+> +
+> +static inline void set_page_memcg(struct page *page, struct mem_cgroup *memcg)
+> +{
+> +	page->mem_cgroup = memcg;
+> +}
+> +#else
+> +static inline struct mem_cgroup *page_memcg(struct page *page)
+> +{
+> +	return NULL;
+> +}
+> +
+> +static inline void set_page_memcg(struct page *page, struct mem_cgroup *memcg)
+> +{
+> +}
+> +#endif
+> +
+>  /*
+>   * Some inline functions in vmstat.h depend on page_zone()
+>   */
+> diff --git a/mm/migrate.c b/mm/migrate.c
+> index c3cb566af3e2..6116b8f64d27 100644
+> --- a/mm/migrate.c
+> +++ b/mm/migrate.c
+> @@ -740,6 +740,15 @@ static int move_to_new_page(struct page *newpage, struct page *page,
+>  	if (PageSwapBacked(page))
+>  		SetPageSwapBacked(newpage);
+>  
+> +	/*
+> +	 * Indirectly called below, migrate_page_copy() copies PG_dirty and thus
+> +	 * needs newpage's memcg set to transfer memcg dirty page accounting.
+> +	 * So perform memcg migration in two steps:
+> +	 * 1. set newpage->mem_cgroup (here)
+> +	 * 2. clear page->mem_cgroup (below)
+> +	 */
+> +	set_page_memcg(newpage, page_memcg(page));
+> +
+>  	mapping = page_mapping(page);
+>  	if (!mapping)
+>  		rc = migrate_page(mapping, newpage, page, mode);
+> @@ -756,9 +765,10 @@ static int move_to_new_page(struct page *newpage, struct page *page,
+>  		rc = fallback_migrate_page(mapping, newpage, page, mode);
+>  
+>  	if (rc != MIGRATEPAGE_SUCCESS) {
+> +		set_page_memcg(newpage, NULL);
+>  		newpage->mapping = NULL;
+>  	} else {
+> -		mem_cgroup_migrate(page, newpage, false);
+> +		set_page_memcg(page, NULL);
+>  		if (page_was_mapped)
+>  			remove_migration_ptes(page, newpage);
+>  		page->mapping = NULL;
+> -- 
+> 2.6.0.rc0.131.gf624c3d
 
 -- 
-tejun
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
