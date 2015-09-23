@@ -1,46 +1,56 @@
-From: Chris Mason <clm@fb.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH 2/2] ext4: implement cgroup writeback support
-Date: Wed, 23 Sep 2015 13:53:37 -0400
-Message-ID: <20150923175337.GD25218@ret.masoncoding.com>
+Date: Wed, 23 Sep 2015 13:57:23 -0400
+Message-ID: <20150923175723.GC26647@mtj.duckdns.org>
 References: <1434495193-31182-1-git-send-email-tj@kernel.org>
  <1434495193-31182-3-git-send-email-tj@kernel.org>
  <20150722035620.GD2944@thunk.org>
  <1443012552.19983.209.camel@gmail.com>
- <20150923172535.GC25218@ret.masoncoding.com>
- <CAF4G-tKEcnVw76-ZU77AjmBDGybLnNEOKjkJtYBN67es0wb30g@mail.gmail.com>
+ <1443016253.19983.230.camel@gmail.com>
+ <20150923170238.GG3318@thunk.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=facebook; bh=d2WmcuCLRyelnMZTsGowmD/VOt3c1pygqdKNZ5a0kyw=;
- b=YDz0m08xPMCttn6x+QzS11JvbXdNkVCEND2MnS0F2jGS/EFrQ2YF69vtUXq2OOJPyu4c
- g2HjYKDv/zfaVhADdFNHEtdPROcmVuMTf/t4dobuekBxsEec+5Zjy9hMv1PVpZYgSSBR
- cNkomTzLtH0e8WMb5cmK8pnGj4Wn8+lHyuk= 
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=tsbN5B/MBdDASML2zZRiHSDD0eDG4NquOWVEtgJR19c=;
+        b=ro73d1TlJ1EokrYlJkNVnu3tyP2eQ2DHvfWhpl39SBt0ipE85Ghmk1MYqoQ4sh4mjd
+         1MRjkTM24qSoOojwt5vEWZivG/2KgdSCmrioKN8UcTxWEwsmx5XF+lw7m3CQTugoYg5P
+         uMVvstVLPqKJ6ADGbH1DGMaBnHTpTjWuljpPCCgTVR1Rq5LVL02Wjtr1brXx7Fsu9/7F
+         KMZrw1G8crixhT48PmC4wMar3OIE5hymXDIn77TAu4Con6G3ckW0StdSVOlSote4Y2GV
+         nsjoJcl9hE6BcRAQg0MfIKCtDCuqKPXmusFVeweYfq2q47c8jtfl9dGJAoNhmujCnO28
+         m3Zg==
 Content-Disposition: inline
-In-Reply-To: <CAF4G-tKEcnVw76-ZU77AjmBDGybLnNEOKjkJtYBN67es0wb30g@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20150923170238.GG3318@thunk.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Artem Bityutskiy <dedekind1@gmail.com>
-Cc: linux-ext4@vger.kernel.org, hannes@cmpxchg.org, axboe@kernel.dk, Tejun Heo <tj@kernel.org>, Theodore Ts'o <tytso@mit.edu>, linux-fsdevel@vger.kernel.org, lizefan@huawei.com, cgroups@vger.kernel.org, adilger.kernel@dilger.ca, kernel-team@fb.com, linux-kernel@vger.kernel.org
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Artem Bityutskiy <dedekind1@gmail.com>, axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, lizefan@huawei.com, cgroups@vger.kernel.org, hannes@cmpxchg.org, kernel-team@fb.com, adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org
 
-On Wed, Sep 23, 2015 at 08:41:25PM +0300, Artem Bityutskiy wrote:
->    Hi
+Hello, Ted.
+
+On Wed, Sep 23, 2015 at 01:02:38PM -0400, Theodore Ts'o wrote:
+> Also note this performance regression reported by Dexuan Cui
 > 
->    $ sync
->    $ reboot
+> 	https://lkml.org/lkml/2015/9/23/333
+> 
+> I didn't notice these problems since I my userspace doesn't enable the
+> writeback cgroup.  (In fact I don't know how to do it using Debian
+> Jessie.)
 
-If this is case, it should be possible to reproduce with:
+The thing is I don't think they're either.
 
-cp a bunch of stuff to /ext4
-unmount /ext4
-mount ext4
-compare data
+> Tejun, can you please take a look at this and give me a
+> recommendation?  I'm willing to wait a day or two while we try to fix
+> the problem, but past that point I'd like to have a fix or revert this
+> commit before Linus releases the next -rc release.
 
-If you're not getting a clean unmount of the test FS during the reboot,
-its a different test.  Trying to reproduce here, so far its clean.
-Could you please double check for failed unmounts?
+Yeap, looking at them both.  Will update as soon as I know more.
 
-Thanks,
-Chris
+Thanks.
+
+-- 
+tejun
