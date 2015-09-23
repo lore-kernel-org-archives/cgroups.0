@@ -1,62 +1,53 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] memcg: remove pcp_counter_lock
-Date: Wed, 23 Sep 2015 09:45:19 +0200
-Message-ID: <20150923074518.GC6283@dhcp22.suse.cz>
-References: <1442976106-49685-1-git-send-email-gthelen@google.com>
+From: Artem Bityutskiy <dedekind1@gmail.com>
+Subject: Re: [PATCH 2/2] ext4: implement cgroup writeback support
+Date: Wed, 23 Sep 2015 15:49:12 +0300
+Message-ID: <1443012552.19983.209.camel@gmail.com>
+References: <1434495193-31182-1-git-send-email-tj@kernel.org>
+	 <1434495193-31182-3-git-send-email-tj@kernel.org>
+	 <20150722035620.GD2944@thunk.org>
+Reply-To: dedekind1@gmail.com
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1442976106-49685-1-git-send-email-gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20150722035620.GD2944@thunk.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vladimir Davydov <vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Theodore Ts'o <tytso@mit.edu>, Tejun Heo <tj@kernel.org>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, lizefan@huawei.com, cgroups@vger.kernel.org, hannes@cmpxchg.org, kernel-team@fb.com, adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org
 
-On Tue 22-09-15 19:41:46, Greg Thelen wrote:
-> Commit 733a572e66d2 ("memcg: make mem_cgroup_read_{stat|event}() iterate
-> possible cpus instead of online") removed the last use of the per memcg
-> pcp_counter_lock but forgot to remove the variable.
+On Tue, 2015-07-21 at 23:56 -0400, Theodore Ts'o wrote:
+> > v2: Updated for MS_CGROUPWB -> SB_I_CGROUPWB.
+> > 
+> > Signed-off-by: Tejun Heo <tj@kernel.org>
+> > Cc: "Theodore Ts'o" <tytso@mit.edu>
+> > Cc: Andreas Dilger <adilger.kernel@dilger.ca>
+> > Cc: linux-ext4@vger.kernel.org
 > 
-> Kill the vestigial variable.
-> 
-> Signed-off-by: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Thanks, applied.
 
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Hi, this patch introduces a regression - a major one, I'd say.
 
-> ---
->  include/linux/memcontrol.h | 1 -
->  mm/memcontrol.c            | 1 -
->  2 files changed, 2 deletions(-)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index ad800e62cb7a..6452ff4c463f 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -242,7 +242,6 @@ struct mem_cgroup {
->  	 * percpu counter.
->  	 */
->  	struct mem_cgroup_stat_cpu __percpu *stat;
-> -	spinlock_t pcp_counter_lock;
->  
->  #if defined(CONFIG_MEMCG_KMEM) && defined(CONFIG_INET)
->  	struct cg_proto tcp_mem;
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 6ddaeba34e09..da21143550c0 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -4179,7 +4179,6 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
->  	if (memcg_wb_domain_init(memcg, GFP_KERNEL))
->  		goto out_free_stat;
->  
-> -	spin_lock_init(&memcg->pcp_counter_lock);
->  	return memcg;
->  
->  out_free_stat:
-> -- 
-> 2.6.0.rc0.131.gf624c3d
+Symptoms: copy a bunch of file, run sync, then run 'reboot', and after
+you boot up the copied files are corrupted. So basically the user
+-visible symptom is that 'sync' does not work.
 
--- 
-Michal Hocko
-SUSE Labs
+I quite an effort to bisect it, but it led me to this patch.
+
+If I take the latest upstream (v4.3-rc2+), and revert this patch:
+
+001e4a8 ext4: imlpement cgroup writeback support
+
+then the problem goes away - files are not corrupted after reboot.
+
+I use ext4 on top of a "bare" partition, no LVM or dm layers involved.
+
+I use Fedora 22 with all the latest package updates, and I only change
+the kernel there.
+
+The corruption seems to be that the start with a bunch of zeroes
+instead of the real data, but I did not check carefully, looked only at
+one file briefly.
+
+Artem.
+
