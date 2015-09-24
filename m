@@ -1,41 +1,76 @@
-From: Dexuan Cui <decui-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
-Subject: RE: [PATCH cgroup/for-4.3-fixes] cgroup, writeback: don't enable
+From: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-4.3-fixes] cgroup, writeback: don't enable
  cgroup writeback on traditional hierarchies
-Date: Thu, 24 Sep 2015 08:40:18 +0000
-Message-ID: <d6cf09f352a84b8d811da55fbc64a869@SIXPR30MB031.064d.mgd.msft.net>
+Date: Thu, 24 Sep 2015 10:17:19 -0600
+Message-ID: <5604220F.503@fb.com>
 References: <1434495193-31182-1-git-send-email-tj@kernel.org>
-	 <1434495193-31182-3-git-send-email-tj@kernel.org>
-	 <20150722035620.GD2944@thunk.org> <1443012552.19983.209.camel@gmail.com>
-	 <20150923180934.GE26647@mtj.duckdns.org>
-	 <20150923185137.GJ26647@mtj.duckdns.org>
-	 <20150923210729.GA23180@mtj.duckdns.org>
- <1443082186.19983.234.camel@gmail.com>
+ <1434495193-31182-3-git-send-email-tj@kernel.org>
+ <20150722035620.GD2944@thunk.org> <1443012552.19983.209.camel@gmail.com>
+ <20150923180934.GE26647@mtj.duckdns.org>
+ <20150923185137.GJ26647@mtj.duckdns.org>
+ <20150923210729.GA23180@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector1; h=From:To:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=otf/YOKMgOX0SkQ3yi/NHhfHv7NbAaVguK55URysB3Y=;
- b=mznKaWIBMCAlEvgCLojUoghfzJ9wkcQSpSLXqSFyR9DtDmQbvDcRD7CbUBsqnkdiHx9/UyuTMFLTvHOwaMaR/OgNfvcyFjG8VROOTr/I6tnd0WVOWk22BbZQYr3fN+gIaqGzOAgXwAXCS33FmgfxrmJS/iYsaD6bjhOZuB8LUK8=
-In-Reply-To: <1443082186.19983.234.camel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fb.com; h=subject : to : references
+ : cc : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=facebook;
+ bh=nm5V+Kwe/Q4b9C5NyRNQkuClSN1ejuzaoDgq+MMBRU8=;
+ b=mwuNYxda7Ytf7wb3hwaMNiY0nk2gI6EPRCZthEYotu8rQJxcDHf+FHfC+CV0G2Botw3R
+ rg5EU5wkyg85beKDiuzaB04TOWYIY+FZcTQOPW/4DYnHNn3+APGaXKT1MON5OGQer2+l
+ 4W+ozap/5trnm6Ck5eVWFq+aRR9Ig6j0P4I= 
+In-Reply-To: <20150923210729.GA23180-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: "dedekind1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <dedekind1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>, "axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org" <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "kernel-team-b10kYP2dOMg@public.gmane.org" <kernel-team-b10kYP2dOMg@public.gmane.org>, "adilger.kernel-m1MBpc4rdrD3fQ9qLvQP4Q@public.gmane.org" <adilger.kernel-m1MBpc4rdrD3fQ9qLvQP4Q@public.gmane.org>, "linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Artem Bityutskiy <dedekind1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, adilger.kernel-m1MBpc4rdrD3fQ9qLvQP4Q@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dexuan Cui <decui-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
 
-PiBPbiBXZWQsIDIwMTUtMDktMjMgYXQgMTc6MDcgLTA0MDAsIFRlanVuIEhlbyB3cm90ZToNCj4g
-PiBIZWxsbywNCj4gPg0KPiA+IFNvLCB0aGlzIHNob3VsZCBtYWtlIHRoZSByZWdyZXNzaW9uIGdv
-IGF3YXkuICBJdCBkb2Vzbid0IGZpeCB0aGUNCj4gPiB1bmRlcmx5aW5nIGJ1Z3MgYnV0IHRoZXkg
-c2hvdWxkbid0IGdldCB0cmlnZ2VyZWQgYnkgcGVvcGxlIG5vdA0KPiA+IGV4cGVyaW1lbnRpbmcg
-d2l0aCBjZ3JvdXAuDQo+IA0KPiBUZWp1biwNCj4gDQo+IHRoaXMgaGl0cyB0aGUgbmFpbCBvbiB0
-aGUgaGVhZCBhbmQgbWFrZXMgdGhlIHByb2JsZW0gZ28gYXdheS4NCj4gDQo+IEkndmUgdGVzdGVk
-IHRoZSB0aXAgb2YgTGludXNlcyB0cmVlICh2NC4zLXJjMispIHBsdXMgdGhpcyBwYXRjaCAtIG5v
-DQo+IGRhdGEgY29ycnVwdGlvbiBhZnRlciByZWJvb3RzLg0KPiANCj4gSSd2ZSB0ZXN0ZWQganVz
-dCB0aGUgdGlwIG9mIExpbnVzZXMgdHJlZSAodjQuMy1yYzIrKSB3aXRob3V0IHRoaXMNCj4gcGF0
-Y2gsIGFuZCBJIGRvIHNlZSB0aGUgZGF0YSBjb3JydXB0aW9uIGFmdGVyIHJlYm9vdHMuDQo+IA0K
-PiBUZXN0ZWQtYnk6IEFydGVtIEJpdHl1dHNraXkgPGFydGVtLmJpdHl1dHNraXlAbGludXguaW50
-ZWwuY29tPg0KPiANCj4gQXJ0ZW0uDQoNCkkgY2FuIGNvbmZpcm0gdGhlIHBhdGNoIGZpeGVzIG15
-ICJzbG93IHdyaXRlIiBpc3N1ZSB0b28uDQoNClRlc3RlZC1ieTogRGV4dWFuIEN1aSA8ZGVjdWlA
-bWljcm9zb2Z0LmNvbT4NCg0KLS0gRGV4dWFuDQo=
+On 09/23/2015 03:07 PM, Tejun Heo wrote:
+> inode_cgwb_enabled() gates cgroup writeback support.  If it returns
+> true, each inode is attached to the corresponding memory domain which
+> gets mapped to io domain.  It currently only tests whether the
+> filesystem and bdi support cgroup writeback; however, cgroup writeback
+> support doesn't work on traditional hierarchies and thus it should
+> also test whether memcg and iocg are on the default hierarchy.
+>
+> This caused traditional hierarchy setups to hit the cgroup writeback
+> path inadvertently and ended up creating separate writeback domains
+> for each memcg and mapping them all to the root iocg uncovering a
+> couple issues in the cgroup writeback path.
+>
+> cgroup writeback was never meant to be enabled on traditional
+> hierarchies.  Make inode_cgwb_enabled() test whether both memcg and
+> iocg are on the default hierarchy.
+>
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Reported-by: Artem Bityutskiy <dedekind1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Reported-by: Dexuan Cui <decui-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
+> Link: http://lkml.kernel.org/g/1443012552.19983.209.camel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+> Link: http://lkml.kernel.org/g/f30d4a6aa8a546ff88f73021d026a453-NHRYisGuqk8ni+flWUsx/pbBmlrREI7+ECdVDZe1NQc@public.gmane.org
+> ---
+> Hello,
+>
+> So, this should make the regression go away.  It doesn't fix the
+> underlying bugs but they shouldn't get triggered by people not
+> experimenting with cgroup.
+>
+> I'm gonna keep digging the underlying issues but this should make the
+> regressions go away.  If it's okay, I think it'd be better to route
+> this through cgroup/for-4.3-fixes as it's gonna cause a conflict with
+> for-4.4 branch and handling the merge there is easier.
+>
+> Thanks.
+>
+>   include/linux/backing-dev.h |   11 +++++++++--
+>   1 file changed, 9 insertions(+), 2 deletions(-)
+
+I'll ack this since it works around both the corruption issue and the 
+performance regression, so we can avoid having to revert parts of this. 
+And I know you'll keep hunting and get the real issue fixed in the mean 
+time.
+
+Acked-by: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>
+
+-- 
+Jens Axboe
