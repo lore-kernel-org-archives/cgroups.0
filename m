@@ -1,76 +1,65 @@
-From: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-4.3-fixes] cgroup, writeback: don't enable
- cgroup writeback on traditional hierarchies
-Date: Thu, 24 Sep 2015 10:17:19 -0600
-Message-ID: <5604220F.503@fb.com>
-References: <1434495193-31182-1-git-send-email-tj@kernel.org>
- <1434495193-31182-3-git-send-email-tj@kernel.org>
- <20150722035620.GD2944@thunk.org> <1443012552.19983.209.camel@gmail.com>
- <20150923180934.GE26647@mtj.duckdns.org>
- <20150923185137.GJ26647@mtj.duckdns.org>
- <20150923210729.GA23180@mtj.duckdns.org>
+From: Luis Henriques <luis.henriques@canonical.com>
+Subject: Re: [PATCH] cgroup: fix seq_show_option merge with legacy_name
+Date: Thu, 24 Sep 2015 19:33:28 +0100
+Message-ID: <20150924183328.GA2163@charon>
+References: <20150908183043.GA23974@www.outflux.net>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fb.com; h=subject : to : references
- : cc : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=facebook;
- bh=nm5V+Kwe/Q4b9C5NyRNQkuClSN1ejuzaoDgq+MMBRU8=;
- b=mwuNYxda7Ytf7wb3hwaMNiY0nk2gI6EPRCZthEYotu8rQJxcDHf+FHfC+CV0G2Botw3R
- rg5EU5wkyg85beKDiuzaB04TOWYIY+FZcTQOPW/4DYnHNn3+APGaXKT1MON5OGQer2+l
- 4W+ozap/5trnm6Ck5eVWFq+aRR9Ig6j0P4I= 
-In-Reply-To: <20150923210729.GA23180-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20150908183043.GA23974@www.outflux.net>
+Sender: stable-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Artem Bityutskiy <dedekind1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, adilger.kernel-m1MBpc4rdrD3fQ9qLvQP4Q@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dexuan Cui <decui-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Kees Cook <keescook@chromium.org>
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, stable@vger.kernel.org
 
-On 09/23/2015 03:07 PM, Tejun Heo wrote:
-> inode_cgwb_enabled() gates cgroup writeback support.  If it returns
-> true, each inode is attached to the corresponding memory domain which
-> gets mapped to io domain.  It currently only tests whether the
-> filesystem and bdi support cgroup writeback; however, cgroup writeback
-> support doesn't work on traditional hierarchies and thus it should
-> also test whether memcg and iocg are on the default hierarchy.
+On Tue, Sep 08, 2015 at 11:30:43AM -0700, Kees Cook wrote:
+> When seq_show_option (068acf2ee776) was merged, it did not correctly
+> collide with cgroup's addition of legacy_name (3e1d2eed39d8) changes.=
+ This
+> fixes the reported name.
 >
-> This caused traditional hierarchy setups to hit the cgroup writeback
-> path inadvertently and ended up creating separate writeback domains
-> for each memcg and mapping them all to the root iocg uncovering a
-> couple issues in the cgroup writeback path.
->
-> cgroup writeback was never meant to be enabled on traditional
-> hierarchies.  Make inode_cgwb_enabled() test whether both memcg and
-> iocg are on the default hierarchy.
->
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Reported-by: Artem Bityutskiy <dedekind1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Reported-by: Dexuan Cui <decui-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
-> Link: http://lkml.kernel.org/g/1443012552.19983.209.camel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-> Link: http://lkml.kernel.org/g/f30d4a6aa8a546ff88f73021d026a453-NHRYisGuqk8ni+flWUsx/pbBmlrREI7+ECdVDZe1NQc@public.gmane.org
+
+Since a068acf2ee77 ("fs: create and use seq_show_option for escaping")
+has been CC'ed to stable, shouldn't this be tagged to stable too?
+
+(This is upstream commit 61e57c0c3a37 "cgroup: fix seq_show_option
+merge with legacy_name".)
+
+Cheers,
+--
+Lu=EDs
+
+> Signed-off-by: Kees Cook <keescook@chromium.org>
 > ---
-> Hello,
->
-> So, this should make the regression go away.  It doesn't fix the
-> underlying bugs but they shouldn't get triggered by people not
-> experimenting with cgroup.
->
-> I'm gonna keep digging the underlying issues but this should make the
-> regressions go away.  If it's okay, I think it'd be better to route
-> this through cgroup/for-4.3-fixes as it's gonna cause a conflict with
-> for-4.4 branch and handling the merge there is easier.
->
-> Thanks.
->
->   include/linux/backing-dev.h |   11 +++++++++--
->   1 file changed, 9 insertions(+), 2 deletions(-)
-
-I'll ack this since it works around both the corruption issue and the 
-performance regression, so we can avoid having to revert parts of this. 
-And I know you'll keep hunting and get the real issue fixed in the mean 
-time.
-
-Acked-by: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>
-
--- 
-Jens Axboe
+>  kernel/cgroup.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+> index a8538e443784..2cf0f79f1fc9 100644
+> --- a/kernel/cgroup.c
+> +++ b/kernel/cgroup.c
+> @@ -1342,7 +1342,7 @@ static int cgroup_show_options(struct seq_file =
+*seq,
+>  	if (root !=3D &cgrp_dfl_root)
+>  		for_each_subsys(ss, ssid)
+>  			if (root->subsys_mask & (1 << ssid))
+> -				seq_show_option(seq, ss->name, NULL);
+> +				seq_show_option(seq, ss->legacy_name, NULL);
+>  	if (root->flags & CGRP_ROOT_NOPREFIX)
+>  		seq_puts(seq, ",noprefix");
+>  	if (root->flags & CGRP_ROOT_XATTR)
+> --=20
+> 1.9.1
+>=20
+>=20
+> --=20
+> Kees Cook
+> Chrome OS Security
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kerne=
+l" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
