@@ -1,101 +1,89 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH cgroup/for-4.4] cgroup: fix too early usage of
- static_branch_disable()
-Date: Fri, 25 Sep 2015 16:24:27 -0400
-Message-ID: <20150925202427.GJ4449@mtj.duckdns.org>
-References: <CANaxB-yFuS4SA2znSvcKrO9L_CbHciHYW+o9bN8sZJ8eR9FxYA@mail.gmail.com>
+Subject: [GIT PULL] cgroup fixes for v4.3-rc2
+Date: Fri, 25 Sep 2015 16:31:58 -0400
+Message-ID: <20150925203158.GK4449@mtj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=6IBOhmJnq4stlKwmrIcnux6XyIajaPl2SIHNo56lSYE=;
-        b=eMAFglSBwVOMybanAHTj1Rm7BHGFYCTTwdllu321EIiTK7ATV6dHKhE5qx24eHCiHQ
-         SO9IQiM2uuVC3c0IgJO0ACLhgEP6psS6JbsM6eaZH3+GGG9JzRuHCCmY4Q7TTBKQ4tUA
-         jEXyP7sdAmMTVlgKBZtYsdvJXDuxn3rVYZ4J975h1zSFCT84tIgZp0GM4nBZfgGVXM9V
-         rfQZ6htaYrd7ad/tYF3K0LJJTxrCMPFurr6/x38E+MAel9HJ80SZsYcWr/PCxORLO96X
-         fU1/KmhzPeU6BKzyp7eL9xc+Uia4Yltx3wUMcnwooumFANKQlb/X9QUL/MJTVvt6Lc29
-         RB2w==
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=aYZ0nCnKYxFowrEtfMgk/YCkrQWg92RTz1ikttprCaA=;
+        b=VxbXeRGEi28gghD5uAuN5tX87nbYlflo7EjttnJ6rG6pOm+or2I72wmV5ikS0r3G4u
+         Y7TcMpZt1D9vjtLi97zfmSODABCU89oKRkra4tz7pMmtNBwdEjT7O8CRVrWjQ4NvRQO/
+         qyL3TUkJ9/zY27ZwHfU+tBBnMRJsEUgpLvIhU5ugUqCEgSjus1xqlVmINN/HaX3cvBWt
+         B3lY+5Eo5Kb6VxdOt8u0k/UDDx+x6JODkYJ6TM++qiqz34RUIlrAQrmxcAt4DR3fXXoV
+         uiTfpcDnKLFb3XhOhikQo0N8fkzxMglhgsyw/OM3SPegbnF6O3KN9zIhwddat0+HV9yS
+         D6tA==
 Content-Disposition: inline
-In-Reply-To: <CANaxB-yFuS4SA2znSvcKrO9L_CbHciHYW+o9bN8sZJ8eR9FxYA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrey Wagin <avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
 
-49d1dc4b8179 ("cgroup: implement static_key based
-cgroup_subsys_enabled() and cgroup_subsys_on_dfl()") converted cgroup
-enabled test to use static_key; however, cgroup_disable() is called
-before static_key subsystem itself is initialized and thus leads to
-the following warning when "cgroup_disable=" parameter is specified.
+Hello, Linus.
 
- WARNING: CPU: 0 PID: 0 at kernel/jump_label.c:99 static_key_slow_dec+0x44/0x60()
- static_key_slow_dec used before call to jump_label_init
- ...
- Call Trace:
-  [<ffffffff813b18c2>] dump_stack+0x44/0x62
-  [<ffffffff8108dd52>] warn_slowpath_common+0x82/0xc0
-  [<ffffffff8108ddec>] warn_slowpath_fmt+0x5c/0x80
-  [<ffffffff8119c054>] static_key_slow_dec+0x44/0x60
-  [<ffffffff81d826b6>] cgroup_disable+0xaf/0xd6
-  [<ffffffff81d5f9de>] unknown_bootoption+0x8c/0x194
-  [<ffffffff810b0c03>] parse_args+0x273/0x4a0
-  [<ffffffff81d5fd67>] start_kernel+0x205/0x4b8
- ...
+Another cgroup fix pull.  The cgroup writeback support got
+inadvertently enabled for traditional hierarchies revealing two
+regressions which are currently being worked on.  It shouldn't have
+been enabled on traditional hierarchies, so disable it on them.  This
+is enough for making the regressions go away for people who aren't
+experimenting with cgroup.
 
-Fix it by making cgroup_disable() to record the subsystems to disable
-in cgroup_disable_mask and moving the actual application to
-cgroup_init() which is late enough and where the enabled state is
-first used.
+Thanks.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Reported-by: Andrey Wagin <avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Link: http://lkml.kernel.org/g/CANaxB-yFuS4SA2znSvcKrO9L_CbHciHYW+o9bN8sZJ8eR9FxYA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org
-Fixes: 49d1dc4b81797f88270832b11e9f73809e7e7209
----
- kernel/cgroup.c |   14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+The following changes since commit 0c986253b939cc14c69d4adbe2b4121bdf4aa220:
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index f924158..ae23814 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -5124,6 +5124,8 @@ int __init cgroup_init_early(void)
- 	return 0;
- }
- 
-+static unsigned long cgroup_disable_mask __initdata;
-+
- /**
-  * cgroup_init - cgroup initialization
+  Revert "sched, cgroup: replace signal_struct->group_rwsem with a global percpu_rwsem" (2015-09-16 11:51:12 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.3-fixes
+
+for you to fetch changes up to 9badce000e2ce68ba74838a3cd356dde58221c2f:
+
+  cgroup, writeback: don't enable cgroup writeback on traditional hierarchies (2015-09-24 16:48:52 -0400)
+
+----------------------------------------------------------------
+Tejun Heo (1):
+      cgroup, writeback: don't enable cgroup writeback on traditional hierarchies
+
+ include/linux/backing-dev.h | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index 5a5d79e..d5eb4ad1 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -13,6 +13,7 @@
+ #include <linux/sched.h>
+ #include <linux/blkdev.h>
+ #include <linux/writeback.h>
++#include <linux/memcontrol.h>
+ #include <linux/blk-cgroup.h>
+ #include <linux/backing-dev-defs.h>
+ #include <linux/slab.h>
+@@ -252,13 +253,19 @@ int inode_congested(struct inode *inode, int cong_bits);
+  * @inode: inode of interest
   *
-@@ -5170,8 +5172,12 @@ int __init cgroup_init(void)
- 		 * disabled flag and cftype registration needs kmalloc,
- 		 * both of which aren't available during early_init.
- 		 */
--		if (!cgroup_ssid_enabled(ssid))
-+		if (cgroup_disable_mask & (1 << ssid)) {
-+			static_branch_disable(cgroup_subsys_enabled_key[ssid]);
-+			printk(KERN_INFO "Disabling %s control group subsystem\n",
-+			       ss->name);
- 			continue;
-+		}
+  * cgroup writeback requires support from both the bdi and filesystem.
+- * Test whether @inode has both.
++ * Also, both memcg and iocg have to be on the default hierarchy.  Test
++ * whether all conditions are met.
++ *
++ * Note that the test result may change dynamically on the same inode
++ * depending on how memcg and iocg are configured.
+  */
+ static inline bool inode_cgwb_enabled(struct inode *inode)
+ {
+ 	struct backing_dev_info *bdi = inode_to_bdi(inode);
  
- 		cgrp_dfl_root.subsys_mask |= 1 << ss->id;
- 
-@@ -5595,11 +5601,7 @@ static int __init cgroup_disable(char *str)
- 			if (strcmp(token, ss->name) &&
- 			    strcmp(token, ss->legacy_name))
- 				continue;
--
--			static_branch_disable(cgroup_subsys_enabled_key[i]);
--			printk(KERN_INFO "Disabling %s control group subsystem\n",
--			       ss->name);
--			break;
-+			cgroup_disable_mask |= 1 << i;
- 		}
- 	}
- 	return 1;
+-	return bdi_cap_account_dirty(bdi) &&
++	return cgroup_on_dfl(mem_cgroup_root_css->cgroup) &&
++		cgroup_on_dfl(blkcg_root_css->cgroup) &&
++		bdi_cap_account_dirty(bdi) &&
+ 		(bdi->capabilities & BDI_CAP_CGROUP_WRITEBACK) &&
+ 		(inode->i_sb->s_iflags & SB_I_CGROUPWB);
+ }
