@@ -1,56 +1,95 @@
-From: Artem Bityutskiy <dedekind1@gmail.com>
-Subject: Re: [PATCH cgroup/for-4.3-fixes] cgroup, writeback: don't enable
- cgroup writeback on traditional hierarchies
-Date: Fri, 25 Sep 2015 09:49:09 +0300
-Message-ID: <1443163749.19983.254.camel@gmail.com>
-References: <1434495193-31182-1-git-send-email-tj@kernel.org>
-	 <1434495193-31182-3-git-send-email-tj@kernel.org>
-	 <20150722035620.GD2944@thunk.org> <1443012552.19983.209.camel@gmail.com>
-	 <20150923180934.GE26647@mtj.duckdns.org>
-	 <20150923185137.GJ26647@mtj.duckdns.org>
-	 <20150923210729.GA23180@mtj.duckdns.org>
-	 <1443082186.19983.234.camel@gmail.com>
-	 <20150924204529.GF25415@mtj.duckdns.org>
-Reply-To: dedekind1@gmail.com
+From: Luis Henriques <luis.henriques@canonical.com>
+Subject: Re: [PATCH] cgroup: fix seq_show_option merge with legacy_name
+Date: Fri, 25 Sep 2015 09:52:41 +0100
+Message-ID: <20150925085241.GA2557@ares>
+References: <20150908183043.GA23974@www.outflux.net>
+ <20150924183328.GA2163@charon>
+ <CAGXu5jLtaEdTmX2QzgfrB=J=tWaoc3Bt_uAstep8UyKdh8v-OQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20150924204529.GF25415@mtj.duckdns.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAGXu5jLtaEdTmX2QzgfrB=J=tWaoc3Bt_uAstep8UyKdh8v-OQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Tejun Heo <tj@kernel.org>
-Cc: Theodore Ts'o <tytso@mit.edu>, axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, lizefan@huawei.com, cgroups@vger.kernel.org, hannes@cmpxchg.org, kernel-team@fb.com, adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org, Dexuan Cui <decui@microsoft.com>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Kees Cook <keescook@chromium.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Cgroups <cgroups@vger.kernel.org>, "# 3.4.x" <stable@vger.kernel.org>
 
-On Thu, 2015-09-24 at 16:45 -0400, Tejun Heo wrote:
-> Hello, Artem.
+On Thu, Sep 24, 2015 at 11:35:00AM -0700, Kees Cook wrote:
+> On Thu, Sep 24, 2015 at 11:33 AM, Luis Henriques
+> <luis.henriques@canonical.com> wrote:
+> > On Tue, Sep 08, 2015 at 11:30:43AM -0700, Kees Cook wrote:
+> >> When seq_show_option (068acf2ee776) was merged, it did not correct=
+ly
+> >> collide with cgroup's addition of legacy_name (3e1d2eed39d8) chang=
+es. This
+> >> fixes the reported name.
+> >>
+> >
+> > Since a068acf2ee77 ("fs: create and use seq_show_option for escapin=
+g")
+> > has been CC'ed to stable, shouldn't this be tagged to stable too?
+> >
+> > (This is upstream commit 61e57c0c3a37 "cgroup: fix seq_show_option
+> > merge with legacy_name".)
 >=20
-> On Thu, Sep 24, 2015 at 11:09:46AM +0300, Artem Bityutskiy wrote:
-> > On Wed, 2015-09-23 at 17:07 -0400, Tejun Heo wrote:
-> > > So, this should make the regression go away.  It doesn't fix the
-> > > underlying bugs but they shouldn't get triggered by people not
-> > > experimenting with cgroup.
-> >=20
-> > this hits the nail on the head and makes the problem go away.
->=20
-> Yeah but there still is an underlying problem here.  I've been going
-> through the sync path today but can't trigger or spot anything wrong.
-> Can you please apply the patch at the end of this mail, trigger the
-> failure and report the kernel log?
->=20
-> Thanks a lot.
+> If the cgroup change when to stable also, then yes.
+>
 
-Does not compile with multiple errors like
+And this didn't happen, so no need to include this commit.  Sorry for t=
+he
+noise.
 
-linux/fs/fs-writeback.c:799:10: error: =E2=80=98struct bdi_writeback=E2=
-=80=99 has no member named =E2=80=98last_comp_gen=E2=80=99
-   bdi->wb.last_comp_gen =3D bdi->wb.comp_gen;
-          ^
-
-
-
+Cheers,
 --
-To unsubscribe from this list: send the line "unsubscribe linux-fsdevel=
-" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Lu=EDs
+
+
+> -Kees
+>=20
+> >
+> > Cheers,
+> > --
+> > Lu=EDs
+> >
+> >> Signed-off-by: Kees Cook <keescook@chromium.org>
+> >> ---
+> >>  kernel/cgroup.c | 2 +-
+> >>  1 file changed, 1 insertion(+), 1 deletion(-)
+> >>
+> >> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+> >> index a8538e443784..2cf0f79f1fc9 100644
+> >> --- a/kernel/cgroup.c
+> >> +++ b/kernel/cgroup.c
+> >> @@ -1342,7 +1342,7 @@ static int cgroup_show_options(struct seq_fi=
+le *seq,
+> >>       if (root !=3D &cgrp_dfl_root)
+> >>               for_each_subsys(ss, ssid)
+> >>                       if (root->subsys_mask & (1 << ssid))
+> >> -                             seq_show_option(seq, ss->name, NULL)=
+;
+> >> +                             seq_show_option(seq, ss->legacy_name=
+, NULL);
+> >>       if (root->flags & CGRP_ROOT_NOPREFIX)
+> >>               seq_puts(seq, ",noprefix");
+> >>       if (root->flags & CGRP_ROOT_XATTR)
+> >> --
+> >> 1.9.1
+> >>
+> >>
+> >> --
+> >> Kees Cook
+> >> Chrome OS Security
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-ke=
+rnel" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >> Please read the FAQ at  http://www.tux.org/lkml/
+>=20
+>=20
+>=20
+> --=20
+> Kees Cook
+> Chrome OS Security
