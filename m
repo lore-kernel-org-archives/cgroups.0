@@ -1,52 +1,89 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/5] writeback: fix bdi_writeback iteration in wakeup_dirtytime_writeback()
-Date: Tue, 29 Sep 2015 12:47:51 -0400
-Message-ID: <1443545274-18787-3-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 4/5] writeback: memcg dirty_throttle_control should be initialized with wb->memcg_completions
+Date: Tue, 29 Sep 2015 12:47:53 -0400
+Message-ID: <1443545274-18787-5-git-send-email-tj@kernel.org>
 References: <1443545274-18787-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Kv3uFtZ9OG1bDNs6FIN+sZAuQSBaEc7ZlkJEgMFrvEc=;
-        b=KnKFYR8c587yhCI473X9ZycCX4GcCIBZ3MIKWGq8Q/41RGP5S8pn6cpHl44yfNQBGK
-         jcGA6KCCUjWpjQVqzZ/MuCr37SY2orZqEjH5CxgUSEgYLr6gBRcrkhOXyxkm/1rCfyxV
-         f0sud5NVnQWz1yETN71UTL7ncLGpKq0R1guowEcuRluxBKzOFEUDs6078qKo5LdnJ25O
-         cywb/++Z+Hsi3p+WtpRsQAB4jnh+CxW6Xnlfw0N41Ai+uKtB2AW5ok/ytmbrDChuG18O
-         6/sL24qKGaxg5skTiNy1PSH879irBjNcacQZoTQqF1lhK17Pp/wJIzKtWV/w7JX0z74j
-         ETxw==
-In-Reply-To: <1443545274-18787-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=3R0aoVF9+puumpNz9vp7fGvtyDhyoRAMhOHoKEN0AxQ=;
+        b=L6YN0CkphgKxWUOiTZxzNGBZnBBSJrYwAZkQYmWkvS3qo2kh+xijr2sK0zZjECXc8U
+         UUx5yak2W/xeazlXFES7Dx8yduLQbE70VFNkDC/2S29lxKxDWcB8krbjtTL9/O4nY5DB
+         bfd9rHrsnfm5Q0urNst5SZGpAIQ7ImgYu6FqHiB65RZ23SO8a9QKC+nSiBlMQBXcgbfF
+         cfHz1JMoxqpvZNE+GWzsdhKfzdRtXETnrSEuLBQbQSkKx12gEspy2OvaD6bKI+nH297C
+         SeCbIJWbTLwMjwicudmJNhAhWp3DGR1KfqZ43HaEDPH5W9VevY5zPsz8n9FbH6NoFRki
+         uUtQ==
+In-Reply-To: <1443545274-18787-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, tytso@mit.edu, dedekind1@gmail.com, decui@microsoft.com, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tytso-3s7WtUTddSA@public.gmane.org, dedekind1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, decui-0li6OtcxBFHby3iVrkZq2A@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-wakeup_dirtytime_writeback() walks and wakes up all wb's of all bdi's;
-unfortunately, it was always waking up bdi->wb instead of the wb being
-walked.  Fix it.
+MDTC_INIT() is used to initialize dirty_throttle_control for memcg
+domains.  It used DTC_INIT_COMMON() to initialized mdtc->wb and
+->wb_completions which is incorrect as DTC_INIT_COMMON() sets the
+latter to wb->completions instead of wb->memcg_completions.  This can
+lead to wildly incorrect results when calculating the proportion of
+dirty memory the memcg domain should get.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Fixes: 001fe6f617b1 ("writeback: make wakeup_dirtytime_writeback() handle multiple bdi_writeback's")
+Remove DTC_INIT_COMMON() and update MDTC_INIT() to initialize
+mdtc->wb_completions to wb->memcg_completions.
+
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Fixes: c2aa723a6093 ("writeback: implement memcg writeback domain based throttling")
 ---
- fs/fs-writeback.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ mm/page-writeback.c | 20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 091a364..d0da306 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -1897,8 +1897,8 @@ static void wakeup_dirtytime_writeback(struct work_struct *w)
- 		struct wb_iter iter;
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 0f1a94e..56c0bff 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -145,9 +145,6 @@ struct dirty_throttle_control {
+ 	unsigned long		pos_ratio;
+ };
  
- 		bdi_for_each_wb(wb, bdi, &iter, 0)
--			if (!list_empty(&bdi->wb.b_dirty_time))
--				wb_wakeup(&bdi->wb);
-+			if (!list_empty(&wb->b_dirty_time))
-+				wb_wakeup(wb);
- 	}
- 	rcu_read_unlock();
- 	schedule_delayed_work(&dirtytime_work, dirtytime_expire_interval * HZ);
+-#define DTC_INIT_COMMON(__wb)	.wb = (__wb),				\
+-				.wb_completions = &(__wb)->completions
+-
+ /*
+  * Length of period for aging writeout fractions of bdis. This is an
+  * arbitrarily chosen number. The longer the period, the slower fractions will
+@@ -157,12 +154,16 @@ struct dirty_throttle_control {
+ 
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 
+-#define GDTC_INIT(__wb)		.dom = &global_wb_domain,		\
+-				DTC_INIT_COMMON(__wb)
++#define GDTC_INIT(__wb)		.wb = (__wb),				\
++				.dom = &global_wb_domain,		\
++				.wb_completions = &(__wb)->completions
++
+ #define GDTC_INIT_NO_WB		.dom = &global_wb_domain
+-#define MDTC_INIT(__wb, __gdtc)	.dom = mem_cgroup_wb_domain(__wb),	\
+-				.gdtc = __gdtc,				\
+-				DTC_INIT_COMMON(__wb)
++
++#define MDTC_INIT(__wb, __gdtc)	.wb = (__wb),				\
++				.dom = mem_cgroup_wb_domain(__wb),	\
++				.wb_completions = &(__wb)->memcg_completions, \
++				.gdtc = __gdtc
+ 
+ static bool mdtc_valid(struct dirty_throttle_control *dtc)
+ {
+@@ -213,7 +214,8 @@ static void wb_min_max_ratio(struct bdi_writeback *wb,
+ 
+ #else	/* CONFIG_CGROUP_WRITEBACK */
+ 
+-#define GDTC_INIT(__wb)		DTC_INIT_COMMON(__wb)
++#define GDTC_INIT(__wb)		.wb = (__wb),                           \
++				.wb_completions = &(__wb)->completions
+ #define GDTC_INIT_NO_WB
+ #define MDTC_INIT(__wb, __gdtc)
+ 
 -- 
 2.4.3
