@@ -1,56 +1,70 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH cgroup/for-4.3-fixes] cgroup, writeback: don't enable
- cgroup writeback on traditional hierarchies
-Date: Tue, 29 Sep 2015 10:26:31 -0400
-Message-ID: <20150929142631.GA23411@mtj.duckdns.org>
-References: <20150923185137.GJ26647@mtj.duckdns.org>
- <20150923210729.GA23180@mtj.duckdns.org>
- <1443082186.19983.234.camel@gmail.com>
- <20150924204529.GF25415@mtj.duckdns.org>
- <1443163749.19983.254.camel@gmail.com>
- <1443178222.10230.10.camel@gmail.com>
- <20150925154925.GH4449@mtj.duckdns.org>
- <1443254768.16309.46.camel@gmail.com>
- <20150926221413.GI3572@htj.duckdns.org>
- <1443526656.16309.49.camel@gmail.com>
-Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 1/5] writeback: laptop_mode_timer_fn() needs rcu_read_lock() around bdi_writeback iteration
+Date: Tue, 29 Sep 2015 12:47:50 -0400
+Message-ID: <1443545274-18787-2-git-send-email-tj@kernel.org>
+References: <1443545274-18787-1-git-send-email-tj@kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=HxpXe8o5xaGXEcFCMujx6at8kdj1iM4ofAF+F0uRuDE=;
-        b=KhqQJqTpQ//X61ZYwDQN8EYXLXls767+/way+fwaV/6ijtCSzMKiyTrdYCCyjTyLa6
-         fVIKokqbXeayGy0jJP4MQVK0/1FxknPIJ9K7F8urWM3ZJ1p5LxoxkPlysZI/6IVDTmSb
-         c7slYwnemubDmYOIBnBXmx4qR7b7WlgLYgS27CyqSfvJmzmTU87WosPz2Z8kNdbJX8nD
-         FjaZtErPWEEqKqzjx9jPgdVljkOWSRD0z4PDtPExNQQt2VikyqLdRw/AgjPOkHbmMJrM
-         rD0H4qCVbnMAB3VtpCP02l5KJqWoLmDd0zOkt9NriPzY8K9ni1yUQU9zMszw+Eb+gxeJ
-         ND7Q==
-Content-Disposition: inline
-In-Reply-To: <1443526656.16309.49.camel@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=5RHNjeLDcITapkDlrzRPwA7GXnid9j15um2y5TwD97c=;
+        b=OArxD9z8olAi9dBxKHYN8/JzJxPykQq8KLhkfOmuRN4CXR4xdEkuR1kbts/J0PEPer
+         chEGV/8KGiWStXzqTAdjDXkib23ZnGslQz98/I0EomtzFQQI5Nhg9maJNucwtUUjvHgX
+         WYV3lDAPLk1AgaaTTwrEGDKaMewe1ADc9ahJgR1h9HIKKgAvUGdFVqk1FbRmUFQYK3Iy
+         aGDWjjgUm8CeIKNbwbqRsFf/054aEt9EF+xBj5XCQd4HNpXlqhPvnmmUllxpU+UI4tE+
+         5fJUMCgNXLgSoCuD73zSdYC/BSlFYquiYo2dOOfYc6QyNQKeAy3FVHyDD+Q3MC6xPA9m
+         +5TQ==
+In-Reply-To: <1443545274-18787-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Artem Bityutskiy <dedekind1@gmail.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, lizefan@huawei.com, cgroups@vger.kernel.org, hannes@cmpxchg.org, kernel-team@fb.com, adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org, Dexuan Cui <decui@microsoft.com>
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tytso-3s7WtUTddSA@public.gmane.org, dedekind1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, decui-0li6OtcxBFHby3iVrkZq2A@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Hello, Artem.
+laptop_mode_timer_fn() was using bdi_for_each_wb() without the
+required RCU locking leading to the following warning.
 
-On Tue, Sep 29, 2015 at 02:37:36PM +0300, Artem Bityutskiy wrote:
-> On Sat, 2015-09-26 at 18:14 -0400, Tejun Heo wrote:
-> > Hello, Artem.
-> > 
-> > Thanks a lot for the debug dump.  Can you please test whether the
-> > below patch fixes the issue?
-> 
-> Hi,
-> 
-> I've tested this, 7 out of 7 reboots successful, so it looks like this
-> patch fixes the problem.
+ WARNING: CPU: 0 PID: 0 at include/linux/backing-dev.h:415 laptop_mode_timer_fn+0x106/0x170()
+ ...
+ Call Trace:
+  <IRQ>  [<ffffffff81480cdc>] dump_stack+0x4e/0x82
+  [<ffffffff81051912>] warn_slowpath_common+0x82/0xc0
+  [<ffffffff81051a0a>] warn_slowpath_null+0x1a/0x20
+  [<ffffffff8115f0e6>] laptop_mode_timer_fn+0x106/0x170
+  [<ffffffff810ca8e3>] call_timer_fn+0xb3/0x2f0
+  [<ffffffff810cad25>] run_timer_softirq+0x205/0x370
+  [<ffffffff81056854>] __do_softirq+0xd4/0x460
+  [<ffffffff81056d69>] irq_exit+0x89/0xa0
+  [<ffffffff8185a892>] smp_apic_timer_interrupt+0x42/0x50
+  [<ffffffff81858a44>] apic_timer_interrupt+0x84/0x90
+ ...
 
-Thanks a lot for testing.  Will soon post the split patches w/ your
-tested-by.
+Fix it by adding rcu_read_lock() around the iteration.
 
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Fixes: a06fd6b10228 ("writeback: make laptop_mode_timer_fn() handle multiple bdi_writeback's")
+---
+ mm/page-writeback.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 0a931cd..902e5f2 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -1965,10 +1965,12 @@ void laptop_mode_timer_fn(unsigned long data)
+ 	if (!bdi_has_dirty_io(&q->backing_dev_info))
+ 		return;
+ 
++	rcu_read_lock();
+ 	bdi_for_each_wb(wb, &q->backing_dev_info, &iter, 0)
+ 		if (wb_has_dirty_io(wb))
+ 			wb_start_writeback(wb, nr_pages, true,
+ 					   WB_REASON_LAPTOP_TIMER);
++	rcu_read_unlock();
+ }
+ 
+ /*
 -- 
-tejun
+2.4.3
