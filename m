@@ -1,223 +1,167 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v2 5/5] writeback: fix incorrect calculation of available
- memory for memcg domains
-Date: Tue, 29 Sep 2015 13:04:26 -0400
-Message-ID: <20150929170426.GC3578@mtj.duckdns.org>
-References: <1443545274-18787-1-git-send-email-tj@kernel.org>
- <1443545274-18787-6-git-send-email-tj@kernel.org>
+From: kbuild test robot <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [cgroup:review-cgwb-4.3-fixes 5/5] mm/page-writeback.c:1908:
+ warning: 'filepages' is used uninitialized in this function
+Date: Wed, 30 Sep 2015 08:09:40 +0800
+Message-ID: <201509300838.xpna6OlD%fengguang.wu@intel.com>
 Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary="oyUTqETQ0mS9luUI"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=afZYuL7dG6mxifdOLCNPmOd5MREekO6crXJ5nEmtbuc=;
-        b=rkA7V1HRpv7Kx8NfkdBcTGgvT0gvIFLh5gJYNYUy/wPNKlxpNWmeZE5aS9QvkOLhvf
-         Y7L4ET+sXDWp9zEkfu6Pw6jHipat/rq/vgX06+bn4ClHs3Kir7VAqyOVKveN+1to5GVb
-         qPVdcHenKJ3nVBqcI3vACoMiUKH9DzBWHVkOZTqEeFW+G36c+SpAqsCEceCPz1fvOvaz
-         jaMSAudT6JozlHhUZEZoLrARO81AB15GCZcDcdt8GK+FiWKws6h+I6y6cHVe4vjFV/2d
-         KvxmWcSMkpCJDplN5NT/76feXfhMGcKVDgVVwGgmGFaPt6ziE7OVaVhZbK4f/iKkTaa+
-         xjlQ==
 Content-Disposition: inline
-In-Reply-To: <1443545274-18787-6-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tytso-3s7WtUTddSA@public.gmane.org, dedekind1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, decui-0li6OtcxBFHby3iVrkZq2A@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: kbuild-all-JC7UmRfGjtg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-For memcg domains, the amount of available memory was calculated as
 
- min(the amount currently in use + headroom according to memcg,
-     total clean memory)
+--oyUTqETQ0mS9luUI
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-This isn't quite correct as what should be capped by the amount of
-clean memory is the headroom, not the sum of memory in use and
-headroom.  For example, if a memcg domain has a significant amount of
-dirty memory, the above can lead to a value which is lower than the
-current amount in use which doesn't make much sense.  In most
-circumstances, the above leads to a number which is somewhat but not
-drastically lower.
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-cgwb-4.3-fixes
+head:   93bcba95270132db0f16c706a784c97d3a6cc74e
+commit: 93bcba95270132db0f16c706a784c97d3a6cc74e [5/5] writeback: fix incorrect calculation of available memory for memcg domains
+config: avr32-allnoconfig (attached as .config)
+reproduce:
+  wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+  chmod +x ~/bin/make.cross
+  git checkout 93bcba95270132db0f16c706a784c97d3a6cc74e
+  # save the attached .config to linux build tree
+  make.cross ARCH=avr32 
 
-As the amount of memory which can be readily allocated to the memcg
-domain is capped by the amount of system-wide clean memory which is
-not already assigned to the memcg itself, the number we want is
+All warnings (new ones prefixed by >>):
 
- the amount currently in use +
- min(headroom according to memcg, clean memory elsewhere in the system)
+   mm/page-writeback.c: In function 'wb_over_bg_thresh':
+>> mm/page-writeback.c:1908: warning: 'filepages' is used uninitialized in this function
+>> mm/page-writeback.c:1908: warning: 'headroom' is used uninitialized in this function
+   mm/page-writeback.c: In function 'balance_dirty_pages_ratelimited':
+   mm/page-writeback.c:1581: warning: 'writeback' is used uninitialized in this function
+   mm/page-writeback.c:1573: note: 'writeback' was declared here
+   mm/page-writeback.c:1582: warning: 'filepages' is used uninitialized in this function
+   mm/page-writeback.c:1573: note: 'filepages' was declared here
+   mm/page-writeback.c:1582: warning: 'headroom' is used uninitialized in this function
+   mm/page-writeback.c:1573: note: 'headroom' was declared here
+   mm/page-writeback.c:1545: warning: 'm_bg_thresh' may be used uninitialized in this function
+   mm/page-writeback.c:1545: note: 'm_bg_thresh' was declared here
+   mm/page-writeback.c:1545: warning: 'm_thresh' may be used uninitialized in this function
+   mm/page-writeback.c:1545: note: 'm_thresh' was declared here
+   mm/page-writeback.c:1545: warning: 'm_dirty' may be used uninitialized in this function
+   mm/page-writeback.c:1545: note: 'm_dirty' was declared here
 
-This patch updates mem_cgroup_wb_stats() to return the number of
-filepages and headroom instead of the calculated available pages.
-mdtc_cap_avail() is renamed to mdtc_calc_avail() and performs the
-above calculation from file, headroom, dirty and globally clean pages.
+vim +/filepages +1908 mm/page-writeback.c
 
-v2: Dummy mem_cgroup_wb_stats() implementation wasn't updated leading
-    to build failure when !CGROUP_WRITEBACK.  Fixed.
+  1892		gdtc->avail = global_dirtyable_memory();
+  1893		gdtc->dirty = global_page_state(NR_FILE_DIRTY) +
+  1894			      global_page_state(NR_UNSTABLE_NFS);
+  1895		domain_dirty_limits(gdtc);
+  1896	
+  1897		if (gdtc->dirty > gdtc->bg_thresh)
+  1898			return true;
+  1899	
+  1900		if (wb_stat(wb, WB_RECLAIMABLE) > __wb_calc_thresh(gdtc))
+  1901			return true;
+  1902	
+  1903		if (mdtc) {
+  1904			unsigned long filepages, headroom, writeback;
+  1905	
+  1906			mem_cgroup_wb_stats(wb, &filepages, &headroom, &mdtc->dirty,
+  1907					    &writeback);
+> 1908			mdtc_calc_avail(mdtc, filepages, headroom);
+  1909			domain_dirty_limits(mdtc);	/* ditto, ignore writeback */
+  1910	
+  1911			if (mdtc->dirty > mdtc->bg_thresh)
+  1912				return true;
+  1913	
+  1914			if (wb_stat(wb, WB_RECLAIMABLE) > __wb_calc_thresh(mdtc))
+  1915				return true;
+  1916		}
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Fixes: c2aa723a6093 ("writeback: implement memcg writeback domain based throttling")
 ---
- include/linux/memcontrol.h |  8 +++++---
- mm/memcontrol.c            | 35 +++++++++++++++++------------------
- mm/page-writeback.c        | 29 ++++++++++++++++++-----------
- 3 files changed, 40 insertions(+), 32 deletions(-)
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index ad800e6..00bec85 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -677,8 +677,9 @@ enum {
- 
- struct list_head *mem_cgroup_cgwb_list(struct mem_cgroup *memcg);
- struct wb_domain *mem_cgroup_wb_domain(struct bdi_writeback *wb);
--void mem_cgroup_wb_stats(struct bdi_writeback *wb, unsigned long *pavail,
--			 unsigned long *pdirty, unsigned long *pwriteback);
-+void mem_cgroup_wb_stats(struct bdi_writeback *wb, unsigned long *pfilepages,
-+			 unsigned long *pheadroom, unsigned long *pdirty,
-+			 unsigned long *pwriteback);
- 
- #else	/* CONFIG_CGROUP_WRITEBACK */
- 
-@@ -688,7 +689,8 @@ static inline struct wb_domain *mem_cgroup_wb_domain(struct bdi_writeback *wb)
- }
- 
- static inline void mem_cgroup_wb_stats(struct bdi_writeback *wb,
--				       unsigned long *pavail,
-+				       unsigned long *pfilepages,
-+				       unsigned long *pheadroom,
- 				       unsigned long *pdirty,
- 				       unsigned long *pwriteback)
- {
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 6ddaeba..b357ccf 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3734,44 +3734,43 @@ struct wb_domain *mem_cgroup_wb_domain(struct bdi_writeback *wb)
- /**
-  * mem_cgroup_wb_stats - retrieve writeback related stats from its memcg
-  * @wb: bdi_writeback in question
-- * @pavail: out parameter for number of available pages
-+ * @pfilepages: out parameter for number of file pages
-+ * @pheadroom: out parameter for number of allocatable pages according to memcg
-  * @pdirty: out parameter for number of dirty pages
-  * @pwriteback: out parameter for number of pages under writeback
-  *
-- * Determine the numbers of available, dirty, and writeback pages in @wb's
-- * memcg.  Dirty and writeback are self-explanatory.  Available is a bit
-- * more involved.
-+ * Determine the numbers of file, headroom, dirty, and writeback pages in
-+ * @wb's memcg.  File, dirty and writeback are self-explanatory.  Headroom
-+ * is a bit more involved.
-  *
-- * A memcg's headroom is "min(max, high) - used".  The available memory is
-- * calculated as the lowest headroom of itself and the ancestors plus the
-- * number of pages already being used for file pages.  Note that this
-- * doesn't consider the actual amount of available memory in the system.
-- * The caller should further cap *@pavail accordingly.
-+ * A memcg's headroom is "min(max, high) - used".  In the hierarchy, the
-+ * headroom is calculated as the lowest headroom of itself and the
-+ * ancestors.  Note that this doesn't consider the actual amount of
-+ * available memory in the system.  The caller should further cap
-+ * *@pheadroom accordingly.
-  */
--void mem_cgroup_wb_stats(struct bdi_writeback *wb, unsigned long *pavail,
--			 unsigned long *pdirty, unsigned long *pwriteback)
-+void mem_cgroup_wb_stats(struct bdi_writeback *wb, unsigned long *pfilepages,
-+			 unsigned long *pheadroom, unsigned long *pdirty,
-+			 unsigned long *pwriteback)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(wb->memcg_css);
- 	struct mem_cgroup *parent;
--	unsigned long head_room = PAGE_COUNTER_MAX;
--	unsigned long file_pages;
- 
- 	*pdirty = mem_cgroup_read_stat(memcg, MEM_CGROUP_STAT_DIRTY);
- 
- 	/* this should eventually include NR_UNSTABLE_NFS */
- 	*pwriteback = mem_cgroup_read_stat(memcg, MEM_CGROUP_STAT_WRITEBACK);
-+	*pfilepages = mem_cgroup_nr_lru_pages(memcg, (1 << LRU_INACTIVE_FILE) |
-+						     (1 << LRU_ACTIVE_FILE));
-+	*pheadroom = PAGE_COUNTER_MAX;
- 
--	file_pages = mem_cgroup_nr_lru_pages(memcg, (1 << LRU_INACTIVE_FILE) |
--						    (1 << LRU_ACTIVE_FILE));
- 	while ((parent = parent_mem_cgroup(memcg))) {
- 		unsigned long ceiling = min(memcg->memory.limit, memcg->high);
- 		unsigned long used = page_counter_read(&memcg->memory);
- 
--		head_room = min(head_room, ceiling - min(ceiling, used));
-+		*pheadroom = min(*pheadroom, ceiling - min(ceiling, used));
- 		memcg = parent;
- 	}
--
--	*pavail = file_pages + head_room;
- }
- 
- #else	/* CONFIG_CGROUP_WRITEBACK */
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 56c0bff..2c90357 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -684,13 +684,19 @@ static unsigned long hard_dirty_limit(struct wb_domain *dom,
- 	return max(thresh, dom->dirty_limit);
- }
- 
--/* memory available to a memcg domain is capped by system-wide clean memory */
--static void mdtc_cap_avail(struct dirty_throttle_control *mdtc)
-+/*
-+ * Memory which can be further allocated to a memcg domain is capped by
-+ * system-wide clean memory excluding the amount being used in the domain.
-+ */
-+static void mdtc_calc_avail(struct dirty_throttle_control *mdtc,
-+			    unsigned long filepages, unsigned long headroom)
- {
- 	struct dirty_throttle_control *gdtc = mdtc_gdtc(mdtc);
--	unsigned long clean = gdtc->avail - min(gdtc->avail, gdtc->dirty);
-+	unsigned long clean = filepages - min(filepages, mdtc->dirty);
-+	unsigned long global_clean = gdtc->avail - min(gdtc->avail, gdtc->dirty);
-+	unsigned long other_clean = global_clean - min(global_clean, clean);
- 
--	mdtc->avail = min(mdtc->avail, clean);
-+	mdtc->avail = filepages + min(headroom, other_clean);
- }
- 
- /**
-@@ -1564,16 +1570,16 @@ static void balance_dirty_pages(struct address_space *mapping,
- 		}
- 
- 		if (mdtc) {
--			unsigned long writeback;
-+			unsigned long filepages, headroom, writeback;
- 
- 			/*
- 			 * If @wb belongs to !root memcg, repeat the same
- 			 * basic calculations for the memcg domain.
- 			 */
--			mem_cgroup_wb_stats(wb, &mdtc->avail, &mdtc->dirty,
--					    &writeback);
--			mdtc_cap_avail(mdtc);
-+			mem_cgroup_wb_stats(wb, &filepages, &headroom,
-+					    &mdtc->dirty, &writeback);
- 			mdtc->dirty += writeback;
-+			mdtc_calc_avail(mdtc, filepages, headroom);
- 
- 			domain_dirty_limits(mdtc);
- 
-@@ -1895,10 +1901,11 @@ bool wb_over_bg_thresh(struct bdi_writeback *wb)
- 		return true;
- 
- 	if (mdtc) {
--		unsigned long writeback;
-+		unsigned long filepages, headroom, writeback;
- 
--		mem_cgroup_wb_stats(wb, &mdtc->avail, &mdtc->dirty, &writeback);
--		mdtc_cap_avail(mdtc);
-+		mem_cgroup_wb_stats(wb, &filepages, &headroom, &mdtc->dirty,
-+				    &writeback);
-+		mdtc_calc_avail(mdtc, filepages, headroom);
- 		domain_dirty_limits(mdtc);	/* ditto, ignore writeback */
- 
- 		if (mdtc->dirty > mdtc->bg_thresh)
--- 
-2.4.3
+--oyUTqETQ0mS9luUI
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename=".config.gz"
+Content-Transfer-Encoding: base64
+
+H4sICOsnC1YAAy5jb25maWcAjVtZk9s2En73r2DZ+5BUbey5PBvX1jyAICgiIgiaAKUZv6Bk
+DW2rPCNpdSSef78NQBIpsSE7ValM2I2r0cfXjdabV28ist0snieb2XTy9PQSfW3mzWqyaR6j
+L7On5r9RIqNC6oglXL8F5nw23/54N/l7dX0V3by9fnvxx2p6FQ2b1bx5iuhi/mX2dQvDZ4v5
+qzevqCxSPjBkVF1f3b3s/1dpQoe6IpQZVZelrHRLyyUdJqzsEzw/rz6mORmoPr0aKybMgBWs
+4tSokhd2KqC/iY447mk2IEliSD6QFdeZiGbraL7YROtm0/KSimYmI8rwXA6uTA2H/RW225su
+245pv6dszPgg62x5T6Ak53FFNDMJy8lDy5CwdC8WrvTd63dPs8/vnheP26dm/e5fdUEEMxXL
+GVHs3dupk/3rVyD2N9HAXeKT3cZ22V5EXMkhK4wsjBJluw4vuDasGMF57FKC67vrqz2RVlIp
+Q6Uoec7uXr9uT7/7ZjRTGjk3yJ/kI1YpLoujcV2CIbWWyGA4OqlzbTKptD3n3evf5ot583tn
+GvWgRryk6MX4TQsmZPVgiAaFy1C+NCNFkjOUVisG99IlOdGCCkbr7ef1y3rTPLei3V8mkE1Z
+yZj179mSVCbHLSUjVQJfQZ3HcJGKFQmiHVaP2YgVWgHRbUHPnpvVGttF9smUMEomnHZVv5CW
+wkMndWSUkoHG2p0ZzQVcWE8YtKzf6cn6e7SBLUWT+WO03kw262gynS62881s/rXdm+Z0aGCA
+IZTKutC8GOwPVNE6Uv3TAMuDAdqRFdPasHs4pEY3rIkaKsuEUu1g8D55bnVXyAKfomLMcTqX
+E5zHbgJ8IjOxlPhe4prniYl5cYUrKR/6P3ANHlSyLhVOyxgdlpIX2t6NlhW+SwV8iTMwNxd+
+Eutx8N3nQ7DCkXMOVYLvgxpZgmbwT8yksjIK/kBs2V9X9xIFmDYH+6rwfQ+YFnCP1sLBU+Q4
+04NK1VmOIRDUg8BFWFYgvWHg2vAbicHNmrQOrJbWmt2jFFbK0Bn4oCB5igvXWVyA5txBgBaX
+6XnBZeAW8WjGJf49GXE4+m5SXJ72Mp3HDuwK1oxJVfHjK98fR8QsSViydwc7NFE2qy+L1fNk
+Pm0i9nczB79CwMNQ61nA/3kH5GcYCS8T4zzLiac6ClhEQxTEL17lJEZ2p/I67iqvymUcUkkN
+CCMhmhgIbzzllGge8DIQI1Kegw9EVszIiIFlOQ7WXbp2kQU/nBt0exNDKAc8MSis6VPKlAot
+MPSTdaMRfKX5sP2ywzfwuRDcKJICXZQWQp3wjAnIHoKxKUkFqrKP+i9HvsLhPlhUMwo+K7Qt
+IRM/pyoZtTJslwJSnUMwAmUzLE+d82qp5UCTGOBIDpqQq7urHRKicvTH58ka8Ox3r1bL1QKQ
+rQ9NfSRn+XeXw0zIhtxG9wE6EQQ0K2MV6B9yKOc2lICp7i479uCPEvC8EPGRmQDS8oI5bGtq
+B28tpOjCOEevGEl29HM0dOy4shEtMLhL3I1u3R8EzU/Hxu3Eq1xIj/TL0sODL81ks1016zbI
+qzp2wndJQty5bFF37ha8i6wEKSAH2Jt4h5oTbcmA9K6vSAfYOrThvv3n4uI+8P2i/R5LAGRA
+UXp46QntpexIxWAMJCOGHL+7Hts5vowIcPIZXMoZphQkYwIJiOeAObjCMcaOgQt6dXGBaefR
+ia+wE3vS9dnjep6bX+C5/QWee0NrgDV4lDplBXO4/AXGC/PXFbiG5KcyuAC8ohPScTu5JAmr
+TO2Q3j5Gkc0z+BKntBEpo8XSprxHMckrHdycsT5ZCYosveO5vN3zdC9gR/zzzHi7NYjPCcBA
+dXfxw27f/nMIrIW2+c+B/uGEXmYPysg0VUwjo0uwaVFqSA+Koyi0/z6SOVgiqXD8uONCNv2x
+hkzAZbQvPQdsA4DP2kqXEOHIumAQ3QqZOGZByhDydJOm4B2ADYRhw0NvzQRMR0I2Mmh5wrm+
+cvEN59x7Qr9cqz72w2GzRjj/dBxJrF5ZGi9S6TiRaUsyYL70AeoJiSLrpIqqzEFDSu0cM/g2
+dXdzAnpoGIdYFbAaYrRHD8jan0ABXJizG7g76EdR+au8O9QKRrzSRkuA0Kp7yKESyKz7FN9d
+oICYZndxd3Px4fZV95rB9Tt/PRRHcCJnEAwgrccv61MpJR66P8U17mw/uRgtcTcqxxDrVcbL
+M0mhhUgJg+xhcILq2sv+ZC5RLwyEq/dH4Qa+XB+znsyCT3MH05wmgFllM2+EnYrExnVbm3F+
+q1z806wiwNuTr80zwG3MqakaYFmBS7DEbtmbjR9lSqkU90a4Lx9E6ar537aZT1+i9XSyg2Vn
+ia0OgFYA7vjYAx3xdo3tvaSUHGeyjsp+NNPtZvL5qXEVz8jlHJujkZDDp0JbzIlHGk9WtOIl
+7rCcmRNZBwoFfrwIBXEKGX5SCzyDL5juHSlp/p5B0pSsZn/7RKktCs6mu8+R7Euo9klUxvIy
+kJsnbKRFmeLAFQB+kZAcvEUoIrjpU16JMamYL5Dg2fR4F3VxVwx2OnbFibOSccZokoqPgodx
+DGxUBZA4ZHQmewBZQAIs8TkOZTpQRpiJ08BU1n2qDE6dwLHTFIHKVmsf3cUd3YnQuIgkrosQ
+oGxhvDe7mK2n2PQ2WOVG05NSZ7vvWogHi/bxm3CjVUBvWUFzqWq4aWVFGBKNqggO9egVehTG
+ID8T0Xq7XC5Wm+5hPMV8uKb3t71huvkxWUd8vt6sts+umrD+NllBXrhZTeZrO1UEHqaJHkFS
+s6X9c2845GnTrCZRWg4IuIjV8z8wLHpc/DN/WkweI1+Q3/Py+QZwoeDU3ac3tT1NQT6LfG6H
+ZIv1Jkikk9UjNuHhUysGmuGVHHqfu3w0SByyqoALJSWetVgWxrKeaBVVfKdcnWs5RCHFbb57
+VEOx38Ak+tX1+XK76U/V1kyLsu5rRAaicZfC38nIDjmOWbYijhsvEQxVMQqaMZnCrWMmozWO
+eMH8Q6U1IA1DNF4CcPDvELiLycamAnIgH9IU/j0OvV6SVxQVYKAYrQJXrmB3+K4U761Zlgpb
+syz7Lwf22+6pceHeMvajPFWX0fRpMf1+SmBzF6gBtVqHZSsKEP/GshpaIOtqphCERGkR2GYB
+qzXR5lsTTR4fZzbYTZ78rOu3ncfJQ+Lhk04zKLk02UmBC2BGzcGRWSKs3HmmwT7sYkpX432s
+scS+a26eF6sXAF7LJXgjx/J4iNytrrp5x6TE/bQj74PRviAS5gRoeH15ed/fS5r4HTQ/liDd
+kz2M8Uy7lGMA6fZJNg/kgo6BjAKVy3HwKSZjFaBylDYmmmaJxOqnSsU9qKkW89l0HanZ02y6
+mEfxZPp9+TRxPr7VdYXVf2MKoft0ungFrn+6eI7Wy2Y6+wKoioiYHGFGirg3sX3azL5s51Or
+jXs3h1w2XIPDNri8tK2zKk7xmowdO4TUOwCtLFno2+sP/wmSlXh/gd80ie/fX1yEt+ZGP9iE
+OkjW3BBxff3+3mhFSYJ7I8dYqtv3Hy7xwpdjEAG3XrFBDRYQQGyCJZzsGwh6NzRYTZbfrKb0
+4pjzEWnsMc+RaVd975uuJs9N9Hn75QvEkKQfQ1LcimNiKyODTJucJtgeD5yjAQFPpwMvf7Iu
+sEpXDYYhM8pNzrXOGQA0EEXR+i5L73VW2I+H8nhGj+J4rfoP5PabQ1OPx+mH/V5+e1nbPpMo
+n7zY4NrXfLsauHI81ZGlo99Txkcoh6U6/zaK69BDFXCQZMBwsdZj/GKECCgqE+o0ve6kZmNb
+csQ34h9neMzhLvDjVtq+/hMVTCjO5Rukvk+4KkOvu3XAdFwFx6dM/Zg9mq3Ab2G3ZoeB1IXA
+wttsulqsF182UfaybFZ/jKKv2wZwLgIUQKODxROaAbRnh9DW390BBKrlbO6ww4kCUvdRLbYr
+3On6ZKbkuGaozD/JGip+wiB0jTutA4cWeH8CEzsG0Clc3QjPY4m/M3MpRB30axWAjE2zXC2m
+2NGVdg9vsH4FGRTtj14+r7+eylMB42+7Bx45B8w8W/7exsMEWaUu7nk43YP5TODcpbCQ6rTY
+08rtXgdDjqsm4wIL2EA5DgF18M4m5Fhsudq+Pxe6knkIyqeiL1vr7brNL73SQsgdWsRb3hNz
+9WchLBzHPdQRF3i/wEMSFWYoC+I4witaHEcJXm4RtB8Luk/4z4DAAOtjdl+RvjmT+eNqMXs8
+MtAiqSTHYU1xmnv5MGwLel6yx+FXWUTH78ELB9o57POvraeH3FGqCql5GsgEz9C4p5lg+0tK
+zoz+WEtNwhSq8ePYJqBU3ZhA4S61L+oBmoRQAFHkhOyFOZl+O4E1qleT93qwbraPC1dfRW7D
+upzQ8o5GM54nFcMt3NYsQgVJ2ySEY+gaEEAeu2cVPNy4/4CeBCawxVqnJb7rA2cq8r7Qds0t
+3yAB6RS7l6vZfPPdJbSPzw342rZ+fXBkSsFmQSkHrsNh/35yd7O7jMXzEsT7h+vEg3uBLNdN
+N/XfV1hF3Cel9tkpUL9zDRVjUhXAWlaMAuAMdCR5VgEptG9PQ9BnWtmGVTvb3eXF1U03+lS8
+NEQJE+zXso0LbgWicOdcF6DDNvkQsQz0KNm79i85gRqNFUaK9sswW4tW/mT9rF4x975mdULY
+rBS3MXd617V3fgOyoiAlRob7p68AEhjYPucHdVyZPZrKV/P2KeuuzJA0n7dfv548pTjRuIdF
+FXoo9FNaxvAzmeeR8V8gkABq9QKznUDgAUPG57lGoVqaJe5eiW134rmFspPK9e55BEQQ5YAG
+t0tvJNlk/vXIMqzrr0uYpd+s1FnCEsGVFL7vNKB0BdwTKIeUJaZaR3QzInnN2hdWT7SQUNb6
+rveyFzRcT/ZStu9uPYs8EZNdYchYeRLsnECsmFqliX5b79D1+t/R83bT/Gjgj2Yzffv27e99
+17Lvwz93kbZxMvRo4jjGY89kO+/GJdG4fXle9wQeVlCIJqPzcd1NYDPrM4sQLYU1vhxE9pO9
+wDK2mg4uIk9tnzx+TrcoqJm2byWn7fTd7Gj3u4kziw699Z3bFg/Mv7Nw/jMOhUvOEx124aEO
+TM9DK5awQnOChEfbuo27KHd1oc5u35jhGrPPudifytj1ff8S0/nm8I/KnzVQx/AyMqyqZAVm
+/BcLN2j4JgmUZ38o2IrVs7Zy0w7ubdML2fbmA0zQkIefiNke2ikApGOB0lPc/nzHdmGGxRS7
+Vvog3ZvR7c3BOPArsxvK2H3wmdcxWAhRDHYv17juOb4hMOpAAu0YqoyoTAd6e3xHfyKpqo46
+tdzIOgn20isiypNuT59BN9PtarZ5wbDZkD0EQC2jdcX1g0kAErq8E84esPg9L4pq9g047YTd
+rrdT6vFPf6qHUuOxJ+YFce1bYIVp78T57PNqAihktdiC5nX7QA+/kpFHfT4VoH/KNX48oF7i
+DYV2nL68SDj+Sm7JXIMVh6iBfkug4GXznMduVOjnSPTPQF6W2H5tW13dNafvxIAblHsFvL46
+bzD3n+Du8Ak8CZL9vxB12F+Ai562et7tDFe2vNTtavOfrL/ZtbR1viei05Z9mHZn7b3uctU6
+Ars5nrrUXPPRUa8elVUSEEuShH5H4jvjcMnvF1e2tEj4kWP9P1wylFYWOQAA
+
+--oyUTqETQ0mS9luUI--
