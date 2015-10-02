@@ -1,79 +1,83 @@
-From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 1/5] writeback: laptop_mode_timer_fn() needs
- rcu_read_lock() around bdi_writeback iteration
-Date: Fri, 2 Oct 2015 16:13:24 +0200
-Message-ID: <20151002141324.GC17746@quack.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 3/5] writeback: bdi_writeback iteration must not skip
+ dying ones
+Date: Fri, 2 Oct 2015 14:19:10 -0400
+Message-ID: <20151002181910.GA8983@mtj.duckdns.org>
 References: <1443545274-18787-1-git-send-email-tj@kernel.org>
- <1443545274-18787-2-git-send-email-tj@kernel.org>
+ <1443545274-18787-4-git-send-email-tj@kernel.org>
+ <20151002141212.GA17746@quack.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=Jm903CDUNb7nummeC6Gsazv/s6wnrMZKrvT4q8foYEI=;
+        b=q+57sFCHwSgUKDGHX0TeJIF0BYR7f7X6GdyjXI5yF3Zw+qB9ZSHs7sTCak7wF7IC7z
+         uoQteyHv0zblmmHMKhqiCcwEz0ffl66EZ98SbJudadd9bzb+Otu8uOxrq/5WxgUqPIwE
+         XKf0xWBiPI3WIlrM/9LEWmhXHgwCM5H8g2AwxclDGwTvmVbKfnamXHAtjEvNNV5lffiI
+         zvZxmMj9ipbX/XGMniBbJqW1htlux1W94YzBVBZMSFaSKYCVuvPmWdRfyiAblWD0LZkw
+         7IU+2G2QLC/Pgj3ICq6BQBEMD7J/ui7Zp/vob1Trk4JfQLrHzG72mammiLThvL3dLWjQ
+         g0lQ==
 Content-Disposition: inline
-In-Reply-To: <1443545274-18787-2-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <20151002141212.GA17746-+0h/O2h83AeN3ZZ/Hiejyg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
 Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tytso-3s7WtUTddSA@public.gmane.org, dedekind1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, decui-0li6OtcxBFHby3iVrkZq2A@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Tue 29-09-15 12:47:50, Tejun Heo wrote:
-> laptop_mode_timer_fn() was using bdi_for_each_wb() without the
-> required RCU locking leading to the following warning.
+On Fri, Oct 02, 2015 at 04:12:12PM +0200, Jan Kara wrote:
+> > +		if (last_wb) {
+> > +			wb_put(last_wb);
+> > +			last_wb = NULL;
+> > +		}
 > 
->  WARNING: CPU: 0 PID: 0 at include/linux/backing-dev.h:415 laptop_mode_timer_fn+0x106/0x170()
->  ...
->  Call Trace:
->   <IRQ>  [<ffffffff81480cdc>] dump_stack+0x4e/0x82
->   [<ffffffff81051912>] warn_slowpath_common+0x82/0xc0
->   [<ffffffff81051a0a>] warn_slowpath_null+0x1a/0x20
->   [<ffffffff8115f0e6>] laptop_mode_timer_fn+0x106/0x170
->   [<ffffffff810ca8e3>] call_timer_fn+0xb3/0x2f0
->   [<ffffffff810cad25>] run_timer_softirq+0x205/0x370
->   [<ffffffff81056854>] __do_softirq+0xd4/0x460
->   [<ffffffff81056d69>] irq_exit+0x89/0xa0
->   [<ffffffff8185a892>] smp_apic_timer_interrupt+0x42/0x50
->   [<ffffffff81858a44>] apic_timer_interrupt+0x84/0x90
->  ...
-> 
-> Fix it by adding rcu_read_lock() around the iteration.
-> 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Fixes: a06fd6b10228 ("writeback: make laptop_mode_timer_fn() handle multiple bdi_writeback's")
+> But you seem to forget to drop last_wb reference in case this was the last
+> wb in the list, don't you?
 
-Looks good. You can add:
+You're right.  Will update the patch.
 
-Reviewed-by: Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
+> > @@ -686,6 +691,9 @@ static void cgwb_bdi_destroy(struct backing_dev_info *bdi)
+> >  	radix_tree_for_each_slot(slot, &bdi->cgwb_tree, &iter, 0)
+> >  		cgwb_kill(*slot);
+> >  
+> > +	/* wb may get released after @bdi is freed, sever list head */
+> > +	list_del(&bdi->wb_list);
+> > +
+> 
+> But we wait for bdi->usage_cnt to drop to 0 which means there's no wb,
+> don't we? What am I missing?
 
-								Honza
-> ---
->  mm/page-writeback.c | 2 ++
->  1 file changed, 2 insertions(+)
+And I forgot that we were doing that.  This isn't necessary.
+
+> > @@ -764,15 +772,22 @@ static void cgwb_bdi_destroy(struct backing_dev_info *bdi) { }
+> >  
+> >  int bdi_init(struct backing_dev_info *bdi)
+> >  {
+> > +	int ret;
+> > +
+> >  	bdi->dev = NULL;
+> >  
+> >  	bdi->min_ratio = 0;
+> >  	bdi->max_ratio = 100;
+> >  	bdi->max_prop_frac = FPROP_FRAC_BASE;
+> >  	INIT_LIST_HEAD(&bdi->bdi_list);
+> > +	INIT_LIST_HEAD(&bdi->wb_list);
+> >  	init_waitqueue_head(&bdi->wb_waitq);
+> >  
+> > -	return cgwb_bdi_init(bdi);
+> > +	ret = cgwb_bdi_init(bdi);
+> > +
+> > +	list_add_tail_rcu(&bdi->wb.bdi_node, &bdi->wb_list);
 > 
-> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-> index 0a931cd..902e5f2 100644
-> --- a/mm/page-writeback.c
-> +++ b/mm/page-writeback.c
-> @@ -1965,10 +1965,12 @@ void laptop_mode_timer_fn(unsigned long data)
->  	if (!bdi_has_dirty_io(&q->backing_dev_info))
->  		return;
->  
-> +	rcu_read_lock();
->  	bdi_for_each_wb(wb, &q->backing_dev_info, &iter, 0)
->  		if (wb_has_dirty_io(wb))
->  			wb_start_writeback(wb, nr_pages, true,
->  					   WB_REASON_LAPTOP_TIMER);
-> +	rcu_read_unlock();
->  }
->  
->  /*
-> -- 
-> 2.4.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+> Won't this be more logical in cgwb_bdi_init()?
+
+bdi->wb_list exists whether cgwb is enabled or not, so if we move this
+to cgwb_bdi_init(), we'll be duplicating it in both paths.
+
+Thanks.
+
 -- 
-Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
-SUSE Labs, CR
+tejun
