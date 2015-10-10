@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 08/14] cgroup: keep css_set and task lists in chronological order
-Date: Fri,  9 Oct 2015 23:29:35 -0400
-Message-ID: <1444447781-16182-9-git-send-email-tj@kernel.org>
+Subject: [PATCH 07/14] cgroup: make cgroup_destroy_locked() test cgroup_is_populated()
+Date: Fri,  9 Oct 2015 23:29:34 -0400
+Message-ID: <1444447781-16182-8-git-send-email-tj@kernel.org>
 References: <1444447781-16182-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=O9ZuFPhKZ8EFrebrfWsR7VxL7ixJ3VQSBpD+BMRNbkk=;
-        b=zahsJDWwbLeKh2GN3IspcYpvaUp4Y+qOjyMUCi6r8UWcR9XlRlqqXSGKg4VOkjdTlg
-         iPsUp8uv6Ya0IH7+DuB+aeQwA8ypohm0f27JTRrGihBUCLit3zMUMkgIKcT/qMG0BEC3
-         ChSor3G6H1DQkri+pru2ERY/ASz8/USUTEJNcN5CK7ABEojEdewOVM4mKylCRzPPdWCu
-         xPdcL/hySqYLhNsbP2Vsk6qTfUN1YC13mX3f4Tu8HxhfC3Ggo2uuvXrtLbLjtfxJixru
-         H7EzpgaIPZ6gWPJAo2pa/OCPJPZh78mXWB0g2G0xMSAj+zTRbefvWbclY5R1EANr5Mvw
-         CUhw==
+        bh=06TabEe4isVpmKsaND45ZE0esNQ20pVZRGTqF3AYsBo=;
+        b=ingyVleA4Mq6h08q5lIbXqzQkwypNZs7BN7ZjUFBeZushlOLWx/YNX3NjlEt6DbBsn
+         g15b+WX7VDAjxNcvRC6OYI46y17o40wIzyf+jMhOOq9bQTOAvN4NM8fkxd30EVZe/Gm2
+         2U90qcBgh0SGkEzuV4bMsoxFW/fV6fn55iFVjSkGtKWj69LSeWvFCqPSE4+1UjBS4YSM
+         qdbL0PpnQtfyXilwv1Yh0VpfX+neSWxCMII31YbjPwrOUFdJmeFiEL1j5ck1uUaE9uym
+         EK8jI170BVxt+comvVjulEZc9UdwNelMYAtB2m+6ouKCRbGyuRBfWTWcRSBTQEIvVLKH
+         6uXw==
 In-Reply-To: <1444447781-16182-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,14 +23,22 @@ Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com, hannes@cmpxchg.org
 Cc: cgroups@vger.kernel.org, cyphar@cyphar.com, linux-kernel@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
 
-css task iteration will be updated to not leak cgroup internal locking
-to iterator users.  In preparation, update css_set and task lists to
-be in chronological order.
+cgroup_destroy_locked() currently tests whether any css_sets are
+associated to reject removal if the cgroup contains tasks.  This works
+because a css_set's refcnt converges with the number of tasks linked
+to it and thus there's no css_set linked to a cgroup if it doesn't
+have any live tasks.
 
-For tasks, as migration path is already using list_splice_tail_init(),
-only cgroup_enable_task_cg_lists() and cgroup_post_fork() need
-updating.  For css_sets, link_css_set() is the only place which needs
-to be updated.
+To help tracking resource usage of zombie tasks, putting the ref of
+css_set will be separated from disassociating the task from the
+css_set which means that a cgroup may have css_sets linked to it even
+when it doesn't have any live tasks.
+
+This patch updates cgroup_destroy_locked() so that it tests
+cgroup_is_populated(), which counts the number of populated css_sets,
+instead of whether cgrp->cset_links is empty to determine whether the
+cgroup is populated or not.  This ensures that rmdirs won't be
+incorrectly rejected for cgroups which only contain zombie tasks.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
@@ -38,42 +46,30 @@ Signed-off-by: Tejun Heo <tj@kernel.org>
  1 file changed, 5 insertions(+), 6 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index b8da97a..5cb28d2 100644
+index ba11496..b8da97a 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -913,12 +913,11 @@ static void link_css_set(struct list_head *tmp_links, struct css_set *cset,
- 	link->cset = cset;
- 	link->cgrp = cgrp;
+@@ -4996,16 +4996,15 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 	__releases(&cgroup_mutex) __acquires(&cgroup_mutex)
+ {
+ 	struct cgroup_subsys_state *css;
+-	bool empty;
+ 	int ssid;
  
--	list_move(&link->cset_link, &cgrp->cset_links);
--
+ 	lockdep_assert_held(&cgroup_mutex);
+ 
+-	/* css_set_rwsem synchronizes access to ->cset_links */
+-	down_read(&css_set_rwsem);
+-	empty = list_empty(&cgrp->cset_links);
+-	up_read(&css_set_rwsem);
+-	if (!empty)
++	/*
++	 * Only migration can raise populated from zero and we're already
++	 * holding cgroup_mutex.
++	 */
++	if (cgroup_is_populated(cgrp))
+ 		return -EBUSY;
+ 
  	/*
--	 * Always add links to the tail of the list so that the list
--	 * is sorted by order of hierarchy creation
-+	 * Always add links to the tail of the lists so that the lists are
-+	 * in choronological order.
- 	 */
-+	list_move_tail(&link->cset_link, &cgrp->cset_links);
- 	list_add_tail(&link->cgrp_link, &cset->cgrp_links);
- 
- 	cgroup_get(cgrp);
-@@ -1778,7 +1777,7 @@ static void cgroup_enable_task_cg_lists(void)
- 
- 			if (!css_set_populated(cset))
- 				css_set_update_populated(cset, true);
--			list_add(&p->cg_list, &cset->tasks);
-+			list_add_tail(&p->cg_list, &cset->tasks);
- 			get_css_set(cset);
- 		}
- 		spin_unlock_irq(&p->sighand->siglock);
-@@ -5478,7 +5477,7 @@ void cgroup_post_fork(struct task_struct *child,
- 		cset = task_css_set(current);
- 		if (list_empty(&child->cg_list)) {
- 			rcu_assign_pointer(child->cgroups, cset);
--			list_add(&child->cg_list, &cset->tasks);
-+			list_add_tail(&child->cg_list, &cset->tasks);
- 			get_css_set(cset);
- 		}
- 		up_write(&css_set_rwsem);
 -- 
 2.4.3
