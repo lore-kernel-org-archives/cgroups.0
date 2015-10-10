@@ -1,64 +1,113 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 01/14] cgroup: remove an unused parameter from cgroup_task_migrate()
-Date: Fri,  9 Oct 2015 23:29:28 -0400
-Message-ID: <1444447781-16182-2-git-send-email-tj@kernel.org>
-References: <1444447781-16182-1-git-send-email-tj@kernel.org>
+Subject: [PATCHSET cgroup/for-4.4] cgroup: make zombies retain cgroup membership and fix pids controller
+Date: Fri,  9 Oct 2015 23:29:27 -0400
+Message-ID: <1444447781-16182-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=ax7NtDX1o1hADXhDi05KhooKB856Xnduu7VB5crM3qo=;
-        b=1GlyXdCR+v27X5K/b3WIwOy1CkuJkerRq8L1KXFzdCQp7JEmIiwCUWQHLNrvg7k39o
-         u+HChG+82UBGKAnTgaSrXRpNu7xx9/SiQPTg5E3dctaaPw3uFwNDwJBkcdSxyT8xub7H
-         uNSxI2aAFokhAFS+XLLH8jUTHPrGHN260Ruz3XSjodHqL1eCkRrPjwpzQ2Gq5Ta+L1DJ
-         qAXF5Wt+nO0S1YldWISGkmrRuqhLbENws59XqyYA+aaDQsEMI/JvGhRN5sWvI1gz6o+j
-         IEZbh2ehwkz5apXgsUkW6kflFn1IoA9DbUlIRDcOaIlk6IsP/76EeZ9Gz6GGyfJaUxXK
-         5b1w==
-In-Reply-To: <1444447781-16182-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=CcU2GjqNIiB4o1WSV0eyYtjegjoYV4aebnCp+EhdYAk=;
+        b=etamAGW9zpwVK+G07EuuYf/xp9q2CCX5o49VshwMy3M6sQ+CH5NKTvokzkr1/rFz8F
+         z1t/FsHJRdyH+W/YpzE95odQLkbnT/LvM6XmSn4QfVo+dafIMDOhZ1GO80nWRCWxF0Mx
+         e99bJS758DvPBsXlCDwcsdcfKT5ogux8vMcRsSKDBiaSVF3LoEt1Ub54DiwxQjDyuSiU
+         7pj/G5mF5doZGXNlxeOP8JO/OUNLMsrnczBF+s7EXcdWF9EQ0PFwdPhT7PiwwFxagaxI
+         eYSyZ9nodmdSKQ3NBkOzUnoH/XpESbSbn4z0uRmk/kNrserug36X+B7jFYQiInNznkPQ
+         Hc0A==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-cgroup_task_migrate() no longer uses @old_cgrp.  Remove it.
+Hello,
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- kernel/cgroup.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+cgroup currently disassociates a task from its cgroups on exit and
+reassigns it to the root cgroup.  This behavior turns out to be
+problematic for several reasons.
 
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index ae23814..49f30f1 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -2235,14 +2235,12 @@ struct task_struct *cgroup_taskset_next(struct cgroup_taskset *tset)
- 
- /**
-  * cgroup_task_migrate - move a task from one cgroup to another.
-- * @old_cgrp: the cgroup @tsk is being migrated from
-  * @tsk: the task being migrated
-  * @new_cset: the new css_set @tsk is being attached to
-  *
-  * Must be called with cgroup_mutex, threadgroup and css_set_rwsem locked.
-  */
--static void cgroup_task_migrate(struct cgroup *old_cgrp,
--				struct task_struct *tsk,
-+static void cgroup_task_migrate(struct task_struct *tsk,
- 				struct css_set *new_cset)
- {
- 	struct css_set *old_cset;
-@@ -2311,8 +2309,7 @@ static int cgroup_taskset_migrate(struct cgroup_taskset *tset,
- 	down_write(&css_set_rwsem);
- 	list_for_each_entry(cset, &tset->src_csets, mg_node) {
- 		list_for_each_entry_safe(task, tmp_task, &cset->mg_tasks, cg_list)
--			cgroup_task_migrate(cset->mg_src_cgrp, task,
--					    cset->mg_dst_cset);
-+			cgroup_task_migrate(task, cset->mg_dst_cset);
- 	}
- 	up_write(&css_set_rwsem);
- 
--- 
-2.4.3
+* Resources can't be tracked for zombies.  This breaks pids controller
+  as zombies escape resource restriction.  A cgroup can easily go way
+  above its limits by creating a bunch of zombies.
+
+* It's difficult to tell where zombies came from.  /proc/PID/cgroup
+  gets reset to / on exit so given a zombie it's difficult to tell
+  from which cgroup the zombie came from.
+
+* It creates an extra work for controllers for no reason.  cpu and
+  perf_events controllers implement exit callbacks to switch the
+  exiting task's membership to root when just leaving it as-is is
+  enough.
+
+Unfortunately, fixing this involves opening a few cans of worms.
+
+* Decoupling tasks being on a css_set from its reference counting so
+  that css_set can be pinned w/o tasks being on it and decoupling
+  css_set existence from whether a cgroup is populated so that pinning
+  a css_set doesn't confuse populated state tracking and populated
+  state can be used to decide whether certain operations are allowed.
+
+* Making css task iteration drop css_set_rwsem between iteration steps
+  so that internal locking is not exposed to iterator users and
+  css_set_rwsem can be converted to a spinlock which can be grabbed
+  from task free path.
+
+After this patchset, besides pids controller being fixed, the visible
+behavior isn't changed on traditional hierarchies but on the default
+hierarchy a zombie reports its cgroup at the time of exit in
+/proc/PID/cgroup.  If the cgroup gets removed before the task is
+reaped, " (deleted)" is appended to the reported path.
+
+This patchset contains the following 14 patches.
+
+ 0001-cgroup-remove-an-unused-parameter-from-cgroup_task_m.patch
+ 0002-cgroup-make-cgroup-nr_populated-count-the-number-of-.patch
+ 0003-cgroup-replace-cgroup_has_tasks-with-cgroup_is_popul.patch
+ 0004-cgroup-move-check_for_release-invocation.patch
+ 0005-cgroup-relocate-cgroup_-try-get-put.patch
+ 0006-cgroup-make-css_sets-pin-the-associated-cgroups.patch
+ 0007-cgroup-make-cgroup_destroy_locked-test-cgroup_is_pop.patch
+ 0008-cgroup-keep-css_set-and-task-lists-in-chronological-.patch
+ 0009-cgroup-factor-out-css_set_move_task.patch
+ 0010-cgroup-reorganize-css_task_iter-functions.patch
+ 0011-cgroup-don-t-hold-css_set_rwsem-across-css-task-iter.patch
+ 0012-cgroup-make-css_set_rwsem-a-spinlock-and-rename-it-t.patch
+ 0013-cgroup-keep-zombies-associated-with-their-original-c.patch
+ 0014-cgroup-add-cgroup_subsys-free-method-and-use-it-to-f.patch
+
+0001-0007 decouple populated state tracking from css_set existence and
+allows css_sets to be pinned without tasks on them.
+
+0008-0012 update css_set task iterator to not hold lock across
+iteration steps and replace css_set_rwsem with a spinlock.
+
+0013 makes zombies keep their cgroup associations.  0014 introduces
+->exit() method and fixes pids controller.
+
+The patchset is pretty lightly tested and I need to verify that the
+corner cases behave as expected.
+
+This patchset is on top of cgroup/for-4.4 a3e72739b7a7 ("cgroup: fix
+too early usage of static_branch_disable()") and available in the
+following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-zombies
+
+diffstat follows.  Thanks.
+
+ Documentation/cgroups/cgroups.txt           |    4 
+ Documentation/cgroups/unified-hierarchy.txt |    4 
+ include/linux/cgroup-defs.h                 |   16 
+ include/linux/cgroup.h                      |   14 
+ kernel/cgroup.c                             |  522 +++++++++++++++++-----------
+ kernel/cgroup_pids.c                        |    8 
+ kernel/cpuset.c                             |    2 
+ kernel/events/core.c                        |   16 
+ kernel/fork.c                               |    1 
+ kernel/sched/core.c                         |   16 
+ mm/memcontrol.c                             |    2 
+ 11 files changed, 354 insertions(+), 251 deletions(-)
+
+--
+tejun
