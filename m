@@ -1,113 +1,131 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCHSET cgroup/for-4.4] cgroup: make zombies retain cgroup membership and fix pids controller
-Date: Fri,  9 Oct 2015 23:29:27 -0400
-Message-ID: <1444447781-16182-1-git-send-email-tj@kernel.org>
+Subject: [PATCH 03/14] cgroup: replace cgroup_has_tasks() with cgroup_is_populated()
+Date: Fri,  9 Oct 2015 23:29:30 -0400
+Message-ID: <1444447781-16182-4-git-send-email-tj@kernel.org>
+References: <1444447781-16182-1-git-send-email-tj@kernel.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id;
-        bh=CcU2GjqNIiB4o1WSV0eyYtjegjoYV4aebnCp+EhdYAk=;
-        b=etamAGW9zpwVK+G07EuuYf/xp9q2CCX5o49VshwMy3M6sQ+CH5NKTvokzkr1/rFz8F
-         z1t/FsHJRdyH+W/YpzE95odQLkbnT/LvM6XmSn4QfVo+dafIMDOhZ1GO80nWRCWxF0Mx
-         e99bJS758DvPBsXlCDwcsdcfKT5ogux8vMcRsSKDBiaSVF3LoEt1Ub54DiwxQjDyuSiU
-         7pj/G5mF5doZGXNlxeOP8JO/OUNLMsrnczBF+s7EXcdWF9EQ0PFwdPhT7PiwwFxagaxI
-         eYSyZ9nodmdSKQ3NBkOzUnoH/XpESbSbn4z0uRmk/kNrserug36X+B7jFYQiInNznkPQ
-         Hc0A==
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=vs6FIuL9prCJvatCOT6faReneuAlmK8OdqhbO3VBeUY=;
+        b=r+Khl27FG/mvNq43m56vwPMfaxIvobQ8xlFVXMdycRrMA3O6FdGgZ2Sor1xNY02oT6
+         IDcnlEn2CTVPo0B+eGda5W0q6gSuKdzhkoWyVlVcmyLlyuU2zZI3mVy5hUfOPv2Nfl9T
+         WVjXW2zSJVOEfB0hW0uhu+VlKszlkoUagk6Gb1r9Tl/FL2ua2TYgDxsyELnFWFLLzt2+
+         fjwEyGP/R123njnvZ0fZXoafz4PaqQg3syP5oPrUgWpbwlHYEl9R2d9EMcSr7TgL5mCo
+         CBaBgd1OF1XvDHS99kVyj0ST7hfbKtvuqYjQXdeFISKFSSAEMA981vQ4O1rUPe9/J/ch
+         /tHA==
+In-Reply-To: <1444447781-16182-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Hello,
+Currently, cgroup_has_tasks() tests whether the target cgroup has any
+css_set linked to it.  This works because a css_set's refcnt converges
+with the number of tasks linked to it and thus there's no css_set
+linked to a cgroup if it doesn't have any live tasks.
 
-cgroup currently disassociates a task from its cgroups on exit and
-reassigns it to the root cgroup.  This behavior turns out to be
-problematic for several reasons.
+To help tracking resource usage of zombie tasks, putting the ref of
+css_set will be separated from disassociating the task from the
+css_set which means that a cgroup may have css_sets linked to it even
+when it doesn't have any live tasks.
 
-* Resources can't be tracked for zombies.  This breaks pids controller
-  as zombies escape resource restriction.  A cgroup can easily go way
-  above its limits by creating a bunch of zombies.
+This patch replaces cgroup_has_tasks() with cgroup_is_populated()
+which tests cgroup->nr_populated instead which locally counts the
+number of populated css_sets.  Unlike cgroup_has_tasks(),
+cgroup_is_populated() is recursive - if any of the descendants is
+populated, the cgroup is populated too.  While this changes the
+meaning of the test, all the existing users are okay with the change.
 
-* It's difficult to tell where zombies came from.  /proc/PID/cgroup
-  gets reset to / on exit so given a zombie it's difficult to tell
-  from which cgroup the zombie came from.
+While at it, replace the open-coded ->populated_cnt test in
+cgroup_events_show() with cgroup_is_populated().
 
-* It creates an extra work for controllers for no reason.  cpu and
-  perf_events controllers implement exit callbacks to switch the
-  exiting task's membership to root when just leaving it as-is is
-  enough.
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ include/linux/cgroup.h | 4 ++--
+ kernel/cgroup.c        | 6 +++---
+ kernel/cpuset.c        | 2 +-
+ mm/memcontrol.c        | 2 +-
+ 4 files changed, 7 insertions(+), 7 deletions(-)
 
-Unfortunately, fixing this involves opening a few cans of worms.
-
-* Decoupling tasks being on a css_set from its reference counting so
-  that css_set can be pinned w/o tasks being on it and decoupling
-  css_set existence from whether a cgroup is populated so that pinning
-  a css_set doesn't confuse populated state tracking and populated
-  state can be used to decide whether certain operations are allowed.
-
-* Making css task iteration drop css_set_rwsem between iteration steps
-  so that internal locking is not exposed to iterator users and
-  css_set_rwsem can be converted to a spinlock which can be grabbed
-  from task free path.
-
-After this patchset, besides pids controller being fixed, the visible
-behavior isn't changed on traditional hierarchies but on the default
-hierarchy a zombie reports its cgroup at the time of exit in
-/proc/PID/cgroup.  If the cgroup gets removed before the task is
-reaped, " (deleted)" is appended to the reported path.
-
-This patchset contains the following 14 patches.
-
- 0001-cgroup-remove-an-unused-parameter-from-cgroup_task_m.patch
- 0002-cgroup-make-cgroup-nr_populated-count-the-number-of-.patch
- 0003-cgroup-replace-cgroup_has_tasks-with-cgroup_is_popul.patch
- 0004-cgroup-move-check_for_release-invocation.patch
- 0005-cgroup-relocate-cgroup_-try-get-put.patch
- 0006-cgroup-make-css_sets-pin-the-associated-cgroups.patch
- 0007-cgroup-make-cgroup_destroy_locked-test-cgroup_is_pop.patch
- 0008-cgroup-keep-css_set-and-task-lists-in-chronological-.patch
- 0009-cgroup-factor-out-css_set_move_task.patch
- 0010-cgroup-reorganize-css_task_iter-functions.patch
- 0011-cgroup-don-t-hold-css_set_rwsem-across-css-task-iter.patch
- 0012-cgroup-make-css_set_rwsem-a-spinlock-and-rename-it-t.patch
- 0013-cgroup-keep-zombies-associated-with-their-original-c.patch
- 0014-cgroup-add-cgroup_subsys-free-method-and-use-it-to-f.patch
-
-0001-0007 decouple populated state tracking from css_set existence and
-allows css_sets to be pinned without tasks on them.
-
-0008-0012 update css_set task iterator to not hold lock across
-iteration steps and replace css_set_rwsem with a spinlock.
-
-0013 makes zombies keep their cgroup associations.  0014 introduces
-->exit() method and fixes pids controller.
-
-The patchset is pretty lightly tested and I need to verify that the
-corner cases behave as expected.
-
-This patchset is on top of cgroup/for-4.4 a3e72739b7a7 ("cgroup: fix
-too early usage of static_branch_disable()") and available in the
-following git branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-zombies
-
-diffstat follows.  Thanks.
-
- Documentation/cgroups/cgroups.txt           |    4 
- Documentation/cgroups/unified-hierarchy.txt |    4 
- include/linux/cgroup-defs.h                 |   16 
- include/linux/cgroup.h                      |   14 
- kernel/cgroup.c                             |  522 +++++++++++++++++-----------
- kernel/cgroup_pids.c                        |    8 
- kernel/cpuset.c                             |    2 
- kernel/events/core.c                        |   16 
- kernel/fork.c                               |    1 
- kernel/sched/core.c                         |   16 
- mm/memcontrol.c                             |    2 
- 11 files changed, 354 insertions(+), 251 deletions(-)
-
---
-tejun
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index e9c3eac..bdfdb3a 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -456,9 +456,9 @@ static inline struct cgroup *task_cgroup(struct task_struct *task,
+ }
+ 
+ /* no synchronization, the result can only be used as a hint */
+-static inline bool cgroup_has_tasks(struct cgroup *cgrp)
++static inline bool cgroup_is_populated(struct cgroup *cgrp)
+ {
+-	return !list_empty(&cgrp->cset_links);
++	return cgrp->populated_cnt;
+ }
+ 
+ /* returns ino associated with a cgroup */
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index e5231d0..435aa68 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -3121,7 +3121,7 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ static int cgroup_events_show(struct seq_file *seq, void *v)
+ {
+ 	seq_printf(seq, "populated %d\n",
+-		   (bool)seq_css(seq)->cgroup->populated_cnt);
++		   cgroup_is_populated(seq_css(seq)->cgroup));
+ 	return 0;
+ }
+ 
+@@ -5558,7 +5558,7 @@ void cgroup_exit(struct task_struct *tsk)
+ 
+ static void check_for_release(struct cgroup *cgrp)
+ {
+-	if (notify_on_release(cgrp) && !cgroup_has_tasks(cgrp) &&
++	if (notify_on_release(cgrp) && !cgroup_is_populated(cgrp) &&
+ 	    !css_has_online_children(&cgrp->self) && !cgroup_is_dead(cgrp))
+ 		schedule_work(&cgrp->release_agent_work);
+ }
+@@ -5806,7 +5806,7 @@ static int cgroup_css_links_read(struct seq_file *seq, void *v)
+ 
+ static u64 releasable_read(struct cgroup_subsys_state *css, struct cftype *cft)
+ {
+-	return (!cgroup_has_tasks(css->cgroup) &&
++	return (!cgroup_is_populated(css->cgroup) &&
+ 		!css_has_online_children(&css->cgroup->self));
+ }
+ 
+diff --git a/kernel/cpuset.c b/kernel/cpuset.c
+index e4d9999..d7ccb87 100644
+--- a/kernel/cpuset.c
++++ b/kernel/cpuset.c
+@@ -498,7 +498,7 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
+ 	 * be changed to have empty cpus_allowed or mems_allowed.
+ 	 */
+ 	ret = -ENOSPC;
+-	if ((cgroup_has_tasks(cur->css.cgroup) || cur->attach_in_progress)) {
++	if ((cgroup_is_populated(cur->css.cgroup) || cur->attach_in_progress)) {
+ 		if (!cpumask_empty(cur->cpus_allowed) &&
+ 		    cpumask_empty(trial->cpus_allowed))
+ 			goto out;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 33c8dad..0ddd0ff 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2920,7 +2920,7 @@ static int memcg_activate_kmem(struct mem_cgroup *memcg,
+ 	 * of course permitted.
+ 	 */
+ 	mutex_lock(&memcg_create_mutex);
+-	if (cgroup_has_tasks(memcg->css.cgroup) ||
++	if (cgroup_is_populated(memcg->css.cgroup) ||
+ 	    (memcg->use_hierarchy && memcg_has_children(memcg)))
+ 		err = -EBUSY;
+ 	mutex_unlock(&memcg_create_mutex);
+-- 
+2.4.3
