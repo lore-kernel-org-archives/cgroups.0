@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 06/14] cgroup: make css_sets pin the associated cgroups
-Date: Fri,  9 Oct 2015 23:29:33 -0400
-Message-ID: <1444447781-16182-7-git-send-email-tj@kernel.org>
+Subject: [PATCH 08/14] cgroup: keep css_set and task lists in chronological order
+Date: Fri,  9 Oct 2015 23:29:35 -0400
+Message-ID: <1444447781-16182-9-git-send-email-tj@kernel.org>
 References: <1444447781-16182-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=M7HF6BlXuqvx8qKHeKb0J70b52sbQsTqwmeAeUu0mtU=;
-        b=qODqByo1rKKtNI1Q24Fr4+B0E9uswFpNdPSJ1+pUWOxZY5b3koZ+cin6JdHzMQukSe
-         S6zz7I//ZHiICiRBX1IvtiRrOis/QKjrp3KSeVhUDrWpP1dDtAaxNRQ12sICiO5EjzaK
-         nAmKZpMVdMvEtdwTSIWgY4h4WoM7T4wB+prFGqDPr5bIfqpUYS9g4/WzM2ZkPaysCvl9
-         hEKzVZwEBrPmmOqAF96xaFnZYaj8k015fHADyPUjeuv4ZF3qR8Qs1vpulmzp33VPDWnv
-         Jl2MYy1azi9B+dELWoqwmnSlCo/BsOnNn0OvbTi7yt7PXHyDi0HMUkeVPeM6cLV+bSX2
-         OmSQ==
+        bh=O9ZuFPhKZ8EFrebrfWsR7VxL7ixJ3VQSBpD+BMRNbkk=;
+        b=zahsJDWwbLeKh2GN3IspcYpvaUp4Y+qOjyMUCi6r8UWcR9XlRlqqXSGKg4VOkjdTlg
+         iPsUp8uv6Ya0IH7+DuB+aeQwA8ypohm0f27JTRrGihBUCLit3zMUMkgIKcT/qMG0BEC3
+         ChSor3G6H1DQkri+pru2ERY/ASz8/USUTEJNcN5CK7ABEojEdewOVM4mKylCRzPPdWCu
+         xPdcL/hySqYLhNsbP2Vsk6qTfUN1YC13mX3f4Tu8HxhfC3Ggo2uuvXrtLbLjtfxJixru
+         H7EzpgaIPZ6gWPJAo2pa/OCPJPZh78mXWB0g2G0xMSAj+zTRbefvWbclY5R1EANr5Mvw
+         CUhw==
 In-Reply-To: <1444447781-16182-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,53 +23,57 @@ Content-Transfer-Encoding: 7bit
 To: lizefan@huawei.com, hannes@cmpxchg.org
 Cc: cgroups@vger.kernel.org, cyphar@cyphar.com, linux-kernel@vger.kernel.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
 
-Currently, css_sets don't pin the associated cgroups.  This is okay as
-a cgroup with css_sets associated are not allowed to be removed;
-however, to help resource tracking for zombie tasks, this is scheduled
-to change such that a cgroup can be removed even when it has css_sets
-associated as long as none of them are populated.
+css task iteration will be updated to not leak cgroup internal locking
+to iterator users.  In preparation, update css_set and task lists to
+be in chronological order.
 
-To ensure that a cgroup doesn't go away while css_sets are still
-associated with it, make each associated css_set hold a reference on
-the cgroup.
+For tasks, as migration path is already using list_splice_tail_init(),
+only cgroup_enable_task_cg_lists() and cgroup_post_fork() need
+updating.  For css_sets, link_css_set() is the only place which needs
+to be updated.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/cgroup.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ kernel/cgroup.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index ab5c9a5..ba11496 100644
+index b8da97a..5cb28d2 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -705,6 +705,7 @@ static void put_css_set_locked(struct css_set *cset)
- 	list_for_each_entry_safe(link, tmp_link, &cset->cgrp_links, cgrp_link) {
- 		list_del(&link->cset_link);
- 		list_del(&link->cgrp_link);
-+		cgroup_put(link->cgrp);
- 		kfree(link);
- 	}
+@@ -913,12 +913,11 @@ static void link_css_set(struct list_head *tmp_links, struct css_set *cset,
+ 	link->cset = cset;
+ 	link->cgrp = cgrp;
  
-@@ -919,6 +920,8 @@ static void link_css_set(struct list_head *tmp_links, struct css_set *cset,
- 	 * is sorted by order of hierarchy creation
+-	list_move(&link->cset_link, &cgrp->cset_links);
+-
+ 	/*
+-	 * Always add links to the tail of the list so that the list
+-	 * is sorted by order of hierarchy creation
++	 * Always add links to the tail of the lists so that the lists are
++	 * in choronological order.
  	 */
++	list_move_tail(&link->cset_link, &cgrp->cset_links);
  	list_add_tail(&link->cgrp_link, &cset->cgrp_links);
-+
-+	cgroup_get(cgrp);
- }
  
- /**
-@@ -4998,10 +5001,7 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 	cgroup_get(cgrp);
+@@ -1778,7 +1777,7 @@ static void cgroup_enable_task_cg_lists(void)
  
- 	lockdep_assert_held(&cgroup_mutex);
- 
--	/*
--	 * css_set_rwsem synchronizes access to ->cset_links and prevents
--	 * @cgrp from being removed while put_css_set() is in progress.
--	 */
-+	/* css_set_rwsem synchronizes access to ->cset_links */
- 	down_read(&css_set_rwsem);
- 	empty = list_empty(&cgrp->cset_links);
- 	up_read(&css_set_rwsem);
+ 			if (!css_set_populated(cset))
+ 				css_set_update_populated(cset, true);
+-			list_add(&p->cg_list, &cset->tasks);
++			list_add_tail(&p->cg_list, &cset->tasks);
+ 			get_css_set(cset);
+ 		}
+ 		spin_unlock_irq(&p->sighand->siglock);
+@@ -5478,7 +5477,7 @@ void cgroup_post_fork(struct task_struct *child,
+ 		cset = task_css_set(current);
+ 		if (list_empty(&child->cg_list)) {
+ 			rcu_assign_pointer(child->cgroups, cset);
+-			list_add(&child->cg_list, &cset->tasks);
++			list_add_tail(&child->cg_list, &cset->tasks);
+ 			get_css_set(cset);
+ 		}
+ 		up_write(&css_set_rwsem);
 -- 
 2.4.3
