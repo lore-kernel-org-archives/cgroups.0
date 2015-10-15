@@ -1,36 +1,53 @@
-From: "Robert Gierzinger" <robert.gierzinger-RbZlAiThDcE@public.gmane.org>
-Subject: cgroup pid controller side effects
-Date: Thu, 15 Oct 2015 16:13:02 +0200
-Message-ID: <f2e-561fb480-9-1b99f780@25775614>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHSET cgroup/for-4.4] cgroup: make zombies retain cgroup
+ membership and fix pids controller
+Date: Thu, 15 Oct 2015 16:41:14 -0400
+Message-ID: <20151015204114.GA3788@htj.duckdns.org>
+References: <1444447781-16182-1-git-send-email-tj@kernel.org>
+ <20151015013809.GC20884@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=gmx.at; s=mail;
-	t=1444918382; bh=MrDstLan9GAh3LgK3wTMqwsQhlg6RV7ZByqyYquG7hs=;
-	h=from:date:subject:to:From:Sender:To:CC:Subject:Date;
-	b=GOY/BipoEb2LYkWDl8Fr6C06rRVxrJPATB9hVqPfioM1zDdYRD5QJdso0LdDBQtIq
-	 guA3xgByPVE7w/qqOcknuT9i3ONB7ABsc3VInQtmnyWGrD2ErPbZauqd26b8aFRBSA
-	 ECHcMwBGLIzASwoJ7tOyA/0LEQYJmO8h5zh7AQWjQaAGFiMfUMXvTN8goDbfFjgomo
-	 2BRX05YE/dySXEv0fvKCbs+cG4PmAaDWEWyX0GTBjQPuf0kodZituA5Hodum7JUBR6
-	 jjZbzsAwcVh19lchg3TX+IyW8bfNYQFPcP0M56EexKG0mhn/7TZYnz/y7WMSOm6BBU
-	 Aza6nJujIC4rA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=RM9ISY1M7oiQA5hxUBpfmi7Q7AgRhrykFK94yjuhjEw=;
+        b=QQI727ojYNuJUzljQ04tEcNP9sSmsAbPEHNJflLfx1rdK8uXXH0I7vd9KsuFbyw8E5
+         g/9qoZULt7hYFwNVfk7IYD0oEQOSn4rKnqS2f+JtK6NfwgPVucpaAGNUYIQ+XZesv7ys
+         VcdAzUfP6XXjtAgX+kPGtGotPyFdAJiUEMZ4VeRJ6KcCPMkg0zvOANatUUgQqcZJSq18
+         l/pz0ePEjk4sD1r885Q+015E+8YHEsm4qFRld67v3DPkXRODpNvJ1ORlM7RIyIOw/SZw
+         RHKI7acHP89o84UqBvYR8cLBYLQDocIgblZ8GWGYCv85B52rXG3FNyaU8y8Tw3nqVNWH
+         Wtwg==
+Content-Disposition: inline
+In-Reply-To: <20151015013809.GC20884-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Hi,
-I have finally had time to test 4.3-rc5 especially (my greatly anticipated) process limitiation with cgroup-pids.
-With bash forkbombs, it really works nice, however, I had some side effects with the forkbomb from
-https://github.com/linux-vserver/util-vserver/blob/master/tests/forkbomb.c
+On Wed, Oct 14, 2015 at 09:38:09PM -0400, Tejun Heo wrote:
+> Hello,
+> 
+> On Fri, Oct 09, 2015 at 11:29:27PM -0400, Tejun Heo wrote:
+> > The patchset is pretty lightly tested and I need to verify that the
+> > corner cases behave as expected.
+> 
+> Fixed several bugs while testing.  Updated patches posted.  Seems to
+> work fine now.  git branch has been refreshed with the updated
+> patches.
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-zombies
+> 
+> Li, can you please go over the changes?
 
-The good thing: my test systems did not die as in previous versions during the simulated attack. But executing the file with e.g. 
-./forkbomb 100000 100 fork
-I get "unable to fork process: Resource temporarily unavailable" on the host (e.g. while trying to have a look via "watch -n 2 cat /sys/fs/cgroup/pids/lxc/dev04/pids.current") and inside other cgroup processes. This happens with various (low) limits in the respective pids.max; also it doesn't matter whether to launch the forkbomb in a privileged or unprivileged/user-namespace cgroup.
+I want this series to be in -next at least for a couple weeks before
+the merge window opens, so I'm applying it to cgroup/for-4.4 now.
+Please let me know if you spot something wrong.  Let's fix it up
+incrementally.
 
-Maybe someone could have a look, please, as this would be a real nice feature for a hosting service.
-And thanks for your great work!
+Thanks.
 
-Best regards,
-
-Robert
+-- 
+tejun
