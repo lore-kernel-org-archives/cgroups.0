@@ -1,19 +1,23 @@
-From: Florian Weimer <fw@deneb.enyo.de>
-Subject: Re: [PATCH] glibc: Remove CPU set size checking from affinity functions [BZ #19143]
-Date: Sat, 17 Oct 2015 07:48:06 +0200
-Message-ID: <87io66kpux.fsf@mid.deneb.enyo.de>
-References: <5621126E.5080801@redhat.com> <20151017031003.GE28215@vapier.lan>
+From: Mike Frysinger <vapier@gentoo.org>
+Subject: Re: [PATCH] glibc: Remove CPU set size checking from affinity
+ functions [BZ #19143]
+Date: Sat, 17 Oct 2015 11:38:27 -0400
+Message-ID: <20151017153827.GN28215@vapier.lan>
+References: <5621126E.5080801@redhat.com>
+ <20151017031003.GE28215@vapier.lan>
+ <87io66kpux.fsf@mid.deneb.enyo.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <libc-alpha-return-64221-glibc-alpha=m.gmane.org@sourceware.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="mkHYMT4O8DyWoHkb"
+Return-path: <libc-alpha-return-64224-glibc-alpha=m.gmane.org@sourceware.org>
 DKIM-Signature: v=1; a=rsa-sha1; c=relaxed; d=sourceware.org; h=list-id
 	:list-unsubscribe:list-subscribe:list-archive:list-post
-	:list-help:sender:from:to:cc:subject:references:date:in-reply-to
-	:message-id:mime-version:content-type:content-transfer-encoding;
-	 s=default; bh=oVFTxO6A76asFd/gWENvFKiUWhk=; b=fdqrArV53oxw8LjzG
-	IWcymgi+Q4pD9o8jWjpZErVECJuHJrr2MC8lM6ULPqUdxCPG4xQKWIGi0o/NcoIy
-	w3eIsRu1QMKEkId6raDPPd+SYZLf/JDh3iKeCMrYgOJHPIxcDmSGCwOnTVBTEdMK
-	qUZ85V9BwFlD2jIWB8CSiciHEo=
+	:list-help:sender:date:from:to:cc:subject:message-id:references
+	:mime-version:content-type:in-reply-to; s=default; bh=T44uDRP9Uz
+	5wbgHHlrk5AYChPOU=; b=hX3oYpw/O2hrBPgauKwKGnnSOxiRkrMSEgatxtI02y
+	nPx8Uft8apuUc0fxHpvHOKWvvgF/ogITD2jioLdzoNmi2++Am0BdtMLwlw5+Dd4E
+	wljcccEf5quFlV8pUeh4AiIWqSOgxng4Xs7olNPSkQHLOeD72Tsf5hiDDmfhCtr/
+	0=
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <mailto:libc-alpha-unsubscribe-glibc-alpha=m.gmane.org@sourceware.org>
 List-Subscribe: <mailto:libc-alpha-subscribe@sourceware.org>
@@ -21,40 +25,46 @@ List-Archive: <http://sourceware.org/ml/libc-alpha/>
 List-Post: <mailto:libc-alpha@sourceware.org>
 List-Help: <mailto:libc-alpha-help@sourceware.org>, <http://sourceware.org/ml/#faqs>
 Sender: libc-alpha-owner@sourceware.org
-In-Reply-To: <20151017031003.GE28215@vapier.lan> (Mike Frysinger's message of
-	"Fri, 16 Oct 2015 23:10:03 -0400")
-Content-Type: text/plain; charset="utf-8"
-To: GNU C Library <libc-alpha@sourceware.org>
-Cc: cgroups@vger.kernel.org, kosaki.motohiro@gmail.com, Linux API <linux-api@vger.kernel.org>, Li Zefan <lizefan@huawei.com>
+Content-Disposition: inline
+In-Reply-To: <87io66kpux.fsf@mid.deneb.enyo.de>
+To: Florian Weimer <fw@deneb.enyo.de>
+Cc: GNU C Library <libc-alpha@sourceware.org>, cgroups@vger.kernel.org, kosaki.motohiro@gmail.com, Linux API <linux-api@vger.kernel.org>, Li Zefan <lizefan@huawei.com>
 
-* Mike Frysinger:
 
-> On 16 Oct 2015 17:06, Florian Weimer wrote:
->> The current situation, briefly stated, is this: glibc tries to guess the
->> kernel CPU set size and rejects attempts to specify an affinity mask
->> which is larger than that, but it does not work, and glibc and the
->> kernel still silently accept CPU affinity masks with invalid bits,
->> without returning an error.  The glibc check does not provide any value
->> to applications, it just adds pointless complexity to the library.
->> Therefore, I want to remove it from glibc.
->
-> checking the validty of the cpuset mask at the time of setting attributes
-> seems fundamentally wrong to me.  can't the cpuset change too between the
-> check and the actual use ?
+--mkHYMT4O8DyWoHkb
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Yes, unfortunately, that could happen.  There are algorithms that
-would benefit if the affinity mask could not be changed from outside
-the process.
+On 17 Oct 2015 07:48, Florian Weimer wrote:
+> * Mike Frysinger:
+> > abort writes to stderr.
+>=20
+> I don't think so, =E2=80=9CAborted=E2=80=9D is printed by the shell.
 
-> patch makes sense to me
->
->> +	  abort ();
->
-> why does the test call abort instead of exit ?
+err, i was thinking of assert.  nm me ;).
+-mike
 
-It would have to be _exit, because otherwise, the remaining running
-threads would block exiting.
+--mkHYMT4O8DyWoHkb
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-> abort writes to stderr.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-I don't think so, =E2=80=9CAborted=E2=80=9D is printed by the shell.
+iQIcBAEBCAAGBQJWImtzAAoJEEFjO5/oN/WBwwkQAKdsb4JOPw9J+DUftdebMSIB
+cZIzDoyTY7ImAPgaYkETGlMnUcIJeHKcqxz/QK9LG0veqXJS9vcZRX8MKym4MB3d
+HZ07cLhYF+0KIzSt1wYwWEq5+PNPiZHifTpz1gxkeKsjHXiD9XG61I1JPbakN/Tu
+lXUV8zz6M6IMZs4XYlbtxshcz8lNCC+zWBOr283Wr4hYOZ/95PfaKhLOfHv2FMgE
+qNe31KRQ0bIFn80BxKI+h5p+2iEkig1quScbP86dv8lHSYIhqOi5f4/2xihrgWer
+Ehxxjs8hXz3BUEAvatD7xPJKB/Tu7RRsWC6dHAQSw+FnOvtKsroOyppQ6HHQbHgy
+BGgw+CmDCLA73FmO+5A6GcmJu969NwyBtMl8TivGVZ3K98WrXRb7mMEkdQ0HQ+ex
+GL0plcD2Z0lUa1t6jV9gNh4g9fLm7AkLQ4lbsEvU3Xf8ym54EVFDUEkb/FPVWXKn
+R3GFrWb9UMcWnAbpOE91iTODLD6FcJ/BEyoKUc5kfBjazbd8amfPVPAEFacEr2fH
+LspOs3NeiLhzdGsV8u0Qrs/ujshzanqRawmc4u1iJlAj3TUp1tC+T6ODzDu+Jda6
+TCNHZEDW0XlwK2En/q9AzJsh/+iw0ndeMLjReiPm2Kf8sUB3XnpPIBZeBqQ6ErL7
+8lZ0+NoqmiWFHxv2Y4se
+=E9u+
+-----END PGP SIGNATURE-----
+
+--mkHYMT4O8DyWoHkb--
