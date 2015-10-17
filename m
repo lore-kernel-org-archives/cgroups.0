@@ -1,40 +1,81 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: cgroup pid controller side effects
-Date: Fri, 16 Oct 2015 10:39:43 -0700
-Message-ID: <20151016173943.GA2162@cmpxchg.org>
-References: <f2e-561fb480-9-1b99f780@25775614>
+From: Mike Frysinger <vapier@gentoo.org>
+Subject: Re: [PATCH] glibc: Remove CPU set size checking from affinity
+ functions [BZ #19143]
+Date: Fri, 16 Oct 2015 23:10:03 -0400
+Message-ID: <20151017031003.GE28215@vapier.lan>
+References: <5621126E.5080801@redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="5xSkJheCpeK0RUEJ"
+Return-path: <libc-alpha-return-64212-glibc-alpha=m.gmane.org@sourceware.org>
+DKIM-Signature: v=1; a=rsa-sha1; c=relaxed; d=sourceware.org; h=list-id
+	:list-unsubscribe:list-subscribe:list-archive:list-post
+	:list-help:sender:date:from:to:cc:subject:message-id:references
+	:mime-version:content-type:in-reply-to; s=default; bh=LZh9tiwqbL
+	36oUusMe4/yK+/f44=; b=YEMSw2lWLRzM2pMzr4ae8kfn4YU3O/Tfpc6pS/GiUP
+	pYYKxdxz8dzzfAG4AH8Qi9rTVVfBnIs9txJ+m+tMnRVXuG3nmn+uYs7gN17yKHDL
+	10mBoiOcCqyvikr1AyS6a383o3RInhOn8XfwhCwPurXi6ExPjOR5DlG33RFI/668
+	M=
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <mailto:libc-alpha-unsubscribe-glibc-alpha=m.gmane.org@sourceware.org>
+List-Subscribe: <mailto:libc-alpha-subscribe@sourceware.org>
+List-Archive: <http://sourceware.org/ml/libc-alpha/>
+List-Post: <mailto:libc-alpha@sourceware.org>
+List-Help: <mailto:libc-alpha-help@sourceware.org>, <http://sourceware.org/ml/#faqs>
+Sender: libc-alpha-owner@sourceware.org
 Content-Disposition: inline
-In-Reply-To: <f2e-561fb480-9-1b99f780@25775614>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Robert Gierzinger <robert.gierzinger-RbZlAiThDcE@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <5621126E.5080801@redhat.com>
+To: Florian Weimer <fweimer@redhat.com>
+Cc: GNU C Library <libc-alpha@sourceware.org>, cgroups@vger.kernel.org, kosaki.motohiro@gmail.com, Linux API <linux-api@vger.kernel.org>, Li Zefan <lizefan@huawei.com>
 
-Hi Robert,
 
-On Thu, Oct 15, 2015 at 04:13:02PM +0200, Robert Gierzinger wrote:
-> I have finally had time to test 4.3-rc5 especially (my greatly anticipated) process limitiation with cgroup-pids.
-> With bash forkbombs, it really works nice, however, I had some side effects with the forkbomb from
-> https://github.com/linux-vserver/util-vserver/blob/master/tests/forkbomb.c
-> 
-> The good thing: my test systems did not die as in previous versions during the simulated attack. But executing the file with e.g. 
-> ./forkbomb 100000 100 fork
-> I get "unable to fork process: Resource temporarily unavailable" on the host
+--5xSkJheCpeK0RUEJ
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 
-It looks like this forkbomb is not waiting for its children and is
-creating a whole lot of zombies.
+On 16 Oct 2015 17:06, Florian Weimer wrote:
+> The current situation, briefly stated, is this: glibc tries to guess the
+> kernel CPU set size and rejects attempts to specify an affinity mask
+> which is larger than that, but it does not work, and glibc and the
+> kernel still silently accept CPU affinity masks with invalid bits,
+> without returning an error.  The glibc check does not provide any value
+> to applications, it just adds pointless complexity to the library.
+> Therefore, I want to remove it from glibc.
 
-The pids controller is currently broken in that zombies can escape
-accounting completely, and the proposed fix is too invasive to go in
-before 4.4. Until then, we need forkbombs to nicely cooperate with us!
+checking the validty of the cpuset mask at the time of setting attributes
+seems fundamentally wrong to me.  can't the cpuset change too between the
+check and the actual use ?  say you have a controller that also manages
+the cpus, and it has pre-initialized the attributes, and then brings up
+the cpu on demand before spawning the thread.  it wouldn't be possible to
+also pre-create all the attributes.
 
-Could you retry your test against the following branch?
+patch makes sense to me
 
-https://git.kernel.org/cgit/linux/kernel/git/tj/cgroup.git/log/?h=for-4.4
+> +	  abort ();
 
-Thanks!
-Johannes
+why does the test call abort instead of exit ?  abort writes to stderr.
+-mike
+
+--5xSkJheCpeK0RUEJ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWIbwLAAoJEEFjO5/oN/WBuwkP/1R1mnqWa9vREbsllwz1sdUL
+K7RdVlMYD9RlxpggxLzrC2XiAX6AmTNDw0CbReiEKBm9mw2X3xuXaBikVKvmyN17
+1lt9xVvHApKXeZOORjQUobPb2efWIX8vyESjyVj+O/hI+1Ctw1FqtdAaT/NkIwJw
+JBwifbQawS1Uk8l/ym+mYkLZd7zXDWINDezsutP26h9T4klvLfhcCC4Hs0w6WfZZ
+U9P3TW7XWnbO7lJyqDk39KzPuG0of1yBX7HIY2Je1JrUMB0VD/1OJchXH69x0khQ
+nuiGoaB79OnOBz+wqH03/48PXXi7C0ANZ9apdyjFylgXeUCLBvda1wdrF60d24aW
++TMlIlgGG2IVkevY+JxfL5VH/G6ssMbhDMbGJVsMI7qJuY2wOj1LhIsbfiNFUNHF
+G+dwLPUzrTjrmuNNxe0A0WSOvaICMqNfM7qTuUeIBX7HolgQ6KMfq5yaSqxXHTAT
+ttuRhtIOYwODRi4QvGuBJAp8zfyB2xOyI39DboDqQJQmmVtxwnv/Kxta1WaiB9R2
+4RLU3m3M8zzZuzGtc+a7yv6Ad7FvF7RwSRy2a+CWbkScsfDudQf7q6iJz7LxSoRT
+U57/kcKhNYYZ5mZpRk9UCtoWC6L+iD3sVxIiIWqx8pUtPWFpno9NdpgQwFrJNvMu
+FH5+qr4MtJJwll4lkAUx
+=l60K
+-----END PGP SIGNATURE-----
+
+--5xSkJheCpeK0RUEJ--
