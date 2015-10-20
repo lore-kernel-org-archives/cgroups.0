@@ -1,47 +1,96 @@
-From: Mel Gorman <mgorman@techsingularity.net>
-Subject: Re: [PATCH] mm: vmpressure: fix scan window after SWAP_CLUSTER_MAX
- increase
-Date: Tue, 20 Oct 2015 08:47:00 +0100
-Message-ID: <20151020074700.GB2629@techsingularity.net>
-References: <1445278381-21033-1-git-send-email-hannes@cmpxchg.org>
+From: Vladimir Davydov <vdavydov@virtuozzo.com>
+Subject: Re: [PATCH] mm: vmscan: count slab shrinking results after each
+ shrink_slab()
+Date: Tue, 20 Oct 2015 15:19:20 +0300
+Message-ID: <20151020121920.GE18351@esperanza>
+References: <1445278415-21138-1-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1445278381-21033-1-git-send-email-hannes@cmpxchg.org>
+In-Reply-To: <1445278415-21138-1-git-send-email-hannes@cmpxchg.org>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@virtuozzo.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Oct 19, 2015 at 02:13:01PM -0400, Johannes Weiner wrote:
-> mm-increase-swap_cluster_max-to-batch-tlb-flushes.patch changed
-> SWAP_CLUSTER_MAX from 32 pages to 256 pages, inadvertantly switching
-> the scan window for vmpressure detection from 2MB to 16MB. Revert.
+On Mon, Oct 19, 2015 at 02:13:35PM -0400, Johannes Weiner wrote:
+> cb731d6 ("vmscan: per memory cgroup slab shrinkers") sought to
+> optimize accumulating slab reclaim results in sc->nr_reclaimed only
+> once per zone, but the memcg hierarchy walk itself uses
+> sc->nr_reclaimed as an exit condition. This can lead to overreclaim.
 > 
 > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> ---
+>  mm/vmscan.c | 19 ++++++++++++++-----
+>  1 file changed, 14 insertions(+), 5 deletions(-)
+> 
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 27d580b..a02654e 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -2441,11 +2441,18 @@ static bool shrink_zone(struct zone *zone, struct scan_control *sc,
+>  			shrink_lruvec(lruvec, swappiness, sc, &lru_pages);
+>  			zone_lru_pages += lru_pages;
+>  
+> -			if (memcg && is_classzone)
+> +			if (memcg && is_classzone) {
+>  				shrink_slab(sc->gfp_mask, zone_to_nid(zone),
+>  					    memcg, sc->nr_scanned - scanned,
+>  					    lru_pages);
+>  
+> +				if (reclaim_state) {
 
-This was known at the time but it was not clear what the measurable
-impact would be. VM Pressure is odd in that it gives strange results at
-times anyway, particularly on NUMA machines. To be honest, it still isn't
-clear to me what the impact of the patch is. With different base page sizes
-(e.g. on ppc64 with some configs), the window is still large. At the time,
-it was left as-is as I could not decide one way or the other but I'm ok
-with restoring the behaviour so either way;
+current->reclaim_state is only set on global reclaim, so when performing
+memcg reclaim we'll never get here. Hence, since we check nr_reclaimed
+in the loop only on memcg reclaim, this patch doesn't change anything.
 
-Acked-by: Mel Gorman <mgorman@techsingularity.net>
+Setting current->reclaim_state on memcg reclaim doesn't seem to be an
+option, because it accounts objects freed by any cgroup (e.g. via RCU
+callback) - see https://lkml.org/lkml/2015/1/20/91
 
-Out of curiosity though, what *is* the user-visible impact of the patch
-though? It's different but I'm having trouble deciding if it's better
-or worse. I'm curious as to whether the patch is based on a bug report
-or intuition.
+About overreclaim that might happen due to the current behavior. Inodes
+and dentries are small and usually freed by RCU so not accounting them
+to nr_reclaimed shouldn't make much difference. The only reason I see
+why overreclaim can happen is ignoring eviction of an inode full of page
+cache, speaking of which makes me wonder if it'd be better to refrain
+from dropping inodes which have page cache left, at least unless the
+scan priority is low?
 
-Thanks.
+Thanks,
+Vladimir
 
--- 
-Mel Gorman
-SUSE Labs
+> +					sc->nr_reclaimed +=
+> +						reclaim_state->reclaimed_slab;
+> +					reclaim_state->reclaimed_slab = 0;
+> +				}
+> +			}
+> +
+>  			/*
+>  			 * Direct reclaim and kswapd have to scan all memory
+>  			 * cgroups to fulfill the overall scan target for the
+> @@ -2467,14 +2474,16 @@ static bool shrink_zone(struct zone *zone, struct scan_control *sc,
+>  		 * Shrink the slab caches in the same proportion that
+>  		 * the eligible LRU pages were scanned.
+>  		 */
+> -		if (global_reclaim(sc) && is_classzone)
+> +		if (global_reclaim(sc) && is_classzone) {
+>  			shrink_slab(sc->gfp_mask, zone_to_nid(zone), NULL,
+>  				    sc->nr_scanned - nr_scanned,
+>  				    zone_lru_pages);
+>  
+> -		if (reclaim_state) {
+> -			sc->nr_reclaimed += reclaim_state->reclaimed_slab;
+> -			reclaim_state->reclaimed_slab = 0;
+> +			if (reclaim_state) {
+> +				sc->nr_reclaimed +=
+> +					reclaim_state->reclaimed_slab;
+> +				reclaim_state->reclaimed_slab = 0;
+> +			}
+>  		}
+>  
+>  		vmpressure(sc->gfp_mask, sc->target_mem_cgroup,
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
