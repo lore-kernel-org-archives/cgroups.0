@@ -1,75 +1,71 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH] mm: vmpressure: fix scan window after SWAP_CLUSTER_MAX
- increase
-Date: Tue, 20 Oct 2015 09:50:56 -0400
-Message-ID: <20151020135056.GA22383@cmpxchg.org>
-References: <1445278381-21033-1-git-send-email-hannes@cmpxchg.org>
- <20151020074700.GB2629@techsingularity.net>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH] mm: vmscan: count slab shrinking results after each
+ shrink_slab()
+Date: Tue, 20 Oct 2015 09:56:06 -0400
+Message-ID: <20151020135606.GB22383@cmpxchg.org>
+References: <1445278415-21138-1-git-send-email-hannes@cmpxchg.org>
+ <20151020121920.GE18351@esperanza>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20151020074700.GB2629@techsingularity.net>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20151020121920.GE18351@esperanza>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mel Gorman <mgorman@techsingularity.net>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@virtuozzo.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Oct 20, 2015 at 08:47:00AM +0100, Mel Gorman wrote:
-> On Mon, Oct 19, 2015 at 02:13:01PM -0400, Johannes Weiner wrote:
-> > mm-increase-swap_cluster_max-to-batch-tlb-flushes.patch changed
-> > SWAP_CLUSTER_MAX from 32 pages to 256 pages, inadvertantly switching
-> > the scan window for vmpressure detection from 2MB to 16MB. Revert.
+On Tue, Oct 20, 2015 at 03:19:20PM +0300, Vladimir Davydov wrote:
+> On Mon, Oct 19, 2015 at 02:13:35PM -0400, Johannes Weiner wrote:
+> > cb731d6 ("vmscan: per memory cgroup slab shrinkers") sought to
+> > optimize accumulating slab reclaim results in sc->nr_reclaimed only
+> > once per zone, but the memcg hierarchy walk itself uses
+> > sc->nr_reclaimed as an exit condition. This can lead to overreclaim.
 > > 
-> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> > ---
+> >  mm/vmscan.c | 19 ++++++++++++++-----
+> >  1 file changed, 14 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/mm/vmscan.c b/mm/vmscan.c
+> > index 27d580b..a02654e 100644
+> > --- a/mm/vmscan.c
+> > +++ b/mm/vmscan.c
+> > @@ -2441,11 +2441,18 @@ static bool shrink_zone(struct zone *zone, struct scan_control *sc,
+> >  			shrink_lruvec(lruvec, swappiness, sc, &lru_pages);
+> >  			zone_lru_pages += lru_pages;
+> >  
+> > -			if (memcg && is_classzone)
+> > +			if (memcg && is_classzone) {
+> >  				shrink_slab(sc->gfp_mask, zone_to_nid(zone),
+> >  					    memcg, sc->nr_scanned - scanned,
+> >  					    lru_pages);
+> >  
+> > +				if (reclaim_state) {
 > 
-> This was known at the time but it was not clear what the measurable
-> impact would be. VM Pressure is odd in that it gives strange results at
-> times anyway, particularly on NUMA machines.
-
-Interesting. Strange how? In terms of reporting random flukes?
-
-I'm interested in vmpressure because I think reclaim efficiency would
-be a useful metric to export to other parts of the kernel. We have
-slab shrinkers that export LRU scan rate for ageable caches--the
-keyword being "ageable" here--that are currently used for everything
-that wants to know about memory pressure. But unless you actually age
-and rotate your objects, it does not make sense to shrink your objects
-based on LRU scan rate. There is no reason to drop your costly objects
-if all the VM does is pick up streaming cache pages. In those cases,
-it would make more sense to hook yourself up to be notified when
-reclaim efficiency drops below a certain threshold.
-
-> To be honest, it still isn't clear to me what the impact of the
-> patch is. With different base page sizes (e.g. on ppc64 with some
-> configs), the window is still large. At the time, it was left as-is
-> as I could not decide one way or the other but I'm ok with restoring
-> the behaviour so either way;
+> current->reclaim_state is only set on global reclaim, so when performing
+> memcg reclaim we'll never get here. Hence, since we check nr_reclaimed
+> in the loop only on memcg reclaim, this patch doesn't change anything.
 > 
-> Acked-by: Mel Gorman <mgorman@techsingularity.net>
+> Setting current->reclaim_state on memcg reclaim doesn't seem to be an
+> option, because it accounts objects freed by any cgroup (e.g. via RCU
+> callback) - see https://lkml.org/lkml/2015/1/20/91
 
-Thanks!
+Ah, I was not aware of that. Thanks for clarifying. Scratch this patch
+then.
 
-> Out of curiosity though, what *is* the user-visible impact of the patch
-> though? It's different but I'm having trouble deciding if it's better
-> or worse. I'm curious as to whether the patch is based on a bug report
-> or intuition.
+Do you think it would make sense to take the shrink_slab() return
+value into account? Or are most objects expected to be RCU-freed
+anyway so it wouldn't make a difference?
 
-No, I didn't observe a bug, it just struck me during code review.
+> About overreclaim that might happen due to the current behavior. Inodes
+> and dentries are small and usually freed by RCU so not accounting them
+> to nr_reclaimed shouldn't make much difference. The only reason I see
+> why overreclaim can happen is ignoring eviction of an inode full of page
+> cache, speaking of which makes me wonder if it'd be better to refrain
+> from dropping inodes which have page cache left, at least unless the
+> scan priority is low?
 
-My sole line of reasoning was: the pressure scan window was chosen
-back then to be at a certain point between reliable sample size and
-on-time reporting of detected pressure. Increasing the LRU scan window
-for the purpose of improved TLB batching seems sufficiently unrelated
-that we wouldn't want to change the vmpressure window as a side effect.
-
-Arguably it should not even reference SWAP_CLUSTER_MAX, but on the
-other hand that value has been pretty static in the past, and it looks
-better than '256' :-)
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Unless we have evidence that it drops cache pages prematurely, I think
+it should be okay to leave it as is.
