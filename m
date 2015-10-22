@@ -1,8263 +1,59 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH cgroup/for-4.4 2/3] cgroup: rename Documentation/cgroups/ to
- Documentation/cgroup-legacy/
-Date: Thu, 22 Oct 2015 10:23:02 +0900
-Message-ID: <20151022012302.GB20931@mtj.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH cgroup/for-4.4 3/3] cgroup: replace unified-hierarchy.txt
+ with a proper cgroup v2 documentation
+Date: Thu, 22 Oct 2015 10:23:54 +0900
+Message-ID: <20151022012354.GC20931@mtj.duckdns.org>
 References: <20151022012212.GA20931@mtj.duckdns.org>
+ <20151022012302.GB20931@mtj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=bFcXWqRgiWuAtB5h/r9aDe8NnLcf2RBKeZa0JixHSc0=;
-        b=sA1tjDTLhjggkYKic4o8RqBF19Aj5ODncrfyNVC2Ct5WMjFijwqxIBZRm1UvSu6y/p
-         voiWLV49OYuz1eRst0l8wf8X1X18Rrjf9JjHGuQVF4EyRGerYMxLDVPrJBtMtT5azixE
-         I0qyAJdK14qkuEZ0bTau4IOBThfCny/3fKdDFoQ2I+zfGuJkmfUKD/mzl5yvfdVax353
-         h2YxQ3hodjqVwWbLdlWKT/b59k/Kh3e81mONS00VlN+h2DsMqpVaNevMJujvCpU7rjFK
-         l3JF4DjgA6lNgFS7F7AXsF3jD1J2YaxG1PEQ18jhygS0va04JRBBYPdn4cCTJExM4rAH
-         rK4Q==
+        bh=bijM5QDFzJLGlxN7SIZecxNlNEgGLxWz3FI7ESwa6mA=;
+        b=aLdN5djLChku4CNHVn/Umbz0wyVC89iFhAEQT/pOxJMI0PCEvKv1f3/Z04OrUcgprZ
+         VAjzXQbgIjhg2oNHZXrm6AfIPHZA0O36x+yjuUfZIxJQH4ndzYAfSja9DXmdo5KCzdeb
+         4L4Sa2Alc0hI+ZKiANPoL0bKs9VXaBJ3IhxSYTzJ/QV5G27C3u4pwKrxCAG6NBTqcTT7
+         NVa10RW0vA/N6p/9lJnOGowf6zhrE6/tfE6/t67waanPY1RKbed4sfAe1OUUvrDlXrfQ
+         +xvV8lAawwlAR/mgcrBmzCoVM/i2KMOtVgogZ9pTxYkD91Eu9HiaKDbVs6Tf/9dt+WLp
+         auJw==
 Content-Disposition: inline
-In-Reply-To: <20151022012212.GA20931@mtj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20151022012302.GB20931-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Vivek Goyal <vgoyal@redhat.com>, Jens Axboe <axboe@kernel.dk>, Michal Hocko <mhocko@kernel.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Paul Turner <pjt@google.com>, kernel-team@fb.com
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
 
-From dc2f5ab014cee674707c365be6edcf90d55e344b Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj@kernel.org>
-Date: Thu, 22 Oct 2015 09:55:16 +0900
+From 36c503ea9946339ae643aabcbaaec33284f598f1 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Thu, 22 Oct 2015 09:57:39 +0900
 
-In preparation for adding cgroup2 documentation, rename
-Documentation/cgroups/ to Documentation/cgroup-legacy/.
+Now that cgroup v2 is almost out of the door, replace the development
+documentation unified-hierarchy.txt with Documentation/cgroup.txt
+which is a superset of unified-hierarchy.txt and authoritatively
+describes all userland-visible aspects of cgroup.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- Documentation/cgroup-legacy/00-INDEX              |  30 +
- Documentation/cgroup-legacy/blkio-controller.txt  | 455 +++++++++++
- Documentation/cgroup-legacy/cgroups.txt           | 682 +++++++++++++++++
- Documentation/cgroup-legacy/cpuacct.txt           |  49 ++
- Documentation/cgroup-legacy/cpusets.txt           | 839 +++++++++++++++++++++
- Documentation/cgroup-legacy/devices.txt           | 116 +++
- Documentation/cgroup-legacy/freezer-subsystem.txt | 123 +++
- Documentation/cgroup-legacy/hugetlb.txt           |  45 ++
- Documentation/cgroup-legacy/memcg_test.txt        | 280 +++++++
- Documentation/cgroup-legacy/memory.txt            | 876 ++++++++++++++++++++++
- Documentation/cgroup-legacy/net_cls.txt           |  39 +
- Documentation/cgroup-legacy/net_prio.txt          |  55 ++
- Documentation/cgroup-legacy/pids.txt              |  85 +++
- Documentation/cgroup-legacy/unified-hierarchy.txt | 645 ++++++++++++++++
- Documentation/cgroups/00-INDEX                    |  30 -
- Documentation/cgroups/blkio-controller.txt        | 455 -----------
- Documentation/cgroups/cgroups.txt                 | 682 -----------------
- Documentation/cgroups/cpuacct.txt                 |  49 --
- Documentation/cgroups/cpusets.txt                 | 839 ---------------------
- Documentation/cgroups/devices.txt                 | 116 ---
- Documentation/cgroups/freezer-subsystem.txt       | 123 ---
- Documentation/cgroups/hugetlb.txt                 |  45 --
- Documentation/cgroups/memcg_test.txt              | 280 -------
- Documentation/cgroups/memory.txt                  | 876 ----------------------
- Documentation/cgroups/net_cls.txt                 |  39 -
- Documentation/cgroups/net_prio.txt                |  55 --
- Documentation/cgroups/pids.txt                    |  85 ---
- Documentation/cgroups/unified-hierarchy.txt       | 645 ----------------
- 28 files changed, 4319 insertions(+), 4319 deletions(-)
- create mode 100644 Documentation/cgroup-legacy/00-INDEX
- create mode 100644 Documentation/cgroup-legacy/blkio-controller.txt
- create mode 100644 Documentation/cgroup-legacy/cgroups.txt
- create mode 100644 Documentation/cgroup-legacy/cpuacct.txt
- create mode 100644 Documentation/cgroup-legacy/cpusets.txt
- create mode 100644 Documentation/cgroup-legacy/devices.txt
- create mode 100644 Documentation/cgroup-legacy/freezer-subsystem.txt
- create mode 100644 Documentation/cgroup-legacy/hugetlb.txt
- create mode 100644 Documentation/cgroup-legacy/memcg_test.txt
- create mode 100644 Documentation/cgroup-legacy/memory.txt
- create mode 100644 Documentation/cgroup-legacy/net_cls.txt
- create mode 100644 Documentation/cgroup-legacy/net_prio.txt
- create mode 100644 Documentation/cgroup-legacy/pids.txt
- create mode 100644 Documentation/cgroup-legacy/unified-hierarchy.txt
- delete mode 100644 Documentation/cgroups/00-INDEX
- delete mode 100644 Documentation/cgroups/blkio-controller.txt
- delete mode 100644 Documentation/cgroups/cgroups.txt
- delete mode 100644 Documentation/cgroups/cpuacct.txt
- delete mode 100644 Documentation/cgroups/cpusets.txt
- delete mode 100644 Documentation/cgroups/devices.txt
- delete mode 100644 Documentation/cgroups/freezer-subsystem.txt
- delete mode 100644 Documentation/cgroups/hugetlb.txt
- delete mode 100644 Documentation/cgroups/memcg_test.txt
- delete mode 100644 Documentation/cgroups/memory.txt
- delete mode 100644 Documentation/cgroups/net_cls.txt
- delete mode 100644 Documentation/cgroups/net_prio.txt
- delete mode 100644 Documentation/cgroups/pids.txt
- delete mode 100644 Documentation/cgroups/unified-hierarchy.txt
+ Documentation/cgroup-legacy/unified-hierarchy.txt |  645 -----------
+ Documentation/cgroup.txt                          | 1235 +++++++++++++++++++++
+ 2 files changed, 1235 insertions(+), 645 deletions(-)
+ delete mode 100644 Documentation/cgroup-legacy/unified-hierarchy.txt
+ create mode 100644 Documentation/cgroup.txt
 
-diff --git a/Documentation/cgroup-legacy/00-INDEX b/Documentation/cgroup-legacy/00-INDEX
-new file mode 100644
-index 0000000..3f5a40f
---- /dev/null
-+++ b/Documentation/cgroup-legacy/00-INDEX
-@@ -0,0 +1,30 @@
-+00-INDEX
-+	- this file
-+blkio-controller.txt
-+	- Description for Block IO Controller, implementation and usage details.
-+cgroups.txt
-+	- Control Groups definition, implementation details, examples and API.
-+cpuacct.txt
-+	- CPU Accounting Controller; account CPU usage for groups of tasks.
-+cpusets.txt
-+	- documents the cpusets feature; assign CPUs and Mem to a set of tasks.
-+devices.txt
-+	- Device Whitelist Controller; description, interface and security.
-+freezer-subsystem.txt
-+	- checkpointing; rationale to not use signals, interface.
-+hugetlb.txt
-+	- HugeTLB Controller implementation and usage details.
-+memcg_test.txt
-+	- Memory Resource Controller; implementation details.
-+memory.txt
-+	- Memory Resource Controller; design, accounting, interface, testing.
-+net_cls.txt
-+	- Network classifier cgroups details and usages.
-+net_prio.txt
-+	- Network priority cgroups details and usages.
-+pids.txt
-+	- Process number cgroups details and usages.
-+resource_counter.txt
-+	- Resource Counter API.
-+unified-hierarchy.txt
-+	- Description the new/next cgroup interface.
-diff --git a/Documentation/cgroup-legacy/blkio-controller.txt b/Documentation/cgroup-legacy/blkio-controller.txt
-new file mode 100644
-index 0000000..12686be
---- /dev/null
-+++ b/Documentation/cgroup-legacy/blkio-controller.txt
-@@ -0,0 +1,455 @@
-+				Block IO Controller
-+				===================
-+Overview
-+========
-+cgroup subsys "blkio" implements the block io controller. There seems to be
-+a need of various kinds of IO control policies (like proportional BW, max BW)
-+both at leaf nodes as well as at intermediate nodes in a storage hierarchy.
-+Plan is to use the same cgroup based management interface for blkio controller
-+and based on user options switch IO policies in the background.
-+
-+Currently two IO control policies are implemented. First one is proportional
-+weight time based division of disk policy. It is implemented in CFQ. Hence
-+this policy takes effect only on leaf nodes when CFQ is being used. The second
-+one is throttling policy which can be used to specify upper IO rate limits
-+on devices. This policy is implemented in generic block layer and can be
-+used on leaf nodes as well as higher level logical devices like device mapper.
-+
-+HOWTO
-+=====
-+Proportional Weight division of bandwidth
-+-----------------------------------------
-+You can do a very simple testing of running two dd threads in two different
-+cgroups. Here is what you can do.
-+
-+- Enable Block IO controller
-+	CONFIG_BLK_CGROUP=y
-+
-+- Enable group scheduling in CFQ
-+	CONFIG_CFQ_GROUP_IOSCHED=y
-+
-+- Compile and boot into kernel and mount IO controller (blkio); see
-+  cgroups.txt, Why are cgroups needed?.
-+
-+	mount -t tmpfs cgroup_root /sys/fs/cgroup
-+	mkdir /sys/fs/cgroup/blkio
-+	mount -t cgroup -o blkio none /sys/fs/cgroup/blkio
-+
-+- Create two cgroups
-+	mkdir -p /sys/fs/cgroup/blkio/test1/ /sys/fs/cgroup/blkio/test2
-+
-+- Set weights of group test1 and test2
-+	echo 1000 > /sys/fs/cgroup/blkio/test1/blkio.weight
-+	echo 500 > /sys/fs/cgroup/blkio/test2/blkio.weight
-+
-+- Create two same size files (say 512MB each) on same disk (file1, file2) and
-+  launch two dd threads in different cgroup to read those files.
-+
-+	sync
-+	echo 3 > /proc/sys/vm/drop_caches
-+
-+	dd if=/mnt/sdb/zerofile1 of=/dev/null &
-+	echo $! > /sys/fs/cgroup/blkio/test1/tasks
-+	cat /sys/fs/cgroup/blkio/test1/tasks
-+
-+	dd if=/mnt/sdb/zerofile2 of=/dev/null &
-+	echo $! > /sys/fs/cgroup/blkio/test2/tasks
-+	cat /sys/fs/cgroup/blkio/test2/tasks
-+
-+- At macro level, first dd should finish first. To get more precise data, keep
-+  on looking at (with the help of script), at blkio.disk_time and
-+  blkio.disk_sectors files of both test1 and test2 groups. This will tell how
-+  much disk time (in milli seconds), each group got and how many secotors each
-+  group dispatched to the disk. We provide fairness in terms of disk time, so
-+  ideally io.disk_time of cgroups should be in proportion to the weight.
-+
-+Throttling/Upper Limit policy
-+-----------------------------
-+- Enable Block IO controller
-+	CONFIG_BLK_CGROUP=y
-+
-+- Enable throttling in block layer
-+	CONFIG_BLK_DEV_THROTTLING=y
-+
-+- Mount blkio controller (see cgroups.txt, Why are cgroups needed?)
-+        mount -t cgroup -o blkio none /sys/fs/cgroup/blkio
-+
-+- Specify a bandwidth rate on particular device for root group. The format
-+  for policy is "<major>:<minor>  <bytes_per_second>".
-+
-+        echo "8:16  1048576" > /sys/fs/cgroup/blkio/blkio.throttle.read_bps_device
-+
-+  Above will put a limit of 1MB/second on reads happening for root group
-+  on device having major/minor number 8:16.
-+
-+- Run dd to read a file and see if rate is throttled to 1MB/s or not.
-+
-+		# dd if=/mnt/common/zerofile of=/dev/null bs=4K count=1024
-+		# iflag=direct
-+        1024+0 records in
-+        1024+0 records out
-+        4194304 bytes (4.2 MB) copied, 4.0001 s, 1.0 MB/s
-+
-+ Limits for writes can be put using blkio.throttle.write_bps_device file.
-+
-+Hierarchical Cgroups
-+====================
-+
-+Both CFQ and throttling implement hierarchy support; however,
-+throttling's hierarchy support is enabled iff "sane_behavior" is
-+enabled from cgroup side, which currently is a development option and
-+not publicly available.
-+
-+If somebody created a hierarchy like as follows.
-+
-+			root
-+			/  \
-+		     test1 test2
-+			|
-+		     test3
-+
-+CFQ by default and throttling with "sane_behavior" will handle the
-+hierarchy correctly.  For details on CFQ hierarchy support, refer to
-+Documentation/block/cfq-iosched.txt.  For throttling, all limits apply
-+to the whole subtree while all statistics are local to the IOs
-+directly generated by tasks in that cgroup.
-+
-+Throttling without "sane_behavior" enabled from cgroup side will
-+practically treat all groups at same level as if it looks like the
-+following.
-+
-+				pivot
-+			     /  /   \  \
-+			root  test1 test2  test3
-+
-+Various user visible config options
-+===================================
-+CONFIG_BLK_CGROUP
-+	- Block IO controller.
-+
-+CONFIG_DEBUG_BLK_CGROUP
-+	- Debug help. Right now some additional stats file show up in cgroup
-+	  if this option is enabled.
-+
-+CONFIG_CFQ_GROUP_IOSCHED
-+	- Enables group scheduling in CFQ. Currently only 1 level of group
-+	  creation is allowed.
-+
-+CONFIG_BLK_DEV_THROTTLING
-+	- Enable block device throttling support in block layer.
-+
-+Details of cgroup files
-+=======================
-+Proportional weight policy files
-+--------------------------------
-+- blkio.weight
-+	- Specifies per cgroup weight. This is default weight of the group
-+	  on all the devices until and unless overridden by per device rule.
-+	  (See blkio.weight_device).
-+	  Currently allowed range of weights is from 10 to 1000.
-+
-+- blkio.weight_device
-+	- One can specify per cgroup per device rules using this interface.
-+	  These rules override the default value of group weight as specified
-+	  by blkio.weight.
-+
-+	  Following is the format.
-+
-+	  # echo dev_maj:dev_minor weight > blkio.weight_device
-+	  Configure weight=300 on /dev/sdb (8:16) in this cgroup
-+	  # echo 8:16 300 > blkio.weight_device
-+	  # cat blkio.weight_device
-+	  dev     weight
-+	  8:16    300
-+
-+	  Configure weight=500 on /dev/sda (8:0) in this cgroup
-+	  # echo 8:0 500 > blkio.weight_device
-+	  # cat blkio.weight_device
-+	  dev     weight
-+	  8:0     500
-+	  8:16    300
-+
-+	  Remove specific weight for /dev/sda in this cgroup
-+	  # echo 8:0 0 > blkio.weight_device
-+	  # cat blkio.weight_device
-+	  dev     weight
-+	  8:16    300
-+
-+- blkio.leaf_weight[_device]
-+	- Equivalents of blkio.weight[_device] for the purpose of
-+          deciding how much weight tasks in the given cgroup has while
-+          competing with the cgroup's child cgroups. For details,
-+          please refer to Documentation/block/cfq-iosched.txt.
-+
-+- blkio.time
-+	- disk time allocated to cgroup per device in milliseconds. First
-+	  two fields specify the major and minor number of the device and
-+	  third field specifies the disk time allocated to group in
-+	  milliseconds.
-+
-+- blkio.sectors
-+	- number of sectors transferred to/from disk by the group. First
-+	  two fields specify the major and minor number of the device and
-+	  third field specifies the number of sectors transferred by the
-+	  group to/from the device.
-+
-+- blkio.io_service_bytes
-+	- Number of bytes transferred to/from the disk by the group. These
-+	  are further divided by the type of operation - read or write, sync
-+	  or async. First two fields specify the major and minor number of the
-+	  device, third field specifies the operation type and the fourth field
-+	  specifies the number of bytes.
-+
-+- blkio.io_serviced
-+	- Number of IOs (bio) issued to the disk by the group. These
-+	  are further divided by the type of operation - read or write, sync
-+	  or async. First two fields specify the major and minor number of the
-+	  device, third field specifies the operation type and the fourth field
-+	  specifies the number of IOs.
-+
-+- blkio.io_service_time
-+	- Total amount of time between request dispatch and request completion
-+	  for the IOs done by this cgroup. This is in nanoseconds to make it
-+	  meaningful for flash devices too. For devices with queue depth of 1,
-+	  this time represents the actual service time. When queue_depth > 1,
-+	  that is no longer true as requests may be served out of order. This
-+	  may cause the service time for a given IO to include the service time
-+	  of multiple IOs when served out of order which may result in total
-+	  io_service_time > actual time elapsed. This time is further divided by
-+	  the type of operation - read or write, sync or async. First two fields
-+	  specify the major and minor number of the device, third field
-+	  specifies the operation type and the fourth field specifies the
-+	  io_service_time in ns.
-+
-+- blkio.io_wait_time
-+	- Total amount of time the IOs for this cgroup spent waiting in the
-+	  scheduler queues for service. This can be greater than the total time
-+	  elapsed since it is cumulative io_wait_time for all IOs. It is not a
-+	  measure of total time the cgroup spent waiting but rather a measure of
-+	  the wait_time for its individual IOs. For devices with queue_depth > 1
-+	  this metric does not include the time spent waiting for service once
-+	  the IO is dispatched to the device but till it actually gets serviced
-+	  (there might be a time lag here due to re-ordering of requests by the
-+	  device). This is in nanoseconds to make it meaningful for flash
-+	  devices too. This time is further divided by the type of operation -
-+	  read or write, sync or async. First two fields specify the major and
-+	  minor number of the device, third field specifies the operation type
-+	  and the fourth field specifies the io_wait_time in ns.
-+
-+- blkio.io_merged
-+	- Total number of bios/requests merged into requests belonging to this
-+	  cgroup. This is further divided by the type of operation - read or
-+	  write, sync or async.
-+
-+- blkio.io_queued
-+	- Total number of requests queued up at any given instant for this
-+	  cgroup. This is further divided by the type of operation - read or
-+	  write, sync or async.
-+
-+- blkio.avg_queue_size
-+	- Debugging aid only enabled if CONFIG_DEBUG_BLK_CGROUP=y.
-+	  The average queue size for this cgroup over the entire time of this
-+	  cgroup's existence. Queue size samples are taken each time one of the
-+	  queues of this cgroup gets a timeslice.
-+
-+- blkio.group_wait_time
-+	- Debugging aid only enabled if CONFIG_DEBUG_BLK_CGROUP=y.
-+	  This is the amount of time the cgroup had to wait since it became busy
-+	  (i.e., went from 0 to 1 request queued) to get a timeslice for one of
-+	  its queues. This is different from the io_wait_time which is the
-+	  cumulative total of the amount of time spent by each IO in that cgroup
-+	  waiting in the scheduler queue. This is in nanoseconds. If this is
-+	  read when the cgroup is in a waiting (for timeslice) state, the stat
-+	  will only report the group_wait_time accumulated till the last time it
-+	  got a timeslice and will not include the current delta.
-+
-+- blkio.empty_time
-+	- Debugging aid only enabled if CONFIG_DEBUG_BLK_CGROUP=y.
-+	  This is the amount of time a cgroup spends without any pending
-+	  requests when not being served, i.e., it does not include any time
-+	  spent idling for one of the queues of the cgroup. This is in
-+	  nanoseconds. If this is read when the cgroup is in an empty state,
-+	  the stat will only report the empty_time accumulated till the last
-+	  time it had a pending request and will not include the current delta.
-+
-+- blkio.idle_time
-+	- Debugging aid only enabled if CONFIG_DEBUG_BLK_CGROUP=y.
-+	  This is the amount of time spent by the IO scheduler idling for a
-+	  given cgroup in anticipation of a better request than the existing ones
-+	  from other queues/cgroups. This is in nanoseconds. If this is read
-+	  when the cgroup is in an idling state, the stat will only report the
-+	  idle_time accumulated till the last idle period and will not include
-+	  the current delta.
-+
-+- blkio.dequeue
-+	- Debugging aid only enabled if CONFIG_DEBUG_BLK_CGROUP=y. This
-+	  gives the statistics about how many a times a group was dequeued
-+	  from service tree of the device. First two fields specify the major
-+	  and minor number of the device and third field specifies the number
-+	  of times a group was dequeued from a particular device.
-+
-+- blkio.*_recursive
-+	- Recursive version of various stats. These files show the
-+          same information as their non-recursive counterparts but
-+          include stats from all the descendant cgroups.
-+
-+Throttling/Upper limit policy files
-+-----------------------------------
-+- blkio.throttle.read_bps_device
-+	- Specifies upper limit on READ rate from the device. IO rate is
-+	  specified in bytes per second. Rules are per device. Following is
-+	  the format.
-+
-+  echo "<major>:<minor>  <rate_bytes_per_second>" > /cgrp/blkio.throttle.read_bps_device
-+
-+- blkio.throttle.write_bps_device
-+	- Specifies upper limit on WRITE rate to the device. IO rate is
-+	  specified in bytes per second. Rules are per device. Following is
-+	  the format.
-+
-+  echo "<major>:<minor>  <rate_bytes_per_second>" > /cgrp/blkio.throttle.write_bps_device
-+
-+- blkio.throttle.read_iops_device
-+	- Specifies upper limit on READ rate from the device. IO rate is
-+	  specified in IO per second. Rules are per device. Following is
-+	  the format.
-+
-+  echo "<major>:<minor>  <rate_io_per_second>" > /cgrp/blkio.throttle.read_iops_device
-+
-+- blkio.throttle.write_iops_device
-+	- Specifies upper limit on WRITE rate to the device. IO rate is
-+	  specified in io per second. Rules are per device. Following is
-+	  the format.
-+
-+  echo "<major>:<minor>  <rate_io_per_second>" > /cgrp/blkio.throttle.write_iops_device
-+
-+Note: If both BW and IOPS rules are specified for a device, then IO is
-+      subjected to both the constraints.
-+
-+- blkio.throttle.io_serviced
-+	- Number of IOs (bio) issued to the disk by the group. These
-+	  are further divided by the type of operation - read or write, sync
-+	  or async. First two fields specify the major and minor number of the
-+	  device, third field specifies the operation type and the fourth field
-+	  specifies the number of IOs.
-+
-+- blkio.throttle.io_service_bytes
-+	- Number of bytes transferred to/from the disk by the group. These
-+	  are further divided by the type of operation - read or write, sync
-+	  or async. First two fields specify the major and minor number of the
-+	  device, third field specifies the operation type and the fourth field
-+	  specifies the number of bytes.
-+
-+Common files among various policies
-+-----------------------------------
-+- blkio.reset_stats
-+	- Writing an int to this file will result in resetting all the stats
-+	  for that cgroup.
-+
-+CFQ sysfs tunable
-+=================
-+/sys/block/<disk>/queue/iosched/slice_idle
-+------------------------------------------
-+On a faster hardware CFQ can be slow, especially with sequential workload.
-+This happens because CFQ idles on a single queue and single queue might not
-+drive deeper request queue depths to keep the storage busy. In such scenarios
-+one can try setting slice_idle=0 and that would switch CFQ to IOPS
-+(IO operations per second) mode on NCQ supporting hardware.
-+
-+That means CFQ will not idle between cfq queues of a cfq group and hence be
-+able to driver higher queue depth and achieve better throughput. That also
-+means that cfq provides fairness among groups in terms of IOPS and not in
-+terms of disk time.
-+
-+/sys/block/<disk>/queue/iosched/group_idle
-+------------------------------------------
-+If one disables idling on individual cfq queues and cfq service trees by
-+setting slice_idle=0, group_idle kicks in. That means CFQ will still idle
-+on the group in an attempt to provide fairness among groups.
-+
-+By default group_idle is same as slice_idle and does not do anything if
-+slice_idle is enabled.
-+
-+One can experience an overall throughput drop if you have created multiple
-+groups and put applications in that group which are not driving enough
-+IO to keep disk busy. In that case set group_idle=0, and CFQ will not idle
-+on individual groups and throughput should improve.
-+
-+Writeback
-+=========
-+
-+Page cache is dirtied through buffered writes and shared mmaps and
-+written asynchronously to the backing filesystem by the writeback
-+mechanism.  Writeback sits between the memory and IO domains and
-+regulates the proportion of dirty memory by balancing dirtying and
-+write IOs.
-+
-+On traditional cgroup hierarchies, relationships between different
-+controllers cannot be established making it impossible for writeback
-+to operate accounting for cgroup resource restrictions and all
-+writeback IOs are attributed to the root cgroup.
-+
-+If both the blkio and memory controllers are used on the v2 hierarchy
-+and the filesystem supports cgroup writeback, writeback operations
-+correctly follow the resource restrictions imposed by both memory and
-+blkio controllers.
-+
-+Writeback examines both system-wide and per-cgroup dirty memory status
-+and enforces the more restrictive of the two.  Also, writeback control
-+parameters which are absolute values - vm.dirty_bytes and
-+vm.dirty_background_bytes - are distributed across cgroups according
-+to their current writeback bandwidth.
-+
-+There's a peculiarity stemming from the discrepancy in ownership
-+granularity between memory controller and writeback.  While memory
-+controller tracks ownership per page, writeback operates on inode
-+basis.  cgroup writeback bridges the gap by tracking ownership by
-+inode but migrating ownership if too many foreign pages, pages which
-+don't match the current inode ownership, have been encountered while
-+writing back the inode.
-+
-+This is a conscious design choice as writeback operations are
-+inherently tied to inodes making strictly following page ownership
-+complicated and inefficient.  The only use case which suffers from
-+this compromise is multiple cgroups concurrently dirtying disjoint
-+regions of the same inode, which is an unlikely use case and decided
-+to be unsupported.  Note that as memory controller assigns page
-+ownership on the first use and doesn't update it until the page is
-+released, even if cgroup writeback strictly follows page ownership,
-+multiple cgroups dirtying overlapping areas wouldn't work as expected.
-+In general, write-sharing an inode across multiple cgroups is not well
-+supported.
-+
-+Filesystem support for cgroup writeback
-+---------------------------------------
-+
-+A filesystem can make writeback IOs cgroup-aware by updating
-+address_space_operations->writepage[s]() to annotate bio's using the
-+following two functions.
-+
-+* wbc_init_bio(@wbc, @bio)
-+
-+  Should be called for each bio carrying writeback data and associates
-+  the bio with the inode's owner cgroup.  Can be called anytime
-+  between bio allocation and submission.
-+
-+* wbc_account_io(@wbc, @page, @bytes)
-+
-+  Should be called for each data segment being written out.  While
-+  this function doesn't care exactly when it's called during the
-+  writeback session, it's the easiest and most natural to call it as
-+  data segments are added to a bio.
-+
-+With writeback bio's annotated, cgroup support can be enabled per
-+super_block by setting MS_CGROUPWB in ->s_flags.  This allows for
-+selective disabling of cgroup writeback support which is helpful when
-+certain filesystem features, e.g. journaled data mode, are
-+incompatible.
-+
-+wbc_init_bio() binds the specified bio to its cgroup.  Depending on
-+the configuration, the bio may be executed at a lower priority and if
-+the writeback session is holding shared resources, e.g. a journal
-+entry, may lead to priority inversion.  There is no one easy solution
-+for the problem.  Filesystems can try to work around specific problem
-+cases by skipping wbc_init_bio() or using bio_associate_blkcg()
-+directly.
-diff --git a/Documentation/cgroup-legacy/cgroups.txt b/Documentation/cgroup-legacy/cgroups.txt
-new file mode 100644
-index 0000000..c6256ae
---- /dev/null
-+++ b/Documentation/cgroup-legacy/cgroups.txt
-@@ -0,0 +1,682 @@
-+				CGROUPS
-+				-------
-+
-+Written by Paul Menage <menage@google.com> based on
-+Documentation/cgroups/cpusets.txt
-+
-+Original copyright statements from cpusets.txt:
-+Portions Copyright (C) 2004 BULL SA.
-+Portions Copyright (c) 2004-2006 Silicon Graphics, Inc.
-+Modified by Paul Jackson <pj@sgi.com>
-+Modified by Christoph Lameter <clameter@sgi.com>
-+
-+CONTENTS:
-+=========
-+
-+1. Control Groups
-+  1.1 What are cgroups ?
-+  1.2 Why are cgroups needed ?
-+  1.3 How are cgroups implemented ?
-+  1.4 What does notify_on_release do ?
-+  1.5 What does clone_children do ?
-+  1.6 How do I use cgroups ?
-+2. Usage Examples and Syntax
-+  2.1 Basic Usage
-+  2.2 Attaching processes
-+  2.3 Mounting hierarchies by name
-+3. Kernel API
-+  3.1 Overview
-+  3.2 Synchronization
-+  3.3 Subsystem API
-+4. Extended attributes usage
-+5. Questions
-+
-+1. Control Groups
-+=================
-+
-+1.1 What are cgroups ?
-+----------------------
-+
-+Control Groups provide a mechanism for aggregating/partitioning sets of
-+tasks, and all their future children, into hierarchical groups with
-+specialized behaviour.
-+
-+Definitions:
-+
-+A *cgroup* associates a set of tasks with a set of parameters for one
-+or more subsystems.
-+
-+A *subsystem* is a module that makes use of the task grouping
-+facilities provided by cgroups to treat groups of tasks in
-+particular ways. A subsystem is typically a "resource controller" that
-+schedules a resource or applies per-cgroup limits, but it may be
-+anything that wants to act on a group of processes, e.g. a
-+virtualization subsystem.
-+
-+A *hierarchy* is a set of cgroups arranged in a tree, such that
-+every task in the system is in exactly one of the cgroups in the
-+hierarchy, and a set of subsystems; each subsystem has system-specific
-+state attached to each cgroup in the hierarchy.  Each hierarchy has
-+an instance of the cgroup virtual filesystem associated with it.
-+
-+At any one time there may be multiple active hierarchies of task
-+cgroups. Each hierarchy is a partition of all tasks in the system.
-+
-+User-level code may create and destroy cgroups by name in an
-+instance of the cgroup virtual file system, specify and query to
-+which cgroup a task is assigned, and list the task PIDs assigned to
-+a cgroup. Those creations and assignments only affect the hierarchy
-+associated with that instance of the cgroup file system.
-+
-+On their own, the only use for cgroups is for simple job
-+tracking. The intention is that other subsystems hook into the generic
-+cgroup support to provide new attributes for cgroups, such as
-+accounting/limiting the resources which processes in a cgroup can
-+access. For example, cpusets (see Documentation/cgroups/cpusets.txt) allow
-+you to associate a set of CPUs and a set of memory nodes with the
-+tasks in each cgroup.
-+
-+1.2 Why are cgroups needed ?
-+----------------------------
-+
-+There are multiple efforts to provide process aggregations in the
-+Linux kernel, mainly for resource-tracking purposes. Such efforts
-+include cpusets, CKRM/ResGroups, UserBeanCounters, and virtual server
-+namespaces. These all require the basic notion of a
-+grouping/partitioning of processes, with newly forked processes ending
-+up in the same group (cgroup) as their parent process.
-+
-+The kernel cgroup patch provides the minimum essential kernel
-+mechanisms required to efficiently implement such groups. It has
-+minimal impact on the system fast paths, and provides hooks for
-+specific subsystems such as cpusets to provide additional behaviour as
-+desired.
-+
-+Multiple hierarchy support is provided to allow for situations where
-+the division of tasks into cgroups is distinctly different for
-+different subsystems - having parallel hierarchies allows each
-+hierarchy to be a natural division of tasks, without having to handle
-+complex combinations of tasks that would be present if several
-+unrelated subsystems needed to be forced into the same tree of
-+cgroups.
-+
-+At one extreme, each resource controller or subsystem could be in a
-+separate hierarchy; at the other extreme, all subsystems
-+would be attached to the same hierarchy.
-+
-+As an example of a scenario (originally proposed by vatsa@in.ibm.com)
-+that can benefit from multiple hierarchies, consider a large
-+university server with various users - students, professors, system
-+tasks etc. The resource planning for this server could be along the
-+following lines:
-+
-+       CPU :          "Top cpuset"
-+                       /       \
-+               CPUSet1         CPUSet2
-+                  |               |
-+               (Professors)    (Students)
-+
-+               In addition (system tasks) are attached to topcpuset (so
-+               that they can run anywhere) with a limit of 20%
-+
-+       Memory : Professors (50%), Students (30%), system (20%)
-+
-+       Disk : Professors (50%), Students (30%), system (20%)
-+
-+       Network : WWW browsing (20%), Network File System (60%), others (20%)
-+                               / \
-+               Professors (15%)  students (5%)
-+
-+Browsers like Firefox/Lynx go into the WWW network class, while (k)nfsd goes
-+into the NFS network class.
-+
-+At the same time Firefox/Lynx will share an appropriate CPU/Memory class
-+depending on who launched it (prof/student).
-+
-+With the ability to classify tasks differently for different resources
-+(by putting those resource subsystems in different hierarchies),
-+the admin can easily set up a script which receives exec notifications
-+and depending on who is launching the browser he can
-+
-+    # echo browser_pid > /sys/fs/cgroup/<restype>/<userclass>/tasks
-+
-+With only a single hierarchy, he now would potentially have to create
-+a separate cgroup for every browser launched and associate it with
-+appropriate network and other resource class.  This may lead to
-+proliferation of such cgroups.
-+
-+Also let's say that the administrator would like to give enhanced network
-+access temporarily to a student's browser (since it is night and the user
-+wants to do online gaming :))  OR give one of the student's simulation
-+apps enhanced CPU power.
-+
-+With ability to write PIDs directly to resource classes, it's just a
-+matter of:
-+
-+       # echo pid > /sys/fs/cgroup/network/<new_class>/tasks
-+       (after some time)
-+       # echo pid > /sys/fs/cgroup/network/<orig_class>/tasks
-+
-+Without this ability, the administrator would have to split the cgroup into
-+multiple separate ones and then associate the new cgroups with the
-+new resource classes.
-+
-+
-+
-+1.3 How are cgroups implemented ?
-+---------------------------------
-+
-+Control Groups extends the kernel as follows:
-+
-+ - Each task in the system has a reference-counted pointer to a
-+   css_set.
-+
-+ - A css_set contains a set of reference-counted pointers to
-+   cgroup_subsys_state objects, one for each cgroup subsystem
-+   registered in the system. There is no direct link from a task to
-+   the cgroup of which it's a member in each hierarchy, but this
-+   can be determined by following pointers through the
-+   cgroup_subsys_state objects. This is because accessing the
-+   subsystem state is something that's expected to happen frequently
-+   and in performance-critical code, whereas operations that require a
-+   task's actual cgroup assignments (in particular, moving between
-+   cgroups) are less common. A linked list runs through the cg_list
-+   field of each task_struct using the css_set, anchored at
-+   css_set->tasks.
-+
-+ - A cgroup hierarchy filesystem can be mounted for browsing and
-+   manipulation from user space.
-+
-+ - You can list all the tasks (by PID) attached to any cgroup.
-+
-+The implementation of cgroups requires a few, simple hooks
-+into the rest of the kernel, none in performance-critical paths:
-+
-+ - in init/main.c, to initialize the root cgroups and initial
-+   css_set at system boot.
-+
-+ - in fork and exit, to attach and detach a task from its css_set.
-+
-+In addition, a new file system of type "cgroup" may be mounted, to
-+enable browsing and modifying the cgroups presently known to the
-+kernel.  When mounting a cgroup hierarchy, you may specify a
-+comma-separated list of subsystems to mount as the filesystem mount
-+options.  By default, mounting the cgroup filesystem attempts to
-+mount a hierarchy containing all registered subsystems.
-+
-+If an active hierarchy with exactly the same set of subsystems already
-+exists, it will be reused for the new mount. If no existing hierarchy
-+matches, and any of the requested subsystems are in use in an existing
-+hierarchy, the mount will fail with -EBUSY. Otherwise, a new hierarchy
-+is activated, associated with the requested subsystems.
-+
-+It's not currently possible to bind a new subsystem to an active
-+cgroup hierarchy, or to unbind a subsystem from an active cgroup
-+hierarchy. This may be possible in future, but is fraught with nasty
-+error-recovery issues.
-+
-+When a cgroup filesystem is unmounted, if there are any
-+child cgroups created below the top-level cgroup, that hierarchy
-+will remain active even though unmounted; if there are no
-+child cgroups then the hierarchy will be deactivated.
-+
-+No new system calls are added for cgroups - all support for
-+querying and modifying cgroups is via this cgroup file system.
-+
-+Each task under /proc has an added file named 'cgroup' displaying,
-+for each active hierarchy, the subsystem names and the cgroup name
-+as the path relative to the root of the cgroup file system.
-+
-+Each cgroup is represented by a directory in the cgroup file system
-+containing the following files describing that cgroup:
-+
-+ - tasks: list of tasks (by PID) attached to that cgroup.  This list
-+   is not guaranteed to be sorted.  Writing a thread ID into this file
-+   moves the thread into this cgroup.
-+ - cgroup.procs: list of thread group IDs in the cgroup.  This list is
-+   not guaranteed to be sorted or free of duplicate TGIDs, and userspace
-+   should sort/uniquify the list if this property is required.
-+   Writing a thread group ID into this file moves all threads in that
-+   group into this cgroup.
-+ - notify_on_release flag: run the release agent on exit?
-+ - release_agent: the path to use for release notifications (this file
-+   exists in the top cgroup only)
-+
-+Other subsystems such as cpusets may add additional files in each
-+cgroup dir.
-+
-+New cgroups are created using the mkdir system call or shell
-+command.  The properties of a cgroup, such as its flags, are
-+modified by writing to the appropriate file in that cgroups
-+directory, as listed above.
-+
-+The named hierarchical structure of nested cgroups allows partitioning
-+a large system into nested, dynamically changeable, "soft-partitions".
-+
-+The attachment of each task, automatically inherited at fork by any
-+children of that task, to a cgroup allows organizing the work load
-+on a system into related sets of tasks.  A task may be re-attached to
-+any other cgroup, if allowed by the permissions on the necessary
-+cgroup file system directories.
-+
-+When a task is moved from one cgroup to another, it gets a new
-+css_set pointer - if there's an already existing css_set with the
-+desired collection of cgroups then that group is reused, otherwise a new
-+css_set is allocated. The appropriate existing css_set is located by
-+looking into a hash table.
-+
-+To allow access from a cgroup to the css_sets (and hence tasks)
-+that comprise it, a set of cg_cgroup_link objects form a lattice;
-+each cg_cgroup_link is linked into a list of cg_cgroup_links for
-+a single cgroup on its cgrp_link_list field, and a list of
-+cg_cgroup_links for a single css_set on its cg_link_list.
-+
-+Thus the set of tasks in a cgroup can be listed by iterating over
-+each css_set that references the cgroup, and sub-iterating over
-+each css_set's task set.
-+
-+The use of a Linux virtual file system (vfs) to represent the
-+cgroup hierarchy provides for a familiar permission and name space
-+for cgroups, with a minimum of additional kernel code.
-+
-+1.4 What does notify_on_release do ?
-+------------------------------------
-+
-+If the notify_on_release flag is enabled (1) in a cgroup, then
-+whenever the last task in the cgroup leaves (exits or attaches to
-+some other cgroup) and the last child cgroup of that cgroup
-+is removed, then the kernel runs the command specified by the contents
-+of the "release_agent" file in that hierarchy's root directory,
-+supplying the pathname (relative to the mount point of the cgroup
-+file system) of the abandoned cgroup.  This enables automatic
-+removal of abandoned cgroups.  The default value of
-+notify_on_release in the root cgroup at system boot is disabled
-+(0).  The default value of other cgroups at creation is the current
-+value of their parents' notify_on_release settings. The default value of
-+a cgroup hierarchy's release_agent path is empty.
-+
-+1.5 What does clone_children do ?
-+---------------------------------
-+
-+This flag only affects the cpuset controller. If the clone_children
-+flag is enabled (1) in a cgroup, a new cpuset cgroup will copy its
-+configuration from the parent during initialization.
-+
-+1.6 How do I use cgroups ?
-+--------------------------
-+
-+To start a new job that is to be contained within a cgroup, using
-+the "cpuset" cgroup subsystem, the steps are something like:
-+
-+ 1) mount -t tmpfs cgroup_root /sys/fs/cgroup
-+ 2) mkdir /sys/fs/cgroup/cpuset
-+ 3) mount -t cgroup -ocpuset cpuset /sys/fs/cgroup/cpuset
-+ 4) Create the new cgroup by doing mkdir's and write's (or echo's) in
-+    the /sys/fs/cgroup/cpuset virtual file system.
-+ 5) Start a task that will be the "founding father" of the new job.
-+ 6) Attach that task to the new cgroup by writing its PID to the
-+    /sys/fs/cgroup/cpuset tasks file for that cgroup.
-+ 7) fork, exec or clone the job tasks from this founding father task.
-+
-+For example, the following sequence of commands will setup a cgroup
-+named "Charlie", containing just CPUs 2 and 3, and Memory Node 1,
-+and then start a subshell 'sh' in that cgroup:
-+
-+  mount -t tmpfs cgroup_root /sys/fs/cgroup
-+  mkdir /sys/fs/cgroup/cpuset
-+  mount -t cgroup cpuset -ocpuset /sys/fs/cgroup/cpuset
-+  cd /sys/fs/cgroup/cpuset
-+  mkdir Charlie
-+  cd Charlie
-+  /bin/echo 2-3 > cpuset.cpus
-+  /bin/echo 1 > cpuset.mems
-+  /bin/echo $$ > tasks
-+  sh
-+  # The subshell 'sh' is now running in cgroup Charlie
-+  # The next line should display '/Charlie'
-+  cat /proc/self/cgroup
-+
-+2. Usage Examples and Syntax
-+============================
-+
-+2.1 Basic Usage
-+---------------
-+
-+Creating, modifying, using cgroups can be done through the cgroup
-+virtual filesystem.
-+
-+To mount a cgroup hierarchy with all available subsystems, type:
-+# mount -t cgroup xxx /sys/fs/cgroup
-+
-+The "xxx" is not interpreted by the cgroup code, but will appear in
-+/proc/mounts so may be any useful identifying string that you like.
-+
-+Note: Some subsystems do not work without some user input first.  For instance,
-+if cpusets are enabled the user will have to populate the cpus and mems files
-+for each new cgroup created before that group can be used.
-+
-+As explained in section `1.2 Why are cgroups needed?' you should create
-+different hierarchies of cgroups for each single resource or group of
-+resources you want to control. Therefore, you should mount a tmpfs on
-+/sys/fs/cgroup and create directories for each cgroup resource or resource
-+group.
-+
-+# mount -t tmpfs cgroup_root /sys/fs/cgroup
-+# mkdir /sys/fs/cgroup/rg1
-+
-+To mount a cgroup hierarchy with just the cpuset and memory
-+subsystems, type:
-+# mount -t cgroup -o cpuset,memory hier1 /sys/fs/cgroup/rg1
-+
-+While remounting cgroups is currently supported, it is not recommend
-+to use it. Remounting allows changing bound subsystems and
-+release_agent. Rebinding is hardly useful as it only works when the
-+hierarchy is empty and release_agent itself should be replaced with
-+conventional fsnotify. The support for remounting will be removed in
-+the future.
-+
-+To Specify a hierarchy's release_agent:
-+# mount -t cgroup -o cpuset,release_agent="/sbin/cpuset_release_agent" \
-+  xxx /sys/fs/cgroup/rg1
-+
-+Note that specifying 'release_agent' more than once will return failure.
-+
-+Note that changing the set of subsystems is currently only supported
-+when the hierarchy consists of a single (root) cgroup. Supporting
-+the ability to arbitrarily bind/unbind subsystems from an existing
-+cgroup hierarchy is intended to be implemented in the future.
-+
-+Then under /sys/fs/cgroup/rg1 you can find a tree that corresponds to the
-+tree of the cgroups in the system. For instance, /sys/fs/cgroup/rg1
-+is the cgroup that holds the whole system.
-+
-+If you want to change the value of release_agent:
-+# echo "/sbin/new_release_agent" > /sys/fs/cgroup/rg1/release_agent
-+
-+It can also be changed via remount.
-+
-+If you want to create a new cgroup under /sys/fs/cgroup/rg1:
-+# cd /sys/fs/cgroup/rg1
-+# mkdir my_cgroup
-+
-+Now you want to do something with this cgroup.
-+# cd my_cgroup
-+
-+In this directory you can find several files:
-+# ls
-+cgroup.procs notify_on_release tasks
-+(plus whatever files added by the attached subsystems)
-+
-+Now attach your shell to this cgroup:
-+# /bin/echo $$ > tasks
-+
-+You can also create cgroups inside your cgroup by using mkdir in this
-+directory.
-+# mkdir my_sub_cs
-+
-+To remove a cgroup, just use rmdir:
-+# rmdir my_sub_cs
-+
-+This will fail if the cgroup is in use (has cgroups inside, or
-+has processes attached, or is held alive by other subsystem-specific
-+reference).
-+
-+2.2 Attaching processes
-+-----------------------
-+
-+# /bin/echo PID > tasks
-+
-+Note that it is PID, not PIDs. You can only attach ONE task at a time.
-+If you have several tasks to attach, you have to do it one after another:
-+
-+# /bin/echo PID1 > tasks
-+# /bin/echo PID2 > tasks
-+	...
-+# /bin/echo PIDn > tasks
-+
-+You can attach the current shell task by echoing 0:
-+
-+# echo 0 > tasks
-+
-+You can use the cgroup.procs file instead of the tasks file to move all
-+threads in a threadgroup at once. Echoing the PID of any task in a
-+threadgroup to cgroup.procs causes all tasks in that threadgroup to be
-+attached to the cgroup. Writing 0 to cgroup.procs moves all tasks
-+in the writing task's threadgroup.
-+
-+Note: Since every task is always a member of exactly one cgroup in each
-+mounted hierarchy, to remove a task from its current cgroup you must
-+move it into a new cgroup (possibly the root cgroup) by writing to the
-+new cgroup's tasks file.
-+
-+Note: Due to some restrictions enforced by some cgroup subsystems, moving
-+a process to another cgroup can fail.
-+
-+2.3 Mounting hierarchies by name
-+--------------------------------
-+
-+Passing the name=<x> option when mounting a cgroups hierarchy
-+associates the given name with the hierarchy.  This can be used when
-+mounting a pre-existing hierarchy, in order to refer to it by name
-+rather than by its set of active subsystems.  Each hierarchy is either
-+nameless, or has a unique name.
-+
-+The name should match [\w.-]+
-+
-+When passing a name=<x> option for a new hierarchy, you need to
-+specify subsystems manually; the legacy behaviour of mounting all
-+subsystems when none are explicitly specified is not supported when
-+you give a subsystem a name.
-+
-+The name of the subsystem appears as part of the hierarchy description
-+in /proc/mounts and /proc/<pid>/cgroups.
-+
-+
-+3. Kernel API
-+=============
-+
-+3.1 Overview
-+------------
-+
-+Each kernel subsystem that wants to hook into the generic cgroup
-+system needs to create a cgroup_subsys object. This contains
-+various methods, which are callbacks from the cgroup system, along
-+with a subsystem ID which will be assigned by the cgroup system.
-+
-+Other fields in the cgroup_subsys object include:
-+
-+- subsys_id: a unique array index for the subsystem, indicating which
-+  entry in cgroup->subsys[] this subsystem should be managing.
-+
-+- name: should be initialized to a unique subsystem name. Should be
-+  no longer than MAX_CGROUP_TYPE_NAMELEN.
-+
-+- early_init: indicate if the subsystem needs early initialization
-+  at system boot.
-+
-+Each cgroup object created by the system has an array of pointers,
-+indexed by subsystem ID; this pointer is entirely managed by the
-+subsystem; the generic cgroup code will never touch this pointer.
-+
-+3.2 Synchronization
-+-------------------
-+
-+There is a global mutex, cgroup_mutex, used by the cgroup
-+system. This should be taken by anything that wants to modify a
-+cgroup. It may also be taken to prevent cgroups from being
-+modified, but more specific locks may be more appropriate in that
-+situation.
-+
-+See kernel/cgroup.c for more details.
-+
-+Subsystems can take/release the cgroup_mutex via the functions
-+cgroup_lock()/cgroup_unlock().
-+
-+Accessing a task's cgroup pointer may be done in the following ways:
-+- while holding cgroup_mutex
-+- while holding the task's alloc_lock (via task_lock())
-+- inside an rcu_read_lock() section via rcu_dereference()
-+
-+3.3 Subsystem API
-+-----------------
-+
-+Each subsystem should:
-+
-+- add an entry in linux/cgroup_subsys.h
-+- define a cgroup_subsys object called <name>_subsys
-+
-+If a subsystem can be compiled as a module, it should also have in its
-+module initcall a call to cgroup_load_subsys(), and in its exitcall a
-+call to cgroup_unload_subsys(). It should also set its_subsys.module =
-+THIS_MODULE in its .c file.
-+
-+Each subsystem may export the following methods. The only mandatory
-+methods are css_alloc/free. Any others that are null are presumed to
-+be successful no-ops.
-+
-+struct cgroup_subsys_state *css_alloc(struct cgroup *cgrp)
-+(cgroup_mutex held by caller)
-+
-+Called to allocate a subsystem state object for a cgroup. The
-+subsystem should allocate its subsystem state object for the passed
-+cgroup, returning a pointer to the new object on success or a
-+ERR_PTR() value. On success, the subsystem pointer should point to
-+a structure of type cgroup_subsys_state (typically embedded in a
-+larger subsystem-specific object), which will be initialized by the
-+cgroup system. Note that this will be called at initialization to
-+create the root subsystem state for this subsystem; this case can be
-+identified by the passed cgroup object having a NULL parent (since
-+it's the root of the hierarchy) and may be an appropriate place for
-+initialization code.
-+
-+int css_online(struct cgroup *cgrp)
-+(cgroup_mutex held by caller)
-+
-+Called after @cgrp successfully completed all allocations and made
-+visible to cgroup_for_each_child/descendant_*() iterators. The
-+subsystem may choose to fail creation by returning -errno. This
-+callback can be used to implement reliable state sharing and
-+propagation along the hierarchy. See the comment on
-+cgroup_for_each_descendant_pre() for details.
-+
-+void css_offline(struct cgroup *cgrp);
-+(cgroup_mutex held by caller)
-+
-+This is the counterpart of css_online() and called iff css_online()
-+has succeeded on @cgrp. This signifies the beginning of the end of
-+@cgrp. @cgrp is being removed and the subsystem should start dropping
-+all references it's holding on @cgrp. When all references are dropped,
-+cgroup removal will proceed to the next step - css_free(). After this
-+callback, @cgrp should be considered dead to the subsystem.
-+
-+void css_free(struct cgroup *cgrp)
-+(cgroup_mutex held by caller)
-+
-+The cgroup system is about to free @cgrp; the subsystem should free
-+its subsystem state object. By the time this method is called, @cgrp
-+is completely unused; @cgrp->parent is still valid. (Note - can also
-+be called for a newly-created cgroup if an error occurs after this
-+subsystem's create() method has been called for the new cgroup).
-+
-+int can_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
-+(cgroup_mutex held by caller)
-+
-+Called prior to moving one or more tasks into a cgroup; if the
-+subsystem returns an error, this will abort the attach operation.
-+@tset contains the tasks to be attached and is guaranteed to have at
-+least one task in it.
-+
-+If there are multiple tasks in the taskset, then:
-+  - it's guaranteed that all are from the same thread group
-+  - @tset contains all tasks from the thread group whether or not
-+    they're switching cgroups
-+  - the first task is the leader
-+
-+Each @tset entry also contains the task's old cgroup and tasks which
-+aren't switching cgroup can be skipped easily using the
-+cgroup_taskset_for_each() iterator. Note that this isn't called on a
-+fork. If this method returns 0 (success) then this should remain valid
-+while the caller holds cgroup_mutex and it is ensured that either
-+attach() or cancel_attach() will be called in future.
-+
-+void css_reset(struct cgroup_subsys_state *css)
-+(cgroup_mutex held by caller)
-+
-+An optional operation which should restore @css's configuration to the
-+initial state.  This is currently only used on the unified hierarchy
-+when a subsystem is disabled on a cgroup through
-+"cgroup.subtree_control" but should remain enabled because other
-+subsystems depend on it.  cgroup core makes such a css invisible by
-+removing the associated interface files and invokes this callback so
-+that the hidden subsystem can return to the initial neutral state.
-+This prevents unexpected resource control from a hidden css and
-+ensures that the configuration is in the initial state when it is made
-+visible again later.
-+
-+void cancel_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
-+(cgroup_mutex held by caller)
-+
-+Called when a task attach operation has failed after can_attach() has succeeded.
-+A subsystem whose can_attach() has some side-effects should provide this
-+function, so that the subsystem can implement a rollback. If not, not necessary.
-+This will be called only about subsystems whose can_attach() operation have
-+succeeded. The parameters are identical to can_attach().
-+
-+void attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
-+(cgroup_mutex held by caller)
-+
-+Called after the task has been attached to the cgroup, to allow any
-+post-attachment activity that requires memory allocations or blocking.
-+The parameters are identical to can_attach().
-+
-+void fork(struct task_struct *task)
-+
-+Called when a task is forked into a cgroup.
-+
-+void exit(struct task_struct *task)
-+
-+Called during task exit.
-+
-+void free(struct task_struct *task)
-+
-+Called when the task_struct is freed.
-+
-+void bind(struct cgroup *root)
-+(cgroup_mutex held by caller)
-+
-+Called when a cgroup subsystem is rebound to a different hierarchy
-+and root cgroup. Currently this will only involve movement between
-+the default hierarchy (which never has sub-cgroups) and a hierarchy
-+that is being created/destroyed (and hence has no sub-cgroups).
-+
-+4. Extended attribute usage
-+===========================
-+
-+cgroup filesystem supports certain types of extended attributes in its
-+directories and files.  The current supported types are:
-+	- Trusted (XATTR_TRUSTED)
-+	- Security (XATTR_SECURITY)
-+
-+Both require CAP_SYS_ADMIN capability to set.
-+
-+Like in tmpfs, the extended attributes in cgroup filesystem are stored
-+using kernel memory and it's advised to keep the usage at minimum.  This
-+is the reason why user defined extended attributes are not supported, since
-+any user can do it and there's no limit in the value size.
-+
-+The current known users for this feature are SELinux to limit cgroup usage
-+in containers and systemd for assorted meta data like main PID in a cgroup
-+(systemd creates a cgroup per service).
-+
-+5. Questions
-+============
-+
-+Q: what's up with this '/bin/echo' ?
-+A: bash's builtin 'echo' command does not check calls to write() against
-+   errors. If you use it in the cgroup file system, you won't be
-+   able to tell whether a command succeeded or failed.
-+
-+Q: When I attach processes, only the first of the line gets really attached !
-+A: We can only return one error code per call to write(). So you should also
-+   put only ONE PID.
-+
-diff --git a/Documentation/cgroup-legacy/cpuacct.txt b/Documentation/cgroup-legacy/cpuacct.txt
-new file mode 100644
-index 0000000..9d73cc0
---- /dev/null
-+++ b/Documentation/cgroup-legacy/cpuacct.txt
-@@ -0,0 +1,49 @@
-+CPU Accounting Controller
-+-------------------------
-+
-+The CPU accounting controller is used to group tasks using cgroups and
-+account the CPU usage of these groups of tasks.
-+
-+The CPU accounting controller supports multi-hierarchy groups. An accounting
-+group accumulates the CPU usage of all of its child groups and the tasks
-+directly present in its group.
-+
-+Accounting groups can be created by first mounting the cgroup filesystem.
-+
-+# mount -t cgroup -ocpuacct none /sys/fs/cgroup
-+
-+With the above step, the initial or the parent accounting group becomes
-+visible at /sys/fs/cgroup. At bootup, this group includes all the tasks in
-+the system. /sys/fs/cgroup/tasks lists the tasks in this cgroup.
-+/sys/fs/cgroup/cpuacct.usage gives the CPU time (in nanoseconds) obtained
-+by this group which is essentially the CPU time obtained by all the tasks
-+in the system.
-+
-+New accounting groups can be created under the parent group /sys/fs/cgroup.
-+
-+# cd /sys/fs/cgroup
-+# mkdir g1
-+# echo $$ > g1/tasks
-+
-+The above steps create a new group g1 and move the current shell
-+process (bash) into it. CPU time consumed by this bash and its children
-+can be obtained from g1/cpuacct.usage and the same is accumulated in
-+/sys/fs/cgroup/cpuacct.usage also.
-+
-+cpuacct.stat file lists a few statistics which further divide the
-+CPU time obtained by the cgroup into user and system times. Currently
-+the following statistics are supported:
-+
-+user: Time spent by tasks of the cgroup in user mode.
-+system: Time spent by tasks of the cgroup in kernel mode.
-+
-+user and system are in USER_HZ unit.
-+
-+cpuacct controller uses percpu_counter interface to collect user and
-+system times. This has two side effects:
-+
-+- It is theoretically possible to see wrong values for user and system times.
-+  This is because percpu_counter_read() on 32bit systems isn't safe
-+  against concurrent writes.
-+- It is possible to see slightly outdated values for user and system times
-+  due to the batch processing nature of percpu_counter.
-diff --git a/Documentation/cgroup-legacy/cpusets.txt b/Documentation/cgroup-legacy/cpusets.txt
-new file mode 100644
-index 0000000..fdf7dff
---- /dev/null
-+++ b/Documentation/cgroup-legacy/cpusets.txt
-@@ -0,0 +1,839 @@
-+				CPUSETS
-+				-------
-+
-+Copyright (C) 2004 BULL SA.
-+Written by Simon.Derr@bull.net
-+
-+Portions Copyright (c) 2004-2006 Silicon Graphics, Inc.
-+Modified by Paul Jackson <pj@sgi.com>
-+Modified by Christoph Lameter <clameter@sgi.com>
-+Modified by Paul Menage <menage@google.com>
-+Modified by Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
-+
-+CONTENTS:
-+=========
-+
-+1. Cpusets
-+  1.1 What are cpusets ?
-+  1.2 Why are cpusets needed ?
-+  1.3 How are cpusets implemented ?
-+  1.4 What are exclusive cpusets ?
-+  1.5 What is memory_pressure ?
-+  1.6 What is memory spread ?
-+  1.7 What is sched_load_balance ?
-+  1.8 What is sched_relax_domain_level ?
-+  1.9 How do I use cpusets ?
-+2. Usage Examples and Syntax
-+  2.1 Basic Usage
-+  2.2 Adding/removing cpus
-+  2.3 Setting flags
-+  2.4 Attaching processes
-+3. Questions
-+4. Contact
-+
-+1. Cpusets
-+==========
-+
-+1.1 What are cpusets ?
-+----------------------
-+
-+Cpusets provide a mechanism for assigning a set of CPUs and Memory
-+Nodes to a set of tasks.   In this document "Memory Node" refers to
-+an on-line node that contains memory.
-+
-+Cpusets constrain the CPU and Memory placement of tasks to only
-+the resources within a task's current cpuset.  They form a nested
-+hierarchy visible in a virtual file system.  These are the essential
-+hooks, beyond what is already present, required to manage dynamic
-+job placement on large systems.
-+
-+Cpusets use the generic cgroup subsystem described in
-+Documentation/cgroups/cgroups.txt.
-+
-+Requests by a task, using the sched_setaffinity(2) system call to
-+include CPUs in its CPU affinity mask, and using the mbind(2) and
-+set_mempolicy(2) system calls to include Memory Nodes in its memory
-+policy, are both filtered through that task's cpuset, filtering out any
-+CPUs or Memory Nodes not in that cpuset.  The scheduler will not
-+schedule a task on a CPU that is not allowed in its cpus_allowed
-+vector, and the kernel page allocator will not allocate a page on a
-+node that is not allowed in the requesting task's mems_allowed vector.
-+
-+User level code may create and destroy cpusets by name in the cgroup
-+virtual file system, manage the attributes and permissions of these
-+cpusets and which CPUs and Memory Nodes are assigned to each cpuset,
-+specify and query to which cpuset a task is assigned, and list the
-+task pids assigned to a cpuset.
-+
-+
-+1.2 Why are cpusets needed ?
-+----------------------------
-+
-+The management of large computer systems, with many processors (CPUs),
-+complex memory cache hierarchies and multiple Memory Nodes having
-+non-uniform access times (NUMA) presents additional challenges for
-+the efficient scheduling and memory placement of processes.
-+
-+Frequently more modest sized systems can be operated with adequate
-+efficiency just by letting the operating system automatically share
-+the available CPU and Memory resources amongst the requesting tasks.
-+
-+But larger systems, which benefit more from careful processor and
-+memory placement to reduce memory access times and contention,
-+and which typically represent a larger investment for the customer,
-+can benefit from explicitly placing jobs on properly sized subsets of
-+the system.
-+
-+This can be especially valuable on:
-+
-+    * Web Servers running multiple instances of the same web application,
-+    * Servers running different applications (for instance, a web server
-+      and a database), or
-+    * NUMA systems running large HPC applications with demanding
-+      performance characteristics.
-+
-+These subsets, or "soft partitions" must be able to be dynamically
-+adjusted, as the job mix changes, without impacting other concurrently
-+executing jobs. The location of the running jobs pages may also be moved
-+when the memory locations are changed.
-+
-+The kernel cpuset patch provides the minimum essential kernel
-+mechanisms required to efficiently implement such subsets.  It
-+leverages existing CPU and Memory Placement facilities in the Linux
-+kernel to avoid any additional impact on the critical scheduler or
-+memory allocator code.
-+
-+
-+1.3 How are cpusets implemented ?
-+---------------------------------
-+
-+Cpusets provide a Linux kernel mechanism to constrain which CPUs and
-+Memory Nodes are used by a process or set of processes.
-+
-+The Linux kernel already has a pair of mechanisms to specify on which
-+CPUs a task may be scheduled (sched_setaffinity) and on which Memory
-+Nodes it may obtain memory (mbind, set_mempolicy).
-+
-+Cpusets extends these two mechanisms as follows:
-+
-+ - Cpusets are sets of allowed CPUs and Memory Nodes, known to the
-+   kernel.
-+ - Each task in the system is attached to a cpuset, via a pointer
-+   in the task structure to a reference counted cgroup structure.
-+ - Calls to sched_setaffinity are filtered to just those CPUs
-+   allowed in that task's cpuset.
-+ - Calls to mbind and set_mempolicy are filtered to just
-+   those Memory Nodes allowed in that task's cpuset.
-+ - The root cpuset contains all the systems CPUs and Memory
-+   Nodes.
-+ - For any cpuset, one can define child cpusets containing a subset
-+   of the parents CPU and Memory Node resources.
-+ - The hierarchy of cpusets can be mounted at /dev/cpuset, for
-+   browsing and manipulation from user space.
-+ - A cpuset may be marked exclusive, which ensures that no other
-+   cpuset (except direct ancestors and descendants) may contain
-+   any overlapping CPUs or Memory Nodes.
-+ - You can list all the tasks (by pid) attached to any cpuset.
-+
-+The implementation of cpusets requires a few, simple hooks
-+into the rest of the kernel, none in performance critical paths:
-+
-+ - in init/main.c, to initialize the root cpuset at system boot.
-+ - in fork and exit, to attach and detach a task from its cpuset.
-+ - in sched_setaffinity, to mask the requested CPUs by what's
-+   allowed in that task's cpuset.
-+ - in sched.c migrate_live_tasks(), to keep migrating tasks within
-+   the CPUs allowed by their cpuset, if possible.
-+ - in the mbind and set_mempolicy system calls, to mask the requested
-+   Memory Nodes by what's allowed in that task's cpuset.
-+ - in page_alloc.c, to restrict memory to allowed nodes.
-+ - in vmscan.c, to restrict page recovery to the current cpuset.
-+
-+You should mount the "cgroup" filesystem type in order to enable
-+browsing and modifying the cpusets presently known to the kernel.  No
-+new system calls are added for cpusets - all support for querying and
-+modifying cpusets is via this cpuset file system.
-+
-+The /proc/<pid>/status file for each task has four added lines,
-+displaying the task's cpus_allowed (on which CPUs it may be scheduled)
-+and mems_allowed (on which Memory Nodes it may obtain memory),
-+in the two formats seen in the following example:
-+
-+  Cpus_allowed:   ffffffff,ffffffff,ffffffff,ffffffff
-+  Cpus_allowed_list:      0-127
-+  Mems_allowed:   ffffffff,ffffffff
-+  Mems_allowed_list:      0-63
-+
-+Each cpuset is represented by a directory in the cgroup file system
-+containing (on top of the standard cgroup files) the following
-+files describing that cpuset:
-+
-+ - cpuset.cpus: list of CPUs in that cpuset
-+ - cpuset.mems: list of Memory Nodes in that cpuset
-+ - cpuset.memory_migrate flag: if set, move pages to cpusets nodes
-+ - cpuset.cpu_exclusive flag: is cpu placement exclusive?
-+ - cpuset.mem_exclusive flag: is memory placement exclusive?
-+ - cpuset.mem_hardwall flag:  is memory allocation hardwalled
-+ - cpuset.memory_pressure: measure of how much paging pressure in cpuset
-+ - cpuset.memory_spread_page flag: if set, spread page cache evenly on allowed nodes
-+ - cpuset.memory_spread_slab flag: if set, spread slab cache evenly on allowed nodes
-+ - cpuset.sched_load_balance flag: if set, load balance within CPUs on that cpuset
-+ - cpuset.sched_relax_domain_level: the searching range when migrating tasks
-+
-+In addition, only the root cpuset has the following file:
-+ - cpuset.memory_pressure_enabled flag: compute memory_pressure?
-+
-+New cpusets are created using the mkdir system call or shell
-+command.  The properties of a cpuset, such as its flags, allowed
-+CPUs and Memory Nodes, and attached tasks, are modified by writing
-+to the appropriate file in that cpusets directory, as listed above.
-+
-+The named hierarchical structure of nested cpusets allows partitioning
-+a large system into nested, dynamically changeable, "soft-partitions".
-+
-+The attachment of each task, automatically inherited at fork by any
-+children of that task, to a cpuset allows organizing the work load
-+on a system into related sets of tasks such that each set is constrained
-+to using the CPUs and Memory Nodes of a particular cpuset.  A task
-+may be re-attached to any other cpuset, if allowed by the permissions
-+on the necessary cpuset file system directories.
-+
-+Such management of a system "in the large" integrates smoothly with
-+the detailed placement done on individual tasks and memory regions
-+using the sched_setaffinity, mbind and set_mempolicy system calls.
-+
-+The following rules apply to each cpuset:
-+
-+ - Its CPUs and Memory Nodes must be a subset of its parents.
-+ - It can't be marked exclusive unless its parent is.
-+ - If its cpu or memory is exclusive, they may not overlap any sibling.
-+
-+These rules, and the natural hierarchy of cpusets, enable efficient
-+enforcement of the exclusive guarantee, without having to scan all
-+cpusets every time any of them change to ensure nothing overlaps a
-+exclusive cpuset.  Also, the use of a Linux virtual file system (vfs)
-+to represent the cpuset hierarchy provides for a familiar permission
-+and name space for cpusets, with a minimum of additional kernel code.
-+
-+The cpus and mems files in the root (top_cpuset) cpuset are
-+read-only.  The cpus file automatically tracks the value of
-+cpu_online_mask using a CPU hotplug notifier, and the mems file
-+automatically tracks the value of node_states[N_MEMORY]--i.e.,
-+nodes with memory--using the cpuset_track_online_nodes() hook.
-+
-+
-+1.4 What are exclusive cpusets ?
-+--------------------------------
-+
-+If a cpuset is cpu or mem exclusive, no other cpuset, other than
-+a direct ancestor or descendant, may share any of the same CPUs or
-+Memory Nodes.
-+
-+A cpuset that is cpuset.mem_exclusive *or* cpuset.mem_hardwall is "hardwalled",
-+i.e. it restricts kernel allocations for page, buffer and other data
-+commonly shared by the kernel across multiple users.  All cpusets,
-+whether hardwalled or not, restrict allocations of memory for user
-+space.  This enables configuring a system so that several independent
-+jobs can share common kernel data, such as file system pages, while
-+isolating each job's user allocation in its own cpuset.  To do this,
-+construct a large mem_exclusive cpuset to hold all the jobs, and
-+construct child, non-mem_exclusive cpusets for each individual job.
-+Only a small amount of typical kernel memory, such as requests from
-+interrupt handlers, is allowed to be taken outside even a
-+mem_exclusive cpuset.
-+
-+
-+1.5 What is memory_pressure ?
-+-----------------------------
-+The memory_pressure of a cpuset provides a simple per-cpuset metric
-+of the rate that the tasks in a cpuset are attempting to free up in
-+use memory on the nodes of the cpuset to satisfy additional memory
-+requests.
-+
-+This enables batch managers monitoring jobs running in dedicated
-+cpusets to efficiently detect what level of memory pressure that job
-+is causing.
-+
-+This is useful both on tightly managed systems running a wide mix of
-+submitted jobs, which may choose to terminate or re-prioritize jobs that
-+are trying to use more memory than allowed on the nodes assigned to them,
-+and with tightly coupled, long running, massively parallel scientific
-+computing jobs that will dramatically fail to meet required performance
-+goals if they start to use more memory than allowed to them.
-+
-+This mechanism provides a very economical way for the batch manager
-+to monitor a cpuset for signs of memory pressure.  It's up to the
-+batch manager or other user code to decide what to do about it and
-+take action.
-+
-+==> Unless this feature is enabled by writing "1" to the special file
-+    /dev/cpuset/memory_pressure_enabled, the hook in the rebalance
-+    code of __alloc_pages() for this metric reduces to simply noticing
-+    that the cpuset_memory_pressure_enabled flag is zero.  So only
-+    systems that enable this feature will compute the metric.
-+
-+Why a per-cpuset, running average:
-+
-+    Because this meter is per-cpuset, rather than per-task or mm,
-+    the system load imposed by a batch scheduler monitoring this
-+    metric is sharply reduced on large systems, because a scan of
-+    the tasklist can be avoided on each set of queries.
-+
-+    Because this meter is a running average, instead of an accumulating
-+    counter, a batch scheduler can detect memory pressure with a
-+    single read, instead of having to read and accumulate results
-+    for a period of time.
-+
-+    Because this meter is per-cpuset rather than per-task or mm,
-+    the batch scheduler can obtain the key information, memory
-+    pressure in a cpuset, with a single read, rather than having to
-+    query and accumulate results over all the (dynamically changing)
-+    set of tasks in the cpuset.
-+
-+A per-cpuset simple digital filter (requires a spinlock and 3 words
-+of data per-cpuset) is kept, and updated by any task attached to that
-+cpuset, if it enters the synchronous (direct) page reclaim code.
-+
-+A per-cpuset file provides an integer number representing the recent
-+(half-life of 10 seconds) rate of direct page reclaims caused by
-+the tasks in the cpuset, in units of reclaims attempted per second,
-+times 1000.
-+
-+
-+1.6 What is memory spread ?
-+---------------------------
-+There are two boolean flag files per cpuset that control where the
-+kernel allocates pages for the file system buffers and related in
-+kernel data structures.  They are called 'cpuset.memory_spread_page' and
-+'cpuset.memory_spread_slab'.
-+
-+If the per-cpuset boolean flag file 'cpuset.memory_spread_page' is set, then
-+the kernel will spread the file system buffers (page cache) evenly
-+over all the nodes that the faulting task is allowed to use, instead
-+of preferring to put those pages on the node where the task is running.
-+
-+If the per-cpuset boolean flag file 'cpuset.memory_spread_slab' is set,
-+then the kernel will spread some file system related slab caches,
-+such as for inodes and dentries evenly over all the nodes that the
-+faulting task is allowed to use, instead of preferring to put those
-+pages on the node where the task is running.
-+
-+The setting of these flags does not affect anonymous data segment or
-+stack segment pages of a task.
-+
-+By default, both kinds of memory spreading are off, and memory
-+pages are allocated on the node local to where the task is running,
-+except perhaps as modified by the task's NUMA mempolicy or cpuset
-+configuration, so long as sufficient free memory pages are available.
-+
-+When new cpusets are created, they inherit the memory spread settings
-+of their parent.
-+
-+Setting memory spreading causes allocations for the affected page
-+or slab caches to ignore the task's NUMA mempolicy and be spread
-+instead.    Tasks using mbind() or set_mempolicy() calls to set NUMA
-+mempolicies will not notice any change in these calls as a result of
-+their containing task's memory spread settings.  If memory spreading
-+is turned off, then the currently specified NUMA mempolicy once again
-+applies to memory page allocations.
-+
-+Both 'cpuset.memory_spread_page' and 'cpuset.memory_spread_slab' are boolean flag
-+files.  By default they contain "0", meaning that the feature is off
-+for that cpuset.  If a "1" is written to that file, then that turns
-+the named feature on.
-+
-+The implementation is simple.
-+
-+Setting the flag 'cpuset.memory_spread_page' turns on a per-process flag
-+PFA_SPREAD_PAGE for each task that is in that cpuset or subsequently
-+joins that cpuset.  The page allocation calls for the page cache
-+is modified to perform an inline check for this PFA_SPREAD_PAGE task
-+flag, and if set, a call to a new routine cpuset_mem_spread_node()
-+returns the node to prefer for the allocation.
-+
-+Similarly, setting 'cpuset.memory_spread_slab' turns on the flag
-+PFA_SPREAD_SLAB, and appropriately marked slab caches will allocate
-+pages from the node returned by cpuset_mem_spread_node().
-+
-+The cpuset_mem_spread_node() routine is also simple.  It uses the
-+value of a per-task rotor cpuset_mem_spread_rotor to select the next
-+node in the current task's mems_allowed to prefer for the allocation.
-+
-+This memory placement policy is also known (in other contexts) as
-+round-robin or interleave.
-+
-+This policy can provide substantial improvements for jobs that need
-+to place thread local data on the corresponding node, but that need
-+to access large file system data sets that need to be spread across
-+the several nodes in the jobs cpuset in order to fit.  Without this
-+policy, especially for jobs that might have one thread reading in the
-+data set, the memory allocation across the nodes in the jobs cpuset
-+can become very uneven.
-+
-+1.7 What is sched_load_balance ?
-+--------------------------------
-+
-+The kernel scheduler (kernel/sched/core.c) automatically load balances
-+tasks.  If one CPU is underutilized, kernel code running on that
-+CPU will look for tasks on other more overloaded CPUs and move those
-+tasks to itself, within the constraints of such placement mechanisms
-+as cpusets and sched_setaffinity.
-+
-+The algorithmic cost of load balancing and its impact on key shared
-+kernel data structures such as the task list increases more than
-+linearly with the number of CPUs being balanced.  So the scheduler
-+has support to partition the systems CPUs into a number of sched
-+domains such that it only load balances within each sched domain.
-+Each sched domain covers some subset of the CPUs in the system;
-+no two sched domains overlap; some CPUs might not be in any sched
-+domain and hence won't be load balanced.
-+
-+Put simply, it costs less to balance between two smaller sched domains
-+than one big one, but doing so means that overloads in one of the
-+two domains won't be load balanced to the other one.
-+
-+By default, there is one sched domain covering all CPUs, including those
-+marked isolated using the kernel boot time "isolcpus=" argument. However,
-+the isolated CPUs will not participate in load balancing, and will not
-+have tasks running on them unless explicitly assigned.
-+
-+This default load balancing across all CPUs is not well suited for
-+the following two situations:
-+ 1) On large systems, load balancing across many CPUs is expensive.
-+    If the system is managed using cpusets to place independent jobs
-+    on separate sets of CPUs, full load balancing is unnecessary.
-+ 2) Systems supporting realtime on some CPUs need to minimize
-+    system overhead on those CPUs, including avoiding task load
-+    balancing if that is not needed.
-+
-+When the per-cpuset flag "cpuset.sched_load_balance" is enabled (the default
-+setting), it requests that all the CPUs in that cpusets allowed 'cpuset.cpus'
-+be contained in a single sched domain, ensuring that load balancing
-+can move a task (not otherwised pinned, as by sched_setaffinity)
-+from any CPU in that cpuset to any other.
-+
-+When the per-cpuset flag "cpuset.sched_load_balance" is disabled, then the
-+scheduler will avoid load balancing across the CPUs in that cpuset,
-+--except-- in so far as is necessary because some overlapping cpuset
-+has "sched_load_balance" enabled.
-+
-+So, for example, if the top cpuset has the flag "cpuset.sched_load_balance"
-+enabled, then the scheduler will have one sched domain covering all
-+CPUs, and the setting of the "cpuset.sched_load_balance" flag in any other
-+cpusets won't matter, as we're already fully load balancing.
-+
-+Therefore in the above two situations, the top cpuset flag
-+"cpuset.sched_load_balance" should be disabled, and only some of the smaller,
-+child cpusets have this flag enabled.
-+
-+When doing this, you don't usually want to leave any unpinned tasks in
-+the top cpuset that might use non-trivial amounts of CPU, as such tasks
-+may be artificially constrained to some subset of CPUs, depending on
-+the particulars of this flag setting in descendant cpusets.  Even if
-+such a task could use spare CPU cycles in some other CPUs, the kernel
-+scheduler might not consider the possibility of load balancing that
-+task to that underused CPU.
-+
-+Of course, tasks pinned to a particular CPU can be left in a cpuset
-+that disables "cpuset.sched_load_balance" as those tasks aren't going anywhere
-+else anyway.
-+
-+There is an impedance mismatch here, between cpusets and sched domains.
-+Cpusets are hierarchical and nest.  Sched domains are flat; they don't
-+overlap and each CPU is in at most one sched domain.
-+
-+It is necessary for sched domains to be flat because load balancing
-+across partially overlapping sets of CPUs would risk unstable dynamics
-+that would be beyond our understanding.  So if each of two partially
-+overlapping cpusets enables the flag 'cpuset.sched_load_balance', then we
-+form a single sched domain that is a superset of both.  We won't move
-+a task to a CPU outside its cpuset, but the scheduler load balancing
-+code might waste some compute cycles considering that possibility.
-+
-+This mismatch is why there is not a simple one-to-one relation
-+between which cpusets have the flag "cpuset.sched_load_balance" enabled,
-+and the sched domain configuration.  If a cpuset enables the flag, it
-+will get balancing across all its CPUs, but if it disables the flag,
-+it will only be assured of no load balancing if no other overlapping
-+cpuset enables the flag.
-+
-+If two cpusets have partially overlapping 'cpuset.cpus' allowed, and only
-+one of them has this flag enabled, then the other may find its
-+tasks only partially load balanced, just on the overlapping CPUs.
-+This is just the general case of the top_cpuset example given a few
-+paragraphs above.  In the general case, as in the top cpuset case,
-+don't leave tasks that might use non-trivial amounts of CPU in
-+such partially load balanced cpusets, as they may be artificially
-+constrained to some subset of the CPUs allowed to them, for lack of
-+load balancing to the other CPUs.
-+
-+CPUs in "cpuset.isolcpus" were excluded from load balancing by the
-+isolcpus= kernel boot option, and will never be load balanced regardless
-+of the value of "cpuset.sched_load_balance" in any cpuset.
-+
-+1.7.1 sched_load_balance implementation details.
-+------------------------------------------------
-+
-+The per-cpuset flag 'cpuset.sched_load_balance' defaults to enabled (contrary
-+to most cpuset flags.)  When enabled for a cpuset, the kernel will
-+ensure that it can load balance across all the CPUs in that cpuset
-+(makes sure that all the CPUs in the cpus_allowed of that cpuset are
-+in the same sched domain.)
-+
-+If two overlapping cpusets both have 'cpuset.sched_load_balance' enabled,
-+then they will be (must be) both in the same sched domain.
-+
-+If, as is the default, the top cpuset has 'cpuset.sched_load_balance' enabled,
-+then by the above that means there is a single sched domain covering
-+the whole system, regardless of any other cpuset settings.
-+
-+The kernel commits to user space that it will avoid load balancing
-+where it can.  It will pick as fine a granularity partition of sched
-+domains as it can while still providing load balancing for any set
-+of CPUs allowed to a cpuset having 'cpuset.sched_load_balance' enabled.
-+
-+The internal kernel cpuset to scheduler interface passes from the
-+cpuset code to the scheduler code a partition of the load balanced
-+CPUs in the system. This partition is a set of subsets (represented
-+as an array of struct cpumask) of CPUs, pairwise disjoint, that cover
-+all the CPUs that must be load balanced.
-+
-+The cpuset code builds a new such partition and passes it to the
-+scheduler sched domain setup code, to have the sched domains rebuilt
-+as necessary, whenever:
-+ - the 'cpuset.sched_load_balance' flag of a cpuset with non-empty CPUs changes,
-+ - or CPUs come or go from a cpuset with this flag enabled,
-+ - or 'cpuset.sched_relax_domain_level' value of a cpuset with non-empty CPUs
-+   and with this flag enabled changes,
-+ - or a cpuset with non-empty CPUs and with this flag enabled is removed,
-+ - or a cpu is offlined/onlined.
-+
-+This partition exactly defines what sched domains the scheduler should
-+setup - one sched domain for each element (struct cpumask) in the
-+partition.
-+
-+The scheduler remembers the currently active sched domain partitions.
-+When the scheduler routine partition_sched_domains() is invoked from
-+the cpuset code to update these sched domains, it compares the new
-+partition requested with the current, and updates its sched domains,
-+removing the old and adding the new, for each change.
-+
-+
-+1.8 What is sched_relax_domain_level ?
-+--------------------------------------
-+
-+In sched domain, the scheduler migrates tasks in 2 ways; periodic load
-+balance on tick, and at time of some schedule events.
-+
-+When a task is woken up, scheduler try to move the task on idle CPU.
-+For example, if a task A running on CPU X activates another task B
-+on the same CPU X, and if CPU Y is X's sibling and performing idle,
-+then scheduler migrate task B to CPU Y so that task B can start on
-+CPU Y without waiting task A on CPU X.
-+
-+And if a CPU run out of tasks in its runqueue, the CPU try to pull
-+extra tasks from other busy CPUs to help them before it is going to
-+be idle.
-+
-+Of course it takes some searching cost to find movable tasks and/or
-+idle CPUs, the scheduler might not search all CPUs in the domain
-+every time.  In fact, in some architectures, the searching ranges on
-+events are limited in the same socket or node where the CPU locates,
-+while the load balance on tick searches all.
-+
-+For example, assume CPU Z is relatively far from CPU X.  Even if CPU Z
-+is idle while CPU X and the siblings are busy, scheduler can't migrate
-+woken task B from X to Z since it is out of its searching range.
-+As the result, task B on CPU X need to wait task A or wait load balance
-+on the next tick.  For some applications in special situation, waiting
-+1 tick may be too long.
-+
-+The 'cpuset.sched_relax_domain_level' file allows you to request changing
-+this searching range as you like.  This file takes int value which
-+indicates size of searching range in levels ideally as follows,
-+otherwise initial value -1 that indicates the cpuset has no request.
-+
-+  -1  : no request. use system default or follow request of others.
-+   0  : no search.
-+   1  : search siblings (hyperthreads in a core).
-+   2  : search cores in a package.
-+   3  : search cpus in a node [= system wide on non-NUMA system]
-+   4  : search nodes in a chunk of node [on NUMA system]
-+   5  : search system wide [on NUMA system]
-+
-+The system default is architecture dependent.  The system default
-+can be changed using the relax_domain_level= boot parameter.
-+
-+This file is per-cpuset and affect the sched domain where the cpuset
-+belongs to.  Therefore if the flag 'cpuset.sched_load_balance' of a cpuset
-+is disabled, then 'cpuset.sched_relax_domain_level' have no effect since
-+there is no sched domain belonging the cpuset.
-+
-+If multiple cpusets are overlapping and hence they form a single sched
-+domain, the largest value among those is used.  Be careful, if one
-+requests 0 and others are -1 then 0 is used.
-+
-+Note that modifying this file will have both good and bad effects,
-+and whether it is acceptable or not depends on your situation.
-+Don't modify this file if you are not sure.
-+
-+If your situation is:
-+ - The migration costs between each cpu can be assumed considerably
-+   small(for you) due to your special application's behavior or
-+   special hardware support for CPU cache etc.
-+ - The searching cost doesn't have impact(for you) or you can make
-+   the searching cost enough small by managing cpuset to compact etc.
-+ - The latency is required even it sacrifices cache hit rate etc.
-+then increasing 'sched_relax_domain_level' would benefit you.
-+
-+
-+1.9 How do I use cpusets ?
-+--------------------------
-+
-+In order to minimize the impact of cpusets on critical kernel
-+code, such as the scheduler, and due to the fact that the kernel
-+does not support one task updating the memory placement of another
-+task directly, the impact on a task of changing its cpuset CPU
-+or Memory Node placement, or of changing to which cpuset a task
-+is attached, is subtle.
-+
-+If a cpuset has its Memory Nodes modified, then for each task attached
-+to that cpuset, the next time that the kernel attempts to allocate
-+a page of memory for that task, the kernel will notice the change
-+in the task's cpuset, and update its per-task memory placement to
-+remain within the new cpusets memory placement.  If the task was using
-+mempolicy MPOL_BIND, and the nodes to which it was bound overlap with
-+its new cpuset, then the task will continue to use whatever subset
-+of MPOL_BIND nodes are still allowed in the new cpuset.  If the task
-+was using MPOL_BIND and now none of its MPOL_BIND nodes are allowed
-+in the new cpuset, then the task will be essentially treated as if it
-+was MPOL_BIND bound to the new cpuset (even though its NUMA placement,
-+as queried by get_mempolicy(), doesn't change).  If a task is moved
-+from one cpuset to another, then the kernel will adjust the task's
-+memory placement, as above, the next time that the kernel attempts
-+to allocate a page of memory for that task.
-+
-+If a cpuset has its 'cpuset.cpus' modified, then each task in that cpuset
-+will have its allowed CPU placement changed immediately.  Similarly,
-+if a task's pid is written to another cpusets 'cpuset.tasks' file, then its
-+allowed CPU placement is changed immediately.  If such a task had been
-+bound to some subset of its cpuset using the sched_setaffinity() call,
-+the task will be allowed to run on any CPU allowed in its new cpuset,
-+negating the effect of the prior sched_setaffinity() call.
-+
-+In summary, the memory placement of a task whose cpuset is changed is
-+updated by the kernel, on the next allocation of a page for that task,
-+and the processor placement is updated immediately.
-+
-+Normally, once a page is allocated (given a physical page
-+of main memory) then that page stays on whatever node it
-+was allocated, so long as it remains allocated, even if the
-+cpusets memory placement policy 'cpuset.mems' subsequently changes.
-+If the cpuset flag file 'cpuset.memory_migrate' is set true, then when
-+tasks are attached to that cpuset, any pages that task had
-+allocated to it on nodes in its previous cpuset are migrated
-+to the task's new cpuset. The relative placement of the page within
-+the cpuset is preserved during these migration operations if possible.
-+For example if the page was on the second valid node of the prior cpuset
-+then the page will be placed on the second valid node of the new cpuset.
-+
-+Also if 'cpuset.memory_migrate' is set true, then if that cpuset's
-+'cpuset.mems' file is modified, pages allocated to tasks in that
-+cpuset, that were on nodes in the previous setting of 'cpuset.mems',
-+will be moved to nodes in the new setting of 'mems.'
-+Pages that were not in the task's prior cpuset, or in the cpuset's
-+prior 'cpuset.mems' setting, will not be moved.
-+
-+There is an exception to the above.  If hotplug functionality is used
-+to remove all the CPUs that are currently assigned to a cpuset,
-+then all the tasks in that cpuset will be moved to the nearest ancestor
-+with non-empty cpus.  But the moving of some (or all) tasks might fail if
-+cpuset is bound with another cgroup subsystem which has some restrictions
-+on task attaching.  In this failing case, those tasks will stay
-+in the original cpuset, and the kernel will automatically update
-+their cpus_allowed to allow all online CPUs.  When memory hotplug
-+functionality for removing Memory Nodes is available, a similar exception
-+is expected to apply there as well.  In general, the kernel prefers to
-+violate cpuset placement, over starving a task that has had all
-+its allowed CPUs or Memory Nodes taken offline.
-+
-+There is a second exception to the above.  GFP_ATOMIC requests are
-+kernel internal allocations that must be satisfied, immediately.
-+The kernel may drop some request, in rare cases even panic, if a
-+GFP_ATOMIC alloc fails.  If the request cannot be satisfied within
-+the current task's cpuset, then we relax the cpuset, and look for
-+memory anywhere we can find it.  It's better to violate the cpuset
-+than stress the kernel.
-+
-+To start a new job that is to be contained within a cpuset, the steps are:
-+
-+ 1) mkdir /sys/fs/cgroup/cpuset
-+ 2) mount -t cgroup -ocpuset cpuset /sys/fs/cgroup/cpuset
-+ 3) Create the new cpuset by doing mkdir's and write's (or echo's) in
-+    the /sys/fs/cgroup/cpuset virtual file system.
-+ 4) Start a task that will be the "founding father" of the new job.
-+ 5) Attach that task to the new cpuset by writing its pid to the
-+    /sys/fs/cgroup/cpuset tasks file for that cpuset.
-+ 6) fork, exec or clone the job tasks from this founding father task.
-+
-+For example, the following sequence of commands will setup a cpuset
-+named "Charlie", containing just CPUs 2 and 3, and Memory Node 1,
-+and then start a subshell 'sh' in that cpuset:
-+
-+  mount -t cgroup -ocpuset cpuset /sys/fs/cgroup/cpuset
-+  cd /sys/fs/cgroup/cpuset
-+  mkdir Charlie
-+  cd Charlie
-+  /bin/echo 2-3 > cpuset.cpus
-+  /bin/echo 1 > cpuset.mems
-+  /bin/echo $$ > tasks
-+  sh
-+  # The subshell 'sh' is now running in cpuset Charlie
-+  # The next line should display '/Charlie'
-+  cat /proc/self/cpuset
-+
-+There are ways to query or modify cpusets:
-+ - via the cpuset file system directly, using the various cd, mkdir, echo,
-+   cat, rmdir commands from the shell, or their equivalent from C.
-+ - via the C library libcpuset.
-+ - via the C library libcgroup.
-+   (http://sourceforge.net/projects/libcg/)
-+ - via the python application cset.
-+   (http://code.google.com/p/cpuset/)
-+
-+The sched_setaffinity calls can also be done at the shell prompt using
-+SGI's runon or Robert Love's taskset.  The mbind and set_mempolicy
-+calls can be done at the shell prompt using the numactl command
-+(part of Andi Kleen's numa package).
-+
-+2. Usage Examples and Syntax
-+============================
-+
-+2.1 Basic Usage
-+---------------
-+
-+Creating, modifying, using the cpusets can be done through the cpuset
-+virtual filesystem.
-+
-+To mount it, type:
-+# mount -t cgroup -o cpuset cpuset /sys/fs/cgroup/cpuset
-+
-+Then under /sys/fs/cgroup/cpuset you can find a tree that corresponds to the
-+tree of the cpusets in the system. For instance, /sys/fs/cgroup/cpuset
-+is the cpuset that holds the whole system.
-+
-+If you want to create a new cpuset under /sys/fs/cgroup/cpuset:
-+# cd /sys/fs/cgroup/cpuset
-+# mkdir my_cpuset
-+
-+Now you want to do something with this cpuset.
-+# cd my_cpuset
-+
-+In this directory you can find several files:
-+# ls
-+cgroup.clone_children  cpuset.memory_pressure
-+cgroup.event_control   cpuset.memory_spread_page
-+cgroup.procs           cpuset.memory_spread_slab
-+cpuset.cpu_exclusive   cpuset.mems
-+cpuset.cpus            cpuset.sched_load_balance
-+cpuset.mem_exclusive   cpuset.sched_relax_domain_level
-+cpuset.mem_hardwall    notify_on_release
-+cpuset.memory_migrate  tasks
-+
-+Reading them will give you information about the state of this cpuset:
-+the CPUs and Memory Nodes it can use, the processes that are using
-+it, its properties.  By writing to these files you can manipulate
-+the cpuset.
-+
-+Set some flags:
-+# /bin/echo 1 > cpuset.cpu_exclusive
-+
-+Add some cpus:
-+# /bin/echo 0-7 > cpuset.cpus
-+
-+Add some mems:
-+# /bin/echo 0-7 > cpuset.mems
-+
-+Now attach your shell to this cpuset:
-+# /bin/echo $$ > tasks
-+
-+You can also create cpusets inside your cpuset by using mkdir in this
-+directory.
-+# mkdir my_sub_cs
-+
-+To remove a cpuset, just use rmdir:
-+# rmdir my_sub_cs
-+This will fail if the cpuset is in use (has cpusets inside, or has
-+processes attached).
-+
-+Note that for legacy reasons, the "cpuset" filesystem exists as a
-+wrapper around the cgroup filesystem.
-+
-+The command
-+
-+mount -t cpuset X /sys/fs/cgroup/cpuset
-+
-+is equivalent to
-+
-+mount -t cgroup -ocpuset,noprefix X /sys/fs/cgroup/cpuset
-+echo "/sbin/cpuset_release_agent" > /sys/fs/cgroup/cpuset/release_agent
-+
-+2.2 Adding/removing cpus
-+------------------------
-+
-+This is the syntax to use when writing in the cpus or mems files
-+in cpuset directories:
-+
-+# /bin/echo 1-4 > cpuset.cpus		-> set cpus list to cpus 1,2,3,4
-+# /bin/echo 1,2,3,4 > cpuset.cpus	-> set cpus list to cpus 1,2,3,4
-+
-+To add a CPU to a cpuset, write the new list of CPUs including the
-+CPU to be added. To add 6 to the above cpuset:
-+
-+# /bin/echo 1-4,6 > cpuset.cpus	-> set cpus list to cpus 1,2,3,4,6
-+
-+Similarly to remove a CPU from a cpuset, write the new list of CPUs
-+without the CPU to be removed.
-+
-+To remove all the CPUs:
-+
-+# /bin/echo "" > cpuset.cpus		-> clear cpus list
-+
-+2.3 Setting flags
-+-----------------
-+
-+The syntax is very simple:
-+
-+# /bin/echo 1 > cpuset.cpu_exclusive 	-> set flag 'cpuset.cpu_exclusive'
-+# /bin/echo 0 > cpuset.cpu_exclusive 	-> unset flag 'cpuset.cpu_exclusive'
-+
-+2.4 Attaching processes
-+-----------------------
-+
-+# /bin/echo PID > tasks
-+
-+Note that it is PID, not PIDs. You can only attach ONE task at a time.
-+If you have several tasks to attach, you have to do it one after another:
-+
-+# /bin/echo PID1 > tasks
-+# /bin/echo PID2 > tasks
-+	...
-+# /bin/echo PIDn > tasks
-+
-+
-+3. Questions
-+============
-+
-+Q: what's up with this '/bin/echo' ?
-+A: bash's builtin 'echo' command does not check calls to write() against
-+   errors. If you use it in the cpuset file system, you won't be
-+   able to tell whether a command succeeded or failed.
-+
-+Q: When I attach processes, only the first of the line gets really attached !
-+A: We can only return one error code per call to write(). So you should also
-+   put only ONE pid.
-+
-+4. Contact
-+==========
-+
-+Web: http://www.bullopensource.org/cpuset
-diff --git a/Documentation/cgroup-legacy/devices.txt b/Documentation/cgroup-legacy/devices.txt
-new file mode 100644
-index 0000000..3c1095c
---- /dev/null
-+++ b/Documentation/cgroup-legacy/devices.txt
-@@ -0,0 +1,116 @@
-+Device Whitelist Controller
-+
-+1. Description:
-+
-+Implement a cgroup to track and enforce open and mknod restrictions
-+on device files.  A device cgroup associates a device access
-+whitelist with each cgroup.  A whitelist entry has 4 fields.
-+'type' is a (all), c (char), or b (block).  'all' means it applies
-+to all types and all major and minor numbers.  Major and minor are
-+either an integer or * for all.  Access is a composition of r
-+(read), w (write), and m (mknod).
-+
-+The root device cgroup starts with rwm to 'all'.  A child device
-+cgroup gets a copy of the parent.  Administrators can then remove
-+devices from the whitelist or add new entries.  A child cgroup can
-+never receive a device access which is denied by its parent.
-+
-+2. User Interface
-+
-+An entry is added using devices.allow, and removed using
-+devices.deny.  For instance
-+
-+	echo 'c 1:3 mr' > /sys/fs/cgroup/1/devices.allow
-+
-+allows cgroup 1 to read and mknod the device usually known as
-+/dev/null.  Doing
-+
-+	echo a > /sys/fs/cgroup/1/devices.deny
-+
-+will remove the default 'a *:* rwm' entry. Doing
-+
-+	echo a > /sys/fs/cgroup/1/devices.allow
-+
-+will add the 'a *:* rwm' entry to the whitelist.
-+
-+3. Security
-+
-+Any task can move itself between cgroups.  This clearly won't
-+suffice, but we can decide the best way to adequately restrict
-+movement as people get some experience with this.  We may just want
-+to require CAP_SYS_ADMIN, which at least is a separate bit from
-+CAP_MKNOD.  We may want to just refuse moving to a cgroup which
-+isn't a descendant of the current one.  Or we may want to use
-+CAP_MAC_ADMIN, since we really are trying to lock down root.
-+
-+CAP_SYS_ADMIN is needed to modify the whitelist or move another
-+task to a new cgroup.  (Again we'll probably want to change that).
-+
-+A cgroup may not be granted more permissions than the cgroup's
-+parent has.
-+
-+4. Hierarchy
-+
-+device cgroups maintain hierarchy by making sure a cgroup never has more
-+access permissions than its parent.  Every time an entry is written to
-+a cgroup's devices.deny file, all its children will have that entry removed
-+from their whitelist and all the locally set whitelist entries will be
-+re-evaluated.  In case one of the locally set whitelist entries would provide
-+more access than the cgroup's parent, it'll be removed from the whitelist.
-+
-+Example:
-+      A
-+     / \
-+        B
-+
-+    group        behavior	exceptions
-+    A            allow		"b 8:* rwm", "c 116:1 rw"
-+    B            deny		"c 1:3 rwm", "c 116:2 rwm", "b 3:* rwm"
-+
-+If a device is denied in group A:
-+	# echo "c 116:* r" > A/devices.deny
-+it'll propagate down and after revalidating B's entries, the whitelist entry
-+"c 116:2 rwm" will be removed:
-+
-+    group        whitelist entries                        denied devices
-+    A            all                                      "b 8:* rwm", "c 116:* rw"
-+    B            "c 1:3 rwm", "b 3:* rwm"                 all the rest
-+
-+In case parent's exceptions change and local exceptions are not allowed
-+anymore, they'll be deleted.
-+
-+Notice that new whitelist entries will not be propagated:
-+      A
-+     / \
-+        B
-+
-+    group        whitelist entries                        denied devices
-+    A            "c 1:3 rwm", "c 1:5 r"                   all the rest
-+    B            "c 1:3 rwm", "c 1:5 r"                   all the rest
-+
-+when adding "c *:3 rwm":
-+	# echo "c *:3 rwm" >A/devices.allow
-+
-+the result:
-+    group        whitelist entries                        denied devices
-+    A            "c *:3 rwm", "c 1:5 r"                   all the rest
-+    B            "c 1:3 rwm", "c 1:5 r"                   all the rest
-+
-+but now it'll be possible to add new entries to B:
-+	# echo "c 2:3 rwm" >B/devices.allow
-+	# echo "c 50:3 r" >B/devices.allow
-+or even
-+	# echo "c *:3 rwm" >B/devices.allow
-+
-+Allowing or denying all by writing 'a' to devices.allow or devices.deny will
-+not be possible once the device cgroups has children.
-+
-+4.1 Hierarchy (internal implementation)
-+
-+device cgroups is implemented internally using a behavior (ALLOW, DENY) and a
-+list of exceptions.  The internal state is controlled using the same user
-+interface to preserve compatibility with the previous whitelist-only
-+implementation.  Removal or addition of exceptions that will reduce the access
-+to devices will be propagated down the hierarchy.
-+For every propagated exception, the effective rules will be re-evaluated based
-+on current parent's access rules.
-diff --git a/Documentation/cgroup-legacy/freezer-subsystem.txt b/Documentation/cgroup-legacy/freezer-subsystem.txt
-new file mode 100644
-index 0000000..c96a72c
---- /dev/null
-+++ b/Documentation/cgroup-legacy/freezer-subsystem.txt
-@@ -0,0 +1,123 @@
-+The cgroup freezer is useful to batch job management system which start
-+and stop sets of tasks in order to schedule the resources of a machine
-+according to the desires of a system administrator. This sort of program
-+is often used on HPC clusters to schedule access to the cluster as a
-+whole. The cgroup freezer uses cgroups to describe the set of tasks to
-+be started/stopped by the batch job management system. It also provides
-+a means to start and stop the tasks composing the job.
-+
-+The cgroup freezer will also be useful for checkpointing running groups
-+of tasks. The freezer allows the checkpoint code to obtain a consistent
-+image of the tasks by attempting to force the tasks in a cgroup into a
-+quiescent state. Once the tasks are quiescent another task can
-+walk /proc or invoke a kernel interface to gather information about the
-+quiesced tasks. Checkpointed tasks can be restarted later should a
-+recoverable error occur. This also allows the checkpointed tasks to be
-+migrated between nodes in a cluster by copying the gathered information
-+to another node and restarting the tasks there.
-+
-+Sequences of SIGSTOP and SIGCONT are not always sufficient for stopping
-+and resuming tasks in userspace. Both of these signals are observable
-+from within the tasks we wish to freeze. While SIGSTOP cannot be caught,
-+blocked, or ignored it can be seen by waiting or ptracing parent tasks.
-+SIGCONT is especially unsuitable since it can be caught by the task. Any
-+programs designed to watch for SIGSTOP and SIGCONT could be broken by
-+attempting to use SIGSTOP and SIGCONT to stop and resume tasks. We can
-+demonstrate this problem using nested bash shells:
-+
-+	$ echo $$
-+	16644
-+	$ bash
-+	$ echo $$
-+	16690
-+
-+	From a second, unrelated bash shell:
-+	$ kill -SIGSTOP 16690
-+	$ kill -SIGCONT 16690
-+
-+	<at this point 16690 exits and causes 16644 to exit too>
-+
-+This happens because bash can observe both signals and choose how it
-+responds to them.
-+
-+Another example of a program which catches and responds to these
-+signals is gdb. In fact any program designed to use ptrace is likely to
-+have a problem with this method of stopping and resuming tasks.
-+
-+In contrast, the cgroup freezer uses the kernel freezer code to
-+prevent the freeze/unfreeze cycle from becoming visible to the tasks
-+being frozen. This allows the bash example above and gdb to run as
-+expected.
-+
-+The cgroup freezer is hierarchical. Freezing a cgroup freezes all
-+tasks beloning to the cgroup and all its descendant cgroups. Each
-+cgroup has its own state (self-state) and the state inherited from the
-+parent (parent-state). Iff both states are THAWED, the cgroup is
-+THAWED.
-+
-+The following cgroupfs files are created by cgroup freezer.
-+
-+* freezer.state: Read-write.
-+
-+  When read, returns the effective state of the cgroup - "THAWED",
-+  "FREEZING" or "FROZEN". This is the combined self and parent-states.
-+  If any is freezing, the cgroup is freezing (FREEZING or FROZEN).
-+
-+  FREEZING cgroup transitions into FROZEN state when all tasks
-+  belonging to the cgroup and its descendants become frozen. Note that
-+  a cgroup reverts to FREEZING from FROZEN after a new task is added
-+  to the cgroup or one of its descendant cgroups until the new task is
-+  frozen.
-+
-+  When written, sets the self-state of the cgroup. Two values are
-+  allowed - "FROZEN" and "THAWED". If FROZEN is written, the cgroup,
-+  if not already freezing, enters FREEZING state along with all its
-+  descendant cgroups.
-+
-+  If THAWED is written, the self-state of the cgroup is changed to
-+  THAWED.  Note that the effective state may not change to THAWED if
-+  the parent-state is still freezing. If a cgroup's effective state
-+  becomes THAWED, all its descendants which are freezing because of
-+  the cgroup also leave the freezing state.
-+
-+* freezer.self_freezing: Read only.
-+
-+  Shows the self-state. 0 if the self-state is THAWED; otherwise, 1.
-+  This value is 1 iff the last write to freezer.state was "FROZEN".
-+
-+* freezer.parent_freezing: Read only.
-+
-+  Shows the parent-state.  0 if none of the cgroup's ancestors is
-+  frozen; otherwise, 1.
-+
-+The root cgroup is non-freezable and the above interface files don't
-+exist.
-+
-+* Examples of usage :
-+
-+   # mkdir /sys/fs/cgroup/freezer
-+   # mount -t cgroup -ofreezer freezer /sys/fs/cgroup/freezer
-+   # mkdir /sys/fs/cgroup/freezer/0
-+   # echo $some_pid > /sys/fs/cgroup/freezer/0/tasks
-+
-+to get status of the freezer subsystem :
-+
-+   # cat /sys/fs/cgroup/freezer/0/freezer.state
-+   THAWED
-+
-+to freeze all tasks in the container :
-+
-+   # echo FROZEN > /sys/fs/cgroup/freezer/0/freezer.state
-+   # cat /sys/fs/cgroup/freezer/0/freezer.state
-+   FREEZING
-+   # cat /sys/fs/cgroup/freezer/0/freezer.state
-+   FROZEN
-+
-+to unfreeze all tasks in the container :
-+
-+   # echo THAWED > /sys/fs/cgroup/freezer/0/freezer.state
-+   # cat /sys/fs/cgroup/freezer/0/freezer.state
-+   THAWED
-+
-+This is the basic mechanism which should do the right thing for user space task
-+in a simple scenario.
-diff --git a/Documentation/cgroup-legacy/hugetlb.txt b/Documentation/cgroup-legacy/hugetlb.txt
-new file mode 100644
-index 0000000..106245c
---- /dev/null
-+++ b/Documentation/cgroup-legacy/hugetlb.txt
-@@ -0,0 +1,45 @@
-+HugeTLB Controller
-+-------------------
-+
-+The HugeTLB controller allows to limit the HugeTLB usage per control group and
-+enforces the controller limit during page fault. Since HugeTLB doesn't
-+support page reclaim, enforcing the limit at page fault time implies that,
-+the application will get SIGBUS signal if it tries to access HugeTLB pages
-+beyond its limit. This requires the application to know beforehand how much
-+HugeTLB pages it would require for its use.
-+
-+HugeTLB controller can be created by first mounting the cgroup filesystem.
-+
-+# mount -t cgroup -o hugetlb none /sys/fs/cgroup
-+
-+With the above step, the initial or the parent HugeTLB group becomes
-+visible at /sys/fs/cgroup. At bootup, this group includes all the tasks in
-+the system. /sys/fs/cgroup/tasks lists the tasks in this cgroup.
-+
-+New groups can be created under the parent group /sys/fs/cgroup.
-+
-+# cd /sys/fs/cgroup
-+# mkdir g1
-+# echo $$ > g1/tasks
-+
-+The above steps create a new group g1 and move the current shell
-+process (bash) into it.
-+
-+Brief summary of control files
-+
-+ hugetlb.<hugepagesize>.limit_in_bytes     # set/show limit of "hugepagesize" hugetlb usage
-+ hugetlb.<hugepagesize>.max_usage_in_bytes # show max "hugepagesize" hugetlb  usage recorded
-+ hugetlb.<hugepagesize>.usage_in_bytes     # show current usage for "hugepagesize" hugetlb
-+ hugetlb.<hugepagesize>.failcnt		   # show the number of allocation failure due to HugeTLB limit
-+
-+For a system supporting two hugepage size (16M and 16G) the control
-+files include:
-+
-+hugetlb.16GB.limit_in_bytes
-+hugetlb.16GB.max_usage_in_bytes
-+hugetlb.16GB.usage_in_bytes
-+hugetlb.16GB.failcnt
-+hugetlb.16MB.limit_in_bytes
-+hugetlb.16MB.max_usage_in_bytes
-+hugetlb.16MB.usage_in_bytes
-+hugetlb.16MB.failcnt
-diff --git a/Documentation/cgroup-legacy/memcg_test.txt b/Documentation/cgroup-legacy/memcg_test.txt
-new file mode 100644
-index 0000000..8870b02
---- /dev/null
-+++ b/Documentation/cgroup-legacy/memcg_test.txt
-@@ -0,0 +1,280 @@
-+Memory Resource Controller(Memcg)  Implementation Memo.
-+Last Updated: 2010/2
-+Base Kernel Version: based on 2.6.33-rc7-mm(candidate for 34).
-+
-+Because VM is getting complex (one of reasons is memcg...), memcg's behavior
-+is complex. This is a document for memcg's internal behavior.
-+Please note that implementation details can be changed.
-+
-+(*) Topics on API should be in Documentation/cgroups/memory.txt)
-+
-+0. How to record usage ?
-+   2 objects are used.
-+
-+   page_cgroup ....an object per page.
-+	Allocated at boot or memory hotplug. Freed at memory hot removal.
-+
-+   swap_cgroup ... an entry per swp_entry.
-+	Allocated at swapon(). Freed at swapoff().
-+
-+   The page_cgroup has USED bit and double count against a page_cgroup never
-+   occurs. swap_cgroup is used only when a charged page is swapped-out.
-+
-+1. Charge
-+
-+   a page/swp_entry may be charged (usage += PAGE_SIZE) at
-+
-+	mem_cgroup_try_charge()
-+
-+2. Uncharge
-+  a page/swp_entry may be uncharged (usage -= PAGE_SIZE) by
-+
-+	mem_cgroup_uncharge()
-+	  Called when a page's refcount goes down to 0.
-+
-+	mem_cgroup_uncharge_swap()
-+	  Called when swp_entry's refcnt goes down to 0. A charge against swap
-+	  disappears.
-+
-+3. charge-commit-cancel
-+	Memcg pages are charged in two steps:
-+		mem_cgroup_try_charge()
-+		mem_cgroup_commit_charge() or mem_cgroup_cancel_charge()
-+
-+	At try_charge(), there are no flags to say "this page is charged".
-+	at this point, usage += PAGE_SIZE.
-+
-+	At commit(), the page is associated with the memcg.
-+
-+	At cancel(), simply usage -= PAGE_SIZE.
-+
-+Under below explanation, we assume CONFIG_MEM_RES_CTRL_SWAP=y.
-+
-+4. Anonymous
-+	Anonymous page is newly allocated at
-+		  - page fault into MAP_ANONYMOUS mapping.
-+		  - Copy-On-Write.
-+
-+	4.1 Swap-in.
-+	At swap-in, the page is taken from swap-cache. There are 2 cases.
-+
-+	(a) If the SwapCache is newly allocated and read, it has no charges.
-+	(b) If the SwapCache has been mapped by processes, it has been
-+	    charged already.
-+
-+	4.2 Swap-out.
-+	At swap-out, typical state transition is below.
-+
-+	(a) add to swap cache. (marked as SwapCache)
-+	    swp_entry's refcnt += 1.
-+	(b) fully unmapped.
-+	    swp_entry's refcnt += # of ptes.
-+	(c) write back to swap.
-+	(d) delete from swap cache. (remove from SwapCache)
-+	    swp_entry's refcnt -= 1.
-+
-+
-+	Finally, at task exit,
-+	(e) zap_pte() is called and swp_entry's refcnt -=1 -> 0.
-+
-+5. Page Cache
-+   	Page Cache is charged at
-+	- add_to_page_cache_locked().
-+
-+	The logic is very clear. (About migration, see below)
-+	Note: __remove_from_page_cache() is called by remove_from_page_cache()
-+	and __remove_mapping().
-+
-+6. Shmem(tmpfs) Page Cache
-+	The best way to understand shmem's page state transition is to read
-+	mm/shmem.c.
-+	But brief explanation of the behavior of memcg around shmem will be
-+	helpful to understand the logic.
-+
-+	Shmem's page (just leaf page, not direct/indirect block) can be on
-+		- radix-tree of shmem's inode.
-+		- SwapCache.
-+		- Both on radix-tree and SwapCache. This happens at swap-in
-+		  and swap-out,
-+
-+	It's charged when...
-+	- A new page is added to shmem's radix-tree.
-+	- A swp page is read. (move a charge from swap_cgroup to page_cgroup)
-+
-+7. Page Migration
-+
-+	mem_cgroup_migrate()
-+
-+8. LRU
-+        Each memcg has its own private LRU. Now, its handling is under global
-+	VM's control (means that it's handled under global zone->lru_lock).
-+	Almost all routines around memcg's LRU is called by global LRU's
-+	list management functions under zone->lru_lock().
-+
-+	A special function is mem_cgroup_isolate_pages(). This scans
-+	memcg's private LRU and call __isolate_lru_page() to extract a page
-+	from LRU.
-+	(By __isolate_lru_page(), the page is removed from both of global and
-+	 private LRU.)
-+
-+
-+9. Typical Tests.
-+
-+ Tests for racy cases.
-+
-+ 9.1 Small limit to memcg.
-+	When you do test to do racy case, it's good test to set memcg's limit
-+	to be very small rather than GB. Many races found in the test under
-+	xKB or xxMB limits.
-+	(Memory behavior under GB and Memory behavior under MB shows very
-+	 different situation.)
-+
-+ 9.2 Shmem
-+	Historically, memcg's shmem handling was poor and we saw some amount
-+	of troubles here. This is because shmem is page-cache but can be
-+	SwapCache. Test with shmem/tmpfs is always good test.
-+
-+ 9.3 Migration
-+	For NUMA, migration is an another special case. To do easy test, cpuset
-+	is useful. Following is a sample script to do migration.
-+
-+	mount -t cgroup -o cpuset none /opt/cpuset
-+
-+	mkdir /opt/cpuset/01
-+	echo 1 > /opt/cpuset/01/cpuset.cpus
-+	echo 0 > /opt/cpuset/01/cpuset.mems
-+	echo 1 > /opt/cpuset/01/cpuset.memory_migrate
-+	mkdir /opt/cpuset/02
-+	echo 1 > /opt/cpuset/02/cpuset.cpus
-+	echo 1 > /opt/cpuset/02/cpuset.mems
-+	echo 1 > /opt/cpuset/02/cpuset.memory_migrate
-+
-+	In above set, when you moves a task from 01 to 02, page migration to
-+	node 0 to node 1 will occur. Following is a script to migrate all
-+	under cpuset.
-+	--
-+	move_task()
-+	{
-+	for pid in $1
-+        do
-+                /bin/echo $pid >$2/tasks 2>/dev/null
-+		echo -n $pid
-+		echo -n " "
-+        done
-+	echo END
-+	}
-+
-+	G1_TASK=`cat ${G1}/tasks`
-+	G2_TASK=`cat ${G2}/tasks`
-+	move_task "${G1_TASK}" ${G2} &
-+	--
-+ 9.4 Memory hotplug.
-+	memory hotplug test is one of good test.
-+	to offline memory, do following.
-+	# echo offline > /sys/devices/system/memory/memoryXXX/state
-+	(XXX is the place of memory)
-+	This is an easy way to test page migration, too.
-+
-+ 9.5 mkdir/rmdir
-+	When using hierarchy, mkdir/rmdir test should be done.
-+	Use tests like the following.
-+
-+	echo 1 >/opt/cgroup/01/memory/use_hierarchy
-+	mkdir /opt/cgroup/01/child_a
-+	mkdir /opt/cgroup/01/child_b
-+
-+	set limit to 01.
-+	add limit to 01/child_b
-+	run jobs under child_a and child_b
-+
-+	create/delete following groups at random while jobs are running.
-+	/opt/cgroup/01/child_a/child_aa
-+	/opt/cgroup/01/child_b/child_bb
-+	/opt/cgroup/01/child_c
-+
-+	running new jobs in new group is also good.
-+
-+ 9.6 Mount with other subsystems.
-+	Mounting with other subsystems is a good test because there is a
-+	race and lock dependency with other cgroup subsystems.
-+
-+	example)
-+	# mount -t cgroup none /cgroup -o cpuset,memory,cpu,devices
-+
-+	and do task move, mkdir, rmdir etc...under this.
-+
-+ 9.7 swapoff.
-+	Besides management of swap is one of complicated parts of memcg,
-+	call path of swap-in at swapoff is not same as usual swap-in path..
-+	It's worth to be tested explicitly.
-+
-+	For example, test like following is good.
-+	(Shell-A)
-+	# mount -t cgroup none /cgroup -o memory
-+	# mkdir /cgroup/test
-+	# echo 40M > /cgroup/test/memory.limit_in_bytes
-+	# echo 0 > /cgroup/test/tasks
-+	Run malloc(100M) program under this. You'll see 60M of swaps.
-+	(Shell-B)
-+	# move all tasks in /cgroup/test to /cgroup
-+	# /sbin/swapoff -a
-+	# rmdir /cgroup/test
-+	# kill malloc task.
-+
-+	Of course, tmpfs v.s. swapoff test should be tested, too.
-+
-+ 9.8 OOM-Killer
-+	Out-of-memory caused by memcg's limit will kill tasks under
-+	the memcg. When hierarchy is used, a task under hierarchy
-+	will be killed by the kernel.
-+	In this case, panic_on_oom shouldn't be invoked and tasks
-+	in other groups shouldn't be killed.
-+
-+	It's not difficult to cause OOM under memcg as following.
-+	Case A) when you can swapoff
-+	#swapoff -a
-+	#echo 50M > /memory.limit_in_bytes
-+	run 51M of malloc
-+
-+	Case B) when you use mem+swap limitation.
-+	#echo 50M > memory.limit_in_bytes
-+	#echo 50M > memory.memsw.limit_in_bytes
-+	run 51M of malloc
-+
-+ 9.9 Move charges at task migration
-+	Charges associated with a task can be moved along with task migration.
-+
-+	(Shell-A)
-+	#mkdir /cgroup/A
-+	#echo $$ >/cgroup/A/tasks
-+	run some programs which uses some amount of memory in /cgroup/A.
-+
-+	(Shell-B)
-+	#mkdir /cgroup/B
-+	#echo 1 >/cgroup/B/memory.move_charge_at_immigrate
-+	#echo "pid of the program running in group A" >/cgroup/B/tasks
-+
-+	You can see charges have been moved by reading *.usage_in_bytes or
-+	memory.stat of both A and B.
-+	See 8.2 of Documentation/cgroups/memory.txt to see what value should be
-+	written to move_charge_at_immigrate.
-+
-+ 9.10 Memory thresholds
-+	Memory controller implements memory thresholds using cgroups notification
-+	API. You can use tools/cgroup/cgroup_event_listener.c to test it.
-+
-+	(Shell-A) Create cgroup and run event listener
-+	# mkdir /cgroup/A
-+	# ./cgroup_event_listener /cgroup/A/memory.usage_in_bytes 5M
-+
-+	(Shell-B) Add task to cgroup and try to allocate and free memory
-+	# echo $$ >/cgroup/A/tasks
-+	# a="$(dd if=/dev/zero bs=1M count=10)"
-+	# a=
-+
-+	You will see message from cgroup_event_listener every time you cross
-+	the thresholds.
-+
-+	Use /cgroup/A/memory.memsw.usage_in_bytes to test memsw thresholds.
-+
-+	It's good idea to test root cgroup as well.
-diff --git a/Documentation/cgroup-legacy/memory.txt b/Documentation/cgroup-legacy/memory.txt
-new file mode 100644
-index 0000000..ff71e16
---- /dev/null
-+++ b/Documentation/cgroup-legacy/memory.txt
-@@ -0,0 +1,876 @@
-+Memory Resource Controller
-+
-+NOTE: This document is hopelessly outdated and it asks for a complete
-+      rewrite. It still contains a useful information so we are keeping it
-+      here but make sure to check the current code if you need a deeper
-+      understanding.
-+
-+NOTE: The Memory Resource Controller has generically been referred to as the
-+      memory controller in this document. Do not confuse memory controller
-+      used here with the memory controller that is used in hardware.
-+
-+(For editors)
-+In this document:
-+      When we mention a cgroup (cgroupfs's directory) with memory controller,
-+      we call it "memory cgroup". When you see git-log and source code, you'll
-+      see patch's title and function names tend to use "memcg".
-+      In this document, we avoid using it.
-+
-+Benefits and Purpose of the memory controller
-+
-+The memory controller isolates the memory behaviour of a group of tasks
-+from the rest of the system. The article on LWN [12] mentions some probable
-+uses of the memory controller. The memory controller can be used to
-+
-+a. Isolate an application or a group of applications
-+   Memory-hungry applications can be isolated and limited to a smaller
-+   amount of memory.
-+b. Create a cgroup with a limited amount of memory; this can be used
-+   as a good alternative to booting with mem=XXXX.
-+c. Virtualization solutions can control the amount of memory they want
-+   to assign to a virtual machine instance.
-+d. A CD/DVD burner could control the amount of memory used by the
-+   rest of the system to ensure that burning does not fail due to lack
-+   of available memory.
-+e. There are several other use cases; find one or use the controller just
-+   for fun (to learn and hack on the VM subsystem).
-+
-+Current Status: linux-2.6.34-mmotm(development version of 2010/April)
-+
-+Features:
-+ - accounting anonymous pages, file caches, swap caches usage and limiting them.
-+ - pages are linked to per-memcg LRU exclusively, and there is no global LRU.
-+ - optionally, memory+swap usage can be accounted and limited.
-+ - hierarchical accounting
-+ - soft limit
-+ - moving (recharging) account at moving a task is selectable.
-+ - usage threshold notifier
-+ - memory pressure notifier
-+ - oom-killer disable knob and oom-notifier
-+ - Root cgroup has no limit controls.
-+
-+ Kernel memory support is a work in progress, and the current version provides
-+ basically functionality. (See Section 2.7)
-+
-+Brief summary of control files.
-+
-+ tasks				 # attach a task(thread) and show list of threads
-+ cgroup.procs			 # show list of processes
-+ cgroup.event_control		 # an interface for event_fd()
-+ memory.usage_in_bytes		 # show current usage for memory
-+				 (See 5.5 for details)
-+ memory.memsw.usage_in_bytes	 # show current usage for memory+Swap
-+				 (See 5.5 for details)
-+ memory.limit_in_bytes		 # set/show limit of memory usage
-+ memory.memsw.limit_in_bytes	 # set/show limit of memory+Swap usage
-+ memory.failcnt			 # show the number of memory usage hits limits
-+ memory.memsw.failcnt		 # show the number of memory+Swap hits limits
-+ memory.max_usage_in_bytes	 # show max memory usage recorded
-+ memory.memsw.max_usage_in_bytes # show max memory+Swap usage recorded
-+ memory.soft_limit_in_bytes	 # set/show soft limit of memory usage
-+ memory.stat			 # show various statistics
-+ memory.use_hierarchy		 # set/show hierarchical account enabled
-+ memory.force_empty		 # trigger forced move charge to parent
-+ memory.pressure_level		 # set memory pressure notifications
-+ memory.swappiness		 # set/show swappiness parameter of vmscan
-+				 (See sysctl's vm.swappiness)
-+ memory.move_charge_at_immigrate # set/show controls of moving charges
-+ memory.oom_control		 # set/show oom controls.
-+ memory.numa_stat		 # show the number of memory usage per numa node
-+
-+ memory.kmem.limit_in_bytes      # set/show hard limit for kernel memory
-+ memory.kmem.usage_in_bytes      # show current kernel memory allocation
-+ memory.kmem.failcnt             # show the number of kernel memory usage hits limits
-+ memory.kmem.max_usage_in_bytes  # show max kernel memory usage recorded
-+
-+ memory.kmem.tcp.limit_in_bytes  # set/show hard limit for tcp buf memory
-+ memory.kmem.tcp.usage_in_bytes  # show current tcp buf memory allocation
-+ memory.kmem.tcp.failcnt            # show the number of tcp buf memory usage hits limits
-+ memory.kmem.tcp.max_usage_in_bytes # show max tcp buf memory usage recorded
-+
-+1. History
-+
-+The memory controller has a long history. A request for comments for the memory
-+controller was posted by Balbir Singh [1]. At the time the RFC was posted
-+there were several implementations for memory control. The goal of the
-+RFC was to build consensus and agreement for the minimal features required
-+for memory control. The first RSS controller was posted by Balbir Singh[2]
-+in Feb 2007. Pavel Emelianov [3][4][5] has since posted three versions of the
-+RSS controller. At OLS, at the resource management BoF, everyone suggested
-+that we handle both page cache and RSS together. Another request was raised
-+to allow user space handling of OOM. The current memory controller is
-+at version 6; it combines both mapped (RSS) and unmapped Page
-+Cache Control [11].
-+
-+2. Memory Control
-+
-+Memory is a unique resource in the sense that it is present in a limited
-+amount. If a task requires a lot of CPU processing, the task can spread
-+its processing over a period of hours, days, months or years, but with
-+memory, the same physical memory needs to be reused to accomplish the task.
-+
-+The memory controller implementation has been divided into phases. These
-+are:
-+
-+1. Memory controller
-+2. mlock(2) controller
-+3. Kernel user memory accounting and slab control
-+4. user mappings length controller
-+
-+The memory controller is the first controller developed.
-+
-+2.1. Design
-+
-+The core of the design is a counter called the page_counter. The
-+page_counter tracks the current memory usage and limit of the group of
-+processes associated with the controller. Each cgroup has a memory controller
-+specific data structure (mem_cgroup) associated with it.
-+
-+2.2. Accounting
-+
-+		+--------------------+
-+		|  mem_cgroup        |
-+		|  (page_counter)    |
-+		+--------------------+
-+		 /            ^      \
-+		/             |       \
-+           +---------------+  |        +---------------+
-+           | mm_struct     |  |....    | mm_struct     |
-+           |               |  |        |               |
-+           +---------------+  |        +---------------+
-+                              |
-+                              + --------------+
-+                                              |
-+           +---------------+           +------+--------+
-+           | page          +---------->  page_cgroup|
-+           |               |           |               |
-+           +---------------+           +---------------+
-+
-+             (Figure 1: Hierarchy of Accounting)
-+
-+
-+Figure 1 shows the important aspects of the controller
-+
-+1. Accounting happens per cgroup
-+2. Each mm_struct knows about which cgroup it belongs to
-+3. Each page has a pointer to the page_cgroup, which in turn knows the
-+   cgroup it belongs to
-+
-+The accounting is done as follows: mem_cgroup_charge_common() is invoked to
-+set up the necessary data structures and check if the cgroup that is being
-+charged is over its limit. If it is, then reclaim is invoked on the cgroup.
-+More details can be found in the reclaim section of this document.
-+If everything goes well, a page meta-data-structure called page_cgroup is
-+updated. page_cgroup has its own LRU on cgroup.
-+(*) page_cgroup structure is allocated at boot/memory-hotplug time.
-+
-+2.2.1 Accounting details
-+
-+All mapped anon pages (RSS) and cache pages (Page Cache) are accounted.
-+Some pages which are never reclaimable and will not be on the LRU
-+are not accounted. We just account pages under usual VM management.
-+
-+RSS pages are accounted at page_fault unless they've already been accounted
-+for earlier. A file page will be accounted for as Page Cache when it's
-+inserted into inode (radix-tree). While it's mapped into the page tables of
-+processes, duplicate accounting is carefully avoided.
-+
-+An RSS page is unaccounted when it's fully unmapped. A PageCache page is
-+unaccounted when it's removed from radix-tree. Even if RSS pages are fully
-+unmapped (by kswapd), they may exist as SwapCache in the system until they
-+are really freed. Such SwapCaches are also accounted.
-+A swapped-in page is not accounted until it's mapped.
-+
-+Note: The kernel does swapin-readahead and reads multiple swaps at once.
-+This means swapped-in pages may contain pages for other tasks than a task
-+causing page fault. So, we avoid accounting at swap-in I/O.
-+
-+At page migration, accounting information is kept.
-+
-+Note: we just account pages-on-LRU because our purpose is to control amount
-+of used pages; not-on-LRU pages tend to be out-of-control from VM view.
-+
-+2.3 Shared Page Accounting
-+
-+Shared pages are accounted on the basis of the first touch approach. The
-+cgroup that first touches a page is accounted for the page. The principle
-+behind this approach is that a cgroup that aggressively uses a shared
-+page will eventually get charged for it (once it is uncharged from
-+the cgroup that brought it in -- this will happen on memory pressure).
-+
-+But see section 8.2: when moving a task to another cgroup, its pages may
-+be recharged to the new cgroup, if move_charge_at_immigrate has been chosen.
-+
-+Exception: If CONFIG_MEMCG_SWAP is not used.
-+When you do swapoff and make swapped-out pages of shmem(tmpfs) to
-+be backed into memory in force, charges for pages are accounted against the
-+caller of swapoff rather than the users of shmem.
-+
-+2.4 Swap Extension (CONFIG_MEMCG_SWAP)
-+
-+Swap Extension allows you to record charge for swap. A swapped-in page is
-+charged back to original page allocator if possible.
-+
-+When swap is accounted, following files are added.
-+ - memory.memsw.usage_in_bytes.
-+ - memory.memsw.limit_in_bytes.
-+
-+memsw means memory+swap. Usage of memory+swap is limited by
-+memsw.limit_in_bytes.
-+
-+Example: Assume a system with 4G of swap. A task which allocates 6G of memory
-+(by mistake) under 2G memory limitation will use all swap.
-+In this case, setting memsw.limit_in_bytes=3G will prevent bad use of swap.
-+By using the memsw limit, you can avoid system OOM which can be caused by swap
-+shortage.
-+
-+* why 'memory+swap' rather than swap.
-+The global LRU(kswapd) can swap out arbitrary pages. Swap-out means
-+to move account from memory to swap...there is no change in usage of
-+memory+swap. In other words, when we want to limit the usage of swap without
-+affecting global LRU, memory+swap limit is better than just limiting swap from
-+an OS point of view.
-+
-+* What happens when a cgroup hits memory.memsw.limit_in_bytes
-+When a cgroup hits memory.memsw.limit_in_bytes, it's useless to do swap-out
-+in this cgroup. Then, swap-out will not be done by cgroup routine and file
-+caches are dropped. But as mentioned above, global LRU can do swapout memory
-+from it for sanity of the system's memory management state. You can't forbid
-+it by cgroup.
-+
-+2.5 Reclaim
-+
-+Each cgroup maintains a per cgroup LRU which has the same structure as
-+global VM. When a cgroup goes over its limit, we first try
-+to reclaim memory from the cgroup so as to make space for the new
-+pages that the cgroup has touched. If the reclaim is unsuccessful,
-+an OOM routine is invoked to select and kill the bulkiest task in the
-+cgroup. (See 10. OOM Control below.)
-+
-+The reclaim algorithm has not been modified for cgroups, except that
-+pages that are selected for reclaiming come from the per-cgroup LRU
-+list.
-+
-+NOTE: Reclaim does not work for the root cgroup, since we cannot set any
-+limits on the root cgroup.
-+
-+Note2: When panic_on_oom is set to "2", the whole system will panic.
-+
-+When oom event notifier is registered, event will be delivered.
-+(See oom_control section)
-+
-+2.6 Locking
-+
-+   lock_page_cgroup()/unlock_page_cgroup() should not be called under
-+   mapping->tree_lock.
-+
-+   Other lock order is following:
-+   PG_locked.
-+   mm->page_table_lock
-+       zone->lru_lock
-+	  lock_page_cgroup.
-+  In many cases, just lock_page_cgroup() is called.
-+  per-zone-per-cgroup LRU (cgroup's private LRU) is just guarded by
-+  zone->lru_lock, it has no lock of its own.
-+
-+2.7 Kernel Memory Extension (CONFIG_MEMCG_KMEM)
-+
-+With the Kernel memory extension, the Memory Controller is able to limit
-+the amount of kernel memory used by the system. Kernel memory is fundamentally
-+different than user memory, since it can't be swapped out, which makes it
-+possible to DoS the system by consuming too much of this precious resource.
-+
-+Kernel memory won't be accounted at all until limit on a group is set. This
-+allows for existing setups to continue working without disruption.  The limit
-+cannot be set if the cgroup have children, or if there are already tasks in the
-+cgroup. Attempting to set the limit under those conditions will return -EBUSY.
-+When use_hierarchy == 1 and a group is accounted, its children will
-+automatically be accounted regardless of their limit value.
-+
-+After a group is first limited, it will be kept being accounted until it
-+is removed. The memory limitation itself, can of course be removed by writing
-+-1 to memory.kmem.limit_in_bytes. In this case, kmem will be accounted, but not
-+limited.
-+
-+Kernel memory limits are not imposed for the root cgroup. Usage for the root
-+cgroup may or may not be accounted. The memory used is accumulated into
-+memory.kmem.usage_in_bytes, or in a separate counter when it makes sense.
-+(currently only for tcp).
-+The main "kmem" counter is fed into the main counter, so kmem charges will
-+also be visible from the user counter.
-+
-+Currently no soft limit is implemented for kernel memory. It is future work
-+to trigger slab reclaim when those limits are reached.
-+
-+2.7.1 Current Kernel Memory resources accounted
-+
-+* stack pages: every process consumes some stack pages. By accounting into
-+kernel memory, we prevent new processes from being created when the kernel
-+memory usage is too high.
-+
-+* slab pages: pages allocated by the SLAB or SLUB allocator are tracked. A copy
-+of each kmem_cache is created every time the cache is touched by the first time
-+from inside the memcg. The creation is done lazily, so some objects can still be
-+skipped while the cache is being created. All objects in a slab page should
-+belong to the same memcg. This only fails to hold when a task is migrated to a
-+different memcg during the page allocation by the cache.
-+
-+* sockets memory pressure: some sockets protocols have memory pressure
-+thresholds. The Memory Controller allows them to be controlled individually
-+per cgroup, instead of globally.
-+
-+* tcp memory pressure: sockets memory pressure for the tcp protocol.
-+
-+2.7.2 Common use cases
-+
-+Because the "kmem" counter is fed to the main user counter, kernel memory can
-+never be limited completely independently of user memory. Say "U" is the user
-+limit, and "K" the kernel limit. There are three possible ways limits can be
-+set:
-+
-+    U != 0, K = unlimited:
-+    This is the standard memcg limitation mechanism already present before kmem
-+    accounting. Kernel memory is completely ignored.
-+
-+    U != 0, K < U:
-+    Kernel memory is a subset of the user memory. This setup is useful in
-+    deployments where the total amount of memory per-cgroup is overcommited.
-+    Overcommiting kernel memory limits is definitely not recommended, since the
-+    box can still run out of non-reclaimable memory.
-+    In this case, the admin could set up K so that the sum of all groups is
-+    never greater than the total memory, and freely set U at the cost of his
-+    QoS.
-+    WARNING: In the current implementation, memory reclaim will NOT be
-+    triggered for a cgroup when it hits K while staying below U, which makes
-+    this setup impractical.
-+
-+    U != 0, K >= U:
-+    Since kmem charges will also be fed to the user counter and reclaim will be
-+    triggered for the cgroup for both kinds of memory. This setup gives the
-+    admin a unified view of memory, and it is also useful for people who just
-+    want to track kernel memory usage.
-+
-+3. User Interface
-+
-+3.0. Configuration
-+
-+a. Enable CONFIG_CGROUPS
-+b. Enable CONFIG_MEMCG
-+c. Enable CONFIG_MEMCG_SWAP (to use swap extension)
-+d. Enable CONFIG_MEMCG_KMEM (to use kmem extension)
-+
-+3.1. Prepare the cgroups (see cgroups.txt, Why are cgroups needed?)
-+# mount -t tmpfs none /sys/fs/cgroup
-+# mkdir /sys/fs/cgroup/memory
-+# mount -t cgroup none /sys/fs/cgroup/memory -o memory
-+
-+3.2. Make the new group and move bash into it
-+# mkdir /sys/fs/cgroup/memory/0
-+# echo $$ > /sys/fs/cgroup/memory/0/tasks
-+
-+Since now we're in the 0 cgroup, we can alter the memory limit:
-+# echo 4M > /sys/fs/cgroup/memory/0/memory.limit_in_bytes
-+
-+NOTE: We can use a suffix (k, K, m, M, g or G) to indicate values in kilo,
-+mega or gigabytes. (Here, Kilo, Mega, Giga are Kibibytes, Mebibytes, Gibibytes.)
-+
-+NOTE: We can write "-1" to reset the *.limit_in_bytes(unlimited).
-+NOTE: We cannot set limits on the root cgroup any more.
-+
-+# cat /sys/fs/cgroup/memory/0/memory.limit_in_bytes
-+4194304
-+
-+We can check the usage:
-+# cat /sys/fs/cgroup/memory/0/memory.usage_in_bytes
-+1216512
-+
-+A successful write to this file does not guarantee a successful setting of
-+this limit to the value written into the file. This can be due to a
-+number of factors, such as rounding up to page boundaries or the total
-+availability of memory on the system. The user is required to re-read
-+this file after a write to guarantee the value committed by the kernel.
-+
-+# echo 1 > memory.limit_in_bytes
-+# cat memory.limit_in_bytes
-+4096
-+
-+The memory.failcnt field gives the number of times that the cgroup limit was
-+exceeded.
-+
-+The memory.stat file gives accounting information. Now, the number of
-+caches, RSS and Active pages/Inactive pages are shown.
-+
-+4. Testing
-+
-+For testing features and implementation, see memcg_test.txt.
-+
-+Performance test is also important. To see pure memory controller's overhead,
-+testing on tmpfs will give you good numbers of small overheads.
-+Example: do kernel make on tmpfs.
-+
-+Page-fault scalability is also important. At measuring parallel
-+page fault test, multi-process test may be better than multi-thread
-+test because it has noise of shared objects/status.
-+
-+But the above two are testing extreme situations.
-+Trying usual test under memory controller is always helpful.
-+
-+4.1 Troubleshooting
-+
-+Sometimes a user might find that the application under a cgroup is
-+terminated by the OOM killer. There are several causes for this:
-+
-+1. The cgroup limit is too low (just too low to do anything useful)
-+2. The user is using anonymous memory and swap is turned off or too low
-+
-+A sync followed by echo 1 > /proc/sys/vm/drop_caches will help get rid of
-+some of the pages cached in the cgroup (page cache pages).
-+
-+To know what happens, disabling OOM_Kill as per "10. OOM Control" (below) and
-+seeing what happens will be helpful.
-+
-+4.2 Task migration
-+
-+When a task migrates from one cgroup to another, its charge is not
-+carried forward by default. The pages allocated from the original cgroup still
-+remain charged to it, the charge is dropped when the page is freed or
-+reclaimed.
-+
-+You can move charges of a task along with task migration.
-+See 8. "Move charges at task migration"
-+
-+4.3 Removing a cgroup
-+
-+A cgroup can be removed by rmdir, but as discussed in sections 4.1 and 4.2, a
-+cgroup might have some charge associated with it, even though all
-+tasks have migrated away from it. (because we charge against pages, not
-+against tasks.)
-+
-+We move the stats to root (if use_hierarchy==0) or parent (if
-+use_hierarchy==1), and no change on the charge except uncharging
-+from the child.
-+
-+Charges recorded in swap information is not updated at removal of cgroup.
-+Recorded information is discarded and a cgroup which uses swap (swapcache)
-+will be charged as a new owner of it.
-+
-+About use_hierarchy, see Section 6.
-+
-+5. Misc. interfaces.
-+
-+5.1 force_empty
-+  memory.force_empty interface is provided to make cgroup's memory usage empty.
-+  When writing anything to this
-+
-+  # echo 0 > memory.force_empty
-+
-+  the cgroup will be reclaimed and as many pages reclaimed as possible.
-+
-+  The typical use case for this interface is before calling rmdir().
-+  Because rmdir() moves all pages to parent, some out-of-use page caches can be
-+  moved to the parent. If you want to avoid that, force_empty will be useful.
-+
-+  Also, note that when memory.kmem.limit_in_bytes is set the charges due to
-+  kernel pages will still be seen. This is not considered a failure and the
-+  write will still return success. In this case, it is expected that
-+  memory.kmem.usage_in_bytes == memory.usage_in_bytes.
-+
-+  About use_hierarchy, see Section 6.
-+
-+5.2 stat file
-+
-+memory.stat file includes following statistics
-+
-+# per-memory cgroup local status
-+cache		- # of bytes of page cache memory.
-+rss		- # of bytes of anonymous and swap cache memory (includes
-+		transparent hugepages).
-+rss_huge	- # of bytes of anonymous transparent hugepages.
-+mapped_file	- # of bytes of mapped file (includes tmpfs/shmem)
-+pgpgin		- # of charging events to the memory cgroup. The charging
-+		event happens each time a page is accounted as either mapped
-+		anon page(RSS) or cache page(Page Cache) to the cgroup.
-+pgpgout		- # of uncharging events to the memory cgroup. The uncharging
-+		event happens each time a page is unaccounted from the cgroup.
-+swap		- # of bytes of swap usage
-+dirty		- # of bytes that are waiting to get written back to the disk.
-+writeback	- # of bytes of file/anon cache that are queued for syncing to
-+		disk.
-+inactive_anon	- # of bytes of anonymous and swap cache memory on inactive
-+		LRU list.
-+active_anon	- # of bytes of anonymous and swap cache memory on active
-+		LRU list.
-+inactive_file	- # of bytes of file-backed memory on inactive LRU list.
-+active_file	- # of bytes of file-backed memory on active LRU list.
-+unevictable	- # of bytes of memory that cannot be reclaimed (mlocked etc).
-+
-+# status considering hierarchy (see memory.use_hierarchy settings)
-+
-+hierarchical_memory_limit - # of bytes of memory limit with regard to hierarchy
-+			under which the memory cgroup is
-+hierarchical_memsw_limit - # of bytes of memory+swap limit with regard to
-+			hierarchy under which memory cgroup is.
-+
-+total_<counter>		- # hierarchical version of <counter>, which in
-+			addition to the cgroup's own value includes the
-+			sum of all hierarchical children's values of
-+			<counter>, i.e. total_cache
-+
-+# The following additional stats are dependent on CONFIG_DEBUG_VM.
-+
-+recent_rotated_anon	- VM internal parameter. (see mm/vmscan.c)
-+recent_rotated_file	- VM internal parameter. (see mm/vmscan.c)
-+recent_scanned_anon	- VM internal parameter. (see mm/vmscan.c)
-+recent_scanned_file	- VM internal parameter. (see mm/vmscan.c)
-+
-+Memo:
-+	recent_rotated means recent frequency of LRU rotation.
-+	recent_scanned means recent # of scans to LRU.
-+	showing for better debug please see the code for meanings.
-+
-+Note:
-+	Only anonymous and swap cache memory is listed as part of 'rss' stat.
-+	This should not be confused with the true 'resident set size' or the
-+	amount of physical memory used by the cgroup.
-+	'rss + file_mapped" will give you resident set size of cgroup.
-+	(Note: file and shmem may be shared among other cgroups. In that case,
-+	 file_mapped is accounted only when the memory cgroup is owner of page
-+	 cache.)
-+
-+5.3 swappiness
-+
-+Overrides /proc/sys/vm/swappiness for the particular group. The tunable
-+in the root cgroup corresponds to the global swappiness setting.
-+
-+Please note that unlike during the global reclaim, limit reclaim
-+enforces that 0 swappiness really prevents from any swapping even if
-+there is a swap storage available. This might lead to memcg OOM killer
-+if there are no file pages to reclaim.
-+
-+5.4 failcnt
-+
-+A memory cgroup provides memory.failcnt and memory.memsw.failcnt files.
-+This failcnt(== failure count) shows the number of times that a usage counter
-+hit its limit. When a memory cgroup hits a limit, failcnt increases and
-+memory under it will be reclaimed.
-+
-+You can reset failcnt by writing 0 to failcnt file.
-+# echo 0 > .../memory.failcnt
-+
-+5.5 usage_in_bytes
-+
-+For efficiency, as other kernel components, memory cgroup uses some optimization
-+to avoid unnecessary cacheline false sharing. usage_in_bytes is affected by the
-+method and doesn't show 'exact' value of memory (and swap) usage, it's a fuzz
-+value for efficient access. (Of course, when necessary, it's synchronized.)
-+If you want to know more exact memory usage, you should use RSS+CACHE(+SWAP)
-+value in memory.stat(see 5.2).
-+
-+5.6 numa_stat
-+
-+This is similar to numa_maps but operates on a per-memcg basis.  This is
-+useful for providing visibility into the numa locality information within
-+an memcg since the pages are allowed to be allocated from any physical
-+node.  One of the use cases is evaluating application performance by
-+combining this information with the application's CPU allocation.
-+
-+Each memcg's numa_stat file includes "total", "file", "anon" and "unevictable"
-+per-node page counts including "hierarchical_<counter>" which sums up all
-+hierarchical children's values in addition to the memcg's own value.
-+
-+The output format of memory.numa_stat is:
-+
-+total=<total pages> N0=<node 0 pages> N1=<node 1 pages> ...
-+file=<total file pages> N0=<node 0 pages> N1=<node 1 pages> ...
-+anon=<total anon pages> N0=<node 0 pages> N1=<node 1 pages> ...
-+unevictable=<total anon pages> N0=<node 0 pages> N1=<node 1 pages> ...
-+hierarchical_<counter>=<counter pages> N0=<node 0 pages> N1=<node 1 pages> ...
-+
-+The "total" count is sum of file + anon + unevictable.
-+
-+6. Hierarchy support
-+
-+The memory controller supports a deep hierarchy and hierarchical accounting.
-+The hierarchy is created by creating the appropriate cgroups in the
-+cgroup filesystem. Consider for example, the following cgroup filesystem
-+hierarchy
-+
-+	       root
-+	     /  |   \
-+            /	|    \
-+	   a	b     c
-+		      | \
-+		      |  \
-+		      d   e
-+
-+In the diagram above, with hierarchical accounting enabled, all memory
-+usage of e, is accounted to its ancestors up until the root (i.e, c and root),
-+that has memory.use_hierarchy enabled. If one of the ancestors goes over its
-+limit, the reclaim algorithm reclaims from the tasks in the ancestor and the
-+children of the ancestor.
-+
-+6.1 Enabling hierarchical accounting and reclaim
-+
-+A memory cgroup by default disables the hierarchy feature. Support
-+can be enabled by writing 1 to memory.use_hierarchy file of the root cgroup
-+
-+# echo 1 > memory.use_hierarchy
-+
-+The feature can be disabled by
-+
-+# echo 0 > memory.use_hierarchy
-+
-+NOTE1: Enabling/disabling will fail if either the cgroup already has other
-+       cgroups created below it, or if the parent cgroup has use_hierarchy
-+       enabled.
-+
-+NOTE2: When panic_on_oom is set to "2", the whole system will panic in
-+       case of an OOM event in any cgroup.
-+
-+7. Soft limits
-+
-+Soft limits allow for greater sharing of memory. The idea behind soft limits
-+is to allow control groups to use as much of the memory as needed, provided
-+
-+a. There is no memory contention
-+b. They do not exceed their hard limit
-+
-+When the system detects memory contention or low memory, control groups
-+are pushed back to their soft limits. If the soft limit of each control
-+group is very high, they are pushed back as much as possible to make
-+sure that one control group does not starve the others of memory.
-+
-+Please note that soft limits is a best-effort feature; it comes with
-+no guarantees, but it does its best to make sure that when memory is
-+heavily contended for, memory is allocated based on the soft limit
-+hints/setup. Currently soft limit based reclaim is set up such that
-+it gets invoked from balance_pgdat (kswapd).
-+
-+7.1 Interface
-+
-+Soft limits can be setup by using the following commands (in this example we
-+assume a soft limit of 256 MiB)
-+
-+# echo 256M > memory.soft_limit_in_bytes
-+
-+If we want to change this to 1G, we can at any time use
-+
-+# echo 1G > memory.soft_limit_in_bytes
-+
-+NOTE1: Soft limits take effect over a long period of time, since they involve
-+       reclaiming memory for balancing between memory cgroups
-+NOTE2: It is recommended to set the soft limit always below the hard limit,
-+       otherwise the hard limit will take precedence.
-+
-+8. Move charges at task migration
-+
-+Users can move charges associated with a task along with task migration, that
-+is, uncharge task's pages from the old cgroup and charge them to the new cgroup.
-+This feature is not supported in !CONFIG_MMU environments because of lack of
-+page tables.
-+
-+8.1 Interface
-+
-+This feature is disabled by default. It can be enabled (and disabled again) by
-+writing to memory.move_charge_at_immigrate of the destination cgroup.
-+
-+If you want to enable it:
-+
-+# echo (some positive value) > memory.move_charge_at_immigrate
-+
-+Note: Each bits of move_charge_at_immigrate has its own meaning about what type
-+      of charges should be moved. See 8.2 for details.
-+Note: Charges are moved only when you move mm->owner, in other words,
-+      a leader of a thread group.
-+Note: If we cannot find enough space for the task in the destination cgroup, we
-+      try to make space by reclaiming memory. Task migration may fail if we
-+      cannot make enough space.
-+Note: It can take several seconds if you move charges much.
-+
-+And if you want disable it again:
-+
-+# echo 0 > memory.move_charge_at_immigrate
-+
-+8.2 Type of charges which can be moved
-+
-+Each bit in move_charge_at_immigrate has its own meaning about what type of
-+charges should be moved. But in any case, it must be noted that an account of
-+a page or a swap can be moved only when it is charged to the task's current
-+(old) memory cgroup.
-+
-+  bit | what type of charges would be moved ?
-+ -----+------------------------------------------------------------------------
-+   0  | A charge of an anonymous page (or swap of it) used by the target task.
-+      | You must enable Swap Extension (see 2.4) to enable move of swap charges.
-+ -----+------------------------------------------------------------------------
-+   1  | A charge of file pages (normal file, tmpfs file (e.g. ipc shared memory)
-+      | and swaps of tmpfs file) mmapped by the target task. Unlike the case of
-+      | anonymous pages, file pages (and swaps) in the range mmapped by the task
-+      | will be moved even if the task hasn't done page fault, i.e. they might
-+      | not be the task's "RSS", but other task's "RSS" that maps the same file.
-+      | And mapcount of the page is ignored (the page can be moved even if
-+      | page_mapcount(page) > 1). You must enable Swap Extension (see 2.4) to
-+      | enable move of swap charges.
-+
-+8.3 TODO
-+
-+- All of moving charge operations are done under cgroup_mutex. It's not good
-+  behavior to hold the mutex too long, so we may need some trick.
-+
-+9. Memory thresholds
-+
-+Memory cgroup implements memory thresholds using the cgroups notification
-+API (see cgroups.txt). It allows to register multiple memory and memsw
-+thresholds and gets notifications when it crosses.
-+
-+To register a threshold, an application must:
-+- create an eventfd using eventfd(2);
-+- open memory.usage_in_bytes or memory.memsw.usage_in_bytes;
-+- write string like "<event_fd> <fd of memory.usage_in_bytes> <threshold>" to
-+  cgroup.event_control.
-+
-+Application will be notified through eventfd when memory usage crosses
-+threshold in any direction.
-+
-+It's applicable for root and non-root cgroup.
-+
-+10. OOM Control
-+
-+memory.oom_control file is for OOM notification and other controls.
-+
-+Memory cgroup implements OOM notifier using the cgroup notification
-+API (See cgroups.txt). It allows to register multiple OOM notification
-+delivery and gets notification when OOM happens.
-+
-+To register a notifier, an application must:
-+ - create an eventfd using eventfd(2)
-+ - open memory.oom_control file
-+ - write string like "<event_fd> <fd of memory.oom_control>" to
-+   cgroup.event_control
-+
-+The application will be notified through eventfd when OOM happens.
-+OOM notification doesn't work for the root cgroup.
-+
-+You can disable the OOM-killer by writing "1" to memory.oom_control file, as:
-+
-+	#echo 1 > memory.oom_control
-+
-+If OOM-killer is disabled, tasks under cgroup will hang/sleep
-+in memory cgroup's OOM-waitqueue when they request accountable memory.
-+
-+For running them, you have to relax the memory cgroup's OOM status by
-+	* enlarge limit or reduce usage.
-+To reduce usage,
-+	* kill some tasks.
-+	* move some tasks to other group with account migration.
-+	* remove some files (on tmpfs?)
-+
-+Then, stopped tasks will work again.
-+
-+At reading, current status of OOM is shown.
-+	oom_kill_disable 0 or 1 (if 1, oom-killer is disabled)
-+	under_oom	 0 or 1 (if 1, the memory cgroup is under OOM, tasks may
-+				 be stopped.)
-+
-+11. Memory Pressure
-+
-+The pressure level notifications can be used to monitor the memory
-+allocation cost; based on the pressure, applications can implement
-+different strategies of managing their memory resources. The pressure
-+levels are defined as following:
-+
-+The "low" level means that the system is reclaiming memory for new
-+allocations. Monitoring this reclaiming activity might be useful for
-+maintaining cache level. Upon notification, the program (typically
-+"Activity Manager") might analyze vmstat and act in advance (i.e.
-+prematurely shutdown unimportant services).
-+
-+The "medium" level means that the system is experiencing medium memory
-+pressure, the system might be making swap, paging out active file caches,
-+etc. Upon this event applications may decide to further analyze
-+vmstat/zoneinfo/memcg or internal memory usage statistics and free any
-+resources that can be easily reconstructed or re-read from a disk.
-+
-+The "critical" level means that the system is actively thrashing, it is
-+about to out of memory (OOM) or even the in-kernel OOM killer is on its
-+way to trigger. Applications should do whatever they can to help the
-+system. It might be too late to consult with vmstat or any other
-+statistics, so it's advisable to take an immediate action.
-+
-+The events are propagated upward until the event is handled, i.e. the
-+events are not pass-through. Here is what this means: for example you have
-+three cgroups: A->B->C. Now you set up an event listener on cgroups A, B
-+and C, and suppose group C experiences some pressure. In this situation,
-+only group C will receive the notification, i.e. groups A and B will not
-+receive it. This is done to avoid excessive "broadcasting" of messages,
-+which disturbs the system and which is especially bad if we are low on
-+memory or thrashing. So, organize the cgroups wisely, or propagate the
-+events manually (or, ask us to implement the pass-through events,
-+explaining why would you need them.)
-+
-+The file memory.pressure_level is only used to setup an eventfd. To
-+register a notification, an application must:
-+
-+- create an eventfd using eventfd(2);
-+- open memory.pressure_level;
-+- write string like "<event_fd> <fd of memory.pressure_level> <level>"
-+  to cgroup.event_control.
-+
-+Application will be notified through eventfd when memory pressure is at
-+the specific level (or higher). Read/write operations to
-+memory.pressure_level are no implemented.
-+
-+Test:
-+
-+   Here is a small script example that makes a new cgroup, sets up a
-+   memory limit, sets up a notification in the cgroup and then makes child
-+   cgroup experience a critical pressure:
-+
-+   # cd /sys/fs/cgroup/memory/
-+   # mkdir foo
-+   # cd foo
-+   # cgroup_event_listener memory.pressure_level low &
-+   # echo 8000000 > memory.limit_in_bytes
-+   # echo 8000000 > memory.memsw.limit_in_bytes
-+   # echo $$ > tasks
-+   # dd if=/dev/zero | read x
-+
-+   (Expect a bunch of notifications, and eventually, the oom-killer will
-+   trigger.)
-+
-+12. TODO
-+
-+1. Make per-cgroup scanner reclaim not-shared pages first
-+2. Teach controller to account for shared-pages
-+3. Start reclamation in the background when the limit is
-+   not yet hit but the usage is getting closer
-+
-+Summary
-+
-+Overall, the memory controller has been a stable controller and has been
-+commented and discussed quite extensively in the community.
-+
-+References
-+
-+1. Singh, Balbir. RFC: Memory Controller, http://lwn.net/Articles/206697/
-+2. Singh, Balbir. Memory Controller (RSS Control),
-+   http://lwn.net/Articles/222762/
-+3. Emelianov, Pavel. Resource controllers based on process cgroups
-+   http://lkml.org/lkml/2007/3/6/198
-+4. Emelianov, Pavel. RSS controller based on process cgroups (v2)
-+   http://lkml.org/lkml/2007/4/9/78
-+5. Emelianov, Pavel. RSS controller based on process cgroups (v3)
-+   http://lkml.org/lkml/2007/5/30/244
-+6. Menage, Paul. Control Groups v10, http://lwn.net/Articles/236032/
-+7. Vaidyanathan, Srinivasan, Control Groups: Pagecache accounting and control
-+   subsystem (v3), http://lwn.net/Articles/235534/
-+8. Singh, Balbir. RSS controller v2 test results (lmbench),
-+   http://lkml.org/lkml/2007/5/17/232
-+9. Singh, Balbir. RSS controller v2 AIM9 results
-+   http://lkml.org/lkml/2007/5/18/1
-+10. Singh, Balbir. Memory controller v6 test results,
-+    http://lkml.org/lkml/2007/8/19/36
-+11. Singh, Balbir. Memory controller introduction (v6),
-+    http://lkml.org/lkml/2007/8/17/69
-+12. Corbet, Jonathan, Controlling memory use in cgroups,
-+    http://lwn.net/Articles/243795/
-diff --git a/Documentation/cgroup-legacy/net_cls.txt b/Documentation/cgroup-legacy/net_cls.txt
-new file mode 100644
-index 0000000..ec18234
---- /dev/null
-+++ b/Documentation/cgroup-legacy/net_cls.txt
-@@ -0,0 +1,39 @@
-+Network classifier cgroup
-+-------------------------
-+
-+The Network classifier cgroup provides an interface to
-+tag network packets with a class identifier (classid).
-+
-+The Traffic Controller (tc) can be used to assign
-+different priorities to packets from different cgroups.
-+Also, Netfilter (iptables) can use this tag to perform
-+actions on such packets.
-+
-+Creating a net_cls cgroups instance creates a net_cls.classid file.
-+This net_cls.classid value is initialized to 0.
-+
-+You can write hexadecimal values to net_cls.classid; the format for these
-+values is 0xAAAABBBB; AAAA is the major handle number and BBBB
-+is the minor handle number.
-+Reading net_cls.classid yields a decimal result.
-+
-+Example:
-+mkdir /sys/fs/cgroup/net_cls
-+mount -t cgroup -onet_cls net_cls /sys/fs/cgroup/net_cls
-+mkdir /sys/fs/cgroup/net_cls/0
-+echo 0x100001 >  /sys/fs/cgroup/net_cls/0/net_cls.classid
-+	- setting a 10:1 handle.
-+
-+cat /sys/fs/cgroup/net_cls/0/net_cls.classid
-+1048577
-+
-+configuring tc:
-+tc qdisc add dev eth0 root handle 10: htb
-+
-+tc class add dev eth0 parent 10: classid 10:1 htb rate 40mbit
-+ - creating traffic class 10:1
-+
-+tc filter add dev eth0 parent 10: protocol ip prio 10 handle 1: cgroup
-+
-+configuring iptables, basic example:
-+iptables -A OUTPUT -m cgroup ! --cgroup 0x100001 -j DROP
-diff --git a/Documentation/cgroup-legacy/net_prio.txt b/Documentation/cgroup-legacy/net_prio.txt
-new file mode 100644
-index 0000000..a82cbd2
---- /dev/null
-+++ b/Documentation/cgroup-legacy/net_prio.txt
-@@ -0,0 +1,55 @@
-+Network priority cgroup
-+-------------------------
-+
-+The Network priority cgroup provides an interface to allow an administrator to
-+dynamically set the priority of network traffic generated by various
-+applications
-+
-+Nominally, an application would set the priority of its traffic via the
-+SO_PRIORITY socket option.  This however, is not always possible because:
-+
-+1) The application may not have been coded to set this value
-+2) The priority of application traffic is often a site-specific administrative
-+   decision rather than an application defined one.
-+
-+This cgroup allows an administrator to assign a process to a group which defines
-+the priority of egress traffic on a given interface. Network priority groups can
-+be created by first mounting the cgroup filesystem.
-+
-+# mount -t cgroup -onet_prio none /sys/fs/cgroup/net_prio
-+
-+With the above step, the initial group acting as the parent accounting group
-+becomes visible at '/sys/fs/cgroup/net_prio'.  This group includes all tasks in
-+the system. '/sys/fs/cgroup/net_prio/tasks' lists the tasks in this cgroup.
-+
-+Each net_prio cgroup contains two files that are subsystem specific
-+
-+net_prio.prioidx
-+This file is read-only, and is simply informative.  It contains a unique integer
-+value that the kernel uses as an internal representation of this cgroup.
-+
-+net_prio.ifpriomap
-+This file contains a map of the priorities assigned to traffic originating from
-+processes in this group and egressing the system on various interfaces. It
-+contains a list of tuples in the form <ifname priority>.  Contents of this file
-+can be modified by echoing a string into the file using the same tuple format.
-+for example:
-+
-+echo "eth0 5" > /sys/fs/cgroups/net_prio/iscsi/net_prio.ifpriomap
-+
-+This command would force any traffic originating from processes belonging to the
-+iscsi net_prio cgroup and egressing on interface eth0 to have the priority of
-+said traffic set to the value 5. The parent accounting group also has a
-+writeable 'net_prio.ifpriomap' file that can be used to set a system default
-+priority.
-+
-+Priorities are set immediately prior to queueing a frame to the device
-+queueing discipline (qdisc) so priorities will be assigned prior to the hardware
-+queue selection being made.
-+
-+One usage for the net_prio cgroup is with mqprio qdisc allowing application
-+traffic to be steered to hardware/driver based traffic classes. These mappings
-+can then be managed by administrators or other networking protocols such as
-+DCBX.
-+
-+A new net_prio cgroup inherits the parent's configuration.
-diff --git a/Documentation/cgroup-legacy/pids.txt b/Documentation/cgroup-legacy/pids.txt
-new file mode 100644
-index 0000000..1a078b5
---- /dev/null
-+++ b/Documentation/cgroup-legacy/pids.txt
-@@ -0,0 +1,85 @@
-+						   Process Number Controller
-+						   =========================
-+
-+Abstract
-+--------
-+
-+The process number controller is used to allow a cgroup hierarchy to stop any
-+new tasks from being fork()'d or clone()'d after a certain limit is reached.
-+
-+Since it is trivial to hit the task limit without hitting any kmemcg limits in
-+place, PIDs are a fundamental resource. As such, PID exhaustion must be
-+preventable in the scope of a cgroup hierarchy by allowing resource limiting of
-+the number of tasks in a cgroup.
-+
-+Usage
-+-----
-+
-+In order to use the `pids` controller, set the maximum number of tasks in
-+pids.max (this is not available in the root cgroup for obvious reasons). The
-+number of processes currently in the cgroup is given by pids.current.
-+
-+Organisational operations are not blocked by cgroup policies, so it is possible
-+to have pids.current > pids.max. This can be done by either setting the limit to
-+be smaller than pids.current, or attaching enough processes to the cgroup such
-+that pids.current > pids.max. However, it is not possible to violate a cgroup
-+policy through fork() or clone(). fork() and clone() will return -EAGAIN if the
-+creation of a new process would cause a cgroup policy to be violated.
-+
-+To set a cgroup to have no limit, set pids.max to "max". This is the default for
-+all new cgroups (N.B. that PID limits are hierarchical, so the most stringent
-+limit in the hierarchy is followed).
-+
-+pids.current tracks all child cgroup hierarchies, so parent/pids.current is a
-+superset of parent/child/pids.current.
-+
-+Example
-+-------
-+
-+First, we mount the pids controller:
-+# mkdir -p /sys/fs/cgroup/pids
-+# mount -t cgroup -o pids none /sys/fs/cgroup/pids
-+
-+Then we create a hierarchy, set limits and attach processes to it:
-+# mkdir -p /sys/fs/cgroup/pids/parent/child
-+# echo 2 > /sys/fs/cgroup/pids/parent/pids.max
-+# echo $$ > /sys/fs/cgroup/pids/parent/cgroup.procs
-+# cat /sys/fs/cgroup/pids/parent/pids.current
-+2
-+#
-+
-+It should be noted that attempts to overcome the set limit (2 in this case) will
-+fail:
-+
-+# cat /sys/fs/cgroup/pids/parent/pids.current
-+2
-+# ( /bin/echo "Here's some processes for you." | cat )
-+sh: fork: Resource temporary unavailable
-+#
-+
-+Even if we migrate to a child cgroup (which doesn't have a set limit), we will
-+not be able to overcome the most stringent limit in the hierarchy (in this case,
-+parent's):
-+
-+# echo $$ > /sys/fs/cgroup/pids/parent/child/cgroup.procs
-+# cat /sys/fs/cgroup/pids/parent/pids.current
-+2
-+# cat /sys/fs/cgroup/pids/parent/child/pids.current
-+2
-+# cat /sys/fs/cgroup/pids/parent/child/pids.max
-+max
-+# ( /bin/echo "Here's some processes for you." | cat )
-+sh: fork: Resource temporary unavailable
-+#
-+
-+We can set a limit that is smaller than pids.current, which will stop any new
-+processes from being forked at all (note that the shell itself counts towards
-+pids.current):
-+
-+# echo 1 > /sys/fs/cgroup/pids/parent/pids.max
-+# /bin/echo "We can't even spawn a single process now."
-+sh: fork: Resource temporary unavailable
-+# echo 0 > /sys/fs/cgroup/pids/parent/pids.max
-+# /bin/echo "We can't even spawn a single process now."
-+sh: fork: Resource temporary unavailable
-+#
 diff --git a/Documentation/cgroup-legacy/unified-hierarchy.txt b/Documentation/cgroup-legacy/unified-hierarchy.txt
-new file mode 100644
-index 0000000..1161ba4
---- /dev/null
-+++ b/Documentation/cgroup-legacy/unified-hierarchy.txt
-@@ -0,0 +1,645 @@
-+
-+Cgroup unified hierarchy
-+
-+April, 2014		Tejun Heo <tj@kernel.org>
-+
-+This document describes the changes made by unified hierarchy and
-+their rationales.  It will eventually be merged into the main cgroup
-+documentation.
-+
-+CONTENTS
-+
-+1. Background
-+2. Basic Operation
-+  2-1. Mounting
-+  2-2. cgroup.subtree_control
-+  2-3. cgroup.controllers
-+3. Structural Constraints
-+  3-1. Top-down
-+  3-2. No internal tasks
-+4. Delegation
-+  4-1. Model of delegation
-+  4-2. Common ancestor rule
-+5. Other Changes
-+  5-1. [Un]populated Notification
-+  5-2. Other Core Changes
-+  5-3. Controller File Conventions
-+    5-3-1. Format
-+    5-3-2. Control Knobs
-+  5-4. Per-Controller Changes
-+    5-4-1. io
-+    5-4-2. cpuset
-+    5-4-3. memory
-+6. Planned Changes
-+  6-1. CAP for resource control
-+
-+
-+1. Background
-+
-+cgroup allows an arbitrary number of hierarchies and each hierarchy
-+can host any number of controllers.  While this seems to provide a
-+high level of flexibility, it isn't quite useful in practice.
-+
-+For example, as there is only one instance of each controller, utility
-+type controllers such as freezer which can be useful in all
-+hierarchies can only be used in one.  The issue is exacerbated by the
-+fact that controllers can't be moved around once hierarchies are
-+populated.  Another issue is that all controllers bound to a hierarchy
-+are forced to have exactly the same view of the hierarchy.  It isn't
-+possible to vary the granularity depending on the specific controller.
-+
-+In practice, these issues heavily limit which controllers can be put
-+on the same hierarchy and most configurations resort to putting each
-+controller on its own hierarchy.  Only closely related ones, such as
-+the cpu and cpuacct controllers, make sense to put on the same
-+hierarchy.  This often means that userland ends up managing multiple
-+similar hierarchies repeating the same steps on each hierarchy
-+whenever a hierarchy management operation is necessary.
-+
-+Unfortunately, support for multiple hierarchies comes at a steep cost.
-+Internal implementation in cgroup core proper is dazzlingly
-+complicated but more importantly the support for multiple hierarchies
-+restricts how cgroup is used in general and what controllers can do.
-+
-+There's no limit on how many hierarchies there may be, which means
-+that a task's cgroup membership can't be described in finite length.
-+The key may contain any varying number of entries and is unlimited in
-+length, which makes it highly awkward to handle and leads to addition
-+of controllers which exist only to identify membership, which in turn
-+exacerbates the original problem.
-+
-+Also, as a controller can't have any expectation regarding what shape
-+of hierarchies other controllers would be on, each controller has to
-+assume that all other controllers are operating on completely
-+orthogonal hierarchies.  This makes it impossible, or at least very
-+cumbersome, for controllers to cooperate with each other.
-+
-+In most use cases, putting controllers on hierarchies which are
-+completely orthogonal to each other isn't necessary.  What usually is
-+called for is the ability to have differing levels of granularity
-+depending on the specific controller.  In other words, hierarchy may
-+be collapsed from leaf towards root when viewed from specific
-+controllers.  For example, a given configuration might not care about
-+how memory is distributed beyond a certain level while still wanting
-+to control how CPU cycles are distributed.
-+
-+Unified hierarchy is the next version of cgroup interface.  It aims to
-+address the aforementioned issues by having more structure while
-+retaining enough flexibility for most use cases.  Various other
-+general and controller-specific interface issues are also addressed in
-+the process.
-+
-+
-+2. Basic Operation
-+
-+2-1. Mounting
-+
-+Unified hierarchy can be mounted with the following mount command.
-+
-+ mount -t cgroup2 none $MOUNT_POINT
-+
-+All controllers which support the unified hierarchy and are not bound
-+to other hierarchies are automatically bound to unified hierarchy and
-+show up at the root of it.  Controllers which are enabled only in the
-+root of unified hierarchy can be bound to other hierarchies.  This
-+allows mixing unified hierarchy with the traditional multiple
-+hierarchies in a fully backward compatible way.
-+
-+A controller can be moved across hierarchies only after the controller
-+is no longer referenced in its current hierarchy.  Because per-cgroup
-+controller states are destroyed asynchronously and controllers may
-+have lingering references, a controller may not show up immediately on
-+the unified hierarchy after the final umount of the previous
-+hierarchy.  Similarly, a controller should be fully disabled to be
-+moved out of the unified hierarchy and it may take some time for the
-+disabled controller to become available for other hierarchies;
-+furthermore, due to dependencies among controllers, other controllers
-+may need to be disabled too.
-+
-+While useful for development and manual configurations, dynamically
-+moving controllers between the unified and other hierarchies is
-+strongly discouraged for production use.  It is recommended to decide
-+the hierarchies and controller associations before starting using the
-+controllers.
-+
-+
-+2-2. cgroup.subtree_control
-+
-+All cgroups on unified hierarchy have a "cgroup.subtree_control" file
-+which governs which controllers are enabled on the children of the
-+cgroup.  Let's assume a hierarchy like the following.
-+
-+  root - A - B - C
-+               \ D
-+
-+root's "cgroup.subtree_control" file determines which controllers are
-+enabled on A.  A's on B.  B's on C and D.  This coincides with the
-+fact that controllers on the immediate sub-level are used to
-+distribute the resources of the parent.  In fact, it's natural to
-+assume that resource control knobs of a child belong to its parent.
-+Enabling a controller in a "cgroup.subtree_control" file declares that
-+distribution of the respective resources of the cgroup will be
-+controlled.  Note that this means that controller enable states are
-+shared among siblings.
-+
-+When read, the file contains a space-separated list of currently
-+enabled controllers.  A write to the file should contain a
-+space-separated list of controllers with '+' or '-' prefixed (without
-+the quotes).  Controllers prefixed with '+' are enabled and '-'
-+disabled.  If a controller is listed multiple times, the last entry
-+wins.  The specific operations are executed atomically - either all
-+succeed or fail.
-+
-+
-+2-3. cgroup.controllers
-+
-+Read-only "cgroup.controllers" file contains a space-separated list of
-+controllers which can be enabled in the cgroup's
-+"cgroup.subtree_control" file.
-+
-+In the root cgroup, this lists controllers which are not bound to
-+other hierarchies and the content changes as controllers are bound to
-+and unbound from other hierarchies.
-+
-+In non-root cgroups, the content of this file equals that of the
-+parent's "cgroup.subtree_control" file as only controllers enabled
-+from the parent can be used in its children.
-+
-+
-+3. Structural Constraints
-+
-+3-1. Top-down
-+
-+As it doesn't make sense to nest control of an uncontrolled resource,
-+all non-root "cgroup.subtree_control" files can only contain
-+controllers which are enabled in the parent's "cgroup.subtree_control"
-+file.  A controller can be enabled only if the parent has the
-+controller enabled and a controller can't be disabled if one or more
-+children have it enabled.
-+
-+
-+3-2. No internal tasks
-+
-+One long-standing issue that cgroup faces is the competition between
-+tasks belonging to the parent cgroup and its children cgroups.  This
-+is inherently nasty as two different types of entities compete and
-+there is no agreed-upon obvious way to handle it.  Different
-+controllers are doing different things.
-+
-+The cpu controller considers tasks and cgroups as equivalents and maps
-+nice levels to cgroup weights.  This works for some cases but falls
-+flat when children should be allocated specific ratios of CPU cycles
-+and the number of internal tasks fluctuates - the ratios constantly
-+change as the number of competing entities fluctuates.  There also are
-+other issues.  The mapping from nice level to weight isn't obvious or
-+universal, and there are various other knobs which simply aren't
-+available for tasks.
-+
-+The io controller implicitly creates a hidden leaf node for each
-+cgroup to host the tasks.  The hidden leaf has its own copies of all
-+the knobs with "leaf_" prefixed.  While this allows equivalent control
-+over internal tasks, it's with serious drawbacks.  It always adds an
-+extra layer of nesting which may not be necessary, makes the interface
-+messy and significantly complicates the implementation.
-+
-+The memory controller currently doesn't have a way to control what
-+happens between internal tasks and child cgroups and the behavior is
-+not clearly defined.  There have been attempts to add ad-hoc behaviors
-+and knobs to tailor the behavior to specific workloads.  Continuing
-+this direction will lead to problems which will be extremely difficult
-+to resolve in the long term.
-+
-+Multiple controllers struggle with internal tasks and came up with
-+different ways to deal with it; unfortunately, all the approaches in
-+use now are severely flawed and, furthermore, the widely different
-+behaviors make cgroup as whole highly inconsistent.
-+
-+It is clear that this is something which needs to be addressed from
-+cgroup core proper in a uniform way so that controllers don't need to
-+worry about it and cgroup as a whole shows a consistent and logical
-+behavior.  To achieve that, unified hierarchy enforces the following
-+structural constraint:
-+
-+ Except for the root, only cgroups which don't contain any task may
-+ have controllers enabled in their "cgroup.subtree_control" files.
-+
-+Combined with other properties, this guarantees that, when a
-+controller is looking at the part of the hierarchy which has it
-+enabled, tasks are always only on the leaves.  This rules out
-+situations where child cgroups compete against internal tasks of the
-+parent.
-+
-+There are two things to note.  Firstly, the root cgroup is exempt from
-+the restriction.  Root contains tasks and anonymous resource
-+consumption which can't be associated with any other cgroup and
-+requires special treatment from most controllers.  How resource
-+consumption in the root cgroup is governed is up to each controller.
-+
-+Secondly, the restriction doesn't take effect if there is no enabled
-+controller in the cgroup's "cgroup.subtree_control" file.  This is
-+important as otherwise it wouldn't be possible to create children of a
-+populated cgroup.  To control resource distribution of a cgroup, the
-+cgroup must create children and transfer all its tasks to the children
-+before enabling controllers in its "cgroup.subtree_control" file.
-+
-+
-+4. Delegation
-+
-+4-1. Model of delegation
-+
-+A cgroup can be delegated to a less privileged user by granting write
-+access of the directory and its "cgroup.procs" file to the user.  Note
-+that the resource control knobs in a given directory concern the
-+resources of the parent and thus must not be delegated along with the
-+directory.
-+
-+Once delegated, the user can build sub-hierarchy under the directory,
-+organize processes as it sees fit and further distribute the resources
-+it got from the parent.  The limits and other settings of all resource
-+controllers are hierarchical and regardless of what happens in the
-+delegated sub-hierarchy, nothing can escape the resource restrictions
-+imposed by the parent.
-+
-+Currently, cgroup doesn't impose any restrictions on the number of
-+cgroups in or nesting depth of a delegated sub-hierarchy; however,
-+this may in the future be limited explicitly.
-+
-+
-+4-2. Common ancestor rule
-+
-+On the unified hierarchy, to write to a "cgroup.procs" file, in
-+addition to the usual write permission to the file and uid match, the
-+writer must also have write access to the "cgroup.procs" file of the
-+common ancestor of the source and destination cgroups.  This prevents
-+delegatees from smuggling processes across disjoint sub-hierarchies.
-+
-+Let's say cgroups C0 and C1 have been delegated to user U0 who created
-+C00, C01 under C0 and C10 under C1 as follows.
-+
-+ ~~~~~~~~~~~~~ - C0 - C00
-+ ~ cgroup    ~      \ C01
-+ ~ hierarchy ~
-+ ~~~~~~~~~~~~~ - C1 - C10
-+
-+C0 and C1 are separate entities in terms of resource distribution
-+regardless of their relative positions in the hierarchy.  The
-+resources the processes under C0 are entitled to are controlled by
-+C0's ancestors and may be completely different from C1.  It's clear
-+that the intention of delegating C0 to U0 is allowing U0 to organize
-+the processes under C0 and further control the distribution of C0's
-+resources.
-+
-+On traditional hierarchies, if a task has write access to "tasks" or
-+"cgroup.procs" file of a cgroup and its uid agrees with the target, it
-+can move the target to the cgroup.  In the above example, U0 will not
-+only be able to move processes in each sub-hierarchy but also across
-+the two sub-hierarchies, effectively allowing it to violate the
-+organizational and resource restrictions implied by the hierarchical
-+structure above C0 and C1.
-+
-+On the unified hierarchy, let's say U0 wants to write the pid of a
-+process which has a matching uid and is currently in C10 into
-+"C00/cgroup.procs".  U0 obviously has write access to the file and
-+migration permission on the process; however, the common ancestor of
-+the source cgroup C10 and the destination cgroup C00 is above the
-+points of delegation and U0 would not have write access to its
-+"cgroup.procs" and thus be denied with -EACCES.
-+
-+
-+5. Other Changes
-+
-+5-1. [Un]populated Notification
-+
-+cgroup users often need a way to determine when a cgroup's
-+subhierarchy becomes empty so that it can be cleaned up.  cgroup
-+currently provides release_agent for it; unfortunately, this mechanism
-+is riddled with issues.
-+
-+- It delivers events by forking and execing a userland binary
-+  specified as the release_agent.  This is a long deprecated method of
-+  notification delivery.  It's extremely heavy, slow and cumbersome to
-+  integrate with larger infrastructure.
-+
-+- There is single monitoring point at the root.  There's no way to
-+  delegate management of a subtree.
-+
-+- The event isn't recursive.  It triggers when a cgroup doesn't have
-+  any tasks or child cgroups.  Events for internal nodes trigger only
-+  after all children are removed.  This again makes it impossible to
-+  delegate management of a subtree.
-+
-+- Events are filtered from the kernel side.  A "notify_on_release"
-+  file is used to subscribe to or suppress release events.  This is
-+  unnecessarily complicated and probably done this way because event
-+  delivery itself was expensive.
-+
-+Unified hierarchy implements "populated" field in "cgroup.events"
-+interface file which can be used to monitor whether the cgroup's
-+subhierarchy has tasks in it or not.  Its value is 0 if there is no
-+task in the cgroup and its descendants; otherwise, 1.  poll and
-+[id]notify events are triggered when the value changes.
-+
-+This is significantly lighter and simpler and trivially allows
-+delegating management of subhierarchy - subhierarchy monitoring can
-+block further propagation simply by putting itself or another process
-+in the subhierarchy and monitor events that it's interested in from
-+there without interfering with monitoring higher in the tree.
-+
-+In unified hierarchy, the release_agent mechanism is no longer
-+supported and the interface files "release_agent" and
-+"notify_on_release" do not exist.
-+
-+
-+5-2. Other Core Changes
-+
-+- None of the mount options is allowed.
-+
-+- remount is disallowed.
-+
-+- rename(2) is disallowed.
-+
-+- The "tasks" file is removed.  Everything should at process
-+  granularity.  Use the "cgroup.procs" file instead.
-+
-+- The "cgroup.procs" file is not sorted.  pids will be unique unless
-+  they got recycled in-between reads.
-+
-+- The "cgroup.clone_children" file is removed.
-+
-+- /proc/PID/cgroup keeps reporting the cgroup that a zombie belonged
-+  to before exiting.  If the cgroup is removed before the zombie is
-+  reaped, " (deleted)" is appeneded to the path.
-+
-+
-+5-3. Controller File Conventions
-+
-+5-3-1. Format
-+
-+In general, all controller files should be in one of the following
-+formats whenever possible.
-+
-+- Values only files
-+
-+  VAL0 VAL1...\n
-+
-+- Flat keyed files
-+
-+  KEY0 VAL0\n
-+  KEY1 VAL1\n
-+  ...
-+
-+- Nested keyed files
-+
-+  KEY0 SUB_KEY0=VAL00 SUB_KEY1=VAL01...
-+  KEY1 SUB_KEY0=VAL10 SUB_KEY1=VAL11...
-+  ...
-+
-+For a writeable file, the format for writing should generally match
-+reading; however, controllers may allow omitting later fields or
-+implement restricted shortcuts for most common use cases.
-+
-+For both flat and nested keyed files, only the values for a single key
-+can be written at a time.  For nested keyed files, the sub key pairs
-+may be specified in any order and not all pairs have to be specified.
-+
-+
-+5-3-2. Control Knobs
-+
-+- Settings for a single feature should generally be implemented in a
-+  single file.
-+
-+- In general, the root cgroup should be exempt from resource control
-+  and thus shouldn't have resource control knobs.
-+
-+- If a controller implements ratio based resource distribution, the
-+  control knob should be named "weight" and have the range [1, 10000]
-+  and 100 should be the default value.  The values are chosen to allow
-+  enough and symmetric bias in both directions while keeping it
-+  intuitive (the default is 100%).
-+
-+- If a controller implements an absolute resource guarantee and/or
-+  limit, the control knobs should be named "min" and "max"
-+  respectively.  If a controller implements best effort resource
-+  gurantee and/or limit, the control knobs should be named "low" and
-+  "high" respectively.
-+
-+  In the above four control files, the special token "max" should be
-+  used to represent upward infinity for both reading and writing.
-+
-+- If a setting has configurable default value and specific overrides,
-+  the default settings should be keyed with "default" and appear as
-+  the first entry in the file.  Specific entries can use "default" as
-+  its value to indicate inheritance of the default value.
-+
-+- For events which are not very high frequency, an interface file
-+  "events" should be created which lists event key value pairs.
-+  Whenever a notifiable event happens, file modified event should be
-+  generated on the file.
-+
-+
-+5-4. Per-Controller Changes
-+
-+5-4-1. io
-+
-+- blkio is renamed to io.  The interface is overhauled anyway.  The
-+  new name is more in line with the other two major controllers, cpu
-+  and memory, and better suited given that it may be used for cgroup
-+  writeback without involving block layer.
-+
-+- Everything including stat is always hierarchical making separate
-+  recursive stat files pointless and, as no internal node can have
-+  tasks, leaf weights are meaningless.  The operation model is
-+  simplified and the interface is overhauled accordingly.
-+
-+  io.stat
-+
-+	The stat file.  The reported stats are from the point where
-+	bio's are issued to request_queue.  The stats are counted
-+	independent of which policies are enabled.  Each line in the
-+	file follows the following format.  More fields may later be
-+	added at the end.
-+
-+	  $MAJ:$MIN rbytes=$RBYTES wbytes=$WBYTES rios=$RIOS wrios=$WIOS
-+
-+  io.weight
-+
-+	The weight setting, currently only available and effective if
-+	cfq-iosched is in use for the target device.  The weight is
-+	between 1 and 10000 and defaults to 100.  The first line
-+	always contains the default weight in the following format to
-+	use when per-device setting is missing.
-+
-+	  default $WEIGHT
-+
-+	Subsequent lines list per-device weights of the following
-+	format.
-+
-+	  $MAJ:$MIN $WEIGHT
-+
-+	Writing "$WEIGHT" or "default $WEIGHT" changes the default
-+	setting.  Writing "$MAJ:$MIN $WEIGHT" sets per-device weight
-+	while "$MAJ:$MIN default" clears it.
-+
-+	This file is available only on non-root cgroups.
-+
-+  io.max
-+
-+	The maximum bandwidth and/or iops setting, only available if
-+	blk-throttle is enabled.  The file is of the following format.
-+
-+	  $MAJ:$MIN rbps=$RBPS wbps=$WBPS riops=$RIOPS wiops=$WIOPS
-+
-+	${R|W}BPS are read/write bytes per second and ${R|W}IOPS are
-+	read/write IOs per second.  "max" indicates no limit.  Writing
-+	to the file follows the same format but the individual
-+	settings may be ommitted or specified in any order.
-+
-+	This file is available only on non-root cgroups.
-+
-+
-+5-4-2. cpuset
-+
-+- Tasks are kept in empty cpusets after hotplug and take on the masks
-+  of the nearest non-empty ancestor, instead of being moved to it.
-+
-+- A task can be moved into an empty cpuset, and again it takes on the
-+  masks of the nearest non-empty ancestor.
-+
-+
-+5-4-3. memory
-+
-+- use_hierarchy is on by default and the cgroup file for the flag is
-+  not created.
-+
-+- The original lower boundary, the soft limit, is defined as a limit
-+  that is per default unset.  As a result, the set of cgroups that
-+  global reclaim prefers is opt-in, rather than opt-out.  The costs
-+  for optimizing these mostly negative lookups are so high that the
-+  implementation, despite its enormous size, does not even provide the
-+  basic desirable behavior.  First off, the soft limit has no
-+  hierarchical meaning.  All configured groups are organized in a
-+  global rbtree and treated like equal peers, regardless where they
-+  are located in the hierarchy.  This makes subtree delegation
-+  impossible.  Second, the soft limit reclaim pass is so aggressive
-+  that it not just introduces high allocation latencies into the
-+  system, but also impacts system performance due to overreclaim, to
-+  the point where the feature becomes self-defeating.
-+
-+  The memory.low boundary on the other hand is a top-down allocated
-+  reserve.  A cgroup enjoys reclaim protection when it and all its
-+  ancestors are below their low boundaries, which makes delegation of
-+  subtrees possible.  Secondly, new cgroups have no reserve per
-+  default and in the common case most cgroups are eligible for the
-+  preferred reclaim pass.  This allows the new low boundary to be
-+  efficiently implemented with just a minor addition to the generic
-+  reclaim code, without the need for out-of-band data structures and
-+  reclaim passes.  Because the generic reclaim code considers all
-+  cgroups except for the ones running low in the preferred first
-+  reclaim pass, overreclaim of individual groups is eliminated as
-+  well, resulting in much better overall workload performance.
-+
-+- The original high boundary, the hard limit, is defined as a strict
-+  limit that can not budge, even if the OOM killer has to be called.
-+  But this generally goes against the goal of making the most out of
-+  the available memory.  The memory consumption of workloads varies
-+  during runtime, and that requires users to overcommit.  But doing
-+  that with a strict upper limit requires either a fairly accurate
-+  prediction of the working set size or adding slack to the limit.
-+  Since working set size estimation is hard and error prone, and
-+  getting it wrong results in OOM kills, most users tend to err on the
-+  side of a looser limit and end up wasting precious resources.
-+
-+  The memory.high boundary on the other hand can be set much more
-+  conservatively.  When hit, it throttles allocations by forcing them
-+  into direct reclaim to work off the excess, but it never invokes the
-+  OOM killer.  As a result, a high boundary that is chosen too
-+  aggressively will not terminate the processes, but instead it will
-+  lead to gradual performance degradation.  The user can monitor this
-+  and make corrections until the minimal memory footprint that still
-+  gives acceptable performance is found.
-+
-+  In extreme cases, with many concurrent allocations and a complete
-+  breakdown of reclaim progress within the group, the high boundary
-+  can be exceeded.  But even then it's mostly better to satisfy the
-+  allocation from the slack available in other groups or the rest of
-+  the system than killing the group.  Otherwise, memory.max is there
-+  to limit this type of spillover and ultimately contain buggy or even
-+  malicious applications.
-+
-+- The original control file names are unwieldy and inconsistent in
-+  many different ways.  For example, the upper boundary hit count is
-+  exported in the memory.failcnt file, but an OOM event count has to
-+  be manually counted by listening to memory.oom_control events, and
-+  lower boundary / soft limit events have to be counted by first
-+  setting a threshold for that value and then counting those events.
-+  Also, usage and limit files encode their units in the filename.
-+  That makes the filenames very long, even though this is not
-+  information that a user needs to be reminded of every time they type
-+  out those names.
-+
-+  To address these naming issues, as well as to signal clearly that
-+  the new interface carries a new configuration model, the naming
-+  conventions in it necessarily differ from the old interface.
-+
-+- The original limit files indicate the state of an unset limit with a
-+  Very High Number, and a configured limit can be unset by echoing -1
-+  into those files.  But that very high number is implementation and
-+  architecture dependent and not very descriptive.  And while -1 can
-+  be understood as an underflow into the highest possible value, -2 or
-+  -10M etc. do not work, so it's not consistent.
-+
-+  memory.low, memory.high, and memory.max will use the string "max" to
-+  indicate and set the highest possible value.
-+
-+6. Planned Changes
-+
-+6-1. CAP for resource control
-+
-+Unified hierarchy will require one of the capabilities(7), which is
-+yet to be decided, for all resource control related knobs.  Process
-+organization operations - creation of sub-cgroups and migration of
-+processes in sub-hierarchies may be delegated by changing the
-+ownership and/or permissions on the cgroup directory and
-+"cgroup.procs" interface file; however, all operations which affect
-+resource control - writes to a "cgroup.subtree_control" file or any
-+controller-specific knobs - will require an explicit CAP privilege.
-+
-+This, in part, is to prevent the cgroup interface from being
-+inadvertently promoted to programmable API used by non-privileged
-+binaries.  cgroup exposes various aspects of the system in ways which
-+aren't properly abstracted for direct consumption by regular programs.
-+This is an administration interface much closer to sysctl knobs than
-+system calls.  Even the basic access model, being filesystem path
-+based, isn't suitable for direct consumption.  There's no way to
-+access "my cgroup" in a race-free way or make multiple operations
-+atomic against migration to another cgroup.
-+
-+Another aspect is that, for better or for worse, the cgroup interface
-+goes through far less scrutiny than regular interfaces for
-+unprivileged userland.  The upside is that cgroup is able to expose
-+useful features which may not be suitable for general consumption in a
-+reasonable time frame.  It provides a relatively short path between
-+internal details and userland-visible interface.  Of course, this
-+shortcut comes with high risk.  We go through what we go through for
-+general kernel APIs for good reasons.  It may end up leaking internal
-+details in a way which can exert significant pain by locking the
-+kernel into a contract that can't be maintained in a reasonable
-+manner.
-+
-+Also, due to the specific nature, cgroup and its controllers don't
-+tend to attract attention from a wide scope of developers.  cgroup's
-+short history is already fraught with severely mis-designed
-+interfaces, unnecessary commitments to and exposing of internal
-+details, broken and dangerous implementations of various features.
-+
-+Keeping cgroup as an administration interface is both advantageous for
-+its role and imperative given its nature.  Some of the cgroup features
-+may make sense for unprivileged access.  If deemed justified, those
-+must be further abstracted and implemented as a different interface,
-+be it a system call or process-private filesystem, and survive through
-+the scrutiny that any interface for general consumption is required to
-+go through.
-+
-+Requiring CAP is not a complete solution but should serve as a
-+significant deterrent against spraying cgroup usages in non-privileged
-+programs.
-diff --git a/Documentation/cgroups/00-INDEX b/Documentation/cgroups/00-INDEX
-deleted file mode 100644
-index 3f5a40f..0000000
---- a/Documentation/cgroups/00-INDEX
-+++ /dev/null
-@@ -1,30 +0,0 @@
--00-INDEX
--	- this file
--blkio-controller.txt
--	- Description for Block IO Controller, implementation and usage details.
--cgroups.txt
--	- Control Groups definition, implementation details, examples and API.
--cpuacct.txt
--	- CPU Accounting Controller; account CPU usage for groups of tasks.
--cpusets.txt
--	- documents the cpusets feature; assign CPUs and Mem to a set of tasks.
--devices.txt
--	- Device Whitelist Controller; description, interface and security.
--freezer-subsystem.txt
--	- checkpointing; rationale to not use signals, interface.
--hugetlb.txt
--	- HugeTLB Controller implementation and usage details.
--memcg_test.txt
--	- Memory Resource Controller; implementation details.
--memory.txt
--	- Memory Resource Controller; design, accounting, interface, testing.
--net_cls.txt
--	- Network classifier cgroups details and usages.
--net_prio.txt
--	- Network priority cgroups details and usages.
--pids.txt
--	- Process number cgroups details and usages.
--resource_counter.txt
--	- Resource Counter API.
--unified-hierarchy.txt
--	- Description the new/next cgroup interface.
-diff --git a/Documentation/cgroups/blkio-controller.txt b/Documentation/cgroups/blkio-controller.txt
-deleted file mode 100644
-index 12686be..0000000
---- a/Documentation/cgroups/blkio-controller.txt
-+++ /dev/null
-@@ -1,455 +0,0 @@
--				Block IO Controller
--				===================
--Overview
--========
--cgroup subsys "blkio" implements the block io controller. There seems to be
--a need of various kinds of IO control policies (like proportional BW, max BW)
--both at leaf nodes as well as at intermediate nodes in a storage hierarchy.
--Plan is to use the same cgroup based management interface for blkio controller
--and based on user options switch IO policies in the background.
--
--Currently two IO control policies are implemented. First one is proportional
--weight time based division of disk policy. It is implemented in CFQ. Hence
--this policy takes effect only on leaf nodes when CFQ is being used. The second
--one is throttling policy which can be used to specify upper IO rate limits
--on devices. This policy is implemented in generic block layer and can be
--used on leaf nodes as well as higher level logical devices like device mapper.
--
--HOWTO
--=====
--Proportional Weight division of bandwidth
-------------------------------------------
--You can do a very simple testing of running two dd threads in two different
--cgroups. Here is what you can do.
--
--- Enable Block IO controller
--	CONFIG_BLK_CGROUP=y
--
--- Enable group scheduling in CFQ
--	CONFIG_CFQ_GROUP_IOSCHED=y
--
--- Compile and boot into kernel and mount IO controller (blkio); see
--  cgroups.txt, Why are cgroups needed?.
--
--	mount -t tmpfs cgroup_root /sys/fs/cgroup
--	mkdir /sys/fs/cgroup/blkio
--	mount -t cgroup -o blkio none /sys/fs/cgroup/blkio
--
--- Create two cgroups
--	mkdir -p /sys/fs/cgroup/blkio/test1/ /sys/fs/cgroup/blkio/test2
--
--- Set weights of group test1 and test2
--	echo 1000 > /sys/fs/cgroup/blkio/test1/blkio.weight
--	echo 500 > /sys/fs/cgroup/blkio/test2/blkio.weight
--
--- Create two same size files (say 512MB each) on same disk (file1, file2) and
--  launch two dd threads in different cgroup to read those files.
--
--	sync
--	echo 3 > /proc/sys/vm/drop_caches
--
--	dd if=/mnt/sdb/zerofile1 of=/dev/null &
--	echo $! > /sys/fs/cgroup/blkio/test1/tasks
--	cat /sys/fs/cgroup/blkio/test1/tasks
--
--	dd if=/mnt/sdb/zerofile2 of=/dev/null &
--	echo $! > /sys/fs/cgroup/blkio/test2/tasks
--	cat /sys/fs/cgroup/blkio/test2/tasks
--
--- At macro level, first dd should finish first. To get more precise data, keep
--  on looking at (with the help of script), at blkio.disk_time and
--  blkio.disk_sectors files of both test1 and test2 groups. This will tell how
--  much disk time (in milli seconds), each group got and how many secotors each
--  group dispatched to the disk. We provide fairness in terms of disk time, so
--  ideally io.disk_time of cgroups should be in proportion to the weight.
--
--Throttling/Upper Limit policy
-------------------------------
--- Enable Block IO controller
--	CONFIG_BLK_CGROUP=y
--
--- Enable throttling in block layer
--	CONFIG_BLK_DEV_THROTTLING=y
--
--- Mount blkio controller (see cgroups.txt, Why are cgroups needed?)
--        mount -t cgroup -o blkio none /sys/fs/cgroup/blkio
--
--- Specify a bandwidth rate on particular device for root group. The format
--  for policy is "<major>:<minor>  <bytes_per_second>".
--
--        echo "8:16  1048576" > /sys/fs/cgroup/blkio/blkio.throttle.read_bps_device
--
--  Above will put a limit of 1MB/second on reads happening for root group
--  on device having major/minor number 8:16.
--
--- Run dd to read a file and see if rate is throttled to 1MB/s or not.
--
--		# dd if=/mnt/common/zerofile of=/dev/null bs=4K count=1024
--		# iflag=direct
--        1024+0 records in
--        1024+0 records out
--        4194304 bytes (4.2 MB) copied, 4.0001 s, 1.0 MB/s
--
-- Limits for writes can be put using blkio.throttle.write_bps_device file.
--
--Hierarchical Cgroups
--====================
--
--Both CFQ and throttling implement hierarchy support; however,
--throttling's hierarchy support is enabled iff "sane_behavior" is
--enabled from cgroup side, which currently is a development option and
--not publicly available.
--
--If somebody created a hierarchy like as follows.
--
--			root
--			/  \
--		     test1 test2
--			|
--		     test3
--
--CFQ by default and throttling with "sane_behavior" will handle the
--hierarchy correctly.  For details on CFQ hierarchy support, refer to
--Documentation/block/cfq-iosched.txt.  For throttling, all limits apply
--to the whole subtree while all statistics are local to the IOs
--directly generated by tasks in that cgroup.
--
--Throttling without "sane_behavior" enabled from cgroup side will
--practically treat all groups at same level as if it looks like the
--following.
--
--				pivot
--			     /  /   \  \
--			root  test1 test2  test3
--
--Various user visible config options
--===================================
--CONFIG_BLK_CGROUP
--	- Block IO controller.
--
--CONFIG_DEBUG_BLK_CGROUP
--	- Debug help. Right now some additional stats file show up in cgroup
--	  if this option is enabled.
--
--CONFIG_CFQ_GROUP_IOSCHED
--	- Enables group scheduling in CFQ. Currently only 1 level of group
--	  creation is allowed.
--
--CONFIG_BLK_DEV_THROTTLING
--	- Enable block device throttling support in block layer.
--
--Details of cgroup files
--=======================
--Proportional weight policy files
----------------------------------
--- blkio.weight
--	- Specifies per cgroup weight. This is default weight of the group
--	  on all the devices until and unless overridden by per device rule.
--	  (See blkio.weight_device).
--	  Currently allowed range of weights is from 10 to 1000.
--
--- blkio.weight_device
--	- One can specify per cgroup per device rules using this interface.
--	  These rules override the default value of group weight as specified
--	  by blkio.weight.
--
--	  Following is the format.
--
--	  # echo dev_maj:dev_minor weight > blkio.weight_device
--	  Configure weight=300 on /dev/sdb (8:16) in this cgroup
--	  # echo 8:16 300 > blkio.weight_device
--	  # cat blkio.weight_device
--	  dev     weight
--	  8:16    300
--
--	  Configure weight=500 on /dev/sda (8:0) in this cgroup
--	  # echo 8:0 500 > blkio.weight_device
--	  # cat blkio.weight_device
--	  dev     weight
--	  8:0     500
--	  8:16    300
--
--	  Remove specific weight for /dev/sda in this cgroup
--	  # echo 8:0 0 > blkio.weight_device
--	  # cat blkio.weight_device
--	  dev     weight
--	  8:16    300
--
--- blkio.leaf_weight[_device]
--	- Equivalents of blkio.weight[_device] for the purpose of
--          deciding how much weight tasks in the given cgroup has while
--          competing with the cgroup's child cgroups. For details,
--          please refer to Documentation/block/cfq-iosched.txt.
--
--- blkio.time
--	- disk time allocated to cgroup per device in milliseconds. First
--	  two fields specify the major and minor number of the device and
--	  third field specifies the disk time allocated to group in
--	  milliseconds.
--
--- blkio.sectors
--	- number of sectors transferred to/from disk by the group. First
--	  two fields specify the major and minor number of the device and
--	  third field specifies the number of sectors transferred by the
--	  group to/from the device.
--
--- blkio.io_service_bytes
--	- Number of bytes transferred to/from the disk by the group. These
--	  are further divided by the type of operation - read or write, sync
--	  or async. First two fields specify the major and minor number of the
--	  device, third field specifies the operation type and the fourth field
--	  specifies the number of bytes.
--
--- blkio.io_serviced
--	- Number of IOs (bio) issued to the disk by the group. These
--	  are further divided by the type of operation - read or write, sync
--	  or async. First two fields specify the major and minor number of the
--	  device, third field specifies the operation type and the fourth field
--	  specifies the number of IOs.
--
--- blkio.io_service_time
--	- Total amount of time between request dispatch and request completion
--	  for the IOs done by this cgroup. This is in nanoseconds to make it
--	  meaningful for flash devices too. For devices with queue depth of 1,
--	  this time represents the actual service time. When queue_depth > 1,
--	  that is no longer true as requests may be served out of order. This
--	  may cause the service time for a given IO to include the service time
--	  of multiple IOs when served out of order which may result in total
--	  io_service_time > actual time elapsed. This time is further divided by
--	  the type of operation - read or write, sync or async. First two fields
--	  specify the major and minor number of the device, third field
--	  specifies the operation type and the fourth field specifies the
--	  io_service_time in ns.
--
--- blkio.io_wait_time
--	- Total amount of time the IOs for this cgroup spent waiting in the
--	  scheduler queues for service. This can be greater than the total time
--	  elapsed since it is cumulative io_wait_time for all IOs. It is not a
--	  measure of total time the cgroup spent waiting but rather a measure of
--	  the wait_time for its individual IOs. For devices with queue_depth > 1
--	  this metric does not include the time spent waiting for service once
--	  the IO is dispatched to the device but till it actually gets serviced
--	  (there might be a time lag here due to re-ordering of requests by the
--	  device). This is in nanoseconds to make it meaningful for flash
--	  devices too. This time is further divided by the type of operation -
--	  read or write, sync or async. First two fields specify the major and
--	  minor number of the device, third field specifies the operation type
--	  and the fourth field specifies the io_wait_time in ns.
--
--- blkio.io_merged
--	- Total number of bios/requests merged into requests belonging to this
--	  cgroup. This is further divided by the type of operation - read or
--	  write, sync or async.
--
--- blkio.io_queued
--	- Total number of requests queued up at any given instant for this
--	  cgroup. This is further divided by the type of operation - read or
--	  write, sync or async.
--
--- blkio.avg_queue_size
--	- Debugging aid only enabled if CONFIG_DEBUG_BLK_CGROUP=y.
--	  The average queue size for this cgroup over the entire time of this
--	  cgroup's existence. Queue size samples are taken each time one of the
--	  queues of this cgroup gets a timeslice.
--
--- blkio.group_wait_time
--	- Debugging aid only enabled if CONFIG_DEBUG_BLK_CGROUP=y.
--	  This is the amount of time the cgroup had to wait since it became busy
--	  (i.e., went from 0 to 1 request queued) to get a timeslice for one of
--	  its queues. This is different from the io_wait_time which is the
--	  cumulative total of the amount of time spent by each IO in that cgroup
--	  waiting in the scheduler queue. This is in nanoseconds. If this is
--	  read when the cgroup is in a waiting (for timeslice) state, the stat
--	  will only report the group_wait_time accumulated till the last time it
--	  got a timeslice and will not include the current delta.
--
--- blkio.empty_time
--	- Debugging aid only enabled if CONFIG_DEBUG_BLK_CGROUP=y.
--	  This is the amount of time a cgroup spends without any pending
--	  requests when not being served, i.e., it does not include any time
--	  spent idling for one of the queues of the cgroup. This is in
--	  nanoseconds. If this is read when the cgroup is in an empty state,
--	  the stat will only report the empty_time accumulated till the last
--	  time it had a pending request and will not include the current delta.
--
--- blkio.idle_time
--	- Debugging aid only enabled if CONFIG_DEBUG_BLK_CGROUP=y.
--	  This is the amount of time spent by the IO scheduler idling for a
--	  given cgroup in anticipation of a better request than the existing ones
--	  from other queues/cgroups. This is in nanoseconds. If this is read
--	  when the cgroup is in an idling state, the stat will only report the
--	  idle_time accumulated till the last idle period and will not include
--	  the current delta.
--
--- blkio.dequeue
--	- Debugging aid only enabled if CONFIG_DEBUG_BLK_CGROUP=y. This
--	  gives the statistics about how many a times a group was dequeued
--	  from service tree of the device. First two fields specify the major
--	  and minor number of the device and third field specifies the number
--	  of times a group was dequeued from a particular device.
--
--- blkio.*_recursive
--	- Recursive version of various stats. These files show the
--          same information as their non-recursive counterparts but
--          include stats from all the descendant cgroups.
--
--Throttling/Upper limit policy files
-------------------------------------
--- blkio.throttle.read_bps_device
--	- Specifies upper limit on READ rate from the device. IO rate is
--	  specified in bytes per second. Rules are per device. Following is
--	  the format.
--
--  echo "<major>:<minor>  <rate_bytes_per_second>" > /cgrp/blkio.throttle.read_bps_device
--
--- blkio.throttle.write_bps_device
--	- Specifies upper limit on WRITE rate to the device. IO rate is
--	  specified in bytes per second. Rules are per device. Following is
--	  the format.
--
--  echo "<major>:<minor>  <rate_bytes_per_second>" > /cgrp/blkio.throttle.write_bps_device
--
--- blkio.throttle.read_iops_device
--	- Specifies upper limit on READ rate from the device. IO rate is
--	  specified in IO per second. Rules are per device. Following is
--	  the format.
--
--  echo "<major>:<minor>  <rate_io_per_second>" > /cgrp/blkio.throttle.read_iops_device
--
--- blkio.throttle.write_iops_device
--	- Specifies upper limit on WRITE rate to the device. IO rate is
--	  specified in io per second. Rules are per device. Following is
--	  the format.
--
--  echo "<major>:<minor>  <rate_io_per_second>" > /cgrp/blkio.throttle.write_iops_device
--
--Note: If both BW and IOPS rules are specified for a device, then IO is
--      subjected to both the constraints.
--
--- blkio.throttle.io_serviced
--	- Number of IOs (bio) issued to the disk by the group. These
--	  are further divided by the type of operation - read or write, sync
--	  or async. First two fields specify the major and minor number of the
--	  device, third field specifies the operation type and the fourth field
--	  specifies the number of IOs.
--
--- blkio.throttle.io_service_bytes
--	- Number of bytes transferred to/from the disk by the group. These
--	  are further divided by the type of operation - read or write, sync
--	  or async. First two fields specify the major and minor number of the
--	  device, third field specifies the operation type and the fourth field
--	  specifies the number of bytes.
--
--Common files among various policies
-------------------------------------
--- blkio.reset_stats
--	- Writing an int to this file will result in resetting all the stats
--	  for that cgroup.
--
--CFQ sysfs tunable
--=================
--/sys/block/<disk>/queue/iosched/slice_idle
--------------------------------------------
--On a faster hardware CFQ can be slow, especially with sequential workload.
--This happens because CFQ idles on a single queue and single queue might not
--drive deeper request queue depths to keep the storage busy. In such scenarios
--one can try setting slice_idle=0 and that would switch CFQ to IOPS
--(IO operations per second) mode on NCQ supporting hardware.
--
--That means CFQ will not idle between cfq queues of a cfq group and hence be
--able to driver higher queue depth and achieve better throughput. That also
--means that cfq provides fairness among groups in terms of IOPS and not in
--terms of disk time.
--
--/sys/block/<disk>/queue/iosched/group_idle
--------------------------------------------
--If one disables idling on individual cfq queues and cfq service trees by
--setting slice_idle=0, group_idle kicks in. That means CFQ will still idle
--on the group in an attempt to provide fairness among groups.
--
--By default group_idle is same as slice_idle and does not do anything if
--slice_idle is enabled.
--
--One can experience an overall throughput drop if you have created multiple
--groups and put applications in that group which are not driving enough
--IO to keep disk busy. In that case set group_idle=0, and CFQ will not idle
--on individual groups and throughput should improve.
--
--Writeback
--=========
--
--Page cache is dirtied through buffered writes and shared mmaps and
--written asynchronously to the backing filesystem by the writeback
--mechanism.  Writeback sits between the memory and IO domains and
--regulates the proportion of dirty memory by balancing dirtying and
--write IOs.
--
--On traditional cgroup hierarchies, relationships between different
--controllers cannot be established making it impossible for writeback
--to operate accounting for cgroup resource restrictions and all
--writeback IOs are attributed to the root cgroup.
--
--If both the blkio and memory controllers are used on the v2 hierarchy
--and the filesystem supports cgroup writeback, writeback operations
--correctly follow the resource restrictions imposed by both memory and
--blkio controllers.
--
--Writeback examines both system-wide and per-cgroup dirty memory status
--and enforces the more restrictive of the two.  Also, writeback control
--parameters which are absolute values - vm.dirty_bytes and
--vm.dirty_background_bytes - are distributed across cgroups according
--to their current writeback bandwidth.
--
--There's a peculiarity stemming from the discrepancy in ownership
--granularity between memory controller and writeback.  While memory
--controller tracks ownership per page, writeback operates on inode
--basis.  cgroup writeback bridges the gap by tracking ownership by
--inode but migrating ownership if too many foreign pages, pages which
--don't match the current inode ownership, have been encountered while
--writing back the inode.
--
--This is a conscious design choice as writeback operations are
--inherently tied to inodes making strictly following page ownership
--complicated and inefficient.  The only use case which suffers from
--this compromise is multiple cgroups concurrently dirtying disjoint
--regions of the same inode, which is an unlikely use case and decided
--to be unsupported.  Note that as memory controller assigns page
--ownership on the first use and doesn't update it until the page is
--released, even if cgroup writeback strictly follows page ownership,
--multiple cgroups dirtying overlapping areas wouldn't work as expected.
--In general, write-sharing an inode across multiple cgroups is not well
--supported.
--
--Filesystem support for cgroup writeback
-----------------------------------------
--
--A filesystem can make writeback IOs cgroup-aware by updating
--address_space_operations->writepage[s]() to annotate bio's using the
--following two functions.
--
--* wbc_init_bio(@wbc, @bio)
--
--  Should be called for each bio carrying writeback data and associates
--  the bio with the inode's owner cgroup.  Can be called anytime
--  between bio allocation and submission.
--
--* wbc_account_io(@wbc, @page, @bytes)
--
--  Should be called for each data segment being written out.  While
--  this function doesn't care exactly when it's called during the
--  writeback session, it's the easiest and most natural to call it as
--  data segments are added to a bio.
--
--With writeback bio's annotated, cgroup support can be enabled per
--super_block by setting MS_CGROUPWB in ->s_flags.  This allows for
--selective disabling of cgroup writeback support which is helpful when
--certain filesystem features, e.g. journaled data mode, are
--incompatible.
--
--wbc_init_bio() binds the specified bio to its cgroup.  Depending on
--the configuration, the bio may be executed at a lower priority and if
--the writeback session is holding shared resources, e.g. a journal
--entry, may lead to priority inversion.  There is no one easy solution
--for the problem.  Filesystems can try to work around specific problem
--cases by skipping wbc_init_bio() or using bio_associate_blkcg()
--directly.
-diff --git a/Documentation/cgroups/cgroups.txt b/Documentation/cgroups/cgroups.txt
-deleted file mode 100644
-index c6256ae..0000000
---- a/Documentation/cgroups/cgroups.txt
-+++ /dev/null
-@@ -1,682 +0,0 @@
--				CGROUPS
--				-------
--
--Written by Paul Menage <menage@google.com> based on
--Documentation/cgroups/cpusets.txt
--
--Original copyright statements from cpusets.txt:
--Portions Copyright (C) 2004 BULL SA.
--Portions Copyright (c) 2004-2006 Silicon Graphics, Inc.
--Modified by Paul Jackson <pj@sgi.com>
--Modified by Christoph Lameter <clameter@sgi.com>
--
--CONTENTS:
--=========
--
--1. Control Groups
--  1.1 What are cgroups ?
--  1.2 Why are cgroups needed ?
--  1.3 How are cgroups implemented ?
--  1.4 What does notify_on_release do ?
--  1.5 What does clone_children do ?
--  1.6 How do I use cgroups ?
--2. Usage Examples and Syntax
--  2.1 Basic Usage
--  2.2 Attaching processes
--  2.3 Mounting hierarchies by name
--3. Kernel API
--  3.1 Overview
--  3.2 Synchronization
--  3.3 Subsystem API
--4. Extended attributes usage
--5. Questions
--
--1. Control Groups
--=================
--
--1.1 What are cgroups ?
------------------------
--
--Control Groups provide a mechanism for aggregating/partitioning sets of
--tasks, and all their future children, into hierarchical groups with
--specialized behaviour.
--
--Definitions:
--
--A *cgroup* associates a set of tasks with a set of parameters for one
--or more subsystems.
--
--A *subsystem* is a module that makes use of the task grouping
--facilities provided by cgroups to treat groups of tasks in
--particular ways. A subsystem is typically a "resource controller" that
--schedules a resource or applies per-cgroup limits, but it may be
--anything that wants to act on a group of processes, e.g. a
--virtualization subsystem.
--
--A *hierarchy* is a set of cgroups arranged in a tree, such that
--every task in the system is in exactly one of the cgroups in the
--hierarchy, and a set of subsystems; each subsystem has system-specific
--state attached to each cgroup in the hierarchy.  Each hierarchy has
--an instance of the cgroup virtual filesystem associated with it.
--
--At any one time there may be multiple active hierarchies of task
--cgroups. Each hierarchy is a partition of all tasks in the system.
--
--User-level code may create and destroy cgroups by name in an
--instance of the cgroup virtual file system, specify and query to
--which cgroup a task is assigned, and list the task PIDs assigned to
--a cgroup. Those creations and assignments only affect the hierarchy
--associated with that instance of the cgroup file system.
--
--On their own, the only use for cgroups is for simple job
--tracking. The intention is that other subsystems hook into the generic
--cgroup support to provide new attributes for cgroups, such as
--accounting/limiting the resources which processes in a cgroup can
--access. For example, cpusets (see Documentation/cgroups/cpusets.txt) allow
--you to associate a set of CPUs and a set of memory nodes with the
--tasks in each cgroup.
--
--1.2 Why are cgroups needed ?
------------------------------
--
--There are multiple efforts to provide process aggregations in the
--Linux kernel, mainly for resource-tracking purposes. Such efforts
--include cpusets, CKRM/ResGroups, UserBeanCounters, and virtual server
--namespaces. These all require the basic notion of a
--grouping/partitioning of processes, with newly forked processes ending
--up in the same group (cgroup) as their parent process.
--
--The kernel cgroup patch provides the minimum essential kernel
--mechanisms required to efficiently implement such groups. It has
--minimal impact on the system fast paths, and provides hooks for
--specific subsystems such as cpusets to provide additional behaviour as
--desired.
--
--Multiple hierarchy support is provided to allow for situations where
--the division of tasks into cgroups is distinctly different for
--different subsystems - having parallel hierarchies allows each
--hierarchy to be a natural division of tasks, without having to handle
--complex combinations of tasks that would be present if several
--unrelated subsystems needed to be forced into the same tree of
--cgroups.
--
--At one extreme, each resource controller or subsystem could be in a
--separate hierarchy; at the other extreme, all subsystems
--would be attached to the same hierarchy.
--
--As an example of a scenario (originally proposed by vatsa@in.ibm.com)
--that can benefit from multiple hierarchies, consider a large
--university server with various users - students, professors, system
--tasks etc. The resource planning for this server could be along the
--following lines:
--
--       CPU :          "Top cpuset"
--                       /       \
--               CPUSet1         CPUSet2
--                  |               |
--               (Professors)    (Students)
--
--               In addition (system tasks) are attached to topcpuset (so
--               that they can run anywhere) with a limit of 20%
--
--       Memory : Professors (50%), Students (30%), system (20%)
--
--       Disk : Professors (50%), Students (30%), system (20%)
--
--       Network : WWW browsing (20%), Network File System (60%), others (20%)
--                               / \
--               Professors (15%)  students (5%)
--
--Browsers like Firefox/Lynx go into the WWW network class, while (k)nfsd goes
--into the NFS network class.
--
--At the same time Firefox/Lynx will share an appropriate CPU/Memory class
--depending on who launched it (prof/student).
--
--With the ability to classify tasks differently for different resources
--(by putting those resource subsystems in different hierarchies),
--the admin can easily set up a script which receives exec notifications
--and depending on who is launching the browser he can
--
--    # echo browser_pid > /sys/fs/cgroup/<restype>/<userclass>/tasks
--
--With only a single hierarchy, he now would potentially have to create
--a separate cgroup for every browser launched and associate it with
--appropriate network and other resource class.  This may lead to
--proliferation of such cgroups.
--
--Also let's say that the administrator would like to give enhanced network
--access temporarily to a student's browser (since it is night and the user
--wants to do online gaming :))  OR give one of the student's simulation
--apps enhanced CPU power.
--
--With ability to write PIDs directly to resource classes, it's just a
--matter of:
--
--       # echo pid > /sys/fs/cgroup/network/<new_class>/tasks
--       (after some time)
--       # echo pid > /sys/fs/cgroup/network/<orig_class>/tasks
--
--Without this ability, the administrator would have to split the cgroup into
--multiple separate ones and then associate the new cgroups with the
--new resource classes.
--
--
--
--1.3 How are cgroups implemented ?
-----------------------------------
--
--Control Groups extends the kernel as follows:
--
-- - Each task in the system has a reference-counted pointer to a
--   css_set.
--
-- - A css_set contains a set of reference-counted pointers to
--   cgroup_subsys_state objects, one for each cgroup subsystem
--   registered in the system. There is no direct link from a task to
--   the cgroup of which it's a member in each hierarchy, but this
--   can be determined by following pointers through the
--   cgroup_subsys_state objects. This is because accessing the
--   subsystem state is something that's expected to happen frequently
--   and in performance-critical code, whereas operations that require a
--   task's actual cgroup assignments (in particular, moving between
--   cgroups) are less common. A linked list runs through the cg_list
--   field of each task_struct using the css_set, anchored at
--   css_set->tasks.
--
-- - A cgroup hierarchy filesystem can be mounted for browsing and
--   manipulation from user space.
--
-- - You can list all the tasks (by PID) attached to any cgroup.
--
--The implementation of cgroups requires a few, simple hooks
--into the rest of the kernel, none in performance-critical paths:
--
-- - in init/main.c, to initialize the root cgroups and initial
--   css_set at system boot.
--
-- - in fork and exit, to attach and detach a task from its css_set.
--
--In addition, a new file system of type "cgroup" may be mounted, to
--enable browsing and modifying the cgroups presently known to the
--kernel.  When mounting a cgroup hierarchy, you may specify a
--comma-separated list of subsystems to mount as the filesystem mount
--options.  By default, mounting the cgroup filesystem attempts to
--mount a hierarchy containing all registered subsystems.
--
--If an active hierarchy with exactly the same set of subsystems already
--exists, it will be reused for the new mount. If no existing hierarchy
--matches, and any of the requested subsystems are in use in an existing
--hierarchy, the mount will fail with -EBUSY. Otherwise, a new hierarchy
--is activated, associated with the requested subsystems.
--
--It's not currently possible to bind a new subsystem to an active
--cgroup hierarchy, or to unbind a subsystem from an active cgroup
--hierarchy. This may be possible in future, but is fraught with nasty
--error-recovery issues.
--
--When a cgroup filesystem is unmounted, if there are any
--child cgroups created below the top-level cgroup, that hierarchy
--will remain active even though unmounted; if there are no
--child cgroups then the hierarchy will be deactivated.
--
--No new system calls are added for cgroups - all support for
--querying and modifying cgroups is via this cgroup file system.
--
--Each task under /proc has an added file named 'cgroup' displaying,
--for each active hierarchy, the subsystem names and the cgroup name
--as the path relative to the root of the cgroup file system.
--
--Each cgroup is represented by a directory in the cgroup file system
--containing the following files describing that cgroup:
--
-- - tasks: list of tasks (by PID) attached to that cgroup.  This list
--   is not guaranteed to be sorted.  Writing a thread ID into this file
--   moves the thread into this cgroup.
-- - cgroup.procs: list of thread group IDs in the cgroup.  This list is
--   not guaranteed to be sorted or free of duplicate TGIDs, and userspace
--   should sort/uniquify the list if this property is required.
--   Writing a thread group ID into this file moves all threads in that
--   group into this cgroup.
-- - notify_on_release flag: run the release agent on exit?
-- - release_agent: the path to use for release notifications (this file
--   exists in the top cgroup only)
--
--Other subsystems such as cpusets may add additional files in each
--cgroup dir.
--
--New cgroups are created using the mkdir system call or shell
--command.  The properties of a cgroup, such as its flags, are
--modified by writing to the appropriate file in that cgroups
--directory, as listed above.
--
--The named hierarchical structure of nested cgroups allows partitioning
--a large system into nested, dynamically changeable, "soft-partitions".
--
--The attachment of each task, automatically inherited at fork by any
--children of that task, to a cgroup allows organizing the work load
--on a system into related sets of tasks.  A task may be re-attached to
--any other cgroup, if allowed by the permissions on the necessary
--cgroup file system directories.
--
--When a task is moved from one cgroup to another, it gets a new
--css_set pointer - if there's an already existing css_set with the
--desired collection of cgroups then that group is reused, otherwise a new
--css_set is allocated. The appropriate existing css_set is located by
--looking into a hash table.
--
--To allow access from a cgroup to the css_sets (and hence tasks)
--that comprise it, a set of cg_cgroup_link objects form a lattice;
--each cg_cgroup_link is linked into a list of cg_cgroup_links for
--a single cgroup on its cgrp_link_list field, and a list of
--cg_cgroup_links for a single css_set on its cg_link_list.
--
--Thus the set of tasks in a cgroup can be listed by iterating over
--each css_set that references the cgroup, and sub-iterating over
--each css_set's task set.
--
--The use of a Linux virtual file system (vfs) to represent the
--cgroup hierarchy provides for a familiar permission and name space
--for cgroups, with a minimum of additional kernel code.
--
--1.4 What does notify_on_release do ?
--------------------------------------
--
--If the notify_on_release flag is enabled (1) in a cgroup, then
--whenever the last task in the cgroup leaves (exits or attaches to
--some other cgroup) and the last child cgroup of that cgroup
--is removed, then the kernel runs the command specified by the contents
--of the "release_agent" file in that hierarchy's root directory,
--supplying the pathname (relative to the mount point of the cgroup
--file system) of the abandoned cgroup.  This enables automatic
--removal of abandoned cgroups.  The default value of
--notify_on_release in the root cgroup at system boot is disabled
--(0).  The default value of other cgroups at creation is the current
--value of their parents' notify_on_release settings. The default value of
--a cgroup hierarchy's release_agent path is empty.
--
--1.5 What does clone_children do ?
-----------------------------------
--
--This flag only affects the cpuset controller. If the clone_children
--flag is enabled (1) in a cgroup, a new cpuset cgroup will copy its
--configuration from the parent during initialization.
--
--1.6 How do I use cgroups ?
----------------------------
--
--To start a new job that is to be contained within a cgroup, using
--the "cpuset" cgroup subsystem, the steps are something like:
--
-- 1) mount -t tmpfs cgroup_root /sys/fs/cgroup
-- 2) mkdir /sys/fs/cgroup/cpuset
-- 3) mount -t cgroup -ocpuset cpuset /sys/fs/cgroup/cpuset
-- 4) Create the new cgroup by doing mkdir's and write's (or echo's) in
--    the /sys/fs/cgroup/cpuset virtual file system.
-- 5) Start a task that will be the "founding father" of the new job.
-- 6) Attach that task to the new cgroup by writing its PID to the
--    /sys/fs/cgroup/cpuset tasks file for that cgroup.
-- 7) fork, exec or clone the job tasks from this founding father task.
--
--For example, the following sequence of commands will setup a cgroup
--named "Charlie", containing just CPUs 2 and 3, and Memory Node 1,
--and then start a subshell 'sh' in that cgroup:
--
--  mount -t tmpfs cgroup_root /sys/fs/cgroup
--  mkdir /sys/fs/cgroup/cpuset
--  mount -t cgroup cpuset -ocpuset /sys/fs/cgroup/cpuset
--  cd /sys/fs/cgroup/cpuset
--  mkdir Charlie
--  cd Charlie
--  /bin/echo 2-3 > cpuset.cpus
--  /bin/echo 1 > cpuset.mems
--  /bin/echo $$ > tasks
--  sh
--  # The subshell 'sh' is now running in cgroup Charlie
--  # The next line should display '/Charlie'
--  cat /proc/self/cgroup
--
--2. Usage Examples and Syntax
--============================
--
--2.1 Basic Usage
-----------------
--
--Creating, modifying, using cgroups can be done through the cgroup
--virtual filesystem.
--
--To mount a cgroup hierarchy with all available subsystems, type:
--# mount -t cgroup xxx /sys/fs/cgroup
--
--The "xxx" is not interpreted by the cgroup code, but will appear in
--/proc/mounts so may be any useful identifying string that you like.
--
--Note: Some subsystems do not work without some user input first.  For instance,
--if cpusets are enabled the user will have to populate the cpus and mems files
--for each new cgroup created before that group can be used.
--
--As explained in section `1.2 Why are cgroups needed?' you should create
--different hierarchies of cgroups for each single resource or group of
--resources you want to control. Therefore, you should mount a tmpfs on
--/sys/fs/cgroup and create directories for each cgroup resource or resource
--group.
--
--# mount -t tmpfs cgroup_root /sys/fs/cgroup
--# mkdir /sys/fs/cgroup/rg1
--
--To mount a cgroup hierarchy with just the cpuset and memory
--subsystems, type:
--# mount -t cgroup -o cpuset,memory hier1 /sys/fs/cgroup/rg1
--
--While remounting cgroups is currently supported, it is not recommend
--to use it. Remounting allows changing bound subsystems and
--release_agent. Rebinding is hardly useful as it only works when the
--hierarchy is empty and release_agent itself should be replaced with
--conventional fsnotify. The support for remounting will be removed in
--the future.
--
--To Specify a hierarchy's release_agent:
--# mount -t cgroup -o cpuset,release_agent="/sbin/cpuset_release_agent" \
--  xxx /sys/fs/cgroup/rg1
--
--Note that specifying 'release_agent' more than once will return failure.
--
--Note that changing the set of subsystems is currently only supported
--when the hierarchy consists of a single (root) cgroup. Supporting
--the ability to arbitrarily bind/unbind subsystems from an existing
--cgroup hierarchy is intended to be implemented in the future.
--
--Then under /sys/fs/cgroup/rg1 you can find a tree that corresponds to the
--tree of the cgroups in the system. For instance, /sys/fs/cgroup/rg1
--is the cgroup that holds the whole system.
--
--If you want to change the value of release_agent:
--# echo "/sbin/new_release_agent" > /sys/fs/cgroup/rg1/release_agent
--
--It can also be changed via remount.
--
--If you want to create a new cgroup under /sys/fs/cgroup/rg1:
--# cd /sys/fs/cgroup/rg1
--# mkdir my_cgroup
--
--Now you want to do something with this cgroup.
--# cd my_cgroup
--
--In this directory you can find several files:
--# ls
--cgroup.procs notify_on_release tasks
--(plus whatever files added by the attached subsystems)
--
--Now attach your shell to this cgroup:
--# /bin/echo $$ > tasks
--
--You can also create cgroups inside your cgroup by using mkdir in this
--directory.
--# mkdir my_sub_cs
--
--To remove a cgroup, just use rmdir:
--# rmdir my_sub_cs
--
--This will fail if the cgroup is in use (has cgroups inside, or
--has processes attached, or is held alive by other subsystem-specific
--reference).
--
--2.2 Attaching processes
-------------------------
--
--# /bin/echo PID > tasks
--
--Note that it is PID, not PIDs. You can only attach ONE task at a time.
--If you have several tasks to attach, you have to do it one after another:
--
--# /bin/echo PID1 > tasks
--# /bin/echo PID2 > tasks
--	...
--# /bin/echo PIDn > tasks
--
--You can attach the current shell task by echoing 0:
--
--# echo 0 > tasks
--
--You can use the cgroup.procs file instead of the tasks file to move all
--threads in a threadgroup at once. Echoing the PID of any task in a
--threadgroup to cgroup.procs causes all tasks in that threadgroup to be
--attached to the cgroup. Writing 0 to cgroup.procs moves all tasks
--in the writing task's threadgroup.
--
--Note: Since every task is always a member of exactly one cgroup in each
--mounted hierarchy, to remove a task from its current cgroup you must
--move it into a new cgroup (possibly the root cgroup) by writing to the
--new cgroup's tasks file.
--
--Note: Due to some restrictions enforced by some cgroup subsystems, moving
--a process to another cgroup can fail.
--
--2.3 Mounting hierarchies by name
----------------------------------
--
--Passing the name=<x> option when mounting a cgroups hierarchy
--associates the given name with the hierarchy.  This can be used when
--mounting a pre-existing hierarchy, in order to refer to it by name
--rather than by its set of active subsystems.  Each hierarchy is either
--nameless, or has a unique name.
--
--The name should match [\w.-]+
--
--When passing a name=<x> option for a new hierarchy, you need to
--specify subsystems manually; the legacy behaviour of mounting all
--subsystems when none are explicitly specified is not supported when
--you give a subsystem a name.
--
--The name of the subsystem appears as part of the hierarchy description
--in /proc/mounts and /proc/<pid>/cgroups.
--
--
--3. Kernel API
--=============
--
--3.1 Overview
--------------
--
--Each kernel subsystem that wants to hook into the generic cgroup
--system needs to create a cgroup_subsys object. This contains
--various methods, which are callbacks from the cgroup system, along
--with a subsystem ID which will be assigned by the cgroup system.
--
--Other fields in the cgroup_subsys object include:
--
--- subsys_id: a unique array index for the subsystem, indicating which
--  entry in cgroup->subsys[] this subsystem should be managing.
--
--- name: should be initialized to a unique subsystem name. Should be
--  no longer than MAX_CGROUP_TYPE_NAMELEN.
--
--- early_init: indicate if the subsystem needs early initialization
--  at system boot.
--
--Each cgroup object created by the system has an array of pointers,
--indexed by subsystem ID; this pointer is entirely managed by the
--subsystem; the generic cgroup code will never touch this pointer.
--
--3.2 Synchronization
---------------------
--
--There is a global mutex, cgroup_mutex, used by the cgroup
--system. This should be taken by anything that wants to modify a
--cgroup. It may also be taken to prevent cgroups from being
--modified, but more specific locks may be more appropriate in that
--situation.
--
--See kernel/cgroup.c for more details.
--
--Subsystems can take/release the cgroup_mutex via the functions
--cgroup_lock()/cgroup_unlock().
--
--Accessing a task's cgroup pointer may be done in the following ways:
--- while holding cgroup_mutex
--- while holding the task's alloc_lock (via task_lock())
--- inside an rcu_read_lock() section via rcu_dereference()
--
--3.3 Subsystem API
-------------------
--
--Each subsystem should:
--
--- add an entry in linux/cgroup_subsys.h
--- define a cgroup_subsys object called <name>_subsys
--
--If a subsystem can be compiled as a module, it should also have in its
--module initcall a call to cgroup_load_subsys(), and in its exitcall a
--call to cgroup_unload_subsys(). It should also set its_subsys.module =
--THIS_MODULE in its .c file.
--
--Each subsystem may export the following methods. The only mandatory
--methods are css_alloc/free. Any others that are null are presumed to
--be successful no-ops.
--
--struct cgroup_subsys_state *css_alloc(struct cgroup *cgrp)
--(cgroup_mutex held by caller)
--
--Called to allocate a subsystem state object for a cgroup. The
--subsystem should allocate its subsystem state object for the passed
--cgroup, returning a pointer to the new object on success or a
--ERR_PTR() value. On success, the subsystem pointer should point to
--a structure of type cgroup_subsys_state (typically embedded in a
--larger subsystem-specific object), which will be initialized by the
--cgroup system. Note that this will be called at initialization to
--create the root subsystem state for this subsystem; this case can be
--identified by the passed cgroup object having a NULL parent (since
--it's the root of the hierarchy) and may be an appropriate place for
--initialization code.
--
--int css_online(struct cgroup *cgrp)
--(cgroup_mutex held by caller)
--
--Called after @cgrp successfully completed all allocations and made
--visible to cgroup_for_each_child/descendant_*() iterators. The
--subsystem may choose to fail creation by returning -errno. This
--callback can be used to implement reliable state sharing and
--propagation along the hierarchy. See the comment on
--cgroup_for_each_descendant_pre() for details.
--
--void css_offline(struct cgroup *cgrp);
--(cgroup_mutex held by caller)
--
--This is the counterpart of css_online() and called iff css_online()
--has succeeded on @cgrp. This signifies the beginning of the end of
--@cgrp. @cgrp is being removed and the subsystem should start dropping
--all references it's holding on @cgrp. When all references are dropped,
--cgroup removal will proceed to the next step - css_free(). After this
--callback, @cgrp should be considered dead to the subsystem.
--
--void css_free(struct cgroup *cgrp)
--(cgroup_mutex held by caller)
--
--The cgroup system is about to free @cgrp; the subsystem should free
--its subsystem state object. By the time this method is called, @cgrp
--is completely unused; @cgrp->parent is still valid. (Note - can also
--be called for a newly-created cgroup if an error occurs after this
--subsystem's create() method has been called for the new cgroup).
--
--int can_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
--(cgroup_mutex held by caller)
--
--Called prior to moving one or more tasks into a cgroup; if the
--subsystem returns an error, this will abort the attach operation.
--@tset contains the tasks to be attached and is guaranteed to have at
--least one task in it.
--
--If there are multiple tasks in the taskset, then:
--  - it's guaranteed that all are from the same thread group
--  - @tset contains all tasks from the thread group whether or not
--    they're switching cgroups
--  - the first task is the leader
--
--Each @tset entry also contains the task's old cgroup and tasks which
--aren't switching cgroup can be skipped easily using the
--cgroup_taskset_for_each() iterator. Note that this isn't called on a
--fork. If this method returns 0 (success) then this should remain valid
--while the caller holds cgroup_mutex and it is ensured that either
--attach() or cancel_attach() will be called in future.
--
--void css_reset(struct cgroup_subsys_state *css)
--(cgroup_mutex held by caller)
--
--An optional operation which should restore @css's configuration to the
--initial state.  This is currently only used on the unified hierarchy
--when a subsystem is disabled on a cgroup through
--"cgroup.subtree_control" but should remain enabled because other
--subsystems depend on it.  cgroup core makes such a css invisible by
--removing the associated interface files and invokes this callback so
--that the hidden subsystem can return to the initial neutral state.
--This prevents unexpected resource control from a hidden css and
--ensures that the configuration is in the initial state when it is made
--visible again later.
--
--void cancel_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
--(cgroup_mutex held by caller)
--
--Called when a task attach operation has failed after can_attach() has succeeded.
--A subsystem whose can_attach() has some side-effects should provide this
--function, so that the subsystem can implement a rollback. If not, not necessary.
--This will be called only about subsystems whose can_attach() operation have
--succeeded. The parameters are identical to can_attach().
--
--void attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
--(cgroup_mutex held by caller)
--
--Called after the task has been attached to the cgroup, to allow any
--post-attachment activity that requires memory allocations or blocking.
--The parameters are identical to can_attach().
--
--void fork(struct task_struct *task)
--
--Called when a task is forked into a cgroup.
--
--void exit(struct task_struct *task)
--
--Called during task exit.
--
--void free(struct task_struct *task)
--
--Called when the task_struct is freed.
--
--void bind(struct cgroup *root)
--(cgroup_mutex held by caller)
--
--Called when a cgroup subsystem is rebound to a different hierarchy
--and root cgroup. Currently this will only involve movement between
--the default hierarchy (which never has sub-cgroups) and a hierarchy
--that is being created/destroyed (and hence has no sub-cgroups).
--
--4. Extended attribute usage
--===========================
--
--cgroup filesystem supports certain types of extended attributes in its
--directories and files.  The current supported types are:
--	- Trusted (XATTR_TRUSTED)
--	- Security (XATTR_SECURITY)
--
--Both require CAP_SYS_ADMIN capability to set.
--
--Like in tmpfs, the extended attributes in cgroup filesystem are stored
--using kernel memory and it's advised to keep the usage at minimum.  This
--is the reason why user defined extended attributes are not supported, since
--any user can do it and there's no limit in the value size.
--
--The current known users for this feature are SELinux to limit cgroup usage
--in containers and systemd for assorted meta data like main PID in a cgroup
--(systemd creates a cgroup per service).
--
--5. Questions
--============
--
--Q: what's up with this '/bin/echo' ?
--A: bash's builtin 'echo' command does not check calls to write() against
--   errors. If you use it in the cgroup file system, you won't be
--   able to tell whether a command succeeded or failed.
--
--Q: When I attach processes, only the first of the line gets really attached !
--A: We can only return one error code per call to write(). So you should also
--   put only ONE PID.
--
-diff --git a/Documentation/cgroups/cpuacct.txt b/Documentation/cgroups/cpuacct.txt
-deleted file mode 100644
-index 9d73cc0..0000000
---- a/Documentation/cgroups/cpuacct.txt
-+++ /dev/null
-@@ -1,49 +0,0 @@
--CPU Accounting Controller
---------------------------
--
--The CPU accounting controller is used to group tasks using cgroups and
--account the CPU usage of these groups of tasks.
--
--The CPU accounting controller supports multi-hierarchy groups. An accounting
--group accumulates the CPU usage of all of its child groups and the tasks
--directly present in its group.
--
--Accounting groups can be created by first mounting the cgroup filesystem.
--
--# mount -t cgroup -ocpuacct none /sys/fs/cgroup
--
--With the above step, the initial or the parent accounting group becomes
--visible at /sys/fs/cgroup. At bootup, this group includes all the tasks in
--the system. /sys/fs/cgroup/tasks lists the tasks in this cgroup.
--/sys/fs/cgroup/cpuacct.usage gives the CPU time (in nanoseconds) obtained
--by this group which is essentially the CPU time obtained by all the tasks
--in the system.
--
--New accounting groups can be created under the parent group /sys/fs/cgroup.
--
--# cd /sys/fs/cgroup
--# mkdir g1
--# echo $$ > g1/tasks
--
--The above steps create a new group g1 and move the current shell
--process (bash) into it. CPU time consumed by this bash and its children
--can be obtained from g1/cpuacct.usage and the same is accumulated in
--/sys/fs/cgroup/cpuacct.usage also.
--
--cpuacct.stat file lists a few statistics which further divide the
--CPU time obtained by the cgroup into user and system times. Currently
--the following statistics are supported:
--
--user: Time spent by tasks of the cgroup in user mode.
--system: Time spent by tasks of the cgroup in kernel mode.
--
--user and system are in USER_HZ unit.
--
--cpuacct controller uses percpu_counter interface to collect user and
--system times. This has two side effects:
--
--- It is theoretically possible to see wrong values for user and system times.
--  This is because percpu_counter_read() on 32bit systems isn't safe
--  against concurrent writes.
--- It is possible to see slightly outdated values for user and system times
--  due to the batch processing nature of percpu_counter.
-diff --git a/Documentation/cgroups/cpusets.txt b/Documentation/cgroups/cpusets.txt
-deleted file mode 100644
-index fdf7dff..0000000
---- a/Documentation/cgroups/cpusets.txt
-+++ /dev/null
-@@ -1,839 +0,0 @@
--				CPUSETS
--				-------
--
--Copyright (C) 2004 BULL SA.
--Written by Simon.Derr@bull.net
--
--Portions Copyright (c) 2004-2006 Silicon Graphics, Inc.
--Modified by Paul Jackson <pj@sgi.com>
--Modified by Christoph Lameter <clameter@sgi.com>
--Modified by Paul Menage <menage@google.com>
--Modified by Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
--
--CONTENTS:
--=========
--
--1. Cpusets
--  1.1 What are cpusets ?
--  1.2 Why are cpusets needed ?
--  1.3 How are cpusets implemented ?
--  1.4 What are exclusive cpusets ?
--  1.5 What is memory_pressure ?
--  1.6 What is memory spread ?
--  1.7 What is sched_load_balance ?
--  1.8 What is sched_relax_domain_level ?
--  1.9 How do I use cpusets ?
--2. Usage Examples and Syntax
--  2.1 Basic Usage
--  2.2 Adding/removing cpus
--  2.3 Setting flags
--  2.4 Attaching processes
--3. Questions
--4. Contact
--
--1. Cpusets
--==========
--
--1.1 What are cpusets ?
------------------------
--
--Cpusets provide a mechanism for assigning a set of CPUs and Memory
--Nodes to a set of tasks.   In this document "Memory Node" refers to
--an on-line node that contains memory.
--
--Cpusets constrain the CPU and Memory placement of tasks to only
--the resources within a task's current cpuset.  They form a nested
--hierarchy visible in a virtual file system.  These are the essential
--hooks, beyond what is already present, required to manage dynamic
--job placement on large systems.
--
--Cpusets use the generic cgroup subsystem described in
--Documentation/cgroups/cgroups.txt.
--
--Requests by a task, using the sched_setaffinity(2) system call to
--include CPUs in its CPU affinity mask, and using the mbind(2) and
--set_mempolicy(2) system calls to include Memory Nodes in its memory
--policy, are both filtered through that task's cpuset, filtering out any
--CPUs or Memory Nodes not in that cpuset.  The scheduler will not
--schedule a task on a CPU that is not allowed in its cpus_allowed
--vector, and the kernel page allocator will not allocate a page on a
--node that is not allowed in the requesting task's mems_allowed vector.
--
--User level code may create and destroy cpusets by name in the cgroup
--virtual file system, manage the attributes and permissions of these
--cpusets and which CPUs and Memory Nodes are assigned to each cpuset,
--specify and query to which cpuset a task is assigned, and list the
--task pids assigned to a cpuset.
--
--
--1.2 Why are cpusets needed ?
------------------------------
--
--The management of large computer systems, with many processors (CPUs),
--complex memory cache hierarchies and multiple Memory Nodes having
--non-uniform access times (NUMA) presents additional challenges for
--the efficient scheduling and memory placement of processes.
--
--Frequently more modest sized systems can be operated with adequate
--efficiency just by letting the operating system automatically share
--the available CPU and Memory resources amongst the requesting tasks.
--
--But larger systems, which benefit more from careful processor and
--memory placement to reduce memory access times and contention,
--and which typically represent a larger investment for the customer,
--can benefit from explicitly placing jobs on properly sized subsets of
--the system.
--
--This can be especially valuable on:
--
--    * Web Servers running multiple instances of the same web application,
--    * Servers running different applications (for instance, a web server
--      and a database), or
--    * NUMA systems running large HPC applications with demanding
--      performance characteristics.
--
--These subsets, or "soft partitions" must be able to be dynamically
--adjusted, as the job mix changes, without impacting other concurrently
--executing jobs. The location of the running jobs pages may also be moved
--when the memory locations are changed.
--
--The kernel cpuset patch provides the minimum essential kernel
--mechanisms required to efficiently implement such subsets.  It
--leverages existing CPU and Memory Placement facilities in the Linux
--kernel to avoid any additional impact on the critical scheduler or
--memory allocator code.
--
--
--1.3 How are cpusets implemented ?
-----------------------------------
--
--Cpusets provide a Linux kernel mechanism to constrain which CPUs and
--Memory Nodes are used by a process or set of processes.
--
--The Linux kernel already has a pair of mechanisms to specify on which
--CPUs a task may be scheduled (sched_setaffinity) and on which Memory
--Nodes it may obtain memory (mbind, set_mempolicy).
--
--Cpusets extends these two mechanisms as follows:
--
-- - Cpusets are sets of allowed CPUs and Memory Nodes, known to the
--   kernel.
-- - Each task in the system is attached to a cpuset, via a pointer
--   in the task structure to a reference counted cgroup structure.
-- - Calls to sched_setaffinity are filtered to just those CPUs
--   allowed in that task's cpuset.
-- - Calls to mbind and set_mempolicy are filtered to just
--   those Memory Nodes allowed in that task's cpuset.
-- - The root cpuset contains all the systems CPUs and Memory
--   Nodes.
-- - For any cpuset, one can define child cpusets containing a subset
--   of the parents CPU and Memory Node resources.
-- - The hierarchy of cpusets can be mounted at /dev/cpuset, for
--   browsing and manipulation from user space.
-- - A cpuset may be marked exclusive, which ensures that no other
--   cpuset (except direct ancestors and descendants) may contain
--   any overlapping CPUs or Memory Nodes.
-- - You can list all the tasks (by pid) attached to any cpuset.
--
--The implementation of cpusets requires a few, simple hooks
--into the rest of the kernel, none in performance critical paths:
--
-- - in init/main.c, to initialize the root cpuset at system boot.
-- - in fork and exit, to attach and detach a task from its cpuset.
-- - in sched_setaffinity, to mask the requested CPUs by what's
--   allowed in that task's cpuset.
-- - in sched.c migrate_live_tasks(), to keep migrating tasks within
--   the CPUs allowed by their cpuset, if possible.
-- - in the mbind and set_mempolicy system calls, to mask the requested
--   Memory Nodes by what's allowed in that task's cpuset.
-- - in page_alloc.c, to restrict memory to allowed nodes.
-- - in vmscan.c, to restrict page recovery to the current cpuset.
--
--You should mount the "cgroup" filesystem type in order to enable
--browsing and modifying the cpusets presently known to the kernel.  No
--new system calls are added for cpusets - all support for querying and
--modifying cpusets is via this cpuset file system.
--
--The /proc/<pid>/status file for each task has four added lines,
--displaying the task's cpus_allowed (on which CPUs it may be scheduled)
--and mems_allowed (on which Memory Nodes it may obtain memory),
--in the two formats seen in the following example:
--
--  Cpus_allowed:   ffffffff,ffffffff,ffffffff,ffffffff
--  Cpus_allowed_list:      0-127
--  Mems_allowed:   ffffffff,ffffffff
--  Mems_allowed_list:      0-63
--
--Each cpuset is represented by a directory in the cgroup file system
--containing (on top of the standard cgroup files) the following
--files describing that cpuset:
--
-- - cpuset.cpus: list of CPUs in that cpuset
-- - cpuset.mems: list of Memory Nodes in that cpuset
-- - cpuset.memory_migrate flag: if set, move pages to cpusets nodes
-- - cpuset.cpu_exclusive flag: is cpu placement exclusive?
-- - cpuset.mem_exclusive flag: is memory placement exclusive?
-- - cpuset.mem_hardwall flag:  is memory allocation hardwalled
-- - cpuset.memory_pressure: measure of how much paging pressure in cpuset
-- - cpuset.memory_spread_page flag: if set, spread page cache evenly on allowed nodes
-- - cpuset.memory_spread_slab flag: if set, spread slab cache evenly on allowed nodes
-- - cpuset.sched_load_balance flag: if set, load balance within CPUs on that cpuset
-- - cpuset.sched_relax_domain_level: the searching range when migrating tasks
--
--In addition, only the root cpuset has the following file:
-- - cpuset.memory_pressure_enabled flag: compute memory_pressure?
--
--New cpusets are created using the mkdir system call or shell
--command.  The properties of a cpuset, such as its flags, allowed
--CPUs and Memory Nodes, and attached tasks, are modified by writing
--to the appropriate file in that cpusets directory, as listed above.
--
--The named hierarchical structure of nested cpusets allows partitioning
--a large system into nested, dynamically changeable, "soft-partitions".
--
--The attachment of each task, automatically inherited at fork by any
--children of that task, to a cpuset allows organizing the work load
--on a system into related sets of tasks such that each set is constrained
--to using the CPUs and Memory Nodes of a particular cpuset.  A task
--may be re-attached to any other cpuset, if allowed by the permissions
--on the necessary cpuset file system directories.
--
--Such management of a system "in the large" integrates smoothly with
--the detailed placement done on individual tasks and memory regions
--using the sched_setaffinity, mbind and set_mempolicy system calls.
--
--The following rules apply to each cpuset:
--
-- - Its CPUs and Memory Nodes must be a subset of its parents.
-- - It can't be marked exclusive unless its parent is.
-- - If its cpu or memory is exclusive, they may not overlap any sibling.
--
--These rules, and the natural hierarchy of cpusets, enable efficient
--enforcement of the exclusive guarantee, without having to scan all
--cpusets every time any of them change to ensure nothing overlaps a
--exclusive cpuset.  Also, the use of a Linux virtual file system (vfs)
--to represent the cpuset hierarchy provides for a familiar permission
--and name space for cpusets, with a minimum of additional kernel code.
--
--The cpus and mems files in the root (top_cpuset) cpuset are
--read-only.  The cpus file automatically tracks the value of
--cpu_online_mask using a CPU hotplug notifier, and the mems file
--automatically tracks the value of node_states[N_MEMORY]--i.e.,
--nodes with memory--using the cpuset_track_online_nodes() hook.
--
--
--1.4 What are exclusive cpusets ?
----------------------------------
--
--If a cpuset is cpu or mem exclusive, no other cpuset, other than
--a direct ancestor or descendant, may share any of the same CPUs or
--Memory Nodes.
--
--A cpuset that is cpuset.mem_exclusive *or* cpuset.mem_hardwall is "hardwalled",
--i.e. it restricts kernel allocations for page, buffer and other data
--commonly shared by the kernel across multiple users.  All cpusets,
--whether hardwalled or not, restrict allocations of memory for user
--space.  This enables configuring a system so that several independent
--jobs can share common kernel data, such as file system pages, while
--isolating each job's user allocation in its own cpuset.  To do this,
--construct a large mem_exclusive cpuset to hold all the jobs, and
--construct child, non-mem_exclusive cpusets for each individual job.
--Only a small amount of typical kernel memory, such as requests from
--interrupt handlers, is allowed to be taken outside even a
--mem_exclusive cpuset.
--
--
--1.5 What is memory_pressure ?
-------------------------------
--The memory_pressure of a cpuset provides a simple per-cpuset metric
--of the rate that the tasks in a cpuset are attempting to free up in
--use memory on the nodes of the cpuset to satisfy additional memory
--requests.
--
--This enables batch managers monitoring jobs running in dedicated
--cpusets to efficiently detect what level of memory pressure that job
--is causing.
--
--This is useful both on tightly managed systems running a wide mix of
--submitted jobs, which may choose to terminate or re-prioritize jobs that
--are trying to use more memory than allowed on the nodes assigned to them,
--and with tightly coupled, long running, massively parallel scientific
--computing jobs that will dramatically fail to meet required performance
--goals if they start to use more memory than allowed to them.
--
--This mechanism provides a very economical way for the batch manager
--to monitor a cpuset for signs of memory pressure.  It's up to the
--batch manager or other user code to decide what to do about it and
--take action.
--
--==> Unless this feature is enabled by writing "1" to the special file
--    /dev/cpuset/memory_pressure_enabled, the hook in the rebalance
--    code of __alloc_pages() for this metric reduces to simply noticing
--    that the cpuset_memory_pressure_enabled flag is zero.  So only
--    systems that enable this feature will compute the metric.
--
--Why a per-cpuset, running average:
--
--    Because this meter is per-cpuset, rather than per-task or mm,
--    the system load imposed by a batch scheduler monitoring this
--    metric is sharply reduced on large systems, because a scan of
--    the tasklist can be avoided on each set of queries.
--
--    Because this meter is a running average, instead of an accumulating
--    counter, a batch scheduler can detect memory pressure with a
--    single read, instead of having to read and accumulate results
--    for a period of time.
--
--    Because this meter is per-cpuset rather than per-task or mm,
--    the batch scheduler can obtain the key information, memory
--    pressure in a cpuset, with a single read, rather than having to
--    query and accumulate results over all the (dynamically changing)
--    set of tasks in the cpuset.
--
--A per-cpuset simple digital filter (requires a spinlock and 3 words
--of data per-cpuset) is kept, and updated by any task attached to that
--cpuset, if it enters the synchronous (direct) page reclaim code.
--
--A per-cpuset file provides an integer number representing the recent
--(half-life of 10 seconds) rate of direct page reclaims caused by
--the tasks in the cpuset, in units of reclaims attempted per second,
--times 1000.
--
--
--1.6 What is memory spread ?
-----------------------------
--There are two boolean flag files per cpuset that control where the
--kernel allocates pages for the file system buffers and related in
--kernel data structures.  They are called 'cpuset.memory_spread_page' and
--'cpuset.memory_spread_slab'.
--
--If the per-cpuset boolean flag file 'cpuset.memory_spread_page' is set, then
--the kernel will spread the file system buffers (page cache) evenly
--over all the nodes that the faulting task is allowed to use, instead
--of preferring to put those pages on the node where the task is running.
--
--If the per-cpuset boolean flag file 'cpuset.memory_spread_slab' is set,
--then the kernel will spread some file system related slab caches,
--such as for inodes and dentries evenly over all the nodes that the
--faulting task is allowed to use, instead of preferring to put those
--pages on the node where the task is running.
--
--The setting of these flags does not affect anonymous data segment or
--stack segment pages of a task.
--
--By default, both kinds of memory spreading are off, and memory
--pages are allocated on the node local to where the task is running,
--except perhaps as modified by the task's NUMA mempolicy or cpuset
--configuration, so long as sufficient free memory pages are available.
--
--When new cpusets are created, they inherit the memory spread settings
--of their parent.
--
--Setting memory spreading causes allocations for the affected page
--or slab caches to ignore the task's NUMA mempolicy and be spread
--instead.    Tasks using mbind() or set_mempolicy() calls to set NUMA
--mempolicies will not notice any change in these calls as a result of
--their containing task's memory spread settings.  If memory spreading
--is turned off, then the currently specified NUMA mempolicy once again
--applies to memory page allocations.
--
--Both 'cpuset.memory_spread_page' and 'cpuset.memory_spread_slab' are boolean flag
--files.  By default they contain "0", meaning that the feature is off
--for that cpuset.  If a "1" is written to that file, then that turns
--the named feature on.
--
--The implementation is simple.
--
--Setting the flag 'cpuset.memory_spread_page' turns on a per-process flag
--PFA_SPREAD_PAGE for each task that is in that cpuset or subsequently
--joins that cpuset.  The page allocation calls for the page cache
--is modified to perform an inline check for this PFA_SPREAD_PAGE task
--flag, and if set, a call to a new routine cpuset_mem_spread_node()
--returns the node to prefer for the allocation.
--
--Similarly, setting 'cpuset.memory_spread_slab' turns on the flag
--PFA_SPREAD_SLAB, and appropriately marked slab caches will allocate
--pages from the node returned by cpuset_mem_spread_node().
--
--The cpuset_mem_spread_node() routine is also simple.  It uses the
--value of a per-task rotor cpuset_mem_spread_rotor to select the next
--node in the current task's mems_allowed to prefer for the allocation.
--
--This memory placement policy is also known (in other contexts) as
--round-robin or interleave.
--
--This policy can provide substantial improvements for jobs that need
--to place thread local data on the corresponding node, but that need
--to access large file system data sets that need to be spread across
--the several nodes in the jobs cpuset in order to fit.  Without this
--policy, especially for jobs that might have one thread reading in the
--data set, the memory allocation across the nodes in the jobs cpuset
--can become very uneven.
--
--1.7 What is sched_load_balance ?
----------------------------------
--
--The kernel scheduler (kernel/sched/core.c) automatically load balances
--tasks.  If one CPU is underutilized, kernel code running on that
--CPU will look for tasks on other more overloaded CPUs and move those
--tasks to itself, within the constraints of such placement mechanisms
--as cpusets and sched_setaffinity.
--
--The algorithmic cost of load balancing and its impact on key shared
--kernel data structures such as the task list increases more than
--linearly with the number of CPUs being balanced.  So the scheduler
--has support to partition the systems CPUs into a number of sched
--domains such that it only load balances within each sched domain.
--Each sched domain covers some subset of the CPUs in the system;
--no two sched domains overlap; some CPUs might not be in any sched
--domain and hence won't be load balanced.
--
--Put simply, it costs less to balance between two smaller sched domains
--than one big one, but doing so means that overloads in one of the
--two domains won't be load balanced to the other one.
--
--By default, there is one sched domain covering all CPUs, including those
--marked isolated using the kernel boot time "isolcpus=" argument. However,
--the isolated CPUs will not participate in load balancing, and will not
--have tasks running on them unless explicitly assigned.
--
--This default load balancing across all CPUs is not well suited for
--the following two situations:
-- 1) On large systems, load balancing across many CPUs is expensive.
--    If the system is managed using cpusets to place independent jobs
--    on separate sets of CPUs, full load balancing is unnecessary.
-- 2) Systems supporting realtime on some CPUs need to minimize
--    system overhead on those CPUs, including avoiding task load
--    balancing if that is not needed.
--
--When the per-cpuset flag "cpuset.sched_load_balance" is enabled (the default
--setting), it requests that all the CPUs in that cpusets allowed 'cpuset.cpus'
--be contained in a single sched domain, ensuring that load balancing
--can move a task (not otherwised pinned, as by sched_setaffinity)
--from any CPU in that cpuset to any other.
--
--When the per-cpuset flag "cpuset.sched_load_balance" is disabled, then the
--scheduler will avoid load balancing across the CPUs in that cpuset,
----except-- in so far as is necessary because some overlapping cpuset
--has "sched_load_balance" enabled.
--
--So, for example, if the top cpuset has the flag "cpuset.sched_load_balance"
--enabled, then the scheduler will have one sched domain covering all
--CPUs, and the setting of the "cpuset.sched_load_balance" flag in any other
--cpusets won't matter, as we're already fully load balancing.
--
--Therefore in the above two situations, the top cpuset flag
--"cpuset.sched_load_balance" should be disabled, and only some of the smaller,
--child cpusets have this flag enabled.
--
--When doing this, you don't usually want to leave any unpinned tasks in
--the top cpuset that might use non-trivial amounts of CPU, as such tasks
--may be artificially constrained to some subset of CPUs, depending on
--the particulars of this flag setting in descendant cpusets.  Even if
--such a task could use spare CPU cycles in some other CPUs, the kernel
--scheduler might not consider the possibility of load balancing that
--task to that underused CPU.
--
--Of course, tasks pinned to a particular CPU can be left in a cpuset
--that disables "cpuset.sched_load_balance" as those tasks aren't going anywhere
--else anyway.
--
--There is an impedance mismatch here, between cpusets and sched domains.
--Cpusets are hierarchical and nest.  Sched domains are flat; they don't
--overlap and each CPU is in at most one sched domain.
--
--It is necessary for sched domains to be flat because load balancing
--across partially overlapping sets of CPUs would risk unstable dynamics
--that would be beyond our understanding.  So if each of two partially
--overlapping cpusets enables the flag 'cpuset.sched_load_balance', then we
--form a single sched domain that is a superset of both.  We won't move
--a task to a CPU outside its cpuset, but the scheduler load balancing
--code might waste some compute cycles considering that possibility.
--
--This mismatch is why there is not a simple one-to-one relation
--between which cpusets have the flag "cpuset.sched_load_balance" enabled,
--and the sched domain configuration.  If a cpuset enables the flag, it
--will get balancing across all its CPUs, but if it disables the flag,
--it will only be assured of no load balancing if no other overlapping
--cpuset enables the flag.
--
--If two cpusets have partially overlapping 'cpuset.cpus' allowed, and only
--one of them has this flag enabled, then the other may find its
--tasks only partially load balanced, just on the overlapping CPUs.
--This is just the general case of the top_cpuset example given a few
--paragraphs above.  In the general case, as in the top cpuset case,
--don't leave tasks that might use non-trivial amounts of CPU in
--such partially load balanced cpusets, as they may be artificially
--constrained to some subset of the CPUs allowed to them, for lack of
--load balancing to the other CPUs.
--
--CPUs in "cpuset.isolcpus" were excluded from load balancing by the
--isolcpus= kernel boot option, and will never be load balanced regardless
--of the value of "cpuset.sched_load_balance" in any cpuset.
--
--1.7.1 sched_load_balance implementation details.
--------------------------------------------------
--
--The per-cpuset flag 'cpuset.sched_load_balance' defaults to enabled (contrary
--to most cpuset flags.)  When enabled for a cpuset, the kernel will
--ensure that it can load balance across all the CPUs in that cpuset
--(makes sure that all the CPUs in the cpus_allowed of that cpuset are
--in the same sched domain.)
--
--If two overlapping cpusets both have 'cpuset.sched_load_balance' enabled,
--then they will be (must be) both in the same sched domain.
--
--If, as is the default, the top cpuset has 'cpuset.sched_load_balance' enabled,
--then by the above that means there is a single sched domain covering
--the whole system, regardless of any other cpuset settings.
--
--The kernel commits to user space that it will avoid load balancing
--where it can.  It will pick as fine a granularity partition of sched
--domains as it can while still providing load balancing for any set
--of CPUs allowed to a cpuset having 'cpuset.sched_load_balance' enabled.
--
--The internal kernel cpuset to scheduler interface passes from the
--cpuset code to the scheduler code a partition of the load balanced
--CPUs in the system. This partition is a set of subsets (represented
--as an array of struct cpumask) of CPUs, pairwise disjoint, that cover
--all the CPUs that must be load balanced.
--
--The cpuset code builds a new such partition and passes it to the
--scheduler sched domain setup code, to have the sched domains rebuilt
--as necessary, whenever:
-- - the 'cpuset.sched_load_balance' flag of a cpuset with non-empty CPUs changes,
-- - or CPUs come or go from a cpuset with this flag enabled,
-- - or 'cpuset.sched_relax_domain_level' value of a cpuset with non-empty CPUs
--   and with this flag enabled changes,
-- - or a cpuset with non-empty CPUs and with this flag enabled is removed,
-- - or a cpu is offlined/onlined.
--
--This partition exactly defines what sched domains the scheduler should
--setup - one sched domain for each element (struct cpumask) in the
--partition.
--
--The scheduler remembers the currently active sched domain partitions.
--When the scheduler routine partition_sched_domains() is invoked from
--the cpuset code to update these sched domains, it compares the new
--partition requested with the current, and updates its sched domains,
--removing the old and adding the new, for each change.
--
--
--1.8 What is sched_relax_domain_level ?
----------------------------------------
--
--In sched domain, the scheduler migrates tasks in 2 ways; periodic load
--balance on tick, and at time of some schedule events.
--
--When a task is woken up, scheduler try to move the task on idle CPU.
--For example, if a task A running on CPU X activates another task B
--on the same CPU X, and if CPU Y is X's sibling and performing idle,
--then scheduler migrate task B to CPU Y so that task B can start on
--CPU Y without waiting task A on CPU X.
--
--And if a CPU run out of tasks in its runqueue, the CPU try to pull
--extra tasks from other busy CPUs to help them before it is going to
--be idle.
--
--Of course it takes some searching cost to find movable tasks and/or
--idle CPUs, the scheduler might not search all CPUs in the domain
--every time.  In fact, in some architectures, the searching ranges on
--events are limited in the same socket or node where the CPU locates,
--while the load balance on tick searches all.
--
--For example, assume CPU Z is relatively far from CPU X.  Even if CPU Z
--is idle while CPU X and the siblings are busy, scheduler can't migrate
--woken task B from X to Z since it is out of its searching range.
--As the result, task B on CPU X need to wait task A or wait load balance
--on the next tick.  For some applications in special situation, waiting
--1 tick may be too long.
--
--The 'cpuset.sched_relax_domain_level' file allows you to request changing
--this searching range as you like.  This file takes int value which
--indicates size of searching range in levels ideally as follows,
--otherwise initial value -1 that indicates the cpuset has no request.
--
--  -1  : no request. use system default or follow request of others.
--   0  : no search.
--   1  : search siblings (hyperthreads in a core).
--   2  : search cores in a package.
--   3  : search cpus in a node [= system wide on non-NUMA system]
--   4  : search nodes in a chunk of node [on NUMA system]
--   5  : search system wide [on NUMA system]
--
--The system default is architecture dependent.  The system default
--can be changed using the relax_domain_level= boot parameter.
--
--This file is per-cpuset and affect the sched domain where the cpuset
--belongs to.  Therefore if the flag 'cpuset.sched_load_balance' of a cpuset
--is disabled, then 'cpuset.sched_relax_domain_level' have no effect since
--there is no sched domain belonging the cpuset.
--
--If multiple cpusets are overlapping and hence they form a single sched
--domain, the largest value among those is used.  Be careful, if one
--requests 0 and others are -1 then 0 is used.
--
--Note that modifying this file will have both good and bad effects,
--and whether it is acceptable or not depends on your situation.
--Don't modify this file if you are not sure.
--
--If your situation is:
-- - The migration costs between each cpu can be assumed considerably
--   small(for you) due to your special application's behavior or
--   special hardware support for CPU cache etc.
-- - The searching cost doesn't have impact(for you) or you can make
--   the searching cost enough small by managing cpuset to compact etc.
-- - The latency is required even it sacrifices cache hit rate etc.
--then increasing 'sched_relax_domain_level' would benefit you.
--
--
--1.9 How do I use cpusets ?
----------------------------
--
--In order to minimize the impact of cpusets on critical kernel
--code, such as the scheduler, and due to the fact that the kernel
--does not support one task updating the memory placement of another
--task directly, the impact on a task of changing its cpuset CPU
--or Memory Node placement, or of changing to which cpuset a task
--is attached, is subtle.
--
--If a cpuset has its Memory Nodes modified, then for each task attached
--to that cpuset, the next time that the kernel attempts to allocate
--a page of memory for that task, the kernel will notice the change
--in the task's cpuset, and update its per-task memory placement to
--remain within the new cpusets memory placement.  If the task was using
--mempolicy MPOL_BIND, and the nodes to which it was bound overlap with
--its new cpuset, then the task will continue to use whatever subset
--of MPOL_BIND nodes are still allowed in the new cpuset.  If the task
--was using MPOL_BIND and now none of its MPOL_BIND nodes are allowed
--in the new cpuset, then the task will be essentially treated as if it
--was MPOL_BIND bound to the new cpuset (even though its NUMA placement,
--as queried by get_mempolicy(), doesn't change).  If a task is moved
--from one cpuset to another, then the kernel will adjust the task's
--memory placement, as above, the next time that the kernel attempts
--to allocate a page of memory for that task.
--
--If a cpuset has its 'cpuset.cpus' modified, then each task in that cpuset
--will have its allowed CPU placement changed immediately.  Similarly,
--if a task's pid is written to another cpusets 'cpuset.tasks' file, then its
--allowed CPU placement is changed immediately.  If such a task had been
--bound to some subset of its cpuset using the sched_setaffinity() call,
--the task will be allowed to run on any CPU allowed in its new cpuset,
--negating the effect of the prior sched_setaffinity() call.
--
--In summary, the memory placement of a task whose cpuset is changed is
--updated by the kernel, on the next allocation of a page for that task,
--and the processor placement is updated immediately.
--
--Normally, once a page is allocated (given a physical page
--of main memory) then that page stays on whatever node it
--was allocated, so long as it remains allocated, even if the
--cpusets memory placement policy 'cpuset.mems' subsequently changes.
--If the cpuset flag file 'cpuset.memory_migrate' is set true, then when
--tasks are attached to that cpuset, any pages that task had
--allocated to it on nodes in its previous cpuset are migrated
--to the task's new cpuset. The relative placement of the page within
--the cpuset is preserved during these migration operations if possible.
--For example if the page was on the second valid node of the prior cpuset
--then the page will be placed on the second valid node of the new cpuset.
--
--Also if 'cpuset.memory_migrate' is set true, then if that cpuset's
--'cpuset.mems' file is modified, pages allocated to tasks in that
--cpuset, that were on nodes in the previous setting of 'cpuset.mems',
--will be moved to nodes in the new setting of 'mems.'
--Pages that were not in the task's prior cpuset, or in the cpuset's
--prior 'cpuset.mems' setting, will not be moved.
--
--There is an exception to the above.  If hotplug functionality is used
--to remove all the CPUs that are currently assigned to a cpuset,
--then all the tasks in that cpuset will be moved to the nearest ancestor
--with non-empty cpus.  But the moving of some (or all) tasks might fail if
--cpuset is bound with another cgroup subsystem which has some restrictions
--on task attaching.  In this failing case, those tasks will stay
--in the original cpuset, and the kernel will automatically update
--their cpus_allowed to allow all online CPUs.  When memory hotplug
--functionality for removing Memory Nodes is available, a similar exception
--is expected to apply there as well.  In general, the kernel prefers to
--violate cpuset placement, over starving a task that has had all
--its allowed CPUs or Memory Nodes taken offline.
--
--There is a second exception to the above.  GFP_ATOMIC requests are
--kernel internal allocations that must be satisfied, immediately.
--The kernel may drop some request, in rare cases even panic, if a
--GFP_ATOMIC alloc fails.  If the request cannot be satisfied within
--the current task's cpuset, then we relax the cpuset, and look for
--memory anywhere we can find it.  It's better to violate the cpuset
--than stress the kernel.
--
--To start a new job that is to be contained within a cpuset, the steps are:
--
-- 1) mkdir /sys/fs/cgroup/cpuset
-- 2) mount -t cgroup -ocpuset cpuset /sys/fs/cgroup/cpuset
-- 3) Create the new cpuset by doing mkdir's and write's (or echo's) in
--    the /sys/fs/cgroup/cpuset virtual file system.
-- 4) Start a task that will be the "founding father" of the new job.
-- 5) Attach that task to the new cpuset by writing its pid to the
--    /sys/fs/cgroup/cpuset tasks file for that cpuset.
-- 6) fork, exec or clone the job tasks from this founding father task.
--
--For example, the following sequence of commands will setup a cpuset
--named "Charlie", containing just CPUs 2 and 3, and Memory Node 1,
--and then start a subshell 'sh' in that cpuset:
--
--  mount -t cgroup -ocpuset cpuset /sys/fs/cgroup/cpuset
--  cd /sys/fs/cgroup/cpuset
--  mkdir Charlie
--  cd Charlie
--  /bin/echo 2-3 > cpuset.cpus
--  /bin/echo 1 > cpuset.mems
--  /bin/echo $$ > tasks
--  sh
--  # The subshell 'sh' is now running in cpuset Charlie
--  # The next line should display '/Charlie'
--  cat /proc/self/cpuset
--
--There are ways to query or modify cpusets:
-- - via the cpuset file system directly, using the various cd, mkdir, echo,
--   cat, rmdir commands from the shell, or their equivalent from C.
-- - via the C library libcpuset.
-- - via the C library libcgroup.
--   (http://sourceforge.net/projects/libcg/)
-- - via the python application cset.
--   (http://code.google.com/p/cpuset/)
--
--The sched_setaffinity calls can also be done at the shell prompt using
--SGI's runon or Robert Love's taskset.  The mbind and set_mempolicy
--calls can be done at the shell prompt using the numactl command
--(part of Andi Kleen's numa package).
--
--2. Usage Examples and Syntax
--============================
--
--2.1 Basic Usage
-----------------
--
--Creating, modifying, using the cpusets can be done through the cpuset
--virtual filesystem.
--
--To mount it, type:
--# mount -t cgroup -o cpuset cpuset /sys/fs/cgroup/cpuset
--
--Then under /sys/fs/cgroup/cpuset you can find a tree that corresponds to the
--tree of the cpusets in the system. For instance, /sys/fs/cgroup/cpuset
--is the cpuset that holds the whole system.
--
--If you want to create a new cpuset under /sys/fs/cgroup/cpuset:
--# cd /sys/fs/cgroup/cpuset
--# mkdir my_cpuset
--
--Now you want to do something with this cpuset.
--# cd my_cpuset
--
--In this directory you can find several files:
--# ls
--cgroup.clone_children  cpuset.memory_pressure
--cgroup.event_control   cpuset.memory_spread_page
--cgroup.procs           cpuset.memory_spread_slab
--cpuset.cpu_exclusive   cpuset.mems
--cpuset.cpus            cpuset.sched_load_balance
--cpuset.mem_exclusive   cpuset.sched_relax_domain_level
--cpuset.mem_hardwall    notify_on_release
--cpuset.memory_migrate  tasks
--
--Reading them will give you information about the state of this cpuset:
--the CPUs and Memory Nodes it can use, the processes that are using
--it, its properties.  By writing to these files you can manipulate
--the cpuset.
--
--Set some flags:
--# /bin/echo 1 > cpuset.cpu_exclusive
--
--Add some cpus:
--# /bin/echo 0-7 > cpuset.cpus
--
--Add some mems:
--# /bin/echo 0-7 > cpuset.mems
--
--Now attach your shell to this cpuset:
--# /bin/echo $$ > tasks
--
--You can also create cpusets inside your cpuset by using mkdir in this
--directory.
--# mkdir my_sub_cs
--
--To remove a cpuset, just use rmdir:
--# rmdir my_sub_cs
--This will fail if the cpuset is in use (has cpusets inside, or has
--processes attached).
--
--Note that for legacy reasons, the "cpuset" filesystem exists as a
--wrapper around the cgroup filesystem.
--
--The command
--
--mount -t cpuset X /sys/fs/cgroup/cpuset
--
--is equivalent to
--
--mount -t cgroup -ocpuset,noprefix X /sys/fs/cgroup/cpuset
--echo "/sbin/cpuset_release_agent" > /sys/fs/cgroup/cpuset/release_agent
--
--2.2 Adding/removing cpus
--------------------------
--
--This is the syntax to use when writing in the cpus or mems files
--in cpuset directories:
--
--# /bin/echo 1-4 > cpuset.cpus		-> set cpus list to cpus 1,2,3,4
--# /bin/echo 1,2,3,4 > cpuset.cpus	-> set cpus list to cpus 1,2,3,4
--
--To add a CPU to a cpuset, write the new list of CPUs including the
--CPU to be added. To add 6 to the above cpuset:
--
--# /bin/echo 1-4,6 > cpuset.cpus	-> set cpus list to cpus 1,2,3,4,6
--
--Similarly to remove a CPU from a cpuset, write the new list of CPUs
--without the CPU to be removed.
--
--To remove all the CPUs:
--
--# /bin/echo "" > cpuset.cpus		-> clear cpus list
--
--2.3 Setting flags
-------------------
--
--The syntax is very simple:
--
--# /bin/echo 1 > cpuset.cpu_exclusive 	-> set flag 'cpuset.cpu_exclusive'
--# /bin/echo 0 > cpuset.cpu_exclusive 	-> unset flag 'cpuset.cpu_exclusive'
--
--2.4 Attaching processes
-------------------------
--
--# /bin/echo PID > tasks
--
--Note that it is PID, not PIDs. You can only attach ONE task at a time.
--If you have several tasks to attach, you have to do it one after another:
--
--# /bin/echo PID1 > tasks
--# /bin/echo PID2 > tasks
--	...
--# /bin/echo PIDn > tasks
--
--
--3. Questions
--============
--
--Q: what's up with this '/bin/echo' ?
--A: bash's builtin 'echo' command does not check calls to write() against
--   errors. If you use it in the cpuset file system, you won't be
--   able to tell whether a command succeeded or failed.
--
--Q: When I attach processes, only the first of the line gets really attached !
--A: We can only return one error code per call to write(). So you should also
--   put only ONE pid.
--
--4. Contact
--==========
--
--Web: http://www.bullopensource.org/cpuset
-diff --git a/Documentation/cgroups/devices.txt b/Documentation/cgroups/devices.txt
-deleted file mode 100644
-index 3c1095c..0000000
---- a/Documentation/cgroups/devices.txt
-+++ /dev/null
-@@ -1,116 +0,0 @@
--Device Whitelist Controller
--
--1. Description:
--
--Implement a cgroup to track and enforce open and mknod restrictions
--on device files.  A device cgroup associates a device access
--whitelist with each cgroup.  A whitelist entry has 4 fields.
--'type' is a (all), c (char), or b (block).  'all' means it applies
--to all types and all major and minor numbers.  Major and minor are
--either an integer or * for all.  Access is a composition of r
--(read), w (write), and m (mknod).
--
--The root device cgroup starts with rwm to 'all'.  A child device
--cgroup gets a copy of the parent.  Administrators can then remove
--devices from the whitelist or add new entries.  A child cgroup can
--never receive a device access which is denied by its parent.
--
--2. User Interface
--
--An entry is added using devices.allow, and removed using
--devices.deny.  For instance
--
--	echo 'c 1:3 mr' > /sys/fs/cgroup/1/devices.allow
--
--allows cgroup 1 to read and mknod the device usually known as
--/dev/null.  Doing
--
--	echo a > /sys/fs/cgroup/1/devices.deny
--
--will remove the default 'a *:* rwm' entry. Doing
--
--	echo a > /sys/fs/cgroup/1/devices.allow
--
--will add the 'a *:* rwm' entry to the whitelist.
--
--3. Security
--
--Any task can move itself between cgroups.  This clearly won't
--suffice, but we can decide the best way to adequately restrict
--movement as people get some experience with this.  We may just want
--to require CAP_SYS_ADMIN, which at least is a separate bit from
--CAP_MKNOD.  We may want to just refuse moving to a cgroup which
--isn't a descendant of the current one.  Or we may want to use
--CAP_MAC_ADMIN, since we really are trying to lock down root.
--
--CAP_SYS_ADMIN is needed to modify the whitelist or move another
--task to a new cgroup.  (Again we'll probably want to change that).
--
--A cgroup may not be granted more permissions than the cgroup's
--parent has.
--
--4. Hierarchy
--
--device cgroups maintain hierarchy by making sure a cgroup never has more
--access permissions than its parent.  Every time an entry is written to
--a cgroup's devices.deny file, all its children will have that entry removed
--from their whitelist and all the locally set whitelist entries will be
--re-evaluated.  In case one of the locally set whitelist entries would provide
--more access than the cgroup's parent, it'll be removed from the whitelist.
--
--Example:
--      A
--     / \
--        B
--
--    group        behavior	exceptions
--    A            allow		"b 8:* rwm", "c 116:1 rw"
--    B            deny		"c 1:3 rwm", "c 116:2 rwm", "b 3:* rwm"
--
--If a device is denied in group A:
--	# echo "c 116:* r" > A/devices.deny
--it'll propagate down and after revalidating B's entries, the whitelist entry
--"c 116:2 rwm" will be removed:
--
--    group        whitelist entries                        denied devices
--    A            all                                      "b 8:* rwm", "c 116:* rw"
--    B            "c 1:3 rwm", "b 3:* rwm"                 all the rest
--
--In case parent's exceptions change and local exceptions are not allowed
--anymore, they'll be deleted.
--
--Notice that new whitelist entries will not be propagated:
--      A
--     / \
--        B
--
--    group        whitelist entries                        denied devices
--    A            "c 1:3 rwm", "c 1:5 r"                   all the rest
--    B            "c 1:3 rwm", "c 1:5 r"                   all the rest
--
--when adding "c *:3 rwm":
--	# echo "c *:3 rwm" >A/devices.allow
--
--the result:
--    group        whitelist entries                        denied devices
--    A            "c *:3 rwm", "c 1:5 r"                   all the rest
--    B            "c 1:3 rwm", "c 1:5 r"                   all the rest
--
--but now it'll be possible to add new entries to B:
--	# echo "c 2:3 rwm" >B/devices.allow
--	# echo "c 50:3 r" >B/devices.allow
--or even
--	# echo "c *:3 rwm" >B/devices.allow
--
--Allowing or denying all by writing 'a' to devices.allow or devices.deny will
--not be possible once the device cgroups has children.
--
--4.1 Hierarchy (internal implementation)
--
--device cgroups is implemented internally using a behavior (ALLOW, DENY) and a
--list of exceptions.  The internal state is controlled using the same user
--interface to preserve compatibility with the previous whitelist-only
--implementation.  Removal or addition of exceptions that will reduce the access
--to devices will be propagated down the hierarchy.
--For every propagated exception, the effective rules will be re-evaluated based
--on current parent's access rules.
-diff --git a/Documentation/cgroups/freezer-subsystem.txt b/Documentation/cgroups/freezer-subsystem.txt
-deleted file mode 100644
-index c96a72c..0000000
---- a/Documentation/cgroups/freezer-subsystem.txt
-+++ /dev/null
-@@ -1,123 +0,0 @@
--The cgroup freezer is useful to batch job management system which start
--and stop sets of tasks in order to schedule the resources of a machine
--according to the desires of a system administrator. This sort of program
--is often used on HPC clusters to schedule access to the cluster as a
--whole. The cgroup freezer uses cgroups to describe the set of tasks to
--be started/stopped by the batch job management system. It also provides
--a means to start and stop the tasks composing the job.
--
--The cgroup freezer will also be useful for checkpointing running groups
--of tasks. The freezer allows the checkpoint code to obtain a consistent
--image of the tasks by attempting to force the tasks in a cgroup into a
--quiescent state. Once the tasks are quiescent another task can
--walk /proc or invoke a kernel interface to gather information about the
--quiesced tasks. Checkpointed tasks can be restarted later should a
--recoverable error occur. This also allows the checkpointed tasks to be
--migrated between nodes in a cluster by copying the gathered information
--to another node and restarting the tasks there.
--
--Sequences of SIGSTOP and SIGCONT are not always sufficient for stopping
--and resuming tasks in userspace. Both of these signals are observable
--from within the tasks we wish to freeze. While SIGSTOP cannot be caught,
--blocked, or ignored it can be seen by waiting or ptracing parent tasks.
--SIGCONT is especially unsuitable since it can be caught by the task. Any
--programs designed to watch for SIGSTOP and SIGCONT could be broken by
--attempting to use SIGSTOP and SIGCONT to stop and resume tasks. We can
--demonstrate this problem using nested bash shells:
--
--	$ echo $$
--	16644
--	$ bash
--	$ echo $$
--	16690
--
--	From a second, unrelated bash shell:
--	$ kill -SIGSTOP 16690
--	$ kill -SIGCONT 16690
--
--	<at this point 16690 exits and causes 16644 to exit too>
--
--This happens because bash can observe both signals and choose how it
--responds to them.
--
--Another example of a program which catches and responds to these
--signals is gdb. In fact any program designed to use ptrace is likely to
--have a problem with this method of stopping and resuming tasks.
--
--In contrast, the cgroup freezer uses the kernel freezer code to
--prevent the freeze/unfreeze cycle from becoming visible to the tasks
--being frozen. This allows the bash example above and gdb to run as
--expected.
--
--The cgroup freezer is hierarchical. Freezing a cgroup freezes all
--tasks beloning to the cgroup and all its descendant cgroups. Each
--cgroup has its own state (self-state) and the state inherited from the
--parent (parent-state). Iff both states are THAWED, the cgroup is
--THAWED.
--
--The following cgroupfs files are created by cgroup freezer.
--
--* freezer.state: Read-write.
--
--  When read, returns the effective state of the cgroup - "THAWED",
--  "FREEZING" or "FROZEN". This is the combined self and parent-states.
--  If any is freezing, the cgroup is freezing (FREEZING or FROZEN).
--
--  FREEZING cgroup transitions into FROZEN state when all tasks
--  belonging to the cgroup and its descendants become frozen. Note that
--  a cgroup reverts to FREEZING from FROZEN after a new task is added
--  to the cgroup or one of its descendant cgroups until the new task is
--  frozen.
--
--  When written, sets the self-state of the cgroup. Two values are
--  allowed - "FROZEN" and "THAWED". If FROZEN is written, the cgroup,
--  if not already freezing, enters FREEZING state along with all its
--  descendant cgroups.
--
--  If THAWED is written, the self-state of the cgroup is changed to
--  THAWED.  Note that the effective state may not change to THAWED if
--  the parent-state is still freezing. If a cgroup's effective state
--  becomes THAWED, all its descendants which are freezing because of
--  the cgroup also leave the freezing state.
--
--* freezer.self_freezing: Read only.
--
--  Shows the self-state. 0 if the self-state is THAWED; otherwise, 1.
--  This value is 1 iff the last write to freezer.state was "FROZEN".
--
--* freezer.parent_freezing: Read only.
--
--  Shows the parent-state.  0 if none of the cgroup's ancestors is
--  frozen; otherwise, 1.
--
--The root cgroup is non-freezable and the above interface files don't
--exist.
--
--* Examples of usage :
--
--   # mkdir /sys/fs/cgroup/freezer
--   # mount -t cgroup -ofreezer freezer /sys/fs/cgroup/freezer
--   # mkdir /sys/fs/cgroup/freezer/0
--   # echo $some_pid > /sys/fs/cgroup/freezer/0/tasks
--
--to get status of the freezer subsystem :
--
--   # cat /sys/fs/cgroup/freezer/0/freezer.state
--   THAWED
--
--to freeze all tasks in the container :
--
--   # echo FROZEN > /sys/fs/cgroup/freezer/0/freezer.state
--   # cat /sys/fs/cgroup/freezer/0/freezer.state
--   FREEZING
--   # cat /sys/fs/cgroup/freezer/0/freezer.state
--   FROZEN
--
--to unfreeze all tasks in the container :
--
--   # echo THAWED > /sys/fs/cgroup/freezer/0/freezer.state
--   # cat /sys/fs/cgroup/freezer/0/freezer.state
--   THAWED
--
--This is the basic mechanism which should do the right thing for user space task
--in a simple scenario.
-diff --git a/Documentation/cgroups/hugetlb.txt b/Documentation/cgroups/hugetlb.txt
-deleted file mode 100644
-index 106245c..0000000
---- a/Documentation/cgroups/hugetlb.txt
-+++ /dev/null
-@@ -1,45 +0,0 @@
--HugeTLB Controller
---------------------
--
--The HugeTLB controller allows to limit the HugeTLB usage per control group and
--enforces the controller limit during page fault. Since HugeTLB doesn't
--support page reclaim, enforcing the limit at page fault time implies that,
--the application will get SIGBUS signal if it tries to access HugeTLB pages
--beyond its limit. This requires the application to know beforehand how much
--HugeTLB pages it would require for its use.
--
--HugeTLB controller can be created by first mounting the cgroup filesystem.
--
--# mount -t cgroup -o hugetlb none /sys/fs/cgroup
--
--With the above step, the initial or the parent HugeTLB group becomes
--visible at /sys/fs/cgroup. At bootup, this group includes all the tasks in
--the system. /sys/fs/cgroup/tasks lists the tasks in this cgroup.
--
--New groups can be created under the parent group /sys/fs/cgroup.
--
--# cd /sys/fs/cgroup
--# mkdir g1
--# echo $$ > g1/tasks
--
--The above steps create a new group g1 and move the current shell
--process (bash) into it.
--
--Brief summary of control files
--
-- hugetlb.<hugepagesize>.limit_in_bytes     # set/show limit of "hugepagesize" hugetlb usage
-- hugetlb.<hugepagesize>.max_usage_in_bytes # show max "hugepagesize" hugetlb  usage recorded
-- hugetlb.<hugepagesize>.usage_in_bytes     # show current usage for "hugepagesize" hugetlb
-- hugetlb.<hugepagesize>.failcnt		   # show the number of allocation failure due to HugeTLB limit
--
--For a system supporting two hugepage size (16M and 16G) the control
--files include:
--
--hugetlb.16GB.limit_in_bytes
--hugetlb.16GB.max_usage_in_bytes
--hugetlb.16GB.usage_in_bytes
--hugetlb.16GB.failcnt
--hugetlb.16MB.limit_in_bytes
--hugetlb.16MB.max_usage_in_bytes
--hugetlb.16MB.usage_in_bytes
--hugetlb.16MB.failcnt
-diff --git a/Documentation/cgroups/memcg_test.txt b/Documentation/cgroups/memcg_test.txt
-deleted file mode 100644
-index 8870b02..0000000
---- a/Documentation/cgroups/memcg_test.txt
-+++ /dev/null
-@@ -1,280 +0,0 @@
--Memory Resource Controller(Memcg)  Implementation Memo.
--Last Updated: 2010/2
--Base Kernel Version: based on 2.6.33-rc7-mm(candidate for 34).
--
--Because VM is getting complex (one of reasons is memcg...), memcg's behavior
--is complex. This is a document for memcg's internal behavior.
--Please note that implementation details can be changed.
--
--(*) Topics on API should be in Documentation/cgroups/memory.txt)
--
--0. How to record usage ?
--   2 objects are used.
--
--   page_cgroup ....an object per page.
--	Allocated at boot or memory hotplug. Freed at memory hot removal.
--
--   swap_cgroup ... an entry per swp_entry.
--	Allocated at swapon(). Freed at swapoff().
--
--   The page_cgroup has USED bit and double count against a page_cgroup never
--   occurs. swap_cgroup is used only when a charged page is swapped-out.
--
--1. Charge
--
--   a page/swp_entry may be charged (usage += PAGE_SIZE) at
--
--	mem_cgroup_try_charge()
--
--2. Uncharge
--  a page/swp_entry may be uncharged (usage -= PAGE_SIZE) by
--
--	mem_cgroup_uncharge()
--	  Called when a page's refcount goes down to 0.
--
--	mem_cgroup_uncharge_swap()
--	  Called when swp_entry's refcnt goes down to 0. A charge against swap
--	  disappears.
--
--3. charge-commit-cancel
--	Memcg pages are charged in two steps:
--		mem_cgroup_try_charge()
--		mem_cgroup_commit_charge() or mem_cgroup_cancel_charge()
--
--	At try_charge(), there are no flags to say "this page is charged".
--	at this point, usage += PAGE_SIZE.
--
--	At commit(), the page is associated with the memcg.
--
--	At cancel(), simply usage -= PAGE_SIZE.
--
--Under below explanation, we assume CONFIG_MEM_RES_CTRL_SWAP=y.
--
--4. Anonymous
--	Anonymous page is newly allocated at
--		  - page fault into MAP_ANONYMOUS mapping.
--		  - Copy-On-Write.
--
--	4.1 Swap-in.
--	At swap-in, the page is taken from swap-cache. There are 2 cases.
--
--	(a) If the SwapCache is newly allocated and read, it has no charges.
--	(b) If the SwapCache has been mapped by processes, it has been
--	    charged already.
--
--	4.2 Swap-out.
--	At swap-out, typical state transition is below.
--
--	(a) add to swap cache. (marked as SwapCache)
--	    swp_entry's refcnt += 1.
--	(b) fully unmapped.
--	    swp_entry's refcnt += # of ptes.
--	(c) write back to swap.
--	(d) delete from swap cache. (remove from SwapCache)
--	    swp_entry's refcnt -= 1.
--
--
--	Finally, at task exit,
--	(e) zap_pte() is called and swp_entry's refcnt -=1 -> 0.
--
--5. Page Cache
--   	Page Cache is charged at
--	- add_to_page_cache_locked().
--
--	The logic is very clear. (About migration, see below)
--	Note: __remove_from_page_cache() is called by remove_from_page_cache()
--	and __remove_mapping().
--
--6. Shmem(tmpfs) Page Cache
--	The best way to understand shmem's page state transition is to read
--	mm/shmem.c.
--	But brief explanation of the behavior of memcg around shmem will be
--	helpful to understand the logic.
--
--	Shmem's page (just leaf page, not direct/indirect block) can be on
--		- radix-tree of shmem's inode.
--		- SwapCache.
--		- Both on radix-tree and SwapCache. This happens at swap-in
--		  and swap-out,
--
--	It's charged when...
--	- A new page is added to shmem's radix-tree.
--	- A swp page is read. (move a charge from swap_cgroup to page_cgroup)
--
--7. Page Migration
--
--	mem_cgroup_migrate()
--
--8. LRU
--        Each memcg has its own private LRU. Now, its handling is under global
--	VM's control (means that it's handled under global zone->lru_lock).
--	Almost all routines around memcg's LRU is called by global LRU's
--	list management functions under zone->lru_lock().
--
--	A special function is mem_cgroup_isolate_pages(). This scans
--	memcg's private LRU and call __isolate_lru_page() to extract a page
--	from LRU.
--	(By __isolate_lru_page(), the page is removed from both of global and
--	 private LRU.)
--
--
--9. Typical Tests.
--
-- Tests for racy cases.
--
-- 9.1 Small limit to memcg.
--	When you do test to do racy case, it's good test to set memcg's limit
--	to be very small rather than GB. Many races found in the test under
--	xKB or xxMB limits.
--	(Memory behavior under GB and Memory behavior under MB shows very
--	 different situation.)
--
-- 9.2 Shmem
--	Historically, memcg's shmem handling was poor and we saw some amount
--	of troubles here. This is because shmem is page-cache but can be
--	SwapCache. Test with shmem/tmpfs is always good test.
--
-- 9.3 Migration
--	For NUMA, migration is an another special case. To do easy test, cpuset
--	is useful. Following is a sample script to do migration.
--
--	mount -t cgroup -o cpuset none /opt/cpuset
--
--	mkdir /opt/cpuset/01
--	echo 1 > /opt/cpuset/01/cpuset.cpus
--	echo 0 > /opt/cpuset/01/cpuset.mems
--	echo 1 > /opt/cpuset/01/cpuset.memory_migrate
--	mkdir /opt/cpuset/02
--	echo 1 > /opt/cpuset/02/cpuset.cpus
--	echo 1 > /opt/cpuset/02/cpuset.mems
--	echo 1 > /opt/cpuset/02/cpuset.memory_migrate
--
--	In above set, when you moves a task from 01 to 02, page migration to
--	node 0 to node 1 will occur. Following is a script to migrate all
--	under cpuset.
--	--
--	move_task()
--	{
--	for pid in $1
--        do
--                /bin/echo $pid >$2/tasks 2>/dev/null
--		echo -n $pid
--		echo -n " "
--        done
--	echo END
--	}
--
--	G1_TASK=`cat ${G1}/tasks`
--	G2_TASK=`cat ${G2}/tasks`
--	move_task "${G1_TASK}" ${G2} &
--	--
-- 9.4 Memory hotplug.
--	memory hotplug test is one of good test.
--	to offline memory, do following.
--	# echo offline > /sys/devices/system/memory/memoryXXX/state
--	(XXX is the place of memory)
--	This is an easy way to test page migration, too.
--
-- 9.5 mkdir/rmdir
--	When using hierarchy, mkdir/rmdir test should be done.
--	Use tests like the following.
--
--	echo 1 >/opt/cgroup/01/memory/use_hierarchy
--	mkdir /opt/cgroup/01/child_a
--	mkdir /opt/cgroup/01/child_b
--
--	set limit to 01.
--	add limit to 01/child_b
--	run jobs under child_a and child_b
--
--	create/delete following groups at random while jobs are running.
--	/opt/cgroup/01/child_a/child_aa
--	/opt/cgroup/01/child_b/child_bb
--	/opt/cgroup/01/child_c
--
--	running new jobs in new group is also good.
--
-- 9.6 Mount with other subsystems.
--	Mounting with other subsystems is a good test because there is a
--	race and lock dependency with other cgroup subsystems.
--
--	example)
--	# mount -t cgroup none /cgroup -o cpuset,memory,cpu,devices
--
--	and do task move, mkdir, rmdir etc...under this.
--
-- 9.7 swapoff.
--	Besides management of swap is one of complicated parts of memcg,
--	call path of swap-in at swapoff is not same as usual swap-in path..
--	It's worth to be tested explicitly.
--
--	For example, test like following is good.
--	(Shell-A)
--	# mount -t cgroup none /cgroup -o memory
--	# mkdir /cgroup/test
--	# echo 40M > /cgroup/test/memory.limit_in_bytes
--	# echo 0 > /cgroup/test/tasks
--	Run malloc(100M) program under this. You'll see 60M of swaps.
--	(Shell-B)
--	# move all tasks in /cgroup/test to /cgroup
--	# /sbin/swapoff -a
--	# rmdir /cgroup/test
--	# kill malloc task.
--
--	Of course, tmpfs v.s. swapoff test should be tested, too.
--
-- 9.8 OOM-Killer
--	Out-of-memory caused by memcg's limit will kill tasks under
--	the memcg. When hierarchy is used, a task under hierarchy
--	will be killed by the kernel.
--	In this case, panic_on_oom shouldn't be invoked and tasks
--	in other groups shouldn't be killed.
--
--	It's not difficult to cause OOM under memcg as following.
--	Case A) when you can swapoff
--	#swapoff -a
--	#echo 50M > /memory.limit_in_bytes
--	run 51M of malloc
--
--	Case B) when you use mem+swap limitation.
--	#echo 50M > memory.limit_in_bytes
--	#echo 50M > memory.memsw.limit_in_bytes
--	run 51M of malloc
--
-- 9.9 Move charges at task migration
--	Charges associated with a task can be moved along with task migration.
--
--	(Shell-A)
--	#mkdir /cgroup/A
--	#echo $$ >/cgroup/A/tasks
--	run some programs which uses some amount of memory in /cgroup/A.
--
--	(Shell-B)
--	#mkdir /cgroup/B
--	#echo 1 >/cgroup/B/memory.move_charge_at_immigrate
--	#echo "pid of the program running in group A" >/cgroup/B/tasks
--
--	You can see charges have been moved by reading *.usage_in_bytes or
--	memory.stat of both A and B.
--	See 8.2 of Documentation/cgroups/memory.txt to see what value should be
--	written to move_charge_at_immigrate.
--
-- 9.10 Memory thresholds
--	Memory controller implements memory thresholds using cgroups notification
--	API. You can use tools/cgroup/cgroup_event_listener.c to test it.
--
--	(Shell-A) Create cgroup and run event listener
--	# mkdir /cgroup/A
--	# ./cgroup_event_listener /cgroup/A/memory.usage_in_bytes 5M
--
--	(Shell-B) Add task to cgroup and try to allocate and free memory
--	# echo $$ >/cgroup/A/tasks
--	# a="$(dd if=/dev/zero bs=1M count=10)"
--	# a=
--
--	You will see message from cgroup_event_listener every time you cross
--	the thresholds.
--
--	Use /cgroup/A/memory.memsw.usage_in_bytes to test memsw thresholds.
--
--	It's good idea to test root cgroup as well.
-diff --git a/Documentation/cgroups/memory.txt b/Documentation/cgroups/memory.txt
-deleted file mode 100644
-index ff71e16..0000000
---- a/Documentation/cgroups/memory.txt
-+++ /dev/null
-@@ -1,876 +0,0 @@
--Memory Resource Controller
--
--NOTE: This document is hopelessly outdated and it asks for a complete
--      rewrite. It still contains a useful information so we are keeping it
--      here but make sure to check the current code if you need a deeper
--      understanding.
--
--NOTE: The Memory Resource Controller has generically been referred to as the
--      memory controller in this document. Do not confuse memory controller
--      used here with the memory controller that is used in hardware.
--
--(For editors)
--In this document:
--      When we mention a cgroup (cgroupfs's directory) with memory controller,
--      we call it "memory cgroup". When you see git-log and source code, you'll
--      see patch's title and function names tend to use "memcg".
--      In this document, we avoid using it.
--
--Benefits and Purpose of the memory controller
--
--The memory controller isolates the memory behaviour of a group of tasks
--from the rest of the system. The article on LWN [12] mentions some probable
--uses of the memory controller. The memory controller can be used to
--
--a. Isolate an application or a group of applications
--   Memory-hungry applications can be isolated and limited to a smaller
--   amount of memory.
--b. Create a cgroup with a limited amount of memory; this can be used
--   as a good alternative to booting with mem=XXXX.
--c. Virtualization solutions can control the amount of memory they want
--   to assign to a virtual machine instance.
--d. A CD/DVD burner could control the amount of memory used by the
--   rest of the system to ensure that burning does not fail due to lack
--   of available memory.
--e. There are several other use cases; find one or use the controller just
--   for fun (to learn and hack on the VM subsystem).
--
--Current Status: linux-2.6.34-mmotm(development version of 2010/April)
--
--Features:
-- - accounting anonymous pages, file caches, swap caches usage and limiting them.
-- - pages are linked to per-memcg LRU exclusively, and there is no global LRU.
-- - optionally, memory+swap usage can be accounted and limited.
-- - hierarchical accounting
-- - soft limit
-- - moving (recharging) account at moving a task is selectable.
-- - usage threshold notifier
-- - memory pressure notifier
-- - oom-killer disable knob and oom-notifier
-- - Root cgroup has no limit controls.
--
-- Kernel memory support is a work in progress, and the current version provides
-- basically functionality. (See Section 2.7)
--
--Brief summary of control files.
--
-- tasks				 # attach a task(thread) and show list of threads
-- cgroup.procs			 # show list of processes
-- cgroup.event_control		 # an interface for event_fd()
-- memory.usage_in_bytes		 # show current usage for memory
--				 (See 5.5 for details)
-- memory.memsw.usage_in_bytes	 # show current usage for memory+Swap
--				 (See 5.5 for details)
-- memory.limit_in_bytes		 # set/show limit of memory usage
-- memory.memsw.limit_in_bytes	 # set/show limit of memory+Swap usage
-- memory.failcnt			 # show the number of memory usage hits limits
-- memory.memsw.failcnt		 # show the number of memory+Swap hits limits
-- memory.max_usage_in_bytes	 # show max memory usage recorded
-- memory.memsw.max_usage_in_bytes # show max memory+Swap usage recorded
-- memory.soft_limit_in_bytes	 # set/show soft limit of memory usage
-- memory.stat			 # show various statistics
-- memory.use_hierarchy		 # set/show hierarchical account enabled
-- memory.force_empty		 # trigger forced move charge to parent
-- memory.pressure_level		 # set memory pressure notifications
-- memory.swappiness		 # set/show swappiness parameter of vmscan
--				 (See sysctl's vm.swappiness)
-- memory.move_charge_at_immigrate # set/show controls of moving charges
-- memory.oom_control		 # set/show oom controls.
-- memory.numa_stat		 # show the number of memory usage per numa node
--
-- memory.kmem.limit_in_bytes      # set/show hard limit for kernel memory
-- memory.kmem.usage_in_bytes      # show current kernel memory allocation
-- memory.kmem.failcnt             # show the number of kernel memory usage hits limits
-- memory.kmem.max_usage_in_bytes  # show max kernel memory usage recorded
--
-- memory.kmem.tcp.limit_in_bytes  # set/show hard limit for tcp buf memory
-- memory.kmem.tcp.usage_in_bytes  # show current tcp buf memory allocation
-- memory.kmem.tcp.failcnt            # show the number of tcp buf memory usage hits limits
-- memory.kmem.tcp.max_usage_in_bytes # show max tcp buf memory usage recorded
--
--1. History
--
--The memory controller has a long history. A request for comments for the memory
--controller was posted by Balbir Singh [1]. At the time the RFC was posted
--there were several implementations for memory control. The goal of the
--RFC was to build consensus and agreement for the minimal features required
--for memory control. The first RSS controller was posted by Balbir Singh[2]
--in Feb 2007. Pavel Emelianov [3][4][5] has since posted three versions of the
--RSS controller. At OLS, at the resource management BoF, everyone suggested
--that we handle both page cache and RSS together. Another request was raised
--to allow user space handling of OOM. The current memory controller is
--at version 6; it combines both mapped (RSS) and unmapped Page
--Cache Control [11].
--
--2. Memory Control
--
--Memory is a unique resource in the sense that it is present in a limited
--amount. If a task requires a lot of CPU processing, the task can spread
--its processing over a period of hours, days, months or years, but with
--memory, the same physical memory needs to be reused to accomplish the task.
--
--The memory controller implementation has been divided into phases. These
--are:
--
--1. Memory controller
--2. mlock(2) controller
--3. Kernel user memory accounting and slab control
--4. user mappings length controller
--
--The memory controller is the first controller developed.
--
--2.1. Design
--
--The core of the design is a counter called the page_counter. The
--page_counter tracks the current memory usage and limit of the group of
--processes associated with the controller. Each cgroup has a memory controller
--specific data structure (mem_cgroup) associated with it.
--
--2.2. Accounting
--
--		+--------------------+
--		|  mem_cgroup        |
--		|  (page_counter)    |
--		+--------------------+
--		 /            ^      \
--		/             |       \
--           +---------------+  |        +---------------+
--           | mm_struct     |  |....    | mm_struct     |
--           |               |  |        |               |
--           +---------------+  |        +---------------+
--                              |
--                              + --------------+
--                                              |
--           +---------------+           +------+--------+
--           | page          +---------->  page_cgroup|
--           |               |           |               |
--           +---------------+           +---------------+
--
--             (Figure 1: Hierarchy of Accounting)
--
--
--Figure 1 shows the important aspects of the controller
--
--1. Accounting happens per cgroup
--2. Each mm_struct knows about which cgroup it belongs to
--3. Each page has a pointer to the page_cgroup, which in turn knows the
--   cgroup it belongs to
--
--The accounting is done as follows: mem_cgroup_charge_common() is invoked to
--set up the necessary data structures and check if the cgroup that is being
--charged is over its limit. If it is, then reclaim is invoked on the cgroup.
--More details can be found in the reclaim section of this document.
--If everything goes well, a page meta-data-structure called page_cgroup is
--updated. page_cgroup has its own LRU on cgroup.
--(*) page_cgroup structure is allocated at boot/memory-hotplug time.
--
--2.2.1 Accounting details
--
--All mapped anon pages (RSS) and cache pages (Page Cache) are accounted.
--Some pages which are never reclaimable and will not be on the LRU
--are not accounted. We just account pages under usual VM management.
--
--RSS pages are accounted at page_fault unless they've already been accounted
--for earlier. A file page will be accounted for as Page Cache when it's
--inserted into inode (radix-tree). While it's mapped into the page tables of
--processes, duplicate accounting is carefully avoided.
--
--An RSS page is unaccounted when it's fully unmapped. A PageCache page is
--unaccounted when it's removed from radix-tree. Even if RSS pages are fully
--unmapped (by kswapd), they may exist as SwapCache in the system until they
--are really freed. Such SwapCaches are also accounted.
--A swapped-in page is not accounted until it's mapped.
--
--Note: The kernel does swapin-readahead and reads multiple swaps at once.
--This means swapped-in pages may contain pages for other tasks than a task
--causing page fault. So, we avoid accounting at swap-in I/O.
--
--At page migration, accounting information is kept.
--
--Note: we just account pages-on-LRU because our purpose is to control amount
--of used pages; not-on-LRU pages tend to be out-of-control from VM view.
--
--2.3 Shared Page Accounting
--
--Shared pages are accounted on the basis of the first touch approach. The
--cgroup that first touches a page is accounted for the page. The principle
--behind this approach is that a cgroup that aggressively uses a shared
--page will eventually get charged for it (once it is uncharged from
--the cgroup that brought it in -- this will happen on memory pressure).
--
--But see section 8.2: when moving a task to another cgroup, its pages may
--be recharged to the new cgroup, if move_charge_at_immigrate has been chosen.
--
--Exception: If CONFIG_MEMCG_SWAP is not used.
--When you do swapoff and make swapped-out pages of shmem(tmpfs) to
--be backed into memory in force, charges for pages are accounted against the
--caller of swapoff rather than the users of shmem.
--
--2.4 Swap Extension (CONFIG_MEMCG_SWAP)
--
--Swap Extension allows you to record charge for swap. A swapped-in page is
--charged back to original page allocator if possible.
--
--When swap is accounted, following files are added.
-- - memory.memsw.usage_in_bytes.
-- - memory.memsw.limit_in_bytes.
--
--memsw means memory+swap. Usage of memory+swap is limited by
--memsw.limit_in_bytes.
--
--Example: Assume a system with 4G of swap. A task which allocates 6G of memory
--(by mistake) under 2G memory limitation will use all swap.
--In this case, setting memsw.limit_in_bytes=3G will prevent bad use of swap.
--By using the memsw limit, you can avoid system OOM which can be caused by swap
--shortage.
--
--* why 'memory+swap' rather than swap.
--The global LRU(kswapd) can swap out arbitrary pages. Swap-out means
--to move account from memory to swap...there is no change in usage of
--memory+swap. In other words, when we want to limit the usage of swap without
--affecting global LRU, memory+swap limit is better than just limiting swap from
--an OS point of view.
--
--* What happens when a cgroup hits memory.memsw.limit_in_bytes
--When a cgroup hits memory.memsw.limit_in_bytes, it's useless to do swap-out
--in this cgroup. Then, swap-out will not be done by cgroup routine and file
--caches are dropped. But as mentioned above, global LRU can do swapout memory
--from it for sanity of the system's memory management state. You can't forbid
--it by cgroup.
--
--2.5 Reclaim
--
--Each cgroup maintains a per cgroup LRU which has the same structure as
--global VM. When a cgroup goes over its limit, we first try
--to reclaim memory from the cgroup so as to make space for the new
--pages that the cgroup has touched. If the reclaim is unsuccessful,
--an OOM routine is invoked to select and kill the bulkiest task in the
--cgroup. (See 10. OOM Control below.)
--
--The reclaim algorithm has not been modified for cgroups, except that
--pages that are selected for reclaiming come from the per-cgroup LRU
--list.
--
--NOTE: Reclaim does not work for the root cgroup, since we cannot set any
--limits on the root cgroup.
--
--Note2: When panic_on_oom is set to "2", the whole system will panic.
--
--When oom event notifier is registered, event will be delivered.
--(See oom_control section)
--
--2.6 Locking
--
--   lock_page_cgroup()/unlock_page_cgroup() should not be called under
--   mapping->tree_lock.
--
--   Other lock order is following:
--   PG_locked.
--   mm->page_table_lock
--       zone->lru_lock
--	  lock_page_cgroup.
--  In many cases, just lock_page_cgroup() is called.
--  per-zone-per-cgroup LRU (cgroup's private LRU) is just guarded by
--  zone->lru_lock, it has no lock of its own.
--
--2.7 Kernel Memory Extension (CONFIG_MEMCG_KMEM)
--
--With the Kernel memory extension, the Memory Controller is able to limit
--the amount of kernel memory used by the system. Kernel memory is fundamentally
--different than user memory, since it can't be swapped out, which makes it
--possible to DoS the system by consuming too much of this precious resource.
--
--Kernel memory won't be accounted at all until limit on a group is set. This
--allows for existing setups to continue working without disruption.  The limit
--cannot be set if the cgroup have children, or if there are already tasks in the
--cgroup. Attempting to set the limit under those conditions will return -EBUSY.
--When use_hierarchy == 1 and a group is accounted, its children will
--automatically be accounted regardless of their limit value.
--
--After a group is first limited, it will be kept being accounted until it
--is removed. The memory limitation itself, can of course be removed by writing
---1 to memory.kmem.limit_in_bytes. In this case, kmem will be accounted, but not
--limited.
--
--Kernel memory limits are not imposed for the root cgroup. Usage for the root
--cgroup may or may not be accounted. The memory used is accumulated into
--memory.kmem.usage_in_bytes, or in a separate counter when it makes sense.
--(currently only for tcp).
--The main "kmem" counter is fed into the main counter, so kmem charges will
--also be visible from the user counter.
--
--Currently no soft limit is implemented for kernel memory. It is future work
--to trigger slab reclaim when those limits are reached.
--
--2.7.1 Current Kernel Memory resources accounted
--
--* stack pages: every process consumes some stack pages. By accounting into
--kernel memory, we prevent new processes from being created when the kernel
--memory usage is too high.
--
--* slab pages: pages allocated by the SLAB or SLUB allocator are tracked. A copy
--of each kmem_cache is created every time the cache is touched by the first time
--from inside the memcg. The creation is done lazily, so some objects can still be
--skipped while the cache is being created. All objects in a slab page should
--belong to the same memcg. This only fails to hold when a task is migrated to a
--different memcg during the page allocation by the cache.
--
--* sockets memory pressure: some sockets protocols have memory pressure
--thresholds. The Memory Controller allows them to be controlled individually
--per cgroup, instead of globally.
--
--* tcp memory pressure: sockets memory pressure for the tcp protocol.
--
--2.7.2 Common use cases
--
--Because the "kmem" counter is fed to the main user counter, kernel memory can
--never be limited completely independently of user memory. Say "U" is the user
--limit, and "K" the kernel limit. There are three possible ways limits can be
--set:
--
--    U != 0, K = unlimited:
--    This is the standard memcg limitation mechanism already present before kmem
--    accounting. Kernel memory is completely ignored.
--
--    U != 0, K < U:
--    Kernel memory is a subset of the user memory. This setup is useful in
--    deployments where the total amount of memory per-cgroup is overcommited.
--    Overcommiting kernel memory limits is definitely not recommended, since the
--    box can still run out of non-reclaimable memory.
--    In this case, the admin could set up K so that the sum of all groups is
--    never greater than the total memory, and freely set U at the cost of his
--    QoS.
--    WARNING: In the current implementation, memory reclaim will NOT be
--    triggered for a cgroup when it hits K while staying below U, which makes
--    this setup impractical.
--
--    U != 0, K >= U:
--    Since kmem charges will also be fed to the user counter and reclaim will be
--    triggered for the cgroup for both kinds of memory. This setup gives the
--    admin a unified view of memory, and it is also useful for people who just
--    want to track kernel memory usage.
--
--3. User Interface
--
--3.0. Configuration
--
--a. Enable CONFIG_CGROUPS
--b. Enable CONFIG_MEMCG
--c. Enable CONFIG_MEMCG_SWAP (to use swap extension)
--d. Enable CONFIG_MEMCG_KMEM (to use kmem extension)
--
--3.1. Prepare the cgroups (see cgroups.txt, Why are cgroups needed?)
--# mount -t tmpfs none /sys/fs/cgroup
--# mkdir /sys/fs/cgroup/memory
--# mount -t cgroup none /sys/fs/cgroup/memory -o memory
--
--3.2. Make the new group and move bash into it
--# mkdir /sys/fs/cgroup/memory/0
--# echo $$ > /sys/fs/cgroup/memory/0/tasks
--
--Since now we're in the 0 cgroup, we can alter the memory limit:
--# echo 4M > /sys/fs/cgroup/memory/0/memory.limit_in_bytes
--
--NOTE: We can use a suffix (k, K, m, M, g or G) to indicate values in kilo,
--mega or gigabytes. (Here, Kilo, Mega, Giga are Kibibytes, Mebibytes, Gibibytes.)
--
--NOTE: We can write "-1" to reset the *.limit_in_bytes(unlimited).
--NOTE: We cannot set limits on the root cgroup any more.
--
--# cat /sys/fs/cgroup/memory/0/memory.limit_in_bytes
--4194304
--
--We can check the usage:
--# cat /sys/fs/cgroup/memory/0/memory.usage_in_bytes
--1216512
--
--A successful write to this file does not guarantee a successful setting of
--this limit to the value written into the file. This can be due to a
--number of factors, such as rounding up to page boundaries or the total
--availability of memory on the system. The user is required to re-read
--this file after a write to guarantee the value committed by the kernel.
--
--# echo 1 > memory.limit_in_bytes
--# cat memory.limit_in_bytes
--4096
--
--The memory.failcnt field gives the number of times that the cgroup limit was
--exceeded.
--
--The memory.stat file gives accounting information. Now, the number of
--caches, RSS and Active pages/Inactive pages are shown.
--
--4. Testing
--
--For testing features and implementation, see memcg_test.txt.
--
--Performance test is also important. To see pure memory controller's overhead,
--testing on tmpfs will give you good numbers of small overheads.
--Example: do kernel make on tmpfs.
--
--Page-fault scalability is also important. At measuring parallel
--page fault test, multi-process test may be better than multi-thread
--test because it has noise of shared objects/status.
--
--But the above two are testing extreme situations.
--Trying usual test under memory controller is always helpful.
--
--4.1 Troubleshooting
--
--Sometimes a user might find that the application under a cgroup is
--terminated by the OOM killer. There are several causes for this:
--
--1. The cgroup limit is too low (just too low to do anything useful)
--2. The user is using anonymous memory and swap is turned off or too low
--
--A sync followed by echo 1 > /proc/sys/vm/drop_caches will help get rid of
--some of the pages cached in the cgroup (page cache pages).
--
--To know what happens, disabling OOM_Kill as per "10. OOM Control" (below) and
--seeing what happens will be helpful.
--
--4.2 Task migration
--
--When a task migrates from one cgroup to another, its charge is not
--carried forward by default. The pages allocated from the original cgroup still
--remain charged to it, the charge is dropped when the page is freed or
--reclaimed.
--
--You can move charges of a task along with task migration.
--See 8. "Move charges at task migration"
--
--4.3 Removing a cgroup
--
--A cgroup can be removed by rmdir, but as discussed in sections 4.1 and 4.2, a
--cgroup might have some charge associated with it, even though all
--tasks have migrated away from it. (because we charge against pages, not
--against tasks.)
--
--We move the stats to root (if use_hierarchy==0) or parent (if
--use_hierarchy==1), and no change on the charge except uncharging
--from the child.
--
--Charges recorded in swap information is not updated at removal of cgroup.
--Recorded information is discarded and a cgroup which uses swap (swapcache)
--will be charged as a new owner of it.
--
--About use_hierarchy, see Section 6.
--
--5. Misc. interfaces.
--
--5.1 force_empty
--  memory.force_empty interface is provided to make cgroup's memory usage empty.
--  When writing anything to this
--
--  # echo 0 > memory.force_empty
--
--  the cgroup will be reclaimed and as many pages reclaimed as possible.
--
--  The typical use case for this interface is before calling rmdir().
--  Because rmdir() moves all pages to parent, some out-of-use page caches can be
--  moved to the parent. If you want to avoid that, force_empty will be useful.
--
--  Also, note that when memory.kmem.limit_in_bytes is set the charges due to
--  kernel pages will still be seen. This is not considered a failure and the
--  write will still return success. In this case, it is expected that
--  memory.kmem.usage_in_bytes == memory.usage_in_bytes.
--
--  About use_hierarchy, see Section 6.
--
--5.2 stat file
--
--memory.stat file includes following statistics
--
--# per-memory cgroup local status
--cache		- # of bytes of page cache memory.
--rss		- # of bytes of anonymous and swap cache memory (includes
--		transparent hugepages).
--rss_huge	- # of bytes of anonymous transparent hugepages.
--mapped_file	- # of bytes of mapped file (includes tmpfs/shmem)
--pgpgin		- # of charging events to the memory cgroup. The charging
--		event happens each time a page is accounted as either mapped
--		anon page(RSS) or cache page(Page Cache) to the cgroup.
--pgpgout		- # of uncharging events to the memory cgroup. The uncharging
--		event happens each time a page is unaccounted from the cgroup.
--swap		- # of bytes of swap usage
--dirty		- # of bytes that are waiting to get written back to the disk.
--writeback	- # of bytes of file/anon cache that are queued for syncing to
--		disk.
--inactive_anon	- # of bytes of anonymous and swap cache memory on inactive
--		LRU list.
--active_anon	- # of bytes of anonymous and swap cache memory on active
--		LRU list.
--inactive_file	- # of bytes of file-backed memory on inactive LRU list.
--active_file	- # of bytes of file-backed memory on active LRU list.
--unevictable	- # of bytes of memory that cannot be reclaimed (mlocked etc).
--
--# status considering hierarchy (see memory.use_hierarchy settings)
--
--hierarchical_memory_limit - # of bytes of memory limit with regard to hierarchy
--			under which the memory cgroup is
--hierarchical_memsw_limit - # of bytes of memory+swap limit with regard to
--			hierarchy under which memory cgroup is.
--
--total_<counter>		- # hierarchical version of <counter>, which in
--			addition to the cgroup's own value includes the
--			sum of all hierarchical children's values of
--			<counter>, i.e. total_cache
--
--# The following additional stats are dependent on CONFIG_DEBUG_VM.
--
--recent_rotated_anon	- VM internal parameter. (see mm/vmscan.c)
--recent_rotated_file	- VM internal parameter. (see mm/vmscan.c)
--recent_scanned_anon	- VM internal parameter. (see mm/vmscan.c)
--recent_scanned_file	- VM internal parameter. (see mm/vmscan.c)
--
--Memo:
--	recent_rotated means recent frequency of LRU rotation.
--	recent_scanned means recent # of scans to LRU.
--	showing for better debug please see the code for meanings.
--
--Note:
--	Only anonymous and swap cache memory is listed as part of 'rss' stat.
--	This should not be confused with the true 'resident set size' or the
--	amount of physical memory used by the cgroup.
--	'rss + file_mapped" will give you resident set size of cgroup.
--	(Note: file and shmem may be shared among other cgroups. In that case,
--	 file_mapped is accounted only when the memory cgroup is owner of page
--	 cache.)
--
--5.3 swappiness
--
--Overrides /proc/sys/vm/swappiness for the particular group. The tunable
--in the root cgroup corresponds to the global swappiness setting.
--
--Please note that unlike during the global reclaim, limit reclaim
--enforces that 0 swappiness really prevents from any swapping even if
--there is a swap storage available. This might lead to memcg OOM killer
--if there are no file pages to reclaim.
--
--5.4 failcnt
--
--A memory cgroup provides memory.failcnt and memory.memsw.failcnt files.
--This failcnt(== failure count) shows the number of times that a usage counter
--hit its limit. When a memory cgroup hits a limit, failcnt increases and
--memory under it will be reclaimed.
--
--You can reset failcnt by writing 0 to failcnt file.
--# echo 0 > .../memory.failcnt
--
--5.5 usage_in_bytes
--
--For efficiency, as other kernel components, memory cgroup uses some optimization
--to avoid unnecessary cacheline false sharing. usage_in_bytes is affected by the
--method and doesn't show 'exact' value of memory (and swap) usage, it's a fuzz
--value for efficient access. (Of course, when necessary, it's synchronized.)
--If you want to know more exact memory usage, you should use RSS+CACHE(+SWAP)
--value in memory.stat(see 5.2).
--
--5.6 numa_stat
--
--This is similar to numa_maps but operates on a per-memcg basis.  This is
--useful for providing visibility into the numa locality information within
--an memcg since the pages are allowed to be allocated from any physical
--node.  One of the use cases is evaluating application performance by
--combining this information with the application's CPU allocation.
--
--Each memcg's numa_stat file includes "total", "file", "anon" and "unevictable"
--per-node page counts including "hierarchical_<counter>" which sums up all
--hierarchical children's values in addition to the memcg's own value.
--
--The output format of memory.numa_stat is:
--
--total=<total pages> N0=<node 0 pages> N1=<node 1 pages> ...
--file=<total file pages> N0=<node 0 pages> N1=<node 1 pages> ...
--anon=<total anon pages> N0=<node 0 pages> N1=<node 1 pages> ...
--unevictable=<total anon pages> N0=<node 0 pages> N1=<node 1 pages> ...
--hierarchical_<counter>=<counter pages> N0=<node 0 pages> N1=<node 1 pages> ...
--
--The "total" count is sum of file + anon + unevictable.
--
--6. Hierarchy support
--
--The memory controller supports a deep hierarchy and hierarchical accounting.
--The hierarchy is created by creating the appropriate cgroups in the
--cgroup filesystem. Consider for example, the following cgroup filesystem
--hierarchy
--
--	       root
--	     /  |   \
--            /	|    \
--	   a	b     c
--		      | \
--		      |  \
--		      d   e
--
--In the diagram above, with hierarchical accounting enabled, all memory
--usage of e, is accounted to its ancestors up until the root (i.e, c and root),
--that has memory.use_hierarchy enabled. If one of the ancestors goes over its
--limit, the reclaim algorithm reclaims from the tasks in the ancestor and the
--children of the ancestor.
--
--6.1 Enabling hierarchical accounting and reclaim
--
--A memory cgroup by default disables the hierarchy feature. Support
--can be enabled by writing 1 to memory.use_hierarchy file of the root cgroup
--
--# echo 1 > memory.use_hierarchy
--
--The feature can be disabled by
--
--# echo 0 > memory.use_hierarchy
--
--NOTE1: Enabling/disabling will fail if either the cgroup already has other
--       cgroups created below it, or if the parent cgroup has use_hierarchy
--       enabled.
--
--NOTE2: When panic_on_oom is set to "2", the whole system will panic in
--       case of an OOM event in any cgroup.
--
--7. Soft limits
--
--Soft limits allow for greater sharing of memory. The idea behind soft limits
--is to allow control groups to use as much of the memory as needed, provided
--
--a. There is no memory contention
--b. They do not exceed their hard limit
--
--When the system detects memory contention or low memory, control groups
--are pushed back to their soft limits. If the soft limit of each control
--group is very high, they are pushed back as much as possible to make
--sure that one control group does not starve the others of memory.
--
--Please note that soft limits is a best-effort feature; it comes with
--no guarantees, but it does its best to make sure that when memory is
--heavily contended for, memory is allocated based on the soft limit
--hints/setup. Currently soft limit based reclaim is set up such that
--it gets invoked from balance_pgdat (kswapd).
--
--7.1 Interface
--
--Soft limits can be setup by using the following commands (in this example we
--assume a soft limit of 256 MiB)
--
--# echo 256M > memory.soft_limit_in_bytes
--
--If we want to change this to 1G, we can at any time use
--
--# echo 1G > memory.soft_limit_in_bytes
--
--NOTE1: Soft limits take effect over a long period of time, since they involve
--       reclaiming memory for balancing between memory cgroups
--NOTE2: It is recommended to set the soft limit always below the hard limit,
--       otherwise the hard limit will take precedence.
--
--8. Move charges at task migration
--
--Users can move charges associated with a task along with task migration, that
--is, uncharge task's pages from the old cgroup and charge them to the new cgroup.
--This feature is not supported in !CONFIG_MMU environments because of lack of
--page tables.
--
--8.1 Interface
--
--This feature is disabled by default. It can be enabled (and disabled again) by
--writing to memory.move_charge_at_immigrate of the destination cgroup.
--
--If you want to enable it:
--
--# echo (some positive value) > memory.move_charge_at_immigrate
--
--Note: Each bits of move_charge_at_immigrate has its own meaning about what type
--      of charges should be moved. See 8.2 for details.
--Note: Charges are moved only when you move mm->owner, in other words,
--      a leader of a thread group.
--Note: If we cannot find enough space for the task in the destination cgroup, we
--      try to make space by reclaiming memory. Task migration may fail if we
--      cannot make enough space.
--Note: It can take several seconds if you move charges much.
--
--And if you want disable it again:
--
--# echo 0 > memory.move_charge_at_immigrate
--
--8.2 Type of charges which can be moved
--
--Each bit in move_charge_at_immigrate has its own meaning about what type of
--charges should be moved. But in any case, it must be noted that an account of
--a page or a swap can be moved only when it is charged to the task's current
--(old) memory cgroup.
--
--  bit | what type of charges would be moved ?
-- -----+------------------------------------------------------------------------
--   0  | A charge of an anonymous page (or swap of it) used by the target task.
--      | You must enable Swap Extension (see 2.4) to enable move of swap charges.
-- -----+------------------------------------------------------------------------
--   1  | A charge of file pages (normal file, tmpfs file (e.g. ipc shared memory)
--      | and swaps of tmpfs file) mmapped by the target task. Unlike the case of
--      | anonymous pages, file pages (and swaps) in the range mmapped by the task
--      | will be moved even if the task hasn't done page fault, i.e. they might
--      | not be the task's "RSS", but other task's "RSS" that maps the same file.
--      | And mapcount of the page is ignored (the page can be moved even if
--      | page_mapcount(page) > 1). You must enable Swap Extension (see 2.4) to
--      | enable move of swap charges.
--
--8.3 TODO
--
--- All of moving charge operations are done under cgroup_mutex. It's not good
--  behavior to hold the mutex too long, so we may need some trick.
--
--9. Memory thresholds
--
--Memory cgroup implements memory thresholds using the cgroups notification
--API (see cgroups.txt). It allows to register multiple memory and memsw
--thresholds and gets notifications when it crosses.
--
--To register a threshold, an application must:
--- create an eventfd using eventfd(2);
--- open memory.usage_in_bytes or memory.memsw.usage_in_bytes;
--- write string like "<event_fd> <fd of memory.usage_in_bytes> <threshold>" to
--  cgroup.event_control.
--
--Application will be notified through eventfd when memory usage crosses
--threshold in any direction.
--
--It's applicable for root and non-root cgroup.
--
--10. OOM Control
--
--memory.oom_control file is for OOM notification and other controls.
--
--Memory cgroup implements OOM notifier using the cgroup notification
--API (See cgroups.txt). It allows to register multiple OOM notification
--delivery and gets notification when OOM happens.
--
--To register a notifier, an application must:
-- - create an eventfd using eventfd(2)
-- - open memory.oom_control file
-- - write string like "<event_fd> <fd of memory.oom_control>" to
--   cgroup.event_control
--
--The application will be notified through eventfd when OOM happens.
--OOM notification doesn't work for the root cgroup.
--
--You can disable the OOM-killer by writing "1" to memory.oom_control file, as:
--
--	#echo 1 > memory.oom_control
--
--If OOM-killer is disabled, tasks under cgroup will hang/sleep
--in memory cgroup's OOM-waitqueue when they request accountable memory.
--
--For running them, you have to relax the memory cgroup's OOM status by
--	* enlarge limit or reduce usage.
--To reduce usage,
--	* kill some tasks.
--	* move some tasks to other group with account migration.
--	* remove some files (on tmpfs?)
--
--Then, stopped tasks will work again.
--
--At reading, current status of OOM is shown.
--	oom_kill_disable 0 or 1 (if 1, oom-killer is disabled)
--	under_oom	 0 or 1 (if 1, the memory cgroup is under OOM, tasks may
--				 be stopped.)
--
--11. Memory Pressure
--
--The pressure level notifications can be used to monitor the memory
--allocation cost; based on the pressure, applications can implement
--different strategies of managing their memory resources. The pressure
--levels are defined as following:
--
--The "low" level means that the system is reclaiming memory for new
--allocations. Monitoring this reclaiming activity might be useful for
--maintaining cache level. Upon notification, the program (typically
--"Activity Manager") might analyze vmstat and act in advance (i.e.
--prematurely shutdown unimportant services).
--
--The "medium" level means that the system is experiencing medium memory
--pressure, the system might be making swap, paging out active file caches,
--etc. Upon this event applications may decide to further analyze
--vmstat/zoneinfo/memcg or internal memory usage statistics and free any
--resources that can be easily reconstructed or re-read from a disk.
--
--The "critical" level means that the system is actively thrashing, it is
--about to out of memory (OOM) or even the in-kernel OOM killer is on its
--way to trigger. Applications should do whatever they can to help the
--system. It might be too late to consult with vmstat or any other
--statistics, so it's advisable to take an immediate action.
--
--The events are propagated upward until the event is handled, i.e. the
--events are not pass-through. Here is what this means: for example you have
--three cgroups: A->B->C. Now you set up an event listener on cgroups A, B
--and C, and suppose group C experiences some pressure. In this situation,
--only group C will receive the notification, i.e. groups A and B will not
--receive it. This is done to avoid excessive "broadcasting" of messages,
--which disturbs the system and which is especially bad if we are low on
--memory or thrashing. So, organize the cgroups wisely, or propagate the
--events manually (or, ask us to implement the pass-through events,
--explaining why would you need them.)
--
--The file memory.pressure_level is only used to setup an eventfd. To
--register a notification, an application must:
--
--- create an eventfd using eventfd(2);
--- open memory.pressure_level;
--- write string like "<event_fd> <fd of memory.pressure_level> <level>"
--  to cgroup.event_control.
--
--Application will be notified through eventfd when memory pressure is at
--the specific level (or higher). Read/write operations to
--memory.pressure_level are no implemented.
--
--Test:
--
--   Here is a small script example that makes a new cgroup, sets up a
--   memory limit, sets up a notification in the cgroup and then makes child
--   cgroup experience a critical pressure:
--
--   # cd /sys/fs/cgroup/memory/
--   # mkdir foo
--   # cd foo
--   # cgroup_event_listener memory.pressure_level low &
--   # echo 8000000 > memory.limit_in_bytes
--   # echo 8000000 > memory.memsw.limit_in_bytes
--   # echo $$ > tasks
--   # dd if=/dev/zero | read x
--
--   (Expect a bunch of notifications, and eventually, the oom-killer will
--   trigger.)
--
--12. TODO
--
--1. Make per-cgroup scanner reclaim not-shared pages first
--2. Teach controller to account for shared-pages
--3. Start reclamation in the background when the limit is
--   not yet hit but the usage is getting closer
--
--Summary
--
--Overall, the memory controller has been a stable controller and has been
--commented and discussed quite extensively in the community.
--
--References
--
--1. Singh, Balbir. RFC: Memory Controller, http://lwn.net/Articles/206697/
--2. Singh, Balbir. Memory Controller (RSS Control),
--   http://lwn.net/Articles/222762/
--3. Emelianov, Pavel. Resource controllers based on process cgroups
--   http://lkml.org/lkml/2007/3/6/198
--4. Emelianov, Pavel. RSS controller based on process cgroups (v2)
--   http://lkml.org/lkml/2007/4/9/78
--5. Emelianov, Pavel. RSS controller based on process cgroups (v3)
--   http://lkml.org/lkml/2007/5/30/244
--6. Menage, Paul. Control Groups v10, http://lwn.net/Articles/236032/
--7. Vaidyanathan, Srinivasan, Control Groups: Pagecache accounting and control
--   subsystem (v3), http://lwn.net/Articles/235534/
--8. Singh, Balbir. RSS controller v2 test results (lmbench),
--   http://lkml.org/lkml/2007/5/17/232
--9. Singh, Balbir. RSS controller v2 AIM9 results
--   http://lkml.org/lkml/2007/5/18/1
--10. Singh, Balbir. Memory controller v6 test results,
--    http://lkml.org/lkml/2007/8/19/36
--11. Singh, Balbir. Memory controller introduction (v6),
--    http://lkml.org/lkml/2007/8/17/69
--12. Corbet, Jonathan, Controlling memory use in cgroups,
--    http://lwn.net/Articles/243795/
-diff --git a/Documentation/cgroups/net_cls.txt b/Documentation/cgroups/net_cls.txt
-deleted file mode 100644
-index ec18234..0000000
---- a/Documentation/cgroups/net_cls.txt
-+++ /dev/null
-@@ -1,39 +0,0 @@
--Network classifier cgroup
---------------------------
--
--The Network classifier cgroup provides an interface to
--tag network packets with a class identifier (classid).
--
--The Traffic Controller (tc) can be used to assign
--different priorities to packets from different cgroups.
--Also, Netfilter (iptables) can use this tag to perform
--actions on such packets.
--
--Creating a net_cls cgroups instance creates a net_cls.classid file.
--This net_cls.classid value is initialized to 0.
--
--You can write hexadecimal values to net_cls.classid; the format for these
--values is 0xAAAABBBB; AAAA is the major handle number and BBBB
--is the minor handle number.
--Reading net_cls.classid yields a decimal result.
--
--Example:
--mkdir /sys/fs/cgroup/net_cls
--mount -t cgroup -onet_cls net_cls /sys/fs/cgroup/net_cls
--mkdir /sys/fs/cgroup/net_cls/0
--echo 0x100001 >  /sys/fs/cgroup/net_cls/0/net_cls.classid
--	- setting a 10:1 handle.
--
--cat /sys/fs/cgroup/net_cls/0/net_cls.classid
--1048577
--
--configuring tc:
--tc qdisc add dev eth0 root handle 10: htb
--
--tc class add dev eth0 parent 10: classid 10:1 htb rate 40mbit
-- - creating traffic class 10:1
--
--tc filter add dev eth0 parent 10: protocol ip prio 10 handle 1: cgroup
--
--configuring iptables, basic example:
--iptables -A OUTPUT -m cgroup ! --cgroup 0x100001 -j DROP
-diff --git a/Documentation/cgroups/net_prio.txt b/Documentation/cgroups/net_prio.txt
-deleted file mode 100644
-index a82cbd2..0000000
---- a/Documentation/cgroups/net_prio.txt
-+++ /dev/null
-@@ -1,55 +0,0 @@
--Network priority cgroup
---------------------------
--
--The Network priority cgroup provides an interface to allow an administrator to
--dynamically set the priority of network traffic generated by various
--applications
--
--Nominally, an application would set the priority of its traffic via the
--SO_PRIORITY socket option.  This however, is not always possible because:
--
--1) The application may not have been coded to set this value
--2) The priority of application traffic is often a site-specific administrative
--   decision rather than an application defined one.
--
--This cgroup allows an administrator to assign a process to a group which defines
--the priority of egress traffic on a given interface. Network priority groups can
--be created by first mounting the cgroup filesystem.
--
--# mount -t cgroup -onet_prio none /sys/fs/cgroup/net_prio
--
--With the above step, the initial group acting as the parent accounting group
--becomes visible at '/sys/fs/cgroup/net_prio'.  This group includes all tasks in
--the system. '/sys/fs/cgroup/net_prio/tasks' lists the tasks in this cgroup.
--
--Each net_prio cgroup contains two files that are subsystem specific
--
--net_prio.prioidx
--This file is read-only, and is simply informative.  It contains a unique integer
--value that the kernel uses as an internal representation of this cgroup.
--
--net_prio.ifpriomap
--This file contains a map of the priorities assigned to traffic originating from
--processes in this group and egressing the system on various interfaces. It
--contains a list of tuples in the form <ifname priority>.  Contents of this file
--can be modified by echoing a string into the file using the same tuple format.
--for example:
--
--echo "eth0 5" > /sys/fs/cgroups/net_prio/iscsi/net_prio.ifpriomap
--
--This command would force any traffic originating from processes belonging to the
--iscsi net_prio cgroup and egressing on interface eth0 to have the priority of
--said traffic set to the value 5. The parent accounting group also has a
--writeable 'net_prio.ifpriomap' file that can be used to set a system default
--priority.
--
--Priorities are set immediately prior to queueing a frame to the device
--queueing discipline (qdisc) so priorities will be assigned prior to the hardware
--queue selection being made.
--
--One usage for the net_prio cgroup is with mqprio qdisc allowing application
--traffic to be steered to hardware/driver based traffic classes. These mappings
--can then be managed by administrators or other networking protocols such as
--DCBX.
--
--A new net_prio cgroup inherits the parent's configuration.
-diff --git a/Documentation/cgroups/pids.txt b/Documentation/cgroups/pids.txt
-deleted file mode 100644
-index 1a078b5..0000000
---- a/Documentation/cgroups/pids.txt
-+++ /dev/null
-@@ -1,85 +0,0 @@
--						   Process Number Controller
--						   =========================
--
--Abstract
----------
--
--The process number controller is used to allow a cgroup hierarchy to stop any
--new tasks from being fork()'d or clone()'d after a certain limit is reached.
--
--Since it is trivial to hit the task limit without hitting any kmemcg limits in
--place, PIDs are a fundamental resource. As such, PID exhaustion must be
--preventable in the scope of a cgroup hierarchy by allowing resource limiting of
--the number of tasks in a cgroup.
--
--Usage
-------
--
--In order to use the `pids` controller, set the maximum number of tasks in
--pids.max (this is not available in the root cgroup for obvious reasons). The
--number of processes currently in the cgroup is given by pids.current.
--
--Organisational operations are not blocked by cgroup policies, so it is possible
--to have pids.current > pids.max. This can be done by either setting the limit to
--be smaller than pids.current, or attaching enough processes to the cgroup such
--that pids.current > pids.max. However, it is not possible to violate a cgroup
--policy through fork() or clone(). fork() and clone() will return -EAGAIN if the
--creation of a new process would cause a cgroup policy to be violated.
--
--To set a cgroup to have no limit, set pids.max to "max". This is the default for
--all new cgroups (N.B. that PID limits are hierarchical, so the most stringent
--limit in the hierarchy is followed).
--
--pids.current tracks all child cgroup hierarchies, so parent/pids.current is a
--superset of parent/child/pids.current.
--
--Example
---------
--
--First, we mount the pids controller:
--# mkdir -p /sys/fs/cgroup/pids
--# mount -t cgroup -o pids none /sys/fs/cgroup/pids
--
--Then we create a hierarchy, set limits and attach processes to it:
--# mkdir -p /sys/fs/cgroup/pids/parent/child
--# echo 2 > /sys/fs/cgroup/pids/parent/pids.max
--# echo $$ > /sys/fs/cgroup/pids/parent/cgroup.procs
--# cat /sys/fs/cgroup/pids/parent/pids.current
--2
--#
--
--It should be noted that attempts to overcome the set limit (2 in this case) will
--fail:
--
--# cat /sys/fs/cgroup/pids/parent/pids.current
--2
--# ( /bin/echo "Here's some processes for you." | cat )
--sh: fork: Resource temporary unavailable
--#
--
--Even if we migrate to a child cgroup (which doesn't have a set limit), we will
--not be able to overcome the most stringent limit in the hierarchy (in this case,
--parent's):
--
--# echo $$ > /sys/fs/cgroup/pids/parent/child/cgroup.procs
--# cat /sys/fs/cgroup/pids/parent/pids.current
--2
--# cat /sys/fs/cgroup/pids/parent/child/pids.current
--2
--# cat /sys/fs/cgroup/pids/parent/child/pids.max
--max
--# ( /bin/echo "Here's some processes for you." | cat )
--sh: fork: Resource temporary unavailable
--#
--
--We can set a limit that is smaller than pids.current, which will stop any new
--processes from being forked at all (note that the shell itself counts towards
--pids.current):
--
--# echo 1 > /sys/fs/cgroup/pids/parent/pids.max
--# /bin/echo "We can't even spawn a single process now."
--sh: fork: Resource temporary unavailable
--# echo 0 > /sys/fs/cgroup/pids/parent/pids.max
--# /bin/echo "We can't even spawn a single process now."
--sh: fork: Resource temporary unavailable
--#
-diff --git a/Documentation/cgroups/unified-hierarchy.txt b/Documentation/cgroups/unified-hierarchy.txt
 deleted file mode 100644
 index 1161ba4..0000000
---- a/Documentation/cgroups/unified-hierarchy.txt
+--- a/Documentation/cgroup-legacy/unified-hierarchy.txt
 +++ /dev/null
 @@ -1,645 +0,0 @@
 -
 -Cgroup unified hierarchy
 -
--April, 2014		Tejun Heo <tj@kernel.org>
+-April, 2014		Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 -
 -This document describes the changes made by unified hierarchy and
 -their rationales.  It will eventually be merged into the main cgroup
@@ -8899,5 +695,1246 @@ index 1161ba4..0000000
 -Requiring CAP is not a complete solution but should serve as a
 -significant deterrent against spraying cgroup usages in non-privileged
 -programs.
+diff --git a/Documentation/cgroup.txt b/Documentation/cgroup.txt
+new file mode 100644
+index 0000000..255981c
+--- /dev/null
++++ b/Documentation/cgroup.txt
+@@ -0,0 +1,1235 @@
++
++Control Group v2
++
++October, 2015		Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
++
++This is the authoritative documentation on the design, interface and
++conventions of cgroup v2.  It describes all userland-visible aspects
++of cgroup including core and specific controller behaviors.  All
++future changes must be reflected in this document.  Documentation for
++v1 is available under Documentation/cgroup-legacy/.
++
++CONTENTS
++
++1. Introduction
++  1-1. Terminology
++  1-2. What is cgroup?
++2. Basic Operations
++  2-1. Mounting
++  2-2. Organizing Processes
++  2-3. [Un]populated Notification
++  2-4. Controlling Controllers
++    2-4-1. Enabling and Disabling
++    2-4-2. Top-down Constraint
++    2-4-3. No Internal Process Constraint
++  2-5. Delegation
++    2-5-1. Model of Delegation
++    2-5-2. Delegation Containment
++  2-6. Guidelines
++    2-6-1. Organize Once and Control
++    2-6-2. Avoid Name Collisions
++3. Resource Distribution Models
++  3-1. Weights
++  3-2. Limits
++  3-3. Protections
++  3-4. Allocations
++4. Interface Files
++  4-1. Format
++  4-2. Conventions
++  4-3. Core Interface Files
++5. Controllers
++  5-1. CPU
++    5-1-1. CPU Interface Files
++  5-2. Memory
++    5-2-1. Memory Interface Files
++    5-2-2. Usage Guidelines
++    5-2-3. Memory Ownership
++  5-3. IO
++    5-3-1. IO Interface Files
++    5-3-2. Writeback
++D. Deprecated v1 Core Features
++R. Issues with v1 and Rationales for v2
++  R-1. Multiple Hierarchies
++  R-2. Thread Granularity
++  R-3. Competition Between Inner Nodes and Threads
++  R-4. Other Interface Issues
++  R-5. Controller Issues and Remedies
++    R-5-1. Memory
++
++
++1. Introduction
++
++1-1. Terminology
++
++"cgroup" stands for "control group" and is never capitalized.  The
++singular form is used to designate the whole feature and also as a
++qualifier as in "cgroup controllers".  When explicitly referring to
++multiple individual control groups, the plural form "cgroups" is used.
++
++
++1-2. What is cgroup?
++
++cgroup is a mechanism to organize processes hierarchically and
++distribute system resources along the hierarchy in a controlled and
++configurable manner.
++
++cgroup is largely composed of two parts - the core and controllers.
++cgroup core is primarily responsible for hierarchically organizing
++processes.  A cgroup controller is usually responsible for
++distributing a specific type of system resource along the hierarchy
++although there are utility controllers which serve purposes other than
++resource distribution.
++
++cgroups form a tree structure and every process in the system belongs
++to one and only one cgroup.  All threads of a process belong to the
++same cgroup.  On creation, all processes are put in the cgroup that
++the parent process belongs to at the time.  A process can be migrated
++to another cgroup.  Migration of a process doesn't affect already
++existing descendant processes.
++
++Following certain structural constraints, controllers may be enabled or
++disabled selectively on a cgroup.  All controller behaviors are
++hierarchical - if a controller is enabled on a cgroup, it affects all
++processes which belong to the cgroups consisting the inclusive
++sub-hierarchy of the cgroup.  When a controller is enabled on a nested
++cgroup, it always restricts the resource distribution further.  The
++restrictions set closer to the root in the hierarchy can not be
++overridden from further away.
++
++
++2. Basic Operations
++
++2-1. Mounting
++
++Unlike v1, cgroup v2 has only single hierarchy.  The cgroup v2
++hierarchy can be mounted with the following mount command.
++
++  # mount -t cgroup2 none $MOUNT_POINT
++
++cgroup2 filesystem has the magic number 0x63677270 ("cgrp").  All
++controllers which support v2 and are not bound to a v1 hierarchy are
++automatically bound to the v2 hierarchy and show up at the root.
++Controllers which are not in active use in the v2 hierarchy can be
++bound to other hierarchies.  This allows mixing v2 hierarchy with the
++legacy v1 multiple hierarchies in a fully backward compatible way.
++
++A controller can be moved across hierarchies only after the controller
++is no longer referenced in its current hierarchy.  Because per-cgroup
++controller states are destroyed asynchronously and controllers may
++have lingering references, a controller may not show up immediately on
++the v2 hierarchy after the final umount of the previous hierarchy.
++Similarly, a controller should be fully disabled to be moved out of
++the unified hierarchy and it may take some time for the disabled
++controller to become available for other hierarchies; furthermore, due
++to inter-controller dependencies, other controllers may need to be
++disabled too.
++
++While useful for development and manual configurations, moving
++controllers dynamically between the v2 and other hierarchies is
++strongly discouraged for production use.  It is recommended to decide
++the hierarchies and controller associations before starting using the
++controllers after system boot.
++
++
++2-2. Organizing Processes
++
++Initially, only the root cgroup exists to which all processes belong.
++A child cgroup can be created by creating a sub-directory.
++
++  # mkdir $CGROUP_NAME
++
++A given cgroup may have multiple child cgroups forming a tree
++structure.  Each cgroup has a read-writable interface file
++"cgroup.procs".  When read, it lists the PIDs of all processes which
++belong to the cgroup one-per-line.  The PIDs are not ordered and the
++same PID may show up more than once if the process got moved to
++another cgroup and then back or the PID got recycled while reading.
++
++A process can be migrated into a cgroup by writing its PID to the
++target cgroup's "cgroup.procs" file.  Only one process can be migrated
++on a single write(2) call.  If a process is composed of multiple
++threads, writing the PID of any thread migrates all threads of the
++process.
++
++When a process forks a child process, the new process is born into the
++cgroup that the forking process belongs to at the time of the
++operation.  After exit, a process stays associated with the cgroup
++that it belonged to at the time of exit until it's reaped; however, a
++zombie process does not appear in "cgroup.procs" and thus can't be
++moved to another cgroup.
++
++A cgroup which doesn't have any children or live processes can be
++destroyed by removing the directory.  Note that a cgroup which doesn't
++have any children and is associated only with zombie processes is
++considered empty and can be removed.
++
++  # rmdir $CGROUP_NAME
++
++"/proc/$PID/cgroup" lists a process's cgroup membership.  If legacy
++cgroup is in use in the system, this file may contain multiple lines,
++one for each hierarchy.  The entry for cgroup v2 is always in the
++format "0::$PATH".
++
++  # cat /proc/842/cgroup
++  ...
++  0::/test-cgroup/test-cgroup-nested
++
++If the process becomes a zombie and the cgroup it was associated with
++is removed subsequently, " (deleted)" is appended to the path.
++
++  # cat /proc/842/cgroup
++  ...
++  0::/test-cgroup/test-cgroup-nested (deleted)
++
++
++2-3. [Un]populated Notification
++
++Each non-root cgroup has a "cgroup.events" file which contains
++"populated" field indicating whether the cgroup's sub-hierarchy has
++live processes in it.  Its value is 0 if there is no live process in
++the cgroup and its descendants; otherwise, 1.  poll and [id]notify
++events are triggered when the value changes.  This can be used, for
++example, to start a clean-up operation after all processes of a given
++sub-hierarchy have exited.  The populated state updates and
++notifications are recursive.  Consider the following sub-hierarchy
++where the numbers in the parentheses represent the numbers of processes
++in each cgroup.
++
++  A(4) - B(0) - C(1)
++              \ D(0)
++
++A, B and C's "populated" fields would be 1 while D's 0.  After the one
++process in C exits, B and C's "populated" fields would flip to "0" and
++file modified events will be generated on the "cgroup.events" files of
++both cgroups.
++
++
++2-4. Controlling Controllers
++
++2-4-1. Enabling and Disabling
++
++Each cgroup has a "cgroup.controllers" file which lists all
++controllers available for the cgroup to enable.
++
++  # cat cgroup.controllers
++  cpu io memory
++
++No controller is enabled by default.  Controllers can be enabled and
++disabled by writing to the "cgroup.subtree_control" file.
++
++  # echo "+cpu +memory -io" > cgroup.subtree_control
++
++Only controllers which are listed in "cgroup.controllers" can be
++enabled.  When multiple operations are specified as above, either they
++all succeed or fail.  If multiple operations on the same controller
++are specified, the last one is effective.
++
++Enabling a controller in a cgroup indicates that the distribution of
++the target resource across its immediate children will be controlled.
++Consider the following sub-hierarchy.  The enabled controllers are
++listed in parentheses.
++
++  A(cpu,memory) - B(memory) - C()
++                            \ D()
++
++As A has "cpu" and "memory" enabled, A will control the distribution
++of CPU cycles and memory to its children, in this case, B.  As B has
++"memory" enabled but not "CPU", C and D will compete freely on CPU
++cycles but their division of memory available to B will be controlled.
++
++As a controller regulates the distribution of the target resource to
++the cgroup's children, enabling it creates the controller's interface
++files in the child cgroups.  In the above example, enabling "cpu" on B
++would create the "cpu." prefixed controller interface files in C and
++D.  Likewise, disabling "memory" from B would remove the "memory."
++prefixed controller interface files from C and D.  This means that the
++controller interface files - anything which doesn't start with
++"cgroup." are owned by the parent rather than the cgroup itself.
++
++
++2-4-2. Top-down Constraint
++
++Resources are distributed top-down and a cgroup can further distribute
++a resource only if the resource has been distributed to it from the
++parent.  This means that all non-root "cgroup.subtree_control" files
++can only contain controllers which are enabled in the parent's
++"cgroup.subtree_control" file.  A controller can be enabled only if
++the parent has the controller enabled and a controller can't be
++disabled if one or more children have it enabled.
++
++
++2-4-3. No Internal Process Constraint
++
++Non-root cgroups can only distribute resources to their children when
++they don't have any processes of their own.  In other words, only
++cgroups which don't contain any processes can have controllers enabled
++in their "cgroup.subtree_control" files.
++
++This guarantees that, when a controller is looking at the part of the
++hierarchy which has it enabled, processes are always only on the
++leaves.  This rules out situations where child cgroups compete against
++internal processes of the parent.
++
++The root cgroup is exempt from this restriction.  Root contains
++processes and anonymous resource consumption which can't be associated
++with any other cgroups and requires special treatment from most
++controllers.  How resource consumption in the root cgroup is governed
++is up to each controller.
++
++Note that the restriction doesn't get in the way if there is no
++enabled controller in the cgroup's "cgroup.subtree_control".  This is
++important as otherwise it wouldn't be possible to create children of a
++populated cgroup.  To control resource distribution of a cgroup, the
++cgroup must create children and transfer all its processes to the
++children before enabling controllers in its "cgroup.subtree_control"
++file.
++
++
++2-5. Delegation
++
++2-5-1. Model of Delegation
++
++A cgroup can be delegated to a less privileged user by granting write
++access of the directory and its "cgroup.procs" file to the user.  Note
++that resource control interface files in a given directory control the
++distribution of the parent's resources and thus must not be delegated
++along with the directory.
++
++Once delegated, the user can build sub-hierarchy under the directory,
++organize processes as it sees fit and further distribute the resources
++it received from the parent.  The limits and other settings of all
++resource controllers are hierarchical and regardless of what happens
++in the delegated sub-hierarchy, nothing can escape the resource
++restrictions imposed by the parent.
++
++Currently, cgroup doesn't impose any restrictions on the number of
++cgroups in or nesting depth of a delegated sub-hierarchy; however,
++this may be limited explicitly in the future.
++
++
++2-5-2. Delegation Containment
++
++A delegated sub-hierarchy is contained in the sense that processes
++can't be moved into or out of the sub-hierarchy by the delegatee.  For
++a process with a non-root euid to migrate a target process into a
++cgroup by writing its PID to the "cgroup.procs" file, the following
++conditions must be met.
++
++- The writer's euid must match either uid or suid of the target process.
++
++- The writer must have write access to the "cgroup.procs" file.
++
++- The writer must have write access to the "cgroup.procs" file of the
++  common ancestor of the source and destination cgroups.
++
++The above three constraints ensure that while a delegatee may migrate
++processes around freely in the delegated sub-hierarchy it can't pull
++in from or push out to outside the sub-hierarchy.
++
++For an example, let's assume cgroups C0 and C1 have been delegated to
++user U0 who created C00, C01 under C0 and C10 under C1 as follows and
++all processes under C0 and C1 belong to U0.
++
++  ~~~~~~~~~~~~~ - C0 - C00
++  ~ cgroup    ~      \ C01
++  ~ hierarchy ~
++  ~~~~~~~~~~~~~ - C1 - C10
++
++Let's also say U0 wants to write the PID of a process which is
++currently in C10 into "C00/cgroup.procs".  U0 has write access to the
++file and uid match on the process; however, the common ancestor of the
++source cgroup C10 and the destination cgroup C00 is above the points
++of delegation and U0 would not have write access to its "cgroup.procs"
++files and thus the write will be denied with -EACCES.
++
++
++2-6. Guidelines
++
++2-6-1. Organize Once and Control
++
++Migrating a process across cgroups is a relatively expensive operation
++and stateful resources such as memory are not moved together with the
++process.  This is an explicit design decision as there often exist
++inherent trade-offs between migration and various hot paths in terms
++of synchronization cost.
++
++As such, migrating processes across cgroups frequently as a means to
++apply different resource restrictions is discouraged.  A workload
++should be assigned to a cgroup according to the system's logical and
++resource structure once on start-up.  Dynamic adjustments to resource
++distribution can be made by changing controller configuration through
++the interface files.
++
++
++2-6-2. Avoid Name Collisions
++
++Interface files for a cgroup and its children cgroups occupy the same
++directory and it is possible to create children cgroups which collide
++with interface files.
++
++All cgroup core interface files are prefixed with "cgroup." and each
++controller's interface files are prefixed with the controller name and
++a dot.  A controller's name is composed of lower case alphabets and
++'_'s but never begins with an '_' so it can be used as the prefix
++character for collision avoidance.  Also, interface file names won't
++start or end with terms which are often used in categorizing workloads
++such as job, service, slice, unit or workload.
++
++cgroup doesn't do anything to prevent name collisions and it's the
++user's responsibility to avoid them.
++
++
++3. Resource Distribution Models
++
++cgroup controllers implement several resource distribution schemes
++depending on the resource type and expected use cases.  This section
++describes major schemes in use along with their expected behaviors.
++
++
++3-1. Weights
++
++A parent's resource is distributed by adding up the weights of all
++active children and giving each the fraction matching the ratio of its
++weight against the sum.  As only children which can make use of the
++resource at the moment participate in the distribution, this is
++work-conserving.  Due to the dynamic nature, this model is usually
++used for stateless resources.
++
++All weights are in the range [1, 10000] with the default at 100.  This
++allows symmetric multiplicative biases in both directions at fine
++enough granularity while staying in the intuitive range.
++
++As long as the weight is in range, all configuration combinations are
++valid and there is no reason to reject configuration changes or
++process migrations.
++
++"cpu.weight" proportionally distributes CPU cycles to active children
++and is an example of this type.
++
++
++3-2. Limits
++
++A child can only consume upto the configured amount of the resource.
++Limits can be over-committed - the sum of the limits of children can
++exceed the amount of resource available to the parent.
++
++Limits are in the range [0, max] and defaults to "max", which is noop.
++
++As limits can be over-committed, all configuration combinations are
++valid and there is no reason to reject configuration changes or
++process migrations.
++
++"io.max" limits the maximum BPS and/or IOPS that a cgroup can consume
++on an IO device and is an example of this type.
++
++
++3-3. Protections
++
++A cgroup is protected to be allocated upto the configured amount of
++the resource if the usages of all its ancestors are under their
++protected levels.  Protections can be hard guarantees or best effort
++soft boundaries.  Protections can also be over-committed in which case
++only upto the amount available to the parent is protected among
++children.
++
++Protections are in the range [0, max] and defaults to 0, which is
++noop.
++
++As protections can be over-committed, all configuration combinations
++are valid and there is no reason to reject configuration changes or
++process migrations.
++
++"memory.low" implements best-effort memory protection and is an
++example of this type.
++
++
++3-4. Allocations
++
++A cgroup is exclusively allocated a certain amount of a finite
++resource.  Allocations can't be over-committed - the sum of the
++allocations of children can not exceed the amount of resource
++available to the parent.
++
++Allocations are in the range [0, max] and defaults to 0, which is no
++resource.
++
++As allocations can't be over-committed, some configuration
++combinations are invalid and should be rejected.  Also, if the
++resource is mandatory for execution of processes, process migrations
++may be rejected.
++
++"cpu.rt.max" hard-allocates realtime slices and is an example of this
++type.
++
++
++4. Interface Files
++
++4-1. Format
++
++All interface files should be in one of the following formats whenever
++possible.
++
++  New-line separated values
++  (when only one value can be written at once)
++
++	VAL0\n
++	VAL1\n
++	...
++
++  Space separated values
++  (when read-only or multiple values can be written at once)
++
++	VAL0 VAL1 ...\n
++
++  Flat keyed
++
++	KEY0 VAL0\n
++	KEY1 VAL1\n
++	...
++
++  Nested keyed
++
++	KEY0 SUB_KEY0=VAL00 SUB_KEY1=VAL01...
++	KEY1 SUB_KEY0=VAL10 SUB_KEY1=VAL11...
++	...
++
++For a writable file, the format for writing should generally match
++reading; however, controllers may allow omitting later fields or
++implement restricted shortcuts for most common use cases.
++
++For both flat and nested keyed files, only the values for a single key
++can be written at a time.  For nested keyed files, the sub key pairs
++may be specified in any order and not all pairs have to be specified.
++
++
++4-2. Conventions
++
++- Settings for a single feature should be contained in a single file.
++
++- The root cgroup should be exempt from resource control and thus
++  shouldn't have resource control interface files.  Also,
++  informational files on the root cgroup which end up showing global
++  information available elsewhere shouldn't exist.
++
++- If a controller implements weight based resource distribution, its
++  interface file should be named "weight" and have the range [1,
++  10000] with 100 as the default.  The values are chosen to allow
++  enough and symmetric bias in both directions while keeping it
++  intuitive (the default is 100%).
++
++- If a controller implements an absolute resource guarantee and/or
++  limit, the interface files should be named "min" and "max"
++  respectively.  If a controller implements best effort resource
++  guarantee and/or limit, the interface files should be named "low"
++  and "high" respectively.
++
++  In the above four control files, the special token "max" should be
++  used to represent upward infinity for both reading and writing.
++
++- If a setting has a configurable default value and keyed specific
++  overrides, the default entry should be keyed with "default" and
++  appear as the first entry in the file.
++
++  The default value can be updated by writing either "default $VAL" or
++  "$VAL".
++
++  When writing to update a specific override, "default" can be used as
++  the value to indicate removal of the override.  Override entries
++  with "default" as the value must not appear when read.
++
++  For example, a setting which is keyed by major:minor device numbers
++  with integer values may look like the following.
++
++    # cat cgroup-example-interface-file
++    default 150
++    8:0 300
++
++  The default value can be updated by
++
++    # echo 125 > cgroup-example-interface-file
++
++  or
++
++    # echo "default 125" > cgroup-example-interface-file
++
++  An override can be set by
++
++    # echo "8:16 170" > cgroup-example-interface-file
++
++  and cleared by
++
++    # echo "8:0 default" > cgroup-example-interface-file
++    # cat cgroup-example-interface-file
++    default 125
++    8:16 170
++
++- For events which are not very high frequency, an interface file
++  "events" should be created which lists event key value pairs.
++  Whenever a notifiable event happens, file modified event should be
++  generated on the file.
++
++
++4-3. Core Interface Files
++
++All cgroup core files are prefixed with "cgroup."
++
++  cgroup.procs
++
++	A read-write new-line separated values file which exists on
++	all cgroups.
++
++	When read, it lists the PIDs of all processes which belong to
++	the cgroup one-per-line.  The PIDs are not ordered and the
++	same PID may show up more than once if the process got moved
++	to another cgroup and then back or the PID got recycled while
++	reading.
++
++	A PID can be written to migrate the process associated with
++	the PID to the cgroup.  The writer should match all of the
++	following conditions.
++
++	- Its euid is either root or must match either uid or suid of
++          the target process.
++
++	- It must have write access to the "cgroup.procs" file.
++
++	- It must have write access to the "cgroup.procs" file of the
++	  common ancestor of the source and destination cgroups.
++
++	When delegating a sub-hierarchy, write access to this file
++	should be granted along with the containing directory.
++
++  cgroup.controllers
++
++	A read-only space separated values file which exists on all
++	cgroups.
++
++	It shows space separated list of all controllers available to
++	the cgroup.  The controllers are not ordered.
++
++  cgroup.subtree_control
++
++	A read-write space separated values file which exists on all
++	cgroups.  Starts out empty.
++
++	When read, it shows space separated list of the controllers
++	which are enabled to control resource distribution from the
++	cgroup to its children.
++
++	Space separated list of controllers prefixed with '+' or '-'
++	can be written to enable or disable controllers.  A controller
++	name prefixed with '+' enables the controller and '-'
++	disables.  If a controller appears more than once on the list,
++	the last one is effective.  When multiple enable and disable
++	operations are specified, either all succeed or all fail.
++
++  cgroup.events
++
++	A read-only flat-keyed file which exists on non-root cgroups.
++	The following entries are defined.  Unless specified
++	otherwise, a value change in this file generates a file
++	modified event.
++
++	  populated
++
++		1 if the cgroup or its descendants contains any live
++		processes; otherwise, 0.
++
++
++5. Controllers
++
++5-1. CPU
++
++[NOTE: The interface for the cpu controller hasn't been merged yet]
++
++The "cpu" controllers regulates distribution of CPU cycles.  This
++controller implements weight and absolute bandwidth limit models for
++normal scheduling policy and absolute bandwidth allocation model for
++realtime scheduling policy.
++
++
++5-1-1. CPU Interface Files
++
++All time durations are in microseconds.
++
++  cpu.stat
++
++	A read-only flat-keyed file which exists on non-root cgroups.
++
++	It reports the following six stats.
++
++	  usage_usec
++	  user_usec
++	  system_usec
++	  nr_periods
++	  nr_throttled
++	  throttled_usec
++
++  cpu.weight
++
++	A read-write single value file which exists on non-root
++	cgroups.  The default is "100".
++
++	The weight in the range [1, 10000].
++
++  cpu.max
++
++	A read-write two value file which exists on non-root cgroups.
++	The default is "max 100000".
++
++	The maximum bandwidth limit.  It's in the following format.
++
++	  $MAX $PERIOD
++
++	which indicates that the group may consume upto $MAX in each
++	$PERIOD duration.  "max" for $MAX indicates no limit.  If only
++	one number is written, $MAX is updated.
++
++  cpu.rt.max
++
++  [NOTE: The semantics of this file is still under discussion and the
++   interface hasn't been merged yet]
++
++	A read-write two value file which exists on all cgroups.
++	The default is "0 100000".
++
++	The maximum realtime runtime allocation.  Over-committing
++	configurations are disallowed and process migrations are
++	rejected if not enough bandwidth is available.  It's in the
++	following format.
++
++	  $MAX $PERIOD
++
++	which indicates that the group may consume upto $MAX in each
++	$PERIOD duration.  If only one number is written, $MAX is
++	updated.
++
++
++5-2. Memory
++
++The "memory" controller regulates distribution of memory.  Memory is
++stateful and implements both limit and protection models.  Due to the
++intertwining between memory usage and reclaim pressure and the
++stateful nature of memory, the distribution model is relatively
++complex.
++
++While not completely water-tight, all major memory usages by a given
++cgroup are tracked so that the total memory consumption can be
++accounted and controlled to a reasonable extent.  Currently, the
++following types of memory usages are tracked.
++
++- Userland memory - page cache and anonymous memory.
++
++- Kernel data structures such as dentries and inodes.
++
++- TCP socket buffers.
++
++The above list may expand in the future for better coverage.
++
++
++5-2-1. Memory Interface Files
++
++All memory amounts are in bytes.  If a value which is not aligned to
++PAGE_SIZE is written, the value may be rounded up to the closest
++PAGE_SIZE multiple when read back.
++
++  memory.current
++
++	A read-only single value file which exists on non-root
++	cgroups.
++
++	The total amount of memory currently being used by the cgroup
++	and its descendants.
++
++  memory.low
++
++	A read-write single value file which exists on non-root
++	cgroups.  The default is "0".
++
++	Best-effort memory protection.  If the memory usages of a
++	cgroup and all its ancestors are below their low boundaries,
++	the cgroup's memory won't be reclaimed unless memory can be
++	reclaimed from unprotected cgroups.
++
++	Putting more memory than generally available under this
++	protection is discouraged.
++
++  memory.high
++
++	A read-write single value file which exists on non-root
++	cgroups.  The default is "max".
++
++	Memory usage throttle limit.  This is the main mechanism to
++	control memory usage of a cgroup.  If a cgroup's usage goes
++	over the high boundary, the processes of the cgroup are
++	throttled and put under heavy reclaim pressure.
++
++	Going over the high limit never invokes the OOM killer and
++	under extreme conditions the limit may be breached.
++
++  memory.max
++
++	A read-write single value file which exists on non-root
++	cgroups.  The default is "max".
++
++	Memory usage hard limit.  This is the final protection
++	mechanism.  If a cgroup's memory usage reaches this limit and
++	can't be reduced, the OOM killer is invoked in the cgroup.
++	Under certain circumstances, the usage may go over the limit
++	temporarily.
++
++	This is the ultimate protection mechanism.  As long as the
++	high limit is used and monitored properly, this limit's
++	utility is limited to providing the final safety net.
++
++  memory.events
++
++	A read-only flat-keyed file which exists on non-root cgroups.
++	The following entries are defined.  Unless specified
++	otherwise, a value change in this file generates a file
++	modified event.
++
++	  low
++
++		The number of times the cgroup is reclaimed due to
++		high memory pressure even though its usage is under
++		the low boundary.  This usually indicates that the low
++		boundary is over-committed.
++
++	  high
++
++		The number of times processes of the cgroup are
++		throttled and routed to perform direct memory reclaim
++		because the high memory boundary was exceeded.  For a
++		cgroup whose memory usage is capped by the high limit
++		rather than global memory pressure, this event's
++		occurrences are expected.
++
++	  max
++
++		The number of times the cgroup's memory usage was
++		about to go over the max boundary.  If direct reclaim
++		fails to bring it down, the OOM killer is invoked.
++
++	  oom
++
++		The number of times the OOM killer has been invoked in
++		the cgroup.  This may not exactly match the number of
++		processes killed but should generally be close.
++
++
++5-2-2. General Usage
++
++"memory.high" is the main mechanism to control memory usage.
++Over-committing on high limit (sum of high limits > available memory)
++and letting global memory pressure to distribute memory according to
++usage is a viable strategy.
++
++Because breach of the high limit doesn't trigger the OOM killer but
++throttles the offending cgroup, a management agent has ample
++opportunities to monitor and take appropriate actions such as granting
++more memory or terminating the workload.
++
++Determining whether a cgroup has enough memory is not trivial as
++memory usage doesn't indicate whether the workload can benefit from
++more memory.  For example, a workload which writes data received from
++network to a file can use all available memory but can also operate as
++performant with a small amount of memory.  A measure of memory
++pressure - how much the workload is being impacted due to lack of
++memory - is necessary to determine whether a workload needs more
++memory; unfortunately, memory pressure monitoring mechanism isn't
++implemented yet.
++
++
++5-2-3. Memory Ownership
++
++A memory area is charged to the cgroup which instantiated it and stays
++charged to the cgroup until the area is released.  Migrating a process
++to a different cgroup doesn't move the memory usages that it
++instantiated while in the previous cgroup to the new cgroup.
++
++A memory area may be used by processes belonging to different cgroups.
++To which cgroup the area will be charged is in-deterministic; however,
++over time, the memory area is likely to end up in a cgroup which has
++enough memory allowance to avoid high reclaim pressure.
++
++If a cgroup sweeps a considerable amount of memory which is expected
++to be accessed repeatedly by other cgroups, it may make sense to use
++POSIX_FADV_DONTNEED to relinquish the ownership of memory areas
++belonging to the affected files to ensure correct memory ownership.
++
++
++5-3. IO
++
++The "io" controller regulates the distribution of IO resources.  This
++controller implements both weight based and absolute bandwidth or IOPS
++limit distribution; however, weight based distribution is available
++only if cfq-iosched is in use and neither scheme is available for
++blk-mq devices.
++
++
++5-3-1. IO Interface Files
++
++  io.stat
++
++	A read-only nested-keyed file which exists on non-root
++	cgroups.
++
++	Lines are keyed by $MAJ:$MIN device numbers and not ordered.
++	The following nested keys are defined.
++
++	  rbytes	Bytes read
++	  wbytes	Bytes written
++	  rios		Number of read IOs
++	  wios		Number of write IOs
++
++	An example read output follows.
++
++	  8:16 rbytes=1459200 wbytes=314773504 rios=192 wios=353
++	  8:0 rbytes=90430464 wbytes=299008000 rios=8950 wios=1252
++
++  io.weight
++
++	A read-write flat-keyed file which exists on non-root cgroups.
++	The default is "default 100".
++
++	The first line is the default weight applied to devices
++	without specific override.  The rest are overrides keyed by
++	$MAJ:$MIN device numbers and not ordered.  The weights are in
++	the range [1, 10000] and specifies the relative amount IO time
++	the cgroup can use in relation to its siblings.
++
++	The default weight can be updated by writing either "default
++	$WEIGHT" or simply "$WEIGHT".  Overrides can be set by writing
++	"$MAJ:$MIN $WEIGHT" and unset by writing "$MAJ:$MIN default".
++
++	An example read output follows.
++
++	  default 100
++	  8:16 200
++	  8:0 50
++
++  io.max
++
++	A read-write nested-keyed file which exists on non-root
++	cgroups.
++
++	BPS and IOPS based IO limit.  Lines are keyed by $MAJ:$MIN
++	device numbers and not ordered.  The following nested keys are
++	defined.
++
++	  rbps		Max read bytes per second
++	  wbps		Max write bytes per second
++	  riops		Max read IO operations per second
++	  wiops		Max write IO operations per second
++
++	When writing, any number of nested key-value pairs can be
++	specified in any order.  "max" can be specified as the value
++	to remove a specific limit.  If the same key is specified
++	multiple times, the outcome is undefined.
++
++	BPS and IOPS are measured in each IO direction and IOs are
++	delayed if limit is reached.  Temporary bursts are allowed.
++
++	Setting read limit at 2M BPS and write at 120 IOPS for 8:16.
++
++	  echo "8:16 rbps=2097152 wiops=120" > io.max
++
++	Reading returns the following.
++
++	  8:16 rbps=2097152 wbps=max riops=max wiops=120
++
++	Write IOPS limit can be removed by writing the following.
++
++	  echo "8:16 wiops=max" > io.max
++
++	Reading now returns the following.
++
++	  8:16 rbps=2097152 wbps=max riops=max wiops=max
++
++
++5-3-2. Writeback
++
++Writeback of page cache manages the dirty memory ratio and is an
++integral part of memory management.  The io controller, in conjunction
++with the memory controller, implements control of page cache writeback
++IOs.  The memory controller defines the memory domain that dirty
++memory ratio is calculated and maintained for and the io controller
++defines the io domain which writes out dirty pages for the memory
++domain.
++
++There are inherent differences in memory and writeback management
++which affects how cgroup ownership is tracked.  Memory is tracked per
++page while writeback per inode.  For the purpose of writeback, an
++inode is assigned to a cgroup and all IO requests to write dirty pages
++from the inode are attributed to that cgroup.
++
++As cgroup ownership for memory is tracked per page, there can be pages
++which are associated with different cgroups than the one the inode is
++associated with.  These are called foreign pages.  The writeback
++constantly keeps track of foreign pages and, if a particular foreign
++cgroup becomes the majority over a certain period of time, switches
++the ownership of the inode to that cgroup.
++
++While this model is enough for most use cases where a given inode is
++mostly dirtied by a single cgroup even when the main writing cgroup
++changes over time, use cases where multiple cgroups write to a single
++inode simultaneously are not supported well.  In such circumstances, a
++significant portion of IOs are likely to be attributed incorrectly.
++It's recommended to avoid such usage patterns if possible.
++
++The sysctl knobs which affect writeback behavior are applied to cgroup
++writeback as follows.
++
++  vm.dirty_background_ratio
++  vm.dirty_ratio
++
++	These ratios apply the same to cgroup writeback with the
++	amount of available memory capped by limits imposed by the
++	memory controller and system-wide clean memory.
++
++  vm.dirty_background_bytes
++  vm.dirty_bytes
++
++	For cgroup writeback, this is calculated into ratio against
++	total available memory and applied the same way as
++	vm.dirty[_background]_ratio.
++
++
++D. Deprecated v1 Core Features
++
++- Multiple hierarchies including named ones are not supported.
++
++- All mount options and remounting are not supported.
++
++- The "tasks" file is removed and "cgroup.procs" is not sorted.
++
++- "cgroup.clone_children" is removed.
++
++- /proc/cgroups is meaningless for v2.  Use "cgroup.controllers" file
++  at the root instead.
++
++
++R. Issues with v1 and Rationales for v2
++
++R-1. Multiple Hierarchies
++
++cgroup v1 allowed an arbitrary number of hierarchies and each
++hierarchy could host any number of controllers.  While this seemed to
++provide a high level of flexibility, it wasn't useful in practice.
++
++For example, as there is only one instance of each controller, utility
++type controllers such as freezer which can be useful in all
++hierarchies could only be used in one.  The issue is exacerbated by
++the fact that controllers couldn't be moved to another hierarchy once
++hierarchies were populated.  Another issue was that all controllers
++bound to a hierarchy were forced to have exactly the same view of the
++hierarchy.  It wasn't possible to vary the granularity depending on
++the specific controller.
++
++In practice, these issues heavily limited which controllers could be
++put on the same hierarchy and most configurations resorted to putting
++each controller on its own hierarchy.  Only closely related ones, such
++as the cpu and cpuacct controllers, made sense to be put on the same
++hierarchy.  This often meant that userland ended up managing multiple
++similar hierarchies repeating the same steps on each hierarchy
++whenever a hierarchy management operation was necessary.
++
++Furthermore, support for multiple hierarchies came at a steep cost.
++It greatly complicated cgroup core implementation but more importantly
++the support for multiple hierarchies restricted how cgroup could be
++used in general and what controllers was able to do.
++
++There was no limit on how many hierarchies there might be, which meant
++that a thread's cgroup membership couldn't be described in finite
++length.  The key might contain any number of entries and was unlimited
++in length, which made it highly awkward to manipulate and led to
++addition of controllers which existed only to identify membership,
++which in turn exacerbated the original problem of proliferating number
++of hierarchies.
++
++Also, as a controller couldn't have any expectation regarding the
++topologies of hierarchies other controllers might be on, each
++controller had to assume that all other controllers were attached to
++completely orthogonal hierarchies.  This made it impossible, or at
++least very cumbersome, for controllers to cooperate with each other.
++
++In most use cases, putting controllers on hierarchies which are
++completely orthogonal to each other isn't necessary.  What usually is
++called for is the ability to have differing levels of granularity
++depending on the specific controller.  In other words, hierarchy may
++be collapsed from leaf towards root when viewed from specific
++controllers.  For example, a given configuration might not care about
++how memory is distributed beyond a certain level while still wanting
++to control how CPU cycles are distributed.
++
++
++R-2. Thread Granularity
++
++cgroup v1 allowed threads of a process to belong to different cgroups.
++This didn't make sense for some controllers and those controllers
++ended up implementing different ways to ignore such situations but
++much more importantly it blurred the line between API exposed to
++individual applications and system management interface.
++
++Generally, in-process knowledge is available only to the process
++itself; thus, unlike service-level organization of processes,
++categorizing threads of a process requires active participation from
++the application which owns the target process.
++
++cgroup v1 had an ambiguously defined delegation model which got abused
++in combination with thread granularity.  cgroups were delegated to
++individual applications so that they can create and manage their own
++sub-hierarchies and control resource distributions along them.  This
++effectively raised cgroup to the status of a syscall-like API exposed
++to lay programs.
++
++First of all, cgroup has a fundamentally inadequate interface to be
++exposed this way.  For a process to access its own knobs, it has to
++extract the path on the target hierarchy from /proc/self/cgroup,
++construct the path by appending the name of the knob to the path, open
++and then read and/or write to it.  This is not only extremely clunky
++and unusual but also inherently racy.  There is no conventional way to
++define transaction across the required steps and nothing can guarantee
++that the process would actually be operating on its own sub-hierarchy.
++
++cgroup controllers implemented a number of knobs which would never be
++accepted as public APIs because they were just adding control knobs to
++system-management pseudo filesystem.  cgroup ended up with interface
++knobs which were not properly abstracted or refined and directly
++revealed kernel internal details.  These knobs got exposed to
++individual applications through the ill-defined delegation mechanism
++effectively abusing cgroup as a shortcut to implementing public APIs
++without going through the required scrutiny.
++
++This was painful for both userland and kernel.  Userland ended up with
++misbehaving and poorly abstracted interfaces and kernel exposing and
++locked into constructs inadvertently.
++
++
++R-3. Competition Between Inner Nodes and Threads
++
++cgroup v1 allowed threads to be in any cgroups which created an
++interesting problem where threads belonging to a parent cgroup and its
++children cgroups competed for resources.  This was nasty as two
++different types of entities competed and there was no obvious way to
++settle it.  Different controllers did different things.
++
++The cpu controller considered threads and cgroups as equivalents and
++mapped nice levels to cgroup weights.  This worked for some cases but
++fell flat when children wanted to be allocated specific ratios of CPU
++cycles and the number of internal threads fluctuated - the ratios
++constantly changed as the number of competing entities fluctuated.
++There also were other issues.  The mapping from nice level to weight
++wasn't obvious or universal, and there were various other knobs which
++simply weren't available for threads.
++
++The io controller implicitly created a hidden leaf node for each
++cgroup to host the threads.  The hidden leaf had its own copies of all
++the knobs with "leaf_" prefixed.  While this allowed equivalent
++control over internal threads, it was with serious drawbacks.  It
++always added an extra layer of nesting which wouldn't be necessary
++otherwise, made the interface messy and significantly complicated the
++implementation.
++
++The memory controller didn't have a way to control what happened
++between internal tasks and child cgroups and the behavior was not
++clearly defined.  There were attempts to add ad-hoc behaviors and
++knobs to tailor the behavior to specific workloads which would have
++led to problems extremely difficult to resolve in the long term.
++
++Multiple controllers struggled with internal tasks and came up with
++different ways to deal with it; unfortunately, all the approaches were
++severely flawed and, furthermore, the widely different behaviors
++made cgroup as a whole highly inconsistent.
++
++This clearly is a problem which needs to be addressed from cgroup core
++in a uniform way.
++
++
++R-4. Other Interface Issues
++
++cgroup v1 grew without oversight and developed a large number of
++idiosyncrasies and inconsistencies.  One issue on the cgroup core side
++was how an empty cgroup was notified - a userland helper binary was
++forked and executed for each event.  The event delivery wasn't
++recursive or delegatable.  The limitations of the mechanism also led
++to in-kernel event delivery filtering mechanism further complicating
++the interface.
++
++Controller interfaces were problematic too.  An extreme example is
++controllers completely ignoring hierarchical organization and treating
++all cgroups as if they were all located directly under the root
++cgroup.  Some controllers exposed a large amount of inconsistent
++implementation details to userland.
++
++There also was no consistency across controllers.  When a new cgroup
++was created, some controllers defaulted to not imposing extra
++restrictions while others disallowed any resource usage until
++explicitly configured.  Configuration knobs for the same type of
++control used widely differing naming schemes and formats.  Statistics
++and information knobs were named arbitrarily and used different
++formats and units even in the same controller.
++
++cgroup v2 establishes common conventions where appropriate and updates
++controllers so that they expose minimal and consistent interfaces.
++
++
++R-5. Controller Issues and Remedies
++
++R-5-1. Memory
++
++The original lower boundary, the soft limit, is defined as a limit
++that is per default unset.  As a result, the set of cgroups that
++global reclaim prefers is opt-in, rather than opt-out.  The costs for
++optimizing these mostly negative lookups are so high that the
++implementation, despite its enormous size, does not even provide the
++basic desirable behavior.  First off, the soft limit has no
++hierarchical meaning.  All configured groups are organized in a global
++rbtree and treated like equal peers, regardless where they are located
++in the hierarchy.  This makes subtree delegation impossible.  Second,
++the soft limit reclaim pass is so aggressive that it not just
++introduces high allocation latencies into the system, but also impacts
++system performance due to overreclaim, to the point where the feature
++becomes self-defeating.
++
++The memory.low boundary on the other hand is a top-down allocated
++reserve.  A cgroup enjoys reclaim protection when it and all its
++ancestors are below their low boundaries, which makes delegation of
++subtrees possible.  Secondly, new cgroups have no reserve per default
++and in the common case most cgroups are eligible for the preferred
++reclaim pass.  This allows the new low boundary to be efficiently
++implemented with just a minor addition to the generic reclaim code,
++without the need for out-of-band data structures and reclaim passes.
++Because the generic reclaim code considers all cgroups except for the
++ones running low in the preferred first reclaim pass, overreclaim of
++individual groups is eliminated as well, resulting in much better
++overall workload performance.
++
++The original high boundary, the hard limit, is defined as a strict
++limit that can not budge, even if the OOM killer has to be called.
++But this generally goes against the goal of making the most out of the
++available memory.  The memory consumption of workloads varies during
++runtime, and that requires users to overcommit.  But doing that with a
++strict upper limit requires either a fairly accurate prediction of the
++working set size or adding slack to the limit.  Since working set size
++estimation is hard and error prone, and getting it wrong results in
++OOM kills, most users tend to err on the side of a looser limit and
++end up wasting precious resources.
++
++The memory.high boundary on the other hand can be set much more
++conservatively.  When hit, it throttles allocations by forcing them
++into direct reclaim to work off the excess, but it never invokes the
++OOM killer.  As a result, a high boundary that is chosen too
++aggressively will not terminate the processes, but instead it will
++lead to gradual performance degradation.  The user can monitor this
++and make corrections until the minimal memory footprint that still
++gives acceptable performance is found.
++
++In extreme cases, with many concurrent allocations and a complete
++breakdown of reclaim progress within the group, the high boundary can
++be exceeded.  But even then it's mostly better to satisfy the
++allocation from the slack available in other groups or the rest of the
++system than killing the group.  Otherwise, memory.max is there to
++limit this type of spillover and ultimately contain buggy or even
++malicious applications.
 -- 
 2.5.0
