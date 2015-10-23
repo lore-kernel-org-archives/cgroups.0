@@ -1,51 +1,117 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 5/8] mm: memcontrol: account socket memory on unified
- hierarchy
-Date: Fri, 23 Oct 2015 15:19:56 +0200
-Message-ID: <20151023131956.GA15375@dhcp22.suse.cz>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 6/8] mm: vmscan: simplify memcg vs. global shrinker
+ invocation
+Date: Fri, 23 Oct 2015 15:26:22 +0200
+Message-ID: <20151023132622.GB15375@dhcp22.suse.cz>
 References: <1445487696-21545-1-git-send-email-hannes@cmpxchg.org>
- <1445487696-21545-6-git-send-email-hannes@cmpxchg.org>
+ <1445487696-21545-7-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1445487696-21545-6-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1445487696-21545-7-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: "David S. Miller" <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@virtuozzo.com>, Tejun Heo <tj@kernel.org>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu 22-10-15 00:21:33, Johannes Weiner wrote:
-> Socket memory can be a significant share of overall memory consumed by
-> common workloads. In order to provide reasonable resource isolation
-> out-of-the-box in the unified hierarchy, this type of memory needs to
-> be accounted and tracked per default in the memory controller.
+On Thu 22-10-15 00:21:34, Johannes Weiner wrote:
+> Letting shrink_slab() handle the root_mem_cgroup, and implicitely the
+> !CONFIG_MEMCG case, allows shrink_zone() to invoke the shrinkers
+> unconditionally from within the memcg iteration loop.
+> 
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 
-What about users who do not want to pay an additional overhead for the
-accounting? How can they disable it?
+Acked-by: Michal Hocko <mhocko@suse.com>
 
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-
-[...]
-
-> @@ -5453,10 +5470,9 @@ void mem_cgroup_replace_page(struct page *oldpage, struct page *newpage)
->  	commit_charge(newpage, memcg, true);
->  }
+> ---
+>  include/linux/memcontrol.h |  2 ++
+>  mm/vmscan.c                | 31 ++++++++++++++++---------------
+>  2 files changed, 18 insertions(+), 15 deletions(-)
+> 
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index 6f1e0f8..d66ae18 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -482,6 +482,8 @@ void mem_cgroup_split_huge_fixup(struct page *head);
+>  #else /* CONFIG_MEMCG */
+>  struct mem_cgroup;
 >  
-> -/* Writing them here to avoid exposing memcg's inner layout */
-> -#if defined(CONFIG_INET) && defined(CONFIG_MEMCG_KMEM)
-> +#ifdef CONFIG_INET
+> +#define root_mem_cgroup NULL
+> +
+>  static inline void mem_cgroup_events(struct mem_cgroup *memcg,
+>  				     enum mem_cgroup_events_index idx,
+>  				     unsigned int nr)
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 9b52ecf..ecc2125 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -411,6 +411,10 @@ static unsigned long shrink_slab(gfp_t gfp_mask, int nid,
+>  	struct shrinker *shrinker;
+>  	unsigned long freed = 0;
 >  
-> -DEFINE_STATIC_KEY_FALSE(mem_cgroup_sockets);
-> +DEFINE_STATIC_KEY_TRUE(mem_cgroup_sockets);
-
-AFAIU this means that the jump label is enabled by default. Is this
-intended when you enable it explicitly where needed?
-
+> +	/* Global shrinker mode */
+> +	if (memcg == root_mem_cgroup)
+> +		memcg = NULL;
+> +
+>  	if (memcg && !memcg_kmem_is_active(memcg))
+>  		return 0;
 >  
->  void sock_update_memcg(struct sock *sk)
->  {
+> @@ -2417,11 +2421,22 @@ static bool shrink_zone(struct zone *zone, struct scan_control *sc,
+>  			shrink_lruvec(lruvec, swappiness, sc, &lru_pages);
+>  			zone_lru_pages += lru_pages;
+>  
+> -			if (memcg && is_classzone)
+> +			/*
+> +			 * Shrink the slab caches in the same proportion that
+> +			 * the eligible LRU pages were scanned.
+> +			 */
+> +			if (is_classzone) {
+>  				shrink_slab(sc->gfp_mask, zone_to_nid(zone),
+>  					    memcg, sc->nr_scanned - scanned,
+>  					    lru_pages);
+>  
+> +				if (reclaim_state) {
+> +					sc->nr_reclaimed +=
+> +						reclaim_state->reclaimed_slab;
+> +					reclaim_state->reclaimed_slab = 0;
+> +				}
+> +			}
+> +
+>  			/*
+>  			 * Direct reclaim and kswapd have to scan all memory
+>  			 * cgroups to fulfill the overall scan target for the
+> @@ -2439,20 +2454,6 @@ static bool shrink_zone(struct zone *zone, struct scan_control *sc,
+>  			}
+>  		} while ((memcg = mem_cgroup_iter(root, memcg, &reclaim)));
+>  
+> -		/*
+> -		 * Shrink the slab caches in the same proportion that
+> -		 * the eligible LRU pages were scanned.
+> -		 */
+> -		if (global_reclaim(sc) && is_classzone)
+> -			shrink_slab(sc->gfp_mask, zone_to_nid(zone), NULL,
+> -				    sc->nr_scanned - nr_scanned,
+> -				    zone_lru_pages);
+> -
+> -		if (reclaim_state) {
+> -			sc->nr_reclaimed += reclaim_state->reclaimed_slab;
+> -			reclaim_state->reclaimed_slab = 0;
+> -		}
+> -
+>  		vmpressure(sc->gfp_mask, sc->target_mem_cgroup,
+>  			   sc->nr_scanned - nr_scanned,
+>  			   sc->nr_reclaimed - nr_reclaimed);
+> -- 
+> 2.6.1
+
 -- 
 Michal Hocko
 SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
