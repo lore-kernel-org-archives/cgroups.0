@@ -1,94 +1,141 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 2/8] mm: memcontrol: export root_mem_cgroup
-Date: Fri, 23 Oct 2015 13:32:38 +0200
-Message-ID: <20151023113237.GK2410@dhcp22.suse.cz>
-References: <1445487696-21545-1-git-send-email-hannes@cmpxchg.org>
- <1445487696-21545-3-git-send-email-hannes@cmpxchg.org>
+From: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-4.4 3/3] cgroup: replace unified-hierarchy.txt
+ with a proper cgroup v2 documentation
+Date: Fri, 23 Oct 2015 08:16:47 -0400
+Message-ID: <20151023121647.GA22547@redhat.com>
+References: <20151022012212.GA20931@mtj.duckdns.org>
+ <20151022012302.GB20931@mtj.duckdns.org>
+ <20151022012354.GC20931@mtj.duckdns.org>
+ <20151022143427.GC20847@redhat.com>
+ <20151022143605.GE30579@mtj.duckdns.org>
+ <20151023011807.GB5442@mtj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1445487696-21545-3-git-send-email-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20151023011807.GB5442-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: "David S. Miller" <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@virtuozzo.com>, Tejun Heo <tj@kernel.org>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Thu 22-10-15 00:21:30, Johannes Weiner wrote:
-> A later patch will need this symbol in files other than memcontrol.c,
-> so export it now and replace mem_cgroup_root_css at the same time.
+On Fri, Oct 23, 2015 at 10:18:07AM +0900, Tejun Heo wrote:
+> Hello,
 > 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-
-Acked-by: Michal Hocko <mhocko@suse.com>
-
-> ---
->  include/linux/memcontrol.h | 3 ++-
->  mm/backing-dev.c           | 2 +-
->  mm/memcontrol.c            | 5 ++---
->  3 files changed, 5 insertions(+), 5 deletions(-)
+> On Thu, Oct 22, 2015 at 11:36:05PM +0900, Tejun Heo wrote:
+> > It works with ext2 and 4 and btrfs.  Will document it.  Thanks.
 > 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 805da1f..19ff87b 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -275,7 +275,8 @@ struct mem_cgroup {
->  	struct mem_cgroup_per_node *nodeinfo[0];
->  	/* WARNING: nodeinfo must be the last member here */
->  };
-> -extern struct cgroup_subsys_state *mem_cgroup_root_css;
-> +
-> +extern struct mem_cgroup *root_mem_cgroup;
->  
->  /**
->   * mem_cgroup_events - count memory events against a cgroup
-> diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-> index 095b23b..73ab967 100644
-> --- a/mm/backing-dev.c
-> +++ b/mm/backing-dev.c
-> @@ -702,7 +702,7 @@ static int cgwb_bdi_init(struct backing_dev_info *bdi)
->  
->  	ret = wb_init(&bdi->wb, bdi, 1, GFP_KERNEL);
->  	if (!ret) {
-> -		bdi->wb.memcg_css = mem_cgroup_root_css;
-> +		bdi->wb.memcg_css = &root_mem_cgroup->css;
->  		bdi->wb.blkcg_css = blkcg_root_css;
->  	}
->  	return ret;
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index a8ccdbc..e54f434 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -76,9 +76,9 @@
->  struct cgroup_subsys memory_cgrp_subsys __read_mostly;
->  EXPORT_SYMBOL(memory_cgrp_subsys);
->  
-> +struct mem_cgroup *root_mem_cgroup __read_mostly;
-> +
->  #define MEM_CGROUP_RECLAIM_RETRIES	5
-> -static struct mem_cgroup *root_mem_cgroup __read_mostly;
-> -struct cgroup_subsys_state *mem_cgroup_root_css __read_mostly;
->  
->  /* Whether the swap controller is active */
->  #ifdef CONFIG_MEMCG_SWAP
-> @@ -4213,7 +4213,6 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
->  	/* root ? */
->  	if (parent_css == NULL) {
->  		root_mem_cgroup = memcg;
-> -		mem_cgroup_root_css = &memcg->css;
->  		page_counter_init(&memcg->memory, NULL);
->  		memcg->high = PAGE_COUNTER_MAX;
->  		memcg->soft_limit = PAGE_COUNTER_MAX;
+> Updated to include all writeback information from
+> blkio-controller.txt.
+> 
+
+Thanks Tejun. Looks good.
+
+Vivek
+
+> 5-3-2. Writeback
+> 
+> Page cache is dirtied through buffered writes and shared mmaps and
+> written asynchronously to the backing filesystem by the writeback
+> mechanism.  Writeback sits between the memory and IO domains and
+> regulates the proportion of dirty memory by balancing dirtying and
+> write IOs.
+> 
+> The io controller, in conjunction with the memory controller,
+> implements control of page cache writeback IOs.  The memory controller
+> defines the memory domain that dirty memory ratio is calculated and
+> maintained for and the io controller defines the io domain which
+> writes out dirty pages for the memory domain.  Both system-wide and
+> per-cgroup dirty memory states are examined and the more restrictive
+> of the two is enforced.
+> 
+> cgroup writeback requires explicit support from the underlying
+> filesystem.  Currently, cgroup writeback is implemented on ext2, ext4
+> and btrfs.  On other filesystems, all writeback IOs are attributed to
+> the root cgroup.
+> 
+> There are inherent differences in memory and writeback management
+> which affects how cgroup ownership is tracked.  Memory is tracked per
+> page while writeback per inode.  For the purpose of writeback, an
+> inode is assigned to a cgroup and all IO requests to write dirty pages
+> from the inode are attributed to that cgroup.
+> 
+> As cgroup ownership for memory is tracked per page, there can be pages
+> which are associated with different cgroups than the one the inode is
+> associated with.  These are called foreign pages.  The writeback
+> constantly keeps track of foreign pages and, if a particular foreign
+> cgroup becomes the majority over a certain period of time, switches
+> the ownership of the inode to that cgroup.
+> 
+> While this model is enough for most use cases where a given inode is
+> mostly dirtied by a single cgroup even when the main writing cgroup
+> changes over time, use cases where multiple cgroups write to a single
+> inode simultaneously are not supported well.  In such circumstances, a
+> significant portion of IOs are likely to be attributed incorrectly.
+> As memory controller assigns page ownership on the first use and
+> doesn't update it until the page is released, even if writeback
+> strictly follows page ownership, multiple cgroups dirtying overlapping
+> areas wouldn't work as expected.  It's recommended to avoid such usage
+> patterns.
+> 
+> The sysctl knobs which affect writeback behavior are applied to cgroup
+> writeback as follows.
+> 
+>   vm.dirty_background_ratio
+>   vm.dirty_ratio
+> 
+> 	These ratios apply the same to cgroup writeback with the
+> 	amount of available memory capped by limits imposed by the
+> 	memory controller and system-wide clean memory.
+> 
+>   vm.dirty_background_bytes
+>   vm.dirty_bytes
+> 
+> 	For cgroup writeback, this is calculated into ratio against
+> 	total available memory and applied the same way as
+> 	vm.dirty[_background]_ratio.
+> 
+> 
+> P. Information on Kernel Programming
+> 
+> This section contains kernel programming information in the areas
+> where interacting with cgroup is necessary.  cgroup core and
+> controllers are not covered.
+> 
+> 
+> P-1. Filesystem Support for Writeback
+> 
+> A filesystem can support cgroup writeback by updating
+> address_space_operations->writepage[s]() to annotate bio's using the
+> following two functions.
+> 
+>   wbc_init_bio(@wbc, @bio)
+> 
+> 	Should be called for each bio carrying writeback data and
+> 	associates the bio with the inode's owner cgroup.  Can be
+> 	called anytime between bio allocation and submission.
+> 
+>   wbc_account_io(@wbc, @page, @bytes)
+> 
+> 	Should be called for each data segment being written out.
+> 	While this function doesn't care exactly when it's called
+> 	during the writeback session, it's the easiest and most
+> 	natural to call it as data segments are added to a bio.
+> 
+> With writeback bio's annotated, cgroup support can be enabled per
+> super_block by setting SB_I_CGROUPWB in ->s_iflags.  This allows for
+> selective disabling of cgroup writeback support which is helpful when
+> certain filesystem features, e.g. journaled data mode, are
+> incompatible.
+> 
+> wbc_init_bio() binds the specified bio to its cgroup.  Depending on
+> the configuration, the bio may be executed at a lower priority and if
+> the writeback session is holding shared resources, e.g. a journal
+> entry, may lead to priority inversion.  There is no one easy solution
+> for the problem.  Filesystems can try to work around specific problem
+> cases by skipping wbc_init_bio() or using bio_associate_blkcg()
+> directly.
+> 
 > -- 
-> 2.6.1
-
--- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> tejun
