@@ -1,48 +1,43 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 3/3] sched: Implement interface for cgroup unified
- hierarchy
-Date: Mon, 26 Oct 2015 15:10:27 +0100
-Message-ID: <20151026141027.GW2508@worktop.programming.kicks-ass.net>
-References: <CAPM31RKx0vT-9VFN=XASYM4iv4U5ZGZW93XRtJd_7mOHwu76NA@mail.gmail.com>
- <20151023222110.GA4390@mtj.duckdns.org>
- <1445661367.3218.62.camel@gmail.com>
- <20151025021829.GA15471@mtj.duckdns.org>
- <CA+55aFzMdG5VPA0ZvoFANj-H-7LHeu=JUvvqPykF_w5Nd0pnSA@mail.gmail.com>
- <20151025093331.GA4834@gmail.com>
- <20151025104145.GE27558@thunk.org>
- <562CB328.3090906@redhat.com>
- <20151025115842.GA13940@thunk.org>
- <562CD663.5010506@redhat.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH] oom_kill: add option to disable dump_stack()
+Date: Mon, 26 Oct 2015 12:01:11 -0400
+Message-ID: <20151026160111.GA2214@cmpxchg.org>
+References: <1445634150-27992-1-git-send-email-arozansk@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <562CD663.5010506@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1445634150-27992-1-git-send-email-arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Florian Weimer <fweimer@redhat.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, Ingo Molnar <mingo@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Mike Galbraith <umgwanakikbuti@gmail.com>, Paul Turner <pjt@google.com>, Ingo Molnar <mingo@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, kernel-team <kernel-team@fb.com>, Andrew Morton <akpm@linux-foundation.org>
+To: Aristeu Rozanski <arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sun, Oct 25, 2015 at 02:17:23PM +0100, Florian Weimer wrote:
-> On 10/25/2015 12:58 PM, Theodore Ts'o wrote:
+On Fri, Oct 23, 2015 at 05:02:30PM -0400, Aristeu Rozanski wrote:
+> One of the largest chunks of log messages in a OOM is from dump_stack() and in
+> some cases it isn't even necessary to figure out what's going on. In
+> systems with multiple tenants/containers with limited resources each
+> OOMs can be way more frequent and being able to reduce the amount of log
+> output for each situation is useful.
 > 
-> > Well, I was thinking we could just teach them to use
-> > "syscall(SYS_gettid)".
+> This patch adds a sysctl to allow disabling dump_stack() during an OOM while
+> keeping the default to behave the same way it behaves today.
 > 
-> Right, and that's easier if TIDs are officially part of the GNU API.
-> 
-> I think the worry is that some future system might have TIDs which do
-> not share the PID space, or are real descriptors (that they need
-> explicit open and close operations).
+> Cc: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Signed-off-by: Aristeu Rozanski <arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-For the scheduler the sharing of pid/tid space is not an issue.
+I think this makes sense.
 
-Semantically all [1] scheduler syscalls take a tid. There isn't a single
-syscall that iterates the thread group.
+The high volume log output is not just annoying, we have also had
+reports from people whose machines locked up as they tried to log
+hundreds of containers through a low-bandwidth serial console.
 
-Even sys_setpriority() interprets its @who argument as a tid when
-@which == PRIO_PROCESS (PRIO_PGRP looks to be the actual process).
+Could you include sample output of before and after in the changelog
+to provide an immediate comparison on what we are saving?
 
-[1] as seen from: git grep SYSCALL kernel/sched/
-
+Should we make the knob specific to the stack dump or should it be
+more generic, so that we could potentially save even more output?
