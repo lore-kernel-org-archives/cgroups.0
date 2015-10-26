@@ -1,65 +1,47 @@
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Getrandom wrapper
-Date: Sun, 25 Oct 2015 09:40:00 -0400
-Message-ID: <20151025134000.GB13940@thunk.org>
-References: <CAPM31RKx0vT-9VFN=XASYM4iv4U5ZGZW93XRtJd_7mOHwu76NA@mail.gmail.com>
- <20151023222110.GA4390@mtj.duckdns.org>
- <1445661367.3218.62.camel@gmail.com>
- <20151025021829.GA15471@mtj.duckdns.org>
- <CA+55aFzMdG5VPA0ZvoFANj-H-7LHeu=JUvvqPykF_w5Nd0pnSA@mail.gmail.com>
- <20151025093331.GA4834@gmail.com>
- <20151025104145.GE27558@thunk.org>
- <562CB328.3090906@redhat.com>
- <20151025115842.GA13940@thunk.org>
- <562CD663.5010506@redhat.com>
+From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 cgroup/for-4.4 3/3] cgroup: replace
+ unified-hierarchy.txt with a proper cgroup v2 documentation
+Date: Mon, 26 Oct 2015 10:54:26 +0800
+Message-ID: <562D95E2.2000401@huawei.com>
+References: <20151022012212.GA20931@mtj.duckdns.org>
+ <20151022012302.GB20931@mtj.duckdns.org>
+ <20151022012354.GC20931@mtj.duckdns.org>
+ <20151023011902.GC5442@mtj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=thunk.org; s=ef5046eb;
-	h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=XykfkOiNNTX2yrYPBjNeEBqkiP7ZYZE7hcLFZZkdGkg=;
-	b=QDBbteHm3HLpLds+E3zG5KOAw/T/fofBYffPIDQy1aC4D9jaZIW6ksk1SAb5ModTAeRTd7sURoWFE2si0sFzLgk4Stg+FPU3kF89Km6D6spp343U6ek+NZy3v7IICcwl7u7ifNiqFzosZQjP/UfXCXZg+MpczeXPwcp+Wpv1RfM=;
-Content-Disposition: inline
-In-Reply-To: <562CD663.5010506@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Florian Weimer <fweimer@redhat.com>
-Cc: Ingo Molnar <mingo@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Mike Galbraith <umgwanakikbuti@gmail.com>, Paul Turner <pjt@google.com>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, kernel-team <kernel-team@fb.com>, Andrew Morton <akpm@linux-foundation.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20151023011902.GC5442-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Sun, Oct 25, 2015 at 02:17:23PM +0100, Florian Weimer wrote:
-> 
-> I think we can reach consensus for an implementation which makes this code
-> 
->   unsigned char session_key[32];
->   getrandom (session_key, sizeof (session_key), 0);
->   install_session_key (session_key);
-> 
-> correct.  That is, no error handling code for ENOMEM, ENOSYS, EINTR,
-> ENOMEM or short reads is necessary.  It seems that several getrandom
-> wrappers currently built into applications do not get this completely right.
+On 2015/10/23 9:19, Tejun Heo wrote:
+>>From 10d158783de74ad28454ff54556abf89bd85c756 Mon Sep 17 00:00:00 2001
+> From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Date: Fri, 23 Oct 2015 10:13:35 +0900
+>
+> Now that cgroup v2 is almost out of the door, replace the development
+> documentation unified-hierarchy.txt with Documentation/cgroup.txt
+> which is a superset of unified-hierarchy.txt and authoritatively
+> describes all userland-visible aspects of cgroup.
+>
+> v2: Updated to include all information from blkio-controller.txt and
+>      list filesystems which support cgroup writeback as suggested by
+>      Vivek.
+>
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> ---
+>   Documentation/cgroup-legacy/blkio-controller.txt  |   79 --
+>   Documentation/cgroup-legacy/unified-hierarchy.txt |  645 ----------
+>   Documentation/cgroup.txt                          | 1293 +++++++++++++++++++++
+>   3 files changed, 1293 insertions(+), 724 deletions(-)
+>   delete mode 100644 Documentation/cgroup-legacy/unified-hierarchy.txt
+>   create mode 100644 Documentation/cgroup.txt
+>
 
-The only error handling code that is necessary is a fallback for
-ENOSYS.  getrandom(2) won't return ENOMEM, and if the number of bytes
-requested is less than or equal to 256 bytes, it won't return EINTR
-either.  If the user requests more than 256 bytes, they're doing
-something insane and almost certainly not cryptographic, and so
-letting it be interruptible should be fine.  (OpenBSD will outright
-*fail* a request greater than 256 bytes with an EIO error in their
-getentropy(2) system call.  But that means the insane application
-won't get any randomness at all in their overly large, insane request,
-and if they're that insane, they're probably not checking error
-conditions either.)
+Looks good to me. For all three patches:
 
-As far as ENOSYS is concerned, a fallback gets tricky; you could try
-to open /dev/urandom, and read from it, but that can fail due to
-EMFILE, ENFILE, ENOENT (if they are chrooted and /dev wasn't properly
-populated).  So attempting a fallback for ENOSYS can actually expand
-the number of potential error conditions for the userspace application
-to (fail to) handle.  I suppose you could attempt the fallback and
-call abort(2) if the fallback fails, which is probably the safe and
-secure thing to do, but applications might not appreciate getting
-terminated without getting a chance to do something (but if the
-something is just calling random(3), maybe not giving them a chance to
-do something insane is the appropriate thing to do....)
-
-					- Ted
+Acked-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
