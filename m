@@ -1,74 +1,82 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [PATCH] oom_kill: add option to disable dump_stack()
-Date: Mon, 26 Oct 2015 14:38:11 -0700 (PDT)
-Message-ID: <alpine.DEB.2.10.1510261424290.12408@chino.kir.corp.google.com>
-References: <1445634150-27992-1-git-send-email-arozansk@redhat.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 3/3] sched: Implement interface for cgroup unified
+ hierarchy
+Date: Tue, 27 Oct 2015 12:16:56 +0900
+Message-ID: <20151027031656.GA11962@mtj.duckdns.org>
+References: <20150825210234.GE26785@mtj.duckdns.org>
+ <CAPM31RJvrPL7S37=yhxMA5OGUFNUfPurTZ21nfH6eFRb15ZGtw@mail.gmail.com>
+ <20150912144007.GA8942@htj.duckdns.org>
+ <CAPM31RLAtuaDbE9+nvMvgMB8zaOpxVcriCyE9qqszNM3XXTo5Q@mail.gmail.com>
+ <20151001184629.GB26498@mtj.duckdns.org>
+ <CAPM31RKx0vT-9VFN=XASYM4iv4U5ZGZW93XRtJd_7mOHwu76NA@mail.gmail.com>
+ <20151023222110.GA4390@mtj.duckdns.org>
+ <1445661367.3218.62.camel@gmail.com>
+ <20151025021829.GA15471@mtj.duckdns.org>
+ <1445744613.3180.60.camel@gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=cdLMvKyRezEPBUY678xjatliyjxbdGptCNVrJgJa06M=;
-        b=jTUpYXqHllDSGpWaUER7Uq2vctOo59ep1JvbVx4ospU6NWtNrEzlIEbnUCVEoQzC4Z
-         orIqU+i4SKJuYEQCY2rGD6v4dwI7/lGS1Y8ZGP8AFv5364i6cR9s7ahRoRfJ6JPRPWHK
-         jDm1PvwrhofMTt7LkKhzypi7BbB5yIumPkrz/ST5Ml45PHN9oRgmX7hvKHlU/46tN34v
-         KgnmuoqJTczytv52+rIXYkcvNI2/QMrbbKMDod7BPOxwchBvVlaiJ7cTx1k72xNpXNAG
-         oK+a9riIYHpf+dFXN9yDB3lq2vCbnzdvPoWlatt+BFwNt0IMq3CBt5wzMKYj5YxyaMjM
-         nX6g==
-In-Reply-To: <1445634150-27992-1-git-send-email-arozansk@redhat.com>
-Sender: owner-linux-mm@kvack.org
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=pBFk2kgxE64pFElyUPsEG1ugrf04tQ/ZHBcJPzS3Ru0=;
+        b=L6f4feqe8kirtGxGXPB0RwZ3g7Rd2L7eZ0c06Rck2R2ZiraNibbl4uq6lqz1UCfx3A
+         MFwoFqNPYCwZtLY9FYeecNGf6QvBQox6lJzD4TKCw0udDVrPUjXExOktyPjrjH7AwjNF
+         VMYDEN+IiYR0hENDKziRkwPbdiEJdqzTuIQA/tH+JJ62VorQPw+sbaJJJaj9X0e2wc+G
+         T7AQNJFPZyrtIXNMn7PojXMZzMD/GXTecTSCGgzfdudqMOiUo43DashNBKPVVrrKsOSB
+         E3ts2RAOiiVCA57IWpeovCGQfl68UJdlRVatg9j0r0tMnXxvqhrfTcOT6GTfR4ojnHUA
+         5BLQ==
+Content-Disposition: inline
+In-Reply-To: <1445744613.3180.60.camel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aristeu Rozanski <arozansk@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-mm@kvack.org, cgroups@vger.kernel.org
+To: Mike Galbraith <umgwanakikbuti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-team <kernel-team-b10kYP2dOMg@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Fri, 23 Oct 2015, Aristeu Rozanski wrote:
+Hello, Mike.
 
-> One of the largest chunks of log messages in a OOM is from dump_stack() and in
-> some cases it isn't even necessary to figure out what's going on. In
-> systems with multiple tenants/containers with limited resources each
-> OOMs can be way more frequent and being able to reduce the amount of log
-> output for each situation is useful.
+On Sun, Oct 25, 2015 at 04:43:33AM +0100, Mike Galbraith wrote:
+> I don't think it's weird, it's just a thought wrt where pigeon holing
+> could lead:  If you filter out current users who do so in a manner you
+> consider to be in some way odd, when all the filtering is done, you may
+> find that you've filtered out the vast majority of current deployment.
+
+I think you misunderstood what I wrote.  It's not about excluding
+existing odd use cases.  It's about examining the usages and
+extracting the required capabilities and building an interface which
+is well defined and blends well with the rest of programming interface
+provided by the kernel so that those can be achieved in a saner way.
+
+If doing acrobatics with the current interface is necessary to acheive
+certain capabilities, we need to come up with a better interface for
+those.  If fringe usages can be satisfied using better constructs, we
+should implement that and encourage transition to a better mechanism.
+
+> I'm not at all sure of this, but I suspect that SUSE's gigabuck size
+> cgroup power user will land in the same "fringe" pigeon hole.  If so,
+> that would be another sizeable dent in volume.
 > 
-> This patch adds a sysctl to allow disabling dump_stack() during an OOM while
-> keeping the default to behave the same way it behaves today.
-> 
-> Cc: Greg Thelen <gthelen@google.com>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: linux-mm@kvack.org
-> Cc: cgroups@vger.kernel.org
-> Signed-off-by: Aristeu Rozanski <arozansk@redhat.com>
+> My point is that these power users likely _are_ your general audience.
 
-There's lots of information in the oom log that is irrelevant depending on 
-the context in which the oom condition occurred.  Removing the stack trace 
-would have made things like commit 9a185e5861e8 ("/proc/stat: convert to 
-single_open_size()") harder to fix.  In that case, we were calling the oom 
-killer on large file reads from procfs when we could have easily have 
-used vmalloc() instead.
+Sure, that doesn't mean we shouldn't scrutinize the interface we
+implement to support those users.  Also, cgroup also definitely had
+some negative spiral effect where eccentric mechanisms and interfaces
+discouraged general wider usages fortifying the argument that "we're
+the main users" which in turn fed back to even weirder things being
+added.  Everybody including the "heavy" users suffers from such
+failures in the long term.
 
-When you have a memcg oom kill, the state of the system's memory can 
-usually be suppressed because it only occurred because a memcg hierarchy 
-reached its limit and has nothing to do with the exhaustion of RAM.
+We sure want to support all the valid use cases from heavy users in a
+reasonable way but that doesn't mean we say yes to everything.
 
-We already control oom output with global sysctls like vm.oom_dump_tasks 
-and memcg tunables like memory.oom_verbose.  I'm not sure that adding more 
-and more tunables simply to control the oom killer output is in the best 
-interest of either procfs or a long-term maintainable kernel.
+> Sure, it was just a thought wrt "actively filter those out" and who all
+> "those" may end up being.
 
-I can understand the usefulness of having a very small amount of output to 
-the kernel log and then enabling tunables to investigate why oom kills are 
-happening, but in many situations I've found to only have the oom killer 
-output left behind in a kernel log and the situation is not on-going so I 
-can't start diagnosing the problem if I don't know what triggered it.
+I hope what I meant is clearer now.
 
-I think adding additional sysctls to control oom killer output is in the 
-wrong direction.  I do agree with removing anything that is irrelevant in 
-all situations, however.
+Thanks.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
