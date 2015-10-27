@@ -1,106 +1,58 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH cgroup/for-4.4] cgroup: fix race condition around termination
- check in css_task_iter_next()
-Date: Tue, 27 Oct 2015 17:45:04 +0900
-Message-ID: <20151027084504.GB8783@mtj.duckdns.org>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 5/8] mm: memcontrol: account socket memory on unified
+ hierarchy
+Date: Tue, 27 Oct 2015 13:26:47 +0100
+Message-ID: <20151027122647.GG9891@dhcp22.suse.cz>
+References: <1445487696-21545-1-git-send-email-hannes@cmpxchg.org>
+ <1445487696-21545-6-git-send-email-hannes@cmpxchg.org>
+ <20151023131956.GA15375@dhcp22.suse.cz>
+ <20151023.065957.1690815054807881760.davem@davemloft.net>
+ <20151026165619.GB2214@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-         :content-disposition:user-agent;
-        bh=oao7jadYsCCHiIDVMd8P6P862ppG8/nq6H9zrGq3MZk=;
-        b=v9Fa8dP5BlxVDUktwl6H5yxgSeoiwSBaAIx2i6CpKTi7MVaft6Mlt7TbBaZXKLzojU
-         qbFiKAX2Lh/+P20Ow3v2seutUanUyr58YAfs9qU8QK09Xdcmtf0tqopuv3Pe4aslp9Bt
-         cefM8nxjz9ZxXs+69n+5JdeQ1RioADNvi0rFdYD0hTnqj7mU+AC3aro25cKqkQWIuC8X
-         QiT2wuD2UWjcqVH+eq/UPnT5UDtqa4GeiFacfKvXcVUwsM1G/27voKyE+1xPLZ+1DGkx
-         kAJfoZ8UNutM/hJiGLDOZRWc2EnUeGyS2x+JzCpVLzpH/HvPMMgVOSoyNu9cego8nXwe
-         tO/Q==
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20151026165619.GB2214@cmpxchg.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Calvin Owens <calvinowens-b10kYP2dOMg@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: David Miller <davem@davemloft.net>, akpm@linux-foundation.org, vdavydov@virtuozzo.com, tj@kernel.org, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-css_task_iter_next() checked @it->cur_task before grabbing
-css_set_lock and assumed that the result won't change afterwards;
-however, tasks could leave the cgroup being iterated terminating the
-iterator before css_task_lock is acquired.  If this happens,
-css_task_iter_next() tries to calculate the current task from NULL
-cg_list pointer leading to the following oops.
+On Mon 26-10-15 12:56:19, Johannes Weiner wrote:
+[...]
+> Now you could argue that there might exist specialized workloads that
+> need to account anonymous pages and page cache, but not socket memory
+> buffers.
 
- BUG: unable to handle kernel paging request at fffffffffffff7d0
- IP: [<ffffffff810d5f22>] css_task_iter_next+0x42/0x80
- ...
- CPU: 4 PID: 6391 Comm: JobQDisp2 Not tainted 4.0.9-22_fbk4_rc3_81616_ge8d9cb6 #1
- Hardware name: Quanta Freedom/Winterfell, BIOS F03_3B08 03/04/2014
- task: ffff880868e46400 ti: ffff88083404c000 task.ti: ffff88083404c000
- RIP: 0010:[<ffffffff810d5f22>]  [<ffffffff810d5f22>] css_task_iter_next+0x42/0x80
- RSP: 0018:ffff88083404fd28  EFLAGS: 00010246
- RAX: 0000000000000000 RBX: ffff88083404fd68 RCX: ffff8804697fb8b0
- RDX: fffffffffffff7c0 RSI: ffff8803b7dff800 RDI: ffffffff822c0278
- RBP: ffff88083404fd38 R08: 0000000000017160 R09: ffff88046f4070c0
- R10: ffffffff810d61f7 R11: 0000000000000293 R12: ffff880863bf8400
- R13: ffff88046b87fd80 R14: 0000000000000000 R15: ffff88083404fe58
- FS:  00007fa0567e2700(0000) GS:ffff88046f900000(0000) knlGS:0000000000000000
- CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
- CR2: fffffffffffff7d0 CR3: 0000000469568000 CR4: 00000000001406e0
- Stack:
-  0000000000000246 0000000000000000 ffff88083404fde8 ffffffff810d6248
-  ffff88083404fd68 0000000000000000 ffff8803b7dff800 000001ef000001ee
-  0000000000000000 0000000000000000 ffff880863bf8568 0000000000000000
- Call Trace:
-  [<ffffffff810d6248>] cgroup_pidlist_start+0x258/0x550
-  [<ffffffff810cf66d>] cgroup_seqfile_start+0x1d/0x20
-  [<ffffffff8121f8ef>] kernfs_seq_start+0x5f/0xa0
-  [<ffffffff811cab76>] seq_read+0x166/0x380
-  [<ffffffff812200fd>] kernfs_fop_read+0x11d/0x180
-  [<ffffffff811a7398>] __vfs_read+0x18/0x50
-  [<ffffffff811a745d>] vfs_read+0x8d/0x150
-  [<ffffffff811a756f>] SyS_read+0x4f/0xb0
-  [<ffffffff818d4772>] system_call_fastpath+0x12/0x17
+Exactly, and there are loads doing this. Memcg groups are also created to
+limit anon/page cache consumers to not affect the others running on
+the system (basically in the root memcg context from memcg POV) which
+don't care about tracking and they definitely do not want to pay for an
+additional overhead. We should definitely be able to offer a global
+disable knob for them. The same applies to kmem accounting in general.
 
-Fix it by moving the termination condition check inside css_set_lock.
-@it->cur_task is now cleared after being put and @it->task_pos is
-tested for termination instead of @it->cset_pos as they indicate the
-same condition and @it->task_pos is what's being dereferenced.
+I do understand with having the accounting enabled by default after we
+are reasonably sure that both kmem/tcp are stable enough (which I am
+not convinced about yet to be honest) but there will be always special
+loads which simply do not care about kmem/tcp accounting and rather pay
+a global balancing price (even OOM) rather than a permanent price. And
+they should get a way to opt-out.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Reported-by: Calvin Owens <calvinowens-b10kYP2dOMg@public.gmane.org>
-Fixes: ed27b9f7a17d ("cgroup: don't hold css_set_rwsem across css task iteration")
----
- kernel/cgroup.c |   17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+> Or any other combination of pick-and-choose consumers. But
+> honestly, nowadays all our paths are lockless, and the counting is an
+> atomic-add-return with a per-cpu batch cache.
 
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -3930,18 +3930,19 @@ void css_task_iter_start(struct cgroup_s
-  */
- struct task_struct *css_task_iter_next(struct css_task_iter *it)
- {
--	if (!it->cset_pos)
--		return NULL;
--
--	if (it->cur_task)
-+	if (it->cur_task) {
- 		put_task_struct(it->cur_task);
-+		it->cur_task = NULL;
-+	}
- 
- 	spin_lock_bh(&css_set_lock);
- 
--	it->cur_task = list_entry(it->task_pos, struct task_struct, cg_list);
--	get_task_struct(it->cur_task);
--
--	css_task_iter_advance(it);
-+	if (it->task_pos) {
-+		it->cur_task = list_entry(it->task_pos, struct task_struct,
-+					  cg_list);
-+		get_task_struct(it->cur_task);
-+		css_task_iter_advance(it);
-+	}
- 
- 	spin_unlock_bh(&css_set_lock);
- 
+You are still hooking into hot paths and there are users who want to
+squeeze every single cycle from the HW.
+
+> I don't think there is a compelling case for an elaborate interface
+> to make individual memory consumers configurable inside the memory
+> controller.
+
+I do not think we need an elaborate interface. We just want to have
+a global boot time knob to overwrite the default behavior. This is
+few lines of code and it should give the sufficient flexibility.
+-- 
+Michal Hocko
+SUSE Labs
