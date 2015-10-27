@@ -1,109 +1,106 @@
-From: Vladimir Davydov <vdavydov@virtuozzo.com>
-Subject: Re: [PATCH 0/8] mm: memcontrol: account socket memory in unified
- hierarchy
-Date: Tue, 27 Oct 2015 11:43:21 +0300
-Message-ID: <20151027084320.GF13221@esperanza>
-References: <1445487696-21545-1-git-send-email-hannes@cmpxchg.org>
- <20151022184509.GM18351@esperanza>
- <20151026172216.GC2214@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH cgroup/for-4.4] cgroup: fix race condition around termination
+ check in css_task_iter_next()
+Date: Tue, 27 Oct 2015 17:45:04 +0900
+Message-ID: <20151027084504.GB8783@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=oao7jadYsCCHiIDVMd8P6P862ppG8/nq6H9zrGq3MZk=;
+        b=v9Fa8dP5BlxVDUktwl6H5yxgSeoiwSBaAIx2i6CpKTi7MVaft6Mlt7TbBaZXKLzojU
+         qbFiKAX2Lh/+P20Ow3v2seutUanUyr58YAfs9qU8QK09Xdcmtf0tqopuv3Pe4aslp9Bt
+         cefM8nxjz9ZxXs+69n+5JdeQ1RioADNvi0rFdYD0hTnqj7mU+AC3aro25cKqkQWIuC8X
+         QiT2wuD2UWjcqVH+eq/UPnT5UDtqa4GeiFacfKvXcVUwsM1G/27voKyE+1xPLZ+1DGkx
+         kAJfoZ8UNutM/hJiGLDOZRWc2EnUeGyS2x+JzCpVLzpH/HvPMMgVOSoyNu9cego8nXwe
+         tO/Q==
 Content-Disposition: inline
-In-Reply-To: <20151026172216.GC2214@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: "David S. Miller" <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Tejun Heo <tj@kernel.org>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Calvin Owens <calvinowens-b10kYP2dOMg@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Mon, Oct 26, 2015 at 01:22:16PM -0400, Johannes Weiner wrote:
-> On Thu, Oct 22, 2015 at 09:45:10PM +0300, Vladimir Davydov wrote:
-> > Hi Johannes,
-> > 
-> > On Thu, Oct 22, 2015 at 12:21:28AM -0400, Johannes Weiner wrote:
-> > ...
-> > > Patch #5 adds accounting and tracking of socket memory to the unified
-> > > hierarchy memory controller, as described above. It uses the existing
-> > > per-cpu charge caches and triggers high limit reclaim asynchroneously.
-> > > 
-> > > Patch #8 uses the vmpressure extension to equalize pressure between
-> > > the pages tracked natively by the VM and socket buffer pages. As the
-> > > pool is shared, it makes sense that while natively tracked pages are
-> > > under duress the network transmit windows are also not increased.
-> > 
-> > First of all, I've no experience in networking, so I'm likely to be
-> > mistaken. Nevertheless I beg to disagree that this patch set is a step
-> > in the right direction. Here goes why.
-> > 
-> > I admit that your idea to get rid of explicit tcp window control knobs
-> > and size it dynamically basing on memory pressure instead does sound
-> > tempting, but I don't think it'd always work. The problem is that in
-> > contrast to, say, dcache, we can't shrink tcp buffers AFAIU, we can only
-> > stop growing them. Now suppose a system hasn't experienced memory
-> > pressure for a while. If we don't have explicit tcp window limit, tcp
-> > buffers on such a system might have eaten almost all available memory
-> > (because of network load/problems). If a user workload that needs a
-> > significant amount of memory is started suddenly then, the network code
-> > will receive a notification and surely stop growing buffers, but all
-> > those buffers accumulated won't disappear instantly. As a result, the
-> > workload might be unable to find enough free memory and have no choice
-> > but invoke OOM killer. This looks unexpected from the user POV.
-> 
-> I'm not getting rid of those knobs, I'm just reusing the old socket
-> accounting infrastructure in an attempt to make the memory accounting
-> feature useful to more people in cgroups v2 (unified hierarchy).
-> 
+css_task_iter_next() checked @it->cur_task before grabbing
+css_set_lock and assumed that the result won't change afterwards;
+however, tasks could leave the cgroup being iterated terminating the
+iterator before css_task_lock is acquired.  If this happens,
+css_task_iter_next() tries to calculate the current task from NULL
+cg_list pointer leading to the following oops.
 
-My understanding is that in the meantime you effectively break the
-existing per memcg tcp window control logic.
+ BUG: unable to handle kernel paging request at fffffffffffff7d0
+ IP: [<ffffffff810d5f22>] css_task_iter_next+0x42/0x80
+ ...
+ CPU: 4 PID: 6391 Comm: JobQDisp2 Not tainted 4.0.9-22_fbk4_rc3_81616_ge8d9cb6 #1
+ Hardware name: Quanta Freedom/Winterfell, BIOS F03_3B08 03/04/2014
+ task: ffff880868e46400 ti: ffff88083404c000 task.ti: ffff88083404c000
+ RIP: 0010:[<ffffffff810d5f22>]  [<ffffffff810d5f22>] css_task_iter_next+0x42/0x80
+ RSP: 0018:ffff88083404fd28  EFLAGS: 00010246
+ RAX: 0000000000000000 RBX: ffff88083404fd68 RCX: ffff8804697fb8b0
+ RDX: fffffffffffff7c0 RSI: ffff8803b7dff800 RDI: ffffffff822c0278
+ RBP: ffff88083404fd38 R08: 0000000000017160 R09: ffff88046f4070c0
+ R10: ffffffff810d61f7 R11: 0000000000000293 R12: ffff880863bf8400
+ R13: ffff88046b87fd80 R14: 0000000000000000 R15: ffff88083404fe58
+ FS:  00007fa0567e2700(0000) GS:ffff88046f900000(0000) knlGS:0000000000000000
+ CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+ CR2: fffffffffffff7d0 CR3: 0000000469568000 CR4: 00000000001406e0
+ Stack:
+  0000000000000246 0000000000000000 ffff88083404fde8 ffffffff810d6248
+  ffff88083404fd68 0000000000000000 ffff8803b7dff800 000001ef000001ee
+  0000000000000000 0000000000000000 ffff880863bf8568 0000000000000000
+ Call Trace:
+  [<ffffffff810d6248>] cgroup_pidlist_start+0x258/0x550
+  [<ffffffff810cf66d>] cgroup_seqfile_start+0x1d/0x20
+  [<ffffffff8121f8ef>] kernfs_seq_start+0x5f/0xa0
+  [<ffffffff811cab76>] seq_read+0x166/0x380
+  [<ffffffff812200fd>] kernfs_fop_read+0x11d/0x180
+  [<ffffffff811a7398>] __vfs_read+0x18/0x50
+  [<ffffffff811a745d>] vfs_read+0x8d/0x150
+  [<ffffffff811a756f>] SyS_read+0x4f/0xb0
+  [<ffffffff818d4772>] system_call_fastpath+0x12/0x17
 
-> We can always come back to think about per-cgroup tcp window limits in
-> the unified hierarchy, my patches don't get in the way of this. I'm
-> not removing the knobs in cgroups v1 and I'm not preventing them in v2.
-> 
-> But regardless of tcp window control, we need to account socket memory
-> in the main memory accounting pool where pressure is shared (to the
-> best of our abilities) between all accounted memory consumers.
-> 
+Fix it by moving the termination condition check inside css_set_lock.
+@it->cur_task is now cleared after being put and @it->task_pos is
+tested for termination instead of @it->cset_pos as they indicate the
+same condition and @it->task_pos is what's being dereferenced.
 
-No objections to this point. However, I really don't like the idea to
-charge tcp window size to memory.current instead of charging individual
-pages consumed by the workload for storing socket buffers, because it is
-inconsistent with what we have now. Can't we charge individual skb pages
-as we do in case of other kmem allocations?
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Reported-by: Calvin Owens <calvinowens-b10kYP2dOMg@public.gmane.org>
+Fixes: ed27b9f7a17d ("cgroup: don't hold css_set_rwsem across css task iteration")
+---
+ kernel/cgroup.c |   17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
 
-> From an interface standpoint alone, I don't think it's reasonable to
-> ask users per default to limit different consumers on a case by case
-> basis. I certainly have no problem with finetuning for scenarios you
-> describe above, but with memory.current, memory.high, memory.max we
-> are providing a generic interface to account and contain memory
-> consumption of workloads. This has to include all major memory
-> consumers to make semantical sense.
-
-We can propose a reasonable default as we do in the global case.
-
-> 
-> But also, there are people right now for whom the socket buffers cause
-> system OOM, but the existing memcg's hard tcp window limitq that
-> exists absolutely wrecks network performance for them. It's not usable
-> the way it is. It'd be much better to have the socket buffers exert
-> pressure on the shared pool, and then propagate the overall pressure
-> back to individual consumers with reclaim, shrinkers, vmpressure etc.
-> 
-
-This might or might not work. I'm not an expert to judge. But if you do
-this only for memcg leaving the global case as it is, networking people
-won't budge IMO. So could you please start such a major rework from the
-global case? Could you please try to deprecate the tcp window limits not
-only in the legacy memcg hierarchy, but also system-wide in order to
-attract attention of networking experts?
-
-Thanks,
-Vladimir
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -3930,18 +3930,19 @@ void css_task_iter_start(struct cgroup_s
+  */
+ struct task_struct *css_task_iter_next(struct css_task_iter *it)
+ {
+-	if (!it->cset_pos)
+-		return NULL;
+-
+-	if (it->cur_task)
++	if (it->cur_task) {
+ 		put_task_struct(it->cur_task);
++		it->cur_task = NULL;
++	}
+ 
+ 	spin_lock_bh(&css_set_lock);
+ 
+-	it->cur_task = list_entry(it->task_pos, struct task_struct, cg_list);
+-	get_task_struct(it->cur_task);
+-
+-	css_task_iter_advance(it);
++	if (it->task_pos) {
++		it->cur_task = list_entry(it->task_pos, struct task_struct,
++					  cg_list);
++		get_task_struct(it->cur_task);
++		css_task_iter_advance(it);
++	}
+ 
+ 	spin_unlock_bh(&css_set_lock);
+ 
