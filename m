@@ -1,43 +1,109 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] oom_kill: add option to disable dump_stack()
-Date: Tue, 27 Oct 2015 09:09:21 +0100
-Message-ID: <20151027080920.GA9891@dhcp22.suse.cz>
-References: <1445634150-27992-1-git-send-email-arozansk@redhat.com>
- <20151026172012.GC9779@dhcp22.suse.cz>
- <20151026174048.GP15046@redhat.com>
+From: Vladimir Davydov <vdavydov@virtuozzo.com>
+Subject: Re: [PATCH 0/8] mm: memcontrol: account socket memory in unified
+ hierarchy
+Date: Tue, 27 Oct 2015 11:43:21 +0300
+Message-ID: <20151027084320.GF13221@esperanza>
+References: <1445487696-21545-1-git-send-email-hannes@cmpxchg.org>
+ <20151022184509.GM18351@esperanza>
+ <20151026172216.GC2214@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20151026174048.GP15046-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20151026172216.GC2214@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Aristeu Rozanski <arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: "David S. Miller" <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Tejun Heo <tj@kernel.org>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon 26-10-15 13:40:49, Aristeu Rozanski wrote:
-> Hi Michal,
-> On Mon, Oct 26, 2015 at 06:20:12PM +0100, Michal Hocko wrote:
-[...]
-> > Would it make more sense to distinguish different parts of the OOM
-> > report by loglevel properly?
-> > pr_err - killed task report
-> > pr_warning - oom invocation + memory info
-> > pr_notice - task list
-> > pr_info - stack trace
+On Mon, Oct 26, 2015 at 01:22:16PM -0400, Johannes Weiner wrote:
+> On Thu, Oct 22, 2015 at 09:45:10PM +0300, Vladimir Davydov wrote:
+> > Hi Johannes,
+> > 
+> > On Thu, Oct 22, 2015 at 12:21:28AM -0400, Johannes Weiner wrote:
+> > ...
+> > > Patch #5 adds accounting and tracking of socket memory to the unified
+> > > hierarchy memory controller, as described above. It uses the existing
+> > > per-cpu charge caches and triggers high limit reclaim asynchroneously.
+> > > 
+> > > Patch #8 uses the vmpressure extension to equalize pressure between
+> > > the pages tracked natively by the VM and socket buffer pages. As the
+> > > pool is shared, it makes sense that while natively tracked pages are
+> > > under duress the network transmit windows are also not increased.
+> > 
+> > First of all, I've no experience in networking, so I'm likely to be
+> > mistaken. Nevertheless I beg to disagree that this patch set is a step
+> > in the right direction. Here goes why.
+> > 
+> > I admit that your idea to get rid of explicit tcp window control knobs
+> > and size it dynamically basing on memory pressure instead does sound
+> > tempting, but I don't think it'd always work. The problem is that in
+> > contrast to, say, dcache, we can't shrink tcp buffers AFAIU, we can only
+> > stop growing them. Now suppose a system hasn't experienced memory
+> > pressure for a while. If we don't have explicit tcp window limit, tcp
+> > buffers on such a system might have eaten almost all available memory
+> > (because of network load/problems). If a user workload that needs a
+> > significant amount of memory is started suddenly then, the network code
+> > will receive a notification and surely stop growing buffers, but all
+> > those buffers accumulated won't disappear instantly. As a result, the
+> > workload might be unable to find enough free memory and have no choice
+> > but invoke OOM killer. This looks unexpected from the user POV.
 > 
-> That'd work, yes, but I'd think the stack trace would be pr_debug. At a
-> point that you suspect the OOM killer isn't doing the right thing picking
-> up tasks and you need more information.
+> I'm not getting rid of those knobs, I'm just reusing the old socket
+> accounting infrastructure in an attempt to make the memory accounting
+> feature useful to more people in cgroups v2 (unified hierarchy).
+> 
 
-Stack trace should be independent on the oom victim selection because
-the selection should be as much deterministic as possible - so it should
-only depend on the memory consumption. I do agree that the exact trace
-is not very useful for the (maybe) majority of OOM reports. I am trying
-to remember when it was really useful the last time and have trouble to
-find an example. So I would tend to agree that pr_debug would me more
-suitable.
--- 
-Michal Hocko
-SUSE Labs
+My understanding is that in the meantime you effectively break the
+existing per memcg tcp window control logic.
+
+> We can always come back to think about per-cgroup tcp window limits in
+> the unified hierarchy, my patches don't get in the way of this. I'm
+> not removing the knobs in cgroups v1 and I'm not preventing them in v2.
+> 
+> But regardless of tcp window control, we need to account socket memory
+> in the main memory accounting pool where pressure is shared (to the
+> best of our abilities) between all accounted memory consumers.
+> 
+
+No objections to this point. However, I really don't like the idea to
+charge tcp window size to memory.current instead of charging individual
+pages consumed by the workload for storing socket buffers, because it is
+inconsistent with what we have now. Can't we charge individual skb pages
+as we do in case of other kmem allocations?
+
+> From an interface standpoint alone, I don't think it's reasonable to
+> ask users per default to limit different consumers on a case by case
+> basis. I certainly have no problem with finetuning for scenarios you
+> describe above, but with memory.current, memory.high, memory.max we
+> are providing a generic interface to account and contain memory
+> consumption of workloads. This has to include all major memory
+> consumers to make semantical sense.
+
+We can propose a reasonable default as we do in the global case.
+
+> 
+> But also, there are people right now for whom the socket buffers cause
+> system OOM, but the existing memcg's hard tcp window limitq that
+> exists absolutely wrecks network performance for them. It's not usable
+> the way it is. It'd be much better to have the socket buffers exert
+> pressure on the shared pool, and then propagate the overall pressure
+> back to individual consumers with reclaim, shrinkers, vmpressure etc.
+> 
+
+This might or might not work. I'm not an expert to judge. But if you do
+this only for memcg leaving the global case as it is, networking people
+won't budge IMO. So could you please start such a major rework from the
+global case? Could you please try to deprecate the tcp window limits not
+only in the legacy memcg hierarchy, but also system-wide in order to
+attract attention of networking experts?
+
+Thanks,
+Vladimir
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
