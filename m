@@ -1,197 +1,118 @@
-From: Parav Pandit <pandit.parav@gmail.com>
-Subject: RFC rdma cgroup
-Date: Wed, 28 Oct 2015 13:59:15 +0530
-Message-ID: <CAG53R5Vd=tLbKPeKy8ZKP2DoHG-rnzW85COiE1Hk4GLv6SAZyA@mail.gmail.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH 0/8] mm: memcontrol: account socket memory in unified
+ hierarchy
+Date: Wed, 28 Oct 2015 11:58:10 -0700
+Message-ID: <20151028185810.GA31488@cmpxchg.org>
+References: <1445487696-21545-1-git-send-email-hannes@cmpxchg.org>
+ <20151022184509.GM18351@esperanza>
+ <20151026172216.GC2214@cmpxchg.org>
+ <20151027084320.GF13221@esperanza>
+ <20151027155833.GB4665@cmpxchg.org>
+ <20151028082003.GK13221@esperanza>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:date:message-id:subject:from:to:content-type;
-        bh=xGd/VfT6HRTWBQYjz7GgpZ7iPDnTnvdoDVbixyxiamo=;
-        b=MDNn/dgtZuIhS+Vkc/TECi3kh3XRkFG+cO8WUy5NdFc9Jr/+M1BQl4fmESt50+HvrD
-         mm9J8c4KXv0fN4No4Icd/aHmWatbLvxvXcDn2V6Z3up9sQkcPvlh1POt5voEpD26NurW
-         Uy5r74Bd7EiL+E9k527gcP89SrSE5cgNfvifILulFW1EZeCKjsu7gZMhwM4UH870q4jw
-         Zp2mODIUXFf7eCFEAUi5s4R5He1Uqvj+mN+8no4U7Zag8+LUxQB6bDGjDLOkn8aGx+SQ
-         iMrvTZTMC1Fhap2kDOcTMfQB6GfFwSuNm98VS39Ux1ZXjXR+31A3JAHLagZPzyEn88MJ
-         WRFw==
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20151028082003.GK13221@esperanza>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>, Doug Ledford <dledford@redhat.com>, "Hefty, Sean" <sean.hefty@intel.com>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Liran Liss <liranl@mellanox.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "lizefan@huawei.com" <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, "james.l.morris@oracle.com" <james.l.morris@oracle.com>, "serge@hallyn.com" <serge@hallyn.com>, Or Gerlitz <ogerlitz@mellanox.com>, Matan Barak <matanb@mellanox.com>, "raindel@mellanox.com" <raindel@mellanox.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-security-module@vger.kernel.org" <linux-security-module@vger.kernel.org>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Parav Pandit <pandit.parav@gmail.com>, Haggai
+To: Vladimir Davydov <vdavydov@virtuozzo.com>
+Cc: "David S. Miller" <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Tejun Heo <tj@kernel.org>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi All,
+On Wed, Oct 28, 2015 at 11:20:03AM +0300, Vladimir Davydov wrote:
+> Then you'd better not touch existing tcp limits at all, because they
+> just work, and the logic behind them is very close to that of global tcp
+> limits. I don't think one can simplify it somehow.
 
-Based on the review comments, feedback, discussion from/with Tejun,
-Haggai, Doug, Jason, Liran, Sean, ORNL team, I have updated the design
-as below.
+Uhm, no, there is a crapload of boilerplate code and complication that
+seems entirely unnecessary. The only thing missing from my patch seems
+to be the part where it enters memory pressure state when the limit is
+hit. I'm adding this for completeness, but I doubt it even matters.
 
-This is fairly strong and simple design, addresses most of the points
-raised to cover current RDMA use cases.
-Feel free to skip design guidelines section and jump to design section
-below if you find it too verbose. I had to describe it to set the
-context and address comments from our past discussion.
+> Moreover, frankly I still have my reservations about this vmpressure
+> propagation to skb you're proposing. It might work, but I doubt it
+> will allow us to throw away explicit tcp limit, as I explained
+> previously. So, even with your approach I think we can still need
+> per memcg tcp limit *unless* you get rid of global tcp limit
+> somehow.
 
-Design guidelines:
------------------------
-1. There will be new rdma cgroup for accounting rdma resources
-(instead of extending device cgroup).
-Rationale: RDMA tracks different type of resources and it functions
-differently than device cgroup. Though device cgroup could have been
-extended for more generic nature, community feels that its better to
-create RDMA cgroup, which might have more features than just resource
-limit enforcement in future.
+Having the hard limit as a failsafe (or a minimum for other consumers)
+is one thing, and certainly something I'm open to for cgroupv2, should
+we have problems with load startup up after a socket memory landgrab.
 
-2. RDMA cgroup will allow resource accounting, limit enforcement on
-per cgroup, per rdma device basis (instead of resource limiting across
-all devices).
-Rationale: this give granular control when multiple devices exist in the system.
+That being said, if the VM is struggling to reclaim pages, or is even
+swapping, it makes perfect sense to let the socket memory scheduler
+know it shouldn't continue to increase its footprint until the VM
+recovers. Regardless of any hard limitations/minimum guarantees.
 
-3. Resources are not defined by the RDMA cgroup. Resources are defined
-by RDMA/IB subsystem and optionally by HCA vendor device drivers.
-Rationale: This allows rdma cgroup to remain constant while RDMA/IB
-subsystem can evolve without the need of rdma cgroup update. A new
-resource can be easily added by the RDMA/IB subsystem without touching
-rdma cgroup.
+This is what my patch does and it seems pretty straight-forward to
+me. I don't really understand why this is so controversial.
 
-4. RDMA uverbs layer will enforce limits on well defined RDMA verb
-resources without any HCA vendor device driver involvement.
-Rationale:
-(a) RDMA verbs are very well defined set of resource abstraction in
-Linux kernel stack for many years now and in use by many applications
-directly working with RDMA resources in varied manner. Instead of
-replicating code in every vendor driver, RDMA uverbs layer will
-enforce such resource limits (with help of rdma cgroup).
-(b) IB verbs resource is also a vendor agnostic representation of RDMA
-resource; therefore its done at RDMA uverbs level.
+The *next* step would be to figure out whether we can actually
+*reclaim* memory in the network subsystem--shrink windows and steal
+buffers back--and that might even be an avenue to replace tcp window
+limits. But it's not necessary for *this* patch series to be useful.
 
-6. RDMA uverbs layer will not do accounting of hw vendor specific resources.
-Rationale: RDMA uverbs layer is not aware of which hw resource maps to
-which verb resource and by how much amount. Therefore hw resource
-accounting, charging, uncharging has to happen by the vendor driver.
-This is optional and left to the HCA vendor device driver to
-implement. HCA driver best knows on how to keep the mapping, therefore
-its left to HCA vendor driver to do the accounting.
+> > So this seemed like a good way to prove a new mechanism before rolling
+> > it out to every single Linux setup, rather than switch everybody over
+> > after the limited scope testing I can do as a developer on my own.
+> > 
+> > Keep in mind that my patches are not committing anything in terms of
+> > interface, so we retain all the freedom to fix and tune the way this
+> > is implemented, including the freedom to re-add tcp window limits in
+> > case the pressure balancing is not a comprehensive solution.
+> 
+> I really dislike this kind of proof. It looks like you're trying to
+> push something you think is right covertly, w/o having a proper
+> discussion with networking people and then say that it just works
+> and hence should be done globally, but what if it won't? Revert it?
+> We already have a lot of dubious stuff in memcg that should be
+> reverted, so let's please try to avoid this kind of mistakes in
+> future. Note, I say "w/o having a proper discussion with networking
+> people", because I don't think they will really care *unless* you
+> change the global logic, simply because most of them aren't very
+> interested in memcg AFAICS.
 
-7. RDMA cgroup will provide unified APIs through which both RDMA
-subsystem and vendor defined RDMA resource can be charged, uncharged
-by verb layer and HCA driver respectively.
+Come on, Dave is the first To and netdev is CC'd. They might not care
+about memcg, but "pushing things covertly" is a bit of a stretch.
 
-8. RDMA cgroup initial version will support only hard limits without
-any kind of reservation of resources or ranges. In future it might be
-extended for more dynamic nature.
-Rationale: Typically RDMA resources are stateful resource unlike cpu
-and RDMA resources don't follow work conserving nature.
+> That effectively means you loose a chance to listen to networking
+> experts, who could point you at design flaws and propose an improvement
+> right away. Let's please not miss such an opportunity. You said that
+> you'd seen this problem happen w/o cgroups, so you have a use case that
+> might need fixing at the global level. IMO it shouldn't be difficult to
+> prepare an RFC patch for the global case first and see what people think
+> about it.
 
-9. Resource limit enforcement is hierarchical.
+No, the problem we are running into is when network memory is not
+tracked per cgroup. The lack of containment means that the socket
+memory consumption of individual cgroups can trigger system OOM.
 
-10. Process migration from one to other cgroup with active RDMA
-resource is highly discouraged.
+We tried using the per-memcg tcp limits, and that prevents the OOMs
+for sure, but it's horrendous for network performance. There is no
+"stop growing" phase, it just keeps going full throttle until it hits
+the wall hard.
 
-11. When process is migrated with active RDMA resources, rdma cgroup
-continues to charge original cgroup.
-Rationale:
-Unlike other POSIX calls, RDMA resources are not defined as POSIX
-level. These resources sit behind a file descriptor.
-Multiple processes forked, belonging to different thread group, can
-possibly placed in different cgroup sharing same rdma resources.
-It could be well done where its allocated by one thread group and
-release by other thread group from different cgroup.
-Resource usage hierarchy can bet easily get complex even though that
-is not primary use case.
-Typically all processes which want to use RDMA resources will be part
-of one leaf cgroup throughout their life cycle.
-Therefore its not worth to complicate design around process migration.
+Now, we could probably try to replicate the global knobs and add a
+per-memcg soft limit. But you know better than anyone else how hard it
+is to estimate the overall workingset size of a workload, and the
+margins on containerized loads are razor-thin. Performance is much
+more sensitive to input errors, and often times parameters must be
+adjusted continuously during the runtime of a workload. It'd be
+disasterous to rely on yet more static, error-prone user input here.
 
-Design:
----------
-1. New RDMA cgroup defines resource pool object, that connects cgroup
-subsystem to RDMA subsystem.
-2. Resource pool object is per cgroup, per device entity that is
-managed, controlled, configured by the administrator via cgroup
-interface.
-3. There can be at maximum of 64 resources per resource pool (such as
-MR, QP, AH, PD etc and other hardware resources). To manage resources
-beyond 64, it will require RDMA cgroup subsystem update. This will be
-done in future if at all its needed.
+What all this means to me is that fixing it on the cgroup level has
+higher priority. But it also means that once we figured it out under
+such a high-pressure environment, it's much easier to apply to the
+global case and potentially replace the soft limit there.
 
-4. RDMA cgroup defines two class of resources.
-(a) verb resources - tracks RDMA verb layer resources
-(b) hw resources - tracks HCA HW specific resources
-5. verbs resource template is defined by RDMA uverbs layer.
-6. hw resource template is defined by HCA vendor driver. This is
-optional and should be done by those driver which doesn't have one to
-one mapping with verb resource and hw resource.
+This seems like a better approach to me than starting globally, only
+to realize that the solution is not workable for cgroups and we need
+yet something else.
 
-7. Processes in a cgroup without any configured limit (or in other
-words without resource pools) has max limits of the resources. If one
-of the resource limit is configured, that particular resource will be
-enforced, rest will enjoy upto their maximum limit.
-
-8. Typically each RDMA cgroup will have 0 to 4 RDMA devices. Therefore
-each cgroup will have 0 to 4 verbs resource pool and optionally 0 to 4
-hw resource pool per such device.
-(Nothing stops to have more devices and pools, but design is around
-this use case).
-
-9. Resource pool object is created in following situations.
-(a) administrative operation is done to set the limit and no previous
-resource pool exist for the device of interest for the cgroup.
-(b) no resource limits were configured, but IB/RDMA subsystem tries to
-charge the resource. so that when applications are running without
-limits and later on when limits are enforced, during uncharging, it
-correctly uncharges them, otherwise usage count will drop to negative.
-This is done using default resource pool.
-Instead of implementing any sort of time markers, default pool
-simplifies the design.
-(c) When process migrate from one to other cgroup, resource is
-continue to be owned by the creator cgroup (rather css).
-After process migration, whenever new resource is created in new
-cgroup, it will be owned by new cgroup.
-
-10. Resource pool is destroyed if it was of default type (not created
-by administrative operation) and its the last resource getting
-deallocated. Resource pool created as administrative operation is not
-deleted, as its expected to be used in near future.
-
-13. if administrative command tries to delete all the resource limit
-with active resources per device, RDMA cgroup just marks the pool as
-default pool with maximum limits.
-----------------------------------------------------------------
-
-Examples:
-#configure resource limit:
-echo mlx4_0 mr=100 qp=10 ah=2 cq=10 >
-/sys/fs/cgroup/rdma/1/rdma.resource.verb.limit
-echo ocrdma1 mr=120 qp=20 ah=2 cq=10 >
-/sys/fs/cgroup/rdma/2/rdma.resource.verb.limit
-
-#query resource limit:
-cat /sys/fs/cgroup/rdma/2/rdma.resource.verb.limit
-#output:
-mlx4_0 mr=100 qp=10 ah=2 cq=10
-ocrdma1 mr=120 qp=20 cq=10
-
-#delete resource limit:
-echo mlx4_0 del > /sys/fs/cgroup/rdma/1/rdma.resource.verb.limit
-
-#query resource list:
-cat /sys/fs/cgroup/rdma/1/rdma.resource.verb.list
-mlx4_0 mr qp ah pd cq
-
-cat /sys/fs/cgroup/rdma/1/rdma.hw.verb.list
-vendor1 hw_qp hw_cq hw_timer
-
-#configure hw specific resource limit
-echo vendor1 hw_qp=56 > /sys/fs/cgroup/rdma/2/rdma.resource.hw.limit
-
--------------------------------------------------------------------------
-
-I have completed initial development of above design. I am currently
-testing this design.
-I will post the patch soon once I am done validating it.
-
-Let me know if there are any design comments.
-
-Regards,
-Parav Pandit
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
