@@ -1,82 +1,197 @@
-From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 0/7] devcg: device cgroup extension for rdma resource
-Date: Wed, 28 Oct 2015 13:44:12 +0530
-Message-ID: <CAG53R5XEvOn3atF3VS=QEbpVs6VD8ABve7h6R-t5ghHZjoRF=A@mail.gmail.com>
-References: <55F25781.20308@redhat.com>
-	<20150911145213.GQ8114@mtj.duckdns.org>
-	<1828884A29C6694DAF28B7E6B8A82373A903A586@ORSMSX109.amr.corp.intel.com>
-	<20150911194311.GA18755@obsidianresearch.com>
-	<1828884A29C6694DAF28B7E6B8A82373A903A5DB@ORSMSX109.amr.corp.intel.com>
-	<CAG53R5XsMwnLK7L4q1mQx3_wEJNv1qthOr5TsX0o43kRWaiWrg@mail.gmail.com>
-	<20150914172832.GA21652@obsidianresearch.com>
-	<CAG53R5XHTv-o+pGHdw+hGgtv4N3ZkH0WTs6o_W3zK_6jAnVsNA@mail.gmail.com>
-	<20150914201840.GA8764@obsidianresearch.com>
-	<CAG53R5XY1q+AqJvgtK_Qd4Sai2kZX9vhDKD_2dNXpw4Gf=nz0A@mail.gmail.com>
-	<20150915034549.GA27847@obsidianresearch.com>
-	<55FE8C06.8010504@mellanox.com>
+From: Parav Pandit <pandit.parav@gmail.com>
+Subject: RFC rdma cgroup
+Date: Wed, 28 Oct 2015 13:59:15 +0530
+Message-ID: <CAG53R5Vd=tLbKPeKy8ZKP2DoHG-rnzW85COiE1Hk4GLv6SAZyA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=hxEpjnYLuX0clPyLTpxOh9F29beRtfoZ6HSx65589KA=;
-        b=G55sDBfrnHONdD5rR9Zxtkj2g1IE1S5A4xjTbrw4PcuOTboLvvy9hHPhLYL7/k7+HP
-         Q9L3gjyL8fH7O2PFw5Au+dfblZB/zkBRN7UZzUA1luwFgFm9zhRT9i2QC0yaonMP0CCa
-         Ek6T5ngMEHrJnqT3tAAGH3sgLo7CyQqYZpyE9+WvyMQnU5V83RgVBFfKMcwlPGD1DEx8
-         L1qphhrx1XojhaKGFJnln94Xe1+3kOnAwKFuRqOWHGBtNBw/fLO4jtUxxr+9Zq6oge9H
-         XP3i8x+9iLwTnpVyHhQ3OnDlpskUoDlGRDRNe6jjfy916Am/fUQct9u+qQFQoxBKS4oj
-         CCcQ==
-In-Reply-To: <55FE8C06.8010504-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=mime-version:date:message-id:subject:from:to:content-type;
+        bh=xGd/VfT6HRTWBQYjz7GgpZ7iPDnTnvdoDVbixyxiamo=;
+        b=MDNn/dgtZuIhS+Vkc/TECi3kh3XRkFG+cO8WUy5NdFc9Jr/+M1BQl4fmESt50+HvrD
+         mm9J8c4KXv0fN4No4Icd/aHmWatbLvxvXcDn2V6Z3up9sQkcPvlh1POt5voEpD26NurW
+         Uy5r74Bd7EiL+E9k527gcP89SrSE5cgNfvifILulFW1EZeCKjsu7gZMhwM4UH870q4jw
+         Zp2mODIUXFf7eCFEAUi5s4R5He1Uqvj+mN+8no4U7Zag8+LUxQB6bDGjDLOkn8aGx+SQ
+         iMrvTZTMC1Fhap2kDOcTMfQB6GfFwSuNm98VS39Ux1ZXjXR+31A3JAHLagZPzyEn88MJ
+         WRFw==
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Cc: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org" <raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>, Doug Ledford <dledford@redhat.com>, "Hefty, Sean" <sean.hefty@intel.com>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Liran Liss <liranl@mellanox.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "lizefan@huawei.com" <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, "james.l.morris@oracle.com" <james.l.morris@oracle.com>, "serge@hallyn.com" <serge@hallyn.com>, Or Gerlitz <ogerlitz@mellanox.com>, Matan Barak <matanb@mellanox.com>, "raindel@mellanox.com" <raindel@mellanox.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-security-module@vger.kernel.org" <linux-security-module@vger.kernel.org>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Parav Pandit <pandit.parav@gmail.com>, Haggai
 
-Hi,
+Hi All,
 
-I finally got some chance and progress on redesigning rdma cgroup
-controller for the most use cases that we discussed in this email
-chain.
-I am posting RFC and soon code in new email.
+Based on the review comments, feedback, discussion from/with Tejun,
+Haggai, Doug, Jason, Liran, Sean, ORNL team, I have updated the design
+as below.
 
-Parav
+This is fairly strong and simple design, addresses most of the points
+raised to cover current RDMA use cases.
+Feel free to skip design guidelines section and jump to design section
+below if you find it too verbose. I had to describe it to set the
+context and address comments from our past discussion.
 
+Design guidelines:
+-----------------------
+1. There will be new rdma cgroup for accounting rdma resources
+(instead of extending device cgroup).
+Rationale: RDMA tracks different type of resources and it functions
+differently than device cgroup. Though device cgroup could have been
+extended for more generic nature, community feels that its better to
+create RDMA cgroup, which might have more features than just resource
+limit enforcement in future.
 
-On Sun, Sep 20, 2015 at 4:05 PM, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org> wrote:
-> On 15/09/2015 06:45, Jason Gunthorpe wrote:
->> No, I'm saying the resource pool is *well defined* and *fixed* by each
->> hardware.
->>
->> The only question is how do we expose the N resource limits, the list
->> of which is totally vendor specific.
->
-> I don't see why you say the limits are vendor specific. It is true that
-> different RDMA devices have different implementations and capabilities,
-> but they all use the expose the same set of RDMA objects with their
-> limitations. Whether those limitations come from hardware limitations,
-> from the driver, or just because the address space is limited, they can
-> still be exhausted.
->
->> Yes, using a % scheme fixes the ratios, 1% is going to be a certain
->> number of PD's, QP's, MRs, CQ's, etc at a ratio fixed by the driver
->> configuration. That is the trade off for API simplicity.
->>
->>
->> Yes, this results in some resources being over provisioned.
->
-> I agree that such a scheme will be easy to configure, but I don't think
-> it can work well in all situations. Imagine you want to let one
-> container use almost all RC QPs as you want it to connect to the entire
-> cluster through RC. Other containers can still use a single datagram QP
-> to connect to the entire cluster, but they would require many address
-> handles. If you force a fixed ratio of resources given to each container
-> it would be hard to describe such a partitioning.
->
-> I think it would be better to expose different controls for the
-> different RDMA resources.
->
-> Regards,
-> Haggai
+2. RDMA cgroup will allow resource accounting, limit enforcement on
+per cgroup, per rdma device basis (instead of resource limiting across
+all devices).
+Rationale: this give granular control when multiple devices exist in the system.
+
+3. Resources are not defined by the RDMA cgroup. Resources are defined
+by RDMA/IB subsystem and optionally by HCA vendor device drivers.
+Rationale: This allows rdma cgroup to remain constant while RDMA/IB
+subsystem can evolve without the need of rdma cgroup update. A new
+resource can be easily added by the RDMA/IB subsystem without touching
+rdma cgroup.
+
+4. RDMA uverbs layer will enforce limits on well defined RDMA verb
+resources without any HCA vendor device driver involvement.
+Rationale:
+(a) RDMA verbs are very well defined set of resource abstraction in
+Linux kernel stack for many years now and in use by many applications
+directly working with RDMA resources in varied manner. Instead of
+replicating code in every vendor driver, RDMA uverbs layer will
+enforce such resource limits (with help of rdma cgroup).
+(b) IB verbs resource is also a vendor agnostic representation of RDMA
+resource; therefore its done at RDMA uverbs level.
+
+6. RDMA uverbs layer will not do accounting of hw vendor specific resources.
+Rationale: RDMA uverbs layer is not aware of which hw resource maps to
+which verb resource and by how much amount. Therefore hw resource
+accounting, charging, uncharging has to happen by the vendor driver.
+This is optional and left to the HCA vendor device driver to
+implement. HCA driver best knows on how to keep the mapping, therefore
+its left to HCA vendor driver to do the accounting.
+
+7. RDMA cgroup will provide unified APIs through which both RDMA
+subsystem and vendor defined RDMA resource can be charged, uncharged
+by verb layer and HCA driver respectively.
+
+8. RDMA cgroup initial version will support only hard limits without
+any kind of reservation of resources or ranges. In future it might be
+extended for more dynamic nature.
+Rationale: Typically RDMA resources are stateful resource unlike cpu
+and RDMA resources don't follow work conserving nature.
+
+9. Resource limit enforcement is hierarchical.
+
+10. Process migration from one to other cgroup with active RDMA
+resource is highly discouraged.
+
+11. When process is migrated with active RDMA resources, rdma cgroup
+continues to charge original cgroup.
+Rationale:
+Unlike other POSIX calls, RDMA resources are not defined as POSIX
+level. These resources sit behind a file descriptor.
+Multiple processes forked, belonging to different thread group, can
+possibly placed in different cgroup sharing same rdma resources.
+It could be well done where its allocated by one thread group and
+release by other thread group from different cgroup.
+Resource usage hierarchy can bet easily get complex even though that
+is not primary use case.
+Typically all processes which want to use RDMA resources will be part
+of one leaf cgroup throughout their life cycle.
+Therefore its not worth to complicate design around process migration.
+
+Design:
+---------
+1. New RDMA cgroup defines resource pool object, that connects cgroup
+subsystem to RDMA subsystem.
+2. Resource pool object is per cgroup, per device entity that is
+managed, controlled, configured by the administrator via cgroup
+interface.
+3. There can be at maximum of 64 resources per resource pool (such as
+MR, QP, AH, PD etc and other hardware resources). To manage resources
+beyond 64, it will require RDMA cgroup subsystem update. This will be
+done in future if at all its needed.
+
+4. RDMA cgroup defines two class of resources.
+(a) verb resources - tracks RDMA verb layer resources
+(b) hw resources - tracks HCA HW specific resources
+5. verbs resource template is defined by RDMA uverbs layer.
+6. hw resource template is defined by HCA vendor driver. This is
+optional and should be done by those driver which doesn't have one to
+one mapping with verb resource and hw resource.
+
+7. Processes in a cgroup without any configured limit (or in other
+words without resource pools) has max limits of the resources. If one
+of the resource limit is configured, that particular resource will be
+enforced, rest will enjoy upto their maximum limit.
+
+8. Typically each RDMA cgroup will have 0 to 4 RDMA devices. Therefore
+each cgroup will have 0 to 4 verbs resource pool and optionally 0 to 4
+hw resource pool per such device.
+(Nothing stops to have more devices and pools, but design is around
+this use case).
+
+9. Resource pool object is created in following situations.
+(a) administrative operation is done to set the limit and no previous
+resource pool exist for the device of interest for the cgroup.
+(b) no resource limits were configured, but IB/RDMA subsystem tries to
+charge the resource. so that when applications are running without
+limits and later on when limits are enforced, during uncharging, it
+correctly uncharges them, otherwise usage count will drop to negative.
+This is done using default resource pool.
+Instead of implementing any sort of time markers, default pool
+simplifies the design.
+(c) When process migrate from one to other cgroup, resource is
+continue to be owned by the creator cgroup (rather css).
+After process migration, whenever new resource is created in new
+cgroup, it will be owned by new cgroup.
+
+10. Resource pool is destroyed if it was of default type (not created
+by administrative operation) and its the last resource getting
+deallocated. Resource pool created as administrative operation is not
+deleted, as its expected to be used in near future.
+
+13. if administrative command tries to delete all the resource limit
+with active resources per device, RDMA cgroup just marks the pool as
+default pool with maximum limits.
+----------------------------------------------------------------
+
+Examples:
+#configure resource limit:
+echo mlx4_0 mr=100 qp=10 ah=2 cq=10 >
+/sys/fs/cgroup/rdma/1/rdma.resource.verb.limit
+echo ocrdma1 mr=120 qp=20 ah=2 cq=10 >
+/sys/fs/cgroup/rdma/2/rdma.resource.verb.limit
+
+#query resource limit:
+cat /sys/fs/cgroup/rdma/2/rdma.resource.verb.limit
+#output:
+mlx4_0 mr=100 qp=10 ah=2 cq=10
+ocrdma1 mr=120 qp=20 cq=10
+
+#delete resource limit:
+echo mlx4_0 del > /sys/fs/cgroup/rdma/1/rdma.resource.verb.limit
+
+#query resource list:
+cat /sys/fs/cgroup/rdma/1/rdma.resource.verb.list
+mlx4_0 mr qp ah pd cq
+
+cat /sys/fs/cgroup/rdma/1/rdma.hw.verb.list
+vendor1 hw_qp hw_cq hw_timer
+
+#configure hw specific resource limit
+echo vendor1 hw_qp=56 > /sys/fs/cgroup/rdma/2/rdma.resource.hw.limit
+
+-------------------------------------------------------------------------
+
+I have completed initial development of above design. I am currently
+testing this design.
+I will post the patch soon once I am done validating it.
+
+Let me know if there are any design comments.
+
+Regards,
+Parav Pandit
