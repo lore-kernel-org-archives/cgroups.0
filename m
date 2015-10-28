@@ -1,111 +1,82 @@
-From: Vladimir Davydov <vdavydov@virtuozzo.com>
-Subject: Re: [PATCH 0/8] mm: memcontrol: account socket memory in unified
- hierarchy
-Date: Wed, 28 Oct 2015 11:20:03 +0300
-Message-ID: <20151028082003.GK13221@esperanza>
-References: <1445487696-21545-1-git-send-email-hannes@cmpxchg.org>
- <20151022184509.GM18351@esperanza>
- <20151026172216.GC2214@cmpxchg.org>
- <20151027084320.GF13221@esperanza>
- <20151027155833.GB4665@cmpxchg.org>
+From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 0/7] devcg: device cgroup extension for rdma resource
+Date: Wed, 28 Oct 2015 13:44:12 +0530
+Message-ID: <CAG53R5XEvOn3atF3VS=QEbpVs6VD8ABve7h6R-t5ghHZjoRF=A@mail.gmail.com>
+References: <55F25781.20308@redhat.com>
+	<20150911145213.GQ8114@mtj.duckdns.org>
+	<1828884A29C6694DAF28B7E6B8A82373A903A586@ORSMSX109.amr.corp.intel.com>
+	<20150911194311.GA18755@obsidianresearch.com>
+	<1828884A29C6694DAF28B7E6B8A82373A903A5DB@ORSMSX109.amr.corp.intel.com>
+	<CAG53R5XsMwnLK7L4q1mQx3_wEJNv1qthOr5TsX0o43kRWaiWrg@mail.gmail.com>
+	<20150914172832.GA21652@obsidianresearch.com>
+	<CAG53R5XHTv-o+pGHdw+hGgtv4N3ZkH0WTs6o_W3zK_6jAnVsNA@mail.gmail.com>
+	<20150914201840.GA8764@obsidianresearch.com>
+	<CAG53R5XY1q+AqJvgtK_Qd4Sai2kZX9vhDKD_2dNXpw4Gf=nz0A@mail.gmail.com>
+	<20150915034549.GA27847@obsidianresearch.com>
+	<55FE8C06.8010504@mellanox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20151027155833.GB4665@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=hxEpjnYLuX0clPyLTpxOh9F29beRtfoZ6HSx65589KA=;
+        b=G55sDBfrnHONdD5rR9Zxtkj2g1IE1S5A4xjTbrw4PcuOTboLvvy9hHPhLYL7/k7+HP
+         Q9L3gjyL8fH7O2PFw5Au+dfblZB/zkBRN7UZzUA1luwFgFm9zhRT9i2QC0yaonMP0CCa
+         Ek6T5ngMEHrJnqT3tAAGH3sgLo7CyQqYZpyE9+WvyMQnU5V83RgVBFfKMcwlPGD1DEx8
+         L1qphhrx1XojhaKGFJnln94Xe1+3kOnAwKFuRqOWHGBtNBw/fLO4jtUxxr+9Zq6oge9H
+         XP3i8x+9iLwTnpVyHhQ3OnDlpskUoDlGRDRNe6jjfy916Am/fUQct9u+qQFQoxBKS4oj
+         CCcQ==
+In-Reply-To: <55FE8C06.8010504-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: "David S. Miller" <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Tejun Heo <tj@kernel.org>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Cc: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org" <raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Tue, Oct 27, 2015 at 09:01:08AM -0700, Johannes Weiner wrote:
-...
-> > > But regardless of tcp window control, we need to account socket memory
-> > > in the main memory accounting pool where pressure is shared (to the
-> > > best of our abilities) between all accounted memory consumers.
-> > > 
-> > 
-> > No objections to this point. However, I really don't like the idea to
-> > charge tcp window size to memory.current instead of charging individual
-> > pages consumed by the workload for storing socket buffers, because it is
-> > inconsistent with what we have now. Can't we charge individual skb pages
-> > as we do in case of other kmem allocations?
-> 
-> Absolutely, both work for me. I chose that route because it's where
-> the networking code already tracks and accounts memory consumed, so it
-> seemed like a better site to hook into.
-> 
-> But I understand your concerns. We want to track this stuff as close
-> to the memory allocators as possible.
+Hi,
 
-Exactly.
+I finally got some chance and progress on redesigning rdma cgroup
+controller for the most use cases that we discussed in this email
+chain.
+I am posting RFC and soon code in new email.
 
-> 
-> > > But also, there are people right now for whom the socket buffers cause
-> > > system OOM, but the existing memcg's hard tcp window limitq that
-> > > exists absolutely wrecks network performance for them. It's not usable
-> > > the way it is. It'd be much better to have the socket buffers exert
-> > > pressure on the shared pool, and then propagate the overall pressure
-> > > back to individual consumers with reclaim, shrinkers, vmpressure etc.
-> > 
-> > This might or might not work. I'm not an expert to judge. But if you do
-> > this only for memcg leaving the global case as it is, networking people
-> > won't budge IMO. So could you please start such a major rework from the
-> > global case? Could you please try to deprecate the tcp window limits not
-> > only in the legacy memcg hierarchy, but also system-wide in order to
-> > attract attention of networking experts?
-> 
-> I'm definitely interested in addressing this globally as well.
-> 
-> The idea behind this was to use the memcg part as a testbed. cgroup2
-> is going to be new and people are prepared for hiccups when migrating
-> their applications to it; and they can roll back to cgroup1 and tcp
-> window limits at any time should they run into problems in production.
+Parav
 
-Then you'd better not touch existing tcp limits at all, because they
-just work, and the logic behind them is very close to that of global tcp
-limits. I don't think one can simplify it somehow. Moreover, frankly I
-still have my reservations about this vmpressure propagation to skb
-you're proposing. It might work, but I doubt it will allow us to throw
-away explicit tcp limit, as I explained previously. So, even with your
-approach I think we can still need per memcg tcp limit *unless* you get
-rid of global tcp limit somehow.
 
-> 
-> So this seemed like a good way to prove a new mechanism before rolling
-> it out to every single Linux setup, rather than switch everybody over
-> after the limited scope testing I can do as a developer on my own.
-> 
-> Keep in mind that my patches are not committing anything in terms of
-> interface, so we retain all the freedom to fix and tune the way this
-> is implemented, including the freedom to re-add tcp window limits in
-> case the pressure balancing is not a comprehensive solution.
-> 
-
-I really dislike this kind of proof. It looks like you're trying to push
-something you think is right covertly, w/o having a proper discussion
-with networking people and then say that it just works and hence should
-be done globally, but what if it won't? Revert it? We already have a lot
-of dubious stuff in memcg that should be reverted, so let's please try
-to avoid this kind of mistakes in future. Note, I say "w/o having a
-proper discussion with networking people", because I don't think they
-will really care *unless* you change the global logic, simply because
-most of them aren't very interested in memcg AFAICS.
-
-That effectively means you loose a chance to listen to networking
-experts, who could point you at design flaws and propose an improvement
-right away. Let's please not miss such an opportunity. You said that
-you'd seen this problem happen w/o cgroups, so you have a use case that
-might need fixing at the global level. IMO it shouldn't be difficult to
-prepare an RFC patch for the global case first and see what people think
-about it.
-
-Thanks,
-Vladimir
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+On Sun, Sep 20, 2015 at 4:05 PM, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org> wrote:
+> On 15/09/2015 06:45, Jason Gunthorpe wrote:
+>> No, I'm saying the resource pool is *well defined* and *fixed* by each
+>> hardware.
+>>
+>> The only question is how do we expose the N resource limits, the list
+>> of which is totally vendor specific.
+>
+> I don't see why you say the limits are vendor specific. It is true that
+> different RDMA devices have different implementations and capabilities,
+> but they all use the expose the same set of RDMA objects with their
+> limitations. Whether those limitations come from hardware limitations,
+> from the driver, or just because the address space is limited, they can
+> still be exhausted.
+>
+>> Yes, using a % scheme fixes the ratios, 1% is going to be a certain
+>> number of PD's, QP's, MRs, CQ's, etc at a ratio fixed by the driver
+>> configuration. That is the trade off for API simplicity.
+>>
+>>
+>> Yes, this results in some resources being over provisioned.
+>
+> I agree that such a scheme will be easy to configure, but I don't think
+> it can work well in all situations. Imagine you want to let one
+> container use almost all RC QPs as you want it to connect to the entire
+> cluster through RC. Other containers can still use a single datagram QP
+> to connect to the entire cluster, but they would require many address
+> handles. If you force a fixed ratio of resources given to each container
+> it would be hard to describe such a partitioning.
+>
+> I think it would be better to expose different controls for the
+> different RDMA resources.
+>
+> Regards,
+> Haggai
