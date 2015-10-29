@@ -1,8 +1,8 @@
-From: Michal Hocko <mhocko@kernel.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Subject: Re: [PATCH 5/8] mm: memcontrol: account socket memory on unified
  hierarchy
-Date: Thu, 29 Oct 2015 16:25:46 +0100
-Message-ID: <20151029152546.GG23598@dhcp22.suse.cz>
+Date: Thu, 29 Oct 2015 09:10:09 -0700
+Message-ID: <20151029161009.GA9160@cmpxchg.org>
 References: <1445487696-21545-1-git-send-email-hannes@cmpxchg.org>
  <1445487696-21545-6-git-send-email-hannes@cmpxchg.org>
  <20151023131956.GA15375@dhcp22.suse.cz>
@@ -12,93 +12,37 @@ References: <1445487696-21545-1-git-send-email-hannes@cmpxchg.org>
  <20151027154138.GA4665@cmpxchg.org>
  <20151027161554.GJ9891@dhcp22.suse.cz>
  <20151027164227.GB7749@cmpxchg.org>
+ <20151029152546.GG23598@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20151027164227.GB7749@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20151029152546.GG23598-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: David Miller <davem@davemloft.net>, akpm@linux-foundation.org, vdavydov@virtuozzo.com, tj@kernel.org, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue 27-10-15 09:42:27, Johannes Weiner wrote:
-> On Tue, Oct 27, 2015 at 05:15:54PM +0100, Michal Hocko wrote:
-> > On Tue 27-10-15 11:41:38, Johannes Weiner wrote:
-[...]
-> Or it could be exactly the other way around when you have a workload
-> that is heavy on filesystem metadata. I don't see why any scenario
-> would be more important than the other.
-
-Yes I definitely agree. No scenario is more important. We can only
-come up with a default that makes more sense for the majority and
-allow the minority to override. That was what I wanted to say basically.
-
-> I'm not saying that distinguishing between consumers is wrong, just
-> that "user memory vs kernel memory" is a false classification. Why do
-> you call page cache user memory but dentry cache kernel memory? It
-> doesn't make any sense.
-
-We are not talking about dcache vs. page cache alone here, though. We
-are talking about _all_ slab allocations vs. only user accessed memory.
-The slab consumption is directly under kernel control. A great pile of
-this logic is completly hidden from userspace. While user can estimate
-the user memory it is hard (if possible) to do that for the kernel
-memory footprint - not even mentioning this is variable and dependent on
-the particular kernel version.
-
-> > Also kmem accounting will make the load more non-deterministic because
-> > many of the resources are shared between tasks in separate cgroups
-> > unless they are explicitly configured. E.g. [id]cache will be shared
-> > and first to touch gets charged so you would end up with more false
-> > sharing.
-> 
-> Exactly like page cache. This differentiation isn't based on reality.
-
-Yes false sharing is an existing and long term problem already. I just
-wanted to point out that the false sharing would be even a bigger
-problem because some kernel tracked resources are shared more naturally
-than file sharing.
-
-> > > IMO that's an implementation detail and a historical artifact that
-> > > should not be exposed to the user. And that's the thing I hate about
-> > > the current opt-out knob.
-> 
-> You carefully skipped over this part. We can ignore it for socket
-> memory but it's something we need to figure out when it comes to slab
-> accounting and tracking.
-
-I am sorry, I didn't mean to skip this part, I though it would be clear
-from the previous text. I think kmem accounting falls into the same
-category. Have a sane default and a global boottime knob to override it
-for those that think differently - for whatever reason they might have.
-
-[...]
- 
-> Having page cache accounting built in while presenting dentry+inode
-> cache as a configurable extension is completely random and doesn't
-> make sense. They are both first class memory consumers. They're not
-> separate categories. One isn't more "core" than the other.
-
-Again we are talking about all slab allocations not just the dcache. 
-
-> > > For now, something like this as a boot commandline?
-> > > 
-> > > cgroup.memory=nosocket
+On Thu, Oct 29, 2015 at 04:25:46PM +0100, Michal Hocko wrote:
+> On Tue 27-10-15 09:42:27, Johannes Weiner wrote:
+> > On Tue, Oct 27, 2015 at 05:15:54PM +0100, Michal Hocko wrote:
+> > > On Tue 27-10-15 11:41:38, Johannes Weiner wrote:
+> > > > IMO that's an implementation detail and a historical artifact that
+> > > > should not be exposed to the user. And that's the thing I hate about
+> > > > the current opt-out knob.
 > > 
-> > That would work for me.
+> > You carefully skipped over this part. We can ignore it for socket
+> > memory but it's something we need to figure out when it comes to slab
+> > accounting and tracking.
 > 
-> Okay, then I'll go that route for the socket stuff.
+> I am sorry, I didn't mean to skip this part, I though it would be clear
+> from the previous text. I think kmem accounting falls into the same
+> category. Have a sane default and a global boottime knob to override it
+> for those that think differently - for whatever reason they might have.
 
-Thanks!
+Yes, that makes sense to me.
 
--- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Like cgroup.memory=nosocket, would you think it makes sense to include
+slab in the default for functional/semantical completeness and provide
+a cgroup.memory=noslab for powerusers?
