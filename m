@@ -1,142 +1,175 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 0/8] mm: memcontrol: account socket memory in unified
- hierarchy
-Date: Thu, 29 Oct 2015 10:52:28 -0700
-Message-ID: <20151029175228.GB9160@cmpxchg.org>
-References: <1445487696-21545-1-git-send-email-hannes@cmpxchg.org>
- <20151022184509.GM18351@esperanza>
- <20151026172216.GC2214@cmpxchg.org>
- <20151027084320.GF13221@esperanza>
- <20151027155833.GB4665@cmpxchg.org>
- <20151028082003.GK13221@esperanza>
- <20151028185810.GA31488@cmpxchg.org>
- <20151029092747.GR13221@esperanza>
+From: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: RFC rdma cgroup
+Date: Fri, 30 Oct 2015 00:16:07 +0530
+Message-ID: <CAG53R5UrfXdq=t97u=CoqUhQ2v+mZjZrLCxqyBw6n8g__nuP3g@mail.gmail.com>
+References: <CAG53R5Vd=tLbKPeKy8ZKP2DoHG-rnzW85COiE1Hk4GLv6SAZyA@mail.gmail.com>
+	<563233D7.90808@mellanox.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20151029092747.GR13221@esperanza>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=mrwMH5z+uG6XuHO6RaGiLCaSc+TQrmSDOwiHpzOIkgA=;
+        b=AYh0rcQDoYlnZX6+d17tTkhmC0HO63JaPYzEjpeK4FitOjkKu/etzx4cQ6lJFUIS/O
+         KZhKs98mhb0eOf1Bq9GwUjH8x/Z7iL+DTsB7gyyCHhHf3hZYsnYgQxjsLH3SRfoB32ek
+         HyScX2PcRCH7XcxE9N0EUrmgmiofRKBdGws0Ymlu4gbKW4YeWZLjq6de2fBUezApc54C
+         C394buyeUD+Amd8DkNU9nyTdNhQ5fUflLs36tt228rN9NcNoWaVjeKjPMaDvFm2pSNtd
+         jZdFCpGQ6AyqAZLs5YQwEgkyNFzEOBdtjg9cKhO2/Ujahi1tTTxu4G2W7so4yeHm71JR
+         s2pg==
+In-Reply-To: <563233D7.90808-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org" <raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
 
-On Thu, Oct 29, 2015 at 12:27:47PM +0300, Vladimir Davydov wrote:
-> On Wed, Oct 28, 2015 at 11:58:10AM -0700, Johannes Weiner wrote:
-> > Having the hard limit as a failsafe (or a minimum for other consumers)
-> > is one thing, and certainly something I'm open to for cgroupv2, should
-> > we have problems with load startup up after a socket memory landgrab.
-> > 
-> > That being said, if the VM is struggling to reclaim pages, or is even
-> > swapping, it makes perfect sense to let the socket memory scheduler
-> > know it shouldn't continue to increase its footprint until the VM
-> > recovers. Regardless of any hard limitations/minimum guarantees.
-> > 
-> > This is what my patch does and it seems pretty straight-forward to
-> > me. I don't really understand why this is so controversial.
-> 
-> I'm not arguing that the idea behind this patch set is necessarily bad.
-> Quite the contrary, it does look interesting to me. I'm just saying that
-> IMO it can't replace hard/soft limits. It probably could if it was
-> possible to shrink buffers, but I don't think it's feasible, even
-> theoretically. That's why I propose not to change the behavior of the
-> existing per memcg tcp limit at all. And frankly I don't get why you are
-> so keen on simplifying it. You say it's a "crapload of boilerplate
-> code". Well, I don't see how it is - it just replicates global knobs and
-> I don't see how it could be done in a better way. The code is hidden
-> behind jump labels, so the overhead is zero if it isn't used. If you
-> really dislike this code, we can isolate it under a separate config
-> option. But all right, I don't rule out the possibility that the code
-> could be simplified. If you do that w/o breaking it, that'll be OK to
-> me, but I don't see why it should be related to this particular patch
-> set.
+Hi Haggai,
 
-Okay, I see your concern.
+On Thu, Oct 29, 2015 at 8:27 PM, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org> wrote:
+> On 28/10/2015 10:29, Parav Pandit wrote:
+>> 3. Resources are not defined by the RDMA cgroup. Resources are defined
+>> by RDMA/IB subsystem and optionally by HCA vendor device drivers.
+>> Rationale: This allows rdma cgroup to remain constant while RDMA/IB
+>> subsystem can evolve without the need of rdma cgroup update. A new
+>> resource can be easily added by the RDMA/IB subsystem without touching
+>> rdma cgroup.
+> Resources exposed by the cgroup are basically a UAPI, so we have to be
+> careful to make it stable when it evolves. I understand the need for
+> vendor specific resources, following the discussion on the previous
+> proposal, but could you write on how you plan to allow these set of
+> resources to evolve?
 
-I'm not trying to change the behavior, just the implementation,
-because it's too complex for the functionality it actually provides.
+Its fairly simple.
+Here is the code snippet on how resources are defined in my tree.
+It doesn't have the RSS work queues yet, but can be added right after
+this patch.
 
-And the reason it's part of this patch set is because I'm using the
-same code to hook into the memory accounting, so it makes sense to
-refactor this stuff in the same go.
+Resource are defined as index and as match_table_t.
 
-There is also a niceness factor of not adding more memcg callbacks to
-the networking subsystem when there is an option to consolidate them.
+enum rdma_resource_type {
+        RDMA_VERB_RESOURCE_UCTX,
+        RDMA_VERB_RESOURCE_AH,
+        RDMA_VERB_RESOURCE_PD,
+        RDMA_VERB_RESOURCE_CQ,
+        RDMA_VERB_RESOURCE_MR,
+        RDMA_VERB_RESOURCE_MW,
+        RDMA_VERB_RESOURCE_SRQ,
+        RDMA_VERB_RESOURCE_QP,
+        RDMA_VERB_RESOURCE_FLOW,
+        RDMA_VERB_RESOURCE_MAX,
+};
+So UAPI RDMA resources can evolve by just adding more entries here.
 
-Now, you mentioned that you'd rather see the socket buffers accounted
-at the allocator level, but I looked at the different allocation paths
-and network protocols and I'm not convinced that this makes sense. We
-don't want to be in the hotpath of every single packet when a lot of
-them are small, short-lived management blips that don't involve user
-space to let the kernel dispose of them.
+>
+>> 8. Typically each RDMA cgroup will have 0 to 4 RDMA devices. Therefore
+>> each cgroup will have 0 to 4 verbs resource pool and optionally 0 to 4
+>> hw resource pool per such device.
+>> (Nothing stops to have more devices and pools, but design is around
+>> this use case).
+> In what way does the design depend on this assumption?
 
-__sk_mem_schedule() on the other hand is already wired up to exactly
-those consumers we are interested in for memory isolation: those with
-bigger chunks of data attached to them and those that have exploding
-receive queues when userspace fails to read(). UDP and TCP.
+Current code when performs resource charging/uncharging, it needs to
+identify the resource pool which one to charge to.
+This resource pool is maintained as list_head and so its linear search
+per device.
+If we are thinking of 100 of RDMA devices per container, than liner
+search will not be good way and different data structure needs to be
+deployed.
 
-I mean, there is a reason why the global memory limits apply to only
-those types of packets in the first place: everything else is noise.
 
-I agree that it's appealing to account at the allocator level and set
-page->mem_cgroup etc. but in this case we'd pay extra to capture a lot
-of noise, and I don't want to pay that just for aesthetics. In this
-case it's better to track ownership on the socket level and only count
-packets that can accumulate a significant amount of memory consumed.
+>
+>> 9. Resource pool object is created in following situations.
+>> (a) administrative operation is done to set the limit and no previous
+>> resource pool exist for the device of interest for the cgroup.
+>> (b) no resource limits were configured, but IB/RDMA subsystem tries to
+>> charge the resource. so that when applications are running without
+>> limits and later on when limits are enforced, during uncharging, it
+>> correctly uncharges them, otherwise usage count will drop to negative.
+>> This is done using default resource pool.
+>> Instead of implementing any sort of time markers, default pool
+>> simplifies the design.
+> Having a default resource pool kind of implies there is a non-default
+> one. Is the only difference between the default and non-default the fact
+> that the second was created with an administrative operation and has
+> specified limits or is there some other difference?
+>
+You described it correctly.
 
-> > We tried using the per-memcg tcp limits, and that prevents the OOMs
-> > for sure, but it's horrendous for network performance. There is no
-> > "stop growing" phase, it just keeps going full throttle until it hits
-> > the wall hard.
-> > 
-> > Now, we could probably try to replicate the global knobs and add a
-> > per-memcg soft limit. But you know better than anyone else how hard it
-> > is to estimate the overall workingset size of a workload, and the
-> > margins on containerized loads are razor-thin. Performance is much
-> > more sensitive to input errors, and often times parameters must be
-> > adjusted continuously during the runtime of a workload. It'd be
-> > disasterous to rely on yet more static, error-prone user input here.
-> 
-> Yeah, but the dynamic approach proposed in your patch set doesn't
-> guarantee we won't hit OOM in memcg due to overgrown buffers. It just
-> reduces this possibility. Of course, memcg OOM is far not as disastrous
-> as the global one, but still it usually means the workload breakage.
+>> (c) When process migrate from one to other cgroup, resource is
+>> continue to be owned by the creator cgroup (rather css).
+>> After process migration, whenever new resource is created in new
+>> cgroup, it will be owned by new cgroup.
+> It sounds a little different from how other cgroups behave. I agree that
+> mostly processes will create the resources in their cgroup and won't
+> migrate, but why not move the charge during migration?
+>
+With fork() process doesn't really own the resource (unlike other file
+and socket descriptors).
+Parent process might have died also.
+There is possibly no clear way to transfer resource to right child.
+Child that cgroup picks might not even want to own RDMA resources.
+RDMA resources might be allocated by one process and freed by other
+process (though this might not be the way they use it).
+Its pretty similar to other cgroups with exception in migration area,
+such exception comes from different behavior of how RDMA resources are
+owned, created and used.
+Recent unified hierarchy patch from Tejun equally highlights to not
+frequently migrate processes among cgroups.
 
-Right now, the entire machine breaks. Confining it to a faulty memcg,
-as well as reducing the likelihood of that OOM in many cases seems
-like a good move in the right direction, no?
+So in current implementation, (like other),
+if process created a RDMA resource, forked a child.
+child and parent both can allocate and free more resources.
+child moved to different cgroup. But resource is shared among them.
+child can free also the resource. All crazy combinations are possible
+in theory (without much use cases).
+So at best they are charged to the first cgroup css in which
+parent/child are created and reference is hold to CSS.
+cgroup, process can die, cut css remains until RDMA resources are freed.
+This is similar to process behavior where task struct is release but
+id is hold up for a while.
 
-And how likely are memcg OOMs because of this anyway? There is of
-course a scenario imaginable where the packets pile up, followed by
-some *other* part of the workload, the one that doesn't read() and
-process packets, trying to expand--which then doesn't work and goes
-OOM. But that seems like a complete corner case. In the vast majority
-of cases, the application will be in full operation and just fail to
-read() fast enough--because the network bandwidth is enormous compared
-to the container's size, or because it shares the CPU with thousands
-of other workloads and there is scheduling latency.
 
-This would be the perfect point to reign in the transmit window...
+> I finally wanted to ask about other limitations an RDMA cgroup could
+> handle. It would be great to be able to limit a container to be allowed
+> to use only a subset of the MAC/VLAN pairs programmed to a device,
 
-> The static approach is error-prone for sure, but it has existed for
-> years and worked satisfactory AFAIK.
+Truly. I agree. That was one of the prime reason I originally has it
+as part of the device cgroup.
+Where RDMA was just one category.
+But Tejun's opinion was to have rdma's own cgroup.
+Current internal data structure and interface between rdma cgroup and
+uverbs are tied to ib_device structure.
+which I think easy to overcome by abstracting out as new
+resource_device which can be used beyond RDMA as well.
 
-...but that point is not a fixed amount of memory consumed. It depends
-on the workload and the random interactions it's having with thousands
-of other containers on that same machine.
+However my bigger concern is interface to user land.
+We already have two use cases and I am inclined to make it as as
+"device resource cgroup" instead of "rdma cgroup".
+I seek Tejun's input here.
+Initial implementation can expose rdma resources under device resource
+cgroup, as it evolves we can add other net resources such as mac, vlan
+as you described.
 
-The point of containers is to maximize utilization of your hardware
-and systematically eliminate slack in the system. But it's exactly
-that slack on dedicated bare-metal machines that allowed us to take a
-wild guess at the settings and then tune them based on observing a
-handful of workloads. This approach is not going to work anymore when
-we pack the machine to capacity and still expect every single
-container out of thousands to perform well. We need that automation.
+ or
+> only a subset of P_Keys and GIDs it has. Do you see such limitations
+> also as part of this cgroup?
+>
+At present no. Because GID, P_key resources are created from the
+bottom up, either by stack or by network. They are kind of not tied to
+the user processes, unlike mac, vlan, qp which are more application
+driven or administrative driven.
 
-The static setting working okay on the global level is also why I'm
-not interested in starting to experiment with it. There is no reason
-to change it. It's much more likely that any attempt to change it will
-be shot down, not because of the approach chosen, but because there is
-no problem to solve there. I doubt we can get networking people to
-care about containers by screwing with things that work for them ;-)
+For applications that doesn't use RDMA-CM, query_device and query_port
+will filter out the GID entries based on the network namespace in
+which caller process is running.
+It was in my TODO list while we were working on RoCEv2 and GID
+movement changes but I never got chance to chase that fix.
+
+One of the idea I was considering is: to create virtual RDMA device
+mapped to physical device.
+And configure GID count limit via configfs for each such device.
+
+> Thanks,
+> Haggai
