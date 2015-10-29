@@ -1,175 +1,69 @@
-From: Vladimir Davydov <vdavydov@virtuozzo.com>
-Subject: Re: [PATCH 0/8] mm: memcontrol: account socket memory in unified
- hierarchy
-Date: Thu, 29 Oct 2015 12:27:47 +0300
-Message-ID: <20151029092747.GR13221@esperanza>
-References: <1445487696-21545-1-git-send-email-hannes@cmpxchg.org>
- <20151022184509.GM18351@esperanza>
- <20151026172216.GC2214@cmpxchg.org>
- <20151027084320.GF13221@esperanza>
- <20151027155833.GB4665@cmpxchg.org>
- <20151028082003.GK13221@esperanza>
- <20151028185810.GA31488@cmpxchg.org>
+From: Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Subject: Re: RFC rdma cgroup
+Date: Thu, 29 Oct 2015 16:57:27 +0200
+Message-ID: <563233D7.90808@mellanox.com>
+References: <CAG53R5Vd=tLbKPeKy8ZKP2DoHG-rnzW85COiE1Hk4GLv6SAZyA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20151028185810.GA31488@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: "David S. Miller" <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, Tejun Heo <tj@kernel.org>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAG53R5Vd=tLbKPeKy8ZKP2DoHG-rnzW85COiE1Hk4GLv6SAZyA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org" <raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
 
-On Wed, Oct 28, 2015 at 11:58:10AM -0700, Johannes Weiner wrote:
-> On Wed, Oct 28, 2015 at 11:20:03AM +0300, Vladimir Davydov wrote:
-> > Then you'd better not touch existing tcp limits at all, because they
-> > just work, and the logic behind them is very close to that of global tcp
-> > limits. I don't think one can simplify it somehow.
-> 
-> Uhm, no, there is a crapload of boilerplate code and complication that
-> seems entirely unnecessary. The only thing missing from my patch seems
-> to be the part where it enters memory pressure state when the limit is
-> hit. I'm adding this for completeness, but I doubt it even matters.
-> 
-> > Moreover, frankly I still have my reservations about this vmpressure
-> > propagation to skb you're proposing. It might work, but I doubt it
-> > will allow us to throw away explicit tcp limit, as I explained
-> > previously. So, even with your approach I think we can still need
-> > per memcg tcp limit *unless* you get rid of global tcp limit
-> > somehow.
-> 
-> Having the hard limit as a failsafe (or a minimum for other consumers)
-> is one thing, and certainly something I'm open to for cgroupv2, should
-> we have problems with load startup up after a socket memory landgrab.
-> 
-> That being said, if the VM is struggling to reclaim pages, or is even
-> swapping, it makes perfect sense to let the socket memory scheduler
-> know it shouldn't continue to increase its footprint until the VM
-> recovers. Regardless of any hard limitations/minimum guarantees.
-> 
-> This is what my patch does and it seems pretty straight-forward to
-> me. I don't really understand why this is so controversial.
+On 28/10/2015 10:29, Parav Pandit wrote:
+> 3. Resources are not defined by the RDMA cgroup. Resources are defined
+> by RDMA/IB subsystem and optionally by HCA vendor device drivers.
+> Rationale: This allows rdma cgroup to remain constant while RDMA/IB
+> subsystem can evolve without the need of rdma cgroup update. A new
+> resource can be easily added by the RDMA/IB subsystem without touching
+> rdma cgroup.
+Resources exposed by the cgroup are basically a UAPI, so we have to be
+careful to make it stable when it evolves. I understand the need for
+vendor specific resources, following the discussion on the previous
+proposal, but could you write on how you plan to allow these set of
+resources to evolve?
 
-I'm not arguing that the idea behind this patch set is necessarily bad.
-Quite the contrary, it does look interesting to me. I'm just saying that
-IMO it can't replace hard/soft limits. It probably could if it was
-possible to shrink buffers, but I don't think it's feasible, even
-theoretically. That's why I propose not to change the behavior of the
-existing per memcg tcp limit at all. And frankly I don't get why you are
-so keen on simplifying it. You say it's a "crapload of boilerplate
-code". Well, I don't see how it is - it just replicates global knobs and
-I don't see how it could be done in a better way. The code is hidden
-behind jump labels, so the overhead is zero if it isn't used. If you
-really dislike this code, we can isolate it under a separate config
-option. But all right, I don't rule out the possibility that the code
-could be simplified. If you do that w/o breaking it, that'll be OK to
-me, but I don't see why it should be related to this particular patch
-set.
+> 8. Typically each RDMA cgroup will have 0 to 4 RDMA devices. Therefore
+> each cgroup will have 0 to 4 verbs resource pool and optionally 0 to 4
+> hw resource pool per such device.
+> (Nothing stops to have more devices and pools, but design is around
+> this use case).
+In what way does the design depend on this assumption?
 
-> 
-> The *next* step would be to figure out whether we can actually
-> *reclaim* memory in the network subsystem--shrink windows and steal
-> buffers back--and that might even be an avenue to replace tcp window
-> limits. But it's not necessary for *this* patch series to be useful.
+> 9. Resource pool object is created in following situations.
+> (a) administrative operation is done to set the limit and no previous
+> resource pool exist for the device of interest for the cgroup.
+> (b) no resource limits were configured, but IB/RDMA subsystem tries to
+> charge the resource. so that when applications are running without
+> limits and later on when limits are enforced, during uncharging, it
+> correctly uncharges them, otherwise usage count will drop to negative.
+> This is done using default resource pool.
+> Instead of implementing any sort of time markers, default pool
+> simplifies the design.
+Having a default resource pool kind of implies there is a non-default
+one. Is the only difference between the default and non-default the fact
+that the second was created with an administrative operation and has
+specified limits or is there some other difference?
 
-Again, I don't think we can *reclaim* network memory, but you're right.
+> (c) When process migrate from one to other cgroup, resource is
+> continue to be owned by the creator cgroup (rather css).
+> After process migration, whenever new resource is created in new
+> cgroup, it will be owned by new cgroup.
+It sounds a little different from how other cgroups behave. I agree that
+mostly processes will create the resources in their cgroup and won't
+migrate, but why not move the charge during migration?
 
-> 
-> > > So this seemed like a good way to prove a new mechanism before rolling
-> > > it out to every single Linux setup, rather than switch everybody over
-> > > after the limited scope testing I can do as a developer on my own.
-> > > 
-> > > Keep in mind that my patches are not committing anything in terms of
-> > > interface, so we retain all the freedom to fix and tune the way this
-> > > is implemented, including the freedom to re-add tcp window limits in
-> > > case the pressure balancing is not a comprehensive solution.
-> > 
-> > I really dislike this kind of proof. It looks like you're trying to
-> > push something you think is right covertly, w/o having a proper
-> > discussion with networking people and then say that it just works
-> > and hence should be done globally, but what if it won't? Revert it?
-> > We already have a lot of dubious stuff in memcg that should be
-> > reverted, so let's please try to avoid this kind of mistakes in
-> > future. Note, I say "w/o having a proper discussion with networking
-> > people", because I don't think they will really care *unless* you
-> > change the global logic, simply because most of them aren't very
-> > interested in memcg AFAICS.
-> 
-> Come on, Dave is the first To and netdev is CC'd. They might not care
-> about memcg, but "pushing things covertly" is a bit of a stretch.
-
-Sorry if it sounded rude to you. I just look back at my experience
-patching slab internals to make kmem accountable, and AFAICS Christoph
-didn't really care about *what* I was doing, he only cared about the
-global case - if there was no performance degradation when kmemcg was
-disabled, he was usually fine with it, even if from the memcg pov it was
-a crap.
-
-Anyway, I can't force you to patch the global case first or
-simultaneously with the memcg case, so let's just hope I'm a bit too
-overcautious.
-
-> 
-> > That effectively means you loose a chance to listen to networking
-> > experts, who could point you at design flaws and propose an improvement
-> > right away. Let's please not miss such an opportunity. You said that
-> > you'd seen this problem happen w/o cgroups, so you have a use case that
-> > might need fixing at the global level. IMO it shouldn't be difficult to
-> > prepare an RFC patch for the global case first and see what people think
-> > about it.
-> 
-> No, the problem we are running into is when network memory is not
-> tracked per cgroup. The lack of containment means that the socket
-> memory consumption of individual cgroups can trigger system OOM.
-> 
-> We tried using the per-memcg tcp limits, and that prevents the OOMs
-> for sure, but it's horrendous for network performance. There is no
-> "stop growing" phase, it just keeps going full throttle until it hits
-> the wall hard.
-> 
-> Now, we could probably try to replicate the global knobs and add a
-> per-memcg soft limit. But you know better than anyone else how hard it
-> is to estimate the overall workingset size of a workload, and the
-> margins on containerized loads are razor-thin. Performance is much
-> more sensitive to input errors, and often times parameters must be
-> adjusted continuously during the runtime of a workload. It'd be
-> disasterous to rely on yet more static, error-prone user input here.
-
-Yeah, but the dynamic approach proposed in your patch set doesn't
-guarantee we won't hit OOM in memcg due to overgrown buffers. It just
-reduces this possibility. Of course, memcg OOM is far not as disastrous
-as the global one, but still it usually means the workload breakage.
-
-The static approach is error-prone for sure, but it has existed for
-years and worked satisfactory AFAIK.
-
-> 
-> What all this means to me is that fixing it on the cgroup level has
-> higher priority. But it also means that once we figured it out under
-> such a high-pressure environment, it's much easier to apply to the
-> global case and potentially replace the soft limit there.
-> 
-> This seems like a better approach to me than starting globally, only
-> to realize that the solution is not workable for cgroups and we need
-> yet something else.
-> 
-
-Are we in rush? I think if you try your approach at the global level and
-fail, it's still good, because it will probably give us all a better
-understanding of the problem. If you successfully fix the global case,
-but then realize that it doesn't fit memcg, it's even better, because
-you actually fixed a problem. If you patch both global and memcg cases,
-it's perfect.
-
-But of course, that's my understanding and I may be mistaken. Let's hope
-you're right.
+I finally wanted to ask about other limitations an RDMA cgroup could
+handle. It would be great to be able to limit a container to be allowed
+to use only a subset of the MAC/VLAN pairs programmed to a device, or
+only a subset of P_Keys and GIDs it has. Do you see such limitations
+also as part of this cgroup?
 
 Thanks,
-Vladimir
-
+Haggai
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
