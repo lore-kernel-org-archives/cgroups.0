@@ -1,65 +1,40 @@
-From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH cgroup/for-4.4] cgroup: fix race condition around
  termination check in css_task_iter_next()
-Date: Thu, 29 Oct 2015 09:53:36 +0800
-Message-ID: <56317C20.80107@huawei.com>
+Date: Thu, 29 Oct 2015 12:02:17 +0900
+Message-ID: <20151029030217.GC27115@mtj.duckdns.org>
 References: <20151027084504.GB8783@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=axIDa/pIbh6MaEJcDeArwwYYjUhsqpmVwUxvS3vETnU=;
+        b=MFMntAy7F8Yr0Q33nsItGybITe7ZVaYD+dqFWL6Mf7xoBIxRIoHXyAJLA3XadwAq/q
+         5qygyyLja5ai+D2jHSatfbjEQniEgMupiKFxQ68zm32sNIJK610f8ou0xOEHHFzuQX4N
+         NXeHAX+UbnZmaUIPH3wktNXM+G8W2g4cDTdWpTDZFcvVT9FxR6n7juJcUkuLc+fR/CsO
+         RkgJjdLd4f9wjDbrrTHV+YqBOagckoCESn50qPu+Ffnvs9wY26mUHE7UOiluW2b3XpYk
+         /P+Rn6IwBx9CuunsCpak6t7Iu/fR3fgtJ61indMtHM3OqxGZjWdLSoLfizSuHX36bzSJ
+         3dag==
+Content-Disposition: inline
 In-Reply-To: <20151027084504.GB8783-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Calvin Owens <calvinowens-b10kYP2dOMg@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On 2015/10/27 16:45, Tejun Heo wrote:
+On Tue, Oct 27, 2015 at 05:45:04PM +0900, Tejun Heo wrote:
 > css_task_iter_next() checked @it->cur_task before grabbing
 > css_set_lock and assumed that the result won't change afterwards;
 > however, tasks could leave the cgroup being iterated terminating the
 > iterator before css_task_lock is acquired.  If this happens,
 > css_task_iter_next() tries to calculate the current task from NULL
 > cg_list pointer leading to the following oops.
->
->   BUG: unable to handle kernel paging request at fffffffffffff7d0
->   IP: [<ffffffff810d5f22>] css_task_iter_next+0x42/0x80
->   ...
->   CPU: 4 PID: 6391 Comm: JobQDisp2 Not tainted 4.0.9-22_fbk4_rc3_81616_ge8d9cb6 #1
->   Hardware name: Quanta Freedom/Winterfell, BIOS F03_3B08 03/04/2014
->   task: ffff880868e46400 ti: ffff88083404c000 task.ti: ffff88083404c000
->   RIP: 0010:[<ffffffff810d5f22>]  [<ffffffff810d5f22>] css_task_iter_next+0x42/0x80
->   RSP: 0018:ffff88083404fd28  EFLAGS: 00010246
->   RAX: 0000000000000000 RBX: ffff88083404fd68 RCX: ffff8804697fb8b0
->   RDX: fffffffffffff7c0 RSI: ffff8803b7dff800 RDI: ffffffff822c0278
->   RBP: ffff88083404fd38 R08: 0000000000017160 R09: ffff88046f4070c0
->   R10: ffffffff810d61f7 R11: 0000000000000293 R12: ffff880863bf8400
->   R13: ffff88046b87fd80 R14: 0000000000000000 R15: ffff88083404fe58
->   FS:  00007fa0567e2700(0000) GS:ffff88046f900000(0000) knlGS:0000000000000000
->   CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->   CR2: fffffffffffff7d0 CR3: 0000000469568000 CR4: 00000000001406e0
->   Stack:
->    0000000000000246 0000000000000000 ffff88083404fde8 ffffffff810d6248
->    ffff88083404fd68 0000000000000000 ffff8803b7dff800 000001ef000001ee
->    0000000000000000 0000000000000000 ffff880863bf8568 0000000000000000
->   Call Trace:
->    [<ffffffff810d6248>] cgroup_pidlist_start+0x258/0x550
->    [<ffffffff810cf66d>] cgroup_seqfile_start+0x1d/0x20
->    [<ffffffff8121f8ef>] kernfs_seq_start+0x5f/0xa0
->    [<ffffffff811cab76>] seq_read+0x166/0x380
->    [<ffffffff812200fd>] kernfs_fop_read+0x11d/0x180
->    [<ffffffff811a7398>] __vfs_read+0x18/0x50
->    [<ffffffff811a745d>] vfs_read+0x8d/0x150
->    [<ffffffff811a756f>] SyS_read+0x4f/0xb0
->    [<ffffffff818d4772>] system_call_fastpath+0x12/0x17
->
-> Fix it by moving the termination condition check inside css_set_lock.
-> @it->cur_task is now cleared after being put and @it->task_pos is
-> tested for termination instead of @it->cset_pos as they indicate the
-> same condition and @it->task_pos is what's being dereferenced.
->
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Reported-by: Calvin Owens <calvinowens-b10kYP2dOMg@public.gmane.org>
-> Fixes: ed27b9f7a17d ("cgroup: don't hold css_set_rwsem across css task iteration")
 
-Acked-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Applied to cgroup/for-4.4.  Thanks.
+
+-- 
+tejun
