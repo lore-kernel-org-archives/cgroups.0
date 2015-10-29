@@ -1,69 +1,104 @@
-From: Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
-Subject: Re: RFC rdma cgroup
-Date: Thu, 29 Oct 2015 16:57:27 +0200
-Message-ID: <563233D7.90808@mellanox.com>
-References: <CAG53R5Vd=tLbKPeKy8ZKP2DoHG-rnzW85COiE1Hk4GLv6SAZyA@mail.gmail.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 5/8] mm: memcontrol: account socket memory on unified
+ hierarchy
+Date: Thu, 29 Oct 2015 16:25:46 +0100
+Message-ID: <20151029152546.GG23598@dhcp22.suse.cz>
+References: <1445487696-21545-1-git-send-email-hannes@cmpxchg.org>
+ <1445487696-21545-6-git-send-email-hannes@cmpxchg.org>
+ <20151023131956.GA15375@dhcp22.suse.cz>
+ <20151023.065957.1690815054807881760.davem@davemloft.net>
+ <20151026165619.GB2214@cmpxchg.org>
+ <20151027122647.GG9891@dhcp22.suse.cz>
+ <20151027154138.GA4665@cmpxchg.org>
+ <20151027161554.GJ9891@dhcp22.suse.cz>
+ <20151027164227.GB7749@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAG53R5Vd=tLbKPeKy8ZKP2DoHG-rnzW85COiE1Hk4GLv6SAZyA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20151027164227.GB7749@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org" <raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: David Miller <davem@davemloft.net>, akpm@linux-foundation.org, vdavydov@virtuozzo.com, tj@kernel.org, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 28/10/2015 10:29, Parav Pandit wrote:
-> 3. Resources are not defined by the RDMA cgroup. Resources are defined
-> by RDMA/IB subsystem and optionally by HCA vendor device drivers.
-> Rationale: This allows rdma cgroup to remain constant while RDMA/IB
-> subsystem can evolve without the need of rdma cgroup update. A new
-> resource can be easily added by the RDMA/IB subsystem without touching
-> rdma cgroup.
-Resources exposed by the cgroup are basically a UAPI, so we have to be
-careful to make it stable when it evolves. I understand the need for
-vendor specific resources, following the discussion on the previous
-proposal, but could you write on how you plan to allow these set of
-resources to evolve?
+On Tue 27-10-15 09:42:27, Johannes Weiner wrote:
+> On Tue, Oct 27, 2015 at 05:15:54PM +0100, Michal Hocko wrote:
+> > On Tue 27-10-15 11:41:38, Johannes Weiner wrote:
+[...]
+> Or it could be exactly the other way around when you have a workload
+> that is heavy on filesystem metadata. I don't see why any scenario
+> would be more important than the other.
 
-> 8. Typically each RDMA cgroup will have 0 to 4 RDMA devices. Therefore
-> each cgroup will have 0 to 4 verbs resource pool and optionally 0 to 4
-> hw resource pool per such device.
-> (Nothing stops to have more devices and pools, but design is around
-> this use case).
-In what way does the design depend on this assumption?
+Yes I definitely agree. No scenario is more important. We can only
+come up with a default that makes more sense for the majority and
+allow the minority to override. That was what I wanted to say basically.
 
-> 9. Resource pool object is created in following situations.
-> (a) administrative operation is done to set the limit and no previous
-> resource pool exist for the device of interest for the cgroup.
-> (b) no resource limits were configured, but IB/RDMA subsystem tries to
-> charge the resource. so that when applications are running without
-> limits and later on when limits are enforced, during uncharging, it
-> correctly uncharges them, otherwise usage count will drop to negative.
-> This is done using default resource pool.
-> Instead of implementing any sort of time markers, default pool
-> simplifies the design.
-Having a default resource pool kind of implies there is a non-default
-one. Is the only difference between the default and non-default the fact
-that the second was created with an administrative operation and has
-specified limits or is there some other difference?
+> I'm not saying that distinguishing between consumers is wrong, just
+> that "user memory vs kernel memory" is a false classification. Why do
+> you call page cache user memory but dentry cache kernel memory? It
+> doesn't make any sense.
 
-> (c) When process migrate from one to other cgroup, resource is
-> continue to be owned by the creator cgroup (rather css).
-> After process migration, whenever new resource is created in new
-> cgroup, it will be owned by new cgroup.
-It sounds a little different from how other cgroups behave. I agree that
-mostly processes will create the resources in their cgroup and won't
-migrate, but why not move the charge during migration?
+We are not talking about dcache vs. page cache alone here, though. We
+are talking about _all_ slab allocations vs. only user accessed memory.
+The slab consumption is directly under kernel control. A great pile of
+this logic is completly hidden from userspace. While user can estimate
+the user memory it is hard (if possible) to do that for the kernel
+memory footprint - not even mentioning this is variable and dependent on
+the particular kernel version.
 
-I finally wanted to ask about other limitations an RDMA cgroup could
-handle. It would be great to be able to limit a container to be allowed
-to use only a subset of the MAC/VLAN pairs programmed to a device, or
-only a subset of P_Keys and GIDs it has. Do you see such limitations
-also as part of this cgroup?
+> > Also kmem accounting will make the load more non-deterministic because
+> > many of the resources are shared between tasks in separate cgroups
+> > unless they are explicitly configured. E.g. [id]cache will be shared
+> > and first to touch gets charged so you would end up with more false
+> > sharing.
+> 
+> Exactly like page cache. This differentiation isn't based on reality.
 
-Thanks,
-Haggai
+Yes false sharing is an existing and long term problem already. I just
+wanted to point out that the false sharing would be even a bigger
+problem because some kernel tracked resources are shared more naturally
+than file sharing.
+
+> > > IMO that's an implementation detail and a historical artifact that
+> > > should not be exposed to the user. And that's the thing I hate about
+> > > the current opt-out knob.
+> 
+> You carefully skipped over this part. We can ignore it for socket
+> memory but it's something we need to figure out when it comes to slab
+> accounting and tracking.
+
+I am sorry, I didn't mean to skip this part, I though it would be clear
+from the previous text. I think kmem accounting falls into the same
+category. Have a sane default and a global boottime knob to override it
+for those that think differently - for whatever reason they might have.
+
+[...]
+ 
+> Having page cache accounting built in while presenting dentry+inode
+> cache as a configurable extension is completely random and doesn't
+> make sense. They are both first class memory consumers. They're not
+> separate categories. One isn't more "core" than the other.
+
+Again we are talking about all slab allocations not just the dcache. 
+
+> > > For now, something like this as a boot commandline?
+> > > 
+> > > cgroup.memory=nosocket
+> > 
+> > That would work for me.
+> 
+> Okay, then I'll go that route for the socket stuff.
+
+Thanks!
+
+-- 
+Michal Hocko
+SUSE Labs
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
