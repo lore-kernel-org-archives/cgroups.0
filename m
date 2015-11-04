@@ -1,121 +1,147 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 5/8] mm: memcontrol: account socket memory on unified
- hierarchy
-Date: Wed, 4 Nov 2015 14:50:37 -0500
-Message-ID: <20151104195037.GA6872@cmpxchg.org>
-References: <20151023131956.GA15375@dhcp22.suse.cz>
- <20151023.065957.1690815054807881760.davem@davemloft.net>
- <20151026165619.GB2214@cmpxchg.org>
- <20151027122647.GG9891@dhcp22.suse.cz>
- <20151027154138.GA4665@cmpxchg.org>
- <20151027161554.GJ9891@dhcp22.suse.cz>
- <20151027164227.GB7749@cmpxchg.org>
- <20151029152546.GG23598@dhcp22.suse.cz>
- <20151029161009.GA9160@cmpxchg.org>
- <20151104104239.GG29607@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL] cgroup changes for v4.4-rc1
+Date: Wed, 4 Nov 2015 16:10:29 -0500
+Message-ID: <20151104211029.GC396@mtj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=lIVtNU7Bko25XSADnLkWBKUgb4RkbX80fftrN+B534g=;
+        b=qiKwpOJNAovqdAN0UMr1zDQw82nDcb5+D5noGF/n9S/3pa27yVwbMl/wGiAYx62ynR
+         WZMNwuZj9KttmyDfKz+2Pg048vWZRdol4Lg2QT8TYUDinJLr+VLS/vbak3XzUeh2SF9A
+         Y2ALW+4ueoGinynGcg9OmBvLctBQJBxEUj3rpSeUiLLMWViTezk5HcPRy+Wfy0Bdd/QM
+         WkoWoGxvTsTQ2fa1H0WuF9P7NzO32pdlIS7geikh5sD1UPvxPg5GiySKA0jLiSg1sWtX
+         NU1IQh20rimxSt0Gkc94wY6mw/SSJqQiFIdgmSUVbxdZj3/iS89n7NO3JzNHQLUUHxxD
+         9AUQ==
 Content-Disposition: inline
-In-Reply-To: <20151104104239.GG29607-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Nov 04, 2015 at 11:42:40AM +0100, Michal Hocko wrote:
-> On Thu 29-10-15 09:10:09, Johannes Weiner wrote:
-> > On Thu, Oct 29, 2015 at 04:25:46PM +0100, Michal Hocko wrote:
-> > > On Tue 27-10-15 09:42:27, Johannes Weiner wrote:
-> [...]
-> > > > You carefully skipped over this part. We can ignore it for socket
-> > > > memory but it's something we need to figure out when it comes to slab
-> > > > accounting and tracking.
-> > > 
-> > > I am sorry, I didn't mean to skip this part, I though it would be clear
-> > > from the previous text. I think kmem accounting falls into the same
-> > > category. Have a sane default and a global boottime knob to override it
-> > > for those that think differently - for whatever reason they might have.
-> > 
-> > Yes, that makes sense to me.
-> > 
-> > Like cgroup.memory=nosocket, would you think it makes sense to include
-> > slab in the default for functional/semantical completeness and provide
-> > a cgroup.memory=noslab for powerusers?
-> 
-> I am still not sure whether the kmem accounting is stable enough to be
-> enabled by default. If for nothing else the allocation failures, which
-> are not allowed for the global case and easily triggered by the hard
-> limit, might be a big problem. My last attempts to allow GFP_NOFS to
-> fail made me quite skeptical. I still believe this is something which
-> will be solved in the long term but the current state might be still too
-> fragile. So I would rather be conservative and have the kmem accounting
-> disabled by default with a config option and boot parameter to override.
-> If somebody is confident that the desired load is stable then the config
-> can be enabled easily.
+Hello, Linus.
 
-I agree with your assessment of the current kmem code state, but I
-think your conclusion is completely backwards here.
+cgroup core saw several significant updates this cycle.
 
-The interface will be set in stone forever, whereas any stability
-issues will be transient and will have to be addressed in a finite
-amount of time anyway. It doesn't make sense to design an interface
-based on temporary quality of implementation. Only one of those two
-can ever be changed.
+* percpu_rwsem for threadgroup locking is reinstated.  This was
+  temporarily dropped due to down_write latency issues.  Oleg's rework
+  of percpu_rwsem which is scheduled to be merged in this merge window
+  resolves the issue.
 
-Because it goes without saying that once the cgroupv2 interface is
-released, and people use it in production, there is no way we can then
-*add* dentry cache, inode cache, and others to memory.current. That
-would be an unacceptable change in interface behavior. On the other
-hand, people will be prepared for hiccups in the early stages of
-cgroupv2 release, and we're providing cgroup.memory=noslab to let them
-workaround severe problems in production until we fix it without
-forcing them to fully revert to cgroupv1.
+* On the v2 hierarchy, when controllers are enabled and disabled, all
+  operations are atomic and can fail and revert cleanly.  This allows
+  ->can_attach() failure which is necessary for cpu RT slices.
 
-So if we agree that there are no fundamental architectural concerns
-with slab accounting, i.e. nothing that can't be addressed in the
-implementation, we have to make the call now.
+* Tasks now stay associated with the original cgroups after exit until
+  released.  This allows tracking resources held by zombies
+  (e.g. pids) and makes it easy to find out where zombies came from on
+  the v2 hierarchy.  The pids controller was broken before these
+  changes as zombies escaped the limits; unfortunately, updating this
+  behavior required too many invasive changes and I don't think it's a
+  good idea to backport them, so the pids controller on 4.3, the first
+  version which included the pids controller, will stay broken at
+  least until I'm sure about the cgroup core changes.
 
-And I maintain that not accounting dentry cache and inode cache is a
-gaping hole in memory isolation, so it should be included by default.
-(The rest of the slabs is arguable, but IMO the risk of missing
-something important is higher than the cost of including them.)
+* Optimization of a couple common tests using static_key.  This
+  replaces cgroup_on_dfl() with cgroup_subsys_on_dfl() and causes a
+  silent conflict in mm/vmscan.c which causes a build failure.  -mm
+  has the updates but for now the following patch fixes the conflict.
 
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 7f63a93..e7057af 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -175,7 +175,7 @@ static bool sane_reclaim(struct scan_control *sc)
+ 	if (!memcg)
+ 		return true;
+ #ifdef CONFIG_CGROUP_WRITEBACK
+-	if (cgroup_on_dfl(memcg->css.cgroup))
++	if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
+ 		return true;
+ #endif
+ 	return false;
 
-As far as your allocation failure concerns go, I think the kmem code
-is currently not behaving as Glauber originally intended, which is to
-force charge if reclaim and OOM killing weren't able to make enough
-space. See this recently rewritten section of the kmem charge path:
+Thanks.
 
--               /*
--                * try_charge() chose to bypass to root due to OOM kill or
--                * fatal signal.  Since our only options are to either fail
--                * the allocation or charge it to this cgroup, do it as a
--                * temporary condition. But we can't fail. From a kmem/slab
--                * perspective, the cache has already been selected, by
--                * mem_cgroup_kmem_get_cache(), so it is too late to change
--                * our minds.
--                *
--                * This condition will only trigger if the task entered
--                * memcg_charge_kmem in a sane state, but was OOM-killed
--                * during try_charge() above. Tasks that were already dying
--                * when the allocation triggers should have been already
--                * directed to the root cgroup in memcontrol.h
--                */
--               page_counter_charge(&memcg->memory, nr_pages);
--               if (do_swap_account)
--                       page_counter_charge(&memcg->memsw, nr_pages);
+The following changes since commit 9badce000e2ce68ba74838a3cd356dde58221c2f:
 
-It could be that this never properly worked as it was tied to the
--EINTR bypass trick, but the idea was these charges never fail.
+  cgroup, writeback: don't enable cgroup writeback on traditional hierarchies (2015-09-24 16:48:52 -0400)
 
-And this makes sense. If the allocator semantics are such that we
-never fail these page allocations for slab, and the callsites rely on
-that, surely we should not fail them in the memory controller, either.
+are available in the git repository at:
 
-And it makes a lot more sense to account them in excess of the limit
-than pretend they don't exist. We might not be able to completely
-fullfill the containment part of the memory controller (although these
-slab charges will still create significant pressure before that), but
-at least we don't fail the accounting part on top of it.
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.4
+
+for you to fetch changes up to d57456753787ab158f906f1f8eb58d54a2ccd9f4:
+
+  cgroup: fix race condition around termination check in css_task_iter_next() (2015-10-29 11:43:05 +0900)
+
+----------------------------------------------------------------
+Tejun Heo (39):
+      sched, cgroup: replace signal_struct->group_rwsem with a global percpu_rwsem
+      cgroup: simplify threadgroup locking
+      jump_label: make static_key_enabled() work on static_key_true/false types too
+      cgroup: implement static_key based cgroup_subsys_enabled() and cgroup_subsys_on_dfl()
+      cgroup: replace cgroup_subsys->disabled tests with cgroup_subsys_enabled()
+      cgroup: replace cgroup_on_dfl() tests in controllers with cgroup_subsys_on_dfl()
+      cgroup: replace "cgroup.populated" with "cgroup.events"
+      cgroup: replace cftype->mode with CFTYPE_WORLD_WRITABLE
+      cgroup: relocate cgroup_populate_dir()
+      cgroup: make cgroup_addrm_files() clean up after itself on failures
+      cgroup: cosmetic updates to rebind_subsystems()
+      cgroup: restructure file creation / removal handling
+      cgroup: generalize obtaining the handles of and notifying cgroup files
+      memcg: generate file modified notifications on "memory.events"
+      cpuset: migrate memory only for threadgroup leaders
+      cgroup, memcg, cpuset: implement cgroup_taskset_for_each_leader()
+      cgroup: reorder cgroup_migrate()'s parameters
+      cgroup: separate out taskset operations from cgroup_migrate()
+      cgroup: make cgroup_update_dfl_csses() migrate all target processes atomically
+      cgroup: Merge branch 'for-4.3-fixes' into for-4.4
+      cgroup: fix too early usage of static_branch_disable()
+      cgroup: remove an unused parameter from cgroup_task_migrate()
+      cgroup: make cgroup->nr_populated count the number of populated css_sets
+      cgroup: replace cgroup_has_tasks() with cgroup_is_populated()
+      cgroup: move check_for_release() invocation
+      cgroup: relocate cgroup_[try]get/put()
+      cgroup: make css_sets pin the associated cgroups
+      cgroup: make cgroup_destroy_locked() test cgroup_is_populated()
+      cgroup: keep css_set and task lists in chronological order
+      cgroup: factor out css_set_move_task()
+      cgroup: reorganize css_task_iter functions
+      cgroup: don't hold css_set_rwsem across css task iteration
+      cgroup: make css_set_rwsem a spinlock and rename it to css_set_lock
+      cgroup: keep zombies associated with their original cgroups
+      cgroup: add cgroup_subsys->free() method and use it to fix pids controller
+      cgroup: replace error handling in cgroup_init() with WARN_ON()s
+      cgroup: drop cgroup__DEVEL__legacy_files_on_dfl
+      blkcg: don't create "io.stat" on the root cgroup
+      cgroup: fix race condition around termination check in css_task_iter_next()
+
+ Documentation/cgroups/cgroups.txt           |    4 +
+ Documentation/cgroups/unified-hierarchy.txt |   25 +-
+ block/blk-cgroup.c                          |    1 +
+ block/blk-throttle.c                        |    2 +-
+ block/cfq-iosched.c                         |    4 +-
+ include/linux/backing-dev.h                 |    5 +-
+ include/linux/cgroup-defs.h                 |   76 +-
+ include/linux/cgroup.h                      |  129 +--
+ include/linux/hugetlb_cgroup.h              |    4 +-
+ include/linux/init_task.h                   |    8 -
+ include/linux/jump_label.h                  |   18 +-
+ include/linux/memcontrol.h                  |    8 +-
+ include/linux/sched.h                       |   12 -
+ kernel/cgroup.c                             | 1297 +++++++++++++++------------
+ kernel/cgroup_pids.c                        |    8 +-
+ kernel/cpuset.c                             |   72 +-
+ kernel/events/core.c                        |   16 -
+ kernel/fork.c                               |    5 +-
+ kernel/sched/core.c                         |   16 -
+ mm/memcontrol.c                             |   27 +-
+ 20 files changed, 951 insertions(+), 786 deletions(-)
+
+-- 
+tejun
