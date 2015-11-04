@@ -1,104 +1,58 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [cgroup:test-merge-for-4.4 1/1] mm/vmscan.c:178:6: error:
- implicit declaration of function 'cgroup_on_dfl'
-Date: Wed, 4 Nov 2015 09:56:30 +0100
-Message-ID: <20151104085630.GD29607@dhcp22.suse.cz>
-References: <201511040637.nB1K9bmQ%fengguang.wu@intel.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 5/8] mm: memcontrol: account socket memory on unified
+ hierarchy
+Date: Wed, 4 Nov 2015 11:42:40 +0100
+Message-ID: <20151104104239.GG29607@dhcp22.suse.cz>
+References: <1445487696-21545-6-git-send-email-hannes@cmpxchg.org>
+ <20151023131956.GA15375@dhcp22.suse.cz>
+ <20151023.065957.1690815054807881760.davem@davemloft.net>
+ <20151026165619.GB2214@cmpxchg.org>
+ <20151027122647.GG9891@dhcp22.suse.cz>
+ <20151027154138.GA4665@cmpxchg.org>
+ <20151027161554.GJ9891@dhcp22.suse.cz>
+ <20151027164227.GB7749@cmpxchg.org>
+ <20151029152546.GG23598@dhcp22.suse.cz>
+ <20151029161009.GA9160@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <201511040637.nB1K9bmQ%fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20151029161009.GA9160@cmpxchg.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kbuild test robot <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: kbuild-all-JC7UmRfGjtg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: David Miller <davem@davemloft.net>, akpm@linux-foundation.org, vdavydov@virtuozzo.com, tj@kernel.org, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-[CCing Johannes as well]
-
-On Wed 04-11-15 06:26:39, Wu Fengguang wrote:
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git test-merge-for-4.4
-> head:   1c93277f15d351a4c7244cdcc50c8f80cbd9e84e
-> commit: 1c93277f15d351a4c7244cdcc50c8f80cbd9e84e [1/1] Merge branch 'for-4.4' into test-merge-for-4.4
-> config: i386-randconfig-s1-201544 (attached as .config)
-> reproduce:
->         git checkout 1c93277f15d351a4c7244cdcc50c8f80cbd9e84e
->         # save the attached .config to linux build tree
->         make ARCH=i386 
+On Thu 29-10-15 09:10:09, Johannes Weiner wrote:
+> On Thu, Oct 29, 2015 at 04:25:46PM +0100, Michal Hocko wrote:
+> > On Tue 27-10-15 09:42:27, Johannes Weiner wrote:
+[...]
+> > > You carefully skipped over this part. We can ignore it for socket
+> > > memory but it's something we need to figure out when it comes to slab
+> > > accounting and tracking.
+> > 
+> > I am sorry, I didn't mean to skip this part, I though it would be clear
+> > from the previous text. I think kmem accounting falls into the same
+> > category. Have a sane default and a global boottime knob to override it
+> > for those that think differently - for whatever reason they might have.
 > 
-> All errors (new ones prefixed by >>):
+> Yes, that makes sense to me.
 > 
->    mm/vmscan.c: In function 'sane_reclaim':
-> >> mm/vmscan.c:178:6: error: implicit declaration of function 'cgroup_on_dfl' [-Werror=implicit-function-declaration]
->      if (cgroup_on_dfl(memcg->css.cgroup))
->          ^
->    cc1: some warnings being treated as errors
+> Like cgroup.memory=nosocket, would you think it makes sense to include
+> slab in the default for functional/semantical completeness and provide
+> a cgroup.memory=noslab for powerusers?
 
-Ohh, this seems because CONFIG_CGROUP_WRITEBACK depends on BLK_CGROUP
-and MEMCG and none of it depends on CGROUP. Dang. The patch is below
-I haven't checked other controllers yet.
-
-> vim +/cgroup_on_dfl +178 mm/vmscan.c
-> 
-> 97c9341f Tejun Heo        2015-05-22  172  {
-> 97c9341f Tejun Heo        2015-05-22  173  	struct mem_cgroup *memcg = sc->target_mem_cgroup;
-> 97c9341f Tejun Heo        2015-05-22  174  
-> 97c9341f Tejun Heo        2015-05-22  175  	if (!memcg)
-> 97c9341f Tejun Heo        2015-05-22  176  		return true;
-> 97c9341f Tejun Heo        2015-05-22  177  #ifdef CONFIG_CGROUP_WRITEBACK
-> d5028f9f Vladimir Davydov 2015-09-22 @178  	if (cgroup_on_dfl(memcg->css.cgroup))
-> 97c9341f Tejun Heo        2015-05-22  179  		return true;
-> 97c9341f Tejun Heo        2015-05-22  180  #endif
-> 97c9341f Tejun Heo        2015-05-22  181  	return false;
----
-From 509ebecf457b852b3d83af04be258833a434db16 Mon Sep 17 00:00:00 2001
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Date: Wed, 4 Nov 2015 09:45:20 +0100
-Subject: [PATCH] make CONFIG_MEMCG and CONFIG_BLK_CGROUP depend on CGROUPS
-
-Neither CONFIG_MEMCG nor CONFIG_BLK_CGROUP depend on CGROUPS which
-doesn't really make much sense because none of them are usable without
-all the infrastructure. This even leads to compilation problems as
-reported by 0-day compile test:
-
-   mm/vmscan.c: In function 'sane_reclaim':
->> mm/vmscan.c:178:6: error: implicit declaration of function 'cgroup_on_dfl' [-Werror=implicit-function-declaration]
-     if (cgroup_on_dfl(memcg->css.cgroup))
-         ^
-   cc1: some warnings being treated as errors
-
-Reported-by: kbuild test robot <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Signed-off-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
----
- init/Kconfig | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/init/Kconfig b/init/Kconfig
-index 287674421294..47fea987b82d 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -1014,6 +1014,7 @@ config PAGE_COUNTER
- 
- config MEMCG
- 	bool "Memory Resource Controller for Control Groups"
-+	depends on CGROUPS
- 	select PAGE_COUNTER
- 	select EVENTFD
- 	help
-@@ -1128,6 +1129,7 @@ endif #CGROUP_SCHED
- 
- config BLK_CGROUP
- 	bool "Block IO controller"
-+	depends on CGROUPS
- 	depends on BLOCK
- 	default n
- 	---help---
--- 
-2.6.1
-
-
-
+I am still not sure whether the kmem accounting is stable enough to be
+enabled by default. If for nothing else the allocation failures, which
+are not allowed for the global case and easily triggered by the hard
+limit, might be a big problem. My last attempts to allow GFP_NOFS to
+fail made me quite skeptical. I still believe this is something which
+will be solved in the long term but the current state might be still too
+fragile. So I would rather be conservative and have the kmem accounting
+disabled by default with a config option and boot parameter to override.
+If somebody is confident that the desired load is stable then the config
+can be enabled easily.
 -- 
 Michal Hocko
 SUSE Labs
