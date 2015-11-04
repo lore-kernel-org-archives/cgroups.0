@@ -1,147 +1,85 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup changes for v4.4-rc1
-Date: Wed, 4 Nov 2015 16:10:29 -0500
-Message-ID: <20151104211029.GC396@mtj.duckdns.org>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-         :content-disposition:user-agent;
-        bh=lIVtNU7Bko25XSADnLkWBKUgb4RkbX80fftrN+B534g=;
-        b=qiKwpOJNAovqdAN0UMr1zDQw82nDcb5+D5noGF/n9S/3pa27yVwbMl/wGiAYx62ynR
-         WZMNwuZj9KttmyDfKz+2Pg048vWZRdol4Lg2QT8TYUDinJLr+VLS/vbak3XzUeh2SF9A
-         Y2ALW+4ueoGinynGcg9OmBvLctBQJBxEUj3rpSeUiLLMWViTezk5HcPRy+Wfy0Bdd/QM
-         WkoWoGxvTsTQ2fa1H0WuF9P7NzO32pdlIS7geikh5sD1UPvxPg5GiySKA0jLiSg1sWtX
-         NU1IQh20rimxSt0Gkc94wY6mw/SSJqQiFIdgmSUVbxdZj3/iS89n7NO3JzNHQLUUHxxD
-         9AUQ==
-Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH 1/8] mm: memcontrol: export root_mem_cgroup
+Date: Wed,  4 Nov 2015 17:22:07 -0500
+Message-ID: <1446675734-25671-2-git-send-email-hannes@cmpxchg.org>
+References: <1446675734-25671-1-git-send-email-hannes@cmpxchg.org>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1446675734-25671-1-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Miller <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@virtuozzo.com>, Tejun Heo <tj@kernel.org>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-Hello, Linus.
+A later patch will need this symbol in files other than memcontrol.c,
+so export it now and replace mem_cgroup_root_css at the same time.
 
-cgroup core saw several significant updates this cycle.
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Acked-by: Michal Hocko <mhocko@suse.com>
+---
+ include/linux/memcontrol.h | 3 ++-
+ mm/backing-dev.c           | 2 +-
+ mm/memcontrol.c            | 5 ++---
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-* percpu_rwsem for threadgroup locking is reinstated.  This was
-  temporarily dropped due to down_write latency issues.  Oleg's rework
-  of percpu_rwsem which is scheduled to be merged in this merge window
-  resolves the issue.
-
-* On the v2 hierarchy, when controllers are enabled and disabled, all
-  operations are atomic and can fail and revert cleanly.  This allows
-  ->can_attach() failure which is necessary for cpu RT slices.
-
-* Tasks now stay associated with the original cgroups after exit until
-  released.  This allows tracking resources held by zombies
-  (e.g. pids) and makes it easy to find out where zombies came from on
-  the v2 hierarchy.  The pids controller was broken before these
-  changes as zombies escaped the limits; unfortunately, updating this
-  behavior required too many invasive changes and I don't think it's a
-  good idea to backport them, so the pids controller on 4.3, the first
-  version which included the pids controller, will stay broken at
-  least until I'm sure about the cgroup core changes.
-
-* Optimization of a couple common tests using static_key.  This
-  replaces cgroup_on_dfl() with cgroup_subsys_on_dfl() and causes a
-  silent conflict in mm/vmscan.c which causes a build failure.  -mm
-  has the updates but for now the following patch fixes the conflict.
-
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 7f63a93..e7057af 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -175,7 +175,7 @@ static bool sane_reclaim(struct scan_control *sc)
- 	if (!memcg)
- 		return true;
- #ifdef CONFIG_CGROUP_WRITEBACK
--	if (cgroup_on_dfl(memcg->css.cgroup))
-+	if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
- 		return true;
- #endif
- 	return false;
-
-Thanks.
-
-The following changes since commit 9badce000e2ce68ba74838a3cd356dde58221c2f:
-
-  cgroup, writeback: don't enable cgroup writeback on traditional hierarchies (2015-09-24 16:48:52 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.4
-
-for you to fetch changes up to d57456753787ab158f906f1f8eb58d54a2ccd9f4:
-
-  cgroup: fix race condition around termination check in css_task_iter_next() (2015-10-29 11:43:05 +0900)
-
-----------------------------------------------------------------
-Tejun Heo (39):
-      sched, cgroup: replace signal_struct->group_rwsem with a global percpu_rwsem
-      cgroup: simplify threadgroup locking
-      jump_label: make static_key_enabled() work on static_key_true/false types too
-      cgroup: implement static_key based cgroup_subsys_enabled() and cgroup_subsys_on_dfl()
-      cgroup: replace cgroup_subsys->disabled tests with cgroup_subsys_enabled()
-      cgroup: replace cgroup_on_dfl() tests in controllers with cgroup_subsys_on_dfl()
-      cgroup: replace "cgroup.populated" with "cgroup.events"
-      cgroup: replace cftype->mode with CFTYPE_WORLD_WRITABLE
-      cgroup: relocate cgroup_populate_dir()
-      cgroup: make cgroup_addrm_files() clean up after itself on failures
-      cgroup: cosmetic updates to rebind_subsystems()
-      cgroup: restructure file creation / removal handling
-      cgroup: generalize obtaining the handles of and notifying cgroup files
-      memcg: generate file modified notifications on "memory.events"
-      cpuset: migrate memory only for threadgroup leaders
-      cgroup, memcg, cpuset: implement cgroup_taskset_for_each_leader()
-      cgroup: reorder cgroup_migrate()'s parameters
-      cgroup: separate out taskset operations from cgroup_migrate()
-      cgroup: make cgroup_update_dfl_csses() migrate all target processes atomically
-      cgroup: Merge branch 'for-4.3-fixes' into for-4.4
-      cgroup: fix too early usage of static_branch_disable()
-      cgroup: remove an unused parameter from cgroup_task_migrate()
-      cgroup: make cgroup->nr_populated count the number of populated css_sets
-      cgroup: replace cgroup_has_tasks() with cgroup_is_populated()
-      cgroup: move check_for_release() invocation
-      cgroup: relocate cgroup_[try]get/put()
-      cgroup: make css_sets pin the associated cgroups
-      cgroup: make cgroup_destroy_locked() test cgroup_is_populated()
-      cgroup: keep css_set and task lists in chronological order
-      cgroup: factor out css_set_move_task()
-      cgroup: reorganize css_task_iter functions
-      cgroup: don't hold css_set_rwsem across css task iteration
-      cgroup: make css_set_rwsem a spinlock and rename it to css_set_lock
-      cgroup: keep zombies associated with their original cgroups
-      cgroup: add cgroup_subsys->free() method and use it to fix pids controller
-      cgroup: replace error handling in cgroup_init() with WARN_ON()s
-      cgroup: drop cgroup__DEVEL__legacy_files_on_dfl
-      blkcg: don't create "io.stat" on the root cgroup
-      cgroup: fix race condition around termination check in css_task_iter_next()
-
- Documentation/cgroups/cgroups.txt           |    4 +
- Documentation/cgroups/unified-hierarchy.txt |   25 +-
- block/blk-cgroup.c                          |    1 +
- block/blk-throttle.c                        |    2 +-
- block/cfq-iosched.c                         |    4 +-
- include/linux/backing-dev.h                 |    5 +-
- include/linux/cgroup-defs.h                 |   76 +-
- include/linux/cgroup.h                      |  129 +--
- include/linux/hugetlb_cgroup.h              |    4 +-
- include/linux/init_task.h                   |    8 -
- include/linux/jump_label.h                  |   18 +-
- include/linux/memcontrol.h                  |    8 +-
- include/linux/sched.h                       |   12 -
- kernel/cgroup.c                             | 1297 +++++++++++++++------------
- kernel/cgroup_pids.c                        |    8 +-
- kernel/cpuset.c                             |   72 +-
- kernel/events/core.c                        |   16 -
- kernel/fork.c                               |    5 +-
- kernel/sched/core.c                         |   16 -
- mm/memcontrol.c                             |   27 +-
- 20 files changed, 951 insertions(+), 786 deletions(-)
-
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 805da1f..19ff87b 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -275,7 +275,8 @@ struct mem_cgroup {
+ 	struct mem_cgroup_per_node *nodeinfo[0];
+ 	/* WARNING: nodeinfo must be the last member here */
+ };
+-extern struct cgroup_subsys_state *mem_cgroup_root_css;
++
++extern struct mem_cgroup *root_mem_cgroup;
+ 
+ /**
+  * mem_cgroup_events - count memory events against a cgroup
+diff --git a/mm/backing-dev.c b/mm/backing-dev.c
+index 095b23b..73ab967 100644
+--- a/mm/backing-dev.c
++++ b/mm/backing-dev.c
+@@ -702,7 +702,7 @@ static int cgwb_bdi_init(struct backing_dev_info *bdi)
+ 
+ 	ret = wb_init(&bdi->wb, bdi, 1, GFP_KERNEL);
+ 	if (!ret) {
+-		bdi->wb.memcg_css = mem_cgroup_root_css;
++		bdi->wb.memcg_css = &root_mem_cgroup->css;
+ 		bdi->wb.blkcg_css = blkcg_root_css;
+ 	}
+ 	return ret;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index c71fe40..7049e55 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -76,9 +76,9 @@
+ struct cgroup_subsys memory_cgrp_subsys __read_mostly;
+ EXPORT_SYMBOL(memory_cgrp_subsys);
+ 
++struct mem_cgroup *root_mem_cgroup __read_mostly;
++
+ #define MEM_CGROUP_RECLAIM_RETRIES	5
+-static struct mem_cgroup *root_mem_cgroup __read_mostly;
+-struct cgroup_subsys_state *mem_cgroup_root_css __read_mostly;
+ 
+ /* Whether the swap controller is active */
+ #ifdef CONFIG_MEMCG_SWAP
+@@ -4214,7 +4214,6 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+ 	/* root ? */
+ 	if (parent_css == NULL) {
+ 		root_mem_cgroup = memcg;
+-		mem_cgroup_root_css = &memcg->css;
+ 		page_counter_init(&memcg->memory, NULL);
+ 		memcg->high = PAGE_COUNTER_MAX;
+ 		memcg->soft_limit = PAGE_COUNTER_MAX;
 -- 
-tejun
+2.6.2
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
