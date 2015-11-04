@@ -1,58 +1,101 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 5/8] mm: memcontrol: account socket memory on unified
- hierarchy
-Date: Wed, 4 Nov 2015 11:42:40 +0100
-Message-ID: <20151104104239.GG29607@dhcp22.suse.cz>
-References: <1445487696-21545-6-git-send-email-hannes@cmpxchg.org>
- <20151023131956.GA15375@dhcp22.suse.cz>
- <20151023.065957.1690815054807881760.davem@davemloft.net>
- <20151026165619.GB2214@cmpxchg.org>
- <20151027122647.GG9891@dhcp22.suse.cz>
- <20151027154138.GA4665@cmpxchg.org>
- <20151027161554.GJ9891@dhcp22.suse.cz>
- <20151027164227.GB7749@cmpxchg.org>
- <20151029152546.GG23598@dhcp22.suse.cz>
- <20151029161009.GA9160@cmpxchg.org>
+From: Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Subject: Re: RFC rdma cgroup
+Date: Wed, 4 Nov 2015 13:58:27 +0200
+Message-ID: <5639F2E3.8090101@mellanox.com>
+References: <CAG53R5Vd=tLbKPeKy8ZKP2DoHG-rnzW85COiE1Hk4GLv6SAZyA@mail.gmail.com>
+ <563233D7.90808@mellanox.com>
+ <CAG53R5UrfXdq=t97u=CoqUhQ2v+mZjZrLCxqyBw6n8g__nuP3g@mail.gmail.com>
+ <56376889.2080908@mellanox.com>
+ <CAG53R5WUHZ7gcNGxcuadB5cGG3rnj_TKU_MEA-V5Q2Pmv19VTw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20151029161009.GA9160@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAG53R5WUHZ7gcNGxcuadB5cGG3rnj_TKU_MEA-V5Q2Pmv19VTw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: David Miller <davem@davemloft.net>, akpm@linux-foundation.org, vdavydov@virtuozzo.com, tj@kernel.org, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Hefty, Sean" <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Liran Liss <liranl-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <james.l.morris-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Matan Barak <matanb-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org" <raindel-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
 
-On Thu 29-10-15 09:10:09, Johannes Weiner wrote:
-> On Thu, Oct 29, 2015 at 04:25:46PM +0100, Michal Hocko wrote:
-> > On Tue 27-10-15 09:42:27, Johannes Weiner wrote:
-[...]
-> > > You carefully skipped over this part. We can ignore it for socket
-> > > memory but it's something we need to figure out when it comes to slab
-> > > accounting and tracking.
-> > 
-> > I am sorry, I didn't mean to skip this part, I though it would be clear
-> > from the previous text. I think kmem accounting falls into the same
-> > category. Have a sane default and a global boottime knob to override it
-> > for those that think differently - for whatever reason they might have.
-> 
-> Yes, that makes sense to me.
-> 
-> Like cgroup.memory=nosocket, would you think it makes sense to include
-> slab in the default for functional/semantical completeness and provide
-> a cgroup.memory=noslab for powerusers?
+On 03/11/2015 21:11, Parav Pandit wrote:
+> So it looks like below,
+> #cat rdma.resources.verbs.list
+> Output:
+> mlx4_0 uctx ah pd cq mr mw srq qp flow
+> mlx4_1 uctx ah pd cq mr mw srq qp flow rss_wq
+What happens if you set a limit of rss_wq to mlx4_0 in this example?
+Would it fail? I think it would be simpler for administrators if they
+can configure every resource supported by uverbs. If a resource is not
+supported by a specific device, you can never go over the limit anyway.
 
-I am still not sure whether the kmem accounting is stable enough to be
-enabled by default. If for nothing else the allocation failures, which
-are not allowed for the global case and easily triggered by the hard
-limit, might be a big problem. My last attempts to allow GFP_NOFS to
-fail made me quite skeptical. I still believe this is something which
-will be solved in the long term but the current state might be still too
-fragile. So I would rather be conservative and have the kmem accounting
-disabled by default with a config option and boot parameter to override.
-If somebody is confident that the desired load is stable then the config
-can be enabled easily.
--- 
-Michal Hocko
-SUSE Labs
+> #cat rdma.resources.hw.list
+> hfi1 hw_qp hw_mr sw_pd
+> (This particular one is hypothical example, I haven't actually coded
+> this, unlike uverbs which is real).
+Sounds fine to me. We will need to be careful to make sure that driver
+maintainers don't break backward compatibility with this interface.
+
+>> I guess there aren't a lot of options when the resources can belong to
+>> multiple cgroups. So after migrating, new resources will belong to the
+>> new cgroup or the old one?
+> Resource always belongs to the cgroup in which its created, regardless
+> of process migration.
+> Again, its owned at the css level instead of cgroup. Therefore
+> original cgroup can also be deleted but internal reference to data
+> structure and that is freed and last rdma resource is freed.
+Okay.
+
+>>> For applications that doesn't use RDMA-CM, query_device and query_port
+>>> will filter out the GID entries based on the network namespace in
+>>> which caller process is running.
+>> This could work well for RoCE, as each entry in the GID table is
+>> associated with a net device and a network namespace. However, in
+>> InfiniBand, the GID table isn't directly related to the network
+>> namespace. As for the P_Keys, you could deduce the set of P_Keys of a
+>> namespace by the set of IPoIB netdevs in the network namespace, but
+>> InfiniBand is designed to also work without IPoIB, so I don't think it's
+>> a good idea.
+> Got it. Yeah, this code can be under if(device_type RoCE).
+IIRC there's a core capability for the new GID table code that contains
+namespace, so you can use that.
+
+>> I think it would be better to allow each cgroup to limit the pkeys and
+>> gids its processes can use.
+> 
+> o.k. So the use case is P_Key? So I believe requirement would similar
+> to device cgroup.
+> Where set of GID table entries are configured as white list entries.
+> and when they are queried or used during create_ah or modify_qp, its
+> compared against the white list (or in other words as ACL).
+> If they are found in ACL, they are reported in query_device or in
+> create_ah, modify_qp. If not they those calls are failed with
+> appropriate status?
+> Does this look ok? 
+Yes, that sounds good to me.
+
+> Can we address requirement as additional feature just after first path?
+> Tejun had some other idea on this kind of requirement, and I need to
+> discuss with him.
+Of course. I think there's use for the RDMA cgroup even without a pkey
+or GID ACL, just to make sure one application doesn't hog hardware
+resources.
+
+>>> One of the idea I was considering is: to create virtual RDMA device
+>>> mapped to physical device.
+>>> And configure GID count limit via configfs for each such device.
+>> You could probably achieve what you want by creating a virtual RDMA
+>> device and use the device cgroup to limit access to it, but it sounds to
+>> me like an overkill.
+> 
+> Actually not much. Basically this virtual RDMA device points to the
+> struct device of the physical device itself.
+> So only overhead is linking this structure to native device structure
+> and  passing most of the calls to native ib_device with thin filter
+> layer in control path.
+> post_send/recv/poll_cq will directly go native device and same performance.
+Still, I think we already have code that wraps ib_device calls for
+userspace, which is the ib_uverbs module. There's no need for an extra
+layer.
+
+Regards,
+Haggai
