@@ -1,84 +1,199 @@
-From: Shayan Pooya <shayan-UQzSddOuLosdnm+yROfE0A@public.gmane.org>
-Subject: Re: piping core dump to a program escapes container
-Date: Wed, 4 Nov 2015 20:42:49 -0800
-Message-ID: <CABAubThHt6JFO_i6RH5c84d8NkOxZnL6x+VyVzw99N+4t=Rk=g@mail.gmail.com>
-References: <CABAubTgj8+xngrvc7sNbYS_Hq+-rGAYCz0y433ByiZ45dZuT0w@mail.gmail.com>
-	<CAFLxGvz=d=4u7LZ_ZPES_MqfO0kWGxyWE9SPUuONjH9aM=dxFg@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH cgroup/for-4.4-fixes] cgroup: fix cftype->file_offset handling
+Date: Thu, 5 Nov 2015 00:12:24 -0500
+Message-ID: <20151105051224.GA4914@htj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=liveve_org.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=9lUkPQ68tyDyElh5uWNXQUtCJlzF1wyve0UnvZUqu6M=;
-        b=oQ8tWdd7Xk9HaYT8qGmPBKjfGX2mHsO0zsmXI6M4itYw+BQ2lFbeorouzMS8Z5tvaG
-         vVwajdWll82ofiVQ7rUQvBe00pwm9KjFdPAGp4biUDFHljY++OkI8MjiHj2gwOnFELir
-         keGrWV3EotNPQaDZNWDU8t78rLNAHDTKXiU4CIhqDlyCv0p3SGuTZ02T/NHxgQRub9T4
-         fHl9ymVIjqDP87Q0iewOI6YHsSHjfu/Inm7YGB08xjNlPcElQRcA9Q2QaeMtHz/NSnDO
-         RaDxBIArHgKP3ePM2UzXtPwMfaa3BSotpuk/CQlyaUvorWD03xJ9axvqdibcGWEW+dmI
-         Nraw==
-In-Reply-To: <CAFLxGvz=d=4u7LZ_ZPES_MqfO0kWGxyWE9SPUuONjH9aM=dxFg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
+         :content-disposition:user-agent;
+        bh=5hjRP2MK08SzNBj7Vx+uWwxCx+LbMFDTV5wmCcDlY+U=;
+        b=UeFmicc4V9XilE8243fjp5ii/qKtLCsDH4ERTe5mPnCiNVNF1p2k4pcp0J4aKnl8cM
+         rf6oc7OyMVgIq1KZezUPC4kvmlDtSVVKABj+7d+9IgtX5X1tPSe/5yZ0CnXZJUbtU9df
+         ygvXqYLjbe3dMahzytsjtqJfLzlOS/KcoXM3+KkOxkl3BBW54KCDfbIPRiCztXlYhuT9
+         6gNd/1hEfj46Zpa36Fe+Gcp8FKdSl2/nrz3rNS8OHHqVV9ruqTbHBW4n7AuuiVb9sVV8
+         qFLrL/6rXBsL0SbfHh7csZJbtly5E704pu+sAxgJu4WoqPwf/kgXF7MK+Vvr4yXOvE1o
+         CL+g==
+Content-Disposition: inline
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Richard Weinberger <richard.weinberger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, James Sedgwick <jsedgwick-b10kYP2dOMg@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Sun, Nov 1, 2015 at 12:25 PM, Richard Weinberger
-<richard.weinberger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> On Sat, Oct 24, 2015 at 11:54 PM, Shayan Pooya <shayan-UQzSddOuLosdnm+yROfE0A@public.gmane.org> wrote:
->> I noticed the following core_pattern behavior in my linux box while
->> running docker containers. I am not sure if it is bug, but it is
->> inconsistent and not documented.
->>
->> If the core_pattern is set on the host, the containers will observe
->> and use the pattern for dumping cores (there is no per cgroup
->> core_pattern). According to core(5) for setting core_pattern one can:
->>
->> 1. echo "/tmp/cores/core.%e.%p" > /proc/sys/kernel/core_pattern
->> 2. echo "|/bin/custom_core /tmp/cores/ %e %p " > /proc/sys/kernel/core_pattern
->>
->> The former pattern evaluates the /tmp/cores path in the container's
->> filesystem namespace. Which means, the host does not see a core file
->> in /tmp/cores.
->>
->> However, the latter evaluates the /bin/custom_core path in the global
->> filesystem namespace. Moreover, if /bin/core decides to write the core
->> to a path (/tmp/cores in this case as shown by the arg to
->> custom_core), the path will be evaluated in the global filesystem
->> namespace as well.
->>
->> The latter behaviour is counter-intuitive and error-prone as the
->> container can fill up the core-file directory which it does not have
->> direct access to (which means the core is also not accessible for
->> debugging if someone only has access to the container).
->>
->> Currently, I work around this issue by detecting that the process is
->> crashing from a container (by comparing the namespace pid to the
->> global pid) and refuse to dump the core if it is from a container.
->
-> IMHO this is another example of the question whether a container should
-> be a full blown Linux system or not.
+6f60eade2433 ("cgroup: generalize obtaining the handles of and
+notifying cgroup files") introduced cftype->file_offset so that the
+handles for per-css file instances can be recorded.  These handles
+then can be used, for example, to generate file modified
+notifications.
 
-I'd like to use containers as a way for separating concerns (IMHO this
-is a popular use case for the containers, e.g. redhat's openshift).
-The processes running inside a namespace should be that namespace's
-problem.
+Unfortunately, it made the wrong assumption that files are created
+once for a given css and removed on its destruction.  Due to the
+dependencies among subsystems, a css may be hidden from userland and
+then later shown again.  This is implemented by removing and
+re-creating the affected files, so the associated kernfs_node for a
+given cgroup file may change over time.  This incorrect assumption led
+to the corruption of css->files lists.
 
-> In your opinion containers should own core_pattern and be able to install
-> their own dump helpers.
+Reimplement cftype->file_offset handling so that cgroup_file->kn is
+protected by a lock and updated as files are created and destroyed.
+This also makes keeping them on per-cgroup list unnecessary.
 
-Well, it is not just my opinion. That's the default behaviour for when
-you don't use a pipe in the core_pattern. The reason I'd say it is a
-bug is because the two options are not consistent.
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Reported-by: James Sedgwick <jsedgwick-b10kYP2dOMg@public.gmane.org>
+Fixes: 6f60eade2433 ("cgroup: generalize obtaining the handles of and notifying cgroup files")
+---
+ include/linux/cgroup-defs.h |    4 ----
+ include/linux/cgroup.h      |   14 +-------------
+ kernel/cgroup.c             |   42 ++++++++++++++++++++++++++++++++++--------
+ 3 files changed, 35 insertions(+), 25 deletions(-)
 
-> Currently this is not the case as this is setting is only writable by
-> the global root.
-> Others might argue that containers are not a full virtual Linux with
-> all features and
-> an administrator may want to collect cores from all containers.
-
-I agree there are some value in the admin getting a notification if
-they choose to. The problem is that there is no clean mechanism for
-the admin to send the core dump back to the namespace of the process.
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -90,7 +90,6 @@ enum {
+  */
+ struct cgroup_file {
+ 	/* do not access any fields from outside cgroup core */
+-	struct list_head node;			/* anchored at css->files */
+ 	struct kernfs_node *kn;
+ };
+ 
+@@ -134,9 +133,6 @@ struct cgroup_subsys_state {
+ 	 */
+ 	u64 serial_nr;
+ 
+-	/* all cgroup_files associated with this css */
+-	struct list_head files;
+-
+ 	/* percpu_ref killing and RCU release */
+ 	struct rcu_head rcu_head;
+ 	struct work_struct destroy_work;
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -88,6 +88,7 @@ int cgroup_transfer_tasks(struct cgroup
+ int cgroup_add_dfl_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
+ int cgroup_add_legacy_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
+ int cgroup_rm_cftypes(struct cftype *cfts);
++void cgroup_file_notify(struct cgroup_file *cfile);
+ 
+ char *task_cgroup_path(struct task_struct *task, char *buf, size_t buflen);
+ int cgroupstats_build(struct cgroupstats *stats, struct dentry *dentry);
+@@ -516,19 +517,6 @@ static inline void pr_cont_cgroup_path(s
+ 	pr_cont_kernfs_path(cgrp->kn);
+ }
+ 
+-/**
+- * cgroup_file_notify - generate a file modified event for a cgroup_file
+- * @cfile: target cgroup_file
+- *
+- * @cfile must have been obtained by setting cftype->file_offset.
+- */
+-static inline void cgroup_file_notify(struct cgroup_file *cfile)
+-{
+-	/* might not have been created due to one of the CFTYPE selector flags */
+-	if (cfile->kn)
+-		kernfs_notify(cfile->kn);
+-}
+-
+ #else /* !CONFIG_CGROUPS */
+ 
+ struct cgroup_subsys_state;
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -98,6 +98,12 @@ static DEFINE_SPINLOCK(css_set_lock);
+ static DEFINE_SPINLOCK(cgroup_idr_lock);
+ 
+ /*
++ * Protects cgroup_file->kn for !self csses.  It synchronizes notifications
++ * against file removal/re-creation across css hiding.
++ */
++static DEFINE_SPINLOCK(cgroup_file_kn_lock);
++
++/*
+  * Protects cgroup_subsys->release_agent_path.  Modifying it also requires
+  * cgroup_mutex.  Reading requires either cgroup_mutex or this spinlock.
+  */
+@@ -1393,6 +1399,16 @@ static void cgroup_rm_file(struct cgroup
+ 	char name[CGROUP_FILE_NAME_MAX];
+ 
+ 	lockdep_assert_held(&cgroup_mutex);
++
++	if (cft->file_offset) {
++		struct cgroup_subsys_state *css = cgroup_css(cgrp, cft->ss);
++		struct cgroup_file *cfile = (void *)css + cft->file_offset;
++
++		spin_lock_irq(&cgroup_file_kn_lock);
++		cfile->kn = NULL;
++		spin_unlock_irq(&cgroup_file_kn_lock);
++	}
++
+ 	kernfs_remove_by_name(cgrp->kn, cgroup_file_name(cgrp, cft, name));
+ }
+ 
+@@ -1856,7 +1872,6 @@ static void init_cgroup_housekeeping(str
+ 
+ 	INIT_LIST_HEAD(&cgrp->self.sibling);
+ 	INIT_LIST_HEAD(&cgrp->self.children);
+-	INIT_LIST_HEAD(&cgrp->self.files);
+ 	INIT_LIST_HEAD(&cgrp->cset_links);
+ 	INIT_LIST_HEAD(&cgrp->pidlists);
+ 	mutex_init(&cgrp->pidlist_mutex);
+@@ -3313,9 +3328,9 @@ static int cgroup_add_file(struct cgroup
+ 	if (cft->file_offset) {
+ 		struct cgroup_file *cfile = (void *)css + cft->file_offset;
+ 
+-		kernfs_get(kn);
++		spin_lock_irq(&cgroup_file_kn_lock);
+ 		cfile->kn = kn;
+-		list_add(&cfile->node, &css->files);
++		spin_unlock_irq(&cgroup_file_kn_lock);
+ 	}
+ 
+ 	return 0;
+@@ -3553,6 +3568,22 @@ int cgroup_add_legacy_cftypes(struct cgr
+ }
+ 
+ /**
++ * cgroup_file_notify - generate a file modified event for a cgroup_file
++ * @cfile: target cgroup_file
++ *
++ * @cfile must have been obtained by setting cftype->file_offset.
++ */
++void cgroup_file_notify(struct cgroup_file *cfile)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&cgroup_file_kn_lock, flags);
++	if (cfile->kn)
++		kernfs_notify(cfile->kn);
++	spin_unlock_irqrestore(&cgroup_file_kn_lock, flags);
++}
++
++/**
+  * cgroup_task_count - count the number of tasks in a cgroup.
+  * @cgrp: the cgroup in question
+  *
+@@ -4613,13 +4644,9 @@ static void css_free_work_fn(struct work
+ 		container_of(work, struct cgroup_subsys_state, destroy_work);
+ 	struct cgroup_subsys *ss = css->ss;
+ 	struct cgroup *cgrp = css->cgroup;
+-	struct cgroup_file *cfile;
+ 
+ 	percpu_ref_exit(&css->refcnt);
+ 
+-	list_for_each_entry(cfile, &css->files, node)
+-		kernfs_put(cfile->kn);
+-
+ 	if (ss) {
+ 		/* css free path */
+ 		int id = css->id;
+@@ -4724,7 +4751,6 @@ static void init_and_link_css(struct cgr
+ 	css->ss = ss;
+ 	INIT_LIST_HEAD(&css->sibling);
+ 	INIT_LIST_HEAD(&css->children);
+-	INIT_LIST_HEAD(&css->files);
+ 	css->serial_nr = css_serial_nr_next++;
+ 
+ 	if (cgroup_parent(cgrp)) {
