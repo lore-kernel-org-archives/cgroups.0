@@ -1,190 +1,84 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH 6/8] mm: memcontrol: prepare for unified hierarchy socket accounting
-Date: Wed,  4 Nov 2015 17:22:12 -0500
-Message-ID: <1446675734-25671-7-git-send-email-hannes@cmpxchg.org>
-References: <1446675734-25671-1-git-send-email-hannes@cmpxchg.org>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1446675734-25671-1-git-send-email-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+From: Shayan Pooya <shayan-UQzSddOuLosdnm+yROfE0A@public.gmane.org>
+Subject: Re: piping core dump to a program escapes container
+Date: Wed, 4 Nov 2015 20:42:49 -0800
+Message-ID: <CABAubThHt6JFO_i6RH5c84d8NkOxZnL6x+VyVzw99N+4t=Rk=g@mail.gmail.com>
+References: <CABAubTgj8+xngrvc7sNbYS_Hq+-rGAYCz0y433ByiZ45dZuT0w@mail.gmail.com>
+	<CAFLxGvz=d=4u7LZ_ZPES_MqfO0kWGxyWE9SPUuONjH9aM=dxFg@mail.gmail.com>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=liveve_org.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=9lUkPQ68tyDyElh5uWNXQUtCJlzF1wyve0UnvZUqu6M=;
+        b=oQ8tWdd7Xk9HaYT8qGmPBKjfGX2mHsO0zsmXI6M4itYw+BQ2lFbeorouzMS8Z5tvaG
+         vVwajdWll82ofiVQ7rUQvBe00pwm9KjFdPAGp4biUDFHljY++OkI8MjiHj2gwOnFELir
+         keGrWV3EotNPQaDZNWDU8t78rLNAHDTKXiU4CIhqDlyCv0p3SGuTZ02T/NHxgQRub9T4
+         fHl9ymVIjqDP87Q0iewOI6YHsSHjfu/Inm7YGB08xjNlPcElQRcA9Q2QaeMtHz/NSnDO
+         RaDxBIArHgKP3ePM2UzXtPwMfaa3BSotpuk/CQlyaUvorWD03xJ9axvqdibcGWEW+dmI
+         Nraw==
+In-Reply-To: <CAFLxGvz=d=4u7LZ_ZPES_MqfO0kWGxyWE9SPUuONjH9aM=dxFg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Miller <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@virtuozzo.com>, Tejun Heo <tj@kernel.org>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Richard Weinberger <richard.weinberger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 
-The unified hierarchy memory controller will account socket
-memory. Move the infrastructure functions accordingly.
+On Sun, Nov 1, 2015 at 12:25 PM, Richard Weinberger
+<richard.weinberger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> On Sat, Oct 24, 2015 at 11:54 PM, Shayan Pooya <shayan-UQzSddOuLosdnm+yROfE0A@public.gmane.org> wrote:
+>> I noticed the following core_pattern behavior in my linux box while
+>> running docker containers. I am not sure if it is bug, but it is
+>> inconsistent and not documented.
+>>
+>> If the core_pattern is set on the host, the containers will observe
+>> and use the pattern for dumping cores (there is no per cgroup
+>> core_pattern). According to core(5) for setting core_pattern one can:
+>>
+>> 1. echo "/tmp/cores/core.%e.%p" > /proc/sys/kernel/core_pattern
+>> 2. echo "|/bin/custom_core /tmp/cores/ %e %p " > /proc/sys/kernel/core_pattern
+>>
+>> The former pattern evaluates the /tmp/cores path in the container's
+>> filesystem namespace. Which means, the host does not see a core file
+>> in /tmp/cores.
+>>
+>> However, the latter evaluates the /bin/custom_core path in the global
+>> filesystem namespace. Moreover, if /bin/core decides to write the core
+>> to a path (/tmp/cores in this case as shown by the arg to
+>> custom_core), the path will be evaluated in the global filesystem
+>> namespace as well.
+>>
+>> The latter behaviour is counter-intuitive and error-prone as the
+>> container can fill up the core-file directory which it does not have
+>> direct access to (which means the core is also not accessible for
+>> debugging if someone only has access to the container).
+>>
+>> Currently, I work around this issue by detecting that the process is
+>> crashing from a container (by comparing the namespace pid to the
+>> global pid) and refuse to dump the core if it is from a container.
+>
+> IMHO this is another example of the question whether a container should
+> be a full blown Linux system or not.
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-Acked-by: Michal Hocko <mhocko@suse.com>
----
- mm/memcontrol.c | 140 ++++++++++++++++++++++++++++----------------------------
- 1 file changed, 70 insertions(+), 70 deletions(-)
+I'd like to use containers as a way for separating concerns (IMHO this
+is a popular use case for the containers, e.g. redhat's openshift).
+The processes running inside a namespace should be that namespace's
+problem.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index d649b56..85f212e 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -287,76 +287,6 @@ static inline struct mem_cgroup *mem_cgroup_from_id(unsigned short id)
- 	return mem_cgroup_from_css(css);
- }
- 
--/* Writing them here to avoid exposing memcg's inner layout */
--#if defined(CONFIG_INET) && defined(CONFIG_MEMCG_KMEM)
--
--DEFINE_STATIC_KEY_FALSE(mem_cgroup_sockets);
--
--void sock_update_memcg(struct sock *sk)
--{
--	struct mem_cgroup *memcg;
--	/*
--	 * Socket cloning can throw us here with sk_cgrp already
--	 * filled. It won't however, necessarily happen from
--	 * process context. So the test for root memcg given
--	 * the current task's memcg won't help us in this case.
--	 *
--	 * Respecting the original socket's memcg is a better
--	 * decision in this case.
--	 */
--	if (sk->sk_memcg) {
--		BUG_ON(mem_cgroup_is_root(sk->sk_memcg));
--		css_get(&sk->sk_memcg->css);
--		return;
--	}
--
--	rcu_read_lock();
--	memcg = mem_cgroup_from_task(current);
--	if (css_tryget_online(&memcg->css))
--		sk->sk_memcg = memcg;
--	rcu_read_unlock();
--}
--EXPORT_SYMBOL(sock_update_memcg);
--
--void sock_release_memcg(struct sock *sk)
--{
--	if (sk->sk_memcg)
--		css_put(&sk->sk_memcg->css);
--}
--
--/**
-- * mem_cgroup_charge_skmem - charge socket memory
-- * @memcg: memcg to charge
-- * @nr_pages: number of pages to charge
-- *
-- * Charges @nr_pages to @memcg. Returns %true if the charge fit within
-- * the memcg's configured limit, %false if the charge had to be forced.
-- */
--bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
--{
--	struct page_counter *counter;
--
--	if (page_counter_try_charge(&memcg->skmem, nr_pages, &counter)) {
--		memcg->skmem_breached = false;
--		return true;
--	}
--	page_counter_charge(&memcg->skmem, nr_pages);
--	memcg->skmem_breached = true;
--	return false;
--}
--
--/**
-- * mem_cgroup_uncharge_skmem - uncharge socket memory
-- * @memcg: memcg to uncharge
-- * @nr_pages: number of pages to uncharge
-- */
--void mem_cgroup_uncharge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
--{
--	page_counter_uncharge(&memcg->skmem, nr_pages);
--}
--
--#endif
--
- #ifdef CONFIG_MEMCG_KMEM
- /*
-  * This will be the memcg's index in each cache's ->memcg_params.memcg_caches.
-@@ -5523,6 +5453,76 @@ void mem_cgroup_replace_page(struct page *oldpage, struct page *newpage)
- 	commit_charge(newpage, memcg, true);
- }
- 
-+/* Writing them here to avoid exposing memcg's inner layout */
-+#if defined(CONFIG_INET) && defined(CONFIG_MEMCG_KMEM)
-+
-+DEFINE_STATIC_KEY_FALSE(mem_cgroup_sockets);
-+
-+void sock_update_memcg(struct sock *sk)
-+{
-+	struct mem_cgroup *memcg;
-+	/*
-+	 * Socket cloning can throw us here with sk_cgrp already
-+	 * filled. It won't however, necessarily happen from
-+	 * process context. So the test for root memcg given
-+	 * the current task's memcg won't help us in this case.
-+	 *
-+	 * Respecting the original socket's memcg is a better
-+	 * decision in this case.
-+	 */
-+	if (sk->sk_memcg) {
-+		BUG_ON(mem_cgroup_is_root(sk->sk_memcg));
-+		css_get(&sk->sk_memcg->css);
-+		return;
-+	}
-+
-+	rcu_read_lock();
-+	memcg = mem_cgroup_from_task(current);
-+	if (css_tryget_online(&memcg->css))
-+		sk->sk_memcg = memcg;
-+	rcu_read_unlock();
-+}
-+EXPORT_SYMBOL(sock_update_memcg);
-+
-+void sock_release_memcg(struct sock *sk)
-+{
-+	if (sk->sk_memcg)
-+		css_put(&sk->sk_memcg->css);
-+}
-+
-+/**
-+ * mem_cgroup_charge_skmem - charge socket memory
-+ * @memcg: memcg to charge
-+ * @nr_pages: number of pages to charge
-+ *
-+ * Charges @nr_pages to @memcg. Returns %true if the charge fit within
-+ * the memcg's configured limit, %false if the charge had to be forced.
-+ */
-+bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
-+{
-+	struct page_counter *counter;
-+
-+	if (page_counter_try_charge(&memcg->skmem, nr_pages, &counter)) {
-+		memcg->skmem_breached = false;
-+		return true;
-+	}
-+	page_counter_charge(&memcg->skmem, nr_pages);
-+	memcg->skmem_breached = true;
-+	return false;
-+}
-+
-+/**
-+ * mem_cgroup_uncharge_skmem - uncharge socket memory
-+ * @memcg: memcg to uncharge
-+ * @nr_pages: number of pages to uncharge
-+ */
-+void mem_cgroup_uncharge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
-+{
-+	page_counter_uncharge(&memcg->skmem, nr_pages);
-+}
-+
-+#endif
-+
- /*
-  * subsys_initcall() for memory controller.
-  *
--- 
-2.6.2
+> In your opinion containers should own core_pattern and be able to install
+> their own dump helpers.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Well, it is not just my opinion. That's the default behaviour for when
+you don't use a pipe in the core_pattern. The reason I'd say it is a
+bug is because the two options are not consistent.
+
+> Currently this is not the case as this is setting is only writable by
+> the global root.
+> Others might argue that containers are not a full virtual Linux with
+> all features and
+> an administrator may want to collect cores from all containers.
+
+I agree there are some value in the admin getting a notification if
+they choose to. The problem is that there is no clean mechanism for
+the admin to send the core dump back to the namespace of the process.
