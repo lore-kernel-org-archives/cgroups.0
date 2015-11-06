@@ -1,10 +1,9 @@
-From: Michal Hocko <mhocko@kernel.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [PATCH 5/8] mm: memcontrol: account socket memory on unified
  hierarchy
-Date: Fri, 6 Nov 2015 14:29:40 +0100
-Message-ID: <20151106132940.GK4390@dhcp22.suse.cz>
-References: <20151027154138.GA4665@cmpxchg.org>
- <20151027161554.GJ9891@dhcp22.suse.cz>
+Date: Fri, 6 Nov 2015 11:19:53 -0500
+Message-ID: <20151106161953.GA7813@cmpxchg.org>
+References: <20151027161554.GJ9891@dhcp22.suse.cz>
  <20151027164227.GB7749@cmpxchg.org>
  <20151029152546.GG23598@dhcp22.suse.cz>
  <20151029161009.GA9160@cmpxchg.org>
@@ -12,39 +11,57 @@ References: <20151027154138.GA4665@cmpxchg.org>
  <20151104195037.GA6872@cmpxchg.org>
  <20151105144002.GB15111@dhcp22.suse.cz>
  <20151105205522.GA1067@cmpxchg.org>
- <20151106090555.GK29259@esperanza>
+ <20151105225200.GA5432@cmpxchg.org>
+ <20151106105724.GG4390@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20151106090555.GK29259@esperanza>
+In-Reply-To: <20151106105724.GG4390@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov@virtuozzo.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, David Miller <davem@davemloft.net>, akpm@linux-foundation.org, tj@kernel.org, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: David Miller <davem@davemloft.net>, akpm@linux-foundation.org, vdavydov@virtuozzo.com, tj@kernel.org, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri 06-11-15 12:05:55, Vladimir Davydov wrote:
-[...]
-> If there are no objections, I'll prepare a patch switching to the
-> white-list approach. Let's start from obvious things like fs_struct,
-> mm_struct, task_struct, signal_struct, dentry, inode, which can be
-> easily allocated from user space.
+On Fri, Nov 06, 2015 at 11:57:24AM +0100, Michal Hocko wrote:
+> On Thu 05-11-15 17:52:00, Johannes Weiner wrote:
+> > On Thu, Nov 05, 2015 at 03:55:22PM -0500, Johannes Weiner wrote:
+> > > On Thu, Nov 05, 2015 at 03:40:02PM +0100, Michal Hocko wrote:
+> > > > This would be true if they moved on to the new cgroup API intentionally.
+> > > > The reality is more complicated though. AFAIK sysmted is waiting for
+> > > > cgroup2 already and privileged services enable all available resource
+> > > > controllers by default as I've learned just recently.
+> > > 
+> > > Have you filed a report with them? I don't think they should turn them
+> > > on unless users explicitely configure resource control for the unit.
+> > 
+> > Okay, verified with systemd people that they're not planning on
+> > enabling resource control per default.
+> > 
+> > Inflammatory half-truths, man. This is not constructive.
+> 
+> What about Delegate=yes feature then? We have just been burnt by this
+> quite heavily. AFAIU nspawn@.service and nspawn@.service have this
+> enabled by default
+> http://lists.freedesktop.org/archives/systemd-commits/2014-November/007400.html
 
-pipe buffers, kernel stacks and who knows what more.
+That's when you launch a *container* and want it to be able to use
+nested resource control.
 
-> This should cover 90% of all
-> allocations that should be accounted AFAICS. The rest will be added
-> later if necessarily.
+We're talking about actual container users here. It's not turning on
+resource control for all "privileged services", which is what we were
+worried about here. Can you at least admit that when you yourself link
+to the refuting evidence?
 
-The more I think about that the more I am convinced that is the only
-sane way forward. The only concerns I would have is how do we deal with
-the old interface in cgroup1? We do not want to break existing
-deployments which might depend on the current behavior. I doubt they are
-but...
--- 
-Michal Hocko
-SUSE Labs
+And if you've been "burnt quite heavily" by this, where is your bug
+report to stop other users from getting "burnt quite heavily" as well?
+
+All I read here is vague inflammatory language to spread FUD.
+
+You might think sending these emails is helpful, but it really
+isn't. Not only is it not contributing code, insights, or solutions,
+you're now actively sabotaging someone else's effort to build something.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
