@@ -1,82 +1,189 @@
 From: Michal Hocko <mhocko@kernel.org>
 Subject: Re: [PATCH 5/8] mm: memcontrol: account socket memory on unified
  hierarchy
-Date: Fri, 6 Nov 2015 13:51:40 +0100
-Message-ID: <20151106125140.GI4390@dhcp22.suse.cz>
-References: <20151104104239.GG29607@dhcp22.suse.cz>
+Date: Fri, 6 Nov 2015 14:21:02 +0100
+Message-ID: <20151106132102.GJ4390@dhcp22.suse.cz>
+References: <20151027122647.GG9891@dhcp22.suse.cz>
+ <20151027154138.GA4665@cmpxchg.org>
+ <20151027161554.GJ9891@dhcp22.suse.cz>
+ <20151027164227.GB7749@cmpxchg.org>
+ <20151029152546.GG23598@dhcp22.suse.cz>
+ <20151029161009.GA9160@cmpxchg.org>
+ <20151104104239.GG29607@dhcp22.suse.cz>
  <20151104195037.GA6872@cmpxchg.org>
  <20151105144002.GB15111@dhcp22.suse.cz>
- <20151105.111609.1695015438589063316.davem@davemloft.net>
- <20151105162803.GD15111@dhcp22.suse.cz>
- <20151105223251.GA4427@cmpxchg.org>
+ <20151105205522.GA1067@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20151105223251.GA4427@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20151105205522.GA1067@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes@cmpxchg.org>
 Cc: David Miller <davem@davemloft.net>, akpm@linux-foundation.org, vdavydov@virtuozzo.com, tj@kernel.org, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu 05-11-15 17:32:51, Johannes Weiner wrote:
-> On Thu, Nov 05, 2015 at 05:28:03PM +0100, Michal Hocko wrote:
+On Thu 05-11-15 15:55:22, Johannes Weiner wrote:
+> On Thu, Nov 05, 2015 at 03:40:02PM +0100, Michal Hocko wrote:
+> > On Wed 04-11-15 14:50:37, Johannes Weiner wrote:
 [...]
-> > Yes, that part is clear and Johannes made it clear that the kmem tcp
-> > part is disabled by default. Or are you considering also all the slab
-> > usage by the networking code as well?
+> > This would be true if they moved on to the new cgroup API intentionally.
+> > The reality is more complicated though. AFAIK sysmted is waiting for
+> > cgroup2 already and privileged services enable all available resource
+> > controllers by default as I've learned just recently.
 > 
-> Michal, there shouldn't be any tracking or accounting going on per
-> default when you boot into a fresh system.
+> Have you filed a report with them? I don't think they should turn them
+> on unless users explicitely configure resource control for the unit.
+
+We have just been bitten by this (aka Delegate=yes for some basic
+services) and our systemd people are supposed to bring this up upstream.
+I've mentioned that in other email where you accuse me from spreading a
+FUD.
+ 
+> But what I said still holds: critical production machines don't just
+> get rolling updates and "accidentally" switch to all this new
+> code. And those that do take the plunge have the cmdline options.
+
+That is exactly my point why I do not think re-evaluating the default
+config option is a problem at all. The default wouldn't matter for
+existing users. Those who care can have all the functionality they need
+right away - be it kmem enabled or disabled.
+
+> > > And it makes a lot more sense to account them in excess of the limit
+> > > than pretend they don't exist. We might not be able to completely
+> > > fullfill the containment part of the memory controller (although these
+> > > slab charges will still create significant pressure before that), but
+> > > at least we don't fail the accounting part on top of it.
+> > 
+> > Hmm, wouldn't that kill the whole purpose of the kmem accounting? Any
+> > load could simply runaway via kernel allocations. What is even worse we
+> > might even not trigger memcg OOM killer before we hit the global OOM. So
+> > the whole containment goes straight to hell.
+> >
+> > I can see four options here:
+> > 1) enable kmem by default with the current semantic which we know can
+> >    BUG_ON (at least btrfs is known to hit this) or lead to other issues.
 > 
-> I removed all accounting and statistics on the system level in
-> cgroupv2, so distribution kernels can compile-time enable a single,
-> feature-complete CONFIG_MEMCG that provides a full memory controller
-> while at the same time puts no overhead on users that don't benefit
-> from mem control at all and just want to use the machine bare-metal.
+> Can you point me to that report?
 
-Yes that part is clear and I am not disputing it _at all_. It is just
-that changes are high that memory controller _will_ be enabled in a
-typical distribution systems. E.g. systemd _is_ enabling all resource
-controllers by default for some services with Delegate=yes option.
+git grep "BUG_ON.*ENOMEM" -- fs/btrfs
 
-> This is completely doable. My new series does it for skmem, but I also
-> want to retrofit the code to eliminate that current overhead for page
-> cache, anonymous memory, slab memory and so forth.
+just to give you a picture. Not all of them are kmalloc and others are
+not annotated by ENOMEM comment. This came out as a result of my last
+attempt to allow GFP_NOFS fail
+(http://lkml.kernel.org/r/1438768284-30927-1-git-send-email-mhocko%40kernel.org)
+ 
+> That's not "semantics", that's a bug! Whether or not a feature is
+> enabled by default, it can not be allowed to crash the kernel.
+
+Yes those are bugs and have to be fixed. Not an easy task but nothing
+which couldn't be solved. It just takes some time. They are not very
+likely right now because they are reduced to corner cases right now.
+But they are more visible with the current kmem accounting semantic.
+So either we change the semantic or wait until this gets fixed if
+the accoutning should be on by default.
+
+> Presenting this as a choice is a bit of a strawman argument.
 > 
-> This is the only sane way to make the memory controller powerful and
-> generally useful without having to make unreasonable compromises with
-> memory consumers. We shouldn't even be *having* the discussion about
-> whether we should sacrifice the quality of our interface in order to
-> compromise with a class of users that doesn't care about any of this
-> in the first place.
+> > 2) enable kmem by default and change the semantic for cgroup2 to allow
+> >    runaway charges above the hard limit which would defeat the whole
+> >    purpose of the containment for cgroup2. This can be a temporary
+> >    workaround until we can afford kmem failures. This has a big risk
+> >    that we will end up with this permanently because there is a strong
+> >    pressure that GFP_KERNEL allocations should never fail. Yet this is
+> >    the most common type of request. Or do we change the consistency with
+> >    the global case at some point?
 > 
-> So let's eliminate the cost for non-users, but make the memory
-> controller feature-complete and useful--with reasonable cost,
-> implementation, and interface--for our actual userbase.
+> As per 1) we *have* to fail containment eventually if not doing so
+> means crashes and lockups. That's not a choice of semantics.
 > 
-> Paying the necessary cost for a functionality you actually want is not
-> the problem. Paying for something that doesn't benefit you is.
+> But that doesn't mean we have to give up *immediately* and allow
+> unrestrained "runaway charges"--again, more of a strawman than a
+> choice. We can still throttle the allocator and apply significant
+> pressure on the memory pool, culminating in OOM kills eventually.
+> 
+> Once we run out of available containment tools, however, we *have* to
+> follow the semantics of the page and slab allocator and succeed the
+> request. We can not just return -ENOMEM if that causes kernel bugs.
+> 
+> That's the only thing we can do right now.
+> 
+> In fact, it's likely going to be the best we will ever be able to do
+> when it comes to kernel memory accounting. Linus made it clear where
+> he stands on failing kernel allocations, so all we can do is continue
+> to improve our containment tools and then give up on containment when
+> they're exhausted and force the charge past the limit.
 
-I completely agree that a reasonable cost for those who _want_ the
-functionality. It hasn't been shown that people actually lack kmem
-accounting in the wild from the past in general. E.g. kmem controller
-is even not enabled in opensuse nor SLES kernels and I do not remember
-there was huge push to enable it.
+OK, then we need all the additional measures to keep the hard limit
+excess bound.
 
-I do understand that you want to have an out-of-the-box isolation
-behavior which I agree is a nice-to-have feature. Especially with
-a larger penetration of containerized workloads. But my point still
-holds. This is not something everybody wants to have. So have a
-configuration and a boot time option to override is the most reasonable
-way to go. You can clearly see that this is already demand from tcp
-kmem extension because they really _care_ about every single cpu cycle
-even though some part of the userspace happens to have memcg enabled.
+> > 3) keep only some (safe) cache types enabled by default with the current
+> >    failing semantic and require an explicit enabling for the complete
+> >    kmem accounting. [di]cache code paths should be quite robust to
+> >    handle allocation failures.
+> 
+> Vladimir, what would be your opinion on this?
+> 
+> > 4) disable kmem by default and change the config default later to signal
+> >    the accounting is safe as far as we are aware and let people enable
+> >    the functionality on those basis. We would keep the current failing
+> >    semantic.
+> > 
+> > To me 4) sounds like the safest option because it still keeps the
+> > functionality available to those who can benefit from it in v1 already
+> > while we are not exposing a potentially buggy behavior to the majority
+> > (many of them even unintentionally). Moreover we still allow to change
+> > the default later on an explicit basis.
+> 
+> I'm not interested in fragmenting the interface forever out of caution
+> because there might be a bug in the implementation right now. As I
+> said we have to fix any instability in the features we provide whether
+> they are turned on by default or not. I don't see how this is relevant
+> to the interface discussion.
+> 
+> Also, there is no way we can later fundamentally change the semantics
+> of memory.current, so it would have to remain configurable forever,
+> forcing people forever to select multiple options in order to piece
+> together a single logical kernel feature.
+> 
+> This is really not an option, either.
 
-The question about the configuration default is a different question
-and we can discuss that because this is not an easy one to decide right
-now IMHO.
+Why not? I can clearly see people who would really want to have this
+disabled and doing that by config is much more easier than providing
+a command line parameter. A config option doesn't give any additional
+maintenance burden than the boot time parameter.
+ 
+> If there are show-stopping bugs in the implementation, I'd rather hold
+> off the release of the unified hierarchy than commit to a half-assed
+> interface right out of the gate.
+
+If you are willing to postpone releasing cgroup2 until this gets
+resolved - one way or another - then I have no objections. My impression
+was that Tejun wanted to release it sooner rather than later. As this
+mere discussion shows we are even not sure what should be the kmem
+failure behavior.
+
+> The point of v2 is sane interfaces.
+
+And the sane interface to me is to use a single set of knobs regardless
+of memory type. We are currently only discussing what should be
+accounted by default. My understanding of what David said is that tcp
+kmem should be enabled only when explicitly opted in. Did I get this
+wrong?
+
+> So let's please focus on fixing any problems that slab accounting may
+> have, rather than designing complex config options and transition
+> procedures whose sole purpose is to defer dealing with our issues.
+> 
+> Please?
+
 -- 
 Michal Hocko
 SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
