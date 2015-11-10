@@ -1,41 +1,83 @@
-From: Vladimir Davydov <vdavydov@virtuozzo.com>
-Subject: Re: [PATCH 0/5] memcg/kmem: switch to white list policy
-Date: Tue, 10 Nov 2015 10:49:14 +0300
-Message-ID: <20151110074914.GQ31308@esperanza>
+From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: [PATCH 5/5] Account certain kmem allocations to memcg
+Date: Tue, 10 Nov 2015 11:07:09 +0300
+Message-ID: <20151110080709.GR31308@esperanza>
 References: <cover.1446924358.git.vdavydov@virtuozzo.com>
- <20151109140832.GE8916@dhcp22.suse.cz>
- <20151109182840.GJ31308@esperanza>
- <20151109185401.GB28507@mtj.duckdns.org>
- <20151109192747.GN31308@esperanza>
- <20151109193253.GC28507@mtj.duckdns.org>
- <20151109201218.GP31308@esperanza>
- <20151109203053.GD28507@mtj.duckdns.org>
+ <60b4d1631e3a302246859d6a39ac7c6d6cbf3af3.1446924358.git.vdavydov@virtuozzo.com>
+ <20151109143955.GF8916@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20151109203053.GD28507@mtj.duckdns.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20151109143955.GF8916-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Greg Thelen <gthelen@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Nov 09, 2015 at 03:30:53PM -0500, Tejun Heo wrote:
-...
-> Hmm.... can't we simply merge among !SLAB_ACCOUNT and SLAB_ACCOUNT
-> kmem_caches within themselves?  I don't think we'd be losing anything
-> by restricting merge at that level.  For anything to be tagged
-> SLAB_ACCOUNT, it has to have a potential to grow enormous after all.
+On Mon, Nov 09, 2015 at 03:39:55PM +0100, Michal Hocko wrote:
+> On Sat 07-11-15 23:07:09, Vladimir Davydov wrote:
+> > This patch marks those kmem allocations that are known to be easily
+> > triggered from userspace as __GFP_ACCOUNT, which makes them accounted to
+> > memcg. For the list, see below:
+> > 
+> >  - threadinfo
+> >  - task_struct
+> >  - task_delay_info
+> >  - pid
+> >  - cred
+> >  - mm_struct
+> >  - vm_area_struct and vm_region (nommu)
+> >  - anon_vma and anon_vma_chain
+> >  - signal_struct
+> >  - sighand_struct
+> >  - fs_struct
+> >  - files_struct
+> >  - fdtable and fdtable->full_fds_bits
+> >  - dentry and external_name
+> >  - inode for all filesystems. This is the most tedious part, because
+> >    most filesystems overwrite the alloc_inode method. Looks like using
+> >    __GFP_ACCOUNT in alloc_inode is going to become a new rule, like
+> >    passing SLAB_RECLAIM_ACCOUNT on inode cache creation.
+> 
+> I am wondering whether using a helper function to allocate an inode
+> cache would help in that regards. It would limit __GFP_ACCOUNT
+> penetration into fs code.
 
-OK, I'll prepare v2 which will introduce SLAB_ACCOUNT and add it to
-SLAB_MERGE_SAME. Let's see what slab maintainers think of it.
+I'm afraid that wouldn't free fs code from the need to use
+__GFP_ACCOUNT, because there are other things that we might want to
+account AFAICS, e.g. ext4_crypt_info_cachep or ext4_es_cachep.
+
+> 
+> pipe buffers are trivial to abuse (e.g. via fd passing) so we want to
+
+You might also mention allocations caused by select/poll, page tables,
+radix_tree_node, etc. They all might be abused, but the primary purpose
+of this patch set is not catching abusers, but providing reasonable
+level of isolation for most normal workloads. Let's add everything above
+that in separate patches.
+
+> cap those as well. The following should do the trick AFAICS.
+
+Actually, no - you only account pipe metadata while anon pipe buffer
+pages, which usually constitute most of memory consumed by a pipe, still
+go unaccounted. I'm planning to make pipe accountable later.
+
+> ---
+> diff --git a/fs/pipe.c b/fs/pipe.c
+> index 8865f7963700..c4b7e8c08362 100644
+> --- a/fs/pipe.c
+> +++ b/fs/pipe.c
+> @@ -590,7 +590,7 @@ struct pipe_inode_info *alloc_pipe_info(void)
+>  
+>  	pipe = kzalloc(sizeof(struct pipe_inode_info), GFP_KERNEL);
+>  	if (pipe) {
+> -		pipe->bufs = kzalloc(sizeof(struct pipe_buffer) * PIPE_DEF_BUFFERS, GFP_KERNEL);
+> +		pipe->bufs = kzalloc(sizeof(struct pipe_buffer) * PIPE_DEF_BUFFERS, GFP_KERNEL | __GFP_ACCOUNT);
+
+GFP_KERNEL | __GFP_ACCOUNT are used really often, that's why I
+introduced GFP_KERNEL_ACCOUNT.
 
 Thanks,
 Vladimir
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
