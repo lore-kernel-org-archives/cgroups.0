@@ -1,62 +1,42 @@
-From: Parav Pandit <pandit.parav@gmail.com>
+From: Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH] cgroup_pids: add fork limit
-Date: Tue, 10 Nov 2015 21:49:11 +0530
-Message-ID: <CAG53R5XfNjuBcwNZW4pB_bhq2+vLoo1UKQ7Rqhx=TdLMa5abuw@mail.gmail.com>
+Date: Tue, 10 Nov 2015 18:06:12 +0100
+Message-ID: <20151110170612.GA21582@rabbit.intern.cm-ag>
 References: <144716440621.20175.1000688899886388119.stgit@rabbit.intern.cm-ag>
-	<CAOviyaiXSCztjv0d99G-t-yo1wtGzXZr0qpuqcKDBdV=wnMinw@mail.gmail.com>
-	<5642142F.2090302@gmail.com>
+ <20151110151223.GA17938@mtj.duckdns.org>
+ <20151110153746.GA20758@rabbit.intern.cm-ag>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
-         :cc:content-type;
-        bh=Ij9RilGWCucDYh8K3Qh9810cV2nTs+WPR93PxBY9q9w=;
-        b=iuRioFAYMZDKCogeXDdmxNDVk9MSCVzj/LWv46Hswm8sQUm/iT0QctTp+0svFRiV+Z
-         dKuA3J/ulCdLIBrDH2s+KuLoSqYq2cwgNyYaASbOHZsqM4DpplcpPY5Md7ldQ2LHODAu
-         A8QajjByIx0ZUnCn4YKSkcpIft5820Dkycf2jyZ7G3RPQQ2wSxvxYFeEodlYFQBWS5Vm
-         3KX+L8cQjlVTaW6ntpiPMSG+A5SJQ/7hTUgCZD0vusthchZiFDQQI1IHCvrPbw7NB6gP
-         8Kv2Dg0T+mA4tpSDL1hGDhnh3d/3BuRMySRAL72Oez01M0aOVImSHHiM5amolfFxufxs
-         UxZw==
-In-Reply-To: <5642142F.2090302@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20151110153746.GA20758-Rjmu19FXx3rR8JxBgnUBv+rzNCUFrscg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Austin S Hemmelgarn <ahferroin7@gmail.com>
-Cc: Aleksa Sarai <cyphar@cyphar.com>, Max Kellermann <mk@cm4all.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, max@duempel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Nov 10, 2015 at 9:28 PM, Austin S Hemmelgarn
-<ahferroin7@gmail.com> wrote:
-> On 2015-11-10 10:25, Aleksa Sarai wrote:
->>
->> Processes don't "use up resources" after they've died and been freed
->> (which is dealt with inside PIDs). Yes, lots of small processes that
->> die quickly could (in principle) make hard work for the scheduler, but
->> I don't see how "time spent scheduling in general" is a resource...
->> Fork bombs aren't bad because they cause a lot of fork()s, they're bad
->> because the *create a bunch of processes that use up memory*, which
->> happens because they call fork() a bunch of times and **don't
->> exit()**.
->
-> While I'm indifferent about the patch, I would like to point out that
-> fork-bombs are also bad because they eat _a lot_ of processor time, and I've
-> seen ones designed to bring a system to it's knees just by saturating the
-> processor with calls to fork() (which is as slow as or slower than stat() on
-> many commodity systems, setting up the various structures for a new process
-> is an expensive operation) and clogging up the scheduler.
+On 2015/11/10 16:44, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> On Tue, Nov 10, 2015 at 04:37:46PM +0100, Max Kellermann wrote:
+> > There's "cpu" which changes priority
+> 
+> The cpu controller can limit both in terms of relative weight and
+> absolute CPU cycle bandwidth.
 
-Isn't cpu cgroup helpful there to limit it?
-Are you saying time spent by scheduler is more that actually affects
-the scheduling of processes of other threads?
-If so, could you share little more insight on how that time measure
-outside of the cpu's cgroup cycles? Just so that its helpful to wider
-audience.
+No, Tejun, the "cpu" controller does not do what my feature does: like
+I said, it only changes the priority, or let's rephrase (to account
+for the "absolute CPU cycle bandwith" thing): it changes the amount of
+CPU cycles a process gets every period.
 
-> This isn't as
-> evident of course when you run a fork-bomb on a laptop or similar system,
-> because you run out of memory and PID's before the latency from scheduling
-> and so many processes calling fork really starts to become noticeable, but
-> when you start to look at really big systems (on the order of hundreds of GB
-> of RAM), it does become much more noticeable.
->
+But it does NOT put an upper limit on total consumed CPU cycles!  It
+will only slow down a frantic process, but it will not stop it.
+Stopping it is what I want.  Once process crosses the limits I
+configured, there's no point in keeping it running.
+
+You may disagree that the feature I implemented is useful, and you may
+not want it merged, but do not say that I missed a kernel feature,
+because that's not true.
+
+The Linux kernel currently does not have a feature that can emulate
+the fork limit that I implemented.  Useful or not, it doesn't exist.
+
+Max
