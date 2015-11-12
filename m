@@ -1,40 +1,87 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 5/8] mm: memcontrol: account socket memory on unified
- hierarchy
-Date: Thu, 12 Nov 2015 14:12:20 -0500
-Message-ID: <20151112191220.GA25750@cmpxchg.org>
-References: <20151029152546.GG23598@dhcp22.suse.cz>
- <20151029161009.GA9160@cmpxchg.org>
- <20151104104239.GG29607@dhcp22.suse.cz>
- <20151104195037.GA6872@cmpxchg.org>
- <20151105144002.GB15111@dhcp22.suse.cz>
- <20151105205522.GA1067@cmpxchg.org>
- <20151105225200.GA5432@cmpxchg.org>
- <20151106105724.GG4390@dhcp22.suse.cz>
- <20151106161953.GA7813@cmpxchg.org>
- <20151112183620.GC14880@techsingularity.net>
-Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20151112183620.GC14880@techsingularity.net>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH 00/14] mm: memcontrol: account socket memory in unified hierarchy
+Date: Thu, 12 Nov 2015 18:41:19 -0500
+Message-ID: <1447371693-25143-1-git-send-email-hannes@cmpxchg.org>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mel Gorman <mgorman@techsingularity.net>
-Cc: Michal Hocko <mhocko@kernel.org>, David Miller <davem@davemloft.net>, akpm@linux-foundation.org, vdavydov@virtuozzo.com, tj@kernel.org, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: David Miller <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Vladimir Davydov <vdavydov@virtuozzo.com>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Thu, Nov 12, 2015 at 06:36:20PM +0000, Mel Gorman wrote:
-> Bottom line, there is legimate confusion over whether cgroup controllers
-> are going to be enabled by default or not in the future. If they are
-> enabled by default, there is a non-zero cost to that and a change in
-> semantics that people may or may not be surprised by.
+Hi,
 
-Thanks for elaborating, Mel.
+this is version 3 of the patches to add socket memory accounting to
+the unified hierarchy memory controller. Changes since v2 include:
 
-My understanding is that this is a plain bug. I don't think anybody
-wants to put costs without benefits on their users.
+- Fixed an underflow bug in the mem+swap counter that came through the
+  design of the per-cpu charge cache. To fix that, the unused mem+swap
+  counter is now fully patched out on unified hierarchy. Double whammy.
 
-But I'll keep an eye on these reports, and I'll work with the systemd
-people should issues with the kernel interface materialize that would
-force them to enable resource control prematurely.
+- Restored the counting jump label such that the networking callbacks
+  get patched out again when the last memory-controlled cgroup goes
+  away. The code was already there, so we might as well keep it.
+
+- Broke down the massive tcp_memcontrol rewrite patch into smaller
+  logical pieces to (hopefully) make it easier to review and verify.
+
+---
+
+Socket buffer memory can make up a significant share of a workload's
+memory footprint that can be directly linked to userspace activity,
+and so it needs to be part of the memory controller to provide proper
+resource isolation/containment.
+
+Historically, socket buffers were accounted in a separate counter,
+without any pressure equalization between anonymous memory, page
+cache, and the socket buffers. When the socket buffer pool was
+exhausted, buffer allocations would fail hard and cause network
+performance to tank, regardless of whether there was still memory
+available to the group or not. Likewise, struggling anonymous or cache
+workingsets could not dip into an idle socket memory pool. Because of
+this, the feature was not usable for many real life applications.
+
+To not repeat this mistake, the new memory controller will account all
+types of memory pages it is tracking on behalf of a cgroup in a single
+pool. Upon pressure, the VM reclaims and shrinks and puts pressure on
+whatever memory consumer in that pool is within its reach.
+
+For socket memory, pressure feedback is provided through vmpressure
+events. When the VM has trouble freeing memory, the network code is
+instructed to stop growing the cgroup's transmit windows.
+
+This series begins with a rework of the existing tcp memory controller
+that simplifies and cleans up the code while allowing us to have only
+one set of networking hooks for both memory controller versions. The
+original behavior of the existing tcp controller should be preserved.
+
+It then adds socket accounting to the v2 memory controller, including
+the use of the per-cpu charge cache and async memory.high enforcement
+from socket memory charges.
+
+Lastly, vmpressure is hooked up to the socket code so that it stops
+growing transmit windows when the VM has trouble reclaiming memory.
+
+ include/linux/memcontrol.h   |  71 ++++++----
+ include/net/sock.h           | 149 ++------------------
+ include/net/tcp.h            |   5 +-
+ include/net/tcp_memcontrol.h |   1 -
+ mm/backing-dev.c             |   2 +-
+ mm/memcontrol.c              | 303 +++++++++++++++++++++++++++--------------
+ mm/vmpressure.c              |  25 +++-
+ mm/vmscan.c                  |  31 +++--
+ net/core/sock.c              |  78 +++--------
+ net/ipv4/tcp.c               |   3 +-
+ net/ipv4/tcp_ipv4.c          |   9 +-
+ net/ipv4/tcp_memcontrol.c    |  85 ++++--------
+ net/ipv4/tcp_output.c        |   7 +-
+ net/ipv6/tcp_ipv6.c          |   3 -
+ 14 files changed, 353 insertions(+), 419 deletions(-)
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
