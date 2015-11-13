@@ -1,417 +1,230 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 08/14] net: tcp_memcontrol: sanitize tcp memory
- accounting callbacks
-Date: Fri, 13 Nov 2015 00:44:08 -0500
-Message-ID: <20151113054408.GA2104@cmpxchg.org>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 11/14] mm: memcontrol: do not account memory+swap on
+ unified hierarchy
+Date: Fri, 13 Nov 2015 11:37:49 +0100
+Message-ID: <20151113103749.GC2632@dhcp22.suse.cz>
 References: <1447371693-25143-1-git-send-email-hannes@cmpxchg.org>
- <1447371693-25143-9-git-send-email-hannes@cmpxchg.org>
- <1447390418.22599.34.camel@edumazet-glaptop2.roam.corp.google.com>
+ <1447371693-25143-12-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1447390418.22599.34.camel-XN9IlZ5yJG9HTL0Zs8A6p/gx64E7kk8eUsxypvmhUTTZJqsBc5GL+g@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1447371693-25143-12-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: David Miller <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@virtuozzo.com>, Tejun Heo <tj@kernel.org>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Thu, Nov 12, 2015 at 08:53:38PM -0800, Eric Dumazet wrote:
-> On Thu, 2015-11-12 at 18:41 -0500, Johannes Weiner wrote:
-> > @@ -711,6 +705,12 @@ static inline void mem_cgroup_wb_stats(struct bdi_writeback *wb,
-> >  struct sock;
-> >  void sock_update_memcg(struct sock *sk);
-> >  void sock_release_memcg(struct sock *sk);
-> > +bool mem_cgroup_charge_skmem(struct cg_proto *proto, unsigned int nr_pages);
-> > +void mem_cgroup_uncharge_skmem(struct cg_proto *proto, unsigned int nr_pages);
-> > +static inline bool mem_cgroup_under_socket_pressure(struct cg_proto *proto)
-> > +{
-> > +	return proto->memory_pressure;
-> > +}
-> >  #endif /* CONFIG_INET && CONFIG_MEMCG_KMEM */
-> >  
-> >  #ifdef CONFIG_MEMCG_KMEM
-> > diff --git a/include/net/sock.h b/include/net/sock.h
-> > index 2eefc99..8cc7613 100644
-> > --- a/include/net/sock.h
-> > +++ b/include/net/sock.h
-> > @@ -1126,8 +1126,8 @@ static inline bool sk_under_memory_pressure(const struct sock *sk)
-> >  	if (!sk->sk_prot->memory_pressure)
-> >  		return false;
-> >  
-> > -	if (mem_cgroup_sockets_enabled && sk->sk_cgrp)
-> > -		return !!sk->sk_cgrp->memory_pressure;
-> > +	if (mem_cgroup_sockets_enabled && sk->sk_cgrp &&
-> > +	    mem_cgroup_under_socket_pressure(sk->sk_cgrp))
-> >  
-> >  	return !!*sk->sk_prot->memory_pressure;
-> >  }
+On Thu 12-11-15 18:41:30, Johannes Weiner wrote:
+> The unified hierarchy memory controller doesn't expose the memory+swap
+> counter to userspace, but its accounting is hardcoded in all charge
+> paths right now, including the per-cpu charge cache ("the stock").
 > 
+> To avoid adding yet more pointless memory+swap accounting with the
+> socket memory support in unified hierarchy, disable the counter
+> altogether when in unified hierarchy mode.
 > 
-> This looks wrong ?
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+
+Acked-by: Michal Hocko <mhocko@suse.com>
+
+> ---
+>  mm/memcontrol.c | 44 +++++++++++++++++++++++++-------------------
+>  1 file changed, 25 insertions(+), 19 deletions(-)
 > 
-> if (A && B && C)
->     return !!*sk->sk_prot->memory_pressure;
-> 
-> <compiler should eventually barf, 
-> as this function should not return void>
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 658bef2..e7f1a79 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -87,6 +87,12 @@ int do_swap_account __read_mostly;
+>  #define do_swap_account		0
+>  #endif
+>  
+> +/* Whether legacy memory+swap accounting is active */
+> +static bool do_memsw_account(void)
+> +{
+> +	return !cgroup_subsys_on_dfl(memory_cgrp_subsys) && do_swap_account;
+> +}
+> +
+>  static const char * const mem_cgroup_stat_names[] = {
+>  	"cache",
+>  	"rss",
+> @@ -1177,7 +1183,7 @@ static unsigned long mem_cgroup_margin(struct mem_cgroup *memcg)
+>  	if (count < limit)
+>  		margin = limit - count;
+>  
+> -	if (do_swap_account) {
+> +	if (do_memsw_account()) {
+>  		count = page_counter_read(&memcg->memsw);
+>  		limit = READ_ONCE(memcg->memsw.limit);
+>  		if (count <= limit)
+> @@ -1280,7 +1286,7 @@ void mem_cgroup_print_oom_info(struct mem_cgroup *memcg, struct task_struct *p)
+>  		pr_cont(":");
+>  
+>  		for (i = 0; i < MEM_CGROUP_STAT_NSTATS; i++) {
+> -			if (i == MEM_CGROUP_STAT_SWAP && !do_swap_account)
+> +			if (i == MEM_CGROUP_STAT_SWAP && !do_memsw_account())
+>  				continue;
+>  			pr_cont(" %s:%luKB", mem_cgroup_stat_names[i],
+>  				K(mem_cgroup_read_stat(iter, i)));
+> @@ -1903,7 +1909,7 @@ static void drain_stock(struct memcg_stock_pcp *stock)
+>  
+>  	if (stock->nr_pages) {
+>  		page_counter_uncharge(&old->memory, stock->nr_pages);
+> -		if (do_swap_account)
+> +		if (do_memsw_account())
+>  			page_counter_uncharge(&old->memsw, stock->nr_pages);
+>  		css_put_many(&old->css, stock->nr_pages);
+>  		stock->nr_pages = 0;
+> @@ -2033,11 +2039,11 @@ retry:
+>  	if (consume_stock(memcg, nr_pages))
+>  		return 0;
+>  
+> -	if (!do_swap_account ||
+> +	if (!do_memsw_account() ||
+>  	    page_counter_try_charge(&memcg->memsw, batch, &counter)) {
+>  		if (page_counter_try_charge(&memcg->memory, batch, &counter))
+>  			goto done_restock;
+> -		if (do_swap_account)
+> +		if (do_memsw_account())
+>  			page_counter_uncharge(&memcg->memsw, batch);
+>  		mem_over_limit = mem_cgroup_from_counter(counter, memory);
+>  	} else {
+> @@ -2124,7 +2130,7 @@ force:
+>  	 * temporarily by force charging it.
+>  	 */
+>  	page_counter_charge(&memcg->memory, nr_pages);
+> -	if (do_swap_account)
+> +	if (do_memsw_account())
+>  		page_counter_charge(&memcg->memsw, nr_pages);
+>  	css_get_many(&memcg->css, nr_pages);
+>  
+> @@ -2161,7 +2167,7 @@ static void cancel_charge(struct mem_cgroup *memcg, unsigned int nr_pages)
+>  		return;
+>  
+>  	page_counter_uncharge(&memcg->memory, nr_pages);
+> -	if (do_swap_account)
+> +	if (do_memsw_account())
+>  		page_counter_uncharge(&memcg->memsw, nr_pages);
+>  
+>  	css_put_many(&memcg->css, nr_pages);
+> @@ -2441,7 +2447,7 @@ void __memcg_kmem_uncharge(struct page *page, int order)
+>  
+>  	page_counter_uncharge(&memcg->kmem, nr_pages);
+>  	page_counter_uncharge(&memcg->memory, nr_pages);
+> -	if (do_swap_account)
+> +	if (do_memsw_account())
+>  		page_counter_uncharge(&memcg->memsw, nr_pages);
+>  
+>  	page->mem_cgroup = NULL;
+> @@ -3154,7 +3160,7 @@ static int memcg_stat_show(struct seq_file *m, void *v)
+>  	BUILD_BUG_ON(ARRAY_SIZE(mem_cgroup_lru_names) != NR_LRU_LISTS);
+>  
+>  	for (i = 0; i < MEM_CGROUP_STAT_NSTATS; i++) {
+> -		if (i == MEM_CGROUP_STAT_SWAP && !do_swap_account)
+> +		if (i == MEM_CGROUP_STAT_SWAP && !do_memsw_account())
+>  			continue;
+>  		seq_printf(m, "%s %lu\n", mem_cgroup_stat_names[i],
+>  			   mem_cgroup_read_stat(memcg, i) * PAGE_SIZE);
+> @@ -3176,14 +3182,14 @@ static int memcg_stat_show(struct seq_file *m, void *v)
+>  	}
+>  	seq_printf(m, "hierarchical_memory_limit %llu\n",
+>  		   (u64)memory * PAGE_SIZE);
+> -	if (do_swap_account)
+> +	if (do_memsw_account())
+>  		seq_printf(m, "hierarchical_memsw_limit %llu\n",
+>  			   (u64)memsw * PAGE_SIZE);
+>  
+>  	for (i = 0; i < MEM_CGROUP_STAT_NSTATS; i++) {
+>  		unsigned long long val = 0;
+>  
+> -		if (i == MEM_CGROUP_STAT_SWAP && !do_swap_account)
+> +		if (i == MEM_CGROUP_STAT_SWAP && !do_memsw_account())
+>  			continue;
+>  		for_each_mem_cgroup_tree(mi, memcg)
+>  			val += mem_cgroup_read_stat(mi, i) * PAGE_SIZE;
+> @@ -3314,7 +3320,7 @@ static void mem_cgroup_threshold(struct mem_cgroup *memcg)
+>  {
+>  	while (memcg) {
+>  		__mem_cgroup_threshold(memcg, false);
+> -		if (do_swap_account)
+> +		if (do_memsw_account())
+>  			__mem_cgroup_threshold(memcg, true);
+>  
+>  		memcg = parent_mem_cgroup(memcg);
+> @@ -4460,7 +4466,7 @@ static struct page *mc_handle_swap_pte(struct vm_area_struct *vma,
+>  	 * we call find_get_page() with swapper_space directly.
+>  	 */
+>  	page = find_get_page(swap_address_space(ent), ent.val);
+> -	if (do_swap_account)
+> +	if (do_memsw_account())
+>  		entry->val = ent.val;
+>  
+>  	return page;
+> @@ -4495,7 +4501,7 @@ static struct page *mc_handle_file_pte(struct vm_area_struct *vma,
+>  		page = find_get_entry(mapping, pgoff);
+>  		if (radix_tree_exceptional_entry(page)) {
+>  			swp_entry_t swp = radix_to_swp_entry(page);
+> -			if (do_swap_account)
+> +			if (do_memsw_account())
+>  				*entry = swp;
+>  			page = find_get_page(swap_address_space(swp), swp.val);
+>  		}
+> @@ -5270,7 +5276,7 @@ int mem_cgroup_try_charge(struct page *page, struct mm_struct *mm,
+>  		if (page->mem_cgroup)
+>  			goto out;
+>  
+> -		if (do_swap_account) {
+> +		if (do_memsw_account()) {
+>  			swp_entry_t ent = { .val = page_private(page), };
+>  			unsigned short id = lookup_swap_cgroup_id(ent);
+>  
+> @@ -5334,7 +5340,7 @@ void mem_cgroup_commit_charge(struct page *page, struct mem_cgroup *memcg,
+>  	memcg_check_events(memcg, page);
+>  	local_irq_enable();
+>  
+> -	if (do_swap_account && PageSwapCache(page)) {
+> +	if (do_memsw_account() && PageSwapCache(page)) {
+>  		swp_entry_t entry = { .val = page_private(page) };
+>  		/*
+>  		 * The swap entry might not get freed for a long time,
+> @@ -5379,7 +5385,7 @@ static void uncharge_batch(struct mem_cgroup *memcg, unsigned long pgpgout,
+>  
+>  	if (!mem_cgroup_is_root(memcg)) {
+>  		page_counter_uncharge(&memcg->memory, nr_pages);
+> -		if (do_swap_account)
+> +		if (do_memsw_account())
+>  			page_counter_uncharge(&memcg->memsw, nr_pages);
+>  		memcg_oom_recover(memcg);
+>  	}
+> @@ -5587,7 +5593,7 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+>  	VM_BUG_ON_PAGE(PageLRU(page), page);
+>  	VM_BUG_ON_PAGE(page_count(page), page);
+>  
+> -	if (!do_swap_account)
+> +	if (!do_memsw_account())
+>  		return;
+>  
+>  	memcg = page->mem_cgroup;
+> @@ -5627,7 +5633,7 @@ void mem_cgroup_uncharge_swap(swp_entry_t entry)
+>  	struct mem_cgroup *memcg;
+>  	unsigned short id;
+>  
+> -	if (!do_swap_account)
+> +	if (!do_memsw_account())
+>  		return;
+>  
+>  	id = swap_cgroup_record(entry, 0);
+> -- 
+> 2.6.2
 
-Yikes, you're right. This is missing a return true.
-
-[ Just forced a complete rebuild and of course it warns at control
-  reaching end of non-void function. ]
-
-I'm stumped by how I could have missed it as I rebuild after every
-commit with make -s, so a warning should stand out. And it should
-definitely rebuild the callers frequently as most patches change
-memcontrol.h. Probably a screwup in the final series polishing.
-I'm going to go over this carefully one more time tomorrow.
-
-Meanwhile, this is the missing piece and the updated patch.
-
-Thanks Eric.
-
-diff --git a/include/net/sock.h b/include/net/sock.h
-index 8cc7613..f954e2a 100644
---- a/include/net/sock.h
-+++ b/include/net/sock.h
-@@ -1128,6 +1128,7 @@ static inline bool sk_under_memory_pressure(const struct sock *sk)
- 
- 	if (mem_cgroup_sockets_enabled && sk->sk_cgrp &&
- 	    mem_cgroup_under_socket_pressure(sk->sk_cgrp))
-+		return true;
- 
- 	return !!*sk->sk_prot->memory_pressure;
- }
-
----
-From 4a24ca67e5b0f651a68807ee99f714437ffd6109 Mon Sep 17 00:00:00 2001
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Date: Tue, 10 Nov 2015 17:14:41 -0500
-Subject: [PATCH v2] net: tcp_memcontrol: sanitize tcp memory accounting callbacks
-
-There won't be a tcp control soft limit, so integrating the memcg code
-into the global skmem limiting scheme complicates things
-unnecessarily. Replace this with simple and clear charge and uncharge
-calls--hidden behind a jump label--to account skb memory.
-
-Note that this is not purely aesthetic: as a result of shoehorning the
-per-memcg code into the same memory accounting functions that handle
-the global level, the old code would compare the per-memcg consumption
-against the smaller of the per-memcg limit and the global limit. This
-allowed the total consumption of multiple sockets to exceed the global
-limit, as long as the individual sockets stayed within bounds. After
-this change, the code will always compare the per-memcg consumption to
-the per-memcg limit, and the global consumption to the global limit,
-and thus close this loophole.
-
-Without a soft limit, the per-memcg memory pressure state in sockets
-is generally questionable. However, we did it until now, so we
-continue to enter it when the hard limit is hit, and packets are
-dropped, to let other sockets in the cgroup know that they shouldn't
-grow their transmit windows, either. However, keep it simple in the
-new callback model and leave memory pressure lazily when the next
-packet is accepted (as opposed to doing it synchroneously when packets
-are processed). When packets are dropped, network performance will
-already be in the toilet, so that should be a reasonable trade-off.
-
-As described above, consumption is now checked on the per-memcg level
-and the global level separately. Likewise, memory pressure states are
-maintained on both the per-memcg level and the global level, and a
-socket is considered under pressure when either level asserts as much.
-
-Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
----
- include/linux/memcontrol.h | 12 ++++-----
- include/net/sock.h         | 64 ++++++----------------------------------------
- include/net/tcp.h          |  5 ++--
- mm/memcontrol.c            | 32 +++++++++++++++++++++++
- net/core/sock.c            | 26 +++++++++++--------
- net/ipv4/tcp_output.c      |  7 +++--
- 6 files changed, 70 insertions(+), 76 deletions(-)
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 96ca3d3..906dfff 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -676,12 +676,6 @@ void mem_cgroup_count_vm_event(struct mm_struct *mm, enum vm_event_item idx)
- }
- #endif /* CONFIG_MEMCG */
- 
--enum {
--	UNDER_LIMIT,
--	SOFT_LIMIT,
--	OVER_LIMIT,
--};
--
- #ifdef CONFIG_CGROUP_WRITEBACK
- 
- struct list_head *mem_cgroup_cgwb_list(struct mem_cgroup *memcg);
-@@ -711,6 +705,12 @@ static inline void mem_cgroup_wb_stats(struct bdi_writeback *wb,
- struct sock;
- void sock_update_memcg(struct sock *sk);
- void sock_release_memcg(struct sock *sk);
-+bool mem_cgroup_charge_skmem(struct cg_proto *proto, unsigned int nr_pages);
-+void mem_cgroup_uncharge_skmem(struct cg_proto *proto, unsigned int nr_pages);
-+static inline bool mem_cgroup_under_socket_pressure(struct cg_proto *proto)
-+{
-+	return proto->memory_pressure;
-+}
- #endif /* CONFIG_INET && CONFIG_MEMCG_KMEM */
- 
- #ifdef CONFIG_MEMCG_KMEM
-diff --git a/include/net/sock.h b/include/net/sock.h
-index 2eefc99..f954e2a 100644
---- a/include/net/sock.h
-+++ b/include/net/sock.h
-@@ -1126,8 +1126,9 @@ static inline bool sk_under_memory_pressure(const struct sock *sk)
- 	if (!sk->sk_prot->memory_pressure)
- 		return false;
- 
--	if (mem_cgroup_sockets_enabled && sk->sk_cgrp)
--		return !!sk->sk_cgrp->memory_pressure;
-+	if (mem_cgroup_sockets_enabled && sk->sk_cgrp &&
-+	    mem_cgroup_under_socket_pressure(sk->sk_cgrp))
-+		return true;
- 
- 	return !!*sk->sk_prot->memory_pressure;
- }
-@@ -1141,9 +1142,6 @@ static inline void sk_leave_memory_pressure(struct sock *sk)
- 
- 	if (*memory_pressure)
- 		*memory_pressure = 0;
--
--	if (mem_cgroup_sockets_enabled && sk->sk_cgrp)
--		sk->sk_cgrp->memory_pressure = 0;
- }
- 
- static inline void sk_enter_memory_pressure(struct sock *sk)
-@@ -1151,76 +1149,30 @@ static inline void sk_enter_memory_pressure(struct sock *sk)
- 	if (!sk->sk_prot->enter_memory_pressure)
- 		return;
- 
--	if (mem_cgroup_sockets_enabled && sk->sk_cgrp)
--		sk->sk_cgrp->memory_pressure = 1;
--
- 	sk->sk_prot->enter_memory_pressure(sk);
- }
- 
- static inline long sk_prot_mem_limits(const struct sock *sk, int index)
- {
--	long limit = sk->sk_prot->sysctl_mem[index];
--
--	if (mem_cgroup_sockets_enabled && sk->sk_cgrp)
--		limit = min_t(long, limit, sk->sk_cgrp->memory_allocated.limit);
--
--	return limit;
--}
--
--static inline void memcg_memory_allocated_add(struct cg_proto *prot,
--					      unsigned long amt,
--					      int *parent_status)
--{
--	struct page_counter *counter;
--
--	if (page_counter_try_charge(&prot->memory_allocated, amt, &counter))
--		return;
--
--	page_counter_charge(&prot->memory_allocated, amt);
--	*parent_status = OVER_LIMIT;
--}
--
--static inline void memcg_memory_allocated_sub(struct cg_proto *prot,
--					      unsigned long amt)
--{
--	page_counter_uncharge(&prot->memory_allocated, amt);
-+	return sk->sk_prot->sysctl_mem[index];
- }
- 
- static inline long
- sk_memory_allocated(const struct sock *sk)
- {
--	struct proto *prot = sk->sk_prot;
--
--	if (mem_cgroup_sockets_enabled && sk->sk_cgrp)
--		return page_counter_read(&sk->sk_cgrp->memory_allocated);
--
--	return atomic_long_read(prot->memory_allocated);
-+	return atomic_long_read(sk->sk_prot->memory_allocated);
- }
- 
- static inline long
--sk_memory_allocated_add(struct sock *sk, int amt, int *parent_status)
-+sk_memory_allocated_add(struct sock *sk, int amt)
- {
--	struct proto *prot = sk->sk_prot;
--
--	if (mem_cgroup_sockets_enabled && sk->sk_cgrp) {
--		memcg_memory_allocated_add(sk->sk_cgrp, amt, parent_status);
--		/* update the root cgroup regardless */
--		atomic_long_add_return(amt, prot->memory_allocated);
--		return page_counter_read(&sk->sk_cgrp->memory_allocated);
--	}
--
--	return atomic_long_add_return(amt, prot->memory_allocated);
-+	return atomic_long_add_return(amt, sk->sk_prot->memory_allocated);
- }
- 
- static inline void
- sk_memory_allocated_sub(struct sock *sk, int amt)
- {
--	struct proto *prot = sk->sk_prot;
--
--	if (mem_cgroup_sockets_enabled && sk->sk_cgrp)
--		memcg_memory_allocated_sub(sk->sk_cgrp, amt);
--
--	atomic_long_sub(amt, prot->memory_allocated);
-+	atomic_long_sub(amt, sk->sk_prot->memory_allocated);
- }
- 
- static inline void sk_sockets_allocated_dec(struct sock *sk)
-diff --git a/include/net/tcp.h b/include/net/tcp.h
-index f80e74c..04517d6 100644
---- a/include/net/tcp.h
-+++ b/include/net/tcp.h
-@@ -292,8 +292,9 @@ extern int tcp_memory_pressure;
- /* optimized version of sk_under_memory_pressure() for TCP sockets */
- static inline bool tcp_under_memory_pressure(const struct sock *sk)
- {
--	if (mem_cgroup_sockets_enabled && sk->sk_cgrp)
--		return !!sk->sk_cgrp->memory_pressure;
-+	if (mem_cgroup_sockets_enabled && sk->sk_cgrp &&
-+	    mem_cgroup_under_socket_pressure(sk->sk_cgrp))
-+		return true;
- 
- 	return tcp_memory_pressure;
- }
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 57f4539..3462a52 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -338,6 +338,38 @@ struct cg_proto *tcp_proto_cgroup(struct mem_cgroup *memcg)
- }
- EXPORT_SYMBOL(tcp_proto_cgroup);
- 
-+/**
-+ * mem_cgroup_charge_skmem - charge socket memory
-+ * @proto: proto to charge
-+ * @nr_pages: number of pages to charge
-+ *
-+ * Charges @nr_pages to @proto. Returns %true if the charge fit within
-+ * @proto's configured limit, %false if the charge had to be forced.
-+ */
-+bool mem_cgroup_charge_skmem(struct cg_proto *proto, unsigned int nr_pages)
-+{
-+	struct page_counter *counter;
-+
-+	if (page_counter_try_charge(&proto->memory_allocated,
-+				    nr_pages, &counter)) {
-+		proto->memory_pressure = 0;
-+		return true;
-+	}
-+	page_counter_charge(&proto->memory_allocated, nr_pages);
-+	proto->memory_pressure = 1;
-+	return false;
-+}
-+
-+/**
-+ * mem_cgroup_uncharge_skmem - uncharge socket memory
-+ * @proto - proto to uncharge
-+ * @nr_pages - number of pages to uncharge
-+ */
-+void mem_cgroup_uncharge_skmem(struct cg_proto *proto, unsigned int nr_pages)
-+{
-+	page_counter_uncharge(&proto->memory_allocated, nr_pages);
-+}
-+
- #endif
- 
- #ifdef CONFIG_MEMCG_KMEM
-diff --git a/net/core/sock.c b/net/core/sock.c
-index 04e54bc..5b1b96f 100644
---- a/net/core/sock.c
-+++ b/net/core/sock.c
-@@ -2066,27 +2066,27 @@ int __sk_mem_schedule(struct sock *sk, int size, int kind)
- 	struct proto *prot = sk->sk_prot;
- 	int amt = sk_mem_pages(size);
- 	long allocated;
--	int parent_status = UNDER_LIMIT;
- 
- 	sk->sk_forward_alloc += amt * SK_MEM_QUANTUM;
- 
--	allocated = sk_memory_allocated_add(sk, amt, &parent_status);
-+	allocated = sk_memory_allocated_add(sk, amt);
-+
-+	if (mem_cgroup_sockets_enabled && sk->sk_cgrp &&
-+	    !mem_cgroup_charge_skmem(sk->sk_cgrp, amt))
-+		goto suppress_allocation;
- 
- 	/* Under limit. */
--	if (parent_status == UNDER_LIMIT &&
--			allocated <= sk_prot_mem_limits(sk, 0)) {
-+	if (allocated <= sk_prot_mem_limits(sk, 0)) {
- 		sk_leave_memory_pressure(sk);
- 		return 1;
- 	}
- 
--	/* Under pressure. (we or our parents) */
--	if ((parent_status > SOFT_LIMIT) ||
--			allocated > sk_prot_mem_limits(sk, 1))
-+	/* Under pressure. */
-+	if (allocated > sk_prot_mem_limits(sk, 1))
- 		sk_enter_memory_pressure(sk);
- 
--	/* Over hard limit (we or our parents) */
--	if ((parent_status == OVER_LIMIT) ||
--			(allocated > sk_prot_mem_limits(sk, 2)))
-+	/* Over hard limit. */
-+	if (allocated > sk_prot_mem_limits(sk, 2))
- 		goto suppress_allocation;
- 
- 	/* guarantee minimum buffer size under pressure */
-@@ -2135,6 +2135,9 @@ suppress_allocation:
- 
- 	sk_memory_allocated_sub(sk, amt);
- 
-+	if (mem_cgroup_sockets_enabled && sk->sk_cgrp)
-+		mem_cgroup_uncharge_skmem(sk->sk_cgrp, amt);
-+
- 	return 0;
- }
- EXPORT_SYMBOL(__sk_mem_schedule);
-@@ -2150,6 +2153,9 @@ void __sk_mem_reclaim(struct sock *sk, int amount)
- 	sk_memory_allocated_sub(sk, amount);
- 	sk->sk_forward_alloc -= amount << SK_MEM_QUANTUM_SHIFT;
- 
-+	if (mem_cgroup_sockets_enabled && sk->sk_cgrp)
-+		mem_cgroup_uncharge_skmem(sk->sk_cgrp, amount);
-+
- 	if (sk_under_memory_pressure(sk) &&
- 	    (sk_memory_allocated(sk) < sk_prot_mem_limits(sk, 0)))
- 		sk_leave_memory_pressure(sk);
-diff --git a/net/ipv4/tcp_output.c b/net/ipv4/tcp_output.c
-index cb7ca56..7aa168a 100644
---- a/net/ipv4/tcp_output.c
-+++ b/net/ipv4/tcp_output.c
-@@ -2813,13 +2813,16 @@ begin_fwd:
-  */
- void sk_forced_mem_schedule(struct sock *sk, int size)
- {
--	int amt, status;
-+	int amt;
- 
- 	if (size <= sk->sk_forward_alloc)
- 		return;
- 	amt = sk_mem_pages(size);
- 	sk->sk_forward_alloc += amt * SK_MEM_QUANTUM;
--	sk_memory_allocated_add(sk, amt, &status);
-+	sk_memory_allocated_add(sk, amt);
-+
-+	if (mem_cgroup_sockets_enabled && sk->sk_cgrp)
-+		mem_cgroup_charge_skmem(sk->sk_cgrp, amt);
- }
- 
- /* Send a FIN. The caller locks the socket for us.
 -- 
-2.6.2
+Michal Hocko
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
