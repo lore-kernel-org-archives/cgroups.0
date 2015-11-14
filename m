@@ -1,34 +1,66 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 06/14] net: tcp_memcontrol: remove dead per-memcg count
- of allocated sockets
-Date: Fri, 13 Nov 2015 11:01:37 -0500 (EST)
-Message-ID: <20151113.110137.1839985112517581850.davem@davemloft.net>
-References: <1447371693-25143-1-git-send-email-hannes@cmpxchg.org>
-	<1447371693-25143-7-git-send-email-hannes@cmpxchg.org>
+From: Vladimir Davydov <vdavydov@virtuozzo.com>
+Subject: Re: [PATCH v2 4/6] slab: add SLAB_ACCOUNT flag
+Date: Sat, 14 Nov 2015 14:29:24 +0300
+Message-ID: <20151114112924.GF31308@esperanza>
+References: <cover.1447172835.git.vdavydov@virtuozzo.com>
+ <1ce23e932ea53f47a3376de90b21a9db8293bd6c.1447172835.git.vdavydov@virtuozzo.com>
+ <20151112161741.GN1174@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1447371693-25143-7-git-send-email-hannes@cmpxchg.org>
+Content-Disposition: inline
+In-Reply-To: <20151112161741.GN1174@dhcp22.suse.cz>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: Text/Plain; charset="us-ascii"
-To: hannes@cmpxchg.org
-Cc: akpm@linux-foundation.org, vdavydov@virtuozzo.com, tj@kernel.org, mhocko@suse.cz, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Greg Thelen <gthelen@google.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Johannes Weiner <hannes@cmpxchg.org>
-Date: Thu, 12 Nov 2015 18:41:25 -0500
-
-> The number of allocated sockets is used for calculations in the soft
-> limit phase, where packets are accepted but the socket is under memory
-> pressure. Since there is no soft limit phase in tcp_memcontrol, and
-> memory pressure is only entered when packets are already dropped, this
-> is actually dead code. Remove it.
+On Thu, Nov 12, 2015 at 05:17:41PM +0100, Michal Hocko wrote:
+> On Tue 10-11-15 21:34:05, Vladimir Davydov wrote:
+> > Currently, if we want to account all objects of a particular kmem cache,
+> > we have to pass __GFP_ACCOUNT to each kmem_cache_alloc call, which is
+> > inconvenient. This patch introduces SLAB_ACCOUNT flag which if passed to
+> > kmem_cache_create will force accounting for every allocation from this
+> > cache even if __GFP_ACCOUNT is not passed.
 > 
-> As this is the last user of parent_cg_proto(), remove that too.
+> Yes this is much better and less error prone for dedicated caches.
 > 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> > This patch does not make any of the existing caches use this flag - it
+> > will be done later in the series.
+> > 
+> > Note, a cache with SLAB_ACCOUNT cannot be merged with a cache w/o
+> > SLAB_ACCOUNT, i.e. using this flag will probably reduce the number of
+> > merged slabs even if kmem accounting is not used (only compiled in).
+> 
+> I would expect some reasoning why this is the case. Why cannot caches of
+> the same memcg be merged? I remember you have mentioned something in the
+> previous discussion with Tejun but it should be in the changelog as well
+> IMO.
 
-Acked-by: David S. Miller <davem@davemloft.net>
+Here goes an extended version of the last paragraph, hope it makes
+everything clear:
+
+"""
+Note, a cache with SLAB_ACCOUNT cannot be merged with a cache w/o
+SLAB_ACCOUNT, because merged caches share the same kmem_cache struct and
+hence cannot have different sets of SLAB_* flags. Thus using this flag
+will probably reduce the number of merged slabs even if kmem accounting
+is not used (only compiled in).
+"""
+
+Andrew, could you please update the commit message?
+
+> 
+> > Suggested-by: Tejun Heo <tj@kernel.org>
+> > Signed-off-by: Vladimir Davydov <vdavydov@virtuozzo.com>
+> 
+> I am not sufficiently qualified to judge the slab implementation
+> specifics but for the overal approach
+> 
+> Acked-by: Michal Hocko <mhocko@suse.com>
+
+Thanks!
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
