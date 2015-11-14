@@ -1,35 +1,36 @@
-From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: Re: [PATCH 03/14] net: tcp_memcontrol: properly detect ancestor
- socket pressure
-Date: Sat, 14 Nov 2015 15:45:52 +0300
-Message-ID: <20151114124552.GI31308@esperanza>
+From: Vladimir Davydov <vdavydov@virtuozzo.com>
+Subject: Re: [PATCH 11/14] mm: memcontrol: do not account memory+swap on
+ unified hierarchy
+Date: Sat, 14 Nov 2015 16:23:25 +0300
+Message-ID: <20151114132325.GJ31308@esperanza>
 References: <1447371693-25143-1-git-send-email-hannes@cmpxchg.org>
- <1447371693-25143-4-git-send-email-hannes@cmpxchg.org>
+ <1447371693-25143-12-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1447371693-25143-4-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1447371693-25143-12-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: David Miller <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Thu, Nov 12, 2015 at 06:41:22PM -0500, Johannes Weiner wrote:
-> When charging socket memory, the code currently checks only the local
-> page counter for excess to determine whether the memcg is under socket
-> pressure. But even if the local counter is fine, one of the ancestors
-> could have breached its limit, which should also force this child to
-> enter socket pressure. This currently doesn't happen.
+On Thu, Nov 12, 2015 at 06:41:30PM -0500, Johannes Weiner wrote:
+> The unified hierarchy memory controller doesn't expose the memory+swap
+> counter to userspace, but its accounting is hardcoded in all charge
+> paths right now, including the per-cpu charge cache ("the stock").
 > 
-> Fix this by using page_counter_try_charge() first. If that fails, it
-> means that either the local counter or one of the ancestors are in
-> excess of their limit, and the child should enter socket pressure.
+> To avoid adding yet more pointless memory+swap accounting with the
+> socket memory support in unified hierarchy, disable the counter
+> altogether when in unified hierarchy mode.
 > 
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 
-Reviewed-by: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Reviewed-by: Vladimir Davydov <vdavydov@virtuozzo.com>
 
-For the record: it was broken by commit 3e32cb2e0a12 ("mm: memcontrol:
-lockless page counters").
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
