@@ -1,68 +1,138 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 cgroup/for-4.4 3/3] cgroup: replace
- unified-hierarchy.txt with a proper cgroup v2 documentation
-Date: Mon, 16 Nov 2015 11:16:41 -0500
-Message-ID: <20151116161641.GE18894@mtj.duckdns.org>
-References: <20151022012212.GA20931@mtj.duckdns.org>
- <20151022012302.GB20931@mtj.duckdns.org>
- <20151022012354.GC20931@mtj.duckdns.org>
- <20151023011902.GC5442@mtj.duckdns.org>
- <562D95E2.2000401@huawei.com>
+From: Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] cgroup_pids: add fork limit
+Date: Mon, 16 Nov 2015 12:02:06 -0500
+Message-ID: <564A0C0E.6090004@gmail.com>
+References: <144716440621.20175.1000688899886388119.stgit@rabbit.intern.cm-ag>
+ <CAOviyaiXSCztjv0d99G-t-yo1wtGzXZr0qpuqcKDBdV=wnMinw@mail.gmail.com>
+ <5642142F.2090302@gmail.com>
+ <CAG53R5XfNjuBcwNZW4pB_bhq2+vLoo1UKQ7Rqhx=TdLMa5abuw@mail.gmail.com>
+ <56424B83.2080504@gmail.com>
+ <CAOviyag=rHcDZj3MBR3dMbkdaOY=h1FB-78QLM3CZQe2WrrgCQ@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-512; boundary="------------ms080609030309080307010203"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=NnkgDToHTGNAlsWLkznZ8S1YR+Eto66Yd93qOCX0MDE=;
-        b=Vb4CYLRVOXUjGOUHZSJ6f3owtAyOQysnUzy83mRcNi7SGwMIwH8FIGN0oKpOHBbiub
-         X0lm2YAEZiTr8qW1TDDfS4a0qxzGTSUlAgyhWxMQn7Hie8Bqe5xbftx4eWIZVEHuk1W7
-         l15ubRNROIpRANsOL1tGkOFIb+0yfxufJfzWS8K6EOtn8qR5xaQiTze40DGy647PIwr9
-         VHuDKt99sIbYjfJB9lioUCmZMAQap2W0pdK8xACBoKclnOqdiFDdAV+FZG+WuLmN9mFn
-         JlKKzxlPyfrTRf3Ln98B+9FpbstKcj+GkuzgkR3ng57rq23kZ5Rh0RORXUkTjOB+oFKE
-         0RlQ==
-Content-Disposition: inline
-In-Reply-To: <562D95E2.2000401-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+        h=subject:to:references:cc:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-type;
+        bh=t36V+N8xtMn2asNS3E8OsS4Dyo+J8T7KsFdeN8/lTaw=;
+        b=jdB21S6P9hRtdcs3JNaw1HV0i6eNyLbBSbfqpVEmne9x+QUeCPvX7lqNNmjI42MtPS
+         TWLdMUFqjh1cu7NLD0WcafxOuG6EtuRTaG/3bf6z02bKqIHFtj9qknFEnTi8Vmj8EeDG
+         +vyUFkwi84orH+FxYgzjyfIPeAq3vFzCxtt0rCdO2W+2Wb6DBYnObxbg9taGauXIvPhH
+         luxtocg+zzlXbTTR20AarVbljfeNrBXY/3bZPAV3MBFdaRC4hi6scElJtuPM0OEib1jy
+         27HKJ7axj8+v/wMW6U6xJsTIcIu/YDn3cjKfl3jYjXi/JjCN/xihOhZ7GiHunWEVXo3A
+         ymxA==
+In-Reply-To: <CAOviyag=rHcDZj3MBR3dMbkdaOY=h1FB-78QLM3CZQe2WrrgCQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
+Cc: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, max-hDT0AjmEH7RAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Oct 26, 2015 at 10:54:26AM +0800, Zefan Li wrote:
-> On 2015/10/23 9:19, Tejun Heo wrote:
-> >>From 10d158783de74ad28454ff54556abf89bd85c756 Mon Sep 17 00:00:00 2001
-> >From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> >Date: Fri, 23 Oct 2015 10:13:35 +0900
-> >
-> >Now that cgroup v2 is almost out of the door, replace the development
-> >documentation unified-hierarchy.txt with Documentation/cgroup.txt
-> >which is a superset of unified-hierarchy.txt and authoritatively
-> >describes all userland-visible aspects of cgroup.
-> >
-> >v2: Updated to include all information from blkio-controller.txt and
-> >     list filesystems which support cgroup writeback as suggested by
-> >     Vivek.
-> >
-> >Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> >Cc: Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> >---
-> >  Documentation/cgroup-legacy/blkio-controller.txt  |   79 --
-> >  Documentation/cgroup-legacy/unified-hierarchy.txt |  645 ----------
-> >  Documentation/cgroup.txt                          | 1293 +++++++++++++++++++++
-> >  3 files changed, 1293 insertions(+), 724 deletions(-)
-> >  delete mode 100644 Documentation/cgroup-legacy/unified-hierarchy.txt
-> >  create mode 100644 Documentation/cgroup.txt
-> >
-> 
-> Looks good to me. For all three patches:
-> 
-> Acked-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+This is a cryptographically signed message in MIME format.
 
-Applied 1-3 to cgroup/for-4.5.
+--------------ms080609030309080307010203
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-Thanks.
+On 2015-11-15 08:36, Aleksa Sarai wrote:
+>>> If so, could you share little more insight on how that time measure
+>>> outside of the cpu's cgroup cycles? Just so that its helpful to wider=
 
--- 
-tejun
+>>> audience.
+>>
+>> Well, there are a number of things that I can think of that the kernel=
+ does
+>> on behalf of processes that can consume processor time that isn't triv=
+ial to
+>> account:
+>>    * Updating timers on behalf of userspace processes (itimers or simi=
+lar).
+>>    * Sending certain kernel generated signals to processes (that is, s=
+tuff
+>> generated by the kernel like SIGFPE, SIGSEGV, and so forth).
+>>    * Queuing events from dnotify/inotify/fanotify.
+>>    * TLB misses, page faults, and swapping.
+>>    * Setting up new processes prior to them actually running.
+>>    * Scheduling.
+>> All of these are things that fork-bombs can and (other than TLB misses=
+) do
+>> exploit to bring a system down, and the cpu cgroup is by no means a ma=
+gic
+>> bullet to handle this.
+>
+> I feel like these are backed by different resources, and we should
+> work on limiting those *at the source* in the context of a controller
+> rather than just patching up the symptoms (too many forks causing
+> issues), because these are symptoms of a larger issue IMO.
+OK, what specific resources back each of the things that I mentioned?=20
+Other than setting up a new process (which in retrospect I realize=20
+should probably just be accounted as processor time for the parent), I=20
+can't really see much that most of these are backed by, other than=20
+processor time (and until someone demonstrates otherwise, I stand by my=20
+statement that they are non-trivial to account properly as processor time=
+).
+
+
+--------------ms080609030309080307010203
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+cnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5MSEwHwYJKoZIhvcN
+AQkBFhJzdXBwb3J0QGNhY2VydC5vcmcCAxEt+DANBglghkgBZQMEAgMFAKCCAiEwGAYJKoZI
+hvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMTUxMTE2MTcwMjA2WjBPBgkq
+hkiG9w0BCQQxQgRAI/z3WZ3bdDwuohm3er5IK7q1D/AQJTuDTCGvHAKenBgrPwEoW9FzDJzY
+ny1v4Qj0EcWJJPfT09PoXj8LKkUV0DBsBgkqhkiG9w0BCQ8xXzBdMAsGCWCGSAFlAwQBKjAL
+BglghkgBZQMEAQIwCgYIKoZIhvcNAwcwDgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMCAgFA
+MAcGBSsOAwIHMA0GCCqGSIb3DQMCAgEoMIGRBgkrBgEEAYI3EAQxgYMwgYAweTEQMA4GA1UE
+ChMHUm9vdCBDQTEeMBwGA1UECxMVaHR0cDovL3d3dy5jYWNlcnQub3JnMSIwIAYDVQQDExlD
+QSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5MSEwHwYJKoZIhvcNAQkBFhJzdXBwb3J0QGNhY2Vy
+dC5vcmcCAxEt+DCBkwYLKoZIhvcNAQkQAgsxgYOggYAweTEQMA4GA1UEChMHUm9vdCBDQTEe
+MBwGA1UECxMVaHR0cDovL3d3dy5jYWNlcnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0IFNpZ25p
+bmcgQXV0aG9yaXR5MSEwHwYJKoZIhvcNAQkBFhJzdXBwb3J0QGNhY2VydC5vcmcCAxEt+DAN
+BgkqhkiG9w0BAQEFAASCAgCOhlwtnB6RIIZjvrfY7bM78PvljWJ1fgDhWrZyJMVGblQLp1Nk
+zdC8LFL+Ug/6GsX/MwQU1ZvvIzE6vp3893vmQShi5cY55VxIKBXNWP4L7Z0CNclB7Qf+NwEB
+SfRZLObm+OBadBW8/2lAEmfmQs6GL+n0eT4N2neiuwyRckeuuZSB/dpsTMjYKz1KbvIJLloC
+uHl25mLga23tl7B2upd/vBBAa9MVPY/SEpVEaIUtkiLThrRC0tnMGUXL7WbtJiwanvwF5+kc
+xcnjqYVlvahu6FgUd1gYjWpJaVFiTXFatUENU0Xfnw3oEfiQZahjXUwRxU/nGJWxYZj3cbmO
+PiMG1184mMM+3b/DOank5/TI+Nbwrp+oRxRlsmu8vAxhGz5DIrN8qdJ4VkCkc/xohAG1fHFz
+mP9cmRigWHP2BiBZ1CG3miLSb1Dw8av6iRY4mlX1QC9/YmQLeLuCsBpZlbjNel3fYy/rS4uz
+LmBZBgEr8FzuDSiGrn+tbWs1UUu5UITHH/Tb2H4NAoldMZf3k+OUzXUpMjY6slp3M3zCpxUU
+kLn1oVZyEavo6PpMXWlC0ODmpOjv+83/ofCQvpA1jrQeQiXzEnVceypKvF0CH3bfEQwbsPUq
+lWYaCUVmaPHRiyUhlfjIxzHwR4n9WLJvZBVXvrFfIXr5x7tjFG07srlfOAAAAAAAAA==
+--------------ms080609030309080307010203--
