@@ -1,67 +1,94 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 14/14] mm: memcontrol: hook up vmpressure to socket
- pressure
-Date: Mon, 16 Nov 2015 13:53:16 -0500
-Message-ID: <20151116185316.GC32544@cmpxchg.org>
-References: <1447371693-25143-1-git-send-email-hannes@cmpxchg.org>
- <1447371693-25143-15-git-send-email-hannes@cmpxchg.org>
- <20151115135457.GM31308@esperanza>
-Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20151115135457.GM31308@esperanza>
-Sender: netdev-owner@vger.kernel.org
+From: serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org
+Subject: [PATCH 4/8] cgroup: export cgroup_get() and cgroup_put()
+Date: Mon, 16 Nov 2015 13:51:41 -0600
+Message-ID: <1447703505-29672-5-git-send-email-serge@hallyn.com>
+References: <1447703505-29672-1-git-send-email-serge@hallyn.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1447703505-29672-1-git-send-email-serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov@virtuozzo.com>
-Cc: David Miller <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org
 
-On Sun, Nov 15, 2015 at 04:54:57PM +0300, Vladimir Davydov wrote:
-> On Thu, Nov 12, 2015 at 06:41:33PM -0500, Johannes Weiner wrote:
-> > Let the networking stack know when a memcg is under reclaim pressure
-> > so that it can clamp its transmit windows accordingly.
-> > 
-> > Whenever the reclaim efficiency of a cgroup's LRU lists drops low
-> > enough for a MEDIUM or HIGH vmpressure event to occur, assert a
-> > pressure state in the socket and tcp memory code that tells it to curb
-> > consumption growth from sockets associated with said control group.
-> > 
-> > vmpressure events are naturally edge triggered, so for hysteresis
-> > assert socket pressure for a second to allow for subsequent vmpressure
-> > events to occur before letting the socket code return to normal.
-> 
-> AFAICS, in contrast to v1, now you don't modify vmpressure behavior,
-> which means socket_pressure will only be set when cgroup hits its
-> high/hard limit. On tightly packed system, this is unlikely IMO -
-> cgroups will mostly experience pressure due to memory shortage at the
-> global level and/or their low limit configuration, in which case no
-> vmpressure events will be triggered and therefore tcp window won't be
-> clamped accordingly.
+From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Yeah, this is an inherent problem in the vmpressure design and it
-makes the feature significantly less useful than it could be IMO.
+move cgroup_get() and cgroup_put() into cgroup.h so that
+they can be called from other places.
 
-But you guys were wary about the patch that changed it, and this
-series has kicked up enough dust already, so I backed it out.
+Signed-off-by: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Acked-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+---
+ include/linux/cgroup.h |   21 +++++++++++++++++++++
+ kernel/cgroup.c        |   22 ----------------------
+ 2 files changed, 21 insertions(+), 22 deletions(-)
 
-But this will still be useful. Yes, it won't help in rebalancing an
-regularly working system, which would be cool, but it'll still help
-contain a worklad that is growing beyond expectations, which is the
-scenario that kickstarted this work.
-
-> May be, we could use a per memcg slab shrinker to detect memory
-> pressure? This looks like abusing shrinkers API though.
-
-Actually, I thought about doing this long-term.
-
-Shrinkers are a nice way to export VM pressure to auxiliary allocators
-and caches. But currently, the only metric we export is LRU scan rate,
-whose application is limited to ageable caches: it doesn't make sense
-to cause auxiliary workingsets to shrink when the VM is merely picking
-up the drop-behind pages of a one-off page cache stream. I think it
-would make sense for shrinkers to include reclaim efficiency so that
-they can be used by caches that don't have 'accessed' bits and object
-rotation, but are able to shrink based on the cost they're imposing.
-
-But a change like this is beyond the scope of this series, IMO.
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 29f0b02..99096be 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -231,6 +231,27 @@ void css_task_iter_end(struct css_task_iter *it);
+ #define css_for_each_descendant_post(pos, css)				\
+ 	for ((pos) = css_next_descendant_post(NULL, (css)); (pos);	\
+ 	     (pos) = css_next_descendant_post((pos), (css)))
++/* convenient tests for these bits */
++static inline bool cgroup_is_dead(const struct cgroup *cgrp)
++{
++	return !(cgrp->self.flags & CSS_ONLINE);
++}
++
++static inline void cgroup_get(struct cgroup *cgrp)
++{
++	WARN_ON_ONCE(cgroup_is_dead(cgrp));
++	css_get(&cgrp->self);
++}
++
++static inline bool cgroup_tryget(struct cgroup *cgrp)
++{
++	return css_tryget(&cgrp->self);
++}
++
++static inline void cgroup_put(struct cgroup *cgrp)
++{
++	css_put(&cgrp->self);
++}
+ 
+ /**
+  * cgroup_taskset_for_each - iterate cgroup_taskset
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index e29c346..e972259 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -417,28 +417,6 @@ out_unlock:
+ 	return css;
+ }
+ 
+-/* convenient tests for these bits */
+-static inline bool cgroup_is_dead(const struct cgroup *cgrp)
+-{
+-	return !(cgrp->self.flags & CSS_ONLINE);
+-}
+-
+-static void cgroup_get(struct cgroup *cgrp)
+-{
+-	WARN_ON_ONCE(cgroup_is_dead(cgrp));
+-	css_get(&cgrp->self);
+-}
+-
+-static bool cgroup_tryget(struct cgroup *cgrp)
+-{
+-	return css_tryget(&cgrp->self);
+-}
+-
+-static void cgroup_put(struct cgroup *cgrp)
+-{
+-	css_put(&cgrp->self);
+-}
+-
+ struct cgroup_subsys_state *of_css(struct kernfs_open_file *of)
+ {
+ 	struct cgroup *cgrp = of->kn->parent->priv;
+-- 
+1.7.9.5
