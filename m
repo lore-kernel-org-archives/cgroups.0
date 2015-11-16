@@ -1,138 +1,46 @@
-From: Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] cgroup_pids: add fork limit
-Date: Mon, 16 Nov 2015 12:02:06 -0500
-Message-ID: <564A0C0E.6090004@gmail.com>
-References: <144716440621.20175.1000688899886388119.stgit@rabbit.intern.cm-ag>
- <CAOviyaiXSCztjv0d99G-t-yo1wtGzXZr0qpuqcKDBdV=wnMinw@mail.gmail.com>
- <5642142F.2090302@gmail.com>
- <CAG53R5XfNjuBcwNZW4pB_bhq2+vLoo1UKQ7Rqhx=TdLMa5abuw@mail.gmail.com>
- <56424B83.2080504@gmail.com>
- <CAOviyag=rHcDZj3MBR3dMbkdaOY=h1FB-78QLM3CZQe2WrrgCQ@mail.gmail.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH 05/14] net: tcp_memcontrol: protect all tcp_memcontrol
+ calls by jump-label
+Date: Mon, 16 Nov 2015 12:52:04 -0500
+Message-ID: <20151116175204.GA32544@cmpxchg.org>
+References: <1447371693-25143-1-git-send-email-hannes@cmpxchg.org>
+ <1447371693-25143-6-git-send-email-hannes@cmpxchg.org>
+ <20151114163309.GL31308@esperanza>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-512; boundary="------------ms080609030309080307010203"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=subject:to:references:cc:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-type;
-        bh=t36V+N8xtMn2asNS3E8OsS4Dyo+J8T7KsFdeN8/lTaw=;
-        b=jdB21S6P9hRtdcs3JNaw1HV0i6eNyLbBSbfqpVEmne9x+QUeCPvX7lqNNmjI42MtPS
-         TWLdMUFqjh1cu7NLD0WcafxOuG6EtuRTaG/3bf6z02bKqIHFtj9qknFEnTi8Vmj8EeDG
-         +vyUFkwi84orH+FxYgzjyfIPeAq3vFzCxtt0rCdO2W+2Wb6DBYnObxbg9taGauXIvPhH
-         luxtocg+zzlXbTTR20AarVbljfeNrBXY/3bZPAV3MBFdaRC4hi6scElJtuPM0OEib1jy
-         27HKJ7axj8+v/wMW6U6xJsTIcIu/YDn3cjKfl3jYjXi/JjCN/xihOhZ7GiHunWEVXo3A
-         ymxA==
-In-Reply-To: <CAOviyag=rHcDZj3MBR3dMbkdaOY=h1FB-78QLM3CZQe2WrrgCQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20151114163309.GL31308@esperanza>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
-Cc: Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Max Kellermann <mk-xMchvyqCc6DQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, max-hDT0AjmEH7RAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-This is a cryptographically signed message in MIME format.
+On Sat, Nov 14, 2015 at 07:33:10PM +0300, Vladimir Davydov wrote:
+> On Thu, Nov 12, 2015 at 06:41:24PM -0500, Johannes Weiner wrote:
+> > Move the jump-label from sock_update_memcg() and sock_release_memcg()
+> > to the callsite, and so eliminate those function calls when socket
+> > accounting is not enabled.
+> 
+> I don't believe this patch's necessary, because these functions aren't
+> hot paths. Neither do I think it makes the code look better. Anyway,
+> it's rather a matter of personal preference, and the patch looks correct
+> to me, so
 
---------------ms080609030309080307010203
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Yeah, it's not a hotpath. What I like primarily about this patch I
+guess is that makes it more consistent how memcg entry is gated. You
+don't have to remember which functions have the checks in the caller
+and which have it in the function themselves. And I really hate the
 
-On 2015-11-15 08:36, Aleksa Sarai wrote:
->>> If so, could you share little more insight on how that time measure
->>> outside of the cpu's cgroup cycles? Just so that its helpful to wider=
+static inline void foo(void)
+{
+	if (foo_enabled())
+		__foo()
+}
 
->>> audience.
->>
->> Well, there are a number of things that I can think of that the kernel=
- does
->> on behalf of processes that can consume processor time that isn't triv=
-ial to
->> account:
->>    * Updating timers on behalf of userspace processes (itimers or simi=
-lar).
->>    * Sending certain kernel generated signals to processes (that is, s=
-tuff
->> generated by the kernel like SIGFPE, SIGSEGV, and so forth).
->>    * Queuing events from dnotify/inotify/fanotify.
->>    * TLB misses, page faults, and swapping.
->>    * Setting up new processes prior to them actually running.
->>    * Scheduling.
->> All of these are things that fork-bombs can and (other than TLB misses=
-) do
->> exploit to bring a system down, and the cpu cgroup is by no means a ma=
-gic
->> bullet to handle this.
->
-> I feel like these are backed by different resources, and we should
-> work on limiting those *at the source* in the context of a controller
-> rather than just patching up the symptoms (too many forks causing
-> issues), because these are symptoms of a larger issue IMO.
-OK, what specific resources back each of the things that I mentioned?=20
-Other than setting up a new process (which in retrospect I realize=20
-should probably just be accounted as processor time for the parent), I=20
-can't really see much that most of these are backed by, other than=20
-processor time (and until someone demonstrates otherwise, I stand by my=20
-statement that they are non-trivial to account properly as processor time=
-).
+in the headerfile pattern.
 
+> Reviewed-by: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 
---------------ms080609030309080307010203
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-cnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5MSEwHwYJKoZIhvcN
-AQkBFhJzdXBwb3J0QGNhY2VydC5vcmcCAxEt+DANBglghkgBZQMEAgMFAKCCAiEwGAYJKoZI
-hvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMTUxMTE2MTcwMjA2WjBPBgkq
-hkiG9w0BCQQxQgRAI/z3WZ3bdDwuohm3er5IK7q1D/AQJTuDTCGvHAKenBgrPwEoW9FzDJzY
-ny1v4Qj0EcWJJPfT09PoXj8LKkUV0DBsBgkqhkiG9w0BCQ8xXzBdMAsGCWCGSAFlAwQBKjAL
-BglghkgBZQMEAQIwCgYIKoZIhvcNAwcwDgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMCAgFA
-MAcGBSsOAwIHMA0GCCqGSIb3DQMCAgEoMIGRBgkrBgEEAYI3EAQxgYMwgYAweTEQMA4GA1UE
-ChMHUm9vdCBDQTEeMBwGA1UECxMVaHR0cDovL3d3dy5jYWNlcnQub3JnMSIwIAYDVQQDExlD
-QSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5MSEwHwYJKoZIhvcNAQkBFhJzdXBwb3J0QGNhY2Vy
-dC5vcmcCAxEt+DCBkwYLKoZIhvcNAQkQAgsxgYOggYAweTEQMA4GA1UEChMHUm9vdCBDQTEe
-MBwGA1UECxMVaHR0cDovL3d3dy5jYWNlcnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0IFNpZ25p
-bmcgQXV0aG9yaXR5MSEwHwYJKoZIhvcNAQkBFhJzdXBwb3J0QGNhY2VydC5vcmcCAxEt+DAN
-BgkqhkiG9w0BAQEFAASCAgCOhlwtnB6RIIZjvrfY7bM78PvljWJ1fgDhWrZyJMVGblQLp1Nk
-zdC8LFL+Ug/6GsX/MwQU1ZvvIzE6vp3893vmQShi5cY55VxIKBXNWP4L7Z0CNclB7Qf+NwEB
-SfRZLObm+OBadBW8/2lAEmfmQs6GL+n0eT4N2neiuwyRckeuuZSB/dpsTMjYKz1KbvIJLloC
-uHl25mLga23tl7B2upd/vBBAa9MVPY/SEpVEaIUtkiLThrRC0tnMGUXL7WbtJiwanvwF5+kc
-xcnjqYVlvahu6FgUd1gYjWpJaVFiTXFatUENU0Xfnw3oEfiQZahjXUwRxU/nGJWxYZj3cbmO
-PiMG1184mMM+3b/DOank5/TI+Nbwrp+oRxRlsmu8vAxhGz5DIrN8qdJ4VkCkc/xohAG1fHFz
-mP9cmRigWHP2BiBZ1CG3miLSb1Dw8av6iRY4mlX1QC9/YmQLeLuCsBpZlbjNel3fYy/rS4uz
-LmBZBgEr8FzuDSiGrn+tbWs1UUu5UITHH/Tb2H4NAoldMZf3k+OUzXUpMjY6slp3M3zCpxUU
-kLn1oVZyEavo6PpMXWlC0ODmpOjv+83/ofCQvpA1jrQeQiXzEnVceypKvF0CH3bfEQwbsPUq
-lWYaCUVmaPHRiyUhlfjIxzHwR4n9WLJvZBVXvrFfIXr5x7tjFG07srlfOAAAAAAAAA==
---------------ms080609030309080307010203--
+Thanks, I appreciate you acking it despite your personal preference!
