@@ -1,119 +1,96 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 3/5] cgroup: implement cgroup_get_from_path() and expose cgroup_put()
-Date: Tue, 17 Nov 2015 14:40:38 -0500
-Message-ID: <1447789240-29394-4-git-send-email-tj@kernel.org>
-References: <1447789240-29394-1-git-send-email-tj@kernel.org>
+From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: [PATCH 14/14] mm: memcontrol: hook up vmpressure to socket
+ pressure
+Date: Tue, 17 Nov 2015 23:18:50 +0300
+Message-ID: <20151117201849.GQ31308@esperanza>
+References: <1447371693-25143-1-git-send-email-hannes@cmpxchg.org>
+ <1447371693-25143-15-git-send-email-hannes@cmpxchg.org>
+ <20151115135457.GM31308@esperanza>
+ <20151116185316.GC32544@cmpxchg.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=93UWt0lyjvCFiQrGo/cO00Yjc5kKKYXEfbYq5VMm1Xw=;
-        b=ArVrVZz+O5qQ8KO9K5mTrIiid4rSoIC+kH5qQVBqA4p2dqrzi7wfDrBrnlWK2d9maM
-         q+w/TycoYbUY+fvXwa3HFjViyyJ1yh6MXQXAwXkU26GP1H7M/C08vWp1XEwI3oouPCRq
-         n7tg7mlW5IgpuxjtjHCN+FzxJ7TqidCnpAwM0gmoTd4x049C2X7sI/z7pePVqCtBhdQn
-         P4LjITGIR1l/j/2Mx73JvSjz2gLPDkoXuvySecIA84Cj8xawyo2788kJiJM30kE17jVs
-         Gl/yh57ZD4Xgj0UzYRnksOy62eHFMB8px8xMWrzwjlMXVT67+44WXC8w3LFO6XGJndOl
-         aC2w==
-In-Reply-To: <1447789240-29394-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20151116185316.GC32544-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org, kadlec-K40Dz/62t/MgiyqX0sVFJYdd74u8MsAO@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netfilter-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, coreteam-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Implement cgroup_get_path() using kernfs_walk_and_get() which obtains
-a default hierarchy cgroup from its path.  This will be used to allow
-cgroup path based matching from outside cgroup proper -
-e.g. networking and perf.
+On Mon, Nov 16, 2015 at 01:53:16PM -0500, Johannes Weiner wrote:
+> On Sun, Nov 15, 2015 at 04:54:57PM +0300, Vladimir Davydov wrote:
+> > On Thu, Nov 12, 2015 at 06:41:33PM -0500, Johannes Weiner wrote:
+> > > Let the networking stack know when a memcg is under reclaim pressure
+> > > so that it can clamp its transmit windows accordingly.
+> > > 
+> > > Whenever the reclaim efficiency of a cgroup's LRU lists drops low
+> > > enough for a MEDIUM or HIGH vmpressure event to occur, assert a
+> > > pressure state in the socket and tcp memory code that tells it to curb
+> > > consumption growth from sockets associated with said control group.
+> > > 
+> > > vmpressure events are naturally edge triggered, so for hysteresis
+> > > assert socket pressure for a second to allow for subsequent vmpressure
+> > > events to occur before letting the socket code return to normal.
+> > 
+> > AFAICS, in contrast to v1, now you don't modify vmpressure behavior,
+> > which means socket_pressure will only be set when cgroup hits its
+> > high/hard limit. On tightly packed system, this is unlikely IMO -
+> > cgroups will mostly experience pressure due to memory shortage at the
+> > global level and/or their low limit configuration, in which case no
+> > vmpressure events will be triggered and therefore tcp window won't be
+> > clamped accordingly.
+> 
+> Yeah, this is an inherent problem in the vmpressure design and it
+> makes the feature significantly less useful than it could be IMO.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- include/linux/cgroup.h |  7 +++++++
- kernel/cgroup.c        | 38 +++++++++++++++++++++++++++++++++-----
- 2 files changed, 40 insertions(+), 5 deletions(-)
+AFAIK vmpressure was designed to allow userspace to tune hard limits of
+cgroups in accordance with their demands, in which case the way how
+vmpressure notifications work makes sense.
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index b5ee2c4..4c3ffab 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -81,6 +81,8 @@ struct cgroup_subsys_state *cgroup_get_e_css(struct cgroup *cgroup,
- struct cgroup_subsys_state *css_tryget_online_from_dir(struct dentry *dentry,
- 						       struct cgroup_subsys *ss);
- 
-+struct cgroup *cgroup_get_from_path(const char *path);
-+
- int cgroup_attach_task_all(struct task_struct *from, struct task_struct *);
- int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from);
- 
-@@ -351,6 +353,11 @@ static inline void css_put_many(struct cgroup_subsys_state *css, unsigned int n)
- 		percpu_ref_put_many(&css->refcnt, n);
- }
- 
-+static inline void cgroup_put(struct cgroup *cgrp)
-+{
-+	css_put(&cgrp->self);
-+}
-+
- /**
-  * task_css_set_check - obtain a task's css_set with extra access conditions
-  * @task: the task to obtain css_set for
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 3190040..49947c1 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -434,11 +434,6 @@ static bool cgroup_tryget(struct cgroup *cgrp)
- 	return css_tryget(&cgrp->self);
- }
- 
--static void cgroup_put(struct cgroup *cgrp)
--{
--	css_put(&cgrp->self);
--}
--
- struct cgroup_subsys_state *of_css(struct kernfs_open_file *of)
- {
- 	struct cgroup *cgrp = of->kn->parent->priv;
-@@ -5753,6 +5748,39 @@ struct cgroup_subsys_state *css_from_id(int id, struct cgroup_subsys *ss)
- 	return id > 0 ? idr_find(&ss->css_idr, id) : NULL;
- }
- 
-+/**
-+ * cgroup_get_from_path - lookup and get a cgroup from its default hierarchy path
-+ * @path: path on the default hierarchy
-+ *
-+ * Find the cgroup at @path on the default hierarchy, increment its
-+ * reference count and return it.  Returns pointer to the found cgroup on
-+ * success, ERR_PTR(-ENOENT) if @path doens't exist and ERR_PTR(-ENOTDIR)
-+ * if @path points to a non-directory.
-+ */
-+struct cgroup *cgroup_get_from_path(const char *path)
-+{
-+	struct kernfs_node *kn;
-+	struct cgroup *cgrp;
-+
-+	mutex_lock(&cgroup_mutex);
-+
-+	kn = kernfs_walk_and_get(cgrp_dfl_root.cgrp.kn, path);
-+	if (kn) {
-+		if (kernfs_type(kn) == KERNFS_DIR) {
-+			cgrp = kn->priv;
-+			cgroup_get(cgrp);
-+		} else {
-+			cgrp = ERR_PTR(-ENOTDIR);
-+		}
-+		kernfs_put(kn);
-+	} else {
-+		cgrp = ERR_PTR(-ENOENT);
-+	}
-+
-+	mutex_unlock(&cgroup_mutex);
-+	return cgrp;
-+}
-+
- #ifdef CONFIG_CGROUP_DEBUG
- static struct cgroup_subsys_state *
- debug_css_alloc(struct cgroup_subsys_state *parent_css)
--- 
-2.5.0
+> 
+> But you guys were wary about the patch that changed it, and this
+
+Changing vmpressure semantics as you proposed in v1 would result in
+userspace getting notifications even if cgroup does not hit its limit.
+May be it could be useful to someone (e.g. it could help tuning
+memory.low), but I am pretty sure this would also result in breakages
+for others.
+
+> series has kicked up enough dust already, so I backed it out.
+> 
+> But this will still be useful. Yes, it won't help in rebalancing an
+> regularly working system, which would be cool, but it'll still help
+> contain a worklad that is growing beyond expectations, which is the
+> scenario that kickstarted this work.
+
+I haven't looked through all the previous patches in the series, but
+AFAIU they should do the trick, no? Notifying sockets about vmpressure
+is rather needed to protect a workload from itself. And with this patch
+it will work this way, but only if sum limits < total ram, which is
+rather rare in practice. On tightly packed systems it does nothing.
+
+That said, I don't think we should commit this particular patch. Neither
+do I think socket accounting should be enabled by default in the unified
+hierarchy for now, since the implementation is still incomplete. IMHO.
+
+Thanks,
+Vladimir
+
+> 
+> > May be, we could use a per memcg slab shrinker to detect memory
+> > pressure? This looks like abusing shrinkers API though.
+> 
+> Actually, I thought about doing this long-term.
+> 
+> Shrinkers are a nice way to export VM pressure to auxiliary allocators
+> and caches. But currently, the only metric we export is LRU scan rate,
+> whose application is limited to ageable caches: it doesn't make sense
+> to cause auxiliary workingsets to shrink when the VM is merely picking
+> up the drop-behind pages of a one-off page cache stream. I think it
+> would make sense for shrinkers to include reclaim efficiency so that
+> they can be used by caches that don't have 'accessed' bits and object
+> rotation, but are able to shrink based on the cost they're imposing.
+> 
+> But a change like this is beyond the scope of this series, IMO.
+> 
