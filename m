@@ -1,53 +1,30 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/5] kernfs: implement kernfs_walk_and_get()
-Date: Tue, 17 Nov 2015 16:22:26 -0500
-Message-ID: <20151117212226.GG22864@mtj.duckdns.org>
+From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Subject: Re: [PATCH 4/5] sock, cgroup: add sock->sk_cgroup
+Date: Tue, 17 Nov 2015 16:25:54 -0500 (EST)
+Message-ID: <20151117.162554.314531574043190960.davem@davemloft.net>
 References: <1447789240-29394-1-git-send-email-tj@kernel.org>
- <1447789240-29394-3-git-send-email-tj@kernel.org>
- <20151117.162040.1412296298973879057.davem@davemloft.net>
+	<1447789240-29394-5-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=nZLjp/eRx2MzQzGYLmL/+nYeq6moEEXjoWg2UyTcfnI=;
-        b=MNDy2i8dRa8o7UGCFdNSXdBiN4g5E/lVpwKQbkuKP4aB3hQl+IhRx66Hz1QknNNFb4
-         4zQUNTJ/Ccv9Sl9J1gGuoR/wL7+roqIcX+odzpCcTcAGJZPnPgBvLYqGzV/fRmMWjDWE
-         qN7HVj1/kMt+kTYgMpYoOFzOeyx7V0jvIrw8qDe4FCi1CgOd857jFA3Lvm+bedpmcIQp
-         QQbfp3s29Y14Im1zo+cfj15/yURwTjZXAG/2rySnSZ/yjTljO3zIznbHTFi7eiXGtp2/
-         hN9K7D5KmeV99V+YokoTh1knp2wW5mAtAE4w+KjEI4pyLFIbajp7UFKyawHRO3F5PADs
-         Zckg==
-Content-Disposition: inline
-In-Reply-To: <20151117.162040.1412296298973879057.davem@davemloft.net>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Miller <davem@davemloft.net>
-Cc: pablo@netfilter.org, kaber@trash.net, kadlec@blackhole.kfki.hu, lizefan@huawei.com, hannes@cmpxchg.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, coreteam@netfilter.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, daniel@iogearbox.net, daniel.wagner@bmw-carit.de, nhorman@tuxdriver.com, gregkh@linuxfoundation.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1447789240-29394-5-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: Text/Plain; charset="us-ascii"
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org, kadlec-K40Dz/62t/MgiyqX0sVFJYdd74u8MsAO@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netfilter-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, coreteam-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org
 
-On Tue, Nov 17, 2015 at 04:20:40PM -0500, David Miller wrote:
-> From: Tejun Heo <tj@kernel.org>
-> Date: Tue, 17 Nov 2015 14:40:37 -0500
-> 
-> > +	static char path_buf[PATH_MAX];	/* protected by kernfs_mutex */
-> > +	int len = strlen(path);
->  ...
-> > +	if (len >= PATH_MAX)
-> > +		return NULL;
-> > +
-> > +	memcpy(path_buf, path, len + 1);
-> 
-> 	static char path_buf[PATH_MAX];	/* protected by kernfs_mutex */
-> 	int len = strlcpy(path_buf, path, PATH_MAX);
->  ...
-> 	if (len >= PATH_MAX)
-> 		return NULL;
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Tue, 17 Nov 2015 14:40:39 -0500
 
-That's a lot better.  Will update.
+> In preparation, this patch adds sock->sk_cgroup which points to the
+> associated cgroup.  A sock is associated on creation and stays
+> associated to the same cgroup until freed; unfortunately, this ends up
+> adding another cgroup field to struct sock on top of sk_cgrp_prioidx
+> and sk_classid.  I tried to think of a way to somehow overload the
+> existing fields but couldn't come up with a reasonable one.
 
-Thanks.
+sk->sk_cgrp_prioidx is simply sk->sk_cgroup->id, is it not?
 
--- 
-tejun
+We really need to consolidate this before we stuff even more members
+into the socket for control group support, sorry.
