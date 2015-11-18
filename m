@@ -1,50 +1,138 @@
-From: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: CGroup Namespaces (v4)
-Date: Wed, 18 Nov 2015 09:43:06 -0600
-Message-ID: <20151118154306.GA24719@mail.hallyn.com>
-References: <1447703505-29672-1-git-send-email-serge@hallyn.com>
-	<CAFLxGvzVmbZHrpaTmXUAK03hsnVPwEs3SJGNFNXfthh3NL8EDg@mail.gmail.com>
-	<20151116204606.GA30681@mail.hallyn.com> <564A41AF.4040208@nod.at>
-	<20151116205452.GA30975@mail.hallyn.com>
-	<87y4dxh9b8.fsf@x220.int.ebiederm.org>
-	<20151118023022.GA17501@mail.hallyn.com>
-	<87r3jnfyx7.fsf@x220.int.ebiederm.org>
+From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: [PATCH 14/14] mm: memcontrol: hook up vmpressure to socket
+ pressure
+Date: Wed, 18 Nov 2015 19:02:54 +0300
+Message-ID: <20151118160253.GR31308@esperanza>
+References: <1447371693-25143-1-git-send-email-hannes@cmpxchg.org>
+ <1447371693-25143-15-git-send-email-hannes@cmpxchg.org>
+ <20151115135457.GM31308@esperanza>
+ <20151116185316.GC32544@cmpxchg.org>
+ <20151117201849.GQ31308@esperanza>
+ <20151117222217.GA20394@cmpxchg.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <87r3jnfyx7.fsf-JOvCrm2gF+uungPnsOpG7nhyD016LWXt@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Cc: Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LXC development mailing-list <lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org>, "open list:ABI/API" <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+In-Reply-To: <20151117222217.GA20394-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Wed, Nov 18, 2015 at 03:18:44AM -0600, Eric W. Biederman wrote:
-> "Serge E. Hallyn" <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org> writes:
+On Tue, Nov 17, 2015 at 05:22:17PM -0500, Johannes Weiner wrote:
+> On Tue, Nov 17, 2015 at 11:18:50PM +0300, Vladimir Davydov wrote:
+> > AFAIK vmpressure was designed to allow userspace to tune hard limits of
+> > cgroups in accordance with their demands, in which case the way how
+> > vmpressure notifications work makes sense.
 > 
-> > On Mon, Nov 16, 2015 at 04:24:27PM -0600, Eric W. Biederman wrote:
-> >> Similary have you considered what it required to be able to safely set
-> >> FS_USERNS_MOUNT?
-> >
-> > I pushed the one patch which I feel is needed to my branch (it's also
-> > included in another reply).  Aditya had already added FS_USERNS_MOUNT to
-> > the cgroup fs flags, so I think we're now all set.  I can start
-> > unprivileged containers which mount cgroupfs (which make systemd happy).
-> 
-> In principle that sounds very good, and I am glad to see that.
-> 
-> Let's hold off on merging the unprivileged part until everything else is
-> reviewed and merged and we have performed an extra hard look at the
-> security implications as it can be easy to overlook something when
-> relaxing the permissions.
+> You can still do that when the reporting happens on the reclaim level,
+> it's easy to figure out where the pressure comes from once a group is
+> struggling to reclaim its LRU pages.
 
-I'll break out the FS_USERNS_MOUNT flag into the very last patch.
+Right, one only needs to check usage-vs-limit in the cgroup that
+received a notification and all its ascendants, but I doubt existing
+applications do that.
+
+> 
+> Reporting on the pressure level does nothing but destroy valuable
+> information that would be useful in scenarios other than tuning a
+> hierarchical memory limit.
+
+Agree.
+
+> 
+> > > But you guys were wary about the patch that changed it, and this
+> > 
+> > Changing vmpressure semantics as you proposed in v1 would result in
+> > userspace getting notifications even if cgroup does not hit its limit.
+> > May be it could be useful to someone (e.g. it could help tuning
+> > memory.low), but I am pretty sure this would also result in breakages
+> > for others.
+> 
+> Maybe. I'll look into a two-layer vmpressure recording/reporting model
+> that would give us reclaim-level events internally while retaining
+> pressure-level events for the existing userspace interface.
+
+It would be great. I think vmpressure, as you propose to implement it,
+could be useful even in the unified hierarchy for tuning memory.low and
+memory.high.
+
+> 
+> > > series has kicked up enough dust already, so I backed it out.
+> > > 
+> > > But this will still be useful. Yes, it won't help in rebalancing an
+> > > regularly working system, which would be cool, but it'll still help
+> > > contain a worklad that is growing beyond expectations, which is the
+> > > scenario that kickstarted this work.
+> > 
+> > I haven't looked through all the previous patches in the series, but
+> > AFAIU they should do the trick, no? Notifying sockets about vmpressure
+> > is rather needed to protect a workload from itself.
+> 
+> No, the only critical thing is to protect the system from OOM
+> conditions caused by what should be containerized processes.
+> 
+> That's a correctness issue.
+> 
+> How much we mitigate the consequences inside the container when the
+> workload screws up is secondary. But even that is already much better
+> in this series compared to memcg v1, while leaving us with all the
+> freedom to continue improving this internal mitigation in the future.
+> 
+> > And with this patch it will work this way, but only if sum limits <
+> > total ram, which is rather rare in practice. On tightly packed
+> > systems it does nothing.
+> 
+> That's not true, it's still useful when things go south inside a
+> cgroup, even with overcommitted limits. See above.
+
+I meant solely this patch here, not the rest of the patch set. In the
+overcommitted case there is no difference if we have the last patch or
+not AFAIU.
+
+> 
+> We can optimize the continuous global pressure rebalancing later on;
+> whether that'll be based on a modified vmpressure implementation, or
+> adding reclaim efficiency to the shrinker API or whatever.
+> 
+> > That said, I don't think we should commit this particular patch. Neither
+> > do I think socket accounting should be enabled by default in the unified
+> > hierarchy for now, since the implementation is still incomplete. IMHO.
+> 
+> I don't see a technical basis for either of those suggestions.
+> 
+
+IMHO users switching to the unified hierarchy don't expect that
+something gets broken in the default setup unless it's a bug. They
+expect API changes, new functionality appeared, some features dropped,
+but not breakages.
+
+With this patch set, one gets socket accounting enabled by default,
+which would be OK if it always worked right, at least in theory. But it
+does not if the node is overcommitted - one might get unexpected local
+OOMs due to growing socket buffers, which have never been seen in the
+legacy hierarchy.
+
+You say that it will help coping with global OOM, which is true, but it
+looks like trading an old problem for a new one, which is unaccepted in
+this particular case IMHO, because the legacy hierarchy has been used
+for years and people are likely to be used to old problems such as lack
+of socket buffers accounting - they might already work around this
+problem by tuning global tcp limits for instance. After switching to the
+unified hierarchy they'll get a new problem in the default setup, which
+is no good IMHO.
+
+I'm not against enabling socket buffers accounting by default, but only
+once it is expected to work in 99% cases, at least theoretically.
+
+Why can't we apply all patches but the last one (they look OK at first
+glance, but I need more time to review them carefully) and disable
+socket accounting by default for now? Then you or someone else would
+prepare a separate patch set introducing vmpressure propagation to
+socket code, so that socket accounting could be enabled by default.
+
+I don't insist. It's just my vision on how things should be done.
+
+Thanks,
+Vladimir
