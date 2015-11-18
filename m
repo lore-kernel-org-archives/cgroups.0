@@ -1,72 +1,59 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 14/14] mm: memcontrol: hook up vmpressure to socket
- pressure
-Date: Wed, 18 Nov 2015 13:27:46 -0500
-Message-ID: <20151118182746.GA5093@cmpxchg.org>
+Subject: Re: [PATCH 13/14] mm: memcontrol: account socket memory in unified
+ hierarchy memory controller
+Date: Wed, 18 Nov 2015 16:48:22 -0500
+Message-ID: <20151118214822.GA1365@cmpxchg.org>
 References: <1447371693-25143-1-git-send-email-hannes@cmpxchg.org>
- <1447371693-25143-15-git-send-email-hannes@cmpxchg.org>
- <20151115135457.GM31308@esperanza>
- <20151116185316.GC32544@cmpxchg.org>
- <20151117201849.GQ31308@esperanza>
- <20151117222217.GA20394@cmpxchg.org>
- <20151118160253.GR31308@esperanza>
+ <1447371693-25143-14-git-send-email-hannes@cmpxchg.org>
+ <20151116155923.GH14116@dhcp22.suse.cz>
+ <20151116181810.GB32544@cmpxchg.org>
+ <20151118162256.GK19145@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20151118160253.GR31308@esperanza>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20151118162256.GK19145@dhcp22.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov@virtuozzo.com>
-Cc: David Miller <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Michal Hocko <mhocko@kernel.org>
+Cc: David Miller <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@virtuozzo.com>, Tejun Heo <tj@kernel.org>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Wed, Nov 18, 2015 at 07:02:54PM +0300, Vladimir Davydov wrote:
-> On Tue, Nov 17, 2015 at 05:22:17PM -0500, Johannes Weiner wrote:
-> > On Tue, Nov 17, 2015 at 11:18:50PM +0300, Vladimir Davydov wrote:
-> > > And with this patch it will work this way, but only if sum limits <
-> > > total ram, which is rather rare in practice. On tightly packed
-> > > systems it does nothing.
-> > 
-> > That's not true, it's still useful when things go south inside a
-> > cgroup, even with overcommitted limits. See above.
+On Wed, Nov 18, 2015 at 05:22:56PM +0100, Michal Hocko wrote:
+> On Mon 16-11-15 13:18:10, Johannes Weiner wrote:
+> > What load would you test and what would be the baseline to compare it
+> > to?
 > 
-> I meant solely this patch here, not the rest of the patch set. In the
-> overcommitted case there is no difference if we have the last patch or
-> not AFAIU.
+> It seems like netperf with a stream load running in a memcg with no
+> limits vs. in root memcg (and no other cgroups) should give at least a
+> hint about the runtime overhead, no?
 
-Even this patch, and even in the overcommitted case. When things go
-bad inside a cgroup it can steal free memory (it's rare that machines
-are at 100% utilization in practice) or memory from other groups until
-it hits its own limit. I expect most users except, for some largescale
-deployments, to frequently hit memory.high (or max) in practice.
+Comparing root vs. dedicated group generally doesn't make sense since
+you either need containment or you don't. It makes more sense to test
+both times inside a memory-controlled cgroup, one with a regular boot,
+one with cgroup.memory=nosocket.
 
-Obviously the utopian case of full utilization will be even smoother
-when we make vmpressure more finegrained, but why would that be an
-argument *against* this patch here, which is useful everywhere else?
+So I ran perf record -g -a netperf -t TCP_STREAM multiple times inside
+a memory-controlled cgroup, but mostly mem_cgroup_charge_skmem() does
+not show up in the profile at all. Once it was there with 0.00%.
 
-> Why can't we apply all patches but the last one (they look OK at first
-> glance, but I need more time to review them carefully) and disable
-> socket accounting by default for now? Then you or someone else would
-> prepare a separate patch set introducing vmpressure propagation to
-> socket code, so that socket accounting could be enabled by default.
+I ran another test that downloads the latest kernel image from
+kernel.org at 13MB/s (on my i5 laptop) and it looks like this:
 
-This is not going to happen, and we discussed this several times
-before. I really wish Michal and you would put more thought into
-interface implications. It's trivial to fix up implementation if
-actual shortcomings are observed, but it's nigh impossible to fix
-interfaces and user-visible behavior once published. It requires
-enormous undertakings such as unified hierarchy to rectify things.
+     0.02%     0.01%  irq/44-iwlwifi   [kernel.kallsyms]           [k] mem_cgroup_charge_skmem
+             |
+             ---mem_cgroup_charge_skmem
+                __sk_mem_schedule
+                tcp_try_rmem_schedule
+                tcp_data_queue
+                tcp_rcv_established
+                tcp_v4_do_rcv
+                tcp_v4_rcv
+                ip_local_deliver
+                ip_rcv
+                __netif_receive_skb_core
+                __netif_receive_skb
+                netif_receive_skb_internal
+                napi_gro_complete
 
-Please take your time to review this series, no problem.
-
-But I'm no longer reacting to suggestions to make interface tradeoffs
-because new code is not proven to work 99% of the time. That's simply
-ridiculous. Any problems will have to be fixed either way, and we're
-giving users the cmdline options to work around them in the meantime.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+The runs vary too much for this to be measurable in elapsed time.
