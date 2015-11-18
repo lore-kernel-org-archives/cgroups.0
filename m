@@ -1,60 +1,69 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 13/14] mm: memcontrol: account socket memory in unified
- hierarchy memory controller
-Date: Wed, 18 Nov 2015 17:22:56 +0100
-Message-ID: <20151118162256.GK19145@dhcp22.suse.cz>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH 14/14] mm: memcontrol: hook up vmpressure to socket
+ pressure
+Date: Wed, 18 Nov 2015 13:27:46 -0500
+Message-ID: <20151118182746.GA5093@cmpxchg.org>
 References: <1447371693-25143-1-git-send-email-hannes@cmpxchg.org>
- <1447371693-25143-14-git-send-email-hannes@cmpxchg.org>
- <20151116155923.GH14116@dhcp22.suse.cz>
- <20151116181810.GB32544@cmpxchg.org>
+ <1447371693-25143-15-git-send-email-hannes@cmpxchg.org>
+ <20151115135457.GM31308@esperanza>
+ <20151116185316.GC32544@cmpxchg.org>
+ <20151117201849.GQ31308@esperanza>
+ <20151117222217.GA20394@cmpxchg.org>
+ <20151118160253.GR31308@esperanza>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20151116181810.GB32544@cmpxchg.org>
+In-Reply-To: <20151118160253.GR31308@esperanza>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: David Miller <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@virtuozzo.com>, Tejun Heo <tj@kernel.org>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Vladimir Davydov <vdavydov@virtuozzo.com>
+Cc: David Miller <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Mon 16-11-15 13:18:10, Johannes Weiner wrote:
-> On Mon, Nov 16, 2015 at 04:59:25PM +0100, Michal Hocko wrote:
-> > On Thu 12-11-15 18:41:32, Johannes Weiner wrote:
-> > > Socket memory can be a significant share of overall memory consumed by
-> > > common workloads. In order to provide reasonable resource isolation in
-> > > the unified hierarchy, this type of memory needs to be included in the
-> > > tracking/accounting of a cgroup under active memory resource control.
-> > > 
-> > > Overhead is only incurred when a non-root control group is created AND
-> > > the memory controller is instructed to track and account the memory
-> > > footprint of that group. cgroup.memory=nosocket can be specified on
-> > > the boot commandline to override any runtime configuration and
-> > > forcibly exclude socket memory from active memory resource control.
+On Wed, Nov 18, 2015 at 07:02:54PM +0300, Vladimir Davydov wrote:
+> On Tue, Nov 17, 2015 at 05:22:17PM -0500, Johannes Weiner wrote:
+> > On Tue, Nov 17, 2015 at 11:18:50PM +0300, Vladimir Davydov wrote:
+> > > And with this patch it will work this way, but only if sum limits <
+> > > total ram, which is rather rare in practice. On tightly packed
+> > > systems it does nothing.
 > > 
-> > Do you have any numbers about the overhead?
+> > That's not true, it's still useful when things go south inside a
+> > cgroup, even with overcommitted limits. See above.
 > 
-> Hm? Performance numbers make sense when you have a specific scenario
-> and a theory on how to optimize the implementation for it.
+> I meant solely this patch here, not the rest of the patch set. In the
+> overcommitted case there is no difference if we have the last patch or
+> not AFAIU.
 
-The fact that there was a strong push to use static branches to put
-the code out of line to reduce an overhead before the feature was
-merged shows that people are sensitive to network performance and that
-significant effort has been spent to eliminate it. My point was that you
-are enabling the feature for all memcg users in unified hierarchy now
-without having a performance impact overview which users can use
-to judge whether to keep it enabled or disable before they start seeing
-regressions or to make regression easier to track once it happens.
+Even this patch, and even in the overcommitted case. When things go
+bad inside a cgroup it can steal free memory (it's rare that machines
+are at 100% utilization in practice) or memory from other groups until
+it hits its own limit. I expect most users except, for some largescale
+deployments, to frequently hit memory.high (or max) in practice.
 
-> What load would you test and what would be the baseline to compare it
-> to?
+Obviously the utopian case of full utilization will be even smoother
+when we make vmpressure more finegrained, but why would that be an
+argument *against* this patch here, which is useful everywhere else?
 
-It seems like netperf with a stream load running in a memcg with no
-limits vs. in root memcg (and no other cgroups) should give at least a
-hint about the runtime overhead, no?
--- 
-Michal Hocko
-SUSE Labs
+> Why can't we apply all patches but the last one (they look OK at first
+> glance, but I need more time to review them carefully) and disable
+> socket accounting by default for now? Then you or someone else would
+> prepare a separate patch set introducing vmpressure propagation to
+> socket code, so that socket accounting could be enabled by default.
+
+This is not going to happen, and we discussed this several times
+before. I really wish Michal and you would put more thought into
+interface implications. It's trivial to fix up implementation if
+actual shortcomings are observed, but it's nigh impossible to fix
+interfaces and user-visible behavior once published. It requires
+enormous undertakings such as unified hierarchy to rectify things.
+
+Please take your time to review this series, no problem.
+
+But I'm no longer reacting to suggestions to make interface tradeoffs
+because new code is not proven to work 99% of the time. That's simply
+ridiculous. Any problems will have to be fixed either way, and we're
+giving users the cmdline options to work around them in the meantime.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
