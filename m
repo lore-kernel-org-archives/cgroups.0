@@ -1,59 +1,49 @@
-From: Michal Hocko <mhocko@kernel.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Subject: Re: [PATCH 13/14] mm: memcontrol: account socket memory in unified
  hierarchy memory controller
-Date: Thu, 19 Nov 2015 14:50:24 +0100
-Message-ID: <20151119135023.GH8494@dhcp22.suse.cz>
+Date: Thu, 19 Nov 2015 11:52:25 -0500
+Message-ID: <20151119165225.GA1949@cmpxchg.org>
 References: <1447371693-25143-1-git-send-email-hannes@cmpxchg.org>
  <1447371693-25143-14-git-send-email-hannes@cmpxchg.org>
  <20151116155923.GH14116@dhcp22.suse.cz>
  <20151116181810.GB32544@cmpxchg.org>
  <20151118162256.GK19145@dhcp22.suse.cz>
  <20151118214822.GA1365@cmpxchg.org>
+ <20151119135023.GH8494@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20151118214822.GA1365@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20151119135023.GH8494-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: David Miller <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@virtuozzo.com>, Tejun Heo <tj@kernel.org>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Wed 18-11-15 16:48:22, Johannes Weiner wrote:
-[...]
-> So I ran perf record -g -a netperf -t TCP_STREAM multiple times inside
-> a memory-controlled cgroup, but mostly mem_cgroup_charge_skmem() does
-> not show up in the profile at all. Once it was there with 0.00%.
-
-OK, this sounds very good! This means that most workloads which are not
-focusing solely on the network traffic shouldn't even notice. I can
-imagine that workloads with high throughput demands would notice but I
-would also expect them to disable the feature.
-
-Could you add this information to the changelog, please?
-
-> I ran another test that downloads the latest kernel image from
-> kernel.org at 13MB/s (on my i5 laptop) and it looks like this:
+On Thu, Nov 19, 2015 at 02:50:24PM +0100, Michal Hocko wrote:
+> On Wed 18-11-15 16:48:22, Johannes Weiner wrote:
+> [...]
+> > So I ran perf record -g -a netperf -t TCP_STREAM multiple times inside
+> > a memory-controlled cgroup, but mostly mem_cgroup_charge_skmem() does
+> > not show up in the profile at all. Once it was there with 0.00%.
 > 
->      0.02%     0.01%  irq/44-iwlwifi   [kernel.kallsyms]           [k] mem_cgroup_charge_skmem
->              |
->              ---mem_cgroup_charge_skmem
->                 __sk_mem_schedule
->                 tcp_try_rmem_schedule
->                 tcp_data_queue
->                 tcp_rcv_established
->                 tcp_v4_do_rcv
->                 tcp_v4_rcv
->                 ip_local_deliver
->                 ip_rcv
->                 __netif_receive_skb_core
->                 __netif_receive_skb
->                 netif_receive_skb_internal
->                 napi_gro_complete
-> 
-> The runs vary too much for this to be measurable in elapsed time.
+> OK, this sounds very good! This means that most workloads which are not
+> focusing solely on the network traffic shouldn't even notice. I can
+> imagine that workloads with high throughput demands would notice but I
+> would also expect them to disable the feature.
 
--- 
-Michal Hocko
-SUSE Labs
+Even for high throughput, the cost of this is a function of number of
+packets sent. E.g. the 13MB/s over wifi showed the socket charging at
+0.02%. But I just did an http transfer over 1Gbit ethernet at around
+110MB/s, ten times the bandwidth, and the charge function is at 0.00%.
+
+> Could you add this information to the changelog, please?
+
+Sure, but which information exactly?
+
+If we had found a realistic networking workload that is expected to be
+containerized and had shown that load to be negatively affected by the
+charging calls, that would have been worth bringing up in conjunction
+with the boot-time flag. But what do we have to say here? People care
+about cost. It seems unnecessary to point out the absence of it.
