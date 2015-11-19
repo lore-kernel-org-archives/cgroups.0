@@ -1,47 +1,40 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH iptables] libxt_cgroup: improve wording in the man page
-Date: Thu, 19 Nov 2015 13:58:01 -0500
-Message-ID: <20151119185801.GC28608@mtj.duckdns.org>
-References: <1447959171-20749-1-git-send-email-tj@kernel.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH v2 2/6] Revert "gfp: add __GFP_NOACCOUNT"
+Date: Thu, 19 Nov 2015 13:59:32 -0500
+Message-ID: <20151119185932.GB3941@cmpxchg.org>
+References: <cover.1447172835.git.vdavydov@virtuozzo.com>
+ <7edf2c7333f027ad6a890884558fde60b5144140.1447172835.git.vdavydov@virtuozzo.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=YKzzztaK43Hia/nawUjLvzmE7Xp94BT9z10xGmMQNu4=;
-        b=MufDnUzLlKiv11/j8p+pXP6TCQjz68JeSwFgKMpyNf0q357RyB9cT0MC2Lu4RvvzzD
-         cGwpzxbItGQBEtnJWfFdJY9hOQIwx5zJKBY3kSqhenwzUd9j31Jyd96+B3cG/YHGVdh+
-         oXP46yaAPRflpjb4COORSsudsfGxDIT/xNAfyuO8wJm9YOCbn3kfg+agI9XbFyuY6LAb
-         7OcxLsyixrfluWsaxXkNocPQZGHPIqUFr/YYgh9+JJiNaGjnGmFpkDyrULZBGGvfmsyQ
-         HV82LZDXXk/7zLEhp+P9FG1nI/sjDTkMkNlIKVgt6yr5p9MwLvYML6EpPjJI2jOjdGtu
-         yDcg==
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1447959171-20749-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <7edf2c7333f027ad6a890884558fde60b5144140.1447172835.git.vdavydov@virtuozzo.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org, kadlec-K40Dz/62t/MgiyqX0sVFJYdd74u8MsAO@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netfilter-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, coreteam-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, Jan Engelhardt <jengelh-9+2X+4sQBs8@public.gmane.org>
+To: Vladimir Davydov <vdavydov@virtuozzo.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, Greg Thelen <gthelen@google.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Replace "disadviced" with "not advised" as suggested by Jan.
+On Tue, Nov 10, 2015 at 09:34:03PM +0300, Vladimir Davydov wrote:
+> This reverts commit 8f4fc071b1926d0b20336e2b3f8ab85c94c734c5.
+> 
+> Black-list kmem accounting policy (aka __GFP_NOACCOUNT) turned out to be
+> fragile and difficult to maintain, because there seem to be many more
+> allocations that should not be accounted than those that should be.
+> Besides, false accounting an allocation might result in much worse
+> consequences than not accounting at all, namely increased memory
+> consumption due to pinned dead kmem caches.
+> 
+> So it was decided to switch to the white-list policy. This patch reverts
+> bits introducing the black-list policy. The white-list policy will be
+> introduced later in the series.
+> 
+> Signed-off-by: Vladimir Davydov <vdavydov@virtuozzo.com>
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Daniel Borkmann <dborkman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Jan Engelhardt <jengelh-9+2X+4sQBs8@public.gmane.org>
----
- extensions/libxt_cgroup.man |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 
---- a/extensions/libxt_cgroup.man
-+++ b/extensions/libxt_cgroup.man
-@@ -12,7 +12,7 @@ the net_cls cgroup's id.
- matcher is currently only of limited functionality, meaning it
- will only match on packets that are processed for local sockets
- through early socket demuxing. Therefore, general usage on the
--INPUT chain is disadviced unless the implications are well
-+INPUT chain is not advised unless the implications are well
- understood.
- .PP
- Example:
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
