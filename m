@@ -1,59 +1,65 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: pids_free double free.
-Date: Fri, 20 Nov 2015 15:48:13 -0500
-Message-ID: <20151120204813.GB1574@mtj.duckdns.org>
-References: <20151120041836.GA18390@codemonkey.org.uk>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCHSET v2] netfilter, cgroup: implement xt_cgroup2 match
+Date: Fri, 20 Nov 2015 16:06:02 -0500
+Message-ID: <20151120210602.GD1574@mtj.duckdns.org>
+References: <1447959171-20749-1-git-send-email-tj@kernel.org>
+ <20151120.135912.1506496112678349111.davem@davemloft.net>
+ <20151120195625.GA1124@salvia>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <netfilter-devel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=SywJHhqcGBzY19GObtSfPLs7utFbjqeYHQAUqbdflc4=;
-        b=RPGTRtTqwnrykRFAHRe5/c0aQQsdrgTUWetluuEIJvsDmtylGQn+kbPXFYcaiTom05
-         BZJBE2E4PfztD7TsTOU9u/5fmiHmzmKUDkE5LGIFdCBhexo2QAICFV/HnGHnP7XJbrQl
-         tEIGmFipwZr74OKpSjW921VtB9Luv9h4Bzlm1pcI7fa+MB6+zaHYLulurh5mYdhFipYD
-         MNFoOsn6/JBQkrufaGaWh0i4Op77+edLG7zIFNIwzAK2Ixq6Kaa11p1n4FB9kWIGS7rY
-         EnGY/uarqxYTyGCLFEVvCyKRnp9y9IaUSKi4vsn8xZwPPt/O7QViCzUGc1wSRrfEE1le
-         oqdg==
+        bh=vSRCXt0xDsib0f8Vp7rGGhwLAAk4Tl4PYXUEZhYo50U=;
+        b=TYycnwNtgGqziqRkWSvl9Ex7SijuTImx7M/xh3vOWFF0RTNIGeMnIpVDRP8nw1ogYB
+         6boPbBmHUE91uyIrJQ4Fa2bHgp1Dw5mVVJEJzqdFe710YYqlQ+uTD+UUfJyKzdBA3utB
+         zEUqJRU8O4BxQhumon6GRs0gNwkFAHpWoiiQU7npBqp4GPrZ2AskNVUjUu8GQWippGu1
+         wwqd1LYPbr5CV0kjHlhDpuPwKG7qDku4TCjMKYuNEkLPFZGh0PdqUpMMQxcP1YGmKylq
+         Z2S/x/q/ynzCc66X9zYtcYreQ2BzVw7Rv7NYZu6eiM8fPciM8IlE/UK5Q71guEBIx07W
+         82tg==
 Content-Disposition: inline
-In-Reply-To: <20151120041836.GA18390-rdkfGonbjUTCLXcRTR1eJlpr/1R2p/CL@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20151120195625.GA1124@salvia>
+Sender: netfilter-devel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Dave Jones <davej-rdkfGonbjUTCLXcRTR1eJlpr/1R2p/CL@public.gmane.org>
-Cc: Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Pablo Neira Ayuso <pablo@netfilter.org>
+Cc: David Miller <davem@davemloft.net>, kaber@trash.net, kadlec@blackhole.kfki.hu, lizefan@huawei.com, hannes@cmpxchg.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, coreteam@netfilter.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, daniel@iogearbox.net, daniel.wagner@bmw-carit.de, nhorman@tuxdriver.com
 
-Hello, Dave.
+Hello, David, Pablo.
 
-On Thu, Nov 19, 2015 at 11:18:36PM -0500, Dave Jones wrote:
-> One of my debian boxes got a systemd update. After rebooting,
-> I started seeing a use-after-free trace, followed by a lockup.
+On Fri, Nov 20, 2015 at 08:56:25PM +0100, Pablo Neira Ayuso wrote:
+> > Pablo, are you ok with me merging this into net-next directly or
+> > would you rather I take patches 1-6 into net-next and then you can
+> > merge and then add patch #7 on top?
 > 
-> I have two slightly different traces from separate boots,
-> which may give some clue as to how it's getting free'd in two ways..
-> 
-> http://codemonkey.org.uk/junk/IMG_0474.jpg
-> http://codemonkey.org.uk/junk/IMG_0476.jpg
-> 
-> This isn't new, I booted back to 4.3, and hit slab debugging warnings
-> from the same code.  (At the least it was broken differently)
-> 
-> The WARN_ON referenced in the 2nd trace is this..
-> 
-> static void pids_cancel(struct pids_cgroup *pids, int num)
-> {
->         /*  
->          * A negative count (or overflow for that matter) is invalid,
->          * and indicates a bug in the `pids` controller proper.
->          */
->         WARN_ON_ONCE(atomic64_add_negative(-num, &pids->counter));
-> }
+> I'd suggest you get 1-6, then I'll pull this info my tree. Thanks David!
 
-I *think* I know what's going on.  Zombies don't pin the css so if the
-cgroup gets removed, the free path may end up operating on a css which
-has already been freed.  Will look more into it.
+Hmm.... 1-3 will be needed to address similar issues in a different
+controller, so putting them in a separate branch would work best.  I
+created a branch which contains the 1-3 on top of v4.4-rc1.
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.5-ancestor-test
+
+If creating a different branch from net side is better, please let me
+know.
+
+> Regarding #7, I have a couple two concerns:
+> 
+> 1) cgroup currently doesn't work the way users expect, ie. to perform any
+>    reasonable firewalling. Since this relies on early demux, only a
+>    limited number of sockets get access to the cgroup info.
+
+Right, it doesn't work well on INPUT side, so the big warning in the
+man page.
+
+> 2) We have traditionally rejected match2 and target2 extensions. I
+>    guess you can accomodate the new cgroup code through the revision
+>    iptables infrastructure, so we still use the cgroup match.
+
+I thought it would be confusing because the two are completely
+separate.  Hmmm... okay, I'll merge it into xt_cgroup.
 
 Thanks.
 
