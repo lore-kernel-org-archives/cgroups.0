@@ -1,56 +1,61 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH RESEND] cgroups: Allow dynamically changing net_classid
-Date: Fri, 20 Nov 2015 15:40:20 -0500
-Message-ID: <20151120204020.GA1574@mtj.duckdns.org>
-References: <1448051499-1885574-1-git-send-email-ninasc@fb.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: pids_free double free.
+Date: Fri, 20 Nov 2015 15:48:13 -0500
+Message-ID: <20151120204813.GB1574@mtj.duckdns.org>
+References: <20151120041836.GA18390@codemonkey.org.uk>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=q38n3aJNe46Fe2pPC8S/ZsfDT49/sWzUhaZNKoB6FRA=;
-        b=vP852uRiUwDehwhr5+GJfAFncDzfiyKiIxeGJGGjdLARwGkDw60kFIPfqZORP2RP00
-         jrdpzvdDIyQ79sFv1DN1gLWK2/jY+vzYQcueOeTJWVR32PJu8v/UKGxk8/cABfMCrEis
-         TgIeq+Db5+lHy35Ay6o8oef+mRllUkA34ZK+0PRlSoZ2VnQYbWj8p9BylJSSmB9Yaw2C
-         2yK4ELdJhcb1n63+FVJciUWRKk5KxOnuLLONfJU8TXbt5pPS6q6TlyOnIh/xvWRVA6B/
-         C1trdTvcVp4/qV6MAhBPvBDY8TUdoEnWRzvGIxYgPt2VYM2y7I/+TcMpKQwkMHb2PT5w
-         Ssxg==
+        bh=SywJHhqcGBzY19GObtSfPLs7utFbjqeYHQAUqbdflc4=;
+        b=RPGTRtTqwnrykRFAHRe5/c0aQQsdrgTUWetluuEIJvsDmtylGQn+kbPXFYcaiTom05
+         BZJBE2E4PfztD7TsTOU9u/5fmiHmzmKUDkE5LGIFdCBhexo2QAICFV/HnGHnP7XJbrQl
+         tEIGmFipwZr74OKpSjW921VtB9Luv9h4Bzlm1pcI7fa+MB6+zaHYLulurh5mYdhFipYD
+         MNFoOsn6/JBQkrufaGaWh0i4Op77+edLG7zIFNIwzAK2Ixq6Kaa11p1n4FB9kWIGS7rY
+         EnGY/uarqxYTyGCLFEVvCyKRnp9y9IaUSKi4vsn8xZwPPt/O7QViCzUGc1wSRrfEE1le
+         oqdg==
 Content-Disposition: inline
-In-Reply-To: <1448051499-1885574-1-git-send-email-ninasc@fb.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20151120041836.GA18390-rdkfGonbjUTCLXcRTR1eJlpr/1R2p/CL@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Nina Schiff <ninasc@fb.com>
-Cc: davem@davemloft.net, daniel.wagner@bmw-carit.de, nhorman@tuxdriver.com, netdev@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Dave Jones <davej-rdkfGonbjUTCLXcRTR1eJlpr/1R2p/CL@public.gmane.org>
+Cc: Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+Hello, Dave.
 
-On Fri, Nov 20, 2015 at 12:31:39PM -0800, Nina Schiff wrote:
-> The classid of a process is changed either when a process is moved to
-> or from a cgroup or when the net_cls.classid file is updated.
-> Previously net_cls only supported propogating these changes to the
-> cgroup's related sockets when a process was added or removed from the
-> cgroup. This means it was neccessary to remove and re-add all processes
-> to a cgroup in order to update its classid. This change introduces
-> support for doing this dynamically - i.e. when the value is changed in
-> the net_cls_classid file, this will also trigger an update to the
-> classid associated with all sockets controlled by the cgroup.
-> This mimics the behaviour of other cgroup subsystems.
-> net_prio circumvents this issue by storing an index into a table with
-> each socket (and so any updates to the table, don't require updating
-> the value associated with the socket). net_cls, however, passes the
-> socket the classid directly, and so this additional step is needed.
+On Thu, Nov 19, 2015 at 11:18:36PM -0500, Dave Jones wrote:
+> One of my debian boxes got a systemd update. After rebooting,
+> I started seeing a use-after-free trace, followed by a lockup.
 > 
-> Signed-off-by: Nina Schiff <ninasc@fb.com>
+> I have two slightly different traces from separate boots,
+> which may give some clue as to how it's getting free'd in two ways..
+> 
+> http://codemonkey.org.uk/junk/IMG_0474.jpg
+> http://codemonkey.org.uk/junk/IMG_0476.jpg
+> 
+> This isn't new, I booted back to 4.3, and hit slab debugging warnings
+> from the same code.  (At the least it was broken differently)
+> 
+> The WARN_ON referenced in the 2nd trace is this..
+> 
+> static void pids_cancel(struct pids_cgroup *pids, int num)
+> {
+>         /*  
+>          * A negative count (or overflow for that matter) is invalid,
+>          * and indicates a bug in the `pids` controller proper.
+>          */
+>         WARN_ON_ONCE(atomic64_add_negative(-num, &pids->counter));
+> }
 
-Acked-by: Tejun Heo <tj@kernel.org>
+I *think* I know what's going on.  Zombies don't pin the css so if the
+cgroup gets removed, the free path may end up operating on a css which
+has already been freed.  Will look more into it.
 
-This was broken from the beginning.  Thanks for fixing this.
-
-BTW, this will cause a context conflict with the cgroup2 match
-patches.  I'll update the patchset once this lands in net-next.
+Thanks.
 
 -- 
 tejun
