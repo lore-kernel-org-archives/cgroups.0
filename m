@@ -1,89 +1,59 @@
-From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: Re: [PATCH 13/14] mm: memcontrol: account socket memory in unified
- hierarchy memory controller
-Date: Fri, 20 Nov 2015 16:10:33 +0300
-Message-ID: <20151120131033.GF31308@esperanza>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH 08/14] net: tcp_memcontrol: sanitize tcp memory
+ accounting callbacks
+Date: Fri, 20 Nov 2015 13:42:54 -0500
+Message-ID: <20151120184254.GB5623@cmpxchg.org>
 References: <1447371693-25143-1-git-send-email-hannes@cmpxchg.org>
- <1447371693-25143-14-git-send-email-hannes@cmpxchg.org>
+ <1447371693-25143-9-git-send-email-hannes@cmpxchg.org>
+ <20151120105857.GB31308@esperanza>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1447371693-25143-14-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <20151120105857.GB31308@esperanza>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 Cc: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Thu, Nov 12, 2015 at 06:41:32PM -0500, Johannes Weiner wrote:
-...
-> @@ -5514,16 +5550,43 @@ void sock_release_memcg(struct sock *sk)
->   */
->  bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
->  {
-> +	unsigned int batch = max(CHARGE_BATCH, nr_pages);
->  	struct page_counter *counter;
-> +	bool force = false;
->  
-> -	if (page_counter_try_charge(&memcg->tcp_mem.memory_allocated,
-> -				    nr_pages, &counter)) {
-> -		memcg->tcp_mem.memory_pressure = 0;
-> +#ifdef CONFIG_MEMCG_KMEM
-> +	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys)) {
-> +		if (page_counter_try_charge(&memcg->tcp_mem.memory_allocated,
-> +					    nr_pages, &counter)) {
-> +			memcg->tcp_mem.memory_pressure = 0;
-> +			return true;
-> +		}
-> +		page_counter_charge(&memcg->tcp_mem.memory_allocated, nr_pages);
-> +		memcg->tcp_mem.memory_pressure = 1;
-> +		return false;
-> +	}
-> +#endif
-> +	if (consume_stock(memcg, nr_pages))
->  		return true;
-> +retry:
-> +	if (page_counter_try_charge(&memcg->memory, batch, &counter))
-> +		goto done;
-> +
-> +	if (batch > nr_pages) {
-> +		batch = nr_pages;
-> +		goto retry;
->  	}
-> -	page_counter_charge(&memcg->tcp_mem.memory_allocated, nr_pages);
-> -	memcg->tcp_mem.memory_pressure = 1;
-> -	return false;
-> +
-> +	page_counter_charge(&memcg->memory, batch);
-> +	force = true;
-> +done:
+On Fri, Nov 20, 2015 at 01:58:57PM +0300, Vladimir Davydov wrote:
+> On Thu, Nov 12, 2015 at 06:41:27PM -0500, Johannes Weiner wrote:
+> > There won't be a tcp control soft limit, so integrating the memcg code
+> > into the global skmem limiting scheme complicates things
+> > unnecessarily. Replace this with simple and clear charge and uncharge
+> > calls--hidden behind a jump label--to account skb memory.
+> > 
+> > Note that this is not purely aesthetic: as a result of shoehorning the
+> > per-memcg code into the same memory accounting functions that handle
+> > the global level, the old code would compare the per-memcg consumption
+> > against the smaller of the per-memcg limit and the global limit. This
+> > allowed the total consumption of multiple sockets to exceed the global
+> > limit, as long as the individual sockets stayed within bounds. After
+> > this change, the code will always compare the per-memcg consumption to
+> > the per-memcg limit, and the global consumption to the global limit,
+> > and thus close this loophole.
+> > 
+> > Without a soft limit, the per-memcg memory pressure state in sockets
+> > is generally questionable. However, we did it until now, so we
+> > continue to enter it when the hard limit is hit, and packets are
+> > dropped, to let other sockets in the cgroup know that they shouldn't
+> > grow their transmit windows, either. However, keep it simple in the
+> > new callback model and leave memory pressure lazily when the next
+> > packet is accepted (as opposed to doing it synchroneously when packets
+> > are processed). When packets are dropped, network performance will
+> > already be in the toilet, so that should be a reasonable trade-off.
+> > 
+> > As described above, consumption is now checked on the per-memcg level
+> > and the global level separately. Likewise, memory pressure states are
+> > maintained on both the per-memcg level and the global level, and a
+> > socket is considered under pressure when either level asserts as much.
+> > 
+> > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> 
+> It leaves the legacy functionality intact, while making the code look
+> much better.
+> 
+> Reviewed-by: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 
-> +	css_get_many(&memcg->css, batch);
-
-Is there any point to get css reference per each charged page? For kmem
-it is absolutely necessary, because dangling slabs must block
-destruction of memcg's kmem caches, which are destroyed on css_free. But
-for sockets there's no such problem: memcg will be destroyed only after
-all sockets are destroyed and therefore uncharged (since
-sock_update_memcg pins css).
-
-> +	if (batch > nr_pages)
-> +		refill_stock(memcg, batch - nr_pages);
-> +
-> +	schedule_work(&memcg->socket_work);
-
-I think it's suboptimal to schedule the work even if we are below the
-high threshold.
-
-BTW why do we need this work at all? Why is reclaim_high called from
-task_work not enough?
-
-Thanks,
-Vladimir
-
-> +
-> +	return !force;
->  }
->  
->  /**
+Thank you very much!
