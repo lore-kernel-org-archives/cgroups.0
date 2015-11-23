@@ -1,71 +1,63 @@
-From: Nikolay Borisov <kernel-6AxghH7DbtA@public.gmane.org>
-Subject: WARN in __mark_inode_dirty when mounting a filesystem
-Date: Mon, 23 Nov 2015 17:40:36 +0200
-Message-ID: <56533374.2090807@kyup.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 9/9] netfilter: implement xt_cgroup cgroup2 path match
+Date: Mon, 23 Nov 2015 10:41:35 -0500
+Message-ID: <20151123154135.GC3049@mtj.duckdns.org>
+References: <1448122441-9335-1-git-send-email-tj@kernel.org>
+ <1448122441-9335-10-git-send-email-tj@kernel.org>
+ <565309D5.80707@bmw-carit.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=xNPjascOsGyMU1wLNrN0Vph8COLl0E7m2GHSuKOlWvw=;
+        b=LLy+/FsGgIlqOcW56sd73NK2cDtoj1MdnmL9ij47f/u02+PbJQIRAPDCg1YG0lrDFM
+         21zl7B/t3J1ixPsxgoRFTvDVmGdpUer8Of3r/++lLWPIJNKQ13P9/gXTlM8CLTx8SGTt
+         ZqPcsIqhvYheHHoQF6daP1AapttWPDp8X2g5+0DOxKKQIkKxbLO8GRYE9cwB83IX9yXK
+         +EkREgkF3GZtyLjBC2Q2j2+uD6pPE9FnZ0LIVOYpRYlJw7uHsWkloErgq3+WhWsRvzdI
+         joFW9shZS/A8g5G77iXkVBLD+MsvaNeg8GQYmvr7LPCzh2Hwn/52P32NCN99olvE6ZlR
+         QD9A==
+Content-Disposition: inline
+In-Reply-To: <565309D5.80707-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+Cc: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org, kadlec-K40Dz/62t/MgiyqX0sVFJYdd74u8MsAO@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, nhorman-2XuSBdqkA4SvXiR4WA35Jg@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netfilter-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, coreteam-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, ninasc-b10kYP2dOMg@public.gmane.org, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Jan Engelhardt <jengelh-9+2X+4sQBs8@public.gmane.org>
 
-Hello Tejun, 
+Hello,
 
-On one of my servers I recently hit the following warn: 
+On Mon, Nov 23, 2015 at 01:43:01PM +0100, Daniel Wagner wrote:
+> Hi Tejun,
+> 
+> On 11/21/2015 05:14 PM, Tejun Heo wrote:> +static int
+> > cgroup_mt_check_v1(const struct xt_mtchk_param *par)
+> > +{
+> > +	struct xt_cgroup_info_v1 *info = par->matchinfo;
+> > +	struct cgroup *cgrp;
+> > +
+> > +	if ((info->invert_path & ~1) || (info->invert_classid & ~1))
+> > +		return -EINVAL;
+> 
+> The checks below use pr_info() in case the configuration is not valid.
+> Is this missing here on purpose?
 
-182317.101584] ------------[ cut here ]------------
-[182317.101753] WARNING: CPU: 7 PID: 13192 at fs/fs-writeback.c:2080 __mark_inode_dirty+0x20a/0x350()
-[182317.102032] bdi-block not registered
-[182317.102192] Kernel panic - not syncing: panic_on_warn set ...
-                
-[182317.102474] CPU: 7 PID: 13192 Comm: mount Not tainted 4.2.5-vanilla1 #1
-[182317.102647] Hardware name: Supermicro X9DRi-LN4+/X9DR3-LN4+/X9DRi-LN4+/X9DR3-LN4+, BIOS 3.0 07/05/2013
-[182317.102942]  0000000000000820 ffff88026440f968 ffffffff8158d43e 0000000000000000
-[182317.103307]  ffffffff817cb826 ffff88026440f9e8 ffffffff8158d1b8 ffff880200000008
-[182317.103673]  ffff88026440f9f8 ffff88026440f998 0000000000000246 0000000000000030
-[182317.104036] Call Trace:
-[182317.104207]  [<ffffffff8158d43e>] dump_stack+0x48/0x5a
-[182317.104380]  [<ffffffff8158d1b8>] panic+0xc1/0x20d
-[182317.104556]  [<ffffffff81054292>] warn_slowpath_common+0xd2/0xe0
-[182317.104730]  [<ffffffff81054356>] warn_slowpath_fmt+0x46/0x50
-[182317.104903]  [<ffffffff811bdfea>] __mark_inode_dirty+0x20a/0x350
-[182317.105076]  [<ffffffff811c777d>] ? __set_page_dirty+0x7d/0xd0
-[182317.105248]  [<ffffffff811c8157>] mark_buffer_dirty+0x97/0x110
-[182317.105421]  [<ffffffff812310d3>] ext4_commit_super+0x193/0x260
-[182317.105596]  [<ffffffff812314ee>] ext4_setup_super+0xee/0x1e0
-[182317.105774]  [<ffffffff8123dbad>] ext4_fill_super+0x172d/0x2210
-[182317.105951]  [<ffffffff8114aa06>] ? memcg_init_list_lru_node+0x46/0x70
-[182317.106127]  [<ffffffff81197c4f>] mount_bdev+0x1af/0x1f0
-[182317.106300]  [<ffffffff8117143f>] ? alloc_pages_current+0xaf/0x160
-[182317.106475]  [<ffffffff8123c480>] ? ext4_alloc_flex_bg_array+0x110/0x110
-[182317.106651]  [<ffffffff8122d415>] ext4_mount+0x15/0x20
-[182317.106824]  [<ffffffff81197813>] mount_fs+0x43/0x170
-[182317.106997]  [<ffffffff811b4b06>] vfs_kern_mount+0x76/0x130
-[182317.107169]  [<ffffffff811b5a38>] do_new_mount+0xc8/0x370
-[182317.107343]  [<ffffffff811b60f0>] do_mount+0x1c0/0x1f0
-[182317.107515]  [<ffffffff811b619b>] SyS_mount+0x7b/0xc0
-[182317.107687]  [<ffffffff815917ee>] entry_SYSCALL_64_fastpath+0x12/0x71
+It's mostly copied from v0 function but I think it makes sense.  The
+other errors can be caused by incorrect user input but the above one
+can't happen unless iptables extension itself is broken.
 
-WARN(bdi_cap_writeback_dirty(wb->bdi) &&
-     !test_bit(WB_registered, &wb->state),
-     "bdi-%s not registered\n", wb->bdi->name);
+> I have tested it slightly and it seems to work (also on an older
+> kernel). I don't know if that qualifies it for a Tested-by but at least
+> Acked-by should do the trick:
 
+Will answer that there.
 
-On examining the crashdump the main reason is that wb->state in this 
-case is 0. The device in question is a dm-thin volume. WB_registered 
-is basically set in either bdi_register or cgwb_create functions. 
-However, I couldn't figure where those are called for dm devices. Looking
-at struct bdi_writeback the blkcg_css points to blkcg_root and memcg_css 
-also points to the root memcg. IOW the process is in the root cgroup. 
+> Tested-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+> Acked-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
 
-Essentially I'm trying to figure out where is the BDI for this device supposed
-to be initialised (registered) so that the warn doesn't trigger? This is 
-happening on a 4.2.5 vanilla kernel. I have a complete crashdump from when
-this happened so if you need any more state information I'd be happy to 
-provide it. 
+Thanks.
 
-This is triggered when a activating a volume group, then activating the 
-logical volume and finally mounting the volume and on this mounting happening 
-the warn is triggered. 
+-- 
+tejun
