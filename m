@@ -1,95 +1,94 @@
-From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-Subject: Re: [PATCHSET v3] netfilter, cgroup: implement cgroup2 path match in
- xt_cgroup
-Date: Mon, 23 Nov 2015 09:54:32 +0100
-Message-ID: <5652D448.3080002@bmw-carit.de>
-References: <1448122441-9335-1-git-send-email-tj@kernel.org>
- <5652BC3A.1010701@bmw-carit.de>
+From: Vladimir Davydov <vdavydov@virtuozzo.com>
+Subject: Re: [PATCH 09/14] net: tcp_memcontrol: simplify linkage between
+ socket and page counter
+Date: Mon, 23 Nov 2015 12:36:46 +0300
+Message-ID: <20151123093646.GA29014@esperanza>
+References: <1447371693-25143-1-git-send-email-hannes@cmpxchg.org>
+ <1447371693-25143-10-git-send-email-hannes@cmpxchg.org>
+ <20151120124216.GD31308@esperanza>
+ <20151120185648.GC5623@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5652BC3A.1010701-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org, kadlec-K40Dz/62t/MgiyqX0sVFJYdd74u8MsAO@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, nhorman-2XuSBdqkA4SvXiR4WA35Jg@public.gmane.org
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netfilter-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, coreteam-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, ninasc-b10kYP2dOMg@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20151120185648.GC5623@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: David Miller <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On 11/23/2015 08:11 AM, Daniel Wagner wrote:
-> [    3.217648] systemd[1]: tmp.mount: Directory /tmp to mount over is not empty, mounting anyway.
-> [    3.224665] BUG: spinlock bad magic on CPU#1, systemd/1
-> [    3.225653]  lock: cgroup_sk_update_lock+0x0/0x60, .magic: 00000000, .owner: systemd/1, .owner_cpu: 1
-> [    3.227034] CPU: 1 PID: 1 Comm: systemd Not tainted 4.4.0-rc1+ #195
-> [    3.227862] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.8.2-0-g33fbe13 by qemu-project.org 04/01/2014
-> [    3.228906]  ffffffff834a2160 ffff88007c043ad0 ffffffff81551edc ffff88007c028000
-> [    3.229512]  ffff88007c043af0 ffffffff81136868 ffffffff834a2160 ffff88007aff5940
-> [    3.230105]  ffff88007c043b08 ffffffff81136b05 ffffffff834a2160 ffff88007c043b20
-> [    3.230716] Call Trace:
-> [    3.230906]  [<ffffffff81551edc>] dump_stack+0x4e/0x82
-> [    3.231289]  [<ffffffff81136868>] spin_dump+0x78/0xc0
-> [    3.231642]  [<ffffffff81136b05>] do_raw_spin_unlock+0x75/0xd0
-> [    3.232039]  [<ffffffff81bced77>] _raw_spin_unlock+0x27/0x50
-> [    3.232431]  [<ffffffff819b1848>] update_classid_sock+0x68/0x80
-> [    3.232836]  [<ffffffff812855c1>] iterate_fd+0x71/0x150
-> [    3.233197]  [<ffffffff819b1757>] update_classid+0x47/0x80
-> [    3.233571]  [<ffffffff819b17d4>] cgrp_attach+0x14/0x20
-> [    3.233929]  [<ffffffff81188951>] cgroup_taskset_migrate+0x1e1/0x330
-> [    3.234366]  [<ffffffff81188b95>] cgroup_migrate+0xf5/0x190
-> [    3.234747]  [<ffffffff81188aa5>] ? cgroup_migrate+0x5/0x190
-> [    3.235130]  [<ffffffff81188da6>] cgroup_attach_task+0x176/0x200
-> [    3.235543]  [<ffffffff81188c35>] ? cgroup_attach_task+0x5/0x200
-> [    3.235953]  [<ffffffff8118922d>] __cgroup_procs_write+0x2ad/0x460
-> [    3.236377]  [<ffffffff81188fde>] ? __cgroup_procs_write+0x5e/0x460
-> [    3.236805]  [<ffffffff81189414>] cgroup_procs_write+0x14/0x20
-> [    3.237205]  [<ffffffff81185ae5>] cgroup_file_write+0x35/0x1c0
-> [    3.237600]  [<ffffffff812e25e1>] kernfs_fop_write+0x141/0x190
-> [    3.237998]  [<ffffffff81265e78>] __vfs_write+0x28/0xe0
-> [    3.238361]  [<ffffffff811292c7>] ? percpu_down_read+0x57/0xa0
-> [    3.238761]  [<ffffffff81268b04>] ? __sb_start_write+0xb4/0xf0
-> [    3.239154]  [<ffffffff81268b04>] ? __sb_start_write+0xb4/0xf0
-> [    3.239554]  [<ffffffff812665ec>] vfs_write+0xac/0x1a0
-> [    3.239930]  [<ffffffff81285fa6>] ? __fget_light+0x66/0x90
-> [    3.240308]  [<ffffffff81266f09>] SyS_write+0x49/0xb0
-> [    3.240656]  [<ffffffff81bcfb32>] entry_SYSCALL_64_fastpath+0x12/0x76
+On Fri, Nov 20, 2015 at 01:56:48PM -0500, Johannes Weiner wrote:
+> On Fri, Nov 20, 2015 at 03:42:16PM +0300, Vladimir Davydov wrote:
+> > On Thu, Nov 12, 2015 at 06:41:28PM -0500, Johannes Weiner wrote:
+> > > There won't be any separate counters for socket memory consumed by
+> > > protocols other than TCP in the future. Remove the indirection and
+> > 
+> > I really want to believe you're right. And with vmpressure propagation
+> > implemented properly you are likely to be right.
+> > 
+> > However, we might still want to account other socket protos to
+> > memcg->memory in the unified hierarchy, e.g. UDP, or SCTP, or whatever
+> > else. Adding new consumers should be trivial, but it will break the
+> > legacy usecase, where only TCP sockets are supposed to be accounted.
+> > What about adding a check to sock_update_memcg() so that it would enable
+> > accounting only for TCP sockets in case legacy hierarchy is used?
+> 
+> Yup, I was thinking the same thing. But we can cross that bridge when
+> we come to it and are actually adding further packet types.
 
-I have enabled a few additional cgroup controllers as well, because I was
-trying to figure out why I only see the 'memory' cgroup controller in 
-cgroup.controllers. pid and io show up but not net_prio or net_cls.
-Not sure why systemd (v227) is not mounting them.
+Fair enough.
 
-Though, after a while a similar call trace is produced. I guess this
-has nothing to do with the current changes.
+> 
+> > For the same reason, I think we'd better rename memcg->tcp_mem to
+> > something like memcg->sk_mem or we can even drop the cg_proto struct
+> > altogether embedding its fields directly to mem_cgroup struct.
+> > 
+> > Also, I don't see any reason to have tcp_memcontrol.c file. It's tiny
+> > and with this patch it does not depend on tcp code any more. Let's move
+> > it to memcontrol.c?
+> 
+> I actually had all this at first, but then wondered if it makes more
+> sense to keep the legacy code in isolation. Don't you think it would
+> be easier to keep track of what's v1 and what's v2 if we keep the
+> legacy stuff physically separate as much as possible? In particular I
+> found that 'tcp_mem.' marker really useful while working on the code.
+> 
+> In the same vein, tcp_memcontrol.c doesn't really hurt anybody and I'd
+> expect it to remain mostly unopened and unchanged in the future. But
+> if we merge it into memcontrol.c, that code will likely be in the way
+> and we'd have to make it explicit somehow that this is not actually
+> part of the new memory controller anymore.
+> 
+> What do you think?
 
-[   11.594536] ------------[ cut here ]------------
-[   11.595274] WARNING: CPU: 1 PID: 1 at kernel/cgroup_pids.c:97 pids_cancel.constprop.6+0x31/0x40()
-[   11.595958] Modules linked in:
-[   11.596199] CPU: 1 PID: 1 Comm: systemd Not tainted 4.4.0-rc1+ #196
-[   11.596689] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.8.2-0-g33fbe13 by qemu-project.org 04/01/2014
-[   11.597632]  ffffffff81f66d8b ffff88007c04bb90 ffffffff8155ccdc 0000000000000000
-[   11.598234]  ffff88007c04bbc8 ffffffff810de202 ffff8800793dda00 ffff88007a096800
-[   11.598877]  ffff88007c04bc80 ffff88007a6b6200 0000000000000001 ffff88007c04bbd8
-[   11.599547] Call Trace:
-[   11.599784]  [<ffffffff8155ccdc>] dump_stack+0x4e/0x82
-[   11.600197]  [<ffffffff810de202>] warn_slowpath_common+0x82/0xc0
-[   11.600705]  [<ffffffff810de2fa>] warn_slowpath_null+0x1a/0x20
-[   11.601208]  [<ffffffff8118e261>] pids_cancel.constprop.6+0x31/0x40
-[   11.601764]  [<ffffffff8118e32d>] pids_can_attach+0x6d/0xf0
-[   11.602245]  [<ffffffff811887fa>] cgroup_taskset_migrate+0x6a/0x330
-[   11.602795]  [<ffffffff81188bb5>] cgroup_migrate+0xf5/0x190
-[   11.603276]  [<ffffffff81188ac5>] ? cgroup_migrate+0x5/0x190
-[   11.603788]  [<ffffffff81188dc6>] cgroup_attach_task+0x176/0x200
-[   11.604308]  [<ffffffff81188c55>] ? cgroup_attach_task+0x5/0x200
-[   11.604831]  [<ffffffff8118924d>] __cgroup_procs_write+0x2ad/0x460
-[   11.605367]  [<ffffffff81188ffe>] ? __cgroup_procs_write+0x5e/0x460
-[   11.605929]  [<ffffffff81189434>] cgroup_procs_write+0x14/0x20
-[   11.606448]  [<ffffffff81185af5>] cgroup_file_write+0x35/0x1c0
-[   11.606931]  [<ffffffff812e94f1>] kernfs_fop_write+0x141/0x190
-[   11.607401]  [<ffffffff81269b18>] __vfs_write+0x28/0xe0
-[   11.607834]  [<ffffffff811292d7>] ? percpu_down_read+0x57/0xa0
-[   11.608366]  [<ffffffff8126c7a4>] ? __sb_start_write+0xb4/0xf0
-[   11.608874]  [<ffffffff8126c7a4>] ? __sb_start_write+0xb4/0xf0
-[   11.609343]  [<ffffffff8126a28c>] vfs_write+0xac/0x1a0
-[   11.609843]  [<ffffffff81289db6>] ? __fget_light+0x66/0x90
-[   11.610315]  [<ffffffff8126aba9>] SyS_write+0x49/0xb0
-[   11.610756]  [<ffffffff81bdb4f2>] entry_SYSCALL_64_fastpath+0x12/0x76
-[   11.611305] ---[ end trace 7f953d0ce5af99ea ]---
+There isn't much code left in tcp_memcontrol.c, and not all of it is
+legacy. We still want to call tcp_init_cgroup and tcp_destroy_cgroup
+from memcontrol.c - in fact, it's the only call site, so I think we'd
+better keep these functions there. Apart from init/destroy, there is
+only stuff for handling legacy files, which is relatively small and
+isolated. We can just put it along with memsw and kmem legacy files in
+the end of memcontrol.c adding a comment that it's legacy. Personally,
+I'd find the code easier to follow then, because currently the logic
+behind the ACTIVE flag as well as memcg->tcp_mem init/use/destroy turns
+out to be scattered between two files in different subsystems for no
+apparent reason now, as it does not need tcp_prot any more. Besides,
+this would allow us to accurately reuse the ACTIVE flag in init/destroy
+for inc/dec static branch and probably in sock_update_memcg instead of
+sprinkling cgroup_subsys_on_dfl all over the place, which would make the
+code a bit cleaner IMO (in fact, that's why I proposed to drop ACTIVATED
+bit and replace cg_proto->flags with ->active bool).
+
+Regarding, tcp_mem marker, well, currently it's OK, because we don't
+account anything but TCP sockets, but when it changes (and I'm pretty
+sure it will), we'll have to rename it anyway. For now, I'm OK with
+leaving it as is though.
+
+Thanks,
+Vladimir
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
