@@ -1,108 +1,61 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH cgroup/for-4.4-fixes] cgroup: make css_set pin its css's to
- avoid use-afer-free
-Date: Mon, 23 Nov 2015 14:55:41 -0500
-Message-ID: <20151123195541.GA19072@mtj.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCHSET v3] netfilter, cgroup: implement cgroup2 path match in
+ xt_cgroup
+Date: Mon, 23 Nov 2015 14:58:04 -0500
+Message-ID: <20151123195804.GB19072@mtj.duckdns.org>
+References: <1448122441-9335-1-git-send-email-tj@kernel.org>
+ <5652BC3A.1010701@bmw-carit.de>
+ <5652D448.3080002@bmw-carit.de>
+ <20151123155346.GE3049@mtj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:mime-version:content-type
-         :content-disposition:user-agent;
-        bh=ev3gP1QMBo8sSTJaV1yFwUswKg7rn9sAvSqbk5ypTPg=;
-        b=y4jk8Q5W9HZvJIVDRyt3reJN0SlkHDv3H5ioxyMtYpD2TibejgJwiiausqsxbJh0jZ
-         Rdpt+h84kF3JsaR+HYCPvDaj5ohwyiJ9zwA/x2wz5/JdI3hKH05JtE9hlzATqv4kdmdT
-         1G6QlYP0O36QuPZBUiFeRUA+HvtsCCqhlN/s9KbBg6YV9TeZYvPLtbKhkaCor0Nwh8oF
-         6QY4SFcOqIZK1AVGNdvWS8vzBK7OsCrFQNeO3HcjF5zJzAS5XE8e7C86vTiN7YdBAvtM
-         YwPVs34KUs/9jTXJGgvuwItLQSO8ok3ikF0As++KbSU/WuSTKDZZmeToYq6Sq1gkhnaf
-         PEjg==
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=KlbXUeGmUwyiU4tCpbXzb+hYgf5QA3mO1GUauc+Ahuw=;
+        b=F3MA/JrJkiBt7LJLT+9bmnFNOkQR9NLC9dziI5UZC7LjFJDY4yGJPNQzCtDrcwC5xC
+         Ye9Zx/ZSwhvOnvAWgWD+T+h5CKqsaA7VqAR0G3TDqmxvVCZYQ0d+eKIVAypjZ3f34tL1
+         crDBOJr4TsluHhqlRgxFXGE4x3hm4wlRgcVUEtgbyhufcKtW6GKbS81yorR2p8K+jOQ8
+         Yenid0azQQ5RFM7udxH5IxwVOZBj6M2zojhGIx7YFVn/V5vVg0Hfkg+wJbfmz+w/TSnp
+         +JGKiBYdrbJ3p78TBTzZ4hE2hiFVHJwpwP7nTTtMwEGU+yy+fEE4NWJYac+BDTqrcnRM
+         9c9w==
 Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20151123155346.GE3049@mtj.duckdns.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Jones <davej-rdkfGonbjUTCLXcRTR1eJlpr/1R2p/CL@public.gmane.org>, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Daniel Wagner <daniel.wagner@bmw-carit.de>
+Cc: davem@davemloft.net, pablo@netfilter.org, kaber@trash.net, kadlec@blackhole.kfki.hu, daniel@iogearbox.net, nhorman@tuxdriver.co, lizefan@huawei.com, hannes@cmpxchg.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, coreteam@netfilter.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, ninasc@fb.com
 
-A css_set represents the relationship between a set of tasks and
-css's.  css_set never pinned the associated css's.  This was okay
-because tasks used to always disassociate immediately (in RCU sense) -
-either a task is moved to a different css_set or exits and never
-accesses css_set again.
+Hello,
 
-Unfortunately, afcf6c8b7544 ("cgroup: add cgroup_subsys->free() method
-and use it to fix pids controller") and patches leading up to it made
-a zombie hold onto its css_set and deref the associated css's on its
-release.  Nothing pins the css's after exit and it might have already
-been freed leading to use-after-free.
+On Mon, Nov 23, 2015 at 10:53:46AM -0500, Tejun Heo wrote:
+> > [   11.594536] ------------[ cut here ]------------
+> > [   11.595274] WARNING: CPU: 1 PID: 1 at kernel/cgroup_pids.c:97 pids_cancel.constprop.6+0x31/0x40()
+> > [   11.595958] Modules linked in:
+> > [   11.596199] CPU: 1 PID: 1 Comm: systemd Not tainted 4.4.0-rc1+ #196
+> > [   11.596689] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.8.2-0-g33fbe13 by qemu-project.org 04/01/2014
+> > [   11.597632]  ffffffff81f66d8b ffff88007c04bb90 ffffffff8155ccdc 0000000000000000
+> > [   11.598234]  ffff88007c04bbc8 ffffffff810de202 ffff8800793dda00 ffff88007a096800
+> > [   11.598877]  ffff88007c04bc80 ffff88007a6b6200 0000000000000001 ffff88007c04bbd8
+> > [   11.599547] Call Trace:
+> > [   11.599784]  [<ffffffff8155ccdc>] dump_stack+0x4e/0x82
+> > [   11.600197]  [<ffffffff810de202>] warn_slowpath_common+0x82/0xc0
+> > [   11.600705]  [<ffffffff810de2fa>] warn_slowpath_null+0x1a/0x20
+> > [   11.601208]  [<ffffffff8118e261>] pids_cancel.constprop.6+0x31/0x40
+> > [   11.601764]  [<ffffffff8118e32d>] pids_can_attach+0x6d/0xf0
+> 
+> Yeah, this is a known problem regarding css's lifetime.  Working on
+> it.  The earlier dump, I think, is likely to have been caused by the
+> same issue.
 
- general protection fault: 0000 [#1] PREEMPT SMP
- task: ffffffff81bf2500 ti: ffffffff81be4000 task.ti: ffffffff81be4000
- RIP: 0010:[<ffffffff810fa205>]  [<ffffffff810fa205>] pids_cancel.constprop.4+0x5/0x40
- ...
- Call Trace:
-  <IRQ>
-  [<ffffffff810fb02d>] ? pids_free+0x3d/0xa0
-  [<ffffffff810f8893>] cgroup_free+0x53/0xe0
-  [<ffffffff8104ed62>] __put_task_struct+0x42/0x130
-  [<ffffffff81053557>] delayed_put_task_struct+0x77/0x130
-  [<ffffffff810c6b34>] rcu_process_callbacks+0x2f4/0x820
-  [<ffffffff810c6af3>] ? rcu_process_callbacks+0x2b3/0x820
-  [<ffffffff81056e54>] __do_softirq+0xd4/0x460
-  [<ffffffff81057369>] irq_exit+0x89/0xa0
-  [<ffffffff81876212>] smp_apic_timer_interrupt+0x42/0x50
-  [<ffffffff818747f4>] apic_timer_interrupt+0x84/0x90
-  <EOI>
- ...
- Code: 5b 5d c3 48 89 df 48 c7 c2 c9 f9 ae 81 48 c7 c6 91 2c ae 81 e8 1d 94 0e 00 31 c0 5b 5d c3 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 <f0> 48 83 87 e0 00 00 00 ff 78 01 c3 80 3d 08 7a c1 00 00 74 02
- RIP  [<ffffffff810fa205>] pids_cancel.constprop.4+0x5/0x40
-  RSP <ffff88001fc03e20>
- ---[ end trace 89a4a4b916b90c49 ]---
- Kernel panic - not syncing: Fatal exception in interrupt
- Kernel Offset: disabled
- ---[ end Kernel panic - not syncing: Fatal exception in interrupt
+Just posted the fix for this issue.  Can you please verify the fix?
 
-Fix it by making css_set pin the associate css's until its release.
+ http://lkml.kernel.org/g/20151123195541.GA19072@mtj.duckdns.org
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Reported-by: Dave Jones <davej-rdkfGonbjUTCLXcRTR1eJlpr/1R2p/CL@public.gmane.org>
-Reported-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-Link: http://lkml.kernel.org/g/20151120041836.GA18390-rdkfGonbjUTCLXcRTR1eJlpr/1R2p/CL@public.gmane.org
-Link: http://lkml.kernel.org/g/5652D448.3080002-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org
-Fixes: afcf6c8b7544 ("cgroup: add cgroup_subsys->free() method and use it to fix pids controller")
----
- kernel/cgroup.c |   14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+Thanks a lot!
 
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -754,9 +754,11 @@ static void put_css_set_locked(struct cs
- 	if (!atomic_dec_and_test(&cset->refcount))
- 		return;
- 
--	/* This css_set is dead. unlink it and release cgroup refcounts */
--	for_each_subsys(ss, ssid)
-+	/* This css_set is dead. unlink it and release cgroup and css refs */
-+	for_each_subsys(ss, ssid) {
- 		list_del(&cset->e_cset_node[ssid]);
-+		css_put(cset->subsys[ssid]);
-+	}
- 	hash_del(&cset->hlist);
- 	css_set_count--;
- 
-@@ -1056,9 +1058,13 @@ static struct css_set *find_css_set(stru
- 	key = css_set_hash(cset->subsys);
- 	hash_add(css_set_table, &cset->hlist, key);
- 
--	for_each_subsys(ss, ssid)
-+	for_each_subsys(ss, ssid) {
-+		struct cgroup_subsys_state *css = cset->subsys[ssid];
-+
- 		list_add_tail(&cset->e_cset_node[ssid],
--			      &cset->subsys[ssid]->cgroup->e_csets[ssid]);
-+			      &css->cgroup->e_csets[ssid]);
-+		css_get(css);
-+	}
- 
- 	spin_unlock_bh(&css_set_lock);
- 
+-- 
+tejun
