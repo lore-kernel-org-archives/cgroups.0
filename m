@@ -1,94 +1,120 @@
-From: Vladimir Davydov <vdavydov@virtuozzo.com>
-Subject: Re: [PATCH 09/14] net: tcp_memcontrol: simplify linkage between
- socket and page counter
-Date: Mon, 23 Nov 2015 12:36:46 +0300
-Message-ID: <20151123093646.GA29014@esperanza>
+From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: [PATCH 13/14] mm: memcontrol: account socket memory in unified
+ hierarchy memory controller
+Date: Mon, 23 Nov 2015 13:00:59 +0300
+Message-ID: <20151123100059.GB29014@esperanza>
 References: <1447371693-25143-1-git-send-email-hannes@cmpxchg.org>
- <1447371693-25143-10-git-send-email-hannes@cmpxchg.org>
- <20151120124216.GD31308@esperanza>
- <20151120185648.GC5623@cmpxchg.org>
+ <1447371693-25143-14-git-send-email-hannes@cmpxchg.org>
+ <20151120131033.GF31308@esperanza>
+ <20151120192506.GD5623@cmpxchg.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20151120185648.GC5623@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20151120192506.GD5623-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: David Miller <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.cz>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Fri, Nov 20, 2015 at 01:56:48PM -0500, Johannes Weiner wrote:
-> On Fri, Nov 20, 2015 at 03:42:16PM +0300, Vladimir Davydov wrote:
-> > On Thu, Nov 12, 2015 at 06:41:28PM -0500, Johannes Weiner wrote:
-> > > There won't be any separate counters for socket memory consumed by
-> > > protocols other than TCP in the future. Remove the indirection and
+On Fri, Nov 20, 2015 at 02:25:06PM -0500, Johannes Weiner wrote:
+> On Fri, Nov 20, 2015 at 04:10:33PM +0300, Vladimir Davydov wrote:
+> > On Thu, Nov 12, 2015 at 06:41:32PM -0500, Johannes Weiner wrote:
+> > ...
+> > > @@ -5514,16 +5550,43 @@ void sock_release_memcg(struct sock *sk)
+> > >   */
+> > >  bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
+> > >  {
+> > > +	unsigned int batch = max(CHARGE_BATCH, nr_pages);
+> > >  	struct page_counter *counter;
+> > > +	bool force = false;
+> > >  
+> > > -	if (page_counter_try_charge(&memcg->tcp_mem.memory_allocated,
+> > > -				    nr_pages, &counter)) {
+> > > -		memcg->tcp_mem.memory_pressure = 0;
+> > > +#ifdef CONFIG_MEMCG_KMEM
+> > > +	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys)) {
+> > > +		if (page_counter_try_charge(&memcg->tcp_mem.memory_allocated,
+> > > +					    nr_pages, &counter)) {
+> > > +			memcg->tcp_mem.memory_pressure = 0;
+> > > +			return true;
+> > > +		}
+> > > +		page_counter_charge(&memcg->tcp_mem.memory_allocated, nr_pages);
+> > > +		memcg->tcp_mem.memory_pressure = 1;
+> > > +		return false;
+> > > +	}
+> > > +#endif
+> > > +	if (consume_stock(memcg, nr_pages))
+> > >  		return true;
+> > > +retry:
+> > > +	if (page_counter_try_charge(&memcg->memory, batch, &counter))
+> > > +		goto done;
+> > > +
+> > > +	if (batch > nr_pages) {
+> > > +		batch = nr_pages;
+> > > +		goto retry;
+> > >  	}
+> > > -	page_counter_charge(&memcg->tcp_mem.memory_allocated, nr_pages);
+> > > -	memcg->tcp_mem.memory_pressure = 1;
+> > > -	return false;
+> > > +
+> > > +	page_counter_charge(&memcg->memory, batch);
+> > > +	force = true;
+> > > +done:
 > > 
-> > I really want to believe you're right. And with vmpressure propagation
-> > implemented properly you are likely to be right.
+> > > +	css_get_many(&memcg->css, batch);
 > > 
-> > However, we might still want to account other socket protos to
-> > memcg->memory in the unified hierarchy, e.g. UDP, or SCTP, or whatever
-> > else. Adding new consumers should be trivial, but it will break the
-> > legacy usecase, where only TCP sockets are supposed to be accounted.
-> > What about adding a check to sock_update_memcg() so that it would enable
-> > accounting only for TCP sockets in case legacy hierarchy is used?
+> > Is there any point to get css reference per each charged page? For kmem
+> > it is absolutely necessary, because dangling slabs must block
+> > destruction of memcg's kmem caches, which are destroyed on css_free. But
+> > for sockets there's no such problem: memcg will be destroyed only after
+> > all sockets are destroyed and therefore uncharged (since
+> > sock_update_memcg pins css).
 > 
-> Yup, I was thinking the same thing. But we can cross that bridge when
-> we come to it and are actually adding further packet types.
+> I'm afraid we have to when we want to share 'stock' with cache and
+> anon pages, which hold individual references. drain_stock() always
+> assumes one reference per cached page.
 
-Fair enough.
+Missed that, you're right.
 
 > 
-> > For the same reason, I think we'd better rename memcg->tcp_mem to
-> > something like memcg->sk_mem or we can even drop the cg_proto struct
-> > altogether embedding its fields directly to mem_cgroup struct.
+> > > +	if (batch > nr_pages)
+> > > +		refill_stock(memcg, batch - nr_pages);
+> > > +
+> > > +	schedule_work(&memcg->socket_work);
 > > 
-> > Also, I don't see any reason to have tcp_memcontrol.c file. It's tiny
-> > and with this patch it does not depend on tcp code any more. Let's move
-> > it to memcontrol.c?
+> > I think it's suboptimal to schedule the work even if we are below the
+> > high threshold.
 > 
-> I actually had all this at first, but then wondered if it makes more
-> sense to keep the legacy code in isolation. Don't you think it would
-> be easier to keep track of what's v1 and what's v2 if we keep the
-> legacy stuff physically separate as much as possible? In particular I
-> found that 'tcp_mem.' marker really useful while working on the code.
-> 
-> In the same vein, tcp_memcontrol.c doesn't really hurt anybody and I'd
-> expect it to remain mostly unopened and unchanged in the future. But
-> if we merge it into memcontrol.c, that code will likely be in the way
-> and we'd have to make it explicit somehow that this is not actually
-> part of the new memory controller anymore.
-> 
-> What do you think?
+> Hm, it seemed unnecessary to duplicate the hierarchy check since this
+> is in the batch-exhausted slowpath anyway.
 
-There isn't much code left in tcp_memcontrol.c, and not all of it is
-legacy. We still want to call tcp_init_cgroup and tcp_destroy_cgroup
-from memcontrol.c - in fact, it's the only call site, so I think we'd
-better keep these functions there. Apart from init/destroy, there is
-only stuff for handling legacy files, which is relatively small and
-isolated. We can just put it along with memsw and kmem legacy files in
-the end of memcontrol.c adding a comment that it's legacy. Personally,
-I'd find the code easier to follow then, because currently the logic
-behind the ACTIVE flag as well as memcg->tcp_mem init/use/destroy turns
-out to be scattered between two files in different subsystems for no
-apparent reason now, as it does not need tcp_prot any more. Besides,
-this would allow us to accurately reuse the ACTIVE flag in init/destroy
-for inc/dec static branch and probably in sock_update_memcg instead of
-sprinkling cgroup_subsys_on_dfl all over the place, which would make the
-code a bit cleaner IMO (in fact, that's why I proposed to drop ACTIVATED
-bit and replace cg_proto->flags with ->active bool).
+Dunno, may be you're right.
 
-Regarding, tcp_mem marker, well, currently it's OK, because we don't
-account anything but TCP sockets, but when it changes (and I'm pretty
-sure it will), we'll have to rename it anyway. For now, I'm OK with
-leaving it as is though.
+I've another question regarding this socket_work: its reclaim target
+always equals CHARGE_BATCH. Can't it result in a workload exceeding
+memory.high in case there are a lot of allocations coming from different
+cpus? In this case the work might not manage to complete before another
+allocation happens. May be, we should accumulate the number of pages to
+be reclaimed by the work, as we do in try_charge?
+
+> 
+> > BTW why do we need this work at all? Why is reclaim_high called from
+> > task_work not enough?
+> 
+> The problem lies in the memcg association: the random task that gets
+> interrupted by an arriving packet might not be in the same memcg as
+> the one owning receiving socket. And multiple interrupts could happen
+> while we're in the kernel already charging pages. We'd basically have
+> to maintain a list of memcgs that need to run reclaim_high associated
+> with current.
+> 
+
+Right, I think this is worth placing in a comment to memcg->socket_work.
+I wonder if we could use it *instead* of task_work for handling every
+allocation, not only socket-related. Would it make any sense? May be, it
+could reduce the latency experienced by tasks in memory cgroups.
 
 Thanks,
 Vladimir
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
