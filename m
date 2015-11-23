@@ -1,120 +1,39 @@
-From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: Re: [PATCH 13/14] mm: memcontrol: account socket memory in unified
- hierarchy memory controller
-Date: Mon, 23 Nov 2015 13:00:59 +0300
-Message-ID: <20151123100059.GB29014@esperanza>
-References: <1447371693-25143-1-git-send-email-hannes@cmpxchg.org>
- <1447371693-25143-14-git-send-email-hannes@cmpxchg.org>
- <20151120131033.GF31308@esperanza>
- <20151120192506.GD5623@cmpxchg.org>
+From: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+Subject: Re: [PATCH 9/9] netfilter: implement xt_cgroup cgroup2 path match
+Date: Mon, 23 Nov 2015 13:43:01 +0100
+Message-ID: <565309D5.80707@bmw-carit.de>
+References: <1448122441-9335-1-git-send-email-tj@kernel.org>
+ <1448122441-9335-10-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20151120192506.GD5623-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <1448122441-9335-10-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org, kadlec-K40Dz/62t/MgiyqX0sVFJYdd74u8MsAO@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, nhorman-2XuSBdqkA4SvXiR4WA35Jg@public.gmane.org
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netfilter-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, coreteam-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, ninasc-b10kYP2dOMg@public.gmane.org, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Jan Engelhardt <jengelh-9+2X+4sQBs8@public.gmane.org>
 
-On Fri, Nov 20, 2015 at 02:25:06PM -0500, Johannes Weiner wrote:
-> On Fri, Nov 20, 2015 at 04:10:33PM +0300, Vladimir Davydov wrote:
-> > On Thu, Nov 12, 2015 at 06:41:32PM -0500, Johannes Weiner wrote:
-> > ...
-> > > @@ -5514,16 +5550,43 @@ void sock_release_memcg(struct sock *sk)
-> > >   */
-> > >  bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
-> > >  {
-> > > +	unsigned int batch = max(CHARGE_BATCH, nr_pages);
-> > >  	struct page_counter *counter;
-> > > +	bool force = false;
-> > >  
-> > > -	if (page_counter_try_charge(&memcg->tcp_mem.memory_allocated,
-> > > -				    nr_pages, &counter)) {
-> > > -		memcg->tcp_mem.memory_pressure = 0;
-> > > +#ifdef CONFIG_MEMCG_KMEM
-> > > +	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys)) {
-> > > +		if (page_counter_try_charge(&memcg->tcp_mem.memory_allocated,
-> > > +					    nr_pages, &counter)) {
-> > > +			memcg->tcp_mem.memory_pressure = 0;
-> > > +			return true;
-> > > +		}
-> > > +		page_counter_charge(&memcg->tcp_mem.memory_allocated, nr_pages);
-> > > +		memcg->tcp_mem.memory_pressure = 1;
-> > > +		return false;
-> > > +	}
-> > > +#endif
-> > > +	if (consume_stock(memcg, nr_pages))
-> > >  		return true;
-> > > +retry:
-> > > +	if (page_counter_try_charge(&memcg->memory, batch, &counter))
-> > > +		goto done;
-> > > +
-> > > +	if (batch > nr_pages) {
-> > > +		batch = nr_pages;
-> > > +		goto retry;
-> > >  	}
-> > > -	page_counter_charge(&memcg->tcp_mem.memory_allocated, nr_pages);
-> > > -	memcg->tcp_mem.memory_pressure = 1;
-> > > -	return false;
-> > > +
-> > > +	page_counter_charge(&memcg->memory, batch);
-> > > +	force = true;
-> > > +done:
-> > 
-> > > +	css_get_many(&memcg->css, batch);
-> > 
-> > Is there any point to get css reference per each charged page? For kmem
-> > it is absolutely necessary, because dangling slabs must block
-> > destruction of memcg's kmem caches, which are destroyed on css_free. But
-> > for sockets there's no such problem: memcg will be destroyed only after
-> > all sockets are destroyed and therefore uncharged (since
-> > sock_update_memcg pins css).
-> 
-> I'm afraid we have to when we want to share 'stock' with cache and
-> anon pages, which hold individual references. drain_stock() always
-> assumes one reference per cached page.
+Hi Tejun,
 
-Missed that, you're right.
+On 11/21/2015 05:14 PM, Tejun Heo wrote:> +static int
+> cgroup_mt_check_v1(const struct xt_mtchk_param *par)
+> +{
+> +	struct xt_cgroup_info_v1 *info = par->matchinfo;
+> +	struct cgroup *cgrp;
+> +
+> +	if ((info->invert_path & ~1) || (info->invert_classid & ~1))
+> +		return -EINVAL;
 
-> 
-> > > +	if (batch > nr_pages)
-> > > +		refill_stock(memcg, batch - nr_pages);
-> > > +
-> > > +	schedule_work(&memcg->socket_work);
-> > 
-> > I think it's suboptimal to schedule the work even if we are below the
-> > high threshold.
-> 
-> Hm, it seemed unnecessary to duplicate the hierarchy check since this
-> is in the batch-exhausted slowpath anyway.
+The checks below use pr_info() in case the configuration is not valid.
+Is this missing here on purpose?
 
-Dunno, may be you're right.
+I have tested it slightly and it seems to work (also on an older
+kernel). I don't know if that qualifies it for a Tested-by but at least
+Acked-by should do the trick:
 
-I've another question regarding this socket_work: its reclaim target
-always equals CHARGE_BATCH. Can't it result in a workload exceeding
-memory.high in case there are a lot of allocations coming from different
-cpus? In this case the work might not manage to complete before another
-allocation happens. May be, we should accumulate the number of pages to
-be reclaimed by the work, as we do in try_charge?
+Tested-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+Acked-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
 
-> 
-> > BTW why do we need this work at all? Why is reclaim_high called from
-> > task_work not enough?
-> 
-> The problem lies in the memcg association: the random task that gets
-> interrupted by an arriving packet might not be in the same memcg as
-> the one owning receiving socket. And multiple interrupts could happen
-> while we're in the kernel already charging pages. We'd basically have
-> to maintain a list of memcgs that need to run reclaim_high associated
-> with current.
-> 
-
-Right, I think this is worth placing in a comment to memcg->socket_work.
-I wonder if we could use it *instead* of task_work for handling every
-allocation, not only socket-related. Would it make any sense? May be, it
-could reduce the latency experienced by tasks in memory cgroups.
-
-Thanks,
-Vladimir
+cheers,
+daniel
