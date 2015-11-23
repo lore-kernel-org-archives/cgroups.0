@@ -1,50 +1,35 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: WARN in __mark_inode_dirty when mounting a filesystem
-Date: Mon, 23 Nov 2015 16:21:30 -0500
-Message-ID: <20151123212130.GE19072@mtj.duckdns.org>
-References: <56533374.2090807@kyup.com>
+From: Dave Jones <davej-rdkfGonbjUTCLXcRTR1eJlpr/1R2p/CL@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-4.4-fixes] cgroup: make css_set pin its css's
+ to avoid use-afer-free
+Date: Mon, 23 Nov 2015 17:23:44 -0500
+Message-ID: <20151123222344.GA6117@codemonkey.org.uk>
+References: <20151123195541.GA19072@mtj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=gMgVtdjjp5eaKtQArjuX5WYsM3XM3KaCFXsyau4gBsM=;
-        b=YLR333ninHqCTLsVsdPX43LFR3cmHhTFzuGXxGtfqDd060EzsLaUhd24JpOX/bJCbw
-         DZkUrSUNjyD0rvMR2KvHjkb3B0B7k/vLMiiaCsLjbR50KTajEK5WWcCP+FJaCeDajekK
-         vl9uuASet50XbZrFBpotXxVniKndmpUGyJIEYIBh+Wp+FdaCfjC/JPPDBGCxhogWXhcZ
-         3zQDeyuPH1TrP1Rr7TAZsQjb7iOvhkCUPDt/AaAm06kO3GSSYtto0A7PqKE5vPBVYw6V
-         jMyxaDb/T3Oc8boiHvM5OfYV2XIVXhpQ3H3eZzn+5kieJQQE5SzuLVMQUHBSBxBu3TOy
-         Gzww==
 Content-Disposition: inline
-In-Reply-To: <56533374.2090807-6AxghH7DbtA@public.gmane.org>
+In-Reply-To: <20151123195541.GA19072-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Nikolay Borisov <kernel-6AxghH7DbtA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Hello,
+On Mon, Nov 23, 2015 at 02:55:41PM -0500, Tejun Heo wrote:
+ > A css_set represents the relationship between a set of tasks and
+ > css's.  css_set never pinned the associated css's.  This was okay
+ > because tasks used to always disassociate immediately (in RCU sense) -
+ > either a task is moved to a different css_set or exits and never
+ > accesses css_set again.
+ > 
+ > Unfortunately, afcf6c8b7544 ("cgroup: add cgroup_subsys->free() method
+ > and use it to fix pids controller") and patches leading up to it made
+ > a zombie hold onto its css_set and deref the associated css's on its
+ > release.  Nothing pins the css's after exit and it might have already
+ > been freed leading to use-after-free.
+ > 
+ > Fix it by making css_set pin the associate css's until its release.
 
-On Mon, Nov 23, 2015 at 05:40:36PM +0200, Nikolay Borisov wrote:
-> Hello Tejun, 
-> 
-> On one of my servers I recently hit the following warn: 
-> 
-> 182317.101584] ------------[ cut here ]------------
-> [182317.101753] WARNING: CPU: 7 PID: 13192 at fs/fs-writeback.c:2080 __mark_inode_dirty+0x20a/0x350()
-> [182317.102032] bdi-block not registered
-> [182317.102192] Kernel panic - not syncing: panic_on_warn set ...
->                 
-> [182317.102474] CPU: 7 PID: 13192 Comm: mount Not tainted 4.2.5-vanilla1 #1
+This gets me booting again, thanks Tejun!
 
-Is the problem reproducible?  If so, can you please see whether the
-following patch makes any difference?
-
- http://lkml.kernel.org/g/1448054554-24138-1-git-send-email-idryomov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-
-Thanks.
-
--- 
-tejun
+	Dave
