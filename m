@@ -1,52 +1,51 @@
-From: Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH 9/9] netfilter: implement xt_cgroup cgroup2 path match
-Date: Mon, 23 Nov 2015 14:51:39 +0100
-Message-ID: <565319EB.2090909@iogearbox.net>
-References: <1448122441-9335-1-git-send-email-tj@kernel.org> <1448122441-9335-10-git-send-email-tj@kernel.org> <20151121165605.GC25336@breakpoint.cc> <20151121170425.GD3428@htj.duckdns.org> <20151121185419.GD25336@breakpoint.cc> <565317F0.2030502@iogearbox.net>
+Date: Mon, 23 Nov 2015 10:40:13 -0500
+Message-ID: <20151123154013.GB3049@mtj.duckdns.org>
+References: <1448122441-9335-1-git-send-email-tj@kernel.org>
+ <1448122441-9335-10-git-send-email-tj@kernel.org>
+ <20151121165605.GC25336@breakpoint.cc>
+ <20151121170425.GD3428@htj.duckdns.org>
+ <20151121185419.GD25336@breakpoint.cc>
+ <565317F0.2030502@iogearbox.net>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=HHWcQ16diiPj+r9eqOfrUFYROFFXSOr4gQQvgnYhDrw=;
+        b=rEE9rq5rFlZnmooT8x9ypVZVHPLliIAZ84YMRcDATRk0d7wCwOKrFs4UjuzWrqfmRG
+         /AwuvnITCik0VkZzatLACMntITzgGWMmtEKFNsClQpJhsO4KhHmqTlvfpw8N0132mhub
+         8s0TXcz8+wKTXfG8U7WPdhHQ+clJ9SZQQa2BQPzyTihwqBd7BTiv3QYiFGcrl6w7VDkK
+         JJjkihqBOQqZyZ+MPgvyGWynG3KSE3KmDXZ5NEUGuHw4ZmI6Gw5opbtXjiLrfoLlT0Cg
+         vMMsGjeY4q4RrL2HvstgdJYZTOR1G3VHLeGabKfJI1bA4rLxlWUSsBhKKsmwmf4MQMKt
+         c3DA==
+Content-Disposition: inline
 In-Reply-To: <565317F0.2030502-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org, kadlec-K40Dz/62t/MgiyqX0sVFJYdd74u8MsAO@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, nhorman-2XuSBdqkA4SvXiR4WA35Jg@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netfilter-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, ninasc-b10kYP2dOMg@public.gmane.org, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Jan Engelhardt <jengelh-9+2X+4sQBs8@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>
+Cc: Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org, kadlec-K40Dz/62t/MgiyqX0sVFJYdd74u8MsAO@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, nhorman-2XuSBdqkA4SvXiR4WA35Jg@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netfilter-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, ninasc-b10kYP2dOMg@public.gmane.org, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Jan Engelhardt <jengelh-9+2X+4sQBs8@public.gmane.org>
 
-On 11/23/2015 02:43 PM, Daniel Borkmann wrote:
-> On 11/21/2015 07:54 PM, Florian Westphal wrote:
->> Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->>> On Sat, Nov 21, 2015 at 05:56:06PM +0100, Florian Westphal wrote:
->>>>> +struct xt_cgroup_info_v1 {
->>>>> +    __u8        has_path;
->>>>> +    __u8        has_classid;
->>>>> +    __u8        invert_path;
->>>>> +    __u8        invert_classid;
->>>>> +    char        path[PATH_MAX];
->>>>> +    __u32        classid;
->>>>> +
->>>>> +    /* kernel internal data */
->>>>> +    void        *priv __attribute__((aligned(8)));
->>>>> +};
->>>>
->>>> Ahem.  Am I reading this right? This struct is > 4k in size?
->>>> If so -- Ugh.  Does sizeof(path) really have to be PATH_MAX?
->>>
->>> Hmmm... yeap but would this be an acutual problem?
->>
->> Since rule blob can be allocated via vmalloc i guess "no", its not
->> really a problem unless someone needs realy insane amount of such rules.
->>
->> I don't have any better suggestion, so I guess its necessary evil.
->>
->> The only other question I have is wheter PATH_MAX might be a possible
->> ABI breaker in future.  It would have to be guaranteed that this is the
->> same size forever, else you'd get strange errors on rule insertion if
->> the sizes of the kernel and userspace version differs.
->
+Hello, Daniel.
+
+On Mon, Nov 23, 2015 at 02:43:12PM +0100, Daniel Borkmann wrote:
+...
 > Haven't looked deeply into kernfs, but if it's possible to get the object
 > from the struct file eventually, you could let iptables frontend open that
 > path and just pass the fd down. Would be sizeof(int) vs PATH_MAX then, i.e.
 > when you have a large number of rules to load.
 
-( ... but with the downside that things like save/restore wouldn't work. )
+That works in one direction but not in the other.  ie. You can tell
+the kernel the path that way but can't retrieve.  If using path string
+is unacceptable, the best alternative would be an inode number rather
+than a fd; however, using an inode number would be quite cumbersome
+and painful too.
+
+Thanks.
+
+-- 
+tejun
