@@ -1,25 +1,81 @@
-From: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/8] kernfs: Add API to generate relative kernfs path
-Date: Tue, 24 Nov 2015 11:43:13 -0600
-Message-ID: <20151124174313.GA28497@mail.hallyn.com>
-References: <1447703505-29672-1-git-send-email-serge@hallyn.com>
- <1447703505-29672-2-git-send-email-serge@hallyn.com>
- <20151124161630.GL17033@mtj.duckdns.org>
- <20151124161709.GM17033@mtj.duckdns.org>
-Mime-Version: 1.0
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20151124161709.GM17033-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH 01/13] mm: memcontrol: export root_mem_cgroup
+Date: Tue, 24 Nov 2015 16:51:53 -0500
+Message-ID: <1448401925-22501-2-git-send-email-hannes@cmpxchg.org>
+References: <1448401925-22501-1-git-send-email-hannes@cmpxchg.org>
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1448401925-22501-1-git-send-email-hannes@cmpxchg.org>
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: David Miller <davem@davemloft.net>, Vladimir Davydov <vdavydov@virtuozzo.com>, Michal Hocko <mhocko@suse.cz>, Tejun Heo <tj@kernel.org>, Eric Dumazet <eric.dumazet@gmail.com>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Tue, Nov 24, 2015 at 11:17:09AM -0500, Tejun Heo wrote:
-> Oops, also please cc Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-> on kernfs changes.
+A later patch will need this symbol in files other than memcontrol.c,
+so export it now and replace mem_cgroup_root_css at the same time.
 
-Will do.  Thank you for all the feedback.  I'll send out a new set
-when I get it all addressed.
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Acked-by: Michal Hocko <mhocko@suse.com>
+Acked-by: David S. Miller <davem@davemloft.net>
+Reviewed-by: Vladimir Davydov <vdavydov@virtuozzo.com>
+---
+ include/linux/memcontrol.h | 3 ++-
+ mm/backing-dev.c           | 2 +-
+ mm/memcontrol.c            | 5 ++---
+ 3 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 9d5472b..320b690 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -265,7 +265,8 @@ struct mem_cgroup {
+ 	struct mem_cgroup_per_node *nodeinfo[0];
+ 	/* WARNING: nodeinfo must be the last member here */
+ };
+-extern struct cgroup_subsys_state *mem_cgroup_root_css;
++
++extern struct mem_cgroup *root_mem_cgroup;
+ 
+ /**
+  * mem_cgroup_events - count memory events against a cgroup
+diff --git a/mm/backing-dev.c b/mm/backing-dev.c
+index 9160853..fdc6f4d 100644
+--- a/mm/backing-dev.c
++++ b/mm/backing-dev.c
+@@ -707,7 +707,7 @@ static int cgwb_bdi_init(struct backing_dev_info *bdi)
+ 
+ 	ret = wb_init(&bdi->wb, bdi, 1, GFP_KERNEL);
+ 	if (!ret) {
+-		bdi->wb.memcg_css = mem_cgroup_root_css;
++		bdi->wb.memcg_css = &root_mem_cgroup->css;
+ 		bdi->wb.blkcg_css = blkcg_root_css;
+ 	}
+ 	return ret;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 79a29d5..f6ea649 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -76,9 +76,9 @@
+ struct cgroup_subsys memory_cgrp_subsys __read_mostly;
+ EXPORT_SYMBOL(memory_cgrp_subsys);
+ 
++struct mem_cgroup *root_mem_cgroup __read_mostly;
++
+ #define MEM_CGROUP_RECLAIM_RETRIES	5
+-static struct mem_cgroup *root_mem_cgroup __read_mostly;
+-struct cgroup_subsys_state *mem_cgroup_root_css __read_mostly;
+ 
+ /* Whether the swap controller is active */
+ #ifdef CONFIG_MEMCG_SWAP
+@@ -4217,7 +4217,6 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+ 	/* root ? */
+ 	if (parent_css == NULL) {
+ 		root_mem_cgroup = memcg;
+-		mem_cgroup_root_css = &memcg->css;
+ 		page_counter_init(&memcg->memory, NULL);
+ 		memcg->high = PAGE_COUNTER_MAX;
+ 		memcg->soft_limit = PAGE_COUNTER_MAX;
+-- 
+2.6.2
