@@ -1,123 +1,60 @@
-From: Dmitry Vyukov <dvyukov@google.com>
-Subject: WARNING in handle_mm_fault
-Date: Tue, 24 Nov 2015 14:50:26 +0100
-Message-ID: <CACT4Y+ZCkv0BPOdo3aiheA5LXzXhcnuiw7kCoWL=b9FcC8-wqg@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-4.4-fixes] cgroup: make css_set pin its css's
+ to avoid use-afer-free
+Date: Tue, 24 Nov 2015 09:44:18 -0500
+Message-ID: <20151124144418.GB17033@mtj.duckdns.org>
+References: <20151123195541.GA19072@mtj.duckdns.org>
+ <56543C76.2050008@bmw-carit.de>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=mime-version:from:date:message-id:subject:to:cc:content-type;
-        bh=wfhCfCgmT8ARQ/AmKrCSO8iYCApdif6lAN0kMSfJl1A=;
-        b=i8mwoJ/35ICA7VzQT/gILhIMcU1QwWvkMqt9/kgUUqbR0fgAlIYr+lZPHOQr0yq8tI
-         kehCoFxeeVsZByxz+GcbqjCaBuZMUofc4q31gM1+s22pQ2bG5y7p/dLWqwB86u6H7J5J
-         Y7U5MXPRGpIZYeD1wn+vPowFGV4rA2p0I0YFLcgEITITck0zBu7nvtw1FchgCi86ZqK7
-         wQ2jAvToqOtgLGac8Zj51fplJ6F2s14JE6EcG0BT/nz6rBNXaH9QXAqOaxGt5mhR9MqC
-         i5mxETHQj/8UKpPHBKMfYeeh8bBvWD0q7G8myQcdsoJPxDrgA5qDQR7wIEgYx63qwBgK
-         uhxA==
-Sender: owner-linux-mm@kvack.org
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=HDpepeC2cxsWDXLtPn8PskQbOw66PDsg2kOiYpkdz5s=;
+        b=utwgLt4L/i0HijTK6ILPfgoCO8xb8jQwMMVUb6KLh/FR29hNkhuHhU3PvX5x+3Nu66
+         Uzhv9d7cvJCoBPDBsnnYzFE5hsxUSQlKay2YgDSFYJvBaot7ftFv27ruV0tEpzfY7Wdz
+         U0y5RHcLwiT943r/+OiOnJjQrO9zCSo3zRnAy6InfhfWL3QXc17gjeHVqzWGTDvKWjml
+         dXkcpSH2ESqfYFSjFlQ4AoEI3eGxqN1o0itLJv2qniZ/Bwf9oHaG8e2zeXPAc5LT+ms5
+         elzEAxK/ytUGIISsIUNnjThNF0puHbCXtpmCriHnjn/1TiWB/FSe4QG5c+osSa5iFSpZ
+         PBYg==
+Content-Disposition: inline
+In-Reply-To: <56543C76.2050008-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, cgroups@vger.kernel.org, "linux-mm@kvack.org" <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>
-Cc: syzkaller <syzkaller@googlegroups.com>, Kostya Serebryany <kcc@google.com>, Alexander Potapenko <glider@google.com>, Sasha Levin <sasha.levin@oracle.com>, Eric Dumazet <edumazet@google.com>, Greg Thelen <gthelen@google.com>
+To: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Jones <davej-rdkfGonbjUTCLXcRTR1eJlpr/1R2p/CL@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Hello,
+Hello, Daniel.
 
-I am hitting the following WARNING on commit
-8005c49d9aea74d382f474ce11afbbc7d7130bec (Nov 15):
+On Tue, Nov 24, 2015 at 11:31:18AM +0100, Daniel Wagner wrote:
+> I still see this one with the patch applied:
 
+Yeap, this is a different one.
 
-------------[ cut here ]------------
-WARNING: CPU: 3 PID: 12661 at include/linux/memcontrol.h:412
-handle_mm_fault+0x17ec/0x3530()
-Modules linked in:
-CPU: 3 PID: 12661 Comm: executor Tainted: G    B   W       4.4.0-rc1+ #81
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
- 00000000ffffffff ffff88003725fc80 ffffffff825d3336 0000000000000000
- ffff880061d95900 ffffffff84cfb6c0 ffff88003725fcc0 ffffffff81247889
- ffffffff815b68fc ffffffff84cfb6c0 000000000000019c 0000000002f68038
-Call Trace:
- [<ffffffff81247ab9>] warn_slowpath_null+0x29/0x30 kernel/panic.c:411
- [<ffffffff815b68fc>] handle_mm_fault+0x17ec/0x3530 mm/memory.c:3440
- [<     inline     >] access_error arch/x86/mm/fault.c:1020
- [<ffffffff81220951>] __do_page_fault+0x361/0x8b0 arch/x86/mm/fault.c:1227
- [<     inline     >] trace_page_fault_kernel
-./arch/x86/include/asm/trace/exceptions.h:44
- [<     inline     >] trace_page_fault_entries arch/x86/mm/fault.c:1314
- [<ffffffff81220f5a>] trace_do_page_fault+0x8a/0x230 arch/x86/mm/fault.c:1330
- [<ffffffff81213f14>] do_async_page_fault+0x14/0x70
- [<ffffffff84bf2b98>] async_page_fault+0x28/0x30
----[ end trace 179dec89fcb66e7f ]---
+> [   19.369455] ------------[ cut here ]------------
+> [   19.369851] WARNING: CPU: 1 PID: 1 at kernel/cgroup_pids.c:97 pids_cancel.constprop.6+0x31/0x40()
+> [   19.370596] Modules linked in:
+> [   19.370916] CPU: 1 PID: 1 Comm: systemd Not tainted 4.4.0-rc1+ #29
+> [   19.371418] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.8.2-0-g33fbe13 by qemu-project.org 04/01/2014
+> [   19.372542]  ffffffff81f65382 ffff88007c043b90 ffffffff81551ffc 0000000000000000
+> [   19.373173]  ffff88007c043bc8 ffffffff810de202 ffff88007a752000 ffff88007a29ab00
+> [   19.374144]  ffff88007c043c80 ffff88007a1d8400 0000000000000001 ffff88007c043bd8
+> [   19.375185] Call Trace:
+> [   19.375506]  [<ffffffff81551ffc>] dump_stack+0x4e/0x82
+> [   19.376238]  [<ffffffff810de202>] warn_slowpath_common+0x82/0xc0
+> [   19.376975]  [<ffffffff810de2fa>] warn_slowpath_null+0x1a/0x20
+> [   19.377765]  [<ffffffff8118e031>] pids_cancel.constprop.6+0x31/0x40
+> [   19.378623]  [<ffffffff8118e0fd>] pids_can_attach+0x6d/0xf0
+> [   19.379451]  [<ffffffff81188a4c>] cgroup_taskset_migrate+0x6c/0x330
+> [   19.380142]  [<ffffffff81188e05>] cgroup_migrate+0xf5/0x190
 
+Can you please describe how to reproduce this one?  If you have a qemu
+image which reproduces this, I'd be happy to take a look at it.
 
-Reproduction instructions are somewhat involved. I can provide
-detailed instructions if necessary. But maybe we can debug it without
-the reproducer. Just in case I've left some traces here:
-https://gist.githubusercontent.com/dvyukov/451019c8fb14aa4565a4/raw/4f6d55c19fbec74c5923a1aa62acf1db81fe4e98/gistfile1.txt
+Thanks.
 
-
-As a blind guess, I've added the following BUG into copy_process:
-
-diff --git a/kernel/fork.c b/kernel/fork.c
-index b4dc490..c5667e8 100644
---- a/kernel/fork.c
-+++ b/kernel/fork.c
-@@ -1620,6 +1620,8 @@ static struct task_struct *copy_process(unsigned
-long clone_flags,
-        trace_task_newtask(p, clone_flags);
-        uprobe_copy_process(p, clone_flags);
-
-+       BUG_ON(p->memcg_may_oom);
-+
-        return p;
-
-
-And it fired:
-
-------------[ cut here ]------------
-kernel BUG at kernel/fork.c:1623!
-invalid opcode: 0000 [#1] SMP KASAN
-Modules linked in:
-CPU: 3 PID: 28384 Comm: executor Not tainted 4.4.0-rc1+ #83
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
-task: ffff880034c542c0 ti: ffff880033140000 task.ti: ffff880033140000
-RIP: 0010:[<ffffffff81242df3>]  [<ffffffff81242df3>] copy_process+0x32e3/0x5bf0
-RSP: 0018:ffff880033147c28  EFLAGS: 00010246
-RAX: ffff880034c542c0 RBX: ffff880033148000 RCX: 0000000000000001
-RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff880060ca9a14
-RBP: ffff880033147e08 R08: ffff880060ca9808 R09: 0000000000000001
-R10: 0000000000000000 R11: 0000000000000001 R12: ffff88006269b148
-R13: 00000000003d0f00 R14: 1ffff10006628fa8 R15: ffff880060ca9640
-FS:  0000000002017880(0063) GS:ffff88006dd00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007fc73b14ae78 CR3: 000000000089a000 CR4: 00000000000006e0
-Stack:
- ffffea00017e1780 1ffff10006628f8b ffff880033147c48 ffffffff81338b22
- ffff880034c54a58 ffffffff816509d0 0000000000000246 ffffffff00000001
- ffff880060ca99b8 00007fc73b14ae78 ffffea00017e1780 00000002624ab4d0
-Call Trace:
- [<ffffffff81245afd>] _do_fork+0x14d/0xb40 kernel/fork.c:1729
- [<     inline     >] SYSC_clone kernel/fork.c:1838
- [<ffffffff812465c7>] SyS_clone+0x37/0x50 kernel/fork.c:1832
- [<ffffffff84bf0c76>] entry_SYSCALL_64_fastpath+0x16/0x7a
-arch/x86/entry/entry_64.S:185
-Code: 03 0f b6 04 02 48 89 fa 83 e2 07 38 d0 7f 09 84 c0 74 05 e8 c0
-e4 3d 00 41 f6 87 d4 03 00 00 20 0f 84 d7 ce ff ff e8 ed 70 21 00 <0f>
-0b e8 e6 70 21 00 48 8b 1d 8f 39 cf 04 49 bc 00 00 00 00 00
-RIP  [<ffffffff81242df3>] copy_process+0x32e3/0x5bf0
-kernel/fork.c:1623 (discriminator 1)
- RSP <ffff880033147c28>
----[ end trace 6b4b09a815461606 ]---
-
-
-So it seems that copy_process creates tasks with memcg_may_oom flag
-set, which looks wrong. Can it be the root cause?
-
-
-Thank you
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
