@@ -1,94 +1,143 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: RFC rdma cgroup
-Date: Tue, 24 Nov 2015 10:47:45 -0500
-Message-ID: <20151124154745.GK17033@mtj.duckdns.org>
-References: <CAG53R5Vd=tLbKPeKy8ZKP2DoHG-rnzW85COiE1Hk4GLv6SAZyA@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 1/8] kernfs: Add API to generate relative kernfs path
+Date: Tue, 24 Nov 2015 11:16:30 -0500
+Message-ID: <20151124161630.GL17033@mtj.duckdns.org>
+References: <1447703505-29672-1-git-send-email-serge@hallyn.com>
+ <1447703505-29672-2-git-send-email-serge@hallyn.com>
 Mime-Version: 1.0
-Return-path: <linux-security-module-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=A1rSiEoW2TNMN6xUiiaktS66bD6gnuMpxuwji1S/Ubw=;
-        b=H5FLkd0uUESgVFXxu7UJTi+VSqxiRwNvSfAPUFOtPL9SMmXHlQR8kjc3eYWSh48fnF
-         3CLv791beLYFJLY0XlBBMS2s9znbgfOMOkNSINb2fvclJzaW2ahnLcu0RIk/ipDFvV8+
-         fBcDrRmxWIs3kloGAXLA74lPu71Qc0DksHLJx596EBPTYQho71W0uZzaSkBWFvKtZzkG
-         d9YIO2MPjUiqBKaQfx7175NJ03qlO/yxaO1B6BN9QfszaTpMwvRfCqAMZzasa3JW+Xrf
-         CVUjaS/2pQJHCp0v5ZQ+nUWolpLM96W2Q508ODMU5hjl2hxmCKDjXGImC8JySuooPbKi
-         nOrA==
+        bh=I5lRyy6BZamx7t1FOktbG0EHJlZtg8wZzFsiNnxv/7E=;
+        b=P7/J/RRSPJrioj3UZEL516HKw/BgwVzI7xC2vDaQOru8i4oPjgg6i+7m2PKOCnEEv2
+         0N577+uUc0VZPKUFsx+Bbg7qIFBKZnaMWjxsNXeCsxgfMU9T+mOYzE4DTz4fhtVMtvwv
+         D/vVqJgAczbf58pP1T70/RP+iKsvqwxzBN7jRjOkjvmAUROzm5jhpoAMCfiVuEsVK7G/
+         +L1KXTL0qz+iLbYmksKrkuj//+7sdBw8NiN31Puq+d8CR+1SljM45YG7uxKc3Y+/l70k
+         SaRXr7PCj2sDmChwORwKgwxaMunuK+N72umFr7bRCycBR9Btyoh0/ZHgMDrzyu0sN1AY
+         AE4g==
 Content-Disposition: inline
-In-Reply-To: <CAG53R5Vd=tLbKPeKy8ZKP2DoHG-rnzW85COiE1Hk4GLv6SAZyA@mail.gmail.com>
-Sender: owner-linux-security-module@vger.kernel.org
+In-Reply-To: <1447703505-29672-2-git-send-email-serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Parav Pandit <pandit.parav@gmail.com>
-Cc: Doug Ledford <dledford@redhat.com>, "Hefty, Sean" <sean.hefty@intel.com>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Liran Liss <liranl@mellanox.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "lizefan@huawei.com" <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, "james.l.morris@oracle.com" <james.l.morris@oracle.com>, "serge@hallyn.com" <serge@hallyn.com>, Or Gerlitz <ogerlitz@mellanox.com>, Matan Barak <matanb@mellanox.com>, "raindel@mellanox.com" <raindel@mellanox.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-security-module@vger.kernel.org" <linux-security-module@vger.kernel.org>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Haggai Eran <haggaie@mellanox.com>
+To: serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org
 
-Hello, chiming in late.
+Hello,
 
-On Wed, Oct 28, 2015 at 01:59:15PM +0530, Parav Pandit wrote:
-> Design guidelines:
-> -----------------------
-> 1. There will be new rdma cgroup for accounting rdma resources
-> (instead of extending device cgroup).
-> Rationale: RDMA tracks different type of resources and it functions
-> differently than device cgroup. Though device cgroup could have been
-> extended for more generic nature, community feels that its better to
-> create RDMA cgroup, which might have more features than just resource
-> limit enforcement in future.
+On Mon, Nov 16, 2015 at 01:51:38PM -0600, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org wrote:
+> +static char * __must_check kernfs_path_from_node_locked(
+> +	struct kernfs_node *kn_from,
+> +	struct kernfs_node *kn_to,
+> +	char *buf,
+> +	size_t buflen)
+> +{
+> +	char *p = buf;
+> +	struct kernfs_node *kn;
+> +	size_t depth_from = 0, depth_to, d;
+>  	int len;
+>  
+> +	/* We atleast need 2 bytes to write "/\0". */
+> +	BUG_ON(buflen < 2);
 
-Yeap, it should definitely be separate from device cgroup.
+I don't think this is BUG worthy.  Just return NULL?  Also, the only
+reason the original function returned char * was because the starting
+point may not be the start of the buffer which helps keeping the
+implementation simple.  If this function is gonna be complex anyway, a
+better approach would be returning ssize_t and implement a simliar
+behavior to strlcpy().
 
-> 2. RDMA cgroup will allow resource accounting, limit enforcement on
-> per cgroup, per rdma device basis (instead of resource limiting across
-> all devices).
-> Rationale: this give granular control when multiple devices exist in the system.
-> 
-> 3. Resources are not defined by the RDMA cgroup. Resources are defined
-> by RDMA/IB subsystem and optionally by HCA vendor device drivers.
-> Rationale: This allows rdma cgroup to remain constant while RDMA/IB
-> subsystem can evolve without the need of rdma cgroup update. A new
-> resource can be easily added by the RDMA/IB subsystem without touching
-> rdma cgroup.
+> +	/* Short-circuit the easy case - kn_to is the root node. */
+> +	if ((kn_from == kn_to) || (!kn_from && !kn_to->parent)) {
+> +		*p = '/';
+> +		*(p + 1) = '\0';
 
-I'm *extremely* uncomfortable with this.  Drivers for this sort of
-higher end devices tend to pull a lot of stunts for better or worse
-and my gut feeling is that letting low level drivers run free with
-resource definition is highly likely to lead to an unmanageable mess
-in the long run.  I'd strongly urge to gather consensus on what the
-resources should be across the board.
+Hmm... so if kn_from == kn_to, the output is "/"?
 
-> Design:
-> ---------
-> 8. Typically each RDMA cgroup will have 0 to 4 RDMA devices. Therefore
-> each cgroup will have 0 to 4 verbs resource pool and optionally 0 to 4
-> hw resource pool per such device.
-> (Nothing stops to have more devices and pools, but design is around
-> this use case).
+> +		return p;
+> +	}
+> +
+> +	/* We can find the relative path only if both the nodes belong to the
+> +	 * same kernfs root.
+> +	 */
+> +	if (kn_from) {
+> +		BUG_ON(kernfs_root(kn_from) != kernfs_root(kn_to));
 
-Heh, 4 seems like an arbitrary number.  idk, it feels weird to bake in
-a number like 4 into the design.
+Ditto, just return NULL and maybe trigger WARN_ON_ONCE().
 
-> 9. Resource pool object is created in following situations.
-> (a) administrative operation is done to set the limit and no previous
-> resource pool exist for the device of interest for the cgroup.
-> (b) no resource limits were configured, but IB/RDMA subsystem tries to
-> charge the resource. so that when applications are running without
-> limits and later on when limits are enforced, during uncharging, it
-> correctly uncharges them, otherwise usage count will drop to negative.
-> This is done using default resource pool.
-> Instead of implementing any sort of time markers, default pool
-> simplifies the design.
+> +		depth_from = kernfs_node_depth(kn_from);
+> +	}
+> +
+> +	depth_to = kernfs_node_depth(kn_to);
+> +
+> +	/* We compose path from left to right. So first write out all possible
+                                             ^
+					     , so
 
-So, the usual way to deal with this is that the root cgroup is exempt
-from accounting and each resource tracks where they were charged to
-and frees that cgroup on release.  IOW, asssociate on charge and
-maintain the association till release.
+> +	 * "/.." strings needed to reach from 'kn_from' to the common ancestor.
+> +	 */
 
-For interface details, please refer to the following documentation.
+Please fully-wing multiline comments.
 
- https://git.kernel.org/cgit/linux/kernel/git/tj/cgroup.git/tree/Documentation/cgroup.txt?h=for-4.5
+> +	if (kn_from) {
+> +		while (depth_from > depth_to) {
+> +			len = strlen("/..");
+
+Maybe do something like the following instead?
+
+			const char parent_str[] = "/..";
+			size_t len = sizeof(parent_str) - 1;
+
+> +			if ((buflen - (p - buf)) < len + 1) {
+> +				/* buffer not big enough. */
+> +				buf[0] = '\0';
+> +				return NULL;
+> +			}
+> +			memcpy(p, "/..", len);
+> +			p += len;
+> +			*p = '\0';
+> +			--depth_from;
+> +			kn_from = kn_from->parent;
+>  		}
+> +
+> +		d = depth_to;
+> +		kn = kn_to;
+> +		while (depth_from < d) {
+> +			kn = kn->parent;
+> +			d--;
+> +		}
+> +
+> +		/* Now we have 'depth_from == depth_to' at this point. Add more
+
+Ditto with winging.
+
+> +		 * "/.."s until we reach common ancestor. In the worst case,
+> +		 * root node will be the common ancestor.
+> +		 */
+> +		while (depth_from > 0) {
+> +			/* If we reached common ancestor, stop. */
+> +			if (kn_from == kn)
+> +				break;
+> +			len = strlen("/..");
+> +			if ((buflen - (p - buf)) < len + 1) {
+> +				/* buffer not big enough. */
+> +				buf[0] = '\0';
+> +				return NULL;
+> +			}
+> +			memcpy(p, "/..", len);
+> +			p += len;
+> +			*p = '\0';
+> +			--depth_from;
+> +			kn_from = kn_from->parent;
+> +			kn = kn->parent;
+> +		}
+
+Hmmm... I wonder whether this and the above block can be merged.
+Wouldn't it be simpler to calculate common ancestor and generate
+/.. till it reached that point?
 
 Thanks.
 
