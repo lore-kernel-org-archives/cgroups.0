@@ -1,61 +1,96 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-4.4-fixes] cgroup: make css_set pin its css's
- to avoid use-afer-free
-Date: Tue, 24 Nov 2015 09:59:45 -0500
-Message-ID: <20151124145945.GF17033@mtj.duckdns.org>
-References: <20151123195541.GA19072@mtj.duckdns.org>
- <56543C76.2050008@bmw-carit.de>
- <20151124144418.GB17033@mtj.duckdns.org>
- <56547B22.2020802@bmw-carit.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: RFC rdma cgroup
+Date: Tue, 24 Nov 2015 10:47:45 -0500
+Message-ID: <20151124154745.GK17033@mtj.duckdns.org>
+References: <CAG53R5Vd=tLbKPeKy8ZKP2DoHG-rnzW85COiE1Hk4GLv6SAZyA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-security-module-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=uJ2lqUuO8/ebjKyk9yvtzloR5TJ5lMciTtZC2rvBVdw=;
-        b=iMPJq4ZgRt4pvBZ3v28stCxMLqjSEN4gJdfcESbPdoKINqgTGSdunSvX4N3WMrhn+N
-         cpHsNpoRKOy4YilVe1HF6bEX3FP2nYpZDPvppsxnANw8SrMVYrrLi+A6DNFgHkI3pG6m
-         8FJCoZ4BxS/A6zB3CBOFYtZrwO8CCCvWiCFuGuqcxBh0MrhXGhyx5uumeKpefGkymARw
-         bK1dTZZC9g2JoO3u5iDT3zkC3C0FLom+e5ngqlw9KPE15L+EySAaPbGuUatcBQKyeIAC
-         Gtxb7CSr85I4i+AV8Dso4oTt4cjryqj9+dYkdDVkXnWb2m7OXXHPrF/EsK94wNQz5tLb
-         TMoA==
+        bh=A1rSiEoW2TNMN6xUiiaktS66bD6gnuMpxuwji1S/Ubw=;
+        b=H5FLkd0uUESgVFXxu7UJTi+VSqxiRwNvSfAPUFOtPL9SMmXHlQR8kjc3eYWSh48fnF
+         3CLv791beLYFJLY0XlBBMS2s9znbgfOMOkNSINb2fvclJzaW2ahnLcu0RIk/ipDFvV8+
+         fBcDrRmxWIs3kloGAXLA74lPu71Qc0DksHLJx596EBPTYQho71W0uZzaSkBWFvKtZzkG
+         d9YIO2MPjUiqBKaQfx7175NJ03qlO/yxaO1B6BN9QfszaTpMwvRfCqAMZzasa3JW+Xrf
+         CVUjaS/2pQJHCp0v5ZQ+nUWolpLM96W2Q508ODMU5hjl2hxmCKDjXGImC8JySuooPbKi
+         nOrA==
 Content-Disposition: inline
-In-Reply-To: <56547B22.2020802-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <CAG53R5Vd=tLbKPeKy8ZKP2DoHG-rnzW85COiE1Hk4GLv6SAZyA@mail.gmail.com>
+Sender: owner-linux-security-module@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Jones <davej-rdkfGonbjUTCLXcRTR1eJlpr/1R2p/CL@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Parav Pandit <pandit.parav@gmail.com>
+Cc: Doug Ledford <dledford@redhat.com>, "Hefty, Sean" <sean.hefty@intel.com>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Liran Liss <liranl@mellanox.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "lizefan@huawei.com" <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, "james.l.morris@oracle.com" <james.l.morris@oracle.com>, "serge@hallyn.com" <serge@hallyn.com>, Or Gerlitz <ogerlitz@mellanox.com>, Matan Barak <matanb@mellanox.com>, "raindel@mellanox.com" <raindel@mellanox.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-security-module@vger.kernel.org" <linux-security-module@vger.kernel.org>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Haggai Eran <haggaie@mellanox.com>
 
-Hello,
+Hello, chiming in late.
 
-On Tue, Nov 24, 2015 at 03:58:42PM +0100, Daniel Wagner wrote:
-> I start a not so updated rawhide image with some funky kernel options.
-> They are more less some left overs from debugging:
-> 
-> $QEMU -gdb tcp::1235 -enable-kvm -machine accel=kvm \
->       -m 2G -cpu Haswell \
->       -smp sockets=1,cores=2,threads=2 \
->       -hda ~/vm-images/rawhide-big.qcow2\
->       -net nic,model=virtio \
->       -net user,hostfwd=tcp::7777-:22 \
->       -monitor telnet:127.0.0.1:1234,server,nowait \
->       -serial stdio -display none \
->       -append "root=/dev/sda1 console=ttyS0 audit=0 isolcpus=3 systemd.unified_cgroup_hierarchy=1" \
->       -kernel arch/x86_64/boot/bzImage $@
-> 
-> After starting the image I just wait for a few seconds and I'll get it.
-> No interaction needed.
-> 
-> > If you have a qemu image which reproduces this, I'd be happy to take
-> > a look at it.
-> 
-> I'll upload it, though it will take a while... the fun of living
-> with asymmetric connectivity.
+On Wed, Oct 28, 2015 at 01:59:15PM +0530, Parav Pandit wrote:
+> Design guidelines:
+> -----------------------
+> 1. There will be new rdma cgroup for accounting rdma resources
+> (instead of extending device cgroup).
+> Rationale: RDMA tracks different type of resources and it functions
+> differently than device cgroup. Though device cgroup could have been
+> extended for more generic nature, community feels that its better to
+> create RDMA cgroup, which might have more features than just resource
+> limit enforcement in future.
 
-Great, thanks a lot!
+Yeap, it should definitely be separate from device cgroup.
+
+> 2. RDMA cgroup will allow resource accounting, limit enforcement on
+> per cgroup, per rdma device basis (instead of resource limiting across
+> all devices).
+> Rationale: this give granular control when multiple devices exist in the system.
+> 
+> 3. Resources are not defined by the RDMA cgroup. Resources are defined
+> by RDMA/IB subsystem and optionally by HCA vendor device drivers.
+> Rationale: This allows rdma cgroup to remain constant while RDMA/IB
+> subsystem can evolve without the need of rdma cgroup update. A new
+> resource can be easily added by the RDMA/IB subsystem without touching
+> rdma cgroup.
+
+I'm *extremely* uncomfortable with this.  Drivers for this sort of
+higher end devices tend to pull a lot of stunts for better or worse
+and my gut feeling is that letting low level drivers run free with
+resource definition is highly likely to lead to an unmanageable mess
+in the long run.  I'd strongly urge to gather consensus on what the
+resources should be across the board.
+
+> Design:
+> ---------
+> 8. Typically each RDMA cgroup will have 0 to 4 RDMA devices. Therefore
+> each cgroup will have 0 to 4 verbs resource pool and optionally 0 to 4
+> hw resource pool per such device.
+> (Nothing stops to have more devices and pools, but design is around
+> this use case).
+
+Heh, 4 seems like an arbitrary number.  idk, it feels weird to bake in
+a number like 4 into the design.
+
+> 9. Resource pool object is created in following situations.
+> (a) administrative operation is done to set the limit and no previous
+> resource pool exist for the device of interest for the cgroup.
+> (b) no resource limits were configured, but IB/RDMA subsystem tries to
+> charge the resource. so that when applications are running without
+> limits and later on when limits are enforced, during uncharging, it
+> correctly uncharges them, otherwise usage count will drop to negative.
+> This is done using default resource pool.
+> Instead of implementing any sort of time markers, default pool
+> simplifies the design.
+
+So, the usual way to deal with this is that the root cgroup is exempt
+from accounting and each resource tracks where they were charged to
+and frees that cgroup on release.  IOW, asssociate on charge and
+maintain the association till release.
+
+For interface details, please refer to the following documentation.
+
+ https://git.kernel.org/cgit/linux/kernel/git/tj/cgroup.git/tree/Documentation/cgroup.txt?h=for-4.5
+
+Thanks.
 
 -- 
 tejun
