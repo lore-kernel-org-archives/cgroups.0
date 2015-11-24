@@ -1,34 +1,86 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/8] kernfs: Add API to generate relative kernfs path
-Date: Tue, 24 Nov 2015 11:17:09 -0500
-Message-ID: <20151124161709.GM17033@mtj.duckdns.org>
+Subject: Re: [PATCH 3/8] cgroup: add function to get task's cgroup
+Date: Tue, 24 Nov 2015 11:27:28 -0500
+Message-ID: <20151124162728.GN17033@mtj.duckdns.org>
 References: <1447703505-29672-1-git-send-email-serge@hallyn.com>
- <1447703505-29672-2-git-send-email-serge@hallyn.com>
- <20151124161630.GL17033@mtj.duckdns.org>
+	<1447703505-29672-4-git-send-email-serge@hallyn.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=CpdKrhBxNv0TwpWbFOw2zkZuuWFOEjily5hADnSLSPs=;
-        b=gRirox399zKTWm1K1MsA6iwKTU4iU01ZcP2rOvuu2nh/6odZEb/l45j4OPXYyDDYUT
-         yKjpc/qpsT36Z4XqQLb3iQ25iT/lFhMF/ksSyrEAa9YrEOsT3X6RKnpXnxjzhdccnRrz
-         0+qEOFts1cDq+49jhRXZV6JVh07drsSPyxWXoJ1siCbCjDhbP2kF6Ej4NHEnOgEa9msM
-         7y7+UpKcAVmWiMW1rTb7YVSjNwJb8CO4KO0sF80UYYOGnBXylVCVuR8qnCpYt+52FY8t
-         vrhB6YBxlYi5AU4R5dPJzJSmmeHhMW41aqDrC1iCA5BCGLTqrssy+FxmkPN1JLv51GYD
-         zy/w==
-Content-Disposition: inline
-In-Reply-To: <20151124161630.GL17033-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:date:from:to:cc:subject:message-id:references:mime-version
+	:content-type:content-disposition:in-reply-to:user-agent;
+	bh=A97wHhKDGqtHyvogJ+ju3u0QjuKS+6y1xqanHBZcZwo=;
+	b=WPRhrJhd54lNg9h6IvaoFgeKeadmcjJcEpMS4kIIvO8HJ2SlAhSXwMKdFn22rL/RjJ
+	eYyBucER9dwoDcSV9jOzZONo1LWfMZFZxPpzAN8bAqNfRdsIYDmcFaFe5eJP116aYpHq
+	l9Q/9G2r45xlJKxXwSvTkao3rO4Isz2U1ymIyGJjpzq7PrvB+rOO3YqzHk0qe0A0ZozK
+	VGRQRGEv1UJu7CCfLx1tTUhdsI2R55GzbLG3wcNqxuj6JIlhhN7xI/0OlAQMnMrChvHh
+	LsZ28gfoLi5LQGUDC94ijcX8wmTXRaJYGl1u7UhYoilAbmjhY8SP88yp57n1014IDZlq
+	OnCA==
+Content-Disposition: inline
+In-Reply-To: <1447703505-29672-4-git-send-email-serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 To: serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org
+Cc: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 
-Oops, also please cc Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-on kernfs changes.
+Hello,
+
+On Mon, Nov 16, 2015 at 01:51:40PM -0600, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org wrote:
+> diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+> index 22e3754..29f0b02 100644
+> --- a/include/linux/cgroup.h
+> +++ b/include/linux/cgroup.h
+> @@ -326,6 +326,7 @@ static inline bool css_tryget_online(struct cgroup_subsys_state *css)
+>  		return percpu_ref_tryget_live(&css->refcnt);
+>  	return true;
+>  }
+> +struct cgroup *get_task_cgroup(struct task_struct *task);
+
+Please move this where other prototypes are.
+
+> +/*
+> + * get_task_cgroup - returns the cgroup of the task in the default cgroup
+> + * hierarchy.
+> + *
+> + * @task: target task
+> + * This function returns the @task's cgroup on the default cgroup hierarchy. The
+> + * returned cgroup has its reference incremented (by calling cgroup_get()). So
+> + * the caller must cgroup_put() the obtained reference once it is done with it.
+> + */
+> +struct cgroup *get_task_cgroup(struct task_struct *task)
+> +{
+> +	struct cgroup *cgrp;
+> +
+> +	mutex_lock(&cgroup_mutex);
+> +	spin_lock_bh(&css_set_lock);
+> +
+> +	cgrp = task_cgroup_from_root(task, &cgrp_dfl_root);
+> +	cgroup_get(cgrp);
+> +
+> +	spin_unlock_bh(&css_set_lock);
+> +	mutex_unlock(&cgroup_mutex);
+> +	return cgrp;
+> +}
+> +EXPORT_SYMBOL_GPL(get_task_cgroup);
+
+So, exposing cgroup_mutex this way can lead to ugly lock dependency
+issues as cgroup_mutex is expected to be outside of pretty much
+everything.  task_cgroup_path() does it but it has no users (should
+prolly removed) and cgroup_attach_task_all() is pretty specific.
+
+Hmmm... cc'ing Li (btw, please cc him and Johannes from the next
+posting).  Li, I don't think cset_cgroup_from_root() really needs
+cgroup_mutex.  css_set_lock seems to be enough.  What do you think?
 
 Thanks.
 
