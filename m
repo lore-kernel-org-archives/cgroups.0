@@ -1,9 +1,9 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 3/8] cgroup: add function to get task's cgroup
-Date: Tue, 24 Nov 2015 11:27:28 -0500
-Message-ID: <20151124162728.GN17033@mtj.duckdns.org>
+Subject: Re: [PATCH 4/8] cgroup: export cgroup_get() and cgroup_put()
+Date: Tue, 24 Nov 2015 11:30:56 -0500
+Message-ID: <20151124163056.GO17033@mtj.duckdns.org>
 References: <1447703505-29672-1-git-send-email-serge@hallyn.com>
-	<1447703505-29672-4-git-send-email-serge@hallyn.com>
+	<1447703505-29672-5-git-send-email-serge@hallyn.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -11,15 +11,15 @@ Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@pub
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
 	h=sender:date:from:to:cc:subject:message-id:references:mime-version
 	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=A97wHhKDGqtHyvogJ+ju3u0QjuKS+6y1xqanHBZcZwo=;
-	b=WPRhrJhd54lNg9h6IvaoFgeKeadmcjJcEpMS4kIIvO8HJ2SlAhSXwMKdFn22rL/RjJ
-	eYyBucER9dwoDcSV9jOzZONo1LWfMZFZxPpzAN8bAqNfRdsIYDmcFaFe5eJP116aYpHq
-	l9Q/9G2r45xlJKxXwSvTkao3rO4Isz2U1ymIyGJjpzq7PrvB+rOO3YqzHk0qe0A0ZozK
-	VGRQRGEv1UJu7CCfLx1tTUhdsI2R55GzbLG3wcNqxuj6JIlhhN7xI/0OlAQMnMrChvHh
-	LsZ28gfoLi5LQGUDC94ijcX8wmTXRaJYGl1u7UhYoilAbmjhY8SP88yp57n1014IDZlq
-	OnCA==
+	bh=jfFhJOgPtIhry/sio81dmFhzGNOKLtIpkIds4jrKOaA=;
+	b=xCHszV2o3YFR60C6FEyVXNCWXFylsSN5woAcGDtKS9QN+OyRiGY2Yi09M085KeqjUC
+	LARqW7/RmXIlQqB6WZd0aAzOFja4iJ9ZxNf5i24mMPHLCK2YWeRaLk3Ou36tVLGCxOsj
+	qjNsT2HIrgRNmLdOUW3Rz8zZeBS5lpx7m6iwOpXKM95IRsEEdsLo9TR60Rc4IX7vk1X8
+	fU2MTaANbnUxsEmTpTOE+13bDlyOOn1Sf0n1vtDVLxN5BAygre1PNP/DUk6mULRtKpmR
+	GY1EDrazKEFWF4aX/HyIl7qF6XYOz4cKuDlry532QDe8eB1tHE/1XKQwOVkRHsh6Dj25
+	iZQQ==
 Content-Disposition: inline
-In-Reply-To: <1447703505-29672-4-git-send-email-serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1447703505-29672-5-git-send-email-serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
 	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -35,52 +35,60 @@ Cc: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9Qet
 
 Hello,
 
-On Mon, Nov 16, 2015 at 01:51:40PM -0600, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org wrote:
+On Mon, Nov 16, 2015 at 01:51:41PM -0600, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org wrote:
+> From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> 
+> move cgroup_get() and cgroup_put() into cgroup.h so that
+> they can be called from other places.
+> 
+> Signed-off-by: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Acked-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+> ---
+>  include/linux/cgroup.h |   21 +++++++++++++++++++++
+>  kernel/cgroup.c        |   22 ----------------------
+>  2 files changed, 21 insertions(+), 22 deletions(-)
+> 
 > diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-> index 22e3754..29f0b02 100644
+> index 29f0b02..99096be 100644
 > --- a/include/linux/cgroup.h
 > +++ b/include/linux/cgroup.h
-> @@ -326,6 +326,7 @@ static inline bool css_tryget_online(struct cgroup_subsys_state *css)
->  		return percpu_ref_tryget_live(&css->refcnt);
->  	return true;
->  }
-> +struct cgroup *get_task_cgroup(struct task_struct *task);
+> @@ -231,6 +231,27 @@ void css_task_iter_end(struct css_task_iter *it);
+>  #define css_for_each_descendant_post(pos, css)				\
+>  	for ((pos) = css_next_descendant_post(NULL, (css)); (pos);	\
+>  	     (pos) = css_next_descendant_post((pos), (css)))
 
-Please move this where other prototypes are.
+Please insert a blank line here.
 
-> +/*
-> + * get_task_cgroup - returns the cgroup of the task in the default cgroup
-> + * hierarchy.
-> + *
-> + * @task: target task
-> + * This function returns the @task's cgroup on the default cgroup hierarchy. The
-> + * returned cgroup has its reference incremented (by calling cgroup_get()). So
-> + * the caller must cgroup_put() the obtained reference once it is done with it.
-> + */
-> +struct cgroup *get_task_cgroup(struct task_struct *task)
+> +/* convenient tests for these bits */
+
+And I don't think the comment makes sense here.
+
+> +static inline bool cgroup_is_dead(const struct cgroup *cgrp)
 > +{
-> +	struct cgroup *cgrp;
-> +
-> +	mutex_lock(&cgroup_mutex);
-> +	spin_lock_bh(&css_set_lock);
-> +
-> +	cgrp = task_cgroup_from_root(task, &cgrp_dfl_root);
-> +	cgroup_get(cgrp);
-> +
-> +	spin_unlock_bh(&css_set_lock);
-> +	mutex_unlock(&cgroup_mutex);
-> +	return cgrp;
+> +	return !(cgrp->self.flags & CSS_ONLINE);
 > +}
-> +EXPORT_SYMBOL_GPL(get_task_cgroup);
+> +
+> +static inline void cgroup_get(struct cgroup *cgrp)
+> +{
+> +	WARN_ON_ONCE(cgroup_is_dead(cgrp));
+> +	css_get(&cgrp->self);
+> +}
+> +
+> +static inline bool cgroup_tryget(struct cgroup *cgrp)
+> +{
+> +	return css_tryget(&cgrp->self);
+> +}
+> +
+> +static inline void cgroup_put(struct cgroup *cgrp)
+> +{
+> +	css_put(&cgrp->self);
+> +}
 
-So, exposing cgroup_mutex this way can lead to ugly lock dependency
-issues as cgroup_mutex is expected to be outside of pretty much
-everything.  task_cgroup_path() does it but it has no users (should
-prolly removed) and cgroup_attach_task_all() is pretty specific.
-
-Hmmm... cc'ing Li (btw, please cc him and Johannes from the next
-posting).  Li, I don't think cset_cgroup_from_root() really needs
-cgroup_mutex.  css_set_lock seems to be enough.  What do you think?
+So these are being exposed for cgroup NS support.  Hmmm... idk, does
+cgroup NS support needs to be in a spearate file?  The added amount
+isn't that big.  If we split cgroup.c, I'd much prefer to have
+cgroup-internal.h for internally shared stuff than pushing them out to
+cgroup.h.
 
 Thanks.
 
