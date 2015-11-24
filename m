@@ -1,73 +1,80 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: WARNING in handle_mm_fault
-Date: Tue, 24 Nov 2015 17:31:16 -0500
-Message-ID: <20151124223116.GA2874@cmpxchg.org>
-References: <CACT4Y+ZCkv0BPOdo3aiheA5LXzXhcnuiw7kCoWL=b9FcC8-wqg@mail.gmail.com>
+From: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 4/8] cgroup: export cgroup_get() and cgroup_put()
+Date: Tue, 24 Nov 2015 16:35:09 -0600
+Message-ID: <20151124223508.GA31109@mail.hallyn.com>
+References: <1447703505-29672-1-git-send-email-serge@hallyn.com>
+ <1447703505-29672-5-git-send-email-serge@hallyn.com>
+ <20151124163056.GO17033@mtj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <CACT4Y+ZCkv0BPOdo3aiheA5LXzXhcnuiw7kCoWL=b9FcC8-wqg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20151124163056.GO17033-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, syzkaller <syzkaller-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, Kostya Serebryany <kcc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alexander Potapenko <glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sasha Levin <sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org
 
-Hi Dmitry,
-
-On Tue, Nov 24, 2015 at 02:50:26PM +0100, Dmitry Vyukov wrote:
-> As a blind guess, I've added the following BUG into copy_process:
+On Tue, Nov 24, 2015 at 11:30:56AM -0500, Tejun Heo wrote:
+> Hello,
 > 
-> diff --git a/kernel/fork.c b/kernel/fork.c
-> index b4dc490..c5667e8 100644
-> --- a/kernel/fork.c
-> +++ b/kernel/fork.c
-> @@ -1620,6 +1620,8 @@ static struct task_struct *copy_process(unsigned
-> long clone_flags,
->         trace_task_newtask(p, clone_flags);
->         uprobe_copy_process(p, clone_flags);
+> On Mon, Nov 16, 2015 at 01:51:41PM -0600, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org wrote:
+> > From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > 
+> > move cgroup_get() and cgroup_put() into cgroup.h so that
+> > they can be called from other places.
+> > 
+> > Signed-off-by: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > Acked-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+> > ---
+> >  include/linux/cgroup.h |   21 +++++++++++++++++++++
+> >  kernel/cgroup.c        |   22 ----------------------
+> >  2 files changed, 21 insertions(+), 22 deletions(-)
+> > 
+> > diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+> > index 29f0b02..99096be 100644
+> > --- a/include/linux/cgroup.h
+> > +++ b/include/linux/cgroup.h
+> > @@ -231,6 +231,27 @@ void css_task_iter_end(struct css_task_iter *it);
+> >  #define css_for_each_descendant_post(pos, css)				\
+> >  	for ((pos) = css_next_descendant_post(NULL, (css)); (pos);	\
+> >  	     (pos) = css_next_descendant_post((pos), (css)))
 > 
-> +       BUG_ON(p->memcg_may_oom);
-> +
->         return p;
+> Please insert a blank line here.
+> 
+> > +/* convenient tests for these bits */
+> 
+> And I don't think the comment makes sense here.
+> 
+> > +static inline bool cgroup_is_dead(const struct cgroup *cgrp)
+> > +{
+> > +	return !(cgrp->self.flags & CSS_ONLINE);
+> > +}
+> > +
+> > +static inline void cgroup_get(struct cgroup *cgrp)
+> > +{
+> > +	WARN_ON_ONCE(cgroup_is_dead(cgrp));
+> > +	css_get(&cgrp->self);
+> > +}
+> > +
+> > +static inline bool cgroup_tryget(struct cgroup *cgrp)
+> > +{
+> > +	return css_tryget(&cgrp->self);
+> > +}
+> > +
+> > +static inline void cgroup_put(struct cgroup *cgrp)
+> > +{
+> > +	css_put(&cgrp->self);
+> > +}
+> 
+> So these are being exposed for cgroup NS support.  Hmmm... idk, does
+> cgroup NS support needs to be in a spearate file?  The added amount
+> isn't that big.  If we split cgroup.c, I'd much prefer to have
+> cgroup-internal.h for internally shared stuff than pushing them out to
+> cgroup.h.
 
-Thanks for your report.
+Yeah, I think it makes more sense to merge them.
 
-I don't see how this could happen through the legitimate setters of
-p->memcg_may_oom. Something must clobber it. What happens with the
-following patch applied?
-
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index edad7a4..42e1285 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1463,9 +1463,11 @@ struct task_struct {
- 	unsigned sched_reset_on_fork:1;
- 	unsigned sched_contributes_to_load:1;
- 	unsigned sched_migrated:1;
-+	unsigned dummy_a:1;
- #ifdef CONFIG_MEMCG
- 	unsigned memcg_may_oom:1;
- #endif
-+	unsigned dummy_b:1;
- #ifdef CONFIG_MEMCG_KMEM
- 	unsigned memcg_kmem_skip_account:1;
- #endif
-diff --git a/kernel/fork.c b/kernel/fork.c
-index f97f2c4..ab6f7ba 100644
---- a/kernel/fork.c
-+++ b/kernel/fork.c
-@@ -1617,6 +1617,12 @@ static struct task_struct *copy_process(unsigned long clone_flags,
- 	trace_task_newtask(p, clone_flags);
- 	uprobe_copy_process(p, clone_flags);
- 
-+	if (p->dummy_a || p->dummy_b || p->memcg_may_oom) {
-+		printk(KERN_ALERT "dummy_a:%d dummy_b:%d memcg_may_oom:%d\n",
-+		       p->dummy_a, p->dummy_b, p->memcg_may_oom);
-+		BUG();
-+	}
-+
- 	return p;
- 
- bad_fork_cancel_cgroup:
+thanks,
+-serge
