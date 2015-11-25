@@ -1,63 +1,68 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH 1/2] memcg: flatten task_struct->memcg_oom
-Date: Wed, 25 Nov 2015 16:02:07 +0100
-Message-ID: <20151125150207.GM11639@twins.programming.kicks-ass.net>
-References: <20150913185940.GA25369@htj.duckdns.org>
- <55FEC685.5010404@oracle.com>
- <20150921200141.GH13263@mtj.duckdns.org>
- <20151125144354.GB17308@twins.programming.kicks-ass.net>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] cpuset: Replace all instances of time_t with
+	time64_t
+Date: Wed, 25 Nov 2015 16:16:55 +0100
+Message-ID: <2798266.9VZu01a7d1@wuerfel>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20151125144354.GB17308-ndre7Fmf5hadTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <y2038-bounces@lists.linaro.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
+List-Archive: <http://lists.linaro.org/pipermail/y2038/>
+List-Post: <mailto:y2038@lists.linaro.org>
+List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
+List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=subscribe>
+Errors-To: y2038-bounces@lists.linaro.org
+Sender: "Y2038" <y2038-bounces@lists.linaro.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sasha Levin <sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, vdavydov-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org
+Cc: y2038@lists.linaro.org, tglx@linutronix.de, John Stultz <john.stultz@linaro.org>, linux-kernel@vger.kernel.org, Heena Sirwani <heenasirwani@gmail.com>
 
-On Wed, Nov 25, 2015 at 03:43:54PM +0100, Peter Zijlstra wrote:
-> On Mon, Sep 21, 2015 at 04:01:41PM -0400, Tejun Heo wrote:
-> > So, the only way the patch could have caused the above is if someone
-> > who isn't the task itself is writing to the bitfields while the task
-> > is running.  Looking through the fields, ->sched_reset_on_fork seems a
-> > bit suspicious.  __sched_setscheduler() looks like it can modify the
-> > bit while the target task is running.  Peter, am I misreading the
-> > code?
-> 
-> Nope, that's quite possible. Looks like we need to break up those
-> bitfields a bit. All the scheduler ones should be serialized by
-> scheduler locks, but the others are fair game.
-
-Maybe something like so; but my brain is a complete mess today.
-
----
- include/linux/sched.h | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
-
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index f425aac63317..b474e0f05327 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1455,14 +1455,15 @@ struct task_struct {
- 	/* Used for emulating ABI behavior of previous Linux versions */
- 	unsigned int personality;
- 
--	unsigned in_execve:1;	/* Tell the LSMs that the process is doing an
--				 * execve */
--	unsigned in_iowait:1;
--
--	/* Revert to default priority/policy when forking */
-+	/* scheduler bits, serialized by scheduler locks */
- 	unsigned sched_reset_on_fork:1;
- 	unsigned sched_contributes_to_load:1;
- 	unsigned sched_migrated:1;
-+	unsigned __padding_sched:29;
-+
-+	/* unserialized, strictly 'current' */
-+	unsigned in_execve:1; /* bit to tell LSMs we're in execve */
-+	unsigned in_iowait:1;
- #ifdef CONFIG_MEMCG
- 	unsigned memcg_may_oom:1;
- #endif
+VGhlIGZvbGxvd2luZyBwYXRjaCByZXBsYWNlcyBhbGwgaW5zdGFuY2VzIG9mIHRpbWVfdCB3aXRo
+IHRpbWU2NF90IGkuZS4KY2hhbmdlIHRoZSB0eXBlIHVzZWQgZm9yIHJlcHJlc2VudGluZyB0aW1l
+IGZyb20gMzItYml0IHRvIDY0LWJpdC4gQWxsCjMyLWJpdCBrZXJuZWxzIHRvIGRhdGUgdXNlIGEg
+c2lnbmVkIDMyLWJpdCB0aW1lX3QgdHlwZSwgd2hpY2ggY2FuIG9ubHkKcmVwcmVzZW50IHRpbWUg
+dW50aWwgSmFudWFyeSAyMDM4LiBTaW5jZSBlbWJlZGRlZCBzeXN0ZW1zIHJ1bm5pbmcgMzItYml0
+CkxpbnV4IGFyZSBnb2luZyB0byBzdXJ2aXZlIGJleW9uZCB0aGF0IGRhdGUsIHdlIGhhdmUgdG8g
+Y2hhbmdlIGFsbApjdXJyZW50IHVzZXMsIGluIGEgYmFja3dhcmRzIGNvbXBhdGlibGUgd2F5LgoK
+VGhlIHBhdGNoIGFsc28gY2hhbmdlcyB0aGUgZnVuY3Rpb24gZ2V0X3NlY29uZHMoKSB0aGF0IHJl
+dHVybnMgYSAzMi1iaXQKaW50ZWdlciB0byBrdGltZV9nZXRfc2Vjb25kcygpIHRoYXQgcmV0dXJu
+cyBzZWNvbmRzIGFzIDY0LWJpdCBpbnRlZ2VyLgoKVGhlIHBhdGNoIGNoYW5nZXMgdGhlIHR5cGUg
+b2YgdGlja3MgZnJvbSB0aW1lX3QgdG8gdTMyLiBXZSBrZWVwIHRpY2tzIGFzCjMyLWJpdHMgYXMg
+dGhlIGZ1bmN0aW9uIHVzZXMgMzItYml0IGFyaXRobWV0aWMgd2hpY2ggd291bGQgcHJvdmUgbGVz
+cwpleHBlbnNpdmUgdGhhbiA2NC1iaXQgYXJpdGhtZXRpYyBhbmQgdGhlIGZ1bmN0aW9uIGlzIGV4
+cGVjdGVkIHRvIGJlCmNhbGxlZCBhdGxlYXN0IG9uY2UgZXZlcnkgMzIgc2Vjb25kcy4KClNpZ25l
+ZC1vZmYtYnk6IEhlZW5hIFNpcndhbmkgPGhlZW5hc2lyd2FuaUBnbWFpbC5jb20+ClJldmlld2Vk
+LWJ5OiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFybmRiLmRlPgpTaWduZWQtb2ZmLWJ5OiBBcm5kIEJl
+cmdtYW5uIDxhcm5kQGFybmRiLmRlPgotLS0KVGhpcyBpcyBhbiBvbGRlciBwYXRjaCBJIHN0aWxs
+IGhhZCBpbiBteSBxdWV1ZS4gV2hvIHNob3VsZCBwaWNrIGl0IHVwPwoKZGlmZiAtLWdpdCBhL2tl
+cm5lbC9jcHVzZXQuYyBiL2tlcm5lbC9jcHVzZXQuYwppbmRleCAxMGFlNzM2MTFkODAuLmM5ZWE2
+M2ZmNzBhNyAxMDA2NDQKLS0tIGEva2VybmVsL2NwdXNldC5jCisrKyBiL2tlcm5lbC9jcHVzZXQu
+YwpAQCAtNTEsNiArNTEsNyBAQAogI2luY2x1ZGUgPGxpbnV4L3N0YXQuaD4KICNpbmNsdWRlIDxs
+aW51eC9zdHJpbmcuaD4KICNpbmNsdWRlIDxsaW51eC90aW1lLmg+CisjaW5jbHVkZSA8bGludXgv
+dGltZTY0Lmg+CiAjaW5jbHVkZSA8bGludXgvYmFja2luZy1kZXYuaD4KICNpbmNsdWRlIDxsaW51
+eC9zb3J0Lmg+CiAKQEAgLTY4LDcgKzY5LDcgQEAgc3RydWN0IHN0YXRpY19rZXkgY3B1c2V0c19l
+bmFibGVkX2tleSBfX3JlYWRfbW9zdGx5ID0gU1RBVElDX0tFWV9JTklUX0ZBTFNFOwogc3RydWN0
+IGZtZXRlciB7CiAJaW50IGNudDsJCS8qIHVucHJvY2Vzc2VkIGV2ZW50cyBjb3VudCAqLwogCWlu
+dCB2YWw7CQkvKiBtb3N0IHJlY2VudCBvdXRwdXQgdmFsdWUgKi8KLQl0aW1lX3QgdGltZTsJCS8q
+IGNsb2NrIChzZWNzKSB3aGVuIHZhbCBjb21wdXRlZCAqLworCXRpbWU2NF90IHRpbWU7CQkvKiBj
+bG9jayAoc2Vjcykgd2hlbiB2YWwgY29tcHV0ZWQgKi8KIAlzcGlubG9ja190IGxvY2s7CS8qIGd1
+YXJkcyByZWFkIG9yIHdyaXRlIG9mIGFib3ZlICovCiB9OwogCkBAIC0xMzc0LDcgKzEzNzUsNyBA
+QCBvdXQ6CiAgKi8KIAogI2RlZmluZSBGTV9DT0VGIDkzMwkJLyogY29lZmZpY2llbnQgZm9yIGhh
+bGYtbGlmZSBvZiAxMCBzZWNzICovCi0jZGVmaW5lIEZNX01BWFRJQ0tTICgodGltZV90KTk5KSAv
+KiB1c2VsZXNzIGNvbXB1dGluZyBtb3JlIHRpY2tzIHRoYW4gdGhpcyAqLworI2RlZmluZSBGTV9N
+QVhUSUNLUyAoKHUzMik5OSkgICAvKiB1c2VsZXNzIGNvbXB1dGluZyBtb3JlIHRpY2tzIHRoYW4g
+dGhpcyAqLwogI2RlZmluZSBGTV9NQVhDTlQgMTAwMDAwMAkvKiBsaW1pdCBjbnQgdG8gYXZvaWQg
+b3ZlcmZsb3cgKi8KICNkZWZpbmUgRk1fU0NBTEUgMTAwMAkJLyogZmF1eCBmaXhlZCBwb2ludCBz
+Y2FsZSAqLwogCkBAIC0xMzkwLDggKzEzOTEsMTEgQEAgc3RhdGljIHZvaWQgZm1ldGVyX2luaXQo
+c3RydWN0IGZtZXRlciAqZm1wKQogLyogSW50ZXJuYWwgbWV0ZXIgdXBkYXRlIC0gcHJvY2VzcyBj
+bnQgZXZlbnRzIGFuZCB1cGRhdGUgdmFsdWUgKi8KIHN0YXRpYyB2b2lkIGZtZXRlcl91cGRhdGUo
+c3RydWN0IGZtZXRlciAqZm1wKQogewotCXRpbWVfdCBub3cgPSBnZXRfc2Vjb25kcygpOwotCXRp
+bWVfdCB0aWNrcyA9IG5vdyAtIGZtcC0+dGltZTsKKwl0aW1lNjRfdCBub3c7CisJdTMyIHRpY2tz
+OworCisJbm93ID0ga3RpbWVfZ2V0X3NlY29uZHMoKTsKKwl0aWNrcyA9IG5vdyAtIGZtcC0+dGlt
+ZTsKIAogCWlmICh0aWNrcyA9PSAwKQogCQlyZXR1cm47CgpfX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fXwpZMjAzOCBtYWlsaW5nIGxpc3QKWTIwMzhAbGlzdHMu
+bGluYXJvLm9yZwpodHRwczovL2xpc3RzLmxpbmFyby5vcmcvbWFpbG1hbi9saXN0aW5mby95MjAz
+OAo=
