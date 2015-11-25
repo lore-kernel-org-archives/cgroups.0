@@ -1,28 +1,60 @@
-From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-Subject: Re: [PATCH 06/13] net: tcp_memcontrol: simplify the per-memcg
- limit access
-Date: Wed, 25 Nov 2015 11:26:39 -0500 (EST)
-Message-ID: <20151125.112639.2178229649261742673.davem@davemloft.net>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 07/13] net: tcp_memcontrol: sanitize tcp memory
+ accounting callbacks
+Date: Wed, 25 Nov 2015 11:28:11 -0500 (EST)
+Message-ID: <20151125.112811.22762794078922115.davem@davemloft.net>
 References: <1448401925-22501-1-git-send-email-hannes@cmpxchg.org>
-	<1448401925-22501-7-git-send-email-hannes@cmpxchg.org>
+	<1448401925-22501-8-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1448401925-22501-7-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1448401925-22501-8-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: Text/Plain; charset="us-ascii"
-To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org, mhocko-AlSwsSmVLrQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: hannes@cmpxchg.org
+Cc: akpm@linux-foundation.org, vdavydov@virtuozzo.com, mhocko@suse.cz, tj@kernel.org, eric.dumazet@gmail.com, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Date: Tue, 24 Nov 2015 16:51:58 -0500
+From: Johannes Weiner <hannes@cmpxchg.org>
+Date: Tue, 24 Nov 2015 16:51:59 -0500
 
-> tcp_memcontrol replicates the global sysctl_mem limit array per
-> cgroup, but it only ever sets these entries to the value of the
-> memory_allocated page_counter limit. Use the latter directly.
+> There won't be a tcp control soft limit, so integrating the memcg code
+> into the global skmem limiting scheme complicates things
+> unnecessarily. Replace this with simple and clear charge and uncharge
+> calls--hidden behind a jump label--to account skb memory.
 > 
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Reviewed-by: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+> Note that this is not purely aesthetic: as a result of shoehorning the
+> per-memcg code into the same memory accounting functions that handle
+> the global level, the old code would compare the per-memcg consumption
+> against the smaller of the per-memcg limit and the global limit. This
+> allowed the total consumption of multiple sockets to exceed the global
+> limit, as long as the individual sockets stayed within bounds. After
+> this change, the code will always compare the per-memcg consumption to
+> the per-memcg limit, and the global consumption to the global limit,
+> and thus close this loophole.
+> 
+> Without a soft limit, the per-memcg memory pressure state in sockets
+> is generally questionable. However, we did it until now, so we
+> continue to enter it when the hard limit is hit, and packets are
+> dropped, to let other sockets in the cgroup know that they shouldn't
+> grow their transmit windows, either. However, keep it simple in the
+> new callback model and leave memory pressure lazily when the next
+> packet is accepted (as opposed to doing it synchroneously when packets
+> are processed). When packets are dropped, network performance will
+> already be in the toilet, so that should be a reasonable trade-off.
+> 
+> As described above, consumption is now checked on the per-memcg level
+> and the global level separately. Likewise, memory pressure states are
+> maintained on both the per-memcg level and the global level, and a
+> socket is considered under pressure when either level asserts as much.
+> 
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> Reviewed-by: Vladimir Davydov <vdavydov@virtuozzo.com>
 
-Acked-by: David S. Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Acked-by: David S. Miller <davem@davemloft.net>
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
