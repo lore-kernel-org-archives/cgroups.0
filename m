@@ -1,48 +1,89 @@
-From: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
-Subject: Re: WARNING in handle_mm_fault
-Date: Thu, 26 Nov 2015 00:27:17 +0900
-Message-ID: <201511260027.CCC26590.SOHFMQLVJOtFOF@I-love.SAKURA.ne.jp>
-References: <CACT4Y+ZCkv0BPOdo3aiheA5LXzXhcnuiw7kCoWL=b9FcC8-wqg@mail.gmail.com>
-	<20151125084403.GA24703@dhcp22.suse.cz>
-	<565592A1.50407@I-love.SAKURA.ne.jp>
-	<CACT4Y+Zn+mK37-mvqDQTyt1Psp6HT2heT0e937SO24F7V1q7PA@mail.gmail.com>
+From: Andrey Ryabinin <ryabinin.a.a@gmail.com>
+Subject: Re: [PATCH 1/2] memcg: flatten task_struct->memcg_oom
+Date: Wed, 25 Nov 2015 18:31:41 +0300
+Message-ID: <CAPAsAGwa9-7UBUnhysfek3kyWKMgaUJRwtDPEqas1rKwkeTtoA@mail.gmail.com>
+References: <20150913185940.GA25369@htj.duckdns.org>
+	<55FEC685.5010404@oracle.com>
+	<20150921200141.GH13263@mtj.duckdns.org>
+	<20151125144354.GB17308@twins.programming.kicks-ass.net>
+	<20151125150207.GM11639@twins.programming.kicks-ass.net>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CACT4Y+Zn+mK37-mvqDQTyt1Psp6HT2heT0e937SO24F7V1q7PA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type;
+        bh=W8eRCEoLNywJsKEESpAVa/KrkmanmU7uQQ/CGS6ORC4=;
+        b=t2l1T3dogoE5ndg9kdyj1odFtMAkXLjVgb1CMlKp2QPbcUdnutLiyQbSdjJ0vCl7Sn
+         GALB5soUnOGtHejE9PYrD7NkB35aqvbgz8YbFd1R2YOogbfKMGw84kNIHZzs7IQ5NoSv
+         byAOGl6VBew1hygRsT3oAS2bP/xncvHCOmEBl3yGGEzWOOTeF1au11Z85CO4N9rQsPPX
+         YtPafOFf3tQ8uGePbgzAdeXQo/xb3CcUN/imx33BriwQxcAcCZpUIGuRMm2eycvm0wnB
+         gRcO/amrpWssVBNnNeLZ8T6W422sXcC4M+3S80Lmubx0k6AbzaqgpU6y9IsdQpFa9qhi
+         rmjw==
+In-Reply-To: <20151125150207.GM11639@twins.programming.kicks-ass.net>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
-Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, syzkaller-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, kcc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Tejun Heo <tj@kernel.org>, Ingo Molnar <mingo@redhat.com>, Sasha Levin <sasha.levin@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, mhocko@kernel.org, cgroups@vger.kernel.org, "linux-mm@kvack.org" <linux-mm@kvack.org>, vdavydov@parallels.com, kernel-team@fb.com, Dmitry Vyukov <dvyukov@google.com>
 
-Dmitry Vyukov wrote:
-> If the race described in
-> http://www.spinics.net/lists/cgroups/msg14078.html does actually
-> happen, then there is nothing to check.
-> https://gcc.gnu.org/ml/gcc/2012-02/msg00005.html talks about different
-> memory locations, if there is store-widening involving different
-> memory locations, then this is a compiler bug. But the race happens on
-> a single memory location, in such case the code is buggy.
-> 
+2015-11-25 18:02 GMT+03:00 Peter Zijlstra <peterz@infradead.org>:
+> On Wed, Nov 25, 2015 at 03:43:54PM +0100, Peter Zijlstra wrote:
+>> On Mon, Sep 21, 2015 at 04:01:41PM -0400, Tejun Heo wrote:
+>> > So, the only way the patch could have caused the above is if someone
+>> > who isn't the task itself is writing to the bitfields while the task
+>> > is running.  Looking through the fields, ->sched_reset_on_fork seems a
+>> > bit suspicious.  __sched_setscheduler() looks like it can modify the
+>> > bit while the target task is running.  Peter, am I misreading the
+>> > code?
+>>
+>> Nope, that's quite possible. Looks like we need to break up those
+>> bitfields a bit. All the scheduler ones should be serialized by
+>> scheduler locks, but the others are fair game.
+>
+> Maybe something like so; but my brain is a complete mess today.
+>
+> ---
+>  include/linux/sched.h | 11 ++++++-----
+>  1 file changed, 6 insertions(+), 5 deletions(-)
+>
+> diff --git a/include/linux/sched.h b/include/linux/sched.h
+> index f425aac63317..b474e0f05327 100644
+> --- a/include/linux/sched.h
+> +++ b/include/linux/sched.h
+> @@ -1455,14 +1455,15 @@ struct task_struct {
+>         /* Used for emulating ABI behavior of previous Linux versions */
+>         unsigned int personality;
+>
+> -       unsigned in_execve:1;   /* Tell the LSMs that the process is doing an
+> -                                * execve */
+> -       unsigned in_iowait:1;
+> -
+> -       /* Revert to default priority/policy when forking */
+> +       /* scheduler bits, serialized by scheduler locks */
+>         unsigned sched_reset_on_fork:1;
+>         unsigned sched_contributes_to_load:1;
+>         unsigned sched_migrated:1;
+> +       unsigned __padding_sched:29;
 
-All ->in_execve ->in_iowait ->sched_reset_on_fork ->sched_contributes_to_load
-->sched_migrated ->memcg_may_oom ->memcg_kmem_skip_account ->brk_randomized
-shares the same byte.
+AFAIK the order of bit fields is implementation defined, so GCC could
+sort all these bits as it wants.
+You could use unnamed zero-widht bit-field to force padding:
 
-sched_fork(p) modifies p->sched_reset_on_fork but p is not yet visible.
-__sched_setscheduler(p) modifies p->sched_reset_on_fork.
-try_to_wake_up(p) modifies p->sched_contributes_to_load.
-perf_event_task_migrate(p) modifies p->sched_migrated.
+         unsigned :0; //force aligment to the next boundary.
 
-Trying to reproduce this problem with
+> +
+> +       /* unserialized, strictly 'current' */
+> +       unsigned in_execve:1; /* bit to tell LSMs we're in execve */
+> +       unsigned in_iowait:1;
+>  #ifdef CONFIG_MEMCG
+>         unsigned memcg_may_oom:1;
+>  #endif
+>
 
- static __always_inline bool
- perf_sw_migrate_enabled(void)
- {
--	if (static_key_false(&perf_swevent_enabled[PERF_COUNT_SW_CPU_MIGRATIONS]))
--		return true;
- 	return false;
- }
-
-would help testing ->sched_migrated case.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
