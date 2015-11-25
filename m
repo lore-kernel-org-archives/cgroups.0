@@ -1,57 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cpuset: Replace all instances of time_t with
-	time64_t
-Date: Wed, 25 Nov 2015 14:01:50 -0500
-Message-ID: <20151125190150.GA14240@htj.duckdns.org>
-References: <2798266.9VZu01a7d1@wuerfel>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 7/8] cgroup: mount cgroupns-root when inside non-init
+ cgroupns
+Date: Wed, 25 Nov 2015 14:10:41 -0500
+Message-ID: <20151125191041.GB14240@htj.duckdns.org>
+References: <1447703505-29672-1-git-send-email-serge@hallyn.com>
+ <1447703505-29672-8-git-send-email-serge@hallyn.com>
+ <20151124171610.GS17033@mtj.duckdns.org>
+ <20151125060156.GA678@mail.hallyn.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <y2038-bounces@lists.linaro.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
- h=sender:date:from:to:cc:subject:message-id:references:mime-version
- :content-type:content-disposition:in-reply-to:user-agent;
- bh=O/5JBa5EIhsYQ7FX2PG/qoEvzzorbkSjgWjlANNZsIk=;
- b=Dlh9g45ZZjTY6wwtGYc7AD/C61asVD7+lSP9/s3fRUM9fBwoQXbC2I5PNBkQmvDaxi
- SdwC8f85J4JXxkfd5ZBQnNKKm4D9W5IDFGH0cOY4WihHA2r3x4qkJCaPwwAIbYgQ7P2p
- MCC8lRRKtoRbxCsCzdK11Wmp9RJ/J4ZEYR+qesbx3IZgvcVryyKH8hyOLaeWsNza0LsR
- NYN45IxdHSco2Z79HVQ1tJqNiTq7lSs6zgwcJlNv3Pk3MUCLwgKi8OpCp7NRwBHP14vM
- Szhgi+HduksxyfVfmsxf/kScMELgwl9fmXzznt8AQETpePju98i6msEYTG3PilsChd0w
- CYJQ==
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=HqVwIpIVWXxCq3h2VG54M/yKP4yNMrXaNMW0J+q8czo=;
+        b=l3ORBhBhxeQlBFEAOA2oFvYdBfERkiCYE8EHcgWv51SA6KHmD/GlKdSDngeTpRZpG/
+         g5J+vPPXI6dFdWWbVC+eAutAGYe21Y0ME1MBob8wu+geBy9SimHVp6dyY1ngMoJHLbcb
+         fVj83ixFcwulRjRQvmUo5wQ2kmmhcxk3JFsPJmyTvYx+id51pRAD7rTdQKdtzeX7difY
+         II0Bpr4ijQiP24g4cG8M7N+lNYtDs1/QQlI51iOd1M1EtoU1q5nr+YnenCEDzruWRQrV
+         GyrrKjdiYf/J4SH4L906C21iQd7J5yimYo152+cJJoSJZb9+vMsv50cT1AjqYiHzGsFw
+         JUCA==
 Content-Disposition: inline
-In-Reply-To: <2798266.9VZu01a7d1@wuerfel>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
-List-Archive: <http://lists.linaro.org/pipermail/y2038/>
-List-Post: <mailto:y2038@lists.linaro.org>
-List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
-List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=subscribe>
-Errors-To: y2038-bounces@lists.linaro.org
-Sender: "Y2038" <y2038-bounces@lists.linaro.org>
+In-Reply-To: <20151125060156.GA678-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: y2038@lists.linaro.org, linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, John Stultz <john.stultz@linaro.org>, cgroups@vger.kernel.org, tglx@linutronix.de, Heena Sirwani <heenasirwani@gmail.com>
+Content-Transfer-Encoding: 7bit
+To: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Cc: serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org
 
-T24gV2VkLCBOb3YgMjUsIDIwMTUgYXQgMDQ6MTY6NTVQTSArMDEwMCwgQXJuZCBCZXJnbWFubiB3
-cm90ZToKPiBUaGUgZm9sbG93aW5nIHBhdGNoIHJlcGxhY2VzIGFsbCBpbnN0YW5jZXMgb2YgdGlt
-ZV90IHdpdGggdGltZTY0X3QgaS5lLgo+IGNoYW5nZSB0aGUgdHlwZSB1c2VkIGZvciByZXByZXNl
-bnRpbmcgdGltZSBmcm9tIDMyLWJpdCB0byA2NC1iaXQuIEFsbAo+IDMyLWJpdCBrZXJuZWxzIHRv
-IGRhdGUgdXNlIGEgc2lnbmVkIDMyLWJpdCB0aW1lX3QgdHlwZSwgd2hpY2ggY2FuIG9ubHkKPiBy
-ZXByZXNlbnQgdGltZSB1bnRpbCBKYW51YXJ5IDIwMzguIFNpbmNlIGVtYmVkZGVkIHN5c3RlbXMg
-cnVubmluZyAzMi1iaXQKPiBMaW51eCBhcmUgZ29pbmcgdG8gc3Vydml2ZSBiZXlvbmQgdGhhdCBk
-YXRlLCB3ZSBoYXZlIHRvIGNoYW5nZSBhbGwKPiBjdXJyZW50IHVzZXMsIGluIGEgYmFja3dhcmRz
-IGNvbXBhdGlibGUgd2F5Lgo+IAo+IFRoZSBwYXRjaCBhbHNvIGNoYW5nZXMgdGhlIGZ1bmN0aW9u
-IGdldF9zZWNvbmRzKCkgdGhhdCByZXR1cm5zIGEgMzItYml0Cj4gaW50ZWdlciB0byBrdGltZV9n
-ZXRfc2Vjb25kcygpIHRoYXQgcmV0dXJucyBzZWNvbmRzIGFzIDY0LWJpdCBpbnRlZ2VyLgo+IAo+
-IFRoZSBwYXRjaCBjaGFuZ2VzIHRoZSB0eXBlIG9mIHRpY2tzIGZyb20gdGltZV90IHRvIHUzMi4g
-V2Uga2VlcCB0aWNrcyBhcwo+IDMyLWJpdHMgYXMgdGhlIGZ1bmN0aW9uIHVzZXMgMzItYml0IGFy
-aXRobWV0aWMgd2hpY2ggd291bGQgcHJvdmUgbGVzcwo+IGV4cGVuc2l2ZSB0aGFuIDY0LWJpdCBh
-cml0aG1ldGljIGFuZCB0aGUgZnVuY3Rpb24gaXMgZXhwZWN0ZWQgdG8gYmUKPiBjYWxsZWQgYXRs
-ZWFzdCBvbmNlIGV2ZXJ5IDMyIHNlY29uZHMuCj4gCj4gU2lnbmVkLW9mZi1ieTogSGVlbmEgU2ly
-d2FuaSA8aGVlbmFzaXJ3YW5pQGdtYWlsLmNvbT4KPiBSZXZpZXdlZC1ieTogQXJuZCBCZXJnbWFu
-biA8YXJuZEBhcm5kYi5kZT4KPiBTaWduZWQtb2ZmLWJ5OiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFy
-bmRiLmRlPgoKQXBwbGllZCB0byBjZ3JvdXAvZm9yLTQuNS4KClRoYW5rcy4KCi0tIAp0ZWp1bgpf
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpZMjAzOCBtYWls
-aW5nIGxpc3QKWTIwMzhAbGlzdHMubGluYXJvLm9yZwpodHRwczovL2xpc3RzLmxpbmFyby5vcmcv
-bWFpbG1hbi9saXN0aW5mby95MjAzOAo=
+Hello, Serge.
+
+On Wed, Nov 25, 2015 at 12:01:56AM -0600, Serge E. Hallyn wrote:
+> that was my goal with https://git.kernel.org/cgit/linux/kernel/git/sergeh/linux-security.git/commit/?h=cgroupns.v4&id=8eb75d2bb24df59e262f050dce567d2332adc5f3
+> (which was sent inline earlier in this thread in response to Eric)  Does
+> that look sufficient?
+
+Hmmm... but that wouldn't work with non-root and user ns.  I think
+what's necessary is ensuring that namespace scoped mount never creates
+a new hierarchy but always reuses an existing one.
+
+Thanks.
+
+-- 
+tejun
