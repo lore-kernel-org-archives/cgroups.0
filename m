@@ -1,42 +1,41 @@
-From: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
-Subject: Re: WARNING in handle_mm_fault
-Date: Thu, 26 Nov 2015 20:33:05 +0900
-Message-ID: <201511262033.EAB48965.FVJOOOMLFHStFQ@I-love.SAKURA.ne.jp>
-References: <CACT4Y+Zn+mK37-mvqDQTyt1Psp6HT2heT0e937SO24F7V1q7PA@mail.gmail.com>
-	<201511260027.CCC26590.SOHFMQLVJOtFOF@I-love.SAKURA.ne.jp>
-	<CACT4Y+ZdF09hOnb_bL4GNjytSMMGvNde8=9pdZt6gZQB1sp0hQ@mail.gmail.com>
-	<20151125173730.GS27283@dhcp22.suse.cz>
-	<CACT4Y+Y0EESD_HhgGE2pWPqfJsDgvSny=ZMfP1ewaSzd6z_bLg@mail.gmail.com>
+From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] cpuset: Replace all instances of time_t with time64_t
+Date: Thu, 26 Nov 2015 20:08:42 +0800
+Message-ID: <5656F64A.609@huawei.com>
+References: <2798266.9VZu01a7d1@wuerfel>
+ <20151125190150.GA14240@htj.duckdns.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CACT4Y+Y0EESD_HhgGE2pWPqfJsDgvSny=ZMfP1ewaSzd6z_bLg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20151125190150.GA14240-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, syzkaller-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, kcc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Heena Sirwani <heenasirwani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, y2038-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 
-Dmitry Vyukov wrote:
-> On Wed, Nov 25, 2015 at 6:37 PM, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> > On Wed 25-11-15 18:21:02, Dmitry Vyukov wrote:
-> > [...]
-> >> I have some progress.
-> >
-> > Please have a look at Peter's patch posted in the original email thread
-> > http://lkml.kernel.org/r/20151125150207.GM11639-ndre7Fmf5hadTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org
-> 
-> Yes, I've posted there as well. That patch should help.
-> 
-OK. This bug seems to exist since commit ca94c442535a "sched: Introduce
-SCHED_RESET_ON_FORK scheduling policy flag". Should
+On 2015/11/26 3:01, Tejun Heo wrote:
+> On Wed, Nov 25, 2015 at 04:16:55PM +0100, Arnd Bergmann wrote:
+>> The following patch replaces all instances of time_t with time64_t i.e.
+>> change the type used for representing time from 32-bit to 64-bit. All
+>> 32-bit kernels to date use a signed 32-bit time_t type, which can only
+>> represent time until January 2038. Since embedded systems running 32-bit
+>> Linux are going to survive beyond that date, we have to change all
+>> current uses, in a backwards compatible way.
+>>
+>> The patch also changes the function get_seconds() that returns a 32-bit
+>> integer to ktime_get_seconds() that returns seconds as 64-bit integer.
+>>
+>> The patch changes the type of ticks from time_t to u32. We keep ticks as
+>> 32-bits as the function uses 32-bit arithmetic which would prove less
+>> expensive than 64-bit arithmetic and the function is expected to be
+>> called atleast once every 32 seconds.
+>>
+>> Signed-off-by: Heena Sirwani <heenasirwani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>> Reviewed-by: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+>> Signed-off-by: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+>
+> Applied to cgroup/for-4.5.
+>
 
-  Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>  [2.6.32+]
-
-line be added?
-
-By the way, does use of "unsigned char" than "unsigned" save some bytes?
-Simply trying not to change the size of "struct task_struct"...
-According to C99, only "unsigned int", "signed int" and "_Bool" are
-allowed. But many compilers accept other types such as "unsigned char",
-given that we watch out for compiler bugs.
+Acked
