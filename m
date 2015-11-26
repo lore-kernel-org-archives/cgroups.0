@@ -1,53 +1,42 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 7/8] cgroup: mount cgroupns-root when inside non-init
- cgroupns
-Date: Wed, 25 Nov 2015 14:57:05 -0500
-Message-ID: <20151125195705.GE14240@htj.duckdns.org>
-References: <1447703505-29672-1-git-send-email-serge@hallyn.com>
- <1447703505-29672-8-git-send-email-serge@hallyn.com>
- <20151124171610.GS17033@mtj.duckdns.org>
- <20151125060156.GA678@mail.hallyn.com>
- <20151125191041.GB14240@htj.duckdns.org>
- <20151125195553.GA5852@ubuntumail>
+From: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
+Subject: Re: WARNING in handle_mm_fault
+Date: Thu, 26 Nov 2015 20:33:05 +0900
+Message-ID: <201511262033.EAB48965.FVJOOOMLFHStFQ@I-love.SAKURA.ne.jp>
+References: <CACT4Y+Zn+mK37-mvqDQTyt1Psp6HT2heT0e937SO24F7V1q7PA@mail.gmail.com>
+	<201511260027.CCC26590.SOHFMQLVJOtFOF@I-love.SAKURA.ne.jp>
+	<CACT4Y+ZdF09hOnb_bL4GNjytSMMGvNde8=9pdZt6gZQB1sp0hQ@mail.gmail.com>
+	<20151125173730.GS27283@dhcp22.suse.cz>
+	<CACT4Y+Y0EESD_HhgGE2pWPqfJsDgvSny=ZMfP1ewaSzd6z_bLg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=BAR7YyBkrcyHwRixtvDoVKePdK70RuOnv+wI+QkJN6k=;
-        b=lkHjf5JmphIKpczGlMjt7gFt3nBFfBwLtyCVIpYscA3tM6Skg3n9jZtt0WLVWRp8vB
-         hUctIOgB/NHqlB2O496WSHjXJY/natheC67hWnxpgsZBHJ43xAX7eosyNZInlKHWpwD7
-         IN7UUPz8w5Z5WnsjSy0wF+AYsfu71lSYSvq78fieThQXYLRzk7GW12rirsR+aViFXBkH
-         sT1Ye4kJf9/FmBb1jU6Sr3TS0JsggKDdQJLKxrTCummk3UPN8ufl4L6VlNxZs8lWogKW
-         kljimGy45DhlRB0w4QLzeNUdSTd+u9i5N+jgpLaoUZe8oJPPh54IGdwNk4nXIJwye2Zz
-         WtMg==
-Content-Disposition: inline
-In-Reply-To: <20151125195553.GA5852@ubuntumail>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CACT4Y+Y0EESD_HhgGE2pWPqfJsDgvSny=ZMfP1ewaSzd6z_bLg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+To: dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, syzkaller-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, kcc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
 
-On Wed, Nov 25, 2015 at 07:55:53PM +0000, Serge Hallyn wrote:
-> Quoting Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org):
-> > Hello, Serge.
-> > 
-> > On Wed, Nov 25, 2015 at 12:01:56AM -0600, Serge E. Hallyn wrote:
-> > > that was my goal with https://git.kernel.org/cgit/linux/kernel/git/sergeh/linux-security.git/commit/?h=cgroupns.v4&id=8eb75d2bb24df59e262f050dce567d2332adc5f3
-> > > (which was sent inline earlier in this thread in response to Eric)  Does
-> > > that look sufficient?
-> > 
-> > Hmmm... but that wouldn't work with non-root and user ns.  I think
+Dmitry Vyukov wrote:
+> On Wed, Nov 25, 2015 at 6:37 PM, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> > On Wed 25-11-15 18:21:02, Dmitry Vyukov wrote:
+> > [...]
+> >> I have some progress.
+> >
+> > Please have a look at Peter's patch posted in the original email thread
+> > http://lkml.kernel.org/r/20151125150207.GM11639-ndre7Fmf5hadTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org
 > 
-> Are you sure?  IIUC that code block is only hit when we didn't find
-> an already-mounted subsystem.
+> Yes, I've posted there as well. That patch should help.
+> 
+OK. This bug seems to exist since commit ca94c442535a "sched: Introduce
+SCHED_RESET_ON_FORK scheduling policy flag". Should
 
-Heh, you're right.  This should work.
+  Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>  [2.6.32+]
 
-Thanks.
+line be added?
 
--- 
-tejun
+By the way, does use of "unsigned char" than "unsigned" save some bytes?
+Simply trying not to change the size of "struct task_struct"...
+According to C99, only "unsigned int", "signed int" and "_Bool" are
+allowed. But many compilers accept other types such as "unsigned char",
+given that we watch out for compiler bugs.
