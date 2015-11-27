@@ -1,41 +1,75 @@
-From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cpuset: Replace all instances of time_t with time64_t
-Date: Thu, 26 Nov 2015 20:08:42 +0800
-Message-ID: <5656F64A.609@huawei.com>
-References: <2798266.9VZu01a7d1@wuerfel>
- <20151125190150.GA14240@htj.duckdns.org>
+From: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 7/8] cgroup: mount cgroupns-root when inside non-init
+ cgroupns
+Date: Thu, 26 Nov 2015 23:17:45 -0600
+Message-ID: <20151127051745.GA24521@mail.hallyn.com>
+References: <1447703505-29672-1-git-send-email-serge@hallyn.com>
+ <1447703505-29672-8-git-send-email-serge@hallyn.com>
+ <20151124171610.GS17033@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20151125190150.GA14240-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20151124171610.GS17033-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Heena Sirwani <heenasirwani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, y2038-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org
 
-On 2015/11/26 3:01, Tejun Heo wrote:
-> On Wed, Nov 25, 2015 at 04:16:55PM +0100, Arnd Bergmann wrote:
->> The following patch replaces all instances of time_t with time64_t i.e.
->> change the type used for representing time from 32-bit to 64-bit. All
->> 32-bit kernels to date use a signed 32-bit time_t type, which can only
->> represent time until January 2038. Since embedded systems running 32-bit
->> Linux are going to survive beyond that date, we have to change all
->> current uses, in a backwards compatible way.
->>
->> The patch also changes the function get_seconds() that returns a 32-bit
->> integer to ktime_get_seconds() that returns seconds as 64-bit integer.
->>
->> The patch changes the type of ticks from time_t to u32. We keep ticks as
->> 32-bits as the function uses 32-bit arithmetic which would prove less
->> expensive than 64-bit arithmetic and the function is expected to be
->> called atleast once every 32 seconds.
->>
->> Signed-off-by: Heena Sirwani <heenasirwani-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->> Reviewed-by: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
->> Signed-off-by: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
->
-> Applied to cgroup/for-4.5.
->
+On Tue, Nov 24, 2015 at 12:16:10PM -0500, Tejun Heo wrote:
+> Hello,
+> 
+> On Mon, Nov 16, 2015 at 01:51:44PM -0600, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org wrote:
+> > +struct dentry *kernfs_obtain_root(struct super_block *sb,
+> > +				  struct kernfs_node *kn)
+> > +{
+> > +	struct dentry *dentry;
+> > +	struct inode *inode;
+> > +
+> > +	BUG_ON(sb->s_op != &kernfs_sops);
+> > +
+> > +	/* inode for the given kernfs_node should already exist. */
+> > +	inode = ilookup(sb, kn->ino);
+> > +	if (!inode) {
+> > +		pr_debug("kernfs: could not get inode for '");
+> > +		pr_cont_kernfs_path(kn);
+> > +		pr_cont("'.\n");
+> > +		return ERR_PTR(-EINVAL);
+> > +	}
+> 
+> Hmmm... but inode might not have been instantiated yet.  Why not use
+> kernfs_get_inode()?
+> 
+> > +	/* instantiate and link root dentry */
+> > +	dentry = d_obtain_root(inode);
+> > +	if (!dentry) {
+> > +		pr_debug("kernfs: could not get dentry for '");
+> > +		pr_cont_kernfs_path(kn);
+> > +		pr_cont("'.\n");
+> > +		return ERR_PTR(-ENOMEM);
+> > +	}
+> > +
+> > +	/* If this is a new dentry, set it up. We need kernfs_mutex because this
+> > +	 * may be called by callers other than kernfs_fill_super. */
+> 
+> Formatting.
+> 
+> > +	mutex_lock(&kernfs_mutex);
+> > +	if (!dentry->d_fsdata) {
+> > +		kernfs_get(kn);
+> > +		dentry->d_fsdata = kn;
+> > +	} else {
+> > +		WARN_ON(dentry->d_fsdata != kn);
+> > +	}
+> > +	mutex_unlock(&kernfs_mutex);
+> > +
+> > +	return dentry;
+> > +}
+> 
+> Wouldn't it be simpler to walk dentry from kernfs root than
+> duplicating dentry instantiation?
 
-Acked
+Sorry I don't think I'm following.  Are you suggesting walking the
+kn->parent chain backward and doing d_lookup() at each point starting
+with sb->s_root?
