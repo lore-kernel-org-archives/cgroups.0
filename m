@@ -1,41 +1,68 @@
-From: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/8] kernfs: Add API to generate relative kernfs path
-Date: Thu, 26 Nov 2015 23:25:11 -0600
-Message-ID: <20151127052511.GA25490@mail.hallyn.com>
-References: <1447703505-29672-1-git-send-email-serge@hallyn.com>
- <1447703505-29672-2-git-send-email-serge@hallyn.com>
- <20151124161630.GL17033@mtj.duckdns.org>
-Mime-Version: 1.0
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20151124161630.GL17033-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org
+Subject: [PATCH 4/7] cgroup: cgroup namespace setns support
+Date: Fri, 27 Nov 2015 14:52:22 -0600
+Message-ID: <1448657545-531-5-git-send-email-serge.hallyn@ubuntu.com>
+References: <1448657545-531-1-git-send-email-serge.hallyn@ubuntu.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1448657545-531-1-git-send-email-serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
 
-On Tue, Nov 24, 2015 at 11:16:30AM -0500, Tejun Heo wrote:
-> Hello,
-> 
-> On Mon, Nov 16, 2015 at 01:51:38PM -0600, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org wrote:
-> > +static char * __must_check kernfs_path_from_node_locked(
+From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-(Note I've rewritten this to find a common ancestor and walk back to
-and from that, as you suggested later in this email)
+setns on a cgroup namespace is allowed only if
+task has CAP_SYS_ADMIN in its current user-namespace and
+over the user-namespace associated with target cgroupns.
+No implicit cgroup changes happen with attaching to another
+cgroupns. It is expected that the somone moves the attaching
+process under the target cgroupns-root.
 
-> > +	/* Short-circuit the easy case - kn_to is the root node. */
-> > +	if ((kn_from == kn_to) || (!kn_from && !kn_to->parent)) {
-> > +		*p = '/';
-> > +		*(p + 1) = '\0';
-> 
-> Hmm... so if kn_from == kn_to, the output is "/"?
+Signed-off-by: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Acked-by: Serge E. Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup.c |   24 +++++++++++++++++++++---
+ 1 file changed, 21 insertions(+), 3 deletions(-)
 
-Yes, that's what seems to make the most sense for cgroup namespaces.  I
-could see a case for '.' being used instead in general, but for cgroup
-namespaces I think we'd have to convert those back to '/'.  Otherwise
-we'll fail in being able to run legacy software, which would get
-confused.
-
--serge
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index c570957..0afed6b 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -5892,10 +5892,28 @@ err_out:
+ 	return ERR_PTR(err);
+ }
+ 
+-static int cgroupns_install(struct nsproxy *nsproxy, void *ns)
++static inline struct cgroup_namespace *to_cg_ns(struct ns_common *ns)
+ {
+-	pr_info("setns not supported for cgroup namespace");
+-	return -EINVAL;
++	return container_of(ns, struct cgroup_namespace, ns);
++}
++
++static int cgroupns_install(struct nsproxy *nsproxy, struct ns_common *ns)
++{
++	struct cgroup_namespace *cgroup_ns = to_cg_ns(ns);
++
++	if (!ns_capable(current_user_ns(), CAP_SYS_ADMIN) ||
++	    !ns_capable(cgroup_ns->user_ns, CAP_SYS_ADMIN))
++		return -EPERM;
++
++	/* Don't need to do anything if we are attaching to our own cgroupns. */
++	if (cgroup_ns == nsproxy->cgroup_ns)
++		return 0;
++
++	get_cgroup_ns(cgroup_ns);
++	put_cgroup_ns(nsproxy->cgroup_ns);
++	nsproxy->cgroup_ns = cgroup_ns;
++
++	return 0;
+ }
+ 
+ static struct ns_common *cgroupns_get(struct task_struct *task)
+-- 
+1.7.9.5
