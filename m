@@ -1,80 +1,80 @@
-From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: Re: [PATCH 13/13] mm: memcontrol: hook up vmpressure to socket
- pressure
-Date: Mon, 30 Nov 2015 14:36:28 +0300
-Message-ID: <20151130113628.GB24704@esperanza>
-References: <1448401925-22501-1-git-send-email-hannes@cmpxchg.org>
- <20151124215940.GB1373@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-4.4-fixes] cgroup: make css_set pin its css's
+ to avoid use-afer-free
+Date: Mon, 30 Nov 2015 09:48:55 -0500
+Message-ID: <20151130144855.GA3535@mtj.duckdns.org>
+References: <20151123195541.GA19072@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=w3AJBFOBP8nea9dKKI/ai+q6qafDBFS3CwXIM8JzHEE=;
+        b=Aj3nsow68jKN3s9I0wpZw0O1kTpT+diGOORCdCxFhO65Xp/L4Cg++eoD3R7xMAIJ+s
+         F2ubY8eyX0pRyE0vWeLxb3cxjEZDWn91jAODnIU86XSRzRw/KGWr75mGQRotI6YHnf4v
+         IOD/0vHgX6mgjo6f+aFgLl9sO008WAfs351FM3c1u6szq2vIuIg3dz7nUtidkDeGMmW9
+         /TsjM+3uwmtqwTgustu2yR8huOn2OKyn9dlspYDlYXmQtClz492zJX6udIuILFg6yhB5
+         7TsA4DXJvZPAXBaquqYyuHzJnrionwIAIkNa41Pns0NNWj3w3Cc0qg+Y4tKcpumacHgG
+         kdhg==
 Content-Disposition: inline
-In-Reply-To: <20151124215940.GB1373-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <20151123195541.GA19072-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Jones <davej-rdkfGonbjUTCLXcRTR1eJlpr/1R2p/CL@public.gmane.org>, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Tue, Nov 24, 2015 at 04:59:40PM -0500, Johannes Weiner wrote:
-...
-> @@ -2396,6 +2396,7 @@ static bool shrink_zone(struct zone *zone, struct scan_control *sc,
->  		memcg = mem_cgroup_iter(root, NULL, &reclaim);
->  		do {
->  			unsigned long lru_pages;
-> +			unsigned long reclaimed;
->  			unsigned long scanned;
->  			struct lruvec *lruvec;
->  			int swappiness;
-> @@ -2408,6 +2409,7 @@ static bool shrink_zone(struct zone *zone, struct scan_control *sc,
->  
->  			lruvec = mem_cgroup_zone_lruvec(zone, memcg);
->  			swappiness = mem_cgroup_swappiness(memcg);
-> +			reclaimed = sc->nr_reclaimed;
->  			scanned = sc->nr_scanned;
->  
->  			shrink_lruvec(lruvec, swappiness, sc, &lru_pages);
-> @@ -2418,6 +2420,11 @@ static bool shrink_zone(struct zone *zone, struct scan_control *sc,
->  					    memcg, sc->nr_scanned - scanned,
->  					    lru_pages);
->  
-> +			/* Record the group's reclaim efficiency */
-> +			vmpressure(sc->gfp_mask, memcg, false,
-> +				   sc->nr_scanned - scanned,
-> +				   sc->nr_reclaimed - reclaimed);
-> +
+On Mon, Nov 23, 2015 at 02:55:41PM -0500, Tejun Heo wrote:
+> A css_set represents the relationship between a set of tasks and
+> css's.  css_set never pinned the associated css's.  This was okay
+> because tasks used to always disassociate immediately (in RCU sense) -
+> either a task is moved to a different css_set or exits and never
+> accesses css_set again.
+> 
+> Unfortunately, afcf6c8b7544 ("cgroup: add cgroup_subsys->free() method
+> and use it to fix pids controller") and patches leading up to it made
+> a zombie hold onto its css_set and deref the associated css's on its
+> release.  Nothing pins the css's after exit and it might have already
+> been freed leading to use-after-free.
+> 
+>  general protection fault: 0000 [#1] PREEMPT SMP
+>  task: ffffffff81bf2500 ti: ffffffff81be4000 task.ti: ffffffff81be4000
+>  RIP: 0010:[<ffffffff810fa205>]  [<ffffffff810fa205>] pids_cancel.constprop.4+0x5/0x40
+>  ...
+>  Call Trace:
+>   <IRQ>
+>   [<ffffffff810fb02d>] ? pids_free+0x3d/0xa0
+>   [<ffffffff810f8893>] cgroup_free+0x53/0xe0
+>   [<ffffffff8104ed62>] __put_task_struct+0x42/0x130
+>   [<ffffffff81053557>] delayed_put_task_struct+0x77/0x130
+>   [<ffffffff810c6b34>] rcu_process_callbacks+0x2f4/0x820
+>   [<ffffffff810c6af3>] ? rcu_process_callbacks+0x2b3/0x820
+>   [<ffffffff81056e54>] __do_softirq+0xd4/0x460
+>   [<ffffffff81057369>] irq_exit+0x89/0xa0
+>   [<ffffffff81876212>] smp_apic_timer_interrupt+0x42/0x50
+>   [<ffffffff818747f4>] apic_timer_interrupt+0x84/0x90
+>   <EOI>
+>  ...
+>  Code: 5b 5d c3 48 89 df 48 c7 c2 c9 f9 ae 81 48 c7 c6 91 2c ae 81 e8 1d 94 0e 00 31 c0 5b 5d c3 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 <f0> 48 83 87 e0 00 00 00 ff 78 01 c3 80 3d 08 7a c1 00 00 74 02
+>  RIP  [<ffffffff810fa205>] pids_cancel.constprop.4+0x5/0x40
+>   RSP <ffff88001fc03e20>
+>  ---[ end trace 89a4a4b916b90c49 ]---
+>  Kernel panic - not syncing: Fatal exception in interrupt
+>  Kernel Offset: disabled
+>  ---[ end Kernel panic - not syncing: Fatal exception in interrupt
+> 
+> Fix it by making css_set pin the associate css's until its release.
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Reported-by: Dave Jones <davej-rdkfGonbjUTCLXcRTR1eJlpr/1R2p/CL@public.gmane.org>
+> Reported-by: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+> Link: http://lkml.kernel.org/g/20151120041836.GA18390-rdkfGonbjUTCLXcRTR1eJlpr/1R2p/CL@public.gmane.org
+> Link: http://lkml.kernel.org/g/5652D448.3080002-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org
+> Fixes: afcf6c8b7544 ("cgroup: add cgroup_subsys->free() method and use it to fix pids controller")
 
-Suppose we have the following cgroup configuration.
+Applied to cgroup/for-4.4-fixes.
 
-A __ B
-  \_ C
-
-A is empty (which is natural for the unified hierarchy AFAIU). B has
-some workload running in it, and C generates socket pressure. Due to the
-socket pressure coming from C we start reclaim in A, which results in
-thrashing of B, but we might not put sockets under pressure in A or C,
-because vmpressure does not account pages scanned/reclaimed in B when
-generating a vmpressure event for A or C. This might result in
-aggressive reclaim and thrashing in B w/o generating a signal for C to
-stop growing socket buffers.
-
-Do you think such a situation is possible? If so, would it make sense to
-switch to post-order walk in shrink_zone and pass sub-tree
-scanned/reclaimed stats to vmpressure for each scanned memcg?
-
-Thanks,
-Vladimir
-
->  			/*
->  			 * Direct reclaim and kswapd have to scan all memory
->  			 * cgroups to fulfill the overall scan target for the
-> @@ -2449,7 +2456,8 @@ static bool shrink_zone(struct zone *zone, struct scan_control *sc,
->  			reclaim_state->reclaimed_slab = 0;
->  		}
->  
-> -		vmpressure(sc->gfp_mask, sc->target_mem_cgroup,
-> +		/* Record the subtree's reclaim efficiency */
-> +		vmpressure(sc->gfp_mask, sc->target_mem_cgroup, true,
->  			   sc->nr_scanned - nr_scanned,
->  			   sc->nr_reclaimed - nr_reclaimed);
->  
+-- 
+tejun
