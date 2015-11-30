@@ -1,43 +1,55 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 09/13] mm: memcontrol: generalize the socket accounting
- jump label
-Date: Mon, 30 Nov 2015 17:46:34 -0500
-Message-ID: <20151130224634.GA19849@cmpxchg.org>
-References: <1448401925-22501-1-git-send-email-hannes@cmpxchg.org>
- <1448401925-22501-10-git-send-email-hannes@cmpxchg.org>
- <565CBAC2.3080804@akamai.com>
- <20151130215007.GA31903@cmpxchg.org>
- <565CCDA1.905@akamai.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/8] kernfs: Add API to generate relative kernfs path
+Date: Mon, 30 Nov 2015 17:53:18 -0500
+Message-ID: <20151130225318.GD9039@mtj.duckdns.org>
+References: <1447703505-29672-1-git-send-email-serge@hallyn.com>
+ <1447703505-29672-2-git-send-email-serge@hallyn.com>
+ <20151124161630.GL17033@mtj.duckdns.org>
+ <20151127052511.GA25490@mail.hallyn.com>
+ <20151130151147.GG3535@mtj.duckdns.org>
+ <20151130183758.GA25433@mail.hallyn.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=Z5zdSnu6Ch/elMAgb/vD/U6+iYM0p8cSkmmyy92HZuw=;
+        b=xtoN+OASzCn8C54BkHwkYXY0MhklEeaJxlO0azDmzKyXvaU87U8V6mj4AwuI0UrrAc
+         vpa040zMukXXwj3AvaYSLPxDAR36G2XO79ZfAsi4oXpkGXpk5b5XzfH4zzcVUoSqg/3u
+         xPtD0rWN+vmDTk+tdOnNiP6RriRLwPcEqEhk6z8G5VPGrWfr5ZPMe+JIW6CpqihaNQTC
+         gkIBk/IXd6KoQ2tcDKgCg9NJeufzz95lLOjJW9af37MYDFarOBm8M0NxXqD9vcdhXiTz
+         ex4Kdr7z63i19UmUVoSvCjbtFOax3imuyVTsMF5xYIcrgU4g8wi6dVcl5+X7lim9UzbQ
+         9x7Q==
 Content-Disposition: inline
-In-Reply-To: <565CCDA1.905-JqFfY2XvxFXQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20151130183758.GA25433@mail.hallyn.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jason Baron <jbaron-JqFfY2XvxFXQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, "peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org" <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+To: "Serge E. Hallyn" <serge.hallyn@ubuntu.com>
+Cc: serge@hallyn.com, linux-kernel@vger.kernel.org, adityakali@google.com, linux-api@vger.kernel.org, containers@lists.linux-foundation.org, cgroups@vger.kernel.org, lxc-devel@lists.linuxcontainers.org, akpm@linux-foundation.org, ebiederm@xmission.com
 
-On Mon, Nov 30, 2015 at 05:28:49PM -0500, Jason Baron wrote:
-> On 11/30/2015 04:50 PM, Johannes Weiner wrote:
-> > On Mon, Nov 30, 2015 at 04:08:18PM -0500, Jason Baron wrote:
-> >> We're trying to move to the updated API, so this should be:
-> >> static_branch_unlikely(&memcg_sockets_enabled_key)
-> >>
-> >> see: include/linux/jump_label.h for details.
-> > 
-> > Good point. There is another struct static_key in there as well. How
-> > about the following on top of this series?
+Hello, Serge.
+
+On Mon, Nov 30, 2015 at 12:37:58PM -0600, Serge E. Hallyn wrote:
+> > Yeah, I agree but the name is kinda misleading tho.  The output isn't
+> > really a relative path but rather absolute path against the specified
+> > root.  Maybe updating the function and parameter names would be
+> > helpful?
 > > 
 > 
-> Looks fine - you may be able to make use of
-> 'static_branch_enable()/disable()' instead of the inc()/dec() to simply
-> set the branch direction, if you think its more readable. Although I
-> didn't look to see if it would be racy here.
+> Ok - updating the comment is simple enough.  Though the name/params
+> kernfs_path_from_node_locked(from, to) still seem to make sense.  Would
+> you prefer something like kernfs_absolute_path_from node_locked()?  I
+> hesitate to call 'from' 'root' since kernfs_root is a thing and this
+> is not that.
 
-Thanks!
+Hmmm... I see.  Let's just make sure that the comment is clear about
+the fact that it calculates (pseudo) absolute path rather than
+relative path.
 
-We actually need the reference counting semantics for both these keys.
-It counts the number of active cgroups in existence that require the
-code behind those static branches.
+Thanks.
+
+-- 
+tejun
