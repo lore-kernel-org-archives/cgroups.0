@@ -1,57 +1,131 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/8] kernfs: Add API to generate relative
-	kernfs path
-Date: Mon, 30 Nov 2015 10:11:47 -0500
-Message-ID: <20151130151147.GG3535@mtj.duckdns.org>
-References: <1447703505-29672-1-git-send-email-serge@hallyn.com>
- <1447703505-29672-2-git-send-email-serge@hallyn.com>
- <20151124161630.GL17033@mtj.duckdns.org>
- <20151127052511.GA25490@mail.hallyn.com>
-Reply-To: LXC development mailing-list <lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH 12/13] mm: memcontrol: account socket memory in unified
+ hierarchy memory controller
+Date: Mon, 30 Nov 2015 10:26:38 -0500
+Message-ID: <20151130152638.GA30243@cmpxchg.org>
+References: <1448401925-22501-1-git-send-email-hannes@cmpxchg.org>
+ <20151124215844.GA1373@cmpxchg.org>
+ <20151130105421.GA24704@esperanza>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <lxc-devel-bounces-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
- h=sender:date:from:to:cc:subject:message-id:references:mime-version
- :content-type:content-disposition:in-reply-to:user-agent;
- bh=hk1U1zttuA/DRBSzrMeS/2m2GvzJ3mEBM0FD61o90fg=;
- b=LQ9ZBUTjuG667Vrxch3RC/1i7vHGdBSTN6h/8sFZ95AG1jrDshfrXLtfY0Qlwmb2+H
- QgZHMZfhXt6yt88zZSiAzkJc8CO8iLta5M4DnfGEKdSHLywJlUCnw1dJWph4cFo6pQcK
- EKoRgP92u9JTeZjTZqiextGBN3I/2iGoqANzMojUcKwkZ0wrweCeHx2Jhs7YE15iCrry
- i/puqrIiDvmMPSfTbkKcD6+sPm8uAf3FJKfei9cYNTlOi/yYN+WJxDAtWNEc+AB5Wm3H
- XBbGfgZhmS1s1NI0DQyYscX2nVCJExgMJO1dZ+BQeIbooHfJKhj00PJwWCnK047ufOsC
- W03g==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20151127052511.GA25490-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <http://lists.linuxcontainers.org/options/lxc-devel>,
- <mailto:lxc-devel-request-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxcontainers.org/pipermail/lxc-devel/>
-List-Post: <mailto:lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org>
-List-Help: <mailto:lxc-devel-request-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linuxcontainers.org/listinfo/lxc-devel>,
- <mailto:lxc-devel-request-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org?subject=subscribe>
-Errors-To: lxc-devel-bounces-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org
-Sender: "lxc-devel" <lxc-devel-bounces-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org>
+In-Reply-To: <20151130105421.GA24704@esperanza>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Cc: adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-SGVsbG8sCgpPbiBUaHUsIE5vdiAyNiwgMjAxNSBhdCAxMToyNToxMVBNIC0wNjAwLCBTZXJnZSBF
-LiBIYWxseW4gd3JvdGU6Cj4gPiA+ICsJLyogU2hvcnQtY2lyY3VpdCB0aGUgZWFzeSBjYXNlIC0g
-a25fdG8gaXMgdGhlIHJvb3Qgbm9kZS4gKi8KPiA+ID4gKwlpZiAoKGtuX2Zyb20gPT0ga25fdG8p
-IHx8ICgha25fZnJvbSAmJiAha25fdG8tPnBhcmVudCkpIHsKPiA+ID4gKwkJKnAgPSAnLyc7Cj4g
-PiA+ICsJCSoocCArIDEpID0gJ1wwJzsKPiA+IAo+ID4gSG1tLi4uIHNvIGlmIGtuX2Zyb20gPT0g
-a25fdG8sIHRoZSBvdXRwdXQgaXMgIi8iPwo+IAo+IFllcywgdGhhdCdzIHdoYXQgc2VlbXMgdG8g
-bWFrZSB0aGUgbW9zdCBzZW5zZSBmb3IgY2dyb3VwIG5hbWVzcGFjZXMuICBJCj4gY291bGQgc2Vl
-IGEgY2FzZSBmb3IgJy4nIGJlaW5nIHVzZWQgaW5zdGVhZCBpbiBnZW5lcmFsLCBidXQgZm9yIGNn
-cm91cAo+IG5hbWVzcGFjZXMgSSB0aGluayB3ZSdkIGhhdmUgdG8gY29udmVydCB0aG9zZSBiYWNr
-IHRvICcvJy4gIE90aGVyd2lzZQo+IHdlJ2xsIGZhaWwgaW4gYmVpbmcgYWJsZSB0byBydW4gbGVn
-YWN5IHNvZnR3YXJlLCB3aGljaCB3b3VsZCBnZXQKPiBjb25mdXNlZC4KClllYWgsIEkgYWdyZWUg
-YnV0IHRoZSBuYW1lIGlzIGtpbmRhIG1pc2xlYWRpbmcgdGhvLiAgVGhlIG91dHB1dCBpc24ndApy
-ZWFsbHkgYSByZWxhdGl2ZSBwYXRoIGJ1dCByYXRoZXIgYWJzb2x1dGUgcGF0aCBhZ2FpbnN0IHRo
-ZSBzcGVjaWZpZWQKcm9vdC4gIE1heWJlIHVwZGF0aW5nIHRoZSBmdW5jdGlvbiBhbmQgcGFyYW1l
-dGVyIG5hbWVzIHdvdWxkIGJlCmhlbHBmdWw/CgpUaGFua3MuCgotLSAKdGVqdW4KX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbHhjLWRldmVsIG1haWxpbmcg
-bGlzdApseGMtZGV2ZWxAbGlzdHMubGludXhjb250YWluZXJzLm9yZwpodHRwOi8vbGlzdHMubGlu
-dXhjb250YWluZXJzLm9yZy9saXN0aW5mby9seGMtZGV2ZWwK
+On Mon, Nov 30, 2015 at 01:54:21PM +0300, Vladimir Davydov wrote:
+> On Tue, Nov 24, 2015 at 04:58:44PM -0500, Johannes Weiner wrote:
+> ...
+> > @@ -5520,15 +5557,30 @@ void sock_release_memcg(struct sock *sk)
+> >   */
+> >  bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
+> >  {
+> > -	struct page_counter *counter;
+> > +	gfp_t gfp_mask = GFP_KERNEL;
+> >  
+> > -	if (page_counter_try_charge(&memcg->tcp_mem.memory_allocated,
+> > -				    nr_pages, &counter)) {
+> > -		memcg->tcp_mem.memory_pressure = 0;
+> > -		return true;
+> > +#ifdef CONFIG_MEMCG_KMEM
+> > +	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys)) {
+> > +		struct page_counter *counter;
+> > +
+> > +		if (page_counter_try_charge(&memcg->tcp_mem.memory_allocated,
+> > +					    nr_pages, &counter)) {
+> > +			memcg->tcp_mem.memory_pressure = 0;
+> > +			return true;
+> > +		}
+> > +		page_counter_charge(&memcg->tcp_mem.memory_allocated, nr_pages);
+> > +		memcg->tcp_mem.memory_pressure = 1;
+> > +		return false;
+> >  	}
+> > -	page_counter_charge(&memcg->tcp_mem.memory_allocated, nr_pages);
+> > -	memcg->tcp_mem.memory_pressure = 1;
+> > +#endif
+> > +	/* Don't block in the packet receive path */
+> > +	if (in_softirq())
+> > +		gfp_mask = GFP_NOWAIT;
+> > +
+> > +	if (try_charge(memcg, gfp_mask, nr_pages) == 0)
+> > +		return true;
+> > +
+> > +	try_charge(memcg, gfp_mask|__GFP_NOFAIL, nr_pages);
+> 
+> We won't trigger high reclaim if we get here, because try_charge does
+> not check high threshold if failing or forcing charge. I think this
+> should be fixed regardless of this patch. The fix is attached below.
+
+We kind of assume that max is either set above high, or not at
+all. That means when max is hit the high limit has already failed and
+it's of limited use to schedule background reclaim.
+
+> Also, I don't like calling try_charge twice: the second time will go
+> through all the try_charge steps for nothing. What about checking
+> page_counter value after calling try_charge instead:
+> 
+> 	try_charge(memcg, gfp_mask|__GFP_NOFAIL, nr_pages);
+> 	return page_counter_read(&memcg->memory) <= memcg->memory.limit;
+> 
+> or adding an out parameter to try_charge that would inform us if charge
+> was forced?
+
+That's a complete cold path where we are going to drop the packet in
+all but a few cases. It's not worth the trouble.
+
+> > @@ -5539,10 +5591,32 @@ bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
+> >   */
+> >  void mem_cgroup_uncharge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
+> >  {
+> > -	page_counter_uncharge(&memcg->tcp_mem.memory_allocated, nr_pages);
+> > +#ifdef CONFIG_MEMCG_KMEM
+> > +	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys)) {
+> > +		page_counter_uncharge(&memcg->tcp_mem.memory_allocated,
+> > +				      nr_pages);
+> > +		return;
+> > +	}
+> > +#endif
+> > +	page_counter_uncharge(&memcg->memory, nr_pages);
+> > +	css_put_many(&memcg->css, nr_pages);
+> 
+> cancel_charge(memcg, nr_pages);
+
+It does the same, but it's a weird name for regular uncharging.
+
+> From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+> Subject: [PATCH] memcg: check high threshold if forcing allocation
+> 
+> try_charge() does not result in checking high threshold if it forces
+> charge. This is incorrect, because we could have failed to reclaim
+> memory due to the current context, so we do need to check high threshold
+> and try to compensate for the excess once we are in the safe context.
+> 
+> Signed-off-by: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 79a29d564bff..e922965b572b 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2112,13 +2112,14 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  		page_counter_charge(&memcg->memsw, nr_pages);
+>  	css_get_many(&memcg->css, nr_pages);
+>  
+> -	return 0;
+> +	goto check_high;
+>  
+>  done_restock:
+>  	css_get_many(&memcg->css, batch);
+>  	if (batch > nr_pages)
+>  		refill_stock(memcg, batch - nr_pages);
+>  
+> +check_high:
+>  	/*
+>  	 * If the hierarchy is above the normal consumption range, schedule
+>  	 * reclaim on returning to userland.  We can perform reclaim here
+
+One problem is that OOM victims force their charges so they can exit
+quickly. It'd be contradictory to then task them with high reclaim.
