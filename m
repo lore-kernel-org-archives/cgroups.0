@@ -1,176 +1,97 @@
-From: Jason Baron <jbaron@akamai.com>
-Subject: Re: [PATCH 09/13] mm: memcontrol: generalize the socket accounting
- jump label
-Date: Mon, 30 Nov 2015 17:28:49 -0500
-Message-ID: <565CCDA1.905@akamai.com>
-References: <1448401925-22501-1-git-send-email-hannes@cmpxchg.org>
- <1448401925-22501-10-git-send-email-hannes@cmpxchg.org>
- <565CBAC2.3080804@akamai.com> <20151130215007.GA31903@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH cgroup/for-4.4-fixes 1/2] cgroup_freezer: simplify
+ propagation of CGROUP_FROZEN clearing in freezer_attach()
+Date: Mon, 30 Nov 2015 17:42:05 -0500
+Message-ID: <20151130224205.GA9039@mtj.duckdns.org>
+References: <20151123195541.GA19072@mtj.duckdns.org>
+ <56543C76.2050008@bmw-carit.de>
+ <20151124144418.GB17033@mtj.duckdns.org>
+ <56547B22.2020802@bmw-carit.de>
+ <20151124145945.GF17033@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=akamai.com; s=a1;
-	t=1448922529; bh=ydece9LSyPOxwALuQHKHvajsTWbLiwsNi5CYVkBY+V8=;
-	l=5836; h=To:References:Cc:From:Date:In-Reply-To:From;
-	b=MYppZaSK7XVBsZoO2EwOahVwE4gqIofA09OEoooCDWriHcu0uUrz9W/lgwgaMhlYp
-	 qO/PhKb4RUE+IkpcmORa+1ubxLdmKFhrGzaEB2Gvs0IvlvJlS4d2NBJJknY0Vd3wUZ
-	 AcpPNNn0O8pTro5l7HQjEl3LgxEh2rOQ+Yt5erhE=
-In-Reply-To: <20151130215007.GA31903@cmpxchg.org>
-Sender: netdev-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=FQzmdLWeJT4hIe9b95lG1/6qdt/ODKNAYkNSYU1euuw=;
+        b=gQfST463eT3H/o1Rt8gRDE3GZeez+TZyJIvqQYqQjuYtTk6PoXZNfnQMyADuG+KCJW
+         WG6Wu8nA2WTioVbPeTO/s6ND6k8yOzC+XwkcpP3i8LvKIhtJLjHn4n0ZcQafVSQLpndp
+         ywHPEWulDxCIzM4K6NHvQgc/Gkw19makeMngmFjNXJ0QCBWtnQWXsWxhR8UUEFDa9AfV
+         dtgweF0CYOjPD26bdiYugbIYa+dlBaBqz2V9mqpe04ZVaz/wxWyy7f7XInk2oOQIj7SU
+         GQixWyvqXnr1Kg7SV5auaU5+N/fVMm7A5YM7bHQiVgnCCF69k9VAmlvjxhqjzFylvAQd
+         Hc8Q==
+Content-Disposition: inline
+In-Reply-To: <20151124145945.GF17033-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, David Miller <davem@davemloft.net>, Vladimir Davydov <vdavydov@virtuozzo.com>, Michal Hocko <mhocko@suse.cz>, Tejun Heo <tj@kernel.org>, Eric Dumazet <eric.dumazet@gmail.com>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, "peterz@infradead.org" <peterz@infradead.org>
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Jones <davej-rdkfGonbjUTCLXcRTR1eJlpr/1R2p/CL@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>
 
-On 11/30/2015 04:50 PM, Johannes Weiner wrote:
-> On Mon, Nov 30, 2015 at 04:08:18PM -0500, Jason Baron wrote:
->> We're trying to move to the updated API, so this should be:
->> static_branch_unlikely(&memcg_sockets_enabled_key)
->>
->> see: include/linux/jump_label.h for details.
-> 
-> Good point. There is another struct static_key in there as well. How
-> about the following on top of this series?
-> 
+From bafc993033ea01429effe50ec693def57154ebe4 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Mon, 30 Nov 2015 17:24:34 -0500
 
-Looks fine - you may be able to make use of
-'static_branch_enable()/disable()' instead of the inc()/dec() to simply
-set the branch direction, if you think its more readable. Although I
-didn't look to see if it would be racy here.
+If one or more tasks get moved into a frozen css, the frozen state is
+cleared up from the destination css so that it can be reasserted once
+the migrated tasks are frozen.  freezer_attach() implements this in
+two separate steps - clearing CGROUP_FROZEN on the target css while
+processing each task and propagating the clearing upwards after the
+task loop is done if necessary.
 
-Thanks,
+This patch merges the two steps.  Propagation now takes place inside
+the task loop.  This simplifies the code and prepares it for the fix
+of multi-destination migration.
 
--Jason
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ kernel/cgroup_freezer.c | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
 
-
-> ---
-> From b784aa0323628d43272e13a67ead2a2ce0e93ea6 Mon Sep 17 00:00:00 2001
-> From: Johannes Weiner <hannes@cmpxchg.org>
-> Date: Mon, 30 Nov 2015 16:41:38 -0500
-> Subject: [PATCH] mm: memcontrol: switch to the updated jump-label API
-> 
-> According to <linux/jump_label.h> the direct use of struct static_key
-> is deprecated. Update the socket and slab accounting code accordingly.
-> 
-> Reported-by: Jason Baron <jbaron@akamai.com>
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> ---
->  include/linux/memcontrol.h |  8 ++++----
->  mm/memcontrol.c            | 12 ++++++------
->  net/ipv4/tcp_memcontrol.c  |  4 ++--
->  3 files changed, 12 insertions(+), 12 deletions(-)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index a8df46c..9a19590 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -704,8 +704,8 @@ static inline void mem_cgroup_wb_stats(struct bdi_writeback *wb,
->  
->  #ifdef CONFIG_INET
->  struct sock;
-> -extern struct static_key memcg_sockets_enabled_key;
-> -#define mem_cgroup_sockets_enabled static_key_false(&memcg_sockets_enabled_key)
-> +extern struct static_key_false memcg_sockets_enabled_key;
-> +#define mem_cgroup_sockets_enabled static_branch_unlikely(&memcg_sockets_enabled_key)
->  void sock_update_memcg(struct sock *sk);
->  void sock_release_memcg(struct sock *sk);
->  bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages);
-> @@ -727,7 +727,7 @@ static inline bool mem_cgroup_under_socket_pressure(struct mem_cgroup *memcg)
->  #endif /* CONFIG_INET */
->  
->  #ifdef CONFIG_MEMCG_KMEM
-> -extern struct static_key memcg_kmem_enabled_key;
-> +extern struct static_key_false memcg_kmem_enabled_key;
->  
->  extern int memcg_nr_cache_ids;
->  void memcg_get_cache_ids(void);
-> @@ -743,7 +743,7 @@ void memcg_put_cache_ids(void);
->  
->  static inline bool memcg_kmem_enabled(void)
->  {
-> -	return static_key_false(&memcg_kmem_enabled_key);
-> +	return static_branch_unlikely(&memcg_kmem_enabled_key);
->  }
->  
->  static inline bool memcg_kmem_is_active(struct mem_cgroup *memcg)
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index a0da91f..5fe45d68 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -346,7 +346,7 @@ void memcg_put_cache_ids(void)
->   * conditional to this static branch, we'll have to allow modules that does
->   * kmem_cache_alloc and the such to see this symbol as well
->   */
-> -struct static_key memcg_kmem_enabled_key;
-> +DEFINE_STATIC_KEY_FALSE(memcg_kmem_enabled_key);
->  EXPORT_SYMBOL(memcg_kmem_enabled_key);
->  
->  #endif /* CONFIG_MEMCG_KMEM */
-> @@ -2883,7 +2883,7 @@ static int memcg_activate_kmem(struct mem_cgroup *memcg,
->  	err = page_counter_limit(&memcg->kmem, nr_pages);
->  	VM_BUG_ON(err);
->  
-> -	static_key_slow_inc(&memcg_kmem_enabled_key);
-> +	static_branch_inc(&memcg_kmem_enabled_key);
->  	/*
->  	 * A memory cgroup is considered kmem-active as soon as it gets
->  	 * kmemcg_id. Setting the id after enabling static branching will
-> @@ -3622,7 +3622,7 @@ static void memcg_destroy_kmem(struct mem_cgroup *memcg)
->  {
->  	if (memcg->kmem_acct_activated) {
->  		memcg_destroy_kmem_caches(memcg);
-> -		static_key_slow_dec(&memcg_kmem_enabled_key);
-> +		static_branch_dec(&memcg_kmem_enabled_key);
->  		WARN_ON(page_counter_read(&memcg->kmem));
->  	}
->  	tcp_destroy_cgroup(memcg);
-> @@ -4258,7 +4258,7 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
->  
->  #ifdef CONFIG_INET
->  	if (cgroup_subsys_on_dfl(memory_cgrp_subsys) && !cgroup_memory_nosocket)
-> -		static_key_slow_inc(&memcg_sockets_enabled_key);
-> +		static_branch_inc(&memcg_sockets_enabled_key);
->  #endif
->  
->  	/*
-> @@ -4302,7 +4302,7 @@ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
->  	memcg_destroy_kmem(memcg);
->  #ifdef CONFIG_INET
->  	if (cgroup_subsys_on_dfl(memory_cgrp_subsys) && !cgroup_memory_nosocket)
-> -		static_key_slow_dec(&memcg_sockets_enabled_key);
-> +		static_branch_dec(&memcg_sockets_enabled_key);
->  #endif
->  	__mem_cgroup_free(memcg);
->  }
-> @@ -5494,7 +5494,7 @@ void mem_cgroup_replace_page(struct page *oldpage, struct page *newpage)
->  
->  #ifdef CONFIG_INET
->  
-> -struct static_key memcg_sockets_enabled_key;
-> +DEFINE_STATIC_KEY_FALSE(memcg_sockets_enabled_key);
->  EXPORT_SYMBOL(memcg_sockets_enabled_key);
->  
->  void sock_update_memcg(struct sock *sk)
-> diff --git a/net/ipv4/tcp_memcontrol.c b/net/ipv4/tcp_memcontrol.c
-> index 9a22e2d..18bc7f7 100644
-> --- a/net/ipv4/tcp_memcontrol.c
-> +++ b/net/ipv4/tcp_memcontrol.c
-> @@ -34,7 +34,7 @@ void tcp_destroy_cgroup(struct mem_cgroup *memcg)
->  		return;
->  
->  	if (memcg->tcp_mem.active)
-> -		static_key_slow_dec(&memcg_sockets_enabled_key);
-> +		static_branch_dec(&memcg_sockets_enabled_key);
->  }
->  
->  static int tcp_update_limit(struct mem_cgroup *memcg, unsigned long nr_pages)
-> @@ -65,7 +65,7 @@ static int tcp_update_limit(struct mem_cgroup *memcg, unsigned long nr_pages)
->  		 * because when this value change, the code to process it is not
->  		 * patched in yet.
->  		 */
-> -		static_key_slow_inc(&memcg_sockets_enabled_key);
-> +		static_branch_inc(&memcg_sockets_enabled_key);
->  		memcg->tcp_mem.active = true;
->  	}
->  
-> 
+diff --git a/kernel/cgroup_freezer.c b/kernel/cgroup_freezer.c
+index f1b30ad..ff02a8e 100644
+--- a/kernel/cgroup_freezer.c
++++ b/kernel/cgroup_freezer.c
+@@ -158,9 +158,7 @@ static void freezer_css_free(struct cgroup_subsys_state *css)
+ static void freezer_attach(struct cgroup_subsys_state *new_css,
+ 			   struct cgroup_taskset *tset)
+ {
+-	struct freezer *freezer = css_freezer(new_css);
+ 	struct task_struct *task;
+-	bool clear_frozen = false;
+ 
+ 	mutex_lock(&freezer_mutex);
+ 
+@@ -175,21 +173,20 @@ static void freezer_attach(struct cgroup_subsys_state *new_css,
+ 	 * be visible in a FROZEN cgroup and frozen tasks in a THAWED one.
+ 	 */
+ 	cgroup_taskset_for_each(task, tset) {
++		struct freezer *freezer = css_freezer(new_css);
++
+ 		if (!(freezer->state & CGROUP_FREEZING)) {
+ 			__thaw_task(task);
+ 		} else {
+ 			freeze_task(task);
+-			freezer->state &= ~CGROUP_FROZEN;
+-			clear_frozen = true;
++			/* clear FROZEN and propagate upwards */
++			while (freezer && (freezer->state & CGROUP_FROZEN)) {
++				freezer->state &= ~CGROUP_FROZEN;
++				freezer = parent_freezer(freezer);
++			}
+ 		}
+ 	}
+ 
+-	/* propagate FROZEN clearing upwards */
+-	while (clear_frozen && (freezer = parent_freezer(freezer))) {
+-		freezer->state &= ~CGROUP_FROZEN;
+-		clear_frozen = freezer->state & CGROUP_FREEZING;
+-	}
+-
+ 	mutex_unlock(&freezer_mutex);
+ }
+ 
+-- 
+2.5.0
