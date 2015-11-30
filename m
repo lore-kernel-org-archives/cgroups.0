@@ -1,69 +1,27 @@
-From: Vladimir Davydov <vdavydov@virtuozzo.com>
-Subject: Re: [PATCH 13/13] mm: memcontrol: hook up vmpressure to socket
- pressure
-Date: Mon, 30 Nov 2015 19:13:46 +0300
-Message-ID: <20151130161346.GD24704@esperanza>
-References: <1448401925-22501-1-git-send-email-hannes@cmpxchg.org>
- <20151124215940.GB1373@cmpxchg.org>
- <20151130113628.GB24704@esperanza>
- <20151130155838.GB30243@cmpxchg.org>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: WARNING in handle_mm_fault
+Date: Mon, 30 Nov 2015 17:20:00 +0100
+Message-ID: <20151130162000.GM17308@twins.programming.kicks-ass.net>
+References: <CACT4Y+Zn+mK37-mvqDQTyt1Psp6HT2heT0e937SO24F7V1q7PA@mail.gmail.com>
+ <201511260027.CCC26590.SOHFMQLVJOtFOF@I-love.SAKURA.ne.jp>
+ <CACT4Y+ZdF09hOnb_bL4GNjytSMMGvNde8=9pdZt6gZQB1sp0hQ@mail.gmail.com>
+ <20151125173730.GS27283@dhcp22.suse.cz>
+ <CACT4Y+Y0EESD_HhgGE2pWPqfJsDgvSny=ZMfP1ewaSzd6z_bLg@mail.gmail.com>
+ <201511262033.EAB48965.FVJOOOMLFHStFQ@I-love.SAKURA.ne.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20151130155838.GB30243@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <201511262033.EAB48965.FVJOOOMLFHStFQ-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, David Miller <davem@davemloft.net>, Michal Hocko <mhocko@suse.cz>, Tejun Heo <tj@kernel.org>, Eric Dumazet <eric.dumazet@gmail.com>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
+Cc: dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, syzkaller-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, kcc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, sasha.levin-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-On Mon, Nov 30, 2015 at 10:58:38AM -0500, Johannes Weiner wrote:
-> On Mon, Nov 30, 2015 at 02:36:28PM +0300, Vladimir Davydov wrote:
-> > Suppose we have the following cgroup configuration.
-> > 
-> > A __ B
-> >   \_ C
-> > 
-> > A is empty (which is natural for the unified hierarchy AFAIU). B has
-> > some workload running in it, and C generates socket pressure. Due to the
-> > socket pressure coming from C we start reclaim in A, which results in
-> > thrashing of B, but we might not put sockets under pressure in A or C,
-> > because vmpressure does not account pages scanned/reclaimed in B when
-> > generating a vmpressure event for A or C. This might result in
-> > aggressive reclaim and thrashing in B w/o generating a signal for C to
-> > stop growing socket buffers.
-> > 
-> > Do you think such a situation is possible? If so, would it make sense to
-> > switch to post-order walk in shrink_zone and pass sub-tree
-> > scanned/reclaimed stats to vmpressure for each scanned memcg?
-> 
-> In that case the LRU pages in C would experience pressure as well,
-> which would then reign in the sockets in C. There must be some LRU
-> pages in there, otherwise who is creating socket pressure?
-> 
-> The same applies to shrinkers. All secondary reclaim is driven by LRU
-> reclaim results.
-> 
-> I can see that there is some unfairness in distributing memcg reclaim
-> pressure purely based on LRU size, because there are scenarios where
-> the auxiliary objects (incl. sockets, but mostly shrinker pools)
-> amount to a significant portion of the group's memory footprint. But
-> substitute group for NUMA node and we've had this behavior for
-> years. I'm not sure it's actually a problem in practice.
-> 
+On Thu, Nov 26, 2015 at 08:33:05PM +0900, Tetsuo Handa wrote:
 
-Fiar enough. Let's wait until we hit this problem in real world then.
+> By the way, does use of "unsigned char" than "unsigned" save some bytes?
 
-The patch looks good to me.
-
-Reviewed-by: Vladimir Davydov <vdavydov@virtuozzo.com>
-
-Thanks,
-Vladimir
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+There are architectures that cannot do independent byte writes. Best
+leave it a machine word unless there's a real pressing reason otherwise.
