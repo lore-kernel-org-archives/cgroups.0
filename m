@@ -1,45 +1,88 @@
-From: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 7/8] cgroup: mount cgroupns-root when inside non-init
- cgroupns
-Date: Tue, 1 Dec 2015 15:58:53 -0600
-Message-ID: <20151201215853.GA9153@mail.hallyn.com>
-References: <1447703505-29672-1-git-send-email-serge@hallyn.com>
- <1447703505-29672-8-git-send-email-serge@hallyn.com>
- <20151124171610.GS17033@mtj.duckdns.org>
- <20151127051745.GA24521@mail.hallyn.com>
- <20151130150938.GF3535@mtj.duckdns.org>
- <20151201040704.GA31067@mail.hallyn.com>
- <20151201164649.GD12922@mtj.duckdns.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] oom_kill: add option to disable dump_stack()
+Date: Tue, 1 Dec 2015 15:43:53 -0800
+Message-ID: <20151201154353.87e2200b5cd1a99289ce6653@linux-foundation.org>
+References: <1445634150-27992-1-git-send-email-arozansk@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20151201164649.GD12922-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1445634150-27992-1-git-send-email-arozansk@redhat.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org
+To: Aristeu Rozanski <arozansk@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Greg Thelen <gthelen@google.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On Tue, Dec 01, 2015 at 11:46:49AM -0500, Tejun Heo wrote:
-> Hey, Serge.
-> 
-> On Mon, Nov 30, 2015 at 10:07:04PM -0600, Serge E. Hallyn wrote:
-> > So actually the way the code is now, the first mount cannot
-> > be done from a non-init user namespace; and kernfs_obtain_root()
-> > is only called from non-init user namespace.  So can we assume
-> > that the root dentry will be instantiated?  (or can it get
-> > evicted?)
-> > 
-> > If we can assume that then most of that fn can go away.
-> 
-> The v2 hierarchy is always mounted and non-init ns shouldn't be able
-> to create new v1 hierarchies, so the root dentry should always be
-> there.
+On Fri, 23 Oct 2015 17:02:30 -0400 Aristeu Rozanski <arozansk@redhat.com> wrote:
 
-I mispoke before though - it's not the hierarchy's root dentry,
-but rather a dentry for a descendent cgroup which will become the
-root dentry for the new superblock.  We do know that there must be
-a css_set with a cgroup.  I'm still trying to track down whether
-that cgrou's inode's dentry can ever be flushed.  I would think
-not but am not sure.
+> One of the largest chunks of log messages in a OOM is from dump_stack() and in
+> some cases it isn't even necessary to figure out what's going on. In
+> systems with multiple tenants/containers with limited resources each
+> OOMs can be way more frequent and being able to reduce the amount of log
+> output for each situation is useful.
+> 
+> This patch adds a sysctl to allow disabling dump_stack() during an OOM while
+> keeping the default to behave the same way it behaves today.
+
+Can you get the same effect by using "dmesg -n <N>"?  Probably not, I
+didn't look.
+
+> --- a/include/linux/oom.h
+> +++ b/include/linux/oom.h
+> @@ -115,6 +115,7 @@ static inline bool task_will_free_mem(struct task_struct *task)
+>  
+>  /* sysctls */
+>  extern int sysctl_oom_dump_tasks;
+> +extern int sysctl_oom_dump_stack;
+>  extern int sysctl_oom_kill_allocating_task;
+>  extern int sysctl_panic_on_oom;
+>  #endif /* _INCLUDE_LINUX_OOM_H */
+> diff --git a/kernel/sysctl.c b/kernel/sysctl.c
+> index e69201d..c812523 100644
+> --- a/kernel/sysctl.c
+> +++ b/kernel/sysctl.c
+> @@ -1176,6 +1176,13 @@ static struct ctl_table vm_table[] = {
+>  		.proc_handler	= proc_dointvec,
+>  	},
+>  	{
+> +		.procname	= "oom_dump_stack",
+> +		.data		= &sysctl_oom_dump_stack,
+> +		.maxlen		= sizeof(sysctl_oom_dump_stack),
+> +		.mode		= 0644,
+> +		.proc_handler	= proc_dointvec,
+> +	},
+> +	{
+>  		.procname	= "overcommit_ratio",
+>  		.data		= &sysctl_overcommit_ratio,
+>  		.maxlen		= sizeof(sysctl_overcommit_ratio),
+> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+> index 1ecc0bc..bdbf83b 100644
+> --- a/mm/oom_kill.c
+> +++ b/mm/oom_kill.c
+> @@ -42,6 +42,7 @@
+>  int sysctl_panic_on_oom;
+>  int sysctl_oom_kill_allocating_task;
+>  int sysctl_oom_dump_tasks = 1;
+> +int sysctl_oom_dump_stack = 1;
+>  
+>  DEFINE_MUTEX(oom_lock);
+>  
+> @@ -384,7 +385,8 @@ static void dump_header(struct oom_control *oc, struct task_struct *p,
+>  		current->signal->oom_score_adj);
+>  	cpuset_print_task_mems_allowed(current);
+>  	task_unlock(current);
+> -	dump_stack();
+> +	if (sysctl_oom_dump_stack)
+> +		dump_stack();
+>  	if (memcg)
+>  		mem_cgroup_print_oom_info(memcg, p);
+>  	else
+
+The patch seems reasonable to me, but it's missing the required update
+to Documentation/sysctl/vm.txt.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
