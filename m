@@ -1,8 +1,8 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH 7/8] cgroup: mount cgroupns-root when inside non-init
  cgroupns
-Date: Wed, 2 Dec 2015 11:53:12 -0500
-Message-ID: <20151202165312.GB19878@mtj.duckdns.org>
+Date: Wed, 2 Dec 2015 10:56:37 -0600
+Message-ID: <20151202165637.GA20840@mail.hallyn.com>
 References: <1447703505-29672-1-git-send-email-serge@hallyn.com>
  <1447703505-29672-8-git-send-email-serge@hallyn.com>
  <20151124171610.GS17033@mtj.duckdns.org>
@@ -11,42 +11,34 @@ References: <1447703505-29672-1-git-send-email-serge@hallyn.com>
  <20151201040704.GA31067@mail.hallyn.com>
  <20151201164649.GD12922@mtj.duckdns.org>
  <20151201215853.GA9153@mail.hallyn.com>
+ <20151202165312.GB19878@mtj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=0rEBplGdGP8/JYgntg+oCGGhwy2jCmXWNRW62ob9GG0=;
-        b=UOFQBHWcbKdAL5NQ3sVeIuOikxzLCg8qDib7Rj40U9+QBb+A838AmnEXoBUYIOM9A+
-         1yfTkIN67gwY72P4g0BkiQNhmV74B7OZ2+rNapFzIDOB7wsYUFSob2oODwJP6xEENrZJ
-         4Rjl4TvpYUbIg2a3dQlW2TbwL2SmMyYbIopK+PWbRHFxanna1QlwOHWTr86ANSo+ygVA
-         uiyItozpS6qClk61kf8eMH707AR3vWAkzKZwAqAmxdoDPlIRF5Ny5JM53giDiXQrFX64
-         gk7fg7Y5ubKcUENZvFV2p7wEZOgPvYNDpXNuOLv6t3JLdSN6WiZ4H20o9UWC7oUw6/WD
-         5gcQ==
 Content-Disposition: inline
-In-Reply-To: <20151201215853.GA9153-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
+In-Reply-To: <20151202165312.GB19878-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Cc: serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org
 
-Hello, Serge.
+On Wed, Dec 02, 2015 at 11:53:12AM -0500, Tejun Heo wrote:
+> Hello, Serge.
+> 
+> On Tue, Dec 01, 2015 at 03:58:53PM -0600, Serge E. Hallyn wrote:
+> > I mispoke before though - it's not the hierarchy's root dentry,
+> > but rather a dentry for a descendent cgroup which will become the
+> > root dentry for the new superblock.  We do know that there must be
+> > a css_set with a cgroup.  I'm still trying to track down whether
+> > that cgrou's inode's dentry can ever be flushed.  I would think
+> > not but am not sure.
+> 
+> Hmmm... I'm not really following.  The inode can be flushed and that's
+> why it needs to be walked down from root.  What am I missing here?
 
-On Tue, Dec 01, 2015 at 03:58:53PM -0600, Serge E. Hallyn wrote:
-> I mispoke before though - it's not the hierarchy's root dentry,
-> but rather a dentry for a descendent cgroup which will become the
-> root dentry for the new superblock.  We do know that there must be
-> a css_set with a cgroup.  I'm still trying to track down whether
-> that cgrou's inode's dentry can ever be flushed.  I would think
-> not but am not sure.
+Can it be flushed when we know that the cgroup is being pinned by
+a css_set?  (There's either a task or a cgroup_namespace pinning it
+or we wouldn't get here)
 
-Hmmm... I'm not really following.  The inode can be flushed and that's
-why it needs to be walked down from root.  What am I missing here?
-
-Thanks.
-
--- 
-tejun
+-serge
