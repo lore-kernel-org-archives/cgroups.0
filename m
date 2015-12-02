@@ -1,50 +1,95 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] oom_kill: add option to disable dump_stack()
-Date: Wed, 2 Dec 2015 09:18:43 +0100
-Message-ID: <20151202081842.GA25284@dhcp22.suse.cz>
-References: <1445634150-27992-1-git-send-email-arozansk@redhat.com>
- <20151201154353.87e2200b5cd1a99289ce6653@linux-foundation.org>
+From: Hugh Dickins <hughd@google.com>
+Subject: Re: [PATCH] mm: vmpressure: fix scan window after SWAP_CLUSTER_MAX
+ increase
+Date: Wed, 2 Dec 2015 02:11:18 -0800 (PST)
+Message-ID: <alpine.LSU.2.11.1512020150250.32078@eggly.anvils>
+References: <1445278381-21033-1-git-send-email-hannes@cmpxchg.org> <20151021193852.GA13511@cmpxchg.org> <alpine.LSU.2.11.1510211303240.3467@eggly.anvils> <20151116202254.GA6996@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20151201154353.87e2200b5cd1a99289ce6653-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20120113;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version:content-type;
+        bh=4u84cyRzW8IvM56yeboxjj9jIZKlg+OYu8NUZzYl2lk=;
+        b=aEEkHpPvE+YcR3ZbQW2gOOffwSAWDANABqPdQf6dGyL/ckGV6Knnk6RdsHM3pjEBx4
+         2uJfQz2cEIT+YSC1GyJzNkDs++RBnd09SbEsi1UB3+iktBVy+/nkgUUKp1QbYXtEOdL9
+         nYcxtCKBRDuVdIrgZ8t81/DOqcj/rNE5Qm3EKPg69uyCfKvl2+LhK6waN+NVqhUAh6vM
+         KJZTOXVrnXpif+bsJPVqPa9w8svnfjijeB5/J723hG25B6K4rXjSG3qx8RFDk7vo5cnY
+         cK0I+wrlW53W1TGZkcmP6RmLDOTTW4DHlOEfrPVGZu4azqUXxGdzQvJLKGfsLZUJ1Uk1
+         t7qw==
+In-Reply-To: <20151116202254.GA6996@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Aristeu Rozanski <arozansk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@virtuozzo.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue 01-12-15 15:43:53, Andrew Morton wrote:
-[...]
-> > diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-> > index 1ecc0bc..bdbf83b 100644
-> > --- a/mm/oom_kill.c
-> > +++ b/mm/oom_kill.c
-> > @@ -42,6 +42,7 @@
-> >  int sysctl_panic_on_oom;
-> >  int sysctl_oom_kill_allocating_task;
-> >  int sysctl_oom_dump_tasks = 1;
-> > +int sysctl_oom_dump_stack = 1;
-> >  
-> >  DEFINE_MUTEX(oom_lock);
-> >  
-> > @@ -384,7 +385,8 @@ static void dump_header(struct oom_control *oc, struct task_struct *p,
-> >  		current->signal->oom_score_adj);
-> >  	cpuset_print_task_mems_allowed(current);
-> >  	task_unlock(current);
-> > -	dump_stack();
-> > +	if (sysctl_oom_dump_stack)
-> > +		dump_stack();
-> >  	if (memcg)
-> >  		mem_cgroup_print_oom_info(memcg, p);
-> >  	else
+On Mon, 16 Nov 2015, Johannes Weiner wrote:
+
+> Dear Hugh,
 > 
-> The patch seems reasonable to me, but it's missing the required update
-> to Documentation/sysctl/vm.txt.
+> [ sorry, I just noticed this email now ]
 
-I thought we have agreed to go via KERN_DEBUG log level for the
-backtrace. Aristeu has posted a patch for that already.
--- 
-Michal Hocko
-SUSE Labs
+No problem: as you can see, I'm very far from keeping up myself.
+
+> 
+> On Wed, Oct 21, 2015 at 01:05:53PM -0700, Hugh Dickins wrote:
+> > On Wed, 21 Oct 2015, Johannes Weiner wrote:
+> > > On Mon, Oct 19, 2015 at 02:13:01PM -0400, Johannes Weiner wrote:
+> > > > mm-increase-swap_cluster_max-to-batch-tlb-flushes.patch changed
+> > > > SWAP_CLUSTER_MAX from 32 pages to 256 pages, inadvertantly switching
+> > > > the scan window for vmpressure detection from 2MB to 16MB. Revert.
+> > > > 
+> > > > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> > > > ---
+> > > >  mm/vmpressure.c | 2 +-
+> > > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > > 
+> > > > diff --git a/mm/vmpressure.c b/mm/vmpressure.c
+> > > > index c5afd57..74f206b 100644
+> > > > --- a/mm/vmpressure.c
+> > > > +++ b/mm/vmpressure.c
+> > > > @@ -38,7 +38,7 @@
+> > > >   * TODO: Make the window size depend on machine size, as we do for vmstat
+> > > >   * thresholds. Currently we set it to 512 pages (2MB for 4KB pages).
+> > > >   */
+> > > > -static const unsigned long vmpressure_win = SWAP_CLUSTER_MAX * 16;
+> > > > +static const unsigned long vmpressure_win = SWAP_CLUSTER_MAX;
+> > > 
+> > > Argh, Mel's patch sets SWAP_CLUSTER_MAX to 256, so this should be
+> > > SWAP_CLUSTER_MAX * 2 to retain the 512 pages scan window.
+> > > 
+> > > Andrew could you please update this fix in-place? Otherwise I'll
+> > > resend a corrected version.
+> > > 
+> > > Thanks, and sorry about that.
+> > 
+> > I don't understand why "SWAP_CLUSTER_MAX * 2" is thought better than "512".
+> > Retaining a level of obscurity, that just bit us twice, is a good thing?
+> 
+> I'm not sure it is. But it doesn't seem entirely wrong to link it to
+> the reclaim scan window, either--at least be a multiple of it so that
+> the vmpressure reporting happens cleanly at the end of a scan cycle?
+> 
+> I don't mind changing it to 512, but it doesn't feel like an obvious
+> improvement, either.
+
+Never mind: I thought it worth calling out at the time, but now that
+your change is in, I've no reason to make a fuss over it - if it ever
+bites us again, we can rework it then.
+
+Besides, when I wrote, I hadn't noticed the comment there about
+SWAP_CLUSTER_MAX, just out of sight before the context of your fix:
+that would have to be reworded, and I don't know what it should say.
+
+Oh, it's all still mmotm stuff, not in 4.4-rc.  Well, even so,
+forget my interjection: we've all got bigger fish to fry.
+
+Hugh
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
