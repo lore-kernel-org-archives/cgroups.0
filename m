@@ -1,95 +1,52 @@
-From: Hugh Dickins <hughd@google.com>
-Subject: Re: [PATCH] mm: vmpressure: fix scan window after SWAP_CLUSTER_MAX
- increase
-Date: Wed, 2 Dec 2015 02:11:18 -0800 (PST)
-Message-ID: <alpine.LSU.2.11.1512020150250.32078@eggly.anvils>
-References: <1445278381-21033-1-git-send-email-hannes@cmpxchg.org> <20151021193852.GA13511@cmpxchg.org> <alpine.LSU.2.11.1510211303240.3467@eggly.anvils> <20151116202254.GA6996@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 7/8] cgroup: mount cgroupns-root when inside non-init
+ cgroupns
+Date: Wed, 2 Dec 2015 11:53:12 -0500
+Message-ID: <20151202165312.GB19878@mtj.duckdns.org>
+References: <1447703505-29672-1-git-send-email-serge@hallyn.com>
+ <1447703505-29672-8-git-send-email-serge@hallyn.com>
+ <20151124171610.GS17033@mtj.duckdns.org>
+ <20151127051745.GA24521@mail.hallyn.com>
+ <20151130150938.GF3535@mtj.duckdns.org>
+ <20151201040704.GA31067@mail.hallyn.com>
+ <20151201164649.GD12922@mtj.duckdns.org>
+ <20151201215853.GA9153@mail.hallyn.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20120113;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version:content-type;
-        bh=4u84cyRzW8IvM56yeboxjj9jIZKlg+OYu8NUZzYl2lk=;
-        b=aEEkHpPvE+YcR3ZbQW2gOOffwSAWDANABqPdQf6dGyL/ckGV6Knnk6RdsHM3pjEBx4
-         2uJfQz2cEIT+YSC1GyJzNkDs++RBnd09SbEsi1UB3+iktBVy+/nkgUUKp1QbYXtEOdL9
-         nYcxtCKBRDuVdIrgZ8t81/DOqcj/rNE5Qm3EKPg69uyCfKvl2+LhK6waN+NVqhUAh6vM
-         KJZTOXVrnXpif+bsJPVqPa9w8svnfjijeB5/J723hG25B6K4rXjSG3qx8RFDk7vo5cnY
-         cK0I+wrlW53W1TGZkcmP6RmLDOTTW4DHlOEfrPVGZu4azqUXxGdzQvJLKGfsLZUJ1Uk1
-         t7qw==
-In-Reply-To: <20151116202254.GA6996@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=0rEBplGdGP8/JYgntg+oCGGhwy2jCmXWNRW62ob9GG0=;
+        b=UOFQBHWcbKdAL5NQ3sVeIuOikxzLCg8qDib7Rj40U9+QBb+A838AmnEXoBUYIOM9A+
+         1yfTkIN67gwY72P4g0BkiQNhmV74B7OZ2+rNapFzIDOB7wsYUFSob2oODwJP6xEENrZJ
+         4Rjl4TvpYUbIg2a3dQlW2TbwL2SmMyYbIopK+PWbRHFxanna1QlwOHWTr86ANSo+ygVA
+         uiyItozpS6qClk61kf8eMH707AR3vWAkzKZwAqAmxdoDPlIRF5Ny5JM53giDiXQrFX64
+         gk7fg7Y5ubKcUENZvFV2p7wEZOgPvYNDpXNuOLv6t3JLdSN6WiZ4H20o9UWC7oUw6/WD
+         5gcQ==
+Content-Disposition: inline
+In-Reply-To: <20151201215853.GA9153-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@virtuozzo.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Cc: serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org
 
-On Mon, 16 Nov 2015, Johannes Weiner wrote:
+Hello, Serge.
 
-> Dear Hugh,
-> 
-> [ sorry, I just noticed this email now ]
+On Tue, Dec 01, 2015 at 03:58:53PM -0600, Serge E. Hallyn wrote:
+> I mispoke before though - it's not the hierarchy's root dentry,
+> but rather a dentry for a descendent cgroup which will become the
+> root dentry for the new superblock.  We do know that there must be
+> a css_set with a cgroup.  I'm still trying to track down whether
+> that cgrou's inode's dentry can ever be flushed.  I would think
+> not but am not sure.
 
-No problem: as you can see, I'm very far from keeping up myself.
+Hmmm... I'm not really following.  The inode can be flushed and that's
+why it needs to be walked down from root.  What am I missing here?
 
-> 
-> On Wed, Oct 21, 2015 at 01:05:53PM -0700, Hugh Dickins wrote:
-> > On Wed, 21 Oct 2015, Johannes Weiner wrote:
-> > > On Mon, Oct 19, 2015 at 02:13:01PM -0400, Johannes Weiner wrote:
-> > > > mm-increase-swap_cluster_max-to-batch-tlb-flushes.patch changed
-> > > > SWAP_CLUSTER_MAX from 32 pages to 256 pages, inadvertantly switching
-> > > > the scan window for vmpressure detection from 2MB to 16MB. Revert.
-> > > > 
-> > > > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> > > > ---
-> > > >  mm/vmpressure.c | 2 +-
-> > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > 
-> > > > diff --git a/mm/vmpressure.c b/mm/vmpressure.c
-> > > > index c5afd57..74f206b 100644
-> > > > --- a/mm/vmpressure.c
-> > > > +++ b/mm/vmpressure.c
-> > > > @@ -38,7 +38,7 @@
-> > > >   * TODO: Make the window size depend on machine size, as we do for vmstat
-> > > >   * thresholds. Currently we set it to 512 pages (2MB for 4KB pages).
-> > > >   */
-> > > > -static const unsigned long vmpressure_win = SWAP_CLUSTER_MAX * 16;
-> > > > +static const unsigned long vmpressure_win = SWAP_CLUSTER_MAX;
-> > > 
-> > > Argh, Mel's patch sets SWAP_CLUSTER_MAX to 256, so this should be
-> > > SWAP_CLUSTER_MAX * 2 to retain the 512 pages scan window.
-> > > 
-> > > Andrew could you please update this fix in-place? Otherwise I'll
-> > > resend a corrected version.
-> > > 
-> > > Thanks, and sorry about that.
-> > 
-> > I don't understand why "SWAP_CLUSTER_MAX * 2" is thought better than "512".
-> > Retaining a level of obscurity, that just bit us twice, is a good thing?
-> 
-> I'm not sure it is. But it doesn't seem entirely wrong to link it to
-> the reclaim scan window, either--at least be a multiple of it so that
-> the vmpressure reporting happens cleanly at the end of a scan cycle?
-> 
-> I don't mind changing it to 512, but it doesn't feel like an obvious
-> improvement, either.
+Thanks.
 
-Never mind: I thought it worth calling out at the time, but now that
-your change is in, I've no reason to make a fuss over it - if it ever
-bites us again, we can rework it then.
-
-Besides, when I wrote, I hadn't noticed the comment there about
-SWAP_CLUSTER_MAX, just out of sight before the context of your fix:
-that would have to be reworded, and I don't know what it should say.
-
-Oh, it's all still mmotm stuff, not in 4.4-rc.  Well, even so,
-forget my interjection: we've all got bigger fish to fry.
-
-Hugh
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+tejun
