@@ -1,62 +1,66 @@
-From: Geliang Tang <geliangtang-9Onoh4P/yGk@public.gmane.org>
-Subject: [PATCH] mm/memcontrol.c: use list_{first,next}_entry
-Date: Thu,  3 Dec 2015 22:16:55 +0800
-Message-ID: <9e62e3006561653fcbf0c49cf0b9c2b653a8ed0e.1449152124.git.geliangtang@163.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-4.4-fixes 2/3] cgroup: fix handling of
+ multi-destination migration from subtree_control enabling
+Date: Thu, 3 Dec 2015 10:16:32 -0500
+Message-ID: <20151203151632.GE27463@mtj.duckdns.org>
+References: <20151123195541.GA19072@mtj.duckdns.org>
+ <56543C76.2050008@bmw-carit.de>
+ <20151124144418.GB17033@mtj.duckdns.org>
+ <56547B22.2020802@bmw-carit.de>
+ <20151124145945.GF17033@mtj.duckdns.org>
+ <20151130224205.GA9039@mtj.duckdns.org>
+ <20151130224431.GB9039@mtj.duckdns.org>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id; bh=GbHYB397YoI7oKq1Dx
-	OVMp4QvI2r0ApCvK+ZbQoLbdM=; b=j2t6GmldPV5lzlyXcHr33+Gw5wnvS0zosg
-	aeBBSyo1uD9ROzCbQHhtH3+uSrVeUDcwiN1229VXI3rTRciHkyrn4lBZVYz0MFAh
-	IxiPRuljGn2xMkhsvK46/jHvm2ILtTMaKICcpMAJy2SI+vQmy5Z6dlZmOZoqmiWR
-	sNI/z0oto=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=pxrF4j+5VDs1AaBsS1M5KdwuP7JC7CH7ZPMOABHd2qw=;
+        b=ygUSbPelMmscUjsoIqR8bcCCw6m+VqwxKynG4s87H03elAFIAUMHVYSOc3XqyVfpF7
+         B/DdZZuN/YvbOPFM1eOHYNnGKJS9aA3cUZVfXRtmaWDBQ+QItBDSTr6eQo32QkGccOK7
+         0SkGyxj5Cp0RkmhhmfOcIm9ofRB60hWfAVoxnfROKGxpjhWsDoLyOOHzYIeIGO8e2sKz
+         z3l/+Xmudb63smhaiY/Q8b5sBcifXXltfgWb/RIWD0tj2igcGhweEJNkj6ERt9CxZdIm
+         deL2wGM44lfG1dqnZeIwuSkq4sm/QQYZaLymSwV6QAFsL2KgzcGNI/r88XCXi7e7h/AI
+         h7jQ==
+Content-Disposition: inline
+In-Reply-To: <20151130224431.GB9039-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Geliang Tang <geliangtang-9Onoh4P/yGk@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Jones <davej-rdkfGonbjUTCLXcRTR1eJlpr/1R2p/CL@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Neil Horman <nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>
 
-To make the intention clearer, use list_{first,next}_entry instead
-of list_entry.
+On Mon, Nov 30, 2015 at 05:44:31PM -0500, Tejun Heo wrote:
+> From 0d7d444e260493252e30c70813c7657e9ede2f12 Mon Sep 17 00:00:00 2001
+> From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Date: Mon, 30 Nov 2015 17:24:34 -0500
+> 
+> Consider the following v2 hierarchy.
+> 
+>   P0 (+memory) --- P1 (-memory) --- A
+>                                  \- B
+> 
+> P0 has memory enabled in its subtree_control while P1 doesn't.  If
+> both A and B contain processes, they would belong to the memory css of
+> P1.  Now if memory is enabled on P1's subtree_control, memory csses
+> should be created on both A and B and A's processes should be moved to
+> the former and B's processes the latter.  IOW, enabling controllers
+> can cause atomic migrations into different csses.
+> 
+> The core cgroup migration logic has been updated accordingly but the
+> controller migration methods haven't and still assume that all tasks
+> migrate to a single target css; furthermore, the methods were fed the
+> css in which subtree_control was updated which is the parent of the
+> target csses.  pids controller depends on the migration methods to
+> move charges and this made the controller attribute charges to the
+> wrong csses often triggering the following warning by driving a
+> counter negative.
 
-Signed-off-by: Geliang Tang <geliangtang-9Onoh4P/yGk@public.gmane.org>
----
- mm/memcontrol.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+Applying 1-2 to libata/for-4.4-fixes.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 79a29d5..a6301ea 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5395,16 +5395,12 @@ static void uncharge_list(struct list_head *page_list)
- 	unsigned long nr_file = 0;
- 	unsigned long nr_huge = 0;
- 	unsigned long pgpgout = 0;
--	struct list_head *next;
- 	struct page *page;
- 
--	next = page_list->next;
-+	page = list_first_entry(page_list, struct page, lru);
- 	do {
- 		unsigned int nr_pages = 1;
- 
--		page = list_entry(next, struct page, lru);
--		next = page->lru.next;
--
- 		VM_BUG_ON_PAGE(PageLRU(page), page);
- 		VM_BUG_ON_PAGE(page_count(page), page);
- 
-@@ -5440,7 +5436,8 @@ static void uncharge_list(struct list_head *page_list)
- 		page->mem_cgroup = NULL;
- 
- 		pgpgout++;
--	} while (next != page_list);
-+	} while (!list_is_last(&page->lru, page_list) &&
-+		 (page = list_next_entry(page, lru)));
- 
- 	if (memcg)
- 		uncharge_batch(memcg, pgpgout, nr_anon, nr_file,
+Thanks.
+
 -- 
-2.5.0
-
+tejun
