@@ -1,66 +1,62 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 7/8] cgroup: mount cgroupns-root when inside non-init
-	cgroupns
-Date: Wed, 2 Dec 2015 12:05:51 -0500
-Message-ID: <20151202170551.GE19878@mtj.duckdns.org>
-References: <20151124171610.GS17033@mtj.duckdns.org>
-	<20151127051745.GA24521@mail.hallyn.com>
-	<20151130150938.GF3535@mtj.duckdns.org>
-	<20151201040704.GA31067@mail.hallyn.com>
-	<20151201164649.GD12922@mtj.duckdns.org>
-	<20151201215853.GA9153@mail.hallyn.com>
-	<20151202165312.GB19878@mtj.duckdns.org>
-	<20151202165637.GA20840@mail.hallyn.com>
-	<20151202165839.GD19878@mtj.duckdns.org>
-	<20151202170239.GA21009@mail.hallyn.com>
-Mime-Version: 1.0
+From: Geliang Tang <geliangtang-9Onoh4P/yGk@public.gmane.org>
+Subject: [PATCH] mm/memcontrol.c: use list_{first,next}_entry
+Date: Thu,  3 Dec 2015 22:16:55 +0800
+Message-ID: <9e62e3006561653fcbf0c49cf0b9c2b653a8ed0e.1449152124.git.geliangtang@163.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:Subject:Date:Message-Id; bh=GbHYB397YoI7oKq1Dx
+	OVMp4QvI2r0ApCvK+ZbQoLbdM=; b=j2t6GmldPV5lzlyXcHr33+Gw5wnvS0zosg
+	aeBBSyo1uD9ROzCbQHhtH3+uSrVeUDcwiN1229VXI3rTRciHkyrn4lBZVYz0MFAh
+	IxiPRuljGn2xMkhsvK46/jHvm2ILtTMaKICcpMAJy2SI+vQmy5Z6dlZmOZoqmiWR
+	sNI/z0oto=
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
-	h=sender:date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:content-disposition:in-reply-to:user-agent;
-	bh=ikp/6cZ4flr2pOQuofIZlQ597nN59L1WCtEnQP7Pls0=;
-	b=K8iTS0+AlujMZ/t0Wg4E/6SVGWx+XbWAC35P5wNDL9VReZOWZTHSzQNpbREk6IAjhR
-	9YbSoXvlmEQY4EmynYGYaO7vMNMnXaECANSCObZAFPn/akRb0k/V7T7Kox4bs9OTbvI0
-	assik7gEwO5OW/8ySHWIJarF02PlWJLKSsxOmuDMkQPsRQLMRc3/5QAZobasX/hYztvK
-	Yci3vqr2lvTXUtgkmrU6KsJEfZKALB9A/M6MKOfpZQDZoHitbPTHq/v75L1Vo/huX9Iu
-	WVA7vNfzsOxW5Yvq1SnAN7+Ez3xCQzOQ1I5BSLOlGGOpFpcjq3MANGIGerJtkckamFXi
-	oplQ==
-Content-Disposition: inline
-In-Reply-To: <20151202170239.GA21009-7LNsyQBKDXoIagZqoN9o3w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Geliang Tang <geliangtang-9Onoh4P/yGk@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Dec 02, 2015 at 11:02:39AM -0600, Serge E. Hallyn wrote:
-> On Wed, Dec 02, 2015 at 11:58:39AM -0500, Tejun Heo wrote:
-> > On Wed, Dec 02, 2015 at 10:56:37AM -0600, Serge E. Hallyn wrote:
-> > > Can it be flushed when we know that the cgroup is being pinned by
-> > > a css_set?  (There's either a task or a cgroup_namespace pinning it
-> > > or we wouldn't get here)
-> > 
-> > Yeap, it can be flushed.  There's no ref coming out of cgroup to the
-> > vfs objects.
-> 
-> Ok, thanks.  Still seems to me to be more work to actually walk the
-> path ourselves, but I'll go that route and see what it looks like :)
+To make the intention clearer, use list_{first,next}_entry instead
+of list_entry.
 
-I just dislike having two separate paths instantiating the same
-objects and would prefer doing it the same way userland would do if
-that isn't too complex but yeah it might turn out to be a lot more
-work.
+Signed-off-by: Geliang Tang <geliangtang-9Onoh4P/yGk@public.gmane.org>
+---
+ mm/memcontrol.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-Thanks a lot!
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 79a29d5..a6301ea 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5395,16 +5395,12 @@ static void uncharge_list(struct list_head *page_list)
+ 	unsigned long nr_file = 0;
+ 	unsigned long nr_huge = 0;
+ 	unsigned long pgpgout = 0;
+-	struct list_head *next;
+ 	struct page *page;
+ 
+-	next = page_list->next;
++	page = list_first_entry(page_list, struct page, lru);
+ 	do {
+ 		unsigned int nr_pages = 1;
+ 
+-		page = list_entry(next, struct page, lru);
+-		next = page->lru.next;
+-
+ 		VM_BUG_ON_PAGE(PageLRU(page), page);
+ 		VM_BUG_ON_PAGE(page_count(page), page);
+ 
+@@ -5440,7 +5436,8 @@ static void uncharge_list(struct list_head *page_list)
+ 		page->mem_cgroup = NULL;
+ 
+ 		pgpgout++;
+-	} while (next != page_list);
++	} while (!list_is_last(&page->lru, page_list) &&
++		 (page = list_next_entry(page, lru)));
+ 
+ 	if (memcg)
+ 		uncharge_batch(memcg, pgpgout, nr_anon, nr_file,
 -- 
-tejun
+2.5.0
+
