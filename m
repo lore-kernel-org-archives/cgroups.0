@@ -1,77 +1,85 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Geliang Tang <geliangtang@163.com>
 Subject: Re: [PATCH] mm/memcontrol.c: use list_{first,next}_entry
-Date: Fri, 4 Dec 2015 09:46:13 +0100
-Message-ID: <20151204084613.GA10021@dhcp22.suse.cz>
+Date: Sat, 5 Dec 2015 10:55:42 +0800
+Message-ID: <20151205025542.GB9812@bogon>
 References: <9e62e3006561653fcbf0c49cf0b9c2b653a8ed0e.1449152124.git.geliangtang@163.com>
  <20151203162718.GK9264@dhcp22.suse.cz>
- <20151203192750.GA19242@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Date:From:Subject:Message-ID:MIME-Version; bh=CFjAF
+	8huRyGcoxQGmNmsLjQtsRUrPMkBttkrW+aEvY0=; b=IkS66AxOOWGH5uW6L+26L
+	Ucugg1ULihJ+sDrhUj1yVCO8+TQVcPHG0bslMD+WMnt0O9WBzCW1tvOALsFNtQM3
+	yKjyRj+1y9+SI/jXaB2PGWVSsfUX1L1+tBkctMNssnnXYAALnTBDezFDYH0qdaD1
+	aJ/ybE1PqY1/gAm8jK7nTg=
 Content-Disposition: inline
-In-Reply-To: <20151203192750.GA19242-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20151203162718.GK9264@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Geliang Tang <geliangtang-9Onoh4P/yGk@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Geliang Tang <geliangtang@163.com>
 
-On Thu 03-12-15 14:27:50, Johannes Weiner wrote:
-> On Thu, Dec 03, 2015 at 05:27:18PM +0100, Michal Hocko wrote:
-> > On Thu 03-12-15 22:16:55, Geliang Tang wrote:
-> > > To make the intention clearer, use list_{first,next}_entry instead
-> > > of list_entry.
+On Thu, Dec 03, 2015 at 05:27:18PM +0100, Michal Hocko wrote:
+> On Thu 03-12-15 22:16:55, Geliang Tang wrote:
+> > To make the intention clearer, use list_{first,next}_entry instead
+> > of list_entry.
+> 
+> Does this really help readability? This function simply uncharges the
+> given list of pages. Why cannot we simply use list_for_each_entry
+> instead...
+
+I have tested it, list_for_each_entry can't work. Dose it mean that my
+patch is OK? Or please give me some other advices.
+
+Thanks.
+
+- Geliang
+
+> > Signed-off-by: Geliang Tang <geliangtang@163.com>
+> > ---
+> >  mm/memcontrol.c | 9 +++------
+> >  1 file changed, 3 insertions(+), 6 deletions(-)
 > > 
-> > Does this really help readability? This function simply uncharges the
-> > given list of pages. Why cannot we simply use list_for_each_entry
-> > instead...
-> 
-> You asked the same thing when reviewing the patch for the first
-> time. :-) I think it's time to add a comment.
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index 79a29d5..a6301ea 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -5395,16 +5395,12 @@ static void uncharge_list(struct list_head *page_list)
+> >  	unsigned long nr_file = 0;
+> >  	unsigned long nr_huge = 0;
+> >  	unsigned long pgpgout = 0;
+> > -	struct list_head *next;
+> >  	struct page *page;
+> >  
+> > -	next = page_list->next;
+> > +	page = list_first_entry(page_list, struct page, lru);
+> >  	do {
+> >  		unsigned int nr_pages = 1;
+> >  
+> > -		page = list_entry(next, struct page, lru);
+> > -		next = page->lru.next;
+> > -
+> >  		VM_BUG_ON_PAGE(PageLRU(page), page);
+> >  		VM_BUG_ON_PAGE(page_count(page), page);
+> >  
+> > @@ -5440,7 +5436,8 @@ static void uncharge_list(struct list_head *page_list)
+> >  		page->mem_cgroup = NULL;
+> >  
+> >  		pgpgout++;
+> > -	} while (next != page_list);
+> > +	} while (!list_is_last(&page->lru, page_list) &&
+> > +		 (page = list_next_entry(page, lru)));
+> >  
+> >  	if (memcg)
+> >  		uncharge_batch(memcg, pgpgout, nr_anon, nr_file,
+> > -- 
+> > 2.5.0
+> > 
 
-Ohh, I completely forgot about mem_cgroup_uncharge doing
-uncharge_list(&page->lru)
-
-> >From e8ba3f31bb43ed4091b997b6ee8857dc8bbcd349 Mon Sep 17 00:00:00 2001
-> From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Date: Thu, 3 Dec 2015 14:21:45 -0500
-> Subject: [PATCH] mm: memcontrol: clarify the uncharge_list() loop
-> 
-> uncharge_list() does an unusual list walk because the function can
-> take regular lists with dedicated list_heads as well as singleton
-> lists where a single page is passed via its page->lru list node.
-> 
-> This can sometimes lead to confusion, as well as suggestions to
-> replace the loop with a list_for_each_entry(), which wouldn't work.
-
-Yes, this is helpful.
- 
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-
-> ---
->  mm/memcontrol.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 9acfb16..f7ee1c0 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5422,6 +5422,10 @@ static void uncharge_list(struct list_head *page_list)
->  	struct list_head *next;
->  	struct page *page;
->  
-> +	/*
-> +	 * Note that the list can be a single page->lru; hence the
-> +	 * do-while loop instead of a simple list_for_each_entry().
-> +	 */
->  	next = page_list->next;
->  	do {
->  		unsigned int nr_pages = 1;
-> -- 
-> 2.6.3
-
--- 
-Michal Hocko
-SUSE Labs
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
