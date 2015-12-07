@@ -1,40 +1,84 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH] mm/memcontrol.c: use list_{first,next}_entry
-Date: Sat, 5 Dec 2015 11:22:58 -0500
-Message-ID: <20151205162258.GA1792@cmpxchg.org>
-References: <9e62e3006561653fcbf0c49cf0b9c2b653a8ed0e.1449152124.git.geliangtang@163.com>
- <20151203162718.GK9264@dhcp22.suse.cz>
- <20151205025542.GB9812@bogon>
+From: Ankur Khurana <ankur.kkhurana-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Thread page cache getting accounted in the process cgroup instead of
+ cgroup assigned to the thread.
+Date: Mon, 7 Dec 2015 16:06:18 +0530
+Message-ID: <CAKpF0T6+N1TimuKePhXKN4Z+Zmz=NKuOURP3bi0GPC7EZMJurg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20151205025542.GB9812@bogon>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=mime-version:date:message-id:subject:from:to:content-type;
+        bh=Po8P+DiLrWzJfwpu5pwMN8UPb84WDkAn+xn/PfHQlbs=;
+        b=dnyn5Lua6W+aiQ0PSLWfR++MO6hTwQH+o81AR9WNVq3eUgGm0BMc9IxsXw/4a7J9i9
+         zRKkCayp+7OzYF6VkMMyEjy3i2e4IjK9hiCUYrcM5lhc2YaoTiCeKtLFCDHwyhhBa/Ni
+         7lViXXk9WZpY8lv5Dyj7Tsxlu1phmP+LihRD43uHPCVlYDnH95R/AiRdDHuJz9TXCgNo
+         TzXlgMaxfDocmEBP7Ib2DurT1OTadYPHy8eZiZj2TVXF28IHzBAbnZhD3tMi6c8Wt+7W
+         S7r+RtdKiUUBVuHmeYdzqaOQuvw+qGvCTYZK1arqTy3MgDUudjxpZE1mFC1bHl3/ikVW
+         ubqQ==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Geliang Tang <geliangtang@163.com>
-Cc: Michal Hocko <mhocko@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sat, Dec 05, 2015 at 10:55:42AM +0800, Geliang Tang wrote:
-> On Thu, Dec 03, 2015 at 05:27:18PM +0100, Michal Hocko wrote:
-> > On Thu 03-12-15 22:16:55, Geliang Tang wrote:
-> > > To make the intention clearer, use list_{first,next}_entry instead
-> > > of list_entry.
-> > 
-> > Does this really help readability? This function simply uncharges the
-> > given list of pages. Why cannot we simply use list_for_each_entry
-> > instead...
-> 
-> I have tested it, list_for_each_entry can't work. Dose it mean that my
-> patch is OK? Or please give me some other advices.
+Hi,
 
-Your patch is okay. Please feel free to add my
+Recently, I got to know about the control groups on linux and found it
+interesting and started experimenting with it. I tried cgroups for
+various subsystems and it worked as I would expect it to work. Feeling
+empowered with the use of control groups, I went one step further and
+tried to get resource isolation on thread level. I used java as a
+choice of programming language and tried to do resource allocation to
+different threads. It worked really fine for cpu and blkio but results
+for memory were somewhat interesting.
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+To test memory subsystem and as I also wanted to test the impact of
+subsystem on page cache, What I did was to start the program in a
+control group names Parent_cgroup in memory subsystem. After that, I
+launched two threads and assigned Child_cgroup_1 and Child_cgroup_2 to
+thread 1 and thread 2 respectively where Child_cgroup_1 and
+Child_cgroup_2 are children of parent_cgroup.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+
+Hierarchy looks something like this :
+
+                          root
+                          /
+                  Parent_cgroup
+                  /                    \
+  Child_cgroup_1         Child_cgroup_2
+
+
+thread 1 belongs to Child_cgroup_1
+thread 2 belongs to Child_cgroup_2
+the test was started in Parent_cgroup.
+
+
+Now, the thread 1 and thread 2 starts reading different file from
+disk. e.g. thread1 is reading file1 and thread 2 is reading file 2 .
+Both the files are 100mb files and are being read in a loop i.e. if
+the file ends, the thread start reading the file from the start. After
+sometime , when the file has been read multiple times, if I look at
+the memory usage in the control groups, it looks like following
+
+
+Parent_cgroup : 220MB (rounded)
+
+Child_cgroup_1 : 1MB (rounded)
+
+Child_cgroup_2: 1MB (rounded)
+
+
+I cleared the disk cache before starting the experiment (using the
+command echo 3 > /proc/sys/vm/drop_caches).
+
+My question was : Why is the page cache usage not getting accounted
+against Child_cgroup_1 or Child_cgroup_2 ? Is this expected and if
+not, is it something I might be doing wrong when configuring cgroups.
+
+
+My guess is it has something to with the way java provides the
+resource access to its threads but I am not sure.
+
+Regards.
+AK
