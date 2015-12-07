@@ -1,84 +1,36 @@
-From: Ankur Khurana <ankur.kkhurana-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Thread page cache getting accounted in the process cgroup instead of
- cgroup assigned to the thread.
-Date: Mon, 7 Dec 2015 16:06:18 +0530
-Message-ID: <CAKpF0T6+N1TimuKePhXKN4Z+Zmz=NKuOURP3bi0GPC7EZMJurg@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] Fix incomplete dd command.
+Date: Mon, 7 Dec 2015 10:29:58 -0500
+Message-ID: <20151207152958.GE9175@mtj.duckdns.org>
+References: <1449023323-14224-1-git-send-email-sunyuan3@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=mime-version:date:message-id:subject:from:to:content-type;
-        bh=Po8P+DiLrWzJfwpu5pwMN8UPb84WDkAn+xn/PfHQlbs=;
-        b=dnyn5Lua6W+aiQ0PSLWfR++MO6hTwQH+o81AR9WNVq3eUgGm0BMc9IxsXw/4a7J9i9
-         zRKkCayp+7OzYF6VkMMyEjy3i2e4IjK9hiCUYrcM5lhc2YaoTiCeKtLFCDHwyhhBa/Ni
-         7lViXXk9WZpY8lv5Dyj7Tsxlu1phmP+LihRD43uHPCVlYDnH95R/AiRdDHuJz9TXCgNo
-         TzXlgMaxfDocmEBP7Ib2DurT1OTadYPHy8eZiZj2TVXF28IHzBAbnZhD3tMi6c8Wt+7W
-         S7r+RtdKiUUBVuHmeYdzqaOQuvw+qGvCTYZK1arqTy3MgDUudjxpZE1mFC1bHl3/ikVW
-         ubqQ==
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=rfUddSoUtqoX/xcbCzecLzELBYZCyhvH+zJ9Ghdlft0=;
+        b=Bi2tm2hkCcGZi7+rErgALgQFYqPzuNNGUn6NihjpCNd2ZlAOlQfW6N16oURoL7O5Fk
+         0qZpUiMVrcWR7ufwX7fr2bLiFIvesQbokNeHDNsbMMfadh2zTNLAW8qUDJ4h9PsbSRCE
+         nFyMrICkKeGjG3WpPUvWxV3jZmJtBc0IhrwMNmz3cWBtj03LKKg7+03aGEX/xn0rpx1M
+         k88m9fHx9dNrshnRE6aDEEGPfIuccwidL2nxHpRFQkjTwc2zFzVuJ3QSfftzN5gbunV3
+         kxSW+PE3xZ0DRAU3c+aZl/fz/JApEdVPWIW1eSFFKfu91JvTppR8oRjj96a7+uxuOrb0
+         skWw==
+Content-Disposition: inline
+In-Reply-To: <1449023323-14224-1-git-send-email-sunyuan3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Yuan Sun <sunyuan3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi,
+On Wed, Dec 02, 2015 at 10:28:43AM +0800, Yuan Sun wrote:
+> Signed-off-by: Yuan Sun <sunyuan3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Recently, I got to know about the control groups on linux and found it
-interesting and started experimenting with it. I tried cgroups for
-various subsystems and it worked as I would expect it to work. Feeling
-empowered with the use of control groups, I went one step further and
-tried to get resource isolation on thread level. I used java as a
-choice of programming language and tried to do resource allocation to
-different threads. It worked really fine for cpu and blkio but results
-for memory were somewhat interesting.
+Applied to cgroup/for-4.5.
 
-To test memory subsystem and as I also wanted to test the impact of
-subsystem on page cache, What I did was to start the program in a
-control group names Parent_cgroup in memory subsystem. After that, I
-launched two threads and assigned Child_cgroup_1 and Child_cgroup_2 to
-thread 1 and thread 2 respectively where Child_cgroup_1 and
-Child_cgroup_2 are children of parent_cgroup.
+Thanks.
 
-
-Hierarchy looks something like this :
-
-                          root
-                          /
-                  Parent_cgroup
-                  /                    \
-  Child_cgroup_1         Child_cgroup_2
-
-
-thread 1 belongs to Child_cgroup_1
-thread 2 belongs to Child_cgroup_2
-the test was started in Parent_cgroup.
-
-
-Now, the thread 1 and thread 2 starts reading different file from
-disk. e.g. thread1 is reading file1 and thread 2 is reading file 2 .
-Both the files are 100mb files and are being read in a loop i.e. if
-the file ends, the thread start reading the file from the start. After
-sometime , when the file has been read multiple times, if I look at
-the memory usage in the control groups, it looks like following
-
-
-Parent_cgroup : 220MB (rounded)
-
-Child_cgroup_1 : 1MB (rounded)
-
-Child_cgroup_2: 1MB (rounded)
-
-
-I cleared the disk cache before starting the experiment (using the
-command echo 3 > /proc/sys/vm/drop_caches).
-
-My question was : Why is the page cache usage not getting accounted
-against Child_cgroup_1 or Child_cgroup_2 ? Is this expected and if
-not, is it something I might be doing wrong when configuring cgroups.
-
-
-My guess is it has something to with the way java provides the
-resource access to its threads but I am not sure.
-
-Regards.
-AK
+-- 
+tejun
