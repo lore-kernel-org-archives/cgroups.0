@@ -1,199 +1,41 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 1/8] cgroup: record ancestor IDs and reimplement cgroup_is_descendant() using it
-Date: Mon,  7 Dec 2015 17:38:48 -0500
-Message-ID: <1449527935-27056-2-git-send-email-tj@kernel.org>
-References: <1449527935-27056-1-git-send-email-tj@kernel.org>
-Return-path: <netfilter-devel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=T+lj0bafI+T01AXdPgjywisg5W/lZGUanMG/wziKXKQ=;
-        b=jn89fHvD8P9/URckW16qHSJXMc0vtGc91IZjehh61Yp7sSzWuEEnlRkKyTrm/X9cOw
-         kJq493Dun93xRJvHPBWdmCX4bMZ87+BcMdPJuQ6NlERWnc+cTb6tRp8o9efylhySVqLn
-         ytqfxZHQmzIY3zvCLgTPSsQ/TlODYCfi6RV5p2OGtH8oAhPuSt7Ch4iRR7lWbBMCp+0Q
-         PUNzb+vfsr916s4P2T8E8iMxbhwiBtXgPMtWLzmM1WvYl92DDvOfagzG6O127jBK8xyG
-         5qGFbnUQshAnPz9BLmlQd4hqmifcXM0SEy8h0JMTfLhUVQ89LgMgd8n23mp0zVa47qNO
-         ajVg==
-In-Reply-To: <1449527935-27056-1-git-send-email-tj@kernel.org>
-Sender: netfilter-devel-owner@vger.kernel.org
+From: serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org
+Subject: [PATCH 2/7] sched: new clone flag CLONE_NEWCGROUP for cgroup namespace
+Date: Mon,  7 Dec 2015 17:06:17 -0600
+Message-ID: <1449529582-4075-3-git-send-email-serge.hallyn@ubuntu.com>
+References: <1449529582-4075-1-git-send-email-serge.hallyn@ubuntu.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1449529582-4075-1-git-send-email-serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: davem@davemloft.net, pablo@netfilter.org, kaber@trash.net, kadlec@blackhole.kfki.hu, daniel@iogearbox.net, daniel.wagner@bmw-carit.de, nhorman@tuxdriver.com
-Cc: lizefan@huawei.com, hannes@cmpxchg.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, coreteam@netfilter.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, ninasc@fb.com, Tejun Heo <tj@kernel.org>
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
 
-cgroup_is_descendant() currently walks up the hierarchy and compares
-each ancestor to the cgroup in question.  While enough for cgroup core
-usages, this can't be used in hot paths to test cgroup membership.
-This patch adds cgroup->ancestor_ids[] which records the IDs of all
-ancestors including self and cgroup->level for the nesting level.
+From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-This allows testing whether a given cgroup is a descendant of another
-in three finite steps - testing whether the two belong to the same
-hierarchy, whether the descendant candidate is at the same or a higher
-level than the ancestor and comparing the recorded ancestor_id at the
-matching level.  cgroup_is_descendant() is accordingly reimplmented
-and made inline.
+CLONE_NEWCGROUP will be used to create new cgroup namespace.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Acked-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 ---
- include/linux/cgroup-defs.h | 14 ++++++++++++++
- include/linux/cgroup.h      | 18 +++++++++++++++++-
- kernel/cgroup.c             | 32 ++++++++++----------------------
- 3 files changed, 41 insertions(+), 23 deletions(-)
+ include/uapi/linux/sched.h |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 60d44b2..504d859 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -235,6 +235,14 @@ struct cgroup {
- 	int id;
- 
- 	/*
-+	 * The depth this cgroup is at.  The root is at depth zero and each
-+	 * step down the hierarchy increments the level.  This along with
-+	 * ancestor_ids[] can determine whether a given cgroup is a
-+	 * descendant of another without traversing the hierarchy.
-+	 */
-+	int level;
-+
-+	/*
- 	 * Each non-empty css_set associated with this cgroup contributes
- 	 * one to populated_cnt.  All children with non-zero popuplated_cnt
- 	 * of their own contribute one.  The count is zero iff there's no
-@@ -289,6 +297,9 @@ struct cgroup {
- 
- 	/* used to schedule release agent */
- 	struct work_struct release_agent_work;
-+
-+	/* ids of the ancestors at each level including self */
-+	int ancestor_ids[];
- };
- 
- /*
-@@ -308,6 +319,9 @@ struct cgroup_root {
- 	/* The root cgroup.  Root is destroyed on its release. */
- 	struct cgroup cgrp;
- 
-+	/* for cgrp->ancestor_ids[0] */
-+	int cgrp_ancestor_id_storage;
-+
- 	/* Number of cgroups in the hierarchy, used only for /proc/cgroups */
- 	atomic_t nr_cgrps;
- 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 22e3754..b5ee2c4 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -81,7 +81,6 @@ struct cgroup_subsys_state *cgroup_get_e_css(struct cgroup *cgroup,
- struct cgroup_subsys_state *css_tryget_online_from_dir(struct dentry *dentry,
- 						       struct cgroup_subsys *ss);
- 
--bool cgroup_is_descendant(struct cgroup *cgrp, struct cgroup *ancestor);
- int cgroup_attach_task_all(struct task_struct *from, struct task_struct *);
- int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from);
- 
-@@ -459,6 +458,23 @@ static inline struct cgroup *task_cgroup(struct task_struct *task,
- 	return task_css(task, subsys_id)->cgroup;
- }
- 
-+/**
-+ * cgroup_is_descendant - test ancestry
-+ * @cgrp: the cgroup to be tested
-+ * @ancestor: possible ancestor of @cgrp
-+ *
-+ * Test whether @cgrp is a descendant of @ancestor.  It also returns %true
-+ * if @cgrp == @ancestor.  This function is safe to call as long as @cgrp
-+ * and @ancestor are accessible.
-+ */
-+static inline bool cgroup_is_descendant(struct cgroup *cgrp,
-+					struct cgroup *ancestor)
-+{
-+	if (cgrp->root != ancestor->root || cgrp->level < ancestor->level)
-+		return false;
-+	return cgrp->ancestor_ids[ancestor->level] == ancestor->id;
-+}
-+
- /* no synchronization, the result can only be used as a hint */
- static inline bool cgroup_is_populated(struct cgroup *cgrp)
- {
-diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index f1603c1..3190040 100644
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -459,25 +459,6 @@ struct cgroup_subsys_state *of_css(struct kernfs_open_file *of)
- }
- EXPORT_SYMBOL_GPL(of_css);
- 
--/**
-- * cgroup_is_descendant - test ancestry
-- * @cgrp: the cgroup to be tested
-- * @ancestor: possible ancestor of @cgrp
-- *
-- * Test whether @cgrp is a descendant of @ancestor.  It also returns %true
-- * if @cgrp == @ancestor.  This function is safe to call as long as @cgrp
-- * and @ancestor are accessible.
-- */
--bool cgroup_is_descendant(struct cgroup *cgrp, struct cgroup *ancestor)
--{
--	while (cgrp) {
--		if (cgrp == ancestor)
--			return true;
--		cgrp = cgroup_parent(cgrp);
--	}
--	return false;
--}
--
- static int notify_on_release(const struct cgroup *cgrp)
- {
- 	return test_bit(CGRP_NOTIFY_ON_RELEASE, &cgrp->flags);
-@@ -1903,6 +1884,7 @@ static int cgroup_setup_root(struct cgroup_root *root, unsigned long ss_mask)
- 	if (ret < 0)
- 		goto out;
- 	root_cgrp->id = ret;
-+	root_cgrp->ancestor_ids[0] = ret;
- 
- 	ret = percpu_ref_init(&root_cgrp->self.refcnt, css_release, 0,
- 			      GFP_KERNEL);
-@@ -4846,11 +4828,11 @@ static int create_css(struct cgroup *cgrp, struct cgroup_subsys *ss,
- static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
- 			umode_t mode)
- {
--	struct cgroup *parent, *cgrp;
-+	struct cgroup *parent, *cgrp, *tcgrp;
- 	struct cgroup_root *root;
- 	struct cgroup_subsys *ss;
- 	struct kernfs_node *kn;
--	int ssid, ret;
-+	int level, ssid, ret;
- 
- 	/* Do not accept '\n' to prevent making /proc/<pid>/cgroup unparsable.
- 	 */
-@@ -4861,9 +4843,11 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
- 	if (!parent)
- 		return -ENODEV;
- 	root = parent->root;
-+	level = parent->level + 1;
- 
- 	/* allocate the cgroup and its ID, 0 is reserved for the root */
--	cgrp = kzalloc(sizeof(*cgrp), GFP_KERNEL);
-+	cgrp = kzalloc(sizeof(*cgrp) +
-+		       sizeof(cgrp->ancestor_ids[0]) * (level + 1), GFP_KERNEL);
- 	if (!cgrp) {
- 		ret = -ENOMEM;
- 		goto out_unlock;
-@@ -4887,6 +4871,10 @@ static int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name,
- 
- 	cgrp->self.parent = &parent->self;
- 	cgrp->root = root;
-+	cgrp->level = level;
-+
-+	for (tcgrp = cgrp; tcgrp; tcgrp = cgroup_parent(tcgrp))
-+		cgrp->ancestor_ids[tcgrp->level] = tcgrp->id;
- 
- 	if (notify_on_release(parent))
- 		set_bit(CGRP_NOTIFY_ON_RELEASE, &cgrp->flags);
+diff --git a/include/uapi/linux/sched.h b/include/uapi/linux/sched.h
+index cc89dde..5f0fe01 100644
+--- a/include/uapi/linux/sched.h
++++ b/include/uapi/linux/sched.h
+@@ -21,8 +21,7 @@
+ #define CLONE_DETACHED		0x00400000	/* Unused, ignored */
+ #define CLONE_UNTRACED		0x00800000	/* set if the tracing process can't force CLONE_PTRACE on this clone */
+ #define CLONE_CHILD_SETTID	0x01000000	/* set the TID in the child */
+-/* 0x02000000 was previously the unused CLONE_STOPPED (Start in stopped state)
+-   and is now available for re-use. */
++#define CLONE_NEWCGROUP		0x02000000	/* New cgroup namespace */
+ #define CLONE_NEWUTS		0x04000000	/* New utsname namespace */
+ #define CLONE_NEWIPC		0x08000000	/* New ipc namespace */
+ #define CLONE_NEWUSER		0x10000000	/* New user namespace */
 -- 
-2.5.0
-
+1.7.9.5
