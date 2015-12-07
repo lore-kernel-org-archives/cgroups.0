@@ -1,82 +1,43 @@
-From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 7/8] cgroup: mount cgroupns-root when inside non-init
-	cgroupns
-Date: Mon, 7 Dec 2015 15:53:01 +0000
-Message-ID: <20151207155301.GD10746@ubuntumail>
-References: <20151201040704.GA31067@mail.hallyn.com>
-	<20151201164649.GD12922@mtj.duckdns.org>
-	<20151201215853.GA9153@mail.hallyn.com>
-	<20151202165312.GB19878@mtj.duckdns.org>
-	<20151202165637.GA20840@mail.hallyn.com>
-	<20151202165839.GD19878@mtj.duckdns.org>
-	<20151202170239.GA21009@mail.hallyn.com>
-	<20151202170551.GE19878@mtj.duckdns.org>
-	<20151203224706.GA19971@mail.hallyn.com>
-	<20151207153911.GF9175@mtj.duckdns.org>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH] mm/memcontrol.c: use list_{first,next}_entry
+Date: Mon, 7 Dec 2015 17:21:03 +0100
+Message-ID: <20151207162102.GC20774@dhcp22.suse.cz>
+References: <9e62e3006561653fcbf0c49cf0b9c2b653a8ed0e.1449152124.git.geliangtang@163.com>
+ <20151203162718.GK9264@dhcp22.suse.cz>
+ <20151205025542.GB9812@bogon>
 Mime-Version: 1.0
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20151205025542.GB9812@bogon>
+Sender: owner-linux-mm@kvack.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20151207153911.GF9175-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+To: Geliang Tang <geliangtang@163.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-Quoting Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org):
-> Hello, Serge.
+On Sat 05-12-15 10:55:42, Geliang Tang wrote:
+> On Thu, Dec 03, 2015 at 05:27:18PM +0100, Michal Hocko wrote:
+> > On Thu 03-12-15 22:16:55, Geliang Tang wrote:
+> > > To make the intention clearer, use list_{first,next}_entry instead
+> > > of list_entry.
+> > 
+> > Does this really help readability? This function simply uncharges the
+> > given list of pages. Why cannot we simply use list_for_each_entry
+> > instead...
 > 
-> On Thu, Dec 03, 2015 at 04:47:06PM -0600, Serge E. Hallyn wrote:
-> ...
-> > +	dentry = dget(sb->s_root);
-> > +	if (!kn->parent) // this is the root
-> > +		return dentry;
-> > +
-> > +	knparent = find_kn_ancestor_below(kn, NULL);
-> > +	BUG_ON(!knparent);
-> 
-> Doing WARN_ON() and returning failure is better, I think.  Failing ns
-> mount is an okay failure mode and a lot better than crashing the
-> system.
+> I have tested it, list_for_each_entry can't work. Dose it mean that my
+> patch is OK? Or please give me some other advices.
 
-Ok - this shouldn't be user-triggerable, so if it happens it really
-is a bug in our code, but I'll change it,
+I dunno. Your change is technically correct of course. I find the exit
+condition easier to read without your patch though.
 
-> Also, how about find_next_ancestor() for the name of the
-> function?
+-- 
+Michal Hocko
+SUSE Labs
 
-Yeah it's static anyway :)
-
-will change, squash, and resend the set.
-
-> > +	do {
-> > +		struct dentry *dtmp;
-> > +		struct kernfs_node *kntmp;
-> > +
-> > +		if (kn == knparent)
-> > +			return dentry;
-> > +		kntmp = find_kn_ancestor_below(kn, knparent);
-> > +		BUG_ON(!kntmp);
-> > +		dtmp = lookup_one_len(kntmp->name, dentry, strlen(kntmp->name));
-> > +		dput(dentry);
-> > +		if (IS_ERR(dtmp))
-> > +			return dtmp;
-> > +		knparent = kntmp;
-> > +		dentry = dtmp;
-> > +	} while (1);
-> 
-> Other than the nitpicks, looks good to me.
-> 
-> Thanks.
-> 
-> -- 
-> tejun
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
