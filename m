@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH 5/8] mm: memcontrol: separate kmem code from legacy tcp accounting code
-Date: Tue,  8 Dec 2015 13:34:22 -0500
-Message-ID: <1449599665-18047-6-git-send-email-hannes@cmpxchg.org>
+Subject: [PATCH 7/8] mm: memcontrol: account "kmem" consumers in cgroup2 memory controller
+Date: Tue,  8 Dec 2015 13:34:24 -0500
+Message-ID: <1449599665-18047-8-git-send-email-hannes@cmpxchg.org>
 References: <1449599665-18047-1-git-send-email-hannes@cmpxchg.org>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1449599665-18047-1-git-send-email-hannes@cmpxchg.org>
@@ -13,99 +13,102 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@virtuozzo.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-The cgroup2 memory controller will include important in-kernel memory
-consumers per default, including socket memory, but it will no longer
-carry the historic tcp control interface.
+The original cgroup memory controller has an extension to account slab
+memory (and other "kernel memory" consumers) in a separate "kmem"
+counter, once the user set an explicit limit on that "kmem" pool.
 
-Separate the kmem state init from the tcp control interface init in
-preparation for that.
+However, this includes various consumers whose sizes are directly
+linked to userspace activity. Accounting them as an optional "kmem"
+extension is problematic for several reasons:
+
+1. It leaves the main memory interface with incomplete semantics. A
+   user who puts their workload into a cgroup and configures a memory
+   limit does not expect us to leave holes in the containment as big
+   as the dentry and inode cache, or the kernel stack pages.
+
+2. If the limit set on this random historical subgroup of consumers is
+   reached, subsequent allocations will fail even when the main memory
+   pool available to the cgroup is not yet exhausted and/or has
+   reclaimable memory in it.
+
+3. Calling it 'kernel memory' is misleading. The dentry and inode
+   caches are no more 'kernel' (or no less 'user') memory than the
+   page cache itself. Treating these consumers as different classes is
+   a historical implementation detail that should not leak to users.
+
+So, in addition to page cache, anonymous memory, and network socket
+memory, account the following memory consumers per default in the
+cgroup2 memory controller:
+
+     - threadinfo
+     - task_struct
+     - task_delay_info
+     - pid
+     - cred
+     - mm_struct
+     - vm_area_struct and vm_region (nommu)
+     - anon_vma and anon_vma_chain
+     - signal_struct
+     - sighand_struct
+     - fs_struct
+     - files_struct
+     - fdtable and fdtable->full_fds_bits
+     - dentry and external_name
+     - inode for all filesystems.
+
+This should give us reasonable memory isolation for most common
+workloads out of the box.
 
 Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 ---
- mm/memcontrol.c | 33 ++++++++++++---------------------
- 1 file changed, 12 insertions(+), 21 deletions(-)
+ mm/memcontrol.c | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 5118618..55a3f07 100644
+index ab72c47..d048137 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2925,17 +2925,6 @@ static int memcg_propagate_kmem(struct mem_cgroup *memcg)
- 	return ret;
- }
+@@ -2356,13 +2356,14 @@ int __memcg_kmem_charge_memcg(struct page *page, gfp_t gfp, int order,
+ 	if (!memcg_kmem_online(memcg))
+ 		return 0;
  
--static int memcg_init_kmem(struct mem_cgroup *memcg)
--{
--	int ret;
+-	if (!page_counter_try_charge(&memcg->kmem, nr_pages, &counter))
+-		return -ENOMEM;
 -
--	ret = memcg_propagate_kmem(memcg);
--	if (ret)
--		return ret;
--
--	return tcp_init_cgroup(memcg);
--}
--
- static void memcg_offline_kmem(struct mem_cgroup *memcg)
- {
- 	struct cgroup_subsys_state *css;
-@@ -2988,7 +2977,6 @@ static void memcg_free_kmem(struct mem_cgroup *memcg)
- 		static_branch_dec(&memcg_kmem_enabled_key);
- 		WARN_ON(page_counter_read(&memcg->kmem));
- 	}
--	tcp_destroy_cgroup(memcg);
- }
- #else
- static int memcg_update_kmem_limit(struct mem_cgroup *memcg,
-@@ -2996,16 +2984,9 @@ static int memcg_update_kmem_limit(struct mem_cgroup *memcg,
- {
- 	return -EINVAL;
- }
--static int memcg_init_kmem(struct mem_cgroup *memcg)
--{
--	return 0;
--}
- static void memcg_offline_kmem(struct mem_cgroup *memcg)
- {
- }
--static void memcg_free_kmem(struct mem_cgroup *memcg)
--{
--}
- #endif /* CONFIG_MEMCG_KMEM */
- 
- /*
-@@ -4241,9 +4222,14 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
- 	}
- 	mutex_unlock(&memcg_create_mutex);
- 
--	ret = memcg_init_kmem(memcg);
-+#ifdef CONFIG_MEMCG_KMEM
-+	ret = memcg_propagate_kmem(memcg);
- 	if (ret)
- 		return ret;
-+	ret = tcp_init_cgroup(memcg);
+ 	ret = try_charge(memcg, gfp, nr_pages);
+-	if (ret) {
+-		page_counter_uncharge(&memcg->kmem, nr_pages);
 +	if (ret)
-+		return ret;
-+#endif
- 
- #ifdef CONFIG_INET
- 	if (cgroup_subsys_on_dfl(memory_cgrp_subsys) && !cgroup_memory_nosocket)
-@@ -4288,11 +4274,16 @@ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
- 
--	memcg_free_kmem(memcg);
- #ifdef CONFIG_INET
- 	if (cgroup_subsys_on_dfl(memory_cgrp_subsys) && !cgroup_memory_nosocket)
- 		static_branch_dec(&memcg_sockets_enabled_key);
- #endif
+ 		return ret;
 +
-+#ifdef CONFIG_MEMCG_KMEM
-+	memcg_free_kmem(memcg);
-+	tcp_destroy_cgroup(memcg);
-+#endif
-+
- 	__mem_cgroup_free(memcg);
- }
++	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) &&
++	    !page_counter_try_charge(&memcg->kmem, nr_pages, &counter)) {
++		cancel_charge(memcg, nr_pages);
++		return -ENOMEM;
+ 	}
  
+ 	page->mem_cgroup = memcg;
+@@ -2391,7 +2392,9 @@ void __memcg_kmem_uncharge(struct page *page, int order)
+ 
+ 	VM_BUG_ON_PAGE(mem_cgroup_is_root(memcg), page);
+ 
+-	page_counter_uncharge(&memcg->kmem, nr_pages);
++	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
++		page_counter_uncharge(&memcg->kmem, nr_pages);
++
+ 	page_counter_uncharge(&memcg->memory, nr_pages);
+ 	if (do_memsw_account())
+ 		page_counter_uncharge(&memcg->memsw, nr_pages);
+@@ -2895,7 +2898,8 @@ static int memcg_propagate_kmem(struct mem_cgroup *memcg)
+ 	 * onlined after this point, because it has at least one child
+ 	 * already.
+ 	 */
+-	if (memcg_kmem_online(parent))
++	if (cgroup_subsys_on_dfl(memory_cgrp_subsys) ||
++	    memcg_kmem_online(parent))
+ 		ret = memcg_online_kmem(memcg);
+ 	mutex_unlock(&memcg_limit_mutex);
+ 	return ret;
 -- 
 2.6.3
 
