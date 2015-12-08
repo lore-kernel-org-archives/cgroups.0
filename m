@@ -1,176 +1,167 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH 8/8] mm: memcontrol: introduce CONFIG_MEMCG_LEGACY_KMEM
-Date: Tue,  8 Dec 2015 13:34:25 -0500
-Message-ID: <1449599665-18047-9-git-send-email-hannes@cmpxchg.org>
-References: <1449599665-18047-1-git-send-email-hannes@cmpxchg.org>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1449599665-18047-1-git-send-email-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+From: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/7] kernfs: Add API to generate relative kernfs path
+Date: Tue, 8 Dec 2015 12:45:02 -0600
+Message-ID: <20151208184502.GA14814@mail.hallyn.com>
+References: <1449529582-4075-1-git-send-email-serge.hallyn@ubuntu.com>
+ <1449529582-4075-2-git-send-email-serge.hallyn@ubuntu.com>
+ <20151208155251.GA30240@mtj.duckdns.org>
+Mime-Version: 1.0
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20151208155251.GA30240-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@virtuozzo.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 
-Let the user know that CONFIG_MEMCG_KMEM does not apply to the cgroup2
-interface. This also makes legacy-only code sections stand out better.
+On Tue, Dec 08, 2015 at 10:52:51AM -0500, Tejun Heo wrote:
+> Hello, Serge.
+> 
+> On Mon, Dec 07, 2015 at 05:06:16PM -0600, serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org wrote:
+> > +/* kernfs_node_depth - compute depth from @from to @to */
+> > +static size_t kernfs_node_distance(struct kernfs_node *from, struct kernfs_node *to)
+> >  {
+> > +	size_t depth = 0;
+> >  
+> > +	BUG_ON(!to);
+> > +	BUG_ON(!from);
+> 
+> Do these BUG_ON()s achieve anything?
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- include/linux/memcontrol.h |  4 ++--
- init/Kconfig               | 10 +++++++++-
- mm/memcontrol.c            | 16 ++++++++--------
- net/ipv4/Makefile          |  2 +-
- 4 files changed, 20 insertions(+), 12 deletions(-)
+Just try to catch caller errors early on, but I'll drop these.
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 80f38da..c6a5ed2 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -233,7 +233,7 @@ struct mem_cgroup {
- 	 */
- 	struct mem_cgroup_stat_cpu __percpu *stat;
- 
--#if defined(CONFIG_MEMCG_KMEM) && defined(CONFIG_INET)
-+#if defined(CONFIG_MEMCG_LEGACY_KMEM) && defined(CONFIG_INET)
- 	struct cg_proto tcp_mem;
- #endif
- 
-@@ -873,7 +873,7 @@ extern struct static_key_false memcg_sockets_enabled_key;
- #define mem_cgroup_sockets_enabled static_branch_unlikely(&memcg_sockets_enabled_key)
- static inline bool mem_cgroup_under_socket_pressure(struct mem_cgroup *memcg)
- {
--#ifdef CONFIG_MEMCG_KMEM
-+#ifdef CONFIG_MEMCG_LEGACY_KMEM
- 	if (memcg->tcp_mem.memory_pressure)
- 		return true;
- #endif
-diff --git a/init/Kconfig b/init/Kconfig
-index f1af42d..e5e4971 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -1040,10 +1040,13 @@ config MEMCG_SWAP_ENABLED
- 	  For those who want to have the feature enabled by default should
- 	  select this option (if, for some reason, they need to disable it
- 	  then swapaccount=0 does the trick).
-+config MEMCG_LEGACY_KMEM
-+       bool
- config MEMCG_KMEM
--	bool "Memory Resource Controller Kernel Memory accounting"
-+	bool "Legacy Memory Resource Controller Kernel Memory accounting"
- 	depends on MEMCG
- 	depends on SLUB || SLAB
-+	select MEMCG_LEGACY_KMEM
- 	help
- 	  The Kernel Memory extension for Memory Resource Controller can limit
- 	  the amount of memory used by kernel objects in the system. Those are
-@@ -1052,6 +1055,11 @@ config MEMCG_KMEM
- 	  the kmem extension can use it to guarantee that no group of processes
- 	  will ever exhaust kernel resources alone.
- 
-+	  This option affects the ORIGINAL cgroup interface. The cgroup2 memory
-+	  controller includes important in-kernel memory consumers per default.
-+
-+	  If you're using cgroup2, say N.
-+
- config CGROUP_HUGETLB
- 	bool "HugeTLB Resource Controller for Control Groups"
- 	depends on HUGETLB_PAGE
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index d048137..c527767 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2959,7 +2959,7 @@ static void memcg_free_kmem(struct mem_cgroup *memcg)
- 	}
- }
- 
--#ifdef CONFIG_MEMCG_KMEM
-+#ifdef CONFIG_MEMCG_LEGACY_KMEM
- static int memcg_update_kmem_limit(struct mem_cgroup *memcg,
- 				   unsigned long limit)
- {
-@@ -2983,7 +2983,7 @@ static int memcg_update_kmem_limit(struct mem_cgroup *memcg,
- {
- 	return -EINVAL;
- }
--#endif /* CONFIG_MEMCG_KMEM */
-+#endif /* CONFIG_MEMCG_LEGACY_KMEM */
- 
- /*
-  * The user of this function is...
-@@ -3995,7 +3995,7 @@ static struct cftype mem_cgroup_legacy_files[] = {
- 		.seq_show = memcg_numa_stat_show,
- 	},
- #endif
--#ifdef CONFIG_MEMCG_KMEM
-+#ifdef CONFIG_MEMCG_LEGACY_KMEM
- 	{
- 		.name = "kmem.limit_in_bytes",
- 		.private = MEMFILE_PRIVATE(_KMEM, RES_LIMIT),
-@@ -4220,7 +4220,7 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
- 	if (ret)
- 		return ret;
- 
--#ifdef CONFIG_MEMCG_KMEM
-+#ifdef CONFIG_MEMCG_LEGACY_KMEM
- 	ret = tcp_init_cgroup(memcg);
- 	if (ret)
- 		return ret;
-@@ -4276,7 +4276,7 @@ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
- 
- 	memcg_free_kmem(memcg);
- 
--#ifdef CONFIG_MEMCG_KMEM
-+#ifdef CONFIG_MEMCG_LEGACY_KMEM
- 	tcp_destroy_cgroup(memcg);
- #endif
- 
-@@ -5495,7 +5495,7 @@ void sock_update_memcg(struct sock *sk)
- 	memcg = mem_cgroup_from_task(current);
- 	if (memcg == root_mem_cgroup)
- 		goto out;
--#ifdef CONFIG_MEMCG_KMEM
-+#ifdef CONFIG_MEMCG_LEGACY_KMEM
- 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && !memcg->tcp_mem.active)
- 		goto out;
- #endif
-@@ -5524,7 +5524,7 @@ bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
- {
- 	gfp_t gfp_mask = GFP_KERNEL;
- 
--#ifdef CONFIG_MEMCG_KMEM
-+#ifdef CONFIG_MEMCG_LEGACY_KMEM
- 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys)) {
- 		struct page_counter *counter;
- 
-@@ -5556,7 +5556,7 @@ bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
-  */
- void mem_cgroup_uncharge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
- {
--#ifdef CONFIG_MEMCG_KMEM
-+#ifdef CONFIG_MEMCG_LEGACY_KMEM
- 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys)) {
- 		page_counter_uncharge(&memcg->tcp_mem.memory_allocated,
- 				      nr_pages);
-diff --git a/net/ipv4/Makefile b/net/ipv4/Makefile
-index c29809f..bee5055 100644
---- a/net/ipv4/Makefile
-+++ b/net/ipv4/Makefile
-@@ -56,7 +56,7 @@ obj-$(CONFIG_TCP_CONG_SCALABLE) += tcp_scalable.o
- obj-$(CONFIG_TCP_CONG_LP) += tcp_lp.o
- obj-$(CONFIG_TCP_CONG_YEAH) += tcp_yeah.o
- obj-$(CONFIG_TCP_CONG_ILLINOIS) += tcp_illinois.o
--obj-$(CONFIG_MEMCG_KMEM) += tcp_memcontrol.o
-+obj-$(CONFIG_MEMCG_LEGACY_KMEM) += tcp_memcontrol.o
- obj-$(CONFIG_NETLABEL) += cipso_ipv4.o
- 
- obj-$(CONFIG_XFRM) += xfrm4_policy.o xfrm4_state.o xfrm4_input.o \
--- 
-2.6.3
+>   Also, would something like
+> kernfs_relative_depth() be a better name for the function?  Maybe even
+> just kernfs_depth()?
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+ok
+
+> ...
+> > +static struct kernfs_node *kernfs_common_ancestor(struct kernfs_node *a,
+> > +		struct kernfs_node *b)
+> > +{
+> > +	size_t da = kernfs_node_distance(kernfs_root(a)->kn, a);
+> > +	size_t db = kernfs_node_distance(kernfs_root(b)->kn, b);
+> > +
+> > +	if (da == 0)
+> > +		return a;
+> > +	if (db == 0)
+> > +		return b;
+> 
+> Hmm... are the above two ifs necessary?  Wouldn't the outcome be the
+> same?
+
+Yeah it would, dropping them.
+
+>   Furthermore, if a and b are on different roots the above may
+> give the wrong answer while not doing the above would return NULL.
+
+Right, thanks for catching that.  I'm adding a check that the
+roots are the same before proceeding.
+
+> > +	while (da > db) {
+> > +		a = a->parent;
+> > +		da--;
+> > +	}
+> > +	while (db > da) {
+> > +		b = b->parent;
+> > +		db--;
+> > +	}
+> > +
+> > +	/* worst case b and a will be the same at root */
+> > +	while (b != a) {
+> > +		b = b->parent;
+> > +		a = a->parent;
+> > +	}
+> > +
+> > +	return a;
+> > +}
+> ...
+> > +static char *
+> > +__must_check kernfs_path_from_node_locked(struct kernfs_node *kn_from,
+> 
+> Maybe
+> 
+> static char * __must_check
+> kernfs_path...
+
+Actually that __must_check seems weird, I'll just drop it.  (ISTM __must_check
+makes sense in a fn that does something where we worry the caller doesn't
+check that it succeeded, not in a fn where we are just querying a value.
+
+> > +					  struct kernfs_node *kn_to, char *buf,
+> > +					  size_t buflen)
+> 
+> Given that @kn_from is optional and is not the target node, maybe put
+> @kn_to before @kn_from?
+
+ok
+
+> > +{
+> > +	char *p = buf;
+> > +	struct kernfs_node *kn, *common;
+> > +	const char parent_str[] = "/..";
+> > +	int i;
+> > +	size_t depth_from, depth_to, len = 0, nlen = 0,
+> > +	       plen = sizeof(parent_str) - 1;
+> 
+> Heh, idk, just put plen on a separate decl?
+> 
+> > +
+> > +	/* We atleast need 2 bytes to write "/\0". */
+> > +	if (buflen < 2)
+> > +		return NULL;
+> > +
+> > +	if (!kn_from)
+> > +		kn_from = kernfs_root(kn_to)->kn;
+> > +
+> > +	if (kn_from == kn_to) {
+> > +		*p = '/';
+> > +		*(++p) = '\0';
+> > +		return buf;
+> > +	}
+> > +
+> > +	common = kernfs_common_ancestor(kn_from, kn_to);
+> > +	if (!common) {
+> > +		WARN_ONCE("%s: kn_from and kn_to on different roots\n",
+> > +			__func__);
+> > +		return NULL;
+> > +	}
+> 
+> Have you compiled it?  WARN_ONCE()'s first argument is condition, so
+> you'd write
+> 
+> 	if (WARN_ONCE(!common, "blah blah"))
+> 		return NULL;
+
+D'oh.  Actually once isn't even right.  I'll just do WARN_ON
+(and try to do it right).
+
+> > +	depth_to = kernfs_node_distance(common, kn_to);
+> > +	depth_from = kernfs_node_distance(common, kn_from);
+> > +
+> > +	for (i = 0; i < depth_from; i++) {
+> > +		if (len + plen + 1 > buflen)
+> > +			return NULL;
+> > +		strcpy(p, parent_str);
+> > +		p += plen;
+> > +		len += plen;
+> > +	}
+> > +
+> > +	/* Calculate how many bytes we need for the rest */
+> > +	for (kn = kn_to; kn != common; kn = kn->parent)
+> > +		nlen += strlen(kn->name) + 1;
+> > +
+> > +	if (len + nlen + 1 > buflen)
+> > +		return NULL;
+> 
+> Hmm... if we do this anyway, maybe we can make the function behave
+> more like other string formatting function (strlcpy) and return the
+> would-be length instead where ret >= len indicates truncation?
+
+I can change that, but the callers right now don't re-try with
+larger buffer anyway, so this would actually complicate them just
+a smidgeon.  Would you want them changed to do that?  (pr_cont_kernfs_path
+right now writes into a static char[] for instance)
