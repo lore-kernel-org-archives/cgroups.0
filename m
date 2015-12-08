@@ -1,45 +1,87 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: cgroup pids controller -- WARN_ON_ONCE triggering
-Date: Tue, 8 Dec 2015 10:24:28 -0500
-Message-ID: <20151208152428.GJ9175@mtj.duckdns.org>
-References: <20151208145851.GJ9837@bark>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=2Lyhf23wj9hhM0HjVZc45L/UG4TDIG2OuAKoS0EhjtM=;
-        b=mHzQPfL65+9KB1wQcnRg8H1FYJBsPq1RKbuobt+dT3Ec/TmZdqlXpGLR3xjxxzmJXh
-         hipEDGBhXmsgRwcaq41K+nTX4rkIlI5eotiISvRL2jw50XFK/V7Zz+WCz/i2v3z87szS
-         ZE1+pkWViDunUdor4joqno7UNidEc6ZHF/wtYFEgrZejYlTep9MnMJLS0lh+PT6GqZm/
-         TymrCQCB/6Lp7MjDCqIiiYfXybDpW8cTugaGaFPEnX3mKwIlZcIQkPjgrhXmSke3RaLX
-         x9TZNilHxXJdxZwEncqdx41nCQy/xbR4HuLYJvwHh0+Km7gxQnoMlIGrUUByiqoEDhKE
-         CAgg==
-Content-Disposition: inline
-In-Reply-To: <20151208145851.GJ9837@bark>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH 01/14] mm: memcontrol: export root_mem_cgroup
+Date: Tue,  8 Dec 2015 10:30:11 -0500
+Message-ID: <1449588624-9220-2-git-send-email-hannes@cmpxchg.org>
+References: <1449588624-9220-1-git-send-email-hannes@cmpxchg.org>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1449588624-9220-1-git-send-email-hannes@cmpxchg.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andy Whitcroft <apw-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Martin Pitt <martin.pitt-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-mm@kvack.org, netdev@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, Andy.
+A later patch will need this symbol in files other than memcontrol.c,
+so export it now and replace mem_cgroup_root_css at the same time.
 
-On Tue, Dec 08, 2015 at 02:58:51PM +0000, Andy Whitcroft wrote:
-> Converting this to a printk I was able to obtain confirmation that we are
-> indeed seeing this go negative in some cases.
-> 
-> Reverting the above commit seems to resolve the early boot issues in
-> my testing.
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Acked-by: Michal Hocko <mhocko@suse.com>
+Acked-by: David S. Miller <davem@davemloft.net>
+Reviewed-by: Vladimir Davydov <vdavydov@virtuozzo.com>
+---
+ include/linux/memcontrol.h | 3 ++-
+ mm/backing-dev.c           | 2 +-
+ mm/memcontrol.c            | 5 ++---
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-Fix already queued in the following git branch.  Pushing it out as we
-speak.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.4-fixes
-
-Thanks.
-
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 9d5472b..320b690 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -265,7 +265,8 @@ struct mem_cgroup {
+ 	struct mem_cgroup_per_node *nodeinfo[0];
+ 	/* WARNING: nodeinfo must be the last member here */
+ };
+-extern struct cgroup_subsys_state *mem_cgroup_root_css;
++
++extern struct mem_cgroup *root_mem_cgroup;
+ 
+ /**
+  * mem_cgroup_events - count memory events against a cgroup
+diff --git a/mm/backing-dev.c b/mm/backing-dev.c
+index 9160853..fdc6f4d 100644
+--- a/mm/backing-dev.c
++++ b/mm/backing-dev.c
+@@ -707,7 +707,7 @@ static int cgwb_bdi_init(struct backing_dev_info *bdi)
+ 
+ 	ret = wb_init(&bdi->wb, bdi, 1, GFP_KERNEL);
+ 	if (!ret) {
+-		bdi->wb.memcg_css = mem_cgroup_root_css;
++		bdi->wb.memcg_css = &root_mem_cgroup->css;
+ 		bdi->wb.blkcg_css = blkcg_root_css;
+ 	}
+ 	return ret;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 79a29d5..f6ea649 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -76,9 +76,9 @@
+ struct cgroup_subsys memory_cgrp_subsys __read_mostly;
+ EXPORT_SYMBOL(memory_cgrp_subsys);
+ 
++struct mem_cgroup *root_mem_cgroup __read_mostly;
++
+ #define MEM_CGROUP_RECLAIM_RETRIES	5
+-static struct mem_cgroup *root_mem_cgroup __read_mostly;
+-struct cgroup_subsys_state *mem_cgroup_root_css __read_mostly;
+ 
+ /* Whether the swap controller is active */
+ #ifdef CONFIG_MEMCG_SWAP
+@@ -4217,7 +4217,6 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+ 	/* root ? */
+ 	if (parent_css == NULL) {
+ 		root_mem_cgroup = memcg;
+-		mem_cgroup_root_css = &memcg->css;
+ 		page_counter_init(&memcg->memory, NULL);
+ 		memcg->high = PAGE_COUNTER_MAX;
+ 		memcg->soft_limit = PAGE_COUNTER_MAX;
 -- 
-tejun
+2.6.3
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
