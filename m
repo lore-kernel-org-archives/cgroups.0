@@ -1,56 +1,65 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] mm: memcontrol: MEMCG no longer works with SLOB
-Date: Wed, 09 Dec 2015 22:03:06 +0100
-Message-ID: <1555665.xW941mUeCs@wuerfel>
-References: <1449588624-9220-1-git-send-email-hannes@cmpxchg.org> <1558902.EBTjGmY9S2@wuerfel> <20151209200107.GA17409@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 1/8] kernfs: Add API to generate relative kernfs path
+Date: Wed, 9 Dec 2015 16:38:06 -0500
+Message-ID: <20151209213806.GP30240@mtj.duckdns.org>
+References: <1449689341-28742-1-git-send-email-serge.hallyn@ubuntu.com>
+ <1449689341-28742-2-git-send-email-serge.hallyn@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20151209200107.GA17409@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20120113;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-type:content-disposition:in-reply-to:user-agent;
+        bh=CySxaVxjsw3PD8Qk6GivledvUCxoQ+KZyQlWMChFlVA=;
+        b=qsAXGXZGOeQBQMD9uDLO5bezs87bvSk03xsapsOkNZJ43hvIBJnHs5CtANjs51yajS
+         6Ak5Af68MvFFGmsFMVr2+kfdWSrApgn+riYBXxD1PPSgUrML2esr2thvfUJOuIt/tHE+
+         SJmiSpjGrecxzOKO3BaepfiNm3BlruYGh9rF4OWa/kLNhY3XXWqLf4mYSUOlntVU1TX8
+         eOJyMzCXwqSMV6feefUdN/8/ngv8K818pTTtiTBCe1Qi74lNLc3rDye4IFyhF/T66J7i
+         9Mx5JS8L//5KQN2l02IoxsC330nTXVSvktD96LSzf1exDxWP5IPdVoojJEokuBLbrx36
+         /iaA==
+Content-Disposition: inline
+In-Reply-To: <1449689341-28742-2-git-send-email-serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, netdev@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Vladimir Davydov <vdavydov@virtuozzo.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, "Serge E. Hallyn" <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-On Wednesday 09 December 2015 15:01:07 Johannes Weiner wrote:
-> On Wed, Dec 09, 2015 at 05:32:39PM +0100, Arnd Bergmann wrote:
-> > The change to move the kmem accounting into the normal memcg
-> > code means we can no longer use memcg with slob, which lacks
-> > the memcg_params member in its struct kmem_cache:
-> > 
-> > ../mm/slab.h: In function 'is_root_cache':
-> > ../mm/slab.h:187:10: error: 'struct kmem_cache' has no member named 'memcg_params'
-> > 
-> > This enforces the new dependency in Kconfig. Alternatively,
-> > we could change the slob code to allow using MEMCG.
-> 
-> I'm curious, was this a random config or do you actually use
-> CONFIG_SLOB && CONFIG_MEMCG?
+Hello, Serge.
 
-Just a randconfig build, I do a lot of those to check for ARM specific
-regressions.
-> index 5adec08..0b3ec4b 100644
-> --- a/mm/slab.h
-> +++ b/mm/slab.h
-> @@ -25,6 +25,9 @@ struct kmem_cache {
->         int refcount;           /* Use counter */
->         void (*ctor)(void *);   /* Called on object slot creation */
->         struct list_head list;  /* List of all slab caches on the system */
-> +#ifdef CONFIG_MEMCG
-> +       struct memcg_cache_params memcg_params;
-> +#endif
->  };
+On Wed, Dec 09, 2015 at 01:28:54PM -0600, serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org wrote:
+> +/* kernfs_node_depth - compute depth from @from to @to */
+> +static size_t kernfs_depth(struct kernfs_node *from, struct kernfs_node *to)
+...
+> +char *kernfs_path(struct kernfs_node *kn, char *buf, size_t buflen)
+> +{
+> +	return kernfs_path_from_node(NULL, kn, buf, buflen);
+> +}
+...
+> diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
+> index 5d4e9c4..d025ebd 100644
+> --- a/include/linux/kernfs.h
+> +++ b/include/linux/kernfs.h
+> @@ -267,6 +267,9 @@ static inline bool kernfs_ns_enabled(struct kernfs_node *kn)
 >  
->  #endif /* CONFIG_SLOB */
+>  int kernfs_name(struct kernfs_node *kn, char *buf, size_t buflen);
+>  size_t kernfs_path_len(struct kernfs_node *kn);
+> +char * __must_check kernfs_path_from_node(struct kernfs_node *root_kn,
+> +					  struct kernfs_node *kn, char *buf,
+> +					  size_t buflen);
 
-This was my first approach to the problem, and it solves the build issues,
-I just wasn't sure if it works as expected.
+I think I commented on the same thing before, but I think it'd make
+more sense to put @from after @to and the prototype is using @root_kn
+which is a bit confusing.  Was converting the path functions to return
+length too much work?  If so, that's fine but please explain what
+decisions were made.
 
-	Arnd
+I skimmed through the series and spotted several other review points
+which didn't get addressed.  Can you please go over the previous
+review cycle and address the review points?
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks.
+
+-- 
+tejun
