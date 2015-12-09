@@ -1,92 +1,96 @@
-From: "Serge E. Hallyn" <serge.hallyn@ubuntu.com>
-Subject: Re: [PATCH 1/8] kernfs: Add API to generate relative kernfs path
-Date: Wed, 9 Dec 2015 16:51:31 -0600
-Message-ID: <20151209225131.GA31415@mail.hallyn.com>
-References: <1449689341-28742-1-git-send-email-serge.hallyn@ubuntu.com>
- <1449689341-28742-2-git-send-email-serge.hallyn@ubuntu.com>
- <20151209213806.GP30240@mtj.duckdns.org>
- <20151209221327.GA13029@ubuntumail>
- <20151209223651.GQ30240@mtj.duckdns.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH] mm: memcontrol: only manage socket pressure for
+ CONFIG_INET
+Date: Wed, 9 Dec 2015 18:05:05 -0500
+Message-ID: <20151209230505.GA16610@cmpxchg.org>
+References: <1449588624-9220-1-git-send-email-hannes@cmpxchg.org>
+ <2564892.qO1q7YJ6Nb@wuerfel>
+ <7343206.sFybcLLUN2@wuerfel>
+ <20151209185858.GA2342@cmpxchg.org>
+ <20151209142836.e81260567879110f319c01a4@linux-foundation.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20151209223651.GQ30240@mtj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20151209142836.e81260567879110f319c01a4@linux-foundation.org>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Serge Hallyn <serge.hallyn@ubuntu.com>, linux-api@vger.kernel.org, containers@lists.linux-foundation.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, ebiederm@xmission.com, lxc-devel@lists.linuxcontainers.org, gregkh@linuxfoundation.org, cgroups@vger.kernel.org, akpm@linux-foundation.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-mm@kvack.org, netdev@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Dec 09, 2015 at 05:36:51PM -0500, Tejun Heo wrote:
-> Hey,
+On Wed, Dec 09, 2015 at 02:28:36PM -0800, Andrew Morton wrote:
+> On Wed, 9 Dec 2015 13:58:58 -0500 Johannes Weiner <hannes@cmpxchg.org> wrote:
 > 
-> On Wed, Dec 09, 2015 at 10:13:27PM +0000, Serge Hallyn wrote:
-> > we can rename kn_root to from here if you think that's clearer (and
-> > change the order here as well).
-> 
-> I think it'd be better for them to be consistent and in the same order
-> - the target and then the optional base.
-> 
-> > > Was converting the path functions to return
-> > > length too much work?  If so, that's fine but please explain what
-> > > decisions were made.
+> > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > > index 6faea81e66d7..73cd572167bb 100644
+> > > --- a/mm/memcontrol.c
+> > > +++ b/mm/memcontrol.c
+> > > @@ -4220,13 +4220,13 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
+> > >  	if (ret)
+> > >  		return ret;
+> > >  
+> > > +#ifdef CONFIG_INET
+> > >  #ifdef CONFIG_MEMCG_LEGACY_KMEM
+> > >  	ret = tcp_init_cgroup(memcg);
+> > >  	if (ret)
+> > >  		return ret;
+> > >  #endif
 > > 
-> > Yes, I had replied saying:
-> > 
-> >  |I can change that, but the callers right now don't re-try with
-> >  |larger buffer anyway, so this would actually complicate them just
-> >  |a smidgeon.  Would you want them changed to do that?  (pr_cont_kernfs_path
-> >  |right now writes into a static char[] for instance)
-> > 
-> > I can still make that change if you like.
+> > The calls to tcp_init_cgroup() appear earlier in the series than "mm:
+> > memcontrol: hook up vmpressure to socket pressure". However, they get
+> > moved around a few times so fixing it earlier means respinning the
+> > series. Andrew, it's up to you whether we take the bisectability hit
+> > for !CONFIG_INET && CONFIG_MEMCG (how common is this?) or whether you
+> > want me to resend the series.
 > 
-> Oops, sorry I forgot about that.  The reason why kernfs_path() is
-> written the current way was me being lazy.  While I think it'd be
-> better to make the functions behave like normal string handling
-> functions if we're extending it, I don't think it's that important.
-> If it's easy, please go ahead.  If not, we can get back to it later
-> when necessary.
-
-Ok - I'm now gone until Dec 21 (and laptopping won't be an option :( ).
-I'll make the other changes then and do this as well.  So
-pr_cont_kernfs_path() will dynamically allocate a longer buffer (only)
-if needed.
-
-> > > I skimmed through the series and spotted several other review points
-> > > which didn't get addressed.  Can you please go over the previous
-> > > review cycle and address the review points?
-> > 
-> > I did go through every email twice, once while making changes (one
-> > branch per response) and once while making changelog for each patch,
-> > sorry about whatever I missed.  I'll go through each again.
+> hm, drat, I was suspecting dependency issues here, but a test build
+> said it was OK.
 > 
-> The other chunk I noticed was inline conversions of internal functions
-> which didn't seem to belong to the patch.  I asked whether those were
-> stray chunks.  Maybe the comment was too buried to notice?  Anyways,
-> that part actually causes conflicts when applying to cgroup/for-4.5.
+> Actually, I was expecting this patch series to depend on the linux-next
+> cgroup2 changes, but that doesn't appear to be the case.  *should* this
+> series be staged after the cgroup2 code?
 
-Gah.  I saw one and removed it.  Grep tells me I missed some, will
-remove them all next time.
+Code-wise they are independent. My stuff is finishing up the new memcg
+control knobs, the cgroup2 stuff is changing how and when those knobs
+are exposed from within the cgroup core. I'm not relying on any recent
+changes in the cgroup core AFAICS, so the order shouldn't matter here.
 
-> There are a couple more things.
+> Regarding this particular series: yes, I think we can live with a
+> bisection hole for !CONFIG_INET && CONFIG_MEMCG users.  But I'm not
+> sure why we're discussing bisection issues, because Arnd's build
+> failure occurs with everything applied?
+
+Arnd's patches apply to the top of the stack, but they address issues
+introduced early in the series and the problematic code gets touched a
+lot in subsequent patches. E.g. the first build breakage is in ("net:
+tcp_memcontrol: simplify linkage between socket and page counter")
+when the tcp_init_cgroup() and tcp_destroy_cgroup() function calls get
+moved around and lose the CONFIG_INET protection.
+
+This will leave states in between broken for this configuration, which
+is why I brought up bisection. Or did you mean something else?
+
+> > Sorry about the trouble. I don't have a git tree on kernel.org because
+> > we don't really use git in -mm, but the downside is that we don't get
+> > the benefits of the automatic build testing for all kinds of configs.
+> > I'll try to set up a git tree to expose series to full build coverage
+> > before they hit -mm and -next.
 > 
-> * Can you please put the ns related decls after the regular cgroup
->   stuff in cgroup.h?
+> This sort of thing happens quite rarely.
 
-ok
+True, this is a particularly tedious one. The only reason I brought it
+up is because I use git to prepare patches anyway, and pushing patches
+into a branch reachable by Fengguang's rig before I send emails might
+have caught this stuff without spamming so many inboxes ;)
 
-> * I think I might need to edit the documentation anyway but it'd be
->   great if you can make the namespace section more in line with the
->   rest of the documentation - e.g. s/CGroup/cgroup/ and more
->   structured sectioning.
+Anyway, if we can live with the bisection caveat then Arnd's fixes on
+top of the kmem series look good to me. Depending on what Vladimir
+thinks we might want to replace the CONFIG_SLOB fix with something
+else later on, but that shouldn't be a problem, either.
 
-I'll read through it and look for patterns to change.
-
-> At this point, it all generally looks good to me.  Let's get the
-> nits out of the way and merge it.
-> 
-> Thanks.
-
-thanks,
--serge
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
