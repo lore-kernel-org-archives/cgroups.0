@@ -1,81 +1,37 @@
-From: Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: Re: piping core dump to a program escapes container
-Date: Wed, 9 Dec 2015 10:36:09 +0800
-Message-ID: <56679399.6080306@cn.fujitsu.com>
-References: <CABAubTgj8+xngrvc7sNbYS_Hq+-rGAYCz0y433ByiZ45dZuT0w@mail.gmail.com> <56679161.303@cn.fujitsu.com>
+From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Subject: Re: [PATCHSET v4] netfilter, cgroup: implement cgroup2 path match
+ in xt_cgroup
+Date: Tue, 08 Dec 2015 22:03:43 -0500 (EST)
+Message-ID: <20151208.220343.114057012128485057.davem@davemloft.net>
+References: <1449527935-27056-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <56679161.303-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+In-Reply-To: <1449527935-27056-1-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Shayan Pooya <shayan-UQzSddOuLosdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+Content-Type: Text/Plain; charset="us-ascii"
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org, kadlec-K40Dz/62t/MgiyqX0sVFJYdd74u8MsAO@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netfilter-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, coreteam-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, ninasc-b10kYP2dOMg@public.gmane.org
 
-On 12/09/2015 10:26 AM, Dongsheng Yang wrote:
-> On 10/25/2015 05:54 AM, Shayan Pooya wrote:
->> I noticed the following core_pattern behavior in my linux box while
->> running docker containers. I am not sure if it is bug, but it is
->> inconsistent and not documented.
->>
->> If the core_pattern is set on the host, the containers will observe
->> and use the pattern for dumping cores (there is no per cgroup
->> core_pattern). According to core(5) for setting core_pattern one can:
->>
->> 1. echo "/tmp/cores/core.%e.%p" > /proc/sys/kernel/core_pattern
->> 2. echo "|/bin/custom_core /tmp/cores/ %e %p " >
->> /proc/sys/kernel/core_pattern
->>
->> The former pattern evaluates the /tmp/cores path in the container's
->> filesystem namespace. Which means, the host does not see a core file
->> in /tmp/cores.
->>
->> However, the latter evaluates the /bin/custom_core path in the global
->> filesystem namespace. Moreover, if /bin/core decides to write the core
->> to a path (/tmp/cores in this case as shown by the arg to
->> custom_core), the path will be evaluated in the global filesystem
->> namespace as well.
->>
->> The latter behaviour is counter-intuitive and error-prone as the
->> container can fill up the core-file directory which it does not have
->> direct access to (which means the core is also not accessible for
->> debugging if someone only has access to the container).
->
-> Hi Shayan,
->      We found the same problem with what you described here.
-> Is there any document for this behaviour? I want to know is
-> that intentional or as you said a 'bug'. Maybe that's intentional
-> to provide a way for admin to collect core dumps from all containers as
-> Richard said. I am interested in it too.
->
-> Anyone can help here?
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Mon,  7 Dec 2015 17:38:47 -0500
 
-In addition, is that a good idea to make core_pattern to be seperated
-in different namespace?
+> 0001-0003 are prepatory patches in kernfs and cgroup.  These patches
+> are available in the following branch which will stay stable.
+> 
+>  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-4.5-ancestor-test
 
-Yang
->
-> Yang
->>
->> Currently, I work around this issue by detecting that the process is
->> crashing from a container (by comparing the namespace pid to the
->> global pid) and refuse to dump the core if it is from a container.
->>
->> Tested on Ubuntu (kernel 3.16) and Fedora (kernel 4.1).
->> --
->> To unsubscribe from this list: send the line "unsubscribe cgroups" in
->> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> .
->
+Pulled into net-next.
 
+> 0004-0006 consolidate two cgroup related fields in struct sock into
+> cgroup_sock_data and update it so that it can alternatively carry a
+> cgroup pointer.
 
+Applied to net-next.
+
+> 0007-0008 implement cgroup2 patch matching in xt_cgroup.
+
+I'll leave these for Pablo to integrate.
+
+Thanks.
