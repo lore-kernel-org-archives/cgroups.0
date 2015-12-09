@@ -1,41 +1,33 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: occasional kernel hang on shutdown - kernel/cgroup_pids.c
-Date: Wed, 9 Dec 2015 11:09:07 -0500
-Message-ID: <20151209160907.GL30240@mtj.duckdns.org>
-References: <20151207235352.GW15569@logic.at>
- <20151209132253.GB30912@dhcp22.suse.cz>
+From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Subject: Re: [PATCH 00/14] mm: memcontrol: account socket memory in unified hierarchy v4-RESEND
+Date: Wed, 09 Dec 2015 17:31:38 +0100
+Message-ID: <2564892.qO1q7YJ6Nb@wuerfel>
+References: <1449588624-9220-1-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=Iaj7GKq+0K6c0Y4OvWNR2AmS+sqhQh++tYJnH01MSEk=;
-        b=Y56DW8HLuBPdyo80syRlxshIHxC+XkQoB8KU39cPcD6EYUbiU3MvhnU3e1m7EpdRKd
-         UE70izUn73ED+JLQl4o6cWo3Q0r0gLmMURfwXdHmkcHbZut1tIDgHPNJOOCOqdpY21PR
-         78/6d32tA6n8PFUqZxovbg74oc0mx0eXYZZbjUbQ7vj4TftndpoIVt8hjoe94a/kMPPQ
-         3e3oSz5TMfupGurNsv+W3GMvnO6Olh60+Bl/V08aApnK6pDds9oq9zaz6awPhFWC1t/J
-         aD4g+m10mQcwACXyxj2hw7MlmUpiJ0xgDAGyAHDo5AsLxSZ92sVjTeLB4RwltZNkbmPv
-         5klQ==
-Content-Disposition: inline
-In-Reply-To: <20151209132253.GB30912-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <1449588624-9220-1-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Norbert Preining <preining-DX+603jRYB8@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Dec 09, 2015 at 02:22:53PM +0100, Michal Hocko wrote:
-> [CCing Tejun]
+On Tuesday 08 December 2015 10:30:10 Johannes Weiner wrote:
+> Hi Andrew,
 > 
-> Seems to be the same issue as reported here?
-> http://lkml.kernel.org/r/20151208145851.GJ9837@bark
+> there was some build breakage in CONFIG_ combinations I hadn't tested
+> in the last revision, so here is a fixed-up resend with minimal CC
+> list. The only difference to the previous version is a section in
+> memcontrol.h, but it accumulates throughout the series and would have
+> been a pain to resolve on your end. So here goes. This also includes
+> the review tags that Dave and Vlad had sent out in the meantime.
+> 
+> Difference to the original v4:
 
-Patches just got merged into mainline.  Please let me know if the
-current git master doesn't fix the issue.
+I needed two more patches on top of today's linux-next kernel, will
+send them as replies to this mail. I don't know if you have already
+fixed the issues for !CONFIG_INET and CONFIG_SLOB, if not please
+fold them into your series.
 
-Thanks.
-
--- 
-tejun
+	Arnd
