@@ -1,51 +1,44 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] mm: memcontrol: MEMCG no longer works with SLOB
-Date: Wed, 09 Dec 2015 17:32:39 +0100
-Message-ID: <1558902.EBTjGmY9S2@wuerfel>
-References: <1449588624-9220-1-git-send-email-hannes@cmpxchg.org> <2564892.qO1q7YJ6Nb@wuerfel>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH 00/14] mm: memcontrol: account socket memory in unified
+ hierarchy v4-RESEND
+Date: Wed, 9 Dec 2015 13:17:46 -0500
+Message-ID: <20151209181746.GA22412@cmpxchg.org>
+References: <1449588624-9220-1-git-send-email-hannes@cmpxchg.org>
+ <2564892.qO1q7YJ6Nb@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
 Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
 In-Reply-To: <2564892.qO1q7YJ6Nb@wuerfel>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-To: Johannes Weiner <hannes@cmpxchg.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Arnd Bergmann <arnd@arndb.de>
 Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, netdev@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The change to move the kmem accounting into the normal memcg
-code means we can no longer use memcg with slob, which lacks
-the memcg_params member in its struct kmem_cache:
+Hey Arnd!
 
-../mm/slab.h: In function 'is_root_cache':
-../mm/slab.h:187:10: error: 'struct kmem_cache' has no member named 'memcg_params'
+On Wed, Dec 09, 2015 at 05:31:38PM +0100, Arnd Bergmann wrote:
+> On Tuesday 08 December 2015 10:30:10 Johannes Weiner wrote:
+> > Hi Andrew,
+> > 
+> > there was some build breakage in CONFIG_ combinations I hadn't tested
+> > in the last revision, so here is a fixed-up resend with minimal CC
+> > list. The only difference to the previous version is a section in
+> > memcontrol.h, but it accumulates throughout the series and would have
+> > been a pain to resolve on your end. So here goes. This also includes
+> > the review tags that Dave and Vlad had sent out in the meantime.
+> > 
+> > Difference to the original v4:
+> 
+> I needed two more patches on top of today's linux-next kernel, will
+> send them as replies to this mail. I don't know if you have already
+> fixed the issues for !CONFIG_INET and CONFIG_SLOB, if not please
+> fold them into your series.
 
-This enforces the new dependency in Kconfig. Alternatively,
-we could change the slob code to allow using MEMCG.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Fixes: 6e6133536d82 ("mm: memcontrol: move kmem accounting code to CONFIG_MEMCG")
-
-diff --git a/init/Kconfig b/init/Kconfig
-index 4822bb359fea..f4d81d382608 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -999,6 +999,7 @@ config PAGE_COUNTER
- 
- config MEMCG
- 	bool "Memory Resource Controller for Control Groups"
-+	depends on SLAB || SLUB
- 	select PAGE_COUNTER
- 	select EVENTFD
- 	help
-@@ -1040,7 +1041,6 @@ config MEMCG_LEGACY_KMEM
- config MEMCG_KMEM
- 	bool "Legacy Memory Resource Controller Kernel Memory accounting"
- 	depends on MEMCG
--	depends on SLUB || SLAB
- 	select MEMCG_LEGACY_KMEM
- 	help
- 	  The Kernel Memory extension for Memory Resource Controller can limit
+Sorry for breaking your stuff, and thanks for sending patches. I'll
+get to them in a minute and will make sure the fixes get routed to
+Andrew.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
