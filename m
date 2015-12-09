@@ -1,72 +1,68 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH] mm: memcontrol: only manage socket pressure for
- CONFIG_INET
-Date: Wed, 9 Dec 2015 13:58:58 -0500
-Message-ID: <20151209185858.GA2342@cmpxchg.org>
-References: <1449588624-9220-1-git-send-email-hannes@cmpxchg.org>
- <2564892.qO1q7YJ6Nb@wuerfel>
- <7343206.sFybcLLUN2@wuerfel>
-Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <7343206.sFybcLLUN2@wuerfel>
-Sender: owner-linux-mm@kvack.org
+From: serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org
+Subject: [PATCH 4/8] cgroup: cgroup namespace setns support
+Date: Wed,  9 Dec 2015 13:28:57 -0600
+Message-ID: <1449689341-28742-5-git-send-email-serge.hallyn@ubuntu.com>
+References: <1449689341-28742-1-git-send-email-serge.hallyn@ubuntu.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1449689341-28742-1-git-send-email-serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, netdev@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, "Serge E. Hallyn" <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 
-On Wed, Dec 09, 2015 at 05:32:16PM +0100, Arnd Bergmann wrote:
-> When IPV4 support is disabled, the memcg->socket_pressure field is
-> not defined and we get a build error from the vmpressure code:
-> 
-> mm/vmpressure.c: In function 'vmpressure':
-> mm/vmpressure.c:287:9: error: 'struct mem_cgroup' has no member named 'socket_pressure'
->     memcg->socket_pressure = jiffies + HZ;
-> mm/built-in.o: In function `mem_cgroup_css_free':
-> :(.text+0x1c03a): undefined reference to `tcp_destroy_cgroup'
-> mm/built-in.o: In function `mem_cgroup_css_online':
-> :(.text+0x1c20e): undefined reference to `tcp_init_cgroup'
-> 
-> This puts the code causing this in the same #ifdef that guards the
-> struct member and the TCP implementation.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 20cc40e66c42 ("mm: memcontrol: hook up vmpressure to socket pressure")
+From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+setns on a cgroup namespace is allowed only if
+task has CAP_SYS_ADMIN in its current user-namespace and
+over the user-namespace associated with target cgroupns.
+No implicit cgroup changes happen with attaching to another
+cgroupns. It is expected that the somone moves the attaching
+process under the target cgroupns-root.
 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 6faea81e66d7..73cd572167bb 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -4220,13 +4220,13 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
->  	if (ret)
->  		return ret;
->  
-> +#ifdef CONFIG_INET
->  #ifdef CONFIG_MEMCG_LEGACY_KMEM
->  	ret = tcp_init_cgroup(memcg);
->  	if (ret)
->  		return ret;
->  #endif
+Signed-off-by: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Serge E. Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+---
+ kernel/cgroup.c |   24 +++++++++++++++++++++---
+ 1 file changed, 21 insertions(+), 3 deletions(-)
 
-The calls to tcp_init_cgroup() appear earlier in the series than "mm:
-memcontrol: hook up vmpressure to socket pressure". However, they get
-moved around a few times so fixing it earlier means respinning the
-series. Andrew, it's up to you whether we take the bisectability hit
-for !CONFIG_INET && CONFIG_MEMCG (how common is this?) or whether you
-want me to resend the series.
-
-Sorry about the trouble. I don't have a git tree on kernel.org because
-we don't really use git in -mm, but the downside is that we don't get
-the benefits of the automatic build testing for all kinds of configs.
-I'll try to set up a git tree to expose series to full build coverage
-before they hit -mm and -next.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 92db64c..f34551a 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -5904,10 +5904,28 @@ err_out:
+ 	return ERR_PTR(err);
+ }
+ 
+-static int cgroupns_install(struct nsproxy *nsproxy, void *ns)
++static inline struct cgroup_namespace *to_cg_ns(struct ns_common *ns)
+ {
+-	pr_info("setns not supported for cgroup namespace");
+-	return -EINVAL;
++	return container_of(ns, struct cgroup_namespace, ns);
++}
++
++static int cgroupns_install(struct nsproxy *nsproxy, struct ns_common *ns)
++{
++	struct cgroup_namespace *cgroup_ns = to_cg_ns(ns);
++
++	if (!ns_capable(current_user_ns(), CAP_SYS_ADMIN) ||
++	    !ns_capable(cgroup_ns->user_ns, CAP_SYS_ADMIN))
++		return -EPERM;
++
++	/* Don't need to do anything if we are attaching to our own cgroupns. */
++	if (cgroup_ns == nsproxy->cgroup_ns)
++		return 0;
++
++	get_cgroup_ns(cgroup_ns);
++	put_cgroup_ns(nsproxy->cgroup_ns);
++	nsproxy->cgroup_ns = cgroup_ns;
++
++	return 0;
+ }
+ 
+ static struct ns_common *cgroupns_get(struct task_struct *task)
+-- 
+1.7.9.5
