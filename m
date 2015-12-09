@@ -1,64 +1,81 @@
 From: Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 Subject: Re: piping core dump to a program escapes container
-Date: Wed, 9 Dec 2015 10:26:41 +0800
-Message-ID: <56679161.303@cn.fujitsu.com>
-References: <CABAubTgj8+xngrvc7sNbYS_Hq+-rGAYCz0y433ByiZ45dZuT0w@mail.gmail.com>
+Date: Wed, 9 Dec 2015 10:36:09 +0800
+Message-ID: <56679399.6080306@cn.fujitsu.com>
+References: <CABAubTgj8+xngrvc7sNbYS_Hq+-rGAYCz0y433ByiZ45dZuT0w@mail.gmail.com> <56679161.303@cn.fujitsu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CABAubTgj8+xngrvc7sNbYS_Hq+-rGAYCz0y433ByiZ45dZuT0w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <56679161.303-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Shayan Pooya <shayan-UQzSddOuLosdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>
+To: Shayan Pooya <shayan-UQzSddOuLosdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
 
-On 10/25/2015 05:54 AM, Shayan Pooya wrote:
-> I noticed the following core_pattern behavior in my linux box while
-> running docker containers. I am not sure if it is bug, but it is
-> inconsistent and not documented.
+On 12/09/2015 10:26 AM, Dongsheng Yang wrote:
+> On 10/25/2015 05:54 AM, Shayan Pooya wrote:
+>> I noticed the following core_pattern behavior in my linux box while
+>> running docker containers. I am not sure if it is bug, but it is
+>> inconsistent and not documented.
+>>
+>> If the core_pattern is set on the host, the containers will observe
+>> and use the pattern for dumping cores (there is no per cgroup
+>> core_pattern). According to core(5) for setting core_pattern one can:
+>>
+>> 1. echo "/tmp/cores/core.%e.%p" > /proc/sys/kernel/core_pattern
+>> 2. echo "|/bin/custom_core /tmp/cores/ %e %p " >
+>> /proc/sys/kernel/core_pattern
+>>
+>> The former pattern evaluates the /tmp/cores path in the container's
+>> filesystem namespace. Which means, the host does not see a core file
+>> in /tmp/cores.
+>>
+>> However, the latter evaluates the /bin/custom_core path in the global
+>> filesystem namespace. Moreover, if /bin/core decides to write the core
+>> to a path (/tmp/cores in this case as shown by the arg to
+>> custom_core), the path will be evaluated in the global filesystem
+>> namespace as well.
+>>
+>> The latter behaviour is counter-intuitive and error-prone as the
+>> container can fill up the core-file directory which it does not have
+>> direct access to (which means the core is also not accessible for
+>> debugging if someone only has access to the container).
 >
-> If the core_pattern is set on the host, the containers will observe
-> and use the pattern for dumping cores (there is no per cgroup
-> core_pattern). According to core(5) for setting core_pattern one can:
+> Hi Shayan,
+>      We found the same problem with what you described here.
+> Is there any document for this behaviour? I want to know is
+> that intentional or as you said a 'bug'. Maybe that's intentional
+> to provide a way for admin to collect core dumps from all containers as
+> Richard said. I am interested in it too.
 >
-> 1. echo "/tmp/cores/core.%e.%p" > /proc/sys/kernel/core_pattern
-> 2. echo "|/bin/custom_core /tmp/cores/ %e %p " > /proc/sys/kernel/core_pattern
->
-> The former pattern evaluates the /tmp/cores path in the container's
-> filesystem namespace. Which means, the host does not see a core file
-> in /tmp/cores.
->
-> However, the latter evaluates the /bin/custom_core path in the global
-> filesystem namespace. Moreover, if /bin/core decides to write the core
-> to a path (/tmp/cores in this case as shown by the arg to
-> custom_core), the path will be evaluated in the global filesystem
-> namespace as well.
->
-> The latter behaviour is counter-intuitive and error-prone as the
-> container can fill up the core-file directory which it does not have
-> direct access to (which means the core is also not accessible for
-> debugging if someone only has access to the container).
+> Anyone can help here?
 
-Hi Shayan,
-	We found the same problem with what you described here.
-Is there any document for this behaviour? I want to know is
-that intentional or as you said a 'bug'. Maybe that's intentional
-to provide a way for admin to collect core dumps from all containers as
-Richard said. I am interested in it too.
-
-Anyone can help here?
+In addition, is that a good idea to make core_pattern to be seperated
+in different namespace?
 
 Yang
 >
-> Currently, I work around this issue by detecting that the process is
-> crashing from a container (by comparing the namespace pid to the
-> global pid) and refuse to dump the core if it is from a container.
+> Yang
+>>
+>> Currently, I work around this issue by detecting that the process is
+>> crashing from a container (by comparing the namespace pid to the
+>> global pid) and refuse to dump the core if it is from a container.
+>>
+>> Tested on Ubuntu (kernel 3.16) and Fedora (kernel 4.1).
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+>> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
 >
-> Tested on Ubuntu (kernel 3.16) and Fedora (kernel 4.1).
+>
+>
 > --
-> To unsubscribe from this list: send the line "unsubscribe cgroups" in
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
 > the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> .
 >
 
 
