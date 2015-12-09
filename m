@@ -1,80 +1,62 @@
-From: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/8] kernfs: Add API to generate relative kernfs path
-Date: Wed, 9 Dec 2015 22:13:27 +0000
-Message-ID: <20151209221327.GA13029@ubuntumail>
-References: <1449689341-28742-1-git-send-email-serge.hallyn@ubuntu.com>
- <1449689341-28742-2-git-send-email-serge.hallyn@ubuntu.com>
- <20151209213806.GP30240@mtj.duckdns.org>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH] mm: memcontrol: only manage socket pressure for
+ CONFIG_INET
+Date: Wed, 9 Dec 2015 14:28:36 -0800
+Message-ID: <20151209142836.e81260567879110f319c01a4@linux-foundation.org>
+References: <1449588624-9220-1-git-send-email-hannes@cmpxchg.org>
+	<2564892.qO1q7YJ6Nb@wuerfel>
+	<7343206.sFybcLLUN2@wuerfel>
+	<20151209185858.GA2342@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20151209213806.GP30240-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20151209185858.GA2342-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, "Serge E. Hallyn" <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Quoting Tejun Heo (tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org):
-> Hello, Serge.
-> 
-> On Wed, Dec 09, 2015 at 01:28:54PM -0600, serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org wrote:
-> > +/* kernfs_node_depth - compute depth from @from to @to */
-> > +static size_t kernfs_depth(struct kernfs_node *from, struct kernfs_node *to)
-> ...
-> > +char *kernfs_path(struct kernfs_node *kn, char *buf, size_t buflen)
-> > +{
-> > +	return kernfs_path_from_node(NULL, kn, buf, buflen);
-> > +}
-> ...
-> > diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
-> > index 5d4e9c4..d025ebd 100644
-> > --- a/include/linux/kernfs.h
-> > +++ b/include/linux/kernfs.h
-> > @@ -267,6 +267,9 @@ static inline bool kernfs_ns_enabled(struct kernfs_node *kn)
+On Wed, 9 Dec 2015 13:58:58 -0500 Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index 6faea81e66d7..73cd572167bb 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -4220,13 +4220,13 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
+> >  	if (ret)
+> >  		return ret;
 > >  
-> >  int kernfs_name(struct kernfs_node *kn, char *buf, size_t buflen);
-> >  size_t kernfs_path_len(struct kernfs_node *kn);
-> > +char * __must_check kernfs_path_from_node(struct kernfs_node *root_kn,
-> > +					  struct kernfs_node *kn, char *buf,
-> > +					  size_t buflen);
+> > +#ifdef CONFIG_INET
+> >  #ifdef CONFIG_MEMCG_LEGACY_KMEM
+> >  	ret = tcp_init_cgroup(memcg);
+> >  	if (ret)
+> >  		return ret;
+> >  #endif
 > 
-> I think I commented on the same thing before, but I think it'd make
-> more sense to put @from after @to
+> The calls to tcp_init_cgroup() appear earlier in the series than "mm:
+> memcontrol: hook up vmpressure to socket pressure". However, they get
+> moved around a few times so fixing it earlier means respinning the
+> series. Andrew, it's up to you whether we take the bisectability hit
+> for !CONFIG_INET && CONFIG_MEMCG (how common is this?) or whether you
+> want me to resend the series.
 
-Oh.  You said that for kernfs_path_from_node_locked(), and those were
-changed.  kernfs_path_form_node() is a different fn, but
+hm, drat, I was suspecting dependency issues here, but a test build
+said it was OK.
 
-> and the prototype is using @root_kn
-> which is a bit confusing.
+Actually, I was expecting this patch series to depend on the linux-next
+cgroup2 changes, but that doesn't appear to be the case.  *should* this
+series be staged after the cgroup2 code?
 
-we can rename kn_root to from here if you think that's clearer (and
-change the order here as well).
+Regarding this particular series: yes, I think we can live with a
+bisection hole for !CONFIG_INET && CONFIG_MEMCG users.  But I'm not
+sure why we're discussing bisection issues, because Arnd's build
+failure occurs with everything applied?
 
-> Was converting the path functions to return
-> length too much work?  If so, that's fine but please explain what
-> decisions were made.
+> Sorry about the trouble. I don't have a git tree on kernel.org because
+> we don't really use git in -mm, but the downside is that we don't get
+> the benefits of the automatic build testing for all kinds of configs.
+> I'll try to set up a git tree to expose series to full build coverage
+> before they hit -mm and -next.
 
-Yes, I had replied saying:
-
- |I can change that, but the callers right now don't re-try with
- |larger buffer anyway, so this would actually complicate them just
- |a smidgeon.  Would you want them changed to do that?  (pr_cont_kernfs_path
- |right now writes into a static char[] for instance)
-
-I can still make that change if you like.
-
-> I skimmed through the series and spotted several other review points
-> which didn't get addressed.  Can you please go over the previous
-> review cycle and address the review points?
-
-I did go through every email twice, once while making changes (one
-branch per response) and once while making changelog for each patch,
-sorry about whatever I missed.  I'll go through each again.
-
-I'm going to be out for awhile after today, so next version will
-unfortunately take awhile.
-
-thanks,
--serge
+This sort of thing happens quite rarely.
