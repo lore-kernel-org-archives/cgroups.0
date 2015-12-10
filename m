@@ -1,52 +1,60 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 7/8] mm: memcontrol: account "kmem" consumers in cgroup2
- memory controller
-Date: Thu, 10 Dec 2015 17:25:48 +0100
-Message-ID: <20151210162548.GC11778@dhcp22.suse.cz>
-References: <1449599665-18047-1-git-send-email-hannes@cmpxchg.org>
- <1449599665-18047-8-git-send-email-hannes@cmpxchg.org>
- <20151209113037.GS11488@esperanza>
- <20151210132833.GM19496@dhcp22.suse.cz>
- <20151210151627.GB1431@cmpxchg.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [RFC PATCH] mm: memcontrol: reign in CONFIG space madness
+Date: Thu, 10 Dec 2015 12:15:59 -0500
+Message-ID: <20151210171559.GA4642@cmpxchg.org>
+References: <20151209203004.GA5820@cmpxchg.org>
+ <20151210134031.GN19496@dhcp22.suse.cz>
+ <20151210150650.GA1431@cmpxchg.org>
+ <20151210161212.GB11778@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20151210151627.GB1431-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20151210161212.GB11778@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Vladimir Davydov <vdavydov@virtuozzo.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu 10-12-15 10:16:27, Johannes Weiner wrote:
-> On Thu, Dec 10, 2015 at 02:28:33PM +0100, Michal Hocko wrote:
-> > On Wed 09-12-15 14:30:38, Vladimir Davydov wrote:
-> > > From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-> > > Subject: [PATCH] mm: memcontrol: allow to disable kmem accounting for cgroup2
-> > > 
-> > > Kmem accounting might incur overhead that some users can't put up with.
-> > > Besides, the implementation is still considered unstable. So let's
-> > > provide a way to disable it for those users who aren't happy with it.
-> > 
-> > Yes there will be users who do not want to pay an additional overhead
-> > and still accoplish what they need.
-> > I haven't measured the overhead lately - especially after the opt-out ->
-> > opt-in change so it might be much lower than my previous ~5% for kbuild
-> > load.
-> 
-> I think switching from accounting *all* slab allocations to accounting
-> a list of, what, less than 20 select slabs, counts as a change
-> significant enough to entirely invalidate those measurements and never
-> bring up that number again in the context of kmem cost, don't you think?
+On Thu, Dec 10, 2015 at 05:12:12PM +0100, Michal Hocko wrote:
+> This is what we call a review process. Raise concerns and deal with
+> them. My review hasn't implied this would be a show stopper or block
+> those change to get merged. I was merely asking whether we can keep
+> the code size with a _reasonable_ maintenance burden. If the answer is
+> no then I can live with that even when I might not like that fact. That
+> has been reflected by a lack of my acked-by.
 
-Yes, as I've said the numbers are expected to be much lower. That is
-one of the reasons I have acknowledged kmem enabled as a reasonable
-default.  There will always be _special_ loads where numbers might look
-differently, though, and having a disabling knob is a reasonable thing
-to offer with a minimum maintenance overhead. And this is the argument
-for the inclusion of the patch from Vladimir.
+Everything we do bears a cost, our entire work is making tradeoffs
+(with a few exceptions where code is just dumb). So when you bring up
+cost, you have to weigh it against what you're trading off. There is
+simply no value in saying "this costs X" and nothing else. It's
+meaningless on its own. Unless X is so unreasonably large that there
+MUST be another way of doing it, and investing the time is worth it.
 
--- 
-Michal Hocko
-SUSE Labs
+8K is not unreasonably large given the history and overall trend of
+the memcg code. And the only possible tradeoff is to make even more
+CONFIG options and encourage balkanization of cgroup users, which is
+hardly a reasonable route to go down. So what exactly ARE you saying
+when you post `size' results that you don't consider show stoppers?
+That you don't like increasing the kernel size? Do you think I do?
+
+Pointing out the unexpected (bugs, excessive cost, design problems) is
+part of a healthy review process. Proposing a different tradeoff,
+supported by a cost/benefit analysis in both directions is useful.
+
+What's happening here is definitely not a constructive review process.
+
+> You sound as if you had to overrule a nack which sounds like over
+> reacting because this is not the case.
+
+Issues raised are usually considered showstoppers unless it's clear
+from the way they're raised that we can live with them.
+
+And I'm tired of having the same discussion over and over.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
