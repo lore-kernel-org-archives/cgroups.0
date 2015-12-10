@@ -1,125 +1,85 @@
-From: Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: Re: piping core dump to a program escapes container
-Date: Thu, 10 Dec 2015 10:58:12 +0800
-Message-ID: <5668EA44.2070203@cn.fujitsu.com>
-References: <CABAubTgj8+xngrvc7sNbYS_Hq+-rGAYCz0y433ByiZ45dZuT0w@mail.gmail.com>	<56679161.303@cn.fujitsu.com>
-	<56679399.6080306@cn.fujitsu.com>
-	<876108fgfq.fsf@x220.int.ebiederm.org>
+From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: [PATCH] mm: memcontrol: MEMCG no longer works with SLOB
+Date: Thu, 10 Dec 2015 14:24:47 +0300
+Message-ID: <20151210112447.GV11488@esperanza>
+References: <1449588624-9220-1-git-send-email-hannes@cmpxchg.org>
+ <2564892.qO1q7YJ6Nb@wuerfel>
+ <1558902.EBTjGmY9S2@wuerfel>
+ <20151209200107.GA17409@cmpxchg.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20151209200107.GA17409-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <876108fgfq.fsf-JOvCrm2gF+uungPnsOpG7nhyD016LWXt@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shayan Pooya <shayan-UQzSddOuLosdnm+yROfE0A@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 12/09/2015 11:29 AM, Eric W. Biederman wrote:
-> Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org> writes:
->
->> On 12/09/2015 10:26 AM, Dongsheng Yang wrote:
->>> On 10/25/2015 05:54 AM, Shayan Pooya wrote:
->>>> I noticed the following core_pattern behavior in my linux box while
->>>> running docker containers. I am not sure if it is bug, but it is
->>>> inconsistent and not documented.
->>>>
->>>> If the core_pattern is set on the host, the containers will observe
->>>> and use the pattern for dumping cores (there is no per cgroup
->>>> core_pattern). According to core(5) for setting core_pattern one can:
->>>>
->>>> 1. echo "/tmp/cores/core.%e.%p" > /proc/sys/kernel/core_pattern
->>>> 2. echo "|/bin/custom_core /tmp/cores/ %e %p " >
->>>> /proc/sys/kernel/core_pattern
->>>>
->>>> The former pattern evaluates the /tmp/cores path in the container's
->>>> filesystem namespace. Which means, the host does not see a core file
->>>> in /tmp/cores.
->>>>
->>>> However, the latter evaluates the /bin/custom_core path in the global
->>>> filesystem namespace. Moreover, if /bin/core decides to write the core
->>>> to a path (/tmp/cores in this case as shown by the arg to
->>>> custom_core), the path will be evaluated in the global filesystem
->>>> namespace as well.
->>>>
->>>> The latter behaviour is counter-intuitive and error-prone as the
->>>> container can fill up the core-file directory which it does not have
->>>> direct access to (which means the core is also not accessible for
->>>> debugging if someone only has access to the container).
->
->>From a container perspective it is perhaps counter intuitive from
-> the perspective of the operator of the machine nothing works specially
-> about core_pattern and it works as designed with no unusual danages.
->
->>> Hi Shayan,
->>>       We found the same problem with what you described here.
->>> Is there any document for this behaviour? I want to know is
->>> that intentional or as you said a 'bug'. Maybe that's intentional
->>> to provide a way for admin to collect core dumps from all containers as
->>> Richard said. I am interested in it too.
->>>
->>> Anyone can help here?
->>
->> In addition, is that a good idea to make core_pattern to be seperated
->> in different namespace?
->
-> The behavior was the best we could do at the time last time this issue
-> was examined.    There is enough information available to be able to
-> write a core dumping program that can reliably place your core dumps
-> in your container.
->
-> There has not yet been an obvious namespace in which to stick
-> core_pattern, and even worse exactly how to appropriate launch a process
-> in a container has not been figured out.
+On Wed, Dec 09, 2015 at 03:01:07PM -0500, Johannes Weiner wrote:
+> On Wed, Dec 09, 2015 at 05:32:39PM +0100, Arnd Bergmann wrote:
+> > The change to move the kmem accounting into the normal memcg
+> > code means we can no longer use memcg with slob, which lacks
+> > the memcg_params member in its struct kmem_cache:
+> > 
+> > ../mm/slab.h: In function 'is_root_cache':
+> > ../mm/slab.h:187:10: error: 'struct kmem_cache' has no member named 'memcg_params'
 
-Hi Eric,
-	Could you provide an reference to these discussion?? In
-addition, is there a already infrastructure to do this kind of thing?
+Argh, I completely forgot about this SLOB thing :-(
 
-Thanx
-Yang
->
-> If those tricky problems can be solved we can have a core_pattern in a
-> container.  What we have now is the best we have been able to figure out
-> so far.
->
-> Eric
->
->
->>
->> Yang
->>>
->>> Yang
->>>>
->>>> Currently, I work around this issue by detecting that the process is
->>>> crashing from a container (by comparing the namespace pid to the
->>>> global pid) and refuse to dump the core if it is from a container.
->>>>
->>>> Tested on Ubuntu (kernel 3.16) and Fedora (kernel 4.1).
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe cgroups" in
->>>> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>
->>>
->>>
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->>> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>> Please read the FAQ at  http://www.tux.org/lkml/
->>> .
->>>
->
->
-> .
->
+> > 
+> > This enforces the new dependency in Kconfig. Alternatively,
+> > we could change the slob code to allow using MEMCG.
+> 
+> I'm curious, was this a random config or do you actually use
+> CONFIG_SLOB && CONFIG_MEMCG?
+> 
+> Excluding CONFIG_MEMCG completely for slob seems harsh, but I would
+> prefer not littering the source with
+> 
+> #if defined(CONFIG_MEMCG) && (defined(CONFIG_SLAB) || defined(CONFIG_SLUB))
+> 
+> or
+> 
+> #if defined(CONFIG_MEMCG) && !defined(CONFIG_SLOB)
+> 
+> for such a special case. The #ifdefs are already out of hand in there.
+> 
+> Vladimir, what would you think of simply doing this?
+> 
+> diff --git a/mm/slab.h b/mm/slab.h
+> index 5adec08..0b3ec4b 100644
+> --- a/mm/slab.h
+> +++ b/mm/slab.h
+> @@ -25,6 +25,9 @@ struct kmem_cache {
+>  	int refcount;		/* Use counter */
+>  	void (*ctor)(void *);	/* Called on object slot creation */
+>  	struct list_head list;	/* List of all slab caches on the system */
+> +#ifdef CONFIG_MEMCG
+> +	struct memcg_cache_params memcg_params;
+> +#endif
+>  };
+>  
+>  #endif /* CONFIG_SLOB */
+
+I don't like it. This would result in allocation of per memcg arrays for
+each list_lru/kmem_cache, which would never be used. This looks
+extremely ugly. I'd prefer to make CONFIG_MEMCG depend on SL[AU]B, but
+I'm afraid such a change will be frowned upon - who knows who uses
+MEMCG & SLOB?
+
+I guess SLOB could be made memcg-aware, but I don't think it's worth the
+trouble, although I can take a look in this direction - from a quick
+glance at SLOB it shouldn't be difficult. If we decide to go this way, I
+think we could use this patch as a temporary fix, which would be
+reverted eventually.
+
+Otherwise, no matter how tempting the idea to put all memcg stuff under
+CONFIG_MEMCG is, I think it won't fly, so for now we should use ifdefs.
+To avoid complex checks, we could define a macro in memcontrol.h, say
+MEMCG_KMEM_ENABLED, and use it throughout the code. And I think we
+should wrap list_lru stuff in it either :-/
+
+Thanks,
+Vladimir
