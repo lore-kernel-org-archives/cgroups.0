@@ -1,77 +1,132 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] mm: memcontrol: only manage socket pressure for
- CONFIG_INET
-Date: Wed, 9 Dec 2015 15:13:26 -0800
-Message-ID: <20151209151326.f7efba4e5697e1b0f212ea34@linux-foundation.org>
-References: <1449588624-9220-1-git-send-email-hannes@cmpxchg.org>
-	<2564892.qO1q7YJ6Nb@wuerfel>
-	<7343206.sFybcLLUN2@wuerfel>
-	<20151209185858.GA2342@cmpxchg.org>
-	<20151209142836.e81260567879110f319c01a4@linux-foundation.org>
-	<20151209230505.GA16610@cmpxchg.org>
+From: Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Subject: Re: piping core dump to a program escapes container
+Date: Thu, 10 Dec 2015 08:27:35 +0800
+Message-ID: <5668C6F7.4030607@cn.fujitsu.com>
+References: <CABAubTgj8+xngrvc7sNbYS_Hq+-rGAYCz0y433ByiZ45dZuT0w@mail.gmail.com>	<56679161.303@cn.fujitsu.com>	<56679399.6080306@cn.fujitsu.com>	<876108fgfq.fsf@x220.int.ebiederm.org> <20151209093418.4d28b78c@pluto.restena.lu>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20151209230505.GA16610@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20151209093418.4d28b78c-I2t2yFIzmohO7ya8xxV06g@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-mm@kvack.org, netdev@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: =?ISO-8859-1?Q?Bruno_Pr=E9mont?= <bonbons-ud5FBsm0p/xEiooADzr8i9i2O/JbrIOy@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shayan Pooya <shayan-UQzSddOuLosdnm+yROfE0A@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>
 
-On Wed, 9 Dec 2015 18:05:05 -0500 Johannes Weiner <hannes@cmpxchg.org> wrote:
+On 12/09/2015 04:34 PM, Bruno Pr=E9mont wrote:
+> On Tue, 08 Dec 2015 21:29:13 -0600 Eric W. Biederman wrote:
+>> Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org> writes:
+>>
+>>> On 12/09/2015 10:26 AM, Dongsheng Yang wrote:
+>>>> On 10/25/2015 05:54 AM, Shayan Pooya wrote:
+>>>>> I noticed the following core_pattern behavior in my linux box whi=
+le
+>>>>> running docker containers. I am not sure if it is bug, but it is
+>>>>> inconsistent and not documented.
+>>>>>
+>>>>> If the core_pattern is set on the host, the containers will obser=
+ve
+>>>>> and use the pattern for dumping cores (there is no per cgroup
+>>>>> core_pattern). According to core(5) for setting core_pattern one =
+can:
+>>>>>
+>>>>> 1. echo "/tmp/cores/core.%e.%p" > /proc/sys/kernel/core_pattern
+>>>>> 2. echo "|/bin/custom_core /tmp/cores/ %e %p " >
+>>>>> /proc/sys/kernel/core_pattern
+>>>>>
+>>>>> The former pattern evaluates the /tmp/cores path in the container=
+'s
+>>>>> filesystem namespace. Which means, the host does not see a core f=
+ile
+>>>>> in /tmp/cores.
+>>>>>
+>>>>> However, the latter evaluates the /bin/custom_core path in the gl=
+obal
+>>>>> filesystem namespace. Moreover, if /bin/core decides to write the=
+ core
+>>>>> to a path (/tmp/cores in this case as shown by the arg to
+>>>>> custom_core), the path will be evaluated in the global filesystem
+>>>>> namespace as well.
+>>>>>
+>>>>> The latter behaviour is counter-intuitive and error-prone as the
+>>>>> container can fill up the core-file directory which it does not h=
+ave
+>>>>> direct access to (which means the core is also not accessible for
+>>>>> debugging if someone only has access to the container).
+>>
+>>  From a container perspective it is perhaps counter intuitive from
+>> the perspective of the operator of the machine nothing works special=
+ly
+>> about core_pattern and it works as designed with no unusual danages.
+>>
+>>>> Hi Shayan,
+>>>>       We found the same problem with what you described here.
+>>>> Is there any document for this behaviour? I want to know is
+>>>> that intentional or as you said a 'bug'. Maybe that's intentional
+>>>> to provide a way for admin to collect core dumps from all containe=
+rs as
+>>>> Richard said. I am interested in it too.
+>>>>
+>>>> Anyone can help here?
+>>>
+>>> In addition, is that a good idea to make core_pattern to be seperat=
+ed
+>>> in different namespace?
+>>
+>> The behavior was the best we could do at the time last time this iss=
+ue
+>> was examined.    There is enough information available to be able to
+>> write a core dumping program that can reliably place your core dumps
+>> in your container.
+>>
+>> There has not yet been an obvious namespace in which to stick
+>> core_pattern, and even worse exactly how to appropriate launch a pro=
+cess
+>> in a container has not been figured out.
+>>
+>> If those tricky problems can be solved we can have a core_pattern in=
+ a
+>> container.  What we have now is the best we have been able to figure=
+ out
+>> so far.
+>
+> Isn't the second option dangerous if its run in global namespace and
+> settable from some other namespace/container?
+>
+> If a process inside a container can set /proc/sys/kernel/core_pattern
+> then it could e.g. set it to
+>    echo "|/bin/rm -rf / /tmp/cores/ %e %p " > /proc/sys/kernel/core_p=
+attern
+> and kill the host (eventually itself included).
+> Other command lines could do different bad things.
 
-> On Wed, Dec 09, 2015 at 02:28:36PM -0800, Andrew Morton wrote:
-> > On Wed, 9 Dec 2015 13:58:58 -0500 Johannes Weiner <hannes@cmpxchg.org> wrote:
-> > > The calls to tcp_init_cgroup() appear earlier in the series than "mm:
-> > > memcontrol: hook up vmpressure to socket pressure". However, they get
-> > > moved around a few times so fixing it earlier means respinning the
-> > > series. Andrew, it's up to you whether we take the bisectability hit
-> > > for !CONFIG_INET && CONFIG_MEMCG (how common is this?) or whether you
-> > > want me to resend the series.
-> > 
-> > hm, drat, I was suspecting dependency issues here, but a test build
-> > said it was OK.
-> > 
-> > Actually, I was expecting this patch series to depend on the linux-next
-> > cgroup2 changes, but that doesn't appear to be the case.  *should* this
-> > series be staged after the cgroup2 code?
-> 
-> Code-wise they are independent. My stuff is finishing up the new memcg
-> control knobs, the cgroup2 stuff is changing how and when those knobs
-> are exposed from within the cgroup core. I'm not relying on any recent
-> changes in the cgroup core AFAICS, so the order shouldn't matter here.
+Yes, if you don't give a privileged to container, that's read-only
+to them. But if you give containers privilege, that true as you said.
+But that's similar with if you give a privilege to any of process
+running in the machine. So I think it's not a problem.
 
-OK, thanks.
+Yang
+>
+>
+> Something that would sound reasonable is to have the core dumping
+> helper process run under the namespaces the process which wrote to
+> /proc/sys/kernel/core_pattern had.
+> When some of those namespaces are gone, falling back to the namespace=
+s
+> of the process for which core is to be dumped might seem reasonable
+> (or just not dumping core at all as is done when core_pipe_limit is
+> exceeded).
+>
+> The value of core_pattern (and other core_* sysctls)  should probably=
+ belong
+> to the mount namespace the proc filesystem used for setting its value
+> was in - or the matching namespace of calling process when set via sy=
+scall.
+>
+> Bruno
+>
+>
+> .
+>
 
-> > Regarding this particular series: yes, I think we can live with a
-> > bisection hole for !CONFIG_INET && CONFIG_MEMCG users.  But I'm not
-> > sure why we're discussing bisection issues, because Arnd's build
-> > failure occurs with everything applied?
-> 
-> Arnd's patches apply to the top of the stack, but they address issues
-> introduced early in the series and the problematic code gets touched a
-> lot in subsequent patches. E.g. the first build breakage is in ("net:
-> tcp_memcontrol: simplify linkage between socket and page counter")
-> when the tcp_init_cgroup() and tcp_destroy_cgroup() function calls get
-> moved around and lose the CONFIG_INET protection.
 
-Yeah, this is a pain.  I think I'll fold Arnd's fix into
-mm-memcontrol-introduce-config_memcg_legacy_kmem.patch (which is staged
-after all the other MM patches and after linux-next) and will pretend I
-didn't know about the issue ;)
-
-> Anyway, if we can live with the bisection caveat then Arnd's fixes on
-> top of the kmem series look good to me. Depending on what Vladimir
-> thinks we might want to replace the CONFIG_SLOB fix with something
-> else later on, but that shouldn't be a problem, either.
-
-I don't have a fix for the CONFIG_SLOB&&CONFIG_MEMCG issue yet.  I
-agree that it would be best to make the combination work correctly
-rather than banning it, but that does require a bit of runtime testing.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
