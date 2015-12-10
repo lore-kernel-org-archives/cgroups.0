@@ -1,105 +1,91 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 7/8] mm: memcontrol: account "kmem" consumers in cgroup2
- memory controller
-Date: Thu, 10 Dec 2015 10:16:27 -0500
-Message-ID: <20151210151627.GB1431@cmpxchg.org>
-References: <1449599665-18047-1-git-send-email-hannes@cmpxchg.org>
- <1449599665-18047-8-git-send-email-hannes@cmpxchg.org>
- <20151209113037.GS11488@esperanza>
- <20151210132833.GM19496@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC PATCH] mm: memcontrol: reign in CONFIG space madness
+Date: Thu, 10 Dec 2015 17:12:12 +0100
+Message-ID: <20151210161212.GB11778@dhcp22.suse.cz>
+References: <20151209203004.GA5820@cmpxchg.org>
+ <20151210134031.GN19496@dhcp22.suse.cz>
+ <20151210150650.GA1431@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20151210132833.GM19496@dhcp22.suse.cz>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20151210150650.GA1431-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Vladimir Davydov <vdavydov@virtuozzo.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Dec 10, 2015 at 02:28:33PM +0100, Michal Hocko wrote:
-> On Wed 09-12-15 14:30:38, Vladimir Davydov wrote:
-> > From: Vladimir Davydov <vdavydov@virtuozzo.com>
-> > Subject: [PATCH] mm: memcontrol: allow to disable kmem accounting for cgroup2
+On Thu 10-12-15 10:06:50, Johannes Weiner wrote:
+> On Thu, Dec 10, 2015 at 02:40:31PM +0100, Michal Hocko wrote:
+> > On Wed 09-12-15 15:30:04, Johannes Weiner wrote:
+> > > Hey guys,
+> > > 
+> > > there has been quite a bit of trouble that stems from dividing our
+> > > CONFIG space and having to provide real code and dummy functions
+> > > correctly in all possible combinations. This is amplified by having
+> > > the legacy mode and the cgroup2 mode in the same file sharing code.
+> > > 
+> > > The socket memory and kmem accounting series is a nightmare in that
+> > > respect, and I'm still in the process of sorting it out. But no matter
+> > > what the outcome there is going to be, what do you think about getting
+> > > rid of the CONFIG_MEMCG[_LEGACY]_KMEM and CONFIG_INET stuff?
 > > 
-> > Kmem accounting might incur overhead that some users can't put up with.
-> > Besides, the implementation is still considered unstable. So let's
-> > provide a way to disable it for those users who aren't happy with it.
+> > The code size difference after your recent patches is indeed not that
+> > large but that is only because huge part of the kmem code is enabled by
+> > default now. I have raised this in the reply to the respective patch.
+> > This is ~8K of the code 1K for data. I do understand your reasoning
+> > about the complications but this is quite a lot of code. CONFIG_INET
+> > ifdefs are probably pointless - they do not add really much and most
+> > configs will have it by default. The core for KMEM seems to be a
+> > different thing to me. Maybe we can reorganize the code to make the
+> > maintenance easier and still allow to enable KMEM accounting separately
+> > for kernel size savy users?
 > 
-> Yes there will be users who do not want to pay an additional overhead
-> and still accoplish what they need.
-> I haven't measured the overhead lately - especially after the opt-out ->
-> opt-in change so it might be much lower than my previous ~5% for kbuild
-> load.
+> Look, if kernel size savvy users care THAT much about TWO pages then
+> they must absolutely LOVE me for having eliminated page_cgroup and
+> saving them THOUSANDS of pages, and deleted hundreds of lines of code
+> and static data in memcontrol.c ever since I started working on it.
 
-I think switching from accounting *all* slab allocations to accounting
-a list of, what, less than 20 select slabs, counts as a change
-significant enough to entirely invalidate those measurements and never
-bring up that number again in the context of kmem cost, don't you think?
+They surely do! And I appreciate that very much as well!
 
-There isn't that much that the kmem is doing, but for posterity I ran
-kbuild test inside a cgroup2, with and without cgroup.memory=nokmem,
-and these are the results:
+> Yet this has been the only point you have been bringing up this entire
+> time: the cost I'm putting on users with all this in both memory and
+> cpu cycles.
 
-default:
- Performance counter stats for 'make -j16 -s clean bzImage' (3 runs):
+This is quite an unfair statement, don't you think? I have been
+reviewing all those changes as deeply as I could and many of them were
+highly non trivial so it took quite some time. I've raised concerns
+I had on the way. That doesn't compare to the time you have spent on
+that of course but I think that reducing all my review feedback to a
+single thing is really unfair.
 
-     715823.047005      task-clock (msec)         #    3.794 CPUs utilized          
-           252,538      context-switches          #    0.353 K/sec                  
-            32,018      cpu-migrations            #    0.045 K/sec                  
-        16,678,202      page-faults               #    0.023 M/sec                  
- 1,783,804,914,980      cycles                    #    2.492 GHz                    
-   <not supported>      stalled-cycles-frontend  
-   <not supported>      stalled-cycles-backend   
- 1,346,424,021,728      instructions              #    0.75  insns per cycle        
-   298,744,956,474      branches                  #  417.363 M/sec                  
-    10,207,872,737      branch-misses             #    3.42% of all branches        
+> When I have just made all hotpaths and accounting in memcg
+> completely lockless. And when cgroup2 is going to be a FRACTION of the
+> original memcg code, data size, and runtime cost, even INCLUDING the
+> entirety of the kmem accounting.
+> 
+> There is no perspective to your criticism.
 
-     188.667608149 seconds time elapsed                                          ( +-  0.66% )
+This is what we call a review process. Raise concerns and deal with
+them. My review hasn't implied this would be a show stopper or block
+those change to get merged. I was merely asking whether we can keep
+the code size with a _reasonable_ maintenance burden. If the answer is
+no then I can live with that even when I might not like that fact. That
+has been reflected by a lack of my acked-by.
 
-cgroup.memory=nokmem
- Performance counter stats for 'make -j16 -s clean bzImage' (3 runs):
+> So let's just say I'm going to cash some of that credit I built up in
+> order to get to v2 as fast as possible, without having to spend days
+> engineering a solution to save two damn pages in legacy code, okay?
 
-     729028.322760      task-clock (msec)         #    3.805 CPUs utilized          
-           258,775      context-switches          #    0.356 K/sec                  
-            32,241      cpu-migrations            #    0.044 K/sec                  
-        16,647,817      page-faults               #    0.023 M/sec                  
- 1,816,827,061,194      cycles                    #    2.497 GHz                    
-   <not supported>      stalled-cycles-frontend  
-   <not supported>      stalled-cycles-backend   
- 1,345,446,962,095      instructions              #    0.74  insns per cycle        
-   298,461,034,326      branches                  #  410.277 M/sec                  
-    10,215,145,963      branch-misses             #    3.42% of all branches        
-
-     191.583957742 seconds time elapsed                                          ( +-  0.57% )
-
-I would say the difference is solidly in the noise.
-
-I also profiled a silly find | xargs stat pipe to excercise the dentry
-and inode accounting, and this was the highest kmem-specific entry:
-
-     0.27%     0.27%  find             [kernel.kallsyms]        [k] __memcg_kmem_get_cache                    
-                       |
-                       ---__memcg_kmem_get_cache
-                          __kmalloc
-                          ext4_htree_store_dirent
-                          htree_dirblock_to_tree
-                          ext4_htree_fill_tree
-                          ext4_readdir
-                          iterate_dir
-                          sys_getdents
-                          entry_SYSCALL_64_fastpath
-                          __getdents64
-
-So can we *please* lay this whole "unreasonable burden to legacy and
-power users" line of argument to rest and get on with our work? And
-then tackle scalability problems as they show up in real workloads?
-
-Thanks.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+You sound as if you had to overrule a nack which sounds like over
+reacting because this is not the case.
+ 
+> And if you DO care so much about cost for legacy users beyond this, I
+> think it's time for you to put your money where your mouth is and
+> start sending patches that save those users memory and cpu cycles,
+> instead of constantly demanding this from people who work on making
+> this whole thing much leaner, faster, and cleaner for EVERYBODY.
+-- 
+Michal Hocko
+SUSE Labs
