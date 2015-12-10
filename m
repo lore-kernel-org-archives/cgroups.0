@@ -1,124 +1,71 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 7/8] mm: memcontrol: account "kmem" consumers in cgroup2
- memory controller
-Date: Thu, 10 Dec 2015 15:21:47 +0100
-Message-ID: <20151210142147.GP19496@dhcp22.suse.cz>
-References: <1449599665-18047-1-git-send-email-hannes@cmpxchg.org>
- <1449599665-18047-8-git-send-email-hannes@cmpxchg.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [RFC PATCH] mm: memcontrol: reign in CONFIG space madness
+Date: Thu, 10 Dec 2015 10:06:50 -0500
+Message-ID: <20151210150650.GA1431@cmpxchg.org>
+References: <20151209203004.GA5820@cmpxchg.org>
+ <20151210134031.GN19496@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1449599665-18047-8-git-send-email-hannes@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20151210134031.GN19496@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@virtuozzo.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Vladimir Davydov <vdavydov@virtuozzo.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue 08-12-15 13:34:24, Johannes Weiner wrote:
-> The original cgroup memory controller has an extension to account slab
-> memory (and other "kernel memory" consumers) in a separate "kmem"
-> counter, once the user set an explicit limit on that "kmem" pool.
+On Thu, Dec 10, 2015 at 02:40:31PM +0100, Michal Hocko wrote:
+> On Wed 09-12-15 15:30:04, Johannes Weiner wrote:
+> > Hey guys,
+> > 
+> > there has been quite a bit of trouble that stems from dividing our
+> > CONFIG space and having to provide real code and dummy functions
+> > correctly in all possible combinations. This is amplified by having
+> > the legacy mode and the cgroup2 mode in the same file sharing code.
+> > 
+> > The socket memory and kmem accounting series is a nightmare in that
+> > respect, and I'm still in the process of sorting it out. But no matter
+> > what the outcome there is going to be, what do you think about getting
+> > rid of the CONFIG_MEMCG[_LEGACY]_KMEM and CONFIG_INET stuff?
 > 
-> However, this includes various consumers whose sizes are directly
-> linked to userspace activity. Accounting them as an optional "kmem"
-> extension is problematic for several reasons:
-> 
-> 1. It leaves the main memory interface with incomplete semantics. A
->    user who puts their workload into a cgroup and configures a memory
->    limit does not expect us to leave holes in the containment as big
->    as the dentry and inode cache, or the kernel stack pages.
-> 
-> 2. If the limit set on this random historical subgroup of consumers is
->    reached, subsequent allocations will fail even when the main memory
->    pool available to the cgroup is not yet exhausted and/or has
->    reclaimable memory in it.
-> 
-> 3. Calling it 'kernel memory' is misleading. The dentry and inode
->    caches are no more 'kernel' (or no less 'user') memory than the
->    page cache itself. Treating these consumers as different classes is
->    a historical implementation detail that should not leak to users.
-> 
-> So, in addition to page cache, anonymous memory, and network socket
-> memory, account the following memory consumers per default in the
-> cgroup2 memory controller:
-> 
->      - threadinfo
->      - task_struct
->      - task_delay_info
->      - pid
->      - cred
->      - mm_struct
->      - vm_area_struct and vm_region (nommu)
->      - anon_vma and anon_vma_chain
->      - signal_struct
->      - sighand_struct
->      - fs_struct
->      - files_struct
->      - fdtable and fdtable->full_fds_bits
->      - dentry and external_name
->      - inode for all filesystems.
-> 
-> This should give us reasonable memory isolation for most common
-> workloads out of the box.
-> 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> The code size difference after your recent patches is indeed not that
+> large but that is only because huge part of the kmem code is enabled by
+> default now. I have raised this in the reply to the respective patch.
+> This is ~8K of the code 1K for data. I do understand your reasoning
+> about the complications but this is quite a lot of code. CONFIG_INET
+> ifdefs are probably pointless - they do not add really much and most
+> configs will have it by default. The core for KMEM seems to be a
+> different thing to me. Maybe we can reorganize the code to make the
+> maintenance easier and still allow to enable KMEM accounting separately
+> for kernel size savy users?
 
-Acked-by: Michal Hocko <mhocko@suse.com>
+Look, if kernel size savvy users care THAT much about TWO pages then
+they must absolutely LOVE me for having eliminated page_cgroup and
+saving them THOUSANDS of pages, and deleted hundreds of lines of code
+and static data in memcontrol.c ever since I started working on it.
 
-> ---
->  mm/memcontrol.c | 18 +++++++++++-------
->  1 file changed, 11 insertions(+), 7 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index ab72c47..d048137 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2356,13 +2356,14 @@ int __memcg_kmem_charge_memcg(struct page *page, gfp_t gfp, int order,
->  	if (!memcg_kmem_online(memcg))
->  		return 0;
->  
-> -	if (!page_counter_try_charge(&memcg->kmem, nr_pages, &counter))
-> -		return -ENOMEM;
-> -
->  	ret = try_charge(memcg, gfp, nr_pages);
-> -	if (ret) {
-> -		page_counter_uncharge(&memcg->kmem, nr_pages);
-> +	if (ret)
->  		return ret;
-> +
-> +	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) &&
-> +	    !page_counter_try_charge(&memcg->kmem, nr_pages, &counter)) {
-> +		cancel_charge(memcg, nr_pages);
-> +		return -ENOMEM;
->  	}
->  
->  	page->mem_cgroup = memcg;
-> @@ -2391,7 +2392,9 @@ void __memcg_kmem_uncharge(struct page *page, int order)
->  
->  	VM_BUG_ON_PAGE(mem_cgroup_is_root(memcg), page);
->  
-> -	page_counter_uncharge(&memcg->kmem, nr_pages);
-> +	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
-> +		page_counter_uncharge(&memcg->kmem, nr_pages);
-> +
->  	page_counter_uncharge(&memcg->memory, nr_pages);
->  	if (do_memsw_account())
->  		page_counter_uncharge(&memcg->memsw, nr_pages);
-> @@ -2895,7 +2898,8 @@ static int memcg_propagate_kmem(struct mem_cgroup *memcg)
->  	 * onlined after this point, because it has at least one child
->  	 * already.
->  	 */
-> -	if (memcg_kmem_online(parent))
-> +	if (cgroup_subsys_on_dfl(memory_cgrp_subsys) ||
-> +	    memcg_kmem_online(parent))
->  		ret = memcg_online_kmem(memcg);
->  	mutex_unlock(&memcg_limit_mutex);
->  	return ret;
-> -- 
-> 2.6.3
+Yet this has been the only point you have been bringing up this entire
+time: the cost I'm putting on users with all this in both memory and
+cpu cycles. When I have just made all hotpaths and accounting in memcg
+completely lockless. And when cgroup2 is going to be a FRACTION of the
+original memcg code, data size, and runtime cost, even INCLUDING the
+entirety of the kmem accounting.
 
--- 
-Michal Hocko
-SUSE Labs
+There is no perspective to your criticism.
+
+So let's just say I'm going to cash some of that credit I built up in
+order to get to v2 as fast as possible, without having to spend days
+engineering a solution to save two damn pages in legacy code, okay?
+
+And if you DO care so much about cost for legacy users beyond this, I
+think it's time for you to put your money where your mouth is and
+start sending patches that save those users memory and cpu cycles,
+instead of constantly demanding this from people who work on making
+this whole thing much leaner, faster, and cleaner for EVERYBODY.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
