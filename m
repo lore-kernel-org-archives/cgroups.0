@@ -1,50 +1,39 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [RFC PATCH] mm: memcontrol: reign in CONFIG space madness
-Date: Thu, 10 Dec 2015 14:40:31 +0100
-Message-ID: <20151210134031.GN19496@dhcp22.suse.cz>
-References: <20151209203004.GA5820@cmpxchg.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH 6/8] mm: memcontrol: move kmem accounting code to
+ CONFIG_MEMCG
+Date: Thu, 10 Dec 2015 09:00:12 -0500
+Message-ID: <20151210140012.GA21987@cmpxchg.org>
+References: <1449599665-18047-1-git-send-email-hannes@cmpxchg.org>
+ <1449599665-18047-7-git-send-email-hannes@cmpxchg.org>
+ <20151210131718.GL19496@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20151209203004.GA5820@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <20151210131718.GL19496-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Vladimir Davydov <vdavydov@virtuozzo.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Wed 09-12-15 15:30:04, Johannes Weiner wrote:
-> Hey guys,
+On Thu, Dec 10, 2015 at 02:17:18PM +0100, Michal Hocko wrote:
+> On Tue 08-12-15 13:34:23, Johannes Weiner wrote:
+> > The cgroup2 memory controller will account important in-kernel memory
+> > consumers per default. Move all necessary components to CONFIG_MEMCG.
 > 
-> there has been quite a bit of trouble that stems from dividing our
-> CONFIG space and having to provide real code and dummy functions
-> correctly in all possible combinations. This is amplified by having
-> the legacy mode and the cgroup2 mode in the same file sharing code.
-> 
-> The socket memory and kmem accounting series is a nightmare in that
-> respect, and I'm still in the process of sorting it out. But no matter
-> what the outcome there is going to be, what do you think about getting
-> rid of the CONFIG_MEMCG[_LEGACY]_KMEM and CONFIG_INET stuff?
+> Hmm, that bloats the kernel also for users who are not using cgroup2
+> and have CONFIG_MEMCG_KMEM disabled.
 
-The code size difference after your recent patches is indeed not that
-large but that is only because huge part of the kmem code is enabled by
-default now. I have raised this in the reply to the respective patch.
-This is ~8K of the code 1K for data. I do understand your reasoning
-about the complications but this is quite a lot of code. CONFIG_INET
-ifdefs are probably pointless - they do not add really much and most
-configs will have it by default. The core for KMEM seems to be a
-different thing to me. Maybe we can reorganize the code to make the
-maintenance easier and still allow to enable KMEM accounting separately
-for kernel size savy users?
+Huh? The clock is ticking for them. We'll keep the original cgroup
+interface around for backwards compatibility as long as we think there
+are activer users, but this is not the time to microoptimize v1. A
+slight increase to kernel size is unfortunate, but I don't think this
+could be considered a regression in the sense that it breaks anything.
 
-[...]
--- 
-Michal Hocko
-SUSE Labs
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+I'm more concerned with cgroup2 users having to pay the excessive cost
+of v1-only features, like the entire soft limit implementation, charge
+migration, which also has its fangs in VM hotpaths, the eventfd stuff,
+arbitrarily-configurable usage thresholds. That's a *ton* of code. If
+you want to tackle kernel bloat, grouping this stuff all together and
+slapping a CONFIG_MEMCG_LEGACY around it would be a real step forward.
