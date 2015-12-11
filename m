@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH 2/4] mm: memcontrol: reign in the CONFIG space madness
-Date: Fri, 11 Dec 2015 14:54:11 -0500
-Message-ID: <1449863653-6546-2-git-send-email-hannes@cmpxchg.org>
+Subject: [PATCH 4/4] mm: memcontrol: clean up alloc, online, offline, free functions
+Date: Fri, 11 Dec 2015 14:54:13 -0500
+Message-ID: <1449863653-6546-4-git-send-email-hannes@cmpxchg.org>
 References: <1449863653-6546-1-git-send-email-hannes@cmpxchg.org>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1449863653-6546-1-git-send-email-hannes@cmpxchg.org>
@@ -13,344 +13,400 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov@virtuozzo.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-What CONFIG_INET and CONFIG_LEGACY_KMEM guard inside the memory
-controller code is insignificant, having these conditionals is not
-worth the complication and fragility that comes with them.
+The creation and teardown of struct mem_cgroup is fairly messy and
+that has attracted mistakes and subtle bugs before.
+
+The main cause for this is that there is no clear model about what
+needs to happen when, and that attracts more chaos. So create one:
+
+1. mem_cgroup_alloc() should allocate struct mem_cgroup and its
+   auxiliary members and initialize work items, locks etc. so that the
+   object it returns is fully initialized and in a neutral state.
+
+2. mem_cgroup_css_alloc() will use mem_cgroup_alloc() to obtain a new
+   memcg object and configure it and the system according to the role
+   of the new memory-controlled cgroup in the hierarchy.
+
+3. mem_cgroup_css_online() is no longer needed to synchronize with
+   iterators, but it verifies css->id which isn't available earlier.
+
+4. mem_cgroup_css_offline() implements stuff that needs to happen upon
+   the user-visible destruction of a cgroup, which includes stopping
+   all user interfacing as well as releasing certain structures when
+   continued memory consumption would be unexpected at that point.
+
+5. mem_cgroup_css_free() prepares the system and the memcg object for
+   the object's disappearance, neutralizes its state, and then gives
+   it back to mem_cgroup_free().
+
+6. mem_cgroup_free() releases struct mem_cgroup and auxiliary memory.
 
 Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 ---
- include/linux/memcontrol.h | 14 +++++--------
- init/Kconfig               | 26 +++--------------------
- mm/memcontrol.c            | 52 +++-------------------------------------------
- mm/vmpressure.c            |  2 --
- 4 files changed, 11 insertions(+), 83 deletions(-)
+ include/linux/memcontrol.h |   3 -
+ mm/memcontrol.c            | 225 +++++++++++++++------------------------------
+ 2 files changed, 75 insertions(+), 153 deletions(-)
 
 diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 2bb14d02..47995b4 100644
+index a3869bf..27123e5 100644
 --- a/include/linux/memcontrol.h
 +++ b/include/linux/memcontrol.h
-@@ -233,9 +233,11 @@ struct mem_cgroup {
+@@ -181,9 +181,6 @@ struct mem_cgroup {
+ 	/* vmpressure notifications */
+ 	struct vmpressure vmpressure;
+ 
+-	/* css_online() has been completed */
+-	int initialized;
+-
+ 	/*
+ 	 * Should the accounting and control be hierarchical, per subtree?
  	 */
- 	struct mem_cgroup_stat_cpu __percpu *stat;
- 
--#if defined(CONFIG_MEMCG_LEGACY_KMEM) && defined(CONFIG_INET)
-+	unsigned long		socket_pressure;
-+
-+	/* Legacy tcp memory accounting */
- 	struct cg_proto tcp_mem;
--#endif
-+
- #ifndef CONFIG_SLOB
-         /* Index in the kmem_cache->memcg_params.memcg_caches array */
- 	int kmemcg_id;
-@@ -254,10 +256,6 @@ struct mem_cgroup {
- 	struct wb_domain cgwb_domain;
- #endif
- 
--#ifdef CONFIG_INET
--	unsigned long		socket_pressure;
--#endif
--
- 	/* List of events which userspace want to receive */
- 	struct list_head event_list;
- 	spinlock_t event_list_lock;
-@@ -712,15 +710,13 @@ void sock_update_memcg(struct sock *sk);
- void sock_release_memcg(struct sock *sk);
- bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages);
- void mem_cgroup_uncharge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages);
--#if defined(CONFIG_MEMCG) && defined(CONFIG_INET)
-+#ifdef CONFIG_MEMCG
- extern struct static_key_false memcg_sockets_enabled_key;
- #define mem_cgroup_sockets_enabled static_branch_unlikely(&memcg_sockets_enabled_key)
- static inline bool mem_cgroup_under_socket_pressure(struct mem_cgroup *memcg)
- {
--#ifdef CONFIG_MEMCG_LEGACY_KMEM
- 	if (memcg->tcp_mem.memory_pressure)
- 		return true;
--#endif
- 	do {
- 		if (time_before(jiffies, memcg->socket_pressure))
- 			return true;
-diff --git a/init/Kconfig b/init/Kconfig
-index e8cdf02..b8fe7586 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -1057,25 +1057,6 @@ config MEMCG_SWAP_ENABLED
- 	  For those who want to have the feature enabled by default should
- 	  select this option (if, for some reason, they need to disable it
- 	  then swapaccount=0 does the trick).
--config MEMCG_LEGACY_KMEM
--       bool
--config MEMCG_KMEM
--	bool "Legacy Memory Resource Controller Kernel Memory accounting"
--	depends on MEMCG
--	depends on SLUB || SLAB
--	select MEMCG_LEGACY_KMEM
--	help
--	  The Kernel Memory extension for Memory Resource Controller can limit
--	  the amount of memory used by kernel objects in the system. Those are
--	  fundamentally different from the entities handled by the standard
--	  Memory Controller, which are page-based, and can be swapped. Users of
--	  the kmem extension can use it to guarantee that no group of processes
--	  will ever exhaust kernel resources alone.
--
--	  This option affects the ORIGINAL cgroup interface. The cgroup2 memory
--	  controller includes important in-kernel memory consumers per default.
--
--	  If you're using cgroup2, say N.
- 
- config CGROUP_HUGETLB
- 	bool "HugeTLB Resource Controller for Control Groups"
-@@ -1225,10 +1206,9 @@ config USER_NS
- 	  to provide different user info for different servers.
- 
- 	  When user namespaces are enabled in the kernel it is
--	  recommended that the MEMCG and MEMCG_KMEM options also be
--	  enabled and that user-space use the memory control groups to
--	  limit the amount of memory a memory unprivileged users can
--	  use.
-+	  recommended that the MEMCG option also be enabled and that
-+	  user-space use the memory control groups to limit the amount
-+	  of memory a memory unprivileged users can use.
- 
- 	  If unsure, say N.
- 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 5cf7fd2..422ff3f 100644
+index 306842c..af8714a 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2821,11 +2821,9 @@ static u64 mem_cgroup_read_u64(struct cgroup_subsys_state *css,
- 	case _KMEM:
- 		counter = &memcg->kmem;
- 		break;
--#if defined(CONFIG_MEMCG_LEGACY_KMEM) && defined(CONFIG_INET)
- 	case _TCP:
- 		counter = &memcg->tcp_mem.memory_allocated;
- 		break;
--#endif
- 	default:
- 		BUG();
- 	}
-@@ -2985,7 +2983,6 @@ static void memcg_free_kmem(struct mem_cgroup *memcg)
- }
- #endif /* !CONFIG_SLOB */
+@@ -896,17 +896,8 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
+ 		if (css == &root->css)
+ 			break;
  
--#ifdef CONFIG_MEMCG_LEGACY_KMEM
+-		if (css_tryget(css)) {
+-			/*
+-			 * Make sure the memcg is initialized:
+-			 * mem_cgroup_css_online() orders the the
+-			 * initialization against setting the flag.
+-			 */
+-			if (smp_load_acquire(&memcg->initialized))
+-				break;
+-
+-			css_put(css);
+-		}
++		if (css_tryget(css))
++			break;
+ 
+ 		memcg = NULL;
+ 	}
+@@ -2851,37 +2842,14 @@ static u64 mem_cgroup_read_u64(struct cgroup_subsys_state *css,
+ #ifndef CONFIG_SLOB
+ static int memcg_online_kmem(struct mem_cgroup *memcg)
+ {
+-	int err = 0;
+ 	int memcg_id;
+ 
+ 	BUG_ON(memcg->kmemcg_id >= 0);
+ 	BUG_ON(memcg->kmem_state);
+ 
+-	/*
+-	 * For simplicity, we won't allow this to be disabled.  It also can't
+-	 * be changed if the cgroup has children already, or if tasks had
+-	 * already joined.
+-	 *
+-	 * If tasks join before we set the limit, a person looking at
+-	 * kmem.usage_in_bytes will have no way to determine when it took
+-	 * place, which makes the value quite meaningless.
+-	 *
+-	 * After it first became limited, changes in the value of the limit are
+-	 * of course permitted.
+-	 */
+-	mutex_lock(&memcg_create_mutex);
+-	if (cgroup_is_populated(memcg->css.cgroup) ||
+-	    (memcg->use_hierarchy && memcg_has_children(memcg)))
+-		err = -EBUSY;
+-	mutex_unlock(&memcg_create_mutex);
+-	if (err)
+-		goto out;
+-
+ 	memcg_id = memcg_alloc_cache_id();
+-	if (memcg_id < 0) {
+-		err = memcg_id;
+-		goto out;
+-	}
++	if (memcg_id < 0)
++		return memcg_id;
+ 
+ 	static_branch_inc(&memcg_kmem_enabled_key);
+ 	/*
+@@ -2892,17 +2860,14 @@ static int memcg_online_kmem(struct mem_cgroup *memcg)
+ 	 */
+ 	memcg->kmemcg_id = memcg_id;
+ 	memcg->kmem_state = KMEM_ONLINE;
+-out:
+-	return err;
++
++	return 0;
+ }
+ 
+-static int memcg_propagate_kmem(struct mem_cgroup *memcg)
++static int memcg_propagate_kmem(struct mem_cgroup *parent,
++				struct mem_cgroup *memcg)
+ {
+ 	int ret = 0;
+-	struct mem_cgroup *parent = parent_mem_cgroup(memcg);
+-
+-	if (!parent)
+-		return 0;
+ 
+ 	mutex_lock(&memcg_limit_mutex);
+ 	/*
+@@ -2986,11 +2951,18 @@ static void memcg_free_kmem(struct mem_cgroup *memcg)
  static int memcg_update_kmem_limit(struct mem_cgroup *memcg,
  				   unsigned long limit)
  {
-@@ -3003,16 +3000,7 @@ out:
- 	mutex_unlock(&memcg_limit_mutex);
- 	return ret;
- }
--#else
--static int memcg_update_kmem_limit(struct mem_cgroup *memcg,
--				   unsigned long limit)
--{
--	return -EINVAL;
--}
--#endif /* CONFIG_MEMCG_LEGACY_KMEM */
+-	int ret;
++	int ret = 0;
  
+ 	mutex_lock(&memcg_limit_mutex);
+ 	/* Top-level cgroup doesn't propagate from root */
+ 	if (!memcg_kmem_online(memcg)) {
++		mutex_lock(&memcg_create_mutex);
++		if (cgroup_is_populated(memcg->css.cgroup) ||
++		    (memcg->use_hierarchy && memcg_has_children(memcg)))
++			ret = -EBUSY;
++		mutex_unlock(&memcg_create_mutex);
++		if (ret)
++			goto out;
+ 		ret = memcg_online_kmem(memcg);
+ 		if (ret)
+ 			goto out;
+@@ -4145,90 +4117,44 @@ static void free_mem_cgroup_per_zone_info(struct mem_cgroup *memcg, int node)
+ 	kfree(memcg->nodeinfo[node]);
+ }
+ 
+-static struct mem_cgroup *mem_cgroup_alloc(void)
+-{
+-	struct mem_cgroup *memcg;
+-	size_t size;
 -
--#if defined(CONFIG_MEMCG_LEGACY_KMEM) && defined(CONFIG_INET)
- static int memcg_update_tcp_limit(struct mem_cgroup *memcg, unsigned long limit)
- {
- 	int ret;
-@@ -3047,12 +3035,6 @@ out:
- 	mutex_unlock(&memcg_limit_mutex);
- 	return ret;
- }
--#else
--static int memcg_update_tcp_limit(struct mem_cgroup *memcg, unsigned long limit)
--{
--	return -EINVAL;
+-	size = sizeof(struct mem_cgroup);
+-	size += nr_node_ids * sizeof(struct mem_cgroup_per_node *);
+-
+-	memcg = kzalloc(size, GFP_KERNEL);
+-	if (!memcg)
+-		return NULL;
+-
+-	memcg->stat = alloc_percpu(struct mem_cgroup_stat_cpu);
+-	if (!memcg->stat)
+-		goto out_free;
+-
+-	if (memcg_wb_domain_init(memcg, GFP_KERNEL))
+-		goto out_free_stat;
+-
+-	return memcg;
+-
+-out_free_stat:
+-	free_percpu(memcg->stat);
+-out_free:
+-	kfree(memcg);
+-	return NULL;
 -}
--#endif /* CONFIG_MEMCG_LEGACY_KMEM && CONFIG_INET */
+-
+-/*
+- * At destroying mem_cgroup, references from swap_cgroup can remain.
+- * (scanning all at force_empty is too costly...)
+- *
+- * Instead of clearing all references at force_empty, we remember
+- * the number of reference from swap_cgroup and free mem_cgroup when
+- * it goes down to 0.
+- *
+- * Removal of cgroup itself succeeds regardless of refs from swap.
+- */
+-
+-static void __mem_cgroup_free(struct mem_cgroup *memcg)
++static void mem_cgroup_free(struct mem_cgroup *memcg)
+ {
+ 	int node;
  
- /*
-  * The user of this function is...
-@@ -3115,11 +3097,9 @@ static ssize_t mem_cgroup_reset(struct kernfs_open_file *of, char *buf,
- 	case _KMEM:
- 		counter = &memcg->kmem;
- 		break;
--#if defined(CONFIG_MEMCG_LEGACY_KMEM) && defined(CONFIG_INET)
- 	case _TCP:
- 		counter = &memcg->tcp_mem.memory_allocated;
- 		break;
--#endif
- 	default:
- 		BUG();
- 	}
-@@ -4072,7 +4052,6 @@ static struct cftype mem_cgroup_legacy_files[] = {
- 		.seq_show = memcg_numa_stat_show,
- 	},
- #endif
--#ifdef CONFIG_MEMCG_LEGACY_KMEM
- 	{
- 		.name = "kmem.limit_in_bytes",
- 		.private = MEMFILE_PRIVATE(_KMEM, RES_LIMIT),
-@@ -4105,7 +4084,6 @@ static struct cftype mem_cgroup_legacy_files[] = {
- 		.seq_show = memcg_slab_show,
- 	},
- #endif
--#ifdef CONFIG_INET
- 	{
- 		.name = "kmem.tcp.limit_in_bytes",
- 		.private = MEMFILE_PRIVATE(_TCP, RES_LIMIT),
-@@ -4129,8 +4107,6 @@ static struct cftype mem_cgroup_legacy_files[] = {
- 		.write = mem_cgroup_reset,
- 		.read_u64 = mem_cgroup_read_u64,
- 	},
--#endif
--#endif
- 	{ },	/* terminate */
- };
+-	cancel_work_sync(&memcg->high_work);
+-
+-	mem_cgroup_remove_from_trees(memcg);
+-
++	memcg_wb_domain_exit(memcg);
+ 	for_each_node(node)
+ 		free_mem_cgroup_per_zone_info(memcg, node);
+-
+ 	free_percpu(memcg->stat);
+-	memcg_wb_domain_exit(memcg);
+ 	kfree(memcg);
+ }
  
-@@ -4258,15 +4234,13 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+-static struct cgroup_subsys_state * __ref
+-mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
++static struct mem_cgroup *mem_cgroup_alloc(void)
+ {
+ 	struct mem_cgroup *memcg;
+-	long error = -ENOMEM;
++	size_t size;
+ 	int node;
+ 
+-	memcg = mem_cgroup_alloc();
++	size = sizeof(struct mem_cgroup);
++	size += nr_node_ids * sizeof(struct mem_cgroup_per_node *);
++
++	memcg = kzalloc(size, GFP_KERNEL);
+ 	if (!memcg)
+-		return ERR_PTR(error);
++		return NULL;
++
++	memcg->stat = alloc_percpu(struct mem_cgroup_stat_cpu);
++	if (!memcg->stat)
++		goto fail;
+ 
+ 	for_each_node(node)
+ 		if (alloc_mem_cgroup_per_zone_info(memcg, node))
+-			goto free_out;
++			goto fail;
+ 
+-	/* root ? */
+-	if (parent_css == NULL) {
+-		root_mem_cgroup = memcg;
+-		page_counter_init(&memcg->memory, NULL);
+-		memcg->high = PAGE_COUNTER_MAX;
+-		memcg->soft_limit = PAGE_COUNTER_MAX;
+-		page_counter_init(&memcg->memsw, NULL);
+-		page_counter_init(&memcg->kmem, NULL);
+-	}
++	if (memcg_wb_domain_init(memcg, GFP_KERNEL))
++		goto fail;
+ 
+ 	INIT_WORK(&memcg->high_work, high_work_func);
+ 	memcg->last_scanned_node = MAX_NUMNODES;
+ 	INIT_LIST_HEAD(&memcg->oom_notify);
+-	memcg->move_charge_at_immigrate = 0;
+ 	mutex_init(&memcg->thresholds_lock);
+ 	spin_lock_init(&memcg->move_lock);
  	vmpressure_init(&memcg->vmpressure);
- 	INIT_LIST_HEAD(&memcg->event_list);
- 	spin_lock_init(&memcg->event_list_lock);
-+	memcg->socket_pressure = jiffies;
- #ifndef CONFIG_SLOB
- 	memcg->kmemcg_id = -1;
- #endif
+@@ -4241,48 +4167,37 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
  #ifdef CONFIG_CGROUP_WRITEBACK
  	INIT_LIST_HEAD(&memcg->cgwb_list);
  #endif
--#ifdef CONFIG_INET
--	memcg->socket_pressure = jiffies;
--#endif
- 	return &memcg->css;
+-	return &memcg->css;
+-
+-free_out:
+-	__mem_cgroup_free(memcg);
+-	return ERR_PTR(error);
++	return memcg;
++fail:
++	mem_cgroup_free(memcg);
++	return NULL;
+ }
  
- free_out:
-@@ -4299,10 +4273,8 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
- 		memcg->soft_limit = PAGE_COUNTER_MAX;
+-static int
+-mem_cgroup_css_online(struct cgroup_subsys_state *css)
++static struct cgroup_subsys_state * __ref
++mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+ {
+-	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+-	struct mem_cgroup *parent = mem_cgroup_from_css(css->parent);
+-	int ret;
+-
+-	if (css->id > MEM_CGROUP_ID_MAX)
+-		return -ENOSPC;
++	struct mem_cgroup *parent = mem_cgroup_from_css(parent_css);
++	struct mem_cgroup *memcg;
++	long error = -ENOMEM;
+ 
+-	if (!parent)
+-		return 0;
++	memcg = mem_cgroup_alloc();
++	if (!memcg)
++		return ERR_PTR(error);
+ 
+ 	mutex_lock(&memcg_create_mutex);
+-
+-	memcg->use_hierarchy = parent->use_hierarchy;
+-	memcg->oom_kill_disable = parent->oom_kill_disable;
+-	memcg->swappiness = mem_cgroup_swappiness(parent);
+-
+-	if (parent->use_hierarchy) {
++	memcg->high = PAGE_COUNTER_MAX;
++	memcg->soft_limit = PAGE_COUNTER_MAX;
++	if (parent)
++		memcg->swappiness = mem_cgroup_swappiness(parent);
++	if (parent && parent->use_hierarchy) {
++		memcg->use_hierarchy = true;
++		memcg->oom_kill_disable = parent->oom_kill_disable;
+ 		page_counter_init(&memcg->memory, &parent->memory);
+-		memcg->high = PAGE_COUNTER_MAX;
+-		memcg->soft_limit = PAGE_COUNTER_MAX;
  		page_counter_init(&memcg->memsw, &parent->memsw);
  		page_counter_init(&memcg->kmem, &parent->kmem);
--#if defined(CONFIG_MEMCG_LEGACY_KMEM) && defined(CONFIG_INET)
- 		page_counter_init(&memcg->tcp_mem.memory_allocated,
- 				  &parent->tcp_mem.memory_allocated);
--#endif
- 
- 		/*
- 		 * No need to take a reference to the parent because cgroup
-@@ -4314,9 +4286,7 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
- 		memcg->soft_limit = PAGE_COUNTER_MAX;
+ 		page_counter_init(&memcg->tcpmem, &parent->tcpmem);
+-
+-		/*
+-		 * No need to take a reference to the parent because cgroup
+-		 * core guarantees its existence.
+-		 */
+ 	} else {
+ 		page_counter_init(&memcg->memory, NULL);
+-		memcg->high = PAGE_COUNTER_MAX;
+-		memcg->soft_limit = PAGE_COUNTER_MAX;
  		page_counter_init(&memcg->memsw, NULL);
  		page_counter_init(&memcg->kmem, NULL);
--#if defined(CONFIG_MEMCG_LEGACY_KMEM) && defined(CONFIG_INET)
- 		page_counter_init(&memcg->tcp_mem.memory_allocated, NULL);
--#endif
- 		/*
- 		 * Deeper hierachy with use_hierarchy == false doesn't make
- 		 * much sense so let cgroup subsystem know about this
-@@ -4331,10 +4301,8 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
- 	if (ret)
- 		return ret;
+ 		page_counter_init(&memcg->tcpmem, NULL);
+@@ -4296,19 +4211,30 @@ mem_cgroup_css_online(struct cgroup_subsys_state *css)
+ 	}
+ 	mutex_unlock(&memcg_create_mutex);
  
--#ifdef CONFIG_INET
+-	ret = memcg_propagate_kmem(memcg);
+-	if (ret)
+-		return ret;
++	/* The following stuff does not apply to the root */
++	if (!parent) {
++		root_mem_cgroup = memcg;
++		return &memcg->css;
++	}
++
++	error = memcg_propagate_kmem(parent, memcg);
++	if (error)
++		goto fail;
+ 
  	if (cgroup_subsys_on_dfl(memory_cgrp_subsys) && !cgroup_memory_nosocket)
  		static_branch_inc(&memcg_sockets_enabled_key);
--#endif
  
- 	/*
- 	 * Make sure the memcg is initialized: mem_cgroup_iter()
-@@ -4374,17 +4342,11 @@ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+-	/*
+-	 * Make sure the memcg is initialized: mem_cgroup_iter()
+-	 * orders reading memcg->initialized against its callers
+-	 * reading the memcg members.
+-	 */
+-	smp_store_release(&memcg->initialized, 1);
++	return &memcg->css;
++fail:
++	mem_cgroup_free(memcg);
++	return NULL;
++}
++
++static int
++mem_cgroup_css_online(struct cgroup_subsys_state *css)
++{
++	if (css->id > MEM_CGROUP_ID_MAX)
++		return -ENOSPC;
  
--#ifdef CONFIG_INET
- 	if (cgroup_subsys_on_dfl(memory_cgrp_subsys) && !cgroup_memory_nosocket)
- 		static_branch_dec(&memcg_sockets_enabled_key);
--#endif
+ 	return 0;
+ }
+@@ -4330,10 +4256,7 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
+ 	}
+ 	spin_unlock(&memcg->event_list_lock);
+ 
+-	vmpressure_cleanup(&memcg->vmpressure);
 -
--	memcg_free_kmem(memcg);
+ 	memcg_offline_kmem(memcg);
+-
+ 	wb_memcg_offline(memcg);
+ }
  
--#if defined(CONFIG_MEMCG_LEGACY_KMEM) && defined(CONFIG_INET)
- 	if (memcg->tcp_mem.active)
+@@ -4347,9 +4270,11 @@ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
+ 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && memcg->tcpmem_active)
  		static_branch_dec(&memcg_sockets_enabled_key);
--#endif
  
++	vmpressure_cleanup(&memcg->vmpressure);
++	cancel_work_sync(&memcg->high_work);
++	mem_cgroup_remove_from_trees(memcg);
  	memcg_free_kmem(memcg);
- 
-@@ -5585,8 +5547,6 @@ void mem_cgroup_replace_page(struct page *oldpage, struct page *newpage)
- 	commit_charge(newpage, memcg, true);
- }
- 
--#ifdef CONFIG_INET
 -
- DEFINE_STATIC_KEY_FALSE(memcg_sockets_enabled_key);
- EXPORT_SYMBOL(memcg_sockets_enabled_key);
- 
-@@ -5612,10 +5572,8 @@ void sock_update_memcg(struct sock *sk)
- 	memcg = mem_cgroup_from_task(current);
- 	if (memcg == root_mem_cgroup)
- 		goto out;
--#ifdef CONFIG_MEMCG_LEGACY_KMEM
- 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && !memcg->tcp_mem.active)
- 		goto out;
--#endif
- 	if (css_tryget_online(&memcg->css))
- 		sk->sk_memcg = memcg;
- out:
-@@ -5641,7 +5599,6 @@ bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
- {
- 	gfp_t gfp_mask = GFP_KERNEL;
- 
--#ifdef CONFIG_MEMCG_LEGACY_KMEM
- 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys)) {
- 		struct page_counter *counter;
- 
-@@ -5654,7 +5611,7 @@ bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
- 		memcg->tcp_mem.memory_pressure = 1;
- 		return false;
- 	}
--#endif
-+
- 	/* Don't block in the packet receive path */
- 	if (in_softirq())
- 		gfp_mask = GFP_NOWAIT;
-@@ -5673,19 +5630,16 @@ bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
-  */
- void mem_cgroup_uncharge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
- {
--#ifdef CONFIG_MEMCG_LEGACY_KMEM
- 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys)) {
- 		page_counter_uncharge(&memcg->tcp_mem.memory_allocated,
- 				      nr_pages);
- 		return;
- 	}
--#endif
-+
- 	page_counter_uncharge(&memcg->memory, nr_pages);
- 	css_put_many(&memcg->css, nr_pages);
+-	__mem_cgroup_free(memcg);
++	mem_cgroup_free(memcg);
  }
  
--#endif /* CONFIG_INET */
--
- static int __init cgroup_memory(char *s)
- {
- 	char *token;
-diff --git a/mm/vmpressure.c b/mm/vmpressure.c
-index 8cdeebe..506f03e 100644
---- a/mm/vmpressure.c
-+++ b/mm/vmpressure.c
-@@ -275,7 +275,6 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg, bool tree,
- 
- 		level = vmpressure_calc_level(scanned, reclaimed);
- 
--#ifdef CONFIG_INET
- 		if (level > VMPRESSURE_LOW) {
- 			/*
- 			 * Let the socket buffer allocator know that
-@@ -287,7 +286,6 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg, bool tree,
- 			 */
- 			memcg->socket_pressure = jiffies + HZ;
- 		}
--#endif
- 	}
- }
- 
+ /**
 -- 
 2.6.3
 
