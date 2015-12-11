@@ -1,46 +1,35 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 6/8 v2] mm: memcontrol: move kmem accounting code to
- CONFIG_MEMCG
-Date: Thu, 10 Dec 2015 15:50:11 -0500
-Message-ID: <20151210205011.GA4967@cmpxchg.org>
-References: <1449599665-18047-1-git-send-email-hannes@cmpxchg.org>
- <1449599665-18047-7-git-send-email-hannes@cmpxchg.org>
- <20151210202244.GA4809@cmpxchg.org>
+From: Norbert Preining <preining@logic.at>
+Subject: Re: occasional kernel hang on shutdown - kernel/cgroup_pids.c
+Date: Fri, 11 Dec 2015 17:43:43 +0900
+Message-ID: <20151211084343.GO15569@logic.at>
+References: <20151207235352.GW15569@logic.at>
+ <20151209132253.GB30912@dhcp22.suse.cz>
+ <20151209160907.GL30240@mtj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20151210202244.GA4809-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20151209160907.GL30240@mtj.duckdns.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Michal Hocko <mhocko@kernel.org>, linux-kernel@vger.kernel.org, cgroups mailinglist <cgroups@vger.kernel.org>
 
-Narf. Almost there...
+Hi Tejun,
 
-From db4522b2b3e6ca8ce5f6e673948772bcd8fdd298 Mon Sep 17 00:00:00 2001
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Date: Thu, 10 Dec 2015 15:42:54 -0500
-Subject: [PATCH] mm: memcontrol: move kmem accounting code to CONFIG_MEMCG fix
+> Patches just got merged into mainline.  Please let me know if the
+> current git master doesn't fix the issue.
 
-Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
----
- include/linux/slab.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Seems to have worked - I don't see the kernel hangs anymore. What remains
+are problems with DRI/DRM, but I will report separately.
 
-diff --git a/include/linux/slab.h b/include/linux/slab.h
-index 3ffee74..3627d5c 100644
---- a/include/linux/slab.h
-+++ b/include/linux/slab.h
-@@ -86,7 +86,7 @@
- #else
- # define SLAB_FAILSLAB		0x00000000UL
- #endif
--#ifdef CONFIG_MEMCG_KMEM
-+#if defined(CONFIG_MEMCG) && !defined(CONFIG_SLOB)
- # define SLAB_ACCOUNT		0x04000000UL	/* Account to memcg */
- #else
- # define SLAB_ACCOUNT		0x00000000UL
--- 
-2.6.3
+Thanks a lot
+
+Norbert
+
+------------------------------------------------------------------------
+PREINING, Norbert                               http://www.preining.info
+JAIST, Japan                                 TeX Live & Debian Developer
+GPG: 0x860CDC13   fp: F7D8 A928 26E3 16A1 9FA0  ACF0 6CAC A448 860C DC13
+------------------------------------------------------------------------
