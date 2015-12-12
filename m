@@ -1,54 +1,30 @@
-From: Vladimir Davydov <vdavydov@virtuozzo.com>
-Subject: Re: [PATCH 2/4] mm: memcontrol: reign in the CONFIG space madness
-Date: Sat, 12 Dec 2015 19:33:32 +0300
-Message-ID: <20151212163332.GC28521@esperanza>
+From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: [PATCH 3/4] mm: memcontrol: flatten struct cg_proto
+Date: Sat, 12 Dec 2015 19:39:25 +0300
+Message-ID: <20151212163925.GD28521@esperanza>
 References: <1449863653-6546-1-git-send-email-hannes@cmpxchg.org>
- <1449863653-6546-2-git-send-email-hannes@cmpxchg.org>
+ <1449863653-6546-3-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1449863653-6546-2-git-send-email-hannes@cmpxchg.org>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <1449863653-6546-3-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Fri, Dec 11, 2015 at 02:54:11PM -0500, Johannes Weiner wrote:
-> What CONFIG_INET and CONFIG_LEGACY_KMEM guard inside the memory
-> controller code is insignificant, having these conditionals is not
-> worth the complication and fragility that comes with them.
+On Fri, Dec 11, 2015 at 02:54:12PM -0500, Johannes Weiner wrote:
+> There are no more external users of struct cg_proto, flatten the
+> structure into struct mem_cgroup.
 > 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> Since using those struct members doesn't stand out as much anymore,
+> add cgroup2 static branches to make it clearer which code is legacy.
+> 
+> Suggested-by: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-Acked-by: Vladimir Davydov <vdavydov@virtuozzo.com>
+Looks good to me, thanks!
 
-> @@ -4374,17 +4342,11 @@ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
->  {
->  	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
->  
-> -#ifdef CONFIG_INET
->  	if (cgroup_subsys_on_dfl(memory_cgrp_subsys) && !cgroup_memory_nosocket)
->  		static_branch_dec(&memcg_sockets_enabled_key);
-> -#endif
-> -
-> -	memcg_free_kmem(memcg);
-
-I wonder where the second call to memcg_free_kmem comes from. Luckily,
-it couldn't result in a breakage. And now it's removed.
-
->  
-> -#if defined(CONFIG_MEMCG_LEGACY_KMEM) && defined(CONFIG_INET)
->  	if (memcg->tcp_mem.active)
->  		static_branch_dec(&memcg_sockets_enabled_key);
-> -#endif
->  
->  	memcg_free_kmem(memcg);
->  
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Acked-by: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
