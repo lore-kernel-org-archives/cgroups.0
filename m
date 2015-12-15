@@ -1,18 +1,20 @@
 From: Jakub Kunert <kuba.kunert-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH 1/6] cgroup: Remove prohibited white spaces
-Date: Tue, 15 Dec 2015 13:20:40 +0100
-Message-ID: <1450182045-27480-1-git-send-email-kuba.kunert@gmail.com>
+Subject: [PATCH 3/6] cgroup: Fix trailing */ in block comments.
+Date: Tue, 15 Dec 2015 13:20:42 +0100
+Message-ID: <1450182045-27480-3-git-send-email-kuba.kunert@gmail.com>
+References: <1450182045-27480-1-git-send-email-kuba.kunert@gmail.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
-        h=from:to:cc:subject:date:message-id;
-        bh=h0HTv0odhMbEongzH7XGCUZX6owkJW6opv/50Ic8q1s=;
-        b=XE+wlsvDRWjQS5LdC+/9UwJxijBKfO0IWoKaIgEGN54nPdLeYy6879EA8BIpph9K9n
-         rX/w8298AoPyGYb9wH3hE9v4UxLpeeTUtUwGLepE5YMNBYzuU+PUPrgOhCdxOyF7oR+w
-         RfWUmD5LCCMUTaGEOWbsLrJezmNnz3cfE3Nvn+EmW3jYhwhqot+PrLeWo8kNbro4NXc/
-         mMFk8+Y049t7+qI4cOdcWKLrQuRuzQc7BiaBmi1DDZIclGI3QxwdmZkngqVJmwoeJbAY
-         FrvCUApdAI7yjuij1ZOJMQlRJUkEnDQTYT3JJN3qPphLFqLNWOOmxXjZiWCNjewsle4o
-         eV0Q==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=4fjpbT4eDFbQDr/PNtNXcIOPTbB9/9ZeWuOZjP4f2FE=;
+        b=HjLxXwTKVqzmsWfMyq/pH4tRDsepk43ldmRdokzQP/ODUVfWGMQ7x0pshPO4EqItAM
+         v2KaSfv2pOxQTrAkV9VObm5LfBZ82CEJq/4Mf98JYLQMVV3gSYcYnt8ePpGfcJriJSGr
+         OKgMxTCZpjFVpmhl5pJbBgyXhy4nTMohcRtTnUPlT0AaoE4sqJgEDd9nx2aPxUwTjg9i
+         UpcuCavGoQTWW+XJACAZTTJZ3Jeb/CPfA20H7pAJZFpQOFMXTIHW+exvZh6XQs/hTQ7T
+         PimHh+6aHL7Ud6lA+KaE/+snUUuUeM9ZzoHQF4Mm2oZCkHwkQGUjcLg+pv3cczAmpxTI
+         5jRg==
+In-Reply-To: <1450182045-27480-1-git-send-email-kuba.kunert-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -21,51 +23,73 @@ Content-Transfer-Encoding: 7bit
 To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jakub Kunert <kuba.kunert-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-This patch fixes the checkpatch.pl error:
+Fix checkpatch.pl warning:
 
-ERROR: space prohibited before open square bracket
+WARNING: Block comments use a trailing */ on a separate line
 
 Signed-off-by: Jakub Kunert <kuba.kunert-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- kernel/cgroup.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ kernel/cgroup.c | 24 ++++++++++++++++--------
+ 1 file changed, 16 insertions(+), 8 deletions(-)
 
 diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-index 470f653..d848888 100644
+index c512ae0..3e1e112 100644
 --- a/kernel/cgroup.c
 +++ b/kernel/cgroup.c
-@@ -131,14 +131,14 @@ static struct workqueue_struct *cgroup_destroy_wq;
- static struct workqueue_struct *cgroup_pidlist_destroy_wq;
+@@ -1015,8 +1015,10 @@ static struct css_set *find_css_set(struct css_set *old_cset,
  
- /* generate an array of cgroup subsystem pointers */
--#define SUBSYS(_x) [_x ## _cgrp_id] = &_x ## _cgrp_subsys,
-+#define SUBSYS(_x)[_x ## _cgrp_id] = &_x ## _cgrp_subsys,
- static struct cgroup_subsys *cgroup_subsys[] = {
- #include <linux/cgroup_subsys.h>
- };
- #undef SUBSYS
+ 	lockdep_assert_held(&cgroup_mutex);
  
- /* array of cgroup subsystem names */
--#define SUBSYS(_x) [_x ## _cgrp_id] = #_x,
-+#define SUBSYS(_x)[_x ## _cgrp_id] = #_x,
- static const char *cgroup_subsys_name[] = {
- #include <linux/cgroup_subsys.h>
- };
-@@ -153,13 +153,13 @@ static const char *cgroup_subsys_name[] = {
- #include <linux/cgroup_subsys.h>
- #undef SUBSYS
+-	/* First see if we already have a cgroup group that matches
+-	 * the desired set */
++	/*
++	 * First see if we already have a cgroup group that matches
++	 * the desired set
++	 */
+ 	spin_lock_bh(&css_set_lock);
+ 	cset = find_existing_css_set(old_cset, cgrp, template);
+ 	if (cset)
+@@ -1045,8 +1047,10 @@ static struct css_set *find_css_set(struct css_set *old_cset,
+ 	INIT_LIST_HEAD(&cset->task_iters);
+ 	INIT_HLIST_NODE(&cset->hlist);
  
--#define SUBSYS(_x) [_x ## _cgrp_id] = &_x ## _cgrp_subsys_enabled_key,
-+#define SUBSYS(_x)[_x ## _cgrp_id] = &_x ## _cgrp_subsys_enabled_key,
- static struct static_key_true *cgroup_subsys_enabled_key[] = {
- #include <linux/cgroup_subsys.h>
- };
- #undef SUBSYS
+-	/* Copy the set of subsystem state objects generated in
+-	 * find_existing_css_set() */
++	/*
++	 * Copy the set of subsystem state objects generated in
++	 * find_existing_css_set()
++	 */
+ 	memcpy(cset->subsys, template, sizeof(cset->subsys));
  
--#define SUBSYS(_x) [_x ## _cgrp_id] = &_x ## _cgrp_subsys_on_dfl_key,
-+#define SUBSYS(_x)[_x ## _cgrp_id] = &_x ## _cgrp_subsys_on_dfl_key,
- static struct static_key_true *cgroup_subsys_on_dfl_key[] = {
- #include <linux/cgroup_subsys.h>
- };
+ 	spin_lock_bh(&css_set_lock);
+@@ -5227,10 +5231,12 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss, bool early)
+ 		BUG_ON(css->id < 0);
+ 	}
+ 
+-	/* Update the init_css_set to contain a subsys
++	/*
++	 * Update the init_css_set to contain a subsys
+ 	 * pointer to this state - since the subsystem is
+ 	 * newly registered, all tasks and hence the
+-	 * init_css_set is in the subsystem's root cgroup. */
++	 * init_css_set is in the subsystem's root cgroup.
++	 */
+ 	init_css_set.subsys[ss->id] = css;
+ 
+ 	have_fork_callback |= (bool)ss->fork << ss->id;
+@@ -5238,9 +5244,11 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss, bool early)
+ 	have_free_callback |= (bool)ss->free << ss->id;
+ 	have_canfork_callback |= (bool)ss->can_fork << ss->id;
+ 
+-	/* At system boot, before all subsystems have been
++	/*
++	 * At system boot, before all subsystems have been
+ 	 * registered, no tasks have been forked, so we don't
+-	 * need to invoke fork callbacks here. */
++	 * need to invoke fork callbacks here.
++	 */
+ 	BUG_ON(!list_empty(&init_task.tasks));
+ 
+ 	BUG_ON(online_css(css));
 -- 
 2.6.2
