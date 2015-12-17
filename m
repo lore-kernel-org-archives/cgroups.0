@@ -1,78 +1,64 @@
-From: Vladimir Davydov <vdavydov@virtuozzo.com>
-Subject: [PATCH v2 7/7] Documentation: cgroup: add memory.swap.{current,max} description
-Date: Thu, 17 Dec 2015 15:30:00 +0300
-Message-ID: <dbb4bf6bc071997982855c8f7d403c22cea60ffb.1450352792.git.vdavydov@virtuozzo.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH v2 1/7] mm: memcontrol: charge swap to cgroup2
+Date: Thu, 17 Dec 2015 11:09:25 -0500
+Message-ID: <20151217160925.GA24124@cmpxchg.org>
 References: <cover.1450352791.git.vdavydov@virtuozzo.com>
+ <a6d639c29f845c2da9adaaab536754c714099e92.1450352791.git.vdavydov@virtuozzo.com>
 Mime-Version: 1.0
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <cover.1450352791.git.vdavydov@virtuozzo.com>
+Content-Disposition: inline
+In-Reply-To: <a6d639c29f845c2da9adaaab536754c714099e92.1450352791.git.vdavydov@virtuozzo.com>
 Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Vladimir Davydov <vdavydov@virtuozzo.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The rationale of separate swap counter is given by Johannes Weiner.
+On Thu, Dec 17, 2015 at 03:29:54PM +0300, Vladimir Davydov wrote:
+> In the legacy hierarchy we charge memsw, which is dubious, because:
+> 
+>  - memsw.limit must be >= memory.limit, so it is impossible to limit
+>    swap usage less than memory usage. Taking into account the fact that
+>    the primary limiting mechanism in the unified hierarchy is
+>    memory.high while memory.limit is either left unset or set to a very
+>    large value, moving memsw.limit knob to the unified hierarchy would
+>    effectively make it impossible to limit swap usage according to the
+>    user preference.
+> 
+>  - memsw.usage != memory.usage + swap.usage, because a page occupying
+>    both swap entry and a swap cache page is charged only once to memsw
+>    counter. As a result, it is possible to effectively eat up to
+>    memory.limit of memory pages *and* memsw.limit of swap entries, which
+>    looks unexpected.
+> 
+> That said, we should provide a different swap limiting mechanism for
+> cgroup2.
+> 
+> This patch adds mem_cgroup->swap counter, which charges the actual
+> number of swap entries used by a cgroup. It is only charged in the
+> unified hierarchy, while the legacy hierarchy memsw logic is left
+> intact.
+> 
+> The swap usage can be monitored using new memory.swap.current file and
+> limited using memory.swap.max.
+> 
+> Note, to charge swap resource properly in the unified hierarchy, we have
+> to make swap_entry_free uncharge swap only when ->usage reaches zero,
+> not just ->count, i.e. when all references to a swap entry, including
+> the one taken by swap cache, are gone. This is necessary, because
+> otherwise swap-in could result in uncharging swap even if the page is
+> still in swap cache and hence still occupies a swap entry. At the same
+> time, this shouldn't break memsw counter logic, where a page is never
+> charged twice for using both memory and swap, because in case of legacy
+> hierarchy we uncharge swap on commit (see mem_cgroup_commit_charge).
 
-Signed-off-by: Vladimir Davydov <vdavydov@virtuozzo.com>
----
-Changes in v2:
- - Add rationale of separate swap counter provided by Johannes.
+This was actually an oversight when rewriting swap accounting. It
+should have always been uncharged when the swap slot is released.
 
- Documentation/cgroup.txt | 33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+> Signed-off-by: Vladimir Davydov <vdavydov@virtuozzo.com>
 
-diff --git a/Documentation/cgroup.txt b/Documentation/cgroup.txt
-index 31d1f7bf12a1..f441564023e1 100644
---- a/Documentation/cgroup.txt
-+++ b/Documentation/cgroup.txt
-@@ -819,6 +819,22 @@ PAGE_SIZE multiple when read back.
- 		the cgroup.  This may not exactly match the number of
- 		processes killed but should generally be close.
- 
-+  memory.swap.current
-+
-+	A read-only single value file which exists on non-root
-+	cgroups.
-+
-+	The total amount of swap currently being used by the cgroup
-+	and its descendants.
-+
-+  memory.swap.max
-+
-+	A read-write single value file which exists on non-root
-+	cgroups.  The default is "max".
-+
-+	Swap usage hard limit.  If a cgroup's swap usage reaches this
-+	limit, anonymous meomry of the cgroup will not be swapped out.
-+
- 
- 5-2-2. General Usage
- 
-@@ -1291,3 +1307,20 @@ allocation from the slack available in other groups or the rest of the
- system than killing the group.  Otherwise, memory.max is there to
- limit this type of spillover and ultimately contain buggy or even
- malicious applications.
-+
-+The combined memory+swap accounting and limiting is replaced by real
-+control over swap space.
-+
-+The main argument for a combined memory+swap facility in the original
-+cgroup design was that global or parental pressure would always be
-+able to swap all anonymous memory of a child group, regardless of the
-+child's own (possibly untrusted) configuration.  However, untrusted
-+groups can sabotage swapping by other means - such as referencing its
-+anonymous memory in a tight loop - and an admin can not assume full
-+swappability when overcommitting untrusted jobs.
-+
-+For trusted jobs, on the other hand, a combined counter is not an
-+intuitive userspace interface, and it flies in the face of the idea
-+that cgroup controllers should account and limit specific physical
-+resources.  Swap space is a resource like all others in the system,
-+and that's why unified hierarchy allows distributing it separately.
--- 
-2.1.4
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
