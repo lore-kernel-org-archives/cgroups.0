@@ -1,24 +1,17 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v2 7/7] Documentation: cgroup: add
- memory.swap.{current,max} description
-Date: Thu, 17 Dec 2015 11:16:54 -0500
-Message-ID: <20151217161654.GB24124@cmpxchg.org>
-References: <cover.1450352791.git.vdavydov@virtuozzo.com>
- <dbb4bf6bc071997982855c8f7d403c22cea60ffb.1450352792.git.vdavydov@virtuozzo.com>
-Mime-Version: 1.0
+Subject: [PAtCh 0/2] cgroup: prepare kernel config for cgroup2
+Date: Thu, 17 Dec 2015 17:19:55 -0500
+Message-ID: <1450390797-4748-1-git-send-email-hannes@cmpxchg.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <dbb4bf6bc071997982855c8f7d403c22cea60ffb.1450352792.git.vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Thu, Dec 17, 2015 at 03:30:00PM +0300, Vladimir Davydov wrote:
-> The rationale of separate swap counter is given by Johannes Weiner.
-> 
-> Signed-off-by: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+For the scheduled release of cgroup2, put the cgroup Kconfig section
+in order. Fixes the names of the controller items, then puts them in
+order that makes it easy for people to quickly find what they need:
+core features first, then more obscure and legacy stuff at the end.
