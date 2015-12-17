@@ -1,121 +1,51 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 4/4] mm: memcontrol: clean up alloc, online, offline,
- free functions
-Date: Wed, 16 Dec 2015 19:44:14 -0500
-Message-ID: <20151217004414.GA27651@cmpxchg.org>
-References: <1449863653-6546-1-git-send-email-hannes@cmpxchg.org>
- <1449863653-6546-4-git-send-email-hannes@cmpxchg.org>
- <20151214171455.GF28521@esperanza>
- <20151215193858.GA15265@cmpxchg.org>
- <20151216121727.GL28521@esperanza>
+From: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: [PATCH] mm: memcontrol: clean up alloc, online, offline, free
+ functions fix
+Date: Thu, 17 Dec 2015 11:39:31 +0300
+Message-ID: <20151217083931.GM28521@esperanza>
+References: <1450312460-27582-1-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20151216121727.GL28521@esperanza>
-Sender: owner-linux-mm@kvack.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1450312460-27582-1-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov@virtuozzo.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.cz>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Wed, Dec 16, 2015 at 03:17:27PM +0300, Vladimir Davydov wrote:
-> On Tue, Dec 15, 2015 at 02:38:58PM -0500, Johannes Weiner wrote:
-> > On Mon, Dec 14, 2015 at 08:14:55PM +0300, Vladimir Davydov wrote:
-> > > On Fri, Dec 11, 2015 at 02:54:13PM -0500, Johannes Weiner wrote:
-> > > ...
-> > > > -static int
-> > > > -mem_cgroup_css_online(struct cgroup_subsys_state *css)
-> > > > +static struct cgroup_subsys_state * __ref
-> > > > +mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
-> > > >  {
-> > > > -	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-> > > > -	struct mem_cgroup *parent = mem_cgroup_from_css(css->parent);
-> > > > -	int ret;
-> > > > -
-> > > > -	if (css->id > MEM_CGROUP_ID_MAX)
-> > > > -		return -ENOSPC;
-> > > > +	struct mem_cgroup *parent = mem_cgroup_from_css(parent_css);
-> > > > +	struct mem_cgroup *memcg;
-> > > > +	long error = -ENOMEM;
-> > > >  
-> > > > -	if (!parent)
-> > > > -		return 0;
-> > > > +	memcg = mem_cgroup_alloc();
-> > > > +	if (!memcg)
-> > > > +		return ERR_PTR(error);
-> > > >  
-> > > >  	mutex_lock(&memcg_create_mutex);
-> > > 
-> > > It is pointless to take memcg_create_mutex in ->css_alloc. It won't
-> > > prevent setting use_hierarchy for parent after a new child was
-> > > allocated, but before it was added to the list of children (see
-> > > create_css()). Taking the mutex in ->css_online renders this race
-> > > impossible. That is, your cleanup breaks use_hierarchy consistency
-> > > check.
-> > > 
-> > > Can we drop this use_hierarchy consistency check at all and allow
-> > > children of a cgroup with use_hierarchy=1 have use_hierarchy=0? Yeah,
-> > > that might result in some strangeness if cgroups are created in parallel
-> > > with use_hierarchy flipped, but is it a valid use case? I surmise, one
-> > > just sets use_hierarchy for a cgroup once and for good before starting
-> > > to create sub-cgroups.
-> > 
-> > I don't think we have to support airtight exclusion between somebody
-> > changing the parent attribute and creating new children that inherit
-> > these attributes. Everything will still work if this race happens.
-> > 
-> > Does that mean we have to remove the restriction altogether? I'm not
-> > convinced. We can just keep it for historical purposes so that we do
-> > not *encourage* this weird setting.
+On Wed, Dec 16, 2015 at 07:34:20PM -0500, Johannes Weiner wrote:
+> Fixlets based on review feedback from Vladimir:
 > 
-> Well, legacy hierarchy is scheduled to die, so it's too late to
-> encourage or discourage any setting regarding it.
-
-That's the main reason I don't want to blatantly change the interface
-at this point :)
-
-> Besides, hierarchy mode must be enabled for 99% setups, because this is
-> what systemd does at startup. So I don't think we would hurt anybody by
-> dropping this check altogether - IMO it'd be fairer than having a check
-> that might sometimes fail.
-
-Yeah, I don't actually think anybody will run into this in practice,
-but also want to keep changes to the legacy interface, user-visible or
-not, at a minimum: fixing bugs and refactoring code for v2, basically.
-
-> It's not something I really care about though, so I don't insist.
-
-Thanks! I left it for now just to be safe.
-
-> > @@ -2929,6 +2909,10 @@ static void memcg_offline_kmem(struct mem_cgroup *memcg)
-> >  
-> >  static void memcg_free_kmem(struct mem_cgroup *memcg)
-> >  {
-> > +	/* css_alloc() failed, offlining didn't happen */
-> > +	if (unlikely(memcg->kmem_state == KMEM_ONLINE))
+> 1. The memcg_create_mutex is to stabilize a cgroup's hereditary
+>    settings that are not allowed to change once the cgroup has
+>    children: kmem accounting and hierarchy mode. However, the cleanup
+>    patch moves inheritance of these settings from onlining time to
+>    allocation time, before the new child will show up in the parent's
+>    list of children, and this opens a race window where the parent can
+>    change a setting that has been passed on to a new child already.
 > 
-> It's not a hot-path, so there's no need in using 'unlikely' here apart
-> from improving readability, but the comment should be enough.
-
-Yeah it was entirely done for readability to reinforce that we
-(almost) never expect this to happen. The comment elaborates and
-explains it a bit, but the unlikely() carries the main signal.
-
-> > +		memcg_offline_kmem(memcg);
-> > +
+>    That being said, this rule for kmem and hierarchy mode is somewhat
+>    gratuitous: there is no strong reason why these configurations
+>    shouldn't exist, and the outcome of a race is not harmful. It's
+>    also unlikely that somebody will even trigger this race because we
+>    don't expect anybody to flip-flop either settings while creating
+>    child groups. So instead of readding complexity to close an
+>    unlikely race window that doesn't do any harm, simply remove the
+>    now pointless mutex as a follow-up cleanup.
 > 
-> Calling 'offline' from css_free looks a little bit awkward, but let it
-> be.
+> 2. Kmem initialization consists of several steps that are undone in
+>    both css_offline() and css_free(). However, if css allocation fails
+>    later on then css_offline() is never called and we don't properly
+>    free the kmem state. Let css_free() detect this and call kmem
+>    offlining itself.
 > 
-> Anyway, it's a really nice cleanup, thanks!
+> 3. Children in !use_hierarchy mode would inherit the OOM killer
+>    setting from their physical parent rather than the logical parent,
+>    rootmemcg.  This is silly, but no reason to change the semantics as
+>    part of this cleanup patch, so restore it.
 > 
-> Acked-by: Vladimir Davydov <vdavydov@virtuozzo.com>
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-Thanks!
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Acked-by: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
