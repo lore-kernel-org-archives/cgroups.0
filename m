@@ -1,44 +1,40 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/2] cgroup: clean up the kernel configuration menu
- nomenclature
-Date: Fri, 18 Dec 2015 12:39:23 -0500
-Message-ID: <20151218173923.GK4026@mtj.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 2/2] cgroup: put controller Kconfig options in meaningful
+ order
+Date: Fri, 18 Dec 2015 12:45:08 -0500
+Message-ID: <20151218174508.GL4026@mtj.duckdns.org>
 References: <1450390797-4748-1-git-send-email-hannes@cmpxchg.org>
- <1450390797-4748-2-git-send-email-hannes@cmpxchg.org>
- <56736E07.4000300@huawei.com>
+ <1450390797-4748-3-git-send-email-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=ozxPQUwGe0D0f/hrfzFKcGizdKflZ/DVhTMSCz6oBfE=;
-        b=s7uMFk9LaWnax7T8aiQeBg3bQN6nsKV45d34pKFfneb/pLRVOGtmcR9S9nVaOs2o8p
-         prC+Qj9IZ6ewcTbW242b8TzSb4Pr+WOcWr+TBvjVnZdhSXNhdmfCxm+CdPktT/4exVRC
-         Fo6LFBo3B5ooAiunCrcXys4XEqM5UIKb8vaXonfC5QUSut+mIhRAHVBm9MHrm8D2LAjF
-         q0pXTe3wMjXENZxsvRhNNe2VYpp5uCSnpWy3tXiP3rUulu/xrHemeQgcITPzfAzqxZcj
-         4H3x52bf53wfgcysWiPBVo3dqT5xQPRCeV+QDbREiseX4lN8z4utNwlyL2LFKcvv4r7S
-         5iUA==
+        bh=JP3BG1RY4SkW2EgsYtvE7NibL7b72eeoMDJ1aBfTGCs=;
+        b=Z/oKsbqTj5Bkmdigbzv1WCAJSTOacEWiEppLkUVXudcF7a6s0wpNSKquZtYvi91fav
+         NAHsOSxyXVSWHEwzOcx2V1p92h9iZV+1SpsvqdWZoXD356tfd0hYV/nOsVutZT9T5WEJ
+         5xaCIXAkioSpEAo92FealNjbDJJxGlX+OVtHM3K9UNIR9JQz7gr+1Eh4I58e1jXXvHio
+         pE7pYn+7q7X0gNjSgXQ2iBwrVkYyrm61lDlUA3jvPQUhEhmZRtW+VW2XUkd3+6GTeuQV
+         g/8+m+aJhNuAP3ZXW/0crI47OWPqcicY8qUamUOH/Cr+SQYHARsWmVHOuW0hKljYj243
+         XEZg==
 Content-Disposition: inline
-In-Reply-To: <56736E07.4000300-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1450390797-4748-3-git-send-email-hannes@cmpxchg.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Fri, Dec 18, 2015 at 10:23:03AM +0800, Zefan Li wrote:
-> >  config CGROUP_DEBUG
-> >-	bool "Example debug cgroup subsystem"
-> >+	bool "Example controller"
+On Thu, Dec 17, 2015 at 05:19:57PM -0500, Johannes Weiner wrote:
+> To make it easier to quickly find what's needed list the basic
+> resource controllers of cgroup2 first - io, memory, cpu - while
+> pushing the more exotic and/or legacy controllers to the bottom.
 > 
-> But not all cgroup subsystems are controllers, which are debug, perf and
-> cpuacct. I'm fine the other changes.
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 
-I think it's fine to call all of them controllers.  Let's use that as
-the external facing noun to call all cgroup subsystems.  It is a lot
-more specific and better describes the main purpose.
+Applied 1-2 to cgroup/for-4.5 w/ Li's suggestion applied.
 
 Thanks.
 
