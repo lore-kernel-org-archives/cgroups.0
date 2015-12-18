@@ -1,36 +1,50 @@
-From: Vladimir Davydov <vdavydov@virtuozzo.com>
-Subject: Re: [PATCH v2 7/7] Documentation: cgroup: add
- memory.swap.{current,max} description
-Date: Fri, 18 Dec 2015 18:39:24 +0300
-Message-ID: <20151218153924.GT28521@esperanza>
-References: <cover.1450352791.git.vdavydov@virtuozzo.com>
- <dbb4bf6bc071997982855c8f7d403c22cea60ffb.1450352792.git.vdavydov@virtuozzo.com>
- <567374AB.3010101@jp.fujitsu.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH 1/2] cgroup: clean up the kernel configuration menu
+ nomenclature
+Date: Fri, 18 Dec 2015 11:19:03 -0500
+Message-ID: <20151218161903.GB4201@cmpxchg.org>
+References: <1450390797-4748-1-git-send-email-hannes@cmpxchg.org>
+ <1450390797-4748-2-git-send-email-hannes@cmpxchg.org>
+ <56736E07.4000300@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <567374AB.3010101@jp.fujitsu.com>
-Sender: owner-linux-mm@kvack.org
+In-Reply-To: <56736E07.4000300-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Fri, Dec 18, 2015 at 11:51:23AM +0900, Kamezawa Hiroyuki wrote:
-...
-> Could you give here a hint how to calculate amount of swapcache,
-> counted both in memory.current and swap.current ?
+On Fri, Dec 18, 2015 at 10:23:03AM +0800, Zefan Li wrote:
+> On 2015/12/18 6:19, Johannes Weiner wrote:
+> >The config options for the different cgroup controllers use various
+> >terms: resource controller, cgroup subsystem, etc. Simplify this to
+> >"controller", which is clear enough in the cgroup context.
+> >
+> >Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> >---
+> >  init/Kconfig | 65 ++++++++++++++++++++++++------------------------------------
+> >  1 file changed, 26 insertions(+), 39 deletions(-)
+> >
+> >diff --git a/init/Kconfig b/init/Kconfig
+> >index 16840b4..ed324f5 100644
+> >--- a/init/Kconfig
+> >+++ b/init/Kconfig
+> >@@ -958,23 +958,22 @@ menuconfig CGROUPS
+> >  if CGROUPS
+> >
+> >  config CGROUP_DEBUG
+> >-	bool "Example debug cgroup subsystem"
+> >+	bool "Example controller"
+> 
+> But not all cgroup subsystems are controllers, which are debug, perf and
+> cpuacct. I'm fine the other changes.
 
-Currently it's impossible, but once memory.stat has settled in the
-unified hierarchy, it might be worth adding a stat counter for such
-pages (equivalent to SwapCached in the global /proc/meminfo).
+Hm, I basically use the term controller to denote any modular
+component of cgroup that is not part of the cgroup core.
 
-Thanks,
-Vladimir
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Do we need to be more specific/accurate than that? Especially because
+there won't be any purely informational modules in cgroup2 anymore,
+they'll all actually control some resource or behavior.
