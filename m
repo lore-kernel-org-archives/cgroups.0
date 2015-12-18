@@ -1,69 +1,86 @@
-From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/2] cgroup: put controller Kconfig options in meaningful
- order
-Date: Fri, 18 Dec 2015 10:26:05 +0800
-Message-ID: <56736EBD.8060302@huawei.com>
-References: <1450390797-4748-1-git-send-email-hannes@cmpxchg.org>
- <1450390797-4748-3-git-send-email-hannes@cmpxchg.org>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [PATCH v2 7/7] Documentation: cgroup: add
+ memory.swap.{current,max} description
+Date: Fri, 18 Dec 2015 11:51:23 +0900
+Message-ID: <567374AB.3010101@jp.fujitsu.com>
+References: <cover.1450352791.git.vdavydov@virtuozzo.com>
+ <dbb4bf6bc071997982855c8f7d403c22cea60ffb.1450352792.git.vdavydov@virtuozzo.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1450390797-4748-3-git-send-email-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <dbb4bf6bc071997982855c8f7d403c22cea60ffb.1450352792.git.vdavydov@virtuozzo.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Vladimir Davydov <vdavydov@virtuozzo.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 2015/12/18 6:19, Johannes Weiner wrote:
-> To make it easier to quickly find what's needed list the basic
-> resource controllers of cgroup2 first - io, memory, cpu - while
-> pushing the more exotic and/or legacy controllers to the bottom.
->
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-
-Acked-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-
+On 2015/12/17 21:30, Vladimir Davydov wrote:
+> The rationale of separate swap counter is given by Johannes Weiner.
+> 
+> Signed-off-by: Vladimir Davydov <vdavydov@virtuozzo.com>
 > ---
->   init/Kconfig | 214 +++++++++++++++++++++++++++++------------------------------
->   1 file changed, 107 insertions(+), 107 deletions(-)
->
-> diff --git a/init/Kconfig b/init/Kconfig
-> index ed324f5..fdb5ecb 100644
-> --- a/init/Kconfig
-> +++ b/init/Kconfig
-> @@ -957,64 +957,6 @@ menuconfig CGROUPS
->
-...
-> +config CGROUP_PERF
-> +	bool "Perf controller"
-> +	depends on PERF_EVENTS && CGROUPS
-
-While you are at it, remove "&& CGROUPS" ?
-
-> +	help
-> +	  This option extends the perf per-cpu mode to restrict monitoring
-> +	  to threads which belong to the cgroup specified and run on the
-> +	  designated cpu.
+> Changes in v2:
+>   - Add rationale of separate swap counter provided by Johannes.
+> 
+>   Documentation/cgroup.txt | 33 +++++++++++++++++++++++++++++++++
+>   1 file changed, 33 insertions(+)
+> 
+> diff --git a/Documentation/cgroup.txt b/Documentation/cgroup.txt
+> index 31d1f7bf12a1..f441564023e1 100644
+> --- a/Documentation/cgroup.txt
+> +++ b/Documentation/cgroup.txt
+> @@ -819,6 +819,22 @@ PAGE_SIZE multiple when read back.
+>   		the cgroup.  This may not exactly match the number of
+>   		processes killed but should generally be close.
+>   
+> +  memory.swap.current
 > +
-> +	  Say N if unsure.
+> +	A read-only single value file which exists on non-root
+> +	cgroups.
 > +
-> +config CGROUP_DEBUG
-> +	bool "Example controller"
->   	default n
-> -	---help---
-> -	Enable some debugging help. Currently it exports additional stat
-> -	files in a cgroup which can be useful for debugging.
-> +	help
-> +	  This option enables a simple controller that exports
-> +	  debugging information about the cgroups framework.
->
-> -config CGROUP_WRITEBACK
-> -	bool
-> -	depends on MEMCG && BLK_CGROUP
-> -	default y
-> +	  Say N.
->
->   endif # CGROUPS
->
->
+> +	The total amount of swap currently being used by the cgroup
+> +	and its descendants.
+> +
+> +  memory.swap.max
+> +
+> +	A read-write single value file which exists on non-root
+> +	cgroups.  The default is "max".
+> +
+> +	Swap usage hard limit.  If a cgroup's swap usage reaches this
+> +	limit, anonymous meomry of the cgroup will not be swapped out.
+> +
+>   
+>   5-2-2. General Usage
+>   
+> @@ -1291,3 +1307,20 @@ allocation from the slack available in other groups or the rest of the
+>   system than killing the group.  Otherwise, memory.max is there to
+>   limit this type of spillover and ultimately contain buggy or even
+>   malicious applications.
+> +
+> +The combined memory+swap accounting and limiting is replaced by real
+> +control over swap space.
+> +
+> +The main argument for a combined memory+swap facility in the original
+> +cgroup design was that global or parental pressure would always be
+> +able to swap all anonymous memory of a child group, regardless of the
+> +child's own (possibly untrusted) configuration.  However, untrusted
+> +groups can sabotage swapping by other means - such as referencing its
+> +anonymous memory in a tight loop - and an admin can not assume full
+> +swappability when overcommitting untrusted jobs.
+> +
+> +For trusted jobs, on the other hand, a combined counter is not an
+> +intuitive userspace interface, and it flies in the face of the idea
+> +that cgroup controllers should account and limit specific physical
+> +resources.  Swap space is a resource like all others in the system,
+> +and that's why unified hierarchy allows distributing it separately.
+> 
+Could you give here a hint how to calculate amount of swapcache,
+counted both in memory.current and swap.current ?
+
+Thanks,
+-Kame
+
+
+
+
