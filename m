@@ -1,74 +1,491 @@
-From: "Alex Ng (LIS)" <alexng-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
-Subject: [OOPS] BUG_ON in cgroups on 4.4.0-rc5-next
-Date: Fri, 18 Dec 2015 20:08:03 +0000
-Message-ID: <BLUPR0301MB200140C023EB8C2B414F6B13D8E10@BLUPR0301MB2001.namprd03.prod.outlook.com>
+From: Alban Crequy <alban.crequy-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] [RFC] selftests/cgroupns: new test for cgroup namespaces
+Date: Sat, 19 Dec 2015 14:05:33 +0100
+Message-ID: <1450530333-20479-1-git-send-email-alban@kinvolk.io>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector1; h=From:To:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=wJ1KAo3of+QFp/mRNLxOEAqvqiwVYhw+H7uxLV0C9EY=;
- b=IuTCQWixBO9DkDXuCfxN0B+hPt3Uudao+0mXHBbf2yOWvUSmYwc8wRLNgMzyZbQAfuRh4cZAoRKAiBXrKdhiHYRuJKif/GmpmCCKnsjvwNNDQH5pJZ6vjwfznundu0ucSB2mbEkxShVTkyeRM1PM5KGrlv8tXeaaAZyQnmHai18=
-Content-Language: en-US
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-To: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20120113;
+	h=sender:from:to:cc:subject:date:message-id;
+	bh=s2ra64YJBuDeHl20ExC4fDkVycGu5bCi2ahQBdlIlx0=;
+	b=EJwa6IXzrV1uENFXO1go4wmnC74+IPLL12/ukbrviiLz0Pfw7az0Wc3bb3snOe2WhJ
+	GvPZWUGB+3uErJ10W5b2+osBaujGF/a/FwWshTCkhv6E+1SNpG1aSsxsjymR+9BUi3MI
+	D3kdQAVr2ts84lsVODoB5OPPmT1KD3rj2IFP13d0efgWTbX/r+/SIS2TBqdrmOt2D5r+
+	FcLgv8ciy76qDPVBZZBgJYOOeOZlxK6eBO6XzhfbMWtiWv0/YUCam/mOAUSM02uGv9Yg
+	HfMd3BE34TtkMRyq/CGs8yxtkQpjFqLj+hT+w0x9xBP4WxgC4ixB/g3EJmHfls4iKI4g
+	7QlA==
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Serge Hallyn <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Cc: iago-lYLaGTFnO9sWenYVfaLwtA@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alban Crequy <alban-lYLaGTFnO9sWenYVfaLwtA@public.gmane.org>, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 
-Hi,
+From: Alban Crequy <alban-lYLaGTFnO9sWenYVfaLwtA@public.gmane.org>
 
-I was running a "git clone" of the linux-next source tree and hit the following BUG_ON condition. My box is running kernel 4.4.0-rc5-next-20151217-52.27. Any ideas on how to pin down the cause?
+This adds the selftest "cgroupns_test" in order to test the CGroup
+Namespace patchset.
 
-The trace indicates that the following condition in compare_css_sets() triggered the oops:
+cgroupns_test creates two child processes. They perform a list of
+actions defined by the array cgroupns_test. This array can easily be
+extended to more scenarios without adding much code. They are
+synchronized with eventfds to ensure only one action is performed at a
+time.
 
-	BUG_ON(cgrp1->root != cgrp2->root);
+The memory is shared between the processes (CLONE_VM) so each child
+process can know the pid of their siblings without extra IPC.
 
-[ 1859.800805] ------------[ cut here ]------------
-[ 1859.804082] kernel BUG at kernel/cgroup.c:834!
-[ 1859.804082] invalid opcode: 0000 [#1] SMP
-[ 1859.804082] Modules linked in: iscsi_ibft iscsi_boot_sysfs af_packet crct10dif_pclmul crc32_pclmul ghash_clmulni_intel drbg ansi_cprng aesni_intel i2c_piix4 hv_netvsc serio_raw pcspkr hyperv_keyboard aes_x86_64 lrw hyperv_fb joydev gf128mul glue_helper ablk_helper hv_utils acpi_cpufreq cryptd processor button dm_mod xfs libcrc32c sd_mod hid_generic sr_mod cdrom ata_generic ata_piix hid_hyperv hv_storvsc ahci libahci crc32c_intel hv_vmbus libata floppy sg scsi_mod autofs4
-[ 1859.804082] CPU: 2 PID: 1 Comm: systemd Not tainted 4.4.0-rc5-next-20151217-52.27-default+ #2
-[ 1859.804082] Hardware name: Microsoft Corporation Virtual Machine/Virtual Machine, BIOS 090006  05/23/2012
-[ 1859.804082] task: ffff880101c54040 ti: ffff880101c58000 task.ti: ffff880101c58000
-[ 1859.804082] RIP: 0010:[<ffffffff810f108d>]  [<ffffffff810f108d>] find_css_set+0x3ad/0x3e0
-[ 1859.804082] RSP: 0018:ffff880101c5bc38  EFLAGS: 00010207
-[ 1859.804082] RAX: ffff88003694b238 RBX: ffff8800f10d0638 RCX: ffff8800eefa8220
-[ 1859.804082] RDX: ffff8800f14b5a20 RSI: ffff88003694b250 RDI: ffff880101c5bc48
-[ 1859.804082] RBP: ffff880101c5bcc0 R08: 0000000000000000 R09: ffff8800f12efc00
-[ 1859.804082] R10: ffff8800f18e3800 R11: 0000000000000000 R12: ffff8800f3938400
-[ 1859.804082] R13: ffff880101c5bc48 R14: ffff8800f10d0600 R15: ffff88003694b200
-[ 1859.804082] FS:  00007f994345a880(0000) GS:ffff880102e40000(0000) knlGS:0000000000000000
-[ 1859.804082] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 1859.804082] CR2: 00007fc829d19000 CR3: 0000000036e46000 CR4: 00000000000006e0
-[ 1859.804082] Stack:
-[ 1859.804082]  ffff880101c5bc88 ffffffff810c3970 ffffffff81a74b00 ffffffff81dcc380
-[ 1859.804082]  ffffffff81a4d100 ffffffff81f5c660 ffff8801023df800 ffff8801023db500
-[ 1859.804082]  ffff8801023d7400 ffff8801023d7340 ffff8801023d7280 ffff8801023db400
-[ 1859.804082] Call Trace:
-[ 1859.804082]  [<ffffffff810c3970>] ? __wait_rcu_gp+0xd0/0xf0
-[ 1859.804082]  [<ffffffff810f115a>] cgroup_migrate_prepare_dst+0x9a/0x200
-[ 1859.804082]  [<ffffffff810f2065>] cgroup_attach_task+0x65/0xd0
-[ 1859.804082]  [<ffffffff810abf1d>] ? percpu_down_write+0x5d/0xd0
-[ 1859.804082]  [<ffffffff810f2348>] __cgroup_procs_write.isra.22+0x1b8/0x2d0
-[ 1859.804082]  [<ffffffff810f2493>] cgroup_procs_write+0x13/0x20
-[ 1859.804082]  [<ffffffff810edb28>] cgroup_file_write+0x38/0xf0
-[ 1859.804082]  [<ffffffff81250380>] kernfs_fop_write+0x120/0x170
-[ 1859.804082]  [<ffffffff811daf08>] __vfs_write+0x28/0xe0
-[ 1859.804082]  [<ffffffff8129a618>] ? apparmor_file_permission+0x18/0x20
-[ 1859.804082]  [<ffffffff81273dbd>] ? security_file_permission+0x3d/0xc0
-[ 1859.804082]  [<ffffffff810abe47>] ? percpu_down_read+0x17/0x50
-[ 1859.804082]  [<ffffffff811db7c2>] vfs_write+0xa2/0x1a0
-[ 1859.804082]  [<ffffffff81051310>] ? __do_page_fault+0x1a0/0x3f0
-[ 1859.804082]  [<ffffffff811dc726>] SyS_write+0x46/0xa0
-[ 1859.804082]  [<ffffffff815aafee>] entry_SYSCALL_64_fastpath+0x12/0x71
-[ 1859.804082] Code: 03 10 48 8b 72 08 48 89 4a 08 48 89 11 48 89 71 08 48 89 0e f6 40 74 01 75 c3 48 8b 50 18 f6 c2 03 75 22 65 48 ff 02 eb b4 0f 0b <0f> 0b 31 c0 e9 b0 fd ff ff 4c 89 ff e8 72 92 0c 00 31 c0 e9 a1
-[ 1860.196107] RIP  [<ffffffff810f108d>] find_css_set+0x3ad/0x3e0
-[ 1860.196107]  RSP <ffff880101c5bc38>
-[ 1860.199742] ---[ end trace 3a415fee224c72a3 ]---
-[ 1860.199744] Kernel panic - not syncing: Fatal exception in interrupt
-[ 1860.203733] Kernel Offset: disabled
-[ 1860.203733] ---[ end Kernel panic - not syncing: Fatal exception in interrupt
+The output explains the scenario being played. Short extract:
 
---
-Alex Ng
+> current cgroup: /user.slice/user-0.slice/session-1.scope
+> child process #0: check that process #self (pid=482) has cgroup /user.slice/user-0.slice/session-1.scope
+> child process #0: unshare cgroupns
+> child process #0: move process #self (pid=482) to cgroup cgroup-a/subcgroup-a
+> child process #0: join parent cgroupns
+
+The test does not change the mount namespace and does not mount any
+new cgroup2 filesystem. Therefore this does not test that the cgroup2
+mount is correctly rooted to the cgroupns root at mount time.
+
+Signed-off-by: Alban Crequy <alban-lYLaGTFnO9sWenYVfaLwtA@public.gmane.org>
+
+---
+
+This patch is available in the cgroupns.v7-tests branch of
+https://github.com/kinvolk/linux.git
+It is based on top of Serge Hallyn's cgroupns.v7 branch of
+https://git.kernel.org/cgit/linux/kernel/git/sergeh/linux-security.git/
+
+I see Linux does not have a lot of selftests and there are more Linux
+container tests in Linux Test Project:
+https://github.com/linux-test-project/ltp/tree/master/testcases/kernel/containers
+
+Is it better to send this test here or to LTP?
+---
+ tools/testing/selftests/Makefile                 |   1 +
+ tools/testing/selftests/cgroupns/Makefile        |  11 +
+ tools/testing/selftests/cgroupns/cgroupns_test.c | 378 +++++++++++++++++++++++
+ 3 files changed, 390 insertions(+)
+ create mode 100644 tools/testing/selftests/cgroupns/Makefile
+ create mode 100644 tools/testing/selftests/cgroupns/cgroupns_test.c
+
+diff --git a/tools/testing/selftests/Makefile b/tools/testing/selftests/Makefile
+index c8edff6..694325a 100644
+--- a/tools/testing/selftests/Makefile
++++ b/tools/testing/selftests/Makefile
+@@ -1,4 +1,5 @@
+ TARGETS = breakpoints
++TARGETS += cgroupns
+ TARGETS += cpu-hotplug
+ TARGETS += efivarfs
+ TARGETS += exec
+diff --git a/tools/testing/selftests/cgroupns/Makefile b/tools/testing/selftests/cgroupns/Makefile
+new file mode 100644
+index 0000000..0fdbe0a
+--- /dev/null
++++ b/tools/testing/selftests/cgroupns/Makefile
+@@ -0,0 +1,11 @@
++CFLAGS += -I../../../../usr/include/
++CFLAGS += -I../../../../include/uapi/
++
++all: cgroupns_test
++
++TEST_PROGS := cgroupns_test
++
++include ../lib.mk
++
++clean:
++	$(RM) cgroupns_test
+diff --git a/tools/testing/selftests/cgroupns/cgroupns_test.c b/tools/testing/selftests/cgroupns/cgroupns_test.c
+new file mode 100644
+index 0000000..d45017c
+--- /dev/null
++++ b/tools/testing/selftests/cgroupns/cgroupns_test.c
+@@ -0,0 +1,378 @@
++#define _GNU_SOURCE
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <unistd.h>
++#include <string.h>
++#include <sys/statfs.h>
++#include <inttypes.h>
++#include <sched.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <sys/socket.h>
++#include <sys/wait.h>
++#include <sys/eventfd.h>
++#include <signal.h>
++#include <fcntl.h>
++
++#include <linux/magic.h>
++#include <linux/sched.h>
++
++#include "../kselftest.h"
++
++#define STACK_SIZE 65536
++
++static char root_cgroup[4096];
++
++#define CHILDREN_COUNT 2
++typedef struct {
++	int pid;
++	uint8_t *stack;
++	int start_semfd;
++	int end_semfd;
++} cgroupns_child_t;
++cgroupns_child_t children[CHILDREN_COUNT];
++
++typedef enum {
++	UNSHARE_CGROUPNS,
++	JOIN_CGROUPNS,
++	CHECK_CGROUP,
++	CHECK_CGROUP_WITH_ROOT_PREFIX,
++	MOVE_CGROUP,
++	MOVE_CGROUP_WITH_ROOT_PREFIX,
++} cgroupns_action_t;
++
++static const struct {
++	int actor_pid;
++	cgroupns_action_t action;
++	int target_pid;
++	char *path;
++} cgroupns_tests[] = {
++	{ 0, CHECK_CGROUP_WITH_ROOT_PREFIX, -1, ""},
++	{ 0, CHECK_CGROUP_WITH_ROOT_PREFIX, 0, ""},
++	{ 0, CHECK_CGROUP_WITH_ROOT_PREFIX, 1, ""},
++	{ 1, CHECK_CGROUP_WITH_ROOT_PREFIX, -1, ""},
++	{ 1, CHECK_CGROUP_WITH_ROOT_PREFIX, 0, ""},
++	{ 1, CHECK_CGROUP_WITH_ROOT_PREFIX, 1, ""},
++
++	{ 0, UNSHARE_CGROUPNS, -1, NULL},
++
++	{ 0, CHECK_CGROUP, -1, "/"},
++	{ 0, CHECK_CGROUP, 0, "/"},
++	{ 0, CHECK_CGROUP, 1, "/"},
++	{ 1, CHECK_CGROUP_WITH_ROOT_PREFIX, -1, ""},
++	{ 1, CHECK_CGROUP_WITH_ROOT_PREFIX, 0, ""},
++	{ 1, CHECK_CGROUP_WITH_ROOT_PREFIX, 1, ""},
++
++	{ 1, UNSHARE_CGROUPNS, -1, NULL},
++
++	{ 0, CHECK_CGROUP, -1, "/"},
++	{ 0, CHECK_CGROUP, 0, "/"},
++	{ 0, CHECK_CGROUP, 1, "/"},
++	{ 1, CHECK_CGROUP, -1, "/"},
++	{ 1, CHECK_CGROUP, 0, "/"},
++	{ 1, CHECK_CGROUP, 1, "/"},
++
++	{ 0, MOVE_CGROUP_WITH_ROOT_PREFIX, -1, "cgroup-a"},
++	{ 1, MOVE_CGROUP_WITH_ROOT_PREFIX, -1, "cgroup-b"},
++
++	{ 0, CHECK_CGROUP, -1, "/cgroup-a"},
++	{ 0, CHECK_CGROUP, 0, "/cgroup-a"},
++	{ 0, CHECK_CGROUP, 1, "/cgroup-b"},
++	{ 1, CHECK_CGROUP, -1, "/cgroup-b"},
++	{ 1, CHECK_CGROUP, 0, "/cgroup-a"},
++	{ 1, CHECK_CGROUP, 1, "/cgroup-b"},
++
++	{ 0, UNSHARE_CGROUPNS, -1, NULL},
++	{ 1, UNSHARE_CGROUPNS, -1, NULL},
++
++	{ 0, CHECK_CGROUP, -1, "/"},
++	{ 0, CHECK_CGROUP, 0, "/"},
++	{ 0, CHECK_CGROUP, 1, "/../cgroup-b"},
++	{ 1, CHECK_CGROUP, -1, "/"},
++	{ 1, CHECK_CGROUP, 0, "/../cgroup-a"},
++	{ 1, CHECK_CGROUP, 1, "/"},
++
++	{ 0, MOVE_CGROUP_WITH_ROOT_PREFIX, -1, "cgroup-a/sub1-a"},
++	{ 1, MOVE_CGROUP_WITH_ROOT_PREFIX, -1, "cgroup-b/sub1-b"},
++
++	{ 0, CHECK_CGROUP, 0, "/sub1-a"},
++	{ 0, CHECK_CGROUP, 1, "/../cgroup-b/sub1-b"},
++	{ 1, CHECK_CGROUP, 0, "/../cgroup-a/sub1-a"},
++	{ 1, CHECK_CGROUP, 1, "/sub1-b"},
++
++	{ 0, MOVE_CGROUP_WITH_ROOT_PREFIX, -1, "cgroup-a/sub1-a/sub2-a"},
++	{ 1, CHECK_CGROUP, 0, "/../cgroup-a/sub1-a/sub2-a"},
++	{ 0, CHECK_CGROUP, 1, "/../cgroup-b/sub1-b"},
++	{ 0, MOVE_CGROUP_WITH_ROOT_PREFIX, -1, "cgroup-a/sub1-a/sub2-a/sub3-a"},
++	{ 1, CHECK_CGROUP, 0, "/../cgroup-a/sub1-a/sub2-a/sub3-a"},
++	{ 0, CHECK_CGROUP, 1, "/../cgroup-b/sub1-b"},
++	{ 0, MOVE_CGROUP_WITH_ROOT_PREFIX, -1, "cgroup-a/sub1-a/sub2-a/sub3-a/sub4-a"},
++	{ 1, CHECK_CGROUP, 0, "/../cgroup-a/sub1-a/sub2-a/sub3-a/sub4-a"},
++	{ 0, CHECK_CGROUP, 1, "/../cgroup-b/sub1-b"},
++
++	{ 1, UNSHARE_CGROUPNS, -1, NULL},
++	{ 1, CHECK_CGROUP, 0, "/../../cgroup-a/sub1-a/sub2-a/sub3-a/sub4-a"},
++	{ 0, UNSHARE_CGROUPNS, -1, NULL},
++	{ 0, CHECK_CGROUP, 1, "/../../../../../cgroup-b/sub1-b"},
++
++	{ 0, JOIN_CGROUPNS, -1, NULL},
++	{ 1, JOIN_CGROUPNS, -1, NULL},
++
++	{ 0, CHECK_CGROUP_WITH_ROOT_PREFIX, 0, "/cgroup-a/sub1-a/sub2-a/sub3-a/sub4-a"},
++	{ 0, CHECK_CGROUP_WITH_ROOT_PREFIX, 1, "/cgroup-b/sub1-b"},
++	{ 1, CHECK_CGROUP_WITH_ROOT_PREFIX, 0, "/cgroup-a/sub1-a/sub2-a/sub3-a/sub4-a"},
++	{ 1, CHECK_CGROUP_WITH_ROOT_PREFIX, 1, "/cgroup-b/sub1-b"},
++};
++#define cgroupns_tests_len (sizeof(cgroupns_tests) / sizeof(cgroupns_tests[0]))
++
++static void
++get_cgroup(pid_t pid, char *path, size_t len)
++{
++	char proc_path[4096];
++	char *line;
++	FILE *f;
++
++	if (pid > 0) {
++		sprintf(proc_path, "/proc/%d/cgroup", pid);
++	} else {
++		sprintf(proc_path, "/proc/self/cgroup");
++	}
++
++	f = fopen(proc_path, "r");
++	if (!f) {
++		printf("FAIL: cannot open %s\n", proc_path);
++		ksft_exit_fail();
++	}
++	line = malloc(4096);
++	line = fgets(line, 4096, f);
++	if (!line) {
++		printf("FAIL: %s empty\n", proc_path);
++		ksft_exit_fail();
++	}
++	line[strcspn(line, "\n")] = 0;
++	if (strncmp(line, "0::", 3) != 0) {
++		printf("FAIL: cannot parse %s\n", proc_path);
++		ksft_exit_fail();
++	}
++	strncpy(path, line+3, len);
++
++	free(line);
++	fclose(f);
++}
++
++static void
++move_cgroup(pid_t target_pid, int prefix, char *cgroup)
++{
++	char knob_dir[4096];
++	char knob_path[4096];
++	char buf[128];
++	FILE *f;
++	int ret;
++
++	if (prefix) {
++		sprintf(knob_dir, "/sys/fs/cgroup/%s/%s", root_cgroup, cgroup);
++		sprintf(knob_path, "/sys/fs/cgroup/%s/%s/cgroup.procs", root_cgroup, cgroup);
++	} else {
++		sprintf(knob_dir, "/sys/fs/cgroup/%s", cgroup);
++		sprintf(knob_path, "/sys/fs/cgroup/%s/cgroup.procs", cgroup);
++	}
++
++	mkdir(knob_dir, 0755);
++
++	sprintf(buf, "%d\n", target_pid);
++
++	f = fopen(knob_path, "w");
++	ret = fwrite(buf, strlen(buf), 1, f);
++	if (ret != 1) {
++		printf("FAIL: cannot write to %s (ret=%d)\n", knob_path, ret);
++		ksft_exit_fail();
++	}
++	fclose(f);
++}
++
++static int
++child_func(void *arg)
++{
++	uintptr_t id = (uintptr_t) arg;
++	char child_cgroup[4096];
++	char expected_cgroup[4096];
++	char process_name[128];
++	char proc_path[128];
++	int step;
++	int ret;
++	int nsfd;
++
++	for (step = 0; step < cgroupns_tests_len; step++) {
++		uint64_t counter = 0;
++		int target_pid;
++
++		/* wait a signal from the parent process before starting this step */
++		ret = read(children[id].start_semfd, &counter, sizeof(counter));
++		if (ret != sizeof(counter)) {
++			printf("FAIL: cannot read semaphore\n");
++			ksft_exit_fail();
++		}
++
++		/* only one process will do this step */
++		if (cgroupns_tests[step].actor_pid == id)
++		switch (cgroupns_tests[step].action) {
++			case UNSHARE_CGROUPNS:
++				printf("child process #%d: unshare cgroupns\n", id);
++				ret = unshare(CLONE_NEWCGROUP);
++				if (ret != 0) {
++					printf("FAIL: cannot unshare cgroupns\n");
++					ksft_exit_fail();
++				}
++				break;
++
++			case JOIN_CGROUPNS:
++				printf("child process #%d: join parent cgroupns\n", id);
++
++				sprintf(proc_path, "/proc/%d/ns/cgroup", getppid());
++				nsfd = open(proc_path, 0);
++				ret = setns(nsfd, CLONE_NEWCGROUP);
++				if (ret != 0) {
++					printf("FAIL: cannot join cgroupns\n");
++					ksft_exit_fail();
++				}
++				close(nsfd);
++				break;
++
++			case CHECK_CGROUP:
++			case CHECK_CGROUP_WITH_ROOT_PREFIX:
++				if (cgroupns_tests[step].action == CHECK_CGROUP)
++					sprintf(expected_cgroup, "%s", cgroupns_tests[step].path);
++				else
++					sprintf(expected_cgroup, "%s%s", root_cgroup, cgroupns_tests[step].path);
++
++				if (cgroupns_tests[step].target_pid >= 0) {
++					target_pid = children[cgroupns_tests[step].target_pid].pid;
++					sprintf(process_name, "#%d (pid=%d)",
++					        cgroupns_tests[step].target_pid, target_pid);
++				} else {
++					target_pid = 0;
++					sprintf(process_name, "#self (pid=%d)", getpid());
++				}
++
++				printf("child process #%d: check that process %s has cgroup %s\n",
++				       id, process_name, expected_cgroup);
++
++				get_cgroup(target_pid, child_cgroup, sizeof(child_cgroup));
++
++				if (strcmp(child_cgroup, expected_cgroup) != 0) {
++					printf("FAIL: child has cgroup %s\n", child_cgroup);
++					ksft_exit_fail();
++				}
++
++				break;
++
++			case MOVE_CGROUP:
++			case MOVE_CGROUP_WITH_ROOT_PREFIX:
++				if (cgroupns_tests[step].target_pid >= 0) {
++					target_pid = children[cgroupns_tests[step].target_pid].pid;
++					sprintf(process_name, "#%d (pid=%d)",
++					        cgroupns_tests[step].target_pid, target_pid);
++				} else {
++					target_pid = getpid();
++					sprintf(process_name, "#self (pid=%d)", getpid());
++				}
++
++				printf("child process #%d: move process %s to cgroup %s\n",
++				       id, process_name, cgroupns_tests[step].path);
++
++				move_cgroup(target_pid,
++				            cgroupns_tests[step].action == MOVE_CGROUP_WITH_ROOT_PREFIX,
++				            cgroupns_tests[step].path);
++				break;
++
++			default:
++				printf("FAIL: invalid action\n");
++				ksft_exit_fail();
++		}
++
++
++		/* signal the parent process we've finished this step */
++		counter = 1;
++		ret = write(children[id].end_semfd, &counter, sizeof(counter));
++		if (ret != sizeof(counter)) {
++			printf("FAIL: cannot write semaphore\n");
++			ksft_exit_fail();
++		}
++	}
++
++	return 0;
++}
++
++int
++main(int argc, char **argv)
++{
++	struct statfs fs;
++	char child_cgroup[4096];
++	int ret;
++	int status;
++	uintptr_t i;
++	int step;
++
++	if (statfs("/sys/fs/cgroup/", &fs) < 0) {
++		printf("FAIL: statfs\n");
++		ksft_exit_fail();
++	}
++
++	if (fs.f_type != (typeof(fs.f_type)) CGROUP2_SUPER_MAGIC) {
++		printf("FAIL: this test is for Linux >= 4.4 with cgroup2 mounted\n");
++		ksft_exit_fail();
++	}
++
++	get_cgroup(0, root_cgroup, sizeof(root_cgroup));
++	printf("current cgroup: %s\n", root_cgroup);
++
++	for (i = 0; i < CHILDREN_COUNT; i++) {
++		children[i].start_semfd = eventfd(0, EFD_SEMAPHORE);
++		children[i].end_semfd = eventfd(0, EFD_SEMAPHORE);
++
++		children[i].stack = malloc(STACK_SIZE);
++		if (!children[i].stack) {
++			printf("FAIL: cannot allocate stack\n");
++			ksft_exit_fail();
++		}
++	}
++
++	for (i = 0; i < CHILDREN_COUNT; i++) {
++		children[i].pid = clone(child_func, children[i].stack + STACK_SIZE,
++		                        SIGCHLD|CLONE_VM|CLONE_FILES, (void *)i);
++	}
++
++	for (step = 0; step < cgroupns_tests_len; step++) {
++		uint64_t counter = 1;
++
++		/* signal the child processes they can start the current step */
++		for (i = 0; i < CHILDREN_COUNT; i++) {
++			ret = write(children[i].start_semfd, &counter, sizeof(counter));
++			if (ret != sizeof(counter)) {
++				printf("FAIL: cannot write semaphore\n");
++				ksft_exit_fail();
++			}
++		}
++
++		/* wait until all child processes finished the current step */
++		for (i = 0; i < CHILDREN_COUNT; i++) {
++			ret = read(children[i].end_semfd, &counter, sizeof(counter));
++			if (ret != sizeof(counter)) {
++				printf("FAIL: cannot read semaphore\n");
++				ksft_exit_fail();
++			}
++		}
++	}
++
++	for (i = 0; i < CHILDREN_COUNT; i++) {
++		ret = wait(&status);
++		if (ret == -1 || !WIFEXITED(status) || WEXITSTATUS(status) != 0) {
++			printf("FAIL: cannot wait child\n");
++			ksft_exit_fail();
++		}
++	}
++
++	printf("SUCCESS\n");
++	return ksft_exit_pass();
++}
+-- 
+2.5.0
