@@ -1,87 +1,52 @@
-From: Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
-Subject: Re: [Propose] Isolate core_pattern in mnt namespace.
-Date: Mon, 21 Dec 2015 14:15:08 +0800
-Message-ID: <567798EC.1040304@cn.fujitsu.com>
-References: <56729B3D.1040502@cn.fujitsu.com>	<56760F05.3020308@cn.fujitsu.com>	<20151220023712.GT20997@ZenIV.linux.org.uk>	<567616D6.6060202@cn.fujitsu.com> <87fuyx1mfn.fsf@x220.int.ebiederm.org>
+From: Dongsheng Yang <yangds.fnst@cn.fujitsu.com>
+Subject: [RESEND PATCH 1/2] cpuacct: rename parameter in cpuusage_write for readability
+Date: Mon, 21 Dec 2015 19:14:42 +0800
+Message-ID: <1450696483-2864-1-git-send-email-yangds.fnst@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <87fuyx1mfn.fsf-JOvCrm2gF+uungPnsOpG7nhyD016LWXt@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Cc: Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kamezawa Hiroyuki <kamezawa.hiroyu-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, mingo@redhat.com, peterz@infradead.org, tj@kernel.org
+Cc: Dongsheng Yang <yangds.fnst@cn.fujitsu.com>
 
-On 12/20/2015 05:47 PM, Eric W. Biederman wrote:
-> Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org> writes:
->
->> On 12/20/2015 10:37 AM, Al Viro wrote:
->>> On Sun, Dec 20, 2015 at 10:14:29AM +0800, Dongsheng Yang wrote:
->>>> On 12/17/2015 07:23 PM, Dongsheng Yang wrote:
->>>>> Hi guys,
->>>>>       We are working on making core dump behaviour isolated in
->>>>> container. But the problem is, the /proc/sys/kernel/core_pattern
->>>>> is a kernel wide setting, not belongs to a container.
->>>>>
->>>>>       So we want to add core_pattern into mnt namespace. What
->>>>> do you think about it?
->>>>
->>>> Hi Eric,
->>>> 	I found your patch about "net: Implement the per network namespace
->>>> sysctl infrastructure", I want to do the similar thing
->>>> in mnt namespace. Is that suggested way?
->>>
->>> Why mnt namespace and not something else?
->>
->> Hi Al,
->>
->> Well, because core_pattern indicates the path to store core file.
->> In different mnt namespace, we would like to change the path with
->> different value.
->>
->> In addition, Let's considering other namespaces:
->> UTS ns: contains informations of kernel and arch, not proper for core_pattern.
->> IPC ns: communication informations, not proper for core_pattern
->> PID ns: core_pattern is not related with pid
->> net ns: obviousely no.
->> user ns: not proper too.
->>
->> Then I believe it's better to do this in mnt namespace. of course,
->> core_pattern is just one example. After this infrastructure finished,
->> we can implement more sysctls as per-mnt if necessary, I think.
->>
->> Al, what do you think about this idea?
->
-> The hard part is not the sysctl.  The hard part is starting the usermode
-> helper, in an environment that it can deal with.  The mount namespace
-> really provides you with no help there.
+The name of 'reset' makes a little confusion in reading, we would
+say, if we want to reset usage, return -EINVAL. That's not true.
 
-Do you mean the core dump helper? But I think I don't want to touch it
-in my development. I think I can use non-pipe way to get what I want,
-Let me try to explain what I want here.
+Actually, we want to say, we only allow user to do a reset. This
+patch rename reset to val and add a comment here, making the code
+more readable.
 
-(1). introduce a --core-path option in docker run command to specify the
-path in host to store core file in one container.
-E.g: docker run --core-path=/core/test --name=test IMAGE
+Signed-off-by: Dongsheng Yang <yangds.fnst@cn.fujitsu.com>
+---
+ kernel/sched/cpuacct.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-(2). When the container starting, docker attach a volume to it, similar
-with "-v /core/test:/var/lib/docker/coredump". That means, the path of
-/var/lib/docker/coredump in container is a link to /core/test in host.
-
-(3). Set the /proc/sys/kernel/core_pattern in container as
-"/var/lib/docker/coredump". But that should not affect the core_pattern
-in host or other containers.
-
-Then I think I can collect the core files from each container and save
-them in the paths where I want.
-
-Thanx
-Yang
->
-> Eric
->
->
->
+diff --git a/kernel/sched/cpuacct.c b/kernel/sched/cpuacct.c
+index dd7cbb5..9c2bbf7 100644
+--- a/kernel/sched/cpuacct.c
++++ b/kernel/sched/cpuacct.c
+@@ -145,13 +145,16 @@ static u64 cpuusage_read(struct cgroup_subsys_state *css, struct cftype *cft)
+ }
+ 
+ static int cpuusage_write(struct cgroup_subsys_state *css, struct cftype *cft,
+-			  u64 reset)
++			  u64 val)
+ {
+ 	struct cpuacct *ca = css_ca(css);
+ 	int err = 0;
+ 	int i;
+ 
+-	if (reset) {
++	/*
++	 * Only allow '0' here to do a reset.
++	 */
++	if (val) {
+ 		err = -EINVAL;
+ 		goto out;
+ 	}
+-- 
+1.8.4.2
 
 
