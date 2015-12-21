@@ -1,42 +1,102 @@
-From: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [OOPS] BUG_ON in cgroups on 4.4.0-rc5-next
-Date: Mon, 21 Dec 2015 16:56:18 -0500
-Message-ID: <20151221215618.GB25997@mtj.duckdns.org>
-References: <BLUPR0301MB200140C023EB8C2B414F6B13D8E10@BLUPR0301MB2001.namprd03.prod.outlook.com>
+From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
+Subject: Re: [Propose] Isolate core_pattern in mnt namespace.
+Date: Mon, 21 Dec 2015 15:52:11 -0600
+Message-ID: <87twnbzcz8.fsf@x220.int.ebiederm.org>
+References: <56729B3D.1040502@cn.fujitsu.com> <56760F05.3020308@cn.fujitsu.com>
+	<20151220023712.GT20997@ZenIV.linux.org.uk>
+	<567616D6.6060202@cn.fujitsu.com>
+	<87fuyx1mfn.fsf@x220.int.ebiederm.org>
+	<567798EC.1040304@cn.fujitsu.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=wDncIntMPoDUeZ/hvL+uzONIvJXKKBHjIr4OvATvwco=;
-        b=rrimk78vXTHIuW1BGB5Vns0zKpVwRjY3ft1XkK6o61/vHRU751Z6VXMcGqT8/YE1y1
-         9gInwfrrglZN5QCgj8GcTj1T99gK1jVXNp7mheBCbfDMEg+Y5khT9Nnn0JibL/9pN/5g
-         Cu7TRTbL7ye1L2gKwYeIxuUozCuFZOY8SId9NmZlKMnd53rYYMK+TVu20qIq5jsZ3wwc
-         tyqB5rt9/bKUdxWZoPepNxOhWa5lrB7B6U8YDg7y8kXCOMp+Trb5xL76GOu5AK8XEJf9
-         3lzijdMHOYX4YORQ92rnTqGz692ZgPsJjryN58M3bC96euuraYwkR0+vrq9o3CNEyiYf
-         q6kA==
-Content-Disposition: inline
-In-Reply-To: <BLUPR0301MB200140C023EB8C2B414F6B13D8E10-1/ziRz4NpW1pnNF7ophFSpwN6zqB+hSMnBOFsp37pqbUKgpGm//BTAC/G2K4zDHf@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Alex Ng (LIS)" <alexng-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
-Cc: "lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <567798EC.1040304-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org> (Dongsheng Yang's message of
+	"Mon, 21 Dec 2015 14:15:08 +0800")
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/containers>, 
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/containers/>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello, Alex.
+Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org> writes:
 
-On Fri, Dec 18, 2015 at 08:08:03PM +0000, Alex Ng (LIS) wrote:
-> Hi,
-> 
-> I was running a "git clone" of the linux-next source tree and hit the following BUG_ON condition. My box is running kernel 4.4.0-rc5-next-20151217-52.27. Any ideas on how to pin down the cause?
-> 
-> The trace indicates that the following condition in compare_css_sets() triggered the oops:
+> On 12/20/2015 05:47 PM, Eric W. Biederman wrote:
+>> Dongsheng Yang <yangds.fnst-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org> writes:
+>>
+>>> On 12/20/2015 10:37 AM, Al Viro wrote:
+>>>> On Sun, Dec 20, 2015 at 10:14:29AM +0800, Dongsheng Yang wrote:
+>>>>> On 12/17/2015 07:23 PM, Dongsheng Yang wrote:
+>>>>>> Hi guys,
+>>>>>>       We are working on making core dump behaviour isolated in
+>>>>>> container. But the problem is, the /proc/sys/kernel/core_pattern
+>>>>>> is a kernel wide setting, not belongs to a container.
+>>>>>>
+>>>>>>       So we want to add core_pattern into mnt namespace. What
+>>>>>> do you think about it?
+>>>>>
+>>>>> Hi Eric,
+>>>>> 	I found your patch about "net: Implement the per network namespace
+>>>>> sysctl infrastructure", I want to do the similar thing
+>>>>> in mnt namespace. Is that suggested way?
+>>>>
+>>>> Why mnt namespace and not something else?
+>>>
+>>> Hi Al,
+>>>
+>>> Well, because core_pattern indicates the path to store core file.
+>>> In different mnt namespace, we would like to change the path with
+>>> different value.
+>>>
+>>> In addition, Let's considering other namespaces:
+>>> UTS ns: contains informations of kernel and arch, not proper for core_pattern.
+>>> IPC ns: communication informations, not proper for core_pattern
+>>> PID ns: core_pattern is not related with pid
+>>> net ns: obviousely no.
+>>> user ns: not proper too.
+>>>
+>>> Then I believe it's better to do this in mnt namespace. of course,
+>>> core_pattern is just one example. After this infrastructure finished,
+>>> we can implement more sysctls as per-mnt if necessary, I think.
+>>>
+>>> Al, what do you think about this idea?
+>>
+>> The hard part is not the sysctl.  The hard part is starting the usermode
+>> helper, in an environment that it can deal with.  The mount namespace
+>> really provides you with no help there.
+>
+> Do you mean the core dump helper? But I think I don't want to touch it
+> in my development. I think I can use non-pipe way to get what I want,
+> Let me try to explain what I want here.
+>
+> (1). introduce a --core-path option in docker run command to specify the
+> path in host to store core file in one container.
+> E.g: docker run --core-path=/core/test --name=test IMAGE
+>
+> (2). When the container starting, docker attach a volume to it, similar
+> with "-v /core/test:/var/lib/docker/coredump". That means, the path of
+> /var/lib/docker/coredump in container is a link to /core/test in host.
+>
+> (3). Set the /proc/sys/kernel/core_pattern in container as
+> "/var/lib/docker/coredump". But that should not affect the core_pattern
+> in host or other containers.
+>
+> Then I think I can collect the core files from each container and save
+> them in the paths where I want.
 
-Can you please let me know the steps to reproduce the bug?
+For your case that sounds like it would work.  Unfortunately for this to
+be generally applicable and to let the OS in the contianer control it's
+fate the core dump pattern needs to be supported.
 
-Thanks.
+Otherwise something clever in userspace that can be written now should
+be sufficient to fill the gap.  There is enough information for the user
+mode helper to implement the policy you would like today.
 
--- 
-tejun
+Eric
