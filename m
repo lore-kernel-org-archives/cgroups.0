@@ -1,132 +1,107 @@
-From: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 3/8] cgroup: implement cgroup_get_from_path() and expose
- cgroup_put()
-Date: Mon, 21 Dec 2015 18:22:41 -0600
-Message-ID: <20151222002240.GA6682@mail.hallyn.com>
-References: <1449527935-27056-1-git-send-email-tj@kernel.org>
- <1449527935-27056-4-git-send-email-tj@kernel.org>
+From: Kamezawa Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Subject: Re: [Propose] Isolate core_pattern in mnt namespace.
+Date: Tue, 22 Dec 2015 12:12:35 +0900
+Message-ID: <5678BFA3.9090608@jp.fujitsu.com>
+References: <56729B3D.1040502@cn.fujitsu.com>
+ <56760F05.3020308@cn.fujitsu.com> <20151220023712.GT20997@ZenIV.linux.org.uk>
+ <567616D6.6060202@cn.fujitsu.com> <87fuyx1mfn.fsf@x220.int.ebiederm.org>
+ <567798EC.1040304@cn.fujitsu.com> <87twnbzcz8.fsf@x220.int.ebiederm.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1449527935-27056-4-git-send-email-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <87twnbzcz8.fsf@x220.int.ebiederm.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, pablo-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org, kadlec-K40Dz/62t/MgiyqX0sVFJYdd74u8MsAO@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org, nhorman-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netfilter-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, coreteam-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, ninasc-b10kYP2dOMg@public.gmane.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>, Dongsheng Yang <yangds.fnst@cn.fujitsu.com>
+Cc: Al Viro <viro@ZenIV.linux.org.uk>, containers@lists.linux-foundation.org, LKML <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org
 
-On Mon, Dec 07, 2015 at 05:38:50PM -0500, Tejun Heo wrote:
-> Implement cgroup_get_from_path() using kernfs_walk_and_get() which
-> obtains a default hierarchy cgroup from its path.  This will be used
-> to allow cgroup path based matching from outside cgroup proper -
-> e.g. networking and perf.
-
-Hi Tejun,
-
-I'm trying to figure out how to handle this in the cgroup ns patchset.
-Is this going to be purely used internally?  From the user i see in
-this patchset it looks like I should leave it be (and have @path always
-be absolute)  Is that right?
-
-thanks,
--serge
-
-> v2: Add EXPORT_SYMBOL_GPL(cgroup_get_from_path).
+On 2015/12/22 6:52, Eric W. Biederman wrote:
+> Dongsheng Yang <yangds.fnst@cn.fujitsu.com> writes:
 > 
-> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> ---
->  include/linux/cgroup.h |  7 +++++++
->  kernel/cgroup.c        | 39 ++++++++++++++++++++++++++++++++++-----
->  2 files changed, 41 insertions(+), 5 deletions(-)
+>> On 12/20/2015 05:47 PM, Eric W. Biederman wrote:
+>>> Dongsheng Yang <yangds.fnst@cn.fujitsu.com> writes:
+>>>
+>>>> On 12/20/2015 10:37 AM, Al Viro wrote:
+>>>>> On Sun, Dec 20, 2015 at 10:14:29AM +0800, Dongsheng Yang wrote:
+>>>>>> On 12/17/2015 07:23 PM, Dongsheng Yang wrote:
+>>>>>>> Hi guys,
+>>>>>>>        We are working on making core dump behaviour isolated in
+>>>>>>> container. But the problem is, the /proc/sys/kernel/core_pattern
+>>>>>>> is a kernel wide setting, not belongs to a container.
+>>>>>>>
+>>>>>>>        So we want to add core_pattern into mnt namespace. What
+>>>>>>> do you think about it?
+>>>>>>
+>>>>>> Hi Eric,
+>>>>>> 	I found your patch about "net: Implement the per network namespace
+>>>>>> sysctl infrastructure", I want to do the similar thing
+>>>>>> in mnt namespace. Is that suggested way?
+>>>>>
+>>>>> Why mnt namespace and not something else?
+>>>>
+>>>> Hi Al,
+>>>>
+>>>> Well, because core_pattern indicates the path to store core file.
+>>>> In different mnt namespace, we would like to change the path with
+>>>> different value.
+>>>>
+>>>> In addition, Let's considering other namespaces:
+>>>> UTS ns: contains informations of kernel and arch, not proper for core_pattern.
+>>>> IPC ns: communication informations, not proper for core_pattern
+>>>> PID ns: core_pattern is not related with pid
+>>>> net ns: obviousely no.
+>>>> user ns: not proper too.
+>>>>
+>>>> Then I believe it's better to do this in mnt namespace. of course,
+>>>> core_pattern is just one example. After this infrastructure finished,
+>>>> we can implement more sysctls as per-mnt if necessary, I think.
+>>>>
+>>>> Al, what do you think about this idea?
+>>>
+>>> The hard part is not the sysctl.  The hard part is starting the usermode
+>>> helper, in an environment that it can deal with.  The mount namespace
+>>> really provides you with no help there.
+>>
+>> Do you mean the core dump helper? But I think I don't want to touch it
+>> in my development. I think I can use non-pipe way to get what I want,
+>> Let me try to explain what I want here.
+>>
+>> (1). introduce a --core-path option in docker run command to specify the
+>> path in host to store core file in one container.
+>> E.g: docker run --core-path=/core/test --name=test IMAGE
+>>
+>> (2). When the container starting, docker attach a volume to it, similar
+>> with "-v /core/test:/var/lib/docker/coredump". That means, the path of
+>> /var/lib/docker/coredump in container is a link to /core/test in host.
+>>
+>> (3). Set the /proc/sys/kernel/core_pattern in container as
+>> "/var/lib/docker/coredump". But that should not affect the core_pattern
+>> in host or other containers.
+>>
+>> Then I think I can collect the core files from each container and save
+>> them in the paths where I want.
 > 
-> diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-> index b5ee2c4..4c3ffab 100644
-> --- a/include/linux/cgroup.h
-> +++ b/include/linux/cgroup.h
-> @@ -81,6 +81,8 @@ struct cgroup_subsys_state *cgroup_get_e_css(struct cgroup *cgroup,
->  struct cgroup_subsys_state *css_tryget_online_from_dir(struct dentry *dentry,
->  						       struct cgroup_subsys *ss);
->  
-> +struct cgroup *cgroup_get_from_path(const char *path);
-> +
->  int cgroup_attach_task_all(struct task_struct *from, struct task_struct *);
->  int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from);
->  
-> @@ -351,6 +353,11 @@ static inline void css_put_many(struct cgroup_subsys_state *css, unsigned int n)
->  		percpu_ref_put_many(&css->refcnt, n);
->  }
->  
-> +static inline void cgroup_put(struct cgroup *cgrp)
-> +{
-> +	css_put(&cgrp->self);
-> +}
-> +
->  /**
->   * task_css_set_check - obtain a task's css_set with extra access conditions
->   * @task: the task to obtain css_set for
-> diff --git a/kernel/cgroup.c b/kernel/cgroup.c
-> index 3190040..3db5e8f 100644
-> --- a/kernel/cgroup.c
-> +++ b/kernel/cgroup.c
-> @@ -434,11 +434,6 @@ static bool cgroup_tryget(struct cgroup *cgrp)
->  	return css_tryget(&cgrp->self);
->  }
->  
-> -static void cgroup_put(struct cgroup *cgrp)
-> -{
-> -	css_put(&cgrp->self);
-> -}
-> -
->  struct cgroup_subsys_state *of_css(struct kernfs_open_file *of)
->  {
->  	struct cgroup *cgrp = of->kn->parent->priv;
-> @@ -5753,6 +5748,40 @@ struct cgroup_subsys_state *css_from_id(int id, struct cgroup_subsys *ss)
->  	return id > 0 ? idr_find(&ss->css_idr, id) : NULL;
->  }
->  
-> +/**
-> + * cgroup_get_from_path - lookup and get a cgroup from its default hierarchy path
-> + * @path: path on the default hierarchy
-> + *
-> + * Find the cgroup at @path on the default hierarchy, increment its
-> + * reference count and return it.  Returns pointer to the found cgroup on
-> + * success, ERR_PTR(-ENOENT) if @path doens't exist and ERR_PTR(-ENOTDIR)
-> + * if @path points to a non-directory.
-> + */
-> +struct cgroup *cgroup_get_from_path(const char *path)
-> +{
-> +	struct kernfs_node *kn;
-> +	struct cgroup *cgrp;
-> +
-> +	mutex_lock(&cgroup_mutex);
-> +
-> +	kn = kernfs_walk_and_get(cgrp_dfl_root.cgrp.kn, path);
-> +	if (kn) {
-> +		if (kernfs_type(kn) == KERNFS_DIR) {
-> +			cgrp = kn->priv;
-> +			cgroup_get(cgrp);
-> +		} else {
-> +			cgrp = ERR_PTR(-ENOTDIR);
-> +		}
-> +		kernfs_put(kn);
-> +	} else {
-> +		cgrp = ERR_PTR(-ENOENT);
-> +	}
-> +
-> +	mutex_unlock(&cgroup_mutex);
-> +	return cgrp;
-> +}
-> +EXPORT_SYMBOL_GPL(cgroup_get_from_path);
-> +
->  #ifdef CONFIG_CGROUP_DEBUG
->  static struct cgroup_subsys_state *
->  debug_css_alloc(struct cgroup_subsys_state *parent_css)
-> -- 
-> 2.5.0
+> For your case that sounds like it would work.  Unfortunately for this to
+> be generally applicable and to let the OS in the contianer control it's
+> fate the core dump pattern needs to be supported.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+> Otherwise something clever in userspace that can be written now should
+> be sufficient to fill the gap.  There is enough information for the user
+> mode helper to implement the policy you would like today.
+> 
+Let me clarify my understanding.
+
+1) running user-mode-helper in a container.
+   It's not supported by the kernel. user-mode-helper always works on a host.
+
+2) running user mode helper in a host.
+  It's supported in the newest distro(FC23). (abrt supports container.)
+  Summary is here. https://github.com/abrt/abrt/wiki/Containers-and-chroots
+
+If a guest user doesn't want to pass a core to the host owner, core_pattern
+should be configurable but it can't.
+
+Thanks,
+-Kame
+
