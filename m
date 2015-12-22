@@ -1,68 +1,111 @@
-From: "Alex Ng (LIS)" <alexng@microsoft.com>
-Subject: RE: [OOPS] BUG_ON in cgroups on 4.4.0-rc5-next
-Date: Tue, 22 Dec 2015 19:06:41 +0000
-Message-ID: <BLUPR0301MB2001D645D9055C4DB1BF47BFD8E50@BLUPR0301MB2001.namprd03.prod.outlook.com>
-References: <BLUPR0301MB200140C023EB8C2B414F6B13D8E10@BLUPR0301MB2001.namprd03.prod.outlook.com>
- <20151221215618.GB25997@mtj.duckdns.org>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH 2/4] mm: memcontrol: reign in the CONFIG space madness
+Date: Tue, 22 Dec 2015 15:11:38 -0800
+Message-ID: <20151222151138.0c35816e53b0f0ad940568bb@linux-foundation.org>
+References: <1449863653-6546-1-git-send-email-hannes@cmpxchg.org>
+	<1449863653-6546-2-git-send-email-hannes@cmpxchg.org>
+	<20151212163332.GC28521@esperanza>
+	<20151212172057.GA7997@cmpxchg.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_002_BLUPR0301MB2001D645D9055C4DB1BF47BFD8E50BLUPR0301MB2001_"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector1; h=From:To:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=uuUVKYwH5S572IvQAqcOQnyPu/K6u7VC4Tyc/JBnYXE=;
- b=hlX+MKR9KIYLQtxc+3ufTFNUxOLVgWj9UuZ6YCn5ZH8Tg3c62XyIWDJNm1gsOpXOaoyO6NNC5LACzfD389C6KlMPIV4fFQY74zvqorpwYrv20GhhHVkDDU+NfPsh9txCM1E+2MSDmZYPHQFFc73S145Dd7xPBOUJGAVl3OFRzdI=
-In-Reply-To: <20151221215618.GB25997@mtj.duckdns.org>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20151212172057.GA7997-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: "tj@kernel.org" <tj@kernel.org>
-Cc: "lizefan@huawei.com" <lizefan@huawei.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-
---_002_BLUPR0301MB2001D645D9055C4DB1BF47BFD8E50BLUPR0301MB2001_
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-> Hello, Alex.
->=20
-> On Fri, Dec 18, 2015 at 08:08:03PM +0000, Alex Ng (LIS) wrote:
-> > Hi,
-> >
-> > I was running a "git clone" of the linux-next source tree and hit the
-> following BUG_ON condition. My box is running kernel 4.4.0-rc5-next-
-> 20151217-52.27. Any ideas on how to pin down the cause?
-> >
-> > The trace indicates that the following condition in compare_css_sets()
-> triggered the oops:
->=20
-> Can you please let me know the steps to reproduce the bug?
+On Sat, 12 Dec 2015 12:20:57 -0500 Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
 
-I tried this on a Hyper-V VM hosted in Windows Server 2012R2 and ran the at=
-tached script.=20
-The script clones the linux-next tree in a random directory under /tmp in a=
- tight loop.
+> On Sat, Dec 12, 2015 at 07:33:32PM +0300, Vladimir Davydov wrote:
+> > On Fri, Dec 11, 2015 at 02:54:11PM -0500, Johannes Weiner wrote:
+> > > What CONFIG_INET and CONFIG_LEGACY_KMEM guard inside the memory
+> > > controller code is insignificant, having these conditionals is not
+> > > worth the complication and fragility that comes with them.
+> > > 
+> > > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> > 
+> > Acked-by: Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+> > 
+> > > @@ -4374,17 +4342,11 @@ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
+> > >  {
+> > >  	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+> > >  
+> > > -#ifdef CONFIG_INET
+> > >  	if (cgroup_subsys_on_dfl(memory_cgrp_subsys) && !cgroup_memory_nosocket)
+> > >  		static_branch_dec(&memcg_sockets_enabled_key);
+> > > -#endif
+> > > -
+> > > -	memcg_free_kmem(memcg);
+> > 
+> > I wonder where the second call to memcg_free_kmem comes from. Luckily,
+> > it couldn't result in a breakage. And now it's removed.
+> 
+> Lol, I had to double check my trees to see what's going on as I don't
+> remember this being part of the patch. But it looks like the double
+> free came from the "net: drop tcp_memcontrol.c" patch and I must have
+> removed it again during conflict resolution when rebasing this patch
+> on top of yours. I must have thought git's auto-merge added it.
+> 
+> However, this causes an underflow of the kmem static branch, so we
+> will have to fix this directly in "net: drop tcp_memcontrol.c".
+> 
+> Andrew, could you please pick this up? However, it's important to also
+> then remove the hunk above from THIS patch, the one that deletes the
+> excessive memcg_free_kmem(). We need exactly one memcg_free_kmem() in
+> mem_cgroup_css_free(). :-)
 
-This panic is not always reproducible, and I have only hit it once after ru=
-nning the script about 10 times. A different kernel panic happens each time=
- I run this script; and the panics always happen during the first iteration=
- of the loop.
+So you want to retain
+mm-memcontrol-reign-in-the-config-space-madness.patch's removal of the
+ifdef CONFIG_INET?
 
-Let me know if you need more information.
 
-Hope this helps,
-Alex
+What I have is
 
---_002_BLUPR0301MB2001D645D9055C4DB1BF47BFD8E50BLUPR0301MB2001_
-Content-Type: application/octet-stream; name="test.sh"
-Content-Description: test.sh
-Content-Disposition: attachment; filename="test.sh"; size=207;
-	creation-date="Tue, 22 Dec 2015 18:52:35 GMT";
-	modification-date="Fri, 18 Dec 2015 19:42:25 GMT"
-Content-Transfer-Encoding: base64
+Against net-drop-tcp_memcontrolc.patch:
 
-IyEvYmluL2Jhc2gKCmZ1bmN0aW9uIGNsb25ldHJlZQp7Cgkjd2hpbGUgdHJ1ZTsgZG8KCQljbG9u
-ZWRpcj0vdG1wLyQodXVpZGdlbikKCQlnaXQgY2xvbmUgaHR0cHM6Ly9naXQua2VybmVsLm9yZy9w
-dWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvbmV4dC9saW51eC1uZXh0LmdpdCAkY2xvbmVkaXIKCQly
-bSAtcmYgJGNsb25lZGlyCgkjZG9uZQp9CgpjbG9uZXRyZWUK
+--- a/mm/memcontrol.c~net-drop-tcp_memcontrolc-fix
++++ a/mm/memcontrol.c
+@@ -4421,8 +4421,6 @@ static void mem_cgroup_css_free(struct c
+ 		static_branch_dec(&memcg_sockets_enabled_key);
+ #endif
+ 
+-	memcg_free_kmem(memcg);
+-
+ 	__mem_cgroup_free(memcg);
+ }
+ 
 
---_002_BLUPR0301MB2001D645D9055C4DB1BF47BFD8E50BLUPR0301MB2001_--
+and against mm-memcontrol-reign-in-the-config-space-madness.patch:
+
+--- a/mm/memcontrol.c~mm-memcontrol-reign-in-the-config-space-madness-fix
++++ a/mm/memcontrol.c
+@@ -4380,6 +4380,8 @@ static void mem_cgroup_css_free(struct c
+ 	if (cgroup_subsys_on_dfl(memory_cgrp_subsys) && !cgroup_memory_nosocket)
+ 		static_branch_dec(&memcg_sockets_enabled_key);
+ 
++	memcg_free_kmem(memcg);
++
+ 	if (memcg->tcp_mem.active)
+ 		static_branch_dec(&memcg_sockets_enabled_key);
+ 
+
+Producing
+
+static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+
+	if (cgroup_subsys_on_dfl(memory_cgrp_subsys) && !cgroup_memory_nosocket)
+		static_branch_dec(&memcg_sockets_enabled_key);
+
+	memcg_free_kmem(memcg);
+
+	if (memcg->tcp_mem.active)
+		static_branch_dec(&memcg_sockets_enabled_key);
+
+	__mem_cgroup_free(memcg);
+}
+
+And I did s/reign/rein/;)
