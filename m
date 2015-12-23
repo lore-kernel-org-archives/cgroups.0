@@ -1,103 +1,319 @@
-From: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [OOPS] BUG_ON in cgroups on 4.4.0-rc5-next
-Date: Wed, 23 Dec 2015 11:54:23 -0500
-Message-ID: <20151223165423.GJ5003@mtj.duckdns.org>
-References: <BLUPR0301MB200140C023EB8C2B414F6B13D8E10@BLUPR0301MB2001.namprd03.prod.outlook.com>
- <20151221215618.GB25997@mtj.duckdns.org>
- <BLUPR0301MB2001D645D9055C4DB1BF47BFD8E50@BLUPR0301MB2001.namprd03.prod.outlook.com>
+From: "Serge E. Hallyn" <serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/8 v8.2] kernfs: Add API to generate relative kernfs path
+Date: Wed, 23 Dec 2015 13:33:28 -0600
+Message-ID: <20151223193328.GA21581@mail.hallyn.com>
+References: <1450844609-9194-1-git-send-email-serge.hallyn@ubuntu.com>
+ <1450844609-9194-2-git-send-email-serge.hallyn@ubuntu.com>
+ <20151223160854.GF5003@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="NzB8fVQJ5HfG6fxh"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20120113;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-type:content-disposition:in-reply-to:user-agent;
-        bh=q9GiMWpkeEj2o58xP0Ymtp4CjTntKMZ+W6gf8v5pOZM=;
-        b=wpN5EgRSOQhru0U8WF65yqFkXwCZl/zMENC1jyuB84ncZhNHo+GncOX3c01CvEddWM
-         GOG8QoA1py/Wld3KkM3E0AMaFzXT/DnVDIILZq0fK1dhUIEU4ruHGqf/QWq0+m+j0JNx
-         fZSXmMA+n4zzRhPV4Ey3Df8m/iup74faT/UThWo3jUwWN1tIuMLTqwuVRM4MQ25HhwlN
-         djGniwRHPQ40aimMf2+NbDL0PjEhiV5OVv9+4IdBDfGrZ3dwEYtlSPSifjCwY4zru69g
-         0luU62w9AEh0QKk3yxrxRKWwBVWen8bDQsPyqPheGq43WuD1kvqkbmPCu8OZPHbnTFYH
-         VWOg==
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <BLUPR0301MB2001D645D9055C4DB1BF47BFD8E50-1/ziRz4NpW1pnNF7ophFSpwN6zqB+hSMnBOFsp37pqbUKgpGm//BTAC/G2K4zDHf@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20151223160854.GF5003-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: "Alex Ng (LIS)" <alexng-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
-Cc: "lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: serge.hallyn-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 
+The new function kernfs_path_from_node() generates and returns kernfs
+path of a given kernfs_node relative to a given parent kernfs_node.
 
---NzB8fVQJ5HfG6fxh
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-Hello, Alex.
-
-On Tue, Dec 22, 2015 at 07:06:41PM +0000, Alex Ng (LIS) wrote:
-> > Can you please let me know the steps to reproduce the bug?
-> 
-> I tried this on a Hyper-V VM hosted in Windows Server 2012R2 and ran
-> the attached script.  The script clones the linux-next tree in a
-> random directory under /tmp in a tight loop.
->
-> This panic is not always reproducible, and I have only hit it once
-> after running the script about 10 times. A different kernel panic
-> happens each time I run this script; and the panics always happen
-> during the first iteration of the loop.
-
-Heh, I don't get it.  The script doesn't do anything cgroup specific.
-Can you please apply the attached patch, reproduce the issue and
-report the kernel log?
-
-Thanks.
-
--- 
-tejun
-
---NzB8fVQJ5HfG6fxh
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename=dbg
-
+Signed-off-by: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Serge E. Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Acked-by: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
 ---
- kernel/cgroup.c |   21 ++++++++++++++++++++-
- 1 file changed, 20 insertions(+), 1 deletion(-)
+Changelog 20151125:
+  - Fully-wing multilinecomments
+  - Rework kernfs_path_from_node_locked() logic
+  - Replace BUG_ONs with returning NULL
+  - Use a const char* for /.. and precalculate its size
+Changelog 20151130:
+  - Update kernfs_path_from_node_locked comment
+Changelog 20151208:
+  - kernfs_node_distance:
+    * Remove BUG_ON(NULL)s
+    * Rename kernfs_node_distance to kernfs_depth
+  - kernfs_common-ancestor:
+    * Remove useless checks for depth == 0
+    * Add check to ensure nodes are from same root
+  - kernfs_path_from_node_locked:
+    * Remove needless __must_check
+    * Put p;len on its own decl line.
+    * Fix wrong WARN_ONCE usage
+Changelog 20151209:
+  - kernfs_path_from_node: change arguments to 'to' and 'from', and
+    change their order.
+Changelog 20151222:
+  - kernfs_path_from_node{,_locked}: return the string length.
+    kernfs_path is gpl-exported, so changing their return value seemed
+    ill-advised, but if noone minds I can update it too.
+Changelog 20151223:
+  - don't allocate memory pr_cont_kernfs_path() under spinlock
+---
+ fs/kernfs/dir.c        |  192 ++++++++++++++++++++++++++++++++++++++++--------
+ include/linux/kernfs.h |    9 ++-
+ 2 files changed, 166 insertions(+), 35 deletions(-)
 
---- a/kernel/cgroup.c
-+++ b/kernel/cgroup.c
-@@ -779,6 +779,22 @@ static inline void get_css_set(struct cs
- 	atomic_inc(&cset->refcount);
+diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
+index 742bf4a..8cf0810 100644
+--- a/fs/kernfs/dir.c
++++ b/fs/kernfs/dir.c
+@@ -44,28 +44,123 @@ static int kernfs_name_locked(struct kernfs_node *kn, char *buf, size_t buflen)
+ 	return strlcpy(buf, kn->parent ? kn->name : "/", buflen);
  }
  
-+static void dump_cset(struct css_set *cset)
-+{
-+	struct cgrp_cset_link *link;
-+
-+	printk("XXX dumping cset %p\n", cset);
-+	list_for_each_entry(link, &cset->cgrp_links, cgrp_link) {
-+		struct cgroup *cgrp = link->cgrp;
-+		struct cgroup_root *root = cgrp->root;
-+
-+		printk("root %d:0x%04x:%s ",
-+		       root->hierarchy_id, root->subsys_mask, root->name);
-+		pr_cont_cgroup_path(cgrp);
-+		pr_cont("\n");
+-static char * __must_check kernfs_path_locked(struct kernfs_node *kn, char *buf,
+-					      size_t buflen)
++/* kernfs_node_depth - compute depth from @from to @to */
++static size_t kernfs_depth(struct kernfs_node *from, struct kernfs_node *to)
+ {
+-	char *p = buf + buflen;
+-	int len;
++	size_t depth = 0;
+ 
+-	*--p = '\0';
++	while (to->parent && to != from) {
++		depth++;
++		to = to->parent;
 +	}
++	return depth;
++}
+ 
+-	do {
+-		len = strlen(kn->name);
+-		if (p - buf < len + 1) {
+-			buf[0] = '\0';
+-			p = NULL;
+-			break;
+-		}
+-		p -= len;
+-		memcpy(p, kn->name, len);
+-		*--p = '/';
+-		kn = kn->parent;
+-	} while (kn && kn->parent);
++static struct kernfs_node *kernfs_common_ancestor(struct kernfs_node *a,
++						  struct kernfs_node *b)
++{
++	size_t da, db;
++	struct kernfs_root *ra = kernfs_root(a), *rb = kernfs_root(b);
++
++	if (ra != rb)
++		return NULL;
++
++	da = kernfs_depth(ra->kn, a);
++	db = kernfs_depth(rb->kn, b);
++
++	while (da > db) {
++		a = a->parent;
++		da--;
++	}
++	while (db > da) {
++		b = b->parent;
++		db--;
++	}
++
++	/* worst case b and a will be the same at root */
++	while (b != a) {
++		b = b->parent;
++		a = a->parent;
++	}
++
++	return a;
 +}
 +
- /**
-  * compare_css_sets - helper function for find_existing_css_set().
-  * @cset: candidate css_set being tested
-@@ -831,7 +847,10 @@ static bool compare_css_sets(struct css_
- 		cgrp1 = link1->cgrp;
- 		cgrp2 = link2->cgrp;
- 		/* Hierarchies should be linked in the same order. */
--		BUG_ON(cgrp1->root != cgrp2->root);
-+		if (WARN_ON(cgrp1->root != cgrp2->root)) {
-+			dump_cset(cset);
-+			dump_cset(old_cset);
-+		}
++/**
++ * kernfs_path_from_node_locked - find a pseudo-absolute path to @kn_to,
++ * where kn_from is treated as root of the path.
++ * @kn_from: kernfs node which should be treated as root for the path
++ * @kn_to: kernfs node to which path is needed
++ * @buf: buffer to copy the path into
++ * @buflen: size of @buf
++ *
++ * We need to handle couple of scenarios here:
++ * [1] when @kn_from is an ancestor of @kn_to at some level
++ * kn_from: /n1/n2/n3
++ * kn_to:   /n1/n2/n3/n4/n5
++ * result:  /n4/n5
++ *
++ * [2] when @kn_from is on a different hierarchy and we need to find common
++ * ancestor between @kn_from and @kn_to.
++ * kn_from: /n1/n2/n3/n4
++ * kn_to:   /n1/n2/n5
++ * result:  /../../n5
++ * OR
++ * kn_from: /n1/n2/n3/n4/n5   [depth=5]
++ * kn_to:   /n1/n2/n3         [depth=3]
++ * result:  /../..
++ *
++ * return value: length of the string.  If greater than buflen,
++ * then contents of buf are undefined.  On error, -1 is returned.
++ */
++static int
++kernfs_path_from_node_locked(struct kernfs_node *kn_to,
++			     struct kernfs_node *kn_from, char *buf,
++			     size_t buflen)
++{
++	struct kernfs_node *kn, *common;
++	const char parent_str[] = "/..";
++	size_t depth_from, depth_to, len = 0, nlen = 0;
++	char *p;
++	int i;
++
++	if (!kn_from)
++		kn_from = kernfs_root(kn_to)->kn;
++
++	if (kn_from == kn_to)
++		return strlcpy(buf, "/", buflen);
++
++	common = kernfs_common_ancestor(kn_from, kn_to);
++	if (WARN_ON(!common))
++		return -1;
++
++	depth_to = kernfs_depth(common, kn_to);
++	depth_from = kernfs_depth(common, kn_from);
++
++	if (buf)
++		buf[0] = '\0';
  
- 		/*
- 		 * If this hierarchy is the hierarchy of the cgroup
-
---NzB8fVQJ5HfG6fxh--
+-	return p;
++	for (i = 0; i < depth_from; i++)
++		len += strlcpy(buf + len, parent_str,
++			       len < buflen ? buflen - len : 0);
++
++	/* Calculate how many bytes we need for the rest */
++	for (kn = kn_to; kn != common; kn = kn->parent)
++		nlen += strlen(kn->name) + 1;
++
++	if (len + nlen >= buflen)
++		return len + nlen;
++
++	p = buf + len + nlen;
++	*p = '\0';
++	for (kn = kn_to; kn != common; kn = kn->parent) {
++		nlen = strlen(kn->name);
++		p -= nlen;
++		memcpy(p, kn->name, nlen);
++		*(--p) = '/';
++	}
++
++	return len + nlen;
+ }
+ 
+ /**
+@@ -115,6 +210,34 @@ size_t kernfs_path_len(struct kernfs_node *kn)
+ }
+ 
+ /**
++ * kernfs_path_from_node - build path of node @to relative to @from.
++ * @from: parent kernfs_node relative to which we need to build the path
++ * @to: kernfs_node of interest
++ * @buf: buffer to copy @to's path into
++ * @buflen: size of @buf
++ *
++ * Builds @to's path relative to @from in @buf. @from and @to must
++ * be on the same kernfs-root. If @from is not parent of @to, then a relative
++ * path (which includes '..'s) as needed to reach from @from to @to is
++ * returned.
++ * 
++ * If @buf isn't long enough, the return value will be greater than @buflen
++ * and @buf contents are undefined.
++ */
++int kernfs_path_from_node(struct kernfs_node *to, struct kernfs_node *from,
++			  char *buf, size_t buflen)
++{
++	unsigned long flags;
++	int ret;
++
++	spin_lock_irqsave(&kernfs_rename_lock, flags);
++	ret = kernfs_path_from_node_locked(to, from, buf, buflen);
++	spin_unlock_irqrestore(&kernfs_rename_lock, flags);
++	return ret;
++}
++EXPORT_SYMBOL_GPL(kernfs_path_from_node);
++
++/**
+  * kernfs_path - build full path of a given node
+  * @kn: kernfs_node of interest
+  * @buf: buffer to copy @kn's name into
+@@ -127,13 +250,12 @@ size_t kernfs_path_len(struct kernfs_node *kn)
+  */
+ char *kernfs_path(struct kernfs_node *kn, char *buf, size_t buflen)
+ {
+-	unsigned long flags;
+-	char *p;
++	int ret;
+ 
+-	spin_lock_irqsave(&kernfs_rename_lock, flags);
+-	p = kernfs_path_locked(kn, buf, buflen);
+-	spin_unlock_irqrestore(&kernfs_rename_lock, flags);
+-	return p;
++	ret = kernfs_path_from_node(kn, NULL, buf, buflen);
++	if (ret < 0 || ret >= buflen)
++		return NULL;
++	return buf;
+ }
+ EXPORT_SYMBOL_GPL(kernfs_path);
+ 
+@@ -164,17 +286,25 @@ void pr_cont_kernfs_name(struct kernfs_node *kn)
+ void pr_cont_kernfs_path(struct kernfs_node *kn)
+ {
+ 	unsigned long flags;
+-	char *p;
++	int sz;
+ 
+ 	spin_lock_irqsave(&kernfs_rename_lock, flags);
+ 
+-	p = kernfs_path_locked(kn, kernfs_pr_cont_buf,
+-			       sizeof(kernfs_pr_cont_buf));
+-	if (p)
+-		pr_cont("%s", p);
+-	else
+-		pr_cont("<name too long>");
++	sz = kernfs_path_from_node_locked(kn, NULL, kernfs_pr_cont_buf,
++					  sizeof(kernfs_pr_cont_buf));
++	if (sz < 0) {
++		pr_cont("(error)");
++		goto out;
++	}
++
++	if (sz >= sizeof(kernfs_pr_cont_buf)) {
++		pr_cont("(name too long)");
++		goto out;
++	}
++
++	pr_cont("%s", kernfs_pr_cont_buf);
+ 
++out:
+ 	spin_unlock_irqrestore(&kernfs_rename_lock, flags);
+ }
+ 
+diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
+index af51df3..716bfde 100644
+--- a/include/linux/kernfs.h
++++ b/include/linux/kernfs.h
+@@ -267,8 +267,9 @@ static inline bool kernfs_ns_enabled(struct kernfs_node *kn)
+ 
+ int kernfs_name(struct kernfs_node *kn, char *buf, size_t buflen);
+ size_t kernfs_path_len(struct kernfs_node *kn);
+-char * __must_check kernfs_path(struct kernfs_node *kn, char *buf,
+-				size_t buflen);
++int kernfs_path_from_node(struct kernfs_node *root_kn, struct kernfs_node *kn,
++			  char *buf, size_t buflen);
++char *kernfs_path(struct kernfs_node *kn, char *buf, size_t buflen);
+ void pr_cont_kernfs_name(struct kernfs_node *kn);
+ void pr_cont_kernfs_path(struct kernfs_node *kn);
+ struct kernfs_node *kernfs_get_parent(struct kernfs_node *kn);
+@@ -338,8 +339,8 @@ static inline int kernfs_name(struct kernfs_node *kn, char *buf, size_t buflen)
+ static inline size_t kernfs_path_len(struct kernfs_node *kn)
+ { return 0; }
+ 
+-static inline char * __must_check kernfs_path(struct kernfs_node *kn, char *buf,
+-					      size_t buflen)
++static inline char *kernfs_path(struct kernfs_node *kn, char *buf,
++				size_t buflen)
+ { return NULL; }
+ 
+ static inline void pr_cont_kernfs_name(struct kernfs_node *kn) { }
+-- 
+1.7.9.5
