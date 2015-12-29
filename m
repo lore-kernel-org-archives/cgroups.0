@@ -1,218 +1,59 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH] cgroup: Add documentation for cgroup namespaces
-Date: Mon, 28 Dec 2015 16:48:07 -0500
-Message-ID: <20151228214807.GD30165@mtj.duckdns.org>
-References: <1450844609-9194-1-git-send-email-serge.hallyn@ubuntu.com>
- <1450844609-9194-8-git-send-email-serge.hallyn@ubuntu.com>
- <20151228174735.GB30165@mtj.duckdns.org>
- <1451337182.3374.34.camel@Nokia-N900>
+Subject: [PATCH] cgroup: demote subsystem init messages to KERN_DEBUG
+Date: Tue, 29 Dec 2015 14:57:02 -0500
+Message-ID: <20151229195702.GC3873@htj.duckdns.org>
+References: <DB5PR01MB10625F9B4570BCFBBD47FC52ACFC0@DB5PR01MB1062.eurprd01.prod.exchangelabs.com>
+ <5682D420.3030207@infradead.org>
+ <20151229192414.GB3873@htj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20120113;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-type:content-disposition:in-reply-to:user-agent;
-        bh=0Ty0e5wy//zwtICwRblE0J2Wb0P4JssmRBSjnu9R0zE=;
-        b=hAa+prXLAVj45aMvOK9cv1e6agc17aSLaHhEE6G880VYWmlPS6gJJELXoW5tRiiCy5
-         4xACgpwvT+bYyp26tlg2t5TN1DOW2ufcWOgwnl4tFgSXbUaxuyd/Y3SI05quQ5kyvlUw
-         IiyWxeylWojKEAotU7s0RWUE1oFzraZye8Si4H4bc22LcTMXj0thfTC2F6pvc7/9fwMm
-         GiUXNy4j92fo5f+8xyIrTt6Nkyc8nVDUbXnixjIxx2Ana9sIFxWveGmqmzm9sapuuUPY
-         OiQ+wNhO4nl8sfbpViJaS4D2kogEjXVz9PFUfAkB0j3q47hVHZvky+WDvx8LBFXr4a8x
-         RrfA==
+        bh=FQvgzepupa5vSv1YNWNxqcW+cHR4sgpaFa0jg7Qr5mQ=;
+        b=jVWtou7kyhHY/WlzFgtzYLZAPjHuGhYysHX1WcwWQ7ffH/BN3gNmgYbUC2/di/zsvO
+         3bHoLevpYsAwPwHX4vO52juzhLmonuN88a6FizyxLWTem5Pc5nghu+JWVmI/wrGGLTk0
+         0AWnwzGqum42c2Y6MzpZaNx+5a3PFP0/y07c5VgiCmXIk7J5143ufdSZ71NbQiF9n+kG
+         xM6AG938xNCP+aD+XjMHzVp26lPUjE8FQdUtLNWtV7926NIVLMBlx/vJgpb7ogEiUUCO
+         1YK+8eTU3PYuSiXSoHWj741s/ixAaPN/uG+ygp+jpR5ZyC2O1x85TnuNod/L+feYBoVP
+         4V+Q==
 Content-Disposition: inline
-In-Reply-To: <1451337182.3374.34.camel@Nokia-N900>
+In-Reply-To: <20151229192414.GB3873-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Serge Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Alexandru GOIA <alexandru.goia-akc712wslOWvSplVBqRQBQ@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-Hello, Serge.
+From 507bd688e32c2b2ca4bed139d9123b3da6d2d19d Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Tue, 29 Dec 2015 14:53:56 -0500
 
-I applied your suggestions and applied the following to
-cgroup/for-4.5.  Let's improve it from here.
+These are noisy during boot and not all that interesting.
 
-Thanks!
-
------- 8< ------
-From 5dddabce1171af2990160e1cb90f69a1440dcfb7 Mon Sep 17 00:00:00 2001
-From: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Date: Tue, 22 Dec 2015 22:23:28 -0600
-
-tj: Reorganized to better fit the documentation.
-
-Signed-off-by: Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
 Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- Documentation/cgroup.txt | 147 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 147 insertions(+)
+Queued for the coming merge window.
 
-diff --git a/Documentation/cgroup.txt b/Documentation/cgroup.txt
-index 31d1f7b..983ba63 100644
---- a/Documentation/cgroup.txt
-+++ b/Documentation/cgroup.txt
-@@ -47,6 +47,11 @@ CONTENTS
-   5-3. IO
-     5-3-1. IO Interface Files
-     5-3-2. Writeback
-+6. Namespace
-+  6-1. Basics
-+  6-2. The Root and Views
-+  6-3. Migration and setns(2)
-+  6-4. Interaction with Other Namespaces
- P. Information on Kernel Programming
-   P-1. Filesystem Support for Writeback
- D. Deprecated v1 Core Features
-@@ -1013,6 +1018,148 @@ writeback as follows.
- 	vm.dirty[_background]_ratio.
+Thanks.
+
+ kernel/cgroup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index f3836f3..7eb1d9d 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -5245,7 +5245,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss, bool early)
+ {
+ 	struct cgroup_subsys_state *css;
  
+-	printk(KERN_INFO "Initializing cgroup subsys %s\n", ss->name);
++	pr_debug("Initializing cgroup subsys %s\n", ss->name);
  
-+6. Namespace
-+
-+6-1. Basics
-+
-+cgroup namespace provides a mechanism to virtualize the view of the
-+"/proc/$PID/cgroup" file and cgroup mounts.  The CLONE_NEWCGROUP clone
-+flag can be used with clone(2) and unshare(2) to create a new cgroup
-+namespace.  The process running inside the cgroup namespace will have
-+its "/proc/$PID/cgroup" output restricted to cgroupns root.  The
-+cgroupns root is the cgroup of the process at the time of creation of
-+the cgroup namespace.
-+
-+Without cgroup namespace, the "/proc/$PID/cgroup" file shows the
-+complete path of the cgroup of a process.  In a container setup where
-+a set of cgroups and namespaces are intended to isolate processes the
-+"/proc/$PID/cgroup" file may leak potential system level information
-+to the isolated processes.  For Example:
-+
-+  # cat /proc/self/cgroup
-+  0::/batchjobs/container_id1
-+
-+The path '/batchjobs/container_id1' can be considered as system-data
-+and undesirable to expose to the isolated processes.  cgroup namespace
-+can be used to restrict visibility of this path.  For example, before
-+creating a cgroup namespace, one would see:
-+
-+  # ls -l /proc/self/ns/cgroup
-+  lrwxrwxrwx 1 root root 0 2014-07-15 10:37 /proc/self/ns/cgroup -> cgroup:[4026531835]
-+  # cat /proc/self/cgroup
-+  0::/batchjobs/container_id1
-+
-+After unsharing a new namespace, the view changes.
-+
-+  # ls -l /proc/self/ns/cgroup
-+  lrwxrwxrwx 1 root root 0 2014-07-15 10:35 /proc/self/ns/cgroup -> cgroup:[4026532183]
-+  # cat /proc/self/cgroup
-+  0::/
-+
-+When some thread from a multi-threaded process unshares its cgroup
-+namespace, the new cgroupns gets applied to the entire process (all
-+the threads).  This is natural for the v2 hierarchy; however, for the
-+legacy hierarchies, this may be unexpected.
-+
-+A cgroup namespace is alive as long as there are processes inside or
-+mounts pinning it.  When the last usage goes away, the cgroup
-+namespace is destroyed.  The cgroupns root and the actual cgroups
-+remain.
-+
-+
-+6-2. The Root and Views
-+
-+The 'cgroupns root' for a cgroup namespace is the cgroup in which the
-+process calling unshare(2) is running.  For example, if a process in
-+/batchjobs/container_id1 cgroup calls unshare, cgroup
-+/batchjobs/container_id1 becomes the cgroupns root.  For the
-+init_cgroup_ns, this is the real root ('/') cgroup.
-+
-+The cgroupns root cgroup does not change even if the namespace creator
-+process later moves to a different cgroup.
-+
-+  # ~/unshare -c # unshare cgroupns in some cgroup
-+  # cat /proc/self/cgroup
-+  0::/
-+  # mkdir sub_cgrp_1
-+  # echo 0 > sub_cgrp_1/cgroup.procs
-+  # cat /proc/self/cgroup
-+  0::/sub_cgrp_1
-+
-+Each process gets its namespace-specific view of "/proc/$PID/cgroup"
-+
-+Processes running inside the cgroup namespace will be able to see
-+cgroup paths (in /proc/self/cgroup) only inside their root cgroup.
-+From within an unshared cgroupns:
-+
-+  # sleep 100000 &
-+  [1] 7353
-+  # echo 7353 > sub_cgrp_1/cgroup.procs
-+  # cat /proc/7353/cgroup
-+  0::/sub_cgrp_1
-+
-+From the initial cgroup namespace, the real cgroup path will be
-+visible:
-+
-+  $ cat /proc/7353/cgroup
-+  0::/batchjobs/container_id1/sub_cgrp_1
-+
-+From a sibling cgroup namespace (that is, a namespace rooted at a
-+different cgroup), the cgroup path relative to its own cgroup
-+namespace root will be shown.  For instance, if PID 7353's cgroup
-+namespace root is at '/batchjobs/container_id2', then it will see
-+
-+  # cat /proc/7353/cgroup
-+  0::/../container_id2/sub_cgrp_1
-+
-+Note that the relative path always starts with '/' to indicate that
-+its relative to the cgroup namespace root of the caller.
-+
-+
-+6-3. Migration and setns(2)
-+
-+Processes inside a cgroup namespace can move into and out of the
-+namespace root if they have proper access to external cgroups.  For
-+example, from inside a namespace with cgroupns root at
-+/batchjobs/container_id1, and assuming that the global hierarchy is
-+still accessible inside cgroupns:
-+
-+  # cat /proc/7353/cgroup
-+  0::/sub_cgrp_1
-+  # echo 7353 > batchjobs/container_id2/cgroup.procs
-+  # cat /proc/7353/cgroup
-+  0::/../container_id2
-+
-+Note that this kind of setup is not encouraged.  A task inside cgroup
-+namespace should only be exposed to its own cgroupns hierarchy.
-+
-+setns(2) to another cgroup namespace is allowed when:
-+
-+(a) the process has CAP_SYS_ADMIN against its current user namespace
-+(b) the process has CAP_SYS_ADMIN against the target cgroup
-+    namespace's userns
-+
-+No implicit cgroup changes happen with attaching to another cgroup
-+namespace.  It is expected that the someone moves the attaching
-+process under the target cgroup namespace root.
-+
-+
-+6-4. Interaction with Other Namespaces
-+
-+Namespace specific cgroup hierarchy can be mounted by a process
-+running inside a non-init cgroup namespace.
-+
-+  # mount -t cgroup2 none $MOUNT_POINT
-+
-+This will mount the unified cgroup hierarchy with cgroupns root as the
-+filesystem root.  The process needs CAP_SYS_ADMIN against its user and
-+mount namespaces.
-+
-+The virtualization of /proc/self/cgroup file combined with restricting
-+the view of cgroup hierarchy by namespace-private cgroupfs mount
-+provides a properly isolated cgroup view inside the container.
-+
-+
- P. Information on Kernel Programming
+ 	mutex_lock(&cgroup_mutex);
  
- This section contains kernel programming information in the areas
 -- 
 2.5.0
